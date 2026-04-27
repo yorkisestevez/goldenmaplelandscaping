@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Prata&family=Inter:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-brand-gold: #D4AF63;
+  --color-brand-gold-light: #E5CA8A;
+  --color-brand-gold-dark: #B8932E;
+  --color-brand-burgundy: #6B1E2E;
+  --color-brand-nearblack: #0F0E0A;
+  --color-brand-surface: #1A1814;
+  --color-brand-midsurface: #242018;
+  --color-brand-bonewhite: #F2EEE7;
+  --color-brand-muted: #A39887;
+  --color-brand-dim: #5A5448;
+
+  --font-display: "Prata", serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+html, body {
+  background-color: var(--color-brand-nearblack);
+  color: var(--color-brand-bonewhite);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center bg-brand-gold text-brand-nearblack font-sans text-[10px] md:text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-gold-light cursor-pointer;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center bg-transparent text-brand-gold border border-brand-gold font-sans text-[10px] md:text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-gold/5 cursor-pointer;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center bg-transparent text-brand-bonewhite border border-brand-dim font-sans text-[10px] md:text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-bonewhite/5 cursor-pointer;
+  }
+  .section-padding {
+    @apply py-24 md:py-40;
+  }
+  .container-custom {
+    @apply max-w-[1400px] mx-auto px-8 md:px-12;
+  }
+}
+
+/* Blog prose styling */
+.prose-gold h2 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--color-brand-bonewhite);
+  margin-top: 3rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.2;
+}
+.prose-gold h3 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--color-brand-gold);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+.prose-gold p {
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  font-weight: 300;
+  color: var(--color-brand-muted);
+  line-height: 1.85;
+  margin-bottom: 1.5rem;
+}
+.prose-gold strong {
+  color: var(--color-brand-bonewhite);
+  font-weight: 500;
+}
+.prose-gold ul, .prose-gold ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.prose-gold li {
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  font-weight: 300;
+  color: var(--color-brand-muted);
+  line-height: 1.85;
+  margin-bottom: 0.75rem;
+}
+.prose-gold li::marker {
+  color: var(--color-brand-gold);
+}
+.prose-gold blockquote {
+  border-left: 2px solid var(--color-brand-gold);
+  padding: 1.5rem 2rem;
+  margin: 2rem 0;
+  background: var(--color-brand-surface);
+  border-radius: 2px;
+}
+.prose-gold blockquote p {
+  color: var(--color-brand-bonewhite);
+  font-style: italic;
+  font-size: 1.125rem;
+  margin-bottom: 0;
+}

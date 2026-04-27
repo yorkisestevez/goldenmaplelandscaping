@@ -1,0 +1,16 @@
+{
+  "name": "Golden Maple Landscaping",
+  "short_name": "Golden Maple",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#0f0f0f",
+  "description": "Landscape design and construction in Barrie and Simcoe County.",
+  "icons": [
+    {
+      "src": "/images/projects/Golden Maple deck and walkway.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
