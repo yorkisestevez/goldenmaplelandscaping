@@ -18,7 +18,7 @@ const BLOG_POSTS = [
     excerpt: 'Detailed breakdown of what an interlocking patio costs in Ontario. Explains price factors like excavation, base materials, paver types, and exactly what drives the price.',
     category: 'Investment',
     readTime: '7 min',
-    image: '/images/projects/patio-pergola.png',
+    image: '/images/projects/patio-pergola.jpg',
   },
   {
     slug: 'hidden-costs-cheap-landscaping',
@@ -34,6 +34,14 @@ const BLOG_POSTS = [
     excerpt: 'The freeze-thaw cycle destroys shallow bases. Learn why 12-16" of compacted clear stone is the only way to build a patio that lasts in Simcoe County.',
     category: 'Engineering',
     readTime: '7 min',
+    image: '/images/projects/best.JPEG',
+  },
+  {
+    slug: 'clear-stone-vs-granular-a-base',
+    title: 'Clear Stone vs. Granular A: Why Your Patio Base Decides Everything',
+    excerpt: '95% of Barrie contractors quote Granular A. It traps water, fails under freeze-thaw, and is the #1 reason hardscapes sink. Here\'s the ICPI open-graded alternative we build on.',
+    category: 'Engineering',
+    readTime: '9 min',
     image: '/images/projects/best.JPEG',
   },
   {
@@ -108,6 +116,30 @@ const BLOG_POSTS = [
     readTime: '6 min',
     image: '/images/projects/cousy fire feature.jpeg',
   },
+  {
+    slug: 'best-time-install-patio-ontario',
+    title: 'Best Time to Install a Paver Patio in Ontario (2026 Guide)',
+    excerpt: 'Month-by-month breakdown of when to install in Barrie and Simcoe County. Booking lead times, weather windows, and how to lock 2026 pricing before mid-season hikes.',
+    category: 'Project Planning',
+    readTime: '9 min',
+    image: '/images/projects/best.JPEG',
+  },
+  {
+    slug: 'landscape-permits-barrie-simcoe',
+    title: 'Permits, Bylaws & Inspections for Hardscape in Barrie & Simcoe County',
+    excerpt: 'Complete 2026 reference: which projects need permits, the 1-metre retaining wall rule, municipality-by-municipality contact info, and Ontario One Call requirements.',
+    category: 'Project Planning',
+    readTime: '11 min',
+    image: '/images/projects/garden-wall.JPEG',
+  },
+  {
+    slug: 'pool-deck-materials-ontario',
+    title: 'Pool Deck Materials Compared: Porcelain, Concrete Pavers, Natural Stone',
+    excerpt: 'Full side-by-side breakdown of pool surround materials in Ontario — slip ratings, heat retention, real 2026 cost per sqft, and which fits salt-water vs chlorine pools.',
+    category: 'Materials',
+    readTime: '10 min',
+    image: '/images/projects/decking1.jpg',
+  },
 ];
 
 export default function Resources() {
@@ -116,6 +148,7 @@ export default function Resources() {
       <SEO 
         title="Landscaping Resources & Expert Guides | Barrie & Simcoe County | Golden Maple"
         description="Expert landscaping guides, contractor hiring tips, material comparisons, and maintenance advice from Barrie's highest-rated hardscape contractor. Free resources to help you make informed decisions."
+        canonical="https://goldenmaplelandscaping.ca/resources"
       />
 
       <section className="section-padding pt-40 md:pt-48">

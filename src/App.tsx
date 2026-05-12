@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import ScrollToTop from './components/ScrollToTop';
 import { initAnalytics, trackPageView } from './utils/analytics';
 import { initAttributionCapture } from './utils/utmCapture';
+import { initBehaviorCapture } from './utils/behavior';
 
 // Eager: Home loads instantly (LCP path)
 import Home from './pages/Home';
@@ -35,6 +36,8 @@ const CostEstimator = lazy(() => import('./pages/CostEstimator'));
 const CostGuide = lazy(() => import('./pages/CostGuide'));
 const CostGuideThankYou = lazy(() => import('./pages/CostGuideThankYou'));
 const Book = lazy(() => import('./pages/Book'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
 const BarrieLanding = lazy(() => import('./pages/locations/Barrie'));
 const InnisfilLanding = lazy(() => import('./pages/locations/Innisfil'));
 const OroMedonteLanding = lazy(() => import('./pages/locations/OroMedonte'));
@@ -53,7 +56,14 @@ const BackyardROI = lazy(() => import('./pages/blog/BackyardROI'));
 const FirePitRegulations = lazy(() => import('./pages/blog/FirePitRegulations'));
 const LandscapingCostGuide = lazy(() => import('./pages/blog/LandscapingCostGuide'));
 const HiddenCostsCheapLandscaping = lazy(() => import('./pages/blog/HiddenCostsCheapLandscaping'));
+const BestTimeInstallPatio = lazy(() => import('./pages/blog/BestTimeInstallPatio'));
+const PermitsBylawsBarrie = lazy(() => import('./pages/blog/PermitsBylawsBarrie'));
+const PoolDeckMaterials = lazy(() => import('./pages/blog/PoolDeckMaterials'));
 const PatioCostFactors = lazy(() => import('./pages/blog/PatioCostFactors'));
+const ClearStoneVsGranularA = lazy(() => import('./pages/blog/ClearStoneVsGranularA'));
+const PatiosBarrie = lazy(() => import('./pages/PatiosBarrie'));
+const OutdoorLivingBarrie = lazy(() => import('./pages/OutdoorLivingBarrie'));
+const LuxuryLandscapeBarrie = lazy(() => import('./pages/LuxuryLandscapeBarrie'));
 
 const RouteFallback = () => (
   <div className="bg-brand-nearblack min-h-screen flex items-center justify-center">
@@ -73,6 +83,7 @@ function AnalyticsRouteTracker() {
 export default function App() {
   useEffect(() => {
     initAttributionCapture();
+    initBehaviorCapture();
     initAnalytics();
   }, []);
 
@@ -109,11 +120,18 @@ export default function App() {
               <Route path="/process/completion" element={<Completion />} />
               <Route path="/buyers-guide" element={<BuyersGuide />} />
               <Route path="/cost-estimator" element={<CostEstimator />} />
+              {/* Tier-specific landing pages — Foundation / Signature / Premium */}
+              <Route path="/patios-barrie" element={<PatiosBarrie />} />
+              <Route path="/outdoor-living-barrie" element={<OutdoorLivingBarrie />} />
+              <Route path="/luxury-landscape-barrie" element={<LuxuryLandscapeBarrie />} />
               <Route path="/cost-guide" element={<CostGuide />} />
               <Route path="/cost-guide/thank-you" element={<CostGuideThankYou />} />
               <Route path="/book" element={<Book />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
               {/* Blog Posts */}
               <Route path="/resources/why-patios-sink-barrie" element={<WhyPatiosSink />} />
+              <Route path="/resources/clear-stone-vs-granular-a-base" element={<ClearStoneVsGranularA />} />
               <Route path="/resources/timbertech-vs-wood-decking-ontario" element={<TimberTechVsWood />} />
               <Route path="/resources/retaining-wall-guide-simcoe-county" element={<RetainingWallGuide />} />
               <Route path="/resources/how-to-choose-landscaping-contractor-barrie" element={<ChoosingContractor />} />
@@ -127,6 +145,9 @@ export default function App() {
               <Route path="/resources/hidden-costs-cheap-landscaping" element={<HiddenCostsCheapLandscaping />} />
               <Route path="/resources/interlocking-patio-cost-ontario" element={<PatioCostFactors />} />
               <Route path="/resources/interlocking-cost-barrie" element={<InterlockingCostBarrie />} />
+              <Route path="/resources/best-time-install-patio-ontario" element={<BestTimeInstallPatio />} />
+              <Route path="/resources/landscape-permits-barrie-simcoe" element={<PermitsBylawsBarrie />} />
+              <Route path="/resources/pool-deck-materials-ontario" element={<PoolDeckMaterials />} />
               {/* SEO Location Pages */}
               <Route path="/locations/barrie" element={<BarrieLanding />} />
               <Route path="/locations/innisfil" element={<InnisfilLanding />} />
