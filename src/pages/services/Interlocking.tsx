@@ -31,6 +31,7 @@ export default function Interlocking() {
       <SEO 
         title="Interlocking Stone Installation Barrie"
         description="Expert interlocking stone patios, driveways & walkways in Barrie. Techo-Bloc & Permacon certified. Precision-built hardscapes that last. Free estimate today."
+        canonical="https://goldenmaplelandscaping.ca/services/interlocking-barrie"
       />
       
       <section className="section-padding pt-48">
@@ -159,7 +160,10 @@ export default function Interlocking() {
           <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
             You've been looking at your driveway or patio long enough. Let's turn it into something that makes your neighbours slow down when they drive past. One conversation is all it takes to get started.
           </p>
-          <Link to="/contact" className="btn-primary px-20">Get Started Today</Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link to="/cost-estimator?type=patio" className="btn-primary px-12 py-4">See Your Cost Range</Link>
+            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or Book a Discovery Call →</Link>
+          </div>
         </div>
       </section>
 

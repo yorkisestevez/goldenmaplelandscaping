@@ -7,3 +7,6 @@ coverage/
 .env*
 !.env.example
 .netlify/
+
+# Editor scratch (Claude Code per-machine state)
+.claude/

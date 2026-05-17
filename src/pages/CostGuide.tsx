@@ -5,6 +5,8 @@ import { ArrowRight, CheckCircle, FileText, Shield, Star, BookOpen } from 'lucid
 import SEO from '../components/SEO';
 import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
+import { getBehaviorFields } from '../utils/behavior';
+import { genEventId } from '../utils/eventId';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -52,10 +54,13 @@ export default function CostGuide() {
         form.location ? ` (location: ${form.location})` : ''
       }`;
 
+      const eventId = genEventId();
       const payload = {
         'form-name': 'cost-guide',
         source: 'cost-guide-page',
+        event_id: eventId,
         ...getAttributionFields(),
+        ...getBehaviorFields(),
         name: form.name,
         email: form.email,
         address: form.location,
@@ -68,7 +73,7 @@ export default function CostGuide() {
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
         console.log('[dev] cost-guide payload (would POST to Netlify):', payload);
-        trackLead('cost-guide', 'top-of-funnel');
+        trackLead('cost-guide', 'top-of-funnel', undefined, eventId);
         navigate('/cost-guide/thank-you');
         return;
       }
@@ -79,7 +84,7 @@ export default function CostGuide() {
         body: encode(payload),
       });
       if (!res.ok) throw new Error('Network response was not ok');
-      trackLead('cost-guide', 'top-of-funnel');
+      trackLead('cost-guide', 'top-of-funnel', undefined, eventId);
       navigate('/cost-guide/thank-you');
     } catch {
       setStatus('error');

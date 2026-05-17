@@ -1,11 +1,17 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, type ChangeEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Grid, Hexagon, AlignJustify, ListTree, Layout,
-  ChefHat, Flame, Sun, Leaf, Lightbulb, Map, Check, Phone
+  ChefHat, Flame, Sun, Leaf, Lightbulb, Map, Check, MapPin, Image as ImageIcon, Upload, X,
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import EstimateBreakdown from './EstimateBreakdown';
+import EstimateLeadCapture from './EstimateLeadCapture';
+import EstimateBookingCTA from './EstimateBookingCTA';
+import { PAVER_BRANDS, DECK_BRANDS, ADD_ONS, BIN_COST, estimateBins, defaultPaverForTier, sortPaversForDisplay, type PaverTier } from '../data/carrPrices';
+import { ESTIMATOR_LOCATIONS, ZONE_SURCHARGE, type EstimatorLocationKey } from '../data/locations';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -16,7 +22,7 @@ const PROJECT_TYPES = [
   { id: 'stone', label: 'Natural Stone / Flagstone', desc: 'Irregular or cut stone', icon: Hexagon },
   { id: 'wall', label: 'Retaining Wall', desc: 'Block or armour stone', icon: AlignJustify },
   { id: 'steps', label: 'Steps & Walkway', desc: 'Precast or natural stone', icon: ListTree },
-  { id: 'deck', label: 'Composite Deck', desc: 'Trex or TimberTech', icon: Layout },
+  { id: 'deck', label: 'Composite Deck', desc: 'TimberTech AZEK', icon: Layout },
   { id: 'kitchen', label: 'Outdoor Kitchen', desc: 'Cooking and dining', icon: ChefHat },
   { id: 'firepit', label: 'Fire Pit', desc: 'Prefab or custom built', icon: Flame },
   { id: 'pergola', label: 'Pergola / Shade Structure', desc: 'Wood or aluminum', icon: Sun },
@@ -33,17 +39,25 @@ const CONDITIONS = [
   { id: 'levels', label: 'Multiple levels or tiers' },
 ];
 
-const MATERIALS = [
-  { id: 'good', label: 'Premium Standard', desc: 'Quality interlock, clean design, built to last' },
-  { id: 'better', label: 'Elevated Design', desc: 'Upgraded materials, more detail, standout results', badge: 'Most Popular' },
-  { id: 'best', label: 'Signature Build', desc: 'Porcelain, natural stone, or full premium collection' },
+const TIERS: { id: PaverTier; label: string; sub: string; badge?: string }[] = [
+  { id: 'budget',  label: 'Standard',  sub: 'Permacon Melville, Cassara, Vendome. Clean, value-built.' },
+  { id: 'mid',     label: 'Elevated',  sub: 'Mondrian Plus, Wilfred, Rosebel. Most popular tier.', badge: 'Most Popular' },
+  { id: 'premium', label: 'Premium',   sub: 'Mega Melville, Brooklyn, Metrik. Signature finish.' },
 ];
 
+const TOTAL_STEPS = 7;
+
+const fmt = (n: number) =>
+  n >= 10000 ? `$${(n / 1000).toFixed(0)}k` : `$${n.toLocaleString()}`;
+
+const VALID_PROJECT_TYPES = new Set(['patio', 'stone', 'wall', 'steps', 'deck', 'kitchen', 'firepit', 'pergola', 'turf', 'lighting', 'full']);
+
 export default function Estimator() {
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   const [projectType, setProjectType] = useState<string | null>(null);
   const [selectedElements, setSelectedElements] = useState<string[]>([]);
-  const [sizes, setSizes] = useState<Record<string, any>>({
+  const [sizes, setSizes] = useState<Record<string, number | string>>({
     patio: 500,
     stone: 500,
     wall: 50,
@@ -57,224 +71,352 @@ export default function Estimator() {
     lighting: 'Medium',
   });
   const [conditions, setConditions] = useState<Record<string, boolean>>({
-    access: false,
-    slope: false,
-    tearOut: false,
-    drainage: false,
-    levels: false,
+    access: false, slope: false, tearOut: false, drainage: false, levels: false,
   });
-  const [material, setMaterial] = useState('better');
+  const [location, setLocation] = useState<EstimatorLocationKey>('barrie');
+  const [tier, setTier] = useState<PaverTier>('mid');
+  const [paverBrandId, setPaverBrandId] = useState<string>('permacon-mondrian-plus');
+  const [deckBrandId, setDeckBrandId] = useState<string>('timbertech-prime');
+  const [addOns, setAddOns] = useState<string[]>([]);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
-  const handleSizeChange = (id: string, value: any) => {
+  // Auto-pick a default brand when tier changes
+  useEffect(() => {
+    const defaultPaver = defaultPaverForTier(tier);
+    if (defaultPaver) setPaverBrandId(defaultPaver.id);
+  }, [tier]);
+
+  // Hydrate from URL params on mount (HeroEstimator hand-off → jump to step 3 with selections in place)
+  useEffect(() => {
+    const t = searchParams.get('type');
+    const sqftParam = searchParams.get('sqft');
+    const cityParam = searchParams.get('city');
+    let advanced = false;
+    if (t && VALID_PROJECT_TYPES.has(t)) {
+      setProjectType(t);
+      if (t === 'full') {
+        // Pre-fill with the 3 most common picks so size step still has meaning
+        setSelectedElements(['patio', 'wall', 'lighting']);
+      }
+      advanced = true;
+    }
+    if (sqftParam) {
+      const n = parseInt(sqftParam, 10);
+      if (!isNaN(n) && n >= 100 && n <= 2000 && t) {
+        setSizes(prev => ({
+          ...prev,
+          [t === 'full' ? 'patio' : t]: n,
+        }));
+      }
+    }
+    if (cityParam && ESTIMATOR_LOCATIONS.some(l => l.key === cityParam)) {
+      setLocation(cityParam as EstimatorLocationKey);
+    }
+    if (advanced) setStep(3);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSizeChange = (id: string, value: number | string) => {
     setSizes(prev => ({ ...prev, [id]: value }));
   };
-
   const toggleCondition = (id: string) => {
     setConditions(prev => ({ ...prev, [id]: !prev[id] }));
   };
-
   const toggleElement = (id: string) => {
-    setSelectedElements(prev => 
+    setSelectedElements(prev =>
       prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
     );
   };
+  const toggleAddOn = (id: string) => {
+    setAddOns(prev =>
+      prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
+    );
+  };
 
-  const estimates = useMemo(() => {
-    const getElementEstimate = (type: string, sizeData: any, tier: string) => {
-      let rateLow = 1, rateHigh = 1;
-      let matLow = 0, matHigh = 0;
-      let flatDaysLow = 0, flatDaysHigh = 0;
-      
-      let effectiveSize = typeof sizeData === 'number' ? sizeData : 0;
-      
-      if (type === 'patio') {
-        if (tier === 'good') { rateLow = 400; rateHigh = 500; matLow = 8; matHigh = 12; }
-        if (tier === 'better') { rateLow = 250; rateHigh = 350; matLow = 14; matHigh = 20; }
-        if (tier === 'best') { rateLow = 300; rateHigh = 400; matLow = 22; matHigh = 35; }
-      } else if (type === 'stone') {
-        rateLow = 150; rateHigh = 250;
-        if (tier === 'good') { matLow = 12; matHigh = 18; }
-        if (tier === 'better') { matLow = 20; matHigh = 28; }
-        if (tier === 'best') { matLow = 30; matHigh = 45; }
-      } else if (type === 'wall') {
-        let hMult = 1;
-        if (sizes.wallHeight === '2-4ft') hMult = 1.5;
-        if (sizes.wallHeight === '4-6ft') hMult = 2;
-        if (sizes.wallHeight === 'Over 6ft') hMult = 3;
-        effectiveSize = sizeData * hMult;
-        
-        if (tier === 'good') { rateLow = 40; rateHigh = 60; matLow = 30; matHigh = 45; }
-        if (tier === 'better') { rateLow = 40; rateHigh = 60; matLow = 50; matHigh = 80; }
-        if (tier === 'best') { rateLow = 20; rateHigh = 35; matLow = 90; matHigh = 140; }
-      } else if (type === 'steps') {
-        if (tier === 'good') { rateLow = 3; rateHigh = 5; matLow = 400; matHigh = 600; }
-        if (tier === 'better') { rateLow = 3; rateHigh = 5; matLow = 500; matHigh = 800; }
-        if (tier === 'best') { rateLow = 2; rateHigh = 4; matLow = 700; matHigh = 1200; }
-      } else if (type === 'deck') {
-        rateLow = 200; rateHigh = 300;
-        if (tier === 'good') { matLow = 20; matHigh = 28; }
-        if (tier === 'better') { matLow = 30; matHigh = 42; }
-        if (tier === 'best') { matLow = 45; matHigh = 65; }
-      } else if (type === 'turf') {
-        rateLow = 500; rateHigh = 700;
-        if (tier === 'good') { matLow = 10; matHigh = 14; }
-        if (tier === 'better') { matLow = 14; matHigh = 18; }
-        if (tier === 'best') { matLow = 18; matHigh = 25; }
-      } else if (type === 'kitchen') {
-        let isFull = sizeData === 'Full Build';
-        if (tier === 'good') {
-          flatDaysLow = isFull ? 6 : 3; flatDaysHigh = isFull ? 10 : 5;
-          matLow = isFull ? 10000 : 4000; matHigh = isFull ? 25000 : 8000;
-        }
-        if (tier === 'better') {
-          flatDaysLow = isFull ? 6 : 4; flatDaysHigh = isFull ? 10 : 7;
-          matLow = isFull ? 15000 : 6000; matHigh = isFull ? 25000 : 10000;
-        }
-        if (tier === 'best') {
-          flatDaysLow = isFull ? 6 : 4; flatDaysHigh = isFull ? 10 : 7;
-          matLow = isFull ? 20000 : 8000; matHigh = isFull ? 25000 : 12000;
-        }
-        effectiveSize = 0;
-      } else if (type === 'firepit') {
-        if (tier === 'good') { flatDaysLow = 0.5; flatDaysHigh = 1; matLow = 800; matHigh = 2000; }
-        if (tier === 'better') { flatDaysLow = 1; flatDaysHigh = 2; matLow = 1500; matHigh = 3500; }
-        if (tier === 'best') { flatDaysLow = 1.5; flatDaysHigh = 3; matLow = 2000; matHigh = 5000; }
-        effectiveSize = 0;
-      } else if (type === 'pergola') {
-        if (tier === 'good') { flatDaysLow = 2; flatDaysHigh = 3; matLow = 3000; matHigh = 5000; }
-        if (tier === 'better') { flatDaysLow = 2; flatDaysHigh = 3; matLow = 5000; matHigh = 8000; }
-        if (tier === 'best') { flatDaysLow = 3; flatDaysHigh = 4; matLow = 8000; matHigh = 12000; }
-        effectiveSize = 0;
-      } else if (type === 'lighting') {
-        if (tier === 'good') { flatDaysLow = 1; flatDaysHigh = 2; matLow = 2500; matHigh = 4000; }
-        if (tier === 'better') { flatDaysLow = 1; flatDaysHigh = 2; matLow = 4000; matHigh = 6000; }
-        if (tier === 'best') { flatDaysLow = 2; flatDaysHigh = 3; matLow = 6000; matHigh = 10000; }
-        effectiveSize = 0;
+  const isHardscape = projectType === 'patio' || projectType === 'stone' || projectType === 'wall' || projectType === 'steps';
+  const isDeck = projectType === 'deck' || (projectType === 'full' && selectedElements.includes('deck'));
+  const totalSqft = useMemo(() => {
+    const els = projectType === 'full' ? selectedElements : (projectType ? [projectType] : []);
+    return els.reduce((sum, el) => {
+      const v = sizes[el];
+      return sum + (typeof v === 'number' ? v : 0);
+    }, 0);
+  }, [projectType, selectedElements, sizes]);
+
+  const selectedPaver = PAVER_BRANDS.find(p => p.id === paverBrandId) || PAVER_BRANDS[2];
+  const selectedDeck = DECK_BRANDS.find(d => d.id === deckBrandId) || DECK_BRANDS[0];
+
+  /** Core estimate calculation using brand pricing as the anchor. */
+  const estimate = useMemo(() => {
+    const els = projectType === 'full' ? selectedElements : (projectType ? [projectType] : []);
+    if (els.length === 0) {
+      return { totalLow: 0, totalHigh: 0, lines: null, addOnsTotal: { low: 0, high: 0 }, days: { low: 0, high: 0 } };
+    }
+
+    let coreLow = 0;
+    let coreHigh = 0;
+    let materialLow = 0;
+    let materialHigh = 0;
+    let labourLow = 0;
+    let labourHigh = 0;
+    let totalSqftCalc = 0;
+    let daysLow = 0.5;
+    let daysHigh = 1;
+
+    for (const el of els) {
+      const sz = sizes[el];
+
+      if (el === 'patio' || el === 'stone' || el === 'turf') {
+        const sqft = typeof sz === 'number' ? sz : 0;
+        totalSqftCalc += sqft;
+        let perSqft = selectedPaver.retailPerSqft;
+        if (el === 'turf') perSqft = 22;
+        if (el === 'stone') perSqft = Math.max(48, selectedPaver.retailPerSqft + 10);
+        const lineLow = sqft * perSqft * 0.95;
+        const lineHigh = sqft * perSqft * 1.20;
+        materialLow += lineLow * 0.45;
+        materialHigh += lineHigh * 0.45;
+        labourLow += lineLow * 0.40;
+        labourHigh += lineHigh * 0.40;
+        coreLow += lineLow;
+        coreHigh += lineHigh;
+        daysLow += sqft / 350;
+        daysHigh += sqft / 220;
+      } else if (el === 'deck') {
+        const sqft = typeof sz === 'number' ? sz : 0;
+        totalSqftCalc += sqft;
+        const perSqft = selectedDeck.retailPerSqft;
+        const lineLow = sqft * perSqft * 0.95;
+        const lineHigh = sqft * perSqft * 1.20;
+        materialLow += lineLow * 0.55;
+        materialHigh += lineHigh * 0.55;
+        labourLow += lineLow * 0.35;
+        labourHigh += lineHigh * 0.35;
+        coreLow += lineLow;
+        coreHigh += lineHigh;
+        daysLow += sqft / 250;
+        daysHigh += sqft / 150;
+      } else if (el === 'wall') {
+        const lf = typeof sz === 'number' ? sz : 50;
+        const hMult = sizes.wallHeight === 'Under 2ft' ? 1
+          : sizes.wallHeight === '2-4ft' ? 1.5
+          : sizes.wallHeight === '4-6ft' ? 2.2 : 3.2;
+        const perLf = tier === 'budget' ? 220 : tier === 'mid' ? 280 : 360;
+        const lineLow = lf * perLf * hMult * 0.9;
+        const lineHigh = lf * perLf * hMult * 1.15;
+        materialLow += lineLow * 0.45;
+        materialHigh += lineHigh * 0.45;
+        labourLow += lineLow * 0.40;
+        labourHigh += lineHigh * 0.40;
+        coreLow += lineLow;
+        coreHigh += lineHigh;
+        daysLow += (lf * hMult) / 50;
+        daysHigh += (lf * hMult) / 30;
+      } else if (el === 'steps') {
+        const count = typeof sz === 'number' ? sz : 5;
+        const perStep = tier === 'budget' ? 850 : tier === 'mid' ? 1100 : 1500;
+        const lineLow = count * perStep * 0.9;
+        const lineHigh = count * perStep * 1.15;
+        materialLow += lineLow * 0.5;
+        materialHigh += lineHigh * 0.5;
+        labourLow += lineLow * 0.4;
+        labourHigh += lineHigh * 0.4;
+        coreLow += lineLow;
+        coreHigh += lineHigh;
+        daysLow += count * 0.4;
+        daysHigh += count * 0.6;
+      } else if (el === 'kitchen') {
+        const isFull = sizes.kitchen === 'Full Build';
+        const lineLow = tier === 'budget' ? (isFull ? 18000 : 7000) : tier === 'mid' ? (isFull ? 28000 : 10000) : (isFull ? 42000 : 14000);
+        const lineHigh = lineLow * 1.4;
+        materialLow += lineLow * 0.60;
+        materialHigh += lineHigh * 0.60;
+        labourLow += lineLow * 0.30;
+        labourHigh += lineHigh * 0.30;
+        coreLow += lineLow;
+        coreHigh += lineHigh;
+        daysLow += isFull ? 6 : 3;
+        daysHigh += isFull ? 10 : 5;
+      } else if (el === 'firepit') {
+        const lineLow = tier === 'budget' ? 1500 : tier === 'mid' ? 2500 : 3500;
+        const lineHigh = lineLow * 1.5;
+        materialLow += lineLow * 0.6;
+        materialHigh += lineHigh * 0.6;
+        labourLow += lineLow * 0.3;
+        labourHigh += lineHigh * 0.3;
+        coreLow += lineLow;
+        coreHigh += lineHigh;
+        daysLow += 1; daysHigh += 2;
+      } else if (el === 'pergola') {
+        const lineLow = tier === 'budget' ? 4500 : tier === 'mid' ? 7000 : 10000;
+        const lineHigh = lineLow * 1.4;
+        materialLow += lineLow * 0.55;
+        materialHigh += lineHigh * 0.55;
+        labourLow += lineLow * 0.35;
+        labourHigh += lineHigh * 0.35;
+        coreLow += lineLow;
+        coreHigh += lineHigh;
+        daysLow += 2; daysHigh += 4;
+      } else if (el === 'lighting') {
+        const lineLow = tier === 'budget' ? 3000 : tier === 'mid' ? 5000 : 7500;
+        const lineHigh = lineLow * 1.4;
+        materialLow += lineLow * 0.5;
+        materialHigh += lineHigh * 0.5;
+        labourLow += lineLow * 0.35;
+        labourHigh += lineHigh * 0.35;
+        coreLow += lineLow;
+        coreHigh += lineHigh;
+        daysLow += 1; daysHigh += 2;
       }
-  
-      let rawDaysLow = effectiveSize > 0 ? (effectiveSize / rateHigh) * 1.25 : 0;
-      let rawDaysHigh = effectiveSize > 0 ? (effectiveSize / rateLow) * 1.25 : 0;
-      
-      rawDaysLow += flatDaysLow;
-      rawDaysHigh += flatDaysHigh;
-  
-      let materialCostLow = effectiveSize > 0 ? effectiveSize * matLow : matLow;
-      let materialCostHigh = effectiveSize > 0 ? effectiveSize * matHigh : matHigh;
-  
-      return { rawDaysLow, rawDaysHigh, materialCostLow, materialCostHigh };
-    };
-  
-    const calculateTier = (tier: string) => {
-      let totalRawDaysLow = 0;
-      let totalRawDaysHigh = 0;
-      let totalMaterialLow = 0;
-      let totalMaterialHigh = 0;
-  
-      const elementsToCalc = projectType === 'full' ? selectedElements : (projectType ? [projectType] : []);
-  
-      if (elementsToCalc.length === 0) {
-        return { priceLow: 0, priceHigh: 0, daysLow: 0, daysHigh: 0 };
-      }
-  
-      elementsToCalc.forEach(el => {
-        const { rawDaysLow, rawDaysHigh, materialCostLow, materialCostHigh } = getElementEstimate(el, sizes[el], tier);
-        totalRawDaysLow += rawDaysLow;
-        totalRawDaysHigh += rawDaysHigh;
-        totalMaterialLow += materialCostLow;
-        totalMaterialHigh += materialCostHigh;
-      });
-  
-      let flatLow = 0.5; // Grading prep
-      let flatHigh = 1;
-      if (conditions.slope) { flatLow += 0.5; flatHigh += 1; }
-      if (conditions.tearOut) { flatLow += 0.5; flatHigh += 1; }
-      if (conditions.drainage) { flatLow += 0.5; flatHigh += 0.5; }
-  
-      totalRawDaysLow += flatLow;
-      totalRawDaysHigh += flatHigh;
-  
-      let multiplier = 1;
-      if (conditions.access) multiplier += 0.20;
-      if (conditions.levels) multiplier += 0.15;
-  
-      let finalDaysLow = Math.ceil((totalRawDaysLow * multiplier) * 2) / 2;
-      let finalDaysHigh = Math.ceil((totalRawDaysHigh * multiplier) * 2) / 2;
-  
-      let complexityUplift = 1;
-      if (tier === 'better') complexityUplift = 1.15;
-      if (tier === 'best') complexityUplift = 1.35;
-  
-      let labourLow = finalDaysLow * 3000 * complexityUplift;
-      let labourHigh = finalDaysHigh * 3000 * complexityUplift;
-  
-      let priceLow = Math.round((labourLow + totalMaterialLow) / 500) * 500;
-      let priceHigh = Math.round((labourHigh + totalMaterialHigh) / 500) * 500;
-  
-      const isDeckingProject = projectType === 'deck' || (projectType === 'full' && selectedElements.includes('deck'));
-  
-      if (isDeckingProject) {
-        if (priceLow < 25000) priceLow = 25000;
-        if (priceHigh < 25000) priceHigh = 25000;
-      } else {
-        if (priceLow < 20000) priceLow = 20000;
-        if (priceHigh < 20000) priceHigh = 20000;
-      }
-  
-      return {
-        priceLow,
-        priceHigh,
-        daysLow: finalDaysLow,
-        daysHigh: finalDaysHigh
-      };
-    };
-  
+    }
+
+    // Site condition multipliers / additions
+    let conditionMult = 1;
+    if (conditions.access) conditionMult += 0.18;
+    if (conditions.levels) conditionMult += 0.12;
+    let conditionFlatLow = 0;
+    let conditionFlatHigh = 0;
+    if (conditions.slope)    { conditionFlatLow += 1500; conditionFlatHigh += 4000; daysLow += 0.5; daysHigh += 1.5; }
+    if (conditions.tearOut)  { conditionFlatLow += 1200; conditionFlatHigh += 3500; daysLow += 0.5; daysHigh += 1.5; }
+    if (conditions.drainage) { conditionFlatLow += 1500; conditionFlatHigh += 3500; daysLow += 0.5; daysHigh += 1; }
+
+    coreLow = coreLow * conditionMult + conditionFlatLow;
+    coreHigh = coreHigh * conditionMult + conditionFlatHigh;
+    materialLow *= conditionMult;
+    materialHigh *= conditionMult;
+    labourLow = labourLow * conditionMult + conditionFlatLow * 0.6;
+    labourHigh = labourHigh * conditionMult + conditionFlatHigh * 0.6;
+
+    // Excavation = roughly 18% of core for hardscape, lighter for non-hardscape
+    const excavationShare = isHardscape || (projectType === 'full' && totalSqftCalc > 0) ? 0.18 : 0.10;
+    const excavationLow = Math.max(2500, coreLow * excavationShare);
+    const excavationHigh = Math.max(4000, coreHigh * excavationShare);
+
+    // Disposal — only meaningful for hardscape work that excavates
+    const bins = totalSqftCalc > 0 ? estimateBins(totalSqftCalc) : 0;
+    const disposalLow = bins * BIN_COST;
+    const disposalHigh = bins * BIN_COST * 1.15;
+
+    // Restoration — site cleanup, sodding edges, perimeter dressing
+    const restorationLow = Math.max(800, totalSqftCalc * 2.5);
+    const restorationHigh = Math.max(1500, totalSqftCalc * 4);
+
+    // Zone surcharge for delivery
+    const loc = ESTIMATOR_LOCATIONS.find(l => l.key === location) || ESTIMATOR_LOCATIONS[0];
+    const surcharge = ZONE_SURCHARGE[loc.zone];
+
+    // Add-ons
+    let addOnsLow = 0;
+    let addOnsHigh = 0;
+    for (const aid of addOns) {
+      const a = ADD_ONS.find(x => x.id === aid);
+      if (a) { addOnsLow += a.costLow; addOnsHigh += a.costHigh; }
+    }
+    if (addOns.length > 0) {
+      daysLow += addOns.length * 0.5;
+      daysHigh += addOns.length * 1;
+    }
+
+    // Total = core + zone surcharge + add-ons (excavation/labour/materials/disposal/restoration are slices of core; we'll show breakdown but total is the higher-level sum)
+    const totalLow = Math.round((excavationLow + materialLow + labourLow + disposalLow + restorationLow + surcharge + addOnsLow) / 500) * 500;
+    const totalHigh = Math.round((excavationHigh + materialHigh + labourHigh + disposalHigh + restorationHigh + surcharge + addOnsHigh) / 500) * 500;
+
+    // Hard floors
+    const floor = isDeck ? 25000 : isHardscape || projectType === 'full' ? 20000 : 8000;
+    const finalLow = Math.max(floor, totalLow);
+    const finalHigh = Math.max(floor + 5000, totalHigh);
+
     return {
-      good: calculateTier('good'),
-      better: calculateTier('better'),
-      best: calculateTier('best'),
+      totalLow: finalLow,
+      totalHigh: finalHigh,
+      addOnsTotal: { low: addOnsLow, high: addOnsHigh },
+      days: { low: Math.ceil(daysLow * 2) / 2, high: Math.ceil(daysHigh * 2) / 2 },
+      lines: {
+        excavation: {
+          low: Math.round(excavationLow / 100) * 100,
+          high: Math.round(excavationHigh / 100) * 100,
+          detail: totalSqftCalc > 0 ? `12–16" base depth on ${totalSqftCalc} sqft` : 'Site prep + base prep',
+        },
+        materials: {
+          low: Math.round((materialLow + surcharge) / 100) * 100,
+          high: Math.round((materialHigh + surcharge) / 100) * 100,
+          detail: isDeck
+            ? `${selectedDeck.brand} ${selectedDeck.product}`
+            : isHardscape || projectType === 'full'
+            ? `${selectedPaver.brand} ${selectedPaver.product}${totalSqftCalc > 0 ? ` (${totalSqftCalc} sqft)` : ''}`
+            : 'Materials & supplies',
+        },
+        labour: {
+          low: Math.round(labourLow / 100) * 100,
+          high: Math.round(labourHigh / 100) * 100,
+          detail: `${Math.ceil(daysLow * 2) / 2}–${Math.ceil(daysHigh * 2) / 2} days on-site, ICPI-certified crew`,
+        },
+        disposal: {
+          low: Math.round(disposalLow / 100) * 100,
+          high: Math.round(disposalHigh / 100) * 100,
+          detail: bins > 0 ? `${bins} × 14-yard bin (clean fill)` : 'Standard waste removal',
+        },
+        restoration: {
+          low: Math.round(restorationLow / 100) * 100,
+          high: Math.round(restorationHigh / 100) * 100,
+          detail: 'Edge dressing, soil amendments, site clean',
+        },
+      },
     };
-  }, [projectType, selectedElements, sizes, conditions]);
+  }, [projectType, selectedElements, sizes, conditions, location, tier, paverBrandId, deckBrandId, addOns, isHardscape, isDeck, selectedPaver, selectedDeck]);
 
-  const renderSlider = (id: string, label: string, min: number, max: number, format: (v: number) => string) => (
-    <div className="mb-8">
-      <div className="flex justify-between items-end mb-4">
-        <span className="font-sans text-[13px] text-brand-bone">{label}</span>
-        <span className="font-display text-2xl text-brand-gold">{format(sizes[id])}</span>
+  /** Confidence ±% — drops as more steps are completed. */
+  const confidence = useMemo(() => {
+    let c = 25;
+    if (step >= 4) c -= 5; // location
+    if (step >= 5) c -= 3; // brand
+    if (step >= 6) c -= 3; // add-ons
+    if (photoFile) c -= 2;
+    return Math.max(8, c);
+  }, [step, photoFile]);
+
+  const onPhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setPhotoFile(f);
+  };
+
+  // ---------- step renderers ----------
+  const renderSlider = (id: string, label: string, min: number, max: number, format: (v: number) => string) => {
+    const v = typeof sizes[id] === 'number' ? (sizes[id] as number) : min;
+    return (
+      <div className="mb-8">
+        <div className="flex justify-between items-end mb-4">
+          <span className="font-sans text-[13px] text-brand-bone">{label}</span>
+          <span className="font-display text-2xl text-brand-gold">{format(v)}</span>
+        </div>
+        <input
+          type="range" min={min} max={max} value={v}
+          onChange={(e) => handleSizeChange(id, Number(e.target.value))}
+          className="w-full h-[3px] bg-brand-dark rounded-full appearance-none outline-none accent-brand-gold"
+          style={{ background: `linear-gradient(to right, #D4AF63 ${(v - min) / (max - min) * 100}%, #1A1814 ${(v - min) / (max - min) * 100}%)` }}
+        />
       </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={sizes[id]}
-        onChange={(e) => handleSizeChange(id, Number(e.target.value))}
-        className="w-full h-[3px] bg-brand-dark rounded-full appearance-none outline-none accent-brand-gold"
-        style={{
-          background: `linear-gradient(to right, #D4AF63 ${(sizes[id] - min) / (max - min) * 100}%, #1A1814 ${(sizes[id] - min) / (max - min) * 100}%)`
-        }}
-      />
-    </div>
-  );
-
+    );
+  };
   const renderDropdown = (id: string, label: string, options: string[]) => (
     <div className="mb-8">
       <label className="block font-sans text-[13px] text-brand-bone mb-4">{label}</label>
       <div className="relative">
         <select
-          value={sizes[id]}
+          value={sizes[id] as string}
           onChange={(e) => handleSizeChange(id, e.target.value)}
-          className="w-full bg-brand-dark border border-brand-gold/20 text-brand-bone font-sans text-[15px] p-4 rounded-[2px] appearance-none outline-none focus:border-brand-gold transition-colors"
+          className="w-full bg-brand-dark border border-brand-gold/20 text-brand-bone font-sans text-[15px] p-4 rounded-2xl appearance-none outline-none focus:border-brand-gold transition-colors"
         >
           {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
         </select>
         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
           <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 1.5L6 6.5L11 1.5" stroke="#D4AF63" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M1 1.5L6 6.5L11 1.5" stroke="#D4AF63" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       </div>
     </div>
   );
-
   const renderSizeInputs = (type: string) => {
     switch (type) {
       case 'patio':
@@ -283,12 +425,10 @@ export default function Estimator() {
       case 'turf':
         return renderSlider(type, 'Approximate Square Footage', 100, 2000, v => `${v} sq ft`);
       case 'wall':
-        return (
-          <>
-            {renderSlider('wall', 'Wall Length', 10, 200, v => `${v} ln ft`)}
-            {renderDropdown('wallHeight', 'Wall Height', ['Under 2ft', '2-4ft', '4-6ft', 'Over 6ft'])}
-          </>
-        );
+        return (<>
+          {renderSlider('wall', 'Wall Length', 10, 200, v => `${v} ln ft`)}
+          {renderDropdown('wallHeight', 'Wall Height', ['Under 2ft', '2-4ft', '4-6ft', 'Over 6ft'])}
+        </>);
       case 'steps':
         return renderSlider('steps', 'Number of Steps', 2, 20, v => `${v} steps`);
       case 'kitchen':
@@ -302,58 +442,66 @@ export default function Estimator() {
     }
   };
 
-  const nextStep = () => {
-    if (step === 1 && !projectType) return;
-    if (step === 1 && projectType === 'full' && selectedElements.length === 0) return;
-    setStep(s => s + 1);
+  const canAdvance = () => {
+    if (step === 1) {
+      if (!projectType) return false;
+      if (projectType === 'full' && selectedElements.length === 0) return false;
+    }
+    return true;
   };
 
-  const prevStep = () => setStep(s => s - 1);
+  const nextStep = () => { if (canAdvance() && step < TOTAL_STEPS) setStep(s => s + 1); };
+  const prevStep = () => setStep(s => Math.max(1, s - 1));
+
+  const selectedLocation = ESTIMATOR_LOCATIONS.find(l => l.key === location) || ESTIMATOR_LOCATIONS[0];
+  const showBrandPicker = isHardscape || isDeck || projectType === 'full';
+
+  // Filter brands by tier and use case (driveway vs patio)
+  const eligiblePavers = sortPaversForDisplay(
+    PAVER_BRANDS.filter(p => p.tier === tier && (p.useCase === 'patio' || p.useCase === 'patio-driveway' || p.useCase === 'driveway'))
+  );
+  const eligibleDecks = DECK_BRANDS.filter(d => tier === 'premium' ? true : d.id === 'timbertech-prime');
 
   return (
-    <div className="w-full max-w-[860px] mx-auto px-4 py-16 md:py-24">
-      <div className="text-center mb-16">
-        <div className="font-sans text-xs tracking-[0.3em] uppercase text-brand-gold mb-6">
-          ESTIMATE YOUR PROJECT
+    <div className="w-full max-w-[920px] mx-auto px-4 py-16 md:py-24" id="estimator">
+      <div className="text-center mb-14">
+        <div className="font-sans text-[11px] tracking-[0.3em] uppercase text-brand-gold mb-5">
+          Estimate Your Project
         </div>
-        <h2 className="font-display text-4xl md:text-6xl leading-[1.2] mb-6 text-brand-bone">
-          What Will Your Project Cost?
+        <h2 className="font-display text-5xl md:text-7xl leading-[1.05] mb-6 text-brand-bone tracking-tight">
+          What will yours <span className="italic text-brand-gold">cost?</span>
         </h2>
-        <p className="font-sans font-light text-base text-brand-muted max-w-lg mx-auto leading-[1.8]">
-          Answer a few questions and get a real ballpark — instantly. No signup, no spam, no obligation.
+        <p className="font-sans font-light text-[17px] text-brand-muted max-w-xl mx-auto leading-[1.6]">
+          Real numbers, real materials, real Simcoe County pricing. No signup to see your range.
         </p>
       </div>
 
-      <div className="relative bg-brand-black border border-brand-gold/10 rounded-[2px] p-6 md:p-12 overflow-hidden">
-        {/* Step Indicator */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-brand-dark">
-          <motion.div 
-            className="h-full bg-brand-gold"
-            initial={{ width: '20%' }}
-            animate={{ width: `${(step / 5) * 100}%` }}
-            transition={{ duration: 0.3 }}
+      <div className="relative bg-gradient-to-b from-white/[0.10] to-white/[0.03] backdrop-blur-2xl border border-white/25 rounded-3xl p-7 md:p-14 overflow-hidden shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)]">
+        {/* Progress bar */}
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-white/5 rounded-t-3xl overflow-hidden">
+          <motion.div className="h-full bg-gradient-to-r from-brand-gold/80 via-brand-gold to-brand-gold/80"
+            initial={{ width: '14%' }}
+            animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+            transition={{ type: 'spring', stiffness: 90, damping: 20 }}
           />
         </div>
-        <div className="flex justify-between items-center mb-12 mt-4">
-          {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="flex items-center">
-              <div className={cn(
-                "w-2 h-2 rounded-full transition-colors duration-300",
-                step === i ? "bg-brand-gold" : step > i ? "bg-brand-gold/50" : "bg-brand-dark"
-              )} />
-            </div>
+        <div className="flex justify-between items-center mb-12 mt-5">
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(i => (
+            <motion.div
+              key={i}
+              animate={{ scale: step === i ? 1.4 : 1 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className={cn(
+                "w-1.5 h-1.5 rounded-full transition-colors duration-300",
+                step === i ? "bg-brand-gold shadow-[0_0_12px_rgba(212,175,99,0.6)]" : step > i ? "bg-brand-gold/60" : "bg-white/30"
+              )}
+            />
           ))}
         </div>
 
         <AnimatePresence mode="wait">
           {step === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
+            <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
               <h3 className="font-display text-3xl text-brand-bone mb-8">What are you looking to build?</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {PROJECT_TYPES.map(pt => {
@@ -367,18 +515,14 @@ export default function Estimator() {
                         if (pt.id !== 'full') setSelectedElements([]);
                       }}
                       className={cn(
-                        "group flex items-center gap-4 p-6 rounded-[2px] border transition-all duration-200 cursor-pointer",
-                        isSelected 
-                          ? "bg-brand-gold/5 border-brand-gold" 
-                          : "bg-brand-dark border-brand-gold/15 hover:border-brand-gold/50 hover:-translate-y-[2px]"
+                        "group flex items-center gap-4 p-6 rounded-2xl border transition-all duration-200 cursor-pointer",
+                        isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12] hover:-translate-y-[2px] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)]"
                       )}
                     >
-                      <div className="text-brand-gold">
-                        <Icon size={24} strokeWidth={1.5} />
-                      </div>
+                      <div className="text-brand-gold"><Icon size={24} strokeWidth={1.5} /></div>
                       <div>
                         <div className="font-sans text-[13px] uppercase text-brand-bone tracking-wide mb-1">{pt.label}</div>
-                        <div className="font-sans text-[12px] font-light text-brand-muted">{pt.desc}</div>
+                        <div className="font-sans text-[12px] font-normal text-brand-bonewhite/80">{pt.desc}</div>
                       </div>
                     </div>
                   );
@@ -388,15 +532,8 @@ export default function Estimator() {
           )}
 
           {step === 2 && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
+            <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
               <h3 className="font-display text-3xl text-brand-bone mb-8">Let's talk size and scope.</h3>
-              
               {projectType === 'full' ? (
                 <div className="space-y-8">
                   <p className="font-sans text-[13px] text-brand-muted mb-6">Select all the elements you want to include in your backyard transformation:</p>
@@ -406,15 +543,13 @@ export default function Estimator() {
                         key={pt.id}
                         onClick={() => toggleElement(pt.id)}
                         className={cn(
-                          "flex items-center gap-4 p-4 rounded-[2px] border transition-all duration-200 cursor-pointer",
-                          selectedElements.includes(pt.id)
-                            ? "bg-brand-gold/10 border-brand-gold"
-                            : "bg-brand-dark border-brand-gold/15 hover:border-brand-gold/50"
+                          "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
+                          selectedElements.includes(pt.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
                         )}
                       >
                         <div className={cn(
-                          "w-5 h-5 rounded-[2px] border flex items-center justify-center transition-colors",
-                          selectedElements.includes(pt.id) ? "bg-brand-gold border-brand-gold" : "border-brand-gold/30"
+                          "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                          selectedElements.includes(pt.id) ? "bg-brand-gold border-brand-gold" : "border-brand-gold/60"
                         )}>
                           {selectedElements.includes(pt.id) && <Check size={14} className="text-brand-black" />}
                         </div>
@@ -422,12 +557,11 @@ export default function Estimator() {
                       </div>
                     ))}
                   </div>
-                  
                   {selectedElements.length > 0 && (
                     <div className="pt-8 border-t border-brand-gold/10 space-y-12">
                       <h4 className="font-display text-2xl text-brand-bone">Configure Sizes</h4>
                       {selectedElements.map(el => (
-                        <div key={el} className="bg-brand-dark/50 p-6 rounded-[2px] border border-brand-gold/5">
+                        <div key={el} className="bg-white/[0.03] p-6 rounded-2xl border border-white/8">
                           <h5 className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold mb-6">
                             {PROJECT_TYPES.find(p => p.id === el)?.label}
                           </h5>
@@ -438,39 +572,28 @@ export default function Estimator() {
                   )}
                 </div>
               ) : (
-                <div className="max-w-xl">
-                  {renderSizeInputs(projectType!)}
-                </div>
+                <div className="max-w-xl">{renderSizeInputs(projectType!)}</div>
               )}
             </motion.div>
           )}
 
           {step === 3 && (
-            <motion.div
-              key="step3"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
+            <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
               <h3 className="font-display text-3xl text-brand-bone mb-8">Any special site conditions?</h3>
-              <p className="font-sans text-[13px] text-brand-muted mb-8">Select any that apply to your property. These can affect labour time and equipment needs.</p>
-              
+              <p className="font-sans text-[13px] text-brand-muted mb-8">Select any that apply. These affect labour time, equipment, and final pricing.</p>
               <div className="space-y-4">
                 {CONDITIONS.map(cond => (
                   <div
                     key={cond.id}
                     onClick={() => toggleCondition(cond.id)}
                     className={cn(
-                      "flex items-center gap-4 p-5 rounded-[2px] border transition-all duration-200 cursor-pointer",
-                      conditions[cond.id]
-                        ? "bg-brand-gold/10 border-brand-gold"
-                        : "bg-brand-dark border-brand-gold/20 hover:border-brand-gold/50"
+                      "flex items-center gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer",
+                      conditions[cond.id] ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
                     )}
                   >
                     <div className={cn(
-                      "w-5 h-5 rounded-[2px] border flex items-center justify-center transition-colors",
-                      conditions[cond.id] ? "bg-brand-gold border-brand-gold" : "border-brand-gold/30"
+                      "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                      conditions[cond.id] ? "bg-brand-gold border-brand-gold" : "border-brand-gold/60"
                     )}>
                       {conditions[cond.id] && <Check size={14} className="text-brand-black" />}
                     </div>
@@ -482,129 +605,319 @@ export default function Estimator() {
           )}
 
           {step === 4 && (
-            <motion.div
-              key="step4"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <h3 className="font-display text-3xl text-brand-bone mb-8">Material Preference</h3>
-              <p className="font-sans text-[13px] text-brand-muted mb-12">This helps us set the baseline for your estimate. You can see all tiers in the final results.</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {MATERIALS.map(mat => (
-                  <div
-                    key={mat.id}
-                    onClick={() => setMaterial(mat.id)}
+            <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+              <div className="flex items-center gap-3 mb-8">
+                <MapPin size={22} className="text-brand-gold" strokeWidth={1.5} />
+                <h3 className="font-display text-3xl text-brand-bone">Where's the project?</h3>
+              </div>
+              <p className="font-sans text-[13px] text-brand-muted mb-8">
+                We localize your estimate by delivery zone and crew travel. {selectedLocation.projects2025 > 0 ? `We've completed ${selectedLocation.projects2025} projects in ${selectedLocation.name} in 2025.` : ''}
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {ESTIMATOR_LOCATIONS.map(loc => (
+                  <button
+                    key={loc.key}
+                    type="button"
+                    onClick={() => setLocation(loc.key)}
                     className={cn(
-                      "relative flex flex-col p-8 rounded-[2px] border transition-all duration-200 cursor-pointer",
-                      material === mat.id
-                        ? "bg-brand-gold/10 border-brand-gold"
-                        : "bg-brand-dark border-brand-gold/15 hover:border-brand-gold/50 hover:-translate-y-[2px]",
-                      mat.id === 'better' && material !== 'better' && "border-brand-gold/40"
+                      "px-5 py-4 rounded-2xl border text-left transition-all duration-200",
+                      location === loc.key ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
                     )}
                   >
-                    {mat.badge && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-gold text-brand-black font-sans text-[9px] uppercase tracking-widest px-3 py-1 rounded-[2px] font-medium">
-                        {mat.badge}
-                      </div>
+                    <div className="font-sans text-[13px] text-brand-bone">{loc.name}</div>
+                    {loc.projects2025 > 0 ? (
+                      <div className="font-sans text-[10px] text-brand-muted mt-1">{loc.projects2025} projects · 2025</div>
+                    ) : (
+                      <div className="font-sans text-[10px] text-brand-muted mt-1">Outside core area</div>
                     )}
-                    <h4 className="font-display text-2xl text-brand-bone mb-3 text-center">{mat.label}</h4>
-                    <p className="font-sans text-[12px] font-light text-brand-muted text-center leading-[1.6]">{mat.desc}</p>
-                  </div>
+                  </button>
                 ))}
               </div>
             </motion.div>
           )}
 
           {step === 5 && (
-            <motion.div
-              key="step5"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4 }}
-            >
-              <h3 className="font-display text-4xl text-brand-bone mb-12 text-center">Your Estimated Investment</h3>
-              
-              <div className="flex flex-col md:flex-row gap-6 mb-16">
-                {[
-                  { id: 'good', label: 'Premium Standard', data: estimates.good, desc: ['Standard premium materials', 'Efficient, clean design', 'Built to last'] },
-                  { id: 'better', label: 'Elevated Design', data: estimates.better, desc: ['Upgraded materials', 'Added design complexity', 'Standout results'], featured: true },
-                  { id: 'best', label: 'Signature Build', data: estimates.best, desc: ['Porcelain or natural stone', 'Full premium collection', 'Custom architectural details'] }
-                ].map((tier) => (
-                  <div
-                    key={tier.id}
+            <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+              <h3 className="font-display text-3xl text-brand-bone mb-3">Material preference</h3>
+              <p className="font-sans text-[13px] text-brand-muted mb-8">Pick a tier first, then a specific brand. Real Carr Landscape Depot pricing.</p>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+                {TIERS.map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTier(t.id)}
                     className={cn(
-                      "flex-1 flex flex-col p-8 rounded-[2px] border transition-all duration-300",
-                      tier.featured ? "bg-brand-dark border-brand-gold shadow-[0_10px_40px_rgba(212,175,99,0.1)] md:-mt-4 md:mb-4" : "bg-brand-dark border-brand-gold/15",
-                      tier.id === 'best' && "border-brand-gold/40",
-                      material === tier.id && !tier.featured && "border-brand-gold/50 bg-brand-gold/5"
+                      "relative p-4 rounded-2xl border text-left transition-all duration-200",
+                      tier === t.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
                     )}
                   >
-                    <div className="font-sans text-xs uppercase tracking-[0.2em] text-brand-muted mb-4 text-center">
-                      {tier.label}
+                    {t.badge && (
+                      <div className="absolute -top-2 left-3 bg-brand-gold text-brand-black font-sans text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-2xl font-medium">
+                        {t.badge}
+                      </div>
+                    )}
+                    <div className="font-display text-lg text-brand-bone mb-1">{t.label}</div>
+                    <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80 leading-snug">{t.sub}</div>
+                  </button>
+                ))}
+              </div>
+
+              {showBrandPicker && (isHardscape || (projectType === 'full' && !selectedElements.every(e => e === 'deck'))) && eligiblePavers.length > 0 && (
+                <div className="mb-8">
+                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Hardscape Brand</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {eligiblePavers.map(p => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setPaverBrandId(p.id)}
+                        className={cn(
+                          "relative p-4 rounded-2xl border text-left transition-all duration-200",
+                          paverBrandId === p.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
+                        )}
+                      >
+                        {p.recommended && (
+                          <div className="absolute -top-2.5 left-4 bg-brand-gold text-brand-black font-sans text-[9px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-medium shadow-[0_4px_12px_rgba(212,175,99,0.4)]">
+                            Recommended
+                          </div>
+                        )}
+                        <div className="flex items-baseline justify-between gap-2 mb-1 mt-1">
+                          <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold">{p.brand}</span>
+                          <span className="font-display text-[13px] text-brand-bone">${p.retailPerSqft}/sqft</span>
+                        </div>
+                        <div className="font-sans text-[13px] text-brand-bone mb-1">{p.product}</div>
+                        <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80">{p.description}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(isDeck || (projectType === 'full' && selectedElements.includes('deck'))) && eligibleDecks.length > 0 && (
+                <div className="mb-2">
+                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Decking Brand</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {eligibleDecks.map(d => (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => setDeckBrandId(d.id)}
+                        className={cn(
+                          "p-4 rounded-2xl border text-left transition-all duration-200",
+                          deckBrandId === d.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
+                        )}
+                      >
+                        <div className="flex items-baseline justify-between gap-2 mb-1">
+                          <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold">{d.brand}</span>
+                          <span className="font-display text-[13px] text-brand-bone">${d.retailPerSqft}/sqft</span>
+                        </div>
+                        <div className="font-sans text-[13px] text-brand-bone mb-1">{d.product}</div>
+                        <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80">{d.description}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {step === 6 && (
+            <motion.div key="step6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+              <h3 className="font-display text-3xl text-brand-bone mb-3">Add-ons & extras</h3>
+              <p className="font-sans text-[13px] text-brand-muted mb-8">Optional. Each item adds a real line to your estimate.</p>
+
+              <div className="space-y-3 mb-10">
+                {ADD_ONS.map(a => (
+                  <div
+                    key={a.id}
+                    onClick={() => toggleAddOn(a.id)}
+                    className={cn(
+                      "flex items-start gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer",
+                      addOns.includes(a.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
+                    )}
+                  >
+                    <div className={cn(
+                      "mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0",
+                      addOns.includes(a.id) ? "bg-brand-gold border-brand-gold" : "border-brand-gold/60"
+                    )}>
+                      {addOns.includes(a.id) && <Check size={14} className="text-brand-black" />}
                     </div>
-                    <div className="font-display text-3xl lg:text-5xl text-brand-gold mb-6 text-center">
-                      ${(tier.data.priceLow / 1000).toFixed(0)}k – ${(tier.data.priceHigh / 1000).toFixed(0)}k
-                    </div>
-                    <ul className="space-y-3 mb-8 flex-1">
-                      {tier.desc.map((d, i) => (
-                        <li key={i} className="flex items-start gap-3 text-brand-bone font-sans text-[13px] font-light">
-                          <div className="mt-1 w-1 h-1 bg-brand-gold rounded-full shrink-0" />
-                          <span>{d}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="pt-6 border-t border-brand-gold/10 font-sans text-[12px] font-light text-brand-muted italic text-center">
-                      Estimated {tier.data.daysLow}–{tier.data.daysHigh} days on-site
+                    <div className="flex-1">
+                      <div className="flex items-baseline justify-between gap-3 mb-1">
+                        <span className="font-sans text-[13px] text-brand-bone">{a.label}</span>
+                        <span className="font-display text-[13px] text-brand-gold whitespace-nowrap">+{fmt(a.costLow)}–{fmt(a.costHigh)}</span>
+                      </div>
+                      <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80 leading-relaxed">{a.description}</div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="text-center max-w-2xl mx-auto bg-brand-dark p-6 md:p-8 rounded-[2px] border border-brand-gold/10">
-                <p className="font-display text-2xl md:text-4xl text-brand-bone mb-6">
-                  These are ballpark estimates. <br/><span className="text-brand-gold italic">Every property is different.</span>
+              {/* Photo upload */}
+              <div className="border-t border-brand-gold/10 pt-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <ImageIcon size={16} className="text-brand-gold" strokeWidth={1.5} />
+                  <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">Tighten Your Estimate</span>
+                </div>
+                <h4 className="font-display text-xl text-brand-bone mb-2">Upload yard photos (optional)</h4>
+                <p className="font-sans text-[12px] font-normal text-brand-bonewhite/80 mb-5 leading-relaxed">
+                  One photo of the project area helps us account for grade, access, and existing surfaces — drops your confidence range another 2%.
                 </p>
-                <p className="font-sans text-base font-light text-brand-muted mb-10 leading-[1.8]">
-                  A discovery call gives you exact numbers — materials, timeline, and scope — before any work begins. <span className="text-brand-gold font-normal">15 minutes, free, no pressure.</span>
-                </p>
-                <div className="flex flex-col items-center justify-center gap-6">
-                  <a href="#process" className="btn-primary w-full md:w-auto py-5 px-12 tracking-widest">Book Free Discovery Call →</a>
-                  <a href="tel:7055003581" className="font-sans text-sm text-brand-gold hover:text-brand-gold/80 transition-colors flex items-center gap-3">
-                    <Phone size={16} />
-                    <span>Speak with a Designer: 705-500-3581</span>
-                  </a>
+                {photoFile ? (
+                  <div className="bg-white/[0.05] border border-brand-gold/30 rounded-2xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <ImageIcon size={18} className="text-brand-gold shrink-0" strokeWidth={1.5} />
+                      <div className="min-w-0">
+                        <div className="font-sans text-[13px] text-brand-bone truncate">{photoFile.name}</div>
+                        <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80">{(photoFile.size / 1024 / 1024).toFixed(1)} MB</div>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => setPhotoFile(null)} className="p-2 text-brand-muted hover:text-brand-bone transition-colors">
+                      <X size={16} strokeWidth={1.5} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="block bg-white/[0.03] border border-dashed border-white/15 rounded-2xl p-6 hover:bg-white/[0.05] text-center cursor-pointer hover:border-brand-gold/60 transition-colors">
+                    <input type="file" accept="image/*" onChange={onPhotoChange} className="hidden" />
+                    <Upload size={20} className="text-brand-gold mx-auto mb-2" strokeWidth={1.5} />
+                    <div className="font-sans text-[13px] text-brand-bone">Drop a photo or click to upload</div>
+                    <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80 mt-1">JPG, PNG, HEIC · up to 10 MB</div>
+                  </label>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {step === 7 && estimate.lines && (
+            <motion.div key="step7" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
+              <EstimateBreakdown
+                excavation={estimate.lines.excavation}
+                materials={estimate.lines.materials}
+                labour={estimate.lines.labour}
+                disposal={estimate.lines.disposal}
+                restoration={estimate.lines.restoration}
+                totalLow={estimate.totalLow}
+                totalHigh={estimate.totalHigh}
+                confidencePercent={confidence}
+                brandName={isDeck ? `${selectedDeck.brand} ${selectedDeck.product}` : `${selectedPaver.brand} ${selectedPaver.product}`}
+                sqft={totalSqft}
+                city={selectedLocation.name}
+              />
+
+              {addOns.length > 0 && (
+                <div className="mt-8 bg-gradient-to-b from-white/[0.05] to-white/[0.01] backdrop-blur-xl border border-white/10 rounded-3xl p-6">
+                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Selected Add-ons</div>
+                  <div className="divide-y divide-brand-gold/10">
+                    {addOns.map(aid => {
+                      const a = ADD_ONS.find(x => x.id === aid);
+                      if (!a) return null;
+                      return (
+                        <div key={aid} className="py-3 flex items-baseline justify-between gap-3">
+                          <span className="font-sans text-[13px] text-brand-bone">{a.label}</span>
+                          <span className="font-display text-[14px] text-brand-gold whitespace-nowrap">+{fmt(a.costLow)} – {fmt(a.costHigh)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-10 grid lg:grid-cols-2 gap-6">
+                <EstimateLeadCapture estimate={{
+                  projectType: projectType || '',
+                  selectedElements,
+                  totalLow: estimate.totalLow,
+                  totalHigh: estimate.totalHigh,
+                  brandName: isDeck ? `${selectedDeck.brand} ${selectedDeck.product}` : `${selectedPaver.brand} ${selectedPaver.product}`,
+                  city: selectedLocation.name,
+                  sqft: totalSqft,
+                  addOns,
+                  hasPhotos: !!photoFile,
+                  conditions: Object.entries(conditions).filter(([, v]) => v).map(([k]) => k),
+                }} />
+                <div className="bg-gradient-to-b from-white/[0.05] to-white/[0.01] backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col justify-center">
+                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-3">Project Timeline</div>
+                  <div className="font-display text-3xl text-brand-bone mb-2">
+                    {estimate.days.low}–{estimate.days.high} days on-site
+                  </div>
+                  <div className="font-sans text-[12px] font-normal text-brand-bonewhite/80 leading-relaxed mb-6">
+                    Project start typically 4–8 weeks from contract signing during peak season (May–Oct).
+                  </div>
+                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-3">Confidence</div>
+                  <div className="font-display text-3xl text-brand-bone mb-2">±{confidence}%</div>
+                  <div className="font-sans text-[12px] font-normal text-brand-bonewhite/80 leading-relaxed">
+                    Range tightens with site visit. We'll lock to ±5% after measurement.
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-16 text-center">
+              <div className="mt-12">
+                <EstimateBookingCTA />
+              </div>
+
+              <div className="mt-12 text-center">
                 <button onClick={() => setStep(1)} className="btn-ghost text-[9px] py-3 px-6">Start Over</button>
               </div>
 
-              <p className="mt-12 font-sans text-xs font-light text-brand-dim text-center max-w-3xl mx-auto leading-[1.6]">
-                Estimates are based on typical project parameters for Simcoe County. <span className="text-brand-gold font-normal">{(projectType === 'deck' || selectedElements.includes('deck')) ? "Decking projects require a minimum $25,000 investment." : "Hardscape projects require a minimum $20,000 investment."}</span> Final pricing depends on site conditions, material availability, and project scope. Book a free discovery call for an accurate architectural quote.
+              <p className="mt-8 font-sans text-xs font-normal text-brand-bonewhite/80 text-center max-w-3xl mx-auto leading-[1.6]">
+                Estimates use 2026 Carr Landscape Depot pricing for Simcoe County. <span className="text-brand-gold font-normal">{isDeck ? "Decking projects require a $25,000 minimum." : "Hardscape projects require a $20,000 minimum."}</span> Final pricing depends on site measurement, material availability, and design complexity.
               </p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {step < 5 && (
-          <div className="mt-12 pt-8 border-t border-brand-gold/10 flex justify-between items-center">
+        {step < TOTAL_STEPS && (
+          <div className="mt-14 pt-8 border-t border-white/10 flex justify-between items-center gap-4">
             {step > 1 ? (
-              <button onClick={prevStep} className="btn-ghost">← Back</button>
+              <button onClick={prevStep} className="btn-ghost !rounded-full !border-white/15 hover:!border-white/30">← Back</button>
             ) : <div />}
-            <button 
-              onClick={nextStep} 
-              className={cn("btn-primary", (step === 1 && !projectType) || (step === 1 && projectType === 'full' && selectedElements.length === 0) ? "opacity-50 cursor-not-allowed" : "")}
-              disabled={(step === 1 && !projectType) || (step === 1 && projectType === 'full' && selectedElements.length === 0)}
+            <button
+              onClick={nextStep}
+              className={cn(
+                "btn-primary !rounded-full px-10 shadow-[0_8px_24px_-8px_rgba(212,175,99,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(212,175,99,0.55)] transition-shadow",
+                !canAdvance() ? "opacity-40 cursor-not-allowed" : ""
+              )}
+              disabled={!canAdvance()}
             >
-              Continue →
+              {step === 6 ? 'See Estimate →' : 'Continue →'}
             </button>
           </div>
         )}
       </div>
+
+      {/* Mobile sticky bar showing running estimate */}
+      {step >= 2 && step < TOTAL_STEPS && estimate.totalLow > 0 && (
+        <MobileStickyBar
+          low={estimate.totalLow}
+          high={estimate.totalHigh}
+          onContinue={() => setStep(7)}
+        />
+      )}
     </div>
+  );
+}
+
+function MobileStickyBar({ low, high, onContinue }: { low: number; high: number; onContinue: () => void }) {
+  return (
+    <motion.div
+      initial={{ y: 80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-brand-gold/30 px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
+    >
+      <div className="min-w-0">
+        <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">Running Estimate</div>
+        <div className="font-display text-lg text-brand-bone truncate">
+          ${(low / 1000).toFixed(0)}k – ${(high / 1000).toFixed(0)}k
+        </div>
+      </div>
+      <button
+        onClick={onContinue}
+        className="bg-brand-gold text-brand-black font-sans text-[11px] uppercase tracking-wider px-4 py-3 rounded-2xl font-medium shrink-0"
+      >
+        See Full Breakdown →
+      </button>
+    </motion.div>
   );
 }

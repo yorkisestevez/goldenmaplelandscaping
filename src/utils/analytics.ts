@@ -7,10 +7,14 @@
  *   VITE_GOOGLE_ADS_ID            — e.g. "AW-1234567890"
  *   VITE_GOOGLE_ADS_LEAD_LABEL    — conversion action label for the "Lead" event,
  *                                   formatted as "AW-1234567890/AbCdEfGhIj"
+ *   VITE_CLARITY_ID               — Microsoft Clarity project ID, e.g. "qxz1abc2de"
+ *                                   Enables session recordings + heatmaps.
  *
  * Every function no-ops cleanly when the relevant ID is missing — safe to call
  * unconditionally from components.
  */
+
+import { pushPage, pushClick } from './behavior';
 
 declare global {
   interface Window {
@@ -27,6 +31,7 @@ const META_PIXEL_ID = (env.VITE_META_PIXEL_ID as string | undefined)?.trim() || 
 const GOOGLE_ADS_ID = (env.VITE_GOOGLE_ADS_ID as string | undefined)?.trim() || '';
 const GOOGLE_ADS_LEAD_LABEL =
   (env.VITE_GOOGLE_ADS_LEAD_LABEL as string | undefined)?.trim() || '';
+const CLARITY_ID = (env.VITE_CLARITY_ID as string | undefined)?.trim() || '';
 
 const isDev = env.DEV === true;
 const isBrowser = typeof window !== 'undefined';
@@ -79,12 +84,27 @@ export function initAnalytics(): void {
     window.fbq?.('init', META_PIXEL_ID);
   }
 
+  // ---- Microsoft Clarity (heatmaps + session recordings) ----
+  if (CLARITY_ID) {
+    /* eslint-disable */
+    (function (c: any, l: Document, a: string, r: string, i: string) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+      const t = l.createElement(r) as HTMLScriptElement;
+      t.async = true;
+      t.src = 'https://www.clarity.ms/tag/' + i;
+      const y = l.getElementsByTagName(r)[0];
+      y.parentNode!.insertBefore(t, y);
+    })(window, document, 'clarity', 'script', CLARITY_ID);
+    /* eslint-enable */
+  }
+
   if (isDev) {
     // eslint-disable-next-line no-console
     console.log('[analytics] initialized', {
       ga4: GA4_ID || '(none)',
       meta: META_PIXEL_ID || '(none)',
       googleAds: GOOGLE_ADS_ID || '(none)',
+      clarity: CLARITY_ID || '(none)',
     });
   }
 }
@@ -100,6 +120,7 @@ export function trackPageView(path: string, title?: string): void {
     });
   }
   window.fbq?.('track', 'PageView');
+  pushPage(path, title);
   if (isDev) console.log('[analytics] pageview', path);
 }
 
@@ -110,11 +131,13 @@ export function trackPageView(path: string, title?: string): void {
  * @param formName — used as the GA4 form_name parameter and Meta content_category
  * @param tier     — funnel position ("high-intent" or "top-of-funnel")
  * @param value    — optional monetary value of the lead, in CAD
+ * @param eventId  — UUID shared with the CAPI server-side event for Meta dedup
  */
 export function trackLead(
   formName: string,
   tier: 'high-intent' | 'top-of-funnel' = 'high-intent',
   value?: number,
+  eventId?: string,
 ): void {
   if (!isBrowser) return;
 
@@ -127,12 +150,17 @@ export function trackLead(
     });
   }
 
-  window.fbq?.('track', 'Lead', {
-    content_name: formName,
-    content_category: tier,
-    currency: 'CAD',
-    value: value || 0,
-  });
+  window.fbq?.(
+    'track',
+    'Lead',
+    {
+      content_name: formName,
+      content_category: tier,
+      currency: 'CAD',
+      value: value || 0,
+    },
+    eventId ? { eventID: eventId } : undefined,
+  );
 
   if (GOOGLE_ADS_LEAD_LABEL) {
     window.gtag?.('event', 'conversion', {
@@ -142,7 +170,7 @@ export function trackLead(
     });
   }
 
-  if (isDev) console.log('[analytics] trackLead', { formName, tier, value });
+  if (isDev) console.log('[analytics] trackLead', { formName, tier, value, eventId });
 }
 
 /** Generic engagement event for non-lead actions (PDF download, video play, etc). */
@@ -151,5 +179,7 @@ export function trackEngagement(action: string, label?: string): void {
   if (GA4_ID) {
     window.gtag?.('event', action, { event_label: label });
   }
+  window.fbq?.('trackCustom', action, label ? { label } : undefined);
+  if (label) pushClick(label);
   if (isDev) console.log('[analytics] engagement', action, label);
 }

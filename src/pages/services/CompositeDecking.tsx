@@ -32,6 +32,7 @@ export default function CompositeDecking() {
       <SEO 
         title="Composite Decking Installation Barrie"
         description="Low-maintenance composite decks built for Barrie winters. TimberTech & Trex options. Custom designs with lighting & railings. Get your free deck quote."
+        canonical="https://goldenmaplelandscaping.ca/services/composite-decking-barrie"
       />
       
       <section className="section-padding pt-48">
@@ -164,7 +165,10 @@ export default function CompositeDecking() {
           <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
             Imagine a deck that looks stunning in year one and still looks stunning in year twenty — without you lifting a finger. That's exactly what we build. Let's make it happen for your home.
           </p>
-          <Link to="/contact" className="btn-primary px-20">Design My Dream Deck</Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link to="/cost-estimator?type=deck" className="btn-primary px-12 py-4">See Your Deck Cost Range</Link>
+            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or Book a Discovery Call →</Link>
+          </div>
         </div>
       </section>
 

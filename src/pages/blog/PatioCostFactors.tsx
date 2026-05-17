@@ -10,7 +10,7 @@ export default function PatioCostFactors() {
       category="Investment"
       date="March 10, 2026"
       readTime="7 min read"
-      heroImage="/images/projects/patio-pergola.png"
+      heroImage="/images/projects/patio-pergola.jpg"
     >
       <p>If you're planning a backyard upgrade, an interlocking stone patio is usually the foundation of the design. It's where the dining table sits, the fire pit rests, and the entertaining happens.</p>
 

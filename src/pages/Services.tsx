@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Grid, Hexagon, AlignJustify, ListTree, Layout, ChefHat, Flame, Sun, Leaf, Lightbulb, Map, ArrowRight, Layers } from 'lucide-react';
 import SEO from '../components/SEO';
+import Reveal from '../components/Reveal';
 
 const SERVICE_CARDS = [
   {
@@ -68,11 +69,12 @@ export default function Services() {
       <SEO 
         title="Landscaping Services in Barrie"
         description="Interlocking stone, composite decking, retaining walls & landscape design. Premium outdoor construction for Barrie & Simcoe County homeowners. View our services."
+        canonical="https://goldenmaplelandscaping.ca/services"
       />
       
       <section className="section-padding pt-48">
         <div className="container-custom">
-          <div className="text-center max-w-3xl mx-auto mb-32">
+          <Reveal className="text-center max-w-3xl mx-auto mb-32">
             <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
               Our Expertise
             </span>
@@ -83,7 +85,7 @@ export default function Services() {
             <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
               From interlocking stone driveways to complex multi-level retaining walls, we provide the engineering and craftsmanship your property deserves.
             </p>
-          </div>
+          </Reveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-40">
             {SERVICE_CARDS.map((service, idx) => (
@@ -126,7 +128,7 @@ export default function Services() {
       </section>
 
       <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
-        <div className="container-custom text-center">
+        <Reveal className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-8xl font-light mb-20 leading-tight">
             The Golden Maple <br />
             <span className="text-brand-gold italic">Standard.</span>
@@ -146,7 +148,7 @@ export default function Services() {
             </div>
           </div>
           <Link to="/contact" className="btn-primary px-16 py-5">Let's Talk About Your Project</Link>
-        </div>
+        </Reveal>
       </section>
     </div>
   );

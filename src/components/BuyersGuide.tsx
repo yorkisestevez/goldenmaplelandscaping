@@ -2,6 +2,32 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Calculator, Calendar, ArrowRight, CheckCircle2, FileText, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getAttributionFields } from '../utils/utmCapture';
+import { getBehaviorFields } from '../utils/behavior';
+import { trackLead } from '../utils/analytics';
+import { genEventId } from '../utils/eventId';
+
+const encodeForm = (data: Record<string, string>) =>
+  Object.keys(data)
+    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
+    .join('&');
+
+async function postToNetlify(form: HTMLFormElement, formName: string, eventId: string): Promise<void> {
+  const fd = new FormData(form);
+  const payload: Record<string, string> = { 'form-name': formName, event_id: eventId };
+  fd.forEach((v, k) => { if (typeof v === 'string') payload[k] = v; });
+  Object.assign(payload, getAttributionFields(), getBehaviorFields());
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.log(`[dev] ${formName} payload (would POST to Netlify):`, payload);
+    return;
+  }
+  await fetch('/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: encodeForm(payload),
+  });
+}
 
 const BuyersGuide = () => {
   const [guideSubmitted, setGuideSubmitted] = useState(false);
@@ -9,17 +35,20 @@ const BuyersGuide = () => {
   const [isGuideLoading, setIsGuideLoading] = useState(false);
   const [isEstimateLoading, setIsEstimateLoading] = useState(false);
 
-  const handleGuideSubmit = async (e: React.FormEvent) => {
+  const handleGuideSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsGuideLoading(true);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    const eventId = genEventId();
+    try {
+      await postToNetlify(e.currentTarget, 'guide-download', eventId);
+      trackLead('buyers-guide-download', 'top-of-funnel', undefined, eventId);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[guide-download] submit failed', err);
+    }
     setIsGuideLoading(false);
     setGuideSubmitted(true);
 
-    // Trigger PDF download after 1 second delay
     setTimeout(() => {
       const link = document.createElement('a');
       link.href = '/downloads/golden-maple-buyers-guide.pdf';
@@ -30,13 +59,17 @@ const BuyersGuide = () => {
     }, 1000);
   };
 
-  const handleEstimateSubmit = async (e: React.FormEvent) => {
+  const handleEstimateSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsEstimateLoading(true);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    const eventId = genEventId();
+    try {
+      await postToNetlify(e.currentTarget, 'estimate-request', eventId);
+      trackLead('estimate-request', 'high-intent', undefined, eventId);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[estimate-request] submit failed', err);
+    }
     setIsEstimateLoading(false);
     setEstimateSubmitted(true);
   };

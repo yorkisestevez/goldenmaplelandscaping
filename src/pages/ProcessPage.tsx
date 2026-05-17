@@ -60,6 +60,7 @@ export default function ProcessPage() {
       <SEO 
         title="Our Process | How We Build"
         description="From first call to final walkthrough — see exactly how Golden Maple plans, designs & builds your outdoor space. No surprises, just precision craftsmanship."
+        canonical="https://goldenmaplelandscaping.ca/process"
       />
       
       <section className="section-padding pt-48">

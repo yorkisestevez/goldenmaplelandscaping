@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { ArrowRight, Shield, Award, CheckCircle, Star, Quote, ChevronRight, Compass, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
 import BuyersGuide from '../components/BuyersGuide';
 import Manifesto from '../components/Manifesto';
 import Process from '../components/Process';
 import { Link } from 'react-router-dom';
-import BeforeAfterSlider from '../components/BeforeAfterSlider';
-import QuickQuote from '../components/QuickQuote';
+import HeroEstimator from '../components/HeroEstimator';
+import Reveal from '../components/Reveal';
+import { trackEngagement } from '../utils/analytics';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -15,46 +15,20 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const HERO_IMAGES = [
-  "/images/projects/best.JPEG",
-  "/images/projects/luxury decking.jpg",
-  "/images/projects/Outdoor living life.jpeg",
-  "/images/projects/cousy fire feature.jpeg"
-];
+const HERO_POSTER = "/images/projects/best.JPEG";
 
 const Hero = () => {
-  const [currentIdx, setCurrentIdx] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIdx((prev) => (prev + 1) % HERO_IMAGES.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
-
   return (
     <section className="relative min-h-[95vh] flex items-center overflow-hidden bg-brand-nearblack">
       <div className="absolute inset-0 z-0">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIdx}
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 0.55, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 2, ease: "easeOut" }}
-            className="absolute inset-0"
-          >
-            <img
-              src={HERO_IMAGES[currentIdx]}
-              alt="Premium landscaping project in Barrie, Ontario by Golden Maple Landscaping"
-              className="w-full h-full object-cover"
-              loading={currentIdx === 0 ? 'eager' : 'lazy'}
-              fetchPriority={currentIdx === 0 ? 'high' : 'auto'}
-              decoding="async"
-              referrerPolicy="no-referrer"
-            />
-          </motion.div>
-        </AnimatePresence>
+        <img
+          src={HERO_POSTER}
+          alt="Premium Golden Maple Landscaping interlocking patio in Barrie"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          className="absolute inset-0 w-full h-full object-cover opacity-55"
+        />
         <div className="absolute inset-0 bg-gradient-to-r from-brand-nearblack via-brand-nearblack/60 to-brand-nearblack/20" />
       </div>
 
@@ -99,36 +73,28 @@ const Hero = () => {
               transition={{ duration: 1, delay: 0.7 }}
               className="flex items-center gap-8"
             >
-              <Link to="/portfolio" className="group flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
-                View Portfolio
+              <Link
+                to="/portfolio"
+                onClick={() => trackEngagement('cta_click', 'view_portfolio')}
+                className="group flex items-center gap-4 text-brand-muted font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
+              >
+                See Recent Work
                 <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-2" />
               </Link>
-              <span className="w-px h-4 bg-brand-dim/30 hidden sm:block" />
-              <Link to="/cost-estimator" className="hidden sm:flex group items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
-                Cost Calculator
-                <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-2" />
-              </Link>
+              <a
+                href="tel:7055003581"
+                onClick={() => trackEngagement('cta_click', 'hero_phone')}
+                className="group flex items-center gap-4 text-brand-muted font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
+              >
+                Or Call (705) 500-3581
+              </a>
             </motion.div>
           </div>
 
-          {/* Hero Quote Form */}
+          {/* Hero — Mini Cost Estimator (qualifies leads through the calculator) */}
           <div className="lg:col-span-5 w-full">
-            <QuickQuote />
+            <HeroEstimator />
           </div>
-        </div>
-
-        {/* Slideshow Progress Dots */}
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-4">
-          {HERO_IMAGES.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentIdx(idx)}
-              className={cn(
-                "w-2 h-2 rounded-full transition-all duration-500",
-                currentIdx === idx ? "bg-brand-gold w-8" : "bg-brand-muted/30"
-              )}
-            />
-          ))}
         </div>
       </div>
     </section>
@@ -210,7 +176,7 @@ const ServicesGrid = () => {
   return (
     <section className="section-padding bg-brand-nearblack">
       <div className="container-custom">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-12 mb-20">
+        <Reveal className="flex flex-col md:flex-row justify-between items-end gap-12 mb-20">
           <div className="max-w-2xl">
             <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
               Our Expertise
@@ -223,7 +189,7 @@ const ServicesGrid = () => {
             View All Services
             <ChevronRight size={18} strokeWidth={1.5} />
           </Link>
-        </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10">
           {services.map((service, idx) => (
@@ -275,15 +241,17 @@ const WhyGoldenMaple = () => {
       <div className="container-custom relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
           <div>
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
-              The Golden Maple Standard
-            </span>
-            <h2 className="font-display text-4xl md:text-7xl font-light leading-tight mb-12">
-              Why your neighbour's <br />
-              <span className="text-brand-gold italic">patio is already sinking.</span>
-            </h2>
+            <Reveal>
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+                The Golden Maple Standard
+              </span>
+              <h2 className="font-display text-4xl md:text-7xl font-light leading-tight mb-12">
+                Why your neighbour's <br />
+                <span className="text-brand-gold italic">patio is already sinking.</span>
+              </h2>
+            </Reveal>
             <div className="space-y-12">
-              <div className="flex gap-8">
+              <Reveal delay={0.1} className="flex gap-8">
                 <div className="w-14 h-14 bg-brand-midsurface flex items-center justify-center rounded-[2px] shrink-0 border border-brand-dim/10">
                   <Compass className="text-brand-gold" size={24} strokeWidth={1.5} />
                 </div>
@@ -293,8 +261,8 @@ const WhyGoldenMaple = () => {
                     Most contractors dig 6-8 inches and call it done. We dig 12-16". That's the difference between a patio that lasts three winters and one that lasts thirty years.
                   </p>
                 </div>
-              </div>
-              <div className="flex gap-8">
+              </Reveal>
+              <Reveal delay={0.2} className="flex gap-8">
                 <div className="w-14 h-14 bg-brand-midsurface flex items-center justify-center rounded-[2px] shrink-0 border border-brand-dim/10">
                   <Shield className="text-brand-gold" size={24} strokeWidth={1.5} />
                 </div>
@@ -304,8 +272,8 @@ const WhyGoldenMaple = () => {
                     WSIB certified. $5 million in liability coverage. Ask your current contractor if they can say the same — most can't. We protect your family's biggest investment like it's our own.
                   </p>
                 </div>
-              </div>
-              <div className="flex gap-8">
+              </Reveal>
+              <Reveal delay={0.3} className="flex gap-8">
                 <div className="w-14 h-14 bg-brand-midsurface flex items-center justify-center rounded-[2px] shrink-0 border border-brand-dim/10">
                   <Award className="text-brand-gold" size={24} strokeWidth={1.5} />
                 </div>
@@ -315,7 +283,7 @@ const WhyGoldenMaple = () => {
                     Our 5-year sink and settlement warranty isn't just a piece of paper. It's our promise that what we build will stay exactly where we put it. We've never had to honour a claim — and that's the point.
                   </p>
                 </div>
-              </div>
+              </Reveal>
             </div>
           </div>
           <div className="relative">
@@ -341,38 +309,68 @@ const WhyGoldenMaple = () => {
 };
 
 const BeforeAfterSection = () => {
+  const features = [
+    {
+      tag: 'Cottage Country',
+      img: '/images/projects/WhatsApp Image 2026-03-20 at 8.12.26 PM.jpeg',
+      alt: 'Lakeside TimberTech composite deck with louvered pergola and glass railing in Simcoe County',
+      title: 'Lakeside composite deck, on the water.',
+      body: 'TimberTech composite over an aluminum frame, a louvered pergola for shade on demand, and a glass railing that gets out of the view. Built to take Simcoe County winters and look the same when the snow melts.',
+      meta: 'TimberTech AZEK · Aluminum pergola · Glass railing',
+    },
+    {
+      tag: 'Barrie Residential',
+      img: '/images/projects/IMG_4826.jpg',
+      alt: 'Permacon paver patio with hand-set diamond inlay and gravel border in Barrie ON',
+      title: 'Side-yard paver patio with a hand-set inlay.',
+      body: 'Permacon pavers with a centred diamond inlay, a gravel drainage border, and a 14-inch open-graded base under everything. The kind of detail that reads quietly from the driveway and holds up for decades.',
+      meta: 'Permacon · 14" structural base · Hand-set inlay',
+    },
+  ];
+
   return (
     <section className="section-padding bg-brand-nearblack">
       <div className="container-custom">
-        <div className="text-center max-w-3xl mx-auto mb-24">
+        <Reveal className="text-center max-w-3xl mx-auto mb-24">
           <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
-            Transformations
+            Recent Builds
           </span>
           <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite">
-            This is what's possible.
+            Two ways to live outside.
           </h2>
+        </Reveal>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 mb-20">
+          {features.map((f, idx) => (
+            <Reveal key={idx} delay={idx * 0.1} className="group flex flex-col">
+              <div className="aspect-[4/3] rounded-[2px] overflow-hidden border border-brand-dim/10 mb-10">
+                <img
+                  src={f.img}
+                  alt={f.alt}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-[1.04]"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-4 block">
+                {f.tag}
+              </span>
+              <h3 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight mb-6">
+                {f.title}
+              </h3>
+              <p className="font-sans text-brand-muted leading-relaxed font-light mb-6">
+                {f.body}
+              </p>
+              <div className="flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-bonewhite/80">
+                <CheckCircle size={14} strokeWidth={1.5} className="text-brand-gold shrink-0" />
+                {f.meta}
+              </div>
+            </Reveal>
+          ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
-          <BeforeAfterSlider 
-            beforeImage="/images/projects/WhatsApp Image 2026-03-20 at 8.12.26 PM.jpeg"
-            afterImage="/images/projects/IMG_4826.jpg"
-          />
-          <div className="flex flex-col justify-center space-y-10">
-            <h3 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight">They almost sold this house. Now they never want to leave.</h3>
-            <p className="font-sans text-brand-muted leading-relaxed font-light">
-              This Barrie family was ready to move. Their backyard was unusable — overgrown, uneven, and an eyesore. We regraded the entire site, installed a 14-inch structural base, and built them the multi-level entertaining space they'd been dreaming about since they bought the home.
-            </p>
-            <ul className="space-y-5">
-              {['Custom Retaining Walls', 'Permeable Paver Installation', 'Integrated Landscape Lighting', 'Natural Stone Accents'].map((item, i) => (
-                <li key={i} className="flex items-center gap-4 font-sans font-normal text-[11px] uppercase tracking-[0.2em] text-brand-bonewhite">
-                  <CheckCircle size={16} strokeWidth={1.5} className="text-brand-gold" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link to="/portfolio" className="btn-ghost w-fit">View More Projects</Link>
-          </div>
-        </div>
+        <Reveal className="text-center">
+          <Link to="/portfolio" className="btn-ghost">View More Projects</Link>
+        </Reveal>
       </div>
     </section>
   );
@@ -400,17 +398,17 @@ const Testimonials = () => {
   return (
     <section className="section-padding bg-brand-surface">
       <div className="container-custom">
-        <div className="text-center max-w-3xl mx-auto mb-24">
+        <Reveal className="text-center max-w-3xl mx-auto mb-24">
           <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
             Real Homeowners. Real Results.
           </span>
           <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite">
             Don't take our word for it.
           </h2>
-        </div>
+        </Reveal>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {reviews.map((review, idx) => (
-            <div key={idx} className="bg-brand-midsurface p-12 rounded-[2px] border border-brand-dim/10 relative">
+            <Reveal key={idx} delay={idx * 0.12} className="bg-brand-midsurface p-12 rounded-[2px] border border-brand-dim/10 relative">
               <Quote size={40} strokeWidth={1} className="text-brand-gold/10 absolute top-10 left-10" />
               <div className="relative z-10">
                 <div className="flex gap-1 mb-8">
@@ -426,7 +424,7 @@ const Testimonials = () => {
                   <p className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mt-1">{review.location}, ON</p>
                 </div>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -447,7 +445,7 @@ const FinalCTA = () => {
             referrerPolicy="no-referrer"
           />
       </div>
-      <div className="container-custom relative z-10 text-center">
+      <Reveal className="container-custom relative z-10 text-center">
         <h2 className="font-display text-4xl md:text-8xl font-light text-brand-bonewhite mb-12 leading-tight">
           This time next year, <br />
           <span className="text-brand-gold italic">you could be living in it.</span>
@@ -465,7 +463,7 @@ const FinalCTA = () => {
         <Link to="/contact" className="btn-primary px-20 py-5">
           Let's Talk About Your Property
         </Link>
-      </div>
+      </Reveal>
     </section>
   );
 };
@@ -501,7 +499,7 @@ const ContractorPainPoints = () => {
   return (
     <section className="section-padding bg-brand-nearblack">
       <div className="container-custom">
-        <div className="max-w-4xl mx-auto text-center mb-24">
+        <Reveal className="max-w-4xl mx-auto text-center mb-24">
           <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
             Sound Familiar?
           </span>
@@ -512,7 +510,7 @@ const ContractorPainPoints = () => {
           <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
             We hear it every week. Homeowners in Barrie who hired someone "affordable" and got sinking stones, ghosted communication, and surprise invoices. We built Golden Maple to be the opposite of that experience.
           </p>
-        </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {points.map((point, idx) => (
@@ -563,11 +561,11 @@ const SocialProofStrip = () => {
       <div className="container-custom">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {stats.map((stat, idx) => (
-            <div key={idx} className="text-center">
+            <Reveal key={idx} delay={idx * 0.1} y={16} className="text-center">
               <span className="font-display text-4xl md:text-5xl font-light text-brand-gold block mb-3">{stat.number}</span>
               <span className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite block mb-2 font-medium">{stat.label}</span>
               <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted font-light">{stat.sub}</span>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -616,9 +614,10 @@ export default function Home() {
 
   return (
     <>
-      <SEO 
+      <SEO
         title="Premium Landscaping & Hardscape Contractor | Barrie ON"
-        description="Transform your outdoor space with Barrie's top-rated hardscape contractor. Interlocking, decking, retaining walls & more. 5-star reviews. Get a free quote."
+        description="Get an instant cost range for your interlocking patio, composite deck, or retaining wall in Barrie & Simcoe County. Real Techo-Bloc, Unilock, Trex pricing — no signup. 5.0 Google rating, $5M insured, 5-year warranty."
+        canonical="https://goldenmaplelandscaping.ca/"
         schema={schema}
       />
       <Hero />

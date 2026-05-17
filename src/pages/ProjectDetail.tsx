@@ -45,8 +45,8 @@ const PROJECT_DATA: Record<string, ProjectData> = {
     year: '2025',
     duration: '4 weeks',
     investment: '$45,000+',
-    heroImg: '/images/projects/patio-pergola.png',
-    images: ['/images/projects/patio-pergola.png'],
+    heroImg: '/images/projects/patio-pergola.jpg',
+    images: ['/images/projects/patio-pergola.jpg'],
     description: 'A modern outdoor living space that bridges the gap between traditional landscaping and contemporary architecture. The homeowners wanted clean geometric lines, a covered area for all-weather entertaining, and a patio surface that would never need maintenance.',
     challenge: 'The backyard was narrow with limited space, requiring a design that maximized every square foot without feeling cramped. The existing concrete slab was cracked and uneven from years of frost heave.',
     solution: 'We removed the old concrete, excavated to full depth, and designed a multi-zone layout that creates the illusion of a much larger space. The modern pergola provides shade and rain protection while the interlocking stone base is engineered for permanent stability.',
@@ -91,8 +91,8 @@ const PROJECT_DATA: Record<string, ProjectData> = {
     year: '2024',
     duration: '2 weeks',
     investment: '$22,000+',
-    heroImg: '/images/projects/orillia-walkway.png',
-    images: ['/images/projects/orillia-walkway.png'],
+    heroImg: '/images/projects/orillia-walkway.jpg',
+    images: ['/images/projects/orillia-walkway.jpg'],
     description: 'A front walkway that transformed the entire curb appeal of this modern Orillia home. The original concrete path was cracked, stained, and detracted from an otherwise beautiful property.',
     challenge: 'The existing walkway had a grade issue that directed water toward the front door. The homeowner wanted a dramatic improvement without disrupting established garden beds on either side.',
     solution: 'We carefully removed the old concrete, re-graded the subbase to correct the drainage, and installed a sweeping curved walkway with accent borders. The new drainage pattern moves water away from the home and into a dry well system.',
@@ -145,7 +145,7 @@ const PROJECT_DATA: Record<string, ProjectData> = {
   },
   'cousy-fire-feature': {
     slug: 'cousy-fire-feature',
-    title: 'Cousy Fire Feature',
+    title: 'Cozy Fire Feature',
     location: 'Shanty Bay, ON',
     category: 'Hardscape Design',
     year: '2024',
@@ -230,6 +230,7 @@ export default function ProjectDetail() {
       <SEO
         title={`${project.title} | ${project.category} in ${project.location} | Golden Maple`}
         description={project.description}
+        canonical={`https://goldenmaplelandscaping.ca/portfolio/${project.slug}`}
       />
 
       <section className="section-padding pt-40 md:pt-48">

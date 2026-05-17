@@ -36,6 +36,7 @@ export default function LandscapeDesign() {
       <SEO 
         title="Landscape Design Barrie"
         description="Full-service landscape design for Barrie homeowners. From concept to 3D render to build. Create your dream outdoor living space. Book a design consultation."
+        canonical="https://goldenmaplelandscaping.ca/services/landscape-design-barrie"
       />
       
       <section className="section-padding pt-48">
@@ -168,7 +169,10 @@ export default function LandscapeDesign() {
           <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
             No guesswork, no surprises. You'll know exactly what your space will look like — down to the last stone — before we ever pick up a shovel. That's the peace of mind our design process gives you.
           </p>
-          <Link to="/contact" className="btn-primary px-20 py-5">Start My Design</Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link to="/cost-estimator?type=full" className="btn-primary px-12 py-4">See Your Project Cost Range</Link>
+            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or Book a Design Session →</Link>
+          </div>
         </div>
       </section>
 

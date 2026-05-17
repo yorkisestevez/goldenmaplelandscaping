@@ -43,6 +43,9 @@
   <url><loc>https://goldenmaplelandscaping.ca/process</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/contact</loc><changefreq>yearly</changefreq><priority>0.9</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/service-areas</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/book</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 
   <!-- Content Marketing / Resources -->
   <url><loc>https://goldenmaplelandscaping.ca/buyers-guide</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
@@ -74,4 +77,7 @@
   <url><loc>https://goldenmaplelandscaping.ca/resources/landscaping-cost-guide-barrie</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/resources/hidden-costs-cheap-landscaping</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/resources/interlocking-patio-cost-ontario</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/resources/best-time-install-patio-ontario</loc><lastmod>2026-05-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/resources/landscape-permits-barrie-simcoe</loc><lastmod>2026-05-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/resources/pool-deck-materials-ontario</loc><lastmod>2026-05-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>

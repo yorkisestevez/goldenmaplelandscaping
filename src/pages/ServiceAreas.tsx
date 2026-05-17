@@ -20,6 +20,7 @@ export default function ServiceAreas() {
       <SEO 
         title="Service Areas | Barrie & Simcoe County"
         description="Golden Maple Landscaping serves Barrie, Innisfil, Oro-Medonte, Springwater, Angus, Orillia, and surrounding areas in Simcoe County. Premium interlocking and landscape design."
+        canonical="https://goldenmaplelandscaping.ca/service-areas"
       />
       
       <div className="max-w-[1200px] mx-auto px-6 md:px-12 py-24">
@@ -103,7 +104,7 @@ export default function ServiceAreas() {
             className="relative h-[400px] md:h-[600px] rounded-[2px] overflow-hidden"
           >
             <img
-              src="/images/projects/orillia-walkway.png"
+              src="/images/projects/orillia-walkway.jpg"
               alt="Landscaping Service Areas in Simcoe County"
               className="w-full h-full object-cover grayscale-[20%] contrast-[110%]"
               referrerPolicy="no-referrer"

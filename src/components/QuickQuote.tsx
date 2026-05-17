@@ -4,6 +4,8 @@ import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, Shield, Star, Calendar, Phone } from 'lucide-react';
 import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
+import { getBehaviorFields } from '../utils/behavior';
+import { genEventId } from '../utils/eventId';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -36,10 +38,13 @@ export default function QuickQuote() {
     setStatus('submitting');
     setErrorMsg('');
 
+    const eventId = genEventId();
     const payload = {
       'form-name': 'quick-quote',
       source: 'hero',
+      event_id: eventId,
       ...getAttributionFields(),
+      ...getBehaviorFields(),
       ...form,
     };
 
@@ -48,7 +53,7 @@ export default function QuickQuote() {
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.log('[dev] quick-quote payload (would POST to Netlify):', payload);
-      trackLead('quick-quote', 'high-intent');
+      trackLead('quick-quote', 'high-intent', undefined, eventId);
       setStatus('success');
       return;
     }
@@ -60,7 +65,7 @@ export default function QuickQuote() {
         body: encode(payload),
       });
       if (!res.ok) throw new Error('Network response was not ok');
-      trackLead('quick-quote', 'high-intent');
+      trackLead('quick-quote', 'high-intent', undefined, eventId);
       setStatus('success');
     } catch {
       setStatus('error');
@@ -204,13 +209,9 @@ export default function QuickQuote() {
           )}
         </button>
 
-        <div className="flex items-center justify-center gap-6 pt-3 text-[10px] uppercase tracking-[0.2em] text-brand-muted font-light">
-          <span className="flex items-center gap-2">
-            <Shield size={12} className="text-brand-gold/70" strokeWidth={1.5} />
-            No spam
-          </span>
-          <span className="w-px h-3 bg-brand-dim/30" />
-          <span>Pick a time that works</span>
+        <div className="flex items-start justify-center gap-3 pt-4 text-[11px] text-brand-muted font-light leading-relaxed">
+          <Shield size={14} className="text-brand-gold/70 shrink-0 mt-px" strokeWidth={1.5} />
+          <span>We only contact you about your project. No spam, ever — and we never share your number.</span>
         </div>
       </form>
     </motion.div>
