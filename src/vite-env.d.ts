@@ -8,6 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_SEARCH_CONSOLE_TOKEN?: string;
   readonly VITE_BOOKING_URL?: string;
   readonly VITE_CRM_BASE_URL?: string;
+  readonly VITE_CLARITY_ID?: string;
 }
 
 interface ImportMeta {

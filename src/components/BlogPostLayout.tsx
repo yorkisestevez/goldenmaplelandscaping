@@ -1,6 +1,6 @@
 import { type ReactNode, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Linkedin, Link as LinkIcon, Share2, Check } from 'lucide-react';
 import SEO from './SEO';
 
@@ -12,12 +12,15 @@ interface BlogPostLayoutProps {
   date: string;
   readTime: string;
   heroImage: string;
+  /** Optional structured data injected as a second JSON-LD block (e.g. FAQPage, HowTo). */
+  schema?: object;
   children: ReactNode;
 }
 
-export default function BlogPostLayout({ title, seoTitle, seoDescription, category, date, readTime, heroImage, children }: BlogPostLayoutProps) {
+export default function BlogPostLayout({ title, seoTitle, seoDescription, category, date, readTime, heroImage, schema, children }: BlogPostLayoutProps) {
   const [copied, setCopied] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
     setCurrentUrl(window.location.href);
@@ -25,6 +28,47 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
 
   const encodedUrl = encodeURIComponent(currentUrl);
   const encodedTitle = encodeURIComponent(title);
+
+  // Build canonical from the route — server-side and crawlers see this even before JS runs.
+  const canonicalUrl = `https://goldenmaplelandscaping.ca${location.pathname}`;
+  const ogImageUrl = heroImage.startsWith('http') ? heroImage : `https://goldenmaplelandscaping.ca${heroImage}`;
+
+  // Article schema for E-E-A-T signals — Google + AI assistants use this for citation/snippet.
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": title,
+    "description": seoDescription,
+    "image": ogImageUrl,
+    "datePublished": date,
+    "dateModified": date,
+    "author": {
+      "@type": "Person",
+      "name": "Yorkis Estevez",
+      "jobTitle": "Founder, Golden Maple Landscaping",
+      "url": "https://goldenmaplelandscaping.ca/about"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Golden Maple Landscaping",
+      "url": "https://goldenmaplelandscaping.ca",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://goldenmaplelandscaping.ca/logo.svg"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": canonicalUrl
+    },
+    "articleSection": category,
+    "inLanguage": "en-CA"
+  };
+
+  // If a custom schema was supplied (FAQPage etc.), nest both under @graph so SEO can emit them together.
+  const combinedSchema = schema
+    ? { "@context": "https://schema.org", "@graph": [articleSchema, schema] }
+    : articleSchema;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(currentUrl);
@@ -34,7 +78,13 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
 
   return (
     <div className="bg-brand-nearblack min-h-screen">
-      <SEO title={seoTitle} description={seoDescription} />
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonical={canonicalUrl}
+        image={ogImageUrl}
+        schema={combinedSchema}
+      />
       
       <section className="section-padding pt-40 md:pt-48">
         <div className="container-custom">

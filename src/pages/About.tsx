@@ -9,6 +9,7 @@ export default function About() {
       <SEO 
         title="About Golden Maple Landscaping | Barrie ON"
         description="Founded by Yorkis Estevez in Barrie, Golden Maple delivers premium outdoor construction with precision craftsmanship. 42 five-star reviews. Meet our team."
+        canonical="https://goldenmaplelandscaping.ca/about"
       />
       
       <section className="section-padding pt-48">
@@ -57,7 +58,7 @@ export default function About() {
               className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
             >
               <img
-                src="/images/projects/Yorkis Estevez.png"
+                src="/images/projects/Yorkis Estevez.jpg"
                 alt="Yorkis Estevez - Founder of Golden Maple Landscaping"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"

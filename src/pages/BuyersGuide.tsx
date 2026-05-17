@@ -1,4 +1,3 @@
-import React from 'react';
 import SEO from '../components/SEO';
 import { Shield, Hammer, Droplet, Sun, CheckCircle } from 'lucide-react';
 
@@ -23,6 +22,7 @@ export default function BuyersGuide() {
       <SEO 
         title="2026 Landscaping Buyer's Guide | Barrie & Simcoe County"
         description="The ultimate guide to hiring a hardscape contractor in Barrie, ON. Learn about base depths, materials like interlock vs. composite, and what to ask your landscaper."
+        canonical="https://goldenmaplelandscaping.ca/buyers-guide"
         schema={schema}
       />
       <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">

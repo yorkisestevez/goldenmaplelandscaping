@@ -32,6 +32,7 @@ export default function RetainingWalls() {
       <SEO 
         title="Retaining Wall Construction Barrie"
         description="Custom retaining walls for Barrie properties. Armour stone, natural stone & block walls built with engineering precision. Solve grading issues beautifully."
+        canonical="https://goldenmaplelandscaping.ca/services/retaining-walls-barrie"
       />
       
       <section className="section-padding pt-48">
@@ -160,7 +161,10 @@ export default function RetainingWalls() {
           <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
             Let's turn that unusable hillside into multi-level living space your family will use every single day. One consultation is all it takes to see what's possible.
           </p>
-          <Link to="/contact" className="btn-primary px-20">Reclaim Your Yard</Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link to="/cost-estimator?type=wall" className="btn-primary px-12 py-4">See Your Wall Cost Range</Link>
+            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or Book a Discovery Call →</Link>
+          </div>
         </div>
       </section>
 

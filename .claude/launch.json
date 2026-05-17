@@ -6,7 +6,7 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
-      "cwd": "C:\\Users\\yorki\\OneDrive\\Desktop\\Goldenmaplelandscaping.ca\\golden-maple-landscaping"
+      "cwd": "C:\\Users\\yorki\\Desktop\\Goldenmaplelandscaping.ca\\golden-maple-landscaping"
     }
   ]
 }

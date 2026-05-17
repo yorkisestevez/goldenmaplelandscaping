@@ -1,10 +1,10 @@
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Menu, X, Phone, MapPin, Mail, Shield, CheckCircle, Award, ChevronDown } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { trackEngagement } from '../utils/analytics';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -40,6 +40,7 @@ const Navbar = () => {
   const navLinks = [
     { href: "/services", label: "Services", hasServicesDropdown: true },
     { href: "/portfolio", label: "Portfolio" },
+    { href: "/cost-estimator", label: "Cost Estimator" },
     { href: "/process", label: "Process" },
     { href: "/resources", label: "Resources", hasDropdown: true },
     { href: "/about", label: "About" },
@@ -101,16 +102,16 @@ const Navbar = () => {
             onClick={() => setIsMobileMenuOpen(false)}
             className="flex flex-col group relative z-50 shrink-0"
           >
-            <span className="font-display text-xl md:text-2xl leading-none tracking-tight text-brand-bonewhite group-hover:text-brand-gold transition-colors duration-500">
+            <span className="font-display text-2xl md:text-4xl leading-none tracking-tight text-brand-bonewhite group-hover:text-brand-gold transition-colors duration-500">
               GOLDEN MAPLE
             </span>
-            <span className="font-sans text-[8px] md:text-[9px] uppercase tracking-[0.45em] font-light text-brand-gold mt-1">
+            <span className="font-sans text-[10px] md:text-[12px] uppercase tracking-[0.45em] font-light text-brand-gold mt-1.5">
               Landscaping
             </span>
           </Link>
 
           {/* Desktop Nav - centered */}
-          <nav className="hidden lg:flex items-center gap-8 mx-auto">
+          <nav className="hidden xl:flex items-center gap-7 mx-auto">
             {navLinks.map((link) => (
               link.hasServicesDropdown ? (
                 <div
@@ -139,9 +140,9 @@ const Navbar = () => {
                         transition={{ duration: 0.2 }}
                         className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-[640px]"
                       >
-                        <div className="bg-brand-surface border border-brand-dim/20 rounded-[2px] shadow-2xl p-8 grid grid-cols-2 gap-x-8 gap-y-2">
+                        <div className="bg-brand-surface border border-brand-dim/40 rounded-[2px] shadow-2xl p-8 grid grid-cols-2 gap-x-8 gap-y-2">
                           <div>
-                            <span className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold mb-4 block">
+                            <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold font-medium mb-4 block">
                               Flagship Services
                             </span>
                             <div className="space-y-1">
@@ -151,10 +152,10 @@ const Navbar = () => {
                                   to={s.href}
                                   className="group block px-3 py-2.5 hover:bg-brand-nearblack/50 rounded-[2px] transition-all"
                                 >
-                                  <div className="font-sans text-[11px] text-brand-bonewhite group-hover:text-brand-gold font-medium transition-colors">
+                                  <div className="font-sans text-[13px] text-brand-bonewhite group-hover:text-brand-gold font-medium transition-colors">
                                     {s.label}
                                   </div>
-                                  <div className="font-sans text-[10px] text-brand-muted font-light mt-0.5">
+                                  <div className="font-sans text-[11px] text-brand-bonewhite/70 font-light mt-0.5">
                                     {s.desc}
                                   </div>
                                 </Link>
@@ -162,7 +163,7 @@ const Navbar = () => {
                             </div>
                           </div>
                           <div>
-                            <span className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold mb-4 block">
+                            <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold font-medium mb-4 block">
                               Service Areas
                             </span>
                             <div className="grid grid-cols-2 gap-1">
@@ -170,16 +171,16 @@ const Navbar = () => {
                                 <Link
                                   key={l.slug}
                                   to={`/services/interlocking-${l.slug}`}
-                                  className="font-sans text-[10px] text-brand-muted hover:text-brand-gold hover:bg-brand-nearblack/50 px-3 py-2 rounded-[2px] transition-all"
+                                  className="font-sans text-[12px] text-brand-bonewhite/85 hover:text-brand-gold hover:bg-brand-nearblack/50 px-3 py-2 rounded-[2px] transition-all"
                                 >
                                   {l.label}
                                 </Link>
                               ))}
                             </div>
-                            <div className="border-t border-brand-dim/10 mt-4 pt-3">
+                            <div className="border-t border-brand-dim/30 mt-4 pt-3">
                               <Link
                                 to="/services"
-                                className="font-sans text-[9px] uppercase tracking-[0.2em] text-brand-gold hover:text-brand-gold-light"
+                                className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold hover:text-brand-gold-light font-medium"
                               >
                                 View All Services →
                               </Link>
@@ -217,20 +218,20 @@ const Navbar = () => {
                         transition={{ duration: 0.2 }}
                         className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-64"
                       >
-                        <div className="bg-brand-surface border border-brand-dim/20 rounded-[2px] shadow-2xl py-2 overflow-hidden">
+                        <div className="bg-brand-surface border border-brand-dim/40 rounded-[2px] shadow-2xl py-2 overflow-hidden">
                           {resourceLinks.map((item) => (
                             <Link
                               key={item.href}
                               to={item.href}
-                              className="block px-5 py-2.5 font-sans text-[9px] uppercase tracking-[0.15em] text-brand-muted hover:text-brand-gold hover:bg-brand-nearblack/50 transition-all"
+                              className="block px-5 py-2.5 font-sans text-[11px] uppercase tracking-[0.15em] text-brand-bonewhite/85 hover:text-brand-gold hover:bg-brand-nearblack/50 font-medium transition-all"
                             >
                               {item.label}
                             </Link>
                           ))}
-                          <div className="border-t border-brand-dim/10 mt-1.5 pt-1.5">
+                          <div className="border-t border-brand-dim/30 mt-1.5 pt-1.5">
                             <Link
                               to="/resources"
-                              className="block px-5 py-2.5 font-sans text-[9px] uppercase tracking-[0.15em] text-brand-gold hover:bg-brand-nearblack/50 transition-all"
+                              className="block px-5 py-2.5 font-sans text-[11px] uppercase tracking-[0.15em] text-brand-gold hover:bg-brand-nearblack/50 font-medium transition-all"
                             >
                               View All Articles →
                             </Link>
@@ -256,7 +257,7 @@ const Navbar = () => {
           </nav>
 
           {/* Right Side CTA group */}
-          <div className="hidden lg:flex items-center gap-5 shrink-0">
+          <div className="hidden xl:flex items-center gap-5 shrink-0">
             <Link 
               to="/contact" 
               className={cn(
@@ -267,19 +268,19 @@ const Navbar = () => {
               Contact
             </Link>
             
-            <a href="tel:7055003581" className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold text-brand-gold bg-brand-gold/5 hover:bg-brand-gold hover:text-brand-nearblack hover:shadow-[0_0_16px_rgba(212,175,99,0.25)] transition-all group" aria-label="Call Us">
+            <a href="tel:7055003581" onClick={() => trackEngagement('cta_click', 'phone_call')} className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold text-brand-gold bg-brand-gold/5 hover:bg-brand-gold hover:text-brand-nearblack hover:shadow-[0_0_16px_rgba(212,175,99,0.25)] transition-all group" aria-label="Call Us">
               <Phone size={16} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
             </a>
-            
-            <Link to="/book" className="btn-primary py-2.5 px-7">
-              Book Discovery Call
+
+            <Link to="/book" onClick={() => trackEngagement('cta_click', 'book_discovery_call')} className="btn-primary py-2.5 px-6 whitespace-nowrap">
+              Book a Call
             </Link>
           </div>
 
           {/* Mobile Toggle */}
-          <button 
+          <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden relative z-50 w-10 h-10 flex items-center justify-center text-brand-gold"
+            className="xl:hidden relative z-50 w-10 h-10 flex items-center justify-center text-brand-gold"
           >
             <div className="relative w-6 h-5">
               <motion.span 
@@ -307,7 +308,7 @@ const Navbar = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-brand-nearblack/98 backdrop-blur-xl pt-40 px-8 pb-32 overflow-y-auto flex flex-col items-center text-center lg:hidden"
+            className="fixed inset-0 z-40 bg-brand-nearblack/98 backdrop-blur-xl pt-40 px-8 pb-32 overflow-y-auto flex flex-col items-center text-center xl:hidden"
           >
             <nav className="w-full max-w-sm flex flex-col gap-14">
               <div className="flex flex-col gap-6">
@@ -334,7 +335,7 @@ const Navbar = () => {
               <div className="w-12 h-px bg-brand-dim/30 mx-auto" />
 
               <div className="flex flex-col gap-6">
-                <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-dim">Resources</span>
+                <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold font-medium">Resources</span>
                 <div className="grid grid-cols-1 gap-4">
                   <Link to="/buyers-guide" className="font-sans text-sm text-brand-muted hover:text-brand-gold transition-colors py-2 block">Buyer's Guide</Link>
                   <Link to="/cost-estimator" className="font-sans text-sm text-brand-muted hover:text-brand-gold transition-colors py-2 block">Cost Estimator</Link>
@@ -345,7 +346,7 @@ const Navbar = () => {
               <div className="w-12 h-px bg-brand-dim/30 mx-auto" />
 
               <div className="flex flex-col gap-6">
-                <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-dim">Flagship Services</span>
+                <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold font-medium">Flagship Services</span>
                 <div className="grid grid-cols-1 gap-4">
                   {services.map((service, idx) => (
                     <motion.div
@@ -400,10 +401,10 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20 mb-32">
           <div className="space-y-10">
             <Link to="/" className="flex flex-col">
-              <span className="font-display text-3xl leading-none tracking-tight text-brand-gold">
+              <span className="font-display text-4xl md:text-5xl leading-none tracking-tight text-brand-gold">
                 GOLDEN MAPLE
               </span>
-              <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-light text-brand-muted mt-1">
+              <span className="font-sans text-[12px] uppercase tracking-[0.4em] font-light text-brand-muted mt-2">
                 Landscaping
               </span>
             </Link>
@@ -461,9 +462,9 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="pt-12 border-t border-brand-dim/20 flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] uppercase tracking-[0.2em] text-brand-dim font-light">
+        <div className="pt-12 border-t border-brand-dim/40 flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] uppercase tracking-[0.2em] text-brand-muted font-light">
           <p>© {new Date().getFullYear()} Golden Maple Landscaping. Architectural Precision.</p>
-          <div className="flex gap-6 flex-wrap justify-end text-[8px] opacity-60">
+          <div className="flex gap-6 flex-wrap justify-end text-[9px] opacity-80">
             <Link to="/locations/barrie" className="hover:text-brand-gold transition-colors">Barrie</Link>
             <Link to="/locations/innisfil" className="hover:text-brand-gold transition-colors">Innisfil</Link>
             <Link to="/locations/oro-medonte" className="hover:text-brand-gold transition-colors">Oro-Medonte</Link>
@@ -475,7 +476,7 @@ const Footer = () => {
       </div>
 
       {/* Mobile Split Action Dock */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t border-brand-dim/20">
+      <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t border-brand-dim/20">
         <a 
           href="tel:7055003581" 
           className="flex-1 bg-brand-surface text-brand-gold font-sans text-[10px] uppercase tracking-[0.25em] py-5 flex items-center justify-center gap-3 border-r border-brand-dim/20"

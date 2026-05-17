@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Grid, AlignJustify, Map } from 'lucide-react';
 import SEO from '../components/SEO';
+import Reveal from '../components/Reveal';
 import { Link } from 'react-router-dom';
 
 const PROJECTS = [
@@ -18,7 +19,7 @@ const PROJECTS = [
     title: "Bradford Modern Pergola",
     category: "Hardscape Design",
     desc: "Clean geometric lines meet functional luxury with this integrated patio and custom pergola system.",
-    img: "/images/projects/patio-pergola.png"
+    img: "/images/projects/patio-pergola.jpg"
   },
   {
     id: 3,
@@ -42,7 +43,7 @@ const PROJECTS = [
     title: "Orillia Premium Walkway",
     category: "Interlocking Stone",
     desc: "Curated interlocking stone walkway that brings architectural curb appeal to a modern Orillia residence.",
-    img: "/images/projects/orillia-walkway.png"
+    img: "/images/projects/orillia-walkway.jpg"
   },
   {
     id: 6,
@@ -71,7 +72,7 @@ const PROJECTS = [
   {
     id: 9,
     slug: "cousy-fire-feature",
-    title: "Cousy Fire Feature",
+    title: "Cozy Fire Feature",
     category: "Hardscape Design",
     desc: "A custom-built fire pit area designed for intimate gatherings and evening ambiance in Shanty Bay.",
     img: "/images/projects/cousy fire feature.jpeg"
@@ -108,11 +109,12 @@ export default function Portfolio() {
       <SEO 
         title="Landscaping Portfolio | Barrie Projects"
         description="Browse completed interlocking patios, decks, retaining walls & outdoor living spaces across Barrie and Simcoe County. See the quality before you commit."
+        canonical="https://goldenmaplelandscaping.ca/portfolio"
       />
       
       <section className="section-padding pt-48">
         <div className="container-custom">
-          <div className="text-center max-w-3xl mx-auto mb-32">
+          <Reveal className="text-center max-w-3xl mx-auto mb-32">
             <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
               Our Portfolio
             </span>
@@ -123,7 +125,7 @@ export default function Portfolio() {
             <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
               Explore our collection of premium outdoor transformations. From structural engineering to aesthetic mastery, our work reflects our commitment to quality and craftsmanship.
             </p>
-          </div>
+          </Reveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-40">
             {PROJECTS.map((project, idx) => (
@@ -166,7 +168,7 @@ export default function Portfolio() {
       </section>
 
       <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
-        <div className="container-custom text-center">
+        <Reveal className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-8xl font-light mb-12 leading-tight">
             Your backyard could <br />
             <span className="text-brand-gold italic">be next.</span>
@@ -175,7 +177,7 @@ export default function Portfolio() {
             Every project in this gallery started with a single conversation. Tell us what you're imagining — we'll show you what's possible.
           </p>
           <Link to="/contact" className="btn-primary px-20">Let's Talk About Your Property</Link>
-        </div>
+        </Reveal>
       </section>
     </div>
   );

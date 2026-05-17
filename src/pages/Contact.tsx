@@ -6,6 +6,8 @@ import SEO from '../components/SEO';
 import BuyersGuide from '../components/BuyersGuide';
 import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
+import { getBehaviorFields } from '../utils/behavior';
+import { genEventId } from '../utils/eventId';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -51,9 +53,12 @@ export default function Contact() {
       .filter(Boolean)
       .join(' · ');
 
+    const eventId = genEventId();
     const payload = {
       'form-name': 'contact',
+      event_id: eventId,
       ...getAttributionFields(),
+      ...getBehaviorFields(),
       ...form,
       details: enrichedDetails || form.details,
     };
@@ -63,7 +68,7 @@ export default function Contact() {
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.log('[dev] contact payload (would POST to Netlify):', payload);
-      trackLead('contact', 'high-intent');
+      trackLead('contact', 'high-intent', undefined, eventId);
       setStatus('success');
       return;
     }
@@ -75,7 +80,7 @@ export default function Contact() {
         body: encode(payload),
       });
       if (!res.ok) throw new Error('Network response was not ok');
-      trackLead('contact', 'high-intent');
+      trackLead('contact', 'high-intent', undefined, eventId);
       setStatus('success');
     } catch (err) {
       setStatus('error');
@@ -88,6 +93,7 @@ export default function Contact() {
       <SEO 
         title="Contact Golden Maple Landscaping | Free Quote Barrie"
         description="Get a free landscaping quote in Barrie & Simcoe County. Call 705-500-3581 or fill out our form. We respond within 24 hours. Premium outdoor construction."
+        canonical="https://goldenmaplelandscaping.ca/contact"
       />
       
       <section className="section-padding pt-48">
@@ -245,6 +251,10 @@ export default function Contact() {
                     >
                       {status === 'submitting' ? 'Sending…' : 'Book My Consultation'}
                     </button>
+                    <div className="flex items-start justify-center gap-3 pt-2 text-[11px] text-brand-muted font-light leading-relaxed">
+                      <Shield size={14} className="text-brand-gold/70 shrink-0 mt-px" strokeWidth={1.5} />
+                      <span>We only contact you about your project. No spam, ever — and we never share your information.</span>
+                    </div>
                   </form>
                 )}
               </div>

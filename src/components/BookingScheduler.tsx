@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
+import { getBehaviorFields } from '../utils/behavior';
+import { genEventId } from '../utils/eventId';
 
 const CRM_BASE_URL =
   (import.meta.env.VITE_CRM_BASE_URL as string | undefined)?.trim() || '';
@@ -119,6 +121,7 @@ export default function BookingScheduler() {
     setErrorMsg('');
     setStep('submitting');
 
+    const eventId = genEventId();
     const payload = {
       name: form.name.trim(),
       email: form.email.trim() || undefined,
@@ -128,13 +131,15 @@ export default function BookingScheduler() {
       slot_type: selectedSlot.slot_type,
       service_interest: form.service_interest,
       notes: form.notes.trim() || undefined,
+      event_id: eventId,
       ...getAttributionFields(),
+      ...getBehaviorFields(),
     };
 
     if (import.meta.env.DEV && !CRM_BASE_URL) {
       // eslint-disable-next-line no-console
       console.log('[dev] booking payload (would POST to CRM):', payload);
-      trackLead('booking', 'high-intent');
+      trackLead('booking', 'high-intent', undefined, eventId);
       setStep('success');
       return;
     }
@@ -149,7 +154,7 @@ export default function BookingScheduler() {
         const errBody = await res.json().catch(() => ({}));
         throw new Error(errBody.error || 'Could not save your booking.');
       }
-      trackLead('booking', 'high-intent');
+      trackLead('booking', 'high-intent', undefined, eventId);
       setStep('success');
     } catch (err) {
       setErrorMsg(
