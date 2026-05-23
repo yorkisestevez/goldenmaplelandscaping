@@ -272,8 +272,8 @@ const Navbar = () => {
               <Phone size={16} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
             </a>
 
-            <Link to="/book" onClick={() => trackEngagement('cta_click', 'book_discovery_call')} className="btn-primary py-2.5 px-6 whitespace-nowrap">
-              Book a Call
+            <Link to="/contact" onClick={() => trackEngagement('cta_click', 'get_estimate_nav')} className="btn-primary py-2.5 px-6 whitespace-nowrap">
+              Get My Estimate
             </Link>
           </div>
 
@@ -483,11 +483,11 @@ const Footer = () => {
         >
           <Phone size={16} strokeWidth={1.5} /> Call
         </a>
-        <Link 
-          to="/book"
+        <Link
+          to="/contact"
           className="flex-[1.5] bg-brand-gold text-brand-nearblack font-sans text-[10px] uppercase tracking-[0.25em] py-5 flex items-center justify-center gap-3"
         >
-          Book Discovery Call
+          Get My Estimate
         </Link>
       </div>
     </footer>

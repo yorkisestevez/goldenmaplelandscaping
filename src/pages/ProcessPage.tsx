@@ -127,7 +127,7 @@ export default function ProcessPage() {
           <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light leading-relaxed">
             Every project starts with a professional consultation. Let's discuss how we can transform your Simcoe County property into a functional masterpiece.
           </p>
-          <Link to="/contact" className="btn-primary px-20 py-5">Book Your Consultation</Link>
+          <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
         </div>
       </section>
     </div>

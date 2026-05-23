@@ -43,7 +43,7 @@ export default function About() {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/contact" className="btn-primary py-5 px-10">Book A Free Discovery Call</Link>
+                <Link to="/contact" className="btn-primary py-5 px-10">Get My Estimate</Link>
                 <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-xs uppercase tracking-[0.2em] hover:text-brand-gold transition-colors font-medium">
                   See Our Work <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
@@ -230,9 +230,9 @@ export default function About() {
             <span className="text-brand-gold italic">your family will love.</span>
           </h2>
           <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
-            Start with a free 15-minute discovery call. Honest scope, honest budget, no pressure. If we're the right fit, we'll come walk your property — no fee. If we're not, we'll point you toward someone who is.
+            Start with a free estimate request. Honest scope, honest budget, no pressure. If we're the right fit, we'll come walk your property — no fee. If we're not, we'll point you toward someone who is.
           </p>
-          <Link to="/contact" className="btn-primary px-20 py-5">Book My Free Discovery Call</Link>
+          <Link to="/contact" className="btn-primary px-20 py-5">Get My Estimate</Link>
         </div>
       </section>
     </div>

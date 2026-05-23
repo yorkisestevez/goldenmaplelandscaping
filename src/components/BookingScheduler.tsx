@@ -323,7 +323,7 @@ export default function BookingScheduler() {
           >
             {step === 'submitting' ? 'Booking…' : (
               <>
-                Confirm My Discovery Call
+                Confirm My Request
                 <ArrowRight size={14} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />
               </>
             )}

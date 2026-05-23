@@ -120,9 +120,9 @@ export default function Services() {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-px bg-brand-gold/30" />
           <h2 className="font-display text-3xl md:text-5xl font-light text-brand-bonewhite mb-8">Every project starts with a <span className="text-brand-gold italic">conversation.</span></h2>
           <p className="font-sans text-lg text-brand-muted max-w-2xl mx-auto mb-12 font-light">
-            Free 15-minute discovery call · Honest scope, honest budget, no pressure.
+            Free estimate · 24-hour response · No sales call required.
           </p>
-          <Link to="/contact" className="btn-primary px-16 py-5">Book Free Discovery Call</Link>
+          <Link to="/contact" className="btn-primary px-16 py-5">Get My Estimate</Link>
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-px bg-brand-gold/30" />
         </div>
       </section>

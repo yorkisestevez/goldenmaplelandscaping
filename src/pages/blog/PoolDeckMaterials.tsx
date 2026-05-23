@@ -256,7 +256,7 @@ export default function PoolDeckMaterials() {
       <p>No — Golden Maple installs the deck, surround, retaining walls, lighting, and integrated landscape. We coordinate with your pool builder on timeline, grade, and coping installation. Our preferred pool partners in Simcoe County are happy to provide referrals.</p>
 
       <h2>Plan Your Pool Surround</h2>
-      <p>The fastest way to scope a pool deck project is the <Link to="/cost-estimator?type=patio" className="text-brand-gold hover:underline">cost estimator</Link> with "patio" selected and your sqft estimate. From there, our discovery call confirms whether porcelain or concrete pavers fit your pool, your sun exposure, and your budget — usually in one 15-minute call.</p>
+      <p>The fastest way to scope a pool deck project is the <Link to="/cost-estimator?type=patio" className="text-brand-gold hover:underline">cost estimator</Link> with "patio" selected and your sqft estimate. From there, our follow-up confirms whether porcelain or concrete pavers fit your pool, your sun exposure, and your budget — usually in one 15-minute call.</p>
 
       <p>Related reading: <Link to="/resources/unilock-vs-techo-bloc-vs-permacon" className="text-brand-gold hover:underline">Paver brand comparison</Link> · <Link to="/resources/best-time-install-patio-ontario" className="text-brand-gold hover:underline">Best time to install</Link> · <Link to="/resources/landscape-permits-barrie-simcoe" className="text-brand-gold hover:underline">Permits for pool surrounds</Link>.</p>
     </BlogPostLayout>

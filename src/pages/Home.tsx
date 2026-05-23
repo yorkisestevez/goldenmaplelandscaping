@@ -451,17 +451,17 @@ const FinalCTA = () => {
           <span className="text-brand-gold italic">you could be living in it.</span>
         </h2>
         <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-10 font-light leading-relaxed">
-          Start with a 15-minute call. Tell us about the space you've been picturing. We'll tell you honestly whether your vision and your budget can meet — and if they can, we'll walk it through with you, every step.
+          Tell us what you're picturing and what you're willing to spend. Yorkis comes back within 24 hours with an honest read on scope, timeline, and whether your budget matches the build you have in mind.
         </p>
         <div className="flex flex-col items-center gap-12 mb-16">
           <div className="h-px w-20 bg-brand-gold/30" />
           <span className="font-sans text-base md:text-lg text-brand-gold font-normal tracking-[0.1em] uppercase">
-            Free 15-min discovery call · No fee, no pressure
+            Free estimate · 24-hour response · No sales call required
           </span>
           <div className="h-px w-20 bg-brand-gold/30" />
         </div>
         <Link to="/contact" className="btn-primary px-20 py-5">
-          Let's Talk About Your Property
+          Get My Estimate
         </Link>
       </Reveal>
     </section>
@@ -530,7 +530,7 @@ const ContractorPainPoints = () => {
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{point.pain}</h3>
                   <div className="space-y-6">
                     <div className="flex gap-4">
-                      <span className="font-sans text-[10px] font-normal uppercase tracking-widest text-brand-burgundy shrink-0 mt-1">Typical:</span>
+                      <span className="font-sans text-[10px] font-normal uppercase tracking-widest text-red-400 shrink-0 mt-1">Typical:</span>
                       <p className="font-sans text-sm text-brand-muted italic font-light">{point.cause}</p>
                     </div>
                     <div className="flex gap-4">
@@ -653,7 +653,7 @@ export default function Home() {
             },
             {
               q: "Is there a fee to get started?",
-              a: "No. Your first conversation with us is a free 15-minute discovery call by phone — honest scope assessment, honest budget feedback, no pressure. If we're the right fit for your project, we'll come walk your property at no charge. The only paid step in our process is full landscape design, which only applies if you want detailed 3D plans before construction."
+              a: "No. Your first conversation with us is a free estimate request by phone — honest scope assessment, honest budget feedback, no pressure. If we're the right fit for your project, we'll come walk your property at no charge. The only paid step in our process is full landscape design, which only applies if you want detailed 3D plans before construction."
             }
           ].map((faq, idx) => (
             <div key={idx} className="bg-brand-surface p-10 border border-brand-dim/10 rounded-[2px] hover:border-brand-gold/20 transition-colors">

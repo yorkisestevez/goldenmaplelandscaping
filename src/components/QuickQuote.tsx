@@ -88,10 +88,10 @@ export default function QuickQuote() {
           We've got it.
         </h3>
         <p className="font-sans text-sm text-brand-muted leading-relaxed font-light mb-8">
-          Want to skip the wait? Book your <span className="text-brand-gold">free 15-minute discovery call</span> directly — pick a time that works for you.
+          Want to skip the wait? Book your <span className="text-brand-gold">free estimate request</span> directly — pick a time that works for you.
         </p>
         <Link
-          to="/book"
+          to="/contact"
           className="btn-primary w-full py-4 inline-flex items-center justify-center gap-3 group mb-5"
         >
           <Calendar size={14} strokeWidth={1.5} />
@@ -129,7 +129,7 @@ export default function QuickQuote() {
         Get your free <span className="italic text-brand-gold">project estimate</span>
       </h2>
       <p className="font-sans text-sm text-brand-muted font-light mb-8 leading-relaxed">
-        15-minute discovery call with Yorkis — at a time that works for you. No fee. Honest answers about scope and budget.
+        estimate request with Yorkis — at a time that works for you. No fee. Honest answers about scope and budget.
       </p>
 
       <form

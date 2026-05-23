@@ -7,8 +7,8 @@ export default function Consultation() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
-        title="Free Discovery Call | Landscaping Consultation Barrie | Golden Maple"
-        description="The first step is a free 15-minute discovery call. Honest scope, honest budget, no pressure. If we're a fit, the property walk is on us — engineering-first design for Barrie & Simcoe County homeowners."
+        title="Free Estimate | Landscaping Consultation Barrie | Golden Maple"
+        description="The first step is a free estimate request. Honest scope, honest budget, no pressure. If we're a fit, the property walk is on us — engineering-first design for Barrie & Simcoe County homeowners."
       />
 
       <section className="section-padding pt-48">
@@ -21,22 +21,22 @@ export default function Consultation() {
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold mb-10 block">
-                Phase One: Discovery
+                Phase One: The Brief
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.1] mb-12">
-                A Free <br />
-                <span className="italic text-brand-gold">Discovery Call.</span>
+                Your Budget <br />
+                <span className="italic text-brand-gold">Becomes a Brief.</span>
               </h1>
               <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
-                Our process doesn't start with a sales pitch — it starts with a 15-minute phone call. Yorkis listens to what you're imagining, asks the right questions, and tells you honestly whether your project is a fit for what we do. If it is, the on-site property walk that follows is on us.
+                Our process doesn't start with a sales pitch — it starts with you telling us what you're picturing and what you're willing to spend. Yorkis reads every brief personally and responds within 24 hours with an honest read on scope, timeline, and whether your budget matches the build you have in mind. If it does, the on-site property walk that follows is on us.
               </p>
 
               <div className="bg-brand-surface p-10 border border-brand-gold/20 rounded-[2px] mb-16">
                 <h3 className="font-display text-2xl text-brand-gold mb-4">No Fee. No Pressure.</h3>
                 <p className="font-sans text-brand-muted leading-relaxed font-light mb-6">
-                  Discovery is free, the property walk is free. The only paid step is full landscape design — and even that gets credited back if you build with us.
+                  The estimate request is free, the property walk is free. The only paid step is full landscape design — and even that gets credited back if you build with us.
                 </p>
-                <Link to="/contact" className="btn-primary w-full py-5 text-center px-8">Book My Free Discovery Call</Link>
+                <Link to="/contact" className="btn-primary w-full py-5 text-center px-8">Get My Estimate</Link>
               </div>
             </motion.div>
 
@@ -58,7 +58,7 @@ export default function Consultation() {
           </div>
 
           <div className="mb-40">
-            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">What to expect during <br/> <span className="italic text-brand-gold">your discovery session.</span></h2>
+            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">What we cover in <br/> <span className="italic text-brand-gold">your written estimate.</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
               {[
                 { title: "Lifestyle Discovery", desc: "How do you intend to use the space? Whether it's high-traffic entertaining or quiet sanctuary, we listen first." },
@@ -102,7 +102,7 @@ export default function Consultation() {
             <span className="text-brand-gold italic">Phase One?</span>
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
-            <Link to="/contact" className="btn-primary px-20 py-5">Book Your Consultation</Link>
+            <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
             <a href="tel:7055003581" className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
               <Phone size={14} /> (705) 500-3581
             </a>

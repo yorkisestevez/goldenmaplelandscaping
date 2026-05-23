@@ -31,7 +31,7 @@ export default function MaterialSelection() {
                 Not all stone is created equal. We curate a selection of high-performance materials that not only match your home's aesthetic but also withstand the extreme freeze-thaw cycles of Ontario's climate.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Book Your Consultation</Link>
+                <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
               </div>
             </motion.div>
 
@@ -93,7 +93,7 @@ export default function MaterialSelection() {
             <span className="text-brand-gold italic">luxury sanctuary.</span>
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
-            <Link to="/contact" className="btn-primary px-20 py-5">Book Your Consultation</Link>
+            <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
             <a href="tel:7055003581" className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
               <Phone size={14} /> (705) 500-3581
             </a>

@@ -31,7 +31,7 @@ export default function SiteAssessment() {
                 Before a single 3D rendering is created, we must first understand the literal foundation of your project. We look for the technical details that others ignore—soil composition, water runoff patterns, and existing structural elevations.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Book Your Consultation</Link>
+                <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
               </div>
             </motion.div>
 
@@ -96,7 +96,7 @@ export default function SiteAssessment() {
             <span className="text-brand-gold italic">precision build?</span>
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
-            <Link to="/contact" className="btn-primary px-20 py-5">Book Your Consultation</Link>
+            <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
             <a href="tel:7055003581" className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
               <Phone size={14} /> (705) 500-3581
             </a>

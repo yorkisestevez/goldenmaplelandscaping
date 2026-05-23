@@ -48,7 +48,7 @@ export default function ServiceLocation() {
 
   const titleHero = `${service.shortName} in ${location.name}, Ontario`;
   const seoTitle = `${service.shortName} in ${location.name} | Premium ${service.name} | Golden Maple Landscaping`;
-  const seoDescription = `Premium ${service.name.toLowerCase()} in ${location.name}, ${location.region}. ${service.startingPriceText} ${service.perUnitText}. 5-year warranty, WSIB certified, $5M liability. Free 15-min discovery call.`;
+  const seoDescription = `Premium ${service.name.toLowerCase()} in ${location.name}, ${location.region}. ${service.startingPriceText} ${service.perUnitText}. 5-year warranty, WSIB certified, $5M liability. Free estimate request.`;
 
   // Cross-links: same service in other locations + other services in same location
   const otherLocations = LOCATION_KEYS.filter((l) => l !== parsed.location);
@@ -280,7 +280,7 @@ export default function ServiceLocation() {
                   to="/contact"
                   className="btn-primary w-full py-4 inline-flex items-center justify-center gap-3 group"
                 >
-                  Book Discovery Call
+                  Get My Estimate
                   <ArrowRight size={14} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
@@ -434,7 +434,7 @@ export default function ServiceLocation() {
             <span className="italic text-brand-gold">{location.name}?</span>
           </h2>
           <p className="font-sans text-base md:text-lg text-brand-muted font-light max-w-xl mx-auto mb-14 leading-relaxed">
-            Free 15-minute discovery call with Yorkis. Honest scope, honest budget, no pressure.
+            Free estimate request with Yorkis. Honest scope, honest budget, no pressure.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 items-center justify-center max-w-xl mx-auto">
             <a
@@ -448,7 +448,7 @@ export default function ServiceLocation() {
               to="/contact"
               className="flex-1 btn-primary py-5 inline-flex items-center justify-center gap-3 w-full"
             >
-              Book Discovery Call
+              Get My Estimate
               <ArrowRight size={14} strokeWidth={1.5} />
             </Link>
           </div>

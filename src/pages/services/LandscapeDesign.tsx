@@ -60,9 +60,9 @@ export default function LandscapeDesign() {
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-10">
                 <div className="flex flex-col gap-4 w-full sm:w-auto">
-                  <Link to="/contact" className="btn-primary py-5 px-10">Book Free Discovery Call</Link>
+                  <Link to="/contact" className="btn-primary py-5 px-10">Get My Estimate</Link>
                   <span className="font-sans text-xs text-brand-muted italic font-light text-center sm:text-left">
-                    Free 15-min discovery call · No pressure.
+                    Free estimate · 24-hour response.
                   </span>
                 </div>
                 <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">

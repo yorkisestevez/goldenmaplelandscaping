@@ -84,7 +84,7 @@ export default function CostGuideThankYou() {
                 Want to skip the guide and just talk?
               </h2>
               <p className="font-sans text-sm md:text-base text-brand-muted leading-relaxed font-light mb-10">
-                Yorkis offers a <span className="text-brand-gold">free 15-minute discovery call</span> for any homeowner thinking about a project this year. Honest scope, honest budget, no pressure.
+                Yorkis offers a <span className="text-brand-gold">free estimate request</span> for any homeowner thinking about a project this year. Honest scope, honest budget, no pressure.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 items-stretch">
                 <a
@@ -98,7 +98,7 @@ export default function CostGuideThankYou() {
                   to="/contact"
                   className="flex-1 btn-primary py-4 inline-flex items-center justify-center gap-3"
                 >
-                  Book Discovery Call
+                  Get My Estimate
                   <ArrowRight size={14} strokeWidth={1.5} />
                 </Link>
               </div>

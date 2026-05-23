@@ -211,7 +211,7 @@ export default function OutdoorLivingBarrie() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/buyers-guide" className="btn-primary px-12 py-4">Get the Buyer's Guide</Link>
-            <Link to="/book" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or book a site walk →</Link>
+            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or book a site walk →</Link>
           </div>
         </div>
       </section>

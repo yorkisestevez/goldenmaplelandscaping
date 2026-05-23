@@ -64,7 +64,7 @@ export default function TimberTechVsWood() {
 
       <p>Wood decking is cheaper on day one. TimberTech is cheaper on day 7,300. If you're building a deck you plan to actually enjoy — not just maintain — the numbers speak for themselves.</p>
 
-      <p>Want to see what TimberTech looks like in person? We keep samples of every colour and texture on hand. <strong>Book a free discovery call</strong> — if your project is a fit, we'll bring the options to your property so you can see them in your actual lighting, next to your actual home.</p>
+      <p>Want to see what TimberTech looks like in person? We keep samples of every colour and texture on hand. <strong>Book a free estimate request</strong> — if your project is a fit, we'll bring the options to your property so you can see them in your actual lighting, next to your actual home.</p>
     </BlogPostLayout>
   );
 }
