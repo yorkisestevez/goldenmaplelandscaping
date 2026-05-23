@@ -5,6 +5,13 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# Legacy /blog index consolidated into /resources (the working blog index).
+# 301 ensures any backlinks or bookmarks land on the canonical page and pass SEO signals through.
+[[redirects]]
+  from = "/blog"
+  to = "/resources"
+  status = 301
+
 # SPA fallback — all routes return index.html
 [[redirects]]
   from = "/*"
