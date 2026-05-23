@@ -1,0 +1,49 @@
+name: Deploy to Netlify on main
+
+# Every push to main builds the site and ships it to goldenmaplelandscaping.ca.
+# Triggers automatically on PR merges from the weekly blog publisher (and any
+# other main commits). Replaces the manual `netlify deploy --prod` workflow.
+#
+# Site is pinned by ID — never deploys anywhere else.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: netlify-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Netlify (production)
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          npx -y netlify-cli@latest deploy \
+            --site=549b17bd-15af-42ee-8f0c-7fef576cf664 \
+            --dir=dist \
+            --prod \
+            --message="ci(main): ${GITHUB_SHA::7} — ${GITHUB_ACTOR}"
