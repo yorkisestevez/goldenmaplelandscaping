@@ -22,7 +22,6 @@ const ServiceAreas = lazy(() => import('./pages/ServiceAreas'));
 const Portfolio = lazy(() => import('./pages/Portfolio'));
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
 const Contact = lazy(() => import('./pages/Contact'));
-const Blog = lazy(() => import('./pages/Blog'));
 const Resources = lazy(() => import('./pages/Resources'));
 const ProcessPage = lazy(() => import('./pages/ProcessPage'));
 const Consultation = lazy(() => import('./pages/process/Consultation'));
@@ -108,7 +107,6 @@ export default function App() {
               <Route path="/portfolio" element={<Portfolio />} />
               <Route path="/portfolio/:slug" element={<ProjectDetail />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/blog" element={<Blog />} />
               <Route path="/resources" element={<Resources />} />
               {/* Process & Subpages */}
               <Route path="/process" element={<ProcessPage />} />
