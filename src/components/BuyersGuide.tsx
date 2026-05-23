@@ -144,7 +144,7 @@ const BuyersGuide = () => {
                       {isGuideLoading ? "Processing..." : "Download the Guide"}
                       {!isGuideLoading && <Download size={16} className="ml-3 group-hover:translate-y-1 transition-transform" strokeWidth={1.5} />}
                     </button>
-                    <p className="font-sans text-[10px] text-center text-brand-muted/40 uppercase tracking-widest">Instant PDF Access</p>
+                    <p className="font-sans text-[10px] text-center text-brand-bonewhite/65 uppercase tracking-widest">Instant PDF Access</p>
                   </motion.form>
                 ) : (
                   <motion.div 
@@ -323,7 +323,7 @@ const BuyersGuide = () => {
               to="/contact" 
               className="bg-brand-bonewhite text-brand-nearblack font-sans text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-10 rounded-[2px] hover:bg-brand-gold hover:translate-y-[-2px] transition-all duration-500 whitespace-nowrap shadow-xl"
             >
-              Book Your Consultation
+              Tell Us Your Budget
             </Link>
           </div>
         </motion.div>

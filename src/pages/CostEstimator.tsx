@@ -28,7 +28,7 @@ export default function CostEstimator() {
         "name": "Do you charge for estimates?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Our online estimator is free and shows ballpark pricing within ±10–25%. To get exact numbers we offer a free 15-minute discovery call by phone, or a $99 on-site design session that's credited back when you book your project."
+          "text": "Our online estimator is free and shows ballpark pricing within ±10–25%. To get exact numbers we offer a free estimate request by phone, or a $99 on-site design session that's credited back when you book your project."
         }
       }
     ]
@@ -64,7 +64,7 @@ export default function CostEstimator() {
             </ul>
             <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">From estimate to exact quote</h3>
             <p>
-              The estimator above gets you within ±10–25%. A 15-minute phone discovery call (free) confirms scope and timeline. A $99 design session — credited back if you proceed — gets you to ±5% with material samples and a layout sketch in hand.
+              The estimator above gets you within ±10–25%. A free estimate request confirms scope and timeline. A $99 design session — credited back if you proceed — gets you to ±5% with material samples and a layout sketch in hand.
             </p>
           </div>
         </Reveal>

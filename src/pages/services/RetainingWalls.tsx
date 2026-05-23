@@ -55,7 +55,7 @@ export default function RetainingWalls() {
                 A retaining wall is one of those things you don't think about — until it starts to lean. We've spent years rebuilding walls other contractors put up without geogrid, without proper drainage, without an engineering plan. We're not interested in being the next chapter of that story. We build walls the way they should be built the first time, so the slope you've been ignoring becomes the feature your property is known for. <span className="text-brand-gold font-normal">Structural projects start at $20,000.</span>
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/contact" className="btn-primary">Book My Free Discovery Call</Link>
+                <Link to="/contact" className="btn-primary">Get My Estimate</Link>
                 <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
                   View Portfolio <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
@@ -163,7 +163,7 @@ export default function RetainingWalls() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/cost-estimator?type=wall" className="btn-primary px-12 py-4">See Your Wall Cost Range</Link>
-            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or Book a Discovery Call →</Link>
+            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or Get My Estimate →</Link>
           </div>
         </div>
       </section>

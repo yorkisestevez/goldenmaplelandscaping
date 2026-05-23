@@ -55,7 +55,7 @@ export default function CompositeDecking() {
                 Every May, the same ritual. The sanding. The staining. The hour spent looking at the spots where the wood is starting to rot and pretending you'll deal with it next year. We're done with that, and we think you should be too. We build TimberTech and Trex decks that look like real hardwood and stay that way — through every Ontario winter, with zero maintenance, for the next 25 years. <span className="text-brand-gold font-normal">Luxury decking projects start at $25,000.</span>
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/contact" className="btn-primary">Book My Free Discovery Call</Link>
+                <Link to="/contact" className="btn-primary">Get My Estimate</Link>
                 <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
                   View Portfolio <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
@@ -167,7 +167,7 @@ export default function CompositeDecking() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/cost-estimator?type=deck" className="btn-primary px-12 py-4">See Your Deck Cost Range</Link>
-            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or Book a Discovery Call →</Link>
+            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or Get My Estimate →</Link>
           </div>
         </div>
       </section>

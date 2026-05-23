@@ -31,7 +31,7 @@ export default function Design3D() {
                 Why guess what your backyard will look like when you can walk through it? Our high-resolution 3D landscape design process eliminates ambiguity and allows you to experience the spatial flow, lighting, and material textures of your future retreat.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Book Your Consultation</Link>
+                <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
               </div>
             </motion.div>
 
@@ -96,7 +96,7 @@ export default function Design3D() {
             <span className="text-brand-gold italic">backyard in 3D?</span>
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
-            <Link to="/contact" className="btn-primary px-20 py-5">Book Your Consultation</Link>
+            <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
             <a href="tel:7055003581" className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
               <Phone size={14} /> (705) 500-3581
             </a>

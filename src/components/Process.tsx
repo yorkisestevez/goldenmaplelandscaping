@@ -25,11 +25,11 @@ export default function Process() {
               <span className="italic text-brand-gold">not just a project.</span>
             </h2>
             <p className="font-sans font-light text-base md:text-xl text-brand-muted leading-relaxed mb-10 md:mb-14">
-              Premium spaces require meticulous planning. The first step is a free 15-minute discovery call — honest scope, honest budget, no pressure. Everything else flows from there.
+              Premium spaces require meticulous planning. The first step is a free estimate request — honest scope, honest budget, no pressure. Everything else flows from there.
             </p>
 
             <div className="mb-12 p-8 bg-brand-surface border border-brand-gold/20 rounded-[2px]">
-              <h4 className="font-display text-2xl text-brand-gold mb-4">Free Discovery Call</h4>
+              <h4 className="font-display text-2xl text-brand-gold mb-4">Free Estimate</h4>
               <p className="font-sans text-base text-brand-muted leading-relaxed font-light">
                 Your first conversation with us is <span className="text-brand-bonewhite font-normal">free, no strings attached</span>. We'll listen to what you're imagining, ask the right questions, and tell you honestly whether your project is a fit for what we do. If it is, the property walk that follows is also <span className="text-brand-bonewhite font-normal">on the house</span>.
               </p>
@@ -55,7 +55,7 @@ export default function Process() {
 
             <div className="mt-16 md:mt-20 flex flex-col md:flex-row items-center gap-10">
               <Link to="/contact" className="btn-primary w-full md:w-auto py-6 md:py-5 px-12 text-center inline-block">
-                Book Your Consultation
+                Tell Us Your Budget
               </Link>
               <Link to="/process" className="flex items-center gap-4 text-brand-gold font-sans text-xs uppercase tracking-widest hover:gap-6 transition-all font-medium py-2">
                 <span>View Full 6-Step Process</span>

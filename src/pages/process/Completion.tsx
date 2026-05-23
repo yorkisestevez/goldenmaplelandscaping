@@ -31,7 +31,7 @@ export default function Completion() {
                 Our relationship doesn't end when the stones are set. We conduct a rigorous 25-point final inspection with you, ensuring every detail matches the architectural vision and activating your long-term craftsmanship warranty.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Book Your Consultation</Link>
+                <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
               </div>
             </motion.div>
 
@@ -96,7 +96,7 @@ export default function Completion() {
             <span className="text-brand-gold italic">something enduring?</span>
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
-            <Link to="/contact" className="btn-primary px-20 py-5">Book Your Consultation</Link>
+            <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
             <a href="tel:7055003581" className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
               <Phone size={14} /> (705) 500-3581
             </a>

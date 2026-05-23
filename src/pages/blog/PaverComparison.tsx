@@ -66,7 +66,7 @@ export default function PaverComparison() {
 
       <h2>Our Recommendation Process</h2>
 
-      <p>Once we've confirmed on a free discovery call that your project is a fit, we bring physical samples of all three brands to your property. You'll see them in your actual lighting, next to your home's exterior. We'll discuss the pros and cons openly, and you'll make an informed decision — not a pressured one.</p>
+      <p>Once we've confirmed on a free estimate request that your project is a fit, we bring physical samples of all three brands to your property. You'll see them in your actual lighting, next to your home's exterior. We'll discuss the pros and cons openly, and you'll make an informed decision — not a pressured one.</p>
     </BlogPostLayout>
   );
 }

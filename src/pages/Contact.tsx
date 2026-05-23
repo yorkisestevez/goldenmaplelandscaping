@@ -40,6 +40,11 @@ export default function Contact() {
       setErrorMsg('Please fill in your name, phone, and email.');
       return;
     }
+    if (!form.budget) {
+      setStatus('error');
+      setErrorMsg('Please share an approximate budget range so we can give you a meaningful response.');
+      return;
+    }
     setStatus('submitting');
     setErrorMsg('');
 
@@ -100,14 +105,14 @@ export default function Contact() {
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto mb-32">
             <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
-              Start The Conversation
+              Get Your Estimate
             </span>
             <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
-              The hard part <br />
-              <span className="italic text-brand-gold">is already behind you.</span>
+              Share your budget. <br />
+              <span className="italic text-brand-gold">We'll meet you there.</span>
             </h1>
             <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
-              You've spent months thinking about this. You've gotten the quotes that felt wrong. You've read the cautionary tales about contractors who disappear after the deposit. The reason you're here is because you're tired of guessing — and you're ready to talk to someone who treats your home with the seriousness it deserves. So let's talk.
+              The quickest way to find out if Golden Maple is the right fit for your project — tell us what you're picturing and what you're willing to spend. Yorkis comes back within 24 hours with an honest read on scope, timeline, and whether your budget matches the build you have in mind. No sales call required to get started.
             </p>
           </div>
 
@@ -119,11 +124,11 @@ export default function Contact() {
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-                <h2 className="font-display text-3xl font-light text-brand-bonewhite mb-8 leading-tight">Book Your Consultation</h2>
-                
+                <h2 className="font-display text-3xl font-light text-brand-bonewhite mb-8 leading-tight">Tell Us Your Budget</h2>
+
                 <div className="mb-12 p-6 bg-brand-nearblack/50 border-l-2 border-brand-gold">
                   <p className="font-sans text-base text-brand-muted leading-relaxed font-light">
-                    Start with a <span className="text-brand-gold font-normal">free 15-minute discovery call</span>. Yorkis answers personally — honest scope, honest budget, no pressure. If we're the right fit for your project, the property walk that follows is <span className="text-brand-bonewhite font-normal">on the house</span>.
+                    Share a <span className="text-brand-gold font-normal">budget range</span> and a few project details. Yorkis comes back personally with an honest scope, a realistic timeline, and whether what you want is achievable for what you're spending. No call required to get started — <span className="text-brand-bonewhite font-normal">we work off your numbers, not ours</span>.
                   </p>
                 </div>
 
@@ -132,16 +137,10 @@ export default function Contact() {
                     <div className="mx-auto w-16 h-16 rounded-full border border-brand-gold flex items-center justify-center">
                       <CheckCircle size={28} className="text-brand-gold" strokeWidth={1.5} />
                     </div>
-                    <h3 className="font-display text-3xl font-light text-brand-bonewhite">Request received.</h3>
+                    <h3 className="font-display text-3xl font-light text-brand-bonewhite">Budget received.</h3>
                     <p className="font-sans text-base text-brand-muted leading-relaxed font-light max-w-md mx-auto">
-                      Skip the wait — book your <span className="text-brand-gold">free 15-minute discovery call</span> directly. Pick a time that works for you.
+                      Yorkis will review your project and respond within <span className="text-brand-gold">24 hours</span> with an honest scope, timeline, and next steps based on the budget you shared.
                     </p>
-                    <Link
-                      to="/book"
-                      className="btn-primary inline-flex items-center justify-center gap-3 py-4 px-10"
-                    >
-                      Pick A Time On The Calendar
-                    </Link>
                     <p className="font-sans text-sm text-brand-muted font-light">
                       Project urgent? Call <a href="tel:7055003581" className="text-brand-gold hover:underline">(705) 500-3581</a> directly.
                     </p>
@@ -216,18 +215,21 @@ export default function Contact() {
                       </select>
                     </div>
                     <div className="space-y-4">
-                      <label className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal">Approximate Project Budget</label>
+                      <label className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold font-normal">Approximate Project Budget *</label>
                       <select
                         name="budget"
+                        required
                         value={form.budget}
                         onChange={onChange}
-                        className="w-full bg-brand-nearblack border-b border-brand-dim/20 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors appearance-none cursor-pointer font-light"
+                        className="w-full bg-brand-nearblack border-b border-brand-gold/40 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors appearance-none cursor-pointer font-light"
                       >
-                        <option value="">Prefer not to say</option>
+                        <option value="" disabled>Pick a range so we can respond meaningfully</option>
+                        <option value="under-25k">Under $25,000</option>
                         <option value="25k-50k">$25,000 — $50,000</option>
                         <option value="50k-100k">$50,000 — $100,000</option>
                         <option value="100k-250k">$100,000 — $250,000</option>
                         <option value="250k+">$250,000+</option>
+                        <option value="unsure">Not sure yet — please advise</option>
                       </select>
                     </div>
                     <div className="space-y-4">
@@ -249,7 +251,7 @@ export default function Contact() {
                       disabled={status === 'submitting'}
                       className="btn-primary w-full py-6 mt-8 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {status === 'submitting' ? 'Sending…' : 'Book My Consultation'}
+                      {status === 'submitting' ? 'Sending…' : 'Send My Budget & Details'}
                     </button>
                     <div className="flex items-start justify-center gap-3 pt-2 text-[11px] text-brand-muted font-light leading-relaxed">
                       <Shield size={14} className="text-brand-gold/70 shrink-0 mt-px" strokeWidth={1.5} />

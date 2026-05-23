@@ -22,7 +22,7 @@ export default function LocationLanding() {
   const location = LOCATIONS[key];
 
   const seoTitle = `Premium Landscaping in ${location.name}, Ontario | Golden Maple Landscaping`;
-  const seoDescription = `Architectural landscaping and hardscape construction in ${location.name}, ${location.region}. Interlocking, decking, retaining walls, and full backyard renovations. 5-star rated. Free 15-min discovery call.`;
+  const seoDescription = `Architectural landscaping and hardscape construction in ${location.name}, ${location.region}. Interlocking, decking, retaining walls, and full backyard renovations. 5-star rated. Free estimate request.`;
 
   const otherLocations = LOCATION_KEYS.filter((l) => l !== key);
 
@@ -208,7 +208,7 @@ export default function LocationLanding() {
             <div className="lg:col-span-5">
               <div className="bg-brand-surface border border-brand-dim/10 rounded-[2px] p-10 sticky top-32">
                 <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
-                  Free Discovery Call
+                  Free Estimate
                 </span>
                 <h3 className="font-display text-2xl font-light text-brand-bonewhite leading-tight mb-6">
                   15 minutes with Yorkis.
@@ -226,7 +226,7 @@ export default function LocationLanding() {
                   to="/contact"
                   className="btn-primary w-full py-4 inline-flex items-center justify-center gap-3 group"
                 >
-                  Book Discovery Call
+                  Get My Estimate
                   <ArrowRight size={14} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
@@ -320,7 +320,7 @@ export default function LocationLanding() {
             <span className="italic text-brand-gold">{location.name} project?</span>
           </h2>
           <p className="font-sans text-base md:text-lg text-brand-muted font-light max-w-xl mx-auto mb-14 leading-relaxed">
-            A free 15-minute call with Yorkis answers more than three rushed quotes ever will.
+            A 24-hour written estimate from Yorkis answers more than three rushed quotes ever will.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 items-center justify-center max-w-xl mx-auto">
             <a
@@ -334,7 +334,7 @@ export default function LocationLanding() {
               to="/contact"
               className="flex-1 btn-primary py-5 inline-flex items-center justify-center gap-3 w-full"
             >
-              Book Discovery Call
+              Get My Estimate
               <ArrowRight size={14} strokeWidth={1.5} />
             </Link>
           </div>

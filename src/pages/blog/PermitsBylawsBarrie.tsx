@@ -209,7 +209,7 @@ export default function PermitsBylawsBarrie() {
       <p>Newer Simcoe County subdivisions (Mapleview Heights, Bayshore, Snow Valley) may have architectural review committees that require approval before any exterior change, regardless of municipal permit status. Always check your subdivision agreement.</p>
 
       <h2>Plan Your Permitted Project</h2>
-      <p>Every Golden Maple quote includes a permit and engineering line item where required — no surprise costs mid-build. Start with the <Link to="/cost-estimator" className="text-brand-gold hover:underline">cost estimator</Link> to see your project range, then book a discovery call to confirm what permits apply to your specific lot.</p>
+      <p>Every Golden Maple quote includes a permit and engineering line item where required — no surprise costs mid-build. Start with the <Link to="/cost-estimator" className="text-brand-gold hover:underline">cost estimator</Link> to see your project range, then book an estimate request to confirm what permits apply to your specific lot.</p>
 
       <p>Related reading: <Link to="/resources/retaining-wall-guide-simcoe-county" className="text-brand-gold hover:underline">Retaining wall engineering guide</Link> · <Link to="/resources/fire-pit-regulations-barrie" className="text-brand-gold hover:underline">Barrie fire pit regulations</Link> · <Link to="/resources/best-time-install-patio-ontario" className="text-brand-gold hover:underline">Best time to install in Ontario</Link>.</p>
     </BlogPostLayout>

@@ -74,7 +74,7 @@ export default function LuxuryLandscapeBarrie() {
                 Pool decks, full property regrades, multi-trade coordination, phased multi-season builds. Premium projects start at an in-person consult — there's no honest way to price a $120,000 build from a phone call. We walk the property, talk through the soil and the grades, and come back with a design before the first quote. Most Premium builds land between $94,000 and $158,000.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/book" className="btn-primary">Book a Consult</Link>
+                <Link to="/contact" className="btn-primary">Book a Consult</Link>
                 <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
                   See past Premium builds <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
@@ -209,7 +209,7 @@ export default function LuxuryLandscapeBarrie() {
             Premium starts in person. Book a 90-minute consult — we walk the property, talk grade and drainage, and come back with a design before the first quote.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/book" className="btn-primary px-12 py-4">Book the Consult</Link>
+            <Link to="/contact" className="btn-primary px-12 py-4">Book the Consult</Link>
             <Link to="/portfolio" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or browse past builds →</Link>
           </div>
         </div>

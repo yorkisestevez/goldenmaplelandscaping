@@ -54,7 +54,7 @@ export default function Interlocking() {
                 You've seen what happens when an interlocking patio is built wrong. Sunken corners. Joints full of weeds. The whole thing pitching toward the foundation by year three. We're here to make sure that's not the story you tell about yours. We dig deeper, source from <span className="text-brand-gold font-normal">Unilock, Techo-Bloc, and Permacon</span>, and stand behind every square foot for five full years. <span className="text-brand-gold font-normal">Projects start at $20,000.</span>
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/contact" className="btn-primary">Book My Free Discovery Call</Link>
+                <Link to="/contact" className="btn-primary">Get My Estimate</Link>
                 <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
                   View Portfolio <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
@@ -162,7 +162,7 @@ export default function Interlocking() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/cost-estimator?type=patio" className="btn-primary px-12 py-4">See Your Cost Range</Link>
-            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or Book a Discovery Call →</Link>
+            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or Get My Estimate →</Link>
           </div>
         </div>
       </section>

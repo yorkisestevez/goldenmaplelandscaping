@@ -74,7 +74,7 @@ export default function LandscapingCostGuide() {
 
       <p>A good rule of thumb recommended by the Appraisal Institute of Canada is to budget <strong>10% to 15% of your home's total value</strong> for a complete landscape renovation.</p>
 
-      <p>If you're ready to get an exact number for your specific property, the next step is a free 15-minute discovery call. We'll talk through scope, budget, and whether we're the right fit. If we are, the on-site walk and quote that follows is on us.</p>
+      <p>If you're ready to get an exact number for your specific property, the next step is a free estimate request. We'll talk through scope, budget, and whether we're the right fit. If we are, the on-site walk and quote that follows is on us.</p>
     </BlogPostLayout>
   );
 }

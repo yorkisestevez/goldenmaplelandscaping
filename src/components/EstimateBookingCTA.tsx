@@ -1,15 +1,14 @@
 import type { ReactNode } from 'react';
-import { Phone, Calendar, Sparkles } from 'lucide-react';
+import { Calendar, Sparkles, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 /**
- * Two-track CTA: free 15-min phone discovery call, OR paid $99 design session.
+ * Two-track CTA: free written estimate via the budget form, OR paid $99 design session.
  *
- * Optional integrations (set in Netlify env vars):
- *   VITE_CALCOM_FREE_URL   — full Cal.com link for the free 15-min call
+ * Optional integration (set in Netlify env var):
  *   VITE_STRIPE_DESIGN_URL — Stripe Payment Link for the $99 design session
  *
- * If unset, both buttons fall back to the internal /book page.
+ * The free track always points at /contact (the budget form).
  */
 function CTACard({ href, className, children }: { href: string; className: string; children: ReactNode }) {
   const isExternal = href.startsWith('http');
@@ -24,10 +23,9 @@ function CTACard({ href, className, children }: { href: string; className: strin
 }
 
 export default function EstimateBookingCTA() {
-  const calcomFreeUrl = (import.meta.env.VITE_CALCOM_FREE_URL as string | undefined)?.trim() || '';
   const stripeDesignUrl = (import.meta.env.VITE_STRIPE_DESIGN_URL as string | undefined)?.trim() || '';
-  const freeHref = calcomFreeUrl || '/book';
-  const designHref = stripeDesignUrl || '/book?type=design';
+  const freeHref = '/contact';
+  const designHref = stripeDesignUrl || '/contact?type=design';
 
   return (
     <div className="space-y-7">
@@ -51,20 +49,20 @@ export default function EstimateBookingCTA() {
           </div>
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-xl bg-brand-gold/15 border border-brand-gold/30 flex items-center justify-center">
-              <Phone size={18} className="text-brand-gold" strokeWidth={1.75} />
+              <Calendar size={18} className="text-brand-gold" strokeWidth={1.75} />
             </div>
-            <span className="font-display text-2xl text-brand-bone tracking-tight">15-min Phone Call</span>
+            <span className="font-display text-2xl text-brand-bone tracking-tight">Written Estimate</span>
           </div>
           <p className="font-sans text-[13px] font-light text-brand-muted mb-6 flex-1 leading-relaxed">
-            Quick discovery call with Yorkis. We confirm scope, timeline, budget fit, and answer any questions before a site visit.
+            Share your budget and project details on the contact form. Yorkis comes back personally with scope, timeline, and a written estimate within 24 hours — no sales call required.
           </p>
           <ul className="space-y-2 mb-7 font-sans text-[12px] font-light text-brand-bone">
-            <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />No site visit yet — just a phone call</li>
-            <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Pick a slot today, often within 24 hours</li>
-            <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Honest answer if we're not the right fit</li>
+            <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Three minutes to fill out the form</li>
+            <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Written response within 24 hours</li>
+            <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Honest read if we're not the right fit</li>
           </ul>
           <div className="flex items-center justify-between mt-auto pt-5 border-t border-brand-gold/15">
-            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold">Book a Call</span>
+            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold">Send My Budget</span>
             <Calendar size={16} className="text-brand-gold group-hover:translate-x-1 transition-transform" strokeWidth={1.5} />
           </div>
         </CTACard>
