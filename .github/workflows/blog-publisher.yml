@@ -1,0 +1,50 @@
+name: Weekly Blog Publisher
+
+# Runs every Monday at 13:00 UTC = 9:00 AM EDT (8:00 AM EST in winter).
+# Picks the next unused topic from scripts/blog-publisher/topics.json, asks Gemini 2.5 Pro
+# for a 1500-2200 word post, injects it into the site, opens a PR, and Telegrams Yorkis.
+# Computer can be off — this all runs on GitHub's runners.
+
+on:
+  schedule:
+    - cron: '0 13 * * 1'
+  workflow_dispatch:
+    inputs:
+      topic_id:
+        description: 'Force a specific topic id (e.g. auto-005). Leave blank for next-in-queue.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: blog-publisher
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run blog publisher (generate → inject → branch → PR → Telegram)
+        env:
+          GEMINI_API_KEY:      ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
+          GH_TOKEN:            ${{ secrets.GITHUB_TOKEN }}
+          FORCE_TOPIC_ID:      ${{ inputs.topic_id }}
+        run: node scripts/blog-publisher/cli.js workflow-run
