@@ -1,4 +1,4 @@
-// scripts/blog-publisher/telegram.js
+// scripts/blog-publisher/telegram.cjs
 // Env-driven: reads TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID from the environment.
 
 const https = require('https');

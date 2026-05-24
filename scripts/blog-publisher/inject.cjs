@@ -1,6 +1,6 @@
-// scripts/blog-publisher/inject.js
+// scripts/blog-publisher/inject.cjs
 // Writes the 4 user-facing files (.tsx + App.tsx + Resources.tsx + sitemap.xml)
-// inside the repo. Called in-process from cli.js workflow-run.
+// inside the repo. Called in-process from cli.cjs workflow-run.
 
 const fs = require('fs');
 const path = require('path');

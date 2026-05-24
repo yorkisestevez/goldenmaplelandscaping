@@ -1,4 +1,4 @@
-// scripts/blog-publisher/generate.js
+// scripts/blog-publisher/generate.cjs
 // In-repo, env-driven generator. Called by .github/workflows/blog-publisher.yml.
 // Requires env: GEMINI_API_KEY
 
