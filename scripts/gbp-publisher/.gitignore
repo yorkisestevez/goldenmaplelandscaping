@@ -1,0 +1,6 @@
+# Local artifacts that must NEVER be committed
+storage-state.json
+storage-state.*.json
+debug-shots/*.png
+debug-shots/*.html
+_post-body.tmp.*

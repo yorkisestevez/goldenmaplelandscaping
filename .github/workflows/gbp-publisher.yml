@@ -1,0 +1,98 @@
+name: Daily GBP Publisher
+
+# Mirrors each weekly blog post into a Google Business Profile "What's New" post.
+# Runs daily at 18:00 UTC = 2:00 PM EDT (1:00 PM EST in winter) — gives the
+# Monday-morning blog PR time to be merged and Netlify-deployed before we
+# point a GBP post at its URL.
+#
+# Picks the most-recent blog from the last 7 days that hasn't been mirrored yet
+# (per scripts/gbp-publisher/state.json), generates a 800-1400 char summary via
+# Gemini, opens headless Chromium with a stored Google session, drives the GBP UI
+# to publish the post, and Telegrams the result with a screenshot.
+#
+# If there's nothing to mirror today, the workflow sends a quiet "idle" ping
+# and exits clean — no failure.
+
+on:
+  schedule:
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: 'Force-mirror a specific blog slug (must exist in scripts/blog-publisher/drafts/). Leave blank for next-pending.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gbp-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright + Chromium
+        run: |
+          npm install --no-save playwright@1.49.0
+          npx playwright install --with-deps chromium
+
+      - name: Doctor (env + state sanity)
+        env:
+          GEMINI_API_KEY:      ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
+          GBP_STORAGE_STATE:   ${{ secrets.GBP_STORAGE_STATE }}
+        run: node scripts/gbp-publisher/cli.cjs doctor
+
+      - name: Run GBP publisher
+        env:
+          GEMINI_API_KEY:      ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
+          GBP_STORAGE_STATE:   ${{ secrets.GBP_STORAGE_STATE }}
+          GBP_LOCATION_ID:     ${{ secrets.GBP_LOCATION_ID }}
+          FORCE_SLUG:          ${{ inputs.slug }}
+        run: |
+          if [ -n "$FORCE_SLUG" ]; then
+            node scripts/gbp-publisher/cli.cjs post-now --slug="$FORCE_SLUG"
+          else
+            node scripts/gbp-publisher/cli.cjs workflow-run
+          fi
+
+      - name: Upload debug shots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gbp-debug-shots
+          path: scripts/gbp-publisher/debug-shots/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Commit state changes
+        if: success()
+        run: |
+          git config user.name "gm-gbp-publisher[bot]"
+          git config user.email "noreply@goldenmaplelandscaping.ca"
+          if git diff --quiet scripts/gbp-publisher/state.json; then
+            echo "No state changes to commit."
+            exit 0
+          fi
+          git add scripts/gbp-publisher/state.json
+          git commit -m "gbp: update mirror state $(date -u +%Y-%m-%d)"
+          git push origin main
