@@ -1,191 +1,109 @@
-# GBP Publisher — Cloud Cron
+# GBP Publisher — Local Claude Code Routine
 
-Mirrors each weekly Golden Maple blog post into a Google Business Profile "What's New" post. Runs in GitHub Actions daily at 2 PM ET, no local machine needed (except during the monthly cookie-refresh ritual).
+Mirrors each weekly Golden Maple blog post into a Google Business Profile "What's New" post. Runs as a **scheduled Claude Code routine** (daily 2 PM ET) on Yorkis's local machine, driving his already-signed-in Chrome via the `mcp__Claude_in_Chrome__*` tools.
+
+## Why local + Chrome MCP (and not GitHub Actions)
+
+**Originally** this was designed as a GitHub Actions cron + headless Playwright + stored Google session cookies. That plan died on contact with reality:
+
+1. **Google killed the Local Posts API in 2024.** No direct-API path exists.
+2. **Google migrated GBP management into Google Search results.** The legacy `business.google.com/posts` dashboard now redirects into the "Your business on Google" panel that only renders inside `google.com/search?q=<your-business>`.
+3. **The new UI is heavily bot-detected.** `google.com/search` has the most aggressive bot detection on the internet — a headless Chromium from a GitHub Azure IP, signing in fresh, would fail every time.
+4. **Google session cookies don't transfer between browsers.** Even captured locally, uploading to GitHub as a secret and replaying in a different browser fingerprint triggers re-auth challenges.
+
+So the architecture is:
+- **Scheduled task** (`~/.claude/scheduled-tasks/gbp-daily-mirror/`) runs daily 2 PM ET in this Claude Code app
+- The task reads `ROUTINE.md` (this directory) as its playbook
+- Drives Yorkis's already-signed-in Chrome via `mcp__Claude_in_Chrome__*`
+- Telegrams success-with-screenshot, failure-with-screenshot, or idle
+
+Trade-off accepted: this only fires while Claude Code is open. If Claude Code is closed when the task is due, it runs on next launch. For a once-a-week mirror, that's fine.
 
 ## Flow
 
-1. **Daily 2 PM ET** — `.github/workflows/gbp-publisher.yml` fires on GitHub's runners.
-2. Reads `scripts/blog-publisher/state.json` to find the newest blog from the last 7 days that hasn't been mirrored yet (`state.mirrored[]` is the truth).
-3. If nothing is pending → sends a quiet "idle" Telegram ping, exits clean.
-4. If something is pending → loads `scripts/blog-publisher/drafts/<slug>.json`, asks Gemini 2.5 Pro for an 800-1400 char summary + CTA.
-5. Launches headless Chromium with stored Google session cookies, navigates to `business.google.com/posts`, fills the form, attaches the hero image, sets the **Learn more** button to the blog URL, hits Publish.
-6. Telegrams a success message with a screenshot of the published post.
-7. Commits the updated `state.json` back to `main` so the same blog doesn't get mirrored twice.
+1. **Daily 2 PM ET** — scheduled task fires
+2. Reads `scripts/blog-publisher/state.json` to find the newest blog from the last 7 days that hasn't been mirrored (per `scripts/gbp-publisher/state.json`)
+3. If nothing pending → idle Telegram ping → exit
+4. If pending → Gemini generates an 800-1400 char summary + Learn more CTA
+5. Connects to Yorkis's Chrome silently, navigates to `google.com/search?q=Golden+Maple+Landscaping`
+6. Clicks Posts in the business panel, fills the form, uploads the hero image, sets CTA URL
+7. Publishes, screenshots, Telegrams the result
+8. Commits the updated `state.json` back to `main` so the same blog never posts twice
 
-## Why this design (and why it's fragile)
+## Setup
 
-**Google killed the Local Posts API in 2024.** There is no longer any way to publish a GBP post via an official API. The only options are:
+Already done if you're reading this — the scheduled task is created via `mcp__scheduled-tasks__create_scheduled_task` and lives in `~/.claude/scheduled-tasks/gbp-daily-mirror/`.
 
-- Manual posting (current state — no scale)
-- Browser automation (this skill)
-- Third-party SaaS like Buffer or Publer (~$5-15/mo, would also work)
+### Required env vars (all already set via `~/Hermes Agent/credentials/load-keys.cmd`)
 
-Browser automation is **fragile**:
+| Var | Used for |
+|---|---|
+| `GEMINI_API_KEY` | Gemini 2.5 Pro — compresses blog drafts into GBP summaries |
+| `TELEGRAM_BOT_TOKEN` | Status pings to Yorkis |
+| `TELEGRAM_CHAT_ID` | Same |
 
-- **Google's UI changes.** Every few months they tweak the GBP dashboard. Selectors break. The script logs the failing step and posts a screenshot to Telegram so you can see what broke.
-- **Google's bot detection.** Headless Chrome on a GitHub runner IP is suspicious. If you have a fresh-login flow, Google will challenge with 2FA. We work around this by capturing a logged-in `storageState` locally on your trusted machine and uploading it as an encrypted GitHub secret — Google sees a "known session" and skips the challenge.
-- **Cookies expire.** Trusted-device cookies for Google last ~14-30 days. When they die, posting fails with `GBP storage state expired` and you get a Telegram alert pointing at the refresh ritual below.
+### Required Chrome state
 
-When something breaks the recovery is usually 2 minutes (cookie refresh) or 15 minutes (selector tweak). Failure modes are alerted, not silent.
+Yorkis's Chrome must be:
+- Open (the MCP needs a running Chrome to connect to)
+- Signed into the Google account that manages Golden Maple Business Profile
 
-## One-time setup
+The deviceId `58fce9f9-570f-4440-b3e9-ffa56a84af9b` (Yorkis Estevez browser) is the silent-auto-connect default per `~/.claude/rules/chrome-mcp-auto-connect.md`.
 
-### 1. Install Playwright locally (for `capture-state`)
+## Manual run
 
-From the repo root:
+If you want to mirror a specific blog right now without waiting for the cron, paste this into Claude Code:
 
-```bash
-npm install --no-save playwright@1.49.0
-npx playwright install chromium
-```
+> Run the GBP daily-mirror routine for blog slug `<slug>`. Playbook at `scripts/gbp-publisher/ROUTINE.md`.
 
-### 2. Capture a logged-in Google session
-
-```bash
-node scripts/gbp-publisher/cli.cjs capture-state
-```
-
-This opens a real Chromium window. **Sign into Google with the account that manages your Golden Maple Business Profile.** Navigate until you can see the Posts page for the Barrie location, then come back to the terminal and press Enter.
-
-A file `scripts/gbp-publisher/storage-state.json` is written to disk. It's in `.gitignore` — never commit it. Treat it like a password: it grants full access to your Business Profile.
-
-### 3. Upload the session as a GitHub secret
+## CLI reference (helpers — Claude calls these during the routine)
 
 ```bash
-gh secret set GBP_STORAGE_STATE < scripts/gbp-publisher/storage-state.json
-rm scripts/gbp-publisher/storage-state.json
-```
+# Check what blog (if any) is pending
+node -e "const g = require('./scripts/gbp-publisher/generator.cjs'); const fs = require('fs'); const state = JSON.parse(fs.readFileSync('./scripts/gbp-publisher/state.json', 'utf8')); console.log(JSON.stringify(g.findPendingBlog(state, {maxAgeDays: 7})));"
 
-### 4. (Optional) Pin a specific location
+# Generate the GBP post body for a specific blog (validation included)
+node scripts/gbp-publisher/cli.cjs generate-only --slug=<slug>
 
-If your Google account manages more than one GBP location, set the location id to avoid the script posting to the wrong one:
-
-```bash
-gh secret set GBP_LOCATION_ID --body "1234567890123456789"
-```
-
-Find your location id from `business.google.com/n/<this-is-the-id>/posts` in the URL when you're on the Posts page.
-
-### 5. Confirm the other 3 secrets exist
-
-These are reused from the blog-publisher workflow — they should already be set, but check:
-
-```bash
-gh secret list | grep -E '(GEMINI_API_KEY|TELEGRAM_BOT_TOKEN|TELEGRAM_CHAT_ID)'
-```
-
-If any are missing, set them the same way (`gh secret set NAME --body "..."`).
-
-### 6. Test it
-
-Trigger the workflow manually:
-
-GitHub UI → Actions → "Daily GBP Publisher" → Run workflow.
-
-Optionally enter a slug to force-mirror a specific blog (otherwise it'll pick the next-pending or send an idle ping).
-
-Watch the run in Actions. On failure, debug shots are uploaded as an artifact for 14 days.
-
-## Monthly cookie refresh ritual
-
-When you get this Telegram alert:
-
-> ❌ gm-gbp-publisher failed
-> Stage: navigate-to-business
-> Error: GBP storage state expired — Google bounced us to sign-in.
-
-Run these 3 commands (~2 minutes):
-
-```bash
-node scripts/gbp-publisher/cli.cjs capture-state
-gh secret set GBP_STORAGE_STATE < scripts/gbp-publisher/storage-state.json
-rm scripts/gbp-publisher/storage-state.json
-```
-
-Next scheduled run (or manual trigger) will work again. Nothing in the repo changes.
-
-## CLI reference
-
-```bash
-# What the GitHub workflow runs
-node scripts/gbp-publisher/cli.cjs workflow-run
-
-# Force-mirror a specific blog slug (must exist in blog-publisher/drafts/)
-node scripts/gbp-publisher/cli.cjs post-now --slug=spring-cleanup-barrie
-
-# Generate the GBP post body without publishing (preview / debug)
-node scripts/gbp-publisher/cli.cjs generate-only --slug=spring-cleanup-barrie
-
-# Open a Chrome window to sign in to Google (refresh ritual)
-node scripts/gbp-publisher/cli.cjs capture-state
-node scripts/gbp-publisher/cli.cjs capture-state --out=/tmp/my-state.json
-
-# Sanity check env vars + state files
+# Sanity check env + state files
 node scripts/gbp-publisher/cli.cjs doctor
+
+# Direct Telegram send (used by the routine)
+node -e "const t = require('./scripts/gbp-publisher/telegram.cjs'); t.sendMessage('test').then(console.log);"
 ```
 
-## Local debugging tips
+## What happens on failure
 
-```bash
-# Run against a local storage-state.json instead of the env secret
-GBP_STORAGE_STATE_FILE=./scripts/gbp-publisher/storage-state.json \
-  node scripts/gbp-publisher/cli.cjs post-now --slug=spring-cleanup-barrie
+The routine sends a Telegram with a screenshot showing exactly where things broke. Common failures:
 
-# Watch it in a real browser window (Linux/Mac only — needs a display)
-GBP_HEADLESS=false node scripts/gbp-publisher/cli.cjs post-now --slug=spring-cleanup-barrie
+| Failure | Likely cause | Fix |
+|---|---|---|
+| `Chrome not connected` | Yorkis closed Chrome | Open Chrome and re-trigger |
+| `Posts button not found` | Wrong Google account active, or panel didn't render | Open `google.com/search?q=Golden+Maple+Landscaping` in your Chrome, switch to the right account, re-trigger |
+| `Generated post failed validation` | Gemini exceeded 1500 chars or used a banned phrase | Re-run (Gemini is non-deterministic) |
+| `Image fetch failed: 404` | Blog hero image not deployed | Wait for Netlify deploy, re-trigger |
+| (silence — no Telegram) | Claude Code was closed when the task fired | Will run on next Claude Code launch |
 
-# Verbose error stacks
-GBP_DEBUG=1 node scripts/gbp-publisher/cli.cjs workflow-run
-```
-
-When a selector fails, the debug shot + an HTML dump land in `scripts/gbp-publisher/debug-shots/` (gitignored).
+`state.json` tracks `lastFailureAt` and `consecutiveFailures` so you can see drift over time.
 
 ## File layout
 
 ```
 scripts/gbp-publisher/
 ├── README.md           you are here
-├── cli.cjs             entry — workflow-run | post-now | generate-only | capture-state | doctor
-├── generator.cjs       Gemini call: blog draft → GBP post body + CTA + validation
-├── publisher.cjs       Playwright Chromium → business.google.com → publish
-├── telegram.cjs        success / failure / idle pings (reuses TELEGRAM_BOT_TOKEN)
-├── state.json          { mirrored: [...slugs already posted to GBP] }
-├── storage-state.json  (gitignored) local Google session bundle
-└── debug-shots/        (gitignored) screenshots + HTML dumps from failed runs
+├── ROUTINE.md          step-by-step playbook the scheduled task reads
+├── cli.cjs             helper CLI — generate-only | doctor | post-now | capture-state
+├── generator.cjs       Gemini blog→GBP summary + validation
+├── telegram.cjs        Telegram helpers (idle / success-with-photo / failure-with-photo)
+├── publisher.cjs       LEGACY — Playwright-based publisher (kept for reference, not used by the routine)
+├── state.json          { mirrored: [...slugs already posted], lastSuccessAt, consecutiveFailures }
+└── debug-shots/        (gitignored) screenshots from failed attempts
 ```
-
-## What goes in the GBP post
-
-The generator produces a plain-text summary (no HTML, no markdown) between 800 and 1400 characters. Hard constraints baked into the prompt:
-
-- Operator-honest brand voice — same banned phrases as blog-publisher.
-- One paragraph hook → tease the article → one-sentence nudge.
-- Canadian English.
-- No links inside the body (the **Learn more** button handles that).
-- No emoji except one optional 🍁 or 🌿.
-
-The CTA is always `Learn more` pointing to `https://goldenmaplelandscaping.ca/resources/<slug>`. The hero image is the same one used by the blog post.
-
-## Pause / resume
-
-GitHub UI → Actions → "Daily GBP Publisher" → ⋯ → Disable / Enable.
-
-Disabling stops the cron. The blog-publisher workflow keeps running independently.
-
-## Failure modes you might see
-
-| Telegram says | Cause | Fix |
-|---|---|---|
-| `GBP storage state expired` | Google session cookies died (~monthly) | Run capture-state ritual above |
-| `Could not find Add update button` | Google changed the GBP UI | Check `debug-shots/` artifact — update selectors in `publisher.cjs` |
-| `Generated post failed validation` | Gemini returned >1500 chars or used a banned phrase | Re-run; check generator.cjs prompt if recurring |
-| `Image fetch failed: ... HTTP 404` | Blog hero image not deployed yet | Check Netlify deploy status; image must be live |
-| (no message at all) | Workflow itself broke before sending Telegram | Check the Actions run log directly |
 
 ## What this does NOT do
 
 - **No GBP photos-only posts.** Only "What's New" posts mirroring blog content.
-- **No GBP Offers or Events.** Those have different fields and bot-detection profiles.
+- **No GBP Offers or Events.** Different fields.
 - **No reply-to-reviews.** Separate skill.
 - **No QnA management.** Separate skill.
-- **No approval gate.** The blog PR already had one (you merged it). GBP post goes live without another human checkpoint.
+- **No human approval gate.** The blog PR already had one (you merged it). GBP post goes live without another checkpoint.
