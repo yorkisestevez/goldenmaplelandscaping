@@ -378,8 +378,14 @@ async function publishGbpPost(post, opts = {}) {
   }
 }
 
-// Used by cli.js capture-state. Opens a real browser so Yorkis can sign in,
+// Used by cli.cjs capture-state. Opens a real browser so Yorkis can sign in,
 // then writes the storage state to disk.
+//
+// Two completion modes:
+//   - Auto-detect (default): polls every 3s for signed-in state (URL contains
+//     /posts AND DOM has Add update / Create post visible). Auto-saves & exits.
+//     Max wait: 5 minutes.
+//   - Manual Enter (env GBP_CAPTURE_MANUAL=1): falls back to the press-Enter flow.
 async function captureStorageState(outPath) {
   let chromium;
   try {
@@ -390,6 +396,8 @@ async function captureStorageState(outPath) {
       '  npm install --no-save playwright && npx playwright install chromium\n'
     );
   }
+  const manual = process.env.GBP_CAPTURE_MANUAL === '1';
+
   const browser = await chromium.launch({ headless: false, args: ['--no-sandbox'] });
   const context = await browser.newContext({
     viewport: DEFAULT_VIEWPORT,
@@ -399,21 +407,52 @@ async function captureStorageState(outPath) {
   });
   const page = await context.newPage();
   await page.goto('https://business.google.com/posts');
+
   console.log('');
   console.log('=================================================================');
-  console.log('  Sign in to Google Business Profile in the window that opened.');
-  console.log('  Make sure you land on the Posts page for the right location.');
-  console.log('  When you see Posts / Add update, come back here and press Enter.');
+  console.log('  A Chromium window just opened pointed at business.google.com.');
+  console.log('  Sign in with the Google account that manages Golden Maple.');
+  console.log(manual
+    ? '  When you can see the Posts page, come back here and press Enter.'
+    : '  When you land on the Posts page, this script will auto-save & exit.');
+  console.log('  Max wait: 5 minutes.');
   console.log('=================================================================');
   console.log('');
-  await new Promise((resolve) => {
-    process.stdin.resume();
-    process.stdin.once('data', () => resolve());
-  });
+
+  if (manual) {
+    await new Promise((resolve) => {
+      process.stdin.resume();
+      process.stdin.once('data', () => resolve());
+    });
+  } else {
+    const deadline = Date.now() + 5 * 60 * 1000;
+    let signedIn = false;
+    while (Date.now() < deadline) {
+      try {
+        const url = page.url();
+        const onPosts = /business\.google\.com\/(?:n\/\d+\/)?posts/.test(url);
+        if (onPosts) {
+          // Confirm DOM is loaded with a Posts-page marker
+          const has = await page.evaluate(() => {
+            const text = document.body?.innerText || '';
+            return /add update|create post|add post|your posts/i.test(text);
+          }).catch(() => false);
+          if (has) { signedIn = true; break; }
+        }
+      } catch {}
+      await page.waitForTimeout(3000);
+    }
+    if (!signedIn) {
+      throw new Error('Timed out after 5 minutes waiting for sign-in. Re-run with GBP_CAPTURE_MANUAL=1 to use the press-Enter flow.');
+    }
+    console.log('[gbp:capture] Detected signed-in Posts page. Saving state...');
+  }
+
   const state = await context.storageState();
   fs.writeFileSync(outPath, JSON.stringify(state, null, 2));
   console.log(`\nStorage state written to ${outPath}`);
   console.log(`Cookies: ${state.cookies.length}, origins: ${state.origins.length}`);
+
   await context.close();
   await browser.close();
   return outPath;
