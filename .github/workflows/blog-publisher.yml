@@ -47,4 +47,4 @@ jobs:
           TELEGRAM_CHAT_ID:    ${{ secrets.TELEGRAM_CHAT_ID }}
           GH_TOKEN:            ${{ secrets.GITHUB_TOKEN }}
           FORCE_TOPIC_ID:      ${{ inputs.topic_id }}
-        run: node scripts/blog-publisher/cli.js workflow-run
+        run: node scripts/blog-publisher/cli.cjs workflow-run

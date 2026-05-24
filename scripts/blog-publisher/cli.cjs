@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// scripts/blog-publisher/cli.js
+// scripts/blog-publisher/cli.cjs
 // Single orchestration entry. Used by .github/workflows/blog-publisher.yml.
+// Uses .cjs extension because root package.json declares "type": "module".
 //
 // Commands:
 //   workflow-run         End-to-end: pick topic → Gemini → inject → branch → push → gh PR → Telegram.
@@ -12,9 +13,9 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const { generateDraft } = require('./generate');
-const { injectDraft, slugToComponent } = require('./inject');
-const telegram = require('./telegram');
+const { generateDraft } = require('./generate.cjs');
+const { injectDraft, slugToComponent } = require('./inject.cjs');
+const telegram = require('./telegram.cjs');
 
 const SCRIPT_DIR = __dirname;
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
@@ -160,7 +161,7 @@ async function main() {
       }
       case 'generate-only': await cmdGenerateOnly(); break;
       default:
-        console.error('Usage: cli.js {workflow-run|generate-only}');
+        console.error('Usage: cli.cjs {workflow-run|generate-only}');
         process.exit(2);
     }
   } catch (e) {

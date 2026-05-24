@@ -50,10 +50,10 @@ To refill: append new entries with `auto-XXX` ids to `topics.json`.
 ```
 scripts/blog-publisher/
 ├── README.md           you are here
-├── cli.js              entry — workflow-run / generate-only
-├── generate.js         Gemini call + validation
-├── inject.js           writes the 4 user-facing files
-├── telegram.js         env-driven Telegram sender
+├── cli.cjs             entry — workflow-run / generate-only
+├── generate.cjs        Gemini call + validation
+├── inject.cjs          writes the 4 user-facing files
+├── telegram.cjs        env-driven Telegram sender
 ├── topics.json         the topic backlog (45 entries)
 ├── state.json          used topic ids + history
 └── drafts/             archived JSON of every generated post
