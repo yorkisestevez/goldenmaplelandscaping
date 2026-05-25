@@ -1,8 +1,22 @@
 {
   "version": 1,
-  "lastRunAt": null,
-  "usedTopicIds": [],
+  "lastRunAt": "2026-05-25T15:50:33.788Z",
+  "usedTopicIds": [
+    "auto-001"
+  ],
   "publishedSlugs": [],
-  "currentDraft": null,
-  "history": []
+  "currentDraft": "paver-walkway-cost-barrie",
+  "history": [
+    {
+      "topicId": "auto-001",
+      "slug": "paver-walkway-cost-barrie",
+      "at": "2026-05-25T15:50:33.787Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 1653,
+        "linkCount": 3
+      }
+    }
+  ]
 }
