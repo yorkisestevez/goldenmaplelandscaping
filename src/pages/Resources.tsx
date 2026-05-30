@@ -4,6 +4,14 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
+    {
+    slug: "paver-walkway-cost-barrie",
+    title: "What Does a Paver Walkway Cost in Barrie? Real 2026 Pricing",
+    excerpt: "Get real 2026 pricing for a paver walkway in Barrie, Ontario, and understand the key factors that drive cost from a local hardscape contractor.",
+    category: "Investment",
+    readTime: "10 min",
+    image: "/images/projects/orillia-walkway.jpg",
+  },
   {
     slug: 'landscaping-cost-guide-barrie',
     title: 'How Much Does Landscaping Cost in Barrie? A 2026 Price Guide',
