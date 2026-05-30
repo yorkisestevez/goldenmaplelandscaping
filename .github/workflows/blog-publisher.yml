@@ -41,6 +41,7 @@ jobs:
           node-version: '20'
 
       - name: Run blog publisher (generate → inject → branch → PR → Telegram)
+        id: publisher
         env:
           GEMINI_API_KEY:      ${{ secrets.GEMINI_API_KEY }}
           TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -48,3 +49,27 @@ jobs:
           GH_TOKEN:            ${{ secrets.GITHUB_TOKEN }}
           FORCE_TOPIC_ID:      ${{ inputs.topic_id }}
         run: node scripts/blog-publisher/cli.cjs workflow-run
+
+      # Backstop alert — fires on ANY job failure regardless of where it happened.
+      # Catches failures the Node script's inner try/catch couldn't reach (e.g. early
+      # crashes, OS errors, gh CLI permission issues like the 2026-05-25 incident).
+      - name: Telegram alert on failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set +e
+          MSG="🚨 Weekly Blog Publisher FAILED
+          Trigger: ${{ github.event_name }}
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Open the run logs and look for the red step. Common causes:
+          - Gemini API down or rate-limited (transient — re-run next week)
+          - Topic queue empty (refill scripts/blog-publisher/topics.json)
+          - GH Actions permissions changed (Settings → Actions → Workflow permissions)
+          - Secret rotated (GEMINI_API_KEY, TELEGRAM_*, NETLIFY_AUTH_TOKEN)"
+          curl -fsS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+            --data-urlencode "text=$MSG" \
+            --data-urlencode "disable_web_page_preview=true" > /dev/null || true

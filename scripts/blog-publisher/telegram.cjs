@@ -56,6 +56,10 @@ function buildPrPreview(draft, prUrl) {
   const cat = escapeMd(draft.category);
   const sectionCount = (draft.sections || []).length;
   const faqCount = (draft.faqs || []).length;
+  const queueRemaining = typeof draft.queueRemaining === 'number' ? draft.queueRemaining : null;
+  const queueLine = (queueRemaining !== null && queueRemaining <= 4)
+    ? `\n🟡 *Topic queue running low:* only ${queueRemaining} left \\- refill \`topics\\.json\` soon\\.`
+    : '';
 
   return [
     `${okMark} *New blog draft \\- PR open*`,
@@ -66,7 +70,7 @@ function buildPrPreview(draft, prUrl) {
     `*Category:* ${cat}`,
     `*Stats:* ${escapeMd(wordStat)} · ${sectionCount} sections · ${faqCount} FAQs · ${escapeMd(linkStat)}`,
     `*SEO Title:* ${seoTitle}`,
-    `*SEO Desc:* _${seoDesc}_${issuesLine}`,
+    `*SEO Desc:* _${seoDesc}_${issuesLine}${queueLine}`,
     ``,
     `📱 *Approve* \\(tap to open PR, then Merge\\):`,
     escapeMd(prUrl),
