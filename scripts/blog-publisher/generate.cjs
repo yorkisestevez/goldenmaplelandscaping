@@ -191,6 +191,12 @@ async function generateDraft({ topicId = null } = {}) {
   draft.author = 'Yorkis Estevez';
   draft.validation = validateDraft(draft);
 
+  // Queue-low awareness: count topics still unused AFTER this run (i.e. topics
+  // that won't be picked by future cron firings). Used by the PR-body builder
+  // to flag when the operator needs to refill topics.json.
+  const usedAfterThisRun = new Set([...(state.usedTopicIds || []), topic.id]);
+  draft.queueRemaining = topics.filter(t => !usedAfterThisRun.has(t.id)).length;
+
   if (!fs.existsSync(DRAFTS_DIR)) fs.mkdirSync(DRAFTS_DIR, { recursive: true });
   const draftPath = path.join(DRAFTS_DIR, `${topic.slug}.json`);
   writeJson(draftPath, draft);

@@ -47,3 +47,25 @@ jobs:
             --dir=dist \
             --prod \
             --message="ci(main): ${GITHUB_SHA::7} — ${GITHUB_ACTOR}"
+
+      # Backstop alert — fires on ANY deploy failure. Without this, a broken main
+      # push silently rolls back any auto-deploy expectation. Catches: build
+      # failures, missing modules, Netlify auth expiry, dist size limits, etc.
+      - name: Telegram alert on failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set +e
+          MSG="🚨 Netlify deploy FAILED (live site is on previous version)
+          Commit: ${{ github.sha }}
+          Pushed by: ${{ github.actor }}
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          The live site at goldenmaplelandscaping.ca is unchanged — this push didn't deploy.
+          Open the run logs to see the failing step (usually npm run build or netlify-cli auth)."
+          curl -fsS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+            --data-urlencode "text=$MSG" \
+            --data-urlencode "disable_web_page_preview=true" > /dev/null || true

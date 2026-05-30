@@ -29,6 +29,20 @@ The workflow needs these 3 secrets set on the repo (Settings → Secrets and var
 
 (`GITHUB_TOKEN` is auto-provided by Actions — no setup needed.)
 
+The deploy workflow (`netlify-deploy.yml`) additionally needs `NETLIFY_AUTH_TOKEN`.
+
+## Required GitHub repo settings (defaults will break this — don't skip)
+
+**Settings → Actions → General → Workflow permissions:**
+- ✅ "Read and write permissions" (radio button)
+- ✅ "Allow GitHub Actions to create and approve pull requests" (checkbox)
+
+The 2026-05-25 Monday cron failed because this checkbox is **off by default**. The workflow generated the draft, pushed the branch — but `gh pr create` returned `GraphQL: GitHub Actions is not permitted to create or approve pull requests`. After flipping the toggle, the 2026-05-30 manual re-run completed in 1m14s end-to-end. If this ever gets toggled off again (e.g. by an organization-level policy), expect the same silent breakage.
+
+## Failure alerts
+
+Both `blog-publisher.yml` and `netlify-deploy.yml` ship with a workflow-level `if: failure()` Telegram step that fires on **any** job failure — including ones where the Node script crashes before reaching its own error handlers. The alert includes a direct link to the failing run's logs. Use this to debug.
+
 ## Manual trigger
 
 GitHub UI → Actions → "Weekly Blog Publisher" → Run workflow.
