@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-    {
+      {
+    slug: "polymeric-sand-vs-regular-sand-patio",
+    title: "Polymeric Sand vs. Regular Sand: Why It Matters for Your Barrie Patio",
+    excerpt: "Wondering why your paver patio has weeds? Learn why polymeric sand is the only choice for durable interlocking patios in Barrie's harsh freeze-thaw cycles.",
+    category: "Engineering",
+    readTime: "9 min",
+    image: "/images/projects/IHPX8926.JPEG",
+  },
+  {
     slug: "paver-walkway-cost-barrie",
     title: "What Does a Paver Walkway Cost in Barrie? Real 2026 Pricing Guide",
     excerpt: "Get real 2026 pricing for a paver walkway in Barrie, Ontario, and learn what factors like materials, base prep, and size will impact your final investment.",

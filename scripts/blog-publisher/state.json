@@ -1,11 +1,12 @@
 {
   "version": 1,
-  "lastRunAt": "2026-05-25T15:50:33.788Z",
+  "lastRunAt": "2026-06-01T18:37:29.490Z",
   "usedTopicIds": [
-    "auto-001"
+    "auto-001",
+    "auto-002"
   ],
   "publishedSlugs": [],
-  "currentDraft": "paver-walkway-cost-barrie",
+  "currentDraft": "polymeric-sand-vs-regular-sand-patio",
   "history": [
     {
       "topicId": "auto-001",
@@ -16,6 +17,17 @@
         "errors": [],
         "wordCount": 1653,
         "linkCount": 3
+      }
+    },
+    {
+      "topicId": "auto-002",
+      "slug": "polymeric-sand-vs-regular-sand-patio",
+      "at": "2026-06-01T18:37:29.488Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 1943,
+        "linkCount": 5
       }
     }
   ]
