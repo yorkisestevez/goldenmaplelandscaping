@@ -1,9 +1,31 @@
 {
   "version": 1,
-  "lastRunAt": null,
-  "lastSuccessAt": null,
+  "lastRunAt": "2026-06-04T02:21:40.150Z",
+  "lastSuccessAt": "2026-06-04T02:21:40.150Z",
   "lastFailureAt": null,
   "consecutiveFailures": 0,
-  "mirrored": [],
-  "history": []
+  "mirrored": [
+    {
+      "slug": "paver-walkway-cost-barrie",
+      "title": "What Does a Paver Walkway Cost in Barrie? Real 2026 Pricing Guide",
+      "ctaUrl": "https://goldenmaplelandscaping.ca/resources/paver-walkway-cost-barrie",
+      "publishedAt": "2026-06-04T02:21:40.150Z",
+      "routine": "manual-catchup-2026-06-04"
+    },
+    {
+      "slug": "polymeric-sand-vs-regular-sand-patio",
+      "title": "Polymeric Sand vs. Regular Sand: Why It Matters for Your Barrie Patio",
+      "ctaUrl": "https://goldenmaplelandscaping.ca/resources/polymeric-sand-vs-regular-sand-patio",
+      "publishedAt": "2026-06-04T02:21:40.150Z",
+      "routine": "manual-catchup-2026-06-04"
+    }
+  ],
+  "history": [
+    {
+      "at": "2026-06-04T02:21:40.150Z",
+      "mirrored": 2,
+      "ok": true,
+      "note": "manual catch-up after self-heal patch (text-only, no image)"
+    }
+  ]
 }
