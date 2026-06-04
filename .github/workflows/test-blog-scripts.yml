@@ -38,4 +38,6 @@ jobs:
           done
 
       - name: Run tests
-        run: node --test "scripts/blog-publisher/__tests__/*.test.cjs"
+        # Unquoted glob — bash expands to the explicit file list. Node's --test
+        # runner takes file paths, not globs.
+        run: node --test scripts/blog-publisher/__tests__/*.test.cjs
