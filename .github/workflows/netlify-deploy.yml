@@ -50,6 +50,7 @@ jobs:
       # routine already uses. (This replaces the standalone `npm run build` step;
       # netlify runs the build command from netlify.toml itself.)
       - name: Build & deploy to Netlify (production, with site env injected)
+        id: deploy
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: 549b17bd-15af-42ee-8f0c-7fef576cf664
@@ -60,11 +61,57 @@ jobs:
             --prod \
             --message="ci(main): ${GITHUB_SHA::7} — ${GITHUB_ACTOR}"
 
-      # Backstop alert — fires on ANY deploy failure. Without this, a broken main
-      # push silently rolls back any auto-deploy expectation. Catches: build
-      # failures, missing modules, Netlify auth expiry, dist size limits, etc.
+      # Post-deploy analytics guard — fetches the LIVE bundle and verifies every
+      # tracker survived the build. Catches the exact class of bug that bit us:
+      # a deploy that SUCCEEDS but silently ships an analytics-free bundle (lost
+      # Netlify env injection) or the wrong GA4 id. Retries to ride out CDN cache
+      # lag so it never false-alarms. On a real miss → Telegram alert + red run.
+      #
+      # NOTE: these expected IDs are intentional asserts. If you deliberately
+      # change an analytics ID in Netlify env, update the four greps below too —
+      # otherwise this guard will (correctly) fail to warn you of the change.
+      - name: Verify analytics survived the deploy
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set +e
+          OK=0
+          for i in 1 2 3 4 5 6; do
+            sleep 10
+            BUNDLE=$(curl -fsS https://goldenmaplelandscaping.ca/ | grep -oE '/assets/index-[^"]+\.js' | head -1)
+            [ -z "$BUNDLE" ] && continue
+            JS=$(curl -fsS "https://goldenmaplelandscaping.ca$BUNDLE")
+            [ -z "$JS" ] && continue
+            MISSING=""
+            echo "$JS" | grep -q "G-1BRTV91W3Z"    || MISSING="$MISSING GA4(G-1BRTV91W3Z)"
+            echo "$JS" | grep -q "wisgcj7yvw"       || MISSING="$MISSING Clarity(wisgcj7yvw)"
+            echo "$JS" | grep -q "2084193635490617" || MISSING="$MISSING MetaPixel"
+            echo "$JS" | grep -q "AW-1411168829"    || MISSING="$MISSING GoogleAds"
+            if [ -z "$MISSING" ]; then OK=1; echo "Analytics guard OK ($BUNDLE) — GA4 + Clarity + Pixel + Ads all present"; break; fi
+            echo "attempt $i: still missing:$MISSING (bundle $BUNDLE) — retrying"
+          done
+          if [ "$OK" != "1" ]; then
+            MSG="🚨 Analytics MISSING from live deploy of goldenmaplelandscaping.ca
+          Bundle: ${BUNDLE:-unknown}
+          Missing:${MISSING:- (could not fetch bundle)}
+          The deploy SUCCEEDED but the live bundle is missing trackers — most likely the CI build lost Netlify env injection (check the netlify --build step + Netlify env vars), or a tracking id changed. Expected: GA4 G-1BRTV91W3Z, Clarity wisgcj7yvw, Meta Pixel 2084193635490617, Google Ads AW-1411168829.
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            curl -fsS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+              --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+              --data-urlencode "text=$MSG" \
+              --data-urlencode "disable_web_page_preview=true" > /dev/null || true
+            echo "::error::Analytics missing from live bundle:$MISSING"
+            exit 1
+          fi
+
+      # Backstop alert — fires only when the deploy STEP itself failed (build
+      # error, netlify auth, dist size, etc.). Scoped to steps.deploy so an
+      # analytics-guard failure doesn't also fire this misleading "deploy failed"
+      # message (the deploy succeeded in that case; the guard sends its own).
       - name: Telegram alert on failure
-        if: failure()
+        if: failure() && steps.deploy.outcome == 'failure'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
