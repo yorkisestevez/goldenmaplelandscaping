@@ -9,6 +9,11 @@ name: Deploy to Netlify on main
 on:
   push:
     branches: [main]
+    # Don't re-trigger deploys for commits that only touch publisher/watchdog
+    # state files — those are bookkeeping, not user-facing changes.
+    paths-ignore:
+      - 'scripts/blog-publisher/state.json'
+      - 'scripts/gbp-publisher/state.json'
   workflow_dispatch: {}
 
 permissions:

@@ -1,0 +1,89 @@
+name: Blog Watchdog
+
+# Fires after every Weekly Blog Publisher run and every Netlify deploy run,
+# plus on its own schedule. Detects + auto-fixes blog automation failures.
+# Honors ACTIONS_PAT (fine-scoped PAT) when present; degrades to notify-only
+# for fixes that require cross-workflow triggering when PAT is absent.
+
+on:
+  workflow_run:
+    workflows: ["Weekly Blog Publisher", "Deploy to Netlify on main"]
+    types: [completed]
+  schedule:
+    - cron: '0 16 * * 1'   # Mon 16:00 UTC — 3h after publisher cron (catches "didn't run")
+    - cron: '0 2 * * *'    # Daily 02:00 UTC — full sweep
+  workflow_dispatch:
+    inputs:
+      verbose:
+        description: 'Emit Telegram summary even when everything is green'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: blog-watchdog
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    # Skip skipped/cancelled upstream runs — both fire `completed` but aren't failures.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion != 'skipped' &&
+       github.event.workflow_run.conclusion != 'cancelled')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run watchdog
+        env:
+          # Watchdog secrets
+          TELEGRAM_BOT_TOKEN:        ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:          ${{ secrets.TELEGRAM_CHAT_ID }}
+          GEMINI_API_KEY:            ${{ secrets.GEMINI_API_KEY }}
+          GH_TOKEN:                  ${{ secrets.GITHUB_TOKEN }}
+          # Optional — present iff operator added the fine-scoped PAT
+          ACTIONS_PAT:               ${{ secrets.ACTIONS_PAT }}
+
+          # Trigger context (drives which checks run)
+          WORKFLOW_EVENT:            ${{ github.event_name }}
+          WORKFLOW_RUN_NAME:         ${{ github.event.workflow_run.name }}
+          WORKFLOW_RUN_CONCLUSION:   ${{ github.event.workflow_run.conclusion }}
+          WORKFLOW_RUN_ID:           ${{ github.event.workflow_run.id }}
+          WORKFLOW_RUN_HEAD_SHA:     ${{ github.event.workflow_run.head_sha }}
+          SCHEDULE_CRON:             ${{ github.event.schedule }}
+          VERBOSE:                   ${{ inputs.verbose }}
+        run: node scripts/blog-publisher/watchdog.cjs
+
+      # Backstop alert — fires only if the watchdog itself crashed.
+      - name: Telegram alert on watchdog crash
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set +e
+          MSG="🚨 Blog Watchdog ITSELF crashed (meta-failure)
+          Event: ${{ github.event_name }}
+          Upstream: ${{ github.event.workflow_run.name }} (${{ github.event.workflow_run.conclusion }})
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          The detect-and-fix layer is down. Open the run logs and find the failing step."
+          curl -fsS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+            --data-urlencode "text=$MSG" \
+            --data-urlencode "disable_web_page_preview=true" > /dev/null || true

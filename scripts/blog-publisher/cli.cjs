@@ -155,6 +155,10 @@ async function cmdGenerateOnly() {
   console.log(`\nGenerated draft for slug=${draft.slug} valid=${draft.validation.ok}`);
 }
 
+// Exported so scripts/blog-publisher/watchdog.cjs can reuse the PR body
+// format when opening recovery PRs for orphan branches.
+module.exports = { buildPrBody };
+
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2);
   try {
@@ -175,4 +179,5 @@ async function main() {
   }
 }
 
-main();
+// Only run main() when invoked directly, not when require()'d from watchdog.cjs
+if (require.main === module) main();
