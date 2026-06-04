@@ -60,6 +60,11 @@ jobs:
           # Optional — present iff operator added the fine-scoped PAT
           ACTIONS_PAT:               ${{ secrets.ACTIONS_PAT }}
 
+          # Optional — external dead-man's-switch URL from healthchecks.io.
+          # If healthchecks.io doesn't receive a ping within its grace period,
+          # IT emails Yorkis. Catches the case where Actions itself dies.
+          HEALTHCHECKS_URL:          ${{ secrets.HEALTHCHECKS_URL }}
+
           # Trigger context (drives which checks run)
           WORKFLOW_EVENT:            ${{ github.event_name }}
           WORKFLOW_RUN_NAME:         ${{ github.event.workflow_run.name }}
