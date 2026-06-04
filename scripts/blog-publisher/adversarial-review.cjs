@@ -76,12 +76,15 @@ function priorTitlesContext() {
 
 function buildReviewerPrompt(draft) {
   const body = [
+    draft.tldr ? `TL;DR (Quick Answer box at top):\n${draft.tldr}` : '',
     draft.intro,
     ...(draft.sections || []).map((s) => `## ${s.heading}\n${s.html}`),
+    draft.comparison_table?.include && draft.comparison_table?.html ? `## Comparison table\n${draft.comparison_table.caption || ''}\n${draft.comparison_table.html}` : '',
     ...(draft.faqs || []).map((f) => `Q: ${f.question}\nA: ${f.answer}`),
-  ].join('\n\n');
+    draft.author_bio ? `Author bio:\n${draft.author_bio}` : '',
+  ].filter(Boolean).join('\n\n');
 
-  return `You are an adversarial editor reviewing a draft blog post for Golden Maple Landscaping (Barrie, Ontario hardscape contractor). Your job is to find what's WRONG with this draft. The post is auto-generated and headed to production; a careless approval will damage the brand or hurt SEO.
+  return `You are an adversarial editor reviewing a draft blog post for Golden Maple Landscaping (Barrie, Ontario hardscape contractor). Your job is to find what's WRONG with this draft. The post is auto-generated and headed to production; a careless approval will damage the brand or hurt Google SEO + AI engine visibility (ChatGPT/Claude/Perplexity citation).
 
 DRAFT TO REVIEW:
 Title: ${draft.title}
@@ -95,13 +98,18 @@ PRIOR PUBLISHED SLUGS (don't duplicate these angles):
 ${priorTitlesContext()}
 
 EVALUATE on these axes (1-10 each, 10 = best):
-- factual_accuracy:   Any made-up stats, fake pricing, fabricated standards, wrong product info? Specifically, the contractor uses: Permacon/Unilock/Techo-Bloc pavers + TimberTech composite + Carr Landscape Depot supplier + 12-16" clear stone bases (NOT granular A). Service area: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood.
-- voice_fit:          Operator-honest contractor voice, NOT corporate marketing. "We" not "Golden Maple". No "industry-leading", "passionate team", "state-of-the-art", etc.
-- specificity:        Real Simcoe County references (Lake Simcoe, freeze-thaw, Barrie clay, Bayfield St, etc.) — not generic Ontario filler.
-- seo_value:          Does this target a real long-tail keyword? Will Google rank it? Or is it generic content-mill stuff?
-- originality:        Does this duplicate angles from prior published slugs above? Different enough?
-- safety:             Any legal claims, regulatory advice, or safety guidance that could mislead a homeowner?
-- canadian_english:   Metre/colour/neighbour/kilometre — not American spellings.
+- factual_accuracy:        Any made-up stats, fake pricing, fabricated standards, wrong product info? Specifically, the contractor uses: Permacon/Unilock/Techo-Bloc pavers + TimberTech composite + Carr Landscape Depot supplier + 12-16" clear stone bases (NOT granular A). Service area: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood.
+- voice_fit:               Operator-honest contractor voice, NOT corporate marketing. "We" not "Golden Maple". No "industry-leading", "passionate team", "state-of-the-art", etc.
+- specificity:             Real Simcoe County references (Lake Simcoe, freeze-thaw, Barrie clay, Bayfield St, etc.) — not generic Ontario filler.
+- seo_value:               Does this target a real long-tail keyword? Will Google rank it? Or is it generic content-mill stuff?
+- originality:             Does this duplicate angles from prior published slugs above? Different enough?
+- safety:                  Any legal claims, regulatory advice, or safety guidance that could mislead a homeowner?
+- canadian_english:        Metre/colour/neighbour/kilometre — not American spellings.
+- tldr_quality:            Does the TL;DR Quick Answer (top of post) directly answer the article's main question in 50-90 words? Does it include at least one specific number/range? Could it stand alone as a Google featured snippet?
+- featured_snippet_ready:  Are FAQ answers self-contained (each quotable as a standalone answer)? Do section opening sentences lead with the answer (not the lead-up)? Could Google pull a clean snippet from this?
+- ai_citation_ready:       Is this content "citable" by AI engines (ChatGPT/Claude/Perplexity)? Named facts with specific numbers/brands? Could an AI confidently quote a sentence with attribution? Avoid hedged claims like "many people think" — bias toward declarative facts.
+- numeric_density:         Does almost every section contain at least one specific number, measurement, percentage, range, or named product? Or does it drift into vague claims?
+- e_e_a_t:                 Author bio shows real expertise (years on the tools since 2020, install volume, certifications WSIB / $5M liability)? Brand markers appear naturally without sounding like a marketing aside?
 
 OUTPUT FORMAT — single JSON object, no prose before/after, no markdown fences:
 
