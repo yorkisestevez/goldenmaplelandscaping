@@ -110,6 +110,44 @@ function buildIdleMessage() {
   return `ℹ️ *gm\\-gbp\\-publisher* — nothing to mirror today \\(no new blog posts in the last 7 days that haven't already been posted\\)\\.`;
 }
 
+function buildManualAttachCaption(post) {
+  // Image upload to GBP composer is structurally blocked through Chrome MCP
+  // (Wiz framework gates on event.isTrusted, no input[type=file] in DOM). Two
+  // adversarial workflow verdicts confirmed it. So the routine posts text+CTA
+  // automatically, then nudges Yorkis to drag this image into the live post
+  // manually — takes ~30 seconds, perfect attach quality, no fragile infra.
+  const slug = escapeMd(post.slug || '?');
+  const title = escapeMd(post.title || '');
+  return [
+    `📎 *Drop this into the live GBP post when you have 30s*`,
+    ``,
+    `*Post:* ${title}`,
+    `*Slug:* \`${slug}\``,
+    ``,
+    `1\\. Open the Posts modal in your GBP panel`,
+    `2\\. Tap the post that just went up \\(top of the list\\)`,
+    `3\\. Edit → drag this image into the photo slot → save`,
+    ``,
+    `_Image upload via the routine is blocked by Google's Wiz framework \\(isTrusted gate\\) — this is the cleanest workaround until we build a Playwright\\-CDP arm\\._`,
+  ].join('\n');
+}
+
+async function sendManualAttachNudge(post, imagePath) {
+  if (!imagePath || !fs.existsSync(imagePath)) {
+    // Image fetch failed earlier — just send the text nudge so Yorkis knows the
+    // post is live and can pick a project photo himself.
+    return sendMessage([
+      `📎 *Post is live without image*`,
+      ``,
+      `*Post:* ${escapeMd(post.title || '')}`,
+      `*Slug:* \`${escapeMd(post.slug || '?')}\``,
+      ``,
+      `Hero image fetch failed \\(blog deploy lag?\\)\\. Pick any project photo and drag it into the live post when you can\\.`,
+    ].join('\n'));
+  }
+  return sendPhoto(imagePath, buildManualAttachCaption(post));
+}
+
 async function sendSuccessWithScreenshot(post, screenshotPath) {
   const caption = buildSuccessCaption(post);
   if (screenshotPath && fs.existsSync(screenshotPath)) {
@@ -131,6 +169,8 @@ module.exports = {
   sendPhoto,
   sendSuccessWithScreenshot,
   sendFailureWithScreenshot,
+  sendManualAttachNudge,
   buildIdleMessage,
+  buildManualAttachCaption,
   escapeMd
 };
