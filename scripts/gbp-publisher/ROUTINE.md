@@ -99,16 +99,19 @@ If validation fails: Telegram with the errors, skip this blog (move to next pend
 curl -sL "<imageUrl>" -o "/tmp/gbp-hero-<slug>.jpg" && ls -la "/tmp/gbp-hero-<slug>.jpg"
 ```
 
-### 3c. Drive Chrome to post
+### 3c. Drive Chrome to post (text + CTA only — see image note below)
 
 1. `navigate` the tab to `https://www.google.com/search?q=Golden+Maple+Landscaping`. Wait ~3s for the panel.
-2. Use `find({ query: "Posts button in the business management panel" })` to locate the Posts entry. Click it (`computer left_click` with the ref's screenshot coords, OR use the ref directly via `scroll_to` + click).
-3. Wait for the post composer modal. Use `find` to locate:
-   - The text field → click it, then `type` the summary
-   - The image upload control → use file_upload with the temp path
-   - The "Add button" / CTA toggle → click → select "Learn more" → fill URL field with ctaUrl
-4. Click Publish/Post. Wait ~5s.
-5. `screenshot` the result with `save_to_disk: true` and remember the saved path.
+2. Use `find({ query: "Posts button in the business management panel" })` to locate the Posts entry. Click it.
+3. Click the **+ Add post** button at the top-right of the "Your posts" modal (around screenshot coords (935, 99)).
+4. Wait ~4s for the composer to render.
+5. Click into the Description textarea (around (677, 148)) and `type` the summary from step 3a.
+6. Click the **+ Button** toggle (around (608, 421)) — a "Add a button (optional)" dropdown appears.
+7. Click the dropdown (around (780, 487)) → click "Learn more" (around (619, 633)).
+8. Click into the "Link for your button*" field (around (780, 527)) and `type` the ctaUrl.
+9. Click **Post** (around (963, 591)). Wait ~8s. Take a screenshot with `save_to_disk: true`.
+
+**Image attach intentionally NOT in this step.** Two adversarial workflow verdicts (2026-06-04) confirmed Chrome MCP cannot drive image upload to the GBP composer — Wiz framework gates on `event.isTrusted`, and there is no `input[type=file]` element in the DOM. The image goes to Yorkis via Telegram in step 3e for manual attach (~30 second human action). DO NOT attempt to upload via `file_upload`, synthetic drop, or any other Chrome MCP path — it will silently fail and burn cycles.
 
 ### 3d. Update state + Telegram
 
@@ -137,6 +140,18 @@ node -e "
 const t = require('./scripts/gbp-publisher/telegram.cjs');
 const post = { slug: '<slug>', title: '<title>', summary: '<summary>', ctaUrl: '<ctaUrl>', validation: { charCount: <chars>, ok: true } };
 t.sendSuccessWithScreenshot(post, '<screenshot-path>').then(()=>console.log('success ping sent'));
+"
+```
+
+### 3e. Send the manual-attach nudge
+
+Right after the success ping, send the hero image so Yorkis can drag it into the live post when he sees the Telegram. This is the only image-attach path because Chrome MCP cannot upload to GBP.
+
+```bash
+node -e "
+const t = require('./scripts/gbp-publisher/telegram.cjs');
+const post = { slug: '<slug>', title: '<title>' };
+t.sendManualAttachNudge(post, '/tmp/gbp-hero-<slug>.jpg').then(()=>console.log('manual-attach nudge sent'));
 "
 ```
 
