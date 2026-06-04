@@ -112,6 +112,31 @@ describe('publisher pipeline shape', () => {
   });
 });
 
+describe('watchdog: SEO artifact checks', () => {
+  const wdSrc = fs.readFileSync(path.join(__dirname, '..', 'watchdog.cjs'), 'utf8');
+
+  test('checkSeoArtifacts is defined and dispatched on daily sweep', () => {
+    assert.ok(/async function checkSeoArtifacts/.test(wdSrc),
+      'checkSeoArtifacts must exist');
+    assert.ok(/await checkSeoArtifacts\(findings\)/.test(wdSrc),
+      'checkSeoArtifacts must be awaited in runChecks');
+  });
+
+  test('checkSeoArtifacts probes robots.txt, llms.txt, and the IndexNow key', () => {
+    assert.ok(/\/robots\.txt/.test(wdSrc), 'must probe robots.txt');
+    assert.ok(/\/llms\.txt/.test(wdSrc), 'must probe llms.txt');
+    assert.ok(/indexnow_key_missing/.test(wdSrc) || /indexnow_key_mismatch/.test(wdSrc),
+      'must verify IndexNow key file');
+  });
+
+  test('checkPostRot also verifies SEO upgrade markers on auto-generated posts', () => {
+    assert.ok(/seo_artifact_missing/.test(wdSrc),
+      'checkPostRot must surface missing Quick Answer / About the Author / BreadcrumbList');
+    assert.ok(/Quick Answer/.test(wdSrc) && /About the Author/.test(wdSrc) && /BreadcrumbList/.test(wdSrc),
+      'all three SEO markers must be checked');
+  });
+});
+
 describe('AI crawler config', () => {
   const robotsPath = path.join(__dirname, '..', '..', '..', 'public', 'robots.txt');
   const robotsSrc = fs.existsSync(robotsPath) ? fs.readFileSync(robotsPath, 'utf8') : '';
