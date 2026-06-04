@@ -497,6 +497,64 @@ async function checkWorkflowsEnabled(findings) {
   }
 }
 
+// Gemini API key health — probe by listing models. Cheap, catches dead keys
+// before the next Monday's publish silently fails.
+async function checkGeminiKeyHealth(findings) {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return;  // can't probe what we don't have
+  try {
+    const r = await httpsGet(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    if (r.status === 200) return;  // healthy
+    if (r.status === 401 || r.status === 403) {
+      findings.push({
+        severity: 'high',
+        kind: 'gemini_key_dead',
+        message: `GEMINI_API_KEY returned ${r.status} on probe — key is revoked/expired/wrong. Next Monday's publish will fail. Rotate the key + update repo secret.`,
+      });
+    } else if (r.status === 429) {
+      findings.push({
+        severity: 'medium',
+        kind: 'gemini_rate_limited',
+        message: `GEMINI_API_KEY returned 429 (rate limited). Transient — won't affect Monday's run unless persistent.`,
+      });
+    }
+  } catch (e) {
+    findings.push({ severity: 'low', kind: 'gemini_probe_err', message: `Could not probe Gemini key: ${e.message}` });
+  }
+}
+
+// ACTIONS_PAT expiry — fine-grained PATs include the expiration in response
+// headers when used. Probe gh API and parse the X-GitHub-Token-Expires-At header.
+// Alert if <30 days to expiry.
+async function checkPatExpiry(findings) {
+  if (!HAS_PAT) return;
+  try {
+    // Use a lightweight authenticated endpoint
+    const out = execSync(`curl -sI -H "Authorization: Bearer ${process.env.ACTIONS_PAT}" https://api.github.com/user`, {
+      encoding: 'utf8',
+      timeout: 10000,
+    });
+    const m = out.match(/github-authentication-token-expiration:\s*(.+?)(?:\r|\n|$)/i);
+    if (!m) return;  // not a fine-grained PAT or no expiry header
+    const expiresAt = new Date(m[1].trim());
+    if (isNaN(expiresAt.getTime())) return;
+    const daysLeft = (expiresAt.getTime() - Date.now()) / 86400000;
+    if (daysLeft < 0) {
+      findings.push({
+        severity: 'high',
+        kind: 'pat_expired',
+        message: `ACTIONS_PAT EXPIRED ${Math.abs(Math.round(daysLeft))} day(s) ago. Auto-fixes that need cross-workflow triggers are silently failing. Mint a new PAT and update repo secret.`,
+      });
+    } else if (daysLeft < 30) {
+      findings.push({
+        severity: daysLeft < 7 ? 'high' : 'medium',
+        kind: 'pat_expiring',
+        message: `ACTIONS_PAT expires in ${Math.round(daysLeft)} day(s) (${expiresAt.toISOString().slice(0, 10)}). Rotate before expiry to avoid downtime.`,
+      });
+    }
+  } catch { /* probe failed — don't alert noisily */ }
+}
+
 // Repo workflow_permissions drift — the 2026-05-25 root cause
 async function checkRepoPerms(findings) {
   try {
@@ -649,10 +707,12 @@ async function runChecks() {
   if (trigger.scheduleCron === '0 16 * * 1' || trigger.event === 'workflow_dispatch') {
     await checkMissedCron(findings);
   }
-  // Rot scan only on the daily 02:00 UTC sweep — fetches live HTML, would
-  // hammer the site if run on every workflow_run.
+  // Daily 02:00 UTC sweep — runs expensive/comprehensive checks that don't
+  // need to fire on every workflow_run.
   if (trigger.scheduleCron === '0 2 * * *' || trigger.event === 'workflow_dispatch') {
-    await checkPostRot(findings);
+    await checkPostRot(findings);          // live HTML crawl (3 sample posts)
+    await checkGeminiKeyHealth(findings);  // probe Gemini key
+    await checkPatExpiry(findings);        // parse PAT expiry header
   }
   return { findings };
 }
