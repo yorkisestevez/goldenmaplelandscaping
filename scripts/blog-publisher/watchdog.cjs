@@ -569,15 +569,105 @@ function buildReport(findings, applied) {
     lines.push('');
   }
 
-  if (!lines.length && trigger.verbose) {
-    // Verbose mode → emit "all green" summary
-    return buildAllGreen();
+  // Monday 16:00 UTC schedule = always emit a digest, even if healthy.
+  // This is the user's "positive confirmation" channel — silence on a Monday
+  // means "I never checked," not "all good." A weekly Telegram lands every Mon
+  // afternoon ET reporting that the publisher fired AND the post is live.
+  const isMondayDigest = trigger.scheduleCron === '0 16 * * 1';
+
+  if (!lines.length && (trigger.verbose || isMondayDigest)) {
+    return isMondayDigest ? buildMondayDigest() : buildAllGreen();
   }
 
   if (!lines.length) return null;
 
-  lines.unshift(`🔍 Blog watchdog (${trigger.event}${trigger.upstreamName ? ' → ' + trigger.upstreamName : ''})`);
+  // For Monday digest WITH findings, prepend the digest header instead of the
+  // generic watchdog header — gives the user weekly context.
+  if (isMondayDigest) {
+    lines.unshift(`📊 Weekly Blog Health (Mon ${today()}) — issues detected`);
+  } else {
+    lines.unshift(`🔍 Blog watchdog (${trigger.event}${trigger.upstreamName ? ' → ' + trigger.upstreamName : ''})`);
+  }
   return lines.join('\n').trim();
+}
+
+// Monday weekly health digest — sent every Mon 16:00 UTC regardless of findings.
+// This is the user-requested positive confirmation. If the publisher fired
+// successfully and a new post is in the sitemap, Yorkis sees green. If not, he sees red.
+function buildMondayDigest() {
+  const lines = [`📊 Weekly Blog Health (Mon ${today()})`, ''];
+
+  // Pull recent runs to assess the last 7d
+  let pubRuns = [], deployRuns = [];
+  try { pubRuns = ghJson(`run list --repo ${REPO} --workflow=blog-publisher.yml --json conclusion,createdAt,event,url --limit 20`); } catch {}
+  try { deployRuns = ghJson(`run list --repo ${REPO} --workflow=netlify-deploy.yml --json conclusion,createdAt,url --limit 20`); } catch {}
+
+  // Did this Monday's scheduled cron fire?
+  const recentScheduled = pubRuns.find((r) => r.event === 'schedule' && ageDays(r.createdAt) < 1.5);
+  if (recentScheduled) {
+    const em = recentScheduled.conclusion === 'success' ? '✅' : '❌';
+    lines.push(`  ${em} This Monday's cron: ${recentScheduled.conclusion}`);
+  } else {
+    lines.push(`  🚨 This Monday's cron: did NOT fire in the last ~36h`);
+  }
+
+  // Open PRs from publisher
+  try {
+    const openPrs = ghJson(`pr list --repo ${REPO} --state open --search 'head:auto/blog-' --json number,title,createdAt,url --limit 20`);
+    if (openPrs.length === 0) {
+      lines.push(`  ✅ No open PRs — last week's post merged + deployed`);
+    } else {
+      for (const pr of openPrs) {
+        const ageH = ageHours(pr.createdAt);
+        lines.push(`  📩 PR #${pr.number} waiting ${ageH.toFixed(0)}h: ${pr.title.slice(0, 60)}`);
+        lines.push(`     ${pr.url}`);
+      }
+    }
+  } catch (e) {
+    lines.push(`  ⚠️ Could not list PRs: ${e.message}`);
+  }
+
+  // Last successful deploy
+  const lastSuccessDeploy = deployRuns.find((r) => r.conclusion === 'success');
+  if (lastSuccessDeploy) {
+    lines.push(`  ✅ Last successful deploy: ${fmtAgeShort(lastSuccessDeploy.createdAt)}`);
+  }
+
+  // Live site + sitemap
+  // (best-effort, swallow errors so a network blip doesn't break the digest)
+  // Done synchronously is awkward — we use the existing state.json to know latest slug
+  try {
+    const statePath = path.join(SCRIPT_DIR, 'state.json');
+    const topicsPath = path.join(SCRIPT_DIR, 'topics.json');
+    if (fs.existsSync(statePath) && fs.existsSync(topicsPath)) {
+      const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+      const topics = JSON.parse(fs.readFileSync(topicsPath, 'utf8'));
+      const used = new Set(state.usedTopicIds || []);
+      const remaining = (topics.topics || []).filter((t) => !used.has(t.id)).length;
+      lines.push(`  📚 Topic queue: ${remaining} remaining (~${Math.round(remaining / 4.3)} months)`);
+      lines.push(`  📝 Total posts generated: ${(state.usedTopicIds || []).length}`);
+    }
+  } catch { /* best effort */ }
+
+  lines.push('');
+  lines.push(`  Live: ${SITE_URL}`);
+  lines.push(`  PAT: ${HAS_PAT ? 'configured ✅' : 'not set ⚠️ (some auto-fixes degraded)'}`);
+  lines.push(`  Next cron: Mon ${nextMondayDateStr()} 13:00 UTC`);
+
+  return lines.join('\n');
+}
+
+function fmtAgeShort(iso) {
+  const h = ageHours(iso);
+  if (h < 24) return `${h.toFixed(0)}h ago`;
+  return `${Math.round(h / 24)}d ago`;
+}
+
+function nextMondayDateStr() {
+  const d = new Date();
+  const daysToMon = ((1 - d.getUTCDay()) + 7) % 7 || 7;
+  d.setUTCDate(d.getUTCDate() + daysToMon);
+  return d.toISOString().slice(0, 10);
 }
 
 function buildAllGreen() {
