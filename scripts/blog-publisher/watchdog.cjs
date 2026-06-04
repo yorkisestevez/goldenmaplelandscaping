@@ -191,21 +191,25 @@ async function checkOrphanBranches(findings) {
   }
 }
 
-// Check for stale open PRs from the publisher (>72h)
+// Open-PR nudge with escalating severity:
+//   0-24h:  silent (just opened, give operator time)
+//   24-72h: medium (daily nudge in the daily sweep)
+//   >72h:   high (stale — action needed)
 async function checkStaleOpenPRs(findings) {
   let prs;
   try { prs = ghJson(`pr list --repo ${REPO} --state open --json number,title,headRefName,createdAt,url --search 'head:auto/blog-' --limit 50`); }
   catch (e) { findings.push({ severity: 'low', kind: 'pr_list_err', message: e.message }); return; }
   for (const pr of prs) {
     const age = ageHours(pr.createdAt);
-    if (age > STALE_PR_HOURS) {
-      findings.push({
-        severity: 'medium',
-        kind: 'stale_open_pr',
-        prNumber: pr.number,
-        message: `Open PR #${pr.number} has been waiting ${Math.round(age)}h — tap Merge or close to reject. ${pr.url}`,
-      });
-    }
+    if (age < 24) continue;  // just opened — silent
+    const severity = age > STALE_PR_HOURS ? 'high' : 'medium';
+    const label = age > STALE_PR_HOURS ? 'STALE' : 'awaiting merge';
+    findings.push({
+      severity,
+      kind: severity === 'high' ? 'stale_open_pr' : 'pending_open_pr',
+      prNumber: pr.number,
+      message: `${label}: PR #${pr.number} open for ${Math.round(age)}h — ${pr.title.slice(0, 60)} → ${pr.url}`,
+    });
   }
 }
 
@@ -544,7 +548,7 @@ async function applyAutofixes(findings) {
   return applied;
 }
 
-function buildReport(findings, applied) {
+async function buildReport(findings, applied) {
   const fixed = findings.filter((f) => f.fixed);
   const high = findings.filter((f) => f.severity === 'high' && !f.fixed);
   const medium = findings.filter((f) => f.severity === 'medium' && !f.fixed);
@@ -576,7 +580,7 @@ function buildReport(findings, applied) {
   const isMondayDigest = trigger.scheduleCron === '0 16 * * 1';
 
   if (!lines.length && (trigger.verbose || isMondayDigest)) {
-    return isMondayDigest ? buildMondayDigest() : buildAllGreen();
+    return isMondayDigest ? await buildMondayDigest() : buildAllGreen();
   }
 
   if (!lines.length) return null;
@@ -594,7 +598,8 @@ function buildReport(findings, applied) {
 // Monday weekly health digest — sent every Mon 16:00 UTC regardless of findings.
 // This is the user-requested positive confirmation. If the publisher fired
 // successfully and a new post is in the sitemap, Yorkis sees green. If not, he sees red.
-function buildMondayDigest() {
+// Async because it does a live sitemap fetch for accurate published-count.
+async function buildMondayDigest() {
   const lines = [`📊 Weekly Blog Health (Mon ${today()})`, ''];
 
   // Pull recent runs to assess the last 7d
@@ -633,9 +638,7 @@ function buildMondayDigest() {
     lines.push(`  ✅ Last successful deploy: ${fmtAgeShort(lastSuccessDeploy.createdAt)}`);
   }
 
-  // Live site + sitemap
-  // (best-effort, swallow errors so a network blip doesn't break the digest)
-  // Done synchronously is awkward — we use the existing state.json to know latest slug
+  // Topic queue from local state file (in the runner's checkout)
   try {
     const statePath = path.join(SCRIPT_DIR, 'state.json');
     const topicsPath = path.join(SCRIPT_DIR, 'topics.json');
@@ -645,7 +648,18 @@ function buildMondayDigest() {
       const used = new Set(state.usedTopicIds || []);
       const remaining = (topics.topics || []).filter((t) => !used.has(t.id)).length;
       lines.push(`  📚 Topic queue: ${remaining} remaining (~${Math.round(remaining / 4.3)} months)`);
-      lines.push(`  📝 Total posts generated: ${(state.usedTopicIds || []).length}`);
+    }
+  } catch { /* best effort */ }
+
+  // Live published post count — derived from sitemap.xml (single source of truth).
+  // Replaces state.publishedSlugs which only updates when publisher pipeline runs.
+  try {
+    const sitemap = await httpsGet(SITEMAP_URL);
+    if (sitemap.status === 200) {
+      const slugs = Array.from(new Set((sitemap.body.match(/\/resources\/[a-z0-9-]+/g) || [])
+        .map((s) => s.slice('/resources/'.length))));
+      const latest = slugs[slugs.length - 1];
+      lines.push(`  📝 Posts live on site: ${slugs.length}${latest ? ` (latest: ${latest})` : ''}`);
     }
   } catch { /* best effort */ }
 
@@ -691,18 +705,50 @@ function buildAllGreen() {
 }
 
 // =============================================================================
+// External heartbeat
+// =============================================================================
+
+// Optional dead-man's-switch ping. If HEALTHCHECKS_URL is set, ping it at the
+// END of every successful watchdog run. If healthchecks.io stops receiving
+// pings within the grace period, IT emails Yorkis. Closes the "what if GitHub
+// Actions itself is down" gap that no in-system check can catch.
+//
+// Free tier at https://healthchecks.io covers up to 20 checks. Setup:
+//   1. Create account + new "check" with grace period = 26h (covers daily 02:00 UTC)
+//   2. Copy the unique ping URL
+//   3. Add it as repo secret HEALTHCHECKS_URL
+async function pingHeartbeat(status) {
+  const url = process.env.HEALTHCHECKS_URL;
+  if (!url) return;
+  // Append /fail for failures so healthchecks alerts immediately on bad runs
+  const pingUrl = status === 'fail' ? `${url.replace(/\/$/, '')}/fail` : url;
+  return new Promise((resolve) => {
+    try {
+      const u = new URL(pingUrl);
+      const req = https.request(
+        { hostname: u.hostname, path: u.pathname + u.search, method: 'GET', timeout: 5000 },
+        (res) => { res.resume(); resolve(); }
+      );
+      req.on('error', () => resolve());
+      req.on('timeout', () => { req.destroy(); resolve(); });
+      req.end();
+    } catch { resolve(); }
+  });
+}
+
+// =============================================================================
 // Entry
 // =============================================================================
 
 async function main() {
-  console.log(`[watchdog] starting — event=${trigger.event} upstream=${trigger.upstreamName} conc=${trigger.upstreamConc} verbose=${trigger.verbose} pat=${HAS_PAT}`);
+  console.log(`[watchdog] starting — event=${trigger.event} upstream=${trigger.upstreamName} conc=${trigger.upstreamConc} verbose=${trigger.verbose} pat=${HAS_PAT} heartbeat=${!!process.env.HEALTHCHECKS_URL}`);
 
   const { findings, skipReason } = await runChecks();
-  if (skipReason) { console.log(`[watchdog] skipped: ${skipReason}`); return; }
+  if (skipReason) { console.log(`[watchdog] skipped: ${skipReason}`); await pingHeartbeat('ok'); return; }
 
   const applied = await applyAutofixes(findings);
 
-  const report = buildReport(findings, applied);
+  const report = await buildReport(findings, applied);
   if (report) {
     console.log('---\n' + report + '\n---');
     await telegram(report);
@@ -716,10 +762,13 @@ async function main() {
     medium: findings.filter((f) => f.severity === 'medium').length,
     autofixed: applied.length,
   }));
+
+  await pingHeartbeat('ok');
 }
 
 main().catch(async (e) => {
   console.error('[watchdog] FATAL:', e.message);
   await telegram(`🚨 Blog watchdog ITSELF crashed: ${e.message}`);
+  await pingHeartbeat('fail');
   process.exit(1);
 });
