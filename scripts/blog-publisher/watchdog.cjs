@@ -137,9 +137,10 @@ async function checkOrphanBranches(findings) {
   const autoBranches = branches.filter((b) => b.name.startsWith('auto/blog-'));
   if (!autoBranches.length) return;
 
-  // Pull all PRs (any state) whose head ref starts with auto/blog-
+  // Pull all PRs (any state) whose head ref starts with auto/blog-.
+  // Note: `merged` is not a valid --json field; use `mergedAt` (null if not merged).
   let allPrs;
-  try { allPrs = ghJson(`pr list --repo ${REPO} --state all --search 'head:auto/blog-' --json number,state,headRefName,merged,closedAt --limit 200`); }
+  try { allPrs = ghJson(`pr list --repo ${REPO} --state all --search 'head:auto/blog-' --json number,state,headRefName,mergedAt,closedAt --limit 200`); }
   catch (e) { findings.push({ severity: 'low', kind: 'prs_read_err', message: 'Could not list PRs: ' + e.message }); return; }
 
   const prsByHead = new Map();
@@ -173,7 +174,7 @@ async function checkOrphanBranches(findings) {
         autofix: async () => autofixOrphanBranch(b.name),
         needsPat: true,
       });
-    } else if (prs.every((p) => p.state === 'CLOSED' && !p.merged)) {
+    } else if (prs.every((p) => p.state === 'CLOSED' && !p.mergedAt)) {
       // PR opened and closed without merge → rejected. Clean up if old enough.
       const closedAt = prs.map((p) => p.closedAt).filter(Boolean).sort().pop();
       if (closedAt && ageDays(closedAt) >= REJECTED_BRANCH_AGE_DAYS) {
