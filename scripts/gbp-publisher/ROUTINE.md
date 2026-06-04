@@ -93,27 +93,49 @@ Capture the summary text, ctaUrl, imageUrl. Validation must show OK.
 
 If validation fails: Telegram with the errors, skip this blog (move to next pending), do NOT mark mirrored.
 
-### 3b. Download hero image to temp
+### 3b. Try the API path first (image-attached, no browser needed)
+
+The Hermes GBP publisher publishes via Business Profile API v4, with the image baked into the post card by passing `sourceUrl` to `media[]`. This is the preferred path because it attaches the hero image natively — no manual nudge required.
+
+```bash
+RESULT=$(node scripts/gbp-publisher/api-bridge.cjs publish --slug=<slug> 2>&1)
+RESULT_MODE=$(node -e "try{const r=JSON.parse(process.argv[1]);console.log(r.mode||'')}catch{console.log('parse_error')}" "$RESULT")
+echo "$RESULT" | head -20
+```
+
+- If `RESULT_MODE === 'api'`: SUCCESS WITH IMAGE. Skip step 3c, jump to step 3d. Remember the `post_id` from the JSON response.
+- If `RESULT_MODE === 'markdown_paste'`: API mode unavailable (no token, token expired and refresh failed, account/location not provisioned). Continue to step 3c (Chrome MCP fallback, text+CTA only).
+- If `RESULT_MODE === 'error'` (Hermes module missing, network issue, etc.): log the error, continue to step 3c.
+
+Run `node scripts/gbp-publisher/api-bridge.cjs status` ONCE at the start of the routine (before the per-blog loop) to know whether to skip 3c entirely. If status.mode === 'api', the per-blog API attempt is the primary path; 3c is only used on a per-blog failure.
+
+### 3b-alt. Download hero image to temp (only needed if 3c will run)
 
 ```bash
 curl -sL "<imageUrl>" -o "/tmp/gbp-hero-<slug>.jpg" && ls -la "/tmp/gbp-hero-<slug>.jpg"
 ```
 
-### 3c. Drive Chrome to post (text + CTA only — see image note below)
+### 3c. Drive Chrome to post (fallback — text + CTA only)
 
-1. `navigate` the tab to `https://www.google.com/search?q=Golden+Maple+Landscaping`. Wait ~3s for the panel.
-2. Use `find({ query: "Posts button in the business management panel" })` to locate the Posts entry. Click it.
-3. Click the **+ Add post** button at the top-right of the "Your posts" modal (around screenshot coords (935, 99)).
-4. Wait ~4s for the composer to render.
-5. Click into the Description textarea (around (677, 148)) and `type` the summary from step 3a.
-6. Click the **+ Button** toggle (around (608, 421)) — a "Add a button (optional)" dropdown appears.
-7. Click the dropdown (around (780, 487)) → click "Learn more" (around (619, 633)).
-8. Click into the "Link for your button*" field (around (780, 527)) and `type` the ctaUrl.
-9. Click **Post** (around (963, 591)). Wait ~8s. Take a screenshot with `save_to_disk: true`.
+**Use only when 3b returned non-api mode.** The API path is preferred because it attaches the image; this fallback can't.
 
-**Image attach intentionally NOT in this step.** Two adversarial workflow verdicts (2026-06-04) confirmed Chrome MCP cannot drive image upload to the GBP composer — Wiz framework gates on `event.isTrusted`, and there is no `input[type=file]` element in the DOM. The image goes to Yorkis via Telegram in step 3e for manual attach (~30 second human action). DO NOT attempt to upload via `file_upload`, synthetic drop, or any other Chrome MCP path — it will silently fail and burn cycles.
+1. `select_browser({ deviceId: "58fce9f9-570f-4440-b3e9-ffa56a84af9b" })` (per the Chrome MCP auto-connect rule).
+2. `tabs_context_mcp({ createIfEmpty: true })`. Note the `tabId`.
+3. `navigate` the tab to `https://www.google.com/search?q=Golden+Maple+Landscaping`. Wait ~3s for the panel.
+4. Use `find({ query: "Posts button in the business management panel" })` to locate the Posts entry. Click it.
+5. Click the **+ Add post** button at the top-right of the "Your posts" modal (around screenshot coords (935, 99)).
+6. Wait ~4s for the composer to render.
+7. Click into the Description textarea (around (677, 148)) and `type` the summary from step 3a.
+8. Click the **+ Button** toggle (around (608, 421)) — a "Add a button (optional)" dropdown appears.
+9. Click the dropdown (around (780, 487)) → click "Learn more" (around (619, 633)).
+10. Click into the "Link for your button*" field (around (780, 527)) and `type` the ctaUrl.
+11. Click **Post** (around (963, 591)). Wait ~8s. Take a screenshot with `save_to_disk: true`.
+
+**Image attach intentionally NOT in this fallback step.** Two adversarial workflow verdicts (2026-06-04) confirmed Chrome MCP cannot drive image upload to the GBP composer — Wiz framework gates on `event.isTrusted`, and there is no `input[type=file]` element in the DOM. DO NOT attempt to upload via `file_upload`, synthetic drop, or any other Chrome MCP path — it will silently fail and burn cycles. The manual-attach Telegram nudge in step 3e covers this gap.
 
 ### 3d. Update state + Telegram
+
+Persist both the path used (`api` or `chrome_mcp`) and the post_id when available, so future runs can diagnose drift between modes:
 
 ```bash
 node -e "
@@ -125,7 +147,10 @@ state.mirrored = [...(state.mirrored||[]), {
   title: '<title>',
   ctaUrl: '<ctaUrl>',
   publishedAt: new Date().toISOString(),
-  routine: 'gbp-daily-mirror'
+  routine: 'gbp-daily-mirror',
+  path: '<api|chrome_mcp>',        // which tier landed this post
+  post_id: '<api post_id or null>',
+  imageAttached: <true|false>      // true when path=api succeeded; false when chrome_mcp fallback
 }];
 state.lastSuccessAt = new Date().toISOString();
 state.consecutiveFailures = 0;
@@ -134,19 +159,23 @@ console.log('state updated for', '<slug>');
 "
 ```
 
-Send a Telegram with the screenshot from 3c:
+Send a Telegram with whatever proof we have:
+- **If path was `api`**: send a success message with the post_id and a note that the image is already attached (no manual action needed).
+- **If path was `chrome_mcp`**: send a Telegram with the screenshot from 3c.
+
 ```bash
 node -e "
 const t = require('./scripts/gbp-publisher/telegram.cjs');
 const post = { slug: '<slug>', title: '<title>', summary: '<summary>', ctaUrl: '<ctaUrl>', validation: { charCount: <chars>, ok: true } };
-t.sendSuccessWithScreenshot(post, '<screenshot-path>').then(()=>console.log('success ping sent'));
+t.sendSuccessWithScreenshot(post, '<screenshot-path-or-null>').then(()=>console.log('success ping sent'));
 "
 ```
 
-### 3e. Send the manual-attach nudge
+### 3e. Send the manual-attach nudge (CONDITIONAL — only when API path failed)
 
-Right after the success ping, send the hero image so Yorkis can drag it into the live post when he sees the Telegram. This is the only image-attach path because Chrome MCP cannot upload to GBP.
+**Skip this step if step 3b returned `mode: 'api'`** — the API path already attached the image. The nudge is only for the Chrome MCP fallback path which can't attach images.
 
+When the Chrome MCP fallback was used:
 ```bash
 node -e "
 const t = require('./scripts/gbp-publisher/telegram.cjs');
@@ -155,7 +184,7 @@ t.sendManualAttachNudge(post, '/tmp/gbp-hero-<slug>.jpg').then(()=>console.log('
 "
 ```
 
-### 3e. After all blogs processed — commit & push state
+### 3f. After all blogs processed — commit & push state
 
 ```bash
 git add scripts/gbp-publisher/state.json && \

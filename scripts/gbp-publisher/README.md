@@ -1,38 +1,52 @@
 # GBP Publisher — Local Claude Code Routine
 
-Mirrors every weekly Golden Maple blog post into a Google Business Profile "What's New" post. Runs as a **scheduled Claude Code routine** that fires **4x/day** (9:11 AM, 1:11 PM, 5:11 PM, 9:11 PM ET) on Yorkis's local machine, driving his already-signed-in Chrome via the `mcp__Claude_in_Chrome__*` tools. Self-heals on stale local repo, catches up backlogs across missed fires.
+Mirrors every weekly Golden Maple blog post into a Google Business Profile "What's New" post. Runs as a **scheduled Claude Code routine** that fires **4x/day** (9:11 AM, 1:11 PM, 5:11 PM, 9:11 PM ET) on Yorkis's local machine. Three-tier publish stack: **Business Profile API** (preferred — attaches image), **Chrome MCP composer** (fallback — text+CTA, manual-attach nudge), **markdown paste queue** (last resort). Self-heals on stale local repo, catches up backlogs across missed fires.
 
-## Why local + Chrome MCP (and not GitHub Actions)
+## Three-tier publish stack
 
-**Originally** this was designed as a GitHub Actions cron + headless Playwright + stored Google session cookies. That plan died on contact with reality:
+### Tier 1 — Business Profile API (preferred)
 
-1. **Google killed the Local Posts API in 2024.** No direct-API path exists.
-2. **Google migrated GBP management into Google Search results.** The legacy `business.google.com/posts` dashboard now redirects into the "Your business on Google" panel that only renders inside `google.com/search?q=<your-business>`.
-3. **The new UI is heavily bot-detected.** `google.com/search` has the most aggressive bot detection on the internet — a headless Chromium from a GitHub Azure IP, signing in fresh, would fail every time.
-4. **Google session cookies don't transfer between browsers.** Even captured locally, uploading to GitHub as a secret and replaying in a different browser fingerprint triggers re-auth challenges.
+When `~/Hermes Agent/credentials/gbp-token.json` has a fresh OAuth token, the routine calls `scripts/gbp-publisher/api-bridge.cjs publish --slug=<slug>` which goes through the Hermes GBP publisher at `~/Hermes Agent/skills/gbp-publisher/publisher.js`. That POSTs to `mybusiness.googleapis.com/v4/.../localPosts` with the post summary, Learn more CTA, AND the hero image URL — Google fetches the image from `goldenmaplelandscaping.ca/images/projects/...` and embeds it natively. **One HTTP call, image attached, zero browser fragility.**
+
+### Tier 2 — Chrome MCP composer (fallback)
+
+If the API path returns non-api mode (no token, expired refresh, account/location missing, API error), the routine falls back to driving Yorkis's already-signed-in Chrome via `mcp__Claude_in_Chrome__*` tools. This posts text + Learn more CTA but cannot attach an image — Chrome MCP can't drive Google's composer file upload (two adversarial workflow verdicts on 2026-06-04 confirmed: Wiz framework gates on `event.isTrusted`, no `input[type=file]` in DOM, Playwright `filechooser` event doesn't fire for `window.showOpenFilePicker()`). After the text post lands, a Telegram nudge sends Yorkis the hero image so he can drag it into the live post manually (~30s of human attention).
+
+### Tier 3 — Markdown paste queue (last resort)
+
+If both Tier 1 AND Tier 2 fail (e.g. Chrome not open, all browser automation blocked), the Hermes publisher's existing markdown fallback writes a paste-ready `.md` file to `~/Hermes Agent/queue/gbp-paste/` for Yorkis to copy-paste manually.
+
+## Why this routine exists (cold-context)
+
+The original GitHub Actions + headless Playwright plan died:
+1. The Local Posts API was deprecated then partially restored in 2024 — `localPosts.create` still works for `sourceUrl` media references, hence the Tier 1 path being viable
+2. Google migrated GBP management out of `business.google.com/posts` into `google.com/search?q=<your-business>`, breaking cloud automation
+3. Headless Chromium from GitHub IPs gets bot-detected on `google.com/search`
+4. Session cookies don't transfer between browsers
 
 So the architecture is:
-- **Scheduled task** (`~/.claude/scheduled-tasks/gbp-daily-mirror/`) runs daily 2 PM ET in this Claude Code app
+- **Scheduled task** (`~/.claude/scheduled-tasks/gbp-daily-mirror/`) runs 4x/day in Claude Code
 - The task reads `ROUTINE.md` (this directory) as its playbook
-- Drives Yorkis's already-signed-in Chrome via `mcp__Claude_in_Chrome__*`
-- Telegrams success-with-screenshot, failure-with-screenshot, or idle
+- Tries API first, falls back through Chrome MCP, then markdown paste
+- Telegrams success/failure with whatever proof we have (post_id for API path, screenshot for Chrome MCP path)
 
 Trade-off accepted: this only fires while Claude Code is open. If Claude Code is closed when the task is due, it runs on next launch. For a once-a-week mirror, that's fine.
 
 ## Flow
 
 1. **4x/day (9/13/17/21:11 ET)** — scheduled task fires
-2. **`git pull origin main`** — always pulls fresh blog-publisher state (this is the fix for the 2026-05-31 silent-no-op incident — a stale local clone showed no pending blogs even though origin had a fresh one merged)
+2. **`git pull origin main`** — always pulls fresh blog-publisher state (fixes the 2026-05-31 silent-no-op incident — a stale local clone showed no pending blogs even though origin had a fresh one merged)
 3. Writes `state.lastRunAt` heartbeat regardless of outcome
-4. Reads `scripts/blog-publisher/state.json`, finds **all** un-mirrored blogs from the last **14 days** (catches up two missed weeks)
-5. If nothing pending → idle Telegram ping → commit heartbeat → exit
-6. If pending → for each blog (oldest first):
-   1. Gemini generates an 800-1400 char summary + Learn more CTA
-   2. Connects to Yorkis's Chrome silently, navigates to `google.com/search?q=Golden+Maple+Landscaping`
-   3. Clicks Posts in the business panel, fills the form, uploads the hero image, sets CTA URL
-   4. Publishes, screenshots, Telegrams the result
-   5. Updates `state.mirrored[]` for this slug
-7. Commits the updated `state.json` back to `main` so the same blog never posts twice
+4. Reads `scripts/blog-publisher/state.json`, finds **all** un-mirrored blogs from the last **14 days**
+5. Calls `node scripts/gbp-publisher/api-bridge.cjs status` — caches the result so the per-blog loop knows whether Tier 1 is available
+6. If nothing pending → idle Telegram ping → commit heartbeat → exit
+7. If pending → for each blog (oldest first):
+   1. Gemini generates an 800-1400 char summary + Learn more CTA (`generator.cjs`)
+   2. **Tier 1 attempt**: `api-bridge.cjs publish --slug=<slug>` — if mode=api, post is live WITH IMAGE
+   3. **Tier 2 fallback** (only if Tier 1 returned non-api): Chrome MCP composer flow — text+CTA only, screenshot
+   4. Updates `state.mirrored[]` with the slug + which tier was used + whether image attached
+   5. Telegrams success (API: post_id + image; Chrome MCP: screenshot + manual-attach nudge with the hero image)
+8. Commits the updated `state.json` back to `main` so the same blog never posts twice
 8. On environmental failure (Chrome closed, MCP disconnected) → Telegram alert → exit clean — next fire (≤4h away) retries
 
 ## Setup
@@ -47,13 +61,41 @@ Already done if you're reading this — the scheduled task is created via `mcp__
 | `TELEGRAM_BOT_TOKEN` | Status pings to Yorkis |
 | `TELEGRAM_CHAT_ID` | Same |
 
-### Required Chrome state
+### Required Chrome state (Tier 2 fallback only — skip if Tier 1 is wired)
 
 Yorkis's Chrome must be:
 - Open (the MCP needs a running Chrome to connect to)
 - Signed into the Google account that manages Golden Maple Business Profile
 
 The deviceId `58fce9f9-570f-4440-b3e9-ffa56a84af9b` (Yorkis Estevez browser) is the silent-auto-connect default per `~/.claude/rules/chrome-mcp-auto-connect.md`.
+
+### Setting up Tier 1 (Business Profile API — gets you image-attached posts)
+
+One-time setup, ~30–60 min Yorkis time. See `~/Hermes Agent/skills/gbp-publisher/SKILL.md` for the full ritual. Short version:
+
+1. **Google Cloud Console** — create/select a project, enable these APIs:
+   - My Business Account Management API
+   - My Business Business Information API
+   - Business Profile Performance API
+2. **OAuth consent screen** — External, add Yorkis's email as a test user
+3. **Credentials** → OAuth client → Desktop app → download JSON → save to `~/Hermes Agent/credentials/gbp-oauth-client.json`
+4. **Run the consent flow**:
+   ```bash
+   node "/c/Users/yorki/Hermes Agent/skills/gbp-publisher/oauth-flow.cjs"
+   ```
+   Browser opens → approve with the GBP-managing Google account → tokens written to `~/Hermes Agent/credentials/gbp-token.json`
+5. **Discover account_id + location_id**:
+   ```bash
+   node "/c/Users/yorki/Hermes Agent/skills/gbp-publisher/discover-location.cjs"
+   ```
+   Pick the Golden Maple location → patched into the token file
+6. **Smoke test**:
+   ```bash
+   node "/c/Users/yorki/Hermes Agent/skills/gbp-publisher/publisher.js" test
+   # expect: "mode": "api", account_id + location_id populated
+   ```
+
+After that, the next routine fire uses Tier 1 automatically. If anything in the chain breaks (token revoked, API quota, etc.), the routine cleanly falls back to Tier 2 (Chrome MCP) with no manual intervention.
 
 ## Manual run
 
@@ -99,7 +141,8 @@ scripts/gbp-publisher/
 ├── ROUTINE.md          step-by-step playbook the scheduled task reads
 ├── cli.cjs             helper CLI — generate-only | doctor | post-now | capture-state
 ├── generator.cjs       Gemini blog→GBP summary + validation
-├── telegram.cjs        Telegram helpers (idle / success-with-photo / failure-with-photo)
+├── api-bridge.cjs      Tier 1 wrapper — calls Hermes GBP publisher (Business Profile API)
+├── telegram.cjs        Telegram helpers (idle / success-with-photo / manual-attach nudge)
 ├── publisher.cjs       LEGACY — Playwright-based publisher (kept for reference, not used by the routine)
 ├── state.json          { mirrored: [...slugs already posted], lastSuccessAt, consecutiveFailures }
 └── debug-shots/        (gitignored) screenshots from failed attempts
