@@ -1,6 +1,6 @@
 # GBP Publisher — Local Claude Code Routine
 
-Mirrors each weekly Golden Maple blog post into a Google Business Profile "What's New" post. Runs as a **scheduled Claude Code routine** (daily 2 PM ET) on Yorkis's local machine, driving his already-signed-in Chrome via the `mcp__Claude_in_Chrome__*` tools.
+Mirrors every weekly Golden Maple blog post into a Google Business Profile "What's New" post. Runs as a **scheduled Claude Code routine** that fires **4x/day** (9:11 AM, 1:11 PM, 5:11 PM, 9:11 PM ET) on Yorkis's local machine, driving his already-signed-in Chrome via the `mcp__Claude_in_Chrome__*` tools. Self-heals on stale local repo, catches up backlogs across missed fires.
 
 ## Why local + Chrome MCP (and not GitHub Actions)
 
@@ -21,14 +21,19 @@ Trade-off accepted: this only fires while Claude Code is open. If Claude Code is
 
 ## Flow
 
-1. **Daily 2 PM ET** — scheduled task fires
-2. Reads `scripts/blog-publisher/state.json` to find the newest blog from the last 7 days that hasn't been mirrored (per `scripts/gbp-publisher/state.json`)
-3. If nothing pending → idle Telegram ping → exit
-4. If pending → Gemini generates an 800-1400 char summary + Learn more CTA
-5. Connects to Yorkis's Chrome silently, navigates to `google.com/search?q=Golden+Maple+Landscaping`
-6. Clicks Posts in the business panel, fills the form, uploads the hero image, sets CTA URL
-7. Publishes, screenshots, Telegrams the result
-8. Commits the updated `state.json` back to `main` so the same blog never posts twice
+1. **4x/day (9/13/17/21:11 ET)** — scheduled task fires
+2. **`git pull origin main`** — always pulls fresh blog-publisher state (this is the fix for the 2026-05-31 silent-no-op incident — a stale local clone showed no pending blogs even though origin had a fresh one merged)
+3. Writes `state.lastRunAt` heartbeat regardless of outcome
+4. Reads `scripts/blog-publisher/state.json`, finds **all** un-mirrored blogs from the last **14 days** (catches up two missed weeks)
+5. If nothing pending → idle Telegram ping → commit heartbeat → exit
+6. If pending → for each blog (oldest first):
+   1. Gemini generates an 800-1400 char summary + Learn more CTA
+   2. Connects to Yorkis's Chrome silently, navigates to `google.com/search?q=Golden+Maple+Landscaping`
+   3. Clicks Posts in the business panel, fills the form, uploads the hero image, sets CTA URL
+   4. Publishes, screenshots, Telegrams the result
+   5. Updates `state.mirrored[]` for this slug
+7. Commits the updated `state.json` back to `main` so the same blog never posts twice
+8. On environmental failure (Chrome closed, MCP disconnected) → Telegram alert → exit clean — next fire (≤4h away) retries
 
 ## Setup
 

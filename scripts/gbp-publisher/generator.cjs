@@ -198,18 +198,31 @@ function loadBlogDraft(slug) {
 
 // Find the most-recent blog draft that hasn't been mirrored to GBP yet.
 // Returns { blog, draftPath } or null if nothing pending.
-function findPendingBlog(state, { maxAgeDays = 7 } = {}) {
+function findPendingBlog(state, opts = {}) {
+  const all = findAllPendingBlogs(state, opts);
+  return all.length ? all[0] : null;
+}
+
+// Find ALL blog drafts that haven't been mirrored to GBP yet, oldest-first so a
+// catch-up routine processes the backlog in the order the blogs were published.
+// Returns [] if nothing pending.
+//
+// `maxAgeDays` defaults to 14 (vs the legacy 7) so a single missed week of
+// scheduled-task fires still gets caught up. The blog-publisher cron is weekly,
+// so 14 days = two missed weeks of headroom.
+function findAllPendingBlogs(state, { maxAgeDays = 14 } = {}) {
   const blogStatePath = path.join(__dirname, '..', 'blog-publisher', 'state.json');
-  if (!fs.existsSync(blogStatePath)) return null;
+  if (!fs.existsSync(blogStatePath)) return [];
   const blogState = JSON.parse(fs.readFileSync(blogStatePath, 'utf8'));
   const history = blogState.history || [];
-  if (!history.length) return null;
+  if (!history.length) return [];
 
   const mirroredSlugs = new Set((state.mirrored || []).map(m => m.slug));
   const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
+  const pending = [];
 
-  // Walk newest-first
-  for (let i = history.length - 1; i >= 0; i--) {
+  // Walk OLDEST-first so the routine mirrors them in publish order.
+  for (let i = 0; i < history.length; i++) {
     const entry = history[i];
     if (mirroredSlugs.has(entry.slug)) continue;
     const ts = entry.at ? new Date(entry.at).getTime() : 0;
@@ -218,15 +231,16 @@ function findPendingBlog(state, { maxAgeDays = 7 } = {}) {
     const draftPath = path.join(__dirname, '..', 'blog-publisher', 'drafts', `${entry.slug}.json`);
     if (!fs.existsSync(draftPath)) continue;
     const blog = JSON.parse(fs.readFileSync(draftPath, 'utf8'));
-    return { blog, draftPath };
+    pending.push({ blog, draftPath });
   }
-  return null;
+  return pending;
 }
 
 module.exports = {
   generateGbpPost,
   loadBlogDraft,
   findPendingBlog,
+  findAllPendingBlogs,
   validatePost,
   blogUrlForSlug,
   blogImageUrl
