@@ -31,10 +31,11 @@ const SCRIPT_DIR = __dirname;
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..');
 
 const STALE_PR_HOURS = 72;
-const LOW_QUEUE_THRESHOLD = 4;
+const LOW_QUEUE_THRESHOLD = 4;            // critical — auto-refill, may miss next Monday
+const QUEUE_REFILL_THRESHOLD = 8;         // medium — start refill PR while there's runway
 const REJECTED_BRANCH_AGE_DAYS = 7;
 const MAX_AUTO_RETRIES_PER_DAY = 1;
-const ORPHAN_BRANCH_MIN_AGE_MIN = 10;       // grace period — publisher might still be running
+const ORPHAN_BRANCH_MIN_AGE_MIN = 10;     // grace period — publisher might still be running
 
 // =============================================================================
 // Trigger context (parsed from env vars set in the workflow YAML)
@@ -277,7 +278,7 @@ async function checkLastDeployRun(findings) {
   });
 }
 
-// Topic queue health
+// Topic queue health — also triggers auto-refill when nearing exhaustion
 async function checkTopicQueue(findings) {
   const topicsPath = path.join(SCRIPT_DIR, 'topics.json');
   const statePath = path.join(SCRIPT_DIR, 'state.json');
@@ -291,13 +292,28 @@ async function checkTopicQueue(findings) {
     findings.push({
       severity: 'high',
       kind: 'queue_empty',
-      message: `Topic queue is EMPTY — next publisher run will fail. Refill scripts/blog-publisher/topics.json.`,
+      message: `Topic queue is EMPTY — next publisher run will fail. Auto-suggester firing.`,
+      autofix: async () => autofixSuggestTopics(),
+      needsPat: true,
     });
   } else if (remaining <= LOW_QUEUE_THRESHOLD) {
+    // ≤4: high-urgency (might miss a Monday) — auto-refill
+    findings.push({
+      severity: 'high',
+      kind: 'queue_critical',
+      message: `Topic queue critical: ${remaining} topic(s) remaining. Auto-suggester firing.`,
+      autofix: async () => autofixSuggestTopics(),
+      needsPat: true,
+    });
+  } else if (remaining <= QUEUE_REFILL_THRESHOLD) {
+    // ≤8: comfortable runway but trigger refill — also auto, no urgency
+    // Only auto-fire if no recent refill PR is already open (idempotent)
     findings.push({
       severity: 'medium',
       kind: 'queue_low',
-      message: `Topic queue running low: ${remaining} topic(s) remaining (~${remaining} weeks of content).`,
+      message: `Topic queue running low: ${remaining} topic(s) remaining (~${remaining} weeks of content). Auto-suggester firing.`,
+      autofix: async () => autofixSuggestTopics(),
+      needsPat: true,
     });
   }
 }
@@ -315,6 +331,92 @@ async function checkLiveSite(findings) {
     }
   } catch (e) {
     findings.push({ severity: 'high', kind: 'site_unreachable', message: `Site unreachable: ${e.message}` });
+  }
+}
+
+// Rot scanner — fetches 3 random live posts from sitemap, parses for internal
+// links + image refs, checks each returns 200. Catches link/image rot on old
+// posts that other checks would miss. Runs on daily 02:00 UTC sweep only —
+// can't run on every workflow_run (would hammer the live site).
+async function checkPostRot(findings) {
+  let sitemapBody;
+  try {
+    const r = await httpsGet(SITEMAP_URL);
+    if (r.status !== 200) return;
+    sitemapBody = r.body;
+  } catch { return; }
+
+  // Extract all live /resources/* URLs from sitemap
+  const urls = Array.from(new Set((sitemapBody.match(/https:\/\/goldenmaplelandscaping\.ca\/resources\/[a-z0-9-]+/g) || [])));
+  if (!urls.length) return;
+
+  // Sample up to 3 at random — full crawl would be 19+ HTTP calls per daily run
+  const sample = urls.sort(() => Math.random() - 0.5).slice(0, 3);
+  console.log(`[rot-scan] checking ${sample.length} of ${urls.length} live posts`);
+
+  for (const postUrl of sample) {
+    let html;
+    try {
+      const r = await httpsGet(postUrl);
+      if (r.status !== 200) {
+        findings.push({
+          severity: 'high',
+          kind: 'post_unreachable',
+          message: `Live post ${postUrl} returned ${r.status} — broken in production`,
+        });
+        continue;
+      }
+      html = r.body;
+    } catch (e) {
+      findings.push({ severity: 'high', kind: 'post_fetch_err', message: `Could not fetch ${postUrl}: ${e.message}` });
+      continue;
+    }
+
+    // Extract internal links: href="/foo" or href="/foo/bar"
+    const internalHrefs = Array.from(new Set(
+      [...html.matchAll(/href=["'](\/[a-z0-9\-/]+)["']/g)]
+        .map((m) => m[1])
+        .filter((h) => !h.startsWith('/_') && !h.includes('#'))
+    ));
+
+    // Extract image srcs that are LIKELY referenced from this post body (in dangerouslySetInnerHTML)
+    // For the v1 scanner we conservatively check the heroImage path embedded in BlogPostLayout
+    const imgRefs = Array.from(new Set(
+      [...html.matchAll(/src=["'](\/images\/[^"']+)["']/g)].map((m) => m[1])
+    ));
+
+    // HEAD each — Netlify SPA fallback returns 200 for any path, so for routes
+    // we trust that. For /images/* the request actually verifies the file exists.
+    for (const ref of imgRefs) {
+      try {
+        const r = await httpsGet(`${SITE_URL}${ref}`);
+        if (r.status !== 200) {
+          findings.push({
+            severity: 'medium',
+            kind: 'image_rot',
+            message: `${postUrl} references missing image ${ref} (status ${r.status})`,
+          });
+        }
+      } catch (e) {
+        findings.push({ severity: 'low', kind: 'image_check_err', message: `Couldn't verify ${ref}: ${e.message}` });
+      }
+    }
+
+    // Internal hrefs — sample 2 to avoid hammering. SPA fallback means we
+    // can't easily distinguish "real route" from "404 fallback", but a 5xx
+    // would still show up. This is a coarse signal.
+    for (const href of internalHrefs.slice(0, 2)) {
+      try {
+        const r = await httpsGet(`${SITE_URL}${href}`);
+        if (r.status >= 500) {
+          findings.push({
+            severity: 'medium',
+            kind: 'link_5xx',
+            message: `${postUrl} links to ${href} → ${r.status}`,
+          });
+        }
+      } catch { /* network blip — don't alert */ }
+    }
   }
 }
 
@@ -444,6 +546,29 @@ async function autofixEnableWorkflow(wf) {
   return `re-enabled workflow ${wf}`;
 }
 
+// Topic queue auto-refill — spawns Gemini to suggest 20 new topics + opens PR.
+// Idempotent: skips if a recent refill PR is already open (don't spam).
+async function autofixSuggestTopics() {
+  // Don't open a second refill PR if one is already pending
+  try {
+    const openRefillPrs = ghJson(`pr list --repo ${REPO} --state open --search 'head:auto/topics-refill-' --json number,createdAt --limit 5`);
+    if (openRefillPrs.length > 0) {
+      return `topic-refill PR #${openRefillPrs[0].number} already open — skipping new suggestion run`;
+    }
+  } catch { /* fall through to suggestion */ }
+
+  // Invoke the suggester
+  try {
+    const { suggestTopics, openRefillPR } = require('./topic-suggester.cjs');
+    const proposal = await suggestTopics();
+    const pr = await openRefillPR(proposal);
+    if (pr.skipped) return 'topic-suggester ran but all proposals were duplicates';
+    return `opened topic-refill PR with ${pr.accepted.length} new topics: ${pr.prUrl}`;
+  } catch (e) {
+    throw new Error(`topic auto-suggest FAILED: ${e.message}`);
+  }
+}
+
 // Inline publisher retry — uses GITHUB_TOKEN since the publisher workflow itself
 // is the one being retried (we're effectively replaying its logic from the watchdog
 // runner instead of re-triggering the upstream workflow).
@@ -523,6 +648,11 @@ async function runChecks() {
   await checkRepoPerms(findings);
   if (trigger.scheduleCron === '0 16 * * 1' || trigger.event === 'workflow_dispatch') {
     await checkMissedCron(findings);
+  }
+  // Rot scan only on the daily 02:00 UTC sweep — fetches live HTML, would
+  // hammer the site if run on every workflow_run.
+  if (trigger.scheduleCron === '0 2 * * *' || trigger.event === 'workflow_dispatch') {
+    await checkPostRot(findings);
   }
   return { findings };
 }
