@@ -86,6 +86,70 @@ describe('publisher pipeline shape', () => {
     const cliSrc = fs.readFileSync(path.join(__dirname, '..', 'cli.cjs'), 'utf8');
     assert.ok(/SKIP_ADVERSARIAL_REVIEW/.test(cliSrc));
   });
+
+  test('generate.cjs requires the new SEO-quality fields (tldr, author_bio)', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'generate.cjs'), 'utf8');
+    assert.ok(/'tldr'/.test(src) && /'author_bio'/.test(src), 'tldr + author_bio must be in required list');
+  });
+
+  test('inject.cjs renders the TLDR Quick Answer box', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'inject.cjs'), 'utf8');
+    assert.ok(/Quick Answer/.test(src), 'inject must render Quick Answer box from tldr');
+    assert.ok(/draft\.tldr/.test(src), 'inject must reference draft.tldr');
+  });
+
+  test('inject.cjs renders the author bio section', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'inject.cjs'), 'utf8');
+    assert.ok(/About the Author/.test(src), 'inject must render About the Author block from author_bio');
+    assert.ok(/draft\.author_bio/.test(src), 'inject must reference draft.author_bio');
+  });
+
+  test('reviewer evaluates new SEO/GEO axes', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'adversarial-review.cjs'), 'utf8');
+    for (const axis of ['tldr_quality', 'featured_snippet_ready', 'ai_citation_ready', 'numeric_density', 'e_e_a_t']) {
+      assert.ok(src.includes(axis), `reviewer must evaluate axis ${axis}`);
+    }
+  });
+});
+
+describe('AI crawler config', () => {
+  const robotsPath = path.join(__dirname, '..', '..', '..', 'public', 'robots.txt');
+  const robotsSrc = fs.existsSync(robotsPath) ? fs.readFileSync(robotsPath, 'utf8') : '';
+
+  test('robots.txt explicitly allows major AI crawlers', () => {
+    for (const bot of ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'Google-Extended', 'Applebot-Extended', 'CCBot']) {
+      assert.ok(new RegExp(`User-agent:\\s*${bot}`, 'i').test(robotsSrc),
+        `robots.txt must include ${bot}`);
+    }
+  });
+
+  test('llms.txt exists and includes business profile', () => {
+    const llmsPath = path.join(__dirname, '..', '..', '..', 'public', 'llms.txt');
+    assert.ok(fs.existsSync(llmsPath), 'llms.txt must exist for AI engine citation');
+    const src = fs.readFileSync(llmsPath, 'utf8');
+    assert.ok(/Yorkis Estevez/.test(src), 'llms.txt must include founder name');
+    assert.ok(/goldenmaplelandscaping\.ca/.test(src), 'llms.txt must include canonical URL');
+  });
+});
+
+describe('schema + BlogPostLayout', () => {
+  const layoutPath = path.join(__dirname, '..', '..', '..', 'src', 'components', 'BlogPostLayout.tsx');
+  const layoutSrc = fs.existsSync(layoutPath) ? fs.readFileSync(layoutPath, 'utf8') : '';
+
+  test('BlogPostLayout emits BreadcrumbList schema', () => {
+    assert.ok(/BreadcrumbList/.test(layoutSrc), 'must emit BreadcrumbList schema');
+  });
+
+  test('BlogPostLayout accepts tldr / keywords / wordCount / dateModified props', () => {
+    for (const prop of ['tldr', 'keywords', 'wordCount', 'dateModified']) {
+      assert.ok(new RegExp(`${prop}\\??:`).test(layoutSrc), `must accept ${prop} prop`);
+    }
+  });
+
+  test('Article schema uses abstract from tldr when provided', () => {
+    assert.ok(/articleSchema\.abstract\s*=\s*tldr/.test(layoutSrc),
+      'tldr must map to schema.abstract');
+  });
 });
 
 describe('netlify-deploy.yml hygiene', () => {

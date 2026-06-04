@@ -48,6 +48,21 @@ function buildTsx(draft) {
 
   const ctaLiteral = JSON.stringify(`<p>${draft.cta_paragraph}</p>`);
 
+  // TLDR — rendered as a "Quick Answer" box at the very top. Featured-snippet target.
+  const tldrJsx = draft.tldr
+    ? `      <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">\n        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>\n        <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">${draft.tldr.replace(/"/g, '\\"').replace(/'/g, "\\'")}</p>\n      </div>\n\n`
+    : '';
+
+  // Comparison table — rendered if the topic warranted one
+  const tableJsx = (draft.comparison_table?.include && draft.comparison_table?.html)
+    ? `      <div className="not-prose my-10 overflow-x-auto">\n        ${draft.comparison_table.caption ? `<p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold mb-3">${draft.comparison_table.caption.replace(/"/g, '\\"')}</p>\n        ` : ''}<div dangerouslySetInnerHTML={{ __html: ${JSON.stringify(draft.comparison_table.html)} }} />\n      </div>\n\n`
+    : '';
+
+  // Author bio — closes the article. E-E-A-T signal for Google + AI engines.
+  const bioJsx = draft.author_bio
+    ? `      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">\n        <div className="flex items-start gap-4">\n          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />\n          <div>\n            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2">About the Author</div>\n            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">${draft.author_bio.replace(/"/g, '\\"').replace(/'/g, "\\'")}</p>\n          </div>\n        </div>\n      </div>\n\n`
+    : '';
+
   return `import BlogPostLayout from '../../components/BlogPostLayout';
 
 export default function ${compName}() {
@@ -63,17 +78,19 @@ export default function ${compName}() {
       readTime=${JSON.stringify(draft.readTime.includes('min') ? draft.readTime : draft.readTime + ' min read')}
       heroImage=${JSON.stringify(draft.heroImage)}
       schema={faqSchema}
+      tldr=${JSON.stringify(draft.tldr || '')}
+      keywords=${JSON.stringify(draft.seoTitle || draft.title)}
+      wordCount={${draft.validation?.wordCount || 0}}
     >
-      <div dangerouslySetInnerHTML={{ __html: ${introHtml} }} />
+${tldrJsx}      <div dangerouslySetInnerHTML={{ __html: ${introHtml} }} />
 
 ${sectionsJsx}
-
-      <h2>Frequently Asked Questions</h2>
+${tableJsx}      <h2>Frequently Asked Questions</h2>
       <div className="mt-8">
 ${faqsJsx}
       </div>
 
-      <div dangerouslySetInnerHTML={{ __html: ${ctaLiteral} }} />
+${bioJsx}      <div dangerouslySetInnerHTML={{ __html: ${ctaLiteral} }} />
     </BlogPostLayout>
   );
 }

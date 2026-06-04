@@ -106,10 +106,49 @@ jobs:
             exit 1
           fi
 
+      # IndexNow ping — tells Bing / Yandex / Seznam / Naver / etc. about the
+      # newly-deployed URLs so they re-crawl + re-index within hours instead of
+      # waiting for the next scheduled crawl (which can take days).
+      # Free, no auth — IndexNow verifies via the key file at /<KEY>.txt.
+      # Google doesn't support IndexNow (they deprecated sitemap /ping in 2023);
+      # for Google we rely on the existing sitemap.xml + crawl.
+      - name: IndexNow ping (Bing/Yandex)
+        if: success()
+        run: |
+          set +e
+          KEY="bdc5de0d5ef8e208d6e1aea168f008d7"
+          HOST="goldenmaplelandscaping.ca"
+
+          # Pull every /resources/* URL from the live sitemap as the ping list
+          URLS_JSON=$(curl -fsS "https://${HOST}/sitemap.xml" \
+            | grep -oE "https://${HOST}/resources/[a-z0-9-]+" \
+            | sort -u \
+            | head -30 \
+            | jq -R . | jq -s .)
+
+          if [ -z "$URLS_JSON" ] || [ "$URLS_JSON" = "[]" ]; then
+            echo "[indexnow] no resources URLs found, skipping"
+            exit 0
+          fi
+
+          BODY=$(jq -n \
+            --arg host "$HOST" \
+            --arg key "$KEY" \
+            --arg keyLocation "https://${HOST}/${KEY}.txt" \
+            --argjson urls "$URLS_JSON" \
+            '{host: $host, key: $key, keyLocation: $keyLocation, urlList: $urls}')
+
+          echo "[indexnow] pinging api.indexnow.org with $(echo "$URLS_JSON" | jq length) URLs"
+          curl -fsS -X POST "https://api.indexnow.org/IndexNow" \
+            -H "Content-Type: application/json" \
+            -d "$BODY" \
+            -o /dev/null -w "[indexnow] HTTP %{http_code}\n" || echo "[indexnow] ping failed (non-fatal)"
+
       # Backstop alert — fires only when the deploy STEP itself failed (build
       # error, netlify auth, dist size, etc.). Scoped to steps.deploy so an
-      # analytics-guard failure doesn't also fire this misleading "deploy failed"
-      # message (the deploy succeeded in that case; the guard sends its own).
+      # analytics-guard or IndexNow failure doesn't also fire this misleading
+      # "deploy failed" message (the deploy succeeded in that case; the guard
+      # sends its own).
       - name: Telegram alert on failure
         if: failure() && steps.deploy.outcome == 'failure'
         env:

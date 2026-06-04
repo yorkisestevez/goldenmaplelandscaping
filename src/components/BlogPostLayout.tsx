@@ -10,14 +10,22 @@ interface BlogPostLayoutProps {
   seoDescription: string;
   category: string;
   date: string;
+  /** Optional ISO date — defaults to `date` if not provided. Tracks content updates separately. */
+  dateModified?: string;
   readTime: string;
   heroImage: string;
   /** Optional structured data injected as a second JSON-LD block (e.g. FAQPage, HowTo). */
   schema?: object;
+  /** Optional TL;DR string for the Article schema's `abstract` property. Featured-snippet target. */
+  tldr?: string;
+  /** Optional keyword string for the Article schema's `keywords` property. */
+  keywords?: string;
+  /** Optional word count for the Article schema's `wordCount` property. */
+  wordCount?: number;
   children: ReactNode;
 }
 
-export default function BlogPostLayout({ title, seoTitle, seoDescription, category, date, readTime, heroImage, schema, children }: BlogPostLayoutProps) {
+export default function BlogPostLayout({ title, seoTitle, seoDescription, category, date, dateModified, readTime, heroImage, schema, tldr, keywords, wordCount, children }: BlogPostLayoutProps) {
   const [copied, setCopied] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
   const location = useLocation();
@@ -33,20 +41,32 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
   const canonicalUrl = `https://goldenmaplelandscaping.ca${location.pathname}`;
   const ogImageUrl = heroImage.startsWith('http') ? heroImage : `https://goldenmaplelandscaping.ca${heroImage}`;
 
+  // BreadcrumbList helps Google render the page hierarchy in search results.
+  const breadcrumbSchema = {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://goldenmaplelandscaping.ca/" },
+      { "@type": "ListItem", "position": 2, "name": "Resources", "item": "https://goldenmaplelandscaping.ca/resources" },
+      { "@type": "ListItem", "position": 3, "name": title, "item": canonicalUrl },
+    ],
+  };
+
   // Article schema for E-E-A-T signals — Google + AI assistants use this for citation/snippet.
-  const articleSchema = {
+  // Enhanced 2026-06-04 with abstract (from tldr), keywords, wordCount, dateModified.
+  const articleSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": title,
     "description": seoDescription,
     "image": ogImageUrl,
     "datePublished": date,
-    "dateModified": date,
+    "dateModified": dateModified || date,
     "author": {
       "@type": "Person",
       "name": "Yorkis Estevez",
       "jobTitle": "Founder, Golden Maple Landscaping",
-      "url": "https://goldenmaplelandscaping.ca/about"
+      "url": "https://goldenmaplelandscaping.ca/about",
+      "sameAs": ["https://goldenmaplelandscaping.ca/about"],
     },
     "publisher": {
       "@type": "Organization",
@@ -54,21 +74,26 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
       "url": "https://goldenmaplelandscaping.ca",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://goldenmaplelandscaping.ca/logo.svg"
-      }
+        "url": "https://goldenmaplelandscaping.ca/logo.svg",
+      },
+      "areaServed": ["Barrie", "Innisfil", "Oro-Medonte", "Springwater", "Orillia", "Wasaga Beach", "Midland", "Collingwood", "Simcoe County", "Ontario"],
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": canonicalUrl
+      "@id": canonicalUrl,
     },
     "articleSection": category,
-    "inLanguage": "en-CA"
+    "inLanguage": "en-CA",
   };
+  if (tldr) articleSchema.abstract = tldr;
+  if (keywords) articleSchema.keywords = keywords;
+  if (wordCount && wordCount > 0) articleSchema.wordCount = wordCount;
 
-  // If a custom schema was supplied (FAQPage etc.), nest both under @graph so SEO can emit them together.
-  const combinedSchema = schema
-    ? { "@context": "https://schema.org", "@graph": [articleSchema, schema] }
-    : articleSchema;
+  // Combine Article + Breadcrumb + (optional) FAQPage/HowTo into a single @graph block
+  // so a single SEO component emits everything in one JSON-LD payload.
+  const graph: unknown[] = [articleSchema, breadcrumbSchema];
+  if (schema) graph.push(schema);
+  const combinedSchema = { "@context": "https://schema.org", "@graph": graph };
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(currentUrl);

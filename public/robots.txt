@@ -1,4 +1,73 @@
 User-agent: *
 Allow: /
 
+# Explicit allow for AI engines + their training/serving crawlers.
+# Goal: maximize odds of being cited by ChatGPT, Claude, Perplexity, Gemini,
+# Apple Intelligence, etc. when users ask about landscaping / hardscape /
+# interlocking / retaining walls in Barrie + Simcoe County.
+# llms.txt at /llms.txt has the structured business + service profile these
+# crawlers extract.
+
+# OpenAI (ChatGPT search + training)
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic (Claude search + training)
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# Google AI (Gemini + AI Overviews — separate from Googlebot search)
+User-agent: Google-Extended
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot-Extended
+Allow: /
+
+# Common Crawl (training corpus used by many AI engines)
+User-agent: CCBot
+Allow: /
+
+# You.com
+User-agent: YouBot
+Allow: /
+
+# Meta (Llama / Meta AI)
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+# Mistral
+User-agent: MistralAI-User
+Allow: /
+
+# Cohere
+User-agent: cohere-ai
+Allow: /
+
+# Bytespider (Doubao / ByteDance AI)
+User-agent: Bytespider
+Allow: /
+
 Sitemap: https://goldenmaplelandscaping.ca/sitemap.xml
