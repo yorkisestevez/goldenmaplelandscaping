@@ -20,8 +20,9 @@ on:
         default: false
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: write          # checkout, push branches (for inline publisher retry)
+  pull-requests: write     # open recovery PRs
+  actions: read            # read workflow runs + workflow state (REQUIRED — without this, gh run list / gh api workflows/<name> return HTTP 403)
 
 concurrency:
   group: blog-watchdog
