@@ -55,15 +55,15 @@ export default function About() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
+              className="relative aspect-[4/5] w-full max-w-[340px] mx-auto rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
             >
               <img
                 src="/images/projects/yorkis-founder.jpg"
                 alt="Yorkis Estevez - Founder of Golden Maple Landscaping"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover grayscale-[0.9] contrast-[1.05]"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-brand-nearblack/20 mix-blend-overlay" />
+              <div className="absolute inset-0 bg-brand-nearblack/15 mix-blend-overlay" />
             </motion.div>
           </div>
 
