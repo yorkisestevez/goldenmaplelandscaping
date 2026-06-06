@@ -78,7 +78,7 @@ export default function PatiosBarrie() {
               className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
             >
               <img
-                src="/images/projects/best.JPEG"
+                src="/images/projects/IMG_4826.jpg"
                 alt="Hardscape patio in Barrie Ontario with clear stone base"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"

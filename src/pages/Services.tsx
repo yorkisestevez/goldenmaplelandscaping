@@ -10,7 +10,7 @@ const SERVICE_CARDS = [
     title: 'Interlocking Stone & Patios',
     desc: 'The patio where your family gathers, where summer memories happen. We build it on a foundation twice as deep as the industry standard.',
     icon: Grid,
-    img: '/images/projects/best.JPEG',
+    img: '/images/projects/IMG_4826.jpg',
     link: '/services/interlocking-barrie'
   },
   {

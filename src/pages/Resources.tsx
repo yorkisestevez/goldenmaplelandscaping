@@ -26,7 +26,7 @@ const BLOG_POSTS = [
     excerpt: 'The definitive guide to landscaping costs in Barrie and Simcoe County. Authentic price ranges for interlocking, retaining walls, grading, and full property transformations.',
     category: 'Investment',
     readTime: '8 min',
-    image: '/images/projects/best.JPEG',
+    image: '/images/projects/IMG_4826.jpg',
   },
   {
     slug: 'interlocking-patio-cost-ontario',
@@ -50,7 +50,7 @@ const BLOG_POSTS = [
     excerpt: 'The freeze-thaw cycle destroys shallow bases. Learn why 12-16" of compacted clear stone is the only way to build a patio that lasts in Simcoe County.',
     category: 'Engineering',
     readTime: '7 min',
-    image: '/images/projects/best.JPEG',
+    image: '/images/projects/IMG_4826.jpg',
   },
   {
     slug: 'clear-stone-vs-granular-a-base',
@@ -58,7 +58,7 @@ const BLOG_POSTS = [
     excerpt: '95% of Barrie contractors quote Granular A. It traps water, fails under freeze-thaw, and is the #1 reason hardscapes sink. Here\'s the ICPI open-graded alternative we build on.',
     category: 'Engineering',
     readTime: '9 min',
-    image: '/images/projects/best.JPEG',
+    image: '/images/projects/IMG_4826.jpg',
   },
   {
     slug: 'timbertech-vs-wood-decking-ontario',
@@ -114,7 +114,7 @@ const BLOG_POSTS = [
     excerpt: 'Salt, plows, and ice can destroy your patio. Here are the maintenance tips that will keep your interlocking looking perfect through every Barrie winter.',
     category: 'Maintenance',
     readTime: '5 min',
-    image: '/images/projects/best.JPEG',
+    image: '/images/projects/IMG_4826.jpg',
   },
   {
     slug: 'backyard-renovation-roi-ontario',
@@ -138,7 +138,7 @@ const BLOG_POSTS = [
     excerpt: 'Month-by-month breakdown of when to install in Barrie and Simcoe County. Booking lead times, weather windows, and how to lock 2026 pricing before mid-season hikes.',
     category: 'Project Planning',
     readTime: '9 min',
-    image: '/images/projects/best.JPEG',
+    image: '/images/projects/IMG_4826.jpg',
   },
   {
     slug: 'landscape-permits-barrie-simcoe',

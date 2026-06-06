@@ -9,7 +9,7 @@ export default function WinterDamagePrevention() {
       category="Maintenance"
       date="January 22, 2026"
       readTime="5 min read"
-      heroImage="/images/projects/best.JPEG"
+      heroImage="/images/projects/IMG_4826.jpg"
     >
       <p>Your interlocking patio is built to last — but it's not indestructible. The combination of <strong>rock salt, metal snowplow blades, and ice buildup</strong> can cause damage that shortens its lifespan and ruins its appearance. Here's how to protect your investment through every Barrie winter.</p>
 

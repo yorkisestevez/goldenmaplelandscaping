@@ -56,7 +56,7 @@ export default function BestTimeInstallPatio() {
       category="Project Planning"
       date="May 3, 2026"
       readTime="9 min read"
-      heroImage="/images/projects/best.JPEG"
+      heroImage="/images/projects/IMG_4826.jpg"
       schema={faqSchema}
     >
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">

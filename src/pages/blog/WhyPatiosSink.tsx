@@ -9,7 +9,7 @@ export default function WhyPatiosSink() {
       category="Engineering"
       date="March 15, 2026"
       readTime="7 min read"
-      heroImage="/images/projects/best.JPEG"
+      heroImage="/images/projects/IMG_4826.jpg"
     >
       <p>You spent $15,000 on a new patio last summer. It looked incredible — for about eight months. Then winter arrived, and by April, your stones were uneven, your edges were lifting, and there was a puddle where water used to drain. <strong>Sound familiar?</strong></p>
 

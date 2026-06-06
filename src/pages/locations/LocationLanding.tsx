@@ -73,7 +73,7 @@ export default function LocationLanding() {
       <section className="relative pt-44 pb-24 overflow-hidden">
         <div className="absolute inset-0 z-0 bg-brand-nearblack">
           <img
-            src="/images/projects/best.JPEG"
+            src="/images/projects/IMG_4826.jpg"
             alt={`Premium landscaping in ${location.name}, Ontario`}
             className="w-full h-full object-cover opacity-35"
             loading="eager"

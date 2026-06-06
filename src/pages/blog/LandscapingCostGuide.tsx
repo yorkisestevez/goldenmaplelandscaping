@@ -10,7 +10,7 @@ export default function LandscapingCostGuide() {
       category="Investment"
       date="April 2, 2026"
       readTime="8 min read"
-      heroImage="/images/projects/best.JPEG"
+      heroImage="/images/projects/IMG_4826.jpg"
     >
       <p>When homeowners contact us, the most common first question is: <strong>"How much is this going to cost?"</strong></p>
 

@@ -10,7 +10,7 @@ export default function ClearStoneVsGranularA() {
       category="Engineering"
       date="May 12, 2026"
       readTime="9 min read"
-      heroImage="/images/projects/best.JPEG"
+      heroImage="/images/projects/IMG_4826.jpg"
     >
       <p>Every interlocking failure we get called out to inspect in Barrie has the same root cause. Not bad pavers. Not bad weather. Not bad workmanship on the surface. <strong>It's the base material underneath.</strong></p>
 

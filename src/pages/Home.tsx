@@ -15,7 +15,7 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const HERO_POSTER = "/images/projects/best.JPEG";
+const HERO_POSTER = "/images/projects/IMG_4826.jpg";
 
 const Hero = () => {
   return (
@@ -27,9 +27,10 @@ const Hero = () => {
           loading="eager"
           decoding="async"
           fetchPriority="high"
-          className="absolute inset-0 w-full h-full object-cover opacity-55"
+          className="absolute inset-0 w-full h-full object-cover opacity-95"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-nearblack via-brand-nearblack/85 to-brand-nearblack/25" />
+        {/* Light scrim: strong on the left so the ink headline stays readable, clearing toward the right so the photo reads crisp. */}
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-nearblack via-brand-nearblack/75 to-brand-nearblack/5" />
       </div>
 
       <div className="container-custom relative z-10 py-32">
@@ -132,7 +133,7 @@ const ServicesGrid = () => {
     {
       title: "Interlocking Stone & Patios",
       desc: "The patio where your kids grow up, where Saturday dinners happen, where life slows down. We build it on a foundation that won't shift — ever.",
-      img: "/images/projects/best.JPEG",
+      img: "/images/projects/IMG_4826.jpg",
       link: "/services/interlocking-barrie"
     },
     {
@@ -420,7 +421,7 @@ const FinalCTA = () => {
     <section className="section-padding bg-brand-nearblack relative overflow-hidden">
       <div className="absolute inset-0 opacity-40">
           <img
-            src="/images/projects/best.JPEG"
+            src="/images/projects/IMG_4826.jpg"
             alt="Completed luxury backyard transformation in Simcoe County"
             loading="lazy"
             decoding="async"

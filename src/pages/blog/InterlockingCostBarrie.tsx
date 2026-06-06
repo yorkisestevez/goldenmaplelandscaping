@@ -11,7 +11,7 @@ export default function InterlockingCostBarrie() {
       category="Pricing"
       date="April 13, 2026"
       readTime="8 min read"
-      heroImage="/images/projects/best.JPEG"
+      heroImage="/images/projects/IMG_4826.jpg"
     >
       <p>If you're planning an interlocking patio, driveway, or walkway in Barrie, the first question is always the same: <em>what's this going to cost?</em></p>
 

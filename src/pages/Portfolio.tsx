@@ -11,7 +11,7 @@ const PROJECTS = [
     title: "The Shanty Bay Estate",
     category: "Full Transformation",
     desc: "A sprawling lakeside estate transformation featuring multi-level porcelain terraces and custom structural walls.",
-    img: "/images/projects/best.JPEG"
+    img: "/images/projects/IMG_4826.jpg"
   },
   {
     id: 2,
@@ -88,10 +88,10 @@ const PROJECTS = [
   {
     id: 11,
     slug: "lakeside-pool-decking",
-    title: "Lakeside Pool Decking",
+    title: "Paver Patio & Pergola",
     category: "Hardscape Design",
-    desc: "Precision-cut pool surround featuring non-slip textures and seamless transitions to the natural landscape.",
-    img: "/images/projects/pool-deck-ideas.JPEG"
+    desc: "A Permacon paver patio with a cedar pergola and built-in seating — a complete backyard living space on a deep, freeze-thaw-proof base.",
+    img: "/images/projects/patio-pergola.jpg"
   },
   {
     id: 12,
