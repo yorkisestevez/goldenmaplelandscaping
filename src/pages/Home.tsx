@@ -35,8 +35,8 @@ const Hero = () => {
 
       <div className="container-custom relative z-10 py-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
-          {/* Hero Copy — subtle light halo keeps the ink text crisp over the photo */}
-          <div className="lg:col-span-7 [filter:drop-shadow(0_2px_14px_rgba(246,242,232,0.92))]">
+          {/* Hero Copy — tight + soft light halo keeps even the small ink text crisp over the photo */}
+          <div className="lg:col-span-7 [filter:drop-shadow(0_1px_1px_rgba(246,242,232,1))_drop-shadow(0_2px_12px_rgba(246,242,232,0.85))]">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -63,7 +63,7 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.4 }}
-              className="font-sans text-base md:text-lg text-brand-muted max-w-xl mb-12 leading-relaxed font-light"
+              className="font-sans text-base md:text-lg text-brand-ink max-w-xl mb-12 leading-relaxed font-normal"
             >
               You've spent enough nights staring out the window at a yard that doesn't match the home you've built. We're here to fix that — with an outdoor space engineered to outlast the next twenty winters and become the place your family actually wants to be.
             </motion.p>
@@ -77,7 +77,7 @@ const Hero = () => {
               <Link
                 to="/portfolio"
                 onClick={() => trackEngagement('cta_click', 'view_portfolio')}
-                className="group flex items-center gap-4 text-brand-muted font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
+                className="group flex items-center gap-4 text-brand-ink font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
               >
                 See Recent Work
                 <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-2" />
@@ -85,7 +85,7 @@ const Hero = () => {
               <a
                 href="tel:7055003581"
                 onClick={() => trackEngagement('cta_click', 'hero_phone')}
-                className="group flex items-center gap-4 text-brand-muted font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
+                className="group flex items-center gap-4 text-brand-ink font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
               >
                 Or Call (705) 500-3581
               </a>
