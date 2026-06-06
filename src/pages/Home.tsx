@@ -15,7 +15,7 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const HERO_POSTER = "/images/projects/IMG_4826.jpg";
+const HERO_POSTER = "/images/projects/hero-barrie-patio.jpg";
 
 const Hero = () => {
   return (
@@ -151,7 +151,7 @@ const ServicesGrid = () => {
     {
       title: "Composite Decking",
       desc: "The look of real wood with none of the maintenance headaches. No staining, no rotting, no splinters — just 30+ years of barefoot summer evenings.",
-      img: "/images/projects/TimberTech Dark Cocoa PrimeCollection Composite Decking Beauty1.jpg",
+      img: "/images/projects/barrie-composite-deck.jpg",
       link: "/services/composite-decking-barrie"
     },
     {
@@ -163,7 +163,7 @@ const ServicesGrid = () => {
     {
       title: "Fire Features",
       desc: "The gathering spot that turns a cool Simcoe County evening into the best part of your week. Custom fire pits that become your family's favourite place.",
-      img: "/images/projects/cousy fire feature.jpeg",
+      img: "/images/projects/barrie-firepit-patio.jpg",
       link: "/contact"
     },
     {

@@ -83,7 +83,7 @@ const PROJECTS = [
     title: "Front Entrance Grandeur",
     category: "Interlocking Stone",
     desc: "An architectural front entrance design that combines natural stone textures with modern paving patterns.",
-    img: "/images/projects/Front-entrance-idea-pavers.JPG"
+    img: "/images/projects/barrie-walkway-entrance.jpg"
   },
   {
     id: 11,
