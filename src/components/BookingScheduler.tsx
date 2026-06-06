@@ -10,7 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { trackLead } from '../utils/analytics';
+import { trackLead, trackEngagement } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
@@ -105,7 +105,15 @@ export default function BookingScheduler() {
       });
   }, []);
 
+  // Fire a funnel event only when the chosen date actually changes.
+  const onPickDate = (date: string) => {
+    if (selectedDate !== date) trackEngagement('booking_step', 'date_selected');
+    setSelectedDate(date);
+  };
+
   const onPickSlot = (date: string, slot: AvailabilitySlot) => {
+    trackEngagement('booking_step', 'time_selected');
+    trackEngagement('booking_step', 'confirm_form');
     setSelectedDate(date);
     setSelectedSlot(slot);
     setStep('confirm');
@@ -252,13 +260,13 @@ export default function BookingScheduler() {
             </div>
             <div>
               <label htmlFor="bk-phone" className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted mb-3 block">
-                Phone *
+                Phone
               </label>
               <input
                 id="bk-phone"
                 name="phone"
                 type="tel"
-                required
+                inputMode="tel"
                 value={form.phone}
                 onChange={onChange}
                 autoComplete="tel"
@@ -266,6 +274,10 @@ export default function BookingScheduler() {
               />
             </div>
           </div>
+
+          <p className="font-sans text-[11px] text-brand-muted font-light -mt-4">
+            Give us a phone number or an email — either one works.
+          </p>
 
           <div>
             <label htmlFor="bk-email" className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted mb-3 block">
@@ -275,6 +287,7 @@ export default function BookingScheduler() {
               id="bk-email"
               name="email"
               type="email"
+              inputMode="email"
               value={form.email}
               onChange={onChange}
               autoComplete="email"
@@ -313,7 +326,7 @@ export default function BookingScheduler() {
           </div>
 
           {errorMsg && (
-            <p className="font-sans text-xs text-red-400 font-light">{errorMsg}</p>
+            <p className="font-sans text-xs text-red-600 font-light">{errorMsg}</p>
           )}
 
           <button
@@ -403,8 +416,8 @@ export default function BookingScheduler() {
         </div>
       </div>
 
-      {/* Day picker */}
-      <div className="grid grid-cols-7 gap-2 mb-8">
+      {/* Day picker — horizontal scroll on mobile (bigger tap targets), 7-col grid at md+ */}
+      <div className="flex gap-2 mb-8 overflow-x-auto snap-x snap-mandatory pb-1 -mx-1 px-1 md:grid md:grid-cols-7 md:overflow-visible md:mx-0 md:px-0">
         {visibleDays.map((d) => {
           const isAvailable = d.slots.length > 0;
           const isSelected = selectedDate === d.date;
@@ -412,9 +425,9 @@ export default function BookingScheduler() {
           return (
             <button
               key={d.date}
-              onClick={() => isAvailable && setSelectedDate(d.date)}
+              onClick={() => isAvailable && onPickDate(d.date)}
               disabled={!isAvailable}
-              className={`flex flex-col items-center justify-center py-4 rounded-[2px] border transition-all ${
+              className={`flex flex-col items-center justify-center py-4 rounded-[2px] border transition-all shrink-0 min-w-[64px] snap-start md:min-w-0 md:w-auto ${
                 isSelected
                   ? 'border-brand-gold bg-brand-gold/10 text-brand-gold'
                   : isAvailable

@@ -5,7 +5,7 @@ import BuyersGuide from '../components/BuyersGuide';
 import Manifesto from '../components/Manifesto';
 import Process from '../components/Process';
 import { Link } from 'react-router-dom';
-import HeroEstimator from '../components/HeroEstimator';
+import HeroContactForm from '../components/HeroContactForm';
 import Reveal from '../components/Reveal';
 import { trackEngagement } from '../utils/analytics';
 import { clsx, type ClassValue } from 'clsx';
@@ -29,7 +29,7 @@ const Hero = () => {
           fetchPriority="high"
           className="absolute inset-0 w-full h-full object-cover opacity-55"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-nearblack via-brand-nearblack/60 to-brand-nearblack/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-nearblack via-brand-nearblack/85 to-brand-nearblack/25" />
       </div>
 
       <div className="container-custom relative z-10 py-32">
@@ -91,9 +91,9 @@ const Hero = () => {
             </motion.div>
           </div>
 
-          {/* Hero — Mini Cost Estimator (qualifies leads through the calculator) */}
+          {/* Hero — Budget-first contact form (calculator offered as a double-check) */}
           <div className="lg:col-span-5 w-full">
-            <HeroEstimator />
+            <HeroContactForm />
           </div>
         </div>
       </div>
@@ -236,58 +236,41 @@ const ServicesGrid = () => {
 };
 
 const WhyGoldenMaple = () => {
+  const standards = [
+    { icon: Compass, title: 'We Dig Twice as Deep', body: 'Most contractors dig 6-8 inches and call it done. We dig 12-16". That\'s the difference between a patio that lasts three winters and one that lasts thirty years.' },
+    { icon: Shield, title: 'Fully Protected. Zero Risk to You.', body: "WSIB certified. $5 million in liability coverage. Ask your current contractor if they can say the same — most can't. We protect your family's biggest investment like it's our own." },
+    { icon: Award, title: 'If It Sinks, We Come Back. Period.', body: "Our 5-year sink and settlement warranty isn't just a piece of paper. It's our promise that what we build will stay exactly where we put it. We've never had to honour a claim — and that's the point." },
+  ];
   return (
-    <section className="section-padding bg-brand-surface text-brand-bonewhite overflow-hidden relative">
+    <section className="section-padding bg-brand-cream text-brand-ink overflow-hidden relative">
       <div className="container-custom relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
           <div>
             <Reveal>
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-green-dark mb-10 block font-medium">
                 The Golden Maple Standard
               </span>
-              <h2 className="font-display text-4xl md:text-7xl font-light leading-tight mb-12">
+              <h2 className="font-display text-4xl md:text-7xl font-light leading-tight mb-12 text-brand-ink">
                 Why your neighbour's <br />
-                <span className="text-brand-gold italic">patio is already sinking.</span>
+                <span className="text-brand-green-dark italic">patio is already sinking.</span>
               </h2>
             </Reveal>
             <div className="space-y-12">
-              <Reveal delay={0.1} className="flex gap-8">
-                <div className="w-14 h-14 bg-brand-midsurface flex items-center justify-center rounded-[2px] shrink-0 border border-brand-dim/10">
-                  <Compass className="text-brand-gold" size={24} strokeWidth={1.5} />
-                </div>
-                <div>
-                  <h4 className="font-display text-2xl font-light text-brand-bonewhite mb-3">We Dig Twice as Deep</h4>
-                  <p className="font-sans text-sm text-brand-muted leading-relaxed font-light">
-                    Most contractors dig 6-8 inches and call it done. We dig 12-16". That's the difference between a patio that lasts three winters and one that lasts thirty years.
-                  </p>
-                </div>
-              </Reveal>
-              <Reveal delay={0.2} className="flex gap-8">
-                <div className="w-14 h-14 bg-brand-midsurface flex items-center justify-center rounded-[2px] shrink-0 border border-brand-dim/10">
-                  <Shield className="text-brand-gold" size={24} strokeWidth={1.5} />
-                </div>
-                <div>
-                  <h4 className="font-display text-2xl font-light text-brand-bonewhite mb-3">Fully Protected. Zero Risk to You.</h4>
-                  <p className="font-sans text-sm text-brand-muted leading-relaxed font-light">
-                    WSIB certified. $5 million in liability coverage. Ask your current contractor if they can say the same — most can't. We protect your family's biggest investment like it's our own.
-                  </p>
-                </div>
-              </Reveal>
-              <Reveal delay={0.3} className="flex gap-8">
-                <div className="w-14 h-14 bg-brand-midsurface flex items-center justify-center rounded-[2px] shrink-0 border border-brand-dim/10">
-                  <Award className="text-brand-gold" size={24} strokeWidth={1.5} />
-                </div>
-                <div>
-                  <h4 className="font-display text-2xl font-light text-brand-bonewhite mb-3">If It Sinks, We Come Back. Period.</h4>
-                  <p className="font-sans text-sm text-brand-muted leading-relaxed font-light">
-                    Our 5-year sink and settlement warranty isn't just a piece of paper. It's our promise that what we build will stay exactly where we put it. We've never had to honour a claim — and that's the point.
-                  </p>
-                </div>
-              </Reveal>
+              {standards.map((s, i) => (
+                <Reveal key={s.title} delay={0.1 + i * 0.1} className="flex gap-8">
+                  <div className="w-14 h-14 bg-brand-cream-light flex items-center justify-center rounded-[2px] shrink-0 border border-brand-ink/10 shadow-sm">
+                    <s.icon className="text-brand-green-dark" size={24} strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <h4 className="font-display text-2xl font-light text-brand-ink mb-3">{s.title}</h4>
+                    <p className="font-sans text-sm text-brand-ink-soft leading-relaxed font-light">{s.body}</p>
+                  </div>
+                </Reveal>
+              ))}
             </div>
           </div>
           <div className="relative">
-            <div className="aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
+            <div className="aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-ink/10">
               <img
                 src="/images/projects/paver-driveway.JPG"
                 alt="Engineered paver driveway with proper base prep, Barrie ON"
@@ -297,9 +280,9 @@ const WhyGoldenMaple = () => {
                 referrerPolicy="no-referrer"
               />
             </div>
-            <div className="absolute -bottom-10 -left-10 bg-brand-gold p-12 hidden md:block rounded-[2px]">
-              <span className="font-display text-7xl font-light text-brand-nearblack block mb-2">10+</span>
-              <span className="font-sans text-[10px] font-normal uppercase tracking-[0.25em] text-brand-nearblack">Years of Excellence</span>
+            <div className="absolute -bottom-10 -left-10 bg-brand-green-dark p-12 hidden md:block rounded-[2px] shadow-xl">
+              <span className="font-display text-7xl font-light text-brand-cream-light block mb-2">10+</span>
+              <span className="font-sans text-[10px] font-normal uppercase tracking-[0.25em] text-brand-cream-light">Years of Excellence</span>
             </div>
           </div>
         </div>
@@ -396,32 +379,32 @@ const Testimonials = () => {
   ];
 
   return (
-    <section className="section-padding bg-brand-surface">
+    <section className="section-padding bg-brand-cream">
       <div className="container-custom">
         <Reveal className="text-center max-w-3xl mx-auto mb-24">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-green-dark mb-6 block font-medium">
             Real Homeowners. Real Results.
           </span>
-          <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite">
+          <h2 className="font-display text-4xl md:text-7xl font-light text-brand-ink">
             Don't take our word for it.
           </h2>
         </Reveal>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {reviews.map((review, idx) => (
-            <Reveal key={idx} delay={idx * 0.12} className="bg-brand-midsurface p-12 rounded-[2px] border border-brand-dim/10 relative">
-              <Quote size={40} strokeWidth={1} className="text-brand-gold/10 absolute top-10 left-10" />
+            <Reveal key={idx} delay={idx * 0.12} className="bg-brand-cream-light p-12 rounded-[2px] border border-brand-ink/10 shadow-[0_18px_50px_-30px_rgba(33,30,21,0.45)] relative">
+              <Quote size={40} strokeWidth={1} className="text-brand-green-dark/15 absolute top-10 left-10" />
               <div className="relative z-10">
                 <div className="flex gap-1 mb-8">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className="fill-brand-gold text-brand-gold" />
+                    <Star key={i} size={14} className="fill-brand-gold-dark text-brand-gold-dark" />
                   ))}
                 </div>
-                <p className="font-sans text-brand-bonewhite italic leading-relaxed mb-10 font-light">
+                <p className="font-sans text-brand-ink italic leading-relaxed mb-10 font-light">
                   "{review.text}"
                 </p>
                 <div>
-                  <p className="font-display text-xl font-light text-brand-bonewhite">{review.name}</p>
-                  <p className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mt-1">{review.location}, ON</p>
+                  <p className="font-display text-xl font-light text-brand-ink">{review.name}</p>
+                  <p className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-green-dark mt-1 font-medium">{review.location}, ON</p>
                 </div>
               </div>
             </Reveal>
@@ -530,7 +513,7 @@ const ContractorPainPoints = () => {
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{point.pain}</h3>
                   <div className="space-y-6">
                     <div className="flex gap-4">
-                      <span className="font-sans text-[10px] font-normal uppercase tracking-widest text-red-400 shrink-0 mt-1">Typical:</span>
+                      <span className="font-sans text-[10px] font-normal uppercase tracking-widest text-red-600 shrink-0 mt-1">Typical:</span>
                       <p className="font-sans text-sm text-brand-muted italic font-light">{point.cause}</p>
                     </div>
                     <div className="flex gap-4">
@@ -562,7 +545,7 @@ const SocialProofStrip = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {stats.map((stat, idx) => (
             <Reveal key={idx} delay={idx * 0.1} y={16} className="text-center">
-              <span className="font-display text-4xl md:text-5xl font-light text-brand-gold block mb-3">{stat.number}</span>
+              <span className="font-display text-4xl md:text-5xl font-light text-brand-green block mb-3">{stat.number}</span>
               <span className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite block mb-2 font-medium">{stat.label}</span>
               <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted font-light">{stat.sub}</span>
             </Reveal>

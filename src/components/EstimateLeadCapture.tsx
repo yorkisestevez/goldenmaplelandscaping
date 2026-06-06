@@ -102,7 +102,7 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 180, damping: 18 }}
-        className="bg-gradient-to-b from-brand-gold/10 to-white/[0.02] backdrop-blur-xl border border-brand-gold/30 rounded-3xl p-9 text-center shadow-[0_20px_60px_-30px_rgba(212,175,99,0.3)]"
+        className="bg-gradient-to-b from-brand-gold/10 to-brand-cream-light backdrop-blur-xl border border-brand-gold/30 rounded-3xl p-9 text-center shadow-[0_20px_60px_-30px_rgba(212,175,99,0.3)]"
       >
         <div className="mx-auto w-14 h-14 rounded-full bg-brand-gold/15 border border-brand-gold/40 flex items-center justify-center mb-5">
           <CheckCircle size={24} className="text-brand-gold" strokeWidth={1.5} />
@@ -117,7 +117,7 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
   }
 
   return (
-    <div className="bg-gradient-to-b from-white/[0.05] to-white/[0.01] backdrop-blur-xl border border-white/10 rounded-3xl p-7 md:p-9">
+    <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7 md:p-9">
       <div className="flex items-center gap-2.5 mb-3">
         <div className="w-7 h-7 rounded-full bg-brand-gold/15 border border-brand-gold/30 flex items-center justify-center">
           <FileText size={14} className="text-brand-gold" strokeWidth={1.75} />
@@ -155,7 +155,7 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
           required
           autoComplete="name"
           placeholder="Your full name"
-          className="w-full bg-white/[0.04] border border-white/10 hover:border-white/20 focus:border-brand-gold/60 focus:bg-white/[0.06] py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none transition-all font-light"
+          className="w-full bg-brand-cream border border-brand-dim/60 hover:border-brand-gold/60 focus:border-brand-gold/60 focus:bg-brand-cream py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none transition-all font-light"
         />
         <input
           type="email"
@@ -165,7 +165,7 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
           required
           autoComplete="email"
           placeholder="Email address"
-          className="w-full bg-white/[0.04] border border-white/10 hover:border-white/20 focus:border-brand-gold/60 focus:bg-white/[0.06] py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none transition-all font-light"
+          className="w-full bg-brand-cream border border-brand-dim/60 hover:border-brand-gold/60 focus:border-brand-gold/60 focus:bg-brand-cream py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none transition-all font-light"
         />
         <input
           type="tel"
@@ -176,11 +176,11 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
           autoComplete="tel"
           inputMode="tel"
           placeholder="Phone number"
-          className="w-full bg-white/[0.04] border border-white/10 hover:border-white/20 focus:border-brand-gold/60 focus:bg-white/[0.06] py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none transition-all font-light"
+          className="w-full bg-brand-cream border border-brand-dim/60 hover:border-brand-gold/60 focus:border-brand-gold/60 focus:bg-brand-cream py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none transition-all font-light"
         />
 
         {status === 'error' ? (
-          <p className="font-sans text-xs text-red-400 font-light">{errorMsg}</p>
+          <p className="font-sans text-xs text-red-600 font-light">{errorMsg}</p>
         ) : null}
 
         <button

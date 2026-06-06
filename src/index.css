@@ -2,16 +2,29 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-gold: #D4AF63;
-  --color-brand-gold-light: #E5CA8A;
-  --color-brand-gold-dark: #B8932E;
-  --color-brand-burgundy: #6B1E2E;
-  --color-brand-nearblack: #0F0E0A;
-  --color-brand-surface: #1A1814;
-  --color-brand-midsurface: #242018;
-  --color-brand-bonewhite: #F2EEE7;
-  --color-brand-muted: #A39887;
-  --color-brand-dim: #5A5448;
+  /* Deep antique gold — readable as text AND usable as a button bg on light (AA both ways) */
+  --color-brand-gold: #7C6113;
+  --color-brand-gold-light: #9C7A1E;
+  --color-brand-gold-dark: #5E4A0F;
+  /* Was a dark burgundy; now a soft warm-stone light panel tone (recurring accent sections) */
+  --color-brand-burgundy: #EBE2CF;
+  /* Forest green accent (deep enough to read on light) */
+  --color-brand-green: #2F7D4F;
+  --color-brand-green-light: #4E9A6F;
+  --color-brand-green-dark: #265F3D;
+  /* LIGHT base — warm ivory / stone. No dark theme anywhere. */
+  --color-brand-nearblack: #F6F2E8;   /* primary page background */
+  --color-brand-black: #FFFFFF;        /* brightest sections */
+  --color-brand-surface: #FCFAF3;      /* cards / raised surfaces */
+  --color-brand-midsurface: #EFE8D7;   /* soft panels */
+  --color-brand-bonewhite: #211E15;    /* primary text (ink) */
+  --color-brand-muted: #5F594A;        /* secondary text */
+  --color-brand-dim: #CFC6B2;          /* borders / hairlines */
+  /* tonal helpers for section rhythm + on-accent text */
+  --color-brand-cream: #EFE8D7;
+  --color-brand-cream-light: #FCFAF3;
+  --color-brand-ink: #211E15;
+  --color-brand-ink-soft: #5F594A;
 
   --font-display: "Prata", serif;
   --font-sans: "Inter", sans-serif;
@@ -37,6 +50,9 @@ html, body {
   }
   .btn-ghost {
     @apply inline-flex items-center justify-center bg-transparent text-brand-bonewhite border border-brand-dim font-sans text-[10px] md:text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-bonewhite/5 cursor-pointer;
+  }
+  .btn-accent {
+    @apply inline-flex items-center justify-center bg-brand-green text-brand-nearblack font-sans text-[10px] md:text-[11px] font-medium uppercase tracking-[0.25em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-green-light cursor-pointer;
   }
   .section-padding {
     @apply py-24 md:py-40;
@@ -104,4 +120,17 @@ html, body {
   font-style: italic;
   font-size: 1.125rem;
   margin-bottom: 0;
+}
+
+/* "Live" pulse — used by the chat assistant's online indicator + FAB */
+@keyframes gm-live-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(95, 174, 126, 0.55); }
+  70%  { box-shadow: 0 0 0 10px rgba(95, 174, 126, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(95, 174, 126, 0); }
+}
+.gm-live-dot {
+  animation: gm-live-pulse 2.2s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gm-live-dot { animation: none; }
 }

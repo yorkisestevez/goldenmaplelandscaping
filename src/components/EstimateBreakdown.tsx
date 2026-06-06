@@ -91,7 +91,7 @@ export default function EstimateBreakdown(props: BreakdownProps) {
       </motion.div>
 
       {/* Itemized lines */}
-      <div className="bg-gradient-to-b from-white/[0.06] to-white/[0.015] backdrop-blur-xl border border-white/10 rounded-3xl p-7 md:p-9">
+      <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7 md:p-9">
         <h4 className="font-display text-2xl md:text-3xl text-brand-bone mb-6 tracking-tight">Where the money goes</h4>
         <div className="divide-y divide-white/[0.06]">
           {LINES.map(({ key, label, icon: Icon }, idx) => {
@@ -128,7 +128,7 @@ export default function EstimateBreakdown(props: BreakdownProps) {
 
       {/* Includes / Excludes */}
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-gradient-to-b from-white/[0.05] to-white/[0.01] backdrop-blur-xl border border-white/10 rounded-3xl p-7">
+        <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="w-7 h-7 rounded-full bg-brand-gold/15 border border-brand-gold/30 flex items-center justify-center">
               <Check size={14} className="text-brand-gold" strokeWidth={2.5} />
@@ -146,9 +146,9 @@ export default function EstimateBreakdown(props: BreakdownProps) {
             ))}
           </ul>
         </div>
-        <div className="bg-gradient-to-b from-white/[0.03] to-white/[0.005] backdrop-blur-xl border border-white/[0.07] rounded-3xl p-7">
+        <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7">
           <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-7 h-7 rounded-full bg-white/5 border border-white/15 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-full bg-brand-cream border border-brand-dim/60 flex items-center justify-center">
               <X size={14} className="text-brand-muted" strokeWidth={2.5} />
             </div>
             <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted">

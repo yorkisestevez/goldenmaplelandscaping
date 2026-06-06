@@ -5,6 +5,7 @@ import { Menu, X, Phone, MapPin, Mail, Shield, CheckCircle, Award, ChevronDown }
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { trackEngagement } from '../utils/analytics';
+import ChatWidget from './ChatWidget';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -500,6 +501,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Navbar />
       <main className="flex-grow overflow-x-hidden">{children}</main>
       <Footer />
+      <ChatWidget />
     </div>
   );
 }

@@ -244,7 +244,7 @@ export default function Contact() {
                       />
                     </div>
                     {status === 'error' && (
-                      <p className="font-sans text-sm text-red-400 font-light">{errorMsg}</p>
+                      <p className="font-sans text-sm text-red-600 font-light">{errorMsg}</p>
                     )}
                     <button
                       type="submit"

@@ -93,22 +93,22 @@ export default function About() {
               </h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
                 <div className="space-y-12">
-                  <h3 className="font-sans text-sm uppercase tracking-[0.25em] text-brand-burgundy/80 font-normal">The Industry Standard</h3>
+                  <h3 className="font-sans text-sm uppercase tracking-[0.25em] text-red-700/80 font-normal">The Industry Standard</h3>
                   <ul className="space-y-10 font-sans text-lg text-brand-bonewhite/60 font-light">
                     <li className="flex gap-6">
-                      <span className="text-brand-burgundy font-normal shrink-0">✕</span>
+                      <span className="text-red-700 font-normal shrink-0">✕</span>
                       Shallow 6" bases that sink after one winter.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-brand-burgundy font-normal shrink-0">✕</span>
+                      <span className="text-red-700 font-normal shrink-0">✕</span>
                       Communication that stops after the deposit.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-brand-burgundy font-normal shrink-0">✕</span>
+                      <span className="text-red-700 font-normal shrink-0">✕</span>
                       Hidden fees and "surprise" mid-project costs.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-brand-burgundy font-normal shrink-0">✕</span>
+                      <span className="text-red-700 font-normal shrink-0">✕</span>
                       Messy job sites and zero property protection.
                     </li>
                   </ul>

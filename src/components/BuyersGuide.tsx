@@ -300,28 +300,28 @@ const BuyersGuide = () => {
         </div>
 
         {/* TIER 3: DESIGN PACKAGE BAR */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-12 bg-brand-burgundy rounded-[2px] p-8 md:p-12 overflow-hidden relative group border border-white/5"
+          className="mt-12 bg-brand-cream-light rounded-[2px] p-8 md:p-12 overflow-hidden relative group border border-brand-gold/40 shadow-[0_18px_50px_-30px_rgba(33,30,21,0.4)]"
         >
-          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-gold to-transparent opacity-30" />
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-gold to-transparent opacity-40" />
           <div className="flex flex-col md:flex-row justify-between items-center gap-10 relative z-10">
             <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
-              <div className="px-6 py-2 border border-brand-bonewhite/20 rounded-full font-sans text-[10px] uppercase tracking-[0.3em] text-white bg-white/5 backdrop-blur-sm">
+              <div className="px-6 py-2 border border-brand-gold/40 rounded-full font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold bg-brand-gold/10">
                 Serious Buyers
               </div>
               <div>
-                <h4 className="font-display text-3xl text-brand-bonewhite mb-2 font-light">Book a <span className="italic">Design Package</span></h4>
-                <p className="font-sans text-brand-bonewhite/80 text-sm font-light">
-                  A paid on-site consultation. Full fee <span className="text-brand-bonewhite font-normal underline decoration-brand-gold decoration-1 underline-offset-[6px]">credited toward your build</span> when you proceed.
+                <h4 className="font-display text-3xl text-brand-ink mb-2 font-light">Book a <span className="italic text-brand-green-dark">Design Package</span></h4>
+                <p className="font-sans text-brand-muted text-sm font-light">
+                  A paid on-site consultation. Full fee <span className="text-brand-ink font-normal underline decoration-brand-gold decoration-1 underline-offset-[6px]">credited toward your build</span> when you proceed.
                 </p>
               </div>
             </div>
-            <Link 
-              to="/contact" 
-              className="bg-brand-bonewhite text-brand-nearblack font-sans text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-10 rounded-[2px] hover:bg-brand-gold hover:translate-y-[-2px] transition-all duration-500 whitespace-nowrap shadow-xl"
+            <Link
+              to="/contact"
+              className="bg-brand-gold text-brand-nearblack font-sans text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-10 rounded-[2px] hover:bg-brand-gold-dark hover:translate-y-[-2px] transition-all duration-500 whitespace-nowrap shadow-xl"
             >
               Tell Us Your Budget
             </Link>

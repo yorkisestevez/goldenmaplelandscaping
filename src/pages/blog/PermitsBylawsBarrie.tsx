@@ -79,8 +79,8 @@ export default function PermitsBylawsBarrie() {
       <h2>The Quick-Reference Permit Chart</h2>
 
       <div className="not-prose my-10 overflow-x-auto">
-        <table className="w-full text-left font-sans text-sm border border-white/10 rounded-2xl overflow-hidden">
-          <thead className="bg-white/[0.06]">
+        <table className="w-full text-left font-sans text-sm border border-brand-dim/60 rounded-2xl overflow-hidden">
+          <thead className="bg-brand-cream">
             <tr>
               <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Project</th>
               <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Permit Required?</th>
@@ -89,17 +89,17 @@ export default function PermitsBylawsBarrie() {
             </tr>
           </thead>
           <tbody className="text-brand-bonewhite/85 font-light">
-            <tr className="border-t border-white/10"><td className="p-4">Paver patio (ground-level)</td><td className="p-4">Usually no</td><td className="p-4">No</td><td className="p-4">Drainage change to neighbour</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4">Paver driveway</td><td className="p-4">No (unless replacing curb cut)</td><td className="p-4">No</td><td className="p-4">Curb cut alteration → Public Works permit</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4">Retaining wall under 1 m (3.28 ft)</td><td className="p-4">No</td><td className="p-4">No</td><td className="p-4">Setback violation</td></tr>
-            <tr className="border-t border-white/10 bg-brand-gold/[0.04]"><td className="p-4 text-brand-gold">Retaining wall 1 m+</td><td className="p-4 text-brand-gold">Yes</td><td className="p-4 text-brand-gold">Yes (P.Eng)</td><td className="p-4">OBC Part 9 / 4.2</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4">Deck under 60 cm above grade</td><td className="p-4">Usually no</td><td className="p-4">No</td><td className="p-4">Attached to dwelling</td></tr>
-            <tr className="border-t border-white/10 bg-brand-gold/[0.04]"><td className="p-4 text-brand-gold">Deck over 60 cm or attached</td><td className="p-4 text-brand-gold">Yes</td><td className="p-4">No (engineered plans only for unusual loads)</td><td className="p-4">OBC 9.8 + zoning</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4">Pergola (free-standing)</td><td className="p-4">Varies — typically no under 10 m²</td><td className="p-4">No</td><td className="p-4">Setback / size threshold</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4">Outdoor kitchen</td><td className="p-4">Plumbing/gas/electrical permits required</td><td className="p-4">No</td><td className="p-4">Gas line + electrical service</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4">Gas fire pit (natural gas)</td><td className="p-4">TSSA gas permit</td><td className="p-4">No</td><td className="p-4">Gas line install only</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4">Wood-burning fire pit</td><td className="p-4">Open Air Burning Permit (Barrie)</td><td className="p-4">No</td><td className="p-4">By-law 2018-014</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4">Pool with paver surround</td><td className="p-4">Pool enclosure permit</td><td className="p-4">No</td><td className="p-4">Fence/gate compliance</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Paver patio (ground-level)</td><td className="p-4">Usually no</td><td className="p-4">No</td><td className="p-4">Drainage change to neighbour</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Paver driveway</td><td className="p-4">No (unless replacing curb cut)</td><td className="p-4">No</td><td className="p-4">Curb cut alteration → Public Works permit</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Retaining wall under 1 m (3.28 ft)</td><td className="p-4">No</td><td className="p-4">No</td><td className="p-4">Setback violation</td></tr>
+            <tr className="border-t border-brand-dim/60 bg-brand-gold/[0.04]"><td className="p-4 text-brand-gold">Retaining wall 1 m+</td><td className="p-4 text-brand-gold">Yes</td><td className="p-4 text-brand-gold">Yes (P.Eng)</td><td className="p-4">OBC Part 9 / 4.2</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Deck under 60 cm above grade</td><td className="p-4">Usually no</td><td className="p-4">No</td><td className="p-4">Attached to dwelling</td></tr>
+            <tr className="border-t border-brand-dim/60 bg-brand-gold/[0.04]"><td className="p-4 text-brand-gold">Deck over 60 cm or attached</td><td className="p-4 text-brand-gold">Yes</td><td className="p-4">No (engineered plans only for unusual loads)</td><td className="p-4">OBC 9.8 + zoning</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Pergola (free-standing)</td><td className="p-4">Varies — typically no under 10 m²</td><td className="p-4">No</td><td className="p-4">Setback / size threshold</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Outdoor kitchen</td><td className="p-4">Plumbing/gas/electrical permits required</td><td className="p-4">No</td><td className="p-4">Gas line + electrical service</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Gas fire pit (natural gas)</td><td className="p-4">TSSA gas permit</td><td className="p-4">No</td><td className="p-4">Gas line install only</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Wood-burning fire pit</td><td className="p-4">Open Air Burning Permit (Barrie)</td><td className="p-4">No</td><td className="p-4">By-law 2018-014</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Pool with paver surround</td><td className="p-4">Pool enclosure permit</td><td className="p-4">No</td><td className="p-4">Fence/gate compliance</td></tr>
           </tbody>
         </table>
       </div>

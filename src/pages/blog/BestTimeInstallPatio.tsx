@@ -73,8 +73,8 @@ export default function BestTimeInstallPatio() {
       <h2>Month-by-Month: When to Install a Patio in Ontario</h2>
 
       <div className="not-prose my-10 overflow-x-auto">
-        <table className="w-full text-left font-sans text-sm border border-white/10 rounded-2xl overflow-hidden">
-          <thead className="bg-white/[0.06]">
+        <table className="w-full text-left font-sans text-sm border border-brand-dim/60 rounded-2xl overflow-hidden">
+          <thead className="bg-brand-cream">
             <tr>
               <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Month</th>
               <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Install Window</th>
@@ -83,13 +83,13 @@ export default function BestTimeInstallPatio() {
             </tr>
           </thead>
           <tbody className="text-brand-bonewhite/85 font-light">
-            <tr className="border-t border-white/10"><td className="p-4">January–March</td><td className="p-4">Closed</td><td className="p-4">Design phase</td><td className="p-4">Contracting + 3D design only. Frozen ground cannot be excavated.</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4 text-brand-gold">Late April</td><td className="p-4 text-brand-gold">Opens</td><td className="p-4">Booking 4–8 wk out</td><td className="p-4">Ground temperature above 5°C. First crews mobilize.</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4 text-brand-gold">May–early June</td><td className="p-4 text-brand-gold">Prime</td><td className="p-4">Filled by March</td><td className="p-4">Best window of the year. Cool dry weather, dry soil.</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4">Mid June–August</td><td className="p-4">Open</td><td className="p-4">Filled by May</td><td className="p-4">Heat slows crews, polymeric sand needs careful timing around storms.</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4 text-brand-gold">September–early October</td><td className="p-4 text-brand-gold">Prime</td><td className="p-4">Booking 6–10 wk out</td><td className="p-4">Stable cool weather, dry soil, perfect poly cure conditions.</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4">Mid October–early November</td><td className="p-4">Closing</td><td className="p-4">Limited slots</td><td className="p-4">Race against first hard frost (varies by year).</td></tr>
-            <tr className="border-t border-white/10"><td className="p-4">Mid November–March</td><td className="p-4">Closed</td><td className="p-4">2027 booking</td><td className="p-4">No reputable contractor installs in winter conditions.</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">January–March</td><td className="p-4">Closed</td><td className="p-4">Design phase</td><td className="p-4">Contracting + 3D design only. Frozen ground cannot be excavated.</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4 text-brand-gold">Late April</td><td className="p-4 text-brand-gold">Opens</td><td className="p-4">Booking 4–8 wk out</td><td className="p-4">Ground temperature above 5°C. First crews mobilize.</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4 text-brand-gold">May–early June</td><td className="p-4 text-brand-gold">Prime</td><td className="p-4">Filled by March</td><td className="p-4">Best window of the year. Cool dry weather, dry soil.</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Mid June–August</td><td className="p-4">Open</td><td className="p-4">Filled by May</td><td className="p-4">Heat slows crews, polymeric sand needs careful timing around storms.</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4 text-brand-gold">September–early October</td><td className="p-4 text-brand-gold">Prime</td><td className="p-4">Booking 6–10 wk out</td><td className="p-4">Stable cool weather, dry soil, perfect poly cure conditions.</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Mid October–early November</td><td className="p-4">Closing</td><td className="p-4">Limited slots</td><td className="p-4">Race against first hard frost (varies by year).</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4">Mid November–March</td><td className="p-4">Closed</td><td className="p-4">2027 booking</td><td className="p-4">No reputable contractor installs in winter conditions.</td></tr>
           </tbody>
         </table>
       </div>
@@ -124,7 +124,7 @@ export default function BestTimeInstallPatio() {
       <h2>Spring vs Fall: Which Is Actually Better?</h2>
 
       <div className="not-prose my-10 grid md:grid-cols-2 gap-5">
-        <div className="p-7 rounded-2xl border border-white/10 bg-white/[0.04]">
+        <div className="p-7 rounded-2xl border border-brand-dim/60 bg-brand-cream">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-4 mt-0">Spring (Late April–June)</h3>
           <p className="font-sans text-sm text-brand-bonewhite/85 font-light mb-4">You enjoy your patio for the full summer. Yard recovery (sod regrowth) has months of growing season.</p>
           <p className="font-sans text-sm font-light mb-2"><strong className="text-brand-gold">Best for:</strong></p>
@@ -134,7 +134,7 @@ export default function BestTimeInstallPatio() {
             <li>Pool surrounds tied to pool opening</li>
           </ul>
         </div>
-        <div className="p-7 rounded-2xl border border-white/10 bg-white/[0.04]">
+        <div className="p-7 rounded-2xl border border-brand-dim/60 bg-brand-cream">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-4 mt-0">Fall (Sep–Mid Oct)</h3>
           <p className="font-sans text-sm text-brand-bonewhite/85 font-light mb-4">Crews are at peak skill, weather is reliable, polymeric sand cures perfectly. Available 6–10 weeks out instead of 16+.</p>
           <p className="font-sans text-sm font-light mb-2"><strong className="text-brand-gold">Best for:</strong></p>

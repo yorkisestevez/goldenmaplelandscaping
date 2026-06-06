@@ -70,13 +70,13 @@ export default function EstimateBookingCTA() {
         {/* Track 2 — Paid design session */}
         <CTACard
           href={designHref}
-          className="group relative bg-gradient-to-b from-white/[0.05] to-white/[0.01] border border-white/15 rounded-3xl p-8 hover:border-white/30 hover:from-white/[0.07] transition-all flex flex-col backdrop-blur-xl"
+          className="group relative bg-gradient-to-b from-brand-cream-light to-brand-cream-light border border-brand-dim/60 rounded-3xl p-8 hover:border-brand-gold/60 hover:from-brand-cream-light transition-all flex flex-col backdrop-blur-xl"
         >
           <div className="absolute -top-3 left-7 bg-brand-bone text-brand-black font-sans text-[9px] uppercase tracking-widest px-3 py-1 rounded-full font-medium">
             $99 · Credited Back
           </div>
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/15 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-brand-cream border border-brand-dim/60 flex items-center justify-center">
               <Sparkles size={18} className="text-brand-gold" strokeWidth={1.75} />
             </div>
             <span className="font-display text-2xl text-brand-bone tracking-tight">Design Session</span>
@@ -89,7 +89,7 @@ export default function EstimateBookingCTA() {
             <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />$99 credited toward your project if you book</li>
             <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />For serious buyers ready in 30–90 days</li>
           </ul>
-          <div className="flex items-center justify-between mt-auto pt-5 border-t border-white/10">
+          <div className="flex items-center justify-between mt-auto pt-5 border-t border-brand-dim/60">
             <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold">Book Design Session</span>
             <Calendar size={16} className="text-brand-gold group-hover:translate-x-1 transition-transform" strokeWidth={1.5} />
           </div>

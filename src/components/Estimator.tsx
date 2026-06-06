@@ -1,5 +1,6 @@
-import { useState, useMemo, useEffect, type ChangeEvent } from 'react';
+import { useState, useMemo, useEffect, useRef, type ChangeEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { trackEngagement } from '../utils/analytics';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Grid, Hexagon, AlignJustify, ListTree, Layout,
@@ -47,6 +48,11 @@ const TIERS: { id: PaverTier; label: string; sub: string; badge?: string }[] = [
 
 const TOTAL_STEPS = 7;
 
+/** Per-step funnel labels — fixed, non-PII enum so GA4 reads abandonment as a funnel. */
+const STEP_NAMES: Record<number, string> = {
+  1: 'type', 2: 'size', 3: 'conditions', 4: 'location', 5: 'material', 6: 'addons', 7: 'result',
+};
+
 const fmt = (n: number) =>
   n >= 10000 ? `$${(n / 1000).toFixed(0)}k` : `$${n.toLocaleString()}`;
 
@@ -80,6 +86,14 @@ export default function Estimator() {
   const [addOns, setAddOns] = useState<string[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
+  // Per-step funnel tracking — fire each step once per session so GA4 shows drop-off.
+  const firedSteps = useRef<Set<number>>(new Set());
+  const fireStep = (n: number, suffix = '') => {
+    if (firedSteps.current.has(n)) return;
+    firedSteps.current.add(n);
+    trackEngagement('estimator_step', `${n}_${STEP_NAMES[n] ?? 'unknown'}${suffix}`);
+  };
+
   // Auto-pick a default brand when tier changes
   useEffect(() => {
     const defaultPaver = defaultPaverForTier(tier);
@@ -112,7 +126,12 @@ export default function Estimator() {
     if (cityParam && ESTIMATOR_LOCATIONS.some(l => l.key === cityParam)) {
       setLocation(cityParam as EstimatorLocationKey);
     }
-    if (advanced) setStep(3);
+    if (advanced) {
+      setStep(3);
+      fireStep(3, '_prefill');
+    } else {
+      fireStep(1);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -450,7 +469,13 @@ export default function Estimator() {
     return true;
   };
 
-  const nextStep = () => { if (canAdvance() && step < TOTAL_STEPS) setStep(s => s + 1); };
+  const nextStep = () => {
+    if (canAdvance() && step < TOTAL_STEPS) {
+      const next = step + 1;
+      fireStep(next);
+      setStep(next);
+    }
+  };
   const prevStep = () => setStep(s => Math.max(1, s - 1));
 
   const selectedLocation = ESTIMATOR_LOCATIONS.find(l => l.key === location) || ESTIMATOR_LOCATIONS[0];
@@ -476,9 +501,9 @@ export default function Estimator() {
         </p>
       </div>
 
-      <div className="relative bg-gradient-to-b from-white/[0.10] to-white/[0.03] backdrop-blur-2xl border border-white/25 rounded-3xl p-7 md:p-14 overflow-hidden shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)]">
+      <div className="relative bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-2xl border border-brand-dim rounded-3xl p-7 md:p-14 overflow-hidden shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)]">
         {/* Progress bar */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-white/5 rounded-t-3xl overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-brand-cream rounded-t-3xl overflow-hidden">
           <motion.div className="h-full bg-gradient-to-r from-brand-gold/80 via-brand-gold to-brand-gold/80"
             initial={{ width: '14%' }}
             animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
@@ -493,11 +518,41 @@ export default function Estimator() {
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               className={cn(
                 "w-1.5 h-1.5 rounded-full transition-colors duration-300",
-                step === i ? "bg-brand-gold shadow-[0_0_12px_rgba(212,175,99,0.6)]" : step > i ? "bg-brand-gold/60" : "bg-white/30"
+                step === i ? "bg-brand-gold shadow-[0_0_12px_rgba(212,175,99,0.6)]" : step > i ? "bg-brand-gold/60" : "bg-brand-dim"
               )}
             />
           ))}
         </div>
+
+        {/* Desktop running estimate — surfaces the number from step 2 so the remaining steps read as optional refinement, not a gate. */}
+        {step >= 2 && step < TOTAL_STEPS && estimate.totalLow > 0 && (
+          <div className="hidden md:flex items-center justify-between gap-6 mb-12 px-6 py-4 rounded-2xl bg-gradient-to-r from-brand-gold/10 to-transparent border border-brand-gold/20">
+            <div className="flex items-baseline gap-5">
+              <div>
+                <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold mb-1.5">Your range so far</div>
+                <div className="font-display text-3xl text-brand-bone leading-none">
+                  ${(estimate.totalLow / 1000).toFixed(0)}k – ${(estimate.totalHigh / 1000).toFixed(0)}k
+                </div>
+              </div>
+              <div className="hidden lg:block pl-5 border-l border-brand-gold/15">
+                <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold mb-1.5">Confidence</div>
+                <div className="font-display text-3xl text-brand-bone leading-none">±{confidence}%</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="hidden lg:block font-sans text-[11px] font-normal text-brand-muted max-w-[180px] leading-snug">
+                Keep going to tighten the range — or jump straight to the breakdown.
+              </span>
+              <button
+                type="button"
+                onClick={() => { fireStep(7); setStep(7); }}
+                className="btn-secondary !rounded-full whitespace-nowrap !py-3 !px-6"
+              >
+                Skip to full breakdown →
+              </button>
+            </div>
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
           {step === 1 && (
@@ -516,7 +571,7 @@ export default function Estimator() {
                       }}
                       className={cn(
                         "group flex items-center gap-4 p-6 rounded-2xl border transition-all duration-200 cursor-pointer",
-                        isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12] hover:-translate-y-[2px] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)]"
+                        isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface hover:-translate-y-[2px] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)]"
                       )}
                     >
                       <div className="text-brand-gold"><Icon size={24} strokeWidth={1.5} /></div>
@@ -544,7 +599,7 @@ export default function Estimator() {
                         onClick={() => toggleElement(pt.id)}
                         className={cn(
                           "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
-                          selectedElements.includes(pt.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
+                          selectedElements.includes(pt.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                         )}
                       >
                         <div className={cn(
@@ -561,7 +616,7 @@ export default function Estimator() {
                     <div className="pt-8 border-t border-brand-gold/10 space-y-12">
                       <h4 className="font-display text-2xl text-brand-bone">Configure Sizes</h4>
                       {selectedElements.map(el => (
-                        <div key={el} className="bg-white/[0.03] p-6 rounded-2xl border border-white/8">
+                        <div key={el} className="bg-brand-cream-light p-6 rounded-2xl border border-brand-dim/50">
                           <h5 className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold mb-6">
                             {PROJECT_TYPES.find(p => p.id === el)?.label}
                           </h5>
@@ -588,7 +643,7 @@ export default function Estimator() {
                     onClick={() => toggleCondition(cond.id)}
                     className={cn(
                       "flex items-center gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer",
-                      conditions[cond.id] ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
+                      conditions[cond.id] ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     <div className={cn(
@@ -621,7 +676,7 @@ export default function Estimator() {
                     onClick={() => setLocation(loc.key)}
                     className={cn(
                       "px-5 py-4 rounded-2xl border text-left transition-all duration-200",
-                      location === loc.key ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
+                      location === loc.key ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     <div className="font-sans text-[13px] text-brand-bone">{loc.name}</div>
@@ -649,7 +704,7 @@ export default function Estimator() {
                     onClick={() => setTier(t.id)}
                     className={cn(
                       "relative p-4 rounded-2xl border text-left transition-all duration-200",
-                      tier === t.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
+                      tier === t.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     {t.badge && (
@@ -674,7 +729,7 @@ export default function Estimator() {
                         onClick={() => setPaverBrandId(p.id)}
                         className={cn(
                           "relative p-4 rounded-2xl border text-left transition-all duration-200",
-                          paverBrandId === p.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
+                          paverBrandId === p.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                         )}
                       >
                         {p.recommended && (
@@ -705,7 +760,7 @@ export default function Estimator() {
                         onClick={() => setDeckBrandId(d.id)}
                         className={cn(
                           "p-4 rounded-2xl border text-left transition-all duration-200",
-                          deckBrandId === d.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
+                          deckBrandId === d.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                         )}
                       >
                         <div className="flex items-baseline justify-between gap-2 mb-1">
@@ -734,7 +789,7 @@ export default function Estimator() {
                     onClick={() => toggleAddOn(a.id)}
                     className={cn(
                       "flex items-start gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer",
-                      addOns.includes(a.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-white/[0.08] border-white/20 hover:border-white/35 hover:bg-white/[0.12]"
+                      addOns.includes(a.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     <div className={cn(
@@ -765,7 +820,7 @@ export default function Estimator() {
                   One photo of the project area helps us account for grade, access, and existing surfaces — drops your confidence range another 2%.
                 </p>
                 {photoFile ? (
-                  <div className="bg-white/[0.05] border border-brand-gold/30 rounded-2xl p-4 flex items-center justify-between">
+                  <div className="bg-brand-cream border border-brand-gold/30 rounded-2xl p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
                       <ImageIcon size={18} className="text-brand-gold shrink-0" strokeWidth={1.5} />
                       <div className="min-w-0">
@@ -778,7 +833,7 @@ export default function Estimator() {
                     </button>
                   </div>
                 ) : (
-                  <label className="block bg-white/[0.03] border border-dashed border-white/15 rounded-2xl p-6 hover:bg-white/[0.05] text-center cursor-pointer hover:border-brand-gold/60 transition-colors">
+                  <label className="block bg-brand-cream-light border border-dashed border-brand-dim rounded-2xl p-6 hover:bg-brand-midsurface text-center cursor-pointer hover:border-brand-gold/60 transition-colors">
                     <input type="file" accept="image/*" onChange={onPhotoChange} className="hidden" />
                     <Upload size={20} className="text-brand-gold mx-auto mb-2" strokeWidth={1.5} />
                     <div className="font-sans text-[13px] text-brand-bone">Drop a photo or click to upload</div>
@@ -791,6 +846,12 @@ export default function Estimator() {
 
           {step === 7 && estimate.lines && (
             <motion.div key="step7" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
+              <button
+                onClick={() => setStep(6)}
+                className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted hover:text-brand-gold transition-colors mb-8 inline-flex items-center gap-2"
+              >
+                ← Refine my answers
+              </button>
               <EstimateBreakdown
                 excavation={estimate.lines.excavation}
                 materials={estimate.lines.materials}
@@ -806,7 +867,7 @@ export default function Estimator() {
               />
 
               {addOns.length > 0 && (
-                <div className="mt-8 bg-gradient-to-b from-white/[0.05] to-white/[0.01] backdrop-blur-xl border border-white/10 rounded-3xl p-6">
+                <div className="mt-8 bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-6">
                   <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Selected Add-ons</div>
                   <div className="divide-y divide-brand-gold/10">
                     {addOns.map(aid => {
@@ -836,7 +897,7 @@ export default function Estimator() {
                   hasPhotos: !!photoFile,
                   conditions: Object.entries(conditions).filter(([, v]) => v).map(([k]) => k),
                 }} />
-                <div className="bg-gradient-to-b from-white/[0.05] to-white/[0.01] backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col justify-center">
+                <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-6 md:p-8 flex flex-col justify-center">
                   <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-3">Project Timeline</div>
                   <div className="font-display text-3xl text-brand-bone mb-2">
                     {estimate.days.low}–{estimate.days.high} days on-site
@@ -857,7 +918,7 @@ export default function Estimator() {
               </div>
 
               <div className="mt-12 text-center">
-                <button onClick={() => setStep(1)} className="btn-ghost text-[9px] py-3 px-6">Start Over</button>
+                <button onClick={() => { firedSteps.current.clear(); fireStep(1); setStep(1); }} className="btn-ghost text-[9px] py-3 px-6">Start Over</button>
               </div>
 
               <p className="mt-8 font-sans text-xs font-normal text-brand-bonewhite/80 text-center max-w-3xl mx-auto leading-[1.6]">
@@ -868,9 +929,9 @@ export default function Estimator() {
         </AnimatePresence>
 
         {step < TOTAL_STEPS && (
-          <div className="mt-14 pt-8 border-t border-white/10 flex justify-between items-center gap-4">
+          <div className="mt-14 pt-8 border-t border-brand-dim/60 flex justify-between items-center gap-4">
             {step > 1 ? (
-              <button onClick={prevStep} className="btn-ghost !rounded-full !border-white/15 hover:!border-white/30">← Back</button>
+              <button onClick={prevStep} className="btn-ghost !rounded-full !border-brand-dim hover:!border-brand-dim">← Back</button>
             ) : <div />}
             <button
               onClick={nextStep}
@@ -891,7 +952,7 @@ export default function Estimator() {
         <MobileStickyBar
           low={estimate.totalLow}
           high={estimate.totalHigh}
-          onContinue={() => setStep(7)}
+          onContinue={() => { fireStep(7); setStep(7); }}
         />
       )}
     </div>

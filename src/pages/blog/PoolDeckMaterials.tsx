@@ -89,8 +89,8 @@ export default function PoolDeckMaterials() {
       <h2>Material Comparison: Side-by-Side</h2>
 
       <div className="not-prose my-10 overflow-x-auto">
-        <table className="w-full text-left font-sans text-sm border border-white/10 rounded-2xl overflow-hidden">
-          <thead className="bg-white/[0.06]">
+        <table className="w-full text-left font-sans text-sm border border-brand-dim/60 rounded-2xl overflow-hidden">
+          <thead className="bg-brand-cream">
             <tr>
               <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Material</th>
               <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Cost / sqft</th>
@@ -100,63 +100,63 @@ export default function PoolDeckMaterials() {
             </tr>
           </thead>
           <tbody className="text-brand-bonewhite/85 font-light">
-            <tr className="border-t border-white/10 bg-brand-gold/[0.04]">
+            <tr className="border-t border-brand-dim/60 bg-brand-gold/[0.04]">
               <td className="p-4 text-brand-gold">Porcelain (Porcea)</td>
               <td className="p-4">$58–65</td>
               <td className="p-4">R11</td>
               <td className="p-4">5–10°C cooler</td>
               <td className="p-4">Best all-around. Modern, low-maintenance.</td>
             </tr>
-            <tr className="border-t border-white/10">
+            <tr className="border-t border-brand-dim/60">
               <td className="p-4">Techo-Bloc Blu HD² Smooth</td>
               <td className="p-4">$44–48</td>
               <td className="p-4">R10–R11</td>
               <td className="p-4">Same as concrete</td>
               <td className="p-4">Premium concrete look. Best textures.</td>
             </tr>
-            <tr className="border-t border-white/10">
+            <tr className="border-t border-brand-dim/60">
               <td className="p-4">Unilock Umbriano</td>
               <td className="p-4">$46–50</td>
               <td className="p-4">R11</td>
               <td className="p-4">Same as concrete</td>
               <td className="p-4">Granite-like signature finish.</td>
             </tr>
-            <tr className="border-t border-white/10">
+            <tr className="border-t border-brand-dim/60">
               <td className="p-4">Techo-Bloc Blu 60 Slate</td>
               <td className="p-4">$38–42</td>
               <td className="p-4">R10</td>
               <td className="p-4">Same as concrete</td>
               <td className="p-4">Best value mid-tier. Clean modern look.</td>
             </tr>
-            <tr className="border-t border-white/10">
+            <tr className="border-t border-brand-dim/60">
               <td className="p-4">Permacon Melville 60</td>
               <td className="p-4">$32–38</td>
               <td className="p-4">R10</td>
               <td className="p-4">Same as concrete</td>
               <td className="p-4">Budget concrete option. Good textures.</td>
             </tr>
-            <tr className="border-t border-white/10">
+            <tr className="border-t border-brand-dim/60">
               <td className="p-4">Oakville Blue Ice (natural)</td>
               <td className="p-4">$65–75</td>
               <td className="p-4">R10</td>
               <td className="p-4">3–6°C cooler</td>
               <td className="p-4">Genuine Ontario stone. One-of-a-kind look.</td>
             </tr>
-            <tr className="border-t border-white/10">
+            <tr className="border-t border-brand-dim/60">
               <td className="p-4">Oakville Black Limestone</td>
               <td className="p-4">$70–80</td>
               <td className="p-4">R10</td>
               <td className="p-4">Hotter</td>
               <td className="p-4">Dramatic dark look — better for shaded areas.</td>
             </tr>
-            <tr className="border-t border-white/10">
+            <tr className="border-t border-brand-dim/60">
               <td className="p-4 text-brand-muted">Travertine</td>
               <td className="p-4 text-brand-muted">$50–65</td>
               <td className="p-4 text-brand-muted">R10</td>
               <td className="p-4 text-brand-muted">Cooler</td>
               <td className="p-4 text-brand-muted line-through">Not recommended for Ontario — stains, frost spalling.</td>
             </tr>
-            <tr className="border-t border-white/10">
+            <tr className="border-t border-brand-dim/60">
               <td className="p-4 text-brand-muted">Stamped concrete</td>
               <td className="p-4 text-brand-muted">$25–35</td>
               <td className="p-4 text-brand-muted">Varies</td>

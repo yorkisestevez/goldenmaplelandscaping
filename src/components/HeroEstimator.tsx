@@ -45,7 +45,7 @@ export default function HeroEstimator() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-gradient-to-b from-white/[0.14] to-white/[0.04] backdrop-blur-2xl border border-white/30 rounded-3xl p-7 md:p-9 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.7)]"
+      className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-2xl border border-brand-dim rounded-3xl p-7 md:p-9 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.7)]"
     >
       <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">
         Free Cost Estimator · 60 Seconds
@@ -74,7 +74,7 @@ export default function HeroEstimator() {
                 className={`p-3 rounded-2xl border transition-all duration-150 flex flex-col items-center gap-1.5 ${
                   selected
                     ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold text-brand-bonewhite shadow-[0_0_0_1px_rgba(212,175,99,0.45)]'
-                    : 'bg-white/[0.08] border-white/25 text-brand-bonewhite/80 hover:border-white/45 hover:bg-white/[0.14] hover:text-brand-bonewhite'
+                    : 'bg-brand-cream border-brand-dim text-brand-bonewhite/80 hover:border-brand-gold/60 hover:bg-brand-midsurface hover:text-brand-bonewhite'
                 }`}
               >
                 <Icon size={18} strokeWidth={1.5} className={selected ? 'text-brand-gold' : ''} />
@@ -104,7 +104,7 @@ export default function HeroEstimator() {
                 className={`p-3 rounded-2xl border transition-all duration-150 ${
                   selected
                     ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.45)]'
-                    : 'bg-white/[0.08] border-white/25 hover:border-white/45 hover:bg-white/[0.14]'
+                    : 'bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface'
                 }`}
               >
                 <div className={`font-sans text-[12px] uppercase tracking-wider ${selected ? 'text-brand-bonewhite' : 'text-brand-bonewhite/85'}`}>
