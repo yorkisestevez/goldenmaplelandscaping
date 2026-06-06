@@ -15,7 +15,7 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const HERO_POSTER = "/images/projects/hero-barrie-patio.jpg";
+const HERO_POSTER = "/images/projects/patio-pergola.jpg";
 
 const Hero = () => {
   return (
@@ -23,7 +23,7 @@ const Hero = () => {
       <div className="absolute inset-0 z-0">
         <img
           src={HERO_POSTER}
-          alt="Premium Golden Maple Landscaping interlocking patio in Barrie"
+          alt="Completed Golden Maple backyard with paver patio, cedar pavilion and retaining wall in Barrie"
           loading="eager"
           decoding="async"
           fetchPriority="high"
