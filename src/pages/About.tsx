@@ -55,15 +55,19 @@ export default function About() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[4/5] w-full max-w-[340px] mx-auto rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
+              className="relative w-full max-w-[380px] mx-auto aspect-[4/5]"
             >
+              {/* Soft gold-edged blob — the "frame" he floats in front of */}
+              <div className="gm-blob absolute inset-[7%] bg-gradient-to-br from-brand-cream-light via-brand-cream to-brand-midsurface border-[3px] border-brand-gold/45 shadow-[0_30px_70px_-20px_rgba(94,74,15,0.38)]" />
+              {/* Offset second outline — layered editorial accent */}
+              <div className="gm-blob absolute inset-[7%] border border-brand-gold/25 rotate-6 scale-[1.05]" style={{ animationDelay: '-8s' }} />
+              {/* Floating cut-out — bottom-anchored, head breaks above the blob */}
               <img
-                src="/images/projects/yorkis-founder.jpg"
+                src="/images/projects/yorkis-cutout-headshot.png"
                 alt="Yorkis Estevez - Founder of Golden Maple Landscaping"
-                className="w-full h-full object-cover grayscale-[0.9] contrast-[1.05]"
+                className="gm-float absolute inset-x-0 bottom-0 mx-auto h-[102%] w-auto max-w-none object-contain object-bottom grayscale-[0.7] contrast-[1.05] drop-shadow-[0_18px_22px_rgba(0,0,0,0.22)]"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-brand-nearblack/15 mix-blend-overlay" />
             </motion.div>
           </div>
 

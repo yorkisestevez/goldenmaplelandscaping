@@ -134,3 +134,25 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .gm-live-dot { animation: none; }
 }
+
+/* Soft organic "blob" frame for floating cut-out portraits (About founder photo).
+   The blob is the gold-edged frame; the subject floats in front of it. */
+@keyframes gm-blob-morph {
+  0%, 100% { border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%; }
+  34%      { border-radius: 46% 54% 43% 57% / 52% 58% 42% 48%; }
+  67%      { border-radius: 57% 43% 60% 40% / 47% 53% 47% 53%; }
+}
+.gm-blob {
+  border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
+  animation: gm-blob-morph 16s ease-in-out infinite;
+}
+@keyframes gm-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+.gm-float {
+  animation: gm-float 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gm-blob, .gm-float { animation: none; }
+}
