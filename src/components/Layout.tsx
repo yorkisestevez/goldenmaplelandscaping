@@ -93,7 +93,7 @@ const Navbar = () => {
           "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
           isScrolled || isMobileMenuOpen
             ? 'bg-brand-nearblack/95 backdrop-blur-md border-b border-brand-dim/20 py-3'
-            : 'bg-gradient-to-b from-brand-nearblack/85 via-brand-nearblack/40 to-transparent backdrop-blur-[2px] py-6'
+            : 'bg-brand-nearblack/70 backdrop-blur-md border-b border-brand-dim/10 py-6'
         )}
       >
         <div className="container-custom flex items-center justify-between">

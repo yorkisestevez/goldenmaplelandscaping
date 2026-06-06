@@ -29,14 +29,14 @@ const Hero = () => {
           fetchPriority="high"
           className="absolute inset-0 w-full h-full object-cover opacity-95"
         />
-        {/* Light scrim: strong on the left so the ink headline stays readable, clearing toward the right so the photo reads crisp. */}
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-nearblack via-brand-nearblack/75 to-brand-nearblack/5" />
+        {/* Lighter left-weighted scrim: just enough behind the text, clearing fast so the photo stays visible. */}
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-nearblack/85 via-brand-nearblack/35 to-transparent" />
       </div>
 
       <div className="container-custom relative z-10 py-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
-          {/* Hero Copy */}
-          <div className="lg:col-span-7">
+          {/* Hero Copy — subtle light halo keeps the ink text crisp over the photo */}
+          <div className="lg:col-span-7 [filter:drop-shadow(0_2px_14px_rgba(246,242,232,0.92))]">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
