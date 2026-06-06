@@ -88,7 +88,7 @@ jobs:
             echo "$JS" | grep -q "G-1BRTV91W3Z"    || MISSING="$MISSING GA4(G-1BRTV91W3Z)"
             echo "$JS" | grep -q "wisgcj7yvw"       || MISSING="$MISSING Clarity(wisgcj7yvw)"
             echo "$JS" | grep -q "2084193635490617" || MISSING="$MISSING MetaPixel"
-            echo "$JS" | grep -q "AW-1411168829"    || MISSING="$MISSING GoogleAds"
+            echo "$JS" | grep -q "AW-10839158941"    || MISSING="$MISSING GoogleAds"
             if [ -z "$MISSING" ]; then OK=1; echo "Analytics guard OK ($BUNDLE) — GA4 + Clarity + Pixel + Ads all present"; break; fi
             echo "attempt $i: still missing:$MISSING (bundle $BUNDLE) — retrying"
           done
@@ -96,7 +96,7 @@ jobs:
             MSG="🚨 Analytics MISSING from live deploy of goldenmaplelandscaping.ca
           Bundle: ${BUNDLE:-unknown}
           Missing:${MISSING:- (could not fetch bundle)}
-          The deploy SUCCEEDED but the live bundle is missing trackers — most likely the CI build lost Netlify env injection (check the netlify --build step + Netlify env vars), or a tracking id changed. Expected: GA4 G-1BRTV91W3Z, Clarity wisgcj7yvw, Meta Pixel 2084193635490617, Google Ads AW-1411168829.
+          The deploy SUCCEEDED but the live bundle is missing trackers — most likely the CI build lost Netlify env injection (check the netlify --build step + Netlify env vars), or a tracking id changed. Expected: GA4 G-1BRTV91W3Z, Clarity wisgcj7yvw, Meta Pixel 2084193635490617, Google Ads AW-10839158941.
           Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             curl -fsS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
               --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
