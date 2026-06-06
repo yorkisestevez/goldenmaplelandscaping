@@ -58,7 +58,7 @@ export default function About() {
               className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
             >
               <img
-                src="/images/projects/Yorkis Estevez.jpg"
+                src="/images/projects/yorkis-founder.jpg"
                 alt="Yorkis Estevez - Founder of Golden Maple Landscaping"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
