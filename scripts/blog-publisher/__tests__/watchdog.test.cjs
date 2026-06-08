@@ -128,6 +128,22 @@ describe('publisher pipeline shape', () => {
               /slug-string similarity/i.test(src),
       'reviewer prompt must instruct Gemini not to block on slug-name similarity');
   });
+
+  test('generate.cjs normalizes readTime to string (2026-06-08 incident regression)', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'generate.cjs'), 'utf8');
+    assert.ok(/typeof draft\.readTime === 'number'/.test(src),
+      'generate.cjs must normalize integer readTime to string');
+    assert.ok(/typeof draft\.readTime !== 'string'/.test(src),
+      'generate.cjs must coerce any non-string readTime to a default string');
+  });
+
+  test('inject.cjs has belt-and-suspenders normalizeReadTime helper', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'inject.cjs'), 'utf8');
+    assert.ok(/function normalizeReadTime/.test(src),
+      'inject.cjs must define normalizeReadTime helper');
+    assert.ok(!/draft\.readTime\.includes\(/.test(src),
+      'inject.cjs must NOT call draft.readTime.includes() directly (crashes on integer)');
+  });
 });
 
 describe('watchdog: SEO artifact checks', () => {
