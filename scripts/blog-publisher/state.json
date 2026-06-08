@@ -1,12 +1,13 @@
 {
   "version": 1,
-  "lastRunAt": "2026-06-01T18:37:29.490Z",
+  "lastRunAt": "2026-06-08T17:42:23.410Z",
   "usedTopicIds": [
     "auto-001",
-    "auto-002"
+    "auto-002",
+    "auto-003"
   ],
   "publishedSlugs": [],
-  "currentDraft": "polymeric-sand-vs-regular-sand-patio",
+  "currentDraft": "interlocking-driveway-lifespan-ontario",
   "history": [
     {
       "topicId": "auto-001",
@@ -28,6 +29,19 @@
         "errors": [],
         "wordCount": 1943,
         "linkCount": 5
+      }
+    },
+    {
+      "topicId": "auto-003",
+      "slug": "interlocking-driveway-lifespan-ontario",
+      "at": "2026-06-08T17:42:23.408Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 1726,
+        "linkCount": 3,
+        "hasTable": true,
+        "numericCount": 16
       }
     }
   ]
