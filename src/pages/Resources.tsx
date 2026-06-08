@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-      {
+        {
+    slug: "interlocking-driveway-lifespan-ontario",
+    title: "Interlocking Driveway Lifespan Ontario: How Long Pavers Really Last",
+    excerpt: "A properly installed interlocking driveway in Ontario will last 25-50+ years, depending on the base preparation, paver quality, and regular maintenance.",
+    category: "Engineering",
+    readTime: "9 min",
+    image: "/images/projects/paver-driveway.JPG",
+  },
+  {
     slug: "polymeric-sand-vs-regular-sand-patio",
     title: "Polymeric Sand vs. Regular Sand: Why It Matters for Your Barrie Patio",
     excerpt: "Wondering why your paver patio has weeds? Learn why polymeric sand is the only choice for durable interlocking patios in Barrie's harsh freeze-thaw cycles.",
