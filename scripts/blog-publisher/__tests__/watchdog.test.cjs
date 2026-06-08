@@ -110,6 +110,24 @@ describe('publisher pipeline shape', () => {
       assert.ok(src.includes(axis), `reviewer must evaluate axis ${axis}`);
     }
   });
+
+  test('cli.cjs downgrades dedup-only block verdict to warn (2026-06-08 incident regression)', () => {
+    const cliSrc = fs.readFileSync(path.join(__dirname, '..', 'cli.cjs'), 'utf8');
+    assert.ok(/downgradedFromBlock/.test(cliSrc),
+      'cli.cjs must mark dedup-only block downgrades');
+    assert.ok(/allBlockingAreDedup/.test(cliSrc),
+      'cli.cjs must detect when all blocking issues are dedup-related');
+    assert.ok(/upstream-guaranteed|upstream-unique/i.test(cliSrc),
+      'comment must explain why dedup-block can be safely downgraded');
+  });
+
+  test('reviewer prompt warns against blocking on slug-string similarity', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'adversarial-review.cjs'), 'utf8');
+    assert.ok(/slug itself cannot be a duplicate/i.test(src) ||
+              /Do NOT block on slug-name similarity/i.test(src) ||
+              /slug-string similarity/i.test(src),
+      'reviewer prompt must instruct Gemini not to block on slug-name similarity');
+  });
 });
 
 describe('watchdog: SEO artifact checks', () => {
