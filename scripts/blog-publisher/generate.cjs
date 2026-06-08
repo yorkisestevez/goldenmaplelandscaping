@@ -85,7 +85,7 @@ OUTPUT FORMAT — return ONE JSON object only. No prose before or after. No mark
   "seoTitle": "<title tag, ≤60 chars, primary keyword at the very front, location second>",
   "seoDescription": "<meta description, ≤155 chars, single sentence that includes the numeric answer/range if relevant>",
   "category": "<one of: Engineering, Materials, Design, Investment, Decking, Hiring Guide, Process, Seasonal, Regulations, Retaining Walls>",
-  "readTime": "<X min, integer between 6 and 12>",
+  "readTime": "<STRING formatted as 'X min' where X is an integer 6-12, e.g. '8 min'. MUST be a JSON string, NOT a bare integer.>",
   "heroImage": "<one path from ALLOWED list below — pick the most relevant>",
   "tldr": "<50-90 words. THE direct answer to the article's main question, written for Google featured snippets AND AI engines (ChatGPT/Claude/Perplexity citation). MUST contain at least one specific number, range, or named product. Plain prose — no HTML. This goes in a 'Quick Answer' box at the very top of the post.>",
   "intro": "<2-3 paragraph opening that follows the TL;DR — expands on it with a specific Barrie/Simcoe-County observation or real frustration. Plain HTML, only <p>, <strong>, <em> tags. No fluff openers. No 'In today's world.' No 'As a homeowner.'>",
@@ -204,6 +204,14 @@ async function generateDraft({ topicId = null } = {}) {
   let draft;
   try { draft = parseJson(text); }
   catch (e) { throw new Error('Gemini returned non-JSON: ' + text.slice(0, 500)); }
+
+  // Defensive normalization — Gemini sometimes returns shapes that differ
+  // from the prompt's contract (e.g. readTime as a bare integer instead of
+  // a string like "8 min"). Caught 2026-06-08: inject.cjs crashed on
+  // `draft.readTime.includes is not a function`. Normalize once here so all
+  // downstream consumers see a consistent shape.
+  if (typeof draft.readTime === 'number') draft.readTime = `${draft.readTime} min`;
+  if (typeof draft.readTime !== 'string') draft.readTime = '8 min';
 
   draft.slug = topic.slug;
   draft.topicId = topic.id;

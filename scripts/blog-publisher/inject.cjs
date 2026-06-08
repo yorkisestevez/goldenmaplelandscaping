@@ -21,6 +21,15 @@ function formatIsoDate(iso) {
   return new Date(iso).toISOString().slice(0, 10);
 }
 
+// Defensive normalization — Gemini sometimes returns readTime as a bare
+// integer instead of a string. generate.cjs normalizes once after parse,
+// but this fallback ensures inject can't crash even if a draft was generated
+// before that fix (replay scenarios, hand-loaded test fixtures, etc.).
+function normalizeReadTime(rt, suffix) {
+  const str = typeof rt === 'number' ? `${rt} min` : (typeof rt === 'string' ? rt : '8 min');
+  return str.includes('min') ? str : str + suffix;
+}
+
 function buildTsx(draft) {
   const compName = slugToComponent(draft.slug);
   const faqMainEntity = (draft.faqs || []).map(f => ({
@@ -75,7 +84,7 @@ export default function ${compName}() {
       seoDescription=${JSON.stringify(draft.seoDescription)}
       category=${JSON.stringify(draft.category)}
       date=${JSON.stringify(formatDate(draft.generatedAt))}
-      readTime=${JSON.stringify(draft.readTime.includes('min') ? draft.readTime : draft.readTime + ' min read')}
+      readTime=${JSON.stringify(normalizeReadTime(draft.readTime, ' min read'))}
       heroImage=${JSON.stringify(draft.heroImage)}
       schema={faqSchema}
       tldr=${JSON.stringify(draft.tldr || '')}
@@ -130,7 +139,7 @@ function injectIntoResources(draft) {
     title: ${JSON.stringify(draft.title)},
     excerpt: ${JSON.stringify(draft.seoDescription)},
     category: ${JSON.stringify(draft.category)},
-    readTime: ${JSON.stringify(draft.readTime.includes('min') ? draft.readTime : draft.readTime + ' min')},
+    readTime: ${JSON.stringify(normalizeReadTime(draft.readTime, ' min'))},
     image: ${JSON.stringify(draft.heroImage)},
   },
 `;
