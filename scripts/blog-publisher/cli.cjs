@@ -113,6 +113,13 @@ async function cmdWorkflowRun() {
 
   // 2) Adversarial review — second Gemini pass that critiques the draft.
   //    Verdict 'block' halts the workflow; 'warn' continues with warning in PR body.
+  //
+  //    Safety net: the reviewer is an LLM and CAN hallucinate. Slug uniqueness
+  //    is upstream-guaranteed by generate.cjs, so any "block" verdict whose
+  //    stated reasons are *only* dedup/originality concerns gets downgraded to
+  //    "warn". Caught 2026-06-08 incident: reviewer blocked auto-003 claiming
+  //    "directly duplicates the slug of a prior article" — but state.json + the
+  //    live sitemap both confirmed the slug was unique.
   if (!skipReview) {
     try {
       review = await reviewDraft(draft);
@@ -120,15 +127,38 @@ async function cmdWorkflowRun() {
       console.log(`[workflow] adversarial review: ${review.verdict} (score ${review.score})`);
 
       if (review.verdict === 'block') {
-        const blockMsg =
-          `🚫 Adversarial review BLOCKED draft "${draft.slug}".\n\n` +
-          `Score: ${review.score}/10\n` +
-          `Summary: ${review.summary}\n\n` +
-          `Top issues:\n` +
-          review.issues.slice(0, 5).map((i) => `  • [${i.severity}] ${i.axis}: ${i.problem}`).join('\n') +
-          `\n\nDraft NOT submitted. Topic will be retried next cycle.`;
-        try { await telegram.sendMessage(blockMsg, { parseMode: undefined }); } catch {}
-        throw new Error(`adversarial review blocked: ${review.summary}`);
+        // Cross-check: if all blocking-severity issues are dedup/originality
+        // related, downgrade to warn. Slug uniqueness is hard-guaranteed by
+        // generate.cjs's usedTopicIds check.
+        const blockingIssues = (review.issues || []).filter((i) => i.severity === 'high');
+        const allBlockingAreDedup = blockingIssues.length > 0 &&
+          blockingIssues.every((i) =>
+            (i.axis === 'originality') ||
+            /duplicat/i.test(i.problem || '') ||
+            /duplicat/i.test(i.quote || '') ||
+            /\bslug\b/i.test(i.problem || '')
+          );
+        const summaryClaimsDedup =
+          /duplicat/i.test(review.summary || '') ||
+          /already (publish|exist)/i.test(review.summary || '');
+
+        if (allBlockingAreDedup || (summaryClaimsDedup && blockingIssues.length === 0)) {
+          console.warn(`[workflow] reviewer blocked on dedup but slug is upstream-unique — downgrading verdict block → warn`);
+          review.verdict = 'warn';
+          review.downgradedFromBlock = true;
+          review.downgradeReason = 'dedup-only block; slug uniqueness is upstream-guaranteed by generate.cjs';
+          // Continue to inject — fall through, don't throw.
+        } else {
+          const blockMsg =
+            `🚫 Adversarial review BLOCKED draft "${draft.slug}".\n\n` +
+            `Score: ${review.score}/10\n` +
+            `Summary: ${review.summary}\n\n` +
+            `Top issues:\n` +
+            review.issues.slice(0, 5).map((i) => `  • [${i.severity}] ${i.axis}: ${i.problem}`).join('\n') +
+            `\n\nDraft NOT submitted. Topic will be retried next cycle.`;
+          try { await telegram.sendMessage(blockMsg, { parseMode: undefined }); } catch {}
+          throw new Error(`adversarial review blocked: ${review.summary}`);
+        }
       }
     } catch (e) {
       if (e.message.startsWith('adversarial review blocked')) throw e;

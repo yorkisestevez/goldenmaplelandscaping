@@ -102,7 +102,7 @@ EVALUATE on these axes (1-10 each, 10 = best):
 - voice_fit:               Operator-honest contractor voice, NOT corporate marketing. "We" not "Golden Maple". No "industry-leading", "passionate team", "state-of-the-art", etc.
 - specificity:             Real Simcoe County references (Lake Simcoe, freeze-thaw, Barrie clay, Bayfield St, etc.) — not generic Ontario filler.
 - seo_value:               Does this target a real long-tail keyword? Will Google rank it? Or is it generic content-mill stuff?
-- originality:             Does this duplicate angles from prior published slugs above? Different enough?
+- originality:             Does this duplicate ANGLES (the actual argument / takeaway) from prior published slugs? IMPORTANT: the SLUG itself cannot be a duplicate — upstream code in generate.cjs hard-guards against ever picking an already-used topic, so by the time you see this draft the slug is guaranteed unique. Originality concerns must be about CONTENT overlap (e.g. "this rehashes the same points as winter-damage-prevention-interlocking"), NEVER about slug-string similarity. Topic words like "interlocking" or "patio" appearing across many slugs is normal hyperlocal SEO coverage — that is NOT duplication. Do NOT block on slug-name similarity under any circumstances.
 - safety:                  Any legal claims, regulatory advice, or safety guidance that could mislead a homeowner?
 - canadian_english:        Metre/colour/neighbour/kilometre — not American spellings.
 - tldr_quality:            Does the TL;DR Quick Answer (top of post) directly answer the article's main question in 50-90 words? Does it include at least one specific number/range? Could it stand alone as a Google featured snippet?
