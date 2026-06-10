@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "lastRunAt": "2026-06-08T02:22:08.129Z",
-  "lastSuccessAt": "2026-06-04T02:21:40.150Z",
+  "lastRunAt": "2026-06-10T03:31:21.851Z",
+  "lastSuccessAt": "2026-06-10T04:32:42.488Z",
   "lastFailureAt": null,
   "consecutiveFailures": 0,
   "mirrored": [
@@ -18,6 +18,16 @@
       "ctaUrl": "https://goldenmaplelandscaping.ca/resources/polymeric-sand-vs-regular-sand-patio",
       "publishedAt": "2026-06-04T02:21:40.150Z",
       "routine": "manual-catchup-2026-06-04"
+    },
+    {
+      "slug": "interlocking-driveway-lifespan-ontario",
+      "title": "Interlocking Driveway Lifespan Ontario: How Long Pavers Really Last",
+      "ctaUrl": "https://goldenmaplelandscaping.ca/resources/interlocking-driveway-lifespan-ontario",
+      "publishedAt": "2026-06-10T04:32:42.487Z",
+      "routine": "gbp-daily-mirror",
+      "path": "chrome_mcp",
+      "post_id": null,
+      "imageAttached": false
     }
   ],
   "history": [
