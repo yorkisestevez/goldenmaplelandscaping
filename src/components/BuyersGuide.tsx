@@ -39,9 +39,13 @@ const BuyersGuide = () => {
     e.preventDefault();
     setIsGuideLoading(true);
     const eventId = genEventId();
+    const fd = new FormData(e.currentTarget);   // capture before the await (currentTarget nulls out after)
     try {
       await postToNetlify(e.currentTarget, 'guide-download', eventId);
-      trackLead('buyers-guide-download', 'top-of-funnel', undefined, eventId);
+      trackLead('buyers-guide-download', 'top-of-funnel', undefined, eventId, {
+        email: fd.get('email') as string | null,
+        phone: fd.get('phone') as string | null,
+      });
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('[guide-download] submit failed', err);
@@ -63,9 +67,13 @@ const BuyersGuide = () => {
     e.preventDefault();
     setIsEstimateLoading(true);
     const eventId = genEventId();
+    const fd = new FormData(e.currentTarget);   // capture before the await (currentTarget nulls out after)
     try {
       await postToNetlify(e.currentTarget, 'estimate-request', eventId);
-      trackLead('estimate-request', 'high-intent', undefined, eventId);
+      trackLead('estimate-request', 'high-intent', undefined, eventId, {
+        email: fd.get('email') as string | null,
+        phone: fd.get('phone') as string | null,
+      });
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('[estimate-request] submit failed', err);

@@ -53,7 +53,7 @@ export default function QuickQuote() {
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.log('[dev] quick-quote payload (would POST to Netlify):', payload);
-      trackLead('quick-quote', 'high-intent', undefined, eventId);
+      trackLead('quick-quote', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone });
       setStatus('success');
       return;
     }
@@ -65,7 +65,7 @@ export default function QuickQuote() {
         body: encode(payload),
       });
       if (!res.ok) throw new Error('Network response was not ok');
-      trackLead('quick-quote', 'high-intent', undefined, eventId);
+      trackLead('quick-quote', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone });
       setStatus('success');
     } catch {
       setStatus('error');

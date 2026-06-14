@@ -132,12 +132,17 @@ export function trackPageView(path: string, title?: string): void {
  * @param tier     — funnel position ("high-intent" or "top-of-funnel")
  * @param value    — optional monetary value of the lead, in CAD
  * @param eventId  — UUID shared with the CAPI server-side event for Meta dedup
+ * @param identifiers — optional user-provided email/phone for Enhanced
+ *   Conversions for Leads. Passed PLAIN; gtag.js normalizes + SHA-256-hashes
+ *   them in-browser. Lets Google match this lead — and a later offline "job
+ *   won" upload keyed on the same hashed identifier — back to the ad click.
  */
 export function trackLead(
   formName: string,
   tier: 'high-intent' | 'top-of-funnel' = 'high-intent',
   value?: number,
   eventId?: string,
+  identifiers?: { email?: string | null; phone?: string | null },
 ): void {
   if (!isBrowser) return;
 
@@ -161,6 +166,16 @@ export function trackLead(
     },
     eventId ? { eventID: eventId } : undefined,
   );
+
+  // Enhanced Conversions for Leads — set user-provided identifiers BEFORE the
+  // conversion event so gtag attaches them to it. Plain values; gtag.js
+  // normalizes + SHA-256-hashes them in-browser. Only set fields we have.
+  if (GOOGLE_ADS_LEAD_LABEL && identifiers) {
+    const ud: { email?: string; phone_number?: string } = {};
+    if (identifiers.email && identifiers.email.trim()) ud.email = identifiers.email.trim();
+    if (identifiers.phone && identifiers.phone.trim()) ud.phone_number = identifiers.phone.trim();
+    if (ud.email || ud.phone_number) window.gtag?.('set', 'user_data', ud);
+  }
 
   if (GOOGLE_ADS_LEAD_LABEL) {
     window.gtag?.('event', 'conversion', {

@@ -147,7 +147,7 @@ export default function BookingScheduler() {
     if (import.meta.env.DEV && !CRM_BASE_URL) {
       // eslint-disable-next-line no-console
       console.log('[dev] booking payload (would POST to CRM):', payload);
-      trackLead('booking', 'high-intent', undefined, eventId);
+      trackLead('booking', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone });
       setStep('success');
       return;
     }
@@ -162,7 +162,7 @@ export default function BookingScheduler() {
         const errBody = await res.json().catch(() => ({}));
         throw new Error(errBody.error || 'Could not save your booking.');
       }
-      trackLead('booking', 'high-intent', undefined, eventId);
+      trackLead('booking', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone });
       setStep('success');
     } catch (err) {
       setErrorMsg(

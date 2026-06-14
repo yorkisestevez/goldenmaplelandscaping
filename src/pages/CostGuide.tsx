@@ -73,7 +73,7 @@ export default function CostGuide() {
       if (import.meta.env.DEV) {
         // eslint-disable-next-line no-console
         console.log('[dev] cost-guide payload (would POST to Netlify):', payload);
-        trackLead('cost-guide', 'top-of-funnel', undefined, eventId);
+        trackLead('cost-guide', 'top-of-funnel', undefined, eventId, { email: form.email });
         navigate('/cost-guide/thank-you');
         return;
       }
@@ -84,7 +84,7 @@ export default function CostGuide() {
         body: encode(payload),
       });
       if (!res.ok) throw new Error('Network response was not ok');
-      trackLead('cost-guide', 'top-of-funnel', undefined, eventId);
+      trackLead('cost-guide', 'top-of-funnel', undefined, eventId, { email: form.email });
       navigate('/cost-guide/thank-you');
     } catch {
       setStatus('error');
