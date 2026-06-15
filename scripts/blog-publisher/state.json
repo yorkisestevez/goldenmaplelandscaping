@@ -1,13 +1,14 @@
 {
   "version": 1,
-  "lastRunAt": "2026-06-08T17:42:23.410Z",
+  "lastRunAt": "2026-06-15T18:30:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
-    "auto-003"
+    "auto-003",
+    "auto-004"
   ],
   "publishedSlugs": [],
-  "currentDraft": "interlocking-driveway-lifespan-ontario",
+  "currentDraft": "best-pavers-pool-deck-simcoe-county",
   "history": [
     {
       "topicId": "auto-001",
@@ -43,6 +44,20 @@
         "hasTable": true,
         "numericCount": 16
       }
+    },
+    {
+      "topicId": "auto-004",
+      "slug": "best-pavers-pool-deck-simcoe-county",
+      "at": "2026-06-15T18:30:00.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2013,
+        "linkCount": 7,
+        "hasTable": true,
+        "numericCount": 28
+      },
+      "generatedBy": "claude-routine"
     }
   ]
 }

@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-        {
+          {
+    slug: "best-pavers-pool-deck-simcoe-county",
+    title: "Best Pavers for Pool Decks in Simcoe County: Slip-Rated, Cool-Touch, Freeze-Thaw Tested",
+    excerpt: "Best pavers for Simcoe County pool decks — slip-rated R-11 or higher, cool-touch light colours, freeze-thaw certified. Budget $25-45/sq ft installed.",
+    category: "Materials",
+    readTime: "9 min",
+    image: "/images/projects/best.JPEG",
+  },
+  {
     slug: "interlocking-driveway-lifespan-ontario",
     title: "Interlocking Driveway Lifespan Ontario: How Long Pavers Really Last",
     excerpt: "A properly installed interlocking driveway in Ontario will last 25-50+ years, depending on the base preparation, paver quality, and regular maintenance.",
