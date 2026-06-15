@@ -63,6 +63,7 @@ const ClearStoneVsGranularA = lazy(() => import('./pages/blog/ClearStoneVsGranul
 const PaverWalkwayCostBarrie = lazy(() => import('./pages/blog/PaverWalkwayCostBarrie'));
 const PolymericSandVsRegularSandPatio = lazy(() => import('./pages/blog/PolymericSandVsRegularSandPatio'));
 const InterlockingDrivewayLifespanOntario = lazy(() => import('./pages/blog/InterlockingDrivewayLifespanOntario'));
+const BestPaversPoolDeckSimcoeCounty = lazy(() => import('./pages/blog/BestPaversPoolDeckSimcoeCounty'));
 const PatiosBarrie = lazy(() => import('./pages/PatiosBarrie'));
 const OutdoorLivingBarrie = lazy(() => import('./pages/OutdoorLivingBarrie'));
 const LuxuryLandscapeBarrie = lazy(() => import('./pages/LuxuryLandscapeBarrie'));
@@ -152,6 +153,7 @@ export default function App() {
               <Route path="/resources/paver-walkway-cost-barrie" element={<PaverWalkwayCostBarrie />} />
               <Route path="/resources/polymeric-sand-vs-regular-sand-patio" element={<PolymericSandVsRegularSandPatio />} />
               <Route path="/resources/interlocking-driveway-lifespan-ontario" element={<InterlockingDrivewayLifespanOntario />} />
+              <Route path="/resources/best-pavers-pool-deck-simcoe-county" element={<BestPaversPoolDeckSimcoeCounty />} />
               {/* SEO Location Pages */}
               <Route path="/locations/barrie" element={<BarrieLanding />} />
               <Route path="/locations/innisfil" element={<InnisfilLanding />} />

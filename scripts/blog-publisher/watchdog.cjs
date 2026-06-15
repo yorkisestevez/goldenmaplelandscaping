@@ -214,40 +214,17 @@ async function checkStaleOpenPRs(findings) {
   }
 }
 
-// Check the last publisher run — categorize failure as transient/deterministic
-async function checkLastPublisherRun(findings) {
-  let runs;
-  try { runs = ghJson(`run list --repo ${REPO} --workflow=blog-publisher.yml --json conclusion,databaseId,createdAt,event,url --limit 5`); }
-  catch (e) { findings.push({ severity: 'low', kind: 'runs_read_err', message: e.message }); return; }
-  if (!runs.length) return;
-  const last = runs[0];
-  if (last.conclusion !== 'failure') return;
-
-  // Don't retry if there's already an open publisher PR — operator hasn't merged yet
-  const openPrs = ghJson(`pr list --repo ${REPO} --state open --search 'head:auto/blog-' --json number --limit 10`);
-  if (openPrs.length > 0) {
-    findings.push({
-      severity: 'medium',
-      kind: 'publisher_failed_with_open_pr',
-      message: `Last publisher run failed (${last.url}) but ${openPrs.length} open PR(s) exist — retry suppressed.`,
-    });
-    return;
-  }
-
-  // Retry cap: count workflow_dispatch retries in last 24h
-  const retriesIn24h = runs.filter(
-    (r) => r.event === 'workflow_dispatch' && ageHours(r.createdAt) < 24
-  ).length;
-  const canRetry = retriesIn24h < MAX_AUTO_RETRIES_PER_DAY;
-
-  findings.push({
-    severity: 'high',
-    kind: 'publisher_failed',
-    message: `Last publisher run failed (${last.url}). ${canRetry ? 'Attempting inline retry.' : 'Daily retry cap reached.'}`,
-    autofix: canRetry ? async () => autofixPublisherRetry() : null,
-    needsPat: false,
-  });
-}
+// Retired 2026-06-15. The Gemini-based blog-publisher.yml workflow is
+// intentionally disabled. The Claude routine (gm-blog-publisher in
+// Claude Code's scheduled-tasks) is the new generator and doesn't expose
+// itself through the GH Actions runs API at all.
+//
+// Detecting "publisher didn't fire this week" is now checkMissedCron's job
+// (it looks at auto/blog-* PR creation timestamps directly, source-agnostic).
+//
+// We keep this stub so the dispatch wiring doesn't blow up if any caller
+// still references it.
+async function checkLastPublisherRun(findings) { /* no-op — see checkMissedCron */ }
 
 // Check the last deploy run — same logic
 async function checkLastDeployRun(findings) {
@@ -543,37 +520,46 @@ async function checkLatestSlugInSitemap(findings) {
   }
 }
 
-// Did Monday's cron fire? Look for any scheduled run in last 7 days.
+// Did a new blog post land this week? Source-agnostic — works for the Claude
+// routine (current owner) and for the old GH Actions publisher (now disabled
+// but kept callable). Detects "no blog activity in 8+ days" regardless of WHO
+// is supposed to be generating posts.
 async function checkMissedCron(findings) {
-  let runs;
-  try { runs = ghJson(`run list --repo ${REPO} --workflow=blog-publisher.yml --json conclusion,createdAt,event --limit 50`); }
-  catch { return; }
-  const scheduled = runs.filter((r) => r.event === 'schedule');
-  const recentScheduled = scheduled.find((r) => ageDays(r.createdAt) < 7);
-  if (recentScheduled) return;  // good — fired within last week
+  let prs;
+  try {
+    prs = ghJson(`pr list --repo ${REPO} --state all --search 'head:auto/blog-' --json number,title,createdAt,mergedAt,closedAt --limit 30`);
+  } catch { return; }
 
-  // Only alert if at least one Monday has passed since the last scheduled run
-  const lastScheduled = scheduled[0];
-  if (!lastScheduled || ageDays(lastScheduled.createdAt) > 8) {
-    const retriesIn24h = runs.filter(
-      (r) => r.event === 'workflow_dispatch' && ageHours(r.createdAt) < 24
-    ).length;
-    const canCatchup = retriesIn24h < MAX_AUTO_RETRIES_PER_DAY;
+  if (!Array.isArray(prs) || prs.length === 0) {
     findings.push({
       severity: 'high',
-      kind: 'missed_cron',
-      message: `No scheduled publisher run in ${
-        lastScheduled ? Math.round(ageDays(lastScheduled.createdAt)) + 'd' : '7+ days'
-      }. ${canCatchup ? 'Triggering catch-up.' : 'Daily catchup cap reached.'}`,
-      autofix: canCatchup ? async () => autofixPublisherRetry() : null,
-      needsPat: false,
+      kind: 'no_blog_activity',
+      message: `No auto/blog-* PRs found at all — publisher routine may never have fired. Check the gm-blog-publisher scheduled task in Claude Code.`,
     });
+    return;
   }
+
+  // "Activity" = any auto/blog-* PR created in the last 8 days, regardless of
+  // its merge state. Just needs to exist (proves the routine fired).
+  const recentlyOpened = prs.find((p) => ageDays(p.createdAt) < 8);
+  if (recentlyOpened) return;  // healthy — routine fired this week
+
+  // No recent PRs. Compute how stale + what to recommend.
+  const newest = prs[0];
+  const ageOfNewest = newest ? Math.round(ageDays(newest.createdAt)) : null;
+  findings.push({
+    severity: 'high',
+    kind: 'missed_weekly_post',
+    message: `No new auto/blog-* PR in ${ageOfNewest ? ageOfNewest + 'd' : '8+ days'}. The Claude routine (gm-blog-publisher) may not have fired — check Scheduled tab in Claude Code, or run it manually.`,
+  });
 }
 
 // Workflows auto-disabled by inactivity?
 async function checkWorkflowsEnabled(findings) {
-  for (const wf of ['blog-publisher.yml', 'netlify-deploy.yml', 'blog-watchdog.yml']) {
+  // blog-publisher.yml is INTENTIONALLY disabled (Gemini path retired 2026-06-15
+  // in favour of the Claude routine). Don't alert on it. test-blog-scripts.yml
+  // is the new test workflow; keep watching netlify-deploy + blog-watchdog.
+  for (const wf of ['netlify-deploy.yml', 'blog-watchdog.yml', 'test-blog-scripts.yml']) {
     try {
       const info = ghJson(`api repos/${REPO}/actions/workflows/${wf}`);
       if (info.state && info.state !== 'active') {
@@ -888,18 +874,20 @@ async function buildReport(findings, applied) {
 async function buildMondayDigest() {
   const lines = [`📊 Weekly Blog Health (Mon ${today()})`, ''];
 
-  // Pull recent runs to assess the last 7d
-  let pubRuns = [], deployRuns = [];
-  try { pubRuns = ghJson(`run list --repo ${REPO} --workflow=blog-publisher.yml --json conclusion,createdAt,event,url --limit 20`); } catch {}
+  // Pull recent deploys and PRs. As of 2026-06-15 the generator is the Claude
+  // routine (gm-blog-publisher in scheduled-tasks), not a GH Actions workflow,
+  // so we detect "this Monday's post fired" by looking for a fresh auto/blog-*
+  // PR rather than a scheduled workflow run.
+  let recentPrs = [], deployRuns = [];
+  try { recentPrs = ghJson(`pr list --repo ${REPO} --state all --search 'head:auto/blog-' --json number,title,createdAt,mergedAt --limit 10`); } catch {}
   try { deployRuns = ghJson(`run list --repo ${REPO} --workflow=netlify-deploy.yml --json conclusion,createdAt,url --limit 20`); } catch {}
 
-  // Did this Monday's scheduled cron fire?
-  const recentScheduled = pubRuns.find((r) => r.event === 'schedule' && ageDays(r.createdAt) < 1.5);
-  if (recentScheduled) {
-    const em = recentScheduled.conclusion === 'success' ? '✅' : '❌';
-    lines.push(`  ${em} This Monday's cron: ${recentScheduled.conclusion}`);
+  // Did this Monday's routine fire? (Look for any auto/blog-* PR created in last ~36h.)
+  const thisMondayPr = recentPrs.find((p) => ageDays(p.createdAt) < 1.5);
+  if (thisMondayPr) {
+    lines.push(`  ✅ This Monday's routine fired — PR #${thisMondayPr.number} (${thisMondayPr.title.slice(0, 60)})`);
   } else {
-    lines.push(`  🚨 This Monday's cron: did NOT fire in the last ~36h`);
+    lines.push(`  🚨 This Monday's routine: NO auto/blog-* PR opened in last ~36h. Check the gm-blog-publisher scheduled task in Claude Code.`);
   }
 
   // Open PRs from publisher

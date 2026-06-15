@@ -114,13 +114,19 @@ function injectIntoAppTsx(draft) {
   let src = fs.readFileSync(APP_TSX, 'utf8');
   if (src.includes(`./pages/blog/${compName}`)) throw new Error(`App.tsx already imports ${compName}`);
 
-  const importAnchor = src.match(/(const \w+ = lazy\(\(\) => import\('\.\/pages\/blog\/[^']+'\)\);\n)(?![\s\S]*const \w+ = lazy\(\(\) => import\('\.\/pages\/blog\/)/);
+  // \r?\n so the regex works on both LF (Linux CI runners) AND CRLF (Windows
+  // local checkouts) — caught 2026-06-15 when the Claude routine ran the
+  // injector from a Windows working tree and every regex match failed.
+  const importAnchor = src.match(/(const \w+ = lazy\(\(\) => import\('\.\/pages\/blog\/[^']+'\)\);\r?\n)(?![\s\S]*const \w+ = lazy\(\(\) => import\('\.\/pages\/blog\/)/);
   if (!importAnchor) throw new Error('Could not locate blog import block in App.tsx');
-  src = src.replace(importAnchor[0], importAnchor[0] + importLine + '\n');
+  // Use the same line ending the file already uses, so we don't mix CRLF/LF.
+  const eol = importAnchor[0].endsWith('\r\n') ? '\r\n' : '\n';
+  src = src.replace(importAnchor[0], importAnchor[0] + importLine + eol);
 
-  const routeAnchor = src.match(/(\s+<Route path="\/resources\/[^"]+" element=\{<\w+ \/>\} \/>\n)(?![\s\S]*<Route path="\/resources\/)/);
+  const routeAnchor = src.match(/(\s+<Route path="\/resources\/[^"]+" element=\{<\w+ \/>\} \/>\r?\n)(?![\s\S]*<Route path="\/resources\/)/);
   if (!routeAnchor) throw new Error('Could not locate blog route block in App.tsx');
-  src = src.replace(routeAnchor[0], routeAnchor[0] + routeLine + '\n');
+  const routeEol = routeAnchor[0].endsWith('\r\n') ? '\r\n' : '\n';
+  src = src.replace(routeAnchor[0], routeAnchor[0] + routeLine + routeEol);
 
   fs.writeFileSync(APP_TSX, src);
 }
