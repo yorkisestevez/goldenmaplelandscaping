@@ -214,40 +214,17 @@ async function checkStaleOpenPRs(findings) {
   }
 }
 
-// Check the last publisher run — categorize failure as transient/deterministic
-async function checkLastPublisherRun(findings) {
-  let runs;
-  try { runs = ghJson(`run list --repo ${REPO} --workflow=blog-publisher.yml --json conclusion,databaseId,createdAt,event,url --limit 5`); }
-  catch (e) { findings.push({ severity: 'low', kind: 'runs_read_err', message: e.message }); return; }
-  if (!runs.length) return;
-  const last = runs[0];
-  if (last.conclusion !== 'failure') return;
-
-  // Don't retry if there's already an open publisher PR — operator hasn't merged yet
-  const openPrs = ghJson(`pr list --repo ${REPO} --state open --search 'head:auto/blog-' --json number --limit 10`);
-  if (openPrs.length > 0) {
-    findings.push({
-      severity: 'medium',
-      kind: 'publisher_failed_with_open_pr',
-      message: `Last publisher run failed (${last.url}) but ${openPrs.length} open PR(s) exist — retry suppressed.`,
-    });
-    return;
-  }
-
-  // Retry cap: count workflow_dispatch retries in last 24h
-  const retriesIn24h = runs.filter(
-    (r) => r.event === 'workflow_dispatch' && ageHours(r.createdAt) < 24
-  ).length;
-  const canRetry = retriesIn24h < MAX_AUTO_RETRIES_PER_DAY;
-
-  findings.push({
-    severity: 'high',
-    kind: 'publisher_failed',
-    message: `Last publisher run failed (${last.url}). ${canRetry ? 'Attempting inline retry.' : 'Daily retry cap reached.'}`,
-    autofix: canRetry ? async () => autofixPublisherRetry() : null,
-    needsPat: false,
-  });
-}
+// Retired 2026-06-15. The Gemini-based blog-publisher.yml workflow is
+// intentionally disabled. The Claude routine (gm-blog-publisher in
+// Claude Code's scheduled-tasks) is the new generator and doesn't expose
+// itself through the GH Actions runs API at all.
+//
+// Detecting "publisher didn't fire this week" is now checkMissedCron's job
+// (it looks at auto/blog-* PR creation timestamps directly, source-agnostic).
+//
+// We keep this stub so the dispatch wiring doesn't blow up if any caller
+// still references it.
+async function checkLastPublisherRun(findings) { /* no-op — see checkMissedCron */ }
 
 // Check the last deploy run — same logic
 async function checkLastDeployRun(findings) {
