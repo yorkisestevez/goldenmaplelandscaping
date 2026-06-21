@@ -163,7 +163,7 @@ export const handler = async (event: NetlifyEvent) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'no user message' }) };
   }
 
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+  const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
   // No key configured → safe canned reply (keeps the widget useful pre-setup).
   if (!apiKey) {
     return {
