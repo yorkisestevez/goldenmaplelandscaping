@@ -10,8 +10,8 @@
 //   1. Get a key at platform.deepseek.com → API Keys.
 //   2. Netlify → Site settings → Environment variables → add DEEPSEEK_API_KEY.
 //   3. (optional) DEEPSEEK_MODEL to override the default below.
-//        - deepseek-v4-flash = default; cheapest + fastest, ideal for an FAQ bot
-//        - deepseek-v4-pro   = flagship reasoning model (~12x pricier, slower)
+//        - deepseek-chat     = default; fast non-thinking model (V3), ideal for an FAQ bot
+//        - deepseek-reasoner = thinking model (R1); slower + pricier, overkill here
 //   4. Deploy.
 
 import crypto from 'node:crypto';
@@ -26,7 +26,7 @@ interface ClientMsg {
   content: string;
 }
 
-const DEFAULT_MODEL = 'deepseek-v4-flash';
+const DEFAULT_MODEL = 'deepseek-chat';
 const MAX_TOKENS = 600;
 const MAX_TURNS = 12;
 const MAX_CHARS = 2000;
