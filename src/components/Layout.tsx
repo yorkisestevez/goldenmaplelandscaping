@@ -6,6 +6,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { trackEngagement } from '../utils/analytics';
 import ChatWidget from './ChatWidget';
+import SophieVoice from './SophieVoice';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -98,16 +99,23 @@ const Navbar = () => {
       >
         <div className="container-custom flex items-center justify-between">
           {/* Logo */}
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="flex flex-col group relative z-50 shrink-0"
+            className="flex items-center gap-2.5 group relative z-50 shrink-0 mr-6"
           >
-            <span className="font-display text-2xl md:text-4xl leading-none tracking-tight text-brand-bonewhite group-hover:text-brand-gold transition-colors duration-500">
-              GOLDEN MAPLE
-            </span>
-            <span className="font-sans text-[10px] md:text-[12px] uppercase tracking-[0.45em] font-light text-brand-gold mt-1.5">
-              Landscaping
+            <img
+              src="/logo-mark.png"
+              alt="Golden Maple Landscaping"
+              className="h-9 md:h-11 w-auto"
+            />
+            <span className="flex flex-col">
+              <span className="font-display text-xl md:text-3xl leading-none tracking-tight text-brand-bonewhite group-hover:text-brand-gold transition-colors duration-500">
+                GOLDEN MAPLE
+              </span>
+              <span className="font-sans text-[10px] md:text-[12px] uppercase tracking-[0.45em] font-light text-brand-gold mt-1.5">
+                Landscaping
+              </span>
             </span>
           </Link>
 
@@ -502,6 +510,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-grow overflow-x-hidden">{children}</main>
       <Footer />
       <ChatWidget />
+      <SophieVoice />
     </div>
   );
 }

@@ -12,19 +12,20 @@
   --color-brand-green: #2F7D4F;
   --color-brand-green-light: #4E9A6F;
   --color-brand-green-dark: #265F3D;
-  /* LIGHT base — warm ivory / stone. No dark theme anywhere. */
-  --color-brand-nearblack: #F6F2E8;   /* primary page background */
-  --color-brand-black: #FFFFFF;        /* brightest sections */
-  --color-brand-surface: #FCFAF3;      /* cards / raised surfaces */
-  --color-brand-midsurface: #EFE8D7;   /* soft panels */
-  --color-brand-bonewhite: #211E15;    /* primary text (ink) */
-  --color-brand-muted: #5F594A;        /* secondary text */
-  --color-brand-dim: #CFC6B2;          /* borders / hairlines */
+  /* LIGHT base — warm ivory / stone. Deepened 2026-06-21 ("less white" — kill
+     pure-white glare, add tonal separation so the type reads stronger). */
+  --color-brand-nearblack: #DED2B6;   /* primary page background (deep warm stone) */
+  --color-brand-black: #E7DCC2;        /* "brightest" sections — warm, never white */
+  --color-brand-surface: #E8DFC7;      /* cards / raised surfaces */
+  --color-brand-midsurface: #D2C4A2;   /* soft panels (deeper for separation) */
+  --color-brand-bonewhite: #1E1B12;    /* primary text (ink) */
+  --color-brand-muted: #4D4738;        /* secondary text (darker = more legible) */
+  --color-brand-dim: #B4A786;          /* borders / hairlines (stronger) */
   /* tonal helpers for section rhythm + on-accent text */
-  --color-brand-cream: #EFE8D7;
-  --color-brand-cream-light: #FCFAF3;
-  --color-brand-ink: #211E15;
-  --color-brand-ink-soft: #5F594A;
+  --color-brand-cream: #D2C4A2;
+  --color-brand-cream-light: #E8DFC7;
+  --color-brand-ink: #201D14;
+  --color-brand-ink-soft: #534D3F;
 
   --font-display: "Prata", serif;
   --font-sans: "Inter", sans-serif;

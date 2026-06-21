@@ -1,4 +1,4 @@
-// Golden Maple — AI chat assistant (Maple).
+// Golden Maple — AI chat assistant (Sophie).
 // Netlify auto-discovers this at /.netlify/functions/chat (no config needed).
 //
 // Calls DeepSeek (OpenAI-compatible Chat Completions API) with a grounded,
@@ -13,6 +13,8 @@
 //        - deepseek-v4-flash = default; cheapest + fastest, ideal for an FAQ bot
 //        - deepseek-v4-pro   = flagship reasoning model (~12x pricier, slower)
 //   4. Deploy.
+
+import crypto from 'node:crypto';
 
 interface NetlifyEvent {
   httpMethod: string;
@@ -29,7 +31,7 @@ const MAX_TOKENS = 600;
 const MAX_TURNS = 12;
 const MAX_CHARS = 2000;
 
-const SYSTEM_PROMPT = `You are "Maple", the friendly assistant for Golden Maple Landscaping — a premium hardscape and outdoor-construction company serving Barrie, Simcoe County, and Cottage Country, Ontario. Founder: Yorkis Estevez. Phone: (705) 500-3581. Email: yorkis@goldenmaplelandscaping.ca.
+const SYSTEM_PROMPT = `You are "Sophie", the friendly assistant for Golden Maple Landscaping — a premium hardscape and outdoor-construction company serving Barrie, Simcoe County, and Cottage Country, Ontario. Founder: Yorkis Estevez. Phone: (705) 500-3581. Email: yorkis@goldenmaplelandscaping.ca.
 
 VOICE: warm, plain-spoken, operator-honest, confident but never pushy or salesy. Concise — usually 2–4 sentences. No corporate fluff, no emojis, no exclamation spam. Talk like a knowledgeable person who builds these, not a chatbot.
 
@@ -69,9 +71,56 @@ SERVICE AREAS: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach
 GUARDRAILS:
 - Only discuss Golden Maple and its landscaping/hardscape work. If asked something unrelated, politely redirect to what you can help with.
 - Never invent facts, policies, availability, or numbers you weren't given. If you don't know, say so and offer the phone number.
-- Don't collect sensitive info or make commitments (contracts, firm dates, firm prices). Encourage booking a call or using the calculator for specifics.
+- LEAD CAPTURE: when a visitor shows real project interest, warmly offer to have Yorkis follow up and ask for their name and the best phone or email to reach them, plus a one-line description of the project and their town. Ask naturally, one thing at a time — never demand it or gate answers behind it. Do NOT collect payment details or other sensitive info, and don't make commitments (contracts, firm dates, firm prices). Keep encouraging the call (/book) or calculator (/cost-estimator) for specifics.
+- LEAD HANDOFF (IMPORTANT, machine-readable): the FIRST time the visitor has given you their name AND a phone OR email, write your normal warm reply confirming Yorkis will reach out, then on the very last line append this block EXACTLY, with no other text on that line: [[LEAD]]{"name":"…","phone":"…","email":"…","project":"…","town":"…"}[[/LEAD]] — fill fields you know, use "" for any you don't. Emit this block only ONCE per conversation, never again afterward. NEVER mention, describe, or explain this block to the visitor; it is stripped before they see your message.
 - When useful, refer to paths exactly as "/cost-estimator", "/book", or "/contact" and the phone as "(705) 500-3581" — the app turns these into buttons/links.
 - Keep it short and genuinely helpful.`;
+
+// Sophie appends a machine-readable lead block when she's collected contact
+// details. We extract it, strip it from the visible reply, and forward the lead
+// to the CRM via the same signed bridge that the form handler uses.
+const LEAD_RE = /\[\[LEAD\]\]\s*(\{[\s\S]*?\})\s*\[\[\/LEAD\]\]/i;
+
+async function forwardLead(rawJson: string): Promise<void> {
+  const url = process.env.GM_CRM_BRIDGE_URL;
+  const secret = process.env.GM_CRM_BRIDGE_SECRET;
+  if (!url || !secret) {
+    console.error('lead captured but GM_CRM_BRIDGE_URL/SECRET not set — dropping');
+    return;
+  }
+  let lead: Record<string, unknown>;
+  try {
+    lead = JSON.parse(rawJson);
+  } catch {
+    return;
+  }
+  const email = String(lead.email || '').trim();
+  const phone = String(lead.phone || '').trim();
+  const hasContact = email.includes('@') || phone.replace(/\D/g, '').length >= 7;
+  if (!hasContact) return; // never forward a lead with no way to reach them
+
+  const payload = {
+    form_name: 'sophie-chat',
+    source: 'website-chatbot',
+    name: String(lead.name || '').trim(),
+    email,
+    phone,
+    project: String(lead.project || '').trim(),
+    town: String(lead.town || '').trim(),
+  };
+  const body = JSON.stringify(payload);
+  const sig = crypto.createHmac('sha256', secret).update(body).digest('hex');
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Bridge-Signature': sig },
+      body,
+    });
+    if (!res.ok) console.error(`lead bridge ${res.status}: ${(await res.text().catch(() => '')).slice(0, 200)}`);
+  } catch (e) {
+    console.error(`lead bridge unreachable: ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
 
 function canned(text: string): string {
   const t = text.toLowerCase();
@@ -157,10 +206,19 @@ export const handler = async (event: NetlifyEvent) => {
     };
     const reply = (data.choices?.[0]?.message?.content || '').trim();
 
+    // Extract + forward any lead Sophie captured, then strip the block (and any
+    // stray markers) so the visitor never sees the machine payload.
+    let visibleReply = reply;
+    const leadMatch = reply.match(LEAD_RE);
+    if (leadMatch) {
+      await forwardLead(leadMatch[1]);
+      visibleReply = reply.replace(LEAD_RE, '').replace(/\[\[\/?LEAD\]\]/gi, '').trim();
+    }
+
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reply: reply || canned(lastUser.content), source: reply ? 'deepseek' : 'fallback' }),
+      body: JSON.stringify({ reply: visibleReply || canned(lastUser.content), source: visibleReply ? 'deepseek' : 'fallback' }),
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

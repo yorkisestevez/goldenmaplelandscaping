@@ -10,7 +10,7 @@ interface Msg { role: Role; content: string }
 const CHAT_ENDPOINT = '/.netlify/functions/chat';
 
 const GREETING =
-  "Hi! I'm Maple, Golden Maple's assistant. Ask me about our services, process, warranty, service areas, or rough pricing — I'll give you a straight answer.";
+  "Hi! I'm Sophie, Golden Maple's assistant. Ask me about our services, process, warranty, service areas, or rough pricing — I'll give you a straight answer. Tell me about your project and I can have Yorkis follow up.";
 
 const SUGGESTIONS = [
   'How much does a patio cost?',
@@ -149,7 +149,7 @@ export default function ChatWidget() {
                   <Leaf size={17} className="text-brand-nearblack" strokeWidth={1.75} />
                 </div>
                 <div>
-                  <div className="font-display text-[16px] text-brand-bonewhite leading-none">Maple Assistant</div>
+                  <div className="font-display text-[16px] text-brand-bonewhite leading-none">Sophie</div>
                   <div className="flex items-center gap-1.5 mt-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-brand-green-light" />
                     <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">Online · replies instantly</span>
