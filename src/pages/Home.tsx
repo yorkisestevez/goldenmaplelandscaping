@@ -35,8 +35,8 @@ const Hero = () => {
 
       <div className="container-custom relative z-10 py-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
-          {/* Hero Copy — tight + soft light halo keeps even the small ink text crisp over the photo */}
-          <div className="lg:col-span-7 [filter:drop-shadow(0_1px_1px_rgba(246,242,232,1))_drop-shadow(0_2px_12px_rgba(246,242,232,0.85))]">
+          {/* Hero Copy — tight + soft dark halo keeps the light text crisp over the photo */}
+          <div className="lg:col-span-7 [filter:drop-shadow(0_1px_2px_rgba(8,12,10,0.9))_drop-shadow(0_2px_16px_rgba(8,12,10,0.7))]">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -282,8 +282,8 @@ const WhyGoldenMaple = () => {
               />
             </div>
             <div className="absolute -bottom-10 -left-10 bg-brand-green-dark p-12 hidden md:block rounded-[2px] shadow-xl">
-              <span className="font-display text-7xl font-light text-brand-cream-light block mb-2">10+</span>
-              <span className="font-sans text-[10px] font-normal uppercase tracking-[0.25em] text-brand-cream-light">Years of Excellence</span>
+              <span className="font-display text-7xl font-light text-brand-nearblack block mb-2">10+</span>
+              <span className="font-sans text-[10px] font-normal uppercase tracking-[0.25em] text-brand-nearblack">Years of Excellence</span>
             </div>
           </div>
         </div>
@@ -514,7 +514,7 @@ const ContractorPainPoints = () => {
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{point.pain}</h3>
                   <div className="space-y-6">
                     <div className="flex gap-4">
-                      <span className="font-sans text-[10px] font-normal uppercase tracking-widest text-red-600 shrink-0 mt-1">Typical:</span>
+                      <span className="font-sans text-[10px] font-normal uppercase tracking-widest text-red-400 shrink-0 mt-1">Typical:</span>
                       <p className="font-sans text-sm text-brand-muted italic font-light">{point.cause}</p>
                     </div>
                     <div className="flex gap-4">

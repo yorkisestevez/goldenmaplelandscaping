@@ -260,7 +260,7 @@ export default function CostGuide() {
                   </div>
 
                   {status === 'error' && (
-                    <p className="font-sans text-xs text-red-600 font-light">{errorMsg}</p>
+                    <p className="font-sans text-xs text-red-400 font-light">{errorMsg}</p>
                   )}
 
                   <button

@@ -180,7 +180,7 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
         />
 
         {status === 'error' ? (
-          <p className="font-sans text-xs text-red-600 font-light">{errorMsg}</p>
+          <p className="font-sans text-xs text-red-400 font-light">{errorMsg}</p>
         ) : null}
 
         <button

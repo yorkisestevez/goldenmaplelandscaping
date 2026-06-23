@@ -1,33 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Prata&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* Deep antique gold — readable as text AND usable as a button bg on light (AA both ways) */
-  --color-brand-gold: #7C6113;
-  --color-brand-gold-light: #9C7A1E;
-  --color-brand-gold-dark: #5E4A0F;
-  /* Was a dark burgundy; now a soft warm-stone light panel tone (recurring accent sections) */
-  --color-brand-burgundy: #EBE2CF;
-  /* Forest green accent (deep enough to read on light) */
-  --color-brand-green: #2F7D4F;
-  --color-brand-green-light: #4E9A6F;
-  --color-brand-green-dark: #265F3D;
-  /* LIGHT base — warm ivory / stone. Deepened 2026-06-21 ("less white" — kill
-     pure-white glare, add tonal separation so the type reads stronger). */
-  --color-brand-nearblack: #DED2B6;   /* primary page background (deep warm stone) */
-  --color-brand-black: #E7DCC2;        /* "brightest" sections — warm, never white */
-  --color-brand-surface: #E8DFC7;      /* cards / raised surfaces */
-  --color-brand-midsurface: #D2C4A2;   /* soft panels (deeper for separation) */
-  --color-brand-bonewhite: #1E1B12;    /* primary text (ink) */
-  --color-brand-muted: #4D4738;        /* secondary text (darker = more legible) */
-  --color-brand-dim: #B4A786;          /* borders / hairlines (stronger) */
-  /* tonal helpers for section rhythm + on-accent text */
-  --color-brand-cream: #D2C4A2;
-  --color-brand-cream-light: #E8DFC7;
-  --color-brand-ink: #201D14;
-  --color-brand-ink-soft: #534D3F;
+  /* Warm gold — primary accent. Brightened for legibility on dark. */
+  --color-brand-gold: #D4AF63;
+  --color-brand-gold-light: #E5CA8A;
+  --color-brand-gold-dark: #B8932E;
+  /* Deep green panel tone for recurring full-bleed accent sections */
+  --color-brand-burgundy: #122019;
+  /* Forest green — secondary accent, readable as text AND fill on dark */
+  --color-brand-green: #5BA877;
+  --color-brand-green-light: #79C194;
+  --color-brand-green-dark: #4E9C6B;
+  /* DARK base — deep green-black. Reverted to dark theme 2026-06-22
+     ("go darker, more modern"): organic, earthy, on-brand for landscaping. */
+  --color-brand-nearblack: #0C120E;   /* primary page background (deep green-black) */
+  --color-brand-black: #0F1813;        /* darkest fills + text sitting on gold */
+  --color-brand-surface: #14201A;      /* cards / raised surfaces */
+  --color-brand-midsurface: #1F3128;   /* soft elevated panels */
+  --color-brand-bonewhite: #EEF2EC;    /* primary text */
+  --color-brand-muted: #9FB0A4;        /* secondary text (sage) */
+  --color-brand-dim: #38493F;          /* borders / hairlines */
+  /* tonal helpers for section rhythm + glass cards */
+  --color-brand-cream: #16241C;
+  --color-brand-cream-light: #1B2C23;
+  --color-brand-ink: #EEF2EC;          /* light text on dark inputs/photos */
+  --color-brand-ink-soft: #9FB0A4;
 
-  --font-display: "Prata", serif;
+  --font-display: "Cormorant Garamond", serif;
   --font-sans: "Inter", sans-serif;
 }
 

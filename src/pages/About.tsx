@@ -22,24 +22,24 @@ export default function About() {
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
-                Why Golden Maple Exists
+                Who We Are
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
-                You shouldn't have to <br />
-                <span className="italic text-brand-gold">gamble on your home.</span>
+                We build spaces <br />
+                <span className="italic text-brand-gold">families enjoy for years.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-12 font-light">
-                Every spring, we get the same call. A homeowner three years past their build, watching the patio they paid $40,000 for sink another inch. The contractor has stopped answering. The warranty turned out to be worth less than the paper it was written on.
+                We're a Barrie-based hardscape team that genuinely loves this work — shaping patios, walkways, and retaining walls that become the place a family gathers, season after season.
               </p>
               <p className="font-sans text-lg text-brand-bonewhite leading-relaxed mb-12 font-normal">
-                That's not a story you should have to live.
+                And we build them to stay that way for a very long time.
               </p>
               <div className="space-y-8 font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 <p>
-                  Golden Maple exists for a single reason — to be the contractor we wished existed when we started in this trade. One that builds it right the first time. One that picks up the phone five years later. One that puts engineering above margin and craft above speed.
+                  Our approach is simple: do the work properly the first time, and stand behind it long after. We put engineering before shortcuts and craft before speed, because the spaces we build are meant to be enjoyed for decades — not patched after a season.
                 </p>
                 <p>
-                  Your home is the most important investment you'll ever make. The work we do on the outside of it should honour that.
+                  Your home is one of the biggest investments you'll ever make. The work we do outside of it should honour that — and be a pleasure to live with every single day.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-10">
@@ -74,9 +74,9 @@ export default function About() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-40">
             {[
               { icon: Shield, title: "WSIB Certified", desc: "Your property is fully protected. Our team is fully covered. No grey areas." },
-              { icon: Award, title: "$5M Liability", desc: "We carry more insurance than most contractors even know exists. That's how seriously we take your home." },
-              { icon: CheckCircle, title: "5-Year Warranty", desc: "If your stones sink or shift, we come back and fix it. No arguments, no fine print." },
-              { icon: Compass, title: "12-16\" Base Depth", desc: "Most competitors dig 6 inches. We dig more than double. Your patio will outlast the mortgage." }
+              { icon: Award, title: "$5M Liability", desc: "We carry $5M in liability coverage — full protection for your property and complete peace of mind for you." },
+              { icon: CheckCircle, title: "5-Year Warranty", desc: "If your stones sink or shift, we come back and make it right. Simple, and in writing." },
+              { icon: Compass, title: "12-16\" Base Depth", desc: "We build on a 12–16\" engineered base — the deep foundation that keeps your patio level and solid through every freeze-thaw season." }
             ].map((item, idx) => (
               <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 text-center">
                 <item.icon className="text-brand-gold mx-auto mb-8" size={32} strokeWidth={1.5} />
@@ -92,27 +92,27 @@ export default function About() {
                 The Golden Maple Difference
               </span>
               <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-tight mb-16">
-                Every horror story <br />
-                <span className="text-brand-gold italic">starts the same way.</span>
+                Built right <br />
+                <span className="text-brand-gold italic">from the ground up.</span>
               </h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
                 <div className="space-y-12">
-                  <h3 className="font-sans text-sm uppercase tracking-[0.25em] text-red-700/80 font-normal">The Industry Standard</h3>
+                  <h3 className="font-sans text-sm uppercase tracking-[0.25em] text-red-400/90 font-normal">The Industry Standard</h3>
                   <ul className="space-y-10 font-sans text-lg text-brand-bonewhite/60 font-light">
                     <li className="flex gap-6">
-                      <span className="text-red-700 font-normal shrink-0">✕</span>
+                      <span className="text-red-400 font-normal shrink-0">✕</span>
                       Shallow 6" bases that sink after one winter.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-red-700 font-normal shrink-0">✕</span>
+                      <span className="text-red-400 font-normal shrink-0">✕</span>
                       Communication that stops after the deposit.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-red-700 font-normal shrink-0">✕</span>
+                      <span className="text-red-400 font-normal shrink-0">✕</span>
                       Hidden fees and "surprise" mid-project costs.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-red-700 font-normal shrink-0">✕</span>
+                      <span className="text-red-400 font-normal shrink-0">✕</span>
                       Messy job sites and zero property protection.
                     </li>
                   </ul>
@@ -195,27 +195,27 @@ export default function About() {
               </span>
               <div className="space-y-12 font-sans text-xl md:text-2xl text-brand-muted leading-relaxed font-light">
                 <p>
-                  I started Golden Maple because I was tired of watching good people lose money on bad landscaping.
+                  I started Golden Maple because I love building things that last — and I wanted to do it the right way, for people who'd actually get to enjoy them.
                 </p>
                 <p>
-                  Half of every summer, our crew spends ripping out patios and retaining walls that other contractors poured three years ago. The pavers that sank. The walls that leaned. The drainage that turned a backyard into a swamp every April. <span className="text-brand-bonewhite font-normal">All of it built by people who knew better, and chose not to.</span>
+                  There's nothing better than handing over a finished backyard and watching a family picture their next few years in it — the dinners, the kids running around, the quiet morning coffee on a patio that still looks brand new seasons later. <span className="text-brand-bonewhite font-normal">That's the part of this work I love most.</span>
                 </p>
                 <p>
-                  The customer pays for that twice — once for the failed install, and again for the proper rebuild. I refuse to be part of an industry that treats homeowners that way.
+                  So we pour our attention into the fundamentals — deep, engineered bases, proper drainage, clean detailing. They're the parts you never see, and they're what decide whether a space holds up for two seasons or twenty.
                 </p>
                 <p className="text-brand-bonewhite font-normal italic">
-                  So we built Golden Maple to be different. Not the cheapest. Not the biggest. The best at one specific thing — engineering outdoor spaces that still look the way we left them, twenty winters later.
+                  We're not trying to be the cheapest or the biggest. We just want to build outdoor spaces beautifully, and build them to be enjoyed for a very long time.
                 </p>
                 <p>
-                  Every project I take on is personal. My name is on it. My crew is on it. And five years from now, when something goes wrong somewhere on your property, I want you to think of one company first — and know that we'll be there.
+                  Every project I take on is personal. My name is on it, my crew is on it, and we build it the way we'd build it for our own families.
                 </p>
                 <div className="bg-brand-burgundy/10 border-l-2 border-brand-gold p-10 md:p-16 rounded-[2px]">
                   <p className="text-brand-bonewhite text-2xl md:text-3xl font-display font-light leading-tight">
-                    We back every build with a <span className="text-brand-gold">5-year sink and settlement warranty</span>. Not because the law requires it. Because we'd build it the same way for our own homes.
+                    We back every build with a <span className="text-brand-gold">5-year sink and settlement warranty</span> — not because we have to, but because we build every space to be enjoyed for far longer than that.
                   </p>
                 </div>
                 <p>
-                  If you're tired of the gamble, that's exactly what we built this for.
+                  If you're planning a space your family will enjoy for years to come, we'd love to build it with you.
                 </p>
               </div>
               <div className="mt-20 text-center">

@@ -326,7 +326,7 @@ export default function BookingScheduler() {
           </div>
 
           {errorMsg && (
-            <p className="font-sans text-xs text-red-600 font-light">{errorMsg}</p>
+            <p className="font-sans text-xs text-red-400 font-light">{errorMsg}</p>
           )}
 
           <button
