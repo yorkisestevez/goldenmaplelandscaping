@@ -1,14 +1,15 @@
 {
   "version": 1,
-  "lastRunAt": "2026-06-15T18:30:00.000Z",
+  "lastRunAt": "2026-06-23T01:59:03.277Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
     "auto-003",
-    "auto-004"
+    "auto-004",
+    "auto-005"
   ],
   "publishedSlugs": [],
-  "currentDraft": "best-pavers-pool-deck-simcoe-county",
+  "currentDraft": "concrete-vs-interlocking-patio-barrie",
   "history": [
     {
       "topicId": "auto-001",
@@ -58,6 +59,21 @@
         "numericCount": 28
       },
       "generatedBy": "claude-routine"
+    },
+    {
+      "topicId": "auto-005",
+      "slug": "concrete-vs-interlocking-patio-barrie",
+      "at": "2026-06-23T01:59:03.276Z",
+      "validation": {
+        "ok": false,
+        "errors": [
+          "word count low (702)"
+        ],
+        "wordCount": 702,
+        "linkCount": 4,
+        "hasTable": true,
+        "numericCount": 1
+      }
     }
   ]
 }
