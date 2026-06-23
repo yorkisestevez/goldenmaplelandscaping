@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-          {
+            {
+    slug: "concrete-vs-interlocking-patio-barrie",
+    title: "Concrete vs Interlocking Patio: Best Choice for Barrie's Climate",
+    excerpt: "Deciding between concrete and interlocking patios in Barrie involves weighing cost, durability, and style. Learn which suits Barrie's unique climate.",
+    category: "Materials",
+    readTime: "10 min",
+    image: "/images/projects/Permacon-approved.jpeg",
+  },
+  {
     slug: "best-pavers-pool-deck-simcoe-county",
     title: "Best Pavers for Pool Decks in Simcoe County: Slip-Rated, Cool-Touch, Freeze-Thaw Tested",
     excerpt: "Best pavers for Simcoe County pool decks — slip-rated R-11 or higher, cool-touch light colours, freeze-thaw certified. Budget $25-45/sq ft installed.",

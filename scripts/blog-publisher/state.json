@@ -1,63 +1,119 @@
 {
-  "version": 1,
-  "lastRunAt": "2026-06-15T18:30:00.000Z",
-  "usedTopicIds": [
-    "auto-001",
-    "auto-002",
-    "auto-003",
-    "auto-004"
-  ],
-  "publishedSlugs": [],
-  "currentDraft": "best-pavers-pool-deck-simcoe-county",
-  "history": [
-    {
-      "topicId": "auto-001",
-      "slug": "paver-walkway-cost-barrie",
-      "at": "2026-05-25T15:50:33.787Z",
-      "validation": {
-        "ok": true,
-        "errors": [],
-        "wordCount": 1653,
-        "linkCount": 3
-      }
-    },
-    {
-      "topicId": "auto-002",
-      "slug": "polymeric-sand-vs-regular-sand-patio",
-      "at": "2026-06-01T18:37:29.488Z",
-      "validation": {
-        "ok": true,
-        "errors": [],
-        "wordCount": 1943,
-        "linkCount": 5
-      }
-    },
-    {
-      "topicId": "auto-003",
-      "slug": "interlocking-driveway-lifespan-ontario",
-      "at": "2026-06-08T17:42:23.408Z",
-      "validation": {
-        "ok": true,
-        "errors": [],
-        "wordCount": 1726,
-        "linkCount": 3,
-        "hasTable": true,
-        "numericCount": 16
-      }
-    },
-    {
-      "topicId": "auto-004",
-      "slug": "best-pavers-pool-deck-simcoe-county",
-      "at": "2026-06-15T18:30:00.000Z",
-      "validation": {
-        "ok": true,
-        "errors": [],
-        "wordCount": 2013,
-        "linkCount": 7,
-        "hasTable": true,
-        "numericCount": 28
-      },
-      "generatedBy": "claude-routine"
-    }
-  ]
+    "version":  1,
+    "lastRunAt":  "2026-06-23T02:09:29.506Z",
+    "usedTopicIds":  [
+                         "auto-001",
+                         "auto-002",
+                         "auto-003",
+                         "auto-004",
+                         "auto-005"
+                     ],
+    "publishedSlugs":  [
+
+                       ],
+    "currentDraft":  "natural-stone-vs-pavers-barrie",
+    "history":  [
+                    {
+                        "topicId":  "auto-001",
+                        "slug":  "paver-walkway-cost-barrie",
+                        "at":  "2026-05-25T15:50:33.787Z",
+                        "validation":  {
+                                           "ok":  true,
+                                           "errors":  [
+
+                                                      ],
+                                           "wordCount":  1653,
+                                           "linkCount":  3
+                                       }
+                    },
+                    {
+                        "topicId":  "auto-002",
+                        "slug":  "polymeric-sand-vs-regular-sand-patio",
+                        "at":  "2026-06-01T18:37:29.488Z",
+                        "validation":  {
+                                           "ok":  true,
+                                           "errors":  [
+
+                                                      ],
+                                           "wordCount":  1943,
+                                           "linkCount":  5
+                                       }
+                    },
+                    {
+                        "topicId":  "auto-003",
+                        "slug":  "interlocking-driveway-lifespan-ontario",
+                        "at":  "2026-06-08T17:42:23.408Z",
+                        "validation":  {
+                                           "ok":  true,
+                                           "errors":  [
+
+                                                      ],
+                                           "wordCount":  1726,
+                                           "linkCount":  3,
+                                           "hasTable":  true,
+                                           "numericCount":  16
+                                       }
+                    },
+                    {
+                        "topicId":  "auto-004",
+                        "slug":  "best-pavers-pool-deck-simcoe-county",
+                        "at":  "2026-06-15T18:30:00.000Z",
+                        "validation":  {
+                                           "ok":  true,
+                                           "errors":  [
+
+                                                      ],
+                                           "wordCount":  2013,
+                                           "linkCount":  7,
+                                           "hasTable":  true,
+                                           "numericCount":  28
+                                       },
+                        "generatedBy":  "claude-routine"
+                    },
+                    {
+                        "topicId":  "auto-005",
+                        "slug":  "concrete-vs-interlocking-patio-barrie",
+                        "at":  "2026-06-23T01:59:03.276Z",
+                        "validation":  {
+                                           "ok":  false,
+                                           "errors":  [
+                                                          "word count low (702)"
+                                                      ],
+                                           "wordCount":  702,
+                                           "linkCount":  4,
+                                           "hasTable":  true,
+                                           "numericCount":  1
+                                       }
+                    },
+                    {
+                        "topicId":  "auto-005",
+                        "slug":  "concrete-vs-interlocking-patio-barrie",
+                        "at":  "2026-06-23T02:01:52.174Z",
+                        "validation":  {
+                                           "ok":  false,
+                                           "errors":  [
+                                                          "internal links \u003c3 (got 0)"
+                                                      ],
+                                           "wordCount":  1357,
+                                           "linkCount":  0,
+                                           "hasTable":  true,
+                                           "numericCount":  2
+                                       }
+                    },
+                    {
+                        "topicId":  "auto-006",
+                        "slug":  "natural-stone-vs-pavers-barrie",
+                        "at":  "2026-06-23T02:09:29.503Z",
+                        "validation":  {
+                                           "ok":  true,
+                                           "errors":  [
+
+                                                      ],
+                                           "wordCount":  1887,
+                                           "linkCount":  4,
+                                           "hasTable":  true,
+                                           "numericCount":  22
+                                       }
+                    }
+                ]
 }

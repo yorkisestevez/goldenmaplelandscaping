@@ -1,6 +1,6 @@
 // scripts/blog-publisher/generate.cjs
 // In-repo, env-driven generator. Called by .github/workflows/blog-publisher.yml.
-// Requires env: GEMINI_API_KEY
+// Requires env: GEMINI_API_KEY (preferred) or OPENAI_API_KEY (fallback)
 
 const fs = require('fs');
 const path = require('path');
@@ -60,6 +60,52 @@ function extractText(response) {
   const fallback = parts.find(p => p.text);
   if (fallback) return fallback.text;
   throw new Error('No text in Gemini response: ' + JSON.stringify(response).slice(0, 400));
+}
+
+// Generic OpenAI-compatible POST. Works for OpenAI (api.openai.com) and
+// DeepSeek (api.deepseek.com) which share the same /v1/chat/completions format.
+function openaiCompatiblePost(apiKey, prompt, { hostname, model }) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify({
+      model,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional SEO content writer. You MUST write LONG, DETAILED content. Each section in the "sections" array MUST contain at least 200-350 words of HTML content. The total word count across all fields MUST be at least 1300 words. Do not truncate or summarize — write full, complete paragraphs. Return only valid JSON with no markdown fences.'
+        },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 8192,
+      response_format: { type: 'json_object' }
+    });
+    const req = https.request({
+      hostname,
+      path: '/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Length': Buffer.byteLength(data)
+      },
+      timeout: 180000
+    }, (res) => {
+      let result = '';
+      res.on('data', c => result += c);
+      res.on('end', () => {
+        try { resolve(JSON.parse(result)); } catch { resolve({ raw: result }); }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error(`${hostname} timeout (180s)`)); });
+    req.write(data); req.end();
+  });
+}
+
+function extractOpenAICompatibleText(response, provider) {
+  if (response.error) throw new Error(`${provider} error: ${response.error.message || JSON.stringify(response.error)}`);
+  const content = response.choices?.[0]?.message?.content;
+  if (!content) throw new Error(`No text in ${provider} response: ` + JSON.stringify(response).slice(0, 400));
+  return content;
 }
 
 function parseJson(text) {
@@ -173,8 +219,12 @@ function validateDraft(draft) {
 }
 
 async function generateDraft({ topicId = null } = {}) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY env var is required');
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const deepseekKey = process.env.DEEPSEEK_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (!geminiKey && !deepseekKey && !openaiKey) {
+    throw new Error('Set GEMINI_API_KEY, DEEPSEEK_API_KEY, or OPENAI_API_KEY');
+  }
 
   const topics = readJson(TOPICS_PATH).topics;
   const state = readJson(STATE_PATH);
@@ -190,20 +240,40 @@ async function generateDraft({ topicId = null } = {}) {
 
   console.log(`[generate] ${topic.id} — ${topic.title}`);
 
-  const response = await geminiPost(apiKey, {
-    contents: [{ role: 'user', parts: [{ text: buildPrompt(topic) }] }],
-    generationConfig: {
-      temperature: 0.75,
-      topP: 0.95,
-      maxOutputTokens: 16384,
-      responseMimeType: 'application/json'
-    }
-  });
+  let text;
+  if (geminiKey) {
+    const response = await geminiPost(geminiKey, {
+      contents: [{ role: 'user', parts: [{ text: buildPrompt(topic) }] }],
+      generationConfig: {
+        temperature: 0.75,
+        topP: 0.95,
+        maxOutputTokens: 16384,
+        responseMimeType: 'application/json'
+      }
+    });
+    text = extractText(response);
+    console.log('[generate] used Gemini');
+  } else if (deepseekKey) {
+    console.log('[generate] using DeepSeek deepseek-chat (~10x cheaper than OpenAI)');
+    const response = await openaiCompatiblePost(deepseekKey, buildPrompt(topic), {
+      hostname: 'api.deepseek.com',
+      model: 'deepseek-chat'
+    });
+    text = extractOpenAICompatibleText(response, 'DeepSeek');
+    console.log('[generate] used DeepSeek');
+  } else {
+    console.log('[generate] using OpenAI gpt-4o (DEEPSEEK_API_KEY not set)');
+    const response = await openaiCompatiblePost(openaiKey, buildPrompt(topic), {
+      hostname: 'api.openai.com',
+      model: 'gpt-4o'
+    });
+    text = extractOpenAICompatibleText(response, 'OpenAI');
+    console.log('[generate] used OpenAI gpt-4o');
+  }
 
-  const text = extractText(response);
   let draft;
   try { draft = parseJson(text); }
-  catch (e) { throw new Error('Gemini returned non-JSON: ' + text.slice(0, 500)); }
+  catch (e) { throw new Error('LLM returned non-JSON: ' + text.slice(0, 500)); }
 
   // Defensive normalization — Gemini sometimes returns shapes that differ
   // from the prompt's contract (e.g. readTime as a bare integer instead of
