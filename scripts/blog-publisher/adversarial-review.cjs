@@ -133,24 +133,73 @@ Bias toward "block" for factual or safety problems. We can always regenerate; we
 Output the JSON now.`;
 }
 
+function openaiCompatiblePost(apiKey, prompt, { hostname, model }) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify({
+      model,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 8192,
+      response_format: { type: 'json_object' }
+    });
+    const req = https.request({
+      hostname,
+      path: '/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Length': Buffer.byteLength(data)
+      },
+      timeout: 180000
+    }, (res) => {
+      let result = '';
+      res.on('data', c => result += c);
+      res.on('end', () => {
+        try { resolve(JSON.parse(result)); } catch { resolve({ raw: result }); }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error(`${hostname} timeout (180s)`)); });
+    req.write(data); req.end();
+  });
+}
+
 async function reviewDraft(draft, { apiKey = null } = {}) {
-  const key = apiKey || process.env.GEMINI_API_KEY;
-  if (!key) throw new Error('GEMINI_API_KEY required for adversarial reviewer');
+  const geminiKey = apiKey || process.env.GEMINI_API_KEY;
+  const deepseekKey = process.env.DEEPSEEK_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+
+  if (!geminiKey && !deepseekKey && !openaiKey) throw new Error('Set GEMINI_API_KEY, DEEPSEEK_API_KEY, or OPENAI_API_KEY for adversarial reviewer');
 
   const prompt = buildReviewerPrompt(draft);
   console.log(`[reviewer] critiquing draft: ${draft.slug}`);
 
-  const response = await geminiPost(key, {
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig: {
-      temperature: 0.3,    // lower than generation — we want consistent judgment, not creative critique
-      topP: 0.9,
-      maxOutputTokens: 8192,
-      responseMimeType: 'application/json',
-    },
-  });
-
-  const text = extractText(response);
+  let text;
+  if (geminiKey) {
+    const response = await geminiPost(geminiKey, {
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.3,
+        topP: 0.9,
+        maxOutputTokens: 8192,
+        responseMimeType: 'application/json',
+      },
+    });
+    text = extractText(response);
+    console.log('[reviewer] used Gemini');
+  } else if (deepseekKey) {
+    const response = await openaiCompatiblePost(deepseekKey, prompt, { hostname: 'api.deepseek.com', model: 'deepseek-chat' });
+    const content = response.choices?.[0]?.message?.content;
+    if (!content) throw new Error('No text in DeepSeek reviewer response');
+    text = content;
+    console.log('[reviewer] used DeepSeek');
+  } else {
+    const response = await openaiCompatiblePost(openaiKey, prompt, { hostname: 'api.openai.com', model: 'gpt-4o' });
+    const content = response.choices?.[0]?.message?.content;
+    if (!content) throw new Error('No text in OpenAI reviewer response');
+    text = content;
+    console.log('[reviewer] used OpenAI gpt-4o');
+  }
   let review;
   try { review = parseJson(text); }
   catch (e) {

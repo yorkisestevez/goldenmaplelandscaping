@@ -62,10 +62,12 @@ function extractText(response) {
   throw new Error('No text in Gemini response: ' + JSON.stringify(response).slice(0, 400));
 }
 
-function openaiPost(apiKey, prompt) {
+// Generic OpenAI-compatible POST. Works for OpenAI (api.openai.com) and
+// DeepSeek (api.deepseek.com) which share the same /v1/chat/completions format.
+function openaiCompatiblePost(apiKey, prompt, { hostname, model }) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({
-      model: 'gpt-4o',
+      model,
       messages: [
         {
           role: 'system',
@@ -73,11 +75,11 @@ function openaiPost(apiKey, prompt) {
         },
         { role: 'user', content: prompt }
       ],
-      max_tokens: 16384,
+      max_tokens: 8192,
       response_format: { type: 'json_object' }
     });
     const req = https.request({
-      hostname: 'api.openai.com',
+      hostname,
       path: '/v1/chat/completions',
       method: 'POST',
       headers: {
@@ -94,15 +96,15 @@ function openaiPost(apiKey, prompt) {
       });
     });
     req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('OpenAI timeout (180s)')); });
+    req.on('timeout', () => { req.destroy(); reject(new Error(`${hostname} timeout (180s)`)); });
     req.write(data); req.end();
   });
 }
 
-function extractOpenAIText(response) {
-  if (response.error) throw new Error(`OpenAI error: ${response.error.message || JSON.stringify(response.error)}`);
+function extractOpenAICompatibleText(response, provider) {
+  if (response.error) throw new Error(`${provider} error: ${response.error.message || JSON.stringify(response.error)}`);
   const content = response.choices?.[0]?.message?.content;
-  if (!content) throw new Error('No text in OpenAI response: ' + JSON.stringify(response).slice(0, 400));
+  if (!content) throw new Error(`No text in ${provider} response: ` + JSON.stringify(response).slice(0, 400));
   return content;
 }
 
@@ -218,8 +220,11 @@ function validateDraft(draft) {
 
 async function generateDraft({ topicId = null } = {}) {
   const geminiKey = process.env.GEMINI_API_KEY;
+  const deepseekKey = process.env.DEEPSEEK_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
-  if (!geminiKey && !openaiKey) throw new Error('GEMINI_API_KEY or OPENAI_API_KEY env var is required');
+  if (!geminiKey && !deepseekKey && !openaiKey) {
+    throw new Error('Set GEMINI_API_KEY, DEEPSEEK_API_KEY, or OPENAI_API_KEY');
+  }
 
   const topics = readJson(TOPICS_PATH).topics;
   const state = readJson(STATE_PATH);
@@ -248,10 +253,21 @@ async function generateDraft({ topicId = null } = {}) {
     });
     text = extractText(response);
     console.log('[generate] used Gemini');
+  } else if (deepseekKey) {
+    console.log('[generate] using DeepSeek deepseek-chat (~10x cheaper than OpenAI)');
+    const response = await openaiCompatiblePost(deepseekKey, buildPrompt(topic), {
+      hostname: 'api.deepseek.com',
+      model: 'deepseek-chat'
+    });
+    text = extractOpenAICompatibleText(response, 'DeepSeek');
+    console.log('[generate] used DeepSeek');
   } else {
-    console.log('[generate] GEMINI_API_KEY not set — falling back to OpenAI gpt-4o');
-    const response = await openaiPost(openaiKey, buildPrompt(topic));
-    text = extractOpenAIText(response);
+    console.log('[generate] using OpenAI gpt-4o (DEEPSEEK_API_KEY not set)');
+    const response = await openaiCompatiblePost(openaiKey, buildPrompt(topic), {
+      hostname: 'api.openai.com',
+      model: 'gpt-4o'
+    });
+    text = extractOpenAICompatibleText(response, 'OpenAI');
     console.log('[generate] used OpenAI gpt-4o');
   }
 
