@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-06-23T01:59:03.277Z",
+  "lastRunAt": "2026-06-23T02:01:52.175Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -73,6 +73,21 @@
         "linkCount": 4,
         "hasTable": true,
         "numericCount": 1
+      }
+    },
+    {
+      "topicId": "auto-005",
+      "slug": "concrete-vs-interlocking-patio-barrie",
+      "at": "2026-06-23T02:01:52.174Z",
+      "validation": {
+        "ok": false,
+        "errors": [
+          "internal links <3 (got 0)"
+        ],
+        "wordCount": 1357,
+        "linkCount": 0,
+        "hasTable": true,
+        "numericCount": 2
       }
     }
   ]

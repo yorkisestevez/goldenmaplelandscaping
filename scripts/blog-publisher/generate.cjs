@@ -1,6 +1,6 @@
 // scripts/blog-publisher/generate.cjs
 // In-repo, env-driven generator. Called by .github/workflows/blog-publisher.yml.
-// Requires env: GEMINI_API_KEY
+// Requires env: GEMINI_API_KEY (preferred) or OPENAI_API_KEY (fallback)
 
 const fs = require('fs');
 const path = require('path');
@@ -60,6 +60,50 @@ function extractText(response) {
   const fallback = parts.find(p => p.text);
   if (fallback) return fallback.text;
   throw new Error('No text in Gemini response: ' + JSON.stringify(response).slice(0, 400));
+}
+
+function openaiPost(apiKey, prompt) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a professional SEO content writer. You MUST write LONG, DETAILED content. Each section in the "sections" array MUST contain at least 200-350 words of HTML content. The total word count across all fields MUST be at least 1300 words. Do not truncate or summarize — write full, complete paragraphs. Return only valid JSON with no markdown fences.'
+        },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 16384,
+      response_format: { type: 'json_object' }
+    });
+    const req = https.request({
+      hostname: 'api.openai.com',
+      path: '/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Length': Buffer.byteLength(data)
+      },
+      timeout: 180000
+    }, (res) => {
+      let result = '';
+      res.on('data', c => result += c);
+      res.on('end', () => {
+        try { resolve(JSON.parse(result)); } catch { resolve({ raw: result }); }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('OpenAI timeout (180s)')); });
+    req.write(data); req.end();
+  });
+}
+
+function extractOpenAIText(response) {
+  if (response.error) throw new Error(`OpenAI error: ${response.error.message || JSON.stringify(response.error)}`);
+  const content = response.choices?.[0]?.message?.content;
+  if (!content) throw new Error('No text in OpenAI response: ' + JSON.stringify(response).slice(0, 400));
+  return content;
 }
 
 function parseJson(text) {
@@ -173,8 +217,9 @@ function validateDraft(draft) {
 }
 
 async function generateDraft({ topicId = null } = {}) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY env var is required');
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (!geminiKey && !openaiKey) throw new Error('GEMINI_API_KEY or OPENAI_API_KEY env var is required');
 
   const topics = readJson(TOPICS_PATH).topics;
   const state = readJson(STATE_PATH);
@@ -190,20 +235,29 @@ async function generateDraft({ topicId = null } = {}) {
 
   console.log(`[generate] ${topic.id} — ${topic.title}`);
 
-  const response = await geminiPost(apiKey, {
-    contents: [{ role: 'user', parts: [{ text: buildPrompt(topic) }] }],
-    generationConfig: {
-      temperature: 0.75,
-      topP: 0.95,
-      maxOutputTokens: 16384,
-      responseMimeType: 'application/json'
-    }
-  });
+  let text;
+  if (geminiKey) {
+    const response = await geminiPost(geminiKey, {
+      contents: [{ role: 'user', parts: [{ text: buildPrompt(topic) }] }],
+      generationConfig: {
+        temperature: 0.75,
+        topP: 0.95,
+        maxOutputTokens: 16384,
+        responseMimeType: 'application/json'
+      }
+    });
+    text = extractText(response);
+    console.log('[generate] used Gemini');
+  } else {
+    console.log('[generate] GEMINI_API_KEY not set — falling back to OpenAI gpt-4o');
+    const response = await openaiPost(openaiKey, buildPrompt(topic));
+    text = extractOpenAIText(response);
+    console.log('[generate] used OpenAI gpt-4o');
+  }
 
-  const text = extractText(response);
   let draft;
   try { draft = parseJson(text); }
-  catch (e) { throw new Error('Gemini returned non-JSON: ' + text.slice(0, 500)); }
+  catch (e) { throw new Error('LLM returned non-JSON: ' + text.slice(0, 500)); }
 
   // Defensive normalization — Gemini sometimes returns shapes that differ
   // from the prompt's contract (e.g. readTime as a bare integer instead of
