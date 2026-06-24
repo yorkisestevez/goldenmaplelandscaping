@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-            {
+              {
+    slug: "natural-stone-vs-pavers-barrie",
+    title: "Natural Stone vs. Pavers: A Buyer's Guide for Barrie Homeowners",
+    excerpt: "Natural stone or concrete pavers for your Barrie patio? A contractor's honest take on cost, freeze-thaw durability, and long-term value in Simcoe County.",
+    category: "Materials",
+    readTime: "12 min",
+    image: "/images/projects/orillia-walkway.jpg",
+  },
+  {
     slug: "concrete-vs-interlocking-patio-barrie",
     title: "Concrete vs Interlocking Patio: Best Choice for Barrie's Climate",
     excerpt: "Deciding between concrete and interlocking patios in Barrie involves weighing cost, durability, and style. Learn which suits Barrie's unique climate.",
