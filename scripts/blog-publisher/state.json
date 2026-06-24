@@ -1,16 +1,17 @@
 {
     "version": 1,
-    "lastRunAt": "2026-06-24T10:55:00.000Z",
+    "lastRunAt": "2026-06-24T12:00:00.000Z",
     "usedTopicIds": [
         "auto-001",
         "auto-002",
         "auto-003",
         "auto-004",
         "auto-005",
-        "auto-006"
+        "auto-006",
+        "auto-007"
     ],
     "publishedSlugs": [],
-    "currentDraft": "natural-stone-vs-pavers-barrie",
+    "currentDraft": "outdoor-living-planning-innisfil",
     "history": [
         {
             "topicId": "auto-001",
@@ -117,6 +118,20 @@
                 "numericCount": 11
             },
             "generatedBy": "claude-manual"
+        },
+        {
+            "topicId": "auto-007",
+            "slug": "outdoor-living-planning-innisfil",
+            "at": "2026-06-24T12:00:00.000Z",
+            "validation": {
+                "ok": true,
+                "errors": [],
+                "wordCount": 2296,
+                "linkCount": 6,
+                "hasTable": true,
+                "numericCount": 11
+            },
+            "generatedBy": "claude-cloud-routine"
         }
     ]
 }
