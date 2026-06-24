@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-              {
+                {
+    slug: "outdoor-living-planning-innisfil",
+    title: "Outdoor Living Design Innisfil: 7-Step Planning Process",
+    excerpt: "Planning an outdoor living space in Innisfil takes 7 steps — most projects run $25,000–$80,000 depending on zones, materials, and phasing strategy.",
+    category: "Design",
+    readTime: "11 min",
+    image: "/images/projects/patio-pergola.jpg",
+  },
+  {
     slug: "natural-stone-vs-pavers-barrie",
     title: "Natural Stone vs. Pavers: A Buyer's Guide for Barrie Homeowners",
     excerpt: "Natural stone or concrete pavers for your Barrie patio? A contractor's honest take on cost, freeze-thaw durability, and long-term value in Simcoe County.",
