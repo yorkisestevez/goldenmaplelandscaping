@@ -539,18 +539,37 @@ async function checkMissedCron(findings) {
     return;
   }
 
-  // "Activity" = any auto/blog-* PR created in the last 8 days, regardless of
-  // its merge state. Just needs to exist (proves the routine fired).
-  const recentlyOpened = prs.find((p) => ageDays(p.createdAt) < 8);
-  if (recentlyOpened) return;  // healthy — routine fired this week
+  // "Published" = an auto/blog-* PR that actually MERGED (its post is live on the
+  // site). A PR that was merely created but never merged is NOT a published post,
+  // so we key the health signal off mergedAt, not createdAt.
+  const merged = prs
+    .filter((p) => p.mergedAt)
+    .sort((a, b) => new Date(b.mergedAt) - new Date(a.mergedAt));
+  const newestMerged = merged[0];
+  const newestCreated = prs[0]; // gh returns newest-created first
 
-  // No recent PRs. Compute how stale + what to recommend.
-  const newest = prs[0];
-  const ageOfNewest = newest ? Math.round(ageDays(newest.createdAt)) : null;
+  // Healthy — a post was PUBLISHED (merged) within the last 8 days.
+  if (newestMerged && ageDays(newestMerged.mergedAt) < 8) return;
+
+  // A PR was created recently but nothing merged → routine fired but the post is
+  // stuck awaiting a merge (or CI failed). Distinct, actionable failure mode.
+  if (newestCreated && ageDays(newestCreated.createdAt) < 8) {
+    findings.push({
+      severity: 'high',
+      kind: 'blog_unpublished_pr',
+      message: `auto/blog-* PR #${newestCreated.number} "${newestCreated.title}" was created ${Math.round(ageDays(newestCreated.createdAt))}d ago but NO post has been published (merged) in 8+ days. Tap-merge the PR to publish, or check why CI/merge stalled.`,
+    });
+    return;
+  }
+
+  // Nothing created AND nothing merged recently → the routine likely didn't fire.
+  const staleDays = newestMerged
+    ? Math.round(ageDays(newestMerged.mergedAt))
+    : (newestCreated ? Math.round(ageDays(newestCreated.createdAt)) : null);
   findings.push({
     severity: 'high',
     kind: 'missed_weekly_post',
-    message: `No new auto/blog-* PR in ${ageOfNewest ? ageOfNewest + 'd' : '8+ days'}. The Claude routine (gm-blog-publisher) may not have fired — check Scheduled tab in Claude Code, or run it manually.`,
+    message: `No blog post PUBLISHED in ${staleDays ? staleDays + 'd' : '8+ days'}. The Claude routine (gm-blog-publisher) may not have fired — check the Scheduled tab in Claude Code, or run it manually.`,
   });
 }
 
@@ -785,16 +804,20 @@ async function runChecks() {
   await checkLiveSite(findings);
   await checkWorkflowsEnabled(findings);
   await checkRepoPerms(findings);
-  if (trigger.scheduleCron === '0 16 * * 1' || trigger.event === 'workflow_dispatch') {
-    await checkMissedCron(findings);
-  }
+  // Missed-publish detection runs on EVERY scheduled sweep (daily 02:00 UTC AND
+  // Monday 16:00 UTC) plus manual dispatch — NOT just the Monday run. This way a
+  // missed/failed weekly post is caught within 24h even if the Monday watchdog
+  // run itself gets throttled/skipped by GitHub (the blind spot that hid a
+  // two-week gap in June 2026).
+  await checkMissedCron(findings);
   // Daily 02:00 UTC sweep — runs expensive/comprehensive checks that don't
   // need to fire on every workflow_run.
   if (trigger.scheduleCron === '0 2 * * *' || trigger.event === 'workflow_dispatch') {
     await checkPostRot(findings);          // live HTML crawl (3 sample posts) + SEO artifact check
     await checkSeoArtifacts(findings);     // robots.txt + llms.txt + IndexNow key
-    await checkGeminiKeyHealth(findings);  // probe Gemini key
     await checkPatExpiry(findings);        // parse PAT expiry header
+    // checkGeminiKeyHealth retired 2026-06-24 — Gemini path is gone; Claude
+    // routine (gm-blog-publisher) is the sole generator. Nothing to probe.
   }
   return { findings };
 }
