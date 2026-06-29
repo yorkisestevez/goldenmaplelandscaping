@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "lastRunAt": "2026-06-24T12:00:00.000Z",
+    "lastRunAt": "2026-06-29T00:00:00.000Z",
     "usedTopicIds": [
         "auto-001",
         "auto-002",
@@ -8,10 +8,11 @@
         "auto-004",
         "auto-005",
         "auto-006",
-        "auto-007"
+        "auto-007",
+        "auto-008"
     ],
     "publishedSlugs": [],
-    "currentDraft": "outdoor-living-planning-innisfil",
+    "currentDraft": "retaining-wall-cost-oro-medonte",
     "history": [
         {
             "topicId": "auto-001",
@@ -130,6 +131,20 @@
                 "linkCount": 6,
                 "hasTable": true,
                 "numericCount": 11
+            },
+            "generatedBy": "claude-cloud-routine"
+        },
+        {
+            "topicId": "auto-008",
+            "slug": "retaining-wall-cost-oro-medonte",
+            "at": "2026-06-29T00:00:00.000Z",
+            "validation": {
+                "ok": true,
+                "errors": [],
+                "wordCount": 2357,
+                "linkCount": 8,
+                "hasTable": true,
+                "numericCount": 26
             },
             "generatedBy": "claude-cloud-routine"
         }
