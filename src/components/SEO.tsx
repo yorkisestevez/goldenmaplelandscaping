@@ -47,6 +47,7 @@ export default function SEO({ title, description, canonical, schema, image }: SE
     },
     "sameAs": [
       "https://www.facebook.com/GoldenMaplegroup",
+      "https://www.instagram.com/goldenmaplelandscaping",
       "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
       "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
     ],
