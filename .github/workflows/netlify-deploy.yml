@@ -80,23 +80,34 @@ jobs:
           OK=0
           for i in 1 2 3 4 5 6; do
             sleep 10
-            BUNDLE=$(curl -fsS https://goldenmaplelandscaping.ca/ | grep -oE '/assets/index-[^"]+\.js' | head -1)
-            [ -z "$BUNDLE" ] && continue
-            JS=$(curl -fsS "https://goldenmaplelandscaping.ca$BUNDLE")
-            [ -z "$JS" ] && continue
+            HTML=$(curl -fsS https://goldenmaplelandscaping.ca/)
+            [ -z "$HTML" ] && continue
+            # React Router v7 emits hashed chunks (entry.client-*, root-*, chunk-*, utmCapture-*),
+            # NOT a single index-*.js — and the analytics ids may live in any statically-imported
+            # chunk. So collect every /assets/*.js the homepage loads and check across all of them.
+            ASSETS=$(echo "$HTML" | grep -oE '/assets/[A-Za-z0-9._-]+\.js' | sort -u)
+            [ -z "$ASSETS" ] && continue
+            GA4=0; CLA=0; PIX=0; ADS=0
+            for A in $ASSETS; do
+              B=$(curl -fsS "https://goldenmaplelandscaping.ca$A")
+              echo "$B" | grep -q "G-1BRTV91W3Z"    && GA4=1
+              echo "$B" | grep -q "wisgcj7yvw"       && CLA=1
+              echo "$B" | grep -q "2084193635490617" && PIX=1
+              echo "$B" | grep -q "AW-10839158941"    && ADS=1
+            done
             MISSING=""
-            echo "$JS" | grep -q "G-1BRTV91W3Z"    || MISSING="$MISSING GA4(G-1BRTV91W3Z)"
-            echo "$JS" | grep -q "wisgcj7yvw"       || MISSING="$MISSING Clarity(wisgcj7yvw)"
-            echo "$JS" | grep -q "2084193635490617" || MISSING="$MISSING MetaPixel"
-            echo "$JS" | grep -q "AW-10839158941"    || MISSING="$MISSING GoogleAds"
-            if [ -z "$MISSING" ]; then OK=1; echo "Analytics guard OK ($BUNDLE) — GA4 + Clarity + Pixel + Ads all present"; break; fi
-            echo "attempt $i: still missing:$MISSING (bundle $BUNDLE) — retrying"
+            [ "$GA4" = 1 ] || MISSING="$MISSING GA4(G-1BRTV91W3Z)"
+            [ "$CLA" = 1 ] || MISSING="$MISSING Clarity(wisgcj7yvw)"
+            [ "$PIX" = 1 ] || MISSING="$MISSING MetaPixel"
+            [ "$ADS" = 1 ] || MISSING="$MISSING GoogleAds"
+            if [ -z "$MISSING" ]; then OK=1; echo "Analytics guard OK — GA4 + Clarity + Pixel + Ads present across $(echo "$ASSETS" | wc -w) bundle(s)"; break; fi
+            echo "attempt $i: still missing:$MISSING (checked $(echo "$ASSETS" | wc -w) bundles) — retrying"
           done
           if [ "$OK" != "1" ]; then
             MSG="🚨 Analytics MISSING from live deploy of goldenmaplelandscaping.ca
-          Bundle: ${BUNDLE:-unknown}
-          Missing:${MISSING:- (could not fetch bundle)}
-          The deploy SUCCEEDED but the live bundle is missing trackers — most likely the CI build lost Netlify env injection (check the netlify --build step + Netlify env vars), or a tracking id changed. Expected: GA4 G-1BRTV91W3Z, Clarity wisgcj7yvw, Meta Pixel 2084193635490617, Google Ads AW-10839158941.
+          Checked: all homepage /assets/*.js chunks
+          Missing:${MISSING:- (could not fetch homepage or assets)}
+          The deploy SUCCEEDED but the live bundles are missing trackers — most likely the CI build lost Netlify env injection (check the netlify --build step + Netlify env vars), or a tracking id changed. Expected: GA4 G-1BRTV91W3Z, Clarity wisgcj7yvw, Meta Pixel 2084193635490617, Google Ads AW-10839158941.
           Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             curl -fsS -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
               --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
