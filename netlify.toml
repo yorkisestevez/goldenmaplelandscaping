@@ -1,6 +1,8 @@
 [build]
   command = "npm run build"
-  publish = "dist"
+  # React Router v7 framework build outputs the static client (with prerendered
+  # per-route index.html files) to build/client.
+  publish = "build/client"
 
 [build.environment]
   NODE_VERSION = "20"
@@ -12,10 +14,12 @@
   to = "/resources"
   status = 301
 
-# SPA fallback — all routes return index.html
+# SPA fallback — routes NOT prerendered at build time fall back to the generic
+# client shell (RR7 emits it as __spa-fallback.html). Prerendered routes are served
+# as their own static file first; this only catches the rest (e.g. /portfolio/:slug).
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/__spa-fallback.html"
   status = 200
 
 # Cache static assets aggressively

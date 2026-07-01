@@ -1,19 +1,20 @@
 import type { Config } from '@react-router/dev/config';
+import { getAutoCombos } from './src/data/serviceLocations';
 
 export default {
   appDirectory: 'src',
-  // Static SPA (no runtime SSR) + build-time prerender of a route list.
+  // Static SPA (no runtime SSR) + build-time prerender of every route.
   ssr: false,
-  async prerender() {
-    // PHASE 1: prerender the 4 known-SSR-safe hand-built service pages to prove
-    // content + schema land in static HTML on the REAL app. Unlisted routes fall
-    // back to client-side SPA (no worse than today). Phase 2 expands this list to
-    // all ~70 routes (pulled from serviceLocations.ts + sitemap.xml).
-    return [
-      '/services/interlocking-barrie',
-      '/services/retaining-walls-barrie',
-      '/services/composite-decking-barrie',
-      '/services/landscape-design-barrie',
-    ];
+  async prerender({ getStaticPaths }) {
+    // All static (non-param) routes come from the route config automatically.
+    const staticPaths = getStaticPaths();
+    // Dynamic /services/:slug — 28 service×location combos (excludes the 4 hand-built Barrie pages).
+    const serviceCombos = getAutoCombos().map((c) => `/services/${c.slug}`);
+    // Dynamic /locations/:slug — the 4 auto location landings.
+    const autoLocations = ['orillia', 'wasaga-beach', 'midland', 'collingwood'].map(
+      (s) => `/locations/${s}`,
+    );
+    // NOTE: /portfolio/:slug is left to SPA fallback for now (low SEO value; add later).
+    return [...staticPaths, ...serviceCombos, ...autoLocations];
   },
 } satisfies Config;
