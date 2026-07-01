@@ -91,11 +91,6 @@ const localBusinessSchema = {
     "name": "Barrie",
     "url": "https://en.wikipedia.org/wiki/Barrie",
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5.0",
-    "reviewCount": "42",
-  },
 };
 
 const faqSchema = {

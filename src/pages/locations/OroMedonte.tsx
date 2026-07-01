@@ -91,11 +91,6 @@ const localBusinessSchema = {
     "name": "Oro-Medonte",
     "url": "https://en.wikipedia.org/wiki/Oro-Medonte",
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5.0",
-    "reviewCount": "42",
-  },
 };
 
 const faqSchema = {

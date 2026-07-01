@@ -53,11 +53,6 @@ export default function LocationLanding() {
       '@type': 'City',
       name: location.name,
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '5.0',
-      reviewCount: '42',
-    },
   };
 
   return (

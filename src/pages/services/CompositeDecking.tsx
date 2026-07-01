@@ -19,6 +19,16 @@ const FAQ = [
   }
 ];
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+};
+
 export default function CompositeDecking() {
   const processSteps = [
     { title: "Structural Framing", desc: "We build our frames to exceed Ontario Building Code, using pressure-treated lumber or steel for maximum structural integrity." },
@@ -33,6 +43,7 @@ export default function CompositeDecking() {
         title="Composite Decking Installation Barrie"
         description="Low-maintenance composite decks built for Barrie winters. TimberTech & Trex options. Custom designs with lighting & railings. Get your free deck quote."
         canonical="https://goldenmaplelandscaping.ca/services/composite-decking-barrie"
+        schema={faqSchema}
       />
       
       <section className="section-padding pt-48">

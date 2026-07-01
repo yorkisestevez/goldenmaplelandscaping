@@ -23,6 +23,16 @@ const FAQ = [
   }
 ];
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+};
+
 export default function LandscapeDesign() {
   const designSteps = [
     { title: "Consultation", desc: "We meet on-site to understand your vision, lifestyle needs, and the unique characteristics of your property." },
@@ -37,6 +47,7 @@ export default function LandscapeDesign() {
         title="Landscape Design Barrie"
         description="Full-service landscape design for Barrie homeowners. From concept to 3D render to build. Create your dream outdoor living space. Book a design consultation."
         canonical="https://goldenmaplelandscaping.ca/services/landscape-design-barrie"
+        schema={faqSchema}
       />
       
       <section className="section-padding pt-48">

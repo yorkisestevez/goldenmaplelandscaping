@@ -92,11 +92,6 @@ const localBusinessSchema = {
     "name": "Springwater",
     "url": "https://en.wikipedia.org/wiki/Springwater,_Ontario",
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5.0",
-    "reviewCount": "42",
-  },
 };
 
 const faqSchema = {

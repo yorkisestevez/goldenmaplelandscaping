@@ -22,21 +22,27 @@
         "@context": "https://schema.org",
         "@graph": [
           {
-            "@type": "LocalBusiness",
+            "@type": ["LocalBusiness", "HomeAndConstructionBusiness", "GeneralContractor"],
             "@id": "https://goldenmaplelandscaping.ca/#business",
             "name": "Golden Maple Landscaping",
-            "description": "Simcoe County's #1 Premium Hardscape & Interlocking Contractor.",
+            "description": "Premium hardscape and interlocking contractor in Barrie & Simcoe County, Ontario. Engineered paver patios, driveways, retaining walls, composite decks and outdoor-living builds on a 12-16 inch base for the Ontario freeze-thaw cycle.",
             "url": "https://goldenmaplelandscaping.ca/",
+            "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+            "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
             "founder": {
               "@type": "Person",
               "name": "Yorkis Estevez"
             },
+            "foundingDate": "2020",
             "telephone": "+17055003581",
             "email": "yorkis@goldenmaplelandscaping.ca",
+            "priceRange": "$$$",
+            "currenciesAccepted": "CAD",
             "address": {
               "@type": "PostalAddress",
               "addressLocality": "Barrie",
               "addressRegion": "ON",
+              "postalCode": "L4N",
               "addressCountry": "CA"
             },
             "geo": {
@@ -48,14 +54,33 @@
               { "@type": "City", "name": "Barrie", "sameAs": "https://en.wikipedia.org/wiki/Barrie" },
               { "@type": "City", "name": "Innisfil", "sameAs": "https://en.wikipedia.org/wiki/Innisfil" },
               { "@type": "City", "name": "Oro-Medonte", "sameAs": "https://en.wikipedia.org/wiki/Oro-Medonte" },
-              { "@type": "City", "name": "Springwater", "sameAs": "https://en.wikipedia.org/wiki/Springwater,_Ontario" }
+              { "@type": "City", "name": "Springwater", "sameAs": "https://en.wikipedia.org/wiki/Springwater,_Ontario" },
+              { "@type": "City", "name": "Orillia", "sameAs": "https://en.wikipedia.org/wiki/Orillia" },
+              { "@type": "City", "name": "Wasaga Beach", "sameAs": "https://en.wikipedia.org/wiki/Wasaga_Beach" },
+              { "@type": "City", "name": "Midland", "sameAs": "https://en.wikipedia.org/wiki/Midland,_Ontario" },
+              { "@type": "City", "name": "Collingwood", "sameAs": "https://en.wikipedia.org/wiki/Collingwood,_Ontario" }
             ],
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "5.0",
-              "reviewCount": "42"
-            },
-            "priceRange": "$$$"
+            "openingHoursSpecification": [
+              {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "opens": "08:00",
+                "closes": "18:00"
+              }
+            ],
+            "sameAs": [
+              "https://www.facebook.com/GoldenMaplegroup",
+              "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+              "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+              "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+            ],
+            "makesOffer": [
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Interlocking patios, walkways & driveways" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Retaining walls" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Composite decking (Trex / TimberTech)" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Pool decks & natural stone" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Outdoor kitchens, fire features & landscape lighting" } }
+            ]
           },
           {
             "@type": "Service",
@@ -72,6 +97,16 @@
         ]
       }
     </script>
+    <!--
+      REVIEW + AGGREGATE RATING (pending real data - do NOT publish fabricated reviews):
+      Add to the #business node above a "review" array of real Review nodes
+        { "@type":"Review","author":{"@type":"Person","name":"<real first name>"},
+          "datePublished":"<YYYY-MM-DD>","reviewRating":{"@type":"Rating","ratingValue":"5"},
+          "reviewBody":"<exact real review text>" }
+      plus "aggregateRating": { "@type":"AggregateRating","ratingValue":"<live GBP avg>","reviewCount":"<live GBP count>" }
+      using ONLY real reviews and the live Google Business Profile numbers. See audit Artifact 1.
+    -->
+
   </head>
   <body>
     <div id="root"></div>

@@ -91,11 +91,6 @@ const localBusinessSchema = {
     "name": "Innisfil",
     "url": "https://en.wikipedia.org/wiki/Innisfil",
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5.0",
-    "reviewCount": "42",
-  },
 };
 
 const faqSchema = {
