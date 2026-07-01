@@ -504,13 +504,18 @@ const Footer = () => {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  // Client-only interactive widgets — gated so they never render during the
+  // build-time prerender (avoids any window/document access at SSR).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   return (
     <div className="bg-brand-nearblack min-h-screen selection:bg-brand-gold/20 selection:text-brand-gold">
       <Navbar />
       <main className="flex-grow overflow-x-hidden">{children}</main>
       <Footer />
-      <ChatWidget />
-      <SophieVoice />
+      {mounted && <ChatWidget />}
+      {mounted && <SophieVoice />}
     </div>
   );
 }
