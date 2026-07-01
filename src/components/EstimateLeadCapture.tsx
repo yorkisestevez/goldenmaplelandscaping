@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Mail, CheckCircle, FileText } from 'lucide-react';
+import { Mail, CheckCircle, FileText, Phone } from 'lucide-react';
 import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
@@ -42,9 +43,11 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) {
+    // Phone is optional — requiring it for a written estimate kills completion
+    // (form-cro: every field must earn its place; email alone is a workable lead).
+    if (!form.name.trim() || !form.email.trim()) {
       setStatus('error');
-      setErrorMsg('Need name, email, and phone to send your estimate.');
+      setErrorMsg('Just your name and email — that\'s all we need to send it.');
       return;
     }
     setStatus('submitting');
@@ -107,11 +110,19 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
         <div className="mx-auto w-14 h-14 rounded-full bg-brand-gold/15 border border-brand-gold/40 flex items-center justify-center mb-5">
           <CheckCircle size={24} className="text-brand-gold" strokeWidth={1.5} />
         </div>
-        <h4 className="font-display text-3xl text-brand-bone mb-3 tracking-tight">Estimate sent.</h4>
-        <p className="font-sans text-[14px] font-light text-brand-muted leading-relaxed">
-          Check <span className="text-brand-bone">{form.email}</span> in the next minute or two.
-          <br />Now — pick a time below to lock in your numbers.
+        <h4 className="font-display text-3xl text-brand-bone mb-3 tracking-tight">Request received.</h4>
+        <p className="font-sans text-[14px] font-light text-brand-muted leading-relaxed mb-6">
+          Yorkis will personally review your project and reply to{' '}
+          <span className="text-brand-bone">{form.email}</span> with a written estimate within 24 hours —
+          usually much faster.
         </p>
+        <Link
+          to="/book"
+          className="btn-primary !rounded-full inline-flex items-center justify-center gap-2.5 py-3.5 px-7"
+        >
+          <Phone size={15} strokeWidth={1.5} />
+          Or book a free 15-min call now
+        </Link>
       </motion.div>
     );
   }
@@ -123,14 +134,16 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
           <FileText size={14} className="text-brand-gold" strokeWidth={1.75} />
         </div>
         <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">
-          Save Your Estimate
+          Lock It In
         </span>
       </div>
       <h4 className="font-display text-3xl text-brand-bone mb-3 tracking-tight">
-        Email me this breakdown
+        Get this estimate in writing
       </h4>
       <p className="font-sans text-[13px] font-light text-brand-muted mb-7 leading-relaxed">
-        We'll send a PDF copy plus a quick summary of what's typical for your project size in {estimate.city || 'Simcoe County'}. No spam, no obligation.
+        This range and every project detail you just entered goes straight to Yorkis. He'll personally
+        review it and reply with a written estimate for your {estimate.city || 'Simcoe County'} project
+        within 24 hours — honest scope, no sales pressure.
       </p>
 
       <form
@@ -172,10 +185,9 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
           name="phone"
           value={form.phone}
           onChange={onChange}
-          required
           autoComplete="tel"
           inputMode="tel"
-          placeholder="Phone number"
+          placeholder="Phone (optional — for a faster reply)"
           className="w-full bg-brand-cream border border-brand-dim/60 hover:border-brand-gold/60 focus:border-brand-gold/60 focus:bg-brand-cream py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none transition-all font-light"
         />
 
@@ -189,11 +201,11 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
           className="btn-primary !rounded-full w-full py-4 mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_8px_24px_-8px_rgba(212,175,99,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(212,175,99,0.55)] transition-shadow"
         >
           <Mail size={16} strokeWidth={1.5} />
-          {status === 'submitting' ? 'Sending…' : 'Email Me My Estimate'}
+          {status === 'submitting' ? 'Sending…' : 'Get My Written Estimate'}
         </button>
 
         <p className="font-sans text-[11px] text-brand-muted/80 text-center font-light pt-2">
-          We only use this to send your estimate and follow up on your project. We never share your info.
+          5.0★ Google rating · WSIB covered · $5M insured. We never share your info.
         </p>
       </form>
     </div>
