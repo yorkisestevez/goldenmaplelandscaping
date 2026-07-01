@@ -111,7 +111,7 @@ export default function BarrieLanding() {
     <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
         title="Landscaping Contractor Barrie ON"
-        description="Barrie's top-rated landscaping & hardscape contractor. Interlocking patios, composite decks, retaining walls & landscape design. 42 five-star reviews. Free estimates."
+        description="Barrie's top-rated landscaping & hardscape contractor. Interlocking patios, composite decks, retaining walls & landscape design. 8 five-star Google reviews. Free estimates."
         canonical="https://goldenmaplelandscaping.ca/locations/barrie"
         schema={localBusinessSchema}
       />
@@ -155,7 +155,7 @@ export default function BarrieLanding() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                "42 five-star reviews across Google, HomeStars & Yelp",
+                "5.0-star rated across Google, HomeStars & Yelp",
                 "Premium materials — Techo-Bloc, Permacon, TimberTech, In-Lite",
                 "Full design service — 3D renders before we break ground",
                 "Transparent pricing — detailed quotes, no hidden fees",

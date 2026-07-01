@@ -194,7 +194,7 @@ export default function ServiceLocation() {
                 ))}
               </div>
               <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-                5.0 · 42 Reviews
+                5.0 · 8 Reviews
               </span>
             </div>
             <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
