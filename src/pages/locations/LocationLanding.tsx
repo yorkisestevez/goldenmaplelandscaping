@@ -53,11 +53,6 @@ export default function LocationLanding() {
       '@type': 'City',
       name: location.name,
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '5.0',
-      reviewCount: '42',
-    },
   };
 
   return (
@@ -136,7 +131,7 @@ export default function LocationLanding() {
                 ))}
               </div>
               <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-                5.0 · 42 Reviews
+                5.0 · 8 Reviews
               </span>
             </div>
             <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">

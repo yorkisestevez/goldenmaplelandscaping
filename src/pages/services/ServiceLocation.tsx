@@ -56,46 +56,52 @@ export default function ServiceLocation() {
 
   const schema = {
     '@context': 'https://schema.org',
-    '@type': 'Service',
-    name: `${service.name} in ${location.name}`,
-    description: seoDescription,
-    provider: {
-      '@type': 'LandscapeService',
-      name: 'Golden Maple Landscaping',
-      url: 'https://goldenmaplelandscaping.ca',
-      telephone: '+1-705-500-3581',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Barrie',
-        addressRegion: 'ON',
-        postalCode: 'L4M',
-        addressCountry: 'CA',
+    '@graph': [
+      {
+        '@type': 'Service',
+        '@id': `https://goldenmaplelandscaping.ca/services/${slug}#service`,
+        name: `${service.name} in ${location.name}`,
+        serviceType: service.name,
+        description: seoDescription,
+        provider: { '@id': 'https://goldenmaplelandscaping.ca/#business' },
+        areaServed: {
+          '@type': 'City',
+          name: location.name,
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: location.name,
+            addressRegion: 'ON',
+            postalCode: location.postalRoot,
+            addressCountry: 'CA',
+          },
+        },
+        offers: {
+          '@type': 'Offer',
+          priceSpecification: {
+            '@type': 'PriceSpecification',
+            priceCurrency: 'CAD',
+            description: `${service.startingPriceText} ${service.perUnitText}`,
+          },
+        },
       },
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: '5.0',
-        reviewCount: '42',
+      {
+        '@type': 'FAQPage',
+        '@id': `https://goldenmaplelandscaping.ca/services/${slug}#faq`,
+        mainEntity: service.faqs.map((f) => ({
+          '@type': 'Question',
+          name: f.q,
+          acceptedAnswer: { '@type': 'Answer', text: f.a },
+        })),
       },
-    },
-    areaServed: {
-      '@type': 'City',
-      name: location.name,
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: location.name,
-        addressRegion: 'ON',
-        postalCode: location.postalRoot,
-        addressCountry: 'CA',
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://goldenmaplelandscaping.ca/' },
+          { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://goldenmaplelandscaping.ca/services' },
+          { '@type': 'ListItem', position: 3, name: titleHero, item: `https://goldenmaplelandscaping.ca/services/${slug}` },
+        ],
       },
-    },
-    offers: {
-      '@type': 'Offer',
-      priceSpecification: {
-        '@type': 'PriceSpecification',
-        priceCurrency: 'CAD',
-        description: `${service.startingPriceText} ${service.perUnitText}`,
-      },
-    },
+    ],
   };
 
   return (
@@ -188,7 +194,7 @@ export default function ServiceLocation() {
                 ))}
               </div>
               <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-                5.0 · 42 Reviews
+                5.0 · 8 Reviews
               </span>
             </div>
             <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">

@@ -78,7 +78,7 @@ export default function Testimonials({
           <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite leading-tight mb-8">
             {heading ?? (
               <>
-                5.0 stars across <span className="italic text-brand-gold">42 reviews.</span>
+                5.0 stars across <span className="italic text-brand-gold">8 reviews.</span>
               </>
             )}
           </h2>
@@ -135,7 +135,7 @@ export default function Testimonials({
             rel="noopener noreferrer"
             className="inline-flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold hover:text-brand-bonewhite transition-colors border-b border-brand-gold/30 pb-2"
           >
-            Read all 42 reviews on Google →
+            Read all 8 reviews on Google →
           </a>
         </div>
       </div>

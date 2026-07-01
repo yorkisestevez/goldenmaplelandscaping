@@ -18,15 +18,14 @@ export default function SEO({ title, description, canonical, schema, image }: SE
     "@type": "LandscapeService",
     "name": "Golden Maple Landscaping",
     "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
-    "@id": "https://goldenmaplelandscaping.ca",
+    "@id": "https://goldenmaplelandscaping.ca/#business",
     "url": "https://goldenmaplelandscaping.ca",
     "telephone": "+1-705-500-3581",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Serving Barrie & Simcoe County",
       "addressLocality": "Barrie",
       "addressRegion": "ON",
-      "postalCode": "L4M",
+      "postalCode": "L4N",
       "addressCountry": "CA"
     },
     "geo": {
@@ -47,14 +46,21 @@ export default function SEO({ title, description, canonical, schema, image }: SE
       "closes": "18:00"
     },
     "sameAs": [
-      "https://www.facebook.com/goldenmaplelandscaping",
-      "https://www.instagram.com/goldenmaplelandscaping"
+      "https://www.facebook.com/GoldenMaplegroup",
+      "https://www.instagram.com/goldenmaplelandscaping",
+      "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+      "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
     ],
-    "areaServed": {
-      "@type": "City",
-      "name": "Barrie",
-      "sameAs": "https://en.wikipedia.org/wiki/Barrie"
-    }
+    "areaServed": [
+      { "@type": "City", "name": "Barrie" },
+      { "@type": "City", "name": "Innisfil" },
+      { "@type": "City", "name": "Oro-Medonte" },
+      { "@type": "City", "name": "Springwater" },
+      { "@type": "City", "name": "Orillia" },
+      { "@type": "City", "name": "Wasaga Beach" },
+      { "@type": "City", "name": "Midland" },
+      { "@type": "City", "name": "Collingwood" }
+    ]
   };
 
   return (

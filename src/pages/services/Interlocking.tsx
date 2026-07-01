@@ -14,9 +14,20 @@ const FAQ = [
     a: "When properly engineered with our 12-16\" base standard, interlocking stone can last 25-30+ years. We provide a 5-year structural warranty to guarantee this longevity."
   },
   {
+    q: "Do you offer a warranty on interlocking installations?",
     a: "Yes, Golden Maple Landscaping provides a 5-year sink and settlement warranty on all interlocking stone installations. Our installation process is engineered for longevity and structural integrity."
   }
 ];
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+};
 
 export default function Interlocking() {
   const processSteps = [
@@ -32,6 +43,7 @@ export default function Interlocking() {
         title="Interlocking Stone Installation Barrie"
         description="Expert interlocking stone patios, driveways & walkways in Barrie. Techo-Bloc & Permacon certified. Precision-built hardscapes that last. Free estimate today."
         canonical="https://goldenmaplelandscaping.ca/services/interlocking-barrie"
+        schema={faqSchema}
       />
       
       <section className="section-padding pt-48">

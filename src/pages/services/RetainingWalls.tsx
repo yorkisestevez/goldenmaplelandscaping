@@ -19,6 +19,16 @@ const FAQ = [
   }
 ];
 
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+};
+
 export default function RetainingWalls() {
   const engineeringSteps = [
     { title: "Drainage Systems", desc: "We install perforated drainage pipes and clear stone backfill to prevent hydrostatic pressure buildup." },
@@ -33,6 +43,7 @@ export default function RetainingWalls() {
         title="Retaining Wall Construction Barrie"
         description="Custom retaining walls for Barrie properties. Armour stone, natural stone & block walls built with engineering precision. Solve grading issues beautifully."
         canonical="https://goldenmaplelandscaping.ca/services/retaining-walls-barrie"
+        schema={faqSchema}
       />
       
       <section className="section-padding pt-48">

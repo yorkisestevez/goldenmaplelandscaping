@@ -32,7 +32,7 @@ export default function Manifesto() {
             <div className="absolute -bottom-6 -right-6 w-24 h-24 border-b border-r border-brand-gold/30 z-0" />
             
             <div className="absolute -right-4 top-1/2 -translate-y-1/2 hidden lg:block">
-              <span className="font-display text-[120px] text-brand-gold/5 select-none leading-none uppercase font-light">EST. 2014</span>
+              <span className="font-display text-[120px] text-brand-gold/5 select-none leading-none uppercase font-light">EST. 2020</span>
             </div>
           </motion.div>
 

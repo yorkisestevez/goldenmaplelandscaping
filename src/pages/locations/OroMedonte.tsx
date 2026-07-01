@@ -91,11 +91,6 @@ const localBusinessSchema = {
     "name": "Oro-Medonte",
     "url": "https://en.wikipedia.org/wiki/Oro-Medonte",
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5.0",
-    "reviewCount": "42",
-  },
 };
 
 const faqSchema = {
@@ -169,7 +164,7 @@ export default function OroMedonteLanding() {
             </ul>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                "42 five-star reviews across Google, HomeStars & Yelp",
+                "5.0-star rated across Google, HomeStars & Yelp",
                 "Premium materials — Techo-Bloc, Permacon, TimberTech, In-Lite",
                 "Full design service — 3D renders before we break ground",
                 "Transparent pricing — detailed quotes, no hidden fees",
