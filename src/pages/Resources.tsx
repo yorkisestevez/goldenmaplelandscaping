@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-                {
+                  {
+    slug: "retaining-wall-cost-oro-medonte",
+    title: "Retaining Wall Cost in Oro-Medonte: 2026 Price Breakdown",
+    excerpt: "Retaining walls in Oro-Medonte cost $150–$350 per linear foot installed in 2026, depending on height, block brand, and whether engineering is required.",
+    category: "Investment",
+    readTime: "11 min",
+    image: "/images/projects/garden-wall.JPEG",
+  },
+  {
     slug: "outdoor-living-planning-innisfil",
     title: "Outdoor Living Design Innisfil: 7-Step Planning Process",
     excerpt: "Planning an outdoor living space in Innisfil takes 7 steps — most projects run $25,000–$80,000 depending on zones, materials, and phasing strategy.",
