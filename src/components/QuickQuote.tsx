@@ -122,7 +122,7 @@ export default function QuickQuote() {
             <Star key={i} size={12} className="text-brand-gold fill-brand-gold" strokeWidth={0} />
           ))}
         </div>
-        <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">5.0 · 42 Reviews</span>
+        <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">5.0 · 8 Reviews</span>
       </div>
 
       <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight mb-3">

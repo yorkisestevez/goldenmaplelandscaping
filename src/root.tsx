@@ -66,6 +66,39 @@ const businessGraph = {
         'https://www.yelp.com/biz/golden-maple-landscaping-barrie-4',
         'https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html',
       ],
+      // Real Google Business Profile aggregate + reviews (verified 2026-07-01 from the
+      // public Maps listing). NOTE: true Google count is 8 — not the 42 claimed elsewhere.
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '5.0',
+        reviewCount: '8',
+      },
+      review: [
+        {
+          '@type': 'Review',
+          author: { '@type': 'Person', name: 'Rio Sheri' },
+          datePublished: '2025-10',
+          reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+          reviewBody:
+            "We couldn't be happier with the work Yorkis and team from Golden Maple Landscaping did for us! They completely redid our stairs and walkway, and the results are absolutely beautiful. The craftsmanship is top-notch.",
+        },
+        {
+          '@type': 'Review',
+          author: { '@type': 'Person', name: 'Cory Walker' },
+          datePublished: '2026-03',
+          reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+          reviewBody:
+            'Golden Maple Landscaping did an outstanding job. From the first conversation to the final walkthrough, everything was handled professionally and with real attention to detail.',
+        },
+        {
+          '@type': 'Review',
+          author: { '@type': 'Person', name: 'Joseph Perri' },
+          datePublished: '2026-03',
+          reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+          reviewBody:
+            'Golden Maple Landscaping was excellent to work with. I hired them to complete a patio project, and they went above and beyond expectations.',
+        },
+      ],
     },
   ],
 };

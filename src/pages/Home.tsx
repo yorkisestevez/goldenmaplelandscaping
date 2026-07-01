@@ -534,7 +534,7 @@ const ContractorPainPoints = () => {
 
 const SocialProofStrip = () => {
   const stats = [
-    { number: "5.0", label: "Google Rating", sub: "42+ verified reviews" },
+    { number: "5.0", label: "Google Rating", sub: "8 verified Google reviews" },
     { number: "10+", label: "Years in Barrie", sub: "Since 2014" },
     { number: "12-16\"", label: "Base Depth", sub: "2× industry standard" },
     { number: "$5M", label: "Liability Coverage", sub: "WSIB certified" },
