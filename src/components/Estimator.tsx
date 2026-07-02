@@ -458,8 +458,8 @@ export default function Estimator() {
     const totalLow = Math.round((excavationLow + materialLow + labourLow + disposalLow + restorationLow + surcharge + addOnsLow) / 500) * 500;
     const totalHigh = Math.round((excavationHigh + materialHigh + labourHigh + disposalHigh + restorationHigh + surcharge + addOnsHigh) / 500) * 500;
 
-    // Hard floors
-    const floor = isDeck ? 25000 : isHardscape || projectType === 'full' ? 20000 : 8000;
+    // Hard floors — real minimum job size Golden Maple will accept per category.
+    const floor = isDeck ? 25000 : isHardscape ? 12000 : projectType === 'full' ? 20000 : 8000;
     const finalLow = Math.max(floor, totalLow);
     const finalHigh = Math.max(floor + 5000, totalHigh);
 
@@ -1161,7 +1161,7 @@ export default function Estimator() {
               </div>
 
               <p className="mt-8 font-sans text-xs font-normal text-brand-bonewhite/80 text-center max-w-3xl mx-auto leading-[1.6]">
-                Estimates use 2026 Carr Landscape Depot pricing for Simcoe County. <span className="text-brand-gold font-normal">{isDeck ? "Decking projects require a $25,000 minimum." : "Hardscape projects require a $20,000 minimum."}</span> Final pricing depends on site measurement, material availability, and design complexity.
+                Estimates use 2026 Carr Landscape Depot pricing for Simcoe County. <span className="text-brand-gold font-normal">{isDeck ? `Decking projects require a ${fmt(estimate.floor)} minimum.` : isHardscape ? `Hardscape projects require a ${fmt(estimate.floor)} minimum.` : projectType === 'full' ? `Full backyard transformations require a ${fmt(estimate.floor)} minimum.` : `This project type requires a ${fmt(estimate.floor)} minimum.`}</span> Final pricing depends on site measurement, material availability, and design complexity.
               </p>
             </motion.div>
           )}

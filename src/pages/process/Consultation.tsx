@@ -63,7 +63,7 @@ export default function Consultation() {
               {[
                 { title: "Lifestyle Discovery", desc: "How do you intend to use the space? Whether it's high-traffic entertaining or quiet sanctuary, we listen first." },
                 { title: "Property Assessment", desc: "A high-level overview of grades, drainage patterns, and potential engineering challenges." },
-                { title: "Budget Alignment", desc: "Transparent discussions about project scope—typically starting at $20,000 for hardscape and $25,000 for decking—to ensure your vision matches your investment." },
+                { title: "Budget Alignment", desc: "Transparent discussions about project scope—typically starting at $12,000 for hardscape and $25,000 for decking—to ensure your vision matches your investment." },
                 { title: "Material Direction", desc: "Initial thoughts on colors, textures, and product collections from premium partners like Unilock." },
                 { title: "Preliminary Timeline", desc: "Discussion of the design-build schedule and when your transformation can begin." },
                 { title: "Strategic Roadmapping", desc: "Laying out the literal next steps—from site assessment to final 3D design." }

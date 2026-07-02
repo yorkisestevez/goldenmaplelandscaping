@@ -65,7 +65,7 @@ export default function RetainingWallGuide() {
         <li><strong>Armour stone walls:</strong> $400-$700 per linear foot depending on stone size</li>
       </ul>
 
-      <p>At Golden Maple, our structural retaining wall projects start at $20,000. This reflects our commitment to proper engineering — deep bases, full drainage systems, and the kind of construction that doesn't move in 10 years.</p>
+      <p>At Golden Maple, our structural retaining wall projects start at $12,000. This reflects our commitment to proper engineering — deep bases, full drainage systems, and the kind of construction that doesn't move in 10 years.</p>
 
       <h2>Questions to Ask Your Contractor</h2>
 
