@@ -5,7 +5,17 @@
   app no longer ships a static index.html, so these hidden form definitions live
   here (any HTML file in the publish dir is scanned). Attribution fields (utm_*,
   gclid, fbclid, etc.) are populated at runtime by src/utils/utmCapture.ts and
-  forwarded to the CRM via the integrations-netlify webhook.
+  forwarded to the CRM via the submission-created bridge function.
+
+  IMPORTANT: this file must be the ONLY schema source for the forms below
+  (contact, quick-quote, cost-estimator, cost-guide). Do NOT put data-netlify
+  on the runtime JSX versions of these forms — the prerendered pages get
+  scanned too, and their slim static markup (attribution inputs are added by
+  JS at runtime, so they're absent from prerendered HTML) re-registers the
+  form WITHOUT gclid/utm fields. Netlify then silently drops those fields
+  from every submission. That exact regression broke ad attribution until
+  2026-07-02. Runtime forms submit fine without the attribute: the fetch
+  POST carries `form-name`, which routes to the schema registered here.
 -->
 <html lang="en">
   <head><meta charset="UTF-8" /><title>Netlify form definitions</title></head>

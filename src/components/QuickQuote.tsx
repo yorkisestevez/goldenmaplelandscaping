@@ -135,8 +135,6 @@ export default function QuickQuote() {
       <form
         name="quick-quote"
         method="POST"
-        data-netlify="true"
-        data-netlify-honeypot="bot-field"
         onSubmit={onSubmit}
         className="space-y-5"
         noValidate

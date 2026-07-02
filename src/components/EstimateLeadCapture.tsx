@@ -152,8 +152,6 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
       <form
         name="cost-estimator"
         method="POST"
-        data-netlify="true"
-        data-netlify-honeypot="bot-field"
         onSubmit={onSubmit}
         className="space-y-4"
         noValidate

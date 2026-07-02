@@ -149,8 +149,6 @@ export default function Contact() {
                   <form
                     name="contact"
                     method="POST"
-                    data-netlify="true"
-                    data-netlify-honeypot="bot-field"
                     onSubmit={onSubmit}
                     className="space-y-10"
                     noValidate

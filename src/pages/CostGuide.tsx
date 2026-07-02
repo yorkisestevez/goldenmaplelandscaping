@@ -204,8 +204,6 @@ export default function CostGuide() {
                 <form
                   name="cost-guide"
                   method="POST"
-                  data-netlify="true"
-                  data-netlify-honeypot="bot-field"
                   onSubmit={onSubmit}
                   className="space-y-6"
                   noValidate
