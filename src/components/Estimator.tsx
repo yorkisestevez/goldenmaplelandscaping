@@ -662,8 +662,10 @@ export default function Estimator() {
   const canAdvance = () => {
     if (step === 1) {
       if (!projectType) return false;
-      if (projectType === 'full' && selectedElements.length === 0) return false;
     }
+    // Full-backyard elements are chosen ON step 2 — gate leaving step 2, not entering it,
+    // or picking "Full Backyard" at step 1 would be a dead end with no way to reach the checklist.
+    if (step === 2 && projectType === 'full' && selectedElements.length === 0) return false;
     return true;
   };
 
