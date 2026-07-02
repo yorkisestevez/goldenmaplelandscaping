@@ -8,6 +8,11 @@ import {
   ScrollRestoration,
   useLocation,
 } from 'react-router';
+// Global styles: Tailwind v4 + the @theme brand tokens live here. In RR7 framework
+// mode this side-effect import is what makes Vite emit the stylesheet and <Links/>
+// link it — without it the whole site renders unstyled. (Regression from the
+// main.tsx -> root.tsx migration; main.tsx used to carry this import.)
+import './index.css';
 import SiteChrome from './components/Layout';
 import { initAnalytics, trackPageView } from './utils/analytics';
 import { initAttributionCapture } from './utils/utmCapture';
