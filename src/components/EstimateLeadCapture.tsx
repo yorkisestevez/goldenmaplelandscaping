@@ -25,6 +25,8 @@ export interface EstimatePayload {
   addOns: string[];
   hasPhotos: boolean;
   conditions: string[];
+  /** Per-type follow-up answers keyed `${element}.${question}` (e.g. "patio.surface": "concrete") */
+  details: Record<string, string>;
 }
 
 export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePayload }) {
@@ -74,6 +76,7 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
       add_ons: estimate.addOns.join(','),
       has_photos: String(estimate.hasPhotos),
       site_conditions: estimate.conditions.join(','),
+      project_details: Object.entries(estimate.details).map(([k, v]) => `${k}=${v}`).join(', '),
     };
 
     if (import.meta.env.DEV) {

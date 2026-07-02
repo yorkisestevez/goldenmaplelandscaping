@@ -33,12 +33,88 @@ const PROJECT_TYPES = [
 ];
 
 const CONDITIONS = [
-  { id: 'access', label: 'Difficult access (no machine access, wheelbarrow only)' },
-  { id: 'slope', label: 'Significant slope or grading needed' },
-  { id: 'tearOut', label: 'Tear-out / demolition of existing surface' },
-  { id: 'drainage', label: 'Drainage work needed' },
-  { id: 'levels', label: 'Multiple levels or tiers' },
+  { id: 'access', label: 'Difficult access (no machine access, wheelbarrow only)', hint: '+ ~18% labour', why: 'Base gravel moved by hand instead of machine adds crew days.' },
+  { id: 'slope', label: 'Significant slope or grading needed', hint: '+$1.5k–$4k', why: 'Cut-and-fill plus extra base material to get a level, draining surface.' },
+  { id: 'drainage', label: 'Drainage work needed', hint: '+$1.5k–$3.5k', why: 'Catch basins, weeping tile, or swales to move water away from the house.' },
+  { id: 'levels', label: 'Multiple levels or tiers', hint: '+ ~12%', why: 'Each level adds forming, steps, and transitions between surfaces.' },
 ];
+
+/** Per-project-type follow-up questions — the ones a real estimator asks on a site visit.
+ *  Each answer visibly moves the range and tightens the confidence band. */
+type DetailOption = { id: string; label: string; hint: string };
+type DetailQuestion = { id: string; label: string; why: string; options: DetailOption[] };
+
+const SURFACE_Q: DetailQuestion = {
+  id: 'surface',
+  label: "What's there right now?",
+  why: "Tear-out and disposal are real line items — grass digs out fast, concrete doesn't.",
+  options: [
+    { id: 'grass', label: 'Grass / soil', hint: 'Included' },
+    { id: 'concrete', label: 'Old concrete', hint: '+ tear-out' },
+    { id: 'pavers', label: 'Old pavers / stone', hint: '+ lift & dispose' },
+    { id: 'deck', label: 'Old deck / other', hint: '+ removal' },
+  ],
+};
+const USE_Q: DetailQuestion = {
+  id: 'use',
+  label: 'How will you use the space?',
+  why: 'A hot tub needs a reinforced base — better to price it now than change-order it later.',
+  options: [
+    { id: 'dining', label: 'Dining & BBQ', hint: 'Included' },
+    { id: 'lounge', label: 'Lounge / fire area', hint: 'Included' },
+    { id: 'hottub', label: 'Hot tub going on it', hint: '+ reinforced base' },
+    { id: 'multi', label: 'Full outdoor living', hint: 'Wider scope' },
+  ],
+};
+const SHAPE_Q: DetailQuestion = {
+  id: 'shape',
+  label: 'Layout & cutting',
+  why: 'Curves and border bands mean more cuts and a higher waste factor than a straight rectangle.',
+  options: [
+    { id: 'simple', label: 'Simple square / rectangle', hint: 'Included' },
+    { id: 'curves', label: 'Gentle curves', hint: '+6–8%' },
+    { id: 'complex', label: 'Curves + borders / inlays', hint: '+12–16%' },
+  ],
+};
+const WALL_Q: DetailQuestion = {
+  id: 'wallPurpose',
+  label: 'What is the wall holding back?',
+  why: 'A wall supporting a driveway or structure is engineered differently than a garden-bed border.',
+  options: [
+    { id: 'garden', label: 'Garden bed', hint: 'Included' },
+    { id: 'slope', label: 'Backyard slope', hint: '+10%' },
+    { id: 'structure', label: 'Driveway / structure', hint: '+25% · engineered' },
+  ],
+};
+const DECK_Q: DetailQuestion = {
+  id: 'deckHeight',
+  label: 'How high off the ground?',
+  why: 'Height changes framing, footings, and railing requirements under the building code.',
+  options: [
+    { id: 'ground', label: 'Ground level', hint: 'Included' },
+    { id: 'mid', label: '3–6 ft, with stairs', hint: '+ stairs & railings' },
+    { id: 'walkout', label: 'Walkout / second storey', hint: '+18%' },
+  ],
+};
+const FIRE_Q: DetailQuestion = {
+  id: 'fuel',
+  label: 'Wood or gas?',
+  why: 'A gas line run is its own trade — worth pricing upfront.',
+  options: [
+    { id: 'wood', label: 'Wood burning', hint: 'Included' },
+    { id: 'gas', label: 'Natural gas / propane', hint: '+ gas line' },
+  ],
+};
+
+const DETAIL_QUESTIONS: Record<string, DetailQuestion[]> = {
+  patio: [SURFACE_Q, USE_Q, SHAPE_Q],
+  stone: [SURFACE_Q, USE_Q, SHAPE_Q],
+  steps: [SURFACE_Q],
+  turf: [SURFACE_Q],
+  wall: [WALL_Q],
+  deck: [DECK_Q],
+  firepit: [FIRE_Q],
+};
 
 const TIERS: { id: PaverTier; label: string; sub: string; badge?: string }[] = [
   { id: 'budget',  label: 'Standard',  sub: 'Permacon Melville, Cassara, Vendome. Clean, value-built.' },
@@ -77,8 +153,9 @@ export default function Estimator() {
     lighting: 'Medium',
   });
   const [conditions, setConditions] = useState<Record<string, boolean>>({
-    access: false, slope: false, tearOut: false, drainage: false, levels: false,
+    access: false, slope: false, drainage: false, levels: false,
   });
+  const [details, setDetails] = useState<Record<string, string>>({});
   const [location, setLocation] = useState<EstimatorLocationKey>('barrie');
   const [tier, setTier] = useState<PaverTier>('mid');
   const [paverBrandId, setPaverBrandId] = useState<string>('permacon-mondrian-plus');
@@ -127,8 +204,10 @@ export default function Estimator() {
       setLocation(cityParam as EstimatorLocationKey);
     }
     if (advanced) {
-      setStep(3);
-      fireStep(3, '_prefill');
+      // Land on step 2, not 3 — the project-specific questions live there now,
+      // and they're the whole point of the deeper estimator.
+      setStep(2);
+      fireStep(2, '_prefill');
     } else {
       fireStep(1);
     }
@@ -140,6 +219,10 @@ export default function Estimator() {
   };
   const toggleCondition = (id: string) => {
     setConditions(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+  const setDetail = (el: string, qid: string, optId: string) => {
+    setDetails(prev => ({ ...prev, [`${el}.${qid}`]: optId }));
+    trackEngagement('estimator_detail', `${qid}_${optId}`);
   };
   const toggleElement = (id: string) => {
     setSelectedElements(prev =>
@@ -169,7 +252,7 @@ export default function Estimator() {
   const estimate = useMemo(() => {
     const els = projectType === 'full' ? selectedElements : (projectType ? [projectType] : []);
     if (els.length === 0) {
-      return { totalLow: 0, totalHigh: 0, lines: null, addOnsTotal: { low: 0, high: 0 }, days: { low: 0, high: 0 } };
+      return { totalLow: 0, totalHigh: 0, floor: 0, lines: null, addOnsTotal: { low: 0, high: 0 }, days: { low: 0, high: 0 } };
     }
 
     let coreLow = 0;
@@ -181,9 +264,27 @@ export default function Estimator() {
     let totalSqftCalc = 0;
     let daysLow = 0.5;
     let daysHigh = 1;
+    // Flat additions from detail answers (tear-out, gas line, reinforced base…)
+    let extraFlatLow = 0;
+    let extraFlatHigh = 0;
 
     for (const el of els) {
       const sz = sizes[el];
+      const dv = (q: string) => details[`${el}.${q}`];
+      // Existing-surface tear-out — asked per element, scaled to its footprint
+      const applySurface = (sqft: number) => {
+        const surface = dv('surface');
+        if (surface === 'concrete') {
+          extraFlatLow += Math.max(1000, sqft * 4); extraFlatHigh += Math.max(2500, sqft * 7);
+          daysLow += 0.5; daysHigh += 1;
+        } else if (surface === 'pavers') {
+          extraFlatLow += Math.max(600, sqft * 2.5); extraFlatHigh += Math.max(1500, sqft * 4.5);
+          daysLow += 0.5; daysHigh += 1;
+        } else if (surface === 'deck') {
+          extraFlatLow += 800; extraFlatHigh += 2500;
+          daysLow += 0.5; daysHigh += 1;
+        }
+      };
 
       if (el === 'patio' || el === 'stone' || el === 'turf') {
         const sqft = typeof sz === 'number' ? sz : 0;
@@ -191,8 +292,16 @@ export default function Estimator() {
         let perSqft = selectedPaver.retailPerSqft;
         if (el === 'turf') perSqft = 22;
         if (el === 'stone') perSqft = Math.max(48, selectedPaver.retailPerSqft + 10);
-        const lineLow = sqft * perSqft * 0.95;
-        const lineHigh = sqft * perSqft * 1.20;
+        let lineLow = sqft * perSqft * 0.95;
+        let lineHigh = sqft * perSqft * 1.20;
+        // Layout complexity — more cuts, higher waste factor
+        const shape = dv('shape');
+        if (shape === 'curves') { lineLow *= 1.06; lineHigh *= 1.08; }
+        if (shape === 'complex') { lineLow *= 1.12; lineHigh *= 1.16; }
+        const use = dv('use');
+        if (use === 'multi') lineHigh *= 1.06;
+        if (use === 'hottub') { extraFlatLow += 1800; extraFlatHigh += 3500; }
+        applySurface(sqft);
         materialLow += lineLow * 0.45;
         materialHigh += lineHigh * 0.45;
         labourLow += lineLow * 0.40;
@@ -205,8 +314,12 @@ export default function Estimator() {
         const sqft = typeof sz === 'number' ? sz : 0;
         totalSqftCalc += sqft;
         const perSqft = selectedDeck.retailPerSqft;
-        const lineLow = sqft * perSqft * 0.95;
-        const lineHigh = sqft * perSqft * 1.20;
+        let lineLow = sqft * perSqft * 0.95;
+        let lineHigh = sqft * perSqft * 1.20;
+        // Height off grade — framing, footings, code-required railings
+        const height = dv('deckHeight');
+        if (height === 'walkout') { lineLow *= 1.18; lineHigh *= 1.18; }
+        if (height === 'mid') { extraFlatLow += 1500; extraFlatHigh += 3500; }
         materialLow += lineLow * 0.55;
         materialHigh += lineHigh * 0.55;
         labourLow += lineLow * 0.35;
@@ -220,9 +333,12 @@ export default function Estimator() {
         const hMult = sizes.wallHeight === 'Under 2ft' ? 1
           : sizes.wallHeight === '2-4ft' ? 1.5
           : sizes.wallHeight === '4-6ft' ? 2.2 : 3.2;
+        // What the wall retains — engineering and reinforcement scale with load
+        const purpose = dv('wallPurpose');
+        const pMult = purpose === 'slope' ? 1.1 : purpose === 'structure' ? 1.25 : 1;
         const perLf = tier === 'budget' ? 220 : tier === 'mid' ? 280 : 360;
-        const lineLow = lf * perLf * hMult * 0.9;
-        const lineHigh = lf * perLf * hMult * 1.15;
+        const lineLow = lf * perLf * hMult * pMult * 0.9;
+        const lineHigh = lf * perLf * hMult * pMult * 1.15;
         materialLow += lineLow * 0.45;
         materialHigh += lineHigh * 0.45;
         labourLow += lineLow * 0.40;
@@ -233,6 +349,7 @@ export default function Estimator() {
         daysHigh += (lf * hMult) / 30;
       } else if (el === 'steps') {
         const count = typeof sz === 'number' ? sz : 5;
+        applySurface(0);
         const perStep = tier === 'budget' ? 850 : tier === 'mid' ? 1100 : 1500;
         const lineLow = count * perStep * 0.9;
         const lineHigh = count * perStep * 1.15;
@@ -257,6 +374,8 @@ export default function Estimator() {
         daysLow += isFull ? 6 : 3;
         daysHigh += isFull ? 10 : 5;
       } else if (el === 'firepit') {
+        // Gas line run is its own trade
+        if (dv('fuel') === 'gas') { extraFlatLow += 1500; extraFlatHigh += 3000; }
         const lineLow = tier === 'budget' ? 1500 : tier === 'mid' ? 2500 : 3500;
         const lineHigh = lineLow * 1.5;
         materialLow += lineLow * 0.6;
@@ -296,15 +415,14 @@ export default function Estimator() {
     let conditionFlatLow = 0;
     let conditionFlatHigh = 0;
     if (conditions.slope)    { conditionFlatLow += 1500; conditionFlatHigh += 4000; daysLow += 0.5; daysHigh += 1.5; }
-    if (conditions.tearOut)  { conditionFlatLow += 1200; conditionFlatHigh += 3500; daysLow += 0.5; daysHigh += 1.5; }
     if (conditions.drainage) { conditionFlatLow += 1500; conditionFlatHigh += 3500; daysLow += 0.5; daysHigh += 1; }
 
-    coreLow = coreLow * conditionMult + conditionFlatLow;
-    coreHigh = coreHigh * conditionMult + conditionFlatHigh;
+    coreLow = coreLow * conditionMult + conditionFlatLow + extraFlatLow;
+    coreHigh = coreHigh * conditionMult + conditionFlatHigh + extraFlatHigh;
     materialLow *= conditionMult;
     materialHigh *= conditionMult;
-    labourLow = labourLow * conditionMult + conditionFlatLow * 0.6;
-    labourHigh = labourHigh * conditionMult + conditionFlatHigh * 0.6;
+    labourLow = labourLow * conditionMult + conditionFlatLow * 0.6 + extraFlatLow;
+    labourHigh = labourHigh * conditionMult + conditionFlatHigh * 0.6 + extraFlatHigh;
 
     // Excavation = roughly 18% of core for hardscape, lighter for non-hardscape
     const excavationShare = isHardscape || (projectType === 'full' && totalSqftCalc > 0) ? 0.18 : 0.10;
@@ -348,6 +466,7 @@ export default function Estimator() {
     return {
       totalLow: finalLow,
       totalHigh: finalHigh,
+      floor,
       addOnsTotal: { low: addOnsLow, high: addOnsHigh },
       days: { low: Math.ceil(daysLow * 2) / 2, high: Math.ceil(daysHigh * 2) / 2 },
       lines: {
@@ -382,17 +501,52 @@ export default function Estimator() {
         },
       },
     };
-  }, [projectType, selectedElements, sizes, conditions, location, tier, paverBrandId, deckBrandId, addOns, isHardscape, isDeck, selectedPaver, selectedDeck]);
+  }, [projectType, selectedElements, sizes, details, conditions, location, tier, paverBrandId, deckBrandId, addOns, isHardscape, isDeck, selectedPaver, selectedDeck]);
 
-  /** Confidence ±% — drops as more steps are completed. */
+  /** Confidence ±% — earned by ANSWERS, not by page-turning. Every detail question,
+   *  the conditions review, location, material choice, and a photo each tighten the band. */
+  const answeredDetails = useMemo(() => {
+    const els = projectType === 'full' ? selectedElements : (projectType ? [projectType] : []);
+    const keys = els.flatMap(el => (DETAIL_QUESTIONS[el] ?? []).map(q => `${el}.${q.id}`));
+    return keys.filter(k => details[k]).length;
+  }, [projectType, selectedElements, details]);
+
   const confidence = useMemo(() => {
-    let c = 25;
-    if (step >= 4) c -= 5; // location
-    if (step >= 5) c -= 3; // brand
-    if (step >= 6) c -= 3; // add-ons
-    if (photoFile) c -= 2;
-    return Math.max(8, c);
-  }, [step, photoFile]);
+    let c = 30;
+    c -= Math.min(10, answeredDetails * 2.5); // project-specific answers
+    if (step >= 4) c -= 3;  // site conditions reviewed
+    if (step >= 5) c -= 4;  // location set
+    if (step >= 6) c -= 3;  // material tier + brand chosen
+    if (photoFile) c -= 3;
+    return Math.max(8, Math.round(c));
+  }, [answeredDetails, step, photoFile]);
+
+  /** Displayed range = core estimate widened by remaining uncertainty.
+   *  Starts deliberately wide and visibly narrows as questions get answered —
+   *  the narrowing is the reward for answering. */
+  const display = useMemo(() => {
+    if (estimate.totalLow <= 0) return { low: 0, high: 0 };
+    const spread = Math.max(0, (confidence - 8) / 100);
+    const low = Math.max(estimate.floor, Math.round((estimate.totalLow * (1 - spread * 0.45)) / 500) * 500);
+    const high = Math.round((estimate.totalHigh * (1 + spread * 0.9)) / 500) * 500;
+    return { low, high };
+  }, [estimate.totalLow, estimate.totalHigh, estimate.floor, confidence]);
+
+  // Transient "+$2,400" chip when an answer moves the estimate — makes every input visibly count.
+  const mid = (estimate.totalLow + estimate.totalHigh) / 2;
+  const prevMidRef = useRef(0);
+  const deltaTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [delta, setDelta] = useState<number | null>(null);
+  useEffect(() => {
+    const prev = prevMidRef.current;
+    prevMidRef.current = mid;
+    if (prev <= 0 || mid <= 0 || step < 2 || step >= TOTAL_STEPS) return;
+    const diff = mid - prev;
+    if (Math.abs(diff) < 250) return;
+    setDelta(diff);
+    if (deltaTimer.current) clearTimeout(deltaTimer.current);
+    deltaTimer.current = setTimeout(() => setDelta(null), 2600);
+  }, [mid, step]);
 
   const onPhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -461,6 +615,50 @@ export default function Estimator() {
     }
   };
 
+  /** The site-visit questions, one card row per question, each with a "why we ask" line
+   *  and a visible price effect per option. */
+  const renderDetailQuestions = (el: string) => {
+    const qs = DETAIL_QUESTIONS[el];
+    if (!qs || qs.length === 0) return null;
+    return (
+      <div className="space-y-9 mt-10 pt-8 border-t border-brand-gold/10">
+        {qs.map(q => {
+          const key = `${el}.${q.id}`;
+          return (
+            <div key={key}>
+              <div className="font-sans text-[13px] text-brand-bone mb-1.5">{q.label}</div>
+              <div className="font-sans text-[11px] font-normal text-brand-bonewhite/70 mb-4 leading-relaxed">
+                Why we ask: {q.why}
+              </div>
+              <div className={cn(
+                "grid grid-cols-2 gap-2.5",
+                q.options.length >= 4 ? "md:grid-cols-4" : q.options.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"
+              )}>
+                {q.options.map(o => {
+                  const isSelected = details[key] === o.id;
+                  return (
+                    <button
+                      type="button"
+                      key={o.id}
+                      onClick={() => setDetail(el, q.id, o.id)}
+                      className={cn(
+                        "p-3.5 rounded-2xl border text-left transition-all duration-200",
+                        isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                      )}
+                    >
+                      <div className="font-sans text-[12px] text-brand-bone leading-snug mb-1">{o.label}</div>
+                      <div className={cn("font-sans text-[10px]", isSelected ? "text-brand-gold" : "text-brand-bonewhite/60")}>{o.hint}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const canAdvance = () => {
     if (step === 1) {
       if (!projectType) return false;
@@ -524,14 +722,28 @@ export default function Estimator() {
           ))}
         </div>
 
-        {/* Desktop running estimate — surfaces the number from step 2 so the remaining steps read as optional refinement, not a gate. */}
-        {step >= 2 && step < TOTAL_STEPS && estimate.totalLow > 0 && (
+        {/* Desktop running estimate — deliberately wide early, visibly narrowing as answers land.
+            The breakdown shortcut only appears once the pricing-relevant questions are behind them. */}
+        {step >= 2 && step < TOTAL_STEPS && display.low > 0 && (
           <div className="hidden md:flex items-center justify-between gap-6 mb-12 px-6 py-4 rounded-2xl bg-gradient-to-r from-brand-gold/10 to-transparent border border-brand-gold/20">
             <div className="flex items-baseline gap-5">
               <div>
                 <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold mb-1.5">Your range so far</div>
-                <div className="font-display text-3xl text-brand-bone leading-none">
-                  ${(estimate.totalLow / 1000).toFixed(0)}k – ${(estimate.totalHigh / 1000).toFixed(0)}k
+                <div className="font-display text-3xl text-brand-bone leading-none flex items-baseline gap-3">
+                  ${(display.low / 1000).toFixed(0)}k – ${(display.high / 1000).toFixed(0)}k
+                  <AnimatePresence>
+                    {delta !== null && (
+                      <motion.span
+                        key="delta"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        className={cn("font-sans text-[13px] font-medium", delta > 0 ? "text-brand-gold" : "text-emerald-500")}
+                      >
+                        {delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta / 100) * 100).toLocaleString()}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
               <div className="hidden lg:block pl-5 border-l border-brand-gold/15">
@@ -539,18 +751,24 @@ export default function Estimator() {
                 <div className="font-display text-3xl text-brand-bone leading-none">±{confidence}%</div>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="hidden lg:block font-sans text-[11px] font-normal text-brand-muted max-w-[180px] leading-snug">
-                Keep going to tighten the range — or jump straight to the breakdown.
+            {step >= 5 ? (
+              <div className="flex items-center gap-4">
+                <span className="hidden lg:block font-sans text-[11px] font-normal text-brand-muted max-w-[180px] leading-snug">
+                  Keep going to tighten the range — or jump straight to the breakdown.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { fireStep(7); setStep(7); }}
+                  className="btn-secondary !rounded-full whitespace-nowrap !py-3 !px-6"
+                >
+                  Skip to full breakdown →
+                </button>
+              </div>
+            ) : (
+              <span className="font-sans text-[11px] font-normal text-brand-muted max-w-[200px] leading-snug text-right">
+                Every answer narrows this range — we price your project, not just your square footage.
               </span>
-              <button
-                type="button"
-                onClick={() => { fireStep(7); setStep(7); }}
-                className="btn-secondary !rounded-full whitespace-nowrap !py-3 !px-6"
-              >
-                Skip to full breakdown →
-              </button>
-            </div>
+            )}
           </div>
         )}
 
@@ -621,13 +839,17 @@ export default function Estimator() {
                             {PROJECT_TYPES.find(p => p.id === el)?.label}
                           </h5>
                           {renderSizeInputs(el)}
+                          {renderDetailQuestions(el)}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="max-w-xl">{renderSizeInputs(projectType!)}</div>
+                <div>
+                  <div className="max-w-xl">{renderSizeInputs(projectType!)}</div>
+                  {renderDetailQuestions(projectType!)}
+                </div>
               )}
             </motion.div>
           )}
@@ -642,17 +864,23 @@ export default function Estimator() {
                     key={cond.id}
                     onClick={() => toggleCondition(cond.id)}
                     className={cn(
-                      "flex items-center gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer",
+                      "flex items-start gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer",
                       conditions[cond.id] ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     <div className={cn(
-                      "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                      "mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0",
                       conditions[cond.id] ? "bg-brand-gold border-brand-gold" : "border-brand-gold/60"
                     )}>
                       {conditions[cond.id] && <Check size={14} className="text-brand-black" />}
                     </div>
-                    <span className="font-sans text-[13px] text-brand-bone">{cond.label}</span>
+                    <div className="flex-1">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="font-sans text-[13px] text-brand-bone">{cond.label}</span>
+                        <span className="font-display text-[13px] text-brand-gold whitespace-nowrap">{cond.hint}</span>
+                      </div>
+                      <div className="font-sans text-[11px] font-normal text-brand-bonewhite/70 mt-1">{cond.why}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -817,7 +1045,7 @@ export default function Estimator() {
                 </div>
                 <h4 className="font-display text-xl text-brand-bone mb-2">Upload yard photos (optional)</h4>
                 <p className="font-sans text-[12px] font-normal text-brand-bonewhite/80 mb-5 leading-relaxed">
-                  One photo of the project area helps us account for grade, access, and existing surfaces — drops your confidence range another 2%.
+                  One photo of the project area helps us account for grade, access, and existing surfaces — tightens your confidence range another 3%.
                 </p>
                 {photoFile ? (
                   <div className="bg-brand-cream border border-brand-gold/30 rounded-2xl p-4 flex items-center justify-between">
@@ -866,6 +1094,16 @@ export default function Estimator() {
                 city={selectedLocation.name}
               />
 
+              {details['wall.wallPurpose'] === 'structure' && (
+                <div className="mt-6 px-6 py-4 rounded-2xl bg-brand-gold/8 border border-brand-gold/25">
+                  <p className="font-sans text-[12px] font-normal text-brand-bonewhite/85 leading-relaxed">
+                    <span className="text-brand-gold">Heads up:</span> walls supporting a driveway or structure
+                    typically require engineered drawings over 1 m. We handle the engineering — it's already
+                    reflected in the range above.
+                  </p>
+                </div>
+              )}
+
               {addOns.length > 0 && (
                 <div className="mt-8 bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-6">
                   <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Selected Add-ons</div>
@@ -896,6 +1134,7 @@ export default function Estimator() {
                   addOns,
                   hasPhotos: !!photoFile,
                   conditions: Object.entries(conditions).filter(([, v]) => v).map(([k]) => k),
+                  details,
                 }} />
                 <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-6 md:p-8 flex flex-col justify-center">
                   <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-3">Project Timeline</div>
@@ -947,19 +1186,24 @@ export default function Estimator() {
         )}
       </div>
 
-      {/* Mobile sticky bar showing running estimate */}
-      {step >= 2 && step < TOTAL_STEPS && estimate.totalLow > 0 && (
+      {/* Mobile sticky bar showing the narrowing running estimate */}
+      {step >= 2 && step < TOTAL_STEPS && display.low > 0 && (
         <MobileStickyBar
-          low={estimate.totalLow}
-          high={estimate.totalHigh}
-          onContinue={() => { fireStep(7); setStep(7); }}
+          low={display.low}
+          high={display.high}
+          delta={delta}
+          confidence={confidence}
+          label={step >= 5 ? 'See Full Breakdown →' : 'Continue →'}
+          onContinue={step >= 5 ? () => { fireStep(7); setStep(7); } : nextStep}
         />
       )}
     </div>
   );
 }
 
-function MobileStickyBar({ low, high, onContinue }: { low: number; high: number; onContinue: () => void }) {
+function MobileStickyBar({ low, high, delta, confidence, label, onContinue }: {
+  low: number; high: number; delta: number | null; confidence: number; label: string; onContinue: () => void;
+}) {
   return (
     <motion.div
       initial={{ y: 80, opacity: 0 }}
@@ -968,16 +1212,29 @@ function MobileStickyBar({ low, high, onContinue }: { low: number; high: number;
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-brand-gold/30 px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
     >
       <div className="min-w-0">
-        <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">Running Estimate</div>
-        <div className="font-display text-lg text-brand-bone truncate">
+        <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">Running Estimate · ±{confidence}%</div>
+        <div className="font-display text-lg text-brand-bone truncate flex items-baseline gap-2">
           ${(low / 1000).toFixed(0)}k – ${(high / 1000).toFixed(0)}k
+          <AnimatePresence>
+            {delta !== null && (
+              <motion.span
+                key="delta"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className={cn("font-sans text-[11px] font-medium", delta > 0 ? "text-brand-gold" : "text-emerald-400")}
+              >
+                {delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta / 100) * 100).toLocaleString()}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
       </div>
       <button
         onClick={onContinue}
         className="bg-brand-gold text-brand-black font-sans text-[11px] uppercase tracking-wider px-4 py-3 rounded-2xl font-medium shrink-0"
       >
-        See Full Breakdown →
+        {label}
       </button>
     </motion.div>
   );
