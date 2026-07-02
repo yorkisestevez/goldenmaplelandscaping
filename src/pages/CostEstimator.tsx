@@ -12,7 +12,7 @@ export default function CostEstimator() {
         "name": "How much does an interlocking patio cost in Barrie?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "A premium interlocking patio in Barrie typically ranges from $25,000 to $55,000 depending on size, the Permacon paver chosen (Melville, Cassara, Mondrian Plus, Mega Melville, Brooklyn, and more), site conditions like slope or tear-out, and any add-ons like lighting or fire features. Our minimum hardscape investment is $20,000 because we install on a 12–16\" base for true freeze-thaw durability."
+          "text": "A premium interlocking patio in Barrie typically ranges from $25,000 to $55,000 depending on size, the Permacon paver chosen (Melville, Cassara, Mondrian Plus, Mega Melville, Brooklyn, and more), site conditions like slope or tear-out, and any add-ons like lighting or fire features. Our minimum hardscape investment is $12,000 because we install on a 12–16\" base for true freeze-thaw durability."
         }
       },
       {
@@ -52,9 +52,9 @@ export default function CostEstimator() {
             <p>
               Every Golden Maple project quote is built bottom-up from real Carr Landscape Depot pricing — the same supplier we've been using since day one. The estimator above uses 2026 trade rates for Permacon pavers and TimberTech composite decking, plus current bin disposal and aggregate costs.
             </p>
-            <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Why our minimum is $20,000</h3>
+            <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Why our minimum is $12,000</h3>
             <p>
-              We install hardscape on a 12–16" open-graded base — twice as deep as most competitors. That depth is what survives Ontario freeze-thaw cycles. A shallower base might shave $5,000 off the upfront price, but stones start sinking inside three years. We won't build that, which is why our minimum project size is $20,000 ($25,000 for decking).
+              We install hardscape on a 12–16" open-graded base — twice as deep as most competitors. That depth is what survives Ontario freeze-thaw cycles. A shallower base might shave a few thousand off the upfront price, but stones start sinking inside three years. We won't build that, which is why our minimum project size is $12,000 ($25,000 for decking).
             </p>
             <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Permacon material tiers, explained</h3>
             <ul className="space-y-2">
