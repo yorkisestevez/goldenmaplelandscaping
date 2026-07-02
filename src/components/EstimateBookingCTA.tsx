@@ -24,7 +24,9 @@ function CTACard({ href, className, children }: { href: string; className: strin
 
 export default function EstimateBookingCTA() {
   const stripeDesignUrl = (import.meta.env.VITE_STRIPE_DESIGN_URL as string | undefined)?.trim() || '';
-  const freeHref = '/contact';
+  // Free track = the documented lead process: free 15-min discovery call (/book).
+  // Sending people to /contact made them re-type everything the estimator already captured.
+  const freeHref = '/book';
   const designHref = stripeDesignUrl || '/contact?type=design';
 
   return (
@@ -51,18 +53,18 @@ export default function EstimateBookingCTA() {
             <div className="w-10 h-10 rounded-xl bg-brand-gold/15 border border-brand-gold/30 flex items-center justify-center">
               <Calendar size={18} className="text-brand-gold" strokeWidth={1.75} />
             </div>
-            <span className="font-display text-2xl text-brand-bone tracking-tight">Written Estimate</span>
+            <span className="font-display text-2xl text-brand-bone tracking-tight">15-Min Discovery Call</span>
           </div>
           <p className="font-sans text-[13px] font-light text-brand-muted mb-6 flex-1 leading-relaxed">
-            Share your budget and project details on the contact form. Yorkis comes back personally with scope, timeline, and a written estimate within 24 hours — no sales call required.
+            A quick phone call with Yorkis to confirm scope, timeline, and budget fit for your project. No site visit, no sales pitch — just an honest read on your numbers.
           </p>
           <ul className="space-y-2 mb-7 font-sans text-[12px] font-light text-brand-bone">
-            <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Three minutes to fill out the form</li>
-            <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Written response within 24 hours</li>
+            <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Pick a time that works — 15 minutes, by phone</li>
+            <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Your estimator numbers reviewed live</li>
             <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Honest read if we're not the right fit</li>
           </ul>
           <div className="flex items-center justify-between mt-auto pt-5 border-t border-brand-gold/15">
-            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold">Send My Budget</span>
+            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold">Book My Call</span>
             <Calendar size={16} className="text-brand-gold group-hover:translate-x-1 transition-transform" strokeWidth={1.5} />
           </div>
         </CTACard>
