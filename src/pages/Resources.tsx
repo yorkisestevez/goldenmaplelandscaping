@@ -4,6 +4,14 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
+  {
+    slug: "retaining-wall-engineer-required-ontario",
+    title: "Retaining Wall Engineer Required in Ontario: Height Rules Explained",
+    excerpt: "In Ontario, retaining walls over 1.0 metre typically require a permit and P.Eng. drawings — surcharge loads and Barrie clay can lower that threshold.",
+    category: "Regulations",
+    readTime: "10 min",
+    image: "/images/projects/garden-wall.JPEG",
+  },
                   {
     slug: "retaining-wall-cost-oro-medonte",
     title: "Retaining Wall Cost in Oro-Medonte: 2026 Price Breakdown",

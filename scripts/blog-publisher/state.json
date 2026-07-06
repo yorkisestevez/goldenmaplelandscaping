@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "lastRunAt": "2026-06-29T00:00:00.000Z",
+    "lastRunAt": "2026-07-06T10:00:00.000Z",
     "usedTopicIds": [
         "auto-001",
         "auto-002",
@@ -9,10 +9,11 @@
         "auto-005",
         "auto-006",
         "auto-007",
-        "auto-008"
+        "auto-008",
+        "auto-009"
     ],
     "publishedSlugs": [],
-    "currentDraft": "retaining-wall-cost-oro-medonte",
+    "currentDraft": "retaining-wall-engineer-required-ontario",
     "history": [
         {
             "topicId": "auto-001",
@@ -145,6 +146,20 @@
                 "linkCount": 8,
                 "hasTable": true,
                 "numericCount": 26
+            },
+            "generatedBy": "claude-cloud-routine"
+        },
+        {
+            "topicId": "auto-009",
+            "slug": "retaining-wall-engineer-required-ontario",
+            "at": "2026-07-06T10:00:00.000Z",
+            "validation": {
+                "ok": true,
+                "errors": [],
+                "wordCount": 2644,
+                "linkCount": 9,
+                "hasTable": true,
+                "numericCount": 34
             },
             "generatedBy": "claude-cloud-routine"
         }

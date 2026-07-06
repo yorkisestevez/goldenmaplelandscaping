@@ -72,6 +72,8 @@ export default [
   route('resources/concrete-vs-interlocking-patio-barrie', 'pages/blog/ConcreteVsInterlockingPatioBarrie.tsx'),
   route('resources/natural-stone-vs-pavers-barrie', 'pages/blog/NaturalStoneVsPaversBarrie.tsx'),
   route('resources/outdoor-living-planning-innisfil', 'pages/blog/OutdoorLivingPlanningInnisfil.tsx'),
+  route('resources/retaining-wall-cost-oro-medonte', 'pages/blog/RetainingWallCostOroMedonte.tsx'),
+  route('resources/retaining-wall-engineer-required-ontario', 'pages/blog/RetainingWallEngineerRequiredOntario.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),
