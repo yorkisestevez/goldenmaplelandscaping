@@ -40,6 +40,9 @@ export default [
   // Tier landing pages
   route('patios-barrie', 'pages/PatiosBarrie.tsx'),
   route('outdoor-living-barrie', 'pages/OutdoorLivingBarrie.tsx'),
+  route('premium-patio-rebuild-barrie', 'pages/PremiumPatioRebuildBarrie.tsx'),
+  route('sloped-backyard-solutions-barrie', 'pages/SlopedBackyardSolutionsBarrie.tsx'),
+  route('full-backyard-transformations-barrie', 'pages/FullBackyardTransformationsBarrie.tsx'),
   route('luxury-landscape-barrie', 'pages/LuxuryLandscapeBarrie.tsx'),
 
   // Legal

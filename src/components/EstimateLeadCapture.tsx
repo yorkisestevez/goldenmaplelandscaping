@@ -6,6 +6,7 @@ import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
+import { scoreGoldenMapleLead } from '../utils/leadScoring';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -56,6 +57,17 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
     setErrorMsg('');
 
     const eventId = genEventId();
+    const leadScore = scoreGoldenMapleLead({
+      projectType: estimate.projectType,
+      selectedElements: estimate.selectedElements,
+      conditions: estimate.conditions,
+      details: Object.entries(estimate.details).map(([k, v]) => `${k}=${v}`).join(', '),
+      city: estimate.city,
+      sqft: estimate.sqft,
+      totalLow: estimate.totalLow,
+      totalHigh: estimate.totalHigh,
+      hasPhotos: estimate.hasPhotos,
+    });
     const payload = {
       'form-name': 'cost-estimator',
       source: 'cost-estimator',
@@ -77,6 +89,9 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
       has_photos: String(estimate.hasPhotos),
       site_conditions: estimate.conditions.join(','),
       project_details: Object.entries(estimate.details).map(([k, v]) => `${k}=${v}`).join(', '),
+      lead_score: String(leadScore.score),
+      lead_tier: leadScore.tier,
+      lead_score_reasons: leadScore.reasons.join(','),
     };
 
     if (import.meta.env.DEV) {

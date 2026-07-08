@@ -8,6 +8,7 @@ import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
+import { scoreGoldenMapleLead } from '../utils/leadScoring';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -23,7 +24,7 @@ export default function Contact() {
     name: '',
     phone: '',
     email: '',
-    service: 'Complete Backyard Renovation',
+    service: 'Backyard Outdoor Living / Premium Patio',
     budget: '',
     details: '',
     'bot-field': '',
@@ -59,6 +60,11 @@ export default function Contact() {
       .join(' · ');
 
     const eventId = genEventId();
+    const leadScore = scoreGoldenMapleLead({
+      budget: form.budget,
+      service: form.service,
+      details: form.details,
+    });
     const payload = {
       'form-name': 'contact',
       event_id: eventId,
@@ -66,6 +72,9 @@ export default function Contact() {
       ...getBehaviorFields(),
       ...form,
       details: enrichedDetails || form.details,
+      lead_score: String(leadScore.score),
+      lead_tier: leadScore.tier,
+      lead_score_reasons: leadScore.reasons.join(','),
     };
 
     // Vite dev server doesn't process Netlify form submissions — short-circuit
@@ -96,8 +105,8 @@ export default function Contact() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Contact Golden Maple Landscaping | Free Quote Barrie"
-        description="Get a free landscaping quote in Barrie & Simcoe County. Call 705-500-3581 or fill out our form. We respond within 24 hours. Premium outdoor construction."
+        title="Start a Golden Maple Project | Premium Hardscape Barrie"
+        description="Share your budget and scope for a premium patio, retaining wall, sloped-yard fix, or full backyard transformation in Barrie and Simcoe County."
         canonical="https://goldenmaplelandscaping.ca/contact"
       />
       
@@ -203,13 +212,13 @@ export default function Contact() {
                         onChange={onChange}
                         className="w-full bg-brand-nearblack border-b border-brand-dim/20 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors appearance-none cursor-pointer font-light"
                       >
-                        <option>Complete Backyard Renovation</option>
-                        <option>Interlocking Stone & Patios</option>
-                        <option>Retaining Walls</option>
-                        <option>Landscape Design</option>
-                        <option>Composite Decking</option>
-                        <option>Pool Surround & Features</option>
-                        <option>Other Service</option>
+                        <option>Backyard Outdoor Living / Premium Patio</option>
+                        <option>Patio + Retaining Wall / Steps / Drainage</option>
+                        <option>Sloped Backyard / Retaining Wall Solution</option>
+                        <option>Premium Patio Rebuild</option>
+                        <option>Full Backyard Transformation</option>
+                        <option>Front Entrance / Walkway Package</option>
+                        <option>Other Hardscape Project</option>
                       </select>
                     </div>
                     <div className="space-y-4">
@@ -319,7 +328,7 @@ export default function Contact() {
                     <Award size={18} className="text-brand-gold" strokeWidth={1.5} /> $5M Liability
                   </div>
                   <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <CheckCircle size={18} className="text-brand-gold" strokeWidth={1.5} /> 10-Year Warranty
+                    <CheckCircle size={18} className="text-brand-gold" strokeWidth={1.5} /> 5-Year Structural Warranty
                   </div>
                   <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
                     <CheckCircle size={18} className="text-brand-gold" strokeWidth={1.5} /> Engineering Standard

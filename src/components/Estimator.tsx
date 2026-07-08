@@ -13,6 +13,7 @@ import EstimateLeadCapture from './EstimateLeadCapture';
 import EstimateBookingCTA from './EstimateBookingCTA';
 import { PAVER_BRANDS, DECK_BRANDS, ADD_ONS, BIN_COST, estimateBins, defaultPaverForTier, sortPaversForDisplay, type PaverTier } from '../data/carrPrices';
 import { ESTIMATOR_LOCATIONS, ZONE_SURCHARGE, type EstimatorLocationKey } from '../data/locations';
+import { applyDailyProductionFloor, getEstimatorMinimumFloor, getEstimatorRangeCopy } from '../utils/pricingDoctrine';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -454,12 +455,21 @@ export default function Estimator() {
       daysHigh += addOns.length * 1;
     }
 
+    const flooredLabour = applyDailyProductionFloor({
+      labourLow,
+      labourHigh,
+      daysLow,
+      daysHigh,
+    });
+    labourLow = flooredLabour.labourLow;
+    labourHigh = flooredLabour.labourHigh;
+
     // Total = core + zone surcharge + add-ons (excavation/labour/materials/disposal/restoration are slices of core; we'll show breakdown but total is the higher-level sum)
     const totalLow = Math.round((excavationLow + materialLow + labourLow + disposalLow + restorationLow + surcharge + addOnsLow) / 500) * 500;
     const totalHigh = Math.round((excavationHigh + materialHigh + labourHigh + disposalHigh + restorationHigh + surcharge + addOnsHigh) / 500) * 500;
 
-    // Hard floors — real minimum job size Golden Maple will accept per category.
-    const floor = isDeck ? 25000 : isHardscape ? 12000 : projectType === 'full' ? 20000 : 8000;
+    // Hard floors — real minimum job size Golden Maple wants the online funnel to attract.
+    const floor = getEstimatorMinimumFloor(projectType, selectedElements);
     const finalLow = Math.max(floor, totalLow);
     const finalHigh = Math.max(floor + 5000, totalHigh);
 
@@ -1163,7 +1173,7 @@ export default function Estimator() {
               </div>
 
               <p className="mt-8 font-sans text-xs font-normal text-brand-bonewhite/80 text-center max-w-3xl mx-auto leading-[1.6]">
-                Estimates use 2026 Carr Landscape Depot pricing for Simcoe County. <span className="text-brand-gold font-normal">{isDeck ? `Decking projects require a ${fmt(estimate.floor)} minimum.` : isHardscape ? `Hardscape projects require a ${fmt(estimate.floor)} minimum.` : projectType === 'full' ? `Full backyard transformations require a ${fmt(estimate.floor)} minimum.` : `This project type requires a ${fmt(estimate.floor)} minimum.`}</span> Final pricing depends on site measurement, material availability, and design complexity.
+                {getEstimatorRangeCopy(projectType, selectedElements)} <span className="text-brand-gold font-normal">Minimum online planning floor: {fmt(estimate.floor)}.</span> Final pricing depends on site measurement, material availability, access, drainage, and design complexity.
               </p>
             </motion.div>
           )}

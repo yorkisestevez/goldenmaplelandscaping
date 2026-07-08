@@ -4,14 +4,14 @@ import { Check, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import Testimonials from '../components/Testimonials';
 
-// Tier 1 — Foundation projects ($12K-$35K).
-// Hook: cost transparency + base-depth differentiator.
-// Primary CTA: cost estimator (low-commitment, matches Foundation buyer intent).
+// Premium patio projects ($35K-$75K).
+// Hook: cost transparency + base-depth differentiator + budget qualification.
+// Primary CTA: cost estimator to pre-frame serious outdoor-room economics.
 
 const FAQ = [
   {
     q: "What does a patio actually cost in Barrie in 2026?",
-    a: "Most Foundation-tier patios we build run $14,000-$32,000. The range depends on size (200-700 sqft), paver line (Techo-Bloc Blu 60 vs Permacon Lineo vs higher-end series), and how much excavation the soil demands. The cost estimator above gives you a tight range in 60 seconds — no email gate, no phone call required.",
+    a: "Most premium patio and outdoor-room projects we want to attract run $35,000-$75,000. The range depends on size, access, paver line, excavation depth, drainage, steps, lighting, borders, and whether the patio is paired with a wall or fire zone. The cost estimator gives you a realistic planning range before we book time on site.",
   },
   {
     q: "Why is the base depth a big deal?",
@@ -19,11 +19,11 @@ const FAQ = [
   },
   {
     q: "Do you build smaller patios? What's the minimum?",
-    a: "We've done 180 sqft side-yard patios in the south end and 280 sqft walkout pads off back doors in Painswick. There's no hard minimum — what we won't do is cut corners on the base just to hit a low price. If a small patio is what you need, you'll still get the 12-inch clear-stone base and the 5-year warranty.",
+    a: "We can build smaller surfaces when they are part of a larger entrance, walkway, or backyard plan. Standalone small patios are usually not the best fit unless the scope can support proper excavation, base prep, mobilization, cleanup, and warranty. Our online patio planning floor is now $35,000 so the project has room to be built properly.",
   },
   {
     q: "What's the difference between this tier and 'outdoor living'?",
-    a: "Foundation means the patio is the project. Outdoor living means the patio is one element of a larger plan — usually paired with a pergola, lighting, retaining wall, or fire feature, designed as a system rather than installed in pieces. If you're thinking about more than one element, the Outdoor Living page is a better starting point.",
+    a: "A premium patio means the patio is the main build: a serious hardscape surface with proper base, drainage thinking, and possible steps, borders, lighting, or fire. Outdoor living means the patio is one element of a larger system — usually paired with walls, pergola, kitchen, lighting, or multi-zone family use.",
   },
 ];
 
@@ -38,8 +38,8 @@ export default function PatiosBarrie() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
-        title="Patios in Barrie | Real Cost Range + 12-Inch Base | Golden Maple"
-        description="Foundation-tier patio installations in Barrie and Simcoe County. Real cost ranges, 3/4 inch clear stone bases, 5-year sink and settlement warranty. See your cost in 60 seconds."
+        title="Premium Patios in Barrie | $35K-$75K Outdoor Rooms | Golden Maple"
+        description="Premium patio and outdoor-room projects in Barrie and Simcoe County. Real planning ranges, clear-stone bases, drainage-aware construction, and a 5-year structural warranty."
         canonical="https://goldenmaplelandscaping.ca/patios-barrie"
       />
 
@@ -53,14 +53,14 @@ export default function PatiosBarrie() {
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
-                Foundation Projects · $14K-$32K
+                Premium Patio Projects · $35K-$75K
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 Patios that survive <br />
                 <span className="italic text-brand-gold">20 Simcoe winters.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
-                Real cost range, no email gate, no salesperson on the other end. Most Foundation patios in Barrie run between $14,000 and $32,000 depending on size and paver line. The cost estimator below gives you a tight range in 60 seconds. If the number works for you, we book a site walk. If it doesn't, you've lost a minute.
+                Real cost range, no sales pressure. Most premium patio projects Golden Maple is built to serve run between $35,000 and $75,000 depending on size, access, base prep, drainage, steps, and material choice. The cost estimator gives you a planning range first. If the number works, we book the site walk.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/cost-estimator?type=patio" className="btn-primary">See My Cost Range</Link>
@@ -190,7 +190,7 @@ export default function PatiosBarrie() {
             <span className="text-brand-gold italic">Then we talk.</span>
           </h2>
           <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
-            Real cost range in 60 seconds. No email. No callback queue. If the number works, we book a site walk. If not, no hard feelings.
+            Real planning range in 60 seconds. If the number works, we book a site walk. If the project needs walls, drainage, lighting, or a fire zone, we scope it as an outdoor room instead of pretending it is just pavers.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/cost-estimator?type=patio" className="btn-primary px-12 py-4">See My Cost Range</Link>

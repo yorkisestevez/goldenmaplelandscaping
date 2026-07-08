@@ -1,0 +1,65 @@
+# Google Ads Negative Keyword List — Golden Maple
+
+Use this to protect budget from low-fit leads. Apply carefully as phrase/exact negatives after review.
+
+## Maintenance / Low Intent
+lawn care
+lawn mowing
+grass cutting
+weekly maintenance
+snow removal
+leaf cleanup
+garden maintenance
+weed control
+fertilizer
+sod only
+mulch only
+planting only
+flower beds
+hedge trimming
+
+## Cheap / Discount Intent
+cheap
+cheapest
+budget landscaper
+discount
+free materials
+cash job
+student
+DIY
+how to
+repair kit
+paver repair kit
+
+## Small Repair / Low Scope
+small repair
+interlock repair only
+one stone
+reset pavers
+lift and relay
+polymeric sand only
+sealing only
+pressure washing
+crack repair
+minor repair
+
+## Non-Core Services
+fence repair
+pool installation
+hot tub installation
+deck repair
+asphalt driveway
+concrete driveway only
+irrigation repair
+pond maintenance
+tree removal
+
+## Employment / Supplier Noise
+jobs
+career
+salary
+hiring
+supplier
+wholesale
+used pavers
+free pavers

@@ -50,8 +50,8 @@ export default function OutdoorLivingBarrie() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
-        title="Outdoor Living in Barrie | Integrated Patio, Pergola, Fire | Golden Maple"
-        description="Signature-tier outdoor living projects in Barrie, Innisfil, and Oro-Medonte. Integrated patio, pergola, lighting, fire features. Engineered as one system, not installed in pieces. Project starts $42K."
+        title="Outdoor Living in Barrie | $40K-$90K Patio Systems | Golden Maple"
+        description="Premium outdoor living projects in Barrie, Innisfil, Springwater, and Oro-Medonte. Patio, walls, steps, lighting, fire, drainage, and pergola elements engineered as one system."
         canonical="https://goldenmaplelandscaping.ca/outdoor-living-barrie"
       />
 
@@ -65,17 +65,17 @@ export default function OutdoorLivingBarrie() {
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
-                Signature Projects · $42K-$90K
+                Outdoor Living Projects · $40K-$90K+
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 Outdoor living, <br />
                 <span className="italic text-brand-gold">engineered for 20 winters.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
-                Patio, pergola, fire feature, lighting, planting — designed as one system before anything gets excavated. Most contractors quote each piece separately and bolt them together. We plan the footings, conduit runs, drainage, and grade as a single build so it doesn't look added-onto five years from now. Signature projects start at $42,000.
+                Patio, wall, steps, fire feature, lighting, planting, shade — designed as one system before anything gets excavated. Most contractors quote each piece separately and bolt them together. We plan footings, conduit runs, drainage, access, and grade as a single build so it doesn't look added-on five years from now.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/buyers-guide" className="btn-primary">Get the Buyer's Guide</Link>
+                <Link to="/cost-estimator?type=full" className="btn-primary">See Project Cost Range</Link>
                 <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
                   Portfolio <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
@@ -207,10 +207,10 @@ export default function OutdoorLivingBarrie() {
             <span className="text-brand-gold italic">Book the walk when you're ready.</span>
           </h2>
           <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
-            The buyer's guide covers material choices, what to ask any contractor before signing, and the 7 line items that quietly add 20% to a quote.
+            Start with a realistic planning range. Most outdoor living builds land between $40K and $90K+, with full backyard transformations moving past $90K once walls, kitchen, lighting, fire, or major grade correction enter the scope.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/buyers-guide" className="btn-primary px-12 py-4">Get the Buyer's Guide</Link>
+            <Link to="/cost-estimator?type=full" className="btn-primary px-12 py-4">See Project Cost Range</Link>
             <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or book a site walk →</Link>
           </div>
         </div>
