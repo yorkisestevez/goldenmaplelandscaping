@@ -6,7 +6,6 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { trackEngagement } from '../utils/analytics';
 import ChatWidget from './ChatWidget';
-import SophieVoice from './SophieVoice';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -515,7 +514,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-grow overflow-x-hidden">{children}</main>
       <Footer />
       {mounted && <ChatWidget />}
-      {mounted && <SophieVoice />}
     </div>
   );
 }
