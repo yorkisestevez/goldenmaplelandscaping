@@ -70,15 +70,24 @@ function ghJson(args, opts = {}) {
   catch (e) { throw new Error(`gh JSON parse failed for [${args}]: ${e.message}\nraw: ${out.slice(0, 400)}`); }
 }
 
-function httpsGet(url) {
+function httpsGet(url, _hops = 0) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
     const req = https.request(
       { hostname: u.hostname, path: u.pathname + u.search, method: 'GET', timeout: 15000 },
       (res) => {
+        // Follow redirects (up to 5 hops) so we judge the FINAL status, not the
+        // hop. Netlify/Remix 301 the no-trailing-slash URL to the trailing-slash
+        // canonical — a healthy 200 lives one hop away. Treating the 301 itself
+        // as "broken" was a false-positive factory. Resolve relative Locations.
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && _hops < 5) {
+          res.resume(); // drain
+          const next = new URL(res.headers.location, url).toString();
+          return resolve(httpsGet(next, _hops + 1));
+        }
         let body = '';
         res.on('data', (c) => (body += c));
-        res.on('end', () => resolve({ status: res.statusCode, body }));
+        res.on('end', () => resolve({ status: res.statusCode, body, finalUrl: url }));
       }
     );
     req.on('error', reject);
