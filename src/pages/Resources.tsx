@@ -5,6 +5,14 @@ import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
   {
+    slug: "backyard-drainage-solutions-barrie",
+    title: "Backyard Drainage Barrie: 6 Solutions for Wet Yards That Actually Work",
+    excerpt: "Wet backyard in Barrie? We cover 6 drainage solutions—from $1,500 French drains to $8,000+ catch basin systems—for Simcoe County clay soil.",
+    category: "Engineering",
+    readTime: "10 min",
+    image: "/images/projects/garden-wall.JPEG",
+  },
+  {
     slug: "retaining-wall-engineer-required-ontario",
     title: "Retaining Wall Engineer Required in Ontario: Height Rules Explained",
     excerpt: "In Ontario, retaining walls over 1.0 metre typically require a permit and P.Eng. drawings — surcharge loads and Barrie clay can lower that threshold.",
