@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "lastRunAt": "2026-07-06T10:00:00.000Z",
+    "lastRunAt": "2026-07-13T00:00:00.000Z",
     "usedTopicIds": [
         "auto-001",
         "auto-002",
@@ -10,10 +10,11 @@
         "auto-006",
         "auto-007",
         "auto-008",
-        "auto-009"
+        "auto-009",
+        "auto-010"
     ],
     "publishedSlugs": [],
-    "currentDraft": "retaining-wall-engineer-required-ontario",
+    "currentDraft": "backyard-drainage-solutions-barrie",
     "history": [
         {
             "topicId": "auto-001",
@@ -160,6 +161,20 @@
                 "linkCount": 9,
                 "hasTable": true,
                 "numericCount": 34
+            },
+            "generatedBy": "claude-cloud-routine"
+        },
+        {
+            "topicId": "auto-010",
+            "slug": "backyard-drainage-solutions-barrie",
+            "at": "2026-07-13T00:00:00.000Z",
+            "validation": {
+                "ok": true,
+                "errors": [],
+                "wordCount": 2535,
+                "linkCount": 6,
+                "hasTable": true,
+                "numericCount": 37
             },
             "generatedBy": "claude-cloud-routine"
         }
