@@ -5,6 +5,14 @@ import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
   {
+    slug: "best-month-landscaping-project-barrie",
+    title: "What Is the Best Month to Start a Landscaping Project in Barrie?",
+    excerpt: "In Barrie, late April–May and September are the best months to start landscaping — fall booking lead times drop to 3–5 weeks versus 8–14 in peak summer.",
+    category: "Seasonal",
+    readTime: "9 min",
+    image: "/images/projects/paver-driveway.JPG",
+  },
+  {
     slug: "backyard-drainage-solutions-barrie",
     title: "Backyard Drainage Barrie: 6 Solutions for Wet Yards That Actually Work",
     excerpt: "Wet backyard in Barrie? We cover 6 drainage solutions—from $1,500 French drains to $8,000+ catch basin systems—for Simcoe County clay soil.",
