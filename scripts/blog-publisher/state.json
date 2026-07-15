@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "lastRunAt": "2026-07-13T00:00:00.000Z",
+    "lastRunAt": "2026-07-15T00:00:00.000Z",
     "usedTopicIds": [
         "auto-001",
         "auto-002",
@@ -11,10 +11,11 @@
         "auto-007",
         "auto-008",
         "auto-009",
-        "auto-010"
+        "auto-010",
+        "auto-011"
     ],
     "publishedSlugs": [],
-    "currentDraft": "backyard-drainage-solutions-barrie",
+    "currentDraft": "best-month-landscaping-project-barrie",
     "history": [
         {
             "topicId": "auto-001",
@@ -175,6 +176,20 @@
                 "linkCount": 6,
                 "hasTable": true,
                 "numericCount": 37
+            },
+            "generatedBy": "claude-cloud-routine"
+        },
+        {
+            "topicId": "auto-011",
+            "slug": "best-month-landscaping-project-barrie",
+            "at": "2026-07-15T00:00:00.000Z",
+            "validation": {
+                "ok": true,
+                "errors": [],
+                "wordCount": 2418,
+                "linkCount": 6,
+                "hasTable": true,
+                "numericCount": 13
             },
             "generatedBy": "claude-cloud-routine"
         }
