@@ -1,7 +1,19 @@
+import engineBaseline from '../data/engine-baseline.json';
+
+// Deck rates bracket the engine's $3,700/crew-day card. Hardscape floors come
+// straight from the LOCKED all-in rate card ($2,470/crew-day — wages, burden,
+// equipment, overhead, and margin already inside; labor-rate.json 2026-06-04).
+// FACTS derive from engine-baseline.json — scripts/check-pricing-parity.ts
+// fails the build if these drift from the DeckCraft engine.
 export const DAILY_PRODUCTION_RATES = {
   bottom: 3400,
-  target: 3700,
+  target: engineBaseline.facts.crewDayRateDeck,
   premium: 4000,
+} as const;
+
+export const HARDSCAPE_DAILY_RATES = {
+  bottom: engineBaseline.facts.crewDayRateHardscape,
+  premium: Math.round(engineBaseline.facts.crewDayRateHardscape * 1.13),
 } as const;
 
 export const PROJECT_PLANNING_RANGES = {
@@ -16,15 +28,22 @@ export function applyDailyProductionFloor({
   labourHigh,
   daysLow,
   daysHigh,
+  projectType,
 }: {
   labourLow: number;
   labourHigh: number;
   daysLow: number;
   daysHigh: number;
+  /** 'deck' floors at the deck day-rate band; everything else (hardscape) at
+   *  the locked all-in hardscape card. Omitted = legacy deck-band behaviour. */
+  projectType?: string | null;
 }) {
+  const rates = projectType && projectType !== 'deck'
+    ? { bottom: HARDSCAPE_DAILY_RATES.bottom, premium: HARDSCAPE_DAILY_RATES.premium }
+    : { bottom: DAILY_PRODUCTION_RATES.bottom, premium: DAILY_PRODUCTION_RATES.premium };
   return {
-    labourLow: Math.max(labourLow, daysLow * DAILY_PRODUCTION_RATES.bottom),
-    labourHigh: Math.max(labourHigh, daysHigh * DAILY_PRODUCTION_RATES.premium),
+    labourLow: Math.max(labourLow, daysLow * rates.bottom),
+    labourHigh: Math.max(labourHigh, daysHigh * rates.premium),
   };
 }
 

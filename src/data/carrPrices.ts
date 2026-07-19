@@ -6,6 +6,8 @@
  * Calculator scope: Permacon pavers only, TimberTech decking only.
  */
 
+import engineBaseline from './engine-baseline.json';
+
 export type PaverTier = 'budget' | 'mid' | 'premium';
 
 export interface PaverBrand {
@@ -159,7 +161,9 @@ export const AGGREGATES = {
 
 export const POLY_SAND_PER_BAG = 47; // Techniseal HP NextGel Urban Grey
 export const EDGE_RESTRAINT_PER_LF = 4.5;
-export const BIN_COST = 350; // 14-yard bin, before HST
+// FACT — derived from the DeckCraft pricing engine (engine-baseline.json).
+// Do not hand-edit: scripts/check-pricing-parity.ts fails the build on drift.
+export const BIN_COST = engineBaseline.facts.binCostCad; // 14-yard bin, before HST
 export const DELIVERY_ZONE1 = 285;
 
 /**

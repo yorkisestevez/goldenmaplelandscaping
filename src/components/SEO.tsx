@@ -12,6 +12,15 @@ export default function SEO({ title, description, canonical, schema, image }: SE
   const siteName = 'Golden Maple Landscaping';
   const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
   const defaultImage = 'https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg';
+  // Netlify's `pretty_urls = true` serves prerendered routes at trailing-slash
+  // URLs. Canonicals must match the final 200 URL exactly; otherwise Google
+  // sees sitemap URL -> 301 -> page whose canonical points back across the
+  // redirect, creating duplicate/alternate-canonical indexing exclusions.
+  const canonicalUrl = canonical
+    ? canonical === 'https://goldenmaplelandscaping.ca/' || canonical.endsWith('/')
+      ? canonical
+      : `${canonical}/`
+    : undefined;
 
   const localBusinessSchema = {
     "@context": "https://schema.org",
@@ -81,7 +90,7 @@ export default function SEO({ title, description, canonical, schema, image }: SE
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image || defaultImage} />
 
-      {canonical && <link rel="canonical" href={canonical} />}
+      {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
       
       <script type="application/ld+json">
         {JSON.stringify(localBusinessSchema)}

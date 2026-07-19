@@ -460,6 +460,7 @@ export default function Estimator() {
       labourHigh,
       daysLow,
       daysHigh,
+      projectType,
     });
     labourLow = flooredLabour.labourLow;
     labourHigh = flooredLabour.labourHigh;
