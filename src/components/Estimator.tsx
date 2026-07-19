@@ -290,9 +290,9 @@ export default function Estimator() {
       if (el === 'patio' || el === 'stone' || el === 'turf') {
         const sqft = typeof sz === 'number' ? sz : 0;
         totalSqftCalc += sqft;
-        let perSqft = selectedPaver.retailPerSqft;
+        let perSqft = selectedPaver.installedPerSqft;
         if (el === 'turf') perSqft = 22;
-        if (el === 'stone') perSqft = Math.max(48, selectedPaver.retailPerSqft + 10);
+        if (el === 'stone') perSqft = Math.max(48, selectedPaver.installedPerSqft + 10);
         let lineLow = sqft * perSqft * 0.95;
         let lineHigh = sqft * perSqft * 1.20;
         // Layout complexity — more cuts, higher waste factor
@@ -314,7 +314,7 @@ export default function Estimator() {
       } else if (el === 'deck') {
         const sqft = typeof sz === 'number' ? sz : 0;
         totalSqftCalc += sqft;
-        const perSqft = selectedDeck.retailPerSqft;
+        const perSqft = selectedDeck.installedPerSqft;
         let lineLow = sqft * perSqft * 0.95;
         let lineHigh = sqft * perSqft * 1.20;
         // Height off grade — framing, footings, code-required railings
@@ -961,7 +961,8 @@ export default function Estimator() {
 
               {showBrandPicker && (isHardscape || (projectType === 'full' && !selectedElements.every(e => e === 'deck'))) && eligiblePavers.length > 0 && (
                 <div className="mb-8">
-                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Hardscape Brand</div>
+                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-2">Hardscape Brand</div>
+                  <p className="font-sans text-[11px] font-normal text-brand-bonewhite/70 mb-4">Prices shown are paver material only (Carr retail, base colour). Your estimate covers the full installation — excavation, 12–16" base, crew, and disposal.</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {eligiblePavers.map(p => (
                       <button
@@ -980,7 +981,7 @@ export default function Estimator() {
                         )}
                         <div className="flex items-baseline justify-between gap-2 mb-1 mt-1">
                           <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold">{p.brand}</span>
-                          <span className="font-display text-[13px] text-brand-bone">${p.retailPerSqft}/sqft</span>
+                          <span className="font-display text-[13px] text-brand-bone">from ${p.materialRetailPerSqft.toFixed(2)}/sqft</span>
                         </div>
                         <div className="font-sans text-[13px] text-brand-bone mb-1">{p.product}</div>
                         <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80">{p.description}</div>
@@ -1006,7 +1007,7 @@ export default function Estimator() {
                       >
                         <div className="flex items-baseline justify-between gap-2 mb-1">
                           <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold">{d.brand}</span>
-                          <span className="font-display text-[13px] text-brand-bone">${d.retailPerSqft}/sqft</span>
+                          <span className="font-display text-[13px] text-brand-bone">${d.installedPerSqft}/sqft installed</span>
                         </div>
                         <div className="font-sans text-[13px] text-brand-bone mb-1">{d.product}</div>
                         <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80">{d.description}</div>

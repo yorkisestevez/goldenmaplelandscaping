@@ -66,15 +66,15 @@ else pass(`base-depth promise (12–16") present, engine builds ${baseline.facts
 // ---- POSITIONING (warn-only visibility) ----
 const patioBand = (baseline.bands as any).patio.perSqftPreTax as { low: number; high: number };
 for (const p of PAVER_BRANDS as any[]) {
-  const ratio = p.retailPerSqft / patioBand.high;
+  const ratio = p.installedPerSqft / patioBand.high;
   if (ratio < 0.5 || ratio > 2.5)
-    warn(`paver anchor ${p.id} $${p.retailPerSqft}/sqft is ${ratio.toFixed(1)}x the engine's $${patioBand.high} high band`);
+    warn(`paver anchor ${p.id} $${p.installedPerSqft}/sqft is ${ratio.toFixed(1)}x the engine's $${patioBand.high} high band`);
 }
 const deckBand = (baseline.bands as any).deck.perSqftPreTax as { low: number; high: number };
 for (const d of DECK_BRANDS as any[]) {
-  const ratio = d.retailPerSqft / deckBand.high;
+  const ratio = d.installedPerSqft / deckBand.high;
   if (ratio < 0.3 || ratio > 1.5)
-    warn(`deck anchor ${d.id} $${d.retailPerSqft}/sqft vs engine high $${deckBand.high} (${ratio.toFixed(1)}x)`);
+    warn(`deck anchor ${d.id} $${d.installedPerSqft}/sqft vs engine high $${deckBand.high} (${ratio.toFixed(1)}x)`);
 }
 const patioFloor = getEstimatorMinimumFloor('patio');
 const engine300 = ((baseline.bands as any).patio.sizesSqft['300'] as any).mid * 300;

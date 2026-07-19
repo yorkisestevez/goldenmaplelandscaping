@@ -1,6 +1,9 @@
 /**
- * Carr Landscape Depot pricing — sourced from carr-price-list skill (2025 trade prices).
- * Trade values are internal cost; retail values are what we quote.
+ * Carr Landscape Depot pricing — sourced from carr-price-list skill (2025 price book).
+ * `materialRetailPerSqft` is Carr's RETAIL material price (base color) — the number
+ * shown on the brand-picker cards. `installedPerSqft` is the all-in installed anchor
+ * (excavation, base, crew, disposal, margin) that the estimate math is built on; it
+ * must never be displayed as a paver price.
  * Update quarterly when Carr publishes new pricing.
  *
  * Calculator scope: Permacon pavers only, TimberTech decking only.
@@ -15,7 +18,10 @@ export interface PaverBrand {
   brand: string;
   product: string;
   tier: PaverTier;
-  retailPerSqft: number; // installed retail
+  /** Carr 2025 retail material price, base color, $/sqft — shown on the picker cards. */
+  materialRetailPerSqft: number;
+  /** All-in installed anchor used by the estimate math. Not a paver price — do not display as one. */
+  installedPerSqft: number;
   thicknessMm: number;
   useCase: 'patio' | 'patio-driveway' | 'driveway';
   description: string;
@@ -30,7 +36,8 @@ export const PAVER_BRANDS: PaverBrand[] = [
     brand: 'Permacon',
     product: 'Melville',
     tier: 'budget',
-    retailPerSqft: 32,
+    materialRetailPerSqft: 5.62,
+    installedPerSqft: 32,
     thicknessMm: 60,
     useCase: 'patio-driveway',
     description: 'Permacon\'s most-installed slab. Versatile, durable, and consistent across batches.',
@@ -41,7 +48,8 @@ export const PAVER_BRANDS: PaverBrand[] = [
     brand: 'Permacon',
     product: 'Cassara',
     tier: 'budget',
-    retailPerSqft: 34,
+    materialRetailPerSqft: 6.24,
+    installedPerSqft: 34,
     thicknessMm: 60,
     useCase: 'patio',
     description: 'Tumbled European character. Pairs naturally with seating walls and warm hardscape.',
@@ -51,7 +59,8 @@ export const PAVER_BRANDS: PaverBrand[] = [
     brand: 'Permacon',
     product: 'Vendome',
     tier: 'budget',
-    retailPerSqft: 33,
+    materialRetailPerSqft: 5.96,
+    installedPerSqft: 33,
     thicknessMm: 60,
     useCase: 'patio',
     description: 'Textured rustic finish. Warm-toned, traditional Permacon look.',
@@ -62,7 +71,8 @@ export const PAVER_BRANDS: PaverBrand[] = [
     brand: 'Permacon',
     product: 'Mondrian Plus',
     tier: 'mid',
-    retailPerSqft: 36,
+    materialRetailPerSqft: 5.79,
+    installedPerSqft: 36,
     thicknessMm: 60,
     useCase: 'patio',
     description: 'Clean large-format slab. Modern aesthetic with minimal visible joints.',
@@ -73,7 +83,8 @@ export const PAVER_BRANDS: PaverBrand[] = [
     brand: 'Permacon',
     product: 'Wilfred',
     tier: 'mid',
-    retailPerSqft: 38,
+    materialRetailPerSqft: 7.83,
+    installedPerSqft: 38,
     thicknessMm: 60,
     useCase: 'patio',
     description: 'Refined character with subtle European tumbling.',
@@ -83,7 +94,8 @@ export const PAVER_BRANDS: PaverBrand[] = [
     brand: 'Permacon',
     product: 'Rosebel',
     tier: 'mid',
-    retailPerSqft: 40,
+    materialRetailPerSqft: 7.32,
+    installedPerSqft: 40,
     thicknessMm: 60,
     useCase: 'patio',
     description: 'Sleek contemporary slab. Fits modern Simcoe County architecture.',
@@ -94,7 +106,8 @@ export const PAVER_BRANDS: PaverBrand[] = [
     brand: 'Permacon',
     product: 'Mega Melville',
     tier: 'premium',
-    retailPerSqft: 46,
+    materialRetailPerSqft: 9.44,
+    installedPerSqft: 46,
     thicknessMm: 80,
     useCase: 'patio-driveway',
     description: 'Permacon\'s large-format flagship. Signature scale and premium finish.',
@@ -105,7 +118,8 @@ export const PAVER_BRANDS: PaverBrand[] = [
     brand: 'Permacon',
     product: 'Brooklyn',
     tier: 'premium',
-    retailPerSqft: 50,
+    materialRetailPerSqft: 11.84,
+    installedPerSqft: 50,
     thicknessMm: 60,
     useCase: 'patio',
     description: 'Urban-industrial finish in Midnight and Rosewood tones. A statement paver.',
@@ -115,7 +129,8 @@ export const PAVER_BRANDS: PaverBrand[] = [
     brand: 'Permacon',
     product: 'Metrik',
     tier: 'premium',
-    retailPerSqft: 42,
+    materialRetailPerSqft: 7.81,
+    installedPerSqft: 42,
     thicknessMm: 60,
     useCase: 'patio',
     description: 'Bold contemporary slab in Rockland Black. Architectural contrast.',
@@ -127,7 +142,8 @@ export interface DeckBrand {
   brand: string;
   product: string;
   tier: 'mid' | 'premium' | 'luxury';
-  retailPerSqft: number;
+  /** All-in installed rate — decks are quoted installed; cards must say "installed". */
+  installedPerSqft: number;
   description: string;
   recommended?: boolean;
 }
@@ -138,7 +154,7 @@ export const DECK_BRANDS: DeckBrand[] = [
     brand: 'TimberTech',
     product: 'AZEK Prime+',
     tier: 'premium',
-    retailPerSqft: 58,
+    installedPerSqft: 58,
     description: 'PVC, no organics. Won\'t rot, mold, or absorb water.',
     recommended: true,
   },
@@ -147,7 +163,7 @@ export const DECK_BRANDS: DeckBrand[] = [
     brand: 'TimberTech',
     product: 'AZEK Vintage',
     tier: 'luxury',
-    retailPerSqft: 68,
+    installedPerSqft: 68,
     description: 'Top-tier capped polymer. 50-yr fade & stain warranty.',
   },
 ];
