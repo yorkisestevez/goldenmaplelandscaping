@@ -29,14 +29,14 @@ export default function About() {
                 <span className="italic text-brand-gold">families enjoy for years.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-12 font-light">
-                We're a Barrie-based hardscape team that genuinely loves this work — shaping patios, walkways, and retaining walls that become the place a family gathers, season after season.
+                Your backyard should be the place your family actually wants to be — dinner on the patio, kids on the lawn, coffee out back before the day starts.
               </p>
               <p className="font-sans text-lg text-brand-bonewhite leading-relaxed mb-12 font-normal">
-                And we build them to stay that way for a very long time.
+                Our job is to build it so it stays that way, season after season.
               </p>
               <div className="space-y-8 font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 <p>
-                  Our approach is simple: do the work properly the first time, and stand behind it long after. We put engineering before shortcuts and craft before speed, because the spaces we build are meant to be enjoyed for decades — not patched after a season.
+                  We're a Barrie-based hardscape crew, and our approach is simple: listen to how you want to live outside, quote it honestly, and build it properly the first time — engineering before shortcuts, craft before speed.
                 </p>
                 <p>
                   Your home is one of the biggest investments you'll ever make. The work we do outside of it should honour that — and be a pleasure to live with every single day.
@@ -55,19 +55,20 @@ export default function About() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full max-w-[380px] mx-auto aspect-[4/5]"
+              className="relative w-full max-w-[420px] mx-auto"
             >
-              {/* Soft gold-edged blob — the "frame" he floats in front of */}
-              <div className="gm-blob absolute inset-[7%] bg-gradient-to-br from-brand-cream-light via-brand-cream to-brand-midsurface border-[3px] border-brand-gold/45 shadow-[0_30px_70px_-20px_rgba(94,74,15,0.38)]" />
-              {/* Offset second outline — layered editorial accent */}
-              <div className="gm-blob absolute inset-[7%] border border-brand-gold/25 rotate-6 scale-[1.05]" style={{ animationDelay: '-8s' }} />
-              {/* Floating cut-out — bottom-anchored, head breaks above the blob */}
+              {/* Offset gold frame accent */}
+              <div className="absolute inset-0 translate-x-5 translate-y-5 border border-brand-gold/30 rounded-[2px]" aria-hidden="true" />
               <img
-                src="/images/projects/yorkis-cutout-headshot.png"
-                alt="Yorkis Estevez - Founder of Golden Maple Landscaping"
-                className="gm-float absolute inset-x-0 bottom-0 mx-auto h-[102%] w-auto max-w-none object-contain object-bottom grayscale-[0.7] contrast-[1.05] drop-shadow-[0_18px_22px_rgba(0,0,0,0.22)]"
+                src="/images/projects/yorkis-founder-golden-maple.webp"
+                alt="Yorkis Estevez, founder of Golden Maple Landscaping, in Golden Maple branded gear"
+                className="relative w-full rounded-[2px] object-cover shadow-[0_30px_70px_-20px_rgba(0,0,0,0.55)]"
                 referrerPolicy="no-referrer"
               />
+              <div className="relative mt-8 text-center">
+                <p className="font-display text-2xl text-brand-bonewhite font-light">Yorkis Estevez</p>
+                <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-brand-gold mt-2">Founder &amp; Lead Builder</p>
+              </div>
             </motion.div>
           </div>
 
@@ -195,27 +196,24 @@ export default function About() {
               </span>
               <div className="space-y-12 font-sans text-xl md:text-2xl text-brand-muted leading-relaxed font-light">
                 <p>
-                  I started Golden Maple because I love building things that last — and I wanted to do it the right way, for people who'd actually get to enjoy them.
+                  If you're like most homeowners we meet, you've heard the stories — the patio that sank after one winter, the contractor who went quiet after the deposit, the quote that grew halfway through the job. Being careful about who you hire isn't paranoia. It's smart.
                 </p>
                 <p>
-                  There's nothing better than handing over a finished backyard and watching a family picture their next few years in it — the dinners, the kids running around, the quiet morning coffee on a patio that still looks brand new seasons later. <span className="text-brand-bonewhite font-normal">That's the part of this work I love most.</span>
+                  So instead of telling you how much we love this work (we do), here's what you can actually expect when we build for you: <span className="text-brand-bonewhite font-normal">a fixed price before we start, a crew that shows up when we said we would, an update every day, and a clean site every evening.</span>
                 </p>
                 <p>
-                  So we pour our attention into the fundamentals — deep, engineered bases, proper drainage, clean detailing. They're the parts you never see, and they're what decide whether a space holds up for two seasons or twenty.
+                  The parts you'll never see get the most attention — a deep 12–16" engineered base, proper drainage, clean detailing. Those invisible details are what decide whether your patio stays level for twenty years or has to be redone in two.
                 </p>
                 <p className="text-brand-bonewhite font-normal italic">
-                  We're not trying to be the cheapest or the biggest. We just want to build outdoor spaces beautifully, and build them to be enjoyed for a very long time.
-                </p>
-                <p>
-                  Every project I take on is personal. My name is on it, my crew is on it, and we build it the way we'd build it for our own families.
+                  We're not trying to be the cheapest or the biggest. We're trying to be the company you're glad you picked — five years from now, not just on handover day.
                 </p>
                 <div className="bg-brand-burgundy/10 border-l-2 border-brand-gold p-10 md:p-16 rounded-[2px]">
                   <p className="text-brand-bonewhite text-2xl md:text-3xl font-display font-light leading-tight">
-                    We back every build with a <span className="text-brand-gold">5-year sink and settlement warranty</span> — not because we have to, but because we build every space to be enjoyed for far longer than that.
+                    Every build is backed by a <span className="text-brand-gold">5-year sink and settlement warranty</span> — in writing. If your stones ever sink or shift, we come back and make it right.
                   </p>
                 </div>
                 <p>
-                  If you're planning a space your family will enjoy for years to come, we'd love to build it with you.
+                  If you're planning a space your family will enjoy for years to come, I'd love to walk your property with you — honest scope, honest budget, no pressure.
                 </p>
               </div>
               <div className="mt-20 text-center">
