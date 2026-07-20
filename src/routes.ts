@@ -79,6 +79,7 @@ export default [
   route('resources/retaining-wall-engineer-required-ontario', 'pages/blog/RetainingWallEngineerRequiredOntario.tsx'),
   route('resources/backyard-drainage-solutions-barrie', 'pages/blog/BackyardDrainageSolutionsBarrie.tsx'),
   route('resources/best-month-landscaping-project-barrie', 'pages/blog/BestMonthLandscapingProjectBarrie.tsx'),
+  route('resources/spring-cleanup-checklist-barrie', 'pages/blog/SpringCleanupChecklistBarrie.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),

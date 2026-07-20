@@ -5,6 +5,14 @@ import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
   {
+    slug: "spring-cleanup-checklist-barrie",
+    title: "Spring Cleanup Checklist for Barrie Homeowners: 12 Tasks That Matter",
+    excerpt: "After Barrie's freeze-thaw season, these 12 spring cleanup tasks protect interlocking pavers, drainage, and lawn areas from damage that costs 4x more to fix later.",
+    category: "Seasonal",
+    readTime: "10 min",
+    image: "/images/projects/orillia-walkway.jpg",
+  },
+  {
     slug: "best-month-landscaping-project-barrie",
     title: "What Is the Best Month to Start a Landscaping Project in Barrie?",
     excerpt: "In Barrie, late April–May and September are the best months to start landscaping — fall booking lead times drop to 3–5 weeks versus 8–14 in peak summer.",

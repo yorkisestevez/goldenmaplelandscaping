@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "lastRunAt": "2026-07-15T00:00:00.000Z",
+    "lastRunAt": "2026-07-20T10:00:00.000Z",
     "usedTopicIds": [
         "auto-001",
         "auto-002",
@@ -12,10 +12,11 @@
         "auto-008",
         "auto-009",
         "auto-010",
-        "auto-011"
+        "auto-011",
+        "auto-012"
     ],
     "publishedSlugs": [],
-    "currentDraft": "best-month-landscaping-project-barrie",
+    "currentDraft": "spring-cleanup-checklist-barrie",
     "history": [
         {
             "topicId": "auto-001",
@@ -190,6 +191,20 @@
                 "linkCount": 6,
                 "hasTable": true,
                 "numericCount": 13
+            },
+            "generatedBy": "claude-cloud-routine"
+        },
+        {
+            "topicId": "auto-012",
+            "slug": "spring-cleanup-checklist-barrie",
+            "at": "2026-07-20T10:00:00.000Z",
+            "validation": {
+                "ok": true,
+                "errors": [],
+                "wordCount": 3117,
+                "linkCount": 4,
+                "hasTable": true,
+                "numericCount": 39
             },
             "generatedBy": "claude-cloud-routine"
         }
