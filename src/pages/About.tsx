@@ -55,7 +55,7 @@ export default function About() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full max-w-[420px] mx-auto"
+              className="relative w-full max-w-[380px] mx-auto"
             >
               {/* Gold-glow backdrop panel — the cutout stands in front, head breaks above it */}
               <div className="absolute inset-x-0 top-[14%] bottom-0 rounded-[2px] overflow-hidden border border-brand-gold/40 bg-gradient-to-b from-brand-surface to-black shadow-[0_45px_90px_-30px_rgba(0,0,0,0.8)]" aria-hidden="true">
@@ -68,7 +68,7 @@ export default function About() {
               <img
                 src="/images/projects/yorkis-founder-golden-maple-cutout.webp"
                 alt="Yorkis Estevez, founder of Golden Maple Landscaping, in Golden Maple branded gear"
-                className="relative z-10 w-[86%] mx-auto block drop-shadow-[0_30px_50px_rgba(0,0,0,0.65)]"
+                className="relative z-10 w-[82%] mx-auto block drop-shadow-[0_30px_50px_rgba(0,0,0,0.65)]"
                 referrerPolicy="no-referrer"
               />
               {/* Name plate on a gradient scrim */}
