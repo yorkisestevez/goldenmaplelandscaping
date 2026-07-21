@@ -57,17 +57,23 @@ export default function About() {
               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
               className="relative w-full max-w-[420px] mx-auto"
             >
-              {/* Offset gold frame accent */}
-              <div className="absolute inset-0 translate-x-5 translate-y-5 border border-brand-gold/30 rounded-[2px]" aria-hidden="true" />
-              <img
-                src="/images/projects/yorkis-founder-golden-maple.webp"
-                alt="Yorkis Estevez, founder of Golden Maple Landscaping, in Golden Maple branded gear"
-                className="relative w-full rounded-[2px] object-cover shadow-[0_30px_70px_-20px_rgba(0,0,0,0.55)]"
-                referrerPolicy="no-referrer"
-              />
-              <div className="relative mt-8 text-center">
-                <p className="font-display text-2xl text-brand-bonewhite font-light">Yorkis Estevez</p>
-                <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-brand-gold mt-2">Founder &amp; Lead Builder</p>
+              {/* Rotated editorial outline behind the frame */}
+              <div className="absolute -inset-3 border border-brand-gold/20 rounded-[2px] rotate-2" aria-hidden="true" />
+              <div className="absolute -inset-3 border border-brand-gold/10 rounded-[2px] -rotate-1" aria-hidden="true" />
+              {/* Framed portrait */}
+              <div className="relative rounded-[2px] overflow-hidden border border-brand-gold/40 shadow-[0_45px_90px_-30px_rgba(0,0,0,0.8)]">
+                <img
+                  src="/images/projects/yorkis-founder-golden-maple.webp"
+                  alt="Yorkis Estevez, founder of Golden Maple Landscaping, in Golden Maple branded gear"
+                  className="w-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                {/* Name plate on a gradient scrim inside the photo */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent pt-28 pb-9 px-8 text-center">
+                  <div className="mx-auto mb-5 h-px w-12 bg-brand-gold/70" aria-hidden="true" />
+                  <p className="font-display text-3xl text-brand-bonewhite font-light">Yorkis Estevez</p>
+                  <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-brand-gold mt-3">Founder &amp; Lead Builder</p>
+                </div>
               </div>
             </motion.div>
           </div>
