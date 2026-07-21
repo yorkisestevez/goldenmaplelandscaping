@@ -403,6 +403,10 @@ const Navbar = () => {
 };
 
 const Footer = () => {
+  // The estimator page runs its own contextual sticky bar — the global dock
+  // would cover it (z-50 vs z-40) and steal its taps.
+  const { pathname } = useLocation();
+  const hideDock = pathname.startsWith('/cost-estimator');
   return (
     <footer className="bg-brand-surface text-brand-bonewhite pt-32 pb-24 md:pb-12">
       <div className="container-custom">
@@ -484,6 +488,7 @@ const Footer = () => {
       </div>
 
       {/* Mobile Split Action Dock */}
+      {!hideDock && (
       <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t border-brand-dim/20">
         <a 
           href="tel:7055003581" 
@@ -498,6 +503,7 @@ const Footer = () => {
           Get My Estimate
         </Link>
       </div>
+      )}
     </footer>
   );
 };

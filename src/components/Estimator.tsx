@@ -789,7 +789,7 @@ export default function Estimator() {
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
               <h3 className="font-display text-3xl text-brand-bone mb-8">What are you looking to build?</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2.5 md:gap-4">
                 {PROJECT_TYPES.map(pt => {
                   const Icon = pt.icon;
                   const isSelected = projectType === pt.id;
@@ -801,14 +801,14 @@ export default function Estimator() {
                         if (pt.id !== 'full') setSelectedElements([]);
                       }}
                       className={cn(
-                        "group flex items-center gap-4 p-6 rounded-2xl border transition-all duration-200 cursor-pointer",
+                        "group flex flex-col items-start gap-2.5 p-4 md:flex-row md:items-center md:gap-4 md:p-6 rounded-2xl border transition-all duration-200 cursor-pointer",
                         isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface hover:-translate-y-[2px] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)]"
                       )}
                     >
                       <div className="text-brand-gold"><Icon size={24} strokeWidth={1.5} /></div>
                       <div>
-                        <div className="font-sans text-[13px] uppercase text-brand-bone tracking-wide mb-1">{pt.label}</div>
-                        <div className="font-sans text-[12px] font-normal text-brand-bonewhite/80">{pt.desc}</div>
+                        <div className="font-sans text-[11px] md:text-[13px] uppercase text-brand-bone tracking-wide mb-1">{pt.label}</div>
+                        <div className="font-sans text-[10px] md:text-[12px] font-normal text-brand-bonewhite/80">{pt.desc}</div>
                       </div>
                     </div>
                   );
@@ -823,13 +823,13 @@ export default function Estimator() {
               {projectType === 'full' ? (
                 <div className="space-y-8">
                   <p className="font-sans text-[13px] text-brand-muted mb-6">Select all the elements you want to include in your backyard transformation:</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                  <div className="grid grid-cols-2 gap-2.5 md:gap-4 mb-8">
                     {PROJECT_TYPES.filter(pt => pt.id !== 'full').map(pt => (
                       <div
                         key={pt.id}
                         onClick={() => toggleElement(pt.id)}
                         className={cn(
-                          "flex items-center gap-4 p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
+                          "flex items-center gap-3 p-3.5 md:gap-4 md:p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
                           selectedElements.includes(pt.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                         )}
                       >
@@ -888,9 +888,9 @@ export default function Estimator() {
                       {conditions[cond.id] && <Check size={14} className="text-brand-black" />}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-baseline justify-between gap-3">
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                         <span className="font-sans text-[13px] text-brand-bone">{cond.label}</span>
-                        <span className="font-display text-[13px] text-brand-gold whitespace-nowrap">{cond.hint}</span>
+                        <span className="font-display text-[13px] text-brand-gold">{cond.hint}</span>
                       </div>
                       <div className="font-sans text-[11px] font-normal text-brand-bonewhite/70 mt-1">{cond.why}</div>
                     </div>
@@ -1182,14 +1182,14 @@ export default function Estimator() {
         </AnimatePresence>
 
         {step < TOTAL_STEPS && (
-          <div className="mt-14 pt-8 border-t border-brand-dim/60 flex justify-between items-center gap-4">
+          <div className="mt-14 pt-8 border-t border-brand-dim/60 flex flex-col-reverse gap-4 sm:flex-row sm:justify-between sm:items-center">
             {step > 1 ? (
-              <button onClick={prevStep} className="btn-ghost !rounded-full !border-brand-dim hover:!border-brand-dim">← Back</button>
-            ) : <div />}
+              <button onClick={prevStep} className="btn-ghost !rounded-full !border-brand-dim hover:!border-brand-dim w-full sm:w-auto text-center">← Back</button>
+            ) : <div className="hidden sm:block" />}
             <button
               onClick={nextStep}
               className={cn(
-                "btn-primary !rounded-full px-10 shadow-[0_8px_24px_-8px_rgba(212,175,99,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(212,175,99,0.55)] transition-shadow",
+                "btn-primary !rounded-full px-10 w-full sm:w-auto text-center justify-center shadow-[0_8px_24px_-8px_rgba(212,175,99,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(212,175,99,0.55)] transition-shadow",
                 !canAdvance() ? "opacity-40 cursor-not-allowed" : ""
               )}
               disabled={!canAdvance()}
@@ -1200,13 +1200,14 @@ export default function Estimator() {
         )}
       </div>
 
-      {/* Mobile sticky bar showing the narrowing running estimate */}
-      {step >= 2 && step < TOTAL_STEPS && display.low > 0 && (
+      {/* Mobile sticky bar — step 1 shows the selection, steps 2-6 the narrowing running estimate */}
+      {step < TOTAL_STEPS && ((step === 1 && projectType) || (step >= 2 && display.low > 0)) && (
         <MobileStickyBar
-          low={display.low}
-          high={display.high}
-          delta={delta}
+          low={step === 1 ? 0 : display.low}
+          high={step === 1 ? 0 : display.high}
+          delta={step === 1 ? null : delta}
           confidence={confidence}
+          selectedLabel={step === 1 ? (PROJECT_TYPES.find(p => p.id === projectType)?.label ?? '') : ''}
           label={step >= 5 ? 'See Full Breakdown →' : 'Continue →'}
           onContinue={step >= 5 ? () => { fireStep(7); setStep(7); } : nextStep}
         />
@@ -1215,9 +1216,30 @@ export default function Estimator() {
   );
 }
 
-function MobileStickyBar({ low, high, delta, confidence, label, onContinue }: {
-  low: number; high: number; delta: number | null; confidence: number; label: string; onContinue: () => void;
+function MobileStickyBar({ low, high, delta, confidence, label, onContinue, selectedLabel = '' }: {
+  low: number; high: number; delta: number | null; confidence: number; label: string; onContinue: () => void; selectedLabel?: string;
 }) {
+  if (low === 0) {
+    return (
+      <motion.div
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-brand-gold/30 px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
+      >
+        <div className="min-w-0">
+          <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">Selected</div>
+          <div className="font-display text-lg text-brand-bone truncate">{selectedLabel}</div>
+        </div>
+        <button
+          onClick={onContinue}
+          className="bg-brand-gold text-brand-black font-sans text-[11px] uppercase tracking-wider px-4 py-3 rounded-2xl font-medium shrink-0"
+        >
+          {label}
+        </button>
+      </motion.div>
+    );
+  }
   return (
     <motion.div
       initial={{ y: 80, opacity: 0 }}
