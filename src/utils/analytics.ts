@@ -52,9 +52,12 @@ export function initAnalytics(): void {
     document.head.appendChild(script);
 
     window.dataLayer = window.dataLayer || [];
-    window.gtag = function gtag(...args: unknown[]) {
-      window.dataLayer!.push(args);
-    };
+    // gtag.js only processes dataLayer entries that are `arguments` objects —
+    // pushing a rest-param Array is silently ignored (no config, no events).
+    window.gtag = function gtag() {
+      // eslint-disable-next-line prefer-rest-params
+      window.dataLayer!.push(arguments as unknown as unknown[]);
+    } as Window['gtag'];
     window.gtag('js', new Date());
     if (GA4_ID) window.gtag('config', GA4_ID, { send_page_view: false });
     if (GOOGLE_ADS_ID) window.gtag('config', GOOGLE_ADS_ID);
