@@ -3,20 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageCircle, X, Send, Leaf } from 'lucide-react';
 import { trackEngagement } from '../utils/analytics';
+import { openSophieSession, type SophieSession } from '../utils/sophieChat';
 
 type Role = 'user' | 'assistant';
 interface Msg { role: Role; content: string }
 
+/** Legacy DeepSeek chat function — now only a fallback if the live agent is unreachable. */
 const CHAT_ENDPOINT = '/.netlify/functions/chat';
 
 const GREETING =
-  "Hi! I'm Sophie, Golden Maple's assistant. Ask me about our services, process, warranty, service areas, or rough pricing — I'll give you a straight answer. Tell me about your project and I can have Yorkis follow up.";
+  "Hi! I'm Sophie — the same assistant who answers our phone. Ask me about our services, process, warranty or service areas, and I can book your free on-site visit right here. For numbers, the cost estimator gives you a range in about a minute.";
 
 const SUGGESTIONS = [
-  'How much does a patio cost?',
+  'Can you book me a free visit?',
   "What's your warranty?",
   'Which areas do you serve?',
-  'How soon can you start?',
+  'Do you build composite decks?',
 ];
 
 /** Local canned answers so the widget is fully testable in `vite dev` (no function/key).
@@ -55,6 +57,37 @@ export default function ChatWidget() {
     }
   }, [open]);
 
+  // The live agent session. Opened lazily on the first message so visitors who
+  // never chat cost nothing, and reused for the rest of the conversation so
+  // Sophie keeps her context (and her tools) across turns.
+  const sessionRef = useRef<SophieSession | null>(null);
+  const liveRef = useRef(true);
+
+  useEffect(() => () => { sessionRef.current?.close(); }, []);
+
+  const addReply = (content: string) => {
+    setMessages((m) => [...m, { role: 'assistant', content }]);
+    setLoading(false);
+  };
+
+  /** Legacy Netlify function → canned answers. Only used if the agent is unreachable. */
+  const sendViaFallback = async (content: string, history: Msg[]) => {
+    try {
+      const res = await fetch(CHAT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Only send role + content; trim history to last 12 turns to bound cost.
+        body: JSON.stringify({ messages: history.slice(-12).map((m) => ({ role: m.role, content: m.content })) }),
+      });
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const data = (await res.json()) as { reply?: string };
+      addReply((data.reply || '').trim() || fallbackReply(content));
+    } catch {
+      // Dev (no function) or transient error → graceful canned answer.
+      addReply(fallbackReply(content));
+    }
+  };
+
   const send = async (text: string) => {
     const content = text.trim();
     if (!content || loading) return;
@@ -64,22 +97,25 @@ export default function ChatWidget() {
     setLoading(true);
     trackEngagement('chat_message', content.slice(0, 60));
 
+    if (!liveRef.current) { await sendViaFallback(content, next); return; }
+
     try {
-      const res = await fetch(CHAT_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // Only send role + content; trim history to last 12 turns to bound cost.
-        body: JSON.stringify({ messages: next.slice(-12).map((m) => ({ role: m.role, content: m.content })) }),
-      });
-      if (!res.ok) throw new Error(`status ${res.status}`);
-      const data = (await res.json()) as { reply?: string };
-      const reply = (data.reply || '').trim() || fallbackReply(content);
-      setMessages((m) => [...m, { role: 'assistant', content: reply }]);
+      if (!sessionRef.current) {
+        sessionRef.current = await openSophieSession({
+          onReply: addReply,
+          onUnavailable: () => {
+            // Session dropped mid-conversation: stop trying, don't lose the visitor.
+            liveRef.current = false;
+            sessionRef.current = null;
+          },
+        });
+      }
+      sessionRef.current.send(content);
+      // The reply arrives asynchronously via onReply, which clears `loading`.
     } catch {
-      // Dev (no function) or transient error → graceful canned answer.
-      setMessages((m) => [...m, { role: 'assistant', content: fallbackReply(content) }]);
-    } finally {
-      setLoading(false);
+      liveRef.current = false;
+      sessionRef.current = null;
+      await sendViaFallback(content, next);
     }
   };
 
