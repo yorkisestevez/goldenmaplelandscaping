@@ -599,8 +599,8 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="Premium Landscaping & Hardscape Contractor | Barrie ON"
-        description="Get an instant cost range for your interlocking patio, composite deck, or retaining wall in Barrie & Simcoe County. Real Techo-Bloc, Unilock, Trex pricing — no signup. 5.0 Google rating, $5M insured, 5-year warranty."
+        title="Barrie Landscaping Company | Patios, Interlock & Retaining Walls"
+        description="Barrie's 5-star landscaping company — interlocking patios, driveways & retaining walls across Simcoe County. Get an instant cost range, no signup. $5M insured, 5-year warranty."
         canonical="https://goldenmaplelandscaping.ca/"
         schema={schema}
       />
