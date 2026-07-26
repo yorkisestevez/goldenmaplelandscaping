@@ -74,6 +74,11 @@ export default function PolymericSandVsRegularSandPatio() {
       heroImage="/images/projects/IHPX8926.JPEG"
       schema={faqSchema}
     >
+      <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">For a Barrie or Simcoe County paver patio, polymeric sand is the clear choice over regular sand. Its polymer binder hardens the joints so they resist weeds, ants, and wash-out while still flexing with our freeze-thaw cycles — where plain jointing sand loosens, erodes, and sprouts weeds within a season or two. It costs a few hundred dollars more upfront (roughly $300–$500 on an average 400 sq ft patio) but eliminates years of re-sanding, weeding, and premature repairs.</p>
+      </div>
+
       <div dangerouslySetInnerHTML={{ __html: "<p>Drive through any older neighbourhood in Barrie or Innisfil in the spring, and you'll see the same thing: interlocking patios and walkways sprouting a healthy crop of weeds and dotted with anthills. Homeowners are out there with pressure washers and weed pullers, spending a beautiful May weekend fighting a battle they lost the moment the wrong sand was swept into their paver joints. It’s a frustrating cycle, and it’s completely avoidable.</p><p>The material that fills the tiny gaps between your pavers isn't just filler. It's a critical structural component. The choice between cheap, regular sand and modern polymeric sand is the difference between a patio that looks great for a season and one that performs for a decade or more. Here in Simcoe County, with our heavy snow load, spring melts, and notorious freeze-thaw cycles, this choice is everything. It dictates whether your investment stays flat and stable or becomes a wobbly, weed-infested headache.</p>" }} />
 
       <h2>What is Jointing Sand, Anyway?</h2>
@@ -121,6 +126,16 @@ export default function PolymericSandVsRegularSandPatio() {
         <div className="mb-8">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-3">Is polymeric sand waterproof?</h3>
           <div dangerouslySetInnerHTML={{ __html: "<p>No, it is not waterproof, but it is highly water-resistant. It's designed to be permeable so that a small amount of water can pass through, but it sheds the vast majority of rainwater off the surface. This prevents the large-scale water infiltration that washes away regular sand and damages the base.</p>" }} />
+        </div>
+      </div>
+
+      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
+        <div className="flex items-start gap-4">
+          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
+          <div>
+            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2">About the Author</div>
+            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces across Barrie and Simcoe County since 2020. With hundreds of patios, walkways, and driveways installed, WSIB certification, and $5M liability coverage, Yorkis backs every Golden Maple project with a 5-year structural warranty and a perfect 5.0 Google rating.</p>
+          </div>
         </div>
       </div>
 

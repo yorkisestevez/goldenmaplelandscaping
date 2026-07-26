@@ -74,6 +74,11 @@ export default function PaverWalkwayCostBarrie() {
       heroImage="/images/projects/orillia-walkway.jpg"
       schema={faqSchema}
     >
+      <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">A professionally installed paver walkway in Barrie runs roughly $35–$65 per square foot for 2026 — so a standard 4-foot-wide, 50-foot walkway (about 200 sq ft) typically lands between $7,000 and $13,000. The range comes down to paver tier, base depth, site access, and pattern complexity. In Simcoe County's clay soil and freeze-thaw, the base (12&quot;+ of clear stone) is about 70% of a walkway that actually lasts — quotes well below this range are almost always skimping there.</p>
+      </div>
+
       <div dangerouslySetInnerHTML={{ __html: "<p>Trying to get a straight answer on what a paver walkway costs in Barrie can feel like pulling teeth. You see online calculators and ads for a low per-square-foot price, but you have no idea what that actually buys you. Here in Simcoe County, with our heavy clay soil and brutal freeze-thaw cycles that can heave the ground by several centimetres each year, the cheap option is almost always the wrong one. A walkway that looks perfect in August can become a wavy, hazardous mess by the next spring if the foundation isn't built for our specific conditions.</p><p>My name is Yorkis Estevez, and I run Golden Maple Landscaping. We build hardscapes right here in Barrie, Oro-Medonte, and the surrounding areas. I'm not going to give you a vague, salesy pitch. My goal with this guide is to break down the real costs of a professionally installed paver walkway, looking ahead to 2026 pricing to help you plan. I'll show you exactly where your money goes—from the gravel under the stones to the type of paver you choose—so you can make a smart, long-term investment in your home.</p>" }} />
 
       <h2>The Real 'Per Square Foot' Price: What's Included?</h2>
@@ -118,6 +123,16 @@ export default function PaverWalkwayCostBarrie() {
         <div className="mb-8">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-3">What's the difference between Unilock and Techo-Bloc pavers?</h3>
           <div dangerouslySetInnerHTML={{ __html: "<p>Both are excellent, high-quality manufacturers we trust and install regularly. The main differences come down to aesthetics, colours, and textures. Techo-Bloc often has a more modern, contemporary style, while Unilock offers a vast range of both classic and modern looks. We can show you catalogues from both to see what fits your home's style.</p>" }} />
+        </div>
+      </div>
+
+      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
+        <div className="flex items-start gap-4">
+          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
+          <div>
+            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2">About the Author</div>
+            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces across Barrie and Simcoe County since 2020. With hundreds of patios, walkways, and driveways installed, WSIB certification, and $5M liability coverage, Yorkis backs every Golden Maple project with a 5-year structural warranty and a perfect 5.0 Google rating.</p>
+          </div>
         </div>
       </div>
 
