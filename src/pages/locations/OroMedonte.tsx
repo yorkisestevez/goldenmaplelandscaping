@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
+import { trackEngagement } from '../../utils/analytics';
 
 const COMMUNITIES = [
   "Horseshoe Valley — resort and residential, ski country outdoor living",
@@ -140,6 +141,22 @@ export default function OroMedonteLanding() {
             <p className="font-sans text-base text-brand-muted leading-relaxed font-light mb-12 max-w-3xl">
               Based in Barrie, we're minutes from most Oro-Medonte project sites. Our in-house crew handles every phase — no subcontractors, no shortcuts.
             </p>
+            <div className="flex flex-col sm:flex-row items-center gap-5 mb-12">
+              <Link
+                to="/contact"
+                onClick={() => trackEngagement('cta_click', 'oromedonte_hero_quote')}
+                className="btn-primary py-4 px-10"
+              >
+                Request Your Free Oro-Medonte Quote
+              </Link>
+              <a
+                href="tel:7055003581"
+                onClick={() => trackEngagement('call_click', 'oromedonte_hero')}
+                className="flex items-center gap-3 font-sans text-base text-brand-gold hover:text-brand-bonewhite transition-colors"
+              >
+                <Phone size={18} /> Call 705-500-3581
+              </a>
+            </div>
           </motion.div>
 
           {/* Why Choose Us */}
