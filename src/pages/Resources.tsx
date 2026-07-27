@@ -5,6 +5,14 @@ import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
   {
+    slug: "composite-decking-maintenance-ontario",
+    title: "Composite Decking Maintenance: What Actually Needs Doing Each Year",
+    excerpt: "Ontario composite decks need 2 cleanings per year plus fall gap-clearing — the TimberTech routine that protects your 30-year warranty.",
+    category: "Decking",
+    readTime: "10 min",
+    image: "/images/projects/TimberTech Dark Cocoa PrimeCollection Composite Decking Beauty1.jpg",
+  },
+  {
     slug: "spring-cleanup-checklist-barrie",
     title: "Spring Cleanup Checklist for Barrie Homeowners: 12 Tasks That Matter",
     excerpt: "After Barrie's freeze-thaw season, these 12 spring cleanup tasks protect interlocking pavers, drainage, and lawn areas from damage that costs 4x more to fix later.",

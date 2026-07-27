@@ -80,6 +80,7 @@ export default [
   route('resources/backyard-drainage-solutions-barrie', 'pages/blog/BackyardDrainageSolutionsBarrie.tsx'),
   route('resources/best-month-landscaping-project-barrie', 'pages/blog/BestMonthLandscapingProjectBarrie.tsx'),
   route('resources/spring-cleanup-checklist-barrie', 'pages/blog/SpringCleanupChecklistBarrie.tsx'),
+  route('resources/composite-decking-maintenance-ontario', 'pages/blog/CompositeDeckingMaintenanceOntario.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),

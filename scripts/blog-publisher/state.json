@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "lastRunAt": "2026-07-20T10:00:00.000Z",
+    "lastRunAt": "2026-07-27T10:00:00.000Z",
     "usedTopicIds": [
         "auto-001",
         "auto-002",
@@ -13,10 +13,11 @@
         "auto-009",
         "auto-010",
         "auto-011",
-        "auto-012"
+        "auto-012",
+        "auto-013"
     ],
     "publishedSlugs": [],
-    "currentDraft": "spring-cleanup-checklist-barrie",
+    "currentDraft": "composite-decking-maintenance-ontario",
     "history": [
         {
             "topicId": "auto-001",
@@ -205,6 +206,20 @@
                 "linkCount": 4,
                 "hasTable": true,
                 "numericCount": 39
+            },
+            "generatedBy": "claude-cloud-routine"
+        },
+        {
+            "topicId": "auto-013",
+            "slug": "composite-decking-maintenance-ontario",
+            "at": "2026-07-27T10:00:00.000Z",
+            "validation": {
+                "ok": true,
+                "errors": [],
+                "wordCount": 2513,
+                "linkCount": 6,
+                "hasTable": true,
+                "numericCount": 20
             },
             "generatedBy": "claude-cloud-routine"
         }
