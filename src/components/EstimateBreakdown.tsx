@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Pickaxe, Package, Hammer, Trash2, Sparkles, Check, X } from 'lucide-react';
+import { Pickaxe, Package, Hammer, Trash2, Sparkles, Check, X, Lock } from 'lucide-react';
 
 export interface BreakdownLine {
   low: number;
@@ -19,6 +19,10 @@ export interface BreakdownProps {
   brandName?: string;
   sqft?: number;
   city?: string;
+  /** When true, the headline range still shows but the itemized lines and
+   *  includes/excludes are replaced by a teaser — unlocked by the name+email
+   *  form in EstimateLeadCapture. */
+  locked?: boolean;
 }
 
 const fmt = (n: number) =>
@@ -90,6 +94,42 @@ export default function EstimateBreakdown(props: BreakdownProps) {
         ) : null}
       </motion.div>
 
+      {props.locked ? (
+        /* Locked teaser — the range above is free, the itemization is the trade
+           for a name and email. Line labels stay visible so it's obvious what's
+           behind the gate; only the dollar figures are withheld. */
+        <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7 md:p-9">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="w-7 h-7 rounded-full bg-brand-gold/15 border border-brand-gold/30 flex items-center justify-center">
+              <Lock size={13} className="text-brand-gold" strokeWidth={2} />
+            </div>
+            <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">
+              Where the money goes
+            </span>
+          </div>
+          <div className="divide-y divide-white/[0.06]">
+            {LINES.map(({ key, label, icon: Icon }) => (
+              <div key={key} className="py-4 flex items-center gap-4">
+                <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold shrink-0">
+                  <Icon size={16} strokeWidth={1.75} />
+                </div>
+                <span className="font-sans text-[14px] text-brand-bone flex-1 min-w-0">{label}</span>
+                <span
+                  aria-hidden="true"
+                  className="font-display text-lg md:text-xl text-brand-gold/35 tabular-nums whitespace-nowrap tracking-tight select-none blur-[5px]"
+                >
+                  $00.0k – $00.0k
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="font-sans text-[13px] font-light text-brand-muted mt-6 leading-relaxed">
+            Add your name and email below to unlock the line-by-line breakdown — excavation, materials,
+            labour, disposal and cleanup — plus exactly what is and isn't included.
+          </p>
+        </div>
+      ) : (
+      <>
       {/* Itemized lines */}
       <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7 md:p-9">
         <h4 className="font-display text-2xl md:text-3xl text-brand-bone mb-6 tracking-tight">Where the money goes</h4>
@@ -165,6 +205,8 @@ export default function EstimateBreakdown(props: BreakdownProps) {
           </ul>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

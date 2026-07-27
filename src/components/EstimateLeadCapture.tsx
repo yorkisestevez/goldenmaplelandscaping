@@ -30,7 +30,14 @@ export interface EstimatePayload {
   details: Record<string, string>;
 }
 
-export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePayload }) {
+export default function EstimateLeadCapture({
+  estimate,
+  onUnlock,
+}: {
+  estimate: EstimatePayload;
+  /** Fired once name+email are captured — unlocks the itemized breakdown. */
+  onUnlock?: () => void;
+}) {
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [form, setForm] = useState({
@@ -99,6 +106,7 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
       console.log('[dev] cost-estimator payload (would POST to Netlify):', payload);
       trackLead('cost-estimator', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone });
       setStatus('success');
+      onUnlock?.();
       return;
     }
 
@@ -111,6 +119,7 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
       if (!res.ok) throw new Error('Network response was not ok');
       trackLead('cost-estimator', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone });
       setStatus('success');
+      onUnlock?.();
     } catch {
       setStatus('error');
       setErrorMsg('Connection issue. Call (705) 500-3581 — we answer in person.');
@@ -128,11 +137,11 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
         <div className="mx-auto w-14 h-14 rounded-full bg-brand-gold/15 border border-brand-gold/40 flex items-center justify-center mb-5">
           <CheckCircle size={24} className="text-brand-gold" strokeWidth={1.5} />
         </div>
-        <h4 className="font-display text-3xl text-brand-bone mb-3 tracking-tight">Request received.</h4>
+        <h4 className="font-display text-3xl text-brand-bone mb-3 tracking-tight">Breakdown unlocked.</h4>
         <p className="font-sans text-[14px] font-light text-brand-muted leading-relaxed mb-6">
-          Yorkis will personally review your project and reply to{' '}
-          <span className="text-brand-bone">{form.email}</span> with a written estimate within 24 hours —
-          usually much faster.
+          Your full line-by-line breakdown is now open above. Yorkis will personally review your project
+          and reply to <span className="text-brand-bone">{form.email}</span> with a written estimate
+          within 24 hours — usually much faster.
         </p>
         <Link
           to="/book"
@@ -152,16 +161,17 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
           <FileText size={14} className="text-brand-gold" strokeWidth={1.75} />
         </div>
         <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">
-          Lock It In
+          Unlock The Breakdown
         </span>
       </div>
       <h4 className="font-display text-3xl text-brand-bone mb-3 tracking-tight">
-        Get this estimate in writing
+        See where every dollar goes
       </h4>
       <p className="font-sans text-[13px] font-light text-brand-muted mb-7 leading-relaxed">
-        This range and every project detail you just entered goes straight to Yorkis. He'll personally
-        review it and reply with a written estimate for your {estimate.city || 'Simcoe County'} project
-        within 24 hours — honest scope, no sales pressure.
+        Name and email unlocks the line-by-line breakdown right here — excavation, materials, labour,
+        disposal, cleanup, and what's not included. The same details go to Yorkis, who'll personally
+        reply with a written estimate for your {estimate.city || 'Simcoe County'} project within 24
+        hours. Honest scope, no sales pressure.
       </p>
 
       <form
@@ -217,7 +227,7 @@ export default function EstimateLeadCapture({ estimate }: { estimate: EstimatePa
           className="btn-primary !rounded-full w-full py-4 mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_8px_24px_-8px_rgba(212,175,99,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(212,175,99,0.55)] transition-shadow"
         >
           <Mail size={16} strokeWidth={1.5} />
-          {status === 'submitting' ? 'Sending…' : 'Get My Written Estimate'}
+          {status === 'submitting' ? 'Sending…' : 'Unlock My Full Breakdown'}
         </button>
 
         <p className="font-sans text-[11px] text-brand-muted/80 text-center font-light pt-2">
