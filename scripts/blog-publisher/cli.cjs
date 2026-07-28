@@ -210,6 +210,18 @@ async function cmdWorkflowRun() {
     prUrl = sh(`gh pr create --base main --head "${branch}" --title ${JSON.stringify(prTitle)} --body-file "${bodyFile}"`).trim();
     fs.unlinkSync(bodyFile);
     console.log(`[workflow-run] PR opened: ${prUrl}`);
+    // AUTO-MERGE (2026-07-28, Yorkis: "set it free — we want clients").
+    // Posts publish without manual approval. The only remaining gate is the
+    // adversarial reviewer's 'block' verdict, which throws earlier and never
+    // reaches PR creation. Set BLOG_AUTOMERGE=0 to fall back to manual merge.
+    if (process.env.BLOG_AUTOMERGE !== '0') {
+      try {
+        sh(`gh pr merge "${prUrl}" --squash --delete-branch --admin`);
+        console.log('[workflow-run] AUTO-MERGED — published without manual approval');
+      } catch (e) {
+        console.warn('[workflow-run] auto-merge failed, PR left open for manual merge:', e.message);
+      }
+    }
   } catch (e) {
     try { await telegram.sendErrorAlert('gh-pr:' + draft.slug, e); } catch {}
     throw e;

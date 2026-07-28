@@ -29,26 +29,14 @@ const ALLOWED_HEROES = [
 function readJson(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 function writeJson(p, obj) { fs.writeFileSync(p, JSON.stringify(obj, null, 2)); }
 
+// PATCHED 2026-07-28 — routed off Gemini onto the local Claude CLI.
+// Google zeroed this key's free tier (limit: 0) so every publisher in the
+// fleet died at the generate stage. geminiCompatPost keeps the exact request
+// and response shape, so every call site and extractText() work unchanged.
+// Original implementation preserved in generate.cjs.bak-gemini-20260728.
+const { geminiCompatPost } = require('./claude-provider.cjs');
 function geminiPost(apiKey, body) {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
-    const req = https.request({
-      hostname: 'generativelanguage.googleapis.com',
-      path: `/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
-      timeout: 180000
-    }, (res) => {
-      let result = '';
-      res.on('data', c => result += c);
-      res.on('end', () => {
-        try { resolve(JSON.parse(result)); } catch { resolve({ raw: result }); }
-      });
-    });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('Gemini timeout (180s)')); });
-    req.write(data); req.end();
-  });
+  return geminiCompatPost(apiKey, body);
 }
 
 function extractText(response) {
@@ -149,7 +137,7 @@ OUTPUT FORMAT — return ONE JSON object only. No prose before or after. No mark
   "faqs": [
     { "question": "<plain question a Barrie homeowner would actually type into Google. Phrase as a real search query.>", "answer": "<2-4 sentence direct answer that leads with the answer in the first sentence. No hedging. Include a specific number/range when possible.>" }
   ],
-  "author_bio": "<one short paragraph (40-70 words) closing the article in Yorkis's voice. Mention: years on the tools (founded 2020), specific install volume claim that's verifiable ('we've installed hundreds of patios across Simcoe County'), one credibility marker (WSIB certified, $5M liability, 5.0 Google rating). This builds E-E-A-T for both Google and AI engines.>",
+  "author_bio": "<40-70 words closing in the author's voice. CRITICAL: invent NO facts about the business — no founding year, no years-in-business, no square footage, no job counts, no revenue, no client counts. Use ONLY details supplied in credibilityMarkers above. If a specific number is not given to you, do not state one. Write about the WORK and the POV, not about scale.>",
   "cta_paragraph": "<one paragraph that bridges from the article to contacting Golden Maple. Mention Barrie/Simcoe County. End naturally — the layout adds the actual button.>"
 }
 
