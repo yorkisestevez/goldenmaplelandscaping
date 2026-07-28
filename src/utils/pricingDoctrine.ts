@@ -5,10 +5,14 @@ import engineBaseline from '../data/engine-baseline.json';
 // equipment, overhead, and margin already inside; labor-rate.json 2026-06-04).
 // FACTS derive from engine-baseline.json — scripts/check-pricing-parity.ts
 // fails the build if these drift from the DeckCraft engine.
+// 2026-07-27 — deck all-in rate moved $3,700 → $3,000 (Yorkis). The bottom/
+// premium rails keep the original ±$300 spread around target; leaving them at
+// 3400/4000 would put the band FLOOR above the target rate and emit incoherent
+// quotes (line 43 feeds bottom/premium straight into the band).
 export const DAILY_PRODUCTION_RATES = {
-  bottom: 3400,
+  bottom: 2700,
   target: engineBaseline.facts.crewDayRateDeck,
-  premium: 4000,
+  premium: 3300,
 } as const;
 
 export const HARDSCAPE_DAILY_RATES = {
