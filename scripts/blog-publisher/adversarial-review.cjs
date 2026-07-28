@@ -22,29 +22,11 @@ const https = require('https');
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const PUBLISHED_LIST_PATH = path.join(__dirname, 'state.json');
 
+// PATCHED 2026-07-28 — routed off Gemini onto the local Claude CLI (free tier is limit:0).
+// Same request/response shape, so all call sites below are untouched.
+const { geminiCompatPost } = require('./claude-provider.cjs');
 function geminiPost(apiKey, body) {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
-    const req = https.request(
-      {
-        hostname: 'generativelanguage.googleapis.com',
-        path: `/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
-        timeout: 90000,
-      },
-      (res) => {
-        let result = '';
-        res.on('data', (c) => (result += c));
-        res.on('end', () => {
-          try { resolve(JSON.parse(result)); } catch { resolve({ raw: result }); }
-        });
-      }
-    );
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('Gemini reviewer timeout (90s)')); });
-    req.write(data); req.end();
-  });
+  return geminiCompatPost(apiKey, body);
 }
 
 function extractText(response) {

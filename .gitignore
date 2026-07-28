@@ -11,3 +11,6 @@ coverage/
 
 # Editor scratch (Claude Code per-machine state)
 .claude/
+
+# Gemini-era backups from the 2026-07-28 Claude CLI migration
+scripts/blog-publisher/*.bak-gemini-*

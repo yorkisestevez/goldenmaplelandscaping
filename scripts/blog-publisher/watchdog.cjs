@@ -606,29 +606,30 @@ async function checkWorkflowsEnabled(findings) {
   }
 }
 
-// Gemini API key health — probe by listing models. Cheap, catches dead keys
-// before the next Monday's publish silently fails.
-async function checkGeminiKeyHealth(findings) {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) return;  // can't probe what we don't have
+// Generation-backend health.
+//
+// REPLACED 2026-07-28: this used to probe GEMINI_API_KEY by listing models.
+// That probe became actively misleading — Google zeroed the free tier
+// (`limit: 0` on generate_content) while /v1beta/models still returns 200, so
+// the old check reported HEALTHY on a key that could not generate a single
+// word. Publishing now runs on the local Claude CLI, so we probe that instead:
+// the binary must exist AND actually return output.
+async function checkGenerationBackendHealth(findings) {
+  const { claudeGenerate } = require('./claude-provider.cjs');
   try {
-    const r = await httpsGet(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-    if (r.status === 200) return;  // healthy
-    if (r.status === 401 || r.status === 403) {
-      findings.push({
-        severity: 'high',
-        kind: 'gemini_key_dead',
-        message: `GEMINI_API_KEY returned ${r.status} on probe — key is revoked/expired/wrong. Next Monday's publish will fail. Rotate the key + update repo secret.`,
-      });
-    } else if (r.status === 429) {
-      findings.push({
-        severity: 'medium',
-        kind: 'gemini_rate_limited',
-        message: `GEMINI_API_KEY returned 429 (rate limited). Transient — won't affect Monday's run unless persistent.`,
-      });
-    }
+    const out = await claudeGenerate('Reply with exactly: OK', { timeoutMs: 120000 });
+    if (/OK/i.test(out)) return;  // healthy
+    findings.push({
+      severity: 'medium',
+      kind: 'claude_cli_odd_output',
+      message: `Claude CLI responded but not as expected (got: ${out.slice(0, 80)}). Generation may still work; worth an eye.`,
+    });
   } catch (e) {
-    findings.push({ severity: 'low', kind: 'gemini_probe_err', message: `Could not probe Gemini key: ${e.message}` });
+    findings.push({
+      severity: 'high',
+      kind: 'claude_cli_dead',
+      message: `Claude CLI probe failed — next publish will fail. ${e.message}. Check: claude --version, and that the subscription is active.`,
+    });
   }
 }
 
@@ -825,8 +826,12 @@ async function runChecks() {
     await checkPostRot(findings);          // live HTML crawl (3 sample posts) + SEO artifact check
     await checkSeoArtifacts(findings);     // robots.txt + llms.txt + IndexNow key
     await checkPatExpiry(findings);        // parse PAT expiry header
-    // checkGeminiKeyHealth retired 2026-06-24 — Gemini path is gone; Claude
-    // routine (gm-blog-publisher) is the sole generator. Nothing to probe.
+    // CORRECTED 2026-07-28: the 2026-06-24 note claimed "Gemini path is gone;
+    // Claude routine is the sole generator." That was wrong — the Claude routine
+    // was never built, the Gemini Action stayed live, and with no probe running
+    // nothing noticed when Google zeroed the free tier. Generation now genuinely
+    // runs on the local Claude CLI, so probe THAT and never fly blind again.
+    await checkGenerationBackendHealth(findings);
   }
   return { findings };
 }
