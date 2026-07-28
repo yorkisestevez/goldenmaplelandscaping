@@ -615,6 +615,10 @@ async function checkWorkflowsEnabled(findings) {
 // word. Publishing now runs on the local Claude CLI, so we probe that instead:
 // the binary must exist AND actually return output.
 async function checkGenerationBackendHealth(findings) {
+  // Claude CLI is a LOCAL dependency — it does not exist on GitHub runners, and
+  // publishing no longer runs there. Probing it in CI would fail 100% of the
+  // time and turn this watchdog into pure noise, so skip when hosted.
+  if (process.env.GITHUB_ACTIONS || process.env.CI) return;
   const { claudeGenerate } = require('./claude-provider.cjs');
   try {
     const out = await claudeGenerate('Reply with exactly: OK', { timeoutMs: 120000 });
