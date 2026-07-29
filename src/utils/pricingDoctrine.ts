@@ -10,9 +10,9 @@ import engineBaseline from '../data/engine-baseline.json';
 // 3400/4000 would put the band FLOOR above the target rate and emit incoherent
 // quotes (line 43 feeds bottom/premium straight into the band).
 export const DAILY_PRODUCTION_RATES = {
-  bottom: 2700,
+  bottom: 3400,
   target: engineBaseline.facts.crewDayRateDeck,
-  premium: 3300,
+  premium: 4000,
 } as const;
 
 export const HARDSCAPE_DAILY_RATES = {
