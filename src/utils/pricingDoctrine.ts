@@ -1,14 +1,16 @@
 import engineBaseline from '../data/engine-baseline.json';
 
 // Deck rates bracket the engine's $3,700/crew-day card. Hardscape floors come
-// straight from the LOCKED all-in rate card ($2,470/crew-day — wages, burden,
-// equipment, overhead, and margin already inside; labor-rate.json 2026-06-04).
+// straight from the LOCKED all-in rate card ($2,800/crew-day — wages, burden,
+// equipment, overhead, and margin already inside; corrected from a stale $2,470
+// on 2026-07-28).
 // FACTS derive from engine-baseline.json — scripts/check-pricing-parity.ts
 // fails the build if these drift from the DeckCraft engine.
-// 2026-07-27 — deck all-in rate moved $3,700 → $3,000 (Yorkis). The bottom/
-// premium rails keep the original ±$300 spread around target; leaving them at
-// 3400/4000 would put the band FLOOR above the target rate and emit incoherent
-// quotes (line 43 feeds bottom/premium straight into the band).
+// 2026-07-28 — deck was briefly cut to $3,000, then returned to the $3,700
+// target: $3,000 sat below the documented $3,400 bottom and roughly halved
+// deck gross margin (~$800/day vs ~$1,500/day). Rails stay 3400/4000 around
+// the 3700 target. If the target ever moves again, move these rails with it —
+// a bottom above the target feeds an incoherent band into line 43.
 export const DAILY_PRODUCTION_RATES = {
   bottom: 3400,
   target: engineBaseline.facts.crewDayRateDeck,
