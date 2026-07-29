@@ -13,7 +13,7 @@ import EstimateLeadCapture from './EstimateLeadCapture';
 import EstimateBookingCTA from './EstimateBookingCTA';
 import { PAVER_BRANDS, DECK_BRANDS, ADD_ONS, BIN_COST, estimateBins, defaultPaverForTier, sortPaversForDisplay, type PaverTier } from '../data/carrPrices';
 import { ESTIMATOR_LOCATIONS, ZONE_SURCHARGE, type EstimatorLocationKey } from '../data/locations';
-import { applyDailyProductionFloor, getEstimatorMinimumFloor, getEstimatorRangeCopy } from '../utils/pricingDoctrine';
+import { applyDailyProductionFloor, getEstimatorRangeCopy } from '../utils/pricingDoctrine';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -163,6 +163,9 @@ export default function Estimator() {
   const [deckBrandId, setDeckBrandId] = useState<string>('timbertech-prime');
   const [addOns, setAddOns] = useState<string[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  // The headline range is always free. The itemized breakdown is the trade for
+  // a name and email — flipped true once EstimateLeadCapture captures them.
+  const [breakdownUnlocked, setBreakdownUnlocked] = useState(false);
 
   // Per-step funnel tracking — fire each step once per session so GA4 shows drop-off.
   const firedSteps = useRef<Set<number>>(new Set());
@@ -253,7 +256,7 @@ export default function Estimator() {
   const estimate = useMemo(() => {
     const els = projectType === 'full' ? selectedElements : (projectType ? [projectType] : []);
     if (els.length === 0) {
-      return { totalLow: 0, totalHigh: 0, floor: 0, lines: null, addOnsTotal: { low: 0, high: 0 }, days: { low: 0, high: 0 } };
+      return { totalLow: 0, totalHigh: 0, lines: null, addOnsTotal: { low: 0, high: 0 }, days: { low: 0, high: 0 } };
     }
 
     let coreLow = 0;
@@ -469,15 +472,12 @@ export default function Estimator() {
     const totalLow = Math.round((excavationLow + materialLow + labourLow + disposalLow + restorationLow + surcharge + addOnsLow) / 500) * 500;
     const totalHigh = Math.round((excavationHigh + materialHigh + labourHigh + disposalHigh + restorationHigh + surcharge + addOnsHigh) / 500) * 500;
 
-    // Hard floors — real minimum job size Golden Maple wants the online funnel to attract.
-    const floor = getEstimatorMinimumFloor(projectType, selectedElements);
-    const finalLow = Math.max(floor, totalLow);
-    const finalHigh = Math.max(floor + 5000, totalHigh);
-
+    // No job minimum. The estimate is whatever the project actually costs out
+    // to — a small walkway prices as a small walkway. Qualification happens at
+    // the name+email gate on the breakdown, not with a price wall.
     return {
-      totalLow: finalLow,
-      totalHigh: finalHigh,
-      floor,
+      totalLow,
+      totalHigh,
       addOnsTotal: { low: addOnsLow, high: addOnsHigh },
       days: { low: Math.ceil(daysLow * 2) / 2, high: Math.ceil(daysHigh * 2) / 2 },
       lines: {
@@ -538,10 +538,10 @@ export default function Estimator() {
   const display = useMemo(() => {
     if (estimate.totalLow <= 0) return { low: 0, high: 0 };
     const spread = Math.max(0, (confidence - 8) / 100);
-    const low = Math.max(estimate.floor, Math.round((estimate.totalLow * (1 - spread * 0.45)) / 500) * 500);
+    const low = Math.max(500, Math.round((estimate.totalLow * (1 - spread * 0.45)) / 500) * 500);
     const high = Math.round((estimate.totalHigh * (1 + spread * 0.9)) / 500) * 500;
     return { low, high };
-  }, [estimate.totalLow, estimate.totalHigh, estimate.floor, confidence]);
+  }, [estimate.totalLow, estimate.totalHigh, confidence]);
 
   // Transient "+$2,400" chip when an answer moves the estimate — makes every input visibly count.
   const mid = (estimate.totalLow + estimate.totalHigh) / 2;
@@ -1106,6 +1106,7 @@ export default function Estimator() {
                 brandName={isDeck ? `${selectedDeck.brand} ${selectedDeck.product}` : `${selectedPaver.brand} ${selectedPaver.product}`}
                 sqft={totalSqft}
                 city={selectedLocation.name}
+                locked={!breakdownUnlocked}
               />
 
               {details['wall.wallPurpose'] === 'structure' && (
@@ -1118,7 +1119,7 @@ export default function Estimator() {
                 </div>
               )}
 
-              {addOns.length > 0 && (
+              {addOns.length > 0 && breakdownUnlocked && (
                 <div className="mt-8 bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-6">
                   <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Selected Add-ons</div>
                   <div className="divide-y divide-brand-gold/10">
@@ -1149,7 +1150,7 @@ export default function Estimator() {
                   hasPhotos: !!photoFile,
                   conditions: Object.entries(conditions).filter(([, v]) => v).map(([k]) => k),
                   details,
-                }} />
+                }} onUnlock={() => setBreakdownUnlocked(true)} />
                 <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-6 md:p-8 flex flex-col justify-center">
                   <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-3">Project Timeline</div>
                   <div className="font-display text-3xl text-brand-bone mb-2">
@@ -1175,7 +1176,7 @@ export default function Estimator() {
               </div>
 
               <p className="mt-8 font-sans text-xs font-normal text-brand-bonewhite/80 text-center max-w-3xl mx-auto leading-[1.6]">
-                {getEstimatorRangeCopy(projectType, selectedElements)} <span className="text-brand-gold font-normal">Minimum online planning floor: {fmt(estimate.floor)}.</span> Final pricing depends on site measurement, material availability, access, drainage, and design complexity.
+                {getEstimatorRangeCopy(projectType, selectedElements)} <span className="text-brand-gold font-normal">No job minimum — every project gets priced on its real scope, whatever the size.</span> Final pricing depends on site measurement, material availability, access, drainage, and design complexity.
               </p>
             </motion.div>
           )}

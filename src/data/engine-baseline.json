@@ -5,7 +5,7 @@
     "binCostCad": 550,
     "binPerSqftFullDepth": 237,
     "baseDepthIn": 12,
-    "crewDayRateHardscape": 2470,
+    "crewDayRateHardscape": 2800,
     "materialMarkup": 1.35,
     "hstRate": 0.13,
     "crewDayRateDeck": 3700
@@ -16,11 +16,11 @@
         "200": {
           "low": 45,
           "mid": 45,
-          "high": 45
+          "high": 50
         },
         "300": {
-          "low": 40,
-          "mid": 40,
+          "low": 45,
+          "mid": 45,
           "high": 45
         },
         "600": {
@@ -29,61 +29,61 @@
           "high": 40
         },
         "1000": {
-          "low": 35,
-          "mid": 35,
+          "low": 40,
+          "mid": 40,
           "high": 40
         }
       },
       "perSqftPreTax": {
-        "low": 40,
-        "mid": 40,
+        "low": 45,
+        "mid": 45,
         "high": 45
       }
     },
     "walkway": {
       "sizesSqft": {
         "80": {
-          "low": 80,
-          "mid": 80,
-          "high": 80
+          "low": 85,
+          "mid": 85,
+          "high": 85
         },
         "120": {
-          "low": 70,
-          "mid": 70,
-          "high": 70
+          "low": 75,
+          "mid": 75,
+          "high": 75
         },
         "200": {
-          "low": 60,
-          "mid": 60,
-          "high": 60
+          "low": 65,
+          "mid": 65,
+          "high": 65
         }
       },
       "perSqftPreTax": {
-        "low": 70,
-        "mid": 70,
-        "high": 70
+        "low": 75,
+        "mid": 75,
+        "high": 75
       }
     },
     "driveway": {
       "sizesSqft": {
         "400": {
           "low": 50,
-          "mid": 50,
-          "high": 55
+          "mid": 55,
+          "high": 60
         },
         "600": {
-          "low": 45,
+          "low": 50,
           "mid": 50,
           "high": 55
         },
         "1000": {
-          "low": 45,
-          "mid": 45,
-          "high": 50
+          "low": 50,
+          "mid": 50,
+          "high": 55
         }
       },
       "perSqftPreTax": {
-        "low": 45,
+        "low": 50,
         "mid": 50,
         "high": 55
       }

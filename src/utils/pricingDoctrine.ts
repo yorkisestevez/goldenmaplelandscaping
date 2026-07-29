@@ -5,6 +5,10 @@ import engineBaseline from '../data/engine-baseline.json';
 // equipment, overhead, and margin already inside; labor-rate.json 2026-06-04).
 // FACTS derive from engine-baseline.json — scripts/check-pricing-parity.ts
 // fails the build if these drift from the DeckCraft engine.
+// 2026-07-27 — deck all-in rate moved $3,700 → $3,000 (Yorkis). The bottom/
+// premium rails keep the original ±$300 spread around target; leaving them at
+// 3400/4000 would put the band FLOOR above the target rate and emit incoherent
+// quotes (line 43 feeds bottom/premium straight into the band).
 export const DAILY_PRODUCTION_RATES = {
   bottom: 3400,
   target: engineBaseline.facts.crewDayRateDeck,
@@ -47,15 +51,17 @@ export function applyDailyProductionFloor({
   };
 }
 
-export function getEstimatorMinimumFloor(projectType: string | null, selectedElements: string[] = []) {
-  if (projectType === 'full') return PROJECT_PLANNING_RANGES.fullBackyard.low;
-  if (projectType === 'wall') return 30000;
-  if (projectType === 'patio' || projectType === 'stone') return PROJECT_PLANNING_RANGES.premiumPatio.low;
-  if (projectType === 'steps') return PROJECT_PLANNING_RANGES.frontEntrance.low;
-  if (projectType === 'deck') return 25000;
-  if (selectedElements.includes('wall') && selectedElements.includes('patio')) return PROJECT_PLANNING_RANGES.patioWallDrainage.low;
-  return 18000;
-}
+// NOTE: there is deliberately no getEstimatorMinimumFloor() any more.
+// The estimator used to clamp every result up to a per-project-type job
+// minimum ($18K–$90K), which meant a small walkway that genuinely costed out
+// at $9K was shown as $18K. Removed 2026-07-27 — every visitor now prices
+// their real project, whatever the size, and the name+email gate on the
+// itemized breakdown is what qualifies the lead instead of a price wall.
+//
+// The labour day-rate floor in applyDailyProductionFloor() above is NOT the
+// same thing and stays: it's real cost math (a crew-day costs what it costs),
+// not a marketing minimum. Removing that one would let the estimator quote
+// jobs below Golden Maple's actual cost to show up.
 
 export function getEstimatorRangeCopy(projectType: string | null, selectedElements: string[] = []) {
   if (projectType === 'full') return 'Full backyard transformations commonly plan at $90K–$150K+ when patio, walls, lighting, fire, kitchen, drainage, or grade work are included.';

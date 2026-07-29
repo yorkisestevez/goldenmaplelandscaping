@@ -12,7 +12,7 @@ export default function CostEstimator() {
         "name": "How much does an interlocking patio cost in Barrie?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "A premium interlocking patio in Barrie typically ranges from $25,000 to $55,000 depending on size, the Permacon paver chosen (Melville, Cassara, Mondrian Plus, Mega Melville, Brooklyn, and more), site conditions like slope or tear-out, and any add-ons like lighting or fire features. Our minimum hardscape investment is $12,000 because we install on a 12–16\" base for true freeze-thaw durability."
+          "text": "A premium interlocking patio in Barrie typically ranges from $25,000 to $55,000 depending on size, the Permacon paver chosen (Melville, Cassara, Mondrian Plus, Mega Melville, Brooklyn, and more), site conditions like slope or tear-out, and any add-ons like lighting or fire features. There is no job minimum — small walkways and front entrances price out at their real scope. Every build goes on a 12–16\" base for true freeze-thaw durability, whatever the size."
         }
       },
       {
@@ -38,7 +38,7 @@ export default function CostEstimator() {
     <>
       <SEO
         title="Landscaping Cost Estimator Barrie 2026 | Real Pricing | Golden Maple"
-        description="Get a real ballpark for your landscaping project in Simcoe County. Pick your Permacon paver line and TimberTech finish, see itemized pricing, and email yourself the breakdown — no signup to view."
+        description="Get a real ballpark for your landscaping project in Simcoe County — no job minimum, any size. Pick your Permacon paver line and TimberTech finish, see your price range free, then unlock the itemized breakdown with your name and email."
         canonical="https://goldenmaplelandscaping.ca/cost-estimator"
         schema={schema}
       />
@@ -52,9 +52,12 @@ export default function CostEstimator() {
             <p>
               Every Golden Maple project quote is built bottom-up from real Carr Landscape Depot pricing — the same supplier we've been using since day one. The estimator above uses 2026 trade rates for Permacon pavers and TimberTech composite decking, plus current bin disposal and aggregate costs.
             </p>
-            <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Why our minimum is $12,000</h3>
+            <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Why we build on a 12–16" base</h3>
             <p>
-              We install hardscape on a 12–16" open-graded base — twice as deep as most competitors. That depth is what survives Ontario freeze-thaw cycles. A shallower base might shave a few thousand off the upfront price, but stones start sinking inside three years. We won't build that, which is why our minimum project size is $12,000 ($25,000 for decking).
+              We install hardscape on a 12–16" open-graded base — twice as deep as most competitors. That depth is what survives Ontario freeze-thaw cycles. A shallower base might shave a few thousand off the upfront price, but stones start sinking inside three years. We won't build that way at any size, which is why the estimator prices the real base into every project — a 60 sqft front entrance included.
+            </p>
+            <p>
+              There's no job minimum here. Price out whatever you're actually planning and you'll get the honest number for it, not a number padded up to hit a floor.
             </p>
             <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Permacon material tiers, explained</h3>
             <ul className="space-y-2">

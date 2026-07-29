@@ -17,7 +17,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import baseline from '../src/data/engine-baseline.json';
 import { BIN_COST, PAVER_BRANDS, DECK_BRANDS } from '../src/data/carrPrices';
-import { DAILY_PRODUCTION_RATES, HARDSCAPE_DAILY_RATES, getEstimatorMinimumFloor } from '../src/utils/pricingDoctrine';
+import { DAILY_PRODUCTION_RATES, HARDSCAPE_DAILY_RATES } from '../src/utils/pricingDoctrine';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 let failures = 0;
@@ -36,7 +36,10 @@ console.log(`  baseline source: ${baseline.source}`);
 // Yorkis's real cost structure moves.
 const bounds: [string, number, number, number][] = [
   ['facts.binCostCad', baseline.facts.binCostCad, 450, 800],
-  ['facts.crewDayRateHardscape', baseline.facts.crewDayRateHardscape, 2000, 3200],
+  // Bounds moved 2026-07-27 with Yorkis's all-in rate reset: hardscape
+  // $2,470 → $2,800, deck $3,700 → $3,000. Deck floor drops to 2700 to match
+  // the new DAILY_PRODUCTION_RATES.bottom rail.
+  ['facts.crewDayRateHardscape', baseline.facts.crewDayRateHardscape, 2400, 3200],
   ['facts.crewDayRateDeck', baseline.facts.crewDayRateDeck, 3400, 4200],
   ['facts.baseDepthIn', baseline.facts.baseDepthIn, 12, 16],
 ];
@@ -76,9 +79,8 @@ for (const d of DECK_BRANDS as any[]) {
   if (ratio < 0.3 || ratio > 1.5)
     warn(`deck anchor ${d.id} $${d.installedPerSqft}/sqft vs engine high $${deckBand.high} (${ratio.toFixed(1)}x)`);
 }
-const patioFloor = getEstimatorMinimumFloor('patio');
 const engine300 = ((baseline.bands as any).patio.sizesSqft['300'] as any).mid * 300;
-console.log(`  info  positioning: patio floor $${patioFloor.toLocaleString()} vs engine 300sqft mid ~$${Math.round(engine300).toLocaleString()} — intentional premium filter ($25K–$80K rule)`);
+console.log(`  info  positioning: no estimator job minimum — a 300sqft patio prices at the engine mid ~$${Math.round(engine300).toLocaleString()}; qualification happens at the name+email gate, not a price floor`);
 
 console.log(failures === 0 ? 'PARITY OK' : `${failures} PARITY FAILURE(S) — regenerate engine-baseline.json or fix the site data`);
 process.exit(failures === 0 ? 0 : 1);
