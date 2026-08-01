@@ -4,6 +4,14 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
+    {
+    slug: "failing-interlocking-patio-signs-barrie",
+    title: "Failing Patio Signs in Barrie: 7 Things to Check Before It Costs You",
+    excerpt: "Sunken pavers, wide joints, and pooling water are early signs of a failing patio in Barrie — catch them before repairs hit $8,000.",
+    category: "Engineering",
+    readTime: "9 min",
+    image: "/images/projects/patio-pergola.jpg",
+  },
   {
     slug: "composite-decking-maintenance-ontario",
     title: "Composite Decking Maintenance: What Actually Needs Doing Each Year",
