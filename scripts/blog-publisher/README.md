@@ -8,7 +8,7 @@ Automated weekly SEO blog posts for goldenmaplelandscaping.ca. Runs in GitHub Ac
 2. Picks the next unused topic from `topics.json`.
 3. Calls Gemini 2.5 Pro → structured 1500-2200 word post (title, sections, FAQs, internal links, FAQPage schema).
 4. Validates word count / banned phrases / hero allowlist / internal link count.
-5. Writes the new `.tsx`, updates `App.tsx`, `Resources.tsx`, `sitemap.xml`, updates `state.json`, archives the draft.
+5. Writes the new `.tsx`, updates `routes.ts`, `Resources.tsx`, `sitemap.xml`, updates `state.json`, archives the draft.
 6. Creates branch `auto/blog-YYYY-MM-DD-<slug>`, commits the changes, pushes.
 7. Opens a PR via `gh`.
 8. Telegrams the operator with the PR link.

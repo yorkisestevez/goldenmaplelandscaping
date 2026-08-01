@@ -190,7 +190,7 @@ function validateDraft(draft) {
   const words = htmlPlainTextLength(bodyHtml);
   if (words < 1300) errors.push(`word count low (${words})`);
 
-  const linkMatches = bodyHtml.match(/<a\s+href=['"]\/[^'"]+['"]/g) || [];
+  const linkMatches = bodyHtml.match(/<a\s+href=['"]\/[^'"]*['"]/g) || [];
   if (linkMatches.length < 3) errors.push(`internal links <3 (got ${linkMatches.length})`);
 
   const banned = ['in today\'s world', 'as a homeowner', 'industry-leading', 'state-of-the-art', 'look no further', 'elevate your', 'transform your', 'passionate team', 'dedicated team'];

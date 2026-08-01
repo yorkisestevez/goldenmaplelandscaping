@@ -1,12 +1,16 @@
 // scripts/blog-publisher/inject.cjs
-// Writes the 4 user-facing files (.tsx + App.tsx + Resources.tsx + sitemap.xml)
+// Writes the 4 user-facing files (.tsx + routes.ts + Resources.tsx + sitemap.xml)
 // inside the repo. Called in-process from cli.cjs workflow-run.
 
 const fs = require('fs');
 const path = require('path');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
-const APP_TSX = path.join(REPO_ROOT, 'src/App.tsx');
+// RR7 framework mode (migration d9a66cf, 2026-07): src/App.tsx is gone — the
+// route tree now lives in src/routes.ts and each blog page is its own route
+// module. ssr:false + prerender({getStaticPaths}) means a new static route is
+// prerendered automatically with no extra wiring.
+const ROUTES_TS = path.join(REPO_ROOT, 'src/routes.ts');
 const RESOURCES_TSX = path.join(REPO_ROOT, 'src/pages/Resources.tsx');
 const SITEMAP_XML = path.join(REPO_ROOT, 'public/sitemap.xml');
 const BLOG_DIR = path.join(REPO_ROOT, 'src/pages/blog');
@@ -106,29 +110,25 @@ ${bioJsx}      <div dangerouslySetInnerHTML={{ __html: ${ctaLiteral} }} />
 `;
 }
 
-function injectIntoAppTsx(draft) {
+function injectIntoRoutes(draft) {
   const compName = slugToComponent(draft.slug);
-  const importLine = `const ${compName} = lazy(() => import('./pages/blog/${compName}'));`;
-  const routeLine = `              <Route path="/resources/${draft.slug}" element={<${compName} />} />`;
+  const routeLine = `  route('resources/${draft.slug}', 'pages/blog/${compName}.tsx'),`;
 
-  let src = fs.readFileSync(APP_TSX, 'utf8');
-  if (src.includes(`./pages/blog/${compName}`)) throw new Error(`App.tsx already imports ${compName}`);
+  let src = fs.readFileSync(ROUTES_TS, 'utf8');
+  if (src.includes(`'pages/blog/${compName}.tsx'`)) throw new Error(`routes.ts already routes ${compName}`);
+  if (src.includes(`route('resources/${draft.slug}'`)) throw new Error(`routes.ts already routes /resources/${draft.slug}`);
 
-  // \r?\n so the regex works on both LF (Linux CI runners) AND CRLF (Windows
-  // local checkouts) — caught 2026-06-15 when the Claude routine ran the
-  // injector from a Windows working tree and every regex match failed.
-  const importAnchor = src.match(/(const \w+ = lazy\(\(\) => import\('\.\/pages\/blog\/[^']+'\)\);\r?\n)(?![\s\S]*const \w+ = lazy\(\(\) => import\('\.\/pages\/blog\/)/);
-  if (!importAnchor) throw new Error('Could not locate blog import block in App.tsx');
+  // Anchor on the LAST blog route so new posts append to the bottom of that
+  // block. \r?\n so the regex works on both LF (Linux CI runners) AND CRLF
+  // (Windows local checkouts) — caught 2026-06-15 when the Claude routine ran
+  // the injector from a Windows working tree and every regex match failed.
+  const routeAnchor = src.match(/([ \t]*route\('resources\/[^']+', 'pages\/blog\/[^']+'\),\r?\n)(?![\s\S]*route\('resources\/[^']+', 'pages\/blog\/)/);
+  if (!routeAnchor) throw new Error('Could not locate blog route block in routes.ts');
   // Use the same line ending the file already uses, so we don't mix CRLF/LF.
-  const eol = importAnchor[0].endsWith('\r\n') ? '\r\n' : '\n';
-  src = src.replace(importAnchor[0], importAnchor[0] + importLine + eol);
+  const eol = routeAnchor[0].endsWith('\r\n') ? '\r\n' : '\n';
+  src = src.replace(routeAnchor[0], routeAnchor[0] + routeLine + eol);
 
-  const routeAnchor = src.match(/(\s+<Route path="\/resources\/[^"]+" element=\{<\w+ \/>\} \/>\r?\n)(?![\s\S]*<Route path="\/resources\/)/);
-  if (!routeAnchor) throw new Error('Could not locate blog route block in App.tsx');
-  const routeEol = routeAnchor[0].endsWith('\r\n') ? '\r\n' : '\n';
-  src = src.replace(routeAnchor[0], routeAnchor[0] + routeLine + routeEol);
-
-  fs.writeFileSync(APP_TSX, src);
+  fs.writeFileSync(ROUTES_TS, src);
 }
 
 function injectIntoResources(draft) {
@@ -170,17 +170,41 @@ function injectDraft(draft) {
   const newTsxPath = path.join(BLOG_DIR, `${compName}.tsx`);
   if (fs.existsSync(newTsxPath)) throw new Error(`${newTsxPath} already exists`);
 
-  fs.writeFileSync(newTsxPath, buildTsx(draft));
-  injectIntoAppTsx(draft);
-  injectIntoResources(draft);
-  injectIntoSitemap(draft);
+  // All-or-nothing. The four writes are not atomic, so if a later step throws
+  // (2026-08-01: routes.ts injection died on the stale App.tsx path) we roll the
+  // earlier ones back. Otherwise the half-written post orphans a .tsx that makes
+  // EVERY retry fail on the `already exists` guard above — one crash silently
+  // ends the publishing cadence until a human notices.
+  const rollback = [];
+  const snapshot = (p) => rollback.push({ path: p, before: fs.readFileSync(p, 'utf8') });
+  try {
+    fs.writeFileSync(newTsxPath, buildTsx(draft));
+    rollback.push({ path: newTsxPath, before: null });
+
+    snapshot(ROUTES_TS);
+    injectIntoRoutes(draft);
+
+    snapshot(RESOURCES_TSX);
+    injectIntoResources(draft);
+
+    snapshot(SITEMAP_XML);
+    injectIntoSitemap(draft);
+  } catch (err) {
+    for (const { path: p, before } of rollback.reverse()) {
+      try {
+        if (before === null) fs.unlinkSync(p);
+        else fs.writeFileSync(p, before);
+      } catch { /* best-effort — never mask the original error */ }
+    }
+    throw err;
+  }
 
   const relTsx = path.relative(REPO_ROOT, newTsxPath).replace(/\\/g, '/');
   return {
     slug: draft.slug,
     compName,
     route: `/resources/${draft.slug}`,
-    filesChanged: [relTsx, 'src/App.tsx', 'src/pages/Resources.tsx', 'public/sitemap.xml']
+    filesChanged: [relTsx, 'src/routes.ts', 'src/pages/Resources.tsx', 'public/sitemap.xml']
   };
 }
 
