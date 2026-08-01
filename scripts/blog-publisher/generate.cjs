@@ -96,11 +96,30 @@ function extractOpenAICompatibleText(response, provider) {
   return content;
 }
 
+// The Claude CLI often wraps its answer in a ```json fence despite the prompt
+// saying not to. The original regex required BOTH fences, so any output whose
+// closing fence was missing (truncated, or the model just stopped) fell through
+// to JSON.parse('```json{...') and always threw. That was the 2026-08-01 Nudgel
+// failure: the blog never published a single post because of it.
 function parseJson(text) {
   let s = text.trim();
-  const fence = s.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
-  if (fence) s = fence[1].trim();
-  return JSON.parse(s);
+  const fenced = s.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+  if (fenced) {
+    s = fenced[1].trim();
+  } else {
+    // Unclosed fence — strip whatever opener/closer is actually there.
+    s = s.replace(/^```(?:json)?[ \t]*\r?\n?/, '').replace(/\r?\n?[ \t]*```$/, '').trim();
+  }
+  try {
+    return JSON.parse(s);
+  } catch (err) {
+    // Model wrapped the object in prose ("Here's the JSON:"). Take the
+    // outermost {...} span before giving up.
+    const first = s.indexOf('{');
+    const last = s.lastIndexOf('}');
+    if (first !== -1 && last > first) return JSON.parse(s.slice(first, last + 1));
+    throw err;
+  }
 }
 
 function pickNextTopic(topics, state) {
@@ -299,4 +318,6 @@ async function generateDraft({ topicId = null } = {}) {
   return draft;
 }
 
-module.exports = { generateDraft, validateDraft, ALLOWED_HEROES };
+// parseJson is exported for its regression test — the unclosed-fence bug it
+// guards silently killed the Nudgel blog entirely (2026-08-01).
+module.exports = { generateDraft, validateDraft, parseJson, ALLOWED_HEROES };

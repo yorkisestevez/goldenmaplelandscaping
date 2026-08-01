@@ -14,3 +14,13 @@ coverage/
 
 # Gemini-era backups from the 2026-07-28 Claude CLI migration
 scripts/blog-publisher/*.bak-gemini-*
+
+# Client documents must never reach this PUBLIC repo. A signed client invoice
+# (real name, address, price) was sitting loose in the repo root on 2026-08-01,
+# one `git add -A` away from being published. Keep working copies here if
+# convenient, but they stay untracked.
+*.pdf
+!public/**/*.pdf
+!docs/**/*.pdf
+!guides/**/*.pdf
+/.hermes/
