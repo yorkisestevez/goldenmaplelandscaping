@@ -56,6 +56,8 @@ export default function WhyPatiosSink() {
         <li><strong>Edge creep</strong> — the perimeter of your patio is slowly pushing outward.</li>
       </ul>
 
+      <p>If you're seeing any of those, we wrote a full walkthrough on <a href="/resources/failing-interlocking-patio-signs-barrie">how to check each one yourself and decide whether it's a repair or a rebuild</a>.</p>
+
       <h2>What We'd Tell Any Homeowner in Barrie</h2>
 
       <p>When you're getting quotes for a patio project, <strong>ask one question: "How deep will you dig the base?"</strong> If the answer is anything less than 12 inches, keep looking. The money you save upfront will cost you double when you're re-doing the project in three years.</p>
