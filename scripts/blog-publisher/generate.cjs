@@ -133,6 +133,12 @@ function buildPrompt(topic) {
 
 OUTPUT FORMAT — return ONE JSON object only. No prose before or after. No markdown fences.
 
+CRITICAL — never type a straight double quote (") inside any string value. It
+ends the JSON string early and the whole response is discarded. When you need
+quotation marks inside prose, use curly quotes (“ ”). Use single quotes for any
+HTML attribute, e.g. <a href='/blog'>. This is the single most common way this
+response gets thrown away.
+
 {
   "title": "<full article title, ≤80 chars — front-load the primary keyword>",
   "seoTitle": "<title tag, ≤60 chars, primary keyword at the very front, location second>",
