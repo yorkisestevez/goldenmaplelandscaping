@@ -82,6 +82,7 @@ export default [
   route('resources/spring-cleanup-checklist-barrie', 'pages/blog/SpringCleanupChecklistBarrie.tsx'),
   route('resources/composite-decking-maintenance-ontario', 'pages/blog/CompositeDeckingMaintenanceOntario.tsx'),
   route('resources/failing-interlocking-patio-signs-barrie', 'pages/blog/FailingInterlockingPatioSignsBarrie.tsx'),
+  route('resources/outdoor-lighting-design-mistakes', 'pages/blog/OutdoorLightingDesignMistakes.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),
