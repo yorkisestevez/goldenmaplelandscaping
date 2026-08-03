@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-    {
+      {
+    slug: "outdoor-lighting-design-mistakes",
+    title: "Landscape Lighting Mistakes That Make Homes Look Cheap in Simcoe County",
+    excerpt: "Six landscape lighting mistakes — wrong colour temperature, over-lighting, and shallow cable burial — make Barrie homes look cheap. Here is the fix.",
+    category: "Design",
+    readTime: "9 min",
+    image: "/images/projects/patio-pergola.jpg",
+  },
+  {
     slug: "failing-interlocking-patio-signs-barrie",
     title: "Failing Patio Signs in Barrie: 7 Things to Check Before It Costs You",
     excerpt: "Sunken pavers, wide joints, and pooling water are early signs of a failing patio in Barrie — catch them before repairs hit $8,000.",

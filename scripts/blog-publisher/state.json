@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-08-01T12:58:02.814Z",
+  "lastRunAt": "2026-08-03T00:00:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -15,10 +15,11 @@
     "auto-011",
     "auto-012",
     "auto-013",
-    "auto-014"
+    "auto-014",
+    "auto-015"
   ],
   "publishedSlugs": [],
-  "currentDraft": "failing-interlocking-patio-signs-barrie",
+  "currentDraft": "outdoor-lighting-design-mistakes",
   "history": [
     {
       "topicId": "auto-001",
@@ -236,6 +237,20 @@
         "hasTable": true,
         "numericCount": 18
       }
+    },
+    {
+      "topicId": "auto-015",
+      "slug": "outdoor-lighting-design-mistakes",
+      "at": "2026-08-03T00:00:00.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2562,
+        "linkCount": 7,
+        "hasTable": true,
+        "numericCount": 8
+      },
+      "generatedBy": "claude-cloud-routine"
     }
   ]
 }
