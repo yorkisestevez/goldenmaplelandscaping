@@ -76,6 +76,13 @@ export default function PermitsBylawsBarrie() {
 
       <p>This guide is a non-legal reference. Bylaws change, lot conditions vary, and the responsibility to verify rests with the property owner. We've installed in every municipality covered below; the rules summarized here reflect what we file day-to-day in 2025–2026 — but always confirm with your local building department before signing anything.</p>
 
+      <div className="not-prose my-10 p-7 rounded-2xl border border-brand-gold/30 bg-brand-surface flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+        <p className="font-sans text-sm text-brand-bonewhite/85 font-light mb-0 max-w-md">
+          We pull the permits, engage the P.Eng, and schedule the inspections for you — on every project. Get a written quote that accounts for it.
+        </p>
+        <Link to="/contact" className="btn-primary px-10 py-4 whitespace-nowrap shrink-0">Request a Quote</Link>
+      </div>
+
       <h2>The Quick-Reference Permit Chart</h2>
 
       <div className="not-prose my-10 overflow-x-auto">
