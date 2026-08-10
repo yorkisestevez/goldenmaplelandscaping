@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-08-03T00:00:00.000Z",
+  "lastRunAt": "2026-08-10T00:00:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -16,10 +16,11 @@
     "auto-012",
     "auto-013",
     "auto-014",
-    "auto-015"
+    "auto-015",
+    "auto-016"
   ],
   "publishedSlugs": [],
-  "currentDraft": "outdoor-lighting-design-mistakes",
+  "currentDraft": "pergola-vs-pavilion-vs-gazebo-barrie",
   "history": [
     {
       "topicId": "auto-001",
@@ -249,6 +250,20 @@
         "linkCount": 7,
         "hasTable": true,
         "numericCount": 8
+      },
+      "generatedBy": "claude-cloud-routine"
+    },
+    {
+      "topicId": "auto-016",
+      "slug": "pergola-vs-pavilion-vs-gazebo-barrie",
+      "at": "2026-08-10T00:00:00.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2878,
+        "linkCount": 7,
+        "hasTable": true,
+        "numericCount": 41
       },
       "generatedBy": "claude-cloud-routine"
     }
