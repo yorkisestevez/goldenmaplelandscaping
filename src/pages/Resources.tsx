@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-      {
+        {
+    slug: "pergola-vs-pavilion-vs-gazebo-barrie",
+    title: "Pergola vs. Pavilion vs. Gazebo: Which Adds the Most Value in Barrie?",
+    excerpt: "Pergolas cost $8,000–$18,000 installed in Barrie, pavilions $18,000–$45,000, gazebos $12,000–$30,000. Which structure adds the most value? Honest 2026 breakdown.",
+    category: "Design",
+    readTime: "9 min",
+    image: "/images/projects/patio-pergola.jpg",
+  },
+  {
     slug: "outdoor-lighting-design-mistakes",
     title: "Landscape Lighting Mistakes That Make Homes Look Cheap in Simcoe County",
     excerpt: "Six landscape lighting mistakes — wrong colour temperature, over-lighting, and shallow cable burial — make Barrie homes look cheap. Here is the fix.",
