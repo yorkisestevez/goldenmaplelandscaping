@@ -143,8 +143,8 @@ export default function Services() {
               <p className="font-sans text-sm text-brand-bonewhite/80 leading-relaxed font-light">Full protection for our team and your property on every single job site.</p>
             </div>
             <div className="space-y-6">
-              <h3 className="font-display text-3xl font-light text-brand-gold">10-Year Warranty</h3>
-              <p className="font-sans text-base text-brand-bonewhite/80 leading-relaxed font-light">A 10-year sink and settlement warranty on all craftsmanship, reflecting our confidence in our 16" base depth standards.</p>
+              <h3 className="font-display text-3xl font-light text-brand-gold">5-Year Warranty</h3>
+              <p className="font-sans text-base text-brand-bonewhite/80 leading-relaxed font-light">A 5-year sink and settlement warranty on our workmanship, reflecting our confidence in our 16" base depth standards.</p>
             </div>
           </div>
           <Link to="/contact" className="btn-primary px-16 py-5">Let's Talk About Your Project</Link>
