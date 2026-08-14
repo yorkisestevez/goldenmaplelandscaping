@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-08-10T13:02:20.825Z",
+  "lastRunAt": "2026-08-10T00:00:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -256,15 +256,16 @@
     {
       "topicId": "auto-016",
       "slug": "pergola-vs-pavilion-vs-gazebo-barrie",
-      "at": "2026-08-10T13:02:20.821Z",
+      "at": "2026-08-10T00:00:00.000Z",
       "validation": {
         "ok": true,
         "errors": [],
-        "wordCount": 1894,
-        "linkCount": 4,
+        "wordCount": 2878,
+        "linkCount": 7,
         "hasTable": true,
-        "numericCount": 12
-      }
+        "numericCount": 41
+      },
+      "generatedBy": "claude-cloud-routine"
     }
   ]
 }
