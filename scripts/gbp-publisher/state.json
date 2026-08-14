@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "lastRunAt": "2026-06-16T22:03:14.829Z",
-  "lastSuccessAt": "2026-06-10T04:32:42.488Z",
+  "lastRunAt": "2026-08-14T03:33:33.900Z",
+  "lastSuccessAt": "2026-08-14T03:33:33.900Z",
   "lastFailureAt": "2026-06-16T22:15:28.289Z",
-  "consecutiveFailures": 1,
+  "consecutiveFailures": 0,
   "mirrored": [
     {
       "slug": "paver-walkway-cost-barrie",
@@ -28,6 +28,47 @@
       "path": "chrome_mcp",
       "post_id": null,
       "imageAttached": false
+    },
+    {
+      "slug": "failing-interlocking-patio-signs-barrie",
+      "title": "Failing Patio Signs in Barrie: 7 Things to Check Before It Costs You",
+      "ctaUrl": "https://goldenmaplelandscaping.ca/resources/failing-interlocking-patio-signs-barrie",
+      "publishedAt": "2026-08-14T03:24:11.693Z",
+      "routine": "gbp-daily-mirror-manual-catchup-2026-08-13",
+      "path": "chrome_mcp",
+      "post_id": null,
+      "imageAttached": false
+    },
+    {
+      "slug": "outdoor-lighting-design-mistakes",
+      "title": "Landscape Lighting Mistakes That Make Homes Look Cheap in Simcoe County",
+      "ctaUrl": "https://goldenmaplelandscaping.ca/resources/outdoor-lighting-design-mistakes",
+      "publishedAt": "2026-08-14T03:27:24.911Z",
+      "routine": "gbp-daily-mirror-manual-catchup-2026-08-13",
+      "path": "chrome_mcp",
+      "post_id": null,
+      "imageAttached": false
+    },
+    {
+      "slug": "pergola-vs-pavilion-vs-gazebo-barrie",
+      "title": "Pergola vs. Pavilion vs. Gazebo in Barrie: Which Adds the Most Value?",
+      "ctaUrl": "https://goldenmaplelandscaping.ca/resources/pergola-vs-pavilion-vs-gazebo-barrie",
+      "publishedAt": "2026-08-14T03:30:39.098Z",
+      "routine": "gbp-daily-mirror-manual-catchup-2026-08-13",
+      "path": "chrome_mcp",
+      "post_id": null,
+      "imageAttached": false
+    },
+    {
+      "slug": "cost-estimator-promo",
+      "title": "Free Cost Calculator — Price Your Backyard Project",
+      "ctaUrl": "https://goldenmaplelandscaping.ca/cost-estimator?utm_source=gbp&utm_medium=organic&utm_campaign=calculator-launch",
+      "publishedAt": "2026-08-14T03:33:33.900Z",
+      "routine": "gbp-daily-mirror-manual-catchup-2026-08-13",
+      "path": "chrome_mcp",
+      "post_id": null,
+      "imageAttached": false,
+      "note": "NEW post type, not a blog mirror. Showed status=Pending in GBP moderation queue at submission time — normal, not a failure."
     }
   ],
   "history": [
