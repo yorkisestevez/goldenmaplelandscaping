@@ -275,7 +275,7 @@ export default function InnisfilLanding() {
               </table>
             </div>
             <p className="font-sans text-sm text-brand-muted font-light mt-6">
-              Waterfront properties may require additional engineering for drainage and conservation authority approvals. We handle the permit process. Use our <Link to="/cost-estimator" className="text-brand-gold hover:underline">Cost Estimator</Link> for an instant ballpark.
+              Waterfront properties may require additional engineering for drainage and conservation authority approvals. We handle the permit process. Use our <Link to="/cost-estimator?city=innisfil" className="text-brand-gold hover:underline">Cost Estimator</Link> for an instant ballpark.
             </p>
           </motion.div>
 

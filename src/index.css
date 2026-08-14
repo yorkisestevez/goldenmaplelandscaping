@@ -26,6 +26,12 @@
   --color-brand-cream-light: #1B2C23;
   --color-brand-ink: #EEF2EC;          /* light text on dark inputs/photos */
   --color-brand-ink-soft: #9FB0A4;
+  /* Alias. `text-brand-bone` is used ~34 times across the estimator but the
+     token was never defined, so in Tailwind v4 those classes emitted no CSS
+     and the text only looked right by inheriting body colour. Defining it to
+     the same value as bonewhite is a visual no-op that makes the intent real —
+     and means restyling brand-bone later actually does something. */
+  --color-brand-bone: #EEF2EC;
 
   --font-display: "Cormorant Garamond", serif;
   --font-sans: "Inter", sans-serif;
@@ -40,6 +46,42 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   width: 100%;
+}
+
+/* Size slider — the estimator's most-used control.
+   Native range inputs give no thumb styling by default; without this the
+   handle is a tiny OS default that's hard to grab on a phone. 24px thumb on a
+   slim track, with the input itself padded to a 44px touch target by its
+   wrapper in SizeControl. */
+.gm-size-slider {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.gm-size-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: var(--color-brand-gold);
+  border: 3px solid var(--color-brand-nearblack);
+  box-shadow: 0 2px 10px rgba(212, 175, 99, 0.45);
+  cursor: grab;
+  transition: transform 0.15s ease;
+}
+.gm-size-slider::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.12); }
+.gm-size-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: var(--color-brand-gold);
+  border: 3px solid var(--color-brand-nearblack);
+  box-shadow: 0 2px 10px rgba(212, 175, 99, 0.45);
+  cursor: grab;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gm-size-slider::-webkit-slider-thumb { transition: none; }
+  .gm-size-slider::-webkit-slider-thumb:active { transform: none; }
 }
 
 @layer components {

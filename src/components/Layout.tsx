@@ -2,14 +2,10 @@ import { Link, useLocation } from 'react-router-dom';
 import React, { useRef, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Menu, X, Phone, MapPin, Mail, Shield, CheckCircle, Award, ChevronDown } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { trackEngagement } from '../utils/analytics';
 import ChatWidget from './ChatWidget';
+import { cn } from '../utils/cn';
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);

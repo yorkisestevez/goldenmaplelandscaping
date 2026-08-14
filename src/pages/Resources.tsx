@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Clock, BookOpen } from 'lucide-react';
+import { ArrowRight, Clock, BookOpen, Calculator } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
@@ -306,6 +306,30 @@ export default function Resources() {
                   <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-3 block">Featured Resource</span>
                   <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite mb-4 group-hover:text-brand-gold transition-colors">The Homeowner's Buyer's Guide</h2>
                   <p className="font-sans text-brand-muted font-light leading-relaxed">The complete guide to hiring the right landscaping contractor in Barrie. What to ask, what to expect, and how to protect your investment.</p>
+                </div>
+                <ArrowRight className="text-brand-gold shrink-0 group-hover:translate-x-2 transition-transform" size={24} strokeWidth={1.5} />
+              </div>
+            </Link>
+          </motion.div>
+
+          {/* Cost estimator band — the blog index had ZERO links to the site's
+              highest-intent tool. Readers researching costs are exactly who the
+              calculator is for. Same card idiom as the Buyer's Guide above. */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="mb-24"
+          >
+            <Link to="/cost-estimator" className="group block">
+              <div className="bg-brand-surface border border-brand-gold/20 rounded-[2px] p-10 md:p-16 flex flex-col md:flex-row items-center gap-12 hover:border-brand-gold/40 transition-all duration-500">
+                <div className="w-20 h-20 bg-brand-gold/10 flex items-center justify-center rounded-full shrink-0 border border-brand-gold/20 group-hover:bg-brand-gold/20 transition-colors">
+                  <Calculator className="text-brand-gold" size={32} strokeWidth={1.5} />
+                </div>
+                <div className="flex-1">
+                  <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-3 block">Free Tool</span>
+                  <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite mb-4 group-hover:text-brand-gold transition-colors">What will your project cost?</h2>
+                  <p className="font-sans text-brand-muted font-light leading-relaxed">Price your patio, wall, deck or full backyard in about two minutes — real Carr Landscape Depot pricing, no signup to see your range, and every choice shows exactly what it adds.</p>
                 </div>
                 <ArrowRight className="text-brand-gold shrink-0 group-hover:translate-x-2 transition-transform" size={24} strokeWidth={1.5} />
               </div>

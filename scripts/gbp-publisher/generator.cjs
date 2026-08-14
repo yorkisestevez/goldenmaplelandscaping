@@ -15,26 +15,16 @@ const https = require('https');
 
 const SITE_ORIGIN = 'https://goldenmaplelandscaping.ca';
 
+// 2026-08-13 — routed through the local claude CLI, same swap the
+// blog-publisher made on 2026-07-28 when the shared Gemini key died
+// ("limit: 0"). This generator kept calling the dead key for another two
+// weeks, which is HALF of why the GBP mirror went silent in June (the other
+// half: the scheduled task only fires while Claude Code is open).
+// geminiCompatPost keeps the exact request/response shape, so extractText()
+// and everything downstream is untouched.
+const { geminiCompatPost } = require('../blog-publisher/claude-provider.cjs');
 function geminiPost(apiKey, body) {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
-    const req = https.request({
-      hostname: 'generativelanguage.googleapis.com',
-      path: `/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
-      timeout: 120000
-    }, (res) => {
-      let result = '';
-      res.on('data', c => result += c);
-      res.on('end', () => {
-        try { resolve(JSON.parse(result)); } catch { resolve({ raw: result }); }
-      });
-    });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('Gemini timeout (120s)')); });
-    req.write(data); req.end();
-  });
+  return geminiCompatPost(apiKey, body);
 }
 
 function extractText(response) {
@@ -153,8 +143,10 @@ function validatePost(post) {
 }
 
 async function generateGbpPost(blog) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY env var is required');
+  // Key kept only for the geminiCompatPost signature — the claude CLI path
+  // needs no API key. Do not reinstate a throw here; that's what kept this
+  // generator dead for two months after the shared key was retired.
+  const apiKey = process.env.GEMINI_API_KEY || 'unused-claude-cli-path';
   if (!blog || !blog.slug || !blog.title) throw new Error('generateGbpPost: blog draft missing slug/title');
 
   console.log(`[gbp:generate] blog=${blog.slug}`);

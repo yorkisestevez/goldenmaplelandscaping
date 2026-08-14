@@ -161,7 +161,7 @@ export default function InterlockingCostBarrie() {
         <li><strong>Total estimate: ~$30,000</strong></li>
       </ul>
 
-      <p>Want a quick number? Use our <Link to="/cost-estimator" className="text-brand-gold hover:underline">Cost Estimator</Link> for an instant ballpark based on your project details.</p>
+      <p>Want a quick number? Use our <Link to="/cost-estimator?type=patio" className="text-brand-gold hover:underline">Cost Estimator</Link> for an instant ballpark based on your project details.</p>
 
       <CostGuideInlineCTA />
 

@@ -279,7 +279,7 @@ export default function OroMedonteLanding() {
               </table>
             </div>
             <p className="font-sans text-sm text-brand-muted font-light mt-6">
-              Larger lots, elevation work, and remote access can increase costs. We provide detailed written quotes after a site visit. Use our <Link to="/cost-estimator" className="text-brand-gold hover:underline">Cost Estimator</Link> for a quick ballpark.
+              Larger lots, elevation work, and remote access can increase costs. We provide detailed written quotes after a site visit. Use our <Link to="/cost-estimator?city=oro-medonte" className="text-brand-gold hover:underline">Cost Estimator</Link> for a quick ballpark.
             </p>
           </motion.div>
 

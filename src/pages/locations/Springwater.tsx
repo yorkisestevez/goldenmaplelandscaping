@@ -280,7 +280,7 @@ export default function SpringwaterLanding() {
               </table>
             </div>
             <p className="font-sans text-sm text-brand-muted font-light mt-6">
-              Want a faster answer? Use our <Link to="/cost-estimator" className="text-brand-gold hover:underline">Cost Estimator</Link> for an instant ballpark.
+              Want a faster answer? Use our <Link to="/cost-estimator?city=springwater" className="text-brand-gold hover:underline">Cost Estimator</Link> for an instant ballpark.
             </p>
           </motion.div>
 

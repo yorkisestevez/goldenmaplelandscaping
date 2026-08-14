@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import { motion } from 'motion/react';
-import { Pickaxe, Package, Hammer, Trash2, Sparkles, Check, X, Lock } from 'lucide-react';
+import { Pickaxe, Package, Hammer, Trash2, Sparkles, Check, X } from 'lucide-react';
+import AnimatedPrice from './ui/AnimatedPrice';
 
 export interface BreakdownLine {
   low: number;
@@ -19,10 +21,10 @@ export interface BreakdownProps {
   brandName?: string;
   sqft?: number;
   city?: string;
-  /** When true, the headline range still shows but the itemized lines and
-   *  includes/excludes are replaced by a teaser — unlocked by the name+email
-   *  form in EstimateLeadCapture. */
-  locked?: boolean;
+  /** Slot rendered between the headline and the itemized lines. The workbench
+   *  goes here: "you can change this" has to be visible immediately under the
+   *  number, or the number reads as final. */
+  belowHero?: ReactNode;
 }
 
 const fmt = (n: number) =>
@@ -75,11 +77,14 @@ export default function EstimateBreakdown(props: BreakdownProps) {
         <div className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-5">
           Your Estimated Investment
         </div>
-        <div className="font-display text-6xl md:text-[88px] text-brand-bone mb-4 leading-none tracking-tight tabular-nums">
-          ${(props.totalLow / 1000).toFixed(0)}k
-          <span className="text-brand-muted/60 mx-3 font-light">–</span>
-          ${(props.totalHigh / 1000).toFixed(0)}k
-        </div>
+        {/* Animated so that adjusting a lever in the workbench below reads as
+            "I moved that", not "the machine recalculated". */}
+        <AnimatedPrice
+          low={props.totalLow}
+          high={props.totalHigh}
+          className="block font-display text-6xl md:text-[88px] text-brand-bone mb-4 leading-none tracking-tight"
+          separatorClassName="text-brand-muted/60"
+        />
         <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-brand-gold/10 border border-brand-gold/30 rounded-full backdrop-blur-md">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
           <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold">
@@ -94,43 +99,17 @@ export default function EstimateBreakdown(props: BreakdownProps) {
         ) : null}
       </motion.div>
 
-      {props.locked ? (
-        /* Locked teaser — the range above is free, the itemization is the trade
-           for a name and email. Line labels stay visible so it's obvious what's
-           behind the gate; only the dollar figures are withheld. */
-        <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7 md:p-9">
-          <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-7 h-7 rounded-full bg-brand-gold/15 border border-brand-gold/30 flex items-center justify-center">
-              <Lock size={13} className="text-brand-gold" strokeWidth={2} />
-            </div>
-            <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">
-              Where the money goes
-            </span>
-          </div>
-          <div className="divide-y divide-white/[0.06]">
-            {LINES.map(({ key, label, icon: Icon }) => (
-              <div key={key} className="py-4 flex items-center gap-4">
-                <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold shrink-0">
-                  <Icon size={16} strokeWidth={1.75} />
-                </div>
-                <span className="font-sans text-[14px] text-brand-bone flex-1 min-w-0">{label}</span>
-                <span
-                  aria-hidden="true"
-                  className="font-display text-lg md:text-xl text-brand-gold/35 tabular-nums whitespace-nowrap tracking-tight select-none blur-[5px]"
-                >
-                  $00.0k – $00.0k
-                </span>
-              </div>
-            ))}
-          </div>
-          <p className="font-sans text-[13px] font-light text-brand-muted mt-6 leading-relaxed">
-            Add your name and email below to unlock the line-by-line breakdown — excavation, materials,
-            labour, disposal and cleanup — plus exactly what is and isn't included.
-          </p>
-        </div>
-      ) : (
+      {props.belowHero}
+
       <>
-      {/* Itemized lines */}
+      {/* Itemized lines — deliberately NOT gated.
+          These used to be blurred until a name and email were handed over. But
+          understanding where your own money goes is the moment a number stops
+          being something you were quoted and becomes something you own, and
+          withholding it right there reads as "we're hiding something" in a
+          trade where that suspicion is the default. The gate moved to saving
+          the build (see EstimateLeadCapture) — something the customer wants
+          AFTER they trust the number, rather than a wall in front of it. */}
       <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7 md:p-9">
         <h4 className="font-display text-2xl md:text-3xl text-brand-bone mb-6 tracking-tight">Where the money goes</h4>
         <div className="divide-y divide-white/[0.06]">
@@ -206,7 +185,6 @@ export default function EstimateBreakdown(props: BreakdownProps) {
         </div>
       </div>
       </>
-      )}
     </div>
   );
 }

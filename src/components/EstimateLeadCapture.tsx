@@ -25,6 +25,19 @@ export interface EstimatePayload {
   sqft: number;
   addOns: string[];
   hasPhotos: boolean;
+  /** What the customer actually SAW on screen — the confidence-widened range.
+   *  Differs from totalLow/High (the raw engine basis). Sales needs both: the
+   *  engine number to quote from, and the seen number so a call never opens by
+   *  contradicting the figure the customer is looking at. */
+  displayedLow?: number;
+  displayedHigh?: number;
+  /** Optional target the customer set for themselves. */
+  targetBudget?: number | null;
+  /** Non-numeric scope picks (fire pit / pergola / lighting size, kitchen
+   *  scope, wall height). The engine prices some of these from tier alone, so
+   *  they don't all move the estimate — but they're still real scope the
+   *  customer told us, and Yorkis needs them to quote accurately. */
+  scopeSizes?: string;
   conditions: string[];
   /** Per-type follow-up answers keyed `${element}.${question}` (e.g. "patio.surface": "concrete") */
   details: Record<string, string>;
@@ -32,14 +45,31 @@ export interface EstimatePayload {
 
 export default function EstimateLeadCapture({
   estimate,
+  permalink,
   onUnlock,
 }: {
   estimate: EstimatePayload;
-  /** Fired once name+email are captured — unlocks the itemized breakdown. */
+  /** Link that restores this exact build — the thing being traded for, and the
+   *  reason this gate isn't withholding anything the customer already earned. */
+  permalink?: string;
+  /** Fired once name+email are captured. */
   onUnlock?: () => void;
 }) {
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const copyPermalink = async () => {
+    if (!permalink) return;
+    try {
+      await navigator.clipboard.writeText(permalink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      // Clipboard can be blocked by permissions; the input is selectable, so
+      // there's still a working path. Don't surface an error for this.
+    }
+  };
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -75,6 +105,11 @@ export default function EstimateLeadCapture({
       totalHigh: estimate.totalHigh,
       hasPhotos: estimate.hasPhotos,
     });
+    // The estimate midpoint IS the conversion value. Sending 0 (the previous
+    // behaviour) made ROAS unmeasurable on the site's highest-intent
+    // conversion — Ads couldn't tell a $12K walkway from a $90K backyard.
+    const conversionValue = Math.round((estimate.totalLow + estimate.totalHigh) / 2);
+
     const payload = {
       'form-name': 'cost-estimator',
       source: 'cost-estimator',
@@ -89,6 +124,11 @@ export default function EstimateLeadCapture({
       project_elements: estimate.selectedElements.join(','),
       estimate_low: String(estimate.totalLow),
       estimate_high: String(estimate.totalHigh),
+      displayed_low: String(estimate.displayedLow ?? estimate.totalLow),
+      displayed_high: String(estimate.displayedHigh ?? estimate.totalHigh),
+      target_budget: estimate.targetBudget != null ? String(estimate.targetBudget) : '',
+      scope_sizes: estimate.scopeSizes ?? '',
+      build_permalink: permalink ?? '',
       brand_chosen: estimate.brandName,
       city: estimate.city,
       sqft: String(estimate.sqft),
@@ -104,7 +144,7 @@ export default function EstimateLeadCapture({
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.log('[dev] cost-estimator payload (would POST to Netlify):', payload);
-      trackLead('cost-estimator', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone });
+      trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone });
       setStatus('success');
       onUnlock?.();
       return;
@@ -117,7 +157,7 @@ export default function EstimateLeadCapture({
         body: encode(payload),
       });
       if (!res.ok) throw new Error('Network response was not ok');
-      trackLead('cost-estimator', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone });
+      trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone });
       setStatus('success');
       onUnlock?.();
     } catch {
@@ -137,12 +177,43 @@ export default function EstimateLeadCapture({
         <div className="mx-auto w-14 h-14 rounded-full bg-brand-gold/15 border border-brand-gold/40 flex items-center justify-center mb-5">
           <CheckCircle size={24} className="text-brand-gold" strokeWidth={1.5} />
         </div>
-        <h4 className="font-display text-3xl text-brand-bone mb-3 tracking-tight">Breakdown unlocked.</h4>
-        <p className="font-sans text-[14px] font-light text-brand-muted leading-relaxed mb-6">
-          Your full line-by-line breakdown is now open above. Yorkis will personally review your project
-          and reply to <span className="text-brand-bone">{form.email}</span> with a written estimate
-          within 24 hours — usually much faster.
+        <h4 className="font-display text-3xl text-brand-bone mb-3 tracking-tight">Build saved.</h4>
+        <p className="font-sans text-[14px] font-light text-brand-muted leading-relaxed mb-5">
+          Yorkis will personally review it and reply to{' '}
+          <span className="text-brand-bone">{form.email}</span> with a written estimate within
+          24 hours — usually much faster.
         </p>
+
+        {/* The actual deliverable. Generated client-side, so it works the
+            instant it appears — no "check your email for a link that may or
+            may not arrive". */}
+        {permalink ? (
+          <div className="mb-6 text-left">
+            <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-2">
+              Your build link
+            </div>
+            <div className="flex items-stretch gap-2">
+              <input
+                readOnly
+                value={permalink}
+                onFocus={e => e.currentTarget.select()}
+                aria-label="Link back to your saved build"
+                className="flex-1 min-w-0 bg-brand-cream border border-brand-dim/60 py-2.5 px-3 rounded-2xl font-sans text-[12px] text-brand-bonewhite/80 outline-none"
+              />
+              <button
+                type="button"
+                onClick={copyPermalink}
+                className="shrink-0 px-4 rounded-2xl border border-brand-gold/40 bg-brand-gold/10 hover:bg-brand-gold/20 transition-colors font-sans text-[12px] text-brand-gold"
+              >
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+            <p className="font-sans text-[11px] font-light text-brand-muted mt-2">
+              Bookmark it — it reopens this estimate with every choice you made.
+            </p>
+          </div>
+        ) : null}
+
         <Link
           to="/book"
           className="btn-primary !rounded-full inline-flex items-center justify-center gap-2.5 py-3.5 px-7"
@@ -161,17 +232,17 @@ export default function EstimateLeadCapture({
           <FileText size={14} className="text-brand-gold" strokeWidth={1.75} />
         </div>
         <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">
-          Unlock The Breakdown
+          Save This Build
         </span>
       </div>
       <h4 className="font-display text-3xl text-brand-bone mb-3 tracking-tight">
-        See where every dollar goes
+        Keep the build you just made
       </h4>
       <p className="font-sans text-[13px] font-light text-brand-muted mb-7 leading-relaxed">
-        Name and email unlocks the line-by-line breakdown right here — excavation, materials, labour,
-        disposal, cleanup, and what's not included. The same details go to Yorkis, who'll personally
-        reply with a written estimate for your {estimate.city || 'Simcoe County'} project within 24
-        hours. Honest scope, no sales pressure.
+        Get a link back to this exact estimate — every choice you made, ready to keep tuning
+        later or send to whoever else is deciding. Yorkis also reviews it personally and
+        replies with a written estimate for your {estimate.city || 'Simcoe County'} project
+        within 24 hours. Honest scope, no sales pressure.
       </p>
 
       <form
@@ -227,7 +298,7 @@ export default function EstimateLeadCapture({
           className="btn-primary !rounded-full w-full py-4 mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_8px_24px_-8px_rgba(212,175,99,0.4)] hover:shadow-[0_12px_32px_-8px_rgba(212,175,99,0.55)] transition-shadow"
         >
           <Mail size={16} strokeWidth={1.5} />
-          {status === 'submitting' ? 'Sending…' : 'Unlock My Full Breakdown'}
+          {status === 'submitting' ? 'Saving…' : 'Save My Build'}
         </button>
 
         <p className="font-sans text-[11px] text-brand-muted/80 text-center font-light pt-2">

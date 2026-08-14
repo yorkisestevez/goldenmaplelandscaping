@@ -40,6 +40,11 @@ export default function CostEstimator() {
         title="Landscaping Cost Estimator Barrie 2026 | Real Pricing | Golden Maple"
         description="Get a real ballpark for your landscaping project in Simcoe County — no job minimum, any size. Pick your Permacon paver line and TimberTech finish, see your price range free, then unlock the itemized breakdown with your name and email."
         canonical="https://goldenmaplelandscaping.ca/cost-estimator"
+        /* Purpose-built share card — every texted ?build= permalink and every
+           social share of this page previews with this instead of the generic
+           site-wide deck photo. Built by scripts/build-estimator-images.mjs;
+           -v1 is cache-busting against the 1-year immutable /images/* header. */
+        image="https://goldenmaplelandscaping.ca/images/og/cost-estimator-v1.jpg"
         schema={schema}
       />
       <div className="pt-24 pb-32 bg-brand-nearblack min-h-screen text-brand-bonewhite">

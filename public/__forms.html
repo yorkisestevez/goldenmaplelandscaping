@@ -71,10 +71,26 @@
       <input type="email" name="email" />
       <input type="tel" name="phone" />
       <input type="text" name="source" />
+      <!-- Netlify drops any field not declared here. event_id, project_details
+           and the lead_score_* trio were being submitted by the app but were
+           never declared, so Meta CAPI dedup and lead scoring never reached
+           the CRM. Declared 2026-08-13. -->
+      <input type="text" name="event_id" />
       <input type="text" name="project_type" />
       <input type="text" name="project_elements" />
+      <input type="text" name="project_details" />
+      <input type="text" name="lead_score" />
+      <input type="text" name="lead_tier" />
+      <input type="text" name="lead_score_reasons" />
       <input type="text" name="estimate_low" />
       <input type="text" name="estimate_high" />
+      <!-- What the customer actually saw on screen (confidence-widened), vs the
+           raw engine basis above. Sales needs both. -->
+      <input type="text" name="displayed_low" />
+      <input type="text" name="displayed_high" />
+      <input type="text" name="target_budget" />
+      <input type="text" name="build_permalink" />
+      <input type="text" name="scope_sizes" />
       <input type="text" name="brand_chosen" />
       <input type="text" name="city" />
       <input type="text" name="sqft" />

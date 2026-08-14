@@ -1,0 +1,1696 @@
+{
+  "empty-no-type": {
+    "totalLow": 0,
+    "totalHigh": 0,
+    "lines": null,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 0,
+      "high": 0
+    },
+    "sqftPriced": 0
+  },
+  "patio-500-mid-barrie": {
+    "totalLow": 20500,
+    "totalHigh": 28000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3100,
+        "high": 4000,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 7700,
+        "high": 9700,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 6800,
+        "high": 10400,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-500-budget": {
+    "totalLow": 18500,
+    "totalHigh": 27000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 2700,
+        "high": 4000,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 6800,
+        "high": 8600,
+        "detail": "Permacon Melville (500 sqft)"
+      },
+      "labour": {
+        "low": 6100,
+        "high": 10400,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-500-premium": {
+    "totalLow": 27500,
+    "totalHigh": 35000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 4300,
+        "high": 5400,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 10700,
+        "high": 13500,
+        "detail": "Permacon Brooklyn (500 sqft)"
+      },
+      "labour": {
+        "low": 9500,
+        "high": 12000,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-100-min-size": {
+    "totalLow": 7500,
+    "totalHigh": 12500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 1,
+      "high": 1.5
+    },
+    "sqftPriced": 100,
+    "lines": {
+      "excavation": {
+        "low": 2500,
+        "high": 4000,
+        "detail": "12–16\" base depth on 100 sqft"
+      },
+      "materials": {
+        "low": 1500,
+        "high": 1900,
+        "detail": "Permacon Mondrian Plus (100 sqft)"
+      },
+      "labour": {
+        "low": 2200,
+        "high": 4600,
+        "detail": "1–1.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 600,
+        "high": 600,
+        "detail": "1 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-2000-max-size": {
+    "totalLow": 80500,
+    "totalHigh": 102500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 6.5,
+      "high": 10.5
+    },
+    "sqftPriced": 2000,
+    "lines": {
+      "excavation": {
+        "low": 12300,
+        "high": 15600,
+        "detail": "12–16\" base depth on 2000 sqft"
+      },
+      "materials": {
+        "low": 30800,
+        "high": 38900,
+        "detail": "Permacon Mondrian Plus (2000 sqft)"
+      },
+      "labour": {
+        "low": 27400,
+        "high": 34600,
+        "detail": "6.5–10.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 5000,
+        "high": 5700,
+        "detail": "9 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 5000,
+        "high": 8000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-surface-concrete": {
+    "totalLow": 23000,
+    "totalHigh": 31500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2.5,
+      "high": 4.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3400,
+        "high": 4500,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 7700,
+        "high": 9700,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 8800,
+        "high": 13500,
+        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-surface-pavers": {
+    "totalLow": 22000,
+    "totalHigh": 31500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2.5,
+      "high": 4.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3300,
+        "high": 4300,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 7700,
+        "high": 9700,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 8100,
+        "high": 13500,
+        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-surface-deck": {
+    "totalLow": 21500,
+    "totalHigh": 31500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2.5,
+      "high": 4.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3200,
+        "high": 4300,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 7700,
+        "high": 9700,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 7600,
+        "high": 13500,
+        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-shape-curves": {
+    "totalLow": 21500,
+    "totalHigh": 29000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3300,
+        "high": 4200,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 8200,
+        "high": 10500,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 7300,
+        "high": 10400,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-shape-complex": {
+    "totalLow": 22500,
+    "totalHigh": 30000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3400,
+        "high": 4500,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 8600,
+        "high": 11300,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 7700,
+        "high": 10400,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-use-hottub": {
+    "totalLow": 22500,
+    "totalHigh": 30500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3400,
+        "high": 4500,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 7700,
+        "high": 9700,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 8600,
+        "high": 12100,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-use-multi": {
+    "totalLow": 20500,
+    "totalHigh": 28500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3100,
+        "high": 4100,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 7700,
+        "high": 10300,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 6800,
+        "high": 10400,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-all-details": {
+    "totalLow": 27000,
+    "totalHigh": 38000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2.5,
+      "high": 4.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 4100,
+        "high": 5800,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 8600,
+        "high": 11300,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 11500,
+        "high": 17000,
+        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-cond-access": {
+    "totalLow": 23500,
+    "totalHigh": 30500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3600,
+        "high": 4600,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 9100,
+        "high": 11500,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 8100,
+        "high": 10400,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-cond-slope": {
+    "totalLow": 21500,
+    "totalHigh": 33500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2.5,
+      "high": 5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3300,
+        "high": 4600,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 7700,
+        "high": 9700,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 7700,
+        "high": 15100,
+        "detail": "2.5–5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-cond-drainage": {
+    "totalLow": 21500,
+    "totalHigh": 31500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2.5,
+      "high": 4.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3300,
+        "high": 4500,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 7700,
+        "high": 9700,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 7700,
+        "high": 13500,
+        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-cond-levels": {
+    "totalLow": 22500,
+    "totalHigh": 29500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3400,
+        "high": 4400,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 8600,
+        "high": 10900,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 7700,
+        "high": 10400,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-cond-all": {
+    "totalLow": 28000,
+    "totalHigh": 41000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 3,
+      "high": 6
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 4500,
+        "high": 6400,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 10000,
+        "high": 12600,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 10700,
+        "high": 18300,
+        "detail": "3–6 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-zone2-orillia": {
+    "totalLow": 21000,
+    "totalHigh": 28500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3100,
+        "high": 4000,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 8000,
+        "high": 10100,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 6800,
+        "high": 10400,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-zone3-midland": {
+    "totalLow": 21000,
+    "totalHigh": 28500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3100,
+        "high": 4000,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 8400,
+        "high": 10400,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 6800,
+        "high": 10400,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-zone4-collingwood": {
+    "totalLow": 21500,
+    "totalHigh": 29000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3100,
+        "high": 4000,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 8900,
+        "high": 10900,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 6800,
+        "high": 10400,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-addon-lighting": {
+    "totalLow": 24500,
+    "totalHigh": 39000,
+    "addOnsTotal": {
+      "low": 4000,
+      "high": 8000
+    },
+    "days": {
+      "low": 2.5,
+      "high": 4.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3100,
+        "high": 4000,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 7700,
+        "high": 9700,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 6800,
+        "high": 13500,
+        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "patio-addons-all": {
+    "totalLow": 37500,
+    "totalHigh": 72000,
+    "addOnsTotal": {
+      "low": 11500,
+      "high": 28000
+    },
+    "days": {
+      "low": 4.5,
+      "high": 8.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3100,
+        "high": 4000,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 7700,
+        "high": 9700,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 12400,
+        "high": 26200,
+        "detail": "4.5–8.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "stone-400": {
+    "totalLow": 21000,
+    "totalHigh": 26500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3
+    },
+    "sqftPriced": 400,
+    "lines": {
+      "excavation": {
+        "low": 3300,
+        "high": 4100,
+        "detail": "12–16\" base depth on 400 sqft"
+      },
+      "materials": {
+        "low": 8200,
+        "high": 10400,
+        "detail": "Permacon Mondrian Plus (400 sqft)"
+      },
+      "labour": {
+        "low": 7300,
+        "high": 9200,
+        "detail": "2–3 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1100,
+        "high": 1300,
+        "detail": "2 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1000,
+        "high": 1600,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "turf-600": {
+    "totalLow": 17500,
+    "totalHigh": 27000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2.5,
+      "high": 4
+    },
+    "sqftPriced": 600,
+    "lines": {
+      "excavation": {
+        "low": 2500,
+        "high": 4000,
+        "detail": "12–16\" base depth on 600 sqft"
+      },
+      "materials": {
+        "low": 5600,
+        "high": 7100,
+        "detail": "Materials & supplies"
+      },
+      "labour": {
+        "low": 6200,
+        "high": 11800,
+        "detail": "2.5–4 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1500,
+        "high": 2400,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "wall-50-2to4-garden": {
+    "totalLow": 20500,
+    "totalHigh": 28000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3.5
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 3400,
+        "high": 4300,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 8500,
+        "high": 10900,
+        "detail": "Permacon Mondrian Plus"
+      },
+      "labour": {
+        "low": 7600,
+        "high": 11100,
+        "detail": "2–3.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "wall-50-under2": {
+    "totalLow": 14000,
+    "totalHigh": 21000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 1.5,
+      "high": 3
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 2500,
+        "high": 4000,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 5700,
+        "high": 7200,
+        "detail": "Permacon Mondrian Plus"
+      },
+      "labour": {
+        "low": 5000,
+        "high": 8400,
+        "detail": "1.5–3 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "wall-50-4to6-slope": {
+    "totalLow": 32000,
+    "totalHigh": 41500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 3,
+      "high": 5
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 5500,
+        "high": 7000,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 13700,
+        "high": 17500,
+        "detail": "Permacon Mondrian Plus"
+      },
+      "labour": {
+        "low": 12200,
+        "high": 15600,
+        "detail": "3–5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "wall-80-over6-structure-premium": {
+    "totalLow": 107500,
+    "totalHigh": 138000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 6,
+      "high": 10
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 18700,
+        "high": 23800,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 46700,
+        "high": 59600,
+        "detail": "Permacon Mondrian Plus"
+      },
+      "labour": {
+        "low": 41500,
+        "high": 53000,
+        "detail": "6–10 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "steps-5-mid": {
+    "totalLow": 13000,
+    "totalHigh": 21500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2.5,
+      "high": 4
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 2500,
+        "high": 4000,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 2500,
+        "high": 3200,
+        "detail": "Permacon Mondrian Plus"
+      },
+      "labour": {
+        "low": 7000,
+        "high": 12700,
+        "detail": "2.5–4 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "steps-12-premium-concrete": {
+    "totalLow": 28000,
+    "totalHigh": 45000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 6,
+      "high": 9.5
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 3100,
+        "high": 4200,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 8100,
+        "high": 10400,
+        "detail": "Permacon Mondrian Plus"
+      },
+      "labour": {
+        "low": 16200,
+        "high": 29100,
+        "detail": "6–9.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "deck-300-prime-ground": {
+    "totalLow": 19500,
+    "totalHigh": 30000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3
+    },
+    "sqftPriced": 300,
+    "lines": {
+      "excavation": {
+        "low": 2500,
+        "high": 4000,
+        "detail": "12–16\" base depth on 300 sqft"
+      },
+      "materials": {
+        "low": 9100,
+        "high": 11500,
+        "detail": "TimberTech AZEK Prime+"
+      },
+      "labour": {
+        "low": 5800,
+        "high": 12000,
+        "detail": "2–3 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1100,
+        "high": 1300,
+        "detail": "2 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "deck-300-mid-height": {
+    "totalLow": 21000,
+    "totalHigh": 30000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2,
+      "high": 3
+    },
+    "sqftPriced": 300,
+    "lines": {
+      "excavation": {
+        "low": 2500,
+        "high": 4000,
+        "detail": "12–16\" base depth on 300 sqft"
+      },
+      "materials": {
+        "low": 9100,
+        "high": 11500,
+        "detail": "TimberTech AZEK Prime+"
+      },
+      "labour": {
+        "low": 7300,
+        "high": 12000,
+        "detail": "2–3 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1100,
+        "high": 1300,
+        "detail": "2 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "deck-500-vintage-walkout": {
+    "totalLow": 41000,
+    "totalHigh": 52500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2.5,
+      "high": 4.5
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 3800,
+        "high": 4800,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 21000,
+        "high": 26500,
+        "detail": "TimberTech AZEK Vintage"
+      },
+      "labour": {
+        "low": 13300,
+        "high": 17300,
+        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "kitchen-basic-mid": {
+    "totalLow": 19000,
+    "totalHigh": 33000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 3.5,
+      "high": 6
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 2500,
+        "high": 4000,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 6000,
+        "high": 8400,
+        "detail": "Materials & supplies"
+      },
+      "labour": {
+        "low": 9800,
+        "high": 19000,
+        "detail": "3.5–6 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "kitchen-full-premium": {
+    "totalLow": 48500,
+    "totalHigh": 77500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 6.5,
+      "high": 11
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 4200,
+        "high": 5900,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 25200,
+        "high": 35300,
+        "detail": "Materials & supplies"
+      },
+      "labour": {
+        "low": 18200,
+        "high": 34800,
+        "detail": "6.5–11 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "firepit-wood-mid": {
+    "totalLow": 9000,
+    "totalHigh": 17000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 1.5,
+      "high": 3
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 2500,
+        "high": 4000,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 1500,
+        "high": 2300,
+        "detail": "Materials & supplies"
+      },
+      "labour": {
+        "low": 4200,
+        "high": 9500,
+        "detail": "1.5–3 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "firepit-gas-premium": {
+    "totalLow": 9500,
+    "totalHigh": 18000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 1.5,
+      "high": 3
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 2500,
+        "high": 4000,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 2100,
+        "high": 3200,
+        "detail": "Materials & supplies"
+      },
+      "labour": {
+        "low": 4200,
+        "high": 9500,
+        "detail": "1.5–3 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "pergola-budget": {
+    "totalLow": 13000,
+    "totalHigh": 25000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2.5,
+      "high": 5
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 2500,
+        "high": 4000,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 2500,
+        "high": 3500,
+        "detail": "Materials & supplies"
+      },
+      "labour": {
+        "low": 7000,
+        "high": 15800,
+        "detail": "2.5–5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "lighting-mid": {
+    "totalLow": 10000,
+    "totalHigh": 18500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 1.5,
+      "high": 3
+    },
+    "sqftPriced": 0,
+    "lines": {
+      "excavation": {
+        "low": 2500,
+        "high": 4000,
+        "detail": "Site prep + base prep"
+      },
+      "materials": {
+        "low": 2500,
+        "high": 3500,
+        "detail": "Materials & supplies"
+      },
+      "labour": {
+        "low": 4200,
+        "high": 9500,
+        "detail": "1.5–3 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 0,
+        "high": 0,
+        "detail": "Standard waste removal"
+      },
+      "restoration": {
+        "low": 800,
+        "high": 1500,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "full-patio-wall-lighting": {
+    "totalLow": 45000,
+    "totalHigh": 62000,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 4.5,
+      "high": 8
+    },
+    "sqftPriced": 500,
+    "lines": {
+      "excavation": {
+        "low": 7400,
+        "high": 9500,
+        "detail": "12–16\" base depth on 500 sqft"
+      },
+      "materials": {
+        "low": 18700,
+        "high": 24100,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 16200,
+        "high": 24600,
+        "detail": "4.5–8 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 1700,
+        "high": 1900,
+        "detail": "3 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
+  "full-everything-loaded": {
+    "totalLow": 299000,
+    "totalHigh": 414000,
+    "addOnsTotal": {
+      "low": 9000,
+      "high": 21000
+    },
+    "days": {
+      "low": 21,
+      "high": 36.5
+    },
+    "sqftPriced": 1300,
+    "lines": {
+      "excavation": {
+        "low": 48400,
+        "high": 65700,
+        "detail": "12–16\" base depth on 1300 sqft"
+      },
+      "materials": {
+        "low": 132200,
+        "high": 176600,
+        "detail": "TimberTech AZEK Vintage"
+      },
+      "labour": {
+        "low": 102800,
+        "high": 141500,
+        "detail": "21–36.5 days on-site, ICPI-certified crew"
+      },
+      "disposal": {
+        "low": 3300,
+        "high": 3800,
+        "detail": "6 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 3300,
+        "high": 5200,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  }
+}

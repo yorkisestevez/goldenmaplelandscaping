@@ -1,23 +1,29 @@
-import { useState, useMemo, useEffect, useRef, type ChangeEvent } from 'react';
+import { useState, useMemo, useEffect, useRef, type ChangeEvent, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { trackEngagement } from '../utils/analytics';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Grid, Hexagon, AlignJustify, ListTree, Layout,
-  ChefHat, Flame, Sun, Leaf, Lightbulb, Map, Check, MapPin, Image as ImageIcon, Upload, X,
+  ChefHat, Flame, Sun, Leaf, Lightbulb, Map, Check, ChevronDown, MapPin, Image as ImageIcon, Upload, X,
 } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import EstimateBreakdown from './EstimateBreakdown';
 import EstimateLeadCapture from './EstimateLeadCapture';
 import EstimateBookingCTA from './EstimateBookingCTA';
-import { PAVER_BRANDS, DECK_BRANDS, ADD_ONS, BIN_COST, estimateBins, defaultPaverForTier, sortPaversForDisplay, type PaverTier } from '../data/carrPrices';
-import { ESTIMATOR_LOCATIONS, ZONE_SURCHARGE, type EstimatorLocationKey } from '../data/locations';
-import { applyDailyProductionFloor, getEstimatorRangeCopy } from '../utils/pricingDoctrine';
+import EstimateWorkbench from './EstimateWorkbench';
+import BudgetTarget from './BudgetTarget';
+import BudgetGapCoach from './BudgetGapCoach';
+import { buildPermalink, decodeBuild } from '../utils/buildPermalink';
+import { PROJECT_TYPE_IMAGES, DECK_BRAND_IMAGES, PAVER_SWATCHES } from '../data/estimatorImages';
+import type { LucideIcon } from 'lucide-react';
+import { PAVER_BRANDS, DECK_BRANDS, ADD_ONS, defaultPaverForTier, sortPaversForDisplay, type PaverTier } from '../data/carrPrices';
+import { ESTIMATOR_LOCATIONS, type EstimatorLocationKey } from '../data/locations';
+import { getEstimatorRangeCopy } from '../utils/pricingDoctrine';
+import { computeEstimate, deltaFor, widenFactors, widenTotals, type EstimateInput, type EstimateLine } from '../utils/estimateEngine';
+import PriceDelta from './ui/PriceDelta';
+import AnimatedPrice from './ui/AnimatedPrice';
+import SizeControl from './ui/SizeControl';
+import { cn } from '../utils/cn';
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 const PROJECT_TYPES = [
   { id: 'patio', label: 'Patio / Interlock', desc: 'Pavers and hardscape', icon: Grid },
@@ -133,11 +139,105 @@ const STEP_NAMES: Record<number, string> = {
 const fmt = (n: number) =>
   n >= 10000 ? `$${(n / 1000).toFixed(0)}k` : `$${n.toLocaleString()}`;
 
+/** Photo thumb where an honest photo exists (real GM work or dealer asset);
+ *  the lucide icon in an identically-sized slot otherwise — so mixed cards
+ *  still line up. Module-level so React keeps the element identity across
+ *  renders (an inline component would remount the <img> on every keystroke).
+ *  Explicit width/height on the img prevents CLS. */
+function TypeThumb({ typeId, icon: Icon, size = 'md', eager = false }: {
+  typeId: string; icon: LucideIcon; size?: 'sm' | 'md'; eager?: boolean;
+}) {
+  const img = PROJECT_TYPE_IMAGES[typeId];
+  const slot = size === 'sm' ? 'w-12 h-9' : 'w-16 h-12';
+  if (!img) {
+    return (
+      <div className={cn(slot, 'rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold shrink-0')}>
+        <Icon size={size === 'sm' ? 18 : 22} strokeWidth={1.5} />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={img.src}
+      alt={img.alt}
+      width={320}
+      height={240}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+      className={cn(slot, 'rounded-xl object-cover border border-brand-dim shrink-0')}
+    />
+  );
+}
+
+/** Tiny hand-drawn plan/profile diagrams for the questions where words fail —
+ *  "gentle curves" vs "curves + borders / inlays" is meaningless until you see
+ *  it, and wall height is easier to point at than to imagine. Inline SVG,
+ *  brand-gold strokes, no image files, no AI. */
+const DETAIL_DIAGRAMS: Record<string, ReactNode> = {
+  // Patio layout — plan view
+  'shape_simple': (
+    <svg viewBox="0 0 56 40" className="w-14 h-10" aria-hidden="true">
+      <rect x="8" y="7" width="40" height="26" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  ),
+  'shape_curves': (
+    <svg viewBox="0 0 56 40" className="w-14 h-10" aria-hidden="true">
+      <path d="M9 8 H41 Q49 8 47 17 Q45 26 48 33 H15 Q7 33 9 24 Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  ),
+  'shape_complex': (
+    <svg viewBox="0 0 56 40" className="w-14 h-10" aria-hidden="true">
+      <path d="M9 8 H41 Q49 8 47 17 Q45 26 48 33 H15 Q7 33 9 24 Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M14 12.5 H38 Q43.5 12.5 42.5 18 Q41.5 24 43 28.5 H18 Q13 28.5 13.8 22.5 Z" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.55" strokeLinejoin="round" />
+    </svg>
+  ),
+  // Wall height — profile view: ground line + block courses
+  'wallHeight_Under 2ft': (
+    <svg viewBox="0 0 56 40" className="w-14 h-10" aria-hidden="true">
+      <line x1="4" y1="34" x2="52" y2="34" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+      <rect x="16" y="27" width="24" height="7" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  ),
+  'wallHeight_2-4ft': (
+    <svg viewBox="0 0 56 40" className="w-14 h-10" aria-hidden="true">
+      <line x1="4" y1="34" x2="52" y2="34" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+      <rect x="16" y="20" width="24" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="16" y1="27" x2="40" y2="27" stroke="currentColor" strokeWidth="1" opacity="0.55" />
+    </svg>
+  ),
+  'wallHeight_4-6ft': (
+    <svg viewBox="0 0 56 40" className="w-14 h-10" aria-hidden="true">
+      <line x1="4" y1="34" x2="52" y2="34" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+      <rect x="16" y="13" width="24" height="21" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="16" y1="20" x2="40" y2="20" stroke="currentColor" strokeWidth="1" opacity="0.55" />
+      <line x1="16" y1="27" x2="40" y2="27" stroke="currentColor" strokeWidth="1" opacity="0.55" />
+    </svg>
+  ),
+  'wallHeight_Over 6ft': (
+    <svg viewBox="0 0 56 40" className="w-14 h-10" aria-hidden="true">
+      <line x1="4" y1="34" x2="52" y2="34" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+      <rect x="16" y="6" width="24" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <line x1="16" y1="13" x2="40" y2="13" stroke="currentColor" strokeWidth="1" opacity="0.55" />
+      <line x1="16" y1="20" x2="40" y2="20" stroke="currentColor" strokeWidth="1" opacity="0.55" />
+      <line x1="16" y1="27" x2="40" y2="27" stroke="currentColor" strokeWidth="1" opacity="0.55" />
+    </svg>
+  ),
+};
+
 const VALID_PROJECT_TYPES = new Set(['patio', 'stone', 'wall', 'steps', 'deck', 'kitchen', 'firepit', 'pergola', 'turf', 'lighting', 'full']);
 
 export default function Estimator() {
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
+  /** Furthest step reached this session — what makes the dots navigable.
+   *  Tracks the high-water mark, so jumping back never re-locks the steps
+   *  someone has already earned access to. */
+  const [furthestStep, setFurthestStep] = useState(1);
+  /** Scroll target for the result-step sticky bar's "Save build" button. */
+  const saveCardRef = useRef<HTMLDivElement>(null);
+  /** Full-backyard step 2 is a wall of nested config on phones — accordion it.
+   *  Desktop ignores this (everything open). Newly added elements auto-open. */
+  const [openElement, setOpenElement] = useState<string | null>(null);
   const [projectType, setProjectType] = useState<string | null>(null);
   const [selectedElements, setSelectedElements] = useState<string[]>([]);
   const [sizes, setSizes] = useState<Record<string, number | string>>({
@@ -163,13 +263,18 @@ export default function Estimator() {
   const [deckBrandId, setDeckBrandId] = useState<string>('timbertech-prime');
   const [addOns, setAddOns] = useState<string[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  // The headline range is always free. The itemized breakdown is the trade for
-  // a name and email — flipped true once EstimateLeadCapture captures them.
-  const [breakdownUnlocked, setBreakdownUnlocked] = useState(false);
+  /** Optional. null = never answered, which is a legitimate answer — the coach
+   *  simply doesn't appear. Never used to gate or qualify. */
+  const [targetBudget, setTargetBudget] = useState<number | null>(null);
+  // The range AND the itemized breakdown are both free — see EstimateBreakdown
+  // for why. This flips once the customer saves their build (name + email), and
+  // only controls the saved-state UI, never access to their own numbers.
+  const [buildSaved, setBuildSaved] = useState(false);
 
   // Per-step funnel tracking — fire each step once per session so GA4 shows drop-off.
   const firedSteps = useRef<Set<number>>(new Set());
   const fireStep = (n: number, suffix = '') => {
+    setFurthestStep(prev => Math.max(prev, n));
     if (firedSteps.current.has(n)) return;
     firedSteps.current.add(n);
     trackEngagement('estimator_step', `${n}_${STEP_NAMES[n] ?? 'unknown'}${suffix}`);
@@ -183,6 +288,31 @@ export default function Estimator() {
 
   // Hydrate from URL params on mount (HeroEstimator hand-off → jump to step 3 with selections in place)
   useEffect(() => {
+    // A saved build wins over the shorthand params — it's a complete state and
+    // restores the customer exactly where they left off, at the result.
+    const buildParam = searchParams.get('build');
+    if (buildParam) {
+      const saved = decodeBuild(buildParam);
+      if (saved) {
+        setProjectType(saved.projectType);
+        setSelectedElements(saved.selectedElements);
+        setSizes(saved.sizes);
+        setDetails(saved.details);
+        setConditions(saved.conditions);
+        setLocation(saved.location);
+        setTier(saved.tier);
+        setPaverBrandId(saved.paverBrandId);
+        setDeckBrandId(saved.deckBrandId);
+        setAddOns(saved.addOns);
+        setTargetBudget(saved.targetBudget);
+        setStep(TOTAL_STEPS);
+        fireStep(TOTAL_STEPS, '_restored');
+        return;
+      }
+      // A corrupt or outdated link starts a clean estimate rather than a
+      // half-applied one — a wrong restore is worse than no restore.
+    }
+
     const t = searchParams.get('type');
     const sqftParam = searchParams.get('sqft');
     const cityParam = searchParams.get('city');
@@ -192,6 +322,7 @@ export default function Estimator() {
       if (t === 'full') {
         // Pre-fill with the 3 most common picks so size step still has meaning
         setSelectedElements(['patio', 'wall', 'lighting']);
+        setOpenElement('patio'); // mobile accordion starts somewhere useful
       }
       advanced = true;
     }
@@ -229,9 +360,14 @@ export default function Estimator() {
     trackEngagement('estimator_detail', `${qid}_${optId}`);
   };
   const toggleElement = (id: string) => {
-    setSelectedElements(prev =>
-      prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
-    );
+    setSelectedElements(prev => {
+      const adding = !prev.includes(id);
+      // Auto-open the element you just added — its config is the next thing
+      // you need, and on mobile it would otherwise be behind a closed card.
+      if (adding) setOpenElement(id);
+      else if (openElement === id) setOpenElement(null);
+      return adding ? [...prev, id] : prev.filter(e => e !== id);
+    });
   };
   const toggleAddOn = (id: string) => {
     setAddOns(prev =>
@@ -252,267 +388,47 @@ export default function Estimator() {
   const selectedPaver = PAVER_BRANDS.find(p => p.id === paverBrandId) || PAVER_BRANDS[2];
   const selectedDeck = DECK_BRANDS.find(d => d.id === deckBrandId) || DECK_BRANDS[0];
 
-  /** Core estimate calculation using brand pricing as the anchor. */
-  const estimate = useMemo(() => {
-    const els = projectType === 'full' ? selectedElements : (projectType ? [projectType] : []);
-    if (els.length === 0) {
-      return { totalLow: 0, totalHigh: 0, lines: null, addOnsTotal: { low: 0, high: 0 }, days: { low: 0, high: 0 } };
-    }
+  /** The single object the pricing engine reads. Everything that can move the
+   *  number lives in here — which is also what makes honest speculative pricing
+   *  possible: `deltaFor(build, { tier: 'premium' })` is a real re-run of the
+   *  same engine, so a "+$3,900" hint can never promise a number the estimate
+   *  won't then produce. */
+  const build: EstimateInput = useMemo(() => ({
+    projectType, selectedElements, sizes, details, conditions,
+    location, tier, paverBrandId, deckBrandId, addOns,
+  }), [projectType, selectedElements, sizes, details, conditions, location, tier, paverBrandId, deckBrandId, addOns]);
 
-    let coreLow = 0;
-    let coreHigh = 0;
-    let materialLow = 0;
-    let materialHigh = 0;
-    let labourLow = 0;
-    let labourHigh = 0;
-    let totalSqftCalc = 0;
-    let daysLow = 0.5;
-    let daysHigh = 1;
-    // Flat additions from detail answers (tear-out, gas line, reinforced base…)
-    let extraFlatLow = 0;
-    let extraFlatHigh = 0;
+  const estimate = useMemo(() => computeEstimate(build), [build]);
 
-    for (const el of els) {
-      const sz = sizes[el];
-      const dv = (q: string) => details[`${el}.${q}`];
-      // Existing-surface tear-out — asked per element, scaled to its footprint
-      const applySurface = (sqft: number) => {
-        const surface = dv('surface');
-        if (surface === 'concrete') {
-          extraFlatLow += Math.max(1000, sqft * 4); extraFlatHigh += Math.max(2500, sqft * 7);
-          daysLow += 0.5; daysHigh += 1;
-        } else if (surface === 'pavers') {
-          extraFlatLow += Math.max(600, sqft * 2.5); extraFlatHigh += Math.max(1500, sqft * 4.5);
-          daysLow += 0.5; daysHigh += 1;
-        } else if (surface === 'deck') {
-          extraFlatLow += 800; extraFlatHigh += 2500;
-          daysLow += 0.5; daysHigh += 1;
-        }
-      };
+  /** What would ONE change do to this build, in real dollars? Pure arithmetic,
+   *  so it's fine to call once per visible option on every render. Every price
+   *  hint in the UI goes through here rather than through a hand-written
+   *  percentage, which is what stops a hint from ever drifting away from what
+   *  the estimate will actually charge. */
+  const preview = useMemo(
+    () => (patch: Partial<EstimateInput>) => deltaFor(build, patch).mid,
+    [build],
+  );
 
-      if (el === 'patio' || el === 'stone' || el === 'turf') {
-        const sqft = typeof sz === 'number' ? sz : 0;
-        totalSqftCalc += sqft;
-        let perSqft = selectedPaver.installedPerSqft;
-        if (el === 'turf') perSqft = 22;
-        if (el === 'stone') perSqft = Math.max(48, selectedPaver.installedPerSqft + 10);
-        let lineLow = sqft * perSqft * 0.95;
-        let lineHigh = sqft * perSqft * 1.20;
-        // Layout complexity — more cuts, higher waste factor
-        const shape = dv('shape');
-        if (shape === 'curves') { lineLow *= 1.06; lineHigh *= 1.08; }
-        if (shape === 'complex') { lineLow *= 1.12; lineHigh *= 1.16; }
-        const use = dv('use');
-        if (use === 'multi') lineHigh *= 1.06;
-        if (use === 'hottub') { extraFlatLow += 1800; extraFlatHigh += 3500; }
-        applySurface(sqft);
-        materialLow += lineLow * 0.45;
-        materialHigh += lineHigh * 0.45;
-        labourLow += lineLow * 0.40;
-        labourHigh += lineHigh * 0.40;
-        coreLow += lineLow;
-        coreHigh += lineHigh;
-        daysLow += sqft / 350;
-        daysHigh += sqft / 220;
-      } else if (el === 'deck') {
-        const sqft = typeof sz === 'number' ? sz : 0;
-        totalSqftCalc += sqft;
-        const perSqft = selectedDeck.installedPerSqft;
-        let lineLow = sqft * perSqft * 0.95;
-        let lineHigh = sqft * perSqft * 1.20;
-        // Height off grade — framing, footings, code-required railings
-        const height = dv('deckHeight');
-        if (height === 'walkout') { lineLow *= 1.18; lineHigh *= 1.18; }
-        if (height === 'mid') { extraFlatLow += 1500; extraFlatHigh += 3500; }
-        materialLow += lineLow * 0.55;
-        materialHigh += lineHigh * 0.55;
-        labourLow += lineLow * 0.35;
-        labourHigh += lineHigh * 0.35;
-        coreLow += lineLow;
-        coreHigh += lineHigh;
-        daysLow += sqft / 250;
-        daysHigh += sqft / 150;
-      } else if (el === 'wall') {
-        const lf = typeof sz === 'number' ? sz : 50;
-        const hMult = sizes.wallHeight === 'Under 2ft' ? 1
-          : sizes.wallHeight === '2-4ft' ? 1.5
-          : sizes.wallHeight === '4-6ft' ? 2.2 : 3.2;
-        // What the wall retains — engineering and reinforcement scale with load
-        const purpose = dv('wallPurpose');
-        const pMult = purpose === 'slope' ? 1.1 : purpose === 'structure' ? 1.25 : 1;
-        const perLf = tier === 'budget' ? 220 : tier === 'mid' ? 280 : 360;
-        const lineLow = lf * perLf * hMult * pMult * 0.9;
-        const lineHigh = lf * perLf * hMult * pMult * 1.15;
-        materialLow += lineLow * 0.45;
-        materialHigh += lineHigh * 0.45;
-        labourLow += lineLow * 0.40;
-        labourHigh += lineHigh * 0.40;
-        coreLow += lineLow;
-        coreHigh += lineHigh;
-        daysLow += (lf * hMult) / 50;
-        daysHigh += (lf * hMult) / 30;
-      } else if (el === 'steps') {
-        const count = typeof sz === 'number' ? sz : 5;
-        applySurface(0);
-        const perStep = tier === 'budget' ? 850 : tier === 'mid' ? 1100 : 1500;
-        const lineLow = count * perStep * 0.9;
-        const lineHigh = count * perStep * 1.15;
-        materialLow += lineLow * 0.5;
-        materialHigh += lineHigh * 0.5;
-        labourLow += lineLow * 0.4;
-        labourHigh += lineHigh * 0.4;
-        coreLow += lineLow;
-        coreHigh += lineHigh;
-        daysLow += count * 0.4;
-        daysHigh += count * 0.6;
-      } else if (el === 'kitchen') {
-        const isFull = sizes.kitchen === 'Full Build';
-        const lineLow = tier === 'budget' ? (isFull ? 18000 : 7000) : tier === 'mid' ? (isFull ? 28000 : 10000) : (isFull ? 42000 : 14000);
-        const lineHigh = lineLow * 1.4;
-        materialLow += lineLow * 0.60;
-        materialHigh += lineHigh * 0.60;
-        labourLow += lineLow * 0.30;
-        labourHigh += lineHigh * 0.30;
-        coreLow += lineLow;
-        coreHigh += lineHigh;
-        daysLow += isFull ? 6 : 3;
-        daysHigh += isFull ? 10 : 5;
-      } else if (el === 'firepit') {
-        // Gas line run is its own trade
-        if (dv('fuel') === 'gas') { extraFlatLow += 1500; extraFlatHigh += 3000; }
-        const lineLow = tier === 'budget' ? 1500 : tier === 'mid' ? 2500 : 3500;
-        const lineHigh = lineLow * 1.5;
-        materialLow += lineLow * 0.6;
-        materialHigh += lineHigh * 0.6;
-        labourLow += lineLow * 0.3;
-        labourHigh += lineHigh * 0.3;
-        coreLow += lineLow;
-        coreHigh += lineHigh;
-        daysLow += 1; daysHigh += 2;
-      } else if (el === 'pergola') {
-        const lineLow = tier === 'budget' ? 4500 : tier === 'mid' ? 7000 : 10000;
-        const lineHigh = lineLow * 1.4;
-        materialLow += lineLow * 0.55;
-        materialHigh += lineHigh * 0.55;
-        labourLow += lineLow * 0.35;
-        labourHigh += lineHigh * 0.35;
-        coreLow += lineLow;
-        coreHigh += lineHigh;
-        daysLow += 2; daysHigh += 4;
-      } else if (el === 'lighting') {
-        const lineLow = tier === 'budget' ? 3000 : tier === 'mid' ? 5000 : 7500;
-        const lineHigh = lineLow * 1.4;
-        materialLow += lineLow * 0.5;
-        materialHigh += lineHigh * 0.5;
-        labourLow += lineLow * 0.35;
-        labourHigh += lineHigh * 0.35;
-        coreLow += lineLow;
-        coreHigh += lineHigh;
-        daysLow += 1; daysHigh += 2;
-      }
-    }
+  const trackAdjust = (lever: string, direction: string) =>
+    trackEngagement('estimator_adjust', `${lever}_${direction}`);
 
-    // Site condition multipliers / additions
-    let conditionMult = 1;
-    if (conditions.access) conditionMult += 0.18;
-    if (conditions.levels) conditionMult += 0.12;
-    let conditionFlatLow = 0;
-    let conditionFlatHigh = 0;
-    if (conditions.slope)    { conditionFlatLow += 1500; conditionFlatHigh += 4000; daysLow += 0.5; daysHigh += 1.5; }
-    if (conditions.drainage) { conditionFlatLow += 1500; conditionFlatHigh += 3500; daysLow += 0.5; daysHigh += 1; }
+  /** Shareable link that restores this exact build. Computed only at the result
+   *  step — it's what the save gate trades for. */
+  const permalink = useMemo(
+    () => (step === TOTAL_STEPS ? buildPermalink(build, targetBudget) : undefined),
+    [build, targetBudget, step],
+  );
 
-    coreLow = coreLow * conditionMult + conditionFlatLow + extraFlatLow;
-    coreHigh = coreHigh * conditionMult + conditionFlatHigh + extraFlatHigh;
-    materialLow *= conditionMult;
-    materialHigh *= conditionMult;
-    labourLow = labourLow * conditionMult + conditionFlatLow * 0.6 + extraFlatLow;
-    labourHigh = labourHigh * conditionMult + conditionFlatHigh * 0.6 + extraFlatHigh;
-
-    // Excavation = roughly 18% of core for hardscape, lighter for non-hardscape
-    const excavationShare = isHardscape || (projectType === 'full' && totalSqftCalc > 0) ? 0.18 : 0.10;
-    const excavationLow = Math.max(2500, coreLow * excavationShare);
-    const excavationHigh = Math.max(4000, coreHigh * excavationShare);
-
-    // Disposal — only meaningful for hardscape work that excavates
-    const bins = totalSqftCalc > 0 ? estimateBins(totalSqftCalc) : 0;
-    const disposalLow = bins * BIN_COST;
-    const disposalHigh = bins * BIN_COST * 1.15;
-
-    // Restoration — site cleanup, sodding edges, perimeter dressing
-    const restorationLow = Math.max(800, totalSqftCalc * 2.5);
-    const restorationHigh = Math.max(1500, totalSqftCalc * 4);
-
-    // Zone surcharge for delivery
-    const loc = ESTIMATOR_LOCATIONS.find(l => l.key === location) || ESTIMATOR_LOCATIONS[0];
-    const surcharge = ZONE_SURCHARGE[loc.zone];
-
-    // Add-ons
-    let addOnsLow = 0;
-    let addOnsHigh = 0;
-    for (const aid of addOns) {
-      const a = ADD_ONS.find(x => x.id === aid);
-      if (a) { addOnsLow += a.costLow; addOnsHigh += a.costHigh; }
-    }
-    if (addOns.length > 0) {
-      daysLow += addOns.length * 0.5;
-      daysHigh += addOns.length * 1;
-    }
-
-    const flooredLabour = applyDailyProductionFloor({
-      labourLow,
-      labourHigh,
-      daysLow,
-      daysHigh,
-      projectType,
-    });
-    labourLow = flooredLabour.labourLow;
-    labourHigh = flooredLabour.labourHigh;
-
-    // Total = core + zone surcharge + add-ons (excavation/labour/materials/disposal/restoration are slices of core; we'll show breakdown but total is the higher-level sum)
-    const totalLow = Math.round((excavationLow + materialLow + labourLow + disposalLow + restorationLow + surcharge + addOnsLow) / 500) * 500;
-    const totalHigh = Math.round((excavationHigh + materialHigh + labourHigh + disposalHigh + restorationHigh + surcharge + addOnsHigh) / 500) * 500;
-
-    // No job minimum. The estimate is whatever the project actually costs out
-    // to — a small walkway prices as a small walkway. Qualification happens at
-    // the name+email gate on the breakdown, not with a price wall.
-    return {
-      totalLow,
-      totalHigh,
-      addOnsTotal: { low: addOnsLow, high: addOnsHigh },
-      days: { low: Math.ceil(daysLow * 2) / 2, high: Math.ceil(daysHigh * 2) / 2 },
-      lines: {
-        excavation: {
-          low: Math.round(excavationLow / 100) * 100,
-          high: Math.round(excavationHigh / 100) * 100,
-          detail: totalSqftCalc > 0 ? `12–16" base depth on ${totalSqftCalc} sqft` : 'Site prep + base prep',
-        },
-        materials: {
-          low: Math.round((materialLow + surcharge) / 100) * 100,
-          high: Math.round((materialHigh + surcharge) / 100) * 100,
-          detail: isDeck
-            ? `${selectedDeck.brand} ${selectedDeck.product}`
-            : isHardscape || projectType === 'full'
-            ? `${selectedPaver.brand} ${selectedPaver.product}${totalSqftCalc > 0 ? ` (${totalSqftCalc} sqft)` : ''}`
-            : 'Materials & supplies',
-        },
-        labour: {
-          low: Math.round(labourLow / 100) * 100,
-          high: Math.round(labourHigh / 100) * 100,
-          detail: `${Math.ceil(daysLow * 2) / 2}–${Math.ceil(daysHigh * 2) / 2} days on-site, ICPI-certified crew`,
-        },
-        disposal: {
-          low: Math.round(disposalLow / 100) * 100,
-          high: Math.round(disposalHigh / 100) * 100,
-          detail: bins > 0 ? `${bins} × 14-yard bin (clean fill)` : 'Standard waste removal',
-        },
-        restoration: {
-          low: Math.round(restorationLow / 100) * 100,
-          high: Math.round(restorationHigh / 100) * 100,
-          detail: 'Edge dressing, soil amendments, site clean',
-        },
-      },
-    };
-  }, [projectType, selectedElements, sizes, details, conditions, location, tier, paverBrandId, deckBrandId, addOns, isHardscape, isDeck, selectedPaver, selectedDeck]);
+  /** Apply a gap-coach lever to the live build. Only ever touches scope or
+   *  material — the coach never produces a patch that edits site conditions. */
+  const applyLever = (leverId: string, patch: Partial<EstimateInput>) => {
+    if (patch.sizes) setSizes(patch.sizes);
+    if (patch.tier) setTier(patch.tier);
+    if (patch.paverBrandId) setPaverBrandId(patch.paverBrandId);
+    if (patch.addOns) setAddOns(patch.addOns);
+    trackEngagement('estimator_gap_lever_applied', leverId);
+  };
 
   /** Confidence ±% — earned by ANSWERS, not by page-turning. Every detail question,
    *  the conditions review, location, material choice, and a photo each tighten the band. */
@@ -532,16 +448,46 @@ export default function Estimator() {
     return Math.max(8, Math.round(c));
   }, [answeredDetails, step, photoFile]);
 
-  /** Displayed range = core estimate widened by remaining uncertainty.
-   *  Starts deliberately wide and visibly narrows as questions get answered —
-   *  the narrowing is the reward for answering. */
+  /** Everything the user SEES — the engine estimate widened by the uncertainty
+   *  they haven't resolved yet. Starts deliberately wide and visibly narrows as
+   *  questions get answered; the narrowing is the reward for answering.
+   *
+   *  The headline AND the itemized lines are widened by the same two factors,
+   *  so the breakdown always reconciles with the number above it. This is also
+   *  the single source of the displayed range — the result step used to render
+   *  the RAW engine total while every earlier step rendered this widened one,
+   *  so the number visibly jumped at the exact moment the user was supposed to
+   *  feel they'd built it. `confidence` is identical on steps 6 and 7, so
+   *  arriving at the result now changes nothing. */
+  const widen = useMemo(() => widenFactors(confidence), [confidence]);
+
   const display = useMemo(() => {
-    if (estimate.totalLow <= 0) return { low: 0, high: 0 };
-    const spread = Math.max(0, (confidence - 8) / 100);
-    const low = Math.max(500, Math.round((estimate.totalLow * (1 - spread * 0.45)) / 500) * 500);
-    const high = Math.round((estimate.totalHigh * (1 + spread * 0.9)) / 500) * 500;
-    return { low, high };
-  }, [estimate.totalLow, estimate.totalHigh, confidence]);
+    if (estimate.totalLow <= 0) return { low: 0, high: 0, lines: null };
+    const scaleLine = (l: EstimateLine): EstimateLine => ({
+      ...l,
+      low: Math.round(widen.low(l.low) / 100) * 100,
+      high: Math.round(widen.high(l.high) / 100) * 100,
+    });
+    return {
+      ...widenTotals(estimate, confidence),
+      lines: estimate.lines && {
+        excavation: scaleLine(estimate.lines.excavation),
+        materials: scaleLine(estimate.lines.materials),
+        labour: scaleLine(estimate.lines.labour),
+        disposal: scaleLine(estimate.lines.disposal),
+        restoration: scaleLine(estimate.lines.restoration),
+      },
+    };
+  }, [estimate, widen, confidence]);
+
+  /** The range a hypothetical change WOULD display — same widening as the
+   *  headline, so a scenario card can never advertise a range that clicking it
+   *  wouldn't actually produce. */
+  const totalFor = useMemo(
+    () => (patch: Partial<EstimateInput>) =>
+      widenTotals(computeEstimate({ ...build, ...patch }), confidence),
+    [build, confidence],
+  );
 
   // Transient "+$2,400" chip when an answer moves the estimate — makes every input visibly count.
   const mid = (estimate.totalLow + estimate.totalHigh) / 2;
@@ -551,7 +497,9 @@ export default function Estimator() {
   useEffect(() => {
     const prev = prevMidRef.current;
     prevMidRef.current = mid;
-    if (prev <= 0 || mid <= 0 || step < 2 || step >= TOTAL_STEPS) return;
+    // Fires on the result step too — the workbench is where the biggest
+    // adjustments happen, and the mobile sticky bar shows the chip there.
+    if (prev <= 0 || mid <= 0 || step < 2) return;
     const diff = mid - prev;
     if (Math.abs(diff) < 250) return;
     setDelta(diff);
@@ -565,62 +513,107 @@ export default function Estimator() {
   };
 
   // ---------- step renderers ----------
-  const renderSlider = (id: string, label: string, min: number, max: number, format: (v: number) => string) => {
-    const v = typeof sizes[id] === 'number' ? (sizes[id] as number) : min;
+  /** Plain-language anchors for people who don't think in square feet.
+   *  A number you can picture is a number you can own. */
+  const SQFT_PRESETS = [
+    { label: 'Small', value: 250, hint: '~ a single-car garage' },
+    { label: 'Medium', value: 500, hint: '~ a two-car garage' },
+    { label: 'Large', value: 900, hint: '~ a doubles tennis court' },
+  ];
+
+  /** Card options replace the native <select>s. Every other choice in the
+   *  estimator is a card; three dropdowns hiding among them made the cheapest
+   *  interactions feel like the least considered ones. */
+  const renderOptionCards = (id: string, label: string, options: string[], help?: string) => {
+    const current = sizes[id] as string;
     return (
       <div className="mb-8">
-        <div className="flex justify-between items-end mb-4">
-          <span className="font-sans text-[13px] text-brand-bone">{label}</span>
-          <span className="font-display text-2xl text-brand-gold">{format(v)}</span>
+        <div className="font-sans text-[13px] text-brand-bone mb-1.5">{label}</div>
+        {help ? (
+          <div className="font-sans text-[11px] font-normal text-brand-bonewhite/70 mb-4 leading-relaxed">{help}</div>
+        ) : <div className="mb-4" />}
+        {/* Class names must be literal — Tailwind can't see runtime template
+            strings, so `grid-cols-${n}` compiles to nothing. */}
+        <div className={cn(
+          'grid gap-2.5',
+          options.length >= 4 ? 'grid-cols-2 md:grid-cols-4'
+            : options.length === 3 ? 'grid-cols-3'
+            : 'grid-cols-2',
+        )}>
+          {options.map(opt => {
+            const isSelected = current === opt;
+            const optDelta = preview({ sizes: { ...sizes, [id]: opt } });
+            const diagram = DETAIL_DIAGRAMS[`${id}_${opt}`];
+            return (
+              <button
+                type="button"
+                key={opt}
+                onClick={() => handleSizeChange(id, opt)}
+                aria-pressed={isSelected}
+                className={cn(
+                  'p-3.5 rounded-2xl border text-left transition-all duration-200',
+                  isSelected
+                    ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]'
+                    : 'bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
+                )}
+              >
+                {diagram ? (
+                  <div className={cn('mb-1.5', isSelected ? 'text-brand-gold' : 'text-brand-gold/60')}>{diagram}</div>
+                ) : null}
+                <div className="font-sans text-[12px] text-brand-bone leading-snug mb-1">{opt}</div>
+                <PriceDelta
+                  mid={isSelected ? 0 : optDelta}
+                  neutralLabel={isSelected ? 'Selected' : 'Same price'}
+                  dimmed={!isSelected}
+                  className="text-[10px]"
+                />
+              </button>
+            );
+          })}
         </div>
-        <input
-          type="range" min={min} max={max} value={v}
-          onChange={(e) => handleSizeChange(id, Number(e.target.value))}
-          className="w-full h-[3px] bg-brand-dark rounded-full appearance-none outline-none accent-brand-gold"
-          style={{ background: `linear-gradient(to right, #D4AF63 ${(v - min) / (max - min) * 100}%, #1A1814 ${(v - min) / (max - min) * 100}%)` }}
-        />
       </div>
     );
   };
-  const renderDropdown = (id: string, label: string, options: string[]) => (
-    <div className="mb-8">
-      <label className="block font-sans text-[13px] text-brand-bone mb-4">{label}</label>
-      <div className="relative">
-        <select
-          value={sizes[id] as string}
-          onChange={(e) => handleSizeChange(id, e.target.value)}
-          className="w-full bg-brand-dark border border-brand-gold/20 text-brand-bone font-sans text-[15px] p-4 rounded-2xl appearance-none outline-none focus:border-brand-gold transition-colors"
-        >
-          {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-        </select>
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-          <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 1.5L6 6.5L11 1.5" stroke="#D4AF63" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-      </div>
-    </div>
+
+  const renderSizeControl = (
+    id: string, label: string, min: number, max: number, unit: string,
+    step: number, presets?: { label: string; value: number; hint?: string }[],
+  ) => (
+    <SizeControl
+      label={label}
+      value={typeof sizes[id] === 'number' ? (sizes[id] as number) : min}
+      min={min}
+      max={max}
+      step={step}
+      unit={unit}
+      presets={presets}
+      onChange={v => handleSizeChange(id, v)}
+      onCommit={() => trackAdjust('size', id)}
+    />
   );
+
   const renderSizeInputs = (type: string) => {
     switch (type) {
       case 'patio':
       case 'stone':
       case 'deck':
       case 'turf':
-        return renderSlider(type, 'Approximate Square Footage', 100, 2000, v => `${v} sq ft`);
+        return renderSizeControl(type, 'Approximate square footage', 100, 2000, 'sq ft', 10, SQFT_PRESETS);
       case 'wall':
         return (<>
-          {renderSlider('wall', 'Wall Length', 10, 200, v => `${v} ln ft`)}
-          {renderDropdown('wallHeight', 'Wall Height', ['Under 2ft', '2-4ft', '4-6ft', 'Over 6ft'])}
+          {renderSizeControl('wall', 'Wall length', 10, 200, 'ln ft', 5)}
+          {renderOptionCards('wallHeight', 'Wall height', ['Under 2ft', '2-4ft', '4-6ft', 'Over 6ft'],
+            'Height drives block type, reinforcement, and whether engineering is required.')}
         </>);
       case 'steps':
-        return renderSlider('steps', 'Number of Steps', 2, 20, v => `${v} steps`);
+        return renderSizeControl('steps', 'Number of steps', 2, 20, 'steps', 1);
       case 'kitchen':
-        return renderDropdown('kitchen', 'Kitchen Scope', ['Basic', 'Full Build']);
+        return renderOptionCards('kitchen', 'Kitchen scope', ['Basic', 'Full Build'],
+          'Basic is counter, cabinet and a built-in grill. Full Build adds services, appliances and finishes.');
       case 'firepit':
       case 'pergola':
       case 'lighting':
-        return renderDropdown(type, 'Project Size', ['Small', 'Medium', 'Large']);
+        return renderOptionCards(type, 'Project size', ['Small', 'Medium', 'Large']);
       default:
         return null;
     }
@@ -647,6 +640,10 @@ export default function Estimator() {
               )}>
                 {q.options.map(o => {
                   const isSelected = details[key] === o.id;
+                  // Price this option against the CURRENT build, not against a
+                  // generic average — "+$3,200" on their 500 sqft patio, not "+12–16%".
+                  const optionDelta = preview({ details: { ...details, [key]: o.id } });
+                  const diagram = DETAIL_DIAGRAMS[`${q.id}_${o.id}`];
                   return (
                     <button
                       type="button"
@@ -657,8 +654,16 @@ export default function Estimator() {
                         isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                       )}
                     >
+                      {diagram ? (
+                        <div className={cn('mb-1.5', isSelected ? 'text-brand-gold' : 'text-brand-gold/60')}>{diagram}</div>
+                      ) : null}
                       <div className="font-sans text-[12px] text-brand-bone leading-snug mb-1">{o.label}</div>
-                      <div className={cn("font-sans text-[10px]", isSelected ? "text-brand-gold" : "text-brand-bonewhite/60")}>{o.hint}</div>
+                      <PriceDelta
+                        mid={isSelected ? 0 : optionDelta}
+                        neutralLabel={isSelected ? 'Selected' : o.hint}
+                        dimmed={!isSelected}
+                        className="text-[10px]"
+                      />
                     </button>
                   );
                 })}
@@ -698,6 +703,108 @@ export default function Estimator() {
   );
   const eligibleDecks = DECK_BRANDS.filter(d => tier === 'premium' ? true : d.id === 'timbertech-prime');
 
+  const showPaverPicker = showBrandPicker
+    && (isHardscape || (projectType === 'full' && !selectedElements.every(e => e === 'deck')))
+    && eligiblePavers.length > 0;
+  const showDeckPicker = (isDeck || (projectType === 'full' && selectedElements.includes('deck')))
+    && eligibleDecks.length > 0;
+
+  /** Brand cards. Rendered on step 5 and again inside the result workbench, so
+   *  the material choice stays changeable after the number exists — `compact`
+   *  drops the explanatory copy that only earns its space the first time. */
+  const renderBrandPickers = (compact = false) => {
+    if (!showPaverPicker && !showDeckPicker) return null;
+    return (
+      <>
+        {showPaverPicker && (
+          <div className={compact ? 'mb-4' : 'mb-8'}>
+            <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-2">Hardscape Brand</div>
+            {!compact && (
+              <p className="font-sans text-[11px] font-normal text-brand-bonewhite/70 mb-4">Prices shown are paver material only (Carr retail, base colour). Your estimate covers the full installation — excavation, 12–16" base, crew, and disposal.</p>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {eligiblePavers.map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPaverBrandId(p.id)}
+                  className={cn(
+                    "relative p-4 rounded-2xl border text-left transition-all duration-200",
+                    paverBrandId === p.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                  )}
+                >
+                  {p.recommended && (
+                    <div className="absolute -top-2.5 left-4 bg-brand-gold text-brand-black font-sans text-[9px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-medium shadow-[0_4px_12px_rgba(212,175,99,0.4)]">
+                      Recommended
+                    </div>
+                  )}
+                  {/* Product swatch — renders the moment Permacon dealer-portal
+                      images land in estimatorImages.ts. Data-only wire-up. */}
+                  {PAVER_SWATCHES[p.id] ? (
+                    <img
+                      src={PAVER_SWATCHES[p.id].src}
+                      alt={PAVER_SWATCHES[p.id].alt}
+                      width={320} height={240}
+                      loading="lazy" decoding="async"
+                      className="w-full h-20 rounded-xl object-cover border border-brand-dim mb-3 mt-1"
+                    />
+                  ) : null}
+                  <div className="flex items-baseline justify-between gap-2 mb-1 mt-1">
+                    <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold">{p.brand}</span>
+                    <span className="font-display text-[13px] text-brand-bone">from ${p.materialRetailPerSqft.toFixed(2)}/sqft</span>
+                  </div>
+                  <div className="font-sans text-[13px] text-brand-bone mb-1">{p.product}</div>
+                  {!compact && (
+                    <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80">{p.description}</div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showDeckPicker && (
+          <div className="mb-2">
+            <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Decking Brand</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {eligibleDecks.map(d => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setDeckBrandId(d.id)}
+                  className={cn(
+                    "p-4 rounded-2xl border text-left transition-all duration-200",
+                    deckBrandId === d.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                  )}
+                >
+                  {/* TimberTech product shot — dealer asset, choosing a finish
+                      by name alone is guesswork. */}
+                  {DECK_BRAND_IMAGES[d.id] ? (
+                    <img
+                      src={DECK_BRAND_IMAGES[d.id].src}
+                      alt={DECK_BRAND_IMAGES[d.id].alt}
+                      width={320} height={240}
+                      loading="lazy" decoding="async"
+                      className={cn('w-full rounded-xl object-cover border border-brand-dim mb-3', compact ? 'h-16' : 'h-24')}
+                    />
+                  ) : null}
+                  <div className="flex items-baseline justify-between gap-2 mb-1">
+                    <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold">{d.brand}</span>
+                    <span className="font-display text-[13px] text-brand-bone">${d.installedPerSqft}/sqft installed</span>
+                  </div>
+                  <div className="font-sans text-[13px] text-brand-bone mb-1">{d.product}</div>
+                  {!compact && (
+                    <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80">{d.description}</div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="w-full max-w-[920px] mx-auto px-4 py-16 md:py-24" id="estimator">
       <div className="text-center mb-14">
@@ -721,19 +828,44 @@ export default function Estimator() {
             transition={{ type: 'spring', stiffness: 90, damping: 20 }}
           />
         </div>
-        <div className="flex justify-between items-center mb-12 mt-5">
-          {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(i => (
-            <motion.div
-              key={i}
-              animate={{ scale: step === i ? 1.4 : 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className={cn(
-                "w-1.5 h-1.5 rounded-full transition-colors duration-300",
-                step === i ? "bg-brand-gold shadow-[0_0_12px_rgba(212,175,99,0.6)]" : step > i ? "bg-brand-gold/60" : "bg-brand-dim"
-              )}
-            />
-          ))}
-        </div>
+        {/* Step dots are navigation, not decoration. Any step you've already
+            reached is one tap away — being able to move around freely is what
+            being in charge of a form physically feels like. Steps ahead stay
+            inert so the dots never promise a jump they won't make. */}
+        <nav aria-label="Estimator steps" className="flex justify-between items-center mb-12 mt-5">
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(i => {
+            const visited = i <= furthestStep;
+            const isCurrent = step === i;
+            return (
+              <button
+                key={i}
+                type="button"
+                disabled={!visited}
+                onClick={() => { if (visited && !isCurrent) { fireStep(i); setStep(i); } }}
+                aria-current={isCurrent ? 'step' : undefined}
+                aria-label={`Step ${i}: ${STEP_NAMES[i]}${visited ? '' : ' (not yet reached)'}`}
+                title={visited ? `Step ${i} · ${STEP_NAMES[i]}` : undefined}
+                className={cn(
+                  // Generous hit target around a small dot — the dot is 6px,
+                  // the tap area is 36px.
+                  'group relative w-9 h-9 -mx-1.5 flex items-center justify-center rounded-full transition-colors',
+                  visited ? 'cursor-pointer hover:bg-brand-gold/10' : 'cursor-default',
+                )}
+              >
+                <motion.span
+                  animate={{ scale: isCurrent ? 1.4 : 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  className={cn(
+                    'w-1.5 h-1.5 rounded-full transition-colors duration-300',
+                    isCurrent ? 'bg-brand-gold shadow-[0_0_12px_rgba(212,175,99,0.6)]'
+                      : visited ? 'bg-brand-gold/60 group-hover:bg-brand-gold'
+                      : 'bg-brand-dim',
+                  )}
+                />
+              </button>
+            );
+          })}
+        </nav>
 
         {/* Desktop running estimate — deliberately wide early, visibly narrowing as answers land.
             The breakdown shortcut only appears once the pricing-relevant questions are behind them. */}
@@ -743,7 +875,7 @@ export default function Estimator() {
               <div>
                 <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold mb-1.5">Your range so far</div>
                 <div className="font-display text-3xl text-brand-bone leading-none flex items-baseline gap-3">
-                  ${(display.low / 1000).toFixed(0)}k – ${(display.high / 1000).toFixed(0)}k
+                  <AnimatedPrice low={display.low} high={display.high} separatorClassName="!mx-1.5" />
                   <AnimatePresence>
                     {delta !== null && (
                       <motion.span
@@ -763,6 +895,15 @@ export default function Estimator() {
                 <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold mb-1.5">Confidence</div>
                 <div className="font-display text-3xl text-brand-bone leading-none">±{confidence}%</div>
               </div>
+              {/* Their number, tracked alongside ours from the moment they set it. */}
+              {targetBudget !== null && (
+                <div className="hidden lg:block pl-5 border-l border-brand-gold/15">
+                  <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold mb-1.5">Your target</div>
+                  <div className="font-display text-3xl text-brand-bone leading-none tabular-nums">
+                    ${(targetBudget / 1000).toFixed(0)}k
+                  </div>
+                </div>
+              )}
             </div>
             {step >= 5 ? (
               <div className="flex items-center gap-4">
@@ -789,8 +930,8 @@ export default function Estimator() {
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
               <h3 className="font-display text-3xl text-brand-bone mb-8">What are you looking to build?</h3>
-              <div className="grid grid-cols-2 gap-2.5 md:gap-4">
-                {PROJECT_TYPES.map(pt => {
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 md:gap-4">
+                {PROJECT_TYPES.map((pt, idx) => {
                   const Icon = pt.icon;
                   const isSelected = projectType === pt.id;
                   return (
@@ -805,7 +946,9 @@ export default function Estimator() {
                         isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface hover:-translate-y-[2px] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)]"
                       )}
                     >
-                      <div className="text-brand-gold"><Icon size={24} strokeWidth={1.5} /></div>
+                      {/* Real project photo where one exists; first row eager
+                          (above the fold), the rest lazy. */}
+                      <TypeThumb typeId={pt.id} icon={Icon} eager={idx < 4} />
                       <div>
                         <div className="font-sans text-[11px] md:text-[13px] uppercase text-brand-bone tracking-wide mb-1">{pt.label}</div>
                         <div className="font-sans text-[10px] md:text-[12px] font-normal text-brand-bonewhite/80">{pt.desc}</div>
@@ -819,7 +962,27 @@ export default function Estimator() {
 
           {step === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-              <h3 className="font-display text-3xl text-brand-bone mb-8">Let's talk size and scope.</h3>
+              <h3 className="font-display text-3xl text-brand-bone mb-6">Let's talk size and scope.</h3>
+
+              {/* Asked here, not on step 1 — after they've told us what they
+                  want to build, "what would you like to spend?" reads as help
+                  rather than qualification. */}
+              <div className="mb-9">
+                <BudgetTarget
+                  value={targetBudget}
+                  onChange={(v) => {
+                    setTargetBudget(v);
+                    // Bucketed, never the raw figure — this is a funnel signal,
+                    // not a field for someone to browse in analytics.
+                    trackEngagement('estimator_budget_set', v >= 75000 ? '75k_plus' : v >= 50000 ? '50k_75k' : v >= 30000 ? '30k_50k' : v >= 15000 ? '15k_30k' : 'under_15k');
+                  }}
+                  onSkip={() => {
+                    if (targetBudget === null) trackEngagement('estimator_budget_skip', 'not_sure');
+                    setTargetBudget(null);
+                  }}
+                />
+              </div>
+
               {projectType === 'full' ? (
                 <div className="space-y-8">
                   <p className="font-sans text-[13px] text-brand-muted mb-6">Select all the elements you want to include in your backyard transformation:</p>
@@ -834,11 +997,12 @@ export default function Estimator() {
                         )}
                       >
                         <div className={cn(
-                          "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                          "w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0",
                           selectedElements.includes(pt.id) ? "bg-brand-gold border-brand-gold" : "border-brand-gold/60"
                         )}>
                           {selectedElements.includes(pt.id) && <Check size={14} className="text-brand-black" />}
                         </div>
+                        <TypeThumb typeId={pt.id} icon={pt.icon} size="sm" />
                         <span className="font-sans text-[13px] text-brand-bone">{pt.label}</span>
                       </div>
                     ))}
@@ -846,15 +1010,35 @@ export default function Estimator() {
                   {selectedElements.length > 0 && (
                     <div className="pt-8 border-t border-brand-gold/10 space-y-12">
                       <h4 className="font-display text-2xl text-brand-bone">Configure Sizes</h4>
-                      {selectedElements.map(el => (
+                      {selectedElements.map(el => {
+                        // Mobile accordion; desktop always open. A lone
+                        // element stays open — collapsing it would just be a
+                        // pointless extra tap.
+                        const isOpen = openElement === el || selectedElements.length === 1;
+                        return (
                         <div key={el} className="bg-brand-cream-light p-6 rounded-2xl border border-brand-dim/50">
-                          <h5 className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold mb-6">
-                            {PROJECT_TYPES.find(p => p.id === el)?.label}
-                          </h5>
-                          {renderSizeInputs(el)}
-                          {renderDetailQuestions(el)}
+                          <button
+                            type="button"
+                            onClick={() => setOpenElement(prev => (prev === el ? null : el))}
+                            aria-expanded={isOpen}
+                            className="w-full flex items-center justify-between gap-3 text-left md:pointer-events-none"
+                          >
+                            <h5 className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold">
+                              {PROJECT_TYPES.find(p => p.id === el)?.label}
+                            </h5>
+                            <ChevronDown
+                              size={16}
+                              className={cn('md:hidden text-brand-gold/70 shrink-0 transition-transform duration-200', isOpen && 'rotate-180')}
+                              strokeWidth={1.75}
+                            />
+                          </button>
+                          <div className={cn(isOpen ? 'block' : 'hidden', 'md:block', 'mt-6')}>
+                            {renderSizeInputs(el)}
+                            {renderDetailQuestions(el)}
+                          </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -872,7 +1056,14 @@ export default function Estimator() {
               <h3 className="font-display text-3xl text-brand-bone mb-8">Any special site conditions?</h3>
               <p className="font-sans text-[13px] text-brand-muted mb-8">Select any that apply. These affect labour time, equipment, and final pricing.</p>
               <div className="space-y-4">
-                {CONDITIONS.map(cond => (
+                {CONDITIONS.map(cond => {
+                  // Toggling a condition is a statement about their yard, so the
+                  // number shown is what saying "yes" costs (or, once on, what
+                  // it's currently adding).
+                  const condDelta = preview({
+                    conditions: { ...conditions, [cond.id]: !conditions[cond.id] },
+                  });
+                  return (
                   <div
                     key={cond.id}
                     onClick={() => toggleCondition(cond.id)}
@@ -890,12 +1081,20 @@ export default function Estimator() {
                     <div className="flex-1">
                       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                         <span className="font-sans text-[13px] text-brand-bone">{cond.label}</span>
-                        <span className="font-display text-[13px] text-brand-gold">{cond.hint}</span>
+                        {/* Off: what saying yes would cost. On: what it's
+                            contributing right now — negating the "remove it"
+                            delta, so a checked condition never misreads as a saving. */}
+                        <PriceDelta
+                          mid={conditions[cond.id] ? -condDelta : condDelta}
+                          neutralLabel={cond.hint}
+                          className="text-[13px]"
+                        />
                       </div>
                       <div className="font-sans text-[11px] font-normal text-brand-bonewhite/70 mt-1">{cond.why}</div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </motion.div>
           )}
@@ -937,8 +1136,16 @@ export default function Estimator() {
               <h3 className="font-display text-3xl text-brand-bone mb-3">Material preference</h3>
               <p className="font-sans text-[13px] text-brand-muted mb-8">Pick a tier first, then a specific brand. Real Carr Landscape Depot pricing.</p>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-                {TIERS.map(t => (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
+                {TIERS.map(t => {
+                  // Changing tier also auto-swaps the brand (see the effect
+                  // above), so the preview has to patch BOTH or the quoted
+                  // saving won't match what actually happens on click.
+                  const tierDelta = preview({
+                    tier: t.id,
+                    paverBrandId: defaultPaverForTier(t.id).id,
+                  });
+                  return (
                   <button
                     key={t.id}
                     type="button"
@@ -953,69 +1160,22 @@ export default function Estimator() {
                         {t.badge}
                       </div>
                     )}
-                    <div className="font-display text-lg text-brand-bone mb-1">{t.label}</div>
+                    <div className="flex items-baseline justify-between gap-2 mb-1">
+                      <span className="font-display text-lg text-brand-bone">{t.label}</span>
+                      <PriceDelta
+                        mid={tier === t.id ? 0 : tierDelta}
+                        neutralLabel={tier === t.id ? 'Current' : 'Same price'}
+                        dimmed={tier !== t.id}
+                        className="text-[12px]"
+                      />
+                    </div>
                     <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80 leading-snug">{t.sub}</div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
 
-              {showBrandPicker && (isHardscape || (projectType === 'full' && !selectedElements.every(e => e === 'deck'))) && eligiblePavers.length > 0 && (
-                <div className="mb-8">
-                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-2">Hardscape Brand</div>
-                  <p className="font-sans text-[11px] font-normal text-brand-bonewhite/70 mb-4">Prices shown are paver material only (Carr retail, base colour). Your estimate covers the full installation — excavation, 12–16" base, crew, and disposal.</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {eligiblePavers.map(p => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => setPaverBrandId(p.id)}
-                        className={cn(
-                          "relative p-4 rounded-2xl border text-left transition-all duration-200",
-                          paverBrandId === p.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
-                        )}
-                      >
-                        {p.recommended && (
-                          <div className="absolute -top-2.5 left-4 bg-brand-gold text-brand-black font-sans text-[9px] uppercase tracking-widest px-2.5 py-0.5 rounded-full font-medium shadow-[0_4px_12px_rgba(212,175,99,0.4)]">
-                            Recommended
-                          </div>
-                        )}
-                        <div className="flex items-baseline justify-between gap-2 mb-1 mt-1">
-                          <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold">{p.brand}</span>
-                          <span className="font-display text-[13px] text-brand-bone">from ${p.materialRetailPerSqft.toFixed(2)}/sqft</span>
-                        </div>
-                        <div className="font-sans text-[13px] text-brand-bone mb-1">{p.product}</div>
-                        <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80">{p.description}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {(isDeck || (projectType === 'full' && selectedElements.includes('deck'))) && eligibleDecks.length > 0 && (
-                <div className="mb-2">
-                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Decking Brand</div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {eligibleDecks.map(d => (
-                      <button
-                        key={d.id}
-                        type="button"
-                        onClick={() => setDeckBrandId(d.id)}
-                        className={cn(
-                          "p-4 rounded-2xl border text-left transition-all duration-200",
-                          deckBrandId === d.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
-                        )}
-                      >
-                        <div className="flex items-baseline justify-between gap-2 mb-1">
-                          <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold">{d.brand}</span>
-                          <span className="font-display text-[13px] text-brand-bone">${d.installedPerSqft}/sqft installed</span>
-                        </div>
-                        <div className="font-sans text-[13px] text-brand-bone mb-1">{d.product}</div>
-                        <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80">{d.description}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {renderBrandPickers()}
             </motion.div>
           )}
 
@@ -1025,7 +1185,15 @@ export default function Estimator() {
               <p className="font-sans text-[13px] text-brand-muted mb-8">Optional. Each item adds a real line to your estimate.</p>
 
               <div className="space-y-3 mb-10">
-                {ADD_ONS.map(a => (
+                {ADD_ONS.map(a => {
+                  const isOn = addOns.includes(a.id);
+                  // The engine adds crew-days per add-on as well as the flat
+                  // cost, so the real effect can exceed the sticker range.
+                  // Show what actually happens to the total.
+                  const addOnDelta = preview({
+                    addOns: isOn ? addOns.filter(x => x !== a.id) : [...addOns, a.id],
+                  });
+                  return (
                   <div
                     key={a.id}
                     onClick={() => toggleAddOn(a.id)}
@@ -1043,12 +1211,18 @@ export default function Estimator() {
                     <div className="flex-1">
                       <div className="flex items-baseline justify-between gap-3 mb-1">
                         <span className="font-sans text-[13px] text-brand-bone">{a.label}</span>
-                        <span className="font-display text-[13px] text-brand-gold whitespace-nowrap">+{fmt(a.costLow)}–{fmt(a.costHigh)}</span>
+                        {/* On: what it's adding. Off: what adding it would cost. */}
+                        <PriceDelta
+                          mid={isOn ? -addOnDelta : addOnDelta}
+                          neutralLabel={`+${fmt(a.costLow)}–${fmt(a.costHigh)}`}
+                          className="text-[13px]"
+                        />
                       </div>
                       <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80 leading-relaxed">{a.description}</div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Photo upload */}
@@ -1086,27 +1260,65 @@ export default function Estimator() {
             </motion.div>
           )}
 
-          {step === 7 && estimate.lines && (
+          {step === 7 && display.lines && (
             <motion.div key="step7" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
-              <button
-                onClick={() => setStep(6)}
-                className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted hover:text-brand-gold transition-colors mb-8 inline-flex items-center gap-2"
-              >
-                ← Refine my answers
-              </button>
               <EstimateBreakdown
-                excavation={estimate.lines.excavation}
-                materials={estimate.lines.materials}
-                labour={estimate.lines.labour}
-                disposal={estimate.lines.disposal}
-                restoration={estimate.lines.restoration}
-                totalLow={estimate.totalLow}
-                totalHigh={estimate.totalHigh}
+                excavation={display.lines.excavation}
+                materials={display.lines.materials}
+                labour={display.lines.labour}
+                disposal={display.lines.disposal}
+                restoration={display.lines.restoration}
+                totalLow={display.low}
+                totalHigh={display.high}
                 confidencePercent={confidence}
                 brandName={isDeck ? `${selectedDeck.brand} ${selectedDeck.product}` : `${selectedPaver.brand} ${selectedPaver.product}`}
                 sqft={totalSqft}
                 city={selectedLocation.name}
-                locked={!breakdownUnlocked}
+                /* The result is a workbench, not a receipt. Everything that
+                   moved the number stays reachable — directly under the
+                   headline, so the number never reads as final. */
+                belowHero={
+                  <>
+                  {targetBudget !== null && (
+                    <div className="mb-6">
+                      <BudgetGapCoach
+                        build={build}
+                        target={targetBudget}
+                        displayLow={display.low}
+                        displayHigh={display.high}
+                        rangeFor={totalFor}
+                        onApply={applyLever}
+                      />
+                    </div>
+                  )}
+                  <EstimateWorkbench
+                  build={build}
+                  preview={preview}
+                  totalFor={totalFor}
+                  sizeControl={
+                    projectType === 'full' ? (
+                      <div className="space-y-6">
+                        {selectedElements.map(el => (
+                          <div key={el}>
+                            <div className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-bonewhite/60 mb-3">
+                              {PROJECT_TYPES.find(p => p.id === el)?.label ?? el}
+                            </div>
+                            {renderSizeInputs(el)}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      renderSizeInputs(projectType!)
+                    )
+                  }
+                  brandPicker={renderBrandPickers(true)}
+                  onTier={setTier}
+                  onToggleAddOn={toggleAddOn}
+                  onToggleCondition={toggleCondition}
+                  onAdjust={trackAdjust}
+                  />
+                  </>
+                }
               />
 
               {details['wall.wallPurpose'] === 'structure' && (
@@ -1119,7 +1331,7 @@ export default function Estimator() {
                 </div>
               )}
 
-              {addOns.length > 0 && breakdownUnlocked && (
+              {addOns.length > 0 && (
                 <div className="mt-8 bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-6">
                   <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Selected Add-ons</div>
                   <div className="divide-y divide-brand-gold/10">
@@ -1137,7 +1349,7 @@ export default function Estimator() {
                 </div>
               )}
 
-              <div className="mt-10 grid lg:grid-cols-2 gap-6">
+              <div ref={saveCardRef} className="mt-10 grid lg:grid-cols-2 gap-6 scroll-mt-24">
                 <EstimateLeadCapture estimate={{
                   projectType: projectType || '',
                   selectedElements,
@@ -1150,7 +1362,15 @@ export default function Estimator() {
                   hasPhotos: !!photoFile,
                   conditions: Object.entries(conditions).filter(([, v]) => v).map(([k]) => k),
                   details,
-                }} onUnlock={() => setBreakdownUnlocked(true)} />
+                  displayedLow: display.low,
+                  displayedHigh: display.high,
+                  targetBudget,
+                  scopeSizes: Object.entries(sizes)
+                    .filter(([, v]) => typeof v === 'string')
+                    .map(([k, v]) => `${k}=${v}`).join(', '),
+                }}
+                permalink={permalink}
+                onUnlock={() => { setBuildSaved(true); trackEngagement('estimator_build_saved', projectType ?? 'unknown'); }} />
                 <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-6 md:p-8 flex flex-col justify-center">
                   <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-3">Project Timeline</div>
                   <div className="font-display text-3xl text-brand-bone mb-2">
@@ -1172,7 +1392,7 @@ export default function Estimator() {
               </div>
 
               <div className="mt-12 text-center">
-                <button onClick={() => { firedSteps.current.clear(); fireStep(1); setStep(1); }} className="btn-ghost text-[9px] py-3 px-6">Start Over</button>
+                <button onClick={() => { firedSteps.current.clear(); setFurthestStep(1); fireStep(1); setStep(1); }} className="btn-ghost text-[9px] py-3 px-6">Start Over</button>
               </div>
 
               <p className="mt-8 font-sans text-xs font-normal text-brand-bonewhite/80 text-center max-w-3xl mx-auto leading-[1.6]">
@@ -1213,12 +1433,30 @@ export default function Estimator() {
           onContinue={step >= 5 ? () => { fireStep(7); setStep(7); } : nextStep}
         />
       )}
+
+      {/* Result-step sticky bar — on mobile the workbench is a long scroll and
+          the hero number leaves the viewport, which breaks the "number follows
+          your changes" loop exactly where it matters. Keep the live price
+          pinned; the button jumps to the save card. Gone once saved. */}
+      {step === TOTAL_STEPS && !buildSaved && display.low > 0 && (
+        <MobileStickyBar
+          low={display.low}
+          high={display.high}
+          delta={delta}
+          confidence={confidence}
+          title="Your estimate"
+          label="Save build →"
+          onContinue={() => saveCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        />
+      )}
     </div>
   );
 }
 
-function MobileStickyBar({ low, high, delta, confidence, label, onContinue, selectedLabel = '' }: {
+function MobileStickyBar({ low, high, delta, confidence, label, onContinue, selectedLabel = '', title }: {
   low: number; high: number; delta: number | null; confidence: number; label: string; onContinue: () => void; selectedLabel?: string;
+  /** Overrides the "Running Estimate" heading — the result step says "Your estimate". */
+  title?: string;
 }) {
   if (low === 0) {
     return (
@@ -1249,9 +1487,9 @@ function MobileStickyBar({ low, high, delta, confidence, label, onContinue, sele
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-brand-gold/30 px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
     >
       <div className="min-w-0">
-        <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">Running Estimate · ±{confidence}%</div>
+        <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">{title ?? 'Running Estimate'} · ±{confidence}%</div>
         <div className="font-display text-lg text-brand-bone truncate flex items-baseline gap-2">
-          ${(low / 1000).toFixed(0)}k – ${(high / 1000).toFixed(0)}k
+          <AnimatedPrice low={low} high={high} separatorClassName="!mx-1.5" />
           <AnimatePresence>
             {delta !== null && (
               <motion.span

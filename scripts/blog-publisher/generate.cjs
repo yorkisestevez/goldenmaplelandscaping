@@ -127,8 +127,31 @@ function pickNextTopic(topics, state) {
   return topics.find(t => !used.has(t.id)) || null;
 }
 
+/**
+ * Topic-matched estimator link. A retaining-wall post should send readers to
+ * the calculator ALREADY on the wall path (`?type=wall` lands them on step 2
+ * with the right project selected) — a bare link makes them re-answer what the
+ * article was about. Prefill params only; NO utm_* on internal links (UTMs on
+ * internal navigation restart GA4 sessions and clobber true acquisition source).
+ */
+function estimatorPathFor(topic) {
+  const text = `${topic.title} ${topic.primary_keyword} ${topic.category}`.toLowerCase();
+  if (/retaining wall|armour stone|garden wall|slope|grading|drainage/.test(text)) return '/cost-estimator?type=wall';
+  if (/deck/.test(text)) return '/cost-estimator?type=deck';
+  if (/walkway|steps|front entrance/.test(text)) return '/cost-estimator?type=steps';
+  if (/turf/.test(text)) return '/cost-estimator?type=turf';
+  if (/fire pit|firepit/.test(text)) return '/cost-estimator?type=firepit';
+  if (/pergola|pavilion|gazebo/.test(text)) return '/cost-estimator?type=pergola';
+  if (/outdoor kitchen/.test(text)) return '/cost-estimator?type=kitchen';
+  if (/lighting/.test(text)) return '/cost-estimator?type=lighting';
+  if (/backyard transformation|outdoor living/.test(text)) return '/cost-estimator?type=full';
+  if (/patio|interlock|paver|flagstone|natural stone|concrete/.test(text)) return '/cost-estimator?type=patio';
+  return '/cost-estimator';
+}
+
 function buildPrompt(topic) {
   const linkHints = (topic.internal_link_hints || []).join(', ') || '(none)';
+  const estimatorPath = estimatorPathFor(topic);
   return `You are Yorkis Estevez writing for the Golden Maple Landscaping blog. You are a working hardscape contractor in Barrie, Ontario. Your readers are real homeowners in Simcoe County making a buying decision in the next 90 days.
 
 OUTPUT FORMAT — return ONE JSON object only. No prose before or after. No markdown fences.
@@ -174,7 +197,8 @@ HARD CONSTRAINTS:
 - Target total length: 1500-2200 words across tldr + intro + sections + faqs + author_bio.
 - 4 to 6 sections.
 - 5 to 8 FAQs.
-- Internal links: place at least 3 anchor links pointing to paths from this list (use only these paths, exactly as written): ${linkHints}, /contact, /cost-estimator, /portfolio
+- Internal links: place at least 3 anchor links pointing to paths from this list (use only these paths, exactly as written): ${linkHints}, /contact, ${estimatorPath}, /portfolio
+- The cost-estimator link (${estimatorPath}) MUST appear in the cta_paragraph — it opens the calculator with this topic's project type already selected, so anchor it with copy like "price out your own ${topic.category.toLowerCase()} project" rather than generic "click here".
 - **Numeric specificity (critical for SEO + AI citation):** every section should contain at least one specific number, range, measurement, percentage, or brand/product name. Generic statements like "many homeowners" or "high-quality materials" are banned — replace with "homeowners in Bayfield-Street neighbourhoods" or "ICPI-rated 80mm pavers".
 - **Featured-snippet optimization:** FAQ answers and section opening sentences should be self-contained — readable as an extracted quote without surrounding context. Lead with the answer, then explain.
 - Brand voice: operator-honest, anti-corporate, specific. No "industry-leading", "passionate", "dedicated team", "state-of-the-art", "in today's world", "look no further", "elevate your", "transform your".
@@ -326,4 +350,4 @@ async function generateDraft({ topicId = null } = {}) {
 
 // parseJson is exported for its regression test — the unclosed-fence bug it
 // guards silently killed the Nudgel blog entirely (2026-08-01).
-module.exports = { generateDraft, validateDraft, parseJson, ALLOWED_HEROES };
+module.exports = { generateDraft, validateDraft, parseJson, ALLOWED_HEROES, estimatorPathFor };

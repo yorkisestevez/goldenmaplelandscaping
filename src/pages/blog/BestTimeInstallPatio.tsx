@@ -171,7 +171,7 @@ export default function BestTimeInstallPatio() {
       <p>Design and contracting can happen in any season. We often lock spring contracts in December and use January–March for 3D design, material selection, and final pricing. By the time April lands, you walk straight into install with everything finalized.</p>
 
       <h2>Get Your 2026 Slot Locked</h2>
-      <p>The fastest way to see if your project fits a 2026 window is the <Link to="/cost-estimator" className="text-brand-gold hover:underline">Golden Maple cost estimator</Link>. It uses real Carr Landscape Depot pricing and gives you a ballpark in 60 seconds — which is enough to know if an estimate request makes sense. From there we can usually slot a spring or fall window within one phone call.</p>
+      <p>The fastest way to see if your project fits a 2026 window is the <Link to="/cost-estimator?type=patio" className="text-brand-gold hover:underline">Golden Maple cost estimator</Link>. It uses real Carr Landscape Depot pricing and gives you a ballpark in 60 seconds — which is enough to know if an estimate request makes sense. From there we can usually slot a spring or fall window within one phone call.</p>
 
       <p>Related reading: <Link to="/resources/why-patios-sink-barrie" className="text-brand-gold hover:underline">Why patios sink in Barrie</Link> · <Link to="/resources/winter-damage-prevention-interlocking" className="text-brand-gold hover:underline">Winter damage prevention</Link> · <Link to="/resources/interlocking-cost-barrie" className="text-brand-gold hover:underline">Interlocking cost in Barrie 2026</Link>.</p>
     </BlogPostLayout>

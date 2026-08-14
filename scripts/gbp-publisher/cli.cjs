@@ -169,10 +169,12 @@ async function cmdDoctor() {
   function ok(name, msg) { checks.push({ name, ok: true, msg }); }
   function fail(name, msg) { checks.push({ name, ok: false, msg }); }
 
-  // Env vars
-  ['GEMINI_API_KEY', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID'].forEach(k => {
+  // Env vars. GEMINI_API_KEY is informational only since the 2026-08-13 swap
+  // to the local claude CLI (same as blog-publisher) — generation works without it.
+  ['TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID'].forEach(k => {
     process.env[k] ? ok(k, 'set') : fail(k, 'MISSING');
   });
+  ok('GEMINI_API_KEY', process.env.GEMINI_API_KEY ? 'set (unused — claude CLI path)' : 'not set (fine — claude CLI path)');
   process.env.GBP_STORAGE_STATE
     ? ok('GBP_STORAGE_STATE', `set (${process.env.GBP_STORAGE_STATE.length} chars)`)
     : (process.env.GBP_STORAGE_STATE_FILE && fs.existsSync(process.env.GBP_STORAGE_STATE_FILE))

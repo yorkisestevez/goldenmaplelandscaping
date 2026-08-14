@@ -137,7 +137,7 @@ export default function NaturalStoneVsPaversBarrie() {
         </div>
       </div>
 
-      <div dangerouslySetInnerHTML={{ __html: "<p>Still deciding between natural stone and pavers for your Barrie project? Golden Maple Landscaping will help you choose the right surface for your home, soil, and budget — no pressure, just honest advice. <a href=\"/contact\">Contact us today</a> to book a consultation, browse <a href=\"/portfolio\">our portfolio</a> for inspiration, or run the numbers with our <a href=\"/cost-estimator\">cost estimator</a>.</p>" }} />
+      <div dangerouslySetInnerHTML={{ __html: "<p>Still deciding between natural stone and pavers for your Barrie project? Golden Maple Landscaping will help you choose the right surface for your home, soil, and budget — no pressure, just honest advice. <a href=\"/contact\">Contact us today</a> to book a consultation, browse <a href=\"/portfolio\">our portfolio</a> for inspiration, or run the numbers with our <a href=\"/cost-estimator?type=stone\">cost estimator</a>.</p>" }} />
     </BlogPostLayout>
   );
 }

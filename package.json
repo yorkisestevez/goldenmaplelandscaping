@@ -8,8 +8,11 @@
     "build": "react-router build",
     "preview": "vite preview",
     "clean": "rm -rf build",
-    "lint": "react-router typegen && tsc --noEmit && tsx scripts/check-pricing-parity.ts",
-    "check:pricing": "tsx scripts/check-pricing-parity.ts"
+    "lint": "react-router typegen && tsc --noEmit && tsx scripts/check-pricing-parity.ts && tsx scripts/check-engine-snapshot.ts && tsx scripts/check-budget-levers.ts",
+    "check:pricing": "tsx scripts/check-pricing-parity.ts",
+    "check:engine": "tsx scripts/check-engine-snapshot.ts",
+    "check:levers": "tsx scripts/check-budget-levers.ts",
+    "regen:engine-snapshot": "tsx scripts/regen-engine-snapshot.ts"
   },
   "dependencies": {
     "@react-router/node": "^7.18.1",
@@ -30,6 +33,7 @@
     "@react-router/dev": "^7.18.1",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",

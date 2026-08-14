@@ -8,12 +8,8 @@ import { Link } from 'react-router-dom';
 import HeroContactForm from '../components/HeroContactForm';
 import Reveal from '../components/Reveal';
 import { trackEngagement } from '../utils/analytics';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { cn } from '../utils/cn';
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 const HERO_POSTER = "/images/projects/patio-pergola.jpg";
 
