@@ -84,6 +84,7 @@ export default [
   route('resources/failing-interlocking-patio-signs-barrie', 'pages/blog/FailingInterlockingPatioSignsBarrie.tsx'),
   route('resources/outdoor-lighting-design-mistakes', 'pages/blog/OutdoorLightingDesignMistakes.tsx'),
   route('resources/pergola-vs-pavilion-vs-gazebo-barrie', 'pages/blog/PergolaVsPavilionVsGazeboBarrie.tsx'),
+  route('resources/permacon-pavers-honest-review-2026', 'pages/blog/PermaconPaversHonestReview2026.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),

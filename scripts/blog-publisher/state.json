@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-08-10T00:00:00.000Z",
+  "lastRunAt": "2026-08-17T00:00:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -17,10 +17,11 @@
     "auto-013",
     "auto-014",
     "auto-015",
-    "auto-016"
+    "auto-016",
+    "auto-017"
   ],
   "publishedSlugs": [],
-  "currentDraft": "pergola-vs-pavilion-vs-gazebo-barrie",
+  "currentDraft": "permacon-pavers-honest-review-2026",
   "history": [
     {
       "topicId": "auto-001",
@@ -264,6 +265,20 @@
         "linkCount": 7,
         "hasTable": true,
         "numericCount": 41
+      },
+      "generatedBy": "claude-cloud-routine"
+    },
+    {
+      "topicId": "auto-017",
+      "slug": "permacon-pavers-honest-review-2026",
+      "at": "2026-08-17T00:00:00.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2247,
+        "linkCount": 5,
+        "hasTable": true,
+        "numericCount": 7
       },
       "generatedBy": "claude-cloud-routine"
     }

@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen, Calculator } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-        {
+          {
+    slug: "permacon-pavers-honest-review-2026",
+    title: "Permacon Pavers: A Contractor's Honest Review (2026)",
+    excerpt: "A Barrie hardscape contractor's honest review of Permacon pavers: installed cost $18–26/sq ft, top product lines, and trade-offs vs Unilock and Techo-Bloc.",
+    category: "Materials",
+    readTime: "10 min",
+    image: "/images/projects/Permacon-approved.jpeg",
+  },
+  {
     slug: "pergola-vs-pavilion-vs-gazebo-barrie",
     title: "Pergola vs. Pavilion vs. Gazebo: Which Adds the Most Value in Barrie?",
     excerpt: "Pergolas cost $8,000–$18,000 installed in Barrie, pavilions $18,000–$45,000, gazebos $12,000–$30,000. Which structure adds the most value? Honest 2026 breakdown.",
