@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-08-17T00:00:00.000Z",
+  "lastRunAt": "2026-08-24T10:00:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -18,10 +18,11 @@
     "auto-014",
     "auto-015",
     "auto-016",
-    "auto-017"
+    "auto-017",
+    "auto-018"
   ],
   "publishedSlugs": [],
-  "currentDraft": "permacon-pavers-honest-review-2026",
+  "currentDraft": "landscaper-quote-excavation-line-item",
   "history": [
     {
       "topicId": "auto-001",
@@ -279,6 +280,20 @@
         "linkCount": 5,
         "hasTable": true,
         "numericCount": 7
+      },
+      "generatedBy": "claude-cloud-routine"
+    },
+    {
+      "topicId": "auto-018",
+      "slug": "landscaper-quote-excavation-line-item",
+      "at": "2026-08-24T10:00:00.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2742,
+        "linkCount": 8,
+        "hasTable": true,
+        "numericCount": 42
       },
       "generatedBy": "claude-cloud-routine"
     }
