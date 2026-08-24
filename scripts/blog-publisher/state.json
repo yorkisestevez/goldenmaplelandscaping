@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-08-24T13:01:50.243Z",
+  "lastRunAt": "2026-08-24T10:00:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -79,9 +79,7 @@
       "at": "2026-06-23T01:59:03.276Z",
       "validation": {
         "ok": false,
-        "errors": [
-          "word count low (702)"
-        ],
+        "errors": ["word count low (702)"],
         "wordCount": 702,
         "linkCount": 4,
         "hasTable": true,
@@ -94,9 +92,7 @@
       "at": "2026-06-23T02:01:52.174Z",
       "validation": {
         "ok": false,
-        "errors": [
-          "internal links <3 (got 0)"
-        ],
+        "errors": ["internal links <3 (got 0)"],
         "wordCount": 1357,
         "linkCount": 0,
         "hasTable": true,
@@ -272,30 +268,30 @@
     {
       "topicId": "auto-017",
       "slug": "permacon-pavers-honest-review-2026",
-      "at": "2026-08-17T13:01:41.694Z",
+      "at": "2026-08-17T00:00:00.000Z",
       "validation": {
-        "ok": false,
-        "errors": [
-          "heroImage not in allowed list: /images/projects/Permacon-approved.jeg"
-        ],
-        "wordCount": 1654,
+        "ok": true,
+        "errors": [],
+        "wordCount": 2247,
         "linkCount": 5,
         "hasTable": true,
-        "numericCount": 6
-      }
+        "numericCount": 7
+      },
+      "generatedBy": "claude-cloud-routine"
     },
     {
       "topicId": "auto-018",
       "slug": "landscaper-quote-excavation-line-item",
-      "at": "2026-08-24T13:01:50.240Z",
+      "at": "2026-08-24T10:00:00.000Z",
       "validation": {
         "ok": true,
         "errors": [],
-        "wordCount": 1840,
-        "linkCount": 6,
+        "wordCount": 2742,
+        "linkCount": 8,
         "hasTable": true,
-        "numericCount": 24
-      }
+        "numericCount": 42
+      },
+      "generatedBy": "claude-cloud-routine"
     }
   ]
 }

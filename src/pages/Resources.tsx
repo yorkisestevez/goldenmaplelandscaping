@@ -4,18 +4,26 @@ import { ArrowRight, Clock, BookOpen, Calculator } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-          {
+            {
     slug: "landscaper-quote-excavation-line-item",
-    title: "Landscaping Quote Excavation Line Item: What Barrie Homeowners Should Demand",
-    excerpt: "A Barrie landscaping quote without an excavation line item hides the 30-40% of the budget that actually determines whether your patio survives freeze-thaw.",
+    title: "Landscaping Quote Excavation: Why Every Barrie Quote Needs This Line Item",
+    excerpt: "If your landscaping quote lacks a separate excavation line item, you could be overpaying or getting a substandard base — here's what site prep costs in Barrie.",
     category: "Hiring Guide",
     readTime: "9 min",
     image: "/images/projects/paver-driveway.JPG",
   },
   {
+    slug: "permacon-pavers-honest-review-2026",
+    title: "Permacon Pavers: A Contractor's Honest Review (2026)",
+    excerpt: "A Barrie hardscape contractor's honest review of Permacon pavers: installed cost $18–26/sq ft, top product lines, and trade-offs vs Unilock and Techo-Bloc.",
+    category: "Materials",
+    readTime: "10 min",
+    image: "/images/projects/Permacon-approved.jpeg",
+  },
+  {
     slug: "pergola-vs-pavilion-vs-gazebo-barrie",
     title: "Pergola vs. Pavilion vs. Gazebo: Which Adds the Most Value in Barrie?",
-    excerpt: "Pergolas cost $13,000–$25,000 installed in Barrie, pavilions $18,000–$45,000, gazebos $12,000–$30,000. Which structure adds the most value? Honest 2026 breakdown.",
+    excerpt: "Pergolas cost $8,000–$18,000 installed in Barrie, pavilions $18,000–$45,000, gazebos $12,000–$30,000. Which structure adds the most value? Honest 2026 breakdown.",
     category: "Design",
     readTime: "9 min",
     image: "/images/projects/patio-pergola.jpg",
@@ -30,7 +38,7 @@ const BLOG_POSTS = [
   },
   {
     slug: "failing-interlocking-patio-signs-barrie",
-    title: "Failing Patio Signs in Barrie: 6 Things to Check Before It Costs You",
+    title: "Failing Patio Signs in Barrie: 7 Things to Check Before It Costs You",
     excerpt: "Sunken pavers, wide joints, and pooling water are early signs of a failing patio in Barrie — catch them before repairs hit $8,000.",
     category: "Engineering",
     readTime: "9 min",
@@ -111,7 +119,7 @@ const BLOG_POSTS = [
   {
     slug: "best-pavers-pool-deck-simcoe-county",
     title: "Best Pavers for Pool Decks in Simcoe County: Slip-Rated, Cool-Touch, Freeze-Thaw Tested",
-    excerpt: "Best pavers for Simcoe County pool decks — slip-rated R-11 or higher, cool-touch light colours, freeze-thaw certified. Budget $37-65/sq ft installed.",
+    excerpt: "Best pavers for Simcoe County pool decks — slip-rated R-11 or higher, cool-touch light colours, freeze-thaw certified. Budget $25-45/sq ft installed.",
     category: "Materials",
     readTime: "9 min",
     image: "/images/projects/best.JPEG",
@@ -328,9 +336,7 @@ export default function Resources() {
             </Link>
           </motion.div>
 
-          {/* Cost estimator band — the blog index had ZERO links to the site's
-              highest-intent tool. Readers researching costs are exactly who the
-              calculator is for. Same card idiom as the Buyer's Guide above. */}
+          {/* Cost estimator band */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
