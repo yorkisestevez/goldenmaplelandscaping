@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-08-10T00:00:00.000Z",
+  "lastRunAt": "2026-08-24T13:01:50.243Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -17,10 +17,12 @@
     "auto-013",
     "auto-014",
     "auto-015",
-    "auto-016"
+    "auto-016",
+    "auto-017",
+    "auto-018"
   ],
   "publishedSlugs": [],
-  "currentDraft": "pergola-vs-pavilion-vs-gazebo-barrie",
+  "currentDraft": "landscaper-quote-excavation-line-item",
   "history": [
     {
       "topicId": "auto-001",
@@ -266,6 +268,34 @@
         "numericCount": 41
       },
       "generatedBy": "claude-cloud-routine"
+    },
+    {
+      "topicId": "auto-017",
+      "slug": "permacon-pavers-honest-review-2026",
+      "at": "2026-08-17T13:01:41.694Z",
+      "validation": {
+        "ok": false,
+        "errors": [
+          "heroImage not in allowed list: /images/projects/Permacon-approved.jeg"
+        ],
+        "wordCount": 1654,
+        "linkCount": 5,
+        "hasTable": true,
+        "numericCount": 6
+      }
+    },
+    {
+      "topicId": "auto-018",
+      "slug": "landscaper-quote-excavation-line-item",
+      "at": "2026-08-24T13:01:50.240Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 1840,
+        "linkCount": 6,
+        "hasTable": true,
+        "numericCount": 24
+      }
     }
   ]
 }
