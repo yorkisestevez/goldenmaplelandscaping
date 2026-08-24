@@ -4,9 +4,14 @@
 // Uses .cjs extension because root package.json declares "type": "module".
 //
 // Commands:
-//   workflow-run                End-to-end: find pending blog → Gemini → Playwright → publish → Telegram.
-//                               Used by .github/workflows/gbp-publisher.yml.
-//   post-now --slug=<slug>      Force-mirror a specific blog slug (must exist in blog-publisher/drafts/).
+//   workflow-run                LEGACY/Playwright-only — depends on publisher.cjs (see that file's
+//                               README.md entry). .github/workflows/gbp-publisher.yml, which this
+//                               comment used to say it was "used by", does not exist in this repo.
+//                               Live publishing runs via the scheduled Claude Code routine at
+//                               scripts/gbp-publisher/ROUTINE.md (Business Profile API + Chrome MCP
+//                               tiers), not this command.
+//   post-now --slug=<slug>      LEGACY/Playwright-only — same publisher.cjs dependency as workflow-run.
+//                               Force-mirror a specific blog slug (must exist in blog-publisher/drafts/).
 //   generate-only --slug=<slug> Generate the GBP post body, do NOT publish. Prints JSON.
 //   capture-state [--out=path]  Open a real Chrome window so you can sign in to GBP, then write the
 //                               storage state JSON to disk. Local use only — never in CI.
@@ -219,7 +224,7 @@ async function main() {
       case 'capture-state':  await cmdCaptureState(flags); break;
       case 'doctor':         await cmdDoctor(); break;
       default:
-        console.error('Usage: cli.cjs {workflow-run | post-now --slug=X | generate-only --slug=X | capture-state [--out=path] | doctor}');
+        console.error('Usage: cli.cjs {workflow-run [LEGACY] | post-now --slug=X [LEGACY] | generate-only --slug=X | capture-state [--out=path] | doctor}');
         process.exit(2);
     }
   } catch (e) {

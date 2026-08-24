@@ -34,7 +34,7 @@ export default function Consultation() {
               <div className="bg-brand-surface p-10 border border-brand-gold/20 rounded-[2px] mb-16">
                 <h3 className="font-display text-2xl text-brand-gold mb-4">No Fee. No Pressure.</h3>
                 <p className="font-sans text-brand-muted leading-relaxed font-light mb-6">
-                  The estimate request is free, the property walk is free. The only paid step is full landscape design — and even that gets credited back if you build with us.
+                  The estimate request is free, the property walk is free. From there, a $99 on-site design session and full landscape design are both optional paid steps for more precision — and both get credited back if you build with us.
                 </p>
                 <Link to="/contact" className="btn-primary w-full py-5 text-center px-8">Get My Estimate</Link>
               </div>

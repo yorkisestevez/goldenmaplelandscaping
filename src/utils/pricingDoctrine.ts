@@ -57,18 +57,32 @@ export function applyDailyProductionFloor({
 // The estimator used to clamp every result up to a per-project-type job
 // minimum ($18K–$90K), which meant a small walkway that genuinely costed out
 // at $9K was shown as $18K. Removed 2026-07-27 — every visitor now prices
-// their real project, whatever the size, and the name+email gate on the
-// itemized breakdown is what qualifies the lead instead of a price wall.
+// their real project, whatever the size. (As of 2026-08-14 the itemized
+// breakdown is free to everyone — the gate moved to SAVING the build, see
+// EstimateLeadCapture.tsx / buildPermalink.ts — but qualification was never
+// what this floor removal was about: it's that the site should never show a
+// number padded above what a project actually costs.)
 //
 // The labour day-rate floor in applyDailyProductionFloor() above is NOT the
 // same thing and stays: it's real cost math (a crew-day costs what it costs),
 // not a marketing minimum. Removing that one would let the estimator quote
 // jobs below Golden Maple's actual cost to show up.
 
+/** Format a PROJECT_PLANNING_RANGES entry as "$XK–$YK+". */
+const fmtK = (n: number) => `$${Math.round(n / 1000)}K`;
+
+// This copy renders under EVERY result on the estimator's result step — including
+// a $7,500 100-sqft build, since there is deliberately no job minimum (see above).
+// It must therefore describe what GOLDEN MAPLE BUILDS across its project history,
+// never the specific number the calculator just produced for THIS visitor — those
+// are two different claims and conflating them reads as "no minimum" contradicting
+// itself in the same sentence. Sourced from PROJECT_PLANNING_RANGES so there is one
+// number, not three hand-copied literals drifting apart across files.
 export function getEstimatorRangeCopy(projectType: string | null, selectedElements: string[] = []) {
-  if (projectType === 'full') return 'Full backyard transformations commonly plan at $90K–$150K+ when patio, walls, lighting, fire, kitchen, drainage, or grade work are included.';
-  if (projectType === 'wall') return 'Retaining wall and sloped-yard projects commonly plan at $30K–$90K+, with patio + wall + drainage packages often landing $50K–$100K.';
-  if (projectType === 'patio' || projectType === 'stone') return 'Premium patio and outdoor-room projects commonly plan at $35K–$75K depending on size, access, base prep, drainage, and material choice.';
-  if (selectedElements.includes('wall') && selectedElements.includes('patio')) return 'Patio + wall/steps/drainage packages commonly plan at $50K–$100K because the structure and water management are the job.';
-  return 'These are planning ranges, not final quotes. Exact pricing depends on access, excavation, drainage, base depth, material choice, and whether walls, steps, lighting, or fire features are included.';
+  const r = PROJECT_PLANNING_RANGES;
+  if (projectType === 'full') return `Full backyard transformations we build commonly land ${fmtK(r.fullBackyard.low)}–${fmtK(r.fullBackyard.high)}+ when patio, walls, lighting, fire, kitchen, drainage, or grade work are included — your configured scope above prices independently.`;
+  if (projectType === 'wall') return `Retaining wall and sloped-yard projects we build commonly land $30K–$90K+, with patio + wall + drainage packages often reaching ${fmtK(r.patioWallDrainage.low)}–${fmtK(r.patioWallDrainage.high)}.`;
+  if (projectType === 'patio' || projectType === 'stone') return `Most premium patios and outdoor rooms we build land ${fmtK(r.premiumPatio.low)}–${fmtK(r.premiumPatio.high)} depending on size, access, base prep, drainage, and material choice — your configured scope above prices independently.`;
+  if (selectedElements.includes('wall') && selectedElements.includes('patio')) return `Patio + wall/steps/drainage packages we build commonly land ${fmtK(r.patioWallDrainage.low)}–${fmtK(r.patioWallDrainage.high)} because the structure and water management are the job.`;
+  return 'These are planning ranges from past projects, not a prediction for this build. Exact pricing depends on access, excavation, drainage, base depth, material choice, and whether walls, steps, lighting, or fire features are included.';
 }

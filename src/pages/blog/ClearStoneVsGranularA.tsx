@@ -38,7 +38,7 @@ export default function ClearStoneVsGranularA() {
         <li><strong>October rain saturates the top inch of your base</strong> through the paver joints. The fines hold that water like a sponge.</li>
         <li><strong>First freeze in November.</strong> Water expands 9% as it turns to ice. Your base inflates. Pavers lift a millimetre or two — not enough to see yet.</li>
         <li><strong>December thaw.</strong> Ice melts, water drops back down, pavers settle — but not exactly to where they started. Microscopic movement.</li>
-        <li><strong>This cycle repeats 40 to 60 times.</strong> Simcoe County averages 50 freeze-thaw days per winter. Multiply.</li>
+        <li><strong>This cycle repeats 60 to 85 times.</strong> Simcoe County averages 60-85 freeze-thaw days per winter. Multiply.</li>
         <li><strong>By April,</strong> you've got visible lippage, widening joints, edge creep, and puddles where the surface used to drain.</li>
       </ol>
 

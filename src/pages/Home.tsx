@@ -554,43 +554,13 @@ const SocialProofStrip = () => {
 };
 
 export default function Home() {
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": "Golden Maple Landscaping",
-    "image": "https://ais-dev-nbspxodpsmicgderdsv3ck-152684830137.us-east1.run.app/logo.png",
-    "@id": "https://ais-dev-nbspxodpsmicgderdsv3ck-152684830137.us-east1.run.app",
-    "url": "https://ais-dev-nbspxodpsmicgderdsv3ck-152684830137.us-east1.run.app",
-    "telephone": "+1-705-500-3581",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Barrie, Ontario",
-      "addressLocality": "Barrie",
-      "addressRegion": "ON",
-      "postalCode": "L4M",
-      "addressCountry": "CA"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": 44.3894,
-      "longitude": -79.6903
-    },
-    "openingHoursSpecification": {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday"
-      ],
-      "opens": "08:00",
-      "closes": "18:00"
-    },
-    "sameAs": [
-      "https://www.instagram.com/goldenmaplelandscaping"
-    ]
-  };
+  // NO local LocalBusiness schema here. This page used to define its own,
+  // which shipped a stale dev Cloud Run URL as the business @id/url/image
+  // into production, plus a postal code (L4M) that disagreed with the
+  // canonical one (L4N) elsewhere — two conflicting LocalBusiness identities
+  // for one business. root.tsx's `businessGraph` already emits the single
+  // canonical #business entity (with real reviews/rating) on every route,
+  // this one included. Do not re-add a per-page schema here.
 
   return (
     <>
@@ -598,7 +568,6 @@ export default function Home() {
         title="Barrie Landscaping Company | Patios, Interlock & Retaining Walls"
         description="Barrie's 5-star landscaping company — interlocking patios, driveways & retaining walls across Simcoe County. Get an instant cost range, no signup. $5M insured, 5-year warranty."
         canonical="https://goldenmaplelandscaping.ca/"
-        schema={schema}
       />
       <Hero />
       <TrustBar />
@@ -633,7 +602,7 @@ export default function Home() {
             },
             {
               q: "Is there a fee to get started?",
-              a: "No. Your first conversation with us is a free estimate request by phone — honest scope assessment, honest budget feedback, no pressure. If we're the right fit for your project, we'll come walk your property at no charge. The only paid step in our process is full landscape design, which only applies if you want detailed 3D plans before construction."
+              a: "No. Your first conversation with us is a free estimate request by phone — honest scope assessment, honest budget feedback, no pressure. If we're the right fit for your project, we'll come walk your property at no charge. From there, two paid steps are available if you want more precision than a ballpark: a $99 on-site design session (credited back if you book) for ±5% pricing with material samples, or full landscape design starting at $2,500 (credited back if you build with us) if you want detailed 3D plans before construction."
             }
           ].map((faq, idx) => (
             <div key={idx} className="bg-brand-surface p-10 border border-brand-dim/10 rounded-[2px] hover:border-brand-gold/20 transition-colors">

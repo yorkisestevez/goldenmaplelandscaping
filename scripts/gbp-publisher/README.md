@@ -41,7 +41,7 @@ Trade-off accepted: this only fires while Claude Code is open. If Claude Code is
 5. Calls `node scripts/gbp-publisher/api-bridge.cjs status` — caches the result so the per-blog loop knows whether Tier 1 is available
 6. If nothing pending → idle Telegram ping → commit heartbeat → exit
 7. If pending → for each blog (oldest first):
-   1. Gemini generates an 800-1400 char summary + Learn more CTA (`generator.cjs`)
+   1. The local `claude` CLI generates an 800-1400 char summary + Learn more CTA (`generator.cjs`, via `claude-provider.cjs` — same swap `blog-publisher` made 2026-07-28, not Gemini)
    2. **Tier 1 attempt**: `api-bridge.cjs publish --slug=<slug>` — if mode=api, post is live WITH IMAGE
    3. **Tier 2 fallback** (only if Tier 1 returned non-api): Chrome MCP composer flow — text+CTA only, screenshot
    4. Updates `state.mirrored[]` with the slug + which tier was used + whether image attached
@@ -53,13 +53,15 @@ Trade-off accepted: this only fires while Claude Code is open. If Claude Code is
 
 Already done if you're reading this — the scheduled task is created via `mcp__scheduled-tasks__create_scheduled_task` and lives in `~/.claude/scheduled-tasks/gbp-daily-mirror/`.
 
-### Required env vars (all already set via `~/Hermes Agent/credentials/load-keys.cmd`)
+### Required env vars / prerequisites
 
 | Var | Used for |
 |---|---|
-| `GEMINI_API_KEY` | Gemini 2.5 Pro — compresses blog drafts into GBP summaries |
-| `TELEGRAM_BOT_TOKEN` | Status pings to Yorkis |
+| `claude` binary on PATH | Generation — compresses blog drafts into GBP summaries via `claude-provider.cjs`. Override with `CLAUDE_BIN` / `BLOG_CLAUDE_MODEL` if needed. |
+| `TELEGRAM_BOT_TOKEN` | Status pings to Yorkis (set via `~/Hermes Agent/credentials/load-keys.cmd`) |
 | `TELEGRAM_CHAT_ID` | Same |
+
+`GEMINI_API_KEY` is **vestigial** — `generator.cjs` only checks it's non-empty as a presence-gate before routing through the local Claude CLI (see the comment at `generator.cjs:146`, matching `cli.cjs`'s `"not set (fine — claude CLI path)"` message). It is not a real Gemini API key and nothing here calls Google's API. If a failure message says `"Gemini error: ..."`, that's this same compat-naming leftover — check the `claude` CLI, not a Gemini quota/outage.
 
 ### Required Chrome state (Tier 2 fallback only — skip if Tier 1 is wired)
 
@@ -106,8 +108,9 @@ If you want to mirror a specific blog right now without waiting for the cron, pa
 ## CLI reference (helpers — Claude calls these during the routine)
 
 ```bash
-# Check what blog (if any) is pending
-node -e "const g = require('./scripts/gbp-publisher/generator.cjs'); const fs = require('fs'); const state = JSON.parse(fs.readFileSync('./scripts/gbp-publisher/state.json', 'utf8')); console.log(JSON.stringify(g.findPendingBlog(state, {maxAgeDays: 7})));"
+# Check which blogs (if any) are pending — matches the routine's own 14-day
+# window (findAllPendingBlogs, not the legacy 7-day findPendingBlog singular)
+node -e "const g = require('./scripts/gbp-publisher/generator.cjs'); const fs = require('fs'); const state = JSON.parse(fs.readFileSync('./scripts/gbp-publisher/state.json', 'utf8')); console.log(g.findAllPendingBlogs(state).map(p => p.blog.slug));"
 
 # Generate the GBP post body for a specific blog (validation included)
 node scripts/gbp-publisher/cli.cjs generate-only --slug=<slug>
@@ -127,7 +130,7 @@ The routine sends a Telegram with a screenshot showing exactly where things brok
 |---|---|---|
 | `Chrome not connected` | Yorkis closed Chrome | Open Chrome and re-trigger |
 | `Posts button not found` | Wrong Google account active, or panel didn't render | Open `google.com/search?q=Golden+Maple+Landscaping` in your Chrome, switch to the right account, re-trigger |
-| `Generated post failed validation` | Gemini exceeded 1500 chars or used a banned phrase | Re-run (Gemini is non-deterministic) |
+| `Generated post failed validation` | The Claude CLI generation exceeded 1500 chars or used a banned phrase | Re-run (generation is non-deterministic) |
 | `Image fetch failed: 404` | Blog hero image not deployed | Wait for Netlify deploy, re-trigger |
 | (silence — no Telegram) | Claude Code was closed when the task fired | Will run on next Claude Code launch |
 
@@ -140,7 +143,7 @@ scripts/gbp-publisher/
 ├── README.md           you are here
 ├── ROUTINE.md          step-by-step playbook the scheduled task reads
 ├── cli.cjs             helper CLI — generate-only | doctor | post-now | capture-state
-├── generator.cjs       Gemini blog→GBP summary + validation
+├── generator.cjs       local Claude CLI blog→GBP summary + validation (claude-provider.cjs)
 ├── api-bridge.cjs      Tier 1 wrapper — calls Hermes GBP publisher (Business Profile API)
 ├── telegram.cjs        Telegram helpers (idle / success-with-photo / manual-attach nudge)
 ├── publisher.cjs       LEGACY — Playwright-based publisher (kept for reference, not used by the routine)

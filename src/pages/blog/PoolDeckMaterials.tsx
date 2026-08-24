@@ -79,7 +79,7 @@ export default function PoolDeckMaterials() {
       <h2>The Five Things That Matter for Ontario Pool Decks</h2>
 
       <ol>
-        <li><strong>Frost resistance.</strong> The deck endures 100+ freeze-thaw cycles per winter. Materials that absorb water (porous concrete, soft natural stone, cheap travertine) crack within 2–3 seasons.</li>
+        <li><strong>Frost resistance.</strong> The deck endures 60-85 freeze-thaw cycles per winter in Simcoe County. Materials that absorb water (porous concrete, soft natural stone, cheap travertine) crack within 2–3 seasons.</li>
         <li><strong>Slip resistance when wet.</strong> R10 minimum, R11 preferred. Smooth indoor-finish slabs and polished stone are dangerous around water.</li>
         <li><strong>Heat retention.</strong> Dark concrete pavers can hit 60°C+ in direct July sun — too hot for bare feet. Lighter colours and porcelain stay 10–20°C cooler.</li>
         <li><strong>Stain resistance.</strong> Sunscreen, pool chemicals, salt, leaves, wine, BBQ grease. Sealed pavers help; porcelain doesn't even need sealing.</li>
@@ -247,7 +247,7 @@ export default function PoolDeckMaterials() {
       <p>Yes — we tear out the existing deck, replace any failed coping, and install the new surface. Cost is typically 70–80% of a new install (the existing pool shell and excavation work in your favour). Best done in the same season the pool is opened.</p>
 
       <h3>How long does pool deck install take?</h3>
-      <p>An 800 sqft surround with coping, drainage, and lighting takes <strong>10–14 days on-site</strong>. Tear-out of an existing deck adds 2–3 days. Pool must be drained or covered during install.</p>
+      <p>An 800 sqft surround with coping, drainage, and lighting takes <strong>4–7 days on-site</strong>. Tear-out of an existing deck adds 2–3 days. Pool must be drained or covered during install.</p>
 
       <h3>What about dark colours around a pool?</h3>
       <p>Dark concrete pavers look stunning but get hot. We commonly steer clients toward dark perimeter accents (border courses, coping) with a lighter primary deck colour. Dark porcelain (Porcea Thundercloud) stays cooler than dark concrete because of porcelain's surface reflectance.</p>

@@ -42,7 +42,12 @@ const BuyersGuide = () => {
     const fd = new FormData(e.currentTarget);   // capture before the await (currentTarget nulls out after)
     try {
       await postToNetlify(e.currentTarget, 'guide-download', eventId);
-      trackLead('buyers-guide-download', 'top-of-funnel', undefined, eventId, {
+      // Event name matches the Netlify form-name above ('guide-download'), not
+      // a different label — every other form on the site (contact, quick-quote,
+      // estimate-request) reports the same string it submits under, so GA4/Meta
+      // form_name/content_name lines up with the CRM's form_name field instead
+      // of silently diverging from it.
+      trackLead('guide-download', 'top-of-funnel', undefined, eventId, {
         email: fd.get('email') as string | null,
         phone: fd.get('phone') as string | null,
       });
@@ -121,18 +126,17 @@ const BuyersGuide = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    onSubmit={handleGuideSubmit} 
+                    onSubmit={handleGuideSubmit}
                     className="space-y-6"
                     name="guide-download"
-                    data-netlify="true"
                   >
                     <input type="hidden" name="form-name" value="guide-download" />
                     <input type="hidden" name="source" value="buyers_guide_download" />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <input 
+                      <input
                         required
-                        type="text" 
-                        name="first-name"
+                        type="text"
+                        name="name"
                         placeholder="First Name"
                         className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] placeholder:text-brand-muted/50 font-light"
                       />
@@ -207,10 +211,9 @@ const BuyersGuide = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    onSubmit={handleEstimateSubmit} 
+                    onSubmit={handleEstimateSubmit}
                     className="space-y-4"
                     name="estimate-request"
-                    data-netlify="true"
                   >
                     <input type="hidden" name="form-name" value="estimate-request" />
                     <input type="hidden" name="source" value="estimate_request" />
@@ -238,9 +241,9 @@ const BuyersGuide = () => {
                       className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] placeholder:text-brand-muted/50 font-light"
                     />
                     <div className="relative">
-                      <select 
+                      <select
                         required
-                        name="project-type"
+                        name="service"
                         className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] font-light appearance-none cursor-pointer"
                       >
                         <option value="" disabled selected>Type of Project</option>
@@ -271,8 +274,8 @@ const BuyersGuide = () => {
                       </select>
                       <ArrowRight size={14} className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-brand-muted pointer-events-none" />
                     </div>
-                    <textarea 
-                      name="description"
+                    <textarea
+                      name="details"
                       placeholder="Brief Description (Optional)"
                       rows={2}
                       className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] placeholder:text-brand-muted/50 font-light resize-none"

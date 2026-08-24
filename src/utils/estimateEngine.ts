@@ -311,8 +311,9 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
   const totalHigh = Math.round((excavationHigh + materialHigh + labourHigh + disposalHigh + restorationHigh + surcharge + addOnsHigh) / 500) * 500;
 
   // No job minimum. The estimate is whatever the project actually costs out
-  // to — a small walkway prices as a small walkway. Qualification happens at
-  // the name+email gate on the breakdown, not with a price wall.
+  // to — a small walkway prices as a small walkway, never padded up to a
+  // floor. (The itemized breakdown is free to everyone as of 2026-08-14; the
+  // gate is now SAVING the build — see EstimateLeadCapture.tsx.)
   return {
     totalLow,
     totalHigh,

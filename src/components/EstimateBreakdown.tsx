@@ -52,7 +52,11 @@ const EXCLUDES = [
   'Electrical work',
   'Irrigation systems',
   'Plant material & sodding',
-  'Engineered drawings (>4ft walls)',
+  // Deliberately NOT "Engineered drawings" — for a wall over 1m the engine
+  // already applies the 'structure' multiplier (sold in-app as "+25% ·
+  // engineered") and Estimator.tsx tells the visitor engineering is baked
+  // into the range. Listing it here as excluded contradicted that on the
+  // same screen.
 ];
 
 export default function EstimateBreakdown(props: BreakdownProps) {

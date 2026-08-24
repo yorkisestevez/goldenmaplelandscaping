@@ -12,7 +12,7 @@ interface Msg { role: Role; content: string }
 const CHAT_ENDPOINT = '/.netlify/functions/chat';
 
 const GREETING =
-  "Hi! I'm Sophie — the same assistant who answers our phone. Ask me about our services, process, warranty or service areas, and I can book your free on-site visit right here. For numbers, the cost estimator gives you a range in about a minute.";
+  "Hi! I'm Sophie — the same assistant who answers our phone. Ask me about our services, process, warranty or service areas, and I can book your free on-site visit right here. For numbers, the cost estimator gives you a range in about two minutes.";
 
 const SUGGESTIONS = [
   'Can you book me a free visit?',
@@ -27,14 +27,14 @@ const SUGGESTIONS = [
 function fallbackReply(q: string): string {
   const t = q.toLowerCase();
   if (/cost|price|pricing|how much|\$|budget|quote|expensive/.test(t))
-    return "Rough ballpark: a ~500 sq ft interlock patio usually runs $25k–$40k depending on the paver tier and site; a TimberTech deck often $30k–$60k. Our minimums are $20k hardscape / $25k decking. Those are estimates — the cost calculator gives an itemized range in about a minute, and a free consultation locks in exact numbers.";
+    return "Rough ballpark: a ~500 sq ft interlock patio usually runs $25k–$45k depending on the paver tier and site; a TimberTech deck (all-in, ground level) about $19.5k–$30k. No job minimum — priced to your real scope. Those are estimates — the cost calculator gives an itemized range in about two minutes, and a free consultation locks in exact numbers.";
   if (/warranty|guarantee|sink|settle/.test(t))
     return "Every build carries our 5-year sink & settlement warranty — if it shifts, we come back. We excavate a 12–16\" base (about twice the usual depth) so it stays put through Ontario freeze-thaw. We're WSIB certified with $5M liability too.";
   if (/area|serve|location|barrie|innisfil|orillia|wasaga|midland|collingwood|springwater|oro/.test(t))
     return 'We serve Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland and Collingwood — all of Simcoe County and Cottage Country.';
   if (/start|timeline|how soon|when|lead time|book|schedule/.test(t))
-    return 'In peak season (May–Oct), projects typically start 4–8 weeks after the contract is signed. The fastest first step is a free 15-minute discovery call — I can point you to booking whenever you’re ready.';
-  return 'Happy to help! I can talk through our services, process, warranty, service areas, and rough pricing. For exact numbers, the cost calculator gives an itemized range in about a minute. What are you planning?';
+    return 'Project start typically runs 6–10 weeks in spring, 8–14 in peak summer, and 3–5 in early fall, from contract signing. The fastest first step is a free 15-minute discovery call — I can point you to booking whenever you’re ready.';
+  return 'Happy to help! I can talk through our services, process, warranty, service areas, and rough pricing. For exact numbers, the cost calculator gives an itemized range in about two minutes. What are you planning?';
 }
 
 export default function ChatWidget() {

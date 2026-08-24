@@ -15,7 +15,7 @@ const FAQ = [
   },
   {
     q: "Do you charge for landscape consultations?",
-    a: "Discovery is free — your first 15-minute call with us is on the house, and so is the property walk that follows if we're a fit. The only paid step is full landscape design (3D renderings, planting plan, fixed-price quote), which starts at $2,500 and is fully credited back if you build with us."
+    a: "Discovery is free — your first 15-minute call with us is on the house, and so is the property walk that follows if we're a fit. From there, two paid steps are available if you want more than a ballpark: a $99 on-site design session (credited back if you book) gets you to ±5% with material samples and a layout sketch, and full landscape design (3D renderings, planting plan, fixed-price quote) starts at $2,500 and is fully credited back if you build with us."
   },
   {
     q: "What if I only want the design and not the construction?",

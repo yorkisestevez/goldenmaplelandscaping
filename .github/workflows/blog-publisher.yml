@@ -1,5 +1,14 @@
 name: Weekly Blog Publisher
 
+# RETIRED — disabled at the repo level (Actions → Weekly Blog Publisher →
+# Disabled). Publishing now runs via a scheduled Claude Code routine calling
+# the local `claude` CLI, NOT this workflow. See scripts/blog-publisher/README.md
+# "Generation model" for the current setup. Left in the repo for history —
+# do not re-enable without first fixing the dead GEMINI_API_KEY secret this
+# workflow still passes in below (generate.cjs's real generation path today
+# is the local Claude CLI via claude-provider.cjs, not Gemini).
+#
+# Original description (no longer accurate — kept for context):
 # Runs every Monday at 13:00 UTC = 9:00 AM EDT (8:00 AM EST in winter).
 # Picks the next unused topic from scripts/blog-publisher/topics.json, asks Gemini 2.5 Pro
 # for a 1500-2200 word post, injects it into the site, opens a PR, and Telegrams Yorkis.
@@ -65,7 +74,8 @@ jobs:
           Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
           Open the run logs and look for the red step. Common causes:
-          - Gemini API down or rate-limited (transient — re-run next week)
+          - This workflow is RETIRED and disabled — this alert firing at all means
+            someone re-enabled it. Publishing normally runs elsewhere (see README).
           - Topic queue empty (refill scripts/blog-publisher/topics.json)
           - GH Actions permissions changed (Settings → Actions → Workflow permissions)
           - Secret rotated (GEMINI_API_KEY, TELEGRAM_*, NETLIFY_AUTH_TOKEN)"

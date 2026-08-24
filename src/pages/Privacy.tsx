@@ -21,7 +21,7 @@ export default function Privacy() {
 
             <h2 className="font-display text-2xl text-brand-bonewhite mt-12 mb-4">What we collect</h2>
             <ul className="space-y-2 list-disc pl-6">
-              <li><strong className="text-brand-bonewhite">Information you give us:</strong> name, phone, email, project details, mailing address, and any photos you choose to upload via our forms or cost estimator.</li>
+              <li><strong className="text-brand-bonewhite">Information you give us:</strong> name, phone, email, project details, and mailing address, via our forms or cost estimator.</li>
               <li><strong className="text-brand-bonewhite">Marketing attribution:</strong> referring URL, landing page, and click-tracking parameters (utm_source, utm_medium, utm_campaign, gclid, fbclid) so we can measure which channels send qualified leads.</li>
               <li><strong className="text-brand-bonewhite">Site behavior:</strong> pages visited, time on each page, scrolls, clicks, and visitor session recordings via Microsoft Clarity. We use this to improve the site, never to identify you personally.</li>
               <li><strong className="text-brand-bonewhite">Analytics identifiers:</strong> Google Analytics 4 client ID and Meta Pixel browser ID for aggregate measurement.</li>

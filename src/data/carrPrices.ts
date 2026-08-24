@@ -192,6 +192,11 @@ export interface AddOn {
   description: string;
   costLow: number;
   costHigh: number;
+  /** Overrides the budget gap coach's default "easy to add later" phasing
+   *  note (see budgetLevers.ts). Only set this when phasing genuinely costs
+   *  something extra — leaving it unset for an add-on that DOES have real
+   *  rework cost is what makes the coach's claim false. */
+  phaseNote?: string;
 }
 
 export const ADD_ONS: AddOn[] = [
@@ -201,6 +206,7 @@ export const ADD_ONS: AddOn[] = [
     description: 'In-Lite low-voltage system, 8–14 fixtures, transformer, professional install.',
     costLow: 4000,
     costHigh: 8000,
+    phaseNote: 'Can be added later, but conduit is cheapest to run while the base is open — expect extra trenching cost if it\'s added after the patio is set.',
   },
   {
     id: 'drainage',
@@ -208,6 +214,7 @@ export const ADD_ONS: AddOn[] = [
     description: 'French drain or catch basins tied to grade. Critical for clay soil sites.',
     costLow: 2000,
     costHigh: 5000,
+    phaseNote: 'Can be added later, but expect roughly $800–$2,000 extra to lift and relay pavers over the run.',
   },
   {
     id: 'firepit',

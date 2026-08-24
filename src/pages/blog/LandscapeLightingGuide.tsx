@@ -60,13 +60,15 @@ export default function LandscapeLightingGuide() {
 
       <h2>Cost Expectations</h2>
 
+      <p>The tiers below are for lighting installed <strong>as part of a larger hardscape project</strong> — mobilization and excavation are already paid for by the main scope, so lighting only adds fixtures, transformer, and cable runs:</p>
+
       <ul>
         <li><strong>Basic package (8-12 fixtures, transformer, wiring):</strong> $3,000-$5,000</li>
         <li><strong>Mid-range (15-25 fixtures, multiple zones):</strong> $5,000-$10,000</li>
         <li><strong>Premium (30+ fixtures, smart control, architectural integration):</strong> $10,000-$20,000+</li>
       </ul>
 
-      <p>We typically integrate lighting into our larger hardscape projects. When you're already excavating and building, running low-voltage cable is significantly easier and less disruptive than retrofitting after the project is complete.</p>
+      <p>We typically integrate lighting into our larger hardscape projects. When you're already excavating and building, running low-voltage cable is significantly easier and less disruptive than retrofitting after the project is complete. A <strong>lighting-only retrofit starts around $9,000</strong> — it carries its own mobilization, excavation minimum, and full crew-day, so it doesn't get the bundled-project discount above. Use our <a href="/cost-estimator?type=lighting">cost estimator</a> to price a standalone lighting project for your property.</p>
 
       <h2>One Tip That Changes Everything</h2>
 

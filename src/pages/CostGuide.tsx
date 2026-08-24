@@ -298,7 +298,7 @@ export default function CostGuide() {
                 { title: 'Per-sqft pricing for 6 patio sizes', body: 'From 50sqft front walkways to 900sqft double driveways — installed prices in 2026.' },
                 { title: 'Material cost ladder', body: 'Concrete vs. Techo-Bloc vs. porcelain vs. natural stone — with lifespan data.' },
                 { title: '4 sample backyards', body: 'Functional ($25K) → Entertainer ($30K) → Outdoor Room ($40K+) → Elevated ($120K).' },
-                { title: 'The base-prep truth', body: 'Why 14–16" of engineered base costs more — and why 6" guarantees failure by year 2.' },
+                { title: 'The base-prep truth', body: 'Why 12–16" of engineered base costs more — and why 6" guarantees failure by year 2.' },
                 { title: '5 hidden upcharges', body: 'Drainage, slope, restricted access, geotextile, geogrid — when they apply, what they add.' },
                 { title: 'Red flags in cheap quotes', body: 'The exact phrases and quote structures that signal you\'re about to lose $40K.' },
               ].map((item, idx) => (

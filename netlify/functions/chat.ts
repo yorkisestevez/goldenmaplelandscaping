@@ -50,11 +50,11 @@ WHY THEY'RE DIFFERENT (use when relevant):
 ROUGH PRICING — you MAY give honest ballpark RANGES, but ALWAYS:
 - Call them "rough estimates" that depend on size, materials, and site conditions.
 - Never give a single fixed/binding number, and never promise a price.
-- After a range, point to the cost calculator (path /cost-estimator) for an itemized estimate in ~60 seconds, or a free consultation (path /book) for exact numbers.
+- After a range, point to the cost calculator (path /cost-estimator) for an itemized estimate in about two minutes, or a free consultation (path /book) for exact numbers.
 Reference ranges (2026, Simcoe County):
-- Minimums: hardscape projects start at $20,000; composite decking at $25,000.
+- No job minimum: price whatever they're actually planning — small walkways and front entrances price out at their real scope, not padded up to a floor.
 - Interlock/paver patio: roughly $50–$90+ per sq ft installed by tier; a typical ~500 sq ft patio lands around $25,000–$45,000. Driveways and large/premium-paver jobs run higher.
-- Composite deck (TimberTech): about $58/sq ft (Prime) to $68/sq ft (Vintage) installed; a typical 300 sq ft deck is ~$30,000–$60,000 with railing/substructure.
+- Composite deck (TimberTech): about $58/sq ft (Prime) to $68/sq ft (Vintage) for the deck itself. All-in with substructure, footings, railing and disposal, a 300 sq ft ground-level deck lands around $19,500–$30,500; elevated walkout builds in Vintage with difficult access, slope, or drainage work can reach $50,000–$60,000.
 - Retaining walls: roughly $220–$360 per linear foot, multiplied by height (taller = more).
 - Steps: about $850–$1,500 per step depending on material tier.
 - Outdoor kitchen: ~$7,000–$14,000 basic, ~$18,000–$42,000 for a full build.
@@ -64,7 +64,7 @@ Reference ranges (2026, Simcoe County):
 PROCESS / NEXT STEPS:
 - Free 15-minute discovery call (path /book) — honest scope + budget read, no pressure.
 - Free estimate request, or a $99 on-site design session (credited back if they proceed) for ±5% accuracy with samples.
-- In peak season (May–Oct), projects typically start 4–8 weeks after the contract is signed.
+- Project start typically 6–10 weeks in spring, 8–14 in peak summer, 3–5 in early fall, from contract signing.
 
 SERVICE AREAS: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood (Simcoe County + Cottage Country). For areas well outside this, say it depends and suggest they call.
 
@@ -125,7 +125,7 @@ async function forwardLead(rawJson: string): Promise<void> {
 function canned(text: string): string {
   const t = text.toLowerCase();
   if (/cost|price|pricing|how much|\$|budget|quote/.test(t))
-    return "Rough ballpark: a ~500 sq ft interlock patio usually runs $25k–$45k, and a TimberTech deck about $30k–$60k — those are estimates that depend on size, materials, and site. Our minimums are $20k hardscape / $25k decking. The cost calculator at /cost-estimator gives an itemized range in about a minute, or call (705) 500-3581.";
+    return "Rough ballpark: a ~500 sq ft interlock patio usually runs $25k–$45k, and a TimberTech deck (all-in, ground level) about $19.5k–$30k — those are estimates that depend on size, materials, and site. No job minimum — priced to your real scope. The cost calculator at /cost-estimator gives an itemized range in about two minutes, or call (705) 500-3581.";
   if (/warranty|guarantee|sink/.test(t))
     return "Every build carries our 5-year sink & settlement warranty, and we dig a 12–16\" base so it stays put. We're WSIB certified with $5M liability. Want to book a quick call at /book?";
   return "Happy to help with services, process, warranty, service areas, or rough pricing. For exact numbers, try the calculator at /cost-estimator or book a free call at /book.";

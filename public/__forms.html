@@ -8,7 +8,8 @@
   forwarded to the CRM via the submission-created bridge function.
 
   IMPORTANT: this file must be the ONLY schema source for the forms below
-  (contact, quick-quote, cost-estimator, cost-guide). Do NOT put data-netlify
+  (contact, quick-quote, cost-estimator, cost-guide, guide-download,
+  estimate-request). Do NOT put data-netlify
   on the runtime JSX versions of these forms — the prerendered pages get
   scanned too, and their slim static markup (attribution inputs are added by
   JS at runtime, so they're absent from prerendered HTML) re-registers the
@@ -27,6 +28,17 @@
       <input type="text" name="service" />
       <input type="text" name="budget" />
       <textarea name="details"></textarea>
+      <!-- Contact.tsx and HeroContactForm.tsx both POST these under form-name
+           "contact" (lead_score/lead_tier/lead_score_reasons come from
+           scoreGoldenMapleLead; event_id from genEventId for Meta CAPI dedup)
+           but they were never declared here, so Netlify silently dropped
+           them — the primary contact form's lead scoring never reached the
+           CRM. Declared 2026-08-14, alongside the same fields already on
+           cost-estimator. -->
+      <input type="text" name="event_id" />
+      <input type="text" name="lead_score" />
+      <input type="text" name="lead_tier" />
+      <input type="text" name="lead_score_reasons" />
       <input type="text" name="utm_source" />
       <input type="text" name="utm_medium" />
       <input type="text" name="utm_campaign" />
@@ -49,6 +61,7 @@
       <input type="tel" name="phone" />
       <input type="text" name="details" />
       <input type="text" name="source" />
+      <input type="text" name="event_id" />
       <input type="text" name="utm_source" />
       <input type="text" name="utm_medium" />
       <input type="text" name="utm_campaign" />
@@ -120,6 +133,64 @@
       <input type="text" name="address" />
       <input type="text" name="details" />
       <input type="text" name="source" />
+      <input type="text" name="event_id" />
+      <input type="text" name="utm_source" />
+      <input type="text" name="utm_medium" />
+      <input type="text" name="utm_campaign" />
+      <input type="text" name="utm_content" />
+      <input type="text" name="utm_term" />
+      <input type="text" name="gclid" />
+      <input type="text" name="fbclid" />
+      <input type="text" name="landing_page" />
+      <input type="text" name="referrer" />
+      <input type="text" name="visitor_id" />
+      <input type="text" name="ga4_client_id" />
+      <input type="text" name="clarity_recording_url" />
+      <input type="text" name="visit_count" />
+      <input type="text" name="first_visit_at" />
+      <input type="text" name="session_duration_sec" />
+      <textarea name="behavior_json"></textarea>
+    </form>
+    <!-- guide-download and estimate-request (BuyersGuide.tsx): both forms POST via
+         a JS fetch helper (postToNetlify), not a native submit, and previously
+         self-registered via a stray data-netlify attribute on the runtime JSX —
+         which meant Netlify built their schema from the slim static markup only
+         (attribution inputs are added by JS at runtime and are absent from
+         prerendered HTML), silently dropping event_id + every utm_/gclid/fbclid
+         field, same regression class documented in the file header. Declared
+         here 2026-08-14; data-netlify removed from the JSX so this file is the
+         only schema source, matching contact/quick-quote/cost-estimator/cost-guide. -->
+    <form name="guide-download" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="text" name="source" />
+      <input type="text" name="event_id" />
+      <input type="text" name="utm_source" />
+      <input type="text" name="utm_medium" />
+      <input type="text" name="utm_campaign" />
+      <input type="text" name="utm_content" />
+      <input type="text" name="utm_term" />
+      <input type="text" name="gclid" />
+      <input type="text" name="fbclid" />
+      <input type="text" name="landing_page" />
+      <input type="text" name="referrer" />
+      <input type="text" name="visitor_id" />
+      <input type="text" name="ga4_client_id" />
+      <input type="text" name="clarity_recording_url" />
+      <input type="text" name="visit_count" />
+      <input type="text" name="first_visit_at" />
+      <input type="text" name="session_duration_sec" />
+      <textarea name="behavior_json"></textarea>
+    </form>
+    <form name="estimate-request" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="tel" name="phone" />
+      <input type="email" name="email" />
+      <input type="text" name="service" />
+      <input type="text" name="budget" />
+      <textarea name="details"></textarea>
+      <input type="text" name="source" />
+      <input type="text" name="event_id" />
       <input type="text" name="utm_source" />
       <input type="text" name="utm_medium" />
       <input type="text" name="utm_campaign" />

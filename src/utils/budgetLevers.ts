@@ -160,7 +160,10 @@ export function suggestGapLevers(
     add({
       id: `addon-${aid}`,
       label: `Drop ${a.label.toLowerCase()}`,
-      detail: 'Easy to add later — it doesn\'t depend on the rest of the build.',
+      // Per-addon note when phasing has real rework cost (drainage, lighting);
+      // the generic claim otherwise. Never say "doesn't depend on the rest of
+      // the build" for an add-on that actually does — see AddOn.phaseNote.
+      detail: a.phaseNote ?? 'Easy to add later — it doesn\'t depend on the rest of the build.',
       patch,
       saving: savingOf(patch),
     });

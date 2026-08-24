@@ -1,6 +1,11 @@
 // scripts/blog-publisher/generate.cjs
-// In-repo, env-driven generator. Called by .github/workflows/blog-publisher.yml.
-// Requires env: GEMINI_API_KEY (preferred) or OPENAI_API_KEY (fallback)
+// In-repo, env-driven generator. NOT called by .github/workflows/blog-publisher.yml
+// (that workflow is disabled) — invoked by whatever routine runs the weekly
+// publish today (see README.md "Generation model").
+// Requires env: GEMINI_API_KEY (vestigial presence-gate — set to any non-empty
+// value to route through the local Claude CLI via claude-provider.cjs; it is
+// NOT a real Gemini key and nothing here calls Google's API) or OPENAI_API_KEY
+// (real fallback, unchanged)
 
 const fs = require('fs');
 const path = require('path');
@@ -40,6 +45,10 @@ function geminiPost(apiKey, body) {
 }
 
 function extractText(response) {
+  // NOTE: despite the "Gemini error" prefix (kept for compat with the response
+  // shape below), this path is actually the local Claude CLI (claude-provider.cjs)
+  // — a failure here almost always means `claude` isn't on PATH or errored, not
+  // a Gemini quota/API problem. Check the Claude CLI first.
   if (response.error) throw new Error(`Gemini error: ${response.error.message || JSON.stringify(response.error)}`);
   const parts = response.candidates?.[0]?.content?.parts || [];
   for (let i = parts.length - 1; i >= 0; i--) {
@@ -137,7 +146,10 @@ function pickNextTopic(topics, state) {
 function estimatorPathFor(topic) {
   const text = `${topic.title} ${topic.primary_keyword} ${topic.category}`.toLowerCase();
   if (/retaining wall|armour stone|garden wall|slope|grading|drainage/.test(text)) return '/cost-estimator?type=wall';
-  if (/deck/.test(text)) return '/cost-estimator?type=deck';
+  // Positive match, not a bare /deck/ test — "Best Pavers for Pool Decks" is a
+  // paver topic that happens to contain the word "decks"; a bare /deck/ test
+  // routed it to the composite-decking estimator prefill instead of patio.
+  if (/composite deck|decking|timbertech|azek/.test(text)) return '/cost-estimator?type=deck';
   if (/walkway|steps|front entrance/.test(text)) return '/cost-estimator?type=steps';
   if (/turf/.test(text)) return '/cost-estimator?type=turf';
   if (/fire pit|firepit/.test(text)) return '/cost-estimator?type=firepit';
@@ -198,7 +210,7 @@ HARD CONSTRAINTS:
 - 4 to 6 sections.
 - 5 to 8 FAQs.
 - Internal links: place at least 3 anchor links pointing to paths from this list (use only these paths, exactly as written): ${linkHints}, /contact, ${estimatorPath}, /portfolio
-- The cost-estimator link (${estimatorPath}) MUST appear in the cta_paragraph — it opens the calculator with this topic's project type already selected, so anchor it with copy like "price out your own ${topic.category.toLowerCase()} project" rather than generic "click here".
+- The cost-estimator link (${estimatorPath}) MUST appear in the cta_paragraph${estimatorPath.includes('?type=') ? ` — it opens the calculator with this topic's project type already selected, so anchor it with copy like "price out your own ${topic.category.toLowerCase()} project" rather than generic "click here"` : ' — this topic has no matching prefill, so the link opens the calculator on its first step; anchor it with general copy like "get a real price on your project" rather than claiming a preselected type'}.
 - **Numeric specificity (critical for SEO + AI citation):** every section should contain at least one specific number, range, measurement, percentage, or brand/product name. Generic statements like "many homeowners" or "high-quality materials" are banned — replace with "homeowners in Bayfield-Street neighbourhoods" or "ICPI-rated 80mm pavers".
 - **Featured-snippet optimization:** FAQ answers and section opening sentences should be self-contained — readable as an extracted quote without surrounding context. Lead with the answer, then explain.
 - Brand voice: operator-honest, anti-corporate, specific. No "industry-leading", "passionate", "dedicated team", "state-of-the-art", "in today's world", "look no further", "elevate your", "transform your".
@@ -289,7 +301,7 @@ async function generateDraft({ topicId = null } = {}) {
       }
     });
     text = extractText(response);
-    console.log('[generate] used Gemini');
+    console.log('[generate] used local Claude CLI (via claude-provider.cjs, GEMINI_API_KEY presence-gate)');
   } else if (deepseekKey) {
     console.log('[generate] using DeepSeek deepseek-chat (~10x cheaper than OpenAI)');
     const response = await openaiCompatiblePost(deepseekKey, buildPrompt(topic), {

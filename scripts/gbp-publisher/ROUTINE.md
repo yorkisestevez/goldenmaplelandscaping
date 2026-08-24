@@ -16,8 +16,8 @@ Mirror every recent Golden Maple blog post (last 14 days) that hasn't yet been p
 ## Environment
 
 - Working directory: `C:\Users\yorki\Desktop\Goldenmaplelandscaping.ca\golden-maple-landscaping`
+- Required: the `claude` binary on PATH — generation runs through the local Claude CLI (`claude-provider.cjs`), not Gemini. `GEMINI_API_KEY` is a vestigial presence-gate only (see README.md); a `"Gemini error: ..."` message means check the Claude CLI, not a Gemini outage.
 - Required env vars (already set in Yorkis's local env via `load-keys.cmd`):
-  - `GEMINI_API_KEY` — Gemini 2.5 Pro
   - `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` — for status pings
 - Required MCP servers:
   - `mcp__Claude_in_Chrome__*` — drives Yorkis's actual Chrome browser
@@ -198,6 +198,10 @@ git add scripts/gbp-publisher/state.json && \
 - **Environmental failure** (git pull fails, Chrome MCP unavailable): Telegram alert, exit clean. The next scheduled fire will retry.
 - **Never** mark a blog as mirrored if the actual publish didn't visibly land in the GBP panel.
 
+## Ad-hoc catch-up files (`queue/`)
+
+`scripts/gbp-publisher/queue/*.md` is not part of the automated routine above — it's a manual worksheet used when a human (Yorkis or an agent session) needs to draft and review a batch of posts by hand before pushing them live (e.g. clearing a backlog after the routine was broken for a while). There's no code that reads this folder automatically. Convention: title the file with the publish date and a status tag — `AWAITING YORKIS APPROVAL` while pending, updated to `PUBLISHED <date>, commit <sha>` once every post in the file has actually gone live (see `2026-08-13-catchup.md` for the pattern) — so the file's header always matches reality rather than freezing at whatever it said when the file was created. Re-posting from a stale queue file is harmless regardless (dedupe keys on `state.mirrored[].slug`), but a stale "awaiting approval" header after the posts are already live is still worth fixing — it's the same kind of drift this whole doc set exists to prevent.
+
 ## Hard rules
 
 - Do NOT call `list_connected_browsers` or `switch_browser`. Call `select_browser` with `58fce9f9-570f-4440-b3e9-ffa56a84af9b` directly.
@@ -209,6 +213,8 @@ git add scripts/gbp-publisher/state.json && \
 
 ## Why this routine exists (cold-context)
 
-Google killed the GBP Local Posts API in 2024. They also migrated GBP management out of `business.google.com/posts` and into the "Your business on Google" panel that lives inside `google.com/search?q=<your-business>`. Cloud headless Playwright can't authenticate against this UI (bot detection). The only working path is driving Yorkis's already-signed-in local Chrome via the Chrome MCP — which is exactly what this routine does. Don't try to use Playwright, the deleted GitHub Actions workflow, or `business.google.com` directly — they were all abandoned.
+The GBP Local Posts API was deprecated then **partially restored in 2024** — `localPosts.create` still works today when the post carries a `sourceUrl` media reference, which is exactly what Tier 1 (step 3b, `api-bridge.cjs`) uses to get image-attached posts with a single HTTP call. Google separately migrated GBP's human-facing management UI out of `business.google.com/posts` and into the "Your business on Google" panel inside `google.com/search?q=<your-business>` — that break is real and is why Tier 2 (Chrome MCP, step 3c) drives `google.com/search` instead of the old `business.google.com/posts` URL. Cloud headless Playwright can't authenticate against either surface (bot detection), which is why this whole routine runs against Yorkis's already-signed-in **local** Chrome rather than a cloud runner. Don't retry Playwright, the deleted GitHub Actions workflow, or `business.google.com/posts` directly — those are correctly abandoned.
+
+**Tier 1 (API, image-attached) is preferred and works — it just isn't wired up yet.** Its one-time OAuth setup (README.md "Setting up Tier 1") has not been completed, so every routine fire since this was built has fallen through to Tier 2. **Live status as of 2026-08-14:** all 5 routine posts landed with `"path": "chrome_mcp"`, `"post_id": null`, `"imageAttached": false`. Completing the Tier 1 OAuth setup is the actual fix for the missing hero images — it is not a dead end, and Tier 2 is correctly a fallback, not "the only working path."
 
 Working directory for everything: `C:/Users/yorki/Desktop/Goldenmaplelandscaping.ca/golden-maple-landscaping`

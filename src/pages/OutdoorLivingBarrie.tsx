@@ -75,7 +75,7 @@ export default function OutdoorLivingBarrie() {
                 Patio, wall, steps, fire feature, lighting, planting, shade — designed as one system before anything gets excavated. Most contractors quote each piece separately and bolt them together. We plan footings, conduit runs, drainage, access, and grade as a single build so it doesn't look added-on five years from now.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/cost-estimator?type=full" className="btn-primary">See Project Cost Range</Link>
+                <Link to="/cost-estimator?type=patio" className="btn-primary">See Project Cost Range</Link>
                 <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
                   Portfolio <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
@@ -210,7 +210,7 @@ export default function OutdoorLivingBarrie() {
             Start with a realistic planning range. Most outdoor living builds land between $40K and $90K+, with full backyard transformations moving past $90K once walls, kitchen, lighting, fire, or major grade correction enter the scope.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/cost-estimator?type=full" className="btn-primary px-12 py-4">See Project Cost Range</Link>
+            <Link to="/cost-estimator?type=patio" className="btn-primary px-12 py-4">See Project Cost Range</Link>
             <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or book a site walk →</Link>
           </div>
         </div>

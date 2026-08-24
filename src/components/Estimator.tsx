@@ -430,8 +430,12 @@ export default function Estimator() {
     trackEngagement('estimator_gap_lever_applied', leverId);
   };
 
-  /** Confidence ±% — earned by ANSWERS, not by page-turning. Every detail question,
-   *  the conditions review, location, material choice, and a photo each tighten the band. */
+  /** Confidence ±% — tightens as the visitor works through the wizard. Detail
+   *  questions earn the most credit; reaching steps 4/5/6 also earns credit for
+   *  reviewing conditions/location/material even on their defaults, so the
+   *  on-screen copy says "completing each step", not "every answer" — page-
+   *  turning alone genuinely does move this number. Do not let UI copy claim
+   *  answers alone earn it; that would misdescribe this formula. */
   const answeredDetails = useMemo(() => {
     const els = projectType === 'full' ? selectedElements : (projectType ? [projectType] : []);
     const keys = els.flatMap(el => (DETAIL_QUESTIONS[el] ?? []).map(q => `${el}.${q.id}`));
@@ -518,7 +522,7 @@ export default function Estimator() {
   const SQFT_PRESETS = [
     { label: 'Small', value: 250, hint: '~ a single-car garage' },
     { label: 'Medium', value: 500, hint: '~ a two-car garage' },
-    { label: 'Large', value: 900, hint: '~ a doubles tennis court' },
+    { label: 'Large', value: 900, hint: '~ a three-car garage' },
   ];
 
   /** Card options replace the native <select>s. Every other choice in the
@@ -908,7 +912,7 @@ export default function Estimator() {
             {step >= 5 ? (
               <div className="flex items-center gap-4">
                 <span className="hidden lg:block font-sans text-[11px] font-normal text-brand-muted max-w-[180px] leading-snug">
-                  Keep going to tighten the range — or jump straight to the breakdown.
+                  Answer a few more, or see your breakdown now — either way you'll be able to fine-tune it there.
                 </span>
                 <button
                   type="button"
@@ -920,7 +924,7 @@ export default function Estimator() {
               </div>
             ) : (
               <span className="font-sans text-[11px] font-normal text-brand-muted max-w-[200px] leading-snug text-right">
-                Every answer narrows this range — we price your project, not just your square footage.
+                Completing each step narrows this range — we price your project, not just your square footage.
               </span>
             )}
           </div>
@@ -1233,7 +1237,7 @@ export default function Estimator() {
                 </div>
                 <h4 className="font-display text-xl text-brand-bone mb-2">Upload yard photos (optional)</h4>
                 <p className="font-sans text-[12px] font-normal text-brand-bonewhite/80 mb-5 leading-relaxed">
-                  One photo of the project area helps us account for grade, access, and existing surfaces — tightens your confidence range another 3%.
+                  Looking at a photo of the area yourself helps you answer the questions above accurately — we'll ask you to send it before we quote.
                 </p>
                 {photoFile ? (
                   <div className="bg-brand-cream border border-brand-gold/30 rounded-2xl p-4 flex items-center justify-between">
@@ -1377,7 +1381,7 @@ export default function Estimator() {
                     {estimate.days.low}–{estimate.days.high} days on-site
                   </div>
                   <div className="font-sans text-[12px] font-normal text-brand-bonewhite/80 leading-relaxed mb-6">
-                    Project start typically 4–8 weeks from contract signing during peak season (May–Oct).
+                    Project start typically 6–10 weeks in spring, 8–14 in peak summer, 3–5 in early fall, from contract signing.
                   </div>
                   <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-3">Confidence</div>
                   <div className="font-display text-3xl text-brand-bone mb-2">±{confidence}%</div>

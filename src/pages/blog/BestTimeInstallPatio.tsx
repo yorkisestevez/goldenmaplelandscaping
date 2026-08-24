@@ -165,7 +165,7 @@ export default function BestTimeInstallPatio() {
       <p>Some contractors offer 5–10% off for jobs <em>contracted</em> in December–February for spring installs. We don't reduce price (our minimums protect quality), but we do guarantee 2026 pricing won't increase before your spring slot.</p>
 
       <h3>How long does the actual install take?</h3>
-      <p>A typical 600 sqft patio takes <strong>5–8 days on-site</strong>. Add 1–2 days for tear-out if there's an existing surface. The 4–6 month lead time is the wait, not the work.</p>
+      <p>A typical 600 sqft patio takes <strong>2.5–4 days on-site</strong>. Add 1–2 days for tear-out if there's an existing surface. The 8–12 week booking lead time is the wait, not the work.</p>
 
       <h3>What about the design phase?</h3>
       <p>Design and contracting can happen in any season. We often lock spring contracts in December and use January–March for 3D design, material selection, and final pricing. By the time April lands, you walk straight into install with everything finalized.</p>

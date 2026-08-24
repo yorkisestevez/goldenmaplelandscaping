@@ -7,7 +7,7 @@ import Testimonials from '../../components/Testimonials';
 const FAQ = [
   {
     q: "How deep should an interlocking base be in Barrie, ON?",
-    a: "In Barrie and Simcoe County, the freeze-thaw cycle is significant. We recommend a minimum of 12-16\" of compacted aggregate base for driveways and 8-12\" for patios. This ensures the stones do not shift or heave over time."
+    a: "In Barrie and Simcoe County, the freeze-thaw cycle is significant. We recommend a minimum of 12-16\" of compacted aggregate base for driveways and patios alike. This ensures the stones do not shift or heave over time."
   },
   {
     q: "How long does interlocking stone last?",
@@ -63,7 +63,7 @@ export default function Interlocking() {
                 <span className="italic text-brand-gold">still flat in 2046.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
-                You've seen what happens when an interlocking patio is built wrong. Sunken corners. Joints full of weeds. The whole thing pitching toward the foundation by year three. We're here to make sure that's not the story you tell about yours. We dig deeper, source from <span className="text-brand-gold font-normal">Unilock, Techo-Bloc, and Permacon</span>, and stand behind every square foot for five full years. <span className="text-brand-gold font-normal">Projects start at $20,000.</span>
+                You've seen what happens when an interlocking patio is built wrong. Sunken corners. Joints full of weeds. The whole thing pitching toward the foundation by year three. We're here to make sure that's not the story you tell about yours. We dig deeper, source from <span className="text-brand-gold font-normal">Unilock, Techo-Bloc, and Permacon</span>, and stand behind every square foot for five full years — <span className="text-brand-gold font-normal">no job minimum, priced to your real scope.</span>
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary">Get My Estimate</Link>

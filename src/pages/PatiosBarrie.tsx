@@ -15,7 +15,7 @@ const FAQ = [
   },
   {
     q: "Why is the base depth a big deal?",
-    a: "Most contractors in Simcoe County dig 6-8 inches and use Granular A. We dig 12 down and use 3/4\" clear stone over a compacted virgin-soil base. Granular A traps water that freezes and lifts your pavers; clear stone drains at 250 inches per hour and stays stable through 50 freeze-thaw cycles a winter. That's the difference between a patio that looks new in year 8 and one that's pitching toward your foundation by year 3.",
+    a: "Most contractors in Simcoe County dig 6-8 inches and use Granular A. We dig 12 down and use 3/4\" clear stone over a compacted virgin-soil base. Granular A traps water that freezes and lifts your pavers; clear stone drains at 250 inches per hour and stays stable through 60-85 freeze-thaw cycles a winter. That's the difference between a patio that looks new in year 8 and one that's pitching toward your foundation by year 3.",
   },
   {
     q: "Do you build smaller patios? What's the minimum?",

@@ -80,7 +80,7 @@ for (const d of DECK_BRANDS as any[]) {
     warn(`deck anchor ${d.id} $${d.installedPerSqft}/sqft vs engine high $${deckBand.high} (${ratio.toFixed(1)}x)`);
 }
 const engine300 = ((baseline.bands as any).patio.sizesSqft['300'] as any).mid * 300;
-console.log(`  info  positioning: no estimator job minimum — a 300sqft patio prices at the engine mid ~$${Math.round(engine300).toLocaleString()}; qualification happens at the name+email gate, not a price floor`);
+console.log(`  info  positioning: no estimator job minimum — a 300sqft patio prices at the engine mid ~$${Math.round(engine300).toLocaleString()}; qualification happens at the save-build gate (name+email traded for a shareable ?build= permalink), not a price floor`);
 
 console.log(failures === 0 ? 'PARITY OK' : `${failures} PARITY FAILURE(S) — regenerate engine-baseline.json or fix the site data`);
 process.exit(failures === 0 ? 0 : 1);

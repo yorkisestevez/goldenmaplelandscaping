@@ -12,7 +12,7 @@ export default function CostEstimator() {
         "name": "How much does an interlocking patio cost in Barrie?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "A premium interlocking patio in Barrie typically ranges from $25,000 to $55,000 depending on size, the Permacon paver chosen (Melville, Cassara, Mondrian Plus, Mega Melville, Brooklyn, and more), site conditions like slope or tear-out, and any add-ons like lighting or fire features. There is no job minimum — small walkways and front entrances price out at their real scope. Every build goes on a 12–16\" base for true freeze-thaw durability, whatever the size."
+          "text": "A premium interlocking patio in Barrie typically ranges from $35,000 to $75,000 depending on size, the Permacon paver chosen (Melville, Cassara, Mondrian Plus, Mega Melville, Brooklyn, and more), site conditions like slope or tear-out, and any add-ons like lighting or fire features. There is no job minimum — small walkways and front entrances price out at their real scope. Every build goes on a 12–16\" base for true freeze-thaw durability, whatever the size."
         }
       },
       {
@@ -20,7 +20,7 @@ export default function CostEstimator() {
         "name": "What does a composite deck cost in Simcoe County?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "TimberTech AZEK Prime+ composite decking typically lands around $58/sqft installed; TimberTech AZEK Vintage around $68/sqft. A typical 300-sqft deck ranges $30,000–$60,000 depending on the TimberTech line, railing, and substructure."
+          "text": "TimberTech AZEK Prime+ decking runs about $58/sqft for the deck itself, AZEK Vintage about $68/sqft. All-in with substructure, footings, railing and disposal, a 300-sqft ground-level deck lands around $19,500–$30,500; elevated walkout builds in Vintage with difficult access, slope, or drainage work can reach $50,000–$60,000."
         }
       },
       {
@@ -28,7 +28,7 @@ export default function CostEstimator() {
         "name": "Do you charge for estimates?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Our online estimator is free and shows ballpark pricing within ±10–25%. To get exact numbers we offer a free estimate request by phone, or a $99 on-site design session that's credited back when you book your project."
+          "text": "Our online estimator is free — including the full itemized breakdown, with no signup required — and shows ballpark pricing that tightens from ±30% to ±8–20% as you answer. To get exact numbers we offer a free estimate request by phone, or a $99 on-site design session that's credited back when you book your project."
         }
       }
     ]
@@ -38,7 +38,7 @@ export default function CostEstimator() {
     <>
       <SEO
         title="Landscaping Cost Estimator Barrie 2026 | Real Pricing | Golden Maple"
-        description="Get a real ballpark for your landscaping project in Simcoe County — no job minimum, any size. Pick your Permacon paver line and TimberTech finish, see your price range free, then unlock the itemized breakdown with your name and email."
+        description="Get a real ballpark for your landscaping project in Simcoe County — no job minimum, any size. Pick your Permacon paver line and TimberTech finish, see your full itemized breakdown free with no signup, then adjust anything and watch the price move."
         canonical="https://goldenmaplelandscaping.ca/cost-estimator"
         /* Purpose-built share card — every texted ?build= permalink and every
            social share of this page previews with this instead of the generic
@@ -59,7 +59,7 @@ export default function CostEstimator() {
             </p>
             <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Why we build on a 12–16" base</h3>
             <p>
-              We install hardscape on a 12–16" open-graded base — twice as deep as most competitors. That depth is what survives Ontario freeze-thaw cycles. A shallower base might shave a few thousand off the upfront price, but stones start sinking inside three years. We won't build that way at any size, which is why the estimator prices the real base into every project — a 60 sqft front entrance included.
+              We install hardscape on a 12–16" open-graded base — twice as deep as most competitors. That depth is what survives Ontario freeze-thaw cycles. A shallower base might shave a few thousand off the upfront price, but stones start sinking inside three years. We won't build that way at any size, which is why the estimator prices the real base into every project — a 100 sqft front entrance included.
             </p>
             <p>
               There's no job minimum here. Price out whatever you're actually planning and you'll get the honest number for it, not a number padded up to hit a floor.
@@ -72,7 +72,7 @@ export default function CostEstimator() {
             </ul>
             <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">From estimate to exact quote</h3>
             <p>
-              The estimator above gets you within ±10–25%. A free estimate request confirms scope and timeline. A $99 design session — credited back if you proceed — gets you to ±5% with material samples and a layout sketch in hand.
+              The estimator above starts at ±30% and tightens to ±8–20% as you answer. A free estimate request confirms scope and timeline. A $99 design session — credited back if you proceed — gets you to ±5% with material samples and a layout sketch in hand.
             </p>
           </div>
         </Reveal>

@@ -7,7 +7,7 @@ export default function Construction() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Landscape Construction Barrie | Engineered 16-Inch Bases | Golden Maple"
+        title="Landscape Construction Barrie | Engineered 12-16 Inch Bases | Golden Maple"
         description="The Golden Maple Construction Standard: 16-inch deep bases, daily site management, and code-exceeding structural engineering for luxury Simcoe County landscapes."
       />
 
@@ -50,7 +50,7 @@ export default function Construction() {
               />
               <div className="absolute inset-x-8 bottom-8 bg-brand-nearblack/80 backdrop-blur-md p-6 border border-brand-gold/20 rounded-[2px]">
                 <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Structural Standard</p>
-                <p className="font-display text-xl text-brand-bonewhite italic font-light">16-Inch Base Implementation</p>
+                <p className="font-display text-xl text-brand-bonewhite italic font-light">12–16" Base Implementation</p>
               </div>
             </motion.div>
           </div>
@@ -59,7 +59,7 @@ export default function Construction() {
             <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">The Golden Maple <br/> <span className="italic text-brand-gold">Standard of Build.</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
               {[
-                { title: "16\" Engineered Bases", desc: "Twice the industry norm. We excavate 16-18 inches deep for interlocking to ensure your investment remains perfectly level indefinitely." },
+                { title: "12–16\" Engineered Bases", desc: "Twice the industry norm. We excavate 12-16 inches deep for interlocking to ensure your investment remains perfectly level indefinitely." },
                 { title: "Code-Exceeding Framing", desc: "Framing our composite decks to meet and exceed Ontario building code for absolute stability and safety." },
                 { title: "Precision Jointing", desc: "Using high-performance polymeric sands and structural edging that won't separate after one Canadian winter." },
                 { title: "Daily Site Cleanliness", desc: "We treat your property as a professional job site, not a mess. Daily tidying and final wash-downs are standard." },
@@ -78,7 +78,7 @@ export default function Construction() {
             <div className="max-w-4xl mx-auto">
               <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite mb-12">Built to Outlast.</h2>
               <p className="font-sans text-xl text-brand-muted leading-relaxed font-light mb-12 text-balance lg:px-12">
-                We believe in building it once and building it right. Our 10-year settlement warranty on craftsmanship is only possible because we refuse to skip a single step of the engineering process—even if it's hidden under the surface.
+                We believe in building it once and building it right. Our 5-year sink and settlement warranty on craftsmanship is only possible because we refuse to skip a single step of the engineering process—even if it's hidden under the surface.
               </p>
               <Link to="/process/completion" className="flex items-center gap-4 text-brand-gold font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
                 <span>Phase Six: Handover & Warranty</span>

@@ -63,7 +63,7 @@ export default function RetainingWalls() {
                 <span className="italic text-brand-gold">for generations.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
-                A retaining wall is one of those things you don't think about — until it starts to lean. We've spent years rebuilding walls other contractors put up without geogrid, without proper drainage, without an engineering plan. We're not interested in being the next chapter of that story. We build walls the way they should be built the first time, so the slope you've been ignoring becomes the feature your property is known for. <span className="text-brand-gold font-normal">Structural projects start at $20,000.</span>
+                A retaining wall is one of those things you don't think about — until it starts to lean. We've spent years rebuilding walls other contractors put up without geogrid, without proper drainage, without an engineering plan. We're not interested in being the next chapter of that story. We build walls the way they should be built the first time, so the slope you've been ignoring becomes the feature your property is known for — <span className="text-brand-gold font-normal">no job minimum, priced to your real scope.</span>
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary">Get My Estimate</Link>

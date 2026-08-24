@@ -38,7 +38,7 @@ export default function LandscapingCostGuide() {
 
       <h3>2. The Functional Backyard (Patio & Fire Pit)</h3>
       <p><strong>Typical Range: $25,000 - $50,000+</strong></p>
-      <p>This covers a 400-600 square foot interlocking patio with a 14-16" properly engineered base, a built-in seating wall, and a custom fire feature (wood or gas). This range ensures the base is excavated deep enough to survive Ontario winters without heaving.</p>
+      <p>This covers a 400-600 square foot interlocking patio with a 12-16" properly engineered base, a built-in seating wall, and a custom fire feature (wood or gas). This range ensures the base is excavated deep enough to survive Ontario winters without heaving.</p>
 
       <h3>3. The Elevated Outdoor Living Space</h3>
       <p><strong>Typical Range: $60,000 - $120,000+</strong></p>
@@ -53,7 +53,7 @@ export default function LandscapingCostGuide() {
       <p>If you get a quote that seems unusually high, it's usually because the contractor has factored in the "invisible" elements that guarantee longevity:</p>
 
       <ul>
-        <li><strong>Base Depth:</strong> We dig 14-16 inches for patios, compared to the industry average of 6-8 inches. That means double the excavation, double the disposal fees, and double the clear stone.</li>
+        <li><strong>Base Depth:</strong> We dig 12-16 inches for patios, compared to the industry average of 6-8 inches. That means double the excavation, double the disposal fees, and double the clear stone.</li>
         <li><strong>Drainage Solutions:</strong> We don't just slope the patio. We install proper perforated drain tiles and dry wells to move water away from your foundation.</li>
         <li><strong>Geogrid & Engineering:</strong> We use structural geogrid in our bases and walls to prevent lateral shifting.</li>
       </ul>

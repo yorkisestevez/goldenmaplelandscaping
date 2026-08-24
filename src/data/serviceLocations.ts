@@ -55,11 +55,11 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     name: 'Interlocking Stone Installation',
     shortName: 'Interlocking',
     blurb:
-      'Engineered patios, walkways, and driveways built on a 14–16" base to outlast Ontario freeze-thaw cycles.',
+      'Engineered patios, walkways, and driveways built on a 12–16" base to outlast Ontario freeze-thaw cycles.',
     startingPriceText: '$55–$85',
     perUnitText: 'per square foot installed',
     scope: [
-      'Engineered base prep (12–16" excavation, compacted Granular A, HPB sand bedding)',
+      'Engineered base prep (12–16" excavation, compacted 3/4" clear stone, HPB bedding)',
       'Geotextile separation on clay soils',
       'Premium Techo-Bloc, Permacon, or Unilock pavers',
       'Polymeric or Romex jointing',

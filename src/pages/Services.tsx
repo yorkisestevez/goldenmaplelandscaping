@@ -136,15 +136,15 @@ export default function Services() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-20 max-w-6xl mx-auto mb-24">
             <div className="space-y-6">
               <h3 className="font-display text-3xl font-light text-brand-gold">Structural Integrity</h3>
-              <p className="font-sans text-sm text-brand-bonewhite/80 leading-relaxed font-light">From 16" deep interlocking bases to code-exceeding deck framing, we build for the Canadian climate.</p>
+              <p className="font-sans text-sm text-brand-bonewhite/80 leading-relaxed font-light">From 12–16" deep interlocking bases to code-exceeding deck framing, we build for the Canadian climate.</p>
             </div>
             <div className="space-y-6">
               <h3 className="font-display text-3xl font-light text-brand-gold">WSIB & $5M</h3>
               <p className="font-sans text-sm text-brand-bonewhite/80 leading-relaxed font-light">Full protection for our team and your property on every single job site.</p>
             </div>
             <div className="space-y-6">
-              <h3 className="font-display text-3xl font-light text-brand-gold">10-Year Warranty</h3>
-              <p className="font-sans text-base text-brand-bonewhite/80 leading-relaxed font-light">A 10-year sink and settlement warranty on all craftsmanship, reflecting our confidence in our 16" base depth standards.</p>
+              <h3 className="font-display text-3xl font-light text-brand-gold">5-Year Warranty</h3>
+              <p className="font-sans text-base text-brand-bonewhite/80 leading-relaxed font-light">A 5-year sink and settlement warranty on all craftsmanship, reflecting our confidence in our 12–16" base depth standards.</p>
             </div>
           </div>
           <Link to="/contact" className="btn-primary px-16 py-5">Let's Talk About Your Project</Link>

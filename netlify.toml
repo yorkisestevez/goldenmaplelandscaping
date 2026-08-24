@@ -1,5 +1,12 @@
 [build]
-  command = "npm run build"
+  # `npm run lint` runs the pricing-honesty gates (check-pricing-parity,
+  # check-engine-snapshot, check-budget-levers) plus typecheck. Before
+  # 2026-08-14 this only ran in CI's separate "npm run lint" step in
+  # netlify-deploy.yml — but the ACTUAL deploy command Netlify reads is this
+  # one, and it was bare `npm run build`. A pricing refactor that silently
+  # repriced a job would have shipped unblocked. Do not split these back
+  # apart without an equivalent gate elsewhere in the deploy path.
+  command = "npm run lint && npm run build"
   # React Router v7 framework build outputs the static client (with prerendered
   # per-route index.html files) to build/client.
   publish = "build/client"

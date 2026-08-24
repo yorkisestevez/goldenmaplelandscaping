@@ -90,7 +90,7 @@ export default function InterlockingCostBarrie() {
 
       <ul>
         <li><strong>12-16 inches of excavation</strong> (minimum — more for driveways)</li>
-        <li><strong>8-12 inches of compacted granular A base</strong></li>
+        <li><strong>12-16 inches of compacted 3/4" clear stone base</strong></li>
         <li><strong>1 inch of HPB</strong> (high-performance bedding) or concrete sand</li>
         <li><strong>Proper grading</strong> for water to drain away from your home</li>
         <li><strong>Geotextile fabric</strong> on clay soils to prevent base contamination</li>

@@ -6,6 +6,7 @@ import { trackLead, trackEngagement } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
+import { scoreGoldenMapleLead } from '../utils/leadScoring';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -14,12 +15,17 @@ const encode = (data: Record<string, string>) =>
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
+// Values must match Contact.tsx's budget enum exactly — both forms post to the
+// same "contact" Netlify form and both feed scoreGoldenMapleLead(), which
+// pattern-matches on these literal strings ('under-25k' | '25k-50k' |
+// '50k-100k' | '100k-250k' | '250k+'). Mismatched buckets here silently
+// zeroed out the budget component of every hero-form lead's score.
 const BUDGET_RANGES = [
-  { value: '20k-35k', label: '$20k – $35k' },
-  { value: '35k-50k', label: '$35k – $50k' },
-  { value: '50k-75k', label: '$50k – $75k' },
-  { value: '75k-100k', label: '$75k – $100k' },
-  { value: '100k-plus', label: '$100k or more' },
+  { value: 'under-25k', label: 'Under $25k' },
+  { value: '25k-50k', label: '$25k – $50k' },
+  { value: '50k-100k', label: '$50k – $100k' },
+  { value: '100k-250k', label: '$100k – $250k' },
+  { value: '250k+', label: '$250k+' },
 ];
 const UNSURE = 'unsure';
 
@@ -81,6 +87,11 @@ export default function HeroContactForm() {
       .join(' · ');
 
     const eventId = genEventId();
+    const leadScore = scoreGoldenMapleLead({
+      budget: form.budget,
+      service: 'Home Hero Enquiry',
+      details: form.details,
+    });
     const payload = {
       'form-name': 'contact',
       event_id: eventId,
@@ -92,6 +103,9 @@ export default function HeroContactForm() {
       service: 'Home Hero Enquiry',
       budget: form.budget,
       details: enrichedDetails,
+      lead_score: String(leadScore.score),
+      lead_tier: leadScore.tier,
+      lead_score_reasons: leadScore.reasons.join(','),
       'bot-field': form['bot-field'],
     };
 
