@@ -4,6 +4,14 @@ import { ArrowRight, Clock, BookOpen, Calculator } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
+  {
+    slug: "landscaper-quote-excavation-line-item",
+    title: "Landscaping Quote Excavation: Why Every Barrie Quote Needs This Line Item",
+    excerpt: "A separate excavation line item in your landscaping quote is the only way to verify that site prep was properly priced — here's what it should include and what it costs in Barrie.",
+    category: "Hiring Guide",
+    readTime: "9 min",
+    image: "/images/projects/paver-driveway.JPG",
+  },
           {
     slug: "permacon-pavers-honest-review-2026",
     title: "Permacon Pavers: A Contractor's Honest Review (2026)",
@@ -167,7 +175,7 @@ const BLOG_POSTS = [
   {
     slug: 'why-patios-sink-barrie',
     title: 'Why Patios Sink in Barrie (And How to Prevent It)',
-    excerpt: 'The freeze-thaw cycle destroys shallow bases. Learn why 12-16" of compacted clear stone is the only way to build a patio that lasts in Simcoe County.',
+    excerpt: 'The freeze-thaw cycle destroys shallow bases. Learn why 12-16\" of compacted clear stone is the only way to build a patio that lasts in Simcoe County.',
     category: 'Engineering',
     readTime: '7 min',
     image: '/images/projects/IMG_4826.jpg',
@@ -328,9 +336,7 @@ export default function Resources() {
             </Link>
           </motion.div>
 
-          {/* Cost estimator band — the blog index had ZERO links to the site's
-              highest-intent tool. Readers researching costs are exactly who the
-              calculator is for. Same card idiom as the Buyer's Guide above. */}
+          {/* Cost estimator band */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
