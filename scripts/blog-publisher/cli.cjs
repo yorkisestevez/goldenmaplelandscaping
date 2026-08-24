@@ -103,6 +103,35 @@ async function cmdWorkflowRun() {
   const skipReview = process.env.SKIP_ADVERSARIAL_REVIEW === 'true';
   let draft, review, injection, branch, prUrl;
 
+  // 0) Sync to origin/main BEFORE generating.
+  //
+  //    2026-08-24 incident: this step did not exist. The run branched off a
+  //    STALE local main (2 commits behind origin), so the PR opened with merge
+  //    conflicts and `gh pr merge` failed with "Pull Request has merge
+  //    conflicts". The post never published on its own and the repo was left
+  //    parked on the auto/ branch — meaning the NEXT week's run would have
+  //    branched off that abandoned branch instead of main, compounding it.
+  //
+  //    Injection writes into the working tree before the branch is cut, so the
+  //    sync has to happen here (before generate), not next to `checkout -b`.
+  //    Fast-forward only: if main has diverged or the tree is dirty, this
+  //    throws rather than silently discarding work.
+  try {
+    git('fetch origin main');
+    const dirty = git('status --porcelain').trim();
+    if (dirty) {
+      throw new Error(
+        `working tree not clean — refusing to sync. Commit/stash first:\n${dirty.split('\n').slice(0, 10).join('\n')}`,
+      );
+    }
+    git('checkout main');
+    git('merge --ff-only origin/main');
+    console.log('[workflow-run] synced main to origin/main');
+  } catch (e) {
+    try { await telegram.sendErrorAlert('sync-main', e); } catch {}
+    throw e;
+  }
+
   // 1) Generate
   try {
     draft = await generateDraft({ topicId: forced || null });
@@ -219,7 +248,21 @@ async function cmdWorkflowRun() {
         sh(`gh pr merge "${prUrl}" --squash --delete-branch --admin`);
         console.log('[workflow-run] AUTO-MERGED — published without manual approval');
       } catch (e) {
+        // 2026-08-24: this was a silent console.warn. Auto-merge failed on merge
+        // conflicts, the post never went live, and nobody found out until the
+        // weekly digest surfaced it days later. A post that didn't publish is
+        // exactly the case the operator needs told about, so alert loudly.
         console.warn('[workflow-run] auto-merge failed, PR left open for manual merge:', e.message);
+        try {
+          await telegram.sendMessage(
+            `⚠️ Blog auto-merge FAILED — post is NOT live.\n\n` +
+            `Slug: ${draft.slug}\n` +
+            `PR: ${prUrl}\n` +
+            `Reason: ${String(e.message).slice(0, 300)}\n\n` +
+            `The PR is open and needs a manual merge.`,
+            { parseMode: undefined },
+          );
+        } catch {}
       }
     }
   } catch (e) {
@@ -233,6 +276,17 @@ async function cmdWorkflowRun() {
     console.log('[workflow-run] Telegram preview sent');
   } catch (e) {
     console.warn('[workflow-run] Telegram preview failed (non-fatal):', e.message);
+  }
+
+  // 6) Return to main so the repo is never left parked on the auto/ branch.
+  //    2026-08-24: a failed auto-merge left the checkout sitting on
+  //    auto/blog-...-excavation-line-item. Step 0 now hard-fails on a dirty
+  //    tree, so a stranded branch would have blocked every subsequent run.
+  //    Non-fatal: the post is already published by this point.
+  try {
+    git('checkout main');
+  } catch (e) {
+    console.warn('[workflow-run] could not return to main (non-fatal):', e.message);
   }
 
   return { slug: draft.slug, branch, prUrl, validation: draft.validation };
