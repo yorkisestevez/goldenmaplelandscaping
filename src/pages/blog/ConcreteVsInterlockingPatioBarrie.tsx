@@ -141,7 +141,7 @@ export default function ConcreteVsInterlockingPatioBarrie() {
           <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
           <div>
             <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces in Simcoe County since 2020. With hundreds of patios installed and a WSIB certification backed by $5M liability, Yorkis guarantees professional, reliable service with a perfect 5.0 Google rating.</p>
+            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020. The company is WSIB registered, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews.</p>
           </div>
         </div>
       </div>
