@@ -45,27 +45,27 @@ export default function Manifesto() {
             className="lg:col-span-7"
           >
             <div className="font-sans text-[11px] tracking-[0.35em] uppercase text-brand-gold mb-8 md:mb-10 flex items-center gap-6">
-              <span>The Founder's Manifesto</span>
+              <span>A Note From the Founder</span>
               <div className="h-px bg-brand-gold/20 flex-1" />
             </div>
             
             <h2 className="font-display text-4xl md:text-7xl font-light leading-[1.1] mb-10">
-              Quality is a <br />
-              <span className="italic text-brand-gold">moral obligation.</span>
+              Built like it's <br />
+              <span className="italic text-brand-gold">our own backyard.</span>
             </h2>
 
             <div className="space-y-8 font-sans font-light text-base md:text-lg text-brand-porcelain-soft leading-relaxed">
               <p className="text-brand-porcelain font-medium italic">
-                "I started Golden Maple with a simple, uncompromising belief: if a thing is worth doing, it is worth doing to the point of obsession."
+                "I started Golden Maple with one simple rule: build every project like it's going in my own backyard."
               </p>
               <p>
-                In an industry often defined by speed and shortcuts, I chose a different path. I chose the slow way. The hard way. The right way. Because when you are building a space where a family will spend their next twenty years, "good enough" is an insult.
+                In an industry known for shortcuts, we'd rather take the extra time and do it properly. When a family is going to live with a space for the next twenty years, it's worth building right the first time.
               </p>
               <p>
-                Every project that bears our name is a personal reflection of my standards. I am on-site, I am in the details, and I am committed to the architectural integrity of your home. We don't just build landscapes; we build enduring legacies of craftsmanship.
+                I'm on-site for every build, so the details get looked after — deep bases, clean lines, a tidy site every evening, and communication that doesn't go quiet after the deposit.
               </p>
               <p>
-                My promise to you is transparency, precision, and a result that exceeds the boundaries of your imagination.
+                My promise is simple: an honest quote, careful work, and a backyard your family will actually want to spend time in.
               </p>
             </div>
 
