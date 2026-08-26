@@ -12,23 +12,42 @@
  *   2. A snapshot gate. scripts/check-engine-snapshot.ts pins the output of
  *      every branch below, so the arithmetic cannot drift by accident.
  *
- * ⚠️  The slice coefficients (materials 45% / labour 40% / excavation
- *     18%-of-core, and their per-element variants) do NOT reconcile to a
- *     documented whole, and `totalLow/High` are re-summed FROM the slices —
- *     not from `coreLow/High`, which are computed and then deliberately
- *     discarded. Tidying the percentages to "make them add up" silently
- *     reprices every job Golden Maple quotes. Don't. If the pricing model
- *     itself needs to change, change it on purpose and regenerate the
+ * ENGINE v3 (2026-08-26, deliberate repricing): patio and natural-stone work is
+ * now priced by QUANTITY TAKEOFF (src/utils/takeoff.ts) from the Carr 2025
+ * trade book — pavers + waste, 12" clear-stone base tonnage, HPB bedding, poly
+ * sand, edge restraint, fabric, truck-packed delivery, and disposal bins
+ * counted by what the job actually hauls. The result carries a `precise` block
+ * (integer cents: category figures, subtotal, 13% HST, grand total) — the
+ * "most likely" invoice the UI headlines. For takeoff elements the banded
+ * low/high now DERIVES from the precise figure (×0.95 / ×1.25); every other
+ * element keeps its banded model and contributes its band midpoint to
+ * `precise` as a labelled allowance. The precise figure is NEVER widened by
+ * confidence — widening applies only to the secondary range.
+ *
+ * ⚠️  The legacy slice coefficients (materials 45% / labour 40% / excavation
+ *     18%-of-core, and their per-element variants) still do NOT reconcile to a
+ *     documented whole for non-takeoff elements, and `totalLow/High` are
+ *     re-summed FROM the slices. Tidying the percentages to "make them add up"
+ *     silently reprices every job Golden Maple quotes. Don't. If the pricing
+ *     model itself needs to change, change it on purpose and regenerate the
  *     snapshot in the same commit.
  */
 
 import {
-  PAVER_BRANDS, DECK_BRANDS, ADD_ONS, BIN_COST, estimateBins, type PaverTier,
+  PAVER_BRANDS, DECK_BRANDS, ADD_ONS, BIN_COST, type PaverTier,
 } from '../data/carrPrices';
 import {
   ESTIMATOR_LOCATIONS, ZONE_SURCHARGE, type EstimatorLocationKey,
 } from '../data/locations';
-import { applyDailyProductionFloor } from './pricingDoctrine';
+import { applyDailyProductionFloor, applyPreciseCrewFloor } from './pricingDoctrine';
+import {
+  hardscapeTakeoff, disposalBinsFor, c,
+  type PreciseLineItem, type TakeoffQuantities,
+} from './takeoff';
+import engineBaseline from '../data/engine-baseline.json';
+
+const CAL = engineBaseline.calibration;
+const HST_RATE = engineBaseline.facts.hstRate;
 
 /** Everything the price depends on. Anything not in here cannot move the number. */
 export interface EstimateInput {
@@ -52,6 +71,34 @@ export interface EstimateLine {
   detail: string;
 }
 
+/**
+ * The takeoff engine's "most likely" invoice. All money is INTEGER CENTS so
+ * the snapshot gate pins bit-identical output. Pre-tax everywhere except
+ * hstCents/grandTotalCents. `marginPct` is internal (parity gate) — never
+ * displayed. `lineItems` is the internal takeoff detail; the public UI shows
+ * category-level figures only.
+ */
+export interface PreciseResult {
+  subtotalCents: number;
+  hstCents: number;
+  grandTotalCents: number;
+  perCategoryCents: {
+    excavation: number;
+    materials: number;
+    labour: number;
+    disposal: number;
+    restoration: number;
+  };
+  addOnsCents: number;
+  lineItems: PreciseLineItem[];
+  /** Element ids priced as banded-midpoint allowances rather than takeoff. */
+  allowances: string[];
+  /** Internal gross-margin estimate — only computable for pure-takeoff builds. */
+  marginPct: number | null;
+  /** Takeoff quantity summary for category detail copy. Null when no takeoff element. */
+  quantities: TakeoffQuantities | null;
+}
+
 export interface EstimateResult {
   totalLow: number;
   totalHigh: number;
@@ -68,6 +115,8 @@ export interface EstimateResult {
   /** Surface area the engine actually priced (patio/stone/turf/deck only —
    *  wall linear feet and step counts are excluded). Used by the gap coach. */
   sqftPriced: number;
+  /** Null when nothing is selected yet. */
+  precise: PreciseResult | null;
 }
 
 const EMPTY: EstimateResult = {
@@ -77,6 +126,7 @@ const EMPTY: EstimateResult = {
   addOnsTotal: { low: 0, high: 0 },
   days: { low: 0, high: 0 },
   sqftPriced: 0,
+  precise: null,
 };
 
 export function computeEstimate(input: EstimateInput): EstimateResult {
@@ -95,12 +145,30 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
   const els = projectType === 'full' ? selectedElements : (projectType ? [projectType] : []);
   if (els.length === 0) return EMPTY;
 
+  // Banded accumulators — LEGACY (non-takeoff) elements only.
   let coreLow = 0;
   let coreHigh = 0;
   let materialLow = 0;
   let materialHigh = 0;
   let labourLow = 0;
   let labourHigh = 0;
+  // Banded contributions DERIVED from takeoff precise figures (×0.95 / ×1.25).
+  let tMatLow = 0;
+  let tMatHigh = 0;
+  let tLabLow = 0;
+  let tLabHigh = 0;
+  let tExcavLow = 0;
+  let tExcavHigh = 0;
+  // Precise accumulators — integer cents.
+  let pTakeoffMaterialsC = 0;
+  let pTakeoffInstallC = 0;
+  let pTakeoffExcavC = 0;
+  let takeoffTradeC = 0;
+  const lineItems: PreciseLineItem[] = [];
+  let quantities: TakeoffQuantities | null = null;
+  const allowances: string[] = [];
+  let binsTotal = 0;
+
   let totalSqftCalc = 0;
   let daysLow = 0.5;
   let daysHigh = 1;
@@ -111,7 +179,9 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
   for (const el of els) {
     const sz = sizes[el];
     const dv = (q: string) => details[`${el}.${q}`];
-    // Existing-surface tear-out — asked per element, scaled to its footprint
+    // Existing-surface tear-out — the breaking/lifting LABOUR, asked per
+    // element and scaled to its footprint. HAULING is counted separately as
+    // disposal bins (takeoff.disposalBinsFor) so the two never double-charge.
     const applySurface = (sqft: number) => {
       const surface = dv('surface');
       if (surface === 'concrete') {
@@ -126,22 +196,63 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
       }
     };
 
-    if (el === 'patio' || el === 'stone' || el === 'turf') {
+    if (el === 'patio' || el === 'stone') {
+      // ---- TAKEOFF PATH (engine v3) ----
       const sqft = typeof sz === 'number' ? sz : 0;
       totalSqftCalc += sqft;
-      let perSqft = selectedPaver.installedPerSqft;
-      if (el === 'turf') perSqft = 22;
-      if (el === 'stone') perSqft = Math.max(48, selectedPaver.installedPerSqft + 10);
-      let lineLow = sqft * perSqft * 0.95;
-      let lineHigh = sqft * perSqft * 1.20;
-      // Layout complexity — more cuts, higher waste factor
-      const shape = dv('shape');
-      if (shape === 'curves') { lineLow *= 1.06; lineHigh *= 1.08; }
-      if (shape === 'complex') { lineLow *= 1.12; lineHigh *= 1.16; }
-      const use = dv('use');
-      if (use === 'multi') lineHigh *= 1.06;
-      if (use === 'hottub') { extraFlatLow += 1800; extraFlatHigh += 3500; }
+      if (sqft > 0) {
+        const shape = dv('shape');
+        const surface = dv('surface');
+        const takeoff = hardscapeTakeoff({
+          sqft, shape, surface, paver: selectedPaver, element: el,
+        });
+        // Labour-side multipliers: waste already covers the material side of
+        // layout complexity; these are the midpoints of the legacy band mults.
+        const shapeMult = shape === 'complex' ? 1.14 : shape === 'curves' ? 1.07 : 1;
+        const useMult = dv('use') === 'multi' ? 1.03 : 1;
+        if (dv('use') === 'hottub') { extraFlatLow += 1800; extraFlatHigh += 3500; }
+        applySurface(sqft);
+
+        const installC = Math.round(takeoff.installRetailCents * shapeMult * useMult);
+        pTakeoffMaterialsC += takeoff.materialsRetailCents;
+        pTakeoffInstallC += installC;
+        pTakeoffExcavC += takeoff.excavationRetailCents;
+        takeoffTradeC += takeoff.materialsTradeCents;
+        binsTotal += takeoff.bins;
+        lineItems.push(...takeoff.items);
+        quantities = quantities
+          ? {
+              aggregateTonnes: Math.round((quantities.aggregateTonnes + takeoff.quantities.aggregateTonnes) * 10) / 10,
+              polySandBags: quantities.polySandBags + takeoff.quantities.polySandBags,
+              edgePieces: quantities.edgePieces + takeoff.quantities.edgePieces,
+              fabricRolls: quantities.fabricRolls + takeoff.quantities.fabricRolls,
+              skids: quantities.skids + takeoff.quantities.skids,
+              deliveryLoads: quantities.deliveryLoads + takeoff.quantities.deliveryLoads,
+              bins: quantities.bins + takeoff.quantities.bins,
+            }
+          : takeoff.quantities;
+
+        // Band derives from precise: quantities are known, so the residual
+        // uncertainty band is ×0.95 / ×1.25 around the takeoff figure.
+        tMatLow += (takeoff.materialsRetailCents / 100) * 0.95;
+        tMatHigh += (takeoff.materialsRetailCents / 100) * 1.25;
+        tLabLow += (installC / 100) * 0.95;
+        tLabHigh += (installC / 100) * 1.25;
+        tExcavLow += (takeoff.excavationRetailCents / 100) * 0.95;
+        tExcavHigh += (takeoff.excavationRetailCents / 100) * 1.25;
+      }
+      daysLow += (typeof sz === 'number' ? sz : 0) / 350;
+      daysHigh += (typeof sz === 'number' ? sz : 0) / 220;
+    } else if (el === 'turf') {
+      const sqft = typeof sz === 'number' ? sz : 0;
+      totalSqftCalc += sqft;
+      allowances.push(el);
+      const perSqft = 22;
+      const lineLow = sqft * perSqft * 0.95;
+      const lineHigh = sqft * perSqft * 1.20;
       applySurface(sqft);
+      // Turf strips sod, not a 12" base — its bins follow the sod-strip rule.
+      binsTotal += sqft > 0 ? disposalBinsFor(sqft, 'sod-strip', dv('surface')) : 0;
       materialLow += lineLow * 0.45;
       materialHigh += lineHigh * 0.45;
       labourLow += lineLow * 0.40;
@@ -153,6 +264,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
     } else if (el === 'deck') {
       const sqft = typeof sz === 'number' ? sz : 0;
       totalSqftCalc += sqft;
+      allowances.push(el);
       const perSqft = selectedDeck.installedPerSqft;
       let lineLow = sqft * perSqft * 0.95;
       let lineHigh = sqft * perSqft * 1.20;
@@ -160,6 +272,8 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
       const height = dv('deckHeight');
       if (height === 'walkout') { lineLow *= 1.18; lineHigh *= 1.18; }
       if (height === 'mid') { extraFlatLow += 1500; extraFlatHigh += 3500; }
+      // Footing spoil + framing offcuts — one bin, not a 12"-excavation count.
+      if (sqft > 0) binsTotal += 1;
       materialLow += lineLow * 0.55;
       materialHigh += lineHigh * 0.55;
       labourLow += lineLow * 0.35;
@@ -170,6 +284,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
       daysHigh += sqft / 150;
     } else if (el === 'wall') {
       const lf = typeof sz === 'number' ? sz : 50;
+      allowances.push(el);
       const hMult = sizes.wallHeight === 'Under 2ft' ? 1
         : sizes.wallHeight === '2-4ft' ? 1.5
         : sizes.wallHeight === '4-6ft' ? 2.2 : 3.2;
@@ -189,6 +304,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
       daysHigh += (lf * hMult) / 30;
     } else if (el === 'steps') {
       const count = typeof sz === 'number' ? sz : 5;
+      allowances.push(el);
       applySurface(0);
       const perStep = tier === 'budget' ? 850 : tier === 'mid' ? 1100 : 1500;
       const lineLow = count * perStep * 0.9;
@@ -202,6 +318,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
       daysLow += count * 0.4;
       daysHigh += count * 0.6;
     } else if (el === 'kitchen') {
+      allowances.push(el);
       const isFull = sizes.kitchen === 'Full Build';
       const lineLow = tier === 'budget' ? (isFull ? 18000 : 7000) : tier === 'mid' ? (isFull ? 28000 : 10000) : (isFull ? 42000 : 14000);
       const lineHigh = lineLow * 1.4;
@@ -214,6 +331,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
       daysLow += isFull ? 6 : 3;
       daysHigh += isFull ? 10 : 5;
     } else if (el === 'firepit') {
+      allowances.push(el);
       // Gas line run is its own trade
       if (dv('fuel') === 'gas') { extraFlatLow += 1500; extraFlatHigh += 3000; }
       const lineLow = tier === 'budget' ? 1500 : tier === 'mid' ? 2500 : 3500;
@@ -226,6 +344,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
       coreHigh += lineHigh;
       daysLow += 1; daysHigh += 2;
     } else if (el === 'pergola') {
+      allowances.push(el);
       const lineLow = tier === 'budget' ? 4500 : tier === 'mid' ? 7000 : 10000;
       const lineHigh = lineLow * 1.4;
       materialLow += lineLow * 0.55;
@@ -236,6 +355,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
       coreHigh += lineHigh;
       daysLow += 2; daysHigh += 4;
     } else if (el === 'lighting') {
+      allowances.push(el);
       const lineLow = tier === 'budget' ? 3000 : tier === 'mid' ? 5000 : 7500;
       const lineHigh = lineLow * 1.4;
       materialLow += lineLow * 0.5;
@@ -263,14 +383,23 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
   materialHigh *= conditionMult;
   labourLow = labourLow * conditionMult + conditionFlatLow * 0.6 + extraFlatLow;
   labourHigh = labourHigh * conditionMult + conditionFlatHigh * 0.6 + extraFlatHigh;
+  // Takeoff bands ride the same multiplier (access/levels are real crew cost).
+  tMatLow *= conditionMult;
+  tMatHigh *= conditionMult;
+  tLabLow *= conditionMult;
+  tLabHigh *= conditionMult;
+  tExcavLow *= conditionMult;
+  tExcavHigh *= conditionMult;
 
-  // Excavation = roughly 18% of core for hardscape, lighter for non-hardscape
+  // Excavation: takeoff elements price it explicitly (calibrated $/sqft);
+  // legacy elements keep the 18%-of-core share. The floor spans the whole job.
   const excavationShare = isHardscape || (projectType === 'full' && totalSqftCalc > 0) ? 0.18 : 0.10;
-  const excavationLow = Math.max(2500, coreLow * excavationShare);
-  const excavationHigh = Math.max(4000, coreHigh * excavationShare);
+  const excavationLow = Math.max(2500, coreLow * excavationShare + tExcavLow);
+  const excavationHigh = Math.max(4000, coreHigh * excavationShare + tExcavHigh);
 
-  // Disposal — only meaningful for hardscape work that excavates
-  const bins = totalSqftCalc > 0 ? estimateBins(totalSqftCalc) : 0;
+  // Disposal — bins counted per element by tear-out kind (takeoff for
+  // patio/stone, sod-strip for turf, one bin for a deck build).
+  const bins = binsTotal;
   const disposalLow = bins * BIN_COST;
   const disposalHigh = bins * BIN_COST * 1.15;
 
@@ -294,21 +423,85 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
     daysHigh += addOns.length * 1;
   }
 
+  // Combine legacy + takeoff-derived bands before the crew-day floor — the
+  // floor is about the whole job's on-site days, not one accounting bucket.
+  let materialLowAll = materialLow + tMatLow;
+  let materialHighAll = materialHigh + tMatHigh;
+  let labourLowAll = labourLow + tLabLow;
+  let labourHighAll = labourHigh + tLabHigh;
+
   const flooredLabour = applyDailyProductionFloor({
-    labourLow,
-    labourHigh,
+    labourLow: labourLowAll,
+    labourHigh: labourHighAll,
     daysLow,
     daysHigh,
     projectType,
   });
-  labourLow = flooredLabour.labourLow;
-  labourHigh = flooredLabour.labourHigh;
+  labourLowAll = flooredLabour.labourLow;
+  labourHighAll = flooredLabour.labourHigh;
 
   // Total = the five displayed slices + zone surcharge + add-ons. Deliberately
   // re-summed from the slices rather than from coreLow/High — see the file
-  // header before touching this.
-  const totalLow = Math.round((excavationLow + materialLow + labourLow + disposalLow + restorationLow + surcharge + addOnsLow) / 500) * 500;
-  const totalHigh = Math.round((excavationHigh + materialHigh + labourHigh + disposalHigh + restorationHigh + surcharge + addOnsHigh) / 500) * 500;
+  // header before touching this. Rounded to $250 since engine v3 (was $500).
+  const totalLow = Math.round((excavationLow + materialLowAll + labourLowAll + disposalLow + restorationLow + surcharge + addOnsLow) / 250) * 250;
+  const totalHigh = Math.round((excavationHigh + materialHighAll + labourHighAll + disposalHigh + restorationHigh + surcharge + addOnsHigh) / 250) * 250;
+
+  // ---- PRECISE (the "most likely" invoice, integer cents) ----
+  // Takeoff parts are exact; every legacy-banded contribution enters at its
+  // band midpoint. Precise is never widened by confidence.
+  const mid = (lo: number, hi: number) => (lo + hi) / 2;
+  const daysMid = mid(daysLow, daysHigh);
+
+  const pMaterialsBase = pTakeoffMaterialsC + c(mid(materialLow, materialHigh)) + c(surcharge);
+  const pDisposalC = c(bins * BIN_COST);
+  const pRestorationC = c(Math.max(CAL.restorationMinCad, totalSqftCalc * CAL.restorationPerSqft));
+  let pExcavC = Math.round(pTakeoffExcavC * conditionMult)
+    + c(mid(coreLow, coreHigh) * excavationShare);
+  pExcavC = Math.max(pExcavC, c(mid(2500, 4000)));
+  let pLabourC = Math.round(pTakeoffInstallC * conditionMult)
+    + c(mid(labourLow, labourHigh));
+
+  const crewFloored = applyPreciseCrewFloor({
+    excavationCents: pExcavC,
+    labourCents: pLabourC,
+    daysMid,
+    projectType,
+  });
+  pExcavC = crewFloored.excavationCents;
+  pLabourC = crewFloored.labourCents;
+
+  let pAddOnsC = 0;
+  for (const aid of addOns) {
+    const a = ADD_ONS.find(x => x.id === aid);
+    if (a) pAddOnsC += c(mid(a.costLow, a.costHigh));
+  }
+
+  const subtotalCents = pMaterialsBase + pExcavC + pLabourC + pDisposalC + pRestorationC + pAddOnsC;
+  const hstCents = Math.round(subtotalCents * HST_RATE);
+
+  // Internal margin — only meaningful when the whole build is takeoff-priced.
+  const pureTakeoff = allowances.length === 0 && takeoffTradeC > 0;
+  const marginPct = pureTakeoff
+    ? Math.round(((subtotalCents - (takeoffTradeC + pDisposalC + c(daysMid * CAL.crewDayCostCad))) / subtotalCents) * 1000) / 10
+    : null;
+
+  const precise: PreciseResult = {
+    subtotalCents,
+    hstCents,
+    grandTotalCents: subtotalCents + hstCents,
+    perCategoryCents: {
+      excavation: pExcavC,
+      materials: pMaterialsBase,
+      labour: pLabourC,
+      disposal: pDisposalC,
+      restoration: pRestorationC,
+    },
+    addOnsCents: pAddOnsC,
+    lineItems,
+    allowances,
+    marginPct,
+    quantities,
+  };
 
   // No job minimum. The estimate is whatever the project actually costs out
   // to — a small walkway prices as a small walkway, never padded up to a
@@ -320,6 +513,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
     addOnsTotal: { low: addOnsLow, high: addOnsHigh },
     days: { low: Math.ceil(daysLow * 2) / 2, high: Math.ceil(daysHigh * 2) / 2 },
     sqftPriced: totalSqftCalc,
+    precise,
     lines: {
       excavation: {
         low: Math.round(excavationLow / 100) * 100,
@@ -327,8 +521,8 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
         detail: totalSqftCalc > 0 ? `12–16" base depth on ${totalSqftCalc} sqft` : 'Site prep + base prep',
       },
       materials: {
-        low: Math.round((materialLow + surcharge) / 100) * 100,
-        high: Math.round((materialHigh + surcharge) / 100) * 100,
+        low: Math.round((materialLowAll + surcharge) / 100) * 100,
+        high: Math.round((materialHighAll + surcharge) / 100) * 100,
         detail: isDeck
           ? `${selectedDeck.brand} ${selectedDeck.product}`
           : isHardscape || projectType === 'full'
@@ -336,8 +530,8 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
           : 'Materials & supplies',
       },
       labour: {
-        low: Math.round(labourLow / 100) * 100,
-        high: Math.round(labourHigh / 100) * 100,
+        low: Math.round(labourLowAll / 100) * 100,
+        high: Math.round(labourHighAll / 100) * 100,
         detail: `${Math.ceil(daysLow * 2) / 2}–${Math.ceil(daysHigh * 2) / 2} days on-site, ICPI-certified crew`,
       },
       disposal: {
@@ -359,6 +553,8 @@ export interface Delta {
   high: number;
   /** Midpoint movement — what the UI shows as a single "+$3,200" figure. */
   mid: number;
+  /** Movement of the precise subtotal, in cents. Null when either side lacks one. */
+  preciseCents: number | null;
 }
 
 /**
@@ -376,7 +572,10 @@ export function deltaFor(base: EstimateInput, patch: Partial<EstimateInput>): De
   const after = computeEstimate({ ...base, ...patch });
   const low = after.totalLow - before.totalLow;
   const high = after.totalHigh - before.totalHigh;
-  return { low, high, mid: (low + high) / 2 };
+  const preciseCents = before.precise && after.precise
+    ? after.precise.subtotalCents - before.precise.subtotalCents
+    : null;
+  return { low, high, mid: (low + high) / 2, preciseCents };
 }
 
 /** Midpoint of a build — the single number the gap coach steers against. */
@@ -385,13 +584,16 @@ export function midpoint(r: Pick<EstimateResult, 'totalLow' | 'totalHigh'>): num
 }
 
 /**
- * The confidence-widening applied to everything the customer sees.
+ * The confidence-widening applied to the SECONDARY range the customer sees.
  *
  * Lives here rather than in the component because THREE things have to agree on
- * it — the headline, the itemized lines, and the budget gap coach. When the
+ * it — the range, the itemized lines, and the budget gap coach. When the
  * coach reasoned on raw engine totals while the headline showed widened ones,
  * levers labelled "gets you there on its own" landed over target. One
  * definition, imported everywhere, is what prevents that class of bug.
+ *
+ * The `precise` figure is invariant to confidence — it is the model's point
+ * estimate and is NEVER widened; only the range around it breathes.
  *
  * The asymmetry is deliberate: unresolved uncertainty pushes the ceiling up
  * roughly twice as hard as it pulls the floor down, because unknowns on a
@@ -413,7 +615,7 @@ export function widenTotals(
   if (r.totalLow <= 0) return { low: 0, high: 0 };
   const w = widenFactors(confidence);
   return {
-    low: Math.max(500, Math.round(w.low(r.totalLow) / 500) * 500),
-    high: Math.round(w.high(r.totalHigh) / 500) * 500,
+    low: Math.max(500, Math.round(w.low(r.totalLow) / 250) * 250),
+    high: Math.round(w.high(r.totalHigh) / 250) * 250,
   };
 }

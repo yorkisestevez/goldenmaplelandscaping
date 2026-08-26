@@ -17,6 +17,12 @@ import type { EstimateInput } from './estimateEngine';
 import type { PaverTier } from '../data/carrPrices';
 import type { EstimatorLocationKey } from '../data/locations';
 
+// VERSION 1 deliberately survived the 2026-08 engine-v3 (takeoff) repricing:
+// the payload encodes INPUTS only, and no EstimateInput field changed, so an
+// old link restores the same build and simply reprices under the new engine —
+// the link's promise is "reopens this estimate with every choice you made",
+// not "freezes the price". Bump the version only when the Packed shape itself
+// changes meaning.
 const VERSION = 1;
 
 export interface SavedBuild extends EstimateInput {

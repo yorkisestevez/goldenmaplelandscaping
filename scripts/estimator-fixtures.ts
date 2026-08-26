@@ -40,6 +40,10 @@ export const FIXTURES: [string, EstimateInput][] = [
   f('patio-100-min-size', { sizes: { ...base.sizes, patio: 100 } }),
   f('patio-2000-max-size', { sizes: { ...base.sizes, patio: 2000 } }),
 
+  // --- takeoff edges (engine v3) ---
+  f('patio-480-bin-boundary', { sizes: { ...base.sizes, patio: 480 } }), // 480/237 crosses to 3 bins
+  f('patio-surface-grass-explicit', { details: { 'patio.surface': 'grass' } }), // must equal the unset default
+
   // --- patio detail-question branches ---
   f('patio-surface-concrete', { details: { 'patio.surface': 'concrete' } }),
   f('patio-surface-pavers', { details: { 'patio.surface': 'pavers' } }),

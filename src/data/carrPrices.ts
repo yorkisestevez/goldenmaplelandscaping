@@ -13,6 +13,9 @@ import engineBaseline from './engine-baseline.json';
 
 export type PaverTier = 'budget' | 'mid' | 'premium';
 
+/** What kind of tear-out/excavation spoil a job hauls away — drives bin count. */
+export type TearOutKind = 'full-depth' | 'sod-strip' | 'spoil-only';
+
 export interface PaverBrand {
   id: string;
   brand: string;
@@ -20,7 +23,13 @@ export interface PaverBrand {
   tier: PaverTier;
   /** Carr 2025 retail material price, base color, $/sqft — shown on the picker cards. */
   materialRetailPerSqft: number;
-  /** All-in installed anchor used by the estimate math. Not a paver price — do not display as one. */
+  /** Carr 2025 TRADE column, $/sqft — the takeoff engine's cost basis, never displayed.
+   *  VERIFY vs Carr trade column — initialized from the retail figures; if Carr's trade
+   *  price is lower the 1.35 markup double-counts and the internal margin figure reads
+   *  low. Outcome pricing is pinned by the calibration gate either way. */
+  materialTradePerSqft: number;
+  /** Legacy all-in installed anchor. Since the takeoff engine (2026-08) this is
+   *  display/positioning-only — the estimate math prices from quantities. */
   installedPerSqft: number;
   thicknessMm: number;
   useCase: 'patio' | 'patio-driveway' | 'driveway';
@@ -37,6 +46,7 @@ export const PAVER_BRANDS: PaverBrand[] = [
     product: 'Melville',
     tier: 'budget',
     materialRetailPerSqft: 5.62,
+    materialTradePerSqft: 5.62,
     installedPerSqft: 32,
     thicknessMm: 60,
     useCase: 'patio-driveway',
@@ -49,6 +59,7 @@ export const PAVER_BRANDS: PaverBrand[] = [
     product: 'Cassara',
     tier: 'budget',
     materialRetailPerSqft: 6.24,
+    materialTradePerSqft: 6.24,
     installedPerSqft: 34,
     thicknessMm: 60,
     useCase: 'patio',
@@ -60,6 +71,7 @@ export const PAVER_BRANDS: PaverBrand[] = [
     product: 'Vendome',
     tier: 'budget',
     materialRetailPerSqft: 5.96,
+    materialTradePerSqft: 5.96,
     installedPerSqft: 33,
     thicknessMm: 60,
     useCase: 'patio',
@@ -72,6 +84,7 @@ export const PAVER_BRANDS: PaverBrand[] = [
     product: 'Mondrian Plus',
     tier: 'mid',
     materialRetailPerSqft: 5.79,
+    materialTradePerSqft: 5.79,
     installedPerSqft: 36,
     thicknessMm: 60,
     useCase: 'patio',
@@ -84,6 +97,7 @@ export const PAVER_BRANDS: PaverBrand[] = [
     product: 'Wilfred',
     tier: 'mid',
     materialRetailPerSqft: 7.83,
+    materialTradePerSqft: 7.83,
     installedPerSqft: 38,
     thicknessMm: 60,
     useCase: 'patio',
@@ -95,6 +109,7 @@ export const PAVER_BRANDS: PaverBrand[] = [
     product: 'Rosebel',
     tier: 'mid',
     materialRetailPerSqft: 7.32,
+    materialTradePerSqft: 7.32,
     installedPerSqft: 40,
     thicknessMm: 60,
     useCase: 'patio',
@@ -107,6 +122,7 @@ export const PAVER_BRANDS: PaverBrand[] = [
     product: 'Mega Melville',
     tier: 'premium',
     materialRetailPerSqft: 9.44,
+    materialTradePerSqft: 9.44,
     installedPerSqft: 46,
     thicknessMm: 80,
     useCase: 'patio-driveway',
@@ -119,6 +135,7 @@ export const PAVER_BRANDS: PaverBrand[] = [
     product: 'Brooklyn',
     tier: 'premium',
     materialRetailPerSqft: 11.84,
+    materialTradePerSqft: 11.84,
     installedPerSqft: 50,
     thicknessMm: 60,
     useCase: 'patio',
@@ -130,6 +147,7 @@ export const PAVER_BRANDS: PaverBrand[] = [
     product: 'Metrik',
     tier: 'premium',
     materialRetailPerSqft: 7.81,
+    materialTradePerSqft: 7.81,
     installedPerSqft: 42,
     thicknessMm: 60,
     useCase: 'patio',
@@ -181,6 +199,67 @@ export const EDGE_RESTRAINT_PER_LF = 4.5;
 // Do not hand-edit: scripts/check-pricing-parity.ts fails the build on drift.
 export const BIN_COST = engineBaseline.facts.binCostCad; // 14-yard bin, before HST
 export const DELIVERY_ZONE1 = 285;
+
+/**
+ * Carr 2025 TRADE book — the takeoff engine's cost side. UI never renders these.
+ * Mirrored in engine-baseline.json `carr2025`; scripts/check-pricing-parity.ts
+ * fails the build if the two drift apart, and bounds-checks the values so a
+ * stale/tampered copy can't slide through. All CAD, pre-HST, Golden Maple pays
+ * the Trade column (never quote off retail).
+ */
+export const CARR_TRADE = {
+  aggregates: {
+    /** ¾" Clear Stone (open-graded ICPI base), $/tonne trade. */
+    clearStone34PerTonne: 29.50,
+    /** HPB 1" bedding layer, $/tonne trade. */
+    hpbPerTonne: 26.22,
+    /** Locked coverage rule: 1 tonne covers 100 sqft at 4" depth. */
+    coverageSqftPerTonnePer4in: 100,
+    /** For converting tonnes → truck yd³ when packing delivery loads. */
+    tonnesPerYd3: 1.4,
+  },
+  consumables: {
+    polySandPerBag: 29.10,        // Techniseal HP NextGel, trade
+    polySandSqftPerBag: 80,       // conservative end of the 80–100 sqft/bag rule
+    snapEdgePer8ftPiece: 14.64,   // Snap Edge paver restraint = $1.83/lf
+    /** Exposed-edge heuristic: restrained perimeter lf ≈ 4 × √sqft. */
+    edgeLfFactor: 4,
+    gatorFabricPerRoll: 82.92,    // Gator Fabric 3.5 non-woven 4×100'
+    fabricSqftPerRoll: 400,
+  },
+  /** Carr delivery, Zone 1 (Barrie/Innisfil/Angus/Ivy/Midhurst/Shanty Bay).
+   *  Zones 2–4 keep the flat ZONE_SURCHARGE in locations.ts on top. */
+  delivery: {
+    tandemPerLoad: 125, tandemMaxYd3: 16,
+    triAxlePerLoad: 135, triAxleMaxYd3: 22,
+    flatbedBase: 256, flatbedBaseSkids: 6,
+    flatbedPerExtraSkid: 40, flatbedMaxSkids: 15,
+    /** Planning average — pavers per skid; refine per-brand when Permacon data lands. */
+    paverSqftPerSkid: 100,
+  },
+  /** Sqft one 14-yd $550 bin absorbs, by what the job hauls. The tear-out kinds
+   *  are the base rule; concrete/paver tear-outs ADD bins on top of the kind. */
+  disposal: {
+    fullDepthSqftPerBin: engineBaseline.facts.binPerSqftFullDepth, // 12" excavation FACT
+    sodStripSqftPerBin: 650,        // mid of the 600–700 field rule
+    spoilOnlySqftPerBin: 337,       // mid of the 325–350 field rule
+    concreteTearOutSqftPerBin: 250, // ADDED bins when breaking out concrete
+    paverTearOutSqftPerBin: 400,    // ADDED bins when lifting old pavers
+  },
+  /** Paver waste factors by layout complexity. */
+  waste: { standard: 1.10, curves: 1.125, complex: 1.15 },
+} as const;
+
+/**
+ * Natural stone takeoff inputs. Back-solved so stone retail lands ≈ paver
+ * + $10/sqft (6.30 × 1.35 markup + 1.50 labour premium ≈ 10), matching the
+ * engine's long-standing positioning. VERIFY — replace with real Carr
+ * natural-stone trade prices (StoneArch/Oakville) when Yorkis confirms them.
+ */
+export const STONE_TRADE = {
+  tradeDeltaPerSqft: 6.30,
+  labourPremiumPerSqft: 1.50,
+} as const;
 
 /**
  * Add-on flat-cost ranges (CAD installed). Inclusive of materials + labour.
@@ -239,10 +318,19 @@ export const ADD_ONS: AddOn[] = [
   },
 ];
 
-/** Disposal bin count rule of thumb for full 12" excavation hardscape jobs. */
-export function estimateBins(sqft: number): number {
+/**
+ * Disposal bin count by tear-out kind (14-yd bins, CARR_TRADE.disposal rules).
+ * Default 'full-depth' preserves the legacy single-arg call sites — but note
+ * the divisor is now the 237-sqft FACT, not the old hand-rounded 240.
+ */
+export function estimateBins(sqft: number, kind: TearOutKind = 'full-depth'): number {
   if (sqft <= 0) return 0;
-  return Math.max(1, Math.ceil(sqft / 240));
+  const perBin = kind === 'sod-strip'
+    ? CARR_TRADE.disposal.sodStripSqftPerBin
+    : kind === 'spoil-only'
+    ? CARR_TRADE.disposal.spoilOnlySqftPerBin
+    : CARR_TRADE.disposal.fullDepthSqftPerBin;
+  return Math.max(1, Math.ceil(sqft / perBin));
 }
 
 /** Pick a default brand for a given tier and use case. Prefers `recommended` matches first. */

@@ -16,8 +16,9 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import baseline from '../src/data/engine-baseline.json';
-import { BIN_COST, PAVER_BRANDS, DECK_BRANDS } from '../src/data/carrPrices';
+import { BIN_COST, PAVER_BRANDS, DECK_BRANDS, CARR_TRADE } from '../src/data/carrPrices';
 import { DAILY_PRODUCTION_RATES, HARDSCAPE_DAILY_RATES } from '../src/utils/pricingDoctrine';
+import { computeEstimate, type EstimateInput } from '../src/utils/estimateEngine';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 let failures = 0;
@@ -59,6 +60,89 @@ if (HARDSCAPE_DAILY_RATES.bottom !== baseline.facts.crewDayRateHardscape)
   fail(`hardscape day-rate ${HARDSCAPE_DAILY_RATES.bottom} !== engine ${baseline.facts.crewDayRateHardscape}`);
 else pass(`hardscape day-rate $${HARDSCAPE_DAILY_RATES.bottom} (locked all-in card)`);
 
+// ---- CARR 2025 TRADE BOOK (engine v3 takeoff) ----
+// carrPrices.ts CARR_TRADE must equal the baseline's carr2025 mirror, and the
+// values must sit in sane bounds so a stale/tampered copy can't slide through.
+const carrBounds: [string, number, number, number][] = [
+  ['carr2025.aggregates.clearStone34PerTonne', baseline.carr2025.aggregates.clearStone34PerTonne, 25, 40],
+  ['carr2025.aggregates.hpbPerTonne', baseline.carr2025.aggregates.hpbPerTonne, 22, 35],
+  ['carr2025.consumables.polySandPerBag', baseline.carr2025.consumables.polySandPerBag, 24, 40],
+  ['carr2025.disposal.sodStripSqftPerBin', baseline.carr2025.disposal.sodStripSqftPerBin, 500, 800],
+  ['carr2025.disposal.spoilOnlySqftPerBin', baseline.carr2025.disposal.spoilOnlySqftPerBin, 300, 400],
+  ['calibration.crewDayCostCad', baseline.calibration.crewDayCostCad, 2000, 2800],
+  ['facts.materialMarkup', baseline.facts.materialMarkup, 1.25, 1.55],
+  ['facts.hstRate', baseline.facts.hstRate, 0.13, 0.13],
+];
+for (const [name, v, lo, hi] of carrBounds) {
+  if (v < lo || v > hi) fail(`${name} = ${v} outside sane bounds [${lo}, ${hi}] — stale or tampered data?`);
+  else pass(`${name} = ${v} within [${lo}, ${hi}]`);
+}
+const carrPairs: [string, number, number][] = [
+  ['aggregates.clearStone34PerTonne', CARR_TRADE.aggregates.clearStone34PerTonne, baseline.carr2025.aggregates.clearStone34PerTonne],
+  ['aggregates.hpbPerTonne', CARR_TRADE.aggregates.hpbPerTonne, baseline.carr2025.aggregates.hpbPerTonne],
+  ['consumables.polySandPerBag', CARR_TRADE.consumables.polySandPerBag, baseline.carr2025.consumables.polySandPerBag],
+  ['consumables.snapEdgePer8ftPiece', CARR_TRADE.consumables.snapEdgePer8ftPiece, baseline.carr2025.consumables.snapEdgePer8ftPiece],
+  ['consumables.gatorFabricPerRoll', CARR_TRADE.consumables.gatorFabricPerRoll, baseline.carr2025.consumables.gatorFabricPerRoll],
+  ['delivery.tandemPerLoad', CARR_TRADE.delivery.tandemPerLoad, baseline.carr2025.delivery.tandemPerLoad],
+  ['delivery.triAxlePerLoad', CARR_TRADE.delivery.triAxlePerLoad, baseline.carr2025.delivery.triAxlePerLoad],
+  ['delivery.flatbedBase', CARR_TRADE.delivery.flatbedBase, baseline.carr2025.delivery.flatbedBase],
+  ['disposal.sodStripSqftPerBin', CARR_TRADE.disposal.sodStripSqftPerBin, baseline.carr2025.disposal.sodStripSqftPerBin],
+  ['disposal.spoilOnlySqftPerBin', CARR_TRADE.disposal.spoilOnlySqftPerBin, baseline.carr2025.disposal.spoilOnlySqftPerBin],
+  ['disposal.concreteTearOutSqftPerBin', CARR_TRADE.disposal.concreteTearOutSqftPerBin, baseline.carr2025.disposal.concreteTearOutSqftPerBin],
+  ['disposal.paverTearOutSqftPerBin', CARR_TRADE.disposal.paverTearOutSqftPerBin, baseline.carr2025.disposal.paverTearOutSqftPerBin],
+  ['waste.standard', CARR_TRADE.waste.standard, baseline.carr2025.waste.standard],
+  ['waste.complex', CARR_TRADE.waste.complex, baseline.carr2025.waste.complex],
+];
+let carrDrift = 0;
+for (const [name, code, json] of carrPairs) {
+  if (code !== json) { fail(`CARR_TRADE.${name} ${code} !== carr2025 mirror ${json}`); carrDrift++; }
+}
+if (carrDrift === 0) pass(`CARR_TRADE matches carr2025 mirror (${carrPairs.length} fields)`);
+if (CARR_TRADE.disposal.fullDepthSqftPerBin !== baseline.facts.binPerSqftFullDepth)
+  fail(`fullDepthSqftPerBin ${CARR_TRADE.disposal.fullDepthSqftPerBin} !== facts.binPerSqftFullDepth ${baseline.facts.binPerSqftFullDepth}`);
+else pass(`fullDepthSqftPerBin = ${CARR_TRADE.disposal.fullDepthSqftPerBin} (FACT)`);
+
+// ---- CALIBRATION ASSERTION (the owner's pricing rule, made contractual) ----
+// Run the reference build through the real engine: 500 sqft mid Mondrian Plus,
+// Barrie Z1, grass, simple. Identical to fixture patio-500-mid-barrie.
+const referenceBuild: EstimateInput = {
+  projectType: 'patio',
+  selectedElements: [],
+  sizes: {
+    patio: 500, stone: 500, wall: 50, wallHeight: '2-4ft', steps: 5,
+    deck: 300, kitchen: 'Basic', firepit: 'Medium', pergola: 'Medium',
+    turf: 500, lighting: 'Medium',
+  },
+  details: {},
+  conditions: { access: false, slope: false, drainage: false, levels: false },
+  location: 'barrie',
+  tier: 'mid',
+  paverBrandId: 'permacon-mondrian-plus',
+  deckBrandId: 'timbertech-prime',
+  addOns: [],
+};
+const ref = computeEstimate(referenceBuild);
+if (!ref.precise) {
+  fail('reference build produced no precise result — takeoff engine broken');
+} else {
+  const perSqft = ref.precise.subtotalCents / 100 / 500;
+  const [bandLo, bandHi] = baseline.calibration.retailPerSqftBand;
+  if (perSqft < bandLo || perSqft > bandHi)
+    fail(`reference job $${perSqft.toFixed(2)}/sqft outside owner band [$${bandLo}, $${bandHi}] — recalibrate excavation/installLabour rates`);
+  else pass(`reference job $${perSqft.toFixed(2)}/sqft within owner band [$${bandLo}–$${bandHi}]`);
+  const margin = ref.precise.marginPct;
+  if (margin === null || margin < baseline.calibration.minGrossMarginPct)
+    fail(`reference job margin ${margin}% below hard floor ${baseline.calibration.minGrossMarginPct}%`);
+  else pass(`reference job margin ${margin}% >= ${baseline.calibration.minGrossMarginPct}% floor`);
+  const [tLo, tHi] = baseline.calibration.targetGrossMarginPctBand;
+  if (margin !== null && (margin < tLo || margin > tHi))
+    warn(`reference job margin ${margin}% outside the ${tLo}–${tHi}% target band (hard floor still met)`);
+  const expectedDisposal = 3 * baseline.facts.binCostCad * 100;
+  if (ref.precise.perCategoryCents.disposal !== expectedDisposal)
+    fail(`reference job disposal ${ref.precise.perCategoryCents.disposal} cents !== ${expectedDisposal} (3 x $${baseline.facts.binCostCad} bins)`);
+  else pass(`reference job disposal = 3 x $${baseline.facts.binCostCad} bins`);
+}
+
 // Base-depth brand promise: the site's public copy must claim at least the
 // engine's build depth (12"). We look for the "12–16" open-graded" claim.
 const costEstimatorSrc = readFileSync(join(ROOT, 'src/pages/CostEstimator.tsx'), 'utf8');
@@ -67,6 +151,9 @@ if (!/12\s*[–-]\s*16\s*(?:"|&quot;|inch|″|&#8243;)/i.test(costEstimatorSrc))
 else pass(`base-depth promise (12–16") present, engine builds ${baseline.facts.baseDepthIn}"`);
 
 // ---- POSITIONING (warn-only visibility) ----
+// Note: since engine v3 `installedPerSqft` is display/positioning-only — the
+// engine prices patio/stone from quantity takeoff. These warnings keep the
+// picker-card anchors visibly tethered to the engine bands anyway.
 const patioBand = (baseline.bands as any).patio.perSqftPreTax as { low: number; high: number };
 for (const p of PAVER_BRANDS as any[]) {
   const ratio = p.installedPerSqft / patioBand.high;

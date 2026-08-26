@@ -10,6 +10,65 @@
     "hstRate": 0.13,
     "crewDayRateDeck": 3700
   },
+  "carr2025": {
+    "note": "Carr Landscape Depot 2025 TRADE book — maintained in THIS repo (not the deckcraft exporter). src/data/carrPrices.ts CARR_TRADE mirrors these; check-pricing-parity.ts enforces equality + sane bounds. CAD, pre-HST. fullDepthSqftPerBin lives in facts.binPerSqftFullDepth.",
+    "aggregates": {
+      "clearStone34PerTonne": 29.5,
+      "hpbPerTonne": 26.22,
+      "coverageSqftPerTonnePer4in": 100,
+      "tonnesPerYd3": 1.4
+    },
+    "consumables": {
+      "polySandPerBag": 29.1,
+      "polySandSqftPerBag": 80,
+      "snapEdgePer8ftPiece": 14.64,
+      "edgeLfFactor": 4,
+      "gatorFabricPerRoll": 82.92,
+      "fabricSqftPerRoll": 400
+    },
+    "delivery": {
+      "tandemPerLoad": 125,
+      "tandemMaxYd3": 16,
+      "triAxlePerLoad": 135,
+      "triAxleMaxYd3": 22,
+      "flatbedBase": 256,
+      "flatbedBaseSkids": 6,
+      "flatbedPerExtraSkid": 40,
+      "flatbedMaxSkids": 15,
+      "paverSqftPerSkid": 100
+    },
+    "disposal": {
+      "sodStripSqftPerBin": 650,
+      "spoilOnlySqftPerBin": 337,
+      "concreteTearOutSqftPerBin": 250,
+      "paverTearOutSqftPerBin": 400
+    },
+    "waste": {
+      "standard": 1.1,
+      "curves": 1.125,
+      "complex": 1.15
+    }
+  },
+  "calibration": {
+    "note": "Takeoff-engine calibration, maintained in THIS repo. Solved 2026-08-26 so the reference job (500 sqft mid Mondrian Plus, Barrie Z1, grass, simple) lands at $41.25/sqft pre-HST with >=35% margin. check-pricing-parity.ts runs the reference build and hard-fails outside these rails.",
+    "retailPerSqftTarget": 41.25,
+    "retailPerSqftBand": [40, 42],
+    "floorCostPerSqftBand": [25, 26],
+    "minGrossMarginPct": 35,
+    "targetGrossMarginPctBand": [38, 42],
+    "excavationPerSqftRetail": 8.79,
+    "installLabourPerSqftRetail": 13.19,
+    "excavLabourSplit": 0.4,
+    "crewDayCostCad": 2450,
+    "takeoffBand": [0.95, 1.25],
+    "restorationPerSqft": 3.25,
+    "restorationMinCad": 1150,
+    "stepMaterialTradeByTier": {
+      "budget": 260,
+      "mid": 340,
+      "premium": 480
+    }
+  },
   "bands": {
     "patio": {
       "sizesSqft": {

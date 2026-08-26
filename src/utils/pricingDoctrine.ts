@@ -53,6 +53,44 @@ export function applyDailyProductionFloor({
   };
 }
 
+/**
+ * Crew-day sanity floor for the PRECISE (takeoff) figure — engine v3.
+ *
+ * The calibrated $/sqft excavation+install rates undershoot real crew cost on
+ * small jobs (a 100 sqft walkway still mobilizes a crew for a day). When the
+ * combined on-site figure lands under daysMid × the locked day rate, scale
+ * BOTH slices up proportionally so their sum hits the floor exactly (integer
+ * cents preserved). Same cost-math-not-marketing rationale as
+ * applyDailyProductionFloor above — that one floors the banded range; this
+ * one floors the point estimate.
+ */
+export function applyPreciseCrewFloor({
+  excavationCents,
+  labourCents,
+  daysMid,
+  projectType,
+}: {
+  excavationCents: number;
+  labourCents: number;
+  daysMid: number;
+  projectType?: string | null;
+}): { excavationCents: number; labourCents: number; floored: boolean } {
+  const rate = projectType && projectType !== 'deck'
+    ? HARDSCAPE_DAILY_RATES.bottom
+    : DAILY_PRODUCTION_RATES.target;
+  const floorCents = Math.round(daysMid * rate * 100);
+  const combined = excavationCents + labourCents;
+  if (combined <= 0 || combined >= floorCents) {
+    return { excavationCents, labourCents, floored: false };
+  }
+  const scaledExcavation = Math.round(excavationCents * (floorCents / combined));
+  return {
+    excavationCents: scaledExcavation,
+    labourCents: floorCents - scaledExcavation,
+    floored: true,
+  };
+}
+
 // NOTE: there is deliberately no getEstimatorMinimumFloor() any more.
 // The estimator used to clamp every result up to a per-project-type job
 // minimum ($18K–$90K), which meant a small walkway that genuinely costed out

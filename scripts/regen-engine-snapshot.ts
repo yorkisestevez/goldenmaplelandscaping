@@ -13,6 +13,22 @@ import { FIXTURES } from './estimator-fixtures';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const out: Record<string, unknown> = {};
-for (const [name, input] of FIXTURES) out[name] = computeEstimate(input);
+for (const [name, input] of FIXTURES) {
+  const result = computeEstimate(input);
+  // Precise money is INTEGER CENTS by contract — float drift must never enter
+  // the pinned snapshot (it would make the gate nondeterministic).
+  if (result.precise) {
+    const cents = [
+      result.precise.subtotalCents, result.precise.hstCents,
+      result.precise.grandTotalCents, result.precise.addOnsCents,
+      ...Object.values(result.precise.perCategoryCents),
+      ...result.precise.lineItems.flatMap(i => [i.unitTradeCents, i.tradeCents, i.retailCents]),
+    ];
+    for (const v of cents) {
+      if (!Number.isInteger(v)) throw new Error(`${name}: non-integer cents value ${v} — fix the rounding in the engine, not the snapshot`);
+    }
+  }
+  out[name] = result;
+}
 writeFileSync(join(ROOT, 'scripts/estimator-snapshot.json'), JSON.stringify(out, null, 2) + '\n');
 console.log(`Regenerated snapshot for ${FIXTURES.length} fixtures. Review the diff before committing.`);
