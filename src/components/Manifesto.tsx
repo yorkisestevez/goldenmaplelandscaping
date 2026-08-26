@@ -62,7 +62,7 @@ export default function Manifesto() {
                 In an industry known for shortcuts, we'd rather take the extra time and do it properly. When a family is going to live with a space for the next twenty years, it's worth building right the first time.
               </p>
               <p>
-                I'm on-site for every build, so the details get looked after — deep bases, clean lines, a tidy site every evening, and communication that doesn't go quiet after the deposit.
+                I'm on-site for every build, looking after the details that decide whether a patio lasts — the 12–16" compacted base you'll never see, the clean lines you will, a tidy site every evening, and communication that doesn't go quiet after the deposit.
               </p>
               <p>
                 My promise is simple: an honest quote, careful work, and a backyard your family will actually want to spend time in.
