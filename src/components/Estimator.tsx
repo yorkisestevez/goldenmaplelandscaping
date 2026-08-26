@@ -237,6 +237,11 @@ export default function Estimator() {
   const [furthestStep, setFurthestStep] = useState(1);
   /** Scroll target for the result-step sticky bar's "Save build" button. */
   const saveCardRef = useRef<HTMLDivElement>(null);
+  /** The wizard card — every step change scrolls back to its top. Without
+   *  this the viewport stays wherever the Continue button was, and the result
+   *  step's payoff (the number) appears off-screen at the exact moment it
+   *  should land. */
+  const cardRef = useRef<HTMLDivElement>(null);
   /** Full-backyard step 2 is a wall of nested config on phones — accordion it.
    *  Desktop ignores this (everything open). Newly added elements auto-open. */
   const [openElement, setOpenElement] = useState<string | null>(null);
@@ -375,6 +380,14 @@ export default function Estimator() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Present each step from its top — including the result reveal.
+  const prevStepRef = useRef(step);
+  useEffect(() => {
+    if (prevStepRef.current === step) return;
+    prevStepRef.current = step;
+    cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [step]);
 
   const handleSizeChange = (id: string, value: number | string) => {
     setSizes(prev => ({ ...prev, [id]: value }));
@@ -951,7 +964,7 @@ export default function Estimator() {
           onSkip={() => { fireStep(7); setStep(7); }}
         />
       )}
-      <div className="relative bg-brand-cream-light border border-brand-dim rounded-3xl p-7 md:p-14 overflow-hidden shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] lg:order-first">
+      <div ref={cardRef} className="relative bg-brand-cream-light border border-brand-dim rounded-3xl p-7 md:p-14 overflow-hidden shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] lg:order-first scroll-mt-20">
         {gateActive ? (
           <EstimatorUnlock lastEstimate={vaultEstimates[0] ?? null} onUnlocked={handleUnlocked} />
         ) : (

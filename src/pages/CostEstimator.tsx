@@ -88,7 +88,7 @@ export default function CostEstimator() {
           <div className="prose prose-invert prose-brand max-w-none font-sans font-normal text-brand-bonewhite/85">
             <h2 className="font-display text-3xl text-brand-bonewhite mb-8">How we price landscaping in Barrie & Simcoe County</h2>
             <p>
-              Every Golden Maple project quote is built bottom-up from real Carr Landscape Depot pricing — the same supplier we've been using since day one. The estimator above uses 2026 trade rates for Permacon pavers and TimberTech composite decking, plus current bin disposal and aggregate costs.
+              Every Golden Maple project quote is built bottom-up from real Carr Landscape Depot pricing — the same supplier we've been using since day one. The estimator above does a real material takeoff at Carr's current trade rates for Permacon pavers — base stone tonnage, bedding, jointing sand, edge restraint, delivery — plus disposal bins counted by what your job actually hauls away.
             </p>
             <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Why we build on a 12–16" base</h3>
             <p>
