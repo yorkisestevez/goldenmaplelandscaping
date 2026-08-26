@@ -78,7 +78,7 @@ export default function ConcreteVsInterlockingPatioBarrie() {
       wordCount={1357}
     >
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
-        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">Quick Answer</div>
         <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">Choosing between a concrete and interlocking patio in Barrie\'s climate depends on resilience and aesthetic preference. Interlocking pavers, like Permacon or Unilock, offer better durability against freeze-thaw cycles typical in Simcoe County, but cost more, around $37-$65 per square foot. Concrete is more economical initially, about $10-$20 per square foot, but may crack over time.</p>
       </div>
 
@@ -100,7 +100,7 @@ export default function ConcreteVsInterlockingPatioBarrie() {
       <div dangerouslySetInnerHTML={{ __html: "<p>In choosing patio materials, environmental impact is an increasingly relevant consideration for Simcoe County residents. The environmental footprint of interlocking and concrete patios varies, heavily influencing long-term sustainability, which is crucial for climate-conscious homeowners.</p><p>Interlocking patios typically feature permeable variants, allowing water to percolate through the joints and return to the groundwater, thereby reducing runoff to city storm systems. These systems are particularly beneficial for areas like Wasaga Beach, where managing runoff into the Nottawasaga River is crucial.</p><p>Concrete, while less permeable, can be finished in a manner that reflects more sunlight and absorbs less heat, offsetting some urban heat effects. However, the production and transportation of concrete are energy-intensive processes, leading to a larger carbon footprint compared to interlocking pavers, which often use locally sourced materials. Homeowners choosing this option should consider suppliers like Carr Landscape Depot to support local businesses, reducing associated environmental costs.</p>" }} />
 
       <div className="not-prose my-10 overflow-x-auto">
-        <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold mb-3">Cost and Durability Comparison of Patio Materials in Barrie</p>
+        <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold-dark mb-3">Cost and Durability Comparison of Patio Materials in Barrie</p>
         <div dangerouslySetInnerHTML={{ __html: "<table><thead><tr><th>Feature</th><th>Concrete Patio</th><th>Interlocking Patio</th></tr></thead><tbody><tr><td>Initial Cost per sq ft</td><td>$10-$20</td><td>$37-$65</td></tr><tr><td>Average Lifespan</td><td>10-15 years</td><td>20-30 years</td></tr><tr><td>Maintenance</td><td>High</td><td>Low to Moderate</td></tr><tr><td>Resilience to Freeze-Thaw</td><td>Moderate</td><td>High</td></tr><tr><td>Environmental Impact</td><td>Higher</td><td>Lower</td></tr></tbody></table>" }} />
       </div>
 
@@ -140,7 +140,7 @@ export default function ConcreteVsInterlockingPatioBarrie() {
         <div className="flex items-start gap-4">
           <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
           <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2">About the Author</div>
+            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
             <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces in Simcoe County since 2020. With hundreds of patios installed and a WSIB certification backed by $5M liability, Yorkis guarantees professional, reliable service with a perfect 5.0 Google rating.</p>
           </div>
         </div>

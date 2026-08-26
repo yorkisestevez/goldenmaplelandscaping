@@ -33,7 +33,7 @@ export default function EstimateBookingCTA() {
     <div className="space-y-7">
       <div className="text-center">
         <h4 className="font-display text-3xl md:text-5xl text-brand-bone mb-3 tracking-tight">
-          Lock in your <span className="italic text-brand-gold">exact numbers.</span>
+          Lock in your <span className="italic text-brand-gold-dark">exact numbers.</span>
         </h4>
         <p className="font-sans text-[15px] font-light text-brand-muted max-w-xl mx-auto leading-relaxed">
           Two ways to go from ballpark to bid. Pick the one that fits where you are.
@@ -51,7 +51,7 @@ export default function EstimateBookingCTA() {
           </div>
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-xl bg-brand-gold/15 border border-brand-gold/30 flex items-center justify-center">
-              <Calendar size={18} className="text-brand-gold" strokeWidth={1.75} />
+              <Calendar size={18} className="text-brand-gold-dark" strokeWidth={1.75} />
             </div>
             <span className="font-display text-2xl text-brand-bone tracking-tight">15-Min Discovery Call</span>
           </div>
@@ -64,22 +64,22 @@ export default function EstimateBookingCTA() {
             <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Honest read if we're not the right fit</li>
           </ul>
           <div className="flex items-center justify-between mt-auto pt-5 border-t border-brand-gold/15">
-            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold">Book My Call</span>
-            <Calendar size={16} className="text-brand-gold group-hover:translate-x-1 transition-transform" strokeWidth={1.5} />
+            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark">Book My Call</span>
+            <Calendar size={16} className="text-brand-gold-dark group-hover:translate-x-1 transition-transform" strokeWidth={1.5} />
           </div>
         </CTACard>
 
         {/* Track 2 — Paid design session */}
         <CTACard
           href={designHref}
-          className="group relative bg-gradient-to-b from-brand-cream-light to-brand-cream-light border border-brand-dim/60 rounded-3xl p-8 hover:border-brand-gold/60 hover:from-brand-cream-light transition-all flex flex-col backdrop-blur-xl"
+          className="group relative bg-brand-cream-light border border-brand-dim/60 rounded-3xl p-8 hover:border-brand-gold/60 transition-all flex flex-col"
         >
-          <div className="absolute -top-3 left-7 bg-brand-bone text-brand-black font-sans text-[9px] uppercase tracking-widest px-3 py-1 rounded-full font-medium">
+          <div className="absolute -top-3 left-7 bg-brand-bone text-brand-porcelain font-sans text-[9px] uppercase tracking-widest px-3 py-1 rounded-full font-medium">
             $99 · Credited Back
           </div>
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-xl bg-brand-cream border border-brand-dim/60 flex items-center justify-center">
-              <Sparkles size={18} className="text-brand-gold" strokeWidth={1.75} />
+              <Sparkles size={18} className="text-brand-gold-dark" strokeWidth={1.75} />
             </div>
             <span className="font-display text-2xl text-brand-bone tracking-tight">Design Session</span>
           </div>
@@ -92,8 +92,8 @@ export default function EstimateBookingCTA() {
             <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />For serious buyers ready in 30–90 days</li>
           </ul>
           <div className="flex items-center justify-between mt-auto pt-5 border-t border-brand-dim/60">
-            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold">Book Design Session</span>
-            <Calendar size={16} className="text-brand-gold group-hover:translate-x-1 transition-transform" strokeWidth={1.5} />
+            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark">Book Design Session</span>
+            <Calendar size={16} className="text-brand-gold-dark group-hover:translate-x-1 transition-transform" strokeWidth={1.5} />
           </div>
         </CTACard>
       </div>
@@ -101,7 +101,7 @@ export default function EstimateBookingCTA() {
       <div className="text-center pt-1">
         <a
           href="tel:7055003581"
-          className="font-sans text-[13px] text-brand-gold hover:text-brand-bone transition-colors inline-flex items-center gap-2"
+          className="font-sans text-[13px] text-brand-gold-dark hover:text-brand-bone transition-colors inline-flex items-center gap-2"
         >
           <Phone size={14} strokeWidth={1.5} />
           Or call us directly: (705) 500-3581

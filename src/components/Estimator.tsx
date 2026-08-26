@@ -151,7 +151,7 @@ function TypeThumb({ typeId, icon: Icon, size = 'md', eager = false }: {
   const slot = size === 'sm' ? 'w-12 h-9' : 'w-16 h-12';
   if (!img) {
     return (
-      <div className={cn(slot, 'rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold shrink-0')}>
+      <div className={cn(slot, 'rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold-dark shrink-0')}>
         <Icon size={size === 'sm' ? 18 : 22} strokeWidth={1.5} />
       </div>
     );
@@ -558,11 +558,11 @@ export default function Estimator() {
                   'p-3.5 rounded-2xl border text-left transition-all duration-200',
                   isSelected
                     ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]'
-                    : 'bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
+                    : 'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
                 )}
               >
                 {diagram ? (
-                  <div className={cn('mb-1.5', isSelected ? 'text-brand-gold' : 'text-brand-gold/60')}>{diagram}</div>
+                  <div className={cn('mb-1.5', isSelected ? 'text-brand-gold-dark' : 'text-brand-gold-dark/60')}>{diagram}</div>
                 ) : null}
                 <div className="font-sans text-[12px] text-brand-bone leading-snug mb-1">{opt}</div>
                 <PriceDelta
@@ -655,11 +655,11 @@ export default function Estimator() {
                       onClick={() => setDetail(el, q.id, o.id)}
                       className={cn(
                         "p-3.5 rounded-2xl border text-left transition-all duration-200",
-                        isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                        isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                       )}
                     >
                       {diagram ? (
-                        <div className={cn('mb-1.5', isSelected ? 'text-brand-gold' : 'text-brand-gold/60')}>{diagram}</div>
+                        <div className={cn('mb-1.5', isSelected ? 'text-brand-gold-dark' : 'text-brand-gold-dark/60')}>{diagram}</div>
                       ) : null}
                       <div className="font-sans text-[12px] text-brand-bone leading-snug mb-1">{o.label}</div>
                       <PriceDelta
@@ -722,7 +722,7 @@ export default function Estimator() {
       <>
         {showPaverPicker && (
           <div className={compact ? 'mb-4' : 'mb-8'}>
-            <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-2">Hardscape Brand</div>
+            <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-2">Hardscape Brand</div>
             {!compact && (
               <p className="font-sans text-[11px] font-normal text-brand-bonewhite/70 mb-4">Prices shown are paver material only (Carr retail, base colour). Your estimate covers the full installation — excavation, 12–16" base, crew, and disposal.</p>
             )}
@@ -734,7 +734,7 @@ export default function Estimator() {
                   onClick={() => setPaverBrandId(p.id)}
                   className={cn(
                     "relative p-4 rounded-2xl border text-left transition-all duration-200",
-                    paverBrandId === p.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                    paverBrandId === p.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                   )}
                 >
                   {p.recommended && (
@@ -754,7 +754,7 @@ export default function Estimator() {
                     />
                   ) : null}
                   <div className="flex items-baseline justify-between gap-2 mb-1 mt-1">
-                    <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold">{p.brand}</span>
+                    <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold-dark">{p.brand}</span>
                     <span className="font-display text-[13px] text-brand-bone">from ${p.materialRetailPerSqft.toFixed(2)}/sqft</span>
                   </div>
                   <div className="font-sans text-[13px] text-brand-bone mb-1">{p.product}</div>
@@ -769,7 +769,7 @@ export default function Estimator() {
 
         {showDeckPicker && (
           <div className="mb-2">
-            <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Decking Brand</div>
+            <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-4">Decking Brand</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {eligibleDecks.map(d => (
                 <button
@@ -778,7 +778,7 @@ export default function Estimator() {
                   onClick={() => setDeckBrandId(d.id)}
                   className={cn(
                     "p-4 rounded-2xl border text-left transition-all duration-200",
-                    deckBrandId === d.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                    deckBrandId === d.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                   )}
                 >
                   {/* TimberTech product shot — dealer asset, choosing a finish
@@ -793,7 +793,7 @@ export default function Estimator() {
                     />
                   ) : null}
                   <div className="flex items-baseline justify-between gap-2 mb-1">
-                    <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold">{d.brand}</span>
+                    <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold-dark">{d.brand}</span>
                     <span className="font-display text-[13px] text-brand-bone">${d.installedPerSqft}/sqft installed</span>
                   </div>
                   <div className="font-sans text-[13px] text-brand-bone mb-1">{d.product}</div>
@@ -812,20 +812,20 @@ export default function Estimator() {
   return (
     <div className="w-full max-w-[920px] mx-auto px-4 py-16 md:py-24" id="estimator">
       <div className="text-center mb-14">
-        <div className="font-sans text-[11px] tracking-[0.3em] uppercase text-brand-gold mb-5">
+        <div className="font-sans text-[11px] tracking-[0.3em] uppercase text-brand-gold-dark mb-5">
           Estimate Your Project
         </div>
         <h2 className="font-display text-5xl md:text-7xl leading-[1.05] mb-6 text-brand-bone tracking-tight">
-          What will yours <span className="italic text-brand-gold">cost?</span>
+          What will yours <span className="italic text-brand-gold-dark">cost?</span>
         </h2>
         <p className="font-sans font-light text-[17px] text-brand-muted max-w-xl mx-auto leading-[1.6]">
           Real numbers, real materials, real Simcoe County pricing. No signup to see your range.
         </p>
       </div>
 
-      <div className="relative bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-2xl border border-brand-dim rounded-3xl p-7 md:p-14 overflow-hidden shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)]">
+      <div className="relative bg-brand-cream-light border border-brand-dim rounded-3xl p-7 md:p-14 overflow-hidden shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)]">
         {/* Progress bar */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-brand-cream rounded-t-3xl overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-brand-dim/40 rounded-t-3xl overflow-hidden">
           <motion.div className="h-full bg-gradient-to-r from-brand-gold/80 via-brand-gold to-brand-gold/80"
             initial={{ width: '14%' }}
             animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
@@ -877,7 +877,7 @@ export default function Estimator() {
           <div className="hidden md:flex items-center justify-between gap-6 mb-12 px-6 py-4 rounded-2xl bg-gradient-to-r from-brand-gold/10 to-transparent border border-brand-gold/20">
             <div className="flex items-baseline gap-5">
               <div>
-                <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold mb-1.5">Your range so far</div>
+                <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold-dark mb-1.5">Your range so far</div>
                 <div className="font-display text-3xl text-brand-bone leading-none flex items-baseline gap-3">
                   <AnimatedPrice low={display.low} high={display.high} separatorClassName="!mx-1.5" />
                   <AnimatePresence>
@@ -887,7 +887,7 @@ export default function Estimator() {
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -6 }}
-                        className={cn("font-sans text-[13px] font-medium", delta > 0 ? "text-brand-gold" : "text-emerald-500")}
+                        className={cn("font-sans text-[13px] font-medium", delta > 0 ? "text-brand-gold-dark" : "text-brand-success")}
                       >
                         {delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta / 100) * 100).toLocaleString()}
                       </motion.span>
@@ -896,13 +896,13 @@ export default function Estimator() {
                 </div>
               </div>
               <div className="hidden lg:block pl-5 border-l border-brand-gold/15">
-                <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold mb-1.5">Confidence</div>
+                <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold-dark mb-1.5">Confidence</div>
                 <div className="font-display text-3xl text-brand-bone leading-none">±{confidence}%</div>
               </div>
               {/* Their number, tracked alongside ours from the moment they set it. */}
               {targetBudget !== null && (
                 <div className="hidden lg:block pl-5 border-l border-brand-gold/15">
-                  <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold mb-1.5">Your target</div>
+                  <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold-dark mb-1.5">Your target</div>
                   <div className="font-display text-3xl text-brand-bone leading-none tabular-nums">
                     ${(targetBudget / 1000).toFixed(0)}k
                   </div>
@@ -947,7 +947,7 @@ export default function Estimator() {
                       }}
                       className={cn(
                         "group flex flex-col items-start gap-2.5 p-4 md:flex-row md:items-center md:gap-4 md:p-6 rounded-2xl border transition-all duration-200 cursor-pointer",
-                        isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface hover:-translate-y-[2px] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)]"
+                        isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface hover:-translate-y-[2px] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)]"
                       )}
                     >
                       {/* Real project photo where one exists; first row eager
@@ -997,7 +997,7 @@ export default function Estimator() {
                         onClick={() => toggleElement(pt.id)}
                         className={cn(
                           "flex items-center gap-3 p-3.5 md:gap-4 md:p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
-                          selectedElements.includes(pt.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                          selectedElements.includes(pt.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                         )}
                       >
                         <div className={cn(
@@ -1027,12 +1027,12 @@ export default function Estimator() {
                             aria-expanded={isOpen}
                             className="w-full flex items-center justify-between gap-3 text-left md:pointer-events-none"
                           >
-                            <h5 className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold">
+                            <h5 className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark">
                               {PROJECT_TYPES.find(p => p.id === el)?.label}
                             </h5>
                             <ChevronDown
                               size={16}
-                              className={cn('md:hidden text-brand-gold/70 shrink-0 transition-transform duration-200', isOpen && 'rotate-180')}
+                              className={cn('md:hidden text-brand-gold-dark/70 shrink-0 transition-transform duration-200', isOpen && 'rotate-180')}
                               strokeWidth={1.75}
                             />
                           </button>
@@ -1073,7 +1073,7 @@ export default function Estimator() {
                     onClick={() => toggleCondition(cond.id)}
                     className={cn(
                       "flex items-start gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer",
-                      conditions[cond.id] ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                      conditions[cond.id] ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     <div className={cn(
@@ -1106,7 +1106,7 @@ export default function Estimator() {
           {step === 4 && (
             <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
               <div className="flex items-center gap-3 mb-8">
-                <MapPin size={22} className="text-brand-gold" strokeWidth={1.5} />
+                <MapPin size={22} className="text-brand-gold-dark" strokeWidth={1.5} />
                 <h3 className="font-display text-3xl text-brand-bone">Where's the project?</h3>
               </div>
               <p className="font-sans text-[13px] text-brand-muted mb-8">
@@ -1120,7 +1120,7 @@ export default function Estimator() {
                     onClick={() => setLocation(loc.key)}
                     className={cn(
                       "px-5 py-4 rounded-2xl border text-left transition-all duration-200",
-                      location === loc.key ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                      location === loc.key ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     <div className="font-sans text-[13px] text-brand-bone">{loc.name}</div>
@@ -1156,7 +1156,7 @@ export default function Estimator() {
                     onClick={() => setTier(t.id)}
                     className={cn(
                       "relative p-4 rounded-2xl border text-left transition-all duration-200",
-                      tier === t.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                      tier === t.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     {t.badge && (
@@ -1203,7 +1203,7 @@ export default function Estimator() {
                     onClick={() => toggleAddOn(a.id)}
                     className={cn(
                       "flex items-start gap-4 p-5 rounded-2xl border transition-all duration-200 cursor-pointer",
-                      addOns.includes(a.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                      addOns.includes(a.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
                     )}
                   >
                     <div className={cn(
@@ -1232,8 +1232,8 @@ export default function Estimator() {
               {/* Photo upload */}
               <div className="border-t border-brand-gold/10 pt-8">
                 <div className="flex items-center gap-2 mb-3">
-                  <ImageIcon size={16} className="text-brand-gold" strokeWidth={1.5} />
-                  <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">Tighten Your Estimate</span>
+                  <ImageIcon size={16} className="text-brand-gold-dark" strokeWidth={1.5} />
+                  <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark">Tighten Your Estimate</span>
                 </div>
                 <h4 className="font-display text-xl text-brand-bone mb-2">Upload yard photos (optional)</h4>
                 <p className="font-sans text-[12px] font-normal text-brand-bonewhite/80 mb-5 leading-relaxed">
@@ -1242,7 +1242,7 @@ export default function Estimator() {
                 {photoFile ? (
                   <div className="bg-brand-cream border border-brand-gold/30 rounded-2xl p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                      <ImageIcon size={18} className="text-brand-gold shrink-0" strokeWidth={1.5} />
+                      <ImageIcon size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />
                       <div className="min-w-0">
                         <div className="font-sans text-[13px] text-brand-bone truncate">{photoFile.name}</div>
                         <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80">{(photoFile.size / 1024 / 1024).toFixed(1)} MB</div>
@@ -1255,7 +1255,7 @@ export default function Estimator() {
                 ) : (
                   <label className="block bg-brand-cream-light border border-dashed border-brand-dim rounded-2xl p-6 hover:bg-brand-midsurface text-center cursor-pointer hover:border-brand-gold/60 transition-colors">
                     <input type="file" accept="image/*" onChange={onPhotoChange} className="hidden" />
-                    <Upload size={20} className="text-brand-gold mx-auto mb-2" strokeWidth={1.5} />
+                    <Upload size={20} className="text-brand-gold-dark mx-auto mb-2" strokeWidth={1.5} />
                     <div className="font-sans text-[13px] text-brand-bone">Drop a photo or click to upload</div>
                     <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80 mt-1">JPG, PNG, HEIC · up to 10 MB</div>
                   </label>
@@ -1328,7 +1328,7 @@ export default function Estimator() {
               {details['wall.wallPurpose'] === 'structure' && (
                 <div className="mt-6 px-6 py-4 rounded-2xl bg-brand-gold/8 border border-brand-gold/25">
                   <p className="font-sans text-[12px] font-normal text-brand-bonewhite/85 leading-relaxed">
-                    <span className="text-brand-gold">Heads up:</span> walls supporting a driveway or structure
+                    <span className="text-brand-gold-dark">Heads up:</span> walls supporting a driveway or structure
                     typically require engineered drawings over 1 m. We handle the engineering — it's already
                     reflected in the range above.
                   </p>
@@ -1336,8 +1336,8 @@ export default function Estimator() {
               )}
 
               {addOns.length > 0 && (
-                <div className="mt-8 bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-6">
-                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">Selected Add-ons</div>
+                <div className="mt-8 bg-brand-cream-light border border-brand-dim/60 rounded-3xl p-6">
+                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-4">Selected Add-ons</div>
                   <div className="divide-y divide-brand-gold/10">
                     {addOns.map(aid => {
                       const a = ADD_ONS.find(x => x.id === aid);
@@ -1345,7 +1345,7 @@ export default function Estimator() {
                       return (
                         <div key={aid} className="py-3 flex items-baseline justify-between gap-3">
                           <span className="font-sans text-[13px] text-brand-bone">{a.label}</span>
-                          <span className="font-display text-[14px] text-brand-gold whitespace-nowrap">+{fmt(a.costLow)} – {fmt(a.costHigh)}</span>
+                          <span className="font-display text-[14px] text-brand-gold-dark whitespace-nowrap">+{fmt(a.costLow)} – {fmt(a.costHigh)}</span>
                         </div>
                       );
                     })}
@@ -1375,15 +1375,15 @@ export default function Estimator() {
                 }}
                 permalink={permalink}
                 onUnlock={() => { setBuildSaved(true); trackEngagement('estimator_build_saved', projectType ?? 'unknown'); }} />
-                <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-6 md:p-8 flex flex-col justify-center">
-                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-3">Project Timeline</div>
+                <div className="bg-brand-cream-light border border-brand-dim/60 rounded-3xl p-6 md:p-8 flex flex-col justify-center">
+                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-3">Project Timeline</div>
                   <div className="font-display text-3xl text-brand-bone mb-2">
                     {estimate.days.low}–{estimate.days.high} days on-site
                   </div>
                   <div className="font-sans text-[12px] font-normal text-brand-bonewhite/80 leading-relaxed mb-6">
                     Project start typically 6–10 weeks in spring, 8–14 in peak summer, 3–5 in early fall, from contract signing.
                   </div>
-                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-3">Confidence</div>
+                  <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-3">Confidence</div>
                   <div className="font-display text-3xl text-brand-bone mb-2">±{confidence}%</div>
                   <div className="font-sans text-[12px] font-normal text-brand-bonewhite/80 leading-relaxed">
                     Range tightens with site visit. We'll lock to ±5% after measurement.
@@ -1400,7 +1400,7 @@ export default function Estimator() {
               </div>
 
               <p className="mt-8 font-sans text-xs font-normal text-brand-bonewhite/80 text-center max-w-3xl mx-auto leading-[1.6]">
-                {getEstimatorRangeCopy(projectType, selectedElements)} <span className="text-brand-gold font-normal">No job minimum — every project gets priced on its real scope, whatever the size.</span> Final pricing depends on site measurement, material availability, access, drainage, and design complexity.
+                {getEstimatorRangeCopy(projectType, selectedElements)} <span className="text-brand-gold-dark font-normal">No job minimum — every project gets priced on its real scope, whatever the size.</span> Final pricing depends on site measurement, material availability, access, drainage, and design complexity.
               </p>
             </motion.div>
           )}
@@ -1472,7 +1472,7 @@ function MobileStickyBar({ low, high, delta, confidence, label, onContinue, sele
       >
         <div className="min-w-0">
           <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">Selected</div>
-          <div className="font-display text-lg text-brand-bone truncate">{selectedLabel}</div>
+          <div className="font-display text-lg text-brand-porcelain truncate">{selectedLabel}</div>
         </div>
         <button
           onClick={onContinue}
@@ -1492,7 +1492,7 @@ function MobileStickyBar({ low, high, delta, confidence, label, onContinue, sele
     >
       <div className="min-w-0">
         <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">{title ?? 'Running Estimate'} · ±{confidence}%</div>
-        <div className="font-display text-lg text-brand-bone truncate flex items-baseline gap-2">
+        <div className="font-display text-lg text-brand-porcelain truncate flex items-baseline gap-2">
           <AnimatedPrice low={low} high={high} separatorClassName="!mx-1.5" />
           <AnimatePresence>
             {delta !== null && (
@@ -1501,7 +1501,7 @@ function MobileStickyBar({ low, high, delta, confidence, label, onContinue, sele
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className={cn("font-sans text-[11px] font-medium", delta > 0 ? "text-brand-gold" : "text-emerald-400")}
+                className={cn("font-sans text-[11px] font-medium", delta > 0 ? "text-brand-gold" : "text-brand-porcelain-soft")}
               >
                 {delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta / 100) * 100).toLocaleString()}
               </motion.span>

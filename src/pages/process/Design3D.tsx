@@ -20,12 +20,12 @@ export default function Design3D() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold mb-10 block">
+              <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-10 block">
                 Phase Three: Visualization
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.1] mb-12">
                 A Vision in <br />
-                <span className="italic text-brand-gold">3D Rendering.</span>
+                <span className="italic text-brand-gold-dark">3D Rendering.</span>
               </h1>
               <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
                 Why guess what your backyard will look like when you can walk through it? Our high-resolution 3D landscape design process eliminates ambiguity and allows you to experience the spatial flow, lighting, and material textures of your future retreat.
@@ -48,15 +48,15 @@ export default function Design3D() {
                 className="w-full h-full object-cover grayscale opacity-80"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-x-8 bottom-8 bg-brand-nearblack/80 backdrop-blur-md p-6 border border-brand-gold/20 rounded-[2px]">
+              <div className="absolute inset-x-8 bottom-8 bg-brand-black/80 backdrop-blur-md p-6 border border-brand-gold/20 rounded-[2px]">
                 <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Simulated Reality</p>
-                <p className="font-display text-xl text-brand-bonewhite italic font-light">Architectural Walkthroughs</p>
+                <p className="font-display text-xl text-brand-porcelain italic font-light">Architectural Walkthroughs</p>
               </div>
             </motion.div>
           </div>
 
           <div className="mb-40">
-            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">The power of <br/> <span className="italic text-brand-gold">architectural visualization.</span></h2>
+            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">The power of <br/> <span className="italic text-brand-gold-dark">architectural visualization.</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
               {[
                 { title: "Spatial Relationship", desc: "Understand the true scale of your patio, pool, and dining areas in relationship to your home's footprint." },
@@ -67,7 +67,7 @@ export default function Design3D() {
                 { title: "Vegetation Growth", desc: "Understand the mature size of trees and plantings to ensure long-term privacy and spatial comfort." }
               ].map((item, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 group hover:-translate-y-2 transition-all duration-500">
-                  <h3 className="font-display text-2xl font-light text-brand-gold mb-6">{item.title}</h3>
+                  <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-6">{item.title}</h3>
                   <p className="font-sans text-base text-brand-muted leading-relaxed font-light">{item.desc}</p>
                 </div>
               ))}
@@ -80,7 +80,7 @@ export default function Design3D() {
               <p className="font-sans text-xl text-brand-muted leading-relaxed font-light mb-12">
                 A professional 3D landscape design is the most powerful tool for ensuring client satisfaction. It prevents construction delays and costly mid-build modifications by locking in the vision with architectural certainty.
               </p>
-              <Link to="/process/material-selection" className="flex items-center gap-4 text-brand-gold font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
+              <Link to="/process/material-selection" className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
                 <span>Phase Four: Material Curation</span>
                 <ArrowRight size={16} strokeWidth={1.5} />
               </Link>
@@ -89,7 +89,7 @@ export default function Design3D() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-7xl font-light mb-16 leading-tight">
             Want to see your <br />

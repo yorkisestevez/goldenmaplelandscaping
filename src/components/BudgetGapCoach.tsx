@@ -45,9 +45,9 @@ export default function BudgetGapCoach({
   // ---- Under budget: acknowledge it, don't upsell into it. ----
   if (gap <= 0) {
     return (
-      <div className="px-6 py-5 rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/30">
+      <div className="px-6 py-5 rounded-2xl bg-brand-success/[0.08] border border-brand-success/30">
         <div className="flex items-center gap-2.5 mb-1.5">
-          <Check size={15} className="text-emerald-400 shrink-0" strokeWidth={2.5} />
+          <Check size={15} className="text-brand-success shrink-0" strokeWidth={2.5} />
           <span className="font-sans text-[13px] text-brand-bone">
             This lands inside your {fmtFull(target)} target.
           </span>
@@ -73,7 +73,7 @@ export default function BudgetGapCoach({
       className="px-6 py-5 rounded-2xl bg-brand-gold/[0.07] border border-brand-gold/25"
     >
       <div className="flex items-center gap-2.5 mb-1.5">
-        <Target size={15} className="text-brand-gold shrink-0" strokeWidth={1.75} />
+        <Target size={15} className="text-brand-gold-dark shrink-0" strokeWidth={1.75} />
         <span className="font-sans text-[13px] text-brand-bone">
           About {fmtFull(gap)} over your {fmtFull(target)} target.
         </span>
@@ -89,11 +89,11 @@ export default function BudgetGapCoach({
           </p>
           <ul className="space-y-2 mb-1">
             <li className="font-sans text-[12px] font-normal text-brand-bonewhite/85 flex gap-2.5">
-              <span className="text-brand-gold mt-[7px] w-1 h-1 rounded-full bg-brand-gold shrink-0" />
+              <span className="text-brand-gold-dark mt-[7px] w-1 h-1 rounded-full bg-brand-gold shrink-0" />
               <span><span className="text-brand-bone">Phase it.</span> Build the core this season, add the rest next — each phase is a complete, finished space.</span>
             </li>
             <li className="font-sans text-[12px] font-normal text-brand-bonewhite/85 flex gap-2.5">
-              <span className="text-brand-gold mt-[7px] w-1 h-1 rounded-full bg-brand-gold shrink-0" />
+              <span className="text-brand-gold-dark mt-[7px] w-1 h-1 rounded-full bg-brand-gold shrink-0" />
               <span><span className="text-brand-bone">Narrow the scope.</span> A smaller project done properly beats a big one done thin.</span>
             </li>
           </ul>
@@ -114,25 +114,25 @@ export default function BudgetGapCoach({
                 onClick={() => onApply(l.id, l.patch)}
                 className={cn(
                   'w-full flex items-start gap-3 px-4 py-3 rounded-2xl border text-left transition-all duration-200 group',
-                  'bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
+                  'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
                 )}
               >
                 <ArrowRight
                   size={14}
-                  className="text-brand-gold shrink-0 mt-[3px] transition-transform duration-200 group-hover:translate-x-0.5"
+                  className="text-brand-gold-dark shrink-0 mt-[3px] transition-transform duration-200 group-hover:translate-x-0.5"
                   strokeWidth={2}
                 />
                 <span className="flex-1 min-w-0">
                   <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                     <span className="font-sans text-[12.5px] text-brand-bone">{l.label}</span>
-                    <span className="font-display text-[14px] text-emerald-400 tabular-nums whitespace-nowrap">
+                    <span className="font-display text-[14px] text-brand-success tabular-nums whitespace-nowrap">
                       −{fmtFull(l.saving)}
                     </span>
                   </span>
                   <span className="block font-sans text-[11px] font-normal text-brand-bonewhite/65 mt-1 leading-relaxed">
                     {l.detail}
                     {l.closesGap ? (
-                      <span className="text-emerald-400/90"> · gets you there on its own</span>
+                      <span className="text-brand-success/90"> · gets you there on its own</span>
                     ) : null}
                   </span>
                 </span>
@@ -144,7 +144,7 @@ export default function BudgetGapCoach({
 
       <p className="font-sans text-[11px] font-normal text-brand-bonewhite/65 mt-4 leading-relaxed">
         Or keep the build as it is — plenty of projects get phased across two seasons.{' '}
-        <Link to="/book" className="text-brand-gold hover:underline">Talk it through with Yorkis</Link>.
+        <Link to="/book" className="text-brand-gold-dark hover:underline">Talk it through with Yorkis</Link>.
       </p>
     </motion.div>
   );

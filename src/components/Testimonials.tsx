@@ -72,13 +72,13 @@ export default function Testimonials({
     <section className="section-padding border-t border-brand-dim/20">
       <div className="container-custom">
         <div className="text-center mb-20 max-w-2xl mx-auto">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
             {eyebrow}
           </span>
           <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite leading-tight mb-8">
             {heading ?? (
               <>
-                5.0 stars across <span className="italic text-brand-gold">8 reviews.</span>
+                5.0 stars across <span className="italic text-brand-gold-dark">8 reviews.</span>
               </>
             )}
           </h2>
@@ -120,7 +120,7 @@ export default function Testimonials({
                 <div className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted font-light">
                   {r.location}
                 </div>
-                <div className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold/70 font-light mt-2">
+                <div className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark/70 font-light mt-2">
                   {r.project}
                 </div>
               </div>
@@ -133,7 +133,7 @@ export default function Testimonials({
             href="https://g.page/r/CX3lEfKQkdqnEAE/review"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold hover:text-brand-bonewhite transition-colors border-b border-brand-gold/30 pb-2"
+            className="inline-flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors border-b border-brand-gold/30 pb-2"
           >
             Read all 8 reviews on Google →
           </a>

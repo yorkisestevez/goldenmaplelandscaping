@@ -175,7 +175,7 @@ export default function EstimateLeadCapture({
         className="bg-gradient-to-b from-brand-gold/10 to-brand-cream-light backdrop-blur-xl border border-brand-gold/30 rounded-3xl p-9 text-center shadow-[0_20px_60px_-30px_rgba(212,175,99,0.3)]"
       >
         <div className="mx-auto w-14 h-14 rounded-full bg-brand-gold/15 border border-brand-gold/40 flex items-center justify-center mb-5">
-          <CheckCircle size={24} className="text-brand-gold" strokeWidth={1.5} />
+          <CheckCircle size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
         </div>
         <h4 className="font-display text-3xl text-brand-bone mb-3 tracking-tight">Build saved.</h4>
         <p className="font-sans text-[14px] font-light text-brand-muted leading-relaxed mb-5">
@@ -189,7 +189,7 @@ export default function EstimateLeadCapture({
             may not arrive". */}
         {permalink ? (
           <div className="mb-6 text-left">
-            <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-2">
+            <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-2">
               Your build link
             </div>
             <div className="flex items-stretch gap-2">
@@ -198,12 +198,12 @@ export default function EstimateLeadCapture({
                 value={permalink}
                 onFocus={e => e.currentTarget.select()}
                 aria-label="Link back to your saved build"
-                className="flex-1 min-w-0 bg-brand-cream border border-brand-dim/60 py-2.5 px-3 rounded-2xl font-sans text-[12px] text-brand-bonewhite/80 outline-none"
+                className="flex-1 min-w-0 bg-brand-cream-light border border-brand-dim py-2.5 px-3 rounded-2xl font-sans text-[12px] text-brand-bonewhite/80 outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40"
               />
               <button
                 type="button"
                 onClick={copyPermalink}
-                className="shrink-0 px-4 rounded-2xl border border-brand-gold/40 bg-brand-gold/10 hover:bg-brand-gold/20 transition-colors font-sans text-[12px] text-brand-gold"
+                className="shrink-0 px-4 rounded-2xl border border-brand-gold/40 bg-brand-gold/10 hover:bg-brand-gold/20 transition-colors font-sans text-[12px] text-brand-gold-dark"
               >
                 {copied ? 'Copied' : 'Copy'}
               </button>
@@ -226,12 +226,12 @@ export default function EstimateLeadCapture({
   }
 
   return (
-    <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7 md:p-9">
+    <div className="bg-brand-cream-light border border-brand-dim/60 rounded-3xl p-7 md:p-9">
       <div className="flex items-center gap-2.5 mb-3">
         <div className="w-7 h-7 rounded-full bg-brand-gold/15 border border-brand-gold/30 flex items-center justify-center">
-          <FileText size={14} className="text-brand-gold" strokeWidth={1.75} />
+          <FileText size={14} className="text-brand-gold-dark" strokeWidth={1.75} />
         </div>
-        <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">
+        <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark">
           Save This Build
         </span>
       </div>
@@ -265,7 +265,7 @@ export default function EstimateLeadCapture({
           required
           autoComplete="name"
           placeholder="Your full name"
-          className="w-full bg-brand-cream border border-brand-dim/60 hover:border-brand-gold/60 focus:border-brand-gold/60 focus:bg-brand-cream py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none transition-all font-light"
+          className="w-full bg-brand-cream-light border border-brand-dim hover:border-brand-gold/60 focus:border-brand-gold/60 py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all font-light"
         />
         <input
           type="email"
@@ -275,7 +275,7 @@ export default function EstimateLeadCapture({
           required
           autoComplete="email"
           placeholder="Email address"
-          className="w-full bg-brand-cream border border-brand-dim/60 hover:border-brand-gold/60 focus:border-brand-gold/60 focus:bg-brand-cream py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none transition-all font-light"
+          className="w-full bg-brand-cream-light border border-brand-dim hover:border-brand-gold/60 focus:border-brand-gold/60 py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all font-light"
         />
         <input
           type="tel"
@@ -285,11 +285,11 @@ export default function EstimateLeadCapture({
           autoComplete="tel"
           inputMode="tel"
           placeholder="Phone (optional — for a faster reply)"
-          className="w-full bg-brand-cream border border-brand-dim/60 hover:border-brand-gold/60 focus:border-brand-gold/60 focus:bg-brand-cream py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none transition-all font-light"
+          className="w-full bg-brand-cream-light border border-brand-dim hover:border-brand-gold/60 focus:border-brand-gold/60 py-3.5 px-4 rounded-2xl font-sans text-[15px] text-brand-bone placeholder:text-brand-muted/60 outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all font-light"
         />
 
         {status === 'error' ? (
-          <p className="font-sans text-xs text-red-400 font-light">{errorMsg}</p>
+          <p className="font-sans text-xs text-brand-error font-light">{errorMsg}</p>
         ) : null}
 
         <button

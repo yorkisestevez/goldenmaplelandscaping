@@ -235,14 +235,14 @@ export default function ProjectDetail() {
 
       <section className="section-padding pt-40 md:pt-48">
         <div className="container-custom">
-          <Link to="/portfolio" className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold hover:text-brand-bonewhite transition-colors mb-12 group">
+          <Link to="/portfolio" className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors mb-12 group">
             <ArrowLeft size={14} strokeWidth={2} className="group-hover:-translate-x-1 transition-transform" />
             Back to Portfolio
           </Link>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <div className="flex flex-wrap items-center gap-6 mb-6">
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold">{project.category}</span>
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark">{project.category}</span>
               <span className="flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-muted">
                 <MapPin size={12} strokeWidth={1.5} className="text-brand-gold" /> {project.location}
               </span>
@@ -258,7 +258,7 @@ export default function ProjectDetail() {
               </div>
               <div className="bg-brand-surface px-6 py-3 rounded-[2px] border border-brand-dim/10">
                 <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted block">Investment</span>
-                <span className="font-display text-lg text-brand-gold font-light">{project.investment}</span>
+                <span className="font-display text-lg text-brand-gold-dark font-light">{project.investment}</span>
               </div>
             </div>
           </motion.div>
@@ -287,7 +287,7 @@ export default function ProjectDetail() {
               {project.testimonial && (
                 <div className="bg-brand-surface border-l-2 border-brand-gold p-10 rounded-[2px]">
                   <p className="font-display text-xl text-brand-bonewhite italic font-light leading-relaxed mb-4">"{project.testimonial.text}"</p>
-                  <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold">— {project.testimonial.name}</p>
+                  <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark">— {project.testimonial.name}</p>
                 </div>
               )}
             </div>
@@ -295,7 +295,7 @@ export default function ProjectDetail() {
             {/* Specs Sidebar */}
             <div>
               <div className="bg-brand-surface p-10 rounded-[2px] border border-brand-dim/10 sticky top-32">
-                <h3 className="font-display text-2xl font-light text-brand-gold mb-8">Project Specifications</h3>
+                <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-8">Project Specifications</h3>
                 <ul className="space-y-5">
                   {project.specs.map((spec, idx) => (
                     <li key={idx} className="flex items-start gap-4">
@@ -314,13 +314,13 @@ export default function ProjectDetail() {
           {/* Prev/Next Navigation */}
           <div className="flex justify-between items-center pt-16 border-t border-brand-dim/10">
             {prevSlug ? (
-              <Link to={`/portfolio/${prevSlug}`} className="group flex items-center gap-4 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-muted hover:text-brand-gold transition-colors">
+              <Link to={`/portfolio/${prevSlug}`} className="group flex items-center gap-4 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-muted hover:text-brand-gold-dark transition-colors">
                 <ArrowLeft size={16} strokeWidth={1.5} className="group-hover:-translate-x-1 transition-transform" />
                 Previous Project
               </Link>
             ) : <div />}
             {nextSlug ? (
-              <Link to={`/portfolio/${nextSlug}`} className="group flex items-center gap-4 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-muted hover:text-brand-gold transition-colors">
+              <Link to={`/portfolio/${nextSlug}`} className="group flex items-center gap-4 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-muted hover:text-brand-gold-dark transition-colors">
                 Next Project
                 <ArrowRight size={16} strokeWidth={1.5} className="group-hover:translate-x-1 transition-transform" />
               </Link>

@@ -68,9 +68,9 @@ export default function PoolDeckMaterials() {
       schema={faqSchema}
     >
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
-        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">Quick Answer</div>
         <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">
-          For Ontario pool decks: <strong className="text-brand-gold not-italic">porcelain pavers (Porcea)</strong> are the all-around winner — frost-proof, R11 slip-rated, 5–10°C cooler than concrete, stain-proof. <strong className="text-brand-gold not-italic">Techo-Bloc Blu HD² or Unilock Umbriano</strong> are best in concrete pavers. <strong>Avoid travertine.</strong> Budget $40–80/sqft installed, plus coping at $35–80/lin ft. Total typical cost for an 800 sqft surround: <strong>$35,000–$70,000</strong>.
+          For Ontario pool decks: <strong className="text-brand-gold-dark not-italic">porcelain pavers (Porcea)</strong> are the all-around winner — frost-proof, R11 slip-rated, 5–10°C cooler than concrete, stain-proof. <strong className="text-brand-gold-dark not-italic">Techo-Bloc Blu HD² or Unilock Umbriano</strong> are best in concrete pavers. <strong>Avoid travertine.</strong> Budget $40–80/sqft installed, plus coping at $35–80/lin ft. Total typical cost for an 800 sqft surround: <strong>$35,000–$70,000</strong>.
         </p>
       </div>
 
@@ -92,16 +92,16 @@ export default function PoolDeckMaterials() {
         <table className="w-full text-left font-sans text-sm border border-brand-dim/60 rounded-2xl overflow-hidden">
           <thead className="bg-brand-cream">
             <tr>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Material</th>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Cost / sqft</th>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Slip Rating</th>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Heat (vs concrete)</th>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Best For</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Material</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Cost / sqft</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Slip Rating</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Heat (vs concrete)</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Best For</th>
             </tr>
           </thead>
           <tbody className="text-brand-bonewhite/85 font-light">
             <tr className="border-t border-brand-dim/60 bg-brand-gold/[0.04]">
-              <td className="p-4 text-brand-gold">Porcelain (Porcea)</td>
+              <td className="p-4 text-brand-gold-dark">Porcelain (Porcea)</td>
               <td className="p-4">$58–65</td>
               <td className="p-4">R11</td>
               <td className="p-4">5–10°C cooler</td>
@@ -256,9 +256,9 @@ export default function PoolDeckMaterials() {
       <p>No — Golden Maple installs the deck, surround, retaining walls, lighting, and integrated landscape. We coordinate with your pool builder on timeline, grade, and coping installation. Our preferred pool partners in Simcoe County are happy to provide referrals.</p>
 
       <h2>Plan Your Pool Surround</h2>
-      <p>The fastest way to scope a pool deck project is the <Link to="/cost-estimator?type=patio" className="text-brand-gold hover:underline">cost estimator</Link> with "patio" selected and your sqft estimate. From there, our follow-up confirms whether porcelain or concrete pavers fit your pool, your sun exposure, and your budget — usually in one 15-minute call.</p>
+      <p>The fastest way to scope a pool deck project is the <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">cost estimator</Link> with "patio" selected and your sqft estimate. From there, our follow-up confirms whether porcelain or concrete pavers fit your pool, your sun exposure, and your budget — usually in one 15-minute call.</p>
 
-      <p>Related reading: <Link to="/resources/unilock-vs-techo-bloc-vs-permacon" className="text-brand-gold hover:underline">Paver brand comparison</Link> · <Link to="/resources/best-time-install-patio-ontario" className="text-brand-gold hover:underline">Best time to install</Link> · <Link to="/resources/landscape-permits-barrie-simcoe" className="text-brand-gold hover:underline">Permits for pool surrounds</Link>.</p>
+      <p>Related reading: <Link to="/resources/unilock-vs-techo-bloc-vs-permacon" className="text-brand-gold-dark hover:underline">Paver brand comparison</Link> · <Link to="/resources/best-time-install-patio-ontario" className="text-brand-gold-dark hover:underline">Best time to install</Link> · <Link to="/resources/landscape-permits-barrie-simcoe" className="text-brand-gold-dark hover:underline">Permits for pool surrounds</Link>.</p>
     </BlogPostLayout>
   );
 }

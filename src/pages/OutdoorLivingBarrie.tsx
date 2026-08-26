@@ -64,19 +64,19 @@ export default function OutdoorLivingBarrie() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 Outdoor Living Projects · $40K-$90K+
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 Outdoor living, <br />
-                <span className="italic text-brand-gold">engineered for 20 winters.</span>
+                <span className="italic text-brand-gold-dark">engineered for 20 winters.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 Patio, wall, steps, fire feature, lighting, planting, shade — designed as one system before anything gets excavated. Most contractors quote each piece separately and bolt them together. We plan footings, conduit runs, drainage, access, and grade as a single build so it doesn't look added-on five years from now.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/cost-estimator?type=patio" className="btn-primary">See Project Cost Range</Link>
-                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
+                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
                   Portfolio <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
@@ -101,7 +101,7 @@ export default function OutdoorLivingBarrie() {
           {/* Starting points — concrete project ranges */}
           <div className="mb-40">
             <div className="text-center max-w-3xl mx-auto mb-24">
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 Real starting points
               </span>
               <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-tight">
@@ -114,7 +114,7 @@ export default function OutdoorLivingBarrie() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {STARTING_POINTS.map((sp, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-                  <span className="font-display text-3xl font-light text-brand-gold block mb-4">{sp.range}</span>
+                  <span className="font-display text-3xl font-light text-brand-gold-dark block mb-4">{sp.range}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{sp.label}</h3>
                   <p className="font-sans text-sm text-brand-muted leading-relaxed font-light">{sp.detail}</p>
                 </div>
@@ -124,7 +124,7 @@ export default function OutdoorLivingBarrie() {
 
           {/* Engineering wedge */}
           <div className="bg-brand-burgundy/10 border border-brand-burgundy/30 rounded-[2px] p-12 md:p-16 mb-40">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-8 block">
+            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">
               Why integrated beats stitched-together
             </span>
             <h2 className="font-display text-3xl md:text-5xl font-light text-brand-bonewhite leading-tight mb-10">
@@ -136,7 +136,7 @@ export default function OutdoorLivingBarrie() {
             <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed mb-10 font-light">
               The alternative — patio one year, pergola the next, lighting in year three — costs 30-40% more in total and never looks integrated. Every Barrie homeowner who calls us to "add a pergola to last year's patio" has paid for that lesson once already.
             </p>
-            <Link to="/resources/backyard-renovation-roi-ontario" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold hover:text-brand-bonewhite transition-colors inline-flex items-center gap-4">
+            <Link to="/resources/backyard-renovation-roi-ontario" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors inline-flex items-center gap-4">
               See the ROI math <ArrowRight size={16} strokeWidth={1.5} />
             </Link>
           </div>
@@ -144,7 +144,7 @@ export default function OutdoorLivingBarrie() {
           {/* What's included */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-40">
             <div className="bg-brand-surface p-16 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-12 block">Always part of the scope</h2>
+              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">Always part of the scope</h2>
               <ul className="space-y-8">
                 {[
                   'Survey of grade, drainage, sun angles',
@@ -157,14 +157,14 @@ export default function OutdoorLivingBarrie() {
                   '5-year structural + 1-year planting warranty',
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
-                    <Check size={18} className="text-brand-gold shrink-0" strokeWidth={1.5} />
+                    <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
             <div className="bg-brand-surface p-16 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-12 block">Common Signature additions</h2>
+              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">Common Signature additions</h2>
               <ul className="space-y-8">
                 {[
                   'Armourstone retaining wall',
@@ -177,7 +177,7 @@ export default function OutdoorLivingBarrie() {
                   'Drainage swale or french drain',
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
-                    <Check size={18} className="text-brand-gold shrink-0" strokeWidth={1.5} />
+                    <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -200,18 +200,18 @@ export default function OutdoorLivingBarrie() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-8xl font-light mb-12 leading-tight">
             Start with the guide. <br />
             <span className="text-brand-gold italic">Book the walk when you're ready.</span>
           </h2>
-          <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
+          <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light">
             Start with a realistic planning range. Most outdoor living builds land between $40K and $90K+, with full backyard transformations moving past $90K once walls, kitchen, lighting, fire, or major grade correction enter the scope.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/cost-estimator?type=patio" className="btn-primary px-12 py-4">See Project Cost Range</Link>
-            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or book a site walk →</Link>
+            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or book a site walk →</Link>
           </div>
         </div>
       </section>

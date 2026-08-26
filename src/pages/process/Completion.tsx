@@ -20,12 +20,12 @@ export default function Completion() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold mb-10 block">
+              <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-10 block">
                 Phase Six: Completion
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.1] mb-12">
                 The Final <br />
-                <span className="italic text-brand-gold">Walkthrough.</span>
+                <span className="italic text-brand-gold-dark">Walkthrough.</span>
               </h1>
               <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
                 Our relationship doesn't end when the stones are set. We conduct a rigorous 25-point final inspection with you, ensuring every detail matches the architectural vision and activating your long-term craftsmanship warranty.
@@ -48,12 +48,12 @@ export default function Completion() {
                 className="w-full h-full object-cover grayscale opacity-80"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-brand-nearblack/20" />
+              <div className="absolute inset-0 bg-brand-black/20" />
             </motion.div>
           </div>
 
           <div className="mb-40">
-            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">The Golden Maple <br/> <span className="italic text-brand-gold">Certification of Quality.</span></h2>
+            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">The Golden Maple <br/> <span className="italic text-brand-gold-dark">Certification of Quality.</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
               {[
                 { title: "25-Point Final Inspection", desc: "A detailed checklist covering joint sand compaction, edge-restraint stability, and lighting alignment." },
@@ -64,7 +64,7 @@ export default function Completion() {
                 { title: "Professional Photography", desc: "We may request a final session to photograph your transformated space for our Simcoe County portfolio." }
               ].map((item, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 group hover:border-brand-gold/50 transition-all duration-300">
-                  <h3 className="font-display text-2xl font-light text-brand-gold mb-6">{item.title}</h3>
+                  <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-6">{item.title}</h3>
                   <p className="font-sans text-base text-brand-muted leading-relaxed font-light">{item.desc}</p>
                 </div>
               ))}
@@ -80,7 +80,7 @@ export default function Completion() {
               <p className="font-sans text-xl text-brand-muted leading-relaxed font-light mb-12">
                 We're a Barrie-based firm, which means our reputation is everything. We stand by our work so that you can enjoy your luxury outdoor sanctuary with confidence for decades, not just seasons.
               </p>
-              <Link to="/" className="flex items-center gap-4 text-brand-gold font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
+              <Link to="/" className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
                 <span>Back to Home</span>
                 <ArrowRight size={16} strokeWidth={1.5} />
               </Link>
@@ -89,7 +89,7 @@ export default function Completion() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-7xl font-light mb-16 leading-tight">
             Ready to build <br />

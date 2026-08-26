@@ -128,12 +128,12 @@ export default function OroMedonteLanding() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <span className="flex items-center gap-2 font-sans text-xs tracking-widest uppercase text-brand-gold mb-6">
+            <span className="flex items-center gap-2 font-sans text-xs tracking-widest uppercase text-brand-gold-dark mb-6">
               <MapPin size={16} /> Serving Oro-Medonte & Shanty Bay
             </span>
             <h1 className="font-display text-5xl md:text-7xl font-light mb-8 leading-tight">
               Premium Landscaping & Outdoor Living <br />
-              <span className="text-brand-gold italic">in Oro-Medonte, Ontario.</span>
+              <span className="text-brand-gold-dark italic">in Oro-Medonte, Ontario.</span>
             </h1>
             <p className="font-sans text-lg text-brand-muted leading-relaxed font-light mb-6 max-w-3xl">
               Oro-Medonte is home to some of Simcoe County's finest properties — and they deserve outdoor spaces to match. Golden Maple Landscaping brings premium hardscape construction to Oro-Medonte's estate lots, lakefront homes, and rural retreats.
@@ -152,7 +152,7 @@ export default function OroMedonteLanding() {
               <a
                 href="tel:7055003581"
                 onClick={() => trackEngagement('call_click', 'oromedonte_hero')}
-                className="flex items-center gap-3 font-sans text-base text-brand-gold hover:text-brand-bonewhite transition-colors"
+                className="flex items-center gap-3 font-sans text-base text-brand-gold-dark hover:text-brand-bonewhite transition-colors"
               >
                 <Phone size={18} /> Call 705-500-3581
               </a>
@@ -168,7 +168,7 @@ export default function OroMedonteLanding() {
             className="mb-24"
           >
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
-              Why Oro-Medonte Homeowners Choose <span className="text-brand-gold italic">Golden Maple</span>
+              Why Oro-Medonte Homeowners Choose <span className="text-brand-gold-dark italic">Golden Maple</span>
             </h2>
             <p className="font-sans text-base text-brand-muted font-light leading-relaxed mb-6 max-w-3xl">
               Oro-Medonte properties are unique. Larger lots, elevation changes, mature tree canopies, and lakefront exposure all require a contractor who designs around the land — not against it.
@@ -189,7 +189,7 @@ export default function OroMedonteLanding() {
                 "No subcontractors — in-house crew on every project",
               ].map((item, idx) => (
                 <div key={idx} className="flex items-start gap-3">
-                  <CheckCircle size={18} className="text-brand-gold shrink-0 mt-0.5" />
+                  <CheckCircle size={18} className="text-brand-gold-dark shrink-0 mt-0.5" />
                   <span className="font-sans text-sm text-brand-muted font-light">{item}</span>
                 </div>
               ))}
@@ -199,7 +199,7 @@ export default function OroMedonteLanding() {
           {/* Services */}
           <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-12">
-              Our Services in <span className="text-brand-gold italic">Oro-Medonte</span>
+              Our Services in <span className="text-brand-gold-dark italic">Oro-Medonte</span>
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {SERVICES.map((service, idx) => (
@@ -215,7 +215,7 @@ export default function OroMedonteLanding() {
                   <p className="font-sans text-sm text-brand-muted font-light leading-relaxed mb-6">{service.desc}</p>
                   <Link
                     to={service.link}
-                    className="flex items-center gap-3 text-brand-gold font-sans text-[10px] uppercase tracking-[0.3em] group-hover:gap-5 transition-all"
+                    className="flex items-center gap-3 text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.3em] group-hover:gap-5 transition-all"
                   >
                     <span>View Service</span>
                     <ArrowRight size={14} />
@@ -234,12 +234,12 @@ export default function OroMedonteLanding() {
             className="mb-24"
           >
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
-              Oro-Medonte Communities <span className="text-brand-gold italic">We Serve</span>
+              Oro-Medonte Communities <span className="text-brand-gold-dark italic">We Serve</span>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {COMMUNITIES.map((c) => (
                 <div key={c} className="flex items-start gap-3 bg-brand-surface p-4 border border-brand-dim/20 rounded-sm">
-                  <MapPin size={16} className="text-brand-gold shrink-0 mt-0.5" />
+                  <MapPin size={16} className="text-brand-gold-dark shrink-0 mt-0.5" />
                   <span className="font-sans text-sm text-brand-muted font-light">{c}</span>
                 </div>
               ))}
@@ -255,7 +255,7 @@ export default function OroMedonteLanding() {
             className="mb-24"
           >
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
-              What Does Landscaping Cost <span className="text-brand-gold italic">in Oro-Medonte?</span>
+              What Does Landscaping Cost <span className="text-brand-gold-dark italic">in Oro-Medonte?</span>
             </h2>
             <p className="font-sans text-sm text-brand-muted font-light mb-8">
               Oro-Medonte projects tend to run larger than typical Barrie residential work. Typical ranges:
@@ -264,8 +264,8 @@ export default function OroMedonteLanding() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-brand-dim/20">
-                    <th className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold py-4 pr-8">Project Type</th>
-                    <th className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold py-4">Typical Range</th>
+                    <th className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark py-4 pr-8">Project Type</th>
+                    <th className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark py-4">Typical Range</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -279,7 +279,7 @@ export default function OroMedonteLanding() {
               </table>
             </div>
             <p className="font-sans text-sm text-brand-muted font-light mt-6">
-              Larger lots, elevation work, and remote access can increase costs. We provide detailed written quotes after a site visit. Use our <Link to="/cost-estimator?city=oro-medonte" className="text-brand-gold hover:underline">Cost Estimator</Link> for a quick ballpark.
+              Larger lots, elevation work, and remote access can increase costs. We provide detailed written quotes after a site visit. Use our <Link to="/cost-estimator?city=oro-medonte" className="text-brand-gold-dark hover:underline">Cost Estimator</Link> for a quick ballpark.
             </p>
           </motion.div>
 
@@ -292,7 +292,7 @@ export default function OroMedonteLanding() {
             className="mb-24"
           >
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-12">
-              Frequently Asked <span className="text-brand-gold italic">Questions</span>
+              Frequently Asked <span className="text-brand-gold-dark italic">Questions</span>
             </h2>
             <div className="space-y-8">
               {FAQS.map((faq) => (
@@ -314,11 +314,11 @@ export default function OroMedonteLanding() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
               <Link to="/contact" className="btn-primary py-4 px-10">Request a Quote</Link>
-              <a href="tel:7055003581" className="flex items-center gap-3 font-sans text-sm text-brand-gold hover:text-brand-bonewhite transition-colors">
+              <a href="tel:7055003581" className="flex items-center gap-3 font-sans text-sm text-brand-gold-dark hover:text-brand-bonewhite transition-colors">
                 <Phone size={16} /> 705-500-3581
               </a>
             </div>
-            <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="flex items-center justify-center gap-3 font-sans text-sm text-brand-muted hover:text-brand-gold transition-colors">
+            <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="flex items-center justify-center gap-3 font-sans text-sm text-brand-muted hover:text-brand-gold-dark transition-colors">
               <Mail size={16} /> yorkis@goldenmaplelandscaping.ca
             </a>
           </div>

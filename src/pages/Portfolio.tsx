@@ -115,12 +115,12 @@ export default function Portfolio() {
       <section className="section-padding pt-48">
         <div className="container-custom">
           <Reveal className="text-center max-w-3xl mx-auto mb-32">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
               Our Portfolio
             </span>
             <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
               Landscaping Project <br />
-              <span className="italic text-brand-gold">Gallery in Barrie.</span>
+              <span className="italic text-brand-gold-dark">Gallery in Barrie.</span>
             </h1>
             <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
               Explore our collection of premium outdoor transformations. From structural engineering to aesthetic mastery, our work reflects our commitment to quality and craftsmanship.
@@ -143,16 +143,16 @@ export default function Portfolio() {
                   className="w-full h-full object-cover contrast-[110%] transition-transform duration-1000 group-hover:scale-110 opacity-80 group-hover:opacity-100"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-nearblack via-brand-nearblack/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
                 
                 <div className="absolute inset-0 p-12 flex flex-col justify-end">
                   <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-6 block">
                     {project.category}
                   </span>
-                  <h3 className="font-display text-4xl font-light text-brand-bonewhite mb-6 group-hover:text-brand-gold transition-colors duration-500 leading-tight">
+                  <h3 className="font-display text-4xl font-light text-brand-porcelain mb-6 group-hover:text-brand-gold transition-colors duration-500 leading-tight">
                     {project.title}
                   </h3>
-                  <p className="font-sans text-sm text-brand-muted leading-relaxed mb-10 opacity-0 translate-y-6 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-700 ease-[0.16, 1, 0.3, 1] font-light">
+                  <p className="font-sans text-sm text-brand-porcelain-soft leading-relaxed mb-10 opacity-0 translate-y-6 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-700 ease-[0.16, 1, 0.3, 1] font-light">
                     {project.desc}
                   </p>
                   <div className="flex items-center gap-6 text-brand-gold font-sans text-[10px] uppercase tracking-[0.3em]">
@@ -167,13 +167,13 @@ export default function Portfolio() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <Reveal className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-8xl font-light mb-12 leading-tight">
             Your backyard could <br />
             <span className="text-brand-gold italic">be next.</span>
           </h2>
-          <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
+          <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light">
             Every project in this gallery started with a single conversation. Tell us what you're imagining — we'll show you what's possible.
           </p>
           <Link to="/contact" className="btn-primary px-20">Let's Talk About Your Property</Link>

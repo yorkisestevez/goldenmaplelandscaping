@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 export default function Process() {
   return (
-    <section id="process" className="py-24 md:py-64 bg-brand-nearblack text-brand-bonewhite relative overflow-hidden">
+    <section id="process" className="py-24 md:py-64 bg-brand-burgundy text-brand-porcelain relative overflow-hidden">
       {/* Subtle background pattern/texture */}
       <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#D4AF63 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
       
@@ -24,12 +24,12 @@ export default function Process() {
               A partnership, <br />
               <span className="italic text-brand-gold">not just a project.</span>
             </h2>
-            <p className="font-sans font-light text-base md:text-xl text-brand-muted leading-relaxed mb-10 md:mb-14">
+            <p className="font-sans font-light text-base md:text-xl text-brand-porcelain-soft leading-relaxed mb-10 md:mb-14">
               Premium spaces require meticulous planning. The first step is a free estimate request — honest scope, honest budget, no pressure. Everything else flows from there.
             </p>
 
             <div className="mb-12 p-8 bg-brand-surface border border-brand-gold/20 rounded-[2px]">
-              <h4 className="font-display text-2xl text-brand-gold mb-4">Free Estimate</h4>
+              <h4 className="font-display text-2xl text-brand-gold-dark mb-4">Free Estimate</h4>
               <p className="font-sans text-base text-brand-muted leading-relaxed font-light">
                 Your first conversation with us is <span className="text-brand-bonewhite font-normal">free, no strings attached</span>. We'll listen to what you're imagining, ask the right questions, and tell you honestly whether your project is a fit for what we do. If it is, the property walk that follows is also <span className="text-brand-bonewhite font-normal">on the house</span>.
               </p>
@@ -46,8 +46,8 @@ export default function Process() {
                     <step.icon size={22} className="text-brand-gold md:size-[24px]" strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h4 className="font-display text-2xl md:text-3xl text-brand-bonewhite mb-2 md:mb-3 font-light">{step.title}</h4>
-                    <p className="font-sans font-light text-[15px] md:text-base text-brand-muted leading-relaxed">{step.desc}</p>
+                    <h4 className="font-display text-2xl md:text-3xl text-brand-porcelain mb-2 md:mb-3 font-light">{step.title}</h4>
+                    <p className="font-sans font-light text-[15px] md:text-base text-brand-porcelain-soft leading-relaxed">{step.desc}</p>
                   </div>
                 </div>
               ))}
@@ -77,7 +77,7 @@ export default function Process() {
               className="w-full h-full object-cover grayscale opacity-80"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-brand-nearblack/20" />
+            <div className="absolute inset-0 bg-brand-burgundy/20" />
             <div className="absolute inset-0 border border-brand-gold/10" />
           </motion.div>
         </div>

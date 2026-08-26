@@ -181,7 +181,7 @@ export default function BookingScheduler() {
         className="bg-brand-surface border border-brand-gold/30 rounded-[2px] p-12 text-center"
       >
         <div className="mx-auto w-16 h-16 rounded-full border border-brand-gold flex items-center justify-center mb-8">
-          <CheckCircle size={28} className="text-brand-gold" strokeWidth={1.5} />
+          <CheckCircle size={28} className="text-brand-gold-dark" strokeWidth={1.5} />
         </div>
         <h3 className="font-display text-3xl font-light text-brand-bonewhite mb-6">
           You're booked.
@@ -189,9 +189,9 @@ export default function BookingScheduler() {
         <p className="font-sans text-base text-brand-muted leading-relaxed font-light max-w-md mx-auto mb-8">
           {selectedDate && selectedSlot && (
             <>
-              <span className="text-brand-gold">{formatDateLong(selectedDate)}</span>
+              <span className="text-brand-gold-dark">{formatDateLong(selectedDate)}</span>
               <br />
-              <span className="text-brand-gold">{formatTime(selectedSlot.start)}</span>
+              <span className="text-brand-gold-dark">{formatTime(selectedSlot.start)}</span>
               <br />
               <br />
             </>
@@ -201,7 +201,7 @@ export default function BookingScheduler() {
         </p>
         <a
           href="tel:7055003581"
-          className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold hover:underline inline-flex items-center gap-2"
+          className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark hover:underline inline-flex items-center gap-2"
         >
           <Phone size={12} strokeWidth={1.5} />
           Need to reschedule? (705) 500-3581
@@ -223,20 +223,20 @@ export default function BookingScheduler() {
             setStep('pick');
             setErrorMsg('');
           }}
-          className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted hover:text-brand-gold transition-colors flex items-center gap-2 mb-8"
+          className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted hover:text-brand-gold-dark transition-colors flex items-center gap-2 mb-8"
         >
           <ArrowLeft size={12} strokeWidth={1.5} />
           Pick a different time
         </button>
 
         <div className="border-l-2 border-brand-gold pl-6 mb-10">
-          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2 block">
+          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2 block">
             Selected
           </span>
           <p className="font-display text-2xl font-light text-brand-bonewhite">
             {selectedDate && formatDateLong(selectedDate)}
           </p>
-          <p className="font-display text-xl font-light text-brand-gold italic">
+          <p className="font-display text-xl font-light text-brand-gold-dark italic">
             {selectedSlot && formatTime(selectedSlot.start)}
           </p>
         </div>
@@ -255,7 +255,7 @@ export default function BookingScheduler() {
                 value={form.name}
                 onChange={onChange}
                 autoComplete="name"
-                className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light"
+                className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
               />
             </div>
             <div>
@@ -270,7 +270,7 @@ export default function BookingScheduler() {
                 value={form.phone}
                 onChange={onChange}
                 autoComplete="tel"
-                className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light"
+                className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
               />
             </div>
           </div>
@@ -291,7 +291,7 @@ export default function BookingScheduler() {
               value={form.email}
               onChange={onChange}
               autoComplete="email"
-              className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light"
+              className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
             />
           </div>
 
@@ -304,7 +304,7 @@ export default function BookingScheduler() {
               name="service_interest"
               value={form.service_interest}
               onChange={onChange}
-              className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light appearance-none cursor-pointer"
+              className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light appearance-none cursor-pointer"
             >
               {SERVICE_OPTIONS.map((s) => <option key={s}>{s}</option>)}
             </select>
@@ -320,13 +320,13 @@ export default function BookingScheduler() {
               rows={3}
               value={form.notes}
               onChange={onChange}
-              className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light"
+              className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
               placeholder="Optional. The more we know, the better we use our 15 minutes."
             />
           </div>
 
           {errorMsg && (
-            <p className="font-sans text-xs text-red-400 font-light">{errorMsg}</p>
+            <p className="font-sans text-xs text-brand-error font-light">{errorMsg}</p>
           )}
 
           <button
@@ -363,13 +363,13 @@ export default function BookingScheduler() {
   if (!CRM_BASE_URL) {
     return (
       <div className="bg-brand-surface border border-brand-dim/10 rounded-[2px] p-12 text-center">
-        <Calendar size={32} className="text-brand-gold/40 mx-auto mb-6" strokeWidth={1.5} />
+        <Calendar size={32} className="text-brand-gold-dark/40 mx-auto mb-6" strokeWidth={1.5} />
         <p className="font-sans text-sm text-brand-muted font-light mb-4">
           Online booking is being set up.
         </p>
         <a
           href="tel:7055003581"
-          className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold hover:underline inline-flex items-center gap-2"
+          className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark hover:underline inline-flex items-center gap-2"
         >
           <Phone size={12} strokeWidth={1.5} /> Call (705) 500-3581 to schedule
         </a>
@@ -389,7 +389,7 @@ export default function BookingScheduler() {
     <div className="bg-brand-surface border border-brand-dim/10 rounded-[2px] p-8 md:p-10">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-1 block">
+          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-1 block">
             Step 1 of 2
           </span>
           <h3 className="font-display text-2xl font-light text-brand-bonewhite">
@@ -400,7 +400,7 @@ export default function BookingScheduler() {
           <button
             onClick={() => setPageOffset(Math.max(0, pageOffset - 7))}
             disabled={!canGoBack}
-            className="w-9 h-9 flex items-center justify-center border border-brand-dim/20 rounded-[2px] text-brand-bonewhite hover:border-brand-gold hover:text-brand-gold disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="w-9 h-9 flex items-center justify-center border border-brand-dim/20 rounded-[2px] text-brand-bonewhite hover:border-brand-gold hover:text-brand-gold-dark disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             aria-label="Previous week"
           >
             <ChevronLeft size={14} strokeWidth={1.5} />
@@ -408,7 +408,7 @@ export default function BookingScheduler() {
           <button
             onClick={() => setPageOffset(Math.min(days.length - 7, pageOffset + 7))}
             disabled={!canGoForward}
-            className="w-9 h-9 flex items-center justify-center border border-brand-dim/20 rounded-[2px] text-brand-bonewhite hover:border-brand-gold hover:text-brand-gold disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="w-9 h-9 flex items-center justify-center border border-brand-dim/20 rounded-[2px] text-brand-bonewhite hover:border-brand-gold hover:text-brand-gold-dark disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             aria-label="Next week"
           >
             <ChevronRight size={14} strokeWidth={1.5} />
@@ -429,7 +429,7 @@ export default function BookingScheduler() {
               disabled={!isAvailable}
               className={`flex flex-col items-center justify-center py-4 rounded-[2px] border transition-all shrink-0 min-w-[64px] snap-start md:min-w-0 md:w-auto ${
                 isSelected
-                  ? 'border-brand-gold bg-brand-gold/10 text-brand-gold'
+                  ? 'border-brand-gold bg-brand-gold/10 text-brand-gold-dark'
                   : isAvailable
                     ? 'border-brand-dim/20 text-brand-bonewhite hover:border-brand-gold hover:bg-brand-gold/5'
                     : 'border-brand-dim/10 text-brand-dim cursor-not-allowed'
@@ -461,7 +461,7 @@ export default function BookingScheduler() {
           >
             <div className="border-t border-brand-dim/10 pt-8">
               <div className="flex items-center gap-3 mb-6">
-                <Clock size={14} className="text-brand-gold" strokeWidth={1.5} />
+                <Clock size={14} className="text-brand-gold-dark" strokeWidth={1.5} />
                 <span className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite font-medium">
                   {formatDateLong(selectedDate)}
                 </span>
@@ -471,7 +471,7 @@ export default function BookingScheduler() {
                   <button
                     key={slot.start}
                     onClick={() => onPickSlot(selectedDate, slot)}
-                    className="border border-brand-dim/20 hover:border-brand-gold hover:bg-brand-gold/5 py-4 px-6 rounded-[2px] font-sans text-sm text-brand-bonewhite hover:text-brand-gold transition-all"
+                    className="border border-brand-dim/20 hover:border-brand-gold hover:bg-brand-gold/5 py-4 px-6 rounded-[2px] font-sans text-sm text-brand-bonewhite hover:text-brand-gold-dark transition-all"
                   >
                     {formatTime(slot.start)}
                   </button>

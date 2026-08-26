@@ -48,8 +48,8 @@ export default function PriceDelta({
         isNeutral
           ? dimmed ? 'text-brand-bonewhite/50' : 'text-brand-muted'
           : isSaving
-            ? dimmed ? 'text-emerald-400/70' : 'text-emerald-400'
-            : dimmed ? 'text-brand-gold/70' : 'text-brand-gold',
+            ? dimmed ? 'text-brand-success/70' : 'text-brand-success'
+            : dimmed ? 'text-brand-gold-dark/70' : 'text-brand-gold-dark',
         className,
       )}
     >

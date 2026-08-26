@@ -10,7 +10,7 @@ export default function Terms() {
       />
       <div className="bg-brand-nearblack min-h-screen pt-32 pb-24">
         <div className="container-custom max-w-3xl">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">Legal</span>
+          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">Legal</span>
           <h1 className="font-display text-5xl md:text-7xl font-light text-brand-bonewhite mb-4">Terms of Use</h1>
           <p className="font-sans text-sm text-brand-muted mb-16 font-light">Last updated: May 2026</p>
 
@@ -69,8 +69,8 @@ export default function Terms() {
 
             <h2 className="font-display text-2xl text-brand-bonewhite mt-12 mb-4">Contact</h2>
             <p>
-              Questions about these terms: <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="text-brand-gold hover:underline">yorkis@goldenmaplelandscaping.ca</a><br />
-              Phone: <a href="tel:7055003581" className="text-brand-gold hover:underline">(705) 500-3581</a>
+              Questions about these terms: <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="text-brand-gold-dark hover:underline">yorkis@goldenmaplelandscaping.ca</a><br />
+              Phone: <a href="tel:7055003581" className="text-brand-gold-dark hover:underline">(705) 500-3581</a>
             </p>
           </div>
         </div>

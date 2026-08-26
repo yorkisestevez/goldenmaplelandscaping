@@ -133,14 +133,14 @@ export default function ChatWidget() {
           <button
             key={i}
             onClick={() => { setOpen(false); navigate(p); }}
-            className="text-brand-green underline underline-offset-2 hover:text-brand-green"
+            className="text-brand-green-dark underline underline-offset-2 hover:text-brand-green-dark"
           >
             {p === '/cost-estimator' ? 'cost calculator' : p === '/book' ? 'book a call' : 'contact us'}
           </button>
         );
       }
       if (p === '(705) 500-3581') {
-        return <a key={i} href="tel:7055003581" className="text-brand-green underline underline-offset-2">{p}</a>;
+        return <a key={i} href="tel:7055003581" className="text-brand-green-dark underline underline-offset-2">{p}</a>;
       }
       return <span key={i}>{p}</span>;
     });
@@ -158,7 +158,7 @@ export default function ChatWidget() {
             transition={{ duration: 0.25 }}
             onClick={() => setOpen(true)}
             aria-label="Open chat assistant"
-            className="fixed z-[60] right-4 bottom-[84px] xl:right-6 xl:bottom-6 w-14 h-14 rounded-full bg-gradient-to-br from-brand-green to-brand-green-dark text-brand-nearblack flex items-center justify-center shadow-[0_10px_30px_-6px_rgba(95,174,126,0.55)] hover:shadow-[0_14px_38px_-6px_rgba(95,174,126,0.7)] hover:-translate-y-0.5 transition-all gm-live-dot"
+            className="fixed z-[60] right-4 bottom-[84px] xl:right-6 xl:bottom-6 w-14 h-14 rounded-full bg-gradient-to-br from-brand-green to-brand-green-dark text-brand-black flex items-center justify-center shadow-[0_10px_30px_-6px_rgba(95,174,126,0.55)] hover:shadow-[0_14px_38px_-6px_rgba(95,174,126,0.7)] hover:-translate-y-0.5 transition-all gm-live-dot"
           >
             <MessageCircle size={24} strokeWidth={1.75} />
             <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-brand-green-light border-2 border-brand-nearblack" />
@@ -182,7 +182,7 @@ export default function ChatWidget() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-brand-dim/60 bg-gradient-to-r from-brand-green/15 to-transparent">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-green to-brand-green-dark flex items-center justify-center">
-                  <Leaf size={17} className="text-brand-nearblack" strokeWidth={1.75} />
+                  <Leaf size={17} className="text-brand-black" strokeWidth={1.75} />
                 </div>
                 <div>
                   <div className="font-display text-[16px] text-brand-bonewhite leading-none">Sophie</div>
@@ -204,7 +204,7 @@ export default function ChatWidget() {
                   <div
                     className={`max-w-[82%] px-4 py-2.5 rounded-2xl font-sans text-[13.5px] leading-relaxed ${
                       m.role === 'user'
-                        ? 'bg-brand-gold text-brand-nearblack rounded-br-md'
+                        ? 'bg-brand-gold text-brand-black rounded-br-md'
                         : 'bg-brand-midsurface text-brand-bonewhite border border-brand-dim/60 rounded-bl-md'
                     }`}
                   >
@@ -235,7 +235,7 @@ export default function ChatWidget() {
                     <button
                       key={s}
                       onClick={() => void send(s)}
-                      className="px-3 py-2 rounded-full border border-brand-green/40 text-brand-green font-sans text-[12px] hover:bg-brand-green/10 hover:border-brand-green transition-colors text-left"
+                      className="px-3 py-2 rounded-full border border-brand-green/40 text-brand-green-dark font-sans text-[12px] hover:bg-brand-green/10 hover:border-brand-green transition-colors text-left"
                     >
                       {s}
                     </button>
@@ -258,7 +258,7 @@ export default function ChatWidget() {
                 type="submit"
                 disabled={!input.trim() || loading}
                 aria-label="Send message"
-                className="w-10 h-10 shrink-0 rounded-full bg-brand-green text-brand-nearblack flex items-center justify-center hover:bg-brand-green-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="w-10 h-10 shrink-0 rounded-full bg-brand-green text-brand-black flex items-center justify-center hover:bg-brand-green-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 <Send size={16} strokeWidth={2} />
               </button>

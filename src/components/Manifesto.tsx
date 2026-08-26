@@ -3,7 +3,7 @@ import { Phone } from 'lucide-react';
 
 export default function Manifesto() {
   return (
-    <section id="manifesto" className="py-24 md:py-64 bg-brand-nearblack text-brand-bonewhite relative overflow-hidden">
+    <section id="manifesto" className="py-24 md:py-64 bg-brand-burgundy text-brand-porcelain relative overflow-hidden">
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 md:gap-24 items-center">
           {/* Portrait Image */}
@@ -21,9 +21,9 @@ export default function Manifesto() {
                 className="w-full h-full object-cover object-top transition-transform duration-700 group-hover/photo:scale-105"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-nearblack/60 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-burgundy/60 via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6 right-6 opacity-0 group-hover/photo:opacity-100 transition-opacity duration-500">
-                <p className="font-display text-2xl text-brand-bonewhite italic font-light">Yorkis Estevez</p>
+                <p className="font-display text-2xl text-brand-porcelain italic font-light">Yorkis Estevez</p>
                 <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mt-1">Founder & Lead Builder</p>
               </div>
             </div>
@@ -54,8 +54,8 @@ export default function Manifesto() {
               <span className="italic text-brand-gold">moral obligation.</span>
             </h2>
 
-            <div className="space-y-8 font-sans font-light text-base md:text-lg text-brand-muted leading-relaxed">
-              <p className="text-brand-bonewhite font-medium italic">
+            <div className="space-y-8 font-sans font-light text-base md:text-lg text-brand-porcelain-soft leading-relaxed">
+              <p className="text-brand-porcelain font-medium italic">
                 "I started Golden Maple with a simple, uncompromising belief: if a thing is worth doing, it is worth doing to the point of obsession."
               </p>
               <p>
@@ -72,12 +72,12 @@ export default function Manifesto() {
             <div className="mt-16 flex flex-col sm:flex-row items-start sm:items-center gap-8">
               <div>
                 <p className="font-display text-4xl text-brand-gold italic font-light">Yorkis Estevez</p>
-                <p className="font-sans text-[10px] tracking-[0.3em] uppercase text-brand-muted mt-2">Founder & Principal Designer</p>
+                <p className="font-sans text-[10px] tracking-[0.3em] uppercase text-brand-porcelain-soft mt-2">Founder & Principal Designer</p>
               </div>
               <div className="hidden sm:block h-12 w-px bg-brand-gold/20" />
               <div className="flex flex-col gap-1">
                 <span className="font-sans text-[11px] uppercase tracking-widest text-brand-gold">Direct Line</span>
-                <a href="tel:7055003581" className="font-display text-2xl text-brand-bonewhite hover:text-brand-gold transition-colors font-light">705-500-3581</a>
+                <a href="tel:7055003581" className="font-display text-2xl text-brand-porcelain hover:text-brand-gold transition-colors font-light">705-500-3581</a>
               </div>
             </div>
           </motion.div>

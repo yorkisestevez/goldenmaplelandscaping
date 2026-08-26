@@ -78,7 +78,7 @@ export default function OutdoorLivingPlanningInnisfil() {
       wordCount={2296}
     >
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
-        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">Quick Answer</div>
         <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">Planning an outdoor living space in Innisfil starts with a site assessment — soils near Lake Simcoe range from sandy loam to heavy clay, which changes base depth from 14 to 16+ inches. A 600 sq ft patio-and-deck combo typically runs $35,000–$65,000 installed. Most projects take 10–15 weeks from first consultation to final walkthrough. Phasing the build across two seasons is a real option — if you excavate the full footprint in Year 1.</p>
       </div>
 
@@ -100,7 +100,7 @@ export default function OutdoorLivingPlanningInnisfil() {
       <div dangerouslySetInnerHTML={{ __html: "<p>Phasing an outdoor living project is a strategy, not a shortcut. Done well, it means you get a functional, finished-looking outdoor space in Year 1 and complete remaining zones in Year 2 or Year 3 — without re-excavating, re-grading, or redoing any completed work.</p><p>The key is designing the full project first, then determining which phases split cleanly. A patio and pergola combination is a natural Phase 1 — complete and finished on its own. A composite deck attached to the house can follow in Phase 2 without disturbing the patio, as long as footing locations and deck post positions are planned and installed during Phase 1 construction.</p><p>What does not phase well is base work. Excavation and clear stone installation are most cost-efficient done in a single mobilisation. On a 1,200 sq ft project, excavating the full area in Year 1 runs $4,000–$6,000. Returning to excavate a second section — working around an established edge, remobilising equipment — typically adds $2,500–$3,500 to the total cost. The savings are not there, and the disruption to finished work is real.</p><p>Our recommendation: excavate and rough-grade the entire project footprint in Phase 1, even if the surface installation spans two seasons. The base is complete, drainage is addressed, and Phase 2 becomes a surface-only installation on a prepared platform.</p><p>Permits are also worth sequencing carefully. Building permits for decks 600mm (roughly 24 inches) or more above grade are required in Innisfil and Barrie. If a raised deck is planned for Phase 2, we submit the permit application during Phase 1 construction so it is approved and ready when build time comes. Use our <a href=\"/cost-estimator?type=full&city=innisfil\">cost estimator</a> to price the full scope, then re-run it with Phase 1 only — save each build and compare the two links before your first consultation.</p>" }} />
 
       <div className="not-prose my-10 overflow-x-auto">
-        <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold mb-3">Paver Brand Comparison: Permacon vs. Unilock vs. Techo-Bloc for Simcoe County Projects</p>
+        <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold-dark mb-3">Paver Brand Comparison: Permacon vs. Unilock vs. Techo-Bloc for Simcoe County Projects</p>
         <div dangerouslySetInnerHTML={{ __html: "<table><thead><tr><th>Brand</th><th>Best Use</th><th>Typical Installed Cost</th><th>Material Lead Time</th><th>Where We Source It</th></tr></thead><tbody><tr><td><strong>Permacon</strong></td><td>Driveways, value-focused patios</td><td>$18–$26 per sq ft</td><td>1–2 weeks</td><td>Carr Landscape Depot, Barrie</td></tr><tr><td><strong>Unilock</strong></td><td>Patios, pool decks, large-format slabs</td><td>$22–$35 per sq ft</td><td>2–4 weeks</td><td>Carr Landscape Depot, Barrie</td></tr><tr><td><strong>Techo-Bloc</strong></td><td>Contemporary design, premium textures</td><td>$24–$38 per sq ft</td><td>3–5 weeks</td><td>Carr Landscape Depot, Barrie</td></tr></tbody></table>" }} />
       </div>
 
@@ -140,7 +140,7 @@ export default function OutdoorLivingPlanningInnisfil() {
         <div className="flex items-start gap-4">
           <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
           <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2">About the Author</div>
+            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
             <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded the company in 2020 after years of hands-on landscaping work across Simcoe County. We hold WSIB coverage, $5M general liability insurance, and a 5.0 Google rating across hundreds of completed projects in Barrie, Innisfil, and surrounding municipalities. Yorkis personally oversees site assessments, material selection, and quality control on every project we take on.</p>
           </div>
         </div>

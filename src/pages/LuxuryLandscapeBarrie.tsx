@@ -63,19 +63,19 @@ export default function LuxuryLandscapeBarrie() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 Premium Projects · $90K-$160K+
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 Engineered <br />
-                <span className="italic text-brand-gold">residential landscapes.</span>
+                <span className="italic text-brand-gold-dark">residential landscapes.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 Pool decks, full property regrades, multi-trade coordination, phased multi-season builds. Premium projects start at an in-person consult — there's no honest way to price a $120,000 build from a phone call. We walk the property, talk through the soil and the grades, and come back with a design before the first quote. Most Premium builds land between $94,000 and $158,000.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary">Book a Consult</Link>
-                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
+                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
                   See past Premium builds <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
@@ -100,7 +100,7 @@ export default function LuxuryLandscapeBarrie() {
           {/* Case studies — real Premium project shapes */}
           <div className="mb-40">
             <div className="text-center max-w-3xl mx-auto mb-24">
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 Recent Premium builds
               </span>
               <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-tight">
@@ -113,7 +113,7 @@ export default function LuxuryLandscapeBarrie() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {CASE_STUDIES.map((cs, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-                  <span className="font-display text-3xl font-light text-brand-gold block mb-4">{cs.range}</span>
+                  <span className="font-display text-3xl font-light text-brand-gold-dark block mb-4">{cs.range}</span>
                   <h3 className="font-display text-xl font-light text-brand-bonewhite mb-6">{cs.title}</h3>
                   <p className="font-sans text-sm text-brand-muted leading-relaxed font-light">{cs.detail}</p>
                 </div>
@@ -123,7 +123,7 @@ export default function LuxuryLandscapeBarrie() {
 
           {/* The Premium difference */}
           <div className="bg-brand-burgundy/10 border border-brand-burgundy/30 rounded-[2px] p-12 md:p-16 mb-40">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-8 block">
+            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">
               Why an in-person consult comes first
             </span>
             <h2 className="font-display text-3xl md:text-5xl font-light text-brand-bonewhite leading-tight mb-10">
@@ -135,7 +135,7 @@ export default function LuxuryLandscapeBarrie() {
             <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed mb-10 font-light">
               The consult is unbilled. If we're a fit, the next step is a paid design phase ($4,800-$11,000, applied against the build budget if you proceed). If we're not, you keep the walk-through notes and a list of what to ask the next contractor.
             </p>
-            <Link to="/process" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold hover:text-brand-bonewhite transition-colors inline-flex items-center gap-4">
+            <Link to="/process" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors inline-flex items-center gap-4">
               See the full process <ArrowRight size={16} strokeWidth={1.5} />
             </Link>
           </div>
@@ -143,7 +143,7 @@ export default function LuxuryLandscapeBarrie() {
           {/* What's part of every Premium project */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-40">
             <div className="bg-brand-surface p-16 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-12 block">Always part of a Premium build</h2>
+              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">Always part of a Premium build</h2>
               <ul className="space-y-8">
                 {[
                   'On-site consult before quoting',
@@ -156,14 +156,14 @@ export default function LuxuryLandscapeBarrie() {
                   '5-year structural warranty across all hardscape',
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
-                    <Check size={18} className="text-brand-gold shrink-0" strokeWidth={1.5} />
+                    <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
             <div className="bg-brand-surface p-16 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-12 block">Common Premium elements</h2>
+              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">Common Premium elements</h2>
               <ul className="space-y-8">
                 {[
                   'Pool deck + surround (coordinating with pool contractor)',
@@ -176,7 +176,7 @@ export default function LuxuryLandscapeBarrie() {
                   'Sport-court or fitness pad foundation',
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
-                    <Check size={18} className="text-brand-gold shrink-0" strokeWidth={1.5} />
+                    <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -199,18 +199,18 @@ export default function LuxuryLandscapeBarrie() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-8xl font-light mb-12 leading-tight">
             Walk the property. <br />
             <span className="text-brand-gold italic">Then we draw.</span>
           </h2>
-          <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
+          <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light">
             Premium starts in person. Book a 90-minute consult — we walk the property, talk grade and drainage, and come back with a design before the first quote.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/contact" className="btn-primary px-12 py-4">Book the Consult</Link>
-            <Link to="/portfolio" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or browse past builds →</Link>
+            <Link to="/portfolio" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or browse past builds →</Link>
           </div>
         </div>
       </section>

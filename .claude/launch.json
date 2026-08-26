@@ -5,7 +5,8 @@
       "name": "golden-maple",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 5173,
+      "port": 3011,
+      "autoPort": true,
       "cwd": "C:\\Users\\yorki\\Desktop\\Goldenmaplelandscaping.ca\\golden-maple-landscaping"
     }
   ]

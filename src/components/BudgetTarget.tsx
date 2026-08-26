@@ -30,7 +30,7 @@ export default function BudgetTarget({
   if (value !== null) {
     return (
       <div className="flex flex-wrap items-center gap-3 px-5 py-4 rounded-2xl bg-brand-gold/8 border border-brand-gold/25">
-        <Target size={15} className="text-brand-gold shrink-0" strokeWidth={1.75} />
+        <Target size={15} className="text-brand-gold-dark shrink-0" strokeWidth={1.75} />
         <span className="font-sans text-[12px] text-brand-bonewhite/80">Aiming for around</span>
         <span className="font-display text-xl text-brand-bone tabular-nums">
           ${value.toLocaleString()}
@@ -55,7 +55,7 @@ export default function BudgetTarget({
   return (
     <div className="px-5 py-5 rounded-2xl bg-brand-cream border border-brand-dim">
       <div className="flex items-center gap-2 mb-1.5">
-        <Target size={15} className="text-brand-gold shrink-0" strokeWidth={1.75} />
+        <Target size={15} className="text-brand-gold-dark shrink-0" strokeWidth={1.75} />
         <span className="font-sans text-[13px] text-brand-bone">
           Have a number in mind? (optional)
         </span>
@@ -86,7 +86,7 @@ export default function BudgetTarget({
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitCustom(); } }}
             placeholder="Other"
             aria-label="Custom budget target"
-            className="w-[68px] bg-transparent outline-none font-sans text-[12px] text-brand-bone placeholder:text-brand-muted tabular-nums"
+            className="w-[68px] bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 font-sans text-[12px] text-brand-bone placeholder:text-brand-muted tabular-nums"
           />
         </div>
         <button

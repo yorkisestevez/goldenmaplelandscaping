@@ -78,7 +78,7 @@ export default function EstimateBreakdown(props: BreakdownProps) {
         className="relative bg-gradient-to-b from-brand-gold/[0.12] via-brand-gold/[0.04] to-transparent border border-brand-gold/30 rounded-3xl p-10 md:p-14 text-center overflow-hidden shadow-[0_30px_80px_-30px_rgba(212,175,99,0.25)]"
       >
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-gold/40 to-transparent" />
-        <div className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-5">
+        <div className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-5">
           Your Estimated Investment
         </div>
         {/* Animated so that adjusting a lever in the workbench below reads as
@@ -91,7 +91,7 @@ export default function EstimateBreakdown(props: BreakdownProps) {
         />
         <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-brand-gold/10 border border-brand-gold/30 rounded-full backdrop-blur-md">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
-          <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold">
+          <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark">
             Confidence ±{props.confidencePercent}%
           </span>
         </div>
@@ -114,7 +114,7 @@ export default function EstimateBreakdown(props: BreakdownProps) {
           trade where that suspicion is the default. The gate moved to saving
           the build (see EstimateLeadCapture) — something the customer wants
           AFTER they trust the number, rather than a wall in front of it. */}
-      <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7 md:p-9">
+      <div className="bg-brand-cream-light border border-brand-dim/60 rounded-3xl p-7 md:p-9">
         <h4 className="font-display text-2xl md:text-3xl text-brand-bone mb-6 tracking-tight">Where the money goes</h4>
         <div className="divide-y divide-white/[0.06]">
           {LINES.map(({ key, label, icon: Icon }, idx) => {
@@ -127,13 +127,13 @@ export default function EstimateBreakdown(props: BreakdownProps) {
                 transition={{ delay: idx * 0.07, type: 'spring', stiffness: 120, damping: 18 }}
                 className="py-5 flex items-start gap-4"
               >
-                <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold-dark shrink-0">
                   <Icon size={16} strokeWidth={1.75} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline gap-4">
                     <span className="font-sans text-[14px] text-brand-bone">{label}</span>
-                    <span className="font-display text-lg md:text-xl text-brand-gold tabular-nums whitespace-nowrap tracking-tight">
+                    <span className="font-display text-lg md:text-xl text-brand-gold-dark tabular-nums whitespace-nowrap tracking-tight">
                       {fmt(line.low)} – {fmt(line.high)}
                     </span>
                   </div>
@@ -151,25 +151,25 @@ export default function EstimateBreakdown(props: BreakdownProps) {
 
       {/* Includes / Excludes */}
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7">
+        <div className="bg-brand-cream-light border border-brand-dim/60 rounded-3xl p-7">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="w-7 h-7 rounded-full bg-brand-gold/15 border border-brand-gold/30 flex items-center justify-center">
-              <Check size={14} className="text-brand-gold" strokeWidth={2.5} />
+              <Check size={14} className="text-brand-gold-dark" strokeWidth={2.5} />
             </div>
-            <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">
+            <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark">
               What's Included
             </span>
           </div>
           <ul className="space-y-2.5">
             {INCLUDES.map(item => (
               <li key={item} className="font-sans text-[13px] font-light text-brand-bone flex gap-2.5 items-start">
-                <span className="text-brand-gold mt-2 w-1 h-1 rounded-full bg-brand-gold shrink-0" />
+                <span className="text-brand-gold-dark mt-2 w-1 h-1 rounded-full bg-brand-gold shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
           </ul>
         </div>
-        <div className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-dim/60 rounded-3xl p-7">
+        <div className="bg-brand-cream-light border border-brand-dim/60 rounded-3xl p-7">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="w-7 h-7 rounded-full bg-brand-cream border border-brand-dim/60 flex items-center justify-center">
               <X size={14} className="text-brand-muted" strokeWidth={2.5} />

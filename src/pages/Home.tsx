@@ -15,7 +15,7 @@ const HERO_POSTER = "/images/projects/patio-pergola.jpg";
 
 const Hero = () => {
   return (
-    <section className="relative min-h-[95vh] flex items-center overflow-hidden bg-brand-nearblack">
+    <section className="relative min-h-[95vh] flex items-center overflow-hidden bg-brand-burgundy">
       <div className="absolute inset-0 z-0">
         <img
           src={HERO_POSTER}
@@ -26,7 +26,7 @@ const Hero = () => {
           className="absolute inset-0 w-full h-full object-cover opacity-95"
         />
         {/* Lighter left-weighted scrim: just enough behind the text, clearing fast so the photo stays visible. */}
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-nearblack/85 via-brand-nearblack/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-burgundy/85 via-brand-burgundy/35 to-transparent" />
       </div>
 
       <div className="container-custom relative z-10 py-32">
@@ -49,7 +49,7 @@ const Hero = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.2 }}
-              className="font-display text-5xl md:text-7xl lg:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12"
+              className="font-display text-5xl md:text-7xl lg:text-8xl font-light text-brand-porcelain leading-[1.05] mb-12"
             >
               The backyard you've <br />
               <span className="text-brand-gold italic">always pictured.</span>
@@ -59,7 +59,7 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.4 }}
-              className="font-sans text-base md:text-lg text-brand-ink max-w-xl mb-12 leading-relaxed font-normal"
+              className="font-sans text-base md:text-lg text-brand-porcelain max-w-xl mb-12 leading-relaxed font-normal"
             >
               You've spent enough nights staring out the window at a yard that doesn't match the home you've built. We're here to fix that — with an outdoor space engineered to outlast the next twenty winters and become the place your family actually wants to be.
             </motion.p>
@@ -73,7 +73,7 @@ const Hero = () => {
               <Link
                 to="/portfolio"
                 onClick={() => trackEngagement('cta_click', 'view_portfolio')}
-                className="group flex items-center gap-4 text-brand-ink font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
+                className="group flex items-center gap-4 text-brand-porcelain font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
               >
                 See Recent Work
                 <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-2" />
@@ -81,7 +81,7 @@ const Hero = () => {
               <a
                 href="tel:7055003581"
                 onClick={() => trackEngagement('cta_click', 'hero_phone')}
-                className="group flex items-center gap-4 text-brand-ink font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
+                className="group flex items-center gap-4 text-brand-porcelain font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
               >
                 Or Call (705) 500-3581
               </a>
@@ -112,7 +112,7 @@ const TrustBar = () => {
         <div className="flex flex-wrap justify-center md:justify-between items-center gap-6 md:gap-8 lg:gap-10">
           {items.map((item, idx) => (
             <div key={idx} className="flex items-center gap-4">
-              <item.icon className="text-brand-gold" size={20} strokeWidth={1.5} />
+              <item.icon className="text-brand-gold-dark" size={20} strokeWidth={1.5} />
               <span className="font-sans text-xs md:text-sm font-normal uppercase tracking-[0.2em] text-brand-muted">
                 {item.text}
               </span>
@@ -175,14 +175,14 @@ const ServicesGrid = () => {
       <div className="container-custom">
         <Reveal className="flex flex-col md:flex-row justify-between items-end gap-12 mb-20">
           <div className="max-w-2xl">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
               Our Expertise
             </span>
             <h2 className="font-display text-4xl md:text-8xl font-light text-brand-bonewhite leading-tight">
               Mastery in every detail.
             </h2>
           </div>
-          <Link to="/services" className="group flex items-center gap-3 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.2em] hover:text-brand-gold transition-colors">
+          <Link to="/services" className="group flex items-center gap-3 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.2em] hover:text-brand-gold-dark transition-colors">
             View All Services
             <ChevronRight size={18} strokeWidth={1.5} />
           </Link>
@@ -213,13 +213,13 @@ const ServicesGrid = () => {
                 <div className="absolute inset-0 bg-brand-nearblack/20 group-hover:bg-transparent transition-colors" />
               </div>
               <div className="p-10 md:p-12 flex flex-col flex-1">
-                <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-5 group-hover:text-brand-gold transition-colors min-h-[4rem] flex items-center">
+                <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-5 group-hover:text-brand-gold-dark transition-colors min-h-[4rem] flex items-center">
                   {service.title}
                 </h3>
                 <p className="font-sans text-sm text-brand-muted leading-relaxed mb-10 font-light flex-1">
                   {service.desc}
                 </p>
-                <Link to={service.link} className="flex items-center gap-4 text-brand-gold font-sans text-xs uppercase tracking-[0.2em] font-medium mt-auto">
+                <Link to={service.link} className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-[0.2em] font-medium mt-auto">
                   Explore Service
                   <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-2" />
                 </Link>
@@ -278,8 +278,8 @@ const WhyGoldenMaple = () => {
               />
             </div>
             <div className="absolute -bottom-10 -left-10 bg-brand-green-dark p-12 hidden md:block rounded-[2px] shadow-xl">
-              <span className="font-display text-7xl font-light text-brand-nearblack block mb-2">10+</span>
-              <span className="font-sans text-[10px] font-normal uppercase tracking-[0.25em] text-brand-nearblack">Years of Excellence</span>
+              <span className="font-display text-7xl font-light text-brand-porcelain block mb-2">10+</span>
+              <span className="font-sans text-[10px] font-normal uppercase tracking-[0.25em] text-brand-porcelain">Years of Excellence</span>
             </div>
           </div>
         </div>
@@ -312,7 +312,7 @@ const BeforeAfterSection = () => {
     <section className="section-padding bg-brand-nearblack">
       <div className="container-custom">
         <Reveal className="text-center max-w-3xl mx-auto mb-24">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
             Recent Builds
           </span>
           <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite">
@@ -332,7 +332,7 @@ const BeforeAfterSection = () => {
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-4 block">
+              <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-4 block">
                 {f.tag}
               </span>
               <h3 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight mb-6">
@@ -342,7 +342,7 @@ const BeforeAfterSection = () => {
                 {f.body}
               </p>
               <div className="flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-bonewhite/80">
-                <CheckCircle size={14} strokeWidth={1.5} className="text-brand-gold shrink-0" />
+                <CheckCircle size={14} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
                 {f.meta}
               </div>
             </Reveal>
@@ -414,7 +414,7 @@ const Testimonials = () => {
 
 const FinalCTA = () => {
   return (
-    <section className="section-padding bg-brand-nearblack relative overflow-hidden">
+    <section className="section-padding bg-brand-burgundy relative overflow-hidden">
       <div className="absolute inset-0 opacity-40">
           <img
             src="/images/projects/IMG_4826.jpg"
@@ -426,11 +426,11 @@ const FinalCTA = () => {
           />
       </div>
       <Reveal className="container-custom relative z-10 text-center">
-        <h2 className="font-display text-4xl md:text-8xl font-light text-brand-bonewhite mb-12 leading-tight">
+        <h2 className="font-display text-4xl md:text-8xl font-light text-brand-porcelain mb-12 leading-tight">
           This time next year, <br />
           <span className="text-brand-gold italic">you could be living in it.</span>
         </h2>
-        <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-10 font-light leading-relaxed">
+        <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-10 font-light leading-relaxed">
           Tell us what you're picturing and what you're willing to spend. Yorkis comes back within 24 hours with an honest read on scope, timeline, and whether your budget matches the build you have in mind.
         </p>
         <div className="flex flex-col items-center gap-12 mb-16">
@@ -480,12 +480,12 @@ const ContractorPainPoints = () => {
     <section className="section-padding bg-brand-nearblack">
       <div className="container-custom">
         <Reveal className="max-w-4xl mx-auto text-center mb-24">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
             Sound Familiar?
           </span>
           <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-tight mb-10">
             You've been burned <br />
-            <span className="text-brand-gold italic">by a contractor before.</span>
+            <span className="text-brand-gold-dark italic">by a contractor before.</span>
           </h2>
           <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
             We hear it every week. Homeowners in Barrie who hired someone "affordable" and got sinking stones, ghosted communication, and surprise invoices. We built Golden Maple to be the opposite of that experience.
@@ -504,17 +504,17 @@ const ContractorPainPoints = () => {
             >
               <div className="flex items-start gap-8">
                 <div className="w-14 h-14 bg-brand-midsurface flex items-center justify-center rounded-[2px] shrink-0 shadow-sm border border-brand-dim/10">
-                  <point.icon className="text-brand-gold" size={24} strokeWidth={1.5} />
+                  <point.icon className="text-brand-gold-dark" size={24} strokeWidth={1.5} />
                 </div>
                 <div>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{point.pain}</h3>
                   <div className="space-y-6">
                     <div className="flex gap-4">
-                      <span className="font-sans text-[10px] font-normal uppercase tracking-widest text-red-400 shrink-0 mt-1">Typical:</span>
+                      <span className="font-sans text-[10px] font-normal uppercase tracking-widest text-brand-error shrink-0 mt-1">Typical:</span>
                       <p className="font-sans text-sm text-brand-muted italic font-light">{point.cause}</p>
                     </div>
                     <div className="flex gap-4">
-                      <span className="font-sans text-[10px] font-normal uppercase tracking-widest text-brand-gold shrink-0 mt-1">Our Way:</span>
+                      <span className="font-sans text-[10px] font-normal uppercase tracking-widest text-brand-gold-dark shrink-0 mt-1">Our Way:</span>
                       <p className="font-sans text-sm text-brand-bonewhite font-normal">{point.solution}</p>
                     </div>
                   </div>
@@ -542,7 +542,7 @@ const SocialProofStrip = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {stats.map((stat, idx) => (
             <Reveal key={idx} delay={idx * 0.1} y={16} className="text-center">
-              <span className="font-display text-4xl md:text-5xl font-light text-brand-green block mb-3">{stat.number}</span>
+              <span className="font-display text-4xl md:text-5xl font-light text-brand-green-dark block mb-3">{stat.number}</span>
               <span className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite block mb-2 font-medium">{stat.label}</span>
               <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted font-light">{stat.sub}</span>
             </Reveal>
@@ -579,10 +579,10 @@ export default function Home() {
       <BeforeAfterSection />
       <Process />
       <Testimonials />
-      <section className="section-padding bg-brand-black border-t border-brand-dim/5">
+      <section className="section-padding bg-brand-nearblack border-t border-brand-dim/5">
       <div className="container-custom">
         <div className="max-w-3xl mx-auto mb-20 text-center">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">Common Questions</span>
+          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">Common Questions</span>
           <h2 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite">Expert Insights.</h2>
         </div>
         
@@ -606,7 +606,7 @@ export default function Home() {
             }
           ].map((faq, idx) => (
             <div key={idx} className="bg-brand-surface p-10 border border-brand-dim/10 rounded-[2px] hover:border-brand-gold/20 transition-colors">
-              <h3 className="font-display text-2xl font-light text-brand-gold mb-6 leading-tight">{faq.q}</h3>
+              <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-6 leading-tight">{faq.q}</h3>
               <p className="font-sans text-base text-brand-muted leading-relaxed font-light">{faq.a}</p>
             </div>
           ))}

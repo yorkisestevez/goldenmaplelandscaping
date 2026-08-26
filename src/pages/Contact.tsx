@@ -1,7 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { MapPin, Phone, Mail, Clock, Shield, Award, CheckCircle } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Shield, Award, CheckCircle, ChevronDown } from 'lucide-react';
 import SEO from '../components/SEO';
 import BuyersGuide from '../components/BuyersGuide';
 import { trackLead } from '../utils/analytics';
@@ -113,12 +113,12 @@ export default function Contact() {
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto mb-32">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
               Get Your Estimate
             </span>
             <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
               Share your budget. <br />
-              <span className="italic text-brand-gold">We'll meet you there.</span>
+              <span className="italic text-brand-gold-dark">We'll meet you there.</span>
             </h1>
             <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
               The quickest way to find out if Golden Maple is the right fit for your project — tell us what you're picturing and what you're willing to spend. Yorkis comes back within 24 hours with an honest read on scope, timeline, and whether your budget matches the build you have in mind. No sales call required to get started.
@@ -137,21 +137,21 @@ export default function Contact() {
 
                 <div className="mb-12 p-6 bg-brand-nearblack/50 border-l-2 border-brand-gold">
                   <p className="font-sans text-base text-brand-muted leading-relaxed font-light">
-                    Share a <span className="text-brand-gold font-normal">budget range</span> and a few project details. Yorkis comes back personally with an honest scope, a realistic timeline, and whether what you want is achievable for what you're spending. No call required to get started — <span className="text-brand-bonewhite font-normal">we work off your numbers, not ours</span>.
+                    Share a <span className="text-brand-gold-dark font-normal">budget range</span> and a few project details. Yorkis comes back personally with an honest scope, a realistic timeline, and whether what you want is achievable for what you're spending. No call required to get started — <span className="text-brand-bonewhite font-normal">we work off your numbers, not ours</span>.
                   </p>
                 </div>
 
                 {status === 'success' ? (
                   <div className="py-16 text-center space-y-8">
                     <div className="mx-auto w-16 h-16 rounded-full border border-brand-gold flex items-center justify-center">
-                      <CheckCircle size={28} className="text-brand-gold" strokeWidth={1.5} />
+                      <CheckCircle size={28} className="text-brand-gold-dark" strokeWidth={1.5} />
                     </div>
                     <h3 className="font-display text-3xl font-light text-brand-bonewhite">Budget received.</h3>
                     <p className="font-sans text-base text-brand-muted leading-relaxed font-light max-w-md mx-auto">
-                      Yorkis will review your project and respond within <span className="text-brand-gold">24 hours</span> with an honest scope, timeline, and next steps based on the budget you shared.
+                      Yorkis will review your project and respond within <span className="text-brand-gold-dark">24 hours</span> with an honest scope, timeline, and next steps based on the budget you shared.
                     </p>
                     <p className="font-sans text-sm text-brand-muted font-light">
-                      Project urgent? Call <a href="tel:7055003581" className="text-brand-gold hover:underline">(705) 500-3581</a> directly.
+                      Project urgent? Call <a href="tel:7055003581" className="text-brand-gold-dark hover:underline">(705) 500-3581</a> directly.
                     </p>
                   </div>
                 ) : (
@@ -175,7 +175,7 @@ export default function Contact() {
                           required
                           value={form.name}
                           onChange={onChange}
-                          className="w-full bg-brand-nearblack border-b border-brand-dim/20 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light"
+                          className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite placeholder:text-brand-muted/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
                           placeholder="John Doe"
                         />
                       </div>
@@ -187,7 +187,7 @@ export default function Contact() {
                           required
                           value={form.phone}
                           onChange={onChange}
-                          className="w-full bg-brand-nearblack border-b border-brand-dim/20 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light"
+                          className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite placeholder:text-brand-muted/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
                           placeholder="(705) 500-3581"
                         />
                       </div>
@@ -200,17 +200,18 @@ export default function Contact() {
                         required
                         value={form.email}
                         onChange={onChange}
-                        className="w-full bg-brand-nearblack border-b border-brand-dim/20 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light"
+                        className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite placeholder:text-brand-muted/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
                         placeholder="your@email.com"
                       />
                     </div>
                     <div className="space-y-4">
                       <label className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal">Service Interest</label>
+                      <div className="relative">
                       <select
                         name="service"
                         value={form.service}
                         onChange={onChange}
-                        className="w-full bg-brand-nearblack border-b border-brand-dim/20 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors appearance-none cursor-pointer font-light"
+                        className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors appearance-none cursor-pointer font-light"
                       >
                         <option>Backyard Outdoor Living / Premium Patio</option>
                         <option>Patio + Retaining Wall / Steps / Drainage</option>
@@ -220,15 +221,18 @@ export default function Contact() {
                         <option>Front Entrance / Walkway Package</option>
                         <option>Other Hardscape Project</option>
                       </select>
+                      <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-gold-dark pointer-events-none" />
+                      </div>
                     </div>
                     <div className="space-y-4">
-                      <label className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold font-normal">Approximate Project Budget *</label>
+                      <label className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark font-normal">Approximate Project Budget *</label>
+                      <div className="relative">
                       <select
                         name="budget"
                         required
                         value={form.budget}
                         onChange={onChange}
-                        className="w-full bg-brand-nearblack border-b border-brand-gold/40 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors appearance-none cursor-pointer font-light"
+                        className="w-full bg-brand-nearblack border-b-2 border-brand-gold/40 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors appearance-none cursor-pointer font-light"
                       >
                         <option value="" disabled>Pick a range so we can respond meaningfully</option>
                         <option value="under-25k">Under $25,000</option>
@@ -238,6 +242,8 @@ export default function Contact() {
                         <option value="250k+">$250,000+</option>
                         <option value="unsure">Not sure yet — please advise</option>
                       </select>
+                      <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-gold-dark pointer-events-none" />
+                      </div>
                     </div>
                     <div className="space-y-4">
                       <label className="font-sans text-xs uppercase tracking-[0.25em] text-brand-muted font-normal">Project Details</label>
@@ -246,12 +252,12 @@ export default function Contact() {
                         rows={4}
                         value={form.details}
                         onChange={onChange}
-                        className="w-full bg-brand-nearblack border-b border-brand-dim/20 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light text-base"
+                        className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite placeholder:text-brand-muted/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light text-base"
                         placeholder="Tell us about your project goals and timeline..."
                       />
                     </div>
                     {status === 'error' && (
-                      <p className="font-sans text-sm text-red-400 font-light">{errorMsg}</p>
+                      <p className="font-sans text-sm text-brand-error font-light">{errorMsg}</p>
                     )}
                     <button
                       type="submit"
@@ -261,7 +267,7 @@ export default function Contact() {
                       {status === 'submitting' ? 'Sending…' : 'Send My Budget & Details'}
                     </button>
                     <div className="flex items-start justify-center gap-3 pt-2 text-[11px] text-brand-muted font-light leading-relaxed">
-                      <Shield size={14} className="text-brand-gold/70 shrink-0 mt-px" strokeWidth={1.5} />
+                      <Shield size={14} className="text-brand-gold-dark/70 shrink-0 mt-px" strokeWidth={1.5} />
                       <span>We only contact you about your project. No spam, ever — and we never share your information.</span>
                     </div>
                   </form>
@@ -281,7 +287,7 @@ export default function Contact() {
                 <div className="space-y-12">
                   <div className="flex items-start gap-10">
                     <div className="bg-brand-gold/5 p-6 rounded-[2px] border border-brand-gold/10">
-                      <MapPin size={24} className="text-brand-gold" strokeWidth={1.5} />
+                      <MapPin size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
                     </div>
                     <div>
                       <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-3">Our Location</h3>
@@ -290,25 +296,25 @@ export default function Contact() {
                   </div>
                   <div className="flex items-start gap-10">
                     <div className="bg-brand-gold/5 p-6 rounded-[2px] border border-brand-gold/10">
-                      <Phone size={24} className="text-brand-gold" strokeWidth={1.5} />
+                      <Phone size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
                     </div>
                     <div>
                       <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-3">Phone</h3>
-                      <a href="tel:7055003581" className="font-sans text-brand-muted hover:text-brand-gold transition-colors font-normal">(705) 500-3581</a>
+                      <a href="tel:7055003581" className="font-sans text-brand-muted hover:text-brand-gold-dark transition-colors font-normal">(705) 500-3581</a>
                     </div>
                   </div>
                   <div className="flex items-start gap-10">
                     <div className="bg-brand-gold/5 p-6 rounded-[2px] border border-brand-gold/10">
-                      <Mail size={24} className="text-brand-gold" strokeWidth={1.5} />
+                      <Mail size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
                     </div>
                     <div>
                       <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-3">Email</h3>
-                      <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="font-sans text-brand-muted hover:text-brand-gold transition-colors font-normal">yorkis@goldenmaplelandscaping.ca</a>
+                      <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="font-sans text-brand-muted hover:text-brand-gold-dark transition-colors font-normal">yorkis@goldenmaplelandscaping.ca</a>
                     </div>
                   </div>
                   <div className="flex items-start gap-10">
                     <div className="bg-brand-gold/5 p-6 rounded-[2px] border border-brand-gold/10">
-                      <Clock size={24} className="text-brand-gold" strokeWidth={1.5} />
+                      <Clock size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
                     </div>
                     <div>
                       <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-3">Hours</h3>
@@ -319,19 +325,19 @@ export default function Contact() {
               </div>
 
               <div className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10">
-                <h3 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">Our Credentials</h3>
+                <h3 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Our Credentials</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
                   <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <Shield size={18} className="text-brand-gold" strokeWidth={1.5} /> WSIB Certified
+                    <Shield size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> WSIB Certified
                   </div>
                   <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <Award size={18} className="text-brand-gold" strokeWidth={1.5} /> $5M Liability
+                    <Award size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> $5M Liability
                   </div>
                   <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <CheckCircle size={18} className="text-brand-gold" strokeWidth={1.5} /> 5-Year Structural Warranty
+                    <CheckCircle size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> 5-Year Structural Warranty
                   </div>
                   <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <CheckCircle size={18} className="text-brand-gold" strokeWidth={1.5} /> Engineering Standard
+                    <CheckCircle size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> Engineering Standard
                   </div>
                 </div>
               </div>

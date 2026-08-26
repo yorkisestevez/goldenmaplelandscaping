@@ -20,12 +20,12 @@ export default function MaterialSelection() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold mb-10 block">
+              <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-10 block">
                 Phase Four: Curation
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.1] mb-12">
                 The Luxury of <br />
-                <span className="italic text-brand-gold">Choice.</span>
+                <span className="italic text-brand-gold-dark">Choice.</span>
               </h1>
               <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
                 Not all stone is created equal. We curate a selection of high-performance materials that not only match your home's aesthetic but also withstand the extreme freeze-thaw cycles of Ontario's climate.
@@ -48,12 +48,12 @@ export default function MaterialSelection() {
                 className="w-full h-full object-cover grayscale opacity-80"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-brand-nearblack/20" />
+              <div className="absolute inset-0 bg-brand-black/20" />
             </motion.div>
           </div>
 
           <div className="mb-40">
-            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">Curation beyond <br/> <span className="italic text-brand-gold">just aesthetics.</span></h2>
+            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">Curation beyond <br/> <span className="italic text-brand-gold-dark">just aesthetics.</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
               {[
                 { title: "Partner Selection", desc: "We exclusively work with premium manufacturers like Unilock, Techo-Bloc, and Permacon for consistent quality." },
@@ -64,7 +64,7 @@ export default function MaterialSelection() {
                 { title: "Structural Components", desc: "Using engineered retaining wall blocks and high-density gravel bases that exceed industry standards." }
               ].map((item, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 hover:border-brand-gold/30 transition-all duration-300">
-                  <h3 className="font-display text-2xl font-light text-brand-gold mb-6">{item.title}</h3>
+                  <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-6">{item.title}</h3>
                   <p className="font-sans text-base text-brand-muted leading-relaxed font-light">{item.desc}</p>
                 </div>
               ))}
@@ -77,7 +77,7 @@ export default function MaterialSelection() {
               <p className="font-sans text-xl text-brand-muted leading-relaxed font-light mb-12 text-balance lg:px-12">
                 We don't just pick materials based on looks. We pick materials based on their ability to resist salt, fading, and structural settlement. Whether it's a 16" deep base or the interlocking joint sand—every component is chosen for its engineering.
               </p>
-              <Link to="/process/construction" className="flex items-center gap-4 text-brand-gold font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
+              <Link to="/process/construction" className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
                 <span>Phase Five: Engineered Construction</span>
                 <ArrowRight size={16} strokeWidth={1.5} />
               </Link>
@@ -86,7 +86,7 @@ export default function MaterialSelection() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-7xl font-light mb-16 leading-tight">
             Curate your <br />

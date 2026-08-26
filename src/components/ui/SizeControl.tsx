@@ -73,11 +73,11 @@ export default function SizeControl({
             onClick={() => commit(value - step)}
             disabled={value <= min}
             aria-label={`Decrease ${label}`}
-            className="w-11 h-11 rounded-2xl border border-brand-dim bg-brand-cream flex items-center justify-center text-brand-gold hover:border-brand-gold/60 hover:bg-brand-midsurface disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="w-11 h-11 rounded-2xl border border-brand-dim bg-brand-cream-light flex items-center justify-center text-brand-gold-dark hover:border-brand-gold/60 hover:bg-brand-midsurface disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             <Minus size={15} strokeWidth={2} />
           </button>
-          <div className="flex items-baseline gap-1.5 px-3 py-2 rounded-2xl border border-brand-dim bg-brand-cream focus-within:border-brand-gold/60 transition-colors">
+          <div className="flex items-baseline gap-1.5 px-3 py-2 rounded-2xl border border-brand-dim bg-brand-cream-light focus-within:border-brand-gold/60 transition-colors">
             <input
               type="text"
               inputMode="numeric"
@@ -86,7 +86,7 @@ export default function SizeControl({
               onBlur={commitTyped}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitTyped(); e.currentTarget.blur(); } }}
               aria-label={`${label} in ${unit}`}
-              className="w-[68px] bg-transparent outline-none font-display text-2xl text-brand-gold tabular-nums text-right"
+              className="w-[68px] bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 font-display text-2xl text-brand-gold-dark tabular-nums text-right"
             />
             <span className="font-sans text-[12px] text-brand-muted whitespace-nowrap">{unit}</span>
           </div>
@@ -95,7 +95,7 @@ export default function SizeControl({
             onClick={() => commit(value + step)}
             disabled={value >= max}
             aria-label={`Increase ${label}`}
-            className="w-11 h-11 rounded-2xl border border-brand-dim bg-brand-cream flex items-center justify-center text-brand-gold hover:border-brand-gold/60 hover:bg-brand-midsurface disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="w-11 h-11 rounded-2xl border border-brand-dim bg-brand-cream-light flex items-center justify-center text-brand-gold-dark hover:border-brand-gold/60 hover:bg-brand-midsurface disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             <Plus size={15} strokeWidth={2} />
           </button>
@@ -136,7 +136,7 @@ export default function SizeControl({
                   'px-3.5 py-2 rounded-2xl border transition-all duration-200 text-left',
                   active
                     ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold'
-                    : 'bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
+                    : 'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
                 )}
               >
                 <span className="font-sans text-[12px] text-brand-bone">{p.label}</span>

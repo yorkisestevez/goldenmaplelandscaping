@@ -75,7 +75,7 @@ export default function PaverWalkwayCostBarrie() {
       schema={faqSchema}
     >
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
-        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">Quick Answer</div>
         <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">A professionally installed paver walkway in Barrie runs roughly $35–$65 per square foot for 2026 — so a standard 4-foot-wide, 50-foot walkway (about 200 sq ft) typically lands between $7,000 and $13,000. The range comes down to paver tier, base depth, site access, and pattern complexity. In Simcoe County's clay soil and freeze-thaw, the base (12&quot;+ of clear stone) is about 70% of a walkway that actually lasts — quotes well below this range are almost always skimping there.</p>
       </div>
 
@@ -130,7 +130,7 @@ export default function PaverWalkwayCostBarrie() {
         <div className="flex items-start gap-4">
           <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
           <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2">About the Author</div>
+            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
             <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces across Barrie and Simcoe County since 2020. With hundreds of patios, walkways, and driveways installed, WSIB certification, and $5M liability coverage, Yorkis backs every Golden Maple project with a 5-year structural warranty and a perfect 5.0 Google rating.</p>
           </div>
         </div>

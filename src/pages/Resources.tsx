@@ -303,10 +303,10 @@ export default function Resources() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-8 block">Resources</span>
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">Resources</span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-10">
                 Expert guides for <br />
-                <span className="italic text-brand-gold">smarter homeowners.</span>
+                <span className="italic text-brand-gold-dark">smarter homeowners.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
                 Before you spend a dollar on your backyard, arm yourself with the knowledge that separates a 3-year patio from a 30-year one.
@@ -327,8 +327,8 @@ export default function Resources() {
                   <BookOpen className="text-brand-gold" size={32} strokeWidth={1.5} />
                 </div>
                 <div className="flex-1">
-                  <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-3 block">Featured Resource</span>
-                  <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite mb-4 group-hover:text-brand-gold transition-colors">The Homeowner's Buyer's Guide</h2>
+                  <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3 block">Featured Resource</span>
+                  <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite mb-4 group-hover:text-brand-gold-dark transition-colors">The Homeowner's Buyer's Guide</h2>
                   <p className="font-sans text-brand-muted font-light leading-relaxed">The complete guide to hiring the right landscaping contractor in Barrie. What to ask, what to expect, and how to protect your investment.</p>
                 </div>
                 <ArrowRight className="text-brand-gold shrink-0 group-hover:translate-x-2 transition-transform" size={24} strokeWidth={1.5} />
@@ -349,8 +349,8 @@ export default function Resources() {
                   <Calculator className="text-brand-gold" size={32} strokeWidth={1.5} />
                 </div>
                 <div className="flex-1">
-                  <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-3 block">Free Tool</span>
-                  <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite mb-4 group-hover:text-brand-gold transition-colors">What will your project cost?</h2>
+                  <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3 block">Free Tool</span>
+                  <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite mb-4 group-hover:text-brand-gold-dark transition-colors">What will your project cost?</h2>
                   <p className="font-sans text-brand-muted font-light leading-relaxed">Price your patio, wall, deck or full backyard in about two minutes — real Carr Landscape Depot pricing, no signup to see your range, and every choice shows exactly what it adds.</p>
                 </div>
                 <ArrowRight className="text-brand-gold shrink-0 group-hover:translate-x-2 transition-transform" size={24} strokeWidth={1.5} />
@@ -380,14 +380,14 @@ export default function Resources() {
                     </div>
                     <div className="p-8 flex flex-col flex-1">
                       <div className="flex items-center gap-4 mb-5">
-                        <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold font-medium">{post.category}</span>
+                        <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark font-medium">{post.category}</span>
                         <span className="flex items-center gap-1 font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">
                           <Clock size={10} strokeWidth={1.5} /> {post.readTime}
                         </span>
                       </div>
-                      <h3 className="font-display text-xl font-light text-brand-bonewhite mb-4 leading-tight group-hover:text-brand-gold transition-colors">{post.title}</h3>
+                      <h3 className="font-display text-xl font-light text-brand-bonewhite mb-4 leading-tight group-hover:text-brand-gold-dark transition-colors">{post.title}</h3>
                       <p className="font-sans text-sm text-brand-muted font-light leading-relaxed flex-1">{post.excerpt}</p>
-                      <div className="mt-6 flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold group-hover:gap-5 transition-all">
+                      <div className="mt-6 flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark group-hover:gap-5 transition-all">
                         Read Article <ArrowRight size={14} strokeWidth={1.5} />
                       </div>
                     </div>

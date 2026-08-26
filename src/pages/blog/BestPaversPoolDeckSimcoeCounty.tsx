@@ -78,7 +78,7 @@ export default function BestPaversPoolDeckSimcoeCounty() {
       wordCount={1820}
     >
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
-        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">Quick Answer</div>
         <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">For a Simcoe County pool deck, three things actually matter — slip resistance (R-11 rating or higher when wet), cool-touch under July sun (lighter colours that don\'t burn bare feet), and freeze-thaw durability through our 60-plus annual cycles. Quality pavers from Permacon, Unilock, and Techo-Bloc meet all three when you choose the right line. Budget $37-65 per square foot installed, including the 12-16 inch compacted clear stone base our climate demands. The paver matters; the base matters more.</p>
       </div>
 
@@ -103,7 +103,7 @@ export default function BestPaversPoolDeckSimcoeCounty() {
       <div dangerouslySetInnerHTML={{ __html: "<p>We say this on every hardscape project we build, but pool decks especially: the most expensive premium paver installed on a 4-inch granular A base will fail before a budget paver installed on a 12-16 inch compacted clear stone base. The base is the single biggest determinant of whether your deck looks the same in ten years or starts sinking in the second winter.</p><p>What we build on every pool deck: <strong>12 inches minimum, 16 inches in areas with poor-draining clay subgrade</strong> (most of the Bayfield Street corridor and the older Innisfil subdivisions). Compacted in 4-inch lifts with a plate compactor, using 3/4 inch clear crushed stone (NOT granular A — the difference is explained in our <a href='/resources/clear-stone-vs-granular-a-base'>clear stone vs granular A guide</a>). Geotextile fabric between the subgrade and the base to prevent soil migration upward over time.</p><p>That's the foundation that lets a paver perform to its rated lifespan. Without it, the best paver in the showroom is just a slow-motion failure.</p>" }} />
 
       <div className="not-prose my-10 overflow-x-auto">
-        <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold mb-3">Pool-deck-spec paver comparison — what to look for across the three brands we install</p>
+        <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold-dark mb-3">Pool-deck-spec paver comparison — what to look for across the three brands we install</p>
         <div dangerouslySetInnerHTML={{ __html: "<table><thead><tr><th>Spec</th><th>Permacon</th><th>Unilock</th><th>Techo-Bloc</th></tr></thead><tbody><tr><td>Pool-deck slip rating</td><td>R-11 to R-12</td><td>R-11 to R-12</td><td>R-11 to R-12</td></tr><tr><td>Cool-touch (light) lines available</td><td>Strongest range</td><td>Mid range</td><td>Mid range</td></tr><tr><td>Freeze-thaw certification</td><td>CSA A231.2</td><td>CSA A231.2</td><td>CSA A231.2</td></tr><tr><td>Format variety</td><td>Standard rectilinear</td><td>Wide premium textures</td><td>Broadest formats / large-format slabs</td></tr><tr><td>Structural warranty</td><td>25+ years</td><td>25+ years</td><td>25+ years</td></tr><tr><td>Typical aesthetic fit</td><td>Contemporary, clean</td><td>Premium textured</td><td>Movement / blended colour</td></tr></tbody></table>" }} />
       </div>
 
@@ -143,7 +143,7 @@ export default function BestPaversPoolDeckSimcoeCounty() {
         <div className="flex items-start gap-4">
           <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
           <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2">About the Author</div>
+            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
             <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020. We\'ve built hardscape across Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, and Collingwood — including pool decks, retaining walls, driveways, and luxury outdoor living spaces. WSIB certified, $5,000,000 liability coverage, 5.0 Google rating across 8 reviews. Every paver spec on this site is one we\'ve installed in Simcoe County conditions.</p>
           </div>
         </div>

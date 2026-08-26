@@ -66,12 +66,12 @@ export default function ProcessPage() {
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="max-w-4xl mb-32">
-            <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold mb-8 block">
+            <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-8 block">
               The Golden Maple Standard
             </span>
             <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
               A Process Rooted in <br />
-              <span className="italic text-brand-gold">Engineering & Precision.</span>
+              <span className="italic text-brand-gold-dark">Engineering & Precision.</span>
             </h1>
             <p className="font-sans text-xl text-brand-muted leading-relaxed font-light max-w-2xl">
               Luxury outdoor living is not accidental. It is the result of meticulous planning, transparent communication, and a refusal to cut corners where it matters most.
@@ -96,7 +96,7 @@ export default function ProcessPage() {
                     decoding="async"
                     className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
                   />
-                  <div className="absolute inset-0 bg-brand-nearblack/40" />
+                  <div className="absolute inset-0 bg-brand-black/40" />
                 </div>
                 <div className="p-12 flex flex-col flex-1">
                   <step.icon className="text-brand-gold mb-8" size={32} strokeWidth={1.5} />
@@ -106,7 +106,7 @@ export default function ProcessPage() {
                   </p>
                   <Link 
                     to={step.link} 
-                    className="flex items-center gap-4 text-brand-gold font-sans text-xs uppercase tracking-widest group-hover:gap-6 transition-all font-medium py-2"
+                    className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-widest group-hover:gap-6 transition-all font-medium py-2"
                   >
                     <span>View Phase Details</span>
                     <ArrowRight size={16} strokeWidth={1.5} />
@@ -118,13 +118,13 @@ export default function ProcessPage() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-8xl font-light mb-12 leading-tight">
             Ready to experience <br />
             <span className="text-brand-gold italic">the Golden Maple way?</span>
           </h2>
-          <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light leading-relaxed">
+          <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light leading-relaxed">
             Every project starts with a professional consultation. Let's discuss how we can transform your Simcoe County property into a functional masterpiece.
           </p>
           <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>

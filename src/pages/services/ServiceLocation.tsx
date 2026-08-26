@@ -136,8 +136,8 @@ export default function ServiceLocation() {
                 transition={{ duration: 0.8 }}
                 className="flex items-center gap-4 mb-8"
               >
-                <MapPin size={14} className="text-brand-gold" strokeWidth={1.5} />
-                <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold">
+                <MapPin size={14} className="text-brand-gold-dark" strokeWidth={1.5} />
+                <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark">
                   {location.name} · {location.region}
                 </span>
               </motion.div>
@@ -149,7 +149,7 @@ export default function ServiceLocation() {
                 className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-10"
               >
                 {service.shortName} in <br />
-                <span className="text-brand-gold italic">{location.name}, Ontario.</span>
+                <span className="text-brand-gold-dark italic">{location.name}, Ontario.</span>
               </motion.h1>
 
               <motion.p
@@ -168,7 +168,7 @@ export default function ServiceLocation() {
                 className="flex flex-wrap items-center gap-6 text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light"
               >
                 <span className="flex items-center gap-2">
-                  <span className="font-sans text-brand-gold text-xl font-normal normal-case tracking-normal">
+                  <span className="font-sans text-brand-gold-dark text-xl font-normal normal-case tracking-normal">
                     {service.startingPriceText}
                   </span>
                   <span>{service.perUnitText}</span>
@@ -190,7 +190,7 @@ export default function ServiceLocation() {
             <div className="flex items-center gap-4">
               <div className="flex gap-0.5">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={12} className="text-brand-gold fill-brand-gold" strokeWidth={0} />
+                  <Star key={i} size={12} className="text-brand-gold-dark fill-brand-gold" strokeWidth={0} />
                 ))}
               </div>
               <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
@@ -198,13 +198,13 @@ export default function ServiceLocation() {
               </span>
             </div>
             <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <Shield size={14} className="text-brand-gold" strokeWidth={1.5} /> WSIB Certified
+              <Shield size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> WSIB Certified
             </div>
             <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <Award size={14} className="text-brand-gold" strokeWidth={1.5} /> $5M Liability
+              <Award size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> $5M Liability
             </div>
             <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <CheckCircle size={14} className="text-brand-gold" strokeWidth={1.5} /> 5-Yr Warranty
+              <CheckCircle size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> 5-Yr Warranty
             </div>
           </div>
         </div>
@@ -215,11 +215,11 @@ export default function ServiceLocation() {
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24">
             <div className="lg:col-span-7">
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
                 Why {location.name}?
               </span>
               <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite leading-tight mb-12">
-                The {location.name} <span className="italic text-brand-gold">build context.</span>
+                The {location.name} <span className="italic text-brand-gold-dark">build context.</span>
               </h2>
               <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light mb-10">
                 {location.intro}
@@ -227,7 +227,7 @@ export default function ServiceLocation() {
 
               <div className="space-y-10">
                 <div>
-                  <h3 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold mb-4">
+                  <h3 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-4">
                     The terrain
                   </h3>
                   <p className="font-sans text-sm md:text-base text-brand-muted leading-relaxed font-light">
@@ -235,7 +235,7 @@ export default function ServiceLocation() {
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold mb-4">
+                  <h3 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-4">
                     The soil profile
                   </h3>
                   <p className="font-sans text-sm md:text-base text-brand-muted leading-relaxed font-light">
@@ -243,20 +243,20 @@ export default function ServiceLocation() {
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold mb-4">
+                  <h3 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-4">
                     Common project types we build here
                   </h3>
                   <ul className="space-y-3">
                     {location.projects.map((p, idx) => (
                       <li key={idx} className="flex items-start gap-4">
-                        <CheckCircle size={16} className="text-brand-gold mt-1 shrink-0" strokeWidth={1.5} />
+                        <CheckCircle size={16} className="text-brand-gold-dark mt-1 shrink-0" strokeWidth={1.5} />
                         <span className="font-sans text-sm md:text-base text-brand-muted font-light">{p}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <h3 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold mb-4">
+                  <h3 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-4">
                     Neighbourhoods we serve in {location.name}
                   </h3>
                   <p className="font-sans text-sm md:text-base text-brand-muted leading-relaxed font-light">
@@ -268,7 +268,7 @@ export default function ServiceLocation() {
 
             <div className="lg:col-span-5">
               <div className="bg-brand-surface border border-brand-dim/10 rounded-[2px] p-10 sticky top-32">
-                <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+                <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
                   What's included
                 </span>
                 <h3 className="font-display text-2xl font-light text-brand-bonewhite leading-tight mb-8">
@@ -277,7 +277,7 @@ export default function ServiceLocation() {
                 <ul className="space-y-5 mb-10">
                   {service.scope.map((s, idx) => (
                     <li key={idx} className="flex items-start gap-4">
-                      <CheckCircle size={16} className="text-brand-gold mt-1 shrink-0" strokeWidth={1.5} />
+                      <CheckCircle size={16} className="text-brand-gold-dark mt-1 shrink-0" strokeWidth={1.5} />
                       <span className="font-sans text-sm text-brand-muted leading-relaxed font-light">{s}</span>
                     </li>
                   ))}
@@ -299,11 +299,11 @@ export default function ServiceLocation() {
       <section className="border-t border-brand-dim/20 bg-brand-surface/20">
         <div className="container-custom py-24">
           <div className="max-w-3xl">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
               The engineering point
             </span>
             <h2 className="font-display text-3xl md:text-5xl font-light text-brand-bonewhite leading-tight mb-10">
-              Why our {service.shortName.toLowerCase()} <span className="italic text-brand-gold">lasts.</span>
+              Why our {service.shortName.toLowerCase()} <span className="italic text-brand-gold-dark">lasts.</span>
             </h2>
             <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light">
               {service.whyMatters}
@@ -317,12 +317,12 @@ export default function ServiceLocation() {
         <div className="container-custom">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-20">
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
                 Frequently Asked
               </span>
               <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite leading-tight">
                 Quick answers about <br />
-                <span className="italic text-brand-gold">{service.shortName.toLowerCase()} in {location.name}.</span>
+                <span className="italic text-brand-gold-dark">{service.shortName.toLowerCase()} in {location.name}.</span>
               </h2>
             </div>
 
@@ -337,7 +337,7 @@ export default function ServiceLocation() {
                     <ArrowRight
                       size={18}
                       strokeWidth={1.5}
-                      className="text-brand-gold shrink-0 transition-transform group-open:rotate-90"
+                      className="text-brand-gold-dark shrink-0 transition-transform group-open:rotate-90"
                     />
                   </summary>
                   <p className="font-sans text-sm md:text-base text-brand-muted leading-relaxed font-light mt-6">
@@ -353,14 +353,14 @@ export default function ServiceLocation() {
       {/* Trust: testimonials */}
       <Testimonials
         eyebrow={`${location.name} clients`}
-        heading={<>Trusted across <span className="italic text-brand-gold">Simcoe County.</span></>}
+        heading={<>Trusted across <span className="italic text-brand-gold-dark">Simcoe County.</span></>}
         count={3}
       />
 
       {/* Cross-links: same service, other locations */}
       <section className="border-t border-brand-dim/20">
         <div className="container-custom py-24">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
             We also build {service.shortName.toLowerCase()} in
           </span>
           <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight mb-12">
@@ -375,13 +375,13 @@ export default function ServiceLocation() {
                   to={`/services/${targetSlug}`}
                   className="group flex items-center justify-between border border-brand-dim/10 hover:border-brand-gold/30 hover:bg-brand-gold/5 px-6 py-5 transition-all rounded-[2px]"
                 >
-                  <span className="font-sans text-sm text-brand-bonewhite font-light group-hover:text-brand-gold transition-colors">
+                  <span className="font-sans text-sm text-brand-bonewhite font-light group-hover:text-brand-gold-dark transition-colors">
                     {LOCATIONS[l].name}
                   </span>
                   <ArrowRight
                     size={14}
                     strokeWidth={1.5}
-                    className="text-brand-muted group-hover:text-brand-gold transition-all group-hover:translate-x-1"
+                    className="text-brand-muted group-hover:text-brand-gold-dark transition-all group-hover:translate-x-1"
                   />
                 </Link>
               );
@@ -393,7 +393,7 @@ export default function ServiceLocation() {
       {/* Cross-links: same location, other services */}
       <section className="border-t border-brand-dim/20 bg-brand-surface/20">
         <div className="container-custom py-24">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
             More we build in {location.name}
           </span>
           <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight mb-12">
@@ -408,16 +408,16 @@ export default function ServiceLocation() {
                   to={`/services/${targetSlug}`}
                   className="group bg-brand-surface border border-brand-dim/10 hover:border-brand-gold/30 p-10 rounded-[2px] transition-all flex flex-col"
                 >
-                  <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-4">
+                  <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-4">
                     {SERVICES[s].startingPriceText} {SERVICES[s].perUnitText}
                   </span>
-                  <h3 className="font-display text-2xl font-light text-brand-bonewhite leading-tight mb-4 group-hover:text-brand-gold transition-colors">
+                  <h3 className="font-display text-2xl font-light text-brand-bonewhite leading-tight mb-4 group-hover:text-brand-gold-dark transition-colors">
                     {SERVICES[s].shortName} in {location.name}
                   </h3>
                   <p className="font-sans text-sm text-brand-muted leading-relaxed font-light flex-1 mb-6">
                     {SERVICES[s].blurb}
                   </p>
-                  <span className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-bonewhite group-hover:text-brand-gold transition-colors">
+                  <span className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-bonewhite group-hover:text-brand-gold-dark transition-colors">
                     Learn More
                     <ArrowRight
                       size={12}
@@ -437,7 +437,7 @@ export default function ServiceLocation() {
         <div className="container-custom py-32 text-center">
           <h2 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite leading-tight mb-10">
             Ready to build in <br />
-            <span className="italic text-brand-gold">{location.name}?</span>
+            <span className="italic text-brand-gold-dark">{location.name}?</span>
           </h2>
           <p className="font-sans text-base md:text-lg text-brand-muted font-light max-w-xl mx-auto mb-14 leading-relaxed">
             Free estimate request with Yorkis. Honest scope, honest budget, no pressure.
@@ -445,7 +445,7 @@ export default function ServiceLocation() {
           <div className="flex flex-col sm:flex-row gap-6 items-center justify-center max-w-xl mx-auto">
             <a
               href="tel:7055003581"
-              className="flex-1 flex items-center justify-center gap-3 border border-brand-gold/30 text-brand-gold font-sans text-[10px] uppercase tracking-[0.25em] py-5 px-8 hover:bg-brand-gold/5 transition-colors w-full"
+              className="flex-1 flex items-center justify-center gap-3 border border-brand-gold/30 text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.25em] py-5 px-8 hover:bg-brand-gold/5 transition-colors w-full"
             >
               <Phone size={14} strokeWidth={1.5} />
               (705) 500-3581

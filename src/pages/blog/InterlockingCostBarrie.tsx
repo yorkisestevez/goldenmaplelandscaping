@@ -27,9 +27,9 @@ export default function InterlockingCostBarrie() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-brand-dim/30">
-              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold py-3 pr-6">Project</th>
-              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold py-3 pr-6">Size Range</th>
-              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold py-3">Price Range</th>
+              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold-dark py-3 pr-6">Project</th>
+              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold-dark py-3 pr-6">Size Range</th>
+              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold-dark py-3">Price Range</th>
             </tr>
           </thead>
           <tbody className="font-sans text-sm text-brand-muted font-light">
@@ -57,9 +57,9 @@ export default function InterlockingCostBarrie() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-brand-dim/30">
-              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold py-3 pr-6">Material</th>
-              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold py-3 pr-6">Price per sq ft</th>
-              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold py-3">Best For</th>
+              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold-dark py-3 pr-6">Material</th>
+              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold-dark py-3 pr-6">Price per sq ft</th>
+              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold-dark py-3">Best For</th>
             </tr>
           </thead>
           <tbody className="font-sans text-sm text-brand-muted font-light">
@@ -123,11 +123,11 @@ export default function InterlockingCostBarrie() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-brand-dim/30">
-              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold py-3 pr-4">Option</th>
-              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold py-3 pr-4">Per sq ft</th>
-              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold py-3 pr-4">Lifespan</th>
-              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold py-3 pr-4">Maintenance</th>
-              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold py-3">Look</th>
+              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold-dark py-3 pr-4">Option</th>
+              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold-dark py-3 pr-4">Per sq ft</th>
+              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold-dark py-3 pr-4">Lifespan</th>
+              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold-dark py-3 pr-4">Maintenance</th>
+              <th className="font-sans text-[11px] uppercase tracking-wider text-brand-gold-dark py-3">Look</th>
             </tr>
           </thead>
           <tbody className="font-sans text-sm text-brand-muted font-light">
@@ -161,7 +161,7 @@ export default function InterlockingCostBarrie() {
         <li><strong>Total estimate: ~$30,000</strong></li>
       </ul>
 
-      <p>Want a quick number? Use our <Link to="/cost-estimator?type=patio" className="text-brand-gold hover:underline">Cost Estimator</Link> for an instant ballpark based on your project details.</p>
+      <p>Want a quick number? Use our <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">Cost Estimator</Link> for an instant ballpark based on your project details.</p>
 
       <CostGuideInlineCTA />
 
@@ -198,9 +198,9 @@ export default function InterlockingCostBarrie() {
       <p>Golden Maple Landscaping offers <strong>free, no-obligation consultations</strong> with detailed written quotes. We'll measure your space, discuss materials, and give you a price you can hold us to.</p>
 
       <p>
-        <strong>Call:</strong> <a href="tel:+17055003581" className="text-brand-gold hover:underline">705-500-3581</a><br />
-        <strong>Email:</strong> <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="text-brand-gold hover:underline">yorkis@goldenmaplelandscaping.ca</a><br />
-        <strong>Online:</strong> <Link to="/contact" className="text-brand-gold hover:underline">Request a Quote</Link>
+        <strong>Call:</strong> <a href="tel:+17055003581" className="text-brand-gold-dark hover:underline">705-500-3581</a><br />
+        <strong>Email:</strong> <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="text-brand-gold-dark hover:underline">yorkis@goldenmaplelandscaping.ca</a><br />
+        <strong>Online:</strong> <Link to="/contact" className="text-brand-gold-dark hover:underline">Request a Quote</Link>
       </p>
     </BlogPostLayout>
   );

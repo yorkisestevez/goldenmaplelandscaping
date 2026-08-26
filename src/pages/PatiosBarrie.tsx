@@ -52,19 +52,19 @@ export default function PatiosBarrie() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 Premium Patio Projects · $35K-$75K
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 Patios that survive <br />
-                <span className="italic text-brand-gold">20 Simcoe winters.</span>
+                <span className="italic text-brand-gold-dark">20 Simcoe winters.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 Real cost range, no sales pressure. Most premium patio projects Golden Maple is built to serve run between $35,000 and $75,000 depending on size, access, base prep, drainage, steps, and material choice. The cost estimator gives you a planning range first. If the number works, we book the site walk.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/cost-estimator?type=patio" className="btn-primary">See My Cost Range</Link>
-                <Link to="/resources/clear-stone-vs-granular-a-base" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
+                <Link to="/resources/clear-stone-vs-granular-a-base" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
                   Why the base matters <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
@@ -88,7 +88,7 @@ export default function PatiosBarrie() {
 
           {/* The wedge — base material */}
           <div className="bg-brand-burgundy/10 border border-brand-burgundy/30 rounded-[2px] p-12 md:p-16 mb-40">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-8 block">
+            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">
               What most quotes don't tell you
             </span>
             <h2 className="font-display text-3xl md:text-5xl font-light text-brand-bonewhite leading-tight mb-10">
@@ -100,7 +100,7 @@ export default function PatiosBarrie() {
             <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed mb-10 font-light">
               We build on 3/4" clear stone — uniform-size aggregate that drains at 250 inches per hour by design. Water moves through, never sits, never freezes in a layer that can heave. Costs us about $1.50 more per square foot. Adds 20 years to the patio.
             </p>
-            <Link to="/resources/clear-stone-vs-granular-a-base" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold hover:text-brand-bonewhite transition-colors inline-flex items-center gap-4">
+            <Link to="/resources/clear-stone-vs-granular-a-base" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors inline-flex items-center gap-4">
               Read the engineering breakdown <ArrowRight size={16} strokeWidth={1.5} />
             </Link>
           </div>
@@ -108,7 +108,7 @@ export default function PatiosBarrie() {
           {/* Process */}
           <div className="mb-40">
             <div className="text-center max-w-3xl mx-auto mb-24">
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 The Build
               </span>
               <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-tight">
@@ -118,7 +118,7 @@ export default function PatiosBarrie() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
               {processSteps.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-                  <span className="font-display text-6xl font-light text-brand-gold/10 block mb-10">0{idx + 1}</span>
+                  <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10">0{idx + 1}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{step.title}</h3>
                   <p className="font-sans text-sm text-brand-muted leading-relaxed font-light">{step.desc}</p>
                 </div>
@@ -129,7 +129,7 @@ export default function PatiosBarrie() {
           {/* What's included */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-40">
             <div className="bg-brand-surface p-16 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-12 block">What's in every quote</h2>
+              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">What's in every quote</h2>
               <ul className="space-y-8">
                 {[
                   '12" excavation to virgin ground',
@@ -142,14 +142,14 @@ export default function PatiosBarrie() {
                   '5-year sink and settlement warranty',
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
-                    <Check size={18} className="text-brand-gold shrink-0" strokeWidth={1.5} />
+                    <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
             <div className="bg-brand-surface p-16 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-12 block">Common add-ons</h2>
+              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">Common add-ons</h2>
               <ul className="space-y-8">
                 {[
                   'Natural stone accent border',
@@ -160,7 +160,7 @@ export default function PatiosBarrie() {
                   'Custom pattern or colour blend',
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
-                    <Check size={18} className="text-brand-gold shrink-0" strokeWidth={1.5} />
+                    <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -183,18 +183,18 @@ export default function PatiosBarrie() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-8xl font-light mb-12 leading-tight">
             See the number first. <br />
             <span className="text-brand-gold italic">Then we talk.</span>
           </h2>
-          <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
+          <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light">
             Real planning range in 60 seconds. If the number works, we book a site walk. If the project needs walls, drainage, lighting, or a fire zone, we scope it as an outdoor room instead of pretending it is just pavers.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/cost-estimator?type=patio" className="btn-primary px-12 py-4">See My Cost Range</Link>
-            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or book a site walk →</Link>
+            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or book a site walk →</Link>
           </div>
         </div>
       </section>

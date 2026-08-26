@@ -114,7 +114,7 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
       <section className="section-padding pt-40 md:pt-48">
         <div className="container-custom">
           <div className="max-w-4xl mx-auto">
-            <Link to="/resources" className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold hover:text-brand-bonewhite transition-colors mb-12 group">
+            <Link to="/resources" className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors mb-12 group">
               <ArrowLeft size={14} strokeWidth={2} className="group-hover:-translate-x-1 transition-transform" />
               Back to Resources
             </Link>
@@ -124,15 +124,15 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">{category}</span>
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">{category}</span>
               <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.1] mb-10">{title}</h1>
               
               <div className="flex items-center gap-8 mb-16">
                 <span className="flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-muted">
-                  <Calendar size={14} strokeWidth={1.5} className="text-brand-gold" /> {date}
+                  <Calendar size={14} strokeWidth={1.5} className="text-brand-gold-dark" /> {date}
                 </span>
                 <span className="flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-muted">
-                  <Clock size={14} strokeWidth={1.5} className="text-brand-gold" /> {readTime}
+                  <Clock size={14} strokeWidth={1.5} className="text-brand-gold-dark" /> {readTime}
                 </span>
               </div>
             </motion.div>
@@ -148,21 +148,21 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
             {/* Social Share Section */}
             <div className="mt-16 pt-10 border-t border-brand-dim/10 flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-3 text-brand-bonewhite">
-                <Share2 size={18} className="text-brand-gold" />
+                <Share2 size={18} className="text-brand-gold-dark" />
                 <span className="font-display text-lg font-light">Share this article</span>
               </div>
               <div className="flex items-center gap-4">
-                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`} target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook" className="w-10 h-10 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-muted hover:text-brand-gold hover:border-brand-gold hover:bg-brand-gold/5 transition-all">
+                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`} target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook" className="w-10 h-10 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-muted hover:text-brand-gold-dark hover:border-brand-gold hover:bg-brand-gold/5 transition-all">
                   <Facebook size={16} />
                 </a>
-                <a href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`} target="_blank" rel="noopener noreferrer" aria-label="Share on X (Twitter)" className="w-10 h-10 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-muted hover:text-brand-gold hover:border-brand-gold hover:bg-brand-gold/5 transition-all">
+                <a href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`} target="_blank" rel="noopener noreferrer" aria-label="Share on X (Twitter)" className="w-10 h-10 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-muted hover:text-brand-gold-dark hover:border-brand-gold hover:bg-brand-gold/5 transition-all">
                   <Twitter size={16} />
                 </a>
-                <a href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&title=${encodedTitle}`} target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn" className="w-10 h-10 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-muted hover:text-brand-gold hover:border-brand-gold hover:bg-brand-gold/5 transition-all">
+                <a href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&title=${encodedTitle}`} target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn" className="w-10 h-10 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-muted hover:text-brand-gold-dark hover:border-brand-gold hover:bg-brand-gold/5 transition-all">
                   <Linkedin size={16} />
                 </a>
-                <button onClick={handleCopyLink} className="w-10 h-10 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-muted hover:text-brand-gold hover:border-brand-gold hover:bg-brand-gold/5 transition-all" title="Copy Link" aria-label="Copy link">
-                  {copied ? <Check size={16} className="text-green-500" /> : <LinkIcon size={16} />}
+                <button onClick={handleCopyLink} className="w-10 h-10 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-muted hover:text-brand-gold-dark hover:border-brand-gold hover:bg-brand-gold/5 transition-all" title="Copy Link" aria-label="Copy link">
+                  {copied ? <Check size={16} className="text-brand-success" /> : <LinkIcon size={16} />}
                 </button>
               </div>
             </div>

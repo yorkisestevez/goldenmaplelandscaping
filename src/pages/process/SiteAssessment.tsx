@@ -20,12 +20,12 @@ export default function SiteAssessment() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold mb-10 block">
+              <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-10 block">
                 Phase Two: Assessment
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.1] mb-12">
                 Engineering <br />
-                <span className="italic text-brand-gold">Precision.</span>
+                <span className="italic text-brand-gold-dark">Precision.</span>
               </h1>
               <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
                 Before a single 3D rendering is created, we must first understand the literal foundation of your project. We look for the technical details that others ignore—soil composition, water runoff patterns, and existing structural elevations.
@@ -48,15 +48,15 @@ export default function SiteAssessment() {
                 className="w-full h-full object-cover grayscale opacity-80"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-x-8 bottom-8 bg-brand-nearblack/80 backdrop-blur-md p-6 border border-brand-gold/20 rounded-[2px]">
+              <div className="absolute inset-x-8 bottom-8 bg-brand-black/80 backdrop-blur-md p-6 border border-brand-gold/20 rounded-[2px]">
                 <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Technical Standard</p>
-                <p className="font-display text-xl text-brand-bonewhite italic font-light">Laser-Guided Precision</p>
+                <p className="font-display text-xl text-brand-porcelain italic font-light">Laser-Guided Precision</p>
               </div>
             </motion.div>
           </div>
 
           <div className="mb-40">
-            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">The components of <br/> <span className="italic text-brand-gold">a professional assessment.</span></h2>
+            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">The components of <br/> <span className="italic text-brand-gold-dark">a professional assessment.</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
               {[
                 { title: "Laser Site Surveys", desc: "We use professional laser levels to capture every elevation change, ensuring your patio or pool deck is perfectly graded." },
@@ -67,7 +67,7 @@ export default function SiteAssessment() {
                 { title: "Structural Evaluation", desc: "Checking the integrity of your home's foundation or existing walls that will interface with new builds." }
               ].map((item, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 group hover:border-brand-gold/30 transition-all duration-500">
-                  <h3 className="font-display text-2xl font-light text-brand-gold mb-6 group-hover:italic group-hover:translate-x-2 transition-all">{item.title}</h3>
+                  <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-6 group-hover:italic group-hover:translate-x-2 transition-all">{item.title}</h3>
                   <p className="font-sans text-base text-brand-muted leading-relaxed font-light">{item.desc}</p>
                 </div>
               ))}
@@ -80,7 +80,7 @@ export default function SiteAssessment() {
               <p className="font-sans text-xl text-brand-muted leading-relaxed font-light mb-12">
                 Simcoe County soil is notoriously diverse—from the sands of Wasaga to the clay of Innisfil. We don't assume anything. We analyze the literal ground we are building on so your 5-year warranty isn't just a promise, but a result of engineering.
               </p>
-              <Link to="/process/3d-design" className="flex items-center gap-4 text-brand-gold font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
+              <Link to="/process/3d-design" className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
                 <span>Phase Three: 3D Visualization</span>
                 <ArrowRight size={16} strokeWidth={1.5} />
               </Link>
@@ -89,7 +89,7 @@ export default function SiteAssessment() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-7xl font-light mb-16 leading-tight">
             Ready for a <br />

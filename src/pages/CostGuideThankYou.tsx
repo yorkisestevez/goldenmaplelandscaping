@@ -46,7 +46,7 @@ export default function CostGuideThankYou() {
               className="font-display text-5xl md:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-12"
             >
               Your guide is <br />
-              <span className="italic text-brand-gold">downloading.</span>
+              <span className="italic text-brand-gold-dark">downloading.</span>
             </motion.h1>
 
             <motion.p
@@ -77,19 +77,19 @@ export default function CostGuideThankYou() {
               transition={{ duration: 0.8, delay: 0.8 }}
               className="bg-brand-surface border border-brand-dim/10 rounded-[2px] p-10 md:p-12 text-left"
             >
-              <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+              <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
                 While You're Here
               </span>
               <h2 className="font-display text-2xl md:text-3xl font-light text-brand-bonewhite leading-tight mb-6">
                 Want to skip the guide and just talk?
               </h2>
               <p className="font-sans text-sm md:text-base text-brand-muted leading-relaxed font-light mb-10">
-                Yorkis offers a <span className="text-brand-gold">free estimate request</span> for any homeowner thinking about a project this year. Honest scope, honest budget, no pressure.
+                Yorkis offers a <span className="text-brand-gold-dark">free estimate request</span> for any homeowner thinking about a project this year. Honest scope, honest budget, no pressure.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 items-stretch">
                 <a
                   href="tel:7055003581"
-                  className="flex-1 flex items-center justify-center gap-3 border border-brand-gold/30 text-brand-gold font-sans text-[10px] uppercase tracking-[0.25em] py-4 hover:bg-brand-gold/5 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-3 border border-brand-gold/30 text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.25em] py-4 hover:bg-brand-gold/5 transition-colors"
                 >
                   <Phone size={14} strokeWidth={1.5} />
                   (705) 500-3581

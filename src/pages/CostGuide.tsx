@@ -122,7 +122,7 @@ export default function CostGuide() {
                 className="flex items-center gap-4 mb-10"
               >
                 <div className="h-px w-16 bg-brand-gold" />
-                <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold">
+                <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark">
                   Free Download · 2026 Edition
                 </span>
               </motion.div>
@@ -134,7 +134,7 @@ export default function CostGuide() {
                 className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-12"
               >
                 The 2026 Simcoe County <br />
-                <span className="text-brand-gold italic">backyard cost guide.</span>
+                <span className="text-brand-gold-dark italic">backyard cost guide.</span>
               </motion.h1>
 
               <motion.p
@@ -189,13 +189,13 @@ export default function CostGuide() {
                       <Star key={i} size={12} className="text-brand-gold fill-brand-gold" strokeWidth={0} />
                     ))}
                   </div>
-                  <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">
+                  <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark">
                     5.0 · 8 Reviews
                   </span>
                 </div>
 
                 <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight mb-3">
-                  Send me <span className="italic text-brand-gold">the guide.</span>
+                  Send me <span className="italic text-brand-gold-dark">the guide.</span>
                 </h2>
                 <p className="font-sans text-sm text-brand-muted font-light mb-10 leading-relaxed">
                   Instant download. We'll also send 4 short emails over the next 2 weeks with case studies and budget worksheets — no pitches.
@@ -224,7 +224,7 @@ export default function CostGuide() {
                       value={form.name}
                       onChange={onChange}
                       autoComplete="given-name"
-                      className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light"
+                      className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
                       placeholder="Jane"
                     />
                   </div>
@@ -239,7 +239,7 @@ export default function CostGuide() {
                       value={form.email}
                       onChange={onChange}
                       autoComplete="email"
-                      className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light"
+                      className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
                       placeholder="jane@email.com"
                     />
                   </div>
@@ -252,13 +252,13 @@ export default function CostGuide() {
                       name="location"
                       value={form.location}
                       onChange={onChange}
-                      className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-colors font-light"
+                      className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
                       placeholder="Barrie / Innisfil / Oro-Medonte..."
                     />
                   </div>
 
                   {status === 'error' && (
-                    <p className="font-sans text-xs text-red-400 font-light">{errorMsg}</p>
+                    <p className="font-sans text-xs text-brand-error font-light">{errorMsg}</p>
                   )}
 
                   <button
@@ -285,11 +285,11 @@ export default function CostGuide() {
           {/* What's inside */}
           <div className="mt-40 max-w-3xl mx-auto">
             <div className="text-center mb-20">
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
                 What's Inside
               </span>
               <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite leading-tight">
-                12 pages of <span className="italic text-brand-gold">honest numbers.</span>
+                12 pages of <span className="italic text-brand-gold-dark">honest numbers.</span>
               </h2>
             </div>
 

@@ -79,7 +79,7 @@ export default function OutdoorLightingDesignMistakes() {
       wordCount={2830}
     >
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
-        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">Quick Answer</div>
         <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">The most common landscape lighting mistake in Simcoe County is colour temperature — choosing fixtures that run at 5,000–6,500K (cold daylight white) instead of the 2,700–3,000K warm-white range that makes stone, brick, and plant material look appealing at night. After that: over-lighting a flat front yard with 30 path lights where 10 would do, and burying low-voltage cable less than 15 centimetres deep where Ontario freeze-thaw will push it out of the ground every spring.</p>
       </div>
 
@@ -104,7 +104,7 @@ export default function OutdoorLightingDesignMistakes() {
       <div dangerouslySetInnerHTML={{ __html: "<p>The most common symptom homeowners bring to us isn't a failed fixture — it's a system where the lights near the transformer look normal and the fixtures at the far end of the run look dim, or run visibly warmer/cooler than the rest. Almost every time, the cause is voltage drop from an overloaded or undersized transformer, not a bad bulb.</p><p>Every low-voltage run loses a small amount of voltage over distance, and the loss compounds with total fixture wattage on the circuit. A 150-watt transformer covers a typical front yard of 8 to 12 fixtures with room to spare — each In-Lite path light draws 3 to 8 watts, uplights draw 5 to 15 watts. Push more than roughly 80% of a transformer's rated capacity onto one circuit, or run one long cable run to every fixture on the property instead of splitting zones, and the fixtures furthest from the transformer are the first to dim and flicker.</p><p>The fix isn't a bigger single transformer — it's proper zoning. Multi-zone (multi-tap) transformers let you run shorter, lower-loss circuits to each area of the property instead of one long daisy chain, which is standard practice on any Simcoe County system with more than about a dozen fixtures. If your existing system has fixtures that dim toward the back of the yard, that's a sizing and zoning problem to solve at the transformer, not a reason to keep adding fixtures.</p>" }} />
 
       <div className="not-prose my-10 overflow-x-auto">
-        <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold mb-3">Budget solar/DIY kit vs professional 12V low-voltage system for a Barrie front yard</p>
+        <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold-dark mb-3">Budget solar/DIY kit vs professional 12V low-voltage system for a Barrie front yard</p>
         <div dangerouslySetInnerHTML={{ __html: "<table><thead><tr><th>Factor</th><th>Big-Box Solar / DIY Kit</th><th>Professional 12V Low-Voltage</th></tr></thead><tbody><tr><td>Colour temperature</td><td>Fixed, often 5,000–6,500K</td><td>Selectable; 2,700K standard</td></tr><tr><td>Consistent brightness</td><td>Varies with sun exposure and battery age</td><td>Consistent — transformer-regulated</td></tr><tr><td>Cable burial depth</td><td>Typically 5–8 cm (DIY)</td><td>30 cm minimum; conduit under hardscape</td></tr><tr><td>Fixture lifespan</td><td>2–5 years (plastic housings, sealed batteries)</td><td>10–15+ years (brass, aluminium, or stainless)</td></tr><tr><td>Ontario freeze-thaw resilience</td><td>Low — heave moves stakes and cables</td><td>High — properly buried and sleeved</td></tr><tr><td>System expandability</td><td>Limited — each fixture independent</td><td>Transformer-based; add circuits as needed</td></tr><tr><td>Typical cost for 10 fixtures</td><td>$200–$500 (DIY installed)</td><td>$1,800–$3,500 professionally installed</td></tr></tbody></table>" }} />
       </div>
 
@@ -144,7 +144,7 @@ export default function OutdoorLightingDesignMistakes() {
         <div className="flex items-start gap-4">
           <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
           <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2">About the Author</div>
+            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
             <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020. We are WSIB certified, carry $5M in liability coverage, and hold a 5.0 Google rating across Simcoe County. Lighting design is part of every full-scope hardscape project we build — because how a patio or driveway looks at 9 pm matters as much as how it performs at 9 am.</p>
           </div>
         </div>

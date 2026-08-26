@@ -134,7 +134,7 @@ export default function HeroContactForm() {
 
   const labelCls = 'font-sans text-[10px] uppercase tracking-[0.22em] text-brand-muted block mb-2';
   const fieldCls =
-    'w-full bg-brand-nearblack border border-brand-dim rounded-2xl px-4 py-3 font-sans text-[14px] text-brand-ink placeholder-brand-ink/40 focus:border-brand-gold outline-none transition-colors';
+    'w-full bg-brand-nearblack border border-brand-dim rounded-2xl px-4 py-3 font-sans text-[14px] text-brand-ink placeholder:text-brand-ink-soft focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors';
 
   return (
     <motion.div
@@ -146,14 +146,14 @@ export default function HeroContactForm() {
       {status === 'success' ? (
         <div className="py-8 text-center space-y-5">
           <div className="mx-auto w-14 h-14 rounded-full border border-brand-gold flex items-center justify-center">
-            <CheckCircle size={26} className="text-brand-gold" strokeWidth={1.5} />
+            <CheckCircle size={26} className="text-brand-gold-dark" strokeWidth={1.5} />
           </div>
           <h3 className="font-display text-2xl font-light text-brand-bonewhite">Thanks{form.name ? `, ${form.name.split(' ')[0]}` : ''} — talk soon.</h3>
           <p className="font-sans text-[14px] text-brand-bonewhite/80 leading-relaxed font-light max-w-xs mx-auto">
-            Yorkis comes back within <span className="text-brand-gold">24 hours</span> with an honest read on
+            Yorkis comes back within <span className="text-brand-gold-dark">24 hours</span> with an honest read on
             scope, timeline, and budget.
           </p>
-          <a href="tel:7055003581" className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold hover:underline">
+          <a href="tel:7055003581" className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark hover:underline">
             Or call (705) 500-3581
           </a>
         </div>
@@ -171,11 +171,11 @@ export default function HeroContactForm() {
           </p>
 
           <div className="mb-1">
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-1.5">
+            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-1.5">
               Free Consultation · 24-Hour Reply
             </div>
             <h2 className="font-display text-2xl md:text-[28px] font-light text-brand-bonewhite leading-tight">
-              Tell us about your <span className="italic text-brand-gold">space.</span>
+              Tell us about your <span className="italic text-brand-gold-dark">space.</span>
             </h2>
             <p className="font-sans text-[12.5px] text-brand-bonewhite/75 font-light mt-1.5 leading-relaxed">
               Yorkis replies personally — honest scope, honest budget, no sales call.
@@ -204,16 +204,16 @@ export default function HeroContactForm() {
             <label htmlFor="hc-budget" className={labelCls}>Investment range</label>
             <div className="relative">
               <select id="hc-budget" name="budget" value={form.budget} onChange={onChange}
-                className={`${fieldCls} appearance-none cursor-pointer pr-10 ${form.budget ? '' : 'text-brand-bonewhite/45'}`}>
+                className={`${fieldCls} appearance-none cursor-pointer pr-10 ${form.budget ? '' : 'text-brand-muted/70'}`}>
                 <option value="" disabled>Choose a ballpark…</option>
                 {BUDGET_RANGES.map((b) => <option key={b.value} value={b.value} className="text-brand-ink">{b.label}</option>)}
                 <option value={UNSURE} className="text-brand-ink">Not sure yet</option>
               </select>
-              <ChevronDown size={15} className="text-brand-gold absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={1.5} />
+              <ChevronDown size={15} className="text-brand-gold-dark absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={1.5} />
             </div>
             <p className="font-sans text-[11.5px] text-brand-bonewhite/55 font-light mt-2 leading-relaxed">
               A ballpark is perfect — it helps us reply with real options.{' '}
-              <button type="button" onClick={goToCalculator} className="text-brand-gold hover:text-brand-gold-light underline underline-offset-2 transition-colors">
+              <button type="button" onClick={goToCalculator} className="text-brand-gold-dark hover:text-brand-gold-dark/80 underline underline-offset-2 transition-colors">
                 Not sure? Get a quick estimate
               </button>
             </p>
@@ -226,7 +226,7 @@ export default function HeroContactForm() {
           </div>
 
           {status === 'error' && (
-            <p className="font-sans text-[13px] text-red-400 font-light">{errorMsg}</p>
+            <p className="font-sans text-[13px] text-brand-error font-light">{errorMsg}</p>
           )}
 
           <button type="submit" disabled={!canSubmit}

@@ -55,19 +55,19 @@ export default function Interlocking() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 Hardscape Construction
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 A patio that's <br />
-                <span className="italic text-brand-gold">still flat in 2046.</span>
+                <span className="italic text-brand-gold-dark">still flat in 2046.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
-                You've seen what happens when an interlocking patio is built wrong. Sunken corners. Joints full of weeds. The whole thing pitching toward the foundation by year three. We're here to make sure that's not the story you tell about yours. We dig deeper, source from <span className="text-brand-gold font-normal">Unilock, Techo-Bloc, and Permacon</span>, and stand behind every square foot for five full years — <span className="text-brand-gold font-normal">no job minimum, priced to your real scope.</span>
+                You've seen what happens when an interlocking patio is built wrong. Sunken corners. Joints full of weeds. The whole thing pitching toward the foundation by year three. We're here to make sure that's not the story you tell about yours. We dig deeper, source from <span className="text-brand-gold-dark font-normal">Unilock, Techo-Bloc, and Permacon</span>, and stand behind every square foot for five full years — <span className="text-brand-gold-dark font-normal">no job minimum, priced to your real scope.</span>
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary">Get My Estimate</Link>
-                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold transition-colors">
+                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
                   View Portfolio <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
@@ -91,7 +91,7 @@ export default function Interlocking() {
 
           <div className="mb-40">
             <div className="text-center max-w-3xl mx-auto mb-24">
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 The Process
               </span>
               <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-tight">
@@ -101,7 +101,7 @@ export default function Interlocking() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
               {processSteps.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-                  <span className="font-display text-6xl font-light text-brand-gold/10 block mb-10">0{idx + 1}</span>
+                  <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10">0{idx + 1}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{step.title}</h3>
                   <p className="font-sans text-sm text-brand-muted leading-relaxed font-light">{step.desc}</p>
                 </div>
@@ -111,7 +111,7 @@ export default function Interlocking() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-40">
             <div className="bg-brand-surface p-16 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-12 block">What's Included</h2>
+              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">What's Included</h2>
               <ul className="space-y-8">
                 {[
                   "12-16\" Compacted Aggregate Base",
@@ -123,14 +123,14 @@ export default function Interlocking() {
                   "Lifetime Product Warranty"
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
-                    <Check size={18} className="text-brand-gold shrink-0" strokeWidth={1.5} />
+                    <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </div>
             <div className="bg-brand-surface p-16 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-12 block">Premium Options</h2>
+              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">Premium Options</h2>
               <ul className="space-y-8">
                 {[
                   "Natural Stone Accents & Borders",
@@ -141,7 +141,7 @@ export default function Interlocking() {
                   "Outdoor Kitchen Foundations"
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
-                    <Check size={18} className="text-brand-gold shrink-0" strokeWidth={1.5} />
+                    <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -163,18 +163,18 @@ export default function Interlocking() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-8xl font-light mb-12 leading-tight">
             Stop imagining it. <br />
             <span className="text-brand-gold italic">Let's build it.</span>
           </h2>
-          <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
+          <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light">
             You've been looking at your driveway or patio long enough. Let's turn it into something that makes your neighbours slow down when they drive past. One conversation is all it takes to get started.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/cost-estimator?type=patio" className="btn-primary px-12 py-4">See Your Cost Range</Link>
-            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite/80 hover:text-brand-gold transition-colors">Or Get My Estimate →</Link>
+            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or Get My Estimate →</Link>
           </div>
         </div>
       </section>

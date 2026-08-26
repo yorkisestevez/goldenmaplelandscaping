@@ -60,9 +60,9 @@ export default function BestTimeInstallPatio() {
       schema={faqSchema}
     >
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
-        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">Quick Answer</div>
         <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">
-          The best windows for installing a paver patio in Ontario are <strong className="text-brand-gold not-italic">late April–early June</strong> and <strong className="text-brand-gold not-italic">September–mid October</strong>. Mid-summer works but books out 8–12 weeks ahead. Winter installs are not done by reputable contractors. Lock 2026 pricing by booking 3–6 months in advance.
+          The best windows for installing a paver patio in Ontario are <strong className="text-brand-gold-dark not-italic">late April–early June</strong> and <strong className="text-brand-gold-dark not-italic">September–mid October</strong>. Mid-summer works but books out 8–12 weeks ahead. Winter installs are not done by reputable contractors. Lock 2026 pricing by booking 3–6 months in advance.
         </p>
       </div>
 
@@ -76,18 +76,18 @@ export default function BestTimeInstallPatio() {
         <table className="w-full text-left font-sans text-sm border border-brand-dim/60 rounded-2xl overflow-hidden">
           <thead className="bg-brand-cream">
             <tr>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Month</th>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Install Window</th>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Booking Status</th>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Notes</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Month</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Install Window</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Booking Status</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Notes</th>
             </tr>
           </thead>
           <tbody className="text-brand-bonewhite/85 font-light">
             <tr className="border-t border-brand-dim/60"><td className="p-4">January–March</td><td className="p-4">Closed</td><td className="p-4">Design phase</td><td className="p-4">Contracting + 3D design only. Frozen ground cannot be excavated.</td></tr>
-            <tr className="border-t border-brand-dim/60"><td className="p-4 text-brand-gold">Late April</td><td className="p-4 text-brand-gold">Opens</td><td className="p-4">Booking 4–8 wk out</td><td className="p-4">Ground temperature above 5°C. First crews mobilize.</td></tr>
-            <tr className="border-t border-brand-dim/60"><td className="p-4 text-brand-gold">May–early June</td><td className="p-4 text-brand-gold">Prime</td><td className="p-4">Filled by March</td><td className="p-4">Best window of the year. Cool dry weather, dry soil.</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4 text-brand-gold-dark">Late April</td><td className="p-4 text-brand-gold-dark">Opens</td><td className="p-4">Booking 4–8 wk out</td><td className="p-4">Ground temperature above 5°C. First crews mobilize.</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4 text-brand-gold-dark">May–early June</td><td className="p-4 text-brand-gold-dark">Prime</td><td className="p-4">Filled by March</td><td className="p-4">Best window of the year. Cool dry weather, dry soil.</td></tr>
             <tr className="border-t border-brand-dim/60"><td className="p-4">Mid June–August</td><td className="p-4">Open</td><td className="p-4">Filled by May</td><td className="p-4">Heat slows crews, polymeric sand needs careful timing around storms.</td></tr>
-            <tr className="border-t border-brand-dim/60"><td className="p-4 text-brand-gold">September–early October</td><td className="p-4 text-brand-gold">Prime</td><td className="p-4">Booking 6–10 wk out</td><td className="p-4">Stable cool weather, dry soil, perfect poly cure conditions.</td></tr>
+            <tr className="border-t border-brand-dim/60"><td className="p-4 text-brand-gold-dark">September–early October</td><td className="p-4 text-brand-gold-dark">Prime</td><td className="p-4">Booking 6–10 wk out</td><td className="p-4">Stable cool weather, dry soil, perfect poly cure conditions.</td></tr>
             <tr className="border-t border-brand-dim/60"><td className="p-4">Mid October–early November</td><td className="p-4">Closing</td><td className="p-4">Limited slots</td><td className="p-4">Race against first hard frost (varies by year).</td></tr>
             <tr className="border-t border-brand-dim/60"><td className="p-4">Mid November–March</td><td className="p-4">Closed</td><td className="p-4">2027 booking</td><td className="p-4">No reputable contractor installs in winter conditions.</td></tr>
           </tbody>
@@ -127,7 +127,7 @@ export default function BestTimeInstallPatio() {
         <div className="p-7 rounded-2xl border border-brand-dim/60 bg-brand-cream">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-4 mt-0">Spring (Late April–June)</h3>
           <p className="font-sans text-sm text-brand-bonewhite/85 font-light mb-4">You enjoy your patio for the full summer. Yard recovery (sod regrowth) has months of growing season.</p>
-          <p className="font-sans text-sm font-light mb-2"><strong className="text-brand-gold">Best for:</strong></p>
+          <p className="font-sans text-sm font-light mb-2"><strong className="text-brand-gold-dark">Best for:</strong></p>
           <ul className="font-sans text-sm text-brand-bonewhite/85 font-light space-y-1 mb-0">
             <li>Hosting a summer event</li>
             <li>Selling the home that year</li>
@@ -137,7 +137,7 @@ export default function BestTimeInstallPatio() {
         <div className="p-7 rounded-2xl border border-brand-dim/60 bg-brand-cream">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-4 mt-0">Fall (Sep–Mid Oct)</h3>
           <p className="font-sans text-sm text-brand-bonewhite/85 font-light mb-4">Crews are at peak skill, weather is reliable, polymeric sand cures perfectly. Available 6–10 weeks out instead of 16+.</p>
-          <p className="font-sans text-sm font-light mb-2"><strong className="text-brand-gold">Best for:</strong></p>
+          <p className="font-sans text-sm font-light mb-2"><strong className="text-brand-gold-dark">Best for:</strong></p>
           <ul className="font-sans text-sm text-brand-bonewhite/85 font-light space-y-1 mb-0">
             <li>Anyone planning more than 4 months out</li>
             <li>Best installation quality of the year</li>
@@ -171,9 +171,9 @@ export default function BestTimeInstallPatio() {
       <p>Design and contracting can happen in any season. We often lock spring contracts in December and use January–March for 3D design, material selection, and final pricing. By the time April lands, you walk straight into install with everything finalized.</p>
 
       <h2>Get Your 2026 Slot Locked</h2>
-      <p>The fastest way to see if your project fits a 2026 window is the <Link to="/cost-estimator?type=patio" className="text-brand-gold hover:underline">Golden Maple cost estimator</Link>. It uses real Carr Landscape Depot pricing and gives you a ballpark in 60 seconds — which is enough to know if an estimate request makes sense. From there we can usually slot a spring or fall window within one phone call.</p>
+      <p>The fastest way to see if your project fits a 2026 window is the <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">Golden Maple cost estimator</Link>. It uses real Carr Landscape Depot pricing and gives you a ballpark in 60 seconds — which is enough to know if an estimate request makes sense. From there we can usually slot a spring or fall window within one phone call.</p>
 
-      <p>Related reading: <Link to="/resources/why-patios-sink-barrie" className="text-brand-gold hover:underline">Why patios sink in Barrie</Link> · <Link to="/resources/winter-damage-prevention-interlocking" className="text-brand-gold hover:underline">Winter damage prevention</Link> · <Link to="/resources/interlocking-cost-barrie" className="text-brand-gold hover:underline">Interlocking cost in Barrie 2026</Link>.</p>
+      <p>Related reading: <Link to="/resources/why-patios-sink-barrie" className="text-brand-gold-dark hover:underline">Why patios sink in Barrie</Link> · <Link to="/resources/winter-damage-prevention-interlocking" className="text-brand-gold-dark hover:underline">Winter damage prevention</Link> · <Link to="/resources/interlocking-cost-barrie" className="text-brand-gold-dark hover:underline">Interlocking cost in Barrie 2026</Link>.</p>
     </BlogPostLayout>
   );
 }

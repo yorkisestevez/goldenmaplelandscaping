@@ -78,14 +78,14 @@ function Section({ title, hint, summary, open, onToggle, children }: {
         className="w-full flex items-start justify-between gap-3 text-left md:pointer-events-none"
       >
         <div className="min-w-0">
-          <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">{title}</div>
+          <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark">{title}</div>
           {!open && summary ? (
             <div className="md:hidden font-sans text-[12px] text-brand-bonewhite/75 mt-1 truncate">{summary}</div>
           ) : null}
         </div>
         <ChevronDown
           size={16}
-          className={cn('md:hidden text-brand-gold/70 shrink-0 mt-0.5 transition-transform duration-200', open && 'rotate-180')}
+          className={cn('md:hidden text-brand-gold-dark/70 shrink-0 mt-0.5 transition-transform duration-200', open && 'rotate-180')}
           strokeWidth={1.75}
         />
       </button>
@@ -122,10 +122,10 @@ export default function EstimateWorkbench({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 120, damping: 20, delay: 0.1 }}
-      className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-xl border border-brand-gold/25 rounded-3xl p-7 md:p-9"
+      className="bg-brand-cream-light border border-brand-gold/25 rounded-3xl p-7 md:p-9"
     >
       <div className="flex items-start gap-3 mb-8">
-        <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/25 flex items-center justify-center text-brand-gold shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/25 flex items-center justify-center text-brand-gold-dark shrink-0">
           <SlidersHorizontal size={16} strokeWidth={1.75} />
         </div>
         <div>
@@ -173,13 +173,13 @@ export default function EstimateWorkbench({
                     'px-4 py-3.5 rounded-2xl border text-left transition-all duration-200',
                     isCurrent
                       ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]'
-                      : 'bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
+                      : 'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
                   )}
                 >
                   <div className="flex items-baseline justify-between gap-2 mb-1">
                     <span className="font-sans text-[12px] text-brand-bone">{t.label}</span>
                     {isCurrent ? (
-                      <span className="font-sans text-[9px] uppercase tracking-[0.2em] text-brand-gold">Current</span>
+                      <span className="font-sans text-[9px] uppercase tracking-[0.2em] text-brand-gold-dark">Current</span>
                     ) : null}
                   </div>
                   <div className="font-display text-[17px] text-brand-bone tabular-nums leading-none mb-1.5">
@@ -221,7 +221,7 @@ export default function EstimateWorkbench({
                     'flex items-center gap-2.5 pl-3 pr-3.5 py-2.5 rounded-2xl border transition-all duration-200',
                     isOn
                       ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold'
-                      : 'bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
+                      : 'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
                   )}
                 >
                   <span className={cn(
@@ -265,7 +265,7 @@ export default function EstimateWorkbench({
                     'flex items-center gap-2.5 pl-3 pr-3.5 py-2.5 rounded-2xl border transition-all duration-200',
                     isOn
                       ? 'bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold'
-                      : 'bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
+                      : 'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface',
                   )}
                 >
                   <span className={cn(

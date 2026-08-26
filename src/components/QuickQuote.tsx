@@ -79,15 +79,15 @@ export default function QuickQuote() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-brand-nearblack/80 backdrop-blur-md border border-brand-gold/30 rounded-[2px] p-10 shadow-2xl text-center"
+        className="bg-brand-burgundy/90 backdrop-blur-md border border-brand-gold/30 rounded-[2px] p-10 shadow-2xl text-center"
       >
         <div className="mx-auto w-14 h-14 rounded-full border border-brand-gold flex items-center justify-center mb-6">
           <CheckCircle size={24} className="text-brand-gold" strokeWidth={1.5} />
         </div>
-        <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-4">
+        <h3 className="font-display text-2xl font-light text-brand-porcelain mb-4">
           We've got it.
         </h3>
-        <p className="font-sans text-sm text-brand-muted leading-relaxed font-light mb-8">
+        <p className="font-sans text-sm text-brand-porcelain-soft leading-relaxed font-light mb-8">
           Want to skip the wait? Book your <span className="text-brand-gold">free estimate request</span> directly — pick a time that works for you.
         </p>
         <Link
@@ -114,7 +114,7 @@ export default function QuickQuote() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-brand-nearblack/85 backdrop-blur-md border border-brand-gold/25 rounded-[2px] p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+      className="bg-brand-burgundy/90 backdrop-blur-md border border-brand-gold/25 rounded-[2px] p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
     >
       <div className="flex items-center gap-3 mb-2">
         <div className="flex gap-0.5">
@@ -125,10 +125,10 @@ export default function QuickQuote() {
         <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">5.0 · 8 Reviews</span>
       </div>
 
-      <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight mb-3">
+      <h2 className="font-display text-3xl md:text-4xl font-light text-brand-porcelain leading-tight mb-3">
         Get your free <span className="italic text-brand-gold">project estimate</span>
       </h2>
-      <p className="font-sans text-sm text-brand-muted font-light mb-8 leading-relaxed">
+      <p className="font-sans text-sm text-brand-porcelain-soft font-light mb-8 leading-relaxed">
         estimate request with Yorkis — at a time that works for you. No fee. Honest answers about scope and budget.
       </p>
 
@@ -155,7 +155,7 @@ export default function QuickQuote() {
             value={form.name}
             onChange={onChange}
             autoComplete="name"
-            className="w-full bg-transparent border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite placeholder:text-brand-muted/60 focus:border-brand-gold outline-none transition-colors font-light"
+            className="w-full bg-transparent border-b border-brand-porcelain-soft/25 py-3 px-1 font-sans text-brand-porcelain placeholder:text-brand-porcelain-soft/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/50 transition-colors font-light"
             placeholder="Your full name"
           />
         </div>
@@ -171,7 +171,7 @@ export default function QuickQuote() {
             onChange={onChange}
             autoComplete="tel"
             inputMode="tel"
-            className="w-full bg-transparent border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite placeholder:text-brand-muted/60 focus:border-brand-gold outline-none transition-colors font-light"
+            className="w-full bg-transparent border-b border-brand-porcelain-soft/25 py-3 px-1 font-sans text-brand-porcelain placeholder:text-brand-porcelain-soft/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/50 transition-colors font-light"
             placeholder="Phone number"
           />
         </div>
@@ -185,13 +185,13 @@ export default function QuickQuote() {
             required
             value={form.details}
             onChange={onChange}
-            className="w-full bg-transparent border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite placeholder:text-brand-muted/60 focus:border-brand-gold outline-none transition-colors font-light"
+            className="w-full bg-transparent border-b border-brand-porcelain-soft/25 py-3 px-1 font-sans text-brand-porcelain placeholder:text-brand-porcelain-soft/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/50 transition-colors font-light"
             placeholder="What are you building? (e.g. patio, full backyard, deck)"
           />
         </div>
 
         {status === 'error' && (
-          <p className="font-sans text-xs text-red-400 font-light">{errorMsg}</p>
+          <p className="font-sans text-xs text-brand-error font-light">{errorMsg}</p>
         )}
 
         <button
@@ -207,7 +207,7 @@ export default function QuickQuote() {
           )}
         </button>
 
-        <div className="flex items-start justify-center gap-3 pt-4 text-[11px] text-brand-muted font-light leading-relaxed">
+        <div className="flex items-start justify-center gap-3 pt-4 text-[11px] text-brand-porcelain-soft font-light leading-relaxed">
           <Shield size={14} className="text-brand-gold/70 shrink-0 mt-px" strokeWidth={1.5} />
           <span>We only contact you about your project. No spam, ever — and we never share your number.</span>
         </div>

@@ -20,19 +20,19 @@ export default function Consultation() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold mb-10 block">
+              <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-10 block">
                 Phase One: The Brief
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.1] mb-12">
                 Your Budget <br />
-                <span className="italic text-brand-gold">Becomes a Brief.</span>
+                <span className="italic text-brand-gold-dark">Becomes a Brief.</span>
               </h1>
               <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
                 Our process doesn't start with a sales pitch — it starts with you telling us what you're picturing and what you're willing to spend. Yorkis reads every brief personally and responds within 24 hours with an honest read on scope, timeline, and whether your budget matches the build you have in mind. If it does, the on-site property walk that follows is on us.
               </p>
 
               <div className="bg-brand-surface p-10 border border-brand-gold/20 rounded-[2px] mb-16">
-                <h3 className="font-display text-2xl text-brand-gold mb-4">No Fee. No Pressure.</h3>
+                <h3 className="font-display text-2xl text-brand-gold-dark mb-4">No Fee. No Pressure.</h3>
                 <p className="font-sans text-brand-muted leading-relaxed font-light mb-6">
                   The estimate request is free, the property walk is free. From there, a $99 on-site design session and full landscape design are both optional paid steps for more precision — and both get credited back if you build with us.
                 </p>
@@ -53,12 +53,12 @@ export default function Consultation() {
                 className="w-full h-full object-cover grayscale opacity-80"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-brand-nearblack/20" />
+              <div className="absolute inset-0 bg-brand-black/20" />
             </motion.div>
           </div>
 
           <div className="mb-40">
-            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">What we cover in <br/> <span className="italic text-brand-gold">your written estimate.</span></h2>
+            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">What we cover in <br/> <span className="italic text-brand-gold-dark">your written estimate.</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
               {[
                 { title: "Lifestyle Discovery", desc: "How do you intend to use the space? Whether it's high-traffic entertaining or quiet sanctuary, we listen first." },
@@ -69,7 +69,7 @@ export default function Consultation() {
                 { title: "Strategic Roadmapping", desc: "Laying out the literal next steps—from site assessment to final 3D design." }
               ].map((item, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10">
-                  <h3 className="font-display text-2xl font-light text-brand-gold mb-6">{item.title}</h3>
+                  <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-6">{item.title}</h3>
                   <p className="font-sans text-base text-brand-muted leading-relaxed font-light">{item.desc}</p>
                 </div>
               ))}
@@ -95,7 +95,7 @@ export default function Consultation() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-7xl font-light mb-16 leading-tight">
             Ready to start <br />

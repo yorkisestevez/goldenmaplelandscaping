@@ -68,7 +68,7 @@ export default function PermitsBylawsBarrie() {
       schema={faqSchema}
     >
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
-        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">Quick Answer</div>
         <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">
           In <strong>Barrie & Simcoe County</strong>: ground-level paver patios under 60 cm don't need a building permit. <strong>Retaining walls over 1 m require a permit + P.Eng drawings.</strong> Decks over 60 cm need a permit. Fire features and fences have setback rules. <strong>Ontario One Call (1-800-400-2255) is mandatory before any digging</strong> — minimum 5 business days notice.
         </p>
@@ -89,19 +89,19 @@ export default function PermitsBylawsBarrie() {
         <table className="w-full text-left font-sans text-sm border border-brand-dim/60 rounded-2xl overflow-hidden">
           <thead className="bg-brand-cream">
             <tr>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Project</th>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Permit Required?</th>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Engineer Stamp?</th>
-              <th className="p-4 text-brand-gold font-medium uppercase tracking-wider text-[11px]">Common Trigger</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Project</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Permit Required?</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Engineer Stamp?</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Common Trigger</th>
             </tr>
           </thead>
           <tbody className="text-brand-bonewhite/85 font-light">
             <tr className="border-t border-brand-dim/60"><td className="p-4">Paver patio (ground-level)</td><td className="p-4">Usually no</td><td className="p-4">No</td><td className="p-4">Drainage change to neighbour</td></tr>
             <tr className="border-t border-brand-dim/60"><td className="p-4">Paver driveway</td><td className="p-4">No (unless replacing curb cut)</td><td className="p-4">No</td><td className="p-4">Curb cut alteration → Public Works permit</td></tr>
             <tr className="border-t border-brand-dim/60"><td className="p-4">Retaining wall under 1 m (3.28 ft)</td><td className="p-4">No</td><td className="p-4">No</td><td className="p-4">Setback violation</td></tr>
-            <tr className="border-t border-brand-dim/60 bg-brand-gold/[0.04]"><td className="p-4 text-brand-gold">Retaining wall 1 m+</td><td className="p-4 text-brand-gold">Yes</td><td className="p-4 text-brand-gold">Yes (P.Eng)</td><td className="p-4">OBC Part 9 / 4.2</td></tr>
+            <tr className="border-t border-brand-dim/60 bg-brand-gold/[0.04]"><td className="p-4 text-brand-gold-dark">Retaining wall 1 m+</td><td className="p-4 text-brand-gold-dark">Yes</td><td className="p-4 text-brand-gold-dark">Yes (P.Eng)</td><td className="p-4">OBC Part 9 / 4.2</td></tr>
             <tr className="border-t border-brand-dim/60"><td className="p-4">Deck under 60 cm above grade</td><td className="p-4">Usually no</td><td className="p-4">No</td><td className="p-4">Attached to dwelling</td></tr>
-            <tr className="border-t border-brand-dim/60 bg-brand-gold/[0.04]"><td className="p-4 text-brand-gold">Deck over 60 cm or attached</td><td className="p-4 text-brand-gold">Yes</td><td className="p-4">No (engineered plans only for unusual loads)</td><td className="p-4">OBC 9.8 + zoning</td></tr>
+            <tr className="border-t border-brand-dim/60 bg-brand-gold/[0.04]"><td className="p-4 text-brand-gold-dark">Deck over 60 cm or attached</td><td className="p-4 text-brand-gold-dark">Yes</td><td className="p-4">No (engineered plans only for unusual loads)</td><td className="p-4">OBC 9.8 + zoning</td></tr>
             <tr className="border-t border-brand-dim/60"><td className="p-4">Pergola (free-standing)</td><td className="p-4">Varies — typically no under 10 m²</td><td className="p-4">No</td><td className="p-4">Setback / size threshold</td></tr>
             <tr className="border-t border-brand-dim/60"><td className="p-4">Outdoor kitchen</td><td className="p-4">Plumbing/gas/electrical permits required</td><td className="p-4">No</td><td className="p-4">Gas line + electrical service</td></tr>
             <tr className="border-t border-brand-dim/60"><td className="p-4">Gas fire pit (natural gas)</td><td className="p-4">TSSA gas permit</td><td className="p-4">No</td><td className="p-4">Gas line install only</td></tr>
@@ -177,7 +177,7 @@ export default function PermitsBylawsBarrie() {
         <li>Full liability for damaged utilities (a damaged gas line can run $100K+)</li>
       </ul>
 
-      <p>How to call: <a href="https://ontarioonecall.ca" className="text-brand-gold hover:underline" target="_blank" rel="noopener noreferrer">ontarioonecall.ca</a> or 1-800-400-2255. Submit at least 5 business days before excavation. The locate is good for 30 days.</p>
+      <p>How to call: <a href="https://ontarioonecall.ca" className="text-brand-gold-dark hover:underline" target="_blank" rel="noopener noreferrer">ontarioonecall.ca</a> or 1-800-400-2255. Submit at least 5 business days before excavation. The locate is good for 30 days.</p>
 
       <h2>What Gets Inspected (and When)</h2>
 
@@ -216,9 +216,9 @@ export default function PermitsBylawsBarrie() {
       <p>Newer Simcoe County subdivisions (Mapleview Heights, Bayshore, Snow Valley) may have architectural review committees that require approval before any exterior change, regardless of municipal permit status. Always check your subdivision agreement.</p>
 
       <h2>Plan Your Permitted Project</h2>
-      <p>Every Golden Maple quote includes a permit and engineering line item where required — no surprise costs mid-build. Start with the <Link to="/cost-estimator" className="text-brand-gold hover:underline">cost estimator</Link> to see your project range, then book an estimate request to confirm what permits apply to your specific lot.</p>
+      <p>Every Golden Maple quote includes a permit and engineering line item where required — no surprise costs mid-build. Start with the <Link to="/cost-estimator" className="text-brand-gold-dark hover:underline">cost estimator</Link> to see your project range, then book an estimate request to confirm what permits apply to your specific lot.</p>
 
-      <p>Related reading: <Link to="/resources/retaining-wall-guide-simcoe-county" className="text-brand-gold hover:underline">Retaining wall engineering guide</Link> · <Link to="/resources/fire-pit-regulations-barrie" className="text-brand-gold hover:underline">Barrie fire pit regulations</Link> · <Link to="/resources/best-time-install-patio-ontario" className="text-brand-gold hover:underline">Best time to install in Ontario</Link>.</p>
+      <p>Related reading: <Link to="/resources/retaining-wall-guide-simcoe-county" className="text-brand-gold-dark hover:underline">Retaining wall engineering guide</Link> · <Link to="/resources/fire-pit-regulations-barrie" className="text-brand-gold-dark hover:underline">Barrie fire pit regulations</Link> · <Link to="/resources/best-time-install-patio-ontario" className="text-brand-gold-dark hover:underline">Best time to install in Ontario</Link>.</p>
     </BlogPostLayout>
   );
 }

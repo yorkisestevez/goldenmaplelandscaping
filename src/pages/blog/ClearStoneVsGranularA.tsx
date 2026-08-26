@@ -71,7 +71,7 @@ export default function ClearStoneVsGranularA() {
         <li><strong>The failure shows up after they're gone.</strong> A Granular A patio looks beautiful on day one. It looks beautiful at the one-year walkthrough. By year three, when the lippage starts, the contractor has cashed the cheque and moved on to the next job.</li>
       </ol>
 
-      <p>If you've ever wondered why every contractor in town quotes "essentially the same thing," this is one of the places where the same isn't actually the same. <Link to="/resources/hidden-costs-cheap-landscaping" className="text-brand-gold hover:underline">The hidden costs of cheap landscaping</Link> almost always trace back to a corner cut on the base.</p>
+      <p>If you've ever wondered why every contractor in town quotes "essentially the same thing," this is one of the places where the same isn't actually the same. <Link to="/resources/hidden-costs-cheap-landscaping" className="text-brand-gold-dark hover:underline">The hidden costs of cheap landscaping</Link> almost always trace back to a corner cut on the base.</p>
 
       <h2>How to Verify What Your Contractor is Quoting</h2>
 
@@ -97,9 +97,9 @@ export default function ClearStoneVsGranularA() {
 
       <p>If the quote doesn't specify the base material and depth in writing, the contractor either doesn't know or doesn't want you to. Either way, that's not the team you want.</p>
 
-      <p>Want to see what the right base looks like in writing? Our <Link to="/cost-estimator" className="text-brand-gold hover:underline">instant cost estimator</Link> shows you a real range with the engineering included, and our <Link to="/contact" className="text-brand-gold hover:underline">free design consultation</Link> walks you through the exact base spec for your property — soil type, drainage, frost depth, the whole stack.</p>
+      <p>Want to see what the right base looks like in writing? Our <Link to="/cost-estimator" className="text-brand-gold-dark hover:underline">instant cost estimator</Link> shows you a real range with the engineering included, and our <Link to="/contact" className="text-brand-gold-dark hover:underline">free design consultation</Link> walks you through the exact base spec for your property — soil type, drainage, frost depth, the whole stack.</p>
 
-      <p>Related reading: <Link to="/resources/why-patios-sink-barrie" className="text-brand-gold hover:underline">Why patios sink in Barrie</Link> · <Link to="/resources/winter-damage-prevention-interlocking" className="text-brand-gold hover:underline">Winter damage prevention</Link> · <Link to="/resources/interlocking-cost-barrie" className="text-brand-gold hover:underline">Interlocking cost in Barrie 2026</Link>.</p>
+      <p>Related reading: <Link to="/resources/why-patios-sink-barrie" className="text-brand-gold-dark hover:underline">Why patios sink in Barrie</Link> · <Link to="/resources/winter-damage-prevention-interlocking" className="text-brand-gold-dark hover:underline">Winter damage prevention</Link> · <Link to="/resources/interlocking-cost-barrie" className="text-brand-gold-dark hover:underline">Interlocking cost in Barrie 2026</Link>.</p>
     </BlogPostLayout>
   );
 }

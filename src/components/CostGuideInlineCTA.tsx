@@ -13,14 +13,14 @@ export default function CostGuideInlineCTA() {
     >
       <div className="flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-12">
         <div className="shrink-0 bg-brand-gold/5 border border-brand-gold/20 w-16 h-16 flex items-center justify-center rounded-[2px]">
-          <FileText size={28} className="text-brand-gold" strokeWidth={1.5} />
+          <FileText size={28} className="text-brand-gold-dark" strokeWidth={1.5} />
         </div>
         <div className="flex-1">
-          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3 block">
+          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3 block">
             Free Download · 2026 Edition
           </span>
           <h3 className="font-display text-2xl md:text-3xl font-light text-brand-bonewhite leading-tight mb-4">
-            Get the full 12-page <span className="italic text-brand-gold">Simcoe County Cost Guide</span>
+            Get the full 12-page <span className="italic text-brand-gold-dark">Simcoe County Cost Guide</span>
           </h3>
           <p className="font-sans text-sm md:text-base text-brand-muted leading-relaxed font-light mb-2">
             Real numbers from 42 completed jobs, the 5 hidden upcharges, and 4 questions to ask cheap contractors before you sign.

@@ -16,7 +16,7 @@ const AREAS: { name: string; desc: string; slug: string | null }[] = [
 
 export default function ServiceAreas() {
   return (
-    <div className="pt-32 bg-brand-black min-h-screen">
+    <div className="pt-32 bg-brand-nearblack min-h-screen">
       <SEO 
         title="Service Areas | Barrie & Simcoe County"
         description="Golden Maple Landscaping serves Barrie, Innisfil, Oro-Medonte, Springwater, Angus, Orillia, and surrounding areas in Simcoe County. Premium interlocking and landscape design."
@@ -25,12 +25,12 @@ export default function ServiceAreas() {
       
       <div className="max-w-[1200px] mx-auto px-6 md:px-12 py-24">
         <div className="text-center max-w-3xl mx-auto mb-24">
-          <div className="font-sans text-[10px] tracking-[0.35em] uppercase text-brand-gold mb-8">
+          <div className="font-sans text-[10px] tracking-[0.35em] uppercase text-brand-gold-dark mb-8">
             Service Areas
           </div>
           <h1 className="font-display text-5xl md:text-7xl leading-[1.1] mb-10 text-brand-bone">
             Landscaping <br />
-            <span className="italic text-brand-gold text-4xl md:text-6xl">Simcoe County & Cottage Country.</span>
+            <span className="italic text-brand-gold-dark text-4xl md:text-6xl">Simcoe County & Cottage Country.</span>
           </h1>
           <p className="font-sans font-light text-lg text-brand-muted leading-[1.8]">
             Golden Maple Landscaping is proud to serve homeowners across Simcoe County and the surrounding Cottage Country. We extend our services to these regions for projects where the scope aligns with our signature architectural standards.
@@ -45,7 +45,7 @@ export default function ServiceAreas() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: idx * 0.1 }}
-              className="bg-brand-dark border border-brand-gold/10 p-8 rounded-[2px] flex flex-col hover:border-brand-gold/40 transition-all group"
+              className="bg-brand-surface border border-brand-gold/10 p-8 rounded-[2px] flex flex-col hover:border-brand-gold/40 transition-all group"
             >
               <div className="text-brand-gold mb-6 group-hover:scale-110 transition-transform duration-500">
                 <MapPin size={32} strokeWidth={1.5} />
@@ -56,7 +56,7 @@ export default function ServiceAreas() {
               </p>
               <Link
                 to={area.slug ? `/locations/${area.slug}` : "/contact"}
-                className="flex items-center gap-4 text-brand-gold font-sans text-[10px] uppercase tracking-[0.3em] group-hover:gap-6 transition-all"
+                className="flex items-center gap-4 text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.3em] group-hover:gap-6 transition-all"
               >
                 <span>{area.slug ? "Learn More" : "Request Quote"}</span>
                 <ArrowRight size={14} />
@@ -74,7 +74,7 @@ export default function ServiceAreas() {
           >
             <h2 className="font-display text-4xl md:text-6xl leading-[1.1] mb-10 text-brand-bone">
               Landscaping <br />
-              <span className="italic text-brand-gold">Near Me in Barrie.</span>
+              <span className="italic text-brand-gold-dark">Near Me in Barrie.</span>
             </h2>
             <p className="font-sans font-light text-lg text-brand-muted leading-[1.8] mb-12">
               Searching for "landscaping near me" in Barrie? Golden Maple Landscaping is a locally owned and operated company with deep roots in the community. We understand the local soil conditions, climate challenges, and architectural styles of Simcoe County.
@@ -114,7 +114,7 @@ export default function ServiceAreas() {
           </motion.div>
         </div>
 
-        <div className="text-center bg-brand-deeper p-16 border border-brand-gold/10 rounded-[2px]">
+        <div className="text-center bg-brand-midsurface p-16 border border-brand-gold/10 rounded-[2px]">
           <h2 className="font-display text-4xl text-brand-bone mb-8">Serving your neighborhood.</h2>
           <p className="font-sans font-light text-brand-muted mb-12 max-w-2xl mx-auto">
             Contact Golden Maple Landscaping today to schedule a design consultation. We serve Barrie, Simcoe County, and surrounding Cottage Country communities where project scope aligns with our expertise.

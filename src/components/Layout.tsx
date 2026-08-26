@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+﻿import { Link, useLocation } from 'react-router-dom';
 import React, { useRef, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Menu, X, Phone, MapPin, Mail, Shield, CheckCircle, Award, ChevronDown } from 'lucide-react';
@@ -88,8 +88,8 @@ const Navbar = () => {
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
           isScrolled || isMobileMenuOpen
-            ? 'bg-brand-nearblack/95 backdrop-blur-md border-b border-brand-dim/20 py-3'
-            : 'bg-brand-nearblack/70 backdrop-blur-md border-b border-brand-dim/10 py-6'
+            ? 'bg-brand-burgundy/95 backdrop-blur-md border-b border-brand-gold/15 py-3'
+            : 'bg-brand-burgundy/70 backdrop-blur-md border-b border-brand-gold/10 py-6'
         )}
       >
         <div className="container-custom flex items-center justify-between">
@@ -105,7 +105,7 @@ const Navbar = () => {
               className="h-9 md:h-11 w-auto"
             />
             <span className="flex flex-col">
-              <span className="font-display text-xl md:text-3xl leading-none tracking-tight text-brand-bonewhite group-hover:text-brand-gold transition-colors duration-500">
+              <span className="font-display text-xl md:text-3xl leading-none tracking-tight text-brand-porcelain group-hover:text-brand-gold transition-colors duration-500">
                 GOLDEN MAPLE
               </span>
               <span className="font-sans text-[10px] md:text-[12px] uppercase tracking-[0.45em] font-light text-brand-gold mt-1.5">
@@ -129,7 +129,7 @@ const Navbar = () => {
                     to={link.href}
                     className={cn(
                       "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold font-medium whitespace-nowrap flex items-center gap-1",
-                      location.pathname.startsWith('/services') ? "text-brand-gold" : "text-brand-bonewhite"
+                      location.pathname.startsWith('/services') ? "text-brand-gold" : "text-brand-porcelain"
                     )}
                   >
                     {link.label}
@@ -146,7 +146,7 @@ const Navbar = () => {
                       >
                         <div className="bg-brand-surface border border-brand-dim/40 rounded-[2px] shadow-2xl p-8 grid grid-cols-2 gap-x-8 gap-y-2">
                           <div>
-                            <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold font-medium mb-4 block">
+                            <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark font-medium mb-4 block">
                               Flagship Services
                             </span>
                             <div className="space-y-1">
@@ -156,7 +156,7 @@ const Navbar = () => {
                                   to={s.href}
                                   className="group block px-3 py-2.5 hover:bg-brand-nearblack/50 rounded-[2px] transition-all"
                                 >
-                                  <div className="font-sans text-[13px] text-brand-bonewhite group-hover:text-brand-gold font-medium transition-colors">
+                                  <div className="font-sans text-[13px] text-brand-bonewhite group-hover:text-brand-gold-dark font-medium transition-colors">
                                     {s.label}
                                   </div>
                                   <div className="font-sans text-[11px] text-brand-bonewhite/70 font-light mt-0.5">
@@ -167,7 +167,7 @@ const Navbar = () => {
                             </div>
                           </div>
                           <div>
-                            <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold font-medium mb-4 block">
+                            <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark font-medium mb-4 block">
                               Service Areas
                             </span>
                             <div className="grid grid-cols-2 gap-1">
@@ -175,7 +175,7 @@ const Navbar = () => {
                                 <Link
                                   key={l.slug}
                                   to={`/services/interlocking-${l.slug}`}
-                                  className="font-sans text-[12px] text-brand-bonewhite/85 hover:text-brand-gold hover:bg-brand-nearblack/50 px-3 py-2 rounded-[2px] transition-all"
+                                  className="font-sans text-[12px] text-brand-bonewhite/85 hover:text-brand-gold-dark hover:bg-brand-nearblack/50 px-3 py-2 rounded-[2px] transition-all"
                                 >
                                   {l.label}
                                 </Link>
@@ -184,7 +184,7 @@ const Navbar = () => {
                             <div className="border-t border-brand-dim/30 mt-4 pt-3">
                               <Link
                                 to="/services"
-                                className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold hover:text-brand-gold-light font-medium"
+                                className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark hover:text-brand-black font-medium"
                               >
                                 View All Services →
                               </Link>
@@ -207,7 +207,7 @@ const Navbar = () => {
                     to={link.href} 
                     className={cn(
                       "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold font-medium whitespace-nowrap flex items-center gap-1",
-                      location.pathname.startsWith('/resources') || location.pathname === '/buyers-guide' || location.pathname === '/cost-estimator' ? "text-brand-gold" : "text-brand-bonewhite"
+                      location.pathname.startsWith('/resources') || location.pathname === '/buyers-guide' || location.pathname === '/cost-estimator' ? "text-brand-gold" : "text-brand-porcelain"
                     )}
                   >
                     {link.label}
@@ -227,7 +227,7 @@ const Navbar = () => {
                             <Link
                               key={item.href}
                               to={item.href}
-                              className="block px-5 py-2.5 font-sans text-[11px] uppercase tracking-[0.15em] text-brand-bonewhite/85 hover:text-brand-gold hover:bg-brand-nearblack/50 font-medium transition-all"
+                              className="block px-5 py-2.5 font-sans text-[11px] uppercase tracking-[0.15em] text-brand-bonewhite/85 hover:text-brand-gold-dark hover:bg-brand-nearblack/50 font-medium transition-all"
                             >
                               {item.label}
                             </Link>
@@ -235,7 +235,7 @@ const Navbar = () => {
                           <div className="border-t border-brand-dim/30 mt-1.5 pt-1.5">
                             <Link
                               to="/resources"
-                              className="block px-5 py-2.5 font-sans text-[11px] uppercase tracking-[0.15em] text-brand-gold hover:bg-brand-nearblack/50 font-medium transition-all"
+                              className="block px-5 py-2.5 font-sans text-[11px] uppercase tracking-[0.15em] text-brand-gold-dark hover:bg-brand-nearblack/50 font-medium transition-all"
                             >
                               View All Articles →
                             </Link>
@@ -251,7 +251,7 @@ const Navbar = () => {
                   to={link.href} 
                   className={cn(
                     "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold font-medium whitespace-nowrap",
-                    location.pathname === link.href ? "text-brand-gold" : "text-brand-bonewhite"
+                    location.pathname === link.href ? "text-brand-gold" : "text-brand-porcelain"
                   )}
                 >
                   {link.label}
@@ -266,13 +266,13 @@ const Navbar = () => {
               to="/contact" 
               className={cn(
                 "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold font-medium",
-                location.pathname === "/contact" ? "text-brand-gold" : "text-brand-bonewhite"
+                location.pathname === "/contact" ? "text-brand-gold" : "text-brand-porcelain"
               )}
             >
               Contact
             </Link>
             
-            <a href="tel:7055003581" onClick={() => trackEngagement('cta_click', 'phone_call')} className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold text-brand-gold bg-brand-gold/5 hover:bg-brand-gold hover:text-brand-nearblack hover:shadow-[0_0_16px_rgba(212,175,99,0.25)] transition-all group" aria-label="Call Us">
+            <a href="tel:7055003581" onClick={() => trackEngagement('cta_click', 'phone_call')} className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold text-brand-gold bg-brand-gold/5 hover:bg-brand-gold hover:text-brand-black hover:shadow-[0_0_16px_rgba(212,175,99,0.25)] transition-all group" aria-label="Call Us">
               <Phone size={16} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
             </a>
 
@@ -312,7 +312,7 @@ const Navbar = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-brand-nearblack/98 backdrop-blur-xl pt-40 px-8 pb-32 overflow-y-auto flex flex-col items-center text-center xl:hidden"
+            className="fixed inset-0 z-40 bg-brand-burgundy/98 backdrop-blur-xl pt-40 px-8 pb-32 overflow-y-auto flex flex-col items-center text-center xl:hidden"
           >
             <nav className="w-full max-w-sm flex flex-col gap-14">
               <div className="flex flex-col gap-6">
@@ -327,7 +327,7 @@ const Navbar = () => {
                       to={link.href} 
                       className={cn(
                         "font-display text-5xl font-light tracking-tight transition-colors",
-                        location.pathname === link.href ? "text-brand-gold" : "text-brand-bonewhite"
+                        location.pathname === link.href ? "text-brand-gold" : "text-brand-porcelain"
                       )}
                     >
                       {link.label}
@@ -341,8 +341,8 @@ const Navbar = () => {
               <div className="flex flex-col gap-6">
                 <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold font-medium">Resources</span>
                 <div className="grid grid-cols-1 gap-4">
-                  <Link to="/buyers-guide" className="font-sans text-sm text-brand-muted hover:text-brand-gold transition-colors py-2 block">Buyer's Guide</Link>
-                  <Link to="/cost-estimator" className="font-sans text-sm text-brand-muted hover:text-brand-gold transition-colors py-2 block">Cost Estimator</Link>
+                  <Link to="/buyers-guide" className="font-sans text-sm text-brand-porcelain-soft hover:text-brand-gold transition-colors py-2 block">Buyer's Guide</Link>
+                  <Link to="/cost-estimator" className="font-sans text-sm text-brand-porcelain-soft hover:text-brand-gold transition-colors py-2 block">Cost Estimator</Link>
                   <Link to="/resources" className="font-sans text-sm text-brand-gold hover:text-brand-gold-light transition-colors py-2 block">All Articles →</Link>
                 </div>
               </div>
@@ -361,7 +361,7 @@ const Navbar = () => {
                     >
                       <Link 
                         to={service.href} 
-                        className="font-sans text-sm text-brand-muted hover:text-brand-gold transition-colors py-2 block"
+                        className="font-sans text-sm text-brand-porcelain-soft hover:text-brand-gold transition-colors py-2 block"
                       >
                         {service.label}
                       </Link>
@@ -409,7 +409,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20 mb-32">
           <div className="space-y-10">
             <Link to="/" className="flex flex-col">
-              <span className="font-display text-4xl md:text-5xl leading-none tracking-tight text-brand-gold">
+              <span className="font-display text-4xl md:text-5xl leading-none tracking-tight text-brand-gold-dark">
                 GOLDEN MAPLE
               </span>
               <span className="font-sans text-[12px] uppercase tracking-[0.4em] font-light text-brand-muted mt-2">
@@ -420,28 +420,28 @@ const Footer = () => {
               Architectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.
             </p>
             <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold font-normal">
+              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
                 <Shield size={14} strokeWidth={1.5} /> 5-Year Sink & Settlement Warranty
               </div>
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold font-normal">
+              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
                 <Award size={14} strokeWidth={1.5} /> $5M Liability Coverage
               </div>
             </div>
           </div>
           
           <div>
-            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold mb-10">Navigation</h4>
+            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Navigation</h4>
             <ul className="space-y-5 font-sans text-sm text-brand-muted font-light">
-              <li><Link to="/services" className="hover:text-brand-gold transition-colors">Services</Link></li>
-              <li><Link to="/portfolio" className="hover:text-brand-gold transition-colors">Portfolio</Link></li>
-              <li><Link to="/about" className="hover:text-brand-gold transition-colors">Our Story</Link></li>
-              <li><Link to="/contact" className="hover:text-brand-gold transition-colors">Contact</Link></li>
-              <li><Link to="/service-areas" className="hover:text-brand-gold transition-colors">Service Areas</Link></li>
+              <li><Link to="/services" className="hover:text-brand-gold-dark transition-colors">Services</Link></li>
+              <li><Link to="/portfolio" className="hover:text-brand-gold-dark transition-colors">Portfolio</Link></li>
+              <li><Link to="/about" className="hover:text-brand-gold-dark transition-colors">Our Story</Link></li>
+              <li><Link to="/contact" className="hover:text-brand-gold-dark transition-colors">Contact</Link></li>
+              <li><Link to="/service-areas" className="hover:text-brand-gold-dark transition-colors">Service Areas</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold mb-10">Expertise</h4>
+            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Expertise</h4>
             <ul className="space-y-5 font-sans text-[13px] text-brand-muted font-light">
               <li>Interlocking & Hardscape</li>
               <li>Composite Decking</li>
@@ -452,19 +452,19 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold mb-10">Connect</h4>
+            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Connect</h4>
             <ul className="space-y-6 font-sans text-[13px] text-brand-muted font-light">
               <li className="flex items-start gap-4">
-                <MapPin size={18} strokeWidth={1.5} className="text-brand-gold shrink-0" />
+                <MapPin size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
                 <span>Barrie, Simcoe County & Cottage Country</span>
               </li>
               <li className="flex items-center gap-4">
-                <Phone size={18} strokeWidth={1.5} className="text-brand-gold shrink-0" />
-                <a href="tel:7055003581" className="hover:text-brand-gold transition-colors">705.500.3581</a>
+                <Phone size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
+                <a href="tel:7055003581" className="hover:text-brand-gold-dark transition-colors">705.500.3581</a>
               </li>
               <li className="flex items-center gap-4">
-                <Mail size={18} strokeWidth={1.5} className="text-brand-gold shrink-0" />
-                <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="hover:text-brand-gold transition-colors">yorkis@goldenmaplelandscaping.ca</a>
+                <Mail size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
+                <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="hover:text-brand-gold-dark transition-colors">yorkis@goldenmaplelandscaping.ca</a>
               </li>
             </ul>
           </div>
@@ -473,12 +473,12 @@ const Footer = () => {
         <div className="pt-12 border-t border-brand-dim/40 flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] uppercase tracking-[0.2em] text-brand-muted font-light">
           <p>© {new Date().getFullYear()} Golden Maple Landscaping. Architectural Precision.</p>
           <div className="flex gap-6 flex-wrap justify-end text-[9px] opacity-80">
-            <Link to="/locations/barrie" className="hover:text-brand-gold transition-colors">Barrie</Link>
-            <Link to="/locations/innisfil" className="hover:text-brand-gold transition-colors">Innisfil</Link>
-            <Link to="/locations/oro-medonte" className="hover:text-brand-gold transition-colors">Oro-Medonte</Link>
-            <Link to="/locations/springwater" className="hover:text-brand-gold transition-colors">Springwater</Link>
-            <Link to="/privacy" className="hover:text-brand-gold transition-colors ml-2 border-l border-brand-dim/20 pl-4">Privacy</Link>
-            <Link to="/terms" className="hover:text-brand-gold transition-colors">Terms</Link>
+            <Link to="/locations/barrie" className="hover:text-brand-gold-dark transition-colors">Barrie</Link>
+            <Link to="/locations/innisfil" className="hover:text-brand-gold-dark transition-colors">Innisfil</Link>
+            <Link to="/locations/oro-medonte" className="hover:text-brand-gold-dark transition-colors">Oro-Medonte</Link>
+            <Link to="/locations/springwater" className="hover:text-brand-gold-dark transition-colors">Springwater</Link>
+            <Link to="/privacy" className="hover:text-brand-gold-dark transition-colors ml-2 border-l border-brand-dim/20 pl-4">Privacy</Link>
+            <Link to="/terms" className="hover:text-brand-gold-dark transition-colors">Terms</Link>
           </div>
         </div>
       </div>
@@ -488,13 +488,13 @@ const Footer = () => {
       <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t border-brand-dim/20">
         <a 
           href="tel:7055003581" 
-          className="flex-1 bg-brand-surface text-brand-gold font-sans text-[10px] uppercase tracking-[0.25em] py-5 flex items-center justify-center gap-3 border-r border-brand-dim/20"
+          className="flex-1 bg-brand-surface text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.25em] py-5 flex items-center justify-center gap-3 border-r border-brand-dim/20"
         >
           <Phone size={16} strokeWidth={1.5} /> Call
         </a>
         <Link
           to="/contact"
-          className="flex-[1.5] bg-brand-gold text-brand-nearblack font-sans text-[10px] uppercase tracking-[0.25em] py-5 flex items-center justify-center gap-3"
+          className="flex-[1.5] bg-brand-gold text-brand-black font-sans text-[10px] uppercase tracking-[0.25em] py-5 flex items-center justify-center gap-3"
         >
           Get My Estimate
         </Link>
@@ -511,7 +511,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => setMounted(true), []);
 
   return (
-    <div className="bg-brand-nearblack min-h-screen selection:bg-brand-gold/20 selection:text-brand-gold">
+    <div className="bg-brand-nearblack min-h-screen selection:bg-brand-gold/20 selection:text-brand-gold-dark">
       <Navbar />
       <main className="flex-grow overflow-x-hidden">{children}</main>
       <Footer />

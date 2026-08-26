@@ -97,7 +97,7 @@ const BuyersGuide = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 blur-3xl -mr-16 -mt-16 group-hover:bg-brand-gold/10 transition-colors duration-700" />
             
             <div className="relative z-10">
-              <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-8 block font-normal">
+              <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block font-normal">
                 Free Resource
               </span>
               <h3 className="font-display text-4xl font-light text-brand-bonewhite mb-8 leading-tight">
@@ -114,7 +114,7 @@ const BuyersGuide = () => {
                   "Golden Maple's 5-year warranty explained"
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-start gap-4 font-sans text-sm text-brand-muted font-light leading-relaxed">
-                    <CheckCircle2 size={18} className="text-brand-gold shrink-0 mt-0.5" strokeWidth={1.5} />
+                    <CheckCircle2 size={18} className="text-brand-gold-dark shrink-0 mt-0.5" strokeWidth={1.5} />
                     {item}
                   </li>
                 ))}
@@ -138,14 +138,14 @@ const BuyersGuide = () => {
                         type="text"
                         name="name"
                         placeholder="First Name"
-                        className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] placeholder:text-brand-muted/50 font-light"
+                        className="w-full bg-brand-nearblack border border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all rounded-[2px] placeholder:text-brand-muted/70 font-light"
                       />
                       <input 
                         required
                         type="email" 
                         name="email"
                         placeholder="Email Address"
-                        className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] placeholder:text-brand-muted/50 font-light"
+                        className="w-full bg-brand-nearblack border border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all rounded-[2px] placeholder:text-brand-muted/70 font-light"
                       />
                     </div>
                     <button 
@@ -165,11 +165,11 @@ const BuyersGuide = () => {
                     className="p-8 bg-brand-gold/5 border border-brand-gold/20 text-center rounded-[2px]"
                   >
                     <div className="w-16 h-16 bg-brand-gold rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Download size={32} className="text-brand-nearblack" strokeWidth={1.5} />
+                      <Download size={32} className="text-brand-black" strokeWidth={1.5} />
                     </div>
                     <h4 className="font-display text-2xl text-brand-bonewhite mb-2">Check Your Downloads</h4>
                     <p className="font-sans text-brand-muted text-sm font-light leading-relaxed">
-                      Your guide is on its way. If it doesn't start automatically, <a href="/downloads/golden-maple-buyers-guide.pdf" className="text-brand-gold underline decoration-2 underline-offset-4">click here to download manually</a>.
+                      Your guide is on its way. If it doesn't start automatically, <a href="/downloads/golden-maple-buyers-guide.pdf" className="text-brand-gold-dark underline decoration-2 underline-offset-4">click here to download manually</a>.
                     </p>
                   </motion.div>
                 )}
@@ -182,7 +182,7 @@ const BuyersGuide = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 blur-3xl -mr-16 -mt-16 group-hover:bg-brand-gold/10 transition-colors duration-700" />
             
             <div className="relative z-10">
-              <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-8 block font-normal">
+              <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block font-normal">
                 No Obligation
               </span>
               <h3 className="font-display text-4xl font-light text-brand-bonewhite mb-6 leading-tight">
@@ -199,7 +199,7 @@ const BuyersGuide = () => {
                   "Upgrade at any time"
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3">
-                    <CheckCircle2 size={14} className="text-brand-gold" strokeWidth={2} />
+                    <CheckCircle2 size={14} className="text-brand-gold-dark" strokeWidth={2} />
                     {item}
                   </div>
                 ))}
@@ -223,14 +223,14 @@ const BuyersGuide = () => {
                         type="text" 
                         name="name"
                         placeholder="Full Name"
-                        className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] placeholder:text-brand-muted/50 font-light"
+                        className="w-full bg-brand-nearblack border border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all rounded-[2px] placeholder:text-brand-muted/70 font-light"
                       />
                       <input 
                         required
                         type="tel" 
                         name="phone"
                         placeholder="Phone Number"
-                        className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] placeholder:text-brand-muted/50 font-light"
+                        className="w-full bg-brand-nearblack border border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all rounded-[2px] placeholder:text-brand-muted/70 font-light"
                       />
                     </div>
                     <input 
@@ -238,13 +238,13 @@ const BuyersGuide = () => {
                       type="email" 
                       name="email"
                       placeholder="Email Address"
-                      className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] placeholder:text-brand-muted/50 font-light"
+                      className="w-full bg-brand-nearblack border border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all rounded-[2px] placeholder:text-brand-muted/70 font-light"
                     />
                     <div className="relative">
                       <select
                         required
                         name="service"
-                        className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] font-light appearance-none cursor-pointer"
+                        className="w-full bg-brand-nearblack border border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all rounded-[2px] font-light appearance-none cursor-pointer"
                       >
                         <option value="" disabled selected>Type of Project</option>
                         <option>Interlocking Driveway or Patio</option>
@@ -262,7 +262,7 @@ const BuyersGuide = () => {
                     <div className="relative">
                       <select 
                         name="budget"
-                        className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] font-light appearance-none cursor-pointer"
+                        className="w-full bg-brand-nearblack border border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all rounded-[2px] font-light appearance-none cursor-pointer"
                       >
                         <option value="" disabled selected>Approximate Budget (Optional)</option>
                         <option>Under $20K</option>
@@ -278,7 +278,7 @@ const BuyersGuide = () => {
                       name="details"
                       placeholder="Brief Description (Optional)"
                       rows={2}
-                      className="w-full bg-brand-nearblack border border-brand-dim/30 p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none transition-all rounded-[2px] placeholder:text-brand-muted/50 font-light resize-none"
+                      className="w-full bg-brand-nearblack border border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all rounded-[2px] placeholder:text-brand-muted/70 font-light resize-none"
                     />
                     <button 
                       disabled={isEstimateLoading}
@@ -296,7 +296,7 @@ const BuyersGuide = () => {
                     className="p-10 bg-brand-gold/5 border border-brand-gold/20 text-center rounded-[2px]"
                   >
                     <div className="w-16 h-16 bg-brand-gold rounded-full flex items-center justify-center mx-auto mb-6">
-                      <CheckCircle2 size={32} className="text-brand-nearblack" strokeWidth={2} />
+                      <CheckCircle2 size={32} className="text-brand-black" strokeWidth={2} />
                     </div>
                     <h4 className="font-display text-3xl text-brand-bonewhite mb-3 font-light">Request Received</h4>
                     <p className="font-sans text-brand-muted text-sm font-light leading-relaxed">
@@ -320,7 +320,7 @@ const BuyersGuide = () => {
           <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-gold to-transparent opacity-40" />
           <div className="flex flex-col md:flex-row justify-between items-center gap-10 relative z-10">
             <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
-              <div className="px-6 py-2 border border-brand-gold/40 rounded-full font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold bg-brand-gold/10">
+              <div className="px-6 py-2 border border-brand-gold/40 rounded-full font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark bg-brand-gold/10">
                 Serious Buyers
               </div>
               <div>
@@ -332,7 +332,7 @@ const BuyersGuide = () => {
             </div>
             <Link
               to="/contact"
-              className="bg-brand-gold text-brand-nearblack font-sans text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-10 rounded-[2px] hover:bg-brand-gold-dark hover:translate-y-[-2px] transition-all duration-500 whitespace-nowrap shadow-xl"
+              className="bg-brand-gold text-brand-black font-sans text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-10 rounded-[2px] hover:bg-brand-gold-dark hover:translate-y-[-2px] transition-all duration-500 whitespace-nowrap shadow-xl"
             >
               Tell Us Your Budget
             </Link>

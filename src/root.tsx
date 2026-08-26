@@ -117,7 +117,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="theme-color" content="#0C120E" />
+        <meta name="theme-color" content="#F3EEE3" />
         <meta name="msvalidate.01" content="F7FE7E3677ED01FC13ECAF1154E928B8" />
         {gscToken ? <meta name="google-site-verification" content={gscToken} /> : null}
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />

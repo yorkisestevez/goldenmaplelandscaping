@@ -70,7 +70,7 @@ export default function NaturalStoneVsPaversBarrie() {
       wordCount={1740}
     >
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
-        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">Quick Answer</div>
         <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">For most Barrie homeowners, concrete pavers (Unilock, Techo-Bloc, Permacon) are the more practical choice: they cost $37-$65 per square foot installed, flex with our freeze-thaw cycles, and any damaged unit is replaceable in minutes. Natural stone runs $55-$95+ per square foot and delivers a one-of-a-kind look, but it\'s less forgiving of ground movement and harder to repair. Choose pavers for value and resilience; choose natural stone when a signature, high-end aesthetic justifies the premium and the maintenance.</p>
       </div>
 
@@ -95,7 +95,7 @@ export default function NaturalStoneVsPaversBarrie() {
       <div dangerouslySetInnerHTML={{ __html: "<p>For the majority of Barrie and Simcoe County homeowners, <strong>concrete pavers are the smarter buy.</strong> They deliver excellent durability in our climate, the widest range of looks at every budget, predictable pricing, and repairs that don't make you wince. If you want strong value, low hassle, and a patio that handles snow-removal season without drama, pavers are hard to beat.</p><p><strong>Choose natural stone when the aesthetic is the point.</strong> If you're building a signature outdoor living space, a high-end property where a one-of-a-kind flagstone terrace fits the architecture, and you've budgeted for both the premium and the maintenance — natural stone is unmatched. It reads as luxury because it is, and on the right project it's worth every dollar.</p><p>A middle path we often recommend: use pavers for the large functional areas (the main patio, walkways, driveway) and reserve natural stone for a feature — a fireplace surround, a set of steps, or a focal seating area. You get the prestige where it shows most and the value everywhere else. There's no universally \"right\" answer here — only the right answer for your home, your soil, and how you actually want to spend the next 20 years using the space.</p>" }} />
 
       <div className="not-prose my-10 overflow-x-auto">
-        <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold mb-3">Natural Stone vs. Concrete Pavers — Barrie Buyer's Comparison</p>
+        <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold-dark mb-3">Natural Stone vs. Concrete Pavers — Barrie Buyer's Comparison</p>
         <div dangerouslySetInnerHTML={{ __html: "<table><thead><tr><th>Factor</th><th>Concrete Pavers</th><th>Natural Stone</th></tr></thead><tbody><tr><td>Installed cost / sq ft</td><td>$37-$65</td><td>$55-$95+</td></tr><tr><td>Typical lifespan</td><td>25-30 years</td><td>30+ years (if dense + well set)</td></tr><tr><td>Freeze-thaw resilience</td><td>High (flexible system)</td><td>Varies (high for granite/porcelain)</td></tr><tr><td>Repairability</td><td>Easy — swap individual units</td><td>Difficult — matching + re-bedding</td></tr><tr><td>Maintenance</td><td>Low — joint sand, occasional rinse</td><td>Moderate — seal every 2-3 yrs</td></tr><tr><td>Look</td><td>Consistent, engineered, huge range</td><td>Unique, premium, natural variation</td></tr><tr><td>Best for</td><td>Value, durability, low hassle</td><td>Signature high-end aesthetics</td></tr></tbody></table>" }} />
       </div>
 
@@ -131,7 +131,7 @@ export default function NaturalStoneVsPaversBarrie() {
         <div className="flex items-start gap-4">
           <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
           <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2">About the Author</div>
+            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
             <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces across Barrie and Simcoe County since 2020. With hundreds of patios, walkways, and driveways installed, WSIB certification, and $5M liability coverage, Yorkis backs every Golden Maple project with a 5-year structural warranty and a perfect 5.0 Google rating.</p>
           </div>
         </div>

@@ -21,12 +21,12 @@ export default function About() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 Who We Are
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 We build spaces <br />
-                <span className="italic text-brand-gold">families enjoy for years.</span>
+                <span className="italic text-brand-gold-dark">families enjoy for years.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-12 font-light">
                 Your backyard should be the place your family actually wants to be — dinner on the patio, kids on the lawn, coffee out back before the day starts.
@@ -44,7 +44,7 @@ export default function About() {
               </div>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary py-5 px-10">Get My Estimate</Link>
-                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-xs uppercase tracking-[0.2em] hover:text-brand-gold transition-colors font-medium">
+                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-xs uppercase tracking-[0.2em] hover:text-brand-gold-dark transition-colors font-medium">
                   See Our Work <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
@@ -58,7 +58,7 @@ export default function About() {
               className="relative w-full max-w-[380px] mx-auto"
             >
               {/* Gold-glow backdrop panel — the cutout stands in front, head breaks above it */}
-              <div className="absolute inset-x-0 top-[14%] bottom-0 rounded-[2px] overflow-hidden border border-brand-gold/40 bg-gradient-to-b from-brand-surface to-black shadow-[0_45px_90px_-30px_rgba(0,0,0,0.8)]" aria-hidden="true">
+              <div className="absolute inset-x-0 top-[14%] bottom-0 rounded-[2px] overflow-hidden border border-brand-gold/40 bg-gradient-to-b from-brand-burgundy to-black shadow-[0_45px_90px_-30px_rgba(0,0,0,0.8)]" aria-hidden="true">
                 <div className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[130%] aspect-square rounded-full bg-brand-gold/20 blur-3xl" />
               </div>
               {/* Rotated editorial outlines */}
@@ -74,7 +74,7 @@ export default function About() {
               {/* Name plate on a gradient scrim */}
               <div className="absolute z-20 inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent pt-20 pb-8 px-8 text-center">
                 <div className="mx-auto mb-4 h-px w-12 bg-brand-gold/70" aria-hidden="true" />
-                <p className="font-display text-3xl text-brand-bonewhite font-light">Yorkis Estevez</p>
+                <p className="font-display text-3xl text-brand-porcelain font-light">Yorkis Estevez</p>
                 <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-brand-gold mt-3">Founder &amp; Lead Builder</p>
               </div>
             </motion.div>
@@ -97,56 +97,56 @@ export default function About() {
 
           <div className="mb-40 bg-brand-surface p-16 md:p-24 rounded-[2px] border border-brand-dim/10">
             <div className="max-w-5xl mx-auto">
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 The Golden Maple Difference
               </span>
               <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-tight mb-16">
                 Built right <br />
-                <span className="text-brand-gold italic">from the ground up.</span>
+                <span className="text-brand-gold-dark italic">from the ground up.</span>
               </h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
                 <div className="space-y-12">
-                  <h3 className="font-sans text-sm uppercase tracking-[0.25em] text-red-400/90 font-normal">The Industry Standard</h3>
+                  <h3 className="font-sans text-sm uppercase tracking-[0.25em] text-brand-error/90 font-normal">The Industry Standard</h3>
                   <ul className="space-y-10 font-sans text-lg text-brand-bonewhite/60 font-light">
                     <li className="flex gap-6">
-                      <span className="text-red-400 font-normal shrink-0">✕</span>
+                      <span className="text-brand-error font-normal shrink-0">✕</span>
                       Shallow 6" bases that sink after one winter.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-red-400 font-normal shrink-0">✕</span>
+                      <span className="text-brand-error font-normal shrink-0">✕</span>
                       Communication that stops after the deposit.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-red-400 font-normal shrink-0">✕</span>
+                      <span className="text-brand-error font-normal shrink-0">✕</span>
                       Hidden fees and "surprise" mid-project costs.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-red-400 font-normal shrink-0">✕</span>
+                      <span className="text-brand-error font-normal shrink-0">✕</span>
                       Messy job sites and zero property protection.
                     </li>
                   </ul>
                 </div>
                 <div className="space-y-12">
-                  <h3 className="font-sans text-sm uppercase tracking-[0.25em] text-brand-gold font-normal">The Golden Maple Way</h3>
+                  <h3 className="font-sans text-sm uppercase tracking-[0.25em] text-brand-gold-dark font-normal">The Golden Maple Way</h3>
                   <ul className="space-y-10 font-sans text-lg text-brand-bonewhite font-light">
                     <li className="flex gap-6">
-                      <span className="text-brand-gold font-normal shrink-0">✓</span>
+                      <span className="text-brand-gold-dark font-normal shrink-0">✓</span>
                       Deep 12-16" structural bases for zero shifting.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-brand-gold font-normal shrink-0">✓</span>
+                      <span className="text-brand-gold-dark font-normal shrink-0">✓</span>
                       Daily updates and a dedicated project manager.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-brand-gold font-normal shrink-0">✓</span>
+                      <span className="text-brand-gold-dark font-normal shrink-0">✓</span>
                       Fixed-price, transparent quotes. No surprises.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-brand-gold font-normal shrink-0">✓</span>
+                      <span className="text-brand-gold-dark font-normal shrink-0">✓</span>
                       5-year craftsmanship warranty on all installations.
                     </li>
                     <li className="flex gap-6">
-                      <span className="text-brand-gold font-normal shrink-0">✓</span>
+                      <span className="text-brand-gold-dark font-normal shrink-0">✓</span>
                       Professional site management and daily cleanup.
                     </li>
                   </ul>
@@ -157,12 +157,12 @@ export default function About() {
 
           <div className="mb-40">
             <div className="text-center mb-16">
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-10 block">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 Manufacturing Partners
               </span>
               <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-tight">
                 Elite Materials for <br />
-                <span className="text-brand-gold italic">Elite Construction.</span>
+                <span className="text-brand-gold-dark italic">Elite Construction.</span>
               </h2>
             </div>
             
@@ -185,7 +185,7 @@ export default function About() {
                 }
               ].map((partner, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 hover:border-brand-gold/30 transition-all group">
-                  <h3 className="font-display text-2xl text-brand-gold mb-4 uppercase tracking-widest">{partner.name}</h3>
+                  <h3 className="font-display text-2xl text-brand-gold-dark mb-4 uppercase tracking-widest">{partner.name}</h3>
                   <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-bonewhite mb-6 font-normal underline decoration-brand-gold/30 underline-offset-8">
                     {partner.strength}
                   </p>
@@ -199,7 +199,7 @@ export default function About() {
 
           <div className="mb-40">
             <div className="max-w-4xl mx-auto">
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-12 block text-center">
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block text-center">
                 A Letter From Yorkis
               </span>
               <div className="space-y-12 font-sans text-xl md:text-2xl text-brand-muted leading-relaxed font-light">
@@ -217,7 +217,7 @@ export default function About() {
                 </p>
                 <div className="bg-brand-burgundy/10 border-l-2 border-brand-gold p-10 md:p-16 rounded-[2px]">
                   <p className="text-brand-bonewhite text-2xl md:text-3xl font-display font-light leading-tight">
-                    Every build is backed by a <span className="text-brand-gold">5-year sink and settlement warranty</span> — in writing. If your stones ever sink or shift, we come back and make it right.
+                    Every build is backed by a <span className="text-brand-gold-dark">5-year sink and settlement warranty</span> — in writing. If your stones ever sink or shift, we come back and make it right.
                   </p>
                 </div>
                 <p>
@@ -225,7 +225,7 @@ export default function About() {
                 </p>
               </div>
               <div className="mt-20 text-center">
-                <p className="font-display text-4xl text-brand-gold italic font-light">Yorkis Estevez</p>
+                <p className="font-display text-4xl text-brand-gold-dark italic font-light">Yorkis Estevez</p>
                 <p className="font-sans text-[10px] font-normal tracking-[0.4em] uppercase text-brand-muted mt-3">Founder & Lead Builder</p>
               </div>
             </div>
@@ -233,13 +233,13 @@ export default function About() {
         </div>
       </section>
 
-      <section className="section-padding bg-brand-burgundy text-brand-bonewhite">
+      <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-8xl font-light mb-12 leading-tight">
             Let's build something <br />
             <span className="text-brand-gold italic">your family will love.</span>
           </h2>
-          <p className="font-sans text-lg text-brand-bonewhite/80 max-w-2xl mx-auto mb-16 font-light">
+          <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light">
             Start with a free estimate request. Honest scope, honest budget, no pressure. If we're the right fit, we'll come walk your property — no fee. If we're not, we'll point you toward someone who is.
           </p>
           <Link to="/contact" className="btn-primary px-20 py-5">Get My Estimate</Link>

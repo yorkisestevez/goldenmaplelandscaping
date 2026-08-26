@@ -27,9 +27,9 @@ export default function BuyersGuide() {
       />
       <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
         <div className="container-custom max-w-4xl">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-6 block">The 2026 Edition</span>
+          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">The 2026 Edition</span>
           <h1 className="font-display text-5xl md:text-7xl font-light mb-12">
-            The Simcoe County <span className="text-brand-gold italic">Buyer's Guide</span>
+            The Simcoe County <span className="text-brand-gold-dark italic">Buyer's Guide</span>
           </h1>
           
           <div className="prose prose-invert prose-brand max-w-none font-sans font-light text-brand-muted leading-relaxed">
@@ -44,7 +44,7 @@ export default function BuyersGuide() {
               In Simcoe County, the ground expands and contracts significantly due to the winter frost. A standard 6-inch base is simply not enough for interlocking stone or retaining walls.
             </p>
             <div className="bg-brand-surface p-8 rounded-sm my-8 border border-brand-dim/20">
-              <h3 className="text-brand-gold font-display text-xl mb-4">The Golden Maple Standard vs. Industry Average</h3>
+              <h3 className="text-brand-gold-dark font-display text-xl mb-4">The Golden Maple Standard vs. Industry Average</h3>
               <ul className="space-y-4 text-sm">
                 <li className="flex items-start gap-4">
                   <Shield className="text-brand-gold shrink-0 mt-1" size={20} />
@@ -66,12 +66,12 @@ export default function BuyersGuide() {
               <div className="bg-brand-surface p-8 border border-brand-dim/20">
                 <h4 className="text-brand-bonewhite font-display text-2xl mb-4">Interlocking Stone</h4>
                 <p className="text-sm mb-4">Highly durable, versatile designs. Permeable options available for better water management.</p>
-                <div className="text-xs text-brand-gold uppercase tracking-widest">Lifespan: 30+ Years</div>
+                <div className="text-xs text-brand-gold-dark uppercase tracking-widest">Lifespan: 30+ Years</div>
               </div>
               <div className="bg-brand-surface p-8 border border-brand-dim/20">
                 <h4 className="text-brand-bonewhite font-display text-2xl mb-4">Composite Decking</h4>
                 <p className="text-sm mb-4">Zero maintenance, resistant to rot and splintering. Ideal for elevated spaces.</p>
-                <div className="text-xs text-brand-gold uppercase tracking-widest">Lifespan: 25+ Years</div>
+                <div className="text-xs text-brand-gold-dark uppercase tracking-widest">Lifespan: 25+ Years</div>
               </div>
             </div>
 

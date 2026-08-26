@@ -45,13 +45,13 @@ export default function HeroEstimator() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-gradient-to-b from-brand-cream-light to-brand-cream-light backdrop-blur-2xl border border-brand-dim rounded-3xl p-7 md:p-9 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.7)]"
+      className="bg-brand-cream-light border border-brand-dim rounded-3xl p-7 md:p-9 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.7)]"
     >
-      <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">
+      <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">
         Free Cost Estimator · 60 Seconds
       </div>
       <h2 className="font-display text-3xl md:text-[34px] font-light text-brand-bonewhite leading-tight mb-2">
-        See your <span className="italic text-brand-gold">project range</span>
+        See your <span className="italic text-brand-gold-dark">project range</span>
       </h2>
       <p className="font-sans text-[13px] text-brand-bonewhite/85 font-normal mb-7 leading-relaxed">
         Three quick taps. Real Simcoe County pricing using actual Permacon paver and TimberTech decking costs. No signup to view.
@@ -59,7 +59,7 @@ export default function HeroEstimator() {
 
       {/* Step 1 — Project type */}
       <div className="mb-5">
-        <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-3">
+        <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-3">
           1 · What are you building?
         </div>
         <div className="grid grid-cols-3 gap-2">
@@ -74,10 +74,10 @@ export default function HeroEstimator() {
                 className={`p-3 rounded-2xl border transition-all duration-150 flex flex-col items-center gap-1.5 ${
                   selected
                     ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold text-brand-bonewhite shadow-[0_0_0_1px_rgba(212,175,99,0.45)]'
-                    : 'bg-brand-cream border-brand-dim text-brand-bonewhite/80 hover:border-brand-gold/60 hover:bg-brand-midsurface hover:text-brand-bonewhite'
+                    : 'bg-brand-cream-light border-brand-dim text-brand-bonewhite/80 hover:border-brand-gold/60 hover:bg-brand-midsurface hover:text-brand-bonewhite'
                 }`}
               >
-                <Icon size={18} strokeWidth={1.5} className={selected ? 'text-brand-gold' : ''} />
+                <Icon size={18} strokeWidth={1.5} className={selected ? 'text-brand-gold-dark' : ''} />
                 <span className="font-sans text-[11px] tracking-wide">{opt.label}</span>
               </button>
             );
@@ -88,8 +88,8 @@ export default function HeroEstimator() {
       {/* Step 2 — Size */}
       <div className="mb-5">
         <div className="flex items-center gap-2 mb-3">
-          <Ruler size={11} className="text-brand-gold" strokeWidth={2} />
-          <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">
+          <Ruler size={11} className="text-brand-gold-dark" strokeWidth={2} />
+          <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark">
             2 · How big?
           </span>
         </div>
@@ -104,13 +104,13 @@ export default function HeroEstimator() {
                 className={`p-3 rounded-2xl border transition-all duration-150 ${
                   selected
                     ? 'bg-gradient-to-b from-brand-gold/35 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.45)]'
-                    : 'bg-brand-cream border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface'
+                    : 'bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface'
                 }`}
               >
                 <div className={`font-sans text-[12px] uppercase tracking-wider ${selected ? 'text-brand-bonewhite' : 'text-brand-bonewhite/85'}`}>
                   {s.label}
                 </div>
-                <div className={`font-sans text-[10px] mt-0.5 ${selected ? 'text-brand-gold' : 'text-brand-bonewhite/65'}`}>
+                <div className={`font-sans text-[10px] mt-0.5 ${selected ? 'text-brand-gold-dark' : 'text-brand-bonewhite/65'}`}>
                   {s.hint}
                 </div>
               </button>
@@ -122,8 +122,8 @@ export default function HeroEstimator() {
       {/* Step 3 — City */}
       <div className="mb-7">
         <div className="flex items-center gap-2 mb-3">
-          <MapPin size={11} className="text-brand-gold" strokeWidth={2} />
-          <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">
+          <MapPin size={11} className="text-brand-gold-dark" strokeWidth={2} />
+          <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark">
             3 · Where?
           </span>
         </div>
@@ -131,7 +131,7 @@ export default function HeroEstimator() {
           <select
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            className="w-full bg-brand-surface/50 border border-brand-dim/30 hover:border-brand-gold/50 focus:border-brand-gold text-brand-bonewhite font-sans text-[13px] py-3 px-4 pr-10 rounded-2xl appearance-none outline-none transition-colors cursor-pointer"
+            className="w-full bg-brand-surface border border-brand-dim hover:border-brand-gold/50 focus:border-brand-gold text-brand-bonewhite font-sans text-[13px] py-3 px-4 pr-10 rounded-2xl appearance-none outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors cursor-pointer"
           >
             {ESTIMATOR_LOCATIONS.map(loc => (
               <option key={loc.key} value={loc.key}>{loc.name}</option>

@@ -28,7 +28,7 @@ export default function Book() {
             <motion.span
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold mb-8 block"
+              className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block"
             >
               Free Discovery Call · 15 Minutes
             </motion.span>
@@ -40,7 +40,7 @@ export default function Book() {
               className="font-display text-5xl md:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-12"
             >
               Pick a time <br />
-              <span className="italic text-brand-gold">that works for you.</span>
+              <span className="italic text-brand-gold-dark">that works for you.</span>
             </motion.h1>
 
             <motion.p
