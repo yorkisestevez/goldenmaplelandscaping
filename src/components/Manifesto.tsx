@@ -31,7 +31,10 @@ export default function Manifesto() {
             <div className="absolute -top-6 -left-6 w-24 h-24 border-t border-l border-brand-gold/30 z-0" />
             <div className="absolute -bottom-6 -right-6 w-24 h-24 border-b border-r border-brand-gold/30 z-0" />
             
-            <div className="absolute -right-4 top-1/2 -translate-y-1/2 hidden lg:block">
+            {/* Decorative watermark — aria-hidden so screen readers skip it and
+                the contrast auditor (which ignores aria-hidden) doesn't flag
+                deliberately-ghosted ornament as invisible text. */}
+            <div aria-hidden="true" className="absolute -right-4 top-1/2 -translate-y-1/2 hidden lg:block">
               <span className="font-display text-[120px] text-brand-gold/5 select-none leading-none uppercase font-light">EST. 2020</span>
             </div>
           </motion.div>
