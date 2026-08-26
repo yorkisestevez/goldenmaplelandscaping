@@ -432,7 +432,7 @@ export default function BookingScheduler() {
                   ? 'border-brand-gold bg-brand-gold/10 text-brand-gold-dark'
                   : isAvailable
                     ? 'border-brand-dim/20 text-brand-bonewhite hover:border-brand-gold hover:bg-brand-gold/5'
-                    : 'border-brand-dim/10 text-brand-dim cursor-not-allowed'
+                    : 'border-brand-dim/10 text-brand-muted/50 cursor-not-allowed'
               }`}
             >
               <span className="font-sans text-[9px] uppercase tracking-[0.2em] mb-1">

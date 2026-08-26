@@ -245,7 +245,7 @@ export default function CostGuide() {
                   </div>
 
                   <div>
-                    <label htmlFor="cg-location" className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal mb-3 block">Town or City <span className="text-brand-dim normal-case tracking-normal">(optional)</span></label>
+                    <label htmlFor="cg-location" className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal mb-3 block">Town or City <span className="text-brand-muted/70 normal-case tracking-normal">(optional)</span></label>
                     <input
                       id="cg-location"
                       type="text"
