@@ -41,6 +41,10 @@ export interface EstimatePayload {
   conditions: string[];
   /** Per-type follow-up answers keyed `${element}.${question}` (e.g. "patio.surface": "concrete") */
   details: Record<string, string>;
+  /** Engine v3 exact invoice figures (cents). Optional so old callers compile. */
+  preciseSubtotalCents?: number | null;
+  preciseHstCents?: number | null;
+  preciseGrandTotalCents?: number | null;
 }
 
 export default function EstimateLeadCapture({
@@ -52,8 +56,10 @@ export default function EstimateLeadCapture({
   /** Link that restores this exact build — the thing being traded for, and the
    *  reason this gate isn't withholding anything the customer already earned. */
   permalink?: string;
-  /** Fired once name+email are captured. */
-  onUnlock?: () => void;
+  /** Fired once name+email are captured — receives the email so the caller
+   *  can also unlock the estimator vault (saving a build IS giving an email;
+   *  asking again at the repeat gate would be asking twice for the same thing). */
+  onUnlock?: (email: string) => void;
 }) {
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -139,6 +145,10 @@ export default function EstimateLeadCapture({
       lead_score: String(leadScore.score),
       lead_tier: leadScore.tier,
       lead_score_reasons: leadScore.reasons.join(','),
+      // Exact takeoff figures the customer saw (dollars, 2dp) — '' pre-v3.
+      precise_subtotal: estimate.preciseSubtotalCents != null ? (estimate.preciseSubtotalCents / 100).toFixed(2) : '',
+      precise_hst: estimate.preciseHstCents != null ? (estimate.preciseHstCents / 100).toFixed(2) : '',
+      precise_total: estimate.preciseGrandTotalCents != null ? (estimate.preciseGrandTotalCents / 100).toFixed(2) : '',
     };
 
     if (import.meta.env.DEV) {
@@ -146,7 +156,7 @@ export default function EstimateLeadCapture({
       console.log('[dev] cost-estimator payload (would POST to Netlify):', payload);
       trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone });
       setStatus('success');
-      onUnlock?.();
+      onUnlock?.(form.email);
       return;
     }
 
@@ -159,7 +169,7 @@ export default function EstimateLeadCapture({
       if (!res.ok) throw new Error('Network response was not ok');
       trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone });
       setStatus('success');
-      onUnlock?.();
+      onUnlock?.(form.email);
     } catch {
       setStatus('error');
       setErrorMsg('Connection issue. Call (705) 500-3581 — we answer in person.');

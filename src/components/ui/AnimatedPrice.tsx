@@ -57,6 +57,44 @@ export function useCountUp(target: number, duration = 550): number {
 
 const toK = (n: number) => `$${(n / 1000).toFixed(0)}k`;
 
+const toDollars = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-CA')}`;
+
+/** Whole-dollar variant for tight spots (sticky bars) — same tween. */
+export function AnimatedDollars({ cents, className }: { cents: number; className?: string }) {
+  const animated = useCountUp(cents);
+  return (
+    <span className={cn('tabular-nums', className)}>
+      <span aria-hidden="true">{toDollars(animated)}</span>
+      <span className="sr-only">{toDollars(cents)}</span>
+    </span>
+  );
+}
+
+const toMoney = (cents: number) =>
+  `$${(cents / 100).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+/**
+ * An exact dollars-and-cents figure, animated. The takeoff engine prices to
+ * the cent, and showing the cents is the point — it reads as a real invoice,
+ * not a guess. Same interruptible tween as the range version.
+ */
+export function AnimatedMoney({
+  cents,
+  className,
+}: {
+  cents: number;
+  className?: string;
+}) {
+  const animated = useCountUp(cents);
+
+  return (
+    <span className={cn('tabular-nums', className)}>
+      <span aria-hidden="true">{toMoney(Math.round(animated))}</span>
+      <span className="sr-only">{toMoney(cents)}</span>
+    </span>
+  );
+}
+
 /**
  * The headline range, animated. Renders the same `$Xk – $Yk` shape the
  * estimator has always used — only the transition between values is new.

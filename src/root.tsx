@@ -157,11 +157,23 @@ export default function App() {
     trackPageView(location.pathname + location.search);
   }, [location.pathname, location.search]);
 
+  // The cost estimator runs as a full-screen app: its page ships its own
+  // minimal top bar, and the global navbar/footer/chat would fight the
+  // wizard's sticky bars for attention (Layout already hid the mobile dock
+  // there — this completes that thought).
+  const bareApp = location.pathname.startsWith('/cost-estimator');
+
   return (
     <HelmetProvider>
-      <SiteChrome>
-        <Outlet />
-      </SiteChrome>
+      {bareApp ? (
+        <main>
+          <Outlet />
+        </main>
+      ) : (
+        <SiteChrome>
+          <Outlet />
+        </SiteChrome>
+      )}
     </HelmetProvider>
   );
 }

@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import EstimateBreakdown from './EstimateBreakdown';
 import EstimateLeadCapture from './EstimateLeadCapture';
+import EstimatorUnlock from './EstimatorUnlock';
+import { readVault, unlockVault, recordEstimate, type VaultEstimate } from '../utils/estimatorVault';
 import EstimateBookingCTA from './EstimateBookingCTA';
 import EstimateWorkbench from './EstimateWorkbench';
 import BudgetTarget from './BudgetTarget';
@@ -18,9 +20,9 @@ import type { LucideIcon } from 'lucide-react';
 import { PAVER_BRANDS, DECK_BRANDS, ADD_ONS, defaultPaverForTier, sortPaversForDisplay, type PaverTier } from '../data/carrPrices';
 import { ESTIMATOR_LOCATIONS, type EstimatorLocationKey } from '../data/locations';
 import { getEstimatorRangeCopy } from '../utils/pricingDoctrine';
-import { computeEstimate, deltaFor, widenFactors, widenTotals, type EstimateInput, type EstimateLine } from '../utils/estimateEngine';
+import { computeEstimate, deltaFor, widenFactors, widenTotals, type EstimateInput, type EstimateLine, type PreciseResult } from '../utils/estimateEngine';
 import PriceDelta from './ui/PriceDelta';
-import AnimatedPrice from './ui/AnimatedPrice';
+import AnimatedPrice, { AnimatedDollars, AnimatedMoney } from './ui/AnimatedPrice';
 import SizeControl from './ui/SizeControl';
 import { cn } from '../utils/cn';
 
@@ -271,6 +273,19 @@ export default function Estimator() {
   // only controls the saved-state UI, never access to their own numbers.
   const [buildSaved, setBuildSaved] = useState(false);
 
+  // ---- Repeat-pricing gate + device vault (engine v3) ----
+  // First estimate free end-to-end; the SECOND run asks for an email once
+  // (EstimatorUnlock), after which the device stays unlocked and every
+  // completed build lands in the vault drawer. Vault reads live in effects/
+  // handlers only — localStorage must never run during the prerender.
+  const [gateActive, setGateActive] = useState(false);
+  const [vaultEstimates, setVaultEstimates] = useState<VaultEstimate[]>([]);
+  const [vaultOpen, setVaultOpen] = useState(false);
+  /** True when this session restored someone's ?build= link — viewing a shared
+   *  build neither counts as an attempt nor records into the vault. */
+  const restoredRef = useRef(false);
+  const refreshVault = () => setVaultEstimates(readVault().estimates);
+
   // Per-step funnel tracking — fire each step once per session so GA4 shows drop-off.
   const firedSteps = useRef<Set<number>>(new Set());
   const fireStep = (n: number, suffix = '') => {
@@ -306,11 +321,23 @@ export default function Estimator() {
         setAddOns(saved.addOns);
         setTargetBudget(saved.targetBudget);
         setStep(TOTAL_STEPS);
+        restoredRef.current = true;
+        refreshVault();
         fireStep(TOTAL_STEPS, '_restored');
         return;
       }
       // A corrupt or outdated link starts a clean estimate rather than a
       // half-applied one — a wrong restore is worse than no restore.
+    }
+
+    // Returning visitor with a completed estimate and no unlock yet → the
+    // repeat gate fronts the wizard (prefill links included — a repeat is a
+    // repeat however they arrive).
+    const vault = readVault();
+    setVaultEstimates(vault.estimates);
+    if (vault.estimates.length >= 1 && vault.unlockedAt === null) {
+      setGateActive(true);
+      trackEngagement('estimator_unlock_shown', 'return_visit');
     }
 
     const t = searchParams.get('type');
@@ -516,6 +543,28 @@ export default function Estimator() {
     if (f) setPhotoFile(f);
   };
 
+  /** "Price Another Project" — the moment the repeat gate applies. Unlocked
+   *  (or first-run) visitors just get a clean wizard. */
+  const startOver = () => {
+    firedSteps.current.clear();
+    setFurthestStep(1);
+    restoredRef.current = false;
+    const vault = readVault();
+    if (vault.estimates.length >= 1 && vault.unlockedAt === null) {
+      setGateActive(true);
+      trackEngagement('estimator_unlock_shown', 'start_over');
+    }
+    fireStep(1);
+    setStep(1);
+  };
+
+  const handleUnlocked = (email: string) => {
+    unlockVault(email);
+    refreshVault();
+    setGateActive(false);
+    trackEngagement('estimator_unlock_completed', projectType ?? 'unknown');
+  };
+
   // ---------- step renderers ----------
   /** Plain-language anchors for people who don't think in square feet.
    *  A number you can picture is a number you can own. */
@@ -699,6 +748,24 @@ export default function Estimator() {
   const prevStep = () => setStep(s => Math.max(1, s - 1));
 
   const selectedLocation = ESTIMATOR_LOCATIONS.find(l => l.key === location) || ESTIMATOR_LOCATIONS[0];
+
+  // Every completed run lands in the device vault (restored ?build= views
+  // excluded — viewing someone's shared link isn't your estimate). Recorded on
+  // arrival at the result only; lever tweaks afterwards belong to the same
+  // visit and dedupe by permalink anyway.
+  useEffect(() => {
+    if (step !== TOTAL_STEPS || restoredRef.current) return;
+    if (!permalink || !estimate.precise || estimate.totalLow <= 0) return;
+    recordEstimate({
+      permalink,
+      projectType: projectType ?? '',
+      city: selectedLocation.name,
+      sqft: totalSqft,
+      subtotalCents: estimate.precise.subtotalCents,
+    });
+    refreshVault();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
   const showBrandPicker = isHardscape || isDeck || projectType === 'full';
 
   // Filter brands by tier and use case (driveway vs patio)
@@ -809,8 +876,14 @@ export default function Estimator() {
     );
   };
 
+  /** The live receipt rail only makes sense once there's a number to show and
+   *  before the full breakdown takes over. */
+  const showRail = step >= 2 && step < TOTAL_STEPS && estimate.precise !== null && display.low > 0 && !gateActive;
+
+  const vaultMoney = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-CA')}`;
+
   return (
-    <div className="w-full max-w-[920px] mx-auto px-4 py-16 md:py-24" id="estimator">
+    <div className={cn('w-full mx-auto px-4 py-16 md:py-24', showRail ? 'max-w-[1280px]' : 'max-w-[920px]')} id="estimator">
       <div className="text-center mb-14">
         <div className="font-sans text-[11px] tracking-[0.3em] uppercase text-brand-gold-dark mb-5">
           Estimate Your Project
@@ -819,11 +892,70 @@ export default function Estimator() {
           What will yours <span className="italic text-brand-gold-dark">cost?</span>
         </h2>
         <p className="font-sans font-light text-[17px] text-brand-muted max-w-xl mx-auto leading-[1.6]">
-          Real numbers, real materials, real Simcoe County pricing. No signup to see your range.
+          Real numbers, real materials, real Simcoe County pricing. No signup to see your price.
         </p>
       </div>
 
-      <div className="relative bg-brand-cream-light border border-brand-dim rounded-3xl p-7 md:p-14 overflow-hidden shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)]">
+      {/* Saved-builds drawer — this device's completed estimates, reopenable. */}
+      {vaultEstimates.length > 0 && !gateActive && (
+        <div className="mb-6">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setVaultOpen(o => !o)}
+              className="inline-flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark hover:text-brand-bone transition-colors px-4 py-2 rounded-full border border-brand-dim bg-brand-cream-light"
+            >
+              My estimates ({vaultEstimates.length})
+              <ChevronDown size={13} className={cn('transition-transform', vaultOpen && 'rotate-180')} />
+            </button>
+          </div>
+          {vaultOpen && (
+            <div className="mt-3 bg-brand-cream-light border border-brand-dim rounded-2xl divide-y divide-brand-dim/50 overflow-hidden">
+              {vaultEstimates.map(v => (
+                <a
+                  key={v.id}
+                  href={v.permalink}
+                  onClick={() => trackEngagement('estimator_vault_restore', v.projectType)}
+                  className="flex items-baseline justify-between gap-4 px-5 py-3.5 hover:bg-brand-midsurface transition-colors"
+                >
+                  <span className="font-sans text-[13px] text-brand-bone min-w-0 truncate">
+                    {PROJECT_TYPES.find(p => p.id === v.projectType)?.label ?? v.projectType}
+                    <span className="text-brand-muted"> · {v.city}{v.sqft > 0 ? ` · ${v.sqft} sqft` : ''}</span>
+                  </span>
+                  <span className="font-sans text-[11px] text-brand-muted shrink-0">
+                    {new Date(v.savedAt).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}
+                  </span>
+                  <span className="font-display text-[14px] text-brand-gold-dark tabular-nums shrink-0">
+                    {vaultMoney(v.subtotalCents)}
+                  </span>
+                </a>
+              ))}
+              <p className="px-5 py-3 font-sans text-[10px] font-light text-brand-muted">
+                Saved on this device. Opening one reopens that exact build — prices refresh to current rates.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className={cn(showRail && 'lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8 lg:items-start')}>
+      {showRail && (
+        <ReceiptRail
+          precise={estimate.precise!}
+          displayLow={display.low}
+          displayHigh={display.high}
+          confidence={confidence}
+          delta={delta}
+          targetBudget={targetBudget}
+          canSkip={step >= 5}
+          onSkip={() => { fireStep(7); setStep(7); }}
+        />
+      )}
+      <div className="relative bg-brand-cream-light border border-brand-dim rounded-3xl p-7 md:p-14 overflow-hidden shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] lg:order-first">
+        {gateActive ? (
+          <EstimatorUnlock lastEstimate={vaultEstimates[0] ?? null} onUnlocked={handleUnlocked} />
+        ) : (
+        <>
         {/* Progress bar */}
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-brand-dim/40 rounded-t-3xl overflow-hidden">
           <motion.div className="h-full bg-gradient-to-r from-brand-gold/80 via-brand-gold to-brand-gold/80"
@@ -871,10 +1003,10 @@ export default function Estimator() {
           })}
         </nav>
 
-        {/* Desktop running estimate — deliberately wide early, visibly narrowing as answers land.
+        {/* Tablet running estimate — the lg+ receipt rail takes over from here.
             The breakdown shortcut only appears once the pricing-relevant questions are behind them. */}
         {step >= 2 && step < TOTAL_STEPS && display.low > 0 && (
-          <div className="hidden md:flex items-center justify-between gap-6 mb-12 px-6 py-4 rounded-2xl bg-gradient-to-r from-brand-gold/10 to-transparent border border-brand-gold/20">
+          <div className="hidden md:flex lg:hidden items-center justify-between gap-6 mb-12 px-6 py-4 rounded-2xl bg-gradient-to-r from-brand-gold/10 to-transparent border border-brand-gold/20">
             <div className="flex items-baseline gap-5">
               <div>
                 <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold-dark mb-1.5">Your range so far</div>
@@ -917,7 +1049,7 @@ export default function Estimator() {
                 <button
                   type="button"
                   onClick={() => { fireStep(7); setStep(7); }}
-                  className="btn-secondary !rounded-full whitespace-nowrap !py-3 !px-6"
+                  className="btn-primary !rounded-full whitespace-nowrap !py-3 !px-6"
                 >
                   Skip to full breakdown →
                 </button>
@@ -1275,6 +1407,7 @@ export default function Estimator() {
                 totalLow={display.low}
                 totalHigh={display.high}
                 confidencePercent={confidence}
+                precise={estimate.precise}
                 brandName={isDeck ? `${selectedDeck.brand} ${selectedDeck.product}` : `${selectedPaver.brand} ${selectedPaver.product}`}
                 sqft={totalSqft}
                 city={selectedLocation.name}
@@ -1372,9 +1505,19 @@ export default function Estimator() {
                   scopeSizes: Object.entries(sizes)
                     .filter(([, v]) => typeof v === 'string')
                     .map(([k, v]) => `${k}=${v}`).join(', '),
+                  preciseSubtotalCents: estimate.precise?.subtotalCents ?? null,
+                  preciseHstCents: estimate.precise?.hstCents ?? null,
+                  preciseGrandTotalCents: estimate.precise?.grandTotalCents ?? null,
                 }}
                 permalink={permalink}
-                onUnlock={() => { setBuildSaved(true); trackEngagement('estimator_build_saved', projectType ?? 'unknown'); }} />
+                onUnlock={(email) => {
+                  setBuildSaved(true);
+                  // Saving a build IS handing over an email — unlock the vault
+                  // too, so the repeat gate never asks for it a second time.
+                  unlockVault(email);
+                  refreshVault();
+                  trackEngagement('estimator_build_saved', projectType ?? 'unknown');
+                }} />
                 <div className="bg-brand-cream-light border border-brand-dim/60 rounded-3xl p-6 md:p-8 flex flex-col justify-center">
                   <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-3">Project Timeline</div>
                   <div className="font-display text-3xl text-brand-bone mb-2">
@@ -1396,7 +1539,7 @@ export default function Estimator() {
               </div>
 
               <div className="mt-12 text-center">
-                <button onClick={() => { firedSteps.current.clear(); setFurthestStep(1); fireStep(1); setStep(1); }} className="btn-ghost text-[9px] py-3 px-6">Start Over</button>
+                <button onClick={startOver} className="btn-ghost text-[9px] py-3 px-6">Price Another Project</button>
               </div>
 
               <p className="mt-8 font-sans text-xs font-normal text-brand-bonewhite/80 text-center max-w-3xl mx-auto leading-[1.6]">
@@ -1423,15 +1566,19 @@ export default function Estimator() {
             </button>
           </div>
         )}
+        </>
+        )}
+      </div>
       </div>
 
       {/* Mobile sticky bar — step 1 shows the selection, steps 2-6 the narrowing running estimate */}
-      {step < TOTAL_STEPS && ((step === 1 && projectType) || (step >= 2 && display.low > 0)) && (
+      {!gateActive && step < TOTAL_STEPS && ((step === 1 && projectType) || (step >= 2 && display.low > 0)) && (
         <MobileStickyBar
           low={step === 1 ? 0 : display.low}
           high={step === 1 ? 0 : display.high}
           delta={step === 1 ? null : delta}
           confidence={confidence}
+          preciseCents={step === 1 ? null : estimate.precise?.subtotalCents ?? null}
           selectedLabel={step === 1 ? (PROJECT_TYPES.find(p => p.id === projectType)?.label ?? '') : ''}
           label={step >= 5 ? 'See Full Breakdown →' : 'Continue →'}
           onContinue={step >= 5 ? () => { fireStep(7); setStep(7); } : nextStep}
@@ -1442,12 +1589,13 @@ export default function Estimator() {
           the hero number leaves the viewport, which breaks the "number follows
           your changes" loop exactly where it matters. Keep the live price
           pinned; the button jumps to the save card. Gone once saved. */}
-      {step === TOTAL_STEPS && !buildSaved && display.low > 0 && (
+      {!gateActive && step === TOTAL_STEPS && !buildSaved && display.low > 0 && (
         <MobileStickyBar
           low={display.low}
           high={display.high}
           delta={delta}
           confidence={confidence}
+          preciseCents={estimate.precise?.subtotalCents ?? null}
           title="Your estimate"
           label="Save build →"
           onContinue={() => saveCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
@@ -1457,10 +1605,97 @@ export default function Estimator() {
   );
 }
 
-function MobileStickyBar({ low, high, delta, confidence, label, onContinue, selectedLabel = '', title }: {
+/** Desktop live receipt — the categories fill in and re-price as answers land,
+ *  which is what makes the wizard read as an app assembling a real quote
+ *  rather than a form waiting to be finished. lg+ only; the mobile sticky bar
+ *  and tablet running bar carry the same number below that. */
+function ReceiptRail({ precise, displayLow, displayHigh, confidence, delta, targetBudget, canSkip, onSkip }: {
+  precise: PreciseResult;
+  displayLow: number;
+  displayHigh: number;
+  confidence: number;
+  delta: number | null;
+  targetBudget: number | null;
+  canSkip: boolean;
+  onSkip: () => void;
+}) {
+  const money = (cents: number) =>
+    `$${(cents / 100).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const rows: { label: string; cents: number }[] = [
+    { label: 'Excavation & prep', cents: precise.perCategoryCents.excavation },
+    { label: 'Materials & delivery', cents: precise.perCategoryCents.materials },
+    { label: 'Labour & installation', cents: precise.perCategoryCents.labour },
+    { label: 'Disposal', cents: precise.perCategoryCents.disposal },
+    { label: 'Restoration & cleanup', cents: precise.perCategoryCents.restoration },
+  ];
+  return (
+    <aside className="hidden lg:block sticky top-24 self-start" aria-label="Live estimate">
+      <div className="bg-brand-cream-light border border-brand-dim rounded-3xl p-6 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)]">
+        <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">
+          Your estimate · live
+        </div>
+        <div className="flex items-baseline gap-2.5 mb-1">
+          <AnimatedMoney cents={precise.subtotalCents} className="font-display text-[32px] leading-none text-brand-bone tracking-tight" />
+          <AnimatePresence>
+            {delta !== null && (
+              <motion.span
+                key="delta"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                className={cn('font-sans text-[12px] font-medium', delta > 0 ? 'text-brand-gold-dark' : 'text-brand-success')}
+              >
+                {delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta / 100) * 100).toLocaleString()}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+        <div className="font-sans text-[11px] text-brand-muted mb-4">
+          + HST · likely range {fmt(displayLow)}–{fmt(displayHigh)} · ±{confidence}%
+        </div>
+        <div className="divide-y divide-brand-dim/50 border-t border-brand-dim/50">
+          {rows.map(r => (
+            <div key={r.label} className="py-2.5 flex justify-between items-baseline gap-3">
+              <span className="font-sans text-[12px] text-brand-muted">{r.label}</span>
+              <span className="font-display text-[13px] text-brand-bone tabular-nums whitespace-nowrap">{money(r.cents)}</span>
+            </div>
+          ))}
+          {precise.addOnsCents > 0 && (
+            <div className="py-2.5 flex justify-between items-baseline gap-3">
+              <span className="font-sans text-[12px] text-brand-muted">Add-ons</span>
+              <span className="font-display text-[13px] text-brand-bone tabular-nums whitespace-nowrap">{money(precise.addOnsCents)}</span>
+            </div>
+          )}
+          {targetBudget !== null && (
+            <div className="py-2.5 flex justify-between items-baseline gap-3">
+              <span className="font-sans text-[12px] text-brand-gold-dark">Your target</span>
+              <span className="font-display text-[13px] text-brand-gold-dark tabular-nums whitespace-nowrap">
+                ${targetBudget.toLocaleString()}
+              </span>
+            </div>
+          )}
+        </div>
+        {canSkip && (
+          // btn-primary, not btn-secondary — the secondary button is bright
+          // gold text for dark surfaces and reads ~1.9:1 on this light card.
+          <button type="button" onClick={onSkip} className="btn-primary !rounded-full w-full justify-center text-center mt-5 !py-3">
+            See full breakdown →
+          </button>
+        )}
+        <p className="font-sans text-[10px] font-light text-brand-muted mt-4 leading-relaxed">
+          Priced from the Carr 2025 trade book — each answer re-prices the build.
+        </p>
+      </div>
+    </aside>
+  );
+}
+
+function MobileStickyBar({ low, high, delta, confidence, label, onContinue, selectedLabel = '', title, preciseCents }: {
   low: number; high: number; delta: number | null; confidence: number; label: string; onContinue: () => void; selectedLabel?: string;
   /** Overrides the "Running Estimate" heading — the result step says "Your estimate". */
   title?: string;
+  /** When the takeoff engine has a point estimate, the bar leads with it. */
+  preciseCents?: number | null;
 }) {
   if (low === 0) {
     return (
@@ -1491,9 +1726,13 @@ function MobileStickyBar({ low, high, delta, confidence, label, onContinue, sele
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-brand-gold/30 px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
     >
       <div className="min-w-0">
-        <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">{title ?? 'Running Estimate'} · ±{confidence}%</div>
+        <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">{title ?? 'Running Estimate'} · ±{confidence}%{preciseCents ? ' · +HST' : ''}</div>
         <div className="font-display text-lg text-brand-porcelain truncate flex items-baseline gap-2">
-          <AnimatedPrice low={low} high={high} separatorClassName="!mx-1.5" />
+          {preciseCents ? (
+            <AnimatedDollars cents={preciseCents} />
+          ) : (
+            <AnimatedPrice low={low} high={high} separatorClassName="!mx-1.5" />
+          )}
           <AnimatePresence>
             {delta !== null && (
               <motion.span

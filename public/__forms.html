@@ -110,6 +110,43 @@
       <input type="text" name="add_ons" />
       <input type="text" name="has_photos" />
       <input type="text" name="site_conditions" />
+      <!-- Engine v3 (2026-08): the takeoff engine's exact invoice figures,
+           pre-tax cents / HST / grand total in dollars. Declared same-commit
+           as the app started sending them (see the file-header trap). -->
+      <input type="text" name="precise_subtotal" />
+      <input type="text" name="precise_hst" />
+      <input type="text" name="precise_total" />
+      <input type="text" name="utm_source" />
+      <input type="text" name="utm_medium" />
+      <input type="text" name="utm_campaign" />
+      <input type="text" name="utm_content" />
+      <input type="text" name="utm_term" />
+      <input type="text" name="gclid" />
+      <input type="text" name="fbclid" />
+      <input type="text" name="landing_page" />
+      <input type="text" name="referrer" />
+      <input type="text" name="visitor_id" />
+      <input type="text" name="ga4_client_id" />
+      <input type="text" name="clarity_recording_url" />
+      <input type="text" name="visit_count" />
+      <input type="text" name="first_visit_at" />
+      <input type="text" name="session_duration_sec" />
+      <textarea name="behavior_json"></textarea>
+    </form>
+    <!-- estimator-unlock (Estimator.tsx UnlockCard): the light email-only gate
+         behind "first estimate free, unlimited pricing after email". POSTs via
+         JS fetch like every other form — runtime JSX must NOT carry
+         data-netlify (see the file-header trap). Declared 2026-08-26. -->
+    <form name="estimator-unlock" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="text" name="source" />
+      <input type="text" name="event_id" />
+      <input type="text" name="project_type" />
+      <input type="text" name="city" />
+      <input type="text" name="sqft" />
+      <input type="text" name="last_estimate_total" />
+      <input type="text" name="last_permalink" />
       <input type="text" name="utm_source" />
       <input type="text" name="utm_medium" />
       <input type="text" name="utm_campaign" />

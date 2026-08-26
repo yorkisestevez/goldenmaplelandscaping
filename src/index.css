@@ -55,7 +55,11 @@ html, body {
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  /* clip, not hidden: overflow-x hidden turns html/body into scroll
+     containers, which silently kills every position:sticky on the site
+     (the estimator's receipt rail was the victim that exposed it). clip
+     crops sideways overflow without creating a scroll box. */
+  overflow-x: clip;
   width: 100%;
 }
 

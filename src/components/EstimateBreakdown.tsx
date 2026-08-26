@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { Pickaxe, Package, Hammer, Trash2, Sparkles, Check, X } from 'lucide-react';
-import AnimatedPrice from './ui/AnimatedPrice';
+import AnimatedPrice, { AnimatedMoney } from './ui/AnimatedPrice';
+import type { PreciseResult } from '../utils/estimateEngine';
 
 export interface BreakdownLine {
   low: number;
@@ -18,6 +19,10 @@ export interface BreakdownProps {
   totalLow: number;
   totalHigh: number;
   confidencePercent: number; // ±%
+  /** The takeoff engine's "most likely" invoice. When present the card renders
+   *  invoice-style: exact category figures, subtotal, HST, grand total — with
+   *  the widened range demoted to secondary context. */
+  precise?: PreciseResult | null;
   brandName?: string;
   sqft?: number;
   city?: string;
@@ -30,9 +35,12 @@ export interface BreakdownProps {
 const fmt = (n: number) =>
   n >= 10000 ? `$${(n / 1000).toFixed(1)}k` : `$${n.toLocaleString()}`;
 
+const money = (cents: number) =>
+  `$${(cents / 100).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 const LINES = [
   { key: 'excavation', label: 'Excavation & Site Prep', icon: Pickaxe },
-  { key: 'materials',  label: 'Materials',              icon: Package },
+  { key: 'materials',  label: 'Materials & Delivery',   icon: Package },
   { key: 'labour',     label: 'Labour & Installation',  icon: Hammer },
   { key: 'disposal',   label: 'Disposal',               icon: Trash2 },
   { key: 'restoration',label: 'Restoration & Cleanup',  icon: Sparkles },
@@ -59,6 +67,29 @@ const EXCLUDES = [
   // same screen.
 ];
 
+/** Quantity-rich sub-copy for takeoff-priced categories — the receipt should
+ *  read like a contractor ordered the job, because one effectively did. */
+function detailFor(
+  key: (typeof LINES)[number]['key'],
+  fallback: string | undefined,
+  precise: PreciseResult | null | undefined,
+): string | undefined {
+  const q = precise?.quantities;
+  if (!q) return fallback;
+  if (key === 'materials') {
+    const parts = [
+      `${q.aggregateTonnes} tonnes base & bedding aggregate`,
+      `${q.polySandBags} bag${q.polySandBags === 1 ? '' : 's'} jointing sand`,
+      `${q.skids} pallet${q.skids === 1 ? '' : 's'} + ${q.deliveryLoads} truck load${q.deliveryLoads === 1 ? '' : 's'} delivered`,
+    ];
+    return fallback ? `${fallback} — ${parts.join(', ')}` : parts.join(', ');
+  }
+  if (key === 'disposal') {
+    return `${q.bins} × 14-yd bin${q.bins === 1 ? '' : 's'}, tear-out and excavation spoil hauled off`;
+  }
+  return fallback;
+}
+
 export default function EstimateBreakdown(props: BreakdownProps) {
   const lines = {
     excavation: props.excavation,
@@ -67,6 +98,7 @@ export default function EstimateBreakdown(props: BreakdownProps) {
     disposal: props.disposal,
     restoration: props.restoration,
   };
+  const p = props.precise;
 
   return (
     <div className="space-y-6">
@@ -79,22 +111,39 @@ export default function EstimateBreakdown(props: BreakdownProps) {
       >
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-gold/40 to-transparent" />
         <div className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-5">
-          Your Estimated Investment
+          {p ? 'Your Estimate' : 'Your Estimated Investment'}
         </div>
         {/* Animated so that adjusting a lever in the workbench below reads as
             "I moved that", not "the machine recalculated". */}
-        <AnimatedPrice
-          low={props.totalLow}
-          high={props.totalHigh}
-          className="block font-display text-6xl md:text-[88px] text-brand-bone mb-4 leading-none tracking-tight"
-          separatorClassName="text-brand-muted/60"
-        />
+        {p ? (
+          <>
+            <AnimatedMoney
+              cents={p.subtotalCents}
+              className="block font-display text-5xl md:text-[80px] text-brand-bone mb-2 leading-none tracking-tight"
+            />
+            <div className="font-sans text-[12px] text-brand-muted mb-4">
+              + HST · priced from your answers
+            </div>
+          </>
+        ) : (
+          <AnimatedPrice
+            low={props.totalLow}
+            high={props.totalHigh}
+            className="block font-display text-6xl md:text-[88px] text-brand-bone mb-4 leading-none tracking-tight"
+            separatorClassName="text-brand-muted/60"
+          />
+        )}
         <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-brand-gold/10 border border-brand-gold/30 rounded-full backdrop-blur-md">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
           <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark">
             Confidence ±{props.confidencePercent}%
           </span>
         </div>
+        {p ? (
+          <p className="font-sans text-[13px] font-light text-brand-muted mt-4 leading-relaxed">
+            Site unknowns could land it <span className="text-brand-bone tabular-nums">{fmt(props.totalLow)}–{fmt(props.totalHigh)}</span> — answers tighten it.
+          </p>
+        ) : null}
         {props.brandName && props.sqft ? (
           <p className="font-sans text-[14px] font-light text-brand-muted mt-6 leading-relaxed">
             Based on {props.sqft} sqft of <span className="text-brand-bone">{props.brandName}</span>
@@ -119,6 +168,8 @@ export default function EstimateBreakdown(props: BreakdownProps) {
         <div className="divide-y divide-white/[0.06]">
           {LINES.map(({ key, label, icon: Icon }, idx) => {
             const line = lines[key];
+            const preciseCents = p ? p.perCategoryCents[key] : null;
+            const detail = detailFor(key, line.detail, p);
             return (
               <motion.div
                 key={key}
@@ -134,12 +185,12 @@ export default function EstimateBreakdown(props: BreakdownProps) {
                   <div className="flex justify-between items-baseline gap-4">
                     <span className="font-sans text-[14px] text-brand-bone">{label}</span>
                     <span className="font-display text-lg md:text-xl text-brand-gold-dark tabular-nums whitespace-nowrap tracking-tight">
-                      {fmt(line.low)} – {fmt(line.high)}
+                      {preciseCents !== null ? money(preciseCents) : <>{fmt(line.low)} – {fmt(line.high)}</>}
                     </span>
                   </div>
-                  {line.detail ? (
+                  {detail ? (
                     <p className="font-sans text-[12px] font-light text-brand-muted mt-1.5 leading-relaxed">
-                      {line.detail}
+                      {detail}
                     </p>
                   ) : null}
                 </div>
@@ -147,6 +198,35 @@ export default function EstimateBreakdown(props: BreakdownProps) {
             );
           })}
         </div>
+
+        {/* Invoice footer — subtotal / HST / total, to the cent. */}
+        {p ? (
+          <div className="mt-2 pt-5 border-t border-brand-dim/60">
+            {p.addOnsCents > 0 && (
+              <div className="flex justify-between items-baseline gap-4 py-1.5">
+                <span className="font-sans text-[13px] text-brand-bone">Selected add-ons</span>
+                <span className="font-display text-[15px] text-brand-gold-dark tabular-nums">{money(p.addOnsCents)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-baseline gap-4 py-1.5">
+              <span className="font-sans text-[13px] text-brand-bone">Subtotal</span>
+              <span className="font-display text-[15px] text-brand-bone tabular-nums">{money(p.subtotalCents)}</span>
+            </div>
+            <div className="flex justify-between items-baseline gap-4 py-1.5">
+              <span className="font-sans text-[13px] text-brand-muted">HST (13%)</span>
+              <span className="font-display text-[15px] text-brand-muted tabular-nums">{money(p.hstCents)}</span>
+            </div>
+            <div className="flex justify-between items-baseline gap-4 pt-3 mt-2 border-t border-brand-gold/30">
+              <span className="font-sans text-[14px] font-medium text-brand-bone">Estimated total</span>
+              <AnimatedMoney cents={p.grandTotalCents} className="font-display text-2xl text-brand-gold-dark whitespace-nowrap" />
+            </div>
+            <p className="font-sans text-[11px] font-light text-brand-muted mt-4 leading-relaxed">
+              This is the same math we bring to your site visit — the final quote is confirmed
+              on-site after measurement.
+              {p.allowances.length > 0 ? ' Items outside the paver takeoff are carried as planning allowances.' : ''}
+            </p>
+          </div>
+        ) : null}
       </div>
 
       {/* Includes / Excludes */}
