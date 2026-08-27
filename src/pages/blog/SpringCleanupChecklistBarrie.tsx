@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function SpringCleanupChecklistBarrie() {
   const faqSchema = {
@@ -139,15 +140,7 @@ export default function SpringCleanupChecklistBarrie() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded Golden Maple Landscaping in 2020 and has since installed hundreds of interlocking paver driveways, patios, retaining walls, and composite decks across Simcoe County. The company is WSIB certified, carries $5M in liability coverage, and holds a 5.0 Google rating from clients across Barrie, Innisfil, Oro-Medonte, and Springwater.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has since installed hundreds of interlocking paver driveways, patios, retaining walls, and composite decks across Simcoe County. The company is WSIB certified, carries $5M in liability coverage, and holds a 5.0 Google rating from clients across Barrie, Innisfil, Oro-Medonte, and Springwater." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>If your spring walkthrough turned up settlement, drainage issues, or a retaining wall that does not look quite right, we can help. We serve Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, and Collingwood, and we provide written assessments with fixed-price repair quotes. <a href=\"/contact\">Contact Golden Maple Landscaping</a> to book your spring site visit — the earlier in the season you book, the better the scheduling options.</p>" }} />
     </BlogPostLayout>

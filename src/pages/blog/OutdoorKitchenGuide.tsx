@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function OutdoorKitchenGuide() {
   return (
@@ -80,6 +81,8 @@ export default function OutdoorKitchenGuide() {
         <li>Store cushions and accessories indoors</li>
         <li>Avoid using salt near natural stone veneers</li>
       </ul>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has built outdoor kitchens and outdoor living spaces across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the planning advice is the same on every build: settle the utilities, the drainage, and the base before anyone picks a countertop." />
+
     </BlogPostLayout>
   );
 }

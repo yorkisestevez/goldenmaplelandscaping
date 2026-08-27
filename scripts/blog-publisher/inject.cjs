@@ -72,11 +72,18 @@ function buildTsx(draft) {
     : '';
 
   // Author bio — closes the article. E-E-A-T signal for Google + AI engines.
+  // Emitted as a component so the founder photo lives in ONE place
+  // (src/data/founder.ts). This block used to inline the <img> path, which is
+  // how 18 posts ended up hardcoding it. bio={"..."} not bio="..." because a
+  // JSX attribute cannot carry backslash escapes.
   const bioJsx = draft.author_bio
-    ? `      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">\n        <div className="flex items-start gap-4">\n          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />\n          <div>\n            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-2">About the Author</div>\n            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">${draft.author_bio.replace(/"/g, '\\"').replace(/'/g, "\\'")}</p>\n          </div>\n        </div>\n      </div>\n\n`
+    ? `      <AuthorBio bio={${JSON.stringify(draft.author_bio)}} />\n\n`
+    : '';
+  const bioImport = draft.author_bio
+    ? `\nimport AuthorBio from '../../components/AuthorBio';`
     : '';
 
-  return `import BlogPostLayout from '../../components/BlogPostLayout';
+  return `import BlogPostLayout from '../../components/BlogPostLayout';${bioImport}
 
 export default function ${compName}() {
   const faqSchema = ${faqSchemaLiteral};

@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function OutdoorLightingDesignMistakes() {
   const faqSchema = {
@@ -140,15 +141,7 @@ export default function OutdoorLightingDesignMistakes() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020. We are WSIB certified, carry $5M in liability coverage, and hold a 5.0 Google rating across Simcoe County. Lighting design is part of every full-scope hardscape project we build — because how a patio or driveway looks at 9 pm matters as much as how it performs at 9 am.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020. We are WSIB certified, carry $5M in liability coverage, and hold a 5.0 Google rating across Simcoe County. Lighting design is part of every full-scope hardscape project we build — because how a patio or driveway looks at 9 pm matters as much as how it performs at 9 am." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>If you are planning a lighting upgrade for a Barrie, Innisfil, or Simcoe County property — or redesigning an outdoor space where lighting is part of the picture — we can produce a scaled lighting plan as part of the full design process. Reach out through our <a href='/contact'>contact page</a> and we will respond within one business day.</p>" }} />
     </BlogPostLayout>

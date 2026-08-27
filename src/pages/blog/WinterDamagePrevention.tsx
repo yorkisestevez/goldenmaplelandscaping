@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function WinterDamagePrevention() {
   return (
@@ -69,6 +70,8 @@ export default function WinterDamagePrevention() {
       </ul>
 
       <p>These could indicate a base issue that needs professional attention. Under our 5-year warranty, structural issues like sinking and settlement are covered at no charge.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has maintained and repaired interlocking stone through Ontario freeze-thaw winters across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the winter advice here is preventative for a reason: the damage that shows in spring almost always started with drainage or de-icing choices made in November." />
+
     </BlogPostLayout>
   );
 }

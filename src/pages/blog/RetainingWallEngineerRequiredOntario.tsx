@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function RetainingWallEngineerRequiredOntario() {
   const faqSchema = {
@@ -136,15 +137,7 @@ export default function RetainingWallEngineerRequiredOntario() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">I am Yorkis Estevez, founder of Golden Maple Landscaping. We have been building retaining walls across Barrie and Simcoe County since 2020, working with Permacon, Unilock, and Techo-Bloc on everything from straightforward 600 mm garden walls to fully engineered tiered systems on steep Oro-Medonte hillsides. We are WSIB certified, carry $5M in liability coverage, and hold a 5.0 Google rating. We pull every permit and engineer every wall that needs it.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="I am Yorkis Estevez, founder of Golden Maple Landscaping. We have been building retaining walls across Barrie and Simcoe County since 2020, working with Permacon, Unilock, and Techo-Bloc on everything from straightforward 600 mm garden walls to fully engineered tiered systems on steep Oro-Medonte hillsides. We are WSIB certified, carry $5M in liability coverage, and hold a 5.0 Google rating. We pull every permit and engineer every wall that needs it." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>If you are planning a retaining wall anywhere in Barrie or Simcoe County and want a straight answer on whether your project needs engineering, we are happy to give you an honest on-site assessment. We handle the full scope from design and permit application through to installation and final inspection. Reach out through our <a href=\"/contact\">contact page</a> to get a fixed quote, or start with our <a href=\"/cost-estimator?type=wall\">cost estimator</a> to build a realistic budget that includes engineering from day one.</p>" }} />
     </BlogPostLayout>

@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 import CostGuideInlineCTA from '../../components/CostGuideInlineCTA';
 
 export default function HiddenCostsCheapLandscaping() {
@@ -70,6 +71,8 @@ export default function HiddenCostsCheapLandscaping() {
       </ol>
 
       <p>If they hesitate on any of these, walk away. Your home is too valuable to trust to the lowest bidder.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has rebuilt enough failed hardscape across Simcoe County to know what a cheap quote leaves out. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the position here is not that a low number is always bad value: it is that the base depth and drainage a low quote skips are the two things that cost the most to fix later." />
+
     </BlogPostLayout>
   );
 }

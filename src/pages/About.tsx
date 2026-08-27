@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Shield, Award, CheckCircle, Compass, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
+import { FOUNDER } from '../data/founder';
 
 export default function About() {
   return (
@@ -57,25 +58,26 @@ export default function About() {
               transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
               className="relative w-full max-w-[380px] mx-auto"
             >
-              {/* Gold-glow backdrop panel — the cutout stands in front, head breaks above it */}
-              <div className="absolute inset-x-0 top-[14%] bottom-0 rounded-[2px] overflow-hidden border border-brand-gold/40 bg-gradient-to-b from-brand-burgundy to-black shadow-[0_45px_90px_-30px_rgba(0,0,0,0.8)]" aria-hidden="true">
-                <div className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[130%] aspect-square rounded-full bg-brand-gold/20 blur-3xl" />
-              </div>
-              {/* Rotated editorial outlines */}
-              <div className="absolute inset-x-0 top-[14%] bottom-0 border border-brand-gold/20 rounded-[2px] rotate-2" aria-hidden="true" />
-              <div className="absolute inset-x-0 top-[14%] bottom-0 border border-brand-gold/10 rounded-[2px] -rotate-1" aria-hidden="true" />
-              {/* Floating cutout */}
-              <img
-                src="/images/projects/yorkis-founder-golden-maple-cutout.webp"
-                alt="Yorkis Estevez, founder of Golden Maple Landscaping, in Golden Maple branded gear"
-                className="relative z-10 w-[82%] mx-auto block drop-shadow-[0_30px_50px_rgba(0,0,0,0.65)]"
-                referrerPolicy="no-referrer"
-              />
-              {/* Name plate on a gradient scrim */}
-              <div className="absolute z-20 inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent pt-20 pb-8 px-8 text-center">
-                <div className="mx-auto mb-4 h-px w-12 bg-brand-gold/70" aria-hidden="true" />
-                <p className="font-display text-3xl text-brand-porcelain font-light">Yorkis Estevez</p>
-                <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-brand-gold mt-3">Founder &amp; Lead Builder</p>
+              {/* Gold glow haloing out from behind the frame */}
+              <div className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[120%] aspect-square rounded-full bg-brand-gold/15 blur-3xl" aria-hidden="true" />
+              {/* Rotated editorial outlines, offset behind the frame */}
+              <div className="absolute inset-0 border border-brand-gold/20 rounded-[2px] rotate-2" aria-hidden="true" />
+              <div className="absolute inset-0 border border-brand-gold/10 rounded-[2px] -rotate-1" aria-hidden="true" />
+              {/* Full-frame portrait — same 3:4 crop the home Manifesto uses, so the
+                  founder reads identically on both pages. */}
+              <div className="relative z-10 aspect-[3/4] rounded-[2px] overflow-hidden border border-brand-gold/40 shadow-[0_45px_90px_-30px_rgba(0,0,0,0.8)]">
+                <img
+                  src={FOUNDER.portrait.src}
+                  alt={FOUNDER.portrait.alt}
+                  className="w-full h-full object-cover object-top"
+                  referrerPolicy="no-referrer"
+                />
+                {/* Name plate on a gradient scrim */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent pt-20 pb-8 px-8 text-center">
+                  <div className="mx-auto mb-4 h-px w-12 bg-brand-gold/70" aria-hidden="true" />
+                  <p className="font-display text-3xl text-brand-porcelain font-light">Yorkis Estevez</p>
+                  <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-brand-gold mt-3">Founder &amp; Lead Builder</p>
+                </div>
               </div>
             </motion.div>
           </div>

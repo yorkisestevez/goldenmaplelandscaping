@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Linkedin, Link as LinkIcon, Share2, Check } from 'lucide-react';
 import SEO from './SEO';
+import { FOUNDER, FOUNDER_IMAGE_URL } from '../data/founder';
 
 interface BlogPostLayoutProps {
   title: string;
@@ -63,7 +64,8 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
     "dateModified": dateModified || date,
     "author": {
       "@type": "Person",
-      "name": "Yorkis Estevez",
+      "name": FOUNDER.name,
+      "image": FOUNDER_IMAGE_URL,
       "jobTitle": "Founder, Golden Maple Landscaping",
       "url": "https://goldenmaplelandscaping.ca/about",
       "sameAs": ["https://goldenmaplelandscaping.ca/about"],

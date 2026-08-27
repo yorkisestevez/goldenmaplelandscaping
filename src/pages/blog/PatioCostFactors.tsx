@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 import CostGuideInlineCTA from '../../components/CostGuideInlineCTA';
 
 export default function PatioCostFactors() {
@@ -77,6 +78,8 @@ export default function PatioCostFactors() {
       <p>A well-built patio effectively adds a new room to your house. It expands your living space and, according to real estate data, offers one of the highest ROI (Return on Investment) of any home improvement project—recovering up to 75% of its value at resale.</p>
 
       <p>If you're ready to find out exactly what your vision will cost, book a consultation. We'll assess your property, discuss material options, and provide a fixed-price commitment.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has installed interlocking patios in Permacon, Unilock, and Techo-Bloc across Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the cost factors listed here are the ones that actually move a quote: access to the yard, excavation depth, and how much has to come out before anything goes back in." />
+
     </BlogPostLayout>
   );
 }

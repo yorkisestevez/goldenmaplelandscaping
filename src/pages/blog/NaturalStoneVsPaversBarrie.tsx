@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function NaturalStoneVsPaversBarrie() {
   const faqSchema = {
@@ -127,15 +128,7 @@ export default function NaturalStoneVsPaversBarrie() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces across Barrie and Simcoe County since 2020. With hundreds of patios, walkways, and driveways installed, WSIB certification, and $5M liability coverage, Yorkis backs every Golden Maple project with a 5-year structural warranty and a perfect 5.0 Google rating.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces across Barrie and Simcoe County since 2020. With hundreds of patios, walkways, and driveways installed, WSIB certification, and $5M liability coverage, Yorkis backs every Golden Maple project with a 5-year structural warranty and a perfect 5.0 Google rating." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>Still deciding between natural stone and pavers for your Barrie project? Golden Maple Landscaping will help you choose the right surface for your home, soil, and budget — no pressure, just honest advice. <a href=\"/contact\">Contact us today</a> to book a consultation, browse <a href=\"/portfolio\">our portfolio</a> for inspiration, or run the numbers with our <a href=\"/cost-estimator?type=stone\">cost estimator</a>.</p>" }} />
     </BlogPostLayout>

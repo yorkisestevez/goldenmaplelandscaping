@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function LandscaperQuoteExcavationLineItem() {
   const faqSchema = {
@@ -124,15 +125,7 @@ export default function LandscaperQuoteExcavationLineItem() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded Golden Maple Landscaping in 2020 and has been working in hardscape construction across Simcoe County since. The company is WSIB certified, carries $5M in liability coverage, and holds a 5.0 Google rating. Yorkis writes from direct site experience — these posts reflect what he sees in the ground on real Barrie and Simcoe County projects, not borrowed statistics.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has been working in hardscape construction across Simcoe County since. The company is WSIB certified, carries $5M in liability coverage, and holds a 5.0 Google rating. Yorkis writes from direct site experience — these posts reflect what he sees in the ground on real Barrie and Simcoe County projects, not borrowed statistics." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>If you are comparing landscaping quotes in Barrie or anywhere across Simcoe County and want to know whether the numbers in front of you reflect real site prep, we are glad to walk through it with you. <a href='/contact'>Reach out to schedule a site visit</a> and we will show you exactly how we price excavation, base depth, and disposal — in writing, line by line. Or use our <a href='/cost-estimator'>project cost estimator</a> to build a scoped range for your own project before you call anyone.</p>" }} />
     </BlogPostLayout>

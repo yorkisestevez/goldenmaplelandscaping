@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function TimberTechVsWood() {
   return (
@@ -65,6 +66,8 @@ export default function TimberTechVsWood() {
       <p>Wood decking is cheaper on day one. TimberTech is cheaper on day 7,300. If you're building a deck you plan to actually enjoy — not just maintain — the numbers speak for themselves.</p>
 
       <p>Want to see what TimberTech looks like in person? We keep samples of every colour and texture on hand. <strong>Book a free estimate request</strong> — if your project is a fit, we'll bring the options to your property so you can see them in your actual lighting, next to your actual home.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and installs TimberTech composite decking alongside hardscape across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the twenty-year comparison here is built on what maintenance actually costs a homeowner in this climate, not on the sticker price of the boards." />
+
     </BlogPostLayout>
   );
 }

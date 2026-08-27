@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function ChoosingContractor() {
   return (
@@ -94,6 +95,8 @@ export default function ChoosingContractor() {
       </ul>
 
       <p>Hiring the right contractor isn't about finding the cheapest price. It's about finding someone whose standards, communication, and integrity match the investment you're making in your home.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has spent the years since quoting alongside every kind of contractor working in Barrie and Simcoe County. The company is WSIB certified and carries $5M in liability coverage, and both are worth asking any contractor to show you in writing. With a 5.0 Google rating, the standard here is simple: base depth, materials, and warranty belong on the quote before anyone digs." />
+
     </BlogPostLayout>
   );
 }

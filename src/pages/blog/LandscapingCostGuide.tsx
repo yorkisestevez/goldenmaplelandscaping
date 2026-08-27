@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 import CostGuideInlineCTA from '../../components/CostGuideInlineCTA';
 
 export default function LandscapingCostGuide() {
@@ -75,6 +76,8 @@ export default function LandscapingCostGuide() {
       <p>A good rule of thumb recommended by the Appraisal Institute of Canada is to budget <strong>10% to 15% of your home's total value</strong> for a complete landscape renovation.</p>
 
       <p>If you're ready to get an exact number for your specific property, the next step is a free estimate request. We'll talk through scope, budget, and whether we're the right fit. If we are, the on-site walk and quote that follows is on us.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and quotes landscaping work across Barrie, Innisfil, Oro-Medonte, Springwater, and Orillia. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the pricing here comes from real projects and real supplier costs, and every figure assumes the base and drainage are built properly rather than trimmed to hit a number." />
+
     </BlogPostLayout>
   );
 }

@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function PergolaVsPavilionVsGazeboBarrie() {
   const faqSchema = {
@@ -151,15 +152,7 @@ export default function PergolaVsPavilionVsGazeboBarrie() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded Golden Maple Landscaping in 2020 and has installed pergolas, pavilions, and gazebos across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the work ethic is the same on a $10,000 pergola as on a $100,000 backyard renovation: proper footings, right materials for the climate, and no shortcuts on permits or base prep.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has installed pergolas, pavilions, and gazebos across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the work ethic is the same on a $10,000 pergola as on a $100,000 backyard renovation: proper footings, right materials for the climate, and no shortcuts on permits or base prep." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>If you’re weighing a pergola, pavilion, or gazebo for your Barrie or Simcoe County property, the best next step is a site visit. We look at your lot size, setbacks, existing patio or foundation, drainage, and how you actually use the space before recommending a structure. Reach out through our <a href='/contact'>contact page</a> to schedule a consultation, or use the <a href='/cost-estimator?type=pergola'>cost estimator</a> to get a rough project range before we talk.</p>" }} />
     </BlogPostLayout>

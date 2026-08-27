@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function PaverComparison() {
   return (
@@ -67,6 +68,8 @@ export default function PaverComparison() {
       <h2>Our Recommendation Process</h2>
 
       <p>Once we've confirmed on a free estimate request that your project is a fit, we bring physical samples of all three brands to your property. You'll see them in your actual lighting, next to your home's exterior. We'll discuss the pros and cons openly, and you'll make an informed decision — not a pressured one.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and installs Permacon, Unilock, and Techo-Bloc pavers across Barrie and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, this comparison comes from laying all three rather than from a brochure, and the honest answer is that the base under them matters more than the badge on them." />
+
     </BlogPostLayout>
   );
 }

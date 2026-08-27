@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 import { Link } from 'react-router-dom';
 
 export default function BestTimeInstallPatio() {
@@ -174,6 +175,8 @@ export default function BestTimeInstallPatio() {
       <p>The fastest way to see if your project fits a 2026 window is the <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">Golden Maple cost estimator</Link>. It uses real Carr Landscape Depot pricing and gives you a ballpark in 60 seconds — which is enough to know if an estimate request makes sense. From there we can usually slot a spring or fall window within one phone call.</p>
 
       <p>Related reading: <Link to="/resources/why-patios-sink-barrie" className="text-brand-gold-dark hover:underline">Why patios sink in Barrie</Link> · <Link to="/resources/winter-damage-prevention-interlocking" className="text-brand-gold-dark hover:underline">Winter damage prevention</Link> · <Link to="/resources/interlocking-cost-barrie" className="text-brand-gold-dark hover:underline">Interlocking cost in Barrie 2026</Link>.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has installed paver patios in every month Ontario weather allows, across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the scheduling advice here is what every caller hears: the season matters far less than a properly compacted 12 to 16 inch clear stone base." />
+
     </BlogPostLayout>
   );
 }

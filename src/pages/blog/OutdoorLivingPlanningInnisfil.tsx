@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function OutdoorLivingPlanningInnisfil() {
   const faqSchema = {
@@ -136,15 +137,7 @@ export default function OutdoorLivingPlanningInnisfil() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded the company in 2020 after years of hands-on landscaping work across Simcoe County. We hold WSIB coverage, $5M general liability insurance, and a 5.0 Google rating across hundreds of completed projects in Barrie, Innisfil, and surrounding municipalities. Yorkis personally oversees site assessments, material selection, and quality control on every project we take on.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="Yorkis Estevez founded the company in 2020 after years of hands-on landscaping work across Simcoe County. We hold WSIB coverage, $5M general liability insurance, and a 5.0 Google rating across hundreds of completed projects in Barrie, Innisfil, and surrounding municipalities. Yorkis personally oversees site assessments, material selection, and quality control on every project we take on." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>If you are planning an outdoor living space in Innisfil or anywhere across Simcoe County, the right first step is a site visit. We assess drainage, soil type, and sun exposure before any design work begins — no obligation, no pressure to commit. Use the <a href=\"/cost-estimator?type=full\">cost estimator</a> to rough out a budget range, then <a href=\"/contact\">get in touch</a> to book a time. We typically have Innisfil consultations available within 2 weeks.</p>" }} />
     </BlogPostLayout>

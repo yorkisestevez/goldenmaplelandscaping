@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function RetainingWallGuide() {
   return (
@@ -76,6 +77,8 @@ export default function RetainingWallGuide() {
         <li>Do you carry WSIB and liability insurance? (Non-negotiable)</li>
         <li>What warranty do you offer on structural performance?</li>
       </ul>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has built retaining walls across Barrie, Oro-Medonte, Springwater, and the rest of Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the position on walls does not change: drainage behind the wall and a compacted base under it are what keep it standing, and height is where an engineer stops being optional." />
+
     </BlogPostLayout>
   );
 }

@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function BestPaversPoolDeckSimcoeCounty() {
   const faqSchema = {
@@ -139,15 +140,7 @@ export default function BestPaversPoolDeckSimcoeCounty() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020. We\'ve built hardscape across Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, and Collingwood — including pool decks, retaining walls, driveways, and luxury outdoor living spaces. WSIB certified, $5,000,000 liability coverage, 5.0 Google rating across 8 reviews. Every paver spec on this site is one we\'ve installed in Simcoe County conditions.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020. We\'ve built hardscape across Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, and Collingwood — including pool decks, retaining walls, driveways, and luxury outdoor living spaces. WSIB certified, $5,000,000 liability coverage, 5.0 Google rating across 8 reviews. Every paver spec on this site is one we\'ve installed in Simcoe County conditions." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p><p>If you're planning a pool installation or replacing an existing deck anywhere in Simcoe County, the paver-and-base decisions are the ones that determine whether you have a beautiful pool deck for the next 25 years or a maintenance project starting in year three. We're happy to walk your property, look at the subgrade, and put a real spec and number in front of you. Same-week consultation across Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, and Collingwood.</p></p>" }} />
     </BlogPostLayout>

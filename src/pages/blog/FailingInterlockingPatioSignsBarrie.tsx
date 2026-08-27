@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function FailingInterlockingPatioSignsBarrie() {
   const faqSchema = {
@@ -143,15 +144,7 @@ export default function FailingInterlockingPatioSignsBarrie() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">I\'m Yorkis Estevez, founder of Golden Maple Landscaping. We\'ve built our interlocking work around one non-negotiable: a 12-16 inch compacted clear stone base, every time, sourced through Carr Landscape Depot here in Barrie. We\'re WSIB certified, carry $5M in liability coverage, and hold a 5.0 rating on Google — because the base you can\'t see is what actually decides whether a patio lasts.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="I\'m Yorkis Estevez, founder of Golden Maple Landscaping. We\'ve built our interlocking work around one non-negotiable: a 12-16 inch compacted clear stone base, every time, sourced through Carr Landscape Depot here in Barrie. We\'re WSIB certified, carry $5M in liability coverage, and hold a 5.0 rating on Google — because the base you can\'t see is what actually decides whether a patio lasts." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>If you're seeing any of these signs on your own patio — whether you're in Barrie, Innisfil, Orillia, or elsewhere in Simcoe County — the earlier we take a look, the more likely it's a $1,000 repair instead of a $15,000 rebuild. Reach out and we'll walk the patio with you, give it to you straight, and back any work with the same 12-16 inch clear stone base standard we build every job on.</p>" }} />
     </BlogPostLayout>

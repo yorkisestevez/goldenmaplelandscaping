@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function FirePitRegulations() {
   return (
@@ -90,6 +91,8 @@ export default function FirePitRegulations() {
       </ul>
 
       <p>These prices include the gas fitting, permits, and all masonry/hardscape work. We typically integrate fire features into larger patio and outdoor kitchen projects, which creates cost efficiencies since the base preparation and material supply are already happening.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has built fire pits and seating areas across Barrie, Innisfil, Oro-Medonte, and Springwater. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the approach to bylaws matches the approach to base prep: confirm the rule with the municipality first, build to it, and never guess at a setback." />
+
     </BlogPostLayout>
   );
 }

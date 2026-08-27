@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { Phone } from 'lucide-react';
+import { FOUNDER } from '../data/founder';
 
 export default function Manifesto() {
   return (
@@ -16,8 +17,8 @@ export default function Manifesto() {
           >
             <div className="aspect-[4/5] md:aspect-[3/4] rounded-[2px] overflow-hidden relative z-10 border border-brand-gold/20 group/photo shadow-2xl">
               <img
-                src="/images/projects/Yorkis Estevez.jpg"
-                alt="Yorkis Estevez - Founder of Golden Maple Landscaping"
+                src={FOUNDER.portrait.src}
+                alt={FOUNDER.portrait.alt}
                 className="w-full h-full object-cover object-top transition-transform duration-700 group-hover/photo:scale-105"
                 referrerPolicy="no-referrer"
               />

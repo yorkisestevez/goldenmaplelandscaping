@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function WhyPatiosSink() {
   return (
@@ -63,6 +64,8 @@ export default function WhyPatiosSink() {
       <p>When you're getting quotes for a patio project, <strong>ask one question: "How deep will you dig the base?"</strong> If the answer is anything less than 12 inches, keep looking. The money you save upfront will cost you double when you're re-doing the project in three years.</p>
 
       <p>At Golden Maple, we back our base work with a <strong>5-year sink and settlement warranty</strong>. We've never had to honour a claim — because when you build it right, it stays right. That's not marketing. That's engineering.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has rebuilt enough sunken patios across Barrie and Simcoe County to trace nearly all of them back to the same cause. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, every Golden Maple patio goes on a 12 to 16 inch compacted clear stone base, which is this whole article put into practice." />
+
     </BlogPostLayout>
   );
 }

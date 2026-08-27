@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function BackyardROI() {
   return (
@@ -72,6 +73,8 @@ export default function BackyardROI() {
       <h2>The Bottom Line</h2>
 
       <p>A professionally built outdoor living space in Simcoe County isn't just an expense — it's an investment that pays dividends every day you live in the home, and again when you sell it. The key is quality. A premium installation from a reputable contractor recovers most of its cost. A cheap installation from a fly-by-night operator? That'll cost you twice — once when you pay for it, and again when a buyer's inspector flags it.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has built backyard renovations across Barrie, Innisfil, Oro-Medonte, and the rest of Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the advice here is the same one given on site: get the base and the drainage right first, because that is the part of a renovation a buyer never sees but always inherits." />
+
     </BlogPostLayout>
   );
 }

@@ -27,8 +27,7 @@ const ALLOWED_HEROES = [
   '/images/projects/IHPX8926.JPEG',
   '/images/projects/composite deck.jpeg',
   '/images/projects/TimberTech Dark Cocoa PrimeCollection Composite Decking Beauty1.jpg',
-  '/images/projects/rendering1.jpg',
-  '/images/projects/Yorkis Estevez.jpg'
+  '/images/projects/rendering1.jpg'
 ];
 
 function readJson(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }

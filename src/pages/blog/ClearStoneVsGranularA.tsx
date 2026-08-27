@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function ClearStoneVsGranularA() {
   return (
@@ -100,6 +101,8 @@ export default function ClearStoneVsGranularA() {
       <p>Want to see what the right base looks like in writing? Our <Link to="/cost-estimator" className="text-brand-gold-dark hover:underline">instant cost estimator</Link> shows you a real range with the engineering included, and our <Link to="/contact" className="text-brand-gold-dark hover:underline">free design consultation</Link> walks you through the exact base spec for your property — soil type, drainage, frost depth, the whole stack.</p>
 
       <p>Related reading: <Link to="/resources/why-patios-sink-barrie" className="text-brand-gold-dark hover:underline">Why patios sink in Barrie</Link> · <Link to="/resources/winter-damage-prevention-interlocking" className="text-brand-gold-dark hover:underline">Winter damage prevention</Link> · <Link to="/resources/interlocking-cost-barrie" className="text-brand-gold-dark hover:underline">Interlocking cost in Barrie 2026</Link>.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and builds every patio, walkway, and driveway on a 12 to 16 inch compacted clear stone base rather than granular A. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, this is the one detail he will argue about longest, because the base decides whether the surface is still level in ten years." />
+
     </BlogPostLayout>
   );
 }

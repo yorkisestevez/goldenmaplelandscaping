@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function ConcreteVsInterlockingPatioBarrie() {
   const faqSchema = {
@@ -136,15 +137,7 @@ export default function ConcreteVsInterlockingPatioBarrie() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces in Simcoe County since 2020. With hundreds of patios installed and a WSIB certification backed by $5M liability, Yorkis guarantees professional, reliable service with a perfect 5.0 Google rating.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces in Simcoe County since 2020. With hundreds of patios installed and a WSIB certification backed by $5M liability, Yorkis guarantees professional, reliable service with a perfect 5.0 Google rating." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>Choosing the right patio for Barrie's climate is easier with Golden Maple Landscaping. Whether you prefer the cost-efficient solution of a concrete patio or the durable, versatile interlocking option, our expert team is ready to help. <a href=\"/contact\">Contact us today</a> to discuss your project, explore <a href=\"/portfolio\">our portfolio</a>, or use our <a href=\"/cost-estimator?type=patio\">cost estimator</a> to get a quote.</p>" }} />
     </BlogPostLayout>

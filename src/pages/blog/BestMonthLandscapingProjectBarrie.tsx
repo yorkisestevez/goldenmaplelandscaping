@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function BestMonthLandscapingProjectBarrie() {
   const faqSchema = {
@@ -136,15 +137,7 @@ export default function BestMonthLandscapingProjectBarrie() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded Golden Maple Landscaping in 2020 and has since installed hundreds of paver driveways, patios, and retaining walls across Barrie and Simcoe County. We carry $5 million in liability coverage, hold WSIB certification for all field work, and maintain a 5.0 Google rating by being straight with clients about what is actually achievable in each season.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has since installed hundreds of paver driveways, patios, and retaining walls across Barrie and Simcoe County. We carry $5 million in liability coverage, hold WSIB certification for all field work, and maintain a 5.0 Google rating by being straight with clients about what is actually achievable in each season." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>If you are planning a landscaping project in Barrie or anywhere across Simcoe County, the best time to start the conversation is right now. We book spring slots through the winter, and fall windows fill faster than most people expect. <a href='/contact'>Reach out through our contact page</a> to schedule a no-charge site visit, and we will give you an honest picture of what the timeline looks like for your specific scope and location. You can also <a href='/cost-estimator'>try our project cost estimator</a> for a rough budget range before we talk.</p>" }} />
     </BlogPostLayout>

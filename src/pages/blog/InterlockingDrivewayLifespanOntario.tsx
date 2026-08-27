@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function InterlockingDrivewayLifespanOntario() {
   const faqSchema = {
@@ -133,15 +134,7 @@ export default function InterlockingDrivewayLifespanOntario() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">I\'m Yorkis Estevez, founder of Golden Maple Landscaping. Since starting the company in 2020, my crew and I have been on the tools every day, installing hundreds of patios, walkways, and driveways across Simcoe County. We believe in building things right the first time, which is why we\'re WSIB certified, carry $5M in liability insurance, and have earned a 5.0 rating on Google. We build landscapes that last.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="I\'m Yorkis Estevez, founder of Golden Maple Landscaping. Since starting the company in 2020, my crew and I have been on the tools every day, installing hundreds of patios, walkways, and driveways across Simcoe County. We believe in building things right the first time, which is why we\'re WSIB certified, carry $5M in liability insurance, and have earned a 5.0 rating on Google. We build landscapes that last." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>You've seen what happens when shortcuts are taken on driveways in Barrie and Innisfil. An investment in a proper base is an investment in peace of mind and decades of curb appeal. If you want a driveway that is engineered to handle our tough Ontario winters and will look great for years to come, let's talk about your project. Reach out to us for a straightforward, no-obligation quote. You can <a href='/contact'>contact us here</a> to get started.</p>" }} />
     </BlogPostLayout>

@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 import { Link } from 'react-router-dom';
 
 export default function PoolDeckMaterials() {
@@ -259,6 +260,8 @@ export default function PoolDeckMaterials() {
       <p>The fastest way to scope a pool deck project is the <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">cost estimator</Link> with "patio" selected and your sqft estimate. From there, our follow-up confirms whether porcelain or concrete pavers fit your pool, your sun exposure, and your budget — usually in one 15-minute call.</p>
 
       <p>Related reading: <Link to="/resources/unilock-vs-techo-bloc-vs-permacon" className="text-brand-gold-dark hover:underline">Paver brand comparison</Link> · <Link to="/resources/best-time-install-patio-ontario" className="text-brand-gold-dark hover:underline">Best time to install</Link> · <Link to="/resources/landscape-permits-barrie-simcoe" className="text-brand-gold-dark hover:underline">Permits for pool surrounds</Link>.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has built pool decks in porcelain, concrete pavers, and natural stone across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the material advice here accounts for what brochures skip: how each surface behaves wet, in bare feet, through an Ontario freeze-thaw cycle." />
+
     </BlogPostLayout>
   );
 }

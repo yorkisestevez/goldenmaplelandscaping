@@ -17,6 +17,7 @@ import SiteChrome from './components/Layout';
 import { initAnalytics, trackPageView } from './utils/analytics';
 import { initAttributionCapture } from './utils/utmCapture';
 import { initBehaviorCapture } from './utils/behavior';
+import { FOUNDER, FOUNDER_IMAGE_URL } from './data/founder';
 
 // Canonical business entity — ported verbatim from the PR #39 index.html #business
 // node so it prerenders into the <head> of every page (visible to non-JS AI crawlers).
@@ -33,7 +34,7 @@ const businessGraph = {
       image:
         'https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg',
       logo: 'https://goldenmaplelandscaping.ca/logo-mark.png',
-      founder: { '@type': 'Person', name: 'Yorkis Estevez' },
+      founder: { '@type': 'Person', name: FOUNDER.name, image: FOUNDER_IMAGE_URL },
       foundingDate: '2020',
       telephone: '+17055003581',
       email: 'yorkis@goldenmaplelandscaping.ca',

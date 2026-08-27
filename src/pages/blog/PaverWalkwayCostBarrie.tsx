@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function PaverWalkwayCostBarrie() {
   const faqSchema = {
@@ -126,15 +127,7 @@ export default function PaverWalkwayCostBarrie() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces across Barrie and Simcoe County since 2020. With hundreds of patios, walkways, and driveways installed, WSIB certification, and $5M liability coverage, Yorkis backs every Golden Maple project with a 5-year structural warranty and a perfect 5.0 Google rating.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces across Barrie and Simcoe County since 2020. With hundreds of patios, walkways, and driveways installed, WSIB certification, and $5M liability coverage, Yorkis backs every Golden Maple project with a 5-year structural warranty and a perfect 5.0 Google rating." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>I hope this detailed breakdown gives you a realistic understanding of what goes into the cost of a new paver walkway in Barrie. The numbers here are a solid starting point for your 2026 budget, but every project is unique. The only way to get a firm price is for us to see the site, talk about the materials you like, and measure everything out. If you're in Barrie, Innisfil, or anywhere in Simcoe County and want a walkway that's built to last, reach out to us at Golden Maple Landscaping.</p>" }} />
     </BlogPostLayout>

@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 import { Link } from 'react-router-dom';
 import CostGuideInlineCTA from '../../components/CostGuideInlineCTA';
 
@@ -202,6 +203,8 @@ export default function InterlockingCostBarrie() {
         <strong>Email:</strong> <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="text-brand-gold-dark hover:underline">yorkis@goldenmaplelandscaping.ca</a><br />
         <strong>Online:</strong> <Link to="/contact" className="text-brand-gold-dark hover:underline">Request a Quote</Link>
       </p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and prices interlocking work in Barrie and Simcoe County from real supplier numbers out of Carr Landscape Depot rather than rules of thumb. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, every range here assumes a base built to 12 to 16 inches of compacted clear stone, because a cheaper number usually means a shallower hole." />
+
     </BlogPostLayout>
   );
 }

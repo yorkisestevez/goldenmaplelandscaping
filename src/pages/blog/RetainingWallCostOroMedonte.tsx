@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function RetainingWallCostOroMedonte() {
   const faqSchema = {
@@ -136,15 +137,7 @@ export default function RetainingWallCostOroMedonte() {
         </div>
       </div>
 
-      <div className="not-prose mt-16 mb-8 p-6 rounded-2xl border border-brand-gold/20 bg-brand-surface/40">
-        <div className="flex items-start gap-4">
-          <img src="/images/projects/Yorkis Estevez.jpg" alt="Yorkis Estevez, Founder of Golden Maple Landscaping" loading="lazy" decoding="async" className="w-16 h-16 rounded-full object-cover border border-brand-gold/30 shrink-0" />
-          <div>
-            <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-2">About the Author</div>
-            <p className="font-sans text-sm text-brand-bonewhite font-light leading-relaxed mb-0">Yorkis Estevez founded Golden Maple Landscaping in 2020 and has since overseen hundreds of hardscape installations across Barrie, Oro-Medonte, and Simcoe County. The company holds WSIB certification, $5M in liability coverage, and a 5.0-star Google rating. Yorkis brings hands-on oversight to every retaining wall project, from permit coordination to final drainage inspection.</p>
-          </div>
-        </div>
-      </div>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has since overseen hundreds of hardscape installations across Barrie, Oro-Medonte, and Simcoe County. The company holds WSIB certification, $5M in liability coverage, and a 5.0-star Google rating. Yorkis brings hands-on oversight to every retaining wall project, from permit coordination to final drainage inspection." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>If you have a grade problem on your Oro-Medonte property — or anywhere across Simcoe County — we do a full on-site assessment before quoting. We look at your soil, access, wall height, and drainage path before we put a number on paper. <a href=\"/contact\">Book a site visit</a> or use the <a href=\"/cost-estimator?type=wall&city=oro-medonte\">cost estimator</a> to get a ballpark first. We build in Barrie, Oro-Medonte, Innisfil, Springwater, Orillia, Wasaga Beach, Midland, and Collingwood.</p>" }} />
     </BlogPostLayout>

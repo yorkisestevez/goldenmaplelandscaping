@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 
 export default function LandscapeLightingGuide() {
   return (
@@ -73,6 +74,8 @@ export default function LandscapeLightingGuide() {
       <h2>One Tip That Changes Everything</h2>
 
       <p><strong>Light the perimeter, not the centre.</strong> The most common DIY mistake is flooding the patio with light from above, which creates a flat, washed-out look. Instead, light the edges — the gardens, the walls, the trees — and let the reflected light softly illuminate the living space. This creates depth, mystery, and the kind of ambiance you feel in high-end restaurants and resorts.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has designed and installed landscape lighting across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the lighting principle matches the hardscape one: fewer, better-placed fixtures on properly buried runs beat a yard full of fittings that fail after two winters." />
+
     </BlogPostLayout>
   );
 }

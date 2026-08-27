@@ -1,4 +1,5 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
 import { Link } from 'react-router-dom';
 
 export default function PermitsBylawsBarrie() {
@@ -219,6 +220,8 @@ export default function PermitsBylawsBarrie() {
       <p>Every Golden Maple quote includes a permit and engineering line item where required — no surprise costs mid-build. Start with the <Link to="/cost-estimator" className="text-brand-gold-dark hover:underline">cost estimator</Link> to see your project range, then book an estimate request to confirm what permits apply to your specific lot.</p>
 
       <p>Related reading: <Link to="/resources/retaining-wall-guide-simcoe-county" className="text-brand-gold-dark hover:underline">Retaining wall engineering guide</Link> · <Link to="/resources/fire-pit-regulations-barrie" className="text-brand-gold-dark hover:underline">Barrie fire pit regulations</Link> · <Link to="/resources/best-time-install-patio-ontario" className="text-brand-gold-dark hover:underline">Best time to install in Ontario</Link>.</p>
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has pulled permits and worked to local bylaws across Barrie, Innisfil, Oro-Medonte, and Springwater. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the rule on permits is the one applied to every job: confirm the requirement with the municipality in writing before the excavator arrives, not after." />
+
     </BlogPostLayout>
   );
 }
