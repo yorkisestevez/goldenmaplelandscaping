@@ -1,4 +1,74 @@
 {
-  "lastRunAt": null,
-  "history": []
+  "lastRunAt": "2026-08-27T11:35:35.343Z",
+  "history": [
+    {
+      "at": "2026-08-27T11:35:35.343Z",
+      "mode": "health",
+      "outcome": "noop",
+      "findings": [
+        {
+          "pri": "P0",
+          "what": "Live availability: /, /cost-estimator/, /contact/ all HTTP 200 (0.34-0.49s)",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Production console sweep across /, /cost-estimator/, /contact/, 1 blog post, 1 location page: 0 console errors, 0 failed requests, 0 broken images",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "All 19 internal homepage links resolve 200 (301s are the canonical trailing-slash redirect, expected)",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "estimator-e2e.cjs 25/25 passed against dev :3011",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "contrast-audit-run.cjs 0 criticals across 6 route states",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Tracking bundle analytics-DuSv7m2W.js carries GA4 G-1BRTV91W3Z + Clarity wisgcj7yvw + Pixel 2084193635490617 + Ads AW-10839158941 - all 4 match the deploy guard assertions",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Netlify contact form receiving (17 lifetime, last real 2026-08-01); CRM ingesting (1 lead/7d, 6/30d, latest 2026-08-26)",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P3",
+          "what": "DEV-ONLY React warning: <option value=\"\" disabled selected> at src/components/BuyersGuide.tsx:249 and :267 - React ignores selected on option; correct form is defaultValue=\"\" on the <select>. Absent from production build.",
+          "decision": "no change - not P0 (production console is clean); queued for an optimize run"
+        },
+        {
+          "pri": "P3",
+          "what": "DEV-ONLY hydration attribute mismatch logged on /contact/. Production console clean, so not reproducing in the prod build.",
+          "decision": "no change - not P0; investigate in an optimize run"
+        },
+        {
+          "pri": "P1",
+          "what": "Estimator-side Netlify forms at 0 lifetime submissions (quick-quote, estimate-leads, hero-estimate, project-guide, deck-estimator); only contact converts",
+          "decision": "no change - P1 is optimize-mode work and daily traffic (13 sessions) is too thin to read; already tracked in gm-estimator-conversion-diagnosis"
+        },
+        {
+          "pri": "P1",
+          "what": "GA4 daily window: 13 sessions / 13 users / 33 pageviews / 0 key events, 0 lead events. Top: / (6), /locations/innisfil/ (3), /service-areas/ (3)",
+          "decision": "no change - single low-traffic day, not a funnel cliff signal"
+        }
+      ],
+      "changes": [],
+      "watch": [
+        "generate_lead stays 0 across several days with traffic >20 sessions/day -> escalate to P1 funnel review",
+        "Netlify contact form: last real submission 2026-08-01 (26d). Cadence is ~1-2/mo so this is in-range, but a submission by ~2026-09-05 would confirm the path is live",
+        "estimator_unlock_completed / estimator_unlock_shown ratio once the weekly funnel block has volume (needs shown >= 20)",
+        "BuyersGuide.tsx option-selected + /contact/ hydration mismatch: fix candidates for the next optimize run"
+      ]
+    }
+  ]
 }
