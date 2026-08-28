@@ -5,7 +5,7 @@ import { MapPin, Phone, Mail, Clock, Shield, Award, CheckCircle, ChevronDown } f
 import SEO from '../components/SEO';
 import BuyersGuide from '../components/BuyersGuide';
 import { trackLead } from '../utils/analytics';
-import { getAttributionFields } from '../utils/utmCapture';
+import { getAttributionFields, getConversionEventFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
 import { scoreGoldenMapleLead } from '../utils/leadScoring';
@@ -67,7 +67,7 @@ export default function Contact() {
     });
     const payload = {
       'form-name': 'contact',
-      event_id: eventId,
+      ...getConversionEventFields(eventId),
       ...getAttributionFields(),
       ...getBehaviorFields(),
       ...form,

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, Shield, Star, Calendar, Phone } from 'lucide-react';
 import { trackLead } from '../utils/analytics';
-import { getAttributionFields } from '../utils/utmCapture';
+import { getAttributionFields, getConversionEventFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
 
@@ -42,7 +42,7 @@ export default function QuickQuote() {
     const payload = {
       'form-name': 'quick-quote',
       source: 'hero',
-      event_id: eventId,
+      ...getConversionEventFields(eventId),
       ...getAttributionFields(),
       ...getBehaviorFields(),
       ...form,

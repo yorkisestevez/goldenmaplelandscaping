@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Mail, CheckCircle, FileText, Phone } from 'lucide-react';
 import { trackLead } from '../utils/analytics';
-import { getAttributionFields } from '../utils/utmCapture';
+import { getAttributionFields, getConversionEventFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
 import { scoreGoldenMapleLead } from '../utils/leadScoring';
@@ -119,7 +119,7 @@ export default function EstimateLeadCapture({
     const payload = {
       'form-name': 'cost-estimator',
       source: 'cost-estimator',
-      event_id: eventId,
+      ...getConversionEventFields(eventId),
       ...getAttributionFields(),
       ...getBehaviorFields(),
       name: form.name,

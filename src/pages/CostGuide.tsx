@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CheckCircle, FileText, Shield, Star, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
 import { trackLead } from '../utils/analytics';
-import { getAttributionFields } from '../utils/utmCapture';
+import { getAttributionFields, getConversionEventFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
 
@@ -58,7 +58,7 @@ export default function CostGuide() {
       const payload = {
         'form-name': 'cost-guide',
         source: 'cost-guide-page',
-        event_id: eventId,
+        ...getConversionEventFields(eventId),
         ...getAttributionFields(),
         ...getBehaviorFields(),
         name: form.name,

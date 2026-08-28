@@ -2,7 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { motion } from 'motion/react';
 import { Unlock, Mail } from 'lucide-react';
 import { trackLead } from '../utils/analytics';
-import { getAttributionFields } from '../utils/utmCapture';
+import { getAttributionFields, getConversionEventFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
 import type { VaultEstimate } from '../utils/estimatorVault';
@@ -55,7 +55,7 @@ export default function EstimatorUnlock({
     const payload = {
       'form-name': 'estimator-unlock',
       source: 'estimator-repeat-unlock',
-      event_id: eventId,
+      ...getConversionEventFields(eventId),
       ...getAttributionFields(),
       ...getBehaviorFields(),
       name: form.name,

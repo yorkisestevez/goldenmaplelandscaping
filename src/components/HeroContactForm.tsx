@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { CheckCircle, ChevronDown } from 'lucide-react';
 import { trackLead, trackEngagement } from '../utils/analytics';
-import { getAttributionFields } from '../utils/utmCapture';
+import { getAttributionFields, getConversionEventFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
 import { scoreGoldenMapleLead } from '../utils/leadScoring';
@@ -94,7 +94,7 @@ export default function HeroContactForm() {
     });
     const payload = {
       'form-name': 'contact',
-      event_id: eventId,
+      ...getConversionEventFields(eventId),
       ...getAttributionFields(),
       ...getBehaviorFields(),
       name: form.name,

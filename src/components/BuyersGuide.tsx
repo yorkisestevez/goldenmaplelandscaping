@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, Calculator, Calendar, ArrowRight, CheckCircle2, FileText, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getAttributionFields } from '../utils/utmCapture';
+import { getAttributionFields, getConversionEventFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { trackLead } from '../utils/analytics';
 import { genEventId } from '../utils/eventId';
@@ -14,7 +14,7 @@ const encodeForm = (data: Record<string, string>) =>
 
 async function postToNetlify(form: HTMLFormElement, formName: string, eventId: string): Promise<void> {
   const fd = new FormData(form);
-  const payload: Record<string, string> = { 'form-name': formName, event_id: eventId };
+  const payload: Record<string, string> = { 'form-name': formName, ...getConversionEventFields(eventId) };
   fd.forEach((v, k) => { if (typeof v === 'string') payload[k] = v; });
   Object.assign(payload, getAttributionFields(), getBehaviorFields());
   if (import.meta.env.DEV) {

@@ -11,7 +11,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { trackLead, trackEngagement } from '../utils/analytics';
-import { getAttributionFields } from '../utils/utmCapture';
+import { getAttributionFields, getConversionEventFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
 
@@ -139,7 +139,7 @@ export default function BookingScheduler() {
       slot_type: selectedSlot.slot_type,
       service_interest: form.service_interest,
       notes: form.notes.trim() || undefined,
-      event_id: eventId,
+      ...getConversionEventFields(eventId),
       ...getAttributionFields(),
       ...getBehaviorFields(),
     };

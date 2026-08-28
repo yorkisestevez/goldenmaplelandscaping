@@ -12,7 +12,7 @@ export default function Privacy() {
         <div className="container-custom max-w-3xl">
           <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">Legal</span>
           <h1 className="font-display text-5xl md:text-7xl font-light text-brand-bonewhite mb-4">Privacy Policy</h1>
-          <p className="font-sans text-sm text-brand-muted mb-16 font-light">Last updated: May 2026</p>
+          <p className="font-sans text-sm text-brand-muted mb-16 font-light">Last updated: August 2026</p>
 
           <div className="prose prose-invert prose-brand max-w-none font-sans font-light text-brand-muted leading-relaxed space-y-6">
             <p>
@@ -22,7 +22,7 @@ export default function Privacy() {
             <h2 className="font-display text-2xl text-brand-bonewhite mt-12 mb-4">What we collect</h2>
             <ul className="space-y-2 list-disc pl-6">
               <li><strong className="text-brand-bonewhite">Information you give us:</strong> name, phone, email, project details, and mailing address, via our forms or cost estimator.</li>
-              <li><strong className="text-brand-bonewhite">Marketing attribution:</strong> referring URL, landing page, and click-tracking parameters (utm_source, utm_medium, utm_campaign, gclid, fbclid) so we can measure which channels send qualified leads.</li>
+              <li><strong className="text-brand-bonewhite">Marketing attribution:</strong> referring URL, landing page, click-tracking parameters (utm_source, utm_medium, utm_campaign, gclid, fbclid), and pseudonymous campaign, variant, and touch identifiers so we can measure which channels send qualified leads.</li>
               <li><strong className="text-brand-bonewhite">Site behavior:</strong> pages visited, time on each page, scrolls, clicks, and visitor session recordings via Microsoft Clarity. We use this to improve the site, never to identify you personally.</li>
               <li><strong className="text-brand-bonewhite">Analytics identifiers:</strong> Google Analytics 4 client ID and Meta Pixel browser ID for aggregate measurement.</li>
             </ul>
@@ -48,7 +48,7 @@ export default function Privacy() {
 
             <h2 className="font-display text-2xl text-brand-bonewhite mt-12 mb-4">Cookies and tracking</h2>
             <p>
-              We use cookies and similar technologies for essential site functionality, analytics, and marketing measurement. You can disable cookies via your browser settings; some features (forms, attribution) may not work fully if you do.
+              We use cookies and similar technologies for essential site functionality, analytics, and marketing measurement. First-party local storage keeps pseudonymous campaign, variant, and touch identifiers for up to 90 days after your last visit; a later visit refreshes that expiry. You can clear this data or disable storage in your browser settings; some features (forms, attribution) may not work fully if you do.
             </p>
 
             <h2 className="font-display text-2xl text-brand-bonewhite mt-12 mb-4">Your rights</h2>
