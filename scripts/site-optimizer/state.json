@@ -1,6 +1,46 @@
 {
-  "lastRunAt": "2026-08-28T11:30:15.139Z",
+  "lastRunAt": "2026-08-29T11:32:17.710Z",
   "history": [
+    {
+      "at": "2026-08-29T11:32:17.710Z",
+      "mode": "health",
+      "outcome": "error",
+      "findings": [
+        {
+          "pri": "P0",
+          "what": "BLOCKED at Step 0 (process safety), 2nd consecutive day: proc.canStart strict refused — \"RAM floor: free 3796MB - need 2048MB < floor 2048MB\" (gate requires >=4096MB free). Resampled 6x over 30s: free RAM steady 3422-3822MB of 32606MB. TREND IMPROVING (yesterday 1532-2024MB) but still ~300-670MB short. 13 persistent Hermes services checked in, 9 locks held — all legitimate, NO stale gm-site-optimizer lock/residue from prior runs.",
+          "decision": "Honored the gate per ROUTINE Step 0 — no check-in, no lock, no dev server. E2E suite, contrast audit, lint and build DID NOT RUN today (2nd day)."
+        },
+        {
+          "pri": "P0",
+          "what": "BLOCKED at Step 1 (git sync) independently and BINDING: working tree still dirty with the SAME 4 files as 2026-08-28, byte-identical (6 insertions/6 deletions, src/components/EstimateBookingCTA.tsx, src/components/Manifesto.tsx, src/pages/About.tsx, src/pages/services/LandscapeDesign.tsx). Not growing. HEAD == origin/main (0/0, no divergence), on branch main. Human WIP: centralizing founder role to {FOUNDER.role} + honesty edits dropping unstaffed \"designer\" claims.",
+          "decision": "no action — per Step 1, STOP and do not stash. NOTE: this blocker binds even if RAM clears, so committing/reverting this WIP is the SINGLE action that unblocks the loop."
+        },
+        {
+          "pri": "P0",
+          "what": "Read-only production sweep (zero-cost, no lock, no dev server) — ALL GREEN. Key pages 200: / (0.48s,104KB), /cost-estimator/ (0.36s), /contact/ (0.43s), /services/ (0.45s); content markers present on each. All 89 sitemap URLs HTTP 200 with ZERO soft-404 SPA fallbacks. All 63 homepage internal links + JS/CSS assets + images resolve 200 (incl. space-containing image filename).",
+          "decision": "no change, green — but availability/link integrity only; NOT a substitute for the 25-check E2E + contrast audit + console sweep, which did not run."
+        },
+        {
+          "pri": "P0",
+          "what": "Tracking chain re-verified live in /assets/analytics-DuSv7m2W.js (5,396B): GA4 G-1BRTV91W3Z, Google Ads AW-10839158941, Meta Pixel 2084193635490617, Clarity — all four match canonical and match the 4 greps in the deploy guard. IDs are lazy-loaded in the chunk, absent from inline HTML by design. Bundle hash UNCHANGED from 2026-08-27, confirming no deploy has shipped since.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P2",
+          "what": "/blog/ returns HTTP 200 but serves the homepage byte-for-byte (104,512B) — an SPA catch-all soft-404. Real blog content lives at /resources/ (25+ posts, all in sitemap and all 200). No inbound links point at /blog/ and it is absent from the sitemap, so search impact is limited to any external/legacy link.",
+          "decision": "no change — not P0 breakage and health mode acts on P0 only. Queued for an optimize run (redirect /blog/* -> /resources/* or return a real 404)."
+        }
+      ],
+      "changes": [],
+      "watch": [
+        "BINDING BLOCKER: uncommitted WIP in the live repo, unchanged 2 days (4 files, founder-role centralization + designer-claim honesty edits). Blocks EVERY optimizer run at Step 1 regardless of RAM. Yorkis must commit or revert.",
+        "RAM headroom: free RAM improved 2.0GB -> 3.8GB overnight but the strict gate still refuses (needs 4096MB free). If it refuses a 3rd day, either free ~500MB or revisit the ramMb:2048 request in ROUTINE Step 0 — note that ROUTINE change must itself ship through Step 5, which the dirty tree currently blocks.",
+        "Verification debt: E2E 25-check, contrast audit, lint and build have now not run for 2 consecutive days. First unblocked run should treat a full suite pass as the priority before any new change.",
+        "/blog/ soft-404 -> queue for optimize mode.",
+        "Carried: generate_lead 0 across days with >20 sessions -> escalate to P1; contact form last real submission 2026-08-01; estimator unlock ratio once shown >= 20; BuyersGuide.tsx option-selected + /contact/ hydration mismatch queued for an optimize run."
+      ]
+    },
     {
       "at": "2026-08-28T11:30:15.139Z",
       "mode": "health",
