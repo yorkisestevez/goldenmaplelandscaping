@@ -1,6 +1,68 @@
 {
-  "lastRunAt": "2026-08-30T11:32:35.296Z",
+  "lastRunAt": "2026-08-30T20:42:16.955Z",
   "history": [
+    {
+      "at": "2026-08-30T20:42:16.955Z",
+      "mode": "health",
+      "outcome": "fixed",
+      "findings": [
+        {
+          "pri": "P0",
+          "what": "3-DAY BLOCK CLEARED (operator-directed repair; Yorkis said \"fix it\" in-session 2026-08-30). Committed the 4 human WIP files as d46aeb1 \"[golden-maple] honesty: centralize founder role, drop unstaffed designer claims\", committed the health-run heartbeat separately, then `git pull --rebase origin main` replayed both onto the 6 upstream commits. NO CONFLICT - predicted correctly: closest hunk approach was Manifesto 79 vs 84, 5 lines apart. Verified post-rebase that BOTH changes coexist: Manifesto has {FOUNDER.role} at 29/80 AND the upstream onClick trackCall(manifesto_phone) at 85; EstimateBookingCTA has the dropped designer claim at 88 AND trackCall(estimatebookingcta_phone) at 104.",
+          "decision": "SHIPPED. Repo now level with origin/main (0/0) and clean. Pushed 824cd5d..c13dc4b direct to main."
+        },
+        {
+          "pri": "P0",
+          "what": "FULL VERIFICATION SUITE RAN - first time in 3 days, ALL GREEN. npm run lint PASS (typegen + tsc --noEmit + all 3 pricing gates; ENGINE SNAPSHOT OK, pricing unchanged across all 45 branches; 528 budget-lever scenarios OK). npm run build PASS (14.07s, prerender clean). estimator-e2e.cjs 25/25 PASSED. contrast-audit-run.cjs 0 CRITICALS across 6 route states. Also grepped the whole build output: \"Our designers create\", \"Principal Designer\" and \"with a designer\" appear in ZERO files.",
+          "decision": "no change, green - verification debt from 2026-08-28/29/30 is cleared, and the 6 previously-unverified upstream commits are now verified by association."
+        },
+        {
+          "pri": "P0",
+          "what": "LIVE VERIFIED on production. Marker \"retainer creates a 3D model\" appeared on /services/landscape-design-barrie/ on poll ATTEMPT 1 (http 200, new=1, old=0). Re-swept changed + key pages: /services/landscape-design-barrie/, /about/, /, /cost-estimator/, /contact/ all HTTP 200 with ZERO stale claims. Tracking chain re-verified in the production bundle: GA4 G-1BRTV91W3Z, Ads AW-10839158941, Pixel 2084193635490617, Clarity wisgcj7yvw - all four present.",
+          "decision": "no change, green - no revert needed. NOTE: analytics bundle hash stayed BN9nsa6n because analytics.ts was untouched by this change; content-addressed hashing makes that expected, not a stale deploy."
+        },
+        {
+          "pri": "P0",
+          "what": "CLAIM ACCURACY IMPROVED on production. Three overclaims implying in-house design staff are now gone from the live site: Manifesto \"Founder & Principal Designer\" -> FOUNDER.role (\"Founder & Lead Builder\"); EstimateBookingCTA \"60-minute on-site or video session with a designer\" -> drops \"with a designer\"; LandscapeDesign \"Our designers create a 3D model\" -> \"The landscape designer we keep on retainer creates a 3D model\". The retainer wording matches copy already live at LuxuryLandscapeBarrie.tsx:44. About.tsx and Manifesto:28 were pure centralization (identical rendered text).",
+          "decision": "shipped - these sat unshipped in the dirty tree for 3+ days while production kept making the claims."
+        },
+        {
+          "pri": "P2",
+          "what": "TOOLING TRAP: `npm run dev` does NOT honor the port in .claude/launch.json - it bound :3000, which on this host is also held by an unrelated TrovEdge Next.js server (PID 29688, up since 2026-08-26). Had to start explicitly with `npm run dev -- --port 3011`.",
+          "decision": "no repo change - but future runs MUST pass --port 3011 explicitly. Fold into ROUTINE Step 4.4 on the next optimize run."
+        },
+        {
+          "pri": "P1",
+          "what": "PROCESS-HYGIENE BUG IN THIS LOOP, worth fixing before it bites again: TaskStop on the backgrounded `npm run dev` did NOT kill the underlying node process. TWO react-router dev servers leaked (PIDs 30204, 9452); 30204 stayed bound to :3000 alongside TrovEdge, which made an intermediate \"TrovEdge still serving 200\" check AMBIGUOUS - that 200 could have come from either server. Both leaked PIDs were positively identified by CommandLine and killed; TrovEdge 29688 confirmed untouched and now sole owner of :3000. A leaked dev server also emitted /api/health 404 noise that derailed one command.",
+          "decision": "no repo change this run. ROUTINE Step 4.4 should require: after killing the dev server, assert by CommandLine that no *golden-maple-landscaping*react-router* node process survives - never infer liveness from a port probe alone when a port can have multiple owners."
+        },
+        {
+          "pri": "P2",
+          "what": "Local builds CANNOT verify tracking IDs: 3 of 4 were absent from the local bundle because they come from VITE_* env vars only Netlify injects (src/utils/analytics.ts:29-38); only the Ads call-label has a hardcoded fallback. This looked alarming mid-run and is NOT a regression.",
+          "decision": "no change - the tracking assertion is production-only. Note in ROUTINE so a future run does not chase this as a false P0."
+        },
+        {
+          "pri": "P2",
+          "what": "/services/landscape-design/ (no location suffix) returns HTTP 200 but serves an SPA fallback with none of the page content - same soft-404 class as /blog/. The 8 location-suffixed routes all serve correctly.",
+          "decision": "no change - not P0, health mode acts on P0 only. Queued for an optimize run alongside the /blog/ soft-404; likely one shared catch-all root cause."
+        }
+      ],
+      "changes": [
+        {
+          "pr": "direct-to-main 824cd5d..c13dc4b (commits d46aeb1 + c13dc4b)",
+          "what": "honesty: centralize founder role via FOUNDER.role, drop three unstaffed-designer claims",
+          "marker": "retainer creates a 3D model",
+          "liveVerified": true
+        }
+      ],
+      "watch": [
+        "LOOP IS UNBLOCKED. Repo clean, level with origin/main. The next scheduled run should proceed normally for the first time since 2026-08-27.",
+        "RAM gate is now the ONLY remaining blocker and it is intermittent: samples today ranged 1479-3991MB against a 4096MB floor. It did not block this run because an operator-directed repair is not gated by the autonomous Step 0 lock, but a scheduled run can still refuse. If it refuses again, either free ~1GB or revisit the ramMb:2048 request in ROUTINE Step 0 - now finally shippable, since the tree is clean.",
+        "ROUTINE amendments earned this run, to ship next optimize run: (a) Step 4.4 must specify `npm run dev -- --port 3011`; (b) Step 4.4 must assert no leaked react-router node process by CommandLine after teardown; (c) note VITE_* tracking IDs are absent from local builds by design, so that assertion is production-only.",
+        "NEXT OPTIMIZE TARGET, unchanged and now actionable: ~20 days of zero form submissions (Netlify contact last 2026-08-01, estimate-request last 2026-08-10) while google/cpc traffic runs. Instrumentation is PROVEN working (90d: estimator_step 76, cta_click 10, generate_lead 10), so the fault is funnel/offer, not tracking.",
+        "Carried P2 backlog: /blog/ and /services/landscape-design/ soft-404s (probably one shared fix); BuyersGuide.tsx <option selected> dev warning (confirmed still emitting this run); /contact/ hydration mismatch."
+      ]
+    },
     {
       "at": "2026-08-30T11:32:35.296Z",
       "mode": "health",
