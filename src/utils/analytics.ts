@@ -31,6 +31,10 @@ const META_PIXEL_ID = (env.VITE_META_PIXEL_ID as string | undefined)?.trim() || 
 const GOOGLE_ADS_ID = (env.VITE_GOOGLE_ADS_ID as string | undefined)?.trim() || '';
 const GOOGLE_ADS_LEAD_LABEL =
   (env.VITE_GOOGLE_ADS_LEAD_LABEL as string | undefined)?.trim() || '';
+// Click to call — CID 513-052-1150. Do not use the page-load Contact label.
+const GOOGLE_ADS_CALL_LABEL =
+  (env.VITE_GOOGLE_ADS_CALL_LABEL as string | undefined)?.trim() ||
+  'AW-10839158941/0CDHCIO2iPEbEJ3hwbAo';
 const CLARITY_ID = (env.VITE_CLARITY_ID as string | undefined)?.trim() || '';
 
 const isDev = env.DEV === true;
@@ -44,7 +48,8 @@ export function initAnalytics(): void {
   initialized = true;
 
   // ---- Google (gtag.js) — covers both GA4 and Google Ads ----
-  if (GA4_ID || GOOGLE_ADS_ID) {
+  // Skip a second script inject if the static HTML snippet already booted gtag.
+  if ((GA4_ID || GOOGLE_ADS_ID) && typeof window.gtag !== 'function') {
     const primaryId = GA4_ID || GOOGLE_ADS_ID;
     const script = document.createElement('script');
     script.async = true;
@@ -189,6 +194,23 @@ export function trackLead(
   }
 
   if (isDev) console.log('[analytics] trackLead', { formName, tier, value, eventId });
+}
+
+/**
+ * Click-to-call conversion. Fires on every tel:7055003581 click.
+ * send_to is the existing Ads "Click to call" action — do not rename,
+ * and do not fire the page-load Contact conversion from here.
+ */
+export function trackCall(label = 'phone_call'): void {
+  if (!isBrowser) return;
+  if (GA4_ID) {
+    window.gtag?.('event', 'cta_click', { event_label: label });
+  }
+  if (GOOGLE_ADS_CALL_LABEL) {
+    window.gtag?.('event', 'conversion', { send_to: GOOGLE_ADS_CALL_LABEL });
+  }
+  pushClick(label);
+  if (isDev) console.log('[analytics] trackCall', label, GOOGLE_ADS_CALL_LABEL);
 }
 
 /** Generic engagement event for non-lead actions (PDF download, video play, etc). */
