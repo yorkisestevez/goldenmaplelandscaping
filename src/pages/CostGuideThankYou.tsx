@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { CheckCircle, Download, Phone, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
+import { trackCall } from '../utils/analytics';
 
 const PDF_URL = '/downloads/2026-simcoe-county-backyard-cost-guide.pdf';
 
@@ -88,7 +89,7 @@ export default function CostGuideThankYou() {
               </p>
               <div className="flex flex-col sm:flex-row gap-6 items-stretch">
                 <a
-                  href="tel:7055003581"
+                  href="tel:7055003581" onClick={() => trackCall('costguidethankyou_phone')}
                   className="flex-1 flex items-center justify-center gap-3 border border-brand-gold/30 text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.25em] py-4 hover:bg-brand-gold/5 transition-colors"
                 >
                   <Phone size={14} strokeWidth={1.5} />

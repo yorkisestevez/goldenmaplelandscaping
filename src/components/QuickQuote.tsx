@@ -2,7 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, Shield, Star, Calendar, Phone } from 'lucide-react';
-import { trackLead } from '../utils/analytics';
+import { trackLead, trackCall } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
@@ -99,7 +99,7 @@ export default function QuickQuote() {
           <ArrowRight size={14} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />
         </Link>
         <a
-          href="tel:7055003581"
+          href="tel:7055003581" onClick={() => trackCall('quickquote_phone')}
           className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold hover:underline inline-flex items-center gap-2"
         >
           <Phone size={12} strokeWidth={1.5} />

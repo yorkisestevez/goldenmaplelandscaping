@@ -4,6 +4,7 @@ import { ArrowRight, MapPin, CheckCircle, Star, Phone, Shield, Award } from 'luc
 import SEO from '../../components/SEO';
 import QuickQuote from '../../components/QuickQuote';
 import {
+import { trackCall } from '../../utils/analytics';
   SERVICES,
   LOCATIONS,
   SERVICE_KEYS,
@@ -212,7 +213,7 @@ export default function LocationLanding() {
                   Honest scope and budget assessment for your {location.name} project. No fee, no pressure. Most calls confirm whether the budget fits the vision before anyone visits the site.
                 </p>
                 <a
-                  href="tel:7055003581"
+                  href="tel:7055003581" onClick={() => trackCall('locationlanding_phone')}
                   className="block text-center border border-brand-gold/30 text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.25em] py-4 mb-3 hover:bg-brand-gold/5 transition-colors"
                 >
                   Call (705) 500-3581
@@ -319,7 +320,7 @@ export default function LocationLanding() {
           </p>
           <div className="flex flex-col sm:flex-row gap-6 items-center justify-center max-w-xl mx-auto">
             <a
-              href="tel:7055003581"
+              href="tel:7055003581" onClick={() => trackCall('locationlanding_phone')}
               className="flex-1 flex items-center justify-center gap-3 border border-brand-gold/30 text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.25em] py-5 px-8 hover:bg-brand-gold/5 transition-colors w-full"
             >
               <Phone size={14} strokeWidth={1.5} />

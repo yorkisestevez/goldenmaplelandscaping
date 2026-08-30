@@ -7,7 +7,7 @@ import Process from '../components/Process';
 import { Link } from 'react-router-dom';
 import HeroContactForm from '../components/HeroContactForm';
 import Reveal from '../components/Reveal';
-import { trackEngagement } from '../utils/analytics';
+import { trackEngagement, trackCall } from '../utils/analytics';
 import { cn } from '../utils/cn';
 
 
@@ -80,7 +80,7 @@ const Hero = () => {
               </Link>
               <a
                 href="tel:7055003581"
-                onClick={() => trackEngagement('cta_click', 'hero_phone')}
+                onClick={() => trackCall('hero_phone')}
                 className="group flex items-center gap-4 text-brand-porcelain font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
               >
                 Or Call (705) 500-3581

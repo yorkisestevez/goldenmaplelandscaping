@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { Phone } from 'lucide-react';
 import { FOUNDER } from '../data/founder';
+import { trackCall } from '../utils/analytics';
 
 export default function Manifesto() {
   return (
@@ -81,7 +82,7 @@ export default function Manifesto() {
               <div className="hidden sm:block h-12 w-px bg-brand-gold/20" />
               <div className="flex flex-col gap-1">
                 <span className="font-sans text-[11px] uppercase tracking-widest text-brand-gold">Direct Line</span>
-                <a href="tel:7055003581" className="font-display text-2xl text-brand-porcelain hover:text-brand-gold transition-colors font-light">705-500-3581</a>
+                <a href="tel:7055003581" onClick={() => trackCall('manifesto_phone')} className="font-display text-2xl text-brand-porcelain hover:text-brand-gold transition-colors font-light">705-500-3581</a>
               </div>
             </div>
           </motion.div>

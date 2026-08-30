@@ -1,4 +1,5 @@
 import SEO from '../components/SEO';
+import { trackCall } from '../utils/analytics';
 
 export default function Privacy() {
   return (
@@ -64,7 +65,7 @@ export default function Privacy() {
             <h2 className="font-display text-2xl text-brand-bonewhite mt-12 mb-4">Contact</h2>
             <p>
               Privacy questions: <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="text-brand-gold-dark hover:underline">yorkis@goldenmaplelandscaping.ca</a><br />
-              Phone: <a href="tel:7055003581" className="text-brand-gold-dark hover:underline">(705) 500-3581</a><br />
+              Phone: <a href="tel:7055003581" onClick={() => trackCall('privacy_phone')} className="text-brand-gold-dark hover:underline">(705) 500-3581</a><br />
               Mail: Golden Maple Landscaping, Barrie, ON, Canada
             </p>
           </div>

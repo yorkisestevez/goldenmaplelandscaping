@@ -2,7 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { CheckCircle, ChevronDown } from 'lucide-react';
-import { trackLead, trackEngagement } from '../utils/analytics';
+import { trackLead, trackEngagement, trackCall } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
@@ -42,11 +42,10 @@ export default function HeroContactForm() {
     'bot-field': '',
   });
 
-  const hasConcreteBudget = form.budget !== '' && form.budget !== UNSURE;
   const canSubmit =
-    hasConcreteBudget &&
     !!form.name.trim() &&
     !!form.email.trim() &&
+    !!form.phone.trim() &&
     status !== 'submitting';
 
   const onChange = (
@@ -64,15 +63,9 @@ export default function HeroContactForm() {
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim()) {
+    if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) {
       setStatus('error');
-      setErrorMsg('Please add your name and email so we can reply.');
-      return;
-    }
-    // Honor the brief: a range is needed to give a meaningful answer.
-    if (!hasConcreteBudget) {
-      setStatus('error');
-      setErrorMsg('A rough range helps us reply with real options — pick one, or grab a quick estimate from the calculator.');
+      setErrorMsg('Please add your name, phone, and email so we can reply.');
       return;
     }
     setStatus('submitting');
@@ -153,7 +146,7 @@ export default function HeroContactForm() {
             Yorkis comes back within <span className="text-brand-gold-dark">24 hours</span> with an honest read on
             scope, timeline, and budget.
           </p>
-          <a href="tel:7055003581" className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark hover:underline">
+          <a href="tel:7055003581" onClick={() => trackCall('hero_form_phone')} className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark hover:underline">
             Or call (705) 500-3581
           </a>
         </div>
@@ -195,8 +188,8 @@ export default function HeroContactForm() {
           </div>
 
           <div>
-            <label htmlFor="hc-phone" className={labelCls}>Phone <span className="text-brand-bonewhite/60 normal-case tracking-normal">(optional)</span></label>
-            <input id="hc-phone" type="tel" name="phone" inputMode="tel" autoComplete="tel"
+            <label htmlFor="hc-phone" className={labelCls}>Phone</label>
+            <input id="hc-phone" type="tel" name="phone" inputMode="tel" required autoComplete="tel"
               value={form.phone} onChange={onChange} placeholder="(705) 500-3581" className={fieldCls} />
           </div>
 
