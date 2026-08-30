@@ -128,6 +128,14 @@ export function Layout({ children }: { children: ReactNode }) {
         <link rel="manifest" href="/site.webmanifest" />
         <Meta />
         <Links />
+        {/* Static Google tag so Ads Goals scanners see AW-10839158941 without waiting for JS hydrate. send_page_view stays false. */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-1BRTV91W3Z" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1BRTV91W3Z',{send_page_view:false});gtag('config','AW-10839158941');",
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(businessGraph) }}
