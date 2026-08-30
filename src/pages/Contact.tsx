@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, Clock, Shield, Award, CheckCircle, ChevronDown } from 'lucide-react';
 import SEO from '../components/SEO';
-import BuyersGuide from '../components/BuyersGuide';
 import { trackLead, trackCall } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
@@ -352,7 +351,6 @@ export default function Contact() {
           </div>
         </div>
       </section>
-      <BuyersGuide />
     </div>
   );
 }
