@@ -1,6 +1,67 @@
 {
-  "lastRunAt": "2026-08-29T11:32:17.710Z",
+  "lastRunAt": "2026-08-30T11:32:35.296Z",
   "history": [
+    {
+      "at": "2026-08-30T11:32:35.296Z",
+      "mode": "health",
+      "outcome": "error",
+      "findings": [
+        {
+          "pri": "P0",
+          "what": "BLOCKED at Step 0 (process safety), 3rd consecutive day: proc.canStart strict refused — \"RAM floor: free 1479MB - need 2048MB < floor 2048MB\" (gate needs >=4096MB free). Resampled 6x over 24s: free RAM steady 1750-2005MB of 32606MB. TREND REVERSED — yesterday was 3422-3822MB, today is back down to Day-1 levels (~1.5-2.0GB), so the overnight improvement did not hold. vramAvailable 10296MB, conflictingProcesses [] — no stale gm-site-optimizer lock or residue.",
+          "decision": "Honored the gate per ROUTINE Step 0 — no check-in, no lock, no dev server. E2E 25-check, contrast audit, lint and build DID NOT RUN (3rd consecutive day)."
+        },
+        {
+          "pri": "P0",
+          "what": "BLOCKED at Step 1 (git sync) and NOW ESCALATED: the same 4 human WIP files are still uncommitted and byte-identical (6 insertions/6 deletions: EstimateBookingCTA.tsx, Manifesto.tsx, About.tsx, services/LandscapeDesign.tsx). NEW TODAY: origin/main advanced 6 commits (8bb5ee1..824cd5d — contact-form unification + trackCall click-to-call conversions), and TWO of those commits touch the SAME files the WIP holds (EstimateBookingCTA.tsx, Manifesto.tsx). Local HEAD is now 6 behind / 0 ahead. Updating 8bb5ee1..824cd5d ABORTS: \"Your local changes to the following files would be overwritten by merge.\" Verified the merge aborted cleanly — HEAD still on main, tree unchanged.",
+          "decision": "no action — per Step 1, STOP and do not stash. The WIP is NOT superseded: upstream added trackCall wiring, the WIP does founder-role centralization + designer-claim honesty edits; they are distinct changes to the same lines-adjacent regions. Yorkis committing or reverting these 4 files remains the SINGLE action that unblocks the loop, and it is now also the only way the local checkout can catch up to production."
+        },
+        {
+          "pri": "P0",
+          "what": "FRESH DEPLOY VERIFIED HEALTHY. The analytics bundle hash changed DuSv7m2W -> BN9nsa6n (5,742B), confirming the 6 upstream commits deployed. Re-verified the full tracking chain in the NEW bundle: GA4 G-1BRTV91W3Z, Google Ads AW-10839158941, Meta Pixel 2084193635490617, Clarity wisgcj7yvw — all four present and matching canonical. trackCall present in bundle.",
+          "decision": "no change, green — this was the highest-risk axis today since the deploy rewrote analytics.ts."
+        },
+        {
+          "pri": "P0",
+          "what": "Contact-form field integrity after the unification commit: live /contact/ POSTs name, phone, email, service, budget, details, bot-field, form-name(value=contact) — every one declared under form \"contact\" in public/__forms.html. No undeclared field, so no silent Netlify drop. Page size dropped 49KB -> 35.7KB, consistent with the duplicate estimate form being removed.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Read-only production sweep — ALL GREEN. Key pages 200: / (0.79s,104,668B), /cost-estimator/ (0.33s), /contact/ (0.39s), /services/ (0.40s), /about/ (0.41s), /resources/ (0.49s). All 89 sitemap URLs resolve: 82 direct 200, 7 via the expected canonical trailing-slash 301 then 200. ZERO soft-404 SPA fallbacks among sitemap URLs. /resources/ confirmed distinct content, not a homepage clone.",
+          "decision": "no change, green — availability + link integrity only; NOT a substitute for the E2E suite, contrast audit and console sweep, which did not run."
+        },
+        {
+          "pri": "P1",
+          "what": "RESOLVED AMBIGUITY on the carried \"generate_lead 0\" watch item: instrumentation is NOT broken. 90-day GA4 (2026-06-01..2026-08-29, 394 sessions) shows events DO fire — estimator_step 76, cta_click 10, generate_lead 10, chat_open 2, estimator_unlock_shown 1. Yesterday (2026-08-29) was simply a zero day: 17 sessions / 13 users / 26 views / 0 key events, vs 5 sessions the prior Saturday. So this is a conversion-volume problem, not a tracking-breakage problem.",
+          "decision": "no change — downgraded from suspected P0 tracking breakage to a genuine P1 funnel item for optimize mode. generate_lead ~10/394 sessions = ~2.5% over 90d."
+        },
+        {
+          "pri": "P1",
+          "what": "Form submissions have flatlined ~20 days: Netlify contact 17 lifetime, last real 2026-08-01; estimate-request 8 lifetime, last 2026-08-10. Meanwhile paid traffic IS running (google/cpc 3 of 17 sessions yesterday) and /contact/ took 6 pageviews yesterday with zero lead events. CRM still ingesting independently (1 lead/7d, 6/30d, latest 2026-08-26, source \"other\").",
+          "decision": "no change in health mode (P0 only). Escalated in the digest — this is the strongest business signal on the board and should be the first target of the next optimize run."
+        },
+        {
+          "pri": "P1",
+          "what": "estimator_unlock_shown = 1 over 90 days, far below the ROUTINE P1 threshold of shown >= 20.",
+          "decision": "no change — the unlock-ratio threshold cannot trip yet; backlog item 3 (return-visit gate softening) stays NOT pre-authorized."
+        },
+        {
+          "pri": "P2",
+          "what": "/blog/ still returns HTTP 200 while serving the homepage byte-for-byte (104,668B) — unchanged SPA catch-all soft-404. Real posts live under /resources/. /blog/ is absent from the sitemap and has no inbound internal links.",
+          "decision": "no change — not P0, health mode acts on P0 only. Stays queued for an optimize run (redirect /blog/* -> /resources/* or serve a real 404)."
+        }
+      ],
+      "changes": [],
+      "watch": [
+        "BINDING BLOCKER, now compounding: the 4 uncommitted WIP files have blocked every run for 3 days AND now prevent the local checkout from fast-forwarding to production (6 commits behind). Yorkis must commit or revert them. Until then the optimizer cannot lint, build, run E2E, or ship anything.",
+        "RAM headroom regressed: 3.8GB free yesterday -> 1.5-2.0GB today, gate needs 4.0GB. If it refuses a 4th day, either free ~2GB on the host or revisit the ramMb:2048 request in ROUTINE Step 0 — and note that ROUTINE change must itself ship through Step 5, which the dirty tree blocks.",
+        "Verification debt now 3 consecutive days: E2E 25-check, contrast audit, lint and build have not run since 2026-08-27. First unblocked run must treat a full suite pass as the priority before any new change — especially now, since 6 commits deployed to production without the optimizer ever verifying them locally.",
+        "state.json heartbeat is LOCAL-ONLY today: it could not be committed/pushed because HEAD is 6 behind origin/main and the dirty tree blocks the ff-merge needed to catch up. It will be committed on the first unblocked run.",
+        "NEXT OPTIMIZE TARGET (highest business value): ~20 days of zero form submissions with paid traffic live. Instrumentation is proven working, so the fault is in the funnel/offer, not the tracking.",
+        "Carried: /blog/ soft-404 -> optimize run; BuyersGuide.tsx option-selected dev warning + /contact/ hydration mismatch -> optimize run."
+      ]
+    },
     {
       "at": "2026-08-29T11:32:17.710Z",
       "mode": "health",
