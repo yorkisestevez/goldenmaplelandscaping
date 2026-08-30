@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
-import { trackEngagement } from '../../utils/analytics';
+import { trackEngagement, trackCall } from '../../utils/analytics';
 
 const COMMUNITIES = [
   "Midhurst — Springwater's fastest-growing community, new builds",
@@ -152,7 +152,7 @@ export default function SpringwaterLanding() {
               </Link>
               <a
                 href="tel:7055003581"
-                onClick={() => trackEngagement('call_click', 'springwater_hero')}
+                onClick={() => trackCall('springwater_hero_phone')}
                 className="flex items-center gap-3 font-sans text-base text-brand-gold-dark hover:text-brand-bonewhite transition-colors"
               >
                 <Phone size={18} /> Call 705-500-3581
@@ -315,7 +315,7 @@ export default function SpringwaterLanding() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
               <Link to="/contact" className="btn-primary py-4 px-10">Request a Quote</Link>
-              <a href="tel:7055003581" className="flex items-center gap-3 font-sans text-sm text-brand-gold-dark hover:text-brand-bonewhite transition-colors">
+              <a href="tel:7055003581" onClick={() => trackCall('springwater_phone')} className="flex items-center gap-3 font-sans text-sm text-brand-gold-dark hover:text-brand-bonewhite transition-colors">
                 <Phone size={16} /> 705-500-3581
               </a>
             </div>
