@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Calendar, Sparkles, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { trackCall } from '../utils/analytics';
 
 /**
  * Two-track CTA: free written estimate via the budget form, OR paid $99 design session.
@@ -100,7 +101,7 @@ export default function EstimateBookingCTA() {
 
       <div className="text-center pt-1">
         <a
-          href="tel:7055003581"
+          href="tel:7055003581" onClick={() => trackCall('estimatebookingcta_phone')}
           className="font-sans text-[13px] text-brand-gold-dark hover:text-brand-bone transition-colors inline-flex items-center gap-2"
         >
           <Phone size={14} strokeWidth={1.5} />

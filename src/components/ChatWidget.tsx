@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageCircle, X, Send, Leaf } from 'lucide-react';
-import { trackEngagement } from '../utils/analytics';
+import { trackEngagement, trackCall } from '../utils/analytics';
 import { openSophieSession, type SophieSession } from '../utils/sophieChat';
 
 type Role = 'user' | 'assistant';
@@ -140,7 +140,7 @@ export default function ChatWidget() {
         );
       }
       if (p === '(705) 500-3581') {
-        return <a key={i} href="tel:7055003581" className="text-brand-green-dark underline underline-offset-2">{p}</a>;
+        return <a key={i} href="tel:7055003581" onClick={() => trackCall('chatwidget_phone')} className="text-brand-green-dark underline underline-offset-2">{p}</a>;
       }
       return <span key={i}>{p}</span>;
     });
