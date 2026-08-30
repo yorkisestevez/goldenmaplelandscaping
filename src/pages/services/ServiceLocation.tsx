@@ -5,6 +5,7 @@ import SEO from '../../components/SEO';
 import QuickQuote from '../../components/QuickQuote';
 import Testimonials from '../../components/Testimonials';
 import {
+import { trackCall } from '../../utils/analytics';
   SERVICES,
   LOCATIONS,
   SERVICE_KEYS,
@@ -444,7 +445,7 @@ export default function ServiceLocation() {
           </p>
           <div className="flex flex-col sm:flex-row gap-6 items-center justify-center max-w-xl mx-auto">
             <a
-              href="tel:7055003581"
+              href="tel:7055003581" onClick={() => trackCall('servicelocation_phone')}
               className="flex-1 flex items-center justify-center gap-3 border border-brand-gold/30 text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.25em] py-5 px-8 hover:bg-brand-gold/5 transition-colors w-full"
             >
               <Phone size={14} strokeWidth={1.5} />
