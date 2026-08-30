@@ -85,7 +85,7 @@ export default function EstimateBookingCTA() {
             <span className="font-display text-2xl text-brand-bone tracking-tight">Design Session</span>
           </div>
           <p className="font-sans text-[13px] font-light text-brand-muted mb-6 flex-1 leading-relaxed">
-            60-minute on-site or video session with a designer. Material samples, layout sketches, exact pricing — yours to keep.
+            60-minute on-site or video session. Material samples, layout sketches, exact pricing — yours to keep.
           </p>
           <ul className="space-y-2 mb-7 font-sans text-[12px] font-light text-brand-bone">
             <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Layout sketch + material samples in hand</li>

@@ -26,7 +26,7 @@ export default function Manifesto() {
               <div className="absolute inset-0 bg-gradient-to-t from-brand-burgundy/60 via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6 right-6 opacity-0 group-hover/photo:opacity-100 transition-opacity duration-500">
                 <p className="font-display text-2xl text-brand-porcelain italic font-light">Yorkis Estevez</p>
-                <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mt-1">Founder & Lead Builder</p>
+                <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mt-1">{FOUNDER.role}</p>
               </div>
             </div>
             {/* Decorative elements */}
@@ -77,7 +77,7 @@ export default function Manifesto() {
             <div className="mt-16 flex flex-col sm:flex-row items-start sm:items-center gap-8">
               <div>
                 <p className="font-display text-4xl text-brand-gold italic font-light">Yorkis Estevez</p>
-                <p className="font-sans text-[10px] tracking-[0.3em] uppercase text-brand-porcelain-soft mt-2">Founder & Principal Designer</p>
+                <p className="font-sans text-[10px] tracking-[0.3em] uppercase text-brand-porcelain-soft mt-2">{FOUNDER.role}</p>
               </div>
               <div className="hidden sm:block h-12 w-px bg-brand-gold/20" />
               <div className="flex flex-col gap-1">

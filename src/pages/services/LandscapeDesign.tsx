@@ -36,7 +36,7 @@ const faqSchema = {
 export default function LandscapeDesign() {
   const designSteps = [
     { title: "Consultation", desc: "We meet on-site to understand your vision, lifestyle needs, and the unique characteristics of your property." },
-    { title: "Conceptual Design", desc: "Our designers create a 3D model that allows you to walk through your new backyard before a single stone is laid." },
+    { title: "Conceptual Design", desc: "The landscape designer we keep on retainer creates a 3D model that allows you to walk through your new backyard before a single stone is laid." },
     { title: "Material Selection", desc: "We guide you through choosing the perfect pavers, natural stone, and plantings to match your aesthetic." },
     { title: "Final Presentation", desc: "A comprehensive plan including 3D renders, technical drawings, and a detailed construction quote." }
   ];

@@ -76,7 +76,7 @@ export default function About() {
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent pt-20 pb-8 px-8 text-center">
                   <div className="mx-auto mb-4 h-px w-12 bg-brand-gold/70" aria-hidden="true" />
                   <p className="font-display text-3xl text-brand-porcelain font-light">Yorkis Estevez</p>
-                  <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-brand-gold mt-3">Founder &amp; Lead Builder</p>
+                  <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-brand-gold mt-3">{FOUNDER.role}</p>
                 </div>
               </div>
             </motion.div>
@@ -228,7 +228,7 @@ export default function About() {
               </div>
               <div className="mt-20 text-center">
                 <p className="font-display text-4xl text-brand-gold-dark italic font-light">Yorkis Estevez</p>
-                <p className="font-sans text-[10px] font-normal tracking-[0.4em] uppercase text-brand-muted mt-3">Founder & Lead Builder</p>
+                <p className="font-sans text-[10px] font-normal tracking-[0.4em] uppercase text-brand-muted mt-3">{FOUNDER.role}</p>
               </div>
             </div>
           </div>
