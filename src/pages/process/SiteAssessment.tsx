@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Ruler, Shield, Heart, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
+import { trackCall } from '../../utils/analytics';
 
 export default function SiteAssessment() {
   return (
@@ -97,7 +98,7 @@ export default function SiteAssessment() {
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
             <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
-            <a href="tel:7055003581" className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
+            <a href="tel:7055003581" onClick={() => trackCall('siteassessment_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
               <Phone size={14} /> (705) 500-3581
             </a>
           </div>
