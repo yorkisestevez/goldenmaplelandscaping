@@ -1,4 +1,5 @@
 import SEO from '../components/SEO';
+import { trackCall } from '../utils/analytics';
 
 export default function Terms() {
   return (
@@ -70,7 +71,7 @@ export default function Terms() {
             <h2 className="font-display text-2xl text-brand-bonewhite mt-12 mb-4">Contact</h2>
             <p>
               Questions about these terms: <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="text-brand-gold-dark hover:underline">yorkis@goldenmaplelandscaping.ca</a><br />
-              Phone: <a href="tel:7055003581" className="text-brand-gold-dark hover:underline">(705) 500-3581</a>
+              Phone: <a href="tel:7055003581" onClick={() => trackCall('terms_phone')} className="text-brand-gold-dark hover:underline">(705) 500-3581</a>
             </p>
           </div>
         </div>
