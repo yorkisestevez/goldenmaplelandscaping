@@ -86,6 +86,7 @@ export default [
   route('resources/pergola-vs-pavilion-vs-gazebo-barrie', 'pages/blog/PergolaVsPavilionVsGazeboBarrie.tsx'),
   route('resources/permacon-pavers-honest-review-2026', 'pages/blog/PermaconPaversHonestReview2026.tsx'),
   route('resources/landscaper-quote-excavation-line-item', 'pages/blog/LandscaperQuoteExcavationLineItem.tsx'),
+  route('resources/fire-pit-cost-barrie-with-permits', 'pages/blog/FirePitCostBarrieWithPermits.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),

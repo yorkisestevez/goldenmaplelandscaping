@@ -4,6 +4,14 @@ import { ArrowRight, Clock, BookOpen, Calculator } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
+    {
+    slug: "fire-pit-cost-barrie-with-permits",
+    title: "Fire Pit Cost in Barrie: What You'll Pay in 2026 (With Permits)",
+    excerpt: "Fire pit installation in Barrie costs $3,500–$18,000 depending on type; City of Barrie permits are required for gas work and any structure over 0.6 m².",
+    category: "Investment",
+    readTime: "11 min",
+    image: "/images/projects/patio-pergola.jpg",
+  },
   {
     slug: "landscaper-quote-excavation-line-item",
     title: "Landscaping Quote Excavation: Why Every Barrie Quote Needs This Line Item",
