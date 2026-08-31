@@ -81,23 +81,30 @@ GUARDRAILS:
 // to the CRM via the same signed bridge that the form handler uses.
 const LEAD_RE = /\[\[LEAD\]\]\s*(\{[\s\S]*?\})\s*\[\[\/LEAD\]\]/i;
 
-async function forwardLead(rawJson: string): Promise<void> {
+/**
+ * Forwards a captured lead to the CRM bridge. Returns true only when the
+ * bridge accepted it — the caller uses this to tell the browser a lead was
+ * actually created, so it can fire the matching GA4/Meta/Ads client events
+ * (the same way a form submit does). Without this signal, chat-widget leads
+ * land in the CRM but never appear as a `generate_lead` event in GA4.
+ */
+async function forwardLead(rawJson: string): Promise<boolean> {
   const url = process.env.GM_CRM_BRIDGE_URL;
   const secret = process.env.GM_CRM_BRIDGE_SECRET;
   if (!url || !secret) {
     console.error('lead captured but GM_CRM_BRIDGE_URL/SECRET not set — dropping');
-    return;
+    return false;
   }
   let lead: Record<string, unknown>;
   try {
     lead = JSON.parse(rawJson);
   } catch {
-    return;
+    return false;
   }
   const email = String(lead.email || '').trim();
   const phone = String(lead.phone || '').trim();
   const hasContact = email.includes('@') || phone.replace(/\D/g, '').length >= 7;
-  if (!hasContact) return; // never forward a lead with no way to reach them
+  if (!hasContact) return false; // never forward a lead with no way to reach them
 
   const payload = {
     form_name: 'sophie-chat',
@@ -116,9 +123,14 @@ async function forwardLead(rawJson: string): Promise<void> {
       headers: { 'Content-Type': 'application/json', 'X-Bridge-Signature': sig },
       body,
     });
-    if (!res.ok) console.error(`lead bridge ${res.status}: ${(await res.text().catch(() => '')).slice(0, 200)}`);
+    if (!res.ok) {
+      console.error(`lead bridge ${res.status}: ${(await res.text().catch(() => '')).slice(0, 200)}`);
+      return false;
+    }
+    return true;
   } catch (e) {
     console.error(`lead bridge unreachable: ${e instanceof Error ? e.message : String(e)}`);
+    return false;
   }
 }
 
@@ -209,16 +221,21 @@ export const handler = async (event: NetlifyEvent) => {
     // Extract + forward any lead Sophie captured, then strip the block (and any
     // stray markers) so the visitor never sees the machine payload.
     let visibleReply = reply;
+    let leadCaptured = false;
     const leadMatch = reply.match(LEAD_RE);
     if (leadMatch) {
-      await forwardLead(leadMatch[1]);
+      leadCaptured = await forwardLead(leadMatch[1]);
       visibleReply = reply.replace(LEAD_RE, '').replace(/\[\[\/?LEAD\]\]/gi, '').trim();
     }
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reply: visibleReply || canned(lastUser.content), source: visibleReply ? 'deepseek' : 'fallback' }),
+      body: JSON.stringify({
+        reply: visibleReply || canned(lastUser.content),
+        source: visibleReply ? 'deepseek' : 'fallback',
+        leadCaptured,
+      }),
     };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

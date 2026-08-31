@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageCircle, X, Send, Leaf } from 'lucide-react';
-import { trackEngagement, trackCall } from '../utils/analytics';
+import { trackEngagement, trackCall, trackLead } from '../utils/analytics';
 import { openSophieSession, type SophieSession } from '../utils/sophieChat';
 
 type Role = 'user' | 'assistant';
@@ -80,7 +80,11 @@ export default function ChatWidget() {
         body: JSON.stringify({ messages: history.slice(-12).map((m) => ({ role: m.role, content: m.content })) }),
       });
       if (!res.ok) throw new Error(`status ${res.status}`);
-      const data = (await res.json()) as { reply?: string };
+      const data = (await res.json()) as { reply?: string; leadCaptured?: boolean };
+      // Sophie's lead-handoff writes straight to the CRM server-side — this is
+      // the only signal the browser gets that it happened, so fire the GA4/
+      // Meta/Ads lead event here (mirrors what a form submit does on success).
+      if (data.leadCaptured) trackLead('sophie-chat', 'high-intent');
       addReply((data.reply || '').trim() || fallbackReply(content));
     } catch {
       // Dev (no function) or transient error → graceful canned answer.
