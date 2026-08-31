@@ -65,6 +65,11 @@
           "pri": "P2",
           "what": "Sitemap lists the new fire-pit post without a trailing slash (/resources/fire-pit-cost-barrie-with-permits), which 301-redirects to the canonical trailing-slash URL. Pre-existing pattern shared with several older posts (spring-cleanup-checklist-barrie, composite-decking-maintenance-ontario, outdoor-lighting-design-mistakes).",
           "decision": "no change - blog content belongs to the autopilot; a self-redirecting sitemap entry is a minor crawl-budget nit, not breakage."
+        },
+        {
+          "pri": "P0",
+          "what": "LIVE-VERIFIED THE OTHER INSTANCE’S MERGE, since it is now production code on the site this run owns the health of. Marker \"desktop-result-cta\" is live in /assets/CostEstimator-BHGH0YJv.js (found by walking all 32 chunks referenced by /cost-estimator/ - the Estimator is a lazy route chunk, so it is not named in the HTML and a naive marker poll on the page source finds nothing). Post-deploy production check of /cost-estimator/: HTTP 200, 0 console errors, content rendering.",
+          "decision": "no change, green - no revert needed. Recorded because the shipping run and the verifying run were different instances; if that merge had been bad, nobody was guaranteed to catch it."
         }
       ],
       "changes": [],
@@ -76,7 +81,8 @@
         "RAM gate passed today after refusing 2026-08-28/29/30. Still intermittent; if it refuses again, revisit the ramMb:2048 request in ROUTINE Step 0.",
         "NEXT OPTIMIZE TARGET, unchanged: ~30 days of zero form submissions (Netlify contact last 2026-08-01, estimate-request last 2026-08-10) while google/cpc keeps delivering sessions. Instrumentation is proven working, so the fault is funnel/offer, not tracking.",
         "Carried P2 backlog: /blog/ and /services/landscape-design/ soft-404s (one shared catch-all root cause); BuyersGuide.tsx <option selected> dev warning (observed again this run); /contact/ dev hydration mismatch.",
-        "Watch estimator_unlock_completed / estimator_unlock_shown once shown >= 20; all 9 estimator-side Netlify forms still at 0 lifetime submissions."
+        "Watch estimator_unlock_completed / estimator_unlock_shown once shown >= 20; all 9 estimator-side Netlify forms still at 0 lifetime submissions.",
+        "The desktop result CTA (PR #68) went live today - watch whether it moves estimator_build_saved / estimator_unlock_shown, since the result step is where the ~30-day conversion drought bites."
       ]
     },
     {
