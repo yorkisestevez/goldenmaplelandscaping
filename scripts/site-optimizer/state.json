@@ -1,6 +1,83 @@
 {
-  "lastRunAt": "2026-08-30T20:42:16.955Z",
+  "lastRunAt": "2026-08-31T19:56:32.735Z",
   "history": [
+    {
+      "at": "2026-08-31T19:56:32.735Z",
+      "mode": "health",
+      "outcome": "noop",
+      "findings": [
+        {
+          "pri": "P0",
+          "what": "SITE FULLY GREEN. Full verification suite ran for the first time on a normal scheduled path since 2026-08-27. estimator-e2e.cjs 25/25 PASSED against dev :3011. contrast-audit-run.cjs 0 CRITICALS across 6 route states. Production console sweep over / , /cost-estimator/, /contact/, /resources/fire-pit-cost-barrie-with-permits/, /locations/innisfil/: 0 console errors, 0 broken images. Key pages 200 in 0.32-0.92s.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "LINK INTEGRITY PERFECT. All 90 sitemap URLs HTTP 200 with ZERO soft-404 SPA fallbacks (each response byte-size compared against the 104,662B homepage signature). All 62 homepage internal links and all 47 homepage JS/CSS/image assets resolve 200, including /images/projects/Golden Maple deck and walkway.jpg (402,234B image/jpeg) once percent-encoded.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "TRACKING CHAIN VERIFIED in the NEW production bundle /assets/analytics-Bl3kO0PY.js (5,742B): GA4 G-1BRTV91W3Z, Ads AW-10839158941, Meta Pixel 2084193635490617, Clarity wisgcj7yvw - all four present. Bundle hash changed from BN9nsa6n because PR #67 touched analytics (generate_lead on Sophie chat fallback, now present in the bundle): expected, not a regression.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "INTAKE PATHS LIVE. Netlify: contact 17 lifetime (last real 2026-08-01), estimate-request 8; the other 9 estimator-side forms still 0. CRM (read-only): 1 lead/7d, 6/30d, latest 2026-08-26.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "STEP 0 + STEP 1 PASSED AT START: canStart strict returned ok:true (first pass after 3 straight days of RAM refusal); tree clean, on main, 0/0 vs origin/main at 677ae75; lock gm-site-optimizer-22760 acquired.",
+          "decision": "proceeded normally"
+        },
+        {
+          "pri": "P0",
+          "what": "CONCURRENCY BREACH - THE HEADLINE FINDING OF THIS RUN. A SECOND instance was working this repo at the same time as this run. Evidence: (a) the working tree, verified clean at Step 1, later showed two modified files this run never touched - scripts/site-optimizer/ROUTINE.md and src/components/Estimator.tsx; (b) the ROUTINE.md edit documents findings dated 2026-08-31 and the phrase \"leaked servers found on 2026-08-30 AND again on 2026-08-31\", i.e. this run's own observations, written by another writer; (c) Estimator.tsx gains a brand-new DesktopResultCta component (P2 backlog item 1, desktop sticky CTA on the result step) which does NOT exist on main (git show HEAD: 0 matches); (d) at Step 1 the first probe reported HEAD on fix/chat-lead-ga4-tracking at 1-ahead/2-behind, and seconds later git checkout main reported \"Already on main\" at 0/0 - HEAD moved under this run; (e) four concurrent claude.exe stream-json sessions were running (PIDs 28476, 28284, 23516 started 15:40:32, 24684 at 15:47:58).",
+          "decision": "DID NOT TOUCH the other writer's files: not committed, not reverted, not stashed - per Step 1 fail-closed. This run shipped no code of its own, so there is nothing to conflict. Committed ONLY scripts/site-optimizer/state.json, by name. NOTE the other instance is doing OPTIMIZE-mode work (backlog item 1) on a day this task was dispatched in HEALTH mode."
+        },
+        {
+          "pri": "P0",
+          "what": "ROOT CAUSE OF THE BREACH - THE STEP 0 MUTEX DOES NOT ACTUALLY HOLD. process-registry keys locks/check-ins to the acquiring OS PID, but each registry call here is its own short-lived `node -e` process that exits immediately, so the registry reaps the entry as dead within seconds. Verified directly: acquireLock returned true and the lock was visible IN-PROCESS, yet a later getStatus showed locks without gm-site-optimizer and zero gm-site-optimizer process entries. The Step 0 lock therefore provides NO mutual exclusion for an agent-driven run whose steps span many processes - it is a no-op that reads as a success.",
+          "decision": "no repo change from this run (health mode, and this is a ROUTINE/tooling fix, not P0 site breakage). ESCALATED to Yorkis - this is the defect that let two instances run at once and it will recur every time two runs overlap."
+        },
+        {
+          "pri": "P0",
+          "what": "FALSE ALARM RESOLVED, recorded so a future run does not re-chase it: an initial sweep flagged 3 console errors incl. React #418 hydration on \"/resources/fire-pit-cost-barrie/\". That URL does not exist - the real slug for the 2026-08-31 post is /resources/fire-pit-cost-barrie-with-permits/. The soft-404 catch-all served homepage HTML under a blog route and #418 was that markup failing hydration. The REAL post is healthy: 200, title \"Fire Pit Cost Barrie 2026 - Permits & Real Pricing\", 55,982B, 0 console errors.",
+          "decision": "no change - not breakage. Raises the value of the queued soft-404 fix: a mistyped URL currently masquerades as a working page."
+        },
+        {
+          "pri": "P0",
+          "what": "SELF-INFLICTED 502s, not site breakage: sweeping all 36 resource posts back-to-back with no delay drew 502s and ERR_CONNECTION_RESET on 12 of them. Re-probed sequentially at 2s spacing: all 200 (retaining-wall-cost-oro-medonte 54,879B, backyard-drainage-solutions-barrie 55,890B, natural-stone-vs-pavers-barrie 49,469B).",
+          "decision": "no change - measurement artifact. Pace bulk live sweeps at >=0.3s/request, as the 90-URL sitemap sweep did cleanly."
+        },
+        {
+          "pri": "P1",
+          "what": "DEV-SERVER LEAK RECURRED TWICE. (1) The backgrounded dev server reported exit 127 while node PID 32660 (@react-router/dev/bin.js dev --port 3011) was still alive and bound. (2) A second server (PID 16316) was spawned ACCIDENTALLY by this run: backticks inside a double-quoted `node -e \"...\"` heredoc triggered bash command substitution, executing the literal text `npm run dev -- --port 3011` embedded in a state-file string. Both were positively identified by CommandLine and killed; teardown re-asserted no *golden-maple-landscaping*react-router* node process survives.",
+          "decision": "cleaned up. LESSON for future runs: never embed backticked shell text inside a double-quoted node -e; write the script to a file. The accidental spawn also cost a 120s timeout and left the state write unwritten on the first attempt."
+        },
+        {
+          "pri": "P1",
+          "what": "CONVERSION DROUGHT CONTINUES, now ~30 days. GA4 daily (2026-08-30): 10 sessions / 10 users / 59 pageviews / 0 key events / 0 lead events (prior Sunday 2026-08-23: 13 sessions, also 0). Sources: (not set) 4, google/cpc 3, direct 1, bing/organic 1, google/organic 1. Top pages: / (7), /portfolio (7), /portfolio/innisfil-lakeside-retreat (5), /services (5). Paid traffic still lands and still does not convert.",
+          "decision": "no change - health mode acts on P0 only, and a 10-session Sunday is too thin to read as a funnel cliff. Remains THE standing optimize-mode target."
+        },
+        {
+          "pri": "P2",
+          "what": "Sitemap lists the new fire-pit post without a trailing slash (/resources/fire-pit-cost-barrie-with-permits), which 301-redirects to the canonical trailing-slash URL. Pre-existing pattern shared with several older posts (spring-cleanup-checklist-barrie, composite-decking-maintenance-ontario, outdoor-lighting-design-mistakes).",
+          "decision": "no change - blog content belongs to the autopilot; a self-redirecting sitemap entry is a minor crawl-budget nit, not breakage."
+        }
+      ],
+      "changes": [],
+      "watch": [
+        "ESCALATION FOR YORKIS #1: two optimizer instances ran this repo simultaneously today. The Step 0 process-registry lock CANNOT prevent this - it keys on the acquiring node PID, which exits immediately in an agent-driven run, so the registry reaps the lock seconds after it is taken. Needs a PID-independent mutex (lockfile with TTL on disk, checked and refreshed by each step) before the loop can be trusted to run unattended.",
+        "ESCALATION FOR YORKIS #2: the concurrent instance left UNCOMMITTED work in the live repo - scripts/site-optimizer/ROUTINE.md (Step 4.4 amendments) and src/components/Estimator.tsx (new DesktopResultCta, P2 backlog item 1). This run deliberately did not touch it. If that instance did not finish, this WIP will block EVERY future run at Step 1 exactly as the 3-day block of 2026-08-28/29/30 did. Verify it landed or revert it.",
+        "Site health itself is not a concern today: full suite green, 90/90 sitemap URLs 200, 0 console errors, 0 broken images, tracking chain intact.",
+        "RAM gate passed today after refusing 2026-08-28/29/30. Still intermittent; if it refuses again, revisit the ramMb:2048 request in ROUTINE Step 0.",
+        "NEXT OPTIMIZE TARGET, unchanged: ~30 days of zero form submissions (Netlify contact last 2026-08-01, estimate-request last 2026-08-10) while google/cpc keeps delivering sessions. Instrumentation is proven working, so the fault is funnel/offer, not tracking.",
+        "Carried P2 backlog: /blog/ and /services/landscape-design/ soft-404s (one shared catch-all root cause); BuyersGuide.tsx <option selected> dev warning (observed again this run); /contact/ dev hydration mismatch.",
+        "Watch estimator_unlock_completed / estimator_unlock_shown once shown >= 20; all 9 estimator-side Netlify forms still at 0 lifetime submissions."
+      ]
+    },
     {
       "at": "2026-08-30T20:42:16.955Z",
       "mode": "health",
