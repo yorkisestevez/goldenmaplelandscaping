@@ -1614,6 +1614,20 @@ export default function Estimator() {
           onContinue={() => saveCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
         />
       )}
+
+      {/* Desktop counterpart of the result-step sticky bar. The result page is a
+          ~6,000px scroll and the live rail stops at step 6, so on md+ the total
+          and the save action both leave the viewport exactly where the build is
+          finished. Same guard as the mobile bar above, same "gone once saved". */}
+      {!gateActive && step === TOTAL_STEPS && !buildSaved && display.low > 0 && (
+        <DesktopResultCta
+          confidence={confidence}
+          preciseCents={estimate.precise?.subtotalCents ?? null}
+          low={display.low}
+          high={display.high}
+          onSave={() => saveCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        />
+      )}
     </div>
   );
 }
@@ -1700,6 +1714,44 @@ function ReceiptRail({ precise, displayLow, displayHigh, confidence, delta, targ
         </p>
       </div>
     </aside>
+  );
+}
+
+/** md+ result-step pill. Dark surface, so gold-as-text is the bright `brand-gold`
+ *  (the gold-dark rule applies to light surfaces). Bottom-right so it clears the
+ *  invoice column; `hidden md:flex` keeps it off mobile, where MobileStickyBar
+ *  already owns the bottom of the viewport. */
+function DesktopResultCta({ low, high, confidence, preciseCents, onSave }: {
+  low: number; high: number; confidence: number; preciseCents: number | null; onSave: () => void;
+}) {
+  return (
+    <motion.div
+      data-testid="desktop-result-cta"
+      initial={{ y: 24, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-5 bg-brand-black border border-brand-gold/30 rounded-full pl-6 pr-3 py-3 shadow-[0_10px_40px_rgba(0,0,0,0.45)]"
+    >
+      <div className="min-w-0">
+        <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">
+          Your estimate · ±{confidence}%{preciseCents ? ' · +HST' : ''}
+        </div>
+        <div className="font-display text-lg text-brand-porcelain truncate">
+          {preciseCents ? (
+            <AnimatedDollars cents={preciseCents} />
+          ) : (
+            <AnimatedPrice low={low} high={high} separatorClassName="!mx-1.5" />
+          )}
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onSave}
+        className="bg-brand-gold text-brand-black font-sans text-[11px] uppercase tracking-wider px-5 py-3 rounded-full font-medium shrink-0"
+      >
+        Save build →
+      </button>
+    </motion.div>
   );
 }
 
