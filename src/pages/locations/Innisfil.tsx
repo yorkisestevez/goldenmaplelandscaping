@@ -48,7 +48,7 @@ const PRICING = [
 const FAQS = [
   {
     q: "Do I need a permit for landscaping in Innisfil?",
-    a: "Most patio and deck projects don't require permits. Retaining walls over 1 metre do. Properties near Lake Simcoe or within the Lake Simcoe Region Conservation Authority (LSRCA) boundary may require additional approvals — we handle the paperwork.",
+    a: "Permit requirements depend on the structure, height, grading, and property location. Innisfil advises contacting Building Services when a project may involve structural work; current Town engineering standards require retaining walls with an exposed face height of 1 metre or more to be designed and certified by a professional engineer. Shoreline properties may require additional approvals. Confirm site-specific requirements before construction.",
   },
   {
     q: "Is there a travel charge for Innisfil projects?",
