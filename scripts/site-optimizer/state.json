@@ -1,6 +1,86 @@
 {
-  "lastRunAt": "2026-08-31T19:56:32.735Z",
+  "lastRunAt": "2026-08-31T20:03:43.164Z",
   "history": [
+    {
+      "at": "2026-08-31T20:03:43.164Z",
+      "mode": "optimize",
+      "outcome": "shipped",
+      "findings": [
+        {
+          "pri": "P0",
+          "what": "FULL SUITE GREEN. lint PASS (typegen + tsc + all 3 pricing gates; ENGINE SNAPSHOT OK, pricing unchanged across all 45 branches; 528 budget-lever scenarios OK); build PASS; estimator-e2e 25/25; contrast-audit 0 criticals across 6 route states @1440x950. Production sweep: /, /cost-estimator/, /contact/, /about/ all HTTP 200. Tracking chain verified in the PRODUCTION bundle analytics-Bl3kO0PY.js: GA4 G-1BRTV91W3Z, Ads AW-10839158941, Pixel 2084193635490617, Clarity wisgcj7yvw all present.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P1",
+          "what": "generate_lead 5 -> 0 week-over-week with traffic flat-to-up (sessions 83->89, pageviews 158->241, engagementRate 0.398->0.337). Trips the ROUTINE \">40% drop with flat traffic\" threshold.",
+          "decision": "NO CHANGE - the threshold fired on a CONTAMINATED metric. The 5 prior-week events were bot/spam conversions, not real leads (see the spam finding). Rubric amended in ROUTINE so no future run chases this."
+        },
+        {
+          "pri": "P1",
+          "what": "MAJOR CORRECTION to the standing \"~20 days of zero form submissions\" diagnosis. listFormSubmissions returns ONLY verified (ham) submissions. GET /sites/<id>/submissions?state=spam returns 100 records (2026-07-26..08-23) against 25 ham submissions LIFETIME. Inspected all 22 since 2026-08-05: every one is genuinely spam - cold-outreach bots (insaneleads.io, dandyaisoftware.com, juhi.rankfuel, alfareviews.com) and crypto-phishing (USDT/USDC graph.org links). Netlify’s filter is working CORRECTLY. The consequence that matters: generate_lead fires on res.ok, and Netlify returns 200 for spam-classified AND honeypot-discarded submissions alike, so bot submits fire the GA4 conversion feeding Google Ads + Meta CAPI - while Ads is actively spending (google/cpc 18 of 89 sessions). Of the 10 generate_lead events in 60d, the 08-18 one maps to a spam-classified cold sales pitch and 6 have NO stored Netlify record at all.",
+          "decision": "NO CODE CHANGE - deliberately did NOT ship a client-side anti-bot heuristic: it would suppress real leads to clean up a signal that is already noise, and is neither smallest-diff nor safely verifiable. Ruled out as causes: the honeypot is correctly display:none and initialized to empty string in BOTH contact forms; every posted form-name and field IS declared in public/__forms.html. The actionable fix is Netlify/Ads-side = YORKIS. Recorded into the ROUTINE P1 rubric so it is never re-derived."
+        },
+        {
+          "pri": "P1",
+          "what": "estimator_unlock_shown = 1 for the week (threshold needs shown >= 20).",
+          "decision": "no change - backlog item 3 (return-visit gate softening) stays NOT pre-authorized."
+        },
+        {
+          "pri": "P1",
+          "what": "Estimator funnel this week: 1_type 6 -> 2_size 2 -> 3_conditions 1 -> 4_location 1 -> 5_material 1 -> 6_addons 1 -> 7_result 1. Steepest cliff is the very first transition (-67%).",
+          "decision": "no change - n=6 is far too thin to act on. Watch item."
+        },
+        {
+          "pri": "P2",
+          "what": "SHIPPED backlog item 1 (worked top-down): desktop sticky CTA on the estimator result step. The result page is a ~6,000px desktop scroll and the live rail stops at step 6, so on md+ both the total and the save action left the viewport exactly where the build is finished; mobile has had a sticky bar there since the workbench shipped. Same guard as the mobile bar, so it disappears once saved. Copy is verbatim from the live mobile bar, so no new customer-facing strings (Step 4.6 trigger did not fire).",
+          "decision": "shipped - PR #68, live verified on poll attempt 1."
+        },
+        {
+          "pri": "P2",
+          "what": "SHIPPED ROUTINE amendments: (a) Step 4.4 now requires an explicit --port 3011, verifying the listener is OUR react-router process by CommandLine, and asserting no leaked process survives teardown; (b) the P0 rubric now notes VITE_* tracking IDs are absent from local builds BY DESIGN (production-only assertion); (c) the P1 rubric now requires reading \"forms at zero\" and \"generate_lead down\" against the SPAM bucket first.",
+          "decision": "shipped - PR #68."
+        },
+        {
+          "pri": "P2",
+          "what": "/blog/ and /services/landscape-design/ BOTH still return HTTP 200 while serving the homepage byte-for-byte (104,662B). ROOT CAUSE FOUND this run: netlify.toml redirects \"/blog\" but NOT \"/blog/\" (trailing slash), and the /* -> /__spa-fallback.html 200 rule serves the RR7 client shell (which prerenders as the homepage) for anything not prerendered. /services/landscape-design is not in getAutoCombos(), so it has no prerender.",
+          "decision": "ESCALATED, NOT SHIPPED - the clean fix is a netlify.toml redirect rule and netlify.toml is on the ROUTINE hard-exclusion list. Considered and REJECTED an in-repo workaround: adding a /blog route would emit /blog/index.html, which would DISABLE the existing clean 301 and serve a client-redirect page instead - worse SEO. Needs Yorkis."
+        },
+        {
+          "pri": "P2",
+          "what": "A dev server from a PRIOR optimizer run was still bound to :3011 (PID 33772, same repo + same command); Vite silently fell forward to :3012, so an unqualified port probe would have tested the STALE server. Exactly the hazard flagged on 2026-08-30.",
+          "decision": "fixed - killed both, restarted clean, asserted zero survivors by CommandLine at teardown. Codified in ROUTINE Step 4.4 (shipped this run)."
+        },
+        {
+          "pri": "P2",
+          "what": "Local HEAD was parked on a leftover branch fix/chat-lead-ga4-tracking (1 ahead / 2 behind main). Its commit 7aa08bd was already absorbed upstream as squash-merge #67, so nothing was lost.",
+          "decision": "no change - checked out main and ff-merged cleanly per Step 1; the tree was clean throughout."
+        },
+        {
+          "pri": "P2",
+          "what": "CONCURRENT INSTANCE CONFIRMED AGAIN: a health run wrote state at 19:56:32Z today (commit b8af838) while this optimize run was in flight, and independently escalated the same Step 0 mutex defect. My Step 0 lock still reported acquired=true.",
+          "decision": "no change by me - carrying the prior escalation forward; the fix is a PID-independent on-disk mutex and it needs Yorkis."
+        }
+      ],
+      "changes": [
+        {
+          "pr": "https://github.com/yorkisestevez/goldenmaplelandscaping/pull/68",
+          "what": "estimator: desktop sticky CTA on result step (backlog item 1) + ROUTINE Step 4.4 / P0 / P1 rubric amendments",
+          "marker": "desktop-result-cta",
+          "liveVerified": true
+        }
+      ],
+      "watch": [
+        "ESCALATION FOR YORKIS #1 (carried, re-confirmed today): two optimizer instances ran this repo simultaneously. The Step 0 process-registry lock keys on the acquiring node PID, which exits immediately in an agent-driven run, so the registry reaps the lock seconds after it is taken. Needs a PID-independent on-disk mutex with TTL before the loop can be trusted unattended.",
+        "ESCALATION FOR YORKIS #2 (NEW, highest business value): Google Ads + Meta CAPI are being trained on a CONTAMINATED generate_lead conversion. Netlify holds 100 spam submissions vs 25 ham lifetime, and bot submits return 200 and therefore fire generate_lead. Decide whether to keep optimizing Ads toward generate_lead, and consider tightening the Netlify spam/honeypot posture. Outside optimizer authority (analytics IDs + netlify.toml are both excluded).",
+        "ESCALATION FOR YORKIS #3: /blog/ and /services/landscape-design/ soft-404s need a netlify.toml redirect (from = \"/blog/*\" plus a real 404 for unmatched /services/*); excluded from optimizer authority. Root cause is fully documented in this run’s findings.",
+        "Genuine HUMAN lead volume through Netlify forms remains ~zero: contact last real 2026-08-01 (30d), estimate-request last 2026-08-10 (21d). CRM independently ingesting 1 lead/7d, 6/30d, latest 2026-08-26. This half of the standing diagnosis still holds - the funnel is not silently broken, it is that the offer/traffic is not converting humans.",
+        "NEXT OPTIMIZE TARGET: backlog item 2 - real project-photo proof strip near EstimateBookingCTA (item 1 shipped this run). Item 3 stays locked until estimator_unlock_shown >= 20 (currently 1).",
+        "Watch whether the new desktop result CTA moves estimator_build_saved / estimator_unlock_shown off zero. Both were 0 this week.",
+        "Estimator step 1->2 drop (6->2) is the steepest funnel cliff but n is far too small to act on; revisit once estimator_step volume is meaningful.",
+        "Carried P3: BuyersGuide.tsx <option selected> dev-only React warning; /contact/ dev-only hydration mismatch. Neither reproduces in the production build."
+      ]
+    },
     {
       "at": "2026-08-31T19:56:32.735Z",
       "mode": "health",
