@@ -112,10 +112,34 @@ week with a green site is a successful no-op run.
 
 - **P0 — breakage** (any mode): site down, form POST failing, E2E suite failure,
   console errors, tracking bundle missing IDs, broken links/images on live pages.
+  NOTE: the four tracking IDs come from `VITE_*` env vars that only Netlify injects
+  (`src/utils/analytics.ts`), so they are ABSENT from any local build by design —
+  only the Ads call-label has a hardcoded fallback. Assert tracking against the
+  PRODUCTION bundle only; a local miss is not a regression (false P0, 2026-08-30).
 - **P1 — funnel cliffs** (optimize mode): estimator step drop-off spiking vs prior
   period; `estimator_unlock_completed / estimator_unlock_shown < 0.25` with shown ≥ 20
   (→ backlog item 3 is pre-authorized); forms at zero with meaningful traffic;
   generate_lead down >40% week-over-week with flat traffic.
+
+  **Read both of those last two against the SPAM bucket before acting** (established
+  2026-08-31). `listFormSubmissions` / the default submissions list returns only
+  verified ("ham") submissions. Netlify's filter is also quarantining a large,
+  genuinely-spam stream: `GET /sites/<id>/submissions?state=spam` returned 100 records
+  (07-26..08-23) vs 25 ham LIFETIME — cold-outreach bots (insaneleads.io,
+  dandyaisoftware.com, rankfuel, alfareviews.com) and crypto-phishing. The filter is
+  working correctly; do NOT try to "fix" it, and do NOT ship a client-side anti-bot
+  heuristic to chase the metric — it would suppress real leads for a signal that is
+  already noise. Two consequences that DO matter:
+    - "Forms at zero" is ambiguous by itself. Always check `state=spam` before
+      concluding the funnel is broken — submissions may be arriving and be correctly
+      filtered. Real-browser submissions carry `visit_count` / `session_duration_sec`
+      / `landing_page` from `getBehaviorFields()`; JS-less bot POSTs have them
+      `undefined`. That field signature is the cheap way to tell the two apart.
+    - `generate_lead` is CONTAMINATED. It fires on `res.ok`, and Netlify returns 200
+      for spam-classified AND honeypot-discarded submissions alike, so bot submits
+      still fire the GA4 conversion that feeds Google Ads + Meta CAPI. Treat
+      generate_lead as an upper bound, never as real lead count; corroborate against
+      the ham bucket and the CRM before calling a rise or fall real.
 - **P2 — seeded backlog** (work top-down when no P0/P1; check state.json history so
   you don't redo one):
   1. Desktop sticky CTA on the estimator result step (mobile already has one) —
@@ -140,7 +164,16 @@ week with a green site is a successful no-op run.
 3. `npm run build` — must pass (prerender is SSR-strict: no bare window/localStorage
    at module/render top level; use the mounted-gate pattern).
 4. `node scripts/site-optimizer/estimator-e2e.cjs` — 25-check funnel suite (dev server
-   must be running; start it via launch.json/`npm run dev` on 3011 and kill it after).
+   must be running). Start it with an EXPLICIT port — `npm run dev -- --port 3011` —
+   because `npm run dev` alone does NOT honor `.claude/launch.json` and binds :3000,
+   which on this host is also held by an unrelated TrovEdge server (2026-08-30).
+   Vite falls forward to the next free port when 3011 is taken, so after starting,
+   confirm by `Get-NetTCPConnection -LocalPort 3011` + `Win32_Process.CommandLine`
+   that the listener is YOUR react-router process — never infer liveness from a port
+   probe alone, since a port can have multiple owners and a stale server answers 200.
+   After killing it, assert by CommandLine that no `*golden-maple-landscaping*react-router*`
+   node process survives; `TaskStop` on a backgrounded `npm run dev` does NOT kill the
+   underlying node (leaked servers found on 2026-08-30 AND again on 2026-08-31).
 5. `node scripts/site-optimizer/contrast-audit-run.cjs` — zero criticals required.
 6. Customer-facing copy you wrote or changed → judge with the `gm-voice-judge` agent;
    `revise` = apply its hints once and re-judge; `block` = don't ship that copy.
