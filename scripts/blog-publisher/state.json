@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-08-24T10:00:00.000Z",
+  "lastRunAt": "2026-08-31T13:14:52.804Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -19,10 +19,11 @@
     "auto-015",
     "auto-016",
     "auto-017",
-    "auto-018"
+    "auto-018",
+    "auto-019"
   ],
   "publishedSlugs": [],
-  "currentDraft": "landscaper-quote-excavation-line-item",
+  "currentDraft": "fire-pit-cost-barrie-with-permits",
   "history": [
     {
       "topicId": "auto-001",
@@ -294,6 +295,20 @@
         "linkCount": 8,
         "hasTable": true,
         "numericCount": 42
+      },
+      "generatedBy": "claude-cloud-routine"
+    },
+    {
+      "topicId": "auto-019",
+      "slug": "fire-pit-cost-barrie-with-permits",
+      "at": "2026-08-31T10:00:00.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2529,
+        "linkCount": 8,
+        "hasTable": true,
+        "numericCount": 30
       },
       "generatedBy": "claude-cloud-routine"
     }
