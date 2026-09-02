@@ -1,6 +1,96 @@
 {
-  "lastRunAt": "2026-09-01T11:33:44.247Z",
+  "lastRunAt": "2026-09-02T11:41:20.325Z",
   "history": [
+    {
+      "at": "2026-09-02T11:41:20.325Z",
+      "mode": "health",
+      "outcome": "noop",
+      "findings": [
+        {
+          "pri": "P0",
+          "what": "FALSE P0 CAUGHT AND DISPROVEN - the headline methodology finding. The production sweep reported 11 of 15 homepage images broken via img.complete && naturalWidth>0. All 11 are FINE: 9 distinct URLs return HTTP 200 image/jpeg at full byte counts (212KB-1.29MB); an in-page fetch() of IMG_4826.jpg returned 200 / 1,285,892 bytes; a fresh new Image() with cache-bust loaded at 2400x3200; and flipping loading=lazy to eager made the element load instantly. ROOT CAUSE: in an unattended scheduled run the Browser pane is hidden and EVERY tab is born with a 0x0 viewport (innerWidth===0), so native lazy images never intersect and are never requested. resize_window afterwards does NOT re-arm observers registered at zero area - a fresh tab reproduced 0x0.",
+          "decision": "no change to the site - there is nothing wrong with it. SHIPPED a ROUTINE P0-rubric guard (PR #69) so a future run cannot raise this again; the real risk was not wasted time but Step 6 reverting a good change over a measurement artifact."
+        },
+        {
+          "pri": "P0",
+          "what": "Live availability: /, /cost-estimator/, /contact/, /services/, /about/ all HTTP 200 in 0.29-0.66s, expected content markers present, page titles distinct per route (not homepage fallback).",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Sitemap sweep: all 90 URLs resolve 200 with zero soft-404 SPA fallbacks (homepage-byte signature check). 82 direct 200 + 8 that 301 to their canonical trailing-slash twin then 200 - see the P2 sitemap finding below.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Production console sweep across /, /cost-estimator/, /contact/, /resources/why-patios-sink-barrie/, /locations/barrie/: 0 console errors. All 9 probed routes fetched 200 in-browser.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Tracking chain verified in PRODUCTION bundle analytics-Bl3kO0PY.js (5,742B): GA4 G-1BRTV91W3Z, Ads AW-10839158941, Pixel 2084193635490617, Clarity wisgcj7yvw all present. Hash unchanged from 2026-09-01, consistent with no deploy since PR #68.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "npm run lint PASS (typegen + tsc + all 3 pricing gates: PARITY OK; ENGINE SNAPSHOT OK across all 45 branches; BUDGET LEVERS OK across 528 scenarios). npm run build PASS. estimator-e2e.cjs 25/25. contrast-audit-run.cjs 0 criticals across 6 route states.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Step 0 gate PASSED (ok:true, vram 12288MB, no conflicting processes); lock gm-site-optimizer-23876 acquired and NO concurrent optimizer instance was present this run. Step 1 git sync CLEAN: tree empty, on main, 0 ahead / 0 behind at 6dad135.",
+          "decision": "proceeded normally"
+        },
+        {
+          "pri": "P1",
+          "what": "REAL HUMAN LEAD - the business headline. The contact form took a genuine ham submission on 2026-09-01T12:04:38Z, the first real one since 2026-08-01 (31d). It carries the real-browser behavior signature (visit_count / session_duration_sec / landing_page all present) and arrived from a PAID GOOGLE ADS click - gclid + gbraid, gad_campaignid 23916157832 - converting 57 seconds after landing on /. GA4 corroborates for 2026-09-01: generate_lead 1, keyEvents 1. Contact form lifetime 17 -> 18. Lead identity deliberately NOT recorded here (customer PII; this file is committed to the repo) - it is in the Netlify Forms dashboard.",
+          "decision": "no code change - this is the funnel WORKING, and it resolves the standing 2026-09-05 checkpoint on whether the contact path is live. Escalated to Yorkis via Telegram and in the PR body because the lead needs a human to answer it."
+        },
+        {
+          "pri": "P1",
+          "what": "That real lead did NOT reach the CRM. The Netlify->CRM bridge needs GM_CRM_BRIDGE_URL + GM_CRM_BRIDGE_SECRET in Netlify env plus a reachable tunnel to the local receiver (127.0.0.1:18792); its target DB C:/Business/golden_maple_crm.db has not been written since 15 Jun. The in-repo function netlify/functions/submission-created.ts is CORRECT and fails safe. NOT a regression: the 2026-07-28 and 2026-08-01 contact submissions never landed either. Separately: the CRM leads table the ROUTINE reads is fed by the Gmail classifier, not by website forms, so its d7/d30 counts are NOT a website-lead metric and should not be read as one.",
+          "decision": "no change - Netlify env vars and the tunnel are both outside optimizer authority. ESCALATED."
+        },
+        {
+          "pri": "P2",
+          "what": "NEW REAL DEFECT: sitemap canonical-URL drift. scripts/blog-publisher/inject.cjs:166 writes /resources/<slug> with NO trailing slash while the canonical form - and all 29 hand-written sitemap entries - use one. All 8 autopilot-published posts therefore sit in sitemap.xml as URLs that 301 to their canonical twin, and the count grows by one every week the publisher runs. All 8 resolve 200 after the redirect with unique content, so this is SEO hygiene, not breakage.",
+          "decision": "NOT SHIPPED - health mode acts on P0 only and a 301 that lands 200 is not breakage. Seeded as ROUTINE P2 backlog item 5 (PR #69) with root cause, the exact two-part fix, and the authority reasoning: the publisher SCRIPT and sitemap.xml are not blog CONTENT, which is the only blog thing the exclusion list reserves for the autopilot."
+        },
+        {
+          "pri": "P2",
+          "what": "CARRIED (unchanged): /blog/ and /services/landscape-design/ both still return HTTP 200 while serving the homepage byte-for-byte (104,591B this run). Neither URL is in the sitemap, so the 90-URL sweep does not catch them.",
+          "decision": "no change - the fix is a netlify.toml redirect rule and netlify.toml is on the hard-exclusion list. Escalation for Yorkis, carried."
+        },
+        {
+          "pri": "P1",
+          "what": "GA4 daily (2026-09-01 vs 2026-08-25): sessions 10 vs 13, users 10 vs 13, pageviews 15 vs 47, keyEvents 1 vs 0. Top sources: direct 4, (not set) 3, (data not available) 2, ig/social 2, l.instagram.com/referral 1. Top pages: / (10), then /about/, /cost-estimator/, /locations/barrie/, /resources/why-patios-sink-barrie/ at 1 each.",
+          "decision": "no change - health mode is P0-only; single low-volume day, and the one key event is the real lead above."
+        },
+        {
+          "pri": "P2",
+          "what": "Dev-server hygiene: 3011 / 3012 / 3000 all free at start (no leak from the 09-01 run). Started with an explicit --port 3011, confirmed by CommandLine that the listener was OUR react-router process (pid 4228), killed explicitly at teardown, asserted 0 survivors and both ports free.",
+          "decision": "clean - ROUTINE Step 4.4 procedure working as codified"
+        }
+      ],
+      "changes": [
+        {
+          "pr": "https://github.com/yorkisestevez/goldenmaplelandscaping/pull/69",
+          "what": "ROUTINE only (docs): P0-rubric NOTE 2 guarding against the 0x0-viewport false broken-image P0, plus P2 backlog item 5 for the sitemap trailing-slash drift",
+          "marker": "n/a - scripts/site-optimizer/ROUTINE.md is not deployed; verified by squash-merge df9998f on main plus a post-merge production re-probe",
+          "liveVerified": true
+        }
+      ],
+      "watch": [
+        "ACTION FOR YORKIS (new, time-sensitive): a real Google-Ads-attributed lead arrived 2026-09-01 12:04 UTC via the contact form and exists ONLY in the Netlify Forms dashboard. It needs a human reply. First genuine paid-click conversion on record for this loop.",
+        "ESCALATION FOR YORKIS #1 (carried): Step 0 process-registry lock keys on the acquiring node PID, which exits immediately in an agent-driven run, so the registry can reap the lock seconds after it is taken. Needs a PID-independent on-disk mutex with TTL. No concurrent instance was detected this run (2nd clean run in a row).",
+        "ESCALATION FOR YORKIS #2 (carried, with a nuance added today): Google Ads + Meta CAPI train on a CONTAMINATED generate_lead conversion because bot submits return 200 and fire it. Today confirms the 2026-09-01 generate_lead was REAL, so the metric is NOISY rather than uniformly fake - do not dismiss it wholesale. Outside optimizer authority.",
+        "ESCALATION FOR YORKIS #3 (carried, re-confirmed today): /blog/ and /services/landscape-design/ soft-404s need a netlify.toml redirect rule. Excluded from optimizer authority.",
+        "ESCALATION FOR YORKIS #4 (new): the Netlify->CRM bridge is unconfigured, so website form leads never reach the CRM. Needs GM_CRM_BRIDGE_URL + GM_CRM_BRIDGE_SECRET in Netlify env and a tunnel to the local receiver. The in-repo function is correct; there is nothing to fix in code.",
+        "NEXT OPTIMIZE TARGET: backlog item 2 (real project-photo proof strip near EstimateBookingCTA) remains first; NEW item 5 (sitemap trailing-slash fix) is a small, high-certainty second. Item 3 stays locked until estimator_unlock_shown >= 20.",
+        "PR #68 desktop result CTA: still nothing to read - estimator_build_saved and estimator_unlock_shown are both still absent from the daily window. Needs the weekly funnel block.",
+        "Carried P3: BuyersGuide.tsx <option selected> dev-only React warning; /contact/ dev-only hydration mismatch. Neither reproduces in the production build."
+      ]
+    },
     {
       "at": "2026-09-01T11:33:44.247Z",
       "mode": "health",
