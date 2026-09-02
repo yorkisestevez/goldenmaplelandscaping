@@ -116,6 +116,15 @@ week with a green site is a successful no-op run.
   (`src/utils/analytics.ts`), so they are ABSENT from any local build by design —
   only the Ads call-label has a hardcoded fallback. Assert tracking against the
   PRODUCTION bundle only; a local miss is not a regression (false P0, 2026-08-30).
+  NOTE 2: NEVER call a broken image from `img.complete && naturalWidth>0` alone. In a
+  scheduled (unattended) run the Browser pane is hidden and EVERY tab is born with a
+  0x0 viewport, so native `loading="lazy"` images never intersect, are never even
+  requested, and all read as broken — 11 of 15 homepage images did on 2026-09-02.
+  `resize_window` afterwards does NOT re-arm observers already registered at zero area.
+  Confirm any suspected broken image against the ORIGIN before escalating: an HTTP
+  status+bytes check, an in-page `fetch()`, or a fresh `new Image()` — and check
+  `innerWidth` first; if it is 0 the whole sweep is void. A false P0 here is dangerous:
+  Step 6's revert protocol could revert a good change over a measurement artifact.
 - **P1 — funnel cliffs** (optimize mode): estimator step drop-off spiking vs prior
   period; `estimator_unlock_completed / estimator_unlock_shown < 0.25` with shown ≥ 20
   (→ backlog item 3 is pre-authorized); forms at zero with meaningful traffic;
@@ -150,7 +159,15 @@ week with a green site is a successful no-op run.
      visitor view their saved estimate freely; gate only starting a NEW run.
   4. Result-page length experiments (desktop scroll is ~6,000px): tighten spacing,
      collapse secondary cards — never remove the invoice, save card, or booking CTA.
-  5. Findings-driven whole-site improvements within the exclusions.
+  5. Sitemap canonical-URL drift (found 2026-09-02): `scripts/blog-publisher/inject.cjs:166`
+     writes `.../resources/${slug}` with NO trailing slash, but the site's canonical form
+     — and all 29 hand-written sitemap entries — use one. All 8 autopilot-published posts
+     therefore sit in sitemap.xml as URLs that 301 to their canonical twin, and the count
+     grows by one every week the blog publisher runs. Fix = add the trailing slash in
+     inject.cjs AND backfill the 8 existing `<loc>` entries in `public/sitemap.xml`.
+     In authority: the publisher SCRIPT and sitemap.xml are not blog CONTENT, which is
+     the only blog thing the exclusion list reserves for the autopilot.
+  6. Findings-driven whole-site improvements within the exclusions.
 - **P3 — polish**: micro-copy, a11y, performance. Only on a week with nothing above.
 
 ## Step 4 — implement + verify (ALL mandatory before any push)
