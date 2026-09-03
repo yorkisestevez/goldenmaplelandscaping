@@ -1,5 +1,5 @@
 {
-  "lastRunAt": "2026-09-02T11:41:20.325Z",
+  "lastRunAt": "2026-09-03T11:38:37.251Z",
   "history": [
     {
       "at": "2026-09-02T11:41:20.325Z",
@@ -601,6 +601,82 @@
         "estimator_unlock_completed / estimator_unlock_shown ratio once the weekly funnel block has volume (needs shown >= 20)",
         "BuyersGuide.tsx option-selected + /contact/ hydration mismatch: fix candidates for the next optimize run"
       ]
+    },
+    {
+      "mode": "health",
+      "outcome": "noop",
+      "findings": [
+        {
+          "pri": "P0",
+          "what": "Live availability: /, /cost-estimator/, /contact/, /sitemap.xml, /robots.txt all HTTP 200 (0.31-0.47s)",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Production console sweep across /, /cost-estimator/, /contact/, /resources/landscape-permits-barrie-simcoe/, /locations/innisfil/: 0 console errors, 0 page errors. Sweep VALID - innerWidth read 1440 on every route (playwright explicit 1440x950 viewport), so the 2026-09-02 zero-viewport trap does not apply.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Images: 29 across the 5 routes, 0 broken. Each verified by in-page fetch() against the ORIGIN (HTTP status + byte size), never img.complete/naturalWidth - per ROUTINE NOTE 2. All 200.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "All 23 unique internal links from those pages resolve 200",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Tracking: production bundle assets/analytics-Bl3kO0PY.js carries all four IDs - GA4 G-1BRTV91W3Z, Ads AW-10839158941, Pixel 2084193635490617, Clarity wisgcj7yvw. Live beacons observed firing to analytics.google.com with the right tid and to google.com/ccm for the Ads id.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0",
+          "what": "Beacons to analytics.google.com/g/collect and google.com/ccm|rmkt show as ERR_ABORTED in headless (6-9 per route). Normal sendBeacon/ping abort-at-unload pattern, NOT breakage - corroborated by GA4 reporting real sessions the same day.",
+          "decision": "no change - false-positive class, recorded so a future run does not escalate it"
+        },
+        {
+          "pri": "P0",
+          "what": "npm run lint PASS (typegen + tsc --noEmit + all 3 pricing gates: PARITY OK; ENGINE SNAPSHOT OK across 45 fixtures; BUDGET LEVERS OK across 528 scenarios). npm run build PASS. estimator-e2e.cjs 25/25. contrast-audit-run.cjs 0 criticals across 6 route states.",
+          "decision": "no change, green"
+        },
+        {
+          "pri": "P0-ESCALATE",
+          "what": "SITE->CRM LEAD BRIDGE IS DROPPING LEADS (out of repo authority - needs Yorkis). Netlify holds 18 contact + 8 estimate-request submissions; the bridge target DB C:/Business/golden_maple_crm.db has received NOTHING since 2026-05-21 (mtime 2026-06-15; 4 rows total, 3 of them smoke tests). 11 real submissions post-date it: estimate-request x8 (2026-07-07..08-10) and contact on 07-28, 08-01 and 2026-09-01. The 09-01 one is a genuine PAID GOOGLE ADS lead (visit_count=1, landing_page carries gclid + gad_campaignid 23916157832). Everything checkable is HEALTHY: function submission-created is in the published deploy, GM_CRM_BRIDGE_URL + GM_CRM_BRIDGE_SECRET are both set in Netlify env, the cloudflared ingress rule webhooks.yorkis.net ^/(leads|health) -> 127.0.0.1:18792 matches the live listener, and BOTH https://webhooks.yorkis.net/health and http://127.0.0.1:18792/health returned 200 during this run. So the path works while the laptop is awake; the likely failure is a submission arriving while the box is off/asleep getting a 502 from the function and being dropped with no retry or queue. SECOND ISSUE: receiver.js:68 inserts ONLY into that local SQLite and fires Meta CAPI - it never forwards to the canonical CRM (crm.yorkis.net -> gm-crm.fly.dev), so even a successful insert may not surface in the CRM Yorkis actually uses.",
+          "decision": "NO CHANGE - outside this repo (bridge service + tunnel + CRM repo). Reported to Yorkis via Telegram. Needs a durable queue/retry, or a bridge that forwards to the Fly CRM."
+        },
+        {
+          "pri": "P0",
+          "what": "CRM READ PATH IN THE ROUTINE IS WRONG. ROUTINE Step 2.3 points at C:/Users/yorki/Desktop/golden-maple-crm/server/data/crm.db, but the bridge writes to C:/Business/golden_maple_crm.db. The Desktop DB holds 21 leads, ALL created_via=native and all email-classifier false positives (Midjourney, Cloudflare, Triangle Rewards, Remitly, IFTTT, Zoho) - 0 rows carry a gclid or landing_page, i.e. zero site-attributed leads have EVER arrived there. Reading it as a site-conversion signal is misleading in both directions.",
+          "decision": "no change this run (health = P0 only, and a ROUTINE edit ships via PR). Queued for the next optimize run: point Step 2.3 at the bridge DB and stop treating native-classifier rows as site leads."
+        },
+        {
+          "pri": "P1",
+          "what": "GA4 daily window 2026-09-02: 6 sessions / 6 users / 12 pageviews / 0 key events (prior day 14/11/32/0). Top pages / (5), /resources/landscape-permits-barrie-simcoe/ (2). Sources: direct 4, google organic 1.",
+          "decision": "no change - P1 is optimize-mode work, and a 6-session day is far too thin to read as a funnel cliff"
+        },
+        {
+          "pri": "P1",
+          "what": "WATCH ITEM FROM 2026-08-27 CLEARED: the contact form took a real submission on 2026-09-01 (17 -> 18 lifetime) carrying visit_count/landing_page from getBehaviorFields(), so it is a real browser submit and not a JS-less bot POST. The site-side form path is confirmed live.",
+          "decision": "no change, green - this was the confirmation the 08-27 run asked for"
+        },
+        {
+          "pri": "P2",
+          "what": "OPERATOR ERROR THIS RUN (mine, not the repo): I launched npm run dev and npm run lint concurrently; both run react-router typegen and raced on .react-router/types, killing both (ENOTEMPTY rmdir on the lint side, ENOENT on Barrie.ts on the dev side). Fixed by deleting .react-router and running serially. No repo defect - lint, build, e2e and contrast all passed on the serial retry.",
+          "decision": "no repo change. Next optimize run should fold a line into ROUTINE Step 4: never run typegen-touching commands concurrently; the dev server and lint/build must be serialized."
+        }
+      ],
+      "changes": [],
+      "watch": [
+        "CRM BRIDGE: whether any new Netlify submission lands in C:/Business/golden_maple_crm.db. If the next real submission also fails to appear, the drop is systematic and not just laptop-sleep.",
+        "The 2026-09-01 paid-Ads lead may never have been worked - it sits in Netlify but in no CRM. Yorkis should pull it from the Netlify contact form directly.",
+        "generate_lead stays 0 across days with >20 sessions -> escalate to P1 funnel review (still 0, but 6-14 sessions/day is too thin to read)",
+        "Estimator-side forms still 0 lifetime except estimate-request (8, none since 2026-08-10); the estimator-unlock form exists at 0",
+        "Sitemap canonical trailing-slash drift (P2 backlog item 5) still unfixed - 8 autopilot posts, grows weekly",
+        "BuyersGuide.tsx option-selected + /contact/ hydration mismatch: dev-only, still queued for an optimize run"
+      ],
+      "at": "2026-09-03T11:38:37.251Z"
     }
   ]
 }
