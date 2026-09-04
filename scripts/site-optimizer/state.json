@@ -1,5 +1,5 @@
 {
-  "lastRunAt": "2026-09-03T11:38:37.251Z",
+  "lastRunAt": "2026-09-04T11:33:04.423Z",
   "history": [
     {
       "at": "2026-09-02T11:41:20.325Z",
@@ -677,6 +677,76 @@
         "BuyersGuide.tsx option-selected + /contact/ hydration mismatch: dev-only, still queued for an optimize run"
       ],
       "at": "2026-09-03T11:38:37.251Z"
+    },
+    {
+      "at": "2026-09-04T11:33:04.423Z",
+      "mode": "health",
+      "outcome": "noop",
+      "findings": [
+        {
+          "pri": "P0",
+          "what": "Live availability: /, /cost-estimator/, /contact/, /services/, /about/, /resources/, /sitemap.xml, /robots.txt all HTTP 200 (0.16-0.45s). /resources/ confirmed distinct from homepage (different <title>), not a soft-404 clone.",
+          "decision": "no change — green"
+        },
+        {
+          "pri": "P0",
+          "what": "All 90 sitemap URLs resolve 200 (sitemap grew 89 -> 90; blog autopilot published one post since yesterday).",
+          "decision": "no change — green"
+        },
+        {
+          "pri": "P0",
+          "what": "Production console sweep across / , /cost-estimator/, /contact/, /resources/fire-pit-cost-barrie-with-permits/, /locations/innisfil/: 0 console errors, 0 page errors. Sweep VALID — innerWidth read 1440 on every route (explicit 1440x950 playwright viewport), so the 2026-09-02 zero-viewport trap does not apply.",
+          "decision": "no change — green"
+        },
+        {
+          "pri": "P0",
+          "what": "Images: 27 across the 5 routes, 0 broken. Each verified by in-page fetch() against the ORIGIN (HTTP status + byte size), never img.complete/naturalWidth — per ROUTINE NOTE 2.",
+          "decision": "no change — green"
+        },
+        {
+          "pri": "P0",
+          "what": "All 22 unique internal links from those pages resolve 200.",
+          "decision": "no change — green"
+        },
+        {
+          "pri": "P0",
+          "what": "Tracking: production bundle assets/analytics-Bl3kO0PY.js (5,742B) carries all four IDs — GA4 G-1BRTV91W3Z, Ads AW-10839158941, Pixel 2084193635490617, Clarity wisgcj7yvw. Bundle hash UNCHANGED from 2026-09-03, confirming no deploy shipped since.",
+          "decision": "no change — green"
+        },
+        {
+          "pri": "P0",
+          "what": "Local suite ALL PASS: npm run lint (typegen + tsc --noEmit + 3 pricing gates — PARITY OK; ENGINE SNAPSHOT OK across 45 fixtures; BUDGET LEVERS OK across 528 scenarios); npm run build; estimator-e2e.cjs 25/25; contrast-audit-run.cjs 0 criticals across 6 route states.",
+          "decision": "no change — green"
+        },
+        {
+          "pri": "P0-ESCALATE",
+          "what": "CARRIED, UNCHANGED: site->CRM lead bridge still not delivering. C:/Business/golden_maple_crm.db still holds 4 rows, mtime still 2026-06-15 — no new writes. Netlify holds 18 contact + 8 estimate-request submissions; the 2026-09-01 paid Google Ads lead (gad_campaignid 23916157832) still exists ONLY in Netlify, in no CRM. Both health endpoints answered 200 THIS run (127.0.0.1:18792 and webhooks.yorkis.net), so the path is up while the box is awake — consistent with the sleep/502-drop hypothesis. No NEW submission arrived since 09-01, so no new drop was observed; this is not yet proof the drop is systematic.",
+          "decision": "NO ACTION — outside repo authority (bridge lives in Hermes/receiver.js + Netlify function env, not this repo). Needs Yorkis. Re-reported."
+        },
+        {
+          "pri": "P1",
+          "what": "GA4 daily 2026-09-03: 8 sessions / 7 users / 8 pageviews / 0 key events (prior Thu 08-27: 9/8/38/0). One lead event: chat_open 1. Sources: (data not available) 5, direct 2, (not set) 2, bing organic 1. Top pages / (2), /services/interlocking-barrie/ (2).",
+          "decision": "no action — 8 sessions/day is far below any readable threshold; P1 funnel rules need volume (unlock_shown >= 20)."
+        },
+        {
+          "pri": "P1",
+          "what": "Netlify forms unchanged from yesterday: contact 18 lifetime (last 2026-09-01, real browser submit — carries visit_count/landing_page), estimate-request 8 (last 2026-08-10). Other 9 forms still 0 lifetime.",
+          "decision": "no action in health mode — volume/offer problem, belongs to an optimize run."
+        },
+        {
+          "pri": "P2",
+          "what": "Sitemap canonical trailing-slash drift (backlog item 5) holds at 8 non-canonical /resources/ entries that 301 to their canonical twin — did NOT grow this week despite a new post, so the new post was emitted canonically or is hand-written.",
+          "decision": "no action — P2, optimize mode only."
+        }
+      ],
+      "changes": [],
+      "watch": [
+        "CRM BRIDGE (highest value): still zero new writes to C:/Business/golden_maple_crm.db. The next real Netlify submission is the decisive test — if it also fails to land, the drop is systematic, not laptop-sleep. Yorkis should meanwhile pull the 2026-09-01 paid-Ads lead straight from the Netlify contact form; it has now sat unworked for 3 days.",
+        "Traffic is the binding constraint, not the funnel: 8 sessions on 09-03 vs 6 on 09-02. Every conversion threshold in the ROUTINE needs volume that simply is not arriving; do not read conversion signal at this level.",
+        "chat_open fired once on 09-03 — first lead-family event in several days. Watch whether it repeats.",
+        "Sitemap drift stayed at 8 through a new blog post — confirm again next week before assuming inject.cjs was fixed upstream.",
+        "BuyersGuide.tsx option-selected + /contact/ hydration mismatch: dev-only, still queued for an optimize run."
+      ]
     }
   ]
 }
