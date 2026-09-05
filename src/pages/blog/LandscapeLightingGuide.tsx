@@ -1,5 +1,6 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
+import { BUSINESS } from '../../data/business';
 
 export default function LandscapeLightingGuide() {
   return (
@@ -23,7 +24,7 @@ export default function LandscapeLightingGuide() {
       <ul>
         <li><strong>Brightness:</strong> Professional LED fixtures produce 200-600+ lumens. Solar path lights produce 10-30 lumens. That's not a typo — professional fixtures are 10-20x brighter.</li>
         <li><strong>Consistency:</strong> Low-voltage systems run on a transformer with a timer. They turn on at the same brightness every night, regardless of weather. Solar lights fade to nothing on cloudy days.</li>
-        <li><strong>Lifespan:</strong> Quality LED fixtures (we use In-Lite systems) last 50,000+ hours. Solar lights last 1-2 seasons before the batteries degrade.</li>
+        <li><strong>Lifespan:</strong> Quality LED fixtures (contractors use In-Lite systems) last 50,000+ hours. Solar lights last 1-2 seasons before the batteries degrade.</li>
         <li><strong>Aesthetics:</strong> Professional fixtures are designed to be invisible during the day. The light is the feature, not the fixture.</li>
       </ul>
 
@@ -44,9 +45,9 @@ export default function LandscapeLightingGuide() {
       <h3>5. Task Lighting</h3>
       <p>Functional light for outdoor kitchens, grilling areas, and seating. Brighter and more focused than ambient lighting, but still warm and inviting — never harsh.</p>
 
-      <h2>Why We Use In-Lite Systems</h2>
+      <h2>Why Contractors Use In-Lite Systems</h2>
 
-      <p>After testing multiple manufacturers, we standardized on In-Lite for our projects. Here's why:</p>
+      <p>After testing multiple manufacturers, contractors standardized on In-Lite for the projects. Here's why:</p>
 
       <ul>
         <li><strong>Plug-and-play connectors:</strong> No wire splicing, no electrical tape. Professional-grade connections that are waterproof and corrosion-resistant.</li>
@@ -69,12 +70,12 @@ export default function LandscapeLightingGuide() {
         <li><strong>Premium (30+ fixtures, smart control, architectural integration):</strong> $10,000-$20,000+</li>
       </ul>
 
-      <p>We typically integrate lighting into our larger hardscape projects. When you're already excavating and building, running low-voltage cable is significantly easier and less disruptive than retrofitting after the project is complete. A <strong>lighting-only retrofit starts around $9,000</strong> — it carries its own mobilization, excavation minimum, and full crew-day, so it doesn't get the bundled-project discount above. Use our <a href="/cost-estimator?type=lighting">cost estimator</a> to price a standalone lighting project for your property.</p>
+      <p>Contractors typically integrate lighting into the larger hardscape projects. When you're already excavating and building, running low-voltage cable is significantly easier and less disruptive than retrofitting after the project is complete. A <strong>lighting-only retrofit starts around $9,000</strong> — it carries its own mobilization, excavation minimum, and full crew-day, so it doesn't get the bundled-project discount above. Use the <a href="/cost-estimator?type=lighting">cost estimator</a> to price a standalone lighting project for your property.</p>
 
       <h2>One Tip That Changes Everything</h2>
 
       <p><strong>Light the perimeter, not the centre.</strong> The most common DIY mistake is flooding the patio with light from above, which creates a flat, washed-out look. Instead, light the edges — the gardens, the walls, the trees — and let the reflected light softly illuminate the living space. This creates depth, mystery, and the kind of ambiance you feel in high-end restaurants and resorts.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has designed and installed landscape lighting across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the lighting principle matches the hardscape one: fewer, better-placed fixtures on properly buried runs beat a yard full of fittings that fail after two winters." />
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

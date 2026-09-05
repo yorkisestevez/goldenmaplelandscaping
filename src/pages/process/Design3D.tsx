@@ -3,6 +3,7 @@ import { Heart, Shield, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { trackCall } from '../../utils/analytics';
+import { publicContact } from '../../data/business';
 
 export default function Design3D() {
   return (
@@ -98,8 +99,8 @@ export default function Design3D() {
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
             <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
-            <a href="tel:7055003581" onClick={() => trackCall('design3d_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
-              <Phone size={14} /> (705) 500-3581
+            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('design3d_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
+              <Phone size={14} /> {publicContact.phoneDisplay}
             </a>
           </div>
         </div>

@@ -6,18 +6,9 @@ import Testimonials from '../../components/Testimonials';
 import { trackCall, trackEngagement } from '../../utils/analytics';
 
 const FAQ = [
-  {
-    q: "Why choose TimberTech composite decking over wood?",
-    a: "TimberTech decking is engineered to resist fading, staining, scratching, and mold. Unlike traditional wood, it requires no sanding, staining, or sealing, saving you thousands in maintenance costs over its 25-50 year lifespan."
-  },
-  {
-    q: "Are you certified TimberTech installers?",
-    a: "Yes, Golden Maple Landscaping is a recognized TimberTech Pro. This means we have undergone specialized training and can offer enhanced labor warranties. We provide a 10-year craftsmanship warranty on our installation, while TimberTech provides up to a 50-year product warranty."
-  },
-  {
-    q: "How long does a composite deck installation take?",
-    a: "A typical high-end composite deck project takes between 2 to 4 weeks, depending on complexity, size, and additional features like integrated lighting or custom railings."
-  }
+  { q: 'What should I compare when considering composite decking?', a: 'Compare product characteristics, maintenance guidance, framing, railings, and the manufacturer documentation for the specific product line.' },
+  { q: 'How do I confirm product and installation details?', a: 'Ask us to confirm current product availability, installation scope, and any applicable written manufacturer or workmanship terms for your project.' },
+  { q: 'How is timing determined?', a: 'Timing depends on design, approvals, access, materials, weather, and the project scope. We can discuss a current schedule after reviewing your project.' },
 ];
 
 const faqSchema = {
@@ -32,7 +23,7 @@ const faqSchema = {
 
 export default function CompositeDecking() {
   const processSteps = [
-    { title: "Structural Framing", desc: "We build our frames to exceed Ontario Building Code, using pressure-treated lumber or steel for maximum structural integrity." },
+    { title: "Structural Framing", desc: "Structural framing, materials, and applicable code requirements are confirmed for the specific project scope." },
     { title: "TimberTech Selection", desc: "Choose from the Advanced PVC or Composite collections, featuring realistic wood grains and multi-width options." },
     { title: "Precision Installation", desc: "Using hidden fastener systems for a clean, screw-free surface that highlights the architectural lines of your deck." },
     { title: "Finishing Details", desc: "Custom fascia wrapping, integrated LED lighting, and high-end railing systems to complete the luxury look." }
@@ -42,7 +33,7 @@ export default function CompositeDecking() {
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
         title="Composite Decking Installation Barrie"
-        description="Low-maintenance composite decks built for Barrie winters. TimberTech & Trex options. Custom designs with lighting & railings. Get your free deck quote."
+        description="Composite deck planning and installation for Barrie-area properties. Discuss materials, design options, and project-specific scope with our team."
         canonical="https://goldenmaplelandscaping.ca/services/composite-decking-barrie"
         schema={faqSchema}
       />
@@ -61,10 +52,10 @@ export default function CompositeDecking() {
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 A deck you'll <br />
-                <span className="italic text-brand-gold-dark">never re-stain.</span>
+                <span className="italic text-brand-gold-dark">made for your outdoor routine.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
-                Every May, the same ritual. The sanding. The staining. The hour spent looking at the spots where the wood is starting to rot and pretending you'll deal with it next year. We're done with that, and we think you should be too. We build TimberTech and Trex decks that look like real hardwood and stay that way — through every Ontario winter, with zero maintenance, for the next 25 years. <span className="text-brand-gold-dark font-normal">Luxury decking projects start at $25,000.</span>
+                Compare composite product styles, maintenance guidance, framing, railings, lighting, and access needs. We can discuss current options and a project-specific written scope.
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 <Link
@@ -98,8 +89,8 @@ export default function CompositeDecking() {
                 referrerPolicy="no-referrer"
               />
               <div className="absolute bottom-8 left-8 bg-brand-black/80 backdrop-blur-md p-6 border border-brand-gold/20 rounded-[2px]">
-                <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Certified Partner</p>
-                <p className="font-display text-xl text-brand-porcelain italic font-light">TimberTech Pro Status</p>
+                <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Product planning</p>
+                <p className="font-display text-xl text-brand-porcelain italic font-light">Confirm current options</p>
               </div>
             </motion.div>
           </div>
@@ -110,7 +101,7 @@ export default function CompositeDecking() {
                 The Process
               </span>
               <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-tight">
-                Built to last generations.
+                Planned for your project.
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -131,10 +122,10 @@ export default function CompositeDecking() {
                 {[
                   "TimberTech Advanced PVC or Composite",
                   "Hidden Fastener Systems (Screw-Free)",
-                  "Code-Exceeding Structural Framing",
+                  "Project-specific structural framing",
                   "Custom Fascia & Stair Wrapping",
-                  "10-Year Structural Warranty",
-                  "Up to 50-Year TimberTech Product Warranty"
+                  "Current written workmanship terms",
+                  "Current manufacturer product terms, where applicable"
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
                     <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />

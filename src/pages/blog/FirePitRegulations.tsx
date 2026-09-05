@@ -1,5 +1,6 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
+import { BUSINESS } from '../../data/business';
 
 export default function FirePitRegulations() {
   return (
@@ -31,7 +32,7 @@ export default function FirePitRegulations() {
 
       <h2>Natural Gas & Propane Fire Features</h2>
 
-      <p>This is where it gets much more interesting — and where we see the biggest opportunity for homeowners who want a <strong>premium fire experience without the regulatory headaches.</strong></p>
+      <p>This is where it gets much more interesting — and where contractors see the biggest opportunity for homeowners who want a <strong>premium fire experience without the regulatory headaches.</strong></p>
 
       <p>Gas fire features (natural gas or propane) are treated differently than wood-burning fires under most Ontario bylaws because they:</p>
 
@@ -51,9 +52,9 @@ export default function FirePitRegulations() {
         <li><strong>An accessible shut-off valve</strong></li>
       </ul>
 
-      <h2>Why We Recommend Gas Fire Features</h2>
+      <h2>Why Contractors Recommend Gas Fire Features</h2>
 
-      <p>For our clients in Barrie and Simcoe County, we almost always recommend custom gas fire features over wood-burning pits. Here's why:</p>
+      <p>For the clients in Barrie and Simcoe County, contractors almost always recommend custom gas fire features over wood-burning pits. Here's why:</p>
 
       <ul>
         <li><strong>More placement flexibility:</strong> You can integrate them into patios, seat walls, and outdoor kitchens without worrying about the 3-metre setback.</li>
@@ -78,7 +79,7 @@ export default function FirePitRegulations() {
       <p>A retaining or seat wall with a fire element built directly into the top. This creates a natural gathering point and maximizes seating around the fire.</p>
 
       <blockquote>
-        <p>"A fire feature isn't just a luxury — it extends your outdoor living season by weeks on both ends. Our clients use their patios well into October and start again in early April, simply because the fire makes it comfortable and inviting."</p>
+        <p>"A fire feature isn't just a luxury — it extends your outdoor living season by weeks on both ends. The clients use their patios well into October and start again in early April, simply because the fire makes it comfortable and inviting."</p>
       </blockquote>
 
       <h2>Budget Expectations</h2>
@@ -90,8 +91,8 @@ export default function FirePitRegulations() {
         <li><strong>Integrated fire feature with seat walls:</strong> $8,000-$20,000+</li>
       </ul>
 
-      <p>These prices include the gas fitting, permits, and all masonry/hardscape work. We typically integrate fire features into larger patio and outdoor kitchen projects, which creates cost efficiencies since the base preparation and material supply are already happening.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has built fire pits and seating areas across Barrie, Innisfil, Oro-Medonte, and Springwater. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the approach to bylaws matches the approach to base prep: confirm the rule with the municipality first, build to it, and never guess at a setback." />
+      <p>These prices include the gas fitting, permits, and all masonry/hardscape work. Contractors typically integrate fire features into larger patio and outdoor kitchen projects, which creates cost efficiencies since the base preparation and material supply are already happening.</p>
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

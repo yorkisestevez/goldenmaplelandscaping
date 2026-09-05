@@ -3,6 +3,7 @@ import { Phone, ArrowLeft } from 'lucide-react';
 import SEO from '../components/SEO';
 import Estimator from '../components/Estimator';
 import Reveal from '../components/Reveal';
+import { publicContact } from '../data/business';
 
 /** The estimator renders chrome-less (root.tsx skips SiteChrome) — this slim
  *  bar is its entire app frame: a way home, and a way to call. */
@@ -21,13 +22,14 @@ function EstimatorTopBar() {
           </span>
         </Link>
         <a
-          href="tel:+17055003581"
+          href={`tel:${publicContact.phoneTel}`}
+          aria-label={`Call Golden Maple at ${publicContact.phoneDisplay}`}
           className="inline-flex items-center gap-2 font-sans text-[12px] text-brand-porcelain hover:text-brand-gold transition-colors whitespace-nowrap"
         >
           <span className="w-8 h-8 rounded-full border border-brand-gold/40 flex items-center justify-center text-brand-gold">
             <Phone size={13} />
           </span>
-          <span className="hidden md:inline tabular-nums">(705) 500-3581</span>
+          <span className="hidden md:inline tabular-nums">{publicContact.phoneDisplay}</span>
         </a>
       </div>
     </header>
@@ -44,7 +46,7 @@ export default function CostEstimator() {
         "name": "How much does an interlocking patio cost in Barrie?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "A premium interlocking patio in Barrie typically ranges from $35,000 to $75,000 depending on size, the Permacon paver chosen (Melville, Cassara, Mondrian Plus, Mega Melville, Brooklyn, and more), site conditions like slope or tear-out, and any add-ons like lighting or fire features. There is no job minimum — small walkways and front entrances price out at their real scope. Every build goes on a 12–16\" base for true freeze-thaw durability, whatever the size."
+          "text": "A premium interlocking patio in Barrie typically ranges from $35,000 to $75,000 depending on size, paver selection, site conditions such as slope or tear-out, and add-ons such as lighting or fire features. This estimator provides a planning range; final scope, site preparation, and commercial terms are confirmed directly for each project."
         }
       },
       {
@@ -60,7 +62,7 @@ export default function CostEstimator() {
         "name": "Do you charge for estimates?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Our online estimator is free — including the full itemized breakdown, with no signup required — and shows ballpark pricing that tightens from ±30% to ±8–20% as you answer. To get exact numbers we offer a free estimate request by phone, or a $99 on-site design session that's credited back when you book your project."
+          "text": "The online estimator provides a planning-range breakdown that changes as you answer. Contact Golden Maple to confirm the current consultation, design, site-visit, and final-quote process for your project."
         }
       }
     ]
@@ -70,7 +72,7 @@ export default function CostEstimator() {
     <>
       <SEO
         title="Landscaping Cost Estimator Barrie 2026 | Real Pricing | Golden Maple"
-        description="Get a real ballpark for your landscaping project in Simcoe County — no job minimum, any size. Pick your Permacon paver line and TimberTech finish, see your full itemized breakdown free with no signup, then adjust anything and watch the price move."
+        description="Explore a planning-range estimate for your Simcoe County landscaping project. Adjust material and scope inputs, then contact Golden Maple to confirm current project terms."
         canonical="https://goldenmaplelandscaping.ca/cost-estimator"
         /* Purpose-built share card — every texted ?build= permalink and every
            social share of this page previews with this instead of the generic
@@ -81,6 +83,7 @@ export default function CostEstimator() {
       />
       <EstimatorTopBar />
       <div className="pt-24 pb-32 bg-brand-nearblack min-h-screen text-brand-bonewhite">
+        <h1 className="font-display text-3xl text-center px-4 mb-6">Plan your landscaping investment</h1>
         <Estimator />
 
         {/* SEO content */}
@@ -88,14 +91,14 @@ export default function CostEstimator() {
           <div className="prose prose-invert prose-brand max-w-none font-sans font-normal text-brand-bonewhite/85">
             <h2 className="font-display text-3xl text-brand-bonewhite mb-8">How we price landscaping in Barrie & Simcoe County</h2>
             <p>
-              Every Golden Maple project quote is built bottom-up from real Carr Landscape Depot pricing — the same supplier we've been using since day one. The estimator above does a real material takeoff at Carr's current trade rates for Permacon pavers — base stone tonnage, bedding, jointing sand, edge restraint, delivery — plus disposal bins counted by what your job actually hauls away.
+              This calculator uses loaded supplier price data and quantity assumptions to produce a planning estimate for materials, labour and disposal. It does not fetch live supplier prices. Confirm current rates, site conditions, quantities and the written scope before committing to a project.
             </p>
-            <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Why we build on a 12–16" base</h3>
+            <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Site preparation is project-specific</h3>
             <p>
-              We install hardscape on a 12–16" open-graded base — twice as deep as most competitors. That depth is what survives Ontario freeze-thaw cycles. A shallower base might shave a few thousand off the upfront price, but stones start sinking inside three years. We won't build that way at any size, which is why the estimator prices the real base into every project — a 100 sqft front entrance included.
+              Ontario freeze-thaw conditions, drainage, soil, access, intended use, and local requirements can affect excavation and base preparation. The estimator is a planning tool; final site preparation is confirmed in the written project scope.
             </p>
             <p>
-              There's no job minimum here. Price out whatever you're actually planning and you'll get the honest number for it, not a number padded up to hit a floor.
+              Use the estimator to explore your intended scope. Availability, minimums, and final commercial terms are confirmed directly before a project is booked.
             </p>
             <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Permacon material tiers, explained</h3>
             <ul className="space-y-2">
@@ -105,7 +108,7 @@ export default function CostEstimator() {
             </ul>
             <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">From estimate to exact quote</h3>
             <p>
-              The estimator above starts at ±30% and tightens to ±8–20% as you answer. A free estimate request confirms scope and timeline. A $99 design session — credited back if you proceed — gets you to ±5% with material samples and a layout sketch in hand.
+              The estimator starts as a planning range and changes as you refine inputs. Contact Golden Maple to confirm the current consultation, design, material-selection, and final-quote process.
             </p>
           </div>
         </Reveal>

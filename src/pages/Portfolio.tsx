@@ -3,6 +3,7 @@ import { ArrowRight, Grid, AlignJustify, Map } from 'lucide-react';
 import SEO from '../components/SEO';
 import Reveal from '../components/Reveal';
 import { Link } from 'react-router-dom';
+import { BUSINESS, canPublish } from '../data/business';
 
 const PROJECTS = [
   {
@@ -104,11 +105,12 @@ const PROJECTS = [
 ];
 
 export default function Portfolio() {
+  const portfolioVerified = canPublish(BUSINESS.reviews.portfolio) && canPublish(BUSINESS.reviews.photoRights);
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
         title="Landscaping Portfolio | Barrie Projects"
-        description="Browse completed interlocking patios, decks, retaining walls & outdoor living spaces across Barrie and Simcoe County. See the quality before you commit."
+        description="Explore outdoor-living possibilities and ask for project examples relevant to your property, materials and intended use."
         canonical="https://goldenmaplelandscaping.ca/portfolio"
       />
       
@@ -116,19 +118,19 @@ export default function Portfolio() {
         <div className="container-custom">
           <Reveal className="text-center max-w-3xl mx-auto mb-32">
             <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-              Our Portfolio
+              Project possibilities
             </span>
             <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
-              Landscaping Project <br />
-              <span className="italic text-brand-gold-dark">Gallery in Barrie.</span>
+              Outdoor-living <br />
+              <span className="italic text-brand-gold-dark">possibilities.</span>
             </h1>
             <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
-              Explore our collection of premium outdoor transformations. From structural engineering to aesthetic mastery, our work reflects our commitment to quality and craftsmanship.
+              Planning a patio, deck or complete backyard? Tell us what matters to you and ask for relevant examples to discuss.
             </p>
           </Reveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-40">
-            {PROJECTS.map((project, idx) => (
+            {(portfolioVerified ? PROJECTS : []).map((project, idx) => (
               <motion.div
                 key={project.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -147,16 +149,16 @@ export default function Portfolio() {
                 
                 <div className="absolute inset-0 p-12 flex flex-col justify-end">
                   <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-6 block">
-                    {project.category}
+                    {portfolioVerified ? project.category : 'Planning reference'}
                   </span>
                   <h3 className="font-display text-4xl font-light text-brand-porcelain mb-6 group-hover:text-brand-gold transition-colors duration-500 leading-tight">
-                    {project.title}
+                    {portfolioVerified ? project.title : 'Outdoor-living inspiration'}
                   </h3>
                   <p className="font-sans text-sm text-brand-porcelain-soft leading-relaxed mb-10 opacity-0 translate-y-6 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-700 ease-[0.16, 1, 0.3, 1] font-light">
-                    {project.desc}
+                    {portfolioVerified ? project.desc : 'Project-specific scope, location, materials, and outcomes are confirmed directly before they are presented as a Golden Maple build.'}
                   </p>
                   <div className="flex items-center gap-6 text-brand-gold font-sans text-[10px] uppercase tracking-[0.3em]">
-                    <span>View Project</span>
+                    <span>{portfolioVerified ? 'View Project' : 'View Reference'}</span>
                     <div className="w-10 h-px bg-brand-gold group-hover:w-16 transition-all duration-500" />
                   </div>
                 </div>
@@ -174,7 +176,7 @@ export default function Portfolio() {
             <span className="text-brand-gold italic">be next.</span>
           </h2>
           <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light">
-            Every project in this gallery started with a single conversation. Tell us what you're imagining — we'll show you what's possible.
+            Tell us what you are imagining. Ask about suitable materials, the proposed scope and available project references.
           </p>
           <Link to="/contact" className="btn-primary px-20">Let's Talk About Your Property</Link>
         </Reveal>

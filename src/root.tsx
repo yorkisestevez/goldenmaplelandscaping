@@ -17,94 +17,41 @@ import SiteChrome from './components/Layout';
 import { initAnalytics, trackPageView } from './utils/analytics';
 import { initAttributionCapture } from './utils/utmCapture';
 import { initBehaviorCapture } from './utils/behavior';
-import { FOUNDER, FOUNDER_IMAGE_URL } from './data/founder';
+import { BUSINESS, canPublish, publicContact, publicPostalAddress, publicServiceAreas } from './data/business';
 
-// Canonical business entity — ported verbatim from the PR #39 index.html #business
-// node so it prerenders into the <head> of every page (visible to non-JS AI crawlers).
+// Canonical business entity for all routes. Publication status lives in
+// src/data/business.ts; unverified review data intentionally never enters schema.
 const businessGraph = {
   '@context': 'https://schema.org',
   '@graph': [
     {
       '@type': ['LocalBusiness', 'HomeAndConstructionBusiness', 'GeneralContractor'],
-      '@id': 'https://goldenmaplelandscaping.ca/#business',
-      name: 'Golden Maple Landscaping',
-      description:
-        'Premium hardscape and interlocking contractor in Barrie & Simcoe County, Ontario. Engineered paver patios, driveways, retaining walls, composite decks and outdoor-living builds on a 12-16 inch base for the Ontario freeze-thaw cycle.',
-      url: 'https://goldenmaplelandscaping.ca/',
-      image:
-        'https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg',
-      logo: 'https://goldenmaplelandscaping.ca/logo-mark.png',
-      founder: { '@type': 'Person', name: FOUNDER.name, image: FOUNDER_IMAGE_URL },
-      foundingDate: '2020',
-      telephone: '+17055003581',
-      email: 'yorkis@goldenmaplelandscaping.ca',
+      '@id': `${BUSINESS.canonicalUrl}/#business`,
+      name: BUSINESS.publicName.value,
+      description: `${BUSINESS.publicName.value}: discuss ${BUSINESS.services.value.join(', ')}. Confirm project scope and availability for your address.`,
+      url: `${BUSINESS.canonicalUrl}/`,
+      image: `${BUSINESS.canonicalUrl}/logo-mark.png`,
+      logo: `${BUSINESS.canonicalUrl}/logo-mark.png`,
+      ...(canPublish(BUSINESS.founder) ? { founder: { '@type': 'Person', name: BUSINESS.founder.value.name } } : {}),
+      ...(canPublish(BUSINESS.foundingYear) ? { foundingDate: BUSINESS.foundingYear.value } : {}),
+      telephone: publicContact.phoneTel,
+      email: publicContact.email,
       priceRange: '$$$',
       currenciesAccepted: 'CAD',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Barrie',
-        addressRegion: 'ON',
-        postalCode: 'L4N',
-        addressCountry: 'CA',
-      },
-      geo: { '@type': 'GeoCoordinates', latitude: 44.3894, longitude: -79.6903 },
-      areaServed: [
-        { '@type': 'City', name: 'Barrie' },
-        { '@type': 'City', name: 'Innisfil' },
-        { '@type': 'City', name: 'Oro-Medonte' },
-        { '@type': 'City', name: 'Springwater' },
-        { '@type': 'City', name: 'Orillia' },
-        { '@type': 'City', name: 'Wasaga Beach' },
-        { '@type': 'City', name: 'Midland' },
-        { '@type': 'City', name: 'Collingwood' },
-      ],
-      openingHoursSpecification: [
-        {
-          '@type': 'OpeningHoursSpecification',
-          dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-          opens: '08:00',
-          closes: '18:00',
-        },
-      ],
+      address: publicPostalAddress(),
+      ...(canPublish(BUSINESS.serviceArea.primary) && canPublish(BUSINESS.serviceArea.secondary) ? { areaServed: publicServiceAreas.map((name) => ({ '@type': 'City', name })) } : {}),
+      ...(canPublish(BUSINESS.hours) ? { openingHoursSpecification: BUSINESS.hours.value.map((hours) => ({
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: hours.days,
+        opens: hours.opens,
+        closes: hours.closes,
+      })) } : {}),
       sameAs: [
-        'https://www.facebook.com/GoldenMaplegroup',
-        'https://www.instagram.com/goldenmaplelandscaping',
-        'https://www.homestars.com/companies/2982995-golden-maple-landscaping',
-        'https://www.yelp.com/biz/golden-maple-landscaping-barrie-4',
-        'https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html',
-      ],
-      // Real Google Business Profile aggregate + reviews (verified 2026-07-01 from the
-      // public Maps listing). NOTE: true Google count is 8 — not the 42 claimed elsewhere.
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: '5.0',
-        reviewCount: '8',
-      },
-      review: [
-        {
-          '@type': 'Review',
-          author: { '@type': 'Person', name: 'Rio Sheri' },
-          datePublished: '2025-10',
-          reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
-          reviewBody:
-            "We couldn't be happier with the work Yorkis and team from Golden Maple Landscaping did for us! They completely redid our stairs and walkway, and the results are absolutely beautiful. The craftsmanship is top-notch.",
-        },
-        {
-          '@type': 'Review',
-          author: { '@type': 'Person', name: 'Cory Walker' },
-          datePublished: '2026-03',
-          reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
-          reviewBody:
-            'Golden Maple Landscaping did an outstanding job. From the first conversation to the final walkthrough, everything was handled professionally and with real attention to detail.',
-        },
-        {
-          '@type': 'Review',
-          author: { '@type': 'Person', name: 'Joseph Perri' },
-          datePublished: '2026-03',
-          reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
-          reviewBody:
-            'Golden Maple Landscaping was excellent to work with. I hired them to complete a patio project, and they went above and beyond expectations.',
-        },
+        BUSINESS.urls.facebook.value,
+        BUSINESS.urls.instagram.value,
+        BUSINESS.urls.homeStars.value,
+        BUSINESS.urls.yelp.value,
+        BUSINESS.urls.yellowPages.value,
       ],
     },
   ],

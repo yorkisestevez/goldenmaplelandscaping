@@ -1,0 +1,46 @@
+{
+  "id": "6a08d880a10c9b9a37e896f6",
+  "state": "ready",
+  "functions": null,
+  "required_functions": [],
+  "function_schedules": [],
+  "framework": "unknown",
+  "summary": {
+    "status": "ready",
+    "messages": [
+      {
+        "type": "info",
+        "title": "1 new file uploaded",
+        "description": "1 asset changed.",
+        "details": null
+      },
+      {
+        "type": "info",
+        "title": "No redirect rules processed",
+        "description": "This deploy did not include any redirect rules. [Learn more about redirects](https://docs.netlify.com/routing/redirects/)",
+        "details": ""
+      },
+      {
+        "type": "info",
+        "title": "No header rules processed",
+        "description": "This deploy did not include any header rules. [Learn more about headers](https://docs.netlify.com/routing/headers/)",
+        "details": ""
+      },
+      {
+        "type": "info",
+        "title": "No functions deployed",
+        "description": "This deploy did not include any functions. [Learn more about Netlify Functions](https://docs.netlify.com/functions/overview/)",
+        "details": null
+      },
+      {
+        "type": "info",
+        "title": "No edge functions deployed",
+        "description": "This deploy did not include any edge functions. [Learn more about Edge Functions](https://docs.netlify.com/edge-functions/overview/)",
+        "details": null
+      }
+    ]
+  },
+  "edge_functions": null,
+  "edge_functions_present": null,
+  "config": null
+}

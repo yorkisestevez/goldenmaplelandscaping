@@ -1,0 +1,96 @@
+{
+  "sites": [
+    {
+      "id": "e09da126-6035-4d29-a61f-1f37de9494d5",
+      "name": "goldenmaple-deck-15susans",
+      "url": "http://goldenmaple-deck-15susans.netlify.app",
+      "custom_domain": null,
+      "admin_url": "https://app.netlify.com/projects/goldenmaple-deck-15susans"
+    },
+    {
+      "id": "3ba5792b-0a01-440e-94ef-cb3bbb3cc7e3",
+      "name": "golden-maple-group",
+      "url": "https://goldenmaplegroup.com",
+      "custom_domain": "goldenmaplegroup.com",
+      "admin_url": "https://app.netlify.com/projects/golden-maple-group"
+    },
+    {
+      "id": "12bb618b-fb3a-4f9f-b2a6-4aed6b00d258",
+      "name": "golden-maple-quote-studio",
+      "url": "http://golden-maple-quote-studio.netlify.app",
+      "custom_domain": null,
+      "admin_url": "https://app.netlify.com/projects/golden-maple-quote-studio"
+    },
+    {
+      "id": "68d0e773-53a5-438c-9220-a77abae47964",
+      "name": "goldenmaple-seo",
+      "url": "https://seo.goldenmaplelandscaping.ca",
+      "custom_domain": "seo.goldenmaplelandscaping.ca",
+      "admin_url": "https://app.netlify.com/projects/goldenmaple-seo"
+    },
+    {
+      "id": "df9c87b4-04e7-4ad8-a860-b93db4bef49d",
+      "name": "seo-golden-maple",
+      "url": "https://guides.goldenmaplelandscaping.ca",
+      "custom_domain": "guides.goldenmaplelandscaping.ca",
+      "admin_url": "https://app.netlify.com/projects/seo-golden-maple"
+    },
+    {
+      "id": "d7fd4d68-dc28-4850-bd32-ad5132efaab5",
+      "name": "fw-golden-maple-spring-patio-readiness-checklist-for-barrie-hom",
+      "url": "http://fw-golden-maple-spring-patio-readiness-checklist-for-barrie-hom.netlify.app",
+      "custom_domain": null,
+      "admin_url": "https://app.netlify.com/projects/fw-golden-maple-spring-patio-readiness-checklist-for-barrie-hom"
+    },
+    {
+      "id": "c0e1d1c1-5e73-4d08-92a2-39358bee7948",
+      "name": "golden-maple-live",
+      "url": "http://golden-maple-live.netlify.app",
+      "custom_domain": null,
+      "admin_url": "https://app.netlify.com/projects/golden-maple-live"
+    },
+    {
+      "id": "8652a2c8-fd89-44a2-89a9-94b5b325dfd1",
+      "name": "goldenmaplelandscaping",
+      "url": "http://goldenmaplelandscaping.netlify.app",
+      "custom_domain": null,
+      "admin_url": "https://app.netlify.com/projects/goldenmaplelandscaping"
+    },
+    {
+      "id": "5afb8127-e7c3-445a-b59f-9bd09dd9d721",
+      "name": "golden-maple-2026-preview",
+      "url": "http://golden-maple-2026-preview.netlify.app",
+      "custom_domain": null,
+      "admin_url": "https://app.netlify.com/projects/golden-maple-2026-preview"
+    },
+    {
+      "id": "3a32ca35-d271-488f-a847-a1aa119bb0b1",
+      "name": "golden-maple-signature-v1",
+      "url": "http://golden-maple-signature-v1.netlify.app",
+      "custom_domain": null,
+      "admin_url": "https://app.netlify.com/projects/golden-maple-signature-v1"
+    },
+    {
+      "id": "7f96c67c-9336-4f3f-acce-c82567306343",
+      "name": "golden-maple-optimized-app",
+      "url": "http://golden-maple-optimized-app.netlify.app",
+      "custom_domain": null,
+      "admin_url": "https://app.netlify.com/projects/golden-maple-optimized-app"
+    },
+    {
+      "id": "549b17bd-15af-42ee-8f0c-7fef576cf664",
+      "name": "goldenmaple",
+      "url": "https://goldenmaplelandscaping.ca",
+      "custom_domain": "goldenmaplelandscaping.ca",
+      "admin_url": "https://app.netlify.com/projects/goldenmaple"
+    },
+    {
+      "id": "a0f8c22f-3b6a-473d-ad12-6c858358ea30",
+      "name": "golden-maple-landscaping",
+      "url": "https://golden-maple-landscaping.netlify.app",
+      "custom_domain": null,
+      "admin_url": "https://app.netlify.com/projects/golden-maple-landscaping"
+    }
+  ],
+  "scope": "sanitized identity fields only"
+}

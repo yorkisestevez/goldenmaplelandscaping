@@ -1,0 +1,142 @@
+PageSpeed Insights
+Copy Link
+Docs
+This site uses cookies from Google to deliver its services and to analyze traffic.
+Learn More.
+Ok, Got it.
+Report from Sep 5, 2026, 10:52:37 AM
+
+Enter a valid URL
+
+Analyze
+smartphone
+Mobile
+computer
+Desktop
+Discover what your real users are experiencing
+No Data
+Diagnose performance issues
+100
+Performance
+100
+Accessibility
+100
+Best Practices
+100
+SEO
+2/2
+Agentic Browsing
+100
+FCP
++10
+LCP
++25
+TBT
++30
+CLS
++25
+SI
++10
+Performance
+Values are estimated and may vary. The performance score is calculated directly from these metrics.See calculator.
+0–49
+50–89
+90–100
+METRICS
+Expand view
+First Contentful Paint
+0.8 s
+Largest Contentful Paint
+0.8 s
+Total Blocking Time
+0 ms
+Cumulative Layout Shift
+0
+Speed Index
+0.8 s
+Captured at Sep 5, 2026, 10:51 AM EDT
+Emulated Moto G Power with Lighthouse 13.4.1
+Single page session
+Initial page load
+Slow 4G throttling
+Using HeadlessChromium 151.0.7922.71 with lr
+View Treemap
+Show audits relevant to:
+All
+LCP
+INSIGHTS
+LCP breakdown
+These insights are also available in the Chrome DevTools Performance Panel - record a trace to view more detailed information.
+PASSED AUDITS (26)
+Show
+100
+Accessibility
+These checks highlight opportunities to improve the accessibility of your web app. Automatic detection can only detect a subset of issues and does not guarantee the accessibility of your web app, so manual testing is also encouraged.
+ADDITIONAL ITEMS TO MANUALLY CHECK (10)
+Hide
+Interactive controls are keyboard focusable
+Interactive elements indicate their purpose and state
+The page has a logical tab order
+Visual order on the page follows DOM order
+User focus is not accidentally trapped in a region
+The user's focus is directed to new content added to the page
+HTML5 landmark elements are used to improve navigation
+Offscreen content is hidden from assistive technology
+Custom controls have associated labels
+Custom controls have ARIA roles
+These items address areas which an automated testing tool cannot cover. Learn more in our guide on conducting an accessibility review.
+PASSED AUDITS (13)
+Show
+NOT APPLICABLE (50)
+Show
+100
+Best Practices
+TRUST AND SAFETY
+Ensure CSP is effective against XSS attacks
+Use a strong HSTS policy
+Ensure proper origin isolation with COOP
+Mitigate clickjacking with XFO or CSP
+Mitigate DOM-based XSS with Trusted Types
+BROWSER COMPATIBILITY
+Baseline Features
+PASSED AUDITS (13)
+Show
+NOT APPLICABLE (2)
+Show
+100
+SEO
+These checks ensure that your page is following basic search engine optimization advice. There are many additional factors Lighthouse does not score here that may affect your search ranking, including performance on Core Web Vitals. Learn more about Google Search Essentials.
+ADDITIONAL ITEMS TO MANUALLY CHECK (1)
+Hide
+Structured data is valid
+Run these additional validators on your site to check additional SEO best practices.
+PASSED AUDITS (9)
+Show
+NOT APPLICABLE (1)
+Show
+2/2
+Agentic Browsing
+These checks ensure high-quality, browsable websites for AI agents and validate the correctness of WebMCP integrations. This category is still under development and subject to change.
+PASSED AUDITS (2)
+Show
+NOT APPLICABLE (4)
+Show
+More on PageSpeed Insights
+What's new
+Documentation
+Learn about Web Performance
+Ask questions on Stack Overflow
+Mailing list
+Related Content
+Updates
+Web Fundamentals
+Case Studies
+Podcasts
+Connect
+Twitter
+Youtube
+Chrome
+Firebase
+All products
+Terms and Privacy Policy
+For details, see the Google Developers Site Policies.

@@ -1,0 +1,92 @@
+{
+  "id": "549b17bd-15af-42ee-8f0c-7fef576cf664",
+  "name": "goldenmaple",
+  "custom_domain": "goldenmaplelandscaping.ca",
+  "deploy_id": "6a995c8f1c1935a91a7c2c26",
+  "state": "ready",
+  "functions": {
+    "id": "1787fedbb7b925296c60ed494836930d440f08cf",
+    "provider": "aws_lambda",
+    "created_at": "2026-08-31T13:38:52.309Z",
+    "functions": [
+      {
+        "n": "chat",
+        "d": "12f716c38f13e8f4133c120c1b69337acbc9c93b745a4ddd035bc9edf299343c",
+        "dn": null,
+        "g": null,
+        "bd": {
+          "runtimeAPIVersion": 1
+        },
+        "p": 10,
+        "id": "676d1d9d2338d77423649b760a9845ca4d3085ba57e535de6eca03477e462244",
+        "a": "416480437217",
+        "c": "2026-08-31T13:39:00.673Z",
+        "m": 1024,
+        "obl": "netlify-observability-extension",
+        "oblv": 32,
+        "oid": "cd7e75d01f2dd42989d064806df0557aa3decac652c663fb20e742087cea0401",
+        "r": "nodejs20.x",
+        "rg": "us-east-2",
+        "s": 5982,
+        "endpoint": "https://goldenmaplelandscaping.ca/.netlify/functions/chat",
+        "schedule": null
+      },
+      {
+        "n": "submission-created",
+        "d": "c6f58c942610070f8eec76a728643511cc348dba67a54bb312ebc02c07f30414",
+        "dn": null,
+        "g": null,
+        "bd": {
+          "runtimeAPIVersion": 1
+        },
+        "p": 10,
+        "id": "7b6c2ed27a3a4db9409483de081fd5f00d9e87f548a77e4add144d27235a6eac",
+        "s": 1810,
+        "r": "nodejs20.x",
+        "c": "2026-07-08T01:45:16.818Z",
+        "a": "560477221814",
+        "oid": "ce4474a0d3673451fa91f0b9f00430be343e1b66100a7b54a898377bfb2464c3",
+        "endpoint": "https://goldenmaplelandscaping.ca/.netlify/functions/submission-created",
+        "schedule": null
+      }
+    ],
+    "log_type": "socketeer",
+    "branch": null
+  },
+  "function_schedules": [],
+  "summary": {
+    "status": "ready",
+    "messages": [
+      {
+        "type": "info",
+        "title": "All files already uploaded",
+        "description": "All files already uploaded by a previous deploy with the same commits.",
+        "details": null
+      },
+      {
+        "type": "info",
+        "title": "3 redirect rules processed",
+        "description": "All redirect rules deployed without errors.",
+        "details": ""
+      },
+      {
+        "type": "info",
+        "title": "3 header rules processed",
+        "description": "All header rules deployed without errors.",
+        "details": ""
+      },
+      {
+        "type": "info",
+        "title": "2 functions deployed",
+        "description": "We have deployed 2 functions. [Visit your Functions](/projects/goldenmaple/logs/functions) for more information.",
+        "details": null
+      },
+      {
+        "type": "info",
+        "title": "No edge functions deployed",
+        "description": "This deploy did not include any edge functions. [Learn more about Edge Functions](https://docs.netlify.com/edge-functions/overview/)",
+        "details": null
+      }
+    ]
+  }
+}

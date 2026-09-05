@@ -1,5 +1,6 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
+import { BUSINESS } from '../../data/business';
 
 export default function WinterDamagePrevention() {
   return (
@@ -31,7 +32,7 @@ export default function WinterDamagePrevention() {
         <li><strong>Calcium magnesium acetate (CMA):</strong> The gentlest option. Safe for pavers, concrete, and vegetation. More expensive but worth it for premium surfaces.</li>
         <li><strong>Sand or fine gravel:</strong> Provides traction without any chemical damage. Old-fashioned but effective.</li>
         <li><strong>Calcium chloride:</strong> Works at lower temperatures than rock salt and is slightly less damaging, but still not ideal for frequent use.</li>
-        <li><strong>Heated snow-melt systems:</strong> For clients who never want to deal with ice at all, we can install hydronic or electric heating under the paver surface. This is the premium solution for high-traffic areas like walkways and front entrances.</li>
+        <li><strong>Heated snow-melt systems:</strong> For clients who never want to deal with ice at all, contractors can install hydronic or electric heating under the paver surface. This is the premium solution for high-traffic areas like walkways and front entrances.</li>
       </ul>
 
       <h2>Snow Removal Best Practices</h2>
@@ -69,8 +70,8 @@ export default function WinterDamagePrevention() {
         <li>Cracks in retaining walls adjacent to the patio</li>
       </ul>
 
-      <p>These could indicate a base issue that needs professional attention. Under our 5-year warranty, structural issues like sinking and settlement are covered at no charge.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has maintained and repaired interlocking stone through Ontario freeze-thaw winters across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the winter advice here is preventative for a reason: the damage that shows in spring almost always started with drainage or de-icing choices made in November." />
+      <p>These could indicate a base issue that needs professional attention. If you have written workmanship terms, review their coverage and exclusions or ask the contractor for the current document.</p>
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

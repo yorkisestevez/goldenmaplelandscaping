@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Check, AlertTriangle } from 'lucide-react';
 import SEO from '../components/SEO';
 
-const rebuildTriggers = ['Sinking or rocking pavers', 'Water pooling near foundation', 'Weeds/joint failure every season', 'Uneven steps or trip hazards', 'Old concrete/pavers to remove', 'You want it rebuilt once, properly'];
+const rebuildTriggers = ['Sinking or rocking pavers', 'Water pooling near foundation', 'Weeds/joint failure every season', 'Uneven steps or trip hazards', 'Old concrete/pavers to remove', 'You want to discuss a rebuild plan'];
 const ranges = [
   { range: '$25K–$45K', title: 'Clean Patio Rebuild', detail: 'Old surface removal, excavation, open-graded base, pavers, edge restraint, polymeric joints.' },
   { range: '$40K–$75K', title: 'Rebuild + Upgrade', detail: 'Larger patio footprint, steps, border/inlay, drainage correction, lighting conduit, premium material.' },
@@ -14,7 +14,7 @@ export default function PremiumPatioRebuildBarrie() {
     <div className="bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
         title="Premium Patio Rebuilds Barrie | Fix Sinking Interlock | Golden Maple"
-        description="Replace a sinking, dated, or poorly built patio in Barrie with a premium open-graded base, drainage-aware rebuild, and 5-year structural warranty."
+        description="Plan a patio rebuild in Barrie with project-specific drainage, base, materials, and written workmanship terms."
         canonical="https://goldenmaplelandscaping.ca/premium-patio-rebuild-barrie"
       />
       <section className="section-padding pt-48">
@@ -43,7 +43,7 @@ export default function PremiumPatioRebuildBarrie() {
             <div className="bg-brand-burgundy/10 border border-brand-burgundy/30 p-12 rounded-[2px]">
               <AlertTriangle className="text-brand-gold-dark mb-6" />
               <h2 className="font-display text-4xl font-light mb-6">We do not reset failed work on the same failed base.</h2>
-              <p className="font-sans text-brand-muted leading-relaxed font-light">A rebuild is not a cosmetic repair. We remove the bad assembly, correct the water and base problem, then rebuild with clear stone, HPB, geotextile where needed, edge restraint, and a 5-year structural warranty.</p>
+              <p className="font-sans text-brand-muted leading-relaxed font-light">A rebuild is not a cosmetic repair. We remove the bad assembly, correct the water and base problem, then rebuild with clear stone, HPB, geotextile where needed, edge restraint, and project-specific written workmanship terms.</p>
             </div>
             <div className="bg-brand-surface border border-brand-dim/10 p-12 rounded-[2px]">
               <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8">Best-fit rebuild triggers</h2>

@@ -3,6 +3,7 @@ import { Shield, Heart, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { trackCall } from '../../utils/analytics';
+import { publicContact } from '../../data/business';
 
 export default function MaterialSelection() {
   return (
@@ -76,7 +77,7 @@ export default function MaterialSelection() {
             <div className="max-w-4xl mx-auto">
               <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite mb-12">Quality from the Inside Out.</h2>
               <p className="font-sans text-xl text-brand-muted leading-relaxed font-light mb-12 text-balance lg:px-12">
-                We don't just pick materials based on looks. We pick materials based on their ability to resist salt, fading, and structural settlement. Whether it's a 16" deep base or the interlocking joint sand—every component is chosen for its engineering.
+                Material selection considers appearance, site conditions, maintenance expectations, and the project-specific construction scope.
               </p>
               <Link to="/process/construction" className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
                 <span>Phase Five: Engineered Construction</span>
@@ -95,8 +96,8 @@ export default function MaterialSelection() {
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
             <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
-            <a href="tel:7055003581" onClick={() => trackCall('materialselection_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
-              <Phone size={14} /> (705) 500-3581
+            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('materialselection_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
+              <Phone size={14} /> {publicContact.phoneDisplay}
             </a>
           </div>
         </div>

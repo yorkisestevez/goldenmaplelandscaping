@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, Clock, Shield, Award, CheckCircle, ChevronDown } from 'lucide-react';
 import SEO from '../components/SEO';
+import PublicationTrustBar from '../components/PublicationTrustBar';
 import { trackLead, trackCall } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
 import { scoreGoldenMapleLead } from '../utils/leadScoring';
+import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -92,7 +94,7 @@ export default function Contact() {
       setStatus('success');
     } catch (err) {
       setStatus('error');
-      setErrorMsg('Something went wrong. Please call us at (705) 500-3581 or email yorkis@goldenmaplelandscaping.ca.');
+      setErrorMsg(`Something went wrong. Please call us at ${publicContact.phoneDisplay} or email ${publicContact.email}.`);
     }
   };
 
@@ -100,10 +102,10 @@ export default function Contact() {
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
         title="Start a Golden Maple Project | Premium Hardscape Barrie"
-        description="Request a free estimate for a premium patio, retaining wall, sloped-yard fix, or full backyard transformation in Barrie and Simcoe County."
+        description="Start a project conversation for a premium patio, retaining wall, sloped-yard fix, or full backyard transformation in Barrie and Simcoe County."
         canonical="https://goldenmaplelandscaping.ca/contact"
       />
-      
+      <PublicationTrustBar />
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto mb-32">
@@ -111,11 +113,11 @@ export default function Contact() {
               Get Your Estimate
             </span>
             <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
-              Get a free estimate. <br />
-              <span className="italic text-brand-gold-dark">Yorkis replies in 24 hours.</span>
+              Start a project conversation. <br />
+              <span className="italic text-brand-gold-dark">Confirm current scope and next steps.</span>
             </h1>
             <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
-              Tell us your name, phone, and email — and a little about the space if you have it. Yorkis comes back within 24 hours with an honest read on scope, timeline, and whether we're the right fit. Budget is optional. No sales call required to get started.
+              Tell us your name, phone, and email — and a little about the space if you have it. We can discuss scope, availability and whether the project is a fit. Budget is optional.
             </p>
           </div>
 
@@ -142,10 +144,10 @@ export default function Contact() {
                     </div>
                     <h3 className="font-display text-3xl font-light text-brand-bonewhite">Estimate request received.</h3>
                     <p className="font-sans text-base text-brand-muted leading-relaxed font-light max-w-md mx-auto">
-                      Yorkis will review your project and respond within <span className="text-brand-gold-dark">24 hours</span> with an honest scope, timeline, and next steps.
+                      Your project request is ready for review. Contact us if you need to confirm receipt, availability or next steps.
                     </p>
                     <p className="font-sans text-sm text-brand-muted font-light">
-                      Project urgent? Call <a href="tel:7055003581" onClick={() => trackCall('contact_success_phone')} className="text-brand-gold-dark hover:underline">(705) 500-3581</a> directly.
+                      Project urgent? Call <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('contact_success_phone')} className="text-brand-gold-dark hover:underline">{publicContact.phoneDisplay}</a> directly.
                     </p>
                   </div>
                 ) : (
@@ -182,7 +184,7 @@ export default function Contact() {
                           value={form.phone}
                           onChange={onChange}
                           className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite placeholder:text-brand-muted/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
-                          placeholder="(705) 500-3581"
+                          placeholder={publicContact.phoneDisplay}
                         />
                       </div>
                     </div>
@@ -293,7 +295,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-3">Phone</h3>
-                      <a href="tel:7055003581" onClick={() => trackCall('contact_direct_line')} className="font-sans text-brand-muted hover:text-brand-gold-dark transition-colors font-normal">(705) 500-3581</a>
+                      <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('contact_direct_line')} className="font-sans text-brand-muted hover:text-brand-gold-dark transition-colors font-normal">{publicContact.phoneDisplay}</a>
                     </div>
                   </div>
                   <div className="flex items-start gap-10">
@@ -302,7 +304,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-3">Email</h3>
-                      <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="font-sans text-brand-muted hover:text-brand-gold-dark transition-colors font-normal">yorkis@goldenmaplelandscaping.ca</a>
+                      <a href={`mailto:${publicContact.email}`} className="font-sans text-brand-muted hover:text-brand-gold-dark transition-colors font-normal">{publicContact.email}</a>
                     </div>
                   </div>
                   <div className="flex items-start gap-10">
@@ -321,13 +323,13 @@ export default function Contact() {
                 <h3 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Our Credentials</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
                   <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <Shield size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> WSIB Certified
+                    <Shield size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.wsib, 'Current coverage documentation')}
                   </div>
                   <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <Award size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> $5M Liability
+                    <Award size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation')}
                   </div>
                   <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <CheckCircle size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> 5-Year Structural Warranty
+                    <CheckCircle size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms')}
                   </div>
                   <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
                     <CheckCircle size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> Engineering Standard
@@ -346,7 +348,7 @@ export default function Contact() {
               allowFullScreen={true} 
               loading="lazy" 
               referrerPolicy="no-referrer-when-downgrade"
-              title="Golden Maple Landscaping Location in Barrie ON"
+              title="Barrie area map — not a Golden Maple office location"
             ></iframe>
           </div>
         </div>

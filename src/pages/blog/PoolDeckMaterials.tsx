@@ -1,6 +1,7 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
 import { Link } from 'react-router-dom';
+import { BUSINESS } from '../../data/business';
 
 export default function PoolDeckMaterials() {
   const faqSchema = {
@@ -11,7 +12,7 @@ export default function PoolDeckMaterials() {
         "name": "What is the best material for a pool deck in Ontario?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Porcelain pavers (Porcea Algonquin or Coast) are the best all-around pool deck material in Ontario. They're frost-proof, slip-rated R11 wet, stain-proof, and stay 5–10°C cooler underfoot than concrete pavers in direct sun. For a more traditional look, Techo-Bloc Blu HD² Smooth or Unilock Umbriano are excellent concrete-paver options. Avoid natural travertine — it stains from sunscreen and pool chemicals in our climate."
+          "text": "Porcelain pavers (Porcea Algonquin or Coast) are the best all-around pool deck material in Ontario. They're frost-proof, slip-rated R11 wet, stain-proof, and stay 5–10°C cooler underfoot than concrete pavers in direct sun. For a more traditional look, Techo-Bloc Blu HD² Smooth or Unilock Umbriano are excellent concrete-paver options. Avoid natural travertine — it stains from sunscreen and pool chemicals in the climate."
         }
       },
       {
@@ -75,7 +76,7 @@ export default function PoolDeckMaterials() {
         </p>
       </div>
 
-      <p>The pool deck is where you actually live during a Simcoe County summer — and where the wrong material choice shows up fast. We've installed surrounds in every common material; here's the side-by-side based on real performance, not catalog claims.</p>
+      <p>The pool deck is where you actually live during a Simcoe County summer — and where the wrong material choice shows up fast. Contractors have installed surrounds in every common material; here's the side-by-side based on real performance, not catalog claims.</p>
 
       <h2>The Five Things That Matter for Ontario Pool Decks</h2>
 
@@ -162,7 +163,7 @@ export default function PoolDeckMaterials() {
               <td className="p-4 text-brand-muted">$25–35</td>
               <td className="p-4 text-brand-muted">Varies</td>
               <td className="p-4 text-brand-muted">Hottest</td>
-              <td className="p-4 text-brand-muted">Cracks within 5 years in our climate.</td>
+              <td className="p-4 text-brand-muted">Cracks within 5 years in the climate.</td>
             </tr>
           </tbody>
         </table>
@@ -170,17 +171,17 @@ export default function PoolDeckMaterials() {
 
       <h2>Why Porcelain Wins for Most Pools</h2>
 
-      <p>Porcelain pavers were a niche product five years ago and are now our top recommendation for new pool surrounds. Why:</p>
+      <p>Porcelain pavers were a niche product five years ago and are now the top recommendation for new pool surrounds. Why:</p>
 
       <ul>
         <li><strong>Zero porosity (under 0.5%).</strong> Water can't enter the paver, so freeze-thaw can't damage it. Concrete pavers, by comparison, sit at 4–6% porosity.</li>
         <li><strong>Stain-proof surface.</strong> Sunscreen, red wine, leaves — wipes off with water. No sealing, no annual maintenance.</li>
-        <li><strong>Cooler underfoot.</strong> Porcelain reflects more heat than concrete. In a side-by-side test on a 32°C July afternoon, our Porcea Algonquin patio measured 42°C; the adjacent Techo-Bloc Blu HD² measured 51°C.</li>
+        <li><strong>Cooler underfoot.</strong> Porcelain reflects more heat than concrete. In a side-by-side test on a 32°C July afternoon, the Porcea Algonquin patio measured 42°C; the adjacent Techo-Bloc Blu HD² measured 51°C.</li>
         <li><strong>Consistent colour.</strong> Each paver is fired identically. No batch variation, no efflorescence (the white mineral haze that plagues some concrete pavers).</li>
         <li><strong>Thinner profile (20mm).</strong> Lighter to handle, faster to install. Doesn't require the deeper base of 60mm concrete pavers.</li>
       </ul>
 
-      <p>Trade-offs: porcelain is <strong>more expensive (~25–35% higher than mid-tier concrete)</strong>, and edges show wear if the install isn't precise — there's no margin for sloppy cuts. We use diamond wet-saw cuts on 100% of porcelain edges. A budget contractor with a chop saw will give you chipped edges within a season.</p>
+      <p>Trade-offs: porcelain is <strong>more expensive (~25–35% higher than mid-tier concrete)</strong>, and edges show wear if the install isn't precise — there's no margin for sloppy cuts. Contractors use diamond wet-saw cuts on 100% of porcelain edges. A budget contractor with a chop saw will give you chipped edges within a season.</p>
 
       <h2>Concrete Pavers: When They're the Right Call</h2>
 
@@ -206,7 +207,7 @@ export default function PoolDeckMaterials() {
         <li><strong>Porcelain L-coping</strong> ($65–80/lin ft installed) — single-piece L-shape with integrated drainage groove. Premium look, premium price.</li>
         <li><strong>Techo-Bloc / Permacon bullnose coping</strong> ($45–55/lin ft) — colour-matched to the deck. Solid mid-tier option.</li>
         <li><strong>Natural stone coping</strong> ($55–80/lin ft) — variable thickness, hand-cut bullnose. Beautiful but requires precise install.</li>
-        <li><strong>Travertine coping</strong> — same warning as travertine deck pavers. Avoid in our climate.</li>
+        <li><strong>Travertine coping</strong> — same warning as travertine deck pavers. Avoid in the climate.</li>
       </ul>
 
       <p>For a typical 16x32 ft inground pool you need <strong>~96 linear feet of coping</strong>. Mid-tier coping adds $4,500–$5,500; premium adds $6,500–$7,500.</p>
@@ -245,22 +246,22 @@ export default function PoolDeckMaterials() {
       <h2>Frequently Asked Questions</h2>
 
       <h3>Can you re-do an existing pool deck without re-doing the pool?</h3>
-      <p>Yes — we tear out the existing deck, replace any failed coping, and install the new surface. Cost is typically 70–80% of a new install (the existing pool shell and excavation work in your favour). Best done in the same season the pool is opened.</p>
+      <p>Yes — contractors tear out the existing deck, replace any failed coping, and install the new surface. Cost is typically 70–80% of a new install (the existing pool shell and excavation work in your favour). Best done in the same season the pool is opened.</p>
 
       <h3>How long does pool deck install take?</h3>
       <p>An 800 sqft surround with coping, drainage, and lighting takes <strong>4–7 days on-site</strong>. Tear-out of an existing deck adds 2–3 days. Pool must be drained or covered during install.</p>
 
       <h3>What about dark colours around a pool?</h3>
-      <p>Dark concrete pavers look stunning but get hot. We commonly steer clients toward dark perimeter accents (border courses, coping) with a lighter primary deck colour. Dark porcelain (Porcea Thundercloud) stays cooler than dark concrete because of porcelain's surface reflectance.</p>
+      <p>Dark concrete pavers look stunning but get hot. Contractors commonly steer clients toward dark perimeter accents (border courses, coping) with a lighter primary deck colour. Dark porcelain (Porcea Thundercloud) stays cooler than dark concrete because of porcelain's surface reflectance.</p>
 
       <h3>Do you handle the pool itself?</h3>
-      <p>No — Golden Maple installs the deck, surround, retaining walls, lighting, and integrated landscape. We coordinate with your pool builder on timeline, grade, and coping installation. Our preferred pool partners in Simcoe County are happy to provide referrals.</p>
+      <p>Pool-deck scope, trade coordination, and any referrals should be confirmed for the specific project before work begins.</p>
 
       <h2>Plan Your Pool Surround</h2>
-      <p>The fastest way to scope a pool deck project is the <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">cost estimator</Link> with "patio" selected and your sqft estimate. From there, our follow-up confirms whether porcelain or concrete pavers fit your pool, your sun exposure, and your budget — usually in one 15-minute call.</p>
+      <p>The fastest way to scope a pool deck project is the <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">cost estimator</Link> with "patio" selected and your sqft estimate. From there, the follow-up confirms whether porcelain or concrete pavers fit your pool, your sun exposure, and your budget — usually in one 15-minute call.</p>
 
       <p>Related reading: <Link to="/resources/unilock-vs-techo-bloc-vs-permacon" className="text-brand-gold-dark hover:underline">Paver brand comparison</Link> · <Link to="/resources/best-time-install-patio-ontario" className="text-brand-gold-dark hover:underline">Best time to install</Link> · <Link to="/resources/landscape-permits-barrie-simcoe" className="text-brand-gold-dark hover:underline">Permits for pool surrounds</Link>.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has built pool decks in porcelain, concrete pavers, and natural stone across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the material advice here accounts for what brochures skip: how each surface behaves wet, in bare feet, through an Ontario freeze-thaw cycle." />
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

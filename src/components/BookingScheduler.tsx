@@ -14,6 +14,7 @@ import { trackLead, trackEngagement, trackCall } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
+import { publicContact } from '../data/business';
 
 const CRM_BASE_URL =
   (import.meta.env.VITE_CRM_BASE_URL as string | undefined)?.trim() || '';
@@ -101,7 +102,7 @@ export default function BookingScheduler() {
       })
       .catch(() => {
         setLoadingDays(false);
-        setErrorMsg('Could not load availability. Call (705) 500-3581 to book directly.');
+        setErrorMsg(`Could not load availability. Call ${publicContact.phoneDisplay} to book directly.`);
       });
   }, []);
 
@@ -166,7 +167,7 @@ export default function BookingScheduler() {
       setStep('success');
     } catch (err) {
       setErrorMsg(
-        err instanceof Error ? err.message : 'Something went wrong. Call (705) 500-3581.'
+        err instanceof Error ? err.message : `Something went wrong. Call ${publicContact.phoneDisplay}.`
       );
       setStep('error');
     }
@@ -200,11 +201,11 @@ export default function BookingScheduler() {
           Mark it on your calendar — we don't waste each other's time.
         </p>
         <a
-          href="tel:7055003581" onClick={() => trackCall('bookingscheduler_phone')}
+          href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('bookingscheduler_phone')}
           className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark hover:underline inline-flex items-center gap-2"
         >
           <Phone size={12} strokeWidth={1.5} />
-          Need to reschedule? (705) 500-3581
+          Need to reschedule? {publicContact.phoneDisplay}
         </a>
       </motion.div>
     );
@@ -368,10 +369,10 @@ export default function BookingScheduler() {
           Online booking is being set up.
         </p>
         <a
-          href="tel:7055003581" onClick={() => trackCall('bookingscheduler_phone')}
+          href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('bookingscheduler_phone')}
           className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark hover:underline inline-flex items-center gap-2"
         >
-          <Phone size={12} strokeWidth={1.5} /> Call (705) 500-3581 to schedule
+          <Phone size={12} strokeWidth={1.5} /> Call {publicContact.phoneDisplay} to schedule
         </a>
       </div>
     );

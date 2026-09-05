@@ -5,14 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
-    "build": "react-router build",
+    "build": "tsx scripts/generate-llms.ts && react-router build",
     "preview": "vite preview",
     "clean": "rm -rf build",
     "lint": "react-router typegen && tsc --noEmit && tsx scripts/check-pricing-parity.ts && tsx scripts/check-engine-snapshot.ts && tsx scripts/check-budget-levers.ts && tsx scripts/check-lead-qualification.ts",
     "check:pricing": "tsx scripts/check-pricing-parity.ts",
     "check:engine": "tsx scripts/check-engine-snapshot.ts",
     "check:levers": "tsx scripts/check-budget-levers.ts",
-    "regen:engine-snapshot": "tsx scripts/regen-engine-snapshot.ts"
+    "regen:engine-snapshot": "tsx scripts/regen-engine-snapshot.ts",
+    "generate:llms": "tsx scripts/generate-llms.ts",
+    "test:business": "tsx scripts/test-business-publication.ts && tsx scripts/test-business-boundaries.ts && tsx scripts/test-estimator-publication.ts && tsx scripts/test-generate-llms.ts",
+    "postbuild": "python3 scripts/test-publication-detectors.py && python3 scripts/check-contact-centralization.py && python3 scripts/check-build-business-facts.py",
+    "check:business-rendered": "python3 scripts/check-rendered-business-claims.py"
   },
   "dependencies": {
     "@react-router/node": "^7.18.1",

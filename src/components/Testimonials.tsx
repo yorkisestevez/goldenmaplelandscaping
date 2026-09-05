@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import { motion } from 'motion/react';
-import { Star, Quote } from 'lucide-react';
+import { Quote } from 'lucide-react';
+import { BUSINESS, canPublish } from '../data/business';
 
 /**
- * Real Google review excerpts curated to highlight different facets of the work.
- * To swap for live Google Reviews, replace this array with the output of the
- * Google Places API or a widget (Trustindex / EmbedSocial). The visual layout stays the same.
+ * Published testimonial inventory pending source, consent, and owner confirmation.
+ * Do not characterize entries as verified reviews or emit review schema.
  */
 const REVIEWS = [
   {
@@ -66,6 +66,8 @@ export default function Testimonials({
   eyebrow = 'What clients say',
   count = 3,
 }: TestimonialsProps) {
+  if (!canPublish(BUSINESS.reviews.testimonials)) return null;
+
   const shown = REVIEWS.slice(0, count);
 
   return (
@@ -78,20 +80,11 @@ export default function Testimonials({
           <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite leading-tight mb-8">
             {heading ?? (
               <>
-                5.0 stars across <span className="italic text-brand-gold-dark">8 reviews.</span>
+                Published client-story <span className="italic text-brand-gold-dark">inventory.</span>
               </>
             )}
           </h2>
-          <div className="flex items-center justify-center gap-3">
-            <div className="flex gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={18} className="text-brand-gold fill-brand-gold" strokeWidth={0} />
-              ))}
-            </div>
-            <span className="font-sans text-sm text-brand-muted font-light">
-              Verified on Google
-            </span>
-          </div>
+          <p className="font-sans text-sm text-brand-muted font-light">Source, consent, and current details are being confirmed.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -109,11 +102,7 @@ export default function Testimonials({
                 "{r.quote}"
               </p>
               <div className="border-t border-brand-dim/10 pt-6">
-                <div className="flex gap-0.5 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={11} className="text-brand-gold fill-brand-gold" strokeWidth={0} />
-                  ))}
-                </div>
+
                 <div className="font-display text-lg font-light text-brand-bonewhite mb-1">
                   {r.name}
                 </div>
@@ -130,12 +119,12 @@ export default function Testimonials({
 
         <div className="text-center mt-16">
           <a
-            href="https://g.page/r/CX3lEfKQkdqnEAE/review"
+            href={BUSINESS.urls.googleReviewUrl.value}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors border-b border-brand-gold/30 pb-2"
           >
-            Read all 8 reviews on Google →
+            Leave a Google review →
           </a>
         </div>
       </div>

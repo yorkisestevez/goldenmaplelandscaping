@@ -1,0 +1,14 @@
+{
+  "rows": 129,
+  "candidate_types": {
+    "BUSINESS_HOMEPAGE_ONLY": 1,
+    "CONSOLIDATED_SERVICES_REVIEW": 8,
+    "SAME_CITY_SERVICE_FAMILY": 30,
+    "NO_HONEST_EQUIVALENT_ESTABLISHED": 72,
+    "SAME_CITY_LOCATION_FALLBACK": 18
+  },
+  "proposed_destinations": 57,
+  "confirmed_redirects": 0,
+  "robots_allowed": 129,
+  "scope": "Reviewed conditional proposals; unknown metrics are null, never fabricated zero."
+}

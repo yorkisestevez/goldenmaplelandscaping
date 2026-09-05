@@ -31,7 +31,7 @@ const BLOG_POSTS = [
           {
     slug: "permacon-pavers-honest-review-2026",
     title: "Permacon Pavers: A Contractor's Honest Review (2026)",
-    excerpt: "A Barrie hardscape contractor's honest review of Permacon pavers: installed cost $18–26/sq ft, top product lines, and trade-offs vs Unilock and Techo-Bloc.",
+    excerpt: "A guide to comparing paver product lines, material characteristics, and questions to ask a contractor.",
     category: "Materials",
     readTime: "10 min",
     image: "/images/projects/Permacon-approved.jpeg",
@@ -63,7 +63,7 @@ const BLOG_POSTS = [
   {
     slug: "composite-decking-maintenance-ontario",
     title: "Composite Decking Maintenance: What Actually Needs Doing Each Year",
-    excerpt: "Ontario composite decks need 2 cleanings per year plus fall gap-clearing — the TimberTech routine that protects your 30-year warranty.",
+    excerpt: "A guide to reviewing composite-deck maintenance guidance and current manufacturer documentation.",
     category: "Decking",
     readTime: "10 min",
     image: "/images/projects/TimberTech Dark Cocoa PrimeCollection Composite Decking Beauty1.jpg",
@@ -71,7 +71,7 @@ const BLOG_POSTS = [
   {
     slug: "spring-cleanup-checklist-barrie",
     title: "Spring Cleanup Checklist for Barrie Homeowners: 12 Tasks That Matter",
-    excerpt: "After Barrie's freeze-thaw season, these 12 spring cleanup tasks protect interlocking pavers, drainage, and lawn areas from damage that costs 4x more to fix later.",
+    excerpt: "A seasonal checklist for inspecting interlocking pavers, drainage, and lawn areas.",
     category: "Seasonal",
     readTime: "10 min",
     image: "/images/projects/orillia-walkway.jpg",
@@ -79,7 +79,7 @@ const BLOG_POSTS = [
   {
     slug: "best-month-landscaping-project-barrie",
     title: "What Is the Best Month to Start a Landscaping Project in Barrie?",
-    excerpt: "In Barrie, late April–May and September are the best months to start landscaping — fall booking lead times drop to 3–5 weeks versus 8–14 in peak summer.",
+    excerpt: "A guide to planning a landscaping project around site conditions, scheduling, and seasonal considerations.",
     category: "Seasonal",
     readTime: "9 min",
     image: "/images/projects/paver-driveway.JPG",
@@ -135,7 +135,7 @@ const BLOG_POSTS = [
   {
     slug: "best-pavers-pool-deck-simcoe-county",
     title: "Best Pavers for Pool Decks in Simcoe County: Slip-Rated, Cool-Touch, Freeze-Thaw Tested",
-    excerpt: "Best pavers for Simcoe County pool decks — slip-rated R-11 or higher, cool-touch light colours, freeze-thaw certified. Budget $25-45/sq ft installed.",
+    excerpt: "A guide to evaluating paver features and confirming current manufacturer documentation for pool-deck projects.",
     category: "Materials",
     readTime: "9 min",
     image: "/images/projects/best.JPEG",
@@ -143,7 +143,7 @@ const BLOG_POSTS = [
   {
     slug: "interlocking-driveway-lifespan-ontario",
     title: "Interlocking Driveway Lifespan Ontario: How Long Pavers Really Last",
-    excerpt: "A properly installed interlocking driveway in Ontario will last 25-50+ years, depending on the base preparation, paver quality, and regular maintenance.",
+    excerpt: "A guide to the factors that affect interlocking-driveway maintenance and service life.",
     category: "Engineering",
     readTime: "9 min",
     image: "/images/projects/paver-driveway.JPG",
@@ -191,7 +191,7 @@ const BLOG_POSTS = [
   {
     slug: 'why-patios-sink-barrie',
     title: 'Why Patios Sink in Barrie (And How to Prevent It)',
-    excerpt: 'The freeze-thaw cycle destroys shallow bases. Learn why 12-16\" of compacted clear stone is the only way to build a patio that lasts in Simcoe County.',
+    excerpt: 'Learn which site, drainage, and base questions to ask before an interlocking patio project.',
     category: 'Engineering',
     readTime: '7 min',
     image: '/images/projects/IMG_4826.jpg',
@@ -206,7 +206,7 @@ const BLOG_POSTS = [
   },
   {
     slug: 'timbertech-vs-wood-decking-ontario',
-    title: 'TimberTech vs. Wood Decking: The Real Cost Over 20 Years',
+    title: 'TimberTech vs. Wood Decking: Questions to Compare',
     excerpt: 'Wood looks cheaper upfront — until you add up the staining, repairs, and replacements. Here\'s the honest math on composite vs. traditional decking in Ontario.',
     category: 'Decking',
     readTime: '8 min',
@@ -231,7 +231,7 @@ const BLOG_POSTS = [
   {
     slug: 'unilock-vs-techo-bloc-vs-permacon',
     title: 'Unilock vs. Techo-Bloc vs. Permacon: Which Paver is Right for Your Home?',
-    excerpt: 'We install all three brands. Here\'s an honest comparison of durability, aesthetics, warranty, and cost — straight from the contractor who works with them daily.',
+excerpt: 'A guide to comparing paver brands, product documentation, and project-specific material choices.',
     category: 'Materials',
     readTime: '8 min',
     image: '/images/projects/IHPX8926.JPEG',
@@ -255,7 +255,7 @@ const BLOG_POSTS = [
   {
     slug: 'winter-damage-prevention-interlocking',
     title: 'How to Protect Your Interlocking Stone From Winter Damage',
-    excerpt: 'Salt, plows, and ice can destroy your patio. Here are the maintenance tips that will keep your interlocking looking perfect through every Barrie winter.',
+    excerpt: 'Seasonal maintenance considerations for interlocking pavers, including salt, plows, and ice.',
     category: 'Maintenance',
     readTime: '5 min',
     image: '/images/projects/IMG_4826.jpg',
@@ -306,8 +306,8 @@ export default function Resources() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Landscaping Resources & Expert Guides | Barrie & Simcoe County | Golden Maple"
-        description="Expert landscaping guides, contractor hiring tips, material comparisons, and maintenance advice from Barrie's highest-rated hardscape contractor. Free resources to help you make informed decisions."
+        title="Landscaping Resources & Planning Guides | Barrie & Simcoe County | Golden Maple"
+        description="Landscaping guides, contractor hiring tips, material comparisons, and maintenance topics to help with project planning."
         canonical="https://goldenmaplelandscaping.ca/resources"
       />
 
@@ -325,7 +325,7 @@ export default function Resources() {
                 <span className="italic text-brand-gold-dark">smarter homeowners.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
-                Before you spend a dollar on your backyard, arm yourself with the knowledge that separates a 3-year patio from a 30-year one.
+                Use these guides to prepare questions about site conditions, materials, maintenance, and written project terms.
               </p>
             </motion.div>
           </div>
@@ -367,7 +367,7 @@ export default function Resources() {
                 <div className="flex-1">
                   <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3 block">Free Tool</span>
                   <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite mb-4 group-hover:text-brand-gold-dark transition-colors">What will your project cost?</h2>
-                  <p className="font-sans text-brand-muted font-light leading-relaxed">Price your patio, wall, deck or full backyard in about two minutes — real Carr Landscape Depot pricing, no signup to see your range, and every choice shows exactly what it adds.</p>
+                  <p className="font-sans text-brand-muted font-light leading-relaxed">Explore a planning tool, then confirm current scope, material availability, and pricing with the project team.</p>
                 </div>
                 <ArrowRight className="text-brand-gold shrink-0 group-hover:translate-x-2 transition-transform" size={24} strokeWidth={1.5} />
               </div>

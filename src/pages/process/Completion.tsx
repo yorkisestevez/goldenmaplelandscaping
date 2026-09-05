@@ -3,13 +3,14 @@ import { CheckCircle, Shield, Heart, ArrowRight, Phone, Award } from 'lucide-rea
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { trackCall } from '../../utils/analytics';
+import { BUSINESS, publicClaimCopy, publicContact } from '../../data/business';
 
 export default function Completion() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Landscape Warranty & Handover Barrie | 5-Year Guarantee | Golden Maple"
-        description="The Golden Maple completion process includes a final 25-point walkthrough and activation of your 5-year structural warranty for Simcoe County landscapes."
+        title="Landscape Project Completion & Handover Barrie | Golden Maple"
+        description="Learn how project completion, walkthroughs, and written workmanship terms are discussed for Simcoe County landscape projects."
       />
 
       <section className="section-padding pt-48">
@@ -29,7 +30,7 @@ export default function Completion() {
                 <span className="italic text-brand-gold-dark">Walkthrough.</span>
               </h1>
               <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
-                Our relationship doesn't end when the stones are set. We conduct a rigorous 25-point final inspection with you, ensuring every detail matches the architectural vision and activating your long-term craftsmanship warranty.
+                Project completion includes a walkthrough to review the agreed scope, care information, and any current written workmanship terms for your project.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
@@ -57,12 +58,12 @@ export default function Completion() {
             <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">The Golden Maple <br/> <span className="italic text-brand-gold-dark">Certification of Quality.</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
               {[
-                { title: "25-Point Final Inspection", desc: "A detailed checklist covering joint sand compaction, edge-restraint stability, and lighting alignment." },
-                { title: "Warranty Activation", desc: "Official activation of our 5-year structural craftsmanship warranty, giving you absolute peace of mind." },
-                { title: "Maintenance Education", desc: "We provide your customized maintenance guide for stone, decking, and plantings to ensure long-term beauty." },
-                { title: "In-lite System Handover", desc: "Walking you through your smart landscape lighting app and ensuring all timers are set to your preference." },
-                { title: "Final Site Wash-Down", desc: "We leave your property in spotless condition, using power-washing to remove any construction dust or debris." },
-                { title: "Professional Photography", desc: "We may request a final session to photograph your transformated space for our Simcoe County portfolio." }
+                { title: "Final Walkthrough", desc: "A project-specific review of the completed scope and any questions you have about the work." },
+                { title: "Written Terms", desc: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, "Current written workmanship terms can be reviewed for your project.") },
+                { title: "Care Information", desc: "Care and maintenance considerations can be discussed for the materials selected for your project." },
+                { title: "System Handover", desc: "Where applicable, project-specific product information and operating details can be reviewed." },
+                { title: "Site Closeout", desc: "Closeout details are confirmed against the project-specific scope." },
+                { title: "Photography Permission", desc: "Any request to photograph a completed space is discussed separately with the property owner." }
               ].map((item, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 group hover:border-brand-gold/50 transition-all duration-300">
                   <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-6">{item.title}</h3>
@@ -77,9 +78,9 @@ export default function Completion() {
                <Award size={200} />
             </div>
             <div className="max-w-4xl mx-auto">
-              <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite mb-12">Security in a 5-Year Structural Warranty.</h2>
+              <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite mb-12">Clear Completion Details.</h2>
               <p className="font-sans text-xl text-brand-muted leading-relaxed font-light mb-12">
-                We're a Barrie-based firm, which means our reputation is everything. We stand by our work so that you can enjoy your luxury outdoor sanctuary with confidence for decades, not just seasons.
+                Before closeout, ask to review the current written workmanship terms, care guidance, and project-specific next steps.
               </p>
               <Link to="/" className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
                 <span>Back to Home</span>
@@ -98,8 +99,8 @@ export default function Completion() {
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
             <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
-            <a href="tel:7055003581" onClick={() => trackCall('completion_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
-              <Phone size={14} /> (705) 500-3581
+            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('completion_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
+              <Phone size={14} /> {publicContact.phoneDisplay}
             </a>
           </div>
         </div>

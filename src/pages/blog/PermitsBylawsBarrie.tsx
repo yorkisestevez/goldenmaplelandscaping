@@ -1,6 +1,7 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
 import { Link } from 'react-router-dom';
+import { BUSINESS } from '../../data/business';
 
 export default function PermitsBylawsBarrie() {
   const faqSchema = {
@@ -43,7 +44,7 @@ export default function PermitsBylawsBarrie() {
         "name": "Are there permits for outdoor fire pits in Barrie?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Barrie's Open Air Burning By-law (2018-014) permits gas-fueled fire features without a burn permit, but wood-burning open-air fires require a permit and follow strict size, distance, and weather conditions. The City of Barrie maintains a daily burn-status website. For details on natural gas fire features at a residential property, see our fire pit regulations guide."
+          "text": "Barrie's Open Air Burning By-law (2018-014) permits gas-fueled fire features without a burn permit, but wood-burning open-air fires require a permit and follow strict size, distance, and weather conditions. The City of Barrie maintains a daily burn-status website. For details on natural gas fire features at a residential property, see the fire pit regulations guide."
         }
       },
       {
@@ -75,11 +76,11 @@ export default function PermitsBylawsBarrie() {
         </p>
       </div>
 
-      <p>This guide is a non-legal reference. Bylaws change, lot conditions vary, and the responsibility to verify rests with the property owner. We've installed in every municipality covered below; the rules summarized here reflect what we file day-to-day in 2025–2026 — but always confirm with your local building department before signing anything.</p>
+      <p>This guide is a non-legal reference. Bylaws change, lot conditions vary, and the responsibility to verify rests with the property owner. Contractors have installed in every municipality covered below; the rules summarized here reflect what contractors file day-to-day in 2025–2026 — but always confirm with your local building department before signing anything.</p>
 
       <div className="not-prose my-10 p-7 rounded-2xl border border-brand-gold/30 bg-brand-surface flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
         <p className="font-sans text-sm text-brand-bonewhite/85 font-light mb-0 max-w-md">
-          We pull the permits, engage the P.Eng, and schedule the inspections for you — on every project. Get a written quote that accounts for it.
+          Confirm in writing who is responsible for permits, engineering, and inspections for the specific project. Get a written quote that accounts for it.
         </p>
         <Link to="/contact" className="btn-primary px-10 py-4 whitespace-nowrap shrink-0">Request a Quote</Link>
       </div>
@@ -157,7 +158,7 @@ export default function PermitsBylawsBarrie() {
         <li>Inspection at: footing/base, geogrid placement (each course), and final.</li>
       </ul>
 
-      <p>Engineering on a typical 1.2–1.8 m wall costs <strong>$1,500–$3,500</strong>. Permit fees add <strong>$200–$600</strong>. Reputable contractors include both in the contract; budget contractors leave them out and you discover the gap when the inspector shows up. We've seen homeowners pay <strong>$8,000+ to remove and rebuild</strong> walls that were built without permits when the city issued a stop-work order.</p>
+      <p>Engineering on a typical 1.2–1.8 m wall costs <strong>$1,500–$3,500</strong>. Permit fees add <strong>$200–$600</strong>. Reputable contractors include both in the contract; budget contractors leave them out and you discover the gap when the inspector shows up. Contractors have seen homeowners pay <strong>$8,000+ to remove and rebuild</strong> walls that were built without permits when the city issued a stop-work order.</p>
 
       <h2>Setback & Lot-Line Rules</h2>
 
@@ -191,15 +192,15 @@ export default function PermitsBylawsBarrie() {
 
       <p>Failed inspections cost time, not money — the inspector specifies what needs correction, you fix, and they return. A good contractor schedules inspections proactively and never builds past a stage that needs sign-off.</p>
 
-      <h2>How Golden Maple Handles This For You</h2>
+      <h2>Confirming Permit Responsibilities</h2>
 
-      <p>On every project we install:</p>
+      <p>For any project, confirm in writing:</p>
       <ul>
-        <li>We file <strong>Ontario One Call locates</strong> 7+ business days before excavation.</li>
-        <li>We engage a <strong>P.Eng on retaining walls 1 m+</strong> as part of the contract — engineering and permit fees are line items, not surprises.</li>
-        <li>We pull <strong>building permits</strong> for any project that needs them in Barrie, Innisfil, Oro-Medonte, Springwater, and Orillia.</li>
-        <li>We schedule and meet <strong>all building inspections</strong> with the city.</li>
-        <li>We provide a <strong>final letter of compliance</strong> for your records.</li>
+        <li>Contractors file <strong>Ontario One Call locates</strong> 7+ business days before excavation.</li>
+        <li>Contractors engage a <strong>P.Eng on retaining walls 1 m+</strong> as part of the contract — engineering and permit fees are line items, not surprises.</li>
+        <li>Identify who will apply for any required <strong>building permits</strong> and confirm local requirements with the authority having jurisdiction.</li>
+        <li>Contractors schedule and meet <strong>all building inspections</strong> with the city.</li>
+        <li>Confirm what close-out documents, if any, will be provided for your records.</li>
       </ul>
 
       <h2>Frequently Asked Questions</h2>
@@ -207,20 +208,20 @@ export default function PermitsBylawsBarrie() {
       <h3>Can I do permit work myself to save money?</h3>
       <p>You can pull a homeowner permit for some work, but you take on liability. If a wall fails or fire feature causes damage and there's no licensed contractor on file, your homeowner's insurance may deny the claim. The 5–10% fee a good contractor charges to manage permits is dwarfed by what an insurance denial costs.</p>
 
-      <h3>What if my contractor says "we don't need a permit"?</h3>
+      <h3>What if my contractor says "contractors don't need a permit"?</h3>
       <p>Verify in writing with the municipality. Get the response. If the contractor is wrong and the city shows up, you (the homeowner) wear the consequences — stop-work orders, removal orders, fines. A good contractor will give you the by-law section number that exempts the work. A bad one will say "trust me."</p>
 
       <h3>How long does a Barrie building permit take?</h3>
-      <p>Standard residential permits in Barrie process in <strong>10–15 business days</strong> when the application is complete. Conservation authority approvals (LSRCA, NVCA) add <strong>30+ days</strong>. Plan accordingly — this is a real factor in our spring booking timeline.</p>
+      <p>Standard residential permits in Barrie process in <strong>10–15 business days</strong> when the application is complete. Conservation authority approvals (LSRCA, NVCA) add <strong>30+ days</strong>. Plan accordingly — this is a real factor in the spring booking timeline.</p>
 
       <h3>What about HOA / subdivision rules?</h3>
       <p>Newer Simcoe County subdivisions (Mapleview Heights, Bayshore, Snow Valley) may have architectural review committees that require approval before any exterior change, regardless of municipal permit status. Always check your subdivision agreement.</p>
 
       <h2>Plan Your Permitted Project</h2>
-      <p>Every Golden Maple quote includes a permit and engineering line item where required — no surprise costs mid-build. Start with the <Link to="/cost-estimator" className="text-brand-gold-dark hover:underline">cost estimator</Link> to see your project range, then book an estimate request to confirm what permits apply to your specific lot.</p>
+      <p>Confirm permit, engineering, and related fee responsibilities in the written quote before work begins. Start with the <Link to="/cost-estimator" className="text-brand-gold-dark hover:underline">cost estimator</Link> to see your project range, then book an estimate request to confirm what permits apply to your specific lot.</p>
 
       <p>Related reading: <Link to="/resources/retaining-wall-guide-simcoe-county" className="text-brand-gold-dark hover:underline">Retaining wall engineering guide</Link> · <Link to="/resources/fire-pit-regulations-barrie" className="text-brand-gold-dark hover:underline">Barrie fire pit regulations</Link> · <Link to="/resources/best-time-install-patio-ontario" className="text-brand-gold-dark hover:underline">Best time to install in Ontario</Link>.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has pulled permits and worked to local bylaws across Barrie, Innisfil, Oro-Medonte, and Springwater. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the rule on permits is the one applied to every job: confirm the requirement with the municipality in writing before the excavator arrives, not after." />
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

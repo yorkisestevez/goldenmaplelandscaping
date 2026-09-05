@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowLeft, ArrowRight, MapPin, Calendar, Ruler, Shield } from 'lucide-react';
 import SEO from '../components/SEO';
+import { BUSINESS, canPublish } from '../data/business';
 
 interface ProjectData {
   slug: string;
@@ -208,6 +209,7 @@ const PROJECT_DATA: Record<string, ProjectData> = {
 export default function ProjectDetail() {
   const { slug } = useParams();
   const project = slug ? PROJECT_DATA[slug] : null;
+  const portfolioVerified = canPublish(BUSINESS.reviews.portfolio) && canPublish(BUSINESS.reviews.photoRights);
 
   if (!project) {
     return (
@@ -216,6 +218,20 @@ export default function ProjectDetail() {
           <h1 className="font-display text-4xl text-brand-bonewhite mb-6">Project Not Found</h1>
           <Link to="/portfolio" className="btn-primary">Back to Portfolio</Link>
         </div>
+      </div>
+    );
+  }
+
+  if (!portfolioVerified) {
+    return (
+      <div className="bg-brand-nearblack min-h-screen">
+        <SEO title="Outdoor-living planning reference | Golden Maple" description="Discuss outdoor-living possibilities and request relevant project examples for your property." canonical={`${BUSINESS.canonicalUrl}/portfolio/${project.slug}`} />
+        <section className="section-padding pt-40 md:pt-48"><div className="container-custom max-w-4xl">
+          <Link to="/portfolio" className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors mb-12"><ArrowLeft size={14} strokeWidth={2} /> Back to inspiration gallery</Link>
+          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">Planning reference</span>
+          <h1 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-[1.1] mb-10">Plan your outdoor space</h1>
+          <div className="bg-brand-surface border-l-2 border-brand-gold p-10 rounded-[2px]"><p className="font-sans text-lg text-brand-muted leading-relaxed font-light">Tell us how you want to use your outdoor space. Ask about materials, site conditions, the proposed scope and available project examples before choosing an approach.</p><Link to="/contact" className="btn-primary inline-block mt-10">Start a project conversation</Link></div>
+        </div></section>
       </div>
     );
   }

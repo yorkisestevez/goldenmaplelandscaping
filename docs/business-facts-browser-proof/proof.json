@@ -1,0 +1,1750 @@
+{
+  "pages": [
+    {
+      "title": "Barrie Landscaping Company | Patios, Interlock & Retaining Walls | Golden Maple Landscaping",
+      "h1": [
+        "The backyard you've\nalways pictured."
+      ],
+      "phones": [
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015"
+      ],
+      "emails": [
+        "mailto:yorkis@goldenmaplelandscaping.ca"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": [
+                "LocalBusiness",
+                "HomeAndConstructionBusiness",
+                "GeneralContractor"
+              ],
+              "@id": "https://goldenmaplelandscaping.ca/#business",
+              "name": "Golden Maple Landscaping",
+              "description": "Golden Maple Landscaping: discuss Interlocking stone, Composite decking, Retaining walls, Landscape design, Outdoor living / backyard transformations. Confirm project scope and availability for your address.",
+              "url": "https://goldenmaplelandscaping.ca/",
+              "image": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "telephone": "+17053008015",
+              "email": "yorkis@goldenmaplelandscaping.ca",
+              "priceRange": "$$$",
+              "currenciesAccepted": "CAD",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Barrie",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              },
+              "sameAs": [
+                "https://www.facebook.com/GoldenMaplegroup",
+                "https://www.instagram.com/goldenmaplelandscaping",
+                "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+                "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+                "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+              ]
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LandscapeService",
+          "name": "Golden Maple Landscaping",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "@id": "https://goldenmaplelandscaping.ca/#business",
+          "url": "https://goldenmaplelandscaping.ca",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.facebook.com/GoldenMaplegroup",
+            "https://www.instagram.com/goldenmaplelandscaping",
+            "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+            "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+          ],
+          "areaServed": [
+            {
+              "@type": "City",
+              "name": "Barrie"
+            },
+            {
+              "@type": "City",
+              "name": "Innisfil"
+            },
+            {
+              "@type": "City",
+              "name": "Oro-Medonte"
+            },
+            {
+              "@type": "City",
+              "name": "Springwater"
+            },
+            {
+              "@type": "City",
+              "name": "Orillia"
+            },
+            {
+              "@type": "City",
+              "name": "Wasaga Beach"
+            },
+            {
+              "@type": "City",
+              "name": "Midland"
+            },
+            {
+              "@type": "City",
+              "name": "Collingwood"
+            }
+          ]
+        }
+      ],
+      "canonical": "https://goldenmaplelandscaping.ca/",
+      "overflow": false,
+      "text": "GOLDEN MAPLE\nLANDSCAPING\nBARRIE, SIMCOE COUNTY & COTTAGE COUNTRY\nThe backyard you've\nalways pictured.\n\nYou've spent enough nights staring out the window at a yard that doesn't match the home you've built. Let's plan an outdoor space around how your family wants to live \u2014 from the materials underfoot to the places you gather.\n\nEXPLORE PROJECT POSSIBILITIES\nOR CALL (705) 300-8015\nPROJECT CONVERSATION\nTell us about your space.\n\nShare your priorities, location and budget so we can discuss a suitable next step.\n\nFULL NAME\nEMAIL\nPHONE\nINVESTMENT RANGE\nChoose a ballpark\u2026\nUnder $25k\n$25k \u2013 $50k\n$50k \u2013 $100k\n$100k \u2013 $250k\n$250k+\nNot sure yet\n\nA ballpark is perfect \u2014 it helps us reply with real options. Not sure? Get a quick estimate\n\nANYTHING WE SHOULD KNOW? (optional)\nSEND MY PROJECT DETAILS\n\nNo obligation \u00b7 We never share your information.\n\nDISCUSS YOUR PROJECT WITH OUR TEAM.\n\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\n\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\n\nReviews\nGOOGLE\nDISCUSS YOUR PROJECT WITH OUR TEAM.\nSince\n2020\nPUBLISHED BUSINESS HISTORY; CONFIRM CURRENT DETAILS DIRECTLY.\nScope\nSITE PREPARATION\nFINAL DEPTHS AND MATERIALS ARE PROJECT-SPECIFIC.\nTerms\nPROJECT DOCUMENTATION\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nOUR EXPERTISE\nMastery in every detail.\nVIEW ALL SERVICES\nInterlocking Stone & Patios\n\nThe patio where your kids grow up, where Saturday dinners happen, where life slows down. We build it on a foundation that won't shift \u2014 ever.\n\nEXPLORE SERVICE\nRetaining Walls\n\nSlope problems become your home's best architectural feature. Precision-engineered walls that hold back the earth and turn unusable land into living space.\n\nEXPLORE SERVICE\nLandscape Design\n\nWalk through your future backyard in vivid 3D before we move a single stone. See the vision, refine it, fall in love with it \u2014 then watch us build it.\n\nEXPLORE SERVICE\nComposite Decking\n\nThe look of real wood with none of the maintenance headaches. No staining, no rotting, no splinters \u2014 just 30+ years of barefoot summer evenings.\n\nEXPLORE SERVICE\nOutdoor Kitchens\n\nStop running in and out of the house. Cook, serve, and entertain in one seamless space designed around how you actually host.\n\nEXPLORE SERVICE\nFire Features\n\nThe gathering spot that turns a cool Simcoe County evening into the best part of your week. Custom fire pits that become your family's favourite place.\n\nEXPLORE SERVICE\nLandscape Lighting\n\nYour outdoor space doesn't clock out at sunset. Professional lighting that makes your property feel safe, dramatic, and alive after dark.\n\nEXPLORE SERVICE\n\nYorkis Estevez\n\nFOUNDER & LEAD BUILDER\n\nAI-generated founder illustration \u2014 not a photograph.\n\nA NOTE FROM THE FOUNDER\nBuilt like it's\nour own backyard.\n\nStart with the way you want to use your backyard, then work through the details that make the plan practical.\n\nIn an industry known for shortcuts, we'd rather take the extra time and do it properly. When a family is going to live with a space for the next twenty years, it's worth building right the first time.\n\nDiscuss who will supervise the work, how site protection and communication will be handled, and which excavation, drainage and material specifications belong in your written scope.\n\nMy promise is simple: an honest quote, careful work, and a backyard your family will actually want to spend time in.\n\nYorkis Estevez\n\nFOUNDER & LEAD BUILDER\n\nDIRECT LINE\n(705) 300-8015\nSOUND FAMILIAR?\nYou've been burned\nby a contractor before.\n\nCompare more than the headline price. Ask each contractor to explain site preparation, drainage, written scope, payment stages and how changes will be approved.\n\nYour Patio is Sinking After One Winter\nTYPICAL:\n\nThey dug 6 inches, threw down some gravel, and called it a base. Now your stones are uneven and you're back to square one.\n\nOUR WAY:\n\nWe review drainage, soil, access, and the project-specific excavation/base plan before finalizing a written scope.\n\nThey Took Your Deposit and Disappeared\nTYPICAL:\n\nThey were responsive before you paid. Now it's been three weeks with no updates, no timeline, and no one answering the phone.\n\nOUR WAY:\n\nYorkis is on-site personally. You get daily photo updates and direct communication from the owner \u2014 not an answering machine.\n\nThe 'Final' Price Kept Climbing\nTYPICAL:\n\nWhat started as a $15K quote turned into $22K after 'unforeseen' extras. Sound familiar?\n\nOUR WAY:\n\nWe give you a fixed, detailed quote upfront. The price we agree on is the price you pay. No exceptions, no surprises.\n\nYour Property Looked Like a Construction Zone\nTYPICAL:\n\nMaterials dumped on the lawn, equipment blocking the driveway, debris everywhere for weeks.\n\nOUR WAY:\n\nOur crew cleans and organizes the site every single day. Your neighbours won't even know we're there.\n\nTHE GOLDEN MAPLE STANDARD\nWhy your neighbour's\npatio is already sinking.\nProject-specific site preparation\n\nDrainage, soil conditions, access, and final excavation/base depth are reviewed for the written scope of each project.\n\nDocumentation before work begins\n\nAsk us for current coverage documentation.\n\nWritten project terms\n\nAsk for the current written workmanship terms for your project.\n\nRECENT BUILDS\nTwo ways to live outside.\nCOTTAGE COUNTRY\nLakeside composite deck, on the water.\n\nTimberTech composite over an aluminum frame, a louvered pergola for shade on demand, and a glass railing that gets out of the view. Built to take Simcoe County winters and look the same when the snow melts.\n\nTIMBERTECH AZEK \u00b7 ALUMINUM PERGOLA \u00b7 GLASS RAILING\nBARRIE RESIDENTIAL\nSide-yard paver patio with a hand-set inlay.\n\nPermacon pavers with a centred diamond inlay, a gravel drainage border, and a 14-inch open-graded base under everything. The kind of detail that reads quietly from the driveway and holds up for decades.\n\nPERMACON \u00b7 14\" STRUCTURAL BASE \u00b7 HAND-SET INLAY\nVIEW MORE PROJECTS\nTHE PROCESS\nA partnership,\nnot just a project.\n\nPremium spaces require meticulous planning. Start with a project estimate request \u2014 honest scope and an honest budget conversation. Everything else flows from there.\n\nFree Estimate\n\nContact us to confirm the current consultation and design scope. We'll listen to what you're imagining, ask the right questions, and tell you honestly whether your project is a fit for what we do. Any next step is confirmed with you before it is scheduled.\n\nOn-Site Architectural Assessment\n\nWe walk your property, listen to your lifestyle needs, and evaluate the architectural possibilities.\n\nCurated Material Selection\n\nSelection of premium, enduring materials that complement your home's existing aesthetic.\n\n3D Concept Visualization\n\nVisualize your future space with stunning accuracy before a single stone is moved.\n\nTELL US YOUR BUDGET\nVIEW FULL 6-STEP PROCESS\nREAL HOMEOWNERS. REAL RESULTS.\nDon't take our word for it.\n\n\"We got three quotes. Two contractors wanted to dig 6 inches. Yorkis said he'd go 14. Three winters later, not a single stone has moved. You get what you pay for \u2014 and with Golden Maple, you get perfection.\"\n\nMichael R.\n\nBARRIE, ON\n\n\"I was nervous spending this much on our backyard. Then Yorkis showed us the 3D render and I literally started tearing up \u2014 it was the exact space I'd been dreaming about since we moved to Innisfil. And the finished product? Even better.\"\n\nSarah L.\n\nINNISFIL, ON\n\n\"After being ghosted by two other contractors, Golden Maple was a completely different experience. Daily updates, a clean site, and they finished on time. Our neighbours keep coming over to ask who did the work.\"\n\nDavid K.\n\nMIDHURST, ON\n\nCOMMON QUESTIONS\nExpert Insights.\nWhy do you dig so much deeper than other contractors?\n\nFreeze-thaw, drainage, soil, access, and the intended use all affect site preparation. We confirm the project-specific excavation and base plan in the written scope.\n\nWhy TimberTech instead of regular wood decking?\n\nBecause nobody wants to spend their weekends sanding and staining a deck. TimberTech AZEK doesn't rot, warp, or splinter \u2014 even after decades of Simcoe County snow and ice. It looks like real wood without any of the maintenance, and it comes with up to a 50-year warranty.\n\nWhat if something goes wrong after the project is done?\n\nAsk for the current written workmanship terms for your project.\n\nIs there a fee to get started?\n\nContact us to confirm the current consultation and design scope.\n\nFREE RESOURCE\nThe Outdoor Living\nBuyers Guide\nWhat to expect from the design-build process\nMaterial comparisons: interlock, natural stone, porcelain\nHow to budget for a $40K\u2013$90K+ project\nQuestions to ask every contractor\nAsk for the current written workmanship terms for your project.\nDOWNLOAD THE GUIDE\n\nINSTANT PDF ACCESS\n\nNO OBLIGATION\nRequest a\nProject Estimate\n\nTell us about your project and we will follow up about next steps.\n\nROUGH BUDGET RANGE\nTIMELINE CONFIRMATION\nNO SITE VISIT REQUIRED\nUPGRADE AT ANY TIME\nType of Project\nInterlocking Driveway or Patio\nNatural Stone or Flagstone\nPorcelain Installation\nRetaining Wall\nSteps & Walkways\nComposite Deck\nOutdoor Kitchen or Fire Feature\nFull Backyard Transformation\nOther / Not Sure Yet\nApproximate Budget (Optional)\nUnder $20K\n$20K\u2013$40K\n$40K\u2013$60K\n$60K\u2013$90K\n$90K+\nNot sure yet\nSEND MY REQUEST\nSERIOUS BUYERS\nBook a Design Package\n\nContact us to confirm the current consultation and design scope.\n\nTELL US YOUR BUDGET\nThis time next year,\nyou could be living in it.\n\nTell us what you're picturing and your planning budget. We can discuss scope, availability and whether the proposed investment fits your project.\n\nSTART WITH A PROJECT CONVERSATION \u00b7 CURRENT SCOPE AND TIMING CONFIRMED DIRECTLY\nGET MY ESTIMATE\nGOLDEN MAPLE\nLANDSCAPING\n\nArchitectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nNAVIGATION\nServices\nPortfolio\nOur Story\nContact\nService Areas\nEXPERTISE\nInterlocking & Hardscape\nComposite Decking\nNatural Stone & Flagstone\nPorcelain Installation\nRetaining Walls\nCONNECT\nBarrie, Simcoe County & Cottage Country\n(705) 300-8015\nyorkis@goldenmaplelandscaping.ca\n\n\u00a9 2026 GOLDEN MAPLE LANDSCAPING. ARCHITECTURAL PRECISION.\n\nBARRIE\nINNISFIL\nORO-MEDONTE\nSPRINGWATER\nPRIVACY\nTERMS\nCALL\nGET MY ESTIMATE",
+      "route": "/",
+      "status": 200,
+      "observed_at": "2026-09-05T18:09:07.339537+00:00"
+    },
+    {
+      "title": "Start a Golden Maple Project | Premium Hardscape Barrie | Golden Maple Landscaping",
+      "h1": [
+        "Start a project conversation.\nConfirm current scope and next steps."
+      ],
+      "phones": [
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015"
+      ],
+      "emails": [
+        "mailto:yorkis@goldenmaplelandscaping.ca",
+        "mailto:yorkis@goldenmaplelandscaping.ca"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": [
+                "LocalBusiness",
+                "HomeAndConstructionBusiness",
+                "GeneralContractor"
+              ],
+              "@id": "https://goldenmaplelandscaping.ca/#business",
+              "name": "Golden Maple Landscaping",
+              "description": "Golden Maple Landscaping: discuss Interlocking stone, Composite decking, Retaining walls, Landscape design, Outdoor living / backyard transformations. Confirm project scope and availability for your address.",
+              "url": "https://goldenmaplelandscaping.ca/",
+              "image": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "telephone": "+17053008015",
+              "email": "yorkis@goldenmaplelandscaping.ca",
+              "priceRange": "$$$",
+              "currenciesAccepted": "CAD",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Barrie",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              },
+              "sameAs": [
+                "https://www.facebook.com/GoldenMaplegroup",
+                "https://www.instagram.com/goldenmaplelandscaping",
+                "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+                "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+                "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+              ]
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LandscapeService",
+          "name": "Golden Maple Landscaping",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "@id": "https://goldenmaplelandscaping.ca/#business",
+          "url": "https://goldenmaplelandscaping.ca",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.facebook.com/GoldenMaplegroup",
+            "https://www.instagram.com/goldenmaplelandscaping",
+            "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+            "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+          ],
+          "areaServed": [
+            {
+              "@type": "City",
+              "name": "Barrie"
+            },
+            {
+              "@type": "City",
+              "name": "Innisfil"
+            },
+            {
+              "@type": "City",
+              "name": "Oro-Medonte"
+            },
+            {
+              "@type": "City",
+              "name": "Springwater"
+            },
+            {
+              "@type": "City",
+              "name": "Orillia"
+            },
+            {
+              "@type": "City",
+              "name": "Wasaga Beach"
+            },
+            {
+              "@type": "City",
+              "name": "Midland"
+            },
+            {
+              "@type": "City",
+              "name": "Collingwood"
+            }
+          ]
+        }
+      ],
+      "canonical": "https://goldenmaplelandscaping.ca/contact/",
+      "overflow": false,
+      "text": "GOLDEN MAPLE\nLANDSCAPING\n\nDISCUSS YOUR PROJECT WITH OUR TEAM.\n\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\n\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\n\nGET YOUR ESTIMATE\nStart a project conversation.\nConfirm current scope and next steps.\n\nTell us your name, phone, and email \u2014 and a little about the space if you have it. We can discuss scope, availability and whether the project is a fit. Budget is optional.\n\nTell us about your space\n\nName, phone, and email are enough to start. A ballpark budget helps us reply with real options, but it's optional. Yorkis comes back personally with an honest scope and timeline. No call required to get started.\n\nFULL NAME *\nPHONE NUMBER *\nEMAIL ADDRESS *\nSERVICE INTEREST\nBackyard Outdoor Living / Premium Patio\nPatio + Retaining Wall / Steps / Drainage\nSloped Backyard / Retaining Wall Solution\nPremium Patio Rebuild\nFull Backyard Transformation\nFront Entrance / Walkway Package\nOther Hardscape Project\nINVESTMENT RANGE (OPTIONAL)\nChoose a ballpark\u2026\nUnder $25k\n$25k \u2013 $50k\n$50k \u2013 $100k\n$100k \u2013 $250k\n$250k+\nNot sure yet\nPROJECT DETAILS\nSEND MY PROJECT DETAILS\nWe only contact you about your project. No spam, ever \u2014 and we never share your information.\nGet in Touch\nOur Location\n\nBarrie, Ontario, Canada\n\nPhone\n(705) 300-8015\nEmail\nyorkis@goldenmaplelandscaping.ca\nHours\n\nMon - Fri: 8:00 AM - 6:00 PM\n\nOUR CREDENTIALS\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nENGINEERING STANDARD\nGOLDEN MAPLE\nLANDSCAPING\n\nArchitectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nNAVIGATION\nServices\nPortfolio\nOur Story\nContact\nService Areas\nEXPERTISE\nInterlocking & Hardscape\nComposite Decking\nNatural Stone & Flagstone\nPorcelain Installation\nRetaining Walls\nCONNECT\nBarrie, Simcoe County & Cottage Country\n(705) 300-8015\nyorkis@goldenmaplelandscaping.ca\n\n\u00a9 2026 GOLDEN MAPLE LANDSCAPING. ARCHITECTURAL PRECISION.\n\nBARRIE\nINNISFIL\nORO-MEDONTE\nSPRINGWATER\nPRIVACY\nTERMS\nCALL\nGET MY ESTIMATE",
+      "route": "/contact/",
+      "status": 200,
+      "observed_at": "2026-09-05T18:09:08.507535+00:00"
+    },
+    {
+      "title": "About Golden Maple Landscaping | Barrie ON",
+      "h1": [
+        "We build spaces\nfamilies enjoy for years."
+      ],
+      "phones": [
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015"
+      ],
+      "emails": [
+        "mailto:yorkis@goldenmaplelandscaping.ca"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": [
+                "LocalBusiness",
+                "HomeAndConstructionBusiness",
+                "GeneralContractor"
+              ],
+              "@id": "https://goldenmaplelandscaping.ca/#business",
+              "name": "Golden Maple Landscaping",
+              "description": "Golden Maple Landscaping: discuss Interlocking stone, Composite decking, Retaining walls, Landscape design, Outdoor living / backyard transformations. Confirm project scope and availability for your address.",
+              "url": "https://goldenmaplelandscaping.ca/",
+              "image": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "telephone": "+17053008015",
+              "email": "yorkis@goldenmaplelandscaping.ca",
+              "priceRange": "$$$",
+              "currenciesAccepted": "CAD",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Barrie",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              },
+              "sameAs": [
+                "https://www.facebook.com/GoldenMaplegroup",
+                "https://www.instagram.com/goldenmaplelandscaping",
+                "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+                "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+                "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+              ]
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LandscapeService",
+          "name": "Golden Maple Landscaping",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "@id": "https://goldenmaplelandscaping.ca/#business",
+          "url": "https://goldenmaplelandscaping.ca",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.facebook.com/GoldenMaplegroup",
+            "https://www.instagram.com/goldenmaplelandscaping",
+            "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+            "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+          ],
+          "areaServed": [
+            {
+              "@type": "City",
+              "name": "Barrie"
+            },
+            {
+              "@type": "City",
+              "name": "Innisfil"
+            },
+            {
+              "@type": "City",
+              "name": "Oro-Medonte"
+            },
+            {
+              "@type": "City",
+              "name": "Springwater"
+            },
+            {
+              "@type": "City",
+              "name": "Orillia"
+            },
+            {
+              "@type": "City",
+              "name": "Wasaga Beach"
+            },
+            {
+              "@type": "City",
+              "name": "Midland"
+            },
+            {
+              "@type": "City",
+              "name": "Collingwood"
+            }
+          ]
+        }
+      ],
+      "canonical": "https://goldenmaplelandscaping.ca/about/",
+      "overflow": false,
+      "text": "GOLDEN MAPLE\nLANDSCAPING\n\nDISCUSS YOUR PROJECT WITH OUR TEAM.\n\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\n\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\n\nWHO WE ARE\nWe build spaces\nfamilies enjoy for years.\n\nYour backyard should be the place your family actually wants to be \u2014 dinner on the patio, kids on the lawn, coffee out back before the day starts.\n\nOur job is to build it so it stays that way, season after season.\n\nWe're a Barrie-based hardscape crew, and our approach is simple: listen to how you want to live outside, quote it honestly, and build it properly the first time \u2014 engineering before shortcuts, craft before speed.\n\nYour home is one of the biggest investments you'll ever make. The work we do outside of it should honour that \u2014 and be a pleasure to live with every single day.\n\nGET MY ESTIMATE\nSEE OUR WORK\n\nYorkis Estevez\n\nFOUNDER & LEAD BUILDER\n\nCoverage documentation\n\nAsk us for current coverage documentation.\n\nProject documentation\n\nAsk us for current coverage documentation.\n\nWritten workmanship terms\n\nAsk for the current written workmanship terms for your project.\n\nSite-specific preparation\n\nFinal excavation, drainage, and base details are confirmed for each written project scope.\n\nTHE GOLDEN MAPLE DIFFERENCE\nBuilt right\nfrom the ground up.\nTHE INDUSTRY STANDARD\n\u2715\nShallow 6\" bases that sink after one winter.\n\u2715\nCommunication that stops after the deposit.\n\u2715\nHidden fees and \"surprise\" mid-project costs.\n\u2715\nMessy job sites and zero property protection.\nTHE GOLDEN MAPLE WAY\n\u2713\nProject-specific excavation, drainage, and base planning.\n\u2713\nProject communication details confirmed in the written scope.\n\u2713\nWritten scope and current project terms confirmed before work begins.\n\u2713\nCurrent written workmanship terms confirmed before work begins.\n\u2713\nSite-management details confirmed in the written scope.\nMANUFACTURING PARTNERS\nElite Materials for\nElite Construction.\nUNILOCK\n\nHIGHEST QUALITY PAVERS\n\nReserved for our higher-end architectural projects, Unilock represents the absolute peak of hardscape durability and aesthetic luxury.\n\nTECHO-BLOC\n\nMATERIAL OPTIONS\n\nAsk us to confirm current material options and availability for your project.\n\nPERMACON\n\nMATERIAL OPTIONS\n\nAsk us to confirm current material options and availability for your project.\n\nA LETTER FROM YORKIS\n\nIf you're like most homeowners we meet, you've heard the stories \u2014 the patio that sank after one winter, the contractor who went quiet after the deposit, the quote that grew halfway through the job. Being careful about who you hire isn't paranoia. It's smart.\n\nSo instead of telling you how much we love this work (we do), here's what you can actually expect when we build for you: written project terms and communication details confirmed before work begins.\n\nThe parts you'll never see still matter: drainage, access, soil conditions, and detailing. Those details are reviewed before the written scope is finalized.\n\nWe're not trying to be the cheapest or the biggest. We're trying to be the company you're glad you picked \u2014 five years from now, not just on handover day.\n\nAsk for the current written workmanship terms for your project.\n\nIf you're planning a space your family will enjoy for years to come, I'd love to walk your property with you \u2014 honest scope, honest budget, no pressure.\n\nYorkis Estevez\n\nFOUNDER & LEAD BUILDER\n\nLet's build something\nyour family will love.\n\nStart with a project conversation. We will confirm the current consultation, site-visit, design, and project-scope details directly.\n\nGET MY ESTIMATE\nGOLDEN MAPLE\nLANDSCAPING\n\nArchitectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nNAVIGATION\nServices\nPortfolio\nOur Story\nContact\nService Areas\nEXPERTISE\nInterlocking & Hardscape\nComposite Decking\nNatural Stone & Flagstone\nPorcelain Installation\nRetaining Walls\nCONNECT\nBarrie, Simcoe County & Cottage Country\n(705) 300-8015\nyorkis@goldenmaplelandscaping.ca\n\n\u00a9 2026 GOLDEN MAPLE LANDSCAPING. ARCHITECTURAL PRECISION.\n\nBARRIE\nINNISFIL\nORO-MEDONTE\nSPRINGWATER\nPRIVACY\nTERMS\nCALL\nGET MY ESTIMATE",
+      "route": "/about/",
+      "status": 200,
+      "observed_at": "2026-09-05T18:09:09.643184+00:00"
+    },
+    {
+      "title": "Interlocking in Innisfil | Premium Interlocking Stone Installation | Golden Maple Landscaping",
+      "h1": [
+        "Interlocking in\nInnisfil, Ontario."
+      ],
+      "phones": [
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015"
+      ],
+      "emails": [
+        "mailto:yorkis@goldenmaplelandscaping.ca"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": [
+                "LocalBusiness",
+                "HomeAndConstructionBusiness",
+                "GeneralContractor"
+              ],
+              "@id": "https://goldenmaplelandscaping.ca/#business",
+              "name": "Golden Maple Landscaping",
+              "description": "Golden Maple Landscaping: discuss Interlocking stone, Composite decking, Retaining walls, Landscape design, Outdoor living / backyard transformations. Confirm project scope and availability for your address.",
+              "url": "https://goldenmaplelandscaping.ca/",
+              "image": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "telephone": "+17053008015",
+              "email": "yorkis@goldenmaplelandscaping.ca",
+              "priceRange": "$$$",
+              "currenciesAccepted": "CAD",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Barrie",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              },
+              "sameAs": [
+                "https://www.facebook.com/GoldenMaplegroup",
+                "https://www.instagram.com/goldenmaplelandscaping",
+                "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+                "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+                "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+              ]
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LandscapeService",
+          "name": "Golden Maple Landscaping",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "@id": "https://goldenmaplelandscaping.ca/#business",
+          "url": "https://goldenmaplelandscaping.ca",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.facebook.com/GoldenMaplegroup",
+            "https://www.instagram.com/goldenmaplelandscaping",
+            "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+            "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+          ],
+          "areaServed": [
+            {
+              "@type": "City",
+              "name": "Barrie"
+            },
+            {
+              "@type": "City",
+              "name": "Innisfil"
+            },
+            {
+              "@type": "City",
+              "name": "Oro-Medonte"
+            },
+            {
+              "@type": "City",
+              "name": "Springwater"
+            },
+            {
+              "@type": "City",
+              "name": "Orillia"
+            },
+            {
+              "@type": "City",
+              "name": "Wasaga Beach"
+            },
+            {
+              "@type": "City",
+              "name": "Midland"
+            },
+            {
+              "@type": "City",
+              "name": "Collingwood"
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Service",
+              "@id": "https://goldenmaplelandscaping.ca/services/interlocking-innisfil#service",
+              "name": "Interlocking Stone Installation in Innisfil",
+              "serviceType": "Interlocking Stone Installation",
+              "description": "Premium interlocking stone installation in Innisfil, Simcoe County. $55\u2013$85 per square foot installed. Ask for the current written workmanship terms for your project. Contact us to confirm project scope.",
+              "provider": {
+                "@id": "https://goldenmaplelandscaping.ca/#business"
+              },
+              "areaServed": {
+                "@type": "City",
+                "name": "Innisfil",
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressLocality": "Barrie",
+                  "addressRegion": "ON",
+                  "addressCountry": "CA"
+                }
+              },
+              "offers": {
+                "@type": "Offer",
+                "priceSpecification": {
+                  "@type": "PriceSpecification",
+                  "priceCurrency": "CAD",
+                  "description": "$55\u2013$85 per square foot installed"
+                }
+              }
+            },
+            {
+              "@type": "FAQPage",
+              "@id": "https://goldenmaplelandscaping.ca/services/interlocking-innisfil#faq",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "How long does an interlocking patio take to install?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "A typical 400 sqft patio takes 4\u20137 days from excavation to final compaction, weather permitting. Restricted access can extend that to 9 days."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What pavers do you recommend?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Compare available Techo-Bloc, Permacon and Unilock options against your intended use, finish and budget. Confirm current product availability and manufacturer terms for the selected product; a brand reference does not establish installer certification."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What stops the patio from sinking?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Site-appropriate excavation, compaction, separation and drainage help manage settlement risk. Ask for the materials, depth, drainage design and inspection records applicable to your project in the written scope."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What's included in your warranty?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Ask us for the current written workmanship terms, coverage, exclusions, and remedy for your project before contracting."
+                  }
+                }
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://goldenmaplelandscaping.ca/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Services",
+                  "item": "https://goldenmaplelandscaping.ca/services"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Interlocking in Innisfil, Ontario",
+                  "item": "https://goldenmaplelandscaping.ca/services/interlocking-innisfil"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "canonical": "https://goldenmaplelandscaping.ca/services/interlocking-innisfil/",
+      "overflow": false,
+      "text": "GOLDEN MAPLE\nLANDSCAPING\nINNISFIL \u00b7 SIMCOE COUNTY\nInterlocking in\nInnisfil, Ontario.\n\nPatios, walkways, and driveways planned around site conditions and Ontario freeze-thaw cycles; final base depth is confirmed in the written scope.\n\n$55\u2013$85\nPER SQUARE FOOT INSTALLED\nGet a project estimate\n\nShare your project details for a practical conversation about scope and budget.\n\nFull Name\nPhone Number\nWhat are you building?\nGET MY ESTIMATE\nWe only contact you about your project. No spam, ever \u2014 and we never share your number.\n\nDISCUSS YOUR PROJECT WITH OUR TEAM.\n\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\n\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\n\nWHY INNISFIL?\nThe Innisfil build context.\n\nAn Innisfil outdoor project may need careful attention to drainage, access and shoreline restrictions. Share your project address to confirm service availability and arrange a scope discussion.\n\nTHE TERRAIN\n\nLake Simcoe waterfront properties dominate the east; flatter agricultural lots inland. Lakefront builds need particular care for shoreline drainage and frost setback.\n\nTHE SOIL PROFILE\n\nSandy loam near the shoreline, transitioning to clay loam inland. Lakeshore properties drain well \u2014 but the high water table requires careful base depth planning.\n\nCOMMON PROJECT TYPES WE BUILD HERE\nLake Simcoe waterfront patios and stairs\nPool surround installations\nOutdoor kitchens and entertaining decks\nDriveway interlock for cottage-style homes\nNEIGHBOURHOODS WE SERVE IN INNISFIL\n\nLefroy \u00b7 Stroud \u00b7 Alcona \u00b7 Cookstown \u00b7 Big Bay Point \u00b7 Friday Harbour\n\nWHAT'S INCLUDED\nPremium interlocking build, end to end.\nBase prep and materials specified for the site; excavation depth is confirmed per project\nGeotextile separation on clay soils\nPremium Techo-Bloc, Permacon, or Unilock pavers\nPolymeric or Romex jointing\nDrainage planning + 1.5\u20132% slope away from foundation\nAsk for current written workmanship terms for your project\nGET MY ESTIMATE\nTHE ENGINEERING POINT\nWhy our interlocking lasts.\n\nA patio's performance depends on what is below the surface: appropriate excavation, compaction, drainage and materials. Ask for the proposed base specification in your written scope; the right depth depends on the site and intended loading.\n\nFREQUENTLY ASKED\nQuick answers about\ninterlocking in Innisfil.\nHow long does an interlocking patio take to install?\nWhat pavers do you recommend?\nWhat stops the patio from sinking?\nWhat's included in your warranty?\nWE ALSO BUILD INTERLOCKING IN\nOther towns we serve.\nBarrie\nOro-Medonte\nSpringwater\nOrillia\nWasaga Beach\nMidland\nCollingwood\nMORE WE BUILD IN INNISFIL\nOur other Innisfil services.\n$45\u2013$85 PER SQUARE FOOT INSTALLED\nComposite Decking in Innisfil\n\nComposite deck options for Ontario weather; available products and any manufacturer warranty are confirmed with the selected product documentation.\n\nLEARN MORE\n$60\u2013$140 PER SQUARE FOOT OF WALL FACE\nRetaining Walls in Innisfil\n\nEngineered structural walls built with geogrid reinforcement to hold sloped lots flat \u2014 for decades, not seasons.\n\nLEARN MORE\nPRICING CONFIRMED ON REQUEST CURRENT DESIGN SCOPE AND ANY CREDIT POLICY CONFIRMED IN WRITING\nLandscape Design in Innisfil\n\nFull-property design options may include site assessment, renderings, planting plans, and construction scope; confirm current deliverables and pricing before booking.\n\nLEARN MORE\nReady to build in\nInnisfil?\n\nContact Yorkis to discuss scope, budget, and the current consultation options.\n\n(705) 300-8015\nGET MY ESTIMATE\nGOLDEN MAPLE\nLANDSCAPING\n\nArchitectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nNAVIGATION\nServices\nPortfolio\nOur Story\nContact\nService Areas\nEXPERTISE\nInterlocking & Hardscape\nComposite Decking\nNatural Stone & Flagstone\nPorcelain Installation\nRetaining Walls\nCONNECT\nBarrie, Simcoe County & Cottage Country\n(705) 300-8015\nyorkis@goldenmaplelandscaping.ca\n\n\u00a9 2026 GOLDEN MAPLE LANDSCAPING. ARCHITECTURAL PRECISION.\n\nBARRIE\nINNISFIL\nORO-MEDONTE\nSPRINGWATER\nPRIVACY\nTERMS\nCALL\nGET MY ESTIMATE",
+      "route": "/services/interlocking-innisfil/",
+      "status": 200,
+      "observed_at": "2026-09-05T18:09:11.243885+00:00"
+    },
+    {
+      "title": "Premium Landscaping in Orillia, Ontario | Golden Maple Landscaping",
+      "h1": [
+        "Premium landscaping\nin Orillia."
+      ],
+      "phones": [
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015"
+      ],
+      "emails": [
+        "mailto:yorkis@goldenmaplelandscaping.ca"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": [
+                "LocalBusiness",
+                "HomeAndConstructionBusiness",
+                "GeneralContractor"
+              ],
+              "@id": "https://goldenmaplelandscaping.ca/#business",
+              "name": "Golden Maple Landscaping",
+              "description": "Golden Maple Landscaping: discuss Interlocking stone, Composite decking, Retaining walls, Landscape design, Outdoor living / backyard transformations. Confirm project scope and availability for your address.",
+              "url": "https://goldenmaplelandscaping.ca/",
+              "image": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "telephone": "+17053008015",
+              "email": "yorkis@goldenmaplelandscaping.ca",
+              "priceRange": "$$$",
+              "currenciesAccepted": "CAD",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Barrie",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              },
+              "sameAs": [
+                "https://www.facebook.com/GoldenMaplegroup",
+                "https://www.instagram.com/goldenmaplelandscaping",
+                "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+                "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+                "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+              ]
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LandscapeService",
+          "name": "Golden Maple Landscaping",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "@id": "https://goldenmaplelandscaping.ca/#business",
+          "url": "https://goldenmaplelandscaping.ca",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.facebook.com/GoldenMaplegroup",
+            "https://www.instagram.com/goldenmaplelandscaping",
+            "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+            "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+          ],
+          "areaServed": [
+            {
+              "@type": "City",
+              "name": "Barrie"
+            },
+            {
+              "@type": "City",
+              "name": "Innisfil"
+            },
+            {
+              "@type": "City",
+              "name": "Oro-Medonte"
+            },
+            {
+              "@type": "City",
+              "name": "Springwater"
+            },
+            {
+              "@type": "City",
+              "name": "Orillia"
+            },
+            {
+              "@type": "City",
+              "name": "Wasaga Beach"
+            },
+            {
+              "@type": "City",
+              "name": "Midland"
+            },
+            {
+              "@type": "City",
+              "name": "Collingwood"
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          "@id": "https://goldenmaplelandscaping.ca/locations/orillia",
+          "name": "Golden Maple Landscaping \u2014 Orillia",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "url": "https://goldenmaplelandscaping.ca/locations/orillia",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "areaServed": {
+            "@type": "City",
+            "name": "Orillia"
+          }
+        }
+      ],
+      "canonical": "https://goldenmaplelandscaping.ca/locations/orillia/",
+      "overflow": false,
+      "text": "GOLDEN MAPLE\nLANDSCAPING\nSIMCOE COUNTY \u00b7 POPULATION 33,000+\nPremium landscaping\nin Orillia.\n\nOrillia is a city that notices when work is done right \u2014 and notices, even more, when it isn't. Heritage homes, Couchiching waterfront, a downtown that takes pride in how things look. If you live here, you've probably already seen what bad landscaping does to a beautiful property. We're here to make sure that's not what happens to yours.\n\nGet a project estimate\n\nShare your project details for a practical conversation about scope and budget.\n\nFull Name\nPhone Number\nWhat are you building?\nGET MY ESTIMATE\nWe only contact you about your project. No spam, ever \u2014 and we never share your number.\nDISCUSS YOUR PROJECT WITH OUR TEAM.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nLOCAL CONTEXT\nBuilding in Orillia.\nTHE TERRAIN\n\nLake Couchiching and Lake Simcoe shoreline plus mature urban neighbourhoods. Older homes mean older drainage systems that need careful integration with new hardscape.\n\nTHE SOIL PROFILE\n\nLake-influenced clay loam common across the city, with sandy pockets near the shoreline. Older established neighbourhoods often have surprise utility runs that excavation must respect.\n\nCOMMON PROJECT TYPES\nHeritage home walkway and step restorations\nCouchiching shoreline patios\nDowntown courtyard redesigns\nModern decks for waterfront cottages\nNEIGHBOURHOODS WE SERVE\n\nSunshine City \u00b7 Couchiching Beach \u00b7 Atherley \u00b7 Westmount \u00b7 Tudhope Park\n\nPROJECT CONVERSATION\nProject conversation.\n\nDiscuss your Orillia project and confirm the current consultation, site-visit, and design scope directly.\n\nCALL (705) 300-8015\nGET MY ESTIMATE\nSERVICES IN ORILLIA\nWhat we build here.\n$55\u2013$85 PER SQUARE FOOT INSTALLED\nInterlocking\nin Orillia\n\nPatios, walkways, and driveways planned around site conditions and Ontario freeze-thaw cycles; final base depth is confirmed in the written scope.\n\nLEARN MORE\n$45\u2013$85 PER SQUARE FOOT INSTALLED\nComposite Decking\nin Orillia\n\nComposite deck options for Ontario weather; available products and any manufacturer warranty are confirmed with the selected product documentation.\n\nLEARN MORE\n$60\u2013$140 PER SQUARE FOOT OF WALL FACE\nRetaining Walls\nin Orillia\n\nEngineered structural walls built with geogrid reinforcement to hold sloped lots flat \u2014 for decades, not seasons.\n\nLEARN MORE\nPRICING CONFIRMED ON REQUEST CURRENT DESIGN SCOPE AND ANY CREDIT POLICY CONFIRMED IN WRITING\nLandscape Design\nin Orillia\n\nFull-property design options may include site assessment, renderings, planting plans, and construction scope; confirm current deliverables and pricing before booking.\n\nLEARN MORE\nOTHER TOWNS WE SERVE\nAcross Simcoe County.\nBarrie\nInnisfil\nOro-Medonte\nSpringwater\nWasaga Beach\nMidland\nCollingwood\nReady to start your\nOrillia project?\n\nContact us to discuss your project and confirm the current estimate process.\n\n(705) 300-8015\nGET MY ESTIMATE\nGOLDEN MAPLE\nLANDSCAPING\n\nArchitectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nNAVIGATION\nServices\nPortfolio\nOur Story\nContact\nService Areas\nEXPERTISE\nInterlocking & Hardscape\nComposite Decking\nNatural Stone & Flagstone\nPorcelain Installation\nRetaining Walls\nCONNECT\nBarrie, Simcoe County & Cottage Country\n(705) 300-8015\nyorkis@goldenmaplelandscaping.ca\n\n\u00a9 2026 GOLDEN MAPLE LANDSCAPING. ARCHITECTURAL PRECISION.\n\nBARRIE\nINNISFIL\nORO-MEDONTE\nSPRINGWATER\nPRIVACY\nTERMS\nCALL\nGET MY ESTIMATE",
+      "route": "/locations/orillia/",
+      "status": 200,
+      "observed_at": "2026-09-05T18:09:12.837477+00:00"
+    },
+    {
+      "title": "Landscaping Contractor Barrie ON | Golden Maple Landscaping",
+      "h1": [
+        "Premium Landscaping & Hardscape\nContractor in Barrie, Ontario."
+      ],
+      "phones": [
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015"
+      ],
+      "emails": [
+        "mailto:yorkis@goldenmaplelandscaping.ca",
+        "mailto:yorkis@goldenmaplelandscaping.ca"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": [
+                "LocalBusiness",
+                "HomeAndConstructionBusiness",
+                "GeneralContractor"
+              ],
+              "@id": "https://goldenmaplelandscaping.ca/#business",
+              "name": "Golden Maple Landscaping",
+              "description": "Golden Maple Landscaping: discuss Interlocking stone, Composite decking, Retaining walls, Landscape design, Outdoor living / backyard transformations. Confirm project scope and availability for your address.",
+              "url": "https://goldenmaplelandscaping.ca/",
+              "image": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "telephone": "+17053008015",
+              "email": "yorkis@goldenmaplelandscaping.ca",
+              "priceRange": "$$$",
+              "currenciesAccepted": "CAD",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Barrie",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              },
+              "sameAs": [
+                "https://www.facebook.com/GoldenMaplegroup",
+                "https://www.instagram.com/goldenmaplelandscaping",
+                "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+                "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+                "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+              ]
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LandscapeService",
+          "name": "Golden Maple Landscaping",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "@id": "https://goldenmaplelandscaping.ca/#business",
+          "url": "https://goldenmaplelandscaping.ca",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.facebook.com/GoldenMaplegroup",
+            "https://www.instagram.com/goldenmaplelandscaping",
+            "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+            "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+          ],
+          "areaServed": [
+            {
+              "@type": "City",
+              "name": "Barrie"
+            },
+            {
+              "@type": "City",
+              "name": "Innisfil"
+            },
+            {
+              "@type": "City",
+              "name": "Oro-Medonte"
+            },
+            {
+              "@type": "City",
+              "name": "Springwater"
+            },
+            {
+              "@type": "City",
+              "name": "Orillia"
+            },
+            {
+              "@type": "City",
+              "name": "Wasaga Beach"
+            },
+            {
+              "@type": "City",
+              "name": "Midland"
+            },
+            {
+              "@type": "City",
+              "name": "Collingwood"
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          "name": "Golden Maple Landscaping",
+          "description": "Premium landscaping and hardscape contractor serving Barrie, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
+          "url": "https://goldenmaplelandscaping.ca/locations/barrie",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "areaServed": {
+            "@type": "City",
+            "name": "Barrie",
+            "url": "https://en.wikipedia.org/wiki/Barrie"
+          }
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "When is the best time to start a landscaping project in Barrie?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Seasonal timing and availability vary. Contact us to discuss the current scope and timing for your property."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Do you handle permits for Barrie projects?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Permit needs and responsibilities are confirmed for each project."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How long does a typical project take?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Project timing depends on scope, site conditions, materials, and scheduling. We can discuss a project-specific timeline before work begins."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Do you offer financing?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Contact us to confirm current payment and financing options for your project."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What warranty do you offer?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ask for the current written workmanship terms for your project."
+              }
+            }
+          ]
+        }
+      ],
+      "canonical": "https://goldenmaplelandscaping.ca/locations/barrie/",
+      "overflow": false,
+      "text": "GOLDEN MAPLE\nLANDSCAPING\nSERVING ALL OF BARRIE, ON\nPremium Landscaping & Hardscape\nContractor in Barrie, Ontario.\n\nGolden Maple Landscaping is Barrie's premier outdoor construction company, specializing in interlocking stone, composite decking, retaining walls, and full landscape design. We serve homeowners across Barrie \u2014 from the south end near Mapleview to Holly, Painswick, and the north shore of Kempenfelt Bay.\n\nREQUEST A BARRIE QUOTE\nCall (705) 300-8015\nWhy Barrie Homeowners Choose Golden Maple\n\nBarrie's climate demands hardscapes built to handle freeze-thaw cycles, heavy snow loads, and spring runoff. Every project we build accounts for local soil conditions, drainage patterns, and the realities of Simcoe County winters.\n\nDiscuss your project with our team.\nPremium materials \u2014 Techo-Bloc, Permacon, TimberTech, In-Lite\nFull design service \u2014 3D renders before we break ground\nTransparent pricing \u2014 detailed quotes, no hidden fees\nBuilt for Barrie weather \u2014 proper base depth, drainage & Romex\nIn-house crew \u2014 we never subcontract your project\nOur Services in Barrie\nInterlocking Stone Patios & Driveways\n\nFrom intimate backyard patios to full driveway rebuilds, we install interlocking stone with the base preparation and compaction standards that Barrie's frost line demands.\n\nVIEW SERVICE\nComposite Decking\n\nLow-maintenance composite decks designed for Barrie backyards. TimberTech and Trex, including custom railings, integrated lighting, and multi-level designs.\n\nVIEW SERVICE\nRetaining Walls\n\nStructural and decorative retaining walls that solve grading challenges. Armour stone, natural stone, and modular block \u2014 all engineered for load and drainage.\n\nVIEW SERVICE\nLandscape Design\n\nComplete outdoor living design from concept to construction. 3D renderings so you see exactly what your space will look like before a single stone is laid.\n\nVIEW SERVICE\nBarrie Neighbourhoods We Serve\nSouth Barrie / Mapleview\nHolly\nPainswick / East Barrie\nNorth End / Allandale\nEssa Road Corridor\nKempenfelt Bay area\nWhat Does Landscaping Cost in Barrie?\nPROJECT TYPE\tTYPICAL RANGE\nInterlocking patio\tProject-specific scope\nFull backyard transformation\tProject-specific scope\nComposite deck\tProject-specific scope\nRetaining wall\tProject-specific scope\nOutdoor living space\tProject-specific scope\n\nWant a faster answer? Use our Cost Estimator for an instant ballpark.\n\nFrequently Asked Questions\nWhen is the best time to start a landscaping project in Barrie?\n\nSeasonal timing and availability vary. Contact us to discuss the current scope and timing for your property.\n\nDo you handle permits for Barrie projects?\n\nPermit needs and responsibilities are confirmed for each project.\n\nHow long does a typical project take?\n\nProject timing depends on scope, site conditions, materials, and scheduling. We can discuss a project-specific timeline before work begins.\n\nDo you offer financing?\n\nContact us to confirm current payment and financing options for your project.\n\nWhat warranty do you offer?\n\nAsk for the current written workmanship terms for your project.\n\nDiscuss Your Barrie Landscaping Project\n\nReady to discuss your outdoor space? Contact Golden Maple Landscaping to confirm the current consultation and quote scope.\n\nREQUEST A QUOTE\n(705) 300-8015\nyorkis@goldenmaplelandscaping.ca\nGOLDEN MAPLE\nLANDSCAPING\n\nArchitectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nNAVIGATION\nServices\nPortfolio\nOur Story\nContact\nService Areas\nEXPERTISE\nInterlocking & Hardscape\nComposite Decking\nNatural Stone & Flagstone\nPorcelain Installation\nRetaining Walls\nCONNECT\nBarrie, Simcoe County & Cottage Country\n(705) 300-8015\nyorkis@goldenmaplelandscaping.ca\n\n\u00a9 2026 GOLDEN MAPLE LANDSCAPING. ARCHITECTURAL PRECISION.\n\nBARRIE\nINNISFIL\nORO-MEDONTE\nSPRINGWATER\nPRIVACY\nTERMS\nCALL\nGET MY ESTIMATE",
+      "route": "/locations/barrie/",
+      "status": 200,
+      "observed_at": "2026-09-05T18:09:14.131683+00:00"
+    },
+    {
+      "title": "Book a Project Conversation | Golden Maple Landscaping",
+      "h1": [
+        "Pick a time\nthat works for you."
+      ],
+      "phones": [
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015"
+      ],
+      "emails": [
+        "mailto:yorkis@goldenmaplelandscaping.ca"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": [
+                "LocalBusiness",
+                "HomeAndConstructionBusiness",
+                "GeneralContractor"
+              ],
+              "@id": "https://goldenmaplelandscaping.ca/#business",
+              "name": "Golden Maple Landscaping",
+              "description": "Golden Maple Landscaping: discuss Interlocking stone, Composite decking, Retaining walls, Landscape design, Outdoor living / backyard transformations. Confirm project scope and availability for your address.",
+              "url": "https://goldenmaplelandscaping.ca/",
+              "image": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "telephone": "+17053008015",
+              "email": "yorkis@goldenmaplelandscaping.ca",
+              "priceRange": "$$$",
+              "currenciesAccepted": "CAD",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Barrie",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              },
+              "sameAs": [
+                "https://www.facebook.com/GoldenMaplegroup",
+                "https://www.instagram.com/goldenmaplelandscaping",
+                "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+                "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+                "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+              ]
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LandscapeService",
+          "name": "Golden Maple Landscaping",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "@id": "https://goldenmaplelandscaping.ca/#business",
+          "url": "https://goldenmaplelandscaping.ca",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.facebook.com/GoldenMaplegroup",
+            "https://www.instagram.com/goldenmaplelandscaping",
+            "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+            "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+          ],
+          "areaServed": [
+            {
+              "@type": "City",
+              "name": "Barrie"
+            },
+            {
+              "@type": "City",
+              "name": "Innisfil"
+            },
+            {
+              "@type": "City",
+              "name": "Oro-Medonte"
+            },
+            {
+              "@type": "City",
+              "name": "Springwater"
+            },
+            {
+              "@type": "City",
+              "name": "Orillia"
+            },
+            {
+              "@type": "City",
+              "name": "Wasaga Beach"
+            },
+            {
+              "@type": "City",
+              "name": "Midland"
+            },
+            {
+              "@type": "City",
+              "name": "Collingwood"
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "Book a Project Conversation",
+          "description": "Pick a time to discuss your project and confirm the current consultation scope.",
+          "url": "https://goldenmaplelandscaping.ca/book"
+        }
+      ],
+      "canonical": "https://goldenmaplelandscaping.ca/book/",
+      "overflow": false,
+      "text": "GOLDEN MAPLE\nLANDSCAPING\nPROJECT CONVERSATION\nPick a time\nthat works for you.\n\nUse the scheduler to request a project conversation. We will confirm the current consultation, site-visit, design, and project-scope details directly.\n\nCould not load availability. Call (705) 300-8015 to book directly.\n\nDISCUSS YOUR PROJECT WITH OUR TEAM.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nGOLDEN MAPLE\nLANDSCAPING\n\nArchitectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nNAVIGATION\nServices\nPortfolio\nOur Story\nContact\nService Areas\nEXPERTISE\nInterlocking & Hardscape\nComposite Decking\nNatural Stone & Flagstone\nPorcelain Installation\nRetaining Walls\nCONNECT\nBarrie, Simcoe County & Cottage Country\n(705) 300-8015\nyorkis@goldenmaplelandscaping.ca\n\n\u00a9 2026 GOLDEN MAPLE LANDSCAPING. ARCHITECTURAL PRECISION.\n\nBARRIE\nINNISFIL\nORO-MEDONTE\nSPRINGWATER\nPRIVACY\nTERMS\nCALL\nGET MY ESTIMATE",
+      "route": "/book/",
+      "status": 200,
+      "observed_at": "2026-09-05T18:09:15.573022+00:00"
+    },
+    {
+      "title": "Landscaping Cost Estimator Barrie 2026 | Real Pricing | Golden Maple | Golden Maple Landscaping",
+      "h1": [
+        "Plan your landscaping investment"
+      ],
+      "phones": [
+        "tel:+17053008015"
+      ],
+      "emails": [],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": [
+                "LocalBusiness",
+                "HomeAndConstructionBusiness",
+                "GeneralContractor"
+              ],
+              "@id": "https://goldenmaplelandscaping.ca/#business",
+              "name": "Golden Maple Landscaping",
+              "description": "Golden Maple Landscaping: discuss Interlocking stone, Composite decking, Retaining walls, Landscape design, Outdoor living / backyard transformations. Confirm project scope and availability for your address.",
+              "url": "https://goldenmaplelandscaping.ca/",
+              "image": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "telephone": "+17053008015",
+              "email": "yorkis@goldenmaplelandscaping.ca",
+              "priceRange": "$$$",
+              "currenciesAccepted": "CAD",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Barrie",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              },
+              "sameAs": [
+                "https://www.facebook.com/GoldenMaplegroup",
+                "https://www.instagram.com/goldenmaplelandscaping",
+                "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+                "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+                "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+              ]
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LandscapeService",
+          "name": "Golden Maple Landscaping",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "@id": "https://goldenmaplelandscaping.ca/#business",
+          "url": "https://goldenmaplelandscaping.ca",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.facebook.com/GoldenMaplegroup",
+            "https://www.instagram.com/goldenmaplelandscaping",
+            "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+            "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+          ],
+          "areaServed": [
+            {
+              "@type": "City",
+              "name": "Barrie"
+            },
+            {
+              "@type": "City",
+              "name": "Innisfil"
+            },
+            {
+              "@type": "City",
+              "name": "Oro-Medonte"
+            },
+            {
+              "@type": "City",
+              "name": "Springwater"
+            },
+            {
+              "@type": "City",
+              "name": "Orillia"
+            },
+            {
+              "@type": "City",
+              "name": "Wasaga Beach"
+            },
+            {
+              "@type": "City",
+              "name": "Midland"
+            },
+            {
+              "@type": "City",
+              "name": "Collingwood"
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How much does an interlocking patio cost in Barrie?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "A premium interlocking patio in Barrie typically ranges from $35,000 to $75,000 depending on size, paver selection, site conditions such as slope or tear-out, and add-ons such as lighting or fire features. This estimator provides a planning range; final scope, site preparation, and commercial terms are confirmed directly for each project."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What does a composite deck cost in Simcoe County?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "TimberTech AZEK Prime+ decking runs about $58/sqft for the deck itself, AZEK Vintage about $68/sqft. All-in with substructure, footings, railing and disposal, a 300-sqft ground-level deck lands around $19,500\u2013$30,500; elevated walkout builds in Vintage with difficult access, slope, or drainage work can reach $50,000\u2013$60,000."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Do you charge for estimates?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The online estimator provides a planning-range breakdown that changes as you answer. Contact Golden Maple to confirm the current consultation, design, site-visit, and final-quote process for your project."
+              }
+            }
+          ]
+        }
+      ],
+      "canonical": "https://goldenmaplelandscaping.ca/cost-estimator/",
+      "overflow": false,
+      "text": "BACK TO SITE\nPlan your landscaping investment\nESTIMATE YOUR PROJECT\nWhat will yours cost?\n\nReal numbers, real materials, real Simcoe County pricing. No signup to see your price.\n\nWhat are you looking to build?\nPATIO / INTERLOCK\nPavers and hardscape\nNATURAL STONE / FLAGSTONE\nIrregular or cut stone\nRETAINING WALL\nBlock or armour stone\nSTEPS & WALKWAY\nPrecast or natural stone\nCOMPOSITE DECK\nTimberTech AZEK\nOUTDOOR KITCHEN\nCooking and dining\nFIRE PIT\nPrefab or custom built\nPERGOLA / SHADE STRUCTURE\nWood or aluminum\nARTIFICIAL TURF\nLow maintenance lawn\nLANDSCAPE LIGHTING\nIn-Lite systems\nFULL BACKYARD (MULTIPLE)\nComplete transformation\nCONTINUE \u2192\nHow we price landscaping in Barrie & Simcoe County\n\nThis calculator uses loaded supplier price data and quantity assumptions to produce a planning estimate for materials, labour and disposal. It does not fetch live supplier prices. Confirm current rates, site conditions, quantities and the written scope before committing to a project.\n\nSite preparation is project-specific\n\nOntario freeze-thaw conditions, drainage, soil, access, intended use, and local requirements can affect excavation and base preparation. The estimator is a planning tool; final site preparation is confirmed in the written project scope.\n\nUse the estimator to explore your intended scope. Availability, minimums, and final commercial terms are confirmed directly before a project is booked.\n\nPermacon material tiers, explained\nStandard: Melville, Cassara, Vendome \u2014 Permacon's most-installed slabs. Clean, value-built, consistent across batches.\nElevated: Mondrian Plus, Wilfred, Rosebel \u2014 refined textures and modern profiles. Our most popular tier.\nPremium: Mega Melville, Brooklyn, Metrik \u2014 large-format flagship and statement-finish slabs.\nFrom estimate to exact quote\n\nThe estimator starts as a planning range and changes as you refine inputs. Contact Golden Maple to confirm the current consultation, design, material-selection, and final-quote process.",
+      "route": "/cost-estimator/",
+      "status": 200,
+      "observed_at": "2026-09-05T18:09:15.917617+00:00"
+    },
+    {
+      "title": "Landscaping Portfolio | Barrie Projects | Golden Maple Landscaping",
+      "h1": [
+        "Outdoor-living\npossibilities."
+      ],
+      "phones": [
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015"
+      ],
+      "emails": [
+        "mailto:yorkis@goldenmaplelandscaping.ca"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": [
+                "LocalBusiness",
+                "HomeAndConstructionBusiness",
+                "GeneralContractor"
+              ],
+              "@id": "https://goldenmaplelandscaping.ca/#business",
+              "name": "Golden Maple Landscaping",
+              "description": "Golden Maple Landscaping: discuss Interlocking stone, Composite decking, Retaining walls, Landscape design, Outdoor living / backyard transformations. Confirm project scope and availability for your address.",
+              "url": "https://goldenmaplelandscaping.ca/",
+              "image": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "telephone": "+17053008015",
+              "email": "yorkis@goldenmaplelandscaping.ca",
+              "priceRange": "$$$",
+              "currenciesAccepted": "CAD",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Barrie",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              },
+              "sameAs": [
+                "https://www.facebook.com/GoldenMaplegroup",
+                "https://www.instagram.com/goldenmaplelandscaping",
+                "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+                "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+                "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+              ]
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LandscapeService",
+          "name": "Golden Maple Landscaping",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "@id": "https://goldenmaplelandscaping.ca/#business",
+          "url": "https://goldenmaplelandscaping.ca",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.facebook.com/GoldenMaplegroup",
+            "https://www.instagram.com/goldenmaplelandscaping",
+            "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+            "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+          ],
+          "areaServed": [
+            {
+              "@type": "City",
+              "name": "Barrie"
+            },
+            {
+              "@type": "City",
+              "name": "Innisfil"
+            },
+            {
+              "@type": "City",
+              "name": "Oro-Medonte"
+            },
+            {
+              "@type": "City",
+              "name": "Springwater"
+            },
+            {
+              "@type": "City",
+              "name": "Orillia"
+            },
+            {
+              "@type": "City",
+              "name": "Wasaga Beach"
+            },
+            {
+              "@type": "City",
+              "name": "Midland"
+            },
+            {
+              "@type": "City",
+              "name": "Collingwood"
+            }
+          ]
+        }
+      ],
+      "canonical": "https://goldenmaplelandscaping.ca/portfolio/",
+      "overflow": false,
+      "text": "GOLDEN MAPLE\nLANDSCAPING\nPROJECT POSSIBILITIES\nOutdoor-living\npossibilities.\n\nPlanning a patio, deck or complete backyard? Tell us what matters to you and ask for relevant examples to discuss.\n\nYour backyard could\nbe next.\n\nTell us what you are imagining. Ask about suitable materials, the proposed scope and available project references.\n\nLET'S TALK ABOUT YOUR PROPERTY\nGOLDEN MAPLE\nLANDSCAPING\n\nArchitectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nNAVIGATION\nServices\nPortfolio\nOur Story\nContact\nService Areas\nEXPERTISE\nInterlocking & Hardscape\nComposite Decking\nNatural Stone & Flagstone\nPorcelain Installation\nRetaining Walls\nCONNECT\nBarrie, Simcoe County & Cottage Country\n(705) 300-8015\nyorkis@goldenmaplelandscaping.ca\n\n\u00a9 2026 GOLDEN MAPLE LANDSCAPING. ARCHITECTURAL PRECISION.\n\nBARRIE\nINNISFIL\nORO-MEDONTE\nSPRINGWATER\nPRIVACY\nTERMS\nCALL\nGET MY ESTIMATE",
+      "route": "/portfolio/",
+      "status": 200,
+      "observed_at": "2026-09-05T18:09:16.685538+00:00"
+    },
+    {
+      "title": "Landscape Construction Barrie | Project-Specific Planning | Golden Maple | Golden Maple Landscaping",
+      "h1": [
+        "Engineered\nConstruction."
+      ],
+      "phones": [
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015"
+      ],
+      "emails": [
+        "mailto:yorkis@goldenmaplelandscaping.ca"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": [
+                "LocalBusiness",
+                "HomeAndConstructionBusiness",
+                "GeneralContractor"
+              ],
+              "@id": "https://goldenmaplelandscaping.ca/#business",
+              "name": "Golden Maple Landscaping",
+              "description": "Golden Maple Landscaping: discuss Interlocking stone, Composite decking, Retaining walls, Landscape design, Outdoor living / backyard transformations. Confirm project scope and availability for your address.",
+              "url": "https://goldenmaplelandscaping.ca/",
+              "image": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "telephone": "+17053008015",
+              "email": "yorkis@goldenmaplelandscaping.ca",
+              "priceRange": "$$$",
+              "currenciesAccepted": "CAD",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Barrie",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              },
+              "sameAs": [
+                "https://www.facebook.com/GoldenMaplegroup",
+                "https://www.instagram.com/goldenmaplelandscaping",
+                "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+                "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+                "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+              ]
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LandscapeService",
+          "name": "Golden Maple Landscaping",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "@id": "https://goldenmaplelandscaping.ca/#business",
+          "url": "https://goldenmaplelandscaping.ca",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.facebook.com/GoldenMaplegroup",
+            "https://www.instagram.com/goldenmaplelandscaping",
+            "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+            "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+          ],
+          "areaServed": [
+            {
+              "@type": "City",
+              "name": "Barrie"
+            },
+            {
+              "@type": "City",
+              "name": "Innisfil"
+            },
+            {
+              "@type": "City",
+              "name": "Oro-Medonte"
+            },
+            {
+              "@type": "City",
+              "name": "Springwater"
+            },
+            {
+              "@type": "City",
+              "name": "Orillia"
+            },
+            {
+              "@type": "City",
+              "name": "Wasaga Beach"
+            },
+            {
+              "@type": "City",
+              "name": "Midland"
+            },
+            {
+              "@type": "City",
+              "name": "Collingwood"
+            }
+          ]
+        }
+      ],
+      "canonical": null,
+      "overflow": false,
+      "text": "GOLDEN MAPLE\nLANDSCAPING\nPHASE FIVE: IMPLEMENTATION\nEngineered\nConstruction.\n\nThe work below the finished surface matters. Site conditions, drainage, materials, and the agreed project scope all inform a construction plan.\n\nTELL US YOUR BUDGET\n\nCONSTRUCTION PLANNING\n\nProject-Specific Scope\n\nThe Golden Maple\nStandard of Build.\nBase Preparation\n\nFinal excavation and base details are determined from the site and written project scope.\n\nDeck Framing\n\nDeck framing requirements are reviewed for the selected design and applicable approvals.\n\nJointing and Edging\n\nMaterial selections and installation details are discussed for the specific project.\n\nSite Care\n\nSite protection and closeout expectations are confirmed in the project-specific scope.\n\nGround Protection\n\nAccess and protection measures are planned around the property and equipment needs.\n\nProject Updates\n\nCommunication expectations and milestones are discussed before work begins.\n\nBuilt to Outlast.\n\nConstruction details are confirmed against the site, materials, and written project scope. Ask for the current written workmanship terms for your project.\n\nPHASE SIX: HANDOVER DETAILS\nBuild a legacy\nin your backyard.\nTELL US YOUR BUDGET\n(705) 300-8015\nGOLDEN MAPLE\nLANDSCAPING\n\nArchitectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nNAVIGATION\nServices\nPortfolio\nOur Story\nContact\nService Areas\nEXPERTISE\nInterlocking & Hardscape\nComposite Decking\nNatural Stone & Flagstone\nPorcelain Installation\nRetaining Walls\nCONNECT\nBarrie, Simcoe County & Cottage Country\n(705) 300-8015\nyorkis@goldenmaplelandscaping.ca\n\n\u00a9 2026 GOLDEN MAPLE LANDSCAPING. ARCHITECTURAL PRECISION.\n\nBARRIE\nINNISFIL\nORO-MEDONTE\nSPRINGWATER\nPRIVACY\nTERMS\nCALL\nGET MY ESTIMATE",
+      "route": "/process/construction/",
+      "status": 200,
+      "observed_at": "2026-09-05T18:09:17.748953+00:00"
+    },
+    {
+      "title": "Retaining Wall Cost Oro-Medonte 2026 | Real Prices | Golden Maple Landscaping",
+      "h1": [
+        "Retaining Wall Cost in Oro-Medonte: 2026 Price Breakdown"
+      ],
+      "phones": [
+        "tel:+17053008015",
+        "tel:+17053008015",
+        "tel:+17053008015"
+      ],
+      "emails": [
+        "mailto:yorkis@goldenmaplelandscaping.ca"
+      ],
+      "schemas": [
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": [
+                "LocalBusiness",
+                "HomeAndConstructionBusiness",
+                "GeneralContractor"
+              ],
+              "@id": "https://goldenmaplelandscaping.ca/#business",
+              "name": "Golden Maple Landscaping",
+              "description": "Golden Maple Landscaping: discuss Interlocking stone, Composite decking, Retaining walls, Landscape design, Outdoor living / backyard transformations. Confirm project scope and availability for your address.",
+              "url": "https://goldenmaplelandscaping.ca/",
+              "image": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "logo": "https://goldenmaplelandscaping.ca/logo-mark.png",
+              "telephone": "+17053008015",
+              "email": "yorkis@goldenmaplelandscaping.ca",
+              "priceRange": "$$$",
+              "currenciesAccepted": "CAD",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Barrie",
+                "addressRegion": "ON",
+                "addressCountry": "CA"
+              },
+              "sameAs": [
+                "https://www.facebook.com/GoldenMaplegroup",
+                "https://www.instagram.com/goldenmaplelandscaping",
+                "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+                "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4",
+                "https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html"
+              ]
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "LandscapeService",
+          "name": "Golden Maple Landscaping",
+          "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
+          "@id": "https://goldenmaplelandscaping.ca/#business",
+          "url": "https://goldenmaplelandscaping.ca",
+          "telephone": "+17053008015",
+          "email": "yorkis@goldenmaplelandscaping.ca",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Barrie",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ],
+              "opens": "08:00",
+              "closes": "18:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.facebook.com/GoldenMaplegroup",
+            "https://www.instagram.com/goldenmaplelandscaping",
+            "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
+            "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+          ],
+          "areaServed": [
+            {
+              "@type": "City",
+              "name": "Barrie"
+            },
+            {
+              "@type": "City",
+              "name": "Innisfil"
+            },
+            {
+              "@type": "City",
+              "name": "Oro-Medonte"
+            },
+            {
+              "@type": "City",
+              "name": "Springwater"
+            },
+            {
+              "@type": "City",
+              "name": "Orillia"
+            },
+            {
+              "@type": "City",
+              "name": "Wasaga Beach"
+            },
+            {
+              "@type": "City",
+              "name": "Midland"
+            },
+            {
+              "@type": "City",
+              "name": "Collingwood"
+            }
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@context": "https://schema.org",
+              "@type": "Article",
+              "headline": "Retaining Wall Cost in Oro-Medonte: 2026 Price Breakdown",
+              "description": "Retaining walls in Oro-Medonte cost $150\u2013$350 per linear foot installed in 2026, depending on height, block brand, and whether engineering is required.",
+              "image": "https://goldenmaplelandscaping.ca/logo.svg",
+              "datePublished": "June 29, 2026",
+              "dateModified": "June 29, 2026",
+              "author": {
+                "@type": "Organization",
+                "name": "Golden Maple Landscaping",
+                "url": "https://goldenmaplelandscaping.ca"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "Golden Maple Landscaping",
+                "url": "https://goldenmaplelandscaping.ca",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://goldenmaplelandscaping.ca/logo.svg"
+                }
+              },
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": "https://goldenmaplelandscaping.ca/resources/retaining-wall-cost-oro-medonte"
+              },
+              "articleSection": "Investment",
+              "inLanguage": "en-CA",
+              "abstract": "A single-tier retaining wall in Oro-Medonte runs $150\u2013$300 per linear foot installed, or $4,500\u2013$9,000 for a typical 30-foot run. Height is the primary cost driver: walls over 1 metre need compacted clear stone drainage and often geogrid reinforcement. Walls above 1.2 metres typically require an engineer under Ontario Building Code. Permacon, Unilock, and Techo-Bloc are the three block lines contractors install \u2014 each holds up well through Simcoe County's freeze-thaw cycles.",
+              "keywords": "Retaining Wall Cost Oro-Medonte 2026 | Real Prices",
+              "wordCount": 2357
+            },
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://goldenmaplelandscaping.ca/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Resources",
+                  "item": "https://goldenmaplelandscaping.ca/resources"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": "Retaining Wall Cost in Oro-Medonte: 2026 Price Breakdown",
+                  "item": "https://goldenmaplelandscaping.ca/resources/retaining-wall-cost-oro-medonte"
+                }
+              ]
+            },
+            {
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "Does Oro-Medonte require a permit for a retaining wall?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes, if the wall exceeds 1 metre in height measured from the bottom of the footing. Walls below that threshold are generally exempt under Ontario Building Code, though you should confirm specific setback requirements with Oro-Medonte Township for your lot. Confirm permit, engineering, and inspection responsibilities in the written project scope."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How long does a retaining wall last in Ontario's climate?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "A properly built concrete block wall \u2014 Permacon, Unilock, or Techo-Bloc \u2014 with adequate drainage behind it should last 30\u201350 years through Ontario's freeze-thaw cycles. Walls that fail early almost always fail for the same reason: hydrostatic pressure from water that built up behind the block because no drainage system was installed. The blocks themselves rarely fail \u2014 the drainage does."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What is the cheapest retaining wall option in Simcoe County?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "For a low wall under 600 mm, a Permacon Ledgestone dry-stack system is the most cost-effective installed option, running $130\u2013$180 per linear foot with a basic gravel base. For anything taller, cutting corners on the drainage system costs more in repairs than it saves upfront. Pressure-treated timber walls are cheaper initially but typically need replacement within 10\u201315 years in Simcoe County's wet soil conditions."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Can I build a retaining wall myself in Oro-Medonte?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "For low decorative walls under 600 mm on flat ground, a capable DIYer can get a reasonable result with proper base preparation. Above that height, the drainage design, batter calculations, and geogrid schedules are genuinely technical. Contractors repair a significant number of DIY walls in the 800\u20131,200 mm range that were built without adequate drainage or proper base work \u2014 typically within three to five years of construction."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Do retaining walls need maintenance in Ontario?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Minimal maintenance is required for a well-built wall. Annually check that the drainage outlet (weeping tile pipe) is clear and not blocked by debris or ice. Inspect for any forward lean \u2014 more than 25 mm of movement in the top course warrants a professional assessment. Polymeric sand in any cap joints should be reapplied every five to seven years as it breaks down."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How do tiered retaining walls affect cost?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "A tiered wall system \u2014 two or three shorter walls terraced up a slope \u2014 generally costs 15\u201330% more per linear foot than a single tall wall of equivalent total height, primarily because each tier requires its own excavation, drainage layer, and footing preparation. The advantage is that tiers under 1 m each may avoid the engineering and permit requirement that applies to a single wall over 1 m, but this should be confirmed with the municipality before assuming it applies to your property."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Does a retaining wall add property value in Oro-Medonte?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "A well-built retaining wall that solves a visible grade problem \u2014 common on the sloped lots throughout Oro-Medonte \u2014 typically recoups 60\u201380% of its cost in resale value and often more when it opens up usable yard space that was previously unusable hillside. Home inspectors and buyers notice failing walls, so a neglected or poorly built wall can reduce value rather than add it."
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "canonical": "https://goldenmaplelandscaping.ca/resources/retaining-wall-cost-oro-medonte/",
+      "overflow": false,
+      "text": "GOLDEN MAPLE\nLANDSCAPING\nBACK TO RESOURCES\nINVESTMENT\nRetaining Wall Cost in Oro-Medonte: 2026 Price Breakdown\nJUNE 29, 2026\n11 MIN\nQUICK ANSWER\n\nA single-tier retaining wall in Oro-Medonte runs $150\u2013$300 per linear foot installed, or $4,500\u2013$9,000 for a typical 30-foot run. Height is the primary cost driver: walls over 1 metre need compacted clear stone drainage and often geogrid reinforcement. Walls above 1.2 metres typically require an engineer under Ontario Building Code. Permacon, Unilock, and Techo-Bloc are the three block lines contractors install \u2014 each holds up well through Simcoe County\\'s freeze-thaw cycles.\n\nOro-Medonte sits on some of the most varied terrain in Simcoe County \u2014 drumlin ridges, rolling Shield-country hills, and waterfront lots with steep drops toward Lake Simcoe. That topography is beautiful, but it means a lot of properties need retaining walls to manage grade, hold soil in place, and protect foundations from hydrostatic pressure. The appropriate approach depends on wall height, block type, drainage complexity, and whether an engineer needs to sign off.\n\nThis guide summarizes general cost factors and material considerations for retaining walls. Confirm the applicable building-code, engineering, drainage, and installation requirements with qualified professionals for the specific property.\n\nIf you want a planning range for your property, the cost estimator can help. Confirm scope, availability, and written pricing directly for the proposed project.\n\nWhat Does a Retaining Wall Actually Cost in Oro-Medonte in 2026?\n\nHere is what contractors are seeing in the field for installed retaining walls in Oro-Medonte and the broader Simcoe County area in 2026:\n\nBasic single-tier wall (under 900 mm high, 20\u201330 linear feet): $4,000\u2013$8,500 total\nMid-range wall (1,000\u20131,500 mm, 30\u201350 linear feet, with drainage system): $7,500\u2013$18,000\nEngineered wall (over 1.5 m or tiered system, full drainage and geogrid): $18,000\u2013$45,000+\n\nOn a per-linear-foot basis, pricing ranges from $150 to $350 for most residential projects. The low end is a short wall on flat, accessible ground with easy equipment reach. The high end is a tall wall on a steep slope with poor vehicle access, engineered drawings, geogrid reinforcement layers, and a complete weeping-tile drainage system behind the block.\n\nWhat surprises most clients is how non-linear the cost curve is. A wall that is 1.5 m high does not cost 50% more than a 1.0 m wall \u2014 it costs roughly double once you account for the deeper excavation, the wider drainage envelope, the additional block per course due to batter setback, and the likelihood that engineering drawings become mandatory. Every 300 mm of height cascades through the entire job cost.\n\nSquare-footage pricing (based on face area) runs $55\u2013$120 per sq. ft. installed. Contractors tend to quote retaining walls by the linear foot rather than face area because height is the real multiplier, and face-area pricing can obscure total project cost \u2014 particularly on taller walls where the face area rises fast but the drainage and engineering costs rise faster.\n\nThese ranges apply to concrete block walls using Permacon, Unilock, or Techo-Bloc. Armour stone and natural fieldstone typically run 20\u201340% higher on materials alone and require heavier equipment, which adds further to the installed cost.\n\nThe Four Variables That Drive Retaining Wall Cost\n\nIn the experience quoting and building retaining walls across Oro-Medonte's varied terrain, four variables account for almost all of the price spread between a $5,000 job and a $30,000 job.\n\n1. Wall height. This is the dominant variable and the one most homeowners underestimate. A wall that is 1,200 mm tall instead of 800 mm is not 50% more expensive \u2014 it is roughly double once excavation depth, drainage trench volume, block quantity, and geogrid requirements are all counted. Taller walls also trigger engineering and permit requirements under Ontario Building Code, which adds $1,500\u2013$3,000 to the job.\n\n2. Site access. Oro-Medonte properties often have narrow laneways, mature trees, or rear lots that cannot be reached with a standard excavator. When equipment cannot get to the wall location, labour costs climb \u2014 sometimes by 30\u201340% on the base excavation alone. Hand-digging a drainage trench is expensive and slow.\n\n3. Soil and subgrade conditions. Barrie clay is notorious for holding water, and much of Oro-Medonte sits on similar clay-heavy glacial till. That means natural drainage cannot be relied upon \u2014 it has to be engineered into the wall system. Properties closer to the Precambrian Shield, by contrast, sometimes have so much bedrock near the surface that precision excavation is required, which adds a different kind of cost.\n\n4. Drainage \u2014 the variable most contractors skip. A properly built retaining wall includes 12\u201316 inches of compacted clear stone directly behind the block, a perforated weeping tile at the base running to daylight or a catch basin, and filter fabric separating the drainage stone from native soil. Contractors use compacted clear stone (never granular A) because its open aggregate structure lets water escape rather than build hydrostatic pressure. This drainage package adds $25\u2013$50 per linear foot. Walls built without it typically show movement within three to seven years.\n\nBlock Choices: Permacon, Unilock, and Techo-Bloc Side by Side\n\nPermacon, Unilock, and Techo-Bloc each make retaining-wall product lines, and the systems are not interchangeable for every application. Manufacturer authorization or installer credentials should be confirmed directly with the contractor and manufacturer.\n\nProduct suitability, drainage requirements, and final pricing should be confirmed for the selected system and site.\n\nEngineering and Permits: When Ontario Building Code Applies in Oro-Medonte\n\nIn Ontario, the Building Code requires a building permit \u2014 and structural drawings approved by a licensed professional engineer \u2014 for retaining walls that exceed 1 metre in height measured from the bottom of the footing to the top of the block. Oro-Medonte Township follows OBC requirements, and the municipality may impose additional setback requirements for walls near property lines or watercourses draining toward Lake Simcoe tributaries.\n\nIn practice, walls legitimately below 1 m are commonly built without a permit. Walls contractors build above that threshold go through the permit process \u2014 structural drawings from a licensed engineer, submission to the municipality, and inspection at the relevant construction stages. Engineering drawings typically cost $1,200\u2013$2,500 depending on wall height and complexity. Permit fees in Oro-Medonte are generally $200\u2013$600 for a residential retaining wall.\n\nBe cautious of any contractor who proposes a 1.4 m wall and suggests skipping the permit because the neighbours never pulled one. In Ontario's liability framework, an unpermitted wall that fails near a property line or road is not just a repair problem \u2014 it is a liability problem that falls entirely on the property owner. Contractors have seen this scenario play out, and it is not a pleasant one.\n\nFor tiered wall systems \u2014 multiple shorter walls terraced up a slope \u2014 engineering is best practice even when each individual tier is technically under 1 m. The surcharge load from the upper tier places lateral force on the lower one, and both need to be designed together to load-balance correctly. Contractors discuss this with clients who want to avoid engineering costs: tiering can be the right call for aesthetic or budget reasons, but it needs to be engineered to work safely. For more on permit requirements in Simcoe County, see the retaining wall regulation guide or speak directly with the Oro-Medonte team.\n\nWhat a Proper Retaining Wall Quote Should Include \u2014 Line by Line\n\nA solid retaining wall quote should break out every major cost component. If yours does not, here is what to ask for before signing anything.\n\nExcavation and haul-away: Cutting into a hillside generates significant spoil that has to go somewhere. Haul-away is not always included in base quotes. Expect $800\u2013$2,500 for excavation and disposal on a typical Oro-Medonte wall project, depending on volume and trucking distance.\nDrainage stone: Confirm the spec is compacted clear stone (19 mm crushed or larger), not granular A. Granular A is a road base product that retains moisture \u2014 it is not a drainage medium. The drainage layer should be 12\u201316 inches behind the block face.\nWeeping tile and outlet: A 100 mm perforated pipe at the base of the wall running to a clear daylight outlet or a catch basin. This is non-negotiable on any wall over 900 mm. Ask specifically where the pipe outlets \u2014 a contractor who cannot answer that question has not built the drainage system.\nGeogrid reinforcement: For walls over 900\u20131,200 mm, a geogrid layer buried into the compacted fill at defined intervals behind the wall is typically required. Permacon, Unilock, and Techo-Bloc all publish geogrid schedules for their wall products \u2014 a qualified installer follows those schedules exactly.\nEngineering and permit fees: These should be a separate line item, not buried in a lump sum. If the quote does not mention them and the wall is over 1 m, ask why.\nCap block or coping: The finished top course. Sometimes quoted separately. Confirm it is included and that the cap ties back into the block system properly.\n\nWhen comparing quotes, remember that the cheapest price is rarely the cheapest wall. A $7,000 quote with no drainage line item against an $11,000 quote with full drainage is not a $4,000 saving \u2014 it is a $4,000 deposit on a wall that will need rebuilding.\n\nRETAINING WALL BLOCK COMPARISON: PERMACON VS. UNILOCK VS. TECHO-BLOC FOR ORO-MEDONTE INSTALLATIONS\n\nFeature\tPermacon (Soca / Ledgestone)\tUnilock (Brussels / Tuscany)\tTecho-Bloc (Classico / Vertica)\nMaterial cost (per lin. ft.)\t$18\u2013$28\t$24\u2013$38\t$30\u2013$45\nBest application\tFunctional walls; matches Permacon patio\tArchitectural finish; estate lots\tPremium outdoor living backdrops\nTexture / colour options\tModerate selection\tWide selection\tVery wide selection\nGeogrid compatibility\tYes \u2014 published schedule\tYes \u2014 published schedule\tYes \u2014 published schedule\nFreeze-thaw performance (Ontario)\tExcellent\tExcellent\tExcellent\nAvailable at Carr Landscape Depot\tYes\tYes\tYes\nFrequently Asked Questions\nDoes Oro-Medonte require a permit for a retaining wall?\n\nYes, if the wall exceeds 1 metre in height measured from the bottom of the footing. Walls below that threshold are generally exempt under Ontario Building Code, though you should confirm specific setback requirements with Oro-Medonte Township for your lot. Confirm permit, engineering, and inspection responsibilities in the written project scope.\n\nHow long does a retaining wall last in Ontario's climate?\n\nA properly built concrete block wall \u2014 Permacon, Unilock, or Techo-Bloc \u2014 with adequate drainage behind it should last 30\u201350 years through Ontario's freeze-thaw cycles. Walls that fail early almost always fail for the same reason: hydrostatic pressure from water that built up behind the block because no drainage system was installed. The blocks themselves rarely fail \u2014 the drainage does.\n\nWhat is the cheapest retaining wall option in Simcoe County?\n\nFor a low wall under 600 mm, a Permacon Ledgestone dry-stack system is the most cost-effective installed option, running $130\u2013$180 per linear foot with a basic gravel base. For anything taller, cutting corners on the drainage system costs more in repairs than it saves upfront. Pressure-treated timber walls are cheaper initially but typically need replacement within 10\u201315 years in Simcoe County's wet soil conditions.\n\nCan I build a retaining wall myself in Oro-Medonte?\n\nFor low decorative walls under 600 mm on flat ground, a capable DIYer can get a reasonable result with proper base preparation. Above that height, the drainage design, batter calculations, and geogrid schedules are genuinely technical. Contractors repair a significant number of DIY walls in the 800\u20131,200 mm range that were built without adequate drainage or proper base work \u2014 typically within three to five years of construction.\n\nDo retaining walls need maintenance in Ontario?\n\nMinimal maintenance is required for a well-built wall. Annually check that the drainage outlet (weeping tile pipe) is clear and not blocked by debris or ice. Inspect for any forward lean \u2014 more than 25 mm of movement in the top course warrants a professional assessment. Polymeric sand in any cap joints should be reapplied every five to seven years as it breaks down.\n\nHow do tiered retaining walls affect cost?\n\nA tiered wall system \u2014 two or three shorter walls terraced up a slope \u2014 generally costs 15\u201330% more per linear foot than a single tall wall of equivalent total height, primarily because each tier requires its own excavation, drainage layer, and footing preparation. The advantage is that tiers under 1 m each may avoid the engineering and permit requirement that applies to a single wall over 1 m, but this should be confirmed with the municipality before assuming it applies to your property.\n\nDoes a retaining wall add property value in Oro-Medonte?\n\nA well-built retaining wall that solves a visible grade problem \u2014 common on the sloped lots throughout Oro-Medonte \u2014 typically recoups 60\u201380% of its cost in resale value and often more when it opens up usable yard space that was previously unusable hillside. Home inspectors and buyers notice failing walls, so a neglected or poorly built wall can reduce value rather than add it.\n\nABOUT THE AUTHOR\n\nGolden Maple Landscaping publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.\n\nIf you have a grade problem on your Oro-Medonte property \u2014 or anywhere across Simcoe County \u2014 contractors do a full on-site assessment before quoting. Contractors look at your soil, access, wall height, and drainage path before contractors put a number on paper. Book a site visit or use the cost estimator to get a ballpark first. Contractors build in Barrie, Oro-Medonte, Innisfil, Springwater, Orillia, Wasaga Beach, Midland, and Collingwood.\n\nShare this article\nReady to start your project?\n\nEvery great backyard starts with a single conversation. Tell us what you're dreaming about \u2014 we'll tell you exactly what it takes.\n\nLET'S TALK ABOUT YOUR PROPERTY\nGOLDEN MAPLE\nLANDSCAPING\n\nArchitectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.\n\nASK FOR THE CURRENT WRITTEN WORKMANSHIP TERMS FOR YOUR PROJECT.\nASK US FOR CURRENT COVERAGE DOCUMENTATION.\nNAVIGATION\nServices\nPortfolio\nOur Story\nContact\nService Areas\nEXPERTISE\nInterlocking & Hardscape\nComposite Decking\nNatural Stone & Flagstone\nPorcelain Installation\nRetaining Walls\nCONNECT\nBarrie, Simcoe County & Cottage Country\n(705) 300-8015\nyorkis@goldenmaplelandscaping.ca\n\n\u00a9 2026 GOLDEN MAPLE LANDSCAPING. ARCHITECTURAL PRECISION.\n\nBARRIE\nINNISFIL\nORO-MEDONTE\nSPRINGWATER\nPRIVACY\nTERMS\nCALL\nGET MY ESTIMATE",
+      "route": "/resources/retaining-wall-cost-oro-medonte/",
+      "status": 200,
+      "observed_at": "2026-09-05T18:09:18.997427+00:00"
+    }
+  ],
+  "page_errors": [],
+  "external_requests": "blocked in test browser",
+  "form_submissions": 0,
+  "scope": "Local static build only, no production deployment or provider calls"
+}

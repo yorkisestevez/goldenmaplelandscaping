@@ -1,0 +1,92 @@
+{
+  "id": "549b17bd-15af-42ee-8f0c-7fef576cf664",
+  "name": "goldenmaple",
+  "custom_domain": "goldenmaplelandscaping.ca",
+  "deploy_id": "6a9c60bf656a32c7afab840e",
+  "state": "ready",
+  "functions": {
+    "id": "202c7ae25e661e852e69c0a78be03b68d0e46334",
+    "provider": "aws_lambda",
+    "created_at": "2026-09-05T18:35:56.262Z",
+    "functions": [
+      {
+        "n": "chat",
+        "d": "23d48f9356d877ed90275147b9e467d9128b287146c28748ea22eff3514dd6a7",
+        "dn": null,
+        "g": null,
+        "bd": {
+          "runtimeAPIVersion": 1
+        },
+        "p": 10,
+        "id": "61a090e605f8f0c987933291a9d5a08c64d2839705414b46b95b5be428f5d78e",
+        "a": "934697152142",
+        "c": "2026-09-05T18:36:08.113Z",
+        "m": 1024,
+        "obl": "netlify-observability-extension",
+        "oblv": 32,
+        "oid": "5f530b09c90e1b3582ab10f8af86f419c287055c98ea4c6a07a5da9ca21b052c",
+        "r": "nodejs24.x",
+        "rg": "us-east-2",
+        "s": 8386,
+        "endpoint": "https://goldenmaplelandscaping.ca/.netlify/functions/chat",
+        "schedule": null
+      },
+      {
+        "n": "submission-created",
+        "d": "ac4b41a9067a2175623cf3f069a38954f955e13a774c888b2bb8f97af3622f00",
+        "dn": null,
+        "g": null,
+        "bd": {
+          "runtimeAPIVersion": 1
+        },
+        "p": 10,
+        "id": "b4b361f569aef3deda6d6205e57aecf0b1e08f0f98ecbd6667751af85dbcacb4",
+        "s": 1810,
+        "r": "nodejs24.x",
+        "c": "2026-07-07T23:34:47.757Z",
+        "a": "073635757191",
+        "oid": "34cc40e85e5e25af9a6332e6fa158a2e449bf3b14fa171abbf874c696108f835",
+        "endpoint": "https://goldenmaplelandscaping.ca/.netlify/functions/submission-created",
+        "schedule": null
+      }
+    ],
+    "log_type": "socketeer",
+    "branch": null
+  },
+  "function_schedules": [],
+  "summary": {
+    "status": "ready",
+    "messages": [
+      {
+        "type": "info",
+        "title": "195 new files uploaded",
+        "description": "106 generated pages and 89 assets changed.",
+        "details": "New pages include:\n- index.html\n- terms/index.html\n- sloped-backyard-solutions-barrie/index.html\n- services/index.html\n- service-areas/index.html\n- resources/index.html\n- process/index.html\n- privacy/index.html\n- premium-patio-rebuild-barrie/index.html\n- portfolio/index.html\n"
+      },
+      {
+        "type": "info",
+        "title": "3 redirect rules processed",
+        "description": "All redirect rules deployed without errors.",
+        "details": ""
+      },
+      {
+        "type": "info",
+        "title": "3 header rules processed",
+        "description": "All header rules deployed without errors.",
+        "details": ""
+      },
+      {
+        "type": "info",
+        "title": "2 functions deployed",
+        "description": "We have deployed 2 functions. [Visit your Functions](/projects/goldenmaple/logs/functions) for more information.",
+        "details": null
+      },
+      {
+        "type": "info",
+        "title": "No edge functions deployed",
+        "description": "This deploy did not include any edge functions. [Learn more about Edge Functions](https://docs.netlify.com/edge-functions/overview/)",
+        "details": null
+      }
+    ]
+  }
+}

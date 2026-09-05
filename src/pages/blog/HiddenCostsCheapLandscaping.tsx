@@ -1,6 +1,7 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
 import CostGuideInlineCTA from '../../components/CostGuideInlineCTA';
+import { BUSINESS } from '../../data/business';
 
 export default function HiddenCostsCheapLandscaping() {
   return (
@@ -44,7 +45,7 @@ export default function HiddenCostsCheapLandscaping() {
 
       <h2>The True Cost of Doing It Twice</h2>
 
-      <p>Every year, half of our summer schedule is spent ripping out "cheap" patios and failing retaining walls that were installed 2 or 3 years prior.</p>
+      <p>Every year, half of the summer schedule is spent ripping out "cheap" patios and failing retaining walls that were installed 2 or 3 years prior.</p>
 
       <p>Here is the real math on that $18,000 "bargain":</p>
       <ul>
@@ -71,7 +72,7 @@ export default function HiddenCostsCheapLandscaping() {
       </ol>
 
       <p>If they hesitate on any of these, walk away. Your home is too valuable to trust to the lowest bidder.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has rebuilt enough failed hardscape across Simcoe County to know what a cheap quote leaves out. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the position here is not that a low number is always bad value: it is that the base depth and drainage a low quote skips are the two things that cost the most to fix later." />
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

@@ -9,10 +9,20 @@ from reportlab.platypus import (
     HRFlowable, KeepTogether, PageBreak, Flowable,
 )
 from reportlab.lib.colors import HexColor
+from pathlib import Path
+import json
+import shutil
+import subprocess
+
+ROOT = Path(__file__).resolve().parent
+CONTACT = json.loads(subprocess.check_output([
+    shutil.which('node'), str(ROOT / 'node_modules/tsx/dist/cli.mjs'),
+    str(ROOT / 'scripts/export-public-contact.ts'),
+], cwd=ROOT, text=True, encoding='utf-8'))
 
 W, H = letter
 
-OUTPUT = r"C:/Users/yorki/OneDrive/Desktop/Goldenmaplelandscaping.ca/golden-maple-landscaping/public/downloads/2026-simcoe-county-backyard-cost-guide.pdf"
+OUTPUT = r"C:/Users/yorki/Desktop/Goldenmaplelandscaping.ca/golden-maple-landscaping/public/downloads/2026-simcoe-county-backyard-cost-guide.pdf"
 
 # Brand palette — match the website
 NEARBLACK   = HexColor("#0f0f0f")
@@ -280,7 +290,7 @@ story.append(Paragraph("Cost Guide.", s_cover_ital))
 
 story.append(Spacer(1, 0.7*inch))
 story.append(Paragraph(
-    "Real numbers. No fluff.<br/>From 42 completed Simcoe County jobs.",
+    "Planning ranges for early budget conversations.<br/>Confirm current scope and pricing for your project.",
     s_cover_sub
 ))
 
@@ -308,19 +318,18 @@ story.append(Paragraph(
 story.append(Paragraph(
     "I built this guide because that's broken. You shouldn't have to learn the "
     "hardscape industry from the inside before you can confidently choose who "
-    "puts a five-figure investment into your yard. So I sat down with our last "
-    "two seasons of completed jobs across Barrie, Innisfil, Oro-Medonte and "
-    "Springwater and pulled out the real numbers — what we charged, what we "
-    "spent, and what makes one $30,000 patio last 30 years while another fails "
-    "in 30 months.",
+    "puts a five-figure investment into your yard. This guide is a planning "
+    "resource: it uses illustrative price ranges and scope examples to help you "
+    "prepare questions for a contractor. It is not a record of completed projects, "
+    "a quote, or a promise of a particular result.",
     s_letter
 ))
 story.append(Paragraph(
     "My philosophy is simple. Premium landscaping isn't decoration. It's "
-    "engineering. The pavers you see are the easy part — the 16 inches of "
-    "compacted base underneath them is where the price comes from, and where "
-    "the cheap quotes always cut. Every page that follows shows you exactly "
-    "what's hidden under the surface — figuratively and literally.",
+    "engineering. The pavers you see are the easy part; excavation, drainage, "
+    "aggregate, soil conditions, and site access can all affect the work below "
+    "them. Final construction details must be set for the specific site and "
+    "documented in the written scope.",
     s_letter
 ))
 story.append(Paragraph(
@@ -385,7 +394,7 @@ story.append(tier_block(
 story.append(sp(0.12))
 story.append(tier_block(
     "II.", "The Functional Backyard — Patio & Fire Pit", "$25,000 — $50,000+",
-    "A 400–600 sqft interlocking patio on a 14–16\" engineered base, a built-in "
+    "A 400–600 sqft interlocking patio with site-specific base preparation, a built-in "
     "seating wall, and a custom fire feature (wood-burning or natural gas). "
     "This is the most common starting point — enough scope to host without overshooting."
 ))
@@ -411,9 +420,9 @@ story.append(PageBreak())
 story.append(page_eyebrow(3, "Interlocking & patio pricing"))
 story.extend(section_title("Six common projects,", "by the numbers."))
 story.append(Paragraph(
-    "Installed prices for premium-built interlocking projects across Simcoe County "
-    "in 2026. Includes engineered base, materials, and finishing — assumes "
-    "standard site access and Techo-Bloc or Permacon products.",
+    "Illustrative 2026 planning ranges for interlocking project scopes in Simcoe County. "
+    "They are not quotes and may change with site access, materials, drainage, design, "
+    "and the written scope of work.",
     s_body
 ))
 story.append(sp(0.1))
@@ -453,18 +462,18 @@ story.append(sp(0.25))
 
 story.append(gold_callout(
     "Per-square-foot benchmark",
-    "Premium-built interlocking installs in our region range from "
-    "<font color='#d4af63'><b>$55–$85 per square foot installed</b></font> in 2026 — "
-    "inclusive of engineered base prep, materials, polymeric jointing, and finishing. "
-    "Anything quoted under $40/sqft is cutting the base prep, the materials, or both.",
+    "The <font color='#d4af63'><b>$55–$85 per square foot</b></font> figure is an "
+    "illustrative planning benchmark from this guide, not a quote or a universal "
+    "construction standard. Compare written scope, materials, drainage, and site "
+    "conditions rather than relying on a price alone.",
 ))
 
 story.append(sp(0.2))
 
 story.append(Paragraph(
     "<i>Why the wide ranges?</i> Site access, base depth, paver choice, "
-    "and whether your yard is flat or sloped each move the final price by 15–30%. "
-    "The next pages break down each lever.",
+    "and whether your yard is flat or sloped can move the final price. The next pages "
+    "outline questions to use when comparing written scopes.",
     s_body
 ))
 
@@ -564,7 +573,7 @@ def scenario_card(label, price, title, body):
 sc_row = Table([[
     scenario_card("FUNCTIONAL", "≈ $15,000", "The Minimum",
         "Standard pavers, simple square shape, flat yard with good access. "
-        "Proper 14\" engineered base. The right floor for entry-level outdoor living."),
+        "Base and drainage details are confirmed for the specific site."),
     scenario_card("ENTERTAINER", "≈ $25,000", "The Sweet Spot",
         "Techo-Bloc / Unilock Beacon Hill premium pavers, contrasting border, "
         "curved edges, matching stone fire pit. Where most homeowners land."),
@@ -584,7 +593,7 @@ story.append(sp(0.3))
 story.append(Paragraph("A worked example.", s_h2))
 story.append(sp(0.05))
 story.append(Paragraph(
-    "What it actually looks like to price a real backyard from a recent Innisfil project.",
+    "An illustrative example of how a backyard scope can be priced; it is not a completed-project record or quote.",
     s_body
 ))
 story.append(sp(0.1))
@@ -636,9 +645,9 @@ story.append(sp(0.15))
 
 drivers = [
     ("Base preparation",
-     "Professional standard: 12–16\" excavation + 8–12\" compacted Granular A "
-     "+ 1\" HPB or sand. Cheap installers cut to 4–6\" — saves on excavation, "
-     "disposal and aggregate, guarantees heaving by year two."),
+     "Excavation, aggregate, bedding, compaction, drainage, soil, and final depth "
+     "are project-specific. Ask the contractor to document the proposed base design "
+     "and site assumptions in the written scope."),
     ("Geotextile & geogrid",
      "Geotextile separates clay soil from the stone base (mandatory on most "
      "Simcoe County yards). Geogrid ties retaining walls into the earth. "
@@ -756,17 +765,16 @@ story.append(PageBreak())
 story.append(page_eyebrow(8, "Cheap quote autopsy"))
 story.extend(section_title("The five hidden costs", "in a low quote."))
 story.append(Paragraph(
-    "When you see one quote 40% under the others, it's not a deal — it's "
-    "five specific cuts that won't show up until year two.",
+    "When quotes differ substantially, compare the written scope before choosing. "
+    "The following items are questions to review, not assumptions about another contractor's work.",
     s_body
 ))
 story.append(sp(0.15))
 
 hidden = [
-    ("01", "The 6-inch base",
-     "The cheap contractor digs 6\" instead of 14–16\". Saves on excavation, "
-     "disposal, and aggregate. Day one: identical to the premium build. "
-     "Year two: heaved, sunken, cracked."),
+    ("01", "Base design",
+     "Ask for the proposed excavation, aggregate, bedding, compaction, drainage, "
+     "and site assumptions in writing. A final base design should be project-specific."),
     ("02", "Skipped geotextile & geogrid",
      "Geotextile fabric separates clay from stone. Geogrid ties retaining "
      "walls into the earth. Both cost money and time — both get cut. "
@@ -810,9 +818,8 @@ story.append(PageBreak())
 story.append(page_eyebrow(9, "The math"))
 story.extend(section_title("The true cost", "of the bargain."))
 story.append(Paragraph(
-    "Half of our summer schedule is spent ripping out cheap patios and failing "
-    "retaining walls that were installed two or three years prior. Here's the "
-    "math we walk new clients through when they bring us a competing low quote.",
+    "This illustrative comparison shows why a complete written scope matters. Actual "
+    "costs, conditions, remedies, and project outcomes vary and require a site review.",
     s_body
 ))
 story.append(sp(0.2))
@@ -855,8 +862,7 @@ story.append(math_box)
 story.append(sp(0.3))
 
 story.append(Paragraph(
-    '"You aren\'t saving $17,000 by choosing the lowest bid. You\'re paying an '
-    '$18,000 deposit on a headache you\'ll have to fix in three years."',
+    '"Use a written scope to compare what is included, excluded, and confirmed for your site."',
     s_quote
 ))
 story.append(sp(0.05))
@@ -937,9 +943,8 @@ story.append(sp(0.3))
 
 story.append(gold_callout(
     "The Yorkis rule",
-    "If a contractor can't answer all four of these in under 60 seconds without "
-    "checking notes — they don't actually know how to build a patio that lasts. "
-    "Save the conversation, end the call, move on.",
+    "Use the answers to compare written scopes. Base depth, materials, drainage, "
+    "coverage documents, and workmanship terms should be confirmed for the project.",
     icon="◆",
 ))
 
@@ -1016,11 +1021,9 @@ story.append(tb_row)
 story.append(sp(0.3))
 
 story.append(gold_callout(
-    "Free 15-minute discovery call",
-    "Before you spend $200 on anyone's design consultation — including ours — "
-    "we offer a <b>free 15-minute phone discovery call</b>. Honest scope assessment, "
-    "honest budget feedback, no pressure. If your project isn't a fit for what "
-    "we do, we'll tell you and recommend someone better. Available year-round.",
+    "Consultation & design scope",
+    "Contact us to confirm the current consultation and design scope, including any "
+    "fees, deliverables, availability, and whether any credit applies to your project.",
     icon="◆",
 ))
 
@@ -1038,10 +1041,10 @@ story.append(Paragraph("Ready to talk", s_cover_title))
 story.append(Paragraph("about your", s_cover_title))
 story.append(Paragraph("project?", s_cover_ital))
 
-story.append(Spacer(1, 0.6*inch))
+story.append(Spacer(1, 0.45*inch))
 story.append(Paragraph(
-    "A free 15-minute discovery call with the founder.<br/>"
-    "Honest scope. Honest budget. No pressure.",
+    "Contact us to confirm the current consultation and design scope.<br/>"
+    "Project details are confirmed in the written scope.",
     s_cover_sub
 ))
 
@@ -1053,7 +1056,7 @@ contact_bar = Table([[
     Paragraph("EMAIL", S("c2l", fontName="Helvetica-Bold", fontSize=8, textColor=GOLD, alignment=TA_CENTER, leading=12)),
     Paragraph("WEB", S("c3l", fontName="Helvetica-Bold", fontSize=8, textColor=GOLD, alignment=TA_CENTER, leading=12)),
 ], [
-    Paragraph("(705) 500-3581", S("c1v", fontName="Times-Roman", fontSize=14, textColor=BONEWHITE, alignment=TA_CENTER, leading=18)),
+    Paragraph(CONTACT['phoneDisplay'], S("c1v", fontName="Times-Roman", fontSize=14, textColor=BONEWHITE, alignment=TA_CENTER, leading=18)),
     Paragraph("yorkis@<br/>goldenmaplelandscaping.ca", S("c2v", fontName="Times-Roman", fontSize=11, textColor=BONEWHITE, alignment=TA_CENTER, leading=14)),
     Paragraph("goldenmaplelandscaping.ca", S("c3v", fontName="Times-Roman", fontSize=11, textColor=BONEWHITE, alignment=TA_CENTER, leading=18)),
 ]], colWidths=[2.16*inch, 2.16*inch, 2.16*inch])
@@ -1068,16 +1071,16 @@ contact_bar.setStyle(TableStyle([
     ("VALIGN",(0,0),(-1,-1),"MIDDLE"),
 ]))
 story.append(contact_bar)
-story.append(sp(0.4))
+story.append(sp(0.3))
 
-# Trust marks
+# Conservative information prompts: current credential and policy details require confirmation.
 trust_bar = Table([[
-    Paragraph('<font color="#d4af63"><b>◆</b></font>&nbsp;&nbsp;<b>WSIB CERTIFIED</b>',
-              S("t1", fontName="Helvetica-Bold", fontSize=9, textColor=BONEWHITE, alignment=TA_CENTER, leading=13)),
-    Paragraph('<font color="#d4af63"><b>◆</b></font>&nbsp;&nbsp;<b>$5M LIABILITY</b>',
-              S("t2", fontName="Helvetica-Bold", fontSize=9, textColor=BONEWHITE, alignment=TA_CENTER, leading=13)),
-    Paragraph('<font color="#d4af63"><b>◆</b></font>&nbsp;&nbsp;<b>5-YR WARRANTY</b>',
-              S("t3", fontName="Helvetica-Bold", fontSize=9, textColor=BONEWHITE, alignment=TA_CENTER, leading=13)),
+    Paragraph('<font color="#d4af63"><b>◆</b></font>&nbsp;&nbsp;<b>WSIB: ASK FOR DOCUMENTATION</b>',
+              S("t1", fontName="Helvetica-Bold", fontSize=8, textColor=BONEWHITE, alignment=TA_CENTER, leading=11)),
+    Paragraph('<font color="#d4af63"><b>◆</b></font>&nbsp;&nbsp;<b>COVERAGE: ASK FOR DOCUMENTATION</b>',
+              S("t2", fontName="Helvetica-Bold", fontSize=8, textColor=BONEWHITE, alignment=TA_CENTER, leading=11)),
+    Paragraph('<font color="#d4af63"><b>◆</b></font>&nbsp;&nbsp;<b>WORKMANSHIP: ASK FOR WRITTEN TERMS</b>',
+              S("t3", fontName="Helvetica-Bold", fontSize=8, textColor=BONEWHITE, alignment=TA_CENTER, leading=11)),
 ]], colWidths=[2.16*inch, 2.16*inch, 2.16*inch])
 trust_bar.setStyle(TableStyle([
     ("TOPPADDING",(0,0),(-1,-1),12),("BOTTOMPADDING",(0,0),(-1,-1),12),
@@ -1086,7 +1089,7 @@ trust_bar.setStyle(TableStyle([
 ]))
 story.append(trust_bar)
 
-story.append(Spacer(1, 0.5*inch))
+story.append(Spacer(1, 0.3*inch))
 story.append(HRFlowable(width="40%", thickness=0.5, color=GOLD, hAlign="CENTER"))
 story.append(sp(0.15))
 story.append(Paragraph(
@@ -1113,15 +1116,13 @@ import os
 size = os.path.getsize(OUTPUT)
 print(f"Size: {size/1024:.1f} KB")
 
-import pdfplumber
-with pdfplumber.open(OUTPUT) as pdf:
-    print(f"Total pages: {len(pdf.pages)}")
-    for i, page in enumerate(pdf.pages):
-        words = page.extract_words()
-        main = [w for w in words if w['top'] < 760]
-        if main:
-            max_y = max(w['bottom'] for w in main)
-            gap = 760 - max_y
-            status = '✅' if gap < 80 else ('⚠' if gap < 150 else '✗')
-            first = ' '.join(w['text'] for w in sorted(main, key=lambda w: w['top'])[:5])
-            print(f"{status} P{i+1:02d} gap={gap:3.0f}pt | {first[:60]}")
+import pymupdf
+with pymupdf.open(OUTPUT) as pdf:
+    print(f"Total pages: {len(pdf)}")
+    text = '\n'.join(page.get_text() for page in pdf)
+    assert CONTACT['phoneDisplay'] in text, 'Configured public phone missing from PDF'
+    for i, page in enumerate(pdf):
+        words = page.get_text('words')
+        assert words, f'Empty PDF page {i+1}'
+        assert all(w[0] >= 0 and w[1] >= 0 and w[2] <= page.rect.width + 1 and w[3] <= page.rect.height + 1 for w in words), f'Text outside page {i+1}'
+    print('PDF contact, page-content and bounds checks: PASS')

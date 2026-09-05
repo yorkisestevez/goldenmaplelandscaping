@@ -25,6 +25,7 @@ import PriceDelta from './ui/PriceDelta';
 import AnimatedPrice, { AnimatedDollars, AnimatedMoney } from './ui/AnimatedPrice';
 import SizeControl from './ui/SizeControl';
 import { cn } from '../utils/cn';
+import { BUSINESS, canPublish } from '../data/business';
 
 
 const PROJECT_TYPES = [
@@ -804,7 +805,7 @@ export default function Estimator() {
           <div className={compact ? 'mb-4' : 'mb-8'}>
             <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-2">Hardscape Brand</div>
             {!compact && (
-              <p className="font-sans text-[11px] font-normal text-brand-bonewhite/70 mb-4">Prices shown are paver material only (Carr retail, base colour). Your estimate covers the full installation — excavation, 12–16" base, crew, and disposal.</p>
+              <p className="font-sans text-[11px] font-normal text-brand-bonewhite/70 mb-4">Prices shown are paver material only from the loaded supplier price table. The planning estimate includes installation allowances; confirm current supplier prices and project-specific excavation, materials, labour and disposal before contracting.</p>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {eligiblePavers.map(p => (
@@ -1255,7 +1256,7 @@ export default function Estimator() {
                 <h3 className="font-display text-3xl text-brand-bone">Where's the project?</h3>
               </div>
               <p className="font-sans text-[13px] text-brand-muted mb-8">
-                We localize your estimate by delivery zone and crew travel. {selectedLocation.projects2025 > 0 ? `We've completed ${selectedLocation.projects2025} projects in ${selectedLocation.name} in 2025.` : ''}
+                We localize your estimate by delivery zone and crew travel. Confirm service availability for your address. {canPublish(BUSINESS.reviews.projectCounts) && selectedLocation.projects2025 > 0 ? `We've completed ${selectedLocation.projects2025} projects in ${selectedLocation.name} in 2025.` : ''}
               </p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {ESTIMATOR_LOCATIONS.map(loc => (
@@ -1269,10 +1270,10 @@ export default function Estimator() {
                     )}
                   >
                     <div className="font-sans text-[13px] text-brand-bone">{loc.name}</div>
-                    {loc.projects2025 > 0 ? (
+                    {canPublish(BUSINESS.reviews.projectCounts) && loc.projects2025 > 0 ? (
                       <div className="font-sans text-[10px] text-brand-muted mt-1">{loc.projects2025} projects · 2025</div>
                     ) : (
-                      <div className="font-sans text-[10px] text-brand-muted mt-1">Outside core area</div>
+                      <div className="font-sans text-[10px] text-brand-muted mt-1">Confirm availability</div>
                     )}
                   </button>
                 ))}
@@ -1283,7 +1284,7 @@ export default function Estimator() {
           {step === 5 && (
             <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
               <h3 className="font-display text-3xl text-brand-bone mb-3">Material preference</h3>
-              <p className="font-sans text-[13px] text-brand-muted mb-8">Pick a tier first, then a specific brand. Real Carr Landscape Depot pricing.</p>
+              <p className="font-sans text-[13px] text-brand-muted mb-8">Pick a tier first, then a specific brand. Material availability and final selections are confirmed for your project.</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
                 {TIERS.map(t => {
@@ -1475,8 +1476,7 @@ export default function Estimator() {
                 <div className="mt-6 px-6 py-4 rounded-2xl bg-brand-gold/8 border border-brand-gold/25">
                   <p className="font-sans text-[12px] font-normal text-brand-bonewhite/85 leading-relaxed">
                     <span className="text-brand-gold-dark">Heads up:</span> walls supporting a driveway or structure
-                    typically require engineered drawings over 1 m. We handle the engineering — it's already
-                    reflected in the range above.
+                    may have engineering or permit requirements. Confirm the requirements for the specific site and written scope.
                   </p>
                 </div>
               )}
@@ -1537,12 +1537,12 @@ export default function Estimator() {
                     {estimate.days.low}–{estimate.days.high} days on-site
                   </div>
                   <div className="font-sans text-[12px] font-normal text-brand-bonewhite/80 leading-relaxed mb-6">
-                    Project start typically 6–10 weeks in spring, 8–14 in peak summer, 3–5 in early fall, from contract signing.
+                    Timing depends on scope, site conditions, material availability, and the current schedule.
                   </div>
                   <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-3">Confidence</div>
                   <div className="font-display text-3xl text-brand-bone mb-2">±{confidence}%</div>
                   <div className="font-sans text-[12px] font-normal text-brand-bonewhite/80 leading-relaxed">
-                    Range tightens with site visit. We'll lock to ±5% after measurement.
+                    Site review and written scope help refine the planning range; final pricing is confirmed for the specific property.
                   </div>
                 </div>
               </div>

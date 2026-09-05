@@ -1,5 +1,6 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
+import { BUSINESS } from '../../data/business';
 
 export default function TimberTechVsWood() {
   return (
@@ -44,7 +45,7 @@ export default function TimberTechVsWood() {
 
       <h2>Why TimberTech AZEK Specifically?</h2>
 
-      <p>Not all composite decking is created equal. We're certified TimberTech Pros, and we specifically recommend the AZEK line because:</p>
+      <p>Not all composite decking is created equal. Compare manufacturer training, product documentation, and installer qualifications when selecting a composite-decking system:</p>
 
       <ul>
         <li><strong>PVC core, not wood-plastic composite:</strong> It doesn't absorb moisture. At all. This is critical in Ontario where boards sit under snow for 4-5 months.</li>
@@ -58,15 +59,15 @@ export default function TimberTechVsWood() {
       <p>Here's what most people don't consider: <strong>a premium deck increases your home's resale value.</strong> Real estate agents in Simcoe County consistently report that a well-maintained outdoor living space adds 65-75% of its cost back to the home's value. A rotting wood deck? That's a liability in a home inspection.</p>
 
       <blockquote>
-        <p>"We've never had a client come back and say they wished they'd gone with wood. But we've had dozens of wood deck owners call us to rip theirs out and replace it with TimberTech."</p>
+        <p>"Contractors have never had a client come back and say they wished they'd gone with wood. But contractors have had dozens of wood deck owners call us to rip theirs out and replace it with TimberTech."</p>
       </blockquote>
 
       <h2>The Bottom Line</h2>
 
       <p>Wood decking is cheaper on day one. TimberTech is cheaper on day 7,300. If you're building a deck you plan to actually enjoy — not just maintain — the numbers speak for themselves.</p>
 
-      <p>Want to see what TimberTech looks like in person? We keep samples of every colour and texture on hand. <strong>Book a free estimate request</strong> — if your project is a fit, we'll bring the options to your property so you can see them in your actual lighting, next to your actual home.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and installs TimberTech composite decking alongside hardscape across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the twenty-year comparison here is built on what maintenance actually costs a homeowner in this climate, not on the sticker price of the boards." />
+      <p>Before choosing a TimberTech colour or texture, ask whether current physical samples are available to view in your setting. <strong>Contact us to confirm the current estimate and site-visit process</strong> — if your project is a fit, a contractor will bring the options to your property so you can see them in your actual lighting, next to your actual home.</p>
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

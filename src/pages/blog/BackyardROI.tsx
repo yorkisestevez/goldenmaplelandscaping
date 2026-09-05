@@ -1,5 +1,6 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
+import { BUSINESS } from '../../data/business';
 
 export default function BackyardROI() {
   return (
@@ -23,7 +24,7 @@ export default function BackyardROI() {
       <ul>
         <li><strong>Professional landscaping</strong> recovers 65-75% of its cost at resale — making it one of the highest-ROI home improvements you can make.</li>
         <li><strong>Curb appeal improvements</strong> (front walkways, driveways, garden beds) can increase perceived home value by 5-12% on their own.</li>
-        <li><strong>Outdoor living spaces</strong> (patios, kitchens, fire features) are consistently rated as "highly desirable" by buyers in the $600K-$1.5M+ range — which is exactly our market in Simcoe County.</li>
+        <li><strong>Outdoor living spaces</strong> (patios, kitchens, fire features) are consistently rated as "highly desirable" by buyers in the $600K-$1.5M+ range — which is exactly the market in Simcoe County.</li>
         <li><strong>Poorly done hardscaping</strong> actually decreases home value. A sinking patio, crumbling retaining wall, or rotting deck is a liability in a home inspection, not an asset.</li>
       </ul>
 
@@ -46,7 +47,7 @@ export default function BackyardROI() {
 
       <h2>What Appraisers Actually Look At</h2>
 
-      <p>We spoke with several Simcoe County real estate professionals to understand what actually moves the needle during an appraisal:</p>
+      <p>Contractors spoke with several Simcoe County real estate professionals to understand what actually moves the needle during an appraisal:</p>
 
       <ul>
         <li><strong>Quality of materials:</strong> Premium pavers vs. budget products are immediately distinguishable to a trained eye.</li>
@@ -73,7 +74,7 @@ export default function BackyardROI() {
       <h2>The Bottom Line</h2>
 
       <p>A professionally built outdoor living space in Simcoe County isn't just an expense — it's an investment that pays dividends every day you live in the home, and again when you sell it. The key is quality. A premium installation from a reputable contractor recovers most of its cost. A cheap installation from a fly-by-night operator? That'll cost you twice — once when you pay for it, and again when a buyer's inspector flags it.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has built backyard renovations across Barrie, Innisfil, Oro-Medonte, and the rest of Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the advice here is the same one given on site: get the base and the drainage right first, because that is the part of a renovation a buyer never sees but always inherits." />
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

@@ -1,6 +1,7 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
 import CostGuideInlineCTA from '../../components/CostGuideInlineCTA';
+import { BUSINESS } from '../../data/business';
 
 export default function PatioCostFactors() {
   return (
@@ -19,7 +20,7 @@ export default function PatioCostFactors() {
 
       <h2>The Starting Point</h2>
 
-      <p>As a baseline, a professionally installed, engineered interlocking patio from a reputable contractor in our region typically ranges from <strong>$35 to $65+ per square foot.</strong></p>
+      <p>As a baseline, a professionally installed, engineered interlocking patio from a reputable contractor in the region typically ranges from <strong>$35 to $65+ per square foot.</strong></p>
 
       <p>For a standard 400-square-foot patio (20' x 20'), you are looking at an investment of roughly <strong>$14,000 to $26,000.</strong></p>
 
@@ -28,10 +29,10 @@ export default function PatioCostFactors() {
       <h2>The 5 Factors That Dictate Your Patio's Price</h2>
 
       <h3>1. Site Access (The Biggest Hidden Cost)</h3>
-      <p>This is the factor homeowners overlook most often. We move tons of earth and stone for a patio project.</p>
+      <p>This is the factor homeowners overlook most often. Contractors move tons of earth and stone for a patio project.</p>
       <ul>
-        <li><strong>Open Access:</strong> If we can drive a skid steer right into the backyard, excavation takes a day, and importing the gravel base takes hours.</li>
-        <li><strong>Restricted Access:</strong> If you only have a 3-foot gate between two houses, we must use mini-excavators or wheelbarrows. This turns a 4-day job into a 9-day job, drastically increasing labour costs.</li>
+        <li><strong>Open Access:</strong> If contractors can drive a skid steer right into the backyard, excavation takes a day, and importing the gravel base takes hours.</li>
+        <li><strong>Restricted Access:</strong> If you only have a 3-foot gate between two houses, contractors must use mini-excavators or wheelbarrows. This turns a 4-day job into a 9-day job, drastically increasing labour costs.</li>
       </ul>
 
       <h3>2. The Base Depth (The Foundation of Quality)</h3>
@@ -77,8 +78,8 @@ export default function PatioCostFactors() {
 
       <p>A well-built patio effectively adds a new room to your house. It expands your living space and, according to real estate data, offers one of the highest ROI (Return on Investment) of any home improvement project—recovering up to 75% of its value at resale.</p>
 
-      <p>If you're ready to find out exactly what your vision will cost, book a consultation. We'll assess your property, discuss material options, and provide a fixed-price commitment.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has installed interlocking patios in Permacon, Unilock, and Techo-Bloc across Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the cost factors listed here are the ones that actually move a quote: access to the yard, excavation depth, and how much has to come out before anything goes back in." />
+      <p>If you're ready to find out exactly what your vision will cost, book a consultation. A contractor will assess your property, discuss material options, and provide a fixed-price commitment.</p>
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

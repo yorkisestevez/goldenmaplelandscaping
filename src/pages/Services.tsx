@@ -1,7 +1,9 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
+import { BUSINESS, publicClaimCopy } from '../data/business';
 import { Grid, Hexagon, AlignJustify, ListTree, Layout, ChefHat, Flame, Sun, Leaf, Lightbulb, Map, ArrowRight, Layers } from 'lucide-react';
 import SEO from '../components/SEO';
+import PublicationTrustBar from '../components/PublicationTrustBar';
 import Reveal from '../components/Reveal';
 
 const SERVICE_CARDS = [
@@ -71,6 +73,7 @@ export default function Services() {
         description="Interlocking stone, composite decking, retaining walls & landscape design. Premium outdoor construction for Barrie & Simcoe County homeowners. View our services."
         canonical="https://goldenmaplelandscaping.ca/services"
       />
+      <PublicationTrustBar />
       
       <section className="section-padding pt-48">
         <div className="container-custom">
@@ -120,7 +123,7 @@ export default function Services() {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-px bg-brand-gold/30" />
           <h2 className="font-display text-3xl md:text-5xl font-light text-brand-bonewhite mb-8">Every project starts with a <span className="text-brand-gold-dark italic">conversation.</span></h2>
           <p className="font-sans text-lg text-brand-muted max-w-2xl mx-auto mb-12 font-light">
-            Free estimate · 24-hour response · No sales call required.
+            Start with a project conversation. Current scope and timing are confirmed directly.
           </p>
           <Link to="/contact" className="btn-primary px-16 py-5">Get My Free Estimate</Link>
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-px bg-brand-gold/30" />
@@ -136,15 +139,15 @@ export default function Services() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-20 max-w-6xl mx-auto mb-24">
             <div className="space-y-6">
               <h3 className="font-display text-3xl font-light text-brand-gold">Structural Integrity</h3>
-              <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">From 12–16" deep interlocking bases to code-exceeding deck framing, we build for the Canadian climate.</p>
+              <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">Drainage, soil, access, intended use, and local requirements inform project-specific site preparation and framing scope.</p>
             </div>
             <div className="space-y-6">
-              <h3 className="font-display text-3xl font-light text-brand-gold">WSIB & $5M</h3>
-              <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">Full protection for our team and your property on every single job site.</p>
+              <h3 className="font-display text-3xl font-light text-brand-gold">Project documentation</h3>
+              <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">{publicClaimCopy(BUSINESS.credentials.wsib, 'Current coverage documentation is available.')} {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation is available.')}</p>
             </div>
             <div className="space-y-6">
-              <h3 className="font-display text-3xl font-light text-brand-gold">5-Year Warranty</h3>
-              <p className="font-sans text-base text-brand-porcelain/80 leading-relaxed font-light">A 5-year sink and settlement warranty on all craftsmanship, reflecting our confidence in our 12–16" base depth standards.</p>
+              <h3 className="font-display text-3xl font-light text-brand-gold">Written project terms</h3>
+              <p className="font-sans text-base text-brand-porcelain/80 leading-relaxed font-light">Ask us for the current written workmanship terms and project-specific scope.</p>
             </div>
           </div>
           <Link to="/contact" className="btn-primary px-16 py-5">Let's Talk About Your Project</Link>

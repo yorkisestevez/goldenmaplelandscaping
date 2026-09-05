@@ -5,6 +5,7 @@ import { Menu, X, Phone, MapPin, Mail, Shield, CheckCircle, Award, ChevronDown }
 import { trackEngagement, trackCall } from '../utils/analytics';
 import ChatWidget from './ChatWidget';
 import { cn } from '../utils/cn';
+import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
 
 
 const Navbar = () => {
@@ -272,7 +273,7 @@ const Navbar = () => {
               Contact
             </Link>
             
-            <a href="tel:7055003581" onClick={() => trackCall('phone_call')} className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold text-brand-gold bg-brand-gold/5 hover:bg-brand-gold hover:text-brand-black hover:shadow-[0_0_16px_rgba(212,175,99,0.25)] transition-all group" aria-label="Call Us">
+            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('phone_call')} className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold text-brand-gold bg-brand-gold/5 hover:bg-brand-gold hover:text-brand-black hover:shadow-[0_0_16px_rgba(212,175,99,0.25)] transition-all group" aria-label="Call Us">
               <Phone size={16} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
             </a>
 
@@ -421,10 +422,10 @@ const Footer = () => {
             </p>
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
-                <Shield size={14} strokeWidth={1.5} /> 5-Year Sink & Settlement Warranty
+                <Shield size={14} strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available.')}
               </div>
               <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
-                <Award size={14} strokeWidth={1.5} /> $5M Liability Coverage
+                <Award size={14} strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage is documented.')}
               </div>
             </div>
           </div>
@@ -460,11 +461,11 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-4">
                 <Phone size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
-                <a href="tel:7055003581" onClick={() => trackCall('footer_phone')} className="hover:text-brand-gold-dark transition-colors">705.500.3581</a>
+                <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('footer_phone')} className="hover:text-brand-gold-dark transition-colors">{publicContact.phoneDisplay}</a>
               </li>
               <li className="flex items-center gap-4">
                 <Mail size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
-                <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="hover:text-brand-gold-dark transition-colors">yorkis@goldenmaplelandscaping.ca</a>
+                <a href={`mailto:${publicContact.email}`} className="hover:text-brand-gold-dark transition-colors">{publicContact.email}</a>
               </li>
             </ul>
           </div>
@@ -487,7 +488,7 @@ const Footer = () => {
       {!hideDock && (
       <div className="xl:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t border-brand-dim/20">
         <a 
-          href="tel:7055003581" onClick={() => trackCall('sticky_call')} 
+          href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('sticky_call')}
           className="flex-1 bg-brand-surface text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.25em] py-5 flex items-center justify-center gap-3 border-r border-brand-dim/20"
         >
           <Phone size={16} strokeWidth={1.5} /> Call

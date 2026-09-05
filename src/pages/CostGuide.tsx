@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CheckCircle, FileText, Shield, Star, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
+import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
 import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
@@ -88,7 +89,7 @@ export default function CostGuide() {
       navigate('/cost-guide/thank-you');
     } catch {
       setStatus('error');
-      setErrorMsg('Connection issue. Email yorkis@goldenmaplelandscaping.ca and we\'ll send it manually.');
+      setErrorMsg(`Connection issue. Email ${publicContact.email} and we'll send it manually.`);
     }
   };
 
@@ -190,7 +191,7 @@ export default function CostGuide() {
                     ))}
                   </div>
                   <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark">
-                    5.0 · 8 Reviews
+                    {publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.')}
                   </span>
                 </div>
 
@@ -298,7 +299,7 @@ export default function CostGuide() {
                 { title: 'Per-sqft pricing for 6 patio sizes', body: 'From 50sqft front walkways to 900sqft double driveways — installed prices in 2026.' },
                 { title: 'Material cost ladder', body: 'Concrete vs. Techo-Bloc vs. porcelain vs. natural stone — with lifespan data.' },
                 { title: '4 sample backyards', body: 'Functional ($25K) → Entertainer ($30K) → Outdoor Room ($40K+) → Elevated ($120K).' },
-                { title: 'The base-prep truth', body: 'Why 12–16" of engineered base costs more — and why 6" guarantees failure by year 2.' },
+                { title: 'Site preparation', body: 'How soil, drainage, intended use and access affect the excavation and base plan.' },
                 { title: '5 hidden upcharges', body: 'Drainage, slope, restricted access, geotextile, geogrid — when they apply, what they add.' },
                 { title: 'Red flags in cheap quotes', body: 'The exact phrases and quote structures that signal you\'re about to lose $40K.' },
               ].map((item, idx) => (

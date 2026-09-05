@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Pickaxe, Package, Hammer, Trash2, Sparkles, Check, X } from 'lucide-react';
 import AnimatedPrice, { AnimatedMoney } from './ui/AnimatedPrice';
 import type { PreciseResult } from '../utils/estimateEngine';
+import { BUSINESS, publicClaimCopy } from '../data/business';
 
 export interface BreakdownLine {
   low: number;
@@ -47,11 +48,11 @@ const LINES = [
 ] as const;
 
 const INCLUDES = [
-  '12–16" base depth (ICPI spec)',
+  'Site preparation allowance; confirm depth and materials in the written scope',
   'Polymeric sand joints',
   'Edge restraint + spikes',
   'Geotextile fabric',
-  '5-year workmanship warranty',
+  publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available.'),
   'Site protection & clean-up',
 ];
 
@@ -74,15 +75,19 @@ function detailFor(
   fallback: string | undefined,
   precise: PreciseResult | null | undefined,
 ): string | undefined {
+  // Presentation policy only: legacy engine detail strings are snapshot-pinned,
+  // but their certification/base promises are not approved public business facts.
+  if (key === 'labour') return 'Installation labour allowance; confirm crew qualifications and written scope.';
+  if (key === 'excavation') return 'Site preparation allowance; final excavation depth is project-specific.';
   const q = precise?.quantities;
-  if (!q) return fallback;
+  if (!q) return key === 'materials' ? 'Materials allowance for the selected scope; confirm specifications before contracting.' : fallback;
   if (key === 'materials') {
     const parts = [
       `${q.aggregateTonnes} tonnes base & bedding aggregate`,
       `${q.polySandBags} bag${q.polySandBags === 1 ? '' : 's'} jointing sand`,
       `${q.skids} pallet${q.skids === 1 ? '' : 's'} + ${q.deliveryLoads} truck load${q.deliveryLoads === 1 ? '' : 's'} delivered`,
     ];
-    return fallback ? `${fallback} — ${parts.join(', ')}` : parts.join(', ');
+    return parts.join(', ');
   }
   if (key === 'disposal') {
     return `${q.bins} × 14-yd bin${q.bins === 1 ? '' : 's'}, tear-out and excavation spoil hauled off`;

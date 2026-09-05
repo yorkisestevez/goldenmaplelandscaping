@@ -3,7 +3,8 @@ import { motion } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Linkedin, Link as LinkIcon, Share2, Check } from 'lucide-react';
 import SEO from './SEO';
-import { FOUNDER, FOUNDER_IMAGE_URL } from '../data/founder';
+
+import { BUSINESS, canPublish } from '../data/business';
 
 interface BlogPostLayoutProps {
   title: string;
@@ -39,15 +40,17 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
   const encodedTitle = encodeURIComponent(title);
 
   // Build canonical from the route — server-side and crawlers see this even before JS runs.
-  const canonicalUrl = `https://goldenmaplelandscaping.ca${location.pathname}`;
-  const ogImageUrl = heroImage.startsWith('http') ? heroImage : `https://goldenmaplelandscaping.ca${heroImage}`;
+  const origin = BUSINESS.canonicalUrl;
+  const canonicalUrl = `${origin}${location.pathname}`;
+  const photoApproved = canPublish(BUSINESS.reviews.photoRights);
+  const ogImageUrl = photoApproved ? (heroImage.startsWith('http') ? heroImage : `${origin}${heroImage}`) : `${origin}/logo.svg`;
 
   // BreadcrumbList helps Google render the page hierarchy in search results.
   const breadcrumbSchema = {
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://goldenmaplelandscaping.ca/" },
-      { "@type": "ListItem", "position": 2, "name": "Resources", "item": "https://goldenmaplelandscaping.ca/resources" },
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": `${origin}/` },
+      { "@type": "ListItem", "position": 2, "name": "Resources", "item": `${origin}/resources` },
       { "@type": "ListItem", "position": 3, "name": title, "item": canonicalUrl },
     ],
   };
@@ -62,23 +65,16 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
     "image": ogImageUrl,
     "datePublished": date,
     "dateModified": dateModified || date,
-    "author": {
-      "@type": "Person",
-      "name": FOUNDER.name,
-      "image": FOUNDER_IMAGE_URL,
-      "jobTitle": "Founder, Golden Maple Landscaping",
-      "url": "https://goldenmaplelandscaping.ca/about",
-      "sameAs": ["https://goldenmaplelandscaping.ca/about"],
-    },
+    "author": { "@type": "Organization", "name": BUSINESS.publicName.value, "url": origin },
     "publisher": {
       "@type": "Organization",
-      "name": "Golden Maple Landscaping",
-      "url": "https://goldenmaplelandscaping.ca",
+      "name": BUSINESS.publicName.value,
+      "url": origin,
       "logo": {
         "@type": "ImageObject",
-        "url": "https://goldenmaplelandscaping.ca/logo.svg",
+        "url": `${origin}/logo.svg`,
       },
-      "areaServed": ["Barrie", "Innisfil", "Oro-Medonte", "Springwater", "Orillia", "Wasaga Beach", "Midland", "Collingwood", "Simcoe County", "Ontario"],
+
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
@@ -139,9 +135,9 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
               </div>
             </motion.div>
 
-            <div className="aspect-[21/9] rounded-[2px] overflow-hidden mb-20 border border-brand-dim/10">
+            {photoApproved && <div className="aspect-[21/9] rounded-[2px] overflow-hidden mb-20 border border-brand-dim/10">
               <img src={heroImage} alt={title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
-            </div>
+            </div>}
 
             <article className="prose-gold">
               {children}

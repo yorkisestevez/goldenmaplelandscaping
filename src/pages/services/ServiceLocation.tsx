@@ -1,9 +1,10 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowRight, CheckCircle, MapPin, Star, Phone, Shield, Award } from 'lucide-react';
+import { ArrowRight, CheckCircle, MapPin, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import QuickQuote from '../../components/QuickQuote';
 import Testimonials from '../../components/Testimonials';
+import PublicationTrustBar from '../../components/PublicationTrustBar';
 import { trackCall } from '../../utils/analytics';
 import {
   SERVICES,
@@ -14,6 +15,7 @@ import {
   type ServiceKey,
   type LocationKey,
 } from '../../data/serviceLocations';
+import { BUSINESS, publicClaimCopy, publicContact, publicPostalAddress } from '../../data/business';
 
 /**
  * Parse the URL slug like "interlocking-barrie" or "composite-decking-orillia"
@@ -49,7 +51,7 @@ export default function ServiceLocation() {
 
   const titleHero = `${service.shortName} in ${location.name}, Ontario`;
   const seoTitle = `${service.shortName} in ${location.name} | Premium ${service.name} | Golden Maple Landscaping`;
-  const seoDescription = `Premium ${service.name.toLowerCase()} in ${location.name}, ${location.region}. ${service.startingPriceText} ${service.perUnitText}. 5-year warranty, WSIB certified, $5M liability. Free estimate request.`;
+  const seoDescription = `Premium ${service.name.toLowerCase()} in ${location.name}, ${location.region}. ${service.startingPriceText} ${service.perUnitText}. ${publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available.')} Contact us to confirm project scope.`;
 
   // Cross-links: same service in other locations + other services in same location
   const otherLocations = LOCATION_KEYS.filter((l) => l !== parsed.location);
@@ -60,21 +62,15 @@ export default function ServiceLocation() {
     '@graph': [
       {
         '@type': 'Service',
-        '@id': `https://goldenmaplelandscaping.ca/services/${slug}#service`,
+        '@id': `${BUSINESS.canonicalUrl}/services/${slug}#service`,
         name: `${service.name} in ${location.name}`,
         serviceType: service.name,
         description: seoDescription,
-        provider: { '@id': 'https://goldenmaplelandscaping.ca/#business' },
+        provider: { '@id': `${BUSINESS.canonicalUrl}/#business` },
         areaServed: {
           '@type': 'City',
           name: location.name,
-          address: {
-            '@type': 'PostalAddress',
-            addressLocality: location.name,
-            addressRegion: 'ON',
-            postalCode: location.postalRoot,
-            addressCountry: 'CA',
-          },
+          address: publicPostalAddress(location.name, location.postalRoot),
         },
         offers: {
           '@type': 'Offer',
@@ -87,7 +83,7 @@ export default function ServiceLocation() {
       },
       {
         '@type': 'FAQPage',
-        '@id': `https://goldenmaplelandscaping.ca/services/${slug}#faq`,
+        '@id': `${BUSINESS.canonicalUrl}/services/${slug}#faq`,
         mainEntity: service.faqs.map((f) => ({
           '@type': 'Question',
           name: f.q,
@@ -97,9 +93,9 @@ export default function ServiceLocation() {
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://goldenmaplelandscaping.ca/' },
-          { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://goldenmaplelandscaping.ca/services' },
-          { '@type': 'ListItem', position: 3, name: titleHero, item: `https://goldenmaplelandscaping.ca/services/${slug}` },
+          { '@type': 'ListItem', position: 1, name: 'Home', item: `${BUSINESS.canonicalUrl}/` },
+          { '@type': 'ListItem', position: 2, name: 'Services', item: `${BUSINESS.canonicalUrl}/services` },
+          { '@type': 'ListItem', position: 3, name: titleHero, item: `${BUSINESS.canonicalUrl}/services/${slug}` },
         ],
       },
     ],
@@ -110,7 +106,7 @@ export default function ServiceLocation() {
       <SEO
         title={seoTitle}
         description={seoDescription}
-        canonical={`https://goldenmaplelandscaping.ca/services/${slug}`}
+        canonical={`${BUSINESS.canonicalUrl}/services/${slug}`}
         schema={schema}
       />
 
@@ -184,32 +180,7 @@ export default function ServiceLocation() {
         </div>
       </section>
 
-      {/* Trust bar */}
-      <section className="border-y border-brand-dim/20 bg-brand-surface/30">
-        <div className="container-custom py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
-            <div className="flex items-center gap-4">
-              <div className="flex gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={12} className="text-brand-gold-dark fill-brand-gold" strokeWidth={0} />
-                ))}
-              </div>
-              <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-                5.0 · 8 Reviews
-              </span>
-            </div>
-            <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <Shield size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> WSIB Certified
-            </div>
-            <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <Award size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> $5M Liability
-            </div>
-            <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <CheckCircle size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> 5-Yr Warranty
-            </div>
-          </div>
-        </div>
-      </section>
+      <PublicationTrustBar />
 
       {/* Why this matters in this location */}
       <section className="section-padding">
@@ -441,15 +412,15 @@ export default function ServiceLocation() {
             <span className="italic text-brand-gold-dark">{location.name}?</span>
           </h2>
           <p className="font-sans text-base md:text-lg text-brand-muted font-light max-w-xl mx-auto mb-14 leading-relaxed">
-            Free estimate request with Yorkis. Honest scope, honest budget, no pressure.
+            Contact Yorkis to discuss scope, budget, and the current consultation options.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 items-center justify-center max-w-xl mx-auto">
             <a
-              href="tel:7055003581" onClick={() => trackCall('servicelocation_phone')}
+              href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('servicelocation_phone')}
               className="flex-1 flex items-center justify-center gap-3 border border-brand-gold/30 text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.25em] py-5 px-8 hover:bg-brand-gold/5 transition-colors w-full"
             >
               <Phone size={14} strokeWidth={1.5} />
-              (705) 500-3581
+              {publicContact.phoneDisplay}
             </a>
             <Link
               to="/contact"

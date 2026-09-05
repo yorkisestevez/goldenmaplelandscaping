@@ -1,0 +1,24 @@
+{
+  "source_urls": 129,
+  "decision_rows": 129,
+  "coverage": "complete",
+  "statuses": {
+    "200": 129
+  },
+  "dispositions": {
+    "OWNER_CONFIRMATION_REQUIRED": 129
+  },
+  "reviewed_map": {
+    "source_urls": 129,
+    "decision_rows": 129,
+    "coverage": "complete",
+    "statuses": {
+      "200": 129
+    },
+    "dispositions": {
+      "OWNER_CONFIRMATION_REQUIRED": 129
+    }
+  },
+  "negative_fixtures_rejected": 3,
+  "scope": "offline structural proof only; not owner offering approval or live migration verification"
+}

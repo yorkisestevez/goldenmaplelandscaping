@@ -1,0 +1,16 @@
+{
+  "verification": "deep baseline-versus-modified estimator snapshot comparison",
+  "baselinePath": "C:\\Users\\yorki\\Desktop\\Goldenmaplelandscaping.ca\\golden-maple-landscaping\\docs\\business-facts-audit\\estimator-snapshot.before-copy-only.json",
+  "snapshotPath": "C:\\Users\\yorki\\Desktop\\Goldenmaplelandscaping.ca\\golden-maple-landscaping\\scripts\\estimator-snapshot.json",
+  "fixtures": 45,
+  "totalDifferences": 76,
+  "approvedExcavationDetailChanges": 32,
+  "approvedLabourDetailChanges": 44,
+  "numericDifferences": 0,
+  "keysChanged": 0,
+  "approvedPatterns": [
+    "12–16\" base depth on <sqft> sqft -> Site-specific preparation allowance for <sqft> sqft",
+    "<days> days on-site, ICPI-certified crew -> <days> estimated days on-site"
+  ],
+  "status": "pass"
+}

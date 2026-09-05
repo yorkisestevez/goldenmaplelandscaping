@@ -6,6 +6,7 @@ import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
+import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
 import { scoreGoldenMapleLead } from '../utils/leadScoring';
 
 const encode = (data: Record<string, string>) =>
@@ -172,7 +173,7 @@ export default function EstimateLeadCapture({
       onUnlock?.(form.email);
     } catch {
       setStatus('error');
-      setErrorMsg('Connection issue. Call (705) 500-3581 — we answer in person.');
+      setErrorMsg(`Connection issue. Call ${publicContact.phoneDisplay} to discuss your project.`);
     }
   };
 
@@ -189,9 +190,7 @@ export default function EstimateLeadCapture({
         </div>
         <h4 className="font-display text-3xl text-brand-bone mb-3 tracking-tight">Build saved.</h4>
         <p className="font-sans text-[14px] font-light text-brand-muted leading-relaxed mb-5">
-          Yorkis will personally review it and reply to{' '}
-          <span className="text-brand-bone">{form.email}</span> with a written estimate within
-          24 hours — usually much faster.
+          We will send your saved estimate to <span className="text-brand-bone">{form.email}</span> and follow up about project details.
         </p>
 
         {/* The actual deliverable. Generated client-side, so it works the
@@ -229,7 +228,7 @@ export default function EstimateLeadCapture({
           className="btn-primary !rounded-full inline-flex items-center justify-center gap-2.5 py-3.5 px-7"
         >
           <Phone size={15} strokeWidth={1.5} />
-          Or book a free 15-min call now
+          Book a project call
         </Link>
       </motion.div>
     );
@@ -250,9 +249,8 @@ export default function EstimateLeadCapture({
       </h4>
       <p className="font-sans text-[13px] font-light text-brand-muted mb-7 leading-relaxed">
         Get a link back to this exact estimate — every choice you made, ready to keep tuning
-        later or send to whoever else is deciding. Yorkis also reviews it personally and
-        replies with a written estimate for your {estimate.city || 'Simcoe County'} project
-        within 24 hours. Honest scope, no sales pressure.
+        later or send to whoever else is deciding. We can follow up about a written estimate for your {estimate.city || 'Simcoe County'} project.
+        Honest scope, no sales pressure.
       </p>
 
       <form
@@ -312,7 +310,7 @@ export default function EstimateLeadCapture({
         </button>
 
         <p className="font-sans text-[11px] text-brand-muted/80 text-center font-light pt-2">
-          5.0★ Google rating · WSIB covered · $5M insured. We never share your info.
+          {publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.')} We never share your info.
         </p>
       </form>
     </div>

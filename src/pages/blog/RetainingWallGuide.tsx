@@ -1,5 +1,6 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
+import { BUSINESS } from '../../data/business';
 
 export default function RetainingWallGuide() {
   return (
@@ -14,7 +15,7 @@ export default function RetainingWallGuide() {
     >
       <p>A retaining wall isn't just a stack of blocks. It's a <strong>structural system</strong> designed to resist the lateral pressure of soil — and in Simcoe County, where slopes, clay soil, and heavy snowmelt create enormous forces, getting it wrong has real consequences.</p>
 
-      <p>We've been called in to fix retaining walls that were built without proper bases, without drainage, and without any consideration for the soil conditions. In every case, rebuilding cost more than doing it right the first time. This guide will help you avoid that.</p>
+      <p>Contractors have been called in to fix retaining walls that were built without proper bases, without drainage, and without any consideration for the soil conditions. In every case, rebuilding cost more than doing it right the first time. This guide will help you avoid that.</p>
 
       <h2>When Do You Need an Engineer?</h2>
 
@@ -30,10 +31,10 @@ export default function RetainingWallGuide() {
       <h2>Materials: What Works Best in Simcoe County</h2>
 
       <h3>Allan Block</h3>
-      <p>The workhorse of the retaining wall industry. Allan Block's pinned system creates positive mechanical connection between courses, and their engineering library makes design calculations straightforward. We use these for most structural applications because they're proven, predictable, and available in multiple finishes.</p>
+      <p>The workhorse of the retaining wall industry. Allan Block's pinned system creates positive mechanical connection between courses, and their engineering library makes design calculations straightforward. Contractors use these for most structural applications because they're proven, predictable, and available in multiple finishes.</p>
 
       <h3>Unilock & Techo-Bloc Walls</h3>
-      <p>When aesthetics matter as much as structure. These premium brands offer sophisticated textures and colours that blend seamlessly into landscape designs. We use them for walls that double as architectural features — seat walls, planter walls, and walls integrated into outdoor kitchen or patio structures.</p>
+      <p>When aesthetics matter as much as structure. These premium brands offer sophisticated textures and colours that blend seamlessly into landscape designs. Contractors use them for walls that double as architectural features — seat walls, planter walls, and walls integrated into outdoor kitchen or patio structures.</p>
 
       <h3>Natural Stone</h3>
       <p>Nothing beats the look of real armour stone or natural fieldstone. But natural stone walls require significantly more skill to build properly because each piece is unique. The weight of armour stone (each piece can weigh 1,000-3,000 lbs) also means specialized equipment and careful placement.</p>
@@ -42,7 +43,7 @@ export default function RetainingWallGuide() {
 
       <p>The #1 reason retaining walls fail isn't the wall itself — it's <strong>water pressure building up behind it.</strong> This is called hydrostatic pressure, and it will eventually push even a well-built wall forward.</p>
 
-      <p>Every retaining wall we build includes:</p>
+      <p>Every retaining wall contractors build includes:</p>
 
       <ul>
         <li><strong>Perforated drain tile</strong> at the base of the wall, wrapped in filter fabric</li>
@@ -66,7 +67,7 @@ export default function RetainingWallGuide() {
         <li><strong>Armour stone walls:</strong> $400-$700 per linear foot depending on stone size</li>
       </ul>
 
-      <p>At Golden Maple, our structural retaining wall projects start at $12,000. This reflects our commitment to proper engineering — deep bases, full drainage systems, and the kind of construction that doesn't move in 10 years.</p>
+      <p>Retaining-wall cost and design requirements depend on wall height, loading, drainage, engineering, permits, and site conditions; obtain a project-specific written scope.</p>
 
       <h2>Questions to Ask Your Contractor</h2>
 
@@ -77,7 +78,7 @@ export default function RetainingWallGuide() {
         <li>Do you carry WSIB and liability insurance? (Non-negotiable)</li>
         <li>What warranty do you offer on structural performance?</li>
       </ul>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has built retaining walls across Barrie, Oro-Medonte, Springwater, and the rest of Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the position on walls does not change: drainage behind the wall and a compacted base under it are what keep it standing, and height is where an engineer stops being optional." />
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

@@ -166,7 +166,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6000,
@@ -176,7 +176,7 @@
       "labour": {
         "low": 6300,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -342,7 +342,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 5900,
@@ -352,7 +352,7 @@
       "labour": {
         "low": 6300,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -518,7 +518,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 10300,
@@ -528,7 +528,7 @@
       "labour": {
         "low": 6300,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -694,7 +694,7 @@
       "excavation": {
         "low": 2500,
         "high": 4000,
-        "detail": "12–16\" base depth on 100 sqft"
+        "detail": "Site-specific preparation allowance for 100 sqft"
       },
       "materials": {
         "low": 1900,
@@ -704,7 +704,7 @@
       "labour": {
         "low": 2200,
         "high": 4600,
-        "detail": "1–1.5 days on-site, ICPI-certified crew"
+        "detail": "1–1.5 estimated days on-site"
       },
       "disposal": {
         "low": 600,
@@ -870,7 +870,7 @@
       "excavation": {
         "low": 16700,
         "high": 22000,
-        "detail": "12–16\" base depth on 2000 sqft"
+        "detail": "Site-specific preparation allowance for 2000 sqft"
       },
       "materials": {
         "low": 22300,
@@ -880,7 +880,7 @@
       "labour": {
         "low": 25100,
         "high": 33000,
-        "detail": "6.5–10.5 days on-site, ICPI-certified crew"
+        "detail": "6.5–10.5 estimated days on-site"
       },
       "disposal": {
         "low": 5000,
@@ -1046,7 +1046,7 @@
       "excavation": {
         "low": 4000,
         "high": 5300,
-        "detail": "12–16\" base depth on 480 sqft"
+        "detail": "Site-specific preparation allowance for 480 sqft"
       },
       "materials": {
         "low": 5800,
@@ -1056,7 +1056,7 @@
       "labour": {
         "low": 6000,
         "high": 10100,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -1222,7 +1222,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6000,
@@ -1232,7 +1232,7 @@
       "labour": {
         "low": 6300,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -1398,7 +1398,7 @@
       "excavation": {
         "low": 4500,
         "high": 6100,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6000,
@@ -1408,7 +1408,7 @@
       "labour": {
         "low": 8300,
         "high": 13500,
-        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+        "detail": "2.5–4.5 estimated days on-site"
       },
       "disposal": {
         "low": 2800,
@@ -1574,7 +1574,7 @@
       "excavation": {
         "low": 4400,
         "high": 5900,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6000,
@@ -1584,7 +1584,7 @@
       "labour": {
         "low": 7500,
         "high": 13500,
-        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+        "detail": "2.5–4.5 estimated days on-site"
       },
       "disposal": {
         "low": 2200,
@@ -1750,7 +1750,7 @@
       "excavation": {
         "low": 4300,
         "high": 5900,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6000,
@@ -1760,7 +1760,7 @@
       "labour": {
         "low": 7100,
         "high": 13500,
-        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+        "detail": "2.5–4.5 estimated days on-site"
       },
       "disposal": {
         "low": 2200,
@@ -1926,7 +1926,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6100,
@@ -1936,7 +1936,7 @@
       "labour": {
         "low": 6700,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -2102,7 +2102,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6200,
@@ -2112,7 +2112,7 @@
       "labour": {
         "low": 7100,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -2278,7 +2278,7 @@
       "excavation": {
         "low": 4500,
         "high": 6100,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6000,
@@ -2288,7 +2288,7 @@
       "labour": {
         "low": 8100,
         "high": 11700,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -2454,7 +2454,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6000,
@@ -2464,7 +2464,7 @@
       "labour": {
         "low": 6500,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -2630,7 +2630,7 @@
       "excavation": {
         "low": 4900,
         "high": 6800,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6200,
@@ -2640,7 +2640,7 @@
       "labour": {
         "low": 10900,
         "high": 16400,
-        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+        "detail": "2.5–4.5 estimated days on-site"
       },
       "disposal": {
         "low": 2800,
@@ -2806,7 +2806,7 @@
       "excavation": {
         "low": 4900,
         "high": 6500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 7100,
@@ -2816,7 +2816,7 @@
       "labour": {
         "low": 7400,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -2982,7 +2982,7 @@
       "excavation": {
         "low": 4400,
         "high": 6200,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6000,
@@ -2992,7 +2992,7 @@
       "labour": {
         "low": 7200,
         "high": 15100,
-        "detail": "2.5–5 days on-site, ICPI-certified crew"
+        "detail": "2.5–5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -3158,7 +3158,7 @@
       "excavation": {
         "low": 4400,
         "high": 6100,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6000,
@@ -3168,7 +3168,7 @@
       "labour": {
         "low": 7200,
         "high": 13500,
-        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+        "detail": "2.5–4.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -3334,7 +3334,7 @@
       "excavation": {
         "low": 4700,
         "high": 6200,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6800,
@@ -3344,7 +3344,7 @@
       "labour": {
         "low": 7000,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -3510,7 +3510,7 @@
       "excavation": {
         "low": 6000,
         "high": 8500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 7900,
@@ -3520,7 +3520,7 @@
       "labour": {
         "low": 9900,
         "high": 18300,
-        "detail": "3–6 days on-site, ICPI-certified crew"
+        "detail": "3–6 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -3686,7 +3686,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6400,
@@ -3696,7 +3696,7 @@
       "labour": {
         "low": 6300,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -3862,7 +3862,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6700,
@@ -3872,7 +3872,7 @@
       "labour": {
         "low": 6300,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -4038,7 +4038,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 7200,
@@ -4048,7 +4048,7 @@
       "labour": {
         "low": 6300,
         "high": 10400,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -4214,7 +4214,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6000,
@@ -4224,7 +4224,7 @@
       "labour": {
         "low": 6800,
         "high": 13500,
-        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+        "detail": "2.5–4.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -4390,7 +4390,7 @@
       "excavation": {
         "low": 4200,
         "high": 5500,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 6000,
@@ -4400,7 +4400,7 @@
       "labour": {
         "low": 12400,
         "high": 26200,
-        "detail": "4.5–8.5 days on-site, ICPI-certified crew"
+        "detail": "4.5–8.5 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -4566,7 +4566,7 @@
       "excavation": {
         "low": 3300,
         "high": 4400,
-        "detail": "12–16\" base depth on 400 sqft"
+        "detail": "Site-specific preparation allowance for 400 sqft"
       },
       "materials": {
         "low": 8400,
@@ -4576,7 +4576,7 @@
       "labour": {
         "low": 5600,
         "high": 8900,
-        "detail": "2–3 days on-site, ICPI-certified crew"
+        "detail": "2–3 estimated days on-site"
       },
       "disposal": {
         "low": 1100,
@@ -4625,7 +4625,7 @@
       "excavation": {
         "low": 2500,
         "high": 4000,
-        "detail": "12–16\" base depth on 600 sqft"
+        "detail": "Site-specific preparation allowance for 600 sqft"
       },
       "materials": {
         "low": 5600,
@@ -4635,7 +4635,7 @@
       "labour": {
         "low": 6200,
         "high": 11800,
-        "detail": "2.5–4 days on-site, ICPI-certified crew"
+        "detail": "2.5–4 estimated days on-site"
       },
       "disposal": {
         "low": 600,
@@ -4694,7 +4694,7 @@
       "labour": {
         "low": 7600,
         "high": 11100,
-        "detail": "2–3.5 days on-site, ICPI-certified crew"
+        "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -4753,7 +4753,7 @@
       "labour": {
         "low": 5000,
         "high": 8400,
-        "detail": "1.5–3 days on-site, ICPI-certified crew"
+        "detail": "1.5–3 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -4812,7 +4812,7 @@
       "labour": {
         "low": 12200,
         "high": 15600,
-        "detail": "3–5 days on-site, ICPI-certified crew"
+        "detail": "3–5 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -4871,7 +4871,7 @@
       "labour": {
         "low": 41500,
         "high": 53000,
-        "detail": "6–10 days on-site, ICPI-certified crew"
+        "detail": "6–10 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -4930,7 +4930,7 @@
       "labour": {
         "low": 7000,
         "high": 12700,
-        "detail": "2.5–4 days on-site, ICPI-certified crew"
+        "detail": "2.5–4 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -4989,7 +4989,7 @@
       "labour": {
         "low": 16200,
         "high": 29100,
-        "detail": "6–9.5 days on-site, ICPI-certified crew"
+        "detail": "6–9.5 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -5038,7 +5038,7 @@
       "excavation": {
         "low": 2500,
         "high": 4000,
-        "detail": "12–16\" base depth on 300 sqft"
+        "detail": "Site-specific preparation allowance for 300 sqft"
       },
       "materials": {
         "low": 9100,
@@ -5048,7 +5048,7 @@
       "labour": {
         "low": 5800,
         "high": 12000,
-        "detail": "2–3 days on-site, ICPI-certified crew"
+        "detail": "2–3 estimated days on-site"
       },
       "disposal": {
         "low": 600,
@@ -5097,7 +5097,7 @@
       "excavation": {
         "low": 2500,
         "high": 4000,
-        "detail": "12–16\" base depth on 300 sqft"
+        "detail": "Site-specific preparation allowance for 300 sqft"
       },
       "materials": {
         "low": 9100,
@@ -5107,7 +5107,7 @@
       "labour": {
         "low": 7300,
         "high": 12000,
-        "detail": "2–3 days on-site, ICPI-certified crew"
+        "detail": "2–3 estimated days on-site"
       },
       "disposal": {
         "low": 600,
@@ -5156,7 +5156,7 @@
       "excavation": {
         "low": 3800,
         "high": 4800,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 21000,
@@ -5166,7 +5166,7 @@
       "labour": {
         "low": 13300,
         "high": 17300,
-        "detail": "2.5–4.5 days on-site, ICPI-certified crew"
+        "detail": "2.5–4.5 estimated days on-site"
       },
       "disposal": {
         "low": 600,
@@ -5225,7 +5225,7 @@
       "labour": {
         "low": 9800,
         "high": 19000,
-        "detail": "3.5–6 days on-site, ICPI-certified crew"
+        "detail": "3.5–6 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -5284,7 +5284,7 @@
       "labour": {
         "low": 18200,
         "high": 34800,
-        "detail": "6.5–11 days on-site, ICPI-certified crew"
+        "detail": "6.5–11 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -5343,7 +5343,7 @@
       "labour": {
         "low": 4200,
         "high": 9500,
-        "detail": "1.5–3 days on-site, ICPI-certified crew"
+        "detail": "1.5–3 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -5402,7 +5402,7 @@
       "labour": {
         "low": 4200,
         "high": 9500,
-        "detail": "1.5–3 days on-site, ICPI-certified crew"
+        "detail": "1.5–3 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -5461,7 +5461,7 @@
       "labour": {
         "low": 7000,
         "high": 15800,
-        "detail": "2.5–5 days on-site, ICPI-certified crew"
+        "detail": "2.5–5 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -5520,7 +5520,7 @@
       "labour": {
         "low": 4200,
         "high": 9500,
-        "detail": "1.5–3 days on-site, ICPI-certified crew"
+        "detail": "1.5–3 estimated days on-site"
       },
       "disposal": {
         "low": 0,
@@ -5689,7 +5689,7 @@
       "excavation": {
         "low": 8500,
         "high": 11100,
-        "detail": "12–16\" base depth on 500 sqft"
+        "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
         "low": 17000,
@@ -5699,7 +5699,7 @@
       "labour": {
         "low": 15600,
         "high": 24600,
-        "detail": "4.5–8 days on-site, ICPI-certified crew"
+        "detail": "4.5–8 estimated days on-site"
       },
       "disposal": {
         "low": 1700,
@@ -5872,7 +5872,7 @@
       "excavation": {
         "low": 46900,
         "high": 63000,
-        "detail": "12–16\" base depth on 1300 sqft"
+        "detail": "Site-specific preparation allowance for 1300 sqft"
       },
       "materials": {
         "low": 128700,
@@ -5882,7 +5882,7 @@
       "labour": {
         "low": 95100,
         "high": 129700,
-        "detail": "21–36.5 days on-site, ICPI-certified crew"
+        "detail": "21–36.5 estimated days on-site"
       },
       "disposal": {
         "low": 5000,

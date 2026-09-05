@@ -1,0 +1,295 @@
+{
+  "passed": false,
+  "findings": [
+    {
+      "file": "src\\components\\EstimatorUnlock.tsx",
+      "line": 93,
+      "excerpt": "setErrorMsg('Connection issue. Call (705) 500-3581 \u2014 we answer in person.');"
+    },
+    {
+      "file": "src\\components\\Layout.tsx",
+      "line": 464,
+      "excerpt": "<a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('footer_phone')} className=\"hover:text-brand-gold-dark transition-colors\">705.500.3581</a>"
+    },
+    {
+      "file": "src\\pages\\Contact.tsx",
+      "line": 187,
+      "excerpt": "placeholder=\"(705) 500-3581\""
+    },
+    {
+      "file": "src\\pages\\CostGuide.tsx",
+      "line": 92,
+      "excerpt": "setErrorMsg('Connection issue. Email yorkis@goldenmaplelandscaping.ca and we\\'ll send it manually.');"
+    },
+    {
+      "file": "src\\pages\\CostGuideThankYou.tsx",
+      "line": 92,
+      "excerpt": "href=\"tel:7055003581\" onClick={() => trackCall('costguidethankyou_phone')}"
+    },
+    {
+      "file": "src\\pages\\CostGuideThankYou.tsx",
+      "line": 96,
+      "excerpt": "(705) 500-3581"
+    },
+    {
+      "file": "src\\pages\\Home.tsx",
+      "line": 88,
+      "excerpt": "Or Call (705) 500-3581"
+    },
+    {
+      "file": "src\\pages\\Privacy.tsx",
+      "line": 57,
+      "excerpt": "Under Canadian privacy law (PIPEDA), you can request access to the personal information we hold about you, ask us to correct it, or request its deletion. Email <a href=\"mailto:york"
+    },
+    {
+      "file": "src\\pages\\Privacy.tsx",
+      "line": 67,
+      "excerpt": "Privacy questions: <a href=\"mailto:yorkis@goldenmaplelandscaping.ca\" className=\"text-brand-gold-dark hover:underline\">yorkis@goldenmaplelandscaping.ca</a><br />"
+    },
+    {
+      "file": "src\\pages\\Privacy.tsx",
+      "line": 68,
+      "excerpt": "Phone: <a href=\"tel:7055003581\" onClick={() => trackCall('privacy_phone')} className=\"text-brand-gold-dark hover:underline\">(705) 500-3581</a><br />"
+    },
+    {
+      "file": "src\\pages\\Terms.tsx",
+      "line": 73,
+      "excerpt": "Questions about these terms: <a href=\"mailto:yorkis@goldenmaplelandscaping.ca\" className=\"text-brand-gold-dark hover:underline\">yorkis@goldenmaplelandscaping.ca</a><br />"
+    },
+    {
+      "file": "src\\pages\\Terms.tsx",
+      "line": 74,
+      "excerpt": "Phone: <a href=\"tel:7055003581\" onClick={() => trackCall('terms_phone')} className=\"text-brand-gold-dark hover:underline\">(705) 500-3581</a>"
+    },
+    {
+      "file": "src\\pages\\locations\\Barrie.tsx",
+      "line": 77,
+      "excerpt": "\"telephone\": \"+17055003581\","
+    },
+    {
+      "file": "src\\pages\\locations\\Barrie.tsx",
+      "line": 78,
+      "excerpt": "\"email\": \"yorkis@goldenmaplelandscaping.ca\","
+    },
+    {
+      "file": "src\\pages\\locations\\Barrie.tsx",
+      "line": 150,
+      "excerpt": "href=\"tel:7055003581\""
+    },
+    {
+      "file": "src\\pages\\locations\\Barrie.tsx",
+      "line": 154,
+      "excerpt": "<Phone size={18} /> Call 705-500-3581"
+    },
+    {
+      "file": "src\\pages\\locations\\Barrie.tsx",
+      "line": 305,
+      "excerpt": "<a href=\"tel:7055003581\" onClick={() => trackCall('barrie_phone')} className=\"flex items-center gap-3 font-sans text-sm text-brand-gold-dark hover:text-brand-bonewhite transition-c"
+    },
+    {
+      "file": "src\\pages\\locations\\Barrie.tsx",
+      "line": 306,
+      "excerpt": "<Phone size={16} /> 705-500-3581"
+    },
+    {
+      "file": "src\\pages\\locations\\Barrie.tsx",
+      "line": 309,
+      "excerpt": "<a href=\"mailto:yorkis@goldenmaplelandscaping.ca\" className=\"flex items-center justify-center gap-3 font-sans text-sm text-brand-muted hover:text-brand-gold-dark transition-colors\""
+    },
+    {
+      "file": "src\\pages\\locations\\Barrie.tsx",
+      "line": 310,
+      "excerpt": "<Mail size={16} /> yorkis@goldenmaplelandscaping.ca"
+    },
+    {
+      "file": "src\\pages\\locations\\Innisfil.tsx",
+      "line": 77,
+      "excerpt": "\"telephone\": \"+17055003581\","
+    },
+    {
+      "file": "src\\pages\\locations\\Innisfil.tsx",
+      "line": 78,
+      "excerpt": "\"email\": \"yorkis@goldenmaplelandscaping.ca\","
+    },
+    {
+      "file": "src\\pages\\locations\\Innisfil.tsx",
+      "line": 153,
+      "excerpt": "href=\"tel:7055003581\""
+    },
+    {
+      "file": "src\\pages\\locations\\Innisfil.tsx",
+      "line": 157,
+      "excerpt": "<Phone size={18} /> Call 705-500-3581"
+    },
+    {
+      "file": "src\\pages\\locations\\Innisfil.tsx",
+      "line": 313,
+      "excerpt": "<a href=\"tel:7055003581\" onClick={() => trackCall('innisfil_phone')} className=\"flex items-center gap-3 font-sans text-sm text-brand-gold-dark hover:text-brand-bonewhite transition"
+    },
+    {
+      "file": "src\\pages\\locations\\Innisfil.tsx",
+      "line": 314,
+      "excerpt": "<Phone size={16} /> 705-500-3581"
+    },
+    {
+      "file": "src\\pages\\locations\\Innisfil.tsx",
+      "line": 317,
+      "excerpt": "<a href=\"mailto:yorkis@goldenmaplelandscaping.ca\" className=\"flex items-center justify-center gap-3 font-sans text-sm text-brand-muted hover:text-brand-gold-dark transition-colors\""
+    },
+    {
+      "file": "src\\pages\\locations\\Innisfil.tsx",
+      "line": 318,
+      "excerpt": "<Mail size={16} /> yorkis@goldenmaplelandscaping.ca"
+    },
+    {
+      "file": "src\\pages\\locations\\LocationLanding.tsx",
+      "line": 220,
+      "excerpt": "Call (705) 500-3581"
+    },
+    {
+      "file": "src\\pages\\locations\\LocationLanding.tsx",
+      "line": 328,
+      "excerpt": "(705) 500-3581"
+    },
+    {
+      "file": "src\\pages\\locations\\OroMedonte.tsx",
+      "line": 77,
+      "excerpt": "\"telephone\": \"+17055003581\","
+    },
+    {
+      "file": "src\\pages\\locations\\OroMedonte.tsx",
+      "line": 78,
+      "excerpt": "\"email\": \"yorkis@goldenmaplelandscaping.ca\","
+    },
+    {
+      "file": "src\\pages\\locations\\OroMedonte.tsx",
+      "line": 153,
+      "excerpt": "href=\"tel:7055003581\""
+    },
+    {
+      "file": "src\\pages\\locations\\OroMedonte.tsx",
+      "line": 157,
+      "excerpt": "<Phone size={18} /> Call 705-500-3581"
+    },
+    {
+      "file": "src\\pages\\locations\\OroMedonte.tsx",
+      "line": 317,
+      "excerpt": "<a href=\"tel:7055003581\" onClick={() => trackCall('oromedonte_phone')} className=\"flex items-center gap-3 font-sans text-sm text-brand-gold-dark hover:text-brand-bonewhite transiti"
+    },
+    {
+      "file": "src\\pages\\locations\\OroMedonte.tsx",
+      "line": 318,
+      "excerpt": "<Phone size={16} /> 705-500-3581"
+    },
+    {
+      "file": "src\\pages\\locations\\OroMedonte.tsx",
+      "line": 321,
+      "excerpt": "<a href=\"mailto:yorkis@goldenmaplelandscaping.ca\" className=\"flex items-center justify-center gap-3 font-sans text-sm text-brand-muted hover:text-brand-gold-dark transition-colors\""
+    },
+    {
+      "file": "src\\pages\\locations\\OroMedonte.tsx",
+      "line": 322,
+      "excerpt": "<Mail size={16} /> yorkis@goldenmaplelandscaping.ca"
+    },
+    {
+      "file": "src\\pages\\locations\\Springwater.tsx",
+      "line": 78,
+      "excerpt": "\"telephone\": \"+17055003581\","
+    },
+    {
+      "file": "src\\pages\\locations\\Springwater.tsx",
+      "line": 79,
+      "excerpt": "\"email\": \"yorkis@goldenmaplelandscaping.ca\","
+    },
+    {
+      "file": "src\\pages\\locations\\Springwater.tsx",
+      "line": 154,
+      "excerpt": "href=\"tel:7055003581\""
+    },
+    {
+      "file": "src\\pages\\locations\\Springwater.tsx",
+      "line": 158,
+      "excerpt": "<Phone size={18} /> Call 705-500-3581"
+    },
+    {
+      "file": "src\\pages\\locations\\Springwater.tsx",
+      "line": 318,
+      "excerpt": "<a href=\"tel:7055003581\" onClick={() => trackCall('springwater_phone')} className=\"flex items-center gap-3 font-sans text-sm text-brand-gold-dark hover:text-brand-bonewhite transit"
+    },
+    {
+      "file": "src\\pages\\locations\\Springwater.tsx",
+      "line": 319,
+      "excerpt": "<Phone size={16} /> 705-500-3581"
+    },
+    {
+      "file": "src\\pages\\locations\\Springwater.tsx",
+      "line": 322,
+      "excerpt": "<a href=\"mailto:yorkis@goldenmaplelandscaping.ca\" className=\"flex items-center justify-center gap-3 font-sans text-sm text-brand-muted hover:text-brand-gold-dark transition-colors\""
+    },
+    {
+      "file": "src\\pages\\locations\\Springwater.tsx",
+      "line": 323,
+      "excerpt": "<Mail size={16} /> yorkis@goldenmaplelandscaping.ca"
+    },
+    {
+      "file": "src\\pages\\process\\Completion.tsx",
+      "line": 101,
+      "excerpt": "<a href=\"tel:7055003581\" onClick={() => trackCall('completion_phone')} className=\"font-sans text-sm text-brand-gold hover:underline flex items-center gap-2\">"
+    },
+    {
+      "file": "src\\pages\\process\\Completion.tsx",
+      "line": 102,
+      "excerpt": "<Phone size={14} /> (705) 500-3581"
+    },
+    {
+      "file": "src\\pages\\process\\Construction.tsx",
+      "line": 101,
+      "excerpt": "<a href=\"tel:7055003581\" onClick={() => trackCall('construction_phone')} className=\"font-sans text-sm text-brand-gold hover:underline flex items-center gap-2\">"
+    },
+    {
+      "file": "src\\pages\\process\\Construction.tsx",
+      "line": 102,
+      "excerpt": "<Phone size={14} /> (705) 500-3581"
+    },
+    {
+      "file": "src\\pages\\process\\Consultation.tsx",
+      "line": 107,
+      "excerpt": "<a href=\"tel:7055003581\" onClick={() => trackCall('consultation_phone')} className=\"font-sans text-sm text-brand-gold hover:underline flex items-center gap-2\">"
+    },
+    {
+      "file": "src\\pages\\process\\Consultation.tsx",
+      "line": 108,
+      "excerpt": "<Phone size={14} /> (705) 500-3581"
+    },
+    {
+      "file": "src\\pages\\process\\Design3D.tsx",
+      "line": 101,
+      "excerpt": "<a href=\"tel:7055003581\" onClick={() => trackCall('design3d_phone')} className=\"font-sans text-sm text-brand-gold hover:underline flex items-center gap-2\">"
+    },
+    {
+      "file": "src\\pages\\process\\Design3D.tsx",
+      "line": 102,
+      "excerpt": "<Phone size={14} /> (705) 500-3581"
+    },
+    {
+      "file": "src\\pages\\process\\MaterialSelection.tsx",
+      "line": 98,
+      "excerpt": "<a href=\"tel:7055003581\" onClick={() => trackCall('materialselection_phone')} className=\"font-sans text-sm text-brand-gold hover:underline flex items-center gap-2\">"
+    },
+    {
+      "file": "src\\pages\\process\\MaterialSelection.tsx",
+      "line": 99,
+      "excerpt": "<Phone size={14} /> (705) 500-3581"
+    },
+    {
+      "file": "src\\pages\\process\\SiteAssessment.tsx",
+      "line": 101,
+      "excerpt": "<a href=\"tel:7055003581\" onClick={() => trackCall('siteassessment_phone')} className=\"font-sans text-sm text-brand-gold hover:underline flex items-center gap-2\">"
+    },
+    {
+      "file": "src\\pages\\process\\SiteAssessment.tsx",
+      "line": 102,
+      "excerpt": "<Phone size={14} /> (705) 500-3581"
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
 import { scoreGoldenMapleLead } from '../utils/leadScoring';
+import { publicContact } from '../data/business';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -121,7 +122,7 @@ export default function HeroContactForm() {
       setStatus('success');
     } catch (err) {
       setStatus('error');
-      setErrorMsg('Something went wrong. Call (705) 500-3581 or email yorkis@goldenmaplelandscaping.ca.');
+      setErrorMsg(`Something went wrong. Call ${publicContact.phoneDisplay} or email ${publicContact.email}.`);
     }
   };
 
@@ -143,11 +144,10 @@ export default function HeroContactForm() {
           </div>
           <h3 className="font-display text-2xl font-light text-brand-bonewhite">Thanks{form.name ? `, ${form.name.split(' ')[0]}` : ''} — talk soon.</h3>
           <p className="font-sans text-[14px] text-brand-bonewhite/80 leading-relaxed font-light max-w-xs mx-auto">
-            Yorkis comes back within <span className="text-brand-gold-dark">24 hours</span> with an honest read on
-            scope, timeline, and budget.
+            We will follow up about your scope, timeline, and budget.
           </p>
-          <a href="tel:7055003581" onClick={() => trackCall('hero_form_phone')} className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark hover:underline">
-            Or call (705) 500-3581
+          <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('hero_form_phone')} className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark hover:underline">
+            Or call {publicContact.phoneDisplay}
           </a>
         </div>
       ) : (
@@ -165,13 +165,13 @@ export default function HeroContactForm() {
 
           <div className="mb-1">
             <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-1.5">
-              Free Consultation · 24-Hour Reply
+              Project conversation
             </div>
             <h2 className="font-display text-2xl md:text-[28px] font-light text-brand-bonewhite leading-tight">
               Tell us about your <span className="italic text-brand-gold-dark">space.</span>
             </h2>
             <p className="font-sans text-[12.5px] text-brand-bonewhite/75 font-light mt-1.5 leading-relaxed">
-              Yorkis replies personally — honest scope, honest budget, no sales call.
+              Share your priorities, location and budget so we can discuss a suitable next step.
             </p>
           </div>
 
@@ -190,7 +190,7 @@ export default function HeroContactForm() {
           <div>
             <label htmlFor="hc-phone" className={labelCls}>Phone</label>
             <input id="hc-phone" type="tel" name="phone" inputMode="tel" required autoComplete="tel"
-              value={form.phone} onChange={onChange} placeholder="(705) 500-3581" className={fieldCls} />
+              value={form.phone} onChange={onChange} placeholder={publicContact.phoneDisplay} className={fieldCls} />
           </div>
 
           <div>

@@ -1,0 +1,30 @@
+{
+  "pages": 13,
+  "bytes": 29876,
+  "sha256": "1cdfd4be3d4775de1e6b563c4a228a374d690477bcfb3817707b9c37750ab6e4",
+  "term_counts": {
+    "42 completed": 0,
+    "completed jobs": 0,
+    "WSIB CERTIFIED": 0,
+    "$5M LIABILITY": 0,
+    "5-YR WARRANTY": 0,
+    "free 15-minute": 0,
+    "free 15-minute discovery": 0,
+    "14\u201316": 0,
+    "12\u201316": 0,
+    "16 inches": 0,
+    "790-3838": 0,
+    "$99 paid design": 0,
+    "100% credited": 0
+  },
+  "current_phone_count": 1,
+  "pricing_tokens": {
+    "$15,000 \u2014 $35,000+": 1,
+    "$25,000 \u2014 $50,000+": 1,
+    "$55": 2,
+    "$85": 2,
+    "$24,500": 1,
+    "$30,000": 2,
+    "$58,000": 1
+  }
+}

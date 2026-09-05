@@ -9,41 +9,12 @@ import { trackCall } from '../utils/analytics';
 // Hook: engineered residential landscape, multi-trade coordination, multi-season planning.
 // Primary CTA: BookingScheduler — in-person consult only (high-commitment).
 
-const CASE_STUDIES = [
-  {
-    title: 'Lakefront property, Innisfil',
-    range: '$118K',
-    detail: '1,400 sqft Wiarton flagstone pool deck, integrated armourstone retaining (drop to lake side), full grade rework for drainage off the deck to a managed dry well. Five-week build, 90 yards of clear stone, three crew on site.',
-  },
-  {
-    title: 'New build, Oro-Medonte',
-    range: '$94K',
-    detail: 'Full property hardscape package: driveway, walkway, front garden grading, rear patio with outdoor kitchen, sport-court base for future basketball pad. Coordinated with the GC during framing so conduit and drainage ran clean.',
-  },
-  {
-    title: 'Renovation, south end Barrie',
-    range: '$152K',
-    detail: 'Three-phase build over two seasons. Phase 1: regrade entire backyard for drainage, install french drain network. Phase 2: armourstone tiered retaining + planted beds. Phase 3: large patio with covered pergola, fire feature, outdoor kitchen, lighting.',
-  },
-];
+const CASE_STUDIES = [] as { title: string; range: string; detail: string }[];
 
 const FAQ = [
-  {
-    q: "How does Premium work different from Signature?",
-    a: 'Three structural differences. First: Premium is engineered residential landscape — pool decks, full property regrades, integration with architecture, sometimes phased multi-year builds. Second: multi-trade coordination is part of our job, not yours — pool contractor, electrician, gas fitter, GC if there\'s a new build. Third: we lead with an in-person consult and design phase before any quote, because Premium projects can\'t be priced accurately from a phone call.',
-  },
-  {
-    q: "What's your involvement with the pool contractor?",
-    a: 'On pool projects we work alongside whichever pool builder the homeowner chooses (we don\'t install pools ourselves). We handle the deck, the surround, the drainage off it, the lighting integration, the planted boundary. We coordinate timing with the pool contractor so their concrete shell goes in before our base prep, and our pavers land after their final water test. One job, two trades, one project manager on our side.',
-  },
-  {
-    q: "How is the work phased over multiple seasons?",
-    a: 'Most Premium projects benefit from a deliberate phase plan rather than rushing one big build. Drainage and structural elements go in year one, hardscape and major features year two, refined planting year three. Each phase gets its own contract, its own scope, its own payment terms — no commitment past the current phase. About 30% of our Premium clients run multi-year. The other 70% want everything done in one season — both are fine.',
-  },
-  {
-    q: "Do you provide design or do we bring our own?",
-    a: 'Either. We have a landscape designer on retainer who can deliver full plan-and-section drawings, 3D renderings, and a phased build sequence. Their fee runs $4,800-$11,000 depending on property scale and is invoiced through us so you have one point of contact. If you already have a designer (landscape architect, residential designer), we work from their drawings directly.',
-  },
+  { q: 'How do we start planning?', a: 'Contact us to discuss your property, priorities, and the current consultation and design scope.' },
+  { q: 'How are construction details decided?', a: 'Materials, drainage, base preparation, timing, and responsibilities are confirmed for the project-specific written scope.' },
+  { q: 'What terms should I expect?', a: 'Ask for current written workmanship terms, manufacturer information where applicable, and the scope for your project.' },
 ];
 
 export default function LuxuryLandscapeBarrie() {
@@ -148,17 +119,17 @@ export default function LuxuryLandscapeBarrie() {
           {/* What's part of every Premium project */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-40">
             <div className="bg-brand-surface p-16 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">Always part of a Premium build</h2>
+              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">Project-scope considerations</h2>
               <ul className="space-y-8">
                 {[
                   'On-site consult before quoting',
                   'Landscape design phase with renders',
                   'Site survey including drainage + grade',
                   'Multi-trade coordination on our side',
-                  'Engineered base spec for every surface',
+                  'Project-specific base and drainage planning',
                   'Phased schedule with written timeline',
                   'Project manager assigned to the build',
-                  '5-year structural warranty across all hardscape',
+                  'Current written workmanship terms',
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
                     <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />

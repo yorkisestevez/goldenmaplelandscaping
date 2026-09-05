@@ -1,0 +1,19 @@
+{
+  "id": "68d0e773-53a5-438c-9220-a77abae47964",
+  "name": "goldenmaple-seo",
+  "custom_domain": "seo.goldenmaplelandscaping.ca",
+  "published_deploy": {
+    "id": "6a08d880a10c9b9a37e896f6",
+    "state": "ready",
+    "deploy_ssl_url": "https://6a08d880a10c9b9a37e896f6--goldenmaple-seo.netlify.app",
+    "functions": null,
+    "function_schedules": [],
+    "published_at": "2026-05-16T20:50:12.927Z"
+  },
+  "build_settings": {
+    "repo_url": null,
+    "base": null,
+    "dir": null,
+    "cmd": null
+  }
+}

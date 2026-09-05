@@ -1,6 +1,6 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowRight, MapPin, CheckCircle, Star, Phone, Shield, Award } from 'lucide-react';
+import { ArrowRight, MapPin, CheckCircle, Phone, Shield, Award } from 'lucide-react';
 import SEO from '../../components/SEO';
 import QuickQuote from '../../components/QuickQuote';
 import { trackCall } from '../../utils/analytics';
@@ -11,6 +11,7 @@ import {
   LOCATION_KEYS,
   type LocationKey,
 } from '../../data/serviceLocations';
+import { BUSINESS, publicClaimCopy, publicContact, publicPostalAddress } from '../../data/business';
 
 export default function LocationLanding() {
   const { slug } = useParams<{ slug: string }>();
@@ -23,7 +24,7 @@ export default function LocationLanding() {
   const location = LOCATIONS[key];
 
   const seoTitle = `Premium Landscaping in ${location.name}, Ontario | Golden Maple Landscaping`;
-  const seoDescription = `Architectural landscaping and hardscape construction in ${location.name}, ${location.region}. Interlocking, decking, retaining walls, and full backyard renovations. 5-star rated. Free estimate request.`;
+  const seoDescription = `Architectural landscaping and hardscape construction in ${location.name}, ${location.region}. Interlocking, decking, retaining walls, and full backyard renovations. Contact us to confirm current project scope.`;
 
   const otherLocations = LOCATION_KEYS.filter((l) => l !== key);
 
@@ -35,21 +36,9 @@ export default function LocationLanding() {
     image:
       'https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg',
     url: `https://goldenmaplelandscaping.ca/locations/${key}`,
-    telephone: '+1-705-500-3581',
-    email: 'yorkis@goldenmaplelandscaping.ca',
-    priceRange: '$$$',
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: location.name,
-      addressRegion: 'ON',
-      postalCode: location.postalRoot,
-      addressCountry: 'CA',
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: location.lat,
-      longitude: location.lng,
-    },
+    telephone: publicContact.phoneTel,
+    email: publicContact.email,
+    address: publicPostalAddress(),
     areaServed: {
       '@type': 'City',
       name: location.name,
@@ -126,23 +115,19 @@ export default function LocationLanding() {
         <div className="container-custom py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
             <div className="flex items-center gap-4">
-              <div className="flex gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={12} className="text-brand-gold-dark fill-brand-gold" strokeWidth={0} />
-                ))}
-              </div>
+              <CheckCircle size={14} className="text-brand-gold-dark" strokeWidth={1.5} />
               <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-                5.0 · 8 Reviews
+                {publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.')}
               </span>
             </div>
             <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <Shield size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> WSIB Certified
+              <Shield size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.wsib, 'Current coverage documentation')}
             </div>
             <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <Award size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> $5M Liability
+              <Award size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation')}
             </div>
             <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <CheckCircle size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> 5-Yr Warranty
+              <CheckCircle size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms')}
             </div>
           </div>
         </div>
@@ -204,19 +189,19 @@ export default function LocationLanding() {
             <div className="lg:col-span-5">
               <div className="bg-brand-surface border border-brand-dim/10 rounded-[2px] p-10 sticky top-32">
                 <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
-                  Free Estimate
+                  Project conversation
                 </span>
                 <h3 className="font-display text-2xl font-light text-brand-bonewhite leading-tight mb-6">
-                  15 minutes with Yorkis.
+                  Project conversation.
                 </h3>
                 <p className="font-sans text-sm text-brand-muted leading-relaxed font-light mb-10">
-                  Honest scope and budget assessment for your {location.name} project. No fee, no pressure. Most calls confirm whether the budget fits the vision before anyone visits the site.
+                  Discuss your {location.name} project and confirm the current consultation, site-visit, and design scope directly.
                 </p>
                 <a
-                  href="tel:7055003581" onClick={() => trackCall('locationlanding_phone')}
+                  href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('locationlanding_phone')}
                   className="block text-center border border-brand-gold/30 text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.25em] py-4 mb-3 hover:bg-brand-gold/5 transition-colors"
                 >
-                  Call (705) 500-3581
+                  Call {publicContact.phoneDisplay}
                 </a>
                 <Link
                   to="/contact"
@@ -316,15 +301,15 @@ export default function LocationLanding() {
             <span className="italic text-brand-gold-dark">{location.name} project?</span>
           </h2>
           <p className="font-sans text-base md:text-lg text-brand-muted font-light max-w-xl mx-auto mb-14 leading-relaxed">
-            A 24-hour written estimate from Yorkis answers more than three rushed quotes ever will.
+            Contact us to discuss your project and confirm the current estimate process.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 items-center justify-center max-w-xl mx-auto">
             <a
-              href="tel:7055003581" onClick={() => trackCall('locationlanding_phone')}
+              href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('locationlanding_phone')}
               className="flex-1 flex items-center justify-center gap-3 border border-brand-gold/30 text-brand-gold-dark font-sans text-[10px] uppercase tracking-[0.25em] py-5 px-8 hover:bg-brand-gold/5 transition-colors w-full"
             >
               <Phone size={14} strokeWidth={1.5} />
-              (705) 500-3581
+              {publicContact.phoneDisplay}
             </a>
             <Link
               to="/contact"

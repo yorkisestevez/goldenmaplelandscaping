@@ -1,0 +1,70 @@
+{
+  "started_at": "2026-09-05T18:07:33.571117+00:00",
+  "scope": "local cleanup verification, not owner fact certification or deployment approval",
+  "steps": [
+    {
+      "name": "business-tests",
+      "command": "npm run test:business",
+      "exit_code": 0,
+      "log": "docs\\business-facts-audit\\final-business-tests.log"
+    },
+    {
+      "name": "numeric-preservation",
+      "command": "\"C:/Program Files/nodejs/node.EXE\" node_modules/tsx/dist/cli.mjs scripts/test-estimator-numeric-preservation.ts",
+      "exit_code": 0,
+      "log": "docs\\business-facts-audit\\final-numeric-preservation.log"
+    },
+    {
+      "name": "lint-and-pricing",
+      "command": "npm run lint",
+      "exit_code": 0,
+      "log": "docs\\business-facts-audit\\final-lint-and-pricing.log"
+    },
+    {
+      "name": "component-publication",
+      "command": "\"C:/Program Files/nodejs/node.EXE\" scripts/test-components-publication.ts",
+      "exit_code": 0,
+      "log": "docs\\business-facts-audit\\final-component-publication.log"
+    },
+    {
+      "name": "chat-boundaries",
+      "command": "\"C:/Program Files/nodejs/node.EXE\" node_modules/tsx/dist/cli.mjs scripts/check-chat-business-facts.ts",
+      "exit_code": 0,
+      "log": "docs\\business-facts-audit\\final-chat-boundaries.log"
+    },
+    {
+      "name": "production-build",
+      "command": "npm run build",
+      "exit_code": 0,
+      "log": "docs\\business-facts-audit\\final-production-build.log"
+    },
+    {
+      "name": "mobile-browser",
+      "command": "\"C:/Users/yorki/hermes/hermes-agent/venv/Scripts/python.exe\" scripts/check-business-browser.py",
+      "exit_code": 0,
+      "log": "docs\\business-facts-audit\\final-mobile-browser.log"
+    },
+    {
+      "name": "browser-claims",
+      "command": "python3 scripts/check-rendered-business-claims.py",
+      "exit_code": 0,
+      "log": "docs\\business-facts-audit\\final-browser-claims.log"
+    },
+    {
+      "name": "migration-proposal-integrity",
+      "command": "python3 scripts/verify-migration-artifacts.py",
+      "exit_code": 0,
+      "log": "docs\\business-facts-audit\\final-migration-proposal-integrity.log"
+    },
+    {
+      "name": "diff-whitespace",
+      "command": "git diff --check",
+      "exit_code": 0,
+      "log": "docs\\business-facts-audit\\final-diff-whitespace.log"
+    }
+  ],
+  "passed": true,
+  "pdf_sha256": "4f7fda583c89981133534757fa1f7c324822347786f1267b133d5de24a5ad531",
+  "protected_route_and_hosting_diff": "",
+  "finished_at": "2026-09-05T18:09:20.229381+00:00"
+}

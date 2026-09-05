@@ -518,7 +518,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
       excavation: {
         low: Math.round(excavationLow / 100) * 100,
         high: Math.round(excavationHigh / 100) * 100,
-        detail: totalSqftCalc > 0 ? `12–16" base depth on ${totalSqftCalc} sqft` : 'Site prep + base prep',
+        detail: totalSqftCalc > 0 ? `Site-specific preparation allowance for ${totalSqftCalc} sqft` : 'Site prep + base prep',
       },
       materials: {
         low: Math.round((materialLowAll + surcharge) / 100) * 100,
@@ -532,7 +532,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
       labour: {
         low: Math.round(labourLowAll / 100) * 100,
         high: Math.round(labourHighAll / 100) * 100,
-        detail: `${Math.ceil(daysLow * 2) / 2}–${Math.ceil(daysHigh * 2) / 2} days on-site, ICPI-certified crew`,
+        detail: `${Math.ceil(daysLow * 2) / 2}–${Math.ceil(daysHigh * 2) / 2} estimated days on-site`,
       },
       disposal: {
         low: Math.round(disposalLow / 100) * 100,

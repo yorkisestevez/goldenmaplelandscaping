@@ -1,6 +1,7 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
 import { Link } from 'react-router-dom';
+import { BUSINESS } from '../../data/business';
 
 export default function BestTimeInstallPatio() {
   const faqSchema = {
@@ -67,9 +68,9 @@ export default function BestTimeInstallPatio() {
         </p>
       </div>
 
-      <p>If you're planning a paver patio for your Barrie, Innisfil, or Simcoe County home, the question of <em>when</em> to install matters as much as <em>what</em> to install. Ontario's freeze-thaw cycle, our short building season, and how contractor calendars fill all conspire to make timing one of the most expensive variables in your project — get it wrong and you're either paying rush premiums, waiting until next year, or watching a cheap contractor cut corners on a frozen base.</p>
+      <p>If you're planning a paver patio for your Barrie, Innisfil, or Simcoe County home, the question of <em>when</em> to install matters as much as <em>what</em> to install. Ontario's freeze-thaw cycle, the short building season, and how contractor calendars fill all conspire to make timing one of the most expensive variables in your project — get it wrong and you're either paying rush premiums, waiting until next year, or watching a cheap contractor cut corners on a frozen base.</p>
 
-      <p>Here's the month-by-month reality, based on 47 patios we've built in Simcoe County over 2025.</p>
+      <p>Here's the month-by-month reality, based on 47 patios contractors have built in Simcoe County over 2025.</p>
 
       <h2>Month-by-Month: When to Install a Patio in Ontario</h2>
 
@@ -101,7 +102,7 @@ export default function BestTimeInstallPatio() {
       <p>Open-graded base aggregate (3/4" clear stone) needs to be compacted to <strong>95% of maximum density</strong> for an interlocking patio to last. Below 5°C ground temperature, the soil and aggregate behave differently — moisture in the base can freeze between compaction passes, creating voids that show up two winters later as settlement.</p>
 
       <h3>2. Polymeric sand cures by temperature and humidity</h3>
-      <p>The polymeric sand that locks your paver joints (we use Techniseal HP NextGel) requires:</p>
+      <p>The polymeric sand that locks your paver joints (contractors use Techniseal HP NextGel) requires:</p>
       <ul>
         <li>Air temperature above <strong>0°C</strong> for 24 hours after activation</li>
         <li>No rain within <strong>4 hours</strong> of activation</li>
@@ -149,13 +150,13 @@ export default function BestTimeInstallPatio() {
 
       <h2>What Goes Wrong With Bad Timing</h2>
 
-      <p>We've come back to fix patios installed in November or early April by competitors. The pattern is identical:</p>
+      <p>Contractors have come back to fix patios installed in November or early April by competitors. The pattern is identical:</p>
       <ul>
         <li><strong>Settlement within 18 months:</strong> Improperly compacted base from frozen aggregate.</li>
         <li><strong>Polymeric sand failure:</strong> White haze, joint erosion, weeds growing through within one season.</li>
         <li><strong>Heaving in spring:</strong> Frost lenses formed under the base because excavation depth was wrong for the soil temperature.</li>
       </ul>
-      <p>The fix usually costs <strong>60–80% of a fresh install</strong> because we have to lift, re-excavate, and rebuild the base. Timing isn't a luxury — it's the single biggest variable that separates a 25-year patio from a 5-year one.</p>
+      <p>The scope and cost of a repair depend on the condition of the existing base and should be assessed for the specific property. Timing isn't a luxury — it's the single biggest variable that separates a 25-year patio from a 5-year one.</p>
 
       <h2>Frequently Asked Questions</h2>
 
@@ -163,19 +164,19 @@ export default function BestTimeInstallPatio() {
       <p>"Urgent" in landscaping means 4–6 weeks out at the soonest. If a contractor offers to start "next week" in peak season, ask why they have capacity — the answer matters. Cancellations happen, but they're rare with good contractors.</p>
 
       <h3>Does winter pricing exist?</h3>
-      <p>Some contractors offer 5–10% off for jobs <em>contracted</em> in December–February for spring installs. We don't reduce price (our minimums protect quality), but we do guarantee 2026 pricing won't increase before your spring slot.</p>
+      <p>Some contractors offer 5–10% off for jobs <em>contracted</em> in December–February for spring installs. Contractors don't reduce price (the minimums protect quality), but contractors do guarantee 2026 pricing won't increase before your spring slot.</p>
 
       <h3>How long does the actual install take?</h3>
       <p>A typical 600 sqft patio takes <strong>2.5–4 days on-site</strong>. Add 1–2 days for tear-out if there's an existing surface. The 8–12 week booking lead time is the wait, not the work.</p>
 
       <h3>What about the design phase?</h3>
-      <p>Design and contracting can happen in any season. We often lock spring contracts in December and use January–March for 3D design, material selection, and final pricing. By the time April lands, you walk straight into install with everything finalized.</p>
+      <p>Design and contracting can happen in any season. Contractors often lock spring contracts in December and use January–March for 3D design, material selection, and final pricing. By the time April lands, you walk straight into install with everything finalized.</p>
 
       <h2>Get Your 2026 Slot Locked</h2>
-      <p>The fastest way to see if your project fits a 2026 window is the <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">Golden Maple cost estimator</Link>. It uses real Carr Landscape Depot pricing and gives you a ballpark in 60 seconds — which is enough to know if an estimate request makes sense. From there we can usually slot a spring or fall window within one phone call.</p>
+      <p>The fastest way to see if your project fits a 2026 window is the <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">Golden Maple cost estimator</Link>. It provides a planning range; confirm current pricing, scope, and scheduling directly before relying on it for a project decision.</p>
 
       <p>Related reading: <Link to="/resources/why-patios-sink-barrie" className="text-brand-gold-dark hover:underline">Why patios sink in Barrie</Link> · <Link to="/resources/winter-damage-prevention-interlocking" className="text-brand-gold-dark hover:underline">Winter damage prevention</Link> · <Link to="/resources/interlocking-cost-barrie" className="text-brand-gold-dark hover:underline">Interlocking cost in Barrie 2026</Link>.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has installed paver patios in every month Ontario weather allows, across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the scheduling advice here is what every caller hears: the season matters far less than a properly compacted 12 to 16 inch clear stone base." />
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

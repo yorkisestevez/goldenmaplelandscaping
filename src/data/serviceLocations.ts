@@ -55,19 +55,19 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     name: 'Interlocking Stone Installation',
     shortName: 'Interlocking',
     blurb:
-      'Engineered patios, walkways, and driveways built on a 12–16" base to outlast Ontario freeze-thaw cycles.',
+      'Patios, walkways, and driveways planned around site conditions and Ontario freeze-thaw cycles; final base depth is confirmed in the written scope.',
     startingPriceText: '$55–$85',
     perUnitText: 'per square foot installed',
     scope: [
-      'Engineered base prep (12–16" excavation, compacted 3/4" clear stone, HPB bedding)',
+      'Base prep and materials specified for the site; excavation depth is confirmed per project',
       'Geotextile separation on clay soils',
       'Premium Techo-Bloc, Permacon, or Unilock pavers',
       'Polymeric or Romex jointing',
       'Drainage planning + 1.5–2% slope away from foundation',
-      '5-year sink and settlement warranty',
+      'Ask for current written workmanship terms for your project',
     ],
     whyMatters:
-      "Here's what nobody tells you about an interlocking patio: it's only as good as the 14 inches of compacted base underneath it. The patios that fail in year two? They looked identical to the good ones on day one. The difference is invisible — buried underground, where every cheap contractor cuts the corner. We don't. That's why ours are still flat in 2046.",
+      "A patio's performance depends on what is below the surface: appropriate excavation, compaction, drainage and materials. Ask for the proposed base specification in your written scope; the right depth depends on the site and intended loading.",
     faqs: [
       {
         q: 'How long does an interlocking patio take to install?',
@@ -75,15 +75,15 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       },
       {
         q: 'What pavers do you recommend?',
-        a: 'For 90% of projects we use Techo-Bloc or Permacon. Both offer lifetime transferable warranties and engineered colour mixes that resist freeze-thaw fading. Unilock Beacon Hill is our pick for traditional aesthetics.',
+        a: 'Compare available Techo-Bloc, Permacon and Unilock options against your intended use, finish and budget. Confirm current product availability and manufacturer terms for the selected product; a brand reference does not establish installer certification.',
       },
       {
         q: 'What stops the patio from sinking?',
-        a: 'Three things: 12–16" of properly compacted clear stone base, geotextile fabric to keep clay from migrating into the base, and 1.5–2% drainage slope to prevent water saturation. We document all three in your build photos.',
+        a: 'Site-appropriate excavation, compaction, separation and drainage help manage settlement risk. Ask for the materials, depth, drainage design and inspection records applicable to your project in the written scope.',
       },
       {
         q: "What's included in your warranty?",
-        a: 'Five years against sinking, settlement, and joint failure. If a paver moves more than ¼" out of plane within five years of install, we come back and re-set it at no charge.',
+        a: 'Ask us for the current written workmanship terms, coverage, exclusions, and remedy for your project before contracting.',
       },
     ],
     heroImg: '/images/projects/paver-driveway.JPG',
@@ -93,7 +93,7 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     name: 'Composite Decking Construction',
     shortName: 'Composite Decking',
     blurb:
-      'TimberTech and Trex composite decks engineered for Ontario weather — no staining, no rot, 25-year manufacturer warranty.',
+      'Composite deck options for Ontario weather; available products and any manufacturer warranty are confirmed with the selected product documentation.',
     startingPriceText: '$45–$85',
     perUnitText: 'per square foot installed',
     scope: [
@@ -102,18 +102,18 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       'Hidden fastener system — no visible screws',
       'Aluminum or composite railing systems',
       'Integrated low-voltage LED post and stair lighting',
-      '25-year manufacturer warranty + our 5-year build warranty',
+      'Manufacturer terms (if applicable) and Golden Maple workmanship terms are confirmed in writing for the selected project',
     ],
     whyMatters:
-      "If you've owned a wood deck, you know the truth: every May is a sanding-and-staining ritual, and somewhere around year seven the rot starts. Composite is more upfront and free for two decades after that. By year ten, the math doesn't even compare. By year twenty, you'll wonder why anyone still builds with wood.",
+      'Compare composite and wood using purchase cost, maintenance requirements and the selected product documentation. Composite still requires care; neither material has a universal maintenance cost or lifespan.',
     faqs: [
       {
         q: 'TimberTech vs. Trex — which is better?',
-        a: "Both are excellent. TimberTech AZEK Vintage has the most realistic wood grain we've seen and a 50-year limited warranty. Trex Transcend is slightly more affordable with a 25-year warranty. We install both.",
+        a: "Both are product options worth comparing. Manufacturer warranty availability, duration, exclusions, and transferability depend on the selected product and current manufacturer documentation; confirm them before purchase.",
       },
       {
         q: 'Will composite get hot in summer?',
-        a: 'Some lighter colours can warm in direct sun. Mid-tone and darker browns stay surprisingly cool. We help you pick a colour and orientation that works for your space.',
+        a: 'Surface temperature depends on the product, colour, sun exposure and ambient conditions. Review manufacturer temperature guidance and samples for your location before selecting a board.',
       },
       {
         q: 'Do composite boards fade?',
@@ -137,25 +137,25 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     scope: [
       '3/4" clear stone footing on compacted aggregate',
       'Allan Block, Techo-Bloc Mini-Creta, or Permacon engineered units',
-      'Geogrid reinforcement at every 2 vertical feet (mandatory above 3 feet)',
+      'Reinforcement layout specified for wall geometry, loading and engineering requirements',
       '4" perforated drain tile behind wall, daylighted',
       '12" of clear stone backfill before native soil',
       'Engineered cap stones, mortared',
     ],
     whyMatters:
-      "A leaning retaining wall is the most expensive mistake we see in this industry. Once a wall tips, it has to come out — every stone of it — and start over. The walls that fail above three feet are almost always the ones built without geogrid. We install geogrid on every single wall, full stop. Not because the engineering code requires it. Because we don't want to be the contractor in your inbox five years from now apologizing.",
+      'Retaining walls require a coordinated assessment of loading, soil, drainage and reinforcement. Wall height alone does not determine the design. Confirm the applicable engineering and municipal requirements before construction.',
     faqs: [
       {
         q: 'Do I need a permit for my retaining wall?',
-        a: 'In most Simcoe County municipalities, walls under 3 feet do not need a permit. Walls over 3 feet require an engineered drawing and building permit. We handle both processes.',
+        a: 'Permit and engineering requirements depend on the municipality, height, site, and scope. Confirm responsibilities, fees, and application authority with Golden Maple and the relevant authority before work begins.',
       },
       {
         q: 'What is geogrid and why does it matter?',
-        a: "Geogrid is high-tensile mesh that ties wall units back into the earth in horizontal layers. It's what keeps a tall wall from rotating forward over time. Walls without it lean by 18 months.",
+        a: 'Geogrid can reinforce retained soil as part of a designed wall system. Its need, placement and length depend on the wall system, site loading and engineering specifications.',
       },
       {
         q: "What's the lifespan of an engineered retaining wall?",
-        a: 'Properly built (engineered base, geogrid, drainage, clear stone backfill), expect 40–50 years of structural life. The pavers above the wall will fail before the wall does.',
+        a: 'Service life varies with materials, design, loading, drainage and maintenance. Do not treat a general lifespan estimate as a project warranty; request the applicable written terms.',
       },
       {
         q: 'Can you tier a tall slope?',
@@ -169,27 +169,27 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     name: 'Landscape Design Services',
     shortName: 'Landscape Design',
     blurb:
-      'Full-property design with site assessment, 3D renderings, planting plans, and fixed-price construction quotes.',
-    startingPriceText: '$2,500–$8,000',
-    perUnitText: 'design fee, credited if you build with us',
+      'Full-property design options may include site assessment, renderings, planting plans, and construction scope; confirm current deliverables and pricing before booking.',
+    startingPriceText: 'Pricing confirmed on request',
+    perUnitText: 'current design scope and any credit policy confirmed in writing',
     scope: [
       'On-site assessment and grading survey',
       'Hand sketches → 2D CAD plan → 3D photorealistic renderings',
       'Material and plant selection with samples',
       'Drainage and lighting plan',
       'Phased construction sequence',
-      'Fixed-price build quote (not estimates — guaranteed pricing)',
+      'Written construction scope and pricing provided after project review',
     ],
     whyMatters:
       "Most contractors sketch your project on the back of a quote sheet during the first visit. That's how you end up with a $50K patio that doesn't drain — or matches the wrong side of the house. We separate design from construction on purpose. Get the plan right first. Build the right thing second. The order matters.",
     faqs: [
       {
         q: 'Is the design fee refunded if I build with you?',
-        a: '100% — every dollar of the design fee comes off your final invoice if you proceed to construction with us. The fee exists to ensure serious clients and cover the design time.',
+        a: 'Design-session pricing and any construction credit are currently subject to confirmation. Ask for the current written policy before booking.',
       },
       {
         q: 'Can I take your design to another builder?',
-        a: 'Yes. The design is yours. Most clients build with us because we know the design intimately, but you are not locked in.',
+        a: 'Confirm design ownership, permitted use and transfer rights in the design agreement before commissioning work.',
       },
       {
         q: 'How long does the design process take?',
@@ -197,7 +197,7 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       },
       {
         q: 'What if I just want plants and beds, not hardscaping?',
-        a: 'We design soft-scape only projects. Planting plans, garden beds, lighting, and irrigation can be designed and built without any patio or wall work.',
+        a: 'Tell us which planting, garden, lighting or irrigation work you have in mind. Confirm current service availability and scope before booking.',
       },
     ],
     heroImg: '/images/projects/Outdoor living life.jpeg',
@@ -216,7 +216,7 @@ export const LOCATIONS: Record<LocationKey, LocationDef> = {
     terrain:
       'Mixed — flat lakeshore in the south, rolling drumlin slopes in the north and east. Most properties have at least mild grading challenges.',
     soil:
-      'Heavy clay south of Mapleview Drive, sandier loam in the north end. Both require deeper base prep than the Ontario average — clay especially needs 14"+ excavation and full geotextile.',
+      'Soil conditions vary by property. Assess soil, water movement and loading before specifying excavation depth, separation and base materials.',
     projects: [
       'Walkout basement decks',
       'Sloped backyard patios with retaining walls',
@@ -225,7 +225,7 @@ export const LOCATIONS: Record<LocationKey, LocationDef> = {
     ],
     anchors: ['Allandale', 'Painswick', 'Holly', 'Letitia Heights', 'Sunnidale Park', 'Centennial Beach'],
     intro:
-      "Barrie is home. Half of every season we work within fifteen minutes of our own shop, and we know the streets, the soil, and the houses by heart. If you've spent winters watching cracks open in your driveway or summers wishing you actually used the backyard — we've probably built next door to you, and we'd be glad to be your neighbour for the next twenty years too.",
+      'Planning an outdoor project in Barrie? Share the address, site conditions and intended use so we can discuss fit, scope and current availability.',
   },
   innisfil: {
     slug: 'innisfil',
@@ -247,7 +247,7 @@ export const LOCATIONS: Record<LocationKey, LocationDef> = {
     ],
     anchors: ['Lefroy', 'Stroud', 'Alcona', 'Cookstown', 'Big Bay Point', 'Friday Harbour'],
     intro:
-      "You bought the Innisfil property to enjoy the lake — not to spend three years fighting a sinking patio or a deck that warps every spring. The lakefront soil here is forgiving, but only for crews who know how to read it. We've spent enough time around Big Bay Point and Friday Harbour to know exactly what these properties demand, and we build to that standard every time.",
+      'An Innisfil outdoor project may need careful attention to drainage, access and shoreline restrictions. Share your project address to confirm service availability and arrange a scope discussion.',
   },
   'oro-medonte': {
     slug: 'oro-medonte',
@@ -291,7 +291,7 @@ export const LOCATIONS: Record<LocationKey, LocationDef> = {
     ],
     anchors: ['Midhurst', 'Elmvale', 'Anten Mills', 'Hillsdale', 'Snow Valley'],
     intro:
-      "You moved to Springwater for the space. The land. The room to make something beautiful. We've worked across the township from Midhurst to Elmvale, and we've learned that the best projects here — the ones that hold up for decades — are the ones where the design respects what's already there. We build to the land, not against it.",
+      'Springwater properties can offer room for outdoor projects with varied terrain and access. Confirm current service availability for your address, and review the site before choosing a design or construction specification.',
   },
   orillia: {
     slug: 'orillia',

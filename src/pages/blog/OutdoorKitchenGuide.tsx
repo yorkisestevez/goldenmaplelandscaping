@@ -1,5 +1,6 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
+import { BUSINESS } from '../../data/business';
 
 export default function OutdoorKitchenGuide() {
   return (
@@ -12,7 +13,7 @@ export default function OutdoorKitchenGuide() {
       readTime="7 min read"
       heroImage="/images/projects/luxury outdoor kitchen.jpeg"
     >
-      <p>An outdoor kitchen isn't just a grill on a patio. Done right, it's a <strong>fully functional cooking and entertaining space</strong> that changes how your family lives from May through October — and even beyond, if you're the kind of person who grills in a January snowstorm (we see you, Barrie).</p>
+      <p>An outdoor kitchen isn't just a grill on a patio. Done right, it's a <strong>fully functional cooking and entertaining space</strong> that changes how your family lives from May through October — and even beyond, if you're the kind of person who grills in a January snowstorm (contractors see you, Barrie).</p>
 
       <p>But an outdoor kitchen involves more planning than most homeowners realize. Gas lines, electrical, drainage, material selection, and layout all need to work together. Here's what you need to think about before breaking ground.</p>
 
@@ -55,10 +56,10 @@ export default function OutdoorKitchenGuide() {
 
       <h2>The Foundation Matters</h2>
 
-      <p>Your outdoor kitchen needs to sit on a base that won't move. This means the same deep base preparation we use for patios — <strong>12-16 inches of compacted clear stone.</strong> A kitchen island that shifts even slightly can crack gas lines, misalign countertops, and create safety hazards.</p>
+      <p>Your outdoor kitchen needs to sit on a base that won't move. This means the same deep base preparation contractors use for patios — <strong>12-16 inches of compacted clear stone.</strong> A kitchen island that shifts even slightly can crack gas lines, misalign countertops, and create safety hazards.</p>
 
       <blockquote>
-        <p>"An outdoor kitchen is only as good as what it's sitting on. We build every kitchen on the same structural base as our patios because the consequences of movement are even more serious when gas lines are involved."</p>
+        <p>"An outdoor kitchen is only as good as what it's sitting on. An outdoor kitchen base should be designed for its loads, utilities, drainage, and site conditions because movement can affect connected components."</p>
       </blockquote>
 
       <h2>Realistic Budget Ranges for Simcoe County</h2>
@@ -81,7 +82,7 @@ export default function OutdoorKitchenGuide() {
         <li>Store cushions and accessories indoors</li>
         <li>Avoid using salt near natural stone veneers</li>
       </ul>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and has built outdoor kitchens and outdoor living spaces across Barrie, Innisfil, and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, the planning advice is the same on every build: settle the utilities, the drainage, and the base before anyone picks a countertop." />
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

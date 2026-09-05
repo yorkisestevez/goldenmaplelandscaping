@@ -143,12 +143,13 @@ if (!ref.precise) {
   else pass(`reference job disposal = 3 x $${baseline.facts.binCostCad} bins`);
 }
 
-// Base-depth brand promise: the site's public copy must claim at least the
-// engine's build depth (12"). We look for the "12–16" open-graded" claim.
+// Business-facts cleanup: numeric engine assumptions remain pinned above and
+// by the full output snapshot. Public copy must label estimates as planning,
+// not promise an unresolved universal 12–16-inch installation standard.
 const costEstimatorSrc = readFileSync(join(ROOT, 'src/pages/CostEstimator.tsx'), 'utf8');
-if (!/12\s*[–-]\s*16\s*(?:"|&quot;|inch|″|&#8243;)/i.test(costEstimatorSrc))
-  fail(`CostEstimator.tsx no longer claims the 12–16" base — engine builds ${baseline.facts.baseDepthIn}"; keep copy >= engine spec`);
-else pass(`base-depth promise (12–16") present, engine builds ${baseline.facts.baseDepthIn}"`);
+if (!/estimator is a planning tool/i.test(costEstimatorSrc) || !/written project scope/i.test(costEstimatorSrc))
+  fail('CostEstimator must distinguish planning assumptions from written project specifications');
+else pass(`Planning/scope disclosure present; numerical engine baseline remains ${baseline.facts.baseDepthIn}"`);
 
 // ---- POSITIONING (warn-only visibility) ----
 // Note: since engine v3 `installedPerSqft` is display/positioning-only — the

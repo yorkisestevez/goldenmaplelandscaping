@@ -2,19 +2,15 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Check, Layers } from 'lucide-react';
 import SEO from '../components/SEO';
 
-const packages = [
-  { range: '$90K–$120K', title: 'Outdoor Living Core', detail: 'Large patio, walls or steps, lighting conduit, drainage corrections, and one lifestyle feature such as fire or pergola.' },
-  { range: '$120K–$160K', title: 'Full Backyard Build', detail: 'Multi-zone patio, retaining/seat walls, outdoor kitchen or fire area, lighting, planting edges, and full grade planning.' },
-  { range: '$160K+', title: 'Estate / Phased Transformation', detail: 'Pool-adjacent hardscape, terraced grade changes, multi-trade coordination, premium material packages, and phased construction.' },
-];
+const packages = [] as { range: string; title: string; detail: string }[];
 
 const inclusions = [
   'Site walk focused on grade, access, drainage, and family use',
   'Budget-first scope planning before design gets too expensive',
   'Patio, walls, steps, lighting, and add-ons planned as one system',
-  'Ontario freeze-thaw base strategy for every hardscape surface',
+  'Project-specific base and drainage planning',
   'Clear written phasing if the project should span more than one season',
-  '5-year structural warranty on Golden Maple hardscape work',
+  'Current written workmanship terms confirmed for the project',
 ];
 
 export default function FullBackyardTransformationsBarrie() {
@@ -51,7 +47,7 @@ export default function FullBackyardTransformationsBarrie() {
             <div className="bg-brand-burgundy/10 border border-brand-burgundy/30 p-12 rounded-[2px]">
               <Layers className="text-brand-gold-dark mb-6" />
               <h2 className="font-display text-4xl font-light mb-6">The expensive mistake is building one piece at a time.</h2>
-              <p className="font-sans text-brand-muted leading-relaxed font-light">When lighting, walls, pergola footings, drainage, and patio zones are planned after the patio is installed, homeowners pay twice: first in rework, then in a backyard that never feels intentional. Golden Maple builds the system in the right order.</p>
+              <p className="font-sans text-brand-muted leading-relaxed font-light">When lighting, walls, pergola footings, drainage, and patio zones are planned after the patio is installed, homeowners pay twice: first in rework, then in a backyard that never feels intentional. A coordinated plan can help identify sequencing needs before construction.</p>
             </div>
             <div className="bg-brand-surface border border-brand-dim/10 p-12 rounded-[2px]">
               <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8">What belongs in the first plan</h2>

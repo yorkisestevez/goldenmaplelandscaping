@@ -1,9 +1,11 @@
 /**
  * City list for the cost estimator location step.
  * Mirrors the LocationKey set in serviceLocations.ts but adds delivery zone and
- * project-count social proof. Project counts are real 2024–2025 Golden Maple
- * tallies — update annually.
+ * delivery data. Legacy project-count records are unverified inventory in the
+ * business register; they must not be used as public social proof.
  */
+
+import { BUSINESS } from './business';
 
 export type EstimatorLocationKey =
   | 'barrie'
@@ -25,14 +27,14 @@ export interface EstimatorLocation {
 }
 
 export const ESTIMATOR_LOCATIONS: EstimatorLocation[] = [
-  { key: 'barrie',       name: 'Barrie',         zone: 1, projects2025: 47, postalRoot: 'L4M' },
-  { key: 'innisfil',     name: 'Innisfil',       zone: 1, projects2025: 22, postalRoot: 'L9S' },
-  { key: 'oro-medonte',  name: 'Oro-Medonte',    zone: 2, projects2025: 14, postalRoot: 'L0L' },
-  { key: 'springwater',  name: 'Springwater',    zone: 1, projects2025: 9,  postalRoot: 'L9X' },
-  { key: 'orillia',      name: 'Orillia',        zone: 2, projects2025: 11, postalRoot: 'L3V' },
-  { key: 'wasaga-beach', name: 'Wasaga Beach',   zone: 3, projects2025: 7,  postalRoot: 'L9Z' },
-  { key: 'midland',      name: 'Midland',        zone: 3, projects2025: 5,  postalRoot: 'L4R' },
-  { key: 'collingwood',  name: 'Collingwood',    zone: 4, projects2025: 4,  postalRoot: 'L9Y' },
+  { key: 'barrie',       name: BUSINESS.serviceArea.primary.value[0], zone: 1, projects2025: BUSINESS.reviews.projectCounts.value.barrie, postalRoot: 'L4M' },
+  { key: 'innisfil',     name: BUSINESS.serviceArea.primary.value[1], zone: 1, projects2025: BUSINESS.reviews.projectCounts.value.innisfil, postalRoot: 'L9S' },
+  { key: 'oro-medonte',  name: BUSINESS.serviceArea.primary.value[2], zone: 2, projects2025: BUSINESS.reviews.projectCounts.value['oro-medonte'], postalRoot: 'L0L' },
+  { key: 'springwater',  name: BUSINESS.serviceArea.primary.value[3], zone: 1, projects2025: BUSINESS.reviews.projectCounts.value.springwater, postalRoot: 'L9X' },
+  { key: 'orillia',      name: BUSINESS.serviceArea.secondary.value[0], zone: 2, projects2025: BUSINESS.reviews.projectCounts.value.orillia, postalRoot: 'L3V' },
+  { key: 'wasaga-beach', name: BUSINESS.serviceArea.secondary.value[1], zone: 3, projects2025: BUSINESS.reviews.projectCounts.value['wasaga-beach'], postalRoot: 'L9Z' },
+  { key: 'midland',      name: BUSINESS.serviceArea.secondary.value[2], zone: 3, projects2025: BUSINESS.reviews.projectCounts.value.midland, postalRoot: 'L4R' },
+  { key: 'collingwood',  name: BUSINESS.serviceArea.secondary.value[3], zone: 4, projects2025: BUSINESS.reviews.projectCounts.value.collingwood, postalRoot: 'L9Y' },
   { key: 'other',        name: 'Other / Outside Simcoe', zone: 4, projects2025: 0 },
 ];
 

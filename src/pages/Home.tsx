@@ -1,6 +1,8 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Shield, Award, CheckCircle, Star, Quote, ChevronRight, Compass, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
+import PublicationTrustBar from '../components/PublicationTrustBar';
+import BuyersGuide from '../components/BuyersGuide';
 import Manifesto from '../components/Manifesto';
 import Process from '../components/Process';
 import { Link } from 'react-router-dom';
@@ -8,6 +10,7 @@ import HeroContactForm from '../components/HeroContactForm';
 import Reveal from '../components/Reveal';
 import { trackEngagement, trackCall } from '../utils/analytics';
 import { cn } from '../utils/cn';
+import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
 
 
 const HERO_POSTER = "/images/projects/patio-pergola.jpg";
@@ -18,7 +21,7 @@ const Hero = () => {
       <div className="absolute inset-0 z-0">
         <img
           src={HERO_POSTER}
-          alt="Completed Golden Maple backyard with paver patio, cedar pavilion and retaining wall in Barrie"
+          alt="Outdoor-living inspiration with a paver patio, cedar pavilion and retaining wall"
           loading="eager"
           decoding="async"
           fetchPriority="high"
@@ -58,32 +61,10 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.4 }}
-              className="font-sans text-base md:text-lg text-brand-porcelain max-w-xl mb-8 leading-relaxed font-normal"
+              className="font-sans text-base md:text-lg text-brand-porcelain max-w-xl mb-12 leading-relaxed font-normal"
             >
-              Premium interlocking, patios, and retaining walls for Barrie homeowners — engineered for Ontario freeze-thaw, built by a local crew. Free estimate. Yorkis replies in 24 hours.
+              You've spent enough nights staring out the window at a yard that doesn't match the home you've built. Let's plan an outdoor space around how your family wants to live — from the materials underfoot to the places you gather.
             </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="flex flex-wrap gap-x-5 gap-y-3 mb-10 max-w-xl"
-            >
-              {[
-                'WSIB Certified',
-                '$5M Liability',
-                '5-Year Warranty',
-                '5.0 Google',
-              ].map((label) => (
-                <span
-                  key={label}
-                  className="inline-flex items-center gap-2 font-sans text-[10px] uppercase tracking-[0.18em] text-brand-porcelain/90"
-                >
-                  <CheckCircle size={14} strokeWidth={1.5} className="text-brand-gold shrink-0" />
-                  {label}
-                </span>
-              ))}
-            </motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -92,19 +73,19 @@ const Hero = () => {
               className="flex items-center gap-8"
             >
               <Link
-                to="/contact"
-                onClick={() => trackEngagement('cta_click', 'hero_get_estimate')}
+                to="/portfolio"
+                onClick={() => trackEngagement('cta_click', 'view_portfolio')}
                 className="group flex items-center gap-4 text-brand-porcelain font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
               >
-                Get My Free Estimate
+                Explore Project Possibilities
                 <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-2" />
               </Link>
               <a
-                href="tel:7055003581"
+                href={`tel:${publicContact.phoneTel}`}
                 onClick={() => trackCall('hero_phone')}
                 className="group flex items-center gap-4 text-brand-porcelain font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
               >
-                Or Call (705) 500-3581
+                Or Call {publicContact.phoneDisplay}
               </a>
             </motion.div>
           </div>
@@ -119,31 +100,6 @@ const Hero = () => {
   );
 };
 
-const TrustBar = () => {
-  const items = [
-    { icon: Shield, text: "WSIB Certified" },
-    { icon: Award, text: "$5M Liability" },
-    { icon: CheckCircle, text: "5-Year Sink & Settlement Warranty" },
-    { icon: Star, text: "5.0 Google Rating" },
-  ];
-
-  return (
-    <div className="bg-brand-surface border-b border-brand-dim/10 py-6 md:py-10">
-      <div className="container-custom">
-        <div className="flex flex-wrap justify-center md:justify-between items-center gap-6 md:gap-8 lg:gap-10">
-          {items.map((item, idx) => (
-            <div key={idx} className="flex items-center gap-4">
-              <item.icon className="text-brand-gold-dark" size={20} strokeWidth={1.5} />
-              <span className="font-sans text-xs md:text-sm font-normal uppercase tracking-[0.2em] text-brand-muted">
-                {item.text}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const ServicesGrid = () => {
   const services = [
@@ -255,9 +211,9 @@ const ServicesGrid = () => {
 
 const WhyGoldenMaple = () => {
   const standards = [
-    { icon: Compass, title: 'We Dig Twice as Deep', body: 'Most contractors dig 6-8 inches and call it done. We dig 12-16". That\'s the difference between a patio that lasts three winters and one that lasts thirty years.' },
-    { icon: Shield, title: 'Fully Protected. Zero Risk to You.', body: "WSIB certified. $5 million in liability coverage. Ask your current contractor if they can say the same — most can't. We protect your family's biggest investment like it's our own." },
-    { icon: Award, title: 'If It Sinks, We Come Back. Period.', body: "Our 5-year sink and settlement warranty isn't just a piece of paper. It's our promise that what we build will stay exactly where we put it. We've never had to honour a claim — and that's the point." },
+    { icon: Compass, title: 'Project-specific site preparation', body: 'Drainage, soil conditions, access, and final excavation/base depth are reviewed for the written scope of each project.' },
+    { icon: Shield, title: 'Documentation before work begins', body: publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation is available.'), },
+    { icon: Award, title: 'Written project terms', body: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available for your project.'), },
   ];
   return (
     <section className="section-padding bg-brand-cream text-brand-ink overflow-hidden relative">
@@ -452,17 +408,17 @@ const FinalCTA = () => {
           <span className="text-brand-gold italic">you could be living in it.</span>
         </h2>
         <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-10 font-light leading-relaxed">
-          Tell us what you're picturing and what you're willing to spend. Yorkis comes back within 24 hours with an honest read on scope, timeline, and whether your budget matches the build you have in mind.
+          Tell us what you're picturing and your planning budget. We can discuss scope, availability and whether the proposed investment fits your project.
         </p>
         <div className="flex flex-col items-center gap-12 mb-16">
           <div className="h-px w-20 bg-brand-gold/30" />
           <span className="font-sans text-base md:text-lg text-brand-gold font-normal tracking-[0.1em] uppercase">
-            Free estimate · 24-hour response · No sales call required
+            Start with a project conversation · Current scope and timing confirmed directly
           </span>
           <div className="h-px w-20 bg-brand-gold/30" />
         </div>
         <Link to="/contact" className="btn-primary px-20 py-5">
-          Get My Free Estimate
+          Get My Estimate
         </Link>
       </Reveal>
     </section>
@@ -474,7 +430,7 @@ const ContractorPainPoints = () => {
     {
       pain: "Your Patio is Sinking After One Winter",
       cause: "They dug 6 inches, threw down some gravel, and called it a base. Now your stones are uneven and you're back to square one.",
-      solution: "We excavate 12-16 inches deep and use structural-grade clear stone — so your patio looks the same in year ten as it did on day one.",
+      solution: "We review drainage, soil, access, and the project-specific excavation/base plan before finalizing a written scope.",
       icon: Compass
     },
     {
@@ -509,7 +465,7 @@ const ContractorPainPoints = () => {
             <span className="text-brand-gold-dark italic">by a contractor before.</span>
           </h2>
           <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
-            We hear it every week. Homeowners in Barrie who hired someone "affordable" and got sinking stones, ghosted communication, and surprise invoices. We built Golden Maple to be the opposite of that experience.
+            Compare more than the headline price. Ask each contractor to explain site preparation, drainage, written scope, payment stages and how changes will be approved.
           </p>
         </Reveal>
 
@@ -551,10 +507,10 @@ const ContractorPainPoints = () => {
 
 const SocialProofStrip = () => {
   const stats = [
-    { number: "5.0", label: "Google Rating", sub: "8 verified Google reviews" },
-    { number: "5+", label: "Years in Barrie", sub: "Since 2020" },
-    { number: "12-16\"", label: "Base Depth", sub: "2× industry standard" },
-    { number: "$5M", label: "Liability Coverage", sub: "WSIB certified" },
+    { number: "Reviews", label: "Google", sub: publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.') },
+    { number: "Since", label: "2020", sub: "Published business history; confirm current details directly." },
+    { number: "Scope", label: "Site preparation", sub: "Final depths and materials are project-specific." },
+    { number: "Terms", label: "Project documentation", sub: publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current coverage documentation is available.') },
   ];
 
   return (
@@ -587,11 +543,11 @@ export default function Home() {
     <>
       <SEO
         title="Barrie Landscaping Company | Patios, Interlock & Retaining Walls"
-        description="Barrie's 5-star landscaping company — interlocking patios, driveways & retaining walls across Simcoe County. Get an instant cost range, no signup. $5M insured, 5-year warranty."
+        description="Barrie landscaping for interlocking patios, driveways, retaining walls and outdoor spaces across Simcoe County. Get an instant cost range and contact us to confirm project details."
         canonical="https://goldenmaplelandscaping.ca/"
       />
       <Hero />
-      <TrustBar />
+      <PublicationTrustBar />
       <SocialProofStrip />
       <ServicesGrid />
       <Manifesto />
@@ -611,7 +567,7 @@ export default function Home() {
           {[
             {
               q: "Why do you dig so much deeper than other contractors?",
-              a: "Because Barrie's freeze-thaw cycle is brutal. A 6-inch base might look fine the first summer, but by the second winter your stones are shifting. We dig 12-16 inches and use clear stone that drains properly — because fixing a sinking patio costs more than doing it right the first time."
+              a: "Freeze-thaw, drainage, soil, access, and the intended use all affect site preparation. We confirm the project-specific excavation and base plan in the written scope."
             },
             {
               q: "Why TimberTech instead of regular wood decking?",
@@ -619,11 +575,11 @@ export default function Home() {
             },
             {
               q: "What if something goes wrong after the project is done?",
-              a: "Then we come back and fix it. Our 5-year sink and settlement warranty means if anything shifts or settles, it's on us. But honestly? We've never had to honour a claim. That's what happens when you build things properly from the start."
+              a: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available for your project.')
             },
             {
               q: "Is there a fee to get started?",
-              a: "No. Your first conversation with us is a free estimate request by phone — honest scope assessment, honest budget feedback, no pressure. If we're the right fit for your project, we'll come walk your property at no charge. From there, two paid steps are available if you want more precision than a ballpark: a $99 on-site design session (credited back if you book) for ±5% pricing with material samples, or full landscape design starting at $2,500 (credited back if you build with us) if you want detailed 3D plans before construction."
+              a: publicClaimCopy(BUSINESS.commercialPolicies.consultation, 'Contact us to confirm the current consultation and design scope.')
             }
           ].map((faq, idx) => (
             <div key={idx} className="bg-brand-surface p-10 border border-brand-dim/10 rounded-[2px] hover:border-brand-gold/20 transition-colors">
@@ -635,6 +591,7 @@ export default function Home() {
       </div>
     </section>
 
+    <BuyersGuide />
     <FinalCTA />
     </>
   );

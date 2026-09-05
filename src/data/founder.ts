@@ -32,10 +32,12 @@
  * one-line change here plus a rerun of the build script.
  */
 
-const ORIGIN = 'https://goldenmaplelandscaping.ca';
+import { BUSINESS } from './business';
 
-const NAME = 'Yorkis Estevez';
-const ROLE = 'Founder & Lead Builder';
+const ORIGIN = BUSINESS.canonicalUrl;
+
+const NAME = BUSINESS.founder.value.name;
+const ROLE = BUSINESS.founder.value.role;
 
 export const FOUNDER = {
   name: NAME,
@@ -44,13 +46,13 @@ export const FOUNDER = {
   /** Home Manifesto + /about — bordered 3:4 portrait. */
   portrait: {
     src: '/images/projects/yorkis-founder-headshot-v1.jpg',
-    alt: `${NAME}, founder of Golden Maple Landscaping`,
+    alt: `AI-generated founder illustration for ${BUSINESS.publicName.value}; not a photograph`,
   },
 
   /** Blog author bios — small square, rendered as a 64px circle. */
   avatar: {
     src: '/images/projects/yorkis-founder-avatar-v1.webp',
-    alt: `${NAME}, Founder of Golden Maple Landscaping`,
+    alt: `AI-generated founder illustration for ${BUSINESS.publicName.value}; not a photograph`,
   },
 } as const;
 
@@ -59,4 +61,6 @@ export const FOUNDER = {
  * BlogPostLayout `author`) named Yorkis with no image until this existed —
  * which is what lets Google and AI engines tie a face to the author entity.
  */
-export const FOUNDER_IMAGE_URL = `${ORIGIN}${FOUNDER.avatar.src}`;
+// Do not associate a synthetic likeness with a Person's real photographic identity.
+// Kept as an optional export for existing schema consumers; JSON.stringify omits it.
+export const FOUNDER_IMAGE_URL: string | undefined = undefined;

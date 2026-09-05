@@ -1,5 +1,6 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
+import { BUSINESS } from '../../data/business';
 
 export default function PaverComparison() {
   return (
@@ -12,7 +13,7 @@ export default function PaverComparison() {
       readTime="8 min read"
       heroImage="/images/projects/IHPX8926.JPEG"
     >
-      <p>We install pavers from all three major manufacturers — Unilock, Techo-Bloc, and Permacon — and we get asked this question constantly: <strong>"Which one is the best?"</strong></p>
+      <p>Contractors install pavers from all three major manufacturers — Unilock, Techo-Bloc, and Permacon — and contractors get asked this question constantly: <strong>"Which one is the best?"</strong></p>
 
       <p>The honest answer? There isn't a single "best." Each brand has strengths that make it ideal for certain projects and certain homeowners. Here's a straightforward comparison from someone who works with these products every day.</p>
 
@@ -36,7 +37,7 @@ export default function PaverComparison() {
         <li><strong>Design-forward:</strong> Techo-Bloc consistently pushes boundaries with new textures, shapes, and installation patterns. Their Blu Grande slab is one of the most popular large-format pavers in Ontario.</li>
         <li><strong>Hydra Pressed technology:</strong> Their manufacturing process creates denser, stronger pavers with exceptional colour richness.</li>
         <li><strong>Excellent retaining wall blocks:</strong> Their Mini-Creta and Para systems are some of the most versatile wall solutions available.</li>
-        <li><strong>Strong contractor program:</strong> As Techo-Pro certified, we get access to exclusive products and extended warranties for our clients.</li>
+        <li><strong>Strong contractor program:</strong> Check current manufacturer program terms and the installer’s documented authorization; benefits and eligibility vary.</li>
       </ul>
 
       <h3>Best For</h3>
@@ -57,18 +58,18 @@ export default function PaverComparison() {
 
       <h2>What Actually Matters More Than the Brand</h2>
 
-      <p>Here's what we tell every client: <strong>the installation matters more than the brand.</strong> A Permacon paver installed on a proper 14-inch base will outlast a Unilock paver installed on a 6-inch base every single time.</p>
+      <p>Here's what contractors tell every client: <strong>the installation matters more than the brand.</strong> A Permacon paver installed on a proper 14-inch base will outlast a Unilock paver installed on a 6-inch base every single time.</p>
 
-      <p>The paver is the visible surface. The base system underneath is what determines whether that surface stays level, drains properly, and survives Canadian winters. That's why we focus on engineering first and aesthetics second — because you can have both when the foundation is right.</p>
+      <p>The paver is the visible surface. The base system underneath is what determines whether that surface stays level, drains properly, and survives Canadian winters. That's why contractors focus on engineering first and aesthetics second — because you can have both when the foundation is right.</p>
 
       <blockquote>
-        <p>"We never steer a client toward one brand over another. We help them understand the differences and choose based on their priorities — and then we make sure the installation is flawless regardless of which brand they pick."</p>
+        <p>"Contractors never steer a client toward one brand over another. Contractors help them understand the differences and choose based on their priorities — and then contractors make sure the installation is flawless regardless of which brand they pick."</p>
       </blockquote>
 
-      <h2>Our Recommendation Process</h2>
+      <h2>The Recommendation Process</h2>
 
-      <p>Once we've confirmed on a free estimate request that your project is a fit, we bring physical samples of all three brands to your property. You'll see them in your actual lighting, next to your home's exterior. We'll discuss the pros and cons openly, and you'll make an informed decision — not a pressured one.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and installs Permacon, Unilock, and Techo-Bloc pavers across Barrie and Simcoe County. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, this comparison comes from laying all three rather than from a brochure, and the honest answer is that the base under them matters more than the badge on them." />
+      <p>After confirming the current consultation scope, ask whether physical samples are available for your project. You'll see them in your actual lighting, next to your home's exterior. A contractor will discuss the pros and cons openly, and you'll make an informed decision — not a pressured one.</p>
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

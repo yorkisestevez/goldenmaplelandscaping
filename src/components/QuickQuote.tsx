@@ -1,11 +1,12 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowRight, CheckCircle, Shield, Star, Calendar, Phone } from 'lucide-react';
+import { ArrowRight, CheckCircle, Shield, Calendar, Phone } from 'lucide-react';
 import { trackLead, trackCall } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
+import { publicContact } from '../data/business';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -69,7 +70,7 @@ export default function QuickQuote() {
       setStatus('success');
     } catch {
       setStatus('error');
-      setErrorMsg('Connection issue. Call (705) 500-3581 — we answer in person.');
+      setErrorMsg(`Connection issue. Call ${publicContact.phoneDisplay} to discuss your project.`);
     }
   };
 
@@ -88,7 +89,7 @@ export default function QuickQuote() {
           We've got it.
         </h3>
         <p className="font-sans text-sm text-brand-porcelain-soft leading-relaxed font-light mb-8">
-          Want to skip the wait? Book your <span className="text-brand-gold">free estimate request</span> directly — pick a time that works for you.
+          You can also request a project conversation directly and pick a time that works for you.
         </p>
         <Link
           to="/contact"
@@ -99,11 +100,11 @@ export default function QuickQuote() {
           <ArrowRight size={14} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />
         </Link>
         <a
-          href="tel:7055003581" onClick={() => trackCall('quickquote_phone')}
+          href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('quickquote_phone')}
           className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold hover:underline inline-flex items-center gap-2"
         >
           <Phone size={12} strokeWidth={1.5} />
-          (705) 500-3581
+          {publicContact.phoneDisplay}
         </a>
       </motion.div>
     );
@@ -116,20 +117,11 @@ export default function QuickQuote() {
       transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="bg-brand-burgundy/90 backdrop-blur-md border border-brand-gold/25 rounded-[2px] p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
     >
-      <div className="flex items-center gap-3 mb-2">
-        <div className="flex gap-0.5">
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} size={12} className="text-brand-gold fill-brand-gold" strokeWidth={0} />
-          ))}
-        </div>
-        <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold">5.0 · 8 Reviews</span>
-      </div>
-
       <h2 className="font-display text-3xl md:text-4xl font-light text-brand-porcelain leading-tight mb-3">
-        Get your free <span className="italic text-brand-gold">project estimate</span>
+        Get a <span className="italic text-brand-gold">project estimate</span>
       </h2>
       <p className="font-sans text-sm text-brand-porcelain-soft font-light mb-8 leading-relaxed">
-        estimate request with Yorkis — at a time that works for you. No fee. Honest answers about scope and budget.
+        Share your project details for a practical conversation about scope and budget.
       </p>
 
       <form
@@ -201,7 +193,7 @@ export default function QuickQuote() {
         >
           {status === 'submitting' ? 'Sending…' : (
             <>
-              Get My Free Estimate
+              Get My Estimate
               <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />
             </>
           )}

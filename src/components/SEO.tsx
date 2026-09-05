@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { BUSINESS, publicContact, publicPostalAddress, publicServiceAreas } from '../data/business';
 
 interface SEOProps {
   title: string;
@@ -9,7 +10,7 @@ interface SEOProps {
 }
 
 export default function SEO({ title, description, canonical, schema, image }: SEOProps) {
-  const siteName = 'Golden Maple Landscaping';
+  const siteName = BUSINESS.publicName.value;
   const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
   const defaultImage = 'https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg';
   // Netlify's `pretty_urls = true` serves prerendered routes at trailing-slash
@@ -23,53 +24,28 @@ export default function SEO({ title, description, canonical, schema, image }: SE
     : undefined;
 
   const localBusinessSchema = {
-    "@context": "https://schema.org",
-    "@type": "LandscapeService",
-    "name": "Golden Maple Landscaping",
-    "image": "https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg",
-    "@id": "https://goldenmaplelandscaping.ca/#business",
-    "url": "https://goldenmaplelandscaping.ca",
-    "telephone": "+1-705-500-3581",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Barrie",
-      "addressRegion": "ON",
-      "postalCode": "L4N",
-      "addressCountry": "CA"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": 44.3894,
-      "longitude": -79.6903
-    },
-    "openingHoursSpecification": {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday"
-      ],
-      "opens": "08:00",
-      "closes": "18:00"
-    },
-    "sameAs": [
-      "https://www.facebook.com/GoldenMaplegroup",
-      "https://www.instagram.com/goldenmaplelandscaping",
-      "https://www.homestars.com/companies/2982995-golden-maple-landscaping",
-      "https://www.yelp.com/biz/golden-maple-landscaping-barrie-4"
+    '@context': 'https://schema.org',
+    '@type': 'LandscapeService',
+    name: BUSINESS.publicName.value,
+    image: `${BUSINESS.canonicalUrl}/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg`,
+    '@id': `${BUSINESS.canonicalUrl}/#business`,
+    url: BUSINESS.canonicalUrl,
+    telephone: publicContact.phoneTel,
+    email: publicContact.email,
+    address: publicPostalAddress(),
+    openingHoursSpecification: BUSINESS.hours.value.map((hours) => ({
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: hours.days,
+      opens: hours.opens,
+      closes: hours.closes,
+    })),
+    sameAs: [
+      BUSINESS.urls.facebook.value,
+      BUSINESS.urls.instagram.value,
+      BUSINESS.urls.homeStars.value,
+      BUSINESS.urls.yelp.value,
     ],
-    "areaServed": [
-      { "@type": "City", "name": "Barrie" },
-      { "@type": "City", "name": "Innisfil" },
-      { "@type": "City", "name": "Oro-Medonte" },
-      { "@type": "City", "name": "Springwater" },
-      { "@type": "City", "name": "Orillia" },
-      { "@type": "City", "name": "Wasaga Beach" },
-      { "@type": "City", "name": "Midland" },
-      { "@type": "City", "name": "Collingwood" }
-    ]
+    areaServed: publicServiceAreas.map((name) => ({ '@type': 'City', name })),
   };
 
   return (

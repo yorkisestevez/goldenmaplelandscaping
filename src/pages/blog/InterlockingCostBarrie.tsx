@@ -2,6 +2,7 @@ import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
 import { Link } from 'react-router-dom';
 import CostGuideInlineCTA from '../../components/CostGuideInlineCTA';
+import { BUSINESS, publicContact } from '../../data/business';
 
 export default function InterlockingCostBarrie() {
   return (
@@ -16,7 +17,7 @@ export default function InterlockingCostBarrie() {
     >
       <p>If you're planning an interlocking patio, driveway, or walkway in Barrie, the first question is always the same: <em>what's this going to cost?</em></p>
 
-      <p>The honest answer is that it depends — on size, material choice, site conditions, and scope. But after building interlocking projects across Barrie and Simcoe County for years, we can give you real numbers based on what homeowners actually pay.</p>
+      <p>The honest answer is that it depends — on size, material choice, site conditions, and scope. But after building interlocking projects across Barrie and Simcoe County for years, contractors can give you real numbers based on what homeowners actually pay.</p>
 
       <p>This guide breaks down interlocking costs in Barrie for 2026, explains what drives the price up or down, and helps you set a realistic budget before calling a contractor.</p>
 
@@ -72,7 +73,7 @@ export default function InterlockingCostBarrie() {
         </table>
       </div>
 
-      <p>We work primarily with <strong>Techo-Bloc and Permacon</strong> — both offer a lifetime transferable warranty on their products and are manufactured for Ontario's freeze-thaw cycles.</p>
+      <p>Contractors work primarily with <strong>Techo-Bloc and Permacon</strong> — both offer a lifetime transferable warranty on their products and are manufactured for Ontario's freeze-thaw cycles.</p>
 
       <h3>2. Site Conditions</h3>
 
@@ -162,7 +163,7 @@ export default function InterlockingCostBarrie() {
         <li><strong>Total estimate: ~$30,000</strong></li>
       </ul>
 
-      <p>Want a quick number? Use our <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">Cost Estimator</Link> for an instant ballpark based on your project details.</p>
+      <p>Want a quick number? Use the <Link to="/cost-estimator?type=patio" className="text-brand-gold-dark hover:underline">Cost Estimator</Link> for an instant ballpark based on your project details.</p>
 
       <CostGuideInlineCTA />
 
@@ -173,7 +174,7 @@ export default function InterlockingCostBarrie() {
       <ul>
         <li><strong>Per-square-foot quotes under $40</strong> — base prep is being cut somewhere</li>
         <li><strong>No mention of base depth</strong> — the most important part of the job</li>
-        <li><strong>"We'll figure it out on site"</strong> — no design or plan before starting</li>
+        <li><strong>"A contractor will figure it out on site"</strong> — no design or plan before starting</li>
         <li><strong>No written warranty</strong> — verbal promises mean nothing after year two</li>
         <li><strong>Deposit over 50%</strong> — standard is 10-30% deposit with milestone payments</li>
         <li><strong>No insurance or WSIB</strong> — you're liable if someone gets hurt on your property</li>
@@ -196,14 +197,14 @@ export default function InterlockingCostBarrie() {
 
       <p>Every property is different. The numbers in this guide are based on typical Barrie projects, but the only way to get an accurate price is a site visit.</p>
 
-      <p>Golden Maple Landscaping offers <strong>free, no-obligation consultations</strong> with detailed written quotes. We'll measure your space, discuss materials, and give you a price you can hold us to.</p>
+      <p>Contact us to confirm the current consultation scope, site-visit policy, and written-quote process for your project.</p>
 
       <p>
-        <strong>Call:</strong> <a href="tel:+17055003581" className="text-brand-gold-dark hover:underline">705-500-3581</a><br />
-        <strong>Email:</strong> <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="text-brand-gold-dark hover:underline">yorkis@goldenmaplelandscaping.ca</a><br />
+        <strong>Call:</strong> <a href={`tel:${publicContact.phoneTel}`} className="text-brand-gold-dark hover:underline">{publicContact.phoneDisplay}</a><br />
+        <strong>Email:</strong> <a href={`mailto:${publicContact.email}`} className="text-brand-gold-dark hover:underline">{publicContact.email}</a><br />
         <strong>Online:</strong> <Link to="/contact" className="text-brand-gold-dark hover:underline">Request a Quote</Link>
       </p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and prices interlocking work in Barrie and Simcoe County from real supplier numbers out of Carr Landscape Depot rather than rules of thumb. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, every range here assumes a base built to 12 to 16 inches of compacted clear stone, because a cheaper number usually means a shallower hole." />
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

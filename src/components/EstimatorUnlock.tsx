@@ -6,6 +6,7 @@ import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
 import type { VaultEstimate } from '../utils/estimatorVault';
+import { publicContact } from '../data/business';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -90,7 +91,7 @@ export default function EstimatorUnlock({
       finish();
     } catch {
       setStatus('error');
-      setErrorMsg('Connection issue. Call (705) 500-3581 — we answer in person.');
+      setErrorMsg(`Connection issue. Call ${publicContact.phoneDisplay} — we answer in person.`);
     }
   };
 

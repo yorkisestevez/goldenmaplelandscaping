@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { BUSINESS, publicClaimCopy } from '../data/business';
 import { BookOpen, Calculator, Calendar, ArrowRight, CheckCircle2, FileText, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getAttributionFields } from '../utils/utmCapture';
@@ -112,7 +113,7 @@ const BuyersGuide = () => {
                   "Material comparisons: interlock, natural stone, porcelain",
                   "How to budget for a $40K–$90K+ project",
                   "Questions to ask every contractor",
-                  "Golden Maple's 5-year warranty explained"
+                  publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Golden Maple\'s written workmanship terms explained')
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-start gap-4 font-sans text-sm text-brand-muted font-light leading-relaxed">
                     <CheckCircle2 size={18} className="text-brand-gold-dark shrink-0 mt-0.5" strokeWidth={1.5} />
@@ -193,7 +194,7 @@ const BuyersGuide = () => {
                 Request a <br />
                 <span className="italic">Project Estimate</span>
               </h3>
-              <p className="font-sans text-sm text-brand-muted mb-10 leading-relaxed font-light">Tell us about your project and we'll follow up within 1 business day.</p>
+              <p className="font-sans text-sm text-brand-muted mb-10 leading-relaxed font-light">Tell us about your project and we will follow up about next steps.</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4 mb-8 text-[11px] text-brand-bonewhite uppercase tracking-wider font-normal">
                 {[
@@ -307,7 +308,7 @@ const BuyersGuide = () => {
                     </div>
                     <h4 className="font-display text-3xl text-brand-bonewhite mb-3 font-light">Request Received</h4>
                     <p className="font-sans text-brand-muted text-sm font-light leading-relaxed">
-                      Thank you for trusting Golden Maple. Our project specialist will review your details and reach out within 24 hours.
+                      Thank you for trusting Golden Maple. Our project specialist will review your details and follow up.
                     </p>
                   </motion.div>
                 )}
@@ -333,7 +334,7 @@ const BuyersGuide = () => {
               <div>
                 <h4 className="font-display text-3xl text-brand-ink mb-2 font-light">Book a <span className="italic text-brand-green-dark">Design Package</span></h4>
                 <p className="font-sans text-brand-muted text-sm font-light">
-                  A paid on-site consultation. Full fee <span className="text-brand-ink font-normal underline decoration-brand-gold decoration-1 underline-offset-[6px]">credited toward your build</span> when you proceed.
+                  {publicClaimCopy(BUSINESS.commercialPolicies.design, 'Design-session details are available on request.')}
                 </p>
               </div>
             </div>

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
+import { BUSINESS } from '../../data/business';
 
 export default function ClearStoneVsGranularA() {
   return (
@@ -13,11 +14,11 @@ export default function ClearStoneVsGranularA() {
       readTime="9 min read"
       heroImage="/images/projects/IMG_4826.jpg"
     >
-      <p>Every interlocking failure we get called out to inspect in Barrie has the same root cause. Not bad pavers. Not bad weather. Not bad workmanship on the surface. <strong>It's the base material underneath.</strong></p>
+      <p>Every interlocking failure contractors get called out to inspect in Barrie has the same root cause. Not bad pavers. Not bad weather. Not bad workmanship on the surface. <strong>It's the base material underneath.</strong></p>
 
       <p>And in this region, that material is almost always Granular A — the default base aggregate that 95% of contractors quote, install, and walk away from. It's cheap, it's familiar, and in Simcoe County's freeze-thaw climate, <strong>it is the single biggest predictor of how fast your hardscape will fail.</strong></p>
 
-      <p>We don't use it. Not on $15,000 patios, not on $120,000 pool decks, not anywhere. Here's the engineering reason — and why the alternative is the only base we'll ever build on.</p>
+      <p>Contractors don't use it. Not on $15,000 patios, not on $120,000 pool decks, not anywhere. Here's the engineering reason — and why the alternative is the only base a contractor will ever build on.</p>
 
       <h2>What Granular A Actually Is</h2>
 
@@ -51,16 +52,16 @@ export default function ClearStoneVsGranularA() {
 
       <p>Open-graded means the opposite of Granular A. Instead of a mix of sizes that pack tight, you use a uniform-size stone that <strong>can't pack tight by design</strong>. The voids between stones stay open. Water moves through them as fast as it arrives. Nothing pools, nothing sits, nothing freezes in a layer that can heave your pavers.</p>
 
-      <h3>What We Actually Use</h3>
+      <h3>What Contractors Actually Use</h3>
 
-      <p>At Golden Maple, every hardscape build sits on this two-layer open-graded system:</p>
+      <p>A two-layer open-graded system may include:</p>
 
       <ul>
         <li><strong>Base course: 3/4" clear stone (HL-8 / 19mm crusher run washed clean).</strong> This is the structural layer — usually 8 to 14 inches deep depending on soil and load. Compacts to 95%+ density in lifts, holds shape under traffic, and drains at roughly 250 inches per hour. For comparison, Granular A drains at &lt;1 inch per hour after compaction.</li>
         <li><strong>Bedding course: HPB (High Performance Bedding).</strong> A 1 to 1.5 inch layer of small angular chip directly under the pavers. Levels the surface to ±2mm tolerance and stays put under load — won't migrate the way concrete sand does in the first heavy rain.</li>
       </ul>
 
-      <p>The cost difference per square foot is small — usually $1.50 to $2.50 more in materials. The lifespan difference is enormous. We back our base work with a <strong>5-year sink and settlement warranty</strong>, and we've never had to honour a claim. You can't say that on Granular A and stay in business.</p>
+      <p>The cost difference per square foot is small — usually $1.50 to $2.50 more in materials. The lifespan difference is enormous. Ask each contractor for current written workmanship terms, including coverage, exclusions, remedy, and maintenance requirements.</p>
 
       <h2>Why Most Barrie Contractors Still Use Granular A</h2>
 
@@ -79,7 +80,7 @@ export default function ClearStoneVsGranularA() {
       <p>Before you sign anything, ask three specific questions:</p>
 
       <ul>
-        <li><strong>"What base material are you using — Granular A or 3/4 inch clear stone?"</strong> If they hesitate or say "we use what the project needs," walk away. A real hardscape contractor will give you a one-word answer.</li>
+        <li><strong>"What base material are you using — Granular A or 3/4 inch clear stone?"</strong> If they hesitate or say "contractors use what the project needs," walk away. A real hardscape contractor will give you a one-word answer.</li>
         <li><strong>"How deep is the base?"</strong> Anything less than 8 inches for a patio (or 12 inches for a driveway) is undersized for Simcoe County soil.</li>
         <li><strong>"What's the bedding layer?"</strong> The correct answer is HPB or 1/4" chip. If they say concrete sand or stone dust, the bedding will migrate and your pavers will rock within 24 months.</li>
       </ul>
@@ -88,7 +89,7 @@ export default function ClearStoneVsGranularA() {
 
       <h2>The 20-Winter Test</h2>
 
-      <p>Every hardscape we build is engineered to look the same 20 winters from now as it does the day we hand it over. That's not a marketing promise — it's a base specification. Open-graded clear stone with HPB bedding doesn't trap water. Water that doesn't sit doesn't freeze in a layer that can lift your pavers. Pavers that don't lift don't widen, don't tilt, don't crack the polymeric sand. The whole failure cascade starts with one decision underground.</p>
+      <p>Every hardscape contractors build is engineered to look the same 20 winters from now as it does the day contractors hand it over. That's not a marketing promise — it's a base specification. Open-graded clear stone with HPB bedding doesn't trap water. Water that doesn't sit doesn't freeze in a layer that can lift your pavers. Pavers that don't lift don't widen, don't tilt, don't crack the polymeric sand. The whole failure cascade starts with one decision underground.</p>
 
       <p>You can't fix this after the fact. There's no overlay, no top-up, no sealer that compensates for a base that's holding water. The only fix is to tear the surface up, dig the base out, and start over. That's a $15,000 do-over on a $15,000 patio.</p>
 
@@ -98,10 +99,10 @@ export default function ClearStoneVsGranularA() {
 
       <p>If the quote doesn't specify the base material and depth in writing, the contractor either doesn't know or doesn't want you to. Either way, that's not the team you want.</p>
 
-      <p>Want to see what the right base looks like in writing? Our <Link to="/cost-estimator" className="text-brand-gold-dark hover:underline">instant cost estimator</Link> shows you a real range with the engineering included, and our <Link to="/contact" className="text-brand-gold-dark hover:underline">free design consultation</Link> walks you through the exact base spec for your property — soil type, drainage, frost depth, the whole stack.</p>
+      <p>Want to see what the right base looks like in writing? Use the <Link to="/cost-estimator" className="text-brand-gold-dark hover:underline">cost estimator</Link> as a planning tool, then <Link to="/contact" className="text-brand-gold-dark hover:underline">contact us</Link> to confirm the current consultation scope and obtain a project-specific written specification.</p>
 
       <p>Related reading: <Link to="/resources/why-patios-sink-barrie" className="text-brand-gold-dark hover:underline">Why patios sink in Barrie</Link> · <Link to="/resources/winter-damage-prevention-interlocking" className="text-brand-gold-dark hover:underline">Winter damage prevention</Link> · <Link to="/resources/interlocking-cost-barrie" className="text-brand-gold-dark hover:underline">Interlocking cost in Barrie 2026</Link>.</p>
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in 2020 and builds every patio, walkway, and driveway on a 12 to 16 inch compacted clear stone base rather than granular A. The company is WSIB certified and carries $5M in liability coverage. With a 5.0 Google rating, this is the one detail he will argue about longest, because the base decides whether the surface is still level in ten years." />
+      <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
     </BlogPostLayout>
   );

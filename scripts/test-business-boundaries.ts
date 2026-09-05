@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { BUSINESS, canPublish, publicPostalAddress, publicClaimCopy } from '../src/data/business';
+const fact = {...BUSINESS.credentials.wsib, status:'confirmed' as const};
+assert.equal(canPublish({...fact,lastVerified:null}),false,'Undated confirmation must fail closed');
+assert.equal(canPublish({...fact,lastVerified:'not-a-date'}),false,'Malformed verification date must fail closed');
+assert.equal(canPublish({...fact,lastVerified:'2026-09-05',source:''}),false,'Missing provenance must fail closed');
+assert.equal(canPublish({...fact,lastVerified:'2026-09-05',source:'Owner-approved current evidence'}),true);
+assert.equal(publicPostalAddress('Orillia','L3V').addressLocality,'Barrie','Service city must not become an invented business address');
+assert.equal('postalCode' in publicPostalAddress(),false,'Incomplete/unconfirmed postal code must not be asserted');
+assert.doesNotMatch(publicClaimCopy(BUSINESS.reviews.aggregate,'Verified Google reviews'),/reviews are available/i,'Unknown reviews must not become an availability claim');
+console.log('Evidence publication boundaries: PASS');

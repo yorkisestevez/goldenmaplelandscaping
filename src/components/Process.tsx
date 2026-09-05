@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { publicClaimCopy, BUSINESS } from '../data/business';
 import { Compass, Shield, Heart, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -25,13 +26,14 @@ export default function Process() {
               <span className="italic text-brand-gold">not just a project.</span>
             </h2>
             <p className="font-sans font-light text-base md:text-xl text-brand-porcelain-soft leading-relaxed mb-10 md:mb-14">
-              Premium spaces require meticulous planning. The first step is a free estimate request — honest scope, honest budget, no pressure. Everything else flows from there.
+              Premium spaces require meticulous planning. Start with a project estimate request — honest scope and an honest budget conversation. Everything else flows from there.
             </p>
 
             <div className="mb-12 p-8 bg-brand-surface border border-brand-gold/20 rounded-[2px]">
               <h4 className="font-display text-2xl text-brand-gold-dark mb-4">Free Estimate</h4>
               <p className="font-sans text-base text-brand-muted leading-relaxed font-light">
-                Your first conversation with us is <span className="text-brand-bonewhite font-normal">free, no strings attached</span>. We'll listen to what you're imagining, ask the right questions, and tell you honestly whether your project is a fit for what we do. If it is, the property walk that follows is also <span className="text-brand-bonewhite font-normal">on the house</span>.
+                {publicClaimCopy(BUSINESS.commercialPolicies.consultation, 'Your first conversation with us is complimentary.')}
+                {' '}We'll listen to what you're imagining, ask the right questions, and tell you honestly whether your project is a fit for what we do. Any next step is confirmed with you before it is scheduled.
               </p>
             </div>
             

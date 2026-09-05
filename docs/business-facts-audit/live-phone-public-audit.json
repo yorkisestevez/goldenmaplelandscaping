@@ -1,0 +1,68 @@
+{
+  "observed_at": "2026-09-05T18:37:10.313806+00:00",
+  "surfaces": [
+    {
+      "url": "https://goldenmaplelandscaping.ca/",
+      "final_url": "https://goldenmaplelandscaping.ca/",
+      "title": "Barrie Landscaping Company | Patios, Interlock & Retaining Walls | Golden Maple Landscaping",
+      "scripts": [
+        "https://www.googletagmanager.com/gtag/js",
+        "https://www.clarity.ms/tag/wisgcj7yvw",
+        "https://connect.facebook.net/signals/config/2084193635490617",
+        "https://connect.facebook.net/en_US/fbevents.js",
+        "https://www.googletagmanager.com/gtag/js",
+        "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/10839158941/",
+        "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/10839158941/"
+      ],
+      "status": 200,
+      "telephone_links": [
+        "tel:+17053008015"
+      ],
+      "sophie_visible": true,
+      "personal_phone_visible": false,
+      "legacy_phone_visible": false
+    },
+    {
+      "url": "https://goldenmaplelandscaping.ca/contact",
+      "final_url": "https://goldenmaplelandscaping.ca/contact/",
+      "title": "Start a Golden Maple Project | Premium Hardscape Barrie | Golden Maple Landscaping",
+      "scripts": [
+        "https://www.googletagmanager.com/gtag/js",
+        "https://www.googletagmanager.com/gtag/js",
+        "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/10839158941/"
+      ],
+      "status": 200,
+      "telephone_links": [
+        "tel:+17053008015"
+      ],
+      "sophie_visible": true,
+      "personal_phone_visible": false,
+      "legacy_phone_visible": false
+    },
+    {
+      "url": "https://seo.goldenmaplelandscaping.ca/",
+      "final_url": "https://seo.goldenmaplelandscaping.ca/",
+      "title": "Golden Maple Landscaping | Hardscape Contractor in Barrie ON",
+      "scripts": [],
+      "status": 200,
+      "telephone_links": [
+        "tel:+1-705-300-8015"
+      ],
+      "sophie_visible": true,
+      "personal_phone_visible": false,
+      "legacy_phone_visible": false
+    },
+    {
+      "url": "https://guides.goldenmaplelandscaping.ca/",
+      "final_url": "https://guides.goldenmaplelandscaping.ca/",
+      "title": "Golden Maple Landscaping \u2014 Guides & Insights",
+      "scripts": [],
+      "status": 200,
+      "telephone_links": [],
+      "sophie_visible": false,
+      "personal_phone_visible": false,
+      "legacy_phone_visible": false
+    }
+  ],
+  "scope": "public page body and tel links; no account or telephony changes"
+}

@@ -3,13 +3,14 @@ import { Compass, Shield, Heart, CheckCircle, ArrowRight, Phone } from 'lucide-r
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { trackCall } from '../../utils/analytics';
+import { BUSINESS, publicClaimCopy, publicContact } from '../../data/business';
 
 export default function Consultation() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
-        title="Free Estimate | Landscaping Consultation Barrie | Golden Maple"
-        description="The first step is a free estimate request. Honest scope, honest budget, no pressure. If we're a fit, the property walk is on us — engineering-first design for Barrie & Simcoe County homeowners."
+        title="Landscaping Consultation Barrie | Golden Maple"
+        description="Start a conversation about your project scope, site conditions, and current consultation and design options."
       />
 
       <section className="section-padding pt-48">
@@ -29,13 +30,13 @@ export default function Consultation() {
                 <span className="italic text-brand-gold-dark">Becomes a Brief.</span>
               </h1>
               <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
-                Our process doesn't start with a sales pitch — it starts with you telling us what you're picturing and what you're willing to spend. Yorkis reads every brief personally and responds within 24 hours with an honest read on scope, timeline, and whether your budget matches the build you have in mind. If it does, the on-site property walk that follows is on us.
+                Start by sharing what you are picturing and the budget you have in mind. We can discuss project scope, timing, and the current consultation and design options for your property.
               </p>
 
               <div className="bg-brand-surface p-10 border border-brand-gold/20 rounded-[2px] mb-16">
-                <h3 className="font-display text-2xl text-brand-gold-dark mb-4">No Fee. No Pressure.</h3>
+                <h3 className="font-display text-2xl text-brand-gold-dark mb-4">Start with the Scope.</h3>
                 <p className="font-sans text-brand-muted leading-relaxed font-light mb-6">
-                  The estimate request is free, the property walk is free. From there, a $99 on-site design session and full landscape design are both optional paid steps for more precision — and both get credited back if you build with us.
+                  {publicClaimCopy(BUSINESS.commercialPolicies.consultation, "Contact us to confirm the current consultation and design scope.")}
                 </p>
                 <Link to="/contact" className="btn-primary w-full py-5 text-center px-8">Get My Free Estimate</Link>
               </div>
@@ -64,7 +65,7 @@ export default function Consultation() {
               {[
                 { title: "Lifestyle Discovery", desc: "How do you intend to use the space? Whether it's high-traffic entertaining or quiet sanctuary, we listen first." },
                 { title: "Property Assessment", desc: "A high-level overview of grades, drainage patterns, and potential engineering challenges." },
-                { title: "Budget Alignment", desc: "Transparent discussions about project scope—typically starting at $12,000 for hardscape and $25,000 for decking—to ensure your vision matches your investment." },
+                { title: "Budget Alignment", desc: "Discuss the project scope and budget considerations for your property." },
                 { title: "Material Direction", desc: "Initial thoughts on colors, textures, and product collections from premium partners like Unilock." },
                 { title: "Preliminary Timeline", desc: "Discussion of the design-build schedule and when your transformation can begin." },
                 { title: "Strategic Roadmapping", desc: "Laying out the literal next steps—from site assessment to final 3D design." }
@@ -79,16 +80,16 @@ export default function Consultation() {
 
           <div className="bg-brand-surface p-16 md:p-24 rounded-[2px] border border-brand-dim/10 mb-40">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite mb-12">Why we made discovery free.</h2>
+              <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite mb-12">Start with a Conversation.</h2>
               <div className="space-y-8 font-sans text-xl text-brand-muted leading-relaxed font-light">
                 <p>
-                  Most contractors hide their pricing until they've sat in your kitchen for an hour. <span className="text-brand-bonewhite font-normal italic">We're not interested in pressuring anyone.</span>
+                  The right project starts with a clear conversation about goals, site conditions, and budget.
                 </p>
                 <p>
-                  A 15-minute phone call tells both of us what we need to know — whether your project is a fit, whether the budget makes sense, and whether we're the right people to build it. If the answer is yes, the on-site walk and the conversation that follows costs you nothing.
+                  Contact us to confirm the current consultation process and whether the project is a fit.
                 </p>
                 <p className="text-brand-bonewhite font-normal">
-                  We'd rather lose ten minutes telling someone we're not the right fit than waste their afternoon and ours pretending we are.
+                  The next steps, deliverables, and any associated terms are confirmed for the specific project.
                 </p>
               </div>
             </div>
@@ -104,8 +105,8 @@ export default function Consultation() {
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
             <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
-            <a href="tel:7055003581" onClick={() => trackCall('consultation_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
-              <Phone size={14} /> (705) 500-3581
+            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('consultation_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
+              <Phone size={14} /> {publicContact.phoneDisplay}
             </a>
           </div>
         </div>

@@ -9,29 +9,16 @@ import Testimonials from '../components/Testimonials';
 // Primary CTA: cost estimator to pre-frame serious outdoor-room economics.
 
 const FAQ = [
-  {
-    q: "What does a patio actually cost in Barrie in 2026?",
-    a: "Most premium patio and outdoor-room projects we want to attract run $35,000-$75,000. The range depends on size, access, paver line, excavation depth, drainage, steps, lighting, borders, and whether the patio is paired with a wall or fire zone. The cost estimator gives you a realistic planning range before we book time on site.",
-  },
-  {
-    q: "Why is the base depth a big deal?",
-    a: "Most contractors in Simcoe County dig 6-8 inches and use Granular A. We dig 12 down and use 3/4\" clear stone over a compacted virgin-soil base. Granular A traps water that freezes and lifts your pavers; clear stone drains at 250 inches per hour and stays stable through 60-85 freeze-thaw cycles a winter. That's the difference between a patio that looks new in year 8 and one that's pitching toward your foundation by year 3.",
-  },
-  {
-    q: "Do you build smaller patios? What's the minimum?",
-    a: "We can build smaller surfaces when they are part of a larger entrance, walkway, or backyard plan. Standalone small patios are usually not the best fit unless the scope can support proper excavation, base prep, mobilization, cleanup, and warranty. Our online patio planning floor is now $35,000 so the project has room to be built properly.",
-  },
-  {
-    q: "What's the difference between this tier and 'outdoor living'?",
-    a: "A premium patio means the patio is the main build: a serious hardscape surface with proper base, drainage thinking, and possible steps, borders, lighting, or fire. Outdoor living means the patio is one element of a larger system — usually paired with walls, pergola, kitchen, lighting, or multi-zone family use.",
-  },
+  { q: 'How do we start planning?', a: 'Contact us to discuss your property, priorities, and the current consultation and design scope.' },
+  { q: 'How are construction details decided?', a: 'Materials, drainage, base preparation, timing, and responsibilities are confirmed for the project-specific written scope.' },
+  { q: 'What terms should I expect?', a: 'Ask for current written workmanship terms, manufacturer information where applicable, and the scope for your project.' },
 ];
 
 export default function PatiosBarrie() {
   const processSteps = [
-    { title: 'Site walk & quote', desc: 'We come out, measure, talk through soil and grade. Quote on the spot for jobs under 600 sqft.' },
-    { title: 'Excavation to 12"', desc: 'Down to virgin ground. Geotextile fabric across the base. No shortcuts on the prep that the next contractor would hide.' },
-    { title: 'Clear stone + HPB', desc: '3/4" clear stone compacted in 3-4" lifts. High-performance bedding chip on top. Open-graded so water moves through, never sits.' },
+    { title: 'Project review', desc: 'We discuss site conditions, intended use, and the details needed for a written scope.' },
+    { title: 'Excavation and preparation', desc: 'Excavation, drainage, and base details are determined for the site and written scope.' },
+    { title: 'Materials and drainage', desc: 'Proposed materials and drainage approach are confirmed for the project-specific scope.' },
     { title: 'Lay, sand, walk-through', desc: 'Pavers placed against stringline. Polymeric sand swept and watered in. Walk-through on the same day with you, so you see what you bought.' },
   ];
 
@@ -39,7 +26,7 @@ export default function PatiosBarrie() {
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
         title="Premium Patios in Barrie | $35K-$75K Outdoor Rooms | Golden Maple"
-        description="Premium patio and outdoor-room projects in Barrie and Simcoe County. Real planning ranges, clear-stone bases, drainage-aware construction, and a 5-year structural warranty."
+        description="Premium patio and outdoor-room projects in Barrie and Simcoe County. Real planning ranges, clear-stone bases, drainage-aware construction, and project-specific written workmanship terms."
         canonical="https://goldenmaplelandscaping.ca/patios-barrie"
       />
 
@@ -56,7 +43,7 @@ export default function PatiosBarrie() {
                 Premium Patio Projects · $35K-$75K
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
-                Patios that survive <br />
+                Patios planned for <br />
                 <span className="italic text-brand-gold-dark">20 Simcoe winters.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
@@ -92,13 +79,13 @@ export default function PatiosBarrie() {
               What most quotes don't tell you
             </span>
             <h2 className="font-display text-3xl md:text-5xl font-light text-brand-bonewhite leading-tight mb-10">
-              95% of Barrie patios sit on Granular A. We use 3/4" clear stone instead.
+              Base and drainage details should fit the site.
             </h2>
             <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed mb-8 font-light">
-              Granular A was engineered for highway construction — designed to pack tight and shed water off an asphalt surface. Under interlocking pavers, water comes through the joints and gets trapped in the fines. Freezes, expands, lifts the corners. We see it every spring on patios installed less than five years ago.
+              Material selection and drainage design should be reviewed in relation to the site, intended use, and written scope.
             </p>
             <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed mb-10 font-light">
-              We build on 3/4" clear stone — uniform-size aggregate that drains at 250 inches per hour by design. Water moves through, never sits, never freezes in a layer that can heave. Costs us about $1.50 more per square foot. Adds 20 years to the patio.
+              Ask how proposed base materials, drainage, and maintenance expectations apply to your project.
             </p>
             <Link to="/resources/clear-stone-vs-granular-a-base" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors inline-flex items-center gap-4">
               Read the engineering breakdown <ArrowRight size={16} strokeWidth={1.5} />
@@ -129,17 +116,17 @@ export default function PatiosBarrie() {
           {/* What's included */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-40">
             <div className="bg-brand-surface p-16 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">What's in every quote</h2>
+              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">Project-scope considerations</h2>
               <ul className="space-y-8">
                 {[
-                  '12" excavation to virgin ground',
+                  'Project-specific excavation and base planning',
                   'Geotextile fabric base separation',
-                  '3/4" clear stone, compacted in lifts',
+                  'Project-specific material and drainage planning',
                   'HPB bedding chip (not concrete sand)',
-                  'Techo-Bloc or Permacon pavers',
+                  'Material options confirmed for the project',
                   'Polymeric sand joints',
                   'Concrete edge restraint',
-                  '5-year sink and settlement warranty',
+                  'Current written workmanship terms',
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
                     <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />

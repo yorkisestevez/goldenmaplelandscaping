@@ -4,6 +4,7 @@ import { MapPin, Shield, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-rea
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { trackEngagement, trackCall } from '../../utils/analytics';
+import { BUSINESS, publicClaimCopy, publicContact, publicPostalAddress } from '../../data/business';
 
 const NEIGHBOURHOODS = [
   "South Barrie / Mapleview",
@@ -38,33 +39,33 @@ const SERVICES = [
 ];
 
 const PRICING = [
-  { project: "Interlocking patio (200-400 sq ft)", range: "$12,000 – $25,000" },
-  { project: "Full backyard transformation", range: "$35,000 – $90,000" },
-  { project: "Composite deck (200-350 sq ft)", range: "$15,000 – $35,000" },
-  { project: "Retaining wall (30-60 linear ft)", range: "$8,000 – $20,000" },
-  { project: "Premium outdoor living space", range: "$90,000 – $160,000+" },
+  { project: "Interlocking patio", range: "Project-specific scope" },
+  { project: "Full backyard transformation", range: "Project-specific scope" },
+  { project: "Composite deck", range: "Project-specific scope" },
+  { project: "Retaining wall", range: "Project-specific scope" },
+  { project: "Outdoor living space", range: "Project-specific scope" },
 ];
 
 const FAQS = [
   {
     q: "When is the best time to start a landscaping project in Barrie?",
-    a: "Most projects start between April and June. We recommend booking your design consultation in February or March to secure your preferred start date. Our build season runs April through November.",
+    a: "Seasonal timing and availability vary. Contact us to discuss the current scope and timing for your property.",
   },
   {
     q: "Do you handle permits for Barrie projects?",
-    a: "Yes. We handle all permit applications with the City of Barrie and the Nottawasaga Valley Conservation Authority when required. Retaining walls over 1 metre typically require an engineered drawing and building permit.",
+    a: publicClaimCopy(BUSINESS.commercialPolicies.permits, "We confirm permit needs and responsibilities in the written project scope."),
   },
   {
     q: "How long does a typical project take?",
-    a: "A standard interlocking patio takes 3-5 days. A full backyard transformation with multiple elements typically takes 2-4 weeks. We provide a detailed timeline before starting.",
+    a: "Project timing depends on scope, site conditions, materials, and scheduling. We can discuss a project-specific timeline before work begins.",
   },
   {
     q: "Do you offer financing?",
-    a: "We offer flexible payment schedules. A deposit holds your spot, with progress payments aligned to project milestones. Ask about our financing partners for larger projects.",
+    a: "Contact us to confirm current payment and financing options for your project.",
   },
   {
     q: "What warranty do you offer?",
-    a: "All Golden Maple projects include a 5-year workmanship warranty. Material warranties vary by manufacturer — Techo-Bloc offers a transferable lifetime warranty on many products.",
+    a: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, "Written workmanship terms are available for your project."),
   },
 ];
 
@@ -74,19 +75,9 @@ const localBusinessSchema = {
   "name": "Golden Maple Landscaping",
   "description": "Premium landscaping and hardscape contractor serving Barrie, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
   "url": "https://goldenmaplelandscaping.ca/locations/barrie",
-  "telephone": "+17055003581",
-  "email": "yorkis@goldenmaplelandscaping.ca",
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Barrie",
-    "addressRegion": "ON",
-    "addressCountry": "CA",
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 44.3894,
-    "longitude": -79.6903,
-  },
+  "telephone": publicContact.phoneTel,
+  "email": publicContact.email,
+  "address": publicPostalAddress(),
   "areaServed": {
     "@type": "City",
     "name": "Barrie",
@@ -112,7 +103,7 @@ export default function BarrieLanding() {
     <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
         title="Landscaping Contractor Barrie ON"
-        description="Barrie's top-rated landscaping & hardscape contractor. Interlocking patios, composite decks, retaining walls & landscape design. 8 five-star Google reviews. Free estimates."
+        description="Landscaping and hardscape services for Barrie properties, including interlocking patios, composite decks, retaining walls, and landscape design. Contact us to confirm current project scope."
         canonical="https://goldenmaplelandscaping.ca/locations/barrie"
         schema={localBusinessSchema}
       />
@@ -144,14 +135,14 @@ export default function BarrieLanding() {
                 onClick={() => trackEngagement('cta_click', 'barrie_hero_quote')}
                 className="btn-primary py-4 px-10"
               >
-                Request Your Free Barrie Quote
+                Request a Barrie Quote
               </Link>
               <a
-                href="tel:7055003581"
+                href={`tel:${publicContact.phoneTel}`}
                 onClick={() => trackCall('barrie_hero_phone')}
                 className="flex items-center gap-3 font-sans text-base text-brand-gold-dark hover:text-brand-bonewhite transition-colors"
               >
-                <Phone size={18} /> Call 705-500-3581
+                <Phone size={18} /> Call {publicContact.phoneDisplay}
               </a>
             </div>
           </motion.div>
@@ -172,7 +163,7 @@ export default function BarrieLanding() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                "5.0-star rated across Google, HomeStars & Yelp",
+                publicClaimCopy(BUSINESS.reviews.aggregate, "Verified reviews are available."),
                 "Premium materials — Techo-Bloc, Permacon, TimberTech, In-Lite",
                 "Full design service — 3D renders before we break ground",
                 "Transparent pricing — detailed quotes, no hidden fees",
@@ -295,19 +286,19 @@ export default function BarrieLanding() {
           {/* CTA */}
           <div className="text-center bg-brand-surface p-12 md:p-16 border border-brand-dim/20 rounded-sm">
             <h2 className="font-display text-3xl md:text-4xl text-brand-bonewhite mb-6">
-              Get Your Free Barrie Landscaping Quote
+              Discuss Your Barrie Landscaping Project
             </h2>
             <p className="font-sans text-brand-muted font-light mb-10 max-w-2xl mx-auto">
-              Ready to transform your outdoor space? Contact Golden Maple Landscaping for a free, no-obligation consultation and quote.
+              Ready to discuss your outdoor space? Contact Golden Maple Landscaping to confirm the current consultation and quote scope.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
               <Link to="/contact" className="btn-primary py-4 px-10">Request a Quote</Link>
-              <a href="tel:7055003581" onClick={() => trackCall('barrie_phone')} className="flex items-center gap-3 font-sans text-sm text-brand-gold-dark hover:text-brand-bonewhite transition-colors">
-                <Phone size={16} /> 705-500-3581
+              <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('barrie_phone')} className="flex items-center gap-3 font-sans text-sm text-brand-gold-dark hover:text-brand-bonewhite transition-colors">
+                <Phone size={16} /> {publicContact.phoneDisplay}
               </a>
             </div>
-            <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="flex items-center justify-center gap-3 font-sans text-sm text-brand-muted hover:text-brand-gold-dark transition-colors">
-              <Mail size={16} /> yorkis@goldenmaplelandscaping.ca
+            <a href={`mailto:${publicContact.email}`} className="flex items-center justify-center gap-3 font-sans text-sm text-brand-muted hover:text-brand-gold-dark transition-colors">
+              <Mail size={16} /> {publicContact.email}
             </a>
           </div>
         </div>

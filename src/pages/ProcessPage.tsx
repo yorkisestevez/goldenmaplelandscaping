@@ -7,7 +7,7 @@ const PROCESS_STEPS = [
   {
     id: 'consultation',
     title: '01. Professional Consultation',
-    desc: 'The foundation of every luxury landscape. We meet on-site to discuss your vision, budget, and lifestyle requirements.',
+    desc: 'A project conversation to discuss your priorities, budget, and site considerations.',
     icon: Compass,
     link: '/process/consultation',
     img: '/images/projects/Golden Maple deck and walkway.jpg'
@@ -31,7 +31,7 @@ const PROCESS_STEPS = [
   {
     id: 'material-selection',
     title: '04. Curated Material Selection',
-    desc: 'Expert curation of premium pavers, natural stone, and plantings from partners like Unilock and Techo-Bloc.',
+    desc: 'Material options are reviewed for the project scope and current availability.',
     icon: Shield,
     link: '/process/material-selection',
     img: '/images/projects/luxury decking.jpg'
@@ -39,15 +39,15 @@ const PROCESS_STEPS = [
   {
     id: 'construction',
     title: '05. Engineered Construction',
-    desc: 'The Golden Maple Standard: 16" deep bases, daily site management, and uncompromising precision.',
+    desc: 'Project-specific base, drainage, and site-management details confirmed in the written scope.',
     icon: Hammer,
     link: '/process/construction',
     img: '/images/projects/Golden Maple deck and walkway.jpg'
   },
   {
     id: 'completion',
-    title: '06. Final Handover & Warranty',
-    desc: 'A comprehensive walkthrough and activation of your 5-year structural warranty.',
+    title: '06. Final Handover & Project Terms',
+    desc: 'A final walkthrough and review of the current written project terms.',
     icon: CheckCircle,
     link: '/process/completion',
     img: '/images/projects/Silver Maple Radiance Rail 0101.jpg'
@@ -59,7 +59,7 @@ export default function ProcessPage() {
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
         title="Our Process | How We Build"
-        description="From first call to final walkthrough — see exactly how Golden Maple plans, designs & builds your outdoor space. No surprises, just precision craftsmanship."
+        description="Explore a project-planning process and confirm current scope, terms, and responsibilities with our team."
         canonical="https://goldenmaplelandscaping.ca/process"
       />
       
@@ -125,7 +125,7 @@ export default function ProcessPage() {
             <span className="text-brand-gold italic">the Golden Maple way?</span>
           </h2>
           <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light leading-relaxed">
-            Every project starts with a professional consultation. Let's discuss how we can transform your Simcoe County property into a functional masterpiece.
+            Start with a project conversation to confirm the current consultation scope and discuss your property.
           </p>
           <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
         </div>

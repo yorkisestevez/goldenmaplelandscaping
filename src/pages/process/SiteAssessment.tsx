@@ -3,6 +3,7 @@ import { Ruler, Shield, Heart, CheckCircle, ArrowRight, Phone } from 'lucide-rea
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { trackCall } from '../../utils/analytics';
+import { publicContact } from '../../data/business';
 
 export default function SiteAssessment() {
   return (
@@ -79,7 +80,7 @@ export default function SiteAssessment() {
             <div className="max-w-4xl mx-auto">
               <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite mb-12">Built for the Canadian Climate.</h2>
               <p className="font-sans text-xl text-brand-muted leading-relaxed font-light mb-12">
-                Simcoe County soil is notoriously diverse—from the sands of Wasaga to the clay of Innisfil. We don't assume anything. We analyze the literal ground we are building on so your 5-year warranty isn't just a promise, but a result of engineering.
+                Site conditions vary across Simcoe County. Reviewing the ground, drainage, and existing features helps inform a project-specific construction scope.
               </p>
               <Link to="/process/3d-design" className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
                 <span>Phase Three: 3D Visualization</span>
@@ -98,8 +99,8 @@ export default function SiteAssessment() {
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
             <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
-            <a href="tel:7055003581" onClick={() => trackCall('siteassessment_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
-              <Phone size={14} /> (705) 500-3581
+            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('siteassessment_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
+              <Phone size={14} /> {publicContact.phoneDisplay}
             </a>
           </div>
         </div>

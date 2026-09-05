@@ -210,7 +210,7 @@ export function trackLead(
 }
 
 /**
- * Click-to-call conversion. Fires on every tel:7055003581 click.
+ * Click-to-call conversion. Fires on configured public telephone-link clicks.
  * send_to is the existing Ads "Click to call" action — do not rename,
  * and do not fire the page-load Contact conversion from here.
  */

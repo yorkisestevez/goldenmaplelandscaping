@@ -3,13 +3,14 @@ import { Hammer, Shield, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { trackCall } from '../../utils/analytics';
+import { BUSINESS, publicClaimCopy, publicContact } from '../../data/business';
 
 export default function Construction() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Landscape Construction Barrie | Engineered 12-16 Inch Bases | Golden Maple"
-        description="The Golden Maple Construction Standard: 16-inch deep bases, daily site management, and code-exceeding structural engineering for luxury Simcoe County landscapes."
+        title="Landscape Construction Barrie | Project-Specific Planning | Golden Maple"
+        description="Learn how site conditions, materials, and project scope inform landscape construction planning in Simcoe County."
       />
 
       <section className="section-padding pt-48">
@@ -29,7 +30,7 @@ export default function Construction() {
                 <span className="italic text-brand-gold-dark">Construction.</span>
               </h1>
               <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
-                The most important part of any landscape is the part you never see. We build for the long-term, employing engineering standards that are nearly double the industry average to ensure zero shifting, zero settlement, and a lifetime of structural integrity.
+                The work below the finished surface matters. Site conditions, drainage, materials, and the agreed project scope all inform a construction plan.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
@@ -50,8 +51,8 @@ export default function Construction() {
                 referrerPolicy="no-referrer"
               />
               <div className="absolute inset-x-8 bottom-8 bg-brand-black/80 backdrop-blur-md p-6 border border-brand-gold/20 rounded-[2px]">
-                <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Structural Standard</p>
-                <p className="font-display text-xl text-brand-porcelain italic font-light">12–16" Base Implementation</p>
+                <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Construction Planning</p>
+                <p className="font-display text-xl text-brand-porcelain italic font-light">Project-Specific Scope</p>
               </div>
             </motion.div>
           </div>
@@ -60,12 +61,12 @@ export default function Construction() {
             <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">The Golden Maple <br/> <span className="italic text-brand-gold-dark">Standard of Build.</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
               {[
-                { title: "12–16\" Engineered Bases", desc: "Twice the industry norm. We excavate 12-16 inches deep for interlocking to ensure your investment remains perfectly level indefinitely." },
-                { title: "Code-Exceeding Framing", desc: "Framing our composite decks to meet and exceed Ontario building code for absolute stability and safety." },
-                { title: "Precision Jointing", desc: "Using high-performance polymeric sands and structural edging that won't separate after one Canadian winter." },
-                { title: "Daily Site Cleanliness", desc: "We treat your property as a professional job site, not a mess. Daily tidying and final wash-downs are standard." },
-                { title: "Protective Ground-Cover", desc: "Using industrial mats and protection layers to minimize heavy machinery impacts on your existing lawn and property." },
-                { title: "Constant Communication", desc: "You'll have a dedicated point of contact for daily updates on project milestones and progress." }
+                { title: "Base Preparation", desc: "Final excavation and base details are determined from the site and written project scope." },
+                { title: "Deck Framing", desc: "Deck framing requirements are reviewed for the selected design and applicable approvals." },
+                { title: "Jointing and Edging", desc: "Material selections and installation details are discussed for the specific project." },
+                { title: "Site Care", desc: "Site protection and closeout expectations are confirmed in the project-specific scope." },
+                { title: "Ground Protection", desc: "Access and protection measures are planned around the property and equipment needs." },
+                { title: "Project Updates", desc: "Communication expectations and milestones are discussed before work begins." }
               ].map((item, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 group hover:border-brand-gold/30 transition-all duration-300">
                   <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-6 group-hover:translate-x-2 transition-all">{item.title}</h3>
@@ -79,10 +80,10 @@ export default function Construction() {
             <div className="max-w-4xl mx-auto">
               <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite mb-12">Built to Outlast.</h2>
               <p className="font-sans text-xl text-brand-muted leading-relaxed font-light mb-12 text-balance lg:px-12">
-                We believe in building it once and building it right. Our 5-year sink and settlement warranty on craftsmanship is only possible because we refuse to skip a single step of the engineering process—even if it's hidden under the surface.
+                Construction details are confirmed against the site, materials, and written project scope. {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, "Ask for the current written workmanship terms for your project.")}
               </p>
               <Link to="/process/completion" className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
-                <span>Phase Six: Handover & Warranty</span>
+                <span>Phase Six: Handover Details</span>
                 <ArrowRight size={16} strokeWidth={1.5} />
               </Link>
             </div>
@@ -98,8 +99,8 @@ export default function Construction() {
           </h2>
           <div className="flex flex-col items-center justify-center gap-10">
             <Link to="/contact" className="btn-primary px-20 py-5">Tell Us Your Budget</Link>
-            <a href="tel:7055003581" onClick={() => trackCall('construction_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
-              <Phone size={14} /> (705) 500-3581
+            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('construction_phone')} className="font-sans text-sm text-brand-gold hover:underline flex items-center gap-2">
+              <Phone size={14} /> {publicContact.phoneDisplay}
             </a>
           </div>
         </div>

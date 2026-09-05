@@ -10,48 +10,19 @@ import { trackCall } from '../utils/analytics';
 // engineered as one project, not installed in pieces.
 // Primary CTA: BuyersGuide download (medium-commitment, fits Signature buyer).
 
-const STARTING_POINTS = [
-  {
-    range: '$42K-$58K',
-    label: 'Patio + Pergola + Lighting',
-    detail: '500-700 sqft Techo-Bloc patio, cedar or Trex pergola, In-Lite path + step lighting on a transformer, planted border with mulch and edging.',
-  },
-  {
-    range: '$58K-$78K',
-    label: 'Patio + Outdoor Kitchen + Fire',
-    detail: '500 sqft patio with a defined cooking zone, gas-line stub for grill or built-in burner, armourstone fire feature, integrated seating wall.',
-  },
-  {
-    range: '$72K-$90K',
-    label: 'Multi-Zone Backyard',
-    detail: 'Dining patio + lounge patio with grade change, retaining wall in armourstone or Wiarton flagstone, drainage swale, layered planting, low-volt lighting throughout.',
-  },
-];
+const STARTING_POINTS = [] as { range: string; label: string; detail: string }[];
 
 const FAQ = [
-  {
-    q: "Why not just install a patio first, then add the pergola and lighting later?",
-    a: 'You can — it just costs more in total and never looks as integrated. When the patio goes in first, the contractor doesn\'t plan the pergola post footings or the conduit runs for lighting. Adding them after means cutting the polymeric sand, drilling through the base, running surface wire. By the time you\'re done, you\'ve spent 30-40% more than if it was designed as one system from the start. That\'s the value of the Signature tier — the project is engineered up front.',
-  },
-  {
-    q: "Do you do the planting yourself or sub it out?",
-    a: 'We do the hardscape and grading in-house. For planting design we work with one of two local horticulturalists who price out plants by zone-hardiness and mature size, not by what looks good in May. The plant work is invoiced through us, so you have one point of contact and one warranty conversation.',
-  },
-  {
-    q: "How long does a Signature project actually take on site?",
-    a: 'Most Signature builds run 4-7 weeks on site, weather depending. We pull soil at week one, run drainage and electrical conduit in week two, hardscape weeks three and four, structural elements (pergola, fire feature) weeks four and five, planting and final grading weeks six and seven. We share a written timeline before excavation so you know what gets built when.',
-  },
-  {
-    q: "What's the line between this tier and Premium?",
-    a: 'Signature projects are integrated outdoor-living systems for an existing house and lot. Premium is when the project includes pool decks, full property regrading, multi-trade coordination across landscape and architecture, or extends into a phased multi-year build. If you\'re renovating a property end-to-end, the Premium page is the right starting point.',
-  },
+  { q: 'How do we start planning?', a: 'Contact us to discuss your property, priorities, and the current consultation and design scope.' },
+  { q: 'How are construction details decided?', a: 'Materials, drainage, base preparation, timing, and responsibilities are confirmed for the project-specific written scope.' },
+  { q: 'What terms should I expect?', a: 'Ask for current written workmanship terms, manufacturer information where applicable, and the scope for your project.' },
 ];
 
 export default function OutdoorLivingBarrie() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
-        title="Outdoor Living in Barrie | $40K-$90K Patio Systems | Golden Maple"
+        title="Outdoor Living Planning in Barrie | Golden Maple"
         description="Premium outdoor living projects in Barrie, Innisfil, Springwater, and Oro-Medonte. Patio, walls, steps, lighting, fire, drainage, and pergola elements engineered as one system."
         canonical="https://goldenmaplelandscaping.ca/outdoor-living-barrie"
       />
@@ -66,11 +37,11 @@ export default function OutdoorLivingBarrie() {
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Outdoor Living Projects · $40K-$90K+
+                Outdoor Living Projects
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 Outdoor living, <br />
-                <span className="italic text-brand-gold-dark">engineered for 20 winters.</span>
+                <span className="italic text-brand-gold-dark">planned around your property.</span>
               </h1>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 Patio, wall, steps, fire feature, lighting, planting, shade — designed as one system before anything gets excavated. Most contractors quote each piece separately and bolt them together. We plan footings, conduit runs, drainage, access, and grade as a single build so it doesn't look added-on five years from now.
@@ -136,10 +107,10 @@ export default function OutdoorLivingBarrie() {
               Pergola footings get poured the same week as the patio base.
             </h2>
             <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed mb-8 font-light">
-              When a Signature project is designed as a system, the lighting conduit goes in the trench beside the drainage line, the pergola footings go in before the base stone, and the fire feature is sized to the lounge zone before a single paver is cut. Costs less in labour and looks like it was always meant to be there.
+              A coordinated plan can identify drainage, structural, lighting, and access considerations before construction. Confirm the proposed sequence and scope for your project.
             </p>
             <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed mb-10 font-light">
-              The alternative — patio one year, pergola the next, lighting in year three — costs 30-40% more in total and never looks integrated. Every Barrie homeowner who calls us to "add a pergola to last year's patio" has paid for that lesson once already.
+              Planning components together can help identify coordination needs before construction. Confirm the proposed sequence, materials, and scope for your project.
             </p>
             <Link to="/resources/backyard-renovation-roi-ontario" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors inline-flex items-center gap-4">
               See the ROI math <ArrowRight size={16} strokeWidth={1.5} />
@@ -149,17 +120,17 @@ export default function OutdoorLivingBarrie() {
           {/* What's included */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-40">
             <div className="bg-brand-surface p-16 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">Always part of the scope</h2>
+              <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-12 block">Project-scope considerations</h2>
               <ul className="space-y-8">
                 {[
                   'Survey of grade, drainage, sun angles',
                   '3D design walkthrough before excavation',
-                  'Engineered base — 3/4" clear stone, HPB',
+                  'Project-specific base and drainage planning',
                   'Conduit run for low-volt lighting',
                   'Drainage tie-in to existing storm',
                   'Pergola or shade structure footings',
                   'Polymeric joints, edge restraint',
-                  '5-year structural + 1-year planting warranty',
+                  'Current written workmanship terms',
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">
                     <Check size={18} className="text-brand-gold-dark shrink-0" strokeWidth={1.5} />

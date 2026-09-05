@@ -12,11 +12,11 @@ const FAQ = [
   },
   {
     q: "How long does the landscape design process take?",
-    a: "The design process typically takes 2-4 weeks, depending on the complexity of the project. This includes the initial consultation, conceptual design, and final revisions."
+    a: "Design timing, deliverables, and revisions depend on the project scope. Contact us to confirm the current consultation and design scope."
   },
   {
     q: "Do you charge for landscape consultations?",
-    a: "Discovery is free — your first 15-minute call with us is on the house, and so is the property walk that follows if we're a fit. From there, two paid steps are available if you want more than a ballpark: a $99 on-site design session (credited back if you book) gets you to ±5% with material samples and a layout sketch, and full landscape design (3D renderings, planting plan, fixed-price quote) starts at $2,500 and is fully credited back if you build with us."
+    a: "Contact us to confirm the current consultation and design scope, including deliverables, timing, and any applicable fees or credits."
   },
   {
     q: "What if I only want the design and not the construction?",
@@ -46,7 +46,7 @@ export default function LandscapeDesign() {
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
         title="Landscape Design Barrie"
-        description="Full-service landscape design for Barrie homeowners. From concept to 3D render to build. Create your dream outdoor living space. Book a design consultation."
+        description="Landscape design planning for Barrie-area properties. Discuss current design scope, deliverables, and project options with our team."
         canonical="https://goldenmaplelandscaping.ca/services/landscape-design-barrie"
         schema={faqSchema}
       />
@@ -80,7 +80,7 @@ export default function LandscapeDesign() {
                     Get My Free Estimate
                   </Link>
                   <span className="font-sans text-xs text-brand-muted italic font-light text-center sm:text-left">
-                    Free estimate · 24-hour response.
+                    Contact us to confirm current consultation and response details.
                   </span>
                 </div>
                 <a
@@ -189,7 +189,7 @@ export default function LandscapeDesign() {
             <span className="text-brand-gold italic">before we build it.</span>
           </h2>
           <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light">
-            No guesswork, no surprises. You'll know exactly what your space will look like — down to the last stone — before we ever pick up a shovel. That's the peace of mind our design process gives you.
+            A design process can help clarify priorities, materials, and written scope before construction. Confirm current deliverables for your project.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
