@@ -1,7 +1,6 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Shield, Award, CheckCircle, Star, Quote, ChevronRight, Compass, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
-import BuyersGuide from '../components/BuyersGuide';
 import Manifesto from '../components/Manifesto';
 import Process from '../components/Process';
 import { Link } from 'react-router-dom';
@@ -59,10 +58,32 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.4 }}
-              className="font-sans text-base md:text-lg text-brand-porcelain max-w-xl mb-12 leading-relaxed font-normal"
+              className="font-sans text-base md:text-lg text-brand-porcelain max-w-xl mb-8 leading-relaxed font-normal"
             >
-              You've spent enough nights staring out the window at a yard that doesn't match the home you've built. We're here to fix that — with an outdoor space engineered to outlast the next twenty winters and become the place your family actually wants to be.
+              Premium interlocking, patios, and retaining walls for Barrie homeowners — engineered for Ontario freeze-thaw, built by a local crew. Free estimate. Yorkis replies in 24 hours.
             </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="flex flex-wrap gap-x-5 gap-y-3 mb-10 max-w-xl"
+            >
+              {[
+                'WSIB Certified',
+                '$5M Liability',
+                '5-Year Warranty',
+                '5.0 Google',
+              ].map((label) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-2 font-sans text-[10px] uppercase tracking-[0.18em] text-brand-porcelain/90"
+                >
+                  <CheckCircle size={14} strokeWidth={1.5} className="text-brand-gold shrink-0" />
+                  {label}
+                </span>
+              ))}
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -71,11 +92,11 @@ const Hero = () => {
               className="flex items-center gap-8"
             >
               <Link
-                to="/portfolio"
-                onClick={() => trackEngagement('cta_click', 'view_portfolio')}
+                to="/contact"
+                onClick={() => trackEngagement('cta_click', 'hero_get_estimate')}
                 className="group flex items-center gap-4 text-brand-porcelain font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
               >
-                See Recent Work
+                Get My Free Estimate
                 <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-2" />
               </Link>
               <a
@@ -441,7 +462,7 @@ const FinalCTA = () => {
           <div className="h-px w-20 bg-brand-gold/30" />
         </div>
         <Link to="/contact" className="btn-primary px-20 py-5">
-          Get My Estimate
+          Get My Free Estimate
         </Link>
       </Reveal>
     </section>
@@ -614,7 +635,6 @@ export default function Home() {
       </div>
     </section>
 
-    <BuyersGuide />
     <FinalCTA />
     </>
   );
