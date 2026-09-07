@@ -26,7 +26,7 @@ const FAQS = [
     a: 'For Barrie and Simcoe County freeze-thaw, we dig 12–16 inches of compacted aggregate — not the 6–8 inches that sinks after one winter.',
   },
   {
-    q: 'How long does interlocking last when it's built right?',
+    q: 'How long does interlocking last when it is built right?',
     a: 'With a proper base, interlocking can last 25–30+ years. We back every install with a 5-year sink and settlement warranty.',
   },
   {
