@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen, Calculator } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-    {
+      {
+    slug: "sodding-vs-seeding-simcoe-county",
+    title: "Sod vs. Seed in Simcoe County: Real Cost & Timeline for a New Lawn",
+    excerpt: "Sodding a new lawn in Simcoe County runs $1.20–$2.50 per sq ft installed; seeding costs $0.25–$0.65 per sq ft but takes 8–16 weeks to establish.",
+    category: "Materials",
+    readTime: "10 min",
+    image: "/images/projects/rendering1.jpg",
+  },
+  {
     slug: "fire-pit-cost-barrie-with-permits",
     title: "Fire Pit Cost in Barrie: What You'll Pay in 2026 (With Permits)",
     excerpt: "Fire pit installation in Barrie costs $3,500–$18,000 depending on type; City of Barrie permits are required for gas work and any structure over 0.6 m².",
