@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-08-31T13:14:52.804Z",
+  "lastRunAt": "2026-09-07T00:00:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -20,10 +20,11 @@
     "auto-016",
     "auto-017",
     "auto-018",
-    "auto-019"
+    "auto-019",
+    "auto-020"
   ],
   "publishedSlugs": [],
-  "currentDraft": "fire-pit-cost-barrie-with-permits",
+  "currentDraft": "sodding-vs-seeding-simcoe-county",
   "history": [
     {
       "topicId": "auto-001",
@@ -309,6 +310,20 @@
         "linkCount": 8,
         "hasTable": true,
         "numericCount": 30
+      },
+      "generatedBy": "claude-cloud-routine"
+    },
+    {
+      "topicId": "auto-020",
+      "slug": "sodding-vs-seeding-simcoe-county",
+      "at": "2026-09-07T00:00:00.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2832,
+        "linkCount": 4,
+        "hasTable": true,
+        "numericCount": 19
       },
       "generatedBy": "claude-cloud-routine"
     }
