@@ -55,7 +55,7 @@ export default function Process() {
 
             <div className="mt-16 md:mt-20 flex flex-col md:flex-row items-center gap-10">
               <Link to="/contact" className="btn-primary w-full md:w-auto py-6 md:py-5 px-12 text-center inline-block">
-                Tell Us Your Budget
+                Get My Free Estimate
               </Link>
               <Link to="/process" className="flex items-center gap-4 text-brand-gold font-sans text-xs uppercase tracking-widest hover:gap-6 transition-all font-medium py-2">
                 <span>View Full 6-Step Process</span>
