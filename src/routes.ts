@@ -8,6 +8,7 @@ export default [
   // Services
   route('services', 'pages/Services.tsx'),
   route('services/interlocking-barrie', 'pages/services/Interlocking.tsx'),
+  route('interlocking-barrie', 'pages/InterlockingBarrieAds.tsx'),
   route('services/retaining-walls-barrie', 'pages/services/RetainingWalls.tsx'),
   route('services/landscape-design-barrie', 'pages/services/LandscapeDesign.tsx'),
   route('services/composite-decking-barrie', 'pages/services/CompositeDecking.tsx'),
@@ -86,7 +87,6 @@ export default [
   route('resources/pergola-vs-pavilion-vs-gazebo-barrie', 'pages/blog/PergolaVsPavilionVsGazeboBarrie.tsx'),
   route('resources/permacon-pavers-honest-review-2026', 'pages/blog/PermaconPaversHonestReview2026.tsx'),
   route('resources/landscaper-quote-excavation-line-item', 'pages/blog/LandscaperQuoteExcavationLineItem.tsx'),
-  route('resources/fire-pit-cost-barrie-with-permits', 'pages/blog/FirePitCostBarrieWithPermits.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),
