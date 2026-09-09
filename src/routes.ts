@@ -65,6 +65,7 @@ export default [
   route('resources/winter-damage-prevention-interlocking', 'pages/blog/WinterDamagePrevention.tsx'),
   route('resources/backyard-renovation-roi-ontario', 'pages/blog/BackyardROI.tsx'),
   route('resources/fire-pit-regulations-barrie', 'pages/blog/FirePitRegulations.tsx'),
+  route('resources/fire-pit-cost-barrie-with-permits', 'pages/blog/FirePitCostBarrieWithPermits.tsx'),
   route('resources/landscaping-cost-guide-barrie', 'pages/blog/LandscapingCostGuide.tsx'),
   route('resources/hidden-costs-cheap-landscaping', 'pages/blog/HiddenCostsCheapLandscaping.tsx'),
   route('resources/interlocking-patio-cost-ontario', 'pages/blog/PatioCostFactors.tsx'),

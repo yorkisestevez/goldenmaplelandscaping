@@ -105,7 +105,7 @@ export default function HeroContactForm() {
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.log('[dev] hero contact payload (would POST to Netlify):', payload);
-      trackLead('contact', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone });
+      trackLead('contact', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone }, { payload });
       setStatus('success');
       return;
     }
@@ -117,7 +117,7 @@ export default function HeroContactForm() {
         body: encode(payload),
       });
       if (!res.ok) throw new Error('Network response was not ok');
-      trackLead('contact', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone });
+      trackLead('contact', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone }, { payload });
       setStatus('success');
     } catch (err) {
       setStatus('error');

@@ -8,7 +8,7 @@
     "build": "react-router build",
     "preview": "vite preview",
     "clean": "rm -rf build",
-    "lint": "react-router typegen && tsc --noEmit && tsx scripts/check-pricing-parity.ts && tsx scripts/check-engine-snapshot.ts && tsx scripts/check-budget-levers.ts",
+    "lint": "react-router typegen && tsc --noEmit && tsx scripts/check-pricing-parity.ts && tsx scripts/check-engine-snapshot.ts && tsx scripts/check-budget-levers.ts && tsx scripts/check-lead-qualification.ts",
     "check:pricing": "tsx scripts/check-pricing-parity.ts",
     "check:engine": "tsx scripts/check-engine-snapshot.ts",
     "check:levers": "tsx scripts/check-budget-levers.ts",

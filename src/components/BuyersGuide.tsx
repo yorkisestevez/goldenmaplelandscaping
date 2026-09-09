@@ -12,7 +12,7 @@ const encodeForm = (data: Record<string, string>) =>
     .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
     .join('&');
 
-async function postToNetlify(form: HTMLFormElement, formName: string, eventId: string): Promise<void> {
+async function postToNetlify(form: HTMLFormElement, formName: string, eventId: string): Promise<Record<string, string>> {
   const fd = new FormData(form);
   const payload: Record<string, string> = { 'form-name': formName, event_id: eventId };
   fd.forEach((v, k) => { if (typeof v === 'string') payload[k] = v; });
@@ -20,13 +20,14 @@ async function postToNetlify(form: HTMLFormElement, formName: string, eventId: s
   if (import.meta.env.DEV) {
     // eslint-disable-next-line no-console
     console.log(`[dev] ${formName} payload (would POST to Netlify):`, payload);
-    return;
+    return payload;
   }
   await fetch('/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: encodeForm(payload),
   });
+  return payload;
 }
 
 const BuyersGuide = () => {
@@ -41,7 +42,7 @@ const BuyersGuide = () => {
     const eventId = genEventId();
     const fd = new FormData(e.currentTarget);   // capture before the await (currentTarget nulls out after)
     try {
-      await postToNetlify(e.currentTarget, 'guide-download', eventId);
+      const payload = await postToNetlify(e.currentTarget, 'guide-download', eventId);
       // Event name matches the Netlify form-name above ('guide-download'), not
       // a different label — every other form on the site (contact, quick-quote,
       // estimate-request) reports the same string it submits under, so GA4/Meta
@@ -50,7 +51,7 @@ const BuyersGuide = () => {
       trackLead('guide-download', 'top-of-funnel', undefined, eventId, {
         email: fd.get('email') as string | null,
         phone: fd.get('phone') as string | null,
-      });
+      }, { payload });
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('[guide-download] submit failed', err);
@@ -74,11 +75,11 @@ const BuyersGuide = () => {
     const eventId = genEventId();
     const fd = new FormData(e.currentTarget);   // capture before the await (currentTarget nulls out after)
     try {
-      await postToNetlify(e.currentTarget, 'estimate-request', eventId);
+      const payload = await postToNetlify(e.currentTarget, 'estimate-request', eventId);
       trackLead('estimate-request', 'high-intent', undefined, eventId, {
         email: fd.get('email') as string | null,
         phone: fd.get('phone') as string | null,
-      });
+      }, { payload });
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('[estimate-request] submit failed', err);
@@ -132,6 +133,9 @@ const BuyersGuide = () => {
                   >
                     <input type="hidden" name="form-name" value="guide-download" />
                     <input type="hidden" name="source" value="buyers_guide_download" />
+                    <p className="hidden">
+                      <label>Don't fill this out: <input name="bot-field" /></label>
+                    </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <input
                         required
@@ -217,6 +221,9 @@ const BuyersGuide = () => {
                   >
                     <input type="hidden" name="form-name" value="estimate-request" />
                     <input type="hidden" name="source" value="estimate_request" />
+                    <p className="hidden">
+                      <label>Don't fill this out: <input name="bot-field" /></label>
+                    </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <input 
                         required

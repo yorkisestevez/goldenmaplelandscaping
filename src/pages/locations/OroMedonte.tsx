@@ -48,7 +48,7 @@ const PRICING = [
 const FAQS = [
   {
     q: "Do Oro-Medonte projects require special permits?",
-    a: "Retaining walls over 1 metre require building permits from the Township of Oro-Medonte. Waterfront properties may need approval from the Lake Simcoe Region Conservation Authority (LSRCA) or Nottawasaga Valley Conservation Authority (NVCA) depending on location. We handle all applications.",
+    a: "Permit and zoning requirements depend on wall height, setbacks, grading, and property location. Oro-Medonte's current zoning by-law treats retaining walls 1 metre or higher as accessory structures subject to applicable provisions. Waterfront and conservation-regulated properties may require additional approval. Confirm site-specific requirements with the Township and conservation authority before construction.",
   },
   {
     q: "Is there a travel charge for Oro-Medonte?",

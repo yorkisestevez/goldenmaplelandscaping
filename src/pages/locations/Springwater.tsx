@@ -49,7 +49,7 @@ const PRICING = [
 const FAQS = [
   {
     q: "Do Springwater projects require permits?",
-    a: "Most patio and deck projects don't require permits. Retaining walls over 1 metre require a building permit from Springwater Township. Properties near watercourses may need Nottawasaga Valley Conservation Authority (NVCA) approval. We handle all applications.",
+    a: "Permit requirements depend on project height, structural scope, grading, drainage, and property location. Springwater's current building by-law exempts retaining walls not exceeding 1 metre only where drainage is not negatively affected. Projects near watercourses may also require NVCA review. Confirm site-specific requirements before construction.",
   },
   {
     q: "Is there a travel charge for Springwater?",

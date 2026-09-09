@@ -137,7 +137,7 @@ export default function ConcreteVsInterlockingPatioBarrie() {
         </div>
       </div>
 
-      <AuthorBio bio="Yorkis Estevez, founder of Golden Maple Landscaping, has been transforming outdoor spaces in Simcoe County since 2020. With hundreds of patios installed and a WSIB certification backed by $5M liability, Yorkis guarantees professional, reliable service with a perfect 5.0 Google rating." />
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020. The company is WSIB registered, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>Choosing the right patio for Barrie's climate is easier with Golden Maple Landscaping. Whether you prefer the cost-efficient solution of a concrete patio or the durable, versatile interlocking option, our expert team is ready to help. <a href=\"/contact\">Contact us today</a> to discuss your project, explore <a href=\"/portfolio\">our portfolio</a>, or use our <a href=\"/cost-estimator?type=patio\">cost estimator</a> to get a quote.</p>" }} />
     </BlogPostLayout>

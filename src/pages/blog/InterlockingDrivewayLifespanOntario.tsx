@@ -134,7 +134,7 @@ export default function InterlockingDrivewayLifespanOntario() {
         </div>
       </div>
 
-      <AuthorBio bio="I\'m Yorkis Estevez, founder of Golden Maple Landscaping. Since starting the company in 2020, my crew and I have been on the tools every day, installing hundreds of patios, walkways, and driveways across Simcoe County. We believe in building things right the first time, which is why we\'re WSIB certified, carry $5M in liability insurance, and have earned a 5.0 rating on Google. We build landscapes that last." />
+      <AuthorBio bio="I'm Yorkis Estevez, founder of Golden Maple Landscaping. I started the company in Barrie in 2020. We're WSIB certified, carry $5 million in liability insurance, and have a 5.0 Google rating across 8 reviews. We build landscapes that last." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>You've seen what happens when shortcuts are taken on driveways in Barrie and Innisfil. An investment in a proper base is an investment in peace of mind and decades of curb appeal. If you want a driveway that is engineered to handle our tough Ontario winters and will look great for years to come, let's talk about your project. Reach out to us for a straightforward, no-obligation quote. You can <a href='/contact'>contact us here</a> to get started.</p>" }} />
     </BlogPostLayout>

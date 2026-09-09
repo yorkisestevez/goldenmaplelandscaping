@@ -21,6 +21,53 @@ interface NetlifyEvent {
   headers: Record<string, string>;
 }
 
+const BRIDGE_ATTEMPTS = 3;
+
+function isHoneypot(data: Record<string, string> | undefined): boolean {
+  if (!data) return false;
+  return ['bot-field', 'bot_field'].some((key) => String(data[key] ?? '').trim() !== '');
+}
+
+async function postBridge(
+  url: string,
+  secret: string,
+  body: string,
+): Promise<{ statusCode: number; body: string }> {
+  const sig = crypto.createHmac('sha256', secret).update(body).digest('hex');
+  let lastDetail = 'unknown';
+
+  for (let attempt = 1; attempt <= BRIDGE_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Bridge-Signature': sig,
+        },
+        body,
+      });
+      if (res.ok) return { statusCode: 200, body: 'ok' };
+      const text = await res.text().catch(() => '');
+      lastDetail = `${res.status}: ${text}`;
+      console.error(`bridge returned ${res.status} (attempt ${attempt}/${BRIDGE_ATTEMPTS}): ${text}`);
+      // Retry 5xx and 429. Permanent 4xx should not burn the remaining attempts.
+      if (res.status < 500 && res.status !== 429) {
+        return { statusCode: 502, body: `bridge error: ${res.status}` };
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      lastDetail = msg;
+      console.error(`bridge fetch failed (attempt ${attempt}/${BRIDGE_ATTEMPTS}): ${msg}`);
+    }
+
+    if (attempt < BRIDGE_ATTEMPTS) {
+      await new Promise((resolve) => setTimeout(resolve, 400 * attempt));
+    }
+  }
+
+  return { statusCode: 502, body: `bridge unreachable after ${BRIDGE_ATTEMPTS} attempts: ${lastDetail}` };
+}
+
 export const handler = async (event: NetlifyEvent) => {
   const bridgeUrl = process.env.GM_CRM_BRIDGE_URL;
   const bridgeSecret = process.env.GM_CRM_BRIDGE_SECRET;
@@ -37,6 +84,11 @@ export const handler = async (event: NetlifyEvent) => {
   }
 
   const { payload } = submission;
+  if (isHoneypot(payload.data)) {
+    console.log(`skipping honeypot submission for ${payload.form_name}`);
+    return { statusCode: 200, body: 'ignored honeypot' };
+  }
+
   // payload.data carries every form field including the hidden `event_id`
   // (browser-generated UUID for Meta CAPI dedup). The spread preserves it.
   const flat = {
@@ -48,27 +100,5 @@ export const handler = async (event: NetlifyEvent) => {
     netlify_referrer: payload.referrer || '',
   };
 
-  const body = JSON.stringify(flat);
-  const sig = crypto.createHmac('sha256', bridgeSecret).update(body).digest('hex');
-
-  try {
-    const res = await fetch(bridgeUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Bridge-Signature': sig,
-      },
-      body,
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      console.error(`bridge returned ${res.status}: ${text}`);
-      return { statusCode: 502, body: `bridge error: ${res.status}` };
-    }
-    return { statusCode: 200, body: 'ok' };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.error(`bridge fetch failed: ${msg}`);
-    return { statusCode: 502, body: `bridge unreachable: ${msg}` };
-  }
+  return postBridge(bridgeUrl, bridgeSecret, JSON.stringify(flat));
 };

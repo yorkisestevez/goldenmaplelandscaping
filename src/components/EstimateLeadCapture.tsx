@@ -154,7 +154,7 @@ export default function EstimateLeadCapture({
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.log('[dev] cost-estimator payload (would POST to Netlify):', payload);
-      trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone });
+      trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone }, { payload });
       setStatus('success');
       onUnlock?.(form.email);
       return;
@@ -167,7 +167,7 @@ export default function EstimateLeadCapture({
         body: encode(payload),
       });
       if (!res.ok) throw new Error('Network response was not ok');
-      trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone });
+      trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone }, { payload });
       setStatus('success');
       onUnlock?.(form.email);
     } catch {

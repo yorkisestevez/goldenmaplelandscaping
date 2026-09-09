@@ -69,7 +69,7 @@ export default function EstimatorUnlock({
     };
 
     const finish = () => {
-      trackLead('estimator-unlock', 'top-of-funnel', lastEstimate ? Math.round(lastEstimate.subtotalCents / 100) : undefined, eventId, { email: form.email });
+      trackLead('estimator-unlock', 'top-of-funnel', lastEstimate ? Math.round(lastEstimate.subtotalCents / 100) : undefined, eventId, { email: form.email }, { payload });
       onUnlocked(form.email.trim());
     };
 

@@ -14,7 +14,8 @@
  * unconditionally from components.
  */
 
-import { pushPage, pushClick } from './behavior';
+import { pushPage, pushClick, getBehaviorFields } from './behavior';
+import { shouldFireLeadConversion, type LeadFormFields } from './leadQualification';
 
 declare global {
   interface Window {
@@ -144,6 +145,8 @@ export function trackPageView(path: string, title?: string): void {
  *   Conversions for Leads. Passed PLAIN; gtag.js normalizes + SHA-256-hashes
  *   them in-browser. Lets Google match this lead — and a later offline "job
  *   won" upload keyed on the same hashed identifier — back to the ad click.
+ * @param qualification — form payload used to drop honeypot/spam 200s.
+ *   Sophie chat and booking skip this gate by form name.
  */
 export function trackLead(
   formName: string,
@@ -151,8 +154,18 @@ export function trackLead(
   value?: number,
   eventId?: string,
   identifiers?: { email?: string | null; phone?: string | null },
+  qualification?: { payload?: LeadFormFields; skipQualification?: boolean },
 ): void {
   if (!isBrowser) return;
+
+  const mergedPayload = {
+    ...getBehaviorFields(),
+    ...(qualification?.payload ?? {}),
+  };
+  if (!shouldFireLeadConversion(formName, mergedPayload, qualification?.skipQualification)) {
+    if (isDev) console.log('[analytics] trackLead skipped (unqualified)', { formName, eventId });
+    return;
+  }
 
   if (GA4_ID) {
     window.gtag?.('event', 'generate_lead', {

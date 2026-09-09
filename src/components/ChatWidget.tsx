@@ -84,7 +84,7 @@ export default function ChatWidget() {
       // Sophie's lead-handoff writes straight to the CRM server-side — this is
       // the only signal the browser gets that it happened, so fire the GA4/
       // Meta/Ads lead event here (mirrors what a form submit does on success).
-      if (data.leadCaptured) trackLead('sophie-chat', 'high-intent');
+      if (data.leadCaptured) trackLead('sophie-chat', 'high-intent', undefined, undefined, undefined, { skipQualification: true });
       addReply((data.reply || '').trim() || fallbackReply(content));
     } catch {
       // Dev (no function) or transient error → graceful canned answer.
