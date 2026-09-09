@@ -100,7 +100,7 @@ describe('publisher pipeline shape', () => {
 
   test('inject.cjs renders the author bio section', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'inject.cjs'), 'utf8');
-    assert.ok(/About the Author/.test(src), 'inject must render About the Author block from author_bio');
+    assert.ok(/AuthorBio/.test(src), 'inject must render AuthorBio from author_bio');
     assert.ok(/draft\.author_bio/.test(src), 'inject must reference draft.author_bio');
   });
 
