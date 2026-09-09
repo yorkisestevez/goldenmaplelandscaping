@@ -163,8 +163,9 @@ function injectIntoResources(draft) {
 
 function injectIntoSitemap(draft) {
   let src = fs.readFileSync(SITEMAP_XML, 'utf8');
-  const url = `https://goldenmaplelandscaping.ca/resources/${draft.slug}`;
-  if (src.includes(url)) throw new Error(`sitemap.xml already lists ${url}`);
+  const url = `https://goldenmaplelandscaping.ca/resources/${draft.slug}/`;
+  const alreadyListed = src.includes(url) || src.includes(`https://goldenmaplelandscaping.ca/resources/${draft.slug}</loc>`);
+  if (alreadyListed) throw new Error(`sitemap.xml already lists ${url}`);
   const today = formatIsoDate(draft.generatedAt);
   const newUrl = `  <url><loc>${url}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>\n`;
   src = src.replace('</urlset>', newUrl + '</urlset>');

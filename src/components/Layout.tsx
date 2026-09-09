@@ -277,7 +277,7 @@ const Navbar = () => {
             </a>
 
             <Link to="/contact" onClick={() => trackEngagement('cta_click', 'get_estimate_nav')} className="btn-primary py-2.5 px-6 whitespace-nowrap">
-              Get My Estimate
+              Get My Free Estimate
             </Link>
           </div>
 
@@ -496,7 +496,7 @@ const Footer = () => {
           to="/contact"
           className="flex-[1.5] bg-brand-gold text-brand-black font-sans text-[10px] uppercase tracking-[0.25em] py-5 flex items-center justify-center gap-3"
         >
-          Get My Estimate
+          Get My Free Estimate
         </Link>
       </div>
       )}

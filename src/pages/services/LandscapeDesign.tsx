@@ -1,8 +1,9 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Map, Check, ArrowRight, Shield, Award, CheckCircle } from 'lucide-react';
+import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import Testimonials from '../../components/Testimonials';
+import { trackCall, trackEngagement } from '../../utils/analytics';
 
 const FAQ = [
   {
@@ -69,16 +70,26 @@ export default function LandscapeDesign() {
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 The most expensive mistake in landscaping is finding out, halfway through construction, that what's being built doesn't match what you imagined. We've solved that. Before a single stone moves, you walk your finished backyard in 3D. The colours. The light. The way the space flows on a Sunday morning. You sign off on the picture, then we build the picture. Surprises are for birthdays — not your backyard.
               </p>
-              <div className="flex flex-col sm:flex-row items-center gap-10">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
                 <div className="flex flex-col gap-4 w-full sm:w-auto">
-                  <Link to="/contact" className="btn-primary py-5 px-10">Get My Estimate</Link>
+                  <Link
+                    to="/contact"
+                    onClick={() => trackEngagement('cta_click', 'design_lander_estimate')}
+                    className="btn-primary py-5 px-10"
+                  >
+                    Get My Free Estimate
+                  </Link>
                   <span className="font-sans text-xs text-brand-muted italic font-light text-center sm:text-left">
                     Free estimate · 24-hour response.
                   </span>
                 </div>
-                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
-                  View Portfolio <ArrowRight size={16} strokeWidth={1.5} />
-                </Link>
+                <a
+                  href="tel:7055003581"
+                  onClick={() => trackCall('design_lander_phone')}
+                  className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-gold transition-colors"
+                >
+                  <Phone size={14} strokeWidth={1.5} /> Call (705) 500-3581
+                </a>
               </div>
             </motion.div>
 
@@ -181,8 +192,20 @@ export default function LandscapeDesign() {
             No guesswork, no surprises. You'll know exactly what your space will look like — down to the last stone — before we ever pick up a shovel. That's the peace of mind our design process gives you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/cost-estimator?type=full" className="btn-primary px-12 py-4">See Your Project Cost Range</Link>
-            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or Book a Design Session →</Link>
+            <Link
+              to="/contact"
+              onClick={() => trackEngagement('cta_click', 'design_lander_final_estimate')}
+              className="btn-primary px-12 py-4"
+            >
+              Get My Free Estimate
+            </Link>
+            <a
+              href="tel:7055003581"
+              onClick={() => trackCall('design_lander_final_phone')}
+              className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors"
+            >
+              Or call (705) 500-3581
+            </a>
           </div>
         </div>
       </section>

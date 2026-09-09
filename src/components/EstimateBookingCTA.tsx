@@ -30,8 +30,38 @@ export default function EstimateBookingCTA() {
   const freeHref = '/book';
   const designHref = stripeDesignUrl || '/contact?type=design';
 
+  const proofPhotos = [
+    {
+      src: '/images/projects/IMG_4826.jpg',
+      alt: 'Permacon paver patio with hand-set diamond inlay in Barrie ON',
+    },
+    {
+      src: '/images/projects/garden-wall.JPEG',
+      alt: 'Engineered retaining wall in Barrie ON',
+    },
+    {
+      src: '/images/projects/WhatsApp Image 2026-03-20 at 8.12.26 PM.jpeg',
+      alt: 'Lakeside TimberTech composite deck in Simcoe County',
+    },
+  ];
+
   return (
     <div className="space-y-7">
+      <div className="grid grid-cols-3 gap-2 md:gap-3" data-testid="estimator-proof-strip">
+        {proofPhotos.map((photo) => (
+          <div key={photo.src} className="aspect-[4/3] overflow-hidden rounded-[2px] border border-brand-dim/10">
+            <img
+              src={photo.src}
+              alt={photo.alt}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+        ))}
+      </div>
+
       <div className="text-center">
         <h4 className="font-display text-3xl md:text-5xl text-brand-bone mb-3 tracking-tight">
           Lock in your <span className="italic text-brand-gold-dark">exact numbers.</span>

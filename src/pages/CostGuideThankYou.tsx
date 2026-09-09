@@ -99,7 +99,7 @@ export default function CostGuideThankYou() {
                   to="/contact"
                   className="flex-1 btn-primary py-4 inline-flex items-center justify-center gap-3"
                 >
-                  Get My Estimate
+                  Get My Free Estimate
                   <ArrowRight size={14} strokeWidth={1.5} />
                 </Link>
               </div>

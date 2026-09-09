@@ -1,13 +1,14 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { AlignJustify, Check, ArrowRight, Shield, Award, CheckCircle } from 'lucide-react';
+import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import Testimonials from '../../components/Testimonials';
+import { trackCall, trackEngagement } from '../../utils/analytics';
 
 const FAQ = [
   {
     q: "Do I need a permit for a retaining wall in Barrie, ON?",
-    a: "In Barrie and Simcoe County, a permit is typically required for retaining walls over 1 meter (3.3 feet) in height. We handle all necessary engineering and permit applications for our clients."
+    a: "Walls over about 1 metre often trigger municipal review in Barrie and Simcoe County, but the exact rule depends on height, drainage, and the town. We'll tell you what typically applies on your site and help you confirm before we build."
   },
   {
     q: "How long do retaining walls last?",
@@ -65,11 +66,21 @@ export default function RetainingWalls() {
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 A retaining wall is one of those things you don't think about — until it starts to lean. We've spent years rebuilding walls other contractors put up without geogrid, without proper drainage, without an engineering plan. We're not interested in being the next chapter of that story. We build walls the way they should be built the first time, so the slope you've been ignoring becomes the feature your property is known for — <span className="text-brand-gold-dark font-normal">no job minimum, priced to your real scope.</span>
               </p>
-              <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/contact" className="btn-primary">Get My Estimate</Link>
-                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
-                  View Portfolio <ArrowRight size={16} strokeWidth={1.5} />
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <Link
+                  to="/contact"
+                  onClick={() => trackEngagement('cta_click', 'wall_lander_estimate')}
+                  className="btn-primary"
+                >
+                  Get My Free Estimate
                 </Link>
+                <a
+                  href="tel:7055003581"
+                  onClick={() => trackCall('wall_lander_phone')}
+                  className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-gold transition-colors"
+                >
+                  <Phone size={14} strokeWidth={1.5} /> Call (705) 500-3581
+                </a>
               </div>
             </motion.div>
 
@@ -173,8 +184,20 @@ export default function RetainingWalls() {
             Let's turn that unusable hillside into multi-level living space your family will use every single day. One consultation is all it takes to see what's possible.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/cost-estimator?type=wall" className="btn-primary px-12 py-4">See Your Wall Cost Range</Link>
-            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or Get My Estimate →</Link>
+            <Link
+              to="/contact"
+              onClick={() => trackEngagement('cta_click', 'wall_lander_final_estimate')}
+              className="btn-primary px-12 py-4"
+            >
+              Get My Free Estimate
+            </Link>
+            <a
+              href="tel:7055003581"
+              onClick={() => trackCall('wall_lander_final_phone')}
+              className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors"
+            >
+              Or call (705) 500-3581
+            </a>
           </div>
         </div>
       </section>

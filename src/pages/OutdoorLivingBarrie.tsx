@@ -1,8 +1,9 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Check, ArrowRight } from 'lucide-react';
+import { Check, ArrowRight, Phone } from 'lucide-react';
 import SEO from '../components/SEO';
 import Testimonials from '../components/Testimonials';
+import { trackCall } from '../utils/analytics';
 
 // Tier 2 — Signature outdoor living projects ($35K-$90K).
 // Hook: integrated systems (patio + pergola + lighting + fire + planting),
@@ -76,9 +77,13 @@ export default function OutdoorLivingBarrie() {
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/cost-estimator?type=patio" className="btn-primary">See Project Cost Range</Link>
-                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
-                  Portfolio <ArrowRight size={16} strokeWidth={1.5} />
-                </Link>
+                <a
+                  href="tel:7055003581"
+                  onClick={() => trackCall('outdoor_living_lander_phone')}
+                  className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-gold transition-colors"
+                >
+                  <Phone size={14} strokeWidth={1.5} /> Call (705) 500-3581
+                </a>
               </div>
             </motion.div>
 

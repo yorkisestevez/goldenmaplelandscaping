@@ -16,9 +16,22 @@
 
 # Legacy /blog index consolidated into /resources (the working blog index).
 # 301 ensures any backlinks or bookmarks land on the canonical page and pass SEO signals through.
+# `/blog` alone is not enough: pretty_urls plus a trailing-slash request (`/blog/`)
+# miss that rule and fall through to the SPA catch-all, which serves the homepage.
 [[redirects]]
   from = "/blog"
   to = "/resources"
+  status = 301
+
+[[redirects]]
+  from = "/blog/*"
+  to = "/resources/:splat"
+  status = 301
+
+# Unprerendered service stub — only the Barrie-suffixed pages exist.
+[[redirects]]
+  from = "/services/landscape-design"
+  to = "/services/landscape-design-barrie"
   status = 301
 
 # SPA fallback — routes NOT prerendered at build time fall back to the generic

@@ -10,8 +10,11 @@ export default [
   route('services/interlocking-barrie', 'pages/services/Interlocking.tsx'),
   route('interlocking-barrie', 'pages/InterlockingBarrieAds.tsx'),
   route('services/retaining-walls-barrie', 'pages/services/RetainingWalls.tsx'),
+  route('retaining-walls-barrie', 'pages/RetainingWallsBarrieAds.tsx'),
   route('services/landscape-design-barrie', 'pages/services/LandscapeDesign.tsx'),
+  route('landscape-design-barrie', 'pages/LandscapeDesignBarrieAds.tsx'),
   route('services/composite-decking-barrie', 'pages/services/CompositeDecking.tsx'),
+  route('composite-decking-barrie', 'pages/CompositeDeckingBarrieAds.tsx'),
   route('services/:slug', 'pages/services/ServiceLocation.tsx'),
 
   // Core pages

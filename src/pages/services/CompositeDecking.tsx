@@ -1,8 +1,9 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Grid, Check, ArrowRight, Shield, Award, CheckCircle, Hammer, Ruler, Layers } from 'lucide-react';
+import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import Testimonials from '../../components/Testimonials';
+import { trackCall, trackEngagement } from '../../utils/analytics';
 
 const FAQ = [
   {
@@ -65,11 +66,21 @@ export default function CompositeDecking() {
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 Every May, the same ritual. The sanding. The staining. The hour spent looking at the spots where the wood is starting to rot and pretending you'll deal with it next year. We're done with that, and we think you should be too. We build TimberTech and Trex decks that look like real hardwood and stay that way — through every Ontario winter, with zero maintenance, for the next 25 years. <span className="text-brand-gold-dark font-normal">Luxury decking projects start at $25,000.</span>
               </p>
-              <div className="flex flex-col sm:flex-row gap-10">
-                <Link to="/contact" className="btn-primary">Get My Estimate</Link>
-                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
-                  View Portfolio <ArrowRight size={16} strokeWidth={1.5} />
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <Link
+                  to="/contact"
+                  onClick={() => trackEngagement('cta_click', 'deck_lander_estimate')}
+                  className="btn-primary"
+                >
+                  Get My Free Estimate
                 </Link>
+                <a
+                  href="tel:7055003581"
+                  onClick={() => trackCall('deck_lander_phone')}
+                  className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-gold transition-colors"
+                >
+                  <Phone size={14} strokeWidth={1.5} /> Call (705) 500-3581
+                </a>
               </div>
             </motion.div>
 
@@ -177,8 +188,20 @@ export default function CompositeDecking() {
             Imagine a deck that looks stunning in year one and still looks stunning in year twenty — without you lifting a finger. That's exactly what we build. Let's make it happen for your home.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to="/cost-estimator?type=deck" className="btn-primary px-12 py-4">See Your Deck Cost Range</Link>
-            <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or Get My Estimate →</Link>
+            <Link
+              to="/contact"
+              onClick={() => trackEngagement('cta_click', 'deck_lander_final_estimate')}
+              className="btn-primary px-12 py-4"
+            >
+              Get My Free Estimate
+            </Link>
+            <a
+              href="tel:7055003581"
+              onClick={() => trackCall('deck_lander_final_phone')}
+              className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors"
+            >
+              Or call (705) 500-3581
+            </a>
           </div>
         </div>
       </section>

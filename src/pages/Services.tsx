@@ -122,7 +122,7 @@ export default function Services() {
           <p className="font-sans text-lg text-brand-muted max-w-2xl mx-auto mb-12 font-light">
             Free estimate · 24-hour response · No sales call required.
           </p>
-          <Link to="/contact" className="btn-primary px-16 py-5">Get My Estimate</Link>
+          <Link to="/contact" className="btn-primary px-16 py-5">Get My Free Estimate</Link>
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-40 h-px bg-brand-gold/30" />
         </div>
       </section>

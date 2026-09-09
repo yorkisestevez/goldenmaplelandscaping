@@ -1,8 +1,9 @@
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { Check, ArrowRight } from 'lucide-react';
+import { Check, ArrowRight, Phone } from 'lucide-react';
 import SEO from '../components/SEO';
 import Testimonials from '../components/Testimonials';
+import { trackCall } from '../utils/analytics';
 
 // Tier 3 — Premium residential landscapes ($90K-$160K+).
 // Hook: engineered residential landscape, multi-trade coordination, multi-season planning.
@@ -75,9 +76,13 @@ export default function LuxuryLandscapeBarrie() {
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary">Book a Consult</Link>
-                <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
-                  See past Premium builds <ArrowRight size={16} strokeWidth={1.5} />
-                </Link>
+                <a
+                  href="tel:7055003581"
+                  onClick={() => trackCall('luxury_lander_phone')}
+                  className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-gold transition-colors"
+                >
+                  <Phone size={14} strokeWidth={1.5} /> Call (705) 500-3581
+                </a>
               </div>
             </motion.div>
 
@@ -210,7 +215,13 @@ export default function LuxuryLandscapeBarrie() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/contact" className="btn-primary px-12 py-4">Book the Consult</Link>
-            <Link to="/portfolio" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or browse past builds →</Link>
+            <a
+              href="tel:7055003581"
+              onClick={() => trackCall('luxury_lander_final_phone')}
+              className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors"
+            >
+              Or call (705) 500-3581
+            </a>
           </div>
         </div>
       </section>

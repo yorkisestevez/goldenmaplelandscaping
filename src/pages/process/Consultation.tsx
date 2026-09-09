@@ -37,7 +37,7 @@ export default function Consultation() {
                 <p className="font-sans text-brand-muted leading-relaxed font-light mb-6">
                   The estimate request is free, the property walk is free. From there, a $99 on-site design session and full landscape design are both optional paid steps for more precision — and both get credited back if you build with us.
                 </p>
-                <Link to="/contact" className="btn-primary w-full py-5 text-center px-8">Get My Estimate</Link>
+                <Link to="/contact" className="btn-primary w-full py-5 text-center px-8">Get My Free Estimate</Link>
               </div>
             </motion.div>
 

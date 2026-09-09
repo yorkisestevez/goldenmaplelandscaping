@@ -72,6 +72,19 @@ describe('injectDraft: RR7 route wiring', () => {
     assert.ok(fs.existsSync(tsxPath), 'blog page component should be written');
   });
 
+  test('writes the canonical trailing slash on the sitemap loc', () => {
+    const slug = 'zz-test-inject-sitemap-slash';
+    const comp = slugToComponent(slug);
+    const tsxPath = path.join(REPO_ROOT, 'src/pages/blog', `${comp}.tsx`);
+    pending = { snap: snapshot(), extra: [tsxPath] };
+
+    injectDraft(loadRealDraft(slug));
+
+    const sitemap = fs.readFileSync(SITEMAP_XML, 'utf8');
+    assert.match(sitemap, new RegExp(`<loc>https://goldenmaplelandscaping.ca/resources/${slug}/</loc>`));
+    assert.doesNotMatch(sitemap, new RegExp(`<loc>https://goldenmaplelandscaping.ca/resources/${slug}</loc>`));
+  });
+
   test('appends inside the blog block, above // Locations', () => {
     const slug = 'zz-test-inject-ordering';
     const comp = slugToComponent(slug);
@@ -116,7 +129,7 @@ describe('injectDraft: failure is all-or-nothing', () => {
 
     // Force a mid-run failure: pre-seed the sitemap (the LAST step) with this
     // slug's URL so injectIntoSitemap throws after .tsx + routes.ts are written.
-    const url = `https://goldenmaplelandscaping.ca/resources/${slug}`;
+    const url = `https://goldenmaplelandscaping.ca/resources/${slug}/`;
     const sitemap = fs.readFileSync(SITEMAP_XML, 'utf8');
     fs.writeFileSync(SITEMAP_XML, sitemap.replace('</urlset>', `  <url><loc>${url}</loc></url>\n</urlset>`));
 
