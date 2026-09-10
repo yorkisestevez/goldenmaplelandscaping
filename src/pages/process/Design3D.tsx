@@ -45,14 +45,14 @@ export default function Design3D() {
               className="relative aspect-[16/9] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
             >
               <img
-                src="/images/projects/rendering1.jpg"
-                alt="3D Landscape Design Barrie Ontario"
+                src="/images/projects/Golden Maple deck and walkway.jpg"
+                alt="Aerial photograph showing the relationship between a deck, lawn and stone walkway"
                 className="w-full h-full object-cover grayscale opacity-80"
                 referrerPolicy="no-referrer"
               />
               <div className="absolute inset-x-8 bottom-8 bg-brand-black/80 backdrop-blur-md p-6 border border-brand-gold/20 rounded-[2px]">
-                <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Simulated Reality</p>
-                <p className="font-display text-xl text-brand-porcelain italic font-light">Architectural Walkthroughs</p>
+                <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Outdoor layout</p>
+                <p className="font-display text-xl text-brand-porcelain italic font-light">Space, flow and connection</p>
               </div>
             </motion.div>
           </div>

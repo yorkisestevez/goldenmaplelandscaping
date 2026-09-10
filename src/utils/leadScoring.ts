@@ -1,3 +1,5 @@
+import { PROJECT_BUDGET_TARGET } from '../data/projectBudgets';
+
 export type LeadScoreInput = {
   budget?: string;
   service?: string;
@@ -33,13 +35,17 @@ export function scoreGoldenMapleLead(input: LeadScoreInput) {
   let score = 0;
   const reasons: string[] = [];
 
+  // Historical under-25k submissions span both sides of the new target;
+  // leave their budget component neutral without a numerical estimate.
   const budget = input.budget || '';
   const estimateHigh = input.totalHigh || 0;
   if (['50k-100k', '100k-250k', '250k+'].includes(budget) || estimateHigh >= 50000) {
     score += 25; reasons.push('budget_or_estimate_50k_plus');
   } else if (budget === '25k-50k' || estimateHigh >= 35000) {
     score += 15; reasons.push('budget_or_estimate_35k_plus');
-  } else if (budget === 'under-25k' || (estimateHigh > 0 && estimateHigh < 25000)) {
+  } else if (budget === '13k-25k' || (estimateHigh >= PROJECT_BUDGET_TARGET && estimateHigh < 35000)) {
+    score += 10; reasons.push('budget_or_estimate_13k_plus');
+  } else if (budget === 'under-13k' || (estimateHigh > 0 && estimateHigh < PROJECT_BUDGET_TARGET)) {
     score -= 30; reasons.push('below_target_budget');
   }
 

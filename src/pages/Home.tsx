@@ -1,208 +1,80 @@
 import { motion } from 'motion/react';
 import { ArrowRight, Shield, Award, CheckCircle, Star, Quote, ChevronRight, Compass, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
-import PublicationTrustBar from '../components/PublicationTrustBar';
 import BuyersGuide from '../components/BuyersGuide';
 import Manifesto from '../components/Manifesto';
 import Process from '../components/Process';
 import { Link } from 'react-router-dom';
-import HeroContactForm from '../components/HeroContactForm';
 import Reveal from '../components/Reveal';
 import { trackEngagement, trackCall } from '../utils/analytics';
 import { cn } from '../utils/cn';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
 
 
-const HERO_POSTER = "/images/projects/patio-pergola.jpg";
+// Generated design inspiration, deliberately separate from completed-project photography.
+const HERO_POSTER = "/images/concepts/backyard-ivory-hero-v1.webp";
 
-const Hero = () => {
-  return (
-    <section className="relative min-h-[95vh] flex items-center overflow-hidden bg-brand-burgundy">
-      <div className="absolute inset-0 z-0">
-        <img
-          src={HERO_POSTER}
-          alt="Outdoor-living inspiration with a paver patio, cedar pavilion and retaining wall"
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-          className="absolute inset-0 w-full h-full object-cover opacity-95"
-        />
-        {/* Lighter left-weighted scrim: just enough behind the text, clearing fast so the photo stays visible. */}
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-burgundy/85 via-brand-burgundy/35 to-transparent" />
-      </div>
-
-      <div className="container-custom relative z-10 py-32">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
-          {/* Hero Copy — tight + soft dark halo keeps the light text crisp over the photo */}
-          <div className="lg:col-span-7 [filter:drop-shadow(0_1px_2px_rgba(8,12,10,0.9))_drop-shadow(0_2px_16px_rgba(8,12,10,0.7))]">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="flex items-center gap-4 mb-10"
-            >
-              <div className="h-px w-16 bg-brand-gold" />
-              <span className="font-sans text-xs font-normal tracking-[0.4em] uppercase text-brand-gold">
-                Barrie, Simcoe County & Cottage Country
-              </span>
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.2 }}
-              className="font-display text-5xl md:text-7xl lg:text-8xl font-light text-brand-porcelain leading-[1.05] mb-12"
-            >
-              The backyard you've <br />
-              <span className="text-brand-gold italic">always pictured.</span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.4 }}
-              className="font-sans text-base md:text-lg text-brand-porcelain max-w-xl mb-12 leading-relaxed font-normal"
-            >
-              You've spent enough nights staring out the window at a yard that doesn't match the home you've built. Let's plan an outdoor space around how your family wants to live — from the materials underfoot to the places you gather.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.7 }}
-              className="flex items-center gap-8"
-            >
-              <Link
-                to="/portfolio"
-                onClick={() => trackEngagement('cta_click', 'view_portfolio')}
-                className="group flex items-center gap-4 text-brand-porcelain font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
-              >
-                Explore Project Possibilities
-                <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-2" />
-              </Link>
-              <a
-                href={`tel:${publicContact.phoneTel}`}
-                onClick={() => trackCall('hero_phone')}
-                className="group flex items-center gap-4 text-brand-porcelain font-sans text-[11px] font-medium uppercase tracking-[0.25em] hover:text-brand-gold transition-colors"
-              >
-                Or Call {publicContact.phoneDisplay}
-              </a>
-            </motion.div>
+const Hero = () => (
+  <section className="home-hero bg-brand-nearblack">
+    <div className="container-custom">
+      <div className="home-hero-grid">
+        <div className="max-w-xl">
+          <p className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-brand-gold-dark font-medium mb-8">
+            Outdoor living · Barrie & Simcoe County
+          </p>
+          <h1 className="font-display font-normal text-brand-ink mb-8">
+            The backyard<br />you’ve always<br /><span className="italic text-brand-gold-dark">pictured.</span>
+          </h1>
+          <p className="text-base text-brand-muted leading-relaxed max-w-sm mb-7">
+            Thoughtfully planned patios, decks and outdoor spaces. Built around your home, and the way you want to live.
+          </p>
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+            <Link to="/contact" onClick={() => trackEngagement('cta_click', 'home_start_project')} className="btn-primary gap-5">
+              Start your project <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <a href="#selected-work" className="home-project-link hidden sm:inline-flex" onClick={() => trackEngagement('cta_click', 'home_selected_work')}>
+              See the details <ArrowRight size={15} aria-hidden="true" />
+            </a>
           </div>
-
-          {/* Hero — Budget-first contact form (calculator offered as a double-check) */}
-          <div className="lg:col-span-5 w-full">
-            <HeroContactForm />
-          </div>
+          <p className="hidden md:block text-xs text-brand-muted mt-9">Patios & interlock <span className="mx-2 text-brand-gold-dark">/</span> Decks <span className="mx-2 text-brand-gold-dark">/</span> Landscape design</p>
         </div>
+        <figure className="min-w-0">
+          <img src={HERO_POSTER} alt="Outdoor living design concept: stone patio, cedar pergola and planted garden wall" loading="eager" decoding="async" fetchPriority="high" className="home-hero-photo" />
+          <figcaption className="home-hero-caption"><span>Outdoor living concept</span><span>Stone · timber · open air</span></figcaption>
+        </figure>
       </div>
-    </section>
-  );
-};
-
+    </div>
+  </section>
+);
 
 const ServicesGrid = () => {
   const services = [
-    {
-      title: "Interlocking Stone & Patios",
-      desc: "The patio where your kids grow up, where Saturday dinners happen, where life slows down. We build it on a foundation that won't shift — ever.",
-      img: "/images/projects/IMG_4826.jpg",
-      link: "/services/interlocking-barrie"
-    },
-    {
-      title: "Retaining Walls",
-      desc: "Slope problems become your home's best architectural feature. Precision-engineered walls that hold back the earth and turn unusable land into living space.",
-      img: "/images/projects/garden-wall.JPEG",
-      link: "/services/retaining-walls-barrie"
-    },
-    {
-      title: "Landscape Design",
-      desc: "Walk through your future backyard in vivid 3D before we move a single stone. See the vision, refine it, fall in love with it — then watch us build it.",
-      img: "/images/projects/rendering1.jpg",
-      link: "/services/landscape-design-barrie"
-    },
-    {
-      title: "Composite Decking",
-      desc: "The look of real wood with none of the maintenance headaches. No staining, no rotting, no splinters — just 30+ years of barefoot summer evenings.",
-      img: "/images/projects/barrie-composite-deck.jpg",
-      link: "/services/composite-decking-barrie"
-    },
-    {
-      title: "Outdoor Kitchens",
-      desc: "Stop running in and out of the house. Cook, serve, and entertain in one seamless space designed around how you actually host.",
-      img: "/images/projects/luxury outdoor kitchen.jpeg",
-      link: "/contact"
-    },
-    {
-      title: "Fire Features",
-      desc: "The gathering spot that turns a cool Simcoe County evening into the best part of your week. Custom fire pits that become your family's favourite place.",
-      img: "/images/projects/barrie-firepit-patio.jpg",
-      link: "/contact"
-    },
-    {
-      title: "Landscape Lighting",
-      desc: "Your outdoor space doesn't clock out at sunset. Professional lighting that makes your property feel safe, dramatic, and alive after dark.",
-      img: "/images/projects/IHPX8926.JPEG",
-      link: "/contact"
-    }
+    { title: 'Patios & interlocking', img: '/images/projects/IMG_4826.jpg', alt: 'Stone patio with a diamond inlay and contrasting border', desc: 'Beautiful underfoot. Planned for dining, gathering and everyday life outside.', link: '/services/interlocking-barrie' },
+    { title: 'Composite decking', img: '/images/projects/Golden Maple deck and walkway.jpg', alt: 'Aerial photograph of a backyard deck and stone walkway', desc: 'An extension of your home, with room to unwind and materials chosen for your routine.', link: '/services/composite-decking-barrie' },
+    { title: 'Walls & garden spaces', img: '/images/projects/garden-wall.JPEG', alt: 'Masonry garden wall with planting and integrated lighting', desc: 'Bring definition to your landscape with considered levels, planting and stonework.', link: '/services/retaining-walls-barrie' },
   ];
-
   return (
-    <section className="section-padding bg-brand-nearblack">
+    <section className="home-services bg-brand-nearblack">
       <div className="container-custom">
-        <Reveal className="flex flex-col md:flex-row justify-between items-end gap-12 mb-20">
-          <div className="max-w-2xl">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
-              Our Expertise
-            </span>
-            <h2 className="font-display text-4xl md:text-8xl font-light text-brand-bonewhite leading-tight">
-              Mastery in every detail.
-            </h2>
-          </div>
-          <Link to="/services" className="group flex items-center gap-3 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.2em] hover:text-brand-gold-dark transition-colors">
-            View All Services
-            <ChevronRight size={18} strokeWidth={1.5} />
-          </Link>
-        </Reveal>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-10">
-          {services.map((service, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-              className={cn(
-                "group bg-brand-surface rounded-[2px] overflow-hidden border border-brand-dim/10 hover:border-brand-gold/30 transition-all duration-500 flex flex-col",
-                idx >= 4 ? "lg:col-span-1" : ""
-              )}
-            >
-              <div className="h-80 overflow-hidden relative">
-                <img
-                  src={service.img}
-                  alt={`${service.title} in Barrie & Simcoe County by Golden Maple Landscaping`}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-brand-nearblack/20 group-hover:bg-transparent transition-colors" />
-              </div>
-              <div className="p-10 md:p-12 flex flex-col flex-1">
-                <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-5 group-hover:text-brand-gold-dark transition-colors min-h-[4rem] flex items-center">
-                  {service.title}
-                </h3>
-                <p className="font-sans text-sm text-brand-muted leading-relaxed mb-10 font-light flex-1">
-                  {service.desc}
-                </p>
-                <Link to={service.link} className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-[0.2em] font-medium mt-auto">
-                  Explore Service
-                  <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-2" />
-                </Link>
-                </div>
-            </motion.div>
+        <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 mb-10 border-t border-brand-dim pt-10">
+          <div><p className="text-[10px] uppercase tracking-[0.22em] text-brand-gold-dark font-medium mb-4">Considered from the ground up</p><h2 className="home-services-heading font-display">Good living starts outside.</h2></div>
+          <Link to="/services" className="home-project-link self-start md:self-auto">Our services <ArrowRight size={15} aria-hidden="true" /></Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-7">
+          {services.map((service) => (
+            <Link to={service.link} key={service.title} className="group block">
+              <div className="overflow-hidden mb-6"><img src={service.img} alt={service.alt} loading="lazy" decoding="async" className="home-service-photo transition-transform duration-500 motion-safe:group-hover:scale-[1.03]" /></div>
+              <div className="flex items-center justify-between gap-4 mb-3"><h3 className="font-display text-3xl">{service.title}</h3><ArrowRight size={18} className="text-brand-gold-dark shrink-0" aria-hidden="true" /></div>
+              <p className="text-sm leading-relaxed text-brand-muted max-w-sm">{service.desc}</p>
+            </Link>
           ))}
+        </div>
+        <div className="flex flex-wrap gap-x-8 gap-y-4 mt-12 pt-6 border-t border-brand-dim text-xs text-brand-muted">
+          <span className="text-brand-gold-dark uppercase tracking-widest text-[10px] font-medium">Complete the space</span>
+          <Link to="/services/landscape-design-barrie" className="hover:text-brand-ink">Landscape design</Link>
+          <Link to="/contact" className="hover:text-brand-ink">Outdoor kitchens</Link>
+          <Link to="/contact" className="hover:text-brand-ink">Fire features</Link>
+          <Link to="/contact" className="hover:text-brand-ink">Landscape lighting</Link>
         </div>
       </div>
     </section>
@@ -268,29 +140,29 @@ const WhyGoldenMaple = () => {
 const BeforeAfterSection = () => {
   const features = [
     {
-      tag: 'Cottage Country',
-      img: '/images/projects/WhatsApp Image 2026-03-20 at 8.12.26 PM.jpeg',
-      alt: 'Lakeside TimberTech composite deck with louvered pergola and glass railing in Simcoe County',
-      title: 'Lakeside composite deck, on the water.',
-      body: 'TimberTech composite over an aluminum frame, a louvered pergola for shade on demand, and a glass railing that gets out of the view. Built to take Simcoe County winters and look the same when the snow melts.',
-      meta: 'TimberTech AZEK · Aluminum pergola · Glass railing',
+      tag: 'A connected backyard',
+      img: '/images/projects/Golden Maple deck and walkway.jpg',
+      alt: 'Aerial photograph of a deck, lawn and stone walkway beside a home',
+      title: 'Room to gather. Space to grow.',
+      body: 'A deck, a clear path through the garden and an open lawn. A simple arrangement that makes the whole backyard work together.',
+      meta: 'Decking · stonework · garden space',
     },
     {
-      tag: 'Barrie Residential',
+      tag: 'The details underfoot',
       img: '/images/projects/IMG_4826.jpg',
-      alt: 'Permacon paver patio with hand-set diamond inlay and gravel border in Barrie ON',
-      title: 'Side-yard paver patio with a hand-set inlay.',
-      body: 'Permacon pavers with a centred diamond inlay, a gravel drainage border, and a 14-inch open-graded base under everything. The kind of detail that reads quietly from the driveway and holds up for decades.',
-      meta: 'Permacon · 14" structural base · Hand-set inlay',
+      alt: 'Paver patio with a diamond inlay and contrasting border',
+      title: 'A little detail makes it yours.',
+      body: 'A centred diamond inlay, a contrasting border and clean edges give this side-yard patio its own character.',
+      meta: 'Paver patio · geometric inlay · contrasting border',
     },
   ];
 
   return (
-    <section className="section-padding bg-brand-nearblack">
+    <section id="selected-work" className="section-padding bg-brand-cream-light scroll-mt-24">
       <div className="container-custom">
         <Reveal className="text-center max-w-3xl mx-auto mb-24">
           <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
-            Recent Builds
+            In the details
           </span>
           <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite">
             Two ways to live outside.
@@ -505,31 +377,6 @@ const ContractorPainPoints = () => {
   );
 };
 
-const SocialProofStrip = () => {
-  const stats = [
-    { number: "Reviews", label: "Google", sub: publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.') },
-    { number: "Since", label: "2020", sub: "Published business history; confirm current details directly." },
-    { number: "Scope", label: "Site preparation", sub: "Final depths and materials are project-specific." },
-    { number: "Terms", label: "Project documentation", sub: publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current coverage documentation is available.') },
-  ];
-
-  return (
-    <section className="py-16 md:py-20 bg-brand-surface border-y border-brand-dim/10">
-      <div className="container-custom">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-          {stats.map((stat, idx) => (
-            <Reveal key={idx} delay={idx * 0.1} y={16} className="text-center">
-              <span className="font-display text-4xl md:text-5xl font-light text-brand-green-dark block mb-3">{stat.number}</span>
-              <span className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-bonewhite block mb-2 font-medium">{stat.label}</span>
-              <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted font-light">{stat.sub}</span>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
 export default function Home() {
   // NO local LocalBusiness schema here. This page used to define its own,
   // which shipped a stale dev Cloud Run URL as the business @id/url/image
@@ -547,13 +394,11 @@ export default function Home() {
         canonical="https://goldenmaplelandscaping.ca/"
       />
       <Hero />
-      <PublicationTrustBar />
-      <SocialProofStrip />
       <ServicesGrid />
+      <BeforeAfterSection />
       <Manifesto />
       <ContractorPainPoints />
       <WhyGoldenMaple />
-      <BeforeAfterSection />
       <Process />
       <Testimonials />
       <section className="section-padding bg-brand-nearblack border-t border-brand-dim/5">

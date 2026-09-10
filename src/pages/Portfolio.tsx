@@ -71,22 +71,6 @@ const PROJECTS = [
     img: "/images/projects/luxury outdoor kitchen.jpeg"
   },
   {
-    id: 9,
-    slug: "cousy-fire-feature",
-    title: "Cozy Fire Feature",
-    category: "Hardscape Design",
-    desc: "A custom-built fire pit area designed for intimate gatherings and evening ambiance in Shanty Bay.",
-    img: "/images/projects/cousy fire feature.jpeg"
-  },
-  {
-    id: 10,
-    slug: "front-entrance-grandeur",
-    title: "Front Entrance Grandeur",
-    category: "Interlocking Stone",
-    desc: "An architectural front entrance design that combines natural stone textures with modern paving patterns.",
-    img: "/images/projects/barrie-walkway-entrance.jpg"
-  },
-  {
     id: 11,
     slug: "lakeside-pool-decking",
     title: "Paver Patio & Pergola",
@@ -94,14 +78,6 @@ const PROJECTS = [
     desc: "A Permacon paver patio with a cedar pergola and built-in seating — a complete backyard living space on a deep, freeze-thaw-proof base.",
     img: "/images/projects/patio-pergola.jpg"
   },
-  {
-    id: 12,
-    slug: "architectural-visuals",
-    title: "Architectural Visuals",
-    category: "Landscape Design",
-    desc: "High-fidelity 3D renderings that bring our clients' visions to life before breaking ground on their dream project.",
-    img: "/images/projects/rendering1.jpg"
-  }
 ];
 
 export default function Portfolio() {

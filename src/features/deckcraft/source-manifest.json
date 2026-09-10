@@ -1,0 +1,221 @@
+{
+  "source": "Deck Craft Pro local source",
+  "files": [
+    {
+      "file": "types.ts",
+      "sha256": "47396c34d4b4d54b0f0756d12916b31fdb7d9e7175f08001b45e74ad78904931"
+    },
+    {
+      "file": "calculations.ts",
+      "sha256": "1fd78e98af8fba587bf1d2d7ffabb641ac46f4148e25e6f827f211888d58e423"
+    },
+    {
+      "file": "lib/deckGeometry.ts",
+      "sha256": "db6f2578709624f436e5b232f3a75d39cf2920454313328b8c585b57799a32ec"
+    },
+    {
+      "file": "lib/swatches.ts",
+      "sha256": "0de6c3a2905a29f371681f7e15c71f03fe634e1351a35a45a8141268de5ba174"
+    },
+    {
+      "file": "components/DeckDiagram.tsx",
+      "sha256": "f1865c3c3516931ad236241c9510896b4e399b36382832a946392f68250146d1"
+    },
+    {
+      "file": "components/viewer3d/Boards.tsx",
+      "sha256": "b4b145456f1db8ba4e7d33f5867646123b94b22a4218fb3510f6bc6e1dabc1f3"
+    },
+    {
+      "file": "components/viewer3d/Deck3DViewer.tsx",
+      "sha256": "3a9e78f7fd5e9bbf669cbe6cc2a03ad377ccb167ac8ffd2495d692c18c760b6e"
+    },
+    {
+      "file": "components/viewer3d/Environment3D.tsx",
+      "sha256": "9379ca0269717e8ae2efd642d00ef432ff4544a4b6cb3aa6d0e370bd38f9b138"
+    },
+    {
+      "file": "components/viewer3d/Foundation.tsx",
+      "sha256": "ec3d6d2fb4aa796dfd8388d07461045cad341b3ad13cf53896ae9a4d119ee084"
+    },
+    {
+      "file": "components/viewer3d/instancing.ts",
+      "sha256": "130b84219029402f8285ab5b9473f6ba48222c678d89662cfdddd16af0601ab5"
+    },
+    {
+      "file": "components/viewer3d/Platform.tsx",
+      "sha256": "71299c1d7dbea1e559c715029c365fcc0af86dc8de9f750a444356fe7e1ed437"
+    },
+    {
+      "file": "components/viewer3d/Railing.tsx",
+      "sha256": "fdf76a83dcab4bc3002cb78f3689c9c32fae1d6b94e841f5e535fa3bfb4c4dba"
+    },
+    {
+      "file": "components/viewer3d/Stairs.tsx",
+      "sha256": "927e437af4b85bf4b7df24437efac7d9c8a5c2ed059ce50768e8081e1b52b8cf"
+    },
+    {
+      "file": "components/viewer3d/useSwatchTexture.ts",
+      "sha256": "d8a83c5123959fd4e96a89a845dbd69bb9b0c8cf39d129fe1f42c04fd492d44d"
+    },
+    {
+      "file": "assets/swatches/dk-vista-driftwood.jpg",
+      "sha256": "0753033a401fbbaab01cfa23e55101b7477c89f2c3adc05782c4245895d657bf"
+    },
+    {
+      "file": "assets/swatches/dk-vista-dunewood.jpg",
+      "sha256": "f0380a8b415eb63816cf5cc419969f833024b6816f3a6da655005189caae7847"
+    },
+    {
+      "file": "assets/swatches/dk-vista-ironwood.jpg",
+      "sha256": "4f40bf4818fa9934d4f1ce3e0ab130195ab006fc154338a886fc4b06005bb2d4"
+    },
+    {
+      "file": "assets/swatches/dk-vista-silverwood.jpg",
+      "sha256": "4bcfa399d3d85f1e9b7aedb2ef62adce6b324814afba44d3c6166ad83111de5c"
+    },
+    {
+      "file": "assets/swatches/dk-voyage-costa.jpg",
+      "sha256": "ea8562d98102fcc46a1daaa7c2acd508db1f12c76e7bf228c5958aab694b9f0d"
+    },
+    {
+      "file": "assets/swatches/dk-voyage-khaya.jpg",
+      "sha256": "3baad428b4a430f8f1923623e11e95fa219caec856480dfbc28a35cbbe7e0a17"
+    },
+    {
+      "file": "assets/swatches/dk-voyage-mesa.jpg",
+      "sha256": "dcce0023d76a1c576d1fea39db7b4453c0ceff51df83b924b4a0070e35595807"
+    },
+    {
+      "file": "assets/swatches/dk-voyage-sedona.jpg",
+      "sha256": "074673e09cba5c02cceeb8854e2bd6f0f7a11e4a116fead22f9bccef162fb82f"
+    },
+    {
+      "file": "assets/swatches/dk-voyage-sierra.jpg",
+      "sha256": "c84d92e965fc1407db23b80a78f14ef4a1b847eadebe325af0615747be1aa430"
+    },
+    {
+      "file": "assets/swatches/dk-voyage-tundra.jpg",
+      "sha256": "790dcc1af4f5c5447931c1c4a621c4a1477f7709ff4b782228f599345ee55d65"
+    },
+    {
+      "file": "assets/swatches/tt-harvest-brownstone.jpg",
+      "sha256": "fa71e45f8b496d53ce6aedc1ef287a8cb3a1449dcad8c290d629033e2a86bfec"
+    },
+    {
+      "file": "assets/swatches/tt-harvest-kona.jpg",
+      "sha256": "ac89004086a7b208050dbdc7fe123e9be328f6825000cbc2e2cdbc38ebe75fcf"
+    },
+    {
+      "file": "assets/swatches/tt-harvest-slate-gray.jpg",
+      "sha256": "f561b6200bdea3571d2e5346ab38e62d129724ab3df5dc6955d6b69299451b66"
+    },
+    {
+      "file": "assets/swatches/tt-landmark-american-walnut.jpg",
+      "sha256": "c9d0650c2f3359883920fc3e55663ddffda10a484d9ccb843c05535ae1884123"
+    },
+    {
+      "file": "assets/swatches/tt-landmark-boardwalk.jpg",
+      "sha256": "a50e750eb3e091d89fcf1d3d6c7e7a4a07c37698a2bcac459c64cc1d70cd4909"
+    },
+    {
+      "file": "assets/swatches/tt-landmark-castle-gate.jpg",
+      "sha256": "047a5384016c5349afc514c33c35ba86b61ddd503a453d96eaa4467d801e6b51"
+    },
+    {
+      "file": "assets/swatches/tt-landmark-french-white-oak.jpg",
+      "sha256": "398bd58cf39009872e67d6ef5653f088be961adc2496ac4abbdc9b7f6e801d79"
+    },
+    {
+      "file": "assets/swatches/tt-legacy-ashwood.jpg",
+      "sha256": "cbe238fdc03818c6509a4f6b781734cce29efe2c9c3cc74bf5777b5d71625f70"
+    },
+    {
+      "file": "assets/swatches/tt-legacy-espresso.jpg",
+      "sha256": "19acf0f6e2dd9f02c5266cc79c80121b411d0253357dff4a8a551be683cc45fb"
+    },
+    {
+      "file": "assets/swatches/tt-legacy-mocha.jpg",
+      "sha256": "f90512a4cf892fe2cb554f082fce61b744c626e61798a828f808794a524685a0"
+    },
+    {
+      "file": "assets/swatches/tt-legacy-pecan.jpg",
+      "sha256": "f0141f614e604c1dc4bbad3c0f94929f35577e33c31f43a2f56ce92c075ebaf0"
+    },
+    {
+      "file": "assets/swatches/tt-legacy-tigerwood.jpg",
+      "sha256": "1cc22b30fc60de0bf4f0dc27aeffac6f75ec05503fc269edc5def73cfcb5fe11"
+    },
+    {
+      "file": "assets/swatches/tt-legacy-whitewash-cedar.jpg",
+      "sha256": "4a8223a2835e7cd7f5a3192b2be51aba62a83a1d3345dca8668fbba68288b566"
+    },
+    {
+      "file": "assets/swatches/tt-premier-dark-teak.jpg",
+      "sha256": "2a534d701dfc2650e79726d6775aef7ebfda3b1d0cef52699f8d72d163f9cda1"
+    },
+    {
+      "file": "assets/swatches/tt-premier-maritime-gray.jpg",
+      "sha256": "2c24101ebf6b74ad87619eb087f61840b820ce828bc6e9483b408a7a29587e39"
+    },
+    {
+      "file": "assets/swatches/tt-primeplus-coconut-husk.jpg",
+      "sha256": "9ee7517c8f1c77eeb552a9daf443e503f7cbd226666293574db9808af2bbf2ee"
+    },
+    {
+      "file": "assets/swatches/tt-primeplus-dark-cocoa.jpg",
+      "sha256": "6d350001a4df1f26d7ff1258b008adf113042eb1ec7f2dfe3758a384815e4279"
+    },
+    {
+      "file": "assets/swatches/tt-primeplus-sea-salt-gray.jpg",
+      "sha256": "0fa16867ce76b902c33af032729def9faa94d298565f800576b5b4a0145cf67b"
+    },
+    {
+      "file": "assets/swatches/tt-reserve-antique-leather.jpg",
+      "sha256": "25f6b83c6645b23564272619ce2aa2333508b92b3ae92428fd932fb260620610"
+    },
+    {
+      "file": "assets/swatches/tt-reserve-dark-roast.jpg",
+      "sha256": "18bf6cd1deeb08a92751e25570df14861155eec03739893450f44968053bac8e"
+    },
+    {
+      "file": "assets/swatches/tt-reserve-driftwood.jpg",
+      "sha256": "b61aa14afedc78a9fa82b86d655fdc7228db0793fd264c53e1a01b3f19380c6e"
+    },
+    {
+      "file": "assets/swatches/tt-reserve-reclaimed-chestnut.jpg",
+      "sha256": "bc1d91d795ef946546ec067f2e3dcd788a299a8a2a1f86f3b66f44f188d6d5c1"
+    },
+    {
+      "file": "assets/swatches/tt-terrain-brown-oak.jpg",
+      "sha256": "92b58e0db49829ba836550277a47977fe97e72cbd634822aced18d43036c754b"
+    },
+    {
+      "file": "assets/swatches/tt-terrain-silver-maple.jpg",
+      "sha256": "d9a516a1e611bd87bc3d9860cb7f3f59907f9d7a2620441ced49eea8c71e7fe8"
+    },
+    {
+      "file": "assets/swatches/tt-vintage-coastline.jpg",
+      "sha256": "c1c89eff8273c4b5ac396a5abc39a14b42a800f84152f62d7968616b73bd0b7b"
+    },
+    {
+      "file": "assets/swatches/tt-vintage-cypress.jpg",
+      "sha256": "34fe73d2caf55e7dc8a1bbffad0adcf1b17c5120f1c28ed0d3ce244c07c75b0e"
+    },
+    {
+      "file": "assets/swatches/tt-vintage-mahogany.jpg",
+      "sha256": "ce1c320377e6298c82db2e24de49945512dc68ec94c92c9369778aa68317ae96"
+    },
+    {
+      "file": "assets/swatches/tt-vintage-weathered-teak.jpg",
+      "sha256": "6110f944549c7677ed1ae4e66c165ff7be040b8558cf5fff095dfe8fa27d3dcf"
+    },
+    {
+      "file": "assets/swatches/wood-cedar.jpg",
+      "sha256": "e67452fe12a488dd49d1a9e253cde28677dcde02a7480d130d3a05f4461c034e"
+    },
+    {
+      "file": "assets/swatches/wood-pressure-treated.jpg",
+      "sha256": "1ec00958bb8bb813ff126dd8034e0608f62c944c28041cfcd4daf65ffd319ccc"
+    }
+  ]
+}

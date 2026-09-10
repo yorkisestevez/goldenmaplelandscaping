@@ -11,7 +11,7 @@ export default function FirePitRegulations() {
       category="Regulations"
       date="January 8, 2026"
       readTime="6 min read"
-      heroImage="/images/projects/cousy fire feature.jpeg"
+      heroImage="/images/projects/barrie-firepit-patio.jpg"
     >
       <p>You want a fire pit in your backyard. Simple enough, right? Not so fast. The City of Barrie has specific bylaws governing outdoor fires, and ignoring them can result in <strong>fines, forced removal, and a very awkward conversation with bylaw enforcement.</strong></p>
 

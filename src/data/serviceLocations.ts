@@ -200,7 +200,7 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
         a: 'Tell us which planting, garden, lighting or irrigation work you have in mind. Confirm current service availability and scope before booking.',
       },
     ],
-    heroImg: '/images/projects/Outdoor living life.jpeg',
+    heroImg: '/images/projects/patio-pergola.jpg',
   },
 };
 

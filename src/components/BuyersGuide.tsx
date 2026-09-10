@@ -1,3 +1,4 @@
+import { PROJECT_BUDGET_RANGES } from '../data/projectBudgets';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BUSINESS, publicClaimCopy } from '../data/business';
@@ -270,15 +271,13 @@ const BuyersGuide = () => {
                     <div className="relative">
                       <select 
                         name="budget"
+                        aria-label="Project budget (optional)"
+                        defaultValue=""
                         className="w-full bg-brand-nearblack border border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-all rounded-[2px] font-light appearance-none cursor-pointer"
                       >
-                        <option value="" disabled selected>Approximate Budget (Optional)</option>
-                        <option>Under $20K</option>
-                        <option>$20K–$40K</option>
-                        <option>$40K–$60K</option>
-                        <option>$60K–$90K</option>
-                        <option>$90K+</option>
-                        <option>Not sure yet</option>
+                        <option value="" disabled>Project budget (optional)</option>
+                        {PROJECT_BUDGET_RANGES.map((range) => <option key={range.value} value={range.value}>{range.label}</option>)}
+                        <option value="unsure">Not sure yet</option>
                       </select>
                       <ArrowRight size={14} className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-brand-muted pointer-events-none" />
                     </div>

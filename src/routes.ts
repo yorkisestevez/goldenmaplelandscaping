@@ -37,6 +37,7 @@ export default [
   // Lead / cost
   route('buyers-guide', 'pages/BuyersGuide.tsx'),
   route('cost-estimator', 'pages/CostEstimator.tsx'),
+  route('deck-designer', 'pages/DeckDesigner.tsx'),
   route('cost-guide', 'pages/CostGuide.tsx'),
   route('cost-guide/thank-you', 'pages/CostGuideThankYou.tsx'),
   route('book', 'pages/Book.tsx'),

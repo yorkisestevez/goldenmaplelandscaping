@@ -1,3 +1,4 @@
+import { PROJECT_BUDGET_RANGES } from '../data/projectBudgets';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -16,18 +17,6 @@ const encode = (data: Record<string, string>) =>
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
-// Values must match Contact.tsx's budget enum exactly — both forms post to the
-// same "contact" Netlify form and both feed scoreGoldenMapleLead(), which
-// pattern-matches on these literal strings ('under-25k' | '25k-50k' |
-// '50k-100k' | '100k-250k' | '250k+'). Mismatched buckets here silently
-// zeroed out the budget component of every hero-form lead's score.
-const BUDGET_RANGES = [
-  { value: 'under-25k', label: 'Under $25k' },
-  { value: '25k-50k', label: '$25k – $50k' },
-  { value: '50k-100k', label: '$50k – $100k' },
-  { value: '100k-250k', label: '$100k – $250k' },
-  { value: '250k+', label: '$250k+' },
-];
 const UNSURE = 'unsure';
 
 export default function HeroContactForm() {
@@ -72,7 +61,7 @@ export default function HeroContactForm() {
     setStatus('submitting');
     setErrorMsg('');
 
-    const budgetLabel = BUDGET_RANGES.find((b) => b.value === form.budget)?.label || form.budget;
+    const budgetLabel = PROJECT_BUDGET_RANGES.find((b) => b.value === form.budget)?.label || form.budget;
     const enrichedDetails = [
       `Budget: ${budgetLabel}`,
       form.details && `\nNotes: ${form.details}`,
@@ -194,12 +183,12 @@ export default function HeroContactForm() {
           </div>
 
           <div>
-            <label htmlFor="hc-budget" className={labelCls}>Investment range</label>
+            <label htmlFor="hc-budget" className={labelCls}>Project budget (optional)</label>
             <div className="relative">
               <select id="hc-budget" name="budget" value={form.budget} onChange={onChange}
                 className={`${fieldCls} appearance-none cursor-pointer pr-10 ${form.budget ? '' : 'text-brand-muted/70'}`}>
                 <option value="" disabled>Choose a ballpark…</option>
-                {BUDGET_RANGES.map((b) => <option key={b.value} value={b.value} className="text-brand-ink">{b.label}</option>)}
+                {PROJECT_BUDGET_RANGES.map((b) => <option key={b.value} value={b.value} className="text-brand-ink">{b.label}</option>)}
                 <option value={UNSURE} className="text-brand-ink">Not sure yet</option>
               </select>
               <ChevronDown size={15} className="text-brand-gold-dark absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={1.5} />

@@ -65,7 +65,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="theme-color" content="#F3EEE3" />
+        <meta name="theme-color" content="#F7F5F0" />
         <meta name="msvalidate.01" content="F7FE7E3677ED01FC13ECAF1154E928B8" />
         {gscToken ? <meta name="google-site-verification" content={gscToken} /> : null}
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -117,7 +117,7 @@ export default function App() {
   // minimal top bar, and the global navbar/footer/chat would fight the
   // wizard's sticky bars for attention (Layout already hid the mobile dock
   // there — this completes that thought).
-  const bareApp = location.pathname.startsWith('/cost-estimator');
+  const bareApp = location.pathname.startsWith('/cost-estimator') || location.pathname.startsWith('/deck-designer');
 
   return (
     <HelmetProvider>

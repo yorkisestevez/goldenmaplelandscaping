@@ -1,0 +1,22 @@
+{
+  "source": "https://outside-logic-configurator.netlify.app/",
+  "constructionSha256": "2a0cc3d7c9c536aa60abfbce701c009e52cd67710c7ba060826e909c404bea5f",
+  "exports": [
+    "LIMITS",
+    "defaultConfig",
+    "clampConfig",
+    "validateConfig",
+    "deckBoundingBox",
+    "toLegacyCfg",
+    "toStairCfg",
+    "computeStruct",
+    "computeDeckModsImpact",
+    "computeLShape",
+    "computeWrapAround",
+    "computeSplitLevel",
+    "computeStructure",
+    "computeStairs"
+  ],
+  "priceSource": "Existing Deck Craft Pro calculations.ts, defaults.ts and types.ts. No reference pricing imported.",
+  "note": "Ported source rules are design assumptions, not an engineering certification."
+}

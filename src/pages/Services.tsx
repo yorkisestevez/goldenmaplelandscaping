@@ -28,7 +28,7 @@ const SERVICE_CARDS = [
     title: 'Landscape Design',
     desc: 'Walk through your future backyard in vivid 3D. See it, refine it, love it — before we move a single stone.',
     icon: Map,
-    img: '/images/projects/rendering1.jpg',
+    img: '/images/projects/Golden Maple deck and walkway.jpg',
     link: '/services/landscape-design-barrie'
   },
   {
@@ -52,7 +52,7 @@ const SERVICE_CARDS = [
     title: 'Fire Features',
     desc: 'The gathering spot that turns a cool evening into the best part of your week. Your family\'s new favourite place.',
     icon: Flame,
-    img: '/images/projects/cousy fire feature.jpeg',
+    img: '/images/projects/Timbertech Dark Roast Legacy Collection Composite Decking Beauty 1 21.jpg',
     link: '/contact'
   },
   {

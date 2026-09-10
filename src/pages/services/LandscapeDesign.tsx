@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import Testimonials from '../../components/Testimonials';
+import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
 
 const FAQ = [
@@ -84,11 +85,11 @@ export default function LandscapeDesign() {
                   </span>
                 </div>
                 <a
-                  href="tel:7055003581"
+                  href={`tel:${publicContact.phoneTel}`}
                   onClick={() => trackCall('design_lander_phone')}
                   className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-gold transition-colors"
                 >
-                  <Phone size={14} strokeWidth={1.5} /> Call (705) 500-3581
+                  <Phone size={14} strokeWidth={1.5} /> Call {publicContact.phoneDisplay}
                 </a>
               </div>
             </motion.div>
@@ -101,8 +102,8 @@ export default function LandscapeDesign() {
               className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
             >
               <img
-                src="/images/projects/rendering1.jpg"
-                alt="Landscape Design Rendering Barrie"
+                src="/images/projects/Golden Maple deck and walkway.jpg"
+                alt="Aerial photograph of a backyard deck and walkway layout"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
@@ -200,11 +201,11 @@ export default function LandscapeDesign() {
               Get My Free Estimate
             </Link>
             <a
-              href="tel:7055003581"
+              href={`tel:${publicContact.phoneTel}`}
               onClick={() => trackCall('design_lander_final_phone')}
               className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors"
             >
-              Or call (705) 500-3581
+              Or call {publicContact.phoneDisplay}
             </a>
           </div>
         </div>

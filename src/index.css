@@ -2,48 +2,31 @@
 @import "tailwindcss";
 
 @theme {
-  /* Warm gold — primary accent. Fills/borders/icons only; use gold-dark for text on light bg. */
-  --color-brand-gold: #D4AF63;
-  --color-brand-gold-light: #E5CA8A;
-  --color-brand-gold-dark: #7A5C17;
-  /* Deep green-black — the ONE kept-dark token, reserved for a handful of
-     premium "punctuation" sections (Header, Hero, Manifesto, Process, FinalCTA,
-     CTA bands). Not the page default anymore — see brand-nearblack below. */
-  --color-brand-burgundy: #12241C;
-  /* Forest green — secondary accent, fills/icons only; use green-dark for text on light bg. */
-  --color-brand-green: #5BA877;
-  --color-brand-green-light: #79C194;
-  --color-brand-green-dark: #2A5F3F;
-  /* LIGHT base — re-themed 2026-08-26 (previously dark, flipped 2026-06-22).
-     Warm parchment/cream, gold + forest green accents, dark punctuation
-     sections reserved for brand-burgundy. Token NAMES kept stable across the
-     flip so the ~80 files using them didn't need touching — only values changed. */
-  --color-brand-nearblack: #F3EEE3;   /* primary page background (warm parchment) */
-  --color-brand-black: #0F1813;        /* unchanged — dedicated dark-ink-on-bright-fill token (buttons/badges), NOT a bg */
-  --color-brand-surface: #FFFFFF;      /* cards / raised surfaces */
-  --color-brand-midsurface: #FDF6E9;   /* soft elevated panels (chips/badges on a white card) */
-  --color-brand-bonewhite: #1B2620;    /* primary text (dark ink) */
-  --color-brand-muted: #4E6156;        /* secondary text (dark sage) */
-  --color-brand-dim: #DCD3BF;          /* borders / hairlines (light warm taupe) */
-  /* tonal helpers for section rhythm + glass cards — now genuinely cream/ink,
-     fixing the previous mismatch where these names meant dark values. */
-  --color-brand-cream: #EDE3D0;
-  --color-brand-cream-light: #FBF7EF;
-  --color-brand-ink: #1B2620;          /* dark text on light inputs/photos */
-  --color-brand-ink-soft: #4E6156;
-  /* Alias. `text-brand-bone` is used ~34 times across the estimator — see
-     brand-bonewhite above for why this token exists at all. */
-  --color-brand-bone: #1B2620;
-
-  /* Light text for the kept-dark burgundy sections (bonewhite/muted are now
-     dark ink, so dark sections need their own light-text pair). */
-  --color-brand-porcelain: #F4EFE6;
-  --color-brand-porcelain-soft: #B9C4B6;
-
-  /* Brand-token error/success — replaces raw Tailwind red-400/emerald-400 sitewide. */
+  /* Ivory, charcoal and bronze. Existing token names remain compatible with
+     every route; green-named tokens are warm neutrals in this visual system. */
+  --color-brand-gold: #C6A47D;
+  --color-brand-gold-light: #DEC5A8;
+  --color-brand-gold-dark: #78563E;
+  --color-brand-burgundy: #272522;
+  --color-brand-green: #BBAA93;
+  --color-brand-green-light: #D8C5AD;
+  --color-brand-green-dark: #69513E;
+  --color-brand-nearblack: #F7F5F0;
+  --color-brand-black: #23221F;
+  --color-brand-surface: #FFFFFF;
+  --color-brand-midsurface: #EFEAE2;
+  --color-brand-bonewhite: #292824;
+  --color-brand-muted: #68645C;
+  --color-brand-dim: #D8D2C8;
+  --color-brand-cream: #EAE4DA;
+  --color-brand-cream-light: #FAF8F4;
+  --color-brand-ink: #292824;
+  --color-brand-ink-soft: #68645C;
+  --color-brand-bone: #292824;
+  --color-brand-porcelain: #F7F5F0;
+  --color-brand-porcelain-soft: #C9C3B9;
   --color-brand-error: #B3261E;
   --color-brand-success: #2F6B47;
-
   --font-display: "Cormorant Garamond", serif;
   --font-sans: "Inter", sans-serif;
 }
@@ -101,7 +84,7 @@ html, body {
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center bg-brand-gold text-brand-black font-sans text-[10px] md:text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-gold-light cursor-pointer;
+    @apply inline-flex items-center justify-center bg-brand-black text-brand-porcelain font-sans text-[11px] font-medium uppercase tracking-[0.18em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-gold-dark cursor-pointer;
   }
   .btn-secondary {
     @apply inline-flex items-center justify-center bg-transparent text-brand-gold border border-brand-gold font-sans text-[10px] md:text-[11px] font-normal uppercase tracking-[0.25em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-gold/5 cursor-pointer;
@@ -182,9 +165,9 @@ html, body {
 
 /* "Live" pulse — used by the chat assistant's online indicator + FAB */
 @keyframes gm-live-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(95, 174, 126, 0.55); }
-  70%  { box-shadow: 0 0 0 10px rgba(95, 174, 126, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(95, 174, 126, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(166, 135, 101, 0.55); }
+  70%  { box-shadow: 0 0 0 10px rgba(166, 135, 101, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(166, 135, 101, 0); }
 }
 .gm-live-dot {
   animation: gm-live-pulse 2.2s ease-out infinite;
@@ -214,3 +197,35 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .gm-blob, .gm-float { animation: none; }
 }
+
+/* The opening is editorial: readable type on ivory, unobscured photography. */
+.home-hero { padding: 7.5rem 0 3.5rem; }
+.home-hero-grid { display: grid; gap: 3rem; align-items: center; }
+.home-hero h1 { font-size: 3.375rem; line-height: 0.98; letter-spacing: -0.045em; }
+.home-hero-photo { width: 100%; height: 390px; object-fit: cover; object-position: 50% 65%; }
+.home-hero-caption { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--color-brand-dim); color: var(--color-brand-muted); font-size: .6875rem; letter-spacing: .12em; text-transform: uppercase; }
+.home-project-link { display: inline-flex; align-items: center; gap: .75rem; font-size: .6875rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 500; padding: .75rem 0; border-bottom: 1px solid var(--color-brand-ink); }
+.home-project-link:hover { color: var(--color-brand-gold-dark); }
+.home-services { padding: 4.5rem 0 5rem; }
+.home-services-heading { font-size: 2.75rem; line-height: 1.05; letter-spacing: -.025em; }
+.home-service-photo { aspect-ratio: 4 / 3; width: 100%; object-fit: cover; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--color-brand-gold-dark); outline-offset: 5px; }
+@media (min-width: 768px) {
+  .home-hero { padding-top: 10rem; }
+  .home-hero h1 { font-size: 5.5rem; }
+  .home-hero-photo { height: 530px; }
+  .home-services-heading { font-size: 3.75rem; }
+}
+@media (min-width: 1024px) {
+  .home-hero-grid { grid-template-columns: 0.9fr 1.1fr; gap: 4rem; }
+  .home-hero h1 { font-size: 4.75rem; }
+  .home-hero-photo { height: 570px; }
+  .home-services { padding: 4.5rem 0 7rem; }
+}
+@media (min-width: 1440px) {
+  .home-hero-grid { gap: 5rem; }
+  .home-hero h1 { font-size: 5.75rem; }
+  .home-hero-photo { height: 620px; }
+}
+
+@media (max-width: 639px) { .home-hero .home-project-link { display: none; } }

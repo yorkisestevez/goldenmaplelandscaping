@@ -1,62 +1,32 @@
 /**
- * Which estimator choice gets which image — the single source of truth.
- *
- * Policy (locked 2026-08-13): real Golden Maple job photos + manufacturer
- * dealer assets ONLY. No AI imagery here — this is the site's highest-trust
- * page, and the ops watchdog tracks "0 AI on customer pages" as a standing
- * metric. A type with no honest photo keeps its icon; that absence is a
- * signal to go shoot the next stone / fire pit / lighting job, not to fake it.
- *
- * Files are produced by scripts/build-estimator-images.mjs. The -v1 suffix is
- * cache-busting against netlify.toml's 1-year immutable /images/* header —
- * NEVER overwrite a versioned file in place; regenerate as -v2 and update here.
+ * Project choices use generated service concepts at the owner's request.
+ * Each picture isolates its service; these are not completed-job photographs.
+ * Manufacturer-specific material choices retain their actual product images.
+ * Keep versioned assets immutable and increment the filename for replacements.
  */
 
-/** Card thumbs for project types (step 1 + full-backyard checklist). */
 export const PROJECT_TYPE_IMAGES: Record<string, { src: string; alt: string }> = {
-  patio: {
-    src: '/images/estimator/patio-card-v1.webp',
-    alt: 'Paver patio with cedar gazebo — Golden Maple project in Barrie',
-  },
-  wall: {
-    src: '/images/estimator/wall-card-v1.webp',
-    alt: 'Curved charcoal block garden wall — Golden Maple project in Midhurst',
-  },
-  steps: {
-    src: '/images/estimator/steps-card-v1.webp',
-    alt: 'Precast steps and slab walkway with dark border — Golden Maple project',
-  },
-  turf: {
-    src: '/images/estimator/turf-card-v1.webp',
-    alt: 'Artificial turf inlay framed in pavers — Golden Maple project in Orillia',
-  },
-  pergola: {
-    src: '/images/estimator/pergola-card-v1.webp',
-    alt: 'Shade pergola over a paver patio — Golden Maple project',
-  },
-  full: {
-    src: '/images/estimator/full-card-v1.webp',
-    alt: 'Aerial view of a completed Golden Maple backyard transformation',
-  },
-  deck: {
-    src: '/images/estimator/deck-card-v1.webp',
-    alt: 'TimberTech AZEK composite decking',
-  },
-  kitchen: {
-    src: '/images/estimator/kitchen-card-v1.webp',
-    alt: 'Outdoor kitchen with pergola on large-format pavers',
-  },
-  // stone, firepit, lighting: intentionally absent — icon renders instead.
+  patio: { src: '/images/estimator/patio-concept-v2.webp', alt: 'Interlocking paver patio — illustrative concept' },
+  stone: { src: '/images/estimator/stone-concept-v1.webp', alt: 'Natural flagstone paving — illustrative concept' },
+  wall: { src: '/images/estimator/wall-concept-v1.webp', alt: 'Block retaining wall supporting a raised garden — illustrative concept' },
+  steps: { src: '/images/estimator/steps-concept-v2.webp', alt: 'Stone steps and connecting walkway — illustrative concept' },
+  deck: { src: '/images/estimator/deck-concept-v1.webp', alt: 'Composite deck surface and fascia — illustrative concept' },
+  kitchen: { src: '/images/estimator/kitchen-concept-v1.webp', alt: 'Built-in outdoor grill and kitchen counter — illustrative concept' },
+  firepit: { src: '/images/estimator/firepit-concept-v2.webp', alt: 'Circular stone fire pit — illustrative concept' },
+  pergola: { src: '/images/estimator/pergola-concept-v1.webp', alt: 'Freestanding cedar pergola — illustrative concept' },
+  turf: { src: '/images/estimator/turf-concept-v1.webp', alt: 'Artificial turf with a neatly finished edge — illustrative concept' },
+  lighting: { src: '/images/estimator/lighting-concept-v1.webp', alt: 'Landscape path lights illuminating a garden at dusk — illustrative concept' },
+  full: { src: '/images/estimator/full-concept-v1.webp', alt: 'Complete backyard with patio, deck, pergola and planting — illustrative concept' },
 };
 
-/** Deck brand card thumbs (step 5 + workbench brand picker). */
+/** Deck brand card photographs (step 5 + workbench brand picker). */
 export const DECK_BRAND_IMAGES: Record<string, { src: string; alt: string }> = {
   'timbertech-prime': {
-    src: '/images/estimator/brand-timbertech-prime-card-v1.webp',
+    src: '/images/estimator/brand-timbertech-prime-card-v2.webp',
     alt: 'TimberTech AZEK Prime+ decking, Dark Cocoa',
   },
   'timbertech-vintage': {
-    src: '/images/estimator/brand-timbertech-vintage-card-v1.webp',
+    src: '/images/estimator/brand-timbertech-vintage-card-v2.webp',
     alt: 'TimberTech AZEK Vintage decking, English Walnut',
   },
 };

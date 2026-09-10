@@ -24,3 +24,7 @@ scripts/blog-publisher/*.bak-gemini-*
 !docs/**/*.pdf
 !guides/**/*.pdf
 /.hermes/
+
+# CodeGraph / editor tool caches (per-machine, do not ship)
+.codegraph/
+.cursor/

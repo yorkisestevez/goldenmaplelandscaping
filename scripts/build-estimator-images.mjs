@@ -1,12 +1,12 @@
 /**
  * One-off builder for the cost estimator's images. Run manually:
  *
- *   node scripts/build-estimator-images.mjs
+ *   node scripts/build-estimator-images.mjs --cards-only
  *
  * Reads full-res masters (git-tracked source folders + public/images/projects)
  * and emits COMMITTED, VERSIONED outputs:
  *
- *   public/images/estimator/<slug>-card-v1.webp   — 320px-wide card thumbs
+ *   public/images/estimator/<slug>-card-v2.webp   — 960px-wide photo cards
  *   public/images/og/cost-estimator-v1.jpg        — 1200×630 social share card
  *
  * Why committed files instead of a runtime image CDN: identical behaviour in
@@ -34,10 +34,10 @@ const SRC_PROJECTS = join(ROOT, 'public/images/projects');
 const OUT_CARDS = join(ROOT, 'public/images/estimator');
 const OUT_OG = join(ROOT, 'public/images/og');
 
-const VERSION = 'v1';
-const CARD_WIDTH = 320;      // 2× the ~160px render slot
-const CARD_HEIGHT = 240;     // 4:3 crop — consistent slot, no CLS
-const CARD_QUALITY = 72;
+const VERSION = 'v2';
+const CARD_WIDTH = 960;      // sharp photo cards on desktop and high-density phones
+const CARD_HEIGHT = 720;     // 4:3 crop — consistent slot, no CLS
+const CARD_QUALITY = 80;
 
 /** slug → master file. Slugs match estimator project-type ids. */
 const CARDS = [
@@ -77,10 +77,11 @@ for (const [slug, src] of CARDS) {
     .webp({ quality: CARD_QUALITY })
     .toFile(out);
   const size = kb(out);
-  console.log(`  ${size > 35 ? 'WARN >35KB' : 'ok'}  ${slug}-card-${VERSION}.webp  ${size} KB`);
-  if (size > 60) failures++; // hard ceiling — something went wrong
+  console.log(`  ${size > 160 ? 'WARN >160KB' : 'ok'}  ${slug}-card-${VERSION}.webp  ${size} KB`);
+  if (size > 250) failures++; // hard ceiling — something went wrong
 }
 
+if (!process.argv.includes('--cards-only')) {
 // ── OG share card: 1200×630, real photo + dark gradient + text ─────────────
 const OG_W = 1200, OG_H = 630;
 const ogText = Buffer.from(`
@@ -110,6 +111,8 @@ await sharp(join(SRC_PROJECTS, 'patio-pergola.jpg'))
   .jpeg({ quality: 78, mozjpeg: true })
   .toFile(ogOut);
 console.log(`  ${kb(ogOut) > 200 ? 'WARN >200KB' : 'ok'}  og/cost-estimator-${VERSION}.jpg  ${kb(ogOut)} KB`);
+
+}
 
 console.log(failures === 0 ? 'DONE — commit the outputs.' : `${failures} FAILURE(S)`);
 process.exit(failures === 0 ? 0 : 1);

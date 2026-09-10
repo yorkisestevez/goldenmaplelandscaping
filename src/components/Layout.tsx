@@ -89,8 +89,8 @@ const Navbar = () => {
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
           isScrolled || isMobileMenuOpen
-            ? 'bg-brand-burgundy/95 backdrop-blur-md border-b border-brand-gold/15 py-3'
-            : 'bg-brand-burgundy/70 backdrop-blur-md border-b border-brand-gold/10 py-6'
+            ? 'bg-brand-nearblack/95 backdrop-blur-md border-b border-brand-dim/70 py-3'
+            : 'bg-brand-nearblack/95 backdrop-blur-md border-b border-brand-dim/70 py-5'
         )}
       >
         <div className="container-custom flex items-center justify-between">
@@ -106,10 +106,10 @@ const Navbar = () => {
               className="h-9 md:h-11 w-auto"
             />
             <span className="flex flex-col">
-              <span className="font-display text-xl md:text-3xl leading-none tracking-tight text-brand-porcelain group-hover:text-brand-gold transition-colors duration-500">
+              <span className="font-display text-xl md:text-3xl leading-none tracking-tight text-brand-bonewhite group-hover:text-brand-gold-dark transition-colors duration-500">
                 GOLDEN MAPLE
               </span>
-              <span className="font-sans text-[10px] md:text-[12px] uppercase tracking-[0.45em] font-light text-brand-gold mt-1.5">
+              <span className="font-sans text-[10px] md:text-[12px] uppercase tracking-[0.45em] font-light text-brand-gold-dark mt-1.5">
                 Landscaping
               </span>
             </span>
@@ -129,8 +129,8 @@ const Navbar = () => {
                   <Link
                     to={link.href}
                     className={cn(
-                      "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold font-medium whitespace-nowrap flex items-center gap-1",
-                      location.pathname.startsWith('/services') ? "text-brand-gold" : "text-brand-porcelain"
+                      "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
+                      location.pathname.startsWith('/services') ? "text-brand-gold-dark" : "text-brand-bonewhite"
                     )}
                   >
                     {link.label}
@@ -207,8 +207,8 @@ const Navbar = () => {
                   <Link 
                     to={link.href} 
                     className={cn(
-                      "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold font-medium whitespace-nowrap flex items-center gap-1",
-                      location.pathname.startsWith('/resources') || location.pathname === '/buyers-guide' || location.pathname === '/cost-estimator' ? "text-brand-gold" : "text-brand-porcelain"
+                      "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
+                      location.pathname.startsWith('/resources') || location.pathname === '/buyers-guide' || location.pathname === '/cost-estimator' ? "text-brand-gold-dark" : "text-brand-bonewhite"
                     )}
                   >
                     {link.label}
@@ -251,8 +251,8 @@ const Navbar = () => {
                   key={link.href} 
                   to={link.href} 
                   className={cn(
-                    "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold font-medium whitespace-nowrap",
-                    location.pathname === link.href ? "text-brand-gold" : "text-brand-porcelain"
+                    "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap",
+                    location.pathname === link.href ? "text-brand-gold-dark" : "text-brand-bonewhite"
                   )}
                 >
                   {link.label}
@@ -266,14 +266,14 @@ const Navbar = () => {
             <Link 
               to="/contact" 
               className={cn(
-                "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold font-medium",
-                location.pathname === "/contact" ? "text-brand-gold" : "text-brand-porcelain"
+                "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium",
+                location.pathname === "/contact" ? "text-brand-gold-dark" : "text-brand-bonewhite"
               )}
             >
               Contact
             </Link>
             
-            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('phone_call')} className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold text-brand-gold bg-brand-gold/5 hover:bg-brand-gold hover:text-brand-black hover:shadow-[0_0_16px_rgba(212,175,99,0.25)] transition-all group" aria-label="Call Us">
+            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('phone_call')} className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold text-brand-gold-dark bg-brand-gold/5 hover:bg-brand-gold hover:text-brand-black hover:shadow-[0_0_16px_rgba(212,175,99,0.25)] transition-all group" aria-label="Call Us">
               <Phone size={16} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
             </a>
 
@@ -284,21 +284,23 @@ const Navbar = () => {
 
           {/* Mobile Toggle */}
           <button
+            aria-label={isMobileMenuOpen ? "Close navigation" : "Open navigation"}
+            aria-expanded={isMobileMenuOpen}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="xl:hidden relative z-50 w-10 h-10 flex items-center justify-center text-brand-gold"
+            className="xl:hidden relative z-50 w-10 h-10 flex items-center justify-center text-brand-gold-dark"
           >
             <div className="relative w-6 h-5">
               <motion.span 
                 animate={isMobileMenuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-                className="absolute top-0 left-0 w-full h-0.5 bg-brand-gold block rounded-full"
+                className="absolute top-0 left-0 w-full h-0.5 bg-brand-ink block rounded-full"
               />
               <motion.span 
                 animate={isMobileMenuOpen ? { opacity: 0 } : { opacity: 1 }}
-                className="absolute top-2.5 left-0 w-full h-0.5 bg-brand-gold block rounded-full"
+                className="absolute top-2.5 left-0 w-full h-0.5 bg-brand-ink block rounded-full"
               />
               <motion.span 
                 animate={isMobileMenuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-                className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-gold block rounded-full"
+                className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-ink block rounded-full"
               />
             </div>
           </button>

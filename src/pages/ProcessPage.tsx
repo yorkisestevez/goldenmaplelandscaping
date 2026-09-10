@@ -18,7 +18,7 @@ const PROCESS_STEPS = [
     desc: 'Precision laser measurements, soil evaluation, and drainage analysis to ensure structural integrity.',
     icon: Ruler,
     link: '/process/site-assessment',
-    img: '/images/projects/rendering1.jpg'
+    img: '/images/projects/Golden Maple deck and walkway.jpg'
   },
   {
     id: '3d-design',
@@ -26,7 +26,7 @@ const PROCESS_STEPS = [
     desc: 'Breathe life into your vision with high-resolution 3D renderings and architectural plans.',
     icon: Heart,
     link: '/process/3d-design',
-    img: '/images/projects/rendering1.jpg'
+    img: '/images/projects/Golden Maple deck and walkway.jpg'
   },
   {
     id: 'material-selection',

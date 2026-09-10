@@ -274,7 +274,7 @@ excerpt: 'A guide to comparing paver brands, product documentation, and project-
     excerpt: 'Before you build a fire feature, you need to know the rules. Here\'s a plain-English breakdown of Barrie\'s fire pit bylaws and how to stay compliant.',
     category: 'Regulations',
     readTime: '6 min',
-    image: '/images/projects/cousy fire feature.jpeg',
+    image: '/images/projects/barrie-firepit-patio.jpg',
   },
   {
     slug: 'best-time-install-patio-ontario',

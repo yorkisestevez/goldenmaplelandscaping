@@ -45,7 +45,7 @@ export default function SiteAssessment() {
               className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
             >
               <img
-                src="/images/projects/rendering1.jpg"
+                src="/images/projects/Golden Maple deck and walkway.jpg"
                 alt="Landscape Engineering Analysis Barrie"
                 className="w-full h-full object-cover grayscale opacity-80"
                 referrerPolicy="no-referrer"

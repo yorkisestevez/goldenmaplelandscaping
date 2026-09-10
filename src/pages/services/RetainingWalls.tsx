@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import Testimonials from '../../components/Testimonials';
+import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
 
 const FAQ = [
@@ -75,11 +76,11 @@ export default function RetainingWalls() {
                   Get My Free Estimate
                 </Link>
                 <a
-                  href="tel:7055003581"
+                  href={`tel:${publicContact.phoneTel}`}
                   onClick={() => trackCall('wall_lander_phone')}
                   className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-gold transition-colors"
                 >
-                  <Phone size={14} strokeWidth={1.5} /> Call (705) 500-3581
+                  <Phone size={14} strokeWidth={1.5} /> Call {publicContact.phoneDisplay}
                 </a>
               </div>
             </motion.div>
@@ -192,11 +193,11 @@ export default function RetainingWalls() {
               Get My Free Estimate
             </Link>
             <a
-              href="tel:7055003581"
+              href={`tel:${publicContact.phoneTel}`}
               onClick={() => trackCall('wall_lander_final_phone')}
               className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors"
             >
-              Or call (705) 500-3581
+              Or call {publicContact.phoneDisplay}
             </a>
           </div>
         </div>

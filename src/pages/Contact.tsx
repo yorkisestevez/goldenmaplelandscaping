@@ -1,3 +1,4 @@
+import { PROJECT_BUDGET_RANGES } from '../data/projectBudgets';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -221,20 +222,17 @@ export default function Contact() {
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <label className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal">Investment range (optional)</label>
+                      <label htmlFor="contact-budget" className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal">Project budget (optional)</label>
                       <div className="relative">
                       <select
+                        id="contact-budget"
                         name="budget"
                         value={form.budget}
                         onChange={onChange}
                         className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors appearance-none cursor-pointer font-light"
                       >
                         <option value="" disabled>Choose a ballpark…</option>
-                        <option value="under-25k">Under $25k</option>
-                        <option value="25k-50k">$25k – $50k</option>
-                        <option value="50k-100k">$50k – $100k</option>
-                        <option value="100k-250k">$100k – $250k</option>
-                        <option value="250k+">$250k+</option>
+                        {PROJECT_BUDGET_RANGES.map((range) => <option key={range.value} value={range.value}>{range.label}</option>)}
                         <option value="unsure">Not sure yet</option>
                       </select>
                       <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-gold-dark pointer-events-none" />

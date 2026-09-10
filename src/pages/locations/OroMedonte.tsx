@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
+import { publicContact } from '../../data/business';
 import { trackEngagement, trackCall } from '../../utils/analytics';
 
 const COMMUNITIES = [
@@ -74,8 +75,8 @@ const localBusinessSchema = {
   "name": "Golden Maple Landscaping",
   "description": "Premium landscaping and hardscape contractor serving Oro-Medonte, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design for estate properties.",
   "url": "https://goldenmaplelandscaping.ca/locations/oro-medonte",
-  "telephone": "+17055003581",
-  "email": "yorkis@goldenmaplelandscaping.ca",
+  "telephone": publicContact.phoneTel,
+  "email": publicContact.email,
   "address": {
     "@type": "PostalAddress",
     "addressLocality": "Barrie",
@@ -150,11 +151,11 @@ export default function OroMedonteLanding() {
                 Request Your Free Oro-Medonte Quote
               </Link>
               <a
-                href="tel:7055003581"
+                href={`tel:${publicContact.phoneTel}`}
                 onClick={() => trackCall('oromedonte_hero_phone')}
                 className="flex items-center gap-3 font-sans text-base text-brand-gold-dark hover:text-brand-bonewhite transition-colors"
               >
-                <Phone size={18} /> Call 705-500-3581
+                <Phone size={18} /> Call {publicContact.phoneDisplay}
               </a>
             </div>
           </motion.div>
@@ -314,12 +315,12 @@ export default function OroMedonteLanding() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
               <Link to="/contact" className="btn-primary py-4 px-10">Request a Quote</Link>
-              <a href="tel:7055003581" onClick={() => trackCall('oromedonte_phone')} className="flex items-center gap-3 font-sans text-sm text-brand-gold-dark hover:text-brand-bonewhite transition-colors">
-                <Phone size={16} /> 705-500-3581
+              <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('oromedonte_phone')} className="flex items-center gap-3 font-sans text-sm text-brand-gold-dark hover:text-brand-bonewhite transition-colors">
+                <Phone size={16} /> {publicContact.phoneDisplay}
               </a>
             </div>
-            <a href="mailto:yorkis@goldenmaplelandscaping.ca" className="flex items-center justify-center gap-3 font-sans text-sm text-brand-muted hover:text-brand-gold-dark transition-colors">
-              <Mail size={16} /> yorkis@goldenmaplelandscaping.ca
+            <a href={`mailto:${publicContact.email}`} className="flex items-center justify-center gap-3 font-sans text-sm text-brand-muted hover:text-brand-gold-dark transition-colors">
+              <Mail size={16} /> {publicContact.email}
             </a>
           </div>
         </div>

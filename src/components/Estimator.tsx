@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, type ChangeEvent, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { trackEngagement } from '../utils/analytics';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -16,7 +16,6 @@ import BudgetTarget from './BudgetTarget';
 import BudgetGapCoach from './BudgetGapCoach';
 import { buildPermalink, decodeBuild } from '../utils/buildPermalink';
 import { PROJECT_TYPE_IMAGES, DECK_BRAND_IMAGES, PAVER_SWATCHES } from '../data/estimatorImages';
-import type { LucideIcon } from 'lucide-react';
 import { PAVER_BRANDS, DECK_BRANDS, ADD_ONS, defaultPaverForTier, sortPaversForDisplay, type PaverTier } from '../data/carrPrices';
 import { ESTIMATOR_LOCATIONS, type EstimatorLocationKey } from '../data/locations';
 import { getEstimatorRangeCopy } from '../utils/pricingDoctrine';
@@ -142,32 +141,18 @@ const STEP_NAMES: Record<number, string> = {
 const fmt = (n: number) =>
   n >= 10000 ? `$${(n / 1000).toFixed(0)}k` : `$${n.toLocaleString()}`;
 
-/** Photo thumb where an honest photo exists (real GM work or dealer asset);
- *  the lucide icon in an identically-sized slot otherwise — so mixed cards
- *  still line up. Module-level so React keeps the element identity across
- *  renders (an inline component would remount the <img> on every keystroke).
- *  Explicit width/height on the img prevents CLS. */
-function TypeThumb({ typeId, icon: Icon, size = 'md', eager = false }: {
-  typeId: string; icon: LucideIcon; size?: 'sm' | 'md'; eager?: boolean;
-}) {
+/** Large, service-specific concept photograph for every project choice. */
+function TypeThumb({ typeId, eager = false }: { typeId: string; eager?: boolean }) {
   const img = PROJECT_TYPE_IMAGES[typeId];
-  const slot = size === 'sm' ? 'w-12 h-9' : 'w-16 h-12';
-  if (!img) {
-    return (
-      <div className={cn(slot, 'rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold-dark shrink-0')}>
-        <Icon size={size === 'sm' ? 18 : 22} strokeWidth={1.5} />
-      </div>
-    );
-  }
   return (
     <img
       src={img.src}
       alt={img.alt}
-      width={320}
-      height={240}
+      width={960}
+      height={720}
       loading={eager ? 'eager' : 'lazy'}
       decoding="async"
-      className={cn(slot, 'rounded-xl object-cover border border-brand-dim shrink-0')}
+      className="w-full aspect-[4/3] object-cover shrink-0"
     />
   );
 }
@@ -230,6 +215,7 @@ const DETAIL_DIAGRAMS: Record<string, ReactNode> = {
 const VALID_PROJECT_TYPES = new Set(['patio', 'stone', 'wall', 'steps', 'deck', 'kitchen', 'firepit', 'pergola', 'turf', 'lighting', 'full']);
 
 export default function Estimator() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   /** Furthest step reached this session — what makes the dots navigable.
@@ -753,6 +739,7 @@ export default function Estimator() {
   };
 
   const nextStep = () => {
+    if (step === 1 && projectType === 'deck') { navigate('/deck-designer'); return; }
     if (canAdvance() && step < TOTAL_STEPS) {
       const next = step + 1;
       fireStep(next);
@@ -829,9 +816,9 @@ export default function Estimator() {
                     <img
                       src={PAVER_SWATCHES[p.id].src}
                       alt={PAVER_SWATCHES[p.id].alt}
-                      width={320} height={240}
+                      width={960} height={720}
                       loading="lazy" decoding="async"
-                      className="w-full h-20 rounded-xl object-cover border border-brand-dim mb-3 mt-1"
+                      className="w-full h-40 rounded-xl object-cover border border-brand-dim mb-3 mt-1"
                     />
                   ) : null}
                   <div className="flex items-baseline justify-between gap-2 mb-1 mt-1">
@@ -870,7 +857,7 @@ export default function Estimator() {
                       alt={DECK_BRAND_IMAGES[d.id].alt}
                       width={320} height={240}
                       loading="lazy" decoding="async"
-                      className={cn('w-full rounded-xl object-cover border border-brand-dim mb-3', compact ? 'h-16' : 'h-24')}
+                      className={cn('w-full rounded-xl object-cover border border-brand-dim mb-3', compact ? 'h-36' : 'h-48')}
                     />
                   ) : null}
                   <div className="flex items-baseline justify-between gap-2 mb-1">
@@ -1079,31 +1066,30 @@ export default function Estimator() {
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-              <h3 className="font-display text-3xl text-brand-bone mb-8">What are you looking to build?</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 md:gap-4">
+              <h3 className="font-display text-3xl text-brand-bone mb-3">What are you looking to build?</h3>
+              <p className="text-sm text-brand-muted mb-8">Choose your project below. Images illustrate each project type.</p>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
                 {PROJECT_TYPES.map((pt, idx) => {
-                  const Icon = pt.icon;
                   const isSelected = projectType === pt.id;
                   return (
-                    <div
+                    <button
                       key={pt.id}
-                      onClick={() => {
-                        setProjectType(pt.id);
-                        if (pt.id !== 'full') setSelectedElements([]);
-                      }}
+                      type="button"
+                      aria-label={pt.label}
+                      aria-pressed={isSelected}
+                      onClick={() => { setProjectType(pt.id); if (pt.id !== 'full') setSelectedElements([]); }}
                       className={cn(
-                        "group flex flex-col items-start gap-2.5 p-4 md:flex-row md:items-center md:gap-4 md:p-6 rounded-2xl border transition-all duration-200 cursor-pointer",
-                        isSelected ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface hover:-translate-y-[2px] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)]"
+                        'group relative flex flex-col min-w-0 overflow-hidden rounded-2xl border text-left transition-all duration-200 cursor-pointer',
+                        isSelected ? 'bg-brand-gold/10 border-brand-gold-dark ring-1 ring-brand-gold-dark' : 'bg-brand-surface border-brand-dim hover:border-brand-gold-dark hover:shadow-md'
                       )}
                     >
-                      {/* Real project photo where one exists; first row eager
-                          (above the fold), the rest lazy. */}
-                      <TypeThumb typeId={pt.id} icon={Icon} eager={idx < 4} />
-                      <div>
-                        <div className="font-sans text-[11px] md:text-[13px] uppercase text-brand-bone tracking-wide mb-1">{pt.label}</div>
-                        <div className="font-sans text-[10px] md:text-[12px] font-normal text-brand-bonewhite/80">{pt.desc}</div>
-                      </div>
-                    </div>
+                      <TypeThumb typeId={pt.id} eager={idx < 3} />
+                      {isSelected && <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-brand-ink text-brand-porcelain flex items-center justify-center shadow-sm"><Check size={16} aria-hidden="true" /></span>}
+                      <span className="block p-3 md:p-4">
+                        <span className="block font-sans text-[12px] md:text-[14px] text-brand-ink font-medium mb-1.5 leading-snug">{pt.label}</span>
+                        <span className="block font-sans text-[11px] md:text-[12px] text-brand-muted leading-relaxed">{pt.desc}</span>
+                      </span>
+                    </button>
                   );
                 })}
               </div>
@@ -1136,25 +1122,27 @@ export default function Estimator() {
               {projectType === 'full' ? (
                 <div className="space-y-8">
                   <p className="font-sans text-[13px] text-brand-muted mb-6">Select all the elements you want to include in your backyard transformation:</p>
-                  <div className="grid grid-cols-2 gap-2.5 md:gap-4 mb-8">
+                  <div className="grid grid-cols-2 gap-3 md:gap-4 mb-8">
                     {PROJECT_TYPES.filter(pt => pt.id !== 'full').map(pt => (
-                      <div
+                      <button
+                        type="button"
                         key={pt.id}
+                        aria-label={pt.label}
+                        aria-pressed={selectedElements.includes(pt.id)}
                         onClick={() => toggleElement(pt.id)}
                         className={cn(
-                          "flex items-center gap-3 p-3.5 md:gap-4 md:p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
-                          selectedElements.includes(pt.id) ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
+                          'relative flex flex-col min-w-0 overflow-hidden rounded-2xl border text-left transition-colors cursor-pointer',
+                          selectedElements.includes(pt.id) ? 'bg-brand-gold/10 border-brand-gold-dark ring-1 ring-brand-gold-dark' : 'bg-brand-surface border-brand-dim hover:border-brand-gold-dark'
                         )}
                       >
-                        <div className={cn(
-                          "w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0",
-                          selectedElements.includes(pt.id) ? "bg-brand-gold border-brand-gold" : "border-brand-gold/60"
-                        )}>
-                          {selectedElements.includes(pt.id) && <Check size={14} className="text-brand-black" />}
-                        </div>
-                        <TypeThumb typeId={pt.id} icon={pt.icon} size="sm" />
-                        <span className="font-sans text-[13px] text-brand-bone">{pt.label}</span>
-                      </div>
+                        <TypeThumb typeId={pt.id} />
+                        <span className="flex items-center gap-2 p-3 md:p-4">
+                          <span className={cn('w-5 h-5 rounded-md border flex items-center justify-center shrink-0', selectedElements.includes(pt.id) ? 'bg-brand-ink border-brand-ink' : 'border-brand-muted')}>
+                            {selectedElements.includes(pt.id) && <Check size={14} className="text-brand-porcelain" aria-hidden="true" />}
+                          </span>
+                          <span className="text-[12px] md:text-[13px] text-brand-ink font-medium leading-snug">{pt.label}</span>
+                        </span>
+                      </button>
                     ))}
                   </div>
                   {selectedElements.length > 0 && (
