@@ -5,14 +5,19 @@ import { Grid, Hexagon, AlignJustify, ListTree, Layout, ChefHat, Flame, Sun, Lea
 import SEO from '../components/SEO';
 import PublicationTrustBar from '../components/PublicationTrustBar';
 import Reveal from '../components/Reveal';
+import ResponsiveImage from '../components/ResponsiveImage';
+import { CARD_SIZES, categorySlug, coverForCategory, projectsInCategory, type ProjectCategory } from '../data/projects';
 
-const SERVICE_CARDS = [
+// `category` links a service to the attested portfolio register. A card only shows a
+// photo when a real Golden Maple project exists in that category — never a catalog or
+// AI image. Kitchens, fire features and lighting have no attested photo yet.
+const SERVICE_CARDS: Array<{ id: string; title: string; desc: string; icon: typeof Grid; link: string; category?: ProjectCategory }> = [
   {
     id: 'interlocking',
     title: 'Interlocking Stone & Patios',
     desc: 'The patio where your family gathers, where summer memories happen. We build it on a foundation twice as deep as the industry standard.',
     icon: Grid,
-    img: '/images/projects/IMG_4826.jpg',
+    category: 'Patios & interlocking',
     link: '/services/interlocking-barrie'
   },
   {
@@ -20,7 +25,7 @@ const SERVICE_CARDS = [
     title: 'Retaining Walls',
     desc: 'That slope in your yard isn\'t a problem — it\'s your home\'s best architectural feature waiting to happen.',
     icon: AlignJustify,
-    img: '/images/projects/garden-wall.JPEG',
+    category: 'Walls & steps',
     link: '/services/retaining-walls-barrie'
   },
   {
@@ -28,7 +33,7 @@ const SERVICE_CARDS = [
     title: 'Landscape Design',
     desc: 'Walk through your future backyard in vivid 3D. See it, refine it, love it — before we move a single stone.',
     icon: Map,
-    img: '/images/projects/Golden Maple deck and walkway.jpg',
+    category: 'Lakeside & cottage',
     link: '/services/landscape-design-barrie'
   },
   {
@@ -36,7 +41,7 @@ const SERVICE_CARDS = [
     title: 'Composite Decking',
     desc: 'The look of real hardwood with none of the maintenance. No staining, no rotting — just decades of barefoot summer evenings.',
     icon: Layers,
-    img: '/images/projects/TimberTech Dark Cocoa PrimeCollection Composite Decking Beauty1.jpg',
+    category: 'Decks',
     link: '/services/composite-decking-barrie'
   },
   {
@@ -44,7 +49,6 @@ const SERVICE_CARDS = [
     title: 'Outdoor Kitchens',
     desc: 'Stop running in and out of the house. Cook, serve, and entertain in one seamless outdoor space.',
     icon: ChefHat,
-    img: '/images/projects/luxury outdoor kitchen.jpeg',
     link: '/contact'
   },
   {
@@ -52,7 +56,6 @@ const SERVICE_CARDS = [
     title: 'Fire Features',
     desc: 'The gathering spot that turns a cool evening into the best part of your week. Your family\'s new favourite place.',
     icon: Flame,
-    img: '/images/projects/Timbertech Dark Roast Legacy Collection Composite Decking Beauty 1 21.jpg',
     link: '/contact'
   },
   {
@@ -60,7 +63,6 @@ const SERVICE_CARDS = [
     title: 'Landscape Lighting',
     desc: 'Your outdoor space doesn\'t clock out at sunset. Professional lighting that makes your property feel alive after dark.',
     icon: Lightbulb,
-    img: '/images/projects/IHPX8926.JPEG',
     link: '/contact'
   }
 ];
@@ -91,15 +93,24 @@ export default function Services() {
           </Reveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-40">
-            {SERVICE_CARDS.map((service, idx) => (
+            {SERVICE_CARDS.map((service, idx) => {
+              const cover = service.category ? coverForCategory(service.category) : undefined;
+              const hasProjects = service.category ? projectsInCategory(service.category).length > 0 : false;
+              return (
               <motion.div
                 key={service.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, delay: idx * 0.1 }}
-                className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 hover:border-brand-gold/30 transition-all duration-500 flex flex-col group shadow-2xl"
+                className="bg-brand-surface rounded-[2px] border border-brand-dim/10 hover:border-brand-gold/30 transition-all duration-500 flex flex-col group shadow-2xl overflow-hidden"
               >
+                {cover && (
+                  <Link to={service.link} className="block overflow-hidden border-b border-brand-dim/10" aria-label={`${service.title}: see a completed project`}>
+                    <ResponsiveImage image={cover} sizes={CARD_SIZES} aspect="3/2" className="transition-transform duration-700 motion-safe:group-hover:scale-[1.03]" />
+                  </Link>
+                )}
+                <div className="p-12 flex flex-col flex-1">
                 <div className="w-16 h-16 bg-brand-midsurface flex items-center justify-center rounded-[2px] text-brand-gold mb-10 group-hover:bg-brand-gold group-hover:text-brand-black transition-colors duration-500 border border-brand-dim/10">
                   <service.icon size={28} strokeWidth={1.5} />
                 </div>
@@ -107,15 +118,27 @@ export default function Services() {
                 <p className="font-sans text-[15px] text-brand-muted leading-relaxed mb-10 flex-1 font-light">
                   {service.desc}
                 </p>
-                <Link 
-                  to={service.link} 
-                  className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-[0.2em] group-hover:gap-6 transition-all font-medium"
-                >
-                  <span>Explore Service</span>
-                  <ArrowRight size={16} strokeWidth={1.5} />
-                </Link>
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                  <Link
+                    to={service.link}
+                    className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-[0.2em] group-hover:gap-6 transition-all font-medium"
+                  >
+                    <span>Explore Service</span>
+                    <ArrowRight size={16} strokeWidth={1.5} />
+                  </Link>
+                  {hasProjects && service.category && (
+                    <Link
+                      to={`/portfolio?category=${categorySlug(service.category)}`}
+                      className="font-sans text-xs uppercase tracking-[0.2em] text-brand-muted hover:text-brand-gold-dark transition-colors"
+                    >
+                      See projects
+                    </Link>
+                  )}
+                </div>
+                </div>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

@@ -104,7 +104,7 @@ export default function ServiceAreas() {
             className="relative h-[400px] md:h-[600px] rounded-[2px] overflow-hidden"
           >
             <img
-              src="/images/projects/orillia-walkway.jpg"
+              src="/images/portfolio/lakeside-backyard-1-v1-full-1280.webp"
               alt="Landscaping Service Areas in Simcoe County"
               className="w-full h-full object-cover grayscale-[20%] contrast-[110%]"
               referrerPolicy="no-referrer"

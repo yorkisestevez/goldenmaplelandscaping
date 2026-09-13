@@ -9,10 +9,9 @@ import Reveal from '../components/Reveal';
 import { trackEngagement, trackCall } from '../utils/analytics';
 import { cn } from '../utils/cn';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
-
-
-// Generated design inspiration, deliberately separate from completed-project photography.
-const HERO_POSTER = "/images/concepts/backyard-ivory-hero-v1.webp";
+import ResponsiveImage from '../components/ResponsiveImage';
+import InstagramFeed from '../components/InstagramFeed';
+import { FEATURED_PROJECTS, HOME_HERO, HOME_HERO_PROJECT, getProject, projectCover, projectCoverFull } from '../data/projects';
 
 const Hero = () => (
   <section className="home-hero bg-brand-nearblack">
@@ -39,8 +38,10 @@ const Hero = () => (
           <p className="hidden md:block text-xs text-brand-muted mt-9">Patios & interlock <span className="mx-2 text-brand-gold-dark">/</span> Decks <span className="mx-2 text-brand-gold-dark">/</span> Landscape design</p>
         </div>
         <figure className="min-w-0">
-          <img src={HERO_POSTER} alt="Outdoor living design concept: stone patio, cedar pergola and planted garden wall" loading="eager" decoding="async" fetchPriority="high" className="home-hero-photo" />
-          <figcaption className="home-hero-caption"><span>Outdoor living concept</span><span>Stone · timber · open air</span></figcaption>
+          <Link to={`/portfolio/${HOME_HERO_PROJECT.slug}`} className="block">
+            <ResponsiveImage image={HOME_HERO} sizes="(min-width: 1024px) 55vw, 100vw" aspect="fill" priority className="home-hero-photo" />
+          </Link>
+          <figcaption className="home-hero-caption"><span>Completed project · {HOME_HERO_PROJECT.town}</span><span>{HOME_HERO_PROJECT.category}</span></figcaption>
         </figure>
       </div>
     </div>
@@ -49,9 +50,9 @@ const Hero = () => (
 
 const ServicesGrid = () => {
   const services = [
-    { title: 'Patios & interlocking', img: '/images/projects/IMG_4826.jpg', alt: 'Stone patio with a diamond inlay and contrasting border', desc: 'Beautiful underfoot. Planned for dining, gathering and everyday life outside.', link: '/services/interlocking-barrie' },
-    { title: 'Composite decking', img: '/images/projects/Golden Maple deck and walkway.jpg', alt: 'Aerial photograph of a backyard deck and stone walkway', desc: 'An extension of your home, with room to unwind and materials chosen for your routine.', link: '/services/composite-decking-barrie' },
-    { title: 'Walls & garden spaces', img: '/images/projects/garden-wall.JPEG', alt: 'Masonry garden wall with planting and integrated lighting', desc: 'Bring definition to your landscape with considered levels, planting and stonework.', link: '/services/retaining-walls-barrie' },
+    { title: 'Patios & interlocking', image: projectCover(getProject('barrie-diamond-inlay-patio')!), desc: 'Beautiful underfoot. Planned for dining, gathering and everyday life outside.', link: '/services/interlocking-barrie' },
+    { title: 'Composite decking', image: projectCover(getProject('deck-and-garden-walkway')!), desc: 'An extension of your home, with room to unwind and materials chosen for your routine.', link: '/services/composite-decking-barrie' },
+    { title: 'Walls & garden spaces', image: projectCover(getProject('sloped-backyard-patio-steps')!), desc: 'Bring definition to your landscape with considered levels, planting and stonework.', link: '/services/retaining-walls-barrie' },
   ];
   return (
     <section className="home-services bg-brand-nearblack">
@@ -63,7 +64,7 @@ const ServicesGrid = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-7">
           {services.map((service) => (
             <Link to={service.link} key={service.title} className="group block">
-              <div className="overflow-hidden mb-6"><img src={service.img} alt={service.alt} loading="lazy" decoding="async" className="home-service-photo transition-transform duration-500 motion-safe:group-hover:scale-[1.03]" /></div>
+              <div className="overflow-hidden mb-6"><ResponsiveImage image={service.image} sizes="(min-width: 768px) 33vw, 100vw" aspect="fill" className="home-service-photo transition-transform duration-500 motion-safe:group-hover:scale-[1.03]" /></div>
               <div className="flex items-center justify-between gap-4 mb-3"><h3 className="font-display text-3xl">{service.title}</h3><ArrowRight size={18} className="text-brand-gold-dark shrink-0" aria-hidden="true" /></div>
               <p className="text-sm leading-relaxed text-brand-muted max-w-sm">{service.desc}</p>
             </Link>
@@ -117,14 +118,7 @@ const WhyGoldenMaple = () => {
           </div>
           <div className="relative">
             <div className="aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-ink/10">
-              <img
-                src="/images/projects/paver-driveway.JPG"
-                alt="Engineered paver driveway with proper base prep, Barrie ON"
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
+              <ResponsiveImage image={projectCoverFull(getProject('cobblestone-driveway')!)} sizes="(min-width: 1024px) 45vw, 100vw" aspect="fill" className="w-full h-full object-cover" />
             </div>
             <div className="absolute -bottom-10 -left-10 bg-brand-green-dark p-12 hidden md:block rounded-[2px] shadow-xl">
               <span className="font-display text-7xl font-light text-brand-porcelain block mb-2">10+</span>
@@ -137,73 +131,52 @@ const WhyGoldenMaple = () => {
   );
 };
 
-const BeforeAfterSection = () => {
-  const features = [
-    {
-      tag: 'A connected backyard',
-      img: '/images/projects/Golden Maple deck and walkway.jpg',
-      alt: 'Aerial photograph of a deck, lawn and stone walkway beside a home',
-      title: 'Room to gather. Space to grow.',
-      body: 'A deck, a clear path through the garden and an open lawn. A simple arrangement that makes the whole backyard work together.',
-      meta: 'Decking · stonework · garden space',
-    },
-    {
-      tag: 'The details underfoot',
-      img: '/images/projects/IMG_4826.jpg',
-      alt: 'Paver patio with a diamond inlay and contrasting border',
-      title: 'A little detail makes it yours.',
-      body: 'A centred diamond inlay, a contrasting border and clean edges give this side-yard patio its own character.',
-      meta: 'Paver patio · geometric inlay · contrasting border',
-    },
-  ];
-
-  return (
-    <section id="selected-work" className="section-padding bg-brand-cream-light scroll-mt-24">
-      <div className="container-custom">
-        <Reveal className="text-center max-w-3xl mx-auto mb-24">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
-            In the details
-          </span>
-          <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite">
-            Two ways to live outside.
-          </h2>
-        </Reveal>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 mb-20">
-          {features.map((f, idx) => (
-            <Reveal key={idx} delay={idx * 0.1} className="group flex flex-col">
-              <div className="aspect-[4/3] rounded-[2px] overflow-hidden border border-brand-dim/10 mb-10">
-                <img
-                  src={f.img}
-                  alt={f.alt}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-[1.04]"
-                  referrerPolicy="no-referrer"
+const SelectedWork = () => (
+  <section id="selected-work" className="section-padding bg-brand-cream-light scroll-mt-24">
+    <div className="container-custom">
+      <Reveal className="text-center max-w-3xl mx-auto mb-24">
+        <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
+          Selected work
+        </span>
+        <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite">
+          Recent work, up close.
+        </h2>
+      </Reveal>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 mb-20">
+        {FEATURED_PROJECTS.map((project, idx) => (
+          <Reveal key={project.slug} delay={idx * 0.1}>
+            <Link to={`/portfolio/${project.slug}`} className="group flex flex-col">
+              <div className="rounded-[2px] overflow-hidden border border-brand-dim/40 bg-brand-surface mb-10">
+                <ResponsiveImage
+                  image={projectCover(project)}
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                  aspect="4/3"
+                  className="transition-transform duration-1000 motion-safe:group-hover:scale-[1.04]"
                 />
               </div>
               <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-4 block">
-                {f.tag}
+                {project.category}
               </span>
-              <h3 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight mb-6">
-                {f.title}
+              <h3 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight mb-6 group-hover:text-brand-gold-dark transition-colors">
+                {project.title}
               </h3>
               <p className="font-sans text-brand-muted leading-relaxed font-light mb-6">
-                {f.body}
+                {project.summary}
               </p>
               <div className="flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.2em] text-brand-bonewhite/80">
-                <CheckCircle size={14} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
-                {f.meta}
+                <CheckCircle size={14} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" aria-hidden="true" />
+                Completed project · {project.town}, ON
               </div>
-            </Reveal>
-          ))}
-        </div>
-        <Reveal className="text-center">
-          <Link to="/portfolio" className="btn-ghost">View More Projects</Link>
-        </Reveal>
+            </Link>
+          </Reveal>
+        ))}
       </div>
-    </section>
-  );
-};
+      <Reveal className="text-center">
+        <Link to="/portfolio" className="btn-ghost">View all projects</Link>
+      </Reveal>
+    </div>
+  </section>
+);
 
 const Testimonials = () => {
   const reviews = [
@@ -265,14 +238,7 @@ const FinalCTA = () => {
   return (
     <section className="section-padding bg-brand-burgundy relative overflow-hidden">
       <div className="absolute inset-0 opacity-40">
-          <img
-            src="/images/projects/IMG_4826.jpg"
-            alt="Completed luxury backyard transformation in Simcoe County"
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-          />
+          <ResponsiveImage image={projectCoverFull(getProject('barrie-diamond-inlay-patio')!)} sizes="100vw" aspect="fill" className="w-full h-full object-cover" />
       </div>
       <Reveal className="container-custom relative z-10 text-center">
         <h2 className="font-display text-4xl md:text-8xl font-light text-brand-porcelain mb-12 leading-tight">
@@ -395,7 +361,8 @@ export default function Home() {
       />
       <Hero />
       <ServicesGrid />
-      <BeforeAfterSection />
+      <SelectedWork />
+      <InstagramFeed />
       <Manifesto />
       <ContractorPainPoints />
       <WhyGoldenMaple />

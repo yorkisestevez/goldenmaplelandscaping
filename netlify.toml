@@ -36,7 +36,7 @@
 
 # SPA fallback — routes NOT prerendered at build time fall back to the generic
 # client shell (RR7 emits it as __spa-fallback.html). Prerendered routes are served
-# as their own static file first; this only catches the rest (e.g. /portfolio/:slug).
+# as their own static file first; this only catches the rest (unknown slugs, deep links).
 [[redirects]]
   from = "/*"
   to = "/__spa-fallback.html"

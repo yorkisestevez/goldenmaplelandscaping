@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "fetchedAt": "2026-09-13T12:34:54.575Z",
+  "account": {
+    "id": "17841447335950775",
+    "username": "goldenmaplelandscaping.ca",
+    "url": "https://www.instagram.com/goldenmaplelandscaping.ca"
+  },
+  "window": {
+    "since": "2025-09-13",
+    "until": "2026-09-13"
+  },
+  "topN": 12,
+  "posts": [
+    {
+      "id": "17907054450281966",
+      "permalink": "https://www.instagram.com/p/DbXDqSfjfZp/",
+      "caption": "Three years on, and the patio hasn't moved. 🍁 The plantings filled in around it. The hedge doubled. The yard grew up. The stone underneath",
+      "likeCount": 15,
+      "commentsCount": 1,
+      "timestamp": "2026-07-29T02:36:58+0000",
+      "mediaType": "CAROUSEL_ALBUM",
+      "image": {
+        "src": "/images/instagram/17907054450281966-v1-960.webp",
+        "srcSet": "/images/instagram/17907054450281966-v1-480.webp 384w, /images/instagram/17907054450281966-v1-960.webp 768w",
+        "width": 768,
+        "height": 960,
+        "alt": "Instagram post from goldenmaplelandscaping.ca, July 2026: Three years on, and the patio hasn't moved."
+      }
+    },
+    {
+      "id": "18084234587284936",
+      "permalink": "https://www.instagram.com/p/Dceq6tWGg_O/",
+      "caption": "A patio can look perfect on day one. The real test is how it looks after five Barrie winters. Most sinking, shifting, and pooling problems b",
+      "likeCount": 11,
+      "commentsCount": 0,
+      "timestamp": "2026-08-25T22:06:04+0000",
+      "mediaType": "IMAGE",
+      "image": {
+        "src": "/images/instagram/18084234587284936-v1-960.webp",
+        "srcSet": "/images/instagram/18084234587284936-v1-480.webp 384w, /images/instagram/18084234587284936-v1-960.webp 768w",
+        "width": 768,
+        "height": 960,
+        "alt": "Instagram post from goldenmaplelandscaping.ca, August 2026: A patio can look perfect on day one."
+      }
+    },
+    {
+      "id": "18071871788416131",
+      "permalink": "https://www.instagram.com/p/DbtN03uk-bF/",
+      "caption": "Before the after photo, there's this. 🧱 Repairing this outdoor shower floor — old tile out, bed cleaned out, ready to reset right. Today's",
+      "likeCount": 7,
+      "commentsCount": 1,
+      "timestamp": "2026-08-06T17:09:06+0000",
+      "mediaType": "IMAGE",
+      "image": {
+        "src": "/images/instagram/18071871788416131-v1-960.webp",
+        "srcSet": "/images/instagram/18071871788416131-v1-480.webp 384w, /images/instagram/18071871788416131-v1-960.webp 768w",
+        "width": 768,
+        "height": 960,
+        "alt": "Instagram post from goldenmaplelandscaping.ca, August 2026: Before the after photo, there's this."
+      }
+    }
+  ]
+}

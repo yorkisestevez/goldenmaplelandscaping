@@ -1,7 +1,183 @@
 {
-  "passed": true,
-  "routes_checked": 105,
-  "schemas_checked": 295,
-  "findings": [],
+  "passed": false,
+  "routes_checked": 119,
+  "schemas_checked": 338,
+  "findings": [
+    {
+      "route": "/locations/innisfil",
+      "rule": "review_rating",
+      "excerpt": "large-scale patios, long driveways, estate-style retaining walls 5.0-star rated across Google, HomeStars & Yelp Premium materials \u2014 Techo-Bloc, Permacon, TimberTech, In-Lite"
+    },
+    {
+      "route": "/locations/innisfil",
+      "rule": "blanket_warranty",
+      "excerpt": "-12 weeks. What warranty do you offer? All Golden Maple projects include a 5-year workmanship warranty. Material warranties vary by manufacturer \u2014 Techo-Bloc offers a transferable lifetime warr"
+    },
+    {
+      "route": "/locations/innisfil",
+      "surface": "schema",
+      "rule": "blanket_warranty",
+      "excerpt": "dAnswer\": {\"@type\": \"Answer\", \"text\": \"All Golden Maple projects include a 5-year workmanship warranty. Material warranties vary by manufacturer \u2014 Techo-Bloc offers a transferable lifetime warr"
+    },
+    {
+      "route": "/locations/oro-medonte",
+      "rule": "review_rating",
+      "excerpt": "ding durable interlocking that handles vehicle loads and plowing 5.0-star rated across Google, HomeStars & Yelp Premium materials \u2014 Techo-Bloc, Permacon, TimberTech, In-Lite"
+    },
+    {
+      "route": "/locations/oro-medonte",
+      "rule": "blanket_warranty",
+      "excerpt": "uild time. What warranty do you offer? All Golden Maple projects include a 5-year workmanship warranty. Material warranties vary by manufacturer \u2014 Techo-Bloc offers a transferable lifetime warr"
+    },
+    {
+      "route": "/locations/oro-medonte",
+      "rule": "free_visit",
+      "excerpt": "at matches your property? Contact Golden Maple Landscaping for a free site visit and detailed quote. Request a Quote (705) 300-8015 yorkis@goldenmaplelandscaping.ca GOLDEN MAPLE La"
+    },
+    {
+      "route": "/locations/oro-medonte",
+      "surface": "schema",
+      "rule": "blanket_warranty",
+      "excerpt": "dAnswer\": {\"@type\": \"Answer\", \"text\": \"All Golden Maple projects include a 5-year workmanship warranty. Material warranties vary by manufacturer \u2014 Techo-Bloc offers a transferable lifetime warr"
+    },
+    {
+      "route": "/locations/springwater",
+      "rule": "review_rating",
+      "excerpt": "rms and acreages \u2014 functional and aesthetic hardscaping at scale 5.0-star rated across Google, HomeStars & Yelp Premium materials \u2014 Techo-Bloc, Permacon, TimberTech, In-Lite"
+    },
+    {
+      "route": "/locations/springwater",
+      "rule": "blanket_warranty",
+      "excerpt": "ery quote. What warranty do you offer? All Golden Maple projects include a 5-year workmanship warranty. Material warranties vary by manufacturer \u2014 Techo-Bloc offers a transferable lifetime warr"
+    },
+    {
+      "route": "/locations/springwater",
+      "rule": "free_visit",
+      "excerpt": "e your property deserves? Contact Golden Maple Landscaping for a free site visit and detailed quote. Request a Quote (705) 300-8015 yorkis@goldenmaplelandscaping.ca GOLDEN MAPLE La"
+    },
+    {
+      "route": "/locations/springwater",
+      "surface": "schema",
+      "rule": "blanket_warranty",
+      "excerpt": "dAnswer\": {\"@type\": \"Answer\", \"text\": \"All Golden Maple projects include a 5-year workmanship warranty. Material warranties vary by manufacturer \u2014 Techo-Bloc offers a transferable lifetime warr"
+    },
+    {
+      "route": "/resources/concrete-vs-interlocking-patio-barrie",
+      "rule": "review_rating",
+      "excerpt": "d, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews. Choosing the right patio for Barrie's climate is easier with Golden Maple Landsca"
+    },
+    {
+      "route": "/resources/concrete-vs-interlocking-patio-barrie",
+      "rule": "review_count",
+      "excerpt": "liability coverage, and currently has a 5.0 Google rating across 8 reviews. Choosing the right patio for Barrie's climate is easier with Golden Maple Landscaping. Whether you"
+    },
+    {
+      "route": "/resources/concrete-vs-interlocking-patio-barrie",
+      "rule": "insurance_amount",
+      "excerpt": "aping in Barrie in 2020. The company is WSIB registered, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews. Choosing the right patio for Barr"
+    },
+    {
+      "route": "/resources/interlocking-driveway-lifespan-ontario",
+      "rule": "review_rating",
+      "excerpt": "B certified, carry $5 million in liability insurance, and have a 5.0 Google rating across 8 reviews. We build landscapes that last. You've seen what happens when shortcuts are taken "
+    },
+    {
+      "route": "/resources/interlocking-driveway-lifespan-ontario",
+      "rule": "review_count",
+      "excerpt": "lion in liability insurance, and have a 5.0 Google rating across 8 reviews. We build landscapes that last. You've seen what happens when shortcuts are taken on driveways in B"
+    },
+    {
+      "route": "/resources/interlocking-driveway-lifespan-ontario",
+      "rule": "wsib_certified",
+      "excerpt": "aple Landscaping. I started the company in Barrie in 2020. We're WSIB certified, carry $5 million in liability insurance, and have a 5.0 Google rating across 8 reviews. We build l"
+    },
+    {
+      "route": "/resources/interlocking-driveway-lifespan-ontario",
+      "rule": "insurance_amount",
+      "excerpt": "arted the company in Barrie in 2020. We're WSIB certified, carry $5 million in liability insurance, and have a 5.0 Google rating across 8 reviews. We build landscapes that last. You've see"
+    },
+    {
+      "route": "/resources/natural-stone-vs-pavers-barrie",
+      "rule": "review_rating",
+      "excerpt": "d, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews. Still deciding between natural stone and pavers for your Barrie project? Golden M"
+    },
+    {
+      "route": "/resources/natural-stone-vs-pavers-barrie",
+      "rule": "review_count",
+      "excerpt": "liability coverage, and currently has a 5.0 Google rating across 8 reviews. Still deciding between natural stone and pavers for your Barrie project? Golden Maple Landscaping "
+    },
+    {
+      "route": "/resources/natural-stone-vs-pavers-barrie",
+      "rule": "insurance_amount",
+      "excerpt": "aping in Barrie in 2020. The company is WSIB registered, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews. Still deciding between natural st"
+    },
+    {
+      "route": "/resources/paver-walkway-cost-barrie",
+      "rule": "review_rating",
+      "excerpt": "d, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews. I hope this detailed breakdown gives you a realistic understanding of what goes i"
+    },
+    {
+      "route": "/resources/paver-walkway-cost-barrie",
+      "rule": "review_count",
+      "excerpt": "liability coverage, and currently has a 5.0 Google rating across 8 reviews. I hope this detailed breakdown gives you a realistic understanding of what goes into the cost of a"
+    },
+    {
+      "route": "/resources/paver-walkway-cost-barrie",
+      "rule": "insurance_amount",
+      "excerpt": "aping in Barrie in 2020. The company is WSIB registered, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews. I hope this detailed breakdown gi"
+    },
+    {
+      "route": "/resources/polymeric-sand-vs-regular-sand-patio",
+      "rule": "review_rating",
+      "excerpt": "d, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews. The choice of jointing sand is a small detail that has a massive impact on how yo"
+    },
+    {
+      "route": "/resources/polymeric-sand-vs-regular-sand-patio",
+      "rule": "review_count",
+      "excerpt": "liability coverage, and currently has a 5.0 Google rating across 8 reviews. The choice of jointing sand is a small detail that has a massive impact on how your patio performs"
+    },
+    {
+      "route": "/resources/polymeric-sand-vs-regular-sand-patio",
+      "rule": "insurance_amount",
+      "excerpt": "aping in Barrie in 2020. The company is WSIB registered, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews. The choice of jointing sand is a "
+    },
+    {
+      "route": "/resources/sodding-vs-seeding-simcoe-county",
+      "rule": "review_rating",
+      "excerpt": "s WSIB certified, carries $5M in liability coverage, and holds a 5.0 Google rating across all verified reviews. Yorkis writes from field experience, not theory. If your Barrie or Sim"
+    },
+    {
+      "route": "/resources/sodding-vs-seeding-simcoe-county",
+      "rule": "wsib_certified",
+      "excerpt": "d outdoor spaces across Simcoe County ever since. The company is WSIB certified, carries $5M in liability coverage, and holds a 5.0 Google rating across all verified reviews. York"
+    },
+    {
+      "route": "/resources/sodding-vs-seeding-simcoe-county",
+      "rule": "insurance_amount",
+      "excerpt": "Simcoe County ever since. The company is WSIB certified, carries $5M in liability coverage, and holds a 5.0 Google rating across all verified reviews. Yorkis writes from field exper"
+    },
+    {
+      "route": "/retaining-walls-barrie",
+      "rule": "blanket_warranty",
+      "excerpt": "tems Laser-Guided Leveling & Grading Premium Coping & Cap Stones 5-Year Structural Warranty Site Cleanup & Restoration Premium Options Natural Stone Veneer Pre-Cast Concrete Systems Multi-Lev"
+    },
+    {
+      "route": "/retaining-walls-barrie",
+      "surface": "schema",
+      "rule": "blanket_warranty",
+      "excerpt": "einforcement, a retaining wall can last 30-40+ years. We provide a 5-year structural warranty on all wall installations.\"}}, {\"@type\": \"Question\", \"name\": \"What materials do you use fo"
+    },
+    {
+      "route": "/services/retaining-walls-barrie",
+      "rule": "blanket_warranty",
+      "excerpt": "tems Laser-Guided Leveling & Grading Premium Coping & Cap Stones 5-Year Structural Warranty Site Cleanup & Restoration Premium Options Natural Stone Veneer Pre-Cast Concrete Systems Multi-Lev"
+    },
+    {
+      "route": "/services/retaining-walls-barrie",
+      "surface": "schema",
+      "rule": "blanket_warranty",
+      "excerpt": "einforcement, a retaining wall can last 30-40+ years. We provide a 5-year structural warranty on all wall installations.\"}}, {\"@type\": \"Question\", \"name\": \"What materials do you use fo"
+    }
+  ],
   "scope": "Known-disputed-claim detector across all prerendered HTML including metadata. Does not certify generic educational facts or owner facts; requires a fresh build."
 }

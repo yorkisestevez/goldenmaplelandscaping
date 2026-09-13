@@ -1,0 +1,13 @@
+{
+  "igUserId": "17841447335950775",
+  "topN": 12,
+  "windowDays": 365,
+  "excludeIds": [
+    "18543920383018572",
+    "17898249525572352",
+    "18075965420252493",
+    "18214773883354471",
+    "18117759736756723"
+  ],
+  "excludeNote": "Owner decision 2026-09-13: job photos only. Excluded = Permacon promo + AI marketing graphics. Add new non-project post ids here."
+}
