@@ -61,9 +61,9 @@ const ServicesGrid = () => {
           <div><p className="text-[10px] uppercase tracking-[0.22em] text-brand-gold-dark font-medium mb-4">Considered from the ground up</p><h2 className="home-services-heading font-display">Good living starts outside.</h2></div>
           <Link to="/services" className="home-project-link self-start md:self-auto">Our services <ArrowRight size={15} aria-hidden="true" /></Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-7">
+        <div className="no-scrollbar -mx-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-8 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-7 md:overflow-visible md:px-0 md:pb-0">
           {services.map((service) => (
-            <Link to={service.link} key={service.title} className="group block">
+            <Link to={service.link} key={service.title} className="group block w-[78vw] shrink-0 snap-start md:w-auto md:shrink">
               <div className="overflow-hidden mb-6"><ResponsiveImage image={service.image} sizes="(min-width: 768px) 33vw, 100vw" aspect="fill" className="home-service-photo transition-transform duration-500 motion-safe:group-hover:scale-[1.03]" /></div>
               <div className="flex items-center justify-between gap-4 mb-3"><h3 className="font-display text-3xl">{service.title}</h3><ArrowRight size={18} className="text-brand-gold-dark shrink-0" aria-hidden="true" /></div>
               <p className="text-sm leading-relaxed text-brand-muted max-w-sm">{service.desc}</p>
@@ -134,7 +134,7 @@ const WhyGoldenMaple = () => {
 const SelectedWork = () => (
   <section id="selected-work" className="section-padding bg-brand-cream-light scroll-mt-24">
     <div className="container-custom">
-      <Reveal className="text-center max-w-3xl mx-auto mb-24">
+      <Reveal className="text-center max-w-3xl mx-auto mb-12 md:mb-24">
         <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
           Selected work
         </span>
@@ -142,11 +142,11 @@ const SelectedWork = () => (
           Recent work, up close.
         </h2>
       </Reveal>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 mb-20">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 mb-14 md:mb-20">
         {FEATURED_PROJECTS.map((project, idx) => (
           <Reveal key={project.slug} delay={idx * 0.1}>
             <Link to={`/portfolio/${project.slug}`} className="group flex flex-col">
-              <div className="rounded-[2px] overflow-hidden border border-brand-dim/40 bg-brand-surface mb-10">
+              <div className="rounded-[2px] overflow-hidden border border-brand-dim/40 bg-brand-surface mb-6 md:mb-10">
                 <ResponsiveImage
                   image={projectCover(project)}
                   sizes="(min-width: 1024px) 50vw, 100vw"
@@ -200,7 +200,7 @@ const Testimonials = () => {
   return (
     <section className="section-padding bg-brand-cream">
       <div className="container-custom">
-        <Reveal className="text-center max-w-3xl mx-auto mb-24">
+        <Reveal className="text-center max-w-3xl mx-auto mb-12 md:mb-24">
           <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-green-dark mb-6 block font-medium">
             Real Homeowners. Real Results.
           </span>
@@ -208,9 +208,9 @@ const Testimonials = () => {
             Don't take our word for it.
           </h2>
         </Reveal>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="no-scrollbar -mx-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-8 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-10 md:overflow-visible md:px-0 md:pb-0">
           {reviews.map((review, idx) => (
-            <Reveal key={idx} delay={idx * 0.12} className="bg-brand-cream-light p-12 rounded-[2px] border border-brand-ink/10 shadow-[0_18px_50px_-30px_rgba(33,30,21,0.45)] relative">
+            <Reveal key={idx} delay={idx * 0.12} className="w-[84vw] shrink-0 snap-start bg-brand-cream-light p-8 md:w-auto md:shrink md:p-12 rounded-[2px] border border-brand-ink/10 shadow-[0_18px_50px_-30px_rgba(33,30,21,0.45)] relative">
               <Quote size={40} strokeWidth={1} className="text-brand-green-dark/15 absolute top-10 left-10" />
               <div className="relative z-10">
                 <div className="flex gap-1 mb-8">
@@ -294,7 +294,7 @@ const ContractorPainPoints = () => {
   return (
     <section className="section-padding bg-brand-nearblack">
       <div className="container-custom">
-        <Reveal className="max-w-4xl mx-auto text-center mb-24">
+        <Reveal className="max-w-4xl mx-auto text-center mb-12 md:mb-24">
           <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
             Sound Familiar?
           </span>
@@ -307,7 +307,7 @@ const ContractorPainPoints = () => {
           </p>
         </Reveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="no-scrollbar -mx-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-8 pb-2 md:mx-0 md:grid md:grid-cols-2 md:gap-12 md:overflow-visible md:px-0 md:pb-0">
           {points.map((point, idx) => (
             <motion.div
               key={idx}
@@ -315,9 +315,9 @@ const ContractorPainPoints = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10"
+              className="w-[86vw] shrink-0 snap-start bg-brand-surface p-7 md:w-auto md:shrink md:p-12 rounded-[2px] border border-brand-dim/10"
             >
-              <div className="flex items-start gap-8">
+              <div className="flex items-start gap-5 md:gap-8">
                 <div className="w-14 h-14 bg-brand-midsurface flex items-center justify-center rounded-[2px] shrink-0 shadow-sm border border-brand-dim/10">
                   <point.icon className="text-brand-gold-dark" size={24} strokeWidth={1.5} />
                 </div>
@@ -370,12 +370,12 @@ export default function Home() {
       <Testimonials />
       <section className="section-padding bg-brand-nearblack border-t border-brand-dim/5">
       <div className="container-custom">
-        <div className="max-w-3xl mx-auto mb-20 text-center">
+        <div className="max-w-3xl mx-auto mb-10 md:mb-20 text-center">
           <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">Common Questions</span>
           <h2 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite">Expert Insights.</h2>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 max-w-5xl mx-auto">
           {[
             {
               q: "Why do you dig so much deeper than other contractors?",
@@ -394,8 +394,8 @@ export default function Home() {
               a: publicClaimCopy(BUSINESS.commercialPolicies.consultation, 'Contact us to confirm the current consultation and design scope.')
             }
           ].map((faq, idx) => (
-            <div key={idx} className="bg-brand-surface p-10 border border-brand-dim/10 rounded-[2px] hover:border-brand-gold/20 transition-colors">
-              <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-6 leading-tight">{faq.q}</h3>
+            <div key={idx} className="bg-brand-surface p-7 md:p-10 border border-brand-dim/10 rounded-[2px] hover:border-brand-gold/20 transition-colors">
+              <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-4 md:mb-6 leading-tight">{faq.q}</h3>
               <p className="font-sans text-base text-brand-muted leading-relaxed font-light">{faq.a}</p>
             </div>
           ))}

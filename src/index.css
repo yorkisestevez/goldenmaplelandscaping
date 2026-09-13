@@ -96,7 +96,14 @@ html, body {
     @apply inline-flex items-center justify-center bg-brand-green text-brand-black font-sans text-[10px] md:text-[11px] font-medium uppercase tracking-[0.25em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-green-light cursor-pointer;
   }
   .section-padding {
-    @apply py-24 md:py-40;
+    @apply py-16 md:py-40;
+  }
+  /* Horizontal snap rows on phones (services, filter chips). */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
   .container-custom {
     @apply max-w-[1400px] mx-auto px-8 md:px-12;
@@ -199,14 +206,14 @@ html, body {
 }
 
 /* The opening is editorial: readable type on ivory, unobscured photography. */
-.home-hero { padding: 7.5rem 0 3.5rem; }
+.home-hero { padding: 6.5rem 0 3rem; }
 .home-hero-grid { display: grid; gap: 3rem; align-items: center; }
 .home-hero h1 { font-size: 3.375rem; line-height: 0.98; letter-spacing: -0.045em; }
 .home-hero-photo { width: 100%; height: 390px; object-fit: cover; object-position: 50% 65%; }
 .home-hero-caption { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--color-brand-dim); color: var(--color-brand-muted); font-size: .6875rem; letter-spacing: .12em; text-transform: uppercase; }
 .home-project-link { display: inline-flex; align-items: center; gap: .75rem; font-size: .6875rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 500; padding: .75rem 0; border-bottom: 1px solid var(--color-brand-ink); }
 .home-project-link:hover { color: var(--color-brand-gold-dark); }
-.home-services { padding: 4.5rem 0 5rem; }
+.home-services { padding: 3.5rem 0 4rem; }
 .home-services-heading { font-size: 2.75rem; line-height: 1.05; letter-spacing: -.025em; }
 .home-service-photo { aspect-ratio: 4 / 3; width: 100%; object-fit: cover; }
 a:focus-visible, button:focus-visible { outline: 2px solid var(--color-brand-gold-dark); outline-offset: 5px; }

@@ -5,6 +5,7 @@
  *   node scripts/instagram/fetch-top-posts.mjs --dry-run     # print the ranking, write nothing
  *   node scripts/instagram/fetch-top-posts.mjs --keep-orphans
  *   node scripts/instagram/fetch-top-posts.mjs --expect-username=goldenmaplelandscaping.ca
+ *   node scripts/instagram/fetch-top-posts.mjs --dry-run --window-days=3650 --top=200   # survey the whole account
  *
  * What it does
  *   1. Confirms the IG business account username (evidence for BUSINESS.urls.instagram).
@@ -55,7 +56,9 @@ const opt = (n) => args.find((a) => a.startsWith(`--${n}=`))?.split('=').slice(1
 const DRY = flag('dry-run');
 
 const config = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
-const { igUserId, topN = 12, windowDays = 365, excludeIds = [] } = config;
+const { igUserId, excludeIds = [] } = config;
+const topN = Number(opt('top') ?? config.topN ?? 12);
+const windowDays = Number(opt('window-days') ?? config.windowDays ?? 365);
 
 // ── secrets hygiene ──────────────────────────────────────────────────────────
 function redact(s) {

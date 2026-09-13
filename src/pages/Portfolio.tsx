@@ -64,13 +64,13 @@ export default function Portfolio() {
         schema={portfolioVerified ? listSchema : undefined}
       />
 
-      <section className="section-padding pt-40 md:pt-48">
+      <section className="section-padding pt-32 md:pt-48">
         <div className="container-custom">
-          <Reveal className="text-center max-w-3xl mx-auto mb-16 md:mb-24">
+          <Reveal className="text-center max-w-3xl mx-auto mb-10 md:mb-24">
             <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">
               Completed work
             </span>
-            <h1 className="font-display text-5xl md:text-8xl font-light text-brand-ink leading-[1.05] mb-10">
+            <h1 className="font-display text-5xl md:text-8xl font-light text-brand-ink leading-[1.05] mb-6 md:mb-10">
               Built in Barrie <br />
               <span className="italic text-brand-gold-dark">and Simcoe County.</span>
             </h1>
@@ -92,7 +92,7 @@ export default function Portfolio() {
           ) : (
             <>
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-12">
-                <div role="group" aria-label="Filter projects by category" className="flex flex-wrap gap-2">
+                <div role="group" aria-label="Filter projects by category" className="no-scrollbar -mx-8 flex snap-x gap-2 overflow-x-auto px-8 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
                   {(['all', ...categoriesWithWork] as const).map((c) => {
                     const active = category === c;
                     return (
@@ -102,7 +102,7 @@ export default function Portfolio() {
                         aria-pressed={active}
                         onClick={() => update({ category: c })}
                         className={cn(
-                          'rounded-[2px] border px-4 py-2 font-sans text-[11px] uppercase tracking-[0.18em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60',
+                          'min-h-11 shrink-0 snap-start whitespace-nowrap rounded-[2px] border px-4 py-2 font-sans text-[11px] uppercase tracking-[0.18em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60 md:shrink',
                           active
                             ? 'border-brand-black bg-brand-black text-brand-porcelain'
                             : 'border-brand-dim bg-brand-surface text-brand-ink hover:border-brand-gold-dark',
@@ -121,7 +121,7 @@ export default function Portfolio() {
                       aria-pressed={view === v}
                       onClick={() => update({ view: v })}
                       className={cn(
-                        'rounded-[2px] px-4 py-2 font-sans text-[11px] uppercase tracking-[0.18em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60',
+                        'min-h-10 rounded-[2px] px-4 py-2 font-sans text-[11px] uppercase tracking-[0.18em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60',
                         view === v ? 'bg-brand-black text-brand-porcelain' : 'text-brand-ink hover:text-brand-gold-dark',
                       )}
                     >

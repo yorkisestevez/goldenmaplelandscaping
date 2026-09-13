@@ -22,6 +22,8 @@ export const PROJECT_CATEGORIES = [
   'Driveways',
   'Decks',
   'Lakeside & cottage',
+  'Fences & privacy',
+  'Artificial turf',
 ] as const;
 
 export type ProjectCategory = (typeof PROJECT_CATEGORIES)[number];
@@ -54,7 +56,6 @@ export const PROJECTS: readonly ProjectRecord[] = [
     category: 'Patios & interlocking',
     summary: 'Interlocking paver patio behind a brick bungalow, sized for a gazebo-covered dining area and a barbecue corner, with a new lawn on three sides.',
     cover: 'barrie-bungalow-patio-1',
-    featured: true,
     instagramPermalink: 'https://www.instagram.com/p/DbXDqSfjfZp/',
     photos: [
       { id: 'barrie-bungalow-patio-1', alt: 'Interlocking paver patio with a gazebo-covered dining set behind a brick bungalow in Barrie, ON' },
@@ -115,6 +116,7 @@ export const PROJECTS: readonly ProjectRecord[] = [
     category: 'Driveways',
     summary: 'Cobblestone-style paver driveway with a border, leading to stone-pillar front steps at a red-brick home.',
     cover: 'cobblestone-driveway-1',
+    featured: true,
     photos: [
       { id: 'cobblestone-driveway-1', alt: 'Cobblestone-style paver driveway with a border leading to stone-pillar front steps of a red-brick home in Simcoe County, ON' },
     ],

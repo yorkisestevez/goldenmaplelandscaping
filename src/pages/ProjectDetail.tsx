@@ -73,7 +73,7 @@ export default function ProjectDetail() {
         schema={gallerySchema}
       />
 
-      <section className="section-padding pt-40 md:pt-48">
+      <section className="section-padding pt-32 md:pt-48">
         <div className="container-custom">
           <Link to="/portfolio" className="group inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-ink transition-colors mb-12">
             <ArrowLeft size={14} strokeWidth={2} className="group-hover:-translate-x-1 transition-transform" aria-hidden="true" />
