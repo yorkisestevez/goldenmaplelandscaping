@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-09-07T00:00:00.000Z",
+  "lastRunAt": "2026-09-14T00:00:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -21,10 +21,11 @@
     "auto-017",
     "auto-018",
     "auto-019",
-    "auto-020"
+    "auto-020",
+    "auto-021"
   ],
   "publishedSlugs": [],
-  "currentDraft": "sodding-vs-seeding-simcoe-county",
+  "currentDraft": "heated-driveway-worth-it-barrie",
   "history": [
     {
       "topicId": "auto-001",
@@ -324,6 +325,20 @@
         "linkCount": 4,
         "hasTable": true,
         "numericCount": 19
+      },
+      "generatedBy": "claude-cloud-routine"
+    },
+    {
+      "topicId": "auto-021",
+      "slug": "heated-driveway-worth-it-barrie",
+      "at": "2026-09-14T00:00:00.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2915,
+        "linkCount": 8,
+        "hasTable": true,
+        "numericCount": 53
       },
       "generatedBy": "claude-cloud-routine"
     }
