@@ -134,7 +134,7 @@ export default function InterlockingDrivewayLifespanOntario() {
         </div>
       </div>
 
-      <AuthorBio bio="I'm Yorkis Estevez, founder of Golden Maple Landscaping. I started the company in Barrie in 2020. We're WSIB certified, carry $5 million in liability insurance, and have a 5.0 Google rating across 8 reviews. We build landscapes that last." />
+      <AuthorBio bio="Golden Maple Landscaping shares practical planning guidance for homeowners comparing outdoor construction options. Contact us to confirm current project scope and documentation." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>You've seen what happens when shortcuts are taken on driveways in Barrie and Innisfil. An investment in a proper base is an investment in peace of mind and decades of curb appeal. If you want a driveway that is engineered to handle our tough Ontario winters and will look great for years to come, let's talk about your project. Reach out to us for a straightforward, no-obligation quote. You can <a href='/contact'>contact us here</a> to get started.</p>" }} />
     </BlogPostLayout>
