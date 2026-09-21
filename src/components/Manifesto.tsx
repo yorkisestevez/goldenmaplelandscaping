@@ -30,7 +30,6 @@ export default function Manifesto() {
                 <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mt-1">{FOUNDER.role}</p>
               </div>
             </div>
-            <p className="mt-3 text-xs text-brand-porcelain-soft">AI-generated founder illustration — not a photograph.</p>
             {/* Decorative elements */}
             <div className="absolute -top-6 -left-6 w-24 h-24 border-t border-l border-brand-gold/30 z-0" />
             <div className="absolute -bottom-6 -right-6 w-24 h-24 border-b border-r border-brand-gold/30 z-0" />
