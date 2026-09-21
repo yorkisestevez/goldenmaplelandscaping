@@ -93,8 +93,10 @@ export default function RetainingWalls() {
               className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
             >
               <img
-                src="/images/projects/garden-wall.JPEG"
-                alt="Retaining Wall Construction in Barrie ON"
+                src="/images/portfolio/sloped-backyard-patio-steps-2-v1-full-1280.webp"
+                alt="Block retaining wall with built-in steps down to a slab patio in Simcoe County, ON"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />

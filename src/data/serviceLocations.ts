@@ -124,7 +124,7 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
         a: 'A 300–500 sqft deck typically takes 7–10 working days from footings to railing. Larger multi-level decks run 2–3 weeks.',
       },
     ],
-    heroImg: '/images/projects/luxury decking.jpg',
+    heroImg: '/images/portfolio/deck-and-garden-walkway-1-v1-full-1280.webp',
   },
   'retaining-walls': {
     slug: 'retaining-walls',
@@ -200,7 +200,7 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
         a: 'Tell us which planting, garden, lighting or irrigation work you have in mind. Confirm current service availability and scope before booking.',
       },
     ],
-    heroImg: '/images/projects/patio-pergola.jpg',
+    heroImg: '/images/portfolio/gazebo-patio-1-v1-full-1280.webp',
   },
 };
 

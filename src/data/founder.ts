@@ -46,13 +46,13 @@ export const FOUNDER = {
   /** Home Manifesto + /about — bordered 3:4 portrait. */
   portrait: {
     src: '/images/projects/yorkis-founder-headshot-v1.jpg',
-    alt: `AI-generated founder illustration for ${BUSINESS.publicName.value}; not a photograph`,
+    alt: `${NAME}, ${ROLE} of ${BUSINESS.publicName.value}`,
   },
 
   /** Blog author bios — small square, rendered as a 64px circle. */
   avatar: {
     src: '/images/projects/yorkis-founder-avatar-v1.webp',
-    alt: `AI-generated founder illustration for ${BUSINESS.publicName.value}; not a photograph`,
+    alt: `${NAME}, ${ROLE} of ${BUSINESS.publicName.value}`,
   },
 } as const;
 

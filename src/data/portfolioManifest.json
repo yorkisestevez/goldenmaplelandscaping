@@ -1,0 +1,299 @@
+{
+  "barrie-bungalow-patio-1": {
+    "project": "barrie-bungalow-patio",
+    "masterSha": "7419a97717",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/barrie-bungalow-patio-1-v1-card-960.webp",
+      "srcset": "/images/portfolio/barrie-bungalow-patio-1-v1-card-480.webp 480w, /images/portfolio/barrie-bungalow-patio-1-v1-card-960.webp 960w, /images/portfolio/barrie-bungalow-patio-1-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/barrie-bungalow-patio-1-v1-full-1280.webp",
+      "srcset": "/images/portfolio/barrie-bungalow-patio-1-v1-full-720.webp 720w, /images/portfolio/barrie-bungalow-patio-1-v1-full-1280.webp 1280w, /images/portfolio/barrie-bungalow-patio-1-v1-full-1920.webp 1920w",
+      "width": 1920,
+      "height": 1650
+    },
+    "bytes": {
+      "card-480": 48818,
+      "card-960": 189746,
+      "card-1440": 360016,
+      "full-720": 122706,
+      "full-1280": 370030,
+      "full-1920": 652242
+    }
+  },
+  "barrie-bungalow-patio-2": {
+    "project": "barrie-bungalow-patio",
+    "masterSha": "545c7492a4",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/barrie-bungalow-patio-2-v1-card-960.webp",
+      "srcset": "/images/portfolio/barrie-bungalow-patio-2-v1-card-480.webp 480w, /images/portfolio/barrie-bungalow-patio-2-v1-card-960.webp 960w, /images/portfolio/barrie-bungalow-patio-2-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/barrie-bungalow-patio-2-v1-full-1280.webp",
+      "srcset": "/images/portfolio/barrie-bungalow-patio-2-v1-full-720.webp 720w, /images/portfolio/barrie-bungalow-patio-2-v1-full-1280.webp 1280w",
+      "width": 1280,
+      "height": 960
+    },
+    "bytes": {
+      "card-480": 37036,
+      "card-960": 142712,
+      "card-1440": 299746,
+      "full-720": 76882,
+      "full-1280": 224504
+    }
+  },
+  "barrie-diamond-inlay-patio-1": {
+    "project": "barrie-diamond-inlay-patio",
+    "masterSha": "1d5ec1e915",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/barrie-diamond-inlay-patio-1-v1-card-960.webp",
+      "srcset": "/images/portfolio/barrie-diamond-inlay-patio-1-v1-card-480.webp 480w, /images/portfolio/barrie-diamond-inlay-patio-1-v1-card-960.webp 960w, /images/portfolio/barrie-diamond-inlay-patio-1-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/barrie-diamond-inlay-patio-1-v1-full-1280.webp",
+      "srcset": "/images/portfolio/barrie-diamond-inlay-patio-1-v1-full-720.webp 540w, /images/portfolio/barrie-diamond-inlay-patio-1-v1-full-1280.webp 960w, /images/portfolio/barrie-diamond-inlay-patio-1-v1-full-1920.webp 1440w",
+      "width": 1440,
+      "height": 1920
+    },
+    "bytes": {
+      "card-480": 36034,
+      "card-960": 134174,
+      "card-1440": 292732,
+      "full-720": 63824,
+      "full-1280": 204634,
+      "full-1920": 455922
+    }
+  },
+  "barrie-front-entrance-1": {
+    "project": "barrie-front-entrance",
+    "masterSha": "f774a1a8ec",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/barrie-front-entrance-1-v1-card-960.webp",
+      "srcset": "/images/portfolio/barrie-front-entrance-1-v1-card-480.webp 480w, /images/portfolio/barrie-front-entrance-1-v1-card-960.webp 960w, /images/portfolio/barrie-front-entrance-1-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/barrie-front-entrance-1-v1-full-1280.webp",
+      "srcset": "/images/portfolio/barrie-front-entrance-1-v1-full-720.webp 540w, /images/portfolio/barrie-front-entrance-1-v1-full-1280.webp 960w, /images/portfolio/barrie-front-entrance-1-v1-full-1920.webp 1440w",
+      "width": 1440,
+      "height": 1920
+    },
+    "bytes": {
+      "card-480": 32100,
+      "card-960": 131332,
+      "card-1440": 302408,
+      "full-720": 66944,
+      "full-1280": 205496,
+      "full-1920": 446764
+    }
+  },
+  "cobblestone-driveway-1": {
+    "project": "cobblestone-driveway",
+    "masterSha": "b22449bc9f",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/cobblestone-driveway-1-v1-card-960.webp",
+      "srcset": "/images/portfolio/cobblestone-driveway-1-v1-card-480.webp 480w, /images/portfolio/cobblestone-driveway-1-v1-card-960.webp 960w, /images/portfolio/cobblestone-driveway-1-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/cobblestone-driveway-1-v1-full-1280.webp",
+      "srcset": "/images/portfolio/cobblestone-driveway-1-v1-full-720.webp 540w, /images/portfolio/cobblestone-driveway-1-v1-full-1280.webp 960w, /images/portfolio/cobblestone-driveway-1-v1-full-1920.webp 1440w",
+      "width": 1440,
+      "height": 1920
+    },
+    "bytes": {
+      "card-480": 49626,
+      "card-960": 187126,
+      "card-1440": 374898,
+      "full-720": 86830,
+      "full-1280": 250214,
+      "full-1920": 496146
+    }
+  },
+  "deck-and-garden-walkway-1": {
+    "project": "deck-and-garden-walkway",
+    "masterSha": "85b6126025",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/deck-and-garden-walkway-1-v1-card-960.webp",
+      "srcset": "/images/portfolio/deck-and-garden-walkway-1-v1-card-480.webp 480w, /images/portfolio/deck-and-garden-walkway-1-v1-card-960.webp 960w, /images/portfolio/deck-and-garden-walkway-1-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/deck-and-garden-walkway-1-v1-full-1280.webp",
+      "srcset": "/images/portfolio/deck-and-garden-walkway-1-v1-full-720.webp 720w, /images/portfolio/deck-and-garden-walkway-1-v1-full-1280.webp 1280w, /images/portfolio/deck-and-garden-walkway-1-v1-full-1920.webp 1920w",
+      "width": 1920,
+      "height": 1079
+    },
+    "bytes": {
+      "card-480": 28222,
+      "card-960": 95620,
+      "card-1440": 186744,
+      "full-720": 42710,
+      "full-1280": 116878,
+      "full-1920": 230156
+    }
+  },
+  "gazebo-patio-1": {
+    "project": "gazebo-patio",
+    "masterSha": "4b7bcebff6",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/gazebo-patio-1-v1-card-960.webp",
+      "srcset": "/images/portfolio/gazebo-patio-1-v1-card-480.webp 480w, /images/portfolio/gazebo-patio-1-v1-card-960.webp 960w, /images/portfolio/gazebo-patio-1-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/gazebo-patio-1-v1-full-1280.webp",
+      "srcset": "/images/portfolio/gazebo-patio-1-v1-full-720.webp 720w, /images/portfolio/gazebo-patio-1-v1-full-1280.webp 1280w",
+      "width": 1280,
+      "height": 853
+    },
+    "bytes": {
+      "card-480": 42634,
+      "card-960": 155106,
+      "card-1440": 279924,
+      "full-720": 77522,
+      "full-1280": 216346
+    }
+  },
+  "lakeside-backyard-1": {
+    "project": "lakeside-backyard",
+    "masterSha": "6d8fe8cfbb",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/lakeside-backyard-1-v1-card-960.webp",
+      "srcset": "/images/portfolio/lakeside-backyard-1-v1-card-480.webp 480w, /images/portfolio/lakeside-backyard-1-v1-card-960.webp 960w, /images/portfolio/lakeside-backyard-1-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/lakeside-backyard-1-v1-full-1280.webp",
+      "srcset": "/images/portfolio/lakeside-backyard-1-v1-full-720.webp 720w, /images/portfolio/lakeside-backyard-1-v1-full-1280.webp 1280w, /images/portfolio/lakeside-backyard-1-v1-full-1920.webp 1920w",
+      "width": 1920,
+      "height": 1365
+    },
+    "bytes": {
+      "card-480": 48810,
+      "card-960": 175434,
+      "card-1440": 331626,
+      "full-720": 93990,
+      "full-1280": 250402,
+      "full-1920": 450168
+    }
+  },
+  "midhurst-front-entrance-1": {
+    "project": "midhurst-front-entrance",
+    "masterSha": "e4b49d06fa",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/midhurst-front-entrance-1-v1-card-960.webp",
+      "srcset": "/images/portfolio/midhurst-front-entrance-1-v1-card-480.webp 480w, /images/portfolio/midhurst-front-entrance-1-v1-card-960.webp 960w, /images/portfolio/midhurst-front-entrance-1-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/midhurst-front-entrance-1-v1-full-1280.webp",
+      "srcset": "/images/portfolio/midhurst-front-entrance-1-v1-full-720.webp 540w, /images/portfolio/midhurst-front-entrance-1-v1-full-1280.webp 960w",
+      "width": 960,
+      "height": 1280
+    },
+    "bytes": {
+      "card-480": 34412,
+      "card-960": 125808,
+      "card-1440": 227048,
+      "full-720": 93256,
+      "full-1280": 298744
+    }
+  },
+  "midhurst-front-entrance-2": {
+    "project": "midhurst-front-entrance",
+    "masterSha": "a6ba7604d1",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/midhurst-front-entrance-2-v1-card-960.webp",
+      "srcset": "/images/portfolio/midhurst-front-entrance-2-v1-card-480.webp 480w, /images/portfolio/midhurst-front-entrance-2-v1-card-960.webp 960w, /images/portfolio/midhurst-front-entrance-2-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/midhurst-front-entrance-2-v1-full-1280.webp",
+      "srcset": "/images/portfolio/midhurst-front-entrance-2-v1-full-720.webp 540w, /images/portfolio/midhurst-front-entrance-2-v1-full-1280.webp 960w, /images/portfolio/midhurst-front-entrance-2-v1-full-1920.webp 1440w",
+      "width": 1440,
+      "height": 1920
+    },
+    "bytes": {
+      "card-480": 17268,
+      "card-960": 43598,
+      "card-1440": 76924,
+      "full-720": 34996,
+      "full-1280": 91498,
+      "full-1920": 188216
+    }
+  },
+  "sloped-backyard-patio-steps-1": {
+    "project": "sloped-backyard-patio-steps",
+    "masterSha": "2b81349f36",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/sloped-backyard-patio-steps-1-v1-card-960.webp",
+      "srcset": "/images/portfolio/sloped-backyard-patio-steps-1-v1-card-480.webp 480w, /images/portfolio/sloped-backyard-patio-steps-1-v1-card-960.webp 960w, /images/portfolio/sloped-backyard-patio-steps-1-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/sloped-backyard-patio-steps-1-v1-full-1280.webp",
+      "srcset": "/images/portfolio/sloped-backyard-patio-steps-1-v1-full-720.webp 540w, /images/portfolio/sloped-backyard-patio-steps-1-v1-full-1280.webp 960w, /images/portfolio/sloped-backyard-patio-steps-1-v1-full-1920.webp 1440w",
+      "width": 1440,
+      "height": 1920
+    },
+    "bytes": {
+      "card-480": 41662,
+      "card-960": 168154,
+      "card-1440": 363622,
+      "full-720": 91910,
+      "full-1280": 274730,
+      "full-1920": 482690
+    }
+  },
+  "sloped-backyard-patio-steps-2": {
+    "project": "sloped-backyard-patio-steps",
+    "masterSha": "f351f9d816",
+    "version": 1,
+    "card": {
+      "src": "/images/portfolio/sloped-backyard-patio-steps-2-v1-card-960.webp",
+      "srcset": "/images/portfolio/sloped-backyard-patio-steps-2-v1-card-480.webp 480w, /images/portfolio/sloped-backyard-patio-steps-2-v1-card-960.webp 960w, /images/portfolio/sloped-backyard-patio-steps-2-v1-card-1440.webp 1440w",
+      "width": 960,
+      "height": 720
+    },
+    "full": {
+      "src": "/images/portfolio/sloped-backyard-patio-steps-2-v1-full-1280.webp",
+      "srcset": "/images/portfolio/sloped-backyard-patio-steps-2-v1-full-720.webp 720w, /images/portfolio/sloped-backyard-patio-steps-2-v1-full-1280.webp 1280w, /images/portfolio/sloped-backyard-patio-steps-2-v1-full-1920.webp 1920w",
+      "width": 1920,
+      "height": 1069
+    },
+    "bytes": {
+      "card-480": 34182,
+      "card-960": 146282,
+      "card-1440": 299682,
+      "full-720": 48422,
+      "full-1280": 170726,
+      "full-1920": 349088
+    }
+  }
+}

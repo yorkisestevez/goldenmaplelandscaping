@@ -34,7 +34,8 @@ function renderBusinessBrief() {
 - ${publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, BUSINESS.credentials.workmanshipWarranty.value)}
 - ${publicClaimCopy(BUSINESS.commercialPolicies.consultation, BUSINESS.commercialPolicies.consultation.value)}
 - ${publicClaimCopy(BUSINESS.commercialPolicies.permits, 'Confirm permit responsibilities in the written scope.')}
-- Minimum investment, design fees/credits, financing, subcontractor roles, credentials, manufacturer authorization, photo rights and portfolio provenance remain subject to confirmation.
+- Portfolio photos under /images/portfolio are owner-photographed Golden Maple jobs (attested register in the repo, 2026-09-13); project pages list town, category and a description only.
+- Minimum investment, design fees/credits, financing, subcontractor roles, credentials, manufacturer authorization and testimonials remain subject to confirmation.
 - Construction depth and materials depend on site conditions, loading and written project specifications. Estimator assumptions are not universal installation promises.
 - Brand references in articles are comparisons, not installer authorization or manufacturer-warranty commitments.
 

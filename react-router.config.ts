@@ -1,5 +1,6 @@
 import type { Config } from '@react-router/dev/config';
 import { getAutoCombos } from './src/data/serviceLocations';
+import { PROJECTS } from './src/data/projects';
 
 export default {
   appDirectory: 'src',
@@ -14,7 +15,8 @@ export default {
     const autoLocations = ['orillia', 'wasaga-beach', 'midland', 'collingwood'].map(
       (s) => `/locations/${s}`,
     );
-    // NOTE: /portfolio/:slug is left to SPA fallback for now (low SEO value; add later).
-    return [...staticPaths, ...serviceCombos, ...autoLocations];
+    // Dynamic /portfolio/:slug — one route per attested project (src/data/projects.ts).
+    const projects = PROJECTS.map((p) => `/portfolio/${p.slug}`);
+    return [...staticPaths, ...serviceCombos, ...autoLocations, ...projects];
   },
 } satisfies Config;

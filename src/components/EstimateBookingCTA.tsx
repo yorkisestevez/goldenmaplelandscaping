@@ -3,6 +3,8 @@ import { Calendar, Sparkles, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { trackCall } from '../utils/analytics';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+import { getProject, projectCover } from '../data/projects';
+import ResponsiveImage from './ResponsiveImage';
 
 /**
  * Two-track CTA: project conversation or design enquiry.
@@ -31,34 +33,16 @@ export default function EstimateBookingCTA() {
   const freeHref = '/book';
   const designHref = stripeDesignUrl || '/contact?type=design';
 
-  const proofPhotos = [
-    {
-      src: '/images/projects/IMG_4826.jpg',
-      alt: 'Permacon paver patio with hand-set diamond inlay in Barrie ON',
-    },
-    {
-      src: '/images/projects/garden-wall.JPEG',
-      alt: 'Engineered retaining wall in Barrie ON',
-    },
-    {
-      src: '/images/projects/WhatsApp Image 2026-03-20 at 8.12.26 PM.jpeg',
-      alt: 'Lakeside TimberTech composite deck in Simcoe County',
-    },
-  ];
+  // Owner-attested completed-project photos only (scripts/portfolio-sources.mjs).
+  const proofPhotos = ['barrie-diamond-inlay-patio', 'sloped-backyard-patio-steps', 'deck-and-garden-walkway']
+    .map((slug) => projectCover(getProject(slug)!));
 
   return (
     <div className="space-y-7">
       <div className="grid grid-cols-3 gap-2 md:gap-3" data-testid="estimator-proof-strip">
         {proofPhotos.map((photo) => (
           <div key={photo.src} className="aspect-[4/3] overflow-hidden rounded-[2px] border border-brand-dim/10">
-            <img
-              src={photo.src}
-              alt={photo.alt}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover"
-              referrerPolicy="no-referrer"
-            />
+            <ResponsiveImage image={photo} sizes="(min-width: 768px) 20vw, 33vw" aspect="fill" className="h-full w-full object-cover" />
           </div>
         ))}
       </div>
