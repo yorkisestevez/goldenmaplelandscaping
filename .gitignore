@@ -28,3 +28,10 @@ scripts/blog-publisher/*.bak-gemini-*
 # CodeGraph / editor tool caches (per-machine, do not ship)
 .codegraph/
 .cursor/
+
+# Meta photo harvest masters (re-downloadable by id via scripts/photos/harvest-meta-photos.mjs); only the index is tracked
+sources/meta/*.jpg
+
+# Regenerable review sheets (node scripts/photos/harvest-meta-photos.mjs --sheets); keep the markdown + shortlist.json
+docs/portfolio/meta-sheet-*.jpg
+docs/portfolio/shortlist-*.jpg

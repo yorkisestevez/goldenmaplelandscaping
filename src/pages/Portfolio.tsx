@@ -1,149 +1,175 @@
-import { motion } from 'motion/react';
-import { ArrowRight, Grid, AlignJustify, Map } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import SEO from '../components/SEO';
 import Reveal from '../components/Reveal';
-import { Link } from 'react-router-dom';
+import ProjectCard from '../components/ProjectCard';
+import PhotoGrid from '../components/PhotoGrid';
+import InstagramFeed from '../components/InstagramFeed';
 import { BUSINESS, canPublish } from '../data/business';
+import {
+  PROJECTS,
+  PROJECT_CATEGORIES,
+  categoryFromSlug,
+  categorySlug,
+  projectPhotos,
+  type ProjectCategory,
+} from '../data/projects';
+import { cn } from '../utils/cn';
 
-const PROJECTS = [
-  {
-    id: 1,
-    slug: "shanty-bay-estate",
-    title: "The Shanty Bay Estate",
-    category: "Full Transformation",
-    desc: "A sprawling lakeside estate transformation featuring multi-level porcelain terraces and custom structural walls.",
-    img: "/images/projects/IMG_4826.jpg"
-  },
-  {
-    id: 2,
-    slug: "bradford-modern-pergola",
-    title: "Bradford Modern Pergola",
-    category: "Hardscape Design",
-    desc: "Clean geometric lines meet functional luxury with this integrated patio and custom pergola system.",
-    img: "/images/projects/patio-pergola.jpg"
-  },
-  {
-    id: 3,
-    slug: "innisfil-lakeside-retreat",
-    title: "Innisfil Lakeside Retreat",
-    category: "Outdoor Living",
-    desc: "A year-round outdoor sanctuary featuring a covered patio and integrated outdoor kitchen foundations.",
-    img: "/images/projects/covered patio.JPG"
-  },
-  {
-    id: 4,
-    slug: "barrie-heights-structural",
-    title: "Barrie Heights Structural",
-    category: "Retaining Walls",
-    desc: "Precision-engineered retaining walls that reclaimed massive elevation changes for functional garden space.",
-    img: "/images/projects/garden-wall.JPEG"
-  },
-  {
-    id: 5,
-    slug: "orillia-premium-walkway",
-    title: "Orillia Premium Walkway",
-    category: "Interlocking Stone",
-    desc: "Curated interlocking stone walkway that brings architectural curb appeal to a modern Orillia residence.",
-    img: "/images/projects/orillia-walkway.jpg"
-  },
-  {
-    id: 6,
-    slug: "simcoe-county-driveway",
-    title: "Simcoe County Driveway",
-    category: "Interlocking Stone",
-    desc: "Heavy-duty driveway installation engineered with our 16\" base standard for lifetime durability.",
-    img: "/images/projects/paver-driveway.JPG"
-  },
-  {
-    id: 7,
-    slug: "silver-maple-radiance",
-    title: "Silver Maple Radiance",
-    category: "Composite Decking",
-    desc: "A premium TimberTech deck installation featuring the Silver Maple Radiance Rail system for modern lakeside aesthetics.",
-    img: "/images/projects/Silver Maple Radiance Rail 0101.jpg"
-  },
-  {
-    id: 8,
-    slug: "luxury-outdoor-kitchen",
-    title: "Luxury Outdoor Kitchen",
-    category: "Outdoor Living",
-    desc: "Custom outdoor kitchen build in Bradford, featuring high-end grilling stations and built-in refrigeration.",
-    img: "/images/projects/luxury outdoor kitchen.jpeg"
-  },
-  {
-    id: 11,
-    slug: "lakeside-pool-decking",
-    title: "Paver Patio & Pergola",
-    category: "Hardscape Design",
-    desc: "A Permacon paver patio with a cedar pergola and built-in seating — a complete backyard living space on a deep, freeze-thaw-proof base.",
-    img: "/images/projects/patio-pergola.jpg"
-  },
-];
+type View = 'projects' | 'photos';
 
 export default function Portfolio() {
   const portfolioVerified = canPublish(BUSINESS.reviews.portfolio) && canPublish(BUSINESS.reviews.photoRights);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // URL is the source of truth (?category=…&view=photos) but the FIRST render must
+  // match the prerendered HTML, so state starts at the defaults and syncs after mount.
+  const [category, setCategory] = useState<ProjectCategory | 'all'>('all');
+  const [view, setView] = useState<View>('projects');
+  useEffect(() => {
+    setCategory(categoryFromSlug(searchParams.get('category')) ?? 'all');
+    setView(searchParams.get('view') === 'photos' ? 'photos' : 'projects');
+  }, [searchParams]);
+
+  const update = (next: { category?: ProjectCategory | 'all'; view?: View }) => {
+    const params = new URLSearchParams(searchParams);
+    const c = next.category ?? category;
+    const v = next.view ?? view;
+    if (c === 'all') params.delete('category'); else params.set('category', categorySlug(c));
+    if (v === 'projects') params.delete('view'); else params.set('view', v);
+    setSearchParams(params, { replace: true });
+  };
+
+  const visibleProjects = category === 'all' ? PROJECTS : PROJECTS.filter((p) => p.category === category);
+  const categoriesWithWork = PROJECT_CATEGORIES.filter((c) => PROJECTS.some((p) => p.category === c));
+  const allPhotos = visibleProjects.flatMap((p) => projectPhotos(p).map((img) => ({ img, project: p })));
+
+  const listSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Completed landscaping projects by Golden Maple Landscaping',
+    itemListElement: PROJECTS.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${BUSINESS.canonicalUrl}/portfolio/${p.slug}/`,
+      name: p.title,
+    })),
+  };
+
   return (
     <div className="bg-brand-nearblack min-h-screen">
-      <SEO 
-        title="Landscaping Portfolio | Barrie Projects"
-        description="Explore outdoor-living possibilities and ask for project examples relevant to your property, materials and intended use."
+      <SEO
+        title="Landscaping Portfolio | Completed Projects in Barrie & Simcoe County"
+        description="Photos from patios, walkways, retaining walls, driveways and decks Golden Maple Landscaping has completed around Barrie, Midhurst and Simcoe County."
         canonical="https://goldenmaplelandscaping.ca/portfolio"
+        schema={portfolioVerified ? listSchema : undefined}
       />
-      
-      <section className="section-padding pt-48">
+
+      <section className="section-padding pt-32 md:pt-48">
         <div className="container-custom">
-          <Reveal className="text-center max-w-3xl mx-auto mb-32">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-              Project possibilities
+          <Reveal className="text-center max-w-3xl mx-auto mb-10 md:mb-24">
+            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">
+              Completed work
             </span>
-            <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
-              Outdoor-living <br />
-              <span className="italic text-brand-gold-dark">possibilities.</span>
+            <h1 className="font-display text-5xl md:text-8xl font-light text-brand-ink leading-[1.05] mb-6 md:mb-10">
+              Built in Barrie <br />
+              <span className="italic text-brand-gold-dark">and Simcoe County.</span>
             </h1>
             <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
-              Planning a patio, deck or complete backyard? Tell us what matters to you and ask for relevant examples to discuss.
+              Photos from projects we have completed around Barrie, Midhurst and Simcoe County. Filter by the kind of work you are planning, or browse every photo.
             </p>
           </Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-40">
-            {(portfolioVerified ? PROJECTS : []).map((project, idx) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: idx * 0.1 }}
-              >
-                <Link to={`/portfolio/${project.slug}`} className="group relative h-[650px] rounded-[2px] overflow-hidden cursor-pointer shadow-2xl border border-brand-dim/10 block">
-                <img
-                  src={project.img}
-                  alt={project.title}
-                  className="w-full h-full object-cover contrast-[110%] transition-transform duration-1000 group-hover:scale-110 opacity-80 group-hover:opacity-100"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                <div className="absolute inset-0 p-12 flex flex-col justify-end">
-                  <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold mb-6 block">
-                    {portfolioVerified ? project.category : 'Planning reference'}
-                  </span>
-                  <h3 className="font-display text-4xl font-light text-brand-porcelain mb-6 group-hover:text-brand-gold transition-colors duration-500 leading-tight">
-                    {portfolioVerified ? project.title : 'Outdoor-living inspiration'}
-                  </h3>
-                  <p className="font-sans text-sm text-brand-porcelain-soft leading-relaxed mb-10 opacity-0 translate-y-6 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-700 ease-[0.16, 1, 0.3, 1] font-light">
-                    {portfolioVerified ? project.desc : 'Project-specific scope, location, materials, and outcomes are confirmed directly before they are presented as a Golden Maple build.'}
-                  </p>
-                  <div className="flex items-center gap-6 text-brand-gold font-sans text-[10px] uppercase tracking-[0.3em]">
-                    <span>{portfolioVerified ? 'View Project' : 'View Reference'}</span>
-                    <div className="w-10 h-px bg-brand-gold group-hover:w-16 transition-all duration-500" />
-                  </div>
+          {!portfolioVerified ? (
+            <Reveal className="max-w-3xl mx-auto mb-32">
+              <div className="bg-brand-surface border-l-2 border-brand-gold p-10 rounded-[2px]">
+                <h2 className="font-display text-3xl font-light text-brand-ink mb-4">Project photos are being prepared.</h2>
+                <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
+                  Ask us for examples that match your property and the work you are planning.
+                </p>
+                <Link to="/contact" className="btn-primary inline-block mt-10">Start a project conversation</Link>
+              </div>
+            </Reveal>
+          ) : (
+            <>
+              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-12">
+                <div role="group" aria-label="Filter projects by category" className="no-scrollbar -mx-8 flex snap-x gap-2 overflow-x-auto px-8 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
+                  {(['all', ...categoriesWithWork] as const).map((c) => {
+                    const active = category === c;
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => update({ category: c })}
+                        className={cn(
+                          'min-h-11 shrink-0 snap-start whitespace-nowrap rounded-[2px] border px-4 py-2 font-sans text-[11px] uppercase tracking-[0.18em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60 md:shrink',
+                          active
+                            ? 'border-brand-black bg-brand-black text-brand-porcelain'
+                            : 'border-brand-dim bg-brand-surface text-brand-ink hover:border-brand-gold-dark',
+                        )}
+                      >
+                        {c === 'all' ? 'All work' : c}
+                      </button>
+                    );
+                  })}
                 </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+                <div role="group" aria-label="View" className="inline-flex self-start rounded-[2px] border border-brand-dim bg-brand-surface p-1 md:self-auto">
+                  {(['projects', 'photos'] as const).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      aria-pressed={view === v}
+                      onClick={() => update({ view: v })}
+                      className={cn(
+                        'min-h-10 rounded-[2px] px-4 py-2 font-sans text-[11px] uppercase tracking-[0.18em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60',
+                        view === v ? 'bg-brand-black text-brand-porcelain' : 'text-brand-ink hover:text-brand-gold-dark',
+                      )}
+                    >
+                      {v === 'projects' ? 'Projects' : 'All photos'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {visibleProjects.length === 0 ? (
+                <p className="font-sans text-lg text-brand-muted font-light mb-32">
+                  No {category === 'all' ? '' : `${category.toLowerCase()} `}projects published yet.
+                </p>
+              ) : view === 'projects' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-14 mb-32">
+                  {visibleProjects.map((project, idx) => (
+                    <ProjectCard key={project.slug} project={project} delay={Math.min(idx, 5) * 0.06} />
+                  ))}
+                </div>
+              ) : (
+                <div className="mb-32">
+                  <PhotoGrid
+                    images={allPhotos.map((p) => p.img)}
+                    variant="masonry"
+                    lightboxLabel="Project photos"
+                    captionFor={(_, i) => {
+                      const p = allPhotos[i]?.project;
+                      return p ? (
+                        <span>
+                          {p.title} · {p.town}, ON{' '}
+                          <Link to={`/portfolio/${p.slug}`} className="ml-3 underline decoration-brand-gold/60 underline-offset-4 hover:text-brand-gold">
+                            View project
+                          </Link>
+                        </span>
+                      ) : null;
+                    }}
+                  />
+                </div>
+              )}
+            </>
+          )}
         </div>
       </section>
+
+      {/* Newest job photos, straight from Instagram — the portfolio above only grows when a
+          project is written up, so this is what keeps the page current between write-ups. */}
+      <InstagramFeed className="!pt-0" />
 
       <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <Reveal className="container-custom text-center">
@@ -152,7 +178,7 @@ export default function Portfolio() {
             <span className="text-brand-gold italic">be next.</span>
           </h2>
           <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light">
-            Tell us what you are imagining. Ask about suitable materials, the proposed scope and available project references.
+            Tell us what you are imagining. Ask about suitable materials, the proposed scope and project examples like the ones above.
           </p>
           <Link to="/contact" className="btn-primary px-20">Let's Talk About Your Property</Link>
         </Reveal>

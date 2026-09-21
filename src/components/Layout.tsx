@@ -1,11 +1,17 @@
 ﻿import { Link, useLocation } from 'react-router-dom';
 import React, { useRef, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Menu, X, Phone, MapPin, Mail, Shield, CheckCircle, Award, ChevronDown } from 'lucide-react';
+import { Menu, X, Phone, MapPin, Mail, Shield, CheckCircle, Award, ChevronDown, Instagram, Facebook } from 'lucide-react';
 import { trackEngagement, trackCall } from '../utils/analytics';
 import ChatWidget from './ChatWidget';
 import { cn } from '../utils/cn';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+
+// Canonical profile URLs live in src/data/business.ts — never hardcode handles here.
+const SOCIAL_LINKS = [
+  { name: 'Instagram', Icon: Instagram, url: BUSINESS.urls.instagram.value },
+  { name: 'Facebook', Icon: Facebook, url: BUSINESS.urls.facebook.value },
+] as const;
 
 
 const Navbar = () => {
@@ -374,22 +380,20 @@ const Navbar = () => {
               </div>
 
               <div className="flex justify-center gap-10 pt-10 border-t border-brand-dim/10">
-                {[
-                  { name: 'Facebook', icon: 'FB', url: 'https://facebook.com/goldenmaple' },
-                  { name: 'Instagram', icon: 'IG', url: 'https://instagram.com/goldenmaple' },
-                  { name: 'Google', icon: 'G', url: 'https://google.com/search?q=golden+maple+landscaping' }
-                ].map((social, idx) => (
+                {SOCIAL_LINKS.map((social, idx) => (
                   <motion.a
                     key={social.name}
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label={`Golden Maple on ${social.name}`}
+                    onClick={() => trackEngagement('outbound_click', `nav_${social.name.toLowerCase()}`)}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.7 + idx * 0.1 }}
                     className="w-12 h-12 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-gold hover:border-brand-gold hover:bg-brand-gold/5 transition-all"
                   >
-                    <span className="font-sans text-xs font-bold">{social.icon}</span>
+                    <social.Icon size={18} strokeWidth={1.5} aria-hidden="true" />
                   </motion.a>
                 ))}
               </div>
@@ -468,6 +472,21 @@ const Footer = () => {
               <li className="flex items-center gap-4">
                 <Mail size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
                 <a href={`mailto:${publicContact.email}`} className="hover:text-brand-gold-dark transition-colors">{publicContact.email}</a>
+              </li>
+              <li className="flex items-center gap-3 pt-2">
+                {SOCIAL_LINKS.map((social) => (
+                  <a
+                    key={social.name}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Golden Maple on ${social.name}`}
+                    onClick={() => trackEngagement('outbound_click', `footer_${social.name.toLowerCase()}`)}
+                    className="w-10 h-10 rounded-full border border-brand-dim flex items-center justify-center text-brand-gold-dark hover:border-brand-gold-dark hover:bg-brand-gold/5 transition-all"
+                  >
+                    <social.Icon size={16} strokeWidth={1.5} aria-hidden="true" />
+                  </a>
+                ))}
               </li>
             </ul>
           </div>

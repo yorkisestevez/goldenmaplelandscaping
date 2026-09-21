@@ -21,6 +21,8 @@ export default function Manifesto() {
               <img
                 src={FOUNDER.portrait.src}
                 alt={FOUNDER.portrait.alt}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover object-top transition-transform duration-700 group-hover/photo:scale-105"
                 referrerPolicy="no-referrer"
               />

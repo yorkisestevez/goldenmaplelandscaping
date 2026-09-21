@@ -74,8 +74,10 @@ export default function Process() {
             className="relative h-[450px] md:h-[750px] rounded-[2px] overflow-hidden border border-brand-dim/10"
           >
             <img
-              src="/images/projects/Golden Maple deck and walkway.jpg"
-              alt="Architectural Planning in Barrie ON"
+              src="/images/portfolio/deck-and-garden-walkway-1-v1-full-1280.webp"
+              alt="Aerial view of a backyard deck and garden walkway in Simcoe County, ON"
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover grayscale opacity-80"
               referrerPolicy="no-referrer"
             />

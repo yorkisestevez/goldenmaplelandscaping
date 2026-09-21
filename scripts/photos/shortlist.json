@@ -1,0 +1,22 @@
+{
+  "note": "Screened 2026-09-13 from docs/portfolio/meta-sheet-2026-09-13-*.jpg. Rules applied: finished work only, no crew faces, no renders/graphics, no DMG-era signage or watermark, longest edge >= 900px. Sheet numbers (#) map to sources/meta/index.json order (unique items sorted by date desc). Owner approves/vetoes by sheet number.",
+  "groups": [
+    { "slug": "poolside-patio", "title": "Pool-side patio and seating", "category": "Patios & interlocking", "town": "Simcoe County", "sheet": [19] },
+    { "slug": "aerial-driveway-front-yard", "title": "Driveway and front yard from above", "category": "Driveways", "town": "Simcoe County", "sheet": [54] },
+    { "slug": "front-steps-driveway-walkway", "title": "Front porch steps and driveway walkway", "category": "Walkways & entrances", "town": "Simcoe County", "sheet": [59, 60, 56] },
+    { "slug": "lit-entrance-steps", "title": "Entrance steps with landscape lighting", "category": "Walls & steps", "town": "Simcoe County", "sheet": [70, 71, 68, 69] },
+    { "slug": "fenced-patio-2022", "title": "Backyard patio with wood border", "category": "Patios & interlocking", "town": "Simcoe County", "sheet": [74] },
+    { "slug": "gazebo-dining-patio-2022", "title": "Patio with gazebo and dining area", "category": "Patios & interlocking", "town": "Simcoe County", "sheet": [80] },
+    { "slug": "cedar-privacy-fence-2022", "title": "Cedar privacy fence and gate", "category": "Fences & privacy", "town": "Simcoe County", "sheet": [90, 93] },
+    { "slug": "slab-walkway-2021", "title": "Slab walkway along the house", "category": "Walkways & entrances", "town": "Simcoe County", "sheet": [110, 111] },
+    { "slug": "front-steps-and-driveway-2021", "title": "Front steps and paver driveway", "category": "Driveways", "town": "Simcoe County", "sheet": [115, 114] },
+    { "slug": "patio-and-side-drive-2021", "title": "Backyard patio, side drive and night lighting", "category": "Patios & interlocking", "town": "Simcoe County", "sheet": [119, 116, 118, 120] },
+    { "slug": "patio-with-front-steps-2021", "title": "Patio, border and front steps", "category": "Walls & steps", "town": "Simcoe County", "sheet": [121, 122, 123, 125, 124] },
+    { "slug": "walkway-and-new-sod", "title": "Walkway with new sod", "category": "Walkways & entrances", "town": "Simcoe County", "sheet": [126] },
+    { "slug": "pool-deck-pavers", "title": "Paver pool deck", "category": "Patios & interlocking", "town": "Simcoe County", "sheet": [132] },
+    { "slug": "curved-walkway-2021", "title": "Curved slab walkway", "category": "Walkways & entrances", "town": "Simcoe County", "sheet": [141, 137] },
+    { "slug": "artificial-turf-backyard", "title": "Artificial turf backyard", "category": "Artificial turf", "town": "Simcoe County", "sheet": [147] },
+    { "slug": "fence-and-lawn-2021", "title": "Cedar fence with new lawn and cedars", "category": "Fences & privacy", "town": "Simcoe County", "sheet": [157, 156, 160, 161] },
+    { "slug": "patio-dining-2021", "title": "Paver patio for outdoor dining", "category": "Patios & interlocking", "town": "Simcoe County", "sheet": [176] }
+  ]
+}

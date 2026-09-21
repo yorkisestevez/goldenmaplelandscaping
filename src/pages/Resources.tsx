@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen, Calculator } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-      {
+        {
+    slug: "heated-driveway-worth-it-barrie",
+    title: "Heated Driveway Systems: Are They Worth It in Barrie?",
+    excerpt: "Heated driveways in Barrie cost $12–$25 per sq ft installed — find out if electric radiant or hydronic systems make sense for Simcoe County winters.",
+    category: "Engineering",
+    readTime: "11 min",
+    image: "/images/projects/paver-driveway.JPG",
+  },
+  {
     slug: "sodding-vs-seeding-simcoe-county",
     title: "Sod vs. Seed in Simcoe County: Real Cost & Timeline for a New Lawn",
     excerpt: "Sodding a new lawn in Simcoe County runs $1.20–$2.50 per sq ft installed; seeding costs $0.25–$0.65 per sq ft but takes 8–16 weeks to establish.",
