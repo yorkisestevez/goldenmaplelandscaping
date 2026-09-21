@@ -200,7 +200,89 @@ async function reviewDraft(draft, { apiKey = null } = {}) {
   if (!Array.isArray(review.issues)) review.issues = [];
 
   console.log(`[reviewer] verdict=${review.verdict} score=${review.score} issues=${review.issues.length}`);
+
+  // Jev second-opinion (added 2026-09-21). The primary reviewer produces the
+  // rich issue list; Jev independently classifies the draft on the same three
+  // buckets using its Choice primitive. If Jev disagrees with the primary on
+  // pass/block (the two decisive verdicts), downgrade to 'warn' so a human
+  // eyeballs it. Non-fatal: Jev API outage falls silently back to the primary
+  // verdict. Only fires when TYPESAFE_API_KEY is set.
+  if (process.env.TYPESAFE_API_KEY) {
+    try {
+      const jev = await jevSecondOpinion(draft, review.verdict);
+      if (jev && jev.verdict && jev.verdict !== review.verdict) {
+        console.log(`[reviewer] jev-second-opinion=${jev.verdict} (conf ${(jev.confidence || 0).toFixed(2)}) — disagreed with primary=${review.verdict}`);
+        // Only downgrade in the decisive direction: if either side says block,
+        // treat as warn (human review); if both agree it's safe or both agree
+        // block, verdict stays. This avoids Jev accidentally UPGRADING a block
+        // to a pass.
+        if (review.verdict === 'pass' || jev.verdict === 'block') {
+          review.verdict = 'warn';
+          review.issues.push({
+            axis: 'jev_disagreement',
+            severity: 'medium',
+            problem: `Jev independent verdict was "${jev.verdict}" (${((jev.probabilities || {})[jev.verdict] || 0) * 100 | 0}%) while primary reviewer said "${review.verdict}". Downgraded to warn for manual review.`,
+            fix: 'Read both reviews and decide.',
+            quote: null,
+          });
+        }
+      } else if (jev) {
+        console.log(`[reviewer] jev-second-opinion=${jev.verdict} ✓ agrees with primary`);
+      }
+    } catch (e) {
+      // Non-fatal — reviewer keeps its primary verdict.
+      console.warn(`[reviewer] jev second-opinion failed: ${e.message}`);
+    }
+  }
+
   return review;
+}
+
+// Jev independent verdict via Choice primitive. Same three buckets as the
+// primary reviewer. Returns { verdict, confidence, probabilities } or null.
+async function jevSecondOpinion(draft, primaryVerdict) {
+  const apiKey = process.env.TYPESAFE_API_KEY;
+  if (!apiKey) return null;
+
+  const state = {
+    slug: draft.slug,
+    title: draft.title || draft.metaTitle || '',
+    tldr: draft.tldr || draft.summary || '',
+    sections: (draft.sections || []).slice(0, 6).map((s) => ({
+      heading: s.heading || s.h2 || '',
+      content_preview: String(s.content || s.html || '').replace(/<[^>]+>/g, ' ').slice(0, 400),
+    })),
+  };
+
+  const res = await fetch('https://api.typesafe.ai/v1/systemone', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      state,
+      model: 'jev-latest',
+      questions: {
+        verdict: {
+          type: 'choice',
+          instructions: `You are a second-opinion adversarial reviewer for a Golden Maple Landscaping blog draft (hardscape contractor in Barrie, Ontario). Judge this draft using the same three buckets a human editor would use before publishing to goldenmaplelandscaping.ca. Focus on: fabricated stats, math inconsistencies (numbers that contradict elsewhere in the post), hedged/weasel language, embarrassing AI tells, or Google-quality-filter risks. Pick exactly one.`,
+          criteria: {
+            pass: 'Ready to publish as-is. Numbers check out, voice is grounded and specific, no embarrassing AI hedging.',
+            warn: 'Publishable with minor edits — a hedged claim, a rough math approximation, a slightly generic paragraph, or a small hyperlocal-specificity gap. Ship with note.',
+            block: 'Should NOT publish without a rewrite. Fabricated statistic, internally inconsistent numbers (e.g. $150/event in TL;DR but $4/event in body), unsourced claim about a real person or business, or a duplicate angle vs. a prior post.',
+          },
+        },
+      },
+    }),
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!res.ok) throw new Error(`jev HTTP ${res.status}`);
+  const data = await res.json();
+  const ans = data.answers?.verdict;
+  if (!ans || !ans.choice) return null;
+  return {
+    verdict: ans.choice,
+    confidence: ans.confidence || 0,
+    probabilities: ans.probabilities || {},
+  };
 }
 
 module.exports = { reviewDraft };

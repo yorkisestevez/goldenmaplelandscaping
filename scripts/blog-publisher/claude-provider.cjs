@@ -118,6 +118,39 @@ function claudeGenerate(prompt, opts = {}) {
 }
 
 /**
+ * Retry a claudeGenerate call with exponential backoff on transient failures.
+ *
+ * Added 2026-09-21 after the weekly cron surfaced a mystery `Claude CLI exited 15`
+ * failure at 09:00:36 that reproduced zero times on manual re-run — a classic
+ * transient (auth token refresh, Windows Defender AV scan, DNS blip, or a
+ * concurrent CLI instance racing on the same auth state). Without retry, one
+ * 36-second blip = whole week's post skipped.
+ *
+ * Retries any error, since we can't reliably distinguish "transient" from
+ * "your prompt is genuinely bad" without inspecting stderr text patterns.
+ * Backoff: 5s, 15s. Cap total retries at 3 attempts so a truly-broken box
+ * fails inside the outer 30-min workflow timeout with headroom.
+ */
+async function claudeGenerateWithRetry(prompt, opts = {}) {
+  const backoffs = [5_000, 15_000]; // ms between attempts 1-2 and 2-3
+  let lastErr;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      return await claudeGenerate(prompt, opts);
+    } catch (e) {
+      lastErr = e;
+      if (attempt === 3) break;
+      const wait = backoffs[attempt - 1];
+      console.warn(
+        `[claude-provider] attempt ${attempt}/3 failed (${(e && e.message || '').slice(0, 120)}) — retrying in ${wait / 1000}s`,
+      );
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+  throw lastErr;
+}
+
+/**
  * Drop-in replacement for the publishers' `geminiPost(apiKey, body)`.
  *
  * The four repos' generate.cjs files have diverged (Nudgel wraps the call in a
@@ -136,7 +169,7 @@ async function geminiCompatPost(_apiKey, body, opts = {}) {
     return { error: { message: 'claude-provider: no prompt text found in request body' } };
   }
   try {
-    const text = await claudeGenerate(prompt, opts);
+    const text = await claudeGenerateWithRetry(prompt, opts);
     return { candidates: [{ content: { parts: [{ text }] } }] };
   } catch (e) {
     // Gemini-shaped error so existing extractText() error handling still fires.
