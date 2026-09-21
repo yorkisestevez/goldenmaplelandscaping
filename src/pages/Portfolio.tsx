@@ -4,6 +4,7 @@ import SEO from '../components/SEO';
 import Reveal from '../components/Reveal';
 import ProjectCard from '../components/ProjectCard';
 import PhotoGrid from '../components/PhotoGrid';
+import InstagramFeed from '../components/InstagramFeed';
 import { BUSINESS, canPublish } from '../data/business';
 import {
   PROJECTS,
@@ -165,6 +166,10 @@ export default function Portfolio() {
           )}
         </div>
       </section>
+
+      {/* Newest job photos, straight from Instagram — the portfolio above only grows when a
+          project is written up, so this is what keeps the page current between write-ups. */}
+      <InstagramFeed className="!pt-0" />
 
       <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <Reveal className="container-custom text-center">

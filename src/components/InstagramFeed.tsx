@@ -20,6 +20,9 @@ export default function InstagramFeed({ limit = 8, className }: InstagramFeedPro
   if (posts.length === 0) return null;
   const handle = INSTAGRAM_ACCOUNT.username ?? 'goldenmaplelandscaping.ca';
   const profileUrl = INSTAGRAM_ACCOUNT.url ?? BUSINESS.urls.instagram.value;
+  // A short feed fills its row instead of leaving an empty fourth column; three across
+  // is also Instagram's own profile grid, so it reads as intended rather than sparse.
+  const compact = posts.length <= 3;
 
   return (
     <section className={cn('section-padding bg-brand-nearblack', className)} aria-labelledby="instagram-heading">
@@ -45,7 +48,7 @@ export default function InstagramFeed({ limit = 8, className }: InstagramFeedPro
           </a>
         </div>
 
-        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:gap-3" aria-label="Recent Instagram posts">
+        <ul className={cn('grid gap-2 md:gap-3', compact ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4')} aria-label="Recent Instagram posts">
           {posts.map((post, i) => (
             <li key={post.id}>
               <Reveal delay={Math.min(i, 7) * 0.04}>
@@ -59,7 +62,7 @@ export default function InstagramFeed({ limit = 8, className }: InstagramFeedPro
                 >
                   <ResponsiveImage
                     image={post.image}
-                    sizes="(min-width: 640px) 25vw, 50vw"
+                    sizes={compact ? '33vw' : '(min-width: 640px) 25vw, 50vw'}
                     aspect="1/1"
                     className="transition-transform duration-700 motion-safe:group-hover:scale-[1.03]"
                   />
