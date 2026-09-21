@@ -94,6 +94,7 @@ export default [
   route('resources/landscaper-quote-excavation-line-item', 'pages/blog/LandscaperQuoteExcavationLineItem.tsx'),
   route('resources/sodding-vs-seeding-simcoe-county', 'pages/blog/SoddingVsSeedingSimcoeCounty.tsx'),
   route('resources/heated-driveway-worth-it-barrie', 'pages/blog/HeatedDrivewayWorthItBarrie.tsx'),
+  route('resources/backyard-entertaining-wasaga-beach', 'pages/blog/BackyardEntertainingWasagaBeach.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),

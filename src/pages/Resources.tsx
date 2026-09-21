@@ -4,7 +4,15 @@ import { ArrowRight, Clock, BookOpen, Calculator } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const BLOG_POSTS = [
-        {
+          {
+    slug: "backyard-entertaining-wasaga-beach",
+    title: "Outdoor Entertaining in Wasaga Beach: How to Build a Backyard That Works",
+    excerpt: "Build a Wasaga Beach backyard for entertaining with real 2026 costs: $18K–$65K for a full setup, $22–$28 per sq ft for interlocking patio, pergola included.",
+    category: "Design",
+    readTime: "11 min",
+    image: "/images/projects/patio-pergola.jpg",
+  },
+  {
     slug: "heated-driveway-worth-it-barrie",
     title: "Heated Driveway Systems: Are They Worth It in Barrie?",
     excerpt: "Heated driveways in Barrie cost $12–$25 per sq ft installed — find out if electric radiant or hydronic systems make sense for Simcoe County winters.",
