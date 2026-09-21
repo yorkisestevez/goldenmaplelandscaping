@@ -127,7 +127,7 @@ export default function PaverWalkwayCostBarrie() {
         </div>
       </div>
 
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020. The company is WSIB registered, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews." />
+      <AuthorBio bio="Golden Maple Landscaping shares practical planning guidance for homeowners comparing outdoor construction options. Contact us to confirm current project scope and documentation." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>I hope this detailed breakdown gives you a realistic understanding of what goes into the cost of a new paver walkway in Barrie. The numbers here are a solid starting point for your 2026 budget, but every project is unique. The only way to get a firm price is for us to see the site, talk about the materials you like, and measure everything out. If you're in Barrie, Innisfil, or anywhere in Simcoe County and want a walkway that's built to last, reach out to us at Golden Maple Landscaping.</p>" }} />
     </BlogPostLayout>

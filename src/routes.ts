@@ -93,6 +93,7 @@ export default [
   route('resources/permacon-pavers-honest-review-2026', 'pages/blog/PermaconPaversHonestReview2026.tsx'),
   route('resources/landscaper-quote-excavation-line-item', 'pages/blog/LandscaperQuoteExcavationLineItem.tsx'),
   route('resources/sodding-vs-seeding-simcoe-county', 'pages/blog/SoddingVsSeedingSimcoeCounty.tsx'),
+  route('resources/heated-driveway-worth-it-barrie', 'pages/blog/HeatedDrivewayWorthItBarrie.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),

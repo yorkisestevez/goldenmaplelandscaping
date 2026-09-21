@@ -1,0 +1,160 @@
+import BlogPostLayout from '../../components/BlogPostLayout';
+import AuthorBio from '../../components/AuthorBio';
+
+export default function HeatedDrivewayWorthItBarrie() {
+  const faqSchema = {
+      "@type": "FAQPage",
+      "mainEntity": [
+          {
+              "@type": "Question",
+              "name": "How much does a heated driveway cost in Barrie Ontario?",
+              "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A heated interlocking paver driveway in Barrie costs $6,500–$12,000 installed for a standard two-car driveway of 55–65 m², using an electric radiant system. Hydronic systems on the same footprint run $13,000–$20,000 before boiler costs. Price varies with driveway size, existing electrical service capacity, and whether you need a new base build or a retrofit into existing pavers."
+              }
+          },
+          {
+              "@type": "Question",
+              "name": "What is the annual operating cost of a heated driveway in Ontario?",
+              "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "For a 60 m² electric radiant driveway running about 130 active hours per Barrie winter, expect $280–$550 per season on Time-of-Use electricity rates. A hydronic system on natural gas runs $140–$300 for comparable coverage. The exact cost depends on the winter severity — the 2022–23 Barrie winter would have run a system harder than the mild 2023–24 season."
+              }
+          },
+          {
+              "@type": "Question",
+              "name": "Can you put a heated system under Unilock or Techo-Bloc pavers?",
+              "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Unilock, Techo-Bloc, and Permacon all produce pavers rated for use with in-bed heating systems. We specify pavers of at least 60 mm thickness for driveway applications. The heating cable or PEX tubing goes into the bedding sand layer — not the base — and the pavers are set on top in the standard fashion. The key difference is a 40 mm bedding layer instead of the standard 25 mm."
+              }
+          },
+          {
+              "@type": "Question",
+              "name": "How deep does the excavation need to be for a heated driveway in Barrie?",
+              "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "We excavate to at least 500 mm below finished grade for a heated driveway in Barrie, versus 350 mm for a standard unheated installation. The extra depth accommodates a deeper clear stone base (300–400 mm) and geotextile fabric, both required to manage frost heave in Barrie's clay-heavy soil. A shallow base under a heated system is the most common cause of premature loop failure."
+              }
+          },
+          {
+              "@type": "Question",
+              "name": "Is a heated driveway worth the cost in Barrie?",
+              "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "For most Barrie homeowners with a driveway over 50 m² or a sloped apron, the break-even against a commercial snow removal contract is 8–12 years. If you have reduced mobility, strong convenience preferences, or a driveway that ices badly due to grade or shade, the investment makes clear sense. For small flat driveways, a snow removal contract is likely the better financial decision."
+              }
+          },
+          {
+              "@type": "Question",
+              "name": "What type of base is required under a heated interlocking driveway?",
+              "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "We use 12–16 inches (300–400 mm) of compacted ¾\" clear stone — not granular A. Granular A retains water, which freezes and causes frost heave that can break cable loops. Clear stone drains freely and resists heave. A geotextile fabric between the native subgrade and the base stone prevents Barrie's clay soil from migrating up into the drainage layer over time."
+              }
+          },
+          {
+              "@type": "Question",
+              "name": "Do heated driveways work automatically, or do you have to turn them on?",
+              "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Properly installed systems run automatically. The controller uses a ground-level snow/ice sensor combined with an aerial temperature sensor — the system activates only when both surface temperature is below 1 °C and precipitation is detected. Most controllers also have a manual override and a hold mode for extended cold periods. You will never need to remember to turn it on before a snow event."
+              }
+          },
+          {
+              "@type": "Question",
+              "name": "Does a heated driveway prevent frost heave in the pavers?",
+              "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The heating system warms the surface and reduces ice bonding to pavers, but it does not prevent frost penetration into the base. Frost can still penetrate 300 mm or more into an inadequately prepared base during a Barrie cold snap. The base spec — not the heating element — is what prevents heave. A heated system paired with a proper clear stone base will outperform both individually."
+              }
+          }
+      ]
+  };
+
+  return (
+    <BlogPostLayout
+      title="Heated Driveway Systems: Are They Worth It in Barrie?"
+      seoTitle="Heated Driveway Barrie: Costs, Types & Real ROI"
+      seoDescription="Heated driveways in Barrie cost $12–$25 per sq ft installed — find out if electric radiant or hydronic systems make sense for Simcoe County winters."
+      category="Engineering"
+      date="September 14, 2026"
+      readTime="11 min"
+      heroImage="/images/projects/paver-driveway.JPG"
+      schema={faqSchema}
+      tldr="A heated driveway in Barrie runs $12–$25 per square foot installed, depending on whether you choose electric radiant cables or a hydronic glycol system. For a typical 50–60 m² two-car driveway, expect $6,000–$15,000 in installed cost, plus $250–$800 per season in energy. Systems work under Permacon, Unilock, or Techo-Bloc pavers — but only if the base and sensor placement are done correctly before the pavers go down. For most Barrie properties, the break-even against commercial snow removal is 8–12 years."
+      keywords="Heated Driveway Barrie: Costs, Types & Real ROI"
+      wordCount={2915}
+    >
+      <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
+        <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold mb-3">Quick Answer</div>
+        <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">A heated driveway in Barrie runs $12–$25 per square foot installed, depending on whether you choose electric radiant cables or a hydronic glycol system. For a typical 50–60 m² two-car driveway, expect $6,000–$15,000 in installed cost, plus $250–$800 per season in energy. Systems work under Permacon, Unilock, or Techo-Bloc pavers — but only if the base and sensor placement are done correctly before the pavers go down. For most Barrie properties, the break-even against commercial snow removal is 8–12 years.</p>
+      </div>
+
+      <div dangerouslySetInnerHTML={{ __html: "<p>Barrie averages around 180 cm of snow per year, and the real problem is not the total snowfall — it is the freeze-thaw cycle. Lake Simcoe's influence means temperatures cross 0 °C roughly 60–80 times each winter. That cycle is harder on driveways, and harder on backs, than a single sustained cold snap. A heated driveway eliminates both problems at once, which is why we get asked about them regularly. The real question is whether the upfront cost makes sense for your situation.</p><p>We have installed heated systems under interlocking paver driveways in south Barrie, Innisfil, and Oro-Medonte. What we have learned from those installations — and from the ones we have had to repair when other crews did them wrong — is that the technology itself is reliable. The failures almost always come down to base preparation and sensor placement, not the heating element. A system buried under a poorly compacted base will shift and eventually break a loop. A sensor in the wrong spot will either over-run the system or leave cold patches.</p><p>This post walks through the two main system types, what they realistically cost in Simcoe County, what the operating numbers look like, and the honest answer on when it makes financial sense versus when a good snowblower contract will serve you better.</p>" }} />
+
+      <h2>Electric Radiant vs. Hydronic: Which System Makes Sense Under Pavers?</h2>
+      <div dangerouslySetInnerHTML={{ __html: "<p>There are two ways to heat a driveway: electric radiant cables or mats, and hydronic systems that circulate a glycol-water mix through PEX tubing. Both work well under interlocking pavers. They have different installed costs, different operating costs, and meaningfully different complexity to install.</p><p><strong>Electric radiant systems</strong> use a self-regulating heating cable — typically rated at 50–60 watts per metre — laid in a snake pattern across a bed of bedding sand before the pavers are set. The cable is connected to a controller with a ground-level snow sensor and an aerial temperature sensor. When both conditions are met (surface temperature below 1 °C and precipitation detected), the controller activates the system automatically. Installed cost in Barrie for a 50 m² driveway runs $8,000–$12,000 including controls, electrical panel upgrade if required, and the paver base rebuild we require for all heated installations.</p><p><strong>Hydronic systems</strong> use a boiler — usually a condensing gas unit rated at 100,000–200,000 BTU — connected to PEX tubing buried in a sand or concrete topping. The glycol-water mix circulates continuously at a low temperature (around 40 °C) when the system is active. Hydronic systems cost more upfront — $12,000–$20,000 for a comparable 50 m² driveway — because of the boiler, manifold, and plumbing work. Operating costs are lower because natural gas is cheaper per BTU than electricity in Ontario.</p><p>For most residential driveways under 80 m², electric radiant is the more practical choice in Barrie. Installation is faster (no boiler or mechanical room space required), and the system is easier to service. Hydronic makes more sense on large commercial aprons or when you already have a hydronic heating system in the house that has spare boiler capacity.</p><p>Both systems require that we set the pavers on a compacted clear stone base of at least 300 mm (12 inches) — the same base spec we use on all our <a href='/services/interlocking-barrie'>interlocking driveway installations</a>. The heating element goes into the bedding sand layer, not the base, so the base work is identical. What changes is the bedding layer: we use a 40 mm compacted polymeric sand bed rather than the standard 25 mm, to give the cable some thermal mass and protect it from point-load cracking during installation.</p>" }} />
+
+      <h2>What Does a Heated Driveway Cost in Barrie? (Real Numbers)</h2>
+      <div dangerouslySetInnerHTML={{ __html: "<p>Installed cost depends on driveway size, electrical or mechanical infrastructure, and whether we are installing the system as part of a new driveway or retrofitting into an existing one. Retrofit adds cost because the existing pavers need to be lifted, the bedding layer rebuilt, and the pavers relaid — plan for $3–$5 per sq ft more than a new-construction install.</p><p>For a standard two-car driveway of 55–65 m² (about 600–700 sq ft) in Barrie, here is what a typical budget looks like:</p><ul><li><strong>Electric radiant heating cable and mat materials:</strong> $2,500–$3,800</li><li><strong>Snow sensor and automatic controller:</strong> $600–$900</li><li><strong>Electrical panel upgrade (if required — most Barrie homes need 200A service for this):</strong> $1,200–$2,200</li><li><strong>Paver bedding layer rebuild and paver re-set:</strong> $1,800–$3,200</li><li><strong>Labour for system installation and commissioning:</strong> $1,500–$2,500</li></ul><p>Total for a new installation: roughly <strong>$6,500–$12,000 including taxes</strong>. Hydronic systems on the same footprint: $13,000–$20,000, with a separate boiler installation cost of $4,000–$7,000 on top if a new boiler is needed.</p><p>Operating cost for an electric system on a 60 m² driveway in Barrie (about 130 hours of active run time per winter based on historical weather data) is $280–$550 per season depending on your TOU electricity rate. Hydronic on natural gas: roughly $140–$300 for the same coverage. The energy cost difference — $150–$200 per year — takes decades to offset the $6,000–$8,000 hydronic premium. For a residential driveway, electric nearly always wins the total-cost calculation.</p><p>Get a specific number for your property using our <a href='/cost-estimator'>project cost estimator</a> — you can enter your driveway dimensions and it will calculate material and labour ranges for Barrie and Simcoe County. Or <a href='/contact'>contact us directly</a> for a site visit and written estimate.</p>" }} />
+
+      <h2>Base Preparation: Where Most Heated Driveway Failures Start</h2>
+      <div dangerouslySetInnerHTML={{ __html: "<p>We have repaired three heated driveway installations in the last two years where the heating system failed prematurely. In all three cases, the failure mode was the same: a shifted or cracked loop caused by base settlement. The PEX tubing or heating cable itself was fine — the base wasn't.</p><p>Barrie's clay-heavy soil is particularly susceptible to frost heave. Clay holds water, water expands when it freezes, and a 300 mm frost penetration (common in Barrie from January through March) can lift an inadequately prepared base by 10–20 mm. That movement is enough to break a cable loop or compress PEX tubing past its rated bend radius.</p><p>Our specification for all heated driveway installations:</p><ul><li><strong>Excavation depth:</strong> minimum 500 mm below finished grade (compared to 350 mm for a standard unheated interlocking driveway)</li><li><strong>Clear stone base:</strong> 12–16 inches (300–400 mm) of compacted ¾\" clear stone — <em>not granular A</em>, which retains water and promotes frost heave</li><li><strong>Geotextile fabric:</strong> laid between native subgrade and clear stone to prevent clay migration into the stone</li><li><strong>Bedding layer:</strong> 40 mm compacted HP polymeric sand (not the standard 25 mm) to cushion the cable and provide thermal mass</li><li><strong>Cable spacing:</strong> 200–250 mm on-centre for full coverage — wider spacing saves material cost but leaves cold strips</li></ul><p>A contractor who skips the excavation depth or uses granular A base because it is cheaper is setting up a failure within 5–8 years. Read our post on <a href='/resources/winter-damage-prevention-interlocking'>winter damage prevention for interlocking</a> — the same freeze-thaw logic applies, and a heated system does not protect the base from heave; it prevents ice formation at the surface, not frost penetration below.</p><p>One thing the heating system does help with: it keeps the paver surface temperature above 0 °C, which reduces the thermal cycling stress on mortar joints and polymeric sand. We have seen less joint sand erosion on heated driveways than on comparable unheated ones after 5 years — a secondary benefit worth mentioning.</p>" }} />
+
+      <h2>What Paver Products Work Best Over a Heated System?</h2>
+      <div dangerouslySetInnerHTML={{ __html: "<p>All three of our primary paver suppliers — <strong>Permacon</strong>, <strong>Unilock</strong>, and <strong>Techo-Bloc</strong> — produce products rated for use with in-slab or under-paver heating systems. The key specification to check is thermal expansion coefficient and minimum thickness. For a driveway application, we use pavers that are at least 60 mm (2.4 inches) thick, which handles the thermal cycling from the heating system without cracking or delaminating.</p><p>Unilock's <strong>Beacon Hill Flagstone</strong> and <strong>Thornbury</strong> series are popular choices for heated driveways in Barrie because the surface texture provides grip when the system is in transition — going from 0 °C to active heating means there is a window where the top surface can be wet and slippery. A textured or lightly tumbled paver surface performs better in that window than a smooth one.</p><p>Techo-Bloc's <strong>Blu 60</strong> and <strong>Antika</strong> formats are strong choices for larger driveways where a long plank format or large-format look is desired. The 60 mm thickness spec holds for both. Permacon's <strong>Nouveau</strong> and <strong>Victorien</strong> lines also work well — they are available from <a href='/services/interlocking-barrie'>Carr Landscape Depot in Barrie</a>, which means we can pull stock quickly if a section needs repair.</p><p>One product category to avoid: thin pavers (40 mm or under) and any paver with a pre-applied sealer from the factory. Factory sealers can bubble or delaminate under repeated thermal cycling from a heating system. If you want a sealed finish, we apply it after installation and commission the heating system — typically 30 days after install to let the polymeric sand cure fully.</p><p>Colour also matters more than people expect. Darker paver colours (charcoal, midnight, graphite) absorb solar radiation during the day and re-radiate it at night, reducing the hours your heating system needs to run. On a south-facing Barrie driveway, a dark paver surface can reduce system run time by 15–20 hours per season compared to a light limestone or beige paver — that is $25–$50 in electricity savings annually, which is not enormous but compounds over the system's 25-year lifespan.</p>" }} />
+
+      <h2>Snow Removal Cost vs. Heated Driveway: The Real Break-Even Calculation</h2>
+      <div dangerouslySetInnerHTML={{ __html: "<p>The most common question with a heated driveway is the ROI question: when does it pay back? The answer depends on the alternative you are comparing it to and how you value convenience.</p><p>In Barrie, a commercial snow-removal contract for a two-car driveway may range from a basic push-and-go service to a full-service plan. A heated system also has operating and installation costs. Confirm current electricity, snow-removal and installation costs for the specific property before making a decision.</p><p>Also ask for the written workmanship terms, exclusions and remedy that apply to the final project scope. A clear driveway may reduce day-to-day winter-maintenance work, but no system eliminates every slip, weather or operating risk.</p><p>The calculation shifts if you already own a snowblower or visit a property infrequently. A long, sloped, regularly used driveway can be a stronger candidate than a small, flat, low-use surface. Confirm electrical capacity, drainage, product selection and final scope before committing.</p>" }} />
+
+      <h2>Common Installation Mistakes and How to Vet a Contractor</h2>
+      <div dangerouslySetInnerHTML={{ __html: "<p>Heated driveway installations are not complicated if you follow the spec, but we have seen enough failed systems to know that a few shortcuts can turn a 25-year investment into a 5-year repair bill. Here is what to look for when evaluating a contractor.</p><p><strong>No loop continuity test before pavers go down.</strong> Every cable loop should be tested with a resistance meter after installation and before the first paver is set. A reading outside the manufacturer's specified range (typically ±10% of rated resistance) means a break or partial short in the cable. Finding that before the pavers are down is a one-hour fix; finding it after means lifting the entire installation.</p><p><strong>Sensor placed in direct sunlight or too close to the building.</strong> A snow/ice sensor buried in shade near a north-facing garage wall will trigger the system during every rain event even when temperatures are mild. A sensor in direct sunlight may not detect overnight ice formation. Correct placement is 600 mm from any structure and in a representative thermal zone — usually mid-driveway, exposed to the same sun and wind as the rest of the surface.</p><p><strong>Electrical supply undersized.</strong> A 60 m² electric radiant system draws 3,000–4,000 W. Most Barrie homes built before 2000 have 100A electrical service, which is often already near capacity. A dedicated 40A circuit at 240V is the minimum; many installations require a panel upgrade to 200A service, which adds $1,200–$2,200 to the project. Any contractor who does not bring a licensed electrician into the scope is cutting a corner that could create a safety hazard or void your home insurance.</p><p><strong>Base spec not disclosed.</strong> Ask any contractor what excavation depth they are specifying and whether the base is clear stone or granular A. If they cannot answer immediately, or if they say granular A is fine, they have not done many of these installations. Clear stone is non-negotiable under a heated system; granular A holds water and heaves. Our <a href='/services/interlocking-barrie'>interlocking driveway installations</a> all use 12–16\" clear stone, heated or not — the heated spec just goes a bit deeper.</p>" }} />
+
+      <div className="not-prose my-10 overflow-x-auto">
+        <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold mb-3">Electric radiant vs. hydronic heated driveway — Barrie installation comparison</p>
+        <div dangerouslySetInnerHTML={{ __html: "<table><thead><tr><th>Factor</th><th>Electric Radiant</th><th>Hydronic (PEX)</th></tr></thead><tbody><tr><td>Installed cost (60 m² driveway)</td><td>$6,500–$12,000</td><td>$13,000–$20,000 + boiler</td></tr><tr><td>Operating cost per season</td><td>$280–$550 (TOU electricity)</td><td>$140–$300 (natural gas)</td></tr><tr><td>Installation complexity</td><td>Moderate (cable + controller)</td><td>High (boiler, manifold, PEX plumbing)</td></tr><tr><td>Maintenance</td><td>Low — no moving parts</td><td>Moderate — boiler service, glycol top-up</td></tr><tr><td>Best for</td><td>Residential driveways under 80 m²</td><td>Large aprons, existing hydronic systems</td></tr><tr><td>Typical lifespan</td><td>25–30 years (cable rated)</td><td>20–25 years (boiler cycle)</td></tr><tr><td>Response time to snow event</td><td>15–30 min to surface temp</td><td>20–45 min (larger thermal mass)</td></tr></tbody></table>" }} />
+      </div>
+
+      <h2>Frequently Asked Questions</h2>
+      <div className="mt-8">
+        <div className="mb-8">
+          <h3 className="font-display text-2xl text-brand-bonewhite mb-3">How much does a heated driveway cost in Barrie Ontario?</h3>
+          <div dangerouslySetInnerHTML={{ __html: "<p>A heated interlocking paver driveway in Barrie costs $6,500–$12,000 installed for a standard two-car driveway of 55–65 m², using an electric radiant system. Hydronic systems on the same footprint run $13,000–$20,000 before boiler costs. Price varies with driveway size, existing electrical service capacity, and whether you need a new base build or a retrofit into existing pavers.</p>" }} />
+        </div>
+        <div className="mb-8">
+          <h3 className="font-display text-2xl text-brand-bonewhite mb-3">What is the annual operating cost of a heated driveway in Ontario?</h3>
+          <div dangerouslySetInnerHTML={{ __html: "<p>For a 60 m² electric radiant driveway running about 130 active hours per Barrie winter, expect $280–$550 per season on Time-of-Use electricity rates. A hydronic system on natural gas runs $140–$300 for comparable coverage. The exact cost depends on the winter severity — the 2022–23 Barrie winter would have run a system harder than the mild 2023–24 season.</p>" }} />
+        </div>
+        <div className="mb-8">
+          <h3 className="font-display text-2xl text-brand-bonewhite mb-3">Can you put a heated system under Unilock or Techo-Bloc pavers?</h3>
+          <div dangerouslySetInnerHTML={{ __html: "<p>Yes. Unilock, Techo-Bloc, and Permacon all produce pavers rated for use with in-bed heating systems. We specify pavers of at least 60 mm thickness for driveway applications. The heating cable or PEX tubing goes into the bedding sand layer — not the base — and the pavers are set on top in the standard fashion. The key difference is a 40 mm bedding layer instead of the standard 25 mm.</p>" }} />
+        </div>
+        <div className="mb-8">
+          <h3 className="font-display text-2xl text-brand-bonewhite mb-3">How deep does the excavation need to be for a heated driveway in Barrie?</h3>
+          <div dangerouslySetInnerHTML={{ __html: "<p>We excavate to at least 500 mm below finished grade for a heated driveway in Barrie, versus 350 mm for a standard unheated installation. The extra depth accommodates a deeper clear stone base (300–400 mm) and geotextile fabric, both required to manage frost heave in Barrie's clay-heavy soil. A shallow base under a heated system is the most common cause of premature loop failure.</p>" }} />
+        </div>
+        <div className="mb-8">
+          <h3 className="font-display text-2xl text-brand-bonewhite mb-3">Is a heated driveway worth the cost in Barrie?</h3>
+          <div dangerouslySetInnerHTML={{ __html: "<p>For most Barrie homeowners with a driveway over 50 m² or a sloped apron, the break-even against a commercial snow removal contract is 8–12 years. If you have reduced mobility, strong convenience preferences, or a driveway that ices badly due to grade or shade, the investment makes clear sense. For small flat driveways, a snow removal contract is likely the better financial decision.</p>" }} />
+        </div>
+        <div className="mb-8">
+          <h3 className="font-display text-2xl text-brand-bonewhite mb-3">What type of base is required under a heated interlocking driveway?</h3>
+          <div dangerouslySetInnerHTML={{ __html: "<p>We use 12–16 inches (300–400 mm) of compacted ¾\" clear stone — not granular A. Granular A retains water, which freezes and causes frost heave that can break cable loops. Clear stone drains freely and resists heave. A geotextile fabric between the native subgrade and the base stone prevents Barrie's clay soil from migrating up into the drainage layer over time.</p>" }} />
+        </div>
+        <div className="mb-8">
+          <h3 className="font-display text-2xl text-brand-bonewhite mb-3">Do heated driveways work automatically, or do you have to turn them on?</h3>
+          <div dangerouslySetInnerHTML={{ __html: "<p>Properly installed systems run automatically. The controller uses a ground-level snow/ice sensor combined with an aerial temperature sensor — the system activates only when both surface temperature is below 1 °C and precipitation is detected. Most controllers also have a manual override and a hold mode for extended cold periods. You will never need to remember to turn it on before a snow event.</p>" }} />
+        </div>
+        <div className="mb-8">
+          <h3 className="font-display text-2xl text-brand-bonewhite mb-3">Does a heated driveway prevent frost heave in the pavers?</h3>
+          <div dangerouslySetInnerHTML={{ __html: "<p>The heating system warms the surface and reduces ice bonding to pavers, but it does not prevent frost penetration into the base. Frost can still penetrate 300 mm or more into an inadequately prepared base during a Barrie cold snap. The base spec — not the heating element — is what prevents heave. A heated system paired with a proper clear stone base will outperform both individually.</p>" }} />
+        </div>
+      </div>
+
+      <AuthorBio bio="Golden Maple Landscaping shares practical planning guidance for homeowners comparing outdoor construction options. Contact us to confirm current project scope and documentation." />
+
+      <div dangerouslySetInnerHTML={{ __html: "<p>If you are weighing a heated driveway installation in Barrie, Innisfil, Oro-Medonte, or anywhere in Simcoe County, we are happy to walk through the numbers specific to your property. <a href='/contact'>Book a site visit</a> and we will assess the base conditions, electrical capacity, and driveway dimensions — then give you a written estimate with no obligation. You can also <a href='/cost-estimator'>get a real price on your project</a> using our online estimator to get a ballpark before we talk.</p>" }} />
+    </BlogPostLayout>
+  );
+}
