@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-09-14T00:00:00.000Z",
+  "lastRunAt": "2026-09-21T00:00:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -22,10 +22,11 @@
     "auto-018",
     "auto-019",
     "auto-020",
-    "auto-021"
+    "auto-021",
+    "auto-022"
   ],
   "publishedSlugs": [],
-  "currentDraft": "heated-driveway-worth-it-barrie",
+  "currentDraft": "backyard-entertaining-wasaga-beach",
   "history": [
     {
       "topicId": "auto-001",
@@ -339,6 +340,20 @@
         "linkCount": 8,
         "hasTable": true,
         "numericCount": 53
+      },
+      "generatedBy": "claude-cloud-routine"
+    },
+    {
+      "topicId": "auto-022",
+      "slug": "backyard-entertaining-wasaga-beach",
+      "at": "2026-09-21T00:00:00.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2612,
+        "linkCount": 7,
+        "hasTable": true,
+        "numericCount": 40
       },
       "generatedBy": "claude-cloud-routine"
     }
