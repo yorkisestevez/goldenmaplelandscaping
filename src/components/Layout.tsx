@@ -516,7 +516,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-brand-nearblack min-h-screen selection:bg-brand-gold/20 selection:text-brand-gold-dark">
       <Navbar />
-      <main className="flex-grow overflow-x-hidden">{children}</main>
+      <main className="flex-grow overflow-x-clip">{children}</main>
       <Footer />
       {mounted && <ChatWidget />}
     </div>

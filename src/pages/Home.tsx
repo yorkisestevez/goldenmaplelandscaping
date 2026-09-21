@@ -4,48 +4,13 @@ import SEO from '../components/SEO';
 import BuyersGuide from '../components/BuyersGuide';
 import Manifesto from '../components/Manifesto';
 import Process from '../components/Process';
+import HeroDepth from '../components/HeroDepth';
 import { Link } from 'react-router-dom';
 import Reveal from '../components/Reveal';
 import { trackEngagement, trackCall } from '../utils/analytics';
 import { cn } from '../utils/cn';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
 
-
-// Generated design inspiration, deliberately separate from completed-project photography.
-const HERO_POSTER = "/images/concepts/backyard-ivory-hero-v1.webp";
-
-const Hero = () => (
-  <section className="home-hero bg-brand-nearblack">
-    <div className="container-custom">
-      <div className="home-hero-grid">
-        <div className="max-w-xl">
-          <p className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-brand-gold-dark font-medium mb-8">
-            Outdoor living · Barrie & Simcoe County
-          </p>
-          <h1 className="font-display font-normal text-brand-ink mb-8">
-            The backyard<br />you’ve always<br /><span className="italic text-brand-gold-dark">pictured.</span>
-          </h1>
-          <p className="text-base text-brand-muted leading-relaxed max-w-sm mb-7">
-            Thoughtfully planned patios, decks and outdoor spaces. Built around your home, and the way you want to live.
-          </p>
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-            <Link to="/contact" onClick={() => trackEngagement('cta_click', 'home_start_project')} className="btn-primary gap-5">
-              Start your project <ArrowRight size={16} aria-hidden="true" />
-            </Link>
-            <a href="#selected-work" className="home-project-link hidden sm:inline-flex" onClick={() => trackEngagement('cta_click', 'home_selected_work')}>
-              See the details <ArrowRight size={15} aria-hidden="true" />
-            </a>
-          </div>
-          <p className="hidden md:block text-xs text-brand-muted mt-9">Patios & interlock <span className="mx-2 text-brand-gold-dark">/</span> Decks <span className="mx-2 text-brand-gold-dark">/</span> Landscape design</p>
-        </div>
-        <figure className="min-w-0">
-          <img src={HERO_POSTER} alt="Outdoor living design concept: stone patio, cedar pergola and planted garden wall" loading="eager" decoding="async" fetchPriority="high" className="home-hero-photo" />
-          <figcaption className="home-hero-caption"><span>Outdoor living concept</span><span>Stone · timber · open air</span></figcaption>
-        </figure>
-      </div>
-    </div>
-  </section>
-);
 
 const ServicesGrid = () => {
   const services = [
@@ -393,7 +358,7 @@ export default function Home() {
         description="Barrie landscaping for interlocking patios, driveways, retaining walls and outdoor spaces across Simcoe County. Get an instant cost range and contact us to confirm project details."
         canonical="https://goldenmaplelandscaping.ca/"
       />
-      <Hero />
+      <HeroDepth />
       <ServicesGrid />
       <BeforeAfterSection />
       <Manifesto />
