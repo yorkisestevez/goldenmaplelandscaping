@@ -14,6 +14,7 @@ import { DESIGN_STORAGE_KEY, MAX_DESIGN_BYTES, defaultLevel3 } from '../features
 import { extrasLayout } from '../features/deckcraft/extrasLayout';
 import { LIGHTING_CATALOGUE, LIGHTING_CATEGORIES, type LightingCatalogueProduct } from '../features/deckcraft/lightingCatalogue';
 import HouseEditor from '../features/deckcraft/HouseEditor';
+import HouseOpeningsBar from '../features/deckcraft/HouseOpeningsBar';
 import ProposalDialog from '../features/deckcraft/ProposalSheet';
 import {getHouseConfig,clampHouseOpening} from '../features/deckcraft/houseSettings';
 import {availableStairSides,exposedHouseLine,getHouseContact} from '../features/deckcraft/houseContact';
@@ -86,7 +87,11 @@ export default function DeckDesigner(){
   const update=(patch:Partial<DeckData>)=>{setSaved(false);setData(prev=>deckReleaseData({...prev,...patch}));};
   const houseConfig=getHouseConfig(data);
   const effectiveHouseOpeningId=houseConfig.openings.find(o=>o.id===selectedHouseOpeningId)?.id??houseConfig.openings[0]?.id??'';
-  const selectHouseOpening=(id:string)=>{setSelectedHouseOpeningId(id);setHouseSettingsOpen(true);setStep(0);};
+  // Picking a door or window (in 3D or the doors & windows bar) works on every step; the full house
+  // settings on step 1 open only when asked for.
+  const pickedHouseOpeningId=houseConfig.openings.some(o=>o.id===selectedHouseOpeningId)?selectedHouseOpeningId:'';
+  const selectHouseOpening=(id:string)=>setSelectedHouseOpeningId(id);
+  const editHouseOpening=()=>{setHouseSettingsOpen(true);setStep(0);requestAnimationFrame(()=>document.querySelector('.dd-house-editor')?.scrollIntoView({behavior:'smooth',block:'start'}));};
   const moveHouseOpening=(id:string,patch:Partial<HouseOpening>)=>{setSelectedHouseOpeningId(id);update({houseConfig:{...houseConfig,openings:houseConfig.openings.map(o=>o.id===id?clampHouseOpening({...o,...patch},houseConfig):o)}});};
   // Appearance-only gestures must not rebuild every deck cut and stock group.
   // Installation zones remain part of this key; house appearance does not affect deck pricing.
@@ -265,6 +270,8 @@ export default function DeckDesigner(){
   // The proposal uses a customer view of the deck: contractor and plan modes switch to 3D for the snapshot, then back.
   async function openProposal(){
     setPreparing(true);
+    // The snapshot shows the house without a selection outline.
+    if(pickedHouseOpeningId){setSelectedHouseOpeningId('');await new Promise(r=>setTimeout(r,250));}
     const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms)),previous=mode,customerView=['3d','overview','front','top'].includes(mode);
     let image:string|null=null;
     try{
@@ -312,8 +319,9 @@ export default function DeckDesigner(){
         <div className="dd-scene-tools"><span>See your deck in</span><div className="dd-day-night" role="group" aria-label="Day or night preview"><button type="button" aria-pressed={data.sceneLighting!=='Evening'} onClick={()=>{update({sceneLighting:'Daylight'});if(mode==='plan')setMode('3d');}}><span aria-hidden="true">☀</span> Day</button><button type="button" aria-pressed={data.sceneLighting==='Evening'} onClick={()=>{update({sceneLighting:'Evening'});if(mode==='plan')setMode('3d');}}><span aria-hidden="true">☾</span> Night</button></div><label className="dd-check dd-preview-light-switch"><input type="checkbox" role="switch" checked={data.lightingPreviewOn!==false} onChange={e=>update({lightingPreviewOn:e.target.checked})}/><span>Preview lights {data.lightingPreviewOn===false?'off':'on'}</span></label></div>
         {data.sceneLighting==='Evening'&&!hasFixtures&&<div className="dd-night-hint" role="status"><p><strong>No lights on this design yet.</strong> Light every railing post and stair riser in one step.</p><button type="button" className="dd-primary" disabled={!autoCounts.posts&&!autoCounts.stairs} onClick={()=>update({autoLighting:{...data.autoLighting,posts:autoCounts.posts>0,stairs:autoCounts.stairs>0},lightingPreviewOn:true})}>Add post &amp; step lights</button><small>Adds the fixtures and a transformer to your estimate.</small></div>}
         <details className="dd-contractor-view" onToggle={e=>{if(!e.currentTarget.open&&(mode==="structure"||mode==="hardware"||mode==="foundation"))setMode("3d");}}><summary>Advanced contractor view</summary><p className="dd-note">Inspect framing, connections and below-ground components.</p><div className="dd-view-toggle" role="group" aria-label="Contractor preview modes"><button aria-pressed={mode==='structure'} onClick={()=>setMode('structure')}>Framing</button><button aria-pressed={mode==='hardware'} onClick={()=>setMode('hardware')}>Hardware</button><button aria-pressed={mode==='foundation'} onClick={()=>setMode('foundation')}>Below ground</button></div><dl className="dd-quantities" aria-label="Modeled quantities">{[['Support posts',estimate.model.quantities.supportPosts],['Footings',estimate.model.quantities.footings],['Joists',estimate.model.quantities.joists],['Railing posts',estimate.model.quantities.railingPosts],['Stair treads',estimate.model.quantities.stairTreads],['Stringers',estimate.model.quantities.stringers],['Breaker boards',estimate.model.quantities.breakerBoards],['Blocking pieces',estimate.model.quantities.blocking]].map(([label,n])=><div key={label}><dt>{label}</dt><dd>{n}</dd></div>)}</dl></details>
-        <div className="dd-canvas">{mounted && mode!=='plan' && hasWebGL ? <ViewerBoundary fallback={<ConstructionPlan model={estimate.model} data={data}/>}><Suspense fallback={<div className="dd-loading">Preparing your deck…</div>}><Viewer deckOnly data={data} model={estimate.model} view={mode} structure={mode==='structure'||mode==='hardware'} cutaway={mode==='foundation'} selectedHouseOpeningId={step===0&&houseSettingsOpen?effectiveHouseOpeningId:undefined} onSelectHouseOpening={selectHouseOpening} onMoveHouseOpening={moveHouseOpening} onContextLost={()=>setHasWebGL(false)} onMovePrivacyScreen={(id,offsetPct)=>setScreen(id,{offsetPct})} onSnapshotReady={onSnapshotReady}/></Suspense></ViewerBoundary> : <ConstructionPlan model={estimate.model} data={data}/>}</div>
+        <div className="dd-canvas">{mounted && mode!=='plan' && hasWebGL ? <ViewerBoundary fallback={<ConstructionPlan model={estimate.model} data={data}/>}><Suspense fallback={<div className="dd-loading">Preparing your deck…</div>}><Viewer deckOnly data={data} model={estimate.model} view={mode} structure={mode==='structure'||mode==='hardware'} cutaway={mode==='foundation'} selectedHouseOpeningId={pickedHouseOpeningId||(step===0&&houseSettingsOpen?effectiveHouseOpeningId:undefined)} onSelectHouseOpening={selectHouseOpening} onMoveHouseOpening={moveHouseOpening} onContextLost={()=>setHasWebGL(false)} onMovePrivacyScreen={(id,offsetPct)=>setScreen(id,{offsetPct})} onSnapshotReady={onSnapshotReady}/></Suspense></ViewerBoundary> : <ConstructionPlan model={estimate.model} data={data}/>}</div>
         {mounted && !hasWebGL && <p className="dd-note">Showing the plan view because 3D graphics are unavailable on this device. <button type="button" className="dd-linklike" onClick={retryWebGL}>Try the 3D view again</button></p>}
+        <HouseOpeningsBar data={data} selectedId={pickedHouseOpeningId} onSelect={selectHouseOpening} onChange={update} onEditDetails={editHouseOpening}/>
         <div className="dd-finish"><MaterialSwatch file={material.colors.find(c=>c.name===data.deckingColor)?.swatch} alt={data.deckingColor}/><div><strong>{data.deckingColor}</strong><span>{material.name}</span></div><span className="dd-finish-pattern">{data.pattern}</span></div>
         <div className="dd-live-price"><span>{priceLabel} <small>CAD · before HST</small></span><strong>{dollars(estimate.subtotal)}</strong></div>
         {quoteRequired.length>0&&<div className="dd-quote-notice" role="status"><strong>Supplier quotes needed</strong><p>The amount above excludes unpriced selections and is not a complete project estimate.</p><ul>{quoteRequired.map(name=><li key={name}>{name}</li>)}</ul></div>}

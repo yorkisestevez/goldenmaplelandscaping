@@ -69,6 +69,7 @@ export function houseWallSpecs(data:DeckData,config:HouseConfig,blocks:HouseBloc
 
 export const GARAGE_DOOR_COLOR='#e4e2da';
 export const DOOR_SLAB_COLOR='#4a5452';
+export const WINDOW_FRAME_COLOR='#e9e6dc';
 const GLASS='#c1d1d3';
 
 /**
@@ -78,7 +79,17 @@ const GLASS='#c1d1d3';
 export function openingFaces(o:HouseOpening,x:number,y:number):[string,string,Box][]{
  const w=o.widthIn-3,h=o.heightIn-3;
  if(o.type==='Garage')return [['panel',GARAGE_DOOR_COLOR,{x,y,z:.8,w,h,d:1.5}]];
- if(o.type!=='Door'||!o.style)return [['glass',GLASS,{x,y,z:.8,w,h,d:.24}]];
+ if(!o.style)return [['glass',GLASS,{x,y,z:.8,w,h,d:.24}]];
+ if(o.type==='Window'){
+  const frame=WINDOW_FRAME_COLOR;
+  if(o.style==='Double-hung')return [['glass',GLASS,{x,y:y+h/4,z:.8,w,h:h/2,d:.24}],['sash',GLASS,{x,y:y-h/4,z:1.6,w,h:h/2,d:.24}],['meeting_rail',frame,{x,y,z:1.2,w,h:2,d:1.2}]];
+  if(o.style==='Slider')return [['glass',GLASS,{x:x-w/4,y,z:.8,w:w/2,h,d:.24}],['sash',GLASS,{x:x+w/4,y,z:1.6,w:w/2,h,d:.24}],['meeting_stile',frame,{x,y,z:1.2,w:2,h,d:1.2}]];
+  if(o.style==='Casement'&&w>40)return [['glass',GLASS,{x,y,z:.8,w,h,d:.24}],['mullion',frame,{x,y,z:1.2,w:2.5,h,d:1.4}]];
+  if(o.style==='Awning')return [['glass',GLASS,{x,y,z:.8,w,h,d:.24}],['bottom_rail',frame,{x,y:y-h/2+1.25,z:1.4,w,h:2.5,d:1.4}]];
+  // Picture (and a single casement): one pane with a deeper sill.
+  return [['glass',GLASS,{x,y,z:.8,w,h,d:.24}],['sill',frame,{x,y:y-h/2-1,z:2.2,w:w+4,h:1.5,d:3}]];
+ }
+ if(o.type!=='Door')return [['glass',GLASS,{x,y,z:.8,w,h,d:.24}]];
  if(o.style==='Single')return [['slab',DOOR_SLAB_COLOR,{x,y,z:.8,w,h,d:1.75}],['lite',GLASS,{x,y:y+h*.22,z:1.7,w:w*.5,h:h*.3,d:.24}]];
  if(o.style==='French')return [['glass',GLASS,{x,y,z:.8,w,h,d:.24}],['stile',DOOR_SLAB_COLOR,{x,y,z:1.2,w:3,h,d:1.75}]];
  // Sliding patio door: a fixed pane and a sliding sash that overlaps it by 2 in, set further out.

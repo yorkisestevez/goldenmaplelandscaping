@@ -38,6 +38,7 @@
 @media(max-width:420px){.dd-fields,.dd-fields.three{grid-template-columns:minmax(0,1fr)!important}.dd-fields.three>.dd-field:last-child{grid-column:auto}}
 .dd-house-editor h4{font-size:13px;margin:22px 0 4px;font-weight:600}
 .dd-house-block{border:1px solid #d2d5c8;border-radius:8px;padding:10px 12px 12px;margin:12px 0 0;min-width:0}.dd-house-block legend{font-size:13px;font-weight:600;padding:0 6px}.dd-house-block>button{margin-top:10px;min-height:44px}
+.dd-openings{border-top:1px solid #d2d5c8;margin:14px 0 4px;padding-top:14px;display:grid;gap:10px;min-width:0}.dd-openings-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:14px}.dd-openings-head span{color:#5d584f;font-size:12px}.dd-openings-row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}.dd-openings-row .dd-field{flex:1 1 150px;min-width:0}.dd-openings-row button{min-height:44px}.dd-openings select{max-width:100%}
 /* Printable one-page proposal: on-screen preview, and only the sheet when printed (Letter). */
 .dd-proposal-root{position:fixed;inset:0;z-index:1000;background:rgba(41,40,36,.6);overflow:auto;padding:24px 16px 48px;font-family:var(--font-sans,Arial,sans-serif);color:#292824}
 .dd-proposal-root button{cursor:pointer}

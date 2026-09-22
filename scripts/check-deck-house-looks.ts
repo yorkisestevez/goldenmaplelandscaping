@@ -6,7 +6,8 @@ import {getHouseConfig,HOUSE_CLADDINGS,DOOR_STYLES} from '../src/features/deckcr
 import {getHousePlacement} from '../src/features/deckcraft/housePlacement';
 import {houseLayout,roofRiseOver} from '../src/features/deckcraft/components/viewer3d/houseLayout';
 import {buildHouseGeometry,blockRoofRise} from '../src/features/deckcraft/components/viewer3d/houseGeometry';
-import {getHouseBlocks} from '../src/features/deckcraft/houseFootprint';
+import {getHouseBlocks,getHouseWalls,openingHidden,openingWallId} from '../src/features/deckcraft/houseFootprint';
+import {addHouseOpening,MAX_HOUSE_OPENINGS,OPENING_PRESETS,openingLabel,removeHouseOpening,restyleHouseOpening,stylesFor,wallFloorIn,WINDOW_STYLES} from '../src/features/deckcraft/houseOpenings';
 import {deckExportMeshes} from '../src/features/deckcraft/designExports';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import type {DeckData,HouseConfig} from '../src/features/deckcraft/types';
@@ -92,4 +93,61 @@ const top=(d:DeckData,name='roof')=>Math.max(...part(d,name)!.vertices.map(v=>v[
   ok(validateDesign(deck()).houseConfig!.roofPitch===undefined&&validateDesign(deck()).houseConfig!.ridge===undefined,'Older designs stay without a pitch or ridge');
 }
 
-console.log(`HOUSE LOOKS OK — ${checks} roof pitch, ridge, cladding, door style, export, price-isolation and persistence checks.`);
+// 6. Doors and windows in any style can be added and removed at any point: each preset lands on its
+// wall in a clear stretch, restyling keeps size and place, and none of it touches the deck or price.
+{
+  const garageHouse=deck({footprint:{rects:[{id:'garage1',kind:'garage',wall:'Right',offsetFt:0,widthFt:22,depthFt:20},{id:'bump1',kind:'house',wall:'Front',offsetFt:11,widthFt:8,depthFt:3}]}});
+  const plainModel=buildDeckTakeoff(garageHouse),plainTotal=calculateEstimate(garageHouse).total;
+  const houseOf=(d:DeckData)=>d.houseConfig!,walls=getHouseWalls(garageHouse);
+  let d=garageHouse,n=0;
+  for(const p of OPENING_PRESETS){
+    const wallId=p.type==='Garage'?'garage1-back':p.type==='Door'?'main-front':'main-left';
+    const {houseConfig,added}=addHouseOpening(d,p.key,wallId,`o${n++}`);
+    assert(added,`${p.label} can be added`);
+    ok(added.type===p.type&&added.style===p.style&&openingWallId(added,houseConfig)===wallId&&!openingHidden(added,getHouseWalls(d),houseConfig),`${p.label} lands on its wall, in view, with its look`);
+    ok(near(added.bottomIn,wallFloorIn(d,wallId)+p.sillIn),`${p.label} sits its sill height above that wall's floor`);
+    d={...d,houseConfig};
+    assert.deepEqual(buildDeckTakeoff(d).quantities,plainModel.quantities);assert.equal(calculateEstimate(d).total,plainTotal);checks+=2;
+  }
+  // While a wall has room, each new opening goes in a clear stretch: no overlap, at least 12 in apart.
+  const spanOf=(x:DeckData,id:string)=>{const h=houseOf(x),o=h.openings.find(q=>q.id===id)!,w=getHouseWalls(x).find(q=>q.id===openingWallId(o,h))!,at=w.lengthIn*o.offsetPct/100;return [at-o.widthIn/2,at+o.widthIn/2] as const;};
+  const visibleOn=(x:DeckData,wallId:string)=>houseOf(x).openings.filter(o=>openingWallId(o,houseOf(x))===wallId&&!openingHidden(o,getHouseWalls(x),houseOf(x)));
+  const apart=(x:DeckData,wallId:string)=>{const s=visibleOn(x,wallId).map(o=>spanOf(x,o.id)).sort((a,b)=>a[0]-b[0]);return s.every((v,i)=>i===0||v[0]>=s[i-1][1]+12-1e-6);};
+  let roomy=garageHouse;for(let i=0;i<3;i++)roomy={...roomy,houseConfig:addHouseOpening(roomy,'Window:Double-hung','main-back',`r${i}`).houseConfig};
+  ok(visibleOn(roomy,'main-back').length===3&&apart(roomy,'main-back'),'Windows added to a clear wall sit apart, never overlapping');
+  const plainHouse=deck(),between={...plainHouse,houseConfig:addHouseOpening(plainHouse,'Window:Double-hung','main-front','dh').houseConfig};
+  ok(visibleOn(between,'main-front').length===4&&apart(between,'main-front'),'A window added among the existing deck-facing openings finds the clear gap between them');
+  // An opening hidden behind a bump-out takes no wall space: the deck door behind a narrow bump-out
+  // (its centre covered, its edges not) leaves the 96–156 in gap beside the bump-out whole (centre 126 in).
+  const narrow=deck({footprint:{rects:[{id:'bump1',kind:'house',wall:'Front',offsetFt:13.5,widthFt:4,depthFt:3}]}}),door=houseOf(narrow).openings.find(o=>o.id==='deck-door')!;
+  ok(openingHidden(door,getHouseWalls(narrow),houseOf(narrow)),'The deck door behind the narrow bump-out is hidden');
+  const gapFill={...narrow,houseConfig:addHouseOpening(narrow,'Window:Double-hung','main-front','gf').houseConfig},g=spanOf(gapFill,'gf');
+  ok(near((g[0]+g[1])/2,126),'A hidden opening reserves no wall space');
+  // On a crowded wall the opening goes in the widest gap left, never on top of an existing one's centre.
+  const crowded={...garageHouse,houseConfig:addHouseOpening(garageHouse,'Door:French','main-front','fd').houseConfig},fd=spanOf(crowded,'fd'),mid=(fd[0]+fd[1])/2;
+  ok(visibleOn(crowded,'main-front').filter(o=>o.id!=='fd').every(o=>{const s=spanOf(crowded,o.id);return mid<s[0]||mid>s[1];}),'A crowded wall still takes the opening, in its widest gap');
+  // A crowded wall still takes the opening (the editor then reports the overlap), always where it can be seen.
+  ok(houseOf(d).openings.filter(o=>openingWallId(o,houseOf(d))==='main-front'&&o.id.startsWith('o')).every(o=>!openingHidden(o,walls,houseOf(d))),'Openings on the deck-facing wall avoid the stretch behind the bump-out');
+  // Restyling keeps size and place; removing takes out only that opening.
+  const first=houseOf(d).openings.find(o=>o.id==='o1')!,restyled=restyleHouseOpening(houseOf(d),'o1','Sliding').openings.find(o=>o.id==='o1')!;
+  ok(restyled.style==='Sliding'&&restyled.offsetPct===first.offsetPct&&restyled.widthIn===first.widthIn&&restyled.bottomIn===first.bottomIn,'Restyling keeps size and place');
+  ok(!('style' in restyleHouseOpening(houseOf(d),'o1',undefined).openings.find(o=>o.id==='o1')!),'Restyling back to the original look drops the style');
+  const removed=removeHouseOpening(houseOf(d),'o2');
+  ok(removed.openings.length===houseOf(d).openings.length-1&&!removed.openings.some(o=>o.id==='o2'),'Remove takes out only that opening');
+  assert.equal(calculateEstimate({...d,houseConfig:removed}).total,plainTotal);checks++;
+  // The cap.
+  let full=d;for(let i=0;houseOf(full).openings.length<MAX_HOUSE_OPENINGS;i++)full={...full,houseConfig:addHouseOpening(full,'Window:','main-back',`f${i}`).houseConfig};
+  ok(addHouseOpening(full,'Window:','main-back','extra').added===null,`No more than ${MAX_HOUSE_OPENINGS} openings`);
+  ok(getHouseWalls(d).find(w=>w.id==='bump1-back')!.exposed.length===0&&addHouseOpening(d,'Window:','bump1-back','hidden').added===null,'A wall wholly inside the house takes no openings');
+  // Window styles export their own faces; styles survive save and load on their own kind of opening only.
+  const win=(style?:string)=>deck({openings:[{id:'w1',type:'Window',facade:'Front',offsetPct:30,bottomIn:48,widthIn:48,heightIn:48,...(style?{style:style as 'Casement'}:{})}]});
+  const names=(x:DeckData)=>deckExportMeshes(x,buildDeckTakeoff(x)).map(m=>m.name).filter(q=>q.includes('Window_w1'));
+  ok(names(win()).join()==='house_Front_Window_w1_glass','An unstyled window exports its original pane');
+  ok(names(win('Double-hung')).includes('house_Front_Window_w1_meeting_rail')&&names(win('Slider')).includes('house_Front_Window_w1_sash')&&names(win('Casement')).includes('house_Front_Window_w1_mullion')&&names(win('Picture')).includes('house_Front_Window_w1_sill')&&names(win('Awning')).includes('house_Front_Window_w1_bottom_rail'),'Each window style exports its own parts');
+  for(const style of WINDOW_STYLES)ok(parseDesign(serializeDesign(win(style))).houseConfig!.openings[0].style===style,`${style} windows survive save and load`);
+  const mixed=validateDesign(deck({openings:[{id:'a',type:'Door',facade:'Front',offsetPct:30,bottomIn:36,widthIn:36,heightIn:80,style:'Casement' as 'French'},{id:'b',type:'Window',facade:'Front',offsetPct:70,bottomIn:48,widthIn:36,heightIn:36,style:'French'}]})).houseConfig!.openings;
+  ok(mixed.every(o=>o.style===undefined),'A window style never sticks to a door, nor a door style to a window');
+  ok(openingLabel({type:'Window',style:'Casement'})==='Casement window'&&openingLabel({type:'Door'})==='Glass panel door'&&stylesFor('Window').length===WINDOW_STYLES.length+1,'Plain names and style lists per type');
+}
+
+console.log(`HOUSE LOOKS OK — ${checks} roof pitch, ridge, cladding, door and window style, add/remove, export, price-isolation and persistence checks.`);

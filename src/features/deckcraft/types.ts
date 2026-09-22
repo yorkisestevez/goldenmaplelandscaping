@@ -21,13 +21,16 @@ export interface PrivacyScreen {id:string;side:'Left'|'Right'|'Front'|'Back';len
 export type GarageDoorStyle='Panel'|'Carriage'|'Flush'|'Glass';
 /** Door looks. Absent = the studio's original glass-panel door. */
 export type DoorStyle='Single'|'French'|'Sliding';
+/** Window looks. Absent = the studio's original window (glass with a centre rail). */
+export type WindowStyle='Double-hung'|'Casement'|'Picture'|'Slider'|'Awning';
 export type HouseCladding='Brick'|'Siding'|'Stone'|'Stucco'|'Board & batten'|'Vertical siding';
 export interface HouseOpening {id:string;type:'Door'|'Window'|'Garage';facade:'Front'|'Back'|'Left'|'Right';offsetPct:number;bottomIn:number;widthIn:number;heightIn:number;
   /** Wall the opening sits on, '<block id>-<front|back|left|right>' (e.g. 'garage1-back'). Absent = the
    * main block's wall named by `facade`, as older designs have it. */
   wallId?:string;
-  /** Appearance only, never priced: a garage door style on 'Garage' openings, a door style on 'Door' openings. */
-  style?:GarageDoorStyle|DoorStyle}
+  /** Appearance only, never priced: a garage door style on 'Garage' openings, a door style on 'Door'
+   * openings, a window style on 'Window' openings. */
+  style?:GarageDoorStyle|DoorStyle|WindowStyle}
 /** A block attached to one wall of the main house rectangle: a bump-out, an L-wing or a garage. */
 export interface HouseBlock {id:string;kind:'house'|'garage';
   /** Main-block wall it is attached to ('Front' faces the deck). */

@@ -1,5 +1,5 @@
 import { DEFAULT_DECK } from './defaults';
-import { type DeckData, type DoorStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardFeature } from './types';
+import { type DeckData, type DoorStyle, type WindowStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardFeature } from './types';
 import {availableStairSides,getHouseContact} from './houseContact';
 import {getFootprint} from './lib/deckGeometry';
 import {normalizeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
@@ -7,10 +7,11 @@ import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,MAX_SCREEN_PANELS,PRIVACY_HEIGHTS,P
 
 const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy'] as const satisfies readonly LightingZone[];
 import {PATIO_PRODUCTS,WALL_PRODUCTS,WATER_PRODUCTS} from './yardSettings';
+import {GARAGE_DOOR_STYLES,WINDOW_STYLES} from './houseOpenings';
 import {clampHouseOpening,DOOR_STYLES,HOUSE_CLADDINGS,ROOF_PITCH_RANGE} from './houseSettings';
 import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,openingWallId} from './houseFootprint';
 
-export const GARAGE_DOOR_STYLES:readonly GarageDoorStyle[]=['Panel','Carriage','Flush','Glass'];
+export {GARAGE_DOOR_STYLES} from './houseOpenings';
 import { LIGHTING_CATALOGUE } from './lightingCatalogue';
 import { DECKING_CATALOGUE, RAILING_CATALOGUE, MANUFACTURER_ACCESSORIES } from './manufacturerCatalog';
 
@@ -164,7 +165,7 @@ export function validateDesign(input:unknown):DeckData {
       // A wall that no longer exists (its block was removed) falls back to the facade wall.
       if(o.wallId!==undefined){if(typeof o.wallId!=='string'||!/^[a-z][a-zA-Z0-9]{0,15}-(front|back|left|right)$/.test(o.wallId))throw new Error('Invalid house opening wall.');if(openingWallId({...opening,wallId:o.wallId},house)===o.wallId)opening.wallId=o.wallId;}
       // A style only applies to its own kind of opening (a garage door style on a garage door, a door style on a door).
-      if(o.style!==undefined){const garage=GARAGE_DOOR_STYLES.includes(o.style as GarageDoorStyle),door=DOOR_STYLES.includes(o.style as DoorStyle);if(!garage&&!door)throw new Error('Unsupported door style.');if(opening.type==='Garage'&&garage)opening.style=o.style as GarageDoorStyle;if(opening.type==='Door'&&door)opening.style=o.style as DoorStyle;}
+      if(o.style!==undefined){const garage=GARAGE_DOOR_STYLES.includes(o.style as GarageDoorStyle),door=DOOR_STYLES.includes(o.style as DoorStyle),window=WINDOW_STYLES.includes(o.style as WindowStyle);if(!garage&&!door&&!window)throw new Error('Unsupported door or window style.');if(opening.type==='Garage'&&garage)opening.style=o.style as GarageDoorStyle;if(opening.type==='Door'&&door)opening.style=o.style as DoorStyle;if(opening.type==='Window'&&window)opening.style=o.style as WindowStyle;}
       return clampHouseOpening(opening,house);
     });
     if(h.floorHeightIn!==undefined)house.floorHeightIn=numeric(h.floorHeightIn,0,240,'House floor height');

@@ -6,7 +6,7 @@ import type {Box} from '../../deckTakeoff';
 import HouseParts from './HouseParts';
 import {houseWallParts} from './houseWallParts';
 import type {HouseInteraction} from './houseInteraction';
-import {DOOR_SLAB_COLOR,GARAGE_DOOR_COLOR} from './houseGeometry';
+import {DOOR_SLAB_COLOR,GARAGE_DOOR_COLOR,WINDOW_FRAME_COLOR} from './houseGeometry';
 
 const NONE:[number,number][]=[];
 type Shape=HouseOpening&{x:number;y:number;w:number;h:number};
@@ -50,6 +50,36 @@ function claddingSkin(cladding:HouseConfig['cladding'],span:number,height:number
 
 function Glass({x,y,z,w,h}:{x:number;y:number;z:number;w:number;h:number}){
  return <mesh position={[x,y,z]}><boxGeometry args={[Math.max(1,w),Math.max(1,h),.24]}/><meshPhysicalMaterial color="#c1d1d3" roughness={.08} transmission={.25} transparent opacity={.48} thickness={.24} ior={1.5} clearcoat={1} envMapIntensity={1.4} depthTest depthWrite={false}/></mesh>;
+}
+
+/**
+ * Window looks, in the facade frame (appearance only, never priced). The exported faces come from
+ * `openingFaces`; this adds sash frames, rails and hardware.
+ */
+function StyledWindow({o}:{o:Shape}){
+ const w=Math.max(1,o.w-3),h=Math.max(1,o.h-3),bottom=o.y-h/2,frame:Box[]=[],hardware:Box[]=[];
+ const sash=(cx:number,cy:number,sw:number,sh:number,z:number)=>frame.push({x:cx-sw/2+1,y:cy,z,w:2,h:sh,d:1.2},{x:cx+sw/2-1,y:cy,z,w:2,h:sh,d:1.2},{x:cx,y:cy-sh/2+1,z,w:sw,h:2,d:1.2},{x:cx,y:cy+sh/2-1,z,w:sw,h:2,d:1.2});
+ const panes:{x:number;y:number;z:number;w:number;h:number}[]=[];
+ if(o.style==='Double-hung'){
+  // Upper sash behind, lower sash in front, each framed, meeting on a rail with a sash lock.
+  panes.push({x:o.x,y:o.y+h/4,z:.8,w,h:h/2},{x:o.x,y:o.y-h/4,z:1.6,w,h:h/2});sash(o.x,o.y+h/4,w,h/2,1.1);sash(o.x,o.y-h/4,w,h/2,1.9);
+  hardware.push({x:o.x,y:o.y,z:2.6,w:3,h:.8,d:.8});
+ }else if(o.style==='Slider'){
+  panes.push({x:o.x-w/4,y:o.y,z:.8,w:w/2,h},{x:o.x+w/4,y:o.y,z:1.6,w:w/2,h});sash(o.x-w/4,o.y,w/2,h,1.1);sash(o.x+w/4,o.y,w/2,h,1.9);
+  hardware.push({x:o.x+3,y:o.y,z:2.6,w:.8,h:4,d:.8});
+ }else if(o.style==='Casement'){
+  // One leaf, or two meeting on a mullion when the window is wide; a crank at the bottom of each.
+  const leaves=w>40?2:1;
+  for(let i=0;i<leaves;i++){const cx=o.x-w/2+w*(i+.5)/leaves;panes.push({x:cx,y:o.y,z:.8,w:w/leaves,h});sash(cx,o.y,w/leaves,h,1.2);hardware.push({x:cx,y:bottom+3,z:2.4,w:3,h:1,d:1.4});}
+ }else if(o.style==='Awning'){
+  // Hinged at the top, the sash tips out at the bottom.
+  sash(o.x,o.y,w,h,1.2);hardware.push({x:o.x,y:bottom+3,z:2.4,w:4,h:1,d:1.4});
+  return <><mesh position={[o.x,o.y,1.2+Math.sin(.12)*h/2]} rotation={[-.12,0,0]}><boxGeometry args={[w,h,.24]}/><meshPhysicalMaterial color="#c1d1d3" roughness={.08} transmission={.25} transparent opacity={.48} thickness={.24} ior={1.5} clearcoat={1} envMapIntensity={1.4} depthTest depthWrite={false}/></mesh><HouseParts items={frame} color={WINDOW_FRAME_COLOR} name="awning-window-sash"/><HouseParts items={hardware} color="#68716d" name="window-hardware"/></>;
+ }else{
+  // Picture window: one fixed pane in a heavier frame over a deeper sill.
+  panes.push({x:o.x,y:o.y,z:.8,w,h});sash(o.x,o.y,w,h,1.3);frame.push({x:o.x,y:bottom-1,z:2.2,w:w+4,h:1.5,d:3});
+ }
+ return <>{panes.map((p,i)=><Glass key={i} {...p}/>)}<HouseParts items={frame} color={WINDOW_FRAME_COLOR} name={`${(o.style??'').toLowerCase()}-window-frames`}/>{hardware.length>0&&<HouseParts items={hardware} color="#68716d" name="window-hardware"/>}</>;
 }
 
 /** Door looks, in the facade frame (appearance only, never priced). The exported faces come from
@@ -114,8 +144,8 @@ export default function HouseFacade({span,height,openings,hidden=NONE,config,eve
   {shapes.map(o=><group key={o.id} name={`${o.facade}-${o.type}-${o.id}`} onPointerDown={e=>startDrag(e,o)} onPointerMove={moveDrag} onPointerUp={endDrag} onLostPointerCapture={restoreControls}>
     {o.id===selectedHouseOpeningId&&<mesh position={[o.x,o.y,3.2]}><boxGeometry args={[o.w+7,o.h+7,.6]}/><meshBasicMaterial color="#df9b30" wireframe depthTest/></mesh>}
     <mesh position={[o.x,o.y,-12]}><boxGeometry args={[o.w,o.h,.5]}/><meshStandardMaterial color={evening?'#9b7b54':'#414947'} emissive={evening?'#efb873':'#000000'} emissiveIntensity={evening?.16:0} roughness={1}/></mesh>
-    {o.type==='Garage'?<GarageDoor o={o}/>:o.type==='Door'&&o.style?<StyledDoor o={o}/>:<mesh position={[o.x,o.y,.8]}><boxGeometry args={[Math.max(1,o.w-3),Math.max(1,o.h-3),.24]}/><meshPhysicalMaterial color="#c1d1d3" roughness={.08} transmission={.25} transparent opacity={.48} thickness={.24} ior={1.5} clearcoat={1} envMapIntensity={1.4} depthTest depthWrite={false}/></mesh>}
-    <HouseParts items={[...(o.w>42&&o.type!=='Garage'&&!(o.type==='Door'&&o.style)?[{x:o.x,y:o.y,z:1.2,w:1.5,h:o.h,d:1.8}]:[]),...(o.type==='Window'?[{x:o.x,y:o.y,z:1.2,w:o.w,h:1.2,d:1.8}]:[])]} color="#38413f" name="opening-mullions"/>
+    {o.type==='Garage'?<GarageDoor o={o}/>:o.type==='Door'&&o.style?<StyledDoor o={o}/>:o.type==='Window'&&o.style?<StyledWindow o={o}/>:<mesh position={[o.x,o.y,.8]}><boxGeometry args={[Math.max(1,o.w-3),Math.max(1,o.h-3),.24]}/><meshPhysicalMaterial color="#c1d1d3" roughness={.08} transmission={.25} transparent opacity={.48} thickness={.24} ior={1.5} clearcoat={1} envMapIntensity={1.4} depthTest depthWrite={false}/></mesh>}
+    <HouseParts items={[...(o.w>42&&o.type!=='Garage'&&!o.style?[{x:o.x,y:o.y,z:1.2,w:1.5,h:o.h,d:1.8}]:[]),...(o.type==='Window'&&!o.style?[{x:o.x,y:o.y,z:1.2,w:o.w,h:1.2,d:1.8}]:[])]} color="#38413f" name="opening-mullions"/>
     {o.type==='Door'&&<HouseParts items={[...(o.style?[]:[{x:o.x+(o.w>42?3:o.w/2-5),y:o.bottomIn+Math.min(36,o.h/2),z:3,w:.8,h:8,d:1.6}]),{x:o.x,y:o.bottomIn-.7,z:3,w:o.w+7,h:1.4,d:7}]} color="#68716d" name="door-handle-and-threshold"/>}
   </group>)}
  </group>;
