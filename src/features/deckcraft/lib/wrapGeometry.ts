@@ -18,18 +18,29 @@ import type {PlanPoint} from './deckGeometry';
  */
 export const WRAP_WING_WIDTH_FT=[4,24] as const;
 export const WRAP_RUN_FT=[2,100] as const;
+export const WRAP_PORCH_DEPTH_FT=[4,24] as const;
+export const WRAP_PORCH_RUN_FT=[4,100] as const;
+/** Two porches must stop at least this far apart along the street wall, so the deck never closes into a ring. */
+export const WRAP_PORCH_GAP_IN=36;
 /** Deck-facing wall kept as main-deck ledger beside a single wrapped corner. */
 export const WRAP_MIN_MAIN_LEDGER_IN=48;
 
 export type WrapSide='left'|'right';
+export type WrapZoneId='main'|'wingL'|'wingR'|'porchL'|'porchR';
 export interface WrapFrame{origin:PlanPoint;ux:PlanPoint;uz:PlanPoint}
-export interface WrapZoneGeometry{id:'main'|'wingL'|'wingR';label:string;outline:PlanPoint[];frame:WrapFrame;local:PlanPoint[];size:{w:number;h:number}}
+export interface WrapZoneGeometry{id:WrapZoneId;label:string;outline:PlanPoint[];frame:WrapFrame;local:PlanPoint[];size:{w:number;h:number}}
 /** The hip centre line, from the house corner `a` to the deck's outside corner `b`. */
-export interface WrapHip{side:WrapSide;a:PlanPoint;b:PlanPoint;
-  /** Angle between the hip and the deck-facing wall, degrees (45 = true mitre). */
-  angleDeg:number}
+export interface WrapHip{side:WrapSide;
+  /** 'front': where a wing meets the main deck; 'far': where a porch meets its wing. */
+  corner:'front'|'far';
+  a:PlanPoint;b:PlanPoint;
+  /** Angle between the hip and the house wall it leaves (deck-facing or street side), degrees (45 = true mitre). */
+  angleDeg:number;
+  /** The two framing zones that meet on this hip. */
+  zones:[WrapZoneId,WrapZoneId]}
 export interface ActiveWrap{W:number;L:number;x0:number;x1:number;houseDepthIn:number;
-  left?:{widthIn:number;runIn:number};right?:{widthIn:number;runIn:number}}
+  left?:{widthIn:number;runIn:number};right?:{widthIn:number;runIn:number};
+  porchLeft?:{depthIn:number;runIn:number};porchRight?:{depthIn:number;runIn:number}}
 
 const clamp=(v:number,lo:number,hi:number)=>Math.min(hi,Math.max(lo,v));
 const num=(v:unknown,fallback:number)=>Number.isFinite(Number(v))?Number(v):fallback;
@@ -51,11 +62,20 @@ export function activeWrap(data:DeckData):ActiveWrap|null{
   const house=getHouseConfig(data),HW=house.widthFt*12,HD=house.depthFt*12,L=Math.max(12,num(data.length,12)*12);
   const wing=(g?:{widthFt:number;runFt:number})=>g?{widthIn:clamp(num(g.widthFt,8)*12,WRAP_WING_WIDTH_FT[0]*12,WRAP_WING_WIDTH_FT[1]*12),runIn:clamp(num(g.runFt,8)*12,Math.min(WRAP_RUN_FT[0]*12,HD),HD)}:undefined;
   const left=wing(w.left),right=wing(w.right);
-  if(left&&right)return {W:left.widthIn+HW+right.widthIn,L,x0:left.widthIn,x1:left.widthIn+HW,houseDepthIn:HD,left,right};
+  // A porch continues its wing round the far corner: the wing then runs the full house depth, and
+  // the two porch runs stop at least WRAP_PORCH_GAP_IN apart so the deck never becomes a ring.
+  const porch=(g:{depthFt:number;runFt:number}|undefined,along:{runIn:number}|undefined)=>g&&along?{depthIn:clamp(num(g.depthFt,8)*12,WRAP_PORCH_DEPTH_FT[0]*12,WRAP_PORCH_DEPTH_FT[1]*12),runIn:clamp(num(g.runFt,8)*12,WRAP_PORCH_RUN_FT[0]*12,HW)}:undefined;
+  const porchLeft=porch(w.porchLeft,left),porchRight=porch(w.porchRight,right);
+  if(porchLeft)left!.runIn=HD;
+  if(porchRight)right!.runIn=HD;
+  const room=HW-WRAP_PORCH_GAP_IN,total=(porchLeft?.runIn??0)+(porchRight?.runIn??0);
+  if(total>room)for(const p of [porchLeft,porchRight])if(p)p.runIn=Math.max(WRAP_PORCH_RUN_FT[0]*12,p.runIn*room/total);
+  const porches={...(porchLeft?{porchLeft}:{}),...(porchRight?{porchRight}:{})};
+  if(left&&right)return {W:left.widthIn+HW+right.widthIn,L,x0:left.widthIn,x1:left.widthIn+HW,houseDepthIn:HD,left,right,...porches};
   const W=Math.max(12,num(data.width,12)*12),one=(left??right)!;
   one.widthIn=Math.min(one.widthIn,W-WRAP_MIN_MAIN_LEDGER_IN);
   if(one.widthIn<WRAP_WING_WIDTH_FT[0]*12)return null;
-  return right?{W,L,x0:W-right.widthIn-HW,x1:W-right.widthIn,houseDepthIn:HD,right}:{W,L,x0:left!.widthIn,x1:left!.widthIn+HW,houseDepthIn:HD,left};
+  return right?{W,L,x0:W-right.widthIn-HW,x1:W-right.widthIn,houseDepthIn:HD,right,...porches}:{W,L,x0:left!.widthIn,x1:left!.widthIn+HW,houseDepthIn:HD,left,...porches};
 }
 
 /**
@@ -73,34 +93,43 @@ export function normalizeWrap(data:DeckData):DeckData{
 
 /** Wrap-arounds reuse the studio's existing labour factors, no new rate: one mitred corner prices
  * like Multi-corner (×1.25), two like Curved (×1.50). */
-export function wrapLabourFactor(wrap:ActiveWrap|null){return !wrap?1:wrap.left&&wrap.right?1.5:1.25;}
+export function wrapLabourFactor(wrap:ActiveWrap|null){return !wrap?1:wrapHips(wrap).length>=2?1.5:1.25;}
+/** Porch wraps add labour the price book has no factor for yet: listed for a builder quote. */
+export const hasPorchWrap=(wrap:ActiveWrap|null)=>!!(wrap?.porchLeft||wrap?.porchRight);
 
 /** Plain names for exposed wrap edges (stair and screen pickers, the plan). */
 export const WRAP_EDGE_NAMES:Record<string,string>={
   'main-front':'Front edge','main-left':'Left end','main-right':'Right end','main-back-exposed':'Back edge past the house',
   'wingL-side':'Left wing, outer side','wingL-end':'Left wing, back end','wingR-side':'Right wing, outer side','wingR-end':'Right wing, back end',
   'main-ledger':'Ledger on the deck-facing wall','wingL-ledger':'Ledger on the left side wall','wingR-ledger':'Ledger on the right side wall',
+  'porchL-street':'Left porch, street edge','porchL-end':'Left porch end','porchR-street':'Right porch, street edge','porchR-end':'Right porch end',
+  'porchL-ledger':'Ledger on the street-side wall (left porch)','porchR-ledger':'Ledger on the street-side wall (right porch)',
 };
 
 /** The deck outline around the house corners, with an id per edge (edge i runs from point i to i + 1). */
 export function wrapOutline(wrap:ActiveWrap):{outline:PlanPoint[];edgeIds:string[]}{
-  const {W,L,x0,x1,left,right}=wrap,outline:PlanPoint[]=[],edgeIds:string[]=[];
+  const {W,L,x0,x1,left,right,porchLeft:pl,porchRight:pr,houseDepthIn:HD}=wrap,outline:PlanPoint[]=[],edgeIds:string[]=[];
   const add=(p:PlanPoint,id:string)=>{outline.push(p);edgeIds.push(id);};
-  if(left){add({x:0,y:-left.runIn},'wingL-end');add({x:x0,y:-left.runIn},'wingL-ledger');add({x:x0,y:0},'main-ledger');}
+  if(left&&pl){add({x:x0+pl.runIn,y:-HD},'porchL-ledger');add({x:x0,y:-HD},'wingL-ledger');add({x:x0,y:0},'main-ledger');}
+  else if(left){add({x:0,y:-left.runIn},'wingL-end');add({x:x0,y:-left.runIn},'wingL-ledger');add({x:x0,y:0},'main-ledger');}
   else if(x0>.5){add({x:0,y:0},'main-back-exposed');add({x:x0,y:0},'main-ledger');}
   else add({x:0,y:0},'main-ledger');
-  if(right){add({x:x1,y:0},'wingR-ledger');add({x:x1,y:-right.runIn},'wingR-end');add({x:W,y:-right.runIn},'wingR-side');}
+  if(right&&pr){add({x:x1,y:0},'wingR-ledger');add({x:x1,y:-HD},'porchR-ledger');add({x:x1-pr.runIn,y:-HD},'porchR-end');add({x:x1-pr.runIn,y:-HD-pr.depthIn},'porchR-street');add({x:W,y:-HD-pr.depthIn},'wingR-side');}
+  else if(right){add({x:x1,y:0},'wingR-ledger');add({x:x1,y:-right.runIn},'wingR-end');add({x:W,y:-right.runIn},'wingR-side');}
   else if(x1<W-.5){add({x:x1,y:0},'main-back-exposed');add({x:W,y:0},'main-right');}
   else add({x:W,y:0},'main-right');
   add({x:W,y:L},'main-front');
   add({x:0,y:L},left?'wingL-side':'main-left');
+  if(left&&pl){add({x:0,y:-HD-pl.depthIn},'porchL-street');add({x:x0+pl.runIn,y:-HD-pl.depthIn},'porchL-end');}
   return {outline,edgeIds};
 }
 
 export function wrapHips(wrap:ActiveWrap):WrapHip[]{
-  const {W,L,x0,x1,left,right}=wrap,hips:WrapHip[]=[];
-  if(left)hips.push({side:'left',a:{x:x0,y:0},b:{x:0,y:L},angleDeg:Math.atan2(L,left.widthIn)*180/Math.PI});
-  if(right)hips.push({side:'right',a:{x:x1,y:0},b:{x:W,y:L},angleDeg:Math.atan2(L,right.widthIn)*180/Math.PI});
+  const {W,L,x0,x1,left,right,porchLeft:pl,porchRight:pr,houseDepthIn:HD}=wrap,hips:WrapHip[]=[],deg=(a:number,b:number)=>Math.atan2(a,b)*180/Math.PI;
+  if(left)hips.push({side:'left',corner:'front',a:{x:x0,y:0},b:{x:0,y:L},angleDeg:deg(L,left.widthIn),zones:['main','wingL']});
+  if(right)hips.push({side:'right',corner:'front',a:{x:x1,y:0},b:{x:W,y:L},angleDeg:deg(L,right.widthIn),zones:['main','wingR']});
+  if(left&&pl)hips.push({side:'left',corner:'far',a:{x:x0,y:-HD},b:{x:0,y:-HD-pl.depthIn},angleDeg:deg(pl.depthIn,left.widthIn),zones:['wingL','porchL']});
+  if(right&&pr)hips.push({side:'right',corner:'far',a:{x:x1,y:-HD},b:{x:W,y:-HD-pr.depthIn},angleDeg:deg(pr.depthIn,right.widthIn),zones:['wingR','porchR']});
   return hips;
 }
 
@@ -109,12 +138,16 @@ export const toLocal=(f:WrapFrame,p:PlanPoint):PlanPoint=>{const dx=p.x-f.origin
 
 /** Framing zones: the main deck off the deck-facing wall and one wing off each wrapped side wall. */
 export function wrapZones(wrap:ActiveWrap):WrapZoneGeometry[]{
-  const {W,L,x0,x1,left,right}=wrap,zones:WrapZoneGeometry[]=[];
-  const zone=(id:WrapZoneGeometry['id'],label:string,outline:PlanPoint[],frame:WrapFrame,size:{w:number;h:number})=>zones.push({id,label,outline,frame,local:outline.map(p=>toLocal(frame,p)),size});
+  const {W,L,x0,x1,left,right,porchLeft:pl,porchRight:pr,houseDepthIn:HD}=wrap,zones:WrapZoneGeometry[]=[];
+  const zone=(id:WrapZoneId,label:string,outline:PlanPoint[],frame:WrapFrame,size:{w:number;h:number})=>zones.push({id,label,outline,frame,local:outline.map(p=>toLocal(frame,p)),size});
   const back=[...(left?[{x:x0,y:0}]:[{x:0,y:0}]),...(right?[{x:x1,y:0}]:[{x:W,y:0}])];
   zone('main','Main deck',[...back,{x:W,y:L},{x:0,y:L}],{origin:{x:0,y:0},ux:{x:1,y:0},uz:{x:0,y:1}},{w:W,h:L});
-  if(left)zone('wingL','Left wing',[{x:0,y:-left.runIn},{x:x0,y:-left.runIn},{x:x0,y:0},{x:0,y:L}],{origin:{x:x0,y:-left.runIn},ux:{x:0,y:1},uz:{x:-1,y:0}},{w:left.runIn+L,h:left.widthIn});
-  if(right)zone('wingR','Right wing',[{x:x1,y:-right.runIn},{x:W,y:-right.runIn},{x:W,y:L},{x:x1,y:0}],{origin:{x:x1,y:L},ux:{x:0,y:-1},uz:{x:1,y:0}},{w:L+right.runIn,h:right.widthIn});
+  // A wing with a porch ends on the far hip instead of a square end; it spans the whole house depth plus the porch depth.
+  if(left){const far=pl?HD+pl.depthIn:left.runIn;zone('wingL','Left wing',[{x:0,y:-far},pl?{x:x0,y:-HD}:{x:x0,y:-far},{x:x0,y:0},{x:0,y:L}],{origin:{x:x0,y:-far},ux:{x:0,y:1},uz:{x:-1,y:0}},{w:far+L,h:left.widthIn});}
+  if(right){const far=pr?HD+pr.depthIn:right.runIn;zone('wingR','Right wing',[pr?{x:x1,y:-HD}:{x:x1,y:-far},{x:W,y:-far},{x:W,y:L},{x:x1,y:0}],{origin:{x:x1,y:L},ux:{x:0,y:-1},uz:{x:1,y:0}},{w:L+far,h:right.widthIn});}
+  // Porches are framed off the street-side wall: joists run away from it (toward the street).
+  if(left&&pl)zone('porchL','Left porch',[{x:0,y:-HD-pl.depthIn},{x:x0+pl.runIn,y:-HD-pl.depthIn},{x:x0+pl.runIn,y:-HD},{x:x0,y:-HD}],{origin:{x:x0+pl.runIn,y:-HD},ux:{x:-1,y:0},uz:{x:0,y:-1}},{w:pl.runIn+left.widthIn,h:pl.depthIn});
+  if(right&&pr)zone('porchR','Right porch',[{x:x1-pr.runIn,y:-HD-pr.depthIn},{x:W,y:-HD-pr.depthIn},{x:x1,y:-HD},{x:x1-pr.runIn,y:-HD}],{origin:{x:W,y:-HD},ux:{x:-1,y:0},uz:{x:0,y:-1}},{w:right.widthIn+pr.runIn,h:pr.depthIn});
   return zones;
 }
 
@@ -136,7 +169,30 @@ export function distanceToSegment(p:PlanPoint,a:PlanPoint,b:PlanPoint){
 
 /** Plain-language description, e.g. "Wraps the right corner: side wing 10 × 8 ft, mitred at 45°". */
 export function describeWrap(wrap:ActiveWrap):string{
-  const hips=wrapHips(wrap),corner=(side:WrapSide)=>{const g=wrap[side]!,hip=hips.find(h=>h.side===side)!,angle=Math.abs(hip.angleDeg-45)<.5?'mitred at 45°':`corner-to-corner hip at ${hip.angleDeg.toFixed(0)}° to the back wall`;return `${side} wing ${(g.widthIn/12).toFixed(1).replace(/\.0$/,'')} ft out × ${(g.runIn/12).toFixed(1).replace(/\.0$/,'')} ft along the side wall, ${angle}`;};
+  const hips=wrapHips(wrap),ft=(inches:number)=>(inches/12).toFixed(1).replace(/\.0$/,'');
+  const angle=(side:WrapSide,corner:'front'|'far')=>{const hip=hips.find(h=>h.side===side&&h.corner===corner)!;return Math.abs(hip.angleDeg-45)<.5?'mitred at 45°':`corner-to-corner hip at ${hip.angleDeg.toFixed(0)}° to the ${corner==='front'?'back':'street-side'} wall`;};
+  const part=(side:WrapSide)=>{const g=wrap[side]!,p=side==='left'?wrap.porchLeft:wrap.porchRight;
+    return `${side} wing ${ft(g.widthIn)} ft out × ${ft(g.runIn)} ft along the side wall, ${angle(side,'front')}${p?`, continuing as a porch ${ft(p.depthIn)} ft deep × ${ft(p.runIn)} ft along the street side, ${angle(side,'far')}`:''}`;};
   const sides=(['left','right'] as const).filter(s=>wrap[s]);
-  return `Wraps ${sides.length===2?'both house corners':`the ${sides[0]} house corner`}: ${sides.map(corner).join('; ')}`;
+  return `Wraps ${sides.length===2?'both house corners':`the ${sides[0]} house corner`}${hasPorchWrap(wrap)?' and round to the street side':''}: ${sides.map(part).join('; ')}`;
+}
+
+/**
+ * Front entry: where a street-side door (a 'Back' facade opening) faces a porch, the primary stair
+ * can open off that porch's street edge, centred on the door. Openings on the street-side wall run
+ * from the house's right corner (0 %) to its left corner (100 %), as the house geometry draws them.
+ */
+export function porchStairForDoor(data:DeckData):{edgeId:string;offsetPct:number;doorId:string}|null{
+  const wrap=activeWrap(data);if(!wrap||!(wrap.porchLeft||wrap.porchRight))return null;
+  const house=getHouseConfig(data),HW=house.widthFt*12,{outline,edgeIds}=wrapOutline(wrap),width=Math.max(24,num(data.stairWidth,48));
+  for(const door of house.openings.filter(o=>o.type==='Door'&&o.facade==='Back')){
+    const x=wrap.x1-HW*door.offsetPct/100;
+    for(const id of ['porchL-street','porchR-street']){
+      const i=edgeIds.indexOf(id);if(i<0)continue;
+      const a=outline[i],b=outline[(i+1)%outline.length],x0=Math.min(a.x,b.x),len=Math.abs(b.x-a.x);
+      if(x<x0+width/2||x>x0+len-width/2||len<=width)continue;
+      return {edgeId:id,offsetPct:clamp((x-width/2-x0)/(len-width)*100,0,100),doorId:door.id};
+    }
+  }
+  return null;
 }

@@ -59,6 +59,9 @@ export function getHouseContact(data:DeckData,fp:FootprintPlan=getFootprint(data
     const b=fp.outline[(index+1)%fp.outline.length],onWall=(x:number)=>Math.abs(a.x-x)<TOL&&Math.abs(b.x-x)<TOL&&Math.min(a.y,b.y)>-house.depthIn-TOL&&Math.max(a.y,b.y)<TOL;
     if(onWall(house.x1)&&b.y<a.y-TOL)contacts.push({wall:'right',edgeIndex:index,a,b,lengthIn:a.y-b.y,inward:{x:1,y:0}});
     if(onWall(house.x0)&&b.y>a.y+TOL)contacts.push({wall:'left',edgeIndex:index,a,b,lengthIn:b.y-a.y,inward:{x:-1,y:0}});
+    // Porch wraps bear on the street-side (far) wall, y = −depth, facing −y.
+    const onFar=Math.abs(a.y+house.depthIn)<TOL&&Math.abs(b.y+house.depthIn)<TOL&&Math.min(a.x,b.x)>house.x0-TOL&&Math.max(a.x,b.x)<house.x1+TOL;
+    if(onFar&&b.x<a.x-TOL)contacts.push({wall:'far',edgeIndex:index,a,b,lengthIn:a.x-b.x,inward:{x:0,y:-1}});
   });
   // The picture-frame border stays flush along the whole back line (ledger or exposed stretch),
   // so the finished outline never jogs at a house corner.

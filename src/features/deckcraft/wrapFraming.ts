@@ -39,7 +39,7 @@ export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOu
   for(const geom of wrapZones(wrap)){
     const f=geom.frame,zone:DeckZone={id:geom.id,outline:geom.local,origin:{x:0,y:0},size:geom.size,attached:true},reference=zoneReference(zone,cfg);
     if(geom.id==='main')out.reference=reference;
-    const localHips=hips.filter(h=>geom.id==='main'||(geom.id==='wingL')===(h.side==='left')).map(h=>({a:toLocal(f,h.a),b:toLocal(f,h.b)}));
+    const mine=hips.filter(h=>h.zones.includes(geom.id)),localHips=mine.map(h=>({a:toLocal(f,h.a),b:toLocal(f,h.b)}));
     const onHip=(p:PlanPoint,tol=1)=>localHips.some(h=>distanceToSegment(p,h.a,h.b)<tol);
     const local:FramedSet&{blocking:Member[]}={offset:zero,supports:[],beams:[],joists:[],blocking:[]};
     frameZoneBearings({zone,reference},zero,local);
@@ -49,9 +49,11 @@ export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOu
       local.supports.push({x,y:Math.max(0,reference.bBotY*12),z:row.z*12});
     }
     if(geom.id==='main')frameHouseSideBeams(input.houseSide,geom.size.h,cfg,zero,local);
-    // This zone's field: the finished field on this zone's side of each hip, half a gap in from it.
-    let zoneField=field;
-    for(const h of hips)if(geom.id==='main'||(geom.id==='wingL')===(h.side==='left'))zoneField=polygonCut(zoneField,[halfPlane(h.a,h.b,centroid(geom.outline),gap/2)]);
+    // This zone's field: the finished field within this zone (widened 6 in on its outer edges to take
+    // in the border overhang), stopping half a board gap short of each of its hips. Clipping to the
+    // zone first keeps a hip line extended far past its corner from reaching another wing.
+    let zoneField=polygonCut(field,offsetPolygons([geom.outline],-6));
+    for(const h of mine)zoneField=polygonCut(zoneField,[halfPlane(h.a,h.b,centroid(geom.outline),gap/2)]);
     const localField=zoneField.map(poly=>poly.map(p=>toLocal(f,p)));
     const xs=localField.flat().map(p=>p.x),fieldLeft=xs.length?Math.min(...xs):0,fieldWidth=xs.length?Math.max(...xs)-fieldLeft:0,breakerZone=boardWidth+2*gap;
     let breakerCount=0;while((fieldWidth-breakerCount*breakerZone)/(breakerCount+1)>stockLength+1e-6)breakerCount++;

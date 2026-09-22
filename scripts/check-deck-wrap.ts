@@ -10,7 +10,7 @@ import {unsupportedJoistEnds} from '../src/features/deckcraft/constructionDetail
 import {doubledMemberSpanIn} from '../src/features/deckcraft/zoneFraming';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {deckReleaseData} from '../src/features/deckcraft/deckRelease';
-import {activeWrap,distanceToSegment,normalizeWrap,wrapBlockers,wrapLabourFactor,wrapZones} from '../src/features/deckcraft/lib/wrapGeometry';
+import {activeWrap,describeWrap,distanceToSegment,normalizeWrap,porchStairForDoor,wrapBlockers,wrapLabourFactor,wrapZones,WRAP_PORCH_GAP_IN} from '../src/features/deckcraft/lib/wrapGeometry';
 import {boardOutline} from '../src/features/deckcraft/lib/polygonCuts';
 import {deckExportMeshes,exportDeckDXF,exportDeckOBJ} from '../src/features/deckcraft/designExports';
 import type {PlanPoint} from '../src/features/deckcraft/lib/deckGeometry';
@@ -31,10 +31,9 @@ const nearPoly=(p:PlanPoint,poly:PlanPoint[],tol:number)=>inside(p,poly)||poly.s
 const sides={left:(w:number,r:number)=>({left:{widthFt:w,runFt:r}}),right:(w:number,r:number)=>({right:{widthFt:w,runFt:r}}),both:(w:number,r:number)=>({left:{widthFt:w,runFt:r},right:{widthFt:w+4,runFt:r+2}})};
 const boardsets=[{pattern:'Straight' as const,pictureFrameRows:0 as const},{pattern:'Straight' as const,pictureFrameRows:1 as const},{pattern:'Straight' as const,pictureFrameRows:2 as const},{pattern:'Picture Frame' as const,pictureFrameRows:0 as const}];
 let cases=0;
-for(const [corner,wings] of Object.entries(sides))for(const boards of boardsets)for(const stairType of ['Straight','Landing','Winder'] as const)for(const height of [12,36,72])for(const even of [true,false]){
-  const L=12,wing=even?L:8;
-  const d=design({width:22,length:L,height,stairType,...boards,houseConfig:house(26,22),wrap:(sides as Record<string,(w:number,r:number)=>DeckData['wrap']>)[corner](wing,10),stairPosition:'Front'});
-  const tag=`${corner} ${boards.pattern}/${boards.pictureFrameRows} ${stairType} ${height}in ${even?'45°':'uneven'}`;
+/** Every structural, board, ledger and house-clearance check for one wrap design. */
+function checkWrap(d:DeckData,tag:string){
+  const height=d.height;
   const wrap=activeWrap(d)!;assert(wrap,`${tag}: wrap is active`);
   const m=buildDeckTakeoff(d),l=m.levels[0],fp=l.footprint,contact=getHouseContact(d,fp),hips=l.hips!;
   // Outline and zones.
@@ -76,10 +75,11 @@ for(const [corner,wings] of Object.entries(sides))for(const boards of boardsets)
     assert(zone,`${tag}: field board at ${c.x.toFixed(1)},${c.y.toFixed(1)} sits in a zone`);
     const wantAlongX=Math.abs(zone.joistDir.y)>.5;
     assert(wantAlongX?Math.abs(b.angleDeg)<1e-6:Math.abs(Math.abs(b.angleDeg)-90)<1e-6,`${tag}: ${zone.label} boards run parallel to its house wall`);
-    for(const h of hips){const s=(p:PlanPoint)=>(h.b.x-h.a.x)*(p.y-h.a.y)-(h.b.y-h.a.y)*(p.x-h.a.x),poly=boardOutline(b,d.boardWidth),signs=poly.map(s).filter(v=>Math.abs(v)>1e-3*Math.hypot(h.b.x-h.a.x,h.b.y-h.a.y));assert(signs.every(v=>v>0)||signs.every(v=>v<0),`${tag}: no board crosses the ${h.side} hip`);}
+    for(const h of hips){const s=(p:PlanPoint)=>(h.b.x-h.a.x)*(p.y-h.a.y)-(h.b.y-h.a.y)*(p.x-h.a.x),poly=boardOutline(b,d.boardWidth);if(!poly.some(v=>distanceToSegment(v,h.a,h.b)<12))continue;const signs=poly.map(s).filter(v=>Math.abs(v)>1e-3*Math.hypot(h.b.x-h.a.x,h.b.y-h.a.y));assert(signs.every(v=>v>0)||signs.every(v=>v<0),`${tag}: no board crosses the ${h.side} ${h.corner} hip`);}
   }
   checks++;
   const finished=l.deckingFootprint!.outline,polys=l.boards.map(b=>boardOutline(b,d.boardWidth)),xs=finished.map(p=>p.x),ys=finished.map(p=>p.y);
+  ok(polys.reduce((n,p)=>n+Math.abs(area(p)),0)<=Math.abs(area(finished))+1,`${tag}: no two boards overlap (board area within the deck area)`);
   let probes=0,missed=0;
   for(let x=Math.min(...xs)+3;x<Math.max(...xs);x+=7)for(let y=Math.min(...ys)+3;y<Math.max(...ys);y+=7){
     const p={x,y};if(!inside(p,finished)||finished.some((a,i)=>distanceToSegment(p,a,finished[(i+1)%finished.length])<1))continue;
@@ -91,6 +91,47 @@ for(const [corner,wings] of Object.entries(sides))for(const boards of boardsets)
   const {x0,x1,depthIn}=getHousePlacement(d),inHouse=(p:PlanPoint)=>p.x>x0+.5&&p.x<x1-.5&&p.y<-.5&&p.y>-depthIn+.5;
   ok(!finished.some(inHouse)&&!polys.flat().some(inHouse)&&!m.treads.some(t=>inHouse({x:t.x,y:t.z})),`${tag}: no deck, border or stair inside the house`);
   cases++;
+}
+for(const [corner,wings] of Object.entries(sides))for(const boards of boardsets)for(const stairType of ['Straight','Landing','Winder'] as const)for(const height of [12,36,72])for(const even of [true,false]){
+  const L=12,wing=even?L:8;
+  const d=design({width:22,length:L,height,stairType,...boards,houseConfig:house(26,22),wrap:(sides as Record<string,(w:number,r:number)=>DeckData['wrap']>)[corner](wing,10),stairPosition:'Front'});
+  const tag=`${corner} ${boards.pattern}/${boards.pictureFrameRows} ${stairType} ${height}in ${even?'45°':'uneven'}`;
+  checkWrap(d,tag);
+}
+// 1b. Porch wraps: each porch continues its wing round a far corner along the street-side wall.
+const porchSides:Record<string,(w:number)=>DeckData['wrap']>={
+  'left porch':w=>({left:{widthFt:w,runFt:10},porchLeft:{depthFt:w,runFt:10}}),
+  'right porch':w=>({right:{widthFt:w,runFt:10},porchRight:{depthFt:w+2,runFt:12}}),
+  'both porches':w=>({left:{widthFt:w,runFt:10},right:{widthFt:w,runFt:10},porchLeft:{depthFt:w,runFt:11},porchRight:{depthFt:6,runFt:11}}),
+  'wing + porch':w=>({left:{widthFt:w,runFt:8},right:{widthFt:w,runFt:10},porchRight:{depthFt:w,runFt:10}}),
+};
+for(const [corner,make] of Object.entries(porchSides))for(const boards of boardsets)for(const height of [12,36,72])for(const even of [true,false]){
+  const d=design({width:22,length:12,height,...boards,houseConfig:house(26,22),wrap:make(even?8:6),stairPosition:'Front'});
+  const tag=`${corner} ${boards.pattern}/${boards.pictureFrameRows} ${height}in ${even?'even':'uneven'}`;
+  checkWrap(d,tag);
+  const wrap=activeWrap(d)!,contact=getHouseContact(d,buildDeckTakeoff(d).levels[0].footprint),porches=[wrap.porchLeft,wrap.porchRight].filter(Boolean).length;
+  ok(contact.contacts.filter(c=>c.wall==='far').length===porches,`${tag}: one street-side ledger per porch`);
+  ok((!wrap.porchLeft||wrap.left!.runIn===wrap.houseDepthIn)&&(!wrap.porchRight||wrap.right!.runIn===wrap.houseDepthIn),`${tag}: a wing with a porch runs the full house depth`);
+}
+// A narrow house with wide wings that run far back: each wing's boards stay in its own wing.
+checkWrap(design({length:12,height:36,houseConfig:house(12,30),wrap:{left:{widthFt:24,runFt:30},right:{widthFt:24,runFt:30}},stairPosition:'Front'}),'narrow house, wide long wings');
+checkWrap(design({length:12,height:36,houseConfig:house(12,30),wrap:{left:{widthFt:24,runFt:8},right:{widthFt:24,runFt:8},porchLeft:{depthFt:10,runFt:4},porchRight:{depthFt:10,runFt:4}},stairPosition:'Front'}),'narrow house, wide wings, both porches');
+{
+  // Two porches never close into a ring: they stop at least 3 ft apart along the street side.
+  const ring=design({width:22,length:12,houseConfig:house(26,22),wrap:{left:{widthFt:8,runFt:8},right:{widthFt:8,runFt:8},porchLeft:{depthFt:8,runFt:20},porchRight:{depthFt:8,runFt:20}}}),w=activeWrap(ring)!;
+  ok((w.x1-w.porchRight!.runIn)-(w.x0+w.porchLeft!.runIn)>=WRAP_PORCH_GAP_IN-.001,'Two porches stop at least 3 ft apart (no ring round the house)');
+  checkWrap(ring,'porches trimmed to stay apart');
+  assert.throws(()=>validateDesign({...base(),deckType:'Attached',wrap:{porchLeft:{depthFt:8,runFt:8}}}),/add that wing first/);checks++;
+  const e=calculateEstimate(ring),labour=e.sections.find(s=>s.title.startsWith('Labour'))!;
+  ok(e.quoteRequired.includes('Porch-wrap labour premium (builder quote)')&&labour.quoteRequired&&labour.items.some(i=>i.cost===null&&/Porch-wrap/.test(i.name)),'Porch-wrap labour premium is a builder-quote line, never priced at zero');
+  ok(wrapLabourFactor(w)===1.5,'Porch wraps price labour at the two-corner factor');
+  ok(/round to the street side/.test(describeWrap(w)),'The summary says the deck wraps round to the street side');
+  // Front entry: a street-side door facing a porch takes the stair straight off the porch, centred on it.
+  const cfg=house(26,22),withDoor=design({width:22,length:12,height:36,houseConfig:{...cfg,openings:[...cfg.openings,{id:'street-door',type:'Door',facade:'Back',offsetPct:80,bottomIn:36,widthIn:36,heightIn:80}]},wrap:{left:{widthFt:8,runFt:8},porchLeft:{depthFt:8,runFt:14}}});
+  const fit=porchStairForDoor(withDoor);
+  ok(fit?.edgeId==='porchL-street','The street door faces the left porch');
+  const doorX=activeWrap(withDoor)!.x1-26*12*.8,m=buildDeckTakeoff({...withDoor,stairEdgeId:fit!.edgeId,stairOffset:fit!.offsetPct});
+  ok(m.flights.length>0&&Math.abs(m.flights[0].start.x-doorX)<1,'The porch stair lines up with the street door');
 }
 
 // 2. Stairs on a wing end, pricing, labour and review items.
@@ -130,4 +171,4 @@ for(const [corner,wings] of Object.entries(sides))for(const boards of boardsets)
   for(const patch of [{deckType:'Freestanding'},{pattern:'Diagonal'},{pattern:'Herringbone'},{hasInlay:true}] as Partial<DeckData>[])ok(wrapBlockers({...base(),...patch,wrap:{left:{widthFt:8,runFt:8}}}).length===1,`Wrap paused by ${JSON.stringify(patch)}`);
   ok(wrapBlockers({...base(),levels:3,wrap:{left:{widthFt:8,runFt:8}}}).length===0,'A wrap-around can have lower levels joined to it');
 }
-console.log(`DECK WRAP OK — ${cases} wrap designs, ${checks} outline, ledger, hip, joist-bearing, board, stair, price and persistence checks.`);
+console.log(`DECK WRAP OK — ${cases} wrap designs (porch wraps included), ${checks} outline, ledger, hip, joist-bearing, board, stair, price and persistence checks.`);

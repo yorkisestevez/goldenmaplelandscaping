@@ -1,4 +1,4 @@
-import { activeWrap, wrapLabourFactor } from './lib/wrapGeometry';
+import { activeWrap, hasPorchWrap, wrapLabourFactor } from './lib/wrapGeometry';
 import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock} from './stockPlan';
 import {buildDeckTakeoff,type DeckTakeoff} from './deckTakeoff';
@@ -605,6 +605,13 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     flags.push(...veneer.issues);
     const rows=veneer.rows.filter(r=>r.id!=='terrain-veneer-wood');
     if(rows.length){quoteRequired.push(...rows.map(r=>r.name));sections.push({title:'Terrain stair support connections',icon:'🔩',quoteRequired:true,total:0,items:rows.map(r=>({name:r.name,spec:r.basis,qty:r.qty,unit:r.unit,cost:null}))});}
+  }
+  // Porch wraps: labour is priced at the two-corner factor; the extra porch labour has no factor in
+  // the price book yet, so it is listed for a builder quote rather than priced at zero.
+  if(hasPorchWrap(wrap)){
+    const labour=sections.find(s=>s.title==='Labour (Construction & Build)');
+    if(labour){labour.quoteRequired=true;labour.items.push({name:'Porch-wrap labour premium',spec:'Builder quote required: the priced labour uses the two-corner wrap factor (×1.50); the extra porch-wrap labour is quoted separately.',qty:1,unit:'allowance',cost:null});}
+    quoteRequired.push('Porch-wrap labour premium (builder quote)');
   }
   flags.push(...yardTakeoff.warnings);
   for(const row of yardTakeoff.sections){

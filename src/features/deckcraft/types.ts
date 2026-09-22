@@ -28,7 +28,13 @@ export interface HousePlacement {anchor:'left'|'center'|'right';offsetIn:number}
  * far it runs back along that wall from the deck-facing wall. */
 export interface WrapWing {widthFt:number;runFt:number}
 /** Wrap-around deck: side wings around one or both house corners, each mitred on a corner-to-corner hip. */
-export interface WrapConfig {left?:WrapWing;right?:WrapWing}
+/** A porch wrap: the deck continues around a far house corner along the street-side wall. */
+export interface WrapPorch {depthFt:number;runFt:number}
+export interface WrapConfig {left?:WrapWing;right?:WrapWing;
+  /** Needs the left wing, which then runs the full house depth. */
+  porchLeft?:WrapPorch;
+  /** Needs the right wing, which then runs the full house depth. */
+  porchRight?:WrapPorch}
 /** A third deck section, joined to the main deck (parent 1) or the second level (parent 2). */
 export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;parent:1|2;position:'Front'|'Left'|'Right';offsetPct:number;
   /** Named wrap edge of the main deck (parent 1 only), e.g. 'wingR-end'; overrides position. */

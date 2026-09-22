@@ -2,7 +2,7 @@ import { DEFAULT_DECK } from './defaults';
 import { type DeckData, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardFeature } from './types';
 import {availableStairSides,getHouseContact} from './houseContact';
 import {getFootprint} from './lib/deckGeometry';
-import {normalizeWrap,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
+import {normalizeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
 import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,MAX_SCREEN_PANELS,PRIVACY_HEIGHTS,PRIVACY_PRODUCTS,PRIVACY_SIDES,pricedPrivacyArea} from './privacyScreens';
 
 const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy'] as const satisfies readonly LightingZone[];
@@ -161,7 +161,13 @@ export function validateDesign(input:unknown):DeckData {
       return {widthFt:numeric(g.widthFt,WRAP_WING_WIDTH_FT[0],WRAP_WING_WIDTH_FT[1],`${label} wing width`),runFt:numeric(g.runFt,WRAP_RUN_FT[0],WRAP_RUN_FT[1],`${label} wing run`)};
     };
     const left=wing(w.left,'Left'),right=wing(w.right,'Right');
-    if(left||right)clean.wrap={...(left?{left}:{}),...(right?{right}:{})};
+    const porch=(g:unknown,label:string,wingOn:boolean)=>{
+      if(g===undefined)return undefined;if(!record(g))throw new Error(`Invalid ${label.toLowerCase()} porch wrap.`);
+      if(!wingOn)throw new Error(`A ${label.toLowerCase()} porch wrap continues the ${label.toLowerCase()} wing; add that wing first.`);
+      return {depthFt:numeric(g.depthFt,WRAP_PORCH_DEPTH_FT[0],WRAP_PORCH_DEPTH_FT[1],`${label} porch depth`),runFt:numeric(g.runFt,WRAP_PORCH_RUN_FT[0],WRAP_PORCH_RUN_FT[1],`${label} porch run`)};
+    };
+    const porchLeft=porch(w.porchLeft,'Left',!!left),porchRight=porch(w.porchRight,'Right',!!right);
+    if(left||right)clean.wrap={...(left?{left}:{}),...(right?{right}:{}),...(porchLeft?{porchLeft}:{}),...(porchRight?{porchRight}:{})};
   }
   for(const key of ['stairEdgeId','level2EdgeId'] as const)if(input[key]!==undefined){
     if(typeof input[key]!=='string'||!/^[a-zA-Z-]{1,40}$/.test(input[key] as string))throw new Error('Invalid deck edge.');
