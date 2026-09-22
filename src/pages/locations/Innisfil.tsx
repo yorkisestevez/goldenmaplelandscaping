@@ -65,7 +65,7 @@ const FAQS = [
   },
   {
     q: "What warranty do you offer?",
-    a: "All Golden Maple projects include a 5-year workmanship warranty. Material warranties vary by manufacturer — Techo-Bloc offers a transferable lifetime warranty on many products.",
+    a: "Ask us for the current written workmanship terms for your specific project. Material warranties vary by manufacturer — Techo-Bloc offers a transferable lifetime warranty on many products.",
   },
 ];
 
@@ -181,7 +181,7 @@ export default function InnisfilLanding() {
             </ul>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                "5.0-star rated across Google, HomeStars & Yelp",
+                "Project-specific scope and written terms",
                 "Premium materials — Techo-Bloc, Permacon, TimberTech, In-Lite",
                 "Full design service — 3D renders before we break ground",
                 "Transparent pricing — detailed quotes, no hidden fees",

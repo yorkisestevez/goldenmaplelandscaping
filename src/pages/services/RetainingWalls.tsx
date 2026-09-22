@@ -13,7 +13,7 @@ const FAQ = [
   },
   {
     q: "How long do retaining walls last?",
-    a: "When properly engineered with our 12-16\" base standard and geogrid reinforcement, a retaining wall can last 30-40+ years. We provide a 5-year structural warranty on all wall installations."
+    a: "When properly engineered with our 12-16\" base standard and geogrid reinforcement, a retaining wall can last 30-40+ years. Ask us for the current written workmanship terms for your specific project."
   },
   {
     q: "What materials do you use for retaining walls?",
@@ -131,7 +131,7 @@ export default function RetainingWalls() {
                   "Integrated Drainage Systems",
                   "Laser-Guided Leveling & Grading",
                   "Premium Coping & Cap Stones",
-                  "5-Year Structural Warranty",
+                  "Written workmanship terms confirmed per project",
                   "Site Cleanup & Restoration"
                 ].map((item, idx) => (
                   <li key={idx} className="flex items-center gap-6 font-sans text-sm uppercase tracking-[0.2em] text-brand-bonewhite font-light">

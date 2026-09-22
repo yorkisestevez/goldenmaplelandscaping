@@ -66,7 +66,7 @@ const FAQS = [
   },
   {
     q: "What warranty do you offer?",
-    a: "All Golden Maple projects include a 5-year workmanship warranty. Material warranties vary by manufacturer — Techo-Bloc offers a transferable lifetime warranty on many products.",
+    a: "Ask us for the current written workmanship terms for your specific project. Material warranties vary by manufacturer — Techo-Bloc offers a transferable lifetime warranty on many products.",
   },
 ];
 
@@ -183,7 +183,7 @@ export default function SpringwaterLanding() {
             </ul>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                "5.0-star rated across Google, HomeStars & Yelp",
+                "Project-specific scope and written terms",
                 "Premium materials — Techo-Bloc, Permacon, TimberTech, In-Lite",
                 "Full design service — 3D renders before we break ground",
                 "Transparent pricing — detailed quotes, no hidden fees",
@@ -312,7 +312,7 @@ export default function SpringwaterLanding() {
               Get Your Free Springwater Landscaping Quote
             </h2>
             <p className="font-sans text-brand-muted font-light mb-10 max-w-2xl mx-auto">
-              Ready to build the outdoor space your property deserves? Contact Golden Maple Landscaping for a free site visit and detailed quote.
+              Ready to build the outdoor space your property deserves? Contact Golden Maple Landscaping to discuss the current consultation and quote process.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
               <Link to="/contact" className="btn-primary py-4 px-10">Request a Quote</Link>

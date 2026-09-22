@@ -128,7 +128,7 @@ export default function NaturalStoneVsPaversBarrie() {
         </div>
       </div>
 
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020. The company is WSIB registered, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews." />
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>Still deciding between natural stone and pavers for your Barrie project? Golden Maple Landscaping will help you choose the right surface for your home, soil, and budget — no pressure, just honest advice. <a href=\"/contact\">Contact us today</a> to book a consultation, browse <a href=\"/portfolio\">our portfolio</a> for inspiration, or run the numbers with our <a href=\"/cost-estimator?type=stone\">cost estimator</a>.</p>" }} />
     </BlogPostLayout>

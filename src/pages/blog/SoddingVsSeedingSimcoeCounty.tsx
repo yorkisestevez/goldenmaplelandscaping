@@ -152,7 +152,7 @@ export default function SoddingVsSeedingSimcoeCounty() {
         </div>
       </div>
 
-      <AuthorBio bio={"Yorkis Estevez founded Golden Maple Landscaping in 2020 and has been installing lawns, patios, and outdoor spaces across Simcoe County ever since. The company is WSIB certified, carries $5M in liability coverage, and holds a 5.0 Google rating across all verified reviews. Yorkis writes from field experience, not theory."} />
+      <AuthorBio bio={"Yorkis Estevez founded Golden Maple Landscaping in 2020 and has been installing lawns, patios, and outdoor spaces across Simcoe County ever since. Yorkis writes from field experience, not theory."} />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>If your Barrie or Simcoe County property needs a new lawn — whether you are coming off a new build, a major renovation, or years of bare patches — we are happy to walk the site and give you a straight answer on sod vs. seed with no upsell pressure. <a href='/services/landscape-design-barrie'>Our landscape design service</a> covers full lawn installation as well as hardscape, and we can sequence the work so everything is done in the right order. <a href='/contact'>Reach out through our contact page</a> to book a site visit, or use our <a href='/cost-estimator'>project cost estimator</a> to get a ballpark number before we talk.</p>" }} />
     </BlogPostLayout>

@@ -130,7 +130,7 @@ export default function PolymericSandVsRegularSandPatio() {
         </div>
       </div>
 
-      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020. The company is WSIB registered, carries $5 million in liability coverage, and currently has a 5.0 Google rating across 8 reviews." />
+      <AuthorBio bio="Yorkis Estevez founded Golden Maple Landscaping in Barrie in 2020." />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>The choice of jointing sand is a small detail that has a massive impact on how your patio performs and how much work it creates for you down the line. Here in Barrie and across Simcoe County, building for the climate isn't optional. At Golden Maple Landscaping, we build every interlocking project with a deep base and high-quality polymeric sand because it's the only way to do it right. If you're ready for a low-maintenance patio that's engineered to last, we should talk. You can see examples of our work in our <a href='/portfolio'>portfolio</a> or reach out to us directly through our <a href='/contact'>contact page</a>.</p>" }} />
     </BlogPostLayout>
