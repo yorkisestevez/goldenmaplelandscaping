@@ -18,6 +18,7 @@ import LightingFixtures,{MAX_PREVIEW_LIGHTS,isIlluminatingFixture} from './Light
 import {sceneBounds} from './sceneBounds';
 import {getStairBoards} from '../../stairBoards';
 import {houseLayout} from './houseLayout';
+import {getHouseBlocks} from '../../houseFootprint';
 import RailingDetails from './RailingDetails';
 import {catalogueAccessoryLayout} from '../../catalogueAccessories';
 import {activeLightingItems} from '../../lightingSystem';
@@ -129,9 +130,9 @@ function SnapshotBridge({onReady}:{onReady?:(capture:(()=>string|null)|null)=>vo
 }
 export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,...interaction}:{data:DeckData;model:DeckTakeoff;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:(()=>string|null)|null)=>void}&HouseInteraction){
   const data=useMemo<DeckData>(()=>{if(!deckOnly)return rawData;const {yardFeatures:_yard,terrainConfig:_terrain,...deck}=rawData;return deck;},[rawData,deckOnly]);
-  const yard=useMemo(()=>!deckOnly&&calculatedYard?calculatedYard:buildYardModel(data,model),[deckOnly,calculatedYard,model,data.yardFeatures,data.terrainConfig,data.width,data.length,data.houseConfig?.widthFt,data.houseConfig?.depthFt,data.houseVisible,data.deckType]);
+  const yard=useMemo(()=>!deckOnly&&calculatedYard?calculatedYard:buildYardModel(data,model),[deckOnly,calculatedYard,model,data.yardFeatures,data.terrainConfig,data.width,data.length,data.houseConfig?.widthFt,data.houseConfig?.depthFt,data.houseConfig?.footprint,data.housePlacement,data.houseVisible,data.deckType]);
   const bounds=sceneBounds(model),house=houseLayout(data,model.levels[0].footprint.bounds.w);
-  if(view==='overview'&&house.visible){bounds.minX=Math.min(bounds.minX,house.minX-14);bounds.maxX=Math.max(bounds.maxX,house.maxX+14);bounds.minZ=Math.min(bounds.minZ,-house.depth-14);bounds.top=Math.max(bounds.top,house.wallHeight+house.roofRise);}
+  if(view==='overview'&&house.visible){bounds.minX=Math.min(bounds.minX,house.minX-14);bounds.maxX=Math.max(bounds.maxX,house.maxX+14);bounds.minZ=Math.min(bounds.minZ,-house.depth-14);bounds.top=Math.max(bounds.top,house.wallHeight+house.roofRise);for(const {rect:b,wallHeightIn} of getHouseBlocks(data).slice(1)){bounds.minX=Math.min(bounds.minX,b.x0-14);bounds.maxX=Math.max(bounds.maxX,b.x1+14);bounds.minZ=Math.min(bounds.minZ,b.y0-14);bounds.top=Math.max(bounds.top,wallHeightIn+house.roofRise);}}
   if(view==='overview')for(const feature of yard.features.filter(f=>!f.excluded)){for(const p of feature.footprints.flat()){bounds.minX=Math.min(bounds.minX,p.x);bounds.maxX=Math.max(bounds.maxX,p.x);bounds.minZ=Math.min(bounds.minZ,p.y);bounds.maxZ=Math.max(bounds.maxZ,p.y);}for(const b of feature.boxes)bounds.top=Math.max(bounds.top,b.y+b.h/2);}
   const w=(bounds.maxX-bounds.minX)/12,d=(bounds.maxZ-bounds.minZ)/12,cx=(bounds.maxX+bounds.minX)/24,cz=(bounds.maxZ+bounds.minZ)/24,r=Math.max(w,d),height=bounds.top/12,evening=data.sceneLighting==='Evening';
   const lights=activeLightingItems(data).reduce((n,item)=>n+(isIlluminatingFixture(item.productId)?item.qty:0),0);

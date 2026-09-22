@@ -1,5 +1,5 @@
 import { DEFAULT_DECK } from './defaults';
-import { type DeckData, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardFeature } from './types';
+import { type DeckData, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardFeature } from './types';
 import {availableStairSides,getHouseContact} from './houseContact';
 import {getFootprint} from './lib/deckGeometry';
 import {normalizeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
@@ -8,6 +8,9 @@ import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,MAX_SCREEN_PANELS,PRIVACY_HEIGHTS,P
 const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy'] as const satisfies readonly LightingZone[];
 import {PATIO_PRODUCTS,WALL_PRODUCTS,WATER_PRODUCTS} from './yardSettings';
 import {clampHouseOpening} from './houseSettings';
+import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,openingWallId} from './houseFootprint';
+
+export const GARAGE_DOOR_STYLES:readonly GarageDoorStyle[]=['Panel','Carriage','Flush','Glass'];
 import { LIGHTING_CATALOGUE } from './lightingCatalogue';
 import { DECKING_CATALOGUE, RAILING_CATALOGUE, MANUFACTURER_ACCESSORIES } from './manufacturerCatalog';
 
@@ -139,11 +142,28 @@ export function validateDesign(input:unknown):DeckData {
     for(const [key,choices] of Object.entries({storeys:[1,2,3],roofShape:['Gable','Hip','Flat'],roofFinish:['Shingles','Metal'],cladding:['Brick','Siding']}))if(!(choices as unknown[]).includes(h[key]))throw new Error(`Unsupported house ${key}.`);
     for(const key of ['roofColor','claddingColor','trimColor'])if(typeof h[key]!=='string'||!/^#[0-9a-fA-F]{6}$/.test(h[key] as string))throw new Error('House colours must use six-digit hex colours.');
     const house:HouseConfig={widthFt:numeric(h.widthFt,12,100,'House width'),depthFt:numeric(h.depthFt,12,100,'House depth'),storeys:h.storeys as 1|2|3,storeyHeightIn:numeric(h.storeyHeightIn,96,300,'Storey height'),roofShape:h.roofShape as HouseConfig['roofShape'],roofFinish:h.roofFinish as HouseConfig['roofFinish'],roofColor:h.roofColor as string,cladding:h.cladding as HouseConfig['cladding'],claddingColor:h.claddingColor as string,trimColor:h.trimColor as string,openings:[]};
+    if(h.footprint!==undefined){
+      const f=h.footprint;if(!record(f)||!Array.isArray(f.rects)||f.rects.length>MAX_HOUSE_BLOCKS)throw new Error(`A house supports up to ${MAX_HOUSE_BLOCKS} added blocks.`);
+      const blockIds=new Set<string>(['main']);
+      const rects=f.rects.map(r=>{
+        if(!record(r)||typeof r.id!=='string'||!HOUSE_BLOCK_ID.test(r.id)||blockIds.has(r.id)||!['house','garage'].includes(r.kind as string)||!['Front','Back','Left','Right'].includes(r.wall as string))throw new Error('Invalid or duplicate house block.');
+        blockIds.add(r.id);
+        const block:HouseBlock={id:r.id,kind:r.kind as HouseBlock['kind'],wall:r.wall as HouseBlock['wall'],offsetFt:numeric(r.offsetFt,HOUSE_BLOCK_OFFSET_FT[0],HOUSE_BLOCK_OFFSET_FT[1],'Block position'),widthFt:numeric(r.widthFt,HOUSE_BLOCK_WIDTH_FT[0],HOUSE_BLOCK_WIDTH_FT[1],'Block width'),depthFt:numeric(r.depthFt,HOUSE_BLOCK_DEPTH_FT[0],HOUSE_BLOCK_DEPTH_FT[1],'Block depth')};
+        if(r.storeys!==undefined){if(![1,2,3].includes(r.storeys as number))throw new Error('Unsupported block storeys.');block.storeys=r.storeys as 1|2|3;}
+        if(r.floorHeightIn!==undefined)block.floorHeightIn=numeric(r.floorHeightIn,0,240,'Block floor height');
+        if(r.roofShape!==undefined){if(!['Gable','Hip','Flat'].includes(r.roofShape as string))throw new Error('Unsupported block roof.');block.roofShape=r.roofShape as HouseBlock['roofShape'];}
+        return block;
+      });
+      if(rects.length)house.footprint={rects:normalizeHouseBlocks({...house,footprint:{rects}})};
+    }
     if(!Array.isArray(h.openings)||h.openings.length>24)throw new Error('A house supports up to 24 openings.');
     const ids=new Set<string>();
     house.openings=h.openings.map(o=>{
-      if(!record(o)||typeof o.id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(o.id)||ids.has(o.id)||!['Door','Window'].includes(o.type as string)||!['Front','Back','Left','Right'].includes(o.facade as string))throw new Error('Invalid or duplicate house opening.');
+      if(!record(o)||typeof o.id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(o.id)||ids.has(o.id)||!['Door','Window','Garage'].includes(o.type as string)||!['Front','Back','Left','Right'].includes(o.facade as string))throw new Error('Invalid or duplicate house opening.');
       ids.add(o.id);const opening:HouseOpening={id:o.id,type:o.type as HouseOpening['type'],facade:o.facade as HouseOpening['facade'],offsetPct:numeric(o.offsetPct,0,100,'Opening position'),bottomIn:numeric(o.bottomIn,0,900,'Opening bottom'),widthIn:numeric(o.widthIn,12,180,'Opening width'),heightIn:numeric(o.heightIn,12,144,'Opening height')};
+      // A wall that no longer exists (its block was removed) falls back to the facade wall.
+      if(o.wallId!==undefined){if(typeof o.wallId!=='string'||!/^[a-z][a-zA-Z0-9]{0,15}-(front|back|left|right)$/.test(o.wallId))throw new Error('Invalid house opening wall.');if(openingWallId({...opening,wallId:o.wallId},house)===o.wallId)opening.wallId=o.wallId;}
+      if(o.style!==undefined){if(!GARAGE_DOOR_STYLES.includes(o.style as GarageDoorStyle))throw new Error('Unsupported garage door style.');if(opening.type==='Garage')opening.style=o.style as GarageDoorStyle;}
       return clampHouseOpening(opening,house);
     });
     if(h.floorHeightIn!==undefined)house.floorHeightIn=numeric(h.floorHeightIn,0,240,'House floor height');
@@ -170,12 +190,12 @@ export function validateDesign(input:unknown):DeckData {
     if(left||right)clean.wrap={...(left?{left}:{}),...(right?{right}:{}),...(porchLeft?{porchLeft}:{}),...(porchRight?{porchRight}:{})};
   }
   for(const key of ['stairEdgeId','level2EdgeId'] as const)if(input[key]!==undefined){
-    if(typeof input[key]!=='string'||!/^[a-zA-Z-]{1,40}$/.test(input[key] as string))throw new Error('Invalid deck edge.');
+    if(typeof input[key]!=='string'||!/^[a-zA-Z0-9-]{1,40}$/.test(input[key] as string))throw new Error('Invalid deck edge.');
     clean[key]=input[key] as string;
   }
   if(input.level3!==undefined){
     const l=input.level3;if(!record(l)||![1,2].includes(l.parent as number)||!['Front','Left','Right'].includes(l.position as string))throw new Error('Invalid third level.');
-    if(l.edgeId!==undefined&&(typeof l.edgeId!=='string'||!/^[a-zA-Z-]{1,40}$/.test(l.edgeId)))throw new Error('Invalid third level edge.');
+    if(l.edgeId!==undefined&&(typeof l.edgeId!=='string'||!/^[a-zA-Z0-9-]{1,40}$/.test(l.edgeId)))throw new Error('Invalid third level edge.');
     if(l.fullStep!==undefined&&typeof l.fullStep!=='boolean')throw new Error('Invalid third level step.');
     clean.level3={widthFt:numeric(l.widthFt,4,40,'Third level width'),lengthFt:numeric(l.lengthFt,4,40,'Third level depth'),heightIn:numeric(l.heightIn,8,144,'Third level height'),parent:l.parent as 1|2,position:l.position as 'Front'|'Left'|'Right',offsetPct:numeric(l.offsetPct,0,100,'Third level alignment'),...(typeof l.edgeId==="string"?{edgeId:l.edgeId}:{}),...(l.fullStep?{fullStep:true}:{})};
   }

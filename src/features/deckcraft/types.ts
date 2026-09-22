@@ -18,10 +18,29 @@ export interface PrivacyScreen {id:string;side:'Left'|'Right'|'Front'|'Back';len
   product?:PrivacyProductId;design?:string;finish?:'Black'|'White';
   /** Manufacturer screens only: stock panel count; length follows the panels. */
   panels?:number}
-export interface HouseOpening {id:string;type:'Door'|'Window';facade:'Front'|'Back'|'Left'|'Right';offsetPct:number;bottomIn:number;widthIn:number;heightIn:number}
+export type GarageDoorStyle='Panel'|'Carriage'|'Flush'|'Glass';
+export interface HouseOpening {id:string;type:'Door'|'Window'|'Garage';facade:'Front'|'Back'|'Left'|'Right';offsetPct:number;bottomIn:number;widthIn:number;heightIn:number;
+  /** Wall the opening sits on, '<block id>-<front|back|left|right>' (e.g. 'garage1-back'). Absent = the
+   * main block's wall named by `facade`, as older designs have it. */
+  wallId?:string;
+  /** Garage doors only: appearance, never priced. */
+  style?:GarageDoorStyle}
+/** A block attached to one wall of the main house rectangle: a bump-out, an L-wing or a garage. */
+export interface HouseBlock {id:string;kind:'house'|'garage';
+  /** Main-block wall it is attached to ('Front' faces the deck). */
+  wall:'Front'|'Back'|'Left'|'Right';
+  /** Front/Back walls: plan +x from the main block's left corner. Left/Right walls: back from the deck-facing wall. */
+  offsetFt:number;
+  /** Along the wall it is attached to. */
+  widthFt:number;
+  /** Out from that wall. */
+  depthFt:number;
+  storeys?:1|2|3;floorHeightIn?:number;roofShape?:'Gable'|'Hip'|'Flat'}
 export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:'Shingles'|'Metal';roofColor:string;cladding:'Brick'|'Siding';claddingColor:string;trimColor:string;openings:HouseOpening[];
   /** Finished floor / door-sill height above grade. When set, the deck is checked against it. */
-  floorHeightIn?:number}
+  floorHeightIn?:number;
+  /** Blocks attached to the main rectangle. Absent or empty = a plain rectangular house. */
+  footprint?:{rects:HouseBlock[]}}
 /** Where the house sits along the deck's back line. Absent = centred on the deck (the original behaviour). */
 export interface HousePlacement {anchor:'left'|'center'|'right';offsetIn:number}
 /** One side wing of a wrap-around deck: how far it reaches out from the house side wall, and how

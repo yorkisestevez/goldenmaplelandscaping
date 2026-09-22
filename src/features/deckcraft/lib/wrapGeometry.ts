@@ -1,5 +1,6 @@
 import type {DeckData} from '../types';
 import {getHouseConfig} from '../houseSettings';
+import {blockKindLabel,normalizeHouseBlocks,openingWallId} from '../houseFootprint';
 import type {PlanPoint} from './deckGeometry';
 
 /**
@@ -24,6 +25,8 @@ export const WRAP_PORCH_RUN_FT=[4,100] as const;
 export const WRAP_PORCH_GAP_IN=36;
 /** Deck-facing wall kept as main-deck ledger beside a single wrapped corner. */
 export const WRAP_MIN_MAIN_LEDGER_IN=48;
+/** A bump-out on the deck-facing wall stays this far from a wrapped corner, where the hip starts. */
+export const WRAP_CORNER_CLEAR_IN=24;
 
 export type WrapSide='left'|'right';
 export type WrapZoneId='main'|'wingL'|'wingR'|'porchL'|'porchR';
@@ -53,6 +56,21 @@ export function wrapBlockers(data:DeckData):string[]{
   if(data.shape!=='Rectangle')out.push('The main deck must be a rectangle; the wings replace the corner cut-outs.');
   if(data.pattern==='Diagonal'||data.pattern==='Herringbone')out.push('Diagonal and herringbone boards would run along the corner hip; choose straight or picture-frame boards.');
   if(data.hasInlay)out.push('A centre inlay does not continue across the mitred corners; remove the inlay.');
+  // Attached house blocks the wings or porches would run into. Measured against the main block's
+  // walls in inches, before any wrap clamping, so this never depends on the wrap it decides.
+  const house=getHouseConfig(data),HW=house.widthFt*12;
+  for(const b of normalizeHouseBlocks(house)){
+    const o=b.offsetFt*12,e=o+b.widthFt*12,name=blockKindLabel(b).toLowerCase();
+    for(const side of ['left','right'] as const){
+      const wing=w[side];if(!wing)continue;
+      const porch=side==='left'?w.porchLeft:w.porchRight,run=porch?house.depthFt*12:wing.runFt*12,wingIn=wing.widthFt*12;
+      if(b.wall===(side==='left'?'Left':'Right')&&o<run&&e>0)out.push(`The ${side} wing would run into the ${name} on the ${side} wall; move the ${name} back past the wing or remove the ${side} wrap.`);
+      // Front walls measure from the left corner; a left porch runs from it, a right porch from the right corner.
+      const porchSpan:[number,number]|null=porch?(side==='left'?[-wingIn,porch.runFt*12]:[HW-porch.runFt*12,HW+wingIn]):null;
+      if(b.wall==='Back'&&porchSpan&&o<porchSpan[1]&&e>porchSpan[0])out.push(`The ${side} porch would run into the ${name} on the street-side wall; move the ${name} or shorten the porch.`);
+      if(b.wall==='Front'&&(side==='left'?o<WRAP_CORNER_CLEAR_IN:e>HW-WRAP_CORNER_CLEAR_IN))out.push(`A bump-out on the deck-facing wall must stay at least ${WRAP_CORNER_CLEAR_IN/12} ft from the wrapped ${side} corner, where the corner hip starts.`);
+    }
+  }
   return out;
 }
 
@@ -185,7 +203,7 @@ export function describeWrap(wrap:ActiveWrap):string{
 export function porchStairForDoor(data:DeckData):{edgeId:string;offsetPct:number;doorId:string}|null{
   const wrap=activeWrap(data);if(!wrap||!(wrap.porchLeft||wrap.porchRight))return null;
   const house=getHouseConfig(data),HW=house.widthFt*12,{outline,edgeIds}=wrapOutline(wrap),width=Math.max(24,num(data.stairWidth,48));
-  for(const door of house.openings.filter(o=>o.type==='Door'&&o.facade==='Back')){
+  for(const door of house.openings.filter(o=>o.type==='Door'&&openingWallId(o,house)==='main-back')){
     const x=wrap.x1-HW*door.offsetPct/100;
     for(const id of ['porchL-street','porchR-street']){
       const i=edgeIds.indexOf(id);if(i<0)continue;

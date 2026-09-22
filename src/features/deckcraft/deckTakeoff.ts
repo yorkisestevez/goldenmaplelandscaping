@@ -11,6 +11,7 @@ import {getStairSupport,getStringerOffsets,makeRiserBoards,type RiserBoard} from
 import {getHouseContact,exposedSides,deckAttachesToHouse,exposedHouseLine} from './houseContact';
 import {getHouseConfig} from './houseSettings';
 import {getHousePlacement} from './housePlacement';
+import {getHouseBlocks,rectPolygon} from './houseFootprint';
 import {outlineSpans,cleanPolygon,zoneReference,frameZoneBearings,frameZoneJoists,frameHouseSideBeams,type DeckZone,type FramedZone,type ZoneFramingConfig} from './zoneFraming';
 import {edgeFacing,getFootprint,getBoardRows,getPictureFrameRuns,getStairPlacement,getRailingSegments,getHerringboneRows,clipToConvex,type StairPlacement,type PlanPoint,type FootprintPlan,type BoardRun} from './lib/deckGeometry';
 export type V3={x:number;y:number;z:number};
@@ -258,6 +259,10 @@ export function buildDeckTakeoff(data:DeckData){
   if(sill!==undefined&&deckAttachesToHouse(data)){
     if(data.height>sill+.01)issues.push(`The deck surface (${data.height} in above grade) is above the house floor / door sill (${sill} in). Water can run toward the door: lower the deck or confirm a sill detail before construction.`);
     else if(sill-data.height>7.75)issues.push(`The door sill is ${(sill-data.height).toFixed(1)} in above the deck surface, more than one 7.75 in step. Add a step or landing at the door, or raise the deck.`);
+  }
+  for(const block of getHouseBlocks(data).slice(1)){
+    const overlap=polygonCut([getFootprint(data,1).outline],[rectPolygon(block.rect)]).reduce((n,p)=>n+signedArea(p),0);
+    if(overlap>1)issues.push(`The house ${block.kind==='garage'?'garage':block.attachedTo==='Front'?'bump-out':'wing'} reaches ${(overlap/144).toFixed(1)} sq ft into the deck. The deck is not yet notched around house blocks: move or shorten the block before relying on this layout.`);
   }
   if(wrap)issues.push('Wrap-around corner: the doubled hip, the skewed jack-joist and hip hangers, and the posts under the hip are laid out from the existing beam span table. Have the corner framing reviewed by an engineer before construction.');
   for(const level of levels){

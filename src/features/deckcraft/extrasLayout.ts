@@ -7,6 +7,7 @@ import {getTerrainConfig} from './yardSettings';
 import {screenLengthIn,screenOn,screenProduct} from './privacyScreens';
 import {getHouseContact} from './houseContact';
 import {getHousePlacement} from './housePlacement';
+import {openingWallId} from './houseFootprint';
 
 export type FixturePlacement={productId:string;x:number;y:number;z:number;angle:number;zone?:string};
 /** A stock manufacturer panel, drawn by finish; the cut pattern shown is illustrative. */
@@ -148,7 +149,7 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
       if(!houseVisible){warnings.push(`${item.name}: enable the house to place wall fixtures.`);continue;}
       p.x=houseLeft+12+(house.widthFt*12-24)*(index+.5)/(counts.get(zone)??1);p.z=2;y=Math.min(house.storeys*house.storeyHeightIn-12,top+66);p.angle=0;
       // Move clear of real openings, keeping the fixture attached to an opaque wall.
-      for(const o of house.openings.filter(o=>o.facade==='Front')){const ox=houseLeft+o.offsetPct/100*house.widthFt*12;if(Math.abs(p.x-ox)<o.widthIn/2+5&&y>o.bottomIn-5&&y<o.bottomIn+o.heightIn+5)y=Math.min(house.storeys*house.storeyHeightIn-8,o.bottomIn+o.heightIn+7);}
+      for(const o of house.openings.filter(o=>openingWallId(o,house)==='main-front')){const ox=houseLeft+o.offsetPct/100*house.widthFt*12;if(Math.abs(p.x-ox)<o.widthIn/2+5&&y>o.bottomIn-5&&y<o.bottomIn+o.heightIn+5)y=Math.min(house.storeys*house.storeyHeightIn-8,o.bottomIn+o.heightIn+7);}
     }else if(zone==='landscape'||g==='bollard'||g==='spot'){
       // Existing perimeter point is 4 in inboard; place path fittings 24 in beyond it.
       p.x-=Math.sin(p.angle)*28;p.z-=Math.cos(p.angle)*28;y=terrain.elevationIn+p.z*terrain.slopePct/100;p.angle+=Math.PI;

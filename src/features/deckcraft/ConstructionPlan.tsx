@@ -5,6 +5,8 @@ import type {YardModel} from './yardModel';
 import {getHouseContact} from './houseContact';
 import {getHousePlacement} from './housePlacement';
 import {activeWrap} from './lib/wrapGeometry';
+import {getHouseBlocks,hasHouseBlocks,houseOutline} from './houseFootprint';
+import {polygonCut} from './lib/polygonCuts';
 
 const HOUSE_BAND=36;// inches of house drawn behind the deck-facing wall
 const ft=(inches:number)=>`${(inches/12).toFixed(1)} ft`;
@@ -20,6 +22,11 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
   const band=house?Math.min(house.depthIn,Math.max(HOUSE_BAND,...(wrap?[wrap.left?.runIn??0,wrap.right?.runIn??0].map(r=>r+24):[]))):HOUSE_BAND;
   const top=house?Math.min(b.minZ,-band):b.minZ;
   const hips=main.hips??[],zones=main.wrapZones??[];
+ // A house with bump-outs, wings or a garage is drawn as its outline, cut to the same band behind the deck.
+ const blocks=house&&data&&hasHouseBlocks(data)?getHouseBlocks(data):null;
+ const view=[{x:b.minX-48,y:-band},{x:b.maxX+48,y:-band},{x:b.maxX+48,y:b.maxZ},{x:b.minX-48,y:b.maxZ}];
+ const blockPolys=blocks&&data?polygonCut(houseOutline(data,blocks),[view]):null;
+ const blockLabels=(blocks??[]).slice(1).map(k=>{const r=k.rect,y0=Math.max(r.y0,-band),x0=Math.max(r.x0,b.minX-48),x1=Math.min(r.x1,b.maxX+48);return x1-x0<30||r.y1-y0<12?null:{id:k.id,x:(x0+x1)/2,y:(y0+r.y1)/2+2.5,text:k.kind==='garage'?'GARAGE':k.attachedTo==='Front'?'BUMP-OUT':'WING'};}).filter(Boolean) as {id:string;x:number;y:number;text:string}[];
  const w=b.maxX-b.minX,d=b.maxZ-b.minZ,left=Math.min(b.minX,house?Math.max(house.x0,b.minX-48):b.minX),right=Math.max(b.maxX,house?Math.min(house.x1,b.maxX+48):b.maxX);
  // Edge labels sit just outside each main-deck edge; curve facets under 2 ft are left unlabelled.
  const edgeLabels=data?outline.map((a,i)=>{const q=outline[(i+1)%outline.length],len=Math.hypot(q.x-a.x,q.y-a.y);if(len<24)return null;const nx=(q.y-a.y)/len,ny=-(q.x-a.x)/len,ledger=contact?.isContactEdge(i);return {x:(a.x+q.x)/2+nx*(ledger?5:11),y:(a.y+q.y)/2+ny*(ledger?5:11)+2.5,text:ledger?`Ledger ${ft(len)}`:ft(len),ledger};}).filter(Boolean) as {x:number;y:number;text:string;ledger:boolean}[]:[];
@@ -28,7 +35,9 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
    <title>{`Deck plan · ${model.quantities.joists} joists · ${model.quantities.footings} footings`}</title>
    <defs><marker id="dd-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L6 3L0 6z" fill="#5f5a50"/></marker><pattern id="dd-house-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#b9b1a2" strokeWidth="1"/></pattern></defs>
    {house&&<g aria-label="House">
-     <rect x={house.x0} y={-band} width={house.x1-house.x0} height={band} fill="url(#dd-house-hatch)" stroke="#6d675c" strokeWidth=".8"/>
+     {blockPolys?blockPolys.map((poly,i)=><polygon key={i} points={poly.map(p=>`${p.x},${p.y}`).join(' ')} fill="url(#dd-house-hatch)" stroke="#6d675c" strokeWidth=".8"/>)
+       :<rect x={house.x0} y={-band} width={house.x1-house.x0} height={band} fill="url(#dd-house-hatch)" stroke="#6d675c" strokeWidth=".8"/>}
+     {blockLabels.map(l=><text key={l.id} x={l.x} y={l.y} textAnchor="middle" fontSize="7" fontWeight="600" fill="#3d3a34" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{l.text}</text>)}
      <line x1={house.x0} y1={0} x2={house.x1} y2={0} stroke="#3d3a34" strokeWidth="2"/>
      <text x={(Math.max(house.x0,left-40)+Math.min(house.x1,right+40))/2} y={-band+11} textAnchor="middle" fontSize="8" fontWeight="600" fill="#3d3a34" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{`HOUSE · deck-facing wall · ${ft(house.x1-house.x0)} wide`}</text>
    </g>}
@@ -50,6 +59,9 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
    {model.treads.map((t,i)=>{const polygon=(t as typeof t&{polygon?:{x:number;y:number}[]}).polygon;return polygon?<polygon key={i} points={polygon.map(p=>`${p.x},${p.y}`).join(' ')} fill="#ddccb1" stroke="#897354" strokeWidth=".7"/>:<rect key={i} x={t.x-t.w/2} y={t.z-t.d/2} width={t.w} height={t.d} transform={`rotate(${-(t.angle||0)*180/Math.PI} ${t.x} ${t.z})`} fill="#ddccb1" stroke="#897354" strokeWidth=".7"/>;})}
    {model.railing.rails.filter((r,i)=>i%2===1&&r.a.y===r.b.y).map((r,i)=><line key={i} x1={r.a.x} y1={r.a.z} x2={r.b.x} y2={r.b.z} stroke="#272e2c" strokeWidth="1.4"/>)}
    {model.railing.posts.map((p,i)=><rect key={i} x={p.x-2} y={p.z-2} width={4} height={4} fill="#272e2c"/>)}
+   {/* House blocks on the deck side are drawn over the deck, so any overlap with it shows. */}
+   {(blocks??[]).filter(k=>k.rect.y1>0).map(k=><rect key={k.id} aria-label="House block over the deck" x={k.rect.x0} y={0} width={k.rect.x1-k.rect.x0} height={k.rect.y1} fill="#efe9dc" fillOpacity=".8" stroke="#3d3a34" strokeWidth="1.2"/>)}
+   {blockLabels.filter(l=>(blocks?.find(k=>k.id===l.id)?.rect.y1??0)>0).map(l=><text key={l.id} x={l.x} y={l.y} textAnchor="middle" fontSize="7" fontWeight="600" fill="#3d3a34" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{l.text}</text>)}
    {edgeLabels.map((e,i)=><text key={i} x={e.x} y={e.y} textAnchor="middle" fontSize="6.5" fontWeight={e.ledger?600:400} fill={e.ledger?'#7a4f1f':'#3f3a33'} paintOrder="stroke" stroke="#faf8f1" strokeWidth="2">{e.text}</text>)}
    <path d={`M${b.minX} ${top-18}H${b.maxX}M${b.minX} ${top-23}v10M${b.maxX} ${top-23}v10`} stroke="#625d54" fill="none"/>
    <text x={(b.minX+b.maxX)/2} y={top-25} textAnchor="middle" fontSize="8" fill="#514b41">{ft(w)} overall width</text>
