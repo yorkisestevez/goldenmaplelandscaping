@@ -19,7 +19,11 @@ export interface PrivacyScreen {id:string;side:'Left'|'Right'|'Front'|'Back';len
   /** Manufacturer screens only: stock panel count; length follows the panels. */
   panels?:number}
 export interface HouseOpening {id:string;type:'Door'|'Window';facade:'Front'|'Back'|'Left'|'Right';offsetPct:number;bottomIn:number;widthIn:number;heightIn:number}
-export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:'Shingles'|'Metal';roofColor:string;cladding:'Brick'|'Siding';claddingColor:string;trimColor:string;openings:HouseOpening[]}
+export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:'Shingles'|'Metal';roofColor:string;cladding:'Brick'|'Siding';claddingColor:string;trimColor:string;openings:HouseOpening[];
+  /** Finished floor / door-sill height above grade. When set, the deck is checked against it. */
+  floorHeightIn?:number}
+/** Where the house sits along the deck's back line. Absent = centred on the deck (the original behaviour). */
+export interface HousePlacement {anchor:'left'|'center'|'right';offsetIn:number}
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature';
 export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled:boolean;xFt:number;zFt:number;widthFt:number;depthFt:number;heightIn:number;rotationDeg:number;productId:string;color:string}
 export interface TerrainConfig {widthFt:number;depthFt:number;elevationIn:number;slopePct:number}
@@ -68,6 +72,7 @@ export interface DeckData {
   yardFeatures?: YardFeature[];
   terrainConfig?: TerrainConfig;
   houseConfig?: HouseConfig;
+  housePlacement?: HousePlacement;
   lightingZoneEnabled?: Partial<Record<LightingZone,boolean>>;
   lightingPreviewOn?: boolean;
   catalogueRailingId?: string;

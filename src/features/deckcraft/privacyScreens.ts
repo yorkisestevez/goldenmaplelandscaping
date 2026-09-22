@@ -1,4 +1,6 @@
 import type {DeckData,PrivacyProductId,PrivacyScreen} from './types';
+import {getFootprint} from './lib/deckGeometry';
+import {availableStairSides,exposedEdges,getHouseContact} from './houseContact';
 
 export const MAX_PRIVACY_SCREENS=8;
 export const MAX_PRIVACY_SQFT=500;
@@ -65,14 +67,15 @@ export function withPrivacyProduct(s:PrivacyScreen,id:PrivacyProductId):PrivacyS
   return {...base,product:id,design:p.designs[0],panels,...(p.finishes.length?{finish:p.finishes[0]}:{})};
 }
 
-/** Screen sides that exist on this deck type; an attached deck's back edge is the house wall. */
+/** Screen sides with an exposed deck edge; edges against the house never take a screen. */
 export function privacySides(data:DeckData){
-  return PRIVACY_SIDES.filter(side=>side!=='Back'||data.deckType==='Freestanding'||data.deckType==='Floating');
+  const exposed=availableStairSides(data);
+  return PRIVACY_SIDES.filter(side=>exposed.includes(side));
 }
 
 export function newPrivacyScreen(data:DeckData,existing:readonly PrivacyScreen[]):PrivacyScreen{
   const used=new Set(existing.map(s=>s.side)),side=privacySides(data).find(s=>!used.has(s))??'Left';
-  const edgeFt=side==='Front'||side==='Back'?data.width:data.length;
+  const fp=getFootprint(data,1),edgeFt=(exposedEdges(fp,getHouseContact(data,fp),side)[0]?.lengthIn??data.length*12)/12;
   const room=Math.max(0,MAX_PRIVACY_SQFT-pricedPrivacyArea(existing));
   const lengthFt=Math.max(2,Math.min(8,edgeFt-2,Math.floor(room/6*2)/2));
   let n=existing.length+1;while(existing.some(s=>s.id===`screen-${n}`))n++;

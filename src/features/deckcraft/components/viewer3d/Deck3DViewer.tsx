@@ -125,7 +125,10 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
   const lights=activeLightingItems(data).reduce((n,item)=>n+(isIlluminatingFixture(item.productId)?item.qty:0),0);
   const simplifiedPaving=!structure&&!cutaway&&view!=='hardware'&&hasSimplifiedPaving(yard);
   return <div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
-    <Canvas shadows frameloop="demand" dpr={[1,1.5]} camera={{fov:38,position:[cx+r*1.1,height+r*.85,cz+r*1.65],near:.1,far:1000}} gl={{antialias:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:1}} onCreated={({gl})=>gl.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();onContextLost?.();},false)}>
+    <Canvas shadows frameloop="demand" dpr={[1,1.5]} camera={{fov:38,position:[cx+r*1.1,height+r*.85,cz+r*1.65],near:.1,far:1000}} gl={{antialias:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:1}} onCreated={({gl})=>{const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
+        // Leaving 3D (e.g. for the Plan view) disposes the renderer and also fires this event;
+        // only a canvas still on the page has really lost its GPU context.
+        setTimeout(()=>{if(canvas.isConnected)onContextLost?.();},0);},false);}}>
       <color attach="background" args={[evening?'#28374a':'#e9edf0']}/>
       <Environment key={evening?'evening':'day'} resolution={128} frames={1} environmentIntensity={evening?.16:.4}><Lightformer intensity={3} position={[0,12,0]} rotation={[Math.PI/2,0,0]} scale={[20,20,1]}/><Lightformer intensity={2} position={[-15,6,8]} rotation={[0,Math.PI/2,0]} scale={[12,15,1]}/><Lightformer intensity={1} position={[12,5,-8]} rotation={[0,-Math.PI/2,0]} scale={[10,10,1]}/></Environment>
       <CameraView view={view} w={w} d={d} cx={cx} cz={cz} height={height} depth={data.foundationDepthIn??48}/>

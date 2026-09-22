@@ -34,3 +34,5 @@
 .dd-screen-move{display:grid;grid-template-columns:auto 44px minmax(0,1fr) 44px 3.5em;align-items:center;gap:8px;margin:8px 0 4px;font-size:12px;font-weight:500}.dd-screen-move .dd-secondary{padding:0;min-width:44px;font-size:18px}.dd-screen-move input[type=range]{width:100%;accent-color:#78563e;min-height:44px}.dd-screen-move output{text-align:right;color:#655e53}
 .dd-screen .dd-quote-notice p{margin:4px 0}.dd-screen .dd-quote-notice a{color:#573e1b}
 @media(max-width:760px){.dd-screen-move{grid-template-columns:44px minmax(0,1fr) 44px 3em}.dd-screen-move>span{grid-column:1/-1}}
+@media(max-width:420px){.dd-fields,.dd-fields.three{grid-template-columns:minmax(0,1fr)!important}.dd-fields.three>.dd-field:last-child{grid-column:auto}}
+.dd-house-editor h4{font-size:13px;margin:22px 0 4px;font-weight:600}

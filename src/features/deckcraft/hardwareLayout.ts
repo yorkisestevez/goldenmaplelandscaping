@@ -1,6 +1,7 @@
 import type {DeckData} from './types';
 import type {DeckTakeoff,V3} from './deckTakeoff';
 import {boardOutline} from './lib/polygonCuts';
+import {getHouseContact} from './houseContact';
 export type Fastener={x:number;y:number;z:number;axis:'up'|'front'};
 const key=(p:V3)=>[p.x,p.y,p.z].map(n=>n.toFixed(2)).join(':');
 const unique=(points:V3[])=>[...new Map(points.map(p=>[key(p),p])).values()];
@@ -46,7 +47,12 @@ export function getHardwareLayout(data:DeckData,model:DeckTakeoff){
     }
   }
   const ledgerBolts:Fastener[]=[];
-  if(data.deckType==='Attached'||data.deckType==='Add-on')for(let i=0;i<Math.ceil(data.width);i++)ledgerBolts.push({x:(i+.5)*data.width*12/Math.ceil(data.width),y:data.height-(i%2?8:4),z:1.6,axis:'front'});
+  // One staggered bolt per foot along every ledger contact, 1.6 in into the deck from the wall.
+  let bolt=0;
+  for(const c of getHouseContact(data,model.levels[0].footprint).contacts){
+    const count=Math.ceil(c.lengthIn/12-1e-9),ux=(c.b.x-c.a.x)/c.lengthIn,uy=(c.b.y-c.a.y)/c.lengthIn;
+    for(let i=0;i<count;i++,bolt++){const t=(i+.5)*c.lengthIn/count;ledgerBolts.push({x:c.a.x+ux*t+c.inward.x*1.6,y:data.height-(bolt%2?8:4),z:c.a.y+uy*t+c.inward.y*1.6,axis:'front'});}
+  }
   const beamTies=unique(model.levels.flatMap(l=>l.joists.flatMap(j=>{
     const hits=l.beams.flatMap(b=>{const p=intersection(j.a,j.b,b.a,b.b);return p?[{...p,y:j.a.y-j.depth/2}]:[];}).sort((a,b)=>a.z-b.z);
     const groups:V3[][]=[];for(const p of hits){const last=groups[groups.length-1];if(last&&Math.abs(last[0].z-p.z)<6)last.push(p);else groups.push([p]);}

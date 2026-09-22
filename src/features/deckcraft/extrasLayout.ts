@@ -5,6 +5,8 @@ import {getHouseConfig} from './houseSettings';
 import {finishedFasciaOffset} from './lib/finishedFootprint';
 import {getTerrainConfig} from './yardSettings';
 import {screenLengthIn,screenOn,screenProduct} from './privacyScreens';
+import {getHouseContact} from './houseContact';
+import {getHousePlacement} from './housePlacement';
 
 export type FixturePlacement={productId:string;x:number;y:number;z:number;angle:number;zone?:string};
 /** A stock manufacturer panel, drawn by finish; the cut pattern shown is illustrative. */
@@ -24,7 +26,8 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
   const wood:Box[]=[],metal:Box[]=[],drainage:Box[]=[],fixtures:FixturePlacement[]=[],warnings:string[]=[];
   const level=model.levels[0],fp=level.footprint,top=level.top;
   const terrain=getTerrainConfig(data);
-  const edges=fp.outline.map((p,i)=>{const q=fp.outline[(i+1)%fp.outline.length],len=Math.hypot(q.x-p.x,q.y-p.y);return {p,q,len,dx:(q.x-p.x)/len,dz:(q.y-p.y)/len};}).filter(e=>e.len>24&&!(e.p.y===0&&e.q.y===0&&(data.deckType==='Attached'||data.deckType==='Add-on')));
+  const contact=getHouseContact(data,fp);
+  const edges=fp.outline.map((p,i)=>{const q=fp.outline[(i+1)%fp.outline.length],len=Math.hypot(q.x-p.x,q.y-p.y);return {p,q,len,dx:(q.x-p.x)/len,dz:(q.y-p.y)/len,index:i};}).filter(e=>e.len>24&&!contact.isContactEdge(e.index));
   // Prefer side edges; keep the principal front stair approach clear.
   edges.sort((a,b)=>Math.abs(b.dz)-Math.abs(a.dz)||b.len-a.len);
   function allocate(inches:number,callback:(x:number,z:number,len:number,angle:number,dx:number,dz:number)=>void){let left=inches;
@@ -102,7 +105,7 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
   function perimeterPoint(index:number,count:number){let t=(index+.5)*perimeter/Math.max(1,count);for(const e of edges){if(t<=e.len)return {x:e.p.x+e.dx*t-e.dz*4,z:e.p.y+e.dz*t+e.dx*4,angle:-Math.atan2(e.dz,e.dx)};t-=e.len;}return {x:6,z:6,angle:0};}
   const selected=activeLightingItems(data),counts=new Map<string,number>(),indices=new Map<string,number>();
   for(const item of selected)counts.set(item.zone,(counts.get(item.zone)??0)+item.qty);
-  const house=getHouseConfig(data),houseVisible=data.houseVisible!==false,houseLeft=(data.width-house.widthFt)*6;
+  const house=getHouseConfig(data),houseVisible=data.houseVisible!==false,houseLeft=getHousePlacement(data).x0;
   let utilityIndex=0;
   for(const item of selected)for(let i=0;i<item.qty;i++){
     const index=indices.get(item.zone)??0;indices.set(item.zone,index+1);

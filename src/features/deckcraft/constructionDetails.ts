@@ -65,6 +65,19 @@ export function addConstructionDetails(level:DeckLevel,boardWidth:number){
 
 export function memberLength(m:Member){return len(m);}
 
+/** Joist ends that sit on neither a ledger contact nor within cantilever reach of a beam under
+ * that joist. Joists run along z; beams run along x. */
+export function unsupportedJoistEnds(level:DeckLevel,contact?:{onContact(a:{x:number;y:number},b:{x:number;y:number}):boolean}):V3[]{
+  const reach=(level.reference?.cant??2)*12+1,loose:V3[]=[];
+  for(const j of level.joists)for(const end of [j.a,j.b]){
+    const plan={x:end.x-level.offset.x,y:end.z-level.offset.z};
+    if(contact?.onContact(plan,plan))continue;
+    const onBeam=level.beams.some(b=>end.x>=Math.min(b.a.x,b.b.x)-.1&&end.x<=Math.max(b.a.x,b.b.x)+.1&&Math.abs(b.a.z-end.z)<=reach);
+    if(!onBeam)loose.push(end);
+  }
+  return loose;
+}
+
 function boardPolygon(b:BoardRun,width:number):PlanPoint[]{
   if(b.polygon)return b.polygon;const a=b.angleDeg*Math.PI/180,ux=Math.cos(a),uy=Math.sin(a),w=b.width||width;
   return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([x,y])=>({x:b.cx+ux*x*b.length/2-uy*y*w/2,y:b.cy+uy*x*b.length/2+ux*y*w/2}));

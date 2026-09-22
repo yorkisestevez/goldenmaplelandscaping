@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf build",
     "lint": "react-router typegen && tsc --noEmit && tsx scripts/check-pricing-parity.ts && tsx scripts/check-engine-snapshot.ts && tsx scripts/check-budget-levers.ts && tsx scripts/check-lead-qualification.ts && npm run check:deck",
-    "check:deck": "tsx scripts/check-deck-construction.ts && tsx scripts/check-deck-geometry.ts && tsx scripts/check-deck-schedules.ts && tsx scripts/check-deck-io.ts && tsx scripts/check-deck-borders.ts && tsx scripts/check-deck-overhang.ts && tsx scripts/check-stair-construction.ts && tsx scripts/check-stair-veneer.ts && tsx scripts/check-deck-lighting.ts && tsx scripts/check-yard-construction.ts && tsx scripts/check-deck-yard-integration.ts && tsx scripts/check-deck-release.ts",
+    "check:deck": "tsx scripts/check-deck-construction.ts && tsx scripts/check-deck-geometry.ts && tsx scripts/check-deck-schedules.ts && tsx scripts/check-deck-io.ts && tsx scripts/check-deck-borders.ts && tsx scripts/check-deck-overhang.ts && tsx scripts/check-stair-construction.ts && tsx scripts/check-stair-veneer.ts && tsx scripts/check-deck-lighting.ts && tsx scripts/check-yard-construction.ts && tsx scripts/check-deck-yard-integration.ts && tsx scripts/check-deck-release.ts && tsx scripts/check-deck-house.ts && tsx scripts/check-deck-legacy-parity.ts",
     "check:pricing": "tsx scripts/check-pricing-parity.ts",
     "check:engine": "tsx scripts/check-engine-snapshot.ts",
     "check:levers": "tsx scripts/check-budget-levers.ts",

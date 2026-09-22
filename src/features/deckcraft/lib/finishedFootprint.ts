@@ -1,5 +1,5 @@
 import type {DeckData} from '../types';
-import type {FootprintPlan,PlanPoint} from './deckGeometry';
+import type {EdgeContact,FootprintPlan,PlanPoint} from './deckGeometry';
 import {MANUFACTURER_ACCESSORIES} from '../manufacturerCatalog';
 
 export const PICTURE_FRAME_OVERHANG_IN=1.5;
@@ -9,12 +9,12 @@ export function finishedFasciaOffset(data:DeckData){
   return MANUFACTURER_ACCESSORIES.some(p=>p.kind==='fascia'&&data.catalogueAccessories?.includes(p.id))?1.525:.75;
 }
 /** Offset each exposed perimeter line, then intersect neighbouring lines for true mitres.
- * Width/depth inputs remain the structural footprint. The ledger line stays at y=0.
+ * Width/depth inputs remain the structural footprint. Ledger (house contact) lines stay put.
  */
-export function getFinishedFootprint(data:DeckData,fp:FootprintPlan,attached:boolean):FootprintPlan{
+export function getFinishedFootprint(data:DeckData,fp:FootprintPlan,contact?:EdgeContact):FootprintPlan{
   if(!(data.pictureFrameRows||data.pattern==='Picture Frame'))return fp;
   const projection=finishedFasciaOffset(data)+pictureFrameOverhang(data),p=fp.outline;
-  const lines=p.map((a,i)=>{const b=p[(i+1)%p.length],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),offset=attached&&Math.abs(a.y)<1e-6&&Math.abs(b.y)<1e-6?0:projection;return {a:{x:a.x+dy/len*offset,y:a.y-dx/len*offset},v:{x:dx/len,y:dy/len}};});
+  const lines=p.map((a,i)=>{const b=p[(i+1)%p.length],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),offset=contact?.isContactEdge(i)||contact?.isFlushEdge?.(i)?0:projection;return {a:{x:a.x+dy/len*offset,y:a.y-dx/len*offset},v:{x:dx/len,y:dy/len}};});
   const outline:PlanPoint[]=lines.map((line,i)=>{const prev=lines[(i+lines.length-1)%lines.length],cross=prev.v.x*line.v.y-prev.v.y*line.v.x;
     if(Math.abs(cross)<1e-8)return line.a;
     const dx=line.a.x-prev.a.x,dy=line.a.y-prev.a.y,t=(dx*line.v.y-dy*line.v.x)/cross;

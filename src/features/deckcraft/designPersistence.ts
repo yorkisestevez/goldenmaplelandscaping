@@ -1,5 +1,6 @@
 import { DEFAULT_DECK } from './defaults';
-import { type DeckData, type HouseConfig, type HouseOpening, type LightingZone, type PrivacyScreen, type YardFeature } from './types';
+import { type DeckData, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardFeature } from './types';
+import {availableStairSides} from './houseContact';
 import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,MAX_SCREEN_PANELS,PRIVACY_HEIGHTS,PRIVACY_PRODUCTS,PRIVACY_SIDES,pricedPrivacyArea} from './privacyScreens';
 
 const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy'] as const satisfies readonly LightingZone[];
@@ -137,7 +138,14 @@ export function validateDesign(input:unknown):DeckData {
       if(!record(o)||typeof o.id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(o.id)||ids.has(o.id)||!['Door','Window'].includes(o.type as string)||!['Front','Back','Left','Right'].includes(o.facade as string))throw new Error('Invalid or duplicate house opening.');
       ids.add(o.id);const opening:HouseOpening={id:o.id,type:o.type as HouseOpening['type'],facade:o.facade as HouseOpening['facade'],offsetPct:numeric(o.offsetPct,0,100,'Opening position'),bottomIn:numeric(o.bottomIn,0,900,'Opening bottom'),widthIn:numeric(o.widthIn,12,180,'Opening width'),heightIn:numeric(o.heightIn,12,144,'Opening height')};
       return clampHouseOpening(opening,house);
-    });clean.houseConfig=house;
+    });
+    if(h.floorHeightIn!==undefined)house.floorHeightIn=numeric(h.floorHeightIn,0,240,'House floor height');
+    clean.houseConfig=house;
+  }
+  if(input.housePlacement!==undefined){
+    const p=input.housePlacement;
+    if(!record(p)||!['left','center','right'].includes(p.anchor as string))throw new Error('Invalid house position.');
+    clean.housePlacement={anchor:p.anchor as HousePlacement['anchor'],offsetIn:numeric(p.offsetIn,-2400,2400,'House position')};
   }
   if(input.terrainConfig!==undefined){const t=input.terrainConfig;if(!record(t))throw new Error('Invalid terrain configuration.');clean.terrainConfig={widthFt:numeric(t.widthFt,20,250,'Terrain width'),depthFt:numeric(t.depthFt,20,250,'Terrain depth'),elevationIn:numeric(t.elevationIn,-120,120,'Terrain grade'),slopePct:numeric(t.slopePct,-30,30,'Terrain slope')};}
   if(input.yardFeatures!==undefined){
@@ -152,14 +160,16 @@ export function validateDesign(input:unknown):DeckData {
   // The public estimate derives railing quantity from geometry, never an imported allowance.
   clean.railingLf=0;
   if(clean.borderFinish==='Dark Slate')clean.pictureFrameRows=clean.pictureFrameRows===2?2:1;
-  if((clean.deckType==='Attached'||clean.deckType==='Add-on')&&clean.stairPosition==='Back')clean.stairPosition='Front';
+  // A stair side with no exposed edge (e.g. against the house) moves to the first side that has one.
+  const stairSides=availableStairSides(clean);
+  if(!stairSides.includes(clean.stairPosition))clean.stairPosition=stairSides[0]??'Front';
   return clean;
 }
 
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','yardFeatures','terrainConfig']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','yardFeatures','terrainConfig']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);
