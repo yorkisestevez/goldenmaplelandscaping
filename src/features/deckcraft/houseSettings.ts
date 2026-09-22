@@ -1,4 +1,10 @@
-import type {DeckData,HouseConfig,HouseOpening} from './types';
+import type {DeckData,DoorStyle,HouseCladding,HouseConfig,HouseOpening} from './types';
+
+/** House looks (never priced). */
+export const HOUSE_CLADDINGS:readonly HouseCladding[]=['Siding','Brick','Stone','Stucco','Board & batten','Vertical siding'];
+export const DOOR_STYLES:readonly DoorStyle[]=['Single','French','Sliding'];
+/** Roof pitch, rise per 12 of run. */
+export const ROOF_PITCH_RANGE=[3,12] as const;
 
 /** House dimensions and opening elevations are measured from grade. Front faces the deck. */
 export function getHouseConfig(data:DeckData):HouseConfig{

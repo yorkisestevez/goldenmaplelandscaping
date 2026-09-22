@@ -63,7 +63,7 @@ export function normalizeHouseBlocks(house:HouseConfig,deckLengthIn?:number):Hou
 export function getHouseBlocks(data:DeckData):HouseBlockPlan[]{
   const house=getHouseConfig(data),{x0,x1,depthIn:D}=getHousePlacement(data),storey=house.storeyHeightIn;
   let raw:PlanPoint[]|undefined;const outline=()=>raw??=unnotchedMainOutline(data);
-  const main:HouseBlockPlan={id:'main',kind:'house',rect:{x0,x1,y0:-D,y1:0},storeys:house.storeys,wallHeightIn:house.storeys*storey,floorHeightIn:house.floorHeightIn,roofShape:house.roofShape,attachedTo:null,ridge:'z'};
+  const main:HouseBlockPlan={id:'main',kind:'house',rect:{x0,x1,y0:-D,y1:0},storeys:house.storeys,wallHeightIn:house.storeys*storey,floorHeightIn:house.floorHeightIn,roofShape:house.roofShape,attachedTo:null,ridge:house.ridge==='x'?'x':'z'};
   return [main,...normalizeHouseBlocks(house,deckLengthIn(data)).map((b):HouseBlockPlan=>{
     const o=b.offsetFt*12,w=b.widthFt*12,d=b.depthFt*12;
     const rect:HouseRect=b.wall==='Front'?{x0:x0+o,x1:x0+o+w,y0:0,y1:d}

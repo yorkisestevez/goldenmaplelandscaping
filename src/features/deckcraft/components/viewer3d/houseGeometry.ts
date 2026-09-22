@@ -2,16 +2,16 @@ import type {DeckData,HouseConfig,HouseOpening} from '../../types';
 import type {Box} from '../../deckTakeoff';
 import {clampHouseOpening} from '../../houseSettings';
 import {getHouseBlocks,getHouseWalls,openingHidden,openingWallId,SIDE_FACADE,type HouseBlockPlan,type HouseWallPlan} from '../../houseFootprint';
-import {houseLayout} from './houseLayout';
+import {houseLayout,roofRiseOver} from './houseLayout';
 import {houseWallParts} from './houseWallParts';
 
 export type HouseVertex=[number,number,number];
 export interface HouseMesh {name:string;color:string;vertices:HouseVertex[];faces:number[][]}
 
 /** Roof rise (inches) over a block, at the studio's fixed pitch. */
-export function blockRoofRise(block:Pick<HouseBlockPlan,'rect'|'roofShape'|'ridge'>){
+export function blockRoofRise(block:Pick<HouseBlockPlan,'rect'|'roofShape'|'ridge'>,pitch?:number){
  const w=block.rect.x1-block.rect.x0,d=block.rect.y1-block.rect.y0;
- return block.roofShape==='Flat'?6:(block.roofShape==='Hip'?Math.min(w,d):block.ridge==='x'?d:w)*.24;
+ return block.roofShape==='Flat'?6:roofRiseOver(block.roofShape==='Hip'?Math.min(w,d):block.ridge==='x'?d:w,pitch);
 }
 
 /** Roof over one block rectangle with a 12 in eave all round. Gable ridges run along z (plan y) or x. */
@@ -33,16 +33,16 @@ function roofMesh({x0,x1,y0,y1,h,r,shape,ridge,color,name}:{x0:number;x1:number;
 
 export function houseRoofMesh(layout:ReturnType<typeof houseLayout>):HouseMesh{
  const {minX,maxX,depth,wallHeight,roofRise,config}=layout;
- return roofMesh({x0:minX,x1:maxX,y0:-depth,y1:0,h:wallHeight,r:roofRise,shape:config.roofShape,ridge:'z',color:config.roofColor,name:'roof'});
+ return roofMesh({x0:minX,x1:maxX,y0:-depth,y1:0,h:wallHeight,r:roofRise,shape:config.roofShape,ridge:config.ridge==='x'?'x':'z',color:config.roofColor,name:'roof'});
 }
 export function blockRoofMesh(block:HouseBlockPlan,config:HouseConfig):HouseMesh{
  const {x0,x1,y0,y1}=block.rect;
- return roofMesh({x0,x1,y0,y1,h:block.wallHeightIn,r:blockRoofRise(block),shape:block.roofShape,ridge:block.ridge,color:config.roofColor,name:`${block.id}_roof`});
+ return roofMesh({x0,x1,y0,y1,h:block.wallHeightIn,r:blockRoofRise(block,config.roofPitch),shape:block.roofShape,ridge:block.ridge,color:config.roofColor,name:`${block.id}_roof`});
 }
 /** Triangular gable-end walls of a gable-roofed block. */
-export function blockGableMesh(block:HouseBlockPlan,color:string,name:string):HouseMesh|null{
+export function blockGableMesh(block:HouseBlockPlan,color:string,name:string,pitch?:number):HouseMesh|null{
  if(block.roofShape!=='Gable')return null;
- const {x0,x1,y0,y1}=block.rect,h=block.wallHeightIn,r=blockRoofRise(block);
+ const {x0,x1,y0,y1}=block.rect,h=block.wallHeightIn,r=blockRoofRise(block,pitch);
  if(block.ridge==='x'){const cz=(y0+y1)/2;return {name,color,vertices:[[x0,h,y1],[x0,h+r,cz],[x0,h,y0],[x1,h,y1],[x1,h+r,cz],[x1,h,y0]],faces:[[0,1,2],[3,5,4],[0,3,4,1],[1,4,5,2],[0,2,5,3]]};}
  const cx=(x0+x1)/2;
  return {name,color,vertices:[[x0,h,y1],[cx,h+r,y1],[x1,h,y1],[x0,h,y0],[cx,h+r,y0],[x1,h,y0]],faces:[[0,2,1],[3,4,5],[0,1,4,3],[1,2,5,4],[0,3,5,2]]};
@@ -68,24 +68,41 @@ export function houseWallSpecs(data:DeckData,config:HouseConfig,blocks:HouseBloc
 }
 
 export const GARAGE_DOOR_COLOR='#e4e2da';
+export const DOOR_SLAB_COLOR='#4a5452';
+const GLASS='#c1d1d3';
+
+/**
+ * The solid faces of an opening in its facade frame, as exported (the 3D view adds finer detail).
+ * A door without a style keeps the studio's original single glass panel.
+ */
+export function openingFaces(o:HouseOpening,x:number,y:number):[string,string,Box][]{
+ const w=o.widthIn-3,h=o.heightIn-3;
+ if(o.type==='Garage')return [['panel',GARAGE_DOOR_COLOR,{x,y,z:.8,w,h,d:1.5}]];
+ if(o.type!=='Door'||!o.style)return [['glass',GLASS,{x,y,z:.8,w,h,d:.24}]];
+ if(o.style==='Single')return [['slab',DOOR_SLAB_COLOR,{x,y,z:.8,w,h,d:1.75}],['lite',GLASS,{x,y:y+h*.22,z:1.7,w:w*.5,h:h*.3,d:.24}]];
+ if(o.style==='French')return [['glass',GLASS,{x,y,z:.8,w,h,d:.24}],['stile',DOOR_SLAB_COLOR,{x,y,z:1.2,w:3,h,d:1.75}]];
+ // Sliding patio door: a fixed pane and a sliding sash that overlaps it by 2 in, set further out.
+ return [['glass',GLASS,{x:x-w/4-.5,y,z:.8,w:w/2+1,h,d:.24}],['sash',GLASS,{x:x+w/4+.5,y,z:2.2,w:w/2+1,h,d:.24}],['meeting_stile',DOOR_SLAB_COLOR,{x,y,z:1.5,w:2.5,h,d:1.75}]];
+}
 
 export function buildHouseGeometry(data:DeckData,width:number):{parts:HouseMesh[]}{
  const layout=houseLayout(data,width),{config,minX,maxX,depth,wallHeight}=layout,cx=(minX+maxX)/2,parts:HouseMesh[]=[];
  if(!layout.visible)return {parts};
  const box=(name:string,color:string,b:Box,origin:HouseVertex=[0,0,0],yaw=0)=>{const vertices:HouseVertex[]=[];for(const z of [-b.d/2,b.d/2])for(const y of [-b.h/2,b.h/2])for(const x of [-b.w/2,b.w/2]){const px=b.x+x,pz=b.z+z;vertices.push([origin[0]+px*Math.cos(yaw)+pz*Math.sin(yaw),origin[1]+b.y+y,origin[2]-px*Math.sin(yaw)+pz*Math.cos(yaw)]);}parts.push({name,color,vertices,faces:[[0,2,3,1],[4,5,7,6],[0,1,5,4],[2,6,7,3],[0,4,6,2],[1,3,7,5]]});};
  const blocks=getHouseBlocks(data),specs=houseWallSpecs(data,config,blocks);
- const facade=(f:HouseWallSpec)=>{houseWallParts(f.span,f.height,f.openings,f.hidden).forEach((b,i)=>box(`${f.name}_wall_${i}`,config.claddingColor,b,f.origin,f.yaw));for(const o of f.openings){const x=-f.span/2+f.span*o.offsetPct/100,y=o.bottomIn+o.heightIn/2;box(`${f.name}_${o.type}_${o.id}_${o.type==='Garage'?'panel':'glass'}`,o.type==='Garage'?GARAGE_DOOR_COLOR:'#c1d1d3',{x,y,z:.8,w:o.widthIn-3,h:o.heightIn-3,d:o.type==='Garage'?1.5:.24},f.origin,f.yaw);for(const s of [-1,1]){box(`${o.id}_jamb_${s}`,config.trimColor,{x:x+s*(o.widthIn/2+1.5),y,z:1.8,w:3,h:o.heightIn+6,d:2.2},f.origin,f.yaw);box(`${o.id}_trim_${s}`,config.trimColor,{x,y:y+s*(o.heightIn/2+1.5),z:1.8,w:o.widthIn,h:3,d:2.2},f.origin,f.yaw);}}};
+ const facade=(f:HouseWallSpec)=>{houseWallParts(f.span,f.height,f.openings,f.hidden).forEach((b,i)=>box(`${f.name}_wall_${i}`,config.claddingColor,b,f.origin,f.yaw));for(const o of f.openings){const x=-f.span/2+f.span*o.offsetPct/100,y=o.bottomIn+o.heightIn/2;for(const [part,color,b] of openingFaces(o,x,y))box(`${f.name}_${o.type}_${o.id}_${part}`,color,b,f.origin,f.yaw);for(const s of [-1,1]){box(`${o.id}_jamb_${s}`,config.trimColor,{x:x+s*(o.widthIn/2+1.5),y,z:1.8,w:3,h:o.heightIn+6,d:2.2},f.origin,f.yaw);box(`${o.id}_trim_${s}`,config.trimColor,{x,y:y+s*(o.heightIn/2+1.5),z:1.8,w:o.widthIn,h:3,d:2.2},f.origin,f.yaw);}}};
  // The main block builds exactly as it always has; attached blocks follow with their own names.
  for(const f of specs.filter(s=>s.block.id==='main'))facade(f);
  parts.push(houseRoofMesh(layout));
- if(config.roofShape==='Gable'){const r=layout.roofRise;parts.push({name:'gable_walls',color:config.claddingColor,vertices:[[minX,wallHeight,0],[cx,wallHeight+r,0],[maxX,wallHeight,0],[minX,wallHeight,-depth],[cx,wallHeight+r,-depth],[maxX,wallHeight,-depth]],faces:[[0,2,1],[3,4,5],[0,1,4,3],[1,2,5,4],[0,3,5,2]]});}
+ // Gable ends face the deck and the street (ridge front to back, the original look) or the sides.
+ const mainGable=blockGableMesh(blocks[0],config.claddingColor,'gable_walls',config.roofPitch);if(mainGable)parts.push(mainGable);
  box('foundation','#93968d',{x:cx,y:4,z:-depth/2,w:maxX-minX+1,h:8,d:depth+1});
  box('soffit',config.trimColor,{x:cx,y:wallHeight-.75,z:-depth/2,w:maxX-minX+20,h:1.5,d:depth+20});
  for(const block of blocks.slice(1)){
   const {x0,x1,y0,y1}=block.rect,bx=(x0+x1)/2,bz=(y0+y1)/2;
   for(const f of specs.filter(s=>s.block===block))facade(f);
   parts.push(blockRoofMesh(block,config));
-  const gable=blockGableMesh(block,config.claddingColor,`${block.id}_gable_walls`);if(gable)parts.push(gable);
+  const gable=blockGableMesh(block,config.claddingColor,`${block.id}_gable_walls`,config.roofPitch);if(gable)parts.push(gable);
   box(`${block.id}_foundation`,'#93968d',{x:bx,y:4,z:bz,w:x1-x0+1,h:8,d:y1-y0+1});
   box(`${block.id}_soffit`,config.trimColor,{x:bx,y:block.wallHeightIn-.75,z:bz,w:x1-x0+20,h:1.5,d:y1-y0+20});
  }

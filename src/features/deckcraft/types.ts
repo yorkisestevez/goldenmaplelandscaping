@@ -19,12 +19,15 @@ export interface PrivacyScreen {id:string;side:'Left'|'Right'|'Front'|'Back';len
   /** Manufacturer screens only: stock panel count; length follows the panels. */
   panels?:number}
 export type GarageDoorStyle='Panel'|'Carriage'|'Flush'|'Glass';
+/** Door looks. Absent = the studio's original glass-panel door. */
+export type DoorStyle='Single'|'French'|'Sliding';
+export type HouseCladding='Brick'|'Siding'|'Stone'|'Stucco'|'Board & batten'|'Vertical siding';
 export interface HouseOpening {id:string;type:'Door'|'Window'|'Garage';facade:'Front'|'Back'|'Left'|'Right';offsetPct:number;bottomIn:number;widthIn:number;heightIn:number;
   /** Wall the opening sits on, '<block id>-<front|back|left|right>' (e.g. 'garage1-back'). Absent = the
    * main block's wall named by `facade`, as older designs have it. */
   wallId?:string;
-  /** Garage doors only: appearance, never priced. */
-  style?:GarageDoorStyle}
+  /** Appearance only, never priced: a garage door style on 'Garage' openings, a door style on 'Door' openings. */
+  style?:GarageDoorStyle|DoorStyle}
 /** A block attached to one wall of the main house rectangle: a bump-out, an L-wing or a garage. */
 export interface HouseBlock {id:string;kind:'house'|'garage';
   /** Main-block wall it is attached to ('Front' faces the deck). */
@@ -36,11 +39,16 @@ export interface HouseBlock {id:string;kind:'house'|'garage';
   /** Out from that wall. */
   depthFt:number;
   storeys?:1|2|3;floorHeightIn?:number;roofShape?:'Gable'|'Hip'|'Flat'}
-export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:'Shingles'|'Metal';roofColor:string;cladding:'Brick'|'Siding';claddingColor:string;trimColor:string;openings:HouseOpening[];
+export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:'Shingles'|'Metal';roofColor:string;cladding:HouseCladding;claddingColor:string;trimColor:string;openings:HouseOpening[];
   /** Finished floor / door-sill height above grade. When set, the deck is checked against it. */
   floorHeightIn?:number;
   /** Blocks attached to the main rectangle. Absent or empty = a plain rectangular house. */
-  footprint?:{rects:HouseBlock[]}}
+  footprint?:{rects:HouseBlock[]};
+  /** Roof pitch, inches of rise per 12 of run (3–12). Absent = the studio's original roof height. Appearance only. */
+  roofPitch?:number;
+  /** Main gable ridge: 'y' runs front to back (gables face the deck and the street, the original look);
+   * 'x' runs side to side (gables on the side walls). Appearance only. */
+  ridge?:'x'|'y'}
 /** Where the house sits along the deck's back line. Absent = centred on the deck (the original behaviour). */
 export interface HousePlacement {anchor:'left'|'center'|'right';offsetIn:number}
 /** One side wing of a wrap-around deck: how far it reaches out from the house side wall, and how

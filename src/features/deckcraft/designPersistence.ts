@@ -1,5 +1,5 @@
 import { DEFAULT_DECK } from './defaults';
-import { type DeckData, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardFeature } from './types';
+import { type DeckData, type DoorStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardFeature } from './types';
 import {availableStairSides,getHouseContact} from './houseContact';
 import {getFootprint} from './lib/deckGeometry';
 import {normalizeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
@@ -7,7 +7,7 @@ import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,MAX_SCREEN_PANELS,PRIVACY_HEIGHTS,P
 
 const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy'] as const satisfies readonly LightingZone[];
 import {PATIO_PRODUCTS,WALL_PRODUCTS,WATER_PRODUCTS} from './yardSettings';
-import {clampHouseOpening} from './houseSettings';
+import {clampHouseOpening,DOOR_STYLES,HOUSE_CLADDINGS,ROOF_PITCH_RANGE} from './houseSettings';
 import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,openingWallId} from './houseFootprint';
 
 export const GARAGE_DOOR_STYLES:readonly GarageDoorStyle[]=['Panel','Carriage','Flush','Glass'];
@@ -139,7 +139,7 @@ export function validateDesign(input:unknown):DeckData {
   }
   if(input.houseConfig!==undefined){
     const h=input.houseConfig;if(!record(h))throw new Error('Invalid house configuration.');
-    for(const [key,choices] of Object.entries({storeys:[1,2,3],roofShape:['Gable','Hip','Flat'],roofFinish:['Shingles','Metal'],cladding:['Brick','Siding']}))if(!(choices as unknown[]).includes(h[key]))throw new Error(`Unsupported house ${key}.`);
+    for(const [key,choices] of Object.entries({storeys:[1,2,3],roofShape:['Gable','Hip','Flat'],roofFinish:['Shingles','Metal'],cladding:HOUSE_CLADDINGS}))if(!(choices as unknown[]).includes(h[key]))throw new Error(`Unsupported house ${key}.`);
     for(const key of ['roofColor','claddingColor','trimColor'])if(typeof h[key]!=='string'||!/^#[0-9a-fA-F]{6}$/.test(h[key] as string))throw new Error('House colours must use six-digit hex colours.');
     const house:HouseConfig={widthFt:numeric(h.widthFt,12,100,'House width'),depthFt:numeric(h.depthFt,12,100,'House depth'),storeys:h.storeys as 1|2|3,storeyHeightIn:numeric(h.storeyHeightIn,96,300,'Storey height'),roofShape:h.roofShape as HouseConfig['roofShape'],roofFinish:h.roofFinish as HouseConfig['roofFinish'],roofColor:h.roofColor as string,cladding:h.cladding as HouseConfig['cladding'],claddingColor:h.claddingColor as string,trimColor:h.trimColor as string,openings:[]};
     if(h.footprint!==undefined){
@@ -163,10 +163,13 @@ export function validateDesign(input:unknown):DeckData {
       ids.add(o.id);const opening:HouseOpening={id:o.id,type:o.type as HouseOpening['type'],facade:o.facade as HouseOpening['facade'],offsetPct:numeric(o.offsetPct,0,100,'Opening position'),bottomIn:numeric(o.bottomIn,0,900,'Opening bottom'),widthIn:numeric(o.widthIn,12,180,'Opening width'),heightIn:numeric(o.heightIn,12,144,'Opening height')};
       // A wall that no longer exists (its block was removed) falls back to the facade wall.
       if(o.wallId!==undefined){if(typeof o.wallId!=='string'||!/^[a-z][a-zA-Z0-9]{0,15}-(front|back|left|right)$/.test(o.wallId))throw new Error('Invalid house opening wall.');if(openingWallId({...opening,wallId:o.wallId},house)===o.wallId)opening.wallId=o.wallId;}
-      if(o.style!==undefined){if(!GARAGE_DOOR_STYLES.includes(o.style as GarageDoorStyle))throw new Error('Unsupported garage door style.');if(opening.type==='Garage')opening.style=o.style as GarageDoorStyle;}
+      // A style only applies to its own kind of opening (a garage door style on a garage door, a door style on a door).
+      if(o.style!==undefined){const garage=GARAGE_DOOR_STYLES.includes(o.style as GarageDoorStyle),door=DOOR_STYLES.includes(o.style as DoorStyle);if(!garage&&!door)throw new Error('Unsupported door style.');if(opening.type==='Garage'&&garage)opening.style=o.style as GarageDoorStyle;if(opening.type==='Door'&&door)opening.style=o.style as DoorStyle;}
       return clampHouseOpening(opening,house);
     });
     if(h.floorHeightIn!==undefined)house.floorHeightIn=numeric(h.floorHeightIn,0,240,'House floor height');
+    if(h.roofPitch!==undefined)house.roofPitch=numeric(h.roofPitch,ROOF_PITCH_RANGE[0],ROOF_PITCH_RANGE[1],'Roof pitch');
+    if(h.ridge!==undefined){if(h.ridge!=='x'&&h.ridge!=='y')throw new Error('Unsupported roof ridge direction.');house.ridge=h.ridge;}
     clean.houseConfig=house;
   }
   if(input.housePlacement!==undefined){
