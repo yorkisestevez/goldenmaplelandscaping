@@ -39,7 +39,6 @@ export function wrapBlockers(data:DeckData):string[]{
   const w=data.wrap;if(!w||(!w.left&&!w.right))return [];
   const out:string[]=[];
   if(data.deckType!=='Attached'&&data.deckType!=='Add-on')out.push('A wrap-around is fastened to the house walls, so the deck must be attached (or an add-on).');
-  if(data.levels>1)out.push('Wrap-arounds are single-level decks; remove the second level.');
   if(data.shape!=='Rectangle')out.push('The main deck must be a rectangle; the wings replace the corner cut-outs.');
   if(data.pattern==='Diagonal'||data.pattern==='Herringbone')out.push('Diagonal and herringbone boards would run along the corner hip; choose straight or picture-frame boards.');
   if(data.hasInlay)out.push('A centre inlay does not continue across the mitred corners; remove the inlay.');

@@ -539,13 +539,13 @@
   "total": 29921.92
  },
  "std/Multi-corner/Straight/Straight/freestanding-2lvl": {
-  "model": "cfbbb86e9a05755059ca",
+  "model": "722c87798ffaedd7bd16",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "666025921bc2fd308d17",
-  "hardware": "0c5c721e621f0f42d18d",
+  "hardware": "bce114655f57475d5484",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "b964f25bd9bd01e1259b",
+  "exports": "678be429bf94d66a1e2c",
   "estimate": "53a3fdbf3615bedddb5a",
   "total": 71516.43
  },
@@ -561,13 +561,13 @@
   "total": 36693.01
  },
  "std/Multi-corner/Straight/Landing/freestanding-2lvl": {
-  "model": "cfbbb86e9a05755059ca",
+  "model": "722c87798ffaedd7bd16",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "666025921bc2fd308d17",
-  "hardware": "0c5c721e621f0f42d18d",
+  "hardware": "bce114655f57475d5484",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "b964f25bd9bd01e1259b",
+  "exports": "678be429bf94d66a1e2c",
   "estimate": "8ff3ba70da5d328b61aa",
   "total": 72151.42
  },
@@ -583,13 +583,13 @@
   "total": 39786.52
  },
  "std/Multi-corner/Straight/Winder/freestanding-2lvl": {
-  "model": "cfbbb86e9a05755059ca",
+  "model": "722c87798ffaedd7bd16",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "666025921bc2fd308d17",
-  "hardware": "0c5c721e621f0f42d18d",
+  "hardware": "bce114655f57475d5484",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "b964f25bd9bd01e1259b",
+  "exports": "678be429bf94d66a1e2c",
   "estimate": "4515f30592db769733ab",
   "total": 72574.75
  },
@@ -605,13 +605,13 @@
   "total": 33672.27
  },
  "std/Multi-corner/Diagonal/Straight/freestanding-2lvl": {
-  "model": "7e331769cbf83cc9cb10",
+  "model": "f3c3298f6f930f4a32b2",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "666025921bc2fd308d17",
-  "hardware": "70ab8187d90ca93e4741",
+  "hardware": "2704936cdc1eef51dfcb",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "8718d8618bc8c7710649",
+  "exports": "69700a5466414312c12f",
   "estimate": "836a109e21d09fa18276",
   "total": 80808.95
  },
@@ -627,13 +627,13 @@
   "total": 41074.65
  },
  "std/Multi-corner/Diagonal/Landing/freestanding-2lvl": {
-  "model": "7e331769cbf83cc9cb10",
+  "model": "f3c3298f6f930f4a32b2",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "666025921bc2fd308d17",
-  "hardware": "70ab8187d90ca93e4741",
+  "hardware": "2704936cdc1eef51dfcb",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "8718d8618bc8c7710649",
+  "exports": "69700a5466414312c12f",
   "estimate": "05d46be047ee49810ad5",
   "total": 81570.94
  },
@@ -649,13 +649,13 @@
   "total": 44532.78
  },
  "std/Multi-corner/Diagonal/Winder/freestanding-2lvl": {
-  "model": "7e331769cbf83cc9cb10",
+  "model": "f3c3298f6f930f4a32b2",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "666025921bc2fd308d17",
-  "hardware": "70ab8187d90ca93e4741",
+  "hardware": "2704936cdc1eef51dfcb",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "8718d8618bc8c7710649",
+  "exports": "69700a5466414312c12f",
   "estimate": "a0f4c12a0325212416f7",
   "total": 82078.93
  },
@@ -671,13 +671,13 @@
   "total": 35114.71
  },
  "std/Multi-corner/Picture Frame/Straight/freestanding-2lvl": {
-  "model": "4534df30e80ae76222a4",
+  "model": "2d2d6ac62e16ba7fb073",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "8b43aefb0c71360f2c44",
-  "hardware": "0d948994032b8d04cbc5",
+  "hardware": "33adcec6fb1bfda51fec",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "2114ff0fa8c4c698d952",
+  "exports": "34d9ca6433b124d9dbcd",
   "estimate": "ae5c056fc52960ff0e96",
   "total": 84521.14
  },
@@ -693,13 +693,13 @@
   "total": 43331.05
  },
  "std/Multi-corner/Picture Frame/Landing/freestanding-2lvl": {
-  "model": "4534df30e80ae76222a4",
+  "model": "2d2d6ac62e16ba7fb073",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "8b43aefb0c71360f2c44",
-  "hardware": "0d948994032b8d04cbc5",
+  "hardware": "33adcec6fb1bfda51fec",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "2114ff0fa8c4c698d952",
+  "exports": "34d9ca6433b124d9dbcd",
   "estimate": "9a6e60f8c3327bd44640",
   "total": 85314.88
  },
@@ -715,13 +715,13 @@
   "total": 46306.57
  },
  "std/Multi-corner/Picture Frame/Winder/freestanding-2lvl": {
-  "model": "4534df30e80ae76222a4",
+  "model": "2d2d6ac62e16ba7fb073",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "8b43aefb0c71360f2c44",
-  "hardware": "0d948994032b8d04cbc5",
+  "hardware": "33adcec6fb1bfda51fec",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "2114ff0fa8c4c698d952",
+  "exports": "34d9ca6433b124d9dbcd",
   "estimate": "ea09ddb33445f05fcbfa",
   "total": 85844.03
  },
@@ -737,13 +737,13 @@
   "total": 36814.29
  },
  "std/Multi-corner/Herringbone/Straight/freestanding-2lvl": {
-  "model": "2b3cea610589971fa9a5",
+  "model": "aaf55afcdcad564ec9d4",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "666025921bc2fd308d17",
-  "hardware": "c92356b982bc9269555c",
+  "hardware": "41881537b9110872491a",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "3c6c77b35b455818b3f9",
+  "exports": "121e8c2645a8bcbb4af3",
   "estimate": "e276d8fd973c66b1e6a4",
   "total": 88102.26
  },
@@ -759,13 +759,13 @@
   "total": 44674.36
  },
  "std/Multi-corner/Herringbone/Landing/freestanding-2lvl": {
-  "model": "2b3cea610589971fa9a5",
+  "model": "aaf55afcdcad564ec9d4",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "666025921bc2fd308d17",
-  "hardware": "c92356b982bc9269555c",
+  "hardware": "41881537b9110872491a",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "3c6c77b35b455818b3f9",
+  "exports": "121e8c2645a8bcbb4af3",
   "estimate": "c86f0c6285f9d00ed3fe",
   "total": 88927.74
  },
@@ -781,13 +781,13 @@
   "total": 48117.83
  },
  "std/Multi-corner/Herringbone/Winder/freestanding-2lvl": {
-  "model": "2b3cea610589971fa9a5",
+  "model": "aaf55afcdcad564ec9d4",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "666025921bc2fd308d17",
-  "hardware": "c92356b982bc9269555c",
+  "hardware": "41881537b9110872491a",
   "extras": "65e6082610ffdc00d05c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "3c6c77b35b455818b3f9",
+  "exports": "121e8c2645a8bcbb4af3",
   "estimate": "f77e7da9b0408a3b9645",
   "total": 89478.07
  },

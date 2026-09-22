@@ -29,6 +29,12 @@ export interface HousePlacement {anchor:'left'|'center'|'right';offsetIn:number}
 export interface WrapWing {widthFt:number;runFt:number}
 /** Wrap-around deck: side wings around one or both house corners, each mitred on a corner-to-corner hip. */
 export interface WrapConfig {left?:WrapWing;right?:WrapWing}
+/** A third deck section, joined to the main deck (parent 1) or the second level (parent 2). */
+export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;parent:1|2;position:'Front'|'Left'|'Right';offsetPct:number;
+  /** Named wrap edge of the main deck (parent 1 only), e.g. 'wingR-end'; overrides position. */
+  edgeId?:string;
+  /** The connecting step or stair runs the full shared edge (a split level). */
+  fullStep?:boolean}
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature';
 export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled:boolean;xFt:number;zFt:number;widthFt:number;depthFt:number;heightIn:number;rotationDeg:number;productId:string;color:string}
 export interface TerrainConfig {widthFt:number;depthFt:number;elevationIn:number;slopePct:number}
@@ -81,6 +87,11 @@ export interface DeckData {
   wrap?: WrapConfig;
   /** A named exposed edge (e.g. 'wingR-end') for the primary stair flight; overrides stairPosition. */
   stairEdgeId?: string;
+  /** Named wrap edge of the main deck for the second level; overrides level2Position. */
+  level2EdgeId?: string;
+  /** The step or stair between the main deck and the second level runs their full shared edge. */
+  level2FullStep?: boolean;
+  level3?: Level3Config;
   lightingZoneEnabled?: Partial<Record<LightingZone,boolean>>;
   lightingPreviewOn?: boolean;
   catalogueRailingId?: string;

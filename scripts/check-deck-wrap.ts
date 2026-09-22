@@ -127,6 +127,7 @@ for(const [corner,wings] of Object.entries(sides))for(const boards of boardsets)
   ok(wrapBlockers(paused).length===1&&!activeWrap(paused),'An L-shape pauses the wrap');
   assert.deepEqual(buildDeckTakeoff(normalizeWrap(paused)).quantities,buildDeckTakeoff(lShape).quantities);checks++;
   ok(calculateEstimate(normalizeWrap(paused)).total===calculateEstimate(lShape).total,'A paused wrap prices exactly like the deck without it');
-  for(const patch of [{deckType:'Freestanding'},{levels:2},{pattern:'Diagonal'},{pattern:'Herringbone'},{hasInlay:true}] as Partial<DeckData>[])ok(wrapBlockers({...base(),...patch,wrap:{left:{widthFt:8,runFt:8}}}).length===1,`Wrap paused by ${JSON.stringify(patch)}`);
+  for(const patch of [{deckType:'Freestanding'},{pattern:'Diagonal'},{pattern:'Herringbone'},{hasInlay:true}] as Partial<DeckData>[])ok(wrapBlockers({...base(),...patch,wrap:{left:{widthFt:8,runFt:8}}}).length===1,`Wrap paused by ${JSON.stringify(patch)}`);
+  ok(wrapBlockers({...base(),levels:3,wrap:{left:{widthFt:8,runFt:8}}}).length===0,'A wrap-around can have lower levels joined to it');
 }
 console.log(`DECK WRAP OK — ${cases} wrap designs, ${checks} outline, ledger, hip, joist-bearing, board, stair, price and persistence checks.`);

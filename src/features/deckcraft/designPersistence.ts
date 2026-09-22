@@ -17,7 +17,7 @@ const enums: Partial<Record<keyof DeckData, readonly (string | number)[]>> = {
   deckType:['Attached','Freestanding','Floating','Add-on'], municipality:['Toronto','Barrie','Simcoe County','Burlington-Oakville','Rural-Other'],
   siteType:['Standard','Waterfront-Lakefront','Hillside','Urban Tight','Island-Ferry'],soilCondition:['Unknown','Sandy','Clay','Shallow Bedrock','Fill'],
   buildSeason:['Spring-Summer','Fall','Winter'],intendedLoad:['Standard','Heavy'],foundation:['Concrete Piers','Helical Piles','Deck Blocks'],
-  shape:['Rectangle','L-Shape','Multi-corner','Curved'],levels:[1,2],pattern:['Straight','Diagonal','Picture Frame','Herringbone'],
+  shape:['Rectangle','L-Shape','Multi-corner','Curved'],levels:[1,2,3],pattern:['Straight','Diagonal','Picture Frame','Herringbone'],
   framingSize:['2x8','2x10','2x12'],boardWidth:[5.5,3.5],joistSpacing:[12,16],fasteningSystem:['Face','Hidden'],pictureFrameRows:[0,1,2],
   railingType:['None','Wood Picket','Aluminum','Cable','Glass Panels','Trex Select','Trex Transcend','Fortress AL13','TT Classic','TT Impression'],
   stairFlights:[0,1,2,3],stairType:['Straight','Winder','Landing'],stairPosition:['Front','Left','Right','Back'],
@@ -32,7 +32,7 @@ const ranges: Partial<Record<keyof DeckData, readonly [number,number]>> = {
   pictureFrameOverhangIn:[0,1.5],
   houseWallHeightIn:[96,240],houseDoorOffset:[0,100],houseDoorWidthIn:[30,144],level2Offset:[0,100],landingDepthIn:[36,120],
 };
-const booleans = ['hasInlay','hasDrainage','hasDemo','houseVisible','lightingPreviewOn'] as const;
+const booleans = ['hasInlay','hasDrainage','hasDemo','houseVisible','lightingPreviewOn','level2FullStep'] as const;
 const texts = ['customerName','projectAddress','scopeOfWork'] as const;
 function record(value:unknown):value is Record<string,unknown>{return !!value&&typeof value==='object'&&!Array.isArray(value);}
 function numeric(value:unknown,min:number,max:number,label:string):number {
@@ -163,10 +163,18 @@ export function validateDesign(input:unknown):DeckData {
     const left=wing(w.left,'Left'),right=wing(w.right,'Right');
     if(left||right)clean.wrap={...(left?{left}:{}),...(right?{right}:{})};
   }
-  if(input.stairEdgeId!==undefined){
-    if(typeof input.stairEdgeId!=='string'||!/^[a-zA-Z-]{1,40}$/.test(input.stairEdgeId))throw new Error('Invalid stair edge.');
-    clean.stairEdgeId=input.stairEdgeId;
+  for(const key of ['stairEdgeId','level2EdgeId'] as const)if(input[key]!==undefined){
+    if(typeof input[key]!=='string'||!/^[a-zA-Z-]{1,40}$/.test(input[key] as string))throw new Error('Invalid deck edge.');
+    clean[key]=input[key] as string;
   }
+  if(input.level3!==undefined){
+    const l=input.level3;if(!record(l)||![1,2].includes(l.parent as number)||!['Front','Left','Right'].includes(l.position as string))throw new Error('Invalid third level.');
+    if(l.edgeId!==undefined&&(typeof l.edgeId!=='string'||!/^[a-zA-Z-]{1,40}$/.test(l.edgeId)))throw new Error('Invalid third level edge.');
+    if(l.fullStep!==undefined&&typeof l.fullStep!=='boolean')throw new Error('Invalid third level step.');
+    clean.level3={widthFt:numeric(l.widthFt,4,40,'Third level width'),lengthFt:numeric(l.lengthFt,4,40,'Third level depth'),heightIn:numeric(l.heightIn,8,144,'Third level height'),parent:l.parent as 1|2,position:l.position as 'Front'|'Left'|'Right',offsetPct:numeric(l.offsetPct,0,100,'Third level alignment'),...(typeof l.edgeId==="string"?{edgeId:l.edgeId}:{}),...(l.fullStep?{fullStep:true}:{})};
+  }
+  // Three levels always carry a third section; an older file without one gets the default.
+  if(clean.levels===3&&!clean.level3)clean.level3=defaultLevel3(clean);
   if(input.terrainConfig!==undefined){const t=input.terrainConfig;if(!record(t))throw new Error('Invalid terrain configuration.');clean.terrainConfig={widthFt:numeric(t.widthFt,20,250,'Terrain width'),depthFt:numeric(t.depthFt,20,250,'Terrain depth'),elevationIn:numeric(t.elevationIn,-120,120,'Terrain grade'),slopePct:numeric(t.slopePct,-30,30,'Terrain slope')};}
   if(input.yardFeatures!==undefined){
     if(!Array.isArray(input.yardFeatures)||input.yardFeatures.length>20)throw new Error('A design supports up to 20 yard features.');
@@ -182,18 +190,26 @@ export function validateDesign(input:unknown):DeckData {
   if(clean.borderFinish==='Dark Slate')clean.pictureFrameRows=clean.pictureFrameRows===2?2:1;
   // A wrap fixes the house size and, around both corners, the deck width.
   const wrapped=normalizeWrap(clean);if(wrapped!==clean){clean.width=wrapped.width;clean.houseConfig=wrapped.houseConfig;}
-  // A named stair edge must be an exposed edge of this outline; otherwise the stair side decides.
-  if(clean.stairEdgeId){const fp=getFootprint(clean,1),contact=getHouseContact(clean,fp),i=fp.edgeIds?.indexOf(clean.stairEdgeId)??-1;if(i<0||contact.isContactEdge(i))delete clean.stairEdgeId;}
+  // A named stair or level edge must be an exposed edge of this outline; otherwise the side decides.
+  const namedEdgeOk=(id:string)=>{const fp=getFootprint(clean,1),contact=getHouseContact(clean,fp),i=fp.edgeIds?.indexOf(id)??-1;return i>=0&&!contact.isContactEdge(i);};
+  if(clean.stairEdgeId&&!namedEdgeOk(clean.stairEdgeId))delete clean.stairEdgeId;
+  if(clean.level2EdgeId&&!namedEdgeOk(clean.level2EdgeId))delete clean.level2EdgeId;
+  if(clean.level3?.edgeId&&(clean.level3.parent!==1||!namedEdgeOk(clean.level3.edgeId)))delete clean.level3.edgeId;
   // A stair side with no exposed edge (e.g. against the house) moves to the first side that has one.
   const stairSides=availableStairSides(clean);
   if(!stairSides.includes(clean.stairPosition))clean.stairPosition=stairSides[0]??'Front';
   return clean;
 }
 
+/** A third section 2 ft lower than the second, off its front, when none has been set. */
+export function defaultLevel3(data:DeckData):NonNullable<DeckData['level3']>{
+  return {widthFt:Math.min(40,Math.max(4,data.width2)),lengthFt:8,heightIn:Math.max(8,data.height2-24),parent:2,position:'Front',offsetPct:50};
+}
+
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','stairEdgeId','yardFeatures','terrainConfig']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);

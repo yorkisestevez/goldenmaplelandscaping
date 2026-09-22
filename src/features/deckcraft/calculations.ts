@@ -111,7 +111,9 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const wrapOutlineFt = model.levels[0].footprint.outline.reduce((n, p, i, o) => { const q = o[(i + 1) % o.length]; return n + Math.hypot(q.x - p.x, q.y - p.y) / 12; }, 0);
   const perimeter1 = wrapCorners ? wrapOutlineFt : 2 * (width + length);
   const perimeter2 = levels > 1 ? 2 * (width2 + length2) : 0;
-  const perimeter = perimeter1 + perimeter2;
+  // A third section adds its own fascia on the same basis as the second.
+  const perimeter3 = levels > 2 && data.level3 ? 2 * (data.level3.widthFt + data.level3.lengthFt) : 0;
+  const perimeter = perimeter1 + perimeter2 + perimeter3;
   
   const catalogueMaterial=DECKING_CATALOGUE.find(m=>m.id===deckingMaterial);
   const selectedMaterial = catalogueMaterial?.costPerSqft===null?catalogueMaterial:materials.find((m: any) => m.id === deckingMaterial)||catalogueMaterial||materials[0];

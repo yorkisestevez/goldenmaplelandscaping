@@ -1,7 +1,7 @@
 import {addConstructionDetails,addRim,finishBoards,unsupportedJoistEnds} from './constructionDetails';
 import {frameWrap,wrapBoardEndBlocking,planZones} from './wrapFraming';
 import {activeWrap,type ActiveWrap,type WrapHip} from './lib/wrapGeometry';
-import {polygonCut,polygonBoard,splitBoard,offsetPolygons} from './lib/polygonCuts';
+import {polygonCut,polygonBoard,splitBoard,offsetPolygons,signedArea} from './lib/polygonCuts';
 import {getFinishedFootprint} from './lib/finishedFootprint';
 import {computeStruct,computeStairs} from './referenceConstruction';
 import {type DeckData, RAILING_COSTS} from './types';
@@ -10,8 +10,9 @@ import {finishedFasciaOffset} from './lib/finishedFootprint';
 import {getStairSupport,getStringerOffsets,makeRiserBoards,type RiserBoard} from './stairConstruction';
 import {getHouseContact,exposedSides,deckAttachesToHouse,exposedHouseLine} from './houseContact';
 import {getHouseConfig} from './houseSettings';
+import {getHousePlacement} from './housePlacement';
 import {outlineSpans,cleanPolygon,zoneReference,frameZoneBearings,frameZoneJoists,frameHouseSideBeams,type DeckZone,type FramedZone,type ZoneFramingConfig} from './zoneFraming';
-import {getFootprint,getBoardRows,getPictureFrameRuns,getStairPlacement,getRailingSegments,getHerringboneRows,clipToConvex,type StairPlacement,type PlanPoint,type FootprintPlan,type BoardRun} from './lib/deckGeometry';
+import {edgeFacing,getFootprint,getBoardRows,getPictureFrameRuns,getStairPlacement,getRailingSegments,getHerringboneRows,clipToConvex,type StairPlacement,type PlanPoint,type FootprintPlan,type BoardRun} from './lib/deckGeometry';
 export type V3={x:number;y:number;z:number};
 export type Member={a:V3;b:V3;width:number;depth:number;role?:string;spliceStart?:boolean;spliceEnd?:boolean;stair?:{risers:number;rise:number;run:number;top:number;bottom:number}};
 export type Box={x:number;y:number;z:number;w:number;h:number;d:number;angle?:number;polygon?:PlanPoint[];kind?:'tread'|'winder'|'riser'};
@@ -102,15 +103,15 @@ export function buildDeckTakeoff(data:DeckData){
   const openings=new Map<number,StairPlacement[]>();
   const addOpening=(index:number,p:StairPlacement)=>openings.set(index,[...(openings.get(index)||[]),p]);
   const run=stairSupport.runIn;
-  function addStraight(origin:V3,outward:PlanPoint,along:PlanPoint,width:number,n:number,rise:number,kind:Flight['kind'],id:string,startOffset=(data.pictureFrameRows||data.pattern==='Picture Frame')?finishedFasciaOffset(data):0){
+  function addStraight(origin:V3,outward:PlanPoint,along:PlanPoint,width:number,n:number,rise:number,kind:Flight['kind'],id:string,startOffset=(data.pictureFrameRows||data.pattern==='Picture Frame')?finishedFasciaOffset(data):0,opts:{rails?:boolean;stringers?:boolean}={}){
     const start={x:origin.x+outward.x*startOffset,y:origin.y,z:origin.z+outward.y*startOffset};
     const end={x:start.x+outward.x*run*Math.max(0,n-1),y:start.y-n*rise,z:start.z+outward.y*run*Math.max(0,n-1)};
     const yaw=Math.atan2(outward.x,outward.y),stringerOffsets=getStringerOffsets(width,stairSupport.spacingIn,stairSupport.minimumStringers);
     for(let i=0;i<n;i++)riserBoards.push(...makeRiserBoards({x:start.x+outward.x*i*run,y:start.y-i*rise,z:start.z+outward.y*i*run},along,outward,width,rise,stairSupport,data.deckingMaterial,id,i));
     if(rise<=1)issues.push('A stair rise is no greater than the modeled tread thickness; this transition needs a reviewed threshold detail.');
     for(let i=1;i<n;i++){const d=(i-.5)*run+stairSupport.treadNosingIn/2;treads.push({x:start.x+outward.x*d,y:start.y-i*rise-.5,z:start.z+outward.y*d,w:width,h:1,d:run+stairSupport.treadNosingIn,angle:yaw,kind:'tread'});}
-    for(const shift of stringerOffsets){stringers.push({a:{x:start.x+along.x*shift,y:start.y-9,z:start.z+along.y*shift},b:{x:end.x+along.x*shift,y:end.y-4,z:end.z+along.y*shift},width:1.5,depth:9.25,role:'stringer',stair:{risers:n,rise,run,top:start.y,bottom:end.y}});}
-    if(data.railingType!=='None')for(const side of [-1,1]){const shift=side*width/2;railRuns.push({a:{x:start.x+along.x*shift,y:start.y,z:start.z+along.y*shift},b:{x:end.x+along.x*shift,y:end.y,z:end.z+along.y*shift}});}
+    if(opts.stringers!==false)for(const shift of stringerOffsets){stringers.push({a:{x:start.x+along.x*shift,y:start.y-9,z:start.z+along.y*shift},b:{x:end.x+along.x*shift,y:end.y-4,z:end.z+along.y*shift},width:1.5,depth:9.25,role:'stringer',stair:{risers:n,rise,run,top:start.y,bottom:end.y}});}
+    if(data.railingType!=='None'&&opts.rails!==false)for(const side of [-1,1]){const shift=side*width/2;railRuns.push({a:{x:start.x+along.x*shift,y:start.y,z:start.z+along.y*shift},b:{x:end.x+along.x*shift,y:end.y,z:end.z+along.y*shift}});}
     flights.push({id,kind,risers:n,rise,run,width,start,end,type:'Straight',stringerOffsets});return end;
   }
   function addInlineLanding(start:V3,outward:PlanPoint,along:PlanPoint,width:number,n:number,rise:number,kind:Flight['kind'],id:string){
@@ -121,25 +122,55 @@ export function buildDeckTakeoff(data:DeckData){
     if(data.railingType!=='None')for(const side of [-1,1])railRuns.push({a:{x:end.x+along.x*width/2*side,y:end.y,z:end.z+along.y*width/2*side},b:{x:end.x+outward.x*depth+along.x*width/2*side,y:end.y,z:end.z+outward.y*depth+along.y*width/2*side}});
     return addStraight({x:end.x+outward.x*depth,y:end.y,z:end.z+outward.y*depth},outward,along,width,lower,rise,kind,`${id}-lower`);
   }
-  // The second section is physically adjacent to a stair run, rather than floating
-  // twelve inches away. Its attachment edge is cut out of both guard runs.
-  if(data.levels>1){
-    const fp=getFootprint(data,2),side=data.level2Position||'Front';
-    const opening=getStairPlacement({...data,stairFlights:1,stairPosition:side,stairOffset:data.level2Offset??50,stairWidth:Math.abs(data.height-data.height2)<.01?(side==='Front'?fp.bounds.w:fp.bounds.h):Math.min(data.stairWidth,side==='Front'?fp.bounds.w:fp.bounds.h)},mainFp,mainContact)!;
-    const delta=Math.abs(data.height-data.height2),n=delta>.01?Math.ceil(delta/7.75):0,rise=n?delta/n:0,distance=n>14?Math.max(0,n-2)*run+Math.max(opening.width,data.landingDepthIn||48):Math.max(0,n-1)*run;
-    const center={x:opening.origin.x+opening.along.x*opening.width/2,z:opening.origin.y+opening.along.y*opening.width/2};
-    const offset=side==='Front'?{x:center.x-fp.bounds.w/2,y:0,z:center.z+distance}:side==='Left'?{x:center.x-distance-fp.bounds.w,y:0,z:center.z-fp.bounds.h/2}:{x:center.x+distance,y:0,z:center.z-fp.bounds.h/2};
-    levels.push(makeLevel(fp,data.height2,offset,false,'deck',1));
-    const opposite=side==='Front'?'Back':side==='Left'?'Right':'Left';
-    const other=getStairPlacement({...data,stairFlights:1,stairPosition:opposite,stairOffset:50,stairWidth:opening.width},fp)!;
-    addOpening(0,opening);addOpening(1,other);connections.push({from:0,to:1,opening,run:distance});
-    if(n){const mainHigher=data.height>=data.height2;const start=mainHigher?{x:center.x,y:data.height,z:center.z}:{x:center.x+opening.outward.x*distance,y:data.height2,z:center.z+opening.outward.y*distance};(n>14?addInlineLanding:addStraight)(start,mainHigher?opening.outward:{x:-opening.outward.x,y:-opening.outward.y},opening.along,opening.width,n,rise,'connection','level-connection');}
+  // Further sections sit physically adjacent to a stair run from their parent deck, rather than
+  // floating twelve inches away. The attachment edge is cut out of both guard runs. A section never
+  // runs into the house: it slides along its parent's edge until clear (its back then lines up with
+  // the house wall), keeping the opening on its edge; if it cannot, the design is flagged.
+  const house=getHousePlacement(data),deckIndex:number[]=[0];
+  function attachLevel(parentIndex:number,fp:FootprintPlan,top:number,place:{side:'Front'|'Left'|'Right'|'Back';edgeId?:string;offsetPct:number;fullStep?:boolean},index:number,label:string,id:string){
+    const parent=levels[parentIndex],pfp=parent.footprint,contact=parentIndex===0?mainContact:undefined;
+    let side:'Front'|'Left'|'Right'|'Back'=place.side;
+    if(place.edgeId&&pfp.edgeIds){const i=pfp.edgeIds.indexOf(place.edgeId);if(i>=0&&!contact?.isContactEdge(i)){const a=pfp.outline[i],b=pfp.outline[(i+1)%pfp.outline.length],len=Math.hypot(b.x-a.x,b.y-a.y);side=edgeFacing({x:(b.y-a.y)/len,y:-(b.x-a.x)/len});}}
+    const edgeLen=side==='Front'||side==='Back'?fp.bounds.w:fp.bounds.h;
+    const opening=getStairPlacement({...data,stairFlights:1,stairPosition:side,stairOffset:place.offsetPct,stairWidth:Math.abs(parent.top-top)<.01||place.fullStep?edgeLen:Math.min(data.stairWidth,edgeLen),stairEdgeId:place.edgeId},pfp,contact);
+    if(!opening){issues.push(`The ${label} has no open ${side.toLowerCase()} edge to join; choose another side.`);return;}
+    const delta=Math.abs(parent.top-top),n=delta>.01?Math.ceil(delta/7.75):0,rise=n?delta/n:0,distance=n>14?Math.max(0,n-2)*run+Math.max(opening.width,data.landingDepthIn||48):Math.max(0,n-1)*run;
+    const center={x:parent.offset.x+opening.origin.x+opening.along.x*opening.width/2,z:parent.offset.z+opening.origin.y+opening.along.y*opening.width/2};
+    const o=opening.outward,offset=o.y>.5?{x:center.x-fp.bounds.w/2,y:0,z:center.z+distance}:o.x<-.5?{x:center.x-distance-fp.bounds.w,y:0,z:center.z-fp.bounds.h/2}:o.x>.5?{x:center.x+distance,y:0,z:center.z-fp.bounds.h/2}:{x:center.x-fp.bounds.w/2,y:0,z:center.z-distance-fp.bounds.h};
+    // Keep clear of the house by sliding along the parent edge (x for front/back, z for sides).
+    const k=Math.abs(o.y)>.5?'x':'z',size=k==='x'?fp.bounds.w:fp.bounds.h;
+    const hits=(v:V3)=>v.x+fp.bounds.w>house.x0+.5&&v.x<house.x1-.5&&v.z+fp.bounds.h>-house.depthIn+.5&&v.z<-.5;
+    // Where this level's own opening sits along its edge: centred unless it had to slide.
+    let childOffsetPct=50;
+    if(hits(offset)){
+      const lo=k==='x'?house.x0:-house.depthIn,hi=k==='x'?house.x1:0,a0=center[k]-opening.width/2,a1=center[k]+opening.width/2;
+      const shift=[hi-offset[k],lo-size-offset[k]].filter(s=>offset[k]+s<=a0+.01&&offset[k]+s+size>=a1-.01).sort((p,q)=>Math.abs(p)-Math.abs(q))[0];
+      if(shift!==undefined){offset[k]+=shift;childOffsetPct=size-opening.width>1e-9?Math.min(100,Math.max(0,(a0-offset[k])/(size-opening.width)*100)):50;}
+      else issues.push(`The ${label} runs into the house. Make it smaller or join it on another side before construction.`);
+    }
+    const levelIndex=levels.length;
+    levels.push(makeLevel(fp,top,offset,false,'deck',index));deckIndex.push(levelIndex);
+    // Real outlines, not bounding boxes: a wrap-around's box covers the house between its wings.
+    const world=(l:DeckLevel)=>l.footprint.outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}));
+    for(const i of deckIndex.slice(0,-1))if(polygonCut([world(levels[levelIndex])],[world(levels[i])]).some(p=>Math.abs(signedArea(p))>1))issues.push(`The ${label} overlaps ${i===0?'the main deck':'another deck level'}. Join it on another side or change its size before construction.`);
+    const opposite=side==='Front'?'Back':side==='Left'?'Right':side==='Right'?'Left':'Front';
+    const other=getStairPlacement({...data,stairFlights:1,stairPosition:opposite,stairOffset:childOffsetPct,stairWidth:opening.width,stairEdgeId:undefined},fp)!;
+    addOpening(parentIndex,opening);addOpening(levelIndex,other);connections.push({from:parentIndex,to:levelIndex,opening,run:distance});
+    // A full-width split-level step of up to three risers needs no stair guards; a single riser sits on the lower rim.
+    const stepOpts=place.fullStep?{rails:n>3,stringers:n>1}:{};
+    if(n){const parentHigher=parent.top>=top;const start=parentHigher?{x:center.x,y:parent.top,z:center.z}:{x:center.x+o.x*distance,y:top,z:center.z+o.y*distance};(n>14?addInlineLanding:(a:V3,b:PlanPoint,c:PlanPoint,d:number,e:number,f:number,g:Flight['kind'],h:string)=>addStraight(a,b,c,d,e,f,g,h,undefined,stepOpts))(start,parentHigher?o:{x:-o.x,y:-o.y},opening.along,opening.width,n,rise,'connection',id);}
+  }
+  if(data.levels>1)attachLevel(0,getFootprint(data,2),data.height2,{side:data.level2Position||'Front',edgeId:data.level2EdgeId,offsetPct:data.level2Offset??50,fullStep:data.level2FullStep},1,'second level','level-connection');
+  if(data.levels>2&&data.level3&&deckIndex.length===2){
+    const l3=data.level3,w=Math.max(12,l3.widthFt*12),h=Math.max(12,l3.lengthFt*12);
+    attachLevel(l3.parent===2?deckIndex[1]:0,{outline:[{x:0,y:0},{x:w,y:0},{x:w,y:h},{x:0,y:h}],bounds:{w,h},isCurved:false},l3.heightIn,{side:l3.position,edgeId:l3.parent===1?l3.edgeId:undefined,offsetPct:l3.offsetPct,fullStep:l3.fullStep},2,'third level','level3-connection');
   }
   // Flights go only on sides with an exposed edge; a primary side against the house is never used.
   // A named wrap edge (e.g. a wing end) sets the primary flight's side; other flights use other sides.
   const named=data.stairEdgeId&&mainFp.edgeIds&&data.stairFlights>0?getStairPlacement(data,mainFp,mainContact):null;
   const sides=exposedSides(mainFp,mainContact),primary=named&&mainFp.edgeIds?.[named.edgeIndex!]===data.stairEdgeId?named.edge:data.stairPosition,edges=[...(sides.includes(primary)?[primary]:[]),...sides.filter(e=>e!==primary)];
-  const exitLevel=data.levels>1?(data.height2<=data.height?1:0):0;
+  // Grade stairs leave from the lowest deck level (the later one on a tie).
+  const exitLevel=deckIndex.reduce((best,i)=>levels[i].top<=levels[best].top?i:best,0);
   const deck=levels[exitLevel],exitData=exitLevel?{...data,deckType:'Freestanding' as const}:data;
   if(data.stairFlights>edges.length)issues.push('The requested stair exit count exceeds available exposed deck edges.');
   let risers=0;
@@ -232,7 +263,7 @@ export function buildDeckTakeoff(data:DeckData){
   for(const level of levels){
     if(level.kind!=='deck')continue;
     const loose=unsupportedJoistEnds(level,level.index===0?mainContact:undefined);
-    if(loose.length)issues.push(`${loose.length} joist end${loose.length===1?'':'s'} on the ${level.index===0?'main deck':'second level'} do not bear on a ledger or beam (for example a shallow notch wing). Add a beam and posts under that edge before construction.`);
+    if(loose.length)issues.push(`${loose.length} joist end${loose.length===1?'':'s'} on the ${['main deck','second level','third level'][level.index??0]} do not bear on a ledger or beam (for example a shallow notch wing). Add a beam and posts under that edge before construction.`);
   }
   const foundationSaddle=data.foundation==='Deck Blocks'?6.5:4.5;
   if(levels.some(l=>l.supports.some(p=>p.y>0&&p.y<=foundationSaddle)||l.top<joistDepth+1+foundationSaddle))issues.push('Selected deck elevation leaves insufficient clearance for framing and the foundation saddle; review low-profile framing or excavation before construction.');
