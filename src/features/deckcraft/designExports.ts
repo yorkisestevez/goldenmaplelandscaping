@@ -95,7 +95,7 @@ export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
   boxes('joist_hanger',hardware.hangers.map(p=>({x:p.x,y:p.y,z:p.z,w:1.8,h:6,d:1.7})));
   boxes('ledger_bolt',hardware.ledgerBolts.map(p=>({x:p.x,y:p.y,z:p.z,w:.5,h:.5,d:3})));
   boxes(hardware.hidden?'hidden_clip':'deck_screw',hardware.screws.map(p=>({x:p.x,y:p.y-.6,z:p.z,w:hardware.hidden?.6:.18,h:hardware.hidden?.12:1.2,d:hardware.hidden?.4:.18})));
-  const extras=extrasLayout(data,model);boxes('bench_privacy_pergola_wood',extras.wood);boxes('extra_metal',extras.metal);boxes('drainage',extras.drainage);
+  const extras=extrasLayout(data,model);boxes('bench_privacy_pergola_wood',extras.wood);boxes('extra_metal',extras.metal);boxes('drainage',extras.drainage);boxes('privacy_panel',extras.panels);
   const accessories=catalogueAccessoryLayout(data,model);members('manufacturer_fascia',accessories.fascia);boxes('joist_tape',accessories.tape);boxes('ledger_flashing',accessories.flashing);
   extras.fixtures.forEach((p,i)=>{
     const product=getLightingProduct(p.productId),dim=product?.dimensionsIn??{},g=product?.geometry,h=dim.height??(g==='bollard'?18:g==='transformer'?12:1),w=dim.length??dim.diameter??dim.width??2,d=dim.diameter??dim.width??2;

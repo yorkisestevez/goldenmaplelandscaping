@@ -5,7 +5,8 @@ import type {DeckData,YardFeature} from './types';
 import type {Box,Member,DeckTakeoff} from './deckTakeoff';
 import type {PlanPoint} from './lib/deckGeometry';
 import {getTerrainConfig} from './yardSettings';
-import {getHouseConfig} from './houseSettings';
+import {getHousePlacement} from './housePlacement';
+import {hasHouseBlocks,houseOutline} from './houseFootprint';
 
 export type YardRole='paver'|'base'|'bedding'|'wall-block'|'wall-cap'|'wall-drainage'|'backfill'|'liner'|'water'|'basin'|'pump'|'rock'|'drain-pipe'|'water-pipe';
 export type YardBox=Box&{id:string;featureId:string;role:YardRole;color:string;illustrative?:boolean;unitId?:string};
@@ -99,7 +100,8 @@ const treadFootprint=(b:Box)=>b.polygon||rectangle(b.x,b.z,b.w,b.d,-(b.angle||0)
 export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff){
  const terrain=getTerrainConfig(data),gradeAt=(z:number)=>terrain.elevationIn+z*terrain.slopePct/100;
  const warnings:string[]=[],features:YardFeatureModel[]=[],boxes:YardBox[]=[],members:YardMember[]=[],excavations:{featureId:string;polys:PlanPoint[][];bottom:number}[]=[];
- const house=getHouseConfig(data),houseFootprint=data.houseVisible!==false?[rectangle(data.width*6,-house.depthFt*6,house.widthFt*12,house.depthFt*12)]:[];
+ // The house with its bump-outs, wings and garage: attached blocks are unioned with the main block.
+ const house=getHousePlacement(data),houseFootprint=data.houseVisible===false?[]:hasHouseBlocks(data)?houseOutline(data):[rectangle((house.x0+house.x1)/2,-house.depthIn/2,house.widthIn,house.depthIn)];
  let occupied:PlanPoint[][]=[...houseFootprint];
  const enabled=(data.yardFeatures||[]).filter(f=>f.enabled).sort((a,b)=>Number(a.kind==='patio')-Number(b.kind==='patio'));
  const ids=new Set<string>(),supportCutouts:PlanPoint[][]=[],budgetExcludedIds:string[]=[];let reservedPavers=0;

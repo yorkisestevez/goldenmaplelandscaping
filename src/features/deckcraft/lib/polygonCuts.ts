@@ -20,6 +20,13 @@ export function polygonCut(subject:PlanPoint[][],clip:PlanPoint[][],difference=f
   c.Execute(difference?ClipperLib.ClipType.ctDifference:ClipperLib.ClipType.ctIntersection,out,ClipperLib.PolyFillType.pftNonZero,ClipperLib.PolyFillType.pftNonZero);
   return out.map(points).filter(p=>signedArea(p)>.001);
 }
+export function polygonUnion(polys:PlanPoint[][]):PlanPoint[][]{
+  if(!polys.length)return [];
+  const c=new ClipperLib.Clipper(),out=[];
+  c.AddPaths(polys.map(path),ClipperLib.PolyType.ptSubject,true);
+  c.Execute(ClipperLib.ClipType.ctUnion,out,ClipperLib.PolyFillType.pftNonZero,ClipperLib.PolyFillType.pftNonZero);
+  return out.map(points).filter(p=>signedArea(p)>.001);
+}
 export function polygonBoard(polygon:PlanPoint[],angleDeg:number,role:BoardRun['role']='field'):BoardRun{
   const a=angleDeg*Math.PI/180,ux=Math.cos(a),uy=Math.sin(a),u=polygon.map(p=>p.x*ux+p.y*uy),v=polygon.map(p=>-p.x*uy+p.y*ux),lo=Math.min(...u),hi=Math.max(...u),vl=Math.min(...v),vh=Math.max(...v),uc=(lo+hi)/2,vc=(vl+vh)/2;
   return {cx:uc*ux-vc*uy,cy:uc*uy+vc*ux,length:hi-lo,width:vh-vl,angleDeg,polygon,role};

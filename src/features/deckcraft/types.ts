@@ -8,9 +8,69 @@ export type DeckShape = 'Rectangle' | 'L-Shape' | 'Multi-corner' | 'Curved';
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
 export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
-export type LightingZone = 'deck'|'posts'|'stairs'|'landscape'|'house';
-export interface HouseOpening {id:string;type:'Door'|'Window';facade:'Front'|'Back'|'Left'|'Right';offsetPct:number;bottomIn:number;widthIn:number;heightIn:number}
-export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:'Shingles'|'Metal';roofColor:string;cladding:'Brick'|'Siding';claddingColor:string;trimColor:string;openings:HouseOpening[]}
+export type LightingZone = 'deck'|'posts'|'stairs'|'landscape'|'house'|'privacy';
+/** A single freestanding screen on one exposed deck edge; priced by its face area. */
+export type PrivacyProductId='slatted'|'hideaway'|'oasis';
+export interface PrivacyScreen {id:string;side:'Left'|'Right'|'Front'|'Back';lengthFt:number;heightFt:4|5|6;offsetPct:number;lights:boolean;
+  /** Undefined = on. An off screen stays in the design but is not drawn, lit or priced. */
+  enabled?:boolean;
+  /** Undefined = Golden Maple slatted screen. Manufacturer screens are supplier-quote items. */
+  product?:PrivacyProductId;design?:string;finish?:'Black'|'White';
+  /** Manufacturer screens only: stock panel count; length follows the panels. */
+  panels?:number}
+export type GarageDoorStyle='Panel'|'Carriage'|'Flush'|'Glass';
+/** Door looks. Absent = the studio's original glass-panel door. */
+export type DoorStyle='Single'|'French'|'Sliding';
+/** Window looks. Absent = the studio's original window (glass with a centre rail). */
+export type WindowStyle='Double-hung'|'Casement'|'Picture'|'Slider'|'Awning';
+export type HouseCladding='Brick'|'Siding'|'Stone'|'Stucco'|'Board & batten'|'Vertical siding';
+export interface HouseOpening {id:string;type:'Door'|'Window'|'Garage';facade:'Front'|'Back'|'Left'|'Right';offsetPct:number;bottomIn:number;widthIn:number;heightIn:number;
+  /** Wall the opening sits on, '<block id>-<front|back|left|right>' (e.g. 'garage1-back'). Absent = the
+   * main block's wall named by `facade`, as older designs have it. */
+  wallId?:string;
+  /** Appearance only, never priced: a garage door style on 'Garage' openings, a door style on 'Door'
+   * openings, a window style on 'Window' openings. */
+  style?:GarageDoorStyle|DoorStyle|WindowStyle}
+/** A block attached to one wall of the main house rectangle: a bump-out, an L-wing or a garage. */
+export interface HouseBlock {id:string;kind:'house'|'garage';
+  /** Main-block wall it is attached to ('Front' faces the deck). */
+  wall:'Front'|'Back'|'Left'|'Right';
+  /** Front/Back walls: plan +x from the main block's left corner. Left/Right walls: back from the deck-facing wall. */
+  offsetFt:number;
+  /** Along the wall it is attached to. */
+  widthFt:number;
+  /** Out from that wall. */
+  depthFt:number;
+  storeys?:1|2|3;floorHeightIn?:number;roofShape?:'Gable'|'Hip'|'Flat'}
+export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:'Shingles'|'Metal';roofColor:string;cladding:HouseCladding;claddingColor:string;trimColor:string;openings:HouseOpening[];
+  /** Finished floor / door-sill height above grade. When set, the deck is checked against it. */
+  floorHeightIn?:number;
+  /** Blocks attached to the main rectangle. Absent or empty = a plain rectangular house. */
+  footprint?:{rects:HouseBlock[]};
+  /** Roof pitch, inches of rise per 12 of run (3–12). Absent = the studio's original roof height. Appearance only. */
+  roofPitch?:number;
+  /** Main gable ridge: 'y' runs front to back (gables face the deck and the street, the original look);
+   * 'x' runs side to side (gables on the side walls). Appearance only. */
+  ridge?:'x'|'y'}
+/** Where the house sits along the deck's back line. Absent = centred on the deck (the original behaviour). */
+export interface HousePlacement {anchor:'left'|'center'|'right';offsetIn:number}
+/** One side wing of a wrap-around deck: how far it reaches out from the house side wall, and how
+ * far it runs back along that wall from the deck-facing wall. */
+export interface WrapWing {widthFt:number;runFt:number}
+/** Wrap-around deck: side wings around one or both house corners, each mitred on a corner-to-corner hip. */
+/** A porch wrap: the deck continues around a far house corner along the street-side wall. */
+export interface WrapPorch {depthFt:number;runFt:number}
+export interface WrapConfig {left?:WrapWing;right?:WrapWing;
+  /** Needs the left wing, which then runs the full house depth. */
+  porchLeft?:WrapPorch;
+  /** Needs the right wing, which then runs the full house depth. */
+  porchRight?:WrapPorch}
+/** A third deck section, joined to the main deck (parent 1) or the second level (parent 2). */
+export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;parent:1|2;position:'Front'|'Left'|'Right';offsetPct:number;
+  /** Named wrap edge of the main deck (parent 1 only), e.g. 'wingR-end'; overrides position. */
+  edgeId?:string;
+  /** The connecting step or stair runs the full shared edge (a split level). */
+  fullStep?:boolean}
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature';
 export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled:boolean;xFt:number;zFt:number;widthFt:number;depthFt:number;heightIn:number;rotationDeg:number;productId:string;color:string}
 export interface TerrainConfig {widthFt:number;depthFt:number;elevationIn:number;slopePct:number}
@@ -59,6 +119,15 @@ export interface DeckData {
   yardFeatures?: YardFeature[];
   terrainConfig?: TerrainConfig;
   houseConfig?: HouseConfig;
+  housePlacement?: HousePlacement;
+  wrap?: WrapConfig;
+  /** A named exposed edge (e.g. 'wingR-end') for the primary stair flight; overrides stairPosition. */
+  stairEdgeId?: string;
+  /** Named wrap edge of the main deck for the second level; overrides level2Position. */
+  level2EdgeId?: string;
+  /** The step or stair between the main deck and the second level runs their full shared edge. */
+  level2FullStep?: boolean;
+  level3?: Level3Config;
   lightingZoneEnabled?: Partial<Record<LightingZone,boolean>>;
   lightingPreviewOn?: boolean;
   catalogueRailingId?: string;
@@ -133,11 +202,16 @@ export interface DeckData {
   
   // Add-ons
   lightingSystem: {
-    selectedItems: { productId: string; qty: number; zone?:LightingZone }[];
+    /** `auto` marks quantities kept in step with the modeled posts, treads or screen posts. */
+    selectedItems: { productId: string; qty: number; zone?:LightingZone; auto?:true }[];
     wireDistance: number;
   };
+  /** Simple post/stair lighting intent; kept separate so it survives a zero count. */
+  autoLighting?: {posts?:boolean;stairs?:boolean;stairStyle?:'evo_hyde'|'evo_flex'};
   benchLf: number;
+  /** Priced privacy area. Derived from privacyScreens whenever screens are present. */
   privacySqft: number;
+  privacyScreens?: PrivacyScreen[];
   hasDrainage: boolean;
   hasDemo: boolean;
   pergolaSqft: number;

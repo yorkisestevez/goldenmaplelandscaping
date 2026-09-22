@@ -1,4 +1,5 @@
 import {useMemo,useLayoutEffect,useRef} from 'react';
+import {distanceToSegment} from '../../lib/wrapGeometry';
 import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import {type DeckData} from '../../types';
@@ -19,14 +20,14 @@ export default function HardwareDetails({data,model,inspection=false}:{data:Deck
   const depth=data.framingSize==='2x8'?7.25:data.framingSize==='2x12'?11.25:9.25;
   const at=(p:{x:number;y:number;z:number;yaw?:number},x:number,y:number,z:number)=>{const yaw=p.yaw||0;return {x:p.x+x*Math.cos(yaw)+z*Math.sin(yaw),y:p.y+y,z:p.z-x*Math.sin(yaw)+z*Math.cos(yaw),angle:yaw};};
   const plates=useMemo(()=>{const boxes:Box[]=[];
-    for(const p of hardware.hangers){boxes.push({...at(p,0,-depth/2,0),w:2,h:.08,d:2.2});for(const side of [-1,1]){boxes.push({...at(p,side*.84,0,0),w:.08,h:depth,d:2.2});boxes.push({...at(p,side*1.7,0,-1.06),w:1.7,h:depth,d:.08});}}
+    for(const p of [...hardware.hangers,...(hardware.skewedHangers??[])]){boxes.push({...at(p,0,-depth/2,0),w:2,h:.08,d:2.2});for(const side of [-1,1]){boxes.push({...at(p,side*.84,0,0),w:.08,h:depth,d:2.2});boxes.push({...at(p,side*1.7,0,-1.06),w:1.7,h:depth,d:.08});}}
     for(const p of hardware.beamTies){boxes.push({x:p.x+.85,y:p.y,z:p.z,w:.12,h:6,d:1.8});boxes.push({x:p.x+1.6,y:p.y-2.5,z:p.z,w:1.6,h:1,d:.12});}
     for(const p of hardware.blockingAngles){boxes.push({x:p.x,y:p.y,z:p.z,w:.1,h:3,d:1.5});boxes.push({x:p.x+.75,y:p.y,z:p.z+.75,w:1.5,h:3,d:.1});}
     for(const p of hardware.stringerConnectors){boxes.push({x:p.x,y:p.y,z:p.z,w:4,h:8,d:.12});boxes.push({x:p.x,y:p.y-3.5,z:p.z+1.5,w:3,h:.12,d:3});}
     return boxes;
   },[hardware,model,depth]);
   const exposedPlates=useMemo(()=>model.railing.posts.flatMap(p=>[{x:p.x,y:p.y+.15,z:p.z,w:5,h:.3,d:5},{x:p.x,y:p.y+model.railing.height+.15,z:p.z,w:3.8,h:.3,d:3.8}]),[model]);
-  const postCaps=useMemo(()=>hardware.postCaps.flatMap(p=>{const level=model.levels.find(l=>l.supports.some(s=>Math.hypot(s.x-p.x,s.z-p.z)<.01)),beam=level?.beams.find(b=>Math.abs((b.a.z+b.b.z)/2-p.z)<6),yaw=beam?Math.atan2(beam.b.x-beam.a.x,beam.b.z-beam.a.z):Math.PI/2,base={...p,yaw},beamWidth=(level?.reference.bPly??3)*1.5;return [{...at(base,0,0,0),w:6,h:.15,d:6},...[-1,1].flatMap(side=>[{...at(base,side*(beamWidth/2+.07),2.5,0),w:.12,h:5,d:5},{...at(base,side*2.82,-2,0),w:.12,h:4,d:5}])];}),[hardware,model]);
+  const postCaps=useMemo(()=>hardware.postCaps.flatMap(p=>{const level=model.levels.find(l=>l.supports.some(s=>Math.hypot(s.x-p.x,s.z-p.z)<.01)),beam=level?.beams.find(b=>b.role!=='hip'&&distanceToSegment({x:p.x,y:p.z},{x:b.a.x,y:b.a.z},{x:b.b.x,y:b.b.z})<6)??level?.beams.find(b=>Math.abs((b.a.z+b.b.z)/2-p.z)<6),yaw=beam?Math.atan2(beam.b.x-beam.a.x,beam.b.z-beam.a.z):Math.PI/2,base={...p,yaw},beamWidth=(level?.reference.bPly??3)*1.5;return [{...at(base,0,0,0),w:6,h:.15,d:6},...[-1,1].flatMap(side=>[{...at(base,side*(beamWidth/2+.07),2.5,0),w:.12,h:5,d:5},{...at(base,side*2.82,-2,0),w:.12,h:4,d:5}])];}),[hardware,model]);
   return <group name="construction-hardware">
     <Plates items={exposedPlates} name="exposed-railing-bases-and-caps"/>
     <Plates items={postCaps} name="exposed-beam-post-caps"/>
@@ -36,7 +37,7 @@ export default function HardwareDetails({data,model,inspection=false}:{data:Deck
     <Fasteners items={hardware.screws} radius={hardware.hidden?.17:.11} name={hardware.hidden?'hidden-fastener-clips':'deck-screw-heads'}/>
     <Fasteners items={hardware.ledgerBolts} radius={.34} name="ledger-bolts"/>
     <Fasteners items={hardware.spliceBolts.map(p=>({...p,axis:'front'}))} radius={.34} name="stock-splice-bolts"/>
-    <Fasteners items={hardware.hangers.flatMap(p=>[-1,1].flatMap(side=>[.2,.45,.7].map(h=>{const v=at(p,side*1.8,depth*(h-.5),-1);return {...v,yaw:v.angle,axis:'front' as const};})))} radius={.12} name="hanger-nails"/>
+    <Fasteners items={[...hardware.hangers,...(hardware.skewedHangers??[])].flatMap(p=>[-1,1].flatMap(side=>[.2,.45,.7].map(h=>{const v=at(p,side*1.8,depth*(h-.5),-1);return {...v,yaw:v.angle,axis:'front' as const};})))} radius={.12} name="hanger-nails"/>
     </group>}
   </group>;
 }

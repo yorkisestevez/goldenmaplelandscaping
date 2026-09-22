@@ -8,6 +8,37 @@ export function defaultLightingZone(product:LightingCatalogueProduct):LightingZo
   return 'house';
 }
 export const isSystemProduct=(p:LightingCatalogueProduct)=>['transformer','cable','accessory'].includes(p.geometry);
+
+type SelectedLight=DeckData['lightingSystem']['selectedItems'][number];
+export const MAX_FIXTURE_QTY=30;
+/** Simple options use existing price-book allowances only; no new rates. */
+/** Under-step styles: both mount under the tread nose (undercap). EVO FLEX has no price-book rate yet. */
+export const STAIR_LIGHT_STYLES={
+  evo_hyde:{productId:'evo_hyde',label:'EVO HYDE under-step light',note:'Existing price-book allowance'},
+  evo_flex:{productId:'evo_flex_1_kit',label:'EVO FLEX 1 m LED strip',note:'Supplier / installation quote required · needs stairs about 44 in wide'},
+} as const;
+export const stairLightProductId=(data:DeckData)=>STAIR_LIGHT_STYLES[data.autoLighting?.stairStyle??'evo_hyde'].productId;
+export const AUTO_LIGHTING={
+  posts:{productId:'puck',zone:'posts'},
+  stairs:{productId:STAIR_LIGHT_STYLES.evo_hyde.productId,zone:'stairs'},
+  privacy:{productId:'blink',zone:'privacy'},
+  transformer:{productId:'hub100'},
+} as const satisfies Record<string,{productId:string;zone?:LightingZone}>;
+/** Keeps simple-option fixtures equal to the modeled mounts (posts, treads, lit screen posts).
+ * Manual selections are untouched unless they reuse a product the simple option now manages. */
+export function syncAutoLighting(data:DeckData,counts:{posts:number;stairs:number;privacy:number}):SelectedLight[]{
+  const items=data.lightingSystem?.selectedItems??[];
+  const wanted:SelectedLight[]=[];
+  const add=(spec:{productId:string;zone:LightingZone},count:number)=>{if(count>0)wanted.push({productId:spec.productId,qty:Math.min(MAX_FIXTURE_QTY,count),zone:spec.zone,auto:true});};
+  if(data.autoLighting?.posts)add(AUTO_LIGHTING.posts,counts.posts);
+  if(data.autoLighting?.stairs)add({productId:stairLightProductId(data),zone:'stairs'},counts.stairs);
+  add(AUTO_LIGHTING.privacy,counts.privacy);
+  const managed=new Set(wanted.map(w=>w.productId));
+  const manual=items.filter(i=>!i.auto&&!managed.has(i.productId));
+  const hasTransformer=manual.some(i=>getLightingProduct(i.productId)?.geometry==='transformer');
+  if(wanted.length&&!hasTransformer)wanted.push({productId:AUTO_LIGHTING.transformer.productId,qty:1,auto:true});
+  return [...manual,...wanted];
+}
 /** Installation selection alone determines quantities; preview switches never change a purchase. */
 export function activeLightingItems(data:DeckData){
   return (data.lightingSystem?.selectedItems??[]).flatMap(item=>{

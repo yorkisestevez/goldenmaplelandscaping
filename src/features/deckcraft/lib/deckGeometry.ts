@@ -14,15 +14,28 @@ import {offsetPolygons,polygonCut,polygonBoard} from './polygonCuts';
 // the 2D diagram and must never drag the 3D chunk into the main bundle).
 
 import { DeckData } from '../types';
+import { splitAtHouseCorners } from '../housePlacement';
+import { notchDeckAroundHouse } from '../houseFootprint';
+import { activeWrap, wrapOutline } from './wrapGeometry';
 
 export interface PlanPoint { x: number; y: number }
 export type EdgeName = 'Front' | 'Back' | 'Left' | 'Right';
+
+/** Which outline edges sit against the house. Built only by houseContact.ts;
+ * geometry here never guesses the house from coordinates. */
+export interface EdgeContact {
+  isContactEdge(edgeIndex: number): boolean;
+  /** Edges whose finished border stays flush with the rim (the whole house line). */
+  isFlushEdge?(edgeIndex: number): boolean;
+}
 
 export interface FootprintPlan {
   /** Simple polygon, positive shoelace area (interior to the LEFT of edges). */
   outline: PlanPoint[];
   bounds: { w: number; h: number };
   isCurved: boolean;
+  /** Wrap-around outlines name every edge (e.g. 'wingR-end'); other shapes leave this unset. */
+  edgeIds?: string[];
 }
 
 const n = (v: unknown, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) : fallback);
@@ -35,8 +48,25 @@ const n = (v: unknown, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) 
  * bulge sampled at 16 segments — sagitta min(15% of length, 20% of width),
  * a stated visual approximation, matching the "curved front" sales sketch.
  * level 2 uses width2/length2 (an independent slab, like calculations.ts).
+ * A positioned house narrower than the main deck adds vertices at its corners.
  */
+/** The main deck's outline before any house notching (shape or wrap outline, split at house corners). */
+export function unnotchedMainOutline(data: DeckData): PlanPoint[] {
+  const wrap = activeWrap(data);
+  return wrap ? wrapOutline(wrap).outline : shapeFootprint(data, 1).outline;
+}
+
 export function getFootprint(data: DeckData, level: 1 | 2 = 1): FootprintPlan {
+  const wrap = level === 1 ? activeWrap(data) : null;
+  if (wrap) return notchDeckAroundHouse(data, { ...wrapOutline(wrap), bounds: { w: wrap.W, h: wrap.L }, isCurved: false });
+  const fp = shapeFootprint(data, level);
+  if (level !== 1) return fp;
+  const outline = splitAtHouseCorners(data, fp.outline);
+  // House bump-outs (and blocks flush with the deck-facing wall) notch and split the attached deck.
+  return notchDeckAroundHouse(data, outline === fp.outline ? fp : { ...fp, outline });
+}
+
+function shapeFootprint(data: DeckData, level: 1 | 2): FootprintPlan {
   const W = Math.max(12, n(level === 1 ? data.width : data.width2) * 12);
   const L = Math.max(12, n(level === 1 ? data.length : data.length2) * 12);
   const bounds = { w: W, h: L };
@@ -121,12 +151,16 @@ export interface StairPlacement {
  * edge. Notched shapes place against the bounding box edge (same behavior the
  * 2D diagram has always had).
  */
-export function getStairPlacement(data: DeckData, target: { w:number;h:number } | FootprintPlan): StairPlacement | null {
+export function getStairPlacement(data: DeckData, target: { w:number;h:number } | FootprintPlan, contact?: EdgeContact): StairPlacement | null {
   if (!(n(data.stairFlights)>0)) return null;
   const fp='outline' in target?target:getFootprint(data);
   const edge=data.stairPosition||'Front';
   const desired=edge==='Front'?{x:0,y:1}:edge==='Back'?{x:0,y:-1}:edge==='Left'?{x:-1,y:0}:{x:1,y:0};
-  const candidates=fp.outline.map((a,i)=>{const b=fp.outline[(i+1)%fp.outline.length],length=Math.hypot(b.x-a.x,b.y-a.y),along={x:(b.x-a.x)/length,y:(b.y-a.y)/length},outward={x:along.y,y:-along.x};return {a,b,length,along,outward,index:i};}).filter(s=>s.outward.x*desired.x+s.outward.y*desired.y>.7);
+  // Stairs never open through a house wall.
+  const all=fp.outline.map((a,i)=>{const b=fp.outline[(i+1)%fp.outline.length],length=Math.hypot(b.x-a.x,b.y-a.y),along={x:(b.x-a.x)/length,y:(b.y-a.y)/length},outward={x:along.y,y:-along.x};return {a,b,length,along,outward,index:i};});
+  // A named wrap edge (e.g. a wing end) takes precedence over the side, unless it is a house wall.
+  const named=data.stairEdgeId&&fp.edgeIds?all.find(s=>fp.edgeIds![s.index]===data.stairEdgeId&&!contact?.isContactEdge(s.index)):undefined;
+  const candidates=named?[named]:all.filter(s=>s.outward.x*desired.x+s.outward.y*desired.y>.7&&!contact?.isContactEdge(s.index));
   if(!candidates.length)return null;
   const requested=Math.max(24,n(data.stairWidth,48)),eligible=candidates.filter(s=>s.length>=requested);
   const chosen=(eligible.length?eligible:candidates).sort((a,b)=>b.length-a.length)[0];
@@ -135,7 +169,12 @@ export function getStairPlacement(data: DeckData, target: { w:number;h:number } 
   const reverse=chosen.along.x<-.5||chosen.along.y<-.5;
   const along=reverse?{x:-chosen.along.x,y:-chosen.along.y}:chosen.along;
   const base=reverse?chosen.b:chosen.a,start=(chosen.length-width)*offset;
-  return {edge,origin:{x:base.x+along.x*start,y:base.y+along.y*start},along,outward:chosen.outward,width,edgeIndex:chosen.index};
+  return {edge:named?edgeFacing(chosen.outward):edge,origin:{x:base.x+along.x*start,y:base.y+along.y*start},along,outward:chosen.outward,width,edgeIndex:chosen.index};
+}
+
+/** The deck side an outward edge normal faces. */
+export function edgeFacing(outward: PlanPoint): EdgeName {
+  return Math.abs(outward.x) > Math.abs(outward.y) ? (outward.x > 0 ? 'Right' : 'Left') : (outward.y > 0 ? 'Front' : 'Back');
 }
 
 /** Axis-aligned rect covering the stair opening + flight, for 2D drawing. */
@@ -154,17 +193,17 @@ export function getStairRect(p: StairPlacement, flightDepth: number) {
 export interface RailSegment { a: PlanPoint; b: PlanPoint; edge: EdgeName | 'Notch' | 'Curve' }
 
 /**
- * Railing runs around the outline: classifies each polygon edge, drops the
- * house side for Attached/Add-on decks, and splits the stair edge around the
+ * Railing runs around the outline: classifies each polygon edge, drops edges
+ * against the house (ledger, no rail), and splits the stair edge around the
  * opening (the skip logic DeckDiagram implements per-edge inline).
  */
 export function getRailingSegments(
   data: DeckData,
   fp: FootprintPlan,
-  stair: StairPlacement | null
+  stair: StairPlacement | null,
+  contact?: EdgeContact
 ): RailSegment[] {
   if (data.railingType === 'None') return [];
-  const attached = data.deckType === 'Attached' || data.deckType === 'Add-on';
   const out: RailSegment[] = [];
   const EPS = 0.5;
 
@@ -181,7 +220,7 @@ export function getRailingSegments(
     else if (vertical && Math.abs(a.x - fp.bounds.w) < EPS) edge = 'Right';
     else edge = fp.isCurved && a.y > fp.bounds.h - EPS ? 'Curve' : 'Notch';
 
-    if (edge === 'Back' && attached) continue; // house side — ledger, no rail
+    if (contact?.isContactEdge(i)) continue; // house side — ledger, no rail
 
     // Cut only the physical polygon edge carrying the opening, including notch/arc segments.
     if(stair && (stair.edgeIndex===i || (stair.edgeIndex===undefined && edge===stair.edge))){

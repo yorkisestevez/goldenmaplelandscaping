@@ -1,3 +1,4 @@
+import { activeWrap, hasPorchWrap, wrapLabourFactor } from './lib/wrapGeometry';
 import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock} from './stockPlan';
 import {buildDeckTakeoff,type DeckTakeoff} from './deckTakeoff';
@@ -5,6 +6,8 @@ import {DECK_SETTINGS} from './defaults';
 import {DECKING_CATALOGUE,RAILING_CATALOGUE} from './manufacturerCatalog';
 import {catalogueAccessoryLayout} from './catalogueAccessories';
 import {lightingSystemCheck} from './lightingSystem';
+import {quotedPrivacyScreens} from './privacyScreens';
+import {getHouseContact} from './houseContact';
 import {pictureFrameCompatibility} from './lib/finishedFootprint';
 import {buildYardModel,type YardModel} from './yardModel';
 import {buildYardTakeoff,type YardTakeoff} from './yardTakeoff';
@@ -71,6 +74,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const veneer=stairVeneerLayout(data,model);
   const quantities=model.quantities;
   const hardware=getHardwareLayout(data,model);
+  // Flashing covers every wall the deck meets: ledgers plus bump-out flush walls (same as ledger length without them).
+  const flashingLf=getHouseContact(data,model.levels[0].footprint).flashingLf;
   const connectors=connectorSchedule(data,model,hardware);
   const framingStock=constructionStock(model);
   const {
@@ -102,9 +107,14 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const landingArea = levels > 1 ? (stairWidth / 12) * (stairWidth / 12) : 0;
   
   const area = quantities.area;
-  const perimeter1 = 2 * (width + length);
+  // A wrap-around's fascia follows its real outline; every other shape keeps the original rectangle basis.
+  const wrap = activeWrap(data), wrapCorners = wrap ? (wrap.left ? 1 : 0) + (wrap.right ? 1 : 0) : 0;
+  const wrapOutlineFt = model.levels[0].footprint.outline.reduce((n, p, i, o) => { const q = o[(i + 1) % o.length]; return n + Math.hypot(q.x - p.x, q.y - p.y) / 12; }, 0);
+  const perimeter1 = wrapCorners ? wrapOutlineFt : 2 * (width + length);
   const perimeter2 = levels > 1 ? 2 * (width2 + length2) : 0;
-  const perimeter = perimeter1 + perimeter2;
+  // A third section adds its own fascia on the same basis as the second.
+  const perimeter3 = levels > 2 && data.level3 ? 2 * (data.level3.widthFt + data.level3.lengthFt) : 0;
+  const perimeter = perimeter1 + perimeter2 + perimeter3;
   
   const catalogueMaterial=DECKING_CATALOGUE.find(m=>m.id===deckingMaterial);
   const selectedMaterial = catalogueMaterial?.costPerSqft===null?catalogueMaterial:materials.find((m: any) => m.id === deckingMaterial)||catalogueMaterial||materials[0];
@@ -327,6 +337,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   if (shape === 'L-Shape') complexityMult *= 1.10;
   if (shape === 'Multi-corner') complexityMult *= 1.25;
   if (shape === 'Curved') complexityMult *= 1.50;
+  complexityMult *= wrapLabourFactor(wrap);
   
   if (pattern === 'Diagonal') complexityMult *= 1.20;
   if (pattern === 'Picture Frame') complexityMult *= 1.25;
@@ -401,6 +412,9 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const lightingCheck=lightingSystemCheck(data),selectedLightingItems=lightingCheck.items;
   flags.push(...lightingCheck.warnings,...pictureFrameCompatibility(data));
   quoteRequired.push(...selectedLightingItems.filter(p=>p.cost===null||p.laborCost===null).map(p=>`${p.name} supply and installation`));
+  // Manufacturer privacy screens have no price-book rate: listed for a supplier quote, never priced at zero.
+  const quotedScreens=quotedPrivacyScreens(data.privacyScreens??[]);
+  quoteRequired.push(...quotedScreens.map(name=>`${name} supply and installation`));
 
   const lightingWireLf=selectedLightingItems.length&&!selectedLightingItems.some(p=>p.geometry==='cable')?Math.max(0,lSys.wireDistance||0):0;
   const totalLightingMaterial = selectedLightingItems.reduce((sum, item) => sum + (item.cost || 0) * item.qty, 0)+lightingWireLf*LIGHTING_COSTS.wirePerFt;
@@ -417,7 +431,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     pergola: pergolaSqft * 65 * markupMult,
     // Add-on module specific
     structuralTieIn: deckType === 'Add-on' ? (data.addOnHardwareCost || 450) * markupMult : 0,
-    ledgerFlashing: deckType === 'Add-on' ? (data.addOnFlashingLf || width) * 12 * markupMult : 0,
+    ledgerFlashing: deckType === 'Add-on' ? (data.addOnFlashingLf || flashingLf) * 12 * markupMult : 0,
     transitionLabor: deckType === 'Add-on' ? (data.addOnTransitionLabor || 850) : 0,
   };
 
@@ -540,11 +554,12 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       items: [
         { name: 'Built-in Bench', spec: 'Matching Decking', qty: benchLf, unit: 'lf', cost: addOnCosts.bench },
         { name: 'Privacy Screen', spec: 'Louvered/Slatted', qty: privacySqft, unit: 'sqft', cost: addOnCosts.privacy },
+        ...quotedScreens.map(name => ({ name: 'Manufacturer privacy screen', spec: name, qty: 1, unit: 'screen', cost: null })),
         { name: 'Drainage System', spec: 'Under-deck', qty: hasDrainage ? area : 0, unit: 'sqft', cost: addOnCosts.drainage },
         { name: 'Demo & Removal', spec: 'Existing Deck', qty: hasDemo ? area : 0, unit: 'sqft', cost: addOnCosts.demo },
         { name: 'Pergola', spec: 'Wood/Aluminum', qty: pergolaSqft, unit: 'sqft', cost: addOnCosts.pergola },
         { name: 'Structural Tie-in', spec: 'Hardware to Existing', qty: deckType === 'Add-on' ? 1 : 0, unit: 'ls', cost: addOnCosts.structuralTieIn },
-        { name: 'Ledger Flashing', spec: 'Connection Width', qty: deckType === 'Add-on' ? (data.addOnFlashingLf || width) : 0, unit: 'lf', cost: addOnCosts.ledgerFlashing },
+        { name: 'Ledger Flashing', spec: 'Connection Width', qty: deckType === 'Add-on' ? (data.addOnFlashingLf || flashingLf) : 0, unit: 'lf', cost: addOnCosts.ledgerFlashing },
         { name: 'Transition Labor', spec: 'Leveling & Siding Prep', qty: deckType === 'Add-on' ? 1 : 0, unit: 'ls', cost: addOnCosts.transitionLabor },
       ].filter(item => item.qty > 0)
     },
@@ -591,6 +606,13 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     flags.push(...veneer.issues);
     const rows=veneer.rows.filter(r=>r.id!=='terrain-veneer-wood');
     if(rows.length){quoteRequired.push(...rows.map(r=>r.name));sections.push({title:'Terrain stair support connections',icon:'🔩',quoteRequired:true,total:0,items:rows.map(r=>({name:r.name,spec:r.basis,qty:r.qty,unit:r.unit,cost:null}))});}
+  }
+  // Porch wraps: labour is priced at the two-corner factor; the extra porch labour has no factor in
+  // the price book yet, so it is listed for a builder quote rather than priced at zero.
+  if(hasPorchWrap(wrap)){
+    const labour=sections.find(s=>s.title==='Labour (Construction & Build)');
+    if(labour){labour.quoteRequired=true;labour.items.push({name:'Porch-wrap labour premium',spec:'Builder quote required: the priced labour uses the two-corner wrap factor (×1.50); the extra porch-wrap labour is quoted separately.',qty:1,unit:'allowance',cost:null});}
+    quoteRequired.push('Porch-wrap labour premium (builder quote)');
   }
   flags.push(...yardTakeoff.warnings);
   for(const row of yardTakeoff.sections){

@@ -25,6 +25,7 @@ export function constructionStock(model:DeckTakeoff):StockScheduleRow[]{
 export function connectorSchedule(data:DeckData,model:DeckTakeoff,h=getHardwareLayout(data,model)):ConnectorScheduleRow[]{
   return [
     {name:'Joist hangers',qty:h.hangers.length,unit:'ea',rate:4.5,basis:'Existing Deck Craft Pro unit rate; hanger selection to match member'},
+    {name:'Skewed joist and hip hangers',qty:h.skewedHangers?.length??0,unit:'ea',rate:null,basis:'Supplier quote required; jack-joist hangers skewed to the corner angle, plus a hip hanger at each house corner'},
     {name:'Ledger bolts',qty:h.ledgerBolts.length,unit:'ea',rate:2.8,basis:'Existing Deck Craft Pro unit rate'},
     {name:'Post anchors',qty:h.postAnchors,unit:'ea',rate:22,basis:'Existing Deck Craft Pro anchor allowance'},
     {name:'Joist-to-beam ties',qty:h.beamTies.length,unit:'ea',rate:null,basis:'Supplier quote required; no confirmed existing unit rate'},
@@ -36,7 +37,7 @@ export function connectorSchedule(data:DeckData,model:DeckTakeoff,h=getHardwareL
     {name:'Railing brackets',qty:h.railBrackets,unit:'ea',rate:8.5,basis:'Existing railing bracket rate; included in railing system'},
     {name:'Railing cap/skirt sets',qty:h.railCaps,unit:'sets',rate:25,basis:'Existing cap/skirt rate; included in railing system'},
     {name:'Railing post anchors/bolts',qty:h.railBolts.length,unit:'ea',rate:null,basis:'Confirm inclusion in selected railing kit; separate rate unavailable'},
-    {name:'Connector fastener sets',qty:h.hangers.length+h.beamTies.length+h.blockingAngles.length+h.stringerConnectors.length,unit:'sets',rate:null,basis:'One manufacturer-approved fastening set per connector; exact nails/screws and rate require connector selection'},
+    {name:'Connector fastener sets',qty:h.hangers.length+(h.skewedHangers?.length??0)+h.beamTies.length+h.blockingAngles.length+h.stringerConnectors.length,unit:'sets',rate:null,basis:'One manufacturer-approved fastening set per connector; exact nails/screws and rate require connector selection'},
     ...(h.hidden?[{name:'Hidden clips',qty:h.screws.length,unit:'modeled fixings',rate:null,basis:'Priced by existing $0.85/sqft area allowance; no per-clip conversion'}]:[{name:'Deck screws',qty:Math.ceil(h.screws.length*1.1),unit:'ea',rate:.28,basis:'Existing screw rate; modeled positions plus 10% allowance'}]),
   ].filter(r=>r.qty>0);
 }
