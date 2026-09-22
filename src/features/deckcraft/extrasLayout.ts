@@ -1,11 +1,24 @@
 import type {DeckData} from './types';
 import type {Box,DeckTakeoff} from './deckTakeoff';
-import {activeLightingItems,isSystemProduct} from './lightingSystem';
+import {activeLightingItems,isSystemProduct,MAX_FIXTURE_QTY} from './lightingSystem';
 import {getHouseConfig} from './houseSettings';
 import {finishedFasciaOffset} from './lib/finishedFootprint';
 import {getTerrainConfig} from './yardSettings';
+import {screenLengthIn,screenOn,screenProduct} from './privacyScreens';
 
 export type FixturePlacement={productId:string;x:number;y:number;z:number;angle:number;zone?:string};
+/** A stock manufacturer panel, drawn by finish; the cut pattern shown is illustrative. */
+export type PrivacyPanelBox=Box&{finish:'Black'|'White';design:string;screenId:string};
+/** Drag frame for one drawn screen: position along `edge` maps back to the screen's offsetPct. */
+export type PrivacyScreenHandle={id:string;x:number;y:number;z:number;w:number;h:number;angle:number;edge:{x:number;z:number;dx:number;dz:number;available:number;len:number;reversed:boolean}};
+/** Inverse of the layout placement: a point along the edge (model inches) → offsetPct.
+ * null when the screen fills its edge and has no room to slide. */
+export function screenOffsetFromPoint(handle:PrivacyScreenHandle,px:number,pz:number):number|null{
+  const {x,z,dx,dz,available,len,reversed}=handle.edge,room=available-len;
+  if(room<=.5)return null;
+  const pct=Math.min(100,Math.max(0,((px-x)*dx+(pz-z)*dz-12-len/2)/room*100));
+  return Math.round(reversed?100-pct:pct);
+}
 /** Physical accessory layouts in model inches; also consumed by CAD/model export. */
 export function extrasLayout(data:DeckData,model:DeckTakeoff){
   const wood:Box[]=[],metal:Box[]=[],drainage:Box[]=[],fixtures:FixturePlacement[]=[],warnings:string[]=[];
@@ -27,11 +40,51 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
     for(let seat=0;seat<=Math.ceil(len/48);seat++){const t=-len/2+3+(len-6)*seat/Math.ceil(len/48);for(const side of [-1,1])metal.push({x:x+dx*t-dz*side*6,y:top+8,z:z+dz*t+dx*side*6,w:2,h:16,d:2,angle});}
   });
   if(benchRemaining>.1)warnings.push(`Bench layout fits ${((data.benchLf*12-benchRemaining)/12).toFixed(1)} of ${data.benchLf} requested linear feet; reduce seating or enlarge the deck.`);
-  const screenRemaining=allocate(Math.max(0,data.privacySqft)/6*12,(x,z,len,angle,dx,dz)=>{
-    for(let slat=0;slat<12;slat++)wood.push({x:x+dz*10,y:top+3+slat*6,z:z-dx*10,w:len,h:5.5,d:1,angle});
-    const bays=Math.ceil(len/72);for(let i=0;i<=bays;i++){const t=-len/2+len*i/bays;metal.push({x:x+dx*t+dz*10,y:top+36,z:z+dz*t-dx*10,w:3.5,h:72,d:3.5,angle});}
-  });
-  if(screenRemaining>.1)warnings.push(`Privacy layout fits ${(data.privacySqft-screenRemaining/2).toFixed(1)} of ${data.privacySqft} requested square feet at 6 ft high.`);
+  // Inner-face mounts on each post of a lit screen; the inward normal is (-dz, dx).
+  const privacyMounts:{x:number;z:number;y:number;angle:number}[]=[];
+  const panelBoxes:PrivacyPanelBox[]=[],screenHandles:PrivacyScreenHandle[]=[];
+  function screen(x:number,z:number,len:number,angle:number,dx:number,dz:number,heightIn:number,lit:boolean){
+    for(let slat=0;slat<Math.round(heightIn/6);slat++)wood.push({x:x+dz*10,y:top+3+slat*6,z:z-dx*10,w:len,h:5.5,d:1,angle});
+    const bays=Math.ceil(len/72);for(let i=0;i<=bays;i++){const t=-len/2+len*i/bays,px=x+dx*t+dz*10,pz=z+dz*t-dx*10;metal.push({x:px,y:top+heightIn/2,z:pz,w:3.5,h:heightIn,d:3.5,angle});
+      if(lit)privacyMounts.push({x:px-dz*2.6,z:pz+dx*2.6,y:top+heightIn-10,angle});}
+  }
+  if(data.privacyScreens){
+    const ys=fp.outline.map(p=>p.y),xs=fp.outline.map(p=>p.x),cx=(Math.min(...xs)+Math.max(...xs))/2,cz=(Math.min(...ys)+Math.max(...ys))/2;
+    const midX=(e:typeof edges[number])=>(e.p.x+e.q.x)/2,midZ=(e:typeof edges[number])=>(e.p.y+e.q.y)/2;
+    const onSide={Left:(e:typeof edges[number])=>Math.abs(e.dz)>.7&&midX(e)<cx,Right:(e:typeof edges[number])=>Math.abs(e.dz)>.7&&midX(e)>cx,Front:(e:typeof edges[number])=>Math.abs(e.dx)>.7&&midZ(e)>cz,Back:(e:typeof edges[number])=>Math.abs(e.dx)>.7&&midZ(e)<cz};
+    data.privacyScreens.forEach((s,i)=>{
+      if(!screenOn(s))return;
+      const product=screenProduct(s),label=`Privacy screen ${i+1} (${s.side} edge)`,skipped=product.pricedBySqft?'it is priced but not drawn':'it is not drawn';
+      const e=edges.filter(onSide[s.side]).sort((a,b)=>b.len-a.len)[0];
+      if(!e){warnings.push(`${label} has no exposed ${s.side.toLowerCase()} edge on this deck; ${skipped}. Choose another side.`);return;}
+      const available=e.len-24;let len=Math.min(screenLengthIn(s),available),panels=s.panels??1;
+      if(product.panel&&product.post){
+        // Stock panels cannot be trimmed: draw the whole panels that fit.
+        const fit=Math.floor((available-product.post.widthIn)/(product.panel.widthIn+product.post.widthIn));
+        if(fit<1){warnings.push(`${label} does not fit that edge; ${skipped}.`);return;}
+        if(fit<panels){warnings.push(`${label} fits ${fit} of ${panels} ${product.name} panels on that edge.`);panels=fit;}
+        len=panels*product.panel.widthIn+(panels+1)*product.post.widthIn;
+      }else{
+        if(len<=0){warnings.push(`${label} does not fit that edge; ${skipped}.`);return;}
+        if(s.lengthFt*12>available+.5)warnings.push(`${label} fits ${(len/12).toFixed(1)} of ${s.lengthFt} ft on that edge.`);
+      }
+      // 0% = house end on side edges, left end on front/back edges, whatever the outline winding.
+      const reversed=Math.abs(e.dz)>.7?e.dz<0:e.dx<0,pct=reversed?100-s.offsetPct:s.offsetPct;
+      const t=12+(available-len)*pct/100+len/2,x=e.p.x+e.dx*t-e.dz*14,z=e.p.y+e.dz*t+e.dx*14;
+      if(model.treads.some(tr=>Math.abs(tr.y-top)<9&&Math.hypot(tr.x-x,tr.z-z)<len/2+24)){warnings.push(`${label} overlaps the stair opening; ${skipped}. Slide it along the edge or shorten it.`);return;}
+      const angle=-Math.atan2(e.dz,e.dx),heightIn=product.post?product.post.heightIn:s.heightFt*12;
+      if(product.panel&&product.post){
+        const {widthIn:pw,heightIn:ph,thicknessIn}=product.panel,{widthIn:postW,heightIn:postH}=product.post;
+        const at=(along:number)=>({x:x+e.dx*along+e.dz*10,z:z+e.dz*along-e.dx*10});
+        for(let k=0;k<=panels;k++){const along=-len/2+postW/2+k*(pw+postW),q=at(along);metal.push({x:q.x,y:top+postH/2,z:q.z,w:postW,h:postH,d:postW,angle});if(s.lights)privacyMounts.push({x:q.x-e.dz*(postW/2+.85),z:q.z+e.dx*(postW/2+.85),y:top+postH-10,angle});}
+        for(let k=0;k<panels;k++){const q=at(-len/2+postW+k*(pw+postW)+pw/2);panelBoxes.push({x:q.x,y:top+3+ph/2,z:q.z,w:pw,h:ph,d:thicknessIn,angle,finish:s.finish??'Black',design:s.design??product.designs[0],screenId:s.id});}
+      }else screen(x,z,len,angle,e.dx,e.dz,heightIn,s.lights);
+      screenHandles.push({id:s.id,x:x+e.dz*10,y:top+heightIn/2,z:z-e.dx*10,w:len,h:heightIn,angle,edge:{x:e.p.x,z:e.p.y,dx:e.dx,dz:e.dz,available,len,reversed}});
+    });
+  }else{
+    const screenRemaining=allocate(Math.max(0,data.privacySqft)/6*12,(x,z,len,angle,dx,dz)=>screen(x,z,len,angle,dx,dz,72,false));
+    if(screenRemaining>.1)warnings.push(`Privacy layout fits ${(data.privacySqft-screenRemaining/2).toFixed(1)} of ${data.privacySqft} requested square feet at 6 ft high.`);
+  }
   function inside(x:number,z:number){let odd=false;for(let i=0,j=fp.outline.length-1;i<fp.outline.length;j=i++){const a=fp.outline[i],b=fp.outline[j];if((a.y>z)!==(b.y>z)&&x<(b.x-a.x)*(z-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;}
   // Largest centred rectangle contained by the actual polygon, sampled at 6-inch increments.
   let pergolaArea=0;
@@ -65,6 +118,11 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
       if(rafters.length){const r=rafters[index%rafters.length];p.x=r.x;p.z=r.z;y=r.y-r.h/2;}
       else if(houseVisible){p.x=houseLeft+12+(house.widthFt*12-24)*(index+.5)/(counts.get(zone)??1);p.z=7;y=house.storeys*house.storeyHeightIn-1.5;}
       else{warnings.push(`${item.name} needs a ceiling/eave or pergola support; no fixture is placed until that support is included.`);continue;}
+    }else if(zone==='privacy'){
+      const mount=privacyMounts[index%Math.max(1,privacyMounts.length)];
+      if(!mount){warnings.push(`${item.name}: privacy screen lighting needs a screen with “Light this screen” turned on.`);continue;}
+      if(g!=='wall'&&g!=='undercap'){warnings.push(`${item.name} cannot mount on a privacy screen post; choose a wall or under-cap fixture.`);continue;}
+      p.x=mount.x;p.z=mount.z;p.angle=mount.angle;y=mount.y;
     }else if(zone==='posts'){
       const post=model.railing.posts[index%Math.max(1,model.railing.posts.length)];
       if(!post){warnings.push(`${item.name}: the posts zone requires railing posts.`);continue;}
@@ -102,5 +160,9 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
     }
     fixtures.push({productId:item.id,...p,y,zone});
   }
-  return {wood,metal,drainage,fixtures,warnings:[...new Set(warnings)],pergolaArea};
+  for(const item of selected){
+    const mounts=item.zone==='posts'?model.railing.posts.length:item.zone==='stairs'?model.treads.length:item.zone==='privacy'?privacyMounts.length:0;
+    if(item.qty>=MAX_FIXTURE_QTY&&mounts>item.qty)warnings.push(`${item.name}: ${item.qty} fixtures is the per-product limit in this studio, so ${mounts-item.qty} ${item.zone==='stairs'?'treads':'posts'} stay unlit. Ask us to light the rest.`);
+  }
+  return {wood,metal,drainage,fixtures,warnings:[...new Set(warnings)],pergolaArea,privacyMounts,panels:panelBoxes,screenHandles};
 }

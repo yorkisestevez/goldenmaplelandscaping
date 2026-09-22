@@ -7,6 +7,7 @@ import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
 import {newYardFeature,getTerrainConfig} from '../src/features/deckcraft/yardSettings';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
 import {parseDesign,serializeDesign,validateDesign,MAX_DESIGN_BYTES} from '../src/features/deckcraft/designPersistence';
+import {pricedPrivacyArea as privacyScreenArea} from '../src/features/deckcraft/privacyScreens';
 import {deckExportMeshes,exportDeckDXF,exportDeckOBJ} from '../src/features/deckcraft/designExports';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {getStairBoards} from '../src/features/deckcraft/stairBoards';
@@ -86,4 +87,40 @@ for(const [scenario,patch] of scenarios.entries())check(`actual CAD/model geomet
   const faceCount=pairs.filter((v,i)=>i%2===1&&pairs[i-1]==='0'&&v==='3DFACE').length;assert.equal(faceCount,meshes.reduce((sum,m)=>sum+m.faces.reduce((n,f)=>n+f.length-2,0),0));
   assert(!/NaN|Infinity/.test(dxf));
 });
+// Editable privacy screens and simple lighting survive save/load; the priced area always comes from the screens.
+{
+  const screens:NonNullable<DeckData['privacyScreens']>=[{id:'screen-1',side:'Left',lengthFt:8,heightFt:6,offsetPct:25,lights:true},{id:'screen-2',side:'Front',lengthFt:5.5,heightFt:4,offsetPct:100,lights:false}];
+  const withScreens:DeckData={...structuredClone(DEFAULT_DECK),privacyScreens:screens,privacySqft:1,autoLighting:{posts:true,stairs:false},lightingSystem:{wireDistance:20,selectedItems:[{productId:'blink',qty:3,zone:'privacy',auto:true}]}};
+  const restored=parseDesign(serializeDesign(withScreens));
+  assert.deepEqual(restored.privacyScreens,screens,'Privacy screens round-trip');
+  assert.equal(restored.privacySqft,privacyScreenArea(screens),'A file cannot price one area and draw another');
+  assert.equal(restored.privacySqft,70);
+  assert.deepEqual(restored.autoLighting,{posts:true,stairs:false});
+  assert.deepEqual(restored.lightingSystem.selectedItems,[{productId:'blink',qty:3,zone:'privacy',auto:true}]);
+  const bad=(patch:Record<string,unknown>)=>assert.throws(()=>validateDesign({...withScreens,...patch}));
+  bad({privacyScreens:[{...screens[0],side:'Roof'}]});
+  bad({privacyScreens:[{...screens[0],heightFt:7}]});
+  bad({privacyScreens:[screens[0],{...screens[1],id:'screen-1'}]});
+  bad({privacyScreens:Array.from({length:10},(_,i)=>({...screens[0],id:`s${i}`,lengthFt:9}))});
+  bad({privacyScreens:[{...screens[0],lengthFt:60},{...screens[1],id:'b',lengthFt:60,heightFt:6}]});
+  bad({autoLighting:{posts:'yes'}});
+  bad({lightingSystem:{wireDistance:0,selectedItems:[{productId:'blink',qty:1,auto:'yes'}]}});
+  checks+=10;
+  // Round 2: product, design, finish, panels, on/off and under-step style.
+  const mixed:NonNullable<DeckData['privacyScreens']>=[
+    {id:'a',side:'Left',lengthFt:8,heightFt:6,offsetPct:10,lights:false},
+    {id:'b',side:'Right',lengthFt:6,heightFt:5,offsetPct:40,lights:true,enabled:false},
+    {id:'c',side:'Front',lengthFt:8,heightFt:6,offsetPct:70,lights:true,product:'hideaway',design:'River Rock',finish:'White',panels:4},
+    {id:'d',side:'Left',lengthFt:8,heightFt:6,offsetPct:90,lights:false,product:'oasis',design:'Bamboo',panels:2},
+  ];
+  const round2=parseDesign(serializeDesign({...withScreens,privacyScreens:mixed,autoLighting:{posts:true,stairs:true,stairStyle:'evo_flex'}}));
+  assert.deepEqual(round2.privacyScreens,mixed,'Every screen field round-trips');
+  assert.equal(round2.privacySqft,48,'Only screens that are on and slatted are priced by area');
+  assert.equal(round2.autoLighting?.stairStyle,'evo_flex');
+  const bad2=(screen:Record<string,unknown>)=>assert.throws(()=>validateDesign({...withScreens,privacyScreens:[{...mixed[2],...screen}]}));
+  bad2({product:'fence-co'});bad2({design:'Bamboo'});bad2({panels:0});bad2({panels:13});bad2({panels:2.5});bad2({finish:'Red'});bad2({enabled:'yes'});
+  assert.throws(()=>validateDesign({...withScreens,privacyScreens:[{...mixed[3],finish:'Black'}]}),'Oasis finish is unverified, so none is accepted');
+  assert.throws(()=>validateDesign({...withScreens,autoLighting:{stairStyle:'wedge'}}));
+  checks+=12;
+}
 console.log(`Deck design IO: ${checks} save, validation, price-isolation and CAD/model geometry checks passed.`);

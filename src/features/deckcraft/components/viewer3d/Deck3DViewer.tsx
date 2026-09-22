@@ -26,6 +26,7 @@ import {buildYardModel,type YardModel} from '../../yardModel';
 import Yard3D from './Yard3D';
 import {stairVeneerLayout} from '../../stairVeneerLayout';
 import {hasSimplifiedPaving} from './yardPreview';
+import PrivacyScreens3D from './PrivacyScreens3D';
 
 function Members({items,material,name}:{items:Member[];material:THREE.Material;name:string}){
   const ref=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate);
@@ -68,7 +69,7 @@ function CameraView({view,w,d,cx,cz,height,depth}:{view:string;w:number;d:number
  const {camera,controls,invalidate}=useThree();
  useEffect(()=>{const r=Math.max(w,d),target=new THREE.Vector3(cx,view==='foundation'?-depth/24:height*.5,cz);camera.position.set(cx+r*.9,height+r*.7,cz+r*1.3);if(view==='front')camera.position.set(cx,height*.6,cz+r*1.8);if(view==='top')camera.position.set(cx,r*2+.1,cz+.01);if(view==='hardware')camera.position.set(cx+r*.6,height*.25,cz+r*1.2);if(view==='foundation')camera.position.set(cx+r*.9,height+r*.65,cz+r*1.4);camera.lookAt(target);if(controls&&'target' in controls){(controls as any).target.copy(target);(controls as any).update();}invalidate();},[view,w,d,cx,cz,height,depth,camera,controls,invalidate]);return null;
 }
-function Scene({data,model,structure,cutaway,inspection,yard,...interaction}:{data:DeckData;model:DeckTakeoff;structure:boolean;cutaway:boolean;inspection:boolean;yard:YardModel}&HouseInteraction){
+function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen,...interaction}:{data:DeckData;model:DeckTakeoff;structure:boolean;cutaway:boolean;inspection:boolean;yard:YardModel;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void}&HouseInteraction){
   const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)||DECKING_CATALOGUE[0];
   const swatch=material.colors.find(c=>c.name===data.deckingColor)||material.colors[0];
   const board=useSwatchTexture(swatchUrl(swatch.swatch),getMaterialFallbackColor(material.id));
@@ -108,12 +109,13 @@ function Scene({data,model,structure,cutaway,inspection,yard,...interaction}:{da
     <Boxes items={extras.wood} material={board} name="benches-privacy-pergola"/>
     <Boxes items={extras.metal} material={materials.metal} name="accessory-frames"/>
     <Boxes items={extras.drainage} material={materials.metal} name="under-deck-drainage"/>
+    <PrivacyScreens3D panels={extras.panels} handles={extras.screenHandles} onMove={onMovePrivacyScreen}/>
     <LightingFixtures items={extras.fixtures} evening={data.sceneLighting==='Evening'} enabled={data.lightingPreviewOn!==false}/>
     <Yard3D model={yard} inspection={inspection||cutaway}/>
     <Environment3D data={data} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} yard={yard} {...interaction}/>
   </group>;
 }
-export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",...interaction}:{data:DeckData;model:DeckTakeoff;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string}&HouseInteraction){
+export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,...interaction}:{data:DeckData;model:DeckTakeoff;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void}&HouseInteraction){
   const data=useMemo<DeckData>(()=>{if(!deckOnly)return rawData;const {yardFeatures:_yard,terrainConfig:_terrain,...deck}=rawData;return deck;},[rawData,deckOnly]);
   const yard=useMemo(()=>!deckOnly&&calculatedYard?calculatedYard:buildYardModel(data,model),[deckOnly,calculatedYard,model,data.yardFeatures,data.terrainConfig,data.width,data.length,data.houseConfig?.widthFt,data.houseConfig?.depthFt,data.houseVisible,data.deckType]);
   const bounds=sceneBounds(model),house=houseLayout(data,model.levels[0].footprint.bounds.w);
@@ -123,11 +125,11 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
   const lights=activeLightingItems(data).reduce((n,item)=>n+(isIlluminatingFixture(item.productId)?item.qty:0),0);
   const simplifiedPaving=!structure&&!cutaway&&view!=='hardware'&&hasSimplifiedPaving(yard);
   return <div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
-    <Canvas shadows frameloop="demand" dpr={[1,1.5]} camera={{fov:38,position:[cx+r*1.1,height+r*.85,cz+r*1.65],near:.1,far:1000}} gl={{antialias:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:1}}>
+    <Canvas shadows frameloop="demand" dpr={[1,1.5]} camera={{fov:38,position:[cx+r*1.1,height+r*.85,cz+r*1.65],near:.1,far:1000}} gl={{antialias:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:1}} onCreated={({gl})=>gl.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();onContextLost?.();},false)}>
       <color attach="background" args={[evening?'#28374a':'#e9edf0']}/>
       <Environment key={evening?'evening':'day'} resolution={128} frames={1} environmentIntensity={evening?.16:.4}><Lightformer intensity={3} position={[0,12,0]} rotation={[Math.PI/2,0,0]} scale={[20,20,1]}/><Lightformer intensity={2} position={[-15,6,8]} rotation={[0,Math.PI/2,0]} scale={[12,15,1]}/><Lightformer intensity={1} position={[12,5,-8]} rotation={[0,-Math.PI/2,0]} scale={[10,10,1]}/></Environment>
       <CameraView view={view} w={w} d={d} cx={cx} cz={cz} height={height} depth={data.foundationDepthIn??48}/>
-      <Scene data={data} model={model} structure={structure} cutaway={cutaway} inspection={structure||view==='hardware'} yard={yard} {...interaction}/>
+      <Scene data={data} model={model} structure={structure} cutaway={cutaway} inspection={structure||view==='hardware'} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} {...interaction}/>
       <OrbitControls makeDefault target={[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={r*.25} maxDistance={r*4} enableDamping={false}/>
     </Canvas>{simplifiedPaving&&<p className="absolute top-3 left-3 right-3 w-fit rounded-md bg-white/95 px-3 py-2 text-xs text-[#38413b] shadow-sm pointer-events-none">Simplified paving preview · {yard.quantities.paverPieces.toLocaleString()} pavers retained in quantities, construction view and exports.</p>}<p className={`absolute bottom-3 left-4 right-4 text-[10px] pointer-events-none ${evening?'text-white':'text-[#474c43]'}`}>Drag to orbit · pinch or scroll to zoom{evening&&data.lightingPreviewOn!==false&&lights>MAX_PREVIEW_LIGHTS?` · ${lights} fixtures shown; light spread preview limited to ${MAX_PREVIEW_LIGHTS} fixtures`:''}</p>
   </div>;

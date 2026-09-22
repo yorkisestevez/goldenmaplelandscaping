@@ -5,6 +5,7 @@ import {DECK_SETTINGS} from './defaults';
 import {DECKING_CATALOGUE,RAILING_CATALOGUE} from './manufacturerCatalog';
 import {catalogueAccessoryLayout} from './catalogueAccessories';
 import {lightingSystemCheck} from './lightingSystem';
+import {quotedPrivacyScreens} from './privacyScreens';
 import {pictureFrameCompatibility} from './lib/finishedFootprint';
 import {buildYardModel,type YardModel} from './yardModel';
 import {buildYardTakeoff,type YardTakeoff} from './yardTakeoff';
@@ -401,6 +402,9 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const lightingCheck=lightingSystemCheck(data),selectedLightingItems=lightingCheck.items;
   flags.push(...lightingCheck.warnings,...pictureFrameCompatibility(data));
   quoteRequired.push(...selectedLightingItems.filter(p=>p.cost===null||p.laborCost===null).map(p=>`${p.name} supply and installation`));
+  // Manufacturer privacy screens have no price-book rate: listed for a supplier quote, never priced at zero.
+  const quotedScreens=quotedPrivacyScreens(data.privacyScreens??[]);
+  quoteRequired.push(...quotedScreens.map(name=>`${name} supply and installation`));
 
   const lightingWireLf=selectedLightingItems.length&&!selectedLightingItems.some(p=>p.geometry==='cable')?Math.max(0,lSys.wireDistance||0):0;
   const totalLightingMaterial = selectedLightingItems.reduce((sum, item) => sum + (item.cost || 0) * item.qty, 0)+lightingWireLf*LIGHTING_COSTS.wirePerFt;
@@ -540,6 +544,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       items: [
         { name: 'Built-in Bench', spec: 'Matching Decking', qty: benchLf, unit: 'lf', cost: addOnCosts.bench },
         { name: 'Privacy Screen', spec: 'Louvered/Slatted', qty: privacySqft, unit: 'sqft', cost: addOnCosts.privacy },
+        ...quotedScreens.map(name => ({ name: 'Manufacturer privacy screen', spec: name, qty: 1, unit: 'screen', cost: null })),
         { name: 'Drainage System', spec: 'Under-deck', qty: hasDrainage ? area : 0, unit: 'sqft', cost: addOnCosts.drainage },
         { name: 'Demo & Removal', spec: 'Existing Deck', qty: hasDemo ? area : 0, unit: 'sqft', cost: addOnCosts.demo },
         { name: 'Pergola', spec: 'Wood/Aluminum', qty: pergolaSqft, unit: 'sqft', cost: addOnCosts.pergola },

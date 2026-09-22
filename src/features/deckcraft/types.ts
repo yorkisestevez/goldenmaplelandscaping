@@ -8,7 +8,16 @@ export type DeckShape = 'Rectangle' | 'L-Shape' | 'Multi-corner' | 'Curved';
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
 export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
-export type LightingZone = 'deck'|'posts'|'stairs'|'landscape'|'house';
+export type LightingZone = 'deck'|'posts'|'stairs'|'landscape'|'house'|'privacy';
+/** A single freestanding screen on one exposed deck edge; priced by its face area. */
+export type PrivacyProductId='slatted'|'hideaway'|'oasis';
+export interface PrivacyScreen {id:string;side:'Left'|'Right'|'Front'|'Back';lengthFt:number;heightFt:4|5|6;offsetPct:number;lights:boolean;
+  /** Undefined = on. An off screen stays in the design but is not drawn, lit or priced. */
+  enabled?:boolean;
+  /** Undefined = Golden Maple slatted screen. Manufacturer screens are supplier-quote items. */
+  product?:PrivacyProductId;design?:string;finish?:'Black'|'White';
+  /** Manufacturer screens only: stock panel count; length follows the panels. */
+  panels?:number}
 export interface HouseOpening {id:string;type:'Door'|'Window';facade:'Front'|'Back'|'Left'|'Right';offsetPct:number;bottomIn:number;widthIn:number;heightIn:number}
 export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:'Shingles'|'Metal';roofColor:string;cladding:'Brick'|'Siding';claddingColor:string;trimColor:string;openings:HouseOpening[]}
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature';
@@ -133,11 +142,16 @@ export interface DeckData {
   
   // Add-ons
   lightingSystem: {
-    selectedItems: { productId: string; qty: number; zone?:LightingZone }[];
+    /** `auto` marks quantities kept in step with the modeled posts, treads or screen posts. */
+    selectedItems: { productId: string; qty: number; zone?:LightingZone; auto?:true }[];
     wireDistance: number;
   };
+  /** Simple post/stair lighting intent; kept separate so it survives a zero count. */
+  autoLighting?: {posts?:boolean;stairs?:boolean;stairStyle?:'evo_hyde'|'evo_flex'};
   benchLf: number;
+  /** Priced privacy area. Derived from privacyScreens whenever screens are present. */
   privacySqft: number;
+  privacyScreens?: PrivacyScreen[];
   hasDrainage: boolean;
   hasDemo: boolean;
   pergolaSqft: number;

@@ -1,5 +1,8 @@
 import { DEFAULT_DECK } from './defaults';
-import { type DeckData, type HouseConfig, type HouseOpening, type YardFeature } from './types';
+import { type DeckData, type HouseConfig, type HouseOpening, type LightingZone, type PrivacyScreen, type YardFeature } from './types';
+import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,MAX_SCREEN_PANELS,PRIVACY_HEIGHTS,PRIVACY_PRODUCTS,PRIVACY_SIDES,pricedPrivacyArea} from './privacyScreens';
+
+const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy'] as const satisfies readonly LightingZone[];
 import {PATIO_PRODUCTS,WALL_PRODUCTS,WATER_PRODUCTS} from './yardSettings';
 import {clampHouseOpening} from './houseSettings';
 import { LIGHTING_CATALOGUE } from './lightingCatalogue';
@@ -76,14 +79,49 @@ export function validateDesign(input:unknown):DeckData {
     clean.lightingSystem={wireDistance:numeric(lighting.wireDistance,0,500,'Wire distance'),selectedItems:lighting.selectedItems.map(item=>{
       if(!record(item)||typeof item.productId!=='string'||!LIGHTING_CATALOGUE.some(p=>p.id===item.productId&&p.supported)||seen.has(item.productId))throw new Error('Unknown, unsupported or duplicate lighting product.');
       seen.add(item.productId);const qty=numeric(item.qty,0,30,'Lighting quantity');if(!Number.isInteger(qty))throw new Error('Lighting quantities must be whole numbers.');
-      if(item.zone!==undefined&&!['deck','posts','stairs','landscape','house'].includes(item.zone as string))throw new Error('Unsupported lighting installation zone.');
-      return {productId:item.productId,qty,...(item.zone?{zone:item.zone as 'deck'|'posts'|'stairs'|'landscape'|'house'}:{})};
+      if(item.zone!==undefined&&!(LIGHTING_ZONES as readonly unknown[]).includes(item.zone))throw new Error('Unsupported lighting installation zone.');
+      if(item.auto!==undefined&&item.auto!==true)throw new Error('Invalid managed lighting flag.');
+      return {productId:item.productId,qty,...(item.zone?{zone:item.zone as LightingZone}:{}),...(item.auto?{auto:true as const}:{})};
     }).filter(item=>item.qty>0)};
+  }
+  if(input.autoLighting!==undefined){
+    const auto=input.autoLighting;if(!record(auto))throw new Error('Invalid simple lighting selection.');
+    clean.autoLighting={};
+    for(const key of ['posts','stairs'] as const)if(Object.hasOwn(auto,key)){
+      if(typeof auto[key]!=='boolean')throw new Error('Simple lighting options must be on or off.');
+      clean.autoLighting[key]=auto[key];
+    }
+    if(Object.hasOwn(auto,'stairStyle')){
+      if(auto.stairStyle!=='evo_hyde'&&auto.stairStyle!=='evo_flex')throw new Error('Unsupported under-step light style.');
+      clean.autoLighting.stairStyle=auto.stairStyle;
+    }
+  }
+  if(input.privacyScreens!==undefined){
+    if(!Array.isArray(input.privacyScreens)||input.privacyScreens.length>MAX_PRIVACY_SCREENS)throw new Error(`A design supports up to ${MAX_PRIVACY_SCREENS} privacy screens.`);
+    const ids=new Set<string>();
+    clean.privacyScreens=input.privacyScreens.map(s=>{
+      if(!record(s)||typeof s.id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(s.id)||ids.has(s.id)||!(PRIVACY_SIDES as readonly unknown[]).includes(s.side)||!(PRIVACY_HEIGHTS as readonly unknown[]).includes(s.heightFt)||typeof s.lights!=='boolean')throw new Error('Invalid or duplicate privacy screen.');
+      ids.add(s.id);
+      const screen:PrivacyScreen={id:s.id,side:s.side as PrivacyScreen['side'],lengthFt:numeric(s.lengthFt,0,60,'Privacy screen length'),heightFt:s.heightFt as PrivacyScreen['heightFt'],offsetPct:numeric(s.offsetPct,0,100,'Privacy screen position'),lights:s.lights};
+      if(s.enabled!==undefined){if(typeof s.enabled!=='boolean')throw new Error('A privacy screen must be on or off.');screen.enabled=s.enabled;}
+      if(s.product!==undefined&&s.product!=='slatted'){
+        const product=PRIVACY_PRODUCTS.find(p=>p.id===s.product);
+        if(!product)throw new Error('This privacy screen product is unavailable.');
+        if(typeof s.design!=='string'||!product.designs.includes(s.design))throw new Error(`Choose a ${product.name} design.`);
+        if(product.finishes.length?!product.finishes.includes(s.finish as never):s.finish!==undefined)throw new Error(`Unsupported ${product.name} finish.`);
+        const panels=numeric(s.panels,1,MAX_SCREEN_PANELS,'Privacy screen panels');if(!Number.isInteger(panels))throw new Error('Privacy screen panels must be whole panels.');
+        Object.assign(screen,{product:product.id,design:s.design,panels,...(s.finish!==undefined?{finish:s.finish}:{})});
+      }
+      return screen;
+    });
+    // Screens are the source of truth for the priced area; a file cannot price one area and draw another.
+    clean.privacySqft=pricedPrivacyArea(clean.privacyScreens);
+    if(clean.privacySqft>MAX_PRIVACY_SQFT)throw new Error(`Privacy screens can total at most ${MAX_PRIVACY_SQFT} square feet.`);
   }
   if(input.lightingZoneEnabled!==undefined){
     if(!record(input.lightingZoneEnabled))throw new Error('Invalid lighting installation zones.');
     clean.lightingZoneEnabled={};
-    for(const zone of ['deck','posts','stairs','landscape','house'] as const)if(Object.hasOwn(input.lightingZoneEnabled,zone)){
+    for(const zone of LIGHTING_ZONES)if(Object.hasOwn(input.lightingZoneEnabled,zone)){
       if(typeof input.lightingZoneEnabled[zone]!=='boolean')throw new Error('Installation zone must be enabled or disabled.');
       clean.lightingZoneEnabled[zone]=input.lightingZoneEnabled[zone];
     }
@@ -121,7 +159,7 @@ export function validateDesign(input:unknown):DeckData {
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','yardFeatures','terrainConfig']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','yardFeatures','terrainConfig']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);
