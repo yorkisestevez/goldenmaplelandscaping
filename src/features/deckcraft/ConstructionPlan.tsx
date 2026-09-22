@@ -20,7 +20,7 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
  // Edge labels sit just outside each main-deck edge; curve facets under 2 ft are left unlabelled.
  const edgeLabels=data?outline.map((a,i)=>{const q=outline[(i+1)%outline.length],len=Math.hypot(q.x-a.x,q.y-a.y);if(len<24)return null;const nx=(q.y-a.y)/len,ny=-(q.x-a.x)/len,ledger=contact?.isContactEdge(i);return {x:(a.x+q.x)/2+nx*(ledger?5:11),y:(a.y+q.y)/2+ny*(ledger?5:11)+2.5,text:ledger?`Ledger ${ft(len)}`:ft(len),ledger};}).filter(Boolean) as {x:number;y:number;text:string;ledger:boolean}[]:[];
  const scale=48;
- return <svg viewBox={`${left-40} ${top-44} ${right-left+80} ${b.maxZ-top+112}`} role="img" aria-label="Deck construction plan from the shared model" style={{width:'100%',height:'100%',background:'#faf8f1'}}>
+ return <svg viewBox={`${left-40} ${top-44} ${right-left+80} ${b.maxZ-top+128}`} role="img" aria-label="Deck construction plan from the shared model" style={{width:'100%',height:'100%',background:'#faf8f1'}}>
    <title>{`Deck plan · ${model.quantities.joists} joists · ${model.quantities.footings} footings`}</title>
    <defs><pattern id="dd-house-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#b9b1a2" strokeWidth="1"/></pattern></defs>
    {house&&<g aria-label="House">
@@ -50,11 +50,11 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
    <path d={`M${left-22} ${b.minZ}V${b.maxZ}M${left-27} ${b.minZ}h10M${left-27} ${b.maxZ}h10`} stroke="#625d54" fill="none"/>
    <text x={left-29} y={(b.minZ+b.maxZ)/2} textAnchor="middle" fontSize="8" fill="#514b41" transform={`rotate(-90 ${left-29} ${(b.minZ+b.maxZ)/2})`}>{ft(d)} overall depth</text>
    <g aria-label="Scale bar, 4 feet">
-     <path d={`M${b.minX} ${b.maxZ+16}h${scale}M${b.minX} ${b.maxZ+12}v8M${b.minX+scale/2} ${b.maxZ+14}v4M${b.minX+scale} ${b.maxZ+12}v8`} stroke="#514b41" fill="none"/>
-     <text x={b.minX+scale+6} y={b.maxZ+19} fontSize="6.5" fill="#514b41">4 ft</text>
+     <path d={`M${b.minX} ${b.maxZ+28}h${scale}M${b.minX} ${b.maxZ+24}v8M${b.minX+scale/2} ${b.maxZ+26}v4M${b.minX+scale} ${b.maxZ+24}v8`} stroke="#514b41" fill="none"/>
+     <text x={b.minX+scale+6} y={b.maxZ+31} fontSize="6.5" fill="#514b41">4 ft</text>
    </g>
-   <text x={b.minX} y={b.maxZ+34} fontSize="7" fill="#514b41">● Footings · ■ Railing posts · Dark line: railing</text>
-   <text x={b.minX} y={b.maxZ+44} fontSize="7" fill="#514b41">{`Dashed: joists · Solid: beams${contact?.contacts.length?' · Bronze: ledger on the house':''}`}</text>
-   <text x={b.minX} y={b.maxZ+56} fontSize="6" fill="#716a5e">Design illustration · final connections and sizing require site review</text>
+   <text x={b.minX} y={b.maxZ+46} fontSize="7" fill="#514b41">● Footings · ■ Railing posts · Dark line: railing</text>
+   <text x={b.minX} y={b.maxZ+56} fontSize="7" fill="#514b41">{`Dashed: joists · Solid: beams${contact?.contacts.length?' · Bronze: ledger on the house':''}`}</text>
+   <text x={b.minX} y={b.maxZ+68} fontSize="6" fill="#716a5e">Design illustration · final connections and sizing require site review</text>
  </svg>;
 }

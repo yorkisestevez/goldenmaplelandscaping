@@ -8,19 +8,45 @@ import {finishedFasciaOffset} from './lib/finishedFootprint';
 import {getStairSupport,getStringerOffsets,makeRiserBoards,type RiserBoard} from './stairConstruction';
 import {getHouseContact,exposedSides,deckAttachesToHouse,exposedHouseLine} from './houseContact';
 import {getHouseConfig} from './houseSettings';
-import {getFootprint,getBoardRows,getPictureFrameRuns,getStairPlacement,getRailingSegments,getHerringboneRows,type StairPlacement,type PlanPoint,type FootprintPlan,type BoardRun} from './lib/deckGeometry';
+import {outlineSpans,cleanPolygon,zoneReference,frameZoneBearings,frameZoneJoists,type DeckZone,type FramedZone,type ZoneFramingConfig} from './zoneFraming';
+import {getFootprint,getBoardRows,getPictureFrameRuns,getStairPlacement,getRailingSegments,getHerringboneRows,clipToConvex,type StairPlacement,type PlanPoint,type FootprintPlan,type BoardRun} from './lib/deckGeometry';
 export type V3={x:number;y:number;z:number};
 export type Member={a:V3;b:V3;width:number;depth:number;role?:string;spliceStart?:boolean;spliceEnd?:boolean;stair?:{risers:number;rise:number;run:number;top:number;bottom:number}};
 export type Box={x:number;y:number;z:number;w:number;h:number;d:number;angle?:number;polygon?:PlanPoint[];kind?:'tread'|'winder'|'riser'};
 export type RailRun={a:V3;b:V3};
-export type DeckLevel={kind?:'deck'|'landing'|'winder';index?:number;rim?:Member[];footprint:FootprintPlan;deckingFootprint?:FootprintPlan;top:number;offset:V3;boards:BoardRun[];supports:V3[];joists:Member[];beams:Member[];blocking:Member[];breakers:number[];reference:any};
+export type DeckLevel={kind?:'deck'|'landing'|'winder';index?:number;rim?:Member[];footprint:FootprintPlan;deckingFootprint?:FootprintPlan;top:number;offset:V3;boards:BoardRun[];supports:V3[];joists:Member[];beams:Member[];blocking:Member[];breakers:number[];reference:any;zones?:FramedZone[]};
 const distance=(a:V3,b:V3)=>Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z);
 const mix=(a:V3,b:V3,t:number):V3=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t});
 export function polygonArea(fp:FootprintPlan){return Math.abs(fp.outline.reduce((a,p,i)=>{const q=fp.outline[(i+1)%fp.outline.length];return a+p.x*q.y-q.x*p.y;},0))/288;}
-function spans(fp:FootprintPlan,x:number,axis:'x'|'z'){
-  const cross:number[]=[];
-  for(let i=0;i<fp.outline.length;i++){const a=fp.outline[i],b=fp.outline[(i+1)%fp.outline.length];const aa=axis==='x'?a.x:a.y,bb=axis==='x'?b.x:b.y,av=axis==='x'?a.y:a.x,bv=axis==='x'?b.y:b.x;if((aa<=x&&bb>x)||(bb<=x&&aa>x))cross.push(av+(x-aa)*(bv-av)/(bb-aa));}
-  cross.sort((a,b)=>a-b);const pairs:[number,number][]=[];for(let i=0;i+1<cross.length;i+=2)pairs.push([cross[i],cross[i+1]]);return pairs;
+const spans=(fp:FootprintPlan,x:number,axis:'x'|'z')=>outlineSpans(fp.outline,x,axis);
+/**
+ * How a level is split into framing zones, so every joist bears on a beam in its own zone:
+ * - notched (L-shape / Multi-corner) decks split wherever the front depth changes, giving each
+ *   wing its own beam row and posts (a doubled joist sits at each seam);
+ * - a curved front on a drop-beam deck splits into strips whose front rises no more than the
+ *   joist cantilever allowance, so each strip's beam follows the curve. Flush-beam decks allow
+ *   almost no cantilever; their curve needs a curved beam and stays flagged by the bearing check.
+ * Plain rectangles, second levels and landings stay a single zone (unchanged framing).
+ */
+function levelZones(footprint:FootprintPlan,attached:boolean,cfg:ZoneFramingConfig,isMain:boolean):DeckZone[]{
+  const single:DeckZone[]=[{id:'main',outline:footprint.outline,origin:{x:0,y:0},size:footprint.bounds,attached}];
+  if(!isMain)return single;
+  const W=footprint.bounds.w,outline=footprint.outline;
+  let cuts:number[]=[];
+  if(footprint.isCurved){
+    const allow=zoneReference(single[0],cfg).cant*12-2;
+    if(allow<10)return single;
+    const front=(x:number)=>Math.max(...outlineSpans(outline,Math.min(W-1e-6,Math.max(1e-6,x)),'x').map(([,b])=>b));
+    let start=0,lo=Infinity,hi=-Infinity;
+    for(let x=0;x<=W;x++){const y=front(x);lo=Math.min(lo,y);hi=Math.max(hi,y);if(hi-lo>allow&&x-start>=24&&W-x>=24){cuts.push(x);start=x;lo=hi=y;}}
+  }else cuts=[...new Set(outline.filter(p=>p.y>1e-6&&p.x>.5&&p.x<W-.5).map(p=>p.x))].sort((a,b)=>a-b);
+  const xs=[0,...cuts,W],zones:DeckZone[]=[];
+  for(let i=0;i+1<xs.length;i++){
+    const x0=xs[i],x1=xs[i+1];if(x1-x0<1)continue;
+    const part=cleanPolygon(clipToConvex(outline,[{x:x0,y:-1e5},{x:x1,y:-1e5},{x:x1,y:1e5},{x:x0,y:1e5}]));
+    zones.push({id:`zone-${i+1}`,outline:part,origin:{x:x0,y:0},size:{w:x1-x0,h:Math.max(...part.map(p=>p.y))},attached});
+  }
+  return zones.length>1?zones:single;
 }
 export function buildDeckTakeoff(data:DeckData){
   const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)||DECKING_CATALOGUE[0];
@@ -31,10 +57,10 @@ export function buildDeckTakeoff(data:DeckData){
   const levels:DeckLevel[]=[];const railRuns:RailRun[]=[];const treads:Box[]=[];const riserBoards:RiserBoard[]=[];const stringers:Member[]=[];const stairOpenings:StairPlacement[]=[];
   const mainFp=getFootprint(data,1),mainContact=getHouseContact(data,mainFp);
   function makeLevel(footprint:FootprintPlan,top:number,offset:V3,attached:boolean,kind:DeckLevel['kind']='deck',index=0){
-    const reference=computeStruct({width:footprint.bounds.w/12,depth:footprint.bounds.h/12,heightIn:top,house:attached?'wood':'brick',ft:'PT',joistSp:String(spacing),joistSz:data.framingSize,beamMount:top<18?'flush':'drop',bSzSel:'auto',bPlySel:'auto',pf:!!data.pictureFrameRows||data.pattern==='Picture Frame'});
+    const cfg={top,spacing,framingSize:data.framingSize,joistDepth,pictureFrame:!!data.pictureFrameRows||data.pattern==='Picture Frame'};
+    const zones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0).map(zone=>({zone,reference:zoneReference(zone,cfg)})),reference=zones[0].reference;
     const supports:V3[]=[],joists:Member[]=[],beams:Member[]=[],blocking:Member[]=[];
-    for(const p of reference.posts){const x=p.x*12,z=p.z*12;if(spans(footprint,x,'x').some(([a,b])=>z>=a&&z<=b))supports.push({x:x+offset.x,y:Math.max(0,reference.bBotY*12),z:z+offset.z});}
-    for(const row of reference.beamRows)for(const [a,b]of spans(footprint,row.z*12,'z'))for(let ply=0;ply<reference.bPly;ply++)beams.push({a:{x:a+offset.x,y:(reference.bBotY+reference.bh/2)*12,z:row.z*12+offset.z+(ply-(reference.bPly-1)/2)*1.5},b:{x:b+offset.x,y:(reference.bBotY+reference.bh/2)*12,z:row.z*12+offset.z+(ply-(reference.bPly-1)/2)*1.5},width:1.5,depth:reference.bh*12});
+    for(const zone of zones)frameZoneBearings(zone,offset,{supports,beams});
     // Back-line stretches beyond the house have no ledger: frame them like a freestanding deck's
     // house side, using the reference engine's own house beam and posts sized to that stretch.
     if(attached&&index===0)for(const [x0,x1] of exposedHouseLine(data,footprint,mainContact)){
@@ -51,15 +77,13 @@ export function buildDeckTakeoff(data:DeckData){
     const breakers=data.pattern==='Straight'||data.pattern==='Picture Frame'?Array.from({length:breakerCount},(_,i)=>fieldLeft+(i+1)*segment+i*breakerZone+gap+data.boardWidth/2):[];
 
     const buildUps=[...breakers.flatMap(x=>[-1.5,-.5,.5,1.5].map(k=>x+k*(1.5+.375))),...(borders?[1.5+2.375,1.5+2*2.375,footprint.bounds.w-1.5-2.375,footprint.bounds.w-1.5-2*2.375]:[])];
-    const regular=reference.jXs.map((x:number)=>Math.max(.75,Math.min(footprint.bounds.w-.75,x*12))).filter((x:number)=>!buildUps.some(u=>Math.abs(u-x)<1.5));
-    for(const x of [...regular,...buildUps].sort((a,b)=>a-b))for(const [a,b]of spans(footprint,x,'x'))joists.push({a:{x:x+offset.x,y:top-1-joistDepth/2,z:a+offset.z},b:{x:x+offset.x,y:top-1-joistDepth/2,z:b+offset.z},width:1.5,depth:joistDepth});
-    for(let z=96;z<footprint.bounds.h-3;z+=96)for(let i=0;i<joists.length-1;i++){const a=joists[i],b=joists[i+1];if(z+offset.z<=Math.min(a.a.z,a.b.z)||z+offset.z>=Math.max(a.a.z,a.b.z)||z+offset.z<=Math.min(b.a.z,b.b.z)||z+offset.z>=Math.max(b.a.z,b.b.z)||b.a.x-a.a.x<2)continue;blocking.push({a:{x:a.a.x+.75,y:a.a.y,z:z+offset.z},b:{x:b.a.x-.75,y:b.a.y,z:z+offset.z},width:1.5,depth:joistDepth});}
+    for(const zone of zones)frameZoneJoists(zone,offset,cfg,buildUps,{joists,blocking});
     const field=data.pattern==='Herringbone'?getHerringboneRows(deckingFootprint,data.boardWidth,gap,inset):getBoardRows(deckingFootprint,{boardWidth:data.boardWidth,gap,angleDeg:data.pattern==='Diagonal'?45:0,inset,maxBoardLen:breakers.length?100000:stockLength});
     const boards:BoardRun[]=[...(borders?getPictureFrameRuns(deckingFootprint,borders as 1|2,data.boardWidth,gap):[])];
     for(const b of field){let intervals:[number,number][]=[[b.cx-b.length/2,b.cx+b.length/2]];if(!b.angleDeg)for(const x of breakers){const lo=x-data.boardWidth/2-gap,hi=x+data.boardWidth/2+gap;intervals=intervals.flatMap(([a,z])=>z<=lo||a>=hi?[[a,z]]:[...(a<lo?[[a,lo]]:[]),...(z>hi?[[hi,z]]:[])] as [number,number][]);}if(b.angleDeg)boards.push(b);else for(const [a,z]of intervals)if(z-a>.001){if(b.polygon)for(const p of polygonCut([b.polygon],[[{x:a,y:-10000},{x:z,y:-10000},{x:z,y:10000},{x:a,y:10000}]]))boards.push(polygonBoard(p,0,b.role));else boards.push({...b,cx:(a+z)/2,length:z-a});}}
     for(const x of breakers)for(const [a,b]of spans(deckingFootprint,x,'x')){const from=a+inset,to=b-inset;for(let z=from;z<to;z+=stockLength+gap){const len=Math.min(stockLength,to-z);boards.push({cx:x,cy:z+len/2,length:len,angleDeg:90,role:'breaker'});}}
     const installed=boards.flatMap(b=>splitBoard(b,data.boardWidth,stockLength,gap));
-    const result:DeckLevel={kind,index,footprint,deckingFootprint,top,offset,supports,joists,beams,blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,kind==='deck'&&index===0&&data.hasInlay?data.inlayLf*12:0,stockLength,inset),breakers,reference};addConstructionDetails(result,data.boardWidth);return result;
+    const result:DeckLevel={kind,index,footprint,deckingFootprint,top,offset,supports,joists,beams,blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,kind==='deck'&&index===0&&data.hasInlay?data.inlayLf*12:0,stockLength,inset),breakers,reference,...(zones.length>1?{zones}:{})};addConstructionDetails(result,data.boardWidth);return result;
   }
   levels.push(makeLevel(mainFp,data.height,{x:0,y:0,z:0},deckAttachesToHouse(data),'deck',0));
   type Flight={id:string;kind:'grade'|'connection';risers:number;rise:number;run:number;width:number;start:V3;end:V3;type:string;stringerOffsets:number[]};

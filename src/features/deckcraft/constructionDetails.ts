@@ -16,11 +16,13 @@ export function addConstructionDetails(level:DeckLevel,boardWidth:number){
   const framingY=top-1-depth/2;
   // Every clipped beam interval needs bearing near BOTH ends. Reference supports
   // are retained when valid; notches create new beam ends and thus new supports.
+  // Beam-row centre lines of every framing zone (a single-zone level uses its own reference).
+  const rowZs=(level.zones??[{zone:{origin:{x:0,y:0}},reference:level.reference}]).flatMap(z=>(z.reference.beamRows as {z:number}[]).map(r=>r.z*12+z.zone.origin.y));
   for(const b of level.beams){
     const same=level.supports.filter(p=>Math.abs(p.z-(b.a.z+b.b.z)/2)<6);
     for(const x of [b.a.x+Math.min(12,len(b)/4),b.b.x-Math.min(12,len(b)/4)])if(!same.some(p=>Math.abs(p.x-x)<24)){
-      const row=level.reference.beamRows.find((r:{z:number})=>Math.abs(r.z*12+offset.z-b.a.z)<6);
-      const p={x,y:Math.max(0,b.a.y-b.depth/2),z:row?row.z*12+offset.z:(b.a.z+b.b.z)/2};level.supports.push(p);same.push(p);
+      const rowZ=rowZs.find(z=>Math.abs(z+offset.z-b.a.z)<6);
+      const p={x,y:Math.max(0,b.a.y-b.depth/2),z:rowZ!==undefined?rowZ+offset.z:(b.a.z+b.b.z)/2};level.supports.push(p);same.push(p);
     }
   }
   level.beams=level.beams.flatMap(b=>splitOnBearings(b,level.supports.filter(p=>Math.abs(p.z-b.a.z)<6).map(p=>p.x),'x'));
@@ -65,15 +67,19 @@ export function addConstructionDetails(level:DeckLevel,boardWidth:number){
 
 export function memberLength(m:Member){return len(m);}
 
-/** Joist ends that sit on neither a ledger contact nor within cantilever reach of a beam under
- * that joist. Joists run along z; beams run along x. */
+/** Joist ends that sit on neither a ledger contact nor a beam under that joist. A beam may sit
+ * inside the joist by up to the cantilever allowance (the end overhangs it), never beyond the
+ * end (the joist would stop short of it). Joists run along z; beams run along x. */
 export function unsupportedJoistEnds(level:DeckLevel,contact?:{onContact(a:{x:number;y:number},b:{x:number;y:number}):boolean}):V3[]{
   const reach=(level.reference?.cant??2)*12+1,loose:V3[]=[];
-  for(const j of level.joists)for(const end of [j.a,j.b]){
-    const plan={x:end.x-level.offset.x,y:end.z-level.offset.z};
-    if(contact?.onContact(plan,plan))continue;
-    const onBeam=level.beams.some(b=>end.x>=Math.min(b.a.x,b.b.x)-.1&&end.x<=Math.max(b.a.x,b.b.x)+.1&&Math.abs(b.a.z-end.z)<=reach);
-    if(!onBeam)loose.push(end);
+  for(const j of level.joists){
+    const [lo,hi]=j.a.z<=j.b.z?[j.a,j.b]:[j.b,j.a];
+    for(const [end,inward] of [[lo,1],[hi,-1]] as const){
+      const plan={x:end.x-level.offset.x,y:end.z-level.offset.z};
+      if(contact?.onContact(plan,plan))continue;
+      const bears=level.beams.some(b=>{if(end.x<Math.min(b.a.x,b.b.x)-.1||end.x>Math.max(b.a.x,b.b.x)+.1)return false;const inset=(b.a.z-end.z)*inward;return inset>=-1&&inset<=reach;});
+      if(!bears)loose.push(end);
+    }
   }
   return loose;
 }

@@ -84,10 +84,21 @@ const unplaced=deck({width:20,houseConfig:house({widthFt:12})});
   assert.throws(()=>validateDesign({...saved,houseConfig:{...saved.houseConfig,floorHeightIn:999}}));checks+=3;
 }
 
-// 7. The bearing check reports the known shallow notch-wing gap on the default L-shape.
+// 7. Every notch wing and curved strip is framed as its own zone with its own beam, so no joist
+//    end is left without a ledger or beam. Only a curved front on a flush-beam (low) deck, which
+//    allows almost no cantilever, still needs a curved beam and stays flagged.
 {
-  const lShape=deck({shape:'L-Shape'});
-  ok(calculateEstimate(lShape).flags.some(f=>/joist ends? on the main deck do not bear/.test(f)),'Shallow notch wings are flagged for a beam and posts');
-  ok(!calculateEstimate(deck()).flags.some(f=>/do not bear/.test(f)),'A plain rectangle is fully supported');
+  const sizes=[{width:16,length:12,height:36},{width:24,length:20,height:72,cutoutWidth:8,cutoutLength:8,cutoutWidth2:4,cutoutLength2:4}];
+  for(const size of sizes)for(const shape of ['Rectangle','L-Shape','Multi-corner','Curved'] as const)for(const deckType of ['Attached','Freestanding'] as const)for(const pattern of ['Straight','Picture Frame','Diagonal','Herringbone'] as const){
+    const d=deck({...size,shape,deckType,pattern}),m=buildDeckTakeoff(d),main=m.levels[0];
+    ok(unsupportedJoistEnds(main,getHouseContact(d,main.footprint)).length===0,`${shape} ${size.width}×${size.length} ${deckType} ${pattern}: every joist end bears`);
+  }
+  const lShape=buildDeckTakeoff(deck({shape:'L-Shape'})),wingX=16*12-8*12,wingDepth=12*12-6*12;
+  ok((lShape.levels[0].zones?.length??1)===2,'An L-shape frames its notch wing as a separate zone');
+  ok(lShape.levels[0].beams.some(b=>Math.min(b.a.x,b.b.x)>=wingX-1&&b.a.z<wingDepth),'The notch wing has its own beam inside the wing');
+  ok(lShape.levels[0].supports.some(p=>p.x>wingX&&p.z<wingDepth),'Posts carry the wing beam');
+  ok(!calculateEstimate(deck({shape:'L-Shape'})).flags.some(f=>/do not bear/.test(f)),'The L-shape no longer needs a bearing warning');
+  const flushCurve=deck({shape:'Curved',height:12,deckType:'Floating'});
+  ok(calculateEstimate(flushCurve).flags.some(f=>/do not bear/.test(f)),'A flush-beam curved front is honestly flagged for a curved beam');
 }
 console.log(`DECK HOUSE OK — ${checks} house position, ledger, exposed-edge framing, door-sill, pricing and persistence checks.`);
