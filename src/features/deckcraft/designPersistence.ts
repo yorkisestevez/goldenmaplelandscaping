@@ -154,7 +154,7 @@ export function validateDesign(input:unknown):DeckData {
         if(r.roofShape!==undefined){if(!['Gable','Hip','Flat'].includes(r.roofShape as string))throw new Error('Unsupported block roof.');block.roofShape=r.roofShape as HouseBlock['roofShape'];}
         return block;
       });
-      if(rects.length)house.footprint={rects:normalizeHouseBlocks({...house,footprint:{rects}})};
+      if(rects.length)house.footprint={rects:normalizeHouseBlocks({...house,footprint:{rects}},Math.max(12,(Number(clean.length)||0)*12))};
     }
     if(!Array.isArray(h.openings)||h.openings.length>24)throw new Error('A house supports up to 24 openings.');
     const ids=new Set<string>();

@@ -88,10 +88,11 @@ const exposedLen=(d:DeckData,id:string)=>getHouseWalls(d).find(w=>w.id===id)!.ex
   ok(warns(L).some(w=>w.includes('overlaps the house footprint'))&&!warns(plain).some(w=>w.includes('overlaps the house footprint')),'Yard features are checked against the whole house outline');
 }
 
-// 4. A front bump-out that reaches into the deck is flagged (the deck is notched in 6b).
+// 4. A block reaching into a freestanding deck is reported; an attached deck is notched around it (6b).
 {
-  const into=withBlocks([{id:'bump1',kind:'house',wall:'Front',offsetFt:10,widthFt:10,depthFt:3}]);
-  ok(buildDeckTakeoff(into).issues.some(i=>i.includes('bump-out reaches')),'A bump-out into the deck raises an issue');
+  const bump=[{id:'bump1',kind:'house' as const,wall:'Front' as const,offsetFt:10,widthFt:10,depthFt:3}];
+  ok(buildDeckTakeoff(withBlocks(bump,{},{deckType:'Freestanding'})).issues.some(i=>i.includes('bump-out reaches')&&i.includes('freestanding')),'A bump-out into a freestanding deck raises an issue');
+  ok(!buildDeckTakeoff(withBlocks(bump,{},{deckType:'Attached'})).issues.some(i=>i.includes('reaches')),'An attached deck is notched instead');
 }
 
 // 5. Wraps pause on a conflicting block and name why; a block clear of the wing does not.

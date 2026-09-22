@@ -1,7 +1,7 @@
 import {addBearings,blockBoardEnd,splitOnBearingsAlong,type FramedSet} from './constructionDetails';
-import {outlineSpans,zoneReference,frameZoneBearings,frameZoneJoists,frameHouseSideBeams,doubledMemberSpanIn,type DeckZone,type ZoneFramingConfig,type ZoneReference} from './zoneFraming';
+import {cleanPolygon,outlineSpans,zoneReference,frameZoneBearings,frameZoneJoists,frameHouseSideBeams,doubledMemberSpanIn,type DeckZone,type ZoneFramingConfig,type ZoneReference} from './zoneFraming';
 import {getBoardRows,type BoardRun,type PlanPoint} from './lib/deckGeometry';
-import {offsetPolygons,polygonBoard,polygonCut} from './lib/polygonCuts';
+import {offsetPolygons,polygonBoard,polygonCut,signedArea} from './lib/polygonCuts';
 import {distanceToSegment,halfPlane,toLocal,toPlan,wrapHips,wrapZones,type ActiveWrap,type WrapFrame,type WrapHip,type WrapZoneGeometry} from './lib/wrapGeometry';
 import type {DeckLevel,Member,V3} from './deckTakeoff';
 
@@ -32,21 +32,50 @@ function board(f:WrapFrame,b:BoardRun):BoardRun{
 }
 const centroid=(p:PlanPoint[])=>({x:p.reduce((n,v)=>n+v.x,0)/p.length,y:p.reduce((n,v)=>n+v.y,0)/p.length});
 
-export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOutline:PlanPoint[];inset:number;borders:number;boardWidth:number;gap:number;stockLength:number;houseSide:[number,number][]}):WrapFramingResult{
+/**
+ * The main zone of a wrap notched around house bump-outs, split into strips at the bump-out side
+ * walls: each strip is framed from its own back edge (the deck-facing wall, or a bump-out's face).
+ * Without bump-outs the main zone stays one piece, exactly as before.
+ */
+const notchedOutline=(outline:PlanPoint[],houseCut:PlanPoint[][])=>cleanPolygon(polygonCut([outline],houseCut,true).sort((p,q)=>Math.abs(signedArea(q))-Math.abs(signedArea(p)))[0]??outline);
+function mainStrips(outline:PlanPoint[],size:{w:number;h:number},houseCut:PlanPoint[][],cutXs:number[]):{outline:PlanPoint[];origin:PlanPoint;size:{w:number;h:number}}[]{
+  if(!houseCut.length)return [{outline,origin:{x:0,y:0},size}];
+  const notched=notchedOutline(outline,houseCut);
+  const xs=[...new Set([0,...cutXs.filter(x=>x>.5&&x<size.w-.5),size.w])].sort((a,b)=>a-b),out=[];
+  for(let i=0;i+1<xs.length;i++){
+    for(const part of polygonCut([notched],[[{x:xs[i],y:-1e5},{x:xs[i+1],y:-1e5},{x:xs[i+1],y:1e5},{x:xs[i],y:1e5}]])){
+      const clean=cleanPolygon(part),low=Math.min(...clean.map(p=>p.y)),y0=low>1e-6?low:0;
+      out.push({outline:clean,origin:{x:xs[i],y:y0},size:{w:xs[i+1]-xs[i],h:Math.max(...clean.map(p=>p.y))-y0}});
+    }
+  }
+  return out;
+}
+
+export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOutline:PlanPoint[];inset:number;borders:number;boardWidth:number;gap:number;stockLength:number;houseSide:[number,number][];
+  /** House blocks reaching into the main deck (plan polygons) and the x of their side walls. */
+  houseCut?:PlanPoint[][];houseCutXs?:number[]}):WrapFramingResult{
   const {wrap,cfg,inset,borders,boardWidth,gap,stockLength}=input,zero:V3={x:0,y:0,z:0};
   const hips=wrapHips(wrap),field=offsetPolygons([input.deckingOutline],inset);
   const out:WrapFramingResult={supports:[],beams:[],joists:[],blocking:[],fieldBoards:[],breakers:[],zones:[],hips,reference:undefined as unknown as ZoneReference};
   for(const geom of wrapZones(wrap)){
-    const f=geom.frame,zone:DeckZone={id:geom.id,outline:geom.local,origin:{x:0,y:0},size:geom.size,attached:true},reference=zoneReference(zone,cfg);
-    if(geom.id==='main')out.reference=reference;
-    const mine=hips.filter(h=>h.zones.includes(geom.id)),localHips=mine.map(h=>({a:toLocal(f,h.a),b:toLocal(f,h.b)}));
+    const f=geom.frame,mine=hips.filter(h=>h.zones.includes(geom.id)),localHips=mine.map(h=>({a:toLocal(f,h.a),b:toLocal(f,h.b)}));
     const onHip=(p:PlanPoint,tol=1)=>localHips.some(h=>distanceToSegment(p,h.a,h.b)<tol);
     const local:FramedSet&{blocking:Member[]}={offset:zero,supports:[],beams:[],joists:[],blocking:[]};
-    frameZoneBearings({zone,reference},zero,local);
-    // Junction posts: every beam row that runs into the hip ends on a post under it.
-    for(const row of reference.beamRows as {z:number}[])for(const span of outlineSpans(geom.local,row.z*12,'z'))for(const x of span){
-      const p={x,y:row.z*12};if(!onHip(p)||local.supports.some(s=>Math.hypot(s.x-p.x,s.z-p.y)<1))continue;
-      local.supports.push({x,y:Math.max(0,reference.bBotY*12),z:row.z*12});
+    // The main zone frames each strip between bump-outs off its own ledger; other zones are one piece.
+    const parts=(geom.id==='main'?mainStrips(geom.local,geom.size,input.houseCut??[],input.houseCutXs??[]):[{outline:geom.local,origin:{x:0,y:0},size:geom.size}])
+      .map(part=>{const zone:DeckZone={id:geom.id,...part,attached:true};return {zone,reference:zoneReference(zone,cfg)};});
+    // The widest piece stands for the zone (the whole zone without bump-outs).
+    const reference=parts.reduce((best,p)=>p.zone.size.w>best.zone.size.w?p:best).reference;
+    if(geom.id==='main')out.reference=reference;
+    const rowZs:number[]=[];
+    for(const part of parts){
+      frameZoneBearings(part,zero,local);
+      const o=part.zone.origin;
+      // Junction posts: every beam row that runs into the hip ends on a post under it.
+      for(const row of part.reference.beamRows as {z:number}[]){const z=row.z*12+o.y;rowZs.push(z);for(const span of outlineSpans(part.zone.outline,z,'z'))for(const x of span){
+        const p={x,y:z};if(!onHip(p)||local.supports.some(s=>Math.hypot(s.x-p.x,s.z-p.y)<1))continue;
+        local.supports.push({x,y:Math.max(0,part.reference.bBotY*12),z});
+      }}
     }
     if(geom.id==='main')frameHouseSideBeams(input.houseSide,geom.size.h,cfg,zero,local);
     // This zone's field: the finished field within this zone (widened 6 in on its outer edges to take
@@ -62,10 +91,10 @@ export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOu
     // Border boards along a side that runs with the joists sit on doubled joists, as on a plain deck.
     const side=(x:number)=>geom.local.some((a,i)=>{const b=geom.local[(i+1)%geom.local.length];return Math.abs(a.x-x)<.5&&Math.abs(b.x-x)<.5&&Math.abs(b.y-a.y)>=12;});
     const buildUps=[...breakers.flatMap(x=>[-1.5,-.5,.5,1.5].map(k=>x+k*(1.5+.375))),...(borders&&side(0)?[1.5+2.375,1.5+2*2.375]:[]),...(borders&&side(geom.size.w)?[geom.size.w-1.5-2.375,geom.size.w-1.5-2*2.375]:[])];
-    frameZoneJoists({zone,reference},zero,cfg,buildUps,local);
+    for(const part of parts)frameZoneJoists(part,zero,cfg,buildUps,local);
     // Jacks shorter than 3 in at the outside corner are only the hip meeting the rim.
     local.joists=local.joists.filter(j=>Math.hypot(j.b.x-j.a.x,j.b.z-j.a.z)>=3);
-    addBearings(local,(reference.beamRows as {z:number}[]).map(r=>r.z*12));
+    addBearings(local,rowZs);
     // Field boards parallel to this zone's house wall, split at breakers, plus the breaker boards.
     const boards:BoardRun[]=[];
     for(const poly of localField){
@@ -85,7 +114,9 @@ export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOu
     out.blocking.push(...local.blocking.map(m=>member(f,m)));
     out.fieldBoards.push(...boards.map(b=>board(f,b)));
     out.breakers.push(...breakers);
-    out.zones.push({geom,reference,joists:local.joists,keys:new Set()});
+    // Board-end blocking and the plan use the zone as built: the main zone notched around bump-outs.
+    const built=geom.id==='main'&&input.houseCut?.length?notchedOutline(geom.local,input.houseCut):null;
+    out.zones.push({geom:built?{...geom,outline:built,local:built}:geom,reference,joists:local.joists,keys:new Set()});
   }
   // One post where the main-deck and wing beams meet the same point on a hip.
   out.supports=out.supports.filter((p,i)=>!out.supports.some((q,j)=>j<i&&Math.hypot(p.x-q.x,p.z-q.z)<1));

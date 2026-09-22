@@ -1,6 +1,6 @@
 import type {DeckData,GarageDoorStyle,HouseBlock,HouseConfig,HouseOpening} from './types';
 import {getHouseConfig,clampHouseOpening,houseWallSize} from './houseSettings';
-import {blockKindLabel,getHouseWalls,HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,openingHidden,openingWallId,SIDE_FACADE,wallLabel,type HouseWallSide} from './houseFootprint';
+import {blockKindLabel,getHouseBlocks,getHouseWalls,HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,deckLengthIn,openingHidden,openingWallId,SIDE_FACADE,wallLabel,type HouseWallSide} from './houseFootprint';
 import {getFootprint} from './lib/deckGeometry';
 import {exposedHouseLine,getHouseContact} from './houseContact';
 import {activeWrap} from './lib/wrapGeometry';
@@ -26,7 +26,7 @@ export default function HouseEditor({data,onChange,selectedId,onSelect}:{data:De
   const overlapping=selected&&house.openings.some(o=>o.id!==selected.id&&openingWallId(o,house)===selectedWall&&Math.abs(o.offsetPct-selected.offsetPct)/100*wallSize.length<(o.widthIn+selected.widthIn)/2&&o.bottomIn<selected.bottomIn+selected.heightIn&&selected.bottomIn<o.bottomIn+o.heightIn);
   // House shape: blocks attached to the main rectangle.
   const walls=getHouseWalls(data),blocks=normalizeHouseBlocks(house),hidden=selected?openingHidden(selected,walls,house):false;
-  const setBlocks=(rects:HouseBlock[],openings=house.openings)=>change({footprint:rects.length?{rects:normalizeHouseBlocks({...house,footprint:{rects}})}:undefined,openings});
+  const setBlocks=(rects:HouseBlock[],openings=house.openings)=>change({footprint:rects.length?{rects:normalizeHouseBlocks({...house,footprint:{rects}},deckLengthIn(data))}:undefined,openings});
   const changeBlock=(id:string,patch:Partial<HouseBlock>)=>setBlocks(blocks.map(b=>b.id===id?{...b,...patch}:b));
   const addBlock=(kind:'bump'|'wing'|'garage')=>{
     let n=1;while(blocks.some(b=>b.id===`${kind}${n}`))n++;const id=`${kind}${n}`,HW=house.widthFt*12;
@@ -37,14 +37,16 @@ export default function HouseEditor({data,onChange,selectedId,onSelect}:{data:De
     const door:HouseOpening[]=kind==='garage'?[{id:`garage-door-${Date.now()}`,type:'Garage',facade:'Back',wallId:`${id}-back`,style:'Panel',offsetPct:50,bottomIn:0,widthIn:180,heightIn:84}]:[];
     setBlocks([...blocks,block],[...house.openings,...door]);
   };
+  // The deck side limits how far a bump-out can reach; show the depth actually built when it is less.
+  const built=getHouseBlocks(data),capped=(b:HouseBlock)=>{if(b.wall!=='Front')return 0;const r=built.find(k=>k.id===b.id)?.rect;const d=r?Math.round((r.y1-r.y0)/12*10)/10:b.depthFt;return d<b.depthFt-.05?d:0;};
   const removeBlock=(id:string)=>setBlocks(blocks.filter(b=>b.id!==id),house.openings.filter(o=>!o.wallId?.startsWith(`${id}-`)));
   const setWall=(wallId:string)=>{const side=wallId.split('-')[1] as HouseWallSide;changeOpening(wallId.startsWith('main-')?{facade:SIDE_FACADE[side],wallId:undefined}:{facade:SIDE_FACADE[side],wallId});};
-  const shape=<><h4>House shape</h4><p className="dd-note">Add a bump-out, an L-wing or an attached garage to the main house. Each block sits on one wall of the main house and has its own roof and floor height. The deck is not yet notched around a bump-out that reaches into it; that is flagged until it is.</p><div className="dd-summary-actions"><button className="dd-secondary" disabled={blocks.length>=MAX_HOUSE_BLOCKS} onClick={()=>addBlock('bump')}>Add bump-out</button><button className="dd-secondary" disabled={blocks.length>=MAX_HOUSE_BLOCKS} onClick={()=>addBlock('wing')}>Add wing</button><button className="dd-secondary" disabled={blocks.length>=MAX_HOUSE_BLOCKS} onClick={()=>addBlock('garage')}>Add garage</button></div>
+  const shape=<><h4>House shape</h4><p className="dd-note">Add a bump-out, an L-wing or an attached garage to the main house. Each block sits on one wall of the main house and has its own roof and floor height. An attached deck is notched around a bump-out: its face gets a ledger and its side walls are bolted to the outside joist. A bump-out always leaves at least 3 ft of deck in front of it.</p><div className="dd-summary-actions"><button className="dd-secondary" disabled={blocks.length>=MAX_HOUSE_BLOCKS} onClick={()=>addBlock('bump')}>Add bump-out</button><button className="dd-secondary" disabled={blocks.length>=MAX_HOUSE_BLOCKS} onClick={()=>addBlock('wing')}>Add wing</button><button className="dd-secondary" disabled={blocks.length>=MAX_HOUSE_BLOCKS} onClick={()=>addBlock('garage')}>Add garage</button></div>
     {blocks.map(b=>{const along=b.wall==='Front'||b.wall==='Back',name=wallLabel(`${b.id}-front`,house).split(',')[0];return <fieldset key={b.id} className="dd-house-block"><legend>{name}</legend><div className="dd-fields">
       <label className="dd-field"><span>Attached to</span><select aria-label={`${name} attached to`} value={b.wall} onChange={e=>changeBlock(b.id,{wall:e.target.value as HouseBlock['wall']})}>{blockWalls.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
       <Dimension label={along?'From the house left corner':'Back from the deck-facing wall'} value={Math.round(b.offsetFt*10)/10} min={HOUSE_BLOCK_OFFSET_FT[0]} max={HOUSE_BLOCK_OFFSET_FT[1]} unit="ft" onChange={offsetFt=>changeBlock(b.id,{offsetFt})}/>
       <Dimension label="Width along the wall" value={b.widthFt} min={HOUSE_BLOCK_WIDTH_FT[0]} max={HOUSE_BLOCK_WIDTH_FT[1]} unit="ft" onChange={widthFt=>changeBlock(b.id,{widthFt})}/>
-      <Dimension label="Depth out from the wall" value={b.depthFt} min={HOUSE_BLOCK_DEPTH_FT[0]} max={HOUSE_BLOCK_DEPTH_FT[1]} unit="ft" onChange={depthFt=>changeBlock(b.id,{depthFt})}/>
+      {capped(b)&&<p className="dd-note" role="status">Depth limited to {capped(b)} ft here, so at least 3 ft of deck stays in front of it.</p>}<Dimension label="Depth out from the wall" value={b.depthFt} min={HOUSE_BLOCK_DEPTH_FT[0]} max={HOUSE_BLOCK_DEPTH_FT[1]} unit="ft" onChange={depthFt=>changeBlock(b.id,{depthFt})}/>
       <label className="dd-field"><span>Storeys</span><select aria-label={`${name} storeys`} value={b.storeys??1} onChange={e=>changeBlock(b.id,{storeys:Number(e.target.value) as 1|2|3})}>{[1,2,3].map(v=><option key={v} value={v}>{v}</option>)}</select></label>
       <label className="dd-field"><span>Roof</span><select aria-label={`${name} roof`} value={b.roofShape??(b.kind==='garage'?'Gable':house.roofShape)} onChange={e=>changeBlock(b.id,{roofShape:e.target.value as HouseBlock['roofShape']})}>{['Gable','Hip','Flat'].map(v=><option key={v}>{v}</option>)}</select></label>
       <Dimension label={b.kind==='garage'?'Garage floor above grade':'Floor / door sill above grade'} value={b.floorHeightIn??(b.kind==='garage'?4:house.floorHeightIn??data.height)} min={0} max={240} onChange={floorHeightIn=>changeBlock(b.id,{floorHeightIn})}/>

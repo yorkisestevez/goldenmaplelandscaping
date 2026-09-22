@@ -15,6 +15,7 @@ import {offsetPolygons,polygonCut,polygonBoard} from './polygonCuts';
 
 import { DeckData } from '../types';
 import { splitAtHouseCorners } from '../housePlacement';
+import { notchDeckAroundHouse } from '../houseFootprint';
 import { activeWrap, wrapOutline } from './wrapGeometry';
 
 export interface PlanPoint { x: number; y: number }
@@ -49,13 +50,20 @@ const n = (v: unknown, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) 
  * level 2 uses width2/length2 (an independent slab, like calculations.ts).
  * A positioned house narrower than the main deck adds vertices at its corners.
  */
+/** The main deck's outline before any house notching (shape or wrap outline, split at house corners). */
+export function unnotchedMainOutline(data: DeckData): PlanPoint[] {
+  const wrap = activeWrap(data);
+  return wrap ? wrapOutline(wrap).outline : shapeFootprint(data, 1).outline;
+}
+
 export function getFootprint(data: DeckData, level: 1 | 2 = 1): FootprintPlan {
   const wrap = level === 1 ? activeWrap(data) : null;
-  if (wrap) return { ...wrapOutline(wrap), bounds: { w: wrap.W, h: wrap.L }, isCurved: false };
+  if (wrap) return notchDeckAroundHouse(data, { ...wrapOutline(wrap), bounds: { w: wrap.W, h: wrap.L }, isCurved: false });
   const fp = shapeFootprint(data, level);
   if (level !== 1) return fp;
   const outline = splitAtHouseCorners(data, fp.outline);
-  return outline === fp.outline ? fp : { ...fp, outline };
+  // House bump-outs (and blocks flush with the deck-facing wall) notch and split the attached deck.
+  return notchDeckAroundHouse(data, outline === fp.outline ? fp : { ...fp, outline });
 }
 
 function shapeFootprint(data: DeckData, level: 1 | 2): FootprintPlan {

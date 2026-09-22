@@ -11,7 +11,7 @@ import {getStairSupport,getStringerOffsets,makeRiserBoards,type RiserBoard} from
 import {getHouseContact,exposedSides,deckAttachesToHouse,exposedHouseLine} from './houseContact';
 import {getHouseConfig} from './houseSettings';
 import {getHousePlacement} from './housePlacement';
-import {getHouseBlocks,rectPolygon} from './houseFootprint';
+import {blocksTowardDeck,getHouseBlocks,rectPolygon} from './houseFootprint';
 import {outlineSpans,cleanPolygon,zoneReference,frameZoneBearings,frameZoneJoists,frameHouseSideBeams,type DeckZone,type FramedZone,type ZoneFramingConfig} from './zoneFraming';
 import {edgeFacing,getFootprint,getBoardRows,getPictureFrameRuns,getStairPlacement,getRailingSegments,getHerringboneRows,clipToConvex,type StairPlacement,type PlanPoint,type FootprintPlan,type BoardRun} from './lib/deckGeometry';
 export type V3={x:number;y:number;z:number};
@@ -34,8 +34,10 @@ const spans=(fp:FootprintPlan,x:number,axis:'x'|'z')=>outlineSpans(fp.outline,x,
  *   almost no cantilever; their curve needs a curved beam and stays flagged by the bearing check.
  * Plain rectangles, second levels and landings stay a single zone (unchanged framing).
  */
-function levelZones(footprint:FootprintPlan,attached:boolean,cfg:ZoneFramingConfig,isMain:boolean):DeckZone[]{
-  const single:DeckZone[]=[{id:'main',outline:footprint.outline,origin:{x:0,y:0},size:footprint.bounds,attached}];
+function levelZones(footprint:FootprintPlan,attached:boolean,cfg:ZoneFramingConfig,isMain:boolean,houseCuts:number[]=[]):DeckZone[]{
+  // A deck notched across its whole width by a bump-out starts at the bump-out's face, not at y = 0.
+  const back=Math.min(...footprint.outline.map(p=>p.y)),backY=back>1e-6?back:0;
+  const single:DeckZone[]=[{id:'main',outline:footprint.outline,origin:{x:0,y:backY},size:backY?{w:footprint.bounds.w,h:footprint.bounds.h-backY}:footprint.bounds,attached}];
   if(!isMain)return single;
   const W=footprint.bounds.w,outline=footprint.outline;
   let cuts:number[]=[];
@@ -46,11 +48,16 @@ function levelZones(footprint:FootprintPlan,attached:boolean,cfg:ZoneFramingConf
     let start=0,lo=Infinity,hi=-Infinity;
     for(let x=0;x<=W;x++){const y=front(x);lo=Math.min(lo,y);hi=Math.max(hi,y);if(hi-lo>allow&&x-start>=24&&W-x>=24){cuts.push(x);start=x;lo=hi=y;}}
   }else cuts=[...new Set(outline.filter(p=>p.y>1e-6&&p.x>.5&&p.x<W-.5).map(p=>p.x))].sort((a,b)=>a-b);
+  // Bump-out side walls split the deck too: the strip in front of a bump-out is framed off its own ledger.
+  for(const x of houseCuts)if(x>.5&&x<W-.5&&!cuts.some(c=>Math.abs(c-x)<.5))cuts.push(x);
+  cuts.sort((a,b)=>a-b);
   const xs=[0,...cuts,W],zones:DeckZone[]=[];
   for(let i=0;i+1<xs.length;i++){
     const x0=xs[i],x1=xs[i+1];if(x1-x0<1)continue;
     const part=cleanPolygon(clipToConvex(outline,[{x:x0,y:-1e5},{x:x1,y:-1e5},{x:x1,y:1e5},{x:x0,y:1e5}]));
-    zones.push({id:`zone-${i+1}`,outline:part,origin:{x:x0,y:0},size:{w:x1-x0,h:Math.max(...part.map(p=>p.y))},attached});
+    // Each strip is framed from its own back edge: y = 0 against the deck-facing wall, or a bump-out's face.
+    const low=Math.min(...part.map(p=>p.y)),y0=low>1e-6?low:0;
+    zones.push({id:`zone-${i+1}`,outline:part,origin:{x:x0,y:y0},size:{w:x1-x0,h:Math.max(...part.map(p=>p.y))-y0},attached});
   }
   return zones.length>1?zones:single;
 }
@@ -67,7 +74,7 @@ export function buildDeckTakeoff(data:DeckData){
   function makeWrapLevel(footprint:FootprintPlan,top:number,offset:V3,cfg:ZoneFramingConfig,wrap:ActiveWrap):DeckLevel{
     const borders=data.pictureFrameRows||(data.pattern==='Picture Frame'?1:0),inset=borders*(data.boardWidth+gap);
     const deckingFootprint=getFinishedFootprint(data,footprint,mainContact);
-    const framed=frameWrap({wrap,cfg,deckingOutline:deckingFootprint.outline,inset,borders,boardWidth:data.boardWidth,gap,stockLength,houseSide:exposedHouseLine(data,footprint,mainContact)});
+    const framed=frameWrap({wrap,cfg,deckingOutline:deckingFootprint.outline,inset,borders,boardWidth:data.boardWidth,gap,stockLength,houseSide:exposedHouseLine(data,footprint,mainContact),houseCut:blocksTowardDeck(getHouseBlocks(data)).map(b=>rectPolygon(b.rect)),houseCutXs:mainContact.contacts.filter(c=>c.kind==='flush').map(c=>c.a.x)});
     const boards:BoardRun[]=[...(borders?getPictureFrameRuns(deckingFootprint,borders as 1|2,data.boardWidth,gap):[]),...framed.fieldBoards];
     const installed=boards.flatMap(b=>splitBoard(b,data.boardWidth,stockLength,gap));
     const level:DeckLevel={kind:'deck',index:0,footprint,deckingFootprint,top,offset,supports:framed.supports,joists:framed.joists,beams:framed.beams,blocking:framed.blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,0,stockLength,inset),breakers:framed.breakers,reference:framed.reference,hips:framed.hips,wrapZones:planZones(framed.zones)};
@@ -77,7 +84,7 @@ export function buildDeckTakeoff(data:DeckData){
   function makeLevel(footprint:FootprintPlan,top:number,offset:V3,attached:boolean,kind:DeckLevel['kind']='deck',index=0){
     const cfg={top,spacing,framingSize:data.framingSize,joistDepth,pictureFrame:!!data.pictureFrameRows||data.pattern==='Picture Frame'};
     if(wrap&&kind==='deck'&&index===0)return makeWrapLevel(footprint,top,offset,cfg,wrap);
-    const zones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0).map(zone=>({zone,reference:zoneReference(zone,cfg)})),reference=zones[0].reference;
+    const zones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0,attached&&index===0?mainContact.contacts.filter(c=>c.kind==='flush').map(c=>c.a.x):[]).map(zone=>({zone,reference:zoneReference(zone,cfg)})),reference=zones[0].reference;
     const supports:V3[]=[],joists:Member[]=[],beams:Member[]=[],blocking:Member[]=[];
     for(const zone of zones)frameZoneBearings(zone,offset,{supports,beams});
     if(attached&&index===0)frameHouseSideBeams(exposedHouseLine(data,footprint,mainContact),footprint.bounds.h,cfg,offset,{supports,beams});
@@ -255,14 +262,21 @@ export function buildDeckTakeoff(data:DeckData){
   if(flights.length)issues.push(...stairSupport.issues,'Closed-riser thickness is allowed for in the illustrated stringer notch faces. Confirm the resulting stringer throat, bearing and manufacturer attachment detail before cutting.');
   // Door-sill step-down, checked only once the house floor height has been set. 7.75 in is the
   // studio's existing maximum riser, so no new rule is introduced.
-  const sill=getHouseConfig(data).floorHeightIn;
-  if(sill!==undefined&&deckAttachesToHouse(data)){
-    if(data.height>sill+.01)issues.push(`The deck surface (${data.height} in above grade) is above the house floor / door sill (${sill} in). Water can run toward the door: lower the deck or confirm a sill detail before construction.`);
-    else if(sill-data.height>7.75)issues.push(`The door sill is ${(sill-data.height).toFixed(1)} in above the deck surface, more than one 7.75 in step. Add a step or landing at the door, or raise the deck.`);
+  // Each house block the deck meets is checked against its own floor; a garage slab is not a door sill.
+  const houseBlocks=getHouseBlocks(data),blockName=(b:typeof houseBlocks[number])=>b.kind==='garage'?'garage':b.attachedTo==='Front'?'bump-out':'wing';
+  const sills=deckAttachesToHouse(data)?[...new Set(['main',...mainContact.contacts.map(c=>c.blockId)])].map(id=>houseBlocks.find(b=>b.id===id)).filter(b=>b&&b.kind==='house'&&(b.id==='main'||mainContact.contacts.some(c=>c.blockId===b.id))):[];
+  for(const block of sills){
+    const sill=block!.floorHeightIn;if(sill===undefined)continue;
+    const whose=block!.id==='main'?'house':`house ${blockName(block!)}`;
+    if(data.height>sill+.01)issues.push(`The deck surface (${data.height} in above grade) is above the ${whose} floor / door sill (${sill} in). Water can run toward the door: lower the deck or confirm a sill detail before construction.`);
+    else if(sill-data.height>7.75)issues.push(`The ${block!.id==='main'?'door':`${blockName(block!)} door`} sill is ${(sill-data.height).toFixed(1)} in above the deck surface, more than one 7.75 in step. Add a step or landing at the door, or raise the deck.`);
   }
-  for(const block of getHouseBlocks(data).slice(1)){
-    const overlap=polygonCut([getFootprint(data,1).outline],[rectPolygon(block.rect)]).reduce((n,p)=>n+signedArea(p),0);
-    if(overlap>1)issues.push(`The house ${block.kind==='garage'?'garage':block.attachedTo==='Front'?'bump-out':'wing'} reaches ${(overlap/144).toFixed(1)} sq ft into the deck. The deck is not yet notched around house blocks: move or shorten the block before relying on this layout.`);
+  if(mainContact.contacts.some(c=>houseBlocks.find(b=>b.id===c.blockId)?.kind==='garage'))issues.push('Deck ledger on the attached garage wall: confirm the garage wall framing and rim can carry a ledger (slab-on-grade garage walls often cannot) before construction.');
+  if(mainContact.flushLf>0)issues.push(`Bump-out side walls: the outside joist is bolted flat to each side wall (${mainContact.flushLf.toFixed(1)} ft, bolts at the ledger spacing, flashed). Confirm the wall framing behind each side wall before construction.`);
+  // An attached deck is notched around house blocks; a freestanding one is not, so an overlap is reported.
+  for(const block of houseBlocks.slice(1)){
+    const overlap=polygonCut([mainFp.outline],[rectPolygon(block.rect)]).reduce((n,p)=>n+signedArea(p),0);
+    if(overlap>1)issues.push(`The house ${blockName(block)} reaches ${(overlap/144).toFixed(1)} sq ft into this freestanding deck. Only a deck attached to the house is notched around it: attach the deck, or move or shorten the deck or the ${blockName(block)}.`);
   }
   if(wrap)issues.push('Wrap-around corner: the doubled hip, the skewed jack-joist and hip hangers, and the posts under the hip are laid out from the existing beam span table. Have the corner framing reviewed by an engineer before construction.');
   for(const level of levels){

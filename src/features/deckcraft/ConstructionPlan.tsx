@@ -29,7 +29,7 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
  const blockLabels=(blocks??[]).slice(1).map(k=>{const r=k.rect,y0=Math.max(r.y0,-band),x0=Math.max(r.x0,b.minX-48),x1=Math.min(r.x1,b.maxX+48);return x1-x0<30||r.y1-y0<12?null:{id:k.id,x:(x0+x1)/2,y:(y0+r.y1)/2+2.5,text:k.kind==='garage'?'GARAGE':k.attachedTo==='Front'?'BUMP-OUT':'WING'};}).filter(Boolean) as {id:string;x:number;y:number;text:string}[];
  const w=b.maxX-b.minX,d=b.maxZ-b.minZ,left=Math.min(b.minX,house?Math.max(house.x0,b.minX-48):b.minX),right=Math.max(b.maxX,house?Math.min(house.x1,b.maxX+48):b.maxX);
  // Edge labels sit just outside each main-deck edge; curve facets under 2 ft are left unlabelled.
- const edgeLabels=data?outline.map((a,i)=>{const q=outline[(i+1)%outline.length],len=Math.hypot(q.x-a.x,q.y-a.y);if(len<24)return null;const nx=(q.y-a.y)/len,ny=-(q.x-a.x)/len,ledger=contact?.isContactEdge(i);return {x:(a.x+q.x)/2+nx*(ledger?5:11),y:(a.y+q.y)/2+ny*(ledger?5:11)+2.5,text:ledger?`Ledger ${ft(len)}`:ft(len),ledger};}).filter(Boolean) as {x:number;y:number;text:string;ledger:boolean}[]:[];
+ const edgeLabels=data?outline.map((a,i)=>{const q=outline[(i+1)%outline.length],len=Math.hypot(q.x-a.x,q.y-a.y);if(len<24)return null;const nx=(q.y-a.y)/len,ny=-(q.x-a.x)/len,ledger=contact?.isContactEdge(i),flush=contact?.contacts.find(c=>c.edgeIndex===i)?.kind==='flush';return {x:(a.x+q.x)/2+nx*(ledger?5:11),y:(a.y+q.y)/2+ny*(ledger?5:11)+2.5,text:flush?`Bolted flush wall ${ft(len)}`:ledger?`Ledger ${ft(len)}`:ft(len),ledger,flush};}).filter(Boolean) as {x:number;y:number;text:string;ledger:boolean;flush:boolean}[]:[];
  const scale=48;
  return <svg viewBox={`${left-40} ${top-44} ${right-left+80} ${b.maxZ-top+128}`} role="img" aria-label="Deck construction plan from the shared model" style={{width:'100%',height:'100%',background:'#faf8f1'}}>
    <title>{`Deck plan · ${model.quantities.joists} joists · ${model.quantities.footings} footings`}</title>
@@ -55,14 +55,14 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
    </g>)}
    {hips.map((h,i)=>{const mx=(h.a.x+h.b.x)/2,my=(h.a.y+h.b.y)/2;return <g key={`hip${i}`} aria-label={`Hip at ${h.angleDeg.toFixed(0)} degrees`}><line x1={h.a.x} y1={h.a.y} x2={h.b.x} y2={h.b.y} stroke="#5b3d1c" strokeWidth="2.4" strokeDasharray="6 3"/><text x={mx+(h.side==='right'?6:-6)} y={my} textAnchor={h.side==='right'?'start':'end'} fontSize="6.5" fontWeight="600" fill="#5b3d1c" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{Math.abs(h.angleDeg-45)<.5?'Hip · 45° mitre':`Hip · ${h.angleDeg.toFixed(0)}° to back wall`}</text></g>;})}
    {zones.map(z=>{const cx=z.outline.reduce((n,p)=>n+p.x,0)/z.outline.length,cy=z.outline.reduce((n,p)=>n+p.y,0)/z.outline.length;return <g key={z.id} aria-label={`${z.label}: joist direction`}><line x1={cx-z.joistDir.x*14} y1={cy-z.joistDir.y*14} x2={cx+z.joistDir.x*14} y2={cy+z.joistDir.y*14} stroke="#5f5a50" strokeWidth="1.2" markerEnd="url(#dd-arrow)"/><text x={cx+Math.abs(z.joistDir.y)*8} y={cy+Math.abs(z.joistDir.x)*10+2} fontSize="6" fill="#4a453d" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2">{`${z.label} · joists`}</text></g>;})}
-   {contact?.contacts.map((c,i)=><line key={i} x1={c.a.x} y1={c.a.y+1.5} x2={c.b.x} y2={c.b.y+1.5} stroke="#9a6a32" strokeWidth="3" aria-label={`Ledger ${ft(c.lengthIn)}`}/>)}
+   {contact?.contacts.map((c,i)=><line key={i} x1={c.a.x+c.inward.x*1.5} y1={c.a.y+c.inward.y*1.5} x2={c.b.x+c.inward.x*1.5} y2={c.b.y+c.inward.y*1.5} stroke="#9a6a32" strokeWidth="3" strokeDasharray={c.kind==='flush'?'4 2':undefined} aria-label={`${c.kind==='flush'?'Bolted flush wall':'Ledger'} ${ft(c.lengthIn)}`}/>)}
    {model.treads.map((t,i)=>{const polygon=(t as typeof t&{polygon?:{x:number;y:number}[]}).polygon;return polygon?<polygon key={i} points={polygon.map(p=>`${p.x},${p.y}`).join(' ')} fill="#ddccb1" stroke="#897354" strokeWidth=".7"/>:<rect key={i} x={t.x-t.w/2} y={t.z-t.d/2} width={t.w} height={t.d} transform={`rotate(${-(t.angle||0)*180/Math.PI} ${t.x} ${t.z})`} fill="#ddccb1" stroke="#897354" strokeWidth=".7"/>;})}
    {model.railing.rails.filter((r,i)=>i%2===1&&r.a.y===r.b.y).map((r,i)=><line key={i} x1={r.a.x} y1={r.a.z} x2={r.b.x} y2={r.b.z} stroke="#272e2c" strokeWidth="1.4"/>)}
    {model.railing.posts.map((p,i)=><rect key={i} x={p.x-2} y={p.z-2} width={4} height={4} fill="#272e2c"/>)}
    {/* House blocks on the deck side are drawn over the deck, so any overlap with it shows. */}
    {(blocks??[]).filter(k=>k.rect.y1>0).map(k=><rect key={k.id} aria-label="House block over the deck" x={k.rect.x0} y={0} width={k.rect.x1-k.rect.x0} height={k.rect.y1} fill="#efe9dc" fillOpacity=".8" stroke="#3d3a34" strokeWidth="1.2"/>)}
    {blockLabels.filter(l=>(blocks?.find(k=>k.id===l.id)?.rect.y1??0)>0).map(l=><text key={l.id} x={l.x} y={l.y} textAnchor="middle" fontSize="7" fontWeight="600" fill="#3d3a34" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{l.text}</text>)}
-   {edgeLabels.map((e,i)=><text key={i} x={e.x} y={e.y} textAnchor="middle" fontSize="6.5" fontWeight={e.ledger?600:400} fill={e.ledger?'#7a4f1f':'#3f3a33'} paintOrder="stroke" stroke="#faf8f1" strokeWidth="2">{e.text}</text>)}
+   {edgeLabels.map((e,i)=><text key={i} x={e.x} y={e.y} transform={e.flush?`rotate(-90 ${e.x} ${e.y-2.5})`:undefined} textAnchor="middle" fontSize="6.5" fontWeight={e.ledger?600:400} fill={e.ledger?'#7a4f1f':'#3f3a33'} paintOrder="stroke" stroke="#faf8f1" strokeWidth="2">{e.text}</text>)}
    <path d={`M${b.minX} ${top-18}H${b.maxX}M${b.minX} ${top-23}v10M${b.maxX} ${top-23}v10`} stroke="#625d54" fill="none"/>
    <text x={(b.minX+b.maxX)/2} y={top-25} textAnchor="middle" fontSize="8" fill="#514b41">{ft(w)} overall width</text>
    <path d={`M${left-22} ${b.minZ}V${b.maxZ}M${left-27} ${b.minZ}h10M${left-27} ${b.maxZ}h10`} stroke="#625d54" fill="none"/>
@@ -72,7 +72,7 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
      <text x={b.minX+scale+6} y={b.maxZ+31} fontSize="6.5" fill="#514b41">4 ft</text>
    </g>
    <text x={b.minX} y={b.maxZ+46} fontSize="7" fill="#514b41">● Footings · ■ Railing posts · Dark line: railing</text>
-   <text x={b.minX} y={b.maxZ+56} fontSize="7" fill="#514b41">{`Dashed: joists · Solid: beams${contact?.contacts.length?' · Bronze: ledger on the house':''}${hips.length?' · Heavy dashed: doubled hip':''}`}</text>
+   <text x={b.minX} y={b.maxZ+56} fontSize="7" fill="#514b41">{`Dashed: joists · Solid: beams${contact?.contacts.length?' · Bronze: ledger on the house':''}${contact?.flushLf?' · Bronze dashed: bolted flush wall':''}${hips.length?' · Heavy dashed: doubled hip':''}`}</text>
    <text x={b.minX} y={b.maxZ+68} fontSize="6" fill="#716a5e">Design illustration · final connections and sizing require site review</text>
  </svg>;
 }

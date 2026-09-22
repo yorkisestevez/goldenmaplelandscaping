@@ -1,8 +1,8 @@
 import type {DeckData,HouseBlock,HouseConfig,HouseOpening} from './types';
 import {getHouseConfig} from './houseSettings';
 import {getHousePlacement} from './housePlacement';
-import {polygonUnion} from './lib/polygonCuts';
-import type {PlanPoint} from './lib/deckGeometry';
+import {polygonCut,polygonUnion,signedArea} from './lib/polygonCuts';
+import {unnotchedMainOutline,type PlanPoint} from './lib/deckGeometry';
 
 /**
  * The house as rectangular blocks: the main block (placed by `getHousePlacement`) plus bump-outs,
@@ -32,6 +32,9 @@ export interface HouseWallPlan{id:string;blockId:string;side:HouseWallSide;a:Pla
   covered:[number,number][]}
 
 export const MAX_HOUSE_BLOCKS=6;
+/** Deck always left in front of a block that reaches into it. */
+export const MIN_DECK_IN_FRONT_IN=36;
+export const deckLengthIn=(data:DeckData)=>Math.max(12,(Number(data.length)||0)*12);
 /** Every block keeps at least this much of its main-block wall, so it is always attached. */
 export const MIN_BLOCK_SHARE_IN=24;
 export const HOUSE_BLOCK_WIDTH_FT=[2,100] as const;
@@ -43,28 +46,48 @@ const clamp=(v:number,lo:number,hi:number)=>Math.min(hi,Math.max(lo,v));
 const FACADE_SIDE:Record<HouseOpening['facade'],HouseWallSide>={Front:'front',Back:'back',Left:'left',Right:'right'};
 export const SIDE_FACADE:Record<HouseWallSide,HouseOpening['facade']>={front:'Front',back:'Back',left:'Left',right:'Right'};
 
-/** Keeps every block attached: at least MIN_BLOCK_SHARE_IN of its wall, at most MAX_HOUSE_BLOCKS blocks. */
-export function normalizeHouseBlocks(house:HouseConfig):HouseBlock[]{
-  const HW=house.widthFt*12,HD=house.depthFt*12;
+/** Keeps every block attached: at least MIN_BLOCK_SHARE_IN of its wall, at most MAX_HOUSE_BLOCKS blocks.
+ * Given the deck length, a block reaching toward the deck also stops MIN_DECK_IN_FRONT_IN short of
+ * the deck's front, so the deck around it never splits in two. */
+export function normalizeHouseBlocks(house:HouseConfig,deckLengthIn?:number):HouseBlock[]{
+  const HW=house.widthFt*12,HD=house.depthFt*12,reach=deckLengthIn===undefined?Infinity:Math.max(HOUSE_BLOCK_DEPTH_FT[0]*12,deckLengthIn-MIN_DECK_IN_FRONT_IN);
   return (house.footprint?.rects??[]).slice(0,MAX_HOUSE_BLOCKS).map(b=>{
     const wallLen=b.wall==='Front'||b.wall==='Back'?HW:HD,w=clamp(b.widthFt,HOUSE_BLOCK_WIDTH_FT[0],HOUSE_BLOCK_WIDTH_FT[1])*12,share=Math.min(MIN_BLOCK_SHARE_IN,w,wallLen);
-    const offsetIn=clamp(b.offsetFt*12,share-w,wallLen-share);
-    return {...b,widthFt:w/12,depthFt:clamp(b.depthFt,HOUSE_BLOCK_DEPTH_FT[0],HOUSE_BLOCK_DEPTH_FT[1]),offsetFt:offsetIn/12};
+    // A side block can run past the deck-facing corner (offset < 0) toward the deck, up to the same reach.
+    const side=b.wall==='Left'||b.wall==='Right',offsetIn=clamp(b.offsetFt*12,Math.max(share-w,side?-reach:-Infinity),wallLen-share);
+    const depthIn=Math.min(clamp(b.depthFt,HOUSE_BLOCK_DEPTH_FT[0],HOUSE_BLOCK_DEPTH_FT[1])*12,b.wall==='Front'?reach:Infinity);
+    return {...b,widthFt:w/12,depthFt:depthIn/12,offsetFt:offsetIn/12};
   });
 }
 
 export function getHouseBlocks(data:DeckData):HouseBlockPlan[]{
   const house=getHouseConfig(data),{x0,x1,depthIn:D}=getHousePlacement(data),storey=house.storeyHeightIn;
+  let raw:PlanPoint[]|undefined;const outline=()=>raw??=unnotchedMainOutline(data);
   const main:HouseBlockPlan={id:'main',kind:'house',rect:{x0,x1,y0:-D,y1:0},storeys:house.storeys,wallHeightIn:house.storeys*storey,floorHeightIn:house.floorHeightIn,roofShape:house.roofShape,attachedTo:null,ridge:'z'};
-  return [main,...normalizeHouseBlocks(house).map((b):HouseBlockPlan=>{
+  return [main,...normalizeHouseBlocks(house,deckLengthIn(data)).map((b):HouseBlockPlan=>{
     const o=b.offsetFt*12,w=b.widthFt*12,d=b.depthFt*12;
     const rect:HouseRect=b.wall==='Front'?{x0:x0+o,x1:x0+o+w,y0:0,y1:d}
       :b.wall==='Back'?{x0:x0+o,x1:x0+o+w,y0:-D-d,y1:-D}
       :b.wall==='Left'?{x0:x0-d,x1:x0,y0:-o-w,y1:-o}
       :{x0:x1,x1:x1+d,y0:-o-w,y1:-o};
+    // A block reaching into the deck stops MIN_DECK_IN_FRONT_IN short of the deck's front across its
+    // whole width (an L-shape or multi-corner front notch is shallower than the deck length).
+    if(rect.y1>0){const front=deckFrontOver(outline(),rect.x0,rect.x1);if(front!==null&&rect.y1>front-MIN_DECK_IN_FRONT_IN){const shift=rect.y1-Math.max(HOUSE_BLOCK_DEPTH_FT[0]*12,front-MIN_DECK_IN_FRONT_IN);if(b.wall==='Front')rect.y1-=shift;else{rect.y0-=shift;rect.y1-=shift;}}}
     const storeys=b.storeys??1;
     return {id:b.id,kind:b.kind,rect,storeys,wallHeightIn:storeys*storey,floorHeightIn:b.floorHeightIn??(b.kind==='house'?house.floorHeightIn:undefined),roofShape:b.roofShape??(b.kind==='garage'?'Gable':house.roofShape),attachedTo:b.wall,ridge:b.wall==='Front'||b.wall==='Back'?'z':'x'};
   })];
+}
+
+/** Shallowest front of the deck outline between x0 and x1 (plan y), or null where there is no deck. */
+function deckFrontOver(outline:PlanPoint[],x0:number,x1:number):number|null{
+  const xs=[x0+.01,x1-.01,...outline.map(p=>p.x).filter(x=>x>x0&&x<x1)].flatMap(x=>[x-.01,x+.01]).filter(x=>x>x0&&x<x1);
+  let front:number|null=null;
+  for(const x of xs){
+    const cross:number[]=[];
+    outline.forEach((a,i)=>{const b=outline[(i+1)%outline.length];if((a.x<=x&&b.x>x)||(b.x<=x&&a.x>x))cross.push(a.y+(x-a.x)*(b.y-a.y)/(b.x-a.x));});
+    if(cross.length)front=Math.min(front??Infinity,Math.max(...cross));
+  }
+  return front;
 }
 
 /** True when the house has blocks beyond the main rectangle. */
@@ -138,3 +161,57 @@ export const blockKindLabel=(b:HouseBlock)=>b.kind==='garage'?'Garage':b.wall===
 
 /** A block attached to the deck-facing wall reaches toward the deck. */
 export const deckSideBlocks=(blocks:HouseBlockPlan[])=>blocks.filter(b=>b.attachedTo==='Front');
+
+/** Blocks that reach into the deck's side of the deck-facing wall line (y > 0). */
+export const blocksTowardDeck=(blocks:HouseBlockPlan[])=>blocks.slice(1).filter(b=>b.rect.y1>.5);
+
+const snap=(v:number)=>Math.round(v*1e6)/1e6;
+/**
+ * The main deck outline notched around every house block that reaches into it, for a deck fastened
+ * to the house (a freestanding deck is not cut; an overlap is reported instead). Edges are split at
+ * every block corner lying on them, so each outline edge is wholly against one wall or wholly clear.
+ * Wrap edge ids carry over; the new edges are '<block id>-front|left|right'. A house without
+ * blocks, or whose blocks stay clear of the deck side, returns the outline untouched.
+ */
+export function notchDeckAroundHouse<T extends {outline:PlanPoint[];edgeIds?:string[]}>(data:DeckData,fp:T):T{
+  if(data.deckType!=='Attached'&&data.deckType!=='Add-on'||!hasHouseBlocks(data))return fp;
+  const blocks=getHouseBlocks(data),toward=blocksTowardDeck(blocks);
+  const corners=blocks.slice(1).filter(b=>b.rect.y1>-.5).flatMap(b=>rectPolygon(b.rect));
+  let outline=fp.outline;
+  if(toward.length){
+    const cut=polygonCut([outline],toward.map(b=>rectPolygon(b.rect)),true).sort((p,q)=>signedArea(q)-signedArea(p))[0];
+    if(!cut)return fp;
+    outline=cleanOutline(cut.map(p=>({x:snap(p.x),y:snap(p.y)})));
+  }
+  // Split edges at block corners lying on them (e.g. a garage face flush with the deck-facing wall).
+  const split:PlanPoint[]=[];
+  outline.forEach((a,i)=>{
+    const b=outline[(i+1)%outline.length],len=Math.hypot(b.x-a.x,b.y-a.y);split.push(a);
+    const along=corners.filter(p=>Math.abs((p.x-a.x)*(b.y-a.y)-(p.y-a.y)*(b.x-a.x))/len<.01).map(p=>({p,t:((p.x-a.x)*(b.x-a.x)+(p.y-a.y)*(b.y-a.y))/len})).filter(({t})=>t>.5&&t<len-.5).sort((p,q)=>p.t-q.t);
+    for(const {p} of along)if(!split.some(q=>Math.hypot(q.x-p.x,q.y-p.y)<.01))split.push(p);
+  });
+  outline=split;
+  if(outline.length===fp.outline.length&&outline.every((p,i)=>Math.hypot(p.x-fp.outline[i].x,p.y-fp.outline[i].y)<1e-9))return fp;
+  // Start where the original outline started when that corner survives, else at the lowest-left corner.
+  const start=fp.outline[0],keep=outline.findIndex(p=>Math.hypot(p.x-start.x,p.y-start.y)<1e-6);
+  const first=keep>=0?keep:outline.reduce((best,p,i)=>p.y<outline[best].y-1e-6||(Math.abs(p.y-outline[best].y)<1e-6&&p.x<outline[best].x)?i:best,0);
+  outline=[...outline.slice(first),...outline.slice(0,first)];
+  if(!fp.edgeIds)return {...fp,outline};
+  const src=fp.outline,ids=fp.edgeIds;
+  const edgeIds=outline.map((a,i)=>{
+    const b=outline[(i+1)%outline.length],mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+    const j=src.findIndex((p,k)=>{const q=src[(k+1)%src.length],len=Math.hypot(q.x-p.x,q.y-p.y);return [a,b,mid].every(v=>Math.abs((v.x-p.x)*(q.y-p.y)-(v.y-p.y)*(q.x-p.x))/len<.01&&((v.x-p.x)*(q.x-p.x)+(v.y-p.y)*(q.y-p.y))/len>-.01&&((v.x-p.x)*(q.x-p.x)+(v.y-p.y)*(q.y-p.y))/len<len+.01);});
+    if(j>=0)return ids[j];
+    const block=toward.find(k=>mid.x>=k.rect.x0-.01&&mid.x<=k.rect.x1+.01&&mid.y>=k.rect.y0-.01&&mid.y<=k.rect.y1+.01);
+    if(!block)return 'main-front';
+    return Math.abs(mid.y-block.rect.y1)<.01?`${block.id}-front`:Math.abs(mid.x-block.rect.x0)<.01?`${block.id}-left`:`${block.id}-right`;
+  });
+  return {...fp,outline,edgeIds};
+}
+/** Drops repeated and collinear vertices a polygon cut can leave. */
+function cleanOutline(points:PlanPoint[]):PlanPoint[]{
+  let out=points.filter((p,i)=>{const q=points[(i+1)%points.length];return Math.hypot(q.x-p.x,q.y-p.y)>1e-6;});
+  for(let changed=true;changed&&out.length>3;){changed=false;
+    for(let i=0;i<out.length;i++){const a=out[(i+out.length-1)%out.length],p=out[i],b=out[(i+1)%out.length];if(Math.abs((p.x-a.x)*(b.y-a.y)-(p.y-a.y)*(b.x-a.x))<1e-6){out=out.filter((_,j)=>j!==i);changed=true;break;}}}
+  return out;
+}

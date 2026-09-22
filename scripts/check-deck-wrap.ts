@@ -11,7 +11,9 @@ import {doubledMemberSpanIn} from '../src/features/deckcraft/zoneFraming';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {deckReleaseData} from '../src/features/deckcraft/deckRelease';
 import {activeWrap,describeWrap,distanceToSegment,normalizeWrap,porchStairForDoor,wrapBlockers,wrapLabourFactor,wrapZones,WRAP_PORCH_GAP_IN} from '../src/features/deckcraft/lib/wrapGeometry';
-import {boardOutline} from '../src/features/deckcraft/lib/polygonCuts';
+import {boardOutline,polygonCut} from '../src/features/deckcraft/lib/polygonCuts';
+import {getHouseBlocks,rectPolygon} from '../src/features/deckcraft/houseFootprint';
+import {catalogueAccessoryLayout} from '../src/features/deckcraft/catalogueAccessories';
 import {deckExportMeshes,exportDeckDXF,exportDeckOBJ} from '../src/features/deckcraft/designExports';
 import type {PlanPoint} from '../src/features/deckcraft/lib/deckGeometry';
 import type {DeckData} from '../src/features/deckcraft/types';
@@ -171,4 +173,107 @@ checkWrap(design({length:12,height:36,houseConfig:house(12,30),wrap:{left:{width
   for(const patch of [{deckType:'Freestanding'},{pattern:'Diagonal'},{pattern:'Herringbone'},{hasInlay:true}] as Partial<DeckData>[])ok(wrapBlockers({...base(),...patch,wrap:{left:{widthFt:8,runFt:8}}}).length===1,`Wrap paused by ${JSON.stringify(patch)}`);
   ok(wrapBlockers({...base(),levels:3,wrap:{left:{widthFt:8,runFt:8}}}).length===0,'A wrap-around can have lower levels joined to it');
 }
-console.log(`DECK WRAP OK — ${cases} wrap designs (porch wraps included), ${checks} outline, ledger, hip, joist-bearing, board, stair, price and persistence checks.`);
+// 5. Bump-outs on the deck-facing wall: the attached deck is notched around them, on plain, notched
+// and wrap-around decks. The bump-out face is a ledger (joists hang off it); its side walls run with the
+// joists and are flush walls (the outside joist is bolted to them, no hangers); the strip in front of
+// the bump-out has its own beam and posts; nothing of the deck lands inside any part of the house.
+let bumpCases=0;
+function checkBump(d:DeckData,tag:string,bumpId='bump1'){
+  const m=buildDeckTakeoff(d),l=m.levels[0],fp=l.footprint,contact=getHouseContact(d,fp),o=fp.outline,hw=getHardwareLayout(d,m);
+  const blocks=getHouseBlocks(d),bump=blocks.find(b=>b.id===bumpId)!;
+  ok(area(o)>0&&!o.some((a,i)=>o.some((c,j)=>j>i+1&&!(i===0&&j===o.length-1)&&crosses(a,o[(i+1)%o.length],c,o[(j+1)%o.length]))),`${tag}: the notched outline is a simple polygon`);
+  if(l.zones)ok(Math.abs(l.zones.reduce((n,z)=>n+area(z.zone.outline),0)-area(o))<1e-4,`${tag}: the framing strips add up to the outline`);
+  // A strip whose back edge is a bump-out face is framed (and its structure sized) from that face.
+  for(const z of l.zones??[]){const ys=z.zone.outline.map(p=>p.y),back=Math.min(...ys);if(back>.5)ok(Math.abs(z.zone.origin.y-back)<1e-6&&Math.abs(z.zone.size.h-(Math.max(...ys)-back))<1e-6,`${tag}: the strip in front of the bump-out is framed from its face`);}
+  // The depth cap: at least 3 ft of deck in front of the bump-out across its width.
+  const fronts=o.filter(p=>p.x>bump.rect.x0-.01&&p.x<bump.rect.x1+.01&&p.y>bump.rect.y1+.01).map(p=>p.y);
+  ok(!fronts.length||Math.min(...fronts)-bump.rect.y1>=36-.01,`${tag}: at least 3 ft of deck stays in front of the bump-out`);
+  // Contacts: a ledger on the face, flush side walls, lengths and bolts follow them.
+  const face=contact.contacts.filter(c=>c.wall===`${bumpId}-front`),flush=contact.contacts.filter(c=>c.kind==='flush');
+  ok(face.length>0&&face.every(c=>c.kind==='ledger'&&c.blockId===bumpId&&Math.abs(c.a.y-bump.rect.y1)<.01),`${tag}: the bump-out face is a ledger`);
+  ok(flush.length>0&&flush.every(c=>c.blockId===bumpId&&Math.abs(c.a.x-c.b.x)<.01&&(Math.abs(c.a.x-bump.rect.x0)<.01||Math.abs(c.a.x-bump.rect.x1)<.01)),`${tag}: the bump-out side walls are flush contacts`);
+  const sum=(kind:string)=>contact.contacts.filter(c=>c.kind===kind).reduce((n,c)=>n+c.lengthIn,0);
+  ok(Math.abs(contact.ledgerLf*12-sum('ledger'))<1e-4&&Math.abs(contact.flushLf*12-sum('flush'))<1e-4&&Math.abs(contact.flashingLf-contact.ledgerLf-contact.flushLf)<1e-6,`${tag}: ledger, flush-wall and flashing lengths follow the contacts`);
+  ok(hw.ledgerBolts.length===contact.contacts.reduce((n,c)=>n+Math.ceil(c.lengthIn/12-1e-9),0),`${tag}: one bolt per foot of every ledger and flush wall`);
+  for(const c of flush){const along=hw.ledgerBolts.filter(b=>Math.abs(b.x-(c.a.x+c.inward.x*.75))<.01&&b.z>=Math.min(c.a.y,c.b.y)&&b.z<=Math.max(c.a.y,c.b.y));ok(along.length===Math.ceil(c.lengthIn/12-1e-9),`${tag}: flush-wall bolts go through the outside joist`);}
+  const flashRow=catalogueAccessoryLayout({...d,catalogueAccessories:['tt_protac_flashing']},m).rows.find(r=>r.id==='tt_protac_flashing')!;
+  ok(Math.abs(flashRow.qty-Math.ceil(contact.flashingLf*10)/10)<1e-9,`${tag}: flashing runs along the ledgers and the flush walls`);
+  // Joists: every end bears; ends on the face get hangers; no joist ends on a flush wall.
+  ok(unsupportedJoistEnds(l,contact).length===0,`${tag}: every joist end bears on a ledger, hip or beam`);
+  const ends=l.joists.flatMap(j=>[j.a,j.b]).map(plan);
+  const onFace=ends.filter(p=>face.some(c=>Math.abs(p.y-c.a.y)<.5&&p.x>Math.min(c.a.x,c.b.x)-.5&&p.x<Math.max(c.a.x,c.b.x)+.5));
+  ok(onFace.length>0&&onFace.every(p=>hw.hangers.some(h=>Math.hypot(h.x-p.x,h.z-p.y)<.1)),`${tag}: joists hang off the bump-out face on hangers`);
+  ok(!ends.some(p=>flush.some(c=>{const t=p.y-Math.min(c.a.y,c.b.y);return Math.abs(p.x-c.a.x)<1&&t>1&&t<c.lengthIn-1;})),`${tag}: no joist ends on a flush wall`);
+  const jSpan=l.reference.jSpan*12+1,beams=l.beams.filter(b=>b.role!=='hip'),hips=l.hips??[];
+  for(const j of l.joists){
+    const k=Math.abs(j.b.z-j.a.z)<1e-6?'x':'z',c=k==='z'?'x':'z',lo=Math.min(j.a[k],j.b[k]),hi=Math.max(j.a[k],j.b[k]);
+    const stops=[...beams.filter(b=>Math.abs(b.a[k]-b.b[k])<1e-6&&j.a[c]>=Math.min(b.a[c],b.b[c])-.1&&j.a[c]<=Math.max(b.a[c],b.b[c])+.1&&b.a[k]>lo-1&&b.a[k]<hi+1).map(b=>b.a[k]),...[j.a,j.b].filter(p=>contact.onContact(plan(p),plan(p))||hips.some(h=>distanceToSegment(plan(p),h.a,h.b)<2)).map(p=>p[k])].sort((a,b)=>a-b);
+    for(let i=0;i+1<stops.length;i++)assert(stops[i+1]-stops[i]<=jSpan,`${tag}: joist span ${(stops[i+1]-stops[i]).toFixed(1)} in exceeds the table`);
+  }
+  checks++;
+  // Beams: every beam end that does not continue into another piece sits over a post (end-post rule).
+  for(const b of beams)for(const e of [b.a,b.b]){
+    if(beams.some(q=>q!==b&&[q.a,q.b].some(v=>Math.hypot(v.x-e.x,v.z-e.z)<1)))continue;
+    const L=len(b)||1,u={x:(b.b.x-b.a.x)/L,z:(b.b.z-b.a.z)/L};
+    assert(l.supports.some(p=>Math.abs((p.x-e.x)*u.z-(p.z-e.z)*u.x)<6&&Math.abs((p.x-e.x)*u.x+(p.z-e.z)*u.z)<=24+1e-6)||hips.some(h=>distanceToSegment(plan(e),h.a,h.b)<2),`${tag}: beam end at ${e.x.toFixed(1)},${e.z.toFixed(1)} has a post`);
+  }
+  checks++;
+  // The strip in front of the bump-out is framed from its face: a beam row inside that strip.
+  const lo=Math.max(bump.rect.x0,Math.min(...o.map(p=>p.x))),hi=Math.min(bump.rect.x1,Math.max(...o.map(p=>p.x)));
+  ok(beams.some(b=>b.a.z>bump.rect.y1+.5&&Math.min(b.a.x,b.b.x)<hi-1&&Math.max(b.a.x,b.b.x)>lo+1),`${tag}: the deck in front of the bump-out has its own beam`);
+  for(const z of (l.zones??[]).filter(z=>z.zone.origin.y>.5))ok(beams.some(b=>b.a.z>z.zone.origin.y+.5&&Math.min(b.a.x,b.b.x)<z.zone.origin.x+z.zone.size.w-1&&Math.max(b.a.x,b.b.x)>z.zone.origin.x+1),`${tag}: every strip framed off the bump-out face has its own beam`);
+  ok([...l.joists,...l.beams,...l.blocking,...(l.rim??[])].every(mm=>len(mm)<=192.001),`${tag}: no member is longer than 16 ft stock`);
+  ok(!m.railing.rails.some(r=>contact.onContact(plan(r.a),plan(r.b))),`${tag}: no railing along a ledger or flush wall`);
+  // Decking covers the notched deck, and nothing of the deck lands inside any part of the house.
+  const finished=l.deckingFootprint!.outline,polys=l.boards.map(b=>boardOutline(b,d.boardWidth)),xs=finished.map(p=>p.x),ys=finished.map(p=>p.y);
+  ok(polys.reduce((n,p)=>n+Math.abs(area(p)),0)<=Math.abs(area(finished))+1,`${tag}: no two boards overlap`);
+  let probes=0,missed=0;
+  for(let x=Math.min(...xs)+3;x<Math.max(...xs);x+=7)for(let y=Math.min(...ys)+3;y<Math.max(...ys);y+=7){
+    const p={x,y};if(!inside(p,finished)||finished.some((a,i)=>distanceToSegment(p,a,finished[(i+1)%finished.length])<1))continue;
+    probes++;if(!polys.some(poly=>nearPoly(p,poly,m.gap+.02)))missed++;
+  }
+  ok(probes>50&&missed===0,`${tag}: decking covers the notched deck (${missed} of ${probes} probes uncovered)`);
+  const square=(p:{x:number;z:number},h:number)=>[{x:p.x-h,y:p.z-h},{x:p.x+h,y:p.z-h},{x:p.x+h,y:p.z+h},{x:p.x-h,y:p.z+h}];
+  const strip=(mm:Member)=>{const L=Math.hypot(mm.b.x-mm.a.x,mm.b.z-mm.a.z)||1,nx=-(mm.b.z-mm.a.z)/L*mm.width/2,nz=(mm.b.x-mm.a.x)/L*mm.width/2;return [{x:mm.a.x-nx,y:mm.a.z-nz},{x:mm.b.x-nx,y:mm.b.z-nz},{x:mm.b.x+nx,y:mm.b.z+nz},{x:mm.a.x+nx,y:mm.a.z+nz}];};
+  const deckParts=[finished,...polys,...l.supports.map(p=>square(p,1.75)),...[...l.joists,...l.beams,...l.blocking].map(strip),...m.treads.map(t=>square({x:t.x,z:t.z},Math.min(t.w,t.d)/2-.1))].map(p=>area(p)<0?[...p].reverse():p);
+  const intrusion=blocks.reduce((n,b)=>n+deckParts.reduce((k,part)=>k+polygonCut([part],[rectPolygon(b.rect)]).reduce((q,p)=>q+Math.abs(area(p)),0),0),0);
+  ok(intrusion<.5,`${tag}: no deck, board, framing, post or stair inside any house block (${intrusion.toFixed(2)} sq in)`);
+  bumpCases++;
+}
+{
+  const bumps=[
+    {tag:'centred',w:8,d:3,off:(hw:number)=>(hw-8)/2,plainOnly:false},
+    {tag:'off-centre',w:6,d:4,off:(hw:number)=>hw/2+1,plainOnly:false},
+    {tag:'shallow',w:10,d:1.5,off:(hw:number)=>(hw-10)/2,plainOnly:false},
+    {tag:'capped',w:8,d:40,off:(hw:number)=>(hw-8)/2-3,plainOnly:false},
+    {tag:'past-end',w:10,d:3,off:()=>3,plainOnly:true},
+  ];
+  const decks:[string,Partial<DeckData>][]=[
+    ['rectangle',{width:16,length:12,shape:'Rectangle'}],['L-shape',{width:16,length:12,shape:'L-Shape'}],['multi-corner',{width:16,length:12,shape:'Multi-corner'}],
+    ['wrap left',{width:34,length:12,wrap:{left:{widthFt:8,runFt:10}}}],['wrap right',{width:34,length:12,wrap:{right:{widthFt:8,runFt:10}}}],
+    ['wrap both',{width:22,length:12,wrap:{left:{widthFt:8,runFt:10},right:{widthFt:10,runFt:12}}}],['porch',{width:34,length:12,wrap:{right:{widthFt:8,runFt:10},porchRight:{depthFt:6,runFt:10}}}],
+  ];
+  for(const [shape,deck] of decks)for(const bump of bumps)for(const height of [12,36,72])for(const boards of [boardsets[0],boardsets[3]]){
+    if(bump.plainOnly&&deck.wrap)continue;
+    const d=design({...deck,height,...boards,stairPosition:'Front',houseConfig:{...house(26,deck.wrap?22:16),footprint:{rects:[{id:'bump1',kind:'house',wall:'Front',offsetFt:bump.off(26),widthFt:bump.w,depthFt:bump.d}]}}});
+    if(deck.wrap)assert(activeWrap(d),`${shape}: the wrap stays active around a bump-out clear of its corners`);
+    checkBump(d,`${shape} ${bump.tag} ${boards.pattern} ${height}in`);
+  }
+  // A garage flush with the deck-facing wall: the deck running past the house onto it gets a ledger on
+  // the garage (no house-side beam there) and the garage-ledger review item.
+  const garage=design({width:30,length:12,housePlacement:{anchor:'left',offsetIn:0},houseConfig:{...house(20,16),footprint:{rects:[{id:'garage1',kind:'garage',wall:'Right',offsetFt:0,widthFt:20,depthFt:22}]}}});
+  const gm=buildDeckTakeoff(garage),gc=getHouseContact(garage,gm.levels[0].footprint);
+  ok(gc.contacts.some(c=>c.blockId==='garage1'&&c.kind==='ledger'&&Math.abs(c.lengthIn-120)<.01)&&Math.abs(gc.ledgerLf-30)<1e-6,'A deck running past the house onto a flush garage face is ledgered to the garage');
+  ok(gm.levels[0].beams.every(b=>b.role!=='house-side-beam')&&gm.issues.some(i=>i.includes('attached garage wall')),'No house-side beam in front of the garage; the garage ledger is flagged for review');
+  // Each block the deck meets is checked against its own floor.
+  const sunk=design({width:16,length:12,height:36,houseConfig:{...house(26,16),floorHeightIn:37,footprint:{rects:[{id:'bump1',kind:'house',wall:'Front',offsetFt:9,widthFt:8,depthFt:3,floorHeightIn:30}]}}});
+  const si=buildDeckTakeoff(sunk).issues;
+  ok(si.some(i=>i.includes('above the house bump-out floor / door sill (30 in)'))&&!si.some(i=>i.includes('above the house floor / door sill')),'The door-sill check uses each contacted block\'s own floor');
+  // A block away from the deck leaves it exactly as it was; a bump-out removes its area from the deck.
+  const plainD=design({width:16,length:12,houseConfig:house(26,16)}),awayD=design({width:16,length:12,houseConfig:{...house(26,16),footprint:{rects:[{id:'wing1',kind:'house',wall:'Back',offsetFt:0,widthFt:10,depthFt:10}]}}});
+  assert.deepEqual(buildDeckTakeoff(awayD).quantities,buildDeckTakeoff(plainD).quantities);checks++;
+  const bumped=design({width:16,length:12,houseConfig:{...house(26,16),footprint:{rects:[{id:'bump1',kind:'house',wall:'Front',offsetFt:9,widthFt:8,depthFt:3}]}}});
+  ok(area(buildDeckTakeoff(bumped).levels[0].footprint.outline)===area(buildDeckTakeoff(plainD).levels[0].footprint.outline)-96*36,'The notch removes exactly the bump-out area from the deck');
+}
+
+console.log(`DECK WRAP OK — ${cases} wrap designs (porch wraps included), ${bumpCases} bump-out designs, ${checks} outline, ledger, hip, joist-bearing, board, stair, price and persistence checks.`);

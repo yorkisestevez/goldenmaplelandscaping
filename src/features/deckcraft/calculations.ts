@@ -74,7 +74,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const veneer=stairVeneerLayout(data,model);
   const quantities=model.quantities;
   const hardware=getHardwareLayout(data,model);
-  const ledgerLf=getHouseContact(data,model.levels[0].footprint).ledgerLf;
+  // Flashing covers every wall the deck meets: ledgers plus bump-out flush walls (same as ledger length without them).
+  const flashingLf=getHouseContact(data,model.levels[0].footprint).flashingLf;
   const connectors=connectorSchedule(data,model,hardware);
   const framingStock=constructionStock(model);
   const {
@@ -430,7 +431,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     pergola: pergolaSqft * 65 * markupMult,
     // Add-on module specific
     structuralTieIn: deckType === 'Add-on' ? (data.addOnHardwareCost || 450) * markupMult : 0,
-    ledgerFlashing: deckType === 'Add-on' ? (data.addOnFlashingLf || ledgerLf) * 12 * markupMult : 0,
+    ledgerFlashing: deckType === 'Add-on' ? (data.addOnFlashingLf || flashingLf) * 12 * markupMult : 0,
     transitionLabor: deckType === 'Add-on' ? (data.addOnTransitionLabor || 850) : 0,
   };
 
@@ -558,7 +559,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
         { name: 'Demo & Removal', spec: 'Existing Deck', qty: hasDemo ? area : 0, unit: 'sqft', cost: addOnCosts.demo },
         { name: 'Pergola', spec: 'Wood/Aluminum', qty: pergolaSqft, unit: 'sqft', cost: addOnCosts.pergola },
         { name: 'Structural Tie-in', spec: 'Hardware to Existing', qty: deckType === 'Add-on' ? 1 : 0, unit: 'ls', cost: addOnCosts.structuralTieIn },
-        { name: 'Ledger Flashing', spec: 'Connection Width', qty: deckType === 'Add-on' ? (data.addOnFlashingLf || ledgerLf) : 0, unit: 'lf', cost: addOnCosts.ledgerFlashing },
+        { name: 'Ledger Flashing', spec: 'Connection Width', qty: deckType === 'Add-on' ? (data.addOnFlashingLf || flashingLf) : 0, unit: 'lf', cost: addOnCosts.ledgerFlashing },
         { name: 'Transition Labor', spec: 'Leveling & Siding Prep', qty: deckType === 'Add-on' ? 1 : 0, unit: 'ls', cost: addOnCosts.transitionLabor },
       ].filter(item => item.qty > 0)
     },
