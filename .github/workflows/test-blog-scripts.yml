@@ -2,7 +2,7 @@ name: Test blog-publisher scripts
 
 # Runs node --test on every PR or push that touches the publisher/watchdog
 # code. Catches regressions like the 2026-05-30 `merged` vs `mergedAt` bug.
-# Built on Node 20's built-in test runner — no Vitest/Jest needed.
+# Built on Node's built-in test runner — no Vitest/Jest needed.
 
 on:
   pull_request:
@@ -25,11 +25,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Syntax check all .cjs files
         run: |
