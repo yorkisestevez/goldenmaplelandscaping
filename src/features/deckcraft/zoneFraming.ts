@@ -61,3 +61,19 @@ export function frameZoneJoists({zone,reference:ref}:FramedZone,offset:V3,cfg:Zo
   for(let z=o.y+96;z<o.y+zone.size.h-3;z+=96)for(let i=0;i<joists.length-1;i++){const a=joists[i],b=joists[i+1];if(z+offset.z<=Math.min(a.a.z,a.b.z)||z+offset.z>=Math.max(a.a.z,a.b.z)||z+offset.z<=Math.min(b.a.z,b.b.z)||z+offset.z>=Math.max(b.a.z,b.b.z)||b.a.x-a.a.x<2)continue;out.blocking.push({a:{x:a.a.x+.75,y:a.a.y,z:z+offset.z},b:{x:b.a.x-.75,y:b.a.y,z:z+offset.z},width:1.5,depth:cfg.joistDepth});}
   out.joists.push(...joists);
 }
+
+/** Back-line stretches beyond the house have no ledger: frame them like a freestanding deck's
+ * house side, using the reference engine's own house beam and posts sized to that stretch. */
+export function frameHouseSideBeams(stretches:[number,number][],depthIn:number,cfg:ZoneFramingConfig,offset:V3,out:{supports:V3[];beams:Member[]}){
+  for(const [x0,x1] of stretches){
+    const side=computeStruct({width:(x1-x0)/12,depth:depthIn/12,heightIn:cfg.top,house:'brick',ft:'PT',joistSp:String(cfg.spacing),joistSz:cfg.framingSize,beamMount:cfg.top<18?'flush':'drop',bSzSel:'auto',bPlySel:'auto',pf:cfg.pictureFrame});
+    const row=side.beamRows.find((r:{type:string})=>r.type==='house_beam');if(!row)continue;
+    for(const p of side.posts)if(p.type==='mammoth')out.supports.push({x:x0+p.x*12+offset.x,y:Math.max(0,side.bBotY*12),z:p.z*12+offset.z});
+    for(let ply=0;ply<side.bPly;ply++){const y=(side.bBotY+side.bh/2)*12,z=row.z*12+offset.z+(ply-(side.bPly-1)/2)*1.5;out.beams.push({a:{x:x0+offset.x,y,z},b:{x:x1+offset.x,y,z},width:1.5,depth:side.bh*12,role:'house-side-beam'});}
+  }
+}
+
+/** Longest span of a doubled (two-ply) member of joist size, from the reference beam span table. */
+export function doubledMemberSpanIn(cfg:ZoneFramingConfig){
+  return computeStruct({width:10,depth:10,heightIn:cfg.top,house:'wood',ft:'PT',joistSp:String(cfg.spacing),joistSz:cfg.framingSize,beamMount:'drop',bSzSel:cfg.framingSize,bPlySel:'2',pf:false}).govSpan*12;
+}

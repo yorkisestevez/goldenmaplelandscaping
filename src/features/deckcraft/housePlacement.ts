@@ -1,5 +1,6 @@
 import type {DeckData} from './types';
 import {getHouseConfig} from './houseSettings';
+import {activeWrap} from './lib/wrapGeometry';
 
 /** The house footprint along the deck's back line (plan inches; the deck-facing wall is y = 0). */
 export interface HouseFootprint{x0:number;x1:number;widthIn:number;depthIn:number;
@@ -12,7 +13,7 @@ export const MIN_HOUSE_OVERLAP_IN=24;
 /** A positioned house narrower than the deck splits the deck's back (house-line) edge at the
  * house corners, so every outline edge is either wholly against the house or wholly exposed. */
 export function splitAtHouseCorners(data:DeckData,outline:{x:number;y:number}[]){
-  if(!data.housePlacement)return outline;
+  if(!data.housePlacement||activeWrap(data))return outline;
   const {x0,x1}=getHousePlacement(data),out:{x:number;y:number}[]=[];
   outline.forEach((a,i)=>{
     out.push(a);const b=outline[(i+1)%outline.length];
@@ -23,6 +24,9 @@ export function splitAtHouseCorners(data:DeckData,outline:{x:number;y:number}[])
 
 export function getHousePlacement(data:DeckData):HouseFootprint{
   const house=getHouseConfig(data),W=Math.max(12,(Number(data.width)||0)*12),HW=house.widthFt*12,depthIn=house.depthFt*12;
+  // A wrap-around sets the house between its wings: each wrapped side wall is a wing's ledger.
+  const wrap=activeWrap(data);
+  if(wrap)return {x0:wrap.x0,x1:wrap.x1,widthIn:HW,depthIn,placed:true};
   const p=data.housePlacement;
   if(!p)return {x0:W/2-HW/2,x1:W/2+HW/2,widthIn:HW,depthIn,placed:false};
   // offsetIn always shifts the house to the right (+) or left (−) of its anchor.

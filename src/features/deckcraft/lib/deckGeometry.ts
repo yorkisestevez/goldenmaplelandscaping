@@ -15,6 +15,7 @@ import {offsetPolygons,polygonCut,polygonBoard} from './polygonCuts';
 
 import { DeckData } from '../types';
 import { splitAtHouseCorners } from '../housePlacement';
+import { activeWrap, wrapOutline } from './wrapGeometry';
 
 export interface PlanPoint { x: number; y: number }
 export type EdgeName = 'Front' | 'Back' | 'Left' | 'Right';
@@ -32,6 +33,8 @@ export interface FootprintPlan {
   outline: PlanPoint[];
   bounds: { w: number; h: number };
   isCurved: boolean;
+  /** Wrap-around outlines name every edge (e.g. 'wingR-end'); other shapes leave this unset. */
+  edgeIds?: string[];
 }
 
 const n = (v: unknown, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) : fallback);
@@ -47,6 +50,8 @@ const n = (v: unknown, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) 
  * A positioned house narrower than the main deck adds vertices at its corners.
  */
 export function getFootprint(data: DeckData, level: 1 | 2 = 1): FootprintPlan {
+  const wrap = level === 1 ? activeWrap(data) : null;
+  if (wrap) return { ...wrapOutline(wrap), bounds: { w: wrap.W, h: wrap.L }, isCurved: false };
   const fp = shapeFootprint(data, level);
   if (level !== 1) return fp;
   const outline = splitAtHouseCorners(data, fp.outline);
@@ -144,7 +149,10 @@ export function getStairPlacement(data: DeckData, target: { w:number;h:number } 
   const edge=data.stairPosition||'Front';
   const desired=edge==='Front'?{x:0,y:1}:edge==='Back'?{x:0,y:-1}:edge==='Left'?{x:-1,y:0}:{x:1,y:0};
   // Stairs never open through a house wall.
-  const candidates=fp.outline.map((a,i)=>{const b=fp.outline[(i+1)%fp.outline.length],length=Math.hypot(b.x-a.x,b.y-a.y),along={x:(b.x-a.x)/length,y:(b.y-a.y)/length},outward={x:along.y,y:-along.x};return {a,b,length,along,outward,index:i};}).filter(s=>s.outward.x*desired.x+s.outward.y*desired.y>.7&&!contact?.isContactEdge(s.index));
+  const all=fp.outline.map((a,i)=>{const b=fp.outline[(i+1)%fp.outline.length],length=Math.hypot(b.x-a.x,b.y-a.y),along={x:(b.x-a.x)/length,y:(b.y-a.y)/length},outward={x:along.y,y:-along.x};return {a,b,length,along,outward,index:i};});
+  // A named wrap edge (e.g. a wing end) takes precedence over the side, unless it is a house wall.
+  const named=data.stairEdgeId&&fp.edgeIds?all.find(s=>fp.edgeIds![s.index]===data.stairEdgeId&&!contact?.isContactEdge(s.index)):undefined;
+  const candidates=named?[named]:all.filter(s=>s.outward.x*desired.x+s.outward.y*desired.y>.7&&!contact?.isContactEdge(s.index));
   if(!candidates.length)return null;
   const requested=Math.max(24,n(data.stairWidth,48)),eligible=candidates.filter(s=>s.length>=requested);
   const chosen=(eligible.length?eligible:candidates).sort((a,b)=>b.length-a.length)[0];
@@ -153,7 +161,12 @@ export function getStairPlacement(data: DeckData, target: { w:number;h:number } 
   const reverse=chosen.along.x<-.5||chosen.along.y<-.5;
   const along=reverse?{x:-chosen.along.x,y:-chosen.along.y}:chosen.along;
   const base=reverse?chosen.b:chosen.a,start=(chosen.length-width)*offset;
-  return {edge,origin:{x:base.x+along.x*start,y:base.y+along.y*start},along,outward:chosen.outward,width,edgeIndex:chosen.index};
+  return {edge:named?edgeFacing(chosen.outward):edge,origin:{x:base.x+along.x*start,y:base.y+along.y*start},along,outward:chosen.outward,width,edgeIndex:chosen.index};
+}
+
+/** The deck side an outward edge normal faces. */
+export function edgeFacing(outward: PlanPoint): EdgeName {
+  return Math.abs(outward.x) > Math.abs(outward.y) ? (outward.x > 0 ? 'Right' : 'Left') : (outward.y > 0 ? 'Front' : 'Back');
 }
 
 /** Axis-aligned rect covering the stair opening + flight, for 2D drawing. */

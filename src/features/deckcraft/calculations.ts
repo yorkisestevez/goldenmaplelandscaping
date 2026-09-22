@@ -1,3 +1,4 @@
+import { activeWrap, wrapLabourFactor } from './lib/wrapGeometry';
 import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock} from './stockPlan';
 import {buildDeckTakeoff,type DeckTakeoff} from './deckTakeoff';
@@ -105,7 +106,10 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const landingArea = levels > 1 ? (stairWidth / 12) * (stairWidth / 12) : 0;
   
   const area = quantities.area;
-  const perimeter1 = 2 * (width + length);
+  // A wrap-around's fascia follows its real outline; every other shape keeps the original rectangle basis.
+  const wrap = activeWrap(data), wrapCorners = wrap ? (wrap.left ? 1 : 0) + (wrap.right ? 1 : 0) : 0;
+  const wrapOutlineFt = model.levels[0].footprint.outline.reduce((n, p, i, o) => { const q = o[(i + 1) % o.length]; return n + Math.hypot(q.x - p.x, q.y - p.y) / 12; }, 0);
+  const perimeter1 = wrapCorners ? wrapOutlineFt : 2 * (width + length);
   const perimeter2 = levels > 1 ? 2 * (width2 + length2) : 0;
   const perimeter = perimeter1 + perimeter2;
   
@@ -330,6 +334,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   if (shape === 'L-Shape') complexityMult *= 1.10;
   if (shape === 'Multi-corner') complexityMult *= 1.25;
   if (shape === 'Curved') complexityMult *= 1.50;
+  complexityMult *= wrapLabourFactor(wrap);
   
   if (pattern === 'Diagonal') complexityMult *= 1.20;
   if (pattern === 'Picture Frame') complexityMult *= 1.25;

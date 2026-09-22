@@ -1,6 +1,8 @@
 import { DEFAULT_DECK } from './defaults';
 import { type DeckData, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardFeature } from './types';
-import {availableStairSides} from './houseContact';
+import {availableStairSides,getHouseContact} from './houseContact';
+import {getFootprint} from './lib/deckGeometry';
+import {normalizeWrap,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
 import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,MAX_SCREEN_PANELS,PRIVACY_HEIGHTS,PRIVACY_PRODUCTS,PRIVACY_SIDES,pricedPrivacyArea} from './privacyScreens';
 
 const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy'] as const satisfies readonly LightingZone[];
@@ -47,7 +49,12 @@ export function validateDesign(input:unknown):DeckData {
     if(!values.includes(input[key] as never))throw new Error(`Unsupported ${key} selection.`);
     target[key]=input[key];
   }
-  for(const [key,[min,max]] of Object.entries(ranges))if(Object.hasOwn(input,key))target[key]=numeric(input[key],min,max,key);
+  // A two-corner wrap derives its width (left wing + house + right wing), which may exceed the input range.
+  const derivedWidth=record(input.wrap)&&record(input.wrap.left)&&record(input.wrap.right);
+  for(const [key,[min,max]] of Object.entries(ranges))if(Object.hasOwn(input,key)){
+    if(key==='width'&&derivedWidth&&!(typeof input.width==='number'&&input.width>=min&&input.width<=max))continue;
+    target[key]=numeric(input[key],min,max,key);
+  }
   for(const key of booleans)if(Object.hasOwn(input,key)){
     if(typeof input[key]!=='boolean')throw new Error(`${key} must be true or false.`);
     target[key]=input[key];
@@ -147,6 +154,19 @@ export function validateDesign(input:unknown):DeckData {
     if(!record(p)||!['left','center','right'].includes(p.anchor as string))throw new Error('Invalid house position.');
     clean.housePlacement={anchor:p.anchor as HousePlacement['anchor'],offsetIn:numeric(p.offsetIn,-2400,2400,'House position')};
   }
+  if(input.wrap!==undefined){
+    const w=input.wrap;if(!record(w))throw new Error('Invalid wrap-around.');
+    const wing=(g:unknown,label:string)=>{
+      if(g===undefined)return undefined;if(!record(g))throw new Error(`Invalid ${label.toLowerCase()} wrap wing.`);
+      return {widthFt:numeric(g.widthFt,WRAP_WING_WIDTH_FT[0],WRAP_WING_WIDTH_FT[1],`${label} wing width`),runFt:numeric(g.runFt,WRAP_RUN_FT[0],WRAP_RUN_FT[1],`${label} wing run`)};
+    };
+    const left=wing(w.left,'Left'),right=wing(w.right,'Right');
+    if(left||right)clean.wrap={...(left?{left}:{}),...(right?{right}:{})};
+  }
+  if(input.stairEdgeId!==undefined){
+    if(typeof input.stairEdgeId!=='string'||!/^[a-zA-Z-]{1,40}$/.test(input.stairEdgeId))throw new Error('Invalid stair edge.');
+    clean.stairEdgeId=input.stairEdgeId;
+  }
   if(input.terrainConfig!==undefined){const t=input.terrainConfig;if(!record(t))throw new Error('Invalid terrain configuration.');clean.terrainConfig={widthFt:numeric(t.widthFt,20,250,'Terrain width'),depthFt:numeric(t.depthFt,20,250,'Terrain depth'),elevationIn:numeric(t.elevationIn,-120,120,'Terrain grade'),slopePct:numeric(t.slopePct,-30,30,'Terrain slope')};}
   if(input.yardFeatures!==undefined){
     if(!Array.isArray(input.yardFeatures)||input.yardFeatures.length>20)throw new Error('A design supports up to 20 yard features.');
@@ -160,6 +180,10 @@ export function validateDesign(input:unknown):DeckData {
   // The public estimate derives railing quantity from geometry, never an imported allowance.
   clean.railingLf=0;
   if(clean.borderFinish==='Dark Slate')clean.pictureFrameRows=clean.pictureFrameRows===2?2:1;
+  // A wrap fixes the house size and, around both corners, the deck width.
+  const wrapped=normalizeWrap(clean);if(wrapped!==clean){clean.width=wrapped.width;clean.houseConfig=wrapped.houseConfig;}
+  // A named stair edge must be an exposed edge of this outline; otherwise the stair side decides.
+  if(clean.stairEdgeId){const fp=getFootprint(clean,1),contact=getHouseContact(clean,fp),i=fp.edgeIds?.indexOf(clean.stairEdgeId)??-1;if(i<0||contact.isContactEdge(i))delete clean.stairEdgeId;}
   // A stair side with no exposed edge (e.g. against the house) moves to the first side that has one.
   const stairSides=availableStairSides(clean);
   if(!stairSides.includes(clean.stairPosition))clean.stairPosition=stairSides[0]??'Front';
@@ -169,7 +193,7 @@ export function validateDesign(input:unknown):DeckData {
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','yardFeatures','terrainConfig']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','stairEdgeId','yardFeatures','terrainConfig']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);

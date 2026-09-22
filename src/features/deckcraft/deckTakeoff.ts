@@ -1,4 +1,6 @@
-import {addConstructionDetails,finishBoards,unsupportedJoistEnds} from './constructionDetails';
+import {addConstructionDetails,addRim,finishBoards,unsupportedJoistEnds} from './constructionDetails';
+import {frameWrap,wrapBoardEndBlocking,planZones} from './wrapFraming';
+import {activeWrap,type ActiveWrap,type WrapHip} from './lib/wrapGeometry';
 import {polygonCut,polygonBoard,splitBoard,offsetPolygons} from './lib/polygonCuts';
 import {getFinishedFootprint} from './lib/finishedFootprint';
 import {computeStruct,computeStairs} from './referenceConstruction';
@@ -8,13 +10,15 @@ import {finishedFasciaOffset} from './lib/finishedFootprint';
 import {getStairSupport,getStringerOffsets,makeRiserBoards,type RiserBoard} from './stairConstruction';
 import {getHouseContact,exposedSides,deckAttachesToHouse,exposedHouseLine} from './houseContact';
 import {getHouseConfig} from './houseSettings';
-import {outlineSpans,cleanPolygon,zoneReference,frameZoneBearings,frameZoneJoists,type DeckZone,type FramedZone,type ZoneFramingConfig} from './zoneFraming';
+import {outlineSpans,cleanPolygon,zoneReference,frameZoneBearings,frameZoneJoists,frameHouseSideBeams,type DeckZone,type FramedZone,type ZoneFramingConfig} from './zoneFraming';
 import {getFootprint,getBoardRows,getPictureFrameRuns,getStairPlacement,getRailingSegments,getHerringboneRows,clipToConvex,type StairPlacement,type PlanPoint,type FootprintPlan,type BoardRun} from './lib/deckGeometry';
 export type V3={x:number;y:number;z:number};
 export type Member={a:V3;b:V3;width:number;depth:number;role?:string;spliceStart?:boolean;spliceEnd?:boolean;stair?:{risers:number;rise:number;run:number;top:number;bottom:number}};
 export type Box={x:number;y:number;z:number;w:number;h:number;d:number;angle?:number;polygon?:PlanPoint[];kind?:'tread'|'winder'|'riser'};
 export type RailRun={a:V3;b:V3};
-export type DeckLevel={kind?:'deck'|'landing'|'winder';index?:number;rim?:Member[];footprint:FootprintPlan;deckingFootprint?:FootprintPlan;top:number;offset:V3;boards:BoardRun[];supports:V3[];joists:Member[];beams:Member[];blocking:Member[];breakers:number[];reference:any;zones?:FramedZone[]};
+export type DeckLevel={kind?:'deck'|'landing'|'winder';index?:number;rim?:Member[];footprint:FootprintPlan;deckingFootprint?:FootprintPlan;top:number;offset:V3;boards:BoardRun[];supports:V3[];joists:Member[];beams:Member[];blocking:Member[];breakers:number[];reference:any;zones?:FramedZone[];
+  /** Wrap-around main deck only: hip centre lines and the framing zones with their joist direction. */
+  hips?:WrapHip[];wrapZones?:{id:string;label:string;outline:PlanPoint[];joistDir:PlanPoint}[]};
 const distance=(a:V3,b:V3)=>Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z);
 const mix=(a:V3,b:V3,t:number):V3=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t});
 export function polygonArea(fp:FootprintPlan){return Math.abs(fp.outline.reduce((a,p,i)=>{const q=fp.outline[(i+1)%fp.outline.length];return a+p.x*q.y-q.x*p.y;},0))/288;}
@@ -56,19 +60,25 @@ export function buildDeckTakeoff(data:DeckData){
   const joistDepth=data.framingSize==='2x8'?7.25:data.framingSize==='2x12'?11.25:9.25;
   const levels:DeckLevel[]=[];const railRuns:RailRun[]=[];const treads:Box[]=[];const riserBoards:RiserBoard[]=[];const stringers:Member[]=[];const stairOpenings:StairPlacement[]=[];
   const mainFp=getFootprint(data,1),mainContact=getHouseContact(data,mainFp);
+  const wrap=activeWrap(data);
+  /** A wrap-around main deck: zones framed off each house wall and joined on hips (see wrapFraming). */
+  function makeWrapLevel(footprint:FootprintPlan,top:number,offset:V3,cfg:ZoneFramingConfig,wrap:ActiveWrap):DeckLevel{
+    const borders=data.pictureFrameRows||(data.pattern==='Picture Frame'?1:0),inset=borders*(data.boardWidth+gap);
+    const deckingFootprint=getFinishedFootprint(data,footprint,mainContact);
+    const framed=frameWrap({wrap,cfg,deckingOutline:deckingFootprint.outline,inset,borders,boardWidth:data.boardWidth,gap,stockLength,houseSide:exposedHouseLine(data,footprint,mainContact)});
+    const boards:BoardRun[]=[...(borders?getPictureFrameRuns(deckingFootprint,borders as 1|2,data.boardWidth,gap):[]),...framed.fieldBoards];
+    const installed=boards.flatMap(b=>splitBoard(b,data.boardWidth,stockLength,gap));
+    const level:DeckLevel={kind:'deck',index:0,footprint,deckingFootprint,top,offset,supports:framed.supports,joists:framed.joists,beams:framed.beams,blocking:framed.blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,0,stockLength,inset),breakers:framed.breakers,reference:framed.reference,hips:framed.hips,wrapZones:planZones(framed.zones)};
+    addRim(level);wrapBoardEndBlocking(level,framed.zones,framed.hips);
+    return level;
+  }
   function makeLevel(footprint:FootprintPlan,top:number,offset:V3,attached:boolean,kind:DeckLevel['kind']='deck',index=0){
     const cfg={top,spacing,framingSize:data.framingSize,joistDepth,pictureFrame:!!data.pictureFrameRows||data.pattern==='Picture Frame'};
+    if(wrap&&kind==='deck'&&index===0)return makeWrapLevel(footprint,top,offset,cfg,wrap);
     const zones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0).map(zone=>({zone,reference:zoneReference(zone,cfg)})),reference=zones[0].reference;
     const supports:V3[]=[],joists:Member[]=[],beams:Member[]=[],blocking:Member[]=[];
     for(const zone of zones)frameZoneBearings(zone,offset,{supports,beams});
-    // Back-line stretches beyond the house have no ledger: frame them like a freestanding deck's
-    // house side, using the reference engine's own house beam and posts sized to that stretch.
-    if(attached&&index===0)for(const [x0,x1] of exposedHouseLine(data,footprint,mainContact)){
-      const side=computeStruct({width:(x1-x0)/12,depth:footprint.bounds.h/12,heightIn:top,house:'brick',ft:'PT',joistSp:String(spacing),joistSz:data.framingSize,beamMount:top<18?'flush':'drop',bSzSel:'auto',bPlySel:'auto',pf:!!data.pictureFrameRows||data.pattern==='Picture Frame'});
-      const row=side.beamRows.find((r:{type:string})=>r.type==='house_beam');if(!row)continue;
-      for(const p of side.posts)if(p.type==='mammoth')supports.push({x:x0+p.x*12+offset.x,y:Math.max(0,side.bBotY*12),z:p.z*12+offset.z});
-      for(let ply=0;ply<side.bPly;ply++){const y=(side.bBotY+side.bh/2)*12,z=row.z*12+offset.z+(ply-(side.bPly-1)/2)*1.5;beams.push({a:{x:x0+offset.x,y,z},b:{x:x1+offset.x,y,z},width:1.5,depth:side.bh*12,role:'house-side-beam'});}
-    }
+    if(attached&&index===0)frameHouseSideBeams(exposedHouseLine(data,footprint,mainContact),footprint.bounds.h,cfg,offset,{supports,beams});
     const borders=data.pictureFrameRows||(data.pattern==='Picture Frame'?1:0),inset=borders*(data.boardWidth+gap);
     const deckingFootprint=getFinishedFootprint(data,footprint,attached?mainContact:undefined),fieldPolygons=offsetPolygons([deckingFootprint.outline],inset),fieldXs=fieldPolygons.flat().map(p=>p.x),fieldLeft=fieldXs.length?Math.min(...fieldXs):inset;
     const fieldWidth=fieldXs.length?Math.max(...fieldXs)-fieldLeft:0,breakerZone=data.boardWidth+2*gap;
@@ -126,7 +136,9 @@ export function buildDeckTakeoff(data:DeckData){
     if(n){const mainHigher=data.height>=data.height2;const start=mainHigher?{x:center.x,y:data.height,z:center.z}:{x:center.x+opening.outward.x*distance,y:data.height2,z:center.z+opening.outward.y*distance};(n>14?addInlineLanding:addStraight)(start,mainHigher?opening.outward:{x:-opening.outward.x,y:-opening.outward.y},opening.along,opening.width,n,rise,'connection','level-connection');}
   }
   // Flights go only on sides with an exposed edge; a primary side against the house is never used.
-  const sides=exposedSides(mainFp,mainContact),primary=data.stairPosition,edges=[...(sides.includes(primary)?[primary]:[]),...sides.filter(e=>e!==primary)];
+  // A named wrap edge (e.g. a wing end) sets the primary flight's side; other flights use other sides.
+  const named=data.stairEdgeId&&mainFp.edgeIds&&data.stairFlights>0?getStairPlacement(data,mainFp,mainContact):null;
+  const sides=exposedSides(mainFp,mainContact),primary=named&&mainFp.edgeIds?.[named.edgeIndex!]===data.stairEdgeId?named.edge:data.stairPosition,edges=[...(sides.includes(primary)?[primary]:[]),...sides.filter(e=>e!==primary)];
   const exitLevel=data.levels>1?(data.height2<=data.height?1:0):0;
   const deck=levels[exitLevel],exitData=exitLevel?{...data,deckType:'Freestanding' as const}:data;
   if(data.stairFlights>edges.length)issues.push('The requested stair exit count exceeds available exposed deck edges.');
@@ -135,7 +147,7 @@ export function buildDeckTakeoff(data:DeckData){
     let edge=edges[flight];
     const occupied=openings.get(exitLevel)||[];
     if(occupied.some(o=>o.edge===edge))edge=edges.find(e=>!occupied.some(o=>o.edge===e))||edge;
-    const stair=getStairPlacement({...exitData,stairPosition:edge,stairOffset:flight===0?data.stairOffset:50},deck.footprint,exitLevel===0?mainContact:undefined);if(!stair)continue;
+    const stair=getStairPlacement({...exitData,stairPosition:edge,stairOffset:flight===0?data.stairOffset:50,...(flight>0?{stairEdgeId:undefined}:{})},deck.footprint,exitLevel===0?mainContact:undefined);if(!stair)continue;
     if(stair.width<36)issues.push(`Stair opening is only ${stair.width.toFixed(1)} inches wide; enlarge this polygon edge before construction.`);
     stairOpenings.push(stair);addOpening(exitLevel,stair);
     const start={x:stair.origin.x+stair.along.x*stair.width/2+deck.offset.x,y:deck.top,z:stair.origin.y+stair.along.y*stair.width/2+deck.offset.z};
@@ -216,6 +228,7 @@ export function buildDeckTakeoff(data:DeckData){
     if(data.height>sill+.01)issues.push(`The deck surface (${data.height} in above grade) is above the house floor / door sill (${sill} in). Water can run toward the door: lower the deck or confirm a sill detail before construction.`);
     else if(sill-data.height>7.75)issues.push(`The door sill is ${(sill-data.height).toFixed(1)} in above the deck surface, more than one 7.75 in step. Add a step or landing at the door, or raise the deck.`);
   }
+  if(wrap)issues.push('Wrap-around corner: the doubled hip, the skewed jack-joist and hip hangers, and the posts under the hip are laid out from the existing beam span table. Have the corner framing reviewed by an engineer before construction.');
   for(const level of levels){
     if(level.kind!=='deck')continue;
     const loose=unsupportedJoistEnds(level,level.index===0?mainContact:undefined);

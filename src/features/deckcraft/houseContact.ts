@@ -1,6 +1,7 @@
 import type {DeckData} from './types';
 import {getFootprint,type EdgeContact,type EdgeName,type FootprintPlan,type PlanPoint} from './lib/deckGeometry';
 import {getHousePlacement} from './housePlacement';
+import {activeWrap} from './lib/wrapGeometry';
 
 /**
  * Single source of truth for where the deck meets the house. Nothing else may find
@@ -49,10 +50,16 @@ function houseLineEdges(fp:FootprintPlan){
  * whole back edge (the original behaviour); a positioned one only covers its own width. */
 export function getHouseContact(data:DeckData,fp:FootprintPlan=getFootprint(data,1)):HouseContact{
   if(!deckAttachesToHouse(data))return NO_HOUSE_CONTACT;
-  const house=data.housePlacement?getHousePlacement(data):null,line=houseLineEdges(fp);
+  const wrapped=!!activeWrap(data),house=data.housePlacement||wrapped?getHousePlacement(data):null,line=houseLineEdges(fp);
   const contacts:ContactSegment[]=line
     .filter(({a,b})=>!house||(a.x>house.x0-TOL&&b.x<house.x1+TOL))
     .map(({a,b,index})=>({wall:'front',edgeIndex:index,a,b,lengthIn:b.x-a.x,inward:{x:0,y:1}}));
+  // Wrap wings bear on the house side walls: the right wall (x = x1) faces +x, the left (x = x0) −x.
+  if(house&&wrapped)fp.outline.forEach((a,index)=>{
+    const b=fp.outline[(index+1)%fp.outline.length],onWall=(x:number)=>Math.abs(a.x-x)<TOL&&Math.abs(b.x-x)<TOL&&Math.min(a.y,b.y)>-house.depthIn-TOL&&Math.max(a.y,b.y)<TOL;
+    if(onWall(house.x1)&&b.y<a.y-TOL)contacts.push({wall:'right',edgeIndex:index,a,b,lengthIn:a.y-b.y,inward:{x:1,y:0}});
+    if(onWall(house.x0)&&b.y>a.y+TOL)contacts.push({wall:'left',edgeIndex:index,a,b,lengthIn:b.y-a.y,inward:{x:-1,y:0}});
+  });
   // The picture-frame border stays flush along the whole back line (ledger or exposed stretch),
   // so the finished outline never jogs at a house corner.
   return contactFrom(contacts,line.map(e=>e.index));

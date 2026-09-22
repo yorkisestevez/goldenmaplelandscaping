@@ -24,6 +24,11 @@ export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storey
   floorHeightIn?:number}
 /** Where the house sits along the deck's back line. Absent = centred on the deck (the original behaviour). */
 export interface HousePlacement {anchor:'left'|'center'|'right';offsetIn:number}
+/** One side wing of a wrap-around deck: how far it reaches out from the house side wall, and how
+ * far it runs back along that wall from the deck-facing wall. */
+export interface WrapWing {widthFt:number;runFt:number}
+/** Wrap-around deck: side wings around one or both house corners, each mitred on a corner-to-corner hip. */
+export interface WrapConfig {left?:WrapWing;right?:WrapWing}
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature';
 export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled:boolean;xFt:number;zFt:number;widthFt:number;depthFt:number;heightIn:number;rotationDeg:number;productId:string;color:string}
 export interface TerrainConfig {widthFt:number;depthFt:number;elevationIn:number;slopePct:number}
@@ -73,6 +78,9 @@ export interface DeckData {
   terrainConfig?: TerrainConfig;
   houseConfig?: HouseConfig;
   housePlacement?: HousePlacement;
+  wrap?: WrapConfig;
+  /** A named exposed edge (e.g. 'wingR-end') for the primary stair flight; overrides stairPosition. */
+  stairEdgeId?: string;
   lightingZoneEnabled?: Partial<Record<LightingZone,boolean>>;
   lightingPreviewOn?: boolean;
   catalogueRailingId?: string;

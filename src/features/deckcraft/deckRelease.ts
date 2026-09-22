@@ -1,3 +1,4 @@
+import {normalizeWrap} from './lib/wrapGeometry';
 import type {DeckData} from './types';
 import type {DeckTakeoff} from './deckTakeoff';
 import {calculateEstimate} from './calculations';
@@ -12,7 +13,7 @@ export function deckReleaseData(data:DeckData):DeckData{
   const {yardFeatures:_yard,terrainConfig:_terrain,projectKind:_kind,hsUse:_use,hsProduct:_product,hsColor:_color,hsBorderRows:_border,hsSteps:_steps,hsFirePit:_fire,hsLightCount:_lights,...deck}=data;
   // Editable screens drive the priced area. Older single-area designs become equivalent screens.
   const screens=deck.privacyScreens??(deck.privacySqft>0?migrateLegacyPrivacy(deck):undefined);
-  return {...deck,...(screens?{privacyScreens:screens,privacySqft:pricedPrivacyArea(screens)}:{}),projectKind:'deck'};
+  return normalizeWrap({...deck,...(screens?{privacyScreens:screens,privacySqft:pricedPrivacyArea(screens)}:{}),projectKind:'deck'});
 }
 export function parseDeckReleaseDesign(text:string):DeckData{return deckReleaseData(parseDesign(text));}
 export function serializeDeckReleaseDesign(data:DeckData):string{return serializeDesign(deckReleaseData(data));}
