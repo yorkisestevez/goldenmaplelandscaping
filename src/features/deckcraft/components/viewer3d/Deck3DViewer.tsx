@@ -115,7 +115,19 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
     <Environment3D data={data} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} yard={yard} {...interaction}/>
   </group>;
 }
-export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,...interaction}:{data:DeckData;model:DeckTakeoff;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void}&HouseInteraction){
+/** Hands the page a function that renders the current view and returns it as an image (for the
+ * printable proposal). Rendering right before reading keeps the drawing buffer valid without
+ * preserveDrawingBuffer on every frame. */
+function SnapshotBridge({onReady}:{onReady?:(capture:(()=>string|null)|null)=>void}){
+  const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera);
+  useEffect(()=>{
+    if(!onReady)return;
+    onReady(()=>{try{gl.render(scene,camera);return gl.domElement.toDataURL('image/jpeg',.9);}catch{return null;}});
+    return ()=>onReady(null);
+  },[gl,scene,camera,onReady]);
+  return null;
+}
+export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,...interaction}:{data:DeckData;model:DeckTakeoff;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:(()=>string|null)|null)=>void}&HouseInteraction){
   const data=useMemo<DeckData>(()=>{if(!deckOnly)return rawData;const {yardFeatures:_yard,terrainConfig:_terrain,...deck}=rawData;return deck;},[rawData,deckOnly]);
   const yard=useMemo(()=>!deckOnly&&calculatedYard?calculatedYard:buildYardModel(data,model),[deckOnly,calculatedYard,model,data.yardFeatures,data.terrainConfig,data.width,data.length,data.houseConfig?.widthFt,data.houseConfig?.depthFt,data.houseVisible,data.deckType]);
   const bounds=sceneBounds(model),house=houseLayout(data,model.levels[0].footprint.bounds.w);
@@ -133,6 +145,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
       <Environment key={evening?'evening':'day'} resolution={128} frames={1} environmentIntensity={evening?.16:.4}><Lightformer intensity={3} position={[0,12,0]} rotation={[Math.PI/2,0,0]} scale={[20,20,1]}/><Lightformer intensity={2} position={[-15,6,8]} rotation={[0,Math.PI/2,0]} scale={[12,15,1]}/><Lightformer intensity={1} position={[12,5,-8]} rotation={[0,-Math.PI/2,0]} scale={[10,10,1]}/></Environment>
       <CameraView view={view} w={w} d={d} cx={cx} cz={cz} height={height} depth={data.foundationDepthIn??48}/>
       <Scene data={data} model={model} structure={structure} cutaway={cutaway} inspection={structure||view==='hardware'} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} {...interaction}/>
+      <SnapshotBridge onReady={onSnapshotReady}/>
       <OrbitControls makeDefault target={[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={r*.25} maxDistance={r*4} enableDamping={false}/>
     </Canvas>{simplifiedPaving&&<p className="absolute top-3 left-3 right-3 w-fit rounded-md bg-white/95 px-3 py-2 text-xs text-[#38413b] shadow-sm pointer-events-none">Simplified paving preview · {yard.quantities.paverPieces.toLocaleString()} pavers retained in quantities, construction view and exports.</p>}<p className={`absolute bottom-3 left-4 right-4 text-[10px] pointer-events-none ${evening?'text-white':'text-[#474c43]'}`}>Drag to orbit · pinch or scroll to zoom{evening&&data.lightingPreviewOn!==false&&lights>MAX_PREVIEW_LIGHTS?` · ${lights} fixtures shown; light spread preview limited to ${MAX_PREVIEW_LIGHTS} fixtures`:''}</p>
   </div>;
