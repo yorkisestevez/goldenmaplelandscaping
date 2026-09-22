@@ -2,8 +2,10 @@
  * The home hero picture and its three depth layers.
  *
  * Generated design inspiration, deliberately separate from completed-project
- * photography — it lives under /images/concepts/, never /images/portfolio/, and
- * is captioned as a concept. Do not reference it from a project page.
+ * photography — it lives in the concepts image folder, never the portfolio one,
+ * and is captioned as a concept. Do not reference it from a project page.
+ * (No literal portfolio path here on purpose: scripts/check-image-refs.ts scans
+ * source for them and would read a path in a comment as a missing file.)
  *
  * Built by two local scripts, in order (both $0, no API):
  *   python scripts/upscale-hero-master.py

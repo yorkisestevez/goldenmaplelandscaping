@@ -76,7 +76,13 @@ export const BUSINESS = {
   ),
   urls: {
     facebook: published('https://www.facebook.com/GoldenMaplegroup', 'Existing root and SEO schema'),
-    instagram: published('https://www.instagram.com/goldenmaplelandscaping', 'Existing root and SEO schema'),
+    instagram: {
+      value: 'https://www.instagram.com/goldenmaplelandscaping.ca',
+      status: 'confirmed' as const,
+      lastVerified: '2026-09-13',
+      source: 'Graph API GET /17841447335950775?fields=username via scripts/instagram/fetch-top-posts.mjs (IG business account linked to the Golden Maple Landscaping Facebook Page), 2026-09-13',
+      notes: 'Previous value (/goldenmaplelandscaping, no .ca) was wrong. The handle is what the fetch script prints as "IG username confirmed".',
+    },
     homeStars: published('https://www.homestars.com/companies/2982995-golden-maple-landscaping', 'Existing root schema'),
     yelp: published('https://www.yelp.com/biz/golden-maple-landscaping-barrie-4', 'Existing root and SEO schema'),
     yellowPages: published('https://www.yellowpages.ca/bus/Ontario/Barrie/Golden-Maple-Landscaping/102788299.html', 'Existing root schema'),
@@ -142,8 +148,20 @@ export const BUSINESS = {
     projectCounts: published({ barrie: 47, innisfil: 22, 'oro-medonte': 14, springwater: 9, orillia: 11, 'wasaga-beach': 7, midland: 5, collingwood: 4 }, 'Legacy estimator location records labelled 2025; no job ledger supplied', 'Do not display as completed-project proof without traceable project records and approval.'),
     aggregate: published({ ratingValue: '5.0', reviewCount: '8' }, 'Existing root schema comment and llms.txt', 'Publication is not verification. Do not emit AggregateRating or Review schema until a traceable source and owner approval exist.'),
     testimonials: unknown<string>('No approved, traceable testimonial consent register in tracked source'),
-    portfolio: unknown<string>('No verified project provenance register in tracked source'),
-    photoRights: unknown<string>('No owned-versus-licensed photo rights register in tracked source'),
+    portfolio: {
+      value: 'scripts/portfolio-sources.mjs (owner-attested allowlist) -> src/data/projects.ts',
+      status: 'confirmed' as const,
+      lastVerified: '2026-09-13',
+      source: 'Owner attestation 2026-09-13 (Claude Code session, contact sheet docs/portfolio/contact-sheet-2026-09-13.jpg): every entry in scripts/portfolio-sources.mjs is a Golden Maple job photographed by the owner or crew. Manufacturer, AI, render and unconfirmed files are listed in EXCLUDED and are never emitted.',
+      notes: 'Publication is gated per image: build-portfolio-images.mjs refuses unattested sources and --check (npm run lint) fails on drift. Project records carry title, town, category and a descriptive summary only, with no investment figures, durations or testimonials. Revert to unknown if the register is bypassed.',
+    },
+    photoRights: {
+      value: 'Owner-photographed job photos under /images/portfolio and the company Instagram bake under /images/instagram',
+      status: 'confirmed' as const,
+      lastVerified: '2026-09-13',
+      source: 'Same owner attestation as reviews.portfolio (2026-09-13). Instagram images are the company account own posts, mirrored by scripts/instagram/fetch-top-posts.mjs with non-project posts excluded in scripts/instagram/config.json.',
+      notes: 'Applies ONLY to paths accepted by isOwnedPhoto() in src/data/portfolioImages.ts. Legacy /images/projects files (manufacturer beauty shots, renders) remain unverified and must not be presented as Golden Maple work.',
+    },
   },
 } as const;
 

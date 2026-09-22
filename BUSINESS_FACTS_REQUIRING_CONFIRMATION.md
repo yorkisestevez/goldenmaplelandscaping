@@ -17,8 +17,8 @@
 11. **Permits** — Does Golden Maple apply for permits directly, coordinate applications, or leave the application to the client? Who pays municipal, engineering, ESA, gas, and other fees?
 12. **Subcontractors** — Which work, if any, is subcontracted? What public disclosure/quality-control policy is approved?
 13. **Testimonials** — Which testimonials are genuine, approved for publication, and traceable to a source/consent record? Names, project type, date, source URL, and consent status are needed before reuse in structured data.
-14. **Portfolio** — Which displayed projects are genuine Golden Maple work? Provide a project-provenance register (project ID/location granularity, completion date, owner permission, source photos).
-15. **Photo rights** — For every customer-facing photo, is it owned by Golden Maple, licensed, supplier-provided, stock, or AI-generated? Provide license/permission or removal/replacement direction.
+14. **Portfolio** — RESOLVED 2026-09-13. Owner attested each photo on a contact sheet (`docs/portfolio/attestation-2026-09-13.md`); the register is `scripts/portfolio-sources.mjs` and only attested sources are emitted to `/images/portfolio`. Towns the owner could not place are labelled "Simcoe County". No completion dates, investment figures or testimonials are published.
+15. **Photo rights** — RESOLVED 2026-09-13 for register-backed paths only (`/images/portfolio`, `/images/instagram`; see `isOwnedPhoto()`). Manufacturer, render and AI files are enumerated in `EXCLUDED` in `scripts/portfolio-sources.mjs`. Legacy `/images/projects` files remain unverified and are no longer presented as Golden Maple work on Home, Services, Portfolio, the estimator or the service-location pages.
 16. **Active municipalities** — Confirm the active primary service municipalities and any secondary/travel-area municipalities. Are Orillia, Wasaga Beach, Midland, and Collingwood actively served today?
 
 ## Source contradictions and publication-only claims found in the current repo

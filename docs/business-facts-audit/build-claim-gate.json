@@ -1,7 +1,7 @@
 {
   "passed": true,
-  "routes_checked": 105,
-  "schemas_checked": 295,
+  "routes_checked": 121,
+  "schemas_checked": 344,
   "findings": [],
   "scope": "Known-disputed-claim detector across all prerendered HTML including metadata. Does not certify generic educational facts or owner facts; requires a fresh build."
 }

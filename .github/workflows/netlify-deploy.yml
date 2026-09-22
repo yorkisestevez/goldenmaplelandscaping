@@ -38,7 +38,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       # Build THROUGH Netlify (`--build`) so the site's environment variables
       # (VITE_GA4_ID, VITE_CLARITY_ID, VITE_META_PIXEL_ID, VITE_GOOGLE_ADS_ID,

@@ -65,7 +65,7 @@ const FAQS = [
   },
   {
     q: "What warranty do you offer?",
-    a: "Ask us for the current written workmanship terms for your specific project. Material warranties vary by manufacturer — Techo-Bloc offers a transferable lifetime warranty on many products.",
+    a: "Ask us for the current written workmanship terms for your specific project. Manufacturer coverage depends on the selected product and must be confirmed with its current documentation.",
   },
 ];
 

@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Linkedin, Link as LinkIcon, Share2, Check } from 'lucide-react';
 import SEO from './SEO';
 
+import { isOwnedPhoto } from '../data/portfolioImages';
 import { BUSINESS, canPublish } from '../data/business';
 
 interface BlogPostLayoutProps {
@@ -42,7 +43,9 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
   // Build canonical from the route — server-side and crawlers see this even before JS runs.
   const origin = BUSINESS.canonicalUrl;
   const canonicalUrl = `${origin}${location.pathname}`;
-  const photoApproved = canPublish(BUSINESS.reviews.photoRights);
+  // photoRights is confirmed ONLY for register-backed photos (owner-attested portfolio +
+  // Instagram bake). Legacy blog heroes under /images/projects stay on the logo.
+  const photoApproved = canPublish(BUSINESS.reviews.photoRights) && isOwnedPhoto(heroImage);
   const ogImageUrl = photoApproved ? (heroImage.startsWith('http') ? heroImage : `${origin}${heroImage}`) : `${origin}/logo.svg`;
 
   // BreadcrumbList helps Google render the page hierarchy in search results.
