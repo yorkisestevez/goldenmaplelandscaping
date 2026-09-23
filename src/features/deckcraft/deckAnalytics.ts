@@ -78,6 +78,7 @@ export function designFeatures(data:DeckData):string[]{
   add(data.catalogueAccessories?.length,'deck_accessory');
   add(data.pictureFrameRows>0,'deck_border_rows');
   add(data.hasInlay,'deck_inlay');
+  add(data.boardColours?.length,'deck_board_colours');
   add(data.privacyScreens?.some(screenOn),'deck_privacy_screen');
   add(data.lightingSystem.selectedItems.some(i=>{const p=LIGHTING_CATALOGUE.find(x=>x.id===i.productId);return i.qty>0&&!!p&&!isSystemProduct(p);}),'deck_lighting');
   add(data.benchLf>0,'deck_bench');

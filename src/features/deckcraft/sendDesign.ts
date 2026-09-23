@@ -6,6 +6,7 @@ import {backyardElements} from './backyard';
 import {PRICE_BOOK,priceBookLabel} from './priceBook';
 import type {DeckEstimate} from './designFacts';
 import type {DeckData} from './types';
+import {boardFinishPlan} from './boardFinishes';
 
 /**
  * "Send my design to Golden Maple": the `deck-design` Netlify form. Netlify stores the submission and
@@ -103,8 +104,10 @@ export function buildDeckDesignSubmission(f:SendDesignFields,ctx:SendContext):Re
   const offers=!!(ctx.consent&&f.offers),at=ctx.sentAt.toISOString();
   const consentLine=!ctx.consent?'Offers consent: not asked (no mailing address set)':offers?`Offers consent: yes (wording ${ctx.consent.version}, ${at})`:'Offers consent: no';
   const lead=deckLeadScore(f,ctx),samples=OFFER_SAMPLE_REQUEST?(f.samples?'yes':'no'):'';
+  // Accent-colour boards (boardFinishes.ts): the crew brings those samples too.
+  const accentSamples=ctx.data.boardColours?.length?boardFinishPlan(ctx.data,ctx.estimate.model).groups.map(g=>`${g.color.name} (${g.material.name})`):[];
   const head=[`DeckCraft design sent from the website deck designer on ${at.slice(0,10)}.`,`Open the exact design: ${ctx.link}`,`Priced with the ${priceBookLabel()}.`,`Lead: tier ${lead.tier} (score ${lead.score}${lead.reasons.length?`: ${lead.reasons.join(', ')}`:''})`,'',ctx.summary];
-  const tail=['',`Timeline: ${labelOf(DECK_TIMELINES,f.timeline)??'not given'}`,`Budget: ${labelOf(DECK_BUDGETS,f.budget)??'not given'}`,...(samples==='yes'?[`Samples: please bring a ${ctx.data.deckingColor} sample`]:[]),`Customer notes: ${f.notes.trim()||'none'}`,consentLine];
+  const tail=['',`Timeline: ${labelOf(DECK_TIMELINES,f.timeline)??'not given'}`,`Budget: ${labelOf(DECK_BUDGETS,f.budget)??'not given'}`,...(samples==='yes'?[accentSamples.length?`Samples: please bring ${ctx.data.deckingColor} and the accent colours: ${accentSamples.join(', ')}`:`Samples: please bring a ${ctx.data.deckingColor} sample`]:[]),`Customer notes: ${f.notes.trim()||'none'}`,consentLine];
   const review=ctx.reviewItems.length?['','Confirm before construction:',...ctx.reviewItems.map(item=>`- ${item}`)]:[];
   let details=[...head,...review,...tail].join('\n');
   // Review items are the only long part; the link, summary, notes and consent always fit.

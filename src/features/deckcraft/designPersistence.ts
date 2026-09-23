@@ -1,5 +1,5 @@
 import { DEFAULT_DECK } from './defaults';
-import { type DeckData, type DoorStyle, type WindowStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardAllowances, type YardFeature } from './types';
+import { type BoardColour, type DeckData, type DoorStyle, type WindowStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardAllowances, type YardFeature } from './types';
 import {availableStairSides,getHouseContact} from './houseContact';
 import {getFootprint} from './lib/deckGeometry';
 import {normalizeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
@@ -11,6 +11,7 @@ import {GARAGE_DOOR_STYLES,WINDOW_STYLES} from './houseOpenings';
 import {clampHouseOpening,DOOR_STYLES,HOUSE_CLADDINGS,ROOF_PITCH_RANGE} from './houseSettings';
 import {angledStairAllowed,angledStairFits,CORNER_CHAMFER_FT,isChamferEdgeId} from './lib/cornerChamfers';
 import {activeCustomFront,frontBounds,normalizeFront,outlineProblems} from './lib/customOutline';
+import {MAX_BOARD_COLOURS,parseColourRef} from './boardFinishes';
 import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,openingWallId} from './houseFootprint';
 
 export {GARAGE_DOOR_STYLES} from './houseOpenings';
@@ -209,6 +210,22 @@ export function validateDesign(input:unknown):DeckData {
     clean.customFront=normalizeFront(input.customFront as {x:number;y:number}[]).map(p=>({x:p.x,y:p.y}));
   }
   if(clean.shape==='Custom'){Object.assign(clean,frontBounds(activeCustomFront(clean)!));clean.levels=1;}
+  // Accent-colour boards (boardFinishes.ts): real product colours on named board places, one choice per place
+  // (the last one wins). A choice whose place is gone is kept and simply not applied.
+  if(input.boardColours!==undefined){
+    if(!Array.isArray(input.boardColours))throw new Error('Invalid accent boards.');
+    const byPlace=new Map<string,BoardColour>();
+    for(const raw of input.boardColours){
+      if(!record(raw)||![1,2,3].includes(raw.lv as number)||!['field','border','breaker'].includes(raw.role as string)||!['piece','course'].includes(raw.scope as string))throw new Error('Invalid accent board.');
+      if(typeof raw.course!=='string'||!/^[a-z][a-z0-9.:-]{0,40}$/.test(raw.course))throw new Error('Invalid accent board place.');
+      if(!parseColourRef(raw.colour))throw new Error('Unknown accent board colour.');
+      const at=raw.scope==='piece'?Math.round(numeric(raw.at,-100000,100000,'Accent board position')*2)/2:undefined;
+      const item:BoardColour={lv:raw.lv as BoardColour['lv'],role:raw.role as BoardColour['role'],scope:raw.scope as BoardColour['scope'],course:raw.course,...(at!==undefined?{at}:{}),colour:raw.colour as string};
+      const key=[item.lv,item.role,item.scope,item.course,at??''].join('|');byPlace.delete(key);byPlace.set(key,item);
+    }
+    if(byPlace.size>MAX_BOARD_COLOURS)throw new Error(`A design holds up to ${MAX_BOARD_COLOURS} accent boards.`);
+    if(byPlace.size)clean.boardColours=[...byPlace.values()];
+  }
   for(const key of ['stairEdgeId','level2EdgeId'] as const)if(input[key]!==undefined){
     if(typeof input[key]!=='string'||!/^[a-zA-Z0-9-]{1,40}$/.test(input[key] as string))throw new Error('Invalid deck edge.');
     clean[key]=input[key] as string;
@@ -279,7 +296,7 @@ export function defaultLevel3(data:DeckData):NonNullable<DeckData['level3']>{
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','customFront']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','customFront','boardColours']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);

@@ -31,5 +31,7 @@ export function unconfirmedRates():RateNote[]{
       note:'Reuses the L-Shape and Multi-corner labour factors. Awaiting the owner\'s sign-off.'},
     {id:'porch-wrap-labour',rate:'Porch wrap labour premium',value:'Builder quote (labour priced at the two-corner wrap factor)',status:'owner-decision',where:'calculations.ts (porch wrap)',
       note:'Listed for a builder quote until the owner sets a factor.'},
+    {id:'accent-board-labour',rate:'Accent-colour board labour',value:'Builder quote (the boards themselves are priced at their own collection rate)',status:'owner-decision',where:'calculations.ts (accent-colour boards)',
+      note:'Fitting boards in a second colour has no labour rate in the price book. Listed for a builder quote until the owner sets one.'},
   ];
 }

@@ -159,6 +159,47 @@ test('draws a custom outline, moves an edge from the keyboard and reprices it',a
   expect(problems).toEqual([]);
 });
 
+test('paints a row of accent boards, lists and keeps it, and prices the fitting as a builder quote',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  await step(page,/Materials/).click();
+  const panel=page.getByRole('region',{name:'Accent boards'});
+  await panel.getByRole('button',{name:'Paint with Dark Cocoa (TimberTech EDGE Prime+)'}).click();
+  await expect(page.locator('.dd-paint-chip')).toContainText('Painting: Dark Cocoa');
+  await setNumber(page,'Row from the house',6);
+  await panel.getByRole('button',{name:'Paint this row'}).click();
+  await expect(panel.getByRole('listitem')).toHaveText(/Row 6 from the house · Dark Cocoa \(TimberTech EDGE Prime\+\)/);
+  await expect(price(page)).not.toHaveText(before??'');
+  await expect(page.locator('#deck-live-preview .dd-quote-notice')).toContainText('Accent-colour board labour (builder quote)');
+  await page.waitForTimeout(800);// autosave runs 450 ms after the last change
+  await page.reload();
+  await step(page,/Materials/).click();
+  await expect(panel.getByRole('listitem')).toHaveText(/Row 6 from the house/);
+  await panel.getByRole('button',{name:'Remove: Row 6 from the house'}).click();
+  await expect(panel.getByRole('listitem')).toHaveCount(0);
+  await expect(price(page)).toHaveText(before??'');
+  expect(problems).toEqual([]);
+});
+
+test('paints a single board by clicking it in the 3D view',async({page})=>{
+  const problems=await openDesigner(page);
+  await step(page,/Materials/).click();
+  const panel=page.getByRole('region',{name:'Accent boards'});
+  await panel.getByRole('button',{name:'Paint with Sea Salt Gray (TimberTech EDGE Prime+)'}).click();
+  const canvas=page.locator('.dd-canvas canvas');
+  await canvas.scrollIntoViewIfNeeded();
+  await expect(canvas).toBeVisible({timeout:20000});
+  await page.waitForTimeout(2500);// the camera settles on the deck
+  const box=(await canvas.boundingBox())!;
+  // Open deck surface in the default view (the railing takes no clicks, so a click through it still lands on the boards).
+  await canvas.click({position:{x:box.width*.5,y:box.height*.4}});
+  await expect(panel.getByRole('heading',{name:/Your accent boards · 1 board$/})).toBeVisible();
+  await expect(panel.getByRole('listitem')).toHaveText(/One board in row \d+ from the house · Sea Salt Gray/);
+  await page.locator('.dd-paint-chip').getByRole('button',{name:'Done'}).click();
+  await expect(page.locator('.dd-paint-chip')).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
 test('adds a bump-out to the house',async({page})=>{
   await openDesigner(page);
   await page.getByText('House dimensions, finishes, doors & windows').click();

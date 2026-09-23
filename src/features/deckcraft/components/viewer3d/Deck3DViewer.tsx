@@ -1,6 +1,6 @@
 import NotchedStringers from './NotchedStringers';
-import {useEffect,useMemo,useLayoutEffect,useRef} from 'react';
-import {Canvas,useThree} from '@react-three/fiber';
+import {useCallback,useEffect,useMemo,useLayoutEffect,useRef,useState} from 'react';
+import {Canvas,useThree,type ThreeEvent} from '@react-three/fiber';
 import {OrbitControls,Environment,Lightformer} from '@react-three/drei';
 import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
@@ -28,6 +28,8 @@ import Yard3D from './Yard3D';
 import {stairVeneerLayout} from '../../stairVeneerLayout';
 import {hasSimplifiedPaving} from './yardPreview';
 import PrivacyScreens3D from './PrivacyScreens3D';
+import {boardFinishPlan,parseColourRef} from '../../boardFinishes';
+import type {BoardAddress} from '../../lib/boardAddress';
 
 function Members({items,material,name}:{items:Member[];material:THREE.Material;name:string}){
   const ref=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate);
@@ -43,8 +45,26 @@ function Boxes({items,material,name}:{items:Box[];material:THREE.Material;name:s
   useLayoutEffect(()=>{if(!ref.current)return;const matrix=new THREE.Matrix4(),q=new THREE.Quaternion();items.forEach((b,i)=>{q.setFromAxisAngle(new THREE.Vector3(0,1,0),b.angle||0);matrix.compose(new THREE.Vector3(b.x,b.y,b.z),q,new THREE.Vector3(b.w,b.h,b.d));ref.current!.setMatrixAt(i,matrix);});ref.current.count=items.length;ref.current.instanceMatrix.needsUpdate=true;ref.current.computeBoundingSphere();invalidate();},[items,invalidate]);
   return <instancedMesh name={name} castShadow receiveShadow ref={ref} key={items.length} args={[undefined,undefined,Math.max(1,items.length)]} material={material}><boxGeometry args={[1,1,1]}/></instancedMesh>;
 }
-type FinishBox=Box&{polygon?:{x:number;y:number}[];role?:string};
-function BoardBatch({items,material}:{items:FinishBox[];material:THREE.Material}){
+type FinishBox=Box&{polygon?:{x:number;y:number}[];role?:string;
+  /** Where the piece is in the model (level, board) and its accent colour, for the accent-board tool. */
+  ref?:{level:number;index:number};accent?:string|null};
+/** Accent-board tool: a click (not an orbit drag) paints the piece; hovering outlines what a click would paint. */
+interface BoardPick{onPick:(box:FinishBox)=>void;onHover:(box:FinishBox|null)=>void}
+function pickHandlers(pick:BoardPick|undefined,itemAt:(e:ThreeEvent<MouseEvent>|ThreeEvent<PointerEvent>)=>FinishBox|undefined){
+  if(!pick)return {};
+  return {
+    onClick:(e:ThreeEvent<MouseEvent>)=>{if(e.delta>4)return;const item=itemAt(e);if(!item)return;e.stopPropagation();pick.onPick(item);},
+    onPointerMove:(e:ThreeEvent<PointerEvent>)=>{const item=itemAt(e);if(!item)return;e.stopPropagation();pick.onHover(item);},
+    onPointerOut:()=>pick.onHover(null),
+  };
+}
+/** A piece's plan corners (inches, level offset applied). */
+function boxCorners(b:FinishBox){
+  if(b.polygon)return b.polygon;
+  const a=-(b.angle||0),u={x:Math.cos(a),y:Math.sin(a)},n={x:-u.y,y:u.x};
+  return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([s,t])=>({x:b.x+u.x*b.w/2*s+n.x*b.d/2*t,y:b.z+u.y*b.w/2*s+n.y*b.d/2*t}));
+}
+function BoardBatch({items,material,pick}:{items:FinishBox[];material:THREE.Material;pick?:BoardPick}){
   const ref=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate);
   const first=items[0];
   const geometry=useMemo(()=>{
@@ -55,22 +75,47 @@ function BoardBatch({items,material}:{items:FinishBox[];material:THREE.Material}
   },[first.w,first.h,first.d]);
   useEffect(()=>()=>geometry.dispose(),[geometry]);
   useLayoutEffect(()=>{if(!ref.current)return;const m=new THREE.Matrix4(),q=new THREE.Quaternion();items.forEach((b,i)=>{q.setFromAxisAngle(new THREE.Vector3(0,1,0),b.angle||0);m.compose(new THREE.Vector3(b.x,b.y,b.z),q,new THREE.Vector3(1,1,1));ref.current!.setMatrixAt(i,m);const shade=.92+.08*((Math.sin(b.x*12.3+b.z*7.9)*437.1)%1+1)/2;ref.current!.setColorAt(i,new THREE.Color(shade,shade,shade));});ref.current.instanceMatrix.needsUpdate=true;if(ref.current.instanceColor)ref.current.instanceColor.needsUpdate=true;ref.current.computeBoundingSphere();invalidate();},[items,invalidate]);
-  return <instancedMesh ref={ref} args={[geometry,material,items.length]} castShadow receiveShadow/>;
+  return <instancedMesh ref={ref} args={[geometry,material,items.length]} castShadow receiveShadow {...pickHandlers(pick,e=>items[e.instanceId??-1])}/>;
 }
-function PolygonBoard({item,material}:{item:FinishBox;material:THREE.Material}){
+function PolygonBoard({item,material,pick}:{item:FinishBox;material:THREE.Material;pick?:BoardPick}){
   const geometry=useMemo(()=>{const shape=new THREE.Shape();item.polygon!.forEach((p,i)=>i?shape.lineTo(p.x,p.y):shape.moveTo(p.x,p.y));shape.closePath();const g=new THREE.ExtrudeGeometry(shape,{depth:item.h,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,item.y+item.h/2,0);const pos=g.getAttribute('position'),uv=g.getAttribute('uv'),a=item.angle||0,cu=item.x*Math.cos(a)-item.z*Math.sin(a),cv=item.x*Math.sin(a)+item.z*Math.cos(a);for(let i=0;i<uv.count;i++)uv.setXY(i,(pos.getX(i)*Math.cos(a)-pos.getZ(i)*Math.sin(a)-cu+item.w/2)/48,(pos.getX(i)*Math.sin(a)+pos.getZ(i)*Math.cos(a)-cv+item.d/2)/item.d);return g;},[item]);
   useEffect(()=>()=>geometry.dispose(),[geometry]);
-  return <mesh geometry={geometry} material={material} castShadow receiveShadow/>;
+  return <mesh geometry={geometry} material={material} castShadow receiveShadow {...pickHandlers(pick,()=>item)}/>;
 }
-function FinishedBoards({items,material}:{items:FinishBox[];material:THREE.Material}){
+function FinishedBoards({items,material,pick}:{items:FinishBox[];material:THREE.Material;pick?:BoardPick}){
   const layout=useMemo(()=>{const groups=new Map<string,FinishBox[]>(),polygons:FinishBox[]=[];for(const b of items){const area=b.polygon?Math.abs(b.polygon.reduce((s,p,i)=>{const q=b.polygon![(i+1)%b.polygon!.length];return s+p.x*q.y-q.x*p.y;},0))/2:0;if(b.polygon&&(b.polygon.length!==4||Math.abs(area-b.w*b.d)>.01)){polygons.push(b);continue;}const key=[b.w,b.h,b.d].map(n=>n.toFixed(4)).join(':');const group=groups.get(key);if(group)group.push(b);else groups.set(key,[b]);}return {groups:[...groups.entries()],polygons};},[items]);
-  return <group name="installed-deck-board-pieces">{layout.groups.map(([key,items])=><BoardBatch key={key} items={items} material={material}/>)}{layout.polygons.map((item,i)=><PolygonBoard key={i} item={item} material={material}/>)}</group>;
+  return <group name="installed-deck-board-pieces">{layout.groups.map(([key,items])=><BoardBatch key={key} items={items} material={material} pick={pick}/>)}{layout.polygons.map((item,i)=><PolygonBoard key={i} item={item} material={material} pick={pick}/>)}</group>;
 }
+/** Boards in one accent colour, with that product's own swatch. */
+function AccentBoards({colour,items,pick}:{colour:string;items:FinishBox[];pick?:BoardPick}){
+  const parsed=parseColourRef(colour),material=useSwatchTexture(parsed?swatchUrl(parsed.color.swatch):'',getMaterialFallbackColor(parsed?.material.id??''));
+  return <FinishedBoards items={items} material={material} pick={pick}/>;
+}
+/** Outlines the board (or the row) under the pointer while the accent-board tool is on. It keeps its own state,
+ * so hovering never re-renders the rest of the scene. */
+function HoverOutline({boards,addresses,scope,register}:{boards:FinishBox[];addresses?:(BoardAddress|null)[][];scope:'piece'|'course';register:(set:(box:FinishBox|null)=>void)=>void}){
+  const [hover,setHover]=useState<FinishBox|null>(null),invalidate=useThree(s=>s.invalidate),gl=useThree(s=>s.gl);
+  useEffect(()=>{register(box=>setHover(prev=>prev?.ref?.level===box?.ref?.level&&prev?.ref?.index===box?.ref?.index?prev:box));},[register]);
+  useEffect(()=>{gl.domElement.style.cursor=hover?'crosshair':'';invalidate();},[hover,gl,invalidate]);
+  useEffect(()=>()=>{gl.domElement.style.cursor='';},[gl]);
+  const geometry=useMemo(()=>{
+    const at=(b:FinishBox)=>b.ref?addresses?.[b.ref.level]?.[b.ref.index]:undefined,a=hover&&at(hover);
+    if(!hover||!a)return null;
+    const lit=scope==='course'&&a.rowPaint?boards.filter(b=>{const o=at(b);return !!o&&o.lv===a.lv&&o.role===a.role&&o.course===a.course;}):[hover];
+    const points:number[]=[];
+    for(const b of lit){const c=boxCorners(b),y=b.y+b.h/2+.3;c.forEach((p,i)=>{const q=c[(i+1)%c.length];points.push(p.x,y,p.y,q.x,y,q.y);});}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));return g;
+  },[hover,addresses,boards,scope]);
+  useEffect(()=>()=>geometry?.dispose(),[geometry]);
+  return geometry?<lineSegments geometry={geometry} renderOrder={10}><lineBasicMaterial color="#e39a24" depthTest={false} transparent/></lineSegments>:null;
+}
+/** The accent-board tool as the viewer takes it: the row or single-board choice and what a click paints. */
+export interface BoardPaint{scope:'piece'|'course';onPaint:(target:{level:number;index:number})=>void}
 function CameraView({view,w,d,cx,cz,height,depth}:{view:string;w:number;d:number;cx:number;cz:number;height:number;depth:number}){
  const {camera,controls,invalidate}=useThree();
  useEffect(()=>{const r=Math.max(w,d),target=new THREE.Vector3(cx,view==='foundation'?-depth/24:height*.5,cz);camera.position.set(cx+r*.9,height+r*.7,cz+r*1.3);if(view==='front')camera.position.set(cx,height*.6,cz+r*1.8);if(view==='top')camera.position.set(cx,r*2+.1,cz+.01);if(view==='hardware')camera.position.set(cx+r*.6,height*.25,cz+r*1.2);if(view==='foundation')camera.position.set(cx+r*.9,height+r*.65,cz+r*1.4);camera.lookAt(target);if(controls&&'target' in controls){(controls as any).target.copy(target);(controls as any).update();}invalidate();},[view,w,d,cx,cz,height,depth,camera,controls,invalidate]);return null;
 }
-function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen,...interaction}:{data:DeckData;model:DeckTakeoff;structure:boolean;cutaway:boolean;inspection:boolean;yard:YardModel;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void}&HouseInteraction){
+function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen,boardPaint,...interaction}:{data:DeckData;model:DeckTakeoff;structure:boolean;cutaway:boolean;inspection:boolean;yard:YardModel;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;boardPaint?:BoardPaint}&HouseInteraction){
   const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)||DECKING_CATALOGUE[0];
   const swatch=material.colors.find(c=>c.name===data.deckingColor)||material.colors[0];
   const board=useSwatchTexture(swatchUrl(swatch.swatch),getMaterialFallbackColor(material.id));
@@ -82,14 +127,23 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   const stairVeneer=useMemo(()=>stairVeneerLayout(data,model),[data,model]);
   const materials=useMemo(()=>({wood:new THREE.MeshStandardMaterial({color:'#8a7356',roughness:0.86}),inlay:new THREE.MeshStandardMaterial({color:'#514236',roughness:.7}),metal:new THREE.MeshStandardMaterial({color:'#242829',roughness:0.36,metalness:0.5}),concrete:new THREE.MeshStandardMaterial({color:'#a5a49a',roughness:0.9}),glass:new THREE.MeshPhysicalMaterial({color:'#cbdfe3',roughness:0.08,metalness:0.1,transparent:true,opacity:0.23,depthWrite:false})}),[]);
   useEffect(()=>()=>Object.values(materials).forEach(m=>m.dispose()),[materials]);
-  const boards:FinishBox[]=useMemo(()=>model.levels.flatMap(l=>l.boards.map(b=>{const cut=b as typeof b&{width?:number;polygon?:{x:number;y:number}[];role?:string};return {x:b.cx+l.offset.x,y:l.top-0.5,z:b.cy+l.offset.z,w:b.length,h:1,d:cut.width??data.boardWidth,angle:-b.angleDeg*Math.PI/180,role:cut.role,polygon:cut.polygon?.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}))};})),[model,data.boardWidth]);
+  // Accent boards (boardFinishes.ts): worked out only when the design has some, or while the tool is on.
+  const painting=!!boardPaint&&!structure;
+  const finish=useMemo(()=>data.boardColours?.length||painting?boardFinishPlan(data,model):null,[model,data.boardColours,data.deckingMaterial,data.deckingColor,data.pattern,data.boardWidth,data.borderFinish,painting]);
+  const boards:FinishBox[]=useMemo(()=>model.levels.flatMap((l,li)=>l.boards.map((b,bi)=>{const cut=b as typeof b&{width?:number;polygon?:{x:number;y:number}[];role?:string};return {x:b.cx+l.offset.x,y:l.top-0.5,z:b.cy+l.offset.z,w:b.length,h:1,d:cut.width??data.boardWidth,angle:-b.angleDeg*Math.PI/180,role:cut.role,polygon:cut.polygon?.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z})),ref:{level:li,index:bi},accent:finish?.colours[li]?.[bi]??null};})),[model,data.boardWidth,finish]);
+  const hoverSet=useRef<(box:FinishBox|null)=>void>(()=>{}),registerHover=useCallback((set:(box:FinishBox|null)=>void)=>{hoverSet.current=set;},[]);
+  const pick=useMemo<BoardPick|undefined>(()=>{
+    if(!painting)return undefined;
+    const paintable=(b:FinishBox)=>!!b.ref&&!!finish?.addresses[b.ref.level]?.[b.ref.index];
+    return {onPick:b=>{if(paintable(b))boardPaint!.onPaint(b.ref!);},onHover:b=>hoverSet.current(b&&paintable(b)?b:null)};
+  },[painting,boardPaint,finish]);
   const postBase=data.foundation==='Deck Blocks'?6.5:4.5;
   const supportPosts:Box[]=model.levels.flatMap(l=>l.supports.filter(p=>p.y>postBase).map(p=>({x:p.x,y:(p.y+postBase)/2,z:p.z,w:5.5,h:p.y-postBase,d:5.5})));
   const railPosts:Box[]=model.railing.posts.map(p=>({x:p.x,y:p.y+model.railing.height/2,z:p.z,w:3.5,h:model.railing.height,d:3.5}));
   const edgeMembers:Member[]=model.levels.flatMap(l=>l.rim??[]);
   const railMat=data.railingType==='Wood Picket'?board:materials.metal;
   return <group scale={1/12}>
-    {!structure&&<><FinishedBoards items={boards.filter(b=>b.role!=='inlay'&&(!darkBorder||b.role!=='border'))} material={board}/><FinishedBoards items={boards.filter(b=>b.role==='inlay')} material={materials.inlay}/>{darkBorder&&<FinishedBoards items={boards.filter(b=>b.role==='border')} material={borderMaterial}/>}</>}
+    {!structure&&<><FinishedBoards items={boards.filter(b=>b.role!=='inlay'&&!b.accent&&(!darkBorder||b.role!=='border'))} material={board} pick={pick}/><FinishedBoards items={boards.filter(b=>b.role==='inlay')} material={materials.inlay}/>{darkBorder&&<FinishedBoards items={boards.filter(b=>b.role==='border')} material={borderMaterial}/>}{finish?.groups.map(g=><AccentBoards key={g.ref} colour={g.ref} items={boards.filter(b=>b.accent===g.ref)} pick={pick}/>)}{painting&&<HoverOutline boards={boards} addresses={finish?.addresses} scope={boardPaint!.scope} register={registerHover}/>}</>}
     <Members items={model.levels.flatMap(l=>l.joists)} material={materials.wood} name="joists"/>
     <Members items={model.levels.flatMap(l=>l.blocking)} material={materials.wood} name="blocking"/>
     <Members items={model.levels.flatMap(l=>l.beams)} material={materials.wood} name="beams"/>
@@ -128,7 +182,7 @@ function SnapshotBridge({onReady}:{onReady?:(capture:(()=>string|null)|null)=>vo
   },[gl,scene,camera,onReady]);
   return null;
 }
-export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,...interaction}:{data:DeckData;model:DeckTakeoff;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:(()=>string|null)|null)=>void}&HouseInteraction){
+export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,boardPaint,...interaction}:{data:DeckData;model:DeckTakeoff;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:(()=>string|null)|null)=>void;boardPaint?:BoardPaint}&HouseInteraction){
   const data=useMemo<DeckData>(()=>{if(!deckOnly)return rawData;const {yardFeatures:_yard,terrainConfig:_terrain,...deck}=rawData;return deck;},[rawData,deckOnly]);
   const yard=useMemo(()=>!deckOnly&&calculatedYard?calculatedYard:buildYardModel(data,model),[deckOnly,calculatedYard,model,data.yardFeatures,data.terrainConfig,data.width,data.length,data.houseConfig?.widthFt,data.houseConfig?.depthFt,data.houseConfig?.footprint,data.housePlacement,data.houseVisible,data.deckType]);
   const bounds=sceneBounds(model),house=houseLayout(data,model.levels[0].footprint.bounds.w);
@@ -145,7 +199,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
       <color attach="background" args={[evening?'#28374a':'#e9edf0']}/>
       <Environment key={evening?'evening':'day'} resolution={128} frames={1} environmentIntensity={evening?.16:.4}><Lightformer intensity={3} position={[0,12,0]} rotation={[Math.PI/2,0,0]} scale={[20,20,1]}/><Lightformer intensity={2} position={[-15,6,8]} rotation={[0,Math.PI/2,0]} scale={[12,15,1]}/><Lightformer intensity={1} position={[12,5,-8]} rotation={[0,-Math.PI/2,0]} scale={[10,10,1]}/></Environment>
       <CameraView view={view} w={w} d={d} cx={cx} cz={cz} height={height} depth={data.foundationDepthIn??48}/>
-      <Scene data={data} model={model} structure={structure} cutaway={cutaway} inspection={structure||view==='hardware'} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} {...interaction}/>
+      <Scene data={data} model={model} structure={structure} cutaway={cutaway} inspection={structure||view==='hardware'} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} {...interaction}/>
       <SnapshotBridge onReady={onSnapshotReady}/>
       <OrbitControls makeDefault target={[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={r*.25} maxDistance={r*4} enableDamping={false}/>
     </Canvas>{simplifiedPaving&&<p className="absolute top-3 left-3 right-3 w-fit rounded-md bg-white/95 px-3 py-2 text-xs text-[#38413b] shadow-sm pointer-events-none">Simplified paving preview · {yard.quantities.paverPieces.toLocaleString()} pavers retained in quantities, construction view and exports.</p>}<p className={`absolute bottom-3 left-4 right-4 text-[10px] pointer-events-none ${evening?'text-white':'text-[#474c43]'}`}>Drag to orbit · pinch or scroll to zoom{evening&&data.lightingPreviewOn!==false&&lights>MAX_PREVIEW_LIGHTS?` · ${lights} fixtures shown; light spread preview limited to ${MAX_PREVIEW_LIGHTS} fixtures`:''}</p>

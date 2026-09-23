@@ -7,6 +7,11 @@ export type IntendedLoad = 'Standard' | 'Heavy';
 export type DeckShape = 'Rectangle' | 'L-Shape' | 'Multi-corner' | 'Curved' | 'Custom';
 /** A point of a custom outline's front, in feet (see lib/customOutline.ts). */
 export interface OutlinePoint {x:number;y:number}
+/** A real product colour, `${collectionId}:${colourName}` from DECKING_CATALOGUE (see boardFinishes.ts). */
+export type ColourRef = string;
+/** Deck boards in another real product colour: one board ('piece') or its whole row ('course'), found by the
+ * board address in lib/boardAddress.ts. An address that no longer meets a board is kept but not applied. */
+export interface BoardColour {lv:1|2|3;role:'field'|'border'|'breaker';scope:'piece'|'course';course:string;at?:number;colour:ColourRef}
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
 export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
@@ -133,6 +138,8 @@ export interface DeckData {
   cornerChamfers?: CornerChamfers;
   /** A custom outline's front, right side to left side, in feet (shape 'Custom' only; see lib/customOutline.ts). */
   customFront?: OutlinePoint[];
+  /** Accent-colour boards; absent on every existing design (see boardFinishes.ts). */
+  boardColours?: BoardColour[];
   /** A named exposed edge (e.g. 'wingR-end') for the primary stair flight; overrides stairPosition. */
   stairEdgeId?: string;
   /** Named wrap edge of the main deck for the second level; overrides level2Position. */

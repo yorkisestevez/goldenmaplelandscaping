@@ -23,7 +23,9 @@ import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
 import DesignTools from '../features/deckcraft/designer/DesignTools';
 import PreviewPanel from '../features/deckcraft/designer/PreviewPanel';
 import DimensionsStep from '../features/deckcraft/designer/steps/DimensionsStep';
-import MaterialsStep from '../features/deckcraft/designer/steps/MaterialsStep';
+import MaterialsStep,{loadBoardColourPanel} from '../features/deckcraft/designer/steps/MaterialsStep';
+import type {BoardPaintChoice} from '../features/deckcraft/boardFinishes';
+import type {paintBoard as PaintBoard} from '../features/deckcraft/boardPaint';
 import StairsStep from '../features/deckcraft/designer/steps/StairsStep';
 import SiteExtrasStep from '../features/deckcraft/designer/steps/SiteExtrasStep';
 import EstimateStep from '../features/deckcraft/designer/steps/EstimateStep';
@@ -89,11 +91,25 @@ export default function DeckDesigner(){
   useEffect(()=>{trackDeck('deckcraft_step',stepLabel(step));},[step]);
   useEffect(()=>{trackDeck('deckcraft_view',`deck_view_${mode}`);},[mode]);
   // Fetch the on-demand pieces once the page has settled, so opening one is instant.
-  useEffect(()=>{const timer=setTimeout(()=>{for(const load of [loadBackyardStep,loadSendDialog,loadProposalDialog])load().catch(()=>{/* Loaded again when opened. */});},4000);return()=>clearTimeout(timer);},[]);
+  useEffect(()=>{const timer=setTimeout(()=>{for(const load of [loadBackyardStep,loadSendDialog,loadProposalDialog,loadBoardColourPanel])load().catch(()=>{/* Loaded again when opened. */});},4000);return()=>clearTimeout(timer);},[]);
   const featureKey=designFeatures(data).join(' ');
   useEffect(()=>{for(const label of featureKey.split(' '))if(label)trackDeck('deckcraft_feature',label);},[featureKey]);
   const {estimate,lightingCheck,autoCounts,hasFixtures,reviewFlags,described}=useDeckEstimate(data,setData);
   const {material,railingName,quoteRequired,priceLabel}=described;
+  // Accent boards: the tool's colour and scope are page state (never saved). Picking a colour shows the 3D deck;
+  // leaving the finish step puts the tool down.
+  const [boardPaint,setBoardPaintState]=useState<BoardPaintChoice|null>(null),[paintMessage,setPaintMessage]=useState('');
+  const setBoardPaint=useCallback((next:BoardPaintChoice|null)=>{setBoardPaintState(next);setPaintMessage('');if(next){setWant3d(true);setMode(m=>m==='3d'||m==='overview'||m==='front'||m==='top'?m:'3d');}},[]);
+  useEffect(()=>{if(step!==1)setBoardPaintState(null);},[step]);
+  // The painting action comes with the accent-board panel (loaded on the finish step), so it is not in the page's first load.
+  const painter=useRef<typeof PaintBoard|null>(null);
+  useEffect(()=>{if(step===1)loadBoardColourPanel().then(m=>{painter.current=m.paintBoard;}).catch(()=>{/* Loaded again with the panel. */});},[step]);
+  const onPaintBoard=useCallback((target:{level:number;index:number})=>{
+    if(!boardPaint||!painter.current)return;
+    const result=painter.current(data,estimate.model,target,boardPaint.colour,boardPaint.scope);
+    if('error' in result){setPaintMessage(result.error);return;}
+    setPaintMessage('');update({boardColours:result.boardColours});
+  },[boardPaint,data,estimate.model,update]);
   const houseConfig=getHouseConfig(data);
   const effectiveHouseOpeningId=houseConfig.openings.find(o=>o.id===selectedHouseOpeningId)?.id??houseConfig.openings[0]?.id??'';
   // Picking a door or window (in 3D or the doors & windows bar) works on every step; the full house
@@ -211,12 +227,12 @@ export default function DeckDesigner(){
     <div className="dd-intro"><p className="dd-eyebrow">YOUR SPACE. YOUR SPECIFICATIONS.</p><h1>A deck that takes shape <br/><em>with every choice.</em></h1><p>Set the dimensions. Explore real material colours. See how your choices change the design and the estimate.</p></div>
     <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}/>
     <main className="dd-workspace">
-      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} step={step} houseSettingsOpen={houseSettingsOpen} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} docked={docked} material={material} priceLabel={priceLabel} quoteRequired={quoteRequired}/>
+      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} step={step} houseSettingsOpen={houseSettingsOpen} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} docked={docked} material={material} priceLabel={priceLabel} quoteRequired={quoteRequired} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard}/>
       <section className="dd-controls" aria-label="Deck configuration">
         <nav className="dd-steps" aria-label="Design steps">{STEPS.map((s,i)=><button key={s} aria-current={step===i?'step':undefined} onClick={()=>move(i)}><span>{String(i+1).padStart(2,'0')}</span>{s}</button>)}</nav>
         <div className="dd-panel" ref={panelRef} tabIndex={-1}>
           {step===0 && <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} houseSettingsOpen={houseSettingsOpen} setHouseSettingsOpen={setHouseSettingsOpen} effectiveHouseOpeningId={effectiveHouseOpeningId} setSelectedHouseOpeningId={setSelectedHouseOpeningId}/>}
-          {step===1 && <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags}/>}
+          {step===1 && <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage}/>}
           {step===2 && <StairsStep data={data} update={update} stairEdges={stairEdges} autoCounts={autoCounts}/>}
           {step===3 && <SiteExtrasStep data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch}/>}
 

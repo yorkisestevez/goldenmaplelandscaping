@@ -8,6 +8,10 @@ import {activeWrap} from './lib/wrapGeometry';
 import {isChamferEdgeId} from './lib/cornerChamfers';
 import {getHouseBlocks,hasHouseBlocks,houseOutline} from './houseFootprint';
 import {polygonCut} from './lib/polygonCuts';
+import {boardFinishPlan} from './boardFinishes';
+
+/** Plan tones for accent-colour groups; the legend names the real product colours. */
+const ACCENT_TONES=['#6f4e37','#3f5c5a','#8c5a3c','#4f4a6b','#5d6b3a','#7a3f3f'];
 
 const HOUSE_BAND=36;// inches of house drawn behind the deck-facing wall
 const ft=(inches:number)=>`${(inches/12).toFixed(1)} ft`;
@@ -33,7 +37,11 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
  // corner is always labelled, with the cut along the front and side it was entered as.
  const edgeLabels=data?outline.map((a,i)=>{const q=outline[(i+1)%outline.length],len=Math.hypot(q.x-a.x,q.y-a.y),angled=isChamferEdgeId(main.footprint.edgeIds?.[i]);if(len<24&&!angled)return null;const nx=(q.y-a.y)/len,ny=-(q.x-a.x)/len,ledger=contact?.isContactEdge(i),flush=contact?.contacts.find(c=>c.edgeIndex===i)?.kind==='flush';return {x:(a.x+q.x)/2+nx*(ledger?5:11),y:(a.y+q.y)/2+ny*(ledger?5:11)+2.5,text:angled?`45° corner · ${ft(len/Math.SQRT2)} cut`:flush?`Bolted flush wall ${ft(len)}`:ledger?`Ledger ${ft(len)}`:ft(len),ledger,flush};}).filter(Boolean) as {x:number;y:number;text:string;ledger:boolean;flush:boolean}[]:[];
  const scale=48;
- return <svg viewBox={`${left-40} ${top-44} ${right-left+80} ${b.maxZ-top+128}`} role="img" aria-label="Deck construction plan from the shared model" style={{width:'100%',height:'100%',background:'#faf8f1'}}>
+ // Accent-colour boards (boardFinishes.ts): each colour group gets a plan tone, named in the legend.
+ const finish=data?.boardColours?.length?boardFinishPlan(data,model):null,tones=new Map(finish?.groups.map((g,k)=>[g.ref,ACCENT_TONES[k%ACCENT_TONES.length]]));
+ const accentFill=(level:number,index:number)=>{const ref=finish?.colours[level]?.[index];return ref?tones.get(ref):undefined;};
+ const legendRows=finish?.groups.length?1:0;
+ return <svg viewBox={`${left-40} ${top-44} ${right-left+80} ${b.maxZ-top+128+legendRows*12}`} role="img" aria-label="Deck construction plan from the shared model" style={{width:'100%',height:'100%',background:'#faf8f1'}}>
    <title>{`Deck plan · ${model.quantities.joists} joists · ${model.quantities.footings} footings`}</title>
    <defs><marker id="dd-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L6 3L0 6z" fill="#5f5a50"/></marker><pattern id="dd-house-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#b9b1a2" strokeWidth="1"/></pattern></defs>
    {house&&<g aria-label="House">
@@ -48,7 +56,7 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
    {model.levels.map((l,i)=><g key={i}>
      <polygon points={l.footprint.outline.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={l.kind==='winder'?'none':'#e5d7bb'} stroke="#7c6b51" strokeWidth="1"/>
      {l.boards.map((board,j)=>{const cut=board as typeof board&{width?:number;polygon?:{x:number;y:number}[];role?:string},width=cut.width??5.5;
-       return cut.polygon?<polygon key={j} points={cut.polygon.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={cut.role==='inlay'?'#71644e':'none'} stroke="#ac9572" strokeWidth=".3"/>:<rect key={j} x={board.cx+l.offset.x-board.length/2} y={board.cy+l.offset.z-width/2} width={board.length} height={width} transform={`rotate(${board.angleDeg} ${board.cx+l.offset.x} ${board.cy+l.offset.z})`} fill={cut.role==='inlay'?'#71644e':'none'} stroke="#ac9572" strokeWidth=".3"/>;
+       return cut.polygon?<polygon key={j} points={cut.polygon.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={cut.role==='inlay'?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>:<rect key={j} x={board.cx+l.offset.x-board.length/2} y={board.cy+l.offset.z-width/2} width={board.length} height={width} transform={`rotate(${board.angleDeg} ${board.cx+l.offset.x} ${board.cy+l.offset.z})`} fill={cut.role==='inlay'?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>;
      })}
      {l.joists.map((j,k)=><line key={k} x1={j.a.x} y1={j.a.z} x2={j.b.x} y2={j.b.z} stroke="#787b72" strokeDasharray="3 2" strokeWidth=".6"/>)}
      {l.beams.map((j,k)=><line key={k} x1={j.a.x} y1={j.a.z} x2={j.b.x} y2={j.b.z} stroke="#826947" strokeWidth="1"/>)}
@@ -75,6 +83,7 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
    </g>
    <text x={b.minX} y={b.maxZ+46} fontSize="7" fill="#514b41">● Footings · ■ Railing posts · Dark line: railing</text>
    <text x={b.minX} y={b.maxZ+56} fontSize="7" fill="#514b41">{`Dashed: joists · Solid: beams${contact?.contacts.length?' · Bronze: ledger on the house':''}${contact?.flushLf?' · Bronze dashed: bolted flush wall':''}${hips.length?' · Heavy dashed: doubled hip':''}`}</text>
+   {finish&&finish.groups.length>0&&<text x={b.minX} y={b.maxZ+80} fontSize="7" fill="#514b41" aria-label="Accent boards">Accent boards:{finish.groups.map(g=><tspan key={g.ref}> <tspan fill={tones.get(g.ref)}>■</tspan> {g.color.name} ({g.material.name}, {g.boards.length})</tspan>)}</text>}
    <text x={b.minX} y={b.maxZ+68} fontSize="6" fill="#716a5e">Design illustration · final connections and sizing require site review</text>
  </svg>;
 }
