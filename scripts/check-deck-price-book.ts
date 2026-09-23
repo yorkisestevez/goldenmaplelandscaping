@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readdirSync,readFileSync} from 'node:fs';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {jsPDF} from 'jspdf';
@@ -9,6 +9,7 @@ import {decodeDesignLink,decodeDesignLinkFile,designLinkFromHash,designLinkJson,
 import {ProposalSheet} from '../src/features/deckcraft/ProposalSheet';
 import {buildProposalPdf} from '../src/features/deckcraft/proposalPdf';
 import {PRICE_BOOK,priceBookLabel,readPriceBookVersion} from '../src/features/deckcraft/priceBook';
+import {unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
 import {DECK_DESIGN_FIELDS,buildDeckDesignSubmission} from '../src/features/deckcraft/sendDesign';
 import {CREW_DAY_RATES,DEFAULT_ENGINEERING_FEE,INLITE_PRODUCTS,LIGHTING_COSTS,MATERIAL_TIERS,PERMIT_FEES,RAILING_COSTS,STAIR_LABOR_MULTIPLIER,STAIR_TREAD_COSTS,WASTE_FACTORS} from '../src/features/deckcraft/types';
 import {DECKING_CATALOGUE,MANUFACTURER_ACCESSORIES,RAILING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
@@ -61,6 +62,22 @@ ok(numbersOnly({a:'x',b:1})===numbersOnly({a:'y',b:1})&&numbersOnly({b:1})!==num
   const out=buildDeckDesignSubmission({name:'Pat Example',email:'pat@example.ca',phone:'',address:'',notes:'',offers:false,botField:'',timeline:'',budget:'',samples:false},{data:d,estimate,summary:'Summary',reviewItems:[],link:'https://example.test/deck-designer#d=1zabc',sentAt:new Date('2026-09-23T12:00:00Z'),consent:null});
   ok((DECK_DESIGN_FIELDS as readonly string[]).includes('price_book')&&out.price_book===PRICE_BOOK.version&&out.details.includes(`Priced with the ${priceBookLabel()}.`),'A sent design carries the price book, in its own field and in details');
   ok(/<form name="deck-design"[\s\S]*?name="price_book"[\s\S]*?<\/form>/.test(read('public/__forms.html')),'The form declares price_book');
+}
+
+// 4. The rates still waiting on the owner: read from the live tables, never shown publicly, and the parity
+// report that shows what changing one would do never writes the golden.
+{
+  const rates=unconfirmedRates(),statuses=new Set(['conflict','estimate','unconfirmed','owner-decision']);
+  ok(new Set(rates.map(r=>r.id)).size===rates.length&&rates.every(r=>statuses.has(r.status)&&r.note&&r.where&&r.value),'Each unconfirmed rate is listed once, with a status, value, note and location');
+  const byId=Object.fromEntries(rates.map(r=>[r.id,r]));
+  ok(byId['crew-day-rate']?.value.includes(`$${CREW_DAY_RATES.Barrie.toLocaleString('en-CA')}/day`)&&byId['crew-day-rate'].status==='conflict','The crew day rate is listed at the rate the estimate charges, as a conflict');
+  ok(byId.cedar?.value===`$${MATERIAL_TIERS.find(m=>m.id==='cedar')!.costPerSqft!.toFixed(2)}/sq ft`&&byId['tt-reserve']?.value.startsWith(`$${MATERIAL_TIERS.find(m=>m.id==='tt_reserve')!.costPerSqft!.toFixed(2)}/sq ft`),'Material rates are read from the live tables');
+  const walk=(dir:URL):string[]=>readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(new URL(`${e.name}/`,dir)):/\.(ts|tsx)$/.test(e.name)?[new URL(e.name,dir).pathname]:[]);
+  const users=walk(new URL('../src/',import.meta.url)).filter(file=>readFileSync(file.replace(/^\/([A-Z]:)/,'$1'),'utf8').includes('rateConfidence'));
+  ok(users.length===0,`No public page or component imports the register (${users.join(', ')||'none'})`);
+  const parity=read('scripts/check-deck-legacy-parity.ts');
+  ok(/if\(!report&&\(update\|\|!existsSync\(GOLDEN\)\)\)/.test(parity)&&/if\(report\)\{[\s\S]*?The golden was not written[\s\S]*?process\.exit\(0\);/.test(parity),'The parity report prints price changes and never writes the golden');
+  ok(/"deck:rates":\s*"tsx scripts\/deck-rate-report\.ts"/.test(read('package.json')),'npm run deck:rates prints the register');
 }
 
 console.log(`DECK PRICE BOOK OK — ${PRICE_BOOK.version} (${PRICE_BOOK.fingerprint}): ${Object.keys(tables).length} rate tables and ${Object.keys(golden).length} priced scenarios fingerprinted; links, proposal, PDF and lead carry it; ${checks} checks.`);

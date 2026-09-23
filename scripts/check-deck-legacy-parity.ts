@@ -11,8 +11,9 @@ import type {DeckData} from '../src/features/deckcraft/types';
 
 // Existing designs must build, draw and price exactly as before while the house/wrap
 // work refactors the geometry core. Run with --update only when a change is owner-approved.
+// --report prints the price change per scenario (for the owner, before any --update) and writes nothing.
 const GOLDEN=new URL('./deck-legacy-golden.json',import.meta.url);
-const update=process.argv.includes('--update');
+const update=process.argv.includes('--update'),report=process.argv.includes('--report');
 
 const base=():DeckData=>structuredClone(DEFAULT_DECK);
 const scenarios:Record<string,Partial<DeckData>>={};
@@ -74,11 +75,24 @@ function fingerprint(patch:Partial<DeckData>){
 }
 
 const current=Object.fromEntries(Object.entries(scenarios).map(([name,patch])=>[name,fingerprint(patch)]));
-if(update||!existsSync(GOLDEN)){
+if(!report&&(update||!existsSync(GOLDEN))){
   writeFileSync(GOLDEN,JSON.stringify(current,null,1)+'\n');
   console.log(`Legacy parity golden written: ${Object.keys(current).length} scenarios.`);
 }else{
   const golden=JSON.parse(readFileSync(GOLDEN,'utf8')) as Record<string,unknown>;
+  if(report){
+    const money=(n:number)=>`${n<0?'-':''}$${Math.abs(n).toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    const totalOf=(v:unknown)=>typeof (v as {total?:unknown})?.total==='number'?(v as {total:number}).total:null;
+    const rows=Object.keys(current).map(name=>({name,before:totalOf(golden[name]),after:totalOf(current[name])})).filter(r=>r.before!==r.after);
+    for(const r of rows){
+      const delta=r.before!==null&&r.after!==null?r.after-r.before:null;
+      console.log(`${r.name}: ${r.before===null?'(new)':money(r.before)} -> ${r.after===null?'(no price)':money(r.after)}${delta===null?'':`  ${delta>=0?'+':''}${money(delta)} (${(delta/r.before!*100).toFixed(1)}%)`}`);
+    }
+    const deltas=rows.filter(r=>r.before!==null&&r.after!==null).map(r=>(r.after!-r.before!)/r.before!*100);
+    const other=Object.keys(current).filter(name=>totalOf(golden[name])===totalOf(current[name])&&stable(golden[name])!==stable(current[name])).length;
+    console.log(`PRICE REPORT — ${rows.length} of ${Object.keys(current).length} scenarios change price${deltas.length?` (from ${Math.min(...deltas).toFixed(1)}% to ${Math.max(...deltas).toFixed(1)}%)`:''}; ${other} more change in drawings, hardware or wording only. The golden was not written.`);
+    process.exit(0);
+  }
   const drift=Object.keys({...golden,...current}).filter(name=>stable(golden[name])!==stable(current[name]));
   if(drift.length){
     const parts=(name:string)=>{const g=(golden[name]??{}) as Record<string,unknown>,c=(current[name]??{}) as Record<string,unknown>;return Object.keys({...g,...c}).filter(k=>stable(g[k])!==stable(c[k]));};
