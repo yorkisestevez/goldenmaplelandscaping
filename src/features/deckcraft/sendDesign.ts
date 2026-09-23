@@ -27,10 +27,10 @@ export const MAX_DETAILS_CHARS=12_000;
  */
 export const ATTACH_PROPOSAL_PDF=false;
 /**
- * Offer "bring a sample of my decking colour" on the send form. Off until the owner confirms the crew can
- * bring sample boards to a visit; the field is declared and sent (blank) either way.
+ * Offer "bring a sample of my decking colour" on the send form: the crew brings sample boards to a visit
+ * (owner, 2026-09-23). Switching this off sends the field blank and hides the box.
  */
-export const OFFER_SAMPLE_REQUEST=false;
+export const OFFER_SAMPLE_REQUEST=true;
 /** Every form field besides the honeypot and the shared attribution and behaviour fields. */
 export const DECK_DESIGN_FIELDS=['name','email','phone','address','details','value','source','event_id','design_link','design_json','estimate_subtotal','estimate_hst','estimate_total','quote_required','review_items','marketing_consent','consent_text','consent_version','consent_at','timeline','budget','samples_requested','lead_score','lead_tier','lead_score_reasons','price_book'] as const;
 

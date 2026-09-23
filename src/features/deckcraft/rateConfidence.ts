@@ -1,5 +1,5 @@
 import {chamferLabourFactor} from './lib/cornerChamfers';
-import {CREW_DAY_RATES,MATERIAL_TIERS} from './types';
+import {MATERIAL_TIERS} from './types';
 
 /**
  * Rates the deck estimate uses today that the owner has not confirmed: the list to settle with the owner.
@@ -11,17 +11,16 @@ import {CREW_DAY_RATES,MATERIAL_TIERS} from './types';
  * the owner's approval, update the golden (--update) and PRICE_BOOK (priceBook.ts).
  */
 export type RateStatus='conflict'|'estimate'|'unconfirmed'|'owner-decision';
+/** Rates the owner has confirmed as they stand, kept out of the list (and why). */
+export const CONFIRMED_RATES=[{id:'crew-day-rate',on:'2026-09-23',note:'Crew day rate: $3,700/day in every area.'}] as const;
 export interface RateNote{id:string;rate:string;value:string;status:RateStatus;where:string;note:string}
 
 const tier=(id:string)=>MATERIAL_TIERS.find(m=>m.id===id);
 const perSqft=(id:string)=>`$${tier(id)?.costPerSqft?.toFixed(2)}/sq ft`;
 
 export function unconfirmedRates():RateNote[]{
-  const areas=[...new Set(Object.values(CREW_DAY_RATES))];
   const one=chamferLabourFactor({leftIn:48,rightIn:0,reduced:false,shrunk:false}),two=chamferLabourFactor({leftIn:48,rightIn:48,reduced:false,shrunk:false});
   return [
-    {id:'crew-day-rate',rate:'Crew day rate (all labour)',value:areas.length===1?`$${areas[0].toLocaleString('en-CA')}/day in every area`:areas.map(v=>`$${v}`).join(' / '),status:'conflict',where:'types.ts CREW_DAY_RATES',
-      note:'The code comments say the owner set the deck crew day to $3,000 all-in on 2026-07-27, but every estimate uses the value shown. Confirm which is right; the parity report shows the effect of a change on every design.'},
     {id:'cedar',rate:'Western Red Cedar decking',value:perSqft('cedar'),status:'estimate',where:'types.ts MATERIAL_TIERS (cedar)',
       note:'A market-rate estimate: cedar is not stocked at Carr. Confirm with a supplier.'},
     {id:'tt-reserve',rate:'TimberTech PRO Reserve decking',value:`${perSqft('tt_reserve')} (the same as Terrain+)`,status:'unconfirmed',where:'types.ts MATERIAL_TIERS (tt_reserve)',

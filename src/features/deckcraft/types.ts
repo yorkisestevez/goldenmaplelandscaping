@@ -376,10 +376,9 @@ export const WASTE_FACTORS: Record<BoardPattern, number> = {
 // wages, burden, equipment, overhead AND profit — no separate waterfall applies.
 // Editable per-device in Settings.
 //
-// 2026-07-27 — Yorkis set deck to $3,000/day all-in (was $3,700 target).
-// NOTE: the July 2026 doctrine called $2,200/day break-even and $3,400 the
-// bottom, so $3,000 is a DELIBERATE move below the old floor: ~$800/day gross
-// vs ~$1,500/day at $3,700. Above break-even, but roughly half the margin.
+// 2026-09-23 — the owner confirmed $3,700/day for deck estimates. (A 2026-07-27
+// note here recorded a move to $3,000/day; the table was never changed, and the
+// owner kept $3,700.)
 export const CREW_DAY_RATES: Record<Municipality, number> = {
   'Toronto': 3700,
   'Barrie': 3700,

@@ -93,10 +93,10 @@ ok(!read('src/features/deckcraft/SendDesignDialog.tsx').includes('data-netlify')
   const props={data:d,estimate,summary,reviewItems:estimate.flags,send:noop,onPrint:()=>{},onClose:()=>{}};
   const withBox=renderToStaticMarkup(createElement(SendDesignForm,{...props,consent:offersConsent('PO Box 000, Barrie ON')}));
   const withoutBox=renderToStaticMarkup(createElement(SendDesignForm,props));
-  const box=/<input type="checkbox"[^>]*>/.exec(withBox)?.[0]??'';
+  const box=/<input type="checkbox"[^>]*><span>Also send me occasional/.exec(withBox)?.[0]??'';
   ok(box&&!/\bchecked\b/.test(box),'The offers box is on the form and starts unticked');
   ok(text(withBox).includes(offersConsent('PO Box 000, Barrie ON')!.text),'Its label is the exact consent wording');
-  ok(!/type="checkbox"/.test(withoutBox),'Without a mailing address there is no offers box');
+  ok(!text(withoutBox).includes('occasional deck and landscaping offers'),'Without a mailing address there is no offers box');
   ok(text(withBox).includes(CONTACT_REQUEST_TEXT)&&text(withoutBox).includes(CONTACT_REQUEST_TEXT),'The contact-request line is always shown');
   ok(/name="bot-field"/.test(withoutBox)&&/dd-send-trap/.test(withoutBox)&&/aria-hidden="true"/.test(withoutBox),'The honeypot is hidden from people and screen readers');
   ok(/autoComplete|autocomplete="email"/i.test(withoutBox)&&/type="email"/.test(withoutBox)&&/type="tel"/.test(withoutBox),'Email and phone use the right input types');
@@ -127,13 +127,15 @@ ok(!read('src/features/deckcraft/SendDesignDialog.tsx').includes('data-netlify')
   ok(deckLeadScore(fields(),{data:design(),estimate:calculateDeckReleaseEstimate(design())}).tier===blank.lead_tier,'The score needs no qualifiers');
   ok(sendFieldsProblem(fields({timeline:'yesterday'}))!==null&&sendFieldsProblem(fields({budget:'a lot'}))!==null,'Unknown timeline or budget values are refused');
   ok(DECK_TIMELINES.every(t=>sendFieldsProblem(fields({timeline:t.value}))===null)&&DECK_BUDGETS.every(b=>sendFieldsProblem(fields({budget:b.value}))===null),'Every offered timeline and budget passes');
-  // Samples stay off until the owner confirms the crew can bring them: blank field, no line, no checkbox.
-  const asked=(await submission(design(),fields({samples:true}))).out;
-  ok(!OFFER_SAMPLE_REQUEST&&asked.samples_requested===''&&!asked.details.includes('Samples:'),'No sample request is sent while samples are not offered');
+  // Samples are offered (the crew brings sample boards): the request and its colour reach the team.
+  const asked=(await submission(design(),fields({samples:true}))).out,notAsked=(await submission(design(),fields())).out;
+  ok(OFFER_SAMPLE_REQUEST&&asked.samples_requested==='yes'&&asked.details.includes(`Samples: please bring a ${design().deckingColor} sample`),'A sample request is sent with the colour to bring');
+  ok(notAsked.samples_requested==='no'&&!notAsked.details.includes('Samples:'),'No request, no sample line');
+  ok(deckLeadScore(fields(),{data:design(),estimate:calculateDeckReleaseEstimate(design())}).reasons.includes('priority_hardscape_scope'),'A deck is a priority service in the lead score (owner, 2026-09-23)');
   const props={data:design(),estimate:calculateDeckReleaseEstimate(design()),summary:'',reviewItems:[],send:async()=>{},onPrint:()=>{},onClose:()=>{}};
   const html=renderToStaticMarkup(createElement(SendDesignForm,props));
   ok(DECK_TIMELINES.every(t=>html.includes(`value="${t.value}"`))&&DECK_BUDGETS.every(b=>html.includes(`value="${b.value}"`))&&(html.match(/Prefer not to say/g)??[]).length===2,'The form offers every timeline and budget, each optional');
-  ok(!/sample of my decking colour/.test(html),'The form has no sample checkbox while samples are not offered');
+  ok(html.includes(`Please bring a sample of my decking colour (${design().deckingColor})`),'The form offers a sample of the chosen colour');
 }
 
 // 6. The designer offers it everywhere it matters, and the booking page picks up the design link.

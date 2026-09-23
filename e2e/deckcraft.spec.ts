@@ -165,7 +165,8 @@ test('sends a design to Golden Maple and hands the link to booking',async({page}
   await expect(page.getByRole('dialog',{name:'Send your design to Golden Maple'})).toBeVisible();
   const dialog=page.locator('[role=dialog].dd-send-panel');
   await expect(dialog).toContainText('By sending, you ask Golden Maple Landscaping to contact you about this deck design.');
-  await expect(dialog.getByRole('checkbox')).toHaveCount(0);// no offers box until a mailing address is set
+  await expect(dialog.getByRole('checkbox',{name:/offers/})).toHaveCount(0);// no offers box until a mailing address is set
+  await dialog.getByRole('checkbox',{name:/Please bring a sample of my decking colour/}).check();
   await dialog.getByRole('button',{name:'Send my design'}).click();
   await expect(dialog.getByRole('alert')).toHaveText('Please enter your name.');
   await dialog.getByLabel('Your name').fill('DeckCraft Test');
@@ -183,6 +184,7 @@ test('sends a design to Golden Maple and hands the link to booking',async({page}
   expect(fields.get('design_link')).toMatch(/#d=1[zj]/);
   expect(Number(fields.get('value'))).toBeGreaterThan(0);
   expect(fields.get('timeline')).toBe('within-6-months');
+  expect(fields.get('samples_requested')).toBe('yes');
   expect(fields.get('budget')).toBe('');
   expect(fields.get('lead_tier')).toMatch(/^[ABCD]$/);
   expect(fields.get('details')).toContain('Timeline: Within 6 months');

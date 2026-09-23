@@ -315,7 +315,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     : STAIR_LABOR_MULTIPLIER;
 
   // Labor Engine — Golden Maple model: ONE fully-loaded crew day rate
-  // ($3,000/day all-in, set 2026-07-27) covers wages, burden, equipment,
+  // (CREW_DAY_RATES: $3,700/day all-in, confirmed by the owner 2026-09-23) covers wages, burden, equipment,
   // overhead AND profit. No separate overhead/contingency/profit waterfall.
   const crewDayRate = crewRates[municipality] || 3700;
   
