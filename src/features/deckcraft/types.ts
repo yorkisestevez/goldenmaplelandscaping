@@ -4,7 +4,9 @@ export type SiteType = 'Standard' | 'Waterfront-Lakefront' | 'Hillside' | 'Urban
 export type SoilCondition = 'Unknown' | 'Sandy' | 'Clay' | 'Shallow Bedrock' | 'Fill';
 export type BuildSeason = 'Spring-Summer' | 'Fall' | 'Winter';
 export type IntendedLoad = 'Standard' | 'Heavy';
-export type DeckShape = 'Rectangle' | 'L-Shape' | 'Multi-corner' | 'Curved';
+export type DeckShape = 'Rectangle' | 'L-Shape' | 'Multi-corner' | 'Curved' | 'Custom';
+/** A point of a custom outline's front, in feet (see lib/customOutline.ts). */
+export interface OutlinePoint {x:number;y:number}
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
 export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
@@ -129,6 +131,8 @@ export interface DeckData {
   wrap?: WrapConfig;
   /** Absent means square corners; never set in DEFAULT_DECK so every existing design is unchanged. */
   cornerChamfers?: CornerChamfers;
+  /** A custom outline's front, right side to left side, in feet (shape 'Custom' only; see lib/customOutline.ts). */
+  customFront?: OutlinePoint[];
   /** A named exposed edge (e.g. 'wingR-end') for the primary stair flight; overrides stairPosition. */
   stairEdgeId?: string;
   /** Named wrap edge of the main deck for the second level; overrides level2Position. */

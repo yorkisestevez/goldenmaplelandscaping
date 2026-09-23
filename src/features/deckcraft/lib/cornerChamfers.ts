@@ -1,4 +1,5 @@
 import type {DeckData} from '../types';
+import {isCustomAngledEdgeId} from './customOutline';
 
 /**
  * 45° angled front corners on the main deck (the corners away from the house). Each leg is cut back
@@ -39,7 +40,9 @@ export const chamferCount=(a:ActiveChamfers|null)=>!a?0:(a.leftIn>0?1:0)+(a.righ
 /** Labour reuses existing shape factors, no new rate: one angled corner prices like an L-shape
  * (×1.10), two like a multi-corner deck (×1.25). */
 export const chamferLabourFactor=(a:ActiveChamfers|null)=>[1,1.10,1.25][chamferCount(a)];
-export const isChamferEdgeId=(id?:string)=>!!id&&id.startsWith('main-chamfer-');
+/** An angled (45°) edge of the main deck: an angled corner's face, or a custom outline's 45° edge. They share
+ * the angled framing, the skewed hangers and the one-straight-flight stair rule. */
+export const isChamferEdgeId=(id?:string)=>!!id&&(id.startsWith('main-chamfer-')||isCustomAngledEdgeId(id));
 
 const ft=(inches:number)=>(Math.round(inches/12*10)/10).toString();
 /** Plain words for the design facts, the proposal and a sent design. */

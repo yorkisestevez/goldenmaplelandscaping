@@ -18,6 +18,7 @@ import { splitAtHouseCorners } from '../housePlacement';
 import { notchDeckAroundHouse } from '../houseFootprint';
 import { activeWrap, wrapOutline } from './wrapGeometry';
 import { activeCornerChamfers, type ActiveChamfers } from './cornerChamfers';
+import { activeCustomFront, customOutline } from './customOutline';
 
 export interface PlanPoint { x: number; y: number }
 /** How squarely an edge must face a side to count as that side. A 45° angled corner (0.707) faces no
@@ -74,6 +75,12 @@ export function getFootprint(data: DeckData, level: 1 | 2 = 1): FootprintPlan {
 }
 
 function shapeFootprint(data: DeckData, level: 1 | 2): FootprintPlan {
+  // A custom outline: a straight back along the house and a front of square and 45° edges, every edge named.
+  const custom = level === 1 ? activeCustomFront(data) : null;
+  if (custom) {
+    const { outline, edgeIds } = customOutline(custom);
+    return { outline, bounds: { w: custom[0].x * 12, h: Math.max(...custom.map(p => p.y)) * 12 }, isCurved: false, edgeIds };
+  }
   const W = Math.max(12, n(level === 1 ? data.width : data.width2) * 12);
   const L = Math.max(12, n(level === 1 ? data.length : data.length2) * 12);
   const bounds = { w: W, h: L };
@@ -287,11 +294,17 @@ export interface BoardRun {
  * maxBoardLen (20 ft stock) with alternating half-length stagger so butt
  * joints don't line up — same "breaker" intent as the 2D diagram.
  */
+/** Even-odd test: is the point inside the polygon? */
+function insidePolygon(pt:PlanPoint,poly:PlanPoint[]){let odd=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>pt.y)!==(b.y>pt.y)&&pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;}
+
 export function getBoardRows(fp: FootprintPlan, opts: {
   boardWidth: number; gap: number; angleDeg: 0 | 45; inset: number; maxBoardLen?: number;
   /** 'top' starts the rows at the strip's far side, so a front-left angled corner (which diagonal boards run
    * parallel to) gets a full-width board and the ripped row falls at the opposite corner's tip instead. */
   anchor?: 'top';
+  /** Line the rows up with the longest field edge they run along (a custom outline's 45° edge), so the board
+   * against it is full width and any ripped row falls elsewhere. */
+  alignToEdges?: boolean;
 }): BoardRun[] {
   const {boardWidth,gap,angleDeg,inset}=opts,stock=opts.maxBoardLen??240;
   const field=offsetPolygons([fp.outline],inset);if(!field.length)return [];
@@ -300,7 +313,14 @@ export function getBoardRows(fp: FootprintPlan, opts: {
   const left=Math.min(...us),right=Math.max(...us),bottom=Math.min(...vs),top=Math.max(...vs),runs:BoardRun[]=[];
   // Scan the full board strip, including the final ripped row and diagonal tips.
   const pitch=boardWidth+gap,rows:number[]=[];
-  if(opts.anchor==='top')for(let y=top-boardWidth;y+boardWidth>bottom+.001;y-=pitch)rows.push(y);
+  const along=opts.alignToEdges?field.flatMap(poly=>poly.map((p,i)=>{const q=poly[(i+1)%poly.length];return {p,q,v:-p.x*sn+p.y*c,len:Math.hypot(q.x-p.x,q.y-p.y),flat:Math.abs((-p.x*sn+p.y*c)-(-q.x*sn+q.y*c))<.01};}))
+    .filter(e=>e.flat&&e.len>boardWidth).sort((e,f)=>f.len-e.len)[0]:undefined;
+  if(along){
+    // With the field just past the edge (larger v), a row starts on it; with the field before it, a row ends on it.
+    const probe={x:(along.p.x+along.q.x)/2-sn*.5,y:(along.p.y+along.q.y)/2+c*.5},start=field.some(poly=>insidePolygon(probe,poly))?along.v:along.v-boardWidth;
+    for(let y=start-Math.ceil((start-bottom+boardWidth)/pitch)*pitch;y<top-.001;y+=pitch)if(y+boardWidth>bottom+.001)rows.push(y);
+  }
+  else if(opts.anchor==='top')for(let y=top-boardWidth;y+boardWidth>bottom+.001;y-=pitch)rows.push(y);
   else for(let y=bottom;y<top-.001;y+=pitch)rows.push(y);
   for(const [row,y] of rows.entries()){
     let x=left,first=true;

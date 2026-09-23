@@ -1,5 +1,6 @@
 import { activeWrap, hasPorchWrap, wrapLabourFactor } from './lib/wrapGeometry';
 import { activeCornerChamfers, chamferLabourFactor } from './lib/cornerChamfers';
+import { activeCustomFront, customLabourFactor, customOutline } from './lib/customOutline';
 import { outlineSpans } from './zoneFraming';
 import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock} from './stockPlan';
@@ -114,7 +115,10 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const wrapOutlineFt = model.levels[0].footprint.outline.reduce((n, p, i, o) => { const q = o[(i + 1) % o.length]; return n + Math.hypot(q.x - p.x, q.y - p.y) / 12; }, 0);
   // Angled corners replace each corner's two legs with one 45° face (leg × √2) on the same rectangle basis.
   const chamfers = activeCornerChamfers(data);
-  const perimeter1 = wrapCorners ? wrapOutlineFt : chamfers ? 2 * (width + length) - (2 - Math.SQRT2) * (chamfers.leftIn + chamfers.rightIn) / 12 : 2 * (width + length);
+  // A custom outline's fascia is its true outline length (feet), as a wrap-around's is.
+  const custom = activeCustomFront(data);
+  const customOutlineFt = custom ? customOutline(custom, 1).outline.reduce((n, p, i, o) => { const q = o[(i + 1) % o.length]; return n + Math.hypot(q.x - p.x, q.y - p.y); }, 0) : 0;
+  const perimeter1 = wrapCorners ? wrapOutlineFt : custom ? customOutlineFt : chamfers ? 2 * (width + length) - (2 - Math.SQRT2) * (chamfers.leftIn + chamfers.rightIn) / 12 : 2 * (width + length);
   const perimeter2 = levels > 1 ? 2 * (width2 + length2) : 0;
   // A third section adds its own fascia on the same basis as the second.
   const perimeter3 = levels > 2 && data.level3 ? 2 * (data.level3.widthFt + data.level3.lengthFt) : 0;
@@ -344,6 +348,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   if (shape === 'Curved') complexityMult *= 1.50;
   complexityMult *= wrapLabourFactor(wrap);
   complexityMult *= chamferLabourFactor(chamfers);
+  complexityMult *= customLabourFactor(custom);
   
   if (pattern === 'Diagonal') complexityMult *= 1.20;
   if (pattern === 'Picture Frame') complexityMult *= 1.25;

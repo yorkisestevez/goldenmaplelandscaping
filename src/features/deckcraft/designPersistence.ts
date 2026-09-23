@@ -10,6 +10,7 @@ import {ALLOWANCE_FINISHES,PATIO_PRODUCTS,TURF_SQFT,WALL_PRODUCTS,WATER_PRODUCTS
 import {GARAGE_DOOR_STYLES,WINDOW_STYLES} from './houseOpenings';
 import {clampHouseOpening,DOOR_STYLES,HOUSE_CLADDINGS,ROOF_PITCH_RANGE} from './houseSettings';
 import {angledStairAllowed,angledStairFits,CORNER_CHAMFER_FT,isChamferEdgeId} from './lib/cornerChamfers';
+import {activeCustomFront,frontBounds,normalizeFront,outlineProblems} from './lib/customOutline';
 import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,openingWallId} from './houseFootprint';
 
 export {GARAGE_DOOR_STYLES} from './houseOpenings';
@@ -22,7 +23,7 @@ const enums: Partial<Record<keyof DeckData, readonly (string | number)[]>> = {
   deckType:['Attached','Freestanding','Floating','Add-on'], municipality:['Toronto','Barrie','Simcoe County','Burlington-Oakville','Rural-Other'],
   siteType:['Standard','Waterfront-Lakefront','Hillside','Urban Tight','Island-Ferry'],soilCondition:['Unknown','Sandy','Clay','Shallow Bedrock','Fill'],
   buildSeason:['Spring-Summer','Fall','Winter'],intendedLoad:['Standard','Heavy'],foundation:['Concrete Piers','Helical Piles','Deck Blocks'],
-  shape:['Rectangle','L-Shape','Multi-corner','Curved'],levels:[1,2,3],pattern:['Straight','Diagonal','Picture Frame','Herringbone'],
+  shape:['Rectangle','L-Shape','Multi-corner','Curved','Custom'],levels:[1,2,3],pattern:['Straight','Diagonal','Picture Frame','Herringbone'],
   framingSize:['2x8','2x10','2x12'],boardWidth:[5.5,3.5],joistSpacing:[12,16],fasteningSystem:['Face','Hidden'],pictureFrameRows:[0,1,2],
   railingType:['None','Wood Picket','Aluminum','Cable','Glass Panels','Trex Select','Trex Transcend','Fortress AL13','TT Classic','TT Impression'],
   stairFlights:[0,1,2,3],stairType:['Straight','Winder','Landing'],stairPosition:['Front','Left','Right','Back'],
@@ -201,6 +202,13 @@ export function validateDesign(input:unknown):DeckData {
     const frontLeftFt=leg(c.frontLeftFt,'Front-left angled corner'),frontRightFt=leg(c.frontRightFt,'Front-right angled corner');
     if(frontLeftFt!==undefined||frontRightFt!==undefined)clean.cornerChamfers={...(frontLeftFt!==undefined?{frontLeftFt}:{}),...(frontRightFt!==undefined?{frontRightFt}:{})};
   }
+  // A custom outline's front (lib/customOutline.ts): kept on any shape but built only on 'Custom'. A custom
+  // deck takes its width and depth from it and is one level.
+  if(input.customFront!==undefined){
+    const problems=outlineProblems(input.customFront);if(problems.length)throw new Error(`Invalid custom outline: ${problems[0]}`);
+    clean.customFront=normalizeFront(input.customFront as {x:number;y:number}[]).map(p=>({x:p.x,y:p.y}));
+  }
+  if(clean.shape==='Custom'){Object.assign(clean,frontBounds(activeCustomFront(clean)!));clean.levels=1;}
   for(const key of ['stairEdgeId','level2EdgeId'] as const)if(input[key]!==undefined){
     if(typeof input[key]!=='string'||!/^[a-zA-Z0-9-]{1,40}$/.test(input[key] as string))throw new Error('Invalid deck edge.');
     clean[key]=input[key] as string;
@@ -271,7 +279,7 @@ export function defaultLevel3(data:DeckData):NonNullable<DeckData['level3']>{
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','customFront']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);

@@ -1,4 +1,5 @@
 import {activeCornerChamfers} from './cornerChamfers';
+import {customEdgeName} from './customOutline';
 import type {DeckData} from '../types';
 import {getHouseConfig} from '../houseSettings';
 import {blockKindLabel,normalizeHouseBlocks,openingWallId} from '../houseFootprint';
@@ -117,6 +118,8 @@ export function wrapLabourFactor(wrap:ActiveWrap|null){return !wrap?1:wrapHips(w
 /** Porch wraps add labour the price book has no factor for yet: listed for a builder quote. */
 export const hasPorchWrap=(wrap:ActiveWrap|null)=>!!(wrap?.porchLeft||wrap?.porchRight);
 
+/** Plain name of a named deck edge (wrap, angled corner or custom outline), or the id itself. */
+export const edgeNameOf=(id:string)=>WRAP_EDGE_NAMES[id]??customEdgeName(id)??id;
 /** Plain names for exposed wrap edges (stair and screen pickers, the plan). */
 export const WRAP_EDGE_NAMES:Record<string,string>={
   'main-front':'Front edge','main-left':'Left end','main-right':'Right end','main-back-exposed':'Back edge past the house',

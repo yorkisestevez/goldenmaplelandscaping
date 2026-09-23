@@ -142,6 +142,23 @@ test('angles a front corner, reprices it and names it in the estimate',async({pa
   expect(problems).toEqual([]);
 });
 
+test('draws a custom outline, moves an edge from the keyboard and reprices it',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  await page.getByLabel('Deck shape',{exact:true}).selectOption('Custom');
+  const outline=page.getByRole('group',{name:'Custom outline'});
+  await outline.getByRole('button',{name:'T, centre bump-out'}).click();
+  await expect(outline.getByRole('status')).toContainText('Custom outline: 8 corners');
+  await expect(price(page)).not.toHaveText(before??'');
+  const drawn=await price(page).textContent();
+  const edge=outline.getByRole('button',{name:/^Front edge/}).first();
+  await edge.focus();await edge.press('ArrowDown');
+  await expect(price(page)).not.toHaveText(drawn??'');
+  await step(page,/Your estimate/).click();
+  await expect(page.locator('.dd-summary')).toContainText('Custom outline: 8 corners');
+  expect(problems).toEqual([]);
+});
+
 test('adds a bump-out to the house',async({page})=>{
   await openDesigner(page);
   await page.getByText('House dimensions, finishes, doors & windows').click();

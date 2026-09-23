@@ -13,7 +13,7 @@ import {logoImage,planImage} from '../features/deckcraft/pdfAssets';
 import {getHouseConfig,clampHouseOpening} from '../features/deckcraft/houseSettings';
 import {getHouseContact} from '../features/deckcraft/houseContact';
 import {dollars} from '../features/deckcraft/designFacts';
-import {activeWrap,WRAP_EDGE_NAMES} from '../features/deckcraft/lib/wrapGeometry';
+import {activeWrap,edgeNameOf} from '../features/deckcraft/lib/wrapGeometry';
 import {angledStairAllowed,angledStairFits,isChamferEdgeId} from '../features/deckcraft/lib/cornerChamfers';
 import {STEPS,type PreviewMode} from '../features/deckcraft/designer/constants';
 import PhoneDeckBar from '../features/deckcraft/designer/PhoneDeckBar';
@@ -118,10 +118,10 @@ export default function DeckDesigner(){
   const move=(n:number)=>{interacted.current=true;setStep(n);const reduce=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;document.querySelector('.dd-controls')?.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});};
   // Exposed main-deck edges (wing ends and sides) that stairs and extra levels can join.
   const mainFootprint=estimate.model.levels[0].footprint,ledger=getHouseContact(data,mainFootprint);
-  const namedEdges=mainFootprint.edgeIds?mainFootprint.outline.flatMap((a,i)=>{const b=mainFootprint.outline[(i+1)%mainFootprint.outline.length],id=mainFootprint.edgeIds![i],len=Math.hypot(b.x-a.x,b.y-a.y);return ledger.isContactEdge(i)||len<36?[]:[{id,name:WRAP_EDGE_NAMES[id]??id,ft:(len/12).toFixed(1),lenIn:len}];}):[];
-  // Wrap decks offer every exposed edge. On an angled-corner deck only the angled faces are extra choices:
-  // stairs may use one as a single straight flight wide enough for the stair; levels never join one.
-  const stairEdges=namedEdges.filter(e=>wrap||(isChamferEdgeId(e.id)&&angledStairAllowed(data)&&angledStairFits(e.lenIn,data.stairWidth))).map(({lenIn:_len,...e})=>e);
+  const namedEdges=mainFootprint.edgeIds?mainFootprint.outline.flatMap((a,i)=>{const b=mainFootprint.outline[(i+1)%mainFootprint.outline.length],id=mainFootprint.edgeIds![i],len=Math.hypot(b.x-a.x,b.y-a.y);return ledger.isContactEdge(i)||len<36?[]:[{id,name:edgeNameOf(id),ft:(len/12).toFixed(1),lenIn:len}];}):[];
+  // Wrap and custom-outline decks offer every exposed edge. An angled face (an angled corner, or a custom
+  // outline's 45° edge) takes a stair only as a single straight flight wide enough for it; levels never join one.
+  const stairEdges=namedEdges.filter(e=>wrap||(data.shape==='Custom'&&!isChamferEdgeId(e.id))||(isChamferEdgeId(e.id)&&angledStairAllowed(data)&&angledStairFits(e.lenIn,data.stairWidth))).map(({lenIn:_len,...e})=>e);
   const levelEdges=namedEdges.filter(e=>wrap&&!isChamferEdgeId(e.id)).map(({lenIn:_len,...e})=>e);
   const {facts:designFacts,summary,proposalFacts}=described;
   function download(){

@@ -1,4 +1,4 @@
-import {addConstructionDetails,addRim,finishBoards,unsupportedJoistEnds} from './constructionDetails';
+import {addConstructionDetails,addRim,finishBoards,memberLength,unsupportedJoistEnds} from './constructionDetails';
 import {frameWrap,wrapBoardEndBlocking,planZones} from './wrapFraming';
 import {activeWrap,type ActiveWrap,type WrapHip} from './lib/wrapGeometry';
 import {polygonCut,polygonBoard,splitBoard,offsetPolygons,signedArea} from './lib/polygonCuts';
@@ -90,7 +90,14 @@ export function buildDeckTakeoff(data:DeckData){
     const cfg={top,spacing,framingSize:data.framingSize,joistDepth,pictureFrame:!!data.pictureFrameRows||data.pattern==='Picture Frame'};
     if(wrap&&kind==='deck'&&index===0)return makeWrapLevel(footprint,top,offset,cfg,wrap);
     const angled=kind==='deck'&&index===0?angledCornerEdges(footprint):[];
-    const zones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0,attached&&index===0?mainContact.contacts.filter(c=>c.kind==='flush').map(c=>c.a.x):[],angled.flatMap(e=>[e.a.x,e.b.x])).map(zone=>({zone,reference:zoneReference(zone,cfg)})),reference=zones[0].reference;
+    // A 45° edge that cuts a corner off the deck (every other point on its house side) is framed within its strip
+    // on an angled beam, as angled corners are. One inside a custom outline (a bay, a V) splits the deck at its
+    // ends instead, so each strip has a single front edge.
+    const cornerCut=(e:{a:PlanPoint;b:PlanPoint})=>{const dx=e.b.x-e.a.x,dy=e.b.y-e.a.y,len=Math.hypot(dx,dy)||1;return footprint.outline.every(p=>((p.x-e.a.x)*dy-(p.y-e.a.y)*dx)/len<=.5);};
+    // On a custom outline a step at the same point as a 45° edge still splits the deck there.
+    const customDeck=kind==='deck'&&index===0&&data.shape==='Custom',o=footprint.outline;
+    const stepXs=customDeck?o.flatMap((p,i)=>{const q=o[(i+1)%o.length];return Math.abs(p.x-q.x)<.5&&Math.abs(p.y-q.y)>.5&&p.x>.5&&p.x<footprint.bounds.w-.5?[p.x]:[];}):[];
+    const zones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0,attached&&index===0?mainContact.contacts.filter(c=>c.kind==='flush').map(c=>c.a.x):[],angled.filter(cornerCut).flatMap(e=>[e.a.x,e.b.x]).filter(x=>!stepXs.some(s=>Math.abs(s-x)<.5))).map(zone=>({zone,reference:zoneReference(zone,cfg)})),reference=zones[0].reference;
     const supports:V3[]=[],joists:Member[]=[],beams:Member[]=[],blocking:Member[]=[];
     for(const zone of zones){
       // Angled corners: the zone's rows and posts stay behind each angled beam, which carries the joist ends there.
@@ -108,22 +115,31 @@ export function buildDeckTakeoff(data:DeckData){
 
     const buildUps=[...breakers.flatMap(x=>[-1.5,-.5,.5,1.5].map(k=>x+k*(1.5+.375))),...(borders?[1.5+2.375,1.5+2*2.375,footprint.bounds.w-1.5-2.375,footprint.bounds.w-1.5-2*2.375]:[])];
     for(const zone of zones)frameZoneJoists(zone,offset,cfg,buildUps,{joists,blocking});
-    // Angled corners line the 45° layouts up with their edges (see getBoardRows / getHerringboneRows).
-    const angledIds=kind==='deck'&&index===0?footprint.edgeIds??[]:[],leftAngled=angledIds.includes('main-chamfer-left'),rightAngled=angledIds.includes('main-chamfer-right');
+    // Corner-cutting 45° edges line the 45° layouts up with themselves, one per direction (see getBoardRows /
+    // getHerringboneRows): running left toward the house ('left', like the front-left corner) or away from it.
+    const cutting=angled.filter(cornerCut),leftAngled=cutting.some(e=>e.b.y<e.a.y),rightAngled=cutting.some(e=>e.b.y>e.a.y),anyAngled=angled.length>0;
     const fieldPts=leftAngled||rightAngled?fieldPolygons.flat():[];
-    const align=leftAngled||rightAngled?{...(leftAngled?{leftLine:Math.max(...fieldPts.map(p=>p.y-p.x))}:{}),...(rightAngled?{rightLine:Math.max(...fieldPts.map(p=>p.x+p.y))}:{})}:undefined;
-    const field=data.pattern==='Herringbone'?getHerringboneRows(deckingFootprint,data.boardWidth,gap,inset,align):getBoardRows(deckingFootprint,{boardWidth:data.boardWidth,gap,angleDeg:data.pattern==='Diagonal'?45:0,inset,maxBoardLen:breakers.length?100000:stockLength,...(data.pattern==='Diagonal'&&leftAngled?{anchor:'top' as const}:{})});
+    // A custom outline lines herringbone up with its longest 45° edge of each direction, wherever it is.
+    const familyLine=(value:(p:PlanPoint)=>number)=>fieldPolygons.flatMap(poly=>poly.map((p,i)=>{const q=poly[(i+1)%poly.length];return {p,q,len:Math.hypot(q.x-p.x,q.y-p.y)};}))
+      .filter(e=>e.len>1&&Math.abs(e.q.x-e.p.x)>.01&&Math.abs(value(e.q)-value(e.p))<.01).sort((e,f)=>f.len-e.len).map(e=>value(e.p))[0];
+    const customLeft=customDeck&&anyAngled?familyLine(p=>p.y-p.x):undefined,customRight=customDeck&&anyAngled?familyLine(p=>p.x+p.y):undefined;
+    const align=customDeck&&anyAngled?(customLeft===undefined&&customRight===undefined?undefined:{...(customLeft!==undefined?{leftLine:customLeft}:{}),...(customRight!==undefined?{rightLine:customRight}:{})}):leftAngled||rightAngled?{...(leftAngled?{leftLine:Math.max(...fieldPts.map(p=>p.y-p.x))}:{}),...(rightAngled?{rightLine:Math.max(...fieldPts.map(p=>p.x+p.y))}:{})}:undefined;
+    const field=data.pattern==='Herringbone'?getHerringboneRows(deckingFootprint,data.boardWidth,gap,inset,align):getBoardRows(deckingFootprint,{boardWidth:data.boardWidth,gap,angleDeg:data.pattern==='Diagonal'?45:0,inset,maxBoardLen:breakers.length?100000:stockLength,...(data.pattern==='Diagonal'&&leftAngled?{anchor:'top' as const}:{}),...(data.pattern==='Diagonal'&&anyAngled&&customDeck?{alignToEdges:true}:{})});
     const boards:BoardRun[]=[...(borders?getPictureFrameRuns(deckingFootprint,borders as 1|2,data.boardWidth,gap):[])];
     for(const b of field){let intervals:[number,number][]=[[b.cx-b.length/2,b.cx+b.length/2]];if(!b.angleDeg)for(const x of breakers){const lo=x-data.boardWidth/2-gap,hi=x+data.boardWidth/2+gap;intervals=intervals.flatMap(([a,z])=>z<=lo||a>=hi?[[a,z]]:[...(a<lo?[[a,lo]]:[]),...(z>hi?[[hi,z]]:[])] as [number,number][]);}if(b.angleDeg)boards.push(b);else for(const [a,z]of intervals)if(z-a>.001){if(b.polygon)for(const p of polygonCut([b.polygon],[[{x:a,y:-10000},{x:z,y:-10000},{x:z,y:10000},{x:a,y:10000}]]))boards.push(polygonBoard(p,0,b.role));else boards.push({...b,cx:(a+z)/2,length:z-a});}}
-    // Angled corners: a breaker is cut from the field outline, so one reaching an angled edge ends on its 45° line.
+    // 45° edges: a breaker is cut from the field outline, so one reaching an angled edge ends on its 45° line.
     const breakerStrip=(x:number,y0:number,y1:number)=>[{x:x-data.boardWidth/2,y:y0},{x:x+data.boardWidth/2,y:y0},{x:x+data.boardWidth/2,y:y1},{x:x-data.boardWidth/2,y:y1}];
-    if(leftAngled||rightAngled)for(const x of breakers)for(const region of polygonCut(fieldPolygons,[breakerStrip(x,-10000,10000)])){
+    if(anyAngled)for(const x of breakers)for(const region of polygonCut(fieldPolygons,[breakerStrip(x,-10000,10000)])){
       const ys=region.map(p=>p.y),end=Math.max(...ys);
       for(let z=Math.min(...ys);z<end-.001;z+=stockLength+gap)for(const p of polygonCut([region],[breakerStrip(x,z,Math.min(end,z+stockLength))]))boards.push(polygonBoard(p,90,'breaker'));
     }
     else for(const x of breakers)for(const [a,b]of spans(deckingFootprint,x,'x')){const from=a+inset,to=b-inset;for(let z=from;z<to;z+=stockLength+gap){const len=Math.min(stockLength,to-z);boards.push({cx:x,cy:z+len/2,length:len,angleDeg:90,role:'breaker'});}}
     const installed=boards.flatMap(b=>splitBoard(b,data.boardWidth,stockLength,gap));
-    const result:DeckLevel={kind,index,footprint,deckingFootprint,top,offset,supports,joists,beams,blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,kind==='deck'&&index===0&&data.hasInlay?data.inlayLf*12:0,stockLength,inset,leftAngled||rightAngled?fieldPolygons:undefined),breakers,reference,...(zones.length>1?{zones}:{}),...(angled.length?{angledEdges:angled}:{})};addConstructionDetails(result,data.boardWidth,borders);return result;
+    const result:DeckLevel={kind,index,footprint,deckingFootprint,top,offset,supports,joists,beams,blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,kind==='deck'&&index===0&&data.hasInlay?data.inlayLf*12:0,stockLength,inset,anyAngled?fieldPolygons:undefined),breakers,reference,...(zones.length>1?{zones}:{}),...(angled.length?{angledEdges:angled}:{})};addConstructionDetails(result,data.boardWidth,borders);
+    // Custom outlines only (existing designs keep their blocks): a board-end block with no length, between members
+    // that touch (a V-shaped 45° front can put two there), is no block.
+    if(customDeck)result.blocking=result.blocking.filter(b=>b.role!=='board-end'||memberLength(b)>=.05);
+    return result;
   }
   levels.push(makeLevel(mainFp,data.height,{x:0,y:0,z:0},deckAttachesToHouse(data),'deck',0));
   type Flight={id:string;kind:'grade'|'connection';risers:number;rise:number;run:number;width:number;start:V3;end:V3;type:string;stringerOffsets:number[]};
@@ -292,6 +308,11 @@ export function buildDeckTakeoff(data:DeckData){
     else if(data.railingType==='Cable')for(let i=1;i<=9;i++){const h=3+(railHeight-6)*i/10;balusters.push({a:{...r.a,y:r.a.y+h},b:{...r.b,y:r.b.y+h},width:0.125,depth:0.125});}
     else {const count=Math.ceil(length/4.5);for(let i=1;i<count;i++){const p=mix(r.a,r.b,i/count);balusters.push({a:{...p,y:p.y+4},b:{...p,y:p.y+railHeight-3},width:0.75,depth:0.75});}}
   }
+  // A custom outline's stair must not run over the deck itself (a flight off a step inside a U, into the other arm).
+  if(data.shape==='Custom'){
+    const deckOutline=levels[0].footprint.outline,plan=(t:Box)=>t.polygon??(()=>{const o={x:Math.sin(t.angle??0),y:Math.cos(t.angle??0)},u={x:o.y,y:-o.x};return [[-1,-1],[1,-1],[1,1],[-1,1]].map(([s,r])=>({x:t.x+u.x*s*t.w/2+o.x*r*t.d/2,y:t.z+u.y*s*t.w/2+o.y*r*t.d/2}));})();
+    if(treads.some(t=>polygonCut([deckOutline],[plan(t)]).some(p=>Math.abs(signedArea(p))>16)))issues.push('A stair runs over the deck: its treads cross another part of the custom outline. Put the stair on another edge before construction.');
+  }
   if(flights.length)issues.push(...stairSupport.issues,'Closed-riser thickness is allowed for in the illustrated stringer notch faces. Confirm the resulting stringer throat, bearing and manufacturer attachment detail before cutting.');
   // Door-sill step-down, checked only once the house floor height has been set. 7.75 in is the
   // studio's existing maximum riser, so no new rule is introduced.
@@ -311,10 +332,13 @@ export function buildDeckTakeoff(data:DeckData){
     const overlap=polygonCut([mainFp.outline],[rectPolygon(block.rect)]).reduce((n,p)=>n+signedArea(p),0);
     if(overlap>1)issues.push(`The house ${blockName(block)} reaches ${(overlap/144).toFixed(1)} sq ft into this freestanding deck. Only a deck attached to the house is notched around it: attach the deck, or move or shorten the deck or the ${blockName(block)}.`);
   }
-  if(levels[0].angledEdges?.length)issues.push(levels[0].beams.some(b=>b.role==='angled-beam')?'Angled corner: the angled beam and its posts are laid out from the existing beam span table, and joists meet the angled rim on skewed hangers. Have the corner framing reviewed before construction.':'Angled corner: joists meet the angled rim on skewed hangers over the front beam. Have the corner framing reviewed before construction.');
+  // Custom outlines: every change in front depth is its own framing strip; 45° edges there are named as such.
+  const custom=data.shape==='Custom',angledWord=custom?'45° edges':'Angled corner';
+  if(custom&&levels[0].zones&&levels[0].zones.length>1)issues.push(`Custom outline: the deck is framed in ${levels[0].zones.length} strips, one for each front depth, each with its own beam and posts laid out from the existing beam span table. Have the framing reviewed before construction.`);
+  if(levels[0].angledEdges?.length)issues.push(levels[0].beams.some(b=>b.role==='angled-beam')?`${angledWord}: ${custom?'each':'the'} angled beam and its posts are laid out from the existing beam span table, and joists meet the angled rim on skewed hangers. Have the ${custom?'angled':'corner'} framing reviewed before construction.`:`${angledWord}: joists meet the angled rim on skewed hangers over the front beam. Have the ${custom?'angled':'corner'} framing reviewed before construction.`);
   // Defensive: the 45° layouts are aligned to angled edges, so a long thin rip there means that alignment failed.
   const thinStrips=levels[0].angledEdges?.length?levels[0].boards.filter(b=>b.angleDeg%90!==0&&(b.width??data.boardWidth)<1.5&&b.length>6).length:0;
-  if(thinStrips)issues.push(`Angled corner: ${thinStrips} decking piece${thinStrips===1?' is':'s are'} ripped narrower than 1.5 in along a run. The installer will need to adjust the board layout at the corner.`);
+  if(thinStrips)issues.push(`${angledWord}: ${thinStrips} decking piece${thinStrips===1?' is':'s are'} ripped narrower than 1.5 in along a run. The installer will need to adjust the board layout ${custom?'along the 45° edges':'at the corner'}.`);
   if(wrap)issues.push('Wrap-around corner: the doubled hip, the skewed jack-joist and hip hangers, and the posts under the hip are laid out from the existing beam span table. Have the corner framing reviewed by an engineer before construction.');
   for(const level of levels){
     if(level.kind!=='deck')continue;
