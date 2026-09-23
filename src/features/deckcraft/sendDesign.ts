@@ -2,6 +2,7 @@ import {BUSINESS,publicContact} from '../../data/business';
 import {PROJECT_BUDGET_RANGES} from '../../data/projectBudgets';
 import {scoreGoldenMapleLead} from '../../utils/leadScoring';
 import {designLinkJson} from './designLink';
+import {PRICE_BOOK,priceBookLabel} from './priceBook';
 import type {DeckEstimate} from './designFacts';
 import type {DeckData} from './types';
 
@@ -30,7 +31,7 @@ export const ATTACH_PROPOSAL_PDF=false;
  */
 export const OFFER_SAMPLE_REQUEST=false;
 /** Every form field besides the honeypot and the shared attribution and behaviour fields. */
-export const DECK_DESIGN_FIELDS=['name','email','phone','address','details','value','source','event_id','design_link','design_json','estimate_subtotal','estimate_hst','estimate_total','quote_required','review_items','marketing_consent','consent_text','consent_version','consent_at','timeline','budget','samples_requested','lead_score','lead_tier','lead_score_reasons'] as const;
+export const DECK_DESIGN_FIELDS=['name','email','phone','address','details','value','source','event_id','design_link','design_json','estimate_subtotal','estimate_hst','estimate_total','quote_required','review_items','marketing_consent','consent_text','consent_version','consent_at','timeline','budget','samples_requested','lead_score','lead_tier','lead_score_reasons','price_book'] as const;
 
 /** When the customer would like to build (optional on the form). */
 export const DECK_TIMELINES=[
@@ -101,7 +102,7 @@ export function buildDeckDesignSubmission(f:SendDesignFields,ctx:SendContext):Re
   const offers=!!(ctx.consent&&f.offers),at=ctx.sentAt.toISOString();
   const consentLine=!ctx.consent?'Offers consent: not asked (no mailing address set)':offers?`Offers consent: yes (wording ${ctx.consent.version}, ${at})`:'Offers consent: no';
   const lead=deckLeadScore(f,ctx),samples=OFFER_SAMPLE_REQUEST?(f.samples?'yes':'no'):'';
-  const head=[`DeckCraft design sent from the website deck designer on ${at.slice(0,10)}.`,`Open the exact design: ${ctx.link}`,`Lead: tier ${lead.tier} (score ${lead.score}${lead.reasons.length?`: ${lead.reasons.join(', ')}`:''})`,'',ctx.summary];
+  const head=[`DeckCraft design sent from the website deck designer on ${at.slice(0,10)}.`,`Open the exact design: ${ctx.link}`,`Priced with the ${priceBookLabel()}.`,`Lead: tier ${lead.tier} (score ${lead.score}${lead.reasons.length?`: ${lead.reasons.join(', ')}`:''})`,'',ctx.summary];
   const tail=['',`Timeline: ${labelOf(DECK_TIMELINES,f.timeline)??'not given'}`,`Budget: ${labelOf(DECK_BUDGETS,f.budget)??'not given'}`,...(samples==='yes'?[`Samples: please bring a ${ctx.data.deckingColor} sample`]:[]),`Customer notes: ${f.notes.trim()||'none'}`,consentLine];
   const review=ctx.reviewItems.length?['','Confirm before construction:',...ctx.reviewItems.map(item=>`- ${item}`)]:[];
   let details=[...head,...review,...tail].join('\n');
@@ -116,7 +117,7 @@ export function buildDeckDesignSubmission(f:SendDesignFields,ctx:SendContext):Re
     quote_required:(ctx.estimate.quoteRequired??[]).join('; '),review_items:ctx.reviewItems.join(' | '),
     marketing_consent:offers?'yes':'no',consent_text:ctx.consent?.text??'',consent_version:ctx.consent?.version??'',consent_at:offers?at:'',
     timeline:labelOf(DECK_TIMELINES,f.timeline)?f.timeline:'',budget:labelOf(DECK_BUDGETS,f.budget)?f.budget:'',samples_requested:samples,
-    lead_score:String(lead.score),lead_tier:lead.tier,lead_score_reasons:lead.reasons.join(','),
+    lead_score:String(lead.score),lead_tier:lead.tier,lead_score_reasons:lead.reasons.join(','),price_book:PRICE_BOOK.version,
   };
 }
 

@@ -1,3 +1,4 @@
+import {PRICE_BOOK} from './priceBook';
 import {useEffect} from 'react';
 import {createPortal} from 'react-dom';
 import {BUSINESS,publicContact} from '../../data/business';
@@ -29,6 +30,7 @@ export function ProposalSheet({data,estimate,facts,reviewItems,image,date}:Propo
       <div className="dd-proposal-brand"><img src="/logo-mark.png" alt="" width={44} height={44}/><div><strong>{BUSINESS.publicName.value}</strong><span>DECK PROPOSAL · PLANNING ESTIMATE</span></div></div>
       <dl className="dd-proposal-meta">
         <div><dt>Date</dt><dd>{date}</dd></div>
+        <div><dt>Price book</dt><dd>{PRICE_BOOK.version}</dd></div>
         <div><dt>Prepared for</dt><dd>{data.customerName.trim()||'Not provided'}</dd></div>
         <div><dt>Project address</dt><dd>{data.projectAddress.trim()||'Not provided'}</dd></div>
       </dl>

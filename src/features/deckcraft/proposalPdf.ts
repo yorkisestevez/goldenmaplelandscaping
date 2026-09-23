@@ -1,3 +1,4 @@
+import {PRICE_BOOK} from './priceBook';
 import type {jsPDF as JsPDF} from 'jspdf';
 import {BUSINESS,publicContact} from '../../data/business';
 import {dollars,type DeckEstimate} from './designFacts';
@@ -68,7 +69,7 @@ export function buildProposalPdf(PDF:typeof JsPDF,input:ProposalPdfInput,{compre
   font(15,'bold');doc.text(pdfText(name),tx,y+14);
   font(7.5,'normal',MUTED);doc.text(pdfText('DECK PROPOSAL  ·  PLANNING ESTIMATE'),tx,y+27);
   font(8.5,'normal',MUTED);
-  [[`Date`,date],['Prepared for',data.customerName.trim()||'Not provided'],['Project address',data.projectAddress.trim()||'Not provided']].forEach(([k,v],i)=>{
+  [[`Date`,`${date} · price book ${PRICE_BOOK.version}`],['Prepared for',data.customerName.trim()||'Not provided'],['Project address',data.projectAddress.trim()||'Not provided']].forEach(([k,v],i)=>{
     doc.text(pdfText(`${k}: ${v}`).slice(0,70),W-M,y+9+i*11,{align:'right'});
   });
   y+=44;rule();y+=12;

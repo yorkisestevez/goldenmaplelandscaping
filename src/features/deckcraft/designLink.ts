@@ -2,6 +2,7 @@ import {BUSINESS} from '../../data/business';
 import {DEFAULT_DECK} from './defaults';
 import {parseDeckReleaseDesign,serializeDeckReleaseDesign} from './deckRelease';
 import {MAX_DESIGN_BYTES} from './designPersistence';
+import {PRICE_BOOK,readPriceBookVersion} from './priceBook';
 import type {DeckData} from './types';
 
 /**
@@ -39,10 +40,11 @@ export function withoutPersonalDetails(data:DeckData):DeckData{
   return {...data,...Object.fromEntries(PERSONAL_FIELDS.map(key=>[key,DEFAULT_DECK[key]]))};
 }
 
-/** The design file a link carries (minified, personal details removed). */
+/** The design file a link carries (minified, personal details removed), with the price book it was priced with. */
 export function designLinkJson(data:DeckData):string{
-  const file=JSON.parse(serializeDeckReleaseDesign(data)) as {configuration:Record<string,unknown>};
+  const file=JSON.parse(serializeDeckReleaseDesign(data)) as {configuration:Record<string,unknown>;priceBook?:string};
   for(const key of PERSONAL_FIELDS)delete file.configuration[key];
+  file.priceBook=PRICE_BOOK.version;
   return JSON.stringify(file);
 }
 
@@ -88,6 +90,11 @@ export function designLinkFromHash(hash:string):string|null{
 
 /** The design a link payload holds. Throws `DesignLinkError` with a customer-facing message. */
 export async function decodeDesignLink(value:string):Promise<DeckData>{
+  return (await decodeDesignLinkFile(value)).design;
+}
+
+/** The design a link payload holds and the price book it was priced with (null for older links). */
+export async function decodeDesignLinkFile(value:string):Promise<{design:DeckData;priceBook:string|null}>{
   if(value.length>MAX_DESIGN_LINK_CHARS)throw new DesignLinkError('This design link is too long to open. Ask for the saved design file instead.');
   if(value[0]!==LINK_VERSION)throw new DesignLinkError('This design link comes from a newer version of the studio. Refresh the page, or ask for the saved design file.');
   const kind=value[1];let bytes=fromBase64Url(value.slice(2));
@@ -105,6 +112,8 @@ export async function decodeDesignLink(value:string):Promise<DeckData>{
     const reason=error instanceof Error?error.message:'';
     throw new DesignLinkError(!reason||/design file|format or version/i.test(reason)?DAMAGED:`${DAMAGED} (${reason})`);
   }
+  let priceBook:string|null=null;
+  try{priceBook=readPriceBookVersion((JSON.parse(text) as {priceBook?:unknown}).priceBook);}catch{/* parseDeckReleaseDesign already read it. */}
   // A shared design always opens without anyone's name or address, whatever the link holds.
-  return withoutPersonalDetails(design);
+  return {design:withoutPersonalDetails(design),priceBook};
 }

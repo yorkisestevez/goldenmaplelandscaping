@@ -2,7 +2,8 @@ import {useEffect,useRef,useState} from 'react';
 import {deckReleaseData,DECK_RELEASE_STORAGE_KEY,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../deckRelease';
 import {DEFAULT_DECK} from '../defaults';
 import {DESIGN_STORAGE_KEY,pruneEdgeNames} from '../designPersistence';
-import {DESIGN_LINK_BACKUP_KEY,DesignLinkError,decodeDesignLink,designLinkFromHash,designToKeep} from '../designLink';
+import {DESIGN_LINK_BACKUP_KEY,DesignLinkError,decodeDesignLinkFile,designLinkFromHash,designToKeep} from '../designLink';
+import {PRICE_BOOK,priceBookLabel} from '../priceBook';
 import {trackDeck} from '../deckAnalytics';
 import {editKey,emptyHistory,recordChange,redoChange,undoChange,type DesignHistory} from './designHistory';
 import type {DeckData} from '../types';
@@ -33,11 +34,13 @@ export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
   // (never overwritten by a second link) so they can go back to it.
   async function openSharedLink(value:string,own:string|null){
     try{
-      const shared=await decodeDesignLink(value);
+      const {design:shared,priceBook}=await decodeDesignLinkFile(value);
       let kept=false;
       try{const existing=localStorage.getItem(DESIGN_LINK_BACKUP_KEY),keep=designToKeep(existing,own,serializeDesign(shared));if(keep)localStorage.setItem(DESIGN_LINK_BACKUP_KEY,keep);kept=!!(existing||keep);}catch{/* Storage unavailable: the shared design still opens. */}
       replace(shared);setSaved(false);setStep(0);setDesignError('');setLinkBackup(kept);
-      setDesignStatus(`You’re looking at a design shared with you, priced with today’s Golden Maple price book.${kept?' Your own design is kept: use “Go back to my own design” to return to it.':''}`);
+      // A link made before the last price change says so: the estimate shown is today's, not the one that was sent.
+      const priced=priceBook&&priceBook!==PRICE_BOOK.version?`This design was first priced with the ${priceBookLabel(priceBook)}; prices have changed since, and the estimate now uses the ${priceBookLabel()}.`:`You’re looking at a design shared with you, priced with today’s Golden Maple price book.`;
+      setDesignStatus(`${priced}${kept?' Your own design is kept: use “Go back to my own design” to return to it.':''}`);
       trackDeck('deckcraft_link','deck_link_opened');
     }catch(error){setDesignError(error instanceof DesignLinkError?error.message:'This design link could not be opened.');trackDeck('deckcraft_link','deck_link_failed');}
     finally{try{window.history.replaceState(null,'',window.location.pathname+window.location.search);}catch{/* The hash stays; nothing else depends on it. */}}

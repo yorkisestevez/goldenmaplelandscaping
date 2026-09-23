@@ -131,7 +131,7 @@ ok(longest<3000,`The longest scenario link (${longest} characters) stays under 3
 {
   const page=designerSource();
   const share=readFileSync(new URL('../src/features/deckcraft/ShareDesignLink.tsx',import.meta.url),'utf8');
-  ok(page.includes('decodeDesignLink(')&&page.includes('designLinkFromHash(window.location.hash)'),'The page reads links through the link module');
+  ok(/decodeDesignLink(File)?\(/.test(page)&&page.includes('designLinkFromHash(window.location.hash)'),'The page reads links through the link module');
   ok(page.includes('designToKeep(')&&page.includes('DESIGN_LINK_BACKUP_KEY'),'The page keeps the visitor’s design before opening a link');
   ok((page.match(/<ShareDesignLink /g)??[]).length===2,'Share controls in the design tools and on the estimate step');
   ok(share.includes('encodeDesignLink(data)')&&/name and project address are not included/.test(share),'The share control builds the link and says what it leaves out');
