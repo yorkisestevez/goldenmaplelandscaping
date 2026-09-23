@@ -138,6 +138,7 @@ test('sends a design to Golden Maple and hands the link to booking',async({page}
   await expect(dialog.getByRole('alert')).toHaveText('Please enter your name.');
   await dialog.getByLabel('Your name').fill('DeckCraft Test');
   await dialog.getByLabel('Email').fill('deckcraft.test@example.com');
+  await dialog.getByLabel('When would you like to build? (optional)').selectOption('within-6-months');
   await dialog.getByLabel('Anything we should know? (optional)').fill('Automated smoke test.');
   await dialog.getByRole('button',{name:'Send my design'}).click();
   await expect(dialog.getByRole('heading',{name:'Design sent'})).toBeVisible();
@@ -149,6 +150,10 @@ test('sends a design to Golden Maple and hands the link to booking',async({page}
   expect(fields.get('details')).toContain('Open the exact design: ');
   expect(fields.get('design_link')).toMatch(/#d=1[zj]/);
   expect(Number(fields.get('value'))).toBeGreaterThan(0);
+  expect(fields.get('timeline')).toBe('within-6-months');
+  expect(fields.get('budget')).toBe('');
+  expect(fields.get('lead_tier')).toMatch(/^[ABCD]$/);
+  expect(fields.get('details')).toContain('Timeline: Within 6 months');
   await dialog.getByRole('link',{name:'Book a call'}).click();
   await expect(page).toHaveURL(/\/book/);
   expect(await page.evaluate(()=>(history.state?.usr?.bookingNotes as string|undefined)??'')).toContain('#d=1');

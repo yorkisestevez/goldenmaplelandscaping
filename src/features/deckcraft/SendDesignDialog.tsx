@@ -5,7 +5,7 @@ import {publicContact} from '../../data/business';
 import {trackDeck} from './deckAnalytics';
 import {encodeDesignLink} from './designLink';
 import type {DeckEstimate} from './designFacts';
-import {CONTACT_REQUEST_TEXT,bookingNotesFor,buildDeckDesignSubmission,offersConsent,sendFieldsProblem,type OffersConsent,type SendDesignFields} from './sendDesign';
+import {CONTACT_REQUEST_TEXT,DECK_BUDGETS,DECK_TIMELINES,OFFER_SAMPLE_REQUEST,bookingNotesFor,buildDeckDesignSubmission,offersConsent,sendFieldsProblem,type OffersConsent,type SendDesignFields} from './sendDesign';
 import type {DeckData} from './types';
 
 export interface SendDesignProps{
@@ -23,7 +23,7 @@ export interface SendDesignProps{
 
 /** The send form and its confirmation, without the overlay (the checks render this directly). */
 export function SendDesignForm({data,estimate,summary,reviewItems,send,onPrint,onDownloadPdf,onClose,consent=offersConsent()}:SendDesignProps){
-  const [fields,setFields]=useState<SendDesignFields>({name:data.customerName,email:'',phone:'',address:data.projectAddress,notes:'',offers:false,botField:''});
+  const [fields,setFields]=useState<SendDesignFields>({name:data.customerName,email:'',phone:'',address:data.projectAddress,notes:'',offers:false,botField:'',timeline:'',budget:'',samples:false});
   const [status,setStatus]=useState<'idle'|'sending'|'sent'>('idle');
   const [error,setError]=useState('');
   const [link,setLink]=useState('');
@@ -65,7 +65,12 @@ export function SendDesignForm({data,estimate,summary,reviewItems,send,onPrint,o
       {field('Phone (optional)',<input type="tel" autoComplete="tel" inputMode="tel" maxLength={40} value={fields.phone} onChange={e=>set({phone:e.target.value})}/>,'For a quicker reply')}
       {field('Project address (optional)',<input autoComplete="street-address" maxLength={200} value={fields.address} onChange={e=>set({address:e.target.value})}/>)}
     </div>
-    {field('Anything we should know? (optional)',<textarea rows={3} maxLength={2000} value={fields.notes} onChange={e=>set({notes:e.target.value})}/>,'Timing, budget, access, questions…')}
+    <div className="dd-fields">
+      {field('When would you like to build? (optional)',<select value={fields.timeline} onChange={e=>set({timeline:e.target.value})}><option value="">Prefer not to say</option>{DECK_TIMELINES.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>)}
+      {field('Budget you are comfortable with (optional)',<select value={fields.budget} onChange={e=>set({budget:e.target.value})}><option value="">Prefer not to say</option>{DECK_BUDGETS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>)}
+    </div>
+    {OFFER_SAMPLE_REQUEST&&<label className="dd-check"><input type="checkbox" checked={fields.samples} onChange={e=>set({samples:e.target.checked})}/><span>Please bring a sample of my decking colour ({data.deckingColor})</span></label>}
+    {field('Anything we should know? (optional)',<textarea rows={3} maxLength={2000} value={fields.notes} onChange={e=>set({notes:e.target.value})}/>,'Access, questions, anything else…')}
     <p className="dd-note">{CONTACT_REQUEST_TEXT}</p>
     {consent&&<label className="dd-check"><input type="checkbox" checked={fields.offers} onChange={e=>set({offers:e.target.checked})}/><span>{consent.text}</span></label>}
     {error&&<p className="dd-error" role="alert">{error}</p>}

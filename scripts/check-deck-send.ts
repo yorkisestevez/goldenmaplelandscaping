@@ -8,7 +8,9 @@ import {calculateDeckReleaseEstimate,deckReleaseData,serializeDeckReleaseDesign}
 import {describeDesign} from '../src/features/deckcraft/designFacts';
 import {decodeDesignLink,designLinkFromHash,encodeDesignLink,withoutPersonalDetails} from '../src/features/deckcraft/designLink';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
-import {CONTACT_REQUEST_TEXT,DECK_DESIGN_FIELDS,DECK_DESIGN_FORM,DECK_DESIGN_SOURCE,MAX_DETAILS_CHARS,bookingNotesFor,buildDeckDesignSubmission,offersConsent,sendFieldsProblem,type SendDesignFields} from '../src/features/deckcraft/sendDesign';
+import {CONTACT_REQUEST_TEXT,DECK_BUDGETS,DECK_DESIGN_FIELDS,DECK_DESIGN_FORM,DECK_DESIGN_SOURCE,DECK_TIMELINES,MAX_DETAILS_CHARS,OFFER_SAMPLE_REQUEST,bookingNotesFor,buildDeckDesignSubmission,deckLeadScore,designConditions,offersConsent,sendFieldsProblem,type SendDesignFields} from '../src/features/deckcraft/sendDesign';
+import {PROJECT_BUDGET_RANGES} from '../src/data/projectBudgets';
+import {scoreGoldenMapleLead} from '../src/utils/leadScoring';
 import {SendDesignForm} from '../src/features/deckcraft/SendDesignDialog';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {designerSource} from './deck-designer-source';
@@ -22,7 +24,7 @@ const root=new URL('../',import.meta.url),read=(path:string)=>readFileSync(new U
 const text=(html:string)=>html.replace(/<[^>]+>/g,' ').replace(/&#x27;|&apos;/g,"'").replace(/&amp;/g,'&').replace(/\s+/g,' ');
 const house=getHouseConfig({...structuredClone(DEFAULT_DECK),width:20});
 const design=(patch:Partial<DeckData>={}):DeckData=>deckReleaseData({...structuredClone(DEFAULT_DECK),...patch});
-const fields=(patch:Partial<SendDesignFields>={}):SendDesignFields=>({name:'Pat Example',email:'pat@example.ca',phone:'705 555 0142',address:'1 Sample Road, Barrie',notes:'',offers:false,botField:'',...patch});
+const fields=(patch:Partial<SendDesignFields>={}):SendDesignFields=>({name:'Pat Example',email:'pat@example.ca',phone:'705 555 0142',address:'1 Sample Road, Barrie',notes:'',offers:false,botField:'',timeline:'',budget:'',samples:false,...patch});
 const sentAt=new Date('2026-09-22T15:30:00.000Z');
 async function submission(d:DeckData,f=fields(),consent=offersConsent('PO Box 000, Barrie ON')){
   const estimate=calculateDeckReleaseEstimate(d),{summary}=describeDesign(d,estimate),reviewItems=estimate.flags;
@@ -106,6 +108,32 @@ ok(!read('src/features/deckcraft/SendDesignDialog.tsx').includes('data-netlify')
   ok(sendFieldsProblem(fields({phone:''}))===null,'Phone is optional');
   for(const [patch,why] of [[{name:''},'no name'],[{name:'7'},'one character'],[{name:'12345'},'digits only'],[{name:'http://spam.example'},'a link as a name'],[{name:'Pat <b>'},'markup in the name'],[{email:''},'no email'],[{email:'pat@'},'a broken email'],[{phone:'555'},'a short phone'],[{notes:'x'.repeat(2001)},'long notes'],[{address:'x'.repeat(201)},'a long address']] as [Partial<SendDesignFields>,string][])
     ok(sendFieldsProblem(fields(patch))!==null,`Refused before sending: ${why}`);
+}
+
+// 5b. Timeline, budget and the site's shared lead score reach the CRM, in details as well as in their own fields.
+{
+  ok(DECK_BUDGETS===PROJECT_BUDGET_RANGES,'Deck budgets are the site\'s shared enquiry ranges');
+  const d=design({width:24,length:20,levels:2,siteType:'Hillside',hasDrainage:true});
+  ok(designConditions(d).join()==='levels,slope,drainage'&&designConditions(design()).length===0,'Site conditions are named in the words the lead scoring looks for');
+  const f=fields({timeline:'within-6-months',budget:'25k-50k',notes:'Access is down the side of the house.'});
+  const {out,estimate}=await submission(d,f);
+  const want=scoreGoldenMapleLead({budget:'25k-50k',service:'deck',projectType:'deck',conditions:['levels','slope','drainage'],details:'Access is down the side of the house.',city:'1 Sample Road, Barrie',sqft:estimate.model.quantities.area,totalLow:estimate.subtotal,totalHigh:estimate.subtotal});
+  ok(out.lead_score===String(want.score)&&out.lead_tier===want.tier&&out.lead_score_reasons===want.reasons.join(','),`The lead score is the site's shared score (${out.lead_tier} ${out.lead_score}: ${out.lead_score_reasons})`);
+  ok(want.reasons.includes('premium_service_area')&&want.reasons.includes('complexity_protects_margin'),'A Barrie address and a sloped two-level design score as they do on other forms');
+  ok(out.timeline==='within-6-months'&&out.budget==='25k-50k','Timeline and budget travel as their own fields');
+  ok(out.details.includes(`Lead: tier ${want.tier} (score ${want.score}`)&&out.details.includes('Timeline: Within 6 months')&&out.details.includes('Budget: $25,000 – $50,000'),'Details carry the lead tier, timeline and budget in words (the CRM keeps only details)');
+  const blank=(await submission(design())).out;
+  ok(blank.timeline===''&&blank.budget===''&&blank.details.includes('Timeline: not given')&&blank.details.includes('Budget: not given'),'Blank qualifiers send empty fields and say so');
+  ok(deckLeadScore(fields(),{data:design(),estimate:calculateDeckReleaseEstimate(design())}).tier===blank.lead_tier,'The score needs no qualifiers');
+  ok(sendFieldsProblem(fields({timeline:'yesterday'}))!==null&&sendFieldsProblem(fields({budget:'a lot'}))!==null,'Unknown timeline or budget values are refused');
+  ok(DECK_TIMELINES.every(t=>sendFieldsProblem(fields({timeline:t.value}))===null)&&DECK_BUDGETS.every(b=>sendFieldsProblem(fields({budget:b.value}))===null),'Every offered timeline and budget passes');
+  // Samples stay off until the owner confirms the crew can bring them: blank field, no line, no checkbox.
+  const asked=(await submission(design(),fields({samples:true}))).out;
+  ok(!OFFER_SAMPLE_REQUEST&&asked.samples_requested===''&&!asked.details.includes('Samples:'),'No sample request is sent while samples are not offered');
+  const props={data:design(),estimate:calculateDeckReleaseEstimate(design()),summary:'',reviewItems:[],send:async()=>{},onPrint:()=>{},onClose:()=>{}};
+  const html=renderToStaticMarkup(createElement(SendDesignForm,props));
+  ok(DECK_TIMELINES.every(t=>html.includes(`value="${t.value}"`))&&DECK_BUDGETS.every(b=>html.includes(`value="${b.value}"`))&&(html.match(/Prefer not to say/g)??[]).length===2,'The form offers every timeline and budget, each optional');
+  ok(!/sample of my decking colour/.test(html),'The form has no sample checkbox while samples are not offered');
 }
 
 // 6. The designer offers it everywhere it matters, and the booking page picks up the design link.
