@@ -65,3 +65,21 @@
 .dd-share-link input{flex:1;min-width:0;background:#f7f5f0;border:1px solid #d8d1c6;border-radius:10px;padding:12px 10px;font-size:13px;color:#292824;min-height:44px}
 .dd-share>p{flex-basis:100%;margin:0}
 @media(max-width:760px){.dd-share-link input{font-size:16px}}
+/* Send my design: header button, estimate-step card and the modal form. */
+.dd-send-top{border:0;border-radius:30px;background:#292824;color:#fff;font:inherit;font-size:12px;padding:10px 16px;min-height:40px;cursor:pointer;white-space:nowrap}
+.dd-send-top:focus-visible,.dd-send-panel :focus-visible{outline:2px solid #78563e;outline-offset:3px}
+body.dd-send-open{overflow:hidden}
+.dd-send-root{position:fixed;inset:0;z-index:1000;background:rgba(41,40,36,.6);overflow:auto;padding:24px 16px 48px;font-family:var(--font-sans,Arial,sans-serif);color:#292824}
+.dd-send-panel{max-width:620px;margin:0 auto;background:#fffdfa;border-radius:18px;padding:24px 24px 28px;box-shadow:0 20px 60px -20px rgba(0,0,0,.45)}
+.dd-send-panel h2{font-family:var(--font-display,Georgia,serif);font-weight:400;font-size:28px;line-height:1.15;margin:0 0 8px}
+.dd-send-panel p{font-size:14px;line-height:1.55;margin:0 0 12px}
+.dd-send-panel .dd-fields{margin:18px 0}
+.dd-send-panel button{cursor:pointer}
+.dd-field textarea{width:100%;min-width:0;background:#f7f5f0;border:1px solid #d8d1c6;border-radius:10px;padding:12px 10px;font:inherit;font-size:13px;color:#292824;resize:vertical}
+.dd-send-trap{position:absolute!important;left:-10000px;width:1px;height:1px;overflow:hidden}
+.dd-send-card{margin:28px 0 8px;padding:20px;border:1px solid #d8d1c6;border-radius:14px;background:#fffdfa}
+.dd-send-card h3{margin-top:0}
+.dd-send-card a{color:#5c3f20}
+@media(max-width:760px){.dd-field textarea{font-size:16px}.dd-send-panel{padding:20px 16px 24px}.dd-send-panel h2{font-size:24px}}
+@media(max-width:520px){.dd-send-panel .dd-fields{grid-template-columns:1fr}.dd-send-top{padding:9px 12px}}
+@media(max-width:760px){.dd-send-panel input,.dd-send-panel textarea{font-size:16px}}

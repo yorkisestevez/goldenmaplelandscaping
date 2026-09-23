@@ -9,7 +9,7 @@
 
   IMPORTANT: this file must be the ONLY schema source for the forms below
   (contact, quick-quote, cost-estimator, cost-guide, guide-download,
-  estimate-request). Do NOT put data-netlify
+  estimate-request, deck-design). Do NOT put data-netlify
   on the runtime JSX versions of these forms — the prerendered pages get
   scanned too, and their slim static markup (attribution inputs are added by
   JS at runtime, so they're absent from prerendered HTML) re-registers the
@@ -228,6 +228,49 @@
       <textarea name="details"></textarea>
       <input type="text" name="source" />
       <input type="text" name="event_id" />
+      <input type="text" name="utm_source" />
+      <input type="text" name="utm_medium" />
+      <input type="text" name="utm_campaign" />
+      <input type="text" name="utm_content" />
+      <input type="text" name="utm_term" />
+      <input type="text" name="gclid" />
+      <input type="text" name="fbclid" />
+      <input type="text" name="landing_page" />
+      <input type="text" name="referrer" />
+      <input type="text" name="visitor_id" />
+      <input type="text" name="ga4_client_id" />
+      <input type="text" name="clarity_recording_url" />
+      <input type="text" name="visit_count" />
+      <input type="text" name="first_visit_at" />
+      <input type="text" name="session_duration_sec" />
+      <textarea name="behavior_json"></textarea>
+    </form>
+    <!-- deck-design (DeckCraft "Send my design", src/features/deckcraft/sendDesign.ts): POSTs via
+         JS fetch like every other form; runtime JSX must NOT carry data-netlify (see the file-header
+         trap). The CRM keeps name/email/phone/address/details/value, so details carries the reopen
+         link, summary, estimate, review items, notes and consent line; the other fields stay in the
+         Netlify submission. scripts/check-deck-send.ts fails if the app sends a field not declared
+         here. Declared 2026-09-22. -->
+    <form name="deck-design" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="tel" name="phone" />
+      <input type="text" name="address" />
+      <textarea name="details"></textarea>
+      <input type="text" name="value" />
+      <input type="text" name="source" />
+      <input type="text" name="event_id" />
+      <input type="text" name="design_link" />
+      <textarea name="design_json"></textarea>
+      <input type="text" name="estimate_subtotal" />
+      <input type="text" name="estimate_hst" />
+      <input type="text" name="estimate_total" />
+      <input type="text" name="quote_required" />
+      <textarea name="review_items"></textarea>
+      <input type="text" name="marketing_consent" />
+      <input type="text" name="consent_text" />
+      <input type="text" name="consent_version" />
+      <input type="text" name="consent_at" />
       <input type="text" name="utm_source" />
       <input type="text" name="utm_medium" />
       <input type="text" name="utm_campaign" />
