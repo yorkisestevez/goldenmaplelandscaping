@@ -18,6 +18,8 @@ import HouseOpeningsBar from '../features/deckcraft/HouseOpeningsBar';
 import ProposalDialog from '../features/deckcraft/ProposalSheet';
 import ShareDesignLink from '../features/deckcraft/ShareDesignLink';
 import {DESIGN_LINK_BACKUP_KEY,DesignLinkError,decodeDesignLink,designLinkFromHash,designToKeep} from '../features/deckcraft/designLink';
+import {designFeatures,setDeckAnalyticsSink,stepLabel,trackDeck} from '../features/deckcraft/deckAnalytics';
+import {trackEngagement} from '../utils/analytics';
 import {getHouseConfig,clampHouseOpening} from '../features/deckcraft/houseSettings';
 import {availableStairSides,exposedHouseLine,getHouseContact} from '../features/deckcraft/houseContact';
 import {activeWrap,describeWrap,porchStairForDoor,wrapBlockers,wrapHips,WRAP_EDGE_NAMES,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from '../features/deckcraft/lib/wrapGeometry';
@@ -26,6 +28,8 @@ import { defaultLightingZone, isSystemProduct, lightingSystemCheck, syncAutoLigh
 import './DeckDesigner.css';
 
 const Viewer = lazy(() => import('../features/deckcraft/components/viewer3d/Deck3DViewer'));
+// DeckCraft's funnel events go through the site's analytics (GA4, Meta and the behaviour trail sent with leads).
+setDeckAnalyticsSink((event,label)=>trackEngagement(event,label));
 const STEPS = ['Dimensions', 'Materials', 'Stairs & railings', 'Site & extras', 'Your estimate'];
 const LIGHTING_ZONES:readonly [LightingZone,string][]=[['deck','Deck / recessed'],['posts','Railing posts'],['stairs','Stairs'],['privacy','Privacy screens'],['landscape','Landscape'],['house','House']];
 const allowedLightingZones=(geometry:string):LightingZone[]=>geometry==='recessed'?['deck','stairs','posts','landscape']:geometry==='wall'?['deck','stairs','posts','privacy','house']:geometry==='undercap'?['deck','stairs','posts','privacy']:geometry==='bollard'||geometry==='spot'?['landscape']:['house'];
@@ -88,11 +92,12 @@ export default function DeckDesigner(){
       try{const existing=localStorage.getItem(DESIGN_LINK_BACKUP_KEY),keep=designToKeep(existing,own,serializeDesign(shared));if(keep)localStorage.setItem(DESIGN_LINK_BACKUP_KEY,keep);kept=!!(existing||keep);}catch{/* Storage unavailable: the shared design still opens. */}
       setData(shared);setSaved(false);setStep(0);setDesignError('');setLinkBackup(kept);
       setDesignStatus(`You’re looking at a design shared with you, priced with today’s Golden Maple price book.${kept?' Your own design is kept: use “Go back to my own design” to return to it.':''}`);
-    }catch(error){setDesignError(error instanceof DesignLinkError?error.message:'This design link could not be opened.');}
+      trackDeck('deckcraft_link','deck_link_opened');
+    }catch(error){setDesignError(error instanceof DesignLinkError?error.message:'This design link could not be opened.');trackDeck('deckcraft_link','deck_link_failed');}
     finally{try{window.history.replaceState(null,'',window.location.pathname+window.location.search);}catch{/* The hash stays; nothing else depends on it. */}}
   }
   function restoreOwnDesign(){
-    try{const own=localStorage.getItem(DESIGN_LINK_BACKUP_KEY);if(own)setData(parseDesign(own));localStorage.removeItem(DESIGN_LINK_BACKUP_KEY);setLinkBackup(false);setSaved(false);setStep(0);setDesignError('');setDesignStatus(own?'Your own design is back.':'');}
+    try{const own=localStorage.getItem(DESIGN_LINK_BACKUP_KEY);if(own)setData(parseDesign(own));localStorage.removeItem(DESIGN_LINK_BACKUP_KEY);setLinkBackup(false);setSaved(false);setStep(0);setDesignError('');setDesignStatus(own?'Your own design is back.':'');trackDeck('deckcraft_link','deck_link_went_back');}
     catch{setDesignError('Your own design could not be restored. You can import a saved JSON file.');}
   }
   useEffect(()=>{
@@ -110,6 +115,11 @@ export default function DeckDesigner(){
   },[]);
   useEffect(()=>{if(!storageReady)return;const timer=setTimeout(()=>{try{localStorage.setItem(DECK_RELEASE_STORAGE_KEY,serializeDesign(data));}catch{setDesignError('Automatic saving is unavailable on this device. Use Save JSON to keep your design.');}},450);return ()=>clearTimeout(timer);},[data,storageReady]);
   useEffect(()=>{if(interacted.current)panelRef.current?.focus({preventScroll:true});},[step]);
+  // Funnel: each step, preview mode and design feature is counted once per visit (fixed labels only).
+  useEffect(()=>{trackDeck('deckcraft_step',stepLabel(step));},[step]);
+  useEffect(()=>{trackDeck('deckcraft_view',`deck_view_${mode}`);},[mode]);
+  const featureKey=designFeatures(data).join(' ');
+  useEffect(()=>{for(const label of featureKey.split(' '))if(label)trackDeck('deckcraft_feature',label);},[featureKey]);
   const retryWebGL=()=>{try{const c=document.createElement('canvas');setHasWebGL(!!(c.getContext('webgl2')||c.getContext('webgl')));}catch{setHasWebGL(false);}};
   const update=(patch:Partial<DeckData>)=>{setSaved(false);setData(prev=>deckReleaseData({...prev,...patch}));};
   const houseConfig=getHouseConfig(data);
@@ -291,7 +301,7 @@ export default function DeckDesigner(){
   function download(){
     try{
       const body=`GOLDEN MAPLE — YOUR DECK DESIGN\n\n${summary}\n\n${estimate.sections.map(s=>`${s.title}: ${s.quoteRequired&&s.total===0?'Supplier quote required':dollars(s.total)}${s.quoteRequired&&s.total>0?' (priced portion; supplier quote required)':''}`).join('\n')}\n\nPlanning estimate only. Final measurements, engineering, product availability and written scope must be confirmed.\n\nConfiguration:\n${serializeDesign(data)}`;
-      downloadFile(body,'text/plain','golden-maple-deck-summary.txt');setSaved(true);setDesignError('');
+      downloadFile(body,'text/plain','golden-maple-deck-summary.txt');setSaved(true);setDesignError('');trackDeck('deckcraft_output','deck_summary');
     }catch{setDesignError('The summary could not be generated on this device. Please try again, or use “Talk through your design”.');}
   }
   // The proposal uses a customer view of the deck: contractor and plan modes switch to 3D for the snapshot, then back.
@@ -313,21 +323,22 @@ export default function DeckDesigner(){
       setPreparing(false);
     }
     setProposal({image,date:new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'})});
+    trackDeck('deckcraft_output','deck_proposal');
   }
   const proposalFacts=[`${data.width} × ${data.length} ft ${wrap?'wrap-around':data.shape.toLowerCase()} deck, ${data.height} in above grade, ${data.deckType.toLowerCase()}`,`${material.name} · ${data.deckingColor}, ${data.pattern.toLowerCase()} boards${data.pictureFrameRows?` with ${data.pictureFrameRows} border row${data.pictureFrameRows>1?'s':''}`:''}`,`${railingName} railing · ${data.stairFlights} stair flight${data.stairFlights===1?'':'s'}${data.stairFlights?`, ${data.stairWidth} in wide, ${data.stairType.toLowerCase()}`:''}`,...designFacts];
   function exportModel(kind:'dxf'|'obj'){
     try{
       const body=kind==='dxf'?exportDeckDXF(data,estimate.model):exportDeckOBJ(data,estimate.model);
-      downloadFile(body,kind==='dxf'?'application/dxf':'text/plain',`golden-maple-deck.${kind}`);setDesignError('');
+      downloadFile(body,kind==='dxf'?'application/dxf':'text/plain',`golden-maple-deck.${kind}`);setDesignError('');trackDeck('deckcraft_output',`deck_${kind}`);
     }catch{setDesignError(`The ${kind.toUpperCase()} export could not be generated for this design. Adjust a dimension or contact us and we’ll prepare it.`);}
   }
   async function importFile(file?:File){
     if(!file)return;setDesignError('');
-    try{if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 100 KB.');const restored=parseDesign(await file.text());setData(restored);setSaved(false);setDesignStatus('Deck and house imported. Yard features are omitted from this deck-only studio. Your estimate uses the current Golden Maple price book.');}
+    try{if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 100 KB.');const restored=parseDesign(await file.text());setData(restored);setSaved(false);setDesignStatus('Deck and house imported. Yard features are omitted from this deck-only studio. Your estimate uses the current Golden Maple price book.');trackDeck('deckcraft_output','deck_json_import');}
     catch(error){setDesignError(error instanceof Error?error.message:'The design could not be imported.');}
     finally{if(fileInput.current)fileInput.current.value='';}
   }
-  function saveJSON(){try{downloadFile(serializeDesign(data),'application/json','golden-maple-deck-design.json');setDesignStatus('Design JSON saved. Import this file to continue on another device.');setDesignError('');}catch{setDesignError('Saving the design file failed on this device. Use “Download summary” for a plain-text copy instead.');}}
+  function saveJSON(){try{downloadFile(serializeDesign(data),'application/json','golden-maple-deck-design.json');trackDeck('deckcraft_output','deck_json_save');setDesignStatus('Design JSON saved. Import this file to continue on another device.');setDesignError('');}catch{setDesignError('Saving the design file failed on this device. Use “Download summary” for a plain-text copy instead.');}}
   return <div className="deck-designer">
     <SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>
     <header className="dd-header"><Link to="/cost-estimator" className="dd-back">← All project types</Link><Link to="/" className="dd-wordmark">Golden Maple<span>DECK STUDIO</span></Link><Link to="/contact" className="dd-contact">Talk through your design ↗</Link></header>
