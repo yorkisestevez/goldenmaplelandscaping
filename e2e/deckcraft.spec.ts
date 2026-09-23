@@ -162,6 +162,26 @@ test('opens the printable proposal',async({page})=>{
   await expect(sheet).toHaveCount(0);
 });
 
+test('loads the 3D view once the page settles when the preview is on screen',async({page})=>{
+  const viewer:string[]=[];page.on('request',r=>{if(/Deck3DViewer-/.test(r.url()))viewer.push(r.url());});
+  await openDesigner(page);
+  await expect.poll(()=>viewer.length,{timeout:20_000}).toBeGreaterThan(0);
+});
+
+test('@phone waits to load the 3D view until the preview is scrolled near',async({page})=>{
+  const viewer:string[]=[];page.on('request',r=>{if(/Deck3DViewer-/.test(r.url()))viewer.push(r.url());});
+  // A short phone screen puts the preview well below the fold (on a Pixel 7 it sits just under it).
+  await page.setViewportSize({width:412,height:480});
+  await openDesigner(page);
+  const farBelow=await page.evaluate(()=>document.querySelector('.dd-canvas')!.getBoundingClientRect().top>window.innerHeight+300);
+  expect(farBelow).toBe(true);
+  await page.waitForTimeout(4000);
+  expect(viewer).toHaveLength(0);
+  await expect(page.locator('.dd-canvas svg[aria-label="Deck construction plan from the shared model"]')).toHaveCount(1);// the plan shows meanwhile
+  await page.locator('.dd-canvas').scrollIntoViewIfNeeded();
+  await expect.poll(()=>viewer.length,{timeout:20_000}).toBeGreaterThan(0);
+});
+
 test('@phone fits the screen, with the send button in reach',async({page})=>{
   await openDesigner(page);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);

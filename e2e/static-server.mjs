@@ -4,6 +4,7 @@
 import {createReadStream,existsSync,statSync} from 'node:fs';
 import {createServer} from 'node:http';
 import {extname,join,normalize} from 'node:path';
+import {createGzip} from 'node:zlib';
 
 const ROOT=join(import.meta.dirname,'..','build','client');
 const PORT=Number(process.env.E2E_PORT||4031);
@@ -17,7 +18,11 @@ createServer((req,res)=>{
   let file=join(ROOT,path);
   if(existsSync(file)&&statSync(file).isDirectory())file=join(file,'index.html');
   if(!existsSync(file))file=join(ROOT,'__spa-fallback.html');
-  res.writeHead(200,{'Content-Type':TYPES[extname(file).toLowerCase()]??'application/octet-stream'});
+  const type=TYPES[extname(file).toLowerCase()]??'application/octet-stream';
+  // Text is gzipped as Netlify compresses it, so network timings in tests and measurements are realistic.
+  const gzip=/gzip/.test(String(req.headers['accept-encoding']??''))&&/^(text\/|application\/(json|xml))/.test(type);
+  res.writeHead(200,{'Content-Type':type,...(gzip?{'Content-Encoding':'gzip',Vary:'Accept-Encoding'}:{})});
   if(req.method==='HEAD'){res.end();return;}
-  createReadStream(file).pipe(res);
+  const stream=createReadStream(file);
+  (gzip?stream.pipe(createGzip()):stream).pipe(res);
 }).listen(PORT,'127.0.0.1',()=>console.log(`e2e static server on http://127.0.0.1:${PORT}`));

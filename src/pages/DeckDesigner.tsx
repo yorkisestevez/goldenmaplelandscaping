@@ -54,6 +54,9 @@ export default function DeckDesigner(){
   const [preparing,setPreparing]=useState(false);
   const [sendOpen,setSendOpen]=useState(false);
   const [pdfBusy,setPdfBusy]=useState(false);
+  // The 3D viewer loads once its area is near the screen and the page is idle, or when a snapshot needs it.
+  const [want3d,setWant3d]=useState(false);
+  const onWant3d=useCallback(()=>setWant3d(true),[]);
   const snapshot=useRef<(()=>string|null)|null>(null);
   const onSnapshotReady=useCallback((capture:(()=>string|null)|null)=>{snapshot.current=capture;},[]);
   const closeProposal=useCallback(()=>setProposal(null),[]);
@@ -108,8 +111,10 @@ export default function DeckDesigner(){
     let image:string|null=null;
     try{
       if(hasWebGL){
+        // A viewer that has not loaded yet (a phone that never scrolled to it) gets longer to arrive.
+        const loading=!want3d;if(loading)setWant3d(true);
         if(!customerView){setMode('3d');await wait(900);}
-        for(let i=0;i<50&&!snapshot.current;i++)await wait(100);
+        for(let i=0;i<(loading?100:50)&&!snapshot.current;i++)await wait(100);
         if(!customerView)await wait(600);
         image=snapshot.current?.()??null;
       }
@@ -179,7 +184,7 @@ export default function DeckDesigner(){
     <div className="dd-intro"><p className="dd-eyebrow">YOUR SPACE. YOUR SPECIFICATIONS.</p><h1>A deck that takes shape <br/><em>with every choice.</em></h1><p>Set the dimensions. Explore real material colours. See how your choices change the design and the estimate.</p></div>
     <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver}/>
     <main className="dd-workspace">
-      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} step={step} houseSettingsOpen={houseSettingsOpen} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} material={material} priceLabel={priceLabel} quoteRequired={quoteRequired}/>
+      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} step={step} houseSettingsOpen={houseSettingsOpen} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} material={material} priceLabel={priceLabel} quoteRequired={quoteRequired}/>
       <section className="dd-controls" aria-label="Deck configuration">
         <a className="dd-preview-link" href="#deck-live-preview">↑ View updated deck</a><nav className="dd-steps" aria-label="Design steps">{STEPS.map((s,i)=><button key={s} aria-current={step===i?'step':undefined} onClick={()=>move(i)}><span>{String(i+1).padStart(2,'0')}</span>{s}</button>)}</nav>
         <div className="dd-panel" ref={panelRef} tabIndex={-1}>
