@@ -8,6 +8,7 @@ import {DOOR_STYLES} from '../src/features/deckcraft/houseSettings';
 import {GARAGE_DOOR_STYLES,WINDOW_STYLES} from '../src/features/deckcraft/houseOpenings';
 import {DesignLinkError,MAX_DESIGN_LINK_CHARS,decodeDesignLink,designLinkFromHash,designLinkJson,designToKeep,encodeDesignLink,transformBytes,withoutPersonalDetails} from '../src/features/deckcraft/designLink';
 import type {DeckData,HouseOpening} from '../src/features/deckcraft/types';
+import {designerSource} from './deck-designer-source';
 
 /**
  * Share links: a design survives the trip through a link exactly, never carries the customer's
@@ -128,7 +129,7 @@ ok(longest<3000,`The longest scenario link (${longest} characters) stays under 3
 
 // 7. The page opens links only through decodeDesignLink and shares only through ShareDesignLink.
 {
-  const page=readFileSync(new URL('../src/pages/DeckDesigner.tsx',import.meta.url),'utf8');
+  const page=designerSource();
   const share=readFileSync(new URL('../src/features/deckcraft/ShareDesignLink.tsx',import.meta.url),'utf8');
   ok(page.includes('decodeDesignLink(')&&page.includes('designLinkFromHash(window.location.hash)'),'The page reads links through the link module');
   ok(page.includes('designToKeep(')&&page.includes('DESIGN_LINK_BACKUP_KEY'),'The page keeps the visitor’s design before opening a link');

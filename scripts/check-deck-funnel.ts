@@ -6,6 +6,7 @@ import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
 import {MANUFACTURER_ACCESSORIES,RAILING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {DECK_LABEL,designFeatures,resetDeckAnalyticsVisit,setDeckAnalyticsSink,stepLabel,trackDeck,type DeckEvent} from '../src/features/deckcraft/deckAnalytics';
 import type {DeckData} from '../src/features/deckcraft/types';
+import {designerSource} from './deck-designer-source';
 
 /**
  * DeckCraft funnel analytics: a closed vocabulary of fixed labels (never customer text, sizes or prices),
@@ -81,7 +82,7 @@ ok(!designFeatures(design({customerName:'Jane Q Customer',projectAddress:'12 Exa
 
 // 3. Every place in the designer that should report does, through trackDeck with fixed labels.
 {
-  const page=readFileSync(new URL('../src/pages/DeckDesigner.tsx',import.meta.url),'utf8');
+  const page=designerSource();
   const share=readFileSync(new URL('../src/features/deckcraft/ShareDesignLink.tsx',import.meta.url),'utf8');
   ok(/setDeckAnalyticsSink\(\(event,label\)=>trackEngagement\(event,label\)\)/.test(page),'The page sends DeckCraft events through the site analytics');
   ok(page.includes("trackDeck('deckcraft_step',stepLabel(step))")&&page.includes("trackDeck('deckcraft_view',`deck_view_${mode}`)")&&page.includes('designFeatures(data)'),'Steps, views and features are reported');

@@ -11,6 +11,7 @@ import {MANUFACTURER_ACCESSORIES,RAILING_CATALOGUE} from '../src/features/deckcr
 import {buildProposalPdf,pdfText,PROPOSAL_PDF_NAME} from '../src/features/deckcraft/proposalPdf';
 import {ATTACH_PROPOSAL_PDF} from '../src/features/deckcraft/sendDesign';
 import type {DeckData} from '../src/features/deckcraft/types';
+import {designerSource} from './deck-designer-source';
 
 /**
  * The proposal PDF says what the printable proposal says: the same facts, estimate and supplier-quote
@@ -105,7 +106,7 @@ for(const [name,d] of Object.entries(designs)){
 
 // 5. The page loads jsPDF only on demand; the attachment switch and the form schema agree.
 {
-  const page=read('src/pages/DeckDesigner.tsx'),pdf=read('src/features/deckcraft/proposalPdf.ts'),forms=read('public/__forms.html'),dialog=read('src/features/deckcraft/SendDesignDialog.tsx');
+  const page=designerSource(),pdf=read('src/features/deckcraft/proposalPdf.ts'),forms=read('public/__forms.html'),dialog=read('src/features/deckcraft/SendDesignDialog.tsx');
   // Any static form (import x from 'jspdf', import 'jspdf') would put it in the page bundle; only import('jspdf') may appear.
   ok(page.includes("import('jspdf')")&&!/^\s*import\s+(?!\()[^;]*['"]jspdf['"]/m.test(page)&&!/require\(['"]jspdf/.test(page),'The page imports jsPDF lazily, never in the initial bundle');
   ok(/^import type \{jsPDF as JsPDF\} from 'jspdf';/m.test(pdf)&&(pdf.match(/from 'jspdf'/g)??[]).length===1,'The PDF builder takes jsPDF as a type only');

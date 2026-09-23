@@ -5,6 +5,7 @@ import {DESIGN_STORAGE_KEY,serializeDesign} from '../src/features/deckcraft/desi
 import {DECK_RELEASE_STORAGE_KEY,deckReleaseData,parseDeckReleaseDesign,serializeDeckReleaseDesign,calculateDeckReleaseEstimate,exportDeckReleaseDXF,exportDeckReleaseOBJ} from '../src/features/deckcraft/deckRelease';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
+import {designerSource} from './deck-designer-source';
 const combined:DeckData={...structuredClone(DEFAULT_DECK),terrainConfig:{widthFt:80,depthFt:80,elevationIn:10,slopePct:5},yardFeatures:[{id:'old-patio',kind:'patio',name:'Deferred patio',enabled:true,xFt:10,zFt:30,widthFt:20,depthFt:20,heightIn:0,rotationDeg:0,productId:'permacon-melville',color:'#aaaaaa'}]};
 const snapshot=structuredClone(combined),clean=deckReleaseData(combined),base=calculateDeckReleaseEstimate(DEFAULT_DECK),released=calculateDeckReleaseEstimate(combined);
 assert.deepEqual(combined,snapshot,'Source combined design is preserved without mutation');
@@ -37,7 +38,8 @@ for(const privacySqft of [24,25,137,500]){
   assert(calculateDeckReleaseEstimate(on).total>base.total,'The same screen switched on is priced');
   assert.equal(off.privacyScreens?.[0].lengthFt,8,'Switching off keeps the screen settings');
 }
-const page=readFileSync(new URL('../src/pages/DeckDesigner.tsx',import.meta.url),'utf8');
+// The page and its designer/ components: the public workflow wherever its code lives.
+const page=designerSource();
 assert(page.includes('deckRelease'),'Public page uses the release boundary');
 assert(!page.includes('<YardEditor'),'Deferred authoring is absent from the public workflow');
 console.log('Deck-only release: preserved legacy designs, isolated pricing/terrain, clean import/save/exports and public workflow checks passed.');

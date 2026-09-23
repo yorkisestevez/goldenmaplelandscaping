@@ -8,6 +8,7 @@ import type {calculateEstimate} from './calculations';
 import type {DeckData} from './types';
 
 export type DeckEstimate=ReturnType<typeof calculateEstimate>;
+export type DeckMaterial=(typeof DECKING_CATALOGUE)[number];
 export const dollars=(n:number)=>new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD',maximumFractionDigits:0}).format(n);
 
 /**

@@ -11,6 +11,7 @@ import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
 import {CONTACT_REQUEST_TEXT,DECK_DESIGN_FIELDS,DECK_DESIGN_FORM,DECK_DESIGN_SOURCE,MAX_DETAILS_CHARS,bookingNotesFor,buildDeckDesignSubmission,offersConsent,sendFieldsProblem,type SendDesignFields} from '../src/features/deckcraft/sendDesign';
 import {SendDesignForm} from '../src/features/deckcraft/SendDesignDialog';
 import type {DeckData} from '../src/features/deckcraft/types';
+import {designerSource} from './deck-designer-source';
 
 /**
  * "Send my design": every field reaches Netlify (and so the CRM), the consent record is honest, the
@@ -46,7 +47,7 @@ for(const key of [...DECK_DESIGN_FIELDS,...attributionKeys,...behaviorKeys])ok(d
   for(const key of Object.keys(out))if(key!=='form-name'&&key!=='bot-field')ok(declared.has(key),`The app's ${key} field is declared`);
   ok(out['form-name']===DECK_DESIGN_FORM&&'bot-field' in out,'The submission names its form and carries the honeypot');
 }
-ok(!read('src/features/deckcraft/SendDesignDialog.tsx').includes('data-netlify')&&!read('src/pages/DeckDesigner.tsx').includes('data-netlify'),'No runtime JSX self-registers the form (the __forms.html trap)');
+ok(!read('src/features/deckcraft/SendDesignDialog.tsx').includes('data-netlify')&&!designerSource().includes('data-netlify'),'No runtime JSX self-registers the form (the __forms.html trap)');
 
 // 2. The lead the CRM receives: source, value, details with the link, summary, review items, notes and consent.
 {
@@ -109,7 +110,7 @@ ok(!read('src/features/deckcraft/SendDesignDialog.tsx').includes('data-netlify')
 
 // 6. The designer offers it everywhere it matters, and the booking page picks up the design link.
 {
-  const page=read('src/pages/DeckDesigner.tsx'),booking=read('src/components/BookingScheduler.tsx'),privacy=read('src/pages/Privacy.tsx');
+  const page=designerSource(),booking=read('src/components/BookingScheduler.tsx'),privacy=read('src/pages/Privacy.tsx');
   ok(/<header className="dd-header">[\s\S]*?className="dd-send-top"[\s\S]*?Send my design[\s\S]*?<\/header>/.test(page),'The header offers "Send my design"');
   ok(page.includes('className="dd-send-card"')&&page.includes('<SendDesignDialog '),'The estimate step has the send card and the page mounts the dialog');
   ok(page.includes('trackLead(DECK_DESIGN_FORM')&&page.includes("fetch('/'")&&page.includes('getAttributionFields()'),'The page posts to Netlify with attribution and records the lead');
