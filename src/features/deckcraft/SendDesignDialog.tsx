@@ -14,13 +14,15 @@ export interface SendDesignProps{
   send:(fields:Record<string,string>)=>Promise<void>;
   /** Opens the printable proposal (the dialog closes first). */
   onPrint:()=>void;
+  /** Downloads the proposal PDF. */
+  onDownloadPdf?:()=>void|Promise<void>;
   onClose:()=>void;
   /** The offers wording; defaults to the business mailing address (none set means no offers box). */
   consent?:OffersConsent|null;
 }
 
 /** The send form and its confirmation, without the overlay (the checks render this directly). */
-export function SendDesignForm({data,estimate,summary,reviewItems,send,onPrint,onClose,consent=offersConsent()}:SendDesignProps){
+export function SendDesignForm({data,estimate,summary,reviewItems,send,onPrint,onDownloadPdf,onClose,consent=offersConsent()}:SendDesignProps){
   const [fields,setFields]=useState<SendDesignFields>({name:data.customerName,email:'',phone:'',address:data.projectAddress,notes:'',offers:false,botField:''});
   const [status,setStatus]=useState<'idle'|'sending'|'sent'>('idle');
   const [error,setError]=useState('');
@@ -46,6 +48,7 @@ export function SendDesignForm({data,estimate,summary,reviewItems,send,onPrint,o
     <p className="dd-note">Keep the link to reopen this exact design on any device. Your name and address are not in it.</p>
     <div className="dd-summary-actions">
       <Link className="dd-primary dd-send-book" to="/book" state={{bookingNotes:bookingNotesFor(link),serviceInterest:'Composite Decking'}}>Book a call</Link>
+      {onDownloadPdf&&<button type="button" className="dd-secondary" onClick={()=>void onDownloadPdf()}>Download PDF</button>}
       <button type="button" className="dd-secondary" onClick={onPrint}>Print your proposal</button>
       <button type="button" className="dd-secondary" onClick={onClose}>Back to my design</button>
     </div>

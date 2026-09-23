@@ -14,6 +14,14 @@ export const DECK_DESIGN_FORM='deck-design';
 /** The CRM infers the lead source from this: it contains "website", so the lead is filed under Website. */
 export const DECK_DESIGN_SOURCE='website-deck-designer';
 export const MAX_DETAILS_CHARS=12_000;
+/**
+ * Attach the proposal PDF to a sent design as a Netlify form file (`proposal_pdf`). Off until the owner
+ * confirms the Netlify plan's form-upload allowance: the lead already carries the full summary and a
+ * link that rebuilds the design and its PDF. Turning it on also needs `<input type="file"
+ * name="proposal_pdf">` in public/__forms.html (check-deck-pdf enforces both ways). A failed upload
+ * falls back to sending without the file.
+ */
+export const ATTACH_PROPOSAL_PDF=false;
 /** Every form field besides the honeypot and the shared attribution and behaviour fields. */
 export const DECK_DESIGN_FIELDS=['name','email','phone','address','details','value','source','event_id','design_link','design_json','estimate_subtotal','estimate_hst','estimate_total','quote_required','review_items','marketing_consent','consent_text','consent_version','consent_at'] as const;
 
