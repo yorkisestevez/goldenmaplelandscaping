@@ -4,6 +4,7 @@ import {isSystemProduct} from './lightingSystem';
 import {LIGHTING_CATALOGUE} from './lightingCatalogue';
 import {screenOn} from './privacyScreens';
 import {activeCornerChamfers} from './lib/cornerChamfers';
+import {allowanceItems} from './yardSettings';
 import type {DeckData} from './types';
 
 /**
@@ -85,9 +86,14 @@ export function designFeatures(data:DeckData):string[]{
   add(data.hasDrainage,'deck_drainage');
   add(data.sceneLighting==='Evening','deck_night_preview');
   const yard=(data.yardFeatures??[]).filter(f=>f.enabled);
-  add(yard.length,'deck_backyard');
+  const allowances=new Set(allowanceItems(data.yardAllowances).map(i=>i.id));
+  add(yard.length||allowances.size,'deck_backyard');
   add(yard.some(f=>f.kind==='patio'),'deck_patio');
   add(yard.some(f=>f.kind==='retaining-wall'),'deck_retaining_wall');
   add(yard.some(f=>f.kind==='water-feature'),'deck_water_feature');
+  add(allowances.has('firepit'),'deck_fire_pit');
+  add(allowances.has('kitchen'),'deck_outdoor_kitchen');
+  add(allowances.has('turf'),'deck_turf');
+  add(allowances.has('lighting'),'deck_landscape_lighting');
   return features.filter(label=>DECK_LABEL.test(label));
 }

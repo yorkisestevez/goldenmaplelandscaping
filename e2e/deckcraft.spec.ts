@@ -65,6 +65,28 @@ test('adds a patio in the backyard step, priced as its own subtotal',async({page
   expect(problems).toEqual([]);
 });
 
+test('adds a fire pit and turf as labelled estimator allowances, and takes them off again',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  await step(page,/Backyard/).click();
+  await page.getByLabel('Fire pit',{exact:true}).selectOption('wood');
+  await expect(page.locator('.dd-allowances')).toContainText(/Allowance: \$[\d,]+/);
+  await page.getByRole('checkbox',{name:/Artificial turf/}).check();
+  await expect(page.getByLabel('Turf area',{exact:true})).toHaveValue('500');
+  await expect(page.getByLabel('Finish level',{exact:true})).toHaveValue('mid');
+  await expect(page.locator('.dd-backyard-subtotal')).toContainText('Backyard subtotal: $');
+  await expect(price(page)).not.toHaveText(before??'');
+  await step(page,/Your estimate/).click();
+  await expect(page.locator('.dd-breakdown')).toContainText('Fire pit, wood-burning (estimator allowance)');
+  await expect(page.locator('.dd-summary')).toContainText('Backyard: allowances for a wood-burning fire pit and 500 sq ft of artificial turf (Elevated finish)');
+  await step(page,/Backyard/).click();
+  await page.getByLabel('Fire pit',{exact:true}).selectOption('none');
+  await page.getByRole('checkbox',{name:/Artificial turf/}).uncheck();
+  await expect(page.locator('.dd-backyard-subtotal')).toHaveCount(0);
+  await expect(price(page)).toHaveText(before??'');
+  expect(problems).toEqual([]);
+});
+
 test('wraps the deck round a house corner',async({page})=>{
   await openDesigner(page);
   await page.getByRole('checkbox',{name:'Around the left corner'}).check();

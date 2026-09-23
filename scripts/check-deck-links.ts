@@ -39,6 +39,7 @@ for(const shape of ['Rectangle','L-Shape','Multi-corner','Curved'] as const)
       scenarios[`${shape}/${pattern}/${deckType}`]=design({shape,pattern,deckType,width:24,length:20,height:48,cutoutWidth:8,cutoutLength:6,cutoutWidth2:4,cutoutLength2:4});
 Object.assign(scenarios,{
   'stairs/landing-2-flights':design({stairType:'Landing',stairFlights:2,height:90,stairPosition:'Left'}),
+  'backyard/allowances':design({yardAllowances:{finish:'premium',firePit:'gas',kitchen:'full',turfSqft:750,lighting:true}}),
   'stairs/winder':design({stairType:'Winder',stairTurn:'Left',height:60}),
   'levels/split':design({levels:2,level2Position:'Front',height2:29,width2:16,length2:8,level2FullStep:true}),
   'levels/three':design({levels:3,height2:30,width2:14,length2:10,level3:{widthFt:10,lengthFt:8,heightIn:12,parent:2,position:'Front',offsetPct:50}}),

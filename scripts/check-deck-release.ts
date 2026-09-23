@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {DESIGN_STORAGE_KEY,serializeDesign} from '../src/features/deckcraft/designPersistence';
+import {DESIGN_STORAGE_KEY,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {DECK_RELEASE_STORAGE_KEY,deckReleaseData,parseDeckReleaseDesign,serializeDeckReleaseDesign,calculateDeckReleaseEstimate,exportDeckReleaseDXF,exportDeckReleaseOBJ} from '../src/features/deckcraft/deckRelease';
-import {BACKYARD_SECTION_PREFIX,backyardElements,describeBackyard,hasBackyard,splitSubtotal} from '../src/features/deckcraft/backyard';
+import {BACKYARD_SECTION_PREFIX,backyardElements,describeBackyard,hasBackyard,hasBackyardLayout,hasYardAllowances,splitSubtotal} from '../src/features/deckcraft/backyard';
+import {computeEstimate,deltaFor,type EstimateInput} from '../src/utils/estimateEngine';
+import {PAVER_BRANDS} from '../src/data/carrPrices';
 import {normalizeWrap} from '../src/features/deckcraft/lib/wrapGeometry';
 import {migrateLegacyPrivacy,pricedPrivacyArea} from '../src/features/deckcraft/privacyScreens';
-import type {DeckData} from '../src/features/deckcraft/types';
+import type {DeckData,YardAllowances} from '../src/features/deckcraft/types';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {designerSource} from './deck-designer-source';
 
@@ -62,12 +64,64 @@ const pond={id:'pond-1',kind:'water-feature' as const,name:'Pond',enabled:true,x
   ok(Math.abs(off.total-base.total)<1e-6&&splitSubtotal(off).backyard===0,'Backyard features switched off add nothing');
 }
 
+// 2b. Fire pit, outdoor kitchen, turf and landscape lighting (owner decision 2026-09-23): each is what the site's
+// cost estimator adds for it on this backyard, labelled an allowance, never $0, and never moves the deck, a patio
+// or a wall. The default design (Barrie, standard site, unknown soil) has no site conditions.
+{
+  const all:YardAllowances={finish:'mid',firePit:'wood',kitchen:'basic',turfSqft:500,lighting:true};
+  const withAllowances=(a:Partial<YardAllowances>,extra:Partial<DeckData>={})=>calculateDeckReleaseEstimate({...structuredClone(DEFAULT_DECK),...extra,yardAllowances:{...all,...a}});
+  const yardRows=(e:ReturnType<typeof calculateDeckReleaseEstimate>)=>e.sections.filter(s=>s.title.startsWith(BACKYARD_SECTION_PREFIX));
+  const allowanceRows=(e:ReturnType<typeof calculateDeckReleaseEstimate>)=>yardRows(e).filter(s=>s.title.endsWith('(estimator allowance)'));
+  const amount=(e:ReturnType<typeof calculateDeckReleaseEstimate>,word:RegExp)=>allowanceRows(e).find(s=>word.test(s.title))?.total??NaN;
+  const base=calculateDeckReleaseEstimate(DEFAULT_DECK),four=withAllowances({});
+  const deckSections=(e:typeof base)=>e.sections.filter(s=>!s.title.startsWith(BACKYARD_SECTION_PREFIX)&&!/^HST/.test(s.title));
+  // The estimator's own arithmetic: one engine, each item added in turn (fire pit, kitchen, turf, lighting).
+  const engine=(els:string[],tier:'budget'|'mid'|'premium'='mid'):EstimateInput=>({projectType:'full',selectedElements:els,sizes:{patio:0,wall:0,wallHeight:'Under 2ft',firepit:'Medium',kitchen:'Basic',turf:500,lighting:'Medium'},details:{'patio.surface':'grass','patio.shape':'simple','wall.wallPurpose':'garden','firepit.fuel':'wood','turf.surface':'grass'},conditions:{access:false,slope:false,drainage:false},location:'barrie',tier,paverBrandId:PAVER_BRANDS[0].id,deckBrandId:'',addOns:[]});
+  const firstCents=computeEstimate(engine(['firepit'])).precise!.subtotalCents;
+  const steps=[['firepit'],['firepit','kitchen'],['firepit','kitchen','turf'],['firepit','kitchen','turf','lighting']].map((els,i,list)=>i===0?firstCents:deltaFor(engine(list[i-1]),{selectedElements:els}).preciseCents!);
+  ok(JSON.stringify(allowanceRows(four).map(s=>Math.round(s.total*100)))===JSON.stringify(steps),`Each allowance is what the cost estimator adds for it, in order (${steps.map(c=>c/100).join(', ')})`);
+  ok(allowanceRows(four).map(s=>s.title).join('|')==='Yard · Fire pit, wood-burning (estimator allowance)|Yard · Outdoor kitchen, basic: counter, cabinet and a built-in grill (estimator allowance)|Yard · Artificial turf, 500 sq ft (estimator allowance)|Yard · Landscape lighting for the yard (estimator allowance)','Each allowance is labelled as one, in plain words');
+  ok(allowanceRows(four).every(s=>s.total>0&&!s.quoteRequired&&s.description?.includes('a planning allowance, not a quote')),'No allowance is $0 or a quote, and each says it is a planning allowance');
+  ok(allowanceRows(four)[0].description!.includes("one-time site work")&&allowanceRows(four).slice(1).every(s=>!s.description!.includes('one-time site work')),'Without a patio or wall, the first allowance carries the one-time site work, and says so');
+  ok(JSON.stringify(deckSections(four))===JSON.stringify(deckSections(base))&&Math.abs(splitSubtotal(four).deck-base.subtotal)<1e-6,'Allowances leave every deck section as it was');
+  ok(Math.abs(splitSubtotal(four).backyard-four.yardTakeoff.knownSubtotalCents/100)<1e-6&&Math.abs(four.hst-four.subtotal*.13)<1e-6,'The allowances are the backyard subtotal, with HST once');
+  ok(four.flags.some(f=>f.includes('not drawn in the 3D view')),'The estimate says allowances are not drawn in 3D and are placed at the site visit');
+  // Choices move the allowance the way the estimator's do.
+  ok(amount(withAllowances({firePit:'gas'}),/Fire pit/)>amount(four,/Fire pit/)&&amount(withAllowances({kitchen:'full'}),/kitchen/)>amount(four,/kitchen/),'A gas fire pit and a full-build kitchen cost more');
+  const tiers=(['budget','mid','premium'] as const).map(finish=>withAllowances({finish}));
+  ok([/Fire pit/,/kitchen/,/lighting/].every(w=>amount(tiers[0],w)<amount(tiers[1],w)&&amount(tiers[1],w)<amount(tiers[2],w)),'The finish level sets the fire pit, kitchen and lighting allowances');
+  ok(tiers.every(e=>amount(e,/turf/)===amount(four,/turf/))&&amount(withAllowances({turfSqft:1000}),/turf/)>amount(four,/turf/),'Turf follows its area, not the finish');
+  // With a patio and a wall, their sections stay exactly as they were, whatever the finish.
+  const layout={yardFeatures:[patio,wall]},plain=calculateDeckReleaseEstimate({...structuredClone(DEFAULT_DECK),...layout});
+  for(const finish of ['budget','premium'] as const){
+    const e=withAllowances({finish},layout);
+    ok(JSON.stringify(yardRows(e).filter(s=>!s.title.endsWith('(estimator allowance)')))===JSON.stringify(yardRows(plain))&&JSON.stringify(deckSections(e))===JSON.stringify(deckSections(base)),`Allowances (${finish} finish) never move the patio, the wall or the deck`);
+    ok(allowanceRows(e).every(s=>!s.description!.includes('one-time site work')),'With a patio, the site work is already in the patio sections');
+  }
+  // Nothing chosen prices nothing; the backyard is kept, saved and reopened; bad values are refused.
+  const none=calculateDeckReleaseEstimate({...structuredClone(DEFAULT_DECK),yardAllowances:{finish:'premium',firePit:'none',kitchen:'none',turfSqft:0,lighting:false}});
+  ok(none.total===base.total&&yardRows(none).length===0&&!hasYardAllowances({finish:'premium',firePit:'none',kitchen:'none',turfSqft:0,lighting:false}),'Allowances with nothing chosen add nothing');
+  const saved:DeckData={...structuredClone(DEFAULT_DECK),yardAllowances:{...all,firePit:'gas',finish:'premium'}};
+  ok(sorted(parseDeckReleaseDesign(serializeDeckReleaseDesign(saved)).yardAllowances)===sorted(saved.yardAllowances)&&deckReleaseData(saved).yardAllowances?.firePit==='gas','Save and reopen keeps the allowances');
+  const bad:[Partial<YardAllowances>,string][]=[[{finish:'gold' as 'mid'},'finish'],[{firePit:'propane' as 'gas'},'fire pit'],[{kitchen:'deluxe' as 'full'},'kitchen'],[{turfSqft:50},'turf under 100 sq ft'],[{turfSqft:5000},'turf over 2,000 sq ft'],[{lighting:'yes' as unknown as boolean},'lighting']];
+  for(const [patch,what] of bad)ok((()=>{try{validateDesign({...structuredClone(DEFAULT_DECK),yardAllowances:{...all,...patch}});return false;}catch{return true;}})(),`An invalid ${what} is refused`);
+  ok(validateDesign({...structuredClone(DEFAULT_DECK),yardAllowances:{...all,turfSqft:0}}).yardAllowances?.turfSqft===0,'No turf is allowed');
+  // Words, lead scoring and the 3D view.
+  const only=deckReleaseData(saved);
+  ok(hasBackyard(only)&&!hasBackyardLayout(only),'Allowances make a backyard, but not one the 3D view draws');
+  ok(describeBackyard(four.yardModel,all)==='Backyard: allowances for a wood-burning fire pit, a basic outdoor kitchen, 500 sq ft of artificial turf and landscape lighting (Elevated finish)','The allowances read plainly');
+  ok(describeBackyard(plain.yardModel,{...all,firePit:'none',kitchen:'none',lighting:false})!.endsWith('; allowances for 500 sq ft of artificial turf'),'Turf alone names no finish');
+  ok(backyardElements({yardFeatures:[patio],yardAllowances:all}).join()==='patio,fire pit,outdoor kitchen,artificial turf,landscape lighting','The lead score sees the allowances');
+}
+
 // 3. The designer: a Backyard step, the yard in 3D only when there is one, and an older autosave's backyard
 // offered back rather than restored silently.
 {
   const page=designerSource();
   ok(page.includes('<YardEditor data={data} onChange={update}/>')&&page.includes("'Backyard','Your estimate'")&&page.includes('{step===4 && <BackyardStep '),'The designer has a Backyard step before the estimate, edited through the undoable update');
-  ok(page.includes('<Viewer deckOnly={!hasBackyard(data)} yardModel={estimate.yardModel}'),'The 3D view shows the backyard only when the design has one');
+  ok(page.includes('<Viewer deckOnly={!hasBackyardLayout(data)} yardModel={estimate.yardModel}'),'The 3D view shows the backyard only when the design has patios, walls, water or terrain (allowances are not drawn)');
+  ok(page.includes('update({yardAllowances:hasYardAllowances(next)?next:undefined})')&&page.includes('<select aria-label="Fire pit"')&&page.includes('<select aria-label="Outdoor kitchen"')&&page.includes('Artificial turf')&&page.includes('Landscape lighting for the yard')&&page.includes('<select aria-label="Finish level"'),'The Backyard step offers the four allowances and drops them when the last is switched off');
+  ok(!page.includes('yardAllowances:undefined,'),'The live estimate re-prices when an allowance changes');
   ok(/if\(!current&&restored\.yardFeatures\?\.length\)\{\s*const \{yardFeatures,terrainConfig,\.\.\.deck\}=restored;setData\(deck\);setEarlierYard/.test(page)&&page.includes('Add {earlierYard===1?\'it\':\'them\'} back'),'An older autosave\'s backyard is offered back, never restored silently');
   ok(page.includes('Deck subtotal')&&page.includes('Backyard subtotal'),'The estimate shows deck and backyard subtotals');
   ok(page.includes('yardFeatures:data.yardFeatures?.map(({color:_color,...feature})=>feature)')&&!page.includes('terrainConfig:undefined'),'The live estimate re-prices when the backyard or terrain changes (only a concept colour does not)');
@@ -93,4 +147,4 @@ for(const privacySqft of [24,25,137,500]){
   ok(off.privacyScreens?.[0].lengthFt===8,'Switching off keeps the screen settings');
 }
 ok(designerSource().includes('deckRelease'),'The public page uses the release boundary');
-console.log(`DECK RELEASE OK — deck-only designs unchanged byte for byte, the backyard priced separately, one HST, exports, the Backyard step and older autosaves; ${checks} checks.`);
+console.log(`DECK RELEASE OK — deck-only designs unchanged byte for byte, the backyard priced separately (estimator allowances included), one HST, exports, the Backyard step and older autosaves; ${checks} checks.`);

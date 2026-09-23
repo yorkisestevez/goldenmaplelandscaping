@@ -77,6 +77,8 @@ export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;pa
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature';
 export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled:boolean;xFt:number;zFt:number;widthFt:number;depthFt:number;heightIn:number;rotationDeg:number;productId:string;color:string}
 export interface TerrainConfig {widthFt:number;depthFt:number;elevationIn:number;slopePct:number}
+/** Backyard items priced at the site cost estimator's allowances. Not drawn in 3D: placed and confirmed at the site visit. */
+export interface YardAllowances {finish:'budget'|'mid'|'premium';firePit:'none'|'wood'|'gas';kitchen:'none'|'basic'|'full';turfSqft:number;lighting:boolean}
 
 export type FoundationType = 'Concrete Piers' | 'Helical Piles' | 'Deck Blocks';
 
@@ -121,6 +123,7 @@ export const INLITE_PRODUCTS: LightingProduct[] = [
 export interface DeckData {
   yardFeatures?: YardFeature[];
   terrainConfig?: TerrainConfig;
+  yardAllowances?: YardAllowances;
   houseConfig?: HouseConfig;
   housePlacement?: HousePlacement;
   wrap?: WrapConfig;
