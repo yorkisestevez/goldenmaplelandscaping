@@ -118,7 +118,7 @@ const pond={id:'pond-1',kind:'water-feature' as const,name:'Pond',enabled:true,x
 // offered back rather than restored silently.
 {
   const page=designerSource();
-  ok(page.includes('<YardEditor data={data} onChange={update}/>')&&page.includes("'Backyard','Your estimate'")&&page.includes('{step===4 && <BackyardStep '),'The designer has a Backyard step before the estimate, edited through the undoable update');
+  ok(page.includes('<YardEditor data={data} onChange={update}/>')&&page.includes("'Backyard','Your estimate'")&&/\{step===4 && <Suspense fallback=\{<p className="dd-note" role="status">Loading the backyard planner…<\/p>\}><BackyardStep /.test(page)&&page.includes('BackyardStep=lazy(loadBackyardStep)'),'The designer has a Backyard step before the estimate, edited through the undoable update');
   ok(page.includes('<Viewer deckOnly={!hasBackyardLayout(data)} yardModel={estimate.yardModel}'),'The 3D view shows the backyard only when the design has patios, walls, water or terrain (allowances are not drawn)');
   ok(page.includes('update({yardAllowances:hasYardAllowances(next)?next:undefined})')&&page.includes('<select aria-label="Fire pit"')&&page.includes('<select aria-label="Outdoor kitchen"')&&page.includes('Artificial turf')&&page.includes('Landscape lighting for the yard')&&page.includes('<select aria-label="Finish level"'),'The Backyard step offers the four allowances and drops them when the last is switched off');
   ok(!page.includes('yardAllowances:undefined,'),'The live estimate re-prices when an allowance changes');

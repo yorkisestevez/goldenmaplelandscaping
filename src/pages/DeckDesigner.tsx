@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useRef,useState} from 'react';
+import {Suspense,lazy,useCallback,useEffect,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
 import SEO from '../components/SEO';
 import {deckReleaseData,exportDeckReleaseDXF as exportDeckDXF,exportDeckReleaseOBJ as exportDeckOBJ,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
@@ -6,8 +6,6 @@ import {DEFAULT_DECK} from '../features/deckcraft/defaults';
 import type {HouseOpening,PrivacyScreen} from '../features/deckcraft/types';
 import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,pricedPrivacyArea,privacySides,screenOn,screenProduct} from '../features/deckcraft/privacyScreens';
 import {MAX_DESIGN_BYTES} from '../features/deckcraft/designPersistence';
-import ProposalDialog from '../features/deckcraft/ProposalSheet';
-import SendDesignDialog from '../features/deckcraft/SendDesignDialog';
 import {designFeatures,setDeckAnalyticsSink,stepLabel,trackDeck} from '../features/deckcraft/deckAnalytics';
 import {ATTACH_PROPOSAL_PDF,DECK_DESIGN_FORM} from '../features/deckcraft/sendDesign';
 import {buildProposalPdf,PROPOSAL_PDF_NAME} from '../features/deckcraft/proposalPdf';
@@ -18,7 +16,6 @@ import {dollars} from '../features/deckcraft/designFacts';
 import {activeWrap,WRAP_EDGE_NAMES} from '../features/deckcraft/lib/wrapGeometry';
 import {angledStairAllowed,angledStairFits,isChamferEdgeId} from '../features/deckcraft/lib/cornerChamfers';
 import {STEPS,type PreviewMode} from '../features/deckcraft/designer/constants';
-import BackyardStep from '../features/deckcraft/designer/steps/BackyardStep';
 import PhoneDeckBar from '../features/deckcraft/designer/PhoneDeckBar';
 import {downloadFile} from '../features/deckcraft/designer/fields';
 import {useDeckDesign} from '../features/deckcraft/designer/useDeckDesign';
@@ -35,6 +32,12 @@ import {getAttributionFields} from '../utils/utmCapture';
 import {getBehaviorFields} from '../utils/behavior';
 import {genEventId} from '../utils/eventId';
 import './DeckDesigner.css';
+
+// Loaded on demand (and fetched once the page settles), so they are not part of the page's first load.
+const loadBackyardStep=()=>import('../features/deckcraft/designer/steps/BackyardStep');
+const loadSendDialog=()=>import('../features/deckcraft/SendDesignDialog');
+const loadProposalDialog=()=>import('../features/deckcraft/ProposalSheet');
+const BackyardStep=lazy(loadBackyardStep),SendDesignDialog=lazy(loadSendDialog),ProposalDialog=lazy(loadProposalDialog);
 
 // DeckCraft's funnel events go through the site's analytics (GA4, Meta and the behaviour trail sent with leads).
 setDeckAnalyticsSink((event,label)=>trackEngagement(event,label));
@@ -85,6 +88,8 @@ export default function DeckDesigner(){
   // Funnel: each step, preview mode and design feature is counted once per visit (fixed labels only).
   useEffect(()=>{trackDeck('deckcraft_step',stepLabel(step));},[step]);
   useEffect(()=>{trackDeck('deckcraft_view',`deck_view_${mode}`);},[mode]);
+  // Fetch the on-demand pieces once the page has settled, so opening one is instant.
+  useEffect(()=>{const timer=setTimeout(()=>{for(const load of [loadBackyardStep,loadSendDialog,loadProposalDialog])load().catch(()=>{/* Loaded again when opened. */});},4000);return()=>clearTimeout(timer);},[]);
   const featureKey=designFeatures(data).join(' ');
   useEffect(()=>{for(const label of featureKey.split(' '))if(label)trackDeck('deckcraft_feature',label);},[featureKey]);
   const {estimate,lightingCheck,autoCounts,hasFixtures,reviewFlags,described}=useDeckEstimate(data,setData);
@@ -215,14 +220,14 @@ export default function DeckDesigner(){
           {step===2 && <StairsStep data={data} update={update} stairEdges={stairEdges} autoCounts={autoCounts}/>}
           {step===3 && <SiteExtrasStep data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch}/>}
 
-          {step===4 && <BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/>}
+          {step===4 && <Suspense fallback={<p className="dd-note" role="status">Loading the backyard planner…</p>}><BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/></Suspense>}
           {step===5 && <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} quoteRequired={quoteRequired} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={saveJSON} onDownloadSummary={download} onExport={exportModel}/>}
           <div className="dd-navigation"><button className="dd-secondary" disabled={step===0} onClick={()=>move(step-1)}>← Back</button><span>{step+1} of {STEPS.length}</span>{step<STEPS.length-1&&<button className="dd-primary" onClick={()=>move(step+1)}>{step===STEPS.length-2?'Review my estimate':'Continue'} →</button>}</div>
         </div>
       </section>
     </main>
     <PhoneDeckBar subtotal={estimate.subtotal} priceLabel={priceLabel} docked={docked} onToggleDock={toggleDock} onSend={()=>setSendOpen(true)}/>
-    {sendOpen&&<SendDesignDialog data={data} estimate={estimate} summary={summary} reviewItems={reviewFlags} send={postDesign} onPrint={()=>{setSendOpen(false);void openProposal();}} onDownloadPdf={downloadPdf} onClose={closeSend}/>}
-    {proposal&&<ProposalDialog data={data} estimate={estimate} facts={proposalFacts} reviewItems={reviewFlags} image={proposal.image} date={proposal.date} onClose={closeProposal}/>}
+    {sendOpen&&<Suspense fallback={null}><SendDesignDialog data={data} estimate={estimate} summary={summary} reviewItems={reviewFlags} send={postDesign} onPrint={()=>{setSendOpen(false);void openProposal();}} onDownloadPdf={downloadPdf} onClose={closeSend}/></Suspense>}
+    {proposal&&<Suspense fallback={null}><ProposalDialog data={data} estimate={estimate} facts={proposalFacts} reviewItems={reviewFlags} image={proposal.image} date={proposal.date} onClose={closeProposal}/></Suspense>}
   </div>;
 }
