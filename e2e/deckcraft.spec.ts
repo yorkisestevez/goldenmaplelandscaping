@@ -232,6 +232,29 @@ test('@phone waits to load the 3D view until the preview is scrolled near',async
   await expect.poll(()=>viewer.length,{timeout:20_000}).toBeGreaterThan(0);
 });
 
+test('@phone keeps the price in view and pins the deck while editing',async({page})=>{
+  const viewer:string[]=[];page.on('request',r=>{if(/Deck3DViewer-/.test(r.url()))viewer.push(r.url());});
+  const problems=await openDesigner(page);
+  const bar=page.getByRole('region',{name:'Live price'});
+  await expect(bar).toBeVisible();
+  const before=await bar.locator('strong').textContent();
+  // Work in the steps, well below the preview: the price stays on screen.
+  await page.getByLabel('Deck width',{exact:true}).scrollIntoViewIfNeeded();
+  await setNumber(page,'Deck width',20);
+  await expect(bar.locator('strong')).not.toHaveText(before??'');
+  expect(await page.evaluate(()=>{const r=document.querySelector('.dd-phone-bar')!.getBoundingClientRect();return r.bottom<=window.innerHeight+1&&r.top>=window.innerHeight-120;})).toBe(true);
+  // Pin the deck: a compact preview stays at the top while the fields scroll, and the 3D view loads.
+  await bar.getByRole('button',{name:'Show deck'}).click();
+  await expect(bar.getByRole('button',{name:'Hide deck'})).toHaveAttribute('aria-pressed','true');
+  await page.getByLabel('Height above ground',{exact:true}).scrollIntoViewIfNeeded();
+  expect(await page.evaluate(()=>{const r=document.querySelector('#deck-live-preview')!.getBoundingClientRect();return Math.abs(r.top)<2&&r.height<window.innerHeight*.5;})).toBe(true);
+  await expect.poll(()=>viewer.length,{timeout:20_000}).toBeGreaterThan(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  await bar.getByRole('button',{name:'Hide deck'}).click();
+  await expect(page.locator('#deck-live-preview')).not.toHaveClass(/dd-preview-docked/);
+  expect(problems).toEqual([]);
+});
+
 test('@phone fits the screen, with the send button in reach',async({page})=>{
   await openDesigner(page);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);

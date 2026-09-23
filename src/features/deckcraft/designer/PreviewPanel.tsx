@@ -38,15 +38,17 @@ export interface PreviewPanelProps{
   onSnapshotReady:(capture:(()=>string|null)|null)=>void;
   /** True once the 3D viewer may load (near the screen and idle, or a snapshot needs it). */
   want3d:boolean;onWant3d:()=>void;
+  /** Phones: the visitor pinned a compact preview to the top of the screen while editing (PhoneDeckBar). */
+  docked?:boolean;
   material:DeckMaterial;
   priceLabel:string;quoteRequired:string[];
 }
 
 /** The live deck: view modes, day and night, the contractor views, the 3D model or plan, doors and windows, finish and price. */
-export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,step,houseSettingsOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,material,priceLabel,quoteRequired,want3d,onWant3d}:PreviewPanelProps){
+export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,step,houseSettingsOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,material,priceLabel,quoteRequired,want3d,onWant3d,docked=false}:PreviewPanelProps){
   const canvasRef=useRef<HTMLDivElement>(null);
   useWhenNearAndIdle(canvasRef,mounted&&!want3d,onWant3d);
-  return <aside id="deck-live-preview" className="dd-preview">
+  return <aside id="deck-live-preview" className={`dd-preview${docked?' dd-preview-docked':''}`}>
     <div className="dd-preview-head"><div><span className="dd-eyebrow">YOUR DECK, LIVE</span><h2>{data.width} × {data.length} ft <small>· {data.height} in high</small></h2></div><div className="dd-view-toggle"><button aria-pressed={mode==='3d'} onClick={()=>setMode('3d')}>3D</button><button aria-pressed={mode==='overview'} onClick={()=>setMode('overview')}>Overview</button><button aria-pressed={mode==='front'} onClick={()=>setMode('front')}>Front</button><button aria-pressed={mode==='top'} onClick={()=>setMode('top')}>Above</button><button aria-pressed={mode==='plan'} onClick={()=>setMode('plan')}>Plan</button></div></div>
     <div className="dd-scene-tools"><span>See your deck in</span><div className="dd-day-night" role="group" aria-label="Day or night preview"><button type="button" aria-pressed={data.sceneLighting!=='Evening'} onClick={()=>{update({sceneLighting:'Daylight'});if(mode==='plan')setMode('3d');}}><span aria-hidden="true">☀</span> Day</button><button type="button" aria-pressed={data.sceneLighting==='Evening'} onClick={()=>{update({sceneLighting:'Evening'});if(mode==='plan')setMode('3d');}}><span aria-hidden="true">☾</span> Night</button></div><label className="dd-check dd-preview-light-switch"><input type="checkbox" role="switch" checked={data.lightingPreviewOn!==false} onChange={e=>update({lightingPreviewOn:e.target.checked})}/><span>Preview lights {data.lightingPreviewOn===false?'off':'on'}</span></label></div>
     {data.sceneLighting==='Evening'&&!hasFixtures&&<div className="dd-night-hint" role="status"><p><strong>No lights on this design yet.</strong> Light every railing post and stair riser in one step.</p><button type="button" className="dd-primary" disabled={!autoCounts.posts&&!autoCounts.stairs} onClick={()=>update({autoLighting:{...data.autoLighting,posts:autoCounts.posts>0,stairs:autoCounts.stairs>0},lightingPreviewOn:true})}>Add post &amp; step lights</button><small>Adds the fixtures and a transformer to your estimate.</small></div>}

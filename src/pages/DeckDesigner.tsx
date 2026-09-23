@@ -19,6 +19,7 @@ import {activeWrap,WRAP_EDGE_NAMES} from '../features/deckcraft/lib/wrapGeometry
 import {angledStairAllowed,angledStairFits,isChamferEdgeId} from '../features/deckcraft/lib/cornerChamfers';
 import {STEPS,type PreviewMode} from '../features/deckcraft/designer/constants';
 import BackyardStep from '../features/deckcraft/designer/steps/BackyardStep';
+import PhoneDeckBar from '../features/deckcraft/designer/PhoneDeckBar';
 import {downloadFile} from '../features/deckcraft/designer/fields';
 import {useDeckDesign} from '../features/deckcraft/designer/useDeckDesign';
 import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
@@ -71,6 +72,9 @@ export default function DeckDesigner(){
   // The 3D viewer loads once its area is near the screen and the page is idle, or when a snapshot needs it.
   const [want3d,setWant3d]=useState(false);
   const onWant3d=useCallback(()=>setWant3d(true),[]);
+  // Phones: pinning the deck preview while editing is the visitor's choice, and it loads the 3D view.
+  const [docked,setDocked]=useState(false);
+  const toggleDock=()=>{const next=!docked;setDocked(next);if(next){setWant3d(true);trackDeck('deckcraft_view','deck_view_docked');}};
   const snapshot=useRef<(()=>string|null)|null>(null);
   const onSnapshotReady=useCallback((capture:(()=>string|null)|null)=>{snapshot.current=capture;},[]);
   const closeProposal=useCallback(()=>setProposal(null),[]);
@@ -202,9 +206,9 @@ export default function DeckDesigner(){
     <div className="dd-intro"><p className="dd-eyebrow">YOUR SPACE. YOUR SPECIFICATIONS.</p><h1>A deck that takes shape <br/><em>with every choice.</em></h1><p>Set the dimensions. Explore real material colours. See how your choices change the design and the estimate.</p></div>
     <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}/>
     <main className="dd-workspace">
-      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} step={step} houseSettingsOpen={houseSettingsOpen} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} material={material} priceLabel={priceLabel} quoteRequired={quoteRequired}/>
+      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} step={step} houseSettingsOpen={houseSettingsOpen} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} docked={docked} material={material} priceLabel={priceLabel} quoteRequired={quoteRequired}/>
       <section className="dd-controls" aria-label="Deck configuration">
-        <a className="dd-preview-link" href="#deck-live-preview">↑ View updated deck</a><nav className="dd-steps" aria-label="Design steps">{STEPS.map((s,i)=><button key={s} aria-current={step===i?'step':undefined} onClick={()=>move(i)}><span>{String(i+1).padStart(2,'0')}</span>{s}</button>)}</nav>
+        <nav className="dd-steps" aria-label="Design steps">{STEPS.map((s,i)=><button key={s} aria-current={step===i?'step':undefined} onClick={()=>move(i)}><span>{String(i+1).padStart(2,'0')}</span>{s}</button>)}</nav>
         <div className="dd-panel" ref={panelRef} tabIndex={-1}>
           {step===0 && <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} houseSettingsOpen={houseSettingsOpen} setHouseSettingsOpen={setHouseSettingsOpen} effectiveHouseOpeningId={effectiveHouseOpeningId} setSelectedHouseOpeningId={setSelectedHouseOpeningId}/>}
           {step===1 && <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags}/>}
@@ -217,6 +221,7 @@ export default function DeckDesigner(){
         </div>
       </section>
     </main>
+    <PhoneDeckBar subtotal={estimate.subtotal} priceLabel={priceLabel} docked={docked} onToggleDock={toggleDock} onSend={()=>setSendOpen(true)}/>
     {sendOpen&&<SendDesignDialog data={data} estimate={estimate} summary={summary} reviewItems={reviewFlags} send={postDesign} onPrint={()=>{setSendOpen(false);void openProposal();}} onDownloadPdf={downloadPdf} onClose={closeSend}/>}
     {proposal&&<ProposalDialog data={data} estimate={estimate} facts={proposalFacts} reviewItems={reviewFlags} image={proposal.image} date={proposal.date} onClose={closeProposal}/>}
   </div>;
