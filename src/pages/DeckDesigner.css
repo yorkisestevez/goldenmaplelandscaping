@@ -59,3 +59,9 @@
 .dd-proposal-foot{margin-top:auto;border-top:1px solid #ddd6ca;padding-top:.06in;font-size:7pt;color:#655e53}.dd-proposal-foot p{margin:0 0 2px}.dd-proposal-contact{color:#292824;font-weight:600}
 @media screen and (max-width:900px){.dd-proposal-sheet{width:100%;min-height:0;padding:18px}.dd-proposal-head{flex-direction:column}.dd-proposal-meta{text-align:left}.dd-proposal-meta div{justify-content:flex-start}.dd-proposal-visuals{grid-template-columns:1fr;height:auto}.dd-proposal-visuals figure>img{aspect-ratio:1.2}.dd-proposal-visuals figure>svg{height:320px}.dd-proposal-body{grid-template-columns:1fr}.dd-proposal-review ul{columns:1}}
 @media print{@page{size:letter;margin:0}body.dd-proposal-open{background:#fff!important}body.dd-proposal-open>*:not(.dd-proposal-root){display:none!important}.dd-proposal-root{position:static!important;background:none!important;padding:0!important;overflow:visible!important}.dd-no-print{display:none!important}.dd-proposal-sheet{width:8.5in!important;height:11in;min-height:0;margin:0!important;box-shadow:none!important;overflow:hidden;break-inside:avoid}}
+/* Share link: the button sits in the surrounding action row; the link and its note wrap to their own lines. */
+.dd-share{display:contents}
+.dd-share-link{flex-basis:100%;display:flex;gap:8px;align-items:center}
+.dd-share-link input{flex:1;min-width:0;background:#f7f5f0;border:1px solid #d8d1c6;border-radius:10px;padding:12px 10px;font-size:13px;color:#292824;min-height:44px}
+.dd-share>p{flex-basis:100%;margin:0}
+@media(max-width:760px){.dd-share-link input{font-size:16px}}
