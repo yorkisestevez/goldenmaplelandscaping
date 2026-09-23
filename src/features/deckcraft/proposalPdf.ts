@@ -1,3 +1,4 @@
+import {splitSubtotal} from './backyard';
 import {PRICE_BOOK} from './priceBook';
 import type {jsPDF as JsPDF} from 'jspdf';
 import {BUSINESS,publicContact} from '../../data/business';
@@ -74,10 +75,12 @@ export function buildProposalPdf(PDF:typeof JsPDF,input:ProposalPdfInput,{compre
   });
   y+=44;rule();y+=12;
   picture(input.snapshot,250,'3D view unavailable on this device. The construction plan on page 2 shows the layout.');
-  heading('Your deck');bullets(facts);
+  const split=splitSubtotal(estimate);
+  heading(split.backyard>0?'Your deck and backyard':'Your deck');bullets(facts);
   heading(quotes.length?'Planning estimate - priced portion':'Planning estimate');
   for(const s of estimate.sections.filter(s=>!/^HST/.test(s.title)))row(s.title,s.quoteRequired&&s.total===0?'Supplier quote required':dollars(s.total));
   y+=3;rule();y+=5;
+  if(split.backyard>0){row('Deck subtotal',dollars(split.deck));row('Backyard subtotal',dollars(split.backyard));}
   row('Subtotal before HST',dollars(estimate.subtotal),'bold');row('HST',dollars(estimate.hst));
   row(quotes.length?'Priced portion including HST':'Total including HST',dollars(estimate.total),'bold');
   if(quotes.length){y+=6;para(`Not a complete project price. Supplier quotes are still needed for: ${quotes.join('; ')}.`,9.5,{style:'bold'});}

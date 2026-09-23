@@ -7,8 +7,8 @@ Every event goes to GA4 as an event name with an `event_label` parameter (`track
 
 | Event | Labels | Counted |
 |---|---|---|
-| `deckcraft_step` | `deck_step_1_dimensions` … `deck_step_5_estimate` | once per visit |
-| `deckcraft_feature` | `deck_shape_*`, `deck_pattern_*`, `deck_wrap`, `deck_corner_chamfer`, `deck_level_2`, `deck_stairs_*`, `deck_lighting`, `deck_bench`, … | once per visit |
+| `deckcraft_step` | `deck_step_1_dimensions` … `deck_step_5_backyard`, `deck_step_6_estimate` | once per visit |
+| `deckcraft_feature` | `deck_shape_*`, `deck_pattern_*`, `deck_wrap`, `deck_corner_chamfer`, `deck_level_2`, `deck_stairs_*`, `deck_lighting`, `deck_bench`, `deck_backyard`, `deck_patio`, `deck_retaining_wall`, `deck_water_feature`, … | once per visit |
 | `deckcraft_view` | `deck_view_3d`, `deck_view_plan`, … | once per visit |
 | `deckcraft_output` | `deck_pdf`, `deck_proposal`, `deck_summary`, `deck_json_save`, `deck_json_import` | every time |
 | `deckcraft_link` | `deck_link_opened`, `deck_link_failed`, `deck_link_went_back` | every time |
@@ -25,7 +25,7 @@ GA4 → Explore → **Funnel exploration**, open funnel off, device category as 
 1. Page view, page path contains `/deck-designer`
 2. `deckcraft_step`, Event label = `deck_step_2_materials`
 3. `deckcraft_step`, Event label = `deck_step_3_stairs_railings`
-4. `deckcraft_step`, Event label = `deck_step_5_estimate`
+4. `deckcraft_step`, Event label = `deck_step_6_estimate` (the estimate; step 5 is the backyard, which people may skip)
 5. `deckcraft_send`, Event label = `deck_send_opened`
 6. `deckcraft_send`, Event label = `deck_send_sent`
 
@@ -36,10 +36,12 @@ GA4 → Explore → **Free form**. Segment A is users with `deckcraft_send` / `d
 
 A feature much more common among senders than among all designers is worth promoting, for example in the default design or the intro text. A feature nobody uses is a candidate to simplify.
 
+Note: before 2026-09-23 the estimate was `deck_step_5_estimate`; the backyard step came in then.
+
 ## Monthly check (10 minutes)
 - Funnel completion rate and the step with the biggest drop, desktop compared with phone.
 - `deck_send_failed` and `deck_link_failed` counts. Both should stay near zero; a rise means something is broken.
-- The five most common features among senders.
+- The five most common features among senders, and how many senders add a backyard (`deck_backyard`).
 - Outputs (`deck_pdf`, `deck_proposal`) compared with sends. Many PDFs but few sends suggests people shop the proposal elsewhere, so follow up on the proposal itself.
 
 ## Limits

@@ -6,11 +6,12 @@ import {parseDesign,serializeDesign} from './designPersistence';
 import {exportDeckDXF,exportDeckOBJ} from './designExports';
 import {migrateLegacyPrivacy,pricedPrivacyArea} from './privacyScreens';
 
-/** The public product is deck-only. Keep deferred yard authoring modules and
- * the older autosave intact, while giving this release its own storage slot. */
+/** The public product: the deck, with its backyard (patios, retaining walls, water features and terrain;
+ * see backyard.ts) when the design has one. The older combined autosave stays intact in its own slot; this
+ * release keeps its own storage slot (the key predates the backyard and is kept so saved designs load). */
 export const DECK_RELEASE_STORAGE_KEY='golden-maple.deck-studio.deck-only.v1';
 export function deckReleaseData(data:DeckData):DeckData{
-  const {yardFeatures:_yard,terrainConfig:_terrain,projectKind:_kind,hsUse:_use,hsProduct:_product,hsColor:_color,hsBorderRows:_border,hsSteps:_steps,hsFirePit:_fire,hsLightCount:_lights,...deck}=data;
+  const {projectKind:_kind,hsUse:_use,hsProduct:_product,hsColor:_color,hsBorderRows:_border,hsSteps:_steps,hsFirePit:_fire,hsLightCount:_lights,...deck}=data;
   // Editable screens drive the priced area. Older single-area designs become equivalent screens.
   const screens=deck.privacyScreens??(deck.privacySqft>0?migrateLegacyPrivacy(deck):undefined);
   return normalizeWrap({...deck,...(screens?{privacyScreens:screens,privacySqft:pricedPrivacyArea(screens)}:{}),projectKind:'deck'});

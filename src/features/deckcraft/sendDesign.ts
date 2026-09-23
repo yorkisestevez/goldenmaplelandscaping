@@ -2,6 +2,7 @@ import {BUSINESS,publicContact} from '../../data/business';
 import {PROJECT_BUDGET_RANGES} from '../../data/projectBudgets';
 import {scoreGoldenMapleLead} from '../../utils/leadScoring';
 import {designLinkJson} from './designLink';
+import {backyardElements} from './backyard';
 import {PRICE_BOOK,priceBookLabel} from './priceBook';
 import type {DeckEstimate} from './designFacts';
 import type {DeckData} from './types';
@@ -94,7 +95,7 @@ export function designConditions(data:DeckData):string[]{
 }
 /** The lead score the contact and estimator forms send, from this design, its estimate and the form. */
 export function deckLeadScore(f:SendDesignFields,ctx:Pick<SendContext,'data'|'estimate'>){
-  return scoreGoldenMapleLead({budget:f.budget||undefined,service:'deck',projectType:'deck',conditions:designConditions(ctx.data),details:f.notes.trim(),city:f.address.trim(),sqft:ctx.estimate.model.quantities.area,totalLow:ctx.estimate.subtotal,totalHigh:ctx.estimate.subtotal});
+  return scoreGoldenMapleLead({budget:f.budget||undefined,service:'deck',projectType:'deck',selectedElements:backyardElements(ctx.data),conditions:designConditions(ctx.data),details:f.notes.trim(),city:f.address.trim(),sqft:ctx.estimate.model.quantities.area,totalLow:ctx.estimate.subtotal,totalHigh:ctx.estimate.subtotal});
 }
 
 /** The deck-design submission. Offers consent is only ever "yes" when the wording was on screen and ticked. */

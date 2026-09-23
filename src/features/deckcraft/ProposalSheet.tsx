@@ -1,3 +1,4 @@
+import {splitSubtotal} from './backyard';
 import {PRICE_BOOK} from './priceBook';
 import {useEffect} from 'react';
 import {createPortal} from 'react-dom';
@@ -21,7 +22,7 @@ const site=BUSINESS.canonicalUrl.replace(/^https?:\/\//,'');
  * or saves it as a PDF from the browser's print dialog.
  */
 export function ProposalSheet({data,estimate,facts,reviewItems,image,date}:ProposalProps){
-  const quotes=estimate.quoteRequired??[];
+  const quotes=estimate.quoteRequired??[],split=splitSubtotal(estimate);
   // Content-driven density: large multi-level or wrap designs carry more lines, so they print denser.
   const compact=reviewItems.length>8||facts.length+estimate.sections.length>24||reviewItems.join('').length>1500;
   // HST is shown once, after the subtotal; the estimate also carries it as its own section.
@@ -40,10 +41,11 @@ export function ProposalSheet({data,estimate,facts,reviewItems,image,date}:Propo
       <figure className="dd-proposal-plan"><ConstructionPlan model={estimate.model} data={data}/><figcaption>Construction plan</figcaption></figure>
     </div>
     <div className="dd-proposal-body">
-      <section><h2>Your deck</h2><ul className="dd-proposal-facts">{facts.map(f=><li key={f}>{f}</li>)}</ul></section>
+      <section><h2>{split.backyard>0?'Your deck and backyard':'Your deck'}</h2><ul className="dd-proposal-facts">{facts.map(f=><li key={f}>{f}</li>)}</ul></section>
       <section><h2>{quotes.length?'Planning estimate · priced portion':'Planning estimate'}</h2>
         <table className="dd-proposal-estimate"><tbody>
           {estimate.sections.filter(s=>!/^HST/.test(s.title)).map(s=><tr key={s.title}><th scope="row">{s.title}</th><td>{s.quoteRequired&&s.total===0?'Supplier quote':dollars(s.total)}</td></tr>)}
+          {split.backyard>0&&<><tr className="dd-proposal-split"><th scope="row">Deck subtotal</th><td>{dollars(split.deck)}</td></tr><tr className="dd-proposal-split"><th scope="row">Backyard subtotal</th><td>{dollars(split.backyard)}</td></tr></>}
           <tr className="dd-proposal-sub"><th scope="row">Subtotal before HST</th><td>{dollars(estimate.subtotal)}</td></tr>
           <tr><th scope="row">HST</th><td>{dollars(estimate.hst)}</td></tr>
           <tr className="dd-proposal-total"><th scope="row">{quotes.length?'Priced portion including HST':'Total including HST'}</th><td>{dollars(estimate.total)}</td></tr>

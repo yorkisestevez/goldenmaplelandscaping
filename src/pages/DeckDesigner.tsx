@@ -18,6 +18,7 @@ import {dollars} from '../features/deckcraft/designFacts';
 import {activeWrap,WRAP_EDGE_NAMES} from '../features/deckcraft/lib/wrapGeometry';
 import {angledStairAllowed,angledStairFits,isChamferEdgeId} from '../features/deckcraft/lib/cornerChamfers';
 import {STEPS,type PreviewMode} from '../features/deckcraft/designer/constants';
+import BackyardStep from '../features/deckcraft/designer/steps/BackyardStep';
 import {downloadFile} from '../features/deckcraft/designer/fields';
 import {useDeckDesign} from '../features/deckcraft/designer/useDeckDesign';
 import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
@@ -45,7 +46,7 @@ setDeckAnalyticsSink((event,label)=>trackEngagement(event,label));
  */
 export default function DeckDesigner(){
   const [step,setStep]=useState(0);
-  const {data,setData,update,replace,undo,redo,canUndo,canRedo,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign}=useDeckDesign({setStep});
+  const {data,setData,update,replace,undo,redo,canUndo,canRedo,earlierYard,restoreEarlierYard,dismissEarlierYard,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign}=useDeckDesign({setStep});
   // Ctrl/Cmd+Z undoes a design change and Ctrl/Cmd+Shift+Z (or Ctrl+Y) redoes it, except while typing in a
   // field, where the browser's own undo applies to the text.
   useEffect(()=>{
@@ -168,7 +169,7 @@ export default function DeckDesigner(){
   // The design tools clear the file picker once this settles.
   async function importFile(file?:File){
     if(!file)return;setDesignError('');
-    try{if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 100 KB.');const restored=parseDesign(await file.text());replace(restored);setSaved(false);setDesignStatus('Deck and house imported. Yard features are omitted from this deck-only studio. Your estimate uses the current Golden Maple price book.');trackDeck('deckcraft_output','deck_json_import');}
+    try{if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 100 KB.');const restored=parseDesign(await file.text());replace(restored);setSaved(false);setDesignStatus(`Design imported${restored.yardFeatures?.length?', with its backyard':''}. Your estimate uses the current Golden Maple price book.`);trackDeck('deckcraft_output','deck_json_import');}
     catch(error){setDesignError(error instanceof Error?error.message:'The design could not be imported.');}
   }
   // A sent design posts to the deck-design Netlify form (relayed to the CRM) with the site's attribution,
@@ -210,7 +211,8 @@ export default function DeckDesigner(){
           {step===2 && <StairsStep data={data} update={update} stairEdges={stairEdges} autoCounts={autoCounts}/>}
           {step===3 && <SiteExtrasStep data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch}/>}
 
-          {step===4 && <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} quoteRequired={quoteRequired} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={saveJSON} onDownloadSummary={download} onExport={exportModel}/>}
+          {step===4 && <BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/>}
+          {step===5 && <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} quoteRequired={quoteRequired} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={saveJSON} onDownloadSummary={download} onExport={exportModel}/>}
           <div className="dd-navigation"><button className="dd-secondary" disabled={step===0} onClick={()=>move(step-1)}>← Back</button><span>{step+1} of {STEPS.length}</span>{step<STEPS.length-1&&<button className="dd-primary" onClick={()=>move(step+1)}>{step===STEPS.length-2?'Review my estimate':'Continue'} →</button>}</div>
         </div>
       </section>

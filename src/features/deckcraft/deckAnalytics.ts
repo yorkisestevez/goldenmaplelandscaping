@@ -46,7 +46,7 @@ export function trackDeck(event:DeckEvent,label:string){
   sink(event,label);
 }
 
-const STEP_NAMES=['dimensions','materials','stairs_railings','site_extras','estimate'] as const;
+const STEP_NAMES=['dimensions','materials','stairs_railings','site_extras','backyard','estimate'] as const;
 /** Label for a design step (0-based index). */
 export const stepLabel=(index:number)=>`deck_step_${index+1}_${STEP_NAMES[index]??'other'}`;
 const slug=(text:string)=>text.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
@@ -84,5 +84,10 @@ export function designFeatures(data:DeckData):string[]{
   add(data.hasDemo,'deck_demolition');
   add(data.hasDrainage,'deck_drainage');
   add(data.sceneLighting==='Evening','deck_night_preview');
+  const yard=(data.yardFeatures??[]).filter(f=>f.enabled);
+  add(yard.length,'deck_backyard');
+  add(yard.some(f=>f.kind==='patio'),'deck_patio');
+  add(yard.some(f=>f.kind==='retaining-wall'),'deck_retaining_wall');
+  add(yard.some(f=>f.kind==='water-feature'),'deck_water_feature');
   return features.filter(label=>DECK_LABEL.test(label));
 }

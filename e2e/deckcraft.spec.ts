@@ -51,6 +51,20 @@ test('undoes and redoes a design change',async({page})=>{
   expect(problems).toEqual([]);
 });
 
+test('adds a patio in the backyard step, priced as its own subtotal',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  await step(page,/Backyard/).click();
+  await page.getByRole('button',{name:'Add patio'}).click();
+  await expect(page.locator('.dd-backyard-subtotal')).toContainText('Backyard subtotal: $');
+  await expect(price(page)).not.toHaveText(before??'');
+  await step(page,/Your estimate/).click();
+  await expect(page.locator('.dd-breakdown')).toContainText('Deck subtotal');
+  await expect(page.locator('.dd-breakdown')).toContainText('Backyard subtotal');
+  await expect(page.locator('.dd-summary')).toContainText('Backyard: a ');
+  expect(problems).toEqual([]);
+});
+
 test('wraps the deck round a house corner',async({page})=>{
   await openDesigner(page);
   await page.getByRole('checkbox',{name:'Around the left corner'}).check();

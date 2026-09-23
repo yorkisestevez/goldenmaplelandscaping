@@ -6,7 +6,7 @@ import {DESIGN_LINK_BACKUP_KEY,DesignLinkError,decodeDesignLinkFile,designLinkFr
 import {PRICE_BOOK,priceBookLabel} from '../priceBook';
 import {trackDeck} from '../deckAnalytics';
 import {editKey,emptyHistory,recordChange,redoChange,undoChange,type DesignHistory} from './designHistory';
-import type {DeckData} from '../types';
+import type {DeckData,TerrainConfig,YardFeature} from '../types';
 
 /**
  * The working design and everything that keeps it: autosave and restore on this device, shared design
@@ -22,6 +22,8 @@ export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
   const [designStatus,setDesignStatus]=useState('');
   const [designError,setDesignError]=useState('');
   const [linkBackup,setLinkBackup]=useState(false);
+  // Backyard features from the older, pre-release autosave: offered in the Backyard step, not restored silently.
+  const [earlierYard,setEarlierYard]=useState<{yardFeatures:YardFeature[];terrainConfig?:TerrainConfig}|null>(null);
   const dataRef=useRef(data);dataRef.current=data;
   // Undo/redo: an edit or a whole-design replacement names itself in `source` before it sets the design;
   // the effect below then records the design it replaced. Restoring on load, undo/redo themselves and the
@@ -53,7 +55,16 @@ export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
     setMounted(true);
     try {const c=document.createElement('canvas');setHasWebGL(!!(c.getContext('webgl2')||c.getContext('webgl')));}catch{setHasWebGL(false);}
     let stored:string|null=null;
-    try{stored=localStorage.getItem(DECK_RELEASE_STORAGE_KEY)??localStorage.getItem(DESIGN_STORAGE_KEY);if(stored){setData(parseDesign(stored));setDesignStatus('Your deck and house have been restored. Any deferred yard features remain in the older saved design.');}}catch{setDesignError('Your previous design could not be restored. You can import a saved JSON file.');}
+    try{
+      const current=localStorage.getItem(DECK_RELEASE_STORAGE_KEY);stored=current??localStorage.getItem(DESIGN_STORAGE_KEY);
+      if(stored){
+        const restored=parseDesign(stored);
+        if(!current&&restored.yardFeatures?.length){
+          const {yardFeatures,terrainConfig,...deck}=restored;setData(deck);setEarlierYard({yardFeatures,...(terrainConfig?{terrainConfig}:{})});
+          setDesignStatus('Your deck and house have been restored. Your earlier design also had backyard features; you can add them back in the Backyard step.');
+        }else{setData(restored);setDesignStatus(restored.yardFeatures?.length?'Your deck, house and backyard have been restored.':'Your deck and house have been restored.');}
+      }
+    }catch{setDesignError('Your previous design could not be restored. You can import a saved JSON file.');}
     try{setLinkBackup(!!localStorage.getItem(DESIGN_LINK_BACKUP_KEY));}catch{/* No storage, no backup. */}
     setStorageReady(true);
     const link=designLinkFromHash(window.location.hash);if(link)void openSharedLink(link,stored);
@@ -78,5 +89,7 @@ export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
     history.current=result.history;source.current=null;setData(result.design);setSaved(false);syncHistorySize();
   };
   const undo=()=>step(undoChange),redo=()=>step(redoChange);
-  return {data,setData,update,replace,undo,redo,canUndo:historySize.past>0,canRedo:historySize.future>0,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign};
+  const restoreEarlierYard=()=>{if(!earlierYard)return;update({yardFeatures:earlierYard.yardFeatures,...(earlierYard.terrainConfig?{terrainConfig:earlierYard.terrainConfig}:{})});setEarlierYard(null);};
+  const dismissEarlierYard=()=>setEarlierYard(null);
+  return {data,setData,update,replace,undo,redo,canUndo:historySize.past>0,canRedo:historySize.future>0,earlierYard,restoreEarlierYard,dismissEarlierYard,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign};
 }

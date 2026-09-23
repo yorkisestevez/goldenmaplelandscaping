@@ -39,7 +39,8 @@ const expectations:[Partial<DeckData>,string][]=[
   [{pictureFrameRows:1},'deck_border_rows'],[{hasInlay:true,inlayLf:10},'deck_inlay'],
   [{privacyScreens:[{id:'s1',side:'Left',lengthFt:8,heightFt:6,offsetPct:30,lights:false}]},'deck_privacy_screen'],
   [{lightingSystem:{wireDistance:20,selectedItems:[{productId:'wedge',qty:4,zone:'stairs'},{productId:'hub100',qty:1}]}},'deck_lighting'],
-  [{benchLf:8},'deck_bench'],[{pergolaSqft:64},'deck_pergola'],[{hasDemo:true},'deck_demolition'],[{hasDrainage:true},'deck_drainage'],
+  [{benchLf:8},'deck_bench'],[{pergolaSqft:64},'deck_pergola'],[{hasDemo:true},'deck_demolition'],
+  [{yardFeatures:[{id:'p1',kind:'patio' as const,name:'Patio',enabled:true,xFt:10,zFt:30,widthFt:16,depthFt:12,heightIn:0,rotationDeg:0,productId:'permacon-melville',color:'#aaaaaa'}]},'deck_backyard'],[{yardFeatures:[{id:'p1',kind:'patio' as const,name:'Patio',enabled:true,xFt:10,zFt:30,widthFt:16,depthFt:12,heightIn:0,rotationDeg:0,productId:'permacon-melville',color:'#aaaaaa'}]},'deck_patio'],[{yardFeatures:[{...{id:'p1',kind:'patio' as const,name:'Patio',enabled:true,xFt:10,zFt:30,widthFt:16,depthFt:12,heightIn:0,rotationDeg:0,productId:'permacon-melville',color:'#aaaaaa'},kind:'retaining-wall' as const,productId:'segmental-concrete',depthFt:1,heightIn:24}]},'deck_retaining_wall'],[{yardFeatures:[{...{id:'p1',kind:'patio' as const,name:'Patio',enabled:true,xFt:10,zFt:30,widthFt:16,depthFt:12,heightIn:0,rotationDeg:0,productId:'permacon-melville',color:'#aaaaaa'},kind:'water-feature' as const,productId:'pond',widthFt:6,depthFt:6,heightIn:24}]},'deck_water_feature'],[{hasDrainage:true},'deck_drainage'],
   [{sceneLighting:'Evening'},'deck_night_preview'],
 ];
 for(const [patch,label] of expectations){
@@ -50,6 +51,7 @@ for(const [patch,label] of expectations){
 // A transformer on its own is not "lighting"; a screen switched off is not a screen in use.
 ok(!designFeatures(design({lightingSystem:{wireDistance:0,selectedItems:[{productId:'hub100',qty:1}]}})).includes('deck_lighting'),'A lone transformer is not lighting');
 ok(!designFeatures(design({privacyScreens:[{id:'s1',side:'Left',lengthFt:8,heightFt:6,offsetPct:30,lights:false,enabled:false}]})).includes('deck_privacy_screen'),'A switched-off screen is not in use');
+ok(!designFeatures(design({yardFeatures:[{id:'p1',kind:'patio',name:'Patio',enabled:false,xFt:10,zFt:30,widthFt:16,depthFt:12,heightIn:0,rotationDeg:0,productId:'permacon-melville',color:'#aaaaaa'}]})).some(f=>['deck_backyard','deck_patio'].includes(f)),'A switched-off backyard feature is not in use');
 // Resizing the house (a wrap sets its size) re-fits the doors and windows; that is not an edit.
 ok(!designFeatures(design({width:22,length:12,houseConfig:{...house,widthFt:26,depthFt:22},wrap:{left:{widthFt:8,runFt:8},porchLeft:{depthFt:8,runFt:10}}})).includes('deck_doors_windows'),'A resized house does not count as a doors-and-windows edit');
 {
@@ -77,7 +79,7 @@ ok(!designFeatures(design({customerName:'Jane Q Customer',projectAddress:'12 Exa
   ok(sent.length===0,'Labels outside the vocabulary are dropped, never sent');
   resetDeckAnalyticsVisit();sent.length=0;trackDeck('deckcraft_step',stepLabel(1));
   ok(sent.length===1,'A new visit counts the step again');
-  ok(['deck_step_1_dimensions','deck_step_2_materials','deck_step_3_stairs_railings','deck_step_4_site_extras','deck_step_5_estimate'].every((l,i)=>stepLabel(i)===l),'Step labels name the five steps');
+  ok(['deck_step_1_dimensions','deck_step_2_materials','deck_step_3_stairs_railings','deck_step_4_site_extras','deck_step_5_backyard','deck_step_6_estimate'].every((l,i)=>stepLabel(i)===l),'Step labels name the six steps');
   ok(['3d','overview','front','top','plan','structure','hardware','foundation'].every(m=>DECK_LABEL.test(`deck_view_${m}`)),'Every preview mode has a valid label');
 }
 
