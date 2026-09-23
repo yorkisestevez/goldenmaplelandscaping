@@ -7,6 +7,7 @@ import {PRICE_BOOK,priceBookLabel} from '../priceBook';
 import {trackDeck} from '../deckAnalytics';
 import {editKey,emptyHistory,recordChange,redoChange,undoChange,type DesignHistory} from './designHistory';
 import type {DeckData,TerrainConfig,YardFeature} from '../types';
+import {deckSizeForArea,readDeckArea} from '../estimatorHandoff';
 
 /**
  * The working design and everything that keeps it: autosave and restore on this device, shared design
@@ -67,7 +68,16 @@ export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
     }catch{setDesignError('Your previous design could not be restored. You can import a saved JSON file.');}
     try{setLinkBackup(!!localStorage.getItem(DESIGN_LINK_BACKUP_KEY));}catch{/* No storage, no backup. */}
     setStorageReady(true);
-    const link=designLinkFromHash(window.location.hash);if(link)void openSharedLink(link,stored);
+    // A deck handed over by the cost estimator (?sqft=300) starts at about that size, unless a shared design
+    // link opens instead; a saved design is never replaced, only told the size.
+    const area=readDeckArea(window.location.search),link=designLinkFromHash(window.location.hash);
+    if(area){
+      const size=deckSizeForArea(area),words=`about ${area} sq ft (${size.width} × ${size.length} ft)`;
+      if(!link&&!stored){update(size);setDesignStatus(`Started from your cost estimate: a deck of ${words}. Adjust the size to fit your space.`);}
+      else if(!link)setDesignStatus(status=>`${status?`${status} `:''}Your cost estimate had a deck of ${words}; change the size under Dimensions to start from it.`);
+      try{const query=new URLSearchParams(window.location.search);query.delete('sqft');const rest=query.toString();window.history.replaceState(null,'',window.location.pathname+(rest?`?${rest}`:'')+window.location.hash);}catch{/* The size stays in the address; reopening starts from it again. */}
+    }
+    if(link)void openSharedLink(link,stored);
     // A link pasted into this open tab only changes the hash.
     const onHash=()=>{const next=designLinkFromHash(window.location.hash);if(!next)return;let own:string|null=null;try{own=serializeDesign(dataRef.current);}catch{/* Nothing to keep. */}void openSharedLink(next,own);};
     window.addEventListener('hashchange',onHash);
