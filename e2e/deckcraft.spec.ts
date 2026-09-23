@@ -33,6 +33,24 @@ test('prices the default deck and reprices when the size changes',async({page})=
   expect(problems).toEqual([]);
 });
 
+test('undoes and redoes a design change',async({page})=>{
+  const problems=await openDesigner(page);
+  const tools=page.getByRole('region',{name:'Save and restore design'});
+  await expect(tools.getByRole('button',{name:'Undo'})).toBeDisabled();
+  const before=await price(page).textContent();
+  await setNumber(page,'Deck width',22);
+  await expect(size(page)).toContainText('22 × 12 ft');
+  await tools.getByRole('button',{name:'Undo'}).click();
+  await expect(size(page)).toContainText('16 × 12 ft');
+  await expect(price(page)).toHaveText(before??'');
+  await expect(page.getByLabel('Deck width',{exact:true})).toHaveValue('16');
+  await page.keyboard.press('Control+Shift+Z');
+  await expect(size(page)).toContainText('22 × 12 ft');
+  await page.keyboard.press('Control+Z');
+  await expect(size(page)).toContainText('16 × 12 ft');
+  expect(problems).toEqual([]);
+});
+
 test('wraps the deck round a house corner',async({page})=>{
   await openDesigner(page);
   await page.getByRole('checkbox',{name:'Around the left corner'}).check();

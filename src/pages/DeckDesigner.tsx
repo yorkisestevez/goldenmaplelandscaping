@@ -45,7 +45,19 @@ setDeckAnalyticsSink((event,label)=>trackEngagement(event,label));
  */
 export default function DeckDesigner(){
   const [step,setStep]=useState(0);
-  const {data,setData,update,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign}=useDeckDesign({setStep});
+  const {data,setData,update,replace,undo,redo,canUndo,canRedo,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign}=useDeckDesign({setStep});
+  // Ctrl/Cmd+Z undoes a design change and Ctrl/Cmd+Shift+Z (or Ctrl+Y) redoes it, except while typing in a
+  // field, where the browser's own undo applies to the text.
+  useEffect(()=>{
+    const onKey=(e:KeyboardEvent)=>{
+      if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
+      const t=e.target as HTMLElement|null;if(t&&(t.isContentEditable||/^(input|textarea|select)$/i.test(t.tagName)))return;
+      const key=e.key.toLowerCase();
+      if(key==='z'&&!e.shiftKey){e.preventDefault();undo();}
+      else if((key==='z'&&e.shiftKey)||(key==='y'&&!e.metaKey)){e.preventDefault();redo();}
+    };
+    window.addEventListener('keydown',onKey);return ()=>window.removeEventListener('keydown',onKey);
+  });
   const [lightingSearch,setLightingSearch]=useState('');
   const [selectedHouseOpeningId,setSelectedHouseOpeningId]=useState('');
   const [houseSettingsOpen,setHouseSettingsOpen]=useState(false);
@@ -156,7 +168,7 @@ export default function DeckDesigner(){
   // The design tools clear the file picker once this settles.
   async function importFile(file?:File){
     if(!file)return;setDesignError('');
-    try{if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 100 KB.');const restored=parseDesign(await file.text());setData(restored);setSaved(false);setDesignStatus('Deck and house imported. Yard features are omitted from this deck-only studio. Your estimate uses the current Golden Maple price book.');trackDeck('deckcraft_output','deck_json_import');}
+    try{if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 100 KB.');const restored=parseDesign(await file.text());replace(restored);setSaved(false);setDesignStatus('Deck and house imported. Yard features are omitted from this deck-only studio. Your estimate uses the current Golden Maple price book.');trackDeck('deckcraft_output','deck_json_import');}
     catch(error){setDesignError(error instanceof Error?error.message:'The design could not be imported.');}
   }
   // A sent design posts to the deck-design Netlify form (relayed to the CRM) with the site's attribution,
@@ -182,12 +194,12 @@ export default function DeckDesigner(){
     trackLead(DECK_DESIGN_FORM,'high-intent',Number(fields.value)||undefined,eventId,{email:fields.email,phone:fields.phone},{payload});
   }
   function saveJSON(){try{downloadFile(serializeDesign(data),'application/json','golden-maple-deck-design.json');trackDeck('deckcraft_output','deck_json_save');setDesignStatus('Design JSON saved. Import this file to continue on another device.');setDesignError('');}catch{setDesignError('Saving the design file failed on this device. Use “Download summary” for a plain-text copy instead.');}}
-  const startOver=()=>{setData(deckReleaseData(structuredClone(DEFAULT_DECK)));setStep(0);setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');};
+  const startOver=()=>{replace(deckReleaseData(structuredClone(DEFAULT_DECK)));setStep(0);setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');};
   return <div className="deck-designer">
     <SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>
     <header className="dd-header"><Link to="/cost-estimator" className="dd-back">← All project types</Link><Link to="/" className="dd-wordmark">Golden Maple<span>DECK STUDIO</span></Link><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
     <div className="dd-intro"><p className="dd-eyebrow">YOUR SPACE. YOUR SPECIFICATIONS.</p><h1>A deck that takes shape <br/><em>with every choice.</em></h1><p>Set the dimensions. Explore real material colours. See how your choices change the design and the estimate.</p></div>
-    <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver}/>
+    <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}/>
     <main className="dd-workspace">
       <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} step={step} houseSettingsOpen={houseSettingsOpen} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} material={material} priceLabel={priceLabel} quoteRequired={quoteRequired}/>
       <section className="dd-controls" aria-label="Deck configuration">
