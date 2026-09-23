@@ -1,6 +1,8 @@
 import {clipToConvex,type BoardRun,type PlanPoint,type FootprintPlan} from './lib/deckGeometry';
 import type {DeckLevel,Member,V3} from './deckTakeoff';
 import {distanceToSegment} from './lib/wrapGeometry';
+import {angledBeamZAt} from './angledFraming';
+import {offsetPolygons,polygonCut} from './lib/polygonCuts';
 
 const len=(m:Member)=>Math.hypot(m.b.x-m.a.x,m.b.y-m.a.y,m.b.z-m.a.z);
 /** A stock joint may only occur over a physical bearing, never at an arbitrary cut length. */
@@ -19,6 +21,9 @@ export type FramedSet={offset:V3;beams:Member[];supports:V3[];joists:Member[]};
  * bearings. `rowZs` are the beam-row centre lines (plan z, before the level offset). */
 export function addBearings(level:FramedSet,rowZs:number[]){
   const {offset}=level;
+  // Angled beams (angled corners) carry their own posts and split along their length.
+  const angled=level.beams.filter(b=>b.role==='angled-beam');
+  level.beams=level.beams.filter(b=>b.role!=='angled-beam');
   for(const b of level.beams){
     const same=level.supports.filter(p=>Math.abs(p.z-(b.a.z+b.b.z)/2)<6);
     for(const x of [b.a.x+Math.min(12,len(b)/4),b.b.x-Math.min(12,len(b)/4)])if(!same.some(p=>Math.abs(p.x-x)<24)){
@@ -27,7 +32,10 @@ export function addBearings(level:FramedSet,rowZs:number[]){
     }
   }
   level.beams=level.beams.flatMap(b=>splitOnBearings(b,level.supports.filter(p=>Math.abs(p.z-b.a.z)<6).map(p=>p.x),'x'));
-  level.joists=level.joists.flatMap(j=>splitOnBearings(j,level.beams.filter(b=>j.a.x>=b.a.x-.1&&j.a.x<=b.b.x+.1).map(b=>b.a.z),'z'));
+  const along=(b:Member)=>{const l=len(b);return level.supports.filter(p=>distanceToSegment({x:p.x,y:p.z},{x:b.a.x,y:b.a.z},{x:b.b.x,y:b.b.z})<3).map(p=>((p.x-b.a.x)*(b.b.x-b.a.x)+(p.z-b.a.z)*(b.b.z-b.a.z))/l);};
+  const angledSplit=angled.flatMap(b=>splitOnBearingsAlong(b,along(b)));
+  level.joists=level.joists.flatMap(j=>splitOnBearings(j,[...level.beams.filter(b=>j.a.x>=b.a.x-.1&&j.a.x<=b.b.x+.1).map(b=>b.a.z),...angled.flatMap(b=>{const z=angledBeamZAt(b,j.a.x);return z===null?[]:[z];})],'z'));
+  level.beams.push(...angledSplit);
 }
 
 /** Perimeter rim along every outline edge; pieces end at backing blocks, and short arc chords are actual faceted framing. */
@@ -71,7 +79,7 @@ export function splitOnBearingsAlong(member:Member,bearings:number[],stock=192):
   out.push({...member,a:at(from),b:member.b,spliceStart:from>0});return out;
 }
 
-export function addConstructionDetails(level:DeckLevel,_boardWidth:number){
+export function addConstructionDetails(level:DeckLevel,boardWidth:number,borderRows=0){
   const {offset,footprint,top}=level,depth=level.joists[0]?.depth||9.25;
   const framingY=top-1-depth/2;
   // Beam-row centre lines of every framing zone (a single-zone level uses its own reference).
@@ -84,12 +92,110 @@ export function addConstructionDetails(level:DeckLevel,_boardWidth:number){
     for(let i=0;i<footprint.outline.length;i++){const a=footprint.outline[i],b=footprint.outline[(i+1)%footprint.outline.length];if((a.y<=z&&b.y>z)||(b.y<=z&&a.y>z))xs.push(a.x+(z-a.y)*(b.x-a.x)/(b.y-a.y));}
     xs.sort((a,b)=>a-b);const out:[number,number][]=[];for(let i=0;i+1<xs.length;i+=2)out.push([xs[i]+offset.x,xs[i+1]+offset.x]);return out;
   };
-  // Back every individual board end (including diagonal/parquet cuts and butt joints).
+  // Back every individual board end (including diagonal/parquet cuts and butt joints). On an angled-corner
+  // level, an end cut along an angled edge over its rim or a nailer sits on that, and every other end is
+  // blocked at the middle of its actual end face (a 45° cut's far tip can sit a bay away).
   for(const board of level.boards){
     const angle=board.angleDeg*Math.PI/180,ux=Math.cos(angle),uz=Math.sin(angle);
-    for(const sign of [-1,1])blockBoardEnd(board.cx+ux*board.length/2*sign+offset.x,board.cy+uz*board.length/2*sign+offset.z,level.joists,z=>interiorSpans(z-offset.z),keys,framingY,depth,level.blocking);
+    for(const sign of [-1,1]){
+      let x=board.cx+ux*board.length/2*sign,z=board.cy+uz*board.length/2*sign;
+      if(level.angledEdges?.length){
+        const faces=endFaces(board,sign,boardWidth);
+        if(onAngledSupport(level,faces,borderRows))continue;
+        const face=faces.reduce<typeof faces[number]|undefined>((best,f)=>!best||f.len>best.len?f:best,undefined);
+        if(face){x=(face.p.x+face.q.x)/2;z=(face.p.y+face.q.y)/2;}
+      }
+      blockBoardEnd(x+offset.x,z+offset.z,level.joists,y=>interiorSpans(y-offset.z),keys,framingY,depth,level.blocking);
+    }
+  }
+  addAngledNailers(level,borderRows,framingY,depth);
+}
+
+/** Nailer lines under an angled corner, measured in from the angled rim: 3.875 in for the board ends, and
+ * 6.25 in for border boards (where a square edge gets doubled build-up joists). */
+const angledNailerOffsets=(borderRows:number)=>borderRows>0?[3.875,6.25]:[3.875];
+
+/** The inward unit normal of an angled edge (toward the deck). */
+function inwardNormal(e:{a:PlanPoint;b:PlanPoint},outline:PlanPoint[]){
+  const len=Math.hypot(e.b.x-e.a.x,e.b.y-e.a.y),n={x:-(e.b.y-e.a.y)/len,y:(e.b.x-e.a.x)/len},mid={x:(e.a.x+e.b.x)/2,y:(e.a.y+e.b.y)/2};
+  return pointInPolygon({x:mid.x+n.x*6,y:mid.y+n.y*6},outline)?n:{x:-n.x,y:-n.y};
+}
+
+/** The end faces of a board at one end (sign ±1 along its length): its outline's edges within a board
+ * width of that end that are not long sides. */
+function endFaces(board:BoardRun,sign:number,boardWidth:number){
+  const poly=board.polygon??boardPolygon(board,boardWidth),a=board.angleDeg*Math.PI/180,u={x:Math.cos(a),y:Math.sin(a)};
+  // A face belongs to this end only if it lies within a board width of it and on its half of the piece
+  // (a piece shorter than its width would otherwise borrow the other end's cut).
+  const us=poly.map(p=>(p.x*u.x+p.y*u.y)*sign),end=Math.max(...us),half=(end+Math.min(...us))/2,reach=(board.width??boardWidth)+.01;
+  return poly.flatMap((p,i)=>{
+    const q=poly[(i+1)%poly.length],len=Math.hypot(q.x-p.x,q.y-p.y),j=(i+1)%poly.length;
+    if(len<.5||us[i]<end-reach||us[j]<end-reach||(us[i]+us[j])/2<=half)return [];
+    const f={x:(q.x-p.x)/len,y:(q.y-p.y)/len};
+    return Math.abs(f.x*u.x+f.y*u.y)>.99?[]:[{p,q,len,f}];
+  });
+}
+
+/** Whether one of a board's end faces is a cut along an angled edge that lies over the angled rim (the
+ * edge's first 1.5 in, or anywhere outside it) or over one of its nailers, so it needs no block of its own. */
+function onAngledSupport(level:DeckLevel,faces:ReturnType<typeof endFaces>,borderRows:number){
+  const bands=[[-Infinity,1.55],...angledNailerOffsets(borderRows).map(d=>[d-.8,d+.8])];
+  return faces.some(({p,q,f})=>{
+    const mid={x:(p.x+q.x)/2,y:(p.y+q.y)/2};
+    return level.angledEdges!.some(e=>{
+      const el=Math.hypot(e.b.x-e.a.x,e.b.y-e.a.y),d={x:(e.b.x-e.a.x)/el,y:(e.b.y-e.a.y)/el};
+      if(Math.abs(f.x*d.y-f.y*d.x)>.02)return false;
+      const n=inwardNormal(e,level.footprint.outline),dist=(mid.x-e.a.x)*n.x+(mid.y-e.a.y)*n.y;
+      return bands.some(([lo,hi])=>dist>=lo&&dist<=hi);
+    });
+  });
+}
+
+/** Nailers along each angled corner at angledNailerOffsets, between neighbouring joists and from the end
+ * joists to the rims, each line running the full length inside the rims. */
+function addAngledNailers(level:DeckLevel,borderRows:number,framingY:number,depth:number){
+  const {offset}=level,outline=level.footprint.outline;if(!outline.length)return;
+  const inner=offsetPolygons([outline],1.5);
+  for(const e of level.angledEdges??[]){
+    const len=Math.hypot(e.b.x-e.a.x,e.b.y-e.a.y);if(len<1)continue;
+    const n=inwardNormal(e,outline),dir={x:(e.b.x-e.a.x)/len,y:(e.b.y-e.a.y)/len};
+    for(const d of angledNailerOffsets(borderRows)){
+      // The line d in from the edge, clipped to the inside of the rims (its stretch nearest the edge's middle).
+      const p0={x:e.a.x+n.x*d,y:e.a.y+n.y*d},span=lineSpanInside(inner,p0,dir,len);if(!span)continue;
+      const at=(t:number)=>({x:p0.x+dir.x*t+offset.x,z:p0.y+dir.y*t+offset.z}),s=at(span[0]),f=at(span[1]);
+      const zAt=(x:number)=>s.z+(x-s.x)*(f.z-s.z)/(f.x-s.x);
+      const lo=Math.min(s.x,f.x),hi=Math.max(s.x,f.x);
+      const crossing=level.joists.filter(j=>{const x=j.a.x;if(x<lo||x>hi)return false;const z=zAt(x);return z>=Math.min(j.a.z,j.b.z)-.1&&z<=Math.max(j.a.z,j.b.z)+.1;}).map(j=>j.a.x);
+      const xs=[...new Set(crossing.map(x=>Math.round(x*1000)/1000))].sort((p,q)=>p-q);
+      const stops=[{x:lo,joist:false},...xs.map(x=>({x,joist:true})),{x:hi,joist:false}];
+      for(let i=0;i+1<stops.length;i++){
+        const x0=stops[i].x+(stops[i].joist?.75:0),x1=stops[i+1].x-(stops[i+1].joist?.75:0);
+        if(x1-x0<(stops[i].joist&&stops[i+1].joist?.5:1))continue;
+        level.blocking.push({a:{x:x0,y:framingY,z:zAt(x0)},b:{x:x1,y:framingY,z:zAt(x1)},width:1.5,depth,role:'angled-nailer'});
+      }
+    }
   }
 }
+
+/** The stretch [t0, t1] of the line p0 + dir·t inside the polygons that contains the point nearest the
+ * middle of [0, len], or null. */
+function lineSpanInside(polys:PlanPoint[][],p0:PlanPoint,dir:PlanPoint,len:number):[number,number]|null{
+  const ts:number[]=[];
+  for(const poly of polys)for(let i=0;i<poly.length;i++){
+    const a=poly[i],b=poly[(i+1)%poly.length],ex=b.x-a.x,ey=b.y-a.y,den=dir.x*ey-dir.y*ex;if(Math.abs(den)<1e-12)continue;
+    const t=((a.x-p0.x)*ey-(a.y-p0.y)*ex)/den,s=((a.x-p0.x)*dir.y-(a.y-p0.y)*dir.x)/den;if(s>=-1e-9&&s<=1+1e-9)ts.push(t);
+  }
+  ts.sort((p,q)=>p-q);
+  const inside=(t:number)=>polys.some(poly=>pointInPolygon({x:p0.x+dir.x*t,y:p0.y+dir.y*t},poly));
+  let best:[number,number]|null=null,bestDist=Infinity;
+  for(let i=0;i+1<ts.length;i++){
+    if(ts[i+1]-ts[i]<1e-6||!inside((ts[i]+ts[i+1])/2))continue;
+    const dist=Math.max(0,ts[i]-len/2,len/2-ts[i+1]);
+    if(dist<bestDist){best=[ts[i],ts[i+1]];bestDist=dist;}
+  }
+  return best;
+}
+const pointInPolygon=(p:PlanPoint,poly:PlanPoint[])=>{let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)inside=!inside;}return inside;};
 
 export function memberLength(m:Member){return len(m);}
 
@@ -110,6 +216,8 @@ export function unsupportedJoistEnds(level:DeckLevel,contact?:{onContact(a:{x:nu
       // A jack hung off a hip beyond the last beam sits in the corner cantilever: its outer end is
       // within cantilever reach of a beam that itself ends on that hip.
       const jack=onHip(end===lo?hi:lo);
+      // An angled beam (angled corner) carries joist ends that stop on the angled rim in front of it.
+      if(k==='z'&&beams.some(b=>{if(b.role!=='angled-beam')return false;const zb=angledBeamZAt(b,end.x);if(zb===null)return false;const inset=(zb-end.z)*inward;return inset>=-1&&inset<=reach;}))continue;
       const bears=beams.some(b=>{if(Math.abs(b.a[k]-b.b[k])>1e-6)return false;const across=end[c]>=Math.min(b.a[c],b.b[c])-.1&&end[c]<=Math.max(b.a[c],b.b[c])+.1;if(!across&&!(jack&&(onHip(b.a)||onHip(b.b))))return false;const inset=(b.a[k]-end[k])*inward;return inset>=-1&&inset<=reach;});
       if(!bears)loose.push(end);
     }
@@ -128,9 +236,12 @@ function withPolygon(b:BoardRun,polygon:PlanPoint[]):BoardRun|null{
   return {...b,cx:uc*ux-vc*uy,cy:uc*uy+vc*ux,length:hi-lo,width:vh-vl,polygon};
 }
 const rect=(x0:number,y0:number,x1:number,y1:number)=>[{x:x0,y:y0},{x:x1,y:y0},{x:x1,y:y1},{x:x0,y:y1}];
-/** Perimeter cuts and inlay are physical board substitutions, with no overlay/double quantity. */
-export function finishBoards(boards:BoardRun[],fp:FootprintPlan,width:number,gap:number,inlayIn:number,stock:number,inset:number):BoardRun[]{
-  const out:BoardRun[]=[],x0=fp.bounds.w/2-width/2-gap,x1=x0+width+2*gap,y0=inset,y1=Math.min(fp.bounds.h-inset,y0+inlayIn),limit=100000;
+/** Perimeter cuts and inlay are physical board substitutions, with no overlay/double quantity.
+ * `inlayField` (angled-corner decks): the inlay stops at, and is cut to, the field inside the border rows. */
+export function finishBoards(boards:BoardRun[],fp:FootprintPlan,width:number,gap:number,inlayIn:number,stock:number,inset:number,inlayField?:PlanPoint[][]):BoardRun[]{
+  const limit=100000,x0=fp.bounds.w/2-width/2-gap,x1=x0+width+2*gap,y0=inset;
+  const fieldEnd=inlayField?Math.max(y0,...polygonCut(inlayField,[rect(x0+gap,-limit,x1-gap,limit)]).flat().map(p=>p.y)):fp.bounds.h-inset;
+  const out:BoardRun[]=[],y1=Math.min(fieldEnd,y0+inlayIn);
   for(const b of boards){
     const clipped=b.polygon||clipToConvex(fp.outline,boardPolygon(b,width));
     const pieces=inlayIn>0?[
@@ -139,6 +250,9 @@ export function finishBoards(boards:BoardRun[],fp:FootprintPlan,width:number,gap
     ]:[clipped];
     for(const poly of pieces){const next=withPolygon(b,poly);if(next)out.push(next);}
   }
-  if(inlayIn>0)for(let y=y0;y<y1;y+=stock+gap){const length=Math.min(stock,y1-y),b:BoardRun={cx:fp.bounds.w/2,cy:y+length/2,length,angleDeg:90,width,role:'inlay'},next=withPolygon(b,clipToConvex(fp.outline,boardPolygon(b,width)));if(next)out.push(next);}
+  if(inlayIn>0)for(let y=y0;y<y1;y+=stock+gap){
+    const length=Math.min(stock,y1-y),b:BoardRun={cx:fp.bounds.w/2,cy:y+length/2,length,angleDeg:90,width,role:'inlay'};
+    for(const poly of inlayField?polygonCut(inlayField,[boardPolygon(b,width)]):[clipToConvex(fp.outline,boardPolygon(b,width))]){const next=withPolygon(b,poly);if(next)out.push(next);}
+  }
   return out;
 }

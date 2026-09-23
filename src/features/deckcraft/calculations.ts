@@ -1,4 +1,6 @@
 import { activeWrap, hasPorchWrap, wrapLabourFactor } from './lib/wrapGeometry';
+import { activeCornerChamfers, chamferLabourFactor } from './lib/cornerChamfers';
+import { outlineSpans } from './zoneFraming';
 import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock} from './stockPlan';
 import {buildDeckTakeoff,type DeckTakeoff} from './deckTakeoff';
@@ -110,7 +112,9 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // A wrap-around's fascia follows its real outline; every other shape keeps the original rectangle basis.
   const wrap = activeWrap(data), wrapCorners = wrap ? (wrap.left ? 1 : 0) + (wrap.right ? 1 : 0) : 0;
   const wrapOutlineFt = model.levels[0].footprint.outline.reduce((n, p, i, o) => { const q = o[(i + 1) % o.length]; return n + Math.hypot(q.x - p.x, q.y - p.y) / 12; }, 0);
-  const perimeter1 = wrapCorners ? wrapOutlineFt : 2 * (width + length);
+  // Angled corners replace each corner's two legs with one 45° face (leg × √2) on the same rectangle basis.
+  const chamfers = activeCornerChamfers(data);
+  const perimeter1 = wrapCorners ? wrapOutlineFt : chamfers ? 2 * (width + length) - (2 - Math.SQRT2) * (chamfers.leftIn + chamfers.rightIn) / 12 : 2 * (width + length);
   const perimeter2 = levels > 1 ? 2 * (width2 + length2) : 0;
   // A third section adds its own fascia on the same basis as the second.
   const perimeter3 = levels > 2 && data.level3 ? 2 * (data.level3.widthFt + data.level3.lengthFt) : 0;
@@ -163,7 +167,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // Breaker decking and its four-member build-ups are already in the shared
   // board and framing takeoff. These legacy extra-charge fields must stay zero.
   const total_breaker_boards=0,breaker_blocking_lf=0,breaker_screws=0;
-  const breaker_labor_hrs=model.levels.reduce((n,l)=>n+l.breakers.length*(l.footprint.bounds.h/120)*1.5,0);
+  // A breaker beside an angled corner is only as long as the deck is deep at that point.
+  const breaker_labor_hrs=model.levels.reduce((n,l)=>n+(l.angledEdges?.length?l.breakers.reduce((d,x)=>d+outlineSpans(l.footprint.outline,x,'x').reduce((s,[a,b])=>s+b-a,0),0)/120*1.5:l.breakers.length*(l.footprint.bounds.h/120)*1.5),0);
   const unit_cost_per_lf=selectedMaterial.costPerSqft*(boardWidthIn/12);
   const framingSize = data.framingSize || '2x10';
   let framingCostPerLf = 4.50;
@@ -338,6 +343,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   if (shape === 'Multi-corner') complexityMult *= 1.25;
   if (shape === 'Curved') complexityMult *= 1.50;
   complexityMult *= wrapLabourFactor(wrap);
+  complexityMult *= chamferLabourFactor(chamfers);
   
   if (pattern === 'Diagonal') complexityMult *= 1.20;
   if (pattern === 'Picture Frame') complexityMult *= 1.25;

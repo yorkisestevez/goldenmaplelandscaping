@@ -28,6 +28,7 @@ const expectations:[Partial<DeckData>,string][]=[
   [{deckType:'Freestanding'},'deck_type_freestanding'],[{deckType:'Floating',height:12},'deck_type_floating'],
   [{width:22,length:12,houseConfig:{...house,widthFt:26,depthFt:22},wrap:{left:{widthFt:8,runFt:10}}},'deck_wrap'],
   [{width:22,length:12,houseConfig:{...house,widthFt:26,depthFt:22},wrap:{left:{widthFt:8,runFt:8},porchLeft:{depthFt:8,runFt:10}}},'deck_porch'],
+  [{cornerChamfers:{frontLeftFt:4}},'deck_corner_chamfer'],
   [{levels:2},'deck_level_2'],[{levels:3},'deck_level_3'],[{levels:2,level2FullStep:true},'deck_split_level'],
   [{stairType:'Landing'},'deck_stairs_landing'],[{stairType:'Winder'},'deck_stairs_winder'],[{stairFlights:2},'deck_stairs_extra_flights'],
   [{houseConfig:{...house,widthFt:30,depthFt:24,footprint:{rects:[{id:'bump1',kind:'house',wall:'Front',offsetFt:8,widthFt:10,depthFt:3}]}}},'deck_house_block'],

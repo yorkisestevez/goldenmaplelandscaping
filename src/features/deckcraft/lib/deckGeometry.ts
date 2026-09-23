@@ -17,8 +17,13 @@ import { DeckData } from '../types';
 import { splitAtHouseCorners } from '../housePlacement';
 import { notchDeckAroundHouse } from '../houseFootprint';
 import { activeWrap, wrapOutline } from './wrapGeometry';
+import { activeCornerChamfers, type ActiveChamfers } from './cornerChamfers';
 
 export interface PlanPoint { x: number; y: number }
+/** How squarely an edge must face a side to count as that side. A 45° angled corner (0.707) faces no
+ * side, so side-based choices (stairs, screens, benches) never land on one; every other edge the studio
+ * draws is square (1) or a curved-front facet (at least 0.847), so nothing else changes. */
+export const SIDE_DOT = 0.75;
 export type EdgeName = 'Front' | 'Back' | 'Left' | 'Right';
 
 /** Which outline edges sit against the house. Built only by houseContact.ts;
@@ -62,8 +67,10 @@ export function getFootprint(data: DeckData, level: 1 | 2 = 1): FootprintPlan {
   const fp = shapeFootprint(data, level);
   if (level !== 1) return fp;
   const outline = splitAtHouseCorners(data, fp.outline);
+  // Named edges (angled corners) keep their ids across the split at the house corners.
+  const split = outline === fp.outline ? fp : { ...fp, outline, ...(fp.edgeIds ? { edgeIds: inheritEdgeIds(fp.outline, fp.edgeIds, outline) } : {}) };
   // House bump-outs (and blocks flush with the deck-facing wall) notch and split the attached deck.
-  return notchDeckAroundHouse(data, outline === fp.outline ? fp : { ...fp, outline });
+  return notchDeckAroundHouse(data, split);
 }
 
 function shapeFootprint(data: DeckData, level: 1 | 2): FootprintPlan {
@@ -121,7 +128,34 @@ function shapeFootprint(data: DeckData, level: 1 | 2): FootprintPlan {
     };
   }
 
+  // 45° angled front corners: the only non-wrap outline that names its edges.
+  const chamfers = level === 1 ? activeCornerChamfers(data) : null;
+  if (chamfers) return chamferedRectangle(W, L, chamfers);
   return rectangle(W, L);
+}
+
+/** A rectangle with one or both front corners cut at 45° (legs in inches), its edges named. The square
+ * edges get their own ids, never the wrap-around's, so a leftover wrap stair or level edge can't match them. */
+function chamferedRectangle(W: number, L: number, { leftIn: l, rightIn: r }: ActiveChamfers): FootprintPlan {
+  const outline: PlanPoint[] = [{ x: 0, y: 0 }, { x: W, y: 0 }], edgeIds = ['rect-back', 'rect-right'];
+  if (r > 0) { outline.push({ x: W, y: L - r }, { x: W - r, y: L }); edgeIds.push('main-chamfer-right', 'rect-front'); }
+  else { outline.push({ x: W, y: L }); edgeIds.push('rect-front'); }
+  if (l > 0) { outline.push({ x: l, y: L }, { x: 0, y: L - l }); edgeIds.push('main-chamfer-left', 'rect-left'); }
+  else { outline.push({ x: 0, y: L }); edgeIds.push('rect-left'); }
+  return { outline, bounds: { w: W, h: L }, isCurved: false, edgeIds };
+}
+
+/** Ids for an outline whose edges were split: each piece takes the id of the original edge it lies on. */
+function inheritEdgeIds(src: PlanPoint[], ids: string[], out: PlanPoint[]): string[] {
+  return out.map((a, i) => {
+    const b = out[(i + 1) % out.length], mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const j = src.findIndex((p, k) => {
+      const q = src[(k + 1) % src.length], len = Math.hypot(q.x - p.x, q.y - p.y); if (len < 1e-9) return false;
+      const off = (v: PlanPoint) => Math.abs((v.x - p.x) * (q.y - p.y) - (v.y - p.y) * (q.x - p.x)) / len, along = (v: PlanPoint) => ((v.x - p.x) * (q.x - p.x) + (v.y - p.y) * (q.y - p.y)) / len;
+      return [a, b, mid].every(v => off(v) < .01 && along(v) > -.01 && along(v) < len + .01);
+    });
+    return j >= 0 ? ids[j] : ids[i] ?? ids[0];
+  });
 }
 
 function rectangle(W: number, L: number): FootprintPlan {
@@ -160,7 +194,7 @@ export function getStairPlacement(data: DeckData, target: { w:number;h:number } 
   const all=fp.outline.map((a,i)=>{const b=fp.outline[(i+1)%fp.outline.length],length=Math.hypot(b.x-a.x,b.y-a.y),along={x:(b.x-a.x)/length,y:(b.y-a.y)/length},outward={x:along.y,y:-along.x};return {a,b,length,along,outward,index:i};});
   // A named wrap edge (e.g. a wing end) takes precedence over the side, unless it is a house wall.
   const named=data.stairEdgeId&&fp.edgeIds?all.find(s=>fp.edgeIds![s.index]===data.stairEdgeId&&!contact?.isContactEdge(s.index)):undefined;
-  const candidates=named?[named]:all.filter(s=>s.outward.x*desired.x+s.outward.y*desired.y>.7&&!contact?.isContactEdge(s.index));
+  const candidates=named?[named]:all.filter(s=>s.outward.x*desired.x+s.outward.y*desired.y>SIDE_DOT&&!contact?.isContactEdge(s.index));
   if(!candidates.length)return null;
   const requested=Math.max(24,n(data.stairWidth,48)),eligible=candidates.filter(s=>s.length>=requested);
   const chosen=(eligible.length?eligible:candidates).sort((a,b)=>b.length-a.length)[0];
@@ -255,6 +289,9 @@ export interface BoardRun {
  */
 export function getBoardRows(fp: FootprintPlan, opts: {
   boardWidth: number; gap: number; angleDeg: 0 | 45; inset: number; maxBoardLen?: number;
+  /** 'top' starts the rows at the strip's far side, so a front-left angled corner (which diagonal boards run
+   * parallel to) gets a full-width board and the ripped row falls at the opposite corner's tip instead. */
+  anchor?: 'top';
 }): BoardRun[] {
   const {boardWidth,gap,angleDeg,inset}=opts,stock=opts.maxBoardLen??240;
   const field=offsetPolygons([fp.outline],inset);if(!field.length)return [];
@@ -262,7 +299,10 @@ export function getBoardRows(fp: FootprintPlan, opts: {
   const vertices=field.flat(),us=vertices.map(p=>p.x*c+p.y*sn),vs=vertices.map(p=>-p.x*sn+p.y*c);
   const left=Math.min(...us),right=Math.max(...us),bottom=Math.min(...vs),top=Math.max(...vs),runs:BoardRun[]=[];
   // Scan the full board strip, including the final ripped row and diagonal tips.
-  for(let row=0,y=bottom;y<top-.001;y+=boardWidth+gap,row++){
+  const pitch=boardWidth+gap,rows:number[]=[];
+  if(opts.anchor==='top')for(let y=top-boardWidth;y+boardWidth>bottom+.001;y-=pitch)rows.push(y);
+  else for(let y=bottom;y<top-.001;y+=pitch)rows.push(y);
+  for(const [row,y] of rows.entries()){
     let x=left,first=true;
     while(x<right-.001){
       const length=Math.min(first&&row%2?stock/2:stock,right-x),tile=[world(x,y),world(x+length,y),world(x+length,y+boardWidth),world(x,y+boardWidth)];
@@ -319,23 +359,71 @@ export function clipToConvex(subject:PlanPoint[],clip:PlanPoint[]):PlanPoint[]{
   return out;
 }
 /** Classic interlocking parquet: perpendicular rectangular boards on a 2m-cell lattice. */
-export function getHerringboneRows(fp:FootprintPlan,boardWidth:number,gap:number,inset:number):BoardRun[]{
-  const pitch=boardWidth+gap,m=6,root=Math.SQRT1_2,cx=fp.bounds.w/2,cy=fp.bounds.h/2;
+type HerringboneTile={tile:PlanPoint[];angle:number};
+/** Every herringbone tile over the footprint (world corners and board angle) for a lattice centred at (cx, cy). */
+function herringboneTiles(fp:FootprintPlan,boardWidth:number,gap:number,cx:number,cy:number):HerringboneTile[]{
+  const pitch=boardWidth+gap,m=6,root=Math.SQRT1_2;
   const world=(x:number,y:number)=>({x:cx+(x-y)*root,y:cy+(x+y)*root});
   const inverse=(p:PlanPoint)=>({x:((p.x-cx)+(p.y-cy))*root/pitch,y:((p.y-cy)-(p.x-cx))*root/pitch});
-  const local=fp.outline.map(inverse),ks=local.map(p=>(p.x+p.y)/(2*m)),js=local.map(p=>(p.x-p.y)/2),runs:BoardRun[]=[];
-  const outlines=offsetPolygons([fp.outline],inset);
+  const local=fp.outline.map(inverse),ks=local.map(p=>(p.x+p.y)/(2*m)),js=local.map(p=>(p.x-p.y)/2),tiles:HerringboneTile[]=[];
   for(let k=Math.floor(Math.min(...ks))-2;k<=Math.ceil(Math.max(...ks))+2;k++)for(let j=Math.floor(Math.min(...js))-m;j<=Math.ceil(Math.max(...js))+m;j++){
     const x=(k*m+j)*pitch,y=(k*m-j)*pitch;
-    for(const [tx,ty,w,h,angle]of [[x,y,m*pitch-gap,boardWidth,45],[x+m*pitch,y,boardWidth,m*pitch-gap,135]]){
-      const tile=[world(tx,ty),world(tx+w,ty),world(tx+w,ty+h),world(tx,ty+h)];
-      for(const poly of polygonCut(outlines,[tile])){
-      if(poly.length<3)continue;
-      const area=Math.abs(poly.reduce((n,p,i)=>{const q=poly[(i+1)%poly.length];return n+p.x*q.y-q.x*p.y},0))/2;if(area<.1)continue;
-      const a=angle*Math.PI/180,ax=Math.cos(a),ay=Math.sin(a),u=poly.map(p=>p.x*ax+p.y*ay),v=poly.map(p=>-p.x*ay+p.y*ax),u0=Math.min(...u),u1=Math.max(...u),v0=Math.min(...v),v1=Math.max(...v),uc=(u0+u1)/2,vc=(v0+v1)/2;
-      runs.push({cx:uc*ax-vc*ay,cy:uc*ay+vc*ax,length:u1-u0,width:v1-v0,angleDeg:angle,polygon:poly,role:'field'});
-      }
+    for(const [tx,ty,w,h,angle]of [[x,y,m*pitch-gap,boardWidth,45],[x+m*pitch,y,boardWidth,m*pitch-gap,135]])tiles.push({tile:[world(tx,ty),world(tx+w,ty),world(tx+w,ty+h),world(tx,ty+h)],angle});
+  }
+  return tiles;
+}
+const polygonArea=(poly:PlanPoint[])=>Math.abs(poly.reduce((n,p,i)=>{const q=poly[(i+1)%poly.length];return n+p.x*q.y-q.x*p.y},0))/2;
+/** Extent of a cut piece across (rip) and along (length) its board direction. */
+function pieceSize(poly:PlanPoint[],angle:number){
+  const a=angle*Math.PI/180,ax=Math.cos(a),ay=Math.sin(a),u=poly.map(p=>p.x*ax+p.y*ay),v=poly.map(p=>-p.x*ay+p.y*ax);
+  return {length:Math.max(...u)-Math.min(...u),rip:Math.max(...v)-Math.min(...v)};
+}
+const orient=(a:PlanPoint,b:PlanPoint,c:PlanPoint)=>Math.sign((b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x));
+const segmentsMeet=(a:PlanPoint,b:PlanPoint,c:PlanPoint,d:PlanPoint)=>orient(a,b,c)*orient(a,b,d)<=0&&orient(c,d,a)*orient(c,d,b)<=0;
+const insideQuad=(p:PlanPoint,q:PlanPoint[])=>q.every((a,i)=>orient(a,q[(i+1)%q.length],p)>=0)||q.every((a,i)=>orient(a,q[(i+1)%q.length],p)<=0);
+/** A lattice's thin offcuts, pieces under 1.5 in across the board: 1 for each short tip, 100 for each long strip.
+ * Only tiles the outline passes through are cut; a tile wholly inside or outside leaves a full board or nothing. */
+function herringboneOffcuts(outlines:PlanPoint[][],tiles:HerringboneTile[]){
+  const edges=outlines.flatMap(poly=>poly.map((a,i)=>[a,poly[(i+1)%poly.length]] as const)),vertices=outlines.flat();
+  let score=0;
+  for(const {tile,angle} of tiles){
+    const touched=tile.some((a,i)=>{const b=tile[(i+1)%4];return edges.some(([c,d])=>segmentsMeet(a,b,c,d));})||vertices.some(v=>insideQuad(v,tile));
+    if(!touched)continue;
+    for(const poly of polygonCut(outlines,[tile])){
+      if(poly.length<3||polygonArea(poly)<.1)continue;
+      const {length,rip}=pieceSize(poly,angle);if(rip<1.5)score+=length<=6?1:100;
     }
+  }
+  return score;
+}
+/** Angled corners: move the lattice so each angled field edge (front-left y − x = leftLine, front-right
+ * x + y = rightLine) lies on a tile line, leaving whole boards against it rather than a thin strip. Several
+ * positions do that; take the first leaving no thin offcut along the other edges, else the one leaving fewest. */
+function alignHerringbone(fp:FootprintPlan,boardWidth:number,gap:number,outlines:PlanPoint[][],cx:number,cy:number,align:{leftLine?:number;rightLine?:number}):[number,number]{
+  const step=(boardWidth+gap)/Math.SQRT1_2,snap=(line:number,now:number)=>line-Math.round((line-now)/step)*step;
+  const left=align.leftLine!==undefined,right=align.rightLine!==undefined;
+  const d=left?snap(align.leftLine!+gap*Math.SQRT2,cy-cx):cy-cx,s=right?snap(align.rightLine!+gap*Math.SQRT2,cx+cy):cx+cy;
+  // snap() puts a tile line one board gap outside the edge, so the tiles inside end exactly on it.
+  // Both edges fixed: the pattern repeats every twelve pitches along the diagonal, so twelve whole-pitch shifts
+  // are every choice. One edge fixed: the other diagonal is free, so quarter-pitch shifts are tried along it.
+  let best:[number,number]=[(s-d)/2,(s+d)/2],fewest=Infinity;
+  for(let i=0;i<(left&&right?12:16);i++){
+    const shift=i*step*(left&&right?1:.25),dd=left?d:d+shift,ss=left?s+shift:s,centre:[number,number]=[(ss-dd)/2,(ss+dd)/2];
+    const offcuts=herringboneOffcuts(outlines,herringboneTiles(fp,boardWidth,gap,...centre));
+    if(offcuts<fewest){best=centre;fewest=offcuts;}
+    if(!offcuts)break;
+  }
+  return best;
+}
+export function getHerringboneRows(fp:FootprintPlan,boardWidth:number,gap:number,inset:number,align?:{leftLine?:number;rightLine?:number}):BoardRun[]{
+  const outlines=offsetPolygons([fp.outline],inset),runs:BoardRun[]=[];
+  let [cx,cy]=[fp.bounds.w/2,fp.bounds.h/2];
+  if(align&&(align.leftLine!==undefined||align.rightLine!==undefined))[cx,cy]=alignHerringbone(fp,boardWidth,gap,outlines,cx,cy,align);
+  for(const {tile,angle} of herringboneTiles(fp,boardWidth,gap,cx,cy))for(const poly of polygonCut(outlines,[tile])){
+    if(poly.length<3)continue;
+    const area=polygonArea(poly);if(area<.1)continue;
+    const a=angle*Math.PI/180,ax=Math.cos(a),ay=Math.sin(a),u=poly.map(p=>p.x*ax+p.y*ay),v=poly.map(p=>-p.x*ay+p.y*ax),u0=Math.min(...u),u1=Math.max(...u),v0=Math.min(...v),v1=Math.max(...v),uc=(u0+u1)/2,vc=(v0+v1)/2;
+    runs.push({cx:uc*ax-vc*ay,cy:uc*ay+vc*ax,length:u1-u0,width:v1-v0,angleDeg:angle,polygon:poly,role:'field'});
   }
   return runs;
 }

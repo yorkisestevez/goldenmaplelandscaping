@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {deckReleaseData,DECK_RELEASE_STORAGE_KEY,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../deckRelease';
 import {DEFAULT_DECK} from '../defaults';
-import {DESIGN_STORAGE_KEY} from '../designPersistence';
+import {DESIGN_STORAGE_KEY,pruneEdgeNames} from '../designPersistence';
 import {DESIGN_LINK_BACKUP_KEY,DesignLinkError,decodeDesignLink,designLinkFromHash,designToKeep} from '../designLink';
 import {trackDeck} from '../deckAnalytics';
 import type {DeckData} from '../types';
@@ -53,6 +53,8 @@ export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
   },[]);
   useEffect(()=>{if(!storageReady)return;const timer=setTimeout(()=>{try{localStorage.setItem(DECK_RELEASE_STORAGE_KEY,serializeDesign(data));}catch{setDesignError('Automatic saving is unavailable on this device. Use Save JSON to keep your design.');}},450);return ()=>clearTimeout(timer);},[data,storageReady]);
   const retryWebGL=()=>{try{const c=document.createElement('canvas');setHasWebGL(!!(c.getContext('webgl2')||c.getContext('webgl')));}catch{setHasWebGL(false);}};
-  const update=(patch:Partial<DeckData>)=>{setSaved(false);setData(prev=>deckReleaseData({...prev,...patch}));};
+  // An edit can make a named stair or level edge unusable (a wrap removed, a corner cut back, a wider or
+  // turned stair); it is dropped at once so no hidden choice stays in force.
+  const update=(patch:Partial<DeckData>)=>{setSaved(false);setData(prev=>pruneEdgeNames(deckReleaseData({...prev,...patch})));};
   return {data,setData,update,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign};
 }

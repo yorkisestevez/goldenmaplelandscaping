@@ -1,5 +1,5 @@
 import type {DeckData} from './types';
-import {getFootprint,type EdgeContact,type EdgeName,type FootprintPlan,type PlanPoint} from './lib/deckGeometry';
+import {getFootprint,SIDE_DOT,type EdgeContact,type EdgeName,type FootprintPlan,type PlanPoint} from './lib/deckGeometry';
 import {getHousePlacement} from './housePlacement';
 import {activeWrap} from './lib/wrapGeometry';
 import {getHouseWalls,hasHouseBlocks} from './houseFootprint';
@@ -120,7 +120,7 @@ export function exposedHouseLine(data:DeckData,fp:FootprintPlan,contact:EdgeCont
 
 const SIDE_DIRECTIONS:Record<EdgeName,PlanPoint>={Front:{x:0,y:1},Left:{x:-1,y:0},Right:{x:1,y:0},Back:{x:0,y:-1}};
 const outwardOf=(a:PlanPoint,b:PlanPoint)=>{const len=Math.hypot(b.x-a.x,b.y-a.y)||1;return {x:(b.y-a.y)/len,y:-(b.x-a.x)/len};};
-const faces=(a:PlanPoint,b:PlanPoint,side:EdgeName)=>{const o=outwardOf(a,b),d=SIDE_DIRECTIONS[side];return o.x*d.x+o.y*d.y>.7;};
+const faces=(a:PlanPoint,b:PlanPoint,side:EdgeName)=>{const o=outwardOf(a,b),d=SIDE_DIRECTIONS[side];return o.x*d.x+o.y*d.y>SIDE_DOT;};
 
 /** Exposed (non-house) outline edges facing a side, longest first. */
 export function exposedEdges(fp:FootprintPlan,contact:EdgeContact,side:EdgeName){

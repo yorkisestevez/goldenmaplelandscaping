@@ -65,6 +65,9 @@ export interface WrapConfig {left?:WrapWing;right?:WrapWing;
   porchLeft?:WrapPorch;
   /** Needs the right wing, which then runs the full house depth. */
   porchRight?:WrapPorch}
+/** 45° angled FRONT corners of the main deck (away from the house): each leg in feet, cut back equally
+ * along the front and the side edge. A missing corner is square. Rectangles only (see lib/cornerChamfers.ts). */
+export interface CornerChamfers {frontLeftFt?:number;frontRightFt?:number}
 /** A third deck section, joined to the main deck (parent 1) or the second level (parent 2). */
 export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;parent:1|2;position:'Front'|'Left'|'Right';offsetPct:number;
   /** Named wrap edge of the main deck (parent 1 only), e.g. 'wingR-end'; overrides position. */
@@ -121,6 +124,8 @@ export interface DeckData {
   houseConfig?: HouseConfig;
   housePlacement?: HousePlacement;
   wrap?: WrapConfig;
+  /** Absent means square corners; never set in DEFAULT_DECK so every existing design is unchanged. */
+  cornerChamfers?: CornerChamfers;
   /** A named exposed edge (e.g. 'wingR-end') for the primary stair flight; overrides stairPosition. */
   stairEdgeId?: string;
   /** Named wrap edge of the main deck for the second level; overrides level2Position. */

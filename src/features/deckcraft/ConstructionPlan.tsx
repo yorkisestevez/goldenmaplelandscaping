@@ -5,6 +5,7 @@ import type {YardModel} from './yardModel';
 import {getHouseContact} from './houseContact';
 import {getHousePlacement} from './housePlacement';
 import {activeWrap} from './lib/wrapGeometry';
+import {isChamferEdgeId} from './lib/cornerChamfers';
 import {getHouseBlocks,hasHouseBlocks,houseOutline} from './houseFootprint';
 import {polygonCut} from './lib/polygonCuts';
 
@@ -28,8 +29,9 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
  const blockPolys=blocks&&data?polygonCut(houseOutline(data,blocks),[view]):null;
  const blockLabels=(blocks??[]).slice(1).map(k=>{const r=k.rect,y0=Math.max(r.y0,-band),x0=Math.max(r.x0,b.minX-48),x1=Math.min(r.x1,b.maxX+48);return x1-x0<30||r.y1-y0<12?null:{id:k.id,x:(x0+x1)/2,y:(y0+r.y1)/2+2.5,text:k.kind==='garage'?'GARAGE':k.attachedTo==='Front'?'BUMP-OUT':'WING'};}).filter(Boolean) as {id:string;x:number;y:number;text:string}[];
  const w=b.maxX-b.minX,d=b.maxZ-b.minZ,left=Math.min(b.minX,house?Math.max(house.x0,b.minX-48):b.minX),right=Math.max(b.maxX,house?Math.min(house.x1,b.maxX+48):b.maxX);
- // Edge labels sit just outside each main-deck edge; curve facets under 2 ft are left unlabelled.
- const edgeLabels=data?outline.map((a,i)=>{const q=outline[(i+1)%outline.length],len=Math.hypot(q.x-a.x,q.y-a.y);if(len<24)return null;const nx=(q.y-a.y)/len,ny=-(q.x-a.x)/len,ledger=contact?.isContactEdge(i),flush=contact?.contacts.find(c=>c.edgeIndex===i)?.kind==='flush';return {x:(a.x+q.x)/2+nx*(ledger?5:11),y:(a.y+q.y)/2+ny*(ledger?5:11)+2.5,text:flush?`Bolted flush wall ${ft(len)}`:ledger?`Ledger ${ft(len)}`:ft(len),ledger,flush};}).filter(Boolean) as {x:number;y:number;text:string;ledger:boolean;flush:boolean}[]:[];
+ // Edge labels sit just outside each main-deck edge; curve facets under 2 ft are left unlabelled. An angled
+ // corner is always labelled, with the cut along the front and side it was entered as.
+ const edgeLabels=data?outline.map((a,i)=>{const q=outline[(i+1)%outline.length],len=Math.hypot(q.x-a.x,q.y-a.y),angled=isChamferEdgeId(main.footprint.edgeIds?.[i]);if(len<24&&!angled)return null;const nx=(q.y-a.y)/len,ny=-(q.x-a.x)/len,ledger=contact?.isContactEdge(i),flush=contact?.contacts.find(c=>c.edgeIndex===i)?.kind==='flush';return {x:(a.x+q.x)/2+nx*(ledger?5:11),y:(a.y+q.y)/2+ny*(ledger?5:11)+2.5,text:angled?`45° corner · ${ft(len/Math.SQRT2)} cut`:flush?`Bolted flush wall ${ft(len)}`:ledger?`Ledger ${ft(len)}`:ft(len),ledger,flush};}).filter(Boolean) as {x:number;y:number;text:string;ledger:boolean;flush:boolean}[]:[];
  const scale=48;
  return <svg viewBox={`${left-40} ${top-44} ${right-left+80} ${b.maxZ-top+128}`} role="img" aria-label="Deck construction plan from the shared model" style={{width:'100%',height:'100%',background:'#faf8f1'}}>
    <title>{`Deck plan · ${model.quantities.joists} joists · ${model.quantities.footings} footings`}</title>

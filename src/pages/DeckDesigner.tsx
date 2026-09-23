@@ -16,6 +16,7 @@ import {getHouseConfig,clampHouseOpening} from '../features/deckcraft/houseSetti
 import {getHouseContact} from '../features/deckcraft/houseContact';
 import {dollars} from '../features/deckcraft/designFacts';
 import {activeWrap,WRAP_EDGE_NAMES} from '../features/deckcraft/lib/wrapGeometry';
+import {angledStairAllowed,angledStairFits,isChamferEdgeId} from '../features/deckcraft/lib/cornerChamfers';
 import {STEPS,type PreviewMode} from '../features/deckcraft/designer/constants';
 import {downloadFile} from '../features/deckcraft/designer/fields';
 import {useDeckDesign} from '../features/deckcraft/designer/useDeckDesign';
@@ -95,7 +96,11 @@ export default function DeckDesigner(){
   const move=(n:number)=>{interacted.current=true;setStep(n);const reduce=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;document.querySelector('.dd-controls')?.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});};
   // Exposed main-deck edges (wing ends and sides) that stairs and extra levels can join.
   const mainFootprint=estimate.model.levels[0].footprint,ledger=getHouseContact(data,mainFootprint);
-  const stairEdges=mainFootprint.edgeIds?mainFootprint.outline.flatMap((a,i)=>{const b=mainFootprint.outline[(i+1)%mainFootprint.outline.length],id=mainFootprint.edgeIds![i],len=Math.hypot(b.x-a.x,b.y-a.y);return ledger.isContactEdge(i)||len<36?[]:[{id,name:WRAP_EDGE_NAMES[id]??id,ft:(len/12).toFixed(1)}];}):[];
+  const namedEdges=mainFootprint.edgeIds?mainFootprint.outline.flatMap((a,i)=>{const b=mainFootprint.outline[(i+1)%mainFootprint.outline.length],id=mainFootprint.edgeIds![i],len=Math.hypot(b.x-a.x,b.y-a.y);return ledger.isContactEdge(i)||len<36?[]:[{id,name:WRAP_EDGE_NAMES[id]??id,ft:(len/12).toFixed(1),lenIn:len}];}):[];
+  // Wrap decks offer every exposed edge. On an angled-corner deck only the angled faces are extra choices:
+  // stairs may use one as a single straight flight wide enough for the stair; levels never join one.
+  const stairEdges=namedEdges.filter(e=>wrap||(isChamferEdgeId(e.id)&&angledStairAllowed(data)&&angledStairFits(e.lenIn,data.stairWidth))).map(({lenIn:_len,...e})=>e);
+  const levelEdges=namedEdges.filter(e=>wrap&&!isChamferEdgeId(e.id)).map(({lenIn:_len,...e})=>e);
   const {facts:designFacts,summary,proposalFacts}=described;
   function download(){
     try{
@@ -188,7 +193,7 @@ export default function DeckDesigner(){
       <section className="dd-controls" aria-label="Deck configuration">
         <a className="dd-preview-link" href="#deck-live-preview">↑ View updated deck</a><nav className="dd-steps" aria-label="Design steps">{STEPS.map((s,i)=><button key={s} aria-current={step===i?'step':undefined} onClick={()=>move(i)}><span>{String(i+1).padStart(2,'0')}</span>{s}</button>)}</nav>
         <div className="dd-panel" ref={panelRef} tabIndex={-1}>
-          {step===0 && <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={stairEdges} houseSettingsOpen={houseSettingsOpen} setHouseSettingsOpen={setHouseSettingsOpen} effectiveHouseOpeningId={effectiveHouseOpeningId} setSelectedHouseOpeningId={setSelectedHouseOpeningId}/>}
+          {step===0 && <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} houseSettingsOpen={houseSettingsOpen} setHouseSettingsOpen={setHouseSettingsOpen} effectiveHouseOpeningId={effectiveHouseOpeningId} setSelectedHouseOpeningId={setSelectedHouseOpeningId}/>}
           {step===1 && <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags}/>}
           {step===2 && <StairsStep data={data} update={update} stairEdges={stairEdges} autoCounts={autoCounts}/>}
           {step===3 && <SiteExtrasStep data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch}/>}

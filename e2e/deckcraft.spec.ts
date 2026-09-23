@@ -40,6 +40,19 @@ test('wraps the deck round a house corner',async({page})=>{
   await expect(page.locator('.dd-summary')).toContainText('Wraps the left house corner');
 });
 
+test('angles a front corner, reprices it and names it in the estimate',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  await page.getByRole('checkbox',{name:'Angle the front left corner'}).check();
+  await setNumber(page,'Front left corner cut',5);
+  await expect(page.locator('.dd-corners [role=status]')).toContainText('45° angled front corner: 5 ft front left. Angled face: 7.1 ft front left.');
+  await expect(price(page)).not.toHaveText(before??'');
+  await step(page,/Your estimate/).click();
+  await expect(page.locator('.dd-summary')).toContainText('Rectangle with an angled front corner');
+  await expect(page.locator('.dd-summary')).toContainText('45° angled front corner: 5 ft front left');
+  expect(problems).toEqual([]);
+});
+
 test('adds a bump-out to the house',async({page})=>{
   await openDesigner(page);
   await page.getByText('House dimensions, finishes, doors & windows').click();

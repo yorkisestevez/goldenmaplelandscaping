@@ -1,3 +1,4 @@
+import {activeCornerChamfers} from './lib/cornerChamfers';
 import type {DeckData} from './types';
 import type {DeckTakeoff,Member} from './deckTakeoff';
 import {getHardwareLayout} from './hardwareLayout';
@@ -25,7 +26,7 @@ export function constructionStock(model:DeckTakeoff):StockScheduleRow[]{
 export function connectorSchedule(data:DeckData,model:DeckTakeoff,h=getHardwareLayout(data,model)):ConnectorScheduleRow[]{
   return [
     {name:'Joist hangers',qty:h.hangers.length,unit:'ea',rate:4.5,basis:'Existing Deck Craft Pro unit rate; hanger selection to match member'},
-    {name:'Skewed joist and hip hangers',qty:h.skewedHangers?.length??0,unit:'ea',rate:null,basis:'Supplier quote required; jack-joist hangers skewed to the corner angle, plus a hip hanger at each house corner'},
+    {name:'Skewed joist and hip hangers',qty:h.skewedHangers?.length??0,unit:'ea',rate:null,basis:activeCornerChamfers(data)?'Supplier quote required; joist hangers skewed 45° where joists meet the angled corners':'Supplier quote required; jack-joist hangers skewed to the corner angle, plus a hip hanger at each house corner'},
     {name:'Ledger bolts',qty:h.ledgerBolts.length,unit:'ea',rate:2.8,basis:'Existing Deck Craft Pro unit rate'},
     {name:'Post anchors',qty:h.postAnchors,unit:'ea',rate:22,basis:'Existing Deck Craft Pro anchor allowance'},
     {name:'Joist-to-beam ties',qty:h.beamTies.length,unit:'ea',rate:null,basis:'Supplier quote required; no confirmed existing unit rate'},

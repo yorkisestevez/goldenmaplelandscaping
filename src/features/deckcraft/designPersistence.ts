@@ -9,6 +9,7 @@ const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy'] as 
 import {PATIO_PRODUCTS,WALL_PRODUCTS,WATER_PRODUCTS} from './yardSettings';
 import {GARAGE_DOOR_STYLES,WINDOW_STYLES} from './houseOpenings';
 import {clampHouseOpening,DOOR_STYLES,HOUSE_CLADDINGS,ROOF_PITCH_RANGE} from './houseSettings';
+import {angledStairAllowed,angledStairFits,CORNER_CHAMFER_FT,isChamferEdgeId} from './lib/cornerChamfers';
 import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,openingWallId} from './houseFootprint';
 
 export {GARAGE_DOOR_STYLES} from './houseOpenings';
@@ -193,6 +194,13 @@ export function validateDesign(input:unknown):DeckData {
     const porchLeft=porch(w.porchLeft,'Left',!!left),porchRight=porch(w.porchRight,'Right',!!right);
     if(left||right)clean.wrap={...(left?{left}:{}),...(right?{right}:{}),...(porchLeft?{porchLeft}:{}),...(porchRight?{porchRight}:{})};
   }
+  // Angled front corners: a missing or zero leg is a square corner, so {} and zeros store nothing.
+  if(input.cornerChamfers!==undefined){
+    const c=input.cornerChamfers;if(!record(c))throw new Error('Invalid angled corners.');
+    const leg=(v:unknown,label:string)=>v===undefined||v===0?undefined:numeric(v,CORNER_CHAMFER_FT[0],CORNER_CHAMFER_FT[1],label);
+    const frontLeftFt=leg(c.frontLeftFt,'Front-left angled corner'),frontRightFt=leg(c.frontRightFt,'Front-right angled corner');
+    if(frontLeftFt!==undefined||frontRightFt!==undefined)clean.cornerChamfers={...(frontLeftFt!==undefined?{frontLeftFt}:{}),...(frontRightFt!==undefined?{frontRightFt}:{})};
+  }
   for(const key of ['stairEdgeId','level2EdgeId'] as const)if(input[key]!==undefined){
     if(typeof input[key]!=='string'||!/^[a-zA-Z0-9-]{1,40}$/.test(input[key] as string))throw new Error('Invalid deck edge.');
     clean[key]=input[key] as string;
@@ -220,15 +228,34 @@ export function validateDesign(input:unknown):DeckData {
   if(clean.borderFinish==='Dark Slate')clean.pictureFrameRows=clean.pictureFrameRows===2?2:1;
   // A wrap fixes the house size and, around both corners, the deck width.
   const wrapped=normalizeWrap(clean);if(wrapped!==clean){clean.width=wrapped.width;clean.houseConfig=wrapped.houseConfig;}
-  // A named stair or level edge must be an exposed edge of this outline; otherwise the side decides.
-  const namedEdgeOk=(id:string)=>{const fp=getFootprint(clean,1),contact=getHouseContact(clean,fp),i=fp.edgeIds?.indexOf(id)??-1;return i>=0&&!contact.isContactEdge(i);};
-  if(clean.stairEdgeId&&!namedEdgeOk(clean.stairEdgeId))delete clean.stairEdgeId;
-  if(clean.level2EdgeId&&!namedEdgeOk(clean.level2EdgeId))delete clean.level2EdgeId;
-  if(clean.level3?.edgeId&&(clean.level3.parent!==1||!namedEdgeOk(clean.level3.edgeId)))delete clean.level3.edgeId;
+  const named=pruneEdgeNames(clean);
   // A stair side with no exposed edge (e.g. against the house) moves to the first side that has one.
-  const stairSides=availableStairSides(clean);
-  if(!stairSides.includes(clean.stairPosition))clean.stairPosition=stairSides[0]??'Front';
-  return clean;
+  const stairSides=availableStairSides(named);
+  if(!stairSides.includes(named.stairPosition))named.stairPosition=stairSides[0]??'Front';
+  return named;
+}
+
+/**
+ * Drops a named stair or level edge the design can no longer use: an edge this outline doesn't have, or
+ * one against the house; an angled corner for a stair that isn't one straight flight of up to 14 risers
+ * from the main deck, or that is wider than the angled face; and any angled corner for a level. Loading
+ * and every edit run it, so a choice the pickers no longer show can never stay in force.
+ */
+export function pruneEdgeNames(data:DeckData):DeckData{
+  if(!data.stairEdgeId&&!data.level2EdgeId&&!data.level3?.edgeId)return data;
+  const fp=getFootprint(data,1),contact=getHouseContact(data,fp);
+  const edge=(id:string)=>{const i=fp.edgeIds?.indexOf(id)??-1;return i>=0&&!contact.isContactEdge(i)?i:-1;};
+  const face=(i:number)=>{const a=fp.outline[i],b=fp.outline[(i+1)%fp.outline.length];return Math.hypot(b.x-a.x,b.y-a.y);};
+  const stairOk=(id:string)=>{const i=edge(id);return i>=0&&(!isChamferEdgeId(id)||(angledStairAllowed(data)&&angledStairFits(face(i),data.stairWidth)));};
+  const levelOk=(id:string)=>edge(id)>=0&&!isChamferEdgeId(id);
+  const dropStair=!!data.stairEdgeId&&!stairOk(data.stairEdgeId),dropL2=!!data.level2EdgeId&&!levelOk(data.level2EdgeId);
+  const dropL3=!!data.level3?.edgeId&&(data.level3.parent!==1||!levelOk(data.level3.edgeId));
+  if(!dropStair&&!dropL2&&!dropL3)return data;
+  const next={...data};
+  if(dropStair)delete next.stairEdgeId;
+  if(dropL2)delete next.level2EdgeId;
+  if(dropL3&&next.level3){const {edgeId:_edge,...level3}=next.level3;next.level3=level3;}
+  return next;
 }
 
 /** A third section 2 ft lower than the second, off its front, when none has been set. */
@@ -239,7 +266,7 @@ export function defaultLevel3(data:DeckData):NonNullable<DeckData['level3']>{
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);

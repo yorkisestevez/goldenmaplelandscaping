@@ -3,6 +3,7 @@ import {DEFAULT_DECK} from './defaults';
 import {isSystemProduct} from './lightingSystem';
 import {LIGHTING_CATALOGUE} from './lightingCatalogue';
 import {screenOn} from './privacyScreens';
+import {activeCornerChamfers} from './lib/cornerChamfers';
 import type {DeckData} from './types';
 
 /**
@@ -63,6 +64,7 @@ export function designFeatures(data:DeckData):string[]{
   add(data.deckType!=='Attached',`deck_type_${slug(data.deckType)}`);
   add(data.wrap?.left||data.wrap?.right,'deck_wrap');
   add(data.wrap?.porchLeft||data.wrap?.porchRight,'deck_porch');
+  add(activeCornerChamfers(data),'deck_corner_chamfer');
   add(data.levels>=2,'deck_level_2');
   add(data.levels>=3,'deck_level_3');
   add(data.levels>=2&&data.level2FullStep,'deck_split_level');
