@@ -14,8 +14,8 @@ import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
 import {DECKING_CATALOGUE,MANUFACTURER_ACCESSORIES,RAILING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {STEPS} from '../src/features/deckcraft/designer/constants';
-import {SECTIONS,SECTION_BY_ID,loadBackyardStep,ownsTitle,sectionChanged,sectionOfTitle,sectionsOfPatch} from '../src/features/deckcraft/designer/sections';
-import {sectionPriceEffect,sectionSummary} from '../src/features/deckcraft/designer/sectionSummaries';
+import {SECTIONS,SECTION_BY_ID,loadBackyardStep,sectionChanged,sectionsOfPatch} from '../src/features/deckcraft/designer/sections';
+import {sectionSummary} from '../src/features/deckcraft/designer/sectionSummaries';
 import {designerSource} from './deck-designer-source';
 
 /**
@@ -155,20 +155,14 @@ for(const privacySqft of [24,25,137,500]){
   ok(calculateDeckReleaseEstimate(on).total>base.total,'The same screen switched on is priced');
   ok(off.privacyScreens?.[0].lengthFt===8,'Switching off keeps the screen settings');
 }
-// 5. The sections (R1): nine rows in a fixed order, each owning its design fields and its estimate sections. Every
-// estimate section but HST belongs to exactly one row, so the rows' amounts add up to the priced subtotal, and no row
-// ever shows $0 for an unpriced part.
+// 5. The sections (R1): nine rows in a fixed order, each owning its design fields. Which row owns each estimate section,
+// the rows' price effects (they add up to the priced subtotal, never $0 for a quote) and the engine titles are checked
+// with the price schedule, in check-deck-ledger.ts.
 {
   ok(SECTIONS.map(s=>s.name).join('|')==='House|Deck shape & size|Boards & finish|Stairs & railings|Lighting|Privacy, skirting & extras|Site & foundation|Backyard|Proposal & files','Nine sections, in order');
   ok(SECTIONS.every(s=>STEPS[s.legacyStep]!==undefined&&SECTION_BY_ID[s.related.id]&&s.related.id!==s.id),'Each section counts as an old wizard step and links to another section');
   const fields=SECTIONS.flatMap(s=>s.fields);
   ok(new Set(fields).size===fields.length,'No design field belongs to two sections');
-  // Every title the engine can give an estimate section (read from calculations.ts), HST aside, has exactly one owner.
-  const engine=readFileSync(new URL('../src/features/deckcraft/calculations.ts',import.meta.url),'utf8');
-  const titles=[...engine.matchAll(/title:\s*([^,\n]+?),/g)].flatMap(m=>[...m[1].matchAll(/'([^']+)'|`([^`$]*)\$\{/g)].map(t=>t[1]??`${t[2]}*`));
-  const owners=(t:string)=>t.endsWith('*')?SECTIONS.filter(s=>s.ledger.includes(t)):SECTIONS.filter(s=>ownsTitle(s,t));
-  ok(titles.length>=18&&titles.includes('HST (13%)')&&titles.includes('Structural Framing (*'),`The engine's section titles are read (${titles.length})`);
-  for(const t of titles)ok(owners(t).length===(t==='HST (13%)'?0:1),`"${t}" belongs to ${t==='HST (13%)'?'no section':'exactly one section'} (got ${owners(t).map(s=>s.name).join(', ')||'none'})`);
   const house=getHouseConfig({...structuredClone(DEFAULT_DECK),width:20});
   const unrated=DECKING_CATALOGUE.find(m=>m.costPerSqft===null&&!m.isHidden)!;
   const samples:[string,Partial<DeckData>][]=[
@@ -185,16 +179,7 @@ for(const privacySqft of [24,25,137,500]){
     ['a backyard with allowances',{yardFeatures:[patio,wall,pond],yardAllowances:{finish:'mid',firePit:'wood',kitchen:'basic',turfSqft:500,lighting:true}}],
   ];
   for(const [label,patch] of samples){
-    const d=deckReleaseData({...structuredClone(DEFAULT_DECK),...patch}),e=calculateDeckReleaseEstimate(d);
-    ok(e.sections.every(x=>/^HST/.test(x.title)?!sectionOfTitle(x.title):SECTIONS.filter(s=>ownsTitle(s,x.title)).length===1),`${label}: every estimate section but HST has one row`);
-    const rows=SECTIONS.reduce((n,s)=>n+e.sections.filter(x=>ownsTitle(s,x.title)).reduce((m,x)=>m+x.total,0),0);
-    ok(Math.abs(rows-e.subtotal)<0.005,`${label}: the rows add up to the priced subtotal`);
-    const effects=SECTIONS.map(s=>sectionPriceEffect(s,e));
-    ok(effects.every(p=>!p||!/\$0\b/.test(p.text)),`${label}: no row shows $0 (${effects.map(p=>p?.text).join(' | ')})`);
-    for(const s of SECTIONS){
-      const owned=e.sections.filter(x=>ownsTitle(s,x.title)),unpriced=owned.some(x=>x.quoteRequired||x.items.some(i=>i.cost===null&&Number(i.qty)>0)),p=sectionPriceEffect(s,e);
-      if(unpriced)ok(p&&(p.kind==='quote'||p.text.endsWith(' + quote')),`${label}: ${s.name} says part of it is a quote (${p?.text})`);
-    }
+    const d=deckReleaseData({...structuredClone(DEFAULT_DECK),...patch});
     ok(SECTIONS.every(s=>sectionSummary(s,d).length>0),`${label}: every row has a current choice`);
   }
   // The "changed" mark compares a section's fields with the default design; an edit belongs to its fields' sections.
@@ -203,7 +188,6 @@ for(const privacySqft of [24,25,137,500]){
   const changed=(patch:Partial<DeckData>)=>SECTIONS.filter(s=>sectionChanged(s,deckReleaseData({...plain,...patch}))).map(s=>s.id).join();
   ok(changed({width:20})==='deck'&&changed({stairFlights:2})==='stairs'&&changed({deckFinishes:{railingColor:'Matte Black'}})==='stairs'&&changed({deckFinishes:{border:'tt_legacy:Espresso'}})==='boards'&&changed({boardColours:[]})===''&&changed({sceneLighting:'Evening'})==='','Each change marks only its own section (an empty list is no change)');
   ok(sectionsOfPatch({deckFinishes:{border:'tt_legacy:Espresso',railingColor:'Matte Black'}},plain).join()==='boards,stairs'&&sectionsOfPatch({deckFinishes:{...plain.deckFinishes,railingColor:'Matte Black'}},plain).join()==='stairs'&&sectionsOfPatch({width:20,yardAllowances:undefined},plain).join()==='deck,backyard'&&sectionsOfPatch({sceneLighting:'Evening'},plain).length===0,'Edits are attributed to sections through their fields');
-  ok(sectionPriceEffect(SECTION_BY_ID.house,calculateDeckReleaseEstimate(plain))?.text==='Looks never priced; size can move the ledger'&&sectionPriceEffect(SECTION_BY_ID.proposal,calculateDeckReleaseEstimate(plain))===null,'The House row says looks are never priced; the proposal has no price of its own');
 }
 ok(designerSource().includes('deckRelease'),'The public page uses the release boundary');
 console.log(`DECK RELEASE OK — deck-only designs unchanged byte for byte, the backyard priced separately (estimator allowances included), one HST, exports, the Backyard section, the section rows and older autosaves; ${checks} checks.`);

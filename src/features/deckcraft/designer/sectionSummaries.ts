@@ -1,5 +1,5 @@
 import {allowanceItems} from '../yardSettings';
-import {dollars,shapeWords,type DeckEstimate} from '../designFacts';
+import {shapeWords} from '../designFacts';
 import {getHouseConfig} from '../houseSettings';
 import {LIGHTING_CATALOGUE} from '../lightingCatalogue';
 import {isSystemProduct} from '../lightingSystem';
@@ -7,12 +7,11 @@ import {activeWrap} from '../lib/wrapGeometry';
 import {DECKING_CATALOGUE,RAILING_CATALOGUE} from '../manufacturerCatalog';
 import {screenOn} from '../privacyScreens';
 import type {DeckData} from '../types';
-import {ownsTitle,type DesignSection,type SectionId} from './sections';
+import type {DesignSection,SectionId} from './sections';
 
 /**
- * What each section row says about the design: the current choice ("TimberTech EDGE Prime+ · Coconut Husk ·
- * Straight") and the price effect, which is the total of the estimate sections the row owns. Pure: the design and
- * the estimate in, words out. An unpriced part never reads "$0": it is "+ quote" or a quote tag.
+ * What each section row says about the design's current choice ("TimberTech EDGE Prime+ · Coconut Husk · Straight").
+ * Pure: the design in, words out. The row's price effect comes from the price schedule (priceLedger.ts).
  */
 const plural=(n:number,one:string,many=`${one}s`)=>`${n} ${n===1?one:many}`;
 const ft=(n:number)=>String(Math.round(n*10)/10);
@@ -51,25 +50,3 @@ const SUMMARIES:Record<SectionId,(data:DeckData)=>string>={
 };
 /** The section's current choice, in a few words. */
 export const sectionSummary=(section:DesignSection,data:DeckData)=>SUMMARIES[section.id](data);
-
-type EstimateItem=DeckEstimate['sections'][number]['items'][number];
-/** A builder quote says so in its name or spec (as the engine words them); every other unpriced line is a supplier quote. */
-export const isBuilderQuote=(item:EstimateItem)=>/\(builder quote\)/i.test(item.name)||/^Builder quote required/.test(item.spec);
-
-export interface PriceEffect{kind:'amount'|'quote'|'none'|'note';text:string}
-/**
- * The row's price effect: the whole-dollar total of the estimate sections it owns, "+ quote" when part of them is
- * unpriced, or a supplier or builder quote tag when none of it is priced. House looks are never priced; the
- * proposal owns no price of its own (null).
- */
-export function sectionPriceEffect(section:DesignSection,estimate:DeckEstimate):PriceEffect|null{
-  if(section.id==='house')return {kind:'note',text:'Looks never priced; size can move the ledger'};
-  if(!section.ledger.length)return null;
-  const owned=estimate.sections.filter(s=>ownsTitle(section,s.title));
-  const total=owned.reduce((n,s)=>n+s.total,0),priced=total>=0.5;
-  const unpriced=owned.flatMap(s=>s.items.filter(i=>i.cost===null&&Number(i.qty)>0));
-  if(!unpriced.length&&!owned.some(s=>s.quoteRequired))return priced?{kind:'amount',text:dollars(total)}:{kind:'none',text:'Adds nothing yet'};
-  if(priced)return {kind:'amount',text:`${dollars(total)} + quote`};
-  const builder=unpriced.filter(isBuilderQuote).length;
-  return {kind:'quote',text:builder===0?'Supplier quote':builder===unpriced.length?'Builder quote':'Supplier & builder quotes'};
-}

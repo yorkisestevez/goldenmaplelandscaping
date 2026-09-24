@@ -1,8 +1,8 @@
 import {Suspense,useEffect,useRef,type MouseEvent,type ReactNode} from 'react';
-import type {DeckEstimate} from '../designFacts';
 import type {DeckData} from '../types';
 import {SECTIONS,SECTION_BY_ID,sectionChanged,type SectionId} from './sections';
-import {sectionPriceEffect,sectionSummary} from './sectionSummaries';
+import {sectionPriceEffect,type Ledger} from './priceLedgerModel';
+import {sectionSummary} from './sectionSummaries';
 
 /** Calls `onLoaded` once mounted. It sits in a body's Suspense boundary, so it runs when the lazy body has loaded. */
 function Loaded({onLoaded}:{onLoaded:()=>void}){
@@ -18,8 +18,8 @@ const ids=(id:SectionId)=>({row:`dd-section-${id}`,body:`dd-section-${id}-body`,
  * closed section's body is unmounted; the page keeps the state that must outlive it. A section opened from the
  * keyboard moves focus to its first field once its body has loaded. Each body ends with a link to one related section.
  */
-export default function SectionList({data,estimate,open,onToggle,onOpen,renderBody}:{
-  data:DeckData;estimate:DeckEstimate;open:ReadonlySet<SectionId>;
+export default function SectionList({data,ledger,open,onToggle,onOpen,renderBody}:{
+  data:DeckData;ledger:Ledger;open:ReadonlySet<SectionId>;
   /** A row's button: opens a closed section, closes an open one. */
   onToggle:(id:SectionId)=>void;
   /** The related-section link: opens that section (if it is closed) and brings it into view. */
@@ -38,7 +38,7 @@ export default function SectionList({data,estimate,open,onToggle,onOpen,renderBo
   const byKeyboard=(e:MouseEvent)=>e.detail===0;
   return <div className="dd-sections">
     {SECTIONS.map(section=>{
-      const {id}=section,n=ids(id),isOpen=open.has(id),changed=sectionChanged(section,data),price=sectionPriceEffect(section,estimate);
+      const {id}=section,n=ids(id),isOpen=open.has(id),changed=sectionChanged(section,data),price=sectionPriceEffect(section,ledger);
       const related=SECTION_BY_ID[section.related.id];
       return <div key={id} id={n.row} className="dd-section" data-open={isOpen||undefined}>
         <h2 className="dd-section-head">

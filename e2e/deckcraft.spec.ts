@@ -31,14 +31,26 @@ type Section=typeof SECTION_NAMES[number];
 /** The drawing's sheets: the site plan, the 3D view and the framing. */
 type ViewTab='Plan'|'3D'|'Framing';
 
-/** The priced amount, live. */
-const price=(page:Page)=>page.locator('.dd-live-price strong');
+/** From 1280 px the price schedule has a column of its own; below that the price bar opens it in a drawer. */
+const wide=(page:Page)=>(page.viewportSize()?.width??0)>=1280;
+/** The price schedule: the column beside the drawing, or the drawer once opened from the price bar. */
+const schedule=(page:Page)=>page.getByRole('region',{name:'Price schedule',exact:true});
+/** The priced amount, live: the schedule's priced subtotal, or on a narrower screen the price bar's. */
+const price=(page:Page)=>wide(page)?schedule(page).getByRole('status',{name:'Priced subtotal'}):phoneBar(page).locator('strong');
+/** One line of the schedule, by its engine title ("Railing System"). */
+const scheduleLine=(page:Page,title:string)=>schedule(page).getByRole('row').filter({has:page.getByRole('rowheader',{name:title,exact:true})});
+/** The selections still to be quoted, each with a supplier or builder tag; one of them by its name. */
+const quotes=(page:Page)=>schedule(page).getByRole('list',{name:/^Still to be quoted/});
+const quoteLine=(page:Page,name:string)=>quotes(page).getByRole('listitem').filter({hasText:name});
+/** Your changes, newest first, and the one announcement each change makes. */
+const changes=(page:Page)=>schedule(page).getByRole('list',{name:'Your changes'}).getByRole('listitem');
+const announcement=(page:Page)=>page.getByRole('status').filter({hasText:/\. Priced subtotal \$/});
+/** The full price list in Proposal & files. */
+const fullList=(page:Page)=>page.getByRole('region',{name:'Full price list'});
+/** "$0" standing alone: never shown for anything unpriced. */
+const ZERO=/\$0(?![\d.,])/;
 /** The drawing's heading, which names the deck's size ("16 × 12 ft"). */
 const size=(page:Page)=>page.locator('.dd-preview-head h2');
-/** The priced sections, their subtotals and the total. */
-const schedule=(page:Page)=>page.locator('.dd-breakdown');
-/** The selections still to be quoted, listed with the live price. */
-const quotes=(page:Page)=>page.locator('#deck-live-preview .dd-quote-notice');
 /** The design summary in the estimate. */
 const summary=(page:Page)=>page.locator('.dd-summary');
 /** The drawing panel; the drawing area in it (the plan, then the 3D view once it loads); the plan; the 3D canvas. */
@@ -463,7 +475,7 @@ test('paints a row of accent boards, lists and keeps it, and prices the fitting 
   await panel.getByRole('button',{name:'Paint this row'}).click();
   await expect(panel.getByRole('listitem')).toHaveText(/Row 6 from the house · Dark Cocoa \(TimberTech EDGE Prime\+\)/);
   await expect(price(page)).not.toHaveText(before??'');
-  await expect(quotes(page)).toContainText('Accent-colour board labour (builder quote)');
+  await expect(quoteLine(page,'Accent-colour board labour')).toHaveText('Builder quote Accent-colour board labour');
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
   await page.reload();
   await openSection(page,'Boards & finish');
@@ -532,8 +544,8 @@ test('adds a band and a compass medallion, and lists the medallion labour for a 
   await openSection(page,'Proposal & files');
   await expect(summary(page)).toContainText(/Inlays: a band one board wide across the deck; a [\d.]+ ft compass medallion in eight wedges/);
   // The breakdown shows the labour as needing a quote; the list of quotes names the medallion's.
-  await expect(schedule(page)).toContainText(/Labour \(Construction & Build\)\$[\d,]+Priced portion · supplier quote required/);
-  await expect(quotes(page)).toContainText('Medallion inlay labour (builder quote)');
+  await expect(scheduleLine(page,'Labour (Construction & Build)')).toHaveText(/^Labour \(Construction & Build\)\$[\d,]+ \+ quote$/);
+  await expect(quoteLine(page,'Medallion inlay labour')).toHaveText('Builder quote Medallion inlay labour');
   expect(problems).toEqual([]);
 });
 
@@ -546,7 +558,7 @@ test('adds skirting under the deck, lists it for a builder quote, and keeps it a
   await expect(skirting.getByRole('status')).toContainText('Listed for a builder quote');
   // The three open sides are offered; the side against the house never is.
   await expect(skirting.getByRole('group',{name:'Sides to skirt'}).getByRole('checkbox')).toHaveCount(3);
-  await expect(quotes(page)).toContainText('Deck skirting (builder quote)');
+  await expect(quoteLine(page,'Deck skirting')).toHaveText('Builder quote Deck skirting');
   // A quote, never a price: the priced amount does not move.
   await expect(price(page)).toHaveText(before??'');
   await page.getByLabel('Skirting style',{exact:true}).selectOption('Lattice');
@@ -556,7 +568,9 @@ test('adds skirting under the deck, lists it for a builder quote, and keeps it a
   await openSection(page,'Privacy, skirting & extras');
   await expect(page.getByLabel('Skirting style',{exact:true})).toHaveValue('Lattice');
   await openSection(page,'Proposal & files');
-  await expect(schedule(page)).toContainText('Deck skirtingSupplier quote required');
+  // The face is a supplier product; the backing, panels and labour are the builder's.
+  await expect(scheduleLine(page,'Deck skirting')).toHaveText('Deck skirtingSupplier & builder quotes');
+  await expect(fullList(page)).toContainText('Skirting labour');
   await expect(summary(page)).toContainText(/Skirting: lattice in /);
   expect(problems).toEqual([]);
 });
@@ -571,7 +585,7 @@ test('gives the border and stair treads their own colours, quotes a tread line w
   // Treads from a line without a price make the stairs a supplier quote.
   await parts.getByLabel('Stair tread colour',{exact:true}).selectOption('tt_terrain_plus:Dark Oak');
   await expect(partSwatches(page)).toHaveText(['Espresso · TimberTech PRO Legacy','Dark Oak · TimberTech Composite Terrain+ · supplier quote']);
-  await expect(quotes(page)).toContainText('Stair treads and risers in TimberTech Composite Terrain+');
+  await expect(quoteLine(page,'Stair treads and risers in TimberTech Composite Terrain+')).toHaveText('Supplier quote Stair treads and risers in TimberTech Composite Terrain+');
   await openSection(page,'Stairs & railings');
   await page.getByLabel('Manufacturer railing system',{exact:true}).selectOption('tt_classic_composite');
   await page.getByLabel('Railing colour',{exact:true}).selectOption('Matte Black');
@@ -584,10 +598,75 @@ test('gives the border and stair treads their own colours, quotes a tread line w
   await openSection(page,'Stairs & railings');
   await expect(page.getByLabel('Railing colour',{exact:true})).toHaveValue('Matte Black');
   await openSection(page,'Proposal & files');
-  await expect(schedule(page)).toContainText('StairsSupplier quote required');
+  await expect(scheduleLine(page,'Stairs')).toHaveText('StairsSupplier quote');
   await expect(schedule(page)).toContainText('Deck-part finishes');
   await expect(summary(page)).toContainText('Deck parts: border boards in Espresso (TimberTech PRO Legacy); stair treads in Dark Oak (TimberTech Composite Terrain+)');
   await expect(summary(page)).toContainText('Railing colour: Matte Black (TimberTech Classic Composite · balusters); screen colour illustrative');
+  expect(problems).toEqual([]);
+});
+
+test('lists what each change does to the price, tags quotes and never shows $0 for one',async({page})=>{
+  const problems=await openDesigner(page);
+  await expect(schedule(page)).toContainText('Golden Maple price book');
+  await expect(changes(page)).toHaveCount(0);
+  await openSection(page,'Stairs & railings');
+  // A downgrade and a priced upgrade.
+  await page.getByLabel('Number of stair flights',{exact:true}).selectOption('0');
+  await expect(changes(page).first()).toHaveText(/^\u2212\$[\d,]+ Stair flights → 0 \(\d+ fewer to quote\)$/);
+  await page.getByLabel('Railing style',{exact:true}).selectOption('Glass Panels');
+  await expect(changes(page).first()).toHaveText(/^\+\$[\d,]+ Railing style → Glass Panels$/);
+  await expect(announcement(page)).toHaveText(/^Railing style: Glass Panels\. \+\$[\d,]+\. Priced subtotal \$[\d,]+\.$/);
+  await expect(changes(page)).toHaveCount(2);
+  // A choice that turns a priced section into a quote says so, with what left the priced total.
+  const before=await price(page).textContent();
+  await page.getByLabel('Manufacturer railing system',{exact:true}).selectOption('tt_classic_composite');
+  await expect(changes(page).first()).toHaveText(/^Now a supplier quote Manufacturer railing → TimberTech Classic Composite · balusters \(priced total \u2212\$[\d,]+\)$/);
+  await expect(price(page)).not.toHaveText(before??'');
+  await expect(scheduleLine(page,'Railing System')).toHaveText('Railing SystemSupplier quote');
+  await expect(quoteLine(page,'TimberTech Classic Composite · balusters')).toHaveText('Supplier quote TimberTech Classic Composite · balusters');
+  // A builder quote beside it; nothing unpriced reads $0, and the total says it is the priced portion.
+  await openSection(page,'Privacy, skirting & extras');
+  await page.getByRole('region',{name:'Skirting under the deck'}).getByRole('checkbox',{name:'Add skirting under the deck'}).check();
+  await expect(quoteLine(page,'Deck skirting')).toHaveText('Builder quote Deck skirting');
+  await expect(changes(page).first()).toHaveText(/^Now a builder quote Skirting$/);
+  expect(await schedule(page).textContent()).not.toMatch(ZERO);
+  await expect(schedule(page)).toContainText('Priced portion including HST');
+  // Undo shows what it gave back; a new design clears the list.
+  await fileTools(page).getByRole('button',{name:'Undo'}).click();
+  await expect(changes(page).first()).toHaveText('No price change Undo (1 fewer to quote)');
+  await expand(fileTools(page),'Start over');
+  await fileTools(page).getByRole('button',{name:'Start a new design'}).click();
+  await expect(changes(page)).toHaveText(['New design loaded']);
+  // The full price list in Proposal & files lists every item, the unpriced ones tagged.
+  await schedule(page).getByRole('button',{name:'Full price list'}).click();
+  await expect(fullList(page)).toContainText('Installation Labour');
+  expect(await fullList(page).textContent()).not.toMatch(ZERO);
+  expect(problems).toEqual([]);
+});
+
+test('@phone opens the price schedule from the price bar and gives focus back when it closes',async({page})=>{
+  const problems=await openDesigner(page);
+  const opener=phoneBar(page).getByRole('button',{name:/^Priced subtotal/});
+  await expect(opener).toContainText(/to quote/);
+  const amount=await price(page).textContent();
+  await opener.click();
+  const drawer=page.getByRole('dialog',{name:'Price schedule'});
+  await expect(drawer).toBeVisible();
+  await expect(schedule(page).getByRole('status',{name:'Priced subtotal'})).toHaveText(amount??'');
+  await expect(quotes(page).getByRole('listitem').first()).toContainText('quote');
+  await page.keyboard.press('Escape');
+  await expect(drawer).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  await opener.click();
+  await drawer.getByRole('button',{name:'Close',exact:true}).click();
+  await expect(drawer).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  // "Full price list" closes the drawer and opens Proposal & files.
+  await opener.click();
+  await drawer.getByRole('button',{name:'Full price list'}).click();
+  await expect(drawer).toHaveCount(0);
+  await expect(sectionButton(page,'Proposal & files')).toHaveAttribute('aria-expanded','true');
+  await expect(fullList(page)).toContainText('Priced subtotal');
   expect(problems).toEqual([]);
 });
 

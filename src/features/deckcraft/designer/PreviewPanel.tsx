@@ -3,10 +3,10 @@ import {Suspense,lazy,useEffect,useMemo,useRef,useState} from 'react';
 import {colourName,type BoardPaintChoice} from '../boardFinishes';
 import ConstructionPlan from '../ConstructionPlan';
 import HouseOpeningsBar from '../HouseOpeningsBar';
-import {dollars,type DeckEstimate,type DeckMaterial} from '../designFacts';
+import type {DeckEstimate} from '../designFacts';
 import type {DeckData,HouseOpening,PrivacyScreen} from '../types';
 import type {AutoCounts,PreviewMode} from './constants';
-import {MaterialSwatch,ViewerBoundary,type Update} from './fields';
+import {ViewerBoundary,type Update} from './fields';
 
 const Viewer=lazy(()=>import('../components/viewer3d/Deck3DViewer'));
 /** The exterior studio (claddings, roofs, colours): appearance only, loaded when first opened. */
@@ -45,16 +45,14 @@ export interface PreviewPanelProps{
   want3d:boolean;onWant3d:()=>void;
   /** Phones: the visitor pinned a compact preview to the top of the screen while editing (PhoneDeckBar). */
   docked?:boolean;
-  material:DeckMaterial;
-  priceLabel:string;quoteRequired:string[];
   /** Accent boards: the tool's current choice (null when it is put down) and what a click on a board does. */
   boardPaint?:BoardPaintChoice|null;setBoardPaint?:(paint:BoardPaintChoice|null)=>void;onPaintBoard?:(target:{level:number;index:number})=>void;
   /** The exterior studio, open under the doors and windows bar. */
   exteriorOpen:boolean;setExteriorOpen:(open:boolean)=>void;
 }
 
-/** The live deck: view modes, day and night, the contractor views, the 3D model or plan, doors and windows, finish and price. */
-export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,houseOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,material,priceLabel,quoteRequired,want3d,onWant3d,docked=false,boardPaint,setBoardPaint,onPaintBoard,exteriorOpen,setExteriorOpen}:PreviewPanelProps){
+/** The live deck: view modes, day and night, the contractor views, the 3D model or plan, and doors and windows (the price is in the schedule). */
+export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,houseOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,want3d,onWant3d,docked=false,boardPaint,setBoardPaint,onPaintBoard,exteriorOpen,setExteriorOpen}:PreviewPanelProps){
   const canvasRef=useRef<HTMLDivElement>(null);
   // The exterior studio's walls to finish ('' = the whole house): picked in the studio or, while it is open, in 3D.
   const [houseWall,setHouseWall]=useState('');
@@ -71,10 +69,6 @@ export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,
     {mounted && !hasWebGL && <p className="dd-note">Showing the plan view because 3D graphics are unavailable on this device. <button type="button" className="dd-linklike" onClick={retryWebGL}>Try the 3D view again</button></p>}
     <HouseOpeningsBar data={data} selectedId={pickedHouseOpeningId} onSelect={selectHouseOpening} onChange={update} onEditDetails={editHouseOpening} exteriorOpen={exteriorOpen} onOpenExterior={()=>setExteriorOpen(!exteriorOpen)}/>
     {exteriorOpen&&data.houseVisible!==false&&<Suspense fallback={<p className="dd-note" role="status">Loading the exterior finishes…</p>}><ExteriorStudio data={data} update={update} onClose={()=>setExteriorOpen(false)} selectedOpeningId={pickedHouseOpeningId||effectiveHouseOpeningId} onSelectOpening={selectHouseOpening} target={houseWall} onTarget={setHouseWall}/></Suspense>}
-    <div className="dd-finish"><MaterialSwatch file={material.colors.find(c=>c.name===data.deckingColor)?.swatch} alt={data.deckingColor}/><div><strong>{data.deckingColor}</strong><span>{material.name}</span></div><span className="dd-finish-pattern">{data.pattern}</span></div>
-    <div className="dd-live-price"><span>{priceLabel} <small>CAD · before HST</small></span><strong>{dollars(estimate.subtotal)}</strong></div>
-    {quoteRequired.length>0&&<div className="dd-quote-notice" role="status"><strong>Supplier quotes needed</strong><p>The amount above excludes unpriced selections and is not a complete project estimate.</p><ul>{quoteRequired.map(name=><li key={name}>{name}</li>)}</ul></div>}
-
     <p className="dd-note">The model is a design illustration. Colours vary by screen; confirm with samples. The shared model includes cut boards, framing, connected levels and stair components. Site measurements, connections and engineering need confirmation before construction.</p>
   </aside>;
 }
