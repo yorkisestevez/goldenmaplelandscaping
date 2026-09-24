@@ -281,6 +281,31 @@ test('adds, restyles and removes a window from the doors and windows bar',async(
   await expect.poll(count).toBe(start);
 });
 
+test('dresses the house in the exterior studio without changing the price, and keeps it after a reload',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  const open=async()=>{await page.getByRole('region',{name:'House doors and windows'}).getByRole('button',{name:'Exterior finishes'}).click();return page.getByRole('region',{name:'Exterior finishes'});};
+  const studio=await open();
+  await studio.getByRole('group',{name:'House cladding'}).getByRole('button',{name:'Cedar shakes'}).click();
+  await studio.getByRole('button',{name:'Cladding colour: Sage'}).click();
+  await studio.getByRole('button',{name:'Roof',exact:true}).click();
+  await studio.getByRole('group',{name:'Roof finish'}).getByRole('button',{name:'Slate'}).click();
+  await studio.getByRole('button',{name:'Trim, doors & windows'}).click();
+  await studio.getByRole('button',{name:'Doors: Red',exact:true}).click();
+  await expect(studio.getByRole('button',{name:'Doors: Red',exact:true})).toHaveAttribute('aria-pressed','true');
+  // The 3D house redraws in the new finishes; the price does not move.
+  await expect(page.locator('.dd-canvas canvas')).toBeVisible();
+  await expect(price(page)).toHaveText(before??'');
+  await page.waitForTimeout(800);// autosave runs 450 ms after the last change
+  await page.reload();
+  const again=await open();
+  await expect(again.getByRole('group',{name:'House cladding'}).getByRole('button',{name:'Cedar shakes'})).toHaveAttribute('aria-pressed','true');
+  await again.getByRole('button',{name:'Roof',exact:true}).click();
+  await expect(again.getByRole('group',{name:'Roof finish'}).getByRole('button',{name:'Slate'})).toHaveAttribute('aria-pressed','true');
+  await expect(price(page)).toHaveText(before??'');
+  expect(problems).toEqual([]);
+});
+
 test('keeps the design after a reload',async({page})=>{
   await openDesigner(page);
   await setNumber(page,'Deck width',22);

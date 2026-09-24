@@ -8,7 +8,8 @@ import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,MAX_SCREEN_PANELS,PRIVACY_HEIGHTS,P
 const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy'] as const satisfies readonly LightingZone[];
 import {ALLOWANCE_FINISHES,PATIO_PRODUCTS,TURF_SQFT,WALL_PRODUCTS,WATER_PRODUCTS} from './yardSettings';
 import {GARAGE_DOOR_STYLES,WINDOW_STYLES} from './houseOpenings';
-import {clampHouseOpening,DOOR_STYLES,HOUSE_CLADDINGS,ROOF_PITCH_RANGE} from './houseSettings';
+import {clampHouseOpening,DOOR_STYLES,HOUSE_CLADDINGS,ROOF_FINISHES,ROOF_PITCH_RANGE} from './houseSettings';
+import {HEX_COLOUR,HOUSE_COLOUR_FIELDS} from './houseFinishes';
 import {angledStairAllowed,angledStairFits,CORNER_CHAMFER_FT,isChamferEdgeId} from './lib/cornerChamfers';
 import {activeCustomFront,frontBounds,normalizeFront,outlineProblems} from './lib/customOutline';
 import {MAX_BOARD_COLOURS,parseColourRef} from './boardFinishes';
@@ -144,8 +145,10 @@ export function validateDesign(input:unknown):DeckData {
   }
   if(input.houseConfig!==undefined){
     const h=input.houseConfig;if(!record(h))throw new Error('Invalid house configuration.');
-    for(const [key,choices] of Object.entries({storeys:[1,2,3],roofShape:['Gable','Hip','Flat'],roofFinish:['Shingles','Metal'],cladding:HOUSE_CLADDINGS}))if(!(choices as unknown[]).includes(h[key]))throw new Error(`Unsupported house ${key}.`);
-    for(const key of ['roofColor','claddingColor','trimColor'])if(typeof h[key]!=='string'||!/^#[0-9a-fA-F]{6}$/.test(h[key] as string))throw new Error('House colours must use six-digit hex colours.');
+    for(const [key,choices] of Object.entries({storeys:[1,2,3],roofShape:['Gable','Hip','Flat'],roofFinish:ROOF_FINISHES,cladding:HOUSE_CLADDINGS}))if(!(choices as unknown[]).includes(h[key]))throw new Error(`Unsupported house ${key}.`);
+    for(const key of ['roofColor','claddingColor','trimColor'])if(typeof h[key]!=='string'||!HEX_COLOUR.test(h[key] as string))throw new Error('House colours must use six-digit hex colours.');
+    // Exterior colours (appearance only) are optional; one that is there must be a six-digit hex colour.
+    for(const key of HOUSE_COLOUR_FIELDS)if(h[key]!==undefined&&(typeof h[key]!=='string'||!HEX_COLOUR.test(h[key] as string)))throw new Error('House colours must use six-digit hex colours.');
     const house:HouseConfig={widthFt:numeric(h.widthFt,12,100,'House width'),depthFt:numeric(h.depthFt,12,100,'House depth'),storeys:h.storeys as 1|2|3,storeyHeightIn:numeric(h.storeyHeightIn,96,300,'Storey height'),roofShape:h.roofShape as HouseConfig['roofShape'],roofFinish:h.roofFinish as HouseConfig['roofFinish'],roofColor:h.roofColor as string,cladding:h.cladding as HouseConfig['cladding'],claddingColor:h.claddingColor as string,trimColor:h.trimColor as string,openings:[]};
     if(h.footprint!==undefined){
       const f=h.footprint;if(!record(f)||!Array.isArray(f.rects)||f.rects.length>MAX_HOUSE_BLOCKS)throw new Error(`A house supports up to ${MAX_HOUSE_BLOCKS} added blocks.`);
@@ -170,11 +173,13 @@ export function validateDesign(input:unknown):DeckData {
       if(o.wallId!==undefined){if(typeof o.wallId!=='string'||!/^[a-z][a-zA-Z0-9]{0,15}-(front|back|left|right)$/.test(o.wallId))throw new Error('Invalid house opening wall.');if(openingWallId({...opening,wallId:o.wallId},house)===o.wallId)opening.wallId=o.wallId;}
       // A style only applies to its own kind of opening (a garage door style on a garage door, a door style on a door).
       if(o.style!==undefined){const garage=GARAGE_DOOR_STYLES.includes(o.style as GarageDoorStyle),door=DOOR_STYLES.includes(o.style as DoorStyle),window=WINDOW_STYLES.includes(o.style as WindowStyle);if(!garage&&!door&&!window)throw new Error('Unsupported door or window style.');if(opening.type==='Garage'&&garage)opening.style=o.style as GarageDoorStyle;if(opening.type==='Door'&&door)opening.style=o.style as DoorStyle;if(opening.type==='Window'&&window)opening.style=o.style as WindowStyle;}
+      if(o.color!==undefined){if(typeof o.color!=='string'||!HEX_COLOUR.test(o.color))throw new Error('House colours must use six-digit hex colours.');opening.color=o.color;}
       return clampHouseOpening(opening,house);
     });
     if(h.floorHeightIn!==undefined)house.floorHeightIn=numeric(h.floorHeightIn,0,240,'House floor height');
     if(h.roofPitch!==undefined)house.roofPitch=numeric(h.roofPitch,ROOF_PITCH_RANGE[0],ROOF_PITCH_RANGE[1],'Roof pitch');
     if(h.ridge!==undefined){if(h.ridge!=='x'&&h.ridge!=='y')throw new Error('Unsupported roof ridge direction.');house.ridge=h.ridge;}
+    for(const key of HOUSE_COLOUR_FIELDS)if(h[key]!==undefined)house[key]=h[key] as string;
     clean.houseConfig=house;
   }
   if(input.housePlacement!==undefined){

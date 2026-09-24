@@ -1,4 +1,5 @@
-import {getHouseConfig} from './houseSettings';
+import {getHouseConfig,ORIGINAL_HOUSE_CLADDINGS} from './houseSettings';
+import {HOUSE_COLOUR_FIELDS} from './houseFinishes';
 import {DEFAULT_DECK} from './defaults';
 import {isSystemProduct} from './lightingSystem';
 import {LIGHTING_CATALOGUE} from './lightingCatalogue';
@@ -74,6 +75,8 @@ export function designFeatures(data:DeckData):string[]{
   add(house.footprint?.rects.some(b=>b.kind==='garage'),'deck_house_garage');
   add(house.footprint?.rects.some(b=>b.kind==='house'),'deck_house_block');
   add(openingSignature(data)!==DEFAULT_OPENINGS,'deck_doors_windows');
+  // Exterior finishes (appearance only): a newer cladding or roof, or any exterior colour.
+  add(!ORIGINAL_HOUSE_CLADDINGS.includes(house.cladding)||!['Shingles','Metal'].includes(house.roofFinish)||HOUSE_COLOUR_FIELDS.some(k=>house[k])||house.openings.some(o=>o.color),'deck_house_exterior');
   add(data.catalogueRailingId,'deck_catalogue_railing');
   add(data.catalogueAccessories?.length,'deck_accessory');
   add(data.pictureFrameRows>0,'deck_border_rows');

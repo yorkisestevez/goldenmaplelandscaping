@@ -45,14 +45,20 @@ export type GarageDoorStyle='Panel'|'Carriage'|'Flush'|'Glass';
 export type DoorStyle='Single'|'French'|'Sliding';
 /** Window looks. Absent = the studio's original window (glass with a centre rail). */
 export type WindowStyle='Double-hung'|'Casement'|'Picture'|'Slider'|'Awning';
-export type HouseCladding='Brick'|'Siding'|'Stone'|'Stucco'|'Board & batten'|'Vertical siding';
+/** House wall finishes, generic types rather than manufacturer products (appearance only, never priced). */
+export type HouseCladding='Brick'|'Siding'|'Stone'|'Stucco'|'Board & batten'|'Vertical siding'|'Fibre-cement lap'|'Cedar shakes'|'Ledgestone'|'Fieldstone'|'Norman brick'|'Roman brick'|'Horizontal metal';
+/** Roof finishes (appearance only). 'Shingles' (3-tab) and 'Metal' (standing seam) are the studio's originals. */
+export type RoofFinish='Shingles'|'Metal'|'Architectural shingles'|'Cedar shakes'|'Slate'|'Clay tile'|'Concrete tile';
 export interface HouseOpening {id:string;type:'Door'|'Window'|'Garage';facade:'Front'|'Back'|'Left'|'Right';offsetPct:number;bottomIn:number;widthIn:number;heightIn:number;
   /** Wall the opening sits on, '<block id>-<front|back|left|right>' (e.g. 'garage1-back'). Absent = the
    * main block's wall named by `facade`, as older designs have it. */
   wallId?:string;
   /** Appearance only, never priced: a garage door style on 'Garage' openings, a door style on 'Door'
    * openings, a window style on 'Window' openings. */
-  style?:GarageDoorStyle|DoorStyle|WindowStyle}
+  style?:GarageDoorStyle|DoorStyle|WindowStyle;
+  /** Appearance only: this opening's own colour (a door's slab, a window's frame, a garage door's face). Absent =
+   * the house's door, window or garage-door colour, else the studio's original colours. */
+  color?:string}
 /** A block attached to one wall of the main house rectangle: a bump-out, an L-wing or a garage. */
 export interface HouseBlock {id:string;kind:'house'|'garage';
   /** Main-block wall it is attached to ('Front' faces the deck). */
@@ -64,7 +70,7 @@ export interface HouseBlock {id:string;kind:'house'|'garage';
   /** Out from that wall. */
   depthFt:number;
   storeys?:1|2|3;floorHeightIn?:number;roofShape?:'Gable'|'Hip'|'Flat'}
-export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:'Shingles'|'Metal';roofColor:string;cladding:HouseCladding;claddingColor:string;trimColor:string;openings:HouseOpening[];
+export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:RoofFinish;roofColor:string;cladding:HouseCladding;claddingColor:string;trimColor:string;openings:HouseOpening[];
   /** Finished floor / door-sill height above grade. When set, the deck is checked against it. */
   floorHeightIn?:number;
   /** Blocks attached to the main rectangle. Absent or empty = a plain rectangular house. */
@@ -73,7 +79,10 @@ export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storey
   roofPitch?:number;
   /** Main gable ridge: 'y' runs front to back (gables face the deck and the street, the original look);
    * 'x' runs side to side (gables on the side walls). Appearance only. */
-  ridge?:'x'|'y'}
+  ridge?:'x'|'y';
+  /** Exterior colours (appearance only, six-digit hex). Fascia (the rake boards), soffit and gutters follow
+   * trimColor when absent; doors, windows and garage doors keep the studio's original colours when absent. */
+  fasciaColor?:string;soffitColor?:string;gutterColor?:string;doorColor?:string;windowColor?:string;garageDoorColor?:string}
 /** Where the house sits along the deck's back line. Absent = centred on the deck (the original behaviour). */
 export interface HousePlacement {anchor:'left'|'center'|'right';offsetIn:number}
 /** One side wing of a wrap-around deck: how far it reaches out from the house side wall, and how

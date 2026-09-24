@@ -21,7 +21,7 @@ import {downloadFile} from '../features/deckcraft/designer/fields';
 import {useDeckDesign} from '../features/deckcraft/designer/useDeckDesign';
 import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
 import DesignTools from '../features/deckcraft/designer/DesignTools';
-import PreviewPanel from '../features/deckcraft/designer/PreviewPanel';
+import PreviewPanel,{loadExteriorStudio} from '../features/deckcraft/designer/PreviewPanel';
 import DimensionsStep from '../features/deckcraft/designer/steps/DimensionsStep';
 import MaterialsStep,{loadBoardColourPanel,loadInlayEditor} from '../features/deckcraft/designer/steps/MaterialsStep';
 import type {BoardPaintChoice} from '../features/deckcraft/boardFinishes';
@@ -68,6 +68,7 @@ export default function DeckDesigner(){
   const [lightingSearch,setLightingSearch]=useState('');
   const [selectedHouseOpeningId,setSelectedHouseOpeningId]=useState('');
   const [houseSettingsOpen,setHouseSettingsOpen]=useState(false);
+  const [exteriorOpen,setExteriorOpen]=useState(false);
   const [mode,setMode]=useState<PreviewMode>('3d');
   const [wrapStatus,setWrapStatus]=useState('');
   const [proposal,setProposal]=useState<{image:string|null;date:string}|null>(null);
@@ -91,7 +92,7 @@ export default function DeckDesigner(){
   useEffect(()=>{trackDeck('deckcraft_step',stepLabel(step));},[step]);
   useEffect(()=>{trackDeck('deckcraft_view',`deck_view_${mode}`);},[mode]);
   // Fetch the on-demand pieces once the page has settled, so opening one is instant.
-  useEffect(()=>{const timer=setTimeout(()=>{for(const load of [loadBackyardStep,loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor])load().catch(()=>{/* Loaded again when opened. */});},4000);return()=>clearTimeout(timer);},[]);
+  useEffect(()=>{const timer=setTimeout(()=>{for(const load of [loadBackyardStep,loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio])load().catch(()=>{/* Loaded again when opened. */});},4000);return()=>clearTimeout(timer);},[]);
   const featureKey=designFeatures(data).join(' ');
   useEffect(()=>{for(const label of featureKey.split(' '))if(label)trackDeck('deckcraft_feature',label);},[featureKey]);
   const {estimate,lightingCheck,autoCounts,hasFixtures,reviewFlags,described}=useDeckEstimate(data,setData);
@@ -227,11 +228,11 @@ export default function DeckDesigner(){
     <div className="dd-intro"><p className="dd-eyebrow">YOUR SPACE. YOUR SPECIFICATIONS.</p><h1>A deck that takes shape <br/><em>with every choice.</em></h1><p>Set the dimensions. Explore real material colours. See how your choices change the design and the estimate.</p></div>
     <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}/>
     <main className="dd-workspace">
-      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} step={step} houseSettingsOpen={houseSettingsOpen} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} docked={docked} material={material} priceLabel={priceLabel} quoteRequired={quoteRequired} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard}/>
+      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} step={step} houseSettingsOpen={houseSettingsOpen} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} docked={docked} material={material} priceLabel={priceLabel} quoteRequired={quoteRequired} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={setExteriorOpen}/>
       <section className="dd-controls" aria-label="Deck configuration">
         <nav className="dd-steps" aria-label="Design steps">{STEPS.map((s,i)=><button key={s} aria-current={step===i?'step':undefined} onClick={()=>move(i)}><span>{String(i+1).padStart(2,'0')}</span>{s}</button>)}</nav>
         <div className="dd-panel" ref={panelRef} tabIndex={-1}>
-          {step===0 && <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} houseSettingsOpen={houseSettingsOpen} setHouseSettingsOpen={setHouseSettingsOpen} effectiveHouseOpeningId={effectiveHouseOpeningId} setSelectedHouseOpeningId={setSelectedHouseOpeningId}/>}
+          {step===0 && <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} houseSettingsOpen={houseSettingsOpen} setHouseSettingsOpen={setHouseSettingsOpen} effectiveHouseOpeningId={effectiveHouseOpeningId} setSelectedHouseOpeningId={setSelectedHouseOpeningId} openExterior={()=>setExteriorOpen(true)}/>}
           {step===1 && <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage}/>}
           {step===2 && <StairsStep data={data} update={update} stairEdges={stairEdges} autoCounts={autoCounts}/>}
           {step===3 && <SiteExtrasStep data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch}/>}

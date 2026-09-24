@@ -9,6 +9,9 @@ import type {AutoCounts,PreviewMode} from './constants';
 import {MaterialSwatch,ViewerBoundary,type Update} from './fields';
 
 const Viewer=lazy(()=>import('../components/viewer3d/Deck3DViewer'));
+/** The exterior studio (claddings, roofs, colours): appearance only, loaded when first opened. */
+export const loadExteriorStudio=()=>import('./ExteriorStudio');
+const ExteriorStudio=lazy(loadExteriorStudio);
 
 /**
  * Calls `onReady` once the element is within reach of the screen and the browser is idle. The 3D viewer
@@ -45,10 +48,12 @@ export interface PreviewPanelProps{
   priceLabel:string;quoteRequired:string[];
   /** Accent boards: the tool's current choice (null when it is put down) and what a click on a board does. */
   boardPaint?:BoardPaintChoice|null;setBoardPaint?:(paint:BoardPaintChoice|null)=>void;onPaintBoard?:(target:{level:number;index:number})=>void;
+  /** The exterior studio, open under the doors and windows bar. */
+  exteriorOpen:boolean;setExteriorOpen:(open:boolean)=>void;
 }
 
 /** The live deck: view modes, day and night, the contractor views, the 3D model or plan, doors and windows, finish and price. */
-export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,step,houseSettingsOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,material,priceLabel,quoteRequired,want3d,onWant3d,docked=false,boardPaint,setBoardPaint,onPaintBoard}:PreviewPanelProps){
+export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,step,houseSettingsOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,material,priceLabel,quoteRequired,want3d,onWant3d,docked=false,boardPaint,setBoardPaint,onPaintBoard,exteriorOpen,setExteriorOpen}:PreviewPanelProps){
   const canvasRef=useRef<HTMLDivElement>(null);
   const viewerPaint=useMemo(()=>boardPaint&&onPaintBoard?{scope:boardPaint.scope,onPaint:onPaintBoard}:undefined,[boardPaint,onPaintBoard]);
   useWhenNearAndIdle(canvasRef,mounted&&!want3d,onWant3d);
@@ -61,7 +66,8 @@ export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,
     {boardPaint&&setBoardPaint&&<div className="dd-paint-chip" role="status"><span>Painting: <strong>{colourName(boardPaint.colour)}</strong>{mode==='plan'||mode==='structure'||mode==='hardware'||mode==='foundation'?' · switch to the 3D view to paint':' · click a board'}</span>{data.pattern!=='Herringbone'&&<div className="dd-view-toggle" role="group" aria-label="What a click paints"><button type="button" aria-pressed={boardPaint.scope==='piece'} onClick={()=>setBoardPaint({...boardPaint,scope:'piece'})}>One board</button><button type="button" aria-pressed={boardPaint.scope==='course'} onClick={()=>setBoardPaint({...boardPaint,scope:'course'})}>Whole row</button></div>}<button type="button" className="dd-secondary" onClick={()=>setBoardPaint(null)}>Done</button></div>}
     <div className="dd-canvas" ref={canvasRef}>{mounted && want3d && mode!=='plan' && hasWebGL ? <ViewerBoundary fallback={<ConstructionPlan model={estimate.model} data={data}/>}><Suspense fallback={<ConstructionPlan model={estimate.model} data={data}/>}><Viewer deckOnly={!hasBackyardLayout(data)} yardModel={estimate.yardModel} data={data} model={estimate.model} view={mode} structure={mode==='structure'||mode==='hardware'} cutaway={mode==='foundation'} selectedHouseOpeningId={pickedHouseOpeningId||(step===0&&houseSettingsOpen?effectiveHouseOpeningId:undefined)} onSelectHouseOpening={selectHouseOpening} onMoveHouseOpening={moveHouseOpening} onContextLost={()=>setHasWebGL(false)} onMovePrivacyScreen={(id,offsetPct)=>setScreen(id,{offsetPct})} onSnapshotReady={onSnapshotReady} boardPaint={viewerPaint}/></Suspense></ViewerBoundary> : <ConstructionPlan model={estimate.model} data={data}/>}</div>
     {mounted && !hasWebGL && <p className="dd-note">Showing the plan view because 3D graphics are unavailable on this device. <button type="button" className="dd-linklike" onClick={retryWebGL}>Try the 3D view again</button></p>}
-    <HouseOpeningsBar data={data} selectedId={pickedHouseOpeningId} onSelect={selectHouseOpening} onChange={update} onEditDetails={editHouseOpening}/>
+    <HouseOpeningsBar data={data} selectedId={pickedHouseOpeningId} onSelect={selectHouseOpening} onChange={update} onEditDetails={editHouseOpening} exteriorOpen={exteriorOpen} onOpenExterior={()=>setExteriorOpen(!exteriorOpen)}/>
+    {exteriorOpen&&data.houseVisible!==false&&<Suspense fallback={<p className="dd-note" role="status">Loading the exterior finishes…</p>}><ExteriorStudio data={data} update={update} onClose={()=>setExteriorOpen(false)} selectedOpeningId={pickedHouseOpeningId||effectiveHouseOpeningId} onSelectOpening={selectHouseOpening}/></Suspense>}
     <div className="dd-finish"><MaterialSwatch file={material.colors.find(c=>c.name===data.deckingColor)?.swatch} alt={data.deckingColor}/><div><strong>{data.deckingColor}</strong><span>{material.name}</span></div><span className="dd-finish-pattern">{data.pattern}</span></div>
     <div className="dd-live-price"><span>{priceLabel} <small>CAD · before HST</small></span><strong>{dollars(estimate.subtotal)}</strong></div>
     {quoteRequired.length>0&&<div className="dd-quote-notice" role="status"><strong>Supplier quotes needed</strong><p>The amount above excludes unpriced selections and is not a complete project estimate.</p><ul>{quoteRequired.map(name=><li key={name}>{name}</li>)}</ul></div>}
