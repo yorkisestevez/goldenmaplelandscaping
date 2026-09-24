@@ -1,12 +1,11 @@
 import {Suspense,lazy} from 'react';
 import HouseEditor from '../../HouseEditor';
-import {frontFromOutline,outlineProblems,rectangleFront} from '../../lib/customOutline';
-import {unnotchedMainOutline} from '../../lib/deckGeometry';
 import {defaultLevel3} from '../../designPersistence';
 import {wrapBlockers,wrapHips,type activeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from '../../lib/wrapGeometry';
 import {activeCornerChamfers,chamferFaceFt,CORNER_CHAMFER_FT,describeChamfers} from '../../lib/cornerChamfers';
 import type {DeckData,DeckShape,HouseConfig} from '../../types';
 import {Field,NumberField,controlsFor,type Update} from '../fields';
+import {chooseShape,porchKey,setPorch,setPorchSize,setWing,setWingSize,splitLevel,wrapFix,wrapFixNames,wrapFixStatus} from '../deckShapeActions';
 
 export type StairEdge={id:string;name:string;ft:string};
 
@@ -17,35 +16,15 @@ const SHAPES:[DeckShape,string][]=[['Rectangle','Rectangle'],['L-Shape','L-Shape
 /** Step 1: the footprint, shape, levels, wrap-around and the house. */
 export default function DimensionsStep({data,update,houseConfig,wrap,wrapStatus,setWrapStatus,stairEdges,houseSettingsOpen,setHouseSettingsOpen,effectiveHouseOpeningId,setSelectedHouseOpeningId,openExterior}:{data:DeckData;update:Update;houseConfig:HouseConfig;wrap:ReturnType<typeof activeWrap>;wrapStatus:string;setWrapStatus:(status:string)=>void;stairEdges:StairEdge[];houseSettingsOpen:boolean;setHouseSettingsOpen:(open:boolean)=>void;effectiveHouseOpeningId:string;setSelectedHouseOpeningId:(id:string)=>void;openExterior?:()=>void}){
   const {number,select}=controlsFor(data,update);
-  // A custom outline starts from the deck as drawn now (angled corners become its 45° edges), or from the
-  // outline it had before; it sets the width and depth and is one level.
+  // The shape, wrap, porch and split-level changes are pure patches in deckShapeActions.ts; these apply them.
   const custom=data.shape==='Custom';
-  const chooseShape=(shape:DeckShape)=>{
-    if(shape!=='Custom'){update({shape});return;}
-    const kept=data.customFront&&!outlineProblems(data.customFront).length?data.customFront:null;
-    update({shape,customFront:kept??frontFromOutline(unnotchedMainOutline(data))??rectangleFront(data.width,data.length),levels:1});
-  };
   // Wrap-around: side wings around one or both house corners, mitred on corner-to-corner hips.
   const wrapPaused=wrapBlockers(data),attachedDeck=data.deckType==='Attached'||data.deckType==='Add-on';
-  const wrapFix=():Partial<DeckData>=>({shape:'Rectangle',hasInlay:false,...(data.pattern==='Diagonal'||data.pattern==='Herringbone'?{pattern:'Straight' as const}:{}),...(data.cornerChamfers?{cornerChamfers:undefined}:{})});
-  const wrapFixNames=()=>[data.shape!=='Rectangle'&&'a rectangle',data.hasInlay&&'no inlay',(data.pattern==='Diagonal'||data.pattern==='Herringbone')&&'straight boards',activeCornerChamfers({...data,shape:'Rectangle'})&&'square front corners'].filter(Boolean) as string[];
-  const setWing=(side:'left'|'right',on:boolean)=>{
-    const current=data.wrap??{},next={...current};
-    if(on)next[side]=current[side]??{widthFt:8,runFt:Math.min(8,houseConfig.depthFt)};else{delete next[side];delete next[side==='left'?'porchLeft':'porchRight'];}
-    const changed=on?wrapFixNames():[];
-    setWrapStatus(changed.length?`Switched to ${changed.join(', ')} so the corner can be mitred.`:'');
-    update({wrap:next.left||next.right?next:undefined,...(on?wrapFix():{})});
-  };
-  const setWingSize=(side:'left'|'right',patch:Partial<{widthFt:number;runFt:number}>)=>{const wing=data.wrap?.[side];if(wing)update({wrap:{...data.wrap,[side]:{...wing,...patch}}});};
+  const toggleWing=(side:'left'|'right',on:boolean)=>{const {patch,status}=setWing(data,houseConfig,side,on);setWrapStatus(status);update(patch);};
+  const sizeWing=(side:'left'|'right',patch:Partial<{widthFt:number;runFt:number}>)=>{const next=setWingSize(data,side,patch);if(next)update(next);};
   const wrapHipNotes=wrap?wrapHips(wrap):[];
-  const porchKey=(side:'left'|'right')=>side==='left'?'porchLeft' as const:'porchRight' as const;
-  // A porch starts 45° mitred (as deep as its wing is wide) and leaves room for the other porch.
-  const setPorch=(side:'left'|'right',on:boolean)=>{
-    const next={...data.wrap},key=porchKey(side),other=next[porchKey(side==='left'?'right':'left')];
-    if(on)next[key]=next[key]??{depthFt:Math.min(24,Math.max(4,next[side]?.widthFt??8)),runFt:Math.max(4,Math.min(12,houseConfig.widthFt-3-(other?.runFt??0)))};else delete next[key];
-    update({wrap:next});
-  };
-  const setPorchSize=(side:'left'|'right',patch:Partial<{depthFt:number;runFt:number}>)=>{const key=porchKey(side),porch=data.wrap?.[key];if(porch)update({wrap:{...data.wrap,[key]:{...porch,...patch}}});};
+  const togglePorch=(side:'left'|'right',on:boolean)=>update(setPorch(data,houseConfig,side,on));
+  const sizePorch=(side:'left'|'right',patch:Partial<{depthFt:number;runFt:number}>)=>{const next=setPorchSize(data,side,patch);if(next)update(next);};
   const hipNote=(h:{angleDeg:number;corner:'front'|'far'},want:string)=>Math.abs(h.angleDeg-45)<.5?`Mitred at 45°: the hip runs from the house corner to the outside corner.`:`Corner-to-corner hip at ${h.angleDeg.toFixed(0)}° to the ${h.corner==='front'?'back':'street-side'} wall. A true 45° mitre needs ${want}.`;
   const trimFt=(inches:number)=>(inches/12).toFixed(1).replace(/\.0$/,'');
   const wrapSection=<fieldset className="dd-wrap"><legend>Wrap around the house</legend>
@@ -53,23 +32,23 @@ export default function DimensionsStep({data,update,houseConfig,wrap,wrapStatus,
     {!attachedDeck&&<p className="dd-note">Attach the deck to the house (Attached or Add-on) to wrap it around a corner.</p>}
     {(['left','right'] as const).map(side=>{const wing=data.wrap?.[side],label=side==='left'?'Left':'Right',hip=wrapHipNotes.find(h=>h.side===side&&h.corner==='front'),farHip=wrapHipNotes.find(h=>h.side===side&&h.corner==='far'),porch=data.wrap?.[porchKey(side)],otherPorch=data.wrap?.[porchKey(side==='left'?'right':'left')];
       return <div key={side} className="dd-wrap-wing">
-        <label className="dd-check"><input type="checkbox" checked={!!wing} disabled={!attachedDeck&&!wing} onChange={e=>setWing(side,e.target.checked)}/><span>Around the {side} corner</span></label>
+        <label className="dd-check"><input type="checkbox" checked={!!wing} disabled={!attachedDeck&&!wing} onChange={e=>toggleWing(side,e.target.checked)}/><span>Around the {side} corner</span></label>
         {wing&&<><div className="dd-fields">
-          <NumberField label={`${label} wing width`} value={wing.widthFt} min={WRAP_WING_WIDTH_FT[0]} max={WRAP_WING_WIDTH_FT[1]} unit="ft" increment={0.5} hint="Out from the house side wall" onValue={widthFt=>setWingSize(side,{widthFt})}/>
-          <NumberField label={`${label} wing run along the house`} value={porch?houseConfig.depthFt:wing.runFt} min={WRAP_RUN_FT[0]} max={houseConfig.depthFt} unit="ft" increment={0.5} disabled={!!porch} hint={porch?'Runs the full house depth to reach the porch':`Back from the deck-facing wall, up to the ${houseConfig.depthFt} ft house depth`} onValue={runFt=>setWingSize(side,{runFt})}/>
+          <NumberField label={`${label} wing width`} value={wing.widthFt} min={WRAP_WING_WIDTH_FT[0]} max={WRAP_WING_WIDTH_FT[1]} unit="ft" increment={0.5} hint="Out from the house side wall" onValue={widthFt=>sizeWing(side,{widthFt})}/>
+          <NumberField label={`${label} wing run along the house`} value={porch?houseConfig.depthFt:wing.runFt} min={WRAP_RUN_FT[0]} max={houseConfig.depthFt} unit="ft" increment={0.5} disabled={!!porch} hint={porch?'Runs the full house depth to reach the porch':`Back from the deck-facing wall, up to the ${houseConfig.depthFt} ft house depth`} onValue={runFt=>sizeWing(side,{runFt})}/>
         </div>
         {hip&&<p className="dd-note" role="status">{hipNote(hip,`a ${data.length} ft wing (the deck depth)`)}</p>}
-        <label className="dd-check"><input type="checkbox" checked={!!porch} disabled={!wrap} onChange={e=>setPorch(side,e.target.checked)}/><span>Continue round the far corner as a porch<small>Along the street side of the house, with its own ledger on that wall.</small></span></label>
+        <label className="dd-check"><input type="checkbox" checked={!!porch} disabled={!wrap} onChange={e=>togglePorch(side,e.target.checked)}/><span>Continue round the far corner as a porch<small>Along the street side of the house, with its own ledger on that wall.</small></span></label>
         {porch&&<><div className="dd-fields">
-          <NumberField label={`${label} porch depth`} value={porch.depthFt} min={WRAP_PORCH_DEPTH_FT[0]} max={WRAP_PORCH_DEPTH_FT[1]} unit="ft" increment={0.5} hint="Out from the street-side wall" onValue={depthFt=>setPorchSize(side,{depthFt})}/>
-          <NumberField label={`${label} porch run along the street side`} value={porch.runFt} min={WRAP_PORCH_RUN_FT[0]} max={Math.max(WRAP_PORCH_RUN_FT[0],houseConfig.widthFt-3-(otherPorch?.runFt??0))} unit="ft" increment={0.5} hint={otherPorch?'The two porches stop at least 3 ft apart':`Up to ${houseConfig.widthFt-3} ft of the ${houseConfig.widthFt} ft house front`} onValue={runFt=>setPorchSize(side,{runFt})}/>
+          <NumberField label={`${label} porch depth`} value={porch.depthFt} min={WRAP_PORCH_DEPTH_FT[0]} max={WRAP_PORCH_DEPTH_FT[1]} unit="ft" increment={0.5} hint="Out from the street-side wall" onValue={depthFt=>sizePorch(side,{depthFt})}/>
+          <NumberField label={`${label} porch run along the street side`} value={porch.runFt} min={WRAP_PORCH_RUN_FT[0]} max={Math.max(WRAP_PORCH_RUN_FT[0],houseConfig.widthFt-3-(otherPorch?.runFt??0))} unit="ft" increment={0.5} hint={otherPorch?'The two porches stop at least 3 ft apart':`Up to ${houseConfig.widthFt-3} ft of the ${houseConfig.widthFt} ft house front`} onValue={runFt=>sizePorch(side,{runFt})}/>
         </div>
         {farHip&&<p className="dd-note" role="status">{hipNote(farHip,`a ${wing.widthFt} ft deep porch (the wing width)`)}</p>}</>}</>}
       </div>;})}
     {wrap?.left&&wrap.right&&<p className="dd-note" role="status">Deck width is set by the house: {trimFt(wrap.left.widthIn)} ft left wing + {houseConfig.widthFt} ft house + {trimFt(wrap.right.widthIn)} ft right wing = {trimFt(wrap.W)} ft.</p>}
     {(data.wrap?.porchLeft||data.wrap?.porchRight)&&<p className="dd-note">Porch wraps price labour at the two-corner wrap factor. The extra porch-wrap labour is listed for a builder quote until Golden Maple sets its rate.</p>}
     {wrapStatus&&<p className="dd-note" role="status">{wrapStatus}</p>}
-    {data.wrap&&wrapPaused.length>0&&<div className="dd-quote-notice" role="status"><strong>The wrap-around is paused</strong><ul>{wrapPaused.map(r=><li key={r}>{r}</li>)}</ul>{attachedDeck&&<button type="button" className="dd-secondary" onClick={()=>{setWrapStatus(`Switched to ${wrapFixNames().join(', ')} so the corner can be mitred.`);update(wrapFix());}}>Use a rectangle with straight boards</button>}</div>}
+    {data.wrap&&wrapPaused.length>0&&<div className="dd-quote-notice" role="status"><strong>The wrap-around is paused</strong><ul>{wrapPaused.map(r=><li key={r}>{r}</li>)}</ul>{attachedDeck&&<button type="button" className="dd-secondary" onClick={()=>{setWrapStatus(wrapFixStatus(wrapFixNames(data)));update(wrapFix(data));}}>Use a rectangle with straight boards</button>}</div>}
   </fieldset>;
   // Angled front corners: a 45° cut across either front corner, the same distance along the front and the side.
   const chamfers=activeCornerChamfers(data),wrapWanted=!!(data.wrap?.left||data.wrap?.right);
@@ -85,11 +64,9 @@ export default function DimensionsStep({data,update,houseConfig,wrap,wrapStatus,
     {chamfers&&<p className="dd-note" role="status">{describeChamfers(chamfers)}. Angled face{faces.length>1?'s':''}: {faces.join(', ')}.</p>}
     {!chamfers&&(data.cornerChamfers?.frontLeftFt||data.cornerChamfers?.frontRightFt)?<p className="dd-note" role="status">This deck is too small for angled corners, so they stay square.</p>:null}
   </fieldset>;
-  // Split level: a lower section one step down across the whole front, joined by a full-width step.
-  const splitLevel=()=>update({levels:Math.max(2,data.levels),level2Position:'Front',level2EdgeId:undefined,level2Offset:50,height2:Math.max(8,data.height-7),width2:Math.min(40,Math.max(4,data.width)),length2:Math.min(40,Math.max(6,Math.round(data.length*1.5)/2)),level2FullStep:true});
   const l3=data.levels>2?data.level3:undefined,setL3=(patch:Partial<NonNullable<DeckData['level3']>>)=>{if(l3)update({level3:{...l3,...patch}});};
   const levelsSection=<>
-    <div className="dd-summary-actions"><button type="button" className="dd-secondary" onClick={splitLevel}>Make it a split level</button></div>
+    <div className="dd-summary-actions"><button type="button" className="dd-secondary" onClick={()=>update(splitLevel(data))}>Make it a split level</button></div>
     <p className="dd-note">A split level adds a lower section one step down across the front, joined by a full-width step. You can adjust it below.</p>
     {data.levels>1&&<><h3>Second level</h3>
       <div className="dd-fields three">{number('width2','Second level width',4,40,'ft',0.5)}{number('length2','Second level depth',4,40,'ft',0.5)}{number('height2','Second level height',8,144,'in')}</div>
@@ -110,5 +87,5 @@ export default function DimensionsStep({data,update,houseConfig,wrap,wrapStatus,
       </div>
       <label className="dd-check"><input type="checkbox" checked={!!l3.fullStep} onChange={e=>setL3({fullStep:e.target.checked||undefined})}/><span>Full-width step to the third level<small>The step or stair runs the whole shared edge.</small></span></label></>}
   </>;
-  return <><p className="dd-eyebrow">01 / THE FOOTPRINT</p><h2>Start with the space.</h2><p>Width and depth describe the structural framing footprint. Picture-framed decking uses your outer-frame overhang setting beyond the finished fascia (default 1½ in). Measure height up from grade.</p><div className="dd-fields three">{wrap?.left&&wrap.right?<NumberField label="Deck width" value={data.width} min={4} max={200} unit="ft" increment={0.5} disabled hint="Set by the wrap-around" onValue={()=>{}}/>:custom?<NumberField label="Deck width" value={data.width} min={4} max={60} unit="ft" increment={0.5} disabled hint="Set by the outline" onValue={()=>{}}/>:number('width','Deck width',4,60,'ft',0.5)}{custom?<NumberField label="Deck depth" value={data.length} min={4} max={60} unit="ft" increment={0.5} disabled hint="Set by the outline" onValue={()=>{}}/>:number('length','Deck depth',4,60,'ft',0.5)}{number('height','Height above ground',8,144,'in')}</div><div className="dd-fields">{select('deckType','How the deck connects',['Attached','Freestanding','Floating','Add-on'])}<Field label="Deck shape"><select aria-label="Deck shape" value={data.shape} onChange={e=>chooseShape(e.target.value as DeckShape)}>{SHAPES.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></Field></div>{['L-Shape','Multi-corner'].includes(data.shape)&&<div className="dd-fields">{number('cutoutWidth','Corner cutout width',0,data.width*0.8,'ft',0.5)}{number('cutoutLength','Corner cutout depth',0,data.length*0.8,'ft',0.5)}</div>}{data.shape==='Multi-corner'&&<div className="dd-fields">{number('cutoutWidth2','Second cutout width',0,(data.width-data.cutoutWidth)*0.8,'ft',0.5)}{number('cutoutLength2','Second cutout depth',0,data.length*0.8,'ft',0.5)}</div>}{data.shape==='Rectangle'&&cornersSection}{custom&&<Suspense fallback={<p className="dd-note" role="status">Loading the outline editor…</p>}><OutlineEditor data={data} update={update}/></Suspense>}<div className="dd-fields"><Field label="Number of levels" hint={custom?'A custom outline is one level':undefined}><select aria-label="Number of levels" value={data.levels} disabled={custom} onChange={e=>{const levels=Number(e.target.value);update({levels,...(levels===3&&!data.level3?{level3:defaultLevel3(data)}:{})});}}>{[1,2,3].map(n=><option key={n} value={n}>{n}</option>)}</select></Field>{select('pattern','Board layout',['Straight','Diagonal','Picture Frame','Herringbone'])}</div>{wrapSection}{!custom&&levelsSection}<details className="dd-advanced" open={houseSettingsOpen} onToggle={e=>setHouseSettingsOpen(e.currentTarget.open)}><summary>House dimensions, finishes, doors &amp; windows</summary><p className="dd-note">Click a door or window in 3D to select it, then drag it along its wall. Use the controls below for exact dimensions and movement.</p><HouseEditor data={data} onChange={update} selectedId={effectiveHouseOpeningId} onSelect={setSelectedHouseOpeningId} onOpenExterior={openExterior}/></details></>;
+  return <><p className="dd-eyebrow">01 / THE FOOTPRINT</p><h2>Start with the space.</h2><p>Width and depth describe the structural framing footprint. Picture-framed decking uses your outer-frame overhang setting beyond the finished fascia (default 1½ in). Measure height up from grade.</p><div className="dd-fields three">{wrap?.left&&wrap.right?<NumberField label="Deck width" value={data.width} min={4} max={200} unit="ft" increment={0.5} disabled hint="Set by the wrap-around" onValue={()=>{}}/>:custom?<NumberField label="Deck width" value={data.width} min={4} max={60} unit="ft" increment={0.5} disabled hint="Set by the outline" onValue={()=>{}}/>:number('width','Deck width',4,60,'ft',0.5)}{custom?<NumberField label="Deck depth" value={data.length} min={4} max={60} unit="ft" increment={0.5} disabled hint="Set by the outline" onValue={()=>{}}/>:number('length','Deck depth',4,60,'ft',0.5)}{number('height','Height above ground',8,144,'in')}</div><div className="dd-fields">{select('deckType','How the deck connects',['Attached','Freestanding','Floating','Add-on'])}<Field label="Deck shape"><select aria-label="Deck shape" value={data.shape} onChange={e=>update(chooseShape(data,e.target.value as DeckShape))}>{SHAPES.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></Field></div>{['L-Shape','Multi-corner'].includes(data.shape)&&<div className="dd-fields">{number('cutoutWidth','Corner cutout width',0,data.width*0.8,'ft',0.5)}{number('cutoutLength','Corner cutout depth',0,data.length*0.8,'ft',0.5)}</div>}{data.shape==='Multi-corner'&&<div className="dd-fields">{number('cutoutWidth2','Second cutout width',0,(data.width-data.cutoutWidth)*0.8,'ft',0.5)}{number('cutoutLength2','Second cutout depth',0,data.length*0.8,'ft',0.5)}</div>}{data.shape==='Rectangle'&&cornersSection}{custom&&<Suspense fallback={<p className="dd-note" role="status">Loading the outline editor…</p>}><OutlineEditor data={data} update={update}/></Suspense>}<div className="dd-fields"><Field label="Number of levels" hint={custom?'A custom outline is one level':undefined}><select aria-label="Number of levels" value={data.levels} disabled={custom} onChange={e=>{const levels=Number(e.target.value);update({levels,...(levels===3&&!data.level3?{level3:defaultLevel3(data)}:{})});}}>{[1,2,3].map(n=><option key={n} value={n}>{n}</option>)}</select></Field>{select('pattern','Board layout',['Straight','Diagonal','Picture Frame','Herringbone'])}</div>{wrapSection}{!custom&&levelsSection}<details className="dd-advanced" open={houseSettingsOpen} onToggle={e=>setHouseSettingsOpen(e.currentTarget.open)}><summary>House dimensions, finishes, doors &amp; windows</summary><p className="dd-note">Click a door or window in 3D to select it, then drag it along its wall. Use the controls below for exact dimensions and movement.</p><HouseEditor data={data} onChange={update} selectedId={effectiveHouseOpeningId} onSelect={setSelectedHouseOpeningId} onOpenExterior={openExterior}/></details></>;
 }

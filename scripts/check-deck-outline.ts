@@ -9,11 +9,12 @@ import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcr
 import {decodeDesignLink,designLinkFromHash,encodeDesignLink} from '../src/features/deckcraft/designLink';
 import {describeDesign,shapeWords} from '../src/features/deckcraft/designFacts';
 import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
-import {getFootprint} from '../src/features/deckcraft/lib/deckGeometry';
+import {getFootprint,unnotchedMainOutline} from '../src/features/deckcraft/lib/deckGeometry';
 import {isChamferEdgeId} from '../src/features/deckcraft/lib/cornerChamfers';
 import {edgeNameOf} from '../src/features/deckcraft/lib/wrapGeometry';
 import {activeCustomFront,customLabourFactor,customOutline,customShapeWords,frontFromOutline,normalizeFront,outlineFeatures,outlineProblems,type OutlinePoint} from '../src/features/deckcraft/lib/customOutline';
 import {addStep,angleCorner,frontEdges,moveEdge,OUTLINE_PRESETS,outlinePreset,removeStep,squareCorner} from '../src/features/deckcraft/lib/outlineEdits';
+import {chooseShape} from '../src/features/deckcraft/designer/deckShapeActions';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {designerSource} from './deck-designer-source';
 
@@ -160,9 +161,12 @@ for(const [name,patch] of [['rectangle',{}],['L-shape',{shape:'L-Shape',cutoutWi
 
 // 10. The designer: the shape menu offers it, the editor loads on demand, width, depth and levels follow the outline.
 {
-  const page=designerSource(),step=read('src/features/deckcraft/designer/steps/DimensionsStep.tsx'),editor=read('src/features/deckcraft/designer/OutlineEditor.tsx');
+  const page=designerSource(),step=read('src/features/deckcraft/designer/steps/DimensionsStep.tsx'),editor=read('src/features/deckcraft/designer/OutlineEditor.tsx'),actions=read('src/features/deckcraft/designer/deckShapeActions.ts');
   ok(step.includes("['Custom','Custom outline']")&&step.includes("const OutlineEditor=lazy(()=>import('../OutlineEditor'));"),'The shape menu offers a custom outline, and its editor loads only when chosen');
-  ok(/update\(\{shape,customFront:kept\?\?frontFromOutline\(unnotchedMainOutline\(data\)\)\?\?rectangleFront\(data\.width,data\.length\),levels:1\}\)/.test(step),'Choosing it starts from the deck as drawn (or the outline it had), one level');
+  ok(/return \{shape,customFront:kept\?\?frontFromOutline\(unnotchedMainOutline\(data\)\)\?\?rectangleFront\(data\.width,data\.length\),levels:1\};/.test(actions)&&step.includes('update(chooseShape(data,e.target.value as DeckShape))'),'Choosing it starts from the deck as drawn (or the outline it had), one level');
+  const drawn=deckReleaseData({...base(),levels:2}),picked=chooseShape(drawn,'Custom'),kept=chooseShape({...drawn,customFront:T},'Custom');
+  ok(picked.levels===1&&JSON.stringify(picked.customFront)===JSON.stringify(frontFromOutline(unnotchedMainOutline(drawn)))&&JSON.stringify(kept.customFront)===JSON.stringify(T),'The shape action starts from the deck as drawn, or keeps a clean outline');
+  ok(JSON.stringify(chooseShape(drawn,'L-Shape'))==='{"shape":"L-Shape"}','Any other shape changes only the shape');
   ok(step.includes('hint="Set by the outline"')&&step.includes("disabled={custom}")&&step.includes('{!custom&&levelsSection}'),'Width, depth and levels follow the outline');
   ok(/const onKey=\(i:number\)=>\(e:KeyboardEvent\)=>\{/.test(editor)&&editor.includes('ArrowUp:-step,ArrowDown:step')&&editor.includes('role="button" tabIndex={0}'),'Every edge can be selected and moved from the keyboard');
   ok(page.includes("(data.shape==='Custom'&&!isChamferEdgeId(e.id))"),'The stair picker offers every exposed edge of an outline');
