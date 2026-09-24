@@ -15,7 +15,7 @@ import {getHouseContact} from '../features/deckcraft/houseContact';
 import {dollars} from '../features/deckcraft/designFacts';
 import {activeWrap,edgeNameOf} from '../features/deckcraft/lib/wrapGeometry';
 import {angledStairAllowed,angledStairFits,isChamferEdgeId} from '../features/deckcraft/lib/cornerChamfers';
-import type {PreviewMode} from '../features/deckcraft/designer/constants';
+import {CAMERA_MODES,type PreviewMode} from '../features/deckcraft/designer/constants';
 import PhoneDeckBar from '../features/deckcraft/designer/PhoneDeckBar';
 import PriceLedger,{ChangeAnnouncer} from '../features/deckcraft/designer/PriceLedger';
 import {priceLedger} from '../features/deckcraft/designer/priceLedgerModel';
@@ -24,7 +24,7 @@ import {downloadFile} from '../features/deckcraft/designer/fields';
 import {useDeckDesign} from '../features/deckcraft/designer/useDeckDesign';
 import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
 import DesignTools from '../features/deckcraft/designer/DesignTools';
-import PreviewPanel,{loadExteriorStudio} from '../features/deckcraft/designer/PreviewPanel';
+import PreviewPanel,{loadExteriorStudio,loadViewer} from '../features/deckcraft/designer/PreviewPanel';
 import SectionList from '../features/deckcraft/designer/SectionList';
 import {SECTIONS,SECTION_BY_ID,loadBackyardStep,loadBoardColourPanel,loadDeckFinishesPanel,loadDimensionsStep,loadEstimateStep,loadHouseSection,loadInlayEditor,loadMaterialsStep,loadSiteExtrasStep,loadSkirtingEditor,loadStairsStep,sectionsOfPatch,type SectionId} from '../features/deckcraft/designer/sections';
 import type {BoardPaintChoice} from '../features/deckcraft/boardFinishes';
@@ -98,18 +98,23 @@ export default function DeckDesigner(){
   const [lightingSearch,setLightingSearch]=useState('');
   const [selectedHouseOpeningId,setSelectedHouseOpeningId]=useState('');
   const [exteriorOpen,setExteriorOpen]=useState(false);
-  const [mode,setMode]=useState<PreviewMode>('3d');
+  // The drawing opens on the site plan: the customer sizes the deck against the house first. 3D is a sheet of its own.
+  const [mode,setMode]=useState<PreviewMode>('plan');
+  // Opening the exterior studio shows the 3D view (looks never show on the plan).
+  const openExterior=useCallback((open:boolean)=>{setExteriorOpen(open);if(open)setMode(m=>CAMERA_MODES.includes(m)?m:'3d');},[]);
   const [wrapStatus,setWrapStatus]=useState('');
   const [proposal,setProposal]=useState<{image:string|null;date:string}|null>(null);
   const [preparing,setPreparing]=useState(false);
   const [sendOpen,setSendOpen]=useState(false);
   const [pdfBusy,setPdfBusy]=useState(false);
-  // The 3D viewer loads once its area is near the screen and the page is idle, or when a snapshot needs it.
-  const [want3d,setWant3d]=useState(false);
-  const onWant3d=useCallback(()=>setWant3d(true),[]);
-  // Phones: pinning the deck preview while editing is the visitor's choice, and it loads the 3D view.
+  // Whether a 3D view has been shown yet: the 3D viewer loads only when one is (or for a snapshot), so a snapshot waits
+  // longer for a viewer that has never loaded.
+  const shown3d=useRef(false);
+  useEffect(()=>{if(mode!=='plan'&&mode!=='drawing')shown3d.current=true;},[mode]);
+  // Phones: pinning the drawing while editing is the visitor's choice. It pins the sheet on screen (the plan, unless the
+  // 3D sheet is showing), so it never loads the 3D view on its own.
   const [docked,setDocked]=useState(false);
-  const toggleDock=()=>{const next=!docked;setDocked(next);if(next){setWant3d(true);trackDeck('deckcraft_view','deck_view_docked');}};
+  const toggleDock=()=>{const next=!docked;setDocked(next);if(next)trackDeck('deckcraft_view','deck_view_docked');};
   const snapshot=useRef<(()=>string|null)|null>(null);
   const onSnapshotReady=useCallback((capture:(()=>string|null)|null)=>{snapshot.current=capture;},[]);
   const closeProposal=useCallback(()=>setProposal(null),[]);
@@ -119,10 +124,12 @@ export default function DeckDesigner(){
   useEffect(()=>{trackDeck('deckcraft_step',stepLabel(0));},[]);
   useEffect(()=>{trackDeck('deckcraft_view',`deck_view_${mode}`);},[mode]);
   // Fetch the section bodies and the on-demand panels once the page has settled, so opening one is instant; not when
-  // the visitor has asked the browser to save data.
+  // the visitor has asked the browser to save data. A desktop also fetches the 3D viewer then (without drawing it); a
+  // phone never downloads three.js until a 3D view is chosen.
   useEffect(()=>{
     if((navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData)return;
-    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel])load().catch(()=>{/* Loaded again when opened. */});},4000);
+    const desktopOnly=window.matchMedia?.('(min-width: 761px) and (pointer: fine)').matches?[loadViewer]:[];
+    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel,...desktopOnly])load().catch(()=>{/* Loaded again when opened. */});},4000);
     return()=>clearTimeout(timer);
   },[]);
   /** Opens a section (analytics: its old wizard step, and the section, once per visit). On a phone it closes the others. */
@@ -151,7 +158,7 @@ export default function DeckDesigner(){
   // Accent boards: the tool's colour and scope are page state (never saved). Picking a colour shows the 3D deck;
   // closing Boards & finish puts the tool down.
   const [boardPaint,setBoardPaintState]=useState<BoardPaintChoice|null>(null),[paintMessage,setPaintMessage]=useState('');
-  const setBoardPaint=useCallback((next:BoardPaintChoice|null)=>{setBoardPaintState(next);setPaintMessage('');if(next){setWant3d(true);setMode(m=>m==='3d'||m==='overview'||m==='front'||m==='top'?m:'3d');}},[]);
+  const setBoardPaint=useCallback((next:BoardPaintChoice|null)=>{setBoardPaintState(next);setPaintMessage('');if(next)setMode(m=>CAMERA_MODES.includes(m)?m:'3d');},[]);
   useEffect(()=>{if(!open.has('boards'))setBoardPaintState(null);},[open]);
   // The painting action comes with the accent-board panel (loaded with Boards & finish), so it is not in the page's first load.
   const painter=useRef<typeof PaintBoard|null>(null);
@@ -198,16 +205,16 @@ export default function DeckDesigner(){
       downloadFile(body,'text/plain','golden-maple-deck-summary.txt');setSaved(true);setDesignError('');trackDeck('deckcraft_output','deck_summary');
     }catch{setDesignError('The summary could not be generated on this device. Please try again, or use “Send my design”.');}
   }
-  // The 3D picture for the proposal and the PDF: contractor and plan modes switch to 3D for the snapshot, then back.
+  // The 3D picture for the proposal and the PDF: the plans and the contractor views switch to 3D for the snapshot, then back.
   async function captureSnapshot():Promise<string|null>{
     // The snapshot shows the house without a selection outline.
     if(pickedHouseOpeningId){setSelectedHouseOpeningId('');await new Promise(r=>setTimeout(r,250));}
-    const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms)),previous=mode,customerView=['3d','overview','front','top'].includes(mode);
+    const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms)),previous=mode,customerView=CAMERA_MODES.includes(mode);
     let image:string|null=null;
     try{
       if(hasWebGL){
-        // A viewer that has not loaded yet (a phone that never scrolled to it) gets longer to arrive.
-        const loading=!want3d;if(loading)setWant3d(true);
+        // A viewer that has not loaded yet (no 3D view shown so far) gets longer to arrive.
+        const loading=!shown3d.current;
         if(!customerView){setMode('3d');await wait(900);}
         for(let i=0;i<(loading?100:50)&&!snapshot.current;i++)await wait(100);
         if(!customerView)await wait(600);
@@ -278,7 +285,7 @@ export default function DeckDesigner(){
   function saveJSON(){try{downloadFile(serializeDesign(data),'application/json','golden-maple-deck-design.json');trackDeck('deckcraft_output','deck_json_save');setDesignStatus('Design JSON saved. Import this file to continue on another device.');setDesignError('');}catch{setDesignError('Saving the design file failed on this device. Use “Download summary” for a plain-text copy instead.');}}
   // Each open section's body, with the page state it needs (the list wraps it in Suspense while its chunk loads).
   const renderSection=(id:SectionId)=>{switch(id){
-    case 'house':return <HouseSection data={data} update={update} selectedOpeningId={effectiveHouseOpeningId} onSelectOpening={setSelectedHouseOpeningId} openExterior={()=>setExteriorOpen(true)}/>;
+    case 'house':return <HouseSection data={data} update={update} selectedOpeningId={effectiveHouseOpeningId} onSelectOpening={setSelectedHouseOpeningId} openExterior={()=>openExterior(true)}/>;
     case 'deck':return <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges}/>;
     case 'boards':return <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage}/>;
     case 'stairs':return <StairsStep data={data} update={update} stairEdges={stairEdges}/>;
@@ -290,10 +297,10 @@ export default function DeckDesigner(){
   return <div className="deck-designer">
     <SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>
     <header className="dd-header"><Link to="/cost-estimator" className="dd-back">← All project types</Link><Link to="/" className="dd-wordmark">Golden Maple<span>DECK STUDIO</span></Link><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
-    <div className="dd-title"><h1>Draw your deck on your house.</h1><p>Size it against your house, pick every finish, and see an itemized price as you go.</p></div>
+    <div className="dd-title"><h1>Draw your deck on your house.</h1><p>Drag the deck to size on the plan of your house, pick every finish, and see an itemized price as you go.</p></div>
     <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}/>
     <main className="dd-workspace">
-      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={setExteriorOpen}/>
+      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} onOpenDeck={()=>openSection('deck',true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior}/>
       <section className="dd-controls" aria-label="Deck configuration">
         <SectionList data={data} ledger={schedule} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection}/>
       </section>

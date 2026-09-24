@@ -18,11 +18,13 @@ import type {DeckData} from './types';
  * Steps, sections, features and views count once per visit; outputs, links and sends count every time.
  * Since the sections replaced the numbered wizard (R1), a step label means "opened a section of that old step"
  * (the page load still counts the first); `deckcraft_section` counts each section opened (`deck_section_<id>`)
- * and first changed (`deck_changed_<id>`).
+ * and first changed (`deck_changed_<id>`). `deckcraft_plan` (R4) counts the site plan used: a handle dragged or moved
+ * from the keyboard (`deck_plan_drag`), a figure typed (`deck_plan_typed`) and a shape shortcut (`deck_plan_shortcut`).
+ * Since R4 the page opens on the site plan, so `deck_view_plan` fires on load; `deck_view_drawing` is the 2D framing plan.
  */
-export type DeckEvent='deckcraft_step'|'deckcraft_section'|'deckcraft_feature'|'deckcraft_view'|'deckcraft_output'|'deckcraft_link'|'deckcraft_send';
+export type DeckEvent='deckcraft_step'|'deckcraft_section'|'deckcraft_plan'|'deckcraft_feature'|'deckcraft_view'|'deckcraft_output'|'deckcraft_link'|'deckcraft_send';
 export const DECK_LABEL=/^deck_[a-z0-9_]{1,36}$/;
-const ONCE_PER_VISIT:ReadonlySet<DeckEvent>=new Set(['deckcraft_step','deckcraft_section','deckcraft_feature','deckcraft_view']);
+const ONCE_PER_VISIT:ReadonlySet<DeckEvent>=new Set(['deckcraft_step','deckcraft_section','deckcraft_plan','deckcraft_feature','deckcraft_view']);
 const SESSION_KEY='gm_deckcraft_events';
 
 type Sink=(event:DeckEvent,label:string)=>void;

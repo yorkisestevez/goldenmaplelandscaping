@@ -8,7 +8,8 @@ import {gzipSync} from 'node:zlib';
  * - The 3D viewer, the PDF engine and jsPDF's optional helpers, every section body (House, Deck shape & size, Boards &
  *   finish, Stairs & railings, the lighting/extras/site body, Backyard, Proposal & files), the send and proposal
  *   dialogs, the custom outline editor, the accent-board panel, the inlay editor, the exterior studio, the skirting
- *   editor, the deck-part finishes panel and the DXF/OBJ exports are never part of the route's initial load: they are fetched only when needed.
+ *   editor, the deck-part finishes panel, the site plan's editor (its handles, typed figures and shape shortcuts) and the
+ *   DXF/OBJ exports are never part of the route's initial load: they are fetched only when needed.
  * - The lazy chunks themselves do not quietly grow.
  * Budgets were set on 2026-09-23 at the measured size plus about 15% headroom. The route's was raised from 170 to
  * 185 KB the same day, with the owner's approval, for the Finishes track (accent boards, inlays, exterior finishes
@@ -38,9 +39,10 @@ const css=(route.css??[]).filter(f=>!sharedCss.has(f)).map(f=>f.replace(/^\/asse
 const cssKB=css.reduce((n,f)=>n+gz(f),0);
 ok(css.length>0,'The deck designer route has a stylesheet of its own');
 ok(cssKB<=BUDGET_KB.routeCss,`Deck designer route CSS is ${cssKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.routeCss} KB): ${css.join(', ')}`);
-for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
-// Each section body is a chunk of its own (a body merged into the route would pass the test above unseen).
-for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep'])ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
+for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
+// Each section body, and the site plan's editor, is a chunk of its own (one merged into the route would pass the test
+// above unseen).
+for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor'])ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
 const viewer=files.find(f=>/^Deck3DViewer-.*\.js$/.test(f)),pdf=files.find(f=>/^jspdf.*\.js$/.test(f));
 ok(viewer&&gz(viewer)<=BUDGET_KB.viewer,`3D viewer chunk is ${viewer?gz(viewer).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.viewer} KB)`);
 ok(pdf&&gz(pdf)<=BUDGET_KB.pdf,`PDF engine chunk is ${pdf?gz(pdf).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.pdf} KB)`);

@@ -7,5 +7,12 @@ import type {LightingZone} from '../types';
 export const STEPS=['Dimensions','Materials','Stairs & railings','Site & extras','Backyard','Your estimate'];
 export const LIGHTING_ZONES:readonly [LightingZone,string][]=[['deck','Deck / recessed'],['posts','Railing posts'],['stairs','Stairs'],['privacy','Privacy screens'],['landscape','Landscape'],['house','House']];
 export const allowedLightingZones=(geometry:string):LightingZone[]=>geometry==='recessed'?['deck','stairs','posts','landscape']:geometry==='wall'?['deck','stairs','posts','privacy','house']:geometry==='undercap'?['deck','stairs','posts','privacy']:geometry==='bollard'||geometry==='spot'?['landscape']:['house'];
-export type PreviewMode='3d'|'overview'|'plan'|'structure'|'foundation'|'hardware'|'front'|'top';
+/**
+ * What the drawing shows. The Plan sheet is 'plan' (the site plan). The 3D sheet is a camera: '3d' (the corner view),
+ * 'overview', 'front' or 'top'. The Framing sheet is 'drawing' (the 2D framing plan) or a 3D contractor view:
+ * 'structure', 'hardware' or 'foundation'.
+ */
+export type PreviewMode='3d'|'overview'|'plan'|'drawing'|'structure'|'foundation'|'hardware'|'front'|'top';
+export const CAMERA_MODES:readonly PreviewMode[]=['3d','overview','front','top'];
+export const FRAMING_MODES:readonly PreviewMode[]=['drawing','structure','hardware','foundation'];
 export type AutoCounts={posts:number;stairs:number;privacy:number};

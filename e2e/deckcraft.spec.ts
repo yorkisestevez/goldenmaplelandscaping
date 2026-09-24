@@ -57,11 +57,18 @@ const ZERO=/\$0(?![\d.,])/;
 const size=(page:Page)=>preview(page).getByRole('heading',{level:2});
 /** The design summary in the estimate. */
 const summary=(page:Page)=>page.locator('.dd-summary');
-/** The drawing panel; the drawing area in it (the plan, then the 3D view once it loads); the plan; the 3D canvas. */
+/** The drawing panel; the drawing area in it; the plan on screen (the site plan, or the Framing sheet's plan); the 3D canvas. */
 const preview=(page:Page)=>page.locator('#deck-live-preview');
 const drawing=(page:Page)=>page.locator('.dd-canvas');
-const plan=(page:Page)=>drawing(page).locator('svg[aria-label="Deck construction plan from the shared model"]');
+const plan=(page:Page)=>drawing(page).locator('svg[aria-label="Site plan: the deck against the house"],svg[aria-label="Deck construction plan from the shared model"]');
 const viewer3d=(page:Page)=>drawing(page).locator('canvas');
+/** The site plan's handles (sliders, by name), a drag's ghost outline, its shape shortcuts and its status line. */
+const planHandle=(page:Page,name:string)=>page.getByRole('slider',{name,exact:true});
+const ghost=(page:Page)=>drawing(page).locator('.dd-plan-ghost');
+const shortcuts=(page:Page)=>page.getByRole('group',{name:'Shape shortcuts'});
+const planStatus=(page:Page)=>preview(page).locator('.dd-plan-status');
+/** Every request for the 3D viewer's chunk (three.js), from now on. */
+const viewerRequests=(page:Page)=>{const urls:string[]=[];page.on('request',r=>{if(/Deck3DViewer-/.test(r.url()))urls.push(r.url());});return urls;};
 /** The accent-board paint tool's chip over the drawing. */
 const paintChip=(page:Page)=>page.locator('.dd-paint-chip');
 /** The save, import, share, undo, redo and start-over tools. */
@@ -106,16 +113,20 @@ async function sectionReady(page:Page,name:Section){
   if(name==='Boards & finish')for(const panel of ['Accent boards','Inlays','Deck-part finishes'])await expect(page.getByRole('region',{name:panel,exact:true})).toBeVisible();
   if(name==='Privacy, skirting & extras')await expect(page.getByRole('region',{name:'Skirting under the deck'})).toBeVisible();
 }
-/** The advanced contractor view (framing, hardware and below-ground views, and the modelled quantities), opened. */
-async function contractorView(page:Page){
-  await expand(preview(page),'Advanced contractor view');
-  return preview(page).locator('details',{has:page.locator('summary',{hasText:'Advanced contractor view'})});
-}
-/** Shows the drawing as the plan, the 3D view (the drawing's sheet tabs) or the framing. */
+/** Shows one of the drawing's sheets: the site plan, the 3D view or the framing. */
 async function viewTab(page:Page,name:ViewTab){
-  if(name==='Framing'){await (await contractorView(page)).getByRole('group',{name:'Contractor preview modes'}).getByRole('button',{name:'Framing',exact:true}).click();return;}
   await page.getByRole('tab',{name,exact:true}).click();
   await expect(page.getByRole('tab',{name,exact:true})).toHaveAttribute('aria-selected','true');
+}
+/** The Framing sheet (the 2D framing plan, the 3D framing, hardware and below-ground views, and the modelled quantities). */
+async function contractorView(page:Page){
+  await viewTab(page,'Framing');
+  return preview(page).getByRole('tabpanel');
+}
+/** The Framing sheet's 2D plan, the contractor plan the PDF prints. */
+async function framingPlan(page:Page){
+  await (await contractorView(page)).getByRole('group',{name:'Contractor preview modes'}).getByRole('button',{name:'Plan',exact:true}).click();
+  return plan(page);
 }
 /** The proposal's contractor files (the DXF and OBJ exports), opened. */
 async function contractorFiles(page:Page){
@@ -150,6 +161,12 @@ async function setNumber(page:Page,label:string,value:number){
 test('reaches every feature of the designer',async({page})=>{
   const problems=await openDesigner(page);
   const reach=(feature:string,control:Locator)=>expect(control,`${feature} can be reached`).toBeVisible();
+  await test.step('Site plan: handles, typed figures and shape shortcuts',async()=>{
+    await reach('The site plan',plan(page));
+    for(const name of ['Deck depth, front edge','Deck width, right end','Deck width, left end','Deck position along the house'])await reach(`Plan handle: ${name}`,planHandle(page,name));
+    await reach('Typing the width on the plan',drawing(page).getByRole('button',{name:'Deck width 16 ft: type a new width'}));
+    for(const name of ['Rectangle','L-shape','Multi-corner','Curved','Wrap left','Wrap right','Wrap both','Split level','Draw my own'])await reach(`Shape shortcut: ${name}`,shortcuts(page).getByRole('button',{name,exact:true}));
+  });
   await test.step('House editor',async()=>{
     await openSection(page,'House');
     await reach('House size',page.getByLabel('House width',{exact:true}));
@@ -247,10 +264,11 @@ test('reaches every feature of the designer',async({page})=>{
     await expand(tools,'Start over');
     await reach('Start over',tools.getByRole('button',{name:'Start a new design'}));
   });
-  await test.step('Advanced contractor view',async()=>{
+  await test.step('Framing sheet: the 2D framing plan, the 3D contractor views and the quantities',async()=>{
     const view=await contractorView(page);
-    for(const name of ['Framing','Hardware','Below ground'])await reach(`Contractor view: ${name}`,view.getByRole('group',{name:'Contractor preview modes'}).getByRole('button',{name,exact:true}));
-    await viewTab(page,'Framing');
+    for(const name of ['Plan','Framing','Hardware','Below ground'])await reach(`Contractor view: ${name}`,view.getByRole('group',{name:'Contractor preview modes'}).getByRole('button',{name,exact:true}));
+    await reach('Modelled quantities',view.getByLabel('Modeled quantities'));
+    await reach('The framing plan',await framingPlan(page));
     await viewTab(page,'Plan');
     await reach('The plan drawing',plan(page));
   });
@@ -559,9 +577,12 @@ test('adds a framed inlay, fits it to the deck, and shows it and its framing on 
   await expect(inlays.getByRole('status')).toContainText('Not built: It reaches past the deck’s field');
   await inlays.getByRole('button',{name:'Fit to deck'}).click();
   await expect(inlays.getByRole('status')).toContainText('Built:');
+  await expect(await framingPlan(page)).toContainText('Inlay 1');
+  await expect(plan(page)).toContainText('Amber: inlay blocking');
+  // The site plan shows the inlay but none of the framing under it.
   await viewTab(page,'Plan');
   await expect(plan(page)).toContainText('Inlay 1');
-  await expect(plan(page)).toContainText('Amber: inlay blocking');
+  await expect(plan(page)).not.toContainText('Amber: inlay blocking');
   await openSection(page,'Proposal & files');
   await expect(summary(page)).toContainText(/Inlays: a [\d.]+ × [\d.]+ ft framed rectangle with a herringbone inside/);
   expect(problems).toEqual([]);
@@ -580,8 +601,7 @@ test('adds a band and a compass medallion, and lists the medallion labour for a 
   await expect(inlays.getByRole('status').first()).toContainText('with no cutting');
   await inlays.getByRole('button',{name:'Add a medallion'}).click();
   await expect(inlays.getByRole('status').nth(1)).toContainText('on solid blocking');
-  await viewTab(page,'Plan');
-  await expect(plan(page)).toContainText('Inlay 2');
+  await expect(await framingPlan(page)).toContainText('Inlay 2');
   await openSection(page,'Proposal & files');
   await expect(summary(page)).toContainText(/Inlays: a band one board wide across the deck; a [\d.]+ ft compass medallion in eight wedges/);
   // The breakdown shows the labour as needing a quote; the list of quotes names the medallion's.
@@ -708,6 +728,158 @@ test('@phone opens the price schedule from the price bar and gives focus back wh
   await expect(drawer).toHaveCount(0);
   await expect(sectionButton(page,'Proposal & files')).toHaveAttribute('aria-expanded','true');
   await expect(fullList(page)).toContainText('Priced subtotal');
+  expect(problems).toEqual([]);
+});
+
+test('drags the deck’s front edge on the plan: a ghost while dragging, then one change to the size and price and one undo step',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  const handle=planHandle(page,'Deck depth, front edge');
+  await expect(handle).toHaveAttribute('aria-valuenow','12');
+  const box=(await handle.boundingBox())!,x=box.x+box.width/2,y=box.y+box.height/2;
+  await page.mouse.move(x,y);
+  await page.mouse.down();
+  await page.mouse.move(x,y+25,{steps:4});
+  await page.waitForTimeout(700);// longer than undo's grouping, so a change made mid-drag would be a step of its own
+  await page.mouse.move(x,y+50,{steps:4});
+  // Mid-drag: a ghost with the new figures; the design, its size heading and its price have not changed.
+  await expect(ghost(page)).toHaveCount(1);
+  await expect(handle).toHaveAttribute('aria-valuetext',/^16 × 1[3-9](\.5)? ft · \d+ sq ft$/);
+  await expect(size(page)).toContainText('16 × 12 ft');
+  await expect(price(page)).toHaveText(before??'');
+  await expect(changes(page)).toHaveCount(0);
+  await page.mouse.up();
+  await expect(ghost(page)).toHaveCount(0);
+  const depth=Number(await handle.getAttribute('aria-valuenow'));
+  expect(depth).toBeGreaterThan(12);
+  await expect(size(page)).toContainText(`16 × ${depth} ft`);
+  await expect(price(page)).not.toHaveText(before??'');
+  await expect(changes(page)).toHaveCount(1);
+  // One undo takes the whole drag back, and there is nothing more to undo.
+  const undo=fileTools(page).getByRole('button',{name:'Undo'});
+  await undo.click();
+  await expect(size(page)).toContainText('16 × 12 ft');
+  await expect(price(page)).toHaveText(before??'');
+  await expect(undo).toBeDisabled();
+  expect(problems).toEqual([]);
+});
+
+test('moves the deck’s depth with the arrow keys on its handle, as the Deck section’s field sees it',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  const handle=planHandle(page,'Deck depth, front edge');
+  await handle.focus();
+  await page.keyboard.press('ArrowUp');
+  await expect(handle).toHaveAttribute('aria-valuenow','12.5');
+  await expect(handle).toHaveAttribute('aria-valuetext','12.5 ft deep');
+  await expect(size(page)).toContainText('16 × 12.5 ft');
+  await expect(price(page)).not.toHaveText(before??'');
+  await page.keyboard.press('Shift+ArrowUp');
+  await expect(handle).toHaveAttribute('aria-valuenow','13.5');
+  await page.keyboard.press('ArrowDown');
+  await expect(handle).toHaveAttribute('aria-valuenow','13');
+  await page.keyboard.press('End');
+  await expect(handle).toHaveAttribute('aria-valuenow','60');
+  await page.keyboard.press('Home');
+  await expect(handle).toHaveAttribute('aria-valuenow','4');
+  await expect(size(page)).toContainText('16 × 4 ft');
+  await expect(handle).toBeFocused();
+  await openSection(page,'Deck shape & size');
+  await expect(page.getByLabel('Deck depth',{exact:true})).toHaveValue('4');
+  expect(problems).toEqual([]);
+});
+
+test('types the deck’s width and depth on the plan, clamped as the fields are',async({page})=>{
+  const problems=await openDesigner(page);
+  const width=(ft:string)=>drawing(page).getByRole('button',{name:`Deck width ${ft} ft: type a new width`});
+  await width('16').click();
+  const box=page.getByLabel('Type the deck width in feet',{exact:true});
+  await expect(box).toBeFocused();
+  await box.fill('70');
+  await box.press('Enter');
+  await expect(size(page)).toContainText('60 × 12 ft');
+  await expect(width('60')).toBeFocused();
+  // Escape leaves the width as it was.
+  await width('60').click();
+  await box.fill('20');
+  await box.press('Escape');
+  await expect(box).toHaveCount(0);
+  await expect(size(page)).toContainText('60 × 12 ft');
+  await width('60').click();
+  await box.fill('18.5');
+  await box.press('Enter');
+  await expect(size(page)).toContainText('18.5 × 12 ft');
+  await drawing(page).getByRole('button',{name:'Deck depth 12 ft: type a new depth'}).click();
+  await page.getByLabel('Type the deck depth in feet',{exact:true}).fill('14');
+  await page.getByLabel('Type the deck depth in feet',{exact:true}).press('Enter');
+  await expect(size(page)).toContainText('18.5 × 14 ft');
+  await openSection(page,'Deck shape & size');
+  await expect(page.getByLabel('Deck width',{exact:true})).toHaveValue('18.5');
+  expect(problems).toEqual([]);
+});
+
+test('changes the shape from the shortcuts on the plan, and says what a wrap-around fixed',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  await expect(shortcuts(page).getByRole('button',{name:'Rectangle',exact:true})).toHaveAttribute('aria-pressed','true');
+  await shortcuts(page).getByRole('button',{name:'L-shape',exact:true}).click();
+  await expect(shortcuts(page).getByRole('button',{name:'L-shape',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(planStatus(page)).toHaveText('Now an L-shape. Drag the gold cut-out handles to size the corner.');
+  await expect(price(page)).not.toHaveText(before??'');
+  // The cut-out has handles of its own.
+  const cut=planHandle(page,'Corner cut-out width, front right');
+  await expect(cut).toHaveAttribute('aria-valuenow','8');
+  await cut.focus();
+  await page.keyboard.press('ArrowUp');
+  await expect(cut).toHaveAttribute('aria-valuenow','8.5');
+  // A wrap-around on diagonal boards: the same fix as the Deck section, named in the drawing's status line.
+  await openSection(page,'Boards & finish');
+  await page.getByLabel('Board layout',{exact:true}).selectOption('Diagonal');
+  await shortcuts(page).getByRole('button',{name:'Wrap left',exact:true}).click();
+  await expect(planStatus(page)).toHaveText('Wrapped round the left house corner. Switched to a rectangle, straight boards so the corner can be mitred.');
+  await expect(shortcuts(page).getByRole('button',{name:'Wrap left',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(shortcuts(page).getByRole('button',{name:'Rectangle',exact:true})).toHaveAttribute('aria-pressed','true');
+  await openSection(page,'Deck shape & size');
+  await expect(page.getByRole('checkbox',{name:'Around the left corner'})).toBeChecked();
+  await expect(page.getByLabel('Deck shape',{exact:true})).toHaveValue('Rectangle');
+  await openSection(page,'Proposal & files');
+  await expect(summary(page)).toContainText('Wraps the left house corner');
+  expect(problems).toEqual([]);
+});
+
+test('@phone drags a plan handle by touch, and a swipe over the plan still scrolls the page',async({page})=>{
+  const problems=await openDesigner(page);
+  const handle=planHandle(page,'Deck width, right end');
+  await expect(handle).toHaveAttribute('aria-valuenow','16');
+  const cdp=await page.context().newCDPSession(page);
+  const touch=(type:'touchStart'|'touchMove'|'touchEnd',x:number,y:number)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'?[]:[{x,y}]});
+  // The finger rests before it lifts, so a swipe ends without a fling that would keep the page moving afterwards.
+  const swipe=async(x:number,y:number,dx:number,dy:number)=>{
+    await touch('touchStart',x,y);
+    for(let i=1;i<=10;i++){await touch('touchMove',x+dx*i/10,y+dy*i/10);await page.waitForTimeout(20);}
+    await page.waitForTimeout(200);
+    await touch('touchEnd',x+dx,y+dy);
+  };
+  const pageY=()=>page.evaluate(()=>window.scrollY);
+  const settled=async()=>{let last=-1;await expect.poll(async()=>{const now=await pageY(),same=now===last;last=now;return same;},{intervals:[200]}).toBe(true);return last;};
+  // A swipe up over the drawing, away from the handles, scrolls the page and leaves the design alone.
+  const area=(await drawing(page).boundingBox())!,top=await pageY();
+  await swipe(area.x+24,area.y+area.height-24,0,-220);
+  await expect.poll(pageY).toBeGreaterThan(top+60);
+  await expect(size(page)).toContainText('16 × 12 ft');
+  // Dragging the right end by touch widens the deck, once, and does not scroll the page.
+  await settled();
+  await page.evaluate(()=>scrollTo(0,0));
+  expect(await settled()).toBe(0);
+  const b=(await handle.boundingBox())!;
+  await swipe(b.x+b.width/2,b.y+b.height/2,70,0);
+  await expect.poll(async()=>Number(await handle.getAttribute('aria-valuenow'))).toBeGreaterThan(16);
+  expect(await settled()).toBe(0);
+  const width=Number(await handle.getAttribute('aria-valuenow'));
+  await expect(size(page)).toContainText(`${width} × 12 ft`);
+  await fileTools(page).getByRole('button',{name:'Undo'}).click();
+  await expect(size(page)).toContainText('16 × 12 ft');
+  await expect(fileTools(page).getByRole('button',{name:'Undo'})).toBeDisabled();
   expect(problems).toEqual([]);
 });
 
@@ -904,29 +1076,38 @@ test('opens the printable proposal',async({page})=>{
   await expect(sheet).toHaveCount(0);
 });
 
-test('loads the 3D view once the page settles when the preview is on screen',async({page})=>{
-  const viewer:string[]=[];page.on('request',r=>{if(/Deck3DViewer-/.test(r.url()))viewer.push(r.url());});
-  await openDesigner(page);
+test('opens on the site plan, and a desktop fetches the 3D viewer once the page settles without showing it',async({page})=>{
+  const viewer=viewerRequests(page);
+  const problems=await openDesigner(page);
+  await expect(page.getByRole('tab',{name:'Plan',exact:true})).toHaveAttribute('aria-selected','true');
+  await expect(size(page)).toContainText('Site plan · 16 × 12 ft deck');
   await expect.poll(()=>viewer.length,{timeout:20_000}).toBeGreaterThan(0);
+  await expect(plan(page)).toBeVisible();
+  await expect(viewer3d(page)).toHaveCount(0);
+  // The 3D sheet shows it at once.
+  await viewTab(page,'3D');
+  await expect(viewer3d(page)).toBeVisible({timeout:30_000});
+  expect(problems).toEqual([]);
 });
 
-test('@phone waits to load the 3D view until the preview is scrolled near',async({page})=>{
-  const viewer:string[]=[];page.on('request',r=>{if(/Deck3DViewer-/.test(r.url()))viewer.push(r.url());});
-  // The drawing sits near the top of the page, so only a small, short screen (a 320 px phone with the browser's bars
-  // showing) puts it well below the fold; on a Pixel 7 it is on screen and loads once the page is idle.
-  await page.setViewportSize({width:320,height:240});
-  await openDesigner(page);
-  const farBelow=await drawing(page).evaluate(el=>el.getBoundingClientRect().top>window.innerHeight+300);
-  expect(farBelow).toBe(true);
-  await page.waitForTimeout(4000);
+test('@phone never downloads the 3D viewer until the 3D tab is chosen',async({page})=>{
+  const viewer=viewerRequests(page);
+  const problems=await openDesigner(page);
+  await expect(planHandle(page,'Deck depth, front edge')).toBeVisible();// the page is running
+  await page.waitForTimeout(6000);// past the page's own prefetch, 4 s after it settles
   expect(viewer).toHaveLength(0);
-  await expect(plan(page)).toHaveCount(1);// the plan shows meanwhile
-  await drawing(page).scrollIntoViewIfNeeded();
+  await expect(plan(page)).toBeVisible();
+  await viewTab(page,'Framing');// the framing plan is a drawing too
+  await page.waitForTimeout(500);
+  expect(viewer).toHaveLength(0);
+  await viewTab(page,'3D');
   await expect.poll(()=>viewer.length,{timeout:20_000}).toBeGreaterThan(0);
+  await expect(viewer3d(page)).toBeVisible({timeout:30_000});
+  expect(problems).toEqual([]);
 });
 
-test('@phone keeps the price in view and pins the deck while editing',async({page})=>{
-  const viewer:string[]=[];page.on('request',r=>{if(/Deck3DViewer-/.test(r.url()))viewer.push(r.url());});
+test('@phone keeps the price in view and pins the plan while editing, without the 3D viewer',async({page})=>{
+  const viewer=viewerRequests(page);
   const problems=await openDesigner(page);
   const bar=phoneBar(page);
   await expect(bar).toBeVisible();
@@ -937,12 +1118,14 @@ test('@phone keeps the price in view and pins the deck while editing',async({pag
   await setNumber(page,'Deck width',20);
   await expect(bar.locator('strong')).not.toHaveText(before??'');
   expect(await bar.evaluate(el=>{const r=el.getBoundingClientRect();return r.bottom<=window.innerHeight+1&&r.top>=window.innerHeight-120;})).toBe(true);
-  // Pin the deck: a compact preview stays at the top while the fields scroll, and the 3D view loads.
+  // Pin the deck: the plan stays at the top, compact, while the fields scroll; the 3D view is not downloaded for it.
   await bar.getByRole('button',{name:'Show deck'}).click();
   await expect(bar.getByRole('button',{name:'Hide deck'})).toHaveAttribute('aria-pressed','true');
   await page.getByLabel('Height above ground',{exact:true}).scrollIntoViewIfNeeded();
   expect(await preview(page).evaluate(el=>{const r=el.getBoundingClientRect();return Math.abs(r.top)<2&&r.height<window.innerHeight*.5;})).toBe(true);
-  await expect.poll(()=>viewer.length,{timeout:20_000}).toBeGreaterThan(0);
+  await expect(plan(page)).toBeVisible();
+  await page.waitForTimeout(6000);// past the page's own prefetch
+  expect(viewer).toHaveLength(0);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
   await bar.getByRole('button',{name:'Hide deck'}).click();
   await expect(preview(page)).not.toHaveClass(/dd-preview-docked/);
