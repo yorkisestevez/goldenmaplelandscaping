@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {DESIGN_STORAGE_KEY,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
-import {DECK_RELEASE_STORAGE_KEY,deckReleaseData,parseDeckReleaseDesign,serializeDeckReleaseDesign,calculateDeckReleaseEstimate,exportDeckReleaseDXF,exportDeckReleaseOBJ} from '../src/features/deckcraft/deckRelease';
+import {DECK_RELEASE_STORAGE_KEY,deckReleaseData,parseDeckReleaseDesign,serializeDeckReleaseDesign,calculateDeckReleaseEstimate} from '../src/features/deckcraft/deckRelease';
+import {exportDeckReleaseDXF,exportDeckReleaseOBJ} from '../src/features/deckcraft/deckReleaseExports';
 import {BACKYARD_SECTION_PREFIX,backyardElements,describeBackyard,hasBackyard,hasBackyardLayout,hasYardAllowances,splitSubtotal} from '../src/features/deckcraft/backyard';
 import {computeEstimate,deltaFor,type EstimateInput} from '../src/utils/estimateEngine';
 import {PAVER_BRANDS} from '../src/data/carrPrices';

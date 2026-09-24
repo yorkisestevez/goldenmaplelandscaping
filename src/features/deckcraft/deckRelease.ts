@@ -1,9 +1,7 @@
 import {normalizeWrap} from './lib/wrapGeometry';
 import type {DeckData} from './types';
-import type {DeckTakeoff} from './deckTakeoff';
 import {calculateEstimate} from './calculations';
 import {parseDesign,serializeDesign} from './designPersistence';
-import {exportDeckDXF,exportDeckOBJ} from './designExports';
 import {migrateLegacyPrivacy,pricedPrivacyArea} from './privacyScreens';
 import {activeCustomFront,frontBounds} from './lib/customOutline';
 
@@ -22,5 +20,4 @@ export function deckReleaseData(data:DeckData):DeckData{
 export function parseDeckReleaseDesign(text:string):DeckData{return deckReleaseData(parseDesign(text));}
 export function serializeDeckReleaseDesign(data:DeckData):string{return serializeDesign(deckReleaseData(data));}
 export function calculateDeckReleaseEstimate(data:DeckData,settings?:any){return calculateEstimate(deckReleaseData(data),settings);}
-export function exportDeckReleaseDXF(data:DeckData,model:DeckTakeoff):string{return exportDeckDXF(deckReleaseData(data),model);}
-export function exportDeckReleaseOBJ(data:DeckData,model:DeckTakeoff):string{return exportDeckOBJ(deckReleaseData(data),model);}
+// The release's DXF and OBJ exports are in deckReleaseExports.ts, which the page loads only when a file is asked for.

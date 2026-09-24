@@ -1,7 +1,7 @@
 import {Suspense,lazy,useCallback,useEffect,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
 import SEO from '../components/SEO';
-import {deckReleaseData,exportDeckReleaseDXF as exportDeckDXF,exportDeckReleaseOBJ as exportDeckOBJ,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
+import {deckReleaseData,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
 import {DEFAULT_DECK} from '../features/deckcraft/defaults';
 import type {HouseOpening,PrivacyScreen} from '../features/deckcraft/types';
 import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,pricedPrivacyArea,privacySides,screenOn,screenProduct} from '../features/deckcraft/privacyScreens';
@@ -186,9 +186,11 @@ export default function DeckDesigner(){
     catch{setDesignError('The PDF could not be made on this device. Use “Print proposal” and choose “Save as PDF” instead.');}
     finally{setPdfBusy(false);}
   }
-  function exportModel(kind:'dxf'|'obj'){
+  // The export geometry loads only when a file is asked for.
+  async function exportModel(kind:'dxf'|'obj'){
     try{
-      const body=kind==='dxf'?exportDeckDXF(data,estimate.model):exportDeckOBJ(data,estimate.model);
+      const {exportDeckReleaseDXF,exportDeckReleaseOBJ}=await import('../features/deckcraft/deckReleaseExports');
+      const body=kind==='dxf'?exportDeckReleaseDXF(data,estimate.model):exportDeckReleaseOBJ(data,estimate.model);
       downloadFile(body,kind==='dxf'?'application/dxf':'text/plain',`golden-maple-deck.${kind}`);setDesignError('');trackDeck('deckcraft_output',`deck_${kind}`);
     }catch{setDesignError(`The ${kind.toUpperCase()} export could not be generated for this design. Adjust a dimension or contact us and we’ll prepare it.`);}
   }
@@ -238,7 +240,7 @@ export default function DeckDesigner(){
           {step===3 && <SiteExtrasStep data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch}/>}
 
           {step===4 && <Suspense fallback={<p className="dd-note" role="status">Loading the backyard planner…</p>}><BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/></Suspense>}
-          {step===5 && <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} quoteRequired={quoteRequired} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={saveJSON} onDownloadSummary={download} onExport={exportModel}/>}
+          {step===5 && <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} quoteRequired={quoteRequired} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={saveJSON} onDownloadSummary={download} onExport={kind=>void exportModel(kind)}/>}
           <div className="dd-navigation"><button className="dd-secondary" disabled={step===0} onClick={()=>move(step-1)}>← Back</button><span>{step+1} of {STEPS.length}</span>{step<STEPS.length-1&&<button className="dd-primary" onClick={()=>move(step+1)}>{step===STEPS.length-2?'Review my estimate':'Continue'} →</button>}</div>
         </div>
       </section>
