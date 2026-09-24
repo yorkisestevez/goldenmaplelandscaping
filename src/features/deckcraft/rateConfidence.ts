@@ -37,5 +37,7 @@ export function unconfirmedRates():RateNote[]{
       note:'Reuses existing rates, as the owner chose on 2026-09-23. A band of recoloured rows across a straight deck adds none. A dedicated inlay rate would replace it.'},
     {id:'medallion-labour',rate:'Medallion inlay labour',value:'Builder quote (the boards and solid blocking are priced)',status:'owner-decision',where:'calculations.ts (medallion inlays)',
       note:'Cutting and fitting a round or compass medallion has no labour rate in the price book. Listed for a builder quote until the owner sets one.'},
+    {id:'skirting',rate:'Deck skirting (face, backing, access panels and labour)',value:'Builder quote (every row listed with its quantity, none priced)',status:'owner-decision',where:'calculations.ts (deck skirting)',
+      note:'The price book has no skirting rates. Listed for a builder quote until the owner sets rates; setting them is a price-book change.'},
   ];
 }

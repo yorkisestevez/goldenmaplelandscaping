@@ -256,6 +256,30 @@ test('adds a band and a compass medallion, and lists the medallion labour for a 
   expect(problems).toEqual([]);
 });
 
+test('adds skirting under the deck, lists it for a builder quote, and keeps it after a reload',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  await step(page,/Site & extras/).click();
+  const skirting=page.getByRole('region',{name:'Skirting under the deck'});
+  await skirting.getByRole('checkbox',{name:'Add skirting under the deck'}).check();
+  await expect(skirting.getByRole('status')).toContainText('Listed for a builder quote');
+  // The three open sides are offered; the side against the house never is.
+  await expect(skirting.getByRole('group',{name:'Sides to skirt'}).getByRole('checkbox')).toHaveCount(3);
+  await expect(page.locator('#deck-live-preview .dd-quote-notice')).toContainText('Deck skirting (builder quote)');
+  // A quote, never a price: the priced amount does not move.
+  await expect(price(page)).toHaveText(before??'');
+  await page.getByLabel('Skirting style',{exact:true}).selectOption('Lattice');
+  await expect(skirting.getByRole('status')).toContainText('Listed for a builder quote');
+  await page.waitForTimeout(800);// autosave runs 450 ms after the last change
+  await page.reload();
+  await step(page,/Site & extras/).click();
+  await expect(page.getByLabel('Skirting style',{exact:true})).toHaveValue('Lattice');
+  await step(page,/Your estimate/).click();
+  await expect(page.locator('.dd-breakdown')).toContainText('Deck skirtingSupplier quote required');
+  await expect(page.locator('.dd-summary')).toContainText(/Skirting: lattice in /);
+  expect(problems).toEqual([]);
+});
+
 test('adds a bump-out to the house',async({page})=>{
   await openDesigner(page);
   await page.getByText('House dimensions, finishes, doors & windows').click();

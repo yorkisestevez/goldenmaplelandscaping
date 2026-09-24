@@ -10,6 +10,7 @@ import {buildYardModel} from './yardModel';
 import {stairVeneerLayout} from './stairVeneerLayout';
 import {stringerCutProfile} from './components/viewer3d/stringerProfile';
 import type {PlanPoint} from './lib/deckGeometry';
+import {skirtingPlan,type SkirtingSlab} from './skirting';
 
 export type ExportMesh={name:string;vertices:V3[];faces:number[][]};
 const add=(a:V3,b:V3):V3=>({x:a.x+b.x,y:a.y+b.y,z:a.z+b.z});
@@ -55,6 +56,11 @@ function memberMesh(name:string,m:Member):ExportMesh{
   const side=norm(cross(direction,Math.abs(direction.y)>.99?{x:1,y:0,z:0}:{x:0,y:1,z:0}));
   const vertical=norm(cross(side,direction));return prism(name,scale(add(m.a,m.b),.5),axis,scale(vertical,m.depth),scale(side,m.width));
 }
+/** A skirting piece (skirting.ts): corners in the prism's order, along a→b, up, and across it (a trapezoid on a slope). */
+function slabMesh(name:string,s:SkirtingSlab):ExportMesh{
+  const signs=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+  return {name,faces,vertices:signs.map(([along,up,across])=>{const p=along<0?s.a:s.b,y=along<0?(up<0?s.bottomA:s.topA):(up<0?s.bottomB:s.topB),k=-across*s.thick/2;return {x:p.x+s.out.x*k,y,z:p.y+s.out.y*k};})};
+}
 function cylinder(name:string,x:number,z:number,bottom:number,top:number,radius:number):ExportMesh{
   const count=16,vertices:V3[]=[];for(const y of [bottom,top])for(let i=0;i<count;i++){const a=i/count*Math.PI*2;vertices.push({x:x+Math.cos(a)*radius,y,z:z+Math.sin(a)*radius});}
   const fs:number[][]=[Array.from({length:count},(_,i)=>count-1-i),Array.from({length:count},(_,i)=>i+count)];
@@ -96,6 +102,9 @@ export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
   boxes('ledger_bolt',hardware.ledgerBolts.map(p=>({x:p.x,y:p.y,z:p.z,w:.5,h:.5,d:3})));
   boxes(hardware.hidden?'hidden_clip':'deck_screw',hardware.screws.map(p=>({x:p.x,y:p.y-.6,z:p.z,w:hardware.hidden?.6:.18,h:hardware.hidden?.12:1.2,d:hardware.hidden?.4:.18})));
   const extras=extrasLayout(data,model);boxes('bench_privacy_pergola_wood',extras.wood);boxes('extra_metal',extras.metal);boxes('drainage',extras.drainage);boxes('privacy_panel',extras.panels);
+  // Skirting only when the design has it: face boards or lattice, 2×4 backing and access-panel trim.
+  const skirting=data.skirting?skirtingPlan(data,model):null;
+  if(skirting)for(const [part,items] of [['face',skirting.faces],['backing',skirting.backing],['access_panel_frame',skirting.frames]] as const)items.forEach((s,i)=>out.push(slabMesh(`skirting_${part}_${i+1}`,s)));
   const accessories=catalogueAccessoryLayout(data,model);members('manufacturer_fascia',accessories.fascia);boxes('joist_tape',accessories.tape);boxes('ledger_flashing',accessories.flashing);
   extras.fixtures.forEach((p,i)=>{
     const product=getLightingProduct(p.productId),dim=product?.dimensionsIn??{},g=product?.geometry,h=dim.height??(g==='bollard'?18:g==='transformer'?12:1),w=dim.length??dim.diameter??dim.width??2,d=dim.diameter??dim.width??2;

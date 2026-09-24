@@ -28,6 +28,7 @@ import Yard3D from './Yard3D';
 import {stairVeneerLayout} from '../../stairVeneerLayout';
 import {hasSimplifiedPaving} from './yardPreview';
 import PrivacyScreens3D from './PrivacyScreens3D';
+import Skirting3D from './Skirting3D';
 import {boardFinishPlan,parseColourRef} from '../../boardFinishes';
 import type {BoardAddress} from '../../lib/boardAddress';
 
@@ -153,6 +154,8 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
     {!structure&&<Members items={catalogueExtras.fascia} material={board} name="selected-manufacturer-fascia"/>}
     {inspection&&<><Boxes items={catalogueExtras.tape} material={materials.metal} name="selected-joist-tape"/><Boxes items={catalogueExtras.flashing} material={materials.metal} name="selected-ledger-flashing"/></>}
     <Boxes items={supportPosts} material={materials.wood} name="support-posts"/>
+    {/* Skirting (skirting.ts): its face in the finished views; the framing and below-ground views show its backing. */}
+    {data.skirting&&<Skirting3D data={data} model={model} finished={!structure&&!cutaway} wood={materials.wood}/>}
     <HardwareDetails data={data} model={model} inspection={inspection}/><FootingDetails data={data} model={model} cutaway={cutaway}/>
     <FinishedBoards items={stairBoards} material={board}/>
     {!structure&&<group name="closed-stair-riser-boards"><FinishedBoards items={model.riserBoards} material={board}/></group>}

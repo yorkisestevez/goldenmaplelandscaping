@@ -1,5 +1,5 @@
 import { DEFAULT_DECK } from './defaults';
-import { type BoardColour, type DeckData, type DeckInlay, type DoorStyle, type WindowStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardAllowances, type YardFeature } from './types';
+import { type BoardColour, type DeckData, type DeckInlay, type SkirtingStyle, type DoorStyle, type WindowStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardAllowances, type YardFeature } from './types';
 import {availableStairSides,getHouseContact} from './houseContact';
 import {getFootprint} from './lib/deckGeometry';
 import {normalizeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
@@ -14,6 +14,7 @@ import {angledStairAllowed,angledStairFits,CORNER_CHAMFER_FT,isChamferEdgeId} fr
 import {activeCustomFront,frontBounds,normalizeFront,outlineProblems} from './lib/customOutline';
 import {MAX_BOARD_COLOURS,parseColourRef} from './boardFinishes';
 import {INLAY_LIMITS} from './lib/inlayGeometry';
+import {SKIRTING_EDGE,SKIRTING_LIMITS,SKIRTING_STYLES} from './skirting';
 import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,openingWallId} from './houseFootprint';
 
 export {GARAGE_DOOR_STYLES} from './houseOpenings';
@@ -269,6 +270,19 @@ export function validateDesign(input:unknown):DeckData {
     }
     if(list.length)clean.inlays=list;
   }
+  // Skirting under the deck (skirting.ts). An open side the design no longer has (a level or landing gone) is kept
+  // and simply matches nothing.
+  if(input.skirting!==undefined){
+    const s=input.skirting;
+    if(!record(s)||!SKIRTING_STYLES.includes(s.style as SkirtingStyle))throw new Error('Invalid skirting style.');
+    if(s.colour!==undefined&&!parseColourRef(s.colour))throw new Error('Unknown skirting colour.');
+    const clearanceIn=numeric(s.clearanceIn,SKIRTING_LIMITS.clearanceIn[0],SKIRTING_LIMITS.clearanceIn[1],'Skirting clearance');
+    const accessPanels=s.accessPanels===undefined?0:numeric(s.accessPanels,SKIRTING_LIMITS.accessPanels[0],SKIRTING_LIMITS.accessPanels[1],'Skirting access panels');
+    if(!Number.isInteger(accessPanels))throw new Error('Skirting access panels must be a whole number.');
+    if(s.openEdges!==undefined&&(!Array.isArray(s.openEdges)||s.openEdges.length>SKIRTING_LIMITS.openEdges||!s.openEdges.every(e=>typeof e==='string'&&SKIRTING_EDGE.test(e))))throw new Error('Invalid skirting sides.');
+    const openEdges=[...new Set((s.openEdges??[]) as string[])];
+    clean.skirting={style:s.style as SkirtingStyle,...(s.colour!==undefined?{colour:s.colour as string}:{}),clearanceIn,...(openEdges.length?{openEdges}:{}),...(accessPanels?{accessPanels}:{})};
+  }
   for(const key of ['stairEdgeId','level2EdgeId'] as const)if(input[key]!==undefined){
     if(typeof input[key]!=='string'||!/^[a-zA-Z0-9-]{1,40}$/.test(input[key] as string))throw new Error('Invalid deck edge.');
     clean[key]=input[key] as string;
@@ -339,7 +353,7 @@ export function defaultLevel3(data:DeckData):NonNullable<DeckData['level3']>{
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','customFront','boardColours','inlays']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','customFront','boardColours','inlays','skirting']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);

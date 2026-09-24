@@ -6,7 +6,7 @@ import {gzipSync} from 'node:zlib';
  * Deck designer bundle budget, checked against the production build (runs in postbuild).
  * - The route's own initial JavaScript (beyond what every page already loads) stays within budget.
  * - The 3D viewer, the PDF engine and jsPDF's optional helpers, the Backyard step, the send and proposal
- *   dialogs, the custom outline editor, the accent-board panel, the inlay editor and the exterior studio are never part of the
+ *   dialogs, the custom outline editor, the accent-board panel, the inlay editor, the exterior studio and the skirting editor are never part of the
  *   route's initial load:
  *   they are fetched only when needed.
  * - The lazy chunks themselves do not quietly grow.
@@ -29,7 +29,7 @@ const initial=[route.module,...(route.imports??[])].filter(m=>!shared.has(m)).ma
 const routeKB=initial.reduce((n,f)=>n+gz(f),0);
 let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);checks++;};
 ok(routeKB<=BUDGET_KB.routeInitial,`Deck designer initial JS is ${routeKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.routeInitial} KB): ${initial.join(', ')}`);
-for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
+for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
 const viewer=files.find(f=>/^Deck3DViewer-.*\.js$/.test(f)),pdf=files.find(f=>/^jspdf.*\.js$/.test(f));
 ok(viewer&&gz(viewer)<=BUDGET_KB.viewer,`3D viewer chunk is ${viewer?gz(viewer).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.viewer} KB)`);
 ok(pdf&&gz(pdf)<=BUDGET_KB.pdf,`PDF engine chunk is ${pdf?gz(pdf).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.pdf} KB)`);

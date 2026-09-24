@@ -27,6 +27,11 @@ export type DeckInlay =
   | InlayBase&{kind:'rug'|'diamond';dxFt?:number;dyFt?:number;widthFt:number;depthFt:number;frameRows?:1|2;pattern?:InlayFill;frame?:ColourRef}
   | InlayBase&{kind:'band';direction:'across'|'along';atFt?:number;boards:1|2|3|4}
   | InlayBase&{kind:'medallion';dxFt?:number;dyFt?:number;diameterFt:number;style:'round'|'compass';frame?:ColourRef};
+/** Skirting under the deck (see skirting.ts): boards or lattice closing in the space between the deck's rim and the
+ * ground, clearanceIn above it. A colour left out is the deck's own; `openEdges` names deck sides left open
+ * ('deck1-front', 'landing1-left', …). Absent on every existing design. Listed for a builder quote, never priced. */
+export type SkirtingStyle = 'Horizontal boards' | 'Vertical boards' | 'Lattice';
+export interface SkirtingConfig {style:SkirtingStyle;colour?:ColourRef;clearanceIn:number;openEdges?:string[];accessPanels?:number}
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
 export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
@@ -166,6 +171,8 @@ export interface DeckData {
   boardColours?: BoardColour[];
   /** Decorative inlays with their own framing; absent on every existing design (see lib/inlayGeometry.ts). */
   inlays?: DeckInlay[];
+  /** Skirting under the deck; absent on every existing design (see skirting.ts). */
+  skirting?: SkirtingConfig;
   /** A named exposed edge (e.g. 'wingR-end') for the primary stair flight; overrides stairPosition. */
   stairEdgeId?: string;
   /** Named wrap edge of the main deck for the second level; overrides level2Position. */

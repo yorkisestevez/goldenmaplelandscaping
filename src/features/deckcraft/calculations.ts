@@ -6,6 +6,7 @@ import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock} from './stockPlan';
 import {boardFinishPlan} from './boardFinishes';
 import {inlayCrewDays,PATTERN_LABOUR} from './lib/inlayGeometry';
+import {SKIRTING_STYLE_NAMES,skirtingPlan,skirtingRows} from './skirting';
 import {buildDeckTakeoff,type DeckTakeoff} from './deckTakeoff';
 import {DECK_SETTINGS} from './defaults';
 import {DECKING_CATALOGUE,RAILING_CATALOGUE} from './manufacturerCatalog';
@@ -662,6 +663,14 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     const labour=sections.find(s=>s.title==='Labour (Construction & Build)');
     if(labour){labour.quoteRequired=true;labour.items.push({name:'Porch-wrap labour premium',spec:'Builder quote required: the priced labour uses the two-corner wrap factor (×1.50); the extra porch-wrap labour is quoted separately.',qty:1,unit:'allowance',cost:null});}
     quoteRequired.push('Porch-wrap labour premium (builder quote)');
+  }
+  // Skirting under the deck (skirting.ts): the face, backing, access panels and labour, every one a quote. The price
+  // book has no skirting rates, so nothing here is priced or $0; setting a rate later is a price-book change.
+  const skirting=data.skirting?skirtingPlan(data,model):null;
+  if(skirting){
+    const rows=skirtingRows(skirting);
+    if(rows.length){sections.push({title:'Deck skirting',icon:'🧱',quoteRequired:true,total:0,description:`${SKIRTING_STYLE_NAMES[skirting.style]} under the deck, listed for a builder quote: the price book has no skirting rates yet, so it is not in the priced total.`,items:rows});quoteRequired.push('Deck skirting (builder quote)');}
+    flags.push(...skirting.notes);
   }
   flags.push(...yardTakeoff.warnings);
   for(const row of yardTakeoff.sections){
