@@ -10,6 +10,7 @@ import {describeBackyard,splitSubtotal} from './backyard';
 import {accentWords,boardFinishPlan} from './boardFinishes';
 import {inlayWords} from './lib/inlayGeometry';
 import {skirtingPlan,skirtingWords} from './skirting';
+import {partWords} from './deckPartFinishes';
 import type {calculateEstimate} from './calculations';
 import type {DeckData} from './types';
 
@@ -47,6 +48,7 @@ export function describeDesign(data:DeckData,estimate:DeckEstimate){
     ...(wrap?[describeWrap(wrap)]:[]),
     ...(accent?[accent]:[]),
     ...(inlaid?[inlaid]:[]),
+    ...partWords(data),
     ledger.contacts.length?`Attached to the house with ${ledger.ledgerLf.toFixed(1)} ft of ledger${ledger.contacts.length>1&&wrap?` (${ledger.contacts.filter(c=>c.kind==='ledger'&&c.blockId==='main').map(c=>`${(c.lengthIn/12).toFixed(1)} ft on the ${c.wall==='front'?'deck-facing':c.wall==='far'?'street-side':c.wall+' side'} wall`).join(', ')})`:''}${pastHouseFt>0?`; ${pastHouseFt.toFixed(1)} ft of the back edge extends past the house (railing, beam and posts)`:''}${getHouseBlocks(data).slice(1).filter(k=>ledger.contacts.some(c=>c.blockId===k.id)).map(k=>{const mine=ledger.contacts.filter(c=>c.blockId===k.id),face=mine.filter(c=>c.kind==='ledger').reduce((n,c)=>n+c.lengthIn,0)/12,sides=mine.filter(c=>c.kind==='flush');return k.kind==='garage'?`; ${face.toFixed(1)} ft of that ledger is on the attached garage wall`:`; deck notched around a ${((k.rect.x1-k.rect.x0)/12).toFixed(1)} × ${((k.rect.y1-Math.max(0,k.rect.y0))/12).toFixed(1)} ft bump-out: ${face.toFixed(1)} ft of ledger on its face${sides.length?`, ${sides.length} × ${(sides[0].lengthIn/12).toFixed(1)} ft bolted flush wall${sides.length>1?'s':''}`:''}`;}).join('')}`:'Freestanding: no ledger on the house',
     `House ${houseConfig.widthFt} × ${houseConfig.depthFt} ft, ${houseConfig.storeys}-storey, ${wrap?'between the wrap-around wings':placedHouse?(placedHouse.anchor==='center'?'centred on the deck':`lined up with the deck's ${placedHouse.anchor} end`)+(placedHouse.offsetIn?`, shifted ${(Math.abs(placedHouse.offsetIn)/12).toFixed(1)} ft ${placedHouse.offsetIn>0?'right':'left'}`:''):'centred on the deck'}${sillIn!==undefined?`; door sill ${sillIn} in above grade`:''}${normalizeHouseBlocks(houseConfig).map(b=>`; ${b.kind==='garage'?'attached garage':b.wall==='Front'?'bump-out':'wing'} ${b.widthFt} × ${b.depthFt} ft on the ${{Front:'deck-facing wall',Back:'street side',Left:'left side',Right:'right side'}[b.wall]}`).join('')}`,
     ...(onScreens.length?[`Privacy screens: ${onScreens.map(s=>{const p=screenProduct(s);return `${s.side.toLowerCase()} edge ${p.panel?`${p.name.replace(' privacy screen','')} ${s.design}, ${s.panels} panel${s.panels===1?'':'s'}`:`slatted ${s.lengthFt} × ${s.heightFt} ft`}${s.lights?', lit':''}`;}).join('; ')}`]:[]),

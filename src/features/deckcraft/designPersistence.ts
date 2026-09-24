@@ -1,5 +1,5 @@
 import { DEFAULT_DECK } from './defaults';
-import { type BoardColour, type DeckData, type DeckInlay, type SkirtingStyle, type DoorStyle, type WindowStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardAllowances, type YardFeature, type HouseCladding, type HouseFinish } from './types';
+import { type BoardColour, type DeckData, type DeckFinishes, type DeckInlay, type SkirtingStyle, type DoorStyle, type WindowStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardAllowances, type YardFeature, type HouseCladding, type HouseFinish } from './types';
 import {availableStairSides,getHouseContact} from './houseContact';
 import {getFootprint} from './lib/deckGeometry';
 import {normalizeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
@@ -12,9 +12,10 @@ import {clampHouseOpening,DOOR_STYLES,HOUSE_CLADDINGS,ROOF_FINISHES,ROOF_PITCH_R
 import {HEX_COLOUR,HOUSE_COLOUR_FIELDS} from './houseFinishes';
 import {angledStairAllowed,angledStairFits,CORNER_CHAMFER_FT,isChamferEdgeId} from './lib/cornerChamfers';
 import {activeCustomFront,frontBounds,normalizeFront,outlineProblems} from './lib/customOutline';
-import {MAX_BOARD_COLOURS,parseColourRef} from './boardFinishes';
+import {darkSlateBorder,MAX_BOARD_COLOURS,parseColourRef} from './boardFinishes';
 import {INLAY_LIMITS} from './lib/inlayGeometry';
 import {SKIRTING_EDGE,SKIRTING_LIMITS,SKIRTING_STYLES} from './skirting';
+import {DECK_PARTS,pruneDeckFinishes} from './deckPartFinishes';
 import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,openingWallId} from './houseFootprint';
 
 export {GARAGE_DOOR_STYLES} from './houseOpenings';
@@ -307,6 +308,16 @@ export function validateDesign(input:unknown):DeckData {
     const openEdges=[...new Set((s.openEdges??[]) as string[])];
     clean.skirting={style:s.style as SkirtingStyle,...(s.colour!==undefined?{colour:s.colour as string}:{}),clearanceIn,...(openEdges.length?{openEdges}:{}),...(accessPanels?{accessPanels}:{})};
   }
+  // Deck-part finishes (deckPartFinishes.ts): real product colours for the border, fascia, stair treads and risers, and
+  // a railing colour name. A malformed one is refused; one the deck or its railing can no longer take is dropped
+  // quietly (pruneEdgeNames, below), and nothing set saves nothing.
+  if(input.deckFinishes!==undefined){
+    const f=input.deckFinishes;if(!record(f))throw new Error('Invalid deck-part finishes.');
+    const finishes:DeckFinishes={};
+    for(const part of DECK_PARTS)if(f[part]!==undefined){if(!parseColourRef(f[part]))throw new Error('Invalid deck-part finishes.');finishes[part]=f[part] as string;}
+    if(f.railingColor!==undefined){if(typeof f.railingColor!=='string'||f.railingColor.length>60)throw new Error('Invalid deck-part finishes.');finishes.railingColor=f.railingColor;}
+    clean.deckFinishes=finishes;
+  }
   for(const key of ['stairEdgeId','level2EdgeId'] as const)if(input[key]!==undefined){
     if(typeof input[key]!=='string'||!/^[a-zA-Z0-9-]{1,40}$/.test(input[key] as string))throw new Error('Invalid deck edge.');
     clean[key]=input[key] as string;
@@ -336,7 +347,8 @@ export function validateDesign(input:unknown):DeckData {
   }
   // The public estimate derives railing quantity from geometry, never an imported allowance.
   clean.railingLf=0;
-  if(clean.borderFinish==='Dark Slate')clean.pictureFrameRows=clean.pictureFrameRows===2?2:1;
+  // A Dark Slate border needs a border row (unless a border colour replaces it; see pruneEdgeNames).
+  if(darkSlateBorder(clean))clean.pictureFrameRows=clean.pictureFrameRows===2?2:1;
   // A wrap fixes the house size and, around both corners, the deck width.
   const wrapped=normalizeWrap(clean);if(wrapped!==clean){clean.width=wrapped.width;clean.houseConfig=wrapped.houseConfig;}
   const named=pruneEdgeNames(clean);
@@ -353,6 +365,8 @@ export function validateDesign(input:unknown):DeckData {
  * and every edit run it, so a choice the pickers no longer show can never stay in force.
  */
 export function pruneEdgeNames(input:DeckData):DeckData{
+  // Part and railing colours the deck can no longer take go quietly (deckPartFinishes.ts).
+  input=pruneDeckFinishes(input);
   // The finishes of house walls whose block was removed go too, so a block added later never picks them up.
   const h=input.houseConfig,f=h?.wallFinishes,walls=f&&liveWalls(h!,f),data=walls&&walls.length<Object.keys(f).length?{...input,houseConfig:{...h!,wallFinishes:walls.length?Object.fromEntries(walls):undefined}}:input;
   if(!data.stairEdgeId&&!data.level2EdgeId&&!data.level3?.edgeId)return data;
@@ -379,7 +393,7 @@ export function defaultLevel3(data:DeckData):NonNullable<DeckData['level3']>{
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','customFront','boardColours','inlays','skirting']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','customFront','boardColours','inlays','skirting','deckFinishes']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);

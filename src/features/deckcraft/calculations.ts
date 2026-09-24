@@ -4,7 +4,8 @@ import { activeCustomFront, customLabourFactor, customOutline } from './lib/cust
 import { outlineSpans } from './zoneFraming';
 import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock} from './stockPlan';
-import {boardFinishPlan} from './boardFinishes';
+import {boardFinishPlan,colourName,darkSlateBorder,parseColourRef,type StockGroup} from './boardFinishes';
+import {DECK_PARTS,partRef,railingFinish,stairTreadKey} from './deckPartFinishes';
 import {inlayCrewDays,PATTERN_LABOUR} from './lib/inlayGeometry';
 import {SKIRTING_STYLE_NAMES,skirtingPlan,skirtingRows} from './skirting';
 import {buildDeckTakeoff,type DeckTakeoff} from './deckTakeoff';
@@ -13,7 +14,7 @@ import {DECKING_CATALOGUE,RAILING_CATALOGUE} from './manufacturerCatalog';
 import {catalogueAccessoryLayout} from './catalogueAccessories';
 import {lightingSystemCheck} from './lightingSystem';
 import {quotedPrivacyScreens} from './privacyScreens';
-import {getHouseContact} from './houseContact';
+import {exposedRim,getHouseContact} from './houseContact';
 import {pictureFrameCompatibility} from './lib/finishedFootprint';
 import {buildYardModel,type YardModel} from './yardModel';
 import {buildYardTakeoff,type YardTakeoff} from './yardTakeoff';
@@ -145,9 +146,9 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   
   // Total Linear Feet (LF) = (Area / Coverage) * Waste
   const boardStock=deckBoardStock(model,wasteFactor);
-  const separateBorder=data.borderFinish==='Dark Slate'&&model.levels.some(l=>l.boards.some(b=>b.role==='border'));
+  const separateBorder=darkSlateBorder(data)&&model.levels.some(l=>l.boards.some(b=>b.role==='border'));
   // Accent-colour and inlay boards (boardFinishes.ts) leave the main stock and are ordered as their own boards.
-  const finish=data.boardColours?.length||data.inlays?.length?boardFinishPlan(data,model):null,accent=finish?.pieces?finish:null,separate=finish?.stock.length?finish:null;
+  const finish=data.boardColours?.length||data.inlays?.length||data.deckFinishes?.border?boardFinishPlan(data,model):null,accent=finish?.pieces?finish:null,separate=finish?.stock.length?finish:null;
   const accentKeys=new Set(separate?.stock.flatMap(g=>g.boards.map(b=>`${b.level}:${b.index}`)));
   const boardsWhere=(keep:(level:number,index:number,role?:string)=>boolean,waste=wasteFactor)=>deckBoardStock({...model,levels:model.levels.map((l,li)=>({...l,boards:l.boards.filter((b,bi)=>keep(li,bi,b.role))}))},waste);
   const pricedBoardStock=separate?boardsWhere((li,bi,role)=>!(separateBorder&&role==='border')&&!accentKeys.has(`${li}:${bi}`)):separateBorder?deckBoardStock({...model,levels:model.levels.map(l=>({...l,boards:l.boards.filter(b=>b.role!=='border')}))},wasteFactor):boardStock;
@@ -316,7 +317,9 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const stringerCount = stairFlights ? quantities.stringers / stairFlights : 0;
   const treadCostKey = selectedMaterial.isComposite ? 'composite' : (selectedMaterial.id === 'cedar' ? 'cedar' : 'pine');
   const totalRisers=(quantities as typeof quantities & {totalRisers?:number}).totalRisers ?? stairFlights*riserCount;
-  const stairMaterialCost = totalRisers * (stairTreadCosts[treadCostKey] || 24);
+  // Treads and risers in their own finishes (deckPartFinishes.ts) take the dearest category of the two.
+  const stairParts=data.deckFinishes?[partRef(data,'treads'),partRef(data,'risers')]:null;
+  const stairMaterialCost = totalRisers * (stairTreadCosts[stairParts?stairTreadKey(treadCostKey,stairParts,stairTreadCosts):treadCostKey] || 24);
   const stairLaborBase = totalRisers / 10; // Existing ten-risers-per-day basis, now from actual flights.
   // STAIR_LABOR_MULTIPLIER is a scalar (1.25). Indexing it by stairType returned
   // undefined and NaN-poisoned every downstream total. Winder/Landing stairs get
@@ -392,12 +395,14 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // deck's waste allowance, using the same $/sq ft → $/lin-ft conversion as the main decking.
   const collectionRate=(id:string):number|null=>{const c=DECKING_CATALOGUE.find(m=>m.id===id);if(!c||c.costPerSqft===null)return null;return (materials.find((m:any)=>m.id===id)?.costPerSqft as number|undefined)??c.costPerSqft;};
   // Inlay boards use the waste allowance of what they are: a frame is picture-frame work, a fill its own pattern.
-  const accentRows=(separate?.stock??[]).map(g=>{
+  // The border in its own colour (deckFinishes.border) is priced the same way, in the Deck-part finishes section.
+  const groupRow=(g:StockGroup)=>{
     const keys=new Set(g.boards.map(b=>`${b.level}:${b.index}`)),stock=boardsWhere((li,bi)=>keys.has(`${li}:${bi}`),g.wasteKey?wasteFactors[g.wasteKey]||wasteFactor:wasteFactor),rate=collectionRate(g.material.id);
     const part=()=>g.part==='band'?'Inlay band':g.part==='medallion'?'Medallion inlay':g.part==='frame'?'Inlay frame':`Inlay inside, ${g.wasteKey!.toLowerCase()}`;
-    const label=g.kind==='inlay'?`${part()} · ${g.material.name} · ${g.color.name}`:`${g.material.name} · ${g.color.name}`;
+    const label=g.kind==='inlay'?`${part()} · ${g.material.name} · ${g.color.name}`:g.kind==='border'?`Border · ${g.material.name} · ${g.color.name}`:`${g.material.name} · ${g.color.name}`;
     return {group:g,stock,label,cost:rate===null?null:stock.orderedLf*rate*(boardWidthIn/12)*markupMult};
-  });
+  };
+  const accentRows=(separate?.stock??[]).filter(g=>g.kind!=='border').map(groupRow),borderRows=(separate?.stock??[]).filter(g=>g.kind==='border').map(groupRow);
   const m_deckingCost = deckingCost * markupMult;
   const m_framingCost = framingCost * markupMult;
   const m_foundationCost = foundationCost * markupMult;
@@ -502,7 +507,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       description: 'Ordered stock from the modeled field, border and breaker cuts, including the existing waste allowance.',
       total: m_deckingCost + m_breaker_board_cost + m_breaker_blocking_cost,
       items: [
-        { name: selectedMaterial.name, spec: `${pattern}; ${pricedBoardStock.bins.reduce((n,b)=>n+b.cutsIn.length,0)} installed pieces, ${pricedBoardStock.spareBoards} spare stock boards${separateBorder?'; contrast border priced separately':''}${separate?`; ${[accent?'accent-colour':'',finish!.inlayPieces?'inlay':''].filter(Boolean).join(' and ')} boards priced separately`:''}`, qty: finalBoards, unit: 'boards', cost: m_deckingCost },
+        { name: selectedMaterial.name, spec: `${pattern}; ${pricedBoardStock.bins.reduce((n,b)=>n+b.cutsIn.length,0)} installed pieces, ${pricedBoardStock.spareBoards} spare stock boards${separateBorder?'; contrast border priced separately':''}${separate?`; ${[accent?'accent-colour':'',finish!.inlayPieces?'inlay':'',finish!.borderPieces?'border':''].filter(Boolean).join(' and ')} boards priced separately`:''}`, qty: finalBoards, unit: 'boards', cost: m_deckingCost },
         ...(false ? [
           { name: `Breaker Board Rows (${breaker_rows} rows)`, spec: `${total_breaker_boards} boards × ${standard_board_length}ft — perpendicular to field, full deck width`, qty: total_breaker_boards, unit: 'boards', cost: m_breaker_board_cost },
           { name: `Breaker Row Blocking (PT 2×10)`, spec: `${breaker_rows} rows × joist bay blocking @ ${(joistSpacing / 12 - 0.1).toFixed(1)}ft each`, qty: Math.ceil(breaker_blocking_lf / 8), unit: 'pcs', cost: m_breaker_blocking_cost }
@@ -538,7 +543,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       description: 'Stair treads, risers, and stringer materials. Build labour is in the Labour section.',
       total: m_stairMaterialCost,
       items: totalRisers > 0 ? [
-        { name: 'Stair Treads & Stringers', spec: `${quantities.stringers} stringers at maximum ${model.stairSupport.spacingIn} in centres; ${quantities.stairTreads} treads; ${quantities.riserBoardPieces} closed riser pieces. Existing per-riser assembly allowance includes these materials; no duplicate riser charge.`, qty: totalRisers, unit: 'risers', cost: m_stairMaterialCost },
+        { name: 'Stair Treads & Stringers', spec: `${quantities.stringers} stringers at maximum ${model.stairSupport.spacingIn} in centres; ${quantities.stairTreads} treads; ${quantities.riserBoardPieces} closed riser pieces. Existing per-riser assembly allowance includes these materials; no duplicate riser charge.${stairParts?.some(Boolean)?` ${stairParts.map((r,i)=>r?`${i?'Risers':'Treads'} in ${colourName(r)}.`:'').filter(Boolean).join(' ')}`:''}`, qty: totalRisers, unit: 'risers', cost: m_stairMaterialCost },
       ] : []
     },
     {
@@ -619,11 +624,14 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   }
   const catalogueRail=RAILING_CATALOGUE.find(r=>r.id===data.catalogueRailingId);
   if(catalogueRail){requireSection('Railing System',catalogueRail.name);flags.push(catalogueRail.notes);}
+  // A railing colour (deckPartFinishes.ts) leaves the rate as it is; the supplier confirms availability and any premium.
+  const railColour=railingFinish(data);
+  if(railColour)flags.push(`Railing colour ${railColour.colour} (${railColour.system.name}): the railing rate is unchanged${railColour.unconfirmed?'. This line is not confirmed as sold in Canada':''}; confirm availability and any colour premium with the supplier.`);
   if(separateBorder){const lf=model.levels.reduce((n,l)=>n+l.boards.filter(b=>b.role==='border').reduce((s,b)=>s+b.length/12,0),0);quoteRequired.push('Deckorators Dark Slate picture-frame boards');sections.push({title:'Picture-frame border finish',icon:'🪵',quoteRequired:true,total:0,items:[{name:'Deckorators Dark Slate',spec:'Dedicated border product; installed cuts are in the stock schedule. Supplier board lengths, order allowance and pricing require confirmation.',qty:Math.ceil(lf*10)/10,unit:'lf',cost:null}]});}
   if(accentRows.length){
     // Accent boards: real product colours ordered as their own boards; a collection without a rate is a supplier quote.
     const unpriced=accentRows.filter(r=>r.cost===null);
-    quoteRequired.push(...unpriced.map(r=>`${r.label} ${r.group.kind==='inlay'?'boards':'accent boards'}`));
+    quoteRequired.push(...unpriced.map(r=>`${r.label} ${r.group.kind==='accent'?'accent boards':'boards'}`));
     const inlaid=accentRows.some(r=>r.group.kind==='inlay');
     sections.push({title:inlaid?'Accent colours & inlays':'Accent-colour boards',icon:'🎨',description:inlaid?`Accent-colour and inlay boards, each colour ordered as its own stock boards at its collection’s rate. ${[accentRows.some(r=>r.group.part==='frame'||r.group.part==='inside')&&'Inlay frames carry the picture-frame waste allowance and inlay insides their own pattern’s.',accentRows.some(r=>r.group.part==='band')&&'Bands carry the straight-board allowance.',accentRows.some(r=>r.group.part==='medallion')&&'Medallions carry the herringbone allowance, for their angled cuts.'].filter(Boolean).join(' ')} Colours vary by screen; confirm with samples.`:'Boards in a second colour, ordered as their own stock boards at their collection’s rate with the same waste allowance. Colours vary by screen; confirm with samples.',quoteRequired:unpriced.length>0||undefined,total:accentRows.reduce((n,r)=>n+(r.cost??0),0),
       items:accentRows.map(r=>({name:r.label,spec:`${r.group.boards.length} ${r.group.kind==='inlay'?'inlay':'accent-colour'} pieces, ${r.stock.spareBoards} spare stock boards${r.cost===null?'; supplier quote required':''}`,qty:r.stock.orderedBoards,unit:'boards',cost:r.cost}))});
@@ -651,6 +659,22 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     if(data.catalogueAccessories?.includes('tt_protac_flashing')){const section=sections.find(s=>s.title==='Add-ons & Extras');if(section){for(const item of section.items)if(item.name==='Ledger Flashing')item.cost=null;section.total=section.items.reduce((n,i)=>n+(i.cost??0),0);}}
   }
   if(catalogueMaterial?.availabilityNote)flags.push(catalogueMaterial.availabilityNote);
+  // Deck-part finishes (deckPartFinishes.ts): the border in its own colour, ordered as its own boards at its collection's
+  // rate; fascia boards over the exposed rim, a supplier quote (no fascia rate in the price book; fitting is in the
+  // labour); and treads or risers from a line without a rate make the stairs a supplier quote. Never $0.
+  if(data.deckFinishes){
+    const fascia=partRef(data,'fascia'),fasciaLf=fascia&&!data.catalogueAccessories?.some(id=>id==='tt_fascia'||id==='dk_fascia')?exposedRim(data,model).reduce((n,r)=>n+Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z)/12,0):0;
+    const items:EstimateResult['sections'][number]['items']=borderRows.map(r=>({name:r.label,spec:`${r.group.boards.length} border pieces, ${r.stock.spareBoards} spare stock boards${r.cost===null?'; supplier quote required':''}`,qty:r.stock.orderedBoards,unit:'boards',cost:r.cost}));
+    if(fascia&&fasciaLf>0)items.push({name:`Fascia · ${colourName(fascia)}`,spec:'Over the rim the house does not cover. Supplier quote: the price book has no fascia rate; fitting is in the labour.',qty:Math.ceil(fasciaLf*10)/10,unit:'lf',cost:null});
+    if(items.length){
+      sections.push({title:'Deck-part finishes',icon:'🎨',description:'Deck parts in their own real product colour. Colours vary by screen; confirm with samples.',quoteRequired:items.some(i=>i.cost===null)||undefined,total:items.reduce((n,i)=>n+(i.cost??0),0),items});
+      quoteRequired.push(...borderRows.filter(r=>r.cost===null).map(r=>`${r.label} boards`),...(fasciaLf>0?['Fascia boards (supplier quote)']:[]));
+    }
+    const quoted=stairParts?.map(r=>r&&parseColourRef(r)!.material).find(m=>m&&m.costPerSqft===null);
+    if(quoted)requireSection('Stairs',`Stair treads and risers in ${quoted.name}`);
+    const brand=(id:string)=>id.split('_')[0],mixed=DECK_PARTS.some(p=>{const r=partRef(data,p);return !!r&&brand(parseColourRef(r)!.material.id)!==brand(deckingMaterial);});
+    if(mixed)flags.push('Deck parts from another manufacturer than the decking: confirm fastener compatibility with the supplier.');
+  }
   if(veneer.applicable){
     if(veneer.status==='modeled-straight')flags=flags.filter(s=>!s.includes('displayed stringers and closed risers do not provide that complete assembly'));
     flags.push(...veneer.issues);
@@ -700,7 +724,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const stockRow=(name:string,stock:ReturnType<typeof deckBoardStock>):StockScheduleRow=>({name,section:`${boardWidth} in decking`,stockLengthIn:model.stockLength,orderedPieces:stock.orderedBoards,cutsIn:stock.bins.map(b=>b.cutsIn),unresolvedIn:stock.unresolved,installedLf:stock.installedLf,orderedLf:stock.orderedLf});
   const boardSchedules=[stockRow(`${selectedMaterial.name} — ${pricedBoardStock.spareBoards} spare boards included`,pricedBoardStock)];
   if(separateBorder){const stock=deckBoardStock({...model,levels:model.levels.map(l=>({...l,boards:l.boards.filter(b=>b.role==='border')}))},wasteFactor);boardSchedules.push(stockRow(`Dark Slate border — quote required; ${stock.spareBoards} spare boards allowed`,stock));}
-  for(const r of accentRows)boardSchedules.push(stockRow(`${r.label} ${r.group.kind==='inlay'?'boards':'accent boards'} — ${r.cost===null?'quote required; ':''}${r.stock.spareBoards} spare boards included`,r.stock));
+  for(const r of [...accentRows,...borderRows])boardSchedules.push(stockRow(`${r.label} ${r.group.kind==='accent'?'accent boards':'boards'} — ${r.cost===null?'quote required; ':''}${r.stock.spareBoards} spare boards included`,r.stock));
   if(veneer.woodBoxes.length){const stock=planStock(veneer.woodBoxes.map(b=>b.w),192);boardSchedules.push({name:'Flat 2×6 stair veneer supports — confirm inclusion in assembly allowance',section:'1.5 × 5.5 in framing',stockLengthIn:192,orderedPieces:stock.bins.length,cutsIn:stock.bins.map(b=>b.cutsIn),unresolvedIn:stock.unresolved,installedLf:stock.installedLf,orderedLf:stock.purchasedLf});}
 
   return {

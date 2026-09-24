@@ -61,6 +61,10 @@ const phoneBar=(page:Page)=>page.getByRole('region',{name:'Live price'});
 const backyardSubtotal=(page:Page)=>page.locator('.dd-backyard-subtotal');
 const allowances=(page:Page)=>page.locator('.dd-allowances');
 const corners=(page:Page)=>page.locator('.dd-corners');
+/** The deck-part finishes panel (F6) and its chosen-colour swatches, and the railing colour's note. */
+const deckParts=(page:Page)=>page.getByRole('region',{name:'Deck-part finishes'});
+const partSwatches=(page:Page)=>deckParts(page).locator('.dd-part-swatch');
+const railingColourNote=(page:Page)=>page.locator('.dd-railing-colour');
 
 /** Opens a closed <details> by its summary text; an open one stays open. */
 async function expand(scope:Page|Locator,summaryText:string){
@@ -159,8 +163,8 @@ test('reaches every feature of the designer',async({page})=>{
     await expect(paintChip(page)).toHaveCount(0);
     const inlays=page.getByRole('region',{name:'Inlays'});
     for(const kind of ['Add a framed rectangle','Add a diamond','Add a band','Add a medallion'])await reach(`Inlays: ${kind}`,inlays.getByRole('button',{name:kind,exact:true}));
-    // TODO(F6): deck-part finishes (DeckFinishesPanel, in Boards & finish) are not on this branch yet. Add a step for
-    // them here when F6 lands.
+    await reach('Deck-part finishes: fascia (F6)',deckParts(page).getByLabel('Fascia colour',{exact:true}));
+    await reach('Deck-part finishes: stair treads (F6)',deckParts(page).getByLabel('Stair tread colour',{exact:true}));
   });
   await test.step('Stairs and railings',async()=>{
     await openSection(page,'Stairs & railings');
@@ -168,6 +172,8 @@ test('reaches every feature of the designer',async({page})=>{
     await reach('Stair layout',page.getByLabel('Stair layout',{exact:true}));
     await reach('Railing style',page.getByLabel('Railing style',{exact:true}));
     await reach('Manufacturer railing',page.getByLabel('Manufacturer railing system',{exact:true}));
+    await page.getByLabel('Manufacturer railing system',{exact:true}).selectOption('tt_classic_composite');
+    await reach('Railing colour (F6)',page.getByLabel('Railing colour',{exact:true}));
   });
   await test.step('Lighting',async()=>{
     await openSection(page,'Lighting');
@@ -484,6 +490,36 @@ test('adds skirting under the deck, lists it for a builder quote, and keeps it a
   await openSection(page,'Proposal & files');
   await expect(schedule(page)).toContainText('Deck skirtingSupplier quote required');
   await expect(summary(page)).toContainText(/Skirting: lattice in /);
+  expect(problems).toEqual([]);
+});
+
+test('gives the border and stair treads their own colours, quotes a tread line without a price, picks a railing colour, and keeps them after a reload',async({page})=>{
+  const problems=await openDesigner(page);
+  await openSection(page,'Boards & finish');
+  await page.getByLabel('Border rows',{exact:true}).selectOption('1');
+  const parts=deckParts(page);
+  await parts.getByLabel('Border boards colour',{exact:true}).selectOption('tt_legacy:Espresso');
+  await expect(partSwatches(page)).toHaveText(['Espresso · TimberTech PRO Legacy']);
+  // Treads from a line without a price make the stairs a supplier quote.
+  await parts.getByLabel('Stair tread colour',{exact:true}).selectOption('tt_terrain_plus:Dark Oak');
+  await expect(partSwatches(page)).toHaveText(['Espresso · TimberTech PRO Legacy','Dark Oak · TimberTech Composite Terrain+ · supplier quote']);
+  await expect(quotes(page)).toContainText('Stair treads and risers in TimberTech Composite Terrain+');
+  await openSection(page,'Stairs & railings');
+  await page.getByLabel('Manufacturer railing system',{exact:true}).selectOption('tt_classic_composite');
+  await page.getByLabel('Railing colour',{exact:true}).selectOption('Matte Black');
+  await expect(railingColourNote(page)).toHaveText('Matte Black: the colour on screen is illustrative; confirm with a sample.');
+  await page.waitForTimeout(800);// autosave runs 450 ms after the last change
+  await page.reload();
+  await openSection(page,'Boards & finish');
+  await expect(page.getByLabel('Border boards colour',{exact:true})).toHaveValue('tt_legacy:Espresso');
+  await expect(page.getByLabel('Stair tread colour',{exact:true})).toHaveValue('tt_terrain_plus:Dark Oak');
+  await openSection(page,'Stairs & railings');
+  await expect(page.getByLabel('Railing colour',{exact:true})).toHaveValue('Matte Black');
+  await openSection(page,'Proposal & files');
+  await expect(schedule(page)).toContainText('StairsSupplier quote required');
+  await expect(schedule(page)).toContainText('Deck-part finishes');
+  await expect(summary(page)).toContainText('Deck parts: border boards in Espresso (TimberTech PRO Legacy); stair treads in Dark Oak (TimberTech Composite Terrain+)');
+  await expect(summary(page)).toContainText('Railing colour: Matte Black (TimberTech Classic Composite · balusters); screen colour illustrative');
   expect(problems).toEqual([]);
 });
 

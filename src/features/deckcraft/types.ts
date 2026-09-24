@@ -32,6 +32,11 @@ export type DeckInlay =
  * ('deck1-front', 'landing1-left', …). Absent on every existing design. Listed for a builder quote, never priced. */
 export type SkirtingStyle = 'Horizontal boards' | 'Vertical boards' | 'Lattice';
 export interface SkirtingConfig {style:SkirtingStyle;colour?:ColourRef;clearanceIn:number;openEdges?:string[];accessPanels?:number}
+/** Deck parts in their own real product colour (see deckPartFinishes.ts): the border boards, the fascia over the rim,
+ * the stair treads and risers, each from a collection of the deck's own kind; and the railing in one of its system's
+ * manufacturer colours (a colour name from railing-finish-provenance.json). A part left out is the deck's own colour.
+ * Absent on every existing design. */
+export interface DeckFinishes {fascia?:ColourRef;treads?:ColourRef;risers?:ColourRef;border?:ColourRef;railingColor?:string}
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
 export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
@@ -195,6 +200,8 @@ export interface DeckData {
   inlays?: DeckInlay[];
   /** Skirting under the deck; absent on every existing design (see skirting.ts). */
   skirting?: SkirtingConfig;
+  /** Deck-part finishes and the railing colour; absent on every existing design (see deckPartFinishes.ts). */
+  deckFinishes?: DeckFinishes;
   /** A named exposed edge (e.g. 'wingR-end') for the primary stair flight; overrides stairPosition. */
   stairEdgeId?: string;
   /** Named wrap edge of the main deck for the second level; overrides level2Position. */

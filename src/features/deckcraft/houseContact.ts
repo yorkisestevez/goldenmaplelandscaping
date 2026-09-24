@@ -1,4 +1,5 @@
 import type {DeckData} from './types';
+import type {DeckTakeoff,Member} from './deckTakeoff';
 import {getFootprint,SIDE_DOT,type EdgeContact,type EdgeName,type FootprintPlan,type PlanPoint} from './lib/deckGeometry';
 import {getHousePlacement} from './housePlacement';
 import {activeWrap} from './lib/wrapGeometry';
@@ -136,4 +137,9 @@ export function exposedSides(fp:FootprintPlan,contact:EdgeContact):EdgeName[]{
 /** Stair sides available on the main deck. */
 export function availableStairSides(data:DeckData):EdgeName[]{
   const fp=getFootprint(data,1);return exposedSides(fp,getHouseContact(data,fp));
+}
+/** The rim pieces the house does not cover (a manufacturer fascia and a fascia colour go on these), level by level.
+ * On the main deck, onContact alone decides which pieces lie along a wall. */
+export function exposedRim(data:DeckData,model:Pick<DeckTakeoff,'levels'>,contact:HouseContact=getHouseContact(data,model.levels[0].footprint)):Member[]{
+  return model.levels.flatMap(l=>(l.rim??[]).filter(r=>!(l.index===0&&contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z}))));
 }

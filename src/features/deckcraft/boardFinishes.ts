@@ -35,6 +35,19 @@ export function accentCollections(data:Pick<DeckData,'deckingMaterial'>):Catalog
 export function accentAllowed(data:Pick<DeckData,'deckingMaterial'>,ref:ColourRef){
   const parsed=parseColourRef(ref);return !!parsed&&accentCollections(data).some(m=>m.id===parsed.material.id);
 }
+/** Collections whose colours can finish a deck part (border, fascia, stair treads and risers; deckPartFinishes.ts): the
+ * deck's own, then every other one of its kind, supplier-quote lines included (priced as a quote, never $0). */
+export function partCollections(data:Pick<DeckData,'deckingMaterial'>):CatalogueDecking[]{
+  const main=deckMaterial(data);
+  return [main,...DECKING_CATALOGUE.filter(m=>m.id!==main.id&&!m.isHidden&&main.isComposite&&m.isComposite)];
+}
+export function partAllowed(data:Pick<DeckData,'deckingMaterial'>,ref:ColourRef){
+  const parsed=parseColourRef(ref);return !!parsed&&partCollections(data).some(m=>m.id===parsed.material.id);
+}
+/** The border boards' own colour (deckFinishes.border) when this deck can take it. It replaces a Dark Slate border. */
+export const borderFinishRef=(data:DeckData):ColourRef|undefined=>{const b=data.deckFinishes?.border;return b&&partAllowed(data,b)?b:undefined;};
+/** Deckorators Dark Slate border boards: chosen, and not replaced by a border colour. */
+export const darkSlateBorder=(data:DeckData)=>data.borderFinish==='Dark Slate'&&!borderFinishRef(data);
 /** A colour that sets an inlay off: the first other colour of the deck's own collection (undefined if it has one). */
 export function contrastColour(data:Pick<DeckData,'deckingMaterial'|'deckingColor'>):ColourRef|undefined{
   const own=deckMaterial(data),main=deckColourRef(data),c=own.colors.find(x=>colourRef(own.id,x.name)!==main);
@@ -42,10 +55,11 @@ export function contrastColour(data:Pick<DeckData,'deckingMaterial'|'deckingColo
 }
 
 export interface AccentGroup{ref:ColourRef;material:CatalogueDecking;color:MaterialColor;boards:{level:number;index:number}[]}
-/** Boards bought together: an accent colour (at the deck's waste allowance), or one colour of one part of the inlays
- * at the allowance of what it is: a frame is picture-frame work, an inside its own pattern, a band straight boards,
- * and a medallion (cut to its wedges and 16 sides) the herringbone allowance. */
-export interface StockGroup extends AccentGroup{kind:'accent'|'inlay';wasteKey?:BoardPattern;part?:InlayPart}
+/** Boards bought together: an accent colour (at the deck's waste allowance), the border boards in their own colour
+ * (deckFinishes.border, at the deck's allowance), or one colour of one part of the inlays at the allowance of what it
+ * is: a frame is picture-frame work, an inside its own pattern, a band straight boards, and a medallion (cut to its
+ * wedges and 16 sides) the herringbone allowance. */
+export interface StockGroup extends AccentGroup{kind:'accent'|'inlay'|'border';wasteKey?:BoardPattern;part?:InlayPart}
 export type InlayPart='frame'|'inside'|'band'|'medallion';
 /** Which part of its inlay an inlay board is, and the waste allowance it is ordered at. */
 export function inlayPart(inlay:DeckInlay|undefined,role:string|undefined):{part:InlayPart;wasteKey:BoardPattern}{
@@ -64,8 +78,10 @@ export interface BoardFinishPlan{
   stock:StockGroup[];
   /** Saved choices that colour at least one board, and those that no longer do (never moved to another board). */
   matched:BoardColour[];unmatched:BoardColour[];
-  /** Boards in an accent colour (not counting inlays), and inlay boards. */
+  /** Boards in an accent colour (not counting inlays or the border colour), and inlay boards. */
   pieces:number;inlayPieces:number;
+  /** Border boards in the border's own colour (deckFinishes.border). */
+  borderPieces:number;
 }
 
 const sameRow=(o:BoardColour,a:{lv:number;role:string;course:string})=>o.lv===a.lv&&o.role===a.role&&o.course===a.course;
@@ -74,7 +90,9 @@ const spans=(o:BoardColour,a:BoardAddress)=>o.at!==undefined&&o.at>=a.from-.01&&
 /** Which colour every board takes. A single-board choice beats its row's; a later choice beats an earlier one. */
 export function boardFinishPlan(data:DeckData,model:DeckTakeoff):BoardFinishPlan{
   const addresses=modelAddresses(model,{pattern:data.pattern,boardWidth:data.boardWidth,pitch:boardPitch(data)});
-  const overrides=data.boardColours??[],main=deckColourRef(data),darkBorder=data.borderFinish==='Dark Slate';
+  const overrides=data.boardColours??[],main=deckColourRef(data),darkBorder=darkSlateBorder(data);
+  // The border's own colour (deckFinishes.border) comes after a board's or row's accent choice, before the deck's.
+  const border=borderFinishRef(data),borderColour=border&&border!==main?border:null,bordered=new Set<string>();
   // Dark Slate borders are their own product, and a colour outside this deck's collections is not applied.
   const usable=overrides.map(o=>accentAllowed(data,o.colour)&&!(darkBorder&&o.role==='border'));
   const hit=overrides.map(()=>false);
@@ -92,7 +110,9 @@ export function boardFinishPlan(data:DeckData,model:DeckTakeoff):BoardFinishPlan
       else if(spans(o,a)){piece=i;hit[i]=true;}
     });
     const i=piece>=0?piece:course;
-    return i<0||overrides[i].colour===main?null:overrides[i].colour;
+    if(i>=0)return overrides[i].colour===main?null:overrides[i].colour;
+    if(a.role==='border'&&borderColour){bordered.add(`${l}:${bi}`);return borderColour;}
+    return null;
   }));
   const byRef=new Map<ColourRef,AccentGroup>();
   colours.forEach((level,l)=>level.forEach((ref,index)=>{
@@ -101,16 +121,17 @@ export function boardFinishPlan(data:DeckData,model:DeckTakeoff):BoardFinishPlan
     group.boards.push({level:l,index});byRef.set(ref,group);
   }));
   const groups=[...byRef.values()],stock=new Map<string,StockGroup>();
-  let pieces=0,inlayPieces=0;
+  let pieces=0,inlayPieces=0,borderPieces=0;
   colours.forEach((level,l)=>level.forEach((ref,index)=>{
     const board=model.levels[l].boards[index];
     if(!board.inlay&&!ref)return;
     const part=board.inlay?inlayPart(inlays.get(board.inlay),board.role):undefined;
-    const colour=ref??main,key=`${part?`${part.part}|${part.wasteKey}`:'accent'}|${colour}`,group=stock.get(key)??{ref:colour,...parseColourRef(colour)!,boards:[],kind:board.inlay?'inlay' as const:'accent' as const,...(part?{wasteKey:part.wasteKey,part:part.part}:{})};
+    const kind=board.inlay?'inlay' as const:bordered.has(`${l}:${index}`)?'border' as const:'accent' as const;
+    const colour=ref??main,key=`${part?`${part.part}|${part.wasteKey}`:kind}|${colour}`,group=stock.get(key)??{ref:colour,...parseColourRef(colour)!,boards:[],kind,...(part?{wasteKey:part.wasteKey,part:part.part}:{})};
     group.boards.push({level:l,index});stock.set(key,group);
-    if(board.inlay)inlayPieces++;else pieces++;
+    if(board.inlay)inlayPieces++;else if(kind==='border')borderPieces++;else pieces++;
   }));
-  return {addresses,colours,groups,stock:[...stock.values()],matched:overrides.filter((_,i)=>hit[i]),unmatched:overrides.filter((_,i)=>!hit[i]),pieces,inlayPieces};
+  return {addresses,colours,groups,stock:[...stock.values()],matched:overrides.filter((_,i)=>hit[i]),unmatched:overrides.filter((_,i)=>!hit[i]),pieces,inlayPieces,borderPieces};
 }
 
 export function colourName(ref:ColourRef){const p=parseColourRef(ref);return p?`${p.color.name} (${p.material.name})`:ref;}

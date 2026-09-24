@@ -29,7 +29,9 @@ import {stairVeneerLayout} from '../../stairVeneerLayout';
 import {hasSimplifiedPaving} from './yardPreview';
 import PrivacyScreens3D from './PrivacyScreens3D';
 import Skirting3D from './Skirting3D';
-import {boardFinishPlan,parseColourRef} from '../../boardFinishes';
+import {boardFinishPlan,darkSlateBorder,parseColourRef} from '../../boardFinishes';
+import {partRef,railingFinish} from '../../deckPartFinishes';
+import {railingScreenHex} from '../../railingScreenColours';
 import type {BoardAddress} from '../../lib/boardAddress';
 
 function Members({items,material,name}:{items:Member[];material:THREE.Material;name:string}){
@@ -92,6 +94,11 @@ function AccentBoards({colour,items,pick}:{colour:string;items:FinishBox[];pick?
   const parsed=parseColourRef(colour),material=useSwatchTexture(parsed?swatchUrl(parsed.color.swatch):'',getMaterialFallbackColor(parsed?.material.id??''));
   return <FinishedBoards items={items} material={material} pick={pick}/>;
 }
+/** A deck part's own finish (deckPartFinishes.ts) as a swatch material; with none set, the part uses the deck's boards. */
+function usePartMaterial(ref:string|undefined,board:THREE.Material):THREE.Material{
+  const parsed=ref?parseColourRef(ref):null,material=useSwatchTexture(parsed?swatchUrl(parsed.color.swatch):'',getMaterialFallbackColor(parsed?.material.id??''));
+  return parsed?material:board;
+}
 /** Outlines the board (or the row) under the pointer while the accent-board tool is on. It keeps its own state,
  * so hovering never re-renders the rest of the scene. */
 function HoverOutline({boards,addresses,scope,register}:{boards:FinishBox[];addresses?:(BoardAddress|null)[][];scope:'piece'|'course';register:(set:(box:FinishBox|null)=>void)=>void}){
@@ -120,7 +127,7 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)||DECKING_CATALOGUE[0];
   const swatch=material.colors.find(c=>c.name===data.deckingColor)||material.colors[0];
   const board=useSwatchTexture(swatchUrl(swatch.swatch),getMaterialFallbackColor(material.id));
-  const darkBorder=data.borderFinish==='Dark Slate';
+  const darkBorder=darkSlateBorder(data);
   const borderMaterial=useSwatchTexture(darkBorder?swatchUrl('dk-border-dark-slate.jpg'):'','#343635');
   const extras=useMemo(()=>extrasLayout(data,model),[data,model]);
   const catalogueExtras=useMemo(()=>catalogueAccessoryLayout(data,model),[data,model]);
@@ -130,7 +137,13 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   useEffect(()=>()=>Object.values(materials).forEach(m=>m.dispose()),[materials]);
   // Accent boards (boardFinishes.ts): worked out only when the design has some, or while the tool is on.
   const painting=!!boardPaint&&!structure;
-  const finish=useMemo(()=>data.boardColours?.length||data.inlays?.length||painting?boardFinishPlan(data,model):null,[model,data.boardColours,data.inlays,data.deckingMaterial,data.deckingColor,data.pattern,data.boardWidth,data.borderFinish,painting]);
+  const finish=useMemo(()=>data.boardColours?.length||data.inlays?.length||data.deckFinishes?.border||painting?boardFinishPlan(data,model):null,[model,data.boardColours,data.inlays,data.deckingMaterial,data.deckingColor,data.pattern,data.boardWidth,data.borderFinish,data.deckFinishes?.border,painting]);
+  // Deck parts in their own colour (the border is drawn with the accent groups above); the railing in its colour's
+  // screen approximation, illustrative only.
+  const fasciaMat=usePartMaterial(partRef(data,'fascia'),board),treadMat=usePartMaterial(partRef(data,'treads'),board),riserMat=usePartMaterial(partRef(data,'risers'),board);
+  const rail=railingFinish(data),railHex=rail?railingScreenHex(rail.system.id,rail.colour):undefined;
+  const railColour=useMemo(()=>railHex?new THREE.MeshStandardMaterial({color:railHex,roughness:.5,metalness:.15}):null,[railHex]);
+  useEffect(()=>()=>railColour?.dispose(),[railColour]);
   const boards:FinishBox[]=useMemo(()=>model.levels.flatMap((l,li)=>l.boards.map((b,bi)=>{const cut=b as typeof b&{width?:number;polygon?:{x:number;y:number}[];role?:string};return {x:b.cx+l.offset.x,y:l.top-0.5,z:b.cy+l.offset.z,w:b.length,h:1,d:cut.width??data.boardWidth,angle:-b.angleDeg*Math.PI/180,role:cut.role,polygon:cut.polygon?.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z})),ref:{level:li,index:bi},accent:finish?.colours[li]?.[bi]??null};})),[model,data.boardWidth,finish]);
   const hoverSet=useRef<(box:FinishBox|null)=>void>(()=>{}),registerHover=useCallback((set:(box:FinishBox|null)=>void)=>{hoverSet.current=set;},[]);
   const pick=useMemo<BoardPick|undefined>(()=>{
@@ -142,7 +155,7 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   const supportPosts:Box[]=model.levels.flatMap(l=>l.supports.filter(p=>p.y>postBase).map(p=>({x:p.x,y:(p.y+postBase)/2,z:p.z,w:5.5,h:p.y-postBase,d:5.5})));
   const railPosts:Box[]=model.railing.posts.map(p=>({x:p.x,y:p.y+model.railing.height/2,z:p.z,w:3.5,h:model.railing.height,d:3.5}));
   const edgeMembers:Member[]=model.levels.flatMap(l=>l.rim??[]);
-  const railMat=data.railingType==='Wood Picket'?board:materials.metal;
+  const railMat=railColour??(data.railingType==='Wood Picket'?board:materials.metal);
   return <group scale={1/12}>
     {!structure&&<><FinishedBoards items={boards.filter(b=>b.role!=='inlay'&&!b.accent&&(!darkBorder||b.role!=='border'))} material={board} pick={pick}/><FinishedBoards items={boards.filter(b=>b.role==='inlay')} material={materials.inlay}/>{darkBorder&&<FinishedBoards items={boards.filter(b=>b.role==='border')} material={borderMaterial}/>}{finish?.groups.map(g=><AccentBoards key={g.ref} colour={g.ref} items={boards.filter(b=>b.accent===g.ref)} pick={pick}/>)}{painting&&<HoverOutline boards={boards} addresses={finish?.addresses} scope={boardPaint!.scope} register={registerHover}/>}</>}
     <Members items={model.levels.flatMap(l=>l.joists)} material={materials.wood} name="joists"/>
@@ -150,15 +163,15 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
     {/* Framing under decorative inlays (inlayFraming.ts), in its own colour so it reads in the Framing view. */}
     <Members items={model.levels.flatMap(l=>l.blocking.filter(b=>b.role?.startsWith('inlay-')))} material={materials.inlayFraming} name="inlay-blocking"/>
     <Members items={model.levels.flatMap(l=>l.beams)} material={materials.wood} name="beams"/>
-    <Members items={edgeMembers} material={structure?materials.wood:board} name="rim-and-fascia"/>
-    {!structure&&<Members items={catalogueExtras.fascia} material={board} name="selected-manufacturer-fascia"/>}
+    <Members items={edgeMembers} material={structure?materials.wood:fasciaMat} name="rim-and-fascia"/>
+    {!structure&&<Members items={catalogueExtras.fascia} material={fasciaMat} name="selected-manufacturer-fascia"/>}
     {inspection&&<><Boxes items={catalogueExtras.tape} material={materials.metal} name="selected-joist-tape"/><Boxes items={catalogueExtras.flashing} material={materials.metal} name="selected-ledger-flashing"/></>}
     <Boxes items={supportPosts} material={materials.wood} name="support-posts"/>
     {/* Skirting (skirting.ts): its face in the finished views; the framing and below-ground views show its backing. */}
     {data.skirting&&<Skirting3D data={data} model={model} finished={!structure&&!cutaway} wood={materials.wood}/>}
     <HardwareDetails data={data} model={model} inspection={inspection}/><FootingDetails data={data} model={model} cutaway={cutaway}/>
-    <FinishedBoards items={stairBoards} material={board}/>
-    {!structure&&<group name="closed-stair-riser-boards"><FinishedBoards items={model.riserBoards} material={board}/></group>}
+    <FinishedBoards items={stairBoards} material={treadMat}/>
+    {!structure&&<group name="closed-stair-riser-boards"><FinishedBoards items={model.riserBoards} material={riserMat}/></group>}
     <NotchedStringers model={model} material={materials.wood}/>
     <Boxes items={stairVeneer.woodBoxes} material={materials.wood} name="terrain-stair-veneer-support-blocks"/>
     {inspection&&<Boxes items={stairVeneer.bracketBoxes} material={materials.metal} name="terrain-stair-veneer-support-angles"/>}

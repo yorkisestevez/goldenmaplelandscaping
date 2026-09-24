@@ -39,5 +39,9 @@ export function unconfirmedRates():RateNote[]{
       note:'Cutting and fitting a round or compass medallion has no labour rate in the price book. Listed for a builder quote until the owner sets one.'},
     {id:'skirting',rate:'Deck skirting (face, backing, access panels and labour)',value:'Builder quote (every row listed with its quantity, none priced)',status:'owner-decision',where:'calculations.ts (deck skirting)',
       note:'The price book has no skirting rates. Listed for a builder quote until the owner sets rates; setting them is a price-book change.'},
+    {id:'fascia-boards',rate:'Fascia boards in a chosen colour',value:'Supplier quote (the exposed rim length is listed; fitting stays in the priced labour)',status:'owner-decision',where:'calculations.ts (deck-part finishes)',
+      note:'The price book has no fascia board rate. Listed for a supplier quote until the owner sets one; setting it is a price-book change.'},
+    {id:'railing-colour',rate:'Manufacturer railing colours',value:'No change to the railing rate; the supplier confirms availability and any colour premium',status:'owner-decision',where:'deckPartFinishes.ts (railing colours)',
+      note:'Eight lines (five TimberTech, three Deckorators) are not confirmed as sold in Canada; the owner chose to offer them with a supplier-confirmation note.'},
   ];
 }

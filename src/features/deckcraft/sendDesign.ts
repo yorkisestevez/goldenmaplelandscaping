@@ -8,6 +8,7 @@ import type {DeckEstimate} from './designFacts';
 import type {DeckData} from './types';
 import {boardFinishPlan,colourName,deckColourRef} from './boardFinishes';
 import {skirtingPlan} from './skirting';
+import {partSamples} from './deckPartFinishes';
 
 /**
  * "Send my design to Golden Maple": the `deck-design` Netlify form. Netlify stores the submission and
@@ -110,8 +111,10 @@ export function buildDeckDesignSubmission(f:SendDesignFields,ctx:SendContext):Re
   // Skirting (skirting.ts) in a colour other than the deck's: that sample as well.
   const skirting=ctx.data.skirting?skirtingPlan(ctx.data,ctx.estimate.model):null;
   const skirtSample=skirting?.runs.length&&skirting.colour!==deckColourRef(ctx.data)?colourName(skirting.colour):undefined;
-  const moreSamples=[...accentSamples,...(skirtSample&&!accentSamples.includes(skirtSample)?[skirtSample]:[])];
-  const sampleWords=accentSamples.length?(skirtSample?'the accent and skirting colours':'the accent colours'):'the skirting colour';
+  // Deck parts in their own colour (deckPartFinishes.ts): those samples too.
+  const moreSamples=[...accentSamples,...(skirtSample&&!accentSamples.includes(skirtSample)?[skirtSample]:[])],partColours=partSamples(ctx.data).filter(s=>!moreSamples.includes(s));
+  const sampleWords=partColours.length?'the finish colours':accentSamples.length?(skirtSample?'the accent and skirting colours':'the accent colours'):'the skirting colour';
+  moreSamples.push(...partColours);
   const head=[`DeckCraft design sent from the website deck designer on ${at.slice(0,10)}.`,`Open the exact design: ${ctx.link}`,`Priced with the ${priceBookLabel()}.`,`Lead: tier ${lead.tier} (score ${lead.score}${lead.reasons.length?`: ${lead.reasons.join(', ')}`:''})`,'',ctx.summary];
   const tail=['',`Timeline: ${labelOf(DECK_TIMELINES,f.timeline)??'not given'}`,`Budget: ${labelOf(DECK_BUDGETS,f.budget)??'not given'}`,...(samples==='yes'?[moreSamples.length?`Samples: please bring ${ctx.data.deckingColor} and ${sampleWords}: ${moreSamples.join(', ')}`:`Samples: please bring a ${ctx.data.deckingColor} sample`]:[]),`Customer notes: ${f.notes.trim()||'none'}`,consentLine];
   const review=ctx.reviewItems.length?['','Confirm before construction:',...ctx.reviewItems.map(item=>`- ${item}`)]:[];

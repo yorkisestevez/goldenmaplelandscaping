@@ -6,6 +6,7 @@ import {LIGHTING_CATALOGUE} from './lightingCatalogue';
 import {screenOn} from './privacyScreens';
 import {activeCornerChamfers} from './lib/cornerChamfers';
 import {allowanceItems} from './yardSettings';
+import {DECK_PARTS} from './deckPartFinishes';
 import type {DeckData} from './types';
 
 /**
@@ -87,6 +88,8 @@ export function designFeatures(data:DeckData):string[]{
   add(data.inlays?.some(i=>i.kind==='band'),'deck_inlay_band');
   add(data.inlays?.some(i=>i.kind==='medallion'),'deck_inlay_medallion');
   add(data.skirting,'deck_skirting');
+  add(DECK_PARTS.some(p=>data.deckFinishes?.[p]),'deck_part_finishes');
+  add(data.deckFinishes?.railingColor,'deck_railing_colour');
   add(data.privacyScreens?.some(screenOn),'deck_privacy_screen');
   add(data.lightingSystem.selectedItems.some(i=>{const p=LIGHTING_CATALOGUE.find(x=>x.id===i.productId);return i.qty>0&&!!p&&!isSystemProduct(p);}),'deck_lighting');
   add(data.benchLf>0,'deck_bench');
