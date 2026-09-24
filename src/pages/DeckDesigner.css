@@ -104,6 +104,16 @@
 .dd-plan-type label{flex:1;min-width:0}.dd-plan-type input{width:100%;min-height:44px;padding:6px 8px;border:1px solid var(--dc-muted);border-radius:0;background:var(--dc-field);color:var(--dc-ink);font-family:var(--dc-mono);font-size:16px;font-weight:500}
 .dd-plan-shortcuts{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}.dd-plan-shortcuts .dd-secondary{padding:0 12px;font-size:12px}
 .dd-plan-status{min-height:1.55em;margin:6px 0 0;font-size:12px;line-height:1.55;color:var(--dc-ink-2)}
+/* R5: the plan's tools (one at a time), an outline's edges, the stair edges to tap and the tool's own buttons. Handles and
+   edges are drawn in gold; only the handles keep the pointer (the outline and stair lines never do). */
+.dd-plan-tools{display:grid;grid-template-columns:repeat(4,minmax(0,auto));justify-content:start;margin:0 0 10px;border:1px solid var(--dc-ink);background:var(--dc-sheet);width:fit-content;max-width:100%}
+.dd-plan-tools button{min-height:44px;padding:0 14px;background:none;border:0;border-radius:0;color:var(--dc-ink);font-size:13px;font-weight:500}.dd-plan-tools button+button{border-left:1px solid var(--dc-rule-soft)}.dd-plan-tools [aria-checked=true]{background:var(--dc-ink);color:var(--dc-cream)}
+.dd-outline-plan line,.dd-stair-targets line{fill:none;stroke:var(--dc-gold-deep);stroke-width:3px;stroke-dasharray:8 5;vector-effect:non-scaling-stroke}.dd-outline-plan line[data-on],.dd-stair-targets line[data-on]{stroke-width:5px;stroke-dasharray:none}
+.dd-plan-handle[data-handle=edge][data-kind=across]::before{width:24px;height:12px}.dd-plan-handle[data-handle=edge][data-kind=angled-d1]::before,.dd-plan-handle[data-handle^=chamfer]::before{width:24px;height:12px;transform:rotate(-45deg)}.dd-plan-handle[data-handle=edge][data-kind=angled-d2]::before{width:24px;height:12px;transform:rotate(45deg)}
+.dd-plan-handle[data-handle=edge][data-kind^=angled],.dd-plan-handle[data-handle^=chamfer]{cursor:move}.dd-plan-handle[data-handle=stair]{cursor:grab}
+.dd-plan-handle[data-handle=stair]::before{content:'';width:28px;height:16px;background:repeating-linear-gradient(90deg,var(--dc-gold) 0 5px,var(--dc-ink) 5px 7px)}.dd-plan-handle[data-handle=stair][aria-orientation=vertical]::before{width:16px;height:28px;background:repeating-linear-gradient(0deg,var(--dc-gold) 0 5px,var(--dc-ink) 5px 7px)}
+.dd-plan-target{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;padding:0;background:#fbfbf8cc;border:2px dashed var(--dc-gold-deep);border-radius:0;pointer-events:auto;cursor:pointer}.dd-plan-target:hover,.dd-plan-target[aria-pressed=true]{background:var(--dc-gold);border-style:solid;border-color:var(--dc-ink)}
+.dd-plan-tool-extras{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:10px 0 0}.dd-plan-tool-extras:empty{display:none}.dd-plan-tool-extras .dd-outline-presets{margin:0;flex-basis:100%}.dd-plan-tool-extras .dd-note{margin:0;flex-basis:100%}.dd-plan-tool-extras .dd-linklike{font-size:13px}
 .dd-canvas-loading{position:absolute;left:8px;top:8px;margin:0;padding:3px 8px;background:var(--dc-sheet);border:1px solid var(--dc-rule-soft);color:var(--dc-ink);font-size:12px}
 .dd-framing-modes{margin:0 0 10px}.dd-sheet-panel>.dd-note{margin:10px 0 8px}
 .dd-preview>.dd-note{margin:12px 0 0}
@@ -184,7 +194,7 @@
 .dd-accent-list{display:grid;gap:6px;margin:0 0 12px;padding:0;list-style:none}.dd-accent-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:0 0 0 10px;border:1px solid var(--dc-rule-soft);background:#fff;font-size:13px}.dd-accent-list li button{flex:none;padding:0 10px}
 .dd-inlay-add{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}.dd-inlay-card .dd-fields{margin-bottom:8px}.dd-inlay-status{margin:4px 0 10px;font-size:12px;color:var(--dc-ok)}.dd-inlay-status-off{color:var(--dc-alert)}.dd-inlay-actions{display:flex;flex-wrap:wrap;gap:8px}
 .dd-outline-presets{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.dd-outline-presets button{font-size:12px;padding:0 12px}
-.dd-outline-plan{display:block;width:100%;height:auto;max-height:440px;margin:8px 0;touch-action:none;background:var(--dc-sheet);border:1px solid var(--dc-rule-soft)}.dd-outline-edge:focus{outline:none}.dd-outline-edge:focus-visible line+line{stroke:var(--dc-gold-deep);stroke-width:.3}
+.dd-outline-edges{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.dd-outline-edges button{font-size:12px;padding:0 10px}
 .dd-outline-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0}.dd-outline-actions strong{flex-basis:100%;font-size:13px}
 .dd-skirting{margin:24px 0 28px;padding-top:16px;border-top:1px solid var(--dc-rule-soft)}.dd-skirting .dd-fields{margin:12px 0}.dd-skirting-sides .dd-check{margin:4px 0}.dd-skirting-status{margin:8px 0;font-size:12px;color:var(--dc-ok)}
 .dd-part-finishes .dd-fields{margin:12px 0}.dd-part-finish{display:grid;gap:8px;align-content:start;min-width:0}.dd-part-swatch{display:flex;align-items:center;gap:8px;font-size:12px;line-height:1.4;color:var(--dc-ink-2)}.dd-part-swatch img,.dd-part-swatch .dd-swatch-unavailable{flex:none;width:36px;height:36px;min-height:0;padding:0;object-fit:cover;font-size:0}
@@ -230,6 +240,7 @@ body.dd-send-open{overflow:hidden}
 .dd-scene-tools .dd-view-toggle{width:100%}.dd-scene-tools .dd-view-toggle button{flex:1 1 auto;padding:0 8px}.dd-day-night button{min-width:84px}
 .dd-title-block{grid-template-columns:repeat(2,minmax(0,1fr))}.dd-title-block>:nth-child(-n+2){grid-column:auto}
 .dd-plan-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.dd-plan-shortcuts .dd-secondary{padding:0 4px}
+.dd-plan-tools{grid-template-columns:repeat(4,minmax(0,1fr));width:100%}.dd-plan-tools button{padding:0 4px;font-size:12px;line-height:1.2}.dd-plan-tool-extras .dd-outline-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 .dd-section-head button{gap:4px 12px;padding:12px 14px}.dd-section-name{font-size:18px}.dd-section-price{max-width:9.5em}.dd-sections .dd-section-body{padding:4px 14px 20px}
 .dd-fields{gap:12px}.dd-fields.three{gap:8px}.dd-field :is(input,select,textarea),.dd-share-link input,.deck-designer select{font-size:16px}.dd-field .dd-number input{padding-left:8px;font-size:17px}
 .dd-screen-move{grid-template-columns:44px minmax(0,1fr) 44px 3em}.dd-screen-move>span{grid-column:1/-1}

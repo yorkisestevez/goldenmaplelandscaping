@@ -16,3 +16,9 @@ export type PreviewMode='3d'|'overview'|'plan'|'drawing'|'structure'|'foundation
 export const CAMERA_MODES:readonly PreviewMode[]=['3d','overview','front','top'];
 export const FRAMING_MODES:readonly PreviewMode[]=['drawing','structure','hardware','foundation'];
 export type AutoCounts={posts:number;stairs:number;privacy:number};
+/**
+ * The site plan's tools (R5), one at a time: size and place the deck (its handles, figures and shape shortcuts), draw a
+ * custom outline, place the stairs, and size the house. Page state only; never saved.
+ */
+export type PlanTool='size'|'outline'|'stairs'|'house';
+export const PLAN_TOOLS:readonly (readonly [PlanTool,string])[]=[['size','Size & place'],['outline','Draw outline'],['stairs','Stairs'],['house','House']];

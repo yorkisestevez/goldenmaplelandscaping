@@ -168,7 +168,10 @@ for(const [name,patch] of [['rectangle',{}],['L-shape',{shape:'L-Shape',cutoutWi
   ok(picked.levels===1&&JSON.stringify(picked.customFront)===JSON.stringify(frontFromOutline(unnotchedMainOutline(drawn)))&&JSON.stringify(kept.customFront)===JSON.stringify(T),'The shape action starts from the deck as drawn, or keeps a clean outline');
   ok(JSON.stringify(chooseShape(drawn,'L-Shape'))==='{"shape":"L-Shape"}','Any other shape changes only the shape');
   ok(step.includes('hint="Set by the outline"')&&step.includes("disabled={custom}")&&step.includes('{!custom&&levelsSection}'),'Width, depth and levels follow the outline');
-  ok(/const onKey=\(i:number\)=>\(e:KeyboardEvent\)=>\{/.test(editor)&&editor.includes('ArrowUp:-step,ArrowDown:step')&&editor.includes('role="button" tabIndex={0}'),'Every edge can be selected and moved from the keyboard');
+  // R5: the drawing moved to the plan (its Draw outline tool); the Deck section lists every edge as a button, and the keys
+  // live in outlineEditMath.ts, shared with the plan.
+  const editMath=read('src/features/deckcraft/designer/outlineEditMath.ts');
+  ok(/const onKey=\(i:number\)=>\(e:KeyboardEvent\)=>\{/.test(editor)&&editMath.includes('ArrowUp:-step,ArrowDown:step')&&editor.includes('onKeyDown={onKey(i)}>{name}</button>'),'Every edge can be selected and moved from the keyboard');
   ok(page.includes("(data.shape==='Custom'&&!isChamferEdgeId(e.id))"),'The stair picker offers every exposed edge of an outline');
 }
 

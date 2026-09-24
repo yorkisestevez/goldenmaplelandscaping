@@ -1,14 +1,15 @@
 import {hasBackyardLayout} from '../backyard';
-import {Suspense,lazy,useMemo,useState} from 'react';
+import {Suspense,lazy,useMemo,useRef,useState,type KeyboardEvent} from 'react';
 import {colourName,type BoardPaintChoice} from '../boardFinishes';
 import ConstructionPlan from '../ConstructionPlan';
 import HouseOpeningsBar from '../HouseOpeningsBar';
 import {trackDeck} from '../deckAnalytics';
 import type {DeckEstimate} from '../designFacts';
 import type {DeckData,HouseOpening,PrivacyScreen} from '../types';
-import {FRAMING_MODES,type AutoCounts,type PreviewMode} from './constants';
+import {FRAMING_MODES,PLAN_TOOLS,type AutoCounts,type PlanTool,type PreviewMode} from './constants';
 import {ViewerBoundary,type Update} from './fields';
 import type {PlanShortcutId} from './planEditMath';
+import type {StairEdge} from './steps/DimensionsStep';
 import TitleBlock from './TitleBlock';
 
 /**
@@ -30,6 +31,13 @@ const SHEETS:readonly (readonly [string,string,Sheet])[]=[['A1','Plan','plan'],[
 const sheetOf=(mode:PreviewMode):Sheet=>mode==='plan'?'plan':FRAMING_MODES.includes(mode)?'framing':'3d';
 /** The shape shortcuts on the plan; their actions (the Deck section's, from deckShapeActions.ts) load with the editor. */
 const SHORTCUTS:readonly (readonly [PlanShortcutId,string])[]=[['Rectangle','Rectangle'],['L-Shape','L-shape'],['Multi-corner','Multi-corner'],['Curved','Curved'],['wrap-left','Wrap left'],['wrap-right','Wrap right'],['wrap-both','Wrap both'],['split','Split level'],['Custom','Draw my own']];
+/** The coach line over the plan, for each tool (and whether the deck is a custom outline). */
+const COACH:Record<PlanTool,(custom:boolean)=>string>={
+  size:()=>'Drag the gold handles to size your deck against your house, or tap a dimension to type it.',
+  outline:custom=>custom?'Drag an edge of your outline, or focus its gold handle and use the arrow keys (Shift for 1 ft). Corners stay square or 45°, on a 6 in grid.':'Draw your own outline: start from a shape under the drawing, or from this deck as it is.',
+  stairs:()=>'Tap a gold edge to put the stairs there, then drag their handle to slide them along it.',
+  house:()=>'Drag the gold handles on the house’s wall ends to set its width.',
+};
 const shortcutOn=(data:DeckData,id:PlanShortcutId)=>id==='split'?data.levels>=2:id==='wrap-left'?!!data.wrap?.left&&!data.wrap.right:id==='wrap-right'?!!data.wrap?.right&&!data.wrap.left:id==='wrap-both'?!!(data.wrap?.left&&data.wrap.right):data.shape===id;
 
 export interface PreviewPanelProps{
@@ -42,8 +50,12 @@ export interface PreviewPanelProps{
   selectHouseOpening:(id:string)=>void;moveHouseOpening:(id:string,patch:Partial<HouseOpening>)=>void;editHouseOpening:()=>void;
   setScreen:(id:string,patch:Partial<PrivacyScreen>)=>void;
   onSnapshotReady:(capture:(()=>string|null)|null)=>void;
-  /** Opens the Deck shape & size section ("Draw my own" shapes the outline there). */
-  onOpenDeck:()=>void;
+  /** The site plan's tool (R5), and a way to pick another ("Draw my own" takes the Draw outline tool). */
+  tool:PlanTool;setTool:(tool:PlanTool)=>void;
+  /** The edges the page offers stairs on (the Stairs section's edge menu), for the Stairs tool. */
+  stairEdges:StairEdge[];
+  /** Opens a section and brings it into view (the plan tools' links to the rest of their settings). */
+  onOpenSection:(id:'deck'|'stairs'|'house')=>void;
   /** Phones: the visitor pinned a compact drawing to the top of the screen while editing (PhoneDeckBar). */
   docked?:boolean;
   /** Accent boards: the tool's current choice (null when it is put down) and what a click on a board does. */
@@ -56,11 +68,20 @@ export interface PreviewPanelProps{
  * The drawing: its sheets (the site plan to draw on, the 3D view to walk around it, the framing), the title block, and
  * doors and windows (the price is in the schedule). The page opens on the site plan; the 3D view loads only when asked for.
  */
-export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,houseOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,onOpenDeck,docked=false,boardPaint,setBoardPaint,onPaintBoard,exteriorOpen,setExteriorOpen}:PreviewPanelProps){
+export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,houseOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,tool,setTool,stairEdges,onOpenSection,docked=false,boardPaint,setBoardPaint,onPaintBoard,exteriorOpen,setExteriorOpen}:PreviewPanelProps){
   // The exterior studio's walls to finish ('' = the whole house): picked in the studio or, while it is open, in 3D.
   const [houseWall,setHouseWall]=useState('');
   // The plan's status line: what a shape shortcut did (and any fix it made), until the next change on the plan.
   const [planStatus,setPlanStatus]=useState('');
+  // Where the plan tool's own buttons go (the editor puts them there once it has loaded). A ref, not state, so the
+  // drawing is not drawn a second time when the page starts.
+  const toolbar=useRef<HTMLDivElement>(null);
+  const pickTool=(next:PlanTool,focus=false)=>{if(next!==tool){setTool(next);setPlanStatus('');}if(focus)document.getElementById(`dd-tool-${next}`)?.focus();};
+  const toolKeys=(e:KeyboardEvent)=>{
+    const i=PLAN_TOOLS.findIndex(([id])=>id===tool),n=PLAN_TOOLS.length;
+    const to=({ArrowLeft:(i+n-1)%n,ArrowUp:(i+n-1)%n,ArrowRight:(i+1)%n,ArrowDown:(i+1)%n,Home:0,End:n-1} as Record<string,number>)[e.key];
+    if(to!==undefined){e.preventDefault();pickTool(PLAN_TOOLS[to][0],true);}
+  };
   const viewerPaint=useMemo(()=>boardPaint&&onPaintBoard?{scope:boardPaint.scope,onPaint:onPaintBoard}:undefined,[boardPaint,onPaintBoard]);
   const sheet=sheetOf(mode),onPlan=sheet==='plan',framing=sheet==='framing',current=SHEETS.findIndex(s=>s[2]===sheet);
   const drawing=onPlan?'Site plan':framing?'Framing':'3D view';
@@ -68,12 +89,12 @@ export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,
   const pickTab=(i:number)=>{pick(SHEETS[i][2]);document.getElementById(`dd-tab-${i}`)?.focus();};
   const camera=(view:PreviewMode,name:string)=><button type="button" aria-pressed={mode===view} onClick={()=>setMode(view)}>{name}</button>;
   const shortcut=(id:PlanShortcutId)=>{void loadPlanEditor().then(m=>{
-    const r=m.planShortcut(data,id);setPlanStatus(r.status);if(r.patch)update(r.patch);if(r.openDeck)onOpenDeck();
+    const r=m.planShortcut(data,id);setPlanStatus(r.status);if(r.patch)update(r.patch);if(r.tool)setTool(r.tool);
     trackDeck('deckcraft_plan','deck_plan_shortcut');
   }).catch(()=>setPlanStatus('The shortcut could not load. Check your connection and try again.'));};
   // A 3D view (a camera, or a 3D contractor view) needs WebGL; the plans are drawn as SVG.
   const show3d=mounted&&hasWebGL&&mode!=='plan'&&mode!=='drawing';
-  const sitePlan=<ConstructionPlan model={estimate.model} data={data} variant="site"/>,framingPlan=<ConstructionPlan model={estimate.model} data={data}/>,flat=framing?framingPlan:sitePlan;
+  const sitePlan=<ConstructionPlan model={estimate.model} data={data} variant="site" wholeHouse={tool==='house'}/>,framingPlan=<ConstructionPlan model={estimate.model} data={data}/>,flat=framing?framingPlan:sitePlan;
   const loading=<>{flat}<p className="dd-canvas-loading" role="status">Loading the 3D view…</p></>;
   return <aside id="deck-live-preview" className={`dd-preview${docked?' dd-preview-docked':''}`}>
     <div className="dd-preview-head">
@@ -83,7 +104,8 @@ export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,
       <h2>{drawing} · {data.width} × {data.length} ft deck <small>· {data.height} in high</small></h2>
     </div>
     <div id="dd-sheet" className="dd-sheet-panel" role="tabpanel" aria-labelledby={`dd-tab-${current}`}>
-      {onPlan&&<p className="dd-plan-coach">Drag the gold handles to size your deck against your house, or tap a dimension to type it.</p>}
+      {onPlan&&<><p className="dd-plan-coach">{COACH[tool](data.shape==='Custom')}</p>
+        <div className="dd-plan-tools" role="radiogroup" aria-label="Plan tools" onKeyDown={toolKeys}>{PLAN_TOOLS.map(([id,label])=><button key={id} id={`dd-tool-${id}`} type="button" role="radio" aria-checked={tool===id} tabIndex={tool===id?0:-1} onClick={()=>pickTool(id)}>{label}</button>)}</div></>}
       {sheet==='3d'&&<div className="dd-scene-tools"><div className="dd-view-toggle" role="group" aria-label="Camera">{camera('3d','Corner')}{camera('overview','Overview')}{camera('front','Front')}{camera('top','Above')}</div><div className="dd-day-night" role="group" aria-label="Day or night preview"><button type="button" aria-pressed={data.sceneLighting!=='Evening'} onClick={()=>update({sceneLighting:'Daylight'})}><span aria-hidden="true">☀</span> Day</button><button type="button" aria-pressed={data.sceneLighting==='Evening'} onClick={()=>update({sceneLighting:'Evening'})}><span aria-hidden="true">☾</span> Night</button></div><label className="dd-check dd-preview-light-switch"><input type="checkbox" role="switch" checked={data.lightingPreviewOn!==false} onChange={e=>update({lightingPreviewOn:e.target.checked})}/><span>Preview lights {data.lightingPreviewOn===false?'off':'on'}</span></label></div>}
       {sheet==='3d'&&data.sceneLighting==='Evening'&&!hasFixtures&&<div className="dd-night-hint" role="status"><p><strong>No lights on this design yet.</strong> Light every railing post and stair riser in one step.</p><button type="button" className="dd-primary" disabled={!autoCounts.posts&&!autoCounts.stairs} onClick={()=>update({autoLighting:{...data.autoLighting,posts:autoCounts.posts>0,stairs:autoCounts.stairs>0},lightingPreviewOn:true})}>Add post &amp; step lights</button><small>Adds the fixtures and a transformer to your estimate.</small></div>}
       {framing&&<div className="dd-view-toggle dd-framing-modes" role="group" aria-label="Contractor preview modes">{camera('drawing','Plan')}{camera('structure','Framing')}{camera('hardware','Hardware')}{camera('foundation','Below ground')}</div>}
@@ -91,8 +113,9 @@ export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,
       {/* The site plan (in the prerendered page) shows at once; its handles arrive once the page runs. A 3D view shows
           the plan until three.js has loaded. */}
       <div className="dd-canvas">{show3d?<ViewerBoundary fallback={flat}><Suspense fallback={loading}><Viewer deckOnly={!hasBackyardLayout(data)} yardModel={estimate.yardModel} data={data} model={estimate.model} view={mode} structure={mode==='structure'||mode==='hardware'} cutaway={mode==='foundation'} selectedHouseOpeningId={pickedHouseOpeningId||(houseOpen?effectiveHouseOpeningId:undefined)} onSelectHouseOpening={selectHouseOpening} onMoveHouseOpening={moveHouseOpening} onContextLost={()=>setHasWebGL(false)} onMovePrivacyScreen={(id,offsetPct)=>setScreen(id,{offsetPct})} onSnapshotReady={onSnapshotReady} boardPaint={viewerPaint} selectedHouseWallId={exteriorOpen?houseWall:undefined} onSelectHouseWall={exteriorOpen?setHouseWall:undefined}/></Suspense></ViewerBoundary>
-        :onPlan?<>{sitePlan}{mounted&&<Suspense fallback={null}><PlanEditor data={data} model={estimate.model} update={update} onEdited={()=>setPlanStatus('')}/></Suspense>}</>:flat}</div>
-      {onPlan&&<><div className="dd-plan-shortcuts" role="group" aria-label="Shape shortcuts">{SHORTCUTS.map(([id,label])=><button key={id} type="button" className="dd-secondary" aria-pressed={shortcutOn(data,id)} onClick={()=>shortcut(id)}>{label}</button>)}</div>
+        :onPlan?<>{sitePlan}{mounted&&<Suspense fallback={null}><PlanEditor data={data} model={estimate.model} update={update} onEdited={()=>setPlanStatus('')} tool={tool} stairEdges={stairEdges} onStatus={setPlanStatus} toolbar={toolbar} onOpenSection={onOpenSection}/></Suspense>}</>:flat}</div>
+      {onPlan&&<>{tool==='size'&&<div className="dd-plan-shortcuts" role="group" aria-label="Shape shortcuts">{SHORTCUTS.map(([id,label])=><button key={id} type="button" className="dd-secondary" aria-pressed={shortcutOn(data,id)} onClick={()=>shortcut(id)}>{label}</button>)}</div>}
+        <div className="dd-plan-tool-extras" ref={toolbar}/>
         <p className="dd-plan-status" role="status">{planStatus}</p></>}
       {framing&&<><p className="dd-note">Inspect framing, connections and below-ground components.</p><dl className="dd-quantities" aria-label="Modeled quantities">{[['Support posts',estimate.model.quantities.supportPosts],['Footings',estimate.model.quantities.footings],['Joists',estimate.model.quantities.joists],['Railing posts',estimate.model.quantities.railingPosts],['Stair treads',estimate.model.quantities.stairTreads],['Stringers',estimate.model.quantities.stringers],['Breaker boards',estimate.model.quantities.breakerBoards],['Blocking pieces',estimate.model.quantities.blocking]].map(([label,n])=><div key={label}><dt>{label}</dt><dd>{n}</dd></div>)}</dl></>}
     </div>

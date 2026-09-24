@@ -67,6 +67,14 @@ const planHandle=(page:Page,name:string)=>page.getByRole('slider',{name,exact:tr
 const ghost=(page:Page)=>drawing(page).locator('.dd-plan-ghost');
 const shortcuts=(page:Page)=>page.getByRole('group',{name:'Shape shortcuts'});
 const planStatus=(page:Page)=>preview(page).locator('.dd-plan-status');
+/** The plan's tools (R5): Size & place, Draw outline, Stairs and House, one at a time. Picks one. */
+async function planTool(page:Page,name:'Size & place'|'Draw outline'|'Stairs'|'House'){
+  const tool=page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true});
+  await tool.click();
+  await expect(tool).toHaveAttribute('aria-checked','true');
+}
+/** The Stairs tool's mark on an edge the stairs can go on ("left side", "Right wing end"). */
+const stairMark=(page:Page,edge:string)=>drawing(page).getByRole('button',{name:`Put the stairs on the ${edge}`,exact:true});
 /** Every request for the 3D viewer's chunk (three.js), from now on. */
 const viewerRequests=(page:Page)=>{const urls:string[]=[];page.on('request',r=>{if(/Deck3DViewer-/.test(r.url()))urls.push(r.url());});return urls;};
 /** The accent-board paint tool's chip over the drawing. */
@@ -166,6 +174,14 @@ test('reaches every feature of the designer',async({page})=>{
     for(const name of ['Deck depth, front edge','Deck width, right end','Deck width, left end','Deck position along the house'])await reach(`Plan handle: ${name}`,planHandle(page,name));
     await reach('Typing the width on the plan',drawing(page).getByRole('button',{name:'Deck width 16 ft: type a new width'}));
     for(const name of ['Rectangle','L-shape','Multi-corner','Curved','Wrap left','Wrap right','Wrap both','Split level','Draw my own'])await reach(`Shape shortcut: ${name}`,shortcuts(page).getByRole('button',{name,exact:true}));
+    for(const name of ['Size & place','Draw outline','Stairs','House'])await reach(`Plan tool: ${name}`,page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true}));
+    await planTool(page,'Stairs');
+    await reach('Stairs on the plan',planHandle(page,'Stairs, position along the edge'));
+    await planTool(page,'House');
+    await reach('House size on the plan',planHandle(page,'House width, right wall'));
+    await planTool(page,'Draw outline');
+    await reach('Outline shapes on the plan',page.getByRole('group',{name:'Outline shapes'}).getByRole('button',{name:'T, centre bump-out'}));
+    await planTool(page,'Size & place');
   });
   await test.step('House editor',async()=>{
     await openSection(page,'House');
@@ -880,6 +896,183 @@ test('@phone drags a plan handle by touch, and a swipe over the plan still scrol
   await fileTools(page).getByRole('button',{name:'Undo'}).click();
   await expect(size(page)).toContainText('16 × 12 ft');
   await expect(fileTools(page).getByRole('button',{name:'Undo'})).toBeDisabled();
+  expect(problems).toEqual([]);
+});
+
+test('places the stairs on an edge from the plan and slides them along it, one undo step each',async({page})=>{
+  const problems=await openDesigner(page);
+  await planTool(page,'Stairs');
+  // The page allows the front, left and right sides (the house is behind); the stairs are on the front now.
+  const handle=planHandle(page,'Stairs, position along the edge');
+  await expect(handle).toHaveAttribute('aria-valuenow','50');
+  await expect(handle).toHaveAttribute('aria-valuetext','Stairs 6 ft from the left end of the front edge');
+  await expect(stairMark(page,'left side')).toHaveAttribute('aria-pressed','false');
+  await expect(stairMark(page,'right side')).toBeVisible();
+  await expect(drawing(page).getByRole('button',{name:/^Put the stairs on the (back|front)/})).toHaveCount(0);
+  await stairMark(page,'left side').click();
+  await expect(planStatus(page)).toHaveText('Stairs on the left side.');
+  await expect(handle).toHaveAttribute('aria-valuetext',/^Stairs [\d.]+ ft from the back end of the left side$/);
+  await expect(handle).toBeFocused();
+  await expect(changes(page)).toHaveCount(1);
+  const placed=await price(page).textContent();
+  // Slide them toward the house: a ghost while dragging, then one change.
+  const box=(await handle.boundingBox())!,x=box.x+box.width/2,y=box.y+box.height/2;
+  await page.mouse.move(x,y);await page.mouse.down();
+  await page.mouse.move(x,y-30,{steps:4});
+  await page.waitForTimeout(700);
+  await page.mouse.move(x,y-60,{steps:4});
+  await expect(ghost(page)).toHaveCount(1);
+  await expect(changes(page)).toHaveCount(1);
+  await page.mouse.up();
+  await expect(ghost(page)).toHaveCount(0);
+  const offset=Number(await handle.getAttribute('aria-valuenow'));
+  expect(offset).toBeLessThan(50);
+  await expect(changes(page)).toHaveCount(2);
+  await openSection(page,'Stairs & railings');
+  await expect(page.getByLabel('Primary stair location',{exact:true})).toHaveValue('Left');
+  await expect(page.getByLabel('Position along the edge',{exact:true})).toHaveValue(String(offset));
+  // One undo takes the slide back, a second the move to the left side, and then there is nothing left to undo.
+  const undo=fileTools(page).getByRole('button',{name:'Undo'});
+  await undo.click();
+  await expect(page.getByLabel('Position along the edge',{exact:true})).toHaveValue('50');
+  await expect(page.getByLabel('Primary stair location',{exact:true})).toHaveValue('Left');
+  await expect(price(page)).toHaveText(placed??'');
+  await undo.click();
+  await expect(page.getByLabel('Primary stair location',{exact:true})).toHaveValue('Front');
+  await expect(undo).toBeDisabled();
+  expect(problems).toEqual([]);
+});
+
+test('resizes the house from its wall end on the plan, as the House section’s width does',async({page})=>{
+  const problems=await openDesigner(page);
+  await planTool(page,'House');
+  const right=planHandle(page,'House width, right wall'),left=planHandle(page,'House width, left wall');
+  await expect(right).toHaveAttribute('aria-valuenow','27');
+  await expect(left).toBeVisible();
+  const leftAt=(await left.boundingBox())!;
+  const box=(await right.boundingBox())!,x=box.x+box.width/2,y=box.y+box.height/2;
+  await page.mouse.move(x,y);await page.mouse.down();
+  await page.mouse.move(x+40,y,{steps:5});
+  await expect(ghost(page)).toHaveCount(2);
+  await expect(right).toHaveAttribute('aria-valuetext',/^House (2[89]|3\d)(\.5)? ft wide$/);
+  await page.mouse.up();
+  await expect(ghost(page)).toHaveCount(0);
+  const width=Number(await right.getAttribute('aria-valuenow'));
+  expect(width).toBeGreaterThan(27);
+  // The other wall end stays where it was on the drawing (the drawing rescales to the wider house, so allow a little).
+  expect(Math.abs((await left.boundingBox())!.x-leftAt.x)).toBeLessThan(40);
+  await expect(changes(page)).toHaveCount(1);
+  await openSection(page,'House');
+  await expect(page.getByLabel('House width',{exact:true})).toHaveValue(String(width));
+  // From the keyboard: Home is the House section's smallest house (a moment later, so it is an undo step of its own).
+  await page.waitForTimeout(700);
+  await left.focus();
+  await page.keyboard.press('Home');
+  await expect(left).toHaveAttribute('aria-valuenow','12');
+  await expect(page.getByLabel('House width',{exact:true})).toHaveValue('12');
+  const undo=fileTools(page).getByRole('button',{name:'Undo'});
+  await undo.click();await undo.click();
+  await expect(page.getByLabel('House width',{exact:true})).toHaveValue('27');
+  await expect(undo).toBeDisabled();
+  expect(problems).toEqual([]);
+});
+
+test('starts a T outline on the plan and drags one of its edges, one change and one undo step',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  await planTool(page,'Draw outline');
+  await page.getByRole('group',{name:'Outline shapes'}).getByRole('button',{name:'T, centre bump-out'}).click();
+  await expect(planStatus(page)).toHaveText('Starting shape: T, centre bump-out. Drag an edge to change it.');
+  await expect(price(page)).not.toHaveText(before??'');
+  const drawn=await price(page).textContent();
+  const edge=planHandle(page,'Front edge 2');
+  await expect(edge).toHaveAttribute('aria-valuenow','12');
+  const box=(await edge.boundingBox())!,x=box.x+box.width/2,y=box.y+box.height/2;
+  await page.mouse.move(x,y);await page.mouse.down();
+  await page.mouse.move(x,y+30,{steps:4});
+  await page.waitForTimeout(700);
+  await page.mouse.move(x,y+60,{steps:4});
+  await expect(ghost(page)).toHaveCount(1);
+  await expect(price(page)).toHaveText(drawn??'');
+  await page.mouse.up();
+  await expect(ghost(page)).toHaveCount(0);
+  await expect(edge).not.toHaveAttribute('aria-valuenow','12');
+  await expect(price(page)).not.toHaveText(drawn??'');
+  await expect(changes(page)).toHaveCount(2);
+  // The Deck section's outline editor shows the same outline.
+  await openSection(page,'Deck shape & size');
+  await expect(page.getByRole('group',{name:'Custom outline'}).getByRole('status')).toContainText('Custom outline: 8 corners');
+  await fileTools(page).getByRole('button',{name:'Undo'}).click();
+  await expect(edge).toHaveAttribute('aria-valuenow','12');
+  await expect(price(page)).toHaveText(drawn??'');
+  expect(problems).toEqual([]);
+});
+
+test('moves an outline edge on the plan with the arrow keys, Home and End, and says when the rules refuse a move',async({page})=>{
+  const problems=await openDesigner(page);
+  await shortcuts(page).getByRole('button',{name:'Draw my own',exact:true}).click();
+  await expect(page.getByRole('radio',{name:'Draw outline'})).toHaveAttribute('aria-checked','true');
+  await expect(planStatus(page)).toHaveText('Now your own outline: drag its edges on the plan, or start from a shape below it.');
+  const edge=planHandle(page,'Front edge 1');
+  await edge.focus();
+  await page.keyboard.press('ArrowUp');
+  await expect(edge).toHaveAttribute('aria-valuenow','12.5');
+  await expect(edge).toHaveAttribute('aria-valuetext','12.5 ft out from the house, 16 ft long');
+  await expect(size(page)).toContainText('16 × 12.5 ft');
+  await page.keyboard.press('Shift+ArrowUp');
+  await expect(edge).toHaveAttribute('aria-valuenow','13.5');
+  await page.keyboard.press('End');
+  await expect(edge).toHaveAttribute('aria-valuenow','40');
+  await page.keyboard.press('Home');
+  await expect(edge).toHaveAttribute('aria-valuenow','4');
+  await expect(edge).toBeFocused();
+  // Below 4 ft the outline rules refuse it, and the plan says why; the outline stays.
+  await page.keyboard.press('ArrowDown');
+  await expect(planStatus(page)).toContainText('That change does not fit the outline rules');
+  await expect(edge).toHaveAttribute('aria-valuenow','4');
+  await planHandle(page,'Right side').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(size(page)).toContainText('16.5 × 4 ft');
+  await openSection(page,'Deck shape & size');
+  await expect(page.getByRole('group',{name:'Custom outline'}).getByRole('status')).toContainText('16.5 × 4 ft overall');
+  expect(problems).toEqual([]);
+});
+
+test('@phone drags an outline edge by touch in the Draw outline tool, and a swipe over the plan still scrolls the page',async({page})=>{
+  const problems=await openDesigner(page);
+  await planTool(page,'Draw outline');
+  await page.getByRole('button',{name:'Start from this deck'}).click();
+  const edge=planHandle(page,'Front edge 1');
+  await expect(edge).toHaveAttribute('aria-valuenow','12');
+  const cdp=await page.context().newCDPSession(page);
+  const touch=(type:'touchStart'|'touchMove'|'touchEnd',x:number,y:number)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'?[]:[{x,y}]});
+  const swipe=async(x:number,y:number,dx:number,dy:number)=>{
+    await touch('touchStart',x,y);
+    for(let i=1;i<=10;i++){await touch('touchMove',x+dx*i/10,y+dy*i/10);await page.waitForTimeout(20);}
+    await page.waitForTimeout(200);
+    await touch('touchEnd',x+dx,y+dy);
+  };
+  const pageY=()=>page.evaluate(()=>window.scrollY);
+  const settled=async()=>{let last=-1;await expect.poll(async()=>{const now=await pageY(),same=now===last;last=now;return same;},{intervals:[200]}).toBe(true);return last;};
+  // The drawing at the top of the screen (the outline's front edge is low on it).
+  const toDrawing=async()=>{await drawing(page).evaluate(el=>el.scrollIntoView({block:'start'}));return settled();};
+  // A swipe up over the drawing, away from the handles, scrolls the page and leaves the outline alone.
+  const top=await toDrawing();
+  const area=(await drawing(page).boundingBox())!;
+  await swipe(area.x+24,area.y+area.height-24,0,-220);
+  await expect.poll(pageY).toBeGreaterThan(top+60);
+  await expect(edge).toHaveAttribute('aria-valuenow','12');
+  // Dragging the front edge by touch moves it once, and does not scroll the page.
+  await settled();
+  const still=await toDrawing();
+  const b=(await edge.boundingBox())!;
+  await swipe(b.x+b.width/2,b.y+b.height/2,0,40);
+  await expect.poll(async()=>Number(await edge.getAttribute('aria-valuenow'))).toBeGreaterThan(12);
+  expect(await settled()).toBe(still);
+  const depth=Number(await edge.getAttribute('aria-valuenow'));
+  await expect(size(page)).toContainText(`16 × ${depth} ft`);
+  await fileTools(page).getByRole('button',{name:'Undo'}).click();
+  await expect(edge).toHaveAttribute('aria-valuenow','12');
   expect(problems).toEqual([]);
 });
 

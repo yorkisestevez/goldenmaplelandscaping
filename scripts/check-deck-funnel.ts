@@ -85,8 +85,8 @@ ok(!designFeatures(design({customerName:'Jane Q Customer',projectAddress:'12 Exa
   ok(['3d','overview','front','top','plan','drawing','structure','hardware','foundation'].every(m=>DECK_LABEL.test(`deck_view_${m}`)),'Every preview mode has a valid label');
   // The site plan (R4): a handle used, a figure typed, a shape shortcut, each once per visit.
   resetDeckAnalyticsVisit();sent.length=0;
-  for(const label of ['deck_plan_drag','deck_plan_drag','deck_plan_typed','deck_plan_shortcut','deck_plan_shortcut'])trackDeck('deckcraft_plan',label);
-  ok(sent.length===3&&sent.every(([event])=>event==='deckcraft_plan')&&sent.map(([,label])=>label).join()==='deck_plan_drag,deck_plan_typed,deck_plan_shortcut','Plan use is counted once per visit, by what was done');
+  for(const label of ['deck_plan_drag','deck_plan_drag','deck_plan_typed','deck_plan_shortcut','deck_plan_shortcut','deck_plan_stairs','deck_plan_stairs','deck_plan_outline','deck_plan_outline','deck_plan_house','deck_plan_house'])trackDeck('deckcraft_plan',label);
+  ok(sent.length===6&&sent.every(([event])=>event==='deckcraft_plan')&&sent.map(([,label])=>label).join()==='deck_plan_drag,deck_plan_typed,deck_plan_shortcut,deck_plan_stairs,deck_plan_outline,deck_plan_house','Plan use (R4) and the plan tools (R5) are counted once per visit, by what was done');
   // Sections (R1): each opened and each first changed is its own label, once per visit; its old step keeps the funnel.
   ok(SECTIONS.every(s=>DECK_LABEL.test(`deck_section_${s.id}`)&&DECK_LABEL.test(`deck_changed_${s.id}`)),'Every section has valid opened and changed labels');
   ok(SECTIONS.map(s=>stepLabel(s.legacyStep)).join()==='deck_step_1_dimensions,deck_step_1_dimensions,deck_step_2_materials,deck_step_3_stairs_railings,deck_step_4_site_extras,deck_step_4_site_extras,deck_step_4_site_extras,deck_step_5_backyard,deck_step_6_estimate','Each section reports the old step it replaces');
@@ -102,7 +102,9 @@ ok(!designFeatures(design({customerName:'Jane Q Customer',projectAddress:'12 Exa
   ok(/setDeckAnalyticsSink\(\(event,label\)=>trackEngagement\(event,label\)\)/.test(page),'The page sends DeckCraft events through the site analytics');
   ok(page.includes("trackDeck('deckcraft_step',stepLabel(0));},[]);")&&page.includes("trackDeck('deckcraft_step',stepLabel(section.legacyStep))")&&page.includes("trackDeck('deckcraft_view',`deck_view_${mode}`)")&&page.includes('designFeatures(data)'),'The page load and each section opened report their step; views and features are reported');
   ok(page.includes("const [mode,setMode]=useState<PreviewMode>('plan');"),'The page opens on the site plan, so deck_view_plan is the view counted on load');
-  for(const label of ['deck_plan_drag','deck_plan_typed','deck_plan_shortcut'])ok(page.includes(`trackDeck('deckcraft_plan','${label}')`),`The site plan reports ${label}`);
+  for(const label of ['deck_plan_drag','deck_plan_typed','deck_plan_shortcut','deck_plan_stairs','deck_plan_outline','deck_plan_house'])ok(page.includes(`trackDeck('deckcraft_plan','${label}')`),`The site plan reports ${label}`);
+  const report=readFileSync(new URL('../docs/deckcraft/funnel-report.md',import.meta.url),'utf8');
+  for(const label of ['deck_plan_stairs','deck_plan_outline','deck_plan_house'])ok(report.includes(`\`${label}\``),`The funnel report explains ${label}`);
   ok(page.includes("trackDeck('deckcraft_section',`deck_section_${section.id}`)")&&/for\(const id of sectionsOfPatch\(patch,data\)\)[^\n]*trackDeck\('deckcraft_section',`deck_changed_\$\{id\}`\)/.test(page),'Opening a section and the first edit in it are reported, through the fields it owns');
   for(const label of ['deck_proposal','deck_summary','deck_json_save','deck_json_import','deck_link_opened','deck_link_failed','deck_link_went_back'])ok(page.includes(`'${label}'`),`The page reports ${label}`);
   ok(page.includes("trackDeck('deckcraft_output',`deck_${kind}`)"),'DXF and OBJ exports are reported');

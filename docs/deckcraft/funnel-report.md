@@ -9,7 +9,7 @@ Every event goes to GA4 as an event name with an `event_label` parameter (`track
 |---|---|---|
 | `deckcraft_step` | `deck_step_1_dimensions` … `deck_step_5_backyard`, `deck_step_6_estimate` | once per visit |
 | `deckcraft_section` | `deck_section_<id>` when a section is opened, `deck_changed_<id>` on the first edit in it; ids `house`, `deck`, `boards`, `stairs`, `lighting`, `extras`, `site`, `backyard`, `proposal` | once per visit |
-| `deckcraft_plan` | `deck_plan_drag` (a handle on the site plan dragged, or moved from the keyboard), `deck_plan_typed` (a width or depth typed on the plan), `deck_plan_shortcut` (a shape shortcut on the plan) | once per visit |
+| `deckcraft_plan` | `deck_plan_drag` (a handle on the site plan dragged, or moved from the keyboard), `deck_plan_typed` (a width or depth typed on the plan), `deck_plan_shortcut` (a shape shortcut on the plan); from R5, `deck_plan_stairs` (stairs put on an edge or slid along it with the plan's Stairs tool), `deck_plan_outline` (a custom outline drawn or reshaped with the Draw outline tool: an edge moved, a starting shape, or an outline started from the deck) and `deck_plan_house` (the house resized from its wall ends with the House tool) | once per visit |
 | `deckcraft_feature` | `deck_shape_*`, `deck_pattern_*`, `deck_wrap`, `deck_corner_chamfer`, `deck_level_2`, `deck_stairs_*`, `deck_lighting`, `deck_bench`, `deck_backyard`, `deck_patio`, `deck_retaining_wall`, `deck_water_feature`, `deck_fire_pit`, `deck_outdoor_kitchen`, `deck_turf`, `deck_landscape_lighting`, … | once per visit |
 | `deckcraft_view` | `deck_view_plan` (the site plan), `deck_view_3d`, `deck_view_overview`, `deck_view_front`, `deck_view_top` (the 3D sheet's cameras), `deck_view_drawing` (the Framing sheet's 2D plan), `deck_view_structure`, `deck_view_hardware`, `deck_view_foundation` | once per visit |
 | `deckcraft_output` | `deck_pdf`, `deck_proposal`, `deck_summary`, `deck_json_save`, `deck_json_import` | every time |
@@ -30,6 +30,8 @@ Every event goes to GA4 as an event name with an `event_label` parameter (`track
 Because visitors no longer have to pass step 2 to reach step 6, the step funnel's percentages are not comparable across the release. Judge the change by the send rate instead: `deck_send_sent` ÷ page views of `/deck-designer`, for the four weeks before the release against the four weeks after.
 
 **From the R4 release (2026-09-24), the page opens on the site plan.** `deck_view_plan` is now sent on every page load (before R4 the load sent `deck_view_3d`), so `deck_view_3d` now means "chose the 3D sheet" and its share of visits drops by design. Phones no longer download the 3D view until it is chosen. Drawing on the plan is counted by `deckcraft_plan`.
+
+**From the R5 release, the plan has tools** (Size & place, Draw outline, Stairs, House). `deck_plan_drag` keeps its meaning for the Size & place handles, which now also include the second level's depth, the wrap-around wings and the angled corners. The new `deck_plan_stairs`, `deck_plan_outline` and `deck_plan_house` labels start at zero on the release date, so compare them only from then on. "Draw my own" now opens the Draw outline tool instead of the Deck section, so `deck_section_deck` may fall a little for visitors who draw their own outline.
 
 A sent design also fires the site's lead conversion (`generate_lead`, form `deck-design`). Its value is the priced subtotal, and it passes the same qualification rules as every other form.
 
@@ -59,7 +61,7 @@ Note: before 2026-09-23 the estimate was `deck_step_5_estimate`; the backyard st
 GA4 → Explore → **Free form**. Rows are Event label, filtered to event name `deckcraft_section`; the metric is Total users. For each section, compare `deck_section_<id>` (opened) with `deck_changed_<id>` (changed something in it). A section that many open but few change is a candidate to simplify; one that senders change far more often than others is worth promoting.
 
 ## Exploration 4: drawing on the plan (from the R4 release)
-GA4 → Explore → **Free form**. Segment A is users with `deckcraft_send` / `deck_send_sent`; segment B is all users with `deckcraft_view` / `deck_view_plan`. Rows are Event label, filtered to event name `deckcraft_plan` or `deckcraft_view`; the metric is Total users. It shows how many visitors size the deck on the plan (`deck_plan_drag`), type a figure (`deck_plan_typed`) or use a shape shortcut (`deck_plan_shortcut`), and how many go on to the 3D sheet (`deck_view_3d`), for senders against everyone.
+GA4 → Explore → **Free form**. Segment A is users with `deckcraft_send` / `deck_send_sent`; segment B is all users with `deckcraft_view` / `deck_view_plan`. Rows are Event label, filtered to event name `deckcraft_plan` or `deckcraft_view`; the metric is Total users. It shows how many visitors size the deck on the plan (`deck_plan_drag`), type a figure (`deck_plan_typed`) or use a shape shortcut (`deck_plan_shortcut`), and how many go on to the 3D sheet (`deck_view_3d`), for senders against everyone. From the R5 release, add `deck_plan_stairs`, `deck_plan_outline` and `deck_plan_house` to see which plan tools senders use.
 
 ## Monthly check (10 minutes)
 - Funnel completion rate and the step with the biggest drop, desktop compared with phone.

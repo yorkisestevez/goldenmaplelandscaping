@@ -15,7 +15,7 @@ import {getHouseContact} from '../features/deckcraft/houseContact';
 import {dollars} from '../features/deckcraft/designFacts';
 import {activeWrap,edgeNameOf} from '../features/deckcraft/lib/wrapGeometry';
 import {angledStairAllowed,angledStairFits,isChamferEdgeId} from '../features/deckcraft/lib/cornerChamfers';
-import {CAMERA_MODES,type PreviewMode} from '../features/deckcraft/designer/constants';
+import {CAMERA_MODES,type PlanTool,type PreviewMode} from '../features/deckcraft/designer/constants';
 import PhoneDeckBar from '../features/deckcraft/designer/PhoneDeckBar';
 import PriceLedger,{ChangeAnnouncer} from '../features/deckcraft/designer/PriceLedger';
 import {priceLedger} from '../features/deckcraft/designer/priceLedgerModel';
@@ -101,6 +101,9 @@ export default function DeckDesigner(){
   // The drawing opens on the site plan: the customer sizes the deck against the house first. 3D is a sheet of its own.
   const [mode,setMode]=useState<PreviewMode>('plan');
   // Opening the exterior studio shows the 3D view (looks never show on the plan).
+  // The site plan's tool (R5). A deck that becomes a custom outline is drawn with the Draw outline tool.
+  const [planTool,setPlanTool]=useState<PlanTool>('size');
+  useEffect(()=>{if(data.shape==='Custom')setPlanTool(t=>t==='size'?'outline':t);},[data.shape]);
   const openExterior=useCallback((open:boolean)=>{setExteriorOpen(open);if(open)setMode(m=>CAMERA_MODES.includes(m)?m:'3d');},[]);
   const [wrapStatus,setWrapStatus]=useState('');
   const [proposal,setProposal]=useState<{image:string|null;date:string}|null>(null);
@@ -286,13 +289,15 @@ export default function DeckDesigner(){
   // Each open section's body, with the page state it needs (the list wraps it in Suspense while its chunk loads).
   const renderSection=(id:SectionId)=>{switch(id){
     case 'house':return <HouseSection data={data} update={update} selectedOpeningId={effectiveHouseOpeningId} onSelectOpening={setSelectedHouseOpeningId} openExterior={()=>openExterior(true)}/>;
-    case 'deck':return <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges}/>;
+    case 'deck':return <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} onDrawOnPlan={drawOnPlan}/>;
     case 'boards':return <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage}/>;
     case 'stairs':return <StairsStep data={data} update={update} stairEdges={stairEdges}/>;
     case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch}/>;
     case 'backyard':return <BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/>;
     case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={saveJSON} onDownloadSummary={download} onExport={kind=>void exportModel(kind)}/>;
   }};
+  // "Draw it on the plan" (the Deck section's outline editor): the Draw outline tool, with the plan brought into view.
+  const drawOnPlan=()=>{setPlanTool('outline');setMode('plan');requestAnimationFrame(()=>document.getElementById('deck-live-preview')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'}));};
   const startOver=()=>{replace(deckReleaseData(structuredClone(DEFAULT_DECK)));closeSections();setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');};
   return <div className="deck-designer">
     <SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>
@@ -300,7 +305,7 @@ export default function DeckDesigner(){
     <div className="dd-title"><h1>Draw your deck on your house.</h1><p>Drag the deck to size on the plan of your house, pick every finish, and see an itemized price as you go.</p></div>
     <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}/>
     <main className="dd-workspace">
-      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} onOpenDeck={()=>openSection('deck',true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior}/>
+      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} tool={planTool} setTool={setPlanTool} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior}/>
       <section className="dd-controls" aria-label="Deck configuration">
         <SectionList data={data} ledger={schedule} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection}/>
       </section>
