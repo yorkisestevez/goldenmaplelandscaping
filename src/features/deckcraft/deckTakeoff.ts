@@ -3,6 +3,8 @@ import {frameWrap,wrapBoardEndBlocking,planZones} from './wrapFraming';
 import {activeWrap,type ActiveWrap,type WrapHip} from './lib/wrapGeometry';
 import {polygonCut,polygonBoard,splitBoard,offsetPolygons,signedArea} from './lib/polygonCuts';
 import {getFinishedFootprint} from './lib/finishedFootprint';
+import {applyInlays,planInlays,INLAY_KIND_NAMES,type InlayPlan} from './lib/inlayGeometry';
+import {frameInlays} from './inlayFraming';
 import {computeStruct,computeStairs} from './referenceConstruction';
 import {type DeckData, RAILING_COSTS} from './types';
 import {DECKING_CATALOGUE} from './manufacturerCatalog';
@@ -24,7 +26,9 @@ export type DeckLevel={kind?:'deck'|'landing'|'winder';index?:number;rim?:Member
   /** Main deck with angled corners only: the angled front edges (their board ends sit on angled nailers). */
   angledEdges?:{a:PlanPoint;b:PlanPoint}[];footprint:FootprintPlan;deckingFootprint?:FootprintPlan;top:number;offset:V3;boards:BoardRun[];supports:V3[];joists:Member[];beams:Member[];blocking:Member[];breakers:number[];reference:any;zones?:FramedZone[];
   /** Wrap-around main deck only: hip centre lines and the framing zones with their joist direction. */
-  hips?:WrapHip[];wrapZones?:{id:string;label:string;outline:PlanPoint[];joistDir:PlanPoint}[]};
+  hips?:WrapHip[];wrapZones?:{id:string;label:string;outline:PlanPoint[];joistDir:PlanPoint}[];
+  /** Decorative inlays planned on this level (lib/inlayGeometry.ts), built or not; absent when it has none. */
+  inlays?:InlayPlan[]};
 const distance=(a:V3,b:V3)=>Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z);
 const mix=(a:V3,b:V3,t:number):V3=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t});
 export function polygonArea(fp:FootprintPlan){return Math.abs(fp.outline.reduce((a,p,i)=>{const q=fp.outline[(i+1)%fp.outline.length];return a+p.x*q.y-q.x*p.y;},0))/288;}
@@ -134,8 +138,13 @@ export function buildDeckTakeoff(data:DeckData){
       for(let z=Math.min(...ys);z<end-.001;z+=stockLength+gap)for(const p of polygonCut([region],[breakerStrip(x,z,Math.min(end,z+stockLength))]))boards.push(polygonBoard(p,90,'breaker'));
     }
     else for(const x of breakers)for(const [a,b]of spans(deckingFootprint,x,'x')){const from=a+inset,to=b-inset;for(let z=from;z<to;z+=stockLength+gap){const len=Math.min(stockLength,to-z);boards.push({cx:x,cy:z+len/2,length:len,angleDeg:90,role:'breaker'});}}
-    const installed=boards.flatMap(b=>splitBoard(b,data.boardWidth,stockLength,gap));
-    const result:DeckLevel={kind,index,footprint,deckingFootprint,top,offset,supports,joists,beams,blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,kind==='deck'&&index===0&&data.hasInlay?data.inlayLf*12:0,stockLength,inset,anyAngled?fieldPolygons:undefined),breakers,reference,...(zones.length>1?{zones}:{}),...(angled.length?{angledEdges:angled}:{})};addConstructionDetails(result,data.boardWidth,borders);
+    // Decorative inlays on this deck level: planned on its field, the boards cut around them (lib/inlayGeometry.ts).
+    const levelInlays=kind==='deck'?(data.inlays??[]).filter(i=>(i.level??1)===index+1):[];
+    const inlayPlans=levelInlays.length?planInlays(levelInlays,{fieldPolygons,boardWidth:data.boardWidth,gap,stockLength,centre:{x:footprint.bounds.w/2,y:footprint.bounds.h/2},...(index===0&&data.hasInlay?{blocked:'Turn off the centre inlay stripe to build decorative inlays on the main deck.'}:{})}):[];
+    const installed=(inlayPlans.length?applyInlays(boards,inlayPlans,data.boardWidth,gap):boards).flatMap(b=>splitBoard(b,data.boardWidth,stockLength,gap));
+    const result:DeckLevel={kind,index,footprint,deckingFootprint,top,offset,supports,joists,beams,blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,kind==='deck'&&index===0&&data.hasInlay?data.inlayLf*12:0,stockLength,inset,anyAngled?fieldPolygons:undefined),breakers,reference,...(zones.length>1?{zones}:{}),...(angled.length?{angledEdges:angled}:{})};
+    if(inlayPlans.length){result.inlays=inlayPlans;frameInlays(result,inlayPlans,{boardWidth:data.boardWidth,gap,spacing,pattern:data.pattern});}
+    addConstructionDetails(result,data.boardWidth,borders);
     // Custom outlines only (existing designs keep their blocks): a board-end block with no length, between members
     // that touch (a V-shaped 45° front can put two there), is no block.
     if(customDeck)result.blocking=result.blocking.filter(b=>b.role!=='board-end'||memberLength(b)>=.05);
@@ -339,6 +348,12 @@ export function buildDeckTakeoff(data:DeckData){
   // Defensive: the 45° layouts are aligned to angled edges, so a long thin rip there means that alignment failed.
   const thinStrips=levels[0].angledEdges?.length?levels[0].boards.filter(b=>b.angleDeg%90!==0&&(b.width??data.boardWidth)<1.5&&b.length>6).length:0;
   if(thinStrips)issues.push(`${angledWord}: ${thinStrips} decking piece${thinStrips===1?' is':'s are'} ripped narrower than 1.5 in along a run. The installer will need to adjust the board layout ${custom?'along the 45° edges':'at the corner'}.`);
+  // Decorative inlays: the ones not built say why; built ones get a framing review note.
+  if(wrap&&(data.inlays??[]).some(i=>(i.level??1)===1))issues.push('Decorative inlays are not built on a wrap-around deck: the zones meet on hips. Remove the wrap-around or the inlays on the main deck.');
+  // Where a fill meets a slanted frame edge, some pieces are ripped thin: say so, as angled corners do.
+  for(const level of levels)for(const [n,p] of (level.inlays??[]).entries()){const thin=level.boards.filter(b=>b.inlay===p.id&&b.role==='inlay-fill'&&(b.width??data.boardWidth)<1.5&&b.length>6).length;if(thin)issues.push(`${level.index?`Level ${level.index+1} `:''}inlay ${n+1}: ${thin} piece${thin===1?' is':'s are'} ripped narrower than 1.5 in along the frame. The installer will adjust the layout inside the frame.`);}
+  for(const level of levels)for(const [n,p] of (level.inlays??[]).entries())if(p.status!=='ok')issues.push(`${level.index?`Level ${level.index+1} `:''}inlay ${n+1} (${INLAY_KIND_NAMES[p.kind]}) is not built: ${p.message}`);
+  if(levels.some(l=>l.inlays?.some(p=>p.status==='ok')))issues.push('Decorative inlays: blocking is laid out under every joint where boards end at an inlay, with nailers under frame boards that run with the joists and ladder blocking under the inside where the joists alone do not carry it. Confirm fastening with the decking manufacturer before construction.');
   if(wrap)issues.push('Wrap-around corner: the doubled hip, the skewed jack-joist and hip hangers, and the posts under the hip are laid out from the existing beam span table. Have the corner framing reviewed by an engineer before construction.');
   for(const level of levels){
     if(level.kind!=='deck')continue;

@@ -1,7 +1,7 @@
 import {DECKING_CATALOGUE,type CatalogueDecking} from './manufacturerCatalog';
 import type {DeckTakeoff} from './deckTakeoff';
 import {modelAddresses,type BoardAddress} from './lib/boardAddress';
-import type {BoardColour,ColourRef,DeckData,MaterialColor} from './types';
+import type {BoardColour,BoardPattern,ColourRef,DeckData,MaterialColor} from './types';
 
 /**
  * Accent-colour deck boards: one board, or a whole row, in another real product colour. Only colours from
@@ -37,16 +37,22 @@ export function accentAllowed(data:Pick<DeckData,'deckingMaterial'>,ref:ColourRe
 }
 
 export interface AccentGroup{ref:ColourRef;material:CatalogueDecking;color:MaterialColor;boards:{level:number;index:number}[]}
+/** Boards bought together: an accent colour (at the deck's waste allowance), or one colour of inlay boards at the
+ * allowance of what they are (a frame is picture-frame work; a fill is its own pattern). */
+export interface StockGroup extends AccentGroup{kind:'accent'|'inlay';wasteKey?:BoardPattern}
 export interface BoardFinishPlan{
   /** Every board's address, by model level then board (null where boards take no accent colour). */
   addresses:(BoardAddress|null)[][];
   /** Each board's accent colour, or null for the deck's own colour. */
   colours:(ColourRef|null)[][];
+  /** Boards drawn in a colour other than the deck's (accents and coloured inlays), by colour. */
   groups:AccentGroup[];
+  /** Boards ordered apart from the main decking: accent colours, and every inlay board (in any colour). */
+  stock:StockGroup[];
   /** Saved choices that colour at least one board, and those that no longer do (never moved to another board). */
   matched:BoardColour[];unmatched:BoardColour[];
-  /** Boards in an accent colour. */
-  pieces:number;
+  /** Boards in an accent colour (not counting inlays), and inlay boards. */
+  pieces:number;inlayPieces:number;
 }
 
 const sameRow=(o:BoardColour,a:{lv:number;role:string;course:string})=>o.lv===a.lv&&o.role===a.role&&o.course===a.course;
@@ -59,7 +65,11 @@ export function boardFinishPlan(data:DeckData,model:DeckTakeoff):BoardFinishPlan
   // Dark Slate borders are their own product, and a colour outside this deck's collections is not applied.
   const usable=overrides.map(o=>accentAllowed(data,o.colour)&&!(darkBorder&&o.role==='border'));
   const hit=overrides.map(()=>false);
-  const colours=addresses.map(level=>level.map(a=>{
+  // Inlay boards take their inlay's frame or fill colour (lib/inlayGeometry.ts); one this deck can't take is its own.
+  const inlays=new Map((data.inlays??[]).map(i=>[i.id,i]));
+  const inlayColour=(role:string|undefined,id:string)=>{const i=inlays.get(id),ref=role==='inlay-frame'?i?.frame:i?.fill;return ref&&ref!==main&&accentAllowed(data,ref)?ref:null;};
+  const colours=addresses.map((level,l)=>level.map((a,bi)=>{
+    const board=model.levels[l].boards[bi];if(board.inlay)return inlayColour(board.role,board.inlay);
     if(!a)return null;
     let piece=-1,course=-1;
     overrides.forEach((o,i)=>{
@@ -76,13 +86,22 @@ export function boardFinishPlan(data:DeckData,model:DeckTakeoff):BoardFinishPlan
     const parsed=parseColourRef(ref)!,group=byRef.get(ref)??{ref,...parsed,boards:[]};
     group.boards.push({level:l,index});byRef.set(ref,group);
   }));
-  const groups=[...byRef.values()];
-  return {addresses,colours,groups,matched:overrides.filter((_,i)=>hit[i]),unmatched:overrides.filter((_,i)=>!hit[i]),pieces:groups.reduce((n,g)=>n+g.boards.length,0)};
+  const groups=[...byRef.values()],stock=new Map<string,StockGroup>();
+  let pieces=0,inlayPieces=0;
+  colours.forEach((level,l)=>level.forEach((ref,index)=>{
+    const board=model.levels[l].boards[index];
+    if(!board.inlay&&!ref)return;
+    const wasteKey:BoardPattern|undefined=board.inlay?(board.role==='inlay-frame'?'Picture Frame':(inlays.get(board.inlay)?.pattern??'Straight')):undefined;
+    const colour=ref??main,key=`${wasteKey??'accent'}|${colour}`,group=stock.get(key)??{ref:colour,...parseColourRef(colour)!,boards:[],kind:board.inlay?'inlay' as const:'accent' as const,...(wasteKey?{wasteKey}:{})};
+    group.boards.push({level:l,index});stock.set(key,group);
+    if(board.inlay)inlayPieces++;else pieces++;
+  }));
+  return {addresses,colours,groups,stock:[...stock.values()],matched:overrides.filter((_,i)=>hit[i]),unmatched:overrides.filter((_,i)=>!hit[i]),pieces,inlayPieces};
 }
 
 export function colourName(ref:ColourRef){const p=parseColourRef(ref);return p?`${p.color.name} (${p.material.name})`:ref;}
 /** One line for the design facts, the proposal and a sent design, e.g. "Accent boards: 14 in Dark Cocoa (…)". */
 export function accentWords(plan:BoardFinishPlan):string|undefined{
   if(!plan.pieces)return undefined;
-  return `Accent boards: ${plan.groups.map(g=>`${g.boards.length} in ${g.color.name} (${g.material.name})`).join('; ')}`;
+  return `Accent boards: ${plan.stock.filter(g=>g.kind==='accent').map(g=>`${g.boards.length} in ${g.color.name} (${g.material.name})`).join('; ')}`;
 }

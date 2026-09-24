@@ -23,7 +23,7 @@ import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
 import DesignTools from '../features/deckcraft/designer/DesignTools';
 import PreviewPanel from '../features/deckcraft/designer/PreviewPanel';
 import DimensionsStep from '../features/deckcraft/designer/steps/DimensionsStep';
-import MaterialsStep,{loadBoardColourPanel} from '../features/deckcraft/designer/steps/MaterialsStep';
+import MaterialsStep,{loadBoardColourPanel,loadInlayEditor} from '../features/deckcraft/designer/steps/MaterialsStep';
 import type {BoardPaintChoice} from '../features/deckcraft/boardFinishes';
 import type {paintBoard as PaintBoard} from '../features/deckcraft/boardPaint';
 import StairsStep from '../features/deckcraft/designer/steps/StairsStep';
@@ -91,7 +91,7 @@ export default function DeckDesigner(){
   useEffect(()=>{trackDeck('deckcraft_step',stepLabel(step));},[step]);
   useEffect(()=>{trackDeck('deckcraft_view',`deck_view_${mode}`);},[mode]);
   // Fetch the on-demand pieces once the page has settled, so opening one is instant.
-  useEffect(()=>{const timer=setTimeout(()=>{for(const load of [loadBackyardStep,loadSendDialog,loadProposalDialog,loadBoardColourPanel])load().catch(()=>{/* Loaded again when opened. */});},4000);return()=>clearTimeout(timer);},[]);
+  useEffect(()=>{const timer=setTimeout(()=>{for(const load of [loadBackyardStep,loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor])load().catch(()=>{/* Loaded again when opened. */});},4000);return()=>clearTimeout(timer);},[]);
   const featureKey=designFeatures(data).join(' ');
   useEffect(()=>{for(const label of featureKey.split(' '))if(label)trackDeck('deckcraft_feature',label);},[featureKey]);
   const {estimate,lightingCheck,autoCounts,hasFixtures,reviewFlags,described}=useDeckEstimate(data,setData);

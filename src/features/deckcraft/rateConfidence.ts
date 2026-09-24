@@ -33,5 +33,7 @@ export function unconfirmedRates():RateNote[]{
       note:'Listed for a builder quote until the owner sets a factor.'},
     {id:'accent-board-labour',rate:'Accent-colour board labour',value:'Builder quote (the boards themselves are priced at their own collection rate)',status:'owner-decision',where:'calculations.ts (accent-colour boards)',
       note:'Fitting boards in a second colour has no labour rate in the price book. Listed for a builder quote until the owner sets one.'},
+    {id:'inlay-labour',rate:'Decorative inlay labour',value:'Breaker-board rate (1.5 crew-hours per 10 ft) on each frame\'s fitted edge, plus the inside at its pattern\'s labour factor over the deck\'s',status:'owner-decision',where:'lib/inlayGeometry.ts inlayCrewDays',
+      note:'Reuses existing rates, as the owner chose on 2026-09-23. A dedicated inlay rate would replace it.'},
   ];
 }

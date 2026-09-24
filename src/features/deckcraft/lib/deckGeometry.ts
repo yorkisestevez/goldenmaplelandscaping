@@ -279,7 +279,9 @@ export function getRailingSegments(
 export interface BoardRun {
   width?:number;
   polygon?:PlanPoint[];
-  role?:'field'|'border'|'breaker'|'inlay';
+  role?:'field'|'border'|'breaker'|'inlay'|'inlay-frame'|'inlay-fill';
+  /** The decorative inlay (DeckInlay.id) an 'inlay-frame' or 'inlay-fill' piece belongs to. */
+  inlay?:string;
   /** Center of the board, plan inches. */
   cx: number; cy: number;
   /** Board length along its own axis, inches. */
@@ -298,7 +300,7 @@ export interface BoardRun {
 function insidePolygon(pt:PlanPoint,poly:PlanPoint[]){let odd=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>pt.y)!==(b.y>pt.y)&&pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;}
 
 export function getBoardRows(fp: FootprintPlan, opts: {
-  boardWidth: number; gap: number; angleDeg: 0 | 45; inset: number; maxBoardLen?: number;
+  boardWidth: number; gap: number; angleDeg: number; inset: number; maxBoardLen?: number;
   /** 'top' starts the rows at the strip's far side, so a front-left angled corner (which diagonal boards run
    * parallel to) gets a full-width board and the ripped row falls at the opposite corner's tip instead. */
   anchor?: 'top';

@@ -212,6 +212,27 @@ test('paints a single board by clicking it in the 3D view',async({page})=>{
   expect(problems).toEqual([]);
 });
 
+test('adds a framed inlay, fits it to the deck, and shows it and its framing on the plan',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  await step(page,/Materials/).click();
+  const inlays=page.getByRole('region',{name:'Inlays'});
+  await inlays.getByRole('button',{name:'Add a framed rectangle'}).click();
+  await expect(inlays.getByRole('status')).toContainText('Built:');
+  await expect(price(page)).not.toHaveText(before??'');
+  await setNumber(page,'Inlay 1 width',30);
+  await expect(page.getByLabel('Inlay 1 width',{exact:true})).toHaveValue('20');
+  await expect(inlays.getByRole('status')).toContainText('Not built: It reaches past the deck’s field');
+  await inlays.getByRole('button',{name:'Fit to deck'}).click();
+  await expect(inlays.getByRole('status')).toContainText('Built:');
+  await page.locator('.dd-preview-head').getByRole('button',{name:'Plan'}).click();
+  await expect(page.locator('.dd-canvas svg')).toContainText('Inlay 1');
+  await expect(page.locator('.dd-canvas svg')).toContainText('Amber: inlay blocking');
+  await step(page,/Your estimate/).click();
+  await expect(page.locator('.dd-summary')).toContainText(/Inlays: a [\d.]+ × [\d.]+ ft framed rectangle with a herringbone inside/);
+  expect(problems).toEqual([]);
+});
+
 test('adds a bump-out to the house',async({page})=>{
   await openDesigner(page);
   await page.getByText('House dimensions, finishes, doors & windows').click();

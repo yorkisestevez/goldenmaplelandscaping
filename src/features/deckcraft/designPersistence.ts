@@ -1,5 +1,5 @@
 import { DEFAULT_DECK } from './defaults';
-import { type BoardColour, type DeckData, type DoorStyle, type WindowStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardAllowances, type YardFeature } from './types';
+import { type BoardColour, type DeckData, type DeckInlay, type DoorStyle, type WindowStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardAllowances, type YardFeature } from './types';
 import {availableStairSides,getHouseContact} from './houseContact';
 import {getFootprint} from './lib/deckGeometry';
 import {normalizeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
@@ -12,6 +12,7 @@ import {clampHouseOpening,DOOR_STYLES,HOUSE_CLADDINGS,ROOF_PITCH_RANGE} from './
 import {angledStairAllowed,angledStairFits,CORNER_CHAMFER_FT,isChamferEdgeId} from './lib/cornerChamfers';
 import {activeCustomFront,frontBounds,normalizeFront,outlineProblems} from './lib/customOutline';
 import {MAX_BOARD_COLOURS,parseColourRef} from './boardFinishes';
+import {INLAY_LIMITS} from './lib/inlayGeometry';
 import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,openingWallId} from './houseFootprint';
 
 export {GARAGE_DOOR_STYLES} from './houseOpenings';
@@ -226,6 +227,28 @@ export function validateDesign(input:unknown):DeckData {
     if(byPlace.size>MAX_BOARD_COLOURS)throw new Error(`A design holds up to ${MAX_BOARD_COLOURS} accent boards.`);
     if(byPlace.size)clean.boardColours=[...byPlace.values()];
   }
+  // Decorative inlays (lib/inlayGeometry.ts): a framed rectangle or a diamond, placed from the middle of its level.
+  // One that does not fit is kept (and says why on the design), never moved.
+  if(input.inlays!==undefined){
+    if(!Array.isArray(input.inlays)||input.inlays.length>INLAY_LIMITS.max)throw new Error(`A design holds up to ${INLAY_LIMITS.max} inlays.`);
+    const ids=new Set<string>(),list:DeckInlay[]=[];
+    for(const raw of input.inlays){
+      if(!record(raw)||(raw.kind!=='rug'&&raw.kind!=='diamond'))throw new Error('Invalid inlay.');
+      if(typeof raw.id!=='string'||!/^[a-z0-9-]{1,24}$/.test(raw.id)||ids.has(raw.id))throw new Error('Invalid inlay id.');
+      ids.add(raw.id);
+      const [lo,hi]=raw.kind==='rug'?INLAY_LIMITS.rugFt:INLAY_LIMITS.diamondFt,widthFt=numeric(raw.widthFt,lo,hi,'Inlay width');
+      const depthFt=raw.kind==='diamond'?widthFt:numeric(raw.depthFt,lo,hi,'Inlay depth');
+      const offset=(v:unknown,label:string)=>v===undefined||v===0?undefined:numeric(v,INLAY_LIMITS.offsetFt[0],INLAY_LIMITS.offsetFt[1],label);
+      const dxFt=offset(raw.dxFt,'Inlay position across'),dyFt=offset(raw.dyFt,'Inlay position out');
+      if(raw.level!==undefined&&![1,2,3].includes(raw.level as number))throw new Error('Invalid inlay level.');
+      if(raw.frameRows!==undefined&&![1,2].includes(raw.frameRows as number))throw new Error('Invalid inlay frame rows.');
+      if(raw.pattern!==undefined&&!['Straight','Diagonal','Herringbone'].includes(raw.pattern as string))throw new Error('Invalid inlay pattern.');
+      for(const key of ['frame','fill'] as const)if(raw[key]!==undefined&&!parseColourRef(raw[key]))throw new Error('Unknown inlay colour.');
+      list.push({id:raw.id,kind:raw.kind,...(raw.level!==undefined&&raw.level!==1?{level:raw.level as 2|3}:{}),...(dxFt!==undefined?{dxFt}:{}),...(dyFt!==undefined?{dyFt}:{}),widthFt,depthFt,
+        ...(raw.frameRows===2?{frameRows:2 as const}:{}),...(raw.pattern!==undefined&&raw.pattern!=='Straight'?{pattern:raw.pattern as DeckInlay['pattern']}:{}),...(raw.frame!==undefined?{frame:raw.frame as string}:{}),...(raw.fill!==undefined?{fill:raw.fill as string}:{})});
+    }
+    if(list.length)clean.inlays=list;
+  }
   for(const key of ['stairEdgeId','level2EdgeId'] as const)if(input[key]!==undefined){
     if(typeof input[key]!=='string'||!/^[a-zA-Z0-9-]{1,40}$/.test(input[key] as string))throw new Error('Invalid deck edge.');
     clean[key]=input[key] as string;
@@ -296,7 +319,7 @@ export function defaultLevel3(data:DeckData):NonNullable<DeckData['level3']>{
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','customFront','boardColours']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','customFront','boardColours','inlays']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);

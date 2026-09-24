@@ -38,7 +38,7 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
  const edgeLabels=data?outline.map((a,i)=>{const q=outline[(i+1)%outline.length],len=Math.hypot(q.x-a.x,q.y-a.y),angled=isChamferEdgeId(main.footprint.edgeIds?.[i]);if(len<24&&!angled)return null;const nx=(q.y-a.y)/len,ny=-(q.x-a.x)/len,ledger=contact?.isContactEdge(i),flush=contact?.contacts.find(c=>c.edgeIndex===i)?.kind==='flush';return {x:(a.x+q.x)/2+nx*(ledger?5:11),y:(a.y+q.y)/2+ny*(ledger?5:11)+2.5,text:angled?`45° corner · ${ft(len/Math.SQRT2)} cut`:flush?`Bolted flush wall ${ft(len)}`:ledger?`Ledger ${ft(len)}`:ft(len),ledger,flush};}).filter(Boolean) as {x:number;y:number;text:string;ledger:boolean;flush:boolean}[]:[];
  const scale=48;
  // Accent-colour boards (boardFinishes.ts): each colour group gets a plan tone, named in the legend.
- const finish=data?.boardColours?.length?boardFinishPlan(data,model):null,tones=new Map(finish?.groups.map((g,k)=>[g.ref,ACCENT_TONES[k%ACCENT_TONES.length]]));
+ const finish=data?.boardColours?.length||data?.inlays?.length?boardFinishPlan(data,model):null,tones=new Map(finish?.groups.map((g,k)=>[g.ref,ACCENT_TONES[k%ACCENT_TONES.length]]));
  const accentFill=(level:number,index:number)=>{const ref=finish?.colours[level]?.[index];return ref?tones.get(ref):undefined;};
  const legendRows=finish?.groups.length?1:0;
  return <svg viewBox={`${left-40} ${top-44} ${right-left+80} ${b.maxZ-top+128+legendRows*12}`} role="img" aria-label="Deck construction plan from the shared model" style={{width:'100%',height:'100%',background:'#faf8f1'}}>
@@ -59,6 +59,9 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
        return cut.polygon?<polygon key={j} points={cut.polygon.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={cut.role==='inlay'?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>:<rect key={j} x={board.cx+l.offset.x-board.length/2} y={board.cy+l.offset.z-width/2} width={board.length} height={width} transform={`rotate(${board.angleDeg} ${board.cx+l.offset.x} ${board.cy+l.offset.z})`} fill={cut.role==='inlay'?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>;
      })}
      {l.joists.map((j,k)=><line key={k} x1={j.a.x} y1={j.a.z} x2={j.b.x} y2={j.b.z} stroke="#787b72" strokeDasharray="3 2" strokeWidth=".6"/>)}
+     {/* Decorative inlays: their outline, name and the framing under them (inlayFraming.ts). */}
+     {l.blocking.filter(m=>m.role?.startsWith('inlay-')).map((m,k)=><line key={`ib${k}`} x1={m.a.x} y1={m.a.z} x2={m.b.x} y2={m.b.z} stroke="#b27a2c" strokeWidth="1.1"/>)}
+     {(l.inlays??[]).filter(p=>p.status==='ok').map((p,k)=>{const c=p.outline.reduce((s,v)=>({x:s.x+v.x/p.outline.length,y:s.y+v.y/p.outline.length}),{x:0,y:0});return <g key={`in${k}`} aria-label={`Inlay ${k+1}`}><polygon points={p.outline.map(v=>`${v.x+l.offset.x},${v.y+l.offset.z}`).join(' ')} fill="none" stroke="#6b4521" strokeWidth="1"/><text x={c.x+l.offset.x} y={c.y+l.offset.z+2.5} textAnchor="middle" fontSize="7" fontWeight="600" fill="#3d2a1c" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{`Inlay ${k+1}`}</text></g>;})}
      {l.beams.map((j,k)=><line key={k} x1={j.a.x} y1={j.a.z} x2={j.b.x} y2={j.b.z} stroke="#826947" strokeWidth="1"/>)}
      {l.supports.map((p,k)=><circle key={k} cx={p.x} cy={p.z} r={4} fill="#545b54"/>)}
      <text x={l.offset.x+10} y={l.offset.z+15} fontSize="7" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2" fill="#444">{`${l.kind==='landing'?'Landing':l.kind==='winder'?'Winder':'Deck '+((l.index??i)+1)} · ${l.top.toFixed(1)} in above grade`}</text>
@@ -82,7 +85,7 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
      <text x={b.minX+scale+6} y={b.maxZ+31} fontSize="6.5" fill="#514b41">4 ft</text>
    </g>
    <text x={b.minX} y={b.maxZ+46} fontSize="7" fill="#514b41">● Footings · ■ Railing posts · Dark line: railing</text>
-   <text x={b.minX} y={b.maxZ+56} fontSize="7" fill="#514b41">{`Dashed: joists · Solid: beams${contact?.contacts.length?' · Bronze: ledger on the house':''}${contact?.flushLf?' · Bronze dashed: bolted flush wall':''}${hips.length?' · Heavy dashed: doubled hip':''}`}</text>
+   <text x={b.minX} y={b.maxZ+56} fontSize="7" fill="#514b41">{`Dashed: joists · Solid: beams${contact?.contacts.length?' · Bronze: ledger on the house':''}${contact?.flushLf?' · Bronze dashed: bolted flush wall':''}${hips.length?' · Heavy dashed: doubled hip':''}${model.levels.some(l=>l.inlays?.some(p=>p.status==='ok'))?' · Amber: inlay blocking':''}`}</text>
    {finish&&finish.groups.length>0&&<text x={b.minX} y={b.maxZ+80} fontSize="7" fill="#514b41" aria-label="Accent boards">Accent boards:{finish.groups.map(g=><tspan key={g.ref}> <tspan fill={tones.get(g.ref)}>■</tspan> {g.color.name} ({g.material.name}, {g.boards.length})</tspan>)}</text>}
    <text x={b.minX} y={b.maxZ+68} fontSize="6" fill="#716a5e">Design illustration · final connections and sizing require site review</text>
  </svg>;

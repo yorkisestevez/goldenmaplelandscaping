@@ -125,11 +125,11 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   const catalogueExtras=useMemo(()=>catalogueAccessoryLayout(data,model),[data,model]);
   const stairBoards=useMemo(()=>getStairBoards(data,model),[data,model]);
   const stairVeneer=useMemo(()=>stairVeneerLayout(data,model),[data,model]);
-  const materials=useMemo(()=>({wood:new THREE.MeshStandardMaterial({color:'#8a7356',roughness:0.86}),inlay:new THREE.MeshStandardMaterial({color:'#514236',roughness:.7}),metal:new THREE.MeshStandardMaterial({color:'#242829',roughness:0.36,metalness:0.5}),concrete:new THREE.MeshStandardMaterial({color:'#a5a49a',roughness:0.9}),glass:new THREE.MeshPhysicalMaterial({color:'#cbdfe3',roughness:0.08,metalness:0.1,transparent:true,opacity:0.23,depthWrite:false})}),[]);
+  const materials=useMemo(()=>({wood:new THREE.MeshStandardMaterial({color:'#8a7356',roughness:0.86}),inlay:new THREE.MeshStandardMaterial({color:'#514236',roughness:.7}),inlayFraming:new THREE.MeshStandardMaterial({color:'#c08a3e',roughness:.8}),metal:new THREE.MeshStandardMaterial({color:'#242829',roughness:0.36,metalness:0.5}),concrete:new THREE.MeshStandardMaterial({color:'#a5a49a',roughness:0.9}),glass:new THREE.MeshPhysicalMaterial({color:'#cbdfe3',roughness:0.08,metalness:0.1,transparent:true,opacity:0.23,depthWrite:false})}),[]);
   useEffect(()=>()=>Object.values(materials).forEach(m=>m.dispose()),[materials]);
   // Accent boards (boardFinishes.ts): worked out only when the design has some, or while the tool is on.
   const painting=!!boardPaint&&!structure;
-  const finish=useMemo(()=>data.boardColours?.length||painting?boardFinishPlan(data,model):null,[model,data.boardColours,data.deckingMaterial,data.deckingColor,data.pattern,data.boardWidth,data.borderFinish,painting]);
+  const finish=useMemo(()=>data.boardColours?.length||data.inlays?.length||painting?boardFinishPlan(data,model):null,[model,data.boardColours,data.inlays,data.deckingMaterial,data.deckingColor,data.pattern,data.boardWidth,data.borderFinish,painting]);
   const boards:FinishBox[]=useMemo(()=>model.levels.flatMap((l,li)=>l.boards.map((b,bi)=>{const cut=b as typeof b&{width?:number;polygon?:{x:number;y:number}[];role?:string};return {x:b.cx+l.offset.x,y:l.top-0.5,z:b.cy+l.offset.z,w:b.length,h:1,d:cut.width??data.boardWidth,angle:-b.angleDeg*Math.PI/180,role:cut.role,polygon:cut.polygon?.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z})),ref:{level:li,index:bi},accent:finish?.colours[li]?.[bi]??null};})),[model,data.boardWidth,finish]);
   const hoverSet=useRef<(box:FinishBox|null)=>void>(()=>{}),registerHover=useCallback((set:(box:FinishBox|null)=>void)=>{hoverSet.current=set;},[]);
   const pick=useMemo<BoardPick|undefined>(()=>{
@@ -145,7 +145,9 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   return <group scale={1/12}>
     {!structure&&<><FinishedBoards items={boards.filter(b=>b.role!=='inlay'&&!b.accent&&(!darkBorder||b.role!=='border'))} material={board} pick={pick}/><FinishedBoards items={boards.filter(b=>b.role==='inlay')} material={materials.inlay}/>{darkBorder&&<FinishedBoards items={boards.filter(b=>b.role==='border')} material={borderMaterial}/>}{finish?.groups.map(g=><AccentBoards key={g.ref} colour={g.ref} items={boards.filter(b=>b.accent===g.ref)} pick={pick}/>)}{painting&&<HoverOutline boards={boards} addresses={finish?.addresses} scope={boardPaint!.scope} register={registerHover}/>}</>}
     <Members items={model.levels.flatMap(l=>l.joists)} material={materials.wood} name="joists"/>
-    <Members items={model.levels.flatMap(l=>l.blocking)} material={materials.wood} name="blocking"/>
+    <Members items={model.levels.flatMap(l=>l.blocking.filter(b=>!b.role?.startsWith('inlay-')))} material={materials.wood} name="blocking"/>
+    {/* Framing under decorative inlays (inlayFraming.ts), in its own colour so it reads in the Framing view. */}
+    <Members items={model.levels.flatMap(l=>l.blocking.filter(b=>b.role?.startsWith('inlay-')))} material={materials.inlayFraming} name="inlay-blocking"/>
     <Members items={model.levels.flatMap(l=>l.beams)} material={materials.wood} name="beams"/>
     <Members items={edgeMembers} material={structure?materials.wood:board} name="rim-and-fascia"/>
     {!structure&&<Members items={catalogueExtras.fascia} material={board} name="selected-manufacturer-fascia"/>}

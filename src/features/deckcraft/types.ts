@@ -12,6 +12,12 @@ export type ColourRef = string;
 /** Deck boards in another real product colour: one board ('piece') or its whole row ('course'), found by the
  * board address in lib/boardAddress.ts. An address that no longer meets a board is kept but not applied. */
 export interface BoardColour {lv:1|2|3;role:'field'|'border'|'breaker';scope:'piece'|'course';course:string;at?:number;colour:ColourRef}
+/** How the boards inside a framed inlay run: across (Straight, front to back), at 45°, or in a herringbone. */
+export type InlayFill = 'Straight' | 'Diagonal' | 'Herringbone';
+/** A decorative inlay set into the decking (see lib/inlayGeometry.ts): a framed rectangle ('rug') or a framed
+ * square turned 45° ('diamond'). Its centre is dxFt/dyFt from the middle of its deck level (+x right, +y toward
+ * the yard); a colour left out is the deck's own. Absent on every existing design. */
+export interface DeckInlay {id:string;kind:'rug'|'diamond';level?:1|2|3;dxFt?:number;dyFt?:number;widthFt:number;depthFt:number;frameRows?:1|2;pattern?:InlayFill;frame?:ColourRef;fill?:ColourRef}
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
 export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
@@ -140,6 +146,8 @@ export interface DeckData {
   customFront?: OutlinePoint[];
   /** Accent-colour boards; absent on every existing design (see boardFinishes.ts). */
   boardColours?: BoardColour[];
+  /** Decorative inlays with their own framing; absent on every existing design (see lib/inlayGeometry.ts). */
+  inlays?: DeckInlay[];
   /** A named exposed edge (e.g. 'wingR-end') for the primary stair flight; overrides stairPosition. */
   stairEdgeId?: string;
   /** Named wrap edge of the main deck for the second level; overrides level2Position. */
