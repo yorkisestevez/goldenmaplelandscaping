@@ -53,6 +53,12 @@ const announcement=(page:Page)=>page.getByRole('status').filter({hasText:/\. Pri
 const fullList=(page:Page)=>page.getByRole('region',{name:'Full price list'});
 /** "$0" standing alone: never shown for anything unpriced. */
 const ZERO=/\$0(?![\d.,])/;
+/** Whole dollars in a figure ("$24,388" → 24388, "−$380" → −380). */
+const wholeDollars=(text:string|null)=>(/^\s*[−-]/.test(text??'')?-1:1)*Number((text??'').replace(/[^\d]/g,''));
+/** A decking collection's button in Boards & finish, by the collection's name; its price effect is its description. */
+const collection=(page:Page,name:string)=>sectionBody(page,'Boards & finish').getByRole('button',{name:`${name} material sample`});
+/** The text a control is described by (its aria-describedby): an option's or a select's price effect. */
+const describedBy=(control:Locator)=>control.evaluate(el=>(el.getAttribute('aria-describedby')??'').split(/\s+/).map(id=>document.getElementById(id)?.textContent??'').join(' ').trim());
 /** The drawing's heading, which names the sheet and the deck's size ("Site plan · 16 × 12 ft deck"). */
 const size=(page:Page)=>preview(page).getByRole('heading',{level:2});
 /** The design summary in the estimate. */
@@ -718,6 +724,68 @@ test('lists what each change does to the price, tags quotes and never shows $0 f
   await schedule(page).getByRole('button',{name:'Full price list'}).click();
   await expect(fullList(page)).toContainText('Installation Labour');
   expect(await fullList(page).textContent()).not.toMatch(ZERO);
+  expect(problems).toEqual([]);
+});
+
+test('shows the price effect beside each option, and picking one moves the priced subtotal by exactly that much',async({page})=>{
+  const problems=await openDesigner(page);
+  await openSection(page,'Boards & finish');
+  // A desktop prices the options on its own: no "Show price effect" to press.
+  await expect(sectionBody(page,'Boards & finish').getByRole('button',{name:'Show price effect'})).toHaveCount(0);
+  // A dearer collection reads "+$…" as its description (its name is unchanged); the current one has none.
+  const vintage=collection(page,'TimberTech AZEK Vintage'),current=collection(page,'TimberTech EDGE Prime+');
+  await expect(vintage).toHaveAccessibleDescription(/^\+\$[\d,]+$/);
+  await expect(current).toHaveAttribute('aria-pressed','true');
+  await expect(current).not.toHaveAttribute('aria-describedby',/./);
+  // A collection with no rate turns the priced decking into a quote: "supplier quote", never $0.
+  await expect(collection(page,'TimberTech Composite Prime')).toHaveAccessibleDescription('supplier quote');
+  // Picking the dearer one moves the schedule's priced subtotal by exactly its delta.
+  const delta=wholeDollars(await describedBy(vintage)),before=await price(page).textContent();
+  await vintage.click();
+  await expect(vintage).toHaveAttribute('aria-pressed','true');
+  await expect(price(page)).not.toHaveText(before??'');
+  expect(wholeDollars(await price(page).textContent())-wholeDollars(before)).toBe(delta);
+  // The deltas follow the new design at once: the collection just left shows the way back, never a stale figure.
+  await expect(current).toHaveAccessibleDescription(`−$${delta.toLocaleString('en-CA')}`);
+  await expect(vintage).not.toHaveAttribute('aria-describedby',/./);
+  // Each select is described by its line: every other choice with its price effect.
+  await expect(page.getByLabel('Board layout',{exact:true})).toHaveAccessibleDescription(/^Price effect: Diagonal \+\$[\d,]+ · Picture Frame \+\$[\d,]+ · Herringbone \+\$[\d,]+$/);
+  await openSection(page,'Stairs & railings');
+  await expect(page.getByLabel('Railing style',{exact:true})).toHaveAccessibleDescription(/ · Glass Panels \+\$[\d,]+ · /);
+  // Every manufacturer railing is a supplier quote, so they read as one.
+  await expect(page.getByLabel('Manufacturer railing system',{exact:true})).toHaveAccessibleDescription(/^Price effect: \d+ choices: supplier quote$/);
+  const flights=page.getByLabel('Number of stair flights',{exact:true});
+  await expect(flights).toHaveAccessibleDescription(/^Price effect: 0 flights −\$[\d,]+( · \d+ fewer to quote)? · 2 flights \+\$[\d,]+ · 3 flights \+\$[\d,]+$/);
+  const two=wholeDollars(/2 flights (\+\$[\d,]+)/.exec(await describedBy(flights))![1]),was=await price(page).textContent();
+  await flights.selectOption('2');
+  await expect(price(page)).not.toHaveText(was??'');
+  expect(wholeDollars(await price(page).textContent())-wholeDollars(was)).toBe(two);
+  for(const name of ['Boards & finish','Stairs & railings'] as const)expect(await sectionBody(page,name).textContent()).not.toMatch(ZERO);
+  expect(problems).toEqual([]);
+});
+
+test('@phone shows each option’s price effect only once asked, then keeps it for the visit',async({page})=>{
+  const engine:string[]=[];
+  page.on('request',r=>{if(/\/optionDeltas[-.][\w.-]+\.js/.test(r.url()))engine.push(r.url());});
+  const problems=await openDesigner(page);
+  await openSection(page,'Boards & finish');
+  const show=sectionBody(page,'Boards & finish').getByRole('button',{name:'Show price effect'});
+  await expect(show).toHaveAttribute('aria-pressed','false');
+  // One engine run can pass 50 ms on a throttled phone, so nothing is priced (or even downloaded) until asked.
+  await page.waitForTimeout(1500);
+  await expect(collection(page,'TimberTech AZEK Vintage')).not.toHaveAttribute('aria-describedby',/./);
+  await expect(page.getByLabel('Board layout',{exact:true})).not.toHaveAttribute('aria-describedby',/./);
+  expect(engine).toEqual([]);
+  await show.click();
+  await expect(show).toHaveAttribute('aria-pressed','true');
+  await expect(collection(page,'TimberTech AZEK Vintage')).toHaveAccessibleDescription(/^\+\$[\d,]+$/);
+  await expect(collection(page,'TimberTech Composite Prime')).toHaveAccessibleDescription('supplier quote');
+  expect(engine.length).toBeGreaterThan(0);
+  // The choice holds for the visit: the next section shows its price effects at once.
+  await openSection(page,'Stairs & railings');
+  await expect(sectionBody(page,'Stairs & railings').getByRole('button',{name:'Show price effect'})).toHaveAttribute('aria-pressed','true');
+  await expect(page.getByLabel('Railing style',{exact:true})).toHaveAccessibleDescription(/ · Glass Panels \+\$[\d,]+ · /);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
   expect(problems).toEqual([]);
 });
 

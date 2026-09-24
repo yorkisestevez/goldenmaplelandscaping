@@ -8,17 +8,20 @@ import {gzipSync} from 'node:zlib';
  * - The 3D viewer, the PDF engine and jsPDF's optional helpers, every section body (House, Deck shape & size, Boards &
  *   finish, Stairs & railings, the lighting/extras/site body, Backyard, Proposal & files), the send and proposal
  *   dialogs, the custom outline editor, the accent-board panel, the inlay editor, the exterior studio, the skirting
- *   editor, the deck-part finishes panel, the site plan's editor (its handles, typed figures and shape shortcuts) and the
- *   DXF/OBJ exports are never part of the route's initial load: they are fetched only when needed.
+ *   editor, the deck-part finishes panel, the site plan's editor (its handles, typed figures and shape shortcuts), the
+ *   option deltas (each option's price effect: the section bodies' hook, and the engine side it loads only once deltas
+ *   are wanted) and the DXF/OBJ exports are never part of the route's initial load: they are fetched only when needed.
  * - The lazy chunks themselves do not quietly grow.
  * Budgets were set on 2026-09-23 at the measured size plus about 15% headroom. The route's was raised from 170 to
  * 185 KB the same day, with the owner's approval, for the Finishes track (accent boards, inlays, exterior finishes
  * and skirting), whose price and layout code runs with the page's first estimate. On 2026-09-24 (redesign R1) the
  * section bodies became lazy chunks, which freed room under the same budget.
+ * - The option deltas' worker (R6) carries its own copy of the price engine, so it prices options off the main thread;
+ *   it loads only once deltas are wanted and stays within 140 KB gzip (122 KB when added, 2026-09-24).
  * - The route's own stylesheet (the drawing-set look, redesign R3) stays within 12 KB gzip. The fonts come from Google
  *   Fonts on this route only (owner's decision, 2026-09-24), so no font file is part of the build to measure.
  */
-const BUDGET_KB={routeInitial:185,routeCss:12,viewer:340,pdf:150};
+const BUDGET_KB={routeInitial:185,routeCss:12,viewer:340,pdf:150,deltaWorker:140};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);
@@ -39,12 +42,13 @@ const css=(route.css??[]).filter(f=>!sharedCss.has(f)).map(f=>f.replace(/^\/asse
 const cssKB=css.reduce((n,f)=>n+gz(f),0);
 ok(css.length>0,'The deck designer route has a stylesheet of its own');
 ok(cssKB<=BUDGET_KB.routeCss,`Deck designer route CSS is ${cssKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.routeCss} KB): ${css.join(', ')}`);
-for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
+for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
 // Each section body, and the site plan's editor, is a chunk of its own (one merged into the route would pass the test
 // above unseen).
-for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor'])ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
-const viewer=files.find(f=>/^Deck3DViewer-.*\.js$/.test(f)),pdf=files.find(f=>/^jspdf.*\.js$/.test(f));
+for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','optionDeltas','useOptionDeltas'])ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
+const viewer=files.find(f=>/^Deck3DViewer-.*\.js$/.test(f)),pdf=files.find(f=>/^jspdf.*\.js$/.test(f)),deltaWorker=files.find(f=>/^optionDeltas\.worker-.*\.js$/.test(f));
 ok(viewer&&gz(viewer)<=BUDGET_KB.viewer,`3D viewer chunk is ${viewer?gz(viewer).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.viewer} KB)`);
 ok(pdf&&gz(pdf)<=BUDGET_KB.pdf,`PDF engine chunk is ${pdf?gz(pdf).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.pdf} KB)`);
+ok(deltaWorker&&!initial.includes(deltaWorker)&&gz(deltaWorker)<=BUDGET_KB.deltaWorker,`Option deltas' worker is ${deltaWorker?gz(deltaWorker).toFixed(1):'missing'} KB gzip (budget ${BUDGET_KB.deltaWorker} KB), loaded on demand`);
 const headroom=(kb:number,budget:number)=>`${kb.toFixed(1)}/${budget} KB (${(budget-kb).toFixed(1)} KB headroom)`;
-console.log(`DECK BUNDLE OK — route JS ${headroom(routeKB,BUDGET_KB.routeInitial)}, route CSS ${headroom(cssKB,BUDGET_KB.routeCss)}, 3D viewer ${gz(viewer!).toFixed(1)}/${BUDGET_KB.viewer} KB, PDF ${gz(pdf!).toFixed(1)}/${BUDGET_KB.pdf} KB gzip, lazy chunks stay lazy; ${checks} checks.`);
+console.log(`DECK BUNDLE OK — route JS ${headroom(routeKB,BUDGET_KB.routeInitial)}, route CSS ${headroom(cssKB,BUDGET_KB.routeCss)}, 3D viewer ${gz(viewer!).toFixed(1)}/${BUDGET_KB.viewer} KB, PDF ${gz(pdf!).toFixed(1)}/${BUDGET_KB.pdf} KB, delta worker ${gz(deltaWorker!).toFixed(1)}/${BUDGET_KB.deltaWorker} KB gzip, lazy chunks stay lazy; ${checks} checks.`);

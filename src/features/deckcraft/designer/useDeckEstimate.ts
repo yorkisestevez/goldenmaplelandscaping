@@ -7,6 +7,13 @@ import {isSystemProduct,lightingSystemCheck,syncAutoLighting} from '../lightingS
 import type {DeckData} from '../types';
 
 /**
+ * What re-prices the design: the design without its appearance (house looks and openings, screen positions, scene
+ * lighting, the proposal's name and address, a backyard feature's concept colour). House size, attached blocks and floor
+ * heights stay in it, because they can move the ledger. The option deltas (R6) are keyed by it too.
+ */
+export const estimateKeyOf=(data:DeckData)=>JSON.stringify({...data,privacyScreens:data.privacyScreens?.map(({side:_side,offsetPct:_offset,...screen})=>screen),houseFit:data.houseConfig&&[data.houseConfig.widthFt,data.houseConfig.depthFt,data.houseConfig.floorHeightIn,data.houseConfig.footprint?.rects.map(b=>[b.kind,b.wall,b.offsetFt,b.widthFt,b.depthFt,b.floorHeightIn])],houseConfig:undefined,houseVisible:undefined,customerName:undefined,projectAddress:undefined,scopeOfWork:undefined,yardFeatures:data.yardFeatures?.map(({color:_color,...feature})=>feature),houseWallHeightIn:undefined,houseDoorOffset:undefined,houseDoorWidthIn:undefined,sceneLighting:undefined,lightingPreviewOn:undefined});
+
+/**
  * The live estimate and what hangs off it. The estimate key decides what re-prices: appearance never
  * does (house looks and openings, screen positions, scene lighting, the proposal's name and address).
  * Simple post/step/screen lights follow the modelled mounts; the effect writes only real changes.
@@ -17,7 +24,7 @@ export function useDeckEstimate(data:DeckData,setData:Dispatch<SetStateAction<De
   // Where a screen sits on its edge never changes the price, so dragging one does not re-run the estimate.
   // House size, attached blocks and floor heights can move the ledger and add warnings; looks and openings never price.
   // Backyard features and terrain price; a feature's concept colour never does.
-  const estimateKey=JSON.stringify({...data,privacyScreens:data.privacyScreens?.map(({side:_side,offsetPct:_offset,...screen})=>screen),houseFit:data.houseConfig&&[data.houseConfig.widthFt,data.houseConfig.depthFt,data.houseConfig.floorHeightIn,data.houseConfig.footprint?.rects.map(b=>[b.kind,b.wall,b.offsetFt,b.widthFt,b.depthFt,b.floorHeightIn])],houseConfig:undefined,houseVisible:undefined,customerName:undefined,projectAddress:undefined,scopeOfWork:undefined,yardFeatures:data.yardFeatures?.map(({color:_color,...feature})=>feature),houseWallHeightIn:undefined,houseDoorOffset:undefined,houseDoorWidthIn:undefined,sceneLighting:undefined,lightingPreviewOn:undefined});
+  const estimateKey=estimateKeyOf(data);
   const estimate=useMemo(()=>calculateEstimate(data,DECK_SETTINGS),[estimateKey]);
   const lightingCheck=useMemo(()=>lightingSystemCheck(data),[data]);
   const extras=useMemo(()=>extrasLayout(data,estimate.model),[data,estimate.model]);
@@ -32,5 +39,6 @@ export function useDeckEstimate(data:DeckData,setData:Dispatch<SetStateAction<De
   const reviewFlags=[...new Set([...estimate.flags,...extras.warnings])];
   // One description of the design feeds the estimate step, the summary download, the proposal and a sent design.
   const described=describeDesign(data,estimate);
-  return {estimate,lightingCheck,extras,autoCounts,hasFixtures,reviewFlags,described};
+  // The estimate key also keys the option deltas (R6): a delta is shown only for the design it was priced for.
+  return {estimate,estimateKey,lightingCheck,extras,autoCounts,hasFixtures,reviewFlags,described};
 }

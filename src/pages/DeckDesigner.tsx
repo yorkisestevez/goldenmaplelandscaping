@@ -23,6 +23,7 @@ import {priceState,useChangeLedger} from '../features/deckcraft/designer/useChan
 import {downloadFile} from '../features/deckcraft/designer/fields';
 import {useDeckDesign} from '../features/deckcraft/designer/useDeckDesign';
 import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
+import type {DeltaProps} from '../features/deckcraft/designer/useOptionDeltas';
 import DesignTools from '../features/deckcraft/designer/DesignTools';
 import PreviewPanel,{loadExteriorStudio,loadViewer} from '../features/deckcraft/designer/PreviewPanel';
 import SectionList from '../features/deckcraft/designer/SectionList';
@@ -151,11 +152,15 @@ export default function DeckDesigner(){
   const toggleSection=(id:SectionId)=>{if(open.has(id))setOpen(prev=>{const next=new Set(prev);next.delete(id);return next;});else openSection(id);};
   const featureKey=designFeatures(data).join(' ');
   useEffect(()=>{for(const label of featureKey.split(' '))if(label)trackDeck('deckcraft_feature',label);},[featureKey]);
-  const {estimate,lightingCheck,autoCounts,hasFixtures,reviewFlags,described}=useDeckEstimate(data,setData);
+  const {estimate,estimateKey,lightingCheck,autoCounts,hasFixtures,reviewFlags,described}=useDeckEstimate(data,setData);
+  // Where options are not priced without asking (phones, Save-Data), "Show price effect" holds for the visit; never saved.
+  const [deltasShown,setDeltasShown]=useState(false);
   const {material,railingName}=described;
   // The price schedule, from the estimate alone; the change list follows its priced subtotal and quotes.
   const schedule=useMemo(()=>priceLedger(estimate),[estimate]);
   const notePrice=changes.price;
+  // The price effect beside each option (R6) is measured from this estimate and its schedule.
+  const deltas:DeltaProps={key:estimateKey,subtotal:estimate.subtotal,quotes:estimate.quoteRequired,lines:schedule.lines,shown:deltasShown,setShown:setDeltasShown};
   useEffect(()=>{notePrice(priceState(schedule));},[schedule,notePrice]);
   const showFullList=()=>openSection('proposal',true);
   // Accent boards: the tool's colour and scope are page state (never saved). Picking a colour shows the 3D deck;
@@ -290,9 +295,9 @@ export default function DeckDesigner(){
   const renderSection=(id:SectionId)=>{switch(id){
     case 'house':return <HouseSection data={data} update={update} selectedOpeningId={effectiveHouseOpeningId} onSelectOpening={setSelectedHouseOpeningId} openExterior={()=>openExterior(true)}/>;
     case 'deck':return <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} onDrawOnPlan={drawOnPlan}/>;
-    case 'boards':return <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage}/>;
-    case 'stairs':return <StairsStep data={data} update={update} stairEdges={stairEdges}/>;
-    case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch}/>;
+    case 'boards':return <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage} deltas={deltas}/>;
+    case 'stairs':return <StairsStep data={data} update={update} stairEdges={stairEdges} deltas={deltas}/>;
+    case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch} deltas={deltas}/>;
     case 'backyard':return <BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/>;
     case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={saveJSON} onDownloadSummary={download} onExport={kind=>void exportModel(kind)}/>;
   }};

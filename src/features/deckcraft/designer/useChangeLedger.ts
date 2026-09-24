@@ -44,6 +44,8 @@ export const priceState=(ledger:Ledger):PriceState=>({subtotal:ledger.subtotal,q
 
 /** "+$1,240" or "−$380" (a true minus sign). */
 export const signedDollars=(n:number)=>`${n>0?'+':'−'}${dollars(Math.abs(n))}`;
+/** A change to the priced subtotal as the schedule shows it: the difference of the two whole-dollar figures. */
+export const wholeDollarChange=(before:number,after:number)=>Math.round(after)-Math.round(before);
 const kindsWord=(kinds:QuoteKind[])=>kinds.includes('supplier')&&kinds.includes('builder')?'supplier and builder quotes':`a ${kinds[0]} quote`;
 
 /**
@@ -54,7 +56,7 @@ const kindsWord=(kinds:QuoteKind[])=>kinds.includes('supplier')&&kinds.includes(
 export function describeChange(record:ChangeRecord):{effect:string;label:string;note:string;kind:'up'|'down'|'same'|'quote'|'loaded'}{
   const label=record.value?`${record.label} → ${record.value}`:record.label;
   if(record.kind==='loaded')return {effect:'',label,note:'',kind:'loaded'};
-  const delta=record.after.subtotal-record.before.subtotal,moved=Math.abs(delta)>=.5;
+  const delta=wholeDollarChange(record.before.subtotal,record.after.subtotal),moved=delta!==0;
   const had=new Set(record.before.quotes.map(q=>q.label)),has=new Set(record.after.quotes.map(q=>q.label));
   const added=record.after.quotes.filter(q=>!had.has(q.label)),dropped=record.before.quotes.filter(q=>!has.has(q.label)).length;
   if(added.length){
