@@ -15,8 +15,12 @@ const KNOWN_CONSOLE=[/`selected` on <option>/,/THREE\./,/WebGL|GPU stall|swiftsh
  * is cross-origin. Each tracker script is answered with an empty one, so nothing loads after it.
  */
 const TRACKERS=/^https:\/\/([\w-]+\.)*(googletagmanager\.com|facebook\.net|clarity\.ms)\//;
+/** Google Fonts (the site's Inter and Cormorant, the designer's Archivo and Plex Mono) are answered with an empty
+ * stylesheet for the same reason: no test waits on the internet, and text shows in the fallback faces. */
+const FONTS=/^https:\/\/fonts\.(googleapis|gstatic)\.com\//;
 test.beforeEach(async({context})=>{
   await context.route(TRACKERS,route=>route.fulfill({status:200,contentType:'text/javascript',body:''}));
+  await context.route(FONTS,route=>route.fulfill({status:200,contentType:'text/css',body:''}));
 });
 
 /*
@@ -24,7 +28,7 @@ test.beforeEach(async({context})=>{
  * R1–R4 of the "Drawing Set" plan) changes the helpers, not every test. The tests find feature controls by their
  * accessible names, which the redesign keeps. No test body uses a class selector or the wizard's step buttons.
  */
-const TITLE='A deck that takes shape';
+const TITLE='Draw your deck on your house';
 /** The sections of the designer, in page order. */
 const SECTION_NAMES=['House','Deck shape & size','Boards & finish','Stairs & railings','Lighting','Privacy, skirting & extras','Site & foundation','Backyard','Proposal & files'] as const;
 type Section=typeof SECTION_NAMES[number];
@@ -49,8 +53,8 @@ const announcement=(page:Page)=>page.getByRole('status').filter({hasText:/\. Pri
 const fullList=(page:Page)=>page.getByRole('region',{name:'Full price list'});
 /** "$0" standing alone: never shown for anything unpriced. */
 const ZERO=/\$0(?![\d.,])/;
-/** The drawing's heading, which names the deck's size ("16 × 12 ft"). */
-const size=(page:Page)=>page.locator('.dd-preview-head h2');
+/** The drawing's heading, which names the sheet and the deck's size ("Site plan · 16 × 12 ft deck"). */
+const size=(page:Page)=>preview(page).getByRole('heading',{level:2});
 /** The design summary in the estimate. */
 const summary=(page:Page)=>page.locator('.dd-summary');
 /** The drawing panel; the drawing area in it (the plan, then the 3D view once it loads); the plan; the 3D canvas. */
@@ -107,10 +111,11 @@ async function contractorView(page:Page){
   await expand(preview(page),'Advanced contractor view');
   return preview(page).locator('details',{has:page.locator('summary',{hasText:'Advanced contractor view'})});
 }
-/** Shows the drawing as the plan, the 3D view or the framing. */
+/** Shows the drawing as the plan, the 3D view (the drawing's sheet tabs) or the framing. */
 async function viewTab(page:Page,name:ViewTab){
   if(name==='Framing'){await (await contractorView(page)).getByRole('group',{name:'Contractor preview modes'}).getByRole('button',{name:'Framing',exact:true}).click();return;}
-  await page.locator('.dd-preview-head').getByRole('button',{name,exact:true}).click();
+  await page.getByRole('tab',{name,exact:true}).click();
+  await expect(page.getByRole('tab',{name,exact:true})).toHaveAttribute('aria-selected','true');
 }
 /** The proposal's contractor files (the DXF and OBJ exports), opened. */
 async function contractorFiles(page:Page){
@@ -266,9 +271,10 @@ test('reaches every feature of the designer',async({page})=>{
 
 test('opens sections in any order, keeps several open on a wide screen, and has no numbered steps',async({page})=>{
   const problems=await openDesigner(page);
-  // Every section starts closed; there is no "1 of 6", Back or Continue.
+  // Every section starts closed; there is no "1 of 6", Back or Continue. The only "N of M" is the drawing's sheet number.
   for(const name of SECTION_NAMES)await expect(sectionButton(page,name)).toHaveAttribute('aria-expanded','false');
-  await expect(page.getByText(/^\d of \d$/)).toHaveCount(0);
+  await expect(page.getByText(/^\d of \d$/)).toHaveCount(1);
+  await expect(page.getByLabel('Drawing title block').getByText(/^\d of 3$/)).toHaveCount(1);
   await expect(page.getByRole('button',{name:/^(← )?Back$|^Continue|^Review my estimate/})).toHaveCount(0);
   // Stairs before the deck.
   const before=await price(page).textContent();
@@ -321,6 +327,41 @@ test('@phone fits a 375 px screen with each section open',async({page})=>{
     await sectionReady(page,name);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),`No sideways scroll with ${name} open`).toBe(true);
   }
+  expect(problems).toEqual([]);
+});
+
+/**
+ * Controls under 44 px tall inside `scope`, by name and height. A checkbox or radio is tapped through its label, so the
+ * label is measured; controls that are not shown (the design file picker) are skipped.
+ */
+const underTouchSize=(scope:Locator)=>scope.evaluate(root=>[...root.querySelectorAll('button,input,select,textarea')].flatMap(el=>{
+  const target=el.matches('[type=checkbox],[type=radio]')?el.closest('label')??el:el,box=target.getBoundingClientRect();
+  return box.width&&box.height<44?[`${el.tagName.toLowerCase()} "${(el.getAttribute('aria-label')??el.textContent??'').trim().slice(0,40)}": ${Math.round(box.height)} px`]:[];
+}));
+
+test('@phone keeps every control at least 44 px tall at 375 px',async({page})=>{
+  await page.setViewportSize({width:375,height:812});
+  const problems=await openDesigner(page);
+  expect(await underTouchSize(page.locator('.deck-designer')),'The header, file tools, drawing and price bar').toEqual([]);
+  for(const name of SECTION_NAMES){
+    await openSection(page,name);
+    await sectionReady(page,name);
+    expect(await underTouchSize(sectionBody(page,name)),`${name}, open`).toEqual([]);
+  }
+  // Controls shown only while in use: the paint tool's chip over the drawing, and the exterior studio's colour chips
+  // and its link back to the look for a wall with a finish of its own.
+  await openSection(page,'Boards & finish');
+  await page.getByRole('region',{name:'Accent boards'}).getByRole('button',{name:'Paint with Dark Cocoa (TimberTech EDGE Prime+)'}).click();
+  expect(await underTouchSize(paintChip(page)),'The paint tool').toEqual([]);
+  await paintChip(page).getByRole('button',{name:'Done'}).click();
+  const studio=await openExterior(page);
+  expect(await underTouchSize(studio),'Exterior finishes: walls').toEqual([]);
+  await studio.getByLabel('Walls to finish',{exact:true}).selectOption({label:'House, deck-facing wall'});
+  await studio.getByRole('group',{name:'Cladding: House, deck-facing wall',exact:true}).getByRole('button',{name:'Ledgestone',exact:true}).click();
+  await studio.getByRole('button',{name:'Looks',exact:true}).click();
+  await studio.getByRole('button',{name:'Coastal look',exact:true}).click();
+  await expect(studio.getByRole('button',{name:'Reset them to the look'})).toBeVisible();
+  expect(await underTouchSize(studio),'Exterior finishes: looks').toEqual([]);
   expect(problems).toEqual([]);
 });
 
@@ -871,8 +912,9 @@ test('loads the 3D view once the page settles when the preview is on screen',asy
 
 test('@phone waits to load the 3D view until the preview is scrolled near',async({page})=>{
   const viewer:string[]=[];page.on('request',r=>{if(/Deck3DViewer-/.test(r.url()))viewer.push(r.url());});
-  // A short phone screen puts the preview well below the fold (on a Pixel 7 it sits just under it).
-  await page.setViewportSize({width:412,height:480});
+  // The drawing sits near the top of the page, so only a small, short screen (a 320 px phone with the browser's bars
+  // showing) puts it well below the fold; on a Pixel 7 it is on screen and loads once the page is idle.
+  await page.setViewportSize({width:320,height:240});
   await openDesigner(page);
   const farBelow=await drawing(page).evaluate(el=>el.getBoundingClientRect().top>window.innerHeight+300);
   expect(farBelow).toBe(true);

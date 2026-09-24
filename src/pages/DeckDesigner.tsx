@@ -35,6 +35,18 @@ import {getBehaviorFields} from '../utils/behavior';
 import {genEventId} from '../utils/eventId';
 import './DeckDesigner.css';
 
+/**
+ * The drawing-set type, on this page only: Archivo (headings, section names, the title block) and IBM Plex Mono
+ * (figures), from Google Fonts with display=swap, so text shows at once in the fallback faces DeckDesigner.css
+ * sizes to match. Body text stays in the site's Inter; Cormorant stays in the wordmark.
+ */
+const DECK_FONTS='https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87.5,500..600&family=IBM+Plex+Mono:wght@500&display=swap';
+export const links=()=>[
+  {rel:'preconnect',href:'https://fonts.googleapis.com'},
+  {rel:'preconnect',href:'https://fonts.gstatic.com',crossOrigin:'anonymous' as const},
+  {rel:'stylesheet',href:DECK_FONTS},
+];
+
 // Loaded on demand (and fetched once the page settles), so they are not part of the page's first load: every
 // section's body (through the registry in sections.ts) and the send and proposal dialogs.
 const loadSendDialog=()=>import('../features/deckcraft/SendDesignDialog');
@@ -278,7 +290,7 @@ export default function DeckDesigner(){
   return <div className="deck-designer">
     <SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>
     <header className="dd-header"><Link to="/cost-estimator" className="dd-back">← All project types</Link><Link to="/" className="dd-wordmark">Golden Maple<span>DECK STUDIO</span></Link><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
-    <div className="dd-intro"><p className="dd-eyebrow">YOUR SPACE. YOUR SPECIFICATIONS.</p><h1>A deck that takes shape <br/><em>with every choice.</em></h1><p>Set the dimensions. Explore real material colours. See how your choices change the design and the estimate.</p></div>
+    <div className="dd-title"><h1>Draw your deck on your house.</h1><p>Size it against your house, pick every finish, and see an itemized price as you go.</p></div>
     <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}/>
     <main className="dd-workspace">
       <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={setExteriorOpen}/>

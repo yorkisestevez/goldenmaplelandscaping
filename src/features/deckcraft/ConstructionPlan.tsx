@@ -43,7 +43,9 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
  const legendRows=finish?.groups.length?1:0;
  return <svg viewBox={`${left-40} ${top-44} ${right-left+80} ${b.maxZ-top+128+legendRows*12}`} role="img" aria-label="Deck construction plan from the shared model" style={{width:'100%',height:'100%',background:'#faf8f1'}}>
    <title>{`Deck plan · ${model.quantities.joists} joists · ${model.quantities.footings} footings`}</title>
-   <defs><marker id="dd-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L6 3L0 6z" fill="#5f5a50"/></marker><pattern id="dd-house-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#b9b1a2" strokeWidth="1"/></pattern></defs>
+   <defs><marker id="dd-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L6 3L0 6z" fill="#5f5a50"/></marker><pattern id="dd-house-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#b9b1a2" strokeWidth="1"/></pattern><pattern id="dd-grid" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0V12H0" fill="none" stroke="#dde3da" strokeWidth=".6"/></pattern><pattern id="dd-grid-5" width="60" height="60" patternUnits="userSpaceOnUse"><rect width="60" height="60" fill="url(#dd-grid)"/><path d="M60 0V60H0" fill="none" stroke="#c6cfc3" strokeWidth="1"/></pattern></defs>
+   {/* On screen only (the page's CSS shows it; the PDF's picture has no CSS): a 1 ft grid, 5 ft lines bolder, over the yard. */}
+   <rect className="dd-plan-grid" display="none" x={left-40} y={0} width={right-left+80} height={b.maxZ+18} fill="url(#dd-grid-5)"/>
    {house&&<g aria-label="House">
      {blockPolys?blockPolys.map((poly,i)=><polygon key={i} points={poly.map(p=>`${p.x},${p.y}`).join(' ')} fill="url(#dd-house-hatch)" stroke="#6d675c" strokeWidth=".8"/>)
        :<rect x={house.x0} y={-band} width={house.x1-house.x0} height={band} fill="url(#dd-house-hatch)" stroke="#6d675c" strokeWidth=".8"/>}
@@ -75,11 +77,12 @@ export default function ConstructionPlan({model,yard,data}:{model:DeckTakeoff;ya
    {/* House blocks on the deck side are drawn over the deck, so any overlap with it shows. */}
    {(blocks??[]).filter(k=>k.rect.y1>0).map(k=><rect key={k.id} aria-label="House block over the deck" x={k.rect.x0} y={0} width={k.rect.x1-k.rect.x0} height={k.rect.y1} fill="#efe9dc" fillOpacity=".8" stroke="#3d3a34" strokeWidth="1.2"/>)}
    {blockLabels.filter(l=>(blocks?.find(k=>k.id===l.id)?.rect.y1??0)>0).map(l=><text key={l.id} x={l.x} y={l.y} textAnchor="middle" fontSize="7" fontWeight="600" fill="#3d3a34" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{l.text}</text>)}
-   {edgeLabels.map((e,i)=><text key={i} x={e.x} y={e.y} transform={e.flush?`rotate(-90 ${e.x} ${e.y-2.5})`:undefined} textAnchor="middle" fontSize="6.5" fontWeight={e.ledger?600:400} fill={e.ledger?'#7a4f1f':'#3f3a33'} paintOrder="stroke" stroke="#faf8f1" strokeWidth="2">{e.text}</text>)}
-   <path d={`M${b.minX} ${top-18}H${b.maxX}M${b.minX} ${top-23}v10M${b.maxX} ${top-23}v10`} stroke="#625d54" fill="none"/>
-   <text x={(b.minX+b.maxX)/2} y={top-25} textAnchor="middle" fontSize="8" fill="#514b41">{ft(w)} overall width</text>
-   <path d={`M${left-22} ${b.minZ}V${b.maxZ}M${left-27} ${b.minZ}h10M${left-27} ${b.maxZ}h10`} stroke="#625d54" fill="none"/>
-   <text x={left-29} y={(b.minZ+b.maxZ)/2} textAnchor="middle" fontSize="8" fill="#514b41" transform={`rotate(-90 ${left-29} ${(b.minZ+b.maxZ)/2})`}>{ft(d)} overall depth</text>
+   {edgeLabels.map((e,i)=><text key={i} className="dd-plan-figure" x={e.x} y={e.y} transform={e.flush?`rotate(-90 ${e.x} ${e.y-2.5})`:undefined} textAnchor="middle" fontSize="6.5" fontWeight={e.ledger?600:400} fill={e.ledger?'#7a4f1f':'#3f3a33'} paintOrder="stroke" stroke="#faf8f1" strokeWidth="2">{e.text}</text>)}
+   <path className="dd-dim" d={`M${b.minX} ${top-18}H${b.maxX}M${b.minX} ${top-23}v10M${b.maxX} ${top-23}v10`} stroke="#625d54" fill="none"/>
+   <path className="dd-dim-tick" display="none" d={`M${b.minX-4} ${top-14}l8 -8M${b.maxX-4} ${top-14}l8 -8M${left-26} ${b.minZ+4}l8 -8M${left-26} ${b.maxZ+4}l8 -8`}/>
+   <text className="dd-dim-text" x={(b.minX+b.maxX)/2} y={top-25} textAnchor="middle" fontSize="8" fill="#514b41">{ft(w)} overall width</text>
+   <path className="dd-dim" d={`M${left-22} ${b.minZ}V${b.maxZ}M${left-27} ${b.minZ}h10M${left-27} ${b.maxZ}h10`} stroke="#625d54" fill="none"/>
+   <text className="dd-dim-text" x={left-29} y={(b.minZ+b.maxZ)/2} textAnchor="middle" fontSize="8" fill="#514b41" transform={`rotate(-90 ${left-29} ${(b.minZ+b.maxZ)/2})`}>{ft(d)} overall depth</text>
    <g aria-label="Scale bar, 4 feet">
      <path d={`M${b.minX} ${b.maxZ+28}h${scale}M${b.minX} ${b.maxZ+24}v8M${b.minX+scale/2} ${b.maxZ+26}v4M${b.minX+scale} ${b.maxZ+24}v8`} stroke="#514b41" fill="none"/>
      <text x={b.minX+scale+6} y={b.maxZ+31} fontSize="6.5" fill="#514b41">4 ft</text>
