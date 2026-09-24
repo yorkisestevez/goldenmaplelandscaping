@@ -1,4 +1,4 @@
-# DeckCraft redesign baseline (R0)
+# DeckCraft redesign: baseline (R0) and results (R6, R7)
 
 The figures the "Drawing Set" redesign (R1–R7) is measured against. Recorded 2026-09-24 on `feat/deckcraft-r0-prep`, cut from `f2bfb8d` (feat/deckcraft-v2 with F4, F5 and F7; F6 not yet in). R0 changes no rendered output, so the base and R0 columns describe the same page.
 
@@ -102,3 +102,48 @@ The 5-pair medians differ only because base drew three fast runs and R6 two. R6 
 | `useOptionDeltas` chunk (with the option groups), loaded with the section bodies | – | 2.4 KB |
 | `optionDeltas` chunk, loaded once deltas are wanted | – | 1.9 KB |
 | `optionDeltas.worker` (its own copy of the engine), started with the first delta | – | 122.5 KB (budget 140) |
+
+## R7: final numbers
+
+Recorded 2026-09-24 on `feat/deckcraft-r6-deltas` after R7: the redesign complete.
+
+### Bundle (production build, gzip) and headroom
+
+| | R0 (`f2bfb8d` + R0) | `2e33ca2` (R2, before the look) | R6 | R7, final | Budget | Headroom |
+|---|---|---|---|---|---|---|
+| Route first-load JS | 180.16 KB | 172.96 KB | 176.52 KB | 176.75 KB | 185 KB | 8.25 KB |
+| Route CSS | 6.53 KB | 7.73 KB | 8.66 KB | 8.64 KB | 12 KB | 3.36 KB |
+| 3D viewer chunk | 291.3 KB | – | 291.5 KB | 291.5 KB | 340 KB | 48.5 KB |
+| PDF engine chunk | 126.0 KB | – | 126.0 KB | 126.0 KB | 150 KB | 24.0 KB |
+| Option deltas' worker | – | – | 122.5 KB | 122.5 KB | 140 KB | 17.5 KB |
+
+R7 adds 0.23 KB of route JS, for the drawer's own focus trap. It removes one unused rule (`dd-contractor-view`). The wizard-era classes the plan listed (`dd-steps`, `dd-navigation`, `dd-intro`, `dd-live-price`, `dd-finish`, `dd-breakdown`) were already gone after R3; `check-deck-ledger` keeps them out. `STEPS` and `stepLabel` stay for the GA4 step labels.
+
+### Load: the redesign against `2e33ca2`
+
+This uses `perf-ab.mjs`: Pixel 7, 4× CPU, Slow 4G, a 12 s settle, trackers answered empty and fonts stubbed, the builds taking turns. It ran twice, with 10 pairs each time.
+
+| | `2e33ca2` | R7 | Change |
+|---|---|---|---|
+| LCP median, first 10 pairs | 2,040 ms | 2,158 ms | +118 ms (two base runs fell between the modes, at about 1,950 ms) |
+| LCP median, second 10 pairs | 2,100 ms | 2,120 ms | +20 ms |
+| LCP median, all 20 pairs | 2,100 ms | 2,128 ms | +28 ms. Within each mode: +2 ms (fast runs, 4 and 3) and +20 ms (slow runs, 16 and 17) |
+| Blocking time median, all 20 pairs | 1,296 ms | 104 ms | −1,192 ms |
+| JS transferred | 715 KB | 442 KB | −273 KB: phones fetch 3D only when the 3D tab is chosen |
+| CLS | 0 | 0 | – |
+
+### Contrast, touch and layout
+
+The audit (`scratchpad/r6/r7-audit.mjs`) ran from the worktree against the production build, and was deleted afterwards. It used the visibility-audit script in strict AA mode, and also checked for controls and plan handles under 44 px, text under 11 px, SVG plan text under 4.5:1, gold plan graphics under 3:1, sideways scroll and console errors.
+
+It covered 375, 390, 412, 768, 1280 and 1536 px. At each width it checked the first screen, every section open (with the option deltas shown; phones tapped "Show price effect"), the price schedule (the column from 1280 px, the drawer below), the pinned drawing on phones, the 3D sheet, and the Framing sheet with each of its views. That is 105 states, with **0 issues**.
+
+### Phone pass (375, 390, 412 px)
+
+- **The pinned drawing** stays at the top while you edit: 335, 344 and 366 px tall, the plan at 30vh under its tabs and heading. Its handles are 44 × 44 px and there is no sideways scroll. The open section's fields stay visible below it and above the price bar.
+- **The price schedule drawer** used to let Tab leave it: from its last button, focus went to the page behind. It now traps focus itself. Focus goes to Close on opening, Tab and Shift+Tab loop, Escape closes it, and focus returns to the price bar. The e2e test checks the loop.
+
+### Tests
+
+- e2e: 48 tests, 46 from R5 plus the two R6 price-effect tests; the phone drawer test now also checks the focus loop.
+- Lint runs all check:deck suites, `check-deck-option-deltas` included. Legacy parity (213 designs), the engine snapshot and the price book all pass without `--update`.

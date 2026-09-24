@@ -16,6 +16,9 @@ import {gzipSync} from 'node:zlib';
  * 185 KB the same day, with the owner's approval, for the Finishes track (accent boards, inlays, exterior finishes
  * and skirting), whose price and layout code runs with the page's first estimate. On 2026-09-24 (redesign R1) the
  * section bodies became lazy chunks, which freed room under the same budget.
+ * The redesign (R1-R7, 2026-09-24) finished at 176.75 KB route JS (8.25 KB headroom) and 8.64 KB route CSS (3.36 KB
+ * headroom), against 180.16 KB and 6.53 KB before it (R0): the sections, price schedule, drawing-set look, site plan
+ * and option deltas all fit because every section body, the plan's editor and the deltas load on demand.
  * - The option deltas' worker (R6) carries its own copy of the price engine, so it prices options off the main thread;
  *   it loads only once deltas are wanted and stays within 140 KB gzip (122 KB when added, 2026-09-24).
  * - The route's own stylesheet (the drawing-set look, redesign R3) stays within 12 KB gzip. The fonts come from Google

@@ -1,4 +1,4 @@
-import {useEffect,useId,useRef,useState,type RefObject} from 'react';
+import {useEffect,useId,useRef,useState,type KeyboardEvent,type RefObject} from 'react';
 import {dollars} from '../designFacts';
 import {quoteLabel,quoteTag,type Ledger} from './priceLedgerModel';
 import {announceChange,describeChange,type ChangeRecord} from './useChangeLedger';
@@ -58,15 +58,31 @@ export function ChangeAnnouncer({record}:{record?:ChangeRecord}){
   return <p className="dd-sr" role="status">{text}</p>;
 }
 
-/** The schedule in a modal drawer (below 1280 px). Escape or Close shuts it, and focus goes back to the opener. */
+const FOCUSABLE='a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
+
+/**
+ * The schedule in a modal drawer (below 1280 px), with its focus trap spelled out rather than left to the browser's
+ * modal dialog (which lets Tab leave for the page): focus goes to Close when it opens, Tab and Shift+Tab loop through
+ * the drawer, Escape, Close or a tap outside shut it, and focus goes back to the opener in the price bar.
+ */
 export function LedgerDrawer({ledger,changes,onFullList,onClose,opener}:{ledger:Ledger;changes:readonly ChangeRecord[];onFullList:()=>void;onClose:()=>void;opener:RefObject<HTMLElement|null>}){
-  const ref=useRef<HTMLDialogElement>(null);
+  const ref=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null);
   useEffect(()=>{
     const dialog=ref.current;if(dialog&&!dialog.open)dialog.showModal();
+    close.current?.focus();
     return ()=>{opener.current?.focus();};
   },[opener]);
-  return <dialog ref={ref} id="dd-ledger-drawer" className="dd-ledger-sheet" aria-label="Price schedule" onClose={onClose} onCancel={e=>{e.preventDefault();onClose();}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-    <button type="button" className="dd-secondary dd-ledger-close" onClick={onClose}>Close</button>
+  const trap=(e:KeyboardEvent<HTMLDialogElement>)=>{
+    if(e.key==='Escape'){e.preventDefault();onClose();return;}
+    if(e.key!=='Tab')return;
+    const dialog=e.currentTarget,items=[...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(el=>el.getClientRects().length>0);
+    const first=items[0],last=items.at(-1),inside=dialog.contains(document.activeElement)&&document.activeElement!==dialog;
+    if(!first||!last){e.preventDefault();return;}
+    if(e.shiftKey&&(!inside||document.activeElement===first)){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&(!inside||document.activeElement===last)){e.preventDefault();first.focus();}
+  };
+  return <dialog ref={ref} id="dd-ledger-drawer" className="dd-ledger-sheet" aria-label="Price schedule" onKeyDown={trap} onClose={onClose} onCancel={e=>{e.preventDefault();onClose();}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+    <button ref={close} type="button" className="dd-secondary dd-ledger-close" onClick={onClose}>Close</button>
     <PriceLedger ledger={ledger} variant="drawer" changes={changes} onFullList={onFullList}/>
   </dialog>;
 }

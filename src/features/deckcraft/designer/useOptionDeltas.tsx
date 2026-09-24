@@ -77,13 +77,18 @@ export function useOptionDeltas(section:SectionId,data:DeckData,props:DeltaProps
 }
 
 type Store={get:()=>number;subscribe:(fn:()=>void)=>()=>void};
+/** A delta's figure (mono), and its note ("· 1 fewer to quote") in body type; the text reads the same. */
+function DeltaText({d}:{d:DeltaView}){
+  const [figure,...note]=d.text.split(' · ');
+  return <><b data-kind={d.kind}>{figure}</b>{note.length>0&&<span className="dd-delta-note"> · {note.join(' · ')}</span>}</>;
+}
 const useVersion=(store:Store)=>useSyncExternalStore(store.subscribe,store.get,store.get);
 
 /** The text inside an option button ("+$1,240"): hidden from its name, and its accessible description instead. */
 function OptionDelta({id,group,value,view,store}:{id:string;group:OptionGroupId;value:string;view:OptionDeltas['view'];store:Store}){
   useVersion(store);
   const d=view(group,value);
-  return <small id={id} className="dd-delta" data-kind={d?.kind??'pending'} aria-hidden="true">{d?.text??'…'}</small>;
+  return <small id={id} className="dd-delta" data-kind={d?.kind??'pending'} aria-hidden="true">{d?<DeltaText d={d}/>:'…'}</small>;
 }
 
 /**
@@ -96,7 +101,7 @@ function DeltaLine({id,group,view,store}:{id:string;group:OptionGroup;view:Optio
   const others=group.choices.filter(c=>c.value!==group.current).map(choice=>({choice,d:view(group.id,choice.value)}));
   const priced=others.filter(o=>o.d),quoted=priced.filter(o=>o.d!.text==='supplier quote'),fold=quoted.length>=3;
   const listed=fold?priced.filter(o=>!quoted.includes(o)):priced,pending=priced.length<others.length;
-  return <small id={id} className="dd-deltas">Price effect: {listed.map(({choice,d},i)=><span key={choice.value}>{i?' · ':''}{choice.label} <b data-kind={d!.kind}>{d!.text}</b></span>)}
+  return <small id={id} className="dd-deltas">Price effect: {listed.map(({choice,d},i)=><span key={choice.value}>{i?' · ':''}{choice.label} <DeltaText d={d!}/></span>)}
     {fold&&<span>{listed.length?' · ':''}{quoted.length} {listed.length?'others':'choices'}: <b data-kind="quote">supplier quote</b></span>}
     {pending&&<span aria-hidden="true">{priced.length?' · ':''}…</span>}</small>;
 }

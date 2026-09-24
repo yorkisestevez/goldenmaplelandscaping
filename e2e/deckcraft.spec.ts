@@ -797,6 +797,15 @@ test('@phone opens the price schedule from the price bar and gives focus back wh
   await opener.click();
   const drawer=page.getByRole('dialog',{name:'Price schedule'});
   await expect(drawer).toBeVisible();
+  // Focus goes in, and Tab and Shift+Tab loop inside the drawer (never out to the page behind it).
+  const close=drawer.getByRole('button',{name:'Close',exact:true}),more=drawer.getByRole('button',{name:'Full price list'});
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(more).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(more).toBeFocused();
   await expect(schedule(page).getByRole('status',{name:'Priced subtotal'})).toHaveText(amount??'');
   await expect(quotes(page).getByRole('listitem').first()).toContainText('quote');
   await page.keyboard.press('Escape');

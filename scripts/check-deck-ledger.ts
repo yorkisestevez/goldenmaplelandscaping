@@ -301,6 +301,8 @@ ok(quoteLabel('Deck skirting (builder quote)')==='Deck skirting'&&quoteLabel('Fa
   ok(page.includes('const undo=()=>{if(canUndo)changes.undo();undoDesign();},redo=()=>{if(canRedo)changes.redo();redoDesign();};'),'Undo and redo are noted');
   ok(page.includes('useEffect(()=>{notePrice(priceState(schedule));},[schedule,notePrice]);')&&page.includes('<ChangeAnnouncer record={changes.records.at(-1)}/>'),'Every estimate reaches the list, and the newest change is announced');
   ok(list.includes('sectionPriceEffect(section,ledger)'),'The section rows take their price effect from the schedule');
+  const drawer=read('src/features/deckcraft/designer/PriceLedger.tsx');
+  ok(drawer.includes('onKeyDown={trap}')&&drawer.includes('close.current?.focus();')&&drawer.includes('return ()=>{opener.current?.focus();};')&&/if\(e\.key==='Escape'\)\{e\.preventDefault\(\);onClose\(\);return;\}/.test(drawer)&&drawer.includes('last.focus()')&&drawer.includes('first.focus()'),'The drawer traps focus itself: in on opening, Tab looping, Escape closing, back to the price bar');
   ok(bar.includes('aria-haspopup="dialog"')&&bar.includes('<LedgerDrawer ')&&bar.includes('ledger.quotes.length'),'The price bar shows the quote count and opens the schedule drawer');
   ok(/\.dd-ledger-column\{display:none\}/.test(css)&&/@media\(min-width:1280px\)\{[^}]*\{[^}]*\}\.dd-ledger-column\{display:block/.test(css)&&/@media\(max-width:1279\.98px\)\{\.deck-designer\{padding-bottom:84px\}\.dd-phone-bar\{display:flex/.test(css),'The column shows from 1280 px; the price bar below it');
 }

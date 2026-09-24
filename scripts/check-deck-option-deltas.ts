@@ -232,7 +232,7 @@ ok(synced>0,`An option the light sync follows is covered (${synced})`);
   const deltas=read('src/features/deckcraft/designer/optionDeltas.ts'),workerSrc=read('src/features/deckcraft/designer/optionDeltas.worker.ts');
   ok(deltas.includes("new Worker(new URL('./optionDeltas.worker.ts',import.meta.url),{type:'module'})")&&deltas.includes('const pricing=schedule?null:pricingWorker();')&&deltas.includes('for(const run of running.values())run.onPage??=runOnPage(run,whenIdle);'),'The page prices in a worker, and on the page one option per idle slice where a worker cannot start');
   ok(workerSrc.includes("const receive=createPricingQueue(result=>scope.postMessage(result),step=>setTimeout(step,0));"),'The worker is the pricing queue, one option per task');
-  ok(hook.includes('aria-hidden="true">{d?.text??\'…\'}</small>')&&read('src/features/deckcraft/designer/steps/MaterialsStep.tsx').includes('aria-describedby={delta?.id}'),'An option\'s delta is its accessible description, not part of its name');
+  ok(hook.includes('aria-hidden="true">{d?<DeltaText d={d}/>:\'…\'}</small>')&&hook.includes("const [figure,...note]=d.text.split(' · ');")&&read('src/features/deckcraft/designer/steps/MaterialsStep.tsx').includes('aria-describedby={delta?.id}'),'An option\'s delta is its accessible description, not part of its name');
 }
 
 // 7. What the page loads for the deltas never reaches three.js (or the 3D viewer).
