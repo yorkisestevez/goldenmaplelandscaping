@@ -15,10 +15,11 @@
  * never enter the pinned snapshot.
  *
  * Hand-verified reference (500 sqft, mid Mondrian Plus $5.79 trade, grass,
- * simple, Barrie): materials trade $4,205.00, delivery trade $506.00, 3 bins,
- * materials retail $6,359.85, excavation $4,395.00, install $6,595.00,
- * restoration $1,625.00 → subtotal $20,624.85 = $41.25/sqft. Change the
- * calibration numbers and this comment together or not at all.
+ * simple, Barrie; re-solved 2026-09-23): 30 t clear stone + 2.5 t HPB,
+ * materials trade $4,746.97, delivery trade $516.00, 3 bins, materials retail
+ * $7,105.02, excavation $4,100.00, install $6,145.00, restoration $1,625.00
+ * → subtotal $20,625.02 = $41.25/sqft. Change the calibration numbers and
+ * this comment together or not at all.
  */
 
 import {
@@ -69,8 +70,9 @@ export interface HardscapeTakeoff {
   quantities: TakeoffQuantities;
 }
 
+/** Carr depth chart: tonnes = sqft × depth_in × 0.005 (compacted). */
 export function aggregateTonnes(sqft: number, depthIn: number): number {
-  return (sqft * (depthIn / 4)) / CARR_TRADE.aggregates.coverageSqftPerTonnePer4in;
+  return sqft * depthIn * CARR_TRADE.aggregates.tonnesPerSqftPerInch;
 }
 
 /** One product per truck: overflow rides tri-axles, the remainder a tandem. */
