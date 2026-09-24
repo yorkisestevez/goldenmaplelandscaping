@@ -184,7 +184,7 @@ for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another 
   ok(viewer.includes('if(e.delta>4)return;')&&viewer.includes('if(!pick)return {};'),'A board click paints only when the tool is on, and an orbit drag never paints');
   ok(viewer.includes("!b.accent&&(!darkBorder||b.role!=='border')")&&viewer.includes('<AccentBoards key={g.ref}'),'Accent boards are drawn with their own product swatch, apart from the deck colour');
   ok(/lazy\(loadBoardColourPanel\)/.test(designer)&&read('scripts/check-deck-bundle.ts').includes('/^BoardColourPanel-/'),'The accent-board panel loads on demand, off the page\'s first load');
-  ok(designer.includes('if(step!==1)setBoardPaintState(null);'),'Leaving the finish step puts the tool down');
+  ok(designer.includes("useEffect(()=>{if(!open.has('boards'))setBoardPaintState(null);},[open]);"),'Closing Boards & finish puts the tool down');
   ok(plan.includes("accentFill(i,j)??'none'")&&plan.includes('Accent boards:'),'The plan shades accent boards and names their colours');
   ok(!parseColourRef('tt_prime_plus:Nope')&&parseColourRef(COCOA)?.color.name==='Dark Cocoa','Colour references resolve only to real catalogue colours');
 }

@@ -15,11 +15,14 @@ import type {DeckData} from './types';
  * the CRM with a lead); this module stays free of browser-only imports so the checks can run it.
  * Labels are constants built here, never customer text, dimensions or prices.
  *
- * Steps, features and views count once per visit; outputs, links and sends count every time.
+ * Steps, sections, features and views count once per visit; outputs, links and sends count every time.
+ * Since the sections replaced the numbered wizard (R1), a step label means "opened a section of that old step"
+ * (the page load still counts the first); `deckcraft_section` counts each section opened (`deck_section_<id>`)
+ * and first changed (`deck_changed_<id>`).
  */
-export type DeckEvent='deckcraft_step'|'deckcraft_feature'|'deckcraft_view'|'deckcraft_output'|'deckcraft_link'|'deckcraft_send';
+export type DeckEvent='deckcraft_step'|'deckcraft_section'|'deckcraft_feature'|'deckcraft_view'|'deckcraft_output'|'deckcraft_link'|'deckcraft_send';
 export const DECK_LABEL=/^deck_[a-z0-9_]{1,36}$/;
-const ONCE_PER_VISIT:ReadonlySet<DeckEvent>=new Set(['deckcraft_step','deckcraft_feature','deckcraft_view']);
+const ONCE_PER_VISIT:ReadonlySet<DeckEvent>=new Set(['deckcraft_step','deckcraft_section','deckcraft_feature','deckcraft_view']);
 const SESSION_KEY='gm_deckcraft_events';
 
 type Sink=(event:DeckEvent,label:string)=>void;
@@ -50,7 +53,7 @@ export function trackDeck(event:DeckEvent,label:string){
 }
 
 const STEP_NAMES=['dimensions','materials','stairs_railings','site_extras','backyard','estimate'] as const;
-/** Label for a design step (0-based index). */
+/** Label for an old wizard step (0-based index); a section reports its `legacyStep` through it. */
 export const stepLabel=(index:number)=>`deck_step_${index+1}_${STEP_NAMES[index]??'other'}`;
 const slug=(text:string)=>text.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
 // Doors and windows count as edited when one is added, removed, restyled or moved to another wall;

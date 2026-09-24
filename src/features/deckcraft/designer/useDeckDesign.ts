@@ -13,8 +13,10 @@ import {deckSizeForArea,readDeckArea} from '../estimatorHandoff';
  * The working design and everything that keeps it: autosave and restore on this device, shared design
  * links (#d=…) and the visitor's own design kept while they look at one, plus the first-mount checks
  * (3D support), and undo/redo. Its effects are the page's first effects, in the order the page always ran them.
+ * `onReplaced` runs when a shared link or the visitor's own design replaces the working design (the page closes its
+ * sections, so the new design is seen from the top).
  */
-export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
+export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
   const [data,setData]=useState<DeckData>(()=>deckReleaseData(structuredClone(DEFAULT_DECK)));
   const [mounted,setMounted]=useState(false);
   const [hasWebGL,setHasWebGL]=useState(true);
@@ -23,7 +25,7 @@ export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
   const [designStatus,setDesignStatus]=useState('');
   const [designError,setDesignError]=useState('');
   const [linkBackup,setLinkBackup]=useState(false);
-  // Backyard features from the older, pre-release autosave: offered in the Backyard step, not restored silently.
+  // Backyard features from the older, pre-release autosave: offered in the Backyard section, not restored silently.
   const [earlierYard,setEarlierYard]=useState<{yardFeatures:YardFeature[];terrainConfig?:TerrainConfig}|null>(null);
   const dataRef=useRef(data);dataRef.current=data;
   // Undo/redo: an edit or a whole-design replacement names itself in `source` before it sets the design;
@@ -40,7 +42,7 @@ export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
       const {design:shared,priceBook}=await decodeDesignLinkFile(value);
       let kept=false;
       try{const existing=localStorage.getItem(DESIGN_LINK_BACKUP_KEY),keep=designToKeep(existing,own,serializeDesign(shared));if(keep)localStorage.setItem(DESIGN_LINK_BACKUP_KEY,keep);kept=!!(existing||keep);}catch{/* Storage unavailable: the shared design still opens. */}
-      replace(shared);setSaved(false);setStep(0);setDesignError('');setLinkBackup(kept);
+      replace(shared);setSaved(false);onReplaced();setDesignError('');setLinkBackup(kept);
       // A link made before the last price change says so: the estimate shown is today's, not the one that was sent.
       const priced=priceBook&&priceBook!==PRICE_BOOK.version?`This design was first priced with the ${priceBookLabel(priceBook)}; prices have changed since, and the estimate now uses the ${priceBookLabel()}.`:`You’re looking at a design shared with you, priced with today’s Golden Maple price book.`;
       setDesignStatus(`${priced}${kept?' Your own design is kept: use “Go back to my own design” to return to it.':''}`);
@@ -49,7 +51,7 @@ export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
     finally{try{window.history.replaceState(null,'',window.location.pathname+window.location.search);}catch{/* The hash stays; nothing else depends on it. */}}
   }
   function restoreOwnDesign(){
-    try{const own=localStorage.getItem(DESIGN_LINK_BACKUP_KEY);if(own)replace(parseDesign(own));localStorage.removeItem(DESIGN_LINK_BACKUP_KEY);setLinkBackup(false);setSaved(false);setStep(0);setDesignError('');setDesignStatus(own?'Your own design is back.':'');trackDeck('deckcraft_link','deck_link_went_back');}
+    try{const own=localStorage.getItem(DESIGN_LINK_BACKUP_KEY);if(own)replace(parseDesign(own));localStorage.removeItem(DESIGN_LINK_BACKUP_KEY);setLinkBackup(false);setSaved(false);onReplaced();setDesignError('');setDesignStatus(own?'Your own design is back.':'');trackDeck('deckcraft_link','deck_link_went_back');}
     catch{setDesignError('Your own design could not be restored. You can import a saved JSON file.');}
   }
   useEffect(()=>{
@@ -62,7 +64,7 @@ export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
         const restored=parseDesign(stored);
         if(!current&&restored.yardFeatures?.length){
           const {yardFeatures,terrainConfig,...deck}=restored;setData(deck);setEarlierYard({yardFeatures,...(terrainConfig?{terrainConfig}:{})});
-          setDesignStatus('Your deck and house have been restored. Your earlier design also had backyard features; you can add them back in the Backyard step.');
+          setDesignStatus('Your deck and house have been restored. Your earlier design also had backyard features; you can add them back in the Backyard section.');
         }else{setData(restored);setDesignStatus(restored.yardFeatures?.length?'Your deck, house and backyard have been restored.':'Your deck and house have been restored.');}
       }
     }catch{setDesignError('Your previous design could not be restored. You can import a saved JSON file.');}
@@ -74,7 +76,7 @@ export function useDeckDesign({setStep}:{setStep:(step:number)=>void}){
     if(area){
       const size=deckSizeForArea(area),words=`about ${area} sq ft (${size.width} × ${size.length} ft)`;
       if(!link&&!stored){update(size);setDesignStatus(`Started from your cost estimate: a deck of ${words}. Adjust the size to fit your space.`);}
-      else if(!link)setDesignStatus(status=>`${status?`${status} `:''}Your cost estimate had a deck of ${words}; change the size under Dimensions to start from it.`);
+      else if(!link)setDesignStatus(status=>`${status?`${status} `:''}Your cost estimate had a deck of ${words}; change the size under Deck shape & size to start from it.`);
       try{const query=new URLSearchParams(window.location.search);query.delete('sqft');const rest=query.toString();window.history.replaceState(null,'',window.location.pathname+(rest?`?${rest}`:'')+window.location.hash);}catch{/* The size stays in the address; reopening starts from it again. */}
     }
     if(link)void openSharedLink(link,stored);

@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom';
 import SEO from '../components/SEO';
 import {deckReleaseData,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
 import {DEFAULT_DECK} from '../features/deckcraft/defaults';
-import type {HouseOpening,PrivacyScreen} from '../features/deckcraft/types';
+import type {DeckData,HouseOpening,PrivacyScreen} from '../features/deckcraft/types';
 import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,pricedPrivacyArea,privacySides,screenOn,screenProduct} from '../features/deckcraft/privacyScreens';
 import {MAX_DESIGN_BYTES} from '../features/deckcraft/designPersistence';
 import {designFeatures,setDeckAnalyticsSink,stepLabel,trackDeck} from '../features/deckcraft/deckAnalytics';
@@ -15,44 +15,53 @@ import {getHouseContact} from '../features/deckcraft/houseContact';
 import {dollars} from '../features/deckcraft/designFacts';
 import {activeWrap,edgeNameOf} from '../features/deckcraft/lib/wrapGeometry';
 import {angledStairAllowed,angledStairFits,isChamferEdgeId} from '../features/deckcraft/lib/cornerChamfers';
-import {STEPS,type PreviewMode} from '../features/deckcraft/designer/constants';
+import type {PreviewMode} from '../features/deckcraft/designer/constants';
 import PhoneDeckBar from '../features/deckcraft/designer/PhoneDeckBar';
 import {downloadFile} from '../features/deckcraft/designer/fields';
 import {useDeckDesign} from '../features/deckcraft/designer/useDeckDesign';
 import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
 import DesignTools from '../features/deckcraft/designer/DesignTools';
 import PreviewPanel,{loadExteriorStudio} from '../features/deckcraft/designer/PreviewPanel';
-import DimensionsStep from '../features/deckcraft/designer/steps/DimensionsStep';
-import MaterialsStep,{loadBoardColourPanel,loadDeckFinishesPanel,loadInlayEditor} from '../features/deckcraft/designer/steps/MaterialsStep';
+import SectionList from '../features/deckcraft/designer/SectionList';
+import {SECTIONS,SECTION_BY_ID,loadBackyardStep,loadBoardColourPanel,loadDeckFinishesPanel,loadDimensionsStep,loadEstimateStep,loadHouseSection,loadInlayEditor,loadMaterialsStep,loadSiteExtrasStep,loadSkirtingEditor,loadStairsStep,sectionsOfPatch,type SectionId} from '../features/deckcraft/designer/sections';
 import type {BoardPaintChoice} from '../features/deckcraft/boardFinishes';
 import type {paintBoard as PaintBoard} from '../features/deckcraft/boardPaint';
-import StairsStep from '../features/deckcraft/designer/steps/StairsStep';
-import SiteExtrasStep,{loadSkirtingEditor} from '../features/deckcraft/designer/steps/SiteExtrasStep';
-import EstimateStep from '../features/deckcraft/designer/steps/EstimateStep';
 import {trackEngagement,trackLead} from '../utils/analytics';
 import {getAttributionFields} from '../utils/utmCapture';
 import {getBehaviorFields} from '../utils/behavior';
 import {genEventId} from '../utils/eventId';
 import './DeckDesigner.css';
 
-// Loaded on demand (and fetched once the page settles), so they are not part of the page's first load.
-const loadBackyardStep=()=>import('../features/deckcraft/designer/steps/BackyardStep');
+// Loaded on demand (and fetched once the page settles), so they are not part of the page's first load: every
+// section's body (through the registry in sections.ts) and the send and proposal dialogs.
 const loadSendDialog=()=>import('../features/deckcraft/SendDesignDialog');
 const loadProposalDialog=()=>import('../features/deckcraft/ProposalSheet');
+const HouseSection=lazy(loadHouseSection),DimensionsStep=lazy(loadDimensionsStep),MaterialsStep=lazy(loadMaterialsStep),StairsStep=lazy(loadStairsStep),SiteExtrasStep=lazy(loadSiteExtrasStep),EstimateStep=lazy(loadEstimateStep);
 const BackyardStep=lazy(loadBackyardStep),SendDesignDialog=lazy(loadSendDialog),ProposalDialog=lazy(loadProposalDialog);
+// Phones (the layout's single column) show one section at a time; wider screens keep several open.
+const onePhoneSection=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(max-width: 760px)').matches;
+const reducedMotion=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 // DeckCraft's funnel events go through the site's analytics (GA4, Meta and the behaviour trail sent with leads).
 setDeckAnalyticsSink((event,label)=>trackEngagement(event,label));
 
 /**
  * The public deck designer: wires the working design (useDeckDesign), the live estimate (useDeckEstimate),
- * the preview and the five steps together, and owns the outputs (proposal, PDF, summary, exports) and
- * sending the design. The step panels and preview are presentational; every effect lives here, in the
- * order the page has always run them.
+ * the preview and the sections (sections.ts, opened in any order) together, and owns the outputs (proposal,
+ * PDF, summary, exports) and sending the design. The section bodies and preview are presentational; every
+ * effect lives here, in the order the page has always run them.
  */
 export default function DeckDesigner(){
-  const [step,setStep]=useState(0);
-  const {data,setData,update,replace,undo,redo,canUndo,canRedo,earlierYard,restoreEarlierYard,dismissEarlierYard,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign}=useDeckDesign({setStep});
+  // The open sections. Every section starts closed, in the prerendered page and on the client alike; none is saved.
+  const [open,setOpen]=useState<ReadonlySet<SectionId>>(()=>new Set());
+  const closeSections=useCallback(()=>setOpen(new Set()),[]);
+  const {data,setData,update:applyUpdate,replace,undo,redo,canUndo,canRedo,earlierYard,restoreEarlierYard,dismissEarlierYard,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign}=useDeckDesign({onReplaced:closeSections});
+  // Section reach: the first edit in each section counts once per visit, attributed through the fields it owns.
+  const changedSections=useRef(new Set<SectionId>());
+  const update=(patch:Partial<DeckData>)=>{
+    for(const id of sectionsOfPatch(patch,data))if(!changedSections.current.has(id)){changedSections.current.add(id);trackDeck('deckcraft_section',`deck_changed_${id}`);}
+    applyUpdate(patch);
+  };
   // Ctrl/Cmd+Z undoes a design change and Ctrl/Cmd+Shift+Z (or Ctrl+Y) redoes it, except while typing in a
   // field, where the browser's own undo applies to the text.
   useEffect(()=>{
@@ -67,7 +76,6 @@ export default function DeckDesigner(){
   });
   const [lightingSearch,setLightingSearch]=useState('');
   const [selectedHouseOpeningId,setSelectedHouseOpeningId]=useState('');
-  const [houseSettingsOpen,setHouseSettingsOpen]=useState(false);
   const [exteriorOpen,setExteriorOpen]=useState(false);
   const [mode,setMode]=useState<PreviewMode>('3d');
   const [wrapStatus,setWrapStatus]=useState('');
@@ -85,26 +93,44 @@ export default function DeckDesigner(){
   const onSnapshotReady=useCallback((capture:(()=>string|null)|null)=>{snapshot.current=capture;},[]);
   const closeProposal=useCallback(()=>setProposal(null),[]);
   const closeSend=useCallback(()=>setSendOpen(false),[]);
-  const panelRef=useRef<HTMLDivElement>(null);
-  const interacted=useRef(false);
-  useEffect(()=>{if(interacted.current)panelRef.current?.focus({preventScroll:true});},[step]);
-  // Funnel: each step, preview mode and design feature is counted once per visit (fixed labels only).
-  useEffect(()=>{trackDeck('deckcraft_step',stepLabel(step));},[step]);
+  // Funnel: the page load counts the first step, as the wizard did; each preview mode and design feature is counted
+  // once per visit (fixed labels only). Opening a section counts its old step and the section (openSection).
+  useEffect(()=>{trackDeck('deckcraft_step',stepLabel(0));},[]);
   useEffect(()=>{trackDeck('deckcraft_view',`deck_view_${mode}`);},[mode]);
-  // Fetch the on-demand pieces once the page has settled, so opening one is instant.
-  useEffect(()=>{const timer=setTimeout(()=>{for(const load of [loadBackyardStep,loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel])load().catch(()=>{/* Loaded again when opened. */});},4000);return()=>clearTimeout(timer);},[]);
+  // Fetch the section bodies and the on-demand panels once the page has settled, so opening one is instant; not when
+  // the visitor has asked the browser to save data.
+  useEffect(()=>{
+    if((navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData)return;
+    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel])load().catch(()=>{/* Loaded again when opened. */});},4000);
+    return()=>clearTimeout(timer);
+  },[]);
+  /** Opens a section (analytics: its old wizard step, and the section, once per visit). On a phone it closes the others. */
+  function openSection(id:SectionId,bringIntoView=false){
+    const section=SECTION_BY_ID[id];
+    trackDeck('deckcraft_step',stepLabel(section.legacyStep));
+    trackDeck('deckcraft_section',`deck_section_${section.id}`);
+    const single=onePhoneSection();
+    setOpen(prev=>new Set([...(single?[]:prev),id]));
+    // A section closing above this one moves it up, off the screen; one opened from elsewhere is brought into view.
+    if(single||bringIntoView)requestAnimationFrame(()=>{
+      const row=document.getElementById(`dd-section-${id}`),top=row?.getBoundingClientRect().top??0;
+      if(row&&(bringIntoView||top<0||top>window.innerHeight))row.scrollIntoView({block:'start',behavior:bringIntoView&&!reducedMotion()?'smooth':'auto'});
+    });
+  }
+  const toggleSection=(id:SectionId)=>{if(open.has(id))setOpen(prev=>{const next=new Set(prev);next.delete(id);return next;});else openSection(id);};
   const featureKey=designFeatures(data).join(' ');
   useEffect(()=>{for(const label of featureKey.split(' '))if(label)trackDeck('deckcraft_feature',label);},[featureKey]);
   const {estimate,lightingCheck,autoCounts,hasFixtures,reviewFlags,described}=useDeckEstimate(data,setData);
   const {material,railingName,quoteRequired,priceLabel}=described;
   // Accent boards: the tool's colour and scope are page state (never saved). Picking a colour shows the 3D deck;
-  // leaving the finish step puts the tool down.
+  // closing Boards & finish puts the tool down.
   const [boardPaint,setBoardPaintState]=useState<BoardPaintChoice|null>(null),[paintMessage,setPaintMessage]=useState('');
   const setBoardPaint=useCallback((next:BoardPaintChoice|null)=>{setBoardPaintState(next);setPaintMessage('');if(next){setWant3d(true);setMode(m=>m==='3d'||m==='overview'||m==='front'||m==='top'?m:'3d');}},[]);
-  useEffect(()=>{if(step!==1)setBoardPaintState(null);},[step]);
-  // The painting action comes with the accent-board panel (loaded on the finish step), so it is not in the page's first load.
+  useEffect(()=>{if(!open.has('boards'))setBoardPaintState(null);},[open]);
+  // The painting action comes with the accent-board panel (loaded with Boards & finish), so it is not in the page's first load.
   const painter=useRef<typeof PaintBoard|null>(null);
-  useEffect(()=>{if(step===1)loadBoardColourPanel().then(m=>{painter.current=m.paintBoard;}).catch(()=>{/* Loaded again with the panel. */});},[step]);
+  const boardsOpen=open.has('boards');
+  useEffect(()=>{if(boardsOpen)loadBoardColourPanel().then(m=>{painter.current=m.paintBoard;}).catch(()=>{/* Loaded again with the panel. */});},[boardsOpen]);
   const onPaintBoard=useCallback((target:{level:number;index:number})=>{
     if(!boardPaint||!painter.current)return;
     const result=painter.current(data,estimate.model,target,boardPaint.colour,boardPaint.scope);
@@ -113,11 +139,11 @@ export default function DeckDesigner(){
   },[boardPaint,data,estimate.model,update]);
   const houseConfig=getHouseConfig(data);
   const effectiveHouseOpeningId=houseConfig.openings.find(o=>o.id===selectedHouseOpeningId)?.id??houseConfig.openings[0]?.id??'';
-  // Picking a door or window (in 3D or the doors & windows bar) works on every step; the full house
-  // settings on step 1 open only when asked for.
+  // Picking a door or window (in 3D or the doors & windows bar) works whatever is open; "Size & position" in the bar
+  // opens the House section and brings it into view.
   const pickedHouseOpeningId=houseConfig.openings.some(o=>o.id===selectedHouseOpeningId)?selectedHouseOpeningId:'';
   const selectHouseOpening=(id:string)=>setSelectedHouseOpeningId(id);
-  const editHouseOpening=()=>{setHouseSettingsOpen(true);setStep(0);requestAnimationFrame(()=>document.querySelector('.dd-house-editor')?.scrollIntoView({behavior:'smooth',block:'start'}));};
+  const editHouseOpening=()=>openSection('house',true);
   const moveHouseOpening=(id:string,patch:Partial<HouseOpening>)=>{setSelectedHouseOpeningId(id);update({houseConfig:{...houseConfig,openings:houseConfig.openings.map(o=>o.id===id?clampHouseOpening({...o,...patch},houseConfig):o)}});};
   const screens=data.privacyScreens??[];
   const screenArea=pricedPrivacyArea(screens);
@@ -132,7 +158,6 @@ export default function DeckDesigner(){
   const setScreen=(id:string,patch:Partial<PrivacyScreen>)=>writeScreen(id,s=>({...s,...patch}));
   const canAddScreen=screens.length<MAX_PRIVACY_SCREENS&&screenArea+12<=MAX_PRIVACY_SQFT;
   const wrap=activeWrap(data);
-  const move=(n:number)=>{interacted.current=true;setStep(n);const reduce=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;document.querySelector('.dd-controls')?.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});};
   // Exposed main-deck edges (wing ends and sides) that stairs and extra levels can join.
   const mainFootprint=estimate.model.levels[0].footprint,ledger=getHouseContact(data,mainFootprint);
   const namedEdges=mainFootprint.edgeIds?mainFootprint.outline.flatMap((a,i)=>{const b=mainFootprint.outline[(i+1)%mainFootprint.outline.length],id=mainFootprint.edgeIds![i],len=Math.hypot(b.x-a.x,b.y-a.y);return ledger.isContactEdge(i)||len<36?[]:[{id,name:edgeNameOf(id),ft:(len/12).toFixed(1),lenIn:len}];}):[];
@@ -225,26 +250,26 @@ export default function DeckDesigner(){
     trackLead(DECK_DESIGN_FORM,'high-intent',Number(fields.value)||undefined,eventId,{email:fields.email,phone:fields.phone},{payload});
   }
   function saveJSON(){try{downloadFile(serializeDesign(data),'application/json','golden-maple-deck-design.json');trackDeck('deckcraft_output','deck_json_save');setDesignStatus('Design JSON saved. Import this file to continue on another device.');setDesignError('');}catch{setDesignError('Saving the design file failed on this device. Use “Download summary” for a plain-text copy instead.');}}
-  const startOver=()=>{replace(deckReleaseData(structuredClone(DEFAULT_DECK)));setStep(0);setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');};
+  // Each open section's body, with the page state it needs (the list wraps it in Suspense while its chunk loads).
+  const renderSection=(id:SectionId)=>{switch(id){
+    case 'house':return <HouseSection data={data} update={update} selectedOpeningId={effectiveHouseOpeningId} onSelectOpening={setSelectedHouseOpeningId} openExterior={()=>setExteriorOpen(true)}/>;
+    case 'deck':return <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges}/>;
+    case 'boards':return <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage}/>;
+    case 'stairs':return <StairsStep data={data} update={update} stairEdges={stairEdges}/>;
+    case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch}/>;
+    case 'backyard':return <BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/>;
+    case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} quoteRequired={quoteRequired} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={saveJSON} onDownloadSummary={download} onExport={kind=>void exportModel(kind)}/>;
+  }};
+  const startOver=()=>{replace(deckReleaseData(structuredClone(DEFAULT_DECK)));closeSections();setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');};
   return <div className="deck-designer">
     <SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>
     <header className="dd-header"><Link to="/cost-estimator" className="dd-back">← All project types</Link><Link to="/" className="dd-wordmark">Golden Maple<span>DECK STUDIO</span></Link><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
     <div className="dd-intro"><p className="dd-eyebrow">YOUR SPACE. YOUR SPECIFICATIONS.</p><h1>A deck that takes shape <br/><em>with every choice.</em></h1><p>Set the dimensions. Explore real material colours. See how your choices change the design and the estimate.</p></div>
     <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}/>
     <main className="dd-workspace">
-      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} step={step} houseSettingsOpen={houseSettingsOpen} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} docked={docked} material={material} priceLabel={priceLabel} quoteRequired={quoteRequired} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={setExteriorOpen}/>
+      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} want3d={want3d} onWant3d={onWant3d} docked={docked} material={material} priceLabel={priceLabel} quoteRequired={quoteRequired} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={setExteriorOpen}/>
       <section className="dd-controls" aria-label="Deck configuration">
-        <nav className="dd-steps" aria-label="Design steps">{STEPS.map((s,i)=><button key={s} aria-current={step===i?'step':undefined} onClick={()=>move(i)}><span>{String(i+1).padStart(2,'0')}</span>{s}</button>)}</nav>
-        <div className="dd-panel" ref={panelRef} tabIndex={-1}>
-          {step===0 && <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} houseSettingsOpen={houseSettingsOpen} setHouseSettingsOpen={setHouseSettingsOpen} effectiveHouseOpeningId={effectiveHouseOpeningId} setSelectedHouseOpeningId={setSelectedHouseOpeningId} openExterior={()=>setExteriorOpen(true)}/>}
-          {step===1 && <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage}/>}
-          {step===2 && <StairsStep data={data} update={update} stairEdges={stairEdges} autoCounts={autoCounts}/>}
-          {step===3 && <SiteExtrasStep data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch}/>}
-
-          {step===4 && <Suspense fallback={<p className="dd-note" role="status">Loading the backyard planner…</p>}><BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/></Suspense>}
-          {step===5 && <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} quoteRequired={quoteRequired} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={saveJSON} onDownloadSummary={download} onExport={kind=>void exportModel(kind)}/>}
-          <div className="dd-navigation"><button className="dd-secondary" disabled={step===0} onClick={()=>move(step-1)}>← Back</button><span>{step+1} of {STEPS.length}</span>{step<STEPS.length-1&&<button className="dd-primary" onClick={()=>move(step+1)}>{step===STEPS.length-2?'Review my estimate':'Continue'} →</button>}</div>
-        </div>
+        <SectionList data={data} estimate={estimate} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection}/>
       </section>
     </main>
     <PhoneDeckBar subtotal={estimate.subtotal} priceLabel={priceLabel} docked={docked} onToggleDock={toggleDock} onSend={()=>setSendOpen(true)}/>

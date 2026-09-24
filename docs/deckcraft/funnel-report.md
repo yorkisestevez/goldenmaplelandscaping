@@ -8,11 +8,25 @@ Every event goes to GA4 as an event name with an `event_label` parameter (`track
 | Event | Labels | Counted |
 |---|---|---|
 | `deckcraft_step` | `deck_step_1_dimensions` … `deck_step_5_backyard`, `deck_step_6_estimate` | once per visit |
+| `deckcraft_section` | `deck_section_<id>` when a section is opened, `deck_changed_<id>` on the first edit in it; ids `house`, `deck`, `boards`, `stairs`, `lighting`, `extras`, `site`, `backyard`, `proposal` | once per visit |
 | `deckcraft_feature` | `deck_shape_*`, `deck_pattern_*`, `deck_wrap`, `deck_corner_chamfer`, `deck_level_2`, `deck_stairs_*`, `deck_lighting`, `deck_bench`, `deck_backyard`, `deck_patio`, `deck_retaining_wall`, `deck_water_feature`, `deck_fire_pit`, `deck_outdoor_kitchen`, `deck_turf`, `deck_landscape_lighting`, … | once per visit |
 | `deckcraft_view` | `deck_view_3d`, `deck_view_plan`, … | once per visit |
 | `deckcraft_output` | `deck_pdf`, `deck_proposal`, `deck_summary`, `deck_json_save`, `deck_json_import` | every time |
 | `deckcraft_link` | `deck_link_opened`, `deck_link_failed`, `deck_link_went_back` | every time |
 | `deckcraft_send` | `deck_send_opened`, `deck_send_submitted`, `deck_send_sent`, `deck_send_failed` | every time |
+
+**From the R1 release (2026-09-24), a step label means "opened a section", not "pressed Continue".** The numbered wizard became sections a visitor opens in any order (the "Drawing Set" redesign). The page load still sends `deck_step_1_dimensions`; opening a section sends the label of the wizard step it replaced:
+
+| Section | Step label it sends |
+|---|---|
+| House, Deck shape & size | `deck_step_1_dimensions` |
+| Boards & finish | `deck_step_2_materials` |
+| Stairs & railings | `deck_step_3_stairs_railings` |
+| Lighting; Privacy, skirting & extras; Site & foundation | `deck_step_4_site_extras` |
+| Backyard | `deck_step_5_backyard` |
+| Proposal & files (the estimate, send, proposal, PDF and files) | `deck_step_6_estimate` |
+
+Because visitors no longer have to pass step 2 to reach step 6, the step funnel's percentages are not comparable across the release. Judge the change by the send rate instead: `deck_send_sent` ÷ page views of `/deck-designer`, for the four weeks before the release against the four weeks after.
 
 A sent design also fires the site's lead conversion (`generate_lead`, form `deck-design`). Its value is the priced subtotal, and it passes the same qualification rules as every other form.
 
@@ -29,7 +43,7 @@ GA4 → Explore → **Funnel exploration**, open funnel off, device category as 
 5. `deckcraft_send`, Event label = `deck_send_opened`
 6. `deckcraft_send`, Event label = `deck_send_sent`
 
-Read it as: the biggest percentage drop is the next thing to improve. For example, a large drop from 5 to 6 points at the send form, while a phone-only drop at step 2 points at the phone layout (item A3 in the plan).
+Read it as: the biggest percentage drop is the next thing to improve. From the R1 release, use step 2 = any `deckcraft_section` event (a visitor who opened a section), then `deck_step_2_materials`, `deck_step_6_estimate`, send opened and sent; see the note above. For example, a large drop from 5 to 6 points at the send form, while a phone-only drop at step 2 points at the phone layout (item A3 in the plan).
 
 ## Exploration 2: what senders did first
 GA4 → Explore → **Free form**. Segment A is users with `deckcraft_send` / `deck_send_sent`; segment B is all users with `deckcraft_step` / `deck_step_1_dimensions`. Rows are Event label, filtered to event name `deckcraft_feature` or `deckcraft_view`. The metric is Total users.
@@ -37,6 +51,9 @@ GA4 → Explore → **Free form**. Segment A is users with `deckcraft_send` / `d
 A feature much more common among senders than among all designers is worth promoting, for example in the default design or the intro text. A feature nobody uses is a candidate to simplify.
 
 Note: before 2026-09-23 the estimate was `deck_step_5_estimate`; the backyard step came in then.
+
+## Exploration 3: section reach (from the R1 release)
+GA4 → Explore → **Free form**. Rows are Event label, filtered to event name `deckcraft_section`; the metric is Total users. For each section, compare `deck_section_<id>` (opened) with `deck_changed_<id>` (changed something in it). A section that many open but few change is a candidate to simplify; one that senders change far more often than others is worth promoting.
 
 ## Monthly check (10 minutes)
 - Funnel completion rate and the step with the biggest drop, desktop compared with phone.

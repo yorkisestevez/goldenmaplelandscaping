@@ -25,8 +25,9 @@ test.beforeEach(async({context})=>{
  * accessible names, which the redesign keeps. No test body uses a class selector or the wizard's step buttons.
  */
 const TITLE='A deck that takes shape';
-/** The sections of the designer, in the redesign's names. */
-type Section='House'|'Deck shape & size'|'Boards & finish'|'Stairs & railings'|'Lighting'|'Privacy, skirting & extras'|'Site & foundation'|'Backyard'|'Proposal & files';
+/** The sections of the designer, in page order. */
+const SECTION_NAMES=['House','Deck shape & size','Boards & finish','Stairs & railings','Lighting','Privacy, skirting & extras','Site & foundation','Backyard','Proposal & files'] as const;
+type Section=typeof SECTION_NAMES[number];
 /** The drawing's sheets: the site plan, the 3D view and the framing. */
 type ViewTab='Plan'|'3D'|'Framing';
 
@@ -71,16 +72,23 @@ async function expand(scope:Page|Locator,summaryText:string){
   const summaryEl=scope.locator('summary',{hasText:summaryText});
   if(!await summaryEl.evaluate(el=>(el.parentElement as HTMLDetailsElement).open))await summaryEl.click();
 }
-/** Where each section lives in today's wizard: its step, and for House the house settings on the first step. */
-const OLD_STEP:Record<Section,RegExp>={
-  'House':/Dimensions$/,'Deck shape & size':/Dimensions$/,'Boards & finish':/Materials$/,'Stairs & railings':/Stairs & railings$/,
-  'Lighting':/Site & extras$/,'Privacy, skirting & extras':/Site & extras$/,'Site & foundation':/Site & extras$/,'Backyard':/Backyard$/,'Proposal & files':/Your estimate$/,
-};
-/** Opens a section of the designer. An open section stays open. */
+/** The section rows; a section's row button (named by the section alone); its body, once open. */
+const sectionList=(page:Page)=>page.getByRole('region',{name:'Deck configuration'});
+const sectionButton=(page:Page,name:Section)=>sectionList(page).getByRole('button',{name,exact:true});
+const sectionBody=(page:Page,name:Section)=>page.getByRole('region',{name,exact:true});
+/** Opens a section of the designer and waits for its body to load. An open section stays open. */
 async function openSection(page:Page,name:Section){
-  const step=page.getByRole('navigation',{name:'Design steps'}).getByRole('button',{name:OLD_STEP[name]});
-  if(await step.getAttribute('aria-current')!=='step')await step.click();
-  if(name==='House')await expand(page,'House dimensions, finishes, doors & windows');
+  const button=sectionButton(page,name);
+  await expect(button,`"${name}" is a section of the designer`).toBeVisible();
+  if(await button.getAttribute('aria-expanded')==='false')await button.click();
+  await expect(button).toHaveAttribute('aria-expanded','true');
+  // Every body ends with a link to a related section, shown once the body has loaded.
+  await expect(sectionBody(page,name).getByRole('button',{name:/: open /})).toBeVisible();
+}
+/** Waits for the panels a section loads on its own (accent boards, inlays, deck-part finishes, skirting). */
+async function sectionReady(page:Page,name:Section){
+  if(name==='Boards & finish')for(const panel of ['Accent boards','Inlays','Deck-part finishes'])await expect(page.getByRole('region',{name:panel,exact:true})).toBeVisible();
+  if(name==='Privacy, skirting & extras')await expect(page.getByRole('region',{name:'Skirting under the deck'})).toBeVisible();
 }
 /** The advanced contractor view (framing, hardware and below-ground views, and the modelled quantities), opened. */
 async function contractorView(page:Page){
@@ -241,6 +249,66 @@ test('reaches every feature of the designer',async({page})=>{
     await page.goto(link);
     await reach('Go back to my own design',tools.getByRole('button',{name:'Go back to my own design'}));
   });
+  expect(problems).toEqual([]);
+});
+
+test('opens sections in any order, keeps several open on a wide screen, and has no numbered steps',async({page})=>{
+  const problems=await openDesigner(page);
+  // Every section starts closed; there is no "1 of 6", Back or Continue.
+  for(const name of SECTION_NAMES)await expect(sectionButton(page,name)).toHaveAttribute('aria-expanded','false');
+  await expect(page.getByText(/^\d of \d$/)).toHaveCount(0);
+  await expect(page.getByRole('button',{name:/^(← )?Back$|^Continue|^Review my estimate/})).toHaveCount(0);
+  // Stairs before the deck.
+  const before=await price(page).textContent();
+  await openSection(page,'Stairs & railings');
+  await page.getByLabel('Number of stair flights',{exact:true}).selectOption('2');
+  await expect(price(page)).not.toHaveText(before??'');
+  await expect(sectionButton(page,'Stairs & railings')).toHaveAccessibleDescription(/^2 flights, 48 in, straight · Aluminum railing \$[\d,]+ Changed from the default design$/);
+  await openSection(page,'Deck shape & size');
+  await setNumber(page,'Deck width',20);
+  await expect(size(page)).toContainText('20 × 12 ft');
+  await expect(sectionButton(page,'Stairs & railings')).toHaveAttribute('aria-expanded','true');
+  await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveValue('2');
+  // The link at the end of a section opens its related section.
+  await sectionBody(page,'Stairs & railings').getByRole('button',{name:'Light the steps and posts: open Lighting'}).click();
+  await expect(sectionButton(page,'Lighting')).toHaveAttribute('aria-expanded','true');
+  await expect(page.getByRole('group',{name:'Deck lighting',exact:true})).toBeVisible();
+  // A closed section's body goes; the design keeps its choices.
+  await sectionButton(page,'Stairs & railings').click();
+  await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveCount(0);
+  await openSection(page,'Stairs & railings');
+  await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveValue('2');
+  // A section opened from the keyboard takes focus to its first field.
+  await sectionButton(page,'Site & foundation').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('Project area',{exact:true})).toBeFocused();
+  expect(problems).toEqual([]);
+});
+
+test('@phone keeps one section open at a time',async({page})=>{
+  const problems=await openDesigner(page);
+  await openSection(page,'Deck shape & size');
+  await openSection(page,'Boards & finish');
+  await expect(sectionButton(page,'Deck shape & size')).toHaveAttribute('aria-expanded','false');
+  await expect(page.getByLabel('Deck width',{exact:true})).toHaveCount(0);
+  await openSection(page,'House');
+  await openSection(page,'Proposal & files');
+  const expanded:string[]=[];
+  for(const name of SECTION_NAMES)if(await sectionButton(page,name).getAttribute('aria-expanded')==='true')expanded.push(name);
+  expect(expanded).toEqual(['Proposal & files']);
+  // The section just opened is on screen, although the long House section above it closed.
+  expect(await sectionButton(page,'Proposal & files').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.top<window.innerHeight;})).toBe(true);
+  expect(problems).toEqual([]);
+});
+
+test('@phone fits a 375 px screen with each section open',async({page})=>{
+  await page.setViewportSize({width:375,height:812});
+  const problems=await openDesigner(page);
+  for(const name of SECTION_NAMES){
+    await openSection(page,name);
+    await sectionReady(page,name);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),`No sideways scroll with ${name} open`).toBe(true);
+  }
   expect(problems).toEqual([]);
 });
 

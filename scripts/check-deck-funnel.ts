@@ -6,6 +6,7 @@ import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
 import {MANUFACTURER_ACCESSORIES,RAILING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {DECK_LABEL,designFeatures,resetDeckAnalyticsVisit,setDeckAnalyticsSink,stepLabel,trackDeck,type DeckEvent} from '../src/features/deckcraft/deckAnalytics';
 import type {DeckData} from '../src/features/deckcraft/types';
+import {SECTIONS} from '../src/features/deckcraft/designer/sections';
 import {designerSource} from './deck-designer-source';
 
 /**
@@ -82,6 +83,12 @@ ok(!designFeatures(design({customerName:'Jane Q Customer',projectAddress:'12 Exa
   ok(sent.length===1,'A new visit counts the step again');
   ok(['deck_step_1_dimensions','deck_step_2_materials','deck_step_3_stairs_railings','deck_step_4_site_extras','deck_step_5_backyard','deck_step_6_estimate'].every((l,i)=>stepLabel(i)===l),'Step labels name the six steps');
   ok(['3d','overview','front','top','plan','structure','hardware','foundation'].every(m=>DECK_LABEL.test(`deck_view_${m}`)),'Every preview mode has a valid label');
+  // Sections (R1): each opened and each first changed is its own label, once per visit; its old step keeps the funnel.
+  ok(SECTIONS.every(s=>DECK_LABEL.test(`deck_section_${s.id}`)&&DECK_LABEL.test(`deck_changed_${s.id}`)),'Every section has valid opened and changed labels');
+  ok(SECTIONS.map(s=>stepLabel(s.legacyStep)).join()==='deck_step_1_dimensions,deck_step_1_dimensions,deck_step_2_materials,deck_step_3_stairs_railings,deck_step_4_site_extras,deck_step_4_site_extras,deck_step_4_site_extras,deck_step_5_backyard,deck_step_6_estimate','Each section reports the old step it replaces');
+  resetDeckAnalyticsVisit();sent.length=0;
+  trackDeck('deckcraft_section','deck_section_stairs');trackDeck('deckcraft_section','deck_section_stairs');trackDeck('deckcraft_section','deck_changed_stairs');
+  ok(sent.length===2&&sent[0][1]==='deck_section_stairs'&&sent[1][1]==='deck_changed_stairs','A section is counted once per visit when opened and once when first changed');
 }
 
 // 3. Every place in the designer that should report does, through trackDeck with fixed labels.
@@ -89,7 +96,8 @@ ok(!designFeatures(design({customerName:'Jane Q Customer',projectAddress:'12 Exa
   const page=designerSource();
   const share=readFileSync(new URL('../src/features/deckcraft/ShareDesignLink.tsx',import.meta.url),'utf8');
   ok(/setDeckAnalyticsSink\(\(event,label\)=>trackEngagement\(event,label\)\)/.test(page),'The page sends DeckCraft events through the site analytics');
-  ok(page.includes("trackDeck('deckcraft_step',stepLabel(step))")&&page.includes("trackDeck('deckcraft_view',`deck_view_${mode}`)")&&page.includes('designFeatures(data)'),'Steps, views and features are reported');
+  ok(page.includes("trackDeck('deckcraft_step',stepLabel(0));},[]);")&&page.includes("trackDeck('deckcraft_step',stepLabel(section.legacyStep))")&&page.includes("trackDeck('deckcraft_view',`deck_view_${mode}`)")&&page.includes('designFeatures(data)'),'The page load and each section opened report their step; views and features are reported');
+  ok(page.includes("trackDeck('deckcraft_section',`deck_section_${section.id}`)")&&/for\(const id of sectionsOfPatch\(patch,data\)\)[^\n]*trackDeck\('deckcraft_section',`deck_changed_\$\{id\}`\)/.test(page),'Opening a section and the first edit in it are reported, through the fields it owns');
   for(const label of ['deck_proposal','deck_summary','deck_json_save','deck_json_import','deck_link_opened','deck_link_failed','deck_link_went_back'])ok(page.includes(`'${label}'`),`The page reports ${label}`);
   ok(page.includes("trackDeck('deckcraft_output',`deck_${kind}`)"),'DXF and OBJ exports are reported');
   ok(share.includes("trackDeck('deckcraft_link',`deck_link_${how}`)"),'The share control reports copies and shares');

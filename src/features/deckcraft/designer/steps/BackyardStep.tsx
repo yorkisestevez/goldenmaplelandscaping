@@ -6,7 +6,7 @@ import type {DeckData,YardAllowances} from '../../types';
 import {Field,NumberField,type Update} from '../fields';
 
 /**
- * Step 5: patios, retaining walls and water features around the deck, plus a fire pit, outdoor kitchen, turf and
+ * The Backyard section: patios, retaining walls and water features around the deck, plus a fire pit, outdoor kitchen, turf and
  * landscape lighting at the cost estimator's allowances, all with their own subtotal.
  */
 export default function BackyardStep({data,update,estimate,earlierYard,onRestoreEarlierYard,onDismissEarlierYard}:{data:DeckData;update:Update;estimate:DeckEstimate;earlierYard:number;onRestoreEarlierYard:()=>void;onDismissEarlierYard:()=>void}){
@@ -28,7 +28,7 @@ export default function BackyardStep({data,update,estimate,earlierYard,onRestore
       </div>
       <label className="dd-check"><input type="checkbox" checked={a.turfSqft>0} onChange={e=>setAllowance({turfSqft:e.target.checked?TURF_SQFT.default:0})}/><span>Artificial turf{amount('turf')&&<small>{amount('turf')}</small>}</span></label>
       {a.turfSqft>0&&<div className="dd-fields"><NumberField label="Turf area" value={a.turfSqft} min={TURF_SQFT.min} max={TURF_SQFT.max} unit="sq ft" increment={10} onValue={turfSqft=>setAllowance({turfSqft})}/></div>}
-      <label className="dd-check"><input type="checkbox" checked={a.lighting} onChange={e=>setAllowance({lighting:e.target.checked})}/><span>Landscape lighting for the yard<small>{hint('Paths, planting and walls. Deck lighting is chosen in Site & extras.',amount('lighting'))}</small></span></label>
+      <label className="dd-check"><input type="checkbox" checked={a.lighting} onChange={e=>setAllowance({lighting:e.target.checked})}/><span>Landscape lighting for the yard<small>{hint('Paths, planting and walls. Deck lighting is chosen in the Lighting section.',amount('lighting'))}</small></span></label>
       {(a.firePit!=='none'||a.kitchen!=='none'||a.lighting)&&<div className="dd-fields"><Field label="Finish level" hint="Sets the fire pit, kitchen and lighting allowances, as in the cost estimator."><select aria-label="Finish level" value={a.finish} onChange={e=>setAllowance({finish:e.target.value as YardAllowances['finish']})}>{ALLOWANCE_FINISHES.map(f=><option key={f.id} value={f.id}>{f.label}</option>)}</select></Field></div>}
     </section>
     {(active.length>0||hasYardAllowances(data.yardAllowances))&&<p className="dd-note dd-backyard-subtotal" role="status">Backyard subtotal: <strong>{dollars(split.backyard)}</strong> + HST{yard.quoteRequired?' (the priced portion; some items need a supplier quote)':''}. It is shown separately from the deck on your estimate and proposal.</p>}
