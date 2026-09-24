@@ -1,6 +1,6 @@
 import {clipToConvex,type BoardRun,type PlanPoint,type FootprintPlan} from './lib/deckGeometry';
 import type {DeckLevel,Member,V3} from './deckTakeoff';
-import {onInlaySupport} from './inlayFraming';
+import {inSolidInlay,onInlaySupport} from './inlayFraming';
 import {distanceToSegment} from './lib/wrapGeometry';
 import {angledBeamZAt} from './angledFraming';
 import {offsetPolygons,polygonCut} from './lib/polygonCuts';
@@ -96,7 +96,8 @@ export function addConstructionDetails(level:DeckLevel,boardWidth:number,borderR
   // Back every individual board end (including diagonal/parquet cuts and butt joints). On an angled-corner
   // level, an end cut along an angled edge over its rim or a nailer sits on that, and every other end is
   // blocked at the middle of its actual end face (a 45° cut's far tip can sit a bay away).
-  // Board ends already resting on inlay framing (inlayFraming.ts) need no block of their own.
+  // Board ends already resting on inlay framing (inlayFraming.ts), or over a medallion's solid blocking, need no block
+  // of their own.
   const inlaySupport=level.blocking.filter(m=>m.role?.startsWith('inlay-'));
   for(const board of level.boards){
     const angle=board.angleDeg*Math.PI/180,ux=Math.cos(angle),uz=Math.sin(angle);
@@ -104,7 +105,8 @@ export function addConstructionDetails(level:DeckLevel,boardWidth:number,borderR
       let x=board.cx+ux*board.length/2*sign,z=board.cy+uz*board.length/2*sign;
       // Tested at the middle of the end's actual face, so a piece cut on a slant is judged where it really ends.
       if(inlaySupport.length){const face=endFaces(board,sign,boardWidth).reduce<ReturnType<typeof endFaces>[number]|undefined>((best,f)=>!best||f.len>best.len?f:best,undefined);
-        if(onInlaySupport((face?(face.p.x+face.q.x)/2:x)+offset.x,(face?(face.p.y+face.q.y)/2:z)+offset.z,inlaySupport))continue;}
+        const fx=face?(face.p.x+face.q.x)/2:x,fz=face?(face.p.y+face.q.y)/2:z;
+        if(onInlaySupport((face?(face.p.x+face.q.x)/2:x)+offset.x,(face?(face.p.y+face.q.y)/2:z)+offset.z,inlaySupport)||inSolidInlay(level,fx,fz))continue;}
       if(level.angledEdges?.length){
         const faces=endFaces(board,sign,boardWidth);
         if(onAngledSupport(level,faces,borderRows))continue;

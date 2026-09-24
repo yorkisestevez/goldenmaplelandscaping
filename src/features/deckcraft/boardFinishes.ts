@@ -1,7 +1,7 @@
 import {DECKING_CATALOGUE,type CatalogueDecking} from './manufacturerCatalog';
 import type {DeckTakeoff} from './deckTakeoff';
 import {modelAddresses,type BoardAddress} from './lib/boardAddress';
-import type {BoardColour,BoardPattern,ColourRef,DeckData,MaterialColor} from './types';
+import type {BoardColour,BoardPattern,ColourRef,DeckData,DeckInlay,MaterialColor} from './types';
 
 /**
  * Accent-colour deck boards: one board, or a whole row, in another real product colour. Only colours from
@@ -35,11 +35,24 @@ export function accentCollections(data:Pick<DeckData,'deckingMaterial'>):Catalog
 export function accentAllowed(data:Pick<DeckData,'deckingMaterial'>,ref:ColourRef){
   const parsed=parseColourRef(ref);return !!parsed&&accentCollections(data).some(m=>m.id===parsed.material.id);
 }
+/** A colour that sets an inlay off: the first other colour of the deck's own collection (undefined if it has one). */
+export function contrastColour(data:Pick<DeckData,'deckingMaterial'|'deckingColor'>):ColourRef|undefined{
+  const own=deckMaterial(data),main=deckColourRef(data),c=own.colors.find(x=>colourRef(own.id,x.name)!==main);
+  return c?colourRef(own.id,c.name):undefined;
+}
 
 export interface AccentGroup{ref:ColourRef;material:CatalogueDecking;color:MaterialColor;boards:{level:number;index:number}[]}
-/** Boards bought together: an accent colour (at the deck's waste allowance), or one colour of inlay boards at the
- * allowance of what they are (a frame is picture-frame work; a fill is its own pattern). */
-export interface StockGroup extends AccentGroup{kind:'accent'|'inlay';wasteKey?:BoardPattern}
+/** Boards bought together: an accent colour (at the deck's waste allowance), or one colour of one part of the inlays
+ * at the allowance of what it is: a frame is picture-frame work, an inside its own pattern, a band straight boards,
+ * and a medallion (cut to its wedges and 16 sides) the herringbone allowance. */
+export interface StockGroup extends AccentGroup{kind:'accent'|'inlay';wasteKey?:BoardPattern;part?:InlayPart}
+export type InlayPart='frame'|'inside'|'band'|'medallion';
+/** Which part of its inlay an inlay board is, and the waste allowance it is ordered at. */
+export function inlayPart(inlay:DeckInlay|undefined,role:string|undefined):{part:InlayPart;wasteKey:BoardPattern}{
+  if(inlay?.kind==='medallion')return {part:'medallion',wasteKey:'Herringbone'};
+  if(inlay?.kind==='band')return {part:'band',wasteKey:'Straight'};
+  return role==='inlay-frame'?{part:'frame',wasteKey:'Picture Frame'}:{part:'inside',wasteKey:inlay?.pattern??'Straight'};
+}
 export interface BoardFinishPlan{
   /** Every board's address, by model level then board (null where boards take no accent colour). */
   addresses:(BoardAddress|null)[][];
@@ -67,7 +80,8 @@ export function boardFinishPlan(data:DeckData,model:DeckTakeoff):BoardFinishPlan
   const hit=overrides.map(()=>false);
   // Inlay boards take their inlay's frame or fill colour (lib/inlayGeometry.ts); one this deck can't take is its own.
   const inlays=new Map((data.inlays??[]).map(i=>[i.id,i]));
-  const inlayColour=(role:string|undefined,id:string)=>{const i=inlays.get(id),ref=role==='inlay-frame'?i?.frame:i?.fill;return ref&&ref!==main&&accentAllowed(data,ref)?ref:null;};
+  // (A band has no frame; a compass medallion's alternate wedges are 'inlay-frame' boards, in the frame colour.)
+  const inlayColour=(role:string|undefined,id:string)=>{const i=inlays.get(id),ref=role==='inlay-frame'?(i&&i.kind!=='band'?i.frame:undefined):i?.fill;return ref&&ref!==main&&accentAllowed(data,ref)?ref:null;};
   const colours=addresses.map((level,l)=>level.map((a,bi)=>{
     const board=model.levels[l].boards[bi];if(board.inlay)return inlayColour(board.role,board.inlay);
     if(!a)return null;
@@ -91,8 +105,8 @@ export function boardFinishPlan(data:DeckData,model:DeckTakeoff):BoardFinishPlan
   colours.forEach((level,l)=>level.forEach((ref,index)=>{
     const board=model.levels[l].boards[index];
     if(!board.inlay&&!ref)return;
-    const wasteKey:BoardPattern|undefined=board.inlay?(board.role==='inlay-frame'?'Picture Frame':(inlays.get(board.inlay)?.pattern??'Straight')):undefined;
-    const colour=ref??main,key=`${wasteKey??'accent'}|${colour}`,group=stock.get(key)??{ref:colour,...parseColourRef(colour)!,boards:[],kind:board.inlay?'inlay' as const:'accent' as const,...(wasteKey?{wasteKey}:{})};
+    const part=board.inlay?inlayPart(inlays.get(board.inlay),board.role):undefined;
+    const colour=ref??main,key=`${part?`${part.part}|${part.wasteKey}`:'accent'}|${colour}`,group=stock.get(key)??{ref:colour,...parseColourRef(colour)!,boards:[],kind:board.inlay?'inlay' as const:'accent' as const,...(part?{wasteKey:part.wasteKey,part:part.part}:{})};
     group.boards.push({level:l,index});stock.set(key,group);
     if(board.inlay)inlayPieces++;else pieces++;
   }));

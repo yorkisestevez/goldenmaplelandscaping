@@ -393,7 +393,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // Inlay boards use the waste allowance of what they are: a frame is picture-frame work, a fill its own pattern.
   const accentRows=(separate?.stock??[]).map(g=>{
     const keys=new Set(g.boards.map(b=>`${b.level}:${b.index}`)),stock=boardsWhere((li,bi)=>keys.has(`${li}:${bi}`),g.wasteKey?wasteFactors[g.wasteKey]||wasteFactor:wasteFactor),rate=collectionRate(g.material.id);
-    const label=g.kind==='inlay'?`Inlay ${g.wasteKey==='Picture Frame'?'frame':`inside, ${g.wasteKey!.toLowerCase()}`} · ${g.material.name} · ${g.color.name}`:`${g.material.name} · ${g.color.name}`;
+    const part=()=>g.part==='band'?'Inlay band':g.part==='medallion'?'Medallion inlay':g.part==='frame'?'Inlay frame':`Inlay inside, ${g.wasteKey!.toLowerCase()}`;
+    const label=g.kind==='inlay'?`${part()} · ${g.material.name} · ${g.color.name}`:`${g.material.name} · ${g.color.name}`;
     return {group:g,stock,label,cost:rate===null?null:stock.orderedLf*rate*(boardWidthIn/12)*markupMult};
   });
   const m_deckingCost = deckingCost * markupMult;
@@ -623,13 +624,21 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     const unpriced=accentRows.filter(r=>r.cost===null);
     quoteRequired.push(...unpriced.map(r=>`${r.label} ${r.group.kind==='inlay'?'boards':'accent boards'}`));
     const inlaid=accentRows.some(r=>r.group.kind==='inlay');
-    sections.push({title:inlaid?'Accent colours & inlays':'Accent-colour boards',icon:'🎨',description:inlaid?'Accent-colour and inlay boards, each colour ordered as its own stock boards at its collection’s rate. Inlay frames carry the picture-frame waste allowance and inlay insides their own pattern’s. Colours vary by screen; confirm with samples.':'Boards in a second colour, ordered as their own stock boards at their collection’s rate with the same waste allowance. Colours vary by screen; confirm with samples.',quoteRequired:unpriced.length>0||undefined,total:accentRows.reduce((n,r)=>n+(r.cost??0),0),
+    sections.push({title:inlaid?'Accent colours & inlays':'Accent-colour boards',icon:'🎨',description:inlaid?`Accent-colour and inlay boards, each colour ordered as its own stock boards at its collection’s rate. ${[accentRows.some(r=>r.group.part==='frame'||r.group.part==='inside')&&'Inlay frames carry the picture-frame waste allowance and inlay insides their own pattern’s.',accentRows.some(r=>r.group.part==='band')&&'Bands carry the straight-board allowance.',accentRows.some(r=>r.group.part==='medallion')&&'Medallions carry the herringbone allowance, for their angled cuts.'].filter(Boolean).join(' ')} Colours vary by screen; confirm with samples.`:'Boards in a second colour, ordered as their own stock boards at their collection’s rate with the same waste allowance. Colours vary by screen; confirm with samples.',quoteRequired:unpriced.length>0||undefined,total:accentRows.reduce((n,r)=>n+(r.cost??0),0),
       items:accentRows.map(r=>({name:r.label,spec:`${r.group.boards.length} ${r.group.kind==='inlay'?'inlay':'accent-colour'} pieces, ${r.stock.spareBoards} spare stock boards${r.cost===null?'; supplier quote required':''}`,qty:r.stock.orderedBoards,unit:'boards',cost:r.cost}))});
     // Fitting a second colour has no labour rate in the price book yet: listed for a builder quote, never $0.
     const labour=sections.find(s=>s.title==='Labour (Construction & Build)');
     if(accent&&labour){labour.quoteRequired=true;labour.items.push({name:'Accent-colour board labour',spec:`Builder quote required: laying out and fitting ${accent!.pieces} accent-colour board${accent!.pieces===1?'':'s'} has no rate in the price book yet. The priced labour covers the deck as one colour.`,qty:accent!.pieces,unit:'boards',cost:null});}
     if(accent)quoteRequired.push('Accent-colour board labour (builder quote)');
     if(accentRows.some(r=>r.group.material.id.split('_')[0]!==deckingMaterial.split('_')[0]))flags.push('Accent boards from a different manufacturer than the decking: confirm the board gap, hidden fasteners and warranty with the supplier before ordering.');
+  }
+  // Medallions: their boards and solid blocking are priced; cutting and fitting one has no labour rate in the price
+  // book yet, so it is listed for a builder quote, never $0.
+  const medallions=model.levels.flatMap(l=>(l.inlays??[]).filter(p=>p.status==='ok'&&p.quote));
+  if(medallions.length){
+    const labour=sections.find(s=>s.title==='Labour (Construction & Build)'),n=medallions.length;
+    if(labour){labour.quoteRequired=true;labour.items.push({name:'Medallion inlay labour',spec:`Builder quote required: laying out, cutting and fitting ${n===1?'a medallion inlay':`${n} medallion inlays`} (${medallions.reduce((a,p)=>a+p.fillSqft,0).toFixed(1)} sq ft inside the frame${n===1?'':'s'}) has no rate in the price book yet. The priced labour covers the deck without ${n===1?'it':'them'}; the boards and blocking are priced.`,qty:n,unit:n===1?'medallion':'medallions',cost:null});}
+    quoteRequired.push('Medallion inlay labour (builder quote)');
   }
   if(finish?.unmatched.length){const n=finish.unmatched.length;flags.push(`${n} accent-colour choice${n===1?' no longer lines':'s no longer line'} up with a board after a design change (or no longer suit${n===1?'s':''} this decking), so ${n===1?'it is':'they are'} not shown or priced. Review them in the accent boards panel.`);}
   const catalogueAccessories=catalogueAccessoryLayout(data,model);

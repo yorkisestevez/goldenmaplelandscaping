@@ -227,25 +227,40 @@ export function validateDesign(input:unknown):DeckData {
     if(byPlace.size>MAX_BOARD_COLOURS)throw new Error(`A design holds up to ${MAX_BOARD_COLOURS} accent boards.`);
     if(byPlace.size)clean.boardColours=[...byPlace.values()];
   }
-  // Decorative inlays (lib/inlayGeometry.ts): a framed rectangle or a diamond, placed from the middle of its level.
-  // One that does not fit is kept (and says why on the design), never moved.
+  // Decorative inlays (lib/inlayGeometry.ts): a framed rectangle, a diamond or a medallion placed from the middle of
+  // its level, or a band across the field. One that does not fit is kept (and says why on the design), never moved.
   if(input.inlays!==undefined){
     if(!Array.isArray(input.inlays)||input.inlays.length>INLAY_LIMITS.max)throw new Error(`A design holds up to ${INLAY_LIMITS.max} inlays.`);
     const ids=new Set<string>(),list:DeckInlay[]=[];
     for(const raw of input.inlays){
-      if(!record(raw)||(raw.kind!=='rug'&&raw.kind!=='diamond'))throw new Error('Invalid inlay.');
+      if(!record(raw)||!['rug','diamond','band','medallion'].includes(raw.kind as string))throw new Error('Invalid inlay.');
       if(typeof raw.id!=='string'||!/^[a-z0-9-]{1,24}$/.test(raw.id)||ids.has(raw.id))throw new Error('Invalid inlay id.');
       ids.add(raw.id);
+      const offset=(v:unknown,label:string)=>v===undefined||v===0?undefined:numeric(v,INLAY_LIMITS.offsetFt[0],INLAY_LIMITS.offsetFt[1],label);
+      if(raw.level!==undefined&&![1,2,3].includes(raw.level as number))throw new Error('Invalid inlay level.');
+      for(const key of ['frame','fill'] as const)if(raw[key]!==undefined&&!parseColourRef(raw[key]))throw new Error('Unknown inlay colour.');
+      const level=raw.level!==undefined&&raw.level!==1?{level:raw.level as 2|3}:{},fill=raw.fill!==undefined?{fill:raw.fill as string}:{},frame=raw.frame!==undefined?{frame:raw.frame as string}:{};
+      if(raw.kind==='band'){
+        if(raw.direction!=='across'&&raw.direction!=='along')throw new Error('Invalid band direction.');
+        const [fewest,most]=INLAY_LIMITS.bandBoards;
+        if(!Number.isInteger(raw.boards)||(raw.boards as number)<fewest||(raw.boards as number)>most)throw new Error(`A band is ${fewest} to ${most} boards wide.`);
+        const atFt=offset(raw.atFt,'Band position');
+        list.push({id:raw.id,kind:'band',...level,direction:raw.direction,...(atFt!==undefined?{atFt}:{}),boards:raw.boards as 1|2|3|4,...fill});
+        continue;
+      }
+      const dxFt=offset(raw.dxFt,'Inlay position across'),dyFt=offset(raw.dyFt,'Inlay position out');
+      if(raw.kind==='medallion'){
+        if(raw.style!=='round'&&raw.style!=='compass')throw new Error('Invalid medallion style.');
+        const diameterFt=numeric(raw.diameterFt,INLAY_LIMITS.medallionFt[0],INLAY_LIMITS.medallionFt[1],'Medallion size');
+        list.push({id:raw.id,kind:'medallion',...level,...(dxFt!==undefined?{dxFt}:{}),...(dyFt!==undefined?{dyFt}:{}),diameterFt,style:raw.style,...frame,...fill});
+        continue;
+      }
       const [lo,hi]=raw.kind==='rug'?INLAY_LIMITS.rugFt:INLAY_LIMITS.diamondFt,widthFt=numeric(raw.widthFt,lo,hi,'Inlay width');
       const depthFt=raw.kind==='diamond'?widthFt:numeric(raw.depthFt,lo,hi,'Inlay depth');
-      const offset=(v:unknown,label:string)=>v===undefined||v===0?undefined:numeric(v,INLAY_LIMITS.offsetFt[0],INLAY_LIMITS.offsetFt[1],label);
-      const dxFt=offset(raw.dxFt,'Inlay position across'),dyFt=offset(raw.dyFt,'Inlay position out');
-      if(raw.level!==undefined&&![1,2,3].includes(raw.level as number))throw new Error('Invalid inlay level.');
       if(raw.frameRows!==undefined&&![1,2].includes(raw.frameRows as number))throw new Error('Invalid inlay frame rows.');
       if(raw.pattern!==undefined&&!['Straight','Diagonal','Herringbone'].includes(raw.pattern as string))throw new Error('Invalid inlay pattern.');
-      for(const key of ['frame','fill'] as const)if(raw[key]!==undefined&&!parseColourRef(raw[key]))throw new Error('Unknown inlay colour.');
-      list.push({id:raw.id,kind:raw.kind,...(raw.level!==undefined&&raw.level!==1?{level:raw.level as 2|3}:{}),...(dxFt!==undefined?{dxFt}:{}),...(dyFt!==undefined?{dyFt}:{}),widthFt,depthFt,
-        ...(raw.frameRows===2?{frameRows:2 as const}:{}),...(raw.pattern!==undefined&&raw.pattern!=='Straight'?{pattern:raw.pattern as DeckInlay['pattern']}:{}),...(raw.frame!==undefined?{frame:raw.frame as string}:{}),...(raw.fill!==undefined?{fill:raw.fill as string}:{})});
+      list.push({id:raw.id,kind:raw.kind as 'rug'|'diamond',...level,...(dxFt!==undefined?{dxFt}:{}),...(dyFt!==undefined?{dyFt}:{}),widthFt,depthFt,
+        ...(raw.frameRows===2?{frameRows:2 as const}:{}),...(raw.pattern!==undefined&&raw.pattern!=='Straight'?{pattern:raw.pattern as 'Diagonal'|'Herringbone'}:{}),...frame,...fill});
     }
     if(list.length)clean.inlays=list;
   }

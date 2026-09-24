@@ -233,6 +233,29 @@ test('adds a framed inlay, fits it to the deck, and shows it and its framing on 
   expect(problems).toEqual([]);
 });
 
+test('adds a band and a compass medallion, and lists the medallion labour for a builder quote',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  await step(page,/Materials/).click();
+  const inlays=page.getByRole('region',{name:'Inlays'});
+  await inlays.getByRole('button',{name:'Add a band'}).click();
+  await expect(inlays.getByRole('status').first()).toContainText('cut in like a breaker board');
+  await expect(price(page)).not.toHaveText(before??'');
+  // Across a straight deck, a band is its rows in another colour: nothing is cut.
+  await page.getByLabel('Inlay 1 runs',{exact:true}).selectOption('across');
+  await expect(inlays.getByRole('status').first()).toContainText('with no cutting');
+  await inlays.getByRole('button',{name:'Add a medallion'}).click();
+  await expect(inlays.getByRole('status').nth(1)).toContainText('on solid blocking');
+  await page.locator('.dd-preview-head').getByRole('button',{name:'Plan'}).click();
+  await expect(page.locator('.dd-canvas svg')).toContainText('Inlay 2');
+  await step(page,/Your estimate/).click();
+  await expect(page.locator('.dd-summary')).toContainText(/Inlays: a band one board wide across the deck; a [\d.]+ ft compass medallion in eight wedges/);
+  // The breakdown shows the labour as needing a quote; the list of quotes names the medallion's.
+  await expect(page.locator('.dd-breakdown')).toContainText(/Labour \(Construction & Build\)\$[\d,]+Priced portion · supplier quote required/);
+  await expect(page.locator('.dd-quote-notice').filter({hasText:'Supplier quotes needed'})).toContainText('Medallion inlay labour (builder quote)');
+  expect(problems).toEqual([]);
+});
+
 test('adds a bump-out to the house',async({page})=>{
   await openDesigner(page);
   await page.getByText('House dimensions, finishes, doors & windows').click();

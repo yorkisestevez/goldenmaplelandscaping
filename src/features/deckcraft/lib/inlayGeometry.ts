@@ -1,34 +1,55 @@
+import {contrastColour} from '../boardFinishes';
 import {DECKING_CATALOGUE} from '../manufacturerCatalog';
 import type {BoardPattern,DeckData,DeckInlay,InlayFill} from '../types';
 import {getBoardRows,getHerringboneRows,getPictureFrameRuns,type BoardRun,type FootprintPlan,type PlanPoint} from './deckGeometry';
 import {boardOutline,offsetPolygons,polygonBoard,polygonCut,signedArea} from './polygonCuts';
 
 /**
- * Decorative inlays (DeckInlay): a framed rectangle ('rug') or a framed square turned 45° ('diamond') set into the
- * field of a deck level. The frame is picture-frame boards around the inlay's outline; inside, the fill runs across
- * (front to back), at 45° or in a herringbone. Field, border and breaker boards are cut around the outline with the
- * board gap. Placement rules: an inlay sits inside the field with at least one full board of field around it, does
- * not overlap another inlay, and leaves room for two boards inside its frame; one that breaks a rule is kept but
- * not built, and says why. Plan inches, level-local; pure data, no three.js. Framing: inlayFraming.ts.
+ * Decorative inlays (DeckInlay) set into the field of a deck level. Plan inches, level-local; pure data, no three.js.
+ * - A framed rectangle ('rug') or a framed square turned 45° ('diamond'): picture-frame boards around the outline and,
+ *   inside, a fill across (front to back), at 45° or in a herringbone.
+ * - A band: 1 to 4 boards the length of the field. Across a straight field it is whole rows recoloured, with no
+ *   cutting; running front to back, or across a 45° or herringbone field, it is cut in like a breaker.
+ * - A medallion: a 16-sided outline with a one-row frame; inside, boards front to back ('round') or eight wedges
+ *   whose boards follow each wedge's outer edge, in alternating colours ('compass').
+ * Field, border and breaker boards are cut around what is cut in, with the board gap. Placement rules: an inlay sits
+ * inside the field with at least one full board of field around it (beside a band), does not overlap another inlay,
+ * and leaves room for two boards inside a frame; one that breaks a rule is kept but not built, and says why.
+ * Framing: inlayFraming.ts, plus build-up joists under bands running front to back (bandBuildUps, in deckTakeoff.ts).
  */
-export const INLAY_LIMITS={max:8,rugFt:[2,20] as const,diamondFt:[2,14] as const,offsetFt:[-30,30] as const};
+export const INLAY_LIMITS={max:8,rugFt:[2,20] as const,diamondFt:[2,14] as const,medallionFt:[3,10] as const,bandBoards:[1,4] as const,offsetFt:[-30,30] as const};
 export type InlayStatus='ok'|'outside'|'overlap'|'small'|'blocked';
+type Band=Extract<DeckInlay,{kind:'band'}>;
+type Shaped=Exclude<DeckInlay,{kind:'band'}>;
 export interface InlayPlan{
   id:string;kind:DeckInlay['kind'];status:InlayStatus;message?:string;
-  /** Outer edge of the frame, and the edge of the fill inside it (positive shoelace area). */
+  /** Outer edge of the inlay (a band's largest piece), and the edge of the fill inside its frame (positive shoelace
+   * area; empty for a band, which has no frame). */
   outline:PlanPoint[];inner:PlanPoint[];
+  /** Every area the inlay covers: its outline, or each piece of a band where the field's outline splits it. */
+  pieces:PlanPoint[][];
   frameRows:1|2;pattern:InlayFill;
-  /** Frame ('inlay-frame') and fill ('inlay-fill') pieces, before splitting to stock (empty unless ok). */
+  /** Frame ('inlay-frame') and fill ('inlay-fill') pieces, before splitting to stock (empty unless ok, and for a band
+   * of recoloured rows, whose boards are the field's own). */
   boards:BoardRun[];
-  /** The frame's fitted edge (its outer outline) in feet, and the fill's area in square feet. */
+  /** The fitted edge in feet (a frame's outer outline, or a cut-in band's length), and the fill's area in square feet. */
   edgeFt:number;fillSqft:number;
+  /** A band: which way it runs, its span across that (plan y for 'across', x for 'along'), and whether it is whole
+   * rows of a straight field (recoloured, not cut in). */
+  band?:{direction:'across'|'along';from:number;to:number;boards:number;rows:boolean};
+  /** A medallion: the area its solid blocking covers, the outline grown by a board width. */
+  solid?:PlanPoint[];
+  /** Labour listed for a builder quote instead of crew-days (medallions). */
+  quote?:boolean;
 }
 export interface InlayContext{
   /** The level's field: the decking footprint inside its border rows. */
   fieldPolygons:PlanPoint[][];
   boardWidth:number;gap:number;stockLength:number;
-  /** The level's middle, where dxFt/dyFt are measured from. */
+  /** The level's middle, where dxFt/dyFt and a band's atFt are measured from. */
   centre:PlanPoint;
+  /** The field's boards run across the deck (a straight or picture-frame deck), so a band across it is whole rows. */
+  straight?:boolean;
   /** A reason no inlay can be built on this level (a wrap-around deck, or the legacy centre stripe). */
   blocked?:string;
 }
@@ -38,13 +59,22 @@ const MESSAGES:Record<Exclude<InlayStatus,'ok'|'blocked'>,string>={
   overlap:'It overlaps another inlay. Move it or make it smaller.',
   small:'It is too small for its frame: the inside needs room for at least two boards.',
 };
-export const INLAY_KIND_NAMES:Record<DeckInlay['kind'],string>={rug:'framed rectangle',diamond:'diamond'};
+const BAND_OUTSIDE='It runs alongside the deck’s edge, border or a corner of the deck. Keep one full board beside it: move it.';
+export const INLAY_KIND_NAMES:Record<DeckInlay['kind'],string>={rug:'framed rectangle',diamond:'diamond',band:'band',medallion:'medallion'};
 const area=(polys:PlanPoint[][])=>polys.reduce((n,p)=>n+Math.abs(signedArea(p)),0);
 const perimeter=(p:PlanPoint[])=>p.reduce((n,a,i)=>{const b=p[(i+1)%p.length];return n+Math.hypot(b.x-a.x,b.y-a.y);},0);
+const bounds=(polys:PlanPoint[][])=>{const v=polys.flat();return {x0:Math.min(...v.map(p=>p.x)),x1:Math.max(...v.map(p=>p.x)),y0:Math.min(...v.map(p=>p.y)),y1:Math.max(...v.map(p=>p.y))};};
+const rect=(x0:number,y0:number,x1:number,y1:number):PlanPoint[]=>[{x:x0,y:y0},{x:x1,y:y0},{x:x1,y:y1},{x:x0,y:y1}];
+/** A medallion's 16 sides: vertices every 22.5°, the first on the +x axis (so a compass's wedges point along the axes). */
+const MEDALLION_SIDES=16;
+const polygonAround=(c:PlanPoint,r:number)=>Array.from({length:MEDALLION_SIDES},(_,j)=>{const a=j*2*Math.PI/MEDALLION_SIDES;return {x:c.x+r*Math.cos(a),y:c.y+r*Math.sin(a)};});
+/** A band's width across its boards, in plan inches. */
+export const bandWidthIn=(boards:number,boardWidth:number,gap:number)=>boards*boardWidth+(boards-1)*gap;
 
-/** The inlay's outer outline in level-local plan inches. */
-export function inlayOutline(inlay:DeckInlay,centre:PlanPoint):PlanPoint[]{
+/** The outline of a rug, diamond or medallion in level-local plan inches (a band's comes from the field). */
+export function inlayOutline(inlay:Shaped,centre:PlanPoint):PlanPoint[]{
   const cx=centre.x+(inlay.dxFt??0)*12,cy=centre.y+(inlay.dyFt??0)*12;
+  if(inlay.kind==='medallion')return polygonAround({x:cx,y:cy},inlay.diameterFt*6);
   if(inlay.kind==='diamond'){const h=inlay.widthFt*12/Math.SQRT2;return [{x:cx,y:cy-h},{x:cx+h,y:cy},{x:cx,y:cy+h},{x:cx-h,y:cy}];}
   const w=inlay.widthFt*6,d=inlay.depthFt*6;
   return [{x:cx-w,y:cy-d},{x:cx+w,y:cy-d},{x:cx+w,y:cy+d},{x:cx-w,y:cy+d}];
@@ -54,39 +84,100 @@ export const fillAngles=(pattern:InlayFill)=>pattern==='Straight'?[90]:pattern==
 /** The main field's board directions for a deck pattern. */
 export const fieldAngles=(pattern:BoardPattern)=>pattern==='Diagonal'?[45]:pattern==='Herringbone'?[45,135]:[0];
 
-/** Plan every inlay on a level, in order: later inlays that overlap an earlier one are not built. */
-export function planInlays(inlays:DeckInlay[],ctx:InlayContext):InlayPlan[]{
-  const {fieldPolygons,boardWidth,gap,stockLength,centre}=ctx,pitch=boardWidth+gap;
+/** Where a band lies across its direction, in plan inches: whole rows of a straight field when it runs across one
+ * (snapped to the nearest rows, with a full row either side), otherwise exactly where it is asked to be. `fits` is
+ * false when that leaves less than a full board between it and the field's edge. */
+function bandSpan(band:Band,ctx:InlayContext){
+  const {fieldPolygons,boardWidth:bw,gap}=ctx,pitch=bw+gap,w=bandWidthIn(band.boards,bw,gap),b=bounds(fieldPolygons);
+  const across=band.direction==='across',target=(across?ctx.centre.y:ctx.centre.x)+(band.atFt??0)*12-w/2,lo=across?b.y0:b.x0,hi=across?b.y1:b.x1;
+  if(across&&ctx.straight){
+    // A straight field's rows start at its near side, a pitch apart (getBoardRows); count its full-width rows.
+    let full=0;while(lo+full*pitch+bw<=hi+.001)full++;
+    const k=Math.round((target-lo)/pitch);
+    return {from:lo+k*pitch,to:lo+k*pitch+w,rows:true,fits:k>=1&&k+band.boards<=full-1};
+  }
+  return {from:target,to:target+w,rows:false,fits:target-pitch>=lo-.001&&target+w+pitch<=hi+.001};
+}
+
+/** Plan every inlay on a level, in order: later inlays that overlap an earlier one are not built. `boards:false` plans
+ * placement only; `taken` are areas already occupied (by inlays planned elsewhere). */
+export function planInlays(inlays:DeckInlay[],ctx:InlayContext,opts:{boards?:boolean;taken?:PlanPoint[][];allowed?:PlanPoint[][]}={}):InlayPlan[]{
+  const {fieldPolygons,boardWidth,gap,stockLength,centre}=ctx,pitch=boardWidth+gap,withBoards=opts.boards!==false;
   // At least one full field board (plus its gap) between an inlay and the field's edge.
-  const allowed=offsetPolygons(fieldPolygons,pitch),built:PlanPoint[][]=[];
+  const allowed=opts.allowed??offsetPolygons(fieldPolygons,pitch),built:PlanPoint[][]=[...(opts.taken??[])];
+  const overlaps=(pieces:PlanPoint[][])=>built.some(o=>area(polygonCut(pieces,[o]))>1);
+  const fp=(poly:PlanPoint[],c:PlanPoint):FootprintPlan=>({outline:poly,bounds:{w:2*c.x,h:2*c.y},isCurved:false});
+  // Slivers under a square inch, where a pattern meets a frame, are a gap, not a board anyone would cut.
+  const real=(runs:BoardRun[])=>runs.filter(b=>!b.polygon||Math.abs(signedArea(b.polygon))>=1);
   return inlays.map(inlay=>{
-    const frameRows=inlay.frameRows??1,pattern=inlay.pattern??'Straight',outline=inlayOutline(inlay,centre);
-    const inner=offsetPolygons([outline],frameRows*pitch)[0]??[];
-    const base={id:inlay.id,kind:inlay.kind,frameRows,pattern,outline,inner,boards:[] as BoardRun[],edgeFt:perimeter(outline)/12,fillSqft:inner.length?Math.abs(signedArea(inner))/144:0};
+    if(inlay.kind==='band'){
+      const span=bandSpan(inlay,ctx),across=inlay.direction==='across',b=bounds(fieldPolygons);
+      const strip=across?rect(b.x0-12,span.from,b.x1+12,span.to):rect(span.from,b.y0-12,span.to,b.y1+12);
+      const pieces=polygonCut(fieldPolygons,[strip]).filter(p=>Math.abs(signedArea(p))>1).sort((p,q)=>Math.abs(signedArea(q))-Math.abs(signedArea(p)));
+      // The fitted edge runs the band's length: across it, a piece's width; front to back, its depth.
+      const length=pieces.reduce((n,p)=>{const pb=bounds([p]);return n+(across?pb.x1-pb.x0:pb.y1-pb.y0);},0)/12;
+      const base={id:inlay.id,kind:inlay.kind,frameRows:1 as const,pattern:'Straight' as const,outline:pieces[0]??[],inner:[] as PlanPoint[],pieces,boards:[] as BoardRun[],
+        edgeFt:span.rows?0:length,fillSqft:area(pieces)/144,band:{direction:inlay.direction,from:span.from,to:span.to,boards:inlay.boards,rows:span.rows}};
+      if(ctx.blocked)return {...base,status:'blocked' as const,message:ctx.blocked};
+      // A field edge running beside the band (an inside corner of an L or a custom outline) needs a full board too.
+      const beside=fieldPolygons.some(poly=>poly.some((p,i)=>{const q=poly[(i+1)%poly.length],at=across?p.y:p.x;
+        if(Math.abs(across?q.y-p.y:q.x-p.x)>.01||Math.hypot(q.x-p.x,q.y-p.y)<1||at<=span.from-pitch+.01||at>=span.to+pitch-.01)return false;
+        const e0=Math.min(across?p.x:p.y,across?q.x:q.y),e1=Math.max(across?p.x:p.y,across?q.x:q.y);
+        return pieces.some(piece=>{const pb=bounds([piece]);return across?e0<pb.x1-.5&&e1>pb.x0+.5:e0<pb.y1-.5&&e1>pb.y0+.5;});}));
+      if(!span.fits||!pieces.length||beside)return {...base,status:'outside' as const,message:BAND_OUTSIDE};
+      if(overlaps(pieces))return {...base,status:'overlap' as const,message:MESSAGES.overlap};
+      built.push(...pieces);
+      // Cut in: the band's boards run its length, in rows that exactly fill its width.
+      const boards=!withBoards||span.rows?[]:pieces.flatMap(piece=>real(getBoardRows(fp(piece,centre),{boardWidth,gap,angleDeg:across?0:90,inset:0,maxBoardLen:stockLength}))).map(r=>({...r,role:'inlay-fill' as const,inlay:inlay.id}));
+      return {...base,status:'ok' as const,boards};
+    }
+    const medallion=inlay.kind==='medallion',frameRows=inlay.kind==='medallion'?1:inlay.frameRows??1,pattern:InlayFill=inlay.kind==='medallion'?'Straight':inlay.pattern??'Straight',outline=inlayOutline(inlay,centre);
+    const c={x:centre.x+(inlay.dxFt??0)*12,y:centre.y+(inlay.dyFt??0)*12};
+    // A medallion's inside keeps its 16 sides, one frame row in (so its wedges line up with the vertices).
+    const inner=inlay.kind==='medallion'?polygonAround(c,inlay.diameterFt*6-pitch/Math.cos(Math.PI/MEDALLION_SIDES)):offsetPolygons([outline],frameRows*pitch)[0]??[];
+    const base={id:inlay.id,kind:inlay.kind,frameRows,pattern,outline,inner,pieces:[outline],boards:[] as BoardRun[],edgeFt:perimeter(outline)/12,fillSqft:inner.length?Math.abs(signedArea(inner))/144:0,
+      ...(medallion?{solid:offsetPolygons([outline],-boardWidth)[0]??outline,quote:true}:{})};
     if(ctx.blocked)return {...base,status:'blocked' as const,message:ctx.blocked};
     let status:InlayStatus='ok';
     if(!inner.length||!offsetPolygons([inner],pitch*.99).length)status='small';
     else if(area(polygonCut([outline],allowed,true))>1)status='outside';
-    else if(built.some(o=>area(polygonCut([outline],[o]))>1))status='overlap';
+    else if(overlaps([outline]))status='overlap';
     if(status!=='ok')return {...base,status,message:MESSAGES[status]};
     built.push(outline);
-    const fp=(poly:PlanPoint[]):FootprintPlan=>({outline:poly,bounds:{w:2*(centre.x+(inlay.dxFt??0)*12),h:2*(centre.y+(inlay.dyFt??0)*12)},isCurved:false});
-    const frame=getPictureFrameRuns(fp(outline),frameRows,boardWidth,gap).map(b=>({...b,role:'inlay-frame' as const,inlay:inlay.id}));
-    // Slivers under a square inch, where a pattern meets the frame, are a gap, not a board anyone would cut.
-    const fill=(pattern==='Herringbone'?getHerringboneRows(fp(inner),boardWidth,gap,0):getBoardRows(fp(inner),{boardWidth,gap,angleDeg:pattern==='Diagonal'?45:90,inset:0,maxBoardLen:stockLength}))
-      .filter(b=>!b.polygon||Math.abs(signedArea(b.polygon))>=1).map(b=>({...b,role:'inlay-fill' as const,inlay:inlay.id}));
+    if(!withBoards)return {...base,status};
+    const frame=getPictureFrameRuns(fp(outline,c),frameRows,boardWidth,gap).map(b=>({...b,role:'inlay-frame' as const,inlay:inlay.id}));
+    const fill=inlay.kind==='medallion'&&inlay.style==='compass'?compassWedges(c,inner,inlay.diameterFt*6,ctx).map(b=>({...b,inlay:inlay.id}))
+      :real(pattern==='Herringbone'?getHerringboneRows(fp(inner,c),boardWidth,gap,0):getBoardRows(fp(inner,c),{boardWidth,gap,angleDeg:pattern==='Diagonal'?45:90,inset:0,maxBoardLen:stockLength})).map(b=>({...b,role:'inlay-fill' as const,inlay:inlay.id}));
     return {...base,status,boards:[...frame,...fill]};
   });
 }
 
-/** Cut the level's field, border and breaker boards around the built inlays (with the board gap) and add the
- * inlay boards. A board the inlays do not touch is kept exactly as it was. */
+/** A compass medallion's inside: eight wedges pointing along the axes and the diagonals, a board gap between them. Each
+ * wedge's boards run along its outer edge, starting there (so the ripped piece falls at the middle), and the wedges
+ * alternate between the inside colour ('inlay-fill') and the frame colour ('inlay-frame'). */
+function compassWedges(c:PlanPoint,inner:PlanPoint[],radius:number,ctx:InlayContext):BoardRun[]{
+  const {boardWidth,gap,stockLength}=ctx,v=(j:number)=>inner[((j%MEDALLION_SIDES)+MEDALLION_SIDES)%MEDALLION_SIDES],far=radius+12;
+  const joint=(a:number)=>{const d={x:Math.cos(a),y:Math.sin(a)},n={x:-d.y*gap/2,y:d.x*gap/2};return [{x:c.x+n.x,y:c.y+n.y},{x:c.x+d.x*far+n.x,y:c.y+d.y*far+n.y},{x:c.x+d.x*far-n.x,y:c.y+d.y*far-n.y},{x:c.x-n.x,y:c.y-n.y}];};
+  const joints=Array.from({length:8},(_,i)=>joint((2*i+1)*Math.PI/8));
+  return Array.from({length:8},(_,i)=>{
+    // Boards square to the wedge's direction (45i°): rows start at its outer tip (getBoardRows starts at the low side).
+    const angleDeg=(45*i+90)%360,wedge=[c,v(2*i-1),v(2*i),v(2*i+1)];
+    return polygonCut([wedge],joints,true).flatMap(piece=>getBoardRows({outline:piece,bounds:{w:2*c.x,h:2*c.y},isCurved:false},{boardWidth,gap,angleDeg,inset:0,maxBoardLen:stockLength}))
+      .filter(b=>!b.polygon||Math.abs(signedArea(b.polygon))>=1).map(b=>({...b,role:i%2?'inlay-frame' as const:'inlay-fill' as const}));
+  }).flat();
+}
+
+/** Cut the level's field, border and breaker boards around the built inlays (with the board gap), recolour the rows
+ * of a band across a straight field, and add the inlay boards. A board the inlays do not touch is kept exactly. */
 export function applyInlays(boards:BoardRun[],plans:InlayPlan[],boardWidth:number,gap:number):BoardRun[]{
   const built=plans.filter(p=>p.status==='ok');if(!built.length)return boards;
-  const holes=built.map(p=>offsetPolygons([p.outline],-gap)[0]).filter(Boolean);
+  const rows=built.filter(p=>p.band?.rows),holes=built.filter(p=>!p.band?.rows).flatMap(p=>p.pieces.map(q=>offsetPolygons([q],-gap)[0]).filter(Boolean));
   const box=(poly:PlanPoint[])=>({x0:Math.min(...poly.map(p=>p.x)),x1:Math.max(...poly.map(p=>p.x)),y0:Math.min(...poly.map(p=>p.y)),y1:Math.max(...poly.map(p=>p.y))});
   const holeBoxes=holes.map(box),out:BoardRun[]=[];
   for(const b of boards){
+    // A band across a straight field is its rows: the field boards along them take the band's colour, uncut.
+    const band=b.role==='field'&&Math.abs(Math.sin(b.angleDeg*Math.PI/180))<1e-6?rows.find(p=>b.cy>p.band!.from&&b.cy<p.band!.to):undefined;
+    if(band){out.push({...b,role:'inlay-fill',inlay:band.id});continue;}
     const poly=boardOutline(b,boardWidth),bb=box(poly);
     if(!holeBoxes.some(h=>h.x0<bb.x1&&h.x1>bb.x0&&h.y0<bb.y1&&h.y1>bb.y0)){out.push(b);continue;}
     const pieces=polygonCut([poly],holes,true);
@@ -96,44 +187,75 @@ export function applyInlays(boards:BoardRun[],plans:InlayPlan[],boardWidth:numbe
   return [...out,...built.flatMap(p=>p.boards)];
 }
 
+/** The breakers left once bands running front to back are in: a band takes the place of any breaker it covers or
+ * comes within a board of (the field boards end at the band instead, as they did at the breaker). */
+export function keepBreakers(breakers:number[],plans:InlayPlan[],boardWidth:number,gap:number):number[]{
+  const along=plans.filter(p=>p.status==='ok'&&p.band?.direction==='along'),pitch=boardWidth+gap;
+  return along.length?breakers.filter(x=>!along.some(p=>x+boardWidth/2>p.band!.from-pitch&&x-boardWidth/2<p.band!.to+pitch)):breakers;
+}
+/** Build-up joists under bands running front to back, as under a breaker: two under each band board (0.94 in either
+ * side of its middle) and one under each outer joint (2.81 in beyond the outer boards' middles). A one-board band
+ * gets exactly a breaker's four. Plan x, level-local. */
+export function bandBuildUps(plans:InlayPlan[],boardWidth:number,gap:number):number[]{
+  const out:number[]=[];
+  for(const p of plans)if(p.status==='ok'&&p.band?.direction==='along'){
+    const mids=Array.from({length:p.band.boards},(_,k)=>p.band!.to-k*(boardWidth+gap)-boardWidth/2);
+    out.push(Math.min(...mids)-2.8125,...mids.flatMap(m=>[m-.9375,m+.9375]),Math.max(...mids)+2.8125);
+  }
+  return out;
+}
+
+/** The next free inlay id, `inlay-N`. */
+export function nextInlayId(inlays:DeckInlay[]){let n=inlays.length+1;while(inlays.some(i=>i.id===`inlay-${n}`))n++;return `inlay-${n}`;}
+/** Replacing the legacy centre stripe (hasInlay) with a band in its place: one board wide, running front to back down
+ * the middle, in a colour that sets it off. The stripe had no framing or labour of its own and the band does, so this
+ * re-prices the deck; it happens only when the customer chooses it. */
+export function stripeToBand(data:Pick<DeckData,'inlays'|'deckingMaterial'|'deckingColor'>):Partial<DeckData>{
+  const inlays=data.inlays??[],fill=contrastColour(data);
+  return {hasInlay:false,inlayLf:0,inlays:[...inlays,{id:nextInlayId(inlays),kind:'band',direction:'along',boards:1,...(fill?{fill}:{})}]};
+}
+
 /** The inlay context of a built deck level (for the editor's fit and status checks). */
 export function levelInlayContext(data:Pick<DeckData,'deckingMaterial'|'boardWidth'|'pictureFrameRows'|'pattern'>,level:{footprint:FootprintPlan;deckingFootprint?:FootprintPlan}):InlayContext{
   const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)||DECKING_CATALOGUE[0];
   const gap=material.isComposite?.1875:.25,borders=data.pictureFrameRows||(data.pattern==='Picture Frame'?1:0);
-  return {fieldPolygons:offsetPolygons([(level.deckingFootprint??level.footprint).outline],borders*(data.boardWidth+gap)),boardWidth:data.boardWidth,gap,stockLength:material.id==='cedar'?144:192,centre:{x:level.footprint.bounds.w/2,y:level.footprint.bounds.h/2}};
+  return {fieldPolygons:offsetPolygons([(level.deckingFootprint??level.footprint).outline],borders*(data.boardWidth+gap)),boardWidth:data.boardWidth,gap,stockLength:material.id==='cedar'?144:192,centre:{x:level.footprint.bounds.w/2,y:level.footprint.bounds.h/2},straight:data.pattern==='Straight'||data.pattern==='Picture Frame'};
 }
 
-/** The nearest version of an inlay that fits, clear of the other inlays on its level: at its size, first moved
- * toward the middle, then to the nearest free spot around it (in 1 ft steps); only then made smaller (6 in steps).
- * Null when even the smallest size fits nowhere. The checks are the placement rules of planInlays. */
+/** The nearest version of an inlay that fits, clear of the other inlays on its level: at its size, first moved toward
+ * the middle, then to the nearest free spot around it (in 1 ft steps, a band in 6 in steps along its one axis); only
+ * then made smaller (6 in steps; a band loses boards). Null when even the smallest fits nowhere. The checks are the
+ * placement rules of planInlays. */
 export function fitInlay(inlay:DeckInlay,others:DeckInlay[],ctx:InlayContext):DeckInlay|null{
-  const [lo]=inlay.kind==='rug'?INLAY_LIMITS.rugFt:INLAY_LIMITS.diamondFt,snap=(v:number)=>Math.round(v*2)/2,pitch=ctx.boardWidth+ctx.gap;
-  const allowed=offsetPolygons(ctx.fieldPolygons,pitch),taken=planInlays(others,ctx).filter(p=>p.status==='ok').map(p=>p.outline);
-  const pts=allowed.flat(),bx0=Math.min(...pts.map(p=>p.x)),bx1=Math.max(...pts.map(p=>p.x)),by0=Math.min(...pts.map(p=>p.y)),by1=Math.max(...pts.map(p=>p.y));
-  const fits=(c:DeckInlay)=>{
-    const outline=inlayOutline(c,ctx.centre);
-    // Quick reject: an outline outside the field's bounding box cannot fit.
-    if(outline.some(p=>p.x<bx0-.01||p.x>bx1+.01||p.y<by0-.01||p.y>by1+.01))return false;
-    const inner=offsetPolygons([outline],(c.frameRows??1)*pitch)[0];
-    if(!inner||!offsetPolygons([inner],pitch*.99).length||area(polygonCut([outline],allowed,true))>1)return false;
-    return !taken.some(o=>area(polygonCut([outline],[o]))>1);
-  };
-  const x0=inlay.dxFt??0,y0=inlay.dyFt??0,[olo,ohi]=INLAY_LIMITS.offsetFt,steps=Array.from({length:21},(_,i)=>i-10);
+  const snap=(v:number)=>Math.round(v*2)/2,[olo,ohi]=INLAY_LIMITS.offsetFt;
+  const allowed=offsetPolygons(ctx.fieldPolygons,ctx.boardWidth+ctx.gap),taken=planInlays(others,ctx,{boards:false,allowed}).filter(p=>p.status==='ok').flatMap(p=>p.pieces);
+  const fits=(c:DeckInlay)=>planInlays([c],ctx,{boards:false,taken,allowed})[0].status==='ok';
+  if(inlay.kind==='band'){
+    const a0=inlay.atFt??0,spots=[...new Set([a0,snap(a0/2),0,...Array.from({length:121},(_,i)=>snap(a0+(i-60)/2)).sort((a,b)=>Math.abs(a-a0)-Math.abs(b-a0))])].filter(a=>a>=olo&&a<=ohi);
+    for(let boards=inlay.boards;boards>=1;boards--)for(const a of spots){const c:Band={...inlay,boards:boards as Band['boards'],atFt:a};if(!a)delete c.atFt;if(fits(c))return c;}
+    return null;
+  }
+  const lo=inlay.kind==='rug'?INLAY_LIMITS.rugFt[0]:inlay.kind==='diamond'?INLAY_LIMITS.diamondFt[0]:INLAY_LIMITS.medallionFt[0];
+  const b=bounds(allowed);
+  // Quick reject: an outline outside the field's bounding box cannot fit.
+  const inBox=(c:Shaped)=>inlayOutline(c,ctx.centre).every(p=>p.x>=b.x0-.01&&p.x<=b.x1+.01&&p.y>=b.y0-.01&&p.y<=b.y1+.01);
+  const x0=inlay.dxFt??0,y0=inlay.dyFt??0,steps=Array.from({length:21},(_,i)=>i-10);
   const around=steps.flatMap(x=>steps.map(y=>({x:x0+x,y:y0+y}))).filter(p=>p.x>=olo&&p.x<=ohi&&p.y>=olo&&p.y<=ohi).sort((a,b)=>Math.hypot(a.x-x0,a.y-y0)-Math.hypot(b.x-x0,b.y-y0));
   for(let s=0;;s+=.5){
-    const width=Math.max(lo,inlay.widthFt-s),depth=Math.max(lo,inlay.depthFt-s),sized={...inlay,widthFt:width,depthFt:inlay.kind==='diamond'?width:depth};
+    const sized:Shaped=inlay.kind==='medallion'?{...inlay,diameterFt:Math.max(lo,inlay.diameterFt-s)}:{...inlay,widthFt:Math.max(lo,inlay.widthFt-s),depthFt:inlay.kind==='diamond'?Math.max(lo,inlay.widthFt-s):Math.max(lo,inlay.depthFt-s)};
     const spots=[...[1,.5,0].map(t=>({x:snap(x0*t),y:snap(y0*t)})),...around];
-    for(const p of spots){const c={...sized,dxFt:snap(p.x),dyFt:snap(p.y)};if(fits(c))return {...c,...(c.dxFt?{}:{dxFt:undefined}),...(c.dyFt?{}:{dyFt:undefined})};}
-    if(width===lo&&depth===lo)return null;
+    for(const p of spots){const c:Shaped={...sized,dxFt:snap(p.x),dyFt:snap(p.y)};if(inBox(c)&&fits(c))return {...c,...(c.dxFt?{}:{dxFt:undefined}),...(c.dyFt?{}:{dyFt:undefined})};}
+    if(sized.kind==='medallion'?sized.diameterFt===lo:sized.widthFt===lo&&sized.depthFt===lo)return null;
   }
 }
 
-/** Inlay labour, reusing existing rates only: each frame's fitted edge at the breaker-board rate (1.5 crew-hours
- * per 10 ft; a frame is fitted on both sides, as a breaker is), plus the inside's share of the decking labour at
- * its pattern's factor over the deck's (never less than the deck's own). Crew-days, before the deck's multipliers. */
+/** Inlay labour, reusing existing rates only: each frame's fitted edge, and each cut-in band's length, at the
+ * breaker-board rate (1.5 crew-hours per 10 ft; both are fitted on both sides, as a breaker is), plus the inside's share
+ * of the decking labour at its pattern's factor over the deck's (never less than the deck's own). Crew-days, before the
+ * deck's multipliers. A medallion's labour is a builder quote (calculations.ts), so it adds none here. */
 export const PATTERN_LABOUR:Record<BoardPattern,number>={Straight:1,Diagonal:1.20,'Picture Frame':1.25,Herringbone:1.30};
 export function inlayCrewDays(plans:InlayPlan[],deckPattern:BoardPattern,deckingRateSqftPerDay:number){
-  const built=plans.filter(p=>p.status==='ok');
+  const built=plans.filter(p=>p.status==='ok'&&!p.quote);
   const edge=built.reduce((n,p)=>n+p.edgeFt/10*1.5,0)/8;
   const inside=built.reduce((n,p)=>n+Math.max(0,PATTERN_LABOUR[p.pattern]/PATTERN_LABOUR[deckPattern]-1)*p.fillSqft/deckingRateSqftPerDay,0);
   return {edge,inside,total:edge+inside};
@@ -142,6 +264,9 @@ export function inlayCrewDays(plans:InlayPlan[],deckPattern:BoardPattern,decking
 /** Plain words for the built inlays, e.g. "Inlays: a 6 × 4 ft framed rectangle with a herringbone inside". */
 export function inlayWords(plans:InlayPlan[],inlays:DeckInlay[]):string|undefined{
   const built=plans.filter(p=>p.status==='ok');if(!built.length)return undefined;
-  const inside:Record<InlayFill,string>={Straight:'boards running front to back',Diagonal:'boards at 45°',Herringbone:'a herringbone'};
-  return `Inlays: ${built.map(p=>{const i=inlays.find(x=>x.id===p.id)!;return `${i.kind==='diamond'?`a ${i.widthFt} ft diamond`:`a ${i.widthFt} × ${i.depthFt} ft framed rectangle`} with ${inside[p.pattern]} inside`;}).join('; ')}`;
+  const inside:Record<InlayFill,string>={Straight:'boards running front to back',Diagonal:'boards at 45°',Herringbone:'a herringbone'},count=['one','two','three','four'];
+  return `Inlays: ${built.map(p=>{const i=inlays.find(x=>x.id===p.id)!;
+    if(i.kind==='band')return `a band ${count[i.boards-1]} board${i.boards===1?'':'s'} wide ${i.direction==='across'?'across the deck':'running front to back'}`;
+    if(i.kind==='medallion')return `a ${i.diameterFt} ft ${i.style==='compass'?'compass medallion in eight wedges':'round medallion with boards running front to back inside'}`;
+    return `${i.kind==='diamond'?`a ${i.widthFt} ft diamond`:`a ${i.widthFt} × ${i.depthFt} ft framed rectangle`} with ${inside[p.pattern]} inside`;}).join('; ')}`;
 }

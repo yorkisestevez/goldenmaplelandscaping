@@ -14,10 +14,19 @@ export type ColourRef = string;
 export interface BoardColour {lv:1|2|3;role:'field'|'border'|'breaker';scope:'piece'|'course';course:string;at?:number;colour:ColourRef}
 /** How the boards inside a framed inlay run: across (Straight, front to back), at 45°, or in a herringbone. */
 export type InlayFill = 'Straight' | 'Diagonal' | 'Herringbone';
-/** A decorative inlay set into the decking (see lib/inlayGeometry.ts): a framed rectangle ('rug') or a framed
- * square turned 45° ('diamond'). Its centre is dxFt/dyFt from the middle of its deck level (+x right, +y toward
- * the yard); a colour left out is the deck's own. Absent on every existing design. */
-export interface DeckInlay {id:string;kind:'rug'|'diamond';level?:1|2|3;dxFt?:number;dyFt?:number;widthFt:number;depthFt:number;frameRows?:1|2;pattern?:InlayFill;frame?:ColourRef;fill?:ColourRef}
+/** A decorative inlay set into the decking (see lib/inlayGeometry.ts). A colour left out is the deck's own.
+ * Absent on every existing design.
+ * - 'rug' (a framed rectangle) or 'diamond' (a framed square turned 45°): centred dxFt/dyFt from the middle of its
+ *   deck level (+x right, +y toward the yard), with 1 or 2 frame rows and an inside pattern.
+ * - 'band': 1 to 4 boards across the whole field, running across the deck (parallel to the house) or front to
+ *   back ('along' the joists); atFt moves its middle from the level's middle (toward the yard, or to the right).
+ * - 'medallion': a round (16-sided) inlay with a one-row frame; inside, boards front to back ('round') or eight
+ *   wedges in alternating inside and frame colours ('compass'). */
+interface InlayBase {id:string;level?:1|2|3;fill?:ColourRef}
+export type DeckInlay =
+  | InlayBase&{kind:'rug'|'diamond';dxFt?:number;dyFt?:number;widthFt:number;depthFt:number;frameRows?:1|2;pattern?:InlayFill;frame?:ColourRef}
+  | InlayBase&{kind:'band';direction:'across'|'along';atFt?:number;boards:1|2|3|4}
+  | InlayBase&{kind:'medallion';dxFt?:number;dyFt?:number;diameterFt:number;style:'round'|'compass';frame?:ColourRef};
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
 export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
 export type StairType = 'Straight' | 'Winder' | 'Landing';

@@ -12,10 +12,14 @@ import type {PlanPoint} from './lib/deckGeometry';
  * - 'inlay-nailer': under each frame board that runs with the joists (or at 45° over joists wider than 12 in).
  * - 'inlay-ladder': rungs at 12 in centres under a fill that runs with the joists, at 45° over joists wider than
  *   12 in, or in a herringbone.
+ * - A band across a 45° or herringbone field: 'inlay-edge' blocking under both long joints, where the field boards
+ *   end. (A band of recoloured rows needs nothing; one running front to back sits on build-up joists, like a breaker.)
+ * - 'inlay-solid': a medallion's rungs at 6 in centres over its outline grown by a board width, which count as solid
+ *   blocking: every board end over them is supported (inSolidInlay).
  * A line along the joists is one member (left out where a joist already sits under it); a line across them is
  * blocking from joist to joist, each bay filled completely. Joists run along the plan's y axis (z in 3D).
  */
-const RUNG_CENTRES=12;
+const RUNG_CENTRES=12,SOLID_CENTRES=6;
 const parallel=(dirDeg:number,angles:number[])=>angles.some(a=>Math.abs(Math.sin((dirDeg-a)*Math.PI/180))<.05);
 /** A board direction that needs more than the joists: along them, or at 45° over joists wider than 12 in. */
 const needsSupport=(dirDeg:number,spacing:number)=>Math.abs(Math.cos(dirDeg*Math.PI/180))<.05||(Math.abs(Math.abs(Math.sin(dirDeg*Math.PI/180))-Math.SQRT1_2)<.05&&spacing>12);
@@ -23,12 +27,29 @@ const needsSupport=(dirDeg:number,spacing:number)=>Math.abs(Math.cos(dirDeg*Math
 export function frameInlays(level:DeckLevel,plans:InlayPlan[],opts:{boardWidth:number;gap:number;spacing:number;pattern:BoardPattern}){
   const built=plans.filter(p=>p.status==='ok');if(!built.length)return;
   const {boardWidth,gap,spacing,pattern}=opts,pitch=boardWidth+gap,depth=level.joists[0]?.depth||9.25,framingY=level.top-1-depth/2,{offset}=level;
-  const add=(p:PlanPoint,q:PlanPoint,role:'inlay-edge'|'inlay-nailer'|'inlay-ladder')=>supportLine(level,{x:p.x+offset.x,y:p.y+offset.z},{x:q.x+offset.x,y:q.y+offset.z},role,framingY,depth);
+  const add=(p:PlanPoint,q:PlanPoint,role:'inlay-edge'|'inlay-nailer'|'inlay-ladder'|'inlay-solid')=>supportLine(level,{x:p.x+offset.x,y:p.y+offset.z},{x:q.x+offset.x,y:q.y+offset.z},role,framingY,depth);
   const edges=(poly:PlanPoint[])=>poly.map((a,i)=>{const b=poly[(i+1)%poly.length],len=Math.hypot(b.x-a.x,b.y-a.y);return {a,b,len,dir:{x:(b.x-a.x)/len,y:(b.y-a.y)/len},deg:Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI};}).filter(e=>e.len>1);
   // The inward normal of an outline edge (positive shoelace area: the inside is on the left).
   const inward=(e:{dir:PlanPoint})=>({x:-e.dir.y,y:e.dir.x});
   const shift=(e:{a:PlanPoint;b:PlanPoint;dir:PlanPoint},d:number):[PlanPoint,PlanPoint]=>{const n=inward(e);return [{x:e.a.x+n.x*d,y:e.a.y+n.y*d},{x:e.b.x+n.x*d,y:e.b.y+n.y*d}];};
+  // Rungs across the joists at `centres` over a polygon: blocking wherever each line crosses it.
+  const rungs=(poly:PlanPoint[],centres:number,role:'inlay-ladder'|'inlay-solid')=>{
+    const ys=poly.map(p=>p.y),y0=Math.min(...ys),y1=Math.max(...ys);
+    for(let y=y0+centres/2;y<y1-(role==='inlay-ladder'?3:0);y+=centres){
+      const xs:number[]=[];
+      poly.forEach((a,i)=>{const b=poly[(i+1)%poly.length];if((a.y<=y&&b.y>y)||(b.y<=y&&a.y>y))xs.push(a.x+(y-a.y)*(b.x-a.x)/(b.y-a.y));});
+      xs.sort((p,q)=>p-q);
+      for(let i=0;i+1<xs.length;i+=2)if(xs[i+1]-xs[i]>3)add({x:xs[i],y},{x:xs[i+1],y},role);
+    }
+  };
   for(const plan of built){
+    if(plan.band){
+      // Across a 45° or herringbone field, the field boards end along both long sides of the band.
+      if(plan.band.direction==='across'&&!plan.band.rows)for(const piece of plan.pieces)for(const e of edges(piece))
+        if(Math.abs(Math.sin(e.deg*Math.PI/180))<.05&&(Math.abs(e.a.y-plan.band.from)<.5||Math.abs(e.a.y-plan.band.to)<.5))for(const side of [-1,1])add(...shift(e,-gap/2+side*.9375),'inlay-edge');
+      continue;
+    }
+    if(plan.solid){rungs(plan.solid,SOLID_CENTRES,'inlay-solid');continue;}
     const field=fieldAngles(pattern),fill=fillAngles(plan.pattern);
     for(const e of edges(plan.outline)){
       // Field boards ending at the outer edge: the joint is a board gap wide, just outside the outline.
@@ -39,15 +60,7 @@ export function frameInlays(level:DeckLevel,plans:InlayPlan[],opts:{boardWidth:n
     // Fill boards ending at the frame's inner edge: the joint is the gap just outside the fill.
     for(const e of edges(plan.inner))if(!parallel(e.deg,fill))for(const side of [-1,1])add(...shift(e,-gap/2+side*.9375),'inlay-edge');
     // Ladder rungs across the joists under a fill the joists alone do not carry.
-    if(fill.some(a=>needsSupport(a,spacing))||plan.pattern==='Herringbone'){
-      const ys=plan.inner.map(p=>p.y),y0=Math.min(...ys),y1=Math.max(...ys);
-      for(let y=y0+RUNG_CENTRES/2;y<y1-3;y+=RUNG_CENTRES){
-        const xs:number[]=[];
-        plan.inner.forEach((a,i)=>{const b=plan.inner[(i+1)%plan.inner.length];if((a.y<=y&&b.y>y)||(b.y<=y&&a.y>y))xs.push(a.x+(y-a.y)*(b.x-a.x)/(b.y-a.y));});
-        xs.sort((p,q)=>p-q);
-        for(let i=0;i+1<xs.length;i+=2)if(xs[i+1]-xs[i]>3)add({x:xs[i],y},{x:xs[i+1],y},'inlay-ladder');
-      }
-    }
+    if(fill.some(a=>needsSupport(a,spacing))||plan.pattern==='Herringbone')rungs(plan.inner,RUNG_CENTRES,'inlay-ladder');
   }
 }
 
@@ -76,6 +89,16 @@ function supportLine(level:DeckLevel,p:PlanPoint,q:PlanPoint,role:string,framing
     const m:Member={a:{x:x0,y:framingY,z:zAt(x0)},b:{x:x1,y:framingY,z:zAt(x1)},width:1.5,depth,role};
     if(!level.blocking.some(o=>o.role===role&&Math.hypot(o.a.x-m.a.x,o.a.z-m.a.z)<.3&&Math.hypot(o.b.x-m.b.x,o.b.z-m.b.z)<.3))level.blocking.push(m);
   }
+}
+
+/** True when a level-local plan point sits over a medallion's solid blocking (its outline grown by a board width). */
+export function inSolidInlay(level:{inlays?:InlayPlan[]},x:number,y:number){
+  return !!level.inlays?.some(p=>{
+    if(p.status!=='ok'||!p.solid)return false;
+    let odd=false;
+    for(let i=0,j=p.solid.length-1;i<p.solid.length;j=i++){const a=p.solid[i],b=p.solid[j];if((a.y>y)!==(b.y>y)&&x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x)odd=!odd;}
+    return odd;
+  });
 }
 
 /** True when a plan point (world x, z) sits within `tol` inches of an inlay support member. */
