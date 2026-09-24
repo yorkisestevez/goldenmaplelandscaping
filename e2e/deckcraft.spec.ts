@@ -7,6 +7,18 @@ import {expect,test,type Page} from '@playwright/test';
  */
 const KNOWN_CONSOLE=[/`selected` on <option>/,/THREE\./,/WebGL|GPU stall|swiftshader|GroupMarkerNotSet/i,/React DevTools/,/Failed to load resource/];
 
+/**
+ * The suite never reaches the live trackers. CI builds carry no tracker IDs, but a local build picks up .env.local,
+ * and then every run is recorded as real traffic (a sent design can even fire the Lead conversion). Clarity's own
+ * script also fails tests: it stops itself on every SPA URL change, and an upload it has in flight at that moment
+ * rejects with "Cannot read properties of null (reading 'sequence')", which the page cannot catch because the script
+ * is cross-origin. Each tracker script is answered with an empty one, so nothing loads after it.
+ */
+const TRACKERS=/^https:\/\/([\w-]+\.)*(googletagmanager\.com|facebook\.net|clarity\.ms)\//;
+test.beforeEach(async({context})=>{
+  await context.route(TRACKERS,route=>route.fulfill({status:200,contentType:'text/javascript',body:''}));
+});
+
 async function openDesigner(page:Page){
   const problems:string[]=[];
   page.on('console',m=>{if(m.type()==='error'&&!KNOWN_CONSOLE.some(r=>r.test(m.text())))problems.push(m.text());});
