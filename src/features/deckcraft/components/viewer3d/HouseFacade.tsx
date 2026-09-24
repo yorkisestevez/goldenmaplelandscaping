@@ -1,13 +1,15 @@
 import {useEffect,useMemo,useRef} from 'react';
 import {useThree,type ThreeEvent} from '@react-three/fiber';
 import * as THREE from 'three';
-import type {HouseConfig,HouseOpening} from '../../types';
+import type {HouseOpening} from '../../types';
 import type {Box} from '../../deckTakeoff';
 import HouseParts from './HouseParts';
 import {houseWallParts} from './houseWallParts';
 import type {HouseInteraction} from './houseInteraction';
-import {openingColour,openingColors,resolveWallFinish,type OpeningColors} from '../../houseFinishes';
-import {openingShapes,wallSkin,type OpeningShape} from './houseCladdingSkins';
+import {openingColour,openingColors,type OpeningColors} from '../../houseFinishes';
+import type {FacadeFinish} from '../../houseWallFinishes';
+import {facadeSkins,openingShapes,type OpeningShape} from './houseCladdingSkins';
+import {splitAtBand} from './houseWainscot';
 
 const NONE:[number,number][]=[];
 type Shape=OpeningShape;
@@ -85,8 +87,21 @@ function GarageDoor({o,c}:{o:Shape;c:OpeningColors}){
  </>;
 }
 
-export default function HouseFacade({span,height,openings,hidden=NONE,config,evening,selectedHouseOpeningId,onSelectHouseOpening,onMoveHouseOpening}:{span:number;height:number;openings:HouseOpening[];hidden?:[number,number][];config:HouseConfig;evening:boolean}&HouseInteraction){
- const facadeRef=useRef<THREE.Group>(null),controls=useThree(s=>s.controls),drag=useRef<{opening:HouseOpening;start:THREE.Vector3;plane:THREE.Plane;inverse:THREE.Matrix4}|null>(null);
+const PICKED='#df9b30';
+/** The outline round a wall picked in the exterior studio, never in the way of a click. */
+function PickedWall({span,height}:{span:number;height:number}){
+ const bars:Box[]=[{x:0,y:height-1.5,z:3,w:span,h:3,d:.6},{x:0,y:1.5,z:3,w:span,h:3,d:.6},{x:-span/2+1.5,y:height/2,z:3,w:3,h:height,d:.6},{x:span/2-1.5,y:height/2,z:3,w:3,h:height,d:.6}];
+ return <group name="picked-wall-outline">
+  {bars.map((b,i)=><mesh key={i} position={[b.x,b.y,b.z]} raycast={()=>null}><boxGeometry args={[b.w,b.h,b.d]}/><meshBasicMaterial color={PICKED}/></mesh>)}
+  <mesh position={[0,height/2,2.8]} raycast={()=>null}><planeGeometry args={[span,height]}/><meshBasicMaterial color={PICKED} transparent opacity={.16} depthWrite={false}/></mesh>
+ </group>;
+}
+
+export default function HouseFacade({span,height,openings,hidden=NONE,finish,evening,wallId,blockId,selectedHouseOpeningId,onSelectHouseOpening,onMoveHouseOpening,selectedHouseWallId,onSelectHouseWall}:{span:number;height:number;openings:HouseOpening[];hidden?:[number,number][];/** The wall's finish, resolved by House3D (houseWallFinishes.ts `facadeFinish`); appearance only. */
+ finish:FacadeFinish;evening:boolean;
+ /** This wall ('main-front', 'garage1-back') and its block, for picking it in the exterior studio. */
+ wallId:string;blockId:string}&HouseInteraction){
+ const facadeRef=useRef<THREE.Group>(null),controls=useThree(s=>s.controls),invalidate=useThree(s=>s.invalidate),drag=useRef<{opening:HouseOpening;start:THREE.Vector3;plane:THREE.Plane;inverse:THREE.Matrix4}|null>(null);
  const restoreControls=()=>{drag.current=null;if(controls&&'enabled' in controls)controls.enabled=true;};
  useEffect(()=>restoreControls,[controls]);
  const startDrag=(e:ThreeEvent<PointerEvent>,opening:HouseOpening)=>{if(!onSelectHouseOpening&&!onMoveHouseOpening)return;e.stopPropagation();onSelectHouseOpening?.(opening.id);if(!onMoveHouseOpening||!facadeRef.current)return;facadeRef.current.updateWorldMatrix(true,false);const world=facadeRef.current.matrixWorld,inverse=world.clone().invert(),normal=new THREE.Vector3(0,0,1).transformDirection(world);drag.current={opening:{...opening},start:e.point.clone().applyMatrix4(inverse),plane:new THREE.Plane().setFromNormalAndCoplanarPoint(normal,e.point),inverse};if(controls&&'enabled' in controls)controls.enabled=false;(e.target as unknown as {setPointerCapture:(id:number)=>void}).setPointerCapture(e.pointerId);};
@@ -94,20 +109,31 @@ export default function HouseFacade({span,height,openings,hidden=NONE,config,eve
  const endDrag=(e:ThreeEvent<PointerEvent>)=>{if(!drag.current)return;e.stopPropagation();restoreControls();(e.target as unknown as {releasePointerCapture:(id:number)=>void}).releasePointerCapture(e.pointerId);};
  const shapes=useMemo(()=>openingShapes(span,openings),[span,openings]);
  const wall=useMemo(()=>houseWallParts(span,height,openings,hidden),[span,height,openings,hidden]);
- // The cladding over the wall (houseCladdingSkins.ts); a very large wall in a newer cladding is drawn plain.
- const finish=resolveWallFinish(config);
- const skin=useMemo(()=>wallSkin(finish.cladding,span,height,shapes,hidden).pieces,[finish.cladding,span,height,shapes,hidden]);
+ // The cladding over the wall (houseCladdingSkins.ts); a very large wall in a newer cladding is drawn plain. A wainscot
+ // splits the wall at its top: the band in its own cladding under a trim cap, the wall's cladding above.
+ const {wall:look,wainscot,trim:trimColor,openings:colours}=finish;
+ const skins=useMemo(()=>facadeSkins(look.cladding,span,height,shapes,hidden,wainscot),[look.cladding,span,height,shapes,hidden,wainscot?.cladding,wainscot?.heightIn]);
+ const band=skins.band,split=useMemo(()=>band?splitAtBand(wall,band.top):null,[wall,band]);
+ // Exterior studio: a click on the wall (not an orbit drag) picks it; its outline shows while it is picked.
+ const pick=onSelectHouseWall&&((e:ThreeEvent<MouseEvent>)=>{if(e.delta>4)return;e.stopPropagation();onSelectHouseWall(wallId);invalidate();});
+ const picked=!!selectedHouseWallId&&(selectedHouseWallId===wallId||selectedHouseWallId===blockId);
  const trim=useMemo(()=>{const boxes:Box[]=[];for(const o of shapes){for(const side of [-1,1])boxes.push({x:o.x+side*(o.w/2+1.5),y:o.y,z:1.8,w:3,h:o.h+6,d:2.2});for(const side of [-1,1])boxes.push({x:o.x,y:o.y+side*(o.h/2+1.5),z:1.8,w:o.w,h:3,d:2.2});}for(const x of [-span/2+1.5,span/2-1.5])boxes.push({x,y:height/2,z:1.2,w:3,h:height,d:1.8});boxes.push({x:0,y:height-2,z:1.5,w:span,h:4,d:2});return boxes;},[span,height,shapes]);
- return <group ref={facadeRef}>
-  <HouseParts name="wall-with-actual-opening-cutouts" items={wall} color={finish.backing}/>
-  <HouseParts items={skin} color={finish.color} name={finish.partName} variation={finish.variation} roughness={finish.roughness} metalness={finish.metalness}/>
-  <HouseParts items={trim} color={config.trimColor} name="opening-and-corner-trim"/>
-  {shapes.map(o=>{const c=openingColors(config,o);return <group key={o.id} name={`${o.facade}-${o.type}-${o.id}`} onPointerDown={e=>startDrag(e,o)} onPointerMove={moveDrag} onPointerUp={endDrag} onLostPointerCapture={restoreControls}>
+ return <group ref={facadeRef} onClick={pick}>
+  <HouseParts name="wall-with-actual-opening-cutouts" items={split?split.upper:wall} color={look.backing}/>
+  <HouseParts items={skins.skin.pieces} color={look.color} name={look.partName} variation={look.variation} roughness={look.roughness} metalness={look.metalness}/>
+  {band&&split&&wainscot&&<>
+   <HouseParts name="wainscot-wall" items={split.lower} color={wainscot.backing}/>
+   <HouseParts items={band.skin.pieces} color={wainscot.color} name={`wainscot-${wainscot.partName}`} variation={wainscot.variation} roughness={wainscot.roughness} metalness={wainscot.metalness}/>
+   <HouseParts items={band.cap} color={trimColor} name="wainscot-cap"/>
+  </>}
+  <HouseParts items={trim} color={trimColor} name="opening-and-corner-trim"/>
+  {picked&&<PickedWall span={span} height={height}/>}
+  {shapes.map(o=>{const c=openingColors(colours,o);return <group key={o.id} name={`${o.facade}-${o.type}-${o.id}`} onPointerDown={e=>startDrag(e,o)} onPointerMove={moveDrag} onPointerUp={endDrag} onLostPointerCapture={restoreControls}>
     {o.id===selectedHouseOpeningId&&<mesh position={[o.x,o.y,3.2]}><boxGeometry args={[o.w+7,o.h+7,.6]}/><meshBasicMaterial color="#df9b30" wireframe depthTest/></mesh>}
     <mesh position={[o.x,o.y,-12]}><boxGeometry args={[o.w,o.h,.5]}/><meshStandardMaterial color={evening?'#9b7b54':'#414947'} emissive={evening?'#efb873':'#000000'} emissiveIntensity={evening?.16:0} roughness={1}/></mesh>
     {o.type==='Garage'?<GarageDoor o={o} c={c}/>:o.type==='Door'&&o.style?<StyledDoor o={o} c={c}/>:o.type==='Window'&&o.style?<StyledWindow o={o} c={c}/>:<mesh position={[o.x,o.y,.8]}><boxGeometry args={[Math.max(1,o.w-3),Math.max(1,o.h-3),.24]}/><meshPhysicalMaterial color="#c1d1d3" roughness={.08} transmission={.25} transparent opacity={.48} thickness={.24} ior={1.5} clearcoat={1} envMapIntensity={1.4} depthTest depthWrite={false}/></mesh>}
     {/* The original glass door or window gets a frame only once a colour is chosen for it (it has none otherwise). */}
-    {o.type!=='Garage'&&!o.style&&openingColour(config,o)&&<HouseParts items={openingFrame(o)} color={o.type==='Door'?c.slab:c.windowFrame} name="opening-frame"/>}
+    {o.type!=='Garage'&&!o.style&&openingColour(colours,o)&&<HouseParts items={openingFrame(o)} color={o.type==='Door'?c.slab:c.windowFrame} name="opening-frame"/>}
     <HouseParts items={[...(o.w>42&&o.type!=='Garage'&&!o.style?[{x:o.x,y:o.y,z:1.2,w:1.5,h:o.h,d:1.8}]:[]),...(o.type==='Window'&&!o.style?[{x:o.x,y:o.y,z:1.2,w:o.w,h:1.2,d:1.8}]:[])]} color={c.mullions} name="opening-mullions"/>
     {o.type==='Door'&&<HouseParts items={[...(o.style?[]:[{x:o.x+(o.w>42?3:o.w/2-5),y:o.bottomIn+Math.min(36,o.h/2),z:3,w:.8,h:8,d:1.6}]),{x:o.x,y:o.bottomIn-.7,z:3,w:o.w+7,h:1.4,d:7}]} color={c.hardware} name="door-handle-and-threshold"/>}
   </group>;})}

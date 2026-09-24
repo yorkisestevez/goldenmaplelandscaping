@@ -177,12 +177,12 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
 }
 /** Hands the page a function that renders the current view and returns it as an image (for the
  * printable proposal). Rendering right before reading keeps the drawing buffer valid without
- * preserveDrawingBuffer on every frame. */
+ * preserveDrawingBuffer on every frame. The outline of a wall picked in the exterior studio is left out. */
 function SnapshotBridge({onReady}:{onReady?:(capture:(()=>string|null)|null)=>void}){
   const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera);
   useEffect(()=>{
     if(!onReady)return;
-    onReady(()=>{try{gl.render(scene,camera);return gl.domElement.toDataURL('image/jpeg',.9);}catch{return null;}});
+    onReady(()=>{const picked:THREE.Object3D[]=[];scene.traverse(o=>{if(o.name==='picked-wall-outline'&&o.visible){o.visible=false;picked.push(o);}});try{gl.render(scene,camera);return gl.domElement.toDataURL('image/jpeg',.9);}catch{return null;}finally{for(const o of picked)o.visible=true;}});
     return ()=>onReady(null);
   },[gl,scene,camera,onReady]);
   return null;

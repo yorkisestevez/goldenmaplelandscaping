@@ -75,8 +75,8 @@ export function designFeatures(data:DeckData):string[]{
   add(house.footprint?.rects.some(b=>b.kind==='garage'),'deck_house_garage');
   add(house.footprint?.rects.some(b=>b.kind==='house'),'deck_house_block');
   add(openingSignature(data)!==DEFAULT_OPENINGS,'deck_doors_windows');
-  // Exterior finishes (appearance only): a newer cladding or roof, or any exterior colour.
-  add(!ORIGINAL_HOUSE_CLADDINGS.includes(house.cladding)||!['Shingles','Metal'].includes(house.roofFinish)||HOUSE_COLOUR_FIELDS.some(k=>house[k])||house.openings.some(o=>o.color),'deck_house_exterior');
+  // Exterior finishes (appearance only): a newer cladding or roof, any exterior colour, or a wall, block or wainscot finish.
+  add(!ORIGINAL_HOUSE_CLADDINGS.includes(house.cladding)||!['Shingles','Metal'].includes(house.roofFinish)||HOUSE_COLOUR_FIELDS.some(k=>house[k])||house.openings.some(o=>o.color)||house.wallFinishes||house.wainscot||house.gableAccent||house.footprint?.rects.some(b=>b.finish),'deck_house_exterior');
   add(data.catalogueRailingId,'deck_catalogue_railing');
   add(data.catalogueAccessories?.length,'deck_accessory');
   add(data.pictureFrameRows>0,'deck_border_rows');

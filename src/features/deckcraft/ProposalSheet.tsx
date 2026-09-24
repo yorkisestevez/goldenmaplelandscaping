@@ -6,6 +6,7 @@ import {BUSINESS,publicContact} from '../../data/business';
 import ConstructionPlan from './ConstructionPlan';
 import type {DeckData} from './types';
 import type {DeckTakeoff} from './deckTakeoff';
+import {exteriorSummary} from './houseLooks';
 
 /** The parts of the estimate the proposal shows (a subset of calculateEstimate's result). */
 export interface ProposalEstimate{model:DeckTakeoff;sections:{title:string;total:number;quoteRequired?:boolean}[];subtotal:number;hst:number;total:number;quoteRequired?:string[]}
@@ -23,6 +24,8 @@ const site=BUSINESS.canonicalUrl.replace(/^https?:\/\//,'');
  */
 export function ProposalSheet({data,estimate,facts,reviewItems,image,date}:ProposalProps){
   const quotes=estimate.quoteRequired??[],split=splitSubtotal(estimate);
+  // The house exterior, when the customer dressed it: appearance only, never priced.
+  const exterior=exteriorSummary(data);
   // Content-driven density: large multi-level or wrap designs carry more lines, so they print denser.
   const compact=reviewItems.length>8||facts.length+estimate.sections.length>24||reviewItems.join('').length>1500;
   // HST is shown once, after the subtotal; the estimate also carries it as its own section.
@@ -41,7 +44,7 @@ export function ProposalSheet({data,estimate,facts,reviewItems,image,date}:Propo
       <figure className="dd-proposal-plan"><ConstructionPlan model={estimate.model} data={data}/><figcaption>Construction plan</figcaption></figure>
     </div>
     <div className="dd-proposal-body">
-      <section><h2>{split.backyard>0?'Your deck and backyard':'Your deck'}</h2><ul className="dd-proposal-facts">{facts.map(f=><li key={f}>{f}</li>)}</ul></section>
+      <section><h2>{split.backyard>0?'Your deck and backyard':'Your deck'}</h2><ul className="dd-proposal-facts">{facts.map(f=><li key={f}>{f}</li>)}{exterior&&<li>{exterior}</li>}</ul></section>
       <section><h2>{quotes.length?'Planning estimate · priced portion':'Planning estimate'}</h2>
         <table className="dd-proposal-estimate"><tbody>
           {estimate.sections.filter(s=>!/^HST/.test(s.title)).map(s=><tr key={s.title}><th scope="row">{s.title}</th><td>{s.quoteRequired&&s.total===0?'Supplier quote':dollars(s.total)}</td></tr>)}

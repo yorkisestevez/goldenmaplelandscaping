@@ -177,8 +177,10 @@ export default function DeckDesigner(){
   }
   // The PDF engine loads only when a PDF is asked for.
   async function makeProposalPdf():Promise<ArrayBuffer>{
-    const [{jsPDF},snapshotImage,plan,logo]=await Promise.all([import('jspdf'),captureSnapshot(),planImage(estimate.model,data),logoImage()]);
-    return buildProposalPdf(jsPDF,{data,estimate,facts:proposalFacts,reviewItems:reviewFlags,date:proposalDate(),snapshot:snapshotImage,plan,logo});
+    const [{jsPDF},snapshotImage,plan,logo,{exteriorSummary}]=await Promise.all([import('jspdf'),captureSnapshot(),planImage(estimate.model,data),logoImage(),import('../features/deckcraft/houseLooks')]);
+    // The house exterior line (appearance only, not priced) loads with the PDF engine, never with the page.
+    const exterior=exteriorSummary(data);
+    return buildProposalPdf(jsPDF,{data,estimate,facts:exterior?[...proposalFacts,exterior]:proposalFacts,reviewItems:reviewFlags,date:proposalDate(),snapshot:snapshotImage,plan,logo});
   }
   async function downloadPdf(){
     setPdfBusy(true);setDesignError('');

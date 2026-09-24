@@ -176,9 +176,10 @@ const deck=(patch:Partial<HouseConfig>={},deckPatch:Partial<DeckData>={}):DeckDa
 {
   const read=(p:string)=>readFileSync(new URL(`../src/features/deckcraft/${p}`,import.meta.url),'utf8'),designer=designerSource();
   const facade=read('components/viewer3d/HouseFacade.tsx'),house=read('components/viewer3d/House3D.tsx'),geometry=read('components/viewer3d/houseGeometry.ts');
-  ok(/wallSkin\(/.test(facade)&&/resolveWallFinish\(/.test(facade)&&/openingColors\(/.test(facade),'The facade draws from the cladding skins and colour resolvers');
+  // Since F5 the facade takes each wall's finish resolved by House3D (houseWallFinishes.ts), not the house config.
+  ok(/facadeSkins\(/.test(facade)&&/openingColors\(/.test(facade)&&/finish=\{facadeFinish\(config,f\.wall\.id\)\}/.test(house)&&/resolveWallFinish\(/.test(read('houseWallFinishes.ts'))&&/wallSkin\(/.test(read('components/viewer3d/houseCladdingSkins.ts').split('export function facadeSkins')[1]),'The facade draws from the cladding skins and colour resolvers');
   ok(!/#(56615f|3c4442|f0eee6|8e958f|68716d|38413f|cfccc2|d6d3ca|50585a|9fb2b5|b8b2a7|8f8a80)/i.test(facade),'No opening or mortar colour is hard-coded in the facade any more');
-  ok(/!o\.style&&openingColour\(config,o\)&&<HouseParts items=\{openingFrame\(o\)\}/.test(facade),'An original glass door or window gets a frame only once it has a colour');
+  ok(/!o\.style&&openingColour\(colours,o\)&&<HouseParts items=\{openingFrame\(o\)\}/.test(facade),'An original glass door or window gets a frame only once it has a colour');
   ok(/roofPixels\(/.test(house)&&/houseTrimColors\(/.test(house)&&!/config\.trimColor/.test(house),'The 3D house reads roof textures and trim colours from their modules');
   ok(/openingColors\(config,o\)/.test(geometry)&&/trim\.soffit/.test(geometry),'The export reads the same colours');
   for(const p of ['houseFinishes.ts','housePalette.ts','components/viewer3d/houseCladdingSkins.ts','components/viewer3d/roofTextures.ts'])ok(!/from ['"](three|@react-three)/.test(read(p)),`${p} stays free of three.js`);

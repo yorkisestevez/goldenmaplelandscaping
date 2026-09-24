@@ -50,7 +50,7 @@ export interface OpeningColors {
 export function openingColour(config:OpeningColourSource,o:Pick<HouseOpening,'type'|'color'>){
   return o.color??(o.type==='Door'?config.doorColor:o.type==='Window'?config.windowColor:config.garageDoorColor);
 }
-type OpeningColourSource=Pick<HouseConfig,'doorColor'|'windowColor'|'garageDoorColor'>;
+export type OpeningColourSource=Pick<HouseConfig,'doorColor'|'windowColor'|'garageDoorColor'>;
 /** Every colour an opening is drawn in. With no colour chosen these are the studio's original colours. */
 export function openingColors(config:OpeningColourSource,o:Pick<HouseOpening,'type'|'color'>):OpeningColors{
   const O=ORIGINAL_OPENING_COLORS,c=openingColour(config,o),door=o.type==='Door'?c:undefined,window=o.type==='Window'?c:undefined,garage=o.type==='Garage'?c:undefined;
@@ -73,11 +73,11 @@ export interface WallFinish {cladding:HouseCladding;
   /** Piece-to-piece shading, as brick and stone have always had. */
   variation:boolean;roughness:number;metalness:number}
 /**
- * How a house wall is finished. F4 has one finish for the whole house; per-wall finishes resolve here later.
- * The original claddings keep their original backing colours and part names.
+ * How a cladding in a colour is drawn: the whole house's (pass the house config), or a wall's, block's or wainscot's
+ * own (pass its cladding and colour; houseWallFinishes.ts resolves which applies). The original claddings keep their
+ * original backing colours and part names.
  */
-export function resolveWallFinish(config:HouseConfig):WallFinish{
-  const {cladding,claddingColor:color}=config;
+export function resolveWallFinish({cladding,claddingColor:color}:Pick<HouseConfig,'cladding'|'claddingColor'>):WallFinish{
   const look=(backing:string,variation:boolean,roughness=.82,metalness=0,partName=`${cladding.toLowerCase().replace(/[^a-z]+/g,'-')}-cladding`):WallFinish=>({cladding,color,backing,partName,variation,roughness,metalness});
   switch(cladding){
     case 'Brick':return look(MORTAR,true,.82,0,'individual-brick-courses');

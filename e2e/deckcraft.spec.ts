@@ -330,6 +330,43 @@ test('dresses the house in the exterior studio without changing the price, and k
   expect(problems).toEqual([]);
 });
 
+test('finishes one wall with its own cladding and a wainscot, dresses the house in a look, and keeps both after a reload',async({page})=>{
+  const problems=await openDesigner(page);
+  const before=await price(page).textContent();
+  const open=async()=>{await page.getByRole('region',{name:'House doors and windows'}).getByRole('button',{name:'Exterior finishes'}).click();return page.getByRole('region',{name:'Exterior finishes'});};
+  const wallTiles=(studio:ReturnType<Page['getByRole']>)=>studio.getByRole('group',{name:'Cladding: House, deck-facing wall',exact:true});
+  const studio=await open();
+  // One wall, the deck-facing wall of the house, in its own cladding with a stone wainscot.
+  await studio.getByLabel('Walls to finish',{exact:true}).selectOption({label:'House, deck-facing wall'});
+  await wallTiles(studio).getByRole('button',{name:'Ledgestone',exact:true}).click();
+  await expect(wallTiles(studio).getByRole('button',{name:'Ledgestone',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(studio.getByText('This wall has its own finish.',{exact:true})).toBeVisible();
+  await studio.getByRole('checkbox',{name:'A band of another cladding along the bottom, under a trim cap',exact:true}).check();
+  await studio.getByLabel('Wainscot cladding',{exact:true}).selectOption('Fieldstone');
+  await studio.getByLabel('Wainscot height',{exact:true}).selectOption('42');
+  await expect(studio.getByLabel('Wainscot height',{exact:true})).toHaveValue('42');
+  // A look dresses the whole house; the wall keeps its own finish.
+  await studio.getByRole('button',{name:'Looks',exact:true}).click();
+  await studio.getByRole('button',{name:'Coastal look',exact:true}).click();
+  await expect(studio.getByRole('button',{name:'Coastal look',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(studio.getByText(/^1 wall, block, door or window keeps its own finish over the look\./)).toBeVisible();
+  await expect(page.locator('.dd-canvas canvas')).toBeVisible();
+  await expect(price(page)).toHaveText(before??'');
+  await page.waitForTimeout(800);// autosave runs 450 ms after the last change
+  await page.reload();
+  const again=await open();
+  await again.getByRole('button',{name:'Looks',exact:true}).click();
+  await expect(again.getByRole('button',{name:'Coastal look',exact:true})).toHaveAttribute('aria-pressed','true');
+  await again.getByRole('button',{name:'Walls',exact:true}).click();
+  await expect(again.getByRole('group',{name:'House cladding',exact:true}).getByRole('button',{name:'Cedar shakes',exact:true})).toHaveAttribute('aria-pressed','true');
+  await again.getByLabel('Walls to finish',{exact:true}).selectOption({label:'House, deck-facing wall'});
+  await expect(wallTiles(again).getByRole('button',{name:'Ledgestone',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(again.getByLabel('Wainscot cladding',{exact:true})).toHaveValue('Fieldstone');
+  await expect(again.getByLabel('Wainscot height',{exact:true})).toHaveValue('42');
+  await expect(price(page)).toHaveText(before??'');
+  expect(problems).toEqual([]);
+});
+
 test('keeps the design after a reload',async({page})=>{
   await openDesigner(page);
   await setNumber(page,'Deck width',22);

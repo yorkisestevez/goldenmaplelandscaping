@@ -1,5 +1,5 @@
 import { DEFAULT_DECK } from './defaults';
-import { type BoardColour, type DeckData, type DeckInlay, type SkirtingStyle, type DoorStyle, type WindowStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardAllowances, type YardFeature } from './types';
+import { type BoardColour, type DeckData, type DeckInlay, type SkirtingStyle, type DoorStyle, type WindowStyle, type GarageDoorStyle, type HouseBlock, type HouseConfig, type HouseOpening, type HousePlacement, type LightingZone, type PrivacyScreen, type YardAllowances, type YardFeature, type HouseCladding, type HouseFinish } from './types';
 import {availableStairSides,getHouseContact} from './houseContact';
 import {getFootprint} from './lib/deckGeometry';
 import {normalizeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
@@ -20,6 +20,11 @@ import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WI
 export {GARAGE_DOOR_STYLES} from './houseOpenings';
 import { LIGHTING_CATALOGUE } from './lightingCatalogue';
 import { DECKING_CATALOGUE, RAILING_CATALOGUE, MANUFACTURER_ACCESSORIES } from './manufacturerCatalog';
+
+/** A wainscot band's top above grade, inches. */
+export const WAINSCOT_HEIGHT_IN=[12,72] as const;
+/** Keeps the wall finishes of the walls a house has ('main-…' and each added block's): a removed block's go. */
+const liveWalls=(h:HouseConfig,f:Record<string,HouseFinish>)=>Object.entries(f).filter(([id])=>id.startsWith('main-')||h.footprint?.rects.some(b=>id.startsWith(b.id+'-')));
 
 export const DESIGN_STORAGE_KEY = 'golden-maple.deck-studio.design.v1';
 export const MAX_DESIGN_BYTES = 100_000;
@@ -150,6 +155,15 @@ export function validateDesign(input:unknown):DeckData {
     for(const key of ['roofColor','claddingColor','trimColor'])if(typeof h[key]!=='string'||!HEX_COLOUR.test(h[key] as string))throw new Error('House colours must use six-digit hex colours.');
     // Exterior colours (appearance only) are optional; one that is there must be a six-digit hex colour.
     for(const key of HOUSE_COLOUR_FIELDS)if(h[key]!==undefined&&(typeof h[key]!=='string'||!HEX_COLOUR.test(h[key] as string)))throw new Error('House colours must use six-digit hex colours.');
+    // A wall, block or whole-house finish (appearance only): a cladding and colour, a wainscot band (band=1) with its
+    // height, and on a finish (band=0) its own wainscot and gable accent. A malformed one is refused.
+    const look=(v:unknown,band?:number):HouseFinish&{heightIn?:number}=>{
+      if(!record(v)||!HOUSE_CLADDINGS.includes(v.cladding as HouseCladding)||!HEX_COLOUR.test(v.color as string))throw new Error('Invalid house wall finish.');
+      const f:HouseFinish&{heightIn?:number}={cladding:v.cladding as HouseCladding,color:v.color as string};
+      if(band)f.heightIn=numeric(v.heightIn,WAINSCOT_HEIGHT_IN[0],WAINSCOT_HEIGHT_IN[1],'Wainscot height');
+      else if(band===0){if(v.wainscot!==undefined)f.wainscot=look(v.wainscot,1) as HouseFinish['wainscot'];if(v.gable!==undefined)f.gable=look(v.gable);}
+      return f;
+    };
     const house:HouseConfig={widthFt:numeric(h.widthFt,12,100,'House width'),depthFt:numeric(h.depthFt,12,100,'House depth'),storeys:h.storeys as 1|2|3,storeyHeightIn:numeric(h.storeyHeightIn,96,300,'Storey height'),roofShape:h.roofShape as HouseConfig['roofShape'],roofFinish:h.roofFinish as HouseConfig['roofFinish'],roofColor:h.roofColor as string,cladding:h.cladding as HouseConfig['cladding'],claddingColor:h.claddingColor as string,trimColor:h.trimColor as string,openings:[]};
     if(h.footprint!==undefined){
       const f=h.footprint;if(!record(f)||!Array.isArray(f.rects)||f.rects.length>MAX_HOUSE_BLOCKS)throw new Error(`A house supports up to ${MAX_HOUSE_BLOCKS} added blocks.`);
@@ -161,6 +175,7 @@ export function validateDesign(input:unknown):DeckData {
         if(r.storeys!==undefined){if(![1,2,3].includes(r.storeys as number))throw new Error('Unsupported block storeys.');block.storeys=r.storeys as 1|2|3;}
         if(r.floorHeightIn!==undefined)block.floorHeightIn=numeric(r.floorHeightIn,0,240,'Block floor height');
         if(r.roofShape!==undefined){if(!['Gable','Hip','Flat'].includes(r.roofShape as string))throw new Error('Unsupported block roof.');block.roofShape=r.roofShape as HouseBlock['roofShape'];}
+        if(r.finish!==undefined)block.finish=look(r.finish,0);
         return block;
       });
       if(rects.length)house.footprint={rects:normalizeHouseBlocks({...house,footprint:{rects}},Math.max(12,(Number(clean.length)||0)*12))};
@@ -181,6 +196,15 @@ export function validateDesign(input:unknown):DeckData {
     if(h.roofPitch!==undefined)house.roofPitch=numeric(h.roofPitch,ROOF_PITCH_RANGE[0],ROOF_PITCH_RANGE[1],'Roof pitch');
     if(h.ridge!==undefined){if(h.ridge!=='x'&&h.ridge!=='y')throw new Error('Unsupported roof ridge direction.');house.ridge=h.ridge;}
     for(const key of HOUSE_COLOUR_FIELDS)if(h[key]!==undefined)house[key]=h[key] as string;
+    // Walls with their own finish: a wall of a block that is gone is dropped, so at most 28 (7 blocks × 4 walls) stay.
+    const w=h.wallFinishes;
+    if(w!==undefined){
+      if(!record(w))throw new Error('Invalid house wall finish.');
+      const walls=liveWalls(house,Object.fromEntries(Object.entries(w).map(([id,f])=>{if(!/^[a-z][a-zA-Z0-9]{0,15}-(front|back|left|right)$/.test(id))throw new Error('Invalid house wall finish.');return [id,look(f,0)];})));
+      if(walls.length)house.wallFinishes=Object.fromEntries(walls);
+    }
+    if(h.wainscot!==undefined)house.wainscot=look(h.wainscot,1) as HouseConfig['wainscot'];
+    if(h.gableAccent!==undefined)house.gableAccent=look(h.gableAccent);
     clean.houseConfig=house;
   }
   if(input.housePlacement!==undefined){
@@ -328,7 +352,9 @@ export function validateDesign(input:unknown):DeckData {
  * from the main deck, or that is wider than the angled face; and any angled corner for a level. Loading
  * and every edit run it, so a choice the pickers no longer show can never stay in force.
  */
-export function pruneEdgeNames(data:DeckData):DeckData{
+export function pruneEdgeNames(input:DeckData):DeckData{
+  // The finishes of house walls whose block was removed go too, so a block added later never picks them up.
+  const h=input.houseConfig,f=h?.wallFinishes,walls=f&&liveWalls(h!,f),data=walls&&walls.length<Object.keys(f).length?{...input,houseConfig:{...h!,wallFinishes:walls.length?Object.fromEntries(walls):undefined}}:input;
   if(!data.stairEdgeId&&!data.level2EdgeId&&!data.level3?.edgeId)return data;
   const fp=getFootprint(data,1),contact=getHouseContact(data,fp);
   const edge=(id:string)=>{const i=fp.edgeIds?.indexOf(id)??-1;return i>=0&&!contact.isContactEdge(i)?i:-1;};

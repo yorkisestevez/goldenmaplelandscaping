@@ -1,5 +1,6 @@
 import type {HouseCladding,HouseOpening} from '../../types';
 import type {Box} from '../../deckTakeoff';
+import {wainscotBand,wainscotCap} from './houseWainscot';
 
 /**
  * The pieces laid over a house wall for its cladding, in the facade frame: local x along the wall (−span/2 to
@@ -159,4 +160,30 @@ export function wallSkin(cladding:HouseCladding,span:number,height:number,shapes
  if(!make)return {pieces:claddingSkin(cladding,span,height,shapes,hidden),simplified:false};
  const pieces=make(span,height,shapes,hidden);
  return pieces.length>SKIN_PIECE_CAP?{pieces:[],simplified:true}:{pieces,simplified:false};
+}
+
+/**
+ * A wall's cladding pieces, with a wainscot band along the bottom when it has one. Without one this is exactly
+ * `wallSkin`. With one, the band is clad in its own cladding from grade up to its top, and the wall's cladding
+ * starts afresh at the band's top (its courses laid from there), so each keeps whole courses; the trim cap covers
+ * the joint. Each stays under SKIN_PIECE_CAP on its own, as every wall does.
+ */
+export function facadeSkins(cladding:HouseCladding,span:number,height:number,shapes:OpeningShape[],hidden:[number,number][],wainscot?:{cladding:HouseCladding;heightIn:number}):{skin:{pieces:Box[];simplified:boolean};band?:{top:number;skin:{pieces:Box[];simplified:boolean};cap:Box[]}}{
+ const top=wainscot?wainscotBand(wainscot.heightIn,height):0;
+ if(!wainscot||!top)return {skin:wallSkin(cladding,span,height,shapes,hidden)};
+ const above=wallSkin(cladding,span,height-top,shapes.map(o=>({...o,y:o.y-top,bottomIn:o.bottomIn-top})),hidden);
+ return {
+  skin:{pieces:above.pieces.map(b=>({...b,y:b.y+top})),simplified:above.simplified},
+  band:{top,skin:wallSkin(wainscot.cladding,span,top,shapes,hidden),cap:wainscotCap(span,top,shapes,hidden)},
+ };
+}
+
+/**
+ * Horizontal courses on one gable triangle in the facade frame (base `span` wide at `height`, apex `rise` above its
+ * middle), for a gable accent or a wall's own cladding carried up into its gable; none for stucco and vertical boards.
+ */
+export function gableCourses(cladding:HouseCladding,span:number,height:number,rise:number):Box[]{
+ const boxes:Box[]=[],pitch=GABLE_COURSE[cladding];
+ if(pitch&&rise>0)for(let y=height;y<height+rise;y+=pitch){const h=Math.min(pitch-.2,height+rise-y),w=span*(1-(y+h-height)/rise);if(w>0)boxes.push({x:0,y:y+h/2,z:.3,w,h,d:.6});}
+ return boxes;
 }

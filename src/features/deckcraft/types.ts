@@ -74,7 +74,22 @@ export interface HouseBlock {id:string;kind:'house'|'garage';
   widthFt:number;
   /** Out from that wall. */
   depthFt:number;
-  storeys?:1|2|3;floorHeightIn?:number;roofShape?:'Gable'|'Hip'|'Flat'}
+  storeys?:1|2|3;floorHeightIn?:number;roofShape?:'Gable'|'Hip'|'Flat';
+  /** Appearance only: this block's own wall finish. Absent = the whole house's. */
+  finish?:HouseFinish}
+/** A band of a second cladding along the bottom of a wall, under a trim cap (appearance only). */
+export interface Wainscot {cladding:HouseCladding;color:string;
+  /** Top of the band above grade, 12–72 in. */
+  heightIn:number}
+/** A different cladding on a gable triangle, such as shakes in the gable over siding (appearance only). */
+export interface GableAccent {cladding:HouseCladding;color:string}
+/**
+ * How a wall (or a block, or the whole house) is finished, appearance only and never priced. A wall resolves
+ * its own finish first, then its block's, then the whole house's (houseFinishes.ts `houseFinishFor`).
+ */
+export interface HouseFinish {cladding:HouseCladding;color:string;wainscot?:Wainscot;
+  /** The gable triangle above the wall. Absent = the wall's own cladding carries on into the gable. */
+  gable?:GableAccent}
 export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:RoofFinish;roofColor:string;cladding:HouseCladding;claddingColor:string;trimColor:string;openings:HouseOpening[];
   /** Finished floor / door-sill height above grade. When set, the deck is checked against it. */
   floorHeightIn?:number;
@@ -87,7 +102,14 @@ export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storey
   ridge?:'x'|'y';
   /** Exterior colours (appearance only, six-digit hex). Fascia (the rake boards), soffit and gutters follow
    * trimColor when absent; doors, windows and garage doors keep the studio's original colours when absent. */
-  fasciaColor?:string;soffitColor?:string;gutterColor?:string;doorColor?:string;windowColor?:string;garageDoorColor?:string}
+  fasciaColor?:string;soffitColor?:string;gutterColor?:string;doorColor?:string;windowColor?:string;garageDoorColor?:string;
+  /** Walls with their own finish, by wall id ('<block id>-<front|back|left|right>', 'main-front' faces the deck):
+   * at most 28 (seven blocks of four walls); a key for a block that no longer exists is dropped on load and edit. */
+  wallFinishes?:Record<string,HouseFinish>;
+  /** A wainscot band on every wall that follows the whole house. */
+  wainscot?:Wainscot;
+  /** An accent on the gables of every wall that follows the whole house. */
+  gableAccent?:GableAccent}
 /** Where the house sits along the deck's back line. Absent = centred on the deck (the original behaviour). */
 export interface HousePlacement {anchor:'left'|'center'|'right';offsetIn:number}
 /** One side wing of a wrap-around deck: how far it reaches out from the house side wall, and how
