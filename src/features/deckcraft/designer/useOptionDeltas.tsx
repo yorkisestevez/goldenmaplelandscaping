@@ -101,9 +101,11 @@ function DeltaLine({id,group,view,store}:{id:string;group:OptionGroup;view:Optio
   const others=group.choices.filter(c=>c.value!==group.current).map(choice=>({choice,d:view(group.id,choice.value)}));
   const priced=others.filter(o=>o.d),quoted=priced.filter(o=>o.d!.text==='supplier quote'),fold=quoted.length>=3;
   const listed=fold?priced.filter(o=>!quoted.includes(o)):priced,pending=priced.length<others.length;
-  return <small id={id} className="dd-deltas">Price effect: {listed.map(({choice,d},i)=><span key={choice.value}>{i?' · ':''}{choice.label} <DeltaText d={d!}/></span>)}
-    {fold&&<span>{listed.length?' · ':''}{quoted.length} {listed.length?'others':'choices'}: <b data-kind="quote">supplier quote</b></span>}
-    {pending&&<span aria-hidden="true">{priced.length?' · ':''}…</span>}</small>;
+  // One row per choice (its name, then its effect), so a wrapped line never sets an amount against the next choice.
+  // The " · " separators stay in the text for screen readers, so the select's description reads as before.
+  return <small id={id} className="dd-deltas"><span className="dd-deltas-head">Price effect:</span> {listed.map(({choice,d},i)=><span key={choice.value} className="dd-delta-row">{i?<span className="dd-sep"> · </span>:''}<span>{choice.label}</span> <span className="dd-delta-fig"><DeltaText d={d!}/></span></span>)}
+    {fold&&<span className="dd-delta-row">{listed.length?<span className="dd-sep"> · </span>:''}<span>{quoted.length} {listed.length?'others':'choices'}:</span> <b data-kind="quote">supplier quote</b></span>}
+    {pending&&<span className="dd-delta-row" aria-hidden="true">{priced.length?<span className="dd-sep"> · </span>:''}…</span>}</small>;
 }
 
 /** "Show price effect", where options are not priced without asking (a phone, or Save-Data). */
