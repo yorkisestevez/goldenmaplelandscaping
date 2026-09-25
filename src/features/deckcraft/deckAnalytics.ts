@@ -86,6 +86,8 @@ export function designFeatures(data:DeckData):string[]{
   // Exterior finishes (appearance only): a newer cladding or roof, any exterior colour, or a wall, block or wainscot finish.
   add(!ORIGINAL_HOUSE_CLADDINGS.includes(house.cladding)||!['Shingles','Metal'].includes(house.roofFinish)||HOUSE_COLOUR_FIELDS.some(k=>house[k])||house.openings.some(o=>o.color)||house.wallFinishes||house.wainscot||house.gableAccent||house.footprint?.rects.some(b=>b.finish),'deck_house_exterior');
   add(data.catalogueRailingId,'deck_catalogue_railing');
+  add(data.railingType==='Frameless Glass','deck_frameless_glass');
+  add(data.railingType==='Frameless Glass'&&data.glassMount&&data.glassMount!=='Top-mount base shoe',data.glassMount==='Spigots'?'deck_glass_spigots':'deck_glass_fascia_mount');
   add(data.catalogueAccessories?.length,'deck_accessory');
   add(data.pictureFrameRows>0,'deck_border_rows');
   add(data.hasInlay,'deck_inlay');

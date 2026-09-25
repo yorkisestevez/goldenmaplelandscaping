@@ -36,6 +36,7 @@ const expectations:[Partial<DeckData>,string][]=[
   [{houseConfig:{...house,widthFt:30,depthFt:24,footprint:{rects:[{id:'garage1',kind:'garage',wall:'Left',offsetFt:0,widthFt:20,depthFt:22}]}}},'deck_house_garage'],
   [{houseConfig:{...house,openings:[...house.openings,{id:'w9',type:'Window',facade:'Left',offsetPct:50,bottomIn:48,widthIn:36,heightIn:48}]}},'deck_doors_windows'],
   [{catalogueRailingId:RAILING_CATALOGUE[0].id,railingType:RAILING_CATALOGUE[0].baseType},'deck_catalogue_railing'],
+  [{railingType:'Frameless Glass'},'deck_frameless_glass'],[{railingType:'Frameless Glass',glassMount:'Spigots'},'deck_glass_spigots'],[{railingType:'Frameless Glass',glassMount:'Fascia-mount base shoe'},'deck_glass_fascia_mount'],
   [{catalogueAccessories:[MANUFACTURER_ACCESSORIES.find(a=>a.previewSupported)!.id]},'deck_accessory'],
   [{pictureFrameRows:1},'deck_border_rows'],[{hasInlay:true,inlayLf:10},'deck_inlay'],
   [{privacyScreens:[{id:'s1',side:'Left',lengthFt:8,heightFt:6,offsetPct:30,lights:false}]},'deck_privacy_screen'],

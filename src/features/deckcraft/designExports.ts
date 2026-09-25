@@ -8,6 +8,7 @@ import {getLightingProduct} from './lightingCatalogue';
 import {buildHouseGeometry} from './components/viewer3d/houseGeometry';
 import {buildYardModel} from './yardModel';
 import {stairVeneerLayout} from './stairVeneerLayout';
+import {glassHardwarePieces} from './framelessGlass';
 import {stringerCutProfile} from './components/viewer3d/stringerProfile';
 import type {PlanPoint} from './lib/deckGeometry';
 import {skirtingPlan,type SkirtingSlab} from './skirting';
@@ -97,6 +98,8 @@ export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
   const veneer=stairVeneerLayout(data,model);boxes('stair_veneer_2x6',veneer.woodBoxes);boxes('stair_veneer_angle',veneer.bracketBoxes);
   boxes('railing_post',model.railing.posts.map(p=>({x:p.x,y:p.y+model.railing.height/2,z:p.z,w:3.5,h:model.railing.height,d:3.5})));
   members('rail',model.railing.rails);members('baluster',model.railing.balusters);members('glass_panel',model.railing.glass);
+  // Frameless glass only: its base shoe or spigots, and the handrail on the stair glass.
+  if(model.railing.frameless){const g=glassHardwarePieces(model.railing.frameless);members('glass_base_shoe',g.shoes);boxes('glass_spigot',g.spigots);members('glass_handrail',g.handrails);boxes('glass_handrail_bracket',g.brackets);}
   const hardware=getHardwareLayout(data,model);
   boxes('joist_hanger',hardware.hangers.map(p=>({x:p.x,y:p.y,z:p.z,w:1.8,h:6,d:1.7})));
   boxes('ledger_bolt',hardware.ledgerBolts.map(p=>({x:p.x,y:p.y,z:p.z,w:.5,h:.5,d:3})));

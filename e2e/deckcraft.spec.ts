@@ -250,6 +250,10 @@ test('reaches every feature of the designer',async({page})=>{
     await reach('Stair flights',page.getByLabel('Number of stair flights',{exact:true}));
     await reach('Stair layout',page.getByLabel('Stair layout',{exact:true}));
     await reach('Railing style',page.getByLabel('Railing style',{exact:true}));
+    await page.getByLabel('Railing style',{exact:true}).selectOption('Frameless Glass');
+    await reach('Frameless glass mount',page.getByLabel('Glass railing mount',{exact:true}));
+    await reach('Frameless glass hardware finish',page.getByLabel('Glass hardware finish',{exact:true}));
+    await page.getByLabel('Railing style',{exact:true}).selectOption('Aluminum');
     await reach('Manufacturer railing',page.getByLabel('Manufacturer railing system',{exact:true}));
     await page.getByLabel('Manufacturer railing system',{exact:true}).selectOption('tt_classic_composite');
     await reach('Railing colour (F6)',page.getByLabel('Railing colour',{exact:true}));
@@ -739,6 +743,48 @@ test('lists what each change does to the price, tags quotes and never shows $0 f
   await schedule(page).getByRole('button',{name:'Full price list'}).click();
   await expect(fullList(page)).toContainText('Installation Labour');
   expect(await fullList(page).textContent()).not.toMatch(ZERO);
+  expect(problems).toEqual([]);
+});
+
+test('offers a frameless glass railing in three mounts, as a supplier quote with no posts',async({page})=>{
+  test.setTimeout(150_000);
+  const shaderProblems:string[]=[];
+  page.on('console',m=>{if(/Shader Error|WebGLProgram/.test(m.text()))shaderProblems.push(m.text().slice(0,300));});
+  const problems=await openDesigner(page);
+  await openSection(page,'Stairs & railings');
+  await expect(page.getByLabel('Glass railing mount',{exact:true})).toHaveCount(0);
+  await page.getByLabel('Railing style',{exact:true}).selectOption('Frameless Glass');
+  // The railing materials leave the priced total and become a quote; the change says so. Its labour is the Glass Panels
+  // basis (20 ft a crew-day and ×1.40 on the job), so from aluminum the priced total can go up.
+  await expect(changes(page).first()).toHaveText(/^Now a supplier quote Railing style → Frameless Glass \(priced total [+−]\$[\d,]+\)$/);
+  await expect(scheduleLine(page,'Railing System')).toHaveText('Railing SystemSupplier quote');
+  await expect(quoteLine(page,'Frameless glass railing on a top-mount base shoe')).toHaveText('Supplier quote Frameless glass railing on a top-mount base shoe');
+  await expect(page.getByLabel('Glass railing mount',{exact:true})).toHaveValue('Top-mount base shoe');
+  await expect(plan(page).locator('g[aria-label="Frameless glass railing · Top-mount base shoe"]')).toHaveCount(1);
+  await page.getByLabel('Glass railing mount',{exact:true}).selectOption('Spigots');
+  await page.getByLabel('Glass hardware finish',{exact:true}).selectOption('Silver');
+  await expect(quoteLine(page,'Frameless glass railing on spigots')).toHaveCount(1);
+  await expect(plan(page).locator('g[aria-label="Frameless glass railing · Spigots"] circle').first()).toBeAttached();
+  expect(await schedule(page).textContent()).not.toMatch(ZERO);
+  // No posts, so no post-cap lights.
+  await openSection(page,'Lighting');
+  const cap=page.getByRole('checkbox',{name:/^Cap light on each railing post/});
+  await expect(cap).toBeDisabled();
+  await expect(page.getByText('Cap light on each railing post · a frameless glass railing has no posts')).toBeVisible();
+  await page.waitForTimeout(800);// autosave runs 450 ms after the last change
+  await page.reload();
+  await openSection(page,'Stairs & railings');
+  await expect(page.getByLabel('Railing style',{exact:true})).toHaveValue('Frameless Glass');
+  await expect(page.getByLabel('Glass railing mount',{exact:true})).toHaveValue('Spigots');
+  await expect(page.getByLabel('Glass hardware finish',{exact:true})).toHaveValue('Silver');
+  await page.getByLabel('Glass railing mount',{exact:true}).selectOption('Fascia-mount base shoe');
+  await viewTab(page,'3D');
+  await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
+  const canvas=viewer3d(page);
+  await canvas.scrollIntoViewIfNeeded();
+  await expect(canvas).toBeVisible({timeout:20000});
+  await page.waitForTimeout(3000);
+  expect(shaderProblems).toEqual([]);
   expect(problems).toEqual([]);
 });
 

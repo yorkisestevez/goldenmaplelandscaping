@@ -7,6 +7,7 @@ import {activeWrap} from './lib/wrapGeometry';
 import {activeLightingItems,isSystemProduct} from './lightingSystem';
 import {DECKING_CATALOGUE,MANUFACTURER_ACCESSORIES} from './manufacturerCatalog';
 import {railingScreenHex} from './railingScreenColours';
+import {GLASS_FINISH_HEX,GLASS_FINISH_NAMES} from './framelessGlass';
 import {skirtingPlan} from './skirting';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {ColourRef,DeckData} from './types';
@@ -86,7 +87,7 @@ const GROUPS:readonly (readonly [FeatureGroupId,string])[]=[['deck','The deck'],
 const FACT_GROUPS:readonly (readonly [FeatureGroupId,RegExp])[]=[
   ['deck',/^[\d.]+ × [\d.]+ ft .*\bdeck\b|^Deck area:|^(Rectangle|L-shape|Two corner cut-outs|Curved front edge|Main deck|Custom outline)\b|^(Second|Third) level |^Wraps |^Attached to the house|^Freestanding/],
   ['boards',/ boards( with \d+ border rows?)?$|^Accent boards:|^Inlays?:|^Deck parts:/],
-  ['railing',/ railing · \d+ stair flights?\b|^Railing colour:|^Privacy screens:|^Skirting:/],
+  ['railing',/ railing · \d+ stair flights?\b|^Railing colour:|^Frameless glass:|^Privacy screens:|^Skirting:/],
   ['lighting',/^Lighting:/],
   ['living',/^Backyard:/],
   ['house',/^House |^Exterior \(appearance only/],
@@ -154,6 +155,8 @@ export function proposalFinishes(data:DeckData,model:DeckTakeoff):FinishTile[]{
   if(skirting?.runs.length)add(skirting.colour,'Skirting');
   const rail=railingFinish(data);
   if(rail)tiles.set('railing',{key:'railing',colour:rail.colour,collection:rail.system.name,uses:['Railing'],hex:railingScreenHex(rail.system.id,rail.colour),note:'Colour chip illustrative'});
+  const glass=model.railing.frameless;
+  if(glass)tiles.set('glass-hardware',{key:'glass-hardware',colour:GLASS_FINISH_NAMES[glass.finish],collection:'Frameless glass railing',uses:[glass.mount==='Spigots'?'Glass spigots':'Glass base shoe',...(glass.handrails.length?['Stair handrail']:[])],hex:GLASS_FINISH_HEX[glass.finish],note:'Colour chip illustrative'});
   return [...tiles.values()];
 }
 

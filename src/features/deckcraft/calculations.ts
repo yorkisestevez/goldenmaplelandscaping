@@ -16,6 +16,7 @@ import {lightingSystemCheck} from './lightingSystem';
 import {quotedPrivacyScreens} from './privacyScreens';
 import {exposedRim,getHouseContact} from './houseContact';
 import {pictureFrameCompatibility} from './lib/finishedFootprint';
+import {GLASS_FINISH_NAMES,glassRailingName,type FramelessGlassLayout} from './framelessGlass';
 import {buildYardModel,type YardModel} from './yardModel';
 import {buildYardTakeoff,type YardTakeoff} from './yardTakeoff';
 import {stairVeneerLayout} from './stairVeneerLayout';
@@ -292,7 +293,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     // Stair Multiplier: 25% increase for stair panels
     const levelRailingLf = Math.max(0, effectiveRailingLf - totalStairRailingLf);
     
-    const baseMaterialCost = (levelRailingLf * rCost.material) + (totalStairRailingLf * rCost.material * 1.25);
+    // Frameless glass has no rate: its glass, shoe or spigots and handrail are a supplier quote (below).
+    const baseMaterialCost = railingType === 'Frameless Glass' ? 0 : (levelRailingLf * rCost.material) + (totalStairRailingLf * rCost.material * 1.25);
 
     railingMaterialCost = baseMaterialCost + (railingPostCount * rCost.postCost);
 
@@ -309,7 +311,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     if (height > 71) {
       railingFlags.push('OBC: Deck > 71" (1800mm) - 42" high railing required.');
     }
-    railingFlags.push('OBC: Ensure baluster spacing is < 4" (100mm) for non-climbable standards.');
+    if (railingType === 'Frameless Glass') railingFlags.push(...framelessGlassNotes(model.railing.frameless));
+    else railingFlags.push('OBC: Ensure baluster spacing is < 4" (100mm) for non-climbable standards.');
   }
 
   // Stairs
@@ -377,7 +380,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   if (buildSeason === 'Winter') complexityMult *= 1.40;
   
   if (railingType === 'Cable') complexityMult *= 1.30;
-  if (railingType === 'Glass Panels') complexityMult *= 1.40;
+  // Frameless glass installs on the Glass Panels basis (owner decision 2026-09-25): 20 LF per crew-day above, and ×1.40.
+  if (railingType === 'Glass Panels' || railingType === 'Frameless Glass') complexityMult *= 1.40;
 
   const breaker_crew_days = breaker_labor_hrs / 8;
   // Inlays: fitted edges at the breaker rate, and the inside's pattern factor on its share (lib/inlayGeometry.ts).
@@ -531,7 +535,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       icon: '🚧',
       description: 'Guardrails and handrails required by code or selected for aesthetics.',
       total: m_railingMaterialCost + (railingHardwareCost * markupMult),
-      items: [
+      items: railingType === 'Frameless Glass' ? framelessGlassItems(model.railing.frameless) : [
         { name: railingType, spec: `Kits (${railingSectionCount} × ${railingCosts[railingType]?.spacing || 6}ft)`, qty: railingSectionCount, unit: 'kits', cost: m_railingMaterialCost - (railingPostCount * (railingCosts[railingType]?.postCost || 0) * markupMult) },
         { name: 'Railing Posts', spec: 'W/ Caps & Skirts', qty: railingPostCount, unit: 'ea', cost: railingPostCount * (railingCosts[railingType]?.postCost || 0) * markupMult },
         { name: 'Railing Hardware', spec: 'Brackets (4/section) & Caps', qty: railingSectionCount * 4, unit: 'ea', cost: railingHardwareCost * markupMult },
@@ -624,6 +628,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   }
   const catalogueRail=RAILING_CATALOGUE.find(r=>r.id===data.catalogueRailingId);
   if(catalogueRail){requireSection('Railing System',catalogueRail.name);flags.push(catalogueRail.notes);}
+  if(railingType==='Frameless Glass')requireSection('Railing System',`${glassRailingName(data)} (supplier quote)`);
   // A railing colour (deckPartFinishes.ts) leaves the rate as it is; the supplier confirms availability and any premium.
   const railColour=railingFinish(data);
   if(railColour)flags.push(`Railing colour ${railColour.colour} (${railColour.system.name}): the railing rate is unchanged${railColour.unconfirmed?'. This line is not confirmed as sold in Canada':''}; confirm availability and any colour premium with the supplier.`);
@@ -758,4 +763,29 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       positions2: breaker_positions2
     } : undefined
   };
+}
+
+/** A frameless glass railing's lines: quantities only, costed as a supplier quote (requireSection nulls them). */
+function framelessGlassItems(layout?:FramelessGlassLayout){
+  if(!layout)return [];
+  const q=layout.quantities,finish=GLASS_FINISH_NAMES[layout.finish],tenth=(n:number)=>Math.ceil(n*10)/10;
+  const sizes=q.panelSizes.slice(0,4).map(s=>`${s.count} × ${s.widthIn} × ${s.heightIn} in`).join(', ')+(q.panelSizes.length>4?', …':'');
+  const raked=layout.shoes.some(s=>s.raked);
+  return [
+    {name:'Frameless glass panels',spec:`1/2 in safety glass, ${tenth(q.glassSqft)} sq ft: ${sizes}`,qty:q.panels,unit:'ea',cost:0},
+    ...(layout.mount==='Spigots'?[{name:'Glass spigots',spec:`${finish}; 2 per panel${layout.spigots.some(s=>s.side)?', side standoffs on the stairs':''}`,qty:q.spigots,unit:'ea',cost:0}]
+      :[{name:layout.mount==='Fascia-mount base shoe'?'Fascia-mount base shoe':'Top-mount base shoe',spec:`${finish}; ${q.shoeEndCaps} end caps${raked?'; raked on the stair stringers':''}`,qty:tenth(q.shoeLf),unit:'lf',cost:0}]),
+    ...(q.handrailLf>0?[{name:'Glass-mounted handrail',spec:`1.66 in round, ${finish}; ${q.handrailBrackets} glass brackets, 35 in above the nosings`,qty:tenth(q.handrailLf),unit:'lf',cost:0}]:[]),
+  ];
+}
+/** Review notes for a frameless glass railing: what the supplier and the permit reviewer confirm. */
+function framelessGlassNotes(layout?:FramelessGlassLayout){
+  if(!layout)return [];
+  return [
+    'Frameless glass railing: the glass, shoe or spigots and handrail are a supplier quote (the price book has no frameless glass rate). Installation labour uses the Glass Panels basis.',
+    'Frameless glass: use safety glass (tempered or laminated). With no posts or top rail, the glass type and thickness and the shoe or spigots, with their anchors and the blocking behind them, need the supplier’s engineered load rating. Confirm with the supplier and the permit reviewer.',
+    'Frameless glass: the supplier confirms whether laminated glass or a top cap rail is needed so the guard still stands if a panel breaks.',
+    ...(layout.mount==='Fascia-mount base shoe'?['Fascia-mounted glass: add solid blocking behind the rim at every shoe anchor.']:[]),
+    ...(layout.handrails.length?['Stairs with frameless glass: a graspable handrail about 34 to 38 in above the nosings is shown on the glass; the glass itself is not a handrail. Confirm the handrail with the permit reviewer.']:[]),
+  ];
 }

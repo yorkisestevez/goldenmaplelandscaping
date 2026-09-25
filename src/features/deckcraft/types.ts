@@ -38,7 +38,11 @@ export interface SkirtingConfig {style:SkirtingStyle;colour?:ColourRef;clearance
  * Absent on every existing design. */
 export interface DeckFinishes {fascia?:ColourRef;treads?:ColourRef;risers?:ColourRef;border?:ColourRef;railingColor?:string}
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
-export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
+export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Frameless Glass' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
+/** How a frameless glass railing holds its panels (framelessGlass.ts). */
+export type GlassMount = 'Top-mount base shoe' | 'Fascia-mount base shoe' | 'Spigots';
+/** A frameless glass railing's shoe, spigots and handrail: black powder coat, or clear anodized / 316 stainless. */
+export type GlassFinish = 'Black' | 'Silver';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
 export type LightingZone = 'deck'|'posts'|'stairs'|'landscape'|'house'|'privacy';
 /** A single freestanding screen on one exposed deck edge; priced by its face area. */
@@ -212,6 +216,9 @@ export interface DeckData {
   lightingZoneEnabled?: Partial<Record<LightingZone,boolean>>;
   lightingPreviewOn?: boolean;
   catalogueRailingId?: string;
+  /** A frameless glass railing's mount and hardware finish; absent unless railingType is 'Frameless Glass'. */
+  glassMount?: GlassMount;
+  glassFinish?: GlassFinish;
   catalogueAccessories?: string[];
   borderFinish?: 'Matching'|'Dark Slate';
   pictureFrameOverhangIn?: number;
@@ -473,7 +480,8 @@ export const PERMIT_FEES: Record<Municipality, number> = {
 
 export const DEFAULT_ENGINEERING_FEE = 1500;
 
-export const RAILING_COSTS: Record<Exclude<RailingType, 'None'>, { material: number, install: number, spacing: number, postCost: number }> = {
+/** Frameless glass has no rate here: its glass and hardware are a supplier quote (calculations.ts). */
+export const RAILING_COSTS: Record<Exclude<RailingType, 'None' | 'Frameless Glass'>, { material: number, install: number, spacing: number, postCost: number }> = {
   'Wood Picket': { material: 35, install: 45, spacing: 6, postCost: 45 },
   'Aluminum': { material: 60, install: 55, spacing: 6, postCost: 95 },
   'Cable': { material: 90, install: 90, spacing: 4, postCost: 120 },

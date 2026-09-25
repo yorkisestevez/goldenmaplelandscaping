@@ -10,6 +10,7 @@ import {type DeckData, RAILING_COSTS} from './types';
 import {DECKING_CATALOGUE} from './manufacturerCatalog';
 import {finishedFasciaOffset} from './lib/finishedFootprint';
 import {getStairSupport,getStringerOffsets,makeRiserBoards,type RiserBoard} from './stairConstruction';
+import {framelessGlassLayout,glassPanelMembers,type FramelessGlassLayout} from './framelessGlass';
 import {getHouseContact,exposedSides,deckAttachesToHouse,exposedHouseLine} from './houseContact';
 import {getHouseConfig} from './houseSettings';
 import {getHousePlacement} from './housePlacement';
@@ -22,6 +23,8 @@ export type V3={x:number;y:number;z:number};
 export type Member={a:V3;b:V3;width:number;depth:number;role?:string;spliceStart?:boolean;spliceEnd?:boolean;stair?:{risers:number;rise:number;run:number;top:number;bottom:number}};
 export type Box={x:number;y:number;z:number;w:number;h:number;d:number;angle?:number;polygon?:PlanPoint[];kind?:'tread'|'winder'|'riser'};
 export type RailRun={a:V3;b:V3};
+/** The guard: posts, rails, balusters and glass members. `frameless` is set only for a frameless glass railing. */
+export type TakeoffRailing={posts:V3[];rails:Member[];balusters:Member[];glass:Member[];height:number;frameless?:FramelessGlassLayout};
 export type DeckLevel={kind?:'deck'|'landing'|'winder';index?:number;rim?:Member[];
   /** Main deck with angled corners only: the angled front edges (their board ends sit on angled nailers). */
   angledEdges?:{a:PlanPoint;b:PlanPoint}[];footprint:FootprintPlan;deckingFootprint?:FootprintPlan;top:number;offset:V3;boards:BoardRun[];supports:V3[];joists:Member[];beams:Member[];blocking:Member[];breakers:number[];reference:any;zones?:FramedZone[];
@@ -312,7 +315,10 @@ export function buildDeckTakeoff(data:DeckData){
   const posts:V3[]=[],rails:Member[]=[],balusters:Member[]=[],glass:Member[]=[];
   const railHeight=data.height>71?42:36,maxSpan=((RAILING_COSTS as any)[data.railingType]?.spacing||6)*12;
   const postKeys=new Set<string>();let railSections=0;
-  for(const r of railRuns){
+  // A frameless glass railing has no posts, rails or balusters: its panels, shoe or spigots come from framelessGlass.ts.
+  const frameless=data.railingType==='Frameless Glass'?framelessGlassLayout(data,railRuns,{levels,treads,railHeight}):null;
+  if(frameless){glass.push(...glassPanelMembers(frameless));issues.push(...frameless.issues);}
+  for(const r of frameless?[]:railRuns){
     const length=distance(r.a,r.b);if(length<1)continue;const bays=Math.ceil(length/maxSpan);railSections+=bays;
     for(let b=0;b<=bays;b++){const p=mix(r.a,r.b,b/bays),key=[p.x,p.y,p.z].map(n=>n.toFixed(1)).join(':');if(!postKeys.has(key)){posts.push(p);postKeys.add(key);}}
     for(const h of [3,railHeight-1.25])rails.push({a:{...r.a,y:r.a.y+h},b:{...r.b,y:r.b.y+h},width:2,depth:h===3?1.5:2.5});
@@ -369,6 +375,12 @@ export function buildDeckTakeoff(data:DeckData){
   const foundationSaddle=data.foundation==='Deck Blocks'?6.5:4.5;
   if(levels.some(l=>l.supports.some(p=>p.y>0&&p.y<=foundationSaddle)||l.top<joistDepth+1+foundationSaddle))issues.push('Selected deck elevation leaves insufficient clearance for framing and the foundation saddle; review low-profile framing or excavation before construction.');
   const quantities={riserBoardPieces:riserBoards.length,riserBoardLf:riserBoards.reduce((n,b)=>n+b.w/12,0),riserBoardArea:riserBoards.reduce((n,b)=>n+b.w*b.h/144,0),inlayLf:levels.reduce((n,l)=>n+l.boards.filter(b=>b.role==='inlay').reduce((n,b)=>n+b.length/12,0),0),totalRisers:flights.reduce((n,f)=>n+f.risers,0),landingArea:levels.filter(l=>l.kind==='landing').reduce((n,l)=>n+polygonArea(l.footprint),0),breakerBoards:levels.reduce((n,l)=>n+l.breakers.length,0),blocking:levels.reduce((n,l)=>n+l.blocking.length,0),stairRailingLf:railRuns.filter(r=>r.a.y!==r.b.y).reduce((n,r)=>n+distance(r.a,r.b)/12,0),footings:levels.reduce((sum,l)=>sum+l.supports.length,0),supportPosts:levels.reduce((sum,l)=>sum+l.supports.filter(p=>p.y>foundationSaddle).length,0),joists:levels.reduce((sum,l)=>sum+l.joists.length,0),railingPosts:posts.length,railingSections:railSections,railingLf:railRuns.reduce((sum,r)=>sum+distance(r.a,r.b)/12,0),risersPerFlight:risers,stairFlights:stairOpenings.length,stairTreads:treads.length,stringers:stringers.length,installedBoardPieces:levels.reduce((sum,l)=>sum+l.boards.length,0),area:levels.reduce((sum,l)=>sum+(l.kind==='winder'?0:polygonArea(l.footprint)),0),framingLf:levels.reduce((sum,l)=>sum+[...l.joists,...l.beams,...l.blocking,...(l.rim||[])].reduce((n,m)=>n+distance(m.a,m.b)/12,0),0)};
-  return {levels,treads,riserBoards,stairSupport,stringers,flights,connections,issues,railing:{posts,rails,balusters,glass,height:railHeight},quantities,gap,stockLength};
+  return {levels,treads,riserBoards,stairSupport,stringers,flights,connections,issues,railing:{posts,rails,balusters,glass,height:railHeight,...(frameless?{frameless}:{})} as TakeoffRailing,quantities,gap,stockLength};
 }
 export type DeckTakeoff=ReturnType<typeof buildDeckTakeoff>;
+/** The guard runs at walking-surface height, whatever the railing: a frameless railing's runs, or each framed run
+ * (its bottom rail, which sits 3 in up). Checks use it so a railing with no rails is still checked. */
+export function guardRuns(model:DeckTakeoff):RailRun[]{
+  if(model.railing.frameless)return model.railing.frameless.runs.map(r=>({a:r.a,b:r.b}));
+  return model.railing.rails.filter((_,i)=>i%2===0).map(r=>({a:{...r.a,y:r.a.y-3},b:{...r.b,y:r.b.y-3}}));
+}

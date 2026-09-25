@@ -21,6 +21,7 @@ import {getStairBoards} from '../../stairBoards';
 import {houseLayout} from './houseLayout';
 import {getHouseBlocks} from '../../houseFootprint';
 import RailingDetails from './RailingDetails';
+import FramelessGlass3D from './FramelessGlass3D';
 import {catalogueAccessoryLayout} from '../../catalogueAccessories';
 import {activeLightingItems} from '../../lightingSystem';
 import type {HouseInteraction} from './houseInteraction';
@@ -197,6 +198,7 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
     <Members items={model.railing.rails} material={railMat} name="railing-runs"/>
     {data.railingType!=='Cable'&&<Members items={model.railing.balusters} material={railMat} name="railing-infill"/>}
     <RailingDetails data={data} model={model}/>
+    {model.railing.frameless&&<FramelessGlass3D layout={model.railing.frameless}/>}
     <Boxes items={extras.wood} material={board} name="benches-privacy-pergola"/>
     <Boxes items={extras.metal} material={materials.metal} name="accessory-frames"/>
     <Boxes items={extras.drainage} material={materials.metal} name="under-deck-drainage"/>

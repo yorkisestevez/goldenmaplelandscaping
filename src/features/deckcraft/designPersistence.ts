@@ -35,10 +35,11 @@ const enums: Partial<Record<keyof DeckData, readonly (string | number)[]>> = {
   buildSeason:['Spring-Summer','Fall','Winter'],intendedLoad:['Standard','Heavy'],foundation:['Concrete Piers','Helical Piles','Deck Blocks'],
   shape:['Rectangle','L-Shape','Multi-corner','Curved','Custom'],levels:[1,2,3],pattern:['Straight','Diagonal','Picture Frame','Herringbone'],
   framingSize:['2x8','2x10','2x12'],boardWidth:[5.5,3.5],joistSpacing:[12,16],fasteningSystem:['Face','Hidden'],pictureFrameRows:[0,1,2],
-  railingType:['None','Wood Picket','Aluminum','Cable','Glass Panels','Trex Select','Trex Transcend','Fortress AL13','TT Classic','TT Impression'],
+  railingType:['None','Wood Picket','Aluminum','Cable','Glass Panels','Frameless Glass','Trex Select','Trex Transcend','Fortress AL13','TT Classic','TT Impression'],
   stairFlights:[0,1,2,3],stairType:['Straight','Winder','Landing'],stairPosition:['Front','Left','Right','Back'],
   sceneLighting:['Daylight','Evening'],level2Position:['Front','Left','Right'],stairTurn:['Left','Right'],
   borderFinish:['Matching','Dark Slate'],
+  glassMount:['Top-mount base shoe','Fascia-mount base shoe','Spigots'],glassFinish:['Black','Silver'],
 };
 const ranges: Partial<Record<keyof DeckData, readonly [number,number]>> = {
   width:[4,60],length:[4,60],height:[8,144],width2:[4,40],length2:[4,40],height2:[8,144],
@@ -367,6 +368,8 @@ export function validateDesign(input:unknown):DeckData {
 export function pruneEdgeNames(input:DeckData):DeckData{
   // Part and railing colours the deck can no longer take go quietly (deckPartFinishes.ts).
   input=pruneDeckFinishes(input);
+  // A glass mount and finish belong to a frameless glass railing only.
+  if(input.railingType!=='Frameless Glass'&&(input.glassMount!==undefined||input.glassFinish!==undefined)){const {glassMount:_m,glassFinish:_f,...rest}=input;input=rest;}
   // The finishes of house walls whose block was removed go too, so a block added later never picks them up.
   const h=input.houseConfig,f=h?.wallFinishes,walls=f&&liveWalls(h!,f),data=walls&&walls.length<Object.keys(f).length?{...input,houseConfig:{...h!,wallFinishes:walls.length?Object.fromEntries(walls):undefined}}:input;
   if(!data.stairEdgeId&&!data.level2EdgeId&&!data.level3?.edgeId)return data;

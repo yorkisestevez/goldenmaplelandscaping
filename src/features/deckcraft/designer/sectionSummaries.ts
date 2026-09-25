@@ -6,6 +6,7 @@ import {isSystemProduct} from '../lightingSystem';
 import {activeWrap} from '../lib/wrapGeometry';
 import {DECKING_CATALOGUE,RAILING_CATALOGUE} from '../manufacturerCatalog';
 import {screenOn} from '../privacyScreens';
+import {glassRailingName} from '../framelessGlass';
 import type {DeckData} from '../types';
 import type {DesignSection,SectionId} from './sections';
 
@@ -31,7 +32,7 @@ const SUMMARIES:Record<SectionId,(data:DeckData)=>string>={
   },
   stairs:data=>{
     const rail=RAILING_CATALOGUE.find(r=>r.id===data.catalogueRailingId);
-    return words([data.stairFlights>0?`${plural(data.stairFlights,'flight')}, ${data.stairWidth} in, ${data.stairType.toLowerCase()}`:'no stairs',rail?rail.name:data.railingType==='None'?'no railing':`${data.railingType} railing`]);
+    return words([data.stairFlights>0?`${plural(data.stairFlights,'flight')}, ${data.stairWidth} in, ${data.stairType.toLowerCase()}`:'no stairs',rail?rail.name:data.railingType==='None'?'no railing':data.railingType==='Frameless Glass'?glassRailingName(data):`${data.railingType} railing`]);
   },
   lighting:data=>{
     const lights=data.lightingSystem.selectedItems.reduce((n,i)=>{const p=LIGHTING_CATALOGUE.find(x=>x.id===i.productId);return n+(p&&!isSystemProduct(p)?i.qty:0);},0);

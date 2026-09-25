@@ -11,7 +11,7 @@ import type {SectionId} from './sections';
 export const BOARD_LAYOUTS=['Straight','Diagonal','Picture Frame','Herringbone'] as const;
 export const FASTENERS=['Face','Hidden'] as const;
 export const BORDER_ROWS=[0,1,2] as const;
-export const RAILING_STYLES=['None','Wood Picket','Aluminum','Cable','Glass Panels','Fortress AL13','TT Classic','TT Impression'] as const;
+export const RAILING_STYLES=['None','Wood Picket','Aluminum','Cable','Glass Panels','Frameless Glass','Fortress AL13','TT Classic','TT Impression'] as const;
 export const STAIR_FLIGHTS=[0,1,2,3] as const;
 export const STAIR_LAYOUTS=['Straight','Landing','Winder'] as const;
 export const FOUNDATIONS=['Concrete Piers','Helical Piles','Deck Blocks'] as const;
