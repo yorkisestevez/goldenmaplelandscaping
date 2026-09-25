@@ -8,6 +8,10 @@ import {parseColourRef} from '../../boardFinishes';
 import {swatchUrl} from '../../lib/swatches';
 import {getMaterialFallbackColor} from '../../lib/deckGeometry';
 import {useSwatchTexture} from './useSwatchTexture';
+import {boardVariation} from './surfaceShaders';
+
+/** A skirting board's face width: board styles show one course of grain per board (lattice shows one piece). */
+const COURSE_IN=5.5;
 
 /** Lattice openings as an alpha map (white = slat, black = open): slats at 45° both ways, one tile per 12 in. */
 function latticeAlpha(){
@@ -19,17 +23,19 @@ function latticeAlpha(){
 
 /**
  * One geometry for many skirting pieces, each a slab with its bottom and top at both ends (a trapezoid on a slope).
- * The first UV set follows the board: 48 in per swatch repeat along its grain and 0 to 1 across it (the grain runs up a
- * vertical board). The second, in world inches, carries the lattice's open pattern.
+ * The first UV set follows the boards: 48 in per swatch repeat along the grain (up a vertical board) and one unit per
+ * board course across it, each course its own strip of the swatch (surfaceShaders.ts); with courses off, the whole slab
+ * is one piece. The second, in world inches, carries the lattice's open pattern. aVar picks each slab's grain.
  */
-function slabGeometry(slabs:SkirtingSlab[],grain:'along'|'up'){
-  const pos:number[]=[],uv:number[]=[],uv1:number[]=[];
+function slabGeometry(slabs:SkirtingSlab[],grain:'along'|'up',courses=true){
+  const pos:number[]=[],uv:number[]=[],uv1:number[]=[],variation:number[]=[];
   for(const s of slabs){
+    const pick=boardVariation((s.a.x+s.b.x)/2,(s.a.y+s.b.y)/2);
     const dx=s.b.x-s.a.x,dz=s.b.y-s.a.y,len=Math.hypot(dx,dz)||1,ux=dx/len,uz=dz/len,h=s.thick/2;
     const corner=(end:number,top:number,side:number)=>{
       const p=end?s.b:s.a,bottom=end?s.bottomB:s.bottomA,height=end?s.topB:s.topA,y=top?height:bottom,k=side?h:-h,x=p.x+s.out.x*k,z=p.y+s.out.y*k;
       pos.push(x,y,z);
-      uv.push(...(grain==='along'?[end*len/48,top]:[y/48,end]));
+      uv.push(...(grain==='along'?[end*len/48,courses?y/COURSE_IN:top]:[y/48,courses?end*len/COURSE_IN:end]));variation.push(...pick);
       uv1.push((x*ux+z*uz)/12,y/12);
     };
     const quad=(c:[number,number,number][])=>{for(const i of [0,1,2,0,2,3])corner(...c[i]);};
@@ -38,11 +44,11 @@ function slabGeometry(slabs:SkirtingSlab[],grain:'along'|'up'){
     quad([[0,0,0],[0,0,1],[0,1,1],[0,1,0]]);quad([[1,0,1],[1,0,0],[1,1,0],[1,1,1]]);
   }
   const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('uv1',new THREE.Float32BufferAttribute(uv1,2));
+  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('uv1',new THREE.Float32BufferAttribute(uv1,2));g.setAttribute('aVar',new THREE.Float32BufferAttribute(variation,4));
   g.computeVertexNormals();g.computeBoundingSphere();return g;
 }
-function Slabs({slabs,material,grain='along',name}:{slabs:SkirtingSlab[];material:THREE.Material;grain?:'along'|'up';name:string}){
-  const geometry=useMemo(()=>slabGeometry(slabs,grain),[slabs,grain]),invalidate=useThree(s=>s.invalidate);
+function Slabs({slabs,material,grain='along',courses=true,name}:{slabs:SkirtingSlab[];material:THREE.Material;grain?:'along'|'up';courses?:boolean;name:string}){
+  const geometry=useMemo(()=>slabGeometry(slabs,grain,courses),[slabs,grain,courses]),invalidate=useThree(s=>s.invalidate);
   useEffect(()=>{invalidate();return ()=>geometry.dispose();},[geometry,invalidate]);
   return slabs.length?<mesh name={name} geometry={geometry} material={material} castShadow receiveShadow/>:null;
 }
@@ -65,6 +71,6 @@ export default function Skirting3D({data,model,finished,wood}:{data:DeckData;mod
   },[face,lattice,invalidate]);
   if(!plan)return null;
   return <group name="deck-skirting">{finished
-    ?<><Slabs slabs={plan.faces} material={face} grain={plan.style==='Vertical boards'?'up':'along'} name="skirting-face"/><Slabs slabs={plan.frames} material={trim} name="skirting-access-panels"/></>
+    ?<><Slabs slabs={plan.faces} material={face} grain={plan.style==='Vertical boards'?'up':'along'} courses={!lattice} name="skirting-face"/><Slabs slabs={plan.frames} material={trim} name="skirting-access-panels"/></>
     :<><Slabs slabs={plan.backing} material={wood} name="skirting-backing"/><Slabs slabs={plan.frames} material={wood} name="skirting-access-frames"/></>}</group>;
 }

@@ -27,8 +27,10 @@ import {gzipSync} from 'node:zlib';
  *   own (none of it in the route's CSS), and the PDF builder and its pictures with jsPDF. The PDF budget covers jsPDF
  *   and the builder's chunks together (jsPDF 126 KB and the builder about 9.5 KB when R8 landed). R8 took the old
  *   proposal styles and the PDF builder out of the route: route JS 176.8 -> 174.8 KB, route CSS 8.7 -> 7.7 KB.
+ * - The board atlases (Real Life G2, 2026-09-25) are built in a worker of their own, about 2.4 KB gzip, fetched with
+ *   the 3D view.
  */
-const BUDGET_KB={routeInitial:185,routeCss:12,viewer:340,pdf:150,deltaWorker:140};
+const BUDGET_KB={routeInitial:185,routeCss:12,viewer:340,pdf:150,deltaWorker:140,swatchWorker:5};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);
@@ -62,5 +64,7 @@ ok(builder.some(f=>f.startsWith('proposalPdf-'))&&pdfKB<=BUDGET_KB.pdf,`PDF engi
 const proposalCss=files.find(f=>/^ProposalDialog-.*\.css$/.test(f));
 ok(proposalCss&&readFileSync(new URL(proposalCss,assets),'utf8').includes('.dd-proposal-page')&&!css.some(f=>readFileSync(new URL(f,assets),'utf8').includes('.dd-proposal-page')),'The proposal stylesheet loads with its dialog, not with the page');
 ok(deltaWorker&&!initial.includes(deltaWorker)&&gz(deltaWorker)<=BUDGET_KB.deltaWorker,`Option deltas' worker is ${deltaWorker?gz(deltaWorker).toFixed(1):'missing'} KB gzip (budget ${BUDGET_KB.deltaWorker} KB), loaded on demand`);
+const swatchWorker=files.find(f=>/^swatchMaps\.worker-.*\.js$/.test(f));
+ok(swatchWorker&&!initial.includes(swatchWorker)&&gz(swatchWorker)<=BUDGET_KB.swatchWorker,`Board atlas worker is ${swatchWorker?gz(swatchWorker).toFixed(1):'missing'} KB gzip (budget ${BUDGET_KB.swatchWorker} KB), loaded with the 3D view`);
 const headroom=(kb:number,budget:number)=>`${kb.toFixed(1)}/${budget} KB (${(budget-kb).toFixed(1)} KB headroom)`;
 console.log(`DECK BUNDLE OK — route JS ${headroom(routeKB,BUDGET_KB.routeInitial)}, route CSS ${headroom(cssKB,BUDGET_KB.routeCss)}, 3D viewer ${gz(viewer!).toFixed(1)}/${BUDGET_KB.viewer} KB, PDF ${pdfKB.toFixed(1)}/${BUDGET_KB.pdf} KB (jsPDF ${gz(pdf!).toFixed(1)}), delta worker ${gz(deltaWorker!).toFixed(1)}/${BUDGET_KB.deltaWorker} KB gzip, lazy chunks stay lazy; ${checks} checks.`);

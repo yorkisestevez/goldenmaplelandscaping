@@ -9,6 +9,7 @@ import {DECKING_CATALOGUE} from '../../manufacturerCatalog';
 import {type DeckTakeoff,type Member,type Box} from '../../deckTakeoff';
 import {swatchUrl} from '../../lib/swatches';
 import {useSwatchTexture} from './useSwatchTexture';
+import {boardVariation,boxVariant} from './surfaceShaders';
 import {Environment3D} from './Environment3D';
 import HardwareDetails from './HardwareDetails';
 import FootingDetails from './FootingDetails';
@@ -40,8 +41,10 @@ import {SCENE_LOOK} from './sceneLook';
  * catch the sky instead of reading as flat silhouettes. */
 const powderCoat=(color:string)=>new THREE.MeshPhysicalMaterial({color,...SCENE_LOOK.powderCoat});
 
-function Members({items,material,name}:{items:Member[];material:THREE.Material;name:string}){
-  const ref=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate);
+/** Unit boxes (Members, Boxes) take a swatch material's box-projected grain (surfaceShaders.ts): along each piece, never stretched. */
+function useBoxMaterial(material:THREE.Material){return useMemo(()=>boxVariant(material),[material]);}
+function Members({items,material:given,name}:{items:Member[];material:THREE.Material;name:string}){
+  const ref=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate),material=useBoxMaterial(given);
   useLayoutEffect(()=>{
     if(!ref.current)return;const matrix=new THREE.Matrix4(),q=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0);
     items.forEach((m,i)=>{const a=new THREE.Vector3(m.a.x,m.a.y,m.a.z),b=new THREE.Vector3(m.b.x,m.b.y,m.b.z),dir=b.clone().sub(a);const axis=dir.clone().normalize(),normal=new THREE.Vector3(0,1,0);if(Math.abs(axis.y)>0.99)normal.set(1,0,0);const side=new THREE.Vector3().crossVectors(axis,normal).normalize(),vertical=new THREE.Vector3().crossVectors(side,axis).normalize();q.setFromRotationMatrix(new THREE.Matrix4().makeBasis(axis,vertical,side));matrix.compose(a.add(b).multiplyScalar(0.5),q,new THREE.Vector3(Math.max(0.01,dir.length()),m.depth,m.width));ref.current!.setMatrixAt(i,matrix);});
@@ -49,8 +52,8 @@ function Members({items,material,name}:{items:Member[];material:THREE.Material;n
   },[items,invalidate]);
   return <instancedMesh name={name} castShadow receiveShadow key={items.length} ref={ref} args={[undefined,undefined,Math.max(1,items.length)]} material={material}><boxGeometry args={[1,1,1]}/></instancedMesh>;
 }
-function Boxes({items,material,name}:{items:Box[];material:THREE.Material;name:string}){
-  const ref=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate);
+function Boxes({items,material:given,name}:{items:Box[];material:THREE.Material;name:string}){
+  const ref=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate),material=useBoxMaterial(given);
   useLayoutEffect(()=>{if(!ref.current)return;const matrix=new THREE.Matrix4(),q=new THREE.Quaternion();items.forEach((b,i)=>{q.setFromAxisAngle(new THREE.Vector3(0,1,0),b.angle||0);matrix.compose(new THREE.Vector3(b.x,b.y,b.z),q,new THREE.Vector3(b.w,b.h,b.d));ref.current!.setMatrixAt(i,matrix);});ref.current.count=items.length;ref.current.instanceMatrix.needsUpdate=true;ref.current.computeBoundingSphere();invalidate();},[items,invalidate]);
   return <instancedMesh name={name} castShadow receiveShadow ref={ref} key={items.length} args={[undefined,undefined,Math.max(1,items.length)]} material={material}><boxGeometry args={[1,1,1]}/></instancedMesh>;
 }
@@ -77,17 +80,23 @@ function BoardBatch({items,material,pick}:{items:FinishBox[];material:THREE.Mate
   const ref=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate);
   const first=items[0];
   const geometry=useMemo(()=>{
-    const g=new RoundedBoxGeometry(first.w,first.h,first.d,1,.045),pos=g.getAttribute('position'),uv=g.getAttribute('uv');
+    // An eased 1/8 in edge, as milled boards have: it catches the light, so boards read one by one at a distance.
+    const g=new RoundedBoxGeometry(first.w,first.h,first.d,1,.125),pos=g.getAttribute('position'),uv=g.getAttribute('uv');
     // Consistent grain scale in inches, along the board rather than stretching a photo per piece.
     for(let i=0;i<uv.count;i++)uv.setXY(i,(pos.getX(i)+first.w/2)/48,first.h>first.d?(pos.getY(i)+first.h/2)/first.h:(pos.getZ(i)+first.d/2)/first.d);
     return g;
   },[first.w,first.h,first.d]);
   useEffect(()=>()=>geometry.dispose(),[geometry]);
-  useLayoutEffect(()=>{if(!ref.current)return;const m=new THREE.Matrix4(),q=new THREE.Quaternion();items.forEach((b,i)=>{q.setFromAxisAngle(new THREE.Vector3(0,1,0),b.angle||0);m.compose(new THREE.Vector3(b.x,b.y,b.z),q,new THREE.Vector3(1,1,1));ref.current!.setMatrixAt(i,m);const shade=.92+.08*((Math.sin(b.x*12.3+b.z*7.9)*437.1)%1+1)/2;ref.current!.setColorAt(i,new THREE.Color(shade,shade,shade));});ref.current.instanceMatrix.needsUpdate=true;if(ref.current.instanceColor)ref.current.instanceColor.needsUpdate=true;ref.current.computeBoundingSphere();invalidate();},[items,invalidate]);
+  useLayoutEffect(()=>{if(!ref.current)return;const m=new THREE.Matrix4(),q=new THREE.Quaternion(),variation=new Float32Array(items.length*4);items.forEach((b,i)=>{q.setFromAxisAngle(new THREE.Vector3(0,1,0),b.angle||0);m.compose(new THREE.Vector3(b.x,b.y,b.z),q,new THREE.Vector3(1,1,1));ref.current!.setMatrixAt(i,m);variation.set(boardVariation(b.x,b.z),i*4);
+    // Each board a touch lighter or darker, centred on the product's own colour.
+    const shade=.97+.06*((Math.sin(b.x*12.3+b.z*7.9)*437.1)%1+1)/2;ref.current!.setColorAt(i,new THREE.Color(shade,shade,shade));});
+    // Which strip of the swatch atlas, how far along and which way round (surfaceShaders.ts).
+    geometry.setAttribute('aVar',new THREE.InstancedBufferAttribute(variation,4));
+    ref.current.instanceMatrix.needsUpdate=true;if(ref.current.instanceColor)ref.current.instanceColor.needsUpdate=true;ref.current.computeBoundingSphere();invalidate();},[items,geometry,invalidate]);
   return <instancedMesh ref={ref} args={[geometry,material,items.length]} castShadow receiveShadow {...pickHandlers(pick,e=>items[e.instanceId??-1])}/>;
 }
 function PolygonBoard({item,material,pick}:{item:FinishBox;material:THREE.Material;pick?:BoardPick}){
-  const geometry=useMemo(()=>{const shape=new THREE.Shape();item.polygon!.forEach((p,i)=>i?shape.lineTo(p.x,p.y):shape.moveTo(p.x,p.y));shape.closePath();const g=new THREE.ExtrudeGeometry(shape,{depth:item.h,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,item.y+item.h/2,0);const pos=g.getAttribute('position'),uv=g.getAttribute('uv'),a=item.angle||0,cu=item.x*Math.cos(a)-item.z*Math.sin(a),cv=item.x*Math.sin(a)+item.z*Math.cos(a);for(let i=0;i<uv.count;i++)uv.setXY(i,(pos.getX(i)*Math.cos(a)-pos.getZ(i)*Math.sin(a)-cu+item.w/2)/48,(pos.getX(i)*Math.sin(a)+pos.getZ(i)*Math.cos(a)-cv+item.d/2)/item.d);return g;},[item]);
+  const geometry=useMemo(()=>{const shape=new THREE.Shape();item.polygon!.forEach((p,i)=>i?shape.lineTo(p.x,p.y):shape.moveTo(p.x,p.y));shape.closePath();const g=new THREE.ExtrudeGeometry(shape,{depth:item.h,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,item.y+item.h/2,0);const pos=g.getAttribute('position'),uv=g.getAttribute('uv'),a=item.angle||0,cu=item.x*Math.cos(a)-item.z*Math.sin(a),cv=item.x*Math.sin(a)+item.z*Math.cos(a);for(let i=0;i<uv.count;i++)uv.setXY(i,(pos.getX(i)*Math.cos(a)-pos.getZ(i)*Math.sin(a)-cu+item.w/2)/48,(pos.getX(i)*Math.sin(a)+pos.getZ(i)*Math.cos(a)-cv+item.d/2)/item.d);const variation=boardVariation(item.x,item.z);g.setAttribute('aVar',new THREE.Float32BufferAttribute(Array.from({length:uv.count},()=>variation).flat(),4));return g;},[item]);
   useEffect(()=>()=>geometry.dispose(),[geometry]);
   return <mesh geometry={geometry} material={material} castShadow receiveShadow {...pickHandlers(pick,()=>item)}/>;
 }
@@ -139,8 +148,11 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   const catalogueExtras=useMemo(()=>catalogueAccessoryLayout(data,model),[data,model]);
   const stairBoards=useMemo(()=>getStairBoards(data,model),[data,model]);
   const stairVeneer=useMemo(()=>stairVeneerLayout(data,model),[data,model]);
-  const materials=useMemo(()=>({wood:new THREE.MeshStandardMaterial({color:'#8a7356',roughness:0.86}),inlay:new THREE.MeshStandardMaterial({color:'#514236',roughness:.7}),inlayFraming:new THREE.MeshStandardMaterial({color:'#c08a3e',roughness:.8}),metal:powderCoat(SCENE_LOOK.powderCoatColor),concrete:new THREE.MeshStandardMaterial({color:'#a5a49a',roughness:0.9}),glass:new THREE.MeshPhysicalMaterial({color:'#cbdfe3',roughness:0.08,metalness:0.1,transparent:true,opacity:0.23,depthWrite:false})}),[]);
-  useEffect(()=>()=>Object.values(materials).forEach(m=>m.dispose()),[materials]);
+  // Framing lumber (posts, joists, beams, stringers): the pressure-treated swatch, box-projected along each piece.
+  const framing=useSwatchTexture(swatchUrl('wood-pressure-treated.jpg'),'#8a7356');
+  const shared=useMemo(()=>({inlay:new THREE.MeshStandardMaterial({color:'#514236',roughness:.7}),inlayFraming:new THREE.MeshStandardMaterial({color:'#c08a3e',roughness:.8}),metal:powderCoat(SCENE_LOOK.powderCoatColor),concrete:new THREE.MeshStandardMaterial({color:'#a5a49a',roughness:0.9}),glass:new THREE.MeshPhysicalMaterial({color:'#cbdfe3',roughness:0.08,metalness:0.1,transparent:true,opacity:0.23,depthWrite:false})}),[]);
+  useEffect(()=>()=>Object.values(shared).forEach(m=>m.dispose()),[shared]);
+  const materials=useMemo(()=>({...shared,wood:framing}),[shared,framing]);
   // Accent boards (boardFinishes.ts): worked out only when the design has some, or while the tool is on.
   const painting=!!boardPaint&&!structure;
   const finish=useMemo(()=>data.boardColours?.length||data.inlays?.length||data.deckFinishes?.border||painting?boardFinishPlan(data,model):null,[model,data.boardColours,data.inlays,data.deckingMaterial,data.deckingColor,data.pattern,data.boardWidth,data.borderFinish,data.deckFinishes?.border,painting]);

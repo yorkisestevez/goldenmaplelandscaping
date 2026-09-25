@@ -1,14 +1,19 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
+import sharp from 'sharp';
 import * as THREE from 'three';
 import {SCENE_LOOK} from '../src/features/deckcraft/components/viewer3d/sceneLook';
 import {fitSun,shadowKey} from '../src/features/deckcraft/components/viewer3d/shadowCache';
+import {ATLAS_WIDTH,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
+import {PATCHED_CHUNKS,boardVariation,boxVariant,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
+import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 
 /**
  * DeckCraft's photographic look (the "Real Life" track, plan phases G1–G8). G1 is the render pipeline: ambient
  * occlusion from the scene's own depth, evening-only bloom, tone mapping after the effects, shadow maps redrawn only
  * when something that casts changes, the sun's shadow fitted to what casts, and the proposal pictures drawn through
- * the same pipeline. Later phases add their own sections here.
+ * the same pipeline. G2 is the boards: each swatch photo turned into an atlas of its own boards that keeps the photo's
+ * colour, repeats without a seam and runs the grain along the board, and a shader that gives every board its own strip.
  */
 let checks=0;
 const ok=(condition:unknown,message:string)=>{assert(condition,message);checks++;};
@@ -78,4 +83,51 @@ function sceneWithSun(){
   ok(lonely.shadow.camera.left===before.left&&lonely.shadow.camera.far===before.far,'With nothing casting, the sun’s shadow is left as it was');
 }
 
-console.log(`DECK REALISM OK — look, pipeline wiring, shadow key and sun fit; ${checks} checks.`);
+// G2: every swatch becomes an honest, seamless atlas of its own boards.
+const SWATCHES='src/features/deckcraft/assets/swatches/';
+const files=readdirSync(SWATCHES).filter(f=>f.endsWith('.jpg')).sort();
+const used=new Set(DECKING_CATALOGUE.flatMap(m=>m.colors.map(c=>c.swatch)));
+ok([...used].every(f=>files.includes(f)),'Every catalogue colour has its swatch on disk');
+let worstDelta=0,worstSeam=0;
+for(const file of files){
+  const {data,info}=await sharp(SWATCHES+file).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  const photo={width:info.width,height:info.height,data},maps=await buildSwatchMaps(photo,file.startsWith('wood-')?'wood':'composite');
+  // TimberTech's square photos show four boards (Premier+ Natural Oak is a close-up of one surface), and the strips
+  // stop before the board across them on the right.
+  if(file.startsWith('tt-')&&Math.abs(info.width/info.height-1)<.35&&file!=='tt-premierplus-natural-oak.jpg')ok(maps.layout.kind==='boards'&&maps.strips===4&&maps.layout.strips.every(s=>s.x1<info.width*.82),`${file}: four boards, clear of the board across them`);
+  else ok(maps.strips>=3,`${file}: at least three strips`);
+  ok(maps.width===ATLAS_WIDTH&&maps.height===maps.strips*STRIP_ROWS&&maps.albedo.length===maps.width*maps.height*4,`${file}: the atlas is ${ATLAS_WIDTH} wide with ${STRIP_ROWS} rows a strip`);
+  const delta=deltaE(maps.sourceMean,maps.atlasMean);worstDelta=Math.max(worstDelta,delta);
+  ok(delta<1,`${file}: the atlas keeps the photo's colour (ΔE ${delta.toFixed(2)})`);
+  // The grain runs along the atlas: across a row brightness changes less than down a column.
+  ok(!grainIsVertical({width:maps.width,height:maps.height,data:maps.albedo}),`${file}: the grain runs along the board`);
+  // Seamless along the grain: the last column runs on into the first about as smoothly as neighbours do.
+  let wrap=0,inner=0,rows=0;
+  for(let y=0;y<maps.height;y++){if(y%STRIP_ROWS<10||y%STRIP_ROWS>STRIP_ROWS-10)continue;rows++;const at=(x:number)=>maps.albedo[(y*maps.width+x)*4+1];wrap+=Math.abs(at(maps.width-1)-at(0));inner+=Math.abs(at(maps.width/2)-at(maps.width/2-1));}
+  // A step under one grey level can't be seen, so a very even grain (cedar) is measured against that.
+  const seam=wrap/Math.max(rows,inner);worstSeam=Math.max(worstSeam,seam);
+  ok(seam<2.5,`${file}: no seam where the grain repeats (${seam.toFixed(2)}× an ordinary step)`);
+  ok(maps.normal.every((v,i)=>i%4!==2||v>=128),`${file}: every normal faces out of the board`);
+}
+ok(grainIsVertical(rotate90({width:2,height:2,data:new Uint8Array(16)}))===false,'A flat picture has no grain to turn');
+ok(!/from ['"](three|@react-three)/.test(read(`${VIEWER}swatchMaps.ts`)),'swatchMaps.ts stays free of three.js');
+
+// The shader patch rewrites chunks three still has, and every board's pick is stable and in range.
+for(const [name,lookup] of PATCHED_CHUNKS)ok((THREE.ShaderChunk as Record<string,string>)[name]?.includes(lookup),`ShaderChunk.${name} still has "${lookup}"`);
+{
+  const material=surfaceMaterial('#886644'),shader={uniforms:{} as Record<string,THREE.IUniform>,defines:{} as Record<string,string>,vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};
+  material.onBeforeCompile(shader as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);
+  ok(shader.vertexShader.includes('dcBoard();')&&shader.fragmentShader.includes('dcTex( map )')&&shader.fragmentShader.includes('dcTex( normalMap )')&&shader.fragmentShader.includes('dcTex( roughnessMap )')&&!/texture2D\( (map|normalMap|roughnessMap), v/.test(shader.fragmentShader),'The board shader samples colour, normal and roughness through each board’s own strip');
+  ok('uStrips' in shader.uniforms&&!('DC_BOX_UV' in shader.defines),'A board material reads its own UVs');
+  const box=boxVariant(material) as THREE.MeshStandardMaterial,boxShader={...shader,uniforms:{},defines:{},vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};
+  box.onBeforeCompile(boxShader as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);
+  ok('DC_BOX_UV' in boxShader.defines&&box!==material&&boxVariant(material)===box&&boxVariant(box)===box&&material.customProgramCacheKey()!==box.customProgramCacheKey(),'Rim, fascia and framing get one box-projected twin, compiled apart');
+  const plain=new THREE.MeshStandardMaterial();ok(boxVariant(plain)===plain,'Other materials are left as they are');
+  const a=boardVariation(12.5,-40),b=boardVariation(12.5,-40),c=boardVariation(18,-40);
+  ok(a.every((v,i)=>v===b[i])&&a.some((v,i)=>v!==c[i])&&[a,c].every(v=>v[0]>=0&&v[0]<1&&v[1]>=0&&v[1]<1&&(v[2]===0||v[2]===1)),'A board keeps its strip while it stays put, and the next board gets another');
+}
+const viewer2=read(`${VIEWER}Deck3DViewer.tsx`);
+ok(viewer2.includes("geometry.setAttribute('aVar',new THREE.InstancedBufferAttribute(variation,4))")&&viewer2.includes("g.setAttribute('aVar',new THREE.Float32BufferAttribute(")&&read(`${VIEWER}Skirting3D.tsx`).includes("g.setAttribute('aVar',"),'Boards, cut boards and skirting each carry their own pick');
+ok(viewer2.includes("useSwatchTexture(swatchUrl('wood-pressure-treated.jpg'),'#8a7356')")&&viewer2.includes('function useBoxMaterial('),'Framing lumber shows pressure-treated grain along each piece');
+
+console.log(`DECK REALISM OK — look, pipeline wiring, shadow key and sun fit; ${files.length} swatch atlases (worst ΔE ${worstDelta.toFixed(2)}, worst repeat ${worstSeam.toFixed(2)}×), the board shader and its picks; ${checks} checks.`);
