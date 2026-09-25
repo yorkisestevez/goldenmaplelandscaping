@@ -25,16 +25,24 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # Pinned, not ubuntu-latest: that label moves to Ubuntu 26.04 between
+    # 2026-10-19 and 2026-11-19 (actions/runner-images#14748), swapping python3
+    # (3.12 -> 3.14; it runs the postbuild gates) and jq underneath a production
+    # deploy. Move to ubuntu-26.04 deliberately, in its own PR.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
+      # Node 24 LTS (EOL 2028-04-30). Node 20 reached EOL 2026-04-30, and
+      # netlify-cli@latest (27.x) requires Node >=22.13. This version also sets
+      # the Netlify Functions runtime (nodejs24.x) unless AWS_LAMBDA_JS_RUNTIME
+      # is set in the site env. Keep NODE_VERSION in netlify.toml equal to it.
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
