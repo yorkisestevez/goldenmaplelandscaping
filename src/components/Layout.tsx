@@ -499,6 +499,12 @@ const Footer = () => {
             <Link to="/locations/innisfil" className="hover:text-brand-gold-dark transition-colors">Innisfil</Link>
             <Link to="/locations/oro-medonte" className="hover:text-brand-gold-dark transition-colors">Oro-Medonte</Link>
             <Link to="/locations/springwater" className="hover:text-brand-gold-dark transition-colors">Springwater</Link>
+            <Link to="/patios-barrie" className="hover:text-brand-gold-dark transition-colors ml-2 border-l border-brand-dim/20 pl-4">Patios</Link>
+            <Link to="/outdoor-living-barrie" className="hover:text-brand-gold-dark transition-colors">Outdoor Living</Link>
+            <Link to="/premium-patio-rebuild-barrie" className="hover:text-brand-gold-dark transition-colors">Patio Rebuilds</Link>
+            <Link to="/sloped-backyard-solutions-barrie" className="hover:text-brand-gold-dark transition-colors">Sloped Backyards</Link>
+            <Link to="/full-backyard-transformations-barrie" className="hover:text-brand-gold-dark transition-colors">Full Transformations</Link>
+            <Link to="/luxury-landscape-barrie" className="hover:text-brand-gold-dark transition-colors">Luxury Landscapes</Link>
             <Link to="/privacy" className="hover:text-brand-gold-dark transition-colors ml-2 border-l border-brand-dim/20 pl-4">Privacy</Link>
             <Link to="/terms" className="hover:text-brand-gold-dark transition-colors">Terms</Link>
           </div>
