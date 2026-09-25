@@ -24,6 +24,369 @@
     { "id": "auto-020", "title": "Sodding vs. Seeding a New Lawn in Simcoe County: Real Cost & Timeline", "slug": "sodding-vs-seeding-simcoe-county", "category": "Materials", "primary_keyword": "sod vs seed Simcoe County", "location_anchor": "Simcoe County", "internal_link_hints": ["/services/landscape-design-barrie", "/locations/barrie"] },
     { "id": "auto-021", "title": "Heated Driveway Systems: Are They Worth It in Barrie?", "slug": "heated-driveway-worth-it-barrie", "category": "Engineering", "primary_keyword": "heated driveway Barrie", "location_anchor": "Barrie", "internal_link_hints": ["/services/interlocking-barrie", "/resources/winter-damage-prevention-interlocking"] },
     { "id": "auto-022", "title": "How to Build a Backyard for Entertaining in Wasaga Beach", "slug": "backyard-entertaining-wasaga-beach", "category": "Design", "primary_keyword": "outdoor entertaining Wasaga Beach", "location_anchor": "Wasaga Beach", "internal_link_hints": ["/locations/wasaga-beach", "/services/landscape-design-wasaga-beach"] },
+ {
+  "id": "auto-046",
+  "title": "Interlocking Driveway Cost in Alliston: 2026 Real Numbers",
+  "slug": "interlocking-driveway-cost-alliston",
+  "category": "Investment",
+  "primary_keyword": "interlocking driveway cost Alliston",
+  "location_anchor": "Alliston",
+  "internal_link_hints": [
+   "/services/interlocking-barrie",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-047",
+  "title": "Backyard Drainage Solutions for Angus: High Water Table Fixes",
+  "slug": "backyard-drainage-solutions-angus",
+  "category": "Engineering",
+  "primary_keyword": "backyard drainage Angus Ontario",
+  "location_anchor": "Angus",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-048",
+  "title": "Retaining Wall Costs in Tottenham: A Sloped-Lot Guide",
+  "slug": "retaining-wall-cost-tottenham",
+  "category": "Investment",
+  "primary_keyword": "retaining wall cost Tottenham Ontario",
+  "location_anchor": "Tottenham",
+  "internal_link_hints": [
+   "/cost-estimator",
+   "/service-areas",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-049",
+  "title": "Front Walkway & Entrance Interlocking in Cookstown",
+  "slug": "front-walkway-interlocking-cookstown",
+  "category": "Design",
+  "primary_keyword": "front walkway interlocking Cookstown",
+  "location_anchor": "Cookstown",
+  "internal_link_hints": [
+   "/services/interlocking-barrie",
+   "/service-areas",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-050",
+  "title": "New-Build Backyard Transformations in Thornton",
+  "slug": "new-build-backyard-thornton",
+  "category": "Design",
+  "primary_keyword": "backyard landscaping Thornton Ontario",
+  "location_anchor": "Thornton",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-051",
+  "title": "Protecting Your Patio from Frost Heave in Elmvale",
+  "slug": "patio-frost-protection-elmvale",
+  "category": "Engineering",
+  "primary_keyword": "patio frost heave protection Elmvale",
+  "location_anchor": "Elmvale",
+  "internal_link_hints": [
+   "/resources/why-patios-sink-barrie",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-052",
+  "title": "Grading & Drainage for New Builds in Stayner",
+  "slug": "grading-drainage-new-build-stayner",
+  "category": "Engineering",
+  "primary_keyword": "grading drainage new build Stayner Ontario",
+  "location_anchor": "Stayner",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-053",
+  "title": "Septic-Safe Landscaping in Coldwater: What You Can Build",
+  "slug": "septic-safe-landscaping-coldwater",
+  "category": "Regulations",
+  "primary_keyword": "septic safe landscaping Coldwater Ontario",
+  "location_anchor": "Coldwater",
+  "internal_link_hints": [
+   "/service-areas",
+   "/book",
+   "/resources/permits-bylaws-barrie"
+  ]
+ },
+
+ {
+  "id": "auto-054",
+  "title": "Waterfront Backyard Landscaping in Penetanguishene",
+  "slug": "waterfront-landscaping-penetanguishene",
+  "category": "Design",
+  "primary_keyword": "waterfront landscaping Penetanguishene",
+  "location_anchor": "Penetanguishene",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-055",
+  "title": "Cottage Landscaping in Port McNicoll: A Georgian Bay Guide",
+  "slug": "cottage-landscaping-port-mcnicoll",
+  "category": "Design",
+  "primary_keyword": "cottage landscaping Port McNicoll",
+  "location_anchor": "Port McNicoll",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-056",
+  "title": "Shoreline Erosion Control for Tay Township Waterfronts",
+  "slug": "shoreline-erosion-control-tay-township",
+  "category": "Engineering",
+  "primary_keyword": "shoreline erosion control Tay Township",
+  "location_anchor": "Victoria Harbour",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-057",
+  "title": "Beach-Area Landscaping in Tiny Township: A Sand-Soil Guide",
+  "slug": "beach-landscaping-tiny-township",
+  "category": "Materials",
+  "primary_keyword": "landscaping Tiny Township sand soil",
+  "location_anchor": "Tiny Township",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-058",
+  "title": "Backyard Drainage in Keswick: Lake Simcoe Watershed Rules",
+  "slug": "backyard-drainage-keswick",
+  "category": "Engineering",
+  "primary_keyword": "backyard drainage Keswick Ontario",
+  "location_anchor": "Keswick",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-059",
+  "title": "Landscaping on Holland Marsh Fringe Soil in Holland Landing",
+  "slug": "landscaping-holland-marsh-soil",
+  "category": "Engineering",
+  "primary_keyword": "landscaping Holland Marsh soil",
+  "location_anchor": "Holland Landing",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-060",
+  "title": "Interlocking on Clay: Driveways & Patios in Bradford",
+  "slug": "interlocking-clay-bradford",
+  "category": "Materials",
+  "primary_keyword": "interlocking driveway Bradford Ontario clay",
+  "location_anchor": "Bradford",
+  "internal_link_hints": [
+   "/services/interlocking-barrie",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-061",
+  "title": "Backyard Drainage on the Oak Ridges Moraine in Newmarket",
+  "slug": "backyard-drainage-oak-ridges-moraine-newmarket",
+  "category": "Engineering",
+  "primary_keyword": "backyard drainage Newmarket moraine",
+  "location_anchor": "Newmarket",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-062",
+  "title": "Shoreline Landscaping in Beaverton: Lake Simcoe East Shore",
+  "slug": "shoreline-landscaping-beaverton",
+  "category": "Design",
+  "primary_keyword": "shoreline landscaping Beaverton Ontario",
+  "location_anchor": "Beaverton",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-063",
+  "title": "Riverfront Landscaping Along the Severn River in Washago",
+  "slug": "riverfront-landscaping-washago-severn-river",
+  "category": "Design",
+  "primary_keyword": "riverfront landscaping Washago Severn River",
+  "location_anchor": "Washago",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-064",
+  "title": "Lakefront Cottage Landscaping in Hawkestone",
+  "slug": "lakefront-cottage-landscaping-hawkestone",
+  "category": "Design",
+  "primary_keyword": "lakefront landscaping Hawkestone Ontario",
+  "location_anchor": "Hawkestone",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-065",
+  "title": "Retaining Walls for Sloped Moraine Lots in Craighurst",
+  "slug": "retaining-walls-sloped-lots-craighurst",
+  "category": "Engineering",
+  "primary_keyword": "retaining walls Craighurst sloped lot",
+  "location_anchor": "Craighurst",
+  "internal_link_hints": [
+   "/cost-estimator",
+   "/service-areas",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-066",
+  "title": "Landscaping Near Wetlands in Minesing: NVCA Rules",
+  "slug": "landscaping-near-wetlands-minesing",
+  "category": "Regulations",
+  "primary_keyword": "landscaping near wetlands Minesing NVCA",
+  "location_anchor": "Minesing",
+  "internal_link_hints": [
+   "/service-areas",
+   "/book",
+   "/resources/permits-bylaws-barrie"
+  ]
+ },
+
+ {
+  "id": "auto-067",
+  "title": "Estate Lot Landscape Design in Midhurst",
+  "slug": "estate-lot-landscape-design-midhurst",
+  "category": "Design",
+  "primary_keyword": "estate lot landscape design Midhurst",
+  "location_anchor": "Midhurst",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-068",
+  "title": "Cottage Country Outdoor Living in Port Severn",
+  "slug": "cottage-outdoor-living-port-severn",
+  "category": "Design",
+  "primary_keyword": "outdoor living Port Severn cottage",
+  "location_anchor": "Port Severn",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-069",
+  "title": "Waterfront Interlocking in Brechin: Simcoe to Couchiching",
+  "slug": "waterfront-interlocking-brechin",
+  "category": "Materials",
+  "primary_keyword": "interlocking Brechin waterfront",
+  "location_anchor": "Brechin",
+  "internal_link_hints": [
+   "/services/interlocking-barrie",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-070",
+  "title": "Canal-Front Backyard Landscaping in Lagoon City",
+  "slug": "canal-front-landscaping-lagoon-city",
+  "category": "Design",
+  "primary_keyword": "canal front landscaping Lagoon City",
+  "location_anchor": "Lagoon City",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
+
+ {
+  "id": "auto-071",
+  "title": "Lakeside Landscaping in Lefroy: South Shore Lake Simcoe",
+  "slug": "lakeside-landscaping-lefroy",
+  "category": "Design",
+  "primary_keyword": "lakeside landscaping Lefroy Lake Simcoe",
+  "location_anchor": "Lefroy",
+  "internal_link_hints": [
+   "/service-areas",
+   "/cost-estimator",
+   "/book"
+  ]
+ },
     { "id": "auto-023", "title": "Patio Heaters vs. Fire Pits vs. Outdoor Fireplaces: A Practical Guide", "slug": "patio-heater-vs-firepit-vs-fireplace", "category": "Design", "primary_keyword": "outdoor heat options Barrie", "location_anchor": "Simcoe County", "internal_link_hints": ["/resources/fire-pit-regulations-barrie", "/services/landscape-design-barrie"] },
     { "id": "auto-024", "title": "How to Read a Landscape Contractor Quote (Line by Line)", "slug": "how-to-read-landscape-quote", "category": "Hiring Guide", "primary_keyword": "landscape quote how to read", "location_anchor": "Ontario", "internal_link_hints": ["/resources/how-to-choose-landscaping-contractor-barrie", "/resources/hidden-costs-cheap-landscaping"] },
     { "id": "auto-025", "title": "Stamped Concrete vs. Interlocking: The Honest Trade-Offs in Barrie's Climate", "slug": "stamped-concrete-vs-interlocking-barrie", "category": "Materials", "primary_keyword": "stamped concrete vs interlocking Barrie", "location_anchor": "Barrie", "internal_link_hints": ["/services/interlocking-barrie", "/resources/why-patios-sink-barrie"] },
