@@ -190,17 +190,24 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
 }
 /** Hands the page a function that renders the current view and returns it as an image (for the
  * printable proposal). Rendering right before reading keeps the drawing buffer valid without
- * preserveDrawingBuffer on every frame. The outline of a wall picked in the exterior studio is left out. */
-function SnapshotBridge({onReady}:{onReady?:(capture:(()=>string|null)|null)=>void}){
-  const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera);
+ * preserveDrawingBuffer on every frame. The outline of a wall picked in the exterior studio is left out.
+ * Asked for a longer edge than the canvas has (the proposal's print pictures, R8), it draws that one picture at a
+ * higher pixel ratio (at most 3 times), then puts the ratio back and redraws the view on screen. */
+function SnapshotBridge({onReady}:{onReady?:(capture:((longEdgePx?:number)=>string|null)|null)=>void}){
+  const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera),invalidate=useThree(s=>s.invalidate);
   useEffect(()=>{
     if(!onReady)return;
-    onReady(()=>{const picked:THREE.Object3D[]=[];scene.traverse(o=>{if(o.name==='picked-wall-outline'&&o.visible){o.visible=false;picked.push(o);}});try{gl.render(scene,camera);return gl.domElement.toDataURL('image/jpeg',.9);}catch{return null;}finally{for(const o of picked)o.visible=true;}});
+    onReady((longEdgePx?:number)=>{
+      const picked:THREE.Object3D[]=[];scene.traverse(o=>{if(o.name==='picked-wall-outline'&&o.visible){o.visible=false;picked.push(o);}});
+      const ratio=gl.getPixelRatio(),edge=Math.max(gl.domElement.width,gl.domElement.height),scale=longEdgePx&&edge&&longEdgePx>edge?Math.min(3,longEdgePx/edge):1;
+      try{if(scale>1)gl.setPixelRatio(ratio*scale);gl.render(scene,camera);return gl.domElement.toDataURL('image/jpeg',.9);}catch{return null;}
+      finally{for(const o of picked)o.visible=true;if(scale>1){gl.setPixelRatio(ratio);invalidate();}}
+    });
     return ()=>onReady(null);
-  },[gl,scene,camera,onReady]);
+  },[gl,scene,camera,invalidate,onReady]);
   return null;
 }
-export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,boardPaint,...interaction}:{data:DeckData;model:DeckTakeoff;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:(()=>string|null)|null)=>void;boardPaint?:BoardPaint}&HouseInteraction){
+export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,boardPaint,...interaction}:{data:DeckData;model:DeckTakeoff;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:((longEdgePx?:number)=>string|null)|null)=>void;boardPaint?:BoardPaint}&HouseInteraction){
   const data=useMemo<DeckData>(()=>{if(!deckOnly)return rawData;const {yardFeatures:_yard,terrainConfig:_terrain,...deck}=rawData;return deck;},[rawData,deckOnly]);
   const yard=useMemo(()=>!deckOnly&&calculatedYard?calculatedYard:buildYardModel(data,model),[deckOnly,calculatedYard,model,data.yardFeatures,data.terrainConfig,data.width,data.length,data.houseConfig?.widthFt,data.houseConfig?.depthFt,data.houseConfig?.footprint,data.housePlacement,data.houseVisible,data.deckType]);
   const bounds=sceneBounds(model),house=houseLayout(data,model.levels[0].footprint.bounds.w);

@@ -29,6 +29,8 @@ export const MAX_DETAILS_CHARS=12_000;
  * falls back to sending without the file.
  */
 export const ATTACH_PROPOSAL_PDF=false;
+/** The proposal PDF's file name, for the download and the attachment (the PDF builder loads only when asked for). */
+export const PROPOSAL_PDF_NAME='golden-maple-deck-proposal.pdf';
 /**
  * Offer "bring a sample of my decking colour" on the send form: the crew brings sample boards to a visit
  * (owner, 2026-09-23). Switching this off sends the field blank and hides the box.

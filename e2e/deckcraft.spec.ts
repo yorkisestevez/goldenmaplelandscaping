@@ -104,6 +104,21 @@ const deckParts=(page:Page)=>page.getByRole('region',{name:'Deck-part finishes'}
 const partSwatches=(page:Page)=>deckParts(page).locator('.dd-part-swatch');
 const railingColourNote=(page:Page)=>page.locator('.dd-railing-colour');
 
+/** The proposal (R8): its dialog, one of its sheets by name, and its Letter sheets (for their printed size). */
+const proposalDialog=(page:Page)=>page.getByRole('dialog',{name:'Deck proposal preview'});
+const proposalSheet=(page:Page,name:string)=>proposalDialog(page).getByRole('region',{name,exact:true});
+const proposalPages=(page:Page)=>proposalDialog(page).locator('.dd-proposal-page');
+/** Opens the proposal from Proposal & files; its 3D views are taken first (a software-drawn 3D view is slow). */
+async function openProposal(page:Page){
+  await openSection(page,'Proposal & files');
+  await page.getByRole('button',{name:'Print proposal'}).click();
+  await expect(proposalDialog(page)).toBeVisible({timeout:120_000});
+  return proposalDialog(page);
+}
+/** The pages of a PDF file, and the pictures in it. */
+const pdfPages=(bytes:Buffer)=>(bytes.toString('latin1').match(/\/Type \/Page\b/g)??[]).length;
+const pdfImages=(bytes:Buffer)=>(bytes.toString('latin1').match(/\/Subtype \/Image/g)??[]).length;
+
 /** Opens a closed <details> by its summary text; an open one stays open. */
 async function expand(scope:Page|Locator,summaryText:string){
   const summaryEl=scope.locator('summary',{hasText:summaryText});
@@ -1325,25 +1340,85 @@ test('sends a design to Golden Maple and hands the link to booking',async({page}
   expect(await page.evaluate(()=>(history.state?.usr?.bookingNotes as string|undefined)??'')).toContain('#d=1');
 });
 
-test('downloads the proposal as a PDF',async({page},info)=>{
+test('opens the proposal: a 3D cover and views, features, finishes, the site plan, the investment with its quote tags, next steps and the appendix',async({page})=>{
+  test.setTimeout(180_000);
+  const problems=await openDesigner(page);
+  const priced=wholeDollars(await price(page).textContent());
+  const dialog=await openProposal(page);
+  // The cover: the 3D hero in daylight (no lights yet), the wordmark, the project and the price-book stamp.
+  const cover=proposalSheet(page,'Cover');
+  await expect(cover.getByRole('heading',{level:2})).toHaveText('Your deck');
+  await expect(cover.getByRole('img',{name:'3D view of the proposed deck, corner view'})).toBeVisible();
+  for(const words of ['Golden Maple','Deck Studio','Proposal','Corner view · Design illustration','Price book'])await expect(cover).toContainText(words);
+  await expect(proposalSheet(page,'Views').getByRole('img')).toHaveCount(2);
+  await expect(proposalSheet(page,'Views')).toContainText('Front view');
+  await expect(proposalSheet(page,'Lighting & features')).toContainText('The deck');
+  await expect(proposalSheet(page,'Materials & finishes')).toContainText('Colours vary by screen; confirm with samples.');
+  await expect(proposalSheet(page,'Site plan').getByRole('img',{name:'Site plan: the deck against the house'})).toBeVisible();
+  // The investment: the price schedule's priced subtotal, before HST; quotes tagged, never $0.
+  const invest=proposalSheet(page,'Investment');
+  await expect(invest).toContainText('Planning estimate before HST');
+  await expect(invest).toContainText('Not a final quote: measurements, connections and engineering are confirmed on site.');
+  const subtotal=invest.getByRole('row').filter({has:page.getByRole('rowheader',{name:/^Priced subtotal/})}).getByRole('cell');
+  expect(wholeDollars(await subtotal.textContent())).toBe(priced);
+  await expect(invest.getByRole('region',{name:'Still to be quoted'}).getByRole('listitem').first()).toContainText('Supplier quote');
+  const words=await dialog.textContent();
+  expect(words).not.toMatch(ZERO);
+  expect(words).not.toContain('Not provided');
+  await expect(proposalSheet(page,'Next steps')).toContainText('Call or text Sophie, our AI receptionist, at (705) 300-8015');
+  for(const part of ['Confirm before construction','Construction plan','Material and hardware list'])await expect(proposalSheet(page,'Appendix')).toContainText(part);
+  // Printed: only the sheets, each exactly one Letter page.
+  await page.emulateMedia({media:'print'});
+  await expect(dialog.getByRole('button',{name:'Print / save as PDF'})).toBeHidden();
+  expect(await proposalPages(page).evaluateAll(els=>els.map(el=>Math.round(el.getBoundingClientRect().height)))).toEqual(Array(await proposalPages(page).count()).fill(1056));
+  await page.emulateMedia({media:'screen'});
+  // Escape closes it; the drawing is back on the plan the visitor had.
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole('tab',{name:'Plan',exact:true})).toHaveAttribute('aria-selected','true');
+  expect(problems).toEqual([]);
+});
+
+test('puts a lit design at night on the proposal cover, then gives the visitor back their view and design',async({page})=>{
+  test.setTimeout(180_000);
+  const problems=await openDesigner(page);
+  await viewTab(page,'3D');
+  await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
+  await page.getByRole('button',{name:'Add post & step lights'}).click();
+  await page.getByRole('group',{name:'Camera'}).getByRole('button',{name:'Front',exact:true}).click();
+  const priced=await price(page).textContent(),changed=await changes(page).count();
+  await openProposal(page);
+  await expect(proposalSheet(page,'Cover').getByRole('img',{name:'3D view of the proposed deck, corner view at night'})).toBeVisible();
+  await expect(proposalSheet(page,'Views').getByRole('img')).toHaveCount(3);
+  await expect(proposalSheet(page,'Views')).toContainText('Corner view by day');
+  await expect(proposalSheet(page,'Lighting & features')).toContainText('Railing posts:');
+  await proposalDialog(page).getByRole('button',{name:'Close'}).click();
+  // The pictures changed nothing: the visitor's camera and night view are back, with the same price and changes.
+  await expect(page.getByRole('group',{name:'Camera'}).getByRole('button',{name:'Front',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'})).toHaveAttribute('aria-pressed','true');
+  await expect(price(page)).toHaveText(priced??'');
+  await expect(changes(page)).toHaveCount(changed);
+  expect(problems).toEqual([]);
+});
+
+test('downloads the proposal as a multi-page PDF, from Proposal & files and from the proposal itself',async({page},info)=>{
+  test.setTimeout(240_000);
   await openDesigner(page);
   await openSection(page,'Proposal & files');
-  const [download]=await Promise.all([page.waitForEvent('download',{timeout:60_000}),page.getByRole('button',{name:'Download PDF'}).click()]);
+  const [download]=await Promise.all([page.waitForEvent('download',{timeout:120_000}),page.getByRole('button',{name:'Download PDF'}).click()]);
   expect(download.suggestedFilename()).toBe('golden-maple-deck-proposal.pdf');
   const file=info.outputPath('proposal.pdf');await download.saveAs(file);
   const bytes=readFileSync(file);
   expect(bytes.subarray(0,5).toString()).toBe('%PDF-');
-  expect(bytes.length).toBeGreaterThan(20_000);
-});
-
-test('opens the printable proposal',async({page})=>{
-  await openDesigner(page);
-  await openSection(page,'Proposal & files');
-  await page.getByRole('button',{name:'Print proposal'}).click();
-  const sheet=page.getByRole('dialog',{name:'Deck proposal preview'});
-  await expect(sheet).toContainText('PLANNING ESTIMATE');
-  await sheet.getByRole('button',{name:'Close'}).click();
-  await expect(sheet).toHaveCount(0);
+  // Cover, views, features, finishes, site plan, investment, next steps and the appendix's three sheets.
+  expect(pdfPages(bytes)).toBeGreaterThanOrEqual(10);
+  // The 3D views, both plans, the logo and a swatch photo.
+  expect(pdfImages(bytes)).toBeGreaterThanOrEqual(6);
+  // From the proposal itself, with the pictures it already has.
+  const dialog=await openProposal(page);
+  const [again]=await Promise.all([page.waitForEvent('download',{timeout:120_000}),dialog.getByRole('button',{name:'Download PDF'}).click()]);
+  const second=info.outputPath('proposal-2.pdf');await again.saveAs(second);
+  expect(pdfPages(readFileSync(second))).toBe(pdfPages(bytes));
 });
 
 test('opens on the site plan, and a desktop fetches the 3D viewer once the page settles without showing it',async({page})=>{

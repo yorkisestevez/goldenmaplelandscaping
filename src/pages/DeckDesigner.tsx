@@ -7,9 +7,8 @@ import type {DeckData,HouseOpening,PrivacyScreen} from '../features/deckcraft/ty
 import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,pricedPrivacyArea,privacySides,screenOn,screenProduct} from '../features/deckcraft/privacyScreens';
 import {MAX_DESIGN_BYTES} from '../features/deckcraft/designPersistence';
 import {designFeatures,setDeckAnalyticsSink,stepLabel,trackDeck} from '../features/deckcraft/deckAnalytics';
-import {ATTACH_PROPOSAL_PDF,DECK_DESIGN_FORM} from '../features/deckcraft/sendDesign';
-import {buildProposalPdf,PROPOSAL_PDF_NAME} from '../features/deckcraft/proposalPdf';
-import {logoImage,planImage} from '../features/deckcraft/pdfAssets';
+import {ATTACH_PROPOSAL_PDF,DECK_DESIGN_FORM,PROPOSAL_PDF_NAME} from '../features/deckcraft/sendDesign';
+import type {ProposalShot} from '../features/deckcraft/proposalModel';
 import {getHouseConfig,clampHouseOpening} from '../features/deckcraft/houseSettings';
 import {getHouseContact} from '../features/deckcraft/houseContact';
 import {dollars} from '../features/deckcraft/designFacts';
@@ -51,7 +50,7 @@ export const links=()=>[
 // Loaded on demand (and fetched once the page settles), so they are not part of the page's first load: every
 // section's body (through the registry in sections.ts) and the send and proposal dialogs.
 const loadSendDialog=()=>import('../features/deckcraft/SendDesignDialog');
-const loadProposalDialog=()=>import('../features/deckcraft/ProposalSheet');
+const loadProposalDialog=()=>import('../features/deckcraft/ProposalDialog');
 const HouseSection=lazy(loadHouseSection),DimensionsStep=lazy(loadDimensionsStep),MaterialsStep=lazy(loadMaterialsStep),StairsStep=lazy(loadStairsStep),SiteExtrasStep=lazy(loadSiteExtrasStep),EstimateStep=lazy(loadEstimateStep);
 const BackyardStep=lazy(loadBackyardStep),SendDesignDialog=lazy(loadSendDialog),ProposalDialog=lazy(loadProposalDialog);
 // Phones (the layout's single column) show one section at a time; wider screens keep several open.
@@ -107,7 +106,9 @@ export default function DeckDesigner(){
   useEffect(()=>{if(data.shape==='Custom')setPlanTool(t=>t==='size'?'outline':t);},[data.shape]);
   const openExterior=useCallback((open:boolean)=>{setExteriorOpen(open);if(open)setMode(m=>CAMERA_MODES.includes(m)?m:'3d');},[]);
   const [wrapStatus,setWrapStatus]=useState('');
-  const [proposal,setProposal]=useState<{image:string|null;date:string}|null>(null);
+  const [proposal,setProposal]=useState<{shots:ProposalShot[];date:string}|null>(null);
+  // The proposal's pictures ask the 3D view for day or night while they are taken (never a change to the design).
+  const [snapshotLighting,setSnapshotLighting]=useState<'Daylight'|'Evening'|null>(null);
   const [preparing,setPreparing]=useState(false);
   const [sendOpen,setSendOpen]=useState(false);
   const [pdfBusy,setPdfBusy]=useState(false);
@@ -119,8 +120,8 @@ export default function DeckDesigner(){
   // 3D sheet is showing), so it never loads the 3D view on its own.
   const [docked,setDocked]=useState(false);
   const toggleDock=()=>{const next=!docked;setDocked(next);if(next)trackDeck('deckcraft_view','deck_view_docked');};
-  const snapshot=useRef<(()=>string|null)|null>(null);
-  const onSnapshotReady=useCallback((capture:(()=>string|null)|null)=>{snapshot.current=capture;},[]);
+  const snapshot=useRef<((longEdgePx?:number)=>string|null)|null>(null);
+  const onSnapshotReady=useCallback((capture:((longEdgePx?:number)=>string|null)|null)=>{snapshot.current=capture;},[]);
   const closeProposal=useCallback(()=>setProposal(null),[]);
   const closeSend=useCallback(()=>setSendOpen(false),[]);
   // Funnel: the page load counts the first step, as the wizard did; each preview mode and design feature is counted
@@ -213,44 +214,70 @@ export default function DeckDesigner(){
       downloadFile(body,'text/plain','golden-maple-deck-summary.txt');setSaved(true);setDesignError('');trackDeck('deckcraft_output','deck_summary');
     }catch{setDesignError('The summary could not be generated on this device. Please try again, or use “Send my design”.');}
   }
-  // The 3D picture for the proposal and the PDF: the plans and the contractor views switch to 3D for the snapshot, then back.
-  async function captureSnapshot():Promise<string|null>{
-    // The snapshot shows the house without a selection outline.
-    if(pickedHouseOpeningId){setSelectedHouseOpeningId('');await new Promise(r=>setTimeout(r,250));}
-    const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms)),previous=mode,customerView=CAMERA_MODES.includes(mode);
-    let image:string|null=null;
+  // The 3D pictures for the proposal and the PDF (R8): the cover and two or three more views, each from a camera preset
+  // (Corner, Front, Overview), in daylight; the cover is the night view when the design has lights to show. The plans
+  // and the contractor views switch to 3D for the pictures; afterwards the drawing goes back to the sheet, camera and
+  // light the visitor had (a camera preset starts from its own position, so a visitor's orbit is not kept). Pictures
+  // already being taken are shared, never taken twice at once.
+  const capturing=useRef<Promise<ProposalShot[]>|null>(null);
+  function captureViews():Promise<ProposalShot[]>{
+    capturing.current??=takeViews().finally(()=>{capturing.current=null;});
+    return capturing.current;
+  }
+  async function takeViews():Promise<ProposalShot[]>{
+    if(!hasWebGL)return [];
+    const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms));
+    // A frame of the 3D view (requestAnimationFrame), or half a second if the tab is hidden and frames have stopped.
+    const frame=()=>new Promise<void>(r=>{let done=false;const go=()=>{if(!done){done=true;r();}};requestAnimationFrame(()=>go());setTimeout(go,500);});
+    const settle=async(ms:number)=>{await wait(ms);for(let i=0;i<3;i++)await frame();};
+    // The pictures show the house without a selection outline.
+    if(pickedHouseOpeningId){setSelectedHouseOpeningId('');await wait(250);}
+    const night=hasFixtures&&data.lightingPreviewOn!==false,previous=mode,loading=!shown3d.current;
+    const views:{mode:PreviewMode;light:'Daylight'|'Evening';label:string}[]=[
+      {mode:'3d',light:night?'Evening':'Daylight',label:night?'Corner view at night':'Corner view'},
+      {mode:'front',light:'Daylight',label:'Front view'},
+      {mode:'overview',light:'Daylight',label:'Overview'},
+      ...(night?[{mode:'3d' as const,light:'Daylight' as const,label:'Corner view by day'}]:[]),
+    ];
+    // The camera the visitor is on is taken last, so every picture starts from its preset rather than their orbit.
+    const order=[...views.filter(v=>v.mode!==previous),...views.filter(v=>v.mode===previous)];
+    const shots=new Map<string,string>();
     try{
-      if(hasWebGL){
-        // A viewer that has not loaded yet (no 3D view shown so far) gets longer to arrive.
-        const loading=!shown3d.current;
-        if(!customerView){setMode('3d');await wait(900);}
-        for(let i=0;i<(loading?100:50)&&!snapshot.current;i++)await wait(100);
-        if(!customerView)await wait(600);
-        image=snapshot.current?.()??null;
+      for(const [i,view] of order.entries()){
+        setMode(view.mode);setSnapshotLighting(view.light);
+        if(i===0){
+          // A viewer that has not loaded yet (no 3D view shown so far) gets longer to arrive and load its textures.
+          for(let t=0;t<(loading?100:50)&&!snapshot.current;t++)await wait(100);
+          await settle(loading?1500:700);
+        }else await settle(450);
+        // Print resolution: the cover full-bleed on Letter, the other views at up to the sheet's width.
+        const src=snapshot.current?.(view===views[0]?2400:1800);if(src)shots.set(view.label,src);
       }
     }finally{
-      if(!customerView)setMode(previous);
+      setMode(previous);setSnapshotLighting(null);
     }
-    return image;
+    return views.flatMap(v=>{const src=shots.get(v.label);return src?[{label:v.label,src}]:[];});
   }
   const proposalDate=()=>new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
   async function openProposal(){
     setPreparing(true);
-    let image:string|null=null;
-    try{image=await captureSnapshot();}finally{setPreparing(false);}
-    setProposal({image,date:proposalDate()});
+    let shots:ProposalShot[]=[];
+    try{shots=await captureViews();}finally{setPreparing(false);}
+    setProposal({shots,date:proposalDate()});
     trackDeck('deckcraft_output','deck_proposal');
   }
-  // The PDF engine loads only when a PDF is asked for.
-  async function makeProposalPdf():Promise<ArrayBuffer>{
-    const [{jsPDF},snapshotImage,plan,logo,{exteriorSummary}]=await Promise.all([import('jspdf'),captureSnapshot(),planImage(estimate.model,data),logoImage(),import('../features/deckcraft/houseLooks')]);
+  // The PDF engine and its builder load only when a PDF is asked for. The proposal dialog hands over the pictures it
+  // already has, so they are not taken again.
+  async function makeProposalPdf(ready?:ProposalShot[]):Promise<ArrayBuffer>{
+    const [{jsPDF},{buildProposalPdf},assets,{exteriorSummary},shots]=await Promise.all([import('jspdf'),import('../features/deckcraft/proposalPdf'),import('../features/deckcraft/pdfAssets'),import('../features/deckcraft/houseLooks'),ready??captureViews()]);
+    const [sitePlan,plan,logo,swatches]=await Promise.all([assets.planImage(estimate.model,data,2000,'site'),assets.planImage(estimate.model,data),assets.logoImage(),assets.swatchImages(data,estimate.model)]);
     // The house exterior line (appearance only, not priced) loads with the PDF engine, never with the page.
     const exterior=exteriorSummary(data);
-    return buildProposalPdf(jsPDF,{data,estimate,facts:exterior?[...proposalFacts,exterior]:proposalFacts,reviewItems:reviewFlags,date:proposalDate(),snapshot:snapshotImage,plan,logo});
+    return buildProposalPdf(jsPDF,{data,estimate,facts:exterior?[...proposalFacts,exterior]:proposalFacts,reviewItems:reviewFlags,date:proposalDate(),shots,sitePlan,plan,logo,swatches});
   }
-  async function downloadPdf(){
+  async function downloadPdf(ready?:ProposalShot[]){
     setPdfBusy(true);setDesignError('');
-    try{downloadFile(await makeProposalPdf(),'application/pdf',PROPOSAL_PDF_NAME);trackDeck('deckcraft_output','deck_pdf');}
+    try{downloadFile(await makeProposalPdf(ready),'application/pdf',PROPOSAL_PDF_NAME);trackDeck('deckcraft_output','deck_pdf');}
     catch{setDesignError('The PDF could not be made on this device. Use “Print proposal” and choose “Save as PDF” instead.');}
     finally{setPdfBusy(false);}
   }
@@ -310,7 +337,7 @@ export default function DeckDesigner(){
     <div className="dd-title"><h1>Draw your deck on your house.</h1><p>Drag the deck to size on the plan of your house, pick every finish, and see an itemized price as you go.</p></div>
     <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}/>
     <main className="dd-workspace">
-      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} tool={planTool} setTool={setPlanTool} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior}/>
+      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} snapshotLighting={snapshotLighting} tool={planTool} setTool={setPlanTool} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior}/>
       <section className="dd-controls" aria-label="Deck configuration">
         <SectionList data={data} ledger={schedule} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection}/>
       </section>
@@ -319,6 +346,6 @@ export default function DeckDesigner(){
     <PhoneDeckBar ledger={schedule} changes={changes.records} onFullList={showFullList} docked={docked} onToggleDock={toggleDock} onSend={()=>setSendOpen(true)}/>
     <ChangeAnnouncer record={changes.records.at(-1)}/>
     {sendOpen&&<Suspense fallback={null}><SendDesignDialog data={data} estimate={estimate} summary={summary} reviewItems={reviewFlags} send={postDesign} onPrint={()=>{setSendOpen(false);void openProposal();}} onDownloadPdf={downloadPdf} onClose={closeSend}/></Suspense>}
-    {proposal&&<Suspense fallback={null}><ProposalDialog data={data} estimate={estimate} facts={proposalFacts} reviewItems={reviewFlags} image={proposal.image} date={proposal.date} onClose={closeProposal}/></Suspense>}
+    {proposal&&<Suspense fallback={null}><ProposalDialog data={data} estimate={estimate} facts={proposalFacts} reviewItems={reviewFlags} image={proposal.shots[0]?.src??null} shots={proposal.shots} date={proposal.date} onClose={closeProposal} onDownloadPdf={()=>void downloadPdf(proposal.shots)} pdfBusy={pdfBusy}/></Suspense>}
   </div>;
 }

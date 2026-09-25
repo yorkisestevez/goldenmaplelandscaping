@@ -49,7 +49,12 @@ export interface PreviewPanelProps{
   houseOpen:boolean;pickedHouseOpeningId:string;effectiveHouseOpeningId:string;
   selectHouseOpening:(id:string)=>void;moveHouseOpening:(id:string,patch:Partial<HouseOpening>)=>void;editHouseOpening:()=>void;
   setScreen:(id:string,patch:Partial<PrivacyScreen>)=>void;
-  onSnapshotReady:(capture:(()=>string|null)|null)=>void;
+  onSnapshotReady:(capture:((longEdgePx?:number)=>string|null)|null)=>void;
+  /**
+   * The proposal's pictures (R8): day or night for the 3D view while they are taken, without changing the design (so
+   * nothing is saved, undone or repriced). Null shows the design's own choice.
+   */
+  snapshotLighting?:'Daylight'|'Evening'|null;
   /** The site plan's tool (R5), and a way to pick another ("Draw my own" takes the Draw outline tool). */
   tool:PlanTool;setTool:(tool:PlanTool)=>void;
   /** The edges the page offers stairs on (the Stairs section's edge menu), for the Stairs tool. */
@@ -68,7 +73,7 @@ export interface PreviewPanelProps{
  * The drawing: its sheets (the site plan to draw on, the 3D view to walk around it, the framing), the title block, and
  * doors and windows (the price is in the schedule). The page opens on the site plan; the 3D view loads only when asked for.
  */
-export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,houseOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,tool,setTool,stairEdges,onOpenSection,docked=false,boardPaint,setBoardPaint,onPaintBoard,exteriorOpen,setExteriorOpen}:PreviewPanelProps){
+export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,hasWebGL,setHasWebGL,retryWebGL,hasFixtures,autoCounts,houseOpen,pickedHouseOpeningId,effectiveHouseOpeningId,selectHouseOpening,moveHouseOpening,editHouseOpening,setScreen,onSnapshotReady,snapshotLighting=null,tool,setTool,stairEdges,onOpenSection,docked=false,boardPaint,setBoardPaint,onPaintBoard,exteriorOpen,setExteriorOpen}:PreviewPanelProps){
   // The exterior studio's walls to finish ('' = the whole house): picked in the studio or, while it is open, in 3D.
   const [houseWall,setHouseWall]=useState('');
   // The plan's status line: what a shape shortcut did (and any fix it made), until the next change on the plan.
@@ -83,6 +88,8 @@ export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,
     if(to!==undefined){e.preventDefault();pickTool(PLAN_TOOLS[to][0],true);}
   };
   const viewerPaint=useMemo(()=>boardPaint&&onPaintBoard?{scope:boardPaint.scope,onPaint:onPaintBoard}:undefined,[boardPaint,onPaintBoard]);
+  // The design as the 3D view draws it: the proposal's pictures may ask for day or night (appearance only).
+  const viewData=useMemo(()=>snapshotLighting&&snapshotLighting!==data.sceneLighting?{...data,sceneLighting:snapshotLighting}:data,[data,snapshotLighting]);
   const sheet=sheetOf(mode),onPlan=sheet==='plan',framing=sheet==='framing',current=SHEETS.findIndex(s=>s[2]===sheet);
   const drawing=onPlan?'Site plan':framing?'Framing':'3D view';
   const pick=(to:Sheet)=>{if(to!==sheet)setMode(to==='plan'?'plan':to==='3d'?'3d':'drawing');};
@@ -112,7 +119,7 @@ export default function PreviewPanel({data,update,estimate,mode,setMode,mounted,
       {boardPaint&&setBoardPaint&&<div className="dd-paint-chip" role="status"><span>Painting: <strong>{colourName(boardPaint.colour)}</strong>{onPlan||framing?' · switch to the 3D view to paint':' · click a board'}</span>{data.pattern!=='Herringbone'&&<div className="dd-view-toggle" role="group" aria-label="What a click paints"><button type="button" aria-pressed={boardPaint.scope==='piece'} onClick={()=>setBoardPaint({...boardPaint,scope:'piece'})}>One board</button><button type="button" aria-pressed={boardPaint.scope==='course'} onClick={()=>setBoardPaint({...boardPaint,scope:'course'})}>Whole row</button></div>}<button type="button" className="dd-secondary" onClick={()=>setBoardPaint(null)}>Done</button></div>}
       {/* The site plan (in the prerendered page) shows at once; its handles arrive once the page runs. A 3D view shows
           the plan until three.js has loaded. */}
-      <div className="dd-canvas">{show3d?<ViewerBoundary fallback={flat}><Suspense fallback={loading}><Viewer deckOnly={!hasBackyardLayout(data)} yardModel={estimate.yardModel} data={data} model={estimate.model} view={mode} structure={mode==='structure'||mode==='hardware'} cutaway={mode==='foundation'} selectedHouseOpeningId={pickedHouseOpeningId||(houseOpen?effectiveHouseOpeningId:undefined)} onSelectHouseOpening={selectHouseOpening} onMoveHouseOpening={moveHouseOpening} onContextLost={()=>setHasWebGL(false)} onMovePrivacyScreen={(id,offsetPct)=>setScreen(id,{offsetPct})} onSnapshotReady={onSnapshotReady} boardPaint={viewerPaint} selectedHouseWallId={exteriorOpen?houseWall:undefined} onSelectHouseWall={exteriorOpen?setHouseWall:undefined}/></Suspense></ViewerBoundary>
+      <div className="dd-canvas">{show3d?<ViewerBoundary fallback={flat}><Suspense fallback={loading}><Viewer deckOnly={!hasBackyardLayout(data)} yardModel={estimate.yardModel} data={viewData} model={estimate.model} view={mode} structure={mode==='structure'||mode==='hardware'} cutaway={mode==='foundation'} selectedHouseOpeningId={pickedHouseOpeningId||(houseOpen?effectiveHouseOpeningId:undefined)} onSelectHouseOpening={selectHouseOpening} onMoveHouseOpening={moveHouseOpening} onContextLost={()=>setHasWebGL(false)} onMovePrivacyScreen={(id,offsetPct)=>setScreen(id,{offsetPct})} onSnapshotReady={onSnapshotReady} boardPaint={viewerPaint} selectedHouseWallId={exteriorOpen?houseWall:undefined} onSelectHouseWall={exteriorOpen?setHouseWall:undefined}/></Suspense></ViewerBoundary>
         :onPlan?<>{sitePlan}{mounted&&<Suspense fallback={null}><PlanEditor data={data} model={estimate.model} update={update} onEdited={()=>setPlanStatus('')} tool={tool} stairEdges={stairEdges} onStatus={setPlanStatus} toolbar={toolbar} onOpenSection={onOpenSection}/></Suspense>}</>:flat}</div>
       {onPlan&&<>{tool==='size'&&<div className="dd-plan-shortcuts" role="group" aria-label="Shape shortcuts">{SHORTCUTS.map(([id,label])=><button key={id} type="button" className="dd-secondary" aria-pressed={shortcutOn(data,id)} onClick={()=>shortcut(id)}>{label}</button>)}</div>}
         <div className="dd-plan-tool-extras" ref={toolbar}/>
