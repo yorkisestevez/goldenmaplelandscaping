@@ -7,9 +7,9 @@ import {calculateDeckReleaseEstimate} from '../src/features/deckcraft/deckReleas
 import {describeDesign,dollars} from '../src/features/deckcraft/designFacts';
 import {priceLedger,quoteLabel,quoteTag} from '../src/features/deckcraft/designer/priceLedgerModel';
 import {exteriorSummary} from '../src/features/deckcraft/houseLooks';
-import {priceBookLabel} from '../src/features/deckcraft/priceBook';
+import {PRICE_BOOK} from '../src/features/deckcraft/priceBook';
 import {buildProposalPdf,pdfText,PROPOSAL_PDF_NAME,type ProposalPdfInput} from '../src/features/deckcraft/proposalPdf';
-import {lightingLines,proposalContact,proposalFeatures,proposalFinishes,PROPOSAL_WORDS} from '../src/features/deckcraft/proposalModel';
+import {eyebrowNumber,lightingLines,proposalContact,proposalCoverTitle,proposalFeatures,proposalFinishes,proposalRunningTitle,PROPOSAL_WORDS,SHEET_EYEBROWS} from '../src/features/deckcraft/proposalModel';
 import {ATTACH_PROPOSAL_PDF} from '../src/features/deckcraft/sendDesign';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {PROPOSAL_CASES} from './deck-proposal-cases';
@@ -18,8 +18,11 @@ import {designerSource} from './deck-designer-source';
 /**
  * The proposal PDF (R8) says what the printable proposal says, sheet for sheet: the cover, views, lighting and
  * features, finishes, site plan, the investment exactly as the price schedule has it (quote lines tagged, never $0,
- * HST once), next steps and the appendix; contact details only from business.ts; no unapproved claims; and it survives
- * any design, with or without its pictures.
+ * HST once), next steps and the appendix; it wears the Golden Maple estimate branding (R9): the cover's eyebrow,
+ * wordmark and honest document name, a running head and a contact footer with "PAGE 0N" on every page after the
+ * cover, gold section eyebrows, and no italic type; contact details only from business.ts; no unapproved claims (nor
+ * the customer estimate's warranty footer, tagline or validity); and it survives any design, with or without its
+ * pictures.
  */
 let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);checks++;};
 const root=new URL('../',import.meta.url),read=(path:string)=>readFileSync(new URL(path,root),'utf8');
@@ -40,17 +43,20 @@ function drawn(pdf:string):string[]{
 /** "$0" standing alone, never shown for anything unpriced. */
 const ZERO=/\$0(?![\d.,])/;
 const CLAIMS=[/5\.0\s*(GOOGLE RATING|·\s*8 REVIEWS)/i,/8 VERIFIED GOOGLE REVIEWS/i,/WSIB CERTIFIED/i,/\$5M\s*LIABILITY/i,/5-year craftsmanship warranty|Every build is backed by a 5-year/i,
-  /\b5\.0\b|\bstars?\b|\brated\b|\breviews\b|warrant|WSIB|insur|licen[sc]ed|guarantee/i,/instant quote|24\/7|never miss/i];
+  /\b5\.0\b|\bstars?\b|\brated\b|\breviews\b|warrant|WSIB|insur|licen[sc]ed|guarantee/i,/instant quote|24\/7|never miss/i,
+  /structural warranty|built right|backed for years|valid (for )?\d+ days/i];
+const CONTACT=proposalContact(),BRAND=CONTACT.name.toUpperCase();
 function build(d:DeckData,extra:Partial<ProposalPdfInput>={}){
   const estimate=calculateDeckReleaseEstimate(d),{proposalFacts}=describeDesign(d,estimate),exterior=exteriorSummary(d);
   const facts=exterior?[...proposalFacts,exterior]:proposalFacts;
   const bytes=Buffer.from(buildProposalPdf(jsPDF,{data:d,estimate,facts,reviewItems:estimate.flags,date:'September 24, 2026',...extra},{compress:false}));
   const raw=bytes.toString('latin1'),strings=drawn(raw);
-  // Each sheet's running head and title strip are drawn after its body (once the page count is known): they are read on
-  // their own, so body text that runs from one sheet onto the next is matched without them.
+  // Each page's running head and footer are drawn after its body (once the pages are laid out): they are read on their
+  // own, so body text that runs from one sheet onto the next is matched without them. A page's chrome is five strings:
+  // the spaced name, the document's title, the contact line, the footer's second line and "PAGE 0N".
   const head:string[]=[],body:string[]=[];
   for(let i=0;i<strings.length;i++){
-    if(strings[i]==='Golden Maple'&&strings[i+1]==='DECK STUDIO'&&strings[i+3]==='PROJECT'){head.push(...strings.slice(i,i+11));i+=10;continue;}
+    if(strings[i]===BRAND&&/^PAGE \d\d$/.test(strings[i+4]??'')){head.push(...strings.slice(i,i+5),'|');i+=4;continue;}
     body.push(strings[i]);
   }
   const join=(list:string[])=>list.join(' ').replace(/\s+/g,' ');
@@ -63,16 +69,27 @@ for(const [name,make] of Object.entries(PROPOSAL_CASES)){
   const d=make(),{bytes,raw,text,heads,estimate,facts,ledger,pages}=build(d,{shots:SHOTS});
   ok(raw.startsWith('%PDF-')&&raw.trimEnd().endsWith('%%EOF'),`${name}: a complete PDF file`);
   ok(pages>=10&&bytes.length<700_000,`${name}: ${pages} pages, ${bytes.length} bytes`);
-  for(let p=2;p<=pages;p++)ok(heads.includes(`Page ${p} of ${pages}`),`${name}: page ${p} has its running head and title strip`);
-  // The cover.
-  const project=d.customerName.trim()||'Your deck',contact=proposalContact();
-  ok(text.startsWith('Golden Maple DECK STUDIO PROPOSAL'),`${name}: the cover opens with the wordmark, Deck Studio and Proposal`);
-  ok(has(text,`${SHOTS[0].label} · ${PROPOSAL_WORDS.illustration} ${project}`),`${name}: the cover view, a design illustration, then the project: ${project}`);
-  ok(has(text,`DATE September 24, 2026 PRICE BOOK ${priceBookLabel()} PREPARED BY ${contact.name}`),`${name}: the date, the price-book stamp and who prepared it`);
-  ok(d.projectAddress.trim()?has(text,d.projectAddress.trim()):true,`${name}: the address when one was given`);
+  // The estimate's chrome on every page after the cover: the spaced name, the document's title, the published site,
+  // phone and email, and the page number; nothing after the cover lacks it.
+  const contact=CONTACT,backyard=!!ledger.split,running=proposalRunningTitle(d,backyard).toUpperCase();
+  const chrome=`${BRAND} ${pdfText(running)} ${contact.site} · ${contact.phone} · ${contact.email} DECK DESIGN PROPOSAL · ${contact.area.toUpperCase()}`.replace(/\s+/g,' ');
+  for(let p=2;p<=pages;p++)ok(heads.includes(`${chrome} PAGE ${eyebrowNumber(p)} |`),`${name}: page ${p} has the running head and the contact footer with "PAGE ${eyebrowNumber(p)}"`);
+  ok(!heads.includes('PAGE 01')&&(heads.match(/\|/g)??[]).length===pages-1,`${name}: the cover has no running head; the ${pages-1} pages after it each have one`);
+  // The cover: the eyebrow, the spaced wordmark, the hero, the document, the project, who it is for, the date and price
+  // book, and the published contact line.
+  const title=proposalCoverTitle(d,backyard),customer=d.customerName.trim();
+  ok(text.startsWith(`${PROPOSAL_WORDS.eyebrow.toUpperCase()} ${contact.wordmark.top.toUpperCase()} ${contact.wordmark.sub.toUpperCase()} `)&&`${contact.wordmark.top} ${contact.wordmark.sub}`===BUSINESS.publicName.value,`${name}: the cover opens with "${PROPOSAL_WORDS.eyebrow}" and the ${BUSINESS.publicName.value} wordmark`);
+  ok(has(text,`${SHOTS[0].label} · ${PROPOSAL_WORDS.illustration} ${PROPOSAL_WORDS.doctype.toUpperCase()} ${title}`),`${name}: the cover view, a design illustration, "${PROPOSAL_WORDS.doctype}", then the project: ${title}`);
+  ok(has(text,`${customer?`PREPARED FOR ${customer} `:''}PROPOSAL DATE September 24, 2026 PRICE BOOK ${PRICE_BOOK.version} ${BRAND} ${contact.area} · ${contact.phone} · ${contact.email} · ${contact.site}`),`${name}: ${customer?'who it is prepared for, ':''}the date, the price book and the cover's contact line`);
+  ok(customer||!text.includes('PREPARED FOR'),`${name}: "Prepared for" only with the customer's own name`);
+  ok(d.projectAddress.trim()?has(text,d.projectAddress.trim().toUpperCase()):true,`${name}: the address when one was given`);
   ok(!/Not provided/i.test(text),`${name}: never "Not provided"`);
   // Views, features, finishes, the site plan.
-  ok(has(text,'Views Your design from three more angles.')&&SHOTS.slice(1).every(s=>has(text,s.label)),`${name}: three more views, captioned`);
+  ok(has(text,'Views Your design from three more angles.')&&SHOTS.slice(1).every(s=>has(text,s.label.toUpperCase())),`${name}: three more views, captioned`);
+  // The gold eyebrows, numbered in the order the sheets come.
+  const eyebrows=[SHEET_EYEBROWS.views,SHEET_EYEBROWS.features,SHEET_EYEBROWS.finishes,SHEET_EYEBROWS.site,SHEET_EYEBROWS.investment,SHEET_EYEBROWS.next,SHEET_EYEBROWS.appendix];
+  let from=0;
+  ok(eyebrows.every((e,i)=>{const at=text.indexOf(`${eyebrowNumber(i+1)} · ${e.toUpperCase()}`,from);from=at;return at>=0;}),`${name}: the gold eyebrows, 01 to 07, in order`);
   const lights=lightingLines(d);
   for(const fact of facts)if(!(/^Lighting:/.test(fact)&&lights.length))ok(has(text,fact),`${name}: feature on the PDF: ${fact.slice(0,60)}`);
   for(const line of lights)ok(has(text,line),`${name}: fixtures by zone: ${line}`);
@@ -101,7 +118,7 @@ for(const [name,make] of Object.entries(PROPOSAL_CASES)){
   ok(canPublish(BUSINESS.contact.primaryPhone)===has(text,'Call or text Sophie, our AI receptionist'),`${name}: Sophie is named only while the public number is confirmed as hers`);
   ok(text.includes(BUSINESS.publicName.value)&&text.includes(publicContact.phoneDisplay),`${name}: the business name and phone`);
   ok(!text.includes(BUSINESS.contact.legacyPhone.value.display)&&!/\bL4N\b/.test(text),`${name}: no legacy phone or postal code`);
-  for(const claim of CLAIMS)ok(!claim.test(text),`${name}: no claim matching ${claim.source.slice(0,40)}`);
+  for(const claim of CLAIMS)ok(!claim.test(text)&&!claim.test(heads),`${name}: no claim matching ${claim.source.slice(0,40)}, in the body or the running head and footer`);
   ok(!/final price/i.test(text.slice(0,text.indexOf('Appendix For you and your builder'))),`${name}: no "final price" before the appendix`);
   // The appendix, at the back: what to confirm, the construction plan, the material list with quote tags.
   const appendix=text.slice(text.indexOf('Appendix For you and your builder'));
@@ -116,8 +133,8 @@ for(const [name,make] of Object.entries(PROPOSAL_CASES)){
 // 2. Customer details print only when the customer typed them; a blank design is "Your deck".
 {
   const named=build(PROPOSAL_CASES.named()).text,blank=build(PROPOSAL_CASES.default()).text;
-  ok(named.includes('Pat Example')&&named.includes('1 Sample Road, Barrie'),'Typed name and address are printed');
-  ok(blank.startsWith('Golden Maple DECK STUDIO PROPOSAL')&&blank.includes('Your deck')&&!/Not provided/.test(blank),'A blank design is "Your deck", never "Not provided"');
+  ok(named.includes('PREPARED FOR Pat Example')&&named.includes('1 SAMPLE ROAD, BARRIE'),'Typed name and address are printed');
+  ok(blank.includes('DESIGN PROPOSAL 16 × 12 ft Deck')&&!blank.includes('PREPARED FOR')&&!/Not provided/.test(blank),'A blank design is titled by its size, with no "Prepared for", never "Not provided"');
 }
 
 // 3. Pictures: embedded when given, a note when missing or unreadable, never an error.
@@ -148,6 +165,7 @@ for(const [name,make] of Object.entries(PROPOSAL_CASES)){
   ok(page.includes("import('jspdf')")&&!/^\s*import\s+(?!\()[^;]*['"]jspdf['"]/m.test(page)&&!/require\(['"]jspdf/.test(page),'The page imports jsPDF lazily, never in the initial bundle');
   ok(page.includes("import('../features/deckcraft/proposalPdf')")&&page.includes("import('../features/deckcraft/pdfAssets')")&&!/^import[^;]*(proposalPdf|pdfAssets)'/m.test(page),'The PDF builder and its pictures load with jsPDF, not with the page');
   ok(/^import type \{jsPDF as JsPDF\} from 'jspdf';/m.test(pdf)&&(pdf.match(/from 'jspdf'/g)??[]).length===1,'The PDF builder takes jsPDF as a type only');
+  ok(!/['"](bold)?italic['"]/i.test(pdf)&&!/addFont|\.ttf|\.woff/i.test(pdf),'The PDF sets nothing in italics and embeds no font files (jsPDF built-ins only)');
   ok(page.includes('Download PDF')&&page.includes("trackDeck('deckcraft_output','deck_pdf')")&&page.includes('PROPOSAL_PDF_NAME')&&PROPOSAL_PDF_NAME.endsWith('.pdf'),'Proposal & files downloads the PDF and reports it');
   ok(/assets\.planImage\(estimate\.model,data,2000,'site'\)/.test(page)&&/assets\.swatchImages\(data,estimate\.model\)/.test(page)&&/shots,sitePlan,plan,logo,swatches/.test(page),'The page hands the builder the views, both plans, the logo and the swatch photos');
   ok(dialog.includes('onDownloadPdf')&&page.includes('onDownloadPdf={downloadPdf}'),'The send confirmation offers the PDF');
@@ -156,4 +174,4 @@ for(const [name,make] of Object.entries(PROPOSAL_CASES)){
   ok(/if\(ATTACH_PROPOSAL_PDF\)try\{/.test(page)&&/if\(!sent\)\{/.test(page),'An attachment attempt always falls back to the plain submission');
 }
 
-console.log(`DECK PDF OK — ${Object.keys(PROPOSAL_CASES).length} designs: every sheet, the cover (no "Not provided"), features, finishes, the investment equal to the price schedule (no $0, HST once, quotes tagged), contact facts, claims, pictures and lazy loading; ${checks} checks.`);
+console.log(`DECK PDF OK — ${Object.keys(PROPOSAL_CASES).length} designs: every sheet, the estimate's chrome (cover wordmark, running head, contact footer, PAGE 0N, eyebrows, no italics), the cover (no "Not provided"), features, finishes, the investment equal to the price schedule (no $0, HST once, quotes tagged), contact facts, claims, pictures and lazy loading; ${checks} checks.`);

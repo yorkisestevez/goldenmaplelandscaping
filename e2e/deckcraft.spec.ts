@@ -1345,11 +1345,13 @@ test('opens the proposal: a 3D cover and views, features, finishes, the site pla
   const problems=await openDesigner(page);
   const priced=wholeDollars(await price(page).textContent());
   const dialog=await openProposal(page);
-  // The cover: the 3D hero in daylight (no lights yet), the wordmark, the project and the price-book stamp.
+  // The cover, in the Golden Maple estimate branding: the 3D hero in daylight (no lights yet), the wordmark, the
+  // document honestly named, the project (by its size: no name was given) and the price-book stamp.
   const cover=proposalSheet(page,'Cover');
-  await expect(cover.getByRole('heading',{level:2})).toHaveText('Your deck');
+  await expect(cover.getByRole('heading',{level:2})).toHaveText('16 × 12 ft Deck');
   await expect(cover.getByRole('img',{name:'3D view of the proposed deck, corner view'})).toBeVisible();
-  for(const words of ['Golden Maple','Deck Studio','Proposal','Corner view · Design illustration','Price book'])await expect(cover).toContainText(words);
+  for(const words of ['Golden Maple','Landscaping','Deck design · Planning estimate','Design proposal','Corner view · Design illustration','Price book'])await expect(cover).toContainText(words);
+  await expect(cover).not.toContainText('Prepared for');
   await expect(proposalSheet(page,'Views').getByRole('img')).toHaveCount(2);
   await expect(proposalSheet(page,'Views')).toContainText('Front view');
   await expect(proposalSheet(page,'Lighting & features')).toContainText('The deck');
@@ -1358,6 +1360,10 @@ test('opens the proposal: a 3D cover and views, features, finishes, the site pla
   // The investment: the price schedule's priced subtotal, before HST; quotes tagged, never $0.
   const invest=proposalSheet(page,'Investment');
   await expect(invest).toContainText('Planning estimate before HST');
+  // Every numbered sheet has the running head and the contact footer with its page number.
+  await expect(invest.locator('.dd-proposal-runhead')).toContainText('Golden Maple Landscaping');
+  await expect(invest.locator('.dd-proposal-foot')).toContainText('(705) 300-8015');
+  await expect(invest.locator('.dd-proposal-pageno')).toHaveText(/^Page 0\d$/);
   await expect(invest).toContainText('Not a final quote: measurements, connections and engineering are confirmed on site.');
   const subtotal=invest.getByRole('row').filter({has:page.getByRole('rowheader',{name:/^Priced subtotal/})}).getByRole('cell');
   expect(wholeDollars(await subtotal.textContent())).toBe(priced);

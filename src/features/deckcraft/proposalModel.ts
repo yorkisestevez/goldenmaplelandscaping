@@ -3,16 +3,17 @@ import {boardFinishPlan,borderFinishRef,darkSlateBorder,deckColourRef,parseColou
 import {DECK_PARTS,partRef,railingFinish} from './deckPartFinishes';
 import {LIGHTING_ZONES} from './designer/constants';
 import {quoteLabel,type Ledger,type LedgerLine,type LedgerQuote} from './designer/priceLedgerModel';
+import {activeWrap} from './lib/wrapGeometry';
 import {activeLightingItems,isSystemProduct} from './lightingSystem';
-import {MANUFACTURER_ACCESSORIES} from './manufacturerCatalog';
+import {DECKING_CATALOGUE,MANUFACTURER_ACCESSORIES} from './manufacturerCatalog';
 import {railingScreenHex} from './railingScreenColours';
 import {skirtingPlan} from './skirting';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {ColourRef,DeckData} from './types';
 
 /**
- * What the luxury proposal (R8) shows, worked out once for the printable sheet (ProposalSheet.tsx) and the PDF
- * (proposalPdf.ts) alike. Pure: the design, its estimate's facts and its price schedule in; words and lists out. Every
+ * What the luxury proposal (R8, in the Golden Maple estimate branding since R9) shows, worked out once for the printable
+ * sheet (ProposalSheet.tsx) and the PDF (proposalPdf.ts) alike. Pure: the design, its estimate's facts and its price schedule in; words and lists out. Every
  * line comes from the design itself, describeDesign's facts or the price engine (through priceLedgerModel.ts); nothing
  * is added that the design does not have, and nothing here prices anything.
  */
@@ -20,18 +21,20 @@ import type {ColourRef,DeckData} from './types';
 /** A picture of the design from one camera of the 3D view (the page's captureViews). The first is the cover. */
 export interface ProposalShot{label:string;src:string}
 
-/** The project's name on the cover: the customer's own, else "Your deck" (never "Not provided"). */
+/** The project's name in the PDF's document title: the customer's own, else "Your deck" (never "Not provided"). */
 export const proposalTitle=(data:Pick<DeckData,'customerName'>)=>data.customerName.trim()||'Your deck';
 /** The project address, only when the customer gave one ('' otherwise: the line is left out). */
 export const proposalAddress=(data:Pick<DeckData,'projectAddress'>)=>data.projectAddress.trim();
 
 /** The published contact facts (src/data/business.ts), as the proposal words them. */
 export function proposalContact(){
-  const site=BUSINESS.canonicalUrl.replace(/^https?:\/\//,'');
+  const site=BUSINESS.canonicalUrl.replace(/^https?:\/\//,''),name=BUSINESS.publicName.value,words=name.split(' ');
   return {
-    name:BUSINESS.publicName.value,phone:publicContact.phoneDisplay,tel:publicContact.phoneTel,email:publicContact.email,site,
+    name,phone:publicContact.phoneDisplay,tel:publicContact.phoneTel,email:publicContact.email,site,
     area:`${BUSINESS.addressPolicy.value.publicLocality}, ${BUSINESS.addressPolicy.value.region}`,
     book:`${site}/book`,
+    // The cover's wordmark, as the estimate PDF sets it: the published name, its last word set under the rest.
+    wordmark:{top:words.length>1?words.slice(0,-1).join(' '):name,sub:words.length>1?words[words.length-1]:''},
     // The public number is Sophie's, the AI receptionist (business.ts): named only while that fact is confirmed.
     call:canPublish(BUSINESS.contact.primaryPhone)?`Call or text Sophie, our AI receptionist, at ${publicContact.phoneDisplay}`:`Call us at ${publicContact.phoneDisplay}`,
   };
@@ -44,7 +47,34 @@ export const PROPOSAL_WORDS={
   quotesNote:'Not in the totals above. Each is priced by the supplier, or by our builders, once the details are confirmed.',
   illustration:'Design illustration',
   colours:'Colours vary by screen; confirm with samples.',
+  /** The cover's eyebrow and document type (R9): what the document honestly is. */
+  eyebrow:'Deck design · Planning estimate',
+  doctype:'Design proposal',
 } as const;
+
+/**
+ * The gold eyebrow over each sheet's heading ("01 · In your design"), numbered in the order the sheets come; a sheet
+ * that continues keeps its number.
+ */
+export const SHEET_EYEBROWS={views:'Your design in 3D',features:'In your design',finishes:'Manufacturer colours',site:'Layout',investment:'Your investment',next:'Next steps',appendix:'For your builder'} as const;
+export const eyebrowNumber=(n:number)=>String(n).padStart(2,'0');
+
+const LEVEL_WORDS=['','','Two','Three','Four'];
+/**
+ * The project's title on the cover, from the design itself: its levels, else a wrap-around, else its size, and the
+ * backyard when the design has one. Never the customer's name (that is "Prepared for", only when they gave one).
+ */
+export function proposalCoverTitle(data:DeckData,backyard:boolean):string{
+  const deck=data.levels>1?`${LEVEL_WORDS[data.levels]??data.levels}-Level Deck`:activeWrap(data)?'Wrap-Around Deck':`${data.width} × ${data.length} ft Deck`;
+  return backyard?`${deck} & Backyard`:deck;
+}
+/** The line under the cover title: the deck's area, its levels, its decking, and the backyard. */
+export function proposalSummary(data:DeckData,areaSqft:number,backyard:boolean):string{
+  const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)??DECKING_CATALOGUE[0];
+  return [`${Math.round(areaSqft)} sq ft of deck`,data.levels>1?`${data.levels} levels`:'one level',`${material.name}, ${data.deckingColor}`,...(backyard?['with a backyard']:[])].join(' · ');
+}
+/** The running head's title (right of the brand): the cover title, and the customer's name when they gave one. */
+export const proposalRunningTitle=(data:DeckData,backyard:boolean)=>[proposalCoverTitle(data,backyard),data.customerName.trim()].filter(Boolean).join(' · ');
 
 export type FeatureGroupId='deck'|'boards'|'railing'|'lighting'|'living'|'house'|'more';
 export interface FeatureGroup{id:FeatureGroupId;title:string;items:string[]}

@@ -9,16 +9,18 @@ import {priceLedger,quoteLabel,quoteTag} from '../src/features/deckcraft/designe
 import {exteriorSummary} from '../src/features/deckcraft/houseLooks';
 import {PRICE_BOOK,priceBookLabel} from '../src/features/deckcraft/priceBook';
 import {ProposalSheet,type ProposalProps} from '../src/features/deckcraft/ProposalSheet';
-import {investmentSheets,lightingLines,proposalFeatures,proposalFinishes,PROPOSAL_WORDS,type ProposalShot} from '../src/features/deckcraft/proposalModel';
+import {eyebrowNumber,investmentSheets,lightingLines,proposalContact,proposalCoverTitle,proposalFeatures,proposalFinishes,proposalRunningTitle,PROPOSAL_WORDS,SHEET_EYEBROWS,type ProposalShot} from '../src/features/deckcraft/proposalModel';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {PROPOSAL_CASES} from './deck-proposal-cases';
 
 /**
- * The luxury proposal (R8), rendered as the dialog and the print show it. It has every sheet (cover, views, lighting
- * and features, materials and finishes, site plan, investment, next steps, appendix); its investment is the price
- * schedule's figures exactly (lines in the engine's order, subtotals, HST once, the total), every quote tagged, never
- * $0; the cover never says "Not provided"; contact facts come only from business.ts; and no rating, review, WSIB,
- * insurance, warranty or "instant quote" claim appears.
+ * The luxury proposal (R8), rendered as the dialog and the print show it, in the Golden Maple estimate branding (R9).
+ * It has every sheet (cover, views, lighting and features, materials and finishes, site plan, investment, next steps,
+ * appendix); its investment is the price schedule's figures exactly (lines in the engine's order, subtotals, HST once,
+ * the total), every quote tagged, never $0; the cover wears the estimate's wordmark, names the document honestly and
+ * never says "Not provided"; every numbered sheet has the running head and the contact footer with its page number;
+ * contact facts come only from business.ts; no rating, review, WSIB, insurance, warranty, tagline, validity or
+ * "instant quote" claim appears; nothing is set in italics; and the palette's text colours pass WCAG AA.
  */
 let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);checks++;};
 const root=new URL('../',import.meta.url),read=(path:string)=>readFileSync(new URL(path,root),'utf8');
@@ -29,7 +31,9 @@ const esc=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,
 const ZERO=/\$0(?![\d.,])/;
 /** The site's claim gate (scripts/check-rendered-business-claims.py) and the wider list this page has always kept to. */
 const CLAIMS=[/5\.0\s*(GOOGLE RATING|·\s*8 REVIEWS)/i,/8 VERIFIED GOOGLE REVIEWS/i,/WSIB CERTIFIED/i,/\$5M\s*LIABILITY/i,/5-year craftsmanship warranty|Every build is backed by a 5-year/i,
-  /\b5\.0\b|\bstars?\b|\brated\b|\breviews\b|warrant|WSIB|insur|licen[sc]ed|guarantee/i,/instant quote|24\/7|never miss/i];
+  /\b5\.0\b|\bstars?\b|\brated\b|\breviews\b|warrant|WSIB|insur|licen[sc]ed|guarantee/i,/instant quote|24\/7|never miss/i,
+  // The customer estimate PDF's own footer line, tagline and validity, which this planning estimate does not carry.
+  /structural warranty|built right|backed for years|valid (for )?\d+ days/i];
 const SHOTS:ProposalShot[]=[{label:'Corner view at night',src:'data:image/jpeg;base64,AAAA'},{label:'Front view',src:'data:image/jpeg;base64,BBBB'},{label:'Overview',src:'data:image/jpeg;base64,CCCC'},{label:'Corner view by day',src:'data:image/jpeg;base64,DDDD'}];
 function render(data:DeckData,extra:Partial<ProposalProps>={}){
   const estimate=calculateDeckReleaseEstimate(data),{proposalFacts}=describeDesign(data,estimate);
@@ -46,14 +50,29 @@ for(const [name,make] of Object.entries(PROPOSAL_CASES)){
   // 1. Every sheet, in order, each numbered; the appendix at the back.
   const order=['Cover','Views','Lighting &amp; features','Materials &amp; finishes','Site plan','Investment','Next steps','Appendix'].map(l=>html.indexOf(`aria-label="${l}"`));
   ok(order.every(i=>i>0)&&order.every((i,k)=>!k||i>order[k-1]),`${name}: cover, views, features, finishes, site plan, investment, next steps and appendix, in that order`);
-  const pages=(html.match(/<section class="dd-proposal-page/g)??[]).length,numbers=[...html.matchAll(/<dt>No\.<\/dt><dd>(\d+) \/ (\d+)<\/dd>/g)];
-  ok(numbers.length===pages-1&&numbers.every((m,i)=>Number(m[1])===i+2&&Number(m[2])===pages),`${name}: ${pages} sheets, numbered 2 to ${pages} of ${pages} after the cover`);
-  // 2. The cover: the wordmark, the 3D hero, the project, the date and the price book; never "Not provided".
-  const cover=sheetOf(html,'Cover');
-  ok(/Golden Maple<span>Deck Studio<\/span>/.test(cover)&&cover.includes('>Proposal<'),`${name}: the Golden Maple wordmark with Deck Studio and Proposal`);
+  const pages=(html.match(/<section class="dd-proposal-page/g)??[]).length,numbers=[...html.matchAll(/<span class="dd-proposal-pageno">Page (\d+)<\/span>/g)];
+  ok(numbers.length===pages-1&&numbers.every((m,i)=>m[1]===eyebrowNumber(i+2)),`${name}: ${pages} sheets, "Page 02" to "Page ${eyebrowNumber(pages)}" after the cover`);
+  // The estimate's chrome on every numbered sheet (and the appendix's head): the mark, the spaced name and the
+  // document's title; a footer with the published site, phone and email.
+  const contact=proposalContact(),head=proposalRunningTitle(data,!!ledger.split);
+  const runhead=`<header class="dd-proposal-runhead"><span class="dd-proposal-brand"><img src="/logo-mark.png" alt="" width="22" height="18"/>${esc(contact.name)}</span><span class="dd-proposal-headtitle">${esc(head)}</span></header>`;
+  ok(html.split(runhead).length-1===pages,`${name}: the running head (mark, ${contact.name}, "${head}") on every numbered sheet and the appendix`);
+  ok(html.split(`<p>${contact.site} · ${publicContact.phoneDisplay} · ${publicContact.email}</p><p class="dd-proposal-foot-sub">Deck design proposal · ${contact.area}</p>`).length-1===pages-1,`${name}: the contact footer from business.ts on every numbered sheet`);
+  // The gold eyebrows: numbered in the order the sheets come, a continued investment keeping its number.
+  const eyebrows=[...html.matchAll(/<p class="dd-proposal-eyebrow">(\d\d) · (.*?)<\/p>/g)].map(m=>[m[1],unescape(m[2])]);
+  const expected=[SHEET_EYEBROWS.views,SHEET_EYEBROWS.features,SHEET_EYEBROWS.finishes,SHEET_EYEBROWS.site,...investmentSheets(ledger).map(()=>SHEET_EYEBROWS.investment),SHEET_EYEBROWS.next,SHEET_EYEBROWS.appendix];
+  ok(JSON.stringify(eyebrows.map(e=>e[1]))===JSON.stringify(expected)&&eyebrows.every(([n],i)=>Number(n)===expected.slice(0,i+1).filter((x,k)=>!k||x!==expected[k-1]).length),`${name}: ${eyebrows.length} gold eyebrows, numbered 01 to ${eyebrows.at(-1)?.[0]}`);
+  // 2. The cover, as the estimate PDF's: the mark in its ring, the eyebrow, the spaced wordmark (the published name),
+  // the 3D hero, the document honestly named, the project, who it is for, the date and the price book, and the
+  // published contact line; never "Not provided".
+  const cover=sheetOf(html,'Cover'),customer=data.customerName.trim(),title=proposalCoverTitle(data,!!ledger.split);
+  ok(cover.includes('<span class="dd-proposal-emblem"><svg viewBox="0 0 64 64" aria-hidden="true"><circle')&&cover.includes('src="/logo-mark.png"'),`${name}: the GM mark in its thin gold ring`);
+  ok(cover.includes(`<p class="dd-proposal-cover-eyebrow">${PROPOSAL_WORDS.eyebrow}</p><p class="dd-proposal-wordmark">${contact.wordmark.top}<span>${contact.wordmark.sub}</span></p>`)&&`${contact.wordmark.top} ${contact.wordmark.sub}`===BUSINESS.publicName.value,`${name}: "${PROPOSAL_WORDS.eyebrow}" over the ${BUSINESS.publicName.value} wordmark`);
+  ok(cover.includes(`<p class="dd-proposal-doctype">${PROPOSAL_WORDS.doctype}</p><h2>${esc(title)}</h2>`)&&!/instant|final/i.test(text(cover)),`${name}: "${PROPOSAL_WORDS.doctype}", then the project: ${title}`);
   ok(cover.includes(`src="${SHOTS[0].src}"`)&&cover.includes(`alt="3D view of the proposed deck, corner view at night"`)&&cover.includes(`${SHOTS[0].label} · ${PROPOSAL_WORDS.illustration}`),`${name}: the cover is the first view, marked a design illustration`);
-  ok(cover.includes(`<h2>${esc(data.customerName.trim()||'Your deck')}</h2>`),`${name}: the project is the customer's name or "Your deck"`);
-  ok(/<dt>Date<\/dt><dd>September 24, 2026<\/dd>/.test(cover)&&cover.includes(`<dt>Price book</dt><dd>${PRICE_BOOK.version}</dd>`),`${name}: the date and the price-book stamp`);
+  ok(customer?cover.includes(`<dt>Prepared for</dt><dd>${esc(customer)}</dd>`):!cover.includes('Prepared for'),`${name}: "Prepared for" only with the customer's own name`);
+  ok(cover.includes('<dt>Proposal date</dt><dd>September 24, 2026</dd>')&&cover.includes(`<dt>Price book</dt><dd>${PRICE_BOOK.version}</dd>`),`${name}: the date and the price-book stamp`);
+  ok(cover.includes(`<p>${esc(contact.name)}</p><p>${contact.area} · ${publicContact.phoneDisplay} · ${publicContact.email} · ${contact.site}</p>`),`${name}: the cover's footer: the name, service area, phone, email and site from business.ts`);
   ok(data.projectAddress.trim()?cover.includes(`dd-proposal-address">${esc(data.projectAddress.trim())}<`):!cover.includes('dd-proposal-address'),`${name}: the address line only when one was given`);
   ok(!/Not provided/i.test(t),`${name}: never "Not provided"`);
   // 3. Views: the other cameras, each captioned.
@@ -111,7 +130,7 @@ for(const [name,make] of Object.entries(PROPOSAL_CASES)){
   const data=PROPOSAL_CASES.default(),one=render(data,{image:'data:image/jpeg;base64,AAAA'}),none=render(data);
   ok(!one.html.includes('aria-label="Views"')&&one.html.includes('src="data:image/jpeg;base64,AAAA"'),'A single snapshot is the cover; there is no views sheet');
   ok(!none.html.includes('aria-label="Views"')&&sheetOf(none.html,'Cover').includes('Site plan: the deck against the house')&&none.t.includes('The 3D view is not available on this device'),'Without a snapshot the cover shows the site plan and says why');
-  ok(one.t.includes('Your deck')&&!ZERO.test(none.t),'A blank design is "Your deck", and nothing reads $0');
+  ok(sheetOf(one.html,'Cover').includes('<h2>16 × 12 ft Deck</h2>')&&!one.html.includes('Prepared for')&&!ZERO.test(none.t),'A blank design is titled by its size, with no "Prepared for", and nothing reads $0');
 }
 
 // 11. Wiring: the dialog and its styles load on demand; the sheet stays renderable here (no CSS, no bundler-only imports).
@@ -121,6 +140,16 @@ for(const [name,make] of Object.entries(PROPOSAL_CASES)){
   ok(dialog.includes("import './proposal.css';")&&dialog.includes('swatchSrc={swatchUrl}')&&!/\.css'|lib\/swatches/.test(sheet),'The dialog brings the proposal styles and swatch photos; the sheet itself imports neither');
   ok(!css.includes('.dd-proposal-page')&&own.includes('.dd-proposal-page{')&&/@media print\{[\s\S]*@page\{size:letter;margin:0\}/.test(own)&&/break-after:page/.test(own),'The proposal styles (one Letter page a sheet in print) live only in proposal.css');
   ok(!/border-radius:(?!0)|box-shadow:(?!none)/.test(own),'Square corners and no shadows');
+  ok(!/font-style:\s*(italic|oblique)/i.test(own)&&!/fontStyle|<em>|italic/.test(sheet.replace(/\/\*[\s\S]*?\*\//g,'')),'Nothing in the proposal is set in italics');
+  // The estimate's palette (brands.py GM_LANDSCAPING), and every text colour on its ground passes WCAG AA (4.5:1).
+  const token=(n:string)=>new RegExp(`--gm-${n}:(#[0-9a-f]{6})`).exec(own)?.[1]??'';
+  ok(token('forest')==='#122019'&&token('forest-dk')==='#0c120e'&&token('gold')==='#d4af63'&&token('gold-dk')==='#b8932e'&&token('bone')==='#eef2ec','The proposal wears the estimate palette: forest #122019 and #0C120E, gold #D4AF63 and #B8932E, bone #EEF2EC');
+  const lum=(hex:string)=>{const c=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(v=>v<=.03928?v/12.92:((v+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2];};
+  const ratio=(a:string,b:string)=>{const [x,y]=[lum(token(a)),lum(token(b))].sort((p,q)=>q-p);return (x+.05)/(y+.05);};
+  const pairs:[string,string][]=[...['text','muted','gold-ink','forest','quiet'].flatMap(f=>['bone','row-a','row-b','tint','panel'].map(b=>[f,b] as [string,string])),...['gold','light','warm','warm-2','warm-3','warm-4'].map(f=>[f,'forest'] as [string,string])];
+  const failing=pairs.filter(([f,b])=>ratio(f,b)<4.5);
+  ok(!failing.length,`Every text colour passes WCAG AA on its ground (${pairs.length} pairs)${failing.length?`: fails ${failing.map(p=>p.join(' on ')).join(', ')}`:''}`);
+  ok(ratio('gold','bone')<4.5&&/--gm-gold-ink/.test(own),'Small gold text on bone uses the darker gold ink, since the brand gold fails AA there');
   ok(/captureViews\(\)/.test(page)&&/setSnapshotLighting\(view\.light\)/.test(page)&&/setMode\(previous\);setSnapshotLighting\(null\);/.test(page),'The views come from camera presets in day or night, and the visitor\'s view comes back afterwards');
 }
-console.log(`DECK PROPOSAL OK — ${Object.keys(PROPOSAL_CASES).length} designs: sheets and numbering, cover (no "Not provided"), views, features from the facts, finishes with swatches, site plan, investment equal to the price schedule (no $0, HST once, quotes tagged), next steps, appendix, contact facts and claims; ${checks} checks.`);
+console.log(`DECK PROPOSAL OK — ${Object.keys(PROPOSAL_CASES).length} designs: sheets and numbering, the estimate's chrome (cover wordmark, running head, contact footer, page numbers, eyebrows, palette and AA contrast), cover (no "Not provided"), views, features from the facts, finishes with swatches, site plan, investment equal to the price schedule (no $0, HST once, quotes tagged), next steps, appendix, contact facts and claims; ${checks} checks.`);
