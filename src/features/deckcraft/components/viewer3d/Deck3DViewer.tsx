@@ -1,7 +1,7 @@
 import NotchedStringers from './NotchedStringers';
-import {useCallback,useEffect,useMemo,useLayoutEffect,useRef,useState} from 'react';
+import {Suspense,useCallback,useEffect,useMemo,useLayoutEffect,useRef,useState} from 'react';
 import {Canvas,useThree,type ThreeEvent} from '@react-three/fiber';
-import {OrbitControls,Environment,Lightformer} from '@react-three/drei';
+import {OrbitControls} from '@react-three/drei';
 import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import {type DeckData} from '../../types';
@@ -37,6 +37,7 @@ import {railingScreenHex} from '../../railingScreenColours';
 import type {BoardAddress} from '../../lib/boardAddress';
 import RenderPipeline,{pipelineFor} from './renderPipeline';
 import {SCENE_LOOK} from './sceneLook';
+import Sky3D,{StudioLight} from './Sky3D';
 
 /** Powder-coated aluminium (railings, frames, flashing): paint at metalness 0 with a clear coat, so dark finishes
  * catch the sky instead of reading as flat silhouettes. */
@@ -237,12 +238,14 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
   const lights=activeLightingItems(data).reduce((n,item)=>n+(isIlluminatingFixture(item.productId)?item.qty:0),0);
   const simplifiedPaving=!structure&&!cutaway&&view!=='hardware'&&hasSimplifiedPaving(yard);
   return <div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
-    <Canvas shadows="percentage" frameloop="demand" dpr={[1,1.5]} camera={{fov:38,position:[cx+r*1.1,height+r*.85,cz+r*1.65],near:.1,far:1000}} gl={{antialias:false,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:SCENE_LOOK.exposure}} onCreated={({gl})=>{const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
+    <Canvas shadows="percentage" frameloop="demand" dpr={[1,1.5]} camera={{fov:38,position:[cx+r*1.1,height+r*.85,cz+r*1.65],near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar}} gl={{antialias:false,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:SCENE_LOOK.exposure}} onCreated={({gl})=>{const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
         // Leaving 3D (e.g. for the Plan view) disposes the renderer and also fires this event;
         // only a canvas still on the page has really lost its GPU context.
         setTimeout(()=>{if(canvas.isConnected)onContextLost?.();},0);},false);}}>
       <color attach="background" args={[evening?'#28374a':'#e9edf0']}/>
-      <Environment key={evening?'evening':'day'} resolution={128} frames={1} environmentIntensity={evening?.16:.4}><Lightformer intensity={3} position={[0,12,0]} rotation={[Math.PI/2,0,0]} scale={[20,20,1]}/><Lightformer intensity={2} position={[-15,6,8]} rotation={[0,Math.PI/2,0]} scale={[12,15,1]}/><Lightformer intensity={1} position={[12,5,-8]} rotation={[0,-Math.PI/2,0]} scale={[10,10,1]}/></Environment>
+      {/* The real sky (Real Life G3); the studio light stands in while it loads. */}
+      <Suspense fallback={<StudioLight evening={evening}/>}><Sky3D evening={evening}/></Suspense>
+      <fogExp2 attach="fog" args={['#8a8b80',SCENE_LOOK.sky.fogDensity]}/>
       <CameraView view={view} w={w} d={d} cx={cx} cz={cz} height={height} depth={data.foundationDepthIn??48}/>
       <Scene data={data} model={model} structure={structure} cutaway={cutaway} inspection={structure||view==='hardware'} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} {...interaction}/>
       <SnapshotBridge onReady={onSnapshotReady}/>

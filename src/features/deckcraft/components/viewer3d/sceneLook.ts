@@ -16,4 +16,8 @@ export const SCENE_LOOK={
   sunShadow:{mapSize:4096,radius:2.5,marginFt:2},
   /** Paint, not metal: dark powder coat at metalness 0 still catches the sky in a clear coat. */
   powderCoat:{roughness:.5,metalness:0,clearcoat:.6,clearcoatRoughness:.28},powderCoatColor:'#2a2d2e',
+  /** The sky (Sky3D.tsx, built by scripts/build-deck-sky.ts): its sun is turned to come from the front right (azimuth
+   * atan2(z, x) in degrees), as the studio light always has; the evening sky is dimmed so the fixtures carry the scene;
+   * distance haze thickens to 10% at 300 ft; the sky dome sits inside the camera's far plane. */
+  sky:{sunAzimuthDeg:55.3,evening:.1,fogDensity:.0011,domeRadiusFt:1900,cameraNear:.25,cameraFar:2400},
 };

@@ -7,6 +7,12 @@ import {fitSun,shadowKey} from '../src/features/deckcraft/components/viewer3d/sh
 import {ATLAS_WIDTH,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
 import {PATCHED_CHUNKS,boardVariation,boxVariant,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
 import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
+import {HDRLoader} from 'three/examples/jsm/loaders/HDRLoader.js';
+import {SKY_DATA,skyStrength,skyYaw,sunDirection} from '../src/features/deckcraft/components/viewer3d/skyModel';
+import {FAR_RING_IN,LAWN_CHUNKS,groundGeometry} from '../src/features/deckcraft/components/viewer3d/lawnSurface';
+import {occlusionUv} from '../src/features/deckcraft/components/viewer3d/groundOcclusion';
+import {buildYardModel,yardClip} from '../src/features/deckcraft/yardModel';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 
 /**
  * DeckCraft's photographic look (the "Real Life" track, plan phases G1–G8). G1 is the render pipeline: ambient
@@ -14,6 +20,8 @@ import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
  * when something that casts changes, the sun's shadow fitted to what casts, and the proposal pictures drawn through
  * the same pipeline. G2 is the boards: each swatch photo turned into an atlas of its own boards that keeps the photo's
  * colour, repeats without a seam and runs the grain along the board, and a shader that gives every board its own strip.
+ * G3 is the sky and the ground: a real HDRI with its sun painted out and replaced by the scene's sun, a sky dome, haze,
+ * and a photoscanned lawn that runs to the horizon and is shaded under what covers it.
  */
 let checks=0;
 const ok=(condition:unknown,message:string)=>{assert(condition,message);checks++;};
@@ -130,4 +138,51 @@ const viewer2=read(`${VIEWER}Deck3DViewer.tsx`);
 ok(viewer2.includes("geometry.setAttribute('aVar',new THREE.InstancedBufferAttribute(variation,4))")&&viewer2.includes("g.setAttribute('aVar',new THREE.Float32BufferAttribute(")&&read(`${VIEWER}Skirting3D.tsx`).includes("g.setAttribute('aVar',"),'Boards, cut boards and skirting each carry their own pick');
 ok(viewer2.includes("useSwatchTexture(swatchUrl('wood-pressure-treated.jpg'),'#8a7356')")&&viewer2.includes('function useBoxMaterial('),'Framing lumber shows pressure-treated grain along each piece');
 
-console.log(`DECK REALISM OK — look, pipeline wiring, shadow key and sun fit; ${files.length} swatch atlases (worst ΔE ${worstDelta.toFixed(2)}, worst repeat ${worstSeam.toFixed(2)}×), the board shader and its picks; ${checks} checks.`);
+// G3: the sky's numbers, files and wiring.
+const ASSETS=`${VIEWER}assets/`,readme=read(`${ASSETS}README.md`);
+{
+  const {day,evening}=SKY_DATA,up=Math.sin(day.sunElevationDeg*Math.PI/180);
+  ok(day.sunPainted&&day.sunElevationDeg>=25&&day.sunElevationDeg<=60,`The day sky's sun is painted out and stands ${day.sunElevationDeg}° up, a mid-day sun`);
+  ok(Math.abs(day.skyIrradiance+day.sunIntensity*up-Math.PI)<.03,'Sun and sky light a horizontal white card at irradiance π, so a sunlit board shows its swatch colour');
+  ok(Math.abs(evening.skyIrradiance+evening.sunIntensity*Math.max(0,Math.sin(evening.sunElevationDeg*Math.PI/180))-Math.PI)<.03&&!evening.sunPainted&&skyStrength('evening').sun===0,'The evening sky is normalised the same way, keeps its dusk glow and has no sun');
+  ok([day,evening].every(d=>d.sunColor.every(c=>c>0&&c<=1)&&d.whiteBalance.every(w=>w>.6&&w<1.6)&&d.bandScale>0),'Sun colours, white balance and band scales are sane');
+  // The HDRI turned by three's rule (world = R(yaw)·hdri) puts its sun where the scene's sun is.
+  const el=day.sunElevationDeg*Math.PI/180,az=day.sunAzimuthDeg*Math.PI/180,hdriSun=new THREE.Vector3(Math.cos(el)*Math.cos(az),Math.sin(el),Math.cos(el)*Math.sin(az));
+  const world=hdriSun.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0,skyYaw('day'),0)));
+  ok(world.distanceTo(sunDirection())<1e-6,'The turned sky’s sun and the scene’s sun are the same direction, so shadows fall away from the bright sky');
+  for(const name of ['day','evening']){
+    const buffer=readFileSync(`${ASSETS}sky/sky-${name}-ibl.hdr`),hdr=new HDRLoader().setDataType(THREE.FloatType).parse(buffer.buffer.slice(buffer.byteOffset,buffer.byteOffset+buffer.byteLength) as ArrayBuffer);
+    const data=hdr.data as Float32Array;let peak=0,finite=true;for(let i=0;i<data.length;i+=4){const l=.2126*data[i]+.7152*data[i+1]+.0722*data[i+2];if(!Number.isFinite(l))finite=false;peak=Math.max(peak,l);}
+    ok(hdr.width===1024&&hdr.height===512&&finite,`sky-${name}-ibl.hdr is a 1024 × 512 RGBE image that three reads`);
+    ok(name==='evening'||peak<30,`The day lighting image has no sun left in it (brightest ${peak.toFixed(1)})`);
+  }
+}
+const shipped=['lawn-color.webp','lawn-normal.webp','lawn-roughness.webp','lawn.json','sky-*-ibl.hdr','sky-*-band.webp','sky.json'];
+ok(shipped.every(f=>readme.includes(f)),'Every shipped texture and sky file has its source and licence in assets/README.md');
+const assetBytes=readdirSync(ASSETS,{recursive:true}).map(String).filter(f=>/\.(webp|hdr|jpg|png|json)$/.test(f)).reduce((n,f)=>n+readFileSync(`${ASSETS}${f}`).length,0);
+ok(assetBytes<=15*1024*1024&&!readdirSync(ASSETS).some(f=>f.startsWith('grass008')),`The viewer's scanned assets total ${(assetBytes/1048576).toFixed(1)} MB, within 15 MB, and the old lawn is gone`);
+{
+  const viewer3=read(`${VIEWER}Deck3DViewer.tsx`),environment3=read(`${VIEWER}Environment3D.tsx`),sky=read(`${VIEWER}Sky3D.tsx`);
+  ok(viewer3.includes('<Suspense fallback={<StudioLight evening={evening}/>}><Sky3D evening={evening}/></Suspense>')&&viewer3.includes('near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar'),'The real sky loads behind the studio light, and the camera sees to the sky dome');
+  ok(environment3.includes('castShadow={!evening}')&&environment3.includes('SUN.clone().multiplyScalar(radius)')&&!environment3.includes('hemisphereLight'),'The scene’s sun takes the HDRI’s place (none in the evening), and no hemisphere light doubles the sky');
+  ok(sky.includes('name="sky-dome"')&&sky.includes('depthWrite:false,fog:false')&&sky.includes('scene.fog.color.setRGB(')&&viewer3.includes('<fogExp2 attach="fog" args={[')&&sky.includes('preloadEvening()')&&sky.includes("fallback={<SkyOf lighting=\"day\" strength={skyStrength('evening').environment}/>}"),'The dome draws behind everything without fog; one haze lasts the viewer’s life (adding fog recompiles every material) and the sky only recolours it; the evening sky preloads once the day is in, and the dimmed day sky stands in while it loads');
+  ok(SCENE_LOOK.sky.domeRadiusFt<SCENE_LOOK.sky.cameraFar&&Math.exp(-((100*SCENE_LOOK.sky.fogDensity)**2))>.985,'The dome sits inside the far plane, and haze stays under 1.5% at 100 ft');
+}
+// The lawn: the chunks it patches, a natural mean colour, and ground that faces up all the way to the horizon.
+for(const [name,lookup] of LAWN_CHUNKS)ok((THREE.ShaderChunk as Record<string,string>)[name]?.includes(lookup),`ShaderChunk.${name} still has "${lookup}"`);
+{
+  const lawn=JSON.parse(read(`${ASSETS}lawn.json`)),[r,g,b]=lawn.meanSrgb,saturation=(Math.max(r,g,b)-Math.min(r,g,b))/Math.max(r,g,b);
+  ok(g>r&&g>b&&saturation<=.5,`The lawn is a natural green (mean sRGB ${lawn.meanSrgb.join(', ')}, saturation ${saturation.toFixed(2)})`);
+  const yard=buildYardModel(DEFAULT_DECK),tw=yard.terrain.widthFt*12,td=yard.terrain.depthFt*12,width=192,depth=144,bounds={minX:width/2-tw/2,minZ:depth/2-td/2,width:tw,depth:td};
+  const geometry=groundGeometry(yard,yardClip(yard.excavationRegions.map(e=>e.polygon)),width,depth,bounds),pos=geometry.getAttribute('position');
+  let down=0,far=0;const a=new THREE.Vector3(),b2=new THREE.Vector3(),c=new THREE.Vector3();
+  for(let i=0;i<pos.count;i+=3){a.fromBufferAttribute(pos,i);b2.fromBufferAttribute(pos,i+1);c.fromBufferAttribute(pos,i+2);if(b2.clone().sub(a).cross(c.clone().sub(a)).y<=0)down++;for(const v of [a,b2,c])far=Math.max(far,Math.hypot(v.x-width/2,v.z-(bounds.minZ+td/2)));}
+  ok(down===0,`Every ground triangle faces up (${down} face down)`);
+  ok(far>FAR_RING_IN*.99,'The ground runs out to the horizon ring');
+  const [u0,v0]=occlusionUv(bounds,bounds.minX,bounds.minZ),[u1,v1]=occlusionUv(bounds,bounds.minX+tw,bounds.minZ+td);
+  ok(u0===0&&v0===1&&u1===1&&v1===0,'The occlusion map spans the yard: far side at the top, as its camera looking down sees it');
+  const turf=read(`${VIEWER}Turf.tsx`),occlusion=read(`${VIEWER}groundOcclusion.ts`),pipeline3=read(`${VIEWER}renderPipeline.tsx`);
+  ok(turf.includes('timer=setTimeout(redraw,OCCLUSION_SETTLE_MS)')&&turf.includes('occlusion.texture.channel=1')&&pipeline3.includes('for(const listen of shadowListeners.get(gl)??[])listen();gl.shadowMap.needsUpdate=true;')&&occlusion.includes('scene.overrideMaterial=this.cover'),'The lawn’s shade under the deck is redrawn once changes to what casts settle, never mid-drag');
+}
+
+console.log(`DECK REALISM OK — look, pipeline wiring, shadow key and sun fit; ${files.length} swatch atlases (worst ΔE ${worstDelta.toFixed(2)}, worst repeat ${worstSeam.toFixed(2)}×), the board shader and its picks; the sky, its sun and the lawn to the horizon; ${checks} checks.`);

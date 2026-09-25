@@ -56,6 +56,13 @@ interface Pipeline{capture:(scale:number)=>void}
 const pipelines=new WeakMap<THREE.WebGLRenderer,Pipeline>(),renderers=new WeakMap<THREE.WebGLRenderer,()=>void>();
 /** The pipeline drawing this renderer's view, for the proposal snapshot (SnapshotBridge). */
 export function pipelineFor(gl:THREE.WebGLRenderer){return pipelines.get(gl);}
+const shadowListeners=new WeakMap<THREE.WebGLRenderer,Set<()=>void>>();
+/** Runs listen() whenever what casts shadows changes (groundOcclusion.ts redraws then), before the frame is drawn.
+ * Returns the unsubscribe. */
+export function onShadowChange(gl:THREE.WebGLRenderer,listen:()=>void){
+  const set=shadowListeners.get(gl)??new Set();shadowListeners.set(gl,set);set.add(listen);
+  return ()=>{set.delete(listen);};
+}
 
 export default function RenderPipeline({evening}:{evening:boolean}){
   const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera),invalidate=useThree(s=>s.invalidate);
@@ -69,7 +76,8 @@ export default function RenderPipeline({evening}:{evening:boolean}){
     };
     const draw=(chain:Chain,scale:number)=>{
       scene.updateMatrixWorld();const key=shadowKey(scene);
-      if(key!==state.key){state.key=key;fitSun(scene);gl.shadowMap.needsUpdate=true;}
+      // Listeners draw with the shadow maps still frozen (needsUpdate is set after them), so they never redraw those.
+      if(key!==state.key){state.key=key;fitSun(scene);for(const listen of shadowListeners.get(gl)??[])listen();gl.shadowMap.needsUpdate=true;}
       gl.getDrawingBufferSize(size);chain.setSize(size.x,size.y,scale);chain.render(gl,scene,camera,state.evening);
     };
     const frame=()=>{
