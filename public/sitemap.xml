@@ -50,6 +50,12 @@
   <url><loc>https://goldenmaplelandscaping.ca/portfolio/lakeside-backyard/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/about/</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/process/</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/process/consultation/</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/process/site-assessment/</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/process/3d-design/</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/process/material-selection/</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/process/construction/</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/process/completion/</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/contact/</loc><changefreq>yearly</changefreq><priority>0.9</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/service-areas/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/book/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
@@ -71,6 +77,14 @@
   <url><loc>https://goldenmaplelandscaping.ca/locations/wasaga-beach/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/locations/midland/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/locations/collingwood/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+
+  <!-- Barrie Project Collections -->
+  <url><loc>https://goldenmaplelandscaping.ca/patios-barrie/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/outdoor-living-barrie/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/premium-patio-rebuild-barrie/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/sloped-backyard-solutions-barrie/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/full-backyard-transformations-barrie/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/luxury-landscape-barrie/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 
   <!-- Blog Posts -->
   <url><loc>https://goldenmaplelandscaping.ca/resources/interlocking-cost-barrie/</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
