@@ -16,7 +16,7 @@
   },
   "patio-500-mid-barrie": {
     "totalLow": 19500,
-    "totalHigh": 27750,
+    "totalHigh": 28250,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -27,13 +27,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2062486,
-      "hstCents": 268123,
-      "grandTotalCents": 2330609,
+      "subtotalCents": 2062502,
+      "hstCents": 268125,
+      "grandTotalCents": 2330627,
       "perCategoryCents": {
-        "excavation": 439500,
-        "materials": 635986,
-        "labour": 659500,
+        "excavation": 410000,
+        "materials": 710502,
+        "labour": 614500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -52,21 +52,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -104,9 +104,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -136,7 +136,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -146,14 +146,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 38.3,
+      "marginPct": 35.6,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -164,17 +164,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6000,
-        "high": 7900,
+        "low": 6700,
+        "high": 8900,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 6300,
+        "low": 5800,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -192,7 +192,7 @@
   },
   "patio-500-budget": {
     "totalLow": 19250,
-    "totalHigh": 27500,
+    "totalHigh": 28000,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -203,13 +203,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2049863,
-      "hstCents": 266482,
-      "grandTotalCents": 2316345,
+      "subtotalCents": 2049879,
+      "hstCents": 266484,
+      "grandTotalCents": 2316363,
       "perCategoryCents": {
-        "excavation": 439500,
-        "materials": 623363,
-        "labour": 659500,
+        "excavation": 410000,
+        "materials": 697879,
+        "labour": 614500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -228,21 +228,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -280,9 +280,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -312,7 +312,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -322,14 +322,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 38.3,
+      "marginPct": 35.6,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -340,17 +340,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 5900,
-        "high": 7800,
+        "low": 6600,
+        "high": 8700,
         "detail": "Permacon Melville (500 sqft)"
       },
       "labour": {
-        "low": 6300,
+        "low": 5800,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -368,7 +368,7 @@
   },
   "patio-500-premium": {
     "totalLow": 23750,
-    "totalHigh": 33250,
+    "totalHigh": 33750,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -379,13 +379,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2511698,
-      "hstCents": 326521,
-      "grandTotalCents": 2838219,
+      "subtotalCents": 2511714,
+      "hstCents": 326523,
+      "grandTotalCents": 2838237,
       "perCategoryCents": {
-        "excavation": 439500,
-        "materials": 1085198,
-        "labour": 659500,
+        "excavation": 410000,
+        "materials": 1159714,
+        "labour": 614500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -404,21 +404,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -456,9 +456,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -488,7 +488,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -498,14 +498,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 36.1,
+      "marginPct": 33.9,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -516,17 +516,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 10300,
-        "high": 13600,
+        "low": 11000,
+        "high": 14500,
         "detail": "Permacon Brooklyn (500 sqft)"
       },
       "labour": {
-        "low": 6300,
+        "low": 5800,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -555,13 +555,13 @@
     },
     "sqftPriced": 100,
     "precise": {
-      "subtotalCents": 822959,
-      "hstCents": 106985,
-      "grandTotalCents": 929944,
+      "subtotalCents": 828591,
+      "hstCents": 107717,
+      "grandTotalCents": 936308,
       "perCategoryCents": {
         "excavation": 325000,
-        "materials": 196059,
-        "labour": 131900,
+        "materials": 210691,
+        "labour": 122900,
         "disposal": 55000,
         "restoration": 115000
       },
@@ -580,21 +580,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 3,
+          "qty": 6,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 8850,
-          "retailCents": 11948,
+          "unitTradeCents": 3150,
+          "tradeCents": 18900,
+          "retailCents": 25515,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 0.25,
+          "qty": 0.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 656,
-          "retailCents": 886,
+          "unitTradeCents": 2890,
+          "tradeCents": 1445,
+          "retailCents": 1951,
           "category": "materials"
         },
         {
@@ -664,7 +664,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 87900,
+          "retailCents": 82000,
           "category": "excavation"
         },
         {
@@ -674,14 +674,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 131900,
+          "retailCents": 122900,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 42.3,
+      "marginPct": 41.4,
       "quantities": {
-        "aggregateTonnes": 3.3,
+        "aggregateTonnes": 6.5,
         "polySandBags": 2,
         "edgePieces": 5,
         "fabricRolls": 1,
@@ -697,8 +697,8 @@
         "detail": "Site-specific preparation allowance for 100 sqft"
       },
       "materials": {
-        "low": 1900,
-        "high": 2500,
+        "low": 2000,
+        "high": 2600,
         "detail": "Permacon Mondrian Plus (100 sqft)"
       },
       "labour": {
@@ -719,8 +719,8 @@
     }
   },
   "patio-2000-max-size": {
-    "totalLow": 74000,
-    "totalHigh": 98000,
+    "totalLow": 74250,
+    "totalHigh": 99750,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -731,13 +731,13 @@
     },
     "sqftPriced": 2000,
     "precise": {
-      "subtotalCents": 7893365,
-      "hstCents": 1026137,
-      "grandTotalCents": 8919502,
+      "subtotalCents": 7924481,
+      "hstCents": 1030183,
+      "grandTotalCents": 8954664,
       "perCategoryCents": {
-        "excavation": 1758000,
-        "materials": 2352365,
-        "labour": 2638000,
+        "excavation": 1640000,
+        "materials": 2681481,
+        "labour": 2458000,
         "disposal": 495000,
         "restoration": 650000
       },
@@ -756,21 +756,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 60,
+          "qty": 120,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 177000,
-          "retailCents": 238950,
+          "unitTradeCents": 3150,
+          "tradeCents": 378000,
+          "retailCents": 510300,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 5,
+          "qty": 10,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 13110,
-          "retailCents": 17699,
+          "unitTradeCents": 2890,
+          "tradeCents": 28900,
+          "retailCents": 39015,
           "category": "materials"
         },
         {
@@ -806,11 +806,11 @@
         {
           "id": "delivery-aggregate",
           "label": "Aggregate delivery (Carr, zone 1)",
-          "qty": 3,
+          "qty": 5,
           "unit": "load",
-          "unitTradeCents": 13167,
-          "tradeCents": 39500,
-          "retailCents": 53325,
+          "unitTradeCents": 13300,
+          "tradeCents": 66500,
+          "retailCents": 89775,
           "category": "materials"
         },
         {
@@ -840,7 +840,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 1758000,
+          "retailCents": 1640000,
           "category": "excavation"
         },
         {
@@ -850,36 +850,36 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 2638000,
+          "retailCents": 2458000,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 46.3,
+      "marginPct": 43.5,
       "quantities": {
-        "aggregateTonnes": 65,
+        "aggregateTonnes": 130,
         "polySandBags": 25,
         "edgePieces": 23,
         "fabricRolls": 5,
         "skids": 22,
-        "deliveryLoads": 3,
+        "deliveryLoads": 5,
         "bins": 9
       }
     },
     "lines": {
       "excavation": {
-        "low": 16700,
-        "high": 22000,
+        "low": 15600,
+        "high": 20500,
         "detail": "Site-specific preparation allowance for 2000 sqft"
       },
       "materials": {
-        "low": 22300,
-        "high": 29400,
+        "low": 25500,
+        "high": 33500,
         "detail": "Permacon Mondrian Plus (2000 sqft)"
       },
       "labour": {
-        "low": 25100,
-        "high": 33000,
+        "low": 23400,
+        "high": 31900,
         "detail": "6.5–10.5 estimated days on-site"
       },
       "disposal": {
@@ -896,7 +896,7 @@
   },
   "patio-480-bin-boundary": {
     "totalLow": 18750,
-    "totalHigh": 26750,
+    "totalHigh": 27250,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -907,13 +907,13 @@
     },
     "sqftPriced": 480,
     "precise": {
-      "subtotalCents": 1986355,
-      "hstCents": 258226,
-      "grandTotalCents": 2244581,
+      "subtotalCents": 1986426,
+      "hstCents": 258235,
+      "grandTotalCents": 2244661,
       "perCategoryCents": {
-        "excavation": 421920,
-        "materials": 610315,
-        "labour": 633120,
+        "excavation": 393600,
+        "materials": 681906,
+        "labour": 589920,
         "disposal": 165000,
         "restoration": 156000
       },
@@ -932,21 +932,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 14.4,
+          "qty": 28.8,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 42480,
-          "retailCents": 57348,
+          "unitTradeCents": 3150,
+          "tradeCents": 90720,
+          "retailCents": 122472,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.2,
+          "qty": 2.4,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3146,
-          "retailCents": 4247,
+          "unitTradeCents": 2890,
+          "tradeCents": 6936,
+          "retailCents": 9364,
           "category": "materials"
         },
         {
@@ -984,9 +984,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -1016,7 +1016,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 421920,
+          "retailCents": 393600,
           "category": "excavation"
         },
         {
@@ -1026,14 +1026,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 633120,
+          "retailCents": 589920,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 37.8,
+      "marginPct": 35.1,
       "quantities": {
-        "aggregateTonnes": 15.6,
+        "aggregateTonnes": 31.2,
         "polySandBags": 6,
         "edgePieces": 11,
         "fabricRolls": 2,
@@ -1044,17 +1044,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4000,
-        "high": 5300,
+        "low": 3700,
+        "high": 4900,
         "detail": "Site-specific preparation allowance for 480 sqft"
       },
       "materials": {
-        "low": 5800,
-        "high": 7600,
+        "low": 6500,
+        "high": 8500,
         "detail": "Permacon Mondrian Plus (480 sqft)"
       },
       "labour": {
-        "low": 6000,
+        "low": 5600,
         "high": 10100,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -1072,7 +1072,7 @@
   },
   "patio-surface-grass-explicit": {
     "totalLow": 19500,
-    "totalHigh": 27750,
+    "totalHigh": 28250,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -1083,13 +1083,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2062486,
-      "hstCents": 268123,
-      "grandTotalCents": 2330609,
+      "subtotalCents": 2062502,
+      "hstCents": 268125,
+      "grandTotalCents": 2330627,
       "perCategoryCents": {
-        "excavation": 439500,
-        "materials": 635986,
-        "labour": 659500,
+        "excavation": 410000,
+        "materials": 710502,
+        "labour": 614500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -1108,21 +1108,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -1160,9 +1160,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -1192,7 +1192,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -1202,14 +1202,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 38.3,
+      "marginPct": 35.6,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -1220,17 +1220,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6000,
-        "high": 7900,
+        "low": 6700,
+        "high": 8900,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 6300,
+        "low": 5800,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -1248,7 +1248,7 @@
   },
   "patio-surface-concrete": {
     "totalLow": 22750,
-    "totalHigh": 32750,
+    "totalHigh": 33250,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -1259,13 +1259,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2496986,
-      "hstCents": 324608,
-      "grandTotalCents": 2821594,
+      "subtotalCents": 2497002,
+      "hstCents": 324610,
+      "grandTotalCents": 2821612,
       "perCategoryCents": {
-        "excavation": 489000,
-        "materials": 635986,
-        "labour": 934500,
+        "excavation": 459500,
+        "materials": 710502,
+        "labour": 889500,
         "disposal": 275000,
         "restoration": 162500
       },
@@ -1284,21 +1284,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -1336,9 +1336,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -1368,7 +1368,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -1378,14 +1378,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 37.2,
+      "marginPct": 35,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -1396,17 +1396,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4500,
-        "high": 6100,
+        "low": 4300,
+        "high": 5800,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6000,
-        "high": 7900,
+        "low": 6700,
+        "high": 8900,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 8300,
+        "low": 7800,
         "high": 13500,
         "detail": "2.5–4.5 estimated days on-site"
       },
@@ -1424,7 +1424,7 @@
   },
   "patio-surface-pavers": {
     "totalLow": 21500,
-    "totalHigh": 32000,
+    "totalHigh": 32500,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -1435,13 +1435,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2323986,
-      "hstCents": 302118,
-      "grandTotalCents": 2626104,
+      "subtotalCents": 2324002,
+      "hstCents": 302120,
+      "grandTotalCents": 2626122,
       "perCategoryCents": {
-        "excavation": 471000,
-        "materials": 635986,
-        "labour": 834500,
+        "excavation": 441500,
+        "materials": 710502,
+        "labour": 789500,
         "disposal": 220000,
         "restoration": 162500
       },
@@ -1460,21 +1460,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -1512,9 +1512,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -1544,7 +1544,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -1554,14 +1554,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 34.9,
+      "marginPct": 32.6,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -1572,189 +1572,13 @@
     },
     "lines": {
       "excavation": {
-        "low": 4400,
-        "high": 5900,
+        "low": 4100,
+        "high": 5500,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6000,
-        "high": 7900,
-        "detail": "Permacon Mondrian Plus (500 sqft)"
-      },
-      "labour": {
-        "low": 7500,
-        "high": 13500,
-        "detail": "2.5–4.5 estimated days on-site"
-      },
-      "disposal": {
-        "low": 2200,
-        "high": 2500,
-        "detail": "4 × 14-yard bin (clean fill)"
-      },
-      "restoration": {
-        "low": 1300,
-        "high": 2000,
-        "detail": "Edge dressing, soil amendments, site clean"
-      }
-    }
-  },
-  "patio-surface-deck": {
-    "totalLow": 21000,
-    "totalHigh": 32000,
-    "addOnsTotal": {
-      "low": 0,
-      "high": 0
-    },
-    "days": {
-      "low": 2.5,
-      "high": 4.5
-    },
-    "sqftPriced": 500,
-    "precise": {
-      "subtotalCents": 2312186,
-      "hstCents": 300584,
-      "grandTotalCents": 2612770,
-      "perCategoryCents": {
-        "excavation": 469200,
-        "materials": 635986,
-        "labour": 824500,
-        "disposal": 220000,
-        "restoration": 162500
-      },
-      "addOnsCents": 0,
-      "lineItems": [
-        {
-          "id": "patio-material",
-          "label": "Permacon Mondrian Plus pavers (incl. waste)",
-          "qty": 550,
-          "unit": "sqft",
-          "unitTradeCents": 579,
-          "tradeCents": 318450,
-          "retailCents": 429908,
-          "category": "materials"
-        },
-        {
-          "id": "clear-stone-base",
-          "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
-          "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
-          "category": "materials"
-        },
-        {
-          "id": "hpb-bedding",
-          "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
-          "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
-          "category": "materials"
-        },
-        {
-          "id": "poly-sand",
-          "label": "Techniseal HP NextGel polymeric sand",
-          "qty": 7,
-          "unit": "bag",
-          "unitTradeCents": 2910,
-          "tradeCents": 20370,
-          "retailCents": 27500,
-          "category": "materials"
-        },
-        {
-          "id": "edge-restraint",
-          "label": "Snap Edge paver restraint + spikes",
-          "qty": 12,
-          "unit": "pc (8 ft)",
-          "unitTradeCents": 1464,
-          "tradeCents": 17568,
-          "retailCents": 23717,
-          "category": "materials"
-        },
-        {
-          "id": "geotextile",
-          "label": "Non-woven geotextile fabric",
-          "qty": 2,
-          "unit": "roll",
-          "unitTradeCents": 8292,
-          "tradeCents": 16584,
-          "retailCents": 22388,
-          "category": "materials"
-        },
-        {
-          "id": "delivery-aggregate",
-          "label": "Aggregate delivery (Carr, zone 1)",
-          "qty": 2,
-          "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
-          "category": "materials"
-        },
-        {
-          "id": "delivery-pallets",
-          "label": "Paver pallet delivery (flatbed)",
-          "qty": 6,
-          "unit": "skid",
-          "unitTradeCents": 4267,
-          "tradeCents": 25600,
-          "retailCents": 34560,
-          "category": "materials"
-        },
-        {
-          "id": "disposal-bins",
-          "label": "14-yd disposal bins",
-          "qty": 4,
-          "unit": "bin",
-          "unitTradeCents": 55000,
-          "tradeCents": 220000,
-          "retailCents": 220000,
-          "category": "disposal"
-        },
-        {
-          "id": "excavation-base-install",
-          "label": "Excavation + 12\" base build",
-          "qty": 500,
-          "unit": "sqft",
-          "unitTradeCents": 0,
-          "tradeCents": 0,
-          "retailCents": 439500,
-          "category": "excavation"
-        },
-        {
-          "id": "install-labour",
-          "label": "Screeding, laying, cutting, compaction, joint sand",
-          "qty": 500,
-          "unit": "sqft",
-          "unitTradeCents": 0,
-          "tradeCents": 0,
-          "retailCents": 659500,
-          "category": "labour"
-        }
-      ],
-      "allowances": [],
-      "marginPct": 34.6,
-      "quantities": {
-        "aggregateTonnes": 16.3,
-        "polySandBags": 7,
-        "edgePieces": 12,
-        "fabricRolls": 2,
-        "skids": 6,
-        "deliveryLoads": 2,
-        "bins": 4
-      }
-    },
-    "lines": {
-      "excavation": {
-        "low": 4300,
-        "high": 5900,
-        "detail": "Site-specific preparation allowance for 500 sqft"
-      },
-      "materials": {
-        "low": 6000,
-        "high": 7900,
+        "low": 6700,
+        "high": 8900,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
@@ -1774,9 +1598,185 @@
       }
     }
   },
+  "patio-surface-deck": {
+    "totalLow": 21000,
+    "totalHigh": 32500,
+    "addOnsTotal": {
+      "low": 0,
+      "high": 0
+    },
+    "days": {
+      "low": 2.5,
+      "high": 4.5
+    },
+    "sqftPriced": 500,
+    "precise": {
+      "subtotalCents": 2312202,
+      "hstCents": 300586,
+      "grandTotalCents": 2612788,
+      "perCategoryCents": {
+        "excavation": 439700,
+        "materials": 710502,
+        "labour": 779500,
+        "disposal": 220000,
+        "restoration": 162500
+      },
+      "addOnsCents": 0,
+      "lineItems": [
+        {
+          "id": "patio-material",
+          "label": "Permacon Mondrian Plus pavers (incl. waste)",
+          "qty": 550,
+          "unit": "sqft",
+          "unitTradeCents": 579,
+          "tradeCents": 318450,
+          "retailCents": 429908,
+          "category": "materials"
+        },
+        {
+          "id": "clear-stone-base",
+          "label": "¾\" clear stone base, 12\" compacted",
+          "qty": 30,
+          "unit": "tonne",
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
+          "category": "materials"
+        },
+        {
+          "id": "hpb-bedding",
+          "label": "HPB bedding, 1\" screeded",
+          "qty": 2.5,
+          "unit": "tonne",
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
+          "category": "materials"
+        },
+        {
+          "id": "poly-sand",
+          "label": "Techniseal HP NextGel polymeric sand",
+          "qty": 7,
+          "unit": "bag",
+          "unitTradeCents": 2910,
+          "tradeCents": 20370,
+          "retailCents": 27500,
+          "category": "materials"
+        },
+        {
+          "id": "edge-restraint",
+          "label": "Snap Edge paver restraint + spikes",
+          "qty": 12,
+          "unit": "pc (8 ft)",
+          "unitTradeCents": 1464,
+          "tradeCents": 17568,
+          "retailCents": 23717,
+          "category": "materials"
+        },
+        {
+          "id": "geotextile",
+          "label": "Non-woven geotextile fabric",
+          "qty": 2,
+          "unit": "roll",
+          "unitTradeCents": 8292,
+          "tradeCents": 16584,
+          "retailCents": 22388,
+          "category": "materials"
+        },
+        {
+          "id": "delivery-aggregate",
+          "label": "Aggregate delivery (Carr, zone 1)",
+          "qty": 2,
+          "unit": "load",
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
+          "category": "materials"
+        },
+        {
+          "id": "delivery-pallets",
+          "label": "Paver pallet delivery (flatbed)",
+          "qty": 6,
+          "unit": "skid",
+          "unitTradeCents": 4267,
+          "tradeCents": 25600,
+          "retailCents": 34560,
+          "category": "materials"
+        },
+        {
+          "id": "disposal-bins",
+          "label": "14-yd disposal bins",
+          "qty": 4,
+          "unit": "bin",
+          "unitTradeCents": 55000,
+          "tradeCents": 220000,
+          "retailCents": 220000,
+          "category": "disposal"
+        },
+        {
+          "id": "excavation-base-install",
+          "label": "Excavation + 12\" base build",
+          "qty": 500,
+          "unit": "sqft",
+          "unitTradeCents": 0,
+          "tradeCents": 0,
+          "retailCents": 410000,
+          "category": "excavation"
+        },
+        {
+          "id": "install-labour",
+          "label": "Screeding, laying, cutting, compaction, joint sand",
+          "qty": 500,
+          "unit": "sqft",
+          "unitTradeCents": 0,
+          "tradeCents": 0,
+          "retailCents": 614500,
+          "category": "labour"
+        }
+      ],
+      "allowances": [],
+      "marginPct": 32.2,
+      "quantities": {
+        "aggregateTonnes": 32.5,
+        "polySandBags": 7,
+        "edgePieces": 12,
+        "fabricRolls": 2,
+        "skids": 6,
+        "deliveryLoads": 2,
+        "bins": 4
+      }
+    },
+    "lines": {
+      "excavation": {
+        "low": 4000,
+        "high": 5600,
+        "detail": "Site-specific preparation allowance for 500 sqft"
+      },
+      "materials": {
+        "low": 6700,
+        "high": 8900,
+        "detail": "Permacon Mondrian Plus (500 sqft)"
+      },
+      "labour": {
+        "low": 6800,
+        "high": 13500,
+        "detail": "2.5–4.5 estimated days on-site"
+      },
+      "disposal": {
+        "low": 2200,
+        "high": 2500,
+        "detail": "4 × 14-yard bin (clean fill)"
+      },
+      "restoration": {
+        "low": 1300,
+        "high": 2000,
+        "detail": "Edge dressing, soil amendments, site clean"
+      }
+    }
+  },
   "patio-shape-curves": {
     "totalLow": 20000,
-    "totalHigh": 27750,
+    "totalHigh": 28500,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -1787,13 +1787,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2118422,
-      "hstCents": 275395,
-      "grandTotalCents": 2393817,
+      "subtotalCents": 2115288,
+      "hstCents": 274987,
+      "grandTotalCents": 2390275,
       "perCategoryCents": {
-        "excavation": 439500,
-        "materials": 645757,
-        "labour": 705665,
+        "excavation": 410000,
+        "materials": 720273,
+        "labour": 657515,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -1812,21 +1812,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -1864,9 +1864,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -1896,7 +1896,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -1906,14 +1906,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 39.6,
+      "marginPct": 36.9,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -1924,17 +1924,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6100,
-        "high": 8100,
+        "low": 6800,
+        "high": 9000,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 6700,
+        "low": 6200,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -1952,7 +1952,7 @@
   },
   "patio-shape-complex": {
     "totalLow": 20500,
-    "totalHigh": 28000,
+    "totalHigh": 28500,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -1963,13 +1963,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2174357,
-      "hstCents": 282666,
-      "grandTotalCents": 2457023,
+      "subtotalCents": 2168073,
+      "hstCents": 281849,
+      "grandTotalCents": 2449922,
       "perCategoryCents": {
-        "excavation": 439500,
-        "materials": 655527,
-        "labour": 751830,
+        "excavation": 410000,
+        "materials": 730043,
+        "labour": 700530,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -1988,21 +1988,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -2040,9 +2040,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -2072,7 +2072,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -2082,14 +2082,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 40.8,
+      "marginPct": 38.1,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -2100,17 +2100,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6200,
-        "high": 8200,
+        "low": 6900,
+        "high": 9100,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 7100,
+        "low": 6700,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -2139,13 +2139,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2375186,
-      "hstCents": 308774,
-      "grandTotalCents": 2683960,
+      "subtotalCents": 2375202,
+      "hstCents": 308776,
+      "grandTotalCents": 2683978,
       "perCategoryCents": {
-        "excavation": 487200,
-        "materials": 635986,
-        "labour": 924500,
+        "excavation": 457700,
+        "materials": 710502,
+        "labour": 879500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -2164,21 +2164,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -2216,9 +2216,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -2248,7 +2248,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -2258,14 +2258,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 46.4,
+      "marginPct": 44.1,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -2276,18 +2276,18 @@
     },
     "lines": {
       "excavation": {
-        "low": 4500,
-        "high": 6100,
+        "low": 4200,
+        "high": 5800,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6000,
-        "high": 7900,
+        "low": 6700,
+        "high": 8900,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 8100,
-        "high": 11700,
+        "low": 7600,
+        "high": 11200,
         "detail": "2–3.5 estimated days on-site"
       },
       "disposal": {
@@ -2304,7 +2304,7 @@
   },
   "patio-use-multi": {
     "totalLow": 19500,
-    "totalHigh": 27750,
+    "totalHigh": 28250,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -2315,13 +2315,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2082271,
-      "hstCents": 270695,
-      "grandTotalCents": 2352966,
+      "subtotalCents": 2080937,
+      "hstCents": 270522,
+      "grandTotalCents": 2351459,
       "perCategoryCents": {
-        "excavation": 439500,
-        "materials": 635986,
-        "labour": 679285,
+        "excavation": 410000,
+        "materials": 710502,
+        "labour": 632935,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -2340,21 +2340,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -2392,9 +2392,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -2424,7 +2424,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -2434,14 +2434,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 38.9,
+      "marginPct": 36.2,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -2452,17 +2452,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6000,
-        "high": 7900,
+        "low": 6700,
+        "high": 8900,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 6500,
+        "low": 6000,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -2491,13 +2491,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2921557,
-      "hstCents": 379802,
-      "grandTotalCents": 3301359,
+      "subtotalCents": 2915273,
+      "hstCents": 378985,
+      "grandTotalCents": 3294258,
       "perCategoryCents": {
-        "excavation": 536700,
-        "materials": 655527,
-        "labour": 1291830,
+        "excavation": 507200,
+        "materials": 730043,
+        "labour": 1240530,
         "disposal": 275000,
         "restoration": 162500
       },
@@ -2516,21 +2516,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -2568,9 +2568,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -2600,7 +2600,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -2610,14 +2610,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 45.9,
+      "marginPct": 43.9,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -2628,18 +2628,18 @@
     },
     "lines": {
       "excavation": {
-        "low": 4900,
-        "high": 6800,
+        "low": 4600,
+        "high": 6400,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6200,
-        "high": 8200,
+        "low": 6900,
+        "high": 9100,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 10900,
-        "high": 16400,
+        "low": 10500,
+        "high": 15800,
         "detail": "2.5–4.5 estimated days on-site"
       },
       "disposal": {
@@ -2656,7 +2656,7 @@
   },
   "patio-cond-access": {
     "totalLow": 22250,
-    "totalHigh": 30000,
+    "totalHigh": 30750,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -2667,13 +2667,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2260306,
-      "hstCents": 293840,
-      "grandTotalCents": 2554146,
+      "subtotalCents": 2246912,
+      "hstCents": 292099,
+      "grandTotalCents": 2539011,
       "perCategoryCents": {
-        "excavation": 518610,
-        "materials": 635986,
-        "labour": 778210,
+        "excavation": 483800,
+        "materials": 710502,
+        "labour": 725110,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -2692,21 +2692,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -2744,9 +2744,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -2776,7 +2776,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -2786,14 +2786,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 43.7,
+      "marginPct": 40.9,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -2804,17 +2804,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4900,
-        "high": 6500,
+        "low": 4600,
+        "high": 6000,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 7100,
-        "high": 9400,
+        "low": 8000,
+        "high": 10500,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 7400,
+        "low": 6900,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -2832,7 +2832,7 @@
   },
   "patio-cond-slope": {
     "totalLow": 20500,
-    "totalHigh": 33250,
+    "totalHigh": 33750,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -2843,13 +2843,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2276986,
-      "hstCents": 296008,
-      "grandTotalCents": 2572994,
+      "subtotalCents": 2277002,
+      "hstCents": 296010,
+      "grandTotalCents": 2573012,
       "perCategoryCents": {
-        "excavation": 489000,
-        "materials": 635986,
-        "labour": 824500,
+        "excavation": 459500,
+        "materials": 710502,
+        "labour": 779500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -2868,21 +2868,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -2920,9 +2920,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -2952,7 +2952,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -2962,14 +2962,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 33.3,
+      "marginPct": 30.9,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -2980,17 +2980,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4400,
-        "high": 6200,
+        "low": 4200,
+        "high": 5800,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6000,
-        "high": 7900,
+        "low": 6700,
+        "high": 8900,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 7200,
+        "low": 6800,
         "high": 15100,
         "detail": "2.5–5 estimated days on-site"
       },
@@ -3008,7 +3008,7 @@
   },
   "patio-cond-drainage": {
     "totalLow": 20500,
-    "totalHigh": 31500,
+    "totalHigh": 32000,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -3019,13 +3019,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2257486,
-      "hstCents": 293473,
-      "grandTotalCents": 2550959,
+      "subtotalCents": 2257502,
+      "hstCents": 293475,
+      "grandTotalCents": 2550977,
       "perCategoryCents": {
-        "excavation": 484500,
-        "materials": 635986,
-        "labour": 809500,
+        "excavation": 455000,
+        "materials": 710502,
+        "labour": 764500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -3044,21 +3044,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -3096,9 +3096,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -3128,7 +3128,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -3138,14 +3138,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 35.5,
+      "marginPct": 33,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -3156,17 +3156,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4400,
-        "high": 6100,
+        "low": 4200,
+        "high": 5800,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6000,
-        "high": 7900,
+        "low": 6700,
+        "high": 8900,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 7200,
+        "low": 6800,
         "high": 13500,
         "detail": "2.5–4.5 estimated days on-site"
       },
@@ -3184,7 +3184,7 @@
   },
   "patio-cond-levels": {
     "totalLow": 21250,
-    "totalHigh": 29250,
+    "totalHigh": 30000,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -3195,13 +3195,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2194366,
-      "hstCents": 285268,
-      "grandTotalCents": 2479634,
+      "subtotalCents": 2185442,
+      "hstCents": 284107,
+      "grandTotalCents": 2469549,
       "perCategoryCents": {
-        "excavation": 492240,
-        "materials": 635986,
-        "labour": 738640,
+        "excavation": 459200,
+        "materials": 710502,
+        "labour": 688240,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -3220,21 +3220,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -3272,9 +3272,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -3304,7 +3304,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -3314,14 +3314,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 42,
+      "marginPct": 39.2,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -3332,17 +3332,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4700,
-        "high": 6200,
+        "low": 4400,
+        "high": 5700,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6800,
-        "high": 8900,
+        "low": 7600,
+        "high": 9900,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 7000,
+        "low": 6500,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -3360,7 +3360,7 @@
   },
   "patio-cond-all": {
     "totalLow": 26750,
-    "totalHigh": 41000,
+    "totalHigh": 41750,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -3371,13 +3371,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2801686,
-      "hstCents": 364219,
-      "grandTotalCents": 3165905,
+      "subtotalCents": 2779352,
+      "hstCents": 361316,
+      "grandTotalCents": 3140668,
       "perCategoryCents": {
-        "excavation": 665850,
-        "materials": 635986,
-        "labour": 1172350,
+        "excavation": 627500,
+        "materials": 710502,
+        "labour": 1113850,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -3396,21 +3396,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -3448,9 +3448,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -3480,7 +3480,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -3490,14 +3490,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 39.3,
+      "marginPct": 36.8,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -3508,17 +3508,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 6000,
-        "high": 8500,
+        "low": 5600,
+        "high": 8000,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 7900,
-        "high": 10300,
+        "low": 8800,
+        "high": 11500,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 9900,
+        "low": 9400,
         "high": 18300,
         "detail": "3–6 estimated days on-site"
       },
@@ -3536,7 +3536,7 @@
   },
   "patio-zone2-orillia": {
     "totalLow": 19750,
-    "totalHigh": 28000,
+    "totalHigh": 28500,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -3547,13 +3547,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2097486,
-      "hstCents": 272673,
-      "grandTotalCents": 2370159,
+      "subtotalCents": 2097502,
+      "hstCents": 272675,
+      "grandTotalCents": 2370177,
       "perCategoryCents": {
-        "excavation": 439500,
-        "materials": 670986,
-        "labour": 659500,
+        "excavation": 410000,
+        "materials": 745502,
+        "labour": 614500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -3572,21 +3572,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -3624,9 +3624,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -3656,7 +3656,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -3666,14 +3666,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 39.3,
+      "marginPct": 36.7,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -3684,17 +3684,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6400,
-        "high": 8300,
+        "low": 7100,
+        "high": 9200,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 6300,
+        "low": 5800,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -3712,7 +3712,7 @@
   },
   "patio-zone3-midland": {
     "totalLow": 20000,
-    "totalHigh": 28500,
+    "totalHigh": 29000,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -3723,13 +3723,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2132486,
-      "hstCents": 277223,
-      "grandTotalCents": 2409709,
+      "subtotalCents": 2132502,
+      "hstCents": 277225,
+      "grandTotalCents": 2409727,
       "perCategoryCents": {
-        "excavation": 439500,
-        "materials": 705986,
-        "labour": 659500,
+        "excavation": 410000,
+        "materials": 780502,
+        "labour": 614500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -3748,21 +3748,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -3800,9 +3800,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -3832,7 +3832,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -3842,14 +3842,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 40.3,
+      "marginPct": 37.7,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -3860,17 +3860,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6700,
-        "high": 8600,
+        "low": 7400,
+        "high": 9600,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 6300,
+        "low": 5800,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -3888,7 +3888,7 @@
   },
   "patio-zone4-collingwood": {
     "totalLow": 20500,
-    "totalHigh": 29000,
+    "totalHigh": 29500,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -3899,13 +3899,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2182486,
-      "hstCents": 283723,
-      "grandTotalCents": 2466209,
+      "subtotalCents": 2182502,
+      "hstCents": 283725,
+      "grandTotalCents": 2466227,
       "perCategoryCents": {
-        "excavation": 439500,
-        "materials": 755986,
-        "labour": 659500,
+        "excavation": 410000,
+        "materials": 830502,
+        "labour": 614500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -3924,21 +3924,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -3976,9 +3976,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -4008,7 +4008,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -4018,14 +4018,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 41.7,
+      "marginPct": 39.1,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -4036,17 +4036,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 7200,
-        "high": 9100,
+        "low": 7900,
+        "high": 10100,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 6300,
+        "low": 5800,
         "high": 10400,
         "detail": "2–3.5 estimated days on-site"
       },
@@ -4063,8 +4063,8 @@
     }
   },
   "patio-addon-lighting": {
-    "totalLow": 24000,
-    "totalHigh": 38750,
+    "totalLow": 24250,
+    "totalHigh": 39500,
     "addOnsTotal": {
       "low": 4000,
       "high": 8000
@@ -4075,13 +4075,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 2662486,
-      "hstCents": 346123,
-      "grandTotalCents": 3008609,
+      "subtotalCents": 2662502,
+      "hstCents": 346125,
+      "grandTotalCents": 3008627,
       "perCategoryCents": {
-        "excavation": 439500,
-        "materials": 635986,
-        "labour": 659500,
+        "excavation": 410000,
+        "materials": 710502,
+        "labour": 614500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -4100,21 +4100,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -4152,9 +4152,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -4184,7 +4184,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -4194,14 +4194,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 45.3,
+      "marginPct": 43.2,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -4212,13 +4212,13 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6000,
-        "high": 7900,
+        "low": 6700,
+        "high": 8900,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
@@ -4239,8 +4239,8 @@
     }
   },
   "patio-addons-all": {
-    "totalLow": 37000,
-    "totalHigh": 71500,
+    "totalLow": 37500,
+    "totalHigh": 72000,
     "addOnsTotal": {
       "low": 11500,
       "high": 28000
@@ -4251,13 +4251,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 4716668,
-      "hstCents": 613167,
-      "grandTotalCents": 5329835,
+      "subtotalCents": 4791184,
+      "hstCents": 622854,
+      "grandTotalCents": 5414038,
       "perCategoryCents": {
-        "excavation": 711111,
-        "materials": 635986,
-        "labour": 1067071,
+        "excavation": 711620,
+        "materials": 710502,
+        "labour": 1066562,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -4276,21 +4276,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -4328,9 +4328,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -4360,7 +4360,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -4370,14 +4370,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 53.5,
+      "marginPct": 53.1,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -4388,13 +4388,13 @@
     },
     "lines": {
       "excavation": {
-        "low": 4200,
-        "high": 5500,
+        "low": 3900,
+        "high": 5100,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 6000,
-        "high": 7900,
+        "low": 6700,
+        "high": 8900,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
@@ -4416,7 +4416,7 @@
   },
   "stone-400": {
     "totalLow": 19500,
-    "totalHigh": 27250,
+    "totalHigh": 27750,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -4427,13 +4427,13 @@
     },
     "sqftPriced": 400,
     "precise": {
-      "subtotalCents": 2067587,
-      "hstCents": 268786,
-      "grandTotalCents": 2336373,
+      "subtotalCents": 2067870,
+      "hstCents": 268823,
+      "grandTotalCents": 2336693,
       "perCategoryCents": {
-        "excavation": 351600,
-        "materials": 888387,
-        "labour": 587600,
+        "excavation": 328000,
+        "materials": 948270,
+        "labour": 551600,
         "disposal": 110000,
         "restoration": 130000
       },
@@ -4452,21 +4452,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 12,
+          "qty": 24,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 35400,
-          "retailCents": 47790,
+          "unitTradeCents": 3150,
+          "tradeCents": 75600,
+          "retailCents": 102060,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1,
+          "qty": 2,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 2622,
-          "retailCents": 3540,
+          "unitTradeCents": 2890,
+          "tradeCents": 5780,
+          "retailCents": 7803,
           "category": "materials"
         },
         {
@@ -4504,9 +4504,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -4536,7 +4536,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 351600,
+          "retailCents": 328000,
           "category": "excavation"
         },
         {
@@ -4546,14 +4546,14 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 587600,
+          "retailCents": 551600,
           "category": "labour"
         }
       ],
       "allowances": [],
-      "marginPct": 36.4,
+      "marginPct": 34.3,
       "quantities": {
-        "aggregateTonnes": 13,
+        "aggregateTonnes": 26,
         "polySandBags": 5,
         "edgePieces": 10,
         "fabricRolls": 1,
@@ -4564,17 +4564,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 3300,
-        "high": 4400,
+        "low": 3100,
+        "high": 4100,
         "detail": "Site-specific preparation allowance for 400 sqft"
       },
       "materials": {
-        "low": 8400,
-        "high": 11100,
+        "low": 9000,
+        "high": 11900,
         "detail": "Permacon Mondrian Plus (400 sqft)"
       },
       "labour": {
-        "low": 5600,
+        "low": 5200,
         "high": 8900,
         "detail": "2–3 estimated days on-site"
       },
@@ -5536,7 +5536,7 @@
   },
   "full-patio-wall-lighting": {
     "totalLow": 44000,
-    "totalHigh": 62000,
+    "totalHigh": 62500,
     "addOnsTotal": {
       "low": 0,
       "high": 0
@@ -5547,13 +5547,13 @@
     },
     "sqftPriced": 500,
     "precise": {
-      "subtotalCents": 4897561,
-      "hstCents": 636683,
-      "grandTotalCents": 5534244,
+      "subtotalCents": 4897577,
+      "hstCents": 636685,
+      "grandTotalCents": 5534262,
       "perCategoryCents": {
-        "excavation": 934950,
-        "materials": 1904611,
-        "labour": 1730500,
+        "excavation": 905450,
+        "materials": 1979127,
+        "labour": 1685500,
         "disposal": 165000,
         "restoration": 162500
       },
@@ -5572,21 +5572,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 15,
+          "qty": 30,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 44250,
-          "retailCents": 59738,
+          "unitTradeCents": 3150,
+          "tradeCents": 94500,
+          "retailCents": 127575,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 1.25,
+          "qty": 2.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 3278,
-          "retailCents": 4425,
+          "unitTradeCents": 2890,
+          "tradeCents": 7225,
+          "retailCents": 9754,
           "category": "materials"
         },
         {
@@ -5624,9 +5624,9 @@
           "label": "Aggregate delivery (Carr, zone 1)",
           "qty": 2,
           "unit": "load",
-          "unitTradeCents": 12500,
-          "tradeCents": 25000,
-          "retailCents": 33750,
+          "unitTradeCents": 13000,
+          "tradeCents": 26000,
+          "retailCents": 35100,
           "category": "materials"
         },
         {
@@ -5656,7 +5656,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 439500,
+          "retailCents": 410000,
           "category": "excavation"
         },
         {
@@ -5666,7 +5666,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 659500,
+          "retailCents": 614500,
           "category": "labour"
         }
       ],
@@ -5676,7 +5676,7 @@
       ],
       "marginPct": null,
       "quantities": {
-        "aggregateTonnes": 16.3,
+        "aggregateTonnes": 32.5,
         "polySandBags": 7,
         "edgePieces": 12,
         "fabricRolls": 2,
@@ -5687,17 +5687,17 @@
     },
     "lines": {
       "excavation": {
-        "low": 8500,
-        "high": 11100,
+        "low": 8200,
+        "high": 10700,
         "detail": "Site-specific preparation allowance for 500 sqft"
       },
       "materials": {
-        "low": 17000,
-        "high": 22300,
+        "low": 17800,
+        "high": 23200,
         "detail": "Permacon Mondrian Plus (500 sqft)"
       },
       "labour": {
-        "low": 15600,
+        "low": 15100,
         "high": 24600,
         "detail": "4.5–8 estimated days on-site"
       },
@@ -5726,13 +5726,13 @@
     },
     "sqftPriced": 1300,
     "precise": {
-      "subtotalCents": 32944296,
-      "hstCents": 4282758,
-      "grandTotalCents": 37227054,
+      "subtotalCents": 32901547,
+      "hstCents": 4277201,
+      "grandTotalCents": 37178748,
       "perCategoryCents": {
-        "excavation": 5394288,
-        "materials": 14076386,
-        "labour": 11056122,
+        "excavation": 5325258,
+        "materials": 14226310,
+        "labour": 10932479,
         "disposal": 495000,
         "restoration": 422500
       },
@@ -5751,21 +5751,21 @@
         {
           "id": "clear-stone-base",
           "label": "¾\" clear stone base, 12\" compacted",
-          "qty": 27,
+          "qty": 54,
           "unit": "tonne",
-          "unitTradeCents": 2950,
-          "tradeCents": 79650,
-          "retailCents": 107528,
+          "unitTradeCents": 3150,
+          "tradeCents": 170100,
+          "retailCents": 229635,
           "category": "materials"
         },
         {
           "id": "hpb-bedding",
           "label": "HPB bedding, 1\" screeded",
-          "qty": 2.25,
+          "qty": 4.5,
           "unit": "tonne",
-          "unitTradeCents": 2622,
-          "tradeCents": 5900,
-          "retailCents": 7965,
+          "unitTradeCents": 2890,
+          "tradeCents": 13005,
+          "retailCents": 17557,
           "category": "materials"
         },
         {
@@ -5801,11 +5801,11 @@
         {
           "id": "delivery-aggregate",
           "label": "Aggregate delivery (Carr, zone 1)",
-          "qty": 2,
+          "qty": 3,
           "unit": "load",
-          "unitTradeCents": 13000,
-          "tradeCents": 26000,
-          "retailCents": 35100,
+          "unitTradeCents": 13167,
+          "tradeCents": 39500,
+          "retailCents": 53325,
           "category": "materials"
         },
         {
@@ -5835,7 +5835,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 791100,
+          "retailCents": 738000,
           "category": "excavation"
         },
         {
@@ -5845,7 +5845,7 @@
           "unit": "sqft",
           "unitTradeCents": 0,
           "tradeCents": 0,
-          "retailCents": 1187100,
+          "retailCents": 1106100,
           "category": "labour"
         }
       ],
@@ -5859,29 +5859,29 @@
       ],
       "marginPct": null,
       "quantities": {
-        "aggregateTonnes": 29.3,
+        "aggregateTonnes": 58.5,
         "polySandBags": 12,
         "edgePieces": 15,
         "fabricRolls": 3,
         "skids": 11,
-        "deliveryLoads": 2,
+        "deliveryLoads": 3,
         "bins": 8
       }
     },
     "lines": {
       "excavation": {
-        "low": 46900,
-        "high": 63000,
+        "low": 46300,
+        "high": 62100,
         "detail": "Site-specific preparation allowance for 1300 sqft"
       },
       "materials": {
-        "low": 128700,
-        "high": 169900,
+        "low": 130500,
+        "high": 172300,
         "detail": "TimberTech AZEK Vintage"
       },
       "labour": {
-        "low": 95100,
-        "high": 129700,
+        "low": 93900,
+        "high": 128100,
         "detail": "21–36.5 estimated days on-site"
       },
       "disposal": {

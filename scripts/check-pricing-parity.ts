@@ -66,6 +66,9 @@ else pass(`hardscape day-rate $${HARDSCAPE_DAILY_RATES.bottom} (locked all-in ca
 const carrBounds: [string, number, number, number][] = [
   ['carr2025.aggregates.clearStone34PerTonne', baseline.carr2025.aggregates.clearStone34PerTonne, 25, 40],
   ['carr2025.aggregates.hpbPerTonne', baseline.carr2025.aggregates.hpbPerTonne, 22, 35],
+  // Carr depth chart is 0.005 t/sqft/inch compacted. The pre-fix rule was
+  // 0.0025 (1 t per 100 sqft at 4") and under-ordered base stone by half.
+  ['carr2025.aggregates.tonnesPerSqftPerInch', baseline.carr2025.aggregates.tonnesPerSqftPerInch, 0.0045, 0.0055],
   ['carr2025.consumables.polySandPerBag', baseline.carr2025.consumables.polySandPerBag, 24, 40],
   ['carr2025.disposal.sodStripSqftPerBin', baseline.carr2025.disposal.sodStripSqftPerBin, 500, 800],
   ['carr2025.disposal.spoilOnlySqftPerBin', baseline.carr2025.disposal.spoilOnlySqftPerBin, 300, 400],
@@ -80,6 +83,7 @@ for (const [name, v, lo, hi] of carrBounds) {
 const carrPairs: [string, number, number][] = [
   ['aggregates.clearStone34PerTonne', CARR_TRADE.aggregates.clearStone34PerTonne, baseline.carr2025.aggregates.clearStone34PerTonne],
   ['aggregates.hpbPerTonne', CARR_TRADE.aggregates.hpbPerTonne, baseline.carr2025.aggregates.hpbPerTonne],
+  ['aggregates.tonnesPerSqftPerInch', CARR_TRADE.aggregates.tonnesPerSqftPerInch, baseline.carr2025.aggregates.tonnesPerSqftPerInch],
   ['consumables.polySandPerBag', CARR_TRADE.consumables.polySandPerBag, baseline.carr2025.consumables.polySandPerBag],
   ['consumables.snapEdgePer8ftPiece', CARR_TRADE.consumables.snapEdgePer8ftPiece, baseline.carr2025.consumables.snapEdgePer8ftPiece],
   ['consumables.gatorFabricPerRoll', CARR_TRADE.consumables.gatorFabricPerRoll, baseline.carr2025.consumables.gatorFabricPerRoll],

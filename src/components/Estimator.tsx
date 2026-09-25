@@ -1698,7 +1698,7 @@ function ReceiptRail({ precise, displayLow, displayHigh, confidence, delta, targ
           </button>
         )}
         <p className="font-sans text-[10px] font-light text-brand-muted mt-4 leading-relaxed">
-          Priced from the Carr 2025 trade book — each answer re-prices the build.
+          Priced from Carr trade-book pricing — each answer re-prices the build.
         </p>
       </div>
     </aside>
