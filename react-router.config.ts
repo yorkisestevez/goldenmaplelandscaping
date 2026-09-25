@@ -9,10 +9,10 @@ export default {
   async prerender({ getStaticPaths }) {
     // All static (non-param) routes come from the route config automatically.
     const staticPaths = getStaticPaths();
-    // Dynamic /services/:slug — 28 service×location combos (excludes the 4 hand-built Barrie pages).
+    // Dynamic /services/:slug — 36 service×location combos (excludes the 4 hand-built Barrie pages).
     const serviceCombos = getAutoCombos().map((c) => `/services/${c.slug}`);
-    // Dynamic /locations/:slug — the 4 auto location landings.
-    const autoLocations = ['orillia', 'wasaga-beach', 'midland', 'collingwood'].map(
+    // Dynamic /locations/:slug — the 6 auto location landings.
+    const autoLocations = ['orillia', 'wasaga-beach', 'midland', 'collingwood', 'bradford-west-gwillimbury', 'newmarket'].map(
       (s) => `/locations/${s}`,
     );
     // Dynamic /portfolio/:slug — one route per attested project (src/data/projects.ts).
