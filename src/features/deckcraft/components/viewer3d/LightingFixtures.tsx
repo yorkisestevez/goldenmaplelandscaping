@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import {getLightingProduct} from '../../lightingCatalogue';
 import {previewLightPlan} from '../../lightingPreview';
 import CatalogueFixture from './CatalogueFixture';
+import {SCENE_LOOK} from './sceneLook';
 
 export {MAX_PREVIEW_LIGHTS,isIlluminatingFixture} from '../../lightingPreview';
 
@@ -26,7 +27,7 @@ export default function LightingFixtures({items,evening,enabled=true}:{items:Fix
     const legacy=['puck','fusion','hyve','evo_hyde','wedge','blink','ace','liv','scope','hub50','hub100','smart_hub150','smart_move','smart_bridge','smart_extender','cable_14_2','cable_12_2'].includes(id);
     const blinkScale=(product?.dimensionsIn.diameter??3)/3,livScale=(product?.dimensionsIn.height??19.5)/19.5;
     const light=<meshStandardMaterial color="#ffefd0" emissive="#ffc67d" emissiveIntensity={glow} toneMapped={false}/>;
-    const dark=<meshStandardMaterial color="#252a29" roughness={.33} metalness={.65}/>;
+    const dark=<meshPhysicalMaterial color="#252a29" {...SCENE_LOOK.powderCoat}/>;
     return <group key={`${id}-${i}`} name={`${id}-${i+1}`} position={[p.x,p.y,p.z]} rotation={[0,p.angle,0]}>
       {!legacy&&product&&<CatalogueFixture product={product} evening={evening&&enabled} enabled={enabled}/>}
       <group scale={id==='blink'?[blinkScale,blinkScale,1]:id==='liv'?[1,livScale,1]:[1,1,1]}>

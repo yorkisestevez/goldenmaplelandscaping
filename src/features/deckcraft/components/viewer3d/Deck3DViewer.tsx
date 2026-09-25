@@ -33,6 +33,12 @@ import {boardFinishPlan,darkSlateBorder,parseColourRef} from '../../boardFinishe
 import {partRef,railingFinish} from '../../deckPartFinishes';
 import {railingScreenHex} from '../../railingScreenColours';
 import type {BoardAddress} from '../../lib/boardAddress';
+import RenderPipeline,{pipelineFor} from './renderPipeline';
+import {SCENE_LOOK} from './sceneLook';
+
+/** Powder-coated aluminium (railings, frames, flashing): paint at metalness 0 with a clear coat, so dark finishes
+ * catch the sky instead of reading as flat silhouettes. */
+const powderCoat=(color:string)=>new THREE.MeshPhysicalMaterial({color,...SCENE_LOOK.powderCoat});
 
 function Members({items,material,name}:{items:Member[];material:THREE.Material;name:string}){
   const ref=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate);
@@ -115,7 +121,7 @@ function HoverOutline({boards,addresses,scope,register}:{boards:FinishBox[];addr
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));return g;
   },[hover,addresses,boards,scope]);
   useEffect(()=>()=>geometry?.dispose(),[geometry]);
-  return geometry?<lineSegments geometry={geometry} renderOrder={10}><lineBasicMaterial color="#e39a24" depthTest={false} transparent/></lineSegments>:null;
+  return geometry?<lineSegments geometry={geometry} renderOrder={10}><lineBasicMaterial color="#e39a24" depthTest={false} depthWrite={false} transparent/></lineSegments>:null;
 }
 /** The accent-board tool as the viewer takes it: the row or single-board choice and what a click paints. */
 export interface BoardPaint{scope:'piece'|'course';onPaint:(target:{level:number;index:number})=>void}
@@ -133,7 +139,7 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   const catalogueExtras=useMemo(()=>catalogueAccessoryLayout(data,model),[data,model]);
   const stairBoards=useMemo(()=>getStairBoards(data,model),[data,model]);
   const stairVeneer=useMemo(()=>stairVeneerLayout(data,model),[data,model]);
-  const materials=useMemo(()=>({wood:new THREE.MeshStandardMaterial({color:'#8a7356',roughness:0.86}),inlay:new THREE.MeshStandardMaterial({color:'#514236',roughness:.7}),inlayFraming:new THREE.MeshStandardMaterial({color:'#c08a3e',roughness:.8}),metal:new THREE.MeshStandardMaterial({color:'#242829',roughness:0.36,metalness:0.5}),concrete:new THREE.MeshStandardMaterial({color:'#a5a49a',roughness:0.9}),glass:new THREE.MeshPhysicalMaterial({color:'#cbdfe3',roughness:0.08,metalness:0.1,transparent:true,opacity:0.23,depthWrite:false})}),[]);
+  const materials=useMemo(()=>({wood:new THREE.MeshStandardMaterial({color:'#8a7356',roughness:0.86}),inlay:new THREE.MeshStandardMaterial({color:'#514236',roughness:.7}),inlayFraming:new THREE.MeshStandardMaterial({color:'#c08a3e',roughness:.8}),metal:powderCoat(SCENE_LOOK.powderCoatColor),concrete:new THREE.MeshStandardMaterial({color:'#a5a49a',roughness:0.9}),glass:new THREE.MeshPhysicalMaterial({color:'#cbdfe3',roughness:0.08,metalness:0.1,transparent:true,opacity:0.23,depthWrite:false})}),[]);
   useEffect(()=>()=>Object.values(materials).forEach(m=>m.dispose()),[materials]);
   // Accent boards (boardFinishes.ts): worked out only when the design has some, or while the tool is on.
   const painting=!!boardPaint&&!structure;
@@ -142,7 +148,7 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   // screen approximation, illustrative only.
   const fasciaMat=usePartMaterial(partRef(data,'fascia'),board),treadMat=usePartMaterial(partRef(data,'treads'),board),riserMat=usePartMaterial(partRef(data,'risers'),board);
   const rail=railingFinish(data),railHex=rail?railingScreenHex(rail.system.id,rail.colour):undefined;
-  const railColour=useMemo(()=>railHex?new THREE.MeshStandardMaterial({color:railHex,roughness:.5,metalness:.15}):null,[railHex]);
+  const railColour=useMemo(()=>railHex?powderCoat(railHex):null,[railHex]);
   useEffect(()=>()=>railColour?.dispose(),[railColour]);
   const boards:FinishBox[]=useMemo(()=>model.levels.flatMap((l,li)=>l.boards.map((b,bi)=>{const cut=b as typeof b&{width?:number;polygon?:{x:number;y:number}[];role?:string};return {x:b.cx+l.offset.x,y:l.top-0.5,z:b.cy+l.offset.z,w:b.length,h:1,d:cut.width??data.boardWidth,angle:-b.angleDeg*Math.PI/180,role:cut.role,polygon:cut.polygon?.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z})),ref:{level:li,index:bi},accent:finish?.colours[li]?.[bi]??null};})),[model,data.boardWidth,finish]);
   const hoverSet=useRef<(box:FinishBox|null)=>void>(()=>{}),registerHover=useCallback((set:(box:FinishBox|null)=>void)=>{hoverSet.current=set;},[]);
@@ -200,7 +206,7 @@ function SnapshotBridge({onReady}:{onReady?:(capture:((longEdgePx?:number)=>stri
     onReady((longEdgePx?:number)=>{
       const picked:THREE.Object3D[]=[];scene.traverse(o=>{if(o.name==='picked-wall-outline'&&o.visible){o.visible=false;picked.push(o);}});
       const ratio=gl.getPixelRatio(),edge=Math.max(gl.domElement.width,gl.domElement.height),scale=longEdgePx&&edge&&longEdgePx>edge?Math.min(3,longEdgePx/edge):1;
-      try{if(scale>1)gl.setPixelRatio(ratio*scale);gl.render(scene,camera);return gl.domElement.toDataURL('image/jpeg',.9);}catch{return null;}
+      try{if(scale>1)gl.setPixelRatio(ratio*scale);const pipeline=pipelineFor(gl);if(pipeline)pipeline.capture(scale);else gl.render(scene,camera);return gl.domElement.toDataURL('image/jpeg',.9);}catch{return null;}
       finally{for(const o of picked)o.visible=true;if(scale>1){gl.setPixelRatio(ratio);invalidate();}}
     });
     return ()=>onReady(null);
@@ -217,7 +223,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
   const lights=activeLightingItems(data).reduce((n,item)=>n+(isIlluminatingFixture(item.productId)?item.qty:0),0);
   const simplifiedPaving=!structure&&!cutaway&&view!=='hardware'&&hasSimplifiedPaving(yard);
   return <div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
-    <Canvas shadows frameloop="demand" dpr={[1,1.5]} camera={{fov:38,position:[cx+r*1.1,height+r*.85,cz+r*1.65],near:.1,far:1000}} gl={{antialias:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:1}} onCreated={({gl})=>{const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
+    <Canvas shadows="percentage" frameloop="demand" dpr={[1,1.5]} camera={{fov:38,position:[cx+r*1.1,height+r*.85,cz+r*1.65],near:.1,far:1000}} gl={{antialias:false,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:SCENE_LOOK.exposure}} onCreated={({gl})=>{const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
         // Leaving 3D (e.g. for the Plan view) disposes the renderer and also fires this event;
         // only a canvas still on the page has really lost its GPU context.
         setTimeout(()=>{if(canvas.isConnected)onContextLost?.();},0);},false);}}>
@@ -226,6 +232,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
       <CameraView view={view} w={w} d={d} cx={cx} cz={cz} height={height} depth={data.foundationDepthIn??48}/>
       <Scene data={data} model={model} structure={structure} cutaway={cutaway} inspection={structure||view==='hardware'} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} {...interaction}/>
       <SnapshotBridge onReady={onSnapshotReady}/>
+      <RenderPipeline evening={evening}/>
       <OrbitControls makeDefault target={[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={r*.25} maxDistance={r*4} enableDamping={false}/>
     </Canvas>{simplifiedPaving&&<p className="absolute top-3 left-3 right-3 w-fit rounded-md bg-white/95 px-3 py-2 text-xs text-[#38413b] shadow-sm pointer-events-none">Simplified paving preview · {yard.quantities.paverPieces.toLocaleString()} pavers retained in quantities, construction view and exports.</p>}<p className={`absolute bottom-3 left-4 right-4 text-[10px] pointer-events-none ${evening?'text-white':'text-[#474c43]'}`}>Drag to orbit · pinch or scroll to zoom{evening&&data.lightingPreviewOn!==false&&lights>MAX_PREVIEW_LIGHTS?` · ${lights} fixtures shown; light spread preview limited to ${MAX_PREVIEW_LIGHTS} fixtures`:''}</p>
   </div>;

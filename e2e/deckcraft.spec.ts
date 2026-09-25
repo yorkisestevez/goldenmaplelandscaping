@@ -1407,6 +1407,42 @@ test('puts a lit design at night on the proposal cover, then gives the visitor b
   expect(problems).toEqual([]);
 });
 
+/**
+ * The photographic renderer (Real Life G1) at its heaviest: night, post and step lights, a glass railing. Every
+ * compiled shader stays within the GPU's texture units (each shadow-casting light takes one in every lit material),
+ * none fails to compile, and the renderer never falls back to the plain one. KNOWN_CONSOLE lets THREE. messages
+ * through, so those are watched for here on their own.
+ */
+test('draws the 3D view at night with lights and glass, within the GPU’s texture units and without a shader error',async({page})=>{
+  test.setTimeout(150_000);
+  const shaderProblems:string[]=[];
+  page.on('console',m=>{if(/Shader Error|WebGLProgram|photographic renderer failed|capture drew without effects/.test(m.text()))shaderProblems.push(m.text().slice(0,300));});
+  // three announces each renderer it makes to window.__THREE_DEVTOOLS__, which is how the test reaches the live one.
+  await page.addInitScript(()=>{const w=window as unknown as {__THREE_DEVTOOLS__:EventTarget;__renderers:unknown[]};w.__renderers=[];w.__THREE_DEVTOOLS__=new EventTarget();w.__THREE_DEVTOOLS__.addEventListener('observe',e=>{const d=(e as CustomEvent).detail;if(d?.isWebGLRenderer)w.__renderers.push(d);});});
+  const problems=await openDesigner(page);
+  await openSection(page,'Stairs & railings');
+  await page.getByLabel('Railing style',{exact:true}).selectOption('Glass Panels');
+  await viewTab(page,'3D');
+  await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
+  await page.getByRole('button',{name:'Add post & step lights'}).click();
+  const canvas=viewer3d(page);
+  await canvas.scrollIntoViewIfNeeded();
+  await expect(canvas).toBeVisible({timeout:20000});
+  await page.waitForTimeout(4000);// every light's shader compiles on the next frames
+  const units=await page.evaluate(()=>{
+    type Program={program:WebGLProgram};
+    const renderer=(window as unknown as {__renderers:{getContext:()=>WebGL2RenderingContext;info:{programs:Program[]|null}}[]}).__renderers.at(-1)!;
+    const gl=renderer.getContext(),samplers=new Set<number>([gl.SAMPLER_2D,gl.SAMPLER_CUBE,gl.SAMPLER_3D,gl.SAMPLER_2D_SHADOW,gl.SAMPLER_2D_ARRAY,gl.SAMPLER_2D_ARRAY_SHADOW,gl.SAMPLER_CUBE_SHADOW,gl.INT_SAMPLER_2D,gl.UNSIGNED_INT_SAMPLER_2D]);
+    let worst=0;
+    for(const {program} of renderer.info.programs??[]){let used=0;for(let i=0,n=gl.getProgramParameter(program,gl.ACTIVE_UNIFORMS);i<n;i++){const u=gl.getActiveUniform(program,i);if(u&&samplers.has(u.type))used+=u.size;}worst=Math.max(worst,used);}
+    return {worst,limit:gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) as number,programs:renderer.info.programs?.length??0};
+  });
+  expect(units.programs).toBeGreaterThan(5);
+  expect(units.worst).toBeLessThanOrEqual(Math.min(16,units.limit));
+  expect(shaderProblems).toEqual([]);
+  expect(problems).toEqual([]);
+});
+
 test('downloads the proposal as a multi-page PDF, from Proposal & files and from the proposal itself',async({page},info)=>{
   test.setTimeout(240_000);
   await openDesigner(page);
