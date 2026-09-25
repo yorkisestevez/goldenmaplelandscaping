@@ -31,7 +31,7 @@ function fallbackReply(q: string): string {
     return "The cost calculator can provide an itemized planning range from your project details. Final scope and pricing are confirmed for the specific property.";
   if (/warranty|guarantee|sink|settle/.test(t))
     return `${publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available.')} ${publicClaimCopy(BUSINESS.credentials.wsib, 'Current coverage documentation is available.')}`;
-  if (/area|serve|location|barrie|innisfil|orillia|wasaga|midland|collingwood|springwater|oro/.test(t))
+  if (/area|serve|location|barrie|innisfil|orillia|wasaga|midland|collingwood|springwater|bradford|newmarket|oro/.test(t))
     return 'Service availability depends on project scope and address. Contact us to confirm whether your area is currently covered.';
   if (/start|timeline|how soon|when|lead time|book|schedule/.test(t))
     return 'Project timing depends on scope, site conditions, and the current schedule. A project conversation is the best way to discuss timing.';

@@ -108,7 +108,7 @@ export const BUSINESS = {
 
   serviceArea: {
     primary: published(['Barrie', 'Innisfil', 'Oro-Medonte', 'Springwater'], 'Existing dedicated location routes'),
-    secondary: published(['Orillia', 'Wasaga Beach', 'Midland', 'Collingwood'], 'Existing service-location matrix and root schema', 'Active service coverage needs owner confirmation.'),
+    secondary: published(['Orillia', 'Wasaga Beach', 'Midland', 'Collingwood', 'Bradford West Gwillimbury', 'Newmarket'], 'Existing service-location matrix and root schema; Bradford West Gwillimbury + Newmarket added per owner direction 2026-09-25', 'Active service coverage needs owner confirmation.'),
   },
   services: published(
     ['Interlocking stone', 'Composite decking', 'Retaining walls', 'Landscape design', 'Outdoor living / backyard transformations'],

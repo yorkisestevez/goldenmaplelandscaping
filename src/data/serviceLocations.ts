@@ -19,7 +19,9 @@ export type LocationKey =
   | 'orillia'
   | 'wasaga-beach'
   | 'midland'
-  | 'collingwood';
+  | 'collingwood'
+  | 'bradford-west-gwillimbury'
+  | 'newmarket';
 
 export interface ServiceDef {
   slug: ServiceKey;
@@ -381,6 +383,50 @@ export const LOCATIONS: Record<LocationKey, LocationDef> = {
     intro:
       "Collingwood is a town that takes design seriously — from downtown heritage restorations to Blue Mountain chalets perched on the escarpment. You moved here, or built here, because you wanted something better than ordinary. Your outdoor space should match that decision. We build to that level, every project.",
   },
+  'bradford-west-gwillimbury': {
+    slug: 'bradford-west-gwillimbury',
+    name: 'Bradford',
+    region: 'Simcoe County',
+    postalRoot: 'L3Z',
+    lat: 44.13,
+    lng: -79.63,
+    population: '43,000+',
+    terrain:
+      'Bradford sits on the uplands between Lake Simcoe and the Holland Marsh — flatter than Barrie’s drumlin country, with the Holland River corridors cutting through town. New subdivisions in Bradford and Bond Head sit on generous lots with gentle grades falling toward the marsh and the river valleys.',
+    soil:
+      'Productive farmland loams transitioning to suburban lots. The Holland Marsh muck soils are protected agricultural land, but low-lying lots near the Holland River corridors can carry high water tables and soft ground — drainage-first base design matters here more than most places we build.',
+    projects: [
+      'Interlock patios for new-build subdivisions',
+      'Double driveways and front walkway upgrades',
+      'Grading and drainage for low-lying lots',
+      'Family backyard makeovers with room to grow',
+    ],
+    anchors: ['Bradford', 'Bond Head', 'Deerhurst', 'Green Valley', 'Newton Robinson', "Coulson's Hill"],
+    intro:
+      'Bradford is one of Simcoe County’s fastest-growing towns — new streets rising between the Holland River and the marsh, full of young families who need their outdoor space to work as hard as they do. We bring Barrie-honed hardscape craft south to Bradford and Bond Head: patios, driveways and drainage-first designs engineered for flat land and high water tables, built for Ontario winters.',
+  },
+  newmarket: {
+    slug: 'newmarket',
+    name: 'Newmarket',
+    region: 'York Region',
+    postalRoot: 'L3X',
+    lat: 44.06,
+    lng: -79.46,
+    population: '88,000+',
+    terrain:
+      'Newmarket climbs the southern edge of the Oak Ridges Moraine — the town’s protected moraine lands carry Natural Core and Settlement Area designations, with kames, kettles and rolling ridges. The East Holland River corridors thread green ravines through Glenway, Stonehaven and the older neighbourhoods.',
+    soil:
+      'Fast-draining moraine sands and gravels over the tighter Newmarket Till — the geological formation named after this town. Excellent natural drainage, but the sand demands proper compaction and base design, and lots near the protected moraine areas or river corridors come with strict site-alteration rules.',
+    projects: [
+      'Moraine-edge patios with ravine outlooks',
+      'Outdoor living for Glenway and Stonehaven subdivisions',
+      'Retaining walls for sloped moraine lots',
+      'Front entrance upgrades in established neighbourhoods',
+    ],
+    anchors: ['Glenway Estates', 'Stonehaven-Wyndham', 'Armitage', 'Central Newmarket', 'Summerhill Estates', 'Woodland Hill'],
+    intro:
+      'Newmarket is York Region’s seat — a town of 88,000 built on the edge of the Oak Ridges Moraine, where the ground itself carries the town’s name. Mature streets, new subdivisions, ravine lots and moraine-protected edges: this is terrain with real variety, and it rewards a builder who reads the site before drawing the plan. That’s how we work, every project.',
+  },
 };
 
 export const SERVICE_KEYS: ServiceKey[] = ['interlocking', 'composite-decking', 'retaining-walls', 'landscape-design'];
@@ -393,6 +439,8 @@ export const LOCATION_KEYS: LocationKey[] = [
   'wasaga-beach',
   'midland',
   'collingwood',
+  'bradford-west-gwillimbury',
+  'newmarket',
 ];
 
 /**
@@ -406,7 +454,7 @@ export const HAND_BUILT_COMBOS = new Set<string>([
   'landscape-design-barrie',
 ]);
 
-/** All combos that should be auto-generated (28 of them: 4 services × 7 non-Barrie locations). */
+/** All combos that should be auto-generated (36 of them: 4 services × 9 non-Barrie locations). */
 export function getAutoCombos(): { service: ServiceKey; location: LocationKey; slug: string }[] {
   const out: { service: ServiceKey; location: LocationKey; slug: string }[] = [];
   for (const svc of SERVICE_KEYS) {
