@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { BUSINESS, publicContact, publicPostalAddress, publicServiceAreas } from '../data/business';
+import { BUSINESS, publicContact, publicPostalAddress, publicGbpServiceAreas } from '../data/business';
 
 interface SEOProps {
   title: string;
@@ -46,7 +46,7 @@ export default function SEO({ title, description, canonical, schema, image, noin
       BUSINESS.urls.homeStars.value,
       BUSINESS.urls.yelp.value,
     ],
-    areaServed: publicServiceAreas.map((name) => ({ '@type': 'City', name })),
+    areaServed: publicGbpServiceAreas.map((name) => ({ '@type': 'City', name })),
   };
 
   return (
