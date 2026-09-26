@@ -171,7 +171,7 @@ export const publicContact = {
   email: BUSINESS.contact.email.value,
 } as const;
 
-export const publicServiceAreas = [
+/** Google Business Profile service areas, in GBP order. Names only. */ export const publicGbpServiceAreas = ['Barrie', 'Orillia', 'Innisfil', 'Newmarket', 'Angus', 'Oro-Medonte', 'Essa', 'Wasaga Beach', 'Thornton', 'Simcoe', 'Keswick', 'Midhurst', 'Alliston', 'Shanty Bay', 'Bradford West Gwillimbury', 'Coldwater', 'Stayner', 'Cookstown', 'Elmvale', 'Tottenham'] as const; export const publicServiceAreas = [
   ...BUSINESS.serviceArea.primary.value,
   ...BUSINESS.serviceArea.secondary.value,
 ] as const;
