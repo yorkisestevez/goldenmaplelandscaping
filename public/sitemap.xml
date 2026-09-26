@@ -87,6 +87,12 @@
   <url><loc>https://goldenmaplelandscaping.ca/locations/collingwood/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/locations/bradford-west-gwillimbury/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
   <url><loc>https://goldenmaplelandscaping.ca/locations/newmarket/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/locations/alliston/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/locations/angus/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/locations/keswick/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/locations/thornton/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/locations/elmvale/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://goldenmaplelandscaping.ca/locations/stayner/</loc><changefreq>monthly</changefreq><priority>0.85</priority></url>
 
   <!-- Barrie Project Collections -->
   <url><loc>https://goldenmaplelandscaping.ca/patios-barrie/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>

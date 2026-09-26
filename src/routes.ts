@@ -101,5 +101,11 @@ export default [
   route('locations/innisfil', 'pages/locations/Innisfil.tsx'),
   route('locations/oro-medonte', 'pages/locations/OroMedonte.tsx'),
   route('locations/springwater', 'pages/locations/Springwater.tsx'),
+  route('locations/alliston', 'pages/locations/Alliston.tsx'),
+  route('locations/angus', 'pages/locations/Angus.tsx'),
+  route('locations/keswick', 'pages/locations/Keswick.tsx'),
+  route('locations/thornton', 'pages/locations/Thornton.tsx'),
+  route('locations/elmvale', 'pages/locations/Elmvale.tsx'),
+  route('locations/stayner', 'pages/locations/Stayner.tsx'),
   route('locations/:slug', 'pages/locations/LocationLanding.tsx'),
 ] satisfies RouteConfig;
