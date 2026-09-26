@@ -280,7 +280,7 @@ export default function StaynerLanding() {
               </table>
             </div>
             <p className="font-sans text-sm text-brand-muted font-light mt-6">
-              Clay soils mean what's under the surface shapes the quote — which is why every Stayner project starts with a free site visit. Use our <Link to="/cost-estimator?city=stayner" className="text-brand-gold-dark hover:underline">Cost Estimator</Link> for an instant ballpark first.
+              Clay soils mean what's under the surface shapes the quote — which is why every Stayner project starts with a site visit. Use our <Link to="/cost-estimator?city=stayner" className="text-brand-gold-dark hover:underline">Cost Estimator</Link> for an instant ballpark first.
             </p>
           </motion.div>
 
@@ -311,7 +311,7 @@ export default function StaynerLanding() {
               Get Your Free Stayner Landscaping Quote
             </h2>
             <p className="font-sans text-brand-muted font-light mb-10 max-w-2xl mx-auto">
-              Ready to upgrade your outdoor space? Contact Golden Maple Landscaping for a free, no-obligation site visit and detailed quote.
+              Ready to upgrade your outdoor space? Contact Golden Maple Landscaping for a no-obligation site visit and detailed quote.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
               <Link to="/book" className="btn-primary py-4 px-10">Request a Quote</Link>
