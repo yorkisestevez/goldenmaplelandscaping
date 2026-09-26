@@ -6,6 +6,7 @@ import {getHousePlacement} from '../../housePlacement';
 import {getHouseBlocks,type HouseBlockPlan} from '../../houseFootprint';
 import {houseLayout} from './houseLayout';
 import HouseParts from './HouseParts';
+import {claddingSurface} from './houseSurfaceKinds';
 import HouseFacade from './HouseFacade';
 import type {HouseInteraction} from './houseInteraction';
 import {houseTrimColors,type HouseTrimColors} from '../../houseFinishes';
@@ -33,7 +34,7 @@ function GableAccent({wall:{span,height,origin,yaw},look,rise}:GableEnd){
  const courses=useMemo(()=>gableCourses(look.cladding,span,height,rise),[look.cladding,span,height,rise]);
  return <group name="gable-accent" position={origin} rotation={[0,yaw,0]}>
   <mesh geometry={triangle} castShadow receiveShadow><meshStandardMaterial color={look.color} roughness={.9} side={THREE.DoubleSide}/></mesh>
-  {courses.length>0&&<HouseParts items={courses} color={look.color} name="gable-accent-courses"/>}
+  {courses.length>0&&<HouseParts items={courses} color={look.color} name="gable-accent-courses" surface={claddingSurface(look.cladding)}/>}
  </group>;
 }
 
@@ -47,7 +48,7 @@ function HouseBlock3D({block,config,map,look,trim,accents}:{block:HouseBlockPlan
  // Gutters run along the eaves: the sides parallel to the ridge.
  const gutters=block.ridge==='z'?[x0-10,x1+10].map(x=>({x,y:h-2,z:bz,w:5,h:4,d:d+24})):[y0-10,y1+10].map(z=>({x:bx,y:h-2,z,w:w+24,h:4,d:5}));
  return <group name={`house-block-${block.id}`}>
-  <HouseParts items={[{x:bx,y:4,z:bz,w:w+1,h:8,d:d+1}]} color="#93968d" name="house-block-plinth"/>
+  <HouseParts items={[{x:bx,y:4,z:bz,w:w+1,h:8,d:d+1}]} color="#93968d" name="house-block-plinth" surface="stucco"/>
   <mesh geometry={roof} castShadow receiveShadow><meshStandardMaterial color={config.roofColor} map={map} bumpMap={map} bumpScale={look.bumpScale} metalness={look.metalness} roughness={look.roughness} side={THREE.DoubleSide}/></mesh>
   {gable&&<mesh geometry={gable} castShadow receiveShadow><meshStandardMaterial color={config.claddingColor} roughness={.9} side={THREE.DoubleSide}/></mesh>}
   {accents.map(a=><GableAccent key={a.wall.wall.id} {...a}/>)}
@@ -80,7 +81,7 @@ export default function House3D({data,width,...interaction}:{data:DeckData;width
  if(!layout.visible)return null;
  return <group name="complete-editable-house">
   {walls.map(f=><group key={f.wall.id} name={`house-${f.name}-facade`} position={f.origin} rotation={[0,f.yaw,0]}><HouseFacade span={f.span} height={f.height} openings={f.openings} hidden={f.hidden} finish={facadeFinish(config,f.wall.id)} wallId={f.wall.id} blockId={f.block.id} evening={evening} {...interaction}/></group>)}
-  <HouseParts items={[{x:cx,y:4,z:-depth/2,w:maxX-minX+1,h:8,d:depth+1}]} color="#93968d" name="house-foundation-plinth"/>
+  <HouseParts items={[{x:cx,y:4,z:-depth/2,w:maxX-minX+1,h:8,d:depth+1}]} color="#93968d" name="house-foundation-plinth" surface="stucco"/>
   <mesh geometry={roof} castShadow receiveShadow><meshStandardMaterial color={config.roofColor} map={map} bumpMap={map} bumpScale={look.bumpScale} metalness={look.metalness} roughness={look.roughness} side={THREE.DoubleSide}/></mesh>
   <HouseParts items={[{x:cx,y:wallHeight-.75,z:-depth/2,w:maxX-minX+20,h:1.5,d:depth+20}]} color={trim.soffit} name="eave-soffit"/>
   {gable&&<><mesh geometry={gable} castShadow receiveShadow><meshStandardMaterial color={config.claddingColor} roughness={.9} side={sideGables?THREE.DoubleSide:THREE.FrontSide}/></mesh><HouseParts items={gableSkin} color={config.claddingColor} name="gable-cladding"/>

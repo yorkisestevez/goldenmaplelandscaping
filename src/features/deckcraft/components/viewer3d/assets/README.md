@@ -13,6 +13,16 @@ Every file here is CC0 1.0 (public domain), from Poly Haven (https://polyhaven.c
   its own tint. The OpenGL normal and roughness maps are only re-encoded as WebP.
 - Replaces Grass 008 (ambientCG, procedural), which the viewer used until Real Life G3.
 
+## House detail: `masonry-detail.webp`, `masonry-normal.webp`, `rock-detail.webp`, `rock-normal.webp`
+
+- Masonry: Concrete Floor 01 by Rob Tuytel (2018-07-16), a 2 m scan. https://polyhaven.com/a/concrete_floor_01
+  Files: https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_floor_01/concrete_floor_01_{diff,nor_gl}_1k.jpg
+- Rock: Rock Face 03 by Dario Barresi and Rico Cilliers (2024-02-06), a 2.7 m scan. https://polyhaven.com/a/rock_face_03
+  Files: https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_face_03/rock_face_03_{diff,nor_gl}_1k.jpg
+- Converted by `scripts/build-deck-textures.ts`. The colour map becomes a grey detail map, linear, with a mean of
+  exactly 0.5; the wall's own colour, doubled, multiplies it, so the wall keeps the colour the customer picked. The
+  OpenGL normal map is only re-encoded. Painted boards get a fine grain made in code instead (`houseSurfaces.ts`).
+
 ## Sky: `sky/sky-day-*`, `sky/sky-evening-*`, `sky/sky.json`
 
 - Day: Suburban Field 02 by Jacopo Voltolina (2020-10-22), https://polyhaven.com/a/suburban_field_02.

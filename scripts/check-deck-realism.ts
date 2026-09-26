@@ -13,6 +13,9 @@ import {FAR_RING_IN,LAWN_CHUNKS,groundGeometry} from '../src/features/deckcraft/
 import {occlusionUv} from '../src/features/deckcraft/components/viewer3d/groundOcclusion';
 import {buildYardModel,yardClip} from '../src/features/deckcraft/yardModel';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {HOUSE_CHUNKS,HOUSE_SURFACES,backingSurface,claddingSurface} from '../src/features/deckcraft/components/viewer3d/houseSurfaceKinds';
+import {WINDOW_ROOM,paneGeometry,windowGlass} from '../src/features/deckcraft/components/viewer3d/windowGlass';
+import type {HouseCladding} from '../src/features/deckcraft/types';
 
 /**
  * DeckCraft's photographic look (the "Real Life" track, plan phases G1–G8). G1 is the render pipeline: ambient
@@ -22,6 +25,8 @@ import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
  * colour, repeats without a seam and runs the grain along the board, and a shader that gives every board its own strip.
  * G3 is the sky and the ground: a real HDRI with its sun painted out and replaced by the scene's sun, a sky dome, haze,
  * and a photoscanned lawn that runs to the horizon and is shaded under what covers it.
+ * G4 is the house: window glass that reflects like double glazing with a room behind it, and scanned or painted
+ * detail on the cladding that keeps the colour the customer picked.
  */
 let checks=0;
 const ok=(condition:unknown,message:string)=>{assert(condition,message);checks++;};
@@ -185,4 +190,29 @@ for(const [name,lookup] of LAWN_CHUNKS)ok((THREE.ShaderChunk as Record<string,st
   ok(turf.includes('timer=setTimeout(redraw,OCCLUSION_SETTLE_MS)')&&turf.includes('occlusion.texture.channel=1')&&pipeline3.includes('for(const listen of shadowListeners.get(gl)??[])listen();gl.shadowMap.needsUpdate=true;')&&occlusion.includes('scene.overrideMaterial=this.cover'),'The lawn’s shade under the deck is redrawn once changes to what casts settle, never mid-drag');
 }
 
-console.log(`DECK REALISM OK — look, pipeline wiring, shadow key and sun fit; ${files.length} swatch atlases (worst ΔE ${worstDelta.toFixed(2)}, worst repeat ${worstSeam.toFixed(2)}×), the board shader and its picks; the sky, its sun and the lawn to the horizon; ${checks} checks.`);
+// G4: the house's surfaces and its windows.
+{
+  const CLADDINGS:HouseCladding[]=['Brick','Siding','Stone','Stucco','Board & batten','Vertical siding','Fibre-cement lap','Cedar shakes','Ledgestone','Fieldstone','Norman brick','Roman brick','Horizontal metal'];
+  ok(CLADDINGS.every(c=>c==='Horizontal metal'?claddingSurface(c)===undefined:!!claddingSurface(c)),'Every cladding but metal gets surface detail; metal stays smooth');
+  ok(CLADDINGS.every(c=>['masonry','rock'].includes(claddingSurface(c)??'')?backingSurface(c)==='stucco':backingSurface(c)===undefined),'The mortar behind brick and stone takes the stucco detail; other walls keep their plain backing');
+  ok(Object.values(HOUSE_SURFACES).every(v=>v.repeatIn>0&&v.normalScale>0&&v.normalScale<=1),'Each surface has a repeat and a relief strength');
+  for(const [name,lookup] of HOUSE_CHUNKS)ok((THREE.ShaderChunk as Record<string,string>)[name]?.includes(lookup),`ShaderChunk.${name} still has "${lookup}"`);
+  for(const scan of ['masonry','rock']){
+    const stats=await sharp(`${ASSETS}${scan}-detail.webp`).stats(),mean=stats.channels[0].mean;
+    ok(Math.abs(mean-127.5)<4,`${scan}-detail.webp averages ${mean.toFixed(1)} of 255 (linear 0.5), so the cladding colour doubled over it keeps its colour`);
+  }
+  ok(readme.includes('masonry-detail.webp')&&readme.includes('rock-detail.webp')&&readme.includes('concrete_floor_01')&&readme.includes('rock_face_03'),'The masonry and rock scans have their source and licence in assets/README.md');
+  const day=windowGlass(false),night=windowGlass(true);
+  ok(day!==night&&windowGlass(false)===day&&day.transmission===0&&day.ior===WINDOW_ROOM.ior&&day.color.getHex()===0&&day.userData.photoRole==='glass','Window glass is opaque, black, reflective (ior 2, about 11% head-on) and tagged for the photo engine, one material by day and one by night');
+  ok(Math.abs(((WINDOW_ROOM.ior-1)/(WINDOW_ROOM.ior+1))**2-WINDOW_ROOM.f0)<.005,'The room behind the glass fades by the same Fresnel term the glass reflects with');
+  const shader={uniforms:{} as Record<string,THREE.IUniform>,vertexShader:THREE.ShaderLib.physical.vertexShader,fragmentShader:THREE.ShaderLib.physical.fragmentShader};
+  night.onBeforeCompile(shader as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);
+  ok(shader.fragmentShader.includes('totalEmissiveRadiance+=windowRoom()')&&shader.vertexShader.includes('vCamLocal=(inverse(modelMatrix)')&&!/\$\{/.test(shader.fragmentShader+shader.vertexShader)&&!/mix\([^)]*[^.\d]\d+,/.test(shader.fragmentShader.slice(shader.fragmentShader.indexOf('vec3 windowRoom'))),'The room shader is filled in: every number a GLSL float, the room added through the glass');
+  const pane=paneGeometry(30,48),half=pane.getAttribute('aPane');
+  ok(half.count===pane.getAttribute('position').count&&half.getX(0)===15&&half.getY(0)===24,'Each pane carries its half size, so its room fits it');
+  const facade=read(`${VIEWER}HouseFacade.tsx`),house=read(`${VIEWER}House3D.tsx`),parts=read(`${VIEWER}HouseParts.tsx`);
+  ok(!facade.includes('transmission={.25}')&&(facade.match(/<Glass /g)??[]).length>=6&&(facade.match(/<Glass [^>]*evening=\{evening\}/g)??[]).length===(facade.match(/<Glass /g)??[]).length,'Every window and door pane is the new glass, told whether it is evening');
+  ok(facade.includes('surface={claddingSurface(look.cladding)}')&&facade.includes('surface={backingSurface(look.cladding)}')&&facade.includes('surface={claddingSurface(wainscot.cladding)}')&&house.includes('name="gable-accent-courses" surface={claddingSurface(look.cladding)}')&&house.includes('name="house-foundation-plinth" surface="stucco"')&&parts.includes('houseSurfaceMaterial(surface,'),'Walls, wainscots, gable accents and plinths take their surface detail through HouseParts');
+}
+
+console.log(`DECK REALISM OK — look, pipeline wiring, shadow key and sun fit; ${files.length} swatch atlases (worst ΔE ${worstDelta.toFixed(2)}, worst repeat ${worstSeam.toFixed(2)}×), the board shader and its picks; the sky, its sun and the lawn to the horizon; the house's glass and surfaces; ${checks} checks.`);
