@@ -7,6 +7,8 @@ import {PAVER_BRANDS,CARR_TRADE,BIN_COST} from '../src/data/carrPrices';
 import {hardscapeTakeoff} from '../src/utils/takeoff';
 import {computeEstimate} from '../src/utils/estimateEngine';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {CARR_PAVER_TRADE_2026,carrPaverFreight2026} from '../src/features/deckcraft/supplierRates';
+import baseline from '../src/data/engine-baseline.json';
 const feature=(id:string,x=0,z=0,w=10,d=10,productId=PAVER_BRANDS[0].id):YardFeature=>({id,kind:'patio',name:id,enabled:true,xFt:x,zFt:z,widthFt:w,depthFt:d,heightIn:0,rotationDeg:0,productId,color:'#aaa69b'});
 const deck=(yardFeatures:YardFeature[],extra:Partial<DeckData>={}):DeckData=>({...structuredClone(DEFAULT_DECK),deckType:'Freestanding',houseVisible:false,municipality:'Barrie',siteType:'Standard',soilCondition:'Sandy',terrainConfig:{widthFt:100,depthFt:100,elevationIn:0,slopePct:0},yardFeatures,...extra});
 const close=(a:number,b:number,e=1e-4)=>assert(Math.abs(a-b)<e,`${a} != ${b}`);
@@ -17,7 +19,7 @@ for(let i=0;i<overlap.excavationRegions.length;i++)for(let j=i+1;j<overlap.excav
 const disabled=buildYardTakeoff(deck([{...first,enabled:false}]));assert.equal(disabled.knownSubtotalCents,0);assert.equal(disabled.sharedSiteWorkCount,0);assert.equal(disabled.quantities.bins,0);
 const adjacent=buildYardTakeoff(deck([feature('A',-5),feature('B',5)])),single=buildYardTakeoff(deck([feature('C',0,0,20,10)]));assert.equal(adjacent.knownSubtotalCents,single.knownSubtotalCents);assert.equal(adjacent.sharedSiteWorkCount,1);
 const mixed=buildYardTakeoff(deck([feature('A',-5),feature('B',5,0,10,10,PAVER_BRANDS[1].id)]));assert.equal(mixed.materials.length,2);assert.equal(mixed.quantities.skids,4);
-for(const p of mixed.materials){const source=hardscapeTakeoff({sqft:p.installedAreaSqft,paver:PAVER_BRANDS.find(q=>q.id===p.productId)!,element:'patio',shape:'simple',surface:'grass'});assert.equal(p.amountCents,source.items.find(i=>i.id==='patio-material')!.retailCents);}
+for(const p of mixed.materials){const original=PAVER_BRANDS.find(q=>q.id===p.productId)!,rate=CARR_PAVER_TRADE_2026[p.productId];const source=hardscapeTakeoff({sqft:p.installedAreaSqft,paver:rate?{...original,materialTradePerSqft:rate.rate}:original,element:'patio',shape:'simple',surface:'grass'});assert.equal(p.amountCents,source.items.find(i=>i.id==='patio-material')!.retailCents);}
 assert.equal(mixed.sections.filter(s=>s.id==='yard-disposal').length,1);assert.equal(mixed.sections.find(s=>s.id==='yard-disposal')!.amountCents,mixed.quantities.bins*BIN_COST*100);
 const pond={...feature('pond',0,0,4,4,'pond'),kind:'water-feature' as const,heightIn:24},withHole=buildYardModel(deck([feature('patio',0,0,20,20),pond]));close(withHole.quantities.patioAreaSqft,375);
 const waterFootprint=withHole.features.find(f=>f.config.id==='pond')!.footprints;
@@ -42,10 +44,14 @@ const lastTread=deckModel.treads.at(-1)!,stairConflict=buildYardModel({...deckDa
 const highGrade=buildYardModel({...deckData,terrainConfig:{widthFt:100,depthFt:100,elevationIn:80,slopePct:2}},deckModel);assert(highGrade.deckClearance.minStairClearanceIn!<0);assert(highGrade.warnings.some(w=>w.includes('covers a deck stair walking surface')));
 let cases=0;
 for(const p of PAVER_BRANDS)for(const rotationDeg of [0,27,90]){const model=buildYardModel(deck([{...first,productId:p.id,rotationDeg},wall,pond]));for(const b of model.boxes){assert([b.x,b.y,b.z,b.w,b.h,b.d].every(Number.isFinite));assert(b.w>0&&b.h>0&&b.d>0);assert(b.polygon&&yardArea([b.polygon])>0);}assert(Number.isFinite(model.quantities.excavationYd3));cases++;}
-// The locked reference job keeps its current price; only shared geometric
-// quantities, never source rates, may move other job totals.
+// The shared website engine retains its locked reference. DeckCraft deliberately
+// changes only the documented 2026 paver supply and freight for the same job.
 const refProduct=PAVER_BRANDS.find(p=>p.id==='permacon-mondrian-plus')!,size=Math.sqrt(500),ref=buildYardTakeoff(deck([feature('ref',0,0,size,size,refProduct.id)]));
-const source=computeEstimate({projectType:'full',selectedElements:['patio'],sizes:{patio:500},details:{'patio.shape':'simple','patio.surface':'grass'},conditions:{},location:'barrie',tier:'mid',paverBrandId:refProduct.id,deckBrandId:'',addOns:[]});assert.equal(ref.knownSubtotalCents,source.precise!.subtotalCents);
+const source=computeEstimate({projectType:'full',selectedElements:['patio'],sizes:{patio:500},details:{'patio.shape':'simple','patio.surface':'grass'},conditions:{},location:'barrie',tier:'mid',paverBrandId:refProduct.id,deckBrandId:'',addOns:[]});
+const old=hardscapeTakeoff({sqft:500,paver:refProduct,element:'patio',shape:'simple',surface:'grass'}),oldLine=(id:string)=>old.items.find(i=>i.id===id)!.retailCents;
+const freight=Math.round(Math.round(carrPaverFreight2026(500*1.1*.30)*100)*baseline.facts.materialMarkup);
+assert.equal(ref.knownSubtotalCents,source.precise!.subtotalCents+ref.materials[0].amountCents!-oldLine('patio-material')+freight-oldLine('delivery-pallets'));
+assert(ref.quoteRequired&&ref.sections.some(s=>s.id==='paver-order-confirmation'&&s.amountCents===null),'Packaging and exact delivery remain order-specific');
 assert.equal(CARR_TRADE.waste.standard,1.1);
 const publicText=JSON.stringify(ref);assert(!publicText.includes('tradeCents')&&!publicText.includes('marginPct')&&!publicText.includes('unitTrade'));
 const big=feature('big-brooklyn',0,0,60,60,'permacon-brooklyn');

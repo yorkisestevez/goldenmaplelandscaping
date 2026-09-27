@@ -4,12 +4,15 @@ import * as THREE from 'three';
 import type {V3} from '../../deckTakeoff';
 import {GLASS,GLASS_FINISH_HEX,HANDRAIL,SHOE,SPIGOT,type FramelessGlassLayout} from '../../framelessGlass';
 import {SCENE_LOOK} from './sceneLook';
+import {useFixtureLit} from './fixtureLighting';
+import {guardGlass} from './guardGlass';
+import {outwardBoxBasis} from './boxBasis';
 
 const vec=(p:V3)=>new THREE.Vector3(p.x,p.y,p.z);
 const UP=new THREE.Vector3(0,1,0);
 /** A box whose sides stay vertical while its top and bottom follow a/b (a raked stair panel or shoe). */
 function sheared(a:THREE.Vector3,b:THREE.Vector3,height:number,normal:THREE.Vector3,thick:number,centreLift:number){
-  const m=new THREE.Matrix4().makeBasis(b.clone().sub(a),new THREE.Vector3(0,height,0),normal.clone().multiplyScalar(thick));
+  const m=outwardBoxBasis(b.clone().sub(a),new THREE.Vector3(0,height,0),normal.clone().multiplyScalar(thick));
   return m.setPosition(a.clone().add(b).multiplyScalar(.5).add(new THREE.Vector3(0,centreLift,0)));
 }
 function rod(position:THREE.Vector3,axis:THREE.Vector3,radius:number,length:number){
@@ -36,7 +39,7 @@ export default function FramelessGlass3D({layout}:{layout:FramelessGlassLayout})
   const hex=GLASS_FINISH_HEX[layout.finish];
   const materials=useMemo(()=>{
     // The same glass as the framed glass panels; depthWrite stays off so the ambient occlusion pass skips it.
-    const glass=new THREE.MeshPhysicalMaterial({color:'#e5f1eb',roughness:.065,metalness:0,transmission:.87,ior:1.52,thickness:.5,attenuationColor:'#92bda6',attenuationDistance:150,transparent:true,opacity:1,depthWrite:false,envMapIntensity:1.25});
+    const glass=guardGlass();
     glass.userData.photoRole='glass';
     const metal=layout.finish==='Black'?new THREE.MeshPhysicalMaterial({color:hex,...SCENE_LOOK.powderCoat}):new THREE.MeshStandardMaterial({color:hex,metalness:.9,roughness:.3});
     return {glass,metal,
@@ -45,6 +48,8 @@ export default function FramelessGlass3D({layout}:{layout:FramelessGlassLayout})
       stainless:new THREE.MeshStandardMaterial({color:'#bdc4c6',metalness:.93,roughness:.24})};
   },[layout.finish,hex]);
   useEffect(()=>()=>Object.values(materials).forEach(m=>m.dispose()),[materials]);
+  // Shoes, spigots, handrail and clamps catch the night's step and post lights; the glass stays as it is.
+  useFixtureLit(materials.metal);useFixtureLit(materials.rubber);useFixtureLit(materials.stainless);
   const parts=useMemo(()=>{
     const glass:THREE.Matrix4[]=[],edges:THREE.Matrix4[]=[],shoes:THREE.Matrix4[]=[],gaskets:THREE.Matrix4[]=[],bolts:THREE.Matrix4[]=[];
     const spigots:THREE.Matrix4[]=[],plates:THREE.Matrix4[]=[],rails:THREE.Matrix4[]=[],brackets:THREE.Matrix4[]=[];

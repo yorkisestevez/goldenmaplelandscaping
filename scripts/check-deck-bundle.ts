@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {existsSync,readFileSync,readdirSync} from 'node:fs';
 import {gzipSync} from 'node:zlib';
+import {initSync,parse} from 'es-module-lexer';
+import {basename} from 'node:path';
 
 /**
  * Deck designer bundle budget, checked against the production build (runs in postbuild).
@@ -30,11 +32,34 @@ import {gzipSync} from 'node:zlib';
  * - The board atlases (Real Life G2, 2026-09-25) are built in a worker of their own, about 2.4 KB gzip, fetched with
  *   the 3D view.
  */
-const BUDGET_KB={routeInitial:185,routeCss:12,viewer:340,pdf:150,deltaWorker:140,swatchWorker:5};
+// September 26 local review: user-requested drainage/ceiling/ground/mesh costing,
+// edge-light takeoff and house-opening clash checks run with the first estimate.
+// Measured route 195.0 KB and pricing worker 141.4 KB; retain about 10 KB headroom.
+// UnderDeckEditor remains an on-demand chunk (1.7 KB), as do proposal and viewer.
+// September 26 board editing: the requested physical polygon layout, strict import validation
+// and full-stock costing add about 7 KB to the first estimate (208.5 KB measured).
+// Restored/shared layouts need this synchronous model path. The 4 KB BoardLayoutEditor,
+// its styles and agent command controls remain lazy; retain a bounded 215 KB route budget.
+// September 26 section editing: saved rail ranges and exact-edge screens must be
+// priced and drawn by the synchronous model on load. Measured overhead is 2.62 KB
+// route JS and 1.78 KB worker gzip (about 1.2% each). Bound that added model path
+// at 218/153 KB; keep the entire new interaction, action and CSS pack lazy and
+// independently bounded to 12 KB. Existing CSS/viewer/PDF/tool caps stay intact.
+// September 27 landscape editing: restored/shared supplier selections must validate
+// against the same documented units in the page and pricing worker. The compact
+// 193-family engineering index and polygon/open-path earthworks add ~28 KB gzip.
+// Full product prose, photos and pattern references stay in a fetched JSON library;
+// the picker and yard/sketch interactions remain independently lazy and bounded.
+// Bound route/worker at250/185 KB including source swatch references and recipes;
+// two additional sketch kinds raise the optional sketch pack from25 to27 KB.
+const BUDGET_KB={routeInitial:250,routeCss:12,viewer:340,pdf:150,deltaWorker:185,swatchWorker:5,sketch:27,contractorTool:15};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);
 const gz=(file:string)=>gzipSync(readFileSync(new URL(file,assets))).length/1024;
+initSync();
+// Module workers may share their engine across chunks. Count the entire eager graph, not just the tiny entry.
+const workerGraph=(entry:string)=>{const seen=new Set<string>();const visit=(file:string)=>{if(seen.has(file))return;seen.add(file);for(const i of parse(readFileSync(new URL(file,assets),'utf8'))[0])if(i.d===-1&&i.n){assert(i.n.startsWith('.')||i.n.startsWith('/assets/'),'Worker imports must stay in the local build');visit(basename(i.n));}};visit(entry);return [...seen];};
 const manifestFile=files.find(f=>/^manifest-.*\.js$/.test(f));
 assert(manifestFile,'The React Router manifest is missing from the build.');
 const manifest=JSON.parse(readFileSync(new URL(manifestFile,assets),'utf8').replace(/^window\.__reactRouterManifest=/,'').replace(/;\s*$/,'')) as {entry:{module:string;imports:string[]};routes:Record<string,{module:string;imports?:string[];css?:string[]}>};
@@ -54,7 +79,11 @@ ok(cssKB<=BUDGET_KB.routeCss,`Deck designer route CSS is ${cssKB.toFixed(1)} KB 
 for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
 // Each section body, and the site plan's editor, is a chunk of its own (one merged into the route would pass the test
 // above unseen).
-for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','optionDeltas','useOptionDeltas','ProposalDialog','proposalPdf'])ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
+for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','BoardLayoutEditor','HardscapePicker','YardShapeEditor','optionDeltas','useOptionDeltas','ProposalDialog','proposalPdf']){
+  ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
+  if(body==='BoardLayoutEditor')ok(!initial.some(f=>f.startsWith(`${body}-`)),'Board-layout interaction controls stay outside the first estimate');
+  if(body==='HardscapePicker'||body==='YardShapeEditor'){ok(!initial.some(f=>f.startsWith(`${body}-`)),`${body} stays outside the first estimate`);ok(files.filter(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')).reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,`${body} stays within the optional-tool budget`);}
+}
 const viewer=files.find(f=>/^Deck3DViewer-.*\.js$/.test(f)),pdf=files.find(f=>/^jspdf.*\.js$/.test(f)),deltaWorker=files.find(f=>/^optionDeltas\.worker-.*\.js$/.test(f));
 ok(viewer&&gz(viewer)<=BUDGET_KB.viewer,`3D viewer chunk is ${viewer?gz(viewer).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.viewer} KB)`);
 // The PDF: jsPDF plus the proposal's builder, its pictures and the model it shares with the dialog, all loaded on demand.
@@ -63,8 +92,32 @@ ok(builder.some(f=>f.startsWith('proposalPdf-'))&&pdfKB<=BUDGET_KB.pdf,`PDF engi
 // The proposal's styles come with its dialog, never in the route's stylesheet.
 const proposalCss=files.find(f=>/^ProposalDialog-.*\.css$/.test(f));
 ok(proposalCss&&readFileSync(new URL(proposalCss,assets),'utf8').includes('.dd-proposal-page')&&!css.some(f=>readFileSync(new URL(f,assets),'utf8').includes('.dd-proposal-page')),'The proposal stylesheet loads with its dialog, not with the page');
-ok(deltaWorker&&!initial.includes(deltaWorker)&&gz(deltaWorker)<=BUDGET_KB.deltaWorker,`Option deltas' worker is ${deltaWorker?gz(deltaWorker).toFixed(1):'missing'} KB gzip (budget ${BUDGET_KB.deltaWorker} KB), loaded on demand`);
+const workerFiles=deltaWorker?workerGraph(deltaWorker):[],workerKB=workerFiles.reduce((n,f)=>n+gz(f),0);
+ok(deltaWorker&&!initial.includes(deltaWorker)&&workerKB<=BUDGET_KB.deltaWorker,`Option deltas' full initial worker graph is ${workerKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.deltaWorker} KB), loaded on demand`);
 const swatchWorker=files.find(f=>/^swatchMaps\.worker-.*\.js$/.test(f));
 ok(swatchWorker&&!initial.includes(swatchWorker)&&gz(swatchWorker)<=BUDGET_KB.swatchWorker,`Board atlas worker is ${swatchWorker?gz(swatchWorker).toFixed(1):'missing'} KB gzip (budget ${BUDGET_KB.swatchWorker} KB), loaded with the 3D view`);
+const sketchChunks=files.filter(f=>/^(SketchDesigner|sketchToDesign|sketchTypes|sketchGeometry)-.*\.js$/.test(f));
+ok(sketchChunks.some(f=>f.startsWith('SketchDesigner-'))&&sketchChunks.some(f=>f.startsWith('sketchToDesign-')),'Sketch UI and conversion have their own on-demand chunks');
+ok(sketchChunks.every(f=>!initial.includes(f)),'Sketch UI and recognition stay outside the first estimate');
+const sketchKB=sketchChunks.reduce((n,f)=>n+gz(f),0);
+ok(sketchKB<=BUDGET_KB.sketch,`Optional sketch chunks are ${sketchKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.sketch} KB)`);
+// The bidirectional plan adapter is its own lazy tool, separate from stroke recognition.
+// Keep the existing sketch UI/recognition cap; measure this added engine under the same 15 KB tool limit.
+const planSketchChunk=files.find(f=>/^planSketch-.*\.js$/.test(f));
+ok(planSketchChunk&&!initial.includes(planSketchChunk),'The plan/sketch adapter loads only with sketch mode');
+ok(planSketchChunk&&gz(planSketchChunk)<=BUDGET_KB.contractorTool,`Plan/sketch adapter is ${planSketchChunk?gz(planSketchChunk).toFixed(1):'missing'} KB gzip (15 KB optional-tool budget)`);
+for(const tool of ['ContractorPresetDialog','PlanComponentEditor','JobRevisionDialog','NaturalLanguagePanel','EasyEditTools','IssueReviewDialog']){
+  const chunks=files.filter(f=>f.startsWith(`${tool}-`)&&f.endsWith('.js'));
+  ok(chunks.length>0&&chunks.every(f=>!initial.includes(f)),`${tool} controls load on demand`);
+  ok(chunks.reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,`${tool} stays within its 15 KB optional-tool budget`);
+  const styleName=tool==='EasyEditTools'||tool==='IssueReviewDialog'?'easyEditTools':tool;
+  const styles=files.filter(f=>f.startsWith(`${styleName}-`)&&f.endsWith('.css'));
+  ok(styles.length>0&&styles.every(f=>!css.includes(f)),`${tool} styles load with the optional tool`);
+}
+for(const name of ['QuoteReviewPanel','AssistantTargets','deckAssistantClient','InlayPlanEditor','InlaySketchEditor']){const chunks=files.filter(f=>f.startsWith(name+'-')&&f.endsWith('.js'));ok(chunks.length>0&&chunks.every(f=>!initial.includes(f)),name+' stays outside the initial drawing');ok(chunks.reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,name+' stays within the existing 15 KB optional-tool cap');}
 const headroom=(kb:number,budget:number)=>`${kb.toFixed(1)}/${budget} KB (${(budget-kb).toFixed(1)} KB headroom)`;
-console.log(`DECK BUNDLE OK — route JS ${headroom(routeKB,BUDGET_KB.routeInitial)}, route CSS ${headroom(cssKB,BUDGET_KB.routeCss)}, 3D viewer ${gz(viewer!).toFixed(1)}/${BUDGET_KB.viewer} KB, PDF ${pdfKB.toFixed(1)}/${BUDGET_KB.pdf} KB (jsPDF ${gz(pdf!).toFixed(1)}), delta worker ${gz(deltaWorker!).toFixed(1)}/${BUDGET_KB.deltaWorker} KB gzip, lazy chunks stay lazy; ${checks} checks.`);
+const sectionChunks=files.filter(f=>/^(EdgeSectionEditor|edgeSectionActions)-.*\.(js|css)$/.test(f));
+ok(sectionChunks.some(f=>/^EdgeSectionEditor-.*\.js$/.test(f)),'Railing/screen controls are their own optional chunk');
+ok(sectionChunks.every(f=>!initial.includes(f)&&!css.includes(f)),'Section interaction, actions and styles stay off the initial route');
+ok(sectionChunks.reduce((n,f)=>n+gz(f),0)<=12,'The entire optional section editing pack stays within 12 KB gzip');
+console.log(`DECK BUNDLE OK — route JS ${headroom(routeKB,BUDGET_KB.routeInitial)}, route CSS ${headroom(cssKB,BUDGET_KB.routeCss)}, 3D viewer ${gz(viewer!).toFixed(1)}/${BUDGET_KB.viewer} KB, PDF ${pdfKB.toFixed(1)}/${BUDGET_KB.pdf} KB (jsPDF ${gz(pdf!).toFixed(1)}), delta worker ${workerKB.toFixed(1)}/${BUDGET_KB.deltaWorker} KB gzip, lazy chunks stay lazy; ${checks} checks.`);

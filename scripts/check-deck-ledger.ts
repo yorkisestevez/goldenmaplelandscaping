@@ -38,7 +38,7 @@ const ZERO=/\$0(?![\d.,])/;
 // 1. Every title the engine can give an estimate section (read from calculations.ts), HST aside, belongs to exactly one
 // design section, and every title a section claims is one the engine can give.
 {
-  const engine=read('src/features/deckcraft/calculations.ts');
+  const engine=read('src/features/deckcraft/calculations.ts')+'\n'+read('src/features/deckcraft/underDeckPricing.ts')+'\n'+read('src/features/deckcraft/quoteResolutions.ts')+'\n'+read('src/features/deckcraft/pergolaPricing.ts');
   const titles=[...engine.matchAll(/title:\s*([^,\n]+?),/g)].flatMap(m=>[...m[1].matchAll(/'([^']+)'|`([^`$]*)\$\{/g)].map(t=>t[1]??`${t[2]}*`));
   const owners=(t:string)=>t.endsWith('*')?SECTIONS.filter(s=>s.ledger.includes(t)):SECTIONS.filter(s=>ownsTitle(s,t));
   ok(titles.length>=18&&titles.includes('HST (13%)')&&titles.includes('Structural Framing (*')&&titles.includes('Yard · *'),`The engine's section titles are read (${titles.length})`);
@@ -86,6 +86,8 @@ const designs:[string,Partial<DeckData>][]=[
   ['post and step lights',{autoLighting:{posts:true,stairs:true},lightingSystem:{wireDistance:20,selectedItems:[{productId:'puck',qty:10,zone:'posts',auto:true},{productId:'evo_hyde',qty:4,zone:'stairs',auto:true},{productId:'hub100',qty:1,auto:true}]}}],
   ['a slatted screen and a manufacturer screen',{privacySqft:48,privacyScreens:[screen,hideaway]}],
   ['every extra',{benchLf:8,privacySqft:48,pergolaSqft:64,hasDrainage:true,hasDemo:true}],
+  ['under-deck supply and installation',{height:108,underDeck:{drainage:'rainescape',ceiling:'pvc',scope:'main',gravel:true,gravelDepthIn:3,floorMesh:true}}],
+  ['integrated under-deck ceiling',{height:108,underDeck:{drainage:'dryspace',ceiling:'none',scope:'all',gravel:false,gravelDepthIn:3,floorMesh:false}}],
   ['lattice skirting',{height:48,skirting:{style:'Lattice',clearanceIn:2,accessPanels:1}}],
   ['board skirting',{height:30,skirting:{style:'Horizontal boards',clearanceIn:2}}],
   ['a border in its own colour',{pictureFrameRows:1,deckFinishes:{border:'tt_legacy:Espresso'}}],
@@ -191,6 +193,8 @@ const paths:[string,boolean][]=[
   ['manufacturer privacy screen',has('Add-ons & Extras',s=>s.items.some(i=>i.name==='Manufacturer privacy screen'))],
   ['extras with a finish to quote',all.some(e=>e.quoteRequired.includes('Built-in Bench with selected finish'))],
   ['F7 skirting',has('Deck skirting',s=>!!s.quoteRequired)],
+  ['under-deck known supplies and installation with pending site details',has('Under-deck options',s=>s.total>0&&!!s.quoteRequired&&s.items.some(i=>i.name==='Under-deck installation planning allowance'&&Number(i.cost)>0))],
+  ['legacy drainage replaced without duplicate charge',all.some(e=>e.sections.some(s=>s.title==='Under-deck options'))&&!all.some(e=>e.sections.flatMap(s=>s.items).some(i=>i.name==='Drainage System'))],
   ['F6 border boards',has('Deck-part finishes',s=>s.items.some(i=>i.cost!==null))],
   ['F6 border without a rate',has('Deck-part finishes',s=>s.items.some(i=>i.cost===null&&!i.name.startsWith('Fascia')))],
   ['F6 fascia',all.some(e=>e.quoteRequired.includes('Fascia boards (supplier quote)'))],
@@ -292,19 +296,19 @@ ok(quoteLabel('Deck skirting (builder quote)')==='Deck skirting'&&quoteLabel('Fa
 // 7. The page: the schedule replaces the big total, the finish row and the quote notice; every edit, undo, redo and new
 // design is noted for Your changes; the price bar opens the drawer.
 {
-  const page=read('src/pages/DeckDesigner.tsx'),preview=read('src/features/deckcraft/designer/PreviewPanel.tsx'),estimate=read('src/features/deckcraft/designer/steps/EstimateStep.tsx'),bar=read('src/features/deckcraft/designer/PhoneDeckBar.tsx'),list=read('src/features/deckcraft/designer/SectionList.tsx'),css=read('src/pages/DeckDesigner.css');
+  const page=read('src/pages/DeckDesigner.tsx'),preview=read('src/features/deckcraft/designer/PreviewPanel.tsx'),estimate=read('src/features/deckcraft/designer/steps/EstimateStep.tsx'),bar=read('src/features/deckcraft/designer/WorkspacePrice.tsx'),list=read('src/features/deckcraft/designer/SectionList.tsx'),css=read('src/features/deckcraft/designer/workspace.css');
   ok(!/dd-live-price|dd-quote-notice|dd-finish/.test(preview),'The preview no longer carries its own total, finish row or quote notice');
   ok(estimate.includes('<PriceLedger ledger={ledger} variant="full"/>')&&!estimate.includes('dd-breakdown'),'Proposal & files shows the full price list in place of the old breakdown');
-  ok(page.includes('const schedule=useMemo(()=>priceLedger(estimate),[estimate]);')&&page.includes('<PriceLedger ledger={schedule} variant="column" changes={changes.records} onFullList={showFullList}/>')&&page.includes('<SectionList data={data} ledger={schedule} '),'The page builds one schedule for the column, the rows and the full list');
+  ok(page.includes('const schedule=useMemo(()=>priceLedger(estimate),[estimate]);')&&page.includes('<WorkspacePrice onQuoteReview={()=>setQuoteReviewOpen(true)} ledger={schedule} changes={changes.records} onFullList={showFullList}/>')&&page.includes('<SectionList data={data} ledger={schedule} '),'The page builds one schedule for the persistent price bar, the inspector and the full list');
   ok(/changes\.edit\(patch,data\);\s*applyUpdate\(patch\);/.test(page),'Every edit is noted before it is applied');
-  ok(page.includes('const replace=(next:DeckData)=>{changes.loaded();replaceDesign(next);};')&&page.includes('onReplaced:()=>{closeSections();changes.loaded();}'),'Import, start over, links and going back to your own design clear the list');
+  ok(page.includes('const replace=(next:DeckData)=>{changes.loaded();replaceDesign(next);};')&&/onReplaced:\(\)=>\{closeSections\(\);changes\.loaded\(\);(?:clearJobContext\(\);)?\}/.test(page),'Import, start over, links and going back to your own design clear the list');
   ok(page.includes('const undo=()=>{if(canUndo)changes.undo();undoDesign();},redo=()=>{if(canRedo)changes.redo();redoDesign();};'),'Undo and redo are noted');
   ok(page.includes('useEffect(()=>{notePrice(priceState(schedule));},[schedule,notePrice]);')&&page.includes('<ChangeAnnouncer record={changes.records.at(-1)}/>'),'Every estimate reaches the list, and the newest change is announced');
   ok(list.includes('sectionPriceEffect(section,ledger)'),'The section rows take their price effect from the schedule');
   const drawer=read('src/features/deckcraft/designer/PriceLedger.tsx');
   ok(drawer.includes('onKeyDown={trap}')&&drawer.includes('close.current?.focus();')&&drawer.includes('return ()=>{opener.current?.focus();};')&&/if\(e\.key==='Escape'\)\{e\.preventDefault\(\);onClose\(\);return;\}/.test(drawer)&&drawer.includes('last.focus()')&&drawer.includes('first.focus()'),'The drawer traps focus itself: in on opening, Tab looping, Escape closing, back to the price bar');
   ok(bar.includes('aria-haspopup="dialog"')&&bar.includes('<LedgerDrawer ')&&bar.includes('ledger.quotes.length'),'The price bar shows the quote count and opens the schedule drawer');
-  ok(/\.dd-ledger-column\{display:none\}/.test(css)&&/@media\(min-width:1280px\)\{[^}]*\{[^}]*\}\.dd-ledger-column\{display:block/.test(css)&&/@media\(max-width:1279\.98px\)\{\.deck-designer\{padding-bottom:84px\}\.dd-phone-bar\{display:flex/.test(css),'The column shows from 1280 px; the price bar below it');
+  ok(css.includes('.dd-workspace-price')&&bar.includes('aria-label="Priced subtotal"')&&bar.includes('aria-label="Still to be quoted: not in the planning total"')&&bar.includes('These costs are not included in the priced total.')&&bar.includes('<LedgerDrawer ledger={ledger} changes={changes}'),'The persistent price bar shows the priced portion, keeps outstanding quotes visible, and opens the same complete ledger on every screen');
 }
 
 console.log(`DECK LEDGER OK — ${estimates.length} designs and 213 legacy designs: engine figures in engine order, lines add up, one HST and total, every quote listed once and tagged, nothing unpriced at $0, every title owned by one section; Your changes grouped, reset and worded; ${checks} checks.`);

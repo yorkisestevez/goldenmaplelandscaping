@@ -1,4 +1,7 @@
 import type {DeckData,DoorStyle,HouseCladding,HouseConfig,HouseOpening,RoofFinish} from './types';
+import {getFootprint} from './lib/deckGeometry';
+import {getHouseContact} from './houseContact';
+import {getHousePlacement} from './housePlacement';
 
 /** House looks (never priced). The first six are the studio's original claddings; the rest are generic types. */
 export const HOUSE_CLADDINGS:readonly HouseCladding[]=['Siding','Brick','Stone','Stucco','Board & batten','Vertical siding','Fibre-cement lap','Cedar shakes','Ledgestone','Fieldstone','Norman brick','Roman brick','Horizontal metal'];
@@ -16,10 +19,20 @@ export function getHouseConfig(data:DeckData):HouseConfig{
   if(data.houseConfig)return data.houseConfig;
   const widthFt=data.width+11,doorWidth=Math.min(data.houseDoorWidthIn??72,data.width*12-12),doorCenter=doorWidth/2+(data.width*12-doorWidth)*(data.houseDoorOffset??50)/100+66;
   const openings:HouseOpening[]=[{id:'deck-door',type:'Door',facade:'Front',offsetPct:doorCenter/(widthFt*12)*100,bottomIn:data.height,widthIn:doorWidth,heightIn:84}];
-  const leftSpace=doorCenter-doorWidth/2-18,rightSpace=widthFt*12-doorCenter-doorWidth/2-18;
-  if(leftSpace>=40)openings.push({id:'front-window-left',type:'Window',facade:'Front',offsetPct:(leftSpace/2)/(widthFt*12)*100,bottomIn:48,widthIn:Math.min(48,leftSpace-12),heightIn:54});
-  if(rightSpace>=40)openings.push({id:'front-window-right',type:'Window',facade:'Front',offsetPct:(widthFt*12-rightSpace/2)/(widthFt*12)*100,bottomIn:48,widthIn:Math.min(48,rightSpace-12),heightIn:54});
-  return {widthFt,depthFt:Math.min(25,Math.max(16,data.width*.95)),storeys:1,storeyHeightIn:Math.max(data.houseWallHeightIn??132,data.height+96),roofShape:'Gable',roofFinish:'Shingles',roofColor:'#424748',cladding:'Siding',claddingColor:'#c5c7be',trimColor:'#f0eee6',openings};
+  const house:HouseConfig={widthFt,depthFt:Math.min(25,Math.max(16,data.width*.95)),storeys:1,storeyHeightIn:Math.max(data.houseWallHeightIn??132,data.height+96),roofShape:'Gable',roofFinish:'Shingles',roofColor:'#424748',cladding:'Siding',claddingColor:'#c5c7be',trimColor:'#f0eee6',openings};
+  // Resolve geometry with this explicit provisional house, preventing recursive
+  // default-house generation. Only synthetic openings move; measured ones return above.
+  const configured={...data,houseConfig:house},fp=getFootprint(configured,1),contact=getHouseContact(configured,fp),placement=getHousePlacement(configured);
+  const terminals=data.railingType==='None'?[]:fp.outline.flatMap((a,i)=>contact.isContactEdge(i)?[]:[a,fp.outline[(i+1)%fp.outline.length]]).filter(p=>Math.abs(p.y)<.5&&p.x>=placement.x0&&p.x<=placement.x1).map(p=>p.x-placement.x0);
+  const gaps=(from:number,to:number)=>{let free:[number,number][]=[[from,to]];for(const x of terminals)free=free.flatMap(([a,b])=>x+12<=a||x-12>=b?[[a,b]]:[...(x-12>a?[[a,x-12] as [number,number]]:[]),...(x+12<b?[[x+12,b] as [number,number]]:[])]);return free.filter(([a,b])=>b-a>=24).sort((a,b)=>(b[1]-b[0])-(a[1]-a[0]))[0];};
+  for(const [id,a,b] of [['front-window-left',6,doorCenter-doorWidth/2-18],['front-window-right',doorCenter+doorWidth/2+18,widthFt*12-6]] as const){
+    const span=gaps(a,b);if(!span)continue;const widthIn=Math.min(48,span[1]-span[0]);
+    // Illustrative high-sill windows also stay above the foreground guard in
+    // the Front view. Fit their height within the unchanged wall/roof envelope.
+    const bottomIn=data.height+60,heightIn=Math.min(54,house.storeyHeightIn-bottomIn-6);
+    openings.push({id,type:'Window',facade:'Front',offsetPct:(span[0]+span[1])/2/(widthFt*12)*100,bottomIn,widthIn,heightIn});
+  }
+  return house;
 }
 /** Length and height (inches) of a house wall by id ('main-front', 'garage1-back', …). An unknown id
  * falls back to the main block's `facade` wall, as older designs have it. */

@@ -3,6 +3,9 @@ import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import type {DeckTakeoff,V3} from '../../deckTakeoff';
+import {useFixtureLit} from './fixtureLighting';
+import {guardGlass} from './guardGlass';
+import {outwardBoxBasis} from './boxBasis';
 
 type Part={position:THREE.Vector3;axis:THREE.Vector3;size:THREE.Vector3};
 const vec=(p:V3)=>new THREE.Vector3(p.x,p.y,p.z);
@@ -28,13 +31,14 @@ function GlassBatch({matrices,material}:{matrices:THREE.Matrix4[];material:THREE
 
 export default function RailingDetails({data,model}:{data:DeckData;model:DeckTakeoff}){
   const materials=useMemo(()=>({
-    glass:new THREE.MeshPhysicalMaterial({color:'#e5f1eb',roughness:.065,metalness:0,transmission:.87,ior:1.52,thickness:.5,attenuationColor:'#92bda6',attenuationDistance:150,transparent:true,opacity:1,depthWrite:false,envMapIntensity:1.25}),
+    glass:guardGlass(),
     stainless:new THREE.MeshStandardMaterial({color:'#bdc4c6',metalness:.93,roughness:.24}),
     dark:new THREE.MeshStandardMaterial({color:'#303537',metalness:.68,roughness:.33}),
     rubber:new THREE.MeshStandardMaterial({color:'#19201f',metalness:0,roughness:.85}),
     edge:new THREE.MeshStandardMaterial({color:'#6d9b88',metalness:.1,roughness:.18,transparent:true,opacity:.32}),
   }),[]);
   useEffect(()=>()=>Object.values(materials).forEach(m=>m.dispose()),[materials]);
+  useFixtureLit(materials.stainless);useFixtureLit(materials.dark);useFixtureLit(materials.rubber);
   const layout=useMemo(()=>{
     const glass:THREE.Matrix4[]=[],clamps:Part[]=[],pads:Part[]=[],bolts:Part[]=[],cables:Part[]=[],barrels:Part[]=[],nuts:Part[]=[],grommets:Part[]=[],edges:Part[]=[];
     const cylinder=(out:Part[],position:THREE.Vector3,axis:THREE.Vector3,radius:number,length:number)=>out.push({position,axis,size:new THREE.Vector3(radius,length,radius)});
@@ -43,7 +47,7 @@ export default function RailingDetails({data,model}:{data:DeckData;model:DeckTak
       horizontal.normalize();const normal=new THREE.Vector3(-horizontal.z,0,horizontal.x),trim=2.15,t=trim/span;
       const first=a.clone().lerp(b,t),last=b.clone().lerp(a,t),center=first.clone().add(last).multiplyScalar(.5);
       // A sheared box keeps stair panels vertical while their top/bottom follow the slope.
-      const matrix=new THREE.Matrix4().makeBasis(last.clone().sub(first),new THREE.Vector3(0,panel.depth,0),normal.clone().multiplyScalar(panel.width));matrix.setPosition(center);glass.push(matrix);
+      const matrix=outwardBoxBasis(last.clone().sub(first),new THREE.Vector3(0,panel.depth,0),normal.clone().multiplyScalar(panel.width));matrix.setPosition(center);glass.push(matrix);
       for(const endpoint of [first,last])for(const height of [-panel.depth*.31,panel.depth*.31]){
         const p=endpoint.clone().add(new THREE.Vector3(0,height,0));
         for(const side of [-1,1]){

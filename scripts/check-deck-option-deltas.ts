@@ -7,7 +7,9 @@ import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
 import {pruneEdgeNames} from '../src/features/deckcraft/designPersistence';
 import {extrasLayout} from '../src/features/deckcraft/extrasLayout';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
-import {syncAutoLighting} from '../src/features/deckcraft/lightingSystem';
+import {activeLightingItems,syncAutoLighting} from '../src/features/deckcraft/lightingSystem';
+import {BORDER_SUPPORT_QUOTE} from '../src/features/deckcraft/borderLighting';
+import {pictureFrameOverhang} from '../src/features/deckcraft/lib/finishedFootprint';
 import {DECKING_CATALOGUE,RAILING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {BOARD_LAYOUTS,BORDER_ROWS,COLLECTIONS,FASTENERS,FOUNDATIONS,RAILING_STYLES,STAIR_FLIGHTS,STAIR_LAYOUTS,optionGroups,type OptionGroup} from '../src/features/deckcraft/designer/optionGroups';
@@ -33,10 +35,10 @@ const read=(path:string)=>readFileSync(resolve(root,path),'utf8');
 const design=(patch:Partial<DeckData>={})=>deckReleaseData({...structuredClone(DEFAULT_DECK),...patch});
 const ZERO=/\$0(?![\d.,])/;
 
-/** The page on its own: the estimate, then the post/step/screen light sync (useDeckEstimate), then the estimate again. */
+/** The page on its own: the estimate, then modelled light sync (useDeckEstimate), then the estimate again. */
 function settle(d:DeckData){
   let e=calculateDeckReleaseEstimate(d,DECK_SETTINGS);
-  const counts={posts:e.model.railing.posts.length,stairs:e.model.treads.length,privacy:extrasLayout(d,e.model).privacyMounts.length};
+  const extras=extrasLayout(d,e.model),counts={posts:e.model.railing.posts.length,stairs:e.model.treads.length,privacy:extras.privacyMounts.length,border:extras.borderMounts.length};
   const items=syncAutoLighting(d,counts);
   if(JSON.stringify(items)!==JSON.stringify(d.lightingSystem.selectedItems)){d=deckReleaseData({...d,lightingSystem:{...d.lightingSystem,selectedItems:items}});e=calculateDeckReleaseEstimate(d,DECK_SETTINGS);}
   return {design:d,estimate:e};
@@ -75,9 +77,27 @@ const baseOf=(d:DeckData,e:ReturnType<typeof calculateDeckReleaseEstimate>):Delt
   ok(stairs.includes("select('railingType','Railing style',RAILING_STYLES,")&&stairs.includes("select('stairFlights','Number of stair flights',STAIR_FLIGHTS,")&&stairs.includes("select('stairType','Stair layout',STAIR_LAYOUTS,")&&stairs.includes('onChange={e=>update(catalogueRailingPatch(e.target.value))}'),'Stairs & railings offer the groups\' choices and apply their patches');
   ok(site.includes("select('foundation','Foundation preference',FOUNDATIONS,"),'Site & foundation offers the foundations');
   ok(fields.includes('onChange={e=>update(selectPatch(key,typeof choices[0]===\'number\'?Number(e.target.value):e.target.value))}'),'Every select applies selectPatch');
-  ok(history.includes('setData(prev=>pruneEdgeNames(deckReleaseData({...prev,...patch})))'),'The page\'s update is the patch through the release boundary with stale edge names dropped');
-  ok(estimateHook.includes('const autoCounts={posts:estimate.model.railing.posts.length,stairs:estimate.model.treads.length,privacy:extras.privacyMounts.length};')&&estimateHook.includes('selectedItems:syncAutoLighting(prev,autoCounts)')&&estimateHook.includes('const estimateKey=estimateKeyOf(data);'),'The page\'s light sync and estimate key are the ones measured here');
+  const guardedUpdate=read('src/features/deckcraft/designer/designUpdate.ts');
+  ok(history.includes('prepareDesignUpdate(dataRef.current,patch)')&&guardedUpdate.includes('pruneEdgeNames(deckReleaseData({...data,...resizeBoundaryPatch(data,patch)}))'),'The page\'s guarded update scales edited outlines through the release boundary with stale edge names dropped');
+  ok(estimateHook.includes('const autoCounts={posts:estimate.model.railing.posts.length,stairs:estimate.model.treads.length,privacy:extras.privacyMounts.length,border:extras.borderMounts.length};')&&estimateHook.includes('selectedItems:syncAutoLighting(prev,autoCounts)')&&estimateHook.includes('const designKey=estimateKeyOf(data);')&&estimateHook.includes('const estimateKey=designKey+'),'The page\'s light sync and estimate key are the ones measured here');
   for(const [name,src,section] of [['MaterialsStep',materials,'boards'],['StairsStep',stairs,'stairs'],['SiteExtrasStep',site,'part']] as const)ok(src.includes(`useOptionDeltas(${section==='part'?'part':`'${section}'`},data,deltas)`)&&src.includes('<DeltaToggle deltas={effect}/>'),`${name} shows its groups' price effect, with "Show price effect" where it is asked for`);
+}
+
+// Border lighting changes the pricing key and follows real mounts in both page and worker estimates.
+{
+  const off=settle(design({width:20,length:12,pictureFrameRows:1,pictureFrameOverhangIn:.5,autoLighting:{border:false},lightingSystem:{...structuredClone(DEFAULT_DECK.lightingSystem),selectedItems:[],wireDistance:0}}));
+  const patch={autoLighting:{border:true}},on=settle(picked(off.design,patch));
+  const mounts=extrasLayout(on.design,on.estimate.model).borderMounts.length;
+  ok(estimateKeyOf(off.design)!==estimateKeyOf(on.design),'Selecting border lighting invalidates the estimate and option-delta cache');
+  ok(mounts>0&&activeLightingItems(on.design,on.estimate.model).find(p=>p.zone==='border')?.qty===mounts,'The settled page prices the actual exposed border mounts');
+  ok(on.design.lightingSystem.selectedItems.some(p=>p.productId==='hub100'&&p.auto)&&!on.design.lightingSystem.selectedItems.some(p=>p.zone==='border'),'Border sync includes its transformer while fixture quantities remain derived');
+  ok(on.estimate.subtotal>off.estimate.subtotal&&on.estimate.quoteRequired.includes(BORDER_SUPPORT_QUOTE),'Known border supply increases the subtotal while its construction detail remains quoted');
+  const figures=priceOption(off.design,patch),view=optionDelta(baseOf(off.design,off.estimate),off.design,patch);
+  ok(figures.subtotal===on.estimate.subtotal&&figures.total===on.estimate.total&&JSON.stringify(figures.quoteRequired)===JSON.stringify(on.estimate.quoteRequired),'Worker option figures agree with the independently settled page estimate for border lighting');
+  ok(view.amount===Math.round(on.estimate.subtotal)-Math.round(off.estimate.subtotal)&&view.kind==='quote','Border price effect includes the actual subtotal movement and outstanding quote');
+  const restored=settle(picked(on.design,{autoLighting:{border:false}}));
+  ok(pictureFrameOverhang(on.design)===2.5&&pictureFrameOverhang(restored.design)===.5,'Turning the option off restores the saved ordinary overhang');
+  ok(!activeLightingItems(restored.design,restored.estimate.model).some(p=>p.zone==='border')&&!restored.design.lightingSystem.selectedItems.some(p=>p.productId==='hub100'&&p.auto)&&restored.estimate.subtotal===off.estimate.subtotal,'Turning border lighting off removes its derived fixtures and automatic transformer and restores the original subtotal');
 }
 
 // 3. Wording: "+$1,240", "−$380", "no change", a quote never with a figure alone and never "$0".
@@ -106,6 +126,7 @@ const designs:[string,Partial<DeckData>][]=[
   [`${unrated.name} decking (a supplier quote)`,{deckingMaterial:unrated.id,deckingColor:unrated.colors[0].name}],
   ['a manufacturer railing (a supplier quote)',{catalogueRailingId:RAILING_CATALOGUE[0].id,railingType:RAILING_CATALOGUE[0].baseType}],
   ['post and step lights that follow the railing and stairs',{autoLighting:{posts:true,stairs:true}}],
+  ['picture-frame edge lights that follow exposed mounts',{pictureFrameRows:1,autoLighting:{border:true}}],
   ['a Dark Slate border on a picture frame',{pattern:'Picture Frame',pictureFrameRows:1,borderFinish:'Dark Slate'}],
   ['stairs on an angled corner',{cornerChamfers:{frontLeftFt:6,frontRightFt:6},stairEdgeId:'main-chamfer-right',stairFlights:1,stairType:'Straight',height:36}],
   ['a floating deck on deck blocks with hidden fasteners',{deckType:'Floating',height:12,foundation:'Deck Blocks',fasteningSystem:'Hidden'}],
@@ -249,7 +270,7 @@ ok(synced>0,`An option the light sync follows is covered (${synced})`);
   for(const f of ['optionDeltas.ts','optionGroups.ts','useOptionDeltas.tsx','selectPatch.ts'])walk(resolve(root,'src/features/deckcraft/designer',f));
   ok(seen.size>20,`The delta modules' import graph is read (${seen.size} files)`);
   ok(![...bare].some(s=>/^three\b|^@react-three\//.test(s))&&![...seen].some(f=>/viewer3d/.test(f)),`The option deltas never import three.js or the 3D viewer (${[...bare].join(', ')})`);
-  // The worker is built on its own, without code splitting: the engine only, no page code, React or lazy imports.
+  // Public worker stays engine-only; private cost records load one optional engine extension.
   const workerSeen=new Set<string>(),workerBare=new Set<string>(),lazy:string[]=[];
   const walkWorker=(file:string)=>{
     if(workerSeen.has(file))return;workerSeen.add(file);
@@ -261,7 +282,7 @@ ok(synced>0,`An option the light sync follows is covered (${synced})`);
     }
   };
   walkWorker(resolve(root,'src/features/deckcraft/designer/optionDeltas.worker.ts'));
-  ok(workerSeen.size>20&&[...workerBare].every(s=>s==='clipper-lib')&&lazy.length===0,`The worker's graph is the engine alone: ${workerSeen.size} files, packages ${[...workerBare].join(', ')||'none'}, ${lazy.length} lazy imports`);
+  ok(workerSeen.size>20&&[...workerBare].every(s=>s==='clipper-lib')&&lazy.length===1&&lazy[0]==="../quoteResolutions",`The worker's graph is the engine alone: ${workerSeen.size} files, packages ${[...workerBare].join(', ')||'none'}, ${lazy.length} lazy imports`);
   ok(![...workerSeen].some(f=>/[\\/](designer[\\/](sections|priceLedgerModel|useChangeLedger|fields)|steps[\\/])/.test(f)),'The worker never reaches the sections, the ledger or any section body');
 }
 

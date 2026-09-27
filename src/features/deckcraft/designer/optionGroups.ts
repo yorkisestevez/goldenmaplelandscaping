@@ -1,4 +1,4 @@
-import {DECKING_CATALOGUE,RAILING_CATALOGUE} from '../manufacturerCatalog';
+import {DECKING_CATALOGUE,RAILING_CATALOGUE} from '../manufacturerRuntimeCatalogue';
 import type {DeckData} from '../types';
 import {selectPatch} from './selectPatch';
 import type {SectionId} from './sections';

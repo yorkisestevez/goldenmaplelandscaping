@@ -1,4 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
+import {prepareDesignUpdate} from './designUpdate';
 import {deckReleaseData,DECK_RELEASE_STORAGE_KEY,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../deckRelease';
 import {DEFAULT_DECK} from '../defaults';
 import {DESIGN_STORAGE_KEY,pruneEdgeNames} from '../designPersistence';
@@ -19,9 +20,12 @@ import {deckSizeForArea,readDeckArea} from '../estimatorHandoff';
 export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
   const [data,setData]=useState<DeckData>(()=>deckReleaseData(structuredClone(DEFAULT_DECK)));
   const [mounted,setMounted]=useState(false);
+  const [designReady,setDesignReady]=useState(false);
   const [hasWebGL,setHasWebGL]=useState(true);
   const [saved,setSaved]=useState(false);
   const [storageReady,setStorageReady]=useState(false);
+  const [autosaveState,setAutosaveState]=useState<'loading'|'saving'|'saved'|'error'>('loading');
+  const [lastAutosaveAt,setLastAutosaveAt]=useState('');
   const [designStatus,setDesignStatus]=useState('');
   const [designError,setDesignError]=useState('');
   const [linkBackup,setLinkBackup]=useState(false);
@@ -79,17 +83,31 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
       else if(!link)setDesignStatus(status=>`${status?`${status} `:''}Your cost estimate had a deck of ${words}; change the size under Deck shape & size to start from it.`);
       try{const query=new URLSearchParams(window.location.search);query.delete('sqft');const rest=query.toString();window.history.replaceState(null,'',window.location.pathname+(rest?`?${rest}`:'')+window.location.hash);}catch{/* The size stays in the address; reopening starts from it again. */}
     }
-    if(link)void openSharedLink(link,stored);
+    if(link)void openSharedLink(link,stored).finally(()=>setDesignReady(true));else setDesignReady(true);
     // A link pasted into this open tab only changes the hash.
-    const onHash=()=>{const next=designLinkFromHash(window.location.hash);if(!next)return;let own:string|null=null;try{own=serializeDesign(dataRef.current);}catch{/* Nothing to keep. */}void openSharedLink(next,own);};
+    const onHash=()=>{const next=designLinkFromHash(window.location.hash);if(!next)return;setDesignReady(false);let own:string|null=null;try{own=serializeDesign(dataRef.current);}catch{/* Nothing to keep. */}void openSharedLink(next,own).finally(()=>setDesignReady(true));};
     window.addEventListener('hashchange',onHash);
     return ()=>window.removeEventListener('hashchange',onHash);
   },[]);
-  useEffect(()=>{if(!storageReady)return;const timer=setTimeout(()=>{try{localStorage.setItem(DECK_RELEASE_STORAGE_KEY,serializeDesign(data));}catch{setDesignError('Automatic saving is unavailable on this device. Use Save JSON to keep your design.');}},450);return ()=>clearTimeout(timer);},[data,storageReady]);
+  useEffect(()=>{
+    if(!storageReady)return;
+    setAutosaveState('saving');
+    const timer=setTimeout(()=>{
+      try{
+        localStorage.setItem(DECK_RELEASE_STORAGE_KEY,serializeDesign(data));
+        setLastAutosaveAt(new Date().toISOString());setAutosaveState('saved');
+        setDesignError(previous=>previous.startsWith('Automatic saving is unavailable')?'':previous);
+      }catch{setAutosaveState('error');setDesignError('Automatic saving is unavailable on this device. Use Save JSON to keep your design.');}
+    },450);
+    return ()=>clearTimeout(timer);
+  },[data,storageReady]);
   const retryWebGL=()=>{try{const c=document.createElement('canvas');setHasWebGL(!!(c.getContext('webgl2')||c.getContext('webgl')));}catch{setHasWebGL(false);}};
   // An edit can make a named stair or level edge unusable (a wrap removed, a corner cut back, a wider or
   // turned stair); it is dropped at once so no hidden choice stays in force.
-  const update=(patch:Partial<DeckData>)=>{setSaved(false);source.current??=editKey(patch);setData(prev=>pruneEdgeNames(deckReleaseData({...prev,...patch})));};
+  const update=(patch:Partial<DeckData>)=>{
+    try{const next=prepareDesignUpdate(dataRef.current,patch);setDesignError('');setSaved(false);source.current??=editKey(patch);dataRef.current=next;setData(next);}
+    catch(error){setDesignError(`${error instanceof Error?error.message:'The edit could not be applied.'} Unlock the measured edge before changing its length or direction.`);}
+  };
   useEffect(()=>{
     const kind=source.current;source.current=null;
     // A change that leaves the design as it was (a number box re-committing its value) is not a step.
@@ -103,5 +121,5 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
   const undo=()=>step(undoChange),redo=()=>step(redoChange);
   const restoreEarlierYard=()=>{if(!earlierYard)return;update({yardFeatures:earlierYard.yardFeatures,...(earlierYard.terrainConfig?{terrainConfig:earlierYard.terrainConfig}:{})});setEarlierYard(null);};
   const dismissEarlierYard=()=>setEarlierYard(null);
-  return {data,setData,update,replace,undo,redo,canUndo:historySize.past>0,canRedo:historySize.future>0,earlierYard,restoreEarlierYard,dismissEarlierYard,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign};
+  return {data,setData,update,replace,undo,redo,canUndo:historySize.past>0,canRedo:historySize.future>0,earlierYard,restoreEarlierYard,dismissEarlierYard,mounted,designReady,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,autosaveState,lastAutosaveAt,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign};
 }

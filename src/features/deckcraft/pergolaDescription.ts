@@ -1,0 +1,6 @@
+import type {DeckData} from './types';
+import {pergolaProduct,pergolaVariant,pergolaSize} from './pergolaCatalog';
+export function pergolaDescription(data:DeckData):string|null{
+ const s=data.pergola,p=s&&pergolaProduct(s),v=s&&pergolaVariant(s);if(!s||!p||!v)return null;
+ const dim=pergolaSize(s);return `Aluminum pergola: ${p.name}, ${v.label}${v.sku?`, SKU ${v.sku}`:''}; ${s.supplyMode==='install-only'?'customer-owned kit, installation only':'contractor supply and installation'}; ${p.operation==='motorized'||s.accessories.includes('motor')?'motorized':'manual'} louvers; frame ${p.frameFinishes.find(f=>f.id===s.frameFinish)?.name}, roof ${p.roofFinishes.find(f=>f.id===s.roofFinish)?.name}; accessories ${s.accessories.map(id=>p.accessories.find(a=>a.id===id)?.name).join(', ')||'none'}${s.lighting?'; planned perimeter LEDs (compatibility / electrical quote required)':''}; centre (${s.xFt}, ${s.zFt}) ft, rotation ${s.rotationDeg}°, louvers ${s.louverDeg}°; ${s.target.kind==='deck'?`deck level ${s.target.level+1}`:'patio'}; ${dim.widthIn.toFixed(1)} × ${dim.depthIn.toFixed(1)} × ${dim.heightIn.toFixed(1)} in ${v.dimensions&&!p.custom?'listed envelope':'conceptual dimensions'}; CAD listing dated ${v.source.checkedAt}; availability ${v.availability}; profiles/anchors/structural suitability require review. Source: ${v.source.url}`;
+}

@@ -6,6 +6,7 @@ import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass
 import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass.js';
 import {SCENE_LOOK} from './sceneLook';
 import {fitSun,shadowKey} from './shadowCache';
+import {renderWindowReflections} from './windowReflections';
 
 /**
  * The live 3D view's renderer. The scene goes into a multisampled half-float image, ambient occlusion is worked out
@@ -40,6 +41,7 @@ class Chain{
   }
   render(gl:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.Camera,evening:boolean){
     this.gtao.scene=scene;this.gtao.camera=camera;this.gtao.blendIntensity=evening?AO.intensity.evening:AO.intensity.day;
+    renderWindowReflections(gl,scene,camera);
     gl.setRenderTarget(this.beauty);gl.render(scene,camera);
     this.gtao.render(gl,this.post,this.beauty,0,false);
     if(evening){

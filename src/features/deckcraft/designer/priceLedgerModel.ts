@@ -52,15 +52,15 @@ const amountText=(amount:number)=>amount>0&&amount<.5?'Under $1':dollars(amount)
 export function priceLedger(estimate:DeckEstimate):Ledger{
   const hstSection=estimate.sections.find(s=>/^HST/.test(s.title));
   const lines=estimate.sections.filter(s=>s!==hstSection&&(s.total>=.005||s.items.some(i=>Number(i.qty)>0))).map((s):LedgerLine=>{
-    const items=s.items.filter(i=>Number(i.qty)>0).map(i=>({name:i.name,qty:qtyText(i.qty),unit:i.unit,quote:i.cost===null?(isBuilderQuote(i)?'builder':'supplier'):null}) as LedgerItem);
+    const items=s.items.filter(i=>Number(i.qty)>0).map(i=>({name:i.name,qty:qtyText(i.qty),unit:i.unit,quote:i.cost===null&&!i.quoteResolved?(isBuilderQuote(i)?'builder':'supplier'):null}) as LedgerItem);
     const kinds=[...new Set(items.flatMap(i=>i.quote?[i.quote]:[]))];
     const quotes=kinds.length?kinds:s.quoteRequired?['supplier' as const]:[];
-    const priced=s.total>=.005;
-    return {title:s.title,section:sectionOfTitle(s.title)?.id??null,amount:s.total,quotes,items,text:!quotes.length?amountText(s.total):priced?`${amountText(s.total)} + quote`:quoteTag(quotes)};
+    const priced=s.total>=.005,covered=s.items.some(i=>i.quoteResolved)&&!quotes.length&&!priced;
+    return {title:s.title,section:sectionOfTitle(s.title)?.id??null,amount:s.total,quotes,items,text:covered?'Included in confirmed scope':!quotes.length?amountText(s.total):priced?`${amountText(s.total)} + quote`:quoteTag(quotes)};
   });
   const split=splitSubtotal(estimate);
   // A quote's kind: its own label, else the wording of the unpriced item it names.
-  const unpriced=estimate.sections.flatMap(s=>s.items.filter(i=>i.cost===null));
+  const unpriced=estimate.sections.flatMap(s=>s.items.filter(i=>i.cost===null&&!i.quoteResolved));
   const quotes=[...new Set(estimate.quoteRequired)].map(label=>({label,kind:/\(builder quote\)/i.test(label)||unpriced.some(i=>i.name===label&&isBuilderQuote(i))?'builder':'supplier'} as LedgerQuote));
   return {
     stamp:`${priceBookLabel()} · CAD · before HST`,lines,
