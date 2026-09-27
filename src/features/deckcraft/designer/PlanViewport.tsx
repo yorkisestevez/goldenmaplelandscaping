@@ -22,8 +22,8 @@ export default function PlanViewport({children,frame}:{children:(zoom:number,fra
     const wheel=(event:WheelEvent)=>{
       if(!event.ctrlKey&&!event.metaKey)return;
       if((event.target as HTMLElement).closest('button,input,select'))return;
-      event.preventDefault();freeze();const b=el.getBoundingClientRect();
-      zoom(Math.exp(-event.deltaY*.003),{x:event.clientX-b.x-b.width/2,y:event.clientY-b.y-b.height/2});
+      event.preventDefault();freeze();const b=el.getBoundingClientRect(),stage=el.firstElementChild as HTMLElement;
+      zoom(Math.exp(-event.deltaY*.003),{x:event.clientX-b.x-stage.offsetLeft-stage.offsetWidth/2,y:event.clientY-b.y-stage.offsetTop-stage.offsetHeight/2});
     };
     el.addEventListener('wheel',wheel,{passive:false});return ()=>el.removeEventListener('wheel',wheel);
   },[frame]);
@@ -32,7 +32,7 @@ export default function PlanViewport({children,frame}:{children:(zoom:number,fra
     if(!event.currentTarget.contains(event.target as Node))return;
     freeze();
     // An explicit insertion tool takes precedence over a previously enabled camera pan.
-    if((event.target as Element).closest('.dd-boundary-editor[data-add-pull],.dd-yard-shape-editor[data-add-pull],.dd-yard-shape-editor[data-drawing],.dd-inlay-plan-editor[data-placement]')){if(pan)setPan(false);return;}
+    if((event.target as Element).closest('.dd-boundary-editor[data-add-pull],.dd-yard-shape-editor[data-add-pull],.dd-yard-shape-editor[data-drawing],.dd-inlay-plan-editor[data-placement],.dd-patio-inlay-overlay[data-placing]')){if(pan)setPan(false);return;}
     if(!pan&&event.button!==1)return;
     if((event.target as HTMLElement).closest('.dd-plan-navigation,.dd-boundary-inline,[data-plan-editor-ui],[role="toolbar"]'))return;
     event.preventDefault();event.stopPropagation();

@@ -165,13 +165,19 @@ export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;pa
   /** The connecting step or stair runs the full shared edge (a split level). */
   fullStep?:boolean}
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature';
+export interface YardHardscape {finishId:string;colorId:string;unitId:string;patternId:string;angleDeg:number;jointMm:number;capUnitId?:string}
+/** Decorative paving zones, centre-relative patio-local inches before patio rotation. */
+export interface PatioInlay {id:string;name:string;shape:'rectangle'|'diamond'|'circle'|'compass'|'band'|'custom';xIn:number;yIn:number;widthIn:number;depthIn:number;rotationDeg:number;points?:{x:number;y:number}[];productId:string;color:string;hardscape?:YardHardscape}
 export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled:boolean;xFt:number;zFt:number;widthFt:number;depthFt:number;heightIn:number;rotationDeg:number;productId:string;color:string;
+  /** Wall front-grade datum relative to local terrain, inches. Absent means zero. */
+  baseElevationIn?:number;
   /** Patio perimeter in local inches about the feature centre, before rotation. */
   outline?:{x:number;y:number}[];
   /** Open retaining-wall centreline in local inches; widthFt is its total run. */
   wallPath?:{x:number;y:number}[];
   /** A documented supplier variant. Absent preserves the original yard defaults. */
-  hardscape?:{finishId:string;colorId:string;unitId:string;patternId:string;angleDeg:number;jointMm:number;capUnitId?:string};
+  hardscape?:YardHardscape;
+  inlays?:PatioInlay[];
 }
 export interface TerrainConfig {widthFt:number;depthFt:number;elevationIn:number;slopePct:number}
 /** Backyard items priced at the site cost estimator's allowances. Not drawn in 3D: placed and confirmed at the site visit. */

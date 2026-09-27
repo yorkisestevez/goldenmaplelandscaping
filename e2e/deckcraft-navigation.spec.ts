@@ -16,6 +16,12 @@ test('zoom and pan change only the view; editing at zoom preserves exact world d
   const original=await shape(page),before=await matrix(page);
   await page.getByRole('button',{name:'Zoom in',exact:true}).click();await expect(page.getByLabel('Drawing zoom')).toHaveText('125%');await aligned(page);
   expect(await shape(page)).toBe(original);expect((await matrix(page)).a).toBeCloseTo(before.a*1.25,6);
+  const viewport=(await page.getByLabel('Deck drawing canvas').boundingBox())!,tools=(await page.getByRole('region',{name:'Contractor job tools'}).boundingBox())!,anchor={x:viewport.x+35,y:Math.max(viewport.y+35,tools.y+tools.height+35)},wheelBefore=await matrix(page);
+  const world={x:(anchor.x-wheelBefore.e)/wheelBefore.a,y:(anchor.y-wheelBefore.f)/wheelBefore.d};
+  expect(await page.evaluate(p=>!!document.elementFromPoint(p.x,p.y)?.closest('.dd-plan-viewport'),anchor)).toBe(true);
+  await page.mouse.move(anchor.x,anchor.y);await page.keyboard.down('Control');
+  try{await page.mouse.wheel(0,-80);await expect.poll(async()=>(await matrix(page)).a).toBeGreaterThan(wheelBefore.a);}finally{await page.keyboard.up('Control');}
+  const wheelAfter=await matrix(page);expect(Math.abs(world.x*wheelAfter.a+wheelAfter.e-anchor.x)).toBeLessThan(.2);expect(Math.abs(world.y*wheelAfter.d+wheelAfter.f-anchor.y)).toBeLessThan(.2);expect(await shape(page)).toBe(original);await aligned(page);
   await page.getByRole('button',{name:'Pan drawing',exact:true}).click();
   const beforePan=await matrix(page);
   const canvas=page.getByLabel('Deck drawing canvas'),b=(await canvas.boundingBox())!;
@@ -25,7 +31,8 @@ test('zoom and pan change only the view; editing at zoom preserves exact world d
   await page.getByRole('button',{name:'Pan drawing',exact:true}).click();
   await handle(page).scrollIntoViewIfNeeded();const hb=(await handle(page).boundingBox())!,scale=(await matrix(page)).a;
   await page.mouse.move(hb.x+hb.width/2,hb.y+hb.height/2);await page.mouse.down();await page.mouse.move(hb.x+hb.width/2+12*scale,hb.y+hb.height/2+12*scale,{steps:5});await page.mouse.up();
-  await expect.poll(async()=>(await shape(page))!.split(' ')[2].split(',').map(Number)).toEqual([204,156]);
+  // Browser transforms round screen coordinates; enforce sub-thousandth-inch world accuracy.
+  await expect.poll(async()=>Math.max(...(await shape(page))!.split(' ')[2].split(',').map((v,i)=>Math.abs(Number(v)-[204,156][i])))).toBeLessThan(.001);
   expect((await matrix(page)).a).toBeCloseTo(scale,6);await aligned(page);
   await page.getByRole('region',{name:'Save and restore design'}).getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(()=>shape(page)).toBe(original);
   await page.getByRole('button',{name:'Fit drawing',exact:true}).click();await expect(page.getByLabel('Drawing zoom')).toHaveText('100%');await aligned(page);

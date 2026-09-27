@@ -2,7 +2,7 @@ import {useEffect,useLayoutEffect,useMemo} from 'react';
 import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import type {YardBox,YardModel,YardRole} from '../../yardModel';
+import {yardSignedArea,type YardBox,type YardModel,type YardRole} from '../../yardModel';
 import {yardPreviewBoxes} from './yardPreview';
 import {useFixtureLit} from './fixtureLighting';
 import {scanMaterial} from './houseSurfaces';
@@ -15,10 +15,10 @@ function surfaceTexture(){const n=128,bytes=new Uint8Array(n*n*4);for(let y=0;y<
 const PAVER_CHAMFER_IN=.2;
 function boxGeometry(b:YardBox){
  if(b.role==='rock'){const g=new THREE.IcosahedronGeometry(1,1),p=g.getAttribute('position');for(let i=0;i<p.count;i++){const k=.88+.12*(Math.abs(Math.sin(p.getX(i)*91+p.getY(i)*71+p.getZ(i)*31))%1);p.setXYZ(i,p.getX(i)*b.w*.5*k,p.getY(i)*b.h*.5*k,p.getZ(i)*b.d*.5*k);}g.translate(b.x,b.y,b.z);g.computeVertexNormals();return g;}
- if(b.polygon?.length){const shape=new THREE.Shape();b.polygon.forEach((p,i)=>i?shape.lineTo(p.x,p.y):shape.moveTo(p.x,p.y));shape.closePath();
+ if(b.polygon?.length){const contours=b.renderContours??[b.polygon],make=(poly:typeof b.polygon)=>{const path=new THREE.Shape();poly!.forEach((p,i)=>i?path.lineTo(p.x,p.y):path.moveTo(p.x,p.y));path.closePath();return path;},shapes=contours.filter(p=>yardSignedArea(p)>0).map(make);const inside=(p:typeof b.polygon,q:{x:number;y:number})=>{let hit=false;for(let i=0,j=p!.length-1;i<p!.length;j=i++){const a=p![i],z=p![j];if((a.y>q.y)!==(z.y>q.y)&&q.x<(z.x-a.x)*(q.y-a.y)/(z.y-a.y)+a.x)hit=!hit;}return hit;};for(const hole of contours.filter(p=>yardSignedArea(p)<0)){const i=contours.filter(p=>yardSignedArea(p)>0).findIndex(p=>inside(p,hole[0]));if(i>=0)shapes[i].holes.push(make(hole));}
   // A paver's top edge is chamfered (PAVER_CHAMFER_IN), which is what shows its joints from across the yard.
   const c=b.role==='paver'&&!b.illustrative&&Math.min(b.w,b.d)>PAVER_CHAMFER_IN*4&&b.h>PAVER_CHAMFER_IN*3?PAVER_CHAMFER_IN:0;
-  const g=new THREE.ExtrudeGeometry(shape,c?{depth:b.h-2*c,bevelEnabled:true,bevelThickness:c,bevelSize:c,bevelOffset:-c,bevelSegments:1}:{depth:b.h,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,b.y+b.h/2-c,0);return g;}
+  const g=new THREE.ExtrudeGeometry(shapes,c?{depth:b.h-2*c,bevelEnabled:true,bevelThickness:c,bevelSize:c,bevelOffset:-c,bevelSegments:1}:{depth:b.h,bevelEnabled:false});g.rotateX(Math.PI/2);g.translate(0,b.y+b.h/2-c,0);return g;}
  const g=new THREE.BoxGeometry(b.w,b.h,b.d);g.rotateY(b.angle||0);g.translate(b.x,b.y,b.z);return g.toNonIndexed();
 }
 /**
@@ -63,7 +63,7 @@ function pieceUvs(g:THREE.BufferGeometry,b:YardBox,i:number,repeatIn:number,pave
 }
 function YardBatch({items,color,role,occlusion,paverSize}:{items:YardBox[];color:string;role:YardRole;occlusion:SharedOcclusion;paverSize?:{w:number;d:number;angle:number}}){
  const scanned=SCANNED[role],supplierImage=items[0]?.surface?.imageUrl,simplified=!supplierImage&&role==='paver'&&!!paverSize&&items.every(b=>b.illustrative),water=role==='water';
- const geometry=useMemo(()=>{const pieces=items.map((b,i)=>{let g=boxGeometry(b);if(g.index){const converted=g.toNonIndexed();g.dispose();g=converted;}const p=g.getAttribute('position'),c=new THREE.Float32BufferAttribute(new Float32Array(p.count*3),3),shade=.93+.07*(Math.abs(Math.sin(i*89.3))%1);
+ const geometry=useMemo(()=>{const pieces=items.filter(b=>!b.renderDuplicate).map((b,i)=>{let g=boxGeometry(b);if(g.index){const converted=g.toNonIndexed();g.dispose();g=converted;}const p=g.getAttribute('position'),c=new THREE.Float32BufferAttribute(new Float32Array(p.count*3),3),shade=.93+.07*(Math.abs(Math.sin(i*89.3))%1);
   if(scanned||simplified||supplierImage)g.setAttribute('uv',pieceUvs(g,b,i,scanned?.repeatIn??48,simplified?paverSize:undefined));
   else{const uv=new THREE.Float32BufferAttribute(new Float32Array(p.count*2),2);for(let v=0;v<p.count;v++)uv.setXY(v,p.getX(v)/(water?RIPPLE_IN:18),p.getZ(v)/(water?RIPPLE_IN:18));g.setAttribute('uv',uv);}
   // The lawn's occlusion map's UVs, for hardscape under the deck.

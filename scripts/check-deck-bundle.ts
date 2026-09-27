@@ -52,7 +52,17 @@ import {basename} from 'node:path';
 // the picker and yard/sketch interactions remain independently lazy and bounded.
 // Bound route/worker at250/185 KB including source swatch references and recipes;
 // two additional sketch kinds raise the optional sketch pack from25 to27 KB.
-const BUDGET_KB={routeInitial:250,routeCss:12,viewer:340,pdf:150,deltaWorker:185,swatchWorker:5,sketch:27,contractorTool:15};
+// September 27 stock/elevation correction adds ~1 KB to the shared geometry
+// path (full wall courses, separate joint pitch and strict wall datum). The
+// elevation UI stays lazy. Bound this measured change at 252/186 KB; other caps stay.
+// September 27 original stock outlines: restored shaped-unit selections need
+// the same contours and compatible bonds in the synchronous model/validator.
+// Drawing-derived profiles and layouts add ~3 KB gzip. Product photos, guide
+// lists and the shape preview remain lazy.
+// September 27: source-backed multi-size recipes and physical patio inlays participate
+// in saved-design validation and the initial takeoff. Keep their controls, photos and
+// library lazy; bound the shared route/pricing model at270/205 KB for this feature set.
+const BUDGET_KB={routeInitial:270,routeCss:12,viewer:340,pdf:150,deltaWorker:205,swatchWorker:5,sketch:27,contractorTool:15};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);

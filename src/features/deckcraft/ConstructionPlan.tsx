@@ -119,7 +119,7 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
      {breaks.map((path,i)=><g key={i} className="dd-break"><path d={path} fill="none" stroke="#fbfbf8" strokeWidth="4"/><path d={path} fill="none" stroke="#14261c" strokeWidth="1"/></g>)}
      <text x={(hx0+hx1)/2} y={-band/2+3} textAnchor="middle" fontSize="9" fontWeight="600" fill="#14261c" paintOrder="stroke" stroke="#fbfbf8" strokeWidth="3">{`HOUSE · ${feet(house.widthIn)} wide`}</text>
    </g>}
-   {yard?.boxes.filter(p=>['paver','wall-block','wall-cap','water'].includes(p.role)).map(p=><polygon key={p.id} points={p.polygon?.map(v=>`${v.x},${v.y}`).join(' ')} fill={p.color} stroke="#66695d" strokeWidth=".2"/>)}
+   {yard?.boxes.filter(p=>!p.renderDuplicate&&['paver','wall-block','wall-cap','water'].includes(p.role)).map(p=>p.renderContours?<path key={p.id} d={p.renderContours.map(poly=>'M'+poly.map(v=>`${v.x},${v.y}`).join(' L')+' Z').join(' ')} fill={p.color} fillRule="nonzero" stroke="#66695d" strokeWidth=".2"/>:<polygon key={p.id} points={p.polygon?.map(v=>`${v.x},${v.y}`).join(' ')} fill={p.color} stroke="#66695d" strokeWidth=".2"/>)}
    {yard?.features.filter(f=>!f.excluded).map(f=><text key={f.config.id} x={f.config.xFt*12} y={f.config.zFt*12} textAnchor="middle" fontSize="7" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2" fill="#333">{f.config.name}</text>)}
    {model.levels.map((l,i)=><g key={i}>
      <polygon points={l.footprint.outline.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={l.kind==='winder'?'none':'#e5d7bb'} stroke="#7c6b51" strokeWidth="1"/>

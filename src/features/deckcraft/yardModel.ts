@@ -11,12 +11,15 @@ import {yardFeatureOutline,yardWallPath,yardPathEnvelope,yardPathBackStrip,pathR
 import {yardShapeProblem} from './yardShapeEditing';
 import {hardscapeSelection,hardscapeProblem,rectangularUnit} from './hardscapeCatalogue';
 import {hardscapeBlanks} from './hardscapeLayout';
+import {hardscapeProfile,hardscapeStockPolygons} from './hardscapeShapes';
+import {yardWallCourses} from './yardElevations';
+import {patioInlayPlans,patioInlayFeature} from './patioInlays';
 
 export type YardRole='paver'|'base'|'bedding'|'wall-block'|'wall-cap'|'wall-drainage'|'backfill'|'liner'|'water'|'basin'|'pump'|'rock'|'drain-pipe'|'water-pipe';
 export interface YardSurface {imageUrl:string;cx:number;cz:number;angle:number;lengthIn:number;widthIn:number;heightIn:number;kind:'paver'|'wall';sourceUrl:string}
-export type YardBox=Box&{id:string;featureId:string;role:YardRole;color:string;illustrative?:boolean;unitId?:string;surface?:YardSurface;stockAreaSqft?:number;stockUnitId?:string};
+export type YardBox=Box&{id:string;featureId:string;role:YardRole;color:string;illustrative?:boolean;unitId?:string;surface?:YardSurface;stockAreaSqft?:number;stockUnitId?:string;renderContours?:PlanPoint[][];renderDuplicate?:boolean};
 export type YardMember=Member&{id:string;featureId:string;role:YardRole;color:string};
-export interface YardFeatureModel {config:YardFeature;footprints:PlanPoint[][];topIn:number;boxes:YardBox[];members:YardMember[];warnings:string[];quantities:Record<string,number>;stockSchedule?:{unitId:string;widthMm:number;lengthMm:number;heightMm:number;pieces:number}[];sourceUrl?:string;excluded:boolean;supportClearances?:PlanPoint[][];quoteRequired?:boolean;exclusionReason?:'paver-budget'}
+export interface YardFeatureModel {config:YardFeature;footprints:PlanPoint[][];topIn:number;boxes:YardBox[];members:YardMember[];warnings:string[];quantities:Record<string,number>;pavingZones?:{feature:YardFeature;areaSqft:number;stockAreaSqft:number;inlayId?:string}[];stockSchedule?:{unitId:string;widthMm:number;lengthMm:number;heightMm:number;pieces:number;productId?:string;inlayId?:string}[];sourceUrl?:string;excluded:boolean;supportClearances?:PlanPoint[][];quoteRequired?:boolean;exclusionReason?:'paver-budget'}
 export interface YardExcavationRegion {featureId:string;polygon:PlanPoint[];bottomIn:number;volumeYd3:number}
 const S=100000;
 export const yardSignedArea=(p:PlanPoint[])=>p.reduce((n,a,i)=>{const b=p[(i+1)%p.length];return n+a.x*b.y-b.x*a.y;},0)/2;
@@ -62,19 +65,20 @@ export const YARD_PAVER_BUDGET=20000;
  * Reserving raw counts is intentionally conservative for cut-outs/overlaps. */
 export function projectedYardPavers(f:YardFeature):number{
  if(f.kind!=='patio')return 0;
- if(f.hardscape)return hardscapeBlanks(f).length;
+ const extra=patioInlayPlans(f).filter(p=>p.status==='ok').reduce((n,p)=>n+hardscapeBlanks(patioInlayFeature(f,p.inlay)).length,0);
+ if(f.hardscape)return hardscapeBlanks(f).length+extra;
  const rows=profiles[f.productId as keyof typeof profiles]?.rows||[{depth:12,lengths:[24]}];
  const period=rows.length%2?rows.length*2:rows.length;
  const courses=Array.from({length:period},(_,i)=>{
-  const r=rows[i%rows.length],span=Math.max(0,f.widthFt*12+(i%2?r.lengths[0]/2:0)-.001),cycle=r.lengths.reduce((n,v)=>n+v,0),whole=Math.floor(span/cycle);
+  const r=rows[i%rows.length],span=Math.max(0,f.widthFt*12+(i%2?(r.lengths[0]+.125)/2:0)-.001),cycle=r.lengths.reduce((n,v)=>n+v+.125,0),whole=Math.floor(span/cycle);
   let remaining=span-whole*cycle,count=whole*r.lengths.length;
-  for(const length of r.lengths){if(remaining<=1e-7)break;count++;remaining-=length;}
-  return {depth:r.depth,count};
+  for(const length of r.lengths){if(remaining<=1e-7)break;count++;remaining-=length+.125;}
+  return {depth:r.depth+.125,count};
  });
  const depth=Math.max(0,f.depthFt*12-.001),cycleDepth=courses.reduce((n,r)=>n+r.depth,0),whole=Math.floor(depth/cycleDepth);
  let remaining=depth-whole*cycleDepth,count=whole*courses.reduce((n,r)=>n+r.count,0);
  for(const row of courses){if(remaining<=1e-7)break;count+=row.count;remaining-=row.depth;}
- return count;
+ return count+extra;
 }
 const SUPPORT_CLEARANCE_IN=1;
 const circle=(x:number,z:number,r:number):PlanPoint[]=>Array.from({length:32},(_,i)=>({x:x+Math.cos(i*Math.PI/16)*r,y:z+Math.sin(i*Math.PI/16)*r}));
@@ -121,7 +125,7 @@ export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff){
  }
  for(const f of enabled){
   if(ids.has(f.id)){warnings.push(`Duplicate yard feature id ${f.id} excluded.`);continue;}ids.add(f.id);
-  if(![f.xFt,f.zFt,f.widthFt,f.depthFt,f.heightIn,f.rotationDeg].every(Number.isFinite)||f.widthFt<=0||f.depthFt<=0){warnings.push(`${f.name}: invalid dimensions excluded.`);continue;}
+  if(![f.xFt,f.zFt,f.widthFt,f.depthFt,f.heightIn,f.rotationDeg,f.baseElevationIn??0].every(Number.isFinite)||f.widthFt<=0||f.depthFt<=0||f.baseElevationIn!==undefined&&(f.kind!=='retaining-wall'||Math.abs(f.baseElevationIn)>120)){warnings.push(`${f.name}: invalid dimensions excluded.`);continue;}
   const supplierProblem=hardscapeProblem(f);if(supplierProblem){warnings.push(`${f.name}: ${supplierProblem} Excluded until revised.`);features.push({config:f,footprints:[],topIn:0,boxes:[],members:[],warnings:[supplierProblem],quantities:{areaSqft:0},excluded:true,quoteRequired:true});continue;}
   if(f.outline||f.wallPath){const problem=f.kind==='patio'&&f.wallPath||f.kind==='retaining-wall'&&f.outline||f.kind==='water-feature'?'The shape does not match this feature.':yardShapeProblem(f.kind as 'patio'|'retaining-wall',f.outline??f.wallPath);if(problem){warnings.push(`${f.name}: ${problem} Excluded until revised.`);features.push({config:f,footprints:[],topIn:0,boxes:[],members:[],warnings:[problem],quantities:{areaSqft:0},excluded:true,quoteRequired:true});continue;}}
   const supplier=hardscapeSelection(f),capDepth=supplier?.cap?supplier.cap.lengthMm/25.4:f.depthFt*12+2;
@@ -135,8 +139,8 @@ export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff){
   if(yardArea(yardClip(envelope,houseFootprint,'intersection'))>.001)localWarnings.push(`${f.name}: construction overlaps the house footprint; patio area is clipped and conflicting wall/water features are excluded.`);
   if(envelope.flat().some(p=>Math.abs(p.x-data.width*6)>terrain.widthFt*6||Math.abs(p.y-data.length*6)>terrain.depthFt*6))localWarnings.push(`${f.name}: the construction envelope extends outside the selected terrain dimensions.`);
   const paverThickness=(supplier?.unit.heightMm??PAVER_BRANDS.find(p=>p.id===f.productId)?.thicknessMm??60)/25.4;
-  const low=f.kind==='patio'?grade+f.heightIn-paverThickness-1-baseline.facts.baseDepthIn:f.kind==='retaining-wall'?grade-(f.productId==='armour-stone'?24:12):grade-(f.productId==='fountain'?24:Math.max(12,f.heightIn));
-  const high=f.kind==='patio'?grade+f.heightIn:f.kind==='retaining-wall'?grade+Math.max(1,f.heightIn):grade+(f.productId==='fountain'?Math.max(1,f.heightIn):f.productId==='pondless-waterfall'?18:4);
+  const low=f.kind==='patio'?grade+f.heightIn-paverThickness-1-baseline.facts.baseDepthIn:f.kind==='retaining-wall'?yardWallCourses(f,grade).bottom-6:grade-(f.productId==='fountain'?24:Math.max(12,f.heightIn));
+  const high=f.kind==='patio'?grade+f.heightIn:f.kind==='retaining-wall'?yardWallCourses(f,grade).top:grade+(f.productId==='fountain'?Math.max(1,f.heightIn):f.productId==='pondless-waterfall'?18:4);
   const supports=supportSections(data,deckModel,low,high),supportHit=yardArea(yardClip(envelope,supports,'intersection'))>.001;
   const stairs=(deckModel?.treads||[]).filter(t=>low<=t.y+t.h/2&&high>=t.y-t.h/2).map(treadFootprint),stairHit=f.kind!=='patio'&&yardArea(yardClip(envelope,stairs,'intersection'))>.001;
   let footprints=yardClip(original,occupied,'difference'),excluded=false;
@@ -163,22 +167,32 @@ export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff){
    localWarnings.push('Paver module dimensions follow the referenced family. Confirm the exact SKU, colour, laying-pattern mix, joints and supplier pack quantities before ordering.');
    if(spec?.illustrative)localWarnings.push('Rosebel has irregular interlocking edges: the rectangular module envelopes are illustrative, not production cut templates.');
    for(const p of yardSolidCells(footprints)){add('base',p,top-thick-1,base,'#8c8a7c');add('bedding',p,top-thick,1,'#c5bda4');}
-   if(supplier){
-    for(const blank of hardscapeBlanks(f)){const centre={x:x+c*blank.cx-s*blank.cy,y:z+s*blank.cx+c*blank.cy},angle=a+blank.angle;
-     const stock=supplier.finish.units.find(u=>u.id===blank.unitId)??supplier.unit;
-     for(const p of yardSolidCells(yardClip([rectangle(centre.x,centre.y,blank.length,blank.width,angle)],footprints,'intersection'))){add('paver',p,top,stock.heightMm/25.4,f.color,!rectangularUnit(stock));const b=model.boxes.at(-1)!;b.unitId=`${f.id}-paver-${blank.id}`;b.stockAreaSqft=blank.length*blank.width/144;b.stockUnitId=stock.id;if(supplier.color.imageUrl)b.surface={imageUrl:supplier.color.imageUrl,cx:centre.x,cz:centre.y,angle,lengthIn:blank.length,widthIn:blank.width,heightIn:stock.heightMm/25.4,kind:'paver',sourceUrl:supplier.product.sourceUrl};}
+   const plans=patioInlayPlans(f,footprints),valid=plans.filter(p=>p.status==='ok'),field=yardClip(footprints,valid.map(p=>p.outline),'difference');
+   for(const p of plans.filter(p=>p.status!=='ok'))localWarnings.push(`${p.inlay.name}: ${p.message}`);
+   const laySupplier=(zone:YardFeature,mask:PlanPoint[][],inlayId?:string)=>{const sel=hardscapeSelection(zone)!;const za=zone.rotationDeg*Math.PI/180,zc=Math.cos(za),zs=Math.sin(za),before=model.boxes.length;
+    for(const blank of hardscapeBlanks(zone)){const centre={x:zone.xFt*12+zc*blank.cx-zs*blank.cy,y:zone.zFt*12+zs*blank.cx+zc*blank.cy},angle=za+blank.angle,stock=sel.finish.units.find(u=>u.id===blank.unitId)??sel.unit;
+     const contours=yardClip(hardscapeStockPolygons(sel.product.id,stock,centre.x,centre.y,angle),mask,'intersection'),profile=hardscapeProfile(sel.product.id,stock);let fragment=0;for(const p of yardSolidCells(contours)){add('paver',p,top,stock.heightMm/25.4,zone.color,!rectangularUnit(stock)&&!profile);const b=model.boxes.at(-1)!;b.unitId=`${zone.id}-paver-${blank.id}`;b.stockAreaSqft=blank.length*blank.width/144;b.stockUnitId=stock.id;if(profile||valid.length){if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}if(sel.color.imageUrl)b.surface={imageUrl:sel.color.imageUrl,cx:centre.x,cz:centre.y,angle,lengthIn:blank.length,widthIn:blank.width,heightIn:stock.heightMm/25.4,kind:'paver',sourceUrl:sel.product.sourceUrl};}
     }
-    const recipe=supplier.finish.patterns.find(p=>p.id===f.hardscape!.patternId);localWarnings.push(recipe?`Manufacturer recipe ${recipe.name}: documented units and repeat coordinates retained. Nominal module pitch follows ${recipe.sourceUrl}; confirm actual supplied dimensions and joint tolerances before ordering.`:`Selected stock ${supplier.unit.widthMm} × ${supplier.unit.lengthMm} × ${supplier.unit.heightMm} mm; ${f.hardscape!.jointMm} mm joints are added to the module. The contractor pattern uses this single stock size; supplier multi-size recipes remain in the pattern library.`);
-    if(!rectangularUnit(supplier.unit))localWarnings.push('The supplier lists a shaped unit. Rectangular stock envelopes are illustrative; its exact mould profile has not been digitized.');
+    const recipe=sel.finish.patterns.find(p=>p.id===zone.hardscape!.patternId);if(inlayId&&recipe?.layout.installationJointMm!==undefined)localWarnings.push(`${zone.name}: supplier installation joint ${recipe.layout.installationJointMm} mm differs from nominal pattern modules; confirm installed spacing before ordering.`);
+    const stock=[...new Map(model.boxes.slice(before).map(b=>[b.unitId,b])).values()],stockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);model.pavingZones??=[];model.pavingZones.push({feature:zone,areaSqft:yardArea(mask),stockAreaSqft,...(inlayId?{inlayId}:{})});
+    model.stockSchedule??=[];model.stockSchedule.push(...sel.finish.units.flatMap(u=>{const pieces=stock.filter(b=>b.stockUnitId===u.id).length;return pieces?[{unitId:u.id,widthMm:u.widthMm,lengthMm:u.lengthMm,heightMm:u.heightMm,pieces,...(inlayId?{productId:zone.productId,inlayId}:{})}]:[];}));
+   };
+   if(supplier){
+    laySupplier(f,field);
+    const recipe=supplier.finish.patterns.find(p=>p.id===f.hardscape!.patternId);if(recipe?.layout.installationJointMm!==undefined)localWarnings.push(`Manufacturer diagram uses nominal stock modules; the supplier specifies ${recipe.layout.installationJointMm} mm installation joints. Installed module spacing and pack quantities need confirmation; this diagram is not an installation joint schedule.`);localWarnings.push(recipe?`Manufacturer recipe ${recipe.name}: documented units and repeat coordinates retained. Nominal module pitch follows ${recipe.sourceUrl}; confirm actual supplied dimensions and joint tolerances before ordering.`:`Selected stock ${supplier.unit.widthMm} × ${supplier.unit.lengthMm} × ${supplier.unit.heightMm} mm; ${f.hardscape!.jointMm} mm joints are added to the module. The contractor pattern uses this single stock size; supplier multi-size recipes remain in the pattern library.`);
+    if(!rectangularUnit(supplier.unit)&&['herringbone','basket-weave'].includes(f.hardscape!.patternId))localWarnings.push('Legacy rectangular envelope layout retained from the saved design; choose a compatible shaped bond or verified supplier recipe.');
+    if(!rectangularUnit(supplier.unit))localWarnings.push(hardscapeProfile(supplier.product.id,supplier.unit)?'Stock outlines follow the manufacturer plan drawing at nominal dimensions; confirm joints and fabrication against the supplier technical guide.':'The supplier lists a shaped unit. Rectangular stock envelopes are illustrative; its exact mould profile has not been digitized.');
    }else{
    const rows=spec?.rows||[{depth:12,lengths:[24]}],gap=.125;let row=0;
    for(let v=-d/2;v<d/2-.001;){const r=rows[row%rows.length],depth=r.depth;let col=0;
-    for(let u=-w/2-(row%2?r.lengths[0]/2:0);u<w/2-.001;){const len=r.lengths[col%r.lengths.length];for(const p of yardSolidCells(yardClip([localRect(u+len/2,v+depth/2,len-gap,depth-gap)],footprints,'intersection'))){add('paver',p,top,thick,f.color,spec?.illustrative||!spec);model.boxes[model.boxes.length-1].unitId=`${f.id}-paver-${row}-${col}`;}u+=len;col++;}
-    v+=depth;row++;
+    for(let u=-w/2-(row%2?(r.lengths[0]+gap)/2:0);u<w/2-.001;){const len=r.lengths[col%r.lengths.length],contours=yardClip([localRect(u+len/2,v+depth/2,len,depth)],field,'intersection');let fragment=0;for(const p of yardSolidCells(contours)){add('paver',p,top,thick,f.color,spec?.illustrative||!spec);const b=model.boxes.at(-1)!;b.unitId=`${f.id}-paver-${row}-${col}`;if(valid.length){if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}}u+=len+gap;col++;}
+    v+=depth+gap;row++;
    }
    }
+   if(!supplier&&valid.length)model.pavingZones=[{feature:f,areaSqft:yardArea(field),stockAreaSqft:yardArea(field)}];
+   for(const p of valid){laySupplier(patioInlayFeature(f,p.inlay),[p.outline],p.inlay.id);localWarnings.push(`${p.inlay.name}: custom inlay cutting, setting and waste require a builder quote; this is a cut-paver design, not a manufactured medallion kit.`);}
    model.quantities={...model.quantities,paverPieces:new Set(model.boxes.filter(b=>b.role==='paver').map(b=>b.unitId)).size,baseYd3:area*base/324,beddingYd3:area/324,paverAreaSqft:area};
-   if(supplier){const stock=[...new Map(model.boxes.filter(b=>b.role==='paver').map(b=>[b.unitId,b])).values()];model.quantities.paverStockAreaSqft=stock.reduce((n,b)=>n+b.stockAreaSqft!,0);model.stockSchedule=supplier.finish.units.flatMap(u=>{const pieces=stock.filter(b=>b.stockUnitId===u.id).length;return pieces?[{unitId:u.id,widthMm:u.widthMm,lengthMm:u.lengthMm,heightMm:u.heightMm,pieces}]:[];});}
+   if(supplier||valid.length){const stock=[...new Map(model.boxes.filter(b=>b.role==='paver').map(b=>[b.unitId,b])).values()];model.quantities.paverStockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);}
    const formation=top-thick-1-base;let fill=footprints;
    if(terrain.slopePct){const z0=(formation-terrain.elevationIn)/(terrain.slopePct/100),lo=terrain.slopePct>0?-1e7:z0,hi=terrain.slopePct>0?z0:1e7;fill=yardClip(fill,[[{x:-1e7,y:lo},{x:1e7,y:lo},{x:1e7,y:hi},{x:-1e7,y:hi}]],'intersection');}
    else if(formation<=terrain.elevationIn)fill=[];
@@ -186,7 +200,9 @@ export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff){
    if(model.quantities.raisedFillYd3>.001)localWarnings.push('Additional engineered fill below the patio base is required by the selected elevation; fill supply, compaction and containment need a quote.');
    excavations.push({featureId:f.id,polys:footprints,bottom:top-thick-1-base});
   }else if(f.kind==='retaining-wall'){
-   const h=Math.max(1,f.heightIn),armour=f.productId==='armour-stone',course=supplier?supplier.unit.heightMm/25.4:armour?18:6,length=supplier?supplier.unit.widthMm/25.4:armour?36:18,cap=supplier?.cap?supplier.cap.heightMm/25.4:supplier||armour?0:3,capLength=supplier?.cap?supplier.cap.widthMm/25.4:24,bottom=grade-course,top=grade+h;
+   const h=Math.max(1,f.heightIn),armour=f.productId==='armour-stone',{course,cap,bottom,top,count,burialIn}=yardWallCourses(f,grade),length=supplier?supplier.unit.widthMm/25.4:armour?36:18,capLength=supplier?.cap?supplier.cap.widthMm/25.4:24,retainedDepth=top-cap-bottom;
+   const stockSchedule=()=>{if(!supplier)return;for(const b of model.boxes){if(b.role==='wall-block')b.stockUnitId=supplier.unit.id;else if(b.role==='wall-cap')b.stockUnitId=supplier.cap?.id;}model.stockSchedule=[supplier.unit,...(supplier.cap?[supplier.cap]:[])].map(u=>({unitId:u.id,widthMm:u.widthMm,lengthMm:u.lengthMm,heightMm:u.heightMm,pieces:new Set(model.boxes.filter(b=>b.stockUnitId===u.id).map(b=>b.unitId)).size}));model.quantities.wallCourses=count;localWarnings.push(`${count} body courses at ${course.toFixed(3)} in each; ${burialIn.toFixed(3)} in buried to retain full stock height at the requested top.`);};
+   if(f.baseElevationIn)localWarnings.push(`Wall front-grade datum is shifted ${f.baseElevationIn} in from natural terrain. Added fill or excavation, containment and grading are site-specific quote items.`);
    model.sourceUrl=supplier?.product.sourceUrl;
    if(f.wallPath){
     model.topIn=top;const run=pathRun(wallPath),zones=yardPathBackStrip(wallPath,-d/2,d/2),capZones=yardPathBackStrip(wallPath,-capDepth/2,capDepth/2);
@@ -207,12 +223,13 @@ export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff){
     let row=0;for(let y=bottom;y<top-cap-.001;y+=course)lay('wall-block',y+Math.min(course,top-cap-y),Math.min(course,top-cap-y)-(supplier?0:.03),length,row++);
     if(cap)lay('wall-cap',top,cap,capLength,0);
     const drainage=yardClip(yardPathBackStrip(wallPath,d/2,d/2+12)),backfill=yardClip(yardPathBackStrip(wallPath,d/2+12,d/2+24)),baseFootprint=yardClip([...yardPathEnvelope(wallPath,d+12),...yardPathBackStrip(wallPath,d/2,d/2+12)]);
-    for(const p of yardSolidCells(drainage))add('wall-drainage',p,top-cap,Math.max(1,h+course-cap),'#989a91',true);
-    for(const p of yardSolidCells(backfill))add('backfill',p,top-cap,Math.max(1,h+course-cap),'#765e42',true);
+    for(const p of yardSolidCells(drainage))add('wall-drainage',p,top-cap,Math.max(1,retainedDepth),'#989a91',true);
+    for(const p of yardSolidCells(backfill))add('backfill',p,top-cap,Math.max(1,retainedDepth),'#765e42',true);
     for(const p of yardSolidCells(baseFootprint))add('base',p,bottom,6,'#8c8a7c',true);
     for(let seg=0;seg+1<wallPath.length;seg++){const p=wallPath[seg],q=wallPath[seg+1],span=Math.hypot(q.x-p.x,q.y-p.y),nx=-(q.y-p.y)/span,ny=(q.x-p.x)/span,offset=d/2+6,m:YardMember={id:`${f.id}-drain-pipe-${seg}`,featureId:f.id,role:'drain-pipe',color:'#262e32',a:{x:p.x+nx*offset,y:bottom+2,z:p.y+ny*offset},b:{x:q.x+nx*offset,y:bottom+2,z:q.y+ny*offset},width:4,depth:4};members.push(m);model.members.push(m);}
     excavations.push({featureId:f.id,polys:baseFootprint,bottom:bottom-6});
-    model.quantities={...model.quantities,wallLengthLf:run/12,wallFaceSqft:run*h/144,wallBlocks:new Set(model.boxes.filter(b=>b.role==='wall-block').map(b=>b.unitId)).size,wallCaps:new Set(model.boxes.filter(b=>b.role==='wall-cap').map(b=>b.unitId)).size,drainPipeLf:run/12,wallBaseYd3:yardArea(baseFootprint)*6/324,drainageYd3:yardArea(drainage)*(h+course-cap)/324,backfillYd3:yardArea(backfill)*(h+course-cap)/324};
+    model.quantities={...model.quantities,wallLengthLf:run/12,wallFaceSqft:run*h/144,wallBlocks:new Set(model.boxes.filter(b=>b.role==='wall-block').map(b=>b.unitId)).size,wallCaps:new Set(model.boxes.filter(b=>b.role==='wall-cap').map(b=>b.unitId)).size,drainPipeLf:run/12,wallBaseYd3:yardArea(baseFootprint)*6/324,drainageYd3:yardArea(drainage)*retainedDepth/324,backfillYd3:yardArea(backfill)*retainedDepth/324};
+    stockSchedule();
     localWarnings.push('Wall path follows the drawn centreline, including its turns. Corner cuts, buried courses, batter, geogrid, bearing, outlet and surcharge engineering require the selected system and builder review.');
     if(supplier)localWarnings.push(`Documented body unit ${supplier.unit.widthMm} mm face × ${supplier.unit.lengthMm} mm depth × ${supplier.unit.heightMm} mm course. ${supplier.cap?`Selected cap ${supplier.cap.widthMm} × ${supplier.cap.lengthMm} × ${supplier.cap.heightMm} mm.`:'Cap selection remains pending.'} Corners and geogrid need a system-specific selection and quote; no generic cap is substituted.`);
     warnings.push(...localWarnings);continue;
@@ -221,10 +238,11 @@ export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff){
    for(let y=bottom;y<top-cap-.001;y+=course){const ch=Math.min(course,top-cap-y);for(let u=-w/2-(courses%2&&f.hardscape?.patternId!=='stack-bond'?length/2:0);u<w/2;u+=length){const l=Math.max(-w/2,u),r=Math.min(w/2,u+length);if(r-l>.01){add('wall-block',localRect((l+r)/2,0,r-l-(supplier?0:.05),d),y+ch,ch-(supplier?0:.03),f.color,!supplier||!rectangularUnit(supplier.unit));const b=model.boxes.at(-1)!;b.unitId=`${f.id}-wall-${courses}-${u}`;if(supplier?.color.imageUrl)b.surface={imageUrl:supplier.color.imageUrl,cx:x+c*(u+length/2),cz:z+s*(u+length/2),angle:a,lengthIn:length,widthIn:d,heightIn:course,kind:'wall',sourceUrl:supplier.product.sourceUrl};}}courses++;}
    if(cap)for(let u=-w/2;u<w/2;u+=capLength){const len=Math.min(capLength,w/2-u);add('wall-cap',localRect(u+len/2,0,len-(supplier?0:.05),capDepth),top,cap,f.color,!supplier||!rectangularUnit(supplier.cap!));const b=model.boxes.at(-1)!;b.unitId=`${f.id}-cap-${u}`;if(supplier?.color.imageUrl)b.surface={imageUrl:supplier.color.imageUrl,cx:x+c*(u+capLength/2),cz:z+s*(u+capLength/2),angle:a,lengthIn:capLength,widthIn:capDepth,heightIn:cap,kind:'paver',sourceUrl:supplier.product.sourceUrl};}
    const drainage=localRect(0,d/2+6,w,12),backfill=localRect(0,d/2+18,w,12);
-   add('wall-drainage',drainage,top-cap,Math.max(1,h+course-cap),'#989a91',true);add('backfill',backfill,top-cap,Math.max(1,h+course-cap),'#765e42',true);
+   add('wall-drainage',drainage,top-cap,Math.max(1,retainedDepth),'#989a91',true);add('backfill',backfill,top-cap,Math.max(1,retainedDepth),'#765e42',true);
    add('base',localRect(0,6,w+12,d+24),bottom,6,'#8c8a7c',true);pipe('drain-pipe',-w/2,d/2+6,w/2,d/2+6,bottom+2,4);
    excavations.push({featureId:f.id,polys:[localRect(0,6,w+12,d+24)],bottom:bottom-6});
-   model.quantities={...model.quantities,wallLengthLf:w/12,wallFaceSqft:w*h/144,wallBlocks:model.boxes.filter(b=>b.role==='wall-block').length,wallCaps:model.boxes.filter(b=>b.role==='wall-cap').length,drainPipeLf:w/12,wallBaseYd3:(w+12)*(d+24)*6/46656,drainageYd3:w*12*(h+course-cap)/46656,backfillYd3:w*12*(h+course-cap)/46656};
+   model.quantities={...model.quantities,wallLengthLf:w/12,wallFaceSqft:w*h/144,wallBlocks:model.boxes.filter(b=>b.role==='wall-block').length,wallCaps:model.boxes.filter(b=>b.role==='wall-cap').length,drainPipeLf:w/12,wallBaseYd3:(w+12)*(d+24)*6/46656,drainageYd3:w*12*retainedDepth/46656,backfillYd3:w*12*retainedDepth/46656};
+   stockSchedule();
    localWarnings.push(supplier?`Documented wall body units ${supplier.unit.widthMm} × ${supplier.unit.lengthMm} × ${supplier.unit.heightMm} mm. ${supplier.cap?`Selected cap ${supplier.cap.widthMm} × ${supplier.cap.lengthMm} × ${supplier.cap.heightMm} mm.`:'Cap selection remains pending.'} Corners, batter, geogrid and outlet need a system-specific quote.`:'Generic wall courses, buried course, cap and drainage are design envelopes; manufacturer unit, batter, geogrid, bearing, outlet and surcharge engineering remain unselected. The existing wall band is an assembly allowance, not a block unit price.');
   }else{
    const pondless=f.productId==='pondless-waterfall',fountain=f.productId==='fountain',depth=fountain?24:Math.max(12,f.heightIn),bottom=grade-depth,liner=.08;

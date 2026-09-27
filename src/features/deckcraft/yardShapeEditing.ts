@@ -59,7 +59,7 @@ export function yardShapeEdit(f:YardFeature,world:PlanPoint[]):YardFeature{
  const kind=shapeKind(f),before=yardShapeWorldPoints(f);if(world.length===before.length&&world.every((p,i)=>Math.hypot(p.x-before[i].x,p.y-before[i].y)<EPS))return f;
  const raw=world.map(p=>yardShapeLocalPoint(f,p)),b=bounds(raw),centre={x:b.x+b.w/2,y:b.y+b.h/2},points=raw.map(p=>({x:p.x-centre.x,y:p.y-centre.y})),problem=yardShapeProblem(kind,points);if(problem)throw Error(problem);
  const positioned=yardShapeWorldPoint(f,centre),next=place(f,positioned.x/12,positioned.y/12);
- return kind==='patio'?{...next,outline:points,widthFt:b.w/12,depthFt:b.h/12}:{...next,wallPath:points,widthFt:yardShapeRunIn(points)/12};
+ return kind==='patio'?{...next,outline:points,widthFt:b.w/12,depthFt:b.h/12,...(f.inlays?{inlays:f.inlays.map(i=>({...i,xIn:i.xIn-centre.x,yIn:i.yIn-centre.y}))}:{})}:{...next,wallPath:points,widthFt:yardShapeRunIn(points)/12};
 }
 export function yardShapePull(f:YardFeature,kind:YardPullKind,index:number,dxIn:number,dyIn:number):YardFeature{
  if(kind==='area')return yardShapeMove(f,dxIn,dyIn);

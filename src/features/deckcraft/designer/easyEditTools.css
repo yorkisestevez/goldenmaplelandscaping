@@ -4,5 +4,5 @@
 @media(max-width:800px){
  .deck-designer:has(.dd-easy-tools) .dd-workspace{height:auto;min-height:calc(100dvh - 64px - var(--dd-easy-tools-height,0px))}
 }
-.deck-designer:has(.dd-easy-tools) .dd-preview:has(.dd-sketch-launch) .dd-canvas>.dd-plan-viewport{height:clamp(200px,calc(100dvh - 550px - var(--dd-easy-tools-height,0px)),480px)!important}
-@media(max-width:800px){.deck-designer:has(.dd-easy-tools) .dd-preview:has(.dd-sketch-launch) .dd-canvas>.dd-plan-viewport{height:clamp(200px,calc(100dvh - 490px - var(--dd-easy-tools-height,0px)),400px)!important}}
+.deck-designer:has(.dd-easy-tools) .dd-preview:has(.dd-sketch-launch) .dd-canvas>.dd-plan-viewport{height:clamp(360px,calc(100dvh - 550px - var(--dd-easy-tools-height,0px)),480px)!important}
+@media(max-width:800px){.deck-designer:has(.dd-easy-tools) .dd-preview:has(.dd-sketch-launch) .dd-canvas>.dd-plan-viewport{height:clamp(240px,calc(100dvh - 490px - var(--dd-easy-tools-height,0px)),400px)!important}}

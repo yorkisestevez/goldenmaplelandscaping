@@ -55,10 +55,10 @@ assert(ref.quoteRequired&&ref.sections.some(s=>s.id==='paver-order-confirmation'
 assert.equal(CARR_TRADE.waste.standard,1.1);
 const publicText=JSON.stringify(ref);assert(!publicText.includes('tradeCents')&&!publicText.includes('marginPct')&&!publicText.includes('unitTrade'));
 const big=feature('big-brooklyn',0,0,60,60,'permacon-brooklyn');
-assert.equal(projectedYardPavers(big),19400,'A single sixty-foot Brooklyn patio remains usable');
+assert.equal(projectedYardPavers(big),18249,'A sixty-foot Brooklyn patio uses full 76 × 230 mm stones plus separate 1/8-inch joints');
 const oversized=buildYardModel(deck([{...big,widthFt:100,depthFt:100}]));assert(oversized.quoteRequired);assert.equal(oversized.boxes.length,0);assert.equal(oversized.quantities.patioAreaSqft,0);assert.equal(oversized.excavationRegions.length,0);assert.equal(oversized.features[0].exclusionReason,'paver-budget');
 const manyLarge=buildYardModel(deck(Array.from({length:20},(_,i)=>({...big,id:`big-${i}`,xFt:i*100}))));
-assert(!manyLarge.features[0].excluded);assert.equal(manyLarge.features[0].quantities.paverPieces,19400);assert.equal(manyLarge.features.filter(f=>f.excluded).length,19);assert.equal(manyLarge.paverBudget.reservedPieces,19400);assert.equal(manyLarge.paverBudget.remainingPieces,600);assert(manyLarge.quantities.paverPieces<=YARD_PAVER_BUDGET);assert(manyLarge.quoteRequired);
+assert(!manyLarge.features[0].excluded);assert.equal(manyLarge.features[0].quantities.paverPieces,18249);assert.equal(manyLarge.features.filter(f=>f.excluded).length,19);assert.equal(manyLarge.paverBudget.reservedPieces,18249);assert.equal(manyLarge.paverBudget.remainingPieces,1751);assert(manyLarge.quantities.paverPieces<=YARD_PAVER_BUDGET);assert(manyLarge.quoteRequired);
 for(const f of manyLarge.features.filter(f=>f.excluded)){assert(f.quoteRequired);assert.equal(f.boxes.length,0);assert.equal(f.footprints.length,0);assert.equal(f.quantities.paverAreaSqft,0);}
 assert.equal(buildYardModel(deck([{...big,enabled:false}])).paverBudget.reservedPieces,0);
 console.log(`Yard model/takeoff passed: overlap union, hole clipping, excavation deduplication, mixed products, shared floors/deliveries/bins, disabled features, source price parity and ${cases} finite geometry scenarios.`);

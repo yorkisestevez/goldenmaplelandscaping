@@ -1,0 +1,56 @@
+import {test,expect,type Page,type Locator} from '@playwright/test';
+import {mkdirSync,readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import sharp from 'sharp';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {yardShapeWorldPoints} from '../src/features/deckcraft/yardShapeEditing';
+import type {DeckData,YardFeature} from '../src/features/deckcraft/types';
+import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
+const proof=resolve(process.cwd(),'../../outputs/deckcraft-elevation-review');mkdirSync(proof,{recursive:true});
+const catalogue=JSON.parse(readFileSync(resolve(process.cwd(),'public/deckcraft/hardscape-catalogue.json'),'utf8')).products;
+const product=catalogue.find((p:any)=>p.id==='permacon-melville-60-slab')!,finish=product.finishes.find((f:any)=>f.units.length&&f.colors.length)!,unit=finish.units[0],color=finish.colors[0];
+const wallProduct=catalogue.find((p:any)=>p.id==='oaks-ortana')!,wallFinish=wallProduct.finishes[0],wallUnit=wallFinish.units.find((u:any)=>['standard','wall-unit'].includes(u.role))!,wallColor=wallFinish.colors.find((c:any)=>!wallUnit.colorIds||wallUnit.colorIds.includes(c.id))!;
+const yardGradeIn=(d:DeckData,f:YardFeature)=>d.terrainConfig!.elevationIn+f.zFt*12*d.terrainConfig!.slopePct/100;
+const yardSurfaceIn=(d:DeckData,f:YardFeature)=>yardGradeIn(d,f)+(f.baseElevationIn??0)+f.heightIn;
+const patio:YardFeature={id:'elevation-patio',name:'Courtyard',kind:'patio',enabled:true,xFt:6,zFt:26,widthFt:12,depthFt:10,heightIn:0,rotationDeg:0,productId:product.id,color:'#aaa69b',hardscape:{finishId:finish.id,colorId:color.id,unitId:unit.id,patternId:'running-bond',angleDeg:0,jointMm:3}};
+const wall:YardFeature={...patio,id:'elevation-wall',name:'Garden wall',kind:'retaining-wall',xFt:23,zFt:30,widthFt:16,depthFt:wallUnit.lengthMm/304.8,heightIn:24,productId:wallProduct.id,hardscape:{finishId:wallFinish.id,colorId:wallColor.id,unitId:wallUnit.id,patternId:'running-bond',angleDeg:0,jointMm:0}};
+const fixture:DeckData={...structuredClone(DEFAULT_DECK),houseVisible:false,deckType:'Freestanding',stairFlights:0,railingType:'None',height:36,yardFeatures:[patio,wall],terrainConfig:{widthFt:100,depthFt:100,elevationIn:4,slopePct:1}};
+const state=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.read());
+const controls=(page:Page)=>page.getByLabel('Patio and wall shape controls',{exact:true});
+const panel=(page:Page)=>controls(page).getByRole('region',{name:'Patio and wall elevations',exact:true});
+const find=(d:DeckData,id:string)=>d.yardFeatures!.find(f=>f.id===id)!;
+async function ready(page:Page){await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);return state(page);}
+async function activate(el:Locator,phone:boolean){await el.scrollIntoViewIfNeeded();if(phone){const b=(await el.boundingBox())!;expect(b.width).toBeGreaterThanOrEqual(44);expect(b.height).toBeGreaterThanOrEqual(44);await el.tap();}else await el.click();}
+test.beforeEach(async({page,context})=>{await context.addInitScript('window.__name=(target,value)=>target;');await context.addInitScript(configuration=>{if(!localStorage.getItem('golden-maple.deck-studio.deck-only.v1'))localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},fixture);await context.route('**/*',route=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(route.request().url())?route.continue():route.fulfill({status:200,body:''}));await page.goto('/deck-designer/');await ready(page);});
+for(const phone of [false,true]){
+ const prefix=phone?'@phone ':'';
+ test(`${prefix}patio elevation nudges, exact feet inches, matching, Undo and invalid inputs`,async({page})=>{
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await activate(page.getByRole('radio',{name:'Patios & walls',exact:true}),phone);await expect(panel(page)).toBeVisible();const saved=await ready(page),before=find(saved.design as DeckData,patio.id);
+  await expect(panel(page)).toContainText(`${unit.widthMm} × ${unit.lengthMm} × ${unit.heightMm} mm`);
+  await activate(panel(page).getByRole('button',{name:'Raise patio 1 inch',exact:true}),phone);await expect.poll(async()=>find((await state(page)).design as DeckData,patio.id).heightIn).toBe(1);expect(yardShapeWorldPoints(find((await state(page)).design as DeckData,patio.id))).toEqual(yardShapeWorldPoints(before));
+  await activate(page.getByRole('button',{name:'Undo',exact:true}),phone);await expect.poll(async()=>(await state(page)).design).toEqual(saved.design);
+  await panel(page).getByLabel('Patio surface elevation',{exact:true}).fill(`1' 6 1/2"`);await activate(panel(page).getByRole('button',{name:'Apply elevation',exact:true}),phone);await expect.poll(async()=>find((await state(page)).design as DeckData,patio.id).heightIn).toBe(18.5);const exact=await ready(page);
+  await panel(page).getByLabel('Patio surface elevation',{exact:true}).fill('999');await activate(panel(page).getByRole('button',{name:'Apply elevation',exact:true}),phone);await expect(panel(page).getByRole('alert')).toContainText('-24 to 48');expect((await state(page)).design).toEqual(exact.design);expect((await state(page)).pricing).toEqual(exact.pricing);
+  await panel(page).getByLabel('Match yard finished elevation',{exact:true}).selectOption(`feature:${wall.id}`);const matched=await ready(page);expect(yardSurfaceIn(matched.design as DeckData,find(matched.design as DeckData,patio.id))).toBeCloseTo(yardSurfaceIn(matched.design as DeckData,find(matched.design as DeckData,wall.id)),8);
+  await page.screenshot({path:resolve(proof,`${phone?'phone':'desktop'}-patio-elevation.png`),fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);expect(errors).toEqual([]);
+ });
+ test(`${prefix}wall course and base elevation controls retain stock and save exactly`,async({page})=>{
+  await activate(page.getByRole('radio',{name:'Patios & walls',exact:true}),phone);await controls(page).getByLabel('Selected patio or wall',{exact:true}).selectOption(wall.id);const saved=await ready(page),original=find(saved.design as DeckData,wall.id);
+  await activate(panel(page).getByRole('button',{name:'Add one wall course',exact:true}),phone);await expect.poll(async()=>find((await state(page)).design as DeckData,wall.id).heightIn).toBeCloseTo(24+wallUnit.heightMm/25.4,8);
+  await activate(page.getByRole('button',{name:'Undo',exact:true}),phone);await expect.poll(async()=>(await state(page)).design).toEqual(saved.design);
+  await panel(page).getByLabel('Wall base elevation',{exact:true}).fill('-2 1/2 in');await activate(panel(page).getByRole('button',{name:'Apply base',exact:true}),phone);await expect.poll(async()=>find((await state(page)).design as DeckData,wall.id).baseElevationIn).toBe(-2.5);
+  await activate(panel(page).getByRole('button',{name:'Raise wall 1 inch',exact:true}),phone);await expect.poll(async()=>find((await state(page)).design as DeckData,wall.id).baseElevationIn).toBe(-1.5);const changed=await ready(page),current=find(changed.design as DeckData,wall.id);expect(current.heightIn).toBe(original.heightIn);expect(current.hardscape).toEqual(original.hardscape);expect(yardShapeWorldPoints(current)).toEqual(yardShapeWorldPoints(original));await expect(panel(page)).toContainText('full body courses');
+  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('golden-maple.deck-studio.deck-only.v1')??'{}').configuration?.yardFeatures?.find((f:{id:string})=>f.id==='elevation-wall')?.baseElevationIn)).toBe(-1.5);await page.reload();await ready(page);expect(find((await state(page)).design as DeckData,wall.id)).toEqual(current);
+  await activate(page.getByRole('radio',{name:'Patios & walls',exact:true}),phone);await controls(page).getByLabel('Selected patio or wall',{exact:true}).selectOption(wall.id);await page.screenshot({path:resolve(proof,`${phone?'phone':'desktop'}-wall-elevation.png`),fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await activate(page.getByRole('tab',{name:'3D',exact:true}),phone);const region=page.getByRole('region',{name:'Interactive deck construction model',exact:true}),canvas=region.locator('canvas');await expect(canvas).toBeVisible();await canvas.evaluate(el=>el.scrollIntoView({block:'center'}));await expect.poll(async()=>{const stats=await sharp(await canvas.screenshot()).stats();return Math.max(...stats.channels.slice(0,3).map(c=>c.stdev));},{timeout:30000}).toBeGreaterThan(10);await region.screenshot({path:resolve(proof,`${phone?'phone':'desktop'}-hardscape-3d.png`)});expect((await state(page)).design).toEqual(changed.design);
+ });
+ test(`${prefix}slider commits on release and agent elevation preview is atomic`,async({page})=>{
+  await activate(page.getByRole('radio',{name:'Patios & walls',exact:true}),phone);const saved=await ready(page),slider=panel(page).getByRole('slider',{name:'Slide patio elevation',exact:true});await slider.scrollIntoViewIfNeeded();const b=(await slider.boundingBox())!;
+  if(phone){const cdp=await page.context().newCDPSession(page);try{await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:b.x+b.width*.4,y:b.y+b.height/2,id:1}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:b.x+b.width*.6,y:b.y+b.height/2,id:1}]});expect((await state(page)).design).toEqual(saved.design);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});}finally{await cdp.detach();}}
+  else{await page.mouse.move(b.x+b.width*.4,b.y+b.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width*.6,b.y+b.height/2);expect((await state(page)).design).toEqual(saved.design);await page.mouse.up();}
+  await expect.poll(async()=>find((await state(page)).design as DeckData,patio.id).heightIn).not.toBe(0);await activate(page.getByRole('button',{name:'Undo',exact:true}),phone);await expect.poll(async()=>(await state(page)).design).toEqual(saved.design);
+  const request={id:'browser-elevation',expectedRevision:(await state(page)).revision,commands:[{type:'yard.elevation',id:patio.id,field:'heightIn',valueIn:13.25},{type:'yard.elevation',id:wall.id,field:'baseElevationIn',valueIn:8.5}]};const preview=await page.evaluate(request=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.preview(request),request);expect(preview.ok).toBe(true);expect((await state(page)).design).toEqual(saved.design);
+  const response=await page.evaluate(request=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.execute(request),request);expect(response.ok).toBe(true);await expect.poll(async()=>find((await state(page)).design as DeckData,wall.id).baseElevationIn).toBe(8.5);expect(yardGradeIn((await state(page)).design as DeckData,find((await state(page)).design as DeckData,wall.id))).toBeCloseTo(7.6,8);
+  await activate(page.getByRole('button',{name:'Undo',exact:true}),phone);await expect.poll(async()=>(await state(page)).design).toEqual(saved.design);
+ });
+}
