@@ -3,6 +3,7 @@ import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import type {DeckTakeoff,V3} from '../../deckTakeoff';
+import {railingGlassMaterial} from './railingGlass';
 
 type Part={position:THREE.Vector3;axis:THREE.Vector3;size:THREE.Vector3};
 const vec=(p:V3)=>new THREE.Vector3(p.x,p.y,p.z);
@@ -28,7 +29,7 @@ function GlassBatch({matrices,material}:{matrices:THREE.Matrix4[];material:THREE
 
 export default function RailingDetails({data,model}:{data:DeckData;model:DeckTakeoff}){
   const materials=useMemo(()=>({
-    glass:new THREE.MeshPhysicalMaterial({color:'#e5f1eb',roughness:.065,metalness:0,transmission:.87,ior:1.52,thickness:.5,attenuationColor:'#92bda6',attenuationDistance:150,transparent:true,opacity:1,depthWrite:false,envMapIntensity:1.25}),
+    glass:railingGlassMaterial(),
     stainless:new THREE.MeshStandardMaterial({color:'#bdc4c6',metalness:.93,roughness:.24}),
     dark:new THREE.MeshStandardMaterial({color:'#303537',metalness:.68,roughness:.33}),
     rubber:new THREE.MeshStandardMaterial({color:'#19201f',metalness:0,roughness:.85}),

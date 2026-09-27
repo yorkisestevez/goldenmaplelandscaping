@@ -15,6 +15,7 @@ import {buildYardModel,yardClip} from '../src/features/deckcraft/yardModel';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {HOUSE_CHUNKS,HOUSE_SURFACES,backingSurface,claddingSurface} from '../src/features/deckcraft/components/viewer3d/houseSurfaceKinds';
 import {WINDOW_ROOM,paneGeometry,windowGlass} from '../src/features/deckcraft/components/viewer3d/windowGlass';
+import {GLASS_CHUNKS,GLASS_GROUND_HUE,railingGlassMaterial} from '../src/features/deckcraft/components/viewer3d/railingGlass';
 import type {HouseCladding} from '../src/features/deckcraft/types';
 
 /**
@@ -215,4 +216,19 @@ for(const [name,lookup] of LAWN_CHUNKS)ok((THREE.ShaderChunk as Record<string,st
   ok(facade.includes('surface={claddingSurface(look.cladding)}')&&facade.includes('surface={backingSurface(look.cladding)}')&&facade.includes('surface={claddingSurface(wainscot.cladding)}')&&house.includes('name="gable-accent-courses" surface={claddingSurface(look.cladding)}')&&house.includes('name="house-foundation-plinth" surface="stucco"')&&parts.includes('houseSurfaceMaterial(surface,'),'Walls, wainscots, gable accents and plinths take their surface detail through HouseParts');
 }
 
-console.log(`DECK REALISM OK — look, pipeline wiring, shadow key and sun fit; ${files.length} swatch atlases (worst ΔE ${worstDelta.toFixed(2)}, worst repeat ${worstSeam.toFixed(2)}×), the board shader and its picks; the sky, its sun and the lawn to the horizon; the house's glass and surfaces; ${checks} checks.`);
+// The railing glass (frameless and framed): clear, and below the horizon it reflects the lawn, not the HDRI's brown field.
+{
+  for(const [name,lookup] of GLASS_CHUNKS)ok((THREE.ShaderChunk as Record<string,string>)[name]?.includes(lookup),`ShaderChunk.${name} still has "${lookup}"`);
+  const glass=railingGlassMaterial();
+  ok(glass.transmission===1&&glass.envMapIntensity===1&&glass.userData.photoRole==='glass','Railing glass passes all the light it does not reflect (no milky diffuse), at the scene’s environment strength, tagged for the photo engine');
+  const [r,g,b]=GLASS_GROUND_HUE;
+  ok(Math.abs(.2126*r+.7152*g+.0722*b-1)<1e-9&&g>r&&r>b,'The reflected ground keeps the sky map’s brightness and takes the lawn’s green hue');
+  const shader={uniforms:{} as Record<string,THREE.IUniform>,vertexShader:THREE.ShaderLib.physical.vertexShader,fragmentShader:THREE.ShaderLib.physical.fragmentShader};
+  glass.onBeforeCompile(shader as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);
+  ok(shader.fragmentShader.includes('vec3 glassGround(')&&shader.fragmentShader.includes('radiance += glassGround( getIBLRadiance(')&&!shader.fragmentShader.includes('#include <lights_fragment_maps>')&&!/\$\{/.test(shader.fragmentShader),'The glass shader is filled in: its reflection passes through glassGround');
+  const frameless=read(`${VIEWER}FramelessGlass3D.tsx`),framed=read(`${VIEWER}RailingDetails.tsx`);
+  ok(frameless.includes('railingGlassMaterial()')&&framed.includes('railingGlassMaterial()')&&!/transmission:\.87/.test(frameless+framed),'Frameless and framed glass railings use the one railing glass');
+  glass.dispose();
+}
+
+console.log(`DECK REALISM OK — look, pipeline wiring, shadow key and sun fit; ${files.length} swatch atlases (worst ΔE ${worstDelta.toFixed(2)}, worst repeat ${worstSeam.toFixed(2)}×), the board shader and its picks; the sky, its sun and the lawn to the horizon; the house's glass and surfaces; the railing glass; ${checks} checks.`);

@@ -14,6 +14,7 @@ import {proposalFinishes} from '../src/features/deckcraft/proposalModel';
 import {finishedFasciaOffset} from '../src/features/deckcraft/lib/finishedFootprint';
 import {RAILING_STYLES,optionGroups} from '../src/features/deckcraft/designer/optionGroups';
 import {GLASS,GLASS_MOUNTS,HANDRAIL,SHOE,type FramelessGlassLayout} from '../src/features/deckcraft/framelessGlass';
+import {framelessGlassParts} from '../src/features/deckcraft/components/viewer3d/framelessGlassParts';
 import {RAILING_COSTS,type DeckData,type GlassMount} from '../src/features/deckcraft/types';
 
 /**
@@ -94,6 +95,11 @@ for(const [label,patch] of designs)for(const glassMount of GLASS_MOUNTS){
     for(const b of brackets)ok(near(b.at.y-surfaceAt(g,h.run,b.at),HANDRAIL.heightIn,.02),`${name}: the handrail is ${HANDRAIL.heightIn} in above the nosings`);
   }
   ok(near(g.quantities.glassSqft,g.panels.reduce((n,p)=>n+p.width*p.height/144,0))&&g.quantities.panels===g.panels.length&&g.quantities.panelSizes.reduce((n,s)=>n+s.count,0)===g.panels.length,`${name}: glass quantities add up`);
+  // The 3D view's pieces (FramelessGlass3D): a mirrored instance matrix draws its box inside out, and inside-out glass
+  // is a pure mirror (it read amber). Every piece is right-handed, and every panel keeps the glass's thickness.
+  const parts=framelessGlassParts(g),mirrored=Object.entries(parts).flatMap(([kind,list])=>list.filter(m=>m.determinant()<=0).map(()=>kind));
+  ok(parts.glass.length===g.panels.length&&!mirrored.length,`${name}: every 3D piece is right-handed (inside out: ${mirrored.join(', ')||'none'})`);
+  ok(parts.glass.every(m=>near(Math.hypot(m.elements[8],m.elements[9],m.elements[10]),GLASS.thick,1e-9)),`${name}: every 3D panel is ${GLASS.thick} in thick`);
   layouts++;
 }
 
@@ -158,4 +164,4 @@ for(const [label,patch] of designs)for(const glassMount of GLASS_MOUNTS){
   ok(/"check:deck":[^\n]*check-deck-frameless-glass\.ts/.test(read('package.json')),'This check runs in check:deck');
 }
 
-console.log(`DECK FRAMELESS GLASS OK — ${layouts} layouts (${panelsSeen} panels) over ${designs.length} designs × ${GLASS_MOUNTS.length} mounts, quotes and labour, lights, saving, naming — ${checks} checks`);
+console.log(`DECK FRAMELESS GLASS OK — ${layouts} layouts (${panelsSeen} panels) over ${designs.length} designs × ${GLASS_MOUNTS.length} mounts, 3D pieces right-handed, quotes and labour, lights, saving, naming — ${checks} checks`);
