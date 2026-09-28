@@ -46,16 +46,16 @@
    "bytes": 14090
   },
   "L-shape, picture frame, landing stairs": {
-   "sha256": "95d2a575eae653213d34c2b13281fbdd3b95f338e7e53498fbb5f3ff0492cdfa",
-   "bytes": 31128
+   "sha256": "c226a6bb59e1943e5172d2e00b0cbaaea573753f0075772bfd4d273b023ab1d4",
+   "bytes": 31136
   },
   "multi-corner freestanding, 2 levels": {
    "sha256": "09c5e4bd3f529976725d2b4490ea70d20e057031813c69561c7a2949ecdfd403",
    "bytes": 32644
   },
   "curved, herringbone, winder stairs": {
-   "sha256": "dbc69332927666b151d306299ee4f1fd3b0738b5be4e8d71c69d7c31db469cca",
-   "bytes": 49242
+   "sha256": "9c1f6dbf2485f4981ba2b0de3276a30823f7463366a61672b5ca217bbd6e4756",
+   "bytes": 49031
   },
   "split level with a third level": {
    "sha256": "deece4afc8d24a21e0a7ba9b142fb6354f48ea7b31936b5f83b75f5361e96ed5",
