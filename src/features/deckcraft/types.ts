@@ -4,9 +4,45 @@ export type SiteType = 'Standard' | 'Waterfront-Lakefront' | 'Hillside' | 'Urban
 export type SoilCondition = 'Unknown' | 'Sandy' | 'Clay' | 'Shallow Bedrock' | 'Fill';
 export type BuildSeason = 'Spring-Summer' | 'Fall' | 'Winter';
 export type IntendedLoad = 'Standard' | 'Heavy';
-export type DeckShape = 'Rectangle' | 'L-Shape' | 'Multi-corner' | 'Curved';
+export type DeckShape = 'Rectangle' | 'L-Shape' | 'Multi-corner' | 'Curved' | 'Custom';
+/** A point of a custom outline's front, in feet (see lib/customOutline.ts). */
+export interface OutlinePoint {x:number;y:number}
+/** A real product colour, `${collectionId}:${colourName}` from DECKING_CATALOGUE (see boardFinishes.ts). */
+export type ColourRef = string;
+/** Deck boards in another real product colour: one board ('piece') or its whole row ('course'), found by the
+ * board address in lib/boardAddress.ts. An address that no longer meets a board is kept but not applied. */
+export interface BoardColour {lv:1|2|3;role:'field'|'border'|'breaker';scope:'piece'|'course';course:string;at?:number;colour:ColourRef}
+/** How the boards inside a framed inlay run: across (Straight, front to back), at 45°, or in a herringbone. */
+export type InlayFill = 'Straight' | 'Diagonal' | 'Herringbone';
+/** A decorative inlay set into the decking (see lib/inlayGeometry.ts). A colour left out is the deck's own.
+ * Absent on every existing design.
+ * - 'rug' (a framed rectangle) or 'diamond' (a framed square turned 45°): centred dxFt/dyFt from the middle of its
+ *   deck level (+x right, +y toward the yard), with 1 or 2 frame rows and an inside pattern.
+ * - 'band': 1 to 4 boards across the whole field, running across the deck (parallel to the house) or front to
+ *   back ('along' the joists); atFt moves its middle from the level's middle (toward the yard, or to the right).
+ * - 'medallion': a round (16-sided) inlay with a one-row frame; inside, boards front to back ('round') or eight
+ *   wedges in alternating inside and frame colours ('compass'). */
+interface InlayBase {id:string;level?:1|2|3;fill?:ColourRef}
+export type DeckInlay =
+  | InlayBase&{kind:'rug'|'diamond';dxFt?:number;dyFt?:number;widthFt:number;depthFt:number;frameRows?:1|2;pattern?:InlayFill;frame?:ColourRef}
+  | InlayBase&{kind:'band';direction:'across'|'along';atFt?:number;boards:1|2|3|4}
+  | InlayBase&{kind:'medallion';dxFt?:number;dyFt?:number;diameterFt:number;style:'round'|'compass';frame?:ColourRef};
+/** Skirting under the deck (see skirting.ts): boards or lattice closing in the space between the deck's rim and the
+ * ground, clearanceIn above it. A colour left out is the deck's own; `openEdges` names deck sides left open
+ * ('deck1-front', 'landing1-left', …). Absent on every existing design. Listed for a builder quote, never priced. */
+export type SkirtingStyle = 'Horizontal boards' | 'Vertical boards' | 'Lattice';
+export interface SkirtingConfig {style:SkirtingStyle;colour?:ColourRef;clearanceIn:number;openEdges?:string[];accessPanels?:number}
+/** Deck parts in their own real product colour (see deckPartFinishes.ts): the border boards, the fascia over the rim,
+ * the stair treads and risers, each from a collection of the deck's own kind; and the railing in one of its system's
+ * manufacturer colours (a colour name from railing-finish-provenance.json). A part left out is the deck's own colour.
+ * Absent on every existing design. */
+export interface DeckFinishes {fascia?:ColourRef;treads?:ColourRef;risers?:ColourRef;border?:ColourRef;railingColor?:string}
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
-export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
+export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Frameless Glass' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
+/** How a frameless glass railing holds its panels (framelessGlass.ts). */
+export type GlassMount = 'Top-mount base shoe' | 'Fascia-mount base shoe' | 'Spigots';
+/** A frameless glass railing's shoe, spigots and handrail: black powder coat, or clear anodized / 316 stainless. */
+export type GlassFinish = 'Black' | 'Silver';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
 export type LightingZone = 'deck'|'posts'|'stairs'|'landscape'|'house'|'privacy';
 /** A single freestanding screen on one exposed deck edge; priced by its face area. */
@@ -23,14 +59,20 @@ export type GarageDoorStyle='Panel'|'Carriage'|'Flush'|'Glass';
 export type DoorStyle='Single'|'French'|'Sliding';
 /** Window looks. Absent = the studio's original window (glass with a centre rail). */
 export type WindowStyle='Double-hung'|'Casement'|'Picture'|'Slider'|'Awning';
-export type HouseCladding='Brick'|'Siding'|'Stone'|'Stucco'|'Board & batten'|'Vertical siding';
+/** House wall finishes, generic types rather than manufacturer products (appearance only, never priced). */
+export type HouseCladding='Brick'|'Siding'|'Stone'|'Stucco'|'Board & batten'|'Vertical siding'|'Fibre-cement lap'|'Cedar shakes'|'Ledgestone'|'Fieldstone'|'Norman brick'|'Roman brick'|'Horizontal metal';
+/** Roof finishes (appearance only). 'Shingles' (3-tab) and 'Metal' (standing seam) are the studio's originals. */
+export type RoofFinish='Shingles'|'Metal'|'Architectural shingles'|'Cedar shakes'|'Slate'|'Clay tile'|'Concrete tile';
 export interface HouseOpening {id:string;type:'Door'|'Window'|'Garage';facade:'Front'|'Back'|'Left'|'Right';offsetPct:number;bottomIn:number;widthIn:number;heightIn:number;
   /** Wall the opening sits on, '<block id>-<front|back|left|right>' (e.g. 'garage1-back'). Absent = the
    * main block's wall named by `facade`, as older designs have it. */
   wallId?:string;
   /** Appearance only, never priced: a garage door style on 'Garage' openings, a door style on 'Door'
    * openings, a window style on 'Window' openings. */
-  style?:GarageDoorStyle|DoorStyle|WindowStyle}
+  style?:GarageDoorStyle|DoorStyle|WindowStyle;
+  /** Appearance only: this opening's own colour (a door's slab, a window's frame, a garage door's face). Absent =
+   * the house's door, window or garage-door colour, else the studio's original colours. */
+  color?:string}
 /** A block attached to one wall of the main house rectangle: a bump-out, an L-wing or a garage. */
 export interface HouseBlock {id:string;kind:'house'|'garage';
   /** Main-block wall it is attached to ('Front' faces the deck). */
@@ -41,8 +83,23 @@ export interface HouseBlock {id:string;kind:'house'|'garage';
   widthFt:number;
   /** Out from that wall. */
   depthFt:number;
-  storeys?:1|2|3;floorHeightIn?:number;roofShape?:'Gable'|'Hip'|'Flat'}
-export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:'Shingles'|'Metal';roofColor:string;cladding:HouseCladding;claddingColor:string;trimColor:string;openings:HouseOpening[];
+  storeys?:1|2|3;floorHeightIn?:number;roofShape?:'Gable'|'Hip'|'Flat';
+  /** Appearance only: this block's own wall finish. Absent = the whole house's. */
+  finish?:HouseFinish}
+/** A band of a second cladding along the bottom of a wall, under a trim cap (appearance only). */
+export interface Wainscot {cladding:HouseCladding;color:string;
+  /** Top of the band above grade, 12–72 in. */
+  heightIn:number}
+/** A different cladding on a gable triangle, such as shakes in the gable over siding (appearance only). */
+export interface GableAccent {cladding:HouseCladding;color:string}
+/**
+ * How a wall (or a block, or the whole house) is finished, appearance only and never priced. A wall resolves
+ * its own finish first, then its block's, then the whole house's (houseFinishes.ts `houseFinishFor`).
+ */
+export interface HouseFinish {cladding:HouseCladding;color:string;wainscot?:Wainscot;
+  /** The gable triangle above the wall. Absent = the wall's own cladding carries on into the gable. */
+  gable?:GableAccent}
+export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:RoofFinish;roofColor:string;cladding:HouseCladding;claddingColor:string;trimColor:string;openings:HouseOpening[];
   /** Finished floor / door-sill height above grade. When set, the deck is checked against it. */
   floorHeightIn?:number;
   /** Blocks attached to the main rectangle. Absent or empty = a plain rectangular house. */
@@ -51,7 +108,17 @@ export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storey
   roofPitch?:number;
   /** Main gable ridge: 'y' runs front to back (gables face the deck and the street, the original look);
    * 'x' runs side to side (gables on the side walls). Appearance only. */
-  ridge?:'x'|'y'}
+  ridge?:'x'|'y';
+  /** Exterior colours (appearance only, six-digit hex). Fascia (the rake boards), soffit and gutters follow
+   * trimColor when absent; doors, windows and garage doors keep the studio's original colours when absent. */
+  fasciaColor?:string;soffitColor?:string;gutterColor?:string;doorColor?:string;windowColor?:string;garageDoorColor?:string;
+  /** Walls with their own finish, by wall id ('<block id>-<front|back|left|right>', 'main-front' faces the deck):
+   * at most 28 (seven blocks of four walls); a key for a block that no longer exists is dropped on load and edit. */
+  wallFinishes?:Record<string,HouseFinish>;
+  /** A wainscot band on every wall that follows the whole house. */
+  wainscot?:Wainscot;
+  /** An accent on the gables of every wall that follows the whole house. */
+  gableAccent?:GableAccent}
 /** Where the house sits along the deck's back line. Absent = centred on the deck (the original behaviour). */
 export interface HousePlacement {anchor:'left'|'center'|'right';offsetIn:number}
 /** One side wing of a wrap-around deck: how far it reaches out from the house side wall, and how
@@ -65,6 +132,9 @@ export interface WrapConfig {left?:WrapWing;right?:WrapWing;
   porchLeft?:WrapPorch;
   /** Needs the right wing, which then runs the full house depth. */
   porchRight?:WrapPorch}
+/** 45° angled FRONT corners of the main deck (away from the house): each leg in feet, cut back equally
+ * along the front and the side edge. A missing corner is square. Rectangles only (see lib/cornerChamfers.ts). */
+export interface CornerChamfers {frontLeftFt?:number;frontRightFt?:number}
 /** A third deck section, joined to the main deck (parent 1) or the second level (parent 2). */
 export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;parent:1|2;position:'Front'|'Left'|'Right';offsetPct:number;
   /** Named wrap edge of the main deck (parent 1 only), e.g. 'wingR-end'; overrides position. */
@@ -74,6 +144,8 @@ export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;pa
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature';
 export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled:boolean;xFt:number;zFt:number;widthFt:number;depthFt:number;heightIn:number;rotationDeg:number;productId:string;color:string}
 export interface TerrainConfig {widthFt:number;depthFt:number;elevationIn:number;slopePct:number}
+/** Backyard items priced at the site cost estimator's allowances. Not drawn in 3D: placed and confirmed at the site visit. */
+export interface YardAllowances {finish:'budget'|'mid'|'premium';firePit:'none'|'wood'|'gas';kitchen:'none'|'basic'|'full';turfSqft:number;lighting:boolean}
 
 export type FoundationType = 'Concrete Piers' | 'Helical Piles' | 'Deck Blocks';
 
@@ -118,9 +190,22 @@ export const INLITE_PRODUCTS: LightingProduct[] = [
 export interface DeckData {
   yardFeatures?: YardFeature[];
   terrainConfig?: TerrainConfig;
+  yardAllowances?: YardAllowances;
   houseConfig?: HouseConfig;
   housePlacement?: HousePlacement;
   wrap?: WrapConfig;
+  /** Absent means square corners; never set in DEFAULT_DECK so every existing design is unchanged. */
+  cornerChamfers?: CornerChamfers;
+  /** A custom outline's front, right side to left side, in feet (shape 'Custom' only; see lib/customOutline.ts). */
+  customFront?: OutlinePoint[];
+  /** Accent-colour boards; absent on every existing design (see boardFinishes.ts). */
+  boardColours?: BoardColour[];
+  /** Decorative inlays with their own framing; absent on every existing design (see lib/inlayGeometry.ts). */
+  inlays?: DeckInlay[];
+  /** Skirting under the deck; absent on every existing design (see skirting.ts). */
+  skirting?: SkirtingConfig;
+  /** Deck-part finishes and the railing colour; absent on every existing design (see deckPartFinishes.ts). */
+  deckFinishes?: DeckFinishes;
   /** A named exposed edge (e.g. 'wingR-end') for the primary stair flight; overrides stairPosition. */
   stairEdgeId?: string;
   /** Named wrap edge of the main deck for the second level; overrides level2Position. */
@@ -131,6 +216,9 @@ export interface DeckData {
   lightingZoneEnabled?: Partial<Record<LightingZone,boolean>>;
   lightingPreviewOn?: boolean;
   catalogueRailingId?: string;
+  /** A frameless glass railing's mount and hardware finish; absent unless railingType is 'Frameless Glass'. */
+  glassMount?: GlassMount;
+  glassFinish?: GlassFinish;
   catalogueAccessories?: string[];
   borderFinish?: 'Matching'|'Dark Slate';
   pictureFrameOverhangIn?: number;
@@ -371,10 +459,9 @@ export const WASTE_FACTORS: Record<BoardPattern, number> = {
 // wages, burden, equipment, overhead AND profit — no separate waterfall applies.
 // Editable per-device in Settings.
 //
-// 2026-07-27 — Yorkis set deck to $3,000/day all-in (was $3,700 target).
-// NOTE: the July 2026 doctrine called $2,200/day break-even and $3,400 the
-// bottom, so $3,000 is a DELIBERATE move below the old floor: ~$800/day gross
-// vs ~$1,500/day at $3,700. Above break-even, but roughly half the margin.
+// 2026-09-23 — the owner confirmed $3,700/day for deck estimates. (A 2026-07-27
+// note here recorded a move to $3,000/day; the table was never changed, and the
+// owner kept $3,700.)
 export const CREW_DAY_RATES: Record<Municipality, number> = {
   'Toronto': 3700,
   'Barrie': 3700,
@@ -393,7 +480,8 @@ export const PERMIT_FEES: Record<Municipality, number> = {
 
 export const DEFAULT_ENGINEERING_FEE = 1500;
 
-export const RAILING_COSTS: Record<Exclude<RailingType, 'None'>, { material: number, install: number, spacing: number, postCost: number }> = {
+/** Frameless glass has no rate here: its glass and hardware are a supplier quote (calculations.ts). */
+export const RAILING_COSTS: Record<Exclude<RailingType, 'None' | 'Frameless Glass'>, { material: number, install: number, spacing: number, postCost: number }> = {
   'Wood Picket': { material: 35, install: 45, spacing: 6, postCost: 45 },
   'Aluminum': { material: 60, install: 55, spacing: 6, postCost: 95 },
   'Cable': { material: 90, install: 90, spacing: 4, postCost: 120 },

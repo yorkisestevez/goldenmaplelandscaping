@@ -54,7 +54,7 @@ export default function CostEstimator() {
         "name": "What does a composite deck cost in Simcoe County?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "TimberTech AZEK Prime+ decking runs about $58/sqft for the deck itself, AZEK Vintage about $68/sqft. All-in with substructure, footings, railing and disposal, a 300-sqft ground-level deck lands around $19,500–$30,500; elevated walkout builds in Vintage with difficult access, slope, or drainage work can reach $50,000–$60,000."
+          "text": "Our 3D deck designer gives the one deck price on this site: it prices your exact size, height, stairs, railing and TimberTech collection from our price book. For example, a 20 × 15 ft (300 sq ft) attached deck 18 in off the ground in TimberTech EDGE Prime+ decking, with aluminum railing and one stair, prices at about $32,700 before HST; the same deck 8 ft up as a walkout is about $47,500. A few framing connectors and fasteners are confirmed by supplier quote."
         }
       },
       {
@@ -106,6 +106,10 @@ export default function CostEstimator() {
               <li><strong>Elevated:</strong> Mondrian Plus, Wilfred, Rosebel — refined textures and modern profiles. Our most popular tier.</li>
               <li><strong>Premium:</strong> Mega Melville, Brooklyn, Metrik — large-format flagship and statement-finish slabs.</li>
             </ul>
+            <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Decks are priced in the deck designer</h3>
+            <p>
+              Composite decks are designed and priced in our <Link to="/deck-designer">3D deck designer</Link>, the one deck price on this site. It prices your exact size, height, stairs, railing and TimberTech collection, and a deck you add to a full backyard here opens there at its size.
+            </p>
             <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">From estimate to exact quote</h3>
             <p>
               The estimator starts as a planning range and changes as you refine inputs. Contact Golden Maple to confirm the current consultation, design, material-selection, and final-quote process.

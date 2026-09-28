@@ -6,6 +6,7 @@ import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {extrasLayout,screenOffsetFromPoint} from '../src/features/deckcraft/extrasLayout';
 import {deckExportMeshes} from '../src/features/deckcraft/designExports';
 import type {DeckData} from '../src/features/deckcraft/types';
+import {MAX_PREVIEW_LIGHTS,MAX_SHADOW_LIGHTS,previewLightPlan,isIlluminatingFixture} from '../src/features/deckcraft/lightingPreview';
 const data:DeckData={...structuredClone(DEFAULT_DECK),lightingSystem:{selectedItems:[{productId:'wedge',qty:4,zone:'stairs'},{productId:'hyve',qty:4,zone:'deck'},{productId:'hub100',qty:1}],wireDistance:80}};
 const on=calculateEstimate(data),off=calculateEstimate({...data,lightingPreviewOn:false,sceneLighting:'Evening'});
 const landscape={...data,terrainConfig:{widthFt:80,depthFt:80,elevationIn:6,slopePct:2},lightingSystem:{selectedItems:[{productId:'ace',qty:2,zone:'landscape' as const}],wireDistance:0}};
@@ -106,4 +107,19 @@ assert(!withCable.sections.find(s=>s.title==='in-lite® Lighting System')!.items
     assert.equal(screenOffsetFromPoint(h,h.x,h.z),offsetPct,`Drag frame round-trips ${offsetPct}% on the ${side} edge`);
   }
 }
-console.log(`DECK LIGHTING OK — ${LIGHTING_CATALOGUE.filter(p=>p.supported).length} supported products, zone/preview/export/quote, circuit, under-step, privacy-screen and manufacturer-screen checks.`);
+// Night preview lights: a well-lit design must not run WebGL out of texture units (16 per shader). Every
+// shadow-casting light takes one in each lit material, so only MAX_SHADOW_LIGHTS of the preview lights cast shadows.
+{
+  const at=(productId:string,zone:string,n:number)=>Array.from({length:n},(_,i)=>({productId,zone,x:i,y:0,z:0,angle:0}));
+  const heavy=[...at('fusion','deck',12),...at('sway_pendant','house',3),...at('liv','landscape',6),...at('scope','landscape',3),...at('evo_hyde','stairs',8),...at('fusion','posts',20),...at('smart_hub150','',1),...at('wedge','stairs',7)];
+  const plan=previewLightPlan(heavy),shadows=[...plan].filter(([,s])=>s).map(([i])=>i);
+  assert(plan.size<=MAX_PREVIEW_LIGHTS,`At most ${MAX_PREVIEW_LIGHTS} fixtures light the preview (got ${plan.size})`);
+  assert(MAX_SHADOW_LIGHTS<=4,'Few enough preview lights cast shadows to leave texture units for the materials');
+  assert.equal(shadows.length,Math.min(MAX_SHADOW_LIGHTS,plan.size),'A heavy lighting design casts shadows from exactly the capped number of lights');
+  assert.equal(new Set(shadows.map(i=>heavy[i].zone)).size,Math.min(shadows.length,new Set(heavy.filter(p=>isIlluminatingFixture(p.productId)).map(p=>p.zone)).size),'Shadows are shared across zones, not spent on the first zone');
+  assert(![...plan.keys()].some(i=>!isIlluminatingFixture(heavy[i].productId)),'Only fixtures that cast light get a preview light');
+  const small=[...at('fusion','deck',2),...at('evo_hyde','stairs',1)],smallPlan=previewLightPlan(small);
+  assert.equal(smallPlan.size,3);
+  assert([...smallPlan.values()].every(Boolean),'A small design keeps a shadow on every preview light, as before');
+}
+console.log(`DECK LIGHTING OK — ${LIGHTING_CATALOGUE.filter(p=>p.supported).length} supported products, zone/preview/export/quote, circuit, under-step, privacy-screen and manufacturer-screen checks, and night preview lights within the GPU's texture units.`);

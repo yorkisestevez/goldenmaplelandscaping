@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {buildDeckTakeoff,guardRuns} from '../src/features/deckcraft/deckTakeoff';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {getHardwareLayout} from '../src/features/deckcraft/hardwareLayout';
 import {catalogueAccessoryLayout} from '../src/features/deckcraft/catalogueAccessories';
@@ -40,7 +40,7 @@ const unplaced=deck({width:20,houseConfig:house({widthFt:12})});
   ok(sideBeam.length>0&&sideBeam.every(b=>Math.min(b.a.x,b.b.x)>=144-.01&&Math.max(b.a.x,b.b.x)<=240+.01),'A house-side beam spans only the exposed stretch');
   ok(m.levels[0].supports.some(p=>p.x>144&&p.z<12),'Posts carry the house-side beam');
   ok(unsupportedJoistEnds(m.levels[0],contact).length===0,'Every joist end bears on the ledger or a beam');
-  ok(!m.railing.rails.some(r=>contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z})),'No railing along the ledger');
+  ok(!guardRuns(m).some(r=>contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z})),'No railing along the ledger');
   ok(calculateEstimate(wide).total>calculateEstimate(unplaced).total,'Exposed framing and railing are priced');
   ok(availableStairSides(wide).includes('Back')&&privacySides(wide).includes('Back'),'The exposed back stretch can take stairs and screens');
   const backStairs=buildDeckTakeoff({...wide,stairPosition:'Back'});

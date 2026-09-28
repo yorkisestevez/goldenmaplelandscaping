@@ -41,11 +41,13 @@ export function zoneReference(zone:DeckZone,cfg:ZoneFramingConfig):ZoneReference
   return computeStruct({width:zone.size.w/12,depth:zone.size.h/12,heightIn:cfg.top,house:zone.attached?'wood':'brick',ft:'PT',joistSp:String(cfg.spacing),joistSz:cfg.framingSize,beamMount:cfg.top<18?'flush':'drop',bSzSel:'auto',bPlySel:'auto',pf:cfg.pictureFrame});
 }
 
-/** Posts and beams of one zone, clipped to its outline. */
-export function frameZoneBearings({zone,reference:ref}:FramedZone,offset:V3,out:{supports:V3[];beams:Member[]}){
+/** Posts and beams of one zone, clipped to its outline, or to `bearingOutline` (the part of the zone behind
+ * any angled bearing lines, see angledFraming.ts). */
+export function frameZoneBearings({zone,reference:ref}:FramedZone,offset:V3,out:{supports:V3[];beams:Member[]},bearingOutline:PlanPoint[]=zone.outline){
   const o=zone.origin;
-  for(const p of ref.posts){const x=p.x*12+o.x,z=p.z*12+o.y;if(outlineSpans(zone.outline,x,'x').some(([a,b])=>z>=a&&z<=b))out.supports.push({x:x+offset.x,y:Math.max(0,ref.bBotY*12),z:z+offset.z});}
-  for(const row of ref.beamRows)for(const [a,b]of outlineSpans(zone.outline,row.z*12+o.y,'z'))for(let ply=0;ply<ref.bPly;ply++){
+  for(const p of ref.posts){const x=p.x*12+o.x,z=p.z*12+o.y;if(outlineSpans(bearingOutline,x,'x').some(([a,b])=>z>=a&&z<=b))out.supports.push({x:x+offset.x,y:Math.max(0,ref.bBotY*12),z:z+offset.z});}
+  // A row clipped exactly where it meets an angled bearing line leaves a zero-length span: no member there.
+  for(const row of ref.beamRows)for(const [a,b]of outlineSpans(bearingOutline,row.z*12+o.y,'z'))if(bearingOutline===zone.outline||b-a>=1)for(let ply=0;ply<ref.bPly;ply++){
     const y=(ref.bBotY+ref.bh/2)*12,z=row.z*12+o.y+offset.z+(ply-(ref.bPly-1)/2)*1.5;
     out.beams.push({a:{x:a+offset.x,y,z},b:{x:b+offset.x,y,z},width:1.5,depth:ref.bh*12});
   }

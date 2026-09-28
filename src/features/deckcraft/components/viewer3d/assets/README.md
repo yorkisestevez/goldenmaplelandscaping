@@ -1,9 +1,39 @@
-# Lawn material
+# 3D viewer assets
 
-Grass 008 by ambientCG / Lennart Demes, CC0 1.0.
+Every file here is CC0 1.0 (public domain), from Poly Haven (https://polyhaven.com). Each was downloaded on
+2026-09-25 and converted by a script in `scripts/`. The downloads themselves are not committed.
 
-Source: https://ambientcg.com/view?id=Grass008
-Download: https://ambientcg.com/get?file=Grass008_1K-JPG.zip
-Downloaded 2026-09-07. Official source identifies the material as procedural with bitmap elements (not a site photograph).
+## Lawn: `lawn-color.webp`, `lawn-normal.webp`, `lawn-roughness.webp`, `lawn.json`
 
-The 1K color, OpenGL normal, and roughness maps were converted to WebP for the local viewer. Colors were not replaced or generated. Approximate visual tile scale: 6 ft.
+- Leafy Grass by Charlotte Baglioni (published 2023-05-27), a photoscan 2 m square.
+- Source: https://polyhaven.com/a/leafy_grass
+- Files: https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/leafy_grass/leafy_grass_{diff,nor_gl,rough}_1k.jpg
+- Converted by `scripts/build-deck-textures.ts`. The scan is an autumn lawn with leaf litter, so its colour map is
+  graded to a kept lawn (mean sRGB 77, 97, 49). Each pixel keeps its brightness relative to the scan's mean and 35% of
+  its own tint. The OpenGL normal and roughness maps are only re-encoded as WebP.
+- Replaces Grass 008 (ambientCG, procedural), which the viewer used until Real Life G3.
+
+## House detail: `masonry-detail.webp`, `masonry-normal.webp`, `rock-detail.webp`, `rock-normal.webp`
+
+- Masonry: Concrete Floor 01 by Rob Tuytel (2018-07-16), a 2 m scan. https://polyhaven.com/a/concrete_floor_01
+  Files: https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_floor_01/concrete_floor_01_{diff,nor_gl}_1k.jpg
+- Rock: Rock Face 03 by Dario Barresi and Rico Cilliers (2024-02-06), a 2.7 m scan. https://polyhaven.com/a/rock_face_03
+  Files: https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_face_03/rock_face_03_{diff,nor_gl}_1k.jpg
+- Converted by `scripts/build-deck-textures.ts`. The colour map becomes a grey detail map, linear, with a mean of
+  exactly 0.5; the wall's own colour, doubled, multiplies it, so the wall keeps the colour the customer picked. The
+  OpenGL normal map is only re-encoded. Painted boards get a fine grain made in code instead (`houseSurfaces.ts`).
+
+## Sky: `sky/sky-day-*`, `sky/sky-evening-*`, `sky/sky.json`
+
+- Day: Suburban Field 02 by Jacopo Voltolina (2020-10-22), https://polyhaven.com/a/suburban_field_02.
+  File: https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/8k/suburban_field_02_8k.hdr
+- Evening: Steinbach Field by Adrian Kubasa (2024-01-28), https://polyhaven.com/a/steinbach_field.
+  File: https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/8k/steinbach_field_8k.hdr
+- Converted by `scripts/build-deck-sky.ts`:
+  - The sun and its lens flare (12° round it) are painted out of the day sky with the sky beside it. Its energy
+    becomes the scene's directional light, whose direction, colour and intensity are in `sky.json`. The evening sun is
+    too dim to paint out and stays as the dusk glow.
+  - Both skies are white-balanced so sun plus sky light a horizontal card in neutral grey, and scaled so that card's
+    irradiance is π.
+  - `sky-*-ibl.hdr` is the 1024 × 512 lighting image (Radiance RGBE, run-length encoded).
+  - `sky-*-band.webp` is the 8192 × 1024 horizon from −4° to +41°, stored as the sRGB of radiance ÷ `bandScale`.

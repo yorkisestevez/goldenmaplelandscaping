@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {buildDeckTakeoff,type DeckLevel,type DeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {buildDeckTakeoff,guardRuns,type DeckLevel,type DeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {getHouseContact} from '../src/features/deckcraft/houseContact';
 import {getHousePlacement} from '../src/features/deckcraft/housePlacement';
@@ -35,7 +35,7 @@ function sound(d:DeckData,tag:string){
     const mid={x:parent.offset.x+c.opening.origin.x+c.opening.along.x*c.opening.width/2,z:parent.offset.z+c.opening.origin.y+c.opening.along.y*c.opening.width/2};
     const at={x:mid.x+o.x*c.run,z:mid.z+o.y*c.run},k=Math.abs(o.y)>.5?'x':'z',lo=at[k]-c.opening.width/2+1,hi=at[k]+c.opening.width/2-1;
     // No guard run of the joined section lies across the step or stair where it arrives.
-    const blocked=m.railing.rails.some(r=>Math.abs(r.a.y-r.b.y)<1e-6&&Math.abs(r.a.y-child.top-3)<.01&&Math.abs(r.a[k==='x'?'z':'x']-at[k==='x'?'z':'x'])<1&&Math.abs(r.b[k==='x'?'z':'x']-at[k==='x'?'z':'x'])<1&&Math.max(r.a[k],r.b[k])>lo&&Math.min(r.a[k],r.b[k])<hi);
+    const blocked=guardRuns(m).some(r=>Math.abs(r.a.y-r.b.y)<1e-6&&Math.abs(r.a.y-child.top)<.01&&Math.abs(r.a[k==='x'?'z':'x']-at[k==='x'?'z':'x'])<1&&Math.abs(r.b[k==='x'?'z':'x']-at[k==='x'?'z':'x'])<1&&Math.max(r.a[k],r.b[k])>lo&&Math.min(r.a[k],r.b[k])<hi);
     ok(!blocked,`${tag}: the ${c.to===1?'second':'third'} section's opening lines up with its stair`);
   }
   const lowest=Math.min(...ds.map(l=>l.top)),grade=m.flights.filter(f=>f.kind==='grade');
@@ -63,7 +63,7 @@ for(const side of ['Front','Left','Right'] as const)for(const [h1,h2] of [[36,29
   const m=sound(d,'split level'),step=m.flights.find(f=>f.kind==='connection')!;
   ok(step.risers===1&&Math.abs(step.width-16*12)<.01,'A split level is one full-width step');
   ok(!m.stringers.some(s=>Math.abs(s.a.y-step.start.y+9)<.01&&Math.hypot(s.b.x-s.a.x,s.b.z-s.a.z)<1),'A one-riser step sits on the lower rim: no zero-run stringers');
-  const railsAtStep=m.railing.rails.filter(r=>Math.abs(r.a.y-r.b.y)>1&&[r.a,r.b].some(p=>Math.abs(p.z-step.start.z)<1&&p.y>step.start.y));
+  const railsAtStep=guardRuns(m).filter(r=>Math.abs(r.a.y-r.b.y)>1&&[r.a,r.b].some(p=>Math.abs(p.z-step.start.z)<1&&p.y>=step.start.y-.01));
   ok(railsAtStep.length===0,'No stair guards on a one-step split');
   const plain=buildDeckTakeoff(design({levels:2,level2Position:'Front',height:36,height2:29,width2:16,length2:9}));
   ok(m.quantities.railingLf<plain.quantities.railingLf,'The full-width step removes the guard between the two sections');

@@ -1,14 +1,22 @@
 import { activeWrap, hasPorchWrap, wrapLabourFactor } from './lib/wrapGeometry';
+import { activeCornerChamfers, chamferLabourFactor } from './lib/cornerChamfers';
+import { activeCustomFront, customLabourFactor, customOutline } from './lib/customOutline';
+import { outlineSpans } from './zoneFraming';
 import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock} from './stockPlan';
+import {boardFinishPlan,colourName,darkSlateBorder,parseColourRef,type StockGroup} from './boardFinishes';
+import {DECK_PARTS,partRef,railingFinish,stairTreadKey} from './deckPartFinishes';
+import {inlayCrewDays,PATTERN_LABOUR} from './lib/inlayGeometry';
+import {SKIRTING_STYLE_NAMES,skirtingPlan,skirtingRows} from './skirting';
 import {buildDeckTakeoff,type DeckTakeoff} from './deckTakeoff';
 import {DECK_SETTINGS} from './defaults';
 import {DECKING_CATALOGUE,RAILING_CATALOGUE} from './manufacturerCatalog';
 import {catalogueAccessoryLayout} from './catalogueAccessories';
 import {lightingSystemCheck} from './lightingSystem';
 import {quotedPrivacyScreens} from './privacyScreens';
-import {getHouseContact} from './houseContact';
+import {exposedRim,getHouseContact} from './houseContact';
 import {pictureFrameCompatibility} from './lib/finishedFootprint';
+import {GLASS_FINISH_NAMES,glassRailingName,type FramelessGlassLayout} from './framelessGlass';
 import {buildYardModel,type YardModel} from './yardModel';
 import {buildYardTakeoff,type YardTakeoff} from './yardTakeoff';
 import {stairVeneerLayout} from './stairVeneerLayout';
@@ -110,7 +118,12 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // A wrap-around's fascia follows its real outline; every other shape keeps the original rectangle basis.
   const wrap = activeWrap(data), wrapCorners = wrap ? (wrap.left ? 1 : 0) + (wrap.right ? 1 : 0) : 0;
   const wrapOutlineFt = model.levels[0].footprint.outline.reduce((n, p, i, o) => { const q = o[(i + 1) % o.length]; return n + Math.hypot(q.x - p.x, q.y - p.y) / 12; }, 0);
-  const perimeter1 = wrapCorners ? wrapOutlineFt : 2 * (width + length);
+  // Angled corners replace each corner's two legs with one 45° face (leg × √2) on the same rectangle basis.
+  const chamfers = activeCornerChamfers(data);
+  // A custom outline's fascia is its true outline length (feet), as a wrap-around's is.
+  const custom = activeCustomFront(data);
+  const customOutlineFt = custom ? customOutline(custom, 1).outline.reduce((n, p, i, o) => { const q = o[(i + 1) % o.length]; return n + Math.hypot(q.x - p.x, q.y - p.y); }, 0) : 0;
+  const perimeter1 = wrapCorners ? wrapOutlineFt : custom ? customOutlineFt : chamfers ? 2 * (width + length) - (2 - Math.SQRT2) * (chamfers.leftIn + chamfers.rightIn) / 12 : 2 * (width + length);
   const perimeter2 = levels > 1 ? 2 * (width2 + length2) : 0;
   // A third section adds its own fascia on the same basis as the second.
   const perimeter3 = levels > 2 && data.level3 ? 2 * (data.level3.widthFt + data.level3.lengthFt) : 0;
@@ -134,8 +147,12 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   
   // Total Linear Feet (LF) = (Area / Coverage) * Waste
   const boardStock=deckBoardStock(model,wasteFactor);
-  const separateBorder=data.borderFinish==='Dark Slate'&&model.levels.some(l=>l.boards.some(b=>b.role==='border'));
-  const pricedBoardStock=separateBorder?deckBoardStock({...model,levels:model.levels.map(l=>({...l,boards:l.boards.filter(b=>b.role!=='border')}))},wasteFactor):boardStock;
+  const separateBorder=darkSlateBorder(data)&&model.levels.some(l=>l.boards.some(b=>b.role==='border'));
+  // Accent-colour and inlay boards (boardFinishes.ts) leave the main stock and are ordered as their own boards.
+  const finish=data.boardColours?.length||data.inlays?.length||data.deckFinishes?.border?boardFinishPlan(data,model):null,accent=finish?.pieces?finish:null,separate=finish?.stock.length?finish:null;
+  const accentKeys=new Set(separate?.stock.flatMap(g=>g.boards.map(b=>`${b.level}:${b.index}`)));
+  const boardsWhere=(keep:(level:number,index:number,role?:string)=>boolean,waste=wasteFactor)=>deckBoardStock({...model,levels:model.levels.map((l,li)=>({...l,boards:l.boards.filter((b,bi)=>keep(li,bi,b.role))}))},waste);
+  const pricedBoardStock=separate?boardsWhere((li,bi,role)=>!(separateBorder&&role==='border')&&!accentKeys.has(`${li}:${bi}`)):separateBorder?deckBoardStock({...model,levels:model.levels.map(l=>({...l,boards:l.boards.filter(b=>b.role!=='border')}))},wasteFactor):boardStock;
   const totalDeckingLf = pricedBoardStock.orderedLf;
   const standard_board_length = selectedMaterial.id === 'cedar' ? 12 : 16;
   const finalBoards = pricedBoardStock.orderedBoards;
@@ -163,7 +180,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // Breaker decking and its four-member build-ups are already in the shared
   // board and framing takeoff. These legacy extra-charge fields must stay zero.
   const total_breaker_boards=0,breaker_blocking_lf=0,breaker_screws=0;
-  const breaker_labor_hrs=model.levels.reduce((n,l)=>n+l.breakers.length*(l.footprint.bounds.h/120)*1.5,0);
+  // A breaker beside an angled corner is only as long as the deck is deep at that point.
+  const breaker_labor_hrs=model.levels.reduce((n,l)=>n+(l.angledEdges?.length?l.breakers.reduce((d,x)=>d+outlineSpans(l.footprint.outline,x,'x').reduce((s,[a,b])=>s+b-a,0),0)/120*1.5:l.breakers.length*(l.footprint.bounds.h/120)*1.5),0);
   const unit_cost_per_lf=selectedMaterial.costPerSqft*(boardWidthIn/12);
   const framingSize = data.framingSize || '2x10';
   let framingCostPerLf = 4.50;
@@ -275,7 +293,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     // Stair Multiplier: 25% increase for stair panels
     const levelRailingLf = Math.max(0, effectiveRailingLf - totalStairRailingLf);
     
-    const baseMaterialCost = (levelRailingLf * rCost.material) + (totalStairRailingLf * rCost.material * 1.25);
+    // Frameless glass has no rate: its glass, shoe or spigots and handrail are a supplier quote (below).
+    const baseMaterialCost = railingType === 'Frameless Glass' ? 0 : (levelRailingLf * rCost.material) + (totalStairRailingLf * rCost.material * 1.25);
 
     railingMaterialCost = baseMaterialCost + (railingPostCount * rCost.postCost);
 
@@ -292,7 +311,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     if (height > 71) {
       railingFlags.push('OBC: Deck > 71" (1800mm) - 42" high railing required.');
     }
-    railingFlags.push('OBC: Ensure baluster spacing is < 4" (100mm) for non-climbable standards.');
+    if (railingType === 'Frameless Glass') railingFlags.push(...framelessGlassNotes(model.railing.frameless));
+    else railingFlags.push('OBC: Ensure baluster spacing is < 4" (100mm) for non-climbable standards.');
   }
 
   // Stairs
@@ -300,7 +320,9 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const stringerCount = stairFlights ? quantities.stringers / stairFlights : 0;
   const treadCostKey = selectedMaterial.isComposite ? 'composite' : (selectedMaterial.id === 'cedar' ? 'cedar' : 'pine');
   const totalRisers=(quantities as typeof quantities & {totalRisers?:number}).totalRisers ?? stairFlights*riserCount;
-  const stairMaterialCost = totalRisers * (stairTreadCosts[treadCostKey] || 24);
+  // Treads and risers in their own finishes (deckPartFinishes.ts) take the dearest category of the two.
+  const stairParts=data.deckFinishes?[partRef(data,'treads'),partRef(data,'risers')]:null;
+  const stairMaterialCost = totalRisers * (stairTreadCosts[stairParts?stairTreadKey(treadCostKey,stairParts,stairTreadCosts):treadCostKey] || 24);
   const stairLaborBase = totalRisers / 10; // Existing ten-risers-per-day basis, now from actual flights.
   // STAIR_LABOR_MULTIPLIER is a scalar (1.25). Indexing it by stairType returned
   // undefined and NaN-poisoned every downstream total. Winder/Landing stairs get
@@ -310,7 +332,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     : STAIR_LABOR_MULTIPLIER;
 
   // Labor Engine — Golden Maple model: ONE fully-loaded crew day rate
-  // ($3,000/day all-in, set 2026-07-27) covers wages, burden, equipment,
+  // (CREW_DAY_RATES: $3,700/day all-in, confirmed by the owner 2026-09-23) covers wages, burden, equipment,
   // overhead AND profit. No separate overhead/contingency/profit waterfall.
   const crewDayRate = crewRates[municipality] || 3700;
   
@@ -338,10 +360,10 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   if (shape === 'Multi-corner') complexityMult *= 1.25;
   if (shape === 'Curved') complexityMult *= 1.50;
   complexityMult *= wrapLabourFactor(wrap);
+  complexityMult *= chamferLabourFactor(chamfers);
+  complexityMult *= customLabourFactor(custom);
   
-  if (pattern === 'Diagonal') complexityMult *= 1.20;
-  if (pattern === 'Picture Frame') complexityMult *= 1.25;
-  if (pattern === 'Herringbone') complexityMult *= 1.30;
+  complexityMult *= PATTERN_LABOUR[pattern] ?? 1; // Diagonal ×1.20, Picture Frame ×1.25, Herringbone ×1.30
   
   if (levels === 2) complexityMult *= 1.35;
   if (levels === 3) complexityMult *= 1.60;
@@ -358,10 +380,13 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   if (buildSeason === 'Winter') complexityMult *= 1.40;
   
   if (railingType === 'Cable') complexityMult *= 1.30;
-  if (railingType === 'Glass Panels') complexityMult *= 1.40;
+  // Frameless glass installs on the Glass Panels basis (owner decision 2026-09-25): 20 LF per crew-day above, and ×1.40.
+  if (railingType === 'Glass Panels' || railingType === 'Frameless Glass') complexityMult *= 1.40;
 
   const breaker_crew_days = breaker_labor_hrs / 8;
-  const totalCrewDays = (crewDays + stairLaborBase * stairLaborMultiplier + breaker_crew_days) * complexityMult;
+  // Inlays: fitted edges at the breaker rate, and the inside's pattern factor on its share (lib/inlayGeometry.ts).
+  const inlayDays = inlayCrewDays(model.levels.flatMap(l => l.inlays ?? []), pattern, deckingRate);
+  const totalCrewDays = (crewDays + stairLaborBase * stairLaborMultiplier + breaker_crew_days + inlayDays.total) * complexityMult;
   const manHours = totalCrewDays * 27; // 3-person crew × 9-hour days (GM standard)
   const calculatedLaborCost = totalCrewDays * crewDayRate;
   const finalLaborCost = customLaborCost !== undefined ? customLaborCost : calculatedLaborCost;
@@ -370,6 +395,18 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // specialty). Materials are carried at Carr TRADE cost in MATERIAL_TIERS;
   // this is where contractor margin on materials lives.
   const markupMult = (1 + ((materialMarkup ?? 35) / 100));
+  // Each accent colour at its own collection's rate (null when the collection needs a supplier quote), with the
+  // deck's waste allowance, using the same $/sq ft → $/lin-ft conversion as the main decking.
+  const collectionRate=(id:string):number|null=>{const c=DECKING_CATALOGUE.find(m=>m.id===id);if(!c||c.costPerSqft===null)return null;return (materials.find((m:any)=>m.id===id)?.costPerSqft as number|undefined)??c.costPerSqft;};
+  // Inlay boards use the waste allowance of what they are: a frame is picture-frame work, a fill its own pattern.
+  // The border in its own colour (deckFinishes.border) is priced the same way, in the Deck-part finishes section.
+  const groupRow=(g:StockGroup)=>{
+    const keys=new Set(g.boards.map(b=>`${b.level}:${b.index}`)),stock=boardsWhere((li,bi)=>keys.has(`${li}:${bi}`),g.wasteKey?wasteFactors[g.wasteKey]||wasteFactor:wasteFactor),rate=collectionRate(g.material.id);
+    const part=()=>g.part==='band'?'Inlay band':g.part==='medallion'?'Medallion inlay':g.part==='frame'?'Inlay frame':`Inlay inside, ${g.wasteKey!.toLowerCase()}`;
+    const label=g.kind==='inlay'?`${part()} · ${g.material.name} · ${g.color.name}`:g.kind==='border'?`Border · ${g.material.name} · ${g.color.name}`:`${g.material.name} · ${g.color.name}`;
+    return {group:g,stock,label,cost:rate===null?null:stock.orderedLf*rate*(boardWidthIn/12)*markupMult};
+  };
+  const accentRows=(separate?.stock??[]).filter(g=>g.kind!=='border').map(groupRow),borderRows=(separate?.stock??[]).filter(g=>g.kind==='border').map(groupRow);
   const m_deckingCost = deckingCost * markupMult;
   const m_framingCost = framingCost * markupMult;
   const m_foundationCost = foundationCost * markupMult;
@@ -474,7 +511,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       description: 'Ordered stock from the modeled field, border and breaker cuts, including the existing waste allowance.',
       total: m_deckingCost + m_breaker_board_cost + m_breaker_blocking_cost,
       items: [
-        { name: selectedMaterial.name, spec: `${pattern}; ${pricedBoardStock.bins.reduce((n,b)=>n+b.cutsIn.length,0)} installed pieces, ${pricedBoardStock.spareBoards} spare stock boards${separateBorder?'; contrast border priced separately':''}`, qty: finalBoards, unit: 'boards', cost: m_deckingCost },
+        { name: selectedMaterial.name, spec: `${pattern}; ${pricedBoardStock.bins.reduce((n,b)=>n+b.cutsIn.length,0)} installed pieces, ${pricedBoardStock.spareBoards} spare stock boards${separateBorder?'; contrast border priced separately':''}${separate?`; ${[accent?'accent-colour':'',finish!.inlayPieces?'inlay':'',finish!.borderPieces?'border':''].filter(Boolean).join(' and ')} boards priced separately`:''}`, qty: finalBoards, unit: 'boards', cost: m_deckingCost },
         ...(false ? [
           { name: `Breaker Board Rows (${breaker_rows} rows)`, spec: `${total_breaker_boards} boards × ${standard_board_length}ft — perpendicular to field, full deck width`, qty: total_breaker_boards, unit: 'boards', cost: m_breaker_board_cost },
           { name: `Breaker Row Blocking (PT 2×10)`, spec: `${breaker_rows} rows × joist bay blocking @ ${(joistSpacing / 12 - 0.1).toFixed(1)}ft each`, qty: Math.ceil(breaker_blocking_lf / 8), unit: 'pcs', cost: m_breaker_blocking_cost }
@@ -498,7 +535,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       icon: '🚧',
       description: 'Guardrails and handrails required by code or selected for aesthetics.',
       total: m_railingMaterialCost + (railingHardwareCost * markupMult),
-      items: [
+      items: railingType === 'Frameless Glass' ? framelessGlassItems(model.railing.frameless) : [
         { name: railingType, spec: `Kits (${railingSectionCount} × ${railingCosts[railingType]?.spacing || 6}ft)`, qty: railingSectionCount, unit: 'kits', cost: m_railingMaterialCost - (railingPostCount * (railingCosts[railingType]?.postCost || 0) * markupMult) },
         { name: 'Railing Posts', spec: 'W/ Caps & Skirts', qty: railingPostCount, unit: 'ea', cost: railingPostCount * (railingCosts[railingType]?.postCost || 0) * markupMult },
         { name: 'Railing Hardware', spec: 'Brackets (4/section) & Caps', qty: railingSectionCount * 4, unit: 'ea', cost: railingHardwareCost * markupMult },
@@ -510,7 +547,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       description: 'Stair treads, risers, and stringer materials. Build labour is in the Labour section.',
       total: m_stairMaterialCost,
       items: totalRisers > 0 ? [
-        { name: 'Stair Treads & Stringers', spec: `${quantities.stringers} stringers at maximum ${model.stairSupport.spacingIn} in centres; ${quantities.stairTreads} treads; ${quantities.riserBoardPieces} closed riser pieces. Existing per-riser assembly allowance includes these materials; no duplicate riser charge.`, qty: totalRisers, unit: 'risers', cost: m_stairMaterialCost },
+        { name: 'Stair Treads & Stringers', spec: `${quantities.stringers} stringers at maximum ${model.stairSupport.spacingIn} in centres; ${quantities.stairTreads} treads; ${quantities.riserBoardPieces} closed riser pieces. Existing per-riser assembly allowance includes these materials; no duplicate riser charge.${stairParts?.some(Boolean)?` ${stairParts.map((r,i)=>r?`${i?'Risers':'Treads'} in ${colourName(r)}.`:'').filter(Boolean).join(' ')}`:''}`, qty: totalRisers, unit: 'risers', cost: m_stairMaterialCost },
       ] : []
     },
     {
@@ -521,7 +558,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       items: [
         {
           name: 'Installation Labour',
-          spec: `${totalCrewDays.toFixed(1)} crew-days × $${crewDayRate.toLocaleString()}/day`,
+          spec: `${totalCrewDays.toFixed(1)} crew-days × $${crewDayRate.toLocaleString()}/day${inlayDays.total > 0 ? `; includes ${(inlayDays.total * complexityMult).toFixed(1)} crew-days for inlays (fitted edges at the breaker-board rate, the inside at its pattern's labour factor)` : ''}`,
           qty: Math.round(totalCrewDays * 10) / 10,
           unit: 'days',
           cost: finalLaborCost,
@@ -591,7 +628,33 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   }
   const catalogueRail=RAILING_CATALOGUE.find(r=>r.id===data.catalogueRailingId);
   if(catalogueRail){requireSection('Railing System',catalogueRail.name);flags.push(catalogueRail.notes);}
+  if(railingType==='Frameless Glass')requireSection('Railing System',`${glassRailingName(data)} (supplier quote)`);
+  // A railing colour (deckPartFinishes.ts) leaves the rate as it is; the supplier confirms availability and any premium.
+  const railColour=railingFinish(data);
+  if(railColour)flags.push(`Railing colour ${railColour.colour} (${railColour.system.name}): the railing rate is unchanged${railColour.unconfirmed?'. This line is not confirmed as sold in Canada':''}; confirm availability and any colour premium with the supplier.`);
   if(separateBorder){const lf=model.levels.reduce((n,l)=>n+l.boards.filter(b=>b.role==='border').reduce((s,b)=>s+b.length/12,0),0);quoteRequired.push('Deckorators Dark Slate picture-frame boards');sections.push({title:'Picture-frame border finish',icon:'🪵',quoteRequired:true,total:0,items:[{name:'Deckorators Dark Slate',spec:'Dedicated border product; installed cuts are in the stock schedule. Supplier board lengths, order allowance and pricing require confirmation.',qty:Math.ceil(lf*10)/10,unit:'lf',cost:null}]});}
+  if(accentRows.length){
+    // Accent boards: real product colours ordered as their own boards; a collection without a rate is a supplier quote.
+    const unpriced=accentRows.filter(r=>r.cost===null);
+    quoteRequired.push(...unpriced.map(r=>`${r.label} ${r.group.kind==='accent'?'accent boards':'boards'}`));
+    const inlaid=accentRows.some(r=>r.group.kind==='inlay');
+    sections.push({title:inlaid?'Accent colours & inlays':'Accent-colour boards',icon:'🎨',description:inlaid?`Accent-colour and inlay boards, each colour ordered as its own stock boards at its collection’s rate. ${[accentRows.some(r=>r.group.part==='frame'||r.group.part==='inside')&&'Inlay frames carry the picture-frame waste allowance and inlay insides their own pattern’s.',accentRows.some(r=>r.group.part==='band')&&'Bands carry the straight-board allowance.',accentRows.some(r=>r.group.part==='medallion')&&'Medallions carry the herringbone allowance, for their angled cuts.'].filter(Boolean).join(' ')} Colours vary by screen; confirm with samples.`:'Boards in a second colour, ordered as their own stock boards at their collection’s rate with the same waste allowance. Colours vary by screen; confirm with samples.',quoteRequired:unpriced.length>0||undefined,total:accentRows.reduce((n,r)=>n+(r.cost??0),0),
+      items:accentRows.map(r=>({name:r.label,spec:`${r.group.boards.length} ${r.group.kind==='inlay'?'inlay':'accent-colour'} pieces, ${r.stock.spareBoards} spare stock boards${r.cost===null?'; supplier quote required':''}`,qty:r.stock.orderedBoards,unit:'boards',cost:r.cost}))});
+    // Fitting a second colour has no labour rate in the price book yet: listed for a builder quote, never $0.
+    const labour=sections.find(s=>s.title==='Labour (Construction & Build)');
+    if(accent&&labour){labour.quoteRequired=true;labour.items.push({name:'Accent-colour board labour',spec:`Builder quote required: laying out and fitting ${accent!.pieces} accent-colour board${accent!.pieces===1?'':'s'} has no rate in the price book yet. The priced labour covers the deck as one colour.`,qty:accent!.pieces,unit:'boards',cost:null});}
+    if(accent)quoteRequired.push('Accent-colour board labour (builder quote)');
+    if(accentRows.some(r=>r.group.material.id.split('_')[0]!==deckingMaterial.split('_')[0]))flags.push('Accent boards from a different manufacturer than the decking: confirm the board gap, hidden fasteners and warranty with the supplier before ordering.');
+  }
+  // Medallions: their boards and solid blocking are priced; cutting and fitting one has no labour rate in the price
+  // book yet, so it is listed for a builder quote, never $0.
+  const medallions=model.levels.flatMap(l=>(l.inlays??[]).filter(p=>p.status==='ok'&&p.quote));
+  if(medallions.length){
+    const labour=sections.find(s=>s.title==='Labour (Construction & Build)'),n=medallions.length;
+    if(labour){labour.quoteRequired=true;labour.items.push({name:'Medallion inlay labour',spec:`Builder quote required: laying out, cutting and fitting ${n===1?'a medallion inlay':`${n} medallion inlays`} (${medallions.reduce((a,p)=>a+p.fillSqft,0).toFixed(1)} sq ft inside the frame${n===1?'':'s'}) has no rate in the price book yet. The priced labour covers the deck without ${n===1?'it':'them'}; the boards and blocking are priced.`,qty:n,unit:n===1?'medallion':'medallions',cost:null});}
+    quoteRequired.push('Medallion inlay labour (builder quote)');
+  }
+  if(finish?.unmatched.length){const n=finish.unmatched.length;flags.push(`${n} accent-colour choice${n===1?' no longer lines':'s no longer line'} up with a board after a design change (or no longer suit${n===1?'s':''} this decking), so ${n===1?'it is':'they are'} not shown or priced. Review them in the accent boards panel.`);}
   const catalogueAccessories=catalogueAccessoryLayout(data,model);
   if(catalogueAccessories.rows.length){
     const rows=catalogueAccessories.rows.filter(r=>r.qty>0);
@@ -601,6 +664,22 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     if(data.catalogueAccessories?.includes('tt_protac_flashing')){const section=sections.find(s=>s.title==='Add-ons & Extras');if(section){for(const item of section.items)if(item.name==='Ledger Flashing')item.cost=null;section.total=section.items.reduce((n,i)=>n+(i.cost??0),0);}}
   }
   if(catalogueMaterial?.availabilityNote)flags.push(catalogueMaterial.availabilityNote);
+  // Deck-part finishes (deckPartFinishes.ts): the border in its own colour, ordered as its own boards at its collection's
+  // rate; fascia boards over the exposed rim, a supplier quote (no fascia rate in the price book; fitting is in the
+  // labour); and treads or risers from a line without a rate make the stairs a supplier quote. Never $0.
+  if(data.deckFinishes){
+    const fascia=partRef(data,'fascia'),fasciaLf=fascia&&!data.catalogueAccessories?.some(id=>id==='tt_fascia'||id==='dk_fascia')?exposedRim(data,model).reduce((n,r)=>n+Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z)/12,0):0;
+    const items:EstimateResult['sections'][number]['items']=borderRows.map(r=>({name:r.label,spec:`${r.group.boards.length} border pieces, ${r.stock.spareBoards} spare stock boards${r.cost===null?'; supplier quote required':''}`,qty:r.stock.orderedBoards,unit:'boards',cost:r.cost}));
+    if(fascia&&fasciaLf>0)items.push({name:`Fascia · ${colourName(fascia)}`,spec:'Over the rim the house does not cover. Supplier quote: the price book has no fascia rate; fitting is in the labour.',qty:Math.ceil(fasciaLf*10)/10,unit:'lf',cost:null});
+    if(items.length){
+      sections.push({title:'Deck-part finishes',icon:'🎨',description:'Deck parts in their own real product colour. Colours vary by screen; confirm with samples.',quoteRequired:items.some(i=>i.cost===null)||undefined,total:items.reduce((n,i)=>n+(i.cost??0),0),items});
+      quoteRequired.push(...borderRows.filter(r=>r.cost===null).map(r=>`${r.label} boards`),...(fasciaLf>0?['Fascia boards (supplier quote)']:[]));
+    }
+    const quoted=stairParts?.map(r=>r&&parseColourRef(r)!.material).find(m=>m&&m.costPerSqft===null);
+    if(quoted)requireSection('Stairs',`Stair treads and risers in ${quoted.name}`);
+    const brand=(id:string)=>id.split('_')[0],mixed=DECK_PARTS.some(p=>{const r=partRef(data,p);return !!r&&brand(parseColourRef(r)!.material.id)!==brand(deckingMaterial);});
+    if(mixed)flags.push('Deck parts from another manufacturer than the decking: confirm fastener compatibility with the supplier.');
+  }
   if(veneer.applicable){
     if(veneer.status==='modeled-straight')flags=flags.filter(s=>!s.includes('displayed stringers and closed risers do not provide that complete assembly'));
     flags.push(...veneer.issues);
@@ -613,6 +692,14 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     const labour=sections.find(s=>s.title==='Labour (Construction & Build)');
     if(labour){labour.quoteRequired=true;labour.items.push({name:'Porch-wrap labour premium',spec:'Builder quote required: the priced labour uses the two-corner wrap factor (×1.50); the extra porch-wrap labour is quoted separately.',qty:1,unit:'allowance',cost:null});}
     quoteRequired.push('Porch-wrap labour premium (builder quote)');
+  }
+  // Skirting under the deck (skirting.ts): the face, backing, access panels and labour, every one a quote. The price
+  // book has no skirting rates, so nothing here is priced or $0; setting a rate later is a price-book change.
+  const skirting=data.skirting?skirtingPlan(data,model):null;
+  if(skirting){
+    const rows=skirtingRows(skirting);
+    if(rows.length){sections.push({title:'Deck skirting',icon:'🧱',quoteRequired:true,total:0,description:`${SKIRTING_STYLE_NAMES[skirting.style]} under the deck, listed for a builder quote: the price book has no skirting rates yet, so it is not in the priced total.`,items:rows});quoteRequired.push('Deck skirting (builder quote)');}
+    flags.push(...skirting.notes);
   }
   flags.push(...yardTakeoff.warnings);
   for(const row of yardTakeoff.sections){
@@ -642,6 +729,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const stockRow=(name:string,stock:ReturnType<typeof deckBoardStock>):StockScheduleRow=>({name,section:`${boardWidth} in decking`,stockLengthIn:model.stockLength,orderedPieces:stock.orderedBoards,cutsIn:stock.bins.map(b=>b.cutsIn),unresolvedIn:stock.unresolved,installedLf:stock.installedLf,orderedLf:stock.orderedLf});
   const boardSchedules=[stockRow(`${selectedMaterial.name} — ${pricedBoardStock.spareBoards} spare boards included`,pricedBoardStock)];
   if(separateBorder){const stock=deckBoardStock({...model,levels:model.levels.map(l=>({...l,boards:l.boards.filter(b=>b.role==='border')}))},wasteFactor);boardSchedules.push(stockRow(`Dark Slate border — quote required; ${stock.spareBoards} spare boards allowed`,stock));}
+  for(const r of [...accentRows,...borderRows])boardSchedules.push(stockRow(`${r.label} ${r.group.kind==='accent'?'accent boards':'boards'} — ${r.cost===null?'quote required; ':''}${r.stock.spareBoards} spare boards included`,r.stock));
   if(veneer.woodBoxes.length){const stock=planStock(veneer.woodBoxes.map(b=>b.w),192);boardSchedules.push({name:'Flat 2×6 stair veneer supports — confirm inclusion in assembly allowance',section:'1.5 × 5.5 in framing',stockLengthIn:192,orderedPieces:stock.bins.length,cutsIn:stock.bins.map(b=>b.cutsIn),unresolvedIn:stock.unresolved,installedLf:stock.installedLf,orderedLf:stock.purchasedLf});}
 
   return {
@@ -675,4 +763,29 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       positions2: breaker_positions2
     } : undefined
   };
+}
+
+/** A frameless glass railing's lines: quantities only, costed as a supplier quote (requireSection nulls them). */
+function framelessGlassItems(layout?:FramelessGlassLayout){
+  if(!layout)return [];
+  const q=layout.quantities,finish=GLASS_FINISH_NAMES[layout.finish],tenth=(n:number)=>Math.ceil(n*10)/10;
+  const sizes=q.panelSizes.slice(0,4).map(s=>`${s.count} × ${s.widthIn} × ${s.heightIn} in`).join(', ')+(q.panelSizes.length>4?', …':'');
+  const raked=layout.shoes.some(s=>s.raked);
+  return [
+    {name:'Frameless glass panels',spec:`1/2 in safety glass, ${tenth(q.glassSqft)} sq ft: ${sizes}`,qty:q.panels,unit:'ea',cost:0},
+    ...(layout.mount==='Spigots'?[{name:'Glass spigots',spec:`${finish}; 2 per panel${layout.spigots.some(s=>s.side)?', side standoffs on the stairs':''}`,qty:q.spigots,unit:'ea',cost:0}]
+      :[{name:layout.mount==='Fascia-mount base shoe'?'Fascia-mount base shoe':'Top-mount base shoe',spec:`${finish}; ${q.shoeEndCaps} end caps${raked?'; raked on the stair stringers':''}`,qty:tenth(q.shoeLf),unit:'lf',cost:0}]),
+    ...(q.handrailLf>0?[{name:'Glass-mounted handrail',spec:`1.66 in round, ${finish}; ${q.handrailBrackets} glass brackets, 35 in above the nosings`,qty:tenth(q.handrailLf),unit:'lf',cost:0}]:[]),
+  ];
+}
+/** Review notes for a frameless glass railing: what the supplier and the permit reviewer confirm. */
+function framelessGlassNotes(layout?:FramelessGlassLayout){
+  if(!layout)return [];
+  return [
+    'Frameless glass railing: the glass, shoe or spigots and handrail are a supplier quote (the price book has no frameless glass rate). Installation labour uses the Glass Panels basis.',
+    'Frameless glass: use safety glass (tempered or laminated). With no posts or top rail, the glass type and thickness and the shoe or spigots, with their anchors and the blocking behind them, need the supplier’s engineered load rating. Confirm with the supplier and the permit reviewer.',
+    'Frameless glass: the supplier confirms whether laminated glass or a top cap rail is needed so the guard still stands if a panel breaks.',
+    ...(layout.mount==='Fascia-mount base shoe'?['Fascia-mounted glass: add solid blocking behind the rim at every shoe anchor.']:[]),
+    ...(layout.handrails.length?['Stairs with frameless glass: a graspable handrail about 34 to 38 in above the nosings is shown on the glass; the glass itself is not a handrail. Confirm the handrail with the permit reviewer.']:[]),
+  ];
 }

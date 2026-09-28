@@ -8,7 +8,9 @@ import {addHouseOpening,MAX_HOUSE_OPENINGS,OPENING_PRESETS,openableWalls,opening
  * Doors and windows, from any step: add one in any style on any visible wall, pick one (here or by
  * clicking it in 3D) to restyle or remove it. Looks only; nothing here changes the price.
  */
-export default function HouseOpeningsBar({data,selectedId,onSelect,onChange,onEditDetails}:{data:DeckData;selectedId:string;onSelect:(id:string)=>void;onChange:(patch:Partial<DeckData>)=>void;onEditDetails:()=>void}){
+export default function HouseOpeningsBar({data,selectedId,onSelect,onChange,onEditDetails,exteriorOpen=false,onOpenExterior}:{data:DeckData;selectedId:string;onSelect:(id:string)=>void;onChange:(patch:Partial<DeckData>)=>void;onEditDetails:()=>void;
+  /** Opens (or closes) the exterior studio: claddings, roofs and colours. */
+  exteriorOpen?:boolean;onOpenExterior?:()=>void}){
   const house=getHouseConfig(data),walls=openableWalls(data),selected=house.openings.find(o=>o.id===selectedId);
   const hasGarage=getHouseBlocks(data).some(b=>b.kind==='garage');
   const [presetKey,setPresetKey]=useState('Window:Double-hung');
@@ -20,7 +22,7 @@ export default function HouseOpeningsBar({data,selectedId,onSelect,onChange,onEd
   const add=()=>{const {houseConfig,added}=addHouseOpening(data,presetKey,wallId);if(!added)return;onChange({houseConfig});onSelect(added.id);};
   const group=(type:'Door'|'Window'|'Garage',label:string)=><optgroup label={label}>{OPENING_PRESETS.filter(p=>p.type===type).map(p=><option key={p.key} value={p.key}>{p.label}</option>)}</optgroup>;
   return <section className="dd-openings" aria-label="House doors and windows">
-    <div className="dd-openings-head"><strong>Doors &amp; windows</strong><span>{house.openings.length} of {MAX_HOUSE_OPENINGS} · looks only, never priced</span></div>
+    <div className="dd-openings-head"><strong>Doors &amp; windows</strong><span>{house.openings.length} of {MAX_HOUSE_OPENINGS} · looks only, never priced</span>{onOpenExterior&&<button type="button" className="dd-secondary dd-exterior-open" aria-expanded={exteriorOpen} onClick={onOpenExterior}>Exterior finishes</button>}</div>
     <div className="dd-openings-row">
       <label className="dd-field"><span>Add</span><select aria-label="Style of the new door or window" value={presetKey} onChange={e=>setPresetKey(e.target.value)}>{group('Door','Doors')}{group('Window','Windows')}{hasGarage&&group('Garage','Garage doors')}</select></label>
       <label className="dd-field"><span>On</span><select aria-label="Wall for the new door or window" value={wallId} onChange={e=>setWall(e.target.value)}>{walls.map(w=><option key={w.id} value={w.id}>{wallLabel(w.id,house)}</option>)}</select></label>

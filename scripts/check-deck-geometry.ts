@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {buildDeckTakeoff,guardRuns} from '../src/features/deckcraft/deckTakeoff';
 import {getFootprint,getStairPlacement} from '../src/features/deckcraft/lib/deckGeometry';
 import {getHouseContact} from '../src/features/deckcraft/houseContact';
 const inside=(p:{x:number;y:number},poly:{x:number;y:number}[])=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++)if((poly[i].y>p.y)!==(poly[j].y>p.y)&&p.x<(poly[j].x-poly[i].x)*(p.y-poly[i].y)/(poly[j].y-poly[i].y)+poly[i].x)c=!c;return c;};
@@ -63,7 +63,7 @@ for(const deckType of ['Attached','Add-on'] as const)for(const stairFlights of [
   const d={...DEFAULT_DECK,deckType,stairPosition:'Back' as const,stairFlights},fp=getFootprint(d),contact=getHouseContact(d,fp),model=buildDeckTakeoff(d);
   assert(contact.contacts.length===1,'The main deck has one ledger contact');
   for(const f of model.flights)assert(f.start.z>1,'No stair flight starts on the house wall');
-  assert(!model.railing.rails.some(r=>contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z})),'No railing along the ledger');
+  assert(!guardRuns(model).some(r=>contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z})),'No railing along the ledger');
   cases++;
 }
 console.log(`DECK GEOMETRY OK — ${cases} polygon, herringbone, landing/winder, connection, rise and framing-stock scenarios.`);

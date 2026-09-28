@@ -3,6 +3,7 @@ import type {DeckTakeoff,V3} from './deckTakeoff';
 import {boardOutline} from './lib/polygonCuts';
 import {getHouseContact} from './houseContact';
 import {distanceToSegment} from './lib/wrapGeometry';
+import {isChamferEdgeId} from './lib/cornerChamfers';
 export type Fastener={x:number;y:number;z:number;axis:'up'|'front'};
 const key=(p:V3)=>[p.x,p.y,p.z].map(n=>n.toFixed(2)).join(':');
 const unique=(points:V3[])=>[...new Map(points.map(p=>[key(p),p])).values()];
@@ -22,9 +23,11 @@ export function getHardwareLayout(data:DeckData,model:DeckTakeoff){
       const yaw=Math.atan2(j.b.x-j.a.x,j.b.z-j.a.z);
       return [...(j.spliceStart?[]:[{...j.a,yaw}]),...(j.spliceEnd?[]:[{...j.b,yaw:yaw+Math.PI}])].filter(p=>!l.joists.some(other=>other!==j&&[other.a,other.b].some(q=>Math.hypot(p.x-q.x,p.z-q.z)<.1)));
     });
-    const hips=l.hips??[];if(!hips.length)return ends;
+    // So does each joist end against an angled front corner's rim (chosen by edge id, never by angle).
+    const o=l.footprint.outline,angled=l.kind==='deck'&&l.index===0?o.flatMap((a,i)=>isChamferEdgeId(l.footprint.edgeIds?.[i])?[{a,b:o[(i+1)%o.length]}]:[]):[];
+    const hips=l.hips??[];if(!hips.length&&!angled.length)return ends;
     const straight:typeof ends=[];
-    for(const p of ends)(hips.some(h=>distanceToSegment({x:p.x-l.offset.x,y:p.z-l.offset.z},h.a,h.b)<2)?skewedHangers:straight).push(p);
+    for(const p of ends){const q={x:p.x-l.offset.x,y:p.z-l.offset.z};([...hips,...angled].some(h=>distanceToSegment(q,h.a,h.b)<2)?skewedHangers:straight).push(p);}
     for(const h of hips)skewedHangers.push({x:h.a.x+l.offset.x,y:l.top-1-(l.joists[0]?.depth??9.25)/2,z:h.a.y+l.offset.z,yaw:Math.atan2(h.b.x-h.a.x,h.b.y-h.a.y)});
     return straight;
   });
