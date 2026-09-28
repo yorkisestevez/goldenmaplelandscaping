@@ -117,7 +117,7 @@ export default function StaynerLanding() {
     <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
         title="Landscaping & Hardscape Contractor Stayner"
-        description="Premium interlocking, decking & landscape design for Stayner homeowners. Locally owned, Barrie-based. 5-star rated. Book your free Stayner consultation today."
+        description="Premium interlocking, decking & landscape design for Stayner homeowners. Locally owned and Barrie-based. Book your Stayner project consultation today."
         canonical="https://goldenmaplelandscaping.ca/locations/stayner"
         schema={localBusinessSchema}
       />

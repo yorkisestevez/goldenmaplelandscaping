@@ -210,13 +210,14 @@ HARD CONSTRAINTS:
 - 5 to 8 FAQs.
 - Internal links: place at least 3 anchor links pointing to paths from this list (use only these paths, exactly as written): ${linkHints}, /contact, ${estimatorPath}, /portfolio
 - The cost-estimator link (${estimatorPath}) MUST appear in the cta_paragraph${estimatorPath.includes('?type=') ? ` — it opens the calculator with this topic's project type already selected, so anchor it with copy like "price out your own ${topic.category.toLowerCase()} project" rather than generic "click here"` : ' — this topic has no matching prefill, so the link opens the calculator on its first step; anchor it with general copy like "get a real price on your project" rather than claiming a preselected type'}.
-- **Numeric specificity (critical for SEO + AI citation):** every section should contain at least one specific number, range, measurement, percentage, or brand/product name. Generic statements like "many homeowners" or "high-quality materials" are banned — replace with "homeowners in Bayfield-Street neighbourhoods" or "ICPI-rated 80mm pavers".
+- **Numeric specificity (critical for SEO + AI citation):** every section should contain at least one specific number, range, measurement, percentage, or brand/product name. Generic statements like "many homeowners" or "high-quality materials" are banned — replace with "homeowners in Bayfield-Street neighbourhoods" or "80mm Permacon pavers on 3/4\" clear stone".
 - **Featured-snippet optimization:** FAQ answers and section opening sentences should be self-contained — readable as an extracted quote without surrounding context. Lead with the answer, then explain.
 - Brand voice: operator-honest, anti-corporate, specific. No "industry-leading", "passionate", "dedicated team", "state-of-the-art", "in today's world", "look no further", "elevate your", "transform your".
 - Use Canadian English (metre, colour, neighbour, kilometre, centimetre).
 - No fake stats. No fake testimonials. If you need a number, give a range like "$X-$Y per square foot" and say what drives the variance.
 - Reference real local context: Lake Simcoe, freeze-thaw cycles, Barrie's clay soil, Highway 400 corridor, Bayfield Street, City of Barrie bylaws, Simcoe County weather. Don't fabricate addresses or named clients.
-- Founder is Yorkis Estevez. Company is Golden Maple Landscaping (founded 2020). Service area: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood. We install Permacon, Unilock, Techo-Bloc pavers + TimberTech composite decking. We use 12-16" compacted clear stone bases (not granular A). Supplier: Carr Landscape Depot in Barrie. WSIB certified, $5M liability, 5.0 Google rating.
+- Founder is Yorkis Estevez, Founder & Lead Builder. Company is Golden Maple Landscaping. Service area: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood. We install Permacon, Unilock, Techo-Bloc pavers + TimberTech composite decking. Bases are compacted 3/4" clear stone over geotextile with HPB bedding (not granular A). Base DEPTH is project-specific (soil, use, drainage) — never state one universal depth. Supplier: Carr Landscape Depot in Barrie.
+- NEVER write any unverified trust claim — the build's claim gate (scripts/claim-rules.json) rejects them: Google ratings, star scores or review counts; WSIB status; insurance dollar amounts; warranty lengths; installer certifications, manufacturer program or dealer status, or trade-association memberships; no-charge consultations or site visits; design-fee credits; promises to handle permits; founding year or project counts.
 - Don't mention competitors as superior. Don't recommend specific products outside this list.
 
 ALLOWED hero image paths (pick the single most relevant one):
@@ -361,4 +362,4 @@ async function generateDraft({ topicId = null } = {}) {
 
 // parseJson is exported for its regression test — the unclosed-fence bug it
 // guards silently killed the Nudgel blog entirely (2026-08-01).
-module.exports = { generateDraft, validateDraft, parseJson, ALLOWED_HEROES, estimatorPathFor };
+module.exports = { generateDraft, validateDraft, parseJson, buildPrompt, ALLOWED_HEROES, estimatorPathFor };

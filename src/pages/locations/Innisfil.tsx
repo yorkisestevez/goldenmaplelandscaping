@@ -113,7 +113,7 @@ export default function InnisfilLanding() {
     <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
         title="Landscaping & Hardscape Contractor Innisfil"
-        description="Premium interlocking, decking & landscape design for Innisfil homeowners. Locally owned, Barrie-based. 5-star rated. Book your free Innisfil consultation today."
+        description="Premium interlocking, decking & landscape design for Innisfil homeowners. Locally owned and Barrie-based. Book your Innisfil project consultation today."
         canonical="https://goldenmaplelandscaping.ca/locations/innisfil"
         schema={localBusinessSchema}
       />

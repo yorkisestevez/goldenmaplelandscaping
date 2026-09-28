@@ -128,7 +128,7 @@ export default function BackyardEntertainingWasagaBeach() {
         </div>
       </div>
 
-      <AuthorBio bio={"Yorkis Estevez founded Golden Maple Landscaping in 2020 and has since built hardscape and outdoor living projects across Barrie, Wasaga Beach, Innisfil, and the broader Georgian Bay corridor. The company holds WSIB certification, $5M commercial liability coverage, and a five-star score on Google. Yorkis brings a contractor's directness to design — recommending what a specific site actually warrants, not the largest possible invoice."} />
+      <AuthorBio bio={"Yorkis Estevez founded Golden Maple Landscaping in 2020 and has since built hardscape and outdoor living projects across Barrie, Wasaga Beach, Innisfil, and the broader Georgian Bay corridor. Yorkis brings a contractor's directness to design — recommending what a specific site actually warrants, not the largest possible invoice."} />
 
       <div dangerouslySetInnerHTML={{ __html: "<p>If you are planning an outdoor entertaining space in Wasaga Beach or anywhere across Simcoe County, we are happy to walk your property and give you a straight read on what the site can support. We serve Wasaga Beach, Barrie, Innisfil, Collingwood, Midland, and the Georgian Bay corridor. <a href='/contact'>Book a site consultation</a> or use the <a href='/cost-estimator'>project cost estimator</a> to build a realistic budget before we meet.</p>" }} />
     </BlogPostLayout>
