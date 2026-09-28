@@ -75,6 +75,22 @@ async function planTool(page:Page,name:'Size & place'|'Shape & points'|'Stairs'|
 const stairMark=(page:Page,edge:string)=>drawing(page).getByRole('button',{name:`Put the stairs on the ${edge}`,exact:true});
 /** Every request for the 3D viewer's chunk (three.js), from now on. */
 const viewerRequests=(page:Page)=>{const urls:string[]=[];page.on('request',r=>{if(/Deck3DViewer-/.test(r.url()))urls.push(r.url());});return urls;};
+/** Scrolls a control to the middle of the screen, clear of the sticky header and price bar, and lets layout settle.
+ * Pointer input by coordinates does not scroll by itself, and the price bar covers the foot of the drawing. */
+const scrollToCentre=(control:Locator)=>control.evaluate(el=>{el.scrollIntoView({block:'center'});return new Promise<void>(done=>requestAnimationFrame(()=>requestAnimationFrame(()=>done())));});
+/** The Inlays panel in Boards & finish. The plan's inlay controls repeat the selected inlay's card, so this is scoped. */
+const inlayPanel=(page:Page)=>sectionBody(page,'Boards & finish').getByRole('region',{name:'Inlays'});
+/** Add only arms an inlay; it is placed where the visitor taps the deck. Taps a plan point, in inches from the default
+ * 16 × 12 ft deck's corner at the house (by default its middle, where Add used to put an inlay), and waits for the
+ * placement to finish. */
+async function placeInlay(page:Page,point={x:96,y:72}){
+  const surface=page.getByLabel('Inlay placement surface',{exact:true});
+  await scrollToCentre(surface);
+  const at=await surface.evaluate((el,p)=>{const q=new DOMPoint(p.x,p.y).matrixTransform((el as SVGSVGElement).getScreenCTM()!);return {x:q.x,y:q.y,onSurface:document.elementFromPoint(q.x,q.y)===el};},point);
+  expect(at.onSurface,'the tap lands on the plan, clear of the price bar and other controls').toBe(true);
+  await page.mouse.click(at.x,at.y);
+  await expect(surface).toHaveCount(0);
+}
 /** The accent-board paint tool's chip over the drawing. */
 const paintChip=(page:Page)=>page.locator('.dd-paint-chip');
 /** The save, import, share, undo, redo and start-over tools. */
@@ -184,8 +200,8 @@ async function openDesigner(page:Page){
   await expand(preview(page),'Start with a shape');
   return problems;
 }
-async function setNumber(page:Page,label:string,value:number){
-  const input=page.getByLabel(label,{exact:true});
+async function setNumber(scope:Page|Locator,label:string,value:number){
+  const input=scope.getByLabel(label,{exact:true});
   await input.fill(String(value));await input.press('Enter');
 }
 
@@ -607,12 +623,18 @@ test('adds a framed inlay, fits it to the deck, and shows it and its framing on 
   const problems=await openDesigner(page);
   const before=await price(page).textContent();
   await openSection(page,'Boards & finish');
-  const inlays=page.getByRole('region',{name:'Inlays'});
+  const inlays=inlayPanel(page);
   await inlays.getByRole('button',{name:'Add a framed rectangle'}).click();
+  // Add changes nothing until the inlay is placed on the deck.
+  await expect(page.getByText('Choose a position on the deck',{exact:true})).toBeVisible();
+  await expect(price(page)).toHaveText(before??'');
+  await placeInlay(page);
   await expect(inlays.getByRole('status')).toContainText('Built:');
   await expect(price(page)).not.toHaveText(before??'');
-  await setNumber(page,'Inlay 1 width',30);
-  await expect(page.getByLabel('Inlay 1 width',{exact:true})).toHaveValue('20');
+  // The preset's inside runs front to back; the summary names the inside the visitor picks.
+  await inlays.getByLabel('Inlay 1 inside boards',{exact:true}).selectOption('Herringbone');
+  await setNumber(inlays,'Inlay 1 width',30);
+  await expect(inlays.getByLabel('Inlay 1 width',{exact:true})).toHaveValue('20');
   await expect(inlays.getByRole('status')).toContainText('Not built: It reaches past the deck’s field');
   await inlays.getByRole('button',{name:'Fit to deck'}).click();
   await expect(inlays.getByRole('status')).toContainText('Built:');
@@ -631,18 +653,23 @@ test('adds a band and a compass medallion, and lists the medallion labour for a 
   const problems=await openDesigner(page);
   const before=await price(page).textContent();
   await openSection(page,'Boards & finish');
-  const inlays=page.getByRole('region',{name:'Inlays'});
+  const inlays=inlayPanel(page);
   await inlays.getByRole('button',{name:'Add a band'}).click();
+  await placeInlay(page);
   await expect(inlays.getByRole('status').first()).toContainText('cut in like a breaker board');
   await expect(price(page)).not.toHaveText(before??'');
   // Across a straight deck, a band is its rows in another colour: nothing is cut.
-  await page.getByLabel('Inlay 1 runs',{exact:true}).selectOption('across');
+  await inlays.getByLabel('Inlay 1 runs',{exact:true}).selectOption('across');
   await expect(inlays.getByRole('status').first()).toContainText('with no cutting');
+  // The band fills the middle of the 12 ft deep deck, so the medallion is made smaller while it waits to be placed,
+  // then tapped in 3 ft toward the house, clear of the band.
   await inlays.getByRole('button',{name:'Add a medallion'}).click();
+  await setNumber(page.getByLabel('Inlay plan controls',{exact:true}),'Inlay 2 size',4);
+  await placeInlay(page,{x:96,y:36});
   await expect(inlays.getByRole('status').nth(1)).toContainText('on solid blocking');
   await expect(await framingPlan(page)).toContainText('Inlay 2');
   await openSection(page,'Proposal & files');
-  await expect(summary(page)).toContainText(/Inlays: a band one board wide across the deck; a [\d.]+ ft compass medallion in eight wedges/);
+  await expect(summary(page)).toContainText(/Inlays: a band two boards wide across the deck; a 4 ft compass medallion in eight wedges/);
   // The breakdown shows the labour as needing a quote; the list of quotes names the medallion's.
   await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Labour (Construction & Build)')).toHaveText(/^Labour \(Construction & Build\)\$[\d,]+ \+ quote$/); });
   await withSchedule(page,async()=>{ await expect(quoteLine(page,'Medallion inlay labour')).toHaveText('Builder quote Medallion inlay labour'); });
@@ -1044,11 +1071,13 @@ test('@phone drags a plan handle by touch, and a swipe over the plan still scrol
   await expect(size(page)).toContainText('16 × 12 ft');
   // Dragging the right end by touch widens the deck, once, and does not scroll the page.
   await settled();
-  await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+  // At the top of the page the handle is under the fixed price bar, so it is brought to the middle of the screen.
+  await scrollToCentre(handle);
   // Sticky navigation may retain a small focus offset; the touch drag must preserve that actual starting scroll.
   const dragScroll=await settled();
-  const b=(await handle.boundingBox())!;
-  await swipe(b.x+b.width/2,b.y+b.height/2,70,0);
+  const b=(await handle.boundingBox())!,grip={x:b.x+b.width/2,y:b.y+b.height/2};
+  expect(await page.evaluate(p=>document.elementFromPoint(p.x,p.y)?.closest('[role=slider]')?.getAttribute('aria-label'),grip),'the finger lands on the handle').toBe('Deck width, right end');
+  await swipe(grip.x,grip.y,70,0);
   await expect.poll(async()=>Number(await handle.getAttribute('aria-valuenow'))).toBeGreaterThan(16);
   expect(await settled()).toBe(dragScroll);
   const width=Number(await handle.getAttribute('aria-valuenow'));
@@ -1140,7 +1169,9 @@ test('resizes the house from its wall end on the plan, as the House section’s 
 test('drags a free outline edge diagonally with one commit and undo',async({page})=>{
   const problems=await openDesigner(page);await planTool(page,'Shape & points');
   const before=await price(page).textContent(),edge=page.getByRole('button',{name:'Main deck edge 3',exact:true});
+  await scrollToCentre(edge);
   const box=(await edge.boundingBox())!,x=box.x+box.width/2,y=box.y+box.height/2;
+  expect(await page.evaluate(p=>document.elementFromPoint(p.x,p.y)?.closest('button')?.getAttribute('aria-label'),{x,y}),'the press lands on the edge').toBe('Main deck edge 3');
   await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+30,y+35,{steps:6});
   await expect(drawing(page).locator('.dd-boundary-ghost')).toHaveCount(1);await expect(price(page)).toHaveText(before??'');
   await page.mouse.up();await expect(drawing(page).locator('.dd-boundary-ghost')).toHaveCount(0);await expect(price(page)).not.toHaveText(before??'');
@@ -1580,7 +1611,10 @@ test('@phone keeps the price visible while editing and returns to the canvas wit
   await planTool(page,'Shape & points');
   await openSection(page,'Deck shape & size');await setNumber(page,'Deck width',20);
   await expect(price(page)).not.toHaveText(before??'');await expect(preview(page)).toBeHidden();
-  expect(await bar.evaluate(el=>{const r=el.getBoundingClientRect();return r.bottom<=window.innerHeight+1&&r.top>=window.innerHeight-120;})).toBe(true);
+  // The bar stays a strip at the foot of the screen: the amount beside the price schedule, the items still to quote and
+  // the quote review, stacked, so at most 160 px tall.
+  expect(await bar.evaluate(el=>{const r=el.getBoundingClientRect();return r.bottom<=window.innerHeight+1&&r.top>=window.innerHeight-160;})).toBe(true);
+  await expect(price(page)).toBeInViewport();
   await showCanvas(page);await expect(plan(page)).toBeVisible();await expect(size(page)).toContainText('20 × 12 ft');
   await expect(page.getByRole('group',{name:'Drawing navigation'})).toBeVisible();
   await page.waitForTimeout(6000);expect(viewer).toHaveLength(0);
