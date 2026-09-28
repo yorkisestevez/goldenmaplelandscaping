@@ -1,9 +1,9 @@
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { publicContact } from '../../data/business';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import { trackEngagement, trackCall } from '../../utils/analytics';
 
 const COMMUNITIES = [
@@ -73,57 +73,39 @@ const FAQS = [
   },
 ];
 
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "Golden Maple Landscaping",
-  "description": "Premium landscaping and hardscape contractor serving Keswick, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
-  "url": "https://goldenmaplelandscaping.ca/locations/keswick",
-  "telephone": publicContact.phoneTel,
-  "email": publicContact.email,
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Barrie",
-    "addressRegion": "ON",
-    "addressCountry": "CA",
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 44.2205,
-    "longitude": -79.4782,
-  },
-  "areaServed": {
-    "@type": "City",
-    "name": "Keswick",
-    "url": "https://en.wikipedia.org/wiki/Keswick,_Ontario",
-  },
-};
+const PAGE_PATH = '/locations/keswick/';
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": FAQS.map((faq) => ({
-    "@type": "Question",
-    "name": faq.q,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.a,
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PAGE_PATH,
+    name: 'Landscaping & hardscape construction in Keswick',
+    serviceType: 'Landscaping and hardscape construction',
+    description: "Premium landscaping and hardscape contractor serving Keswick, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
+    areaServed: {
+      "@type": "City",
+      "name": "Keswick",
+      "sameAs": "https://en.wikipedia.org/wiki/Keswick,_Ontario",
     },
-  })),
-};
+  }),
+  breadcrumb([
+    { name: 'Home', path: '/' },
+    { name: 'Service Areas', path: '/service-areas/' },
+    { name: 'Keswick', path: PAGE_PATH },
+  ]),
+  faqPage(PAGE_PATH, FAQS),
+);
+
 
 export default function KeswickLanding() {
   return (
     <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
         title="Landscaping & Hardscape Contractor Keswick"
-        description="Premium interlocking, decking & landscape design for Keswick homeowners. Locally owned, Barrie-based. 5-star rated. Book your free Keswick consultation today."
+        description="Premium interlocking, decking & landscape design for Keswick homeowners. Locally owned and Barrie-based. Book your Keswick project consultation today."
         canonical="https://goldenmaplelandscaping.ca/locations/keswick"
-        schema={localBusinessSchema}
+        schema={pageSchema}
       />
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-      </Helmet>
 
       <div className="container-custom">
         <div className="max-w-5xl mx-auto">

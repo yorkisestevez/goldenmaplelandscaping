@@ -2,6 +2,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, MapPin, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import QuickQuote from '../../components/QuickQuote';
 import Testimonials from '../../components/Testimonials';
 import PublicationTrustBar from '../../components/PublicationTrustBar';
@@ -57,49 +58,25 @@ export default function ServiceLocation() {
   const otherLocations = LOCATION_KEYS.filter((l) => l !== parsed.location);
   const otherServices = SERVICE_KEYS.filter((s) => s !== parsed.service);
 
-  const schema = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'Service',
-        '@id': `${BUSINESS.canonicalUrl}/services/${slug}#service`,
-        name: `${service.name} in ${location.name}`,
-        serviceType: service.name,
-        description: seoDescription,
-        provider: { '@id': `${BUSINESS.canonicalUrl}/#business` },
-        areaServed: {
-          '@type': 'City',
-          name: location.name,
-          address: publicPostalAddress(location.name, location.postalRoot),
-        },
-        offers: {
-          '@type': 'Offer',
-          priceSpecification: {
-            '@type': 'PriceSpecification',
-            priceCurrency: 'CAD',
-            description: `${service.startingPriceText} ${service.perUnitText}`,
-          },
-        },
-      },
-      {
-        '@type': 'FAQPage',
-        '@id': `${BUSINESS.canonicalUrl}/services/${slug}#faq`,
-        mainEntity: service.faqs.map((f) => ({
-          '@type': 'Question',
-          name: f.q,
-          acceptedAnswer: { '@type': 'Answer', text: f.a },
-        })),
-      },
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Home', item: `${BUSINESS.canonicalUrl}/` },
-          { '@type': 'ListItem', position: 2, name: 'Services', item: `${BUSINESS.canonicalUrl}/services` },
-          { '@type': 'ListItem', position: 3, name: titleHero, item: `${BUSINESS.canonicalUrl}/services/${slug}` },
-        ],
-      },
-    ],
-  };
+  // Page-level nodes only; they reference the single #business declared in root.tsx.
+  const pagePath = `/services/${slug}/`;
+  const schema = graph(
+    serviceNode({
+      path: pagePath,
+      name: `${service.name} in ${location.name}`,
+      serviceType: service.name,
+      description: seoDescription,
+      areaServed: { '@type': 'City', name: location.name, address: publicPostalAddress(location.name, location.postalRoot) },
+      priceDescription: `${service.startingPriceText} ${service.perUnitText}`,
+    }),
+    faqPage(pagePath, service.faqs),
+    breadcrumb([
+      { name: 'Home', path: '/' },
+      { name: 'Services', path: '/services/' },
+      { name: titleHero, path: pagePath },
+    ]),
+  );
+
 
   return (
     <div className="bg-brand-nearblack min-h-screen">

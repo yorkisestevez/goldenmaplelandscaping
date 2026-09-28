@@ -11,6 +11,7 @@ export default function Design3D() {
       <SEO 
         title="3D Landscape Design Barrie | Visual Simulation | Golden Maple"
         description="Visualize your luxury Simcoe County backyard before construction. We provide high-resolution 3D landscape design and walkthroughs in Barrie, ON for architectural accuracy."
+        canonical="https://goldenmaplelandscaping.ca/process/3d-design/"
       />
 
       <section className="section-padding pt-48">

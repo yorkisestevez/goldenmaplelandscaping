@@ -37,27 +37,29 @@ ok(framingSources().length===Object.keys(SOURCES).length,'Every listed source ba
 
 // 4. Framing rules over a grid of zones.
 let zones=0;
-for(const w of [24,48,96,144,192,240,360,480])for(const d of [36,60,96,120,144,192,240,288,360])for(const ledger of [true,false])for(const joistSize of SIZES)for(const joistSpacingIn of [12,16] as const)for(const topIn of [8,14,20,30,48,96]){
-  const f=frameRectangle({widthIn:w,depthIn:d,topIn,ledger,joistSpacingIn,joistSize}),tag=`${w}x${d} ${ledger?'attached':'freestanding'} ${joistSize}@${joistSpacingIn} top ${topIn}`;
+for(const w of [12,24,30,48,96,144,192,240,360,480])for(const d of [36,60,96,120,144,192,240,288,360])for(const ledger of [true,false])for(const joistSize of SIZES)for(const joistSpacingIn of [12,16] as const)for(const topIn of [8,14,20,30,48,96])for(const landing of [false,true]){
+  const f=frameRectangle({widthIn:w,depthIn:d,topIn,ledger,joistSpacingIn,joistSize,edgeBeams:landing}),tag=`${w}x${d} ${ledger?'attached':'freestanding'} ${joistSize}@${joistSpacingIn} top ${topIn}${landing?' landing':''}`;
   const zs=f.beamRows.map(r=>r.z),bearings=ledger?[0,...zs]:zs,c=f.cantileverIn,s=f.joistSpanIn;
-  ok(zs.every((z,i)=>i===0||z>zs[i-1])&&zs.every(z=>f.beamMount==='drop'?z>0&&z<d:z>=0&&z<=d),`${tag}: beam rows are ordered inside the zone (flush beams may sit on its edges)`);
-  const edge=f.beamMount==='flush'?f.beam.plies*1.5/2:0;
+  ok(zs.every((z,i)=>i===0||z>zs[i-1])&&zs.every(z=>f.edgeBeams?z>=0&&z<=d:z>0&&z<d),`${tag}: beam rows are ordered inside the zone (edge beams may sit on its edges)`);
+  ok(f.edgeBeams===(f.beamMount==='flush'||landing),`${tag}: beams sit on the edges exactly for a flush beam or a landing`);
+  const edge=f.edgeBeams?f.beam.plies*1.5/2:0;
   ok(bearings.every((z,i)=>i===0||(z-bearings[i-1]<=s+1e-6&&z-bearings[i-1]>=s-2*edge-1e-6)),`${tag}: equal joist spans between bearings (a flush edge beam shortens its bay by half its width)`);
   ok(s<=f.joistSpanLimitIn+1e-9&&f.joistSpanLimitIn===joistSpanLimitIn(joistSize,joistSpacingIn),`${tag}: joist span ${s} within the table`);
   ok(Math.abs(d-zs.at(-1)!-c-edge)<1e-6&&(ledger||Math.abs(zs[0]-c-edge)<1e-6),`${tag}: cantilever ${c} at each free end`);
   ok(c<=joistCantileverLimitIn(joistSize,s)+1e-9,`${tag}: cantilever ${c} within ${joistCantileverLimitIn(joistSize,s)}`);
-  ok(f.beamMount==='drop'||c===0,`${tag}: joists hung on a flush beam do not cantilever past it`);
+  ok(!f.edgeBeams||c===0,`${tag}: joists do not cantilever past an edge beam`);
   ok(Math.abs(f.edgeReachIn-(c+edge))<1e-9,`${tag}: edge reach is the cantilever plus a flush beam's half-width`);
   // The fewest rows: one span fewer would break the joist table.
   const n=ledger?zs.length:zs.length-1;
-  if(n>1){const k=ledger?1:2,{maxIn,fractionOfSpan:fr}=joistCantileverRule(joistSize),c1=f.beamMount==='drop'?Math.floor(Math.min(maxIn,fr*d/(n-1+k*fr))):0;ok((d-k*c1)/(n-1)>f.joistSpanLimitIn,`${tag}: ${n} spans are the fewest that fit`);}
+  if(n>1){const k=ledger?1:2,{maxIn,fractionOfSpan:fr}=joistCantileverRule(joistSize),c1=f.edgeBeams?0:Math.floor(Math.min(maxIn,fr*d/(n-1+k*fr)));ok((d-k*c1)/(n-1)>f.joistSpanLimitIn,`${tag}: ${n} spans are the fewest that fit`);}
   for(const r of f.beamRows)ok(Math.abs(r.supportedLengthIn-(r.kind==='intermediate'?s:s/2+c))<1e-6,`${tag}: supported length of the ${r.kind} beam`);
   const governing=Math.max(...f.beamRows.map(r=>r.supportedLengthIn));
   ok(f.beam.size===joistSize&&f.beamSpanLimitIn===beamSpanLimitIn(f.beam,governing)&&f.beamSpanLimitIn>0,`${tag}: joist-size beam read from the table`);
   ok(f.beam.plies===3||f.beamSpanLimitIn>=DESIGN.targetPostSpacingIn,`${tag}: 2-ply only where it spans ${DESIGN.targetPostSpacingIn} in`);
   for(const r of f.beamRows){
     const xs=f.posts.filter(p=>p.z===r.z&&p.row===r.kind).map(p=>p.x).sort((a,b)=>a-b);
-    ok(xs.length>=2&&xs[0]<=BEAM_CANTILEVER.maxIn+1e-9&&w-xs.at(-1)!<=BEAM_CANTILEVER.maxIn+1e-9,`${tag}: the ${r.kind} beam overhangs its end posts by no more than ${BEAM_CANTILEVER.maxIn} in`);
+    ok(xs[0]<=BEAM_CANTILEVER.maxIn+1e-9&&w-xs.at(-1)!<=BEAM_CANTILEVER.maxIn+1e-9,`${tag}: the ${r.kind} beam overhangs its end posts by no more than ${BEAM_CANTILEVER.maxIn} in`);
+    ok(w<DESIGN.minPostSpacingIn?xs.length===1&&Math.abs(xs[0]-w/2)<1e-9:xs.length>=2&&xs.every((x,i)=>i===0||x-xs[i-1]>=DESIGN.minPostSpacingIn-1e-9),`${tag}: posts under the ${r.kind} beam at least ${DESIGN.minPostSpacingIn} in apart, or one centre post`);
     ok(xs.every((x,i)=>i===0||x-xs[i-1]<=f.beamSpanLimitIn+1e-6),`${tag}: posts under the ${r.kind} beam within its span`);
   }
   ok(f.joistXsIn[0]===.75&&f.joistXsIn.at(-1)===w-.75&&f.joistXsIn.every((x,i)=>i===0||(x>f.joistXsIn[i-1]&&x-f.joistXsIn[i-1]<=joistSpacingIn+1e-9)),`${tag}: joists within ${joistSpacingIn} in, rims at both ends`);
@@ -67,4 +69,4 @@ for(const w of [24,48,96,144,192,240,360,480])for(const d of [36,60,96,120,144,1
   ok(f.beamMount==='drop'?Math.abs(f.beamBottomIn-(top-jd-bd))<1e-9&&f.beamBottomIn>=DESIGN.minDropBeamUndersideIn:Math.abs(f.beamBottomIn-(top-bd))<1e-9&&top-jd-bd<DESIGN.minDropBeamUndersideIn,`${tag}: ${f.beamMount} beam height`);
   zones++;
 }
-console.log(`DECK STRUCTURE OK: ${checks} checks. Transcribed OBC 2024, Barrie, Springwater and Orillia values are pinned; ${zones} zones framed within the joist, beam, cantilever and blocking rules.`);
+console.log(`DECK STRUCTURE OK: ${checks} checks. Transcribed OBC 2024, Barrie, Springwater and Orillia values are pinned; ${zones} zones framed within the joist, beam, cantilever, post-spacing and blocking rules, landings included.`);

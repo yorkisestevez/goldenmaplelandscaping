@@ -31,6 +31,9 @@ export const DESIGN={
   targetPostSpacingIn:96,
   /** How far a beam runs past its end posts (never more than the beam cantilever limit). */
   beamEndOverhangIn:Math.min(12,BEAM_CANTILEVER.maxIn),
+  /** Posts under one beam stand at least this far apart, so two pier footings never overlap: the rule
+   * yorkisestevez/goldenmaplelandscaping#102 set for belled piers. */
+  minPostSpacingIn:24,
   /** No regular joist closer than this to the rim joist (centre to centre, less the rim's half-width). */
   minJoistGapIn:3,
   /** A drop beam needs its underside at least this far above grade: Barrie's 6 in of pier above grade, with the

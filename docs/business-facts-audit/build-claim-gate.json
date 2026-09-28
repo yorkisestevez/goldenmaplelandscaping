@@ -1,7 +1,90 @@
 {
   "passed": true,
-  "routes_checked": 121,
-  "schemas_checked": 344,
+  "routes_checked": 149,
+  "schemas_checked": 282,
+  "allowed_by_register": [],
   "findings": [],
+  "warnings": [
+    {
+      "route": "/resources/backyard-drainage-solutions-barrie",
+      "rule": "universal_base_depth",
+      "excerpt": "rlocking paver patio, contractors build the base with 300\u2013400mm (12\u201316 inches) of compacted clear stone\u2014never granular A\u2014and set the finished surface at 2% slope away from the"
+    },
+    {
+      "route": "/resources/backyard-entertaining-wasaga-beach",
+      "rule": "universal_base_depth",
+      "excerpt": "ch sandy soil drains better than Barrie clay, but you still need 12\u201316 inches of compacted clear stone base under any Techo-Bloc or Unilock surface to survive freeze-thaw cycl"
+    },
+    {
+      "route": "/resources/best-pavers-pool-deck-simcoe-county",
+      "rule": "universal_base_depth",
+      "excerpt": "ght line. Budget $37-65 per square foot installed, including the 12-16 inch compacted clear stone base the climate demands. The paver matters; the base matters more. Drive pas"
+    },
+    {
+      "route": "/resources/failing-interlocking-patio-signs-barrie",
+      "rule": "universal_base_depth",
+      "excerpt": " 2-4 usually costs $800-$2,500 for a localized fix with a proper 12-16 inch compacted clear stone base. Waiting until year 6-8 often means a $12,000-$20,000 full rebuild. I've"
+    },
+    {
+      "route": "/resources/fire-pit-cost-barrie-with-permits",
+      "rule": "universal_base_depth",
+      "excerpt": "base: Every fire pit surround contractors build uses 300\u2013400 mm (12\u201316 inches) of compacted clear stone \u2014 the same specification contractors use for driveways and full patios."
+    },
+    {
+      "route": "/resources/heated-driveway-worth-it-barrie",
+      "rule": "universal_base_depth",
+      "excerpt": "for a standard unheated interlocking driveway) Clear stone base: 12\u201316 inches (300\u2013400 mm) of compacted \u00be\" clear stone \u2014 not granular A , which retains water and promotes fros"
+    },
+    {
+      "route": "/resources/how-to-choose-landscaping-contractor-barrie",
+      "rule": "universal_base_depth",
+      "excerpt": "e clay soil and extreme freeze-thaw cycles, the base needs to be 12-16 inches deep. If they say 6-8 inches, they're building to the bare minimum. Your patio will look great in"
+    },
+    {
+      "route": "/resources/interlocking-cost-barrie",
+      "rule": "universal_base_depth",
+      "excerpt": "ide their shortcuts. A proper interlocking base in Barrie needs: 12-16 inches of excavation (minimum \u2014 more for driveways) 12-16 inches of compacted 3/4\" clear stone base 1 in"
+    },
+    {
+      "route": "/resources/interlocking-driveway-lifespan-ontario",
+      "rule": "universal_base_depth",
+      "excerpt": " A correctly engineered system anticipates this. As mentioned, a 12-16 inch clear stone base is the first line of defence, giving water a path to escape before it can freeze. "
+    },
+    {
+      "route": "/resources/landscaping-cost-guide-barrie",
+      "rule": "universal_base_depth",
+      "excerpt": "000+ This covers a 400-600 square foot interlocking patio with a 12-16\" properly engineered base, a built-in seating wall, and a custom fire feature (wood or gas). This ra"
+    },
+    {
+      "route": "/resources/outdoor-kitchen-planning-guide",
+      "rule": "universal_base_depth",
+      "excerpt": "eans the same deep base preparation contractors use for patios \u2014 12-16 inches of compacted clear stone. A kitchen island that shifts even slightly can crack gas lines, misalig"
+    },
+    {
+      "route": "/resources/paver-walkway-cost-barrie",
+      "rule": "universal_base_depth",
+      "excerpt": "oper base). Base Material & Compaction: Supplying and installing 12-16 inches of 3/4\" clear stone, compacted in lifts to ensure a solid, frost-proof foundation. This is the mo"
+    },
+    {
+      "route": "/resources/permacon-pavers-honest-review-2026",
+      "rule": "universal_base_depth",
+      "excerpt": "reliably through Ontario freeze-thaw cycles when set on a proper 12\u201316 inch compacted clear stone base. For most driveways and patios, they\\'re a sound choice that holds up fo"
+    },
+    {
+      "route": "/resources/retaining-wall-cost-oro-medonte",
+      "rule": "universal_base_depth",
+      "excerpt": " most contractors skip. A properly built retaining wall includes 12\u201316 inches of compacted clear stone directly behind the block, a perforated weeping tile at the base running"
+    },
+    {
+      "route": "/retaining-walls-barrie",
+      "rule": "universal_base_depth",
+      "excerpt": "architectural perfection and structural balance. What's Included 12-16\" Compacted Aggregate Base Geogrid Soil Reinforcement Integrated Drainage Systems Laser-Guided Leveli"
+    },
+    {
+      "route": "/services/retaining-walls-barrie",
+      "rule": "universal_base_depth",
+      "excerpt": "architectural perfection and structural balance. What's Included 12-16\" Compacted Aggregate Base Geogrid Soil Reinforcement Integrated Drainage Systems Laser-Guided Leveli"
+    }
+  ],
   "scope": "Known-disputed-claim detector across all prerendered HTML including metadata. Does not certify generic educational facts or owner facts; requires a fresh build."
 }

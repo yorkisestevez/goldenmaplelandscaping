@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import Testimonials from '../../components/Testimonials';
 import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
@@ -21,15 +22,12 @@ const FAQ = [
   }
 ];
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a },
-  })),
-};
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({ path: '/services/retaining-walls-barrie/', name: 'Retaining wall construction in Barrie', serviceType: 'Retaining wall construction', areaServed: 'Barrie' }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Retaining wall construction in Barrie', path: '/services/retaining-walls-barrie/' }]),
+  faqPage('/services/retaining-walls-barrie/', FAQ),
+);
 
 export default function RetainingWalls() {
   const engineeringSteps = [
@@ -42,10 +40,10 @@ export default function RetainingWalls() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Retaining Wall Construction Barrie"
+        title="Retaining Wall Contractor Barrie | Wall Design & Construction"
         description="Custom retaining walls for Barrie properties. Armour stone, natural stone & block walls built with engineering precision. Solve grading issues beautifully."
         canonical="https://goldenmaplelandscaping.ca/services/retaining-walls-barrie"
-        schema={faqSchema}
+        schema={pageSchema}
       />
       
       <section className="section-padding pt-48">
@@ -57,13 +55,11 @@ export default function RetainingWalls() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Structural Engineering
-              </span>
-              <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
+              <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Retaining Wall Contractor in Barrie</h1>
+              <p className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 Walls that hold <br />
                 <span className="italic text-brand-gold-dark">for generations.</span>
-              </h1>
+              </p>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 A retaining wall is one of those things you don't think about — until it starts to lean. We've spent years rebuilding walls other contractors put up without geogrid, without proper drainage, without an engineering plan. We're not interested in being the next chapter of that story. We build walls the way they should be built the first time, so the slope you've been ignoring becomes the feature your property is known for — <span className="text-brand-gold-dark font-normal">no job minimum, priced to your real scope.</span>
               </p>

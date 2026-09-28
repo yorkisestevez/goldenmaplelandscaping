@@ -11,6 +11,7 @@ export default function Consultation() {
       <SEO
         title="Landscaping Consultation Barrie | Golden Maple"
         description="Start a conversation about your project scope, site conditions, and current consultation and design options."
+        canonical="https://goldenmaplelandscaping.ca/process/consultation/"
       />
 
       <section className="section-padding pt-48">

@@ -15,7 +15,7 @@ const SERVICE_CARDS: Array<{ id: string; title: string; desc: string; icon: type
   {
     id: 'interlocking',
     title: 'Interlocking Stone & Patios',
-    desc: 'The patio where your family gathers, where summer memories happen. We build it on a foundation twice as deep as the industry standard.',
+    desc: 'The patio where your family gathers, where summer memories happen. Built on a base planned for your soil, drainage and Barrie winters.',
     icon: Grid,
     category: 'Patios & interlocking',
     link: '/services/interlocking-barrie'
@@ -45,11 +45,34 @@ const SERVICE_CARDS: Array<{ id: string; title: string; desc: string; icon: type
     link: '/services/composite-decking-barrie'
   },
   {
+    id: 'driveways',
+    title: 'Interlock Driveways',
+    desc: 'A driveway built for vehicle loads, clay soil and plow season, with locked-in edges that stay put.',
+    icon: Grid,
+    category: 'Driveways',
+    link: '/services/interlocking-driveways-barrie'
+  },
+  {
+    id: 'porcelain',
+    title: 'Porcelain Patios',
+    desc: 'The clean look of large-format tile, laid on a base designed to stay flat through freeze-thaw.',
+    icon: Layout,
+    link: '/services/porcelain-patios-barrie'
+  },
+  {
+    id: 'entrances',
+    title: 'Front Entrances',
+    desc: 'Steps, landings and walkways rebuilt as one piece, with water moved away from the foundation.',
+    icon: ListTree,
+    category: 'Walkways & entrances',
+    link: '/services/front-entrance-landscaping-barrie'
+  },
+  {
     id: 'kitchens',
     title: 'Outdoor Kitchens',
     desc: 'Stop running in and out of the house. Cook, serve, and entertain in one seamless outdoor space.',
     icon: ChefHat,
-    link: '/contact'
+    link: '/services/outdoor-kitchens-barrie'
   },
   {
     id: 'firepits',

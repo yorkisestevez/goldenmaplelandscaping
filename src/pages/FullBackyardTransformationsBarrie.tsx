@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check, Layers } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
 import { BUSINESS, publicClaimCopy } from '../data/business';
 
 const packages = [
@@ -41,15 +42,20 @@ export default function FullBackyardTransformationsBarrie() {
   return (
     <div className="bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
-        title="Full Backyard Transformations Barrie | $90K+ Outdoor Living | Golden Maple"
+        title="Backyard Renovation Barrie | Full Backyard Transformations $90K+"
         description="Complete backyard transformations in Barrie and Simcoe County: patios, retaining walls, steps, lighting, fire, outdoor kitchens, drainage, and premium hardscape systems."
         canonical="https://goldenmaplelandscaping.ca/full-backyard-transformations-barrie"
+        schema={graph(
+          serviceNode({ path: '/full-backyard-transformations-barrie/', name: 'Backyard renovation in Barrie', serviceType: 'Backyard renovation', areaServed: 'Barrie' }),
+          breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Backyard renovation in Barrie', path: '/full-backyard-transformations-barrie/' }]),
+          faqPage('/full-backyard-transformations-barrie/', faqs),
+        )}
       />
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="max-w-5xl mb-24">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">Full Backyard Transformations · $90K-$160K+</span>
-            <h1 className="font-display text-5xl md:text-8xl font-light leading-[1.05] mb-10">One backyard. <span className="italic text-brand-gold-dark">One engineered plan.</span></h1>
+            <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">Backyard Renovation in Barrie · Full Transformations $90K-$160K+</h1>
+            <p className="font-display text-5xl md:text-8xl font-light leading-[1.05] mb-10">One backyard. <span className="italic text-brand-gold-dark">One engineered plan.</span></p>
             <p className="font-sans text-lg text-brand-muted leading-relaxed max-w-3xl font-light mb-12">A full transformation is not a patio with accessories bolted on later. It is grade, water, structure, traffic flow, lighting, fire, cooking, and family use planned together before excavation starts.</p>
             <div className="flex flex-col sm:flex-row gap-5">
               <Link to="/cost-estimator?type=full" className="btn-primary">Estimate a Full Backyard</Link>

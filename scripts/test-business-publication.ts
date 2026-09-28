@@ -11,4 +11,14 @@ assert.equal(canPublish(BUSINESS.reviews.portfolio), true, 'portfolio is confirm
 assert.match(BUSINESS.reviews.portfolio.source, /portfolio-sources/, 'portfolio confirmation must cite the register');
 assert.equal(canPublish(BUSINESS.reviews.photoRights), true, 'photo rights are confirmed for register-backed paths only');
 assert.match(BUSINESS.urls.instagram.value, /instagram\.com\/goldenmaplelandscaping\.ca$/, 'instagram handle is goldenmaplelandscaping.ca');
+// 2026-09-27: owner says he holds these; they stay unpublishable until proof is recorded
+// (confirmed + lastVerified + source). scripts/claim-rules.json keys off the same paths.
+for (const [label, fact] of [
+  ['CMHA paver installer', BUSINESS.credentials.cmhaPaverInstaller],
+  ['Techo-Pro', BUSINESS.credentials.techoPro],
+  ['Landscape Ontario', BUSINESS.memberships.landscapeOntario],
+] as const) {
+  assert.equal(fact.status, 'owner_reported', `${label} is owner-reported, not proven`);
+  assert.equal(canPublish(fact), false, `${label} must not publish before proof is recorded`);
+}
 console.log('business publication gates: passed');

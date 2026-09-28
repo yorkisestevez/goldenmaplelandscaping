@@ -40,11 +40,26 @@ const unknown = <T>(source: string, notes?: string): BusinessFact<T | null> => (
   notes,
 });
 
+/** Owner answered on 2026-09-27 that Golden Maple sells this service and wants a Barrie page for it. */
+const offeredPerOwner = (value: string): BusinessFact<string> => ({
+  value,
+  status: 'confirmed',
+  lastVerified: '2026-09-27',
+  source: 'Owner answer 2026-09-27 (Claude Code session, SEO authority plan): Golden Maple offers this service and wants a dedicated Barrie page',
+  notes: 'Confirms the service is offered. Pricing, timelines and specs on the page stay project-specific unless separately confirmed.',
+});
+
 export const BUSINESS = {
   canonicalUrl: 'https://goldenmaplelandscaping.ca',
   publicName: published('Golden Maple Landscaping', 'Existing site-wide public copy'),
   legalName: ownerReported('Golden Maple Landscaping Inc.', 'Owner-provided context; not independently verified', 'Do not represent this as independently verified legal registry information.'),
-  founder: published({ name: 'Yorkis Estevez', role: 'Founder & Lead Builder' }, 'src/data/founder.ts and existing site copy'),
+  founder: {
+    value: { name: 'Yorkis Estevez', role: 'Founder & Lead Builder' },
+    status: 'confirmed' as const,
+    lastVerified: '2026-09-27',
+    source: 'Owner attestation 2026-09-27 (Claude Code session approving the SEO authority plan): name spelling, role, and consent to be named as author or reviewer where that is true',
+    notes: 'Confirms identity and role only. Credentials, memberships, years of experience and project counts are separate facts with their own status.',
+  },
   foundingYear: published('2020', 'Existing root schema and llms.txt'),
 
   contact: {
@@ -98,16 +113,26 @@ export const BUSINESS = {
     wsib: published('WSIB Certified', 'Existing llms.txt and trust-bar copy'),
     liabilityInsurance: published('$5,000,000 liability coverage', 'Existing llms.txt and trust-bar copy'),
     workmanshipWarranty: published('5-year sink and settlement warranty', 'Existing service copy and llms.txt', 'Exact coverage, exclusions, remedy, and contract wording require confirmation.'),
-    cmhaPaverInstaller: {
-      value: 'CMHA Certified Concrete Paver Installer',
-      status: 'conflicting' as const,
-      lastVerified: null,
-      source: 'Owner confirmation required; current site instead refers to ICPI',
-      notes: 'Do not claim either credential until current certification is documented.',
-    },
+    cmhaPaverInstaller: ownerReported(
+      'CMHA Certified Concrete Paver Installer',
+      'Owner stated on 2026-09-27 (Claude Code planning session) that he holds this credential; certificate or directory listing not yet supplied',
+      'Not listed in the public CMHA directory PDF dated 2023-12-29 (may predate certification). Confirm by recording the certificate number or a current CMHA directory URL here with lastVerified; scripts/claim-rules.json then allows the claim.',
+    ),
     icpi: published('ICPI specifications / installation references', 'Existing service copy and llms.txt', 'ICPI terminology may be obsolete or superseded; certification status is not verified.'),
-    techoPro: unknown<string>('No current Techo-Pro credential record in tracked source'),
+    techoPro: ownerReported(
+      'Techo-Pro (Techo-Bloc contractor program)',
+      'Owner stated on 2026-09-27 (Claude Code planning session) that Golden Maple is enrolled; proof not yet supplied',
+      'The only public mention found is goldenmaplegroup.com (self-published), which is not independent proof. Confirm with a Techo-Bloc contractor-locator URL or program document.',
+    ),
     permaconCertification: unknown<string>('No Permacon authorization/certification record in tracked source'),
+  },
+
+  memberships: {
+    landscapeOntario: ownerReported(
+      'Landscape Ontario member',
+      'Owner stated on 2026-09-27 (Claude Code planning session); member number or directory listing not yet supplied',
+      'Confirm with a member-directory URL or membership number before any membership claim or memberOf schema is published.',
+    ),
   },
 
   serviceArea: {
@@ -118,6 +143,16 @@ export const BUSINESS = {
     ['Interlocking stone', 'Composite decking', 'Retaining walls', 'Landscape design', 'Outdoor living / backyard transformations'],
     'Existing services and navigation',
   ),
+  /**
+   * Services with a dedicated Barrie money page (src/data/barrieServices.ts). A page is
+   * routed only while its offering passes canPublish() — scripts/check-barrie-services.ts.
+   */
+  serviceOfferings: {
+    interlockDriveways: offeredPerOwner('Interlock driveways'),
+    porcelainPatios: offeredPerOwner('Porcelain patios'),
+    outdoorKitchens: offeredPerOwner('Outdoor kitchens'),
+    frontEntrances: offeredPerOwner('Front entrance landscaping (steps, landings, walkways)'),
+  },
 
   commercialPolicies: {
     minimumInvestment: unknown<string>('Existing site has inconsistent general and service-specific price claims', 'Confirm universal minimum and any service-specific exceptions before publishing as a policy.'),
@@ -157,7 +192,7 @@ export const BUSINESS = {
       status: 'confirmed' as const,
       lastVerified: '2026-09-13',
       source: 'Owner attestation 2026-09-13 (Claude Code session, contact sheet docs/portfolio/contact-sheet-2026-09-13.jpg): every entry in scripts/portfolio-sources.mjs is a Golden Maple job photographed by the owner or crew. Manufacturer, AI, render and unconfirmed files are listed in EXCLUDED and are never emitted.',
-      notes: 'Publication is gated per image: build-portfolio-images.mjs refuses unattested sources and --check (npm run lint) fails on drift. Project records carry title, town, category and a descriptive summary only, with no investment figures, durations or testimonials. Revert to unknown if the register is bypassed.',
+      notes: 'Publication is gated per image: build-portfolio-images.mjs refuses unattested sources and --check (npm run lint) fails on drift. Project records carry title, town, category and a descriptive summary; figures, durations and build specs appear only via individually attested caseStudy fields (scripts/check-case-studies.ts). No testimonials. Revert to unknown if the register is bypassed.',
     },
     photoRights: {
       value: 'Owner-photographed job photos under /images/portfolio and the company Instagram bake under /images/instagram',

@@ -232,6 +232,9 @@ export default function About() {
               <div className="mt-20 text-center">
                 <p className="font-display text-4xl text-brand-gold-dark italic font-light">Yorkis Estevez</p>
                 <p className="font-sans text-[10px] font-normal tracking-[0.4em] uppercase text-brand-muted mt-3">{FOUNDER.role}</p>
+                <Link to={FOUNDER.profilePath} className="inline-block mt-8 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-bonewhite transition-colors">
+                  More about Yorkis →
+                </Link>
               </div>
             </div>
           </div>

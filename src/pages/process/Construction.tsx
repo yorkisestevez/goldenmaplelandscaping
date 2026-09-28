@@ -9,8 +9,9 @@ export default function Construction() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Landscape Construction Barrie | Project-Specific Planning | Golden Maple"
+        title="How We Build: Excavation, Base & Compaction"
         description="Learn how site conditions, materials, and project scope inform landscape construction planning in Simcoe County."
+        canonical="https://goldenmaplelandscaping.ca/process/construction/"
       />
 
       <section className="section-padding pt-48">
@@ -34,6 +35,9 @@ export default function Construction() {
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
+                <Link to="/luxury-landscape-barrie" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
+                  Landscape construction in Barrie <ArrowRight size={16} strokeWidth={1.5} />
+                </Link>
               </div>
             </motion.div>
 

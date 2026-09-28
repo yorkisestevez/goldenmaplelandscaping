@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check, Shield } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
 import { BUSINESS, publicClaimCopy } from '../data/business';
 
 const packages = [
@@ -34,15 +35,20 @@ export default function SlopedBackyardSolutionsBarrie() {
   return (
     <div className="bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
-        title="Sloped Backyard & Retaining Wall Solutions Barrie | Golden Maple"
+        title="Sloped Backyard Landscaping Barrie | Retaining Walls & Drainage"
         description="Turn a sloped, wet, or unusable Barrie backyard into a level outdoor living space with retaining walls, drainage, steps, and premium hardscape construction."
         canonical="https://goldenmaplelandscaping.ca/sloped-backyard-solutions-barrie"
+        schema={graph(
+          serviceNode({ path: '/sloped-backyard-solutions-barrie/', name: 'Sloped backyard and retaining wall solutions in Barrie', serviceType: 'Grading, drainage and retaining walls', areaServed: 'Barrie' }),
+          breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Sloped backyard and retaining wall solutions in Barrie', path: '/sloped-backyard-solutions-barrie/' }]),
+          faqPage('/sloped-backyard-solutions-barrie/', faqs),
+        )}
       />
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="max-w-5xl mb-24">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">Retaining Walls · Drainage · Grade Correction</span>
-            <h1 className="font-display text-5xl md:text-8xl font-light leading-[1.05] mb-10">Fix the slope. <span className="italic text-brand-gold-dark">Reclaim the yard.</span></h1>
+            <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">Sloped Backyard Landscaping in Barrie · Retaining Walls, Drainage &amp; Grading</h1>
+            <p className="font-display text-5xl md:text-8xl font-light leading-[1.05] mb-10">Fix the slope. <span className="italic text-brand-gold-dark">Reclaim the yard.</span></p>
             <p className="font-sans text-lg text-brand-muted leading-relaxed max-w-3xl font-light mb-12">If your backyard is steep, wet, awkward, or failing, the patio is not the first decision. The first decision is how water moves, where the grade lands, and what structure holds it for the next twenty winters.</p>
             <div className="flex flex-col sm:flex-row gap-5">
               <Link to="/cost-estimator?type=wall" className="btn-primary">Price a Sloped Yard Project</Link>

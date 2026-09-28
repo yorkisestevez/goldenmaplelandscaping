@@ -1,0 +1,33 @@
+{
+  "_doc": [
+    "Single source of truth for the disputed-claim detectors.",
+    "Loaded by scripts/check-build-business-facts.py (postbuild gate over every prerendered page + JSON-LD)",
+    "and by scripts/blog-publisher/__tests__/prompt-claims.test.cjs (the writer's prompt must not seed these claims).",
+    "Patterns are matched case-insensitively and must stay valid in BOTH Python re and JavaScript RegExp.",
+    "tier 'block' (default) fails the build; tier 'warn' is reported in docs/business-facts-audit/build-claim-gate.json only.",
+    "allowWhenConfirmed names a BUSINESS fact path (src/data/business.ts). The rule is skipped only while that fact passes",
+    "canPublish() - i.e. status 'confirmed' with a lastVerified date and a source. build/fact-status.json is written by",
+    "scripts/export-fact-status.ts in postbuild; an unknown path fails the gate so a typo can never silently allow a claim."
+  ],
+  "rules": [
+    { "id": "manufacturer_installer_claim", "pattern": "certified installers? for|contractors are certified" },
+    { "id": "unsupported_experience", "pattern": "contractors have assessed hundreds|contractors have completed across" },
+    { "id": "unsupported_accuracy", "pattern": "lock to\\s*±\\s*5%|real Carr Landscape Depot pricing|we handle the engineering" },
+    { "id": "rewrite_artifact", "pattern": "contractors['’]d|record verification in progress" },
+    { "id": "review_rating", "pattern": "5\\.0\\s*(?:GOOGLE RATING|[·/]|-?stars?|out of)|\\b(?:5|five)[ -]star\\b" },
+    { "id": "review_count", "pattern": "8\\s*(?:VERIFIED\\s*)?(?:GOOGLE\\s*)?REVIEWS" },
+    { "id": "wsib_certified", "pattern": "WSIB[ -]?certifi(?:ed|cation)", "allowWhenConfirmed": "credentials.wsib" },
+    { "id": "insurance_amount", "pattern": "\\$\\s*5\\s*(?:M|million|,000,000)\\b[^.]{0,40}?(?:liability|coverage|insurance)", "allowWhenConfirmed": "credentials.liabilityInsurance" },
+    { "id": "installer_certified", "pattern": "(?:ICPI|CMHA)[ -]certified|certified\\s*(?:ICPI|CMHA)|Certified Concrete Paver Installer", "allowWhenConfirmed": "credentials.cmhaPaverInstaller" },
+    { "id": "icpi_rated", "pattern": "ICPI[- ]rated" },
+    { "id": "brand_authorization", "pattern": "(?:certified|authorized)\\s*(?:Techo|Permacon|TimberTech)|TimberTech Pro" },
+    { "id": "techo_pro", "pattern": "Techo-?Pro\\b", "allowWhenConfirmed": "credentials.techoPro" },
+    { "id": "membership_claim", "pattern": "member(?:s|ship)?\\s+(?:of\\s+)?(?:the\\s+)?Landscape Ontario|Landscape Ontario\\s+member", "allowWhenConfirmed": "memberships.landscapeOntario" },
+    { "id": "blanket_warranty", "pattern": "(?:our|a|by a|with a|includes a|include a)\\s*(?:written\\s*)?(?:5|five|10|ten)[ -]year\\s*(?:sink|structural|craftsmanship|workmanship)|\\b(?:5|five|10|ten)[ -](?:year|yr)\\s*(?:(?:structural|craftsmanship|workmanship|sink\\s*(?:&|and)?\\s*settlement)\\s*)?warranty", "allowWhenConfirmed": "credentials.workmanshipWarranty" },
+    { "id": "free_visit", "pattern": "free\\s*(?:on[ -]site|site\\s*(?:visit|assessment)|consultation|15[ -]minute|design\\s*(?:session|consultation))|free\\s+(?:[\\w-]+\\s+){1,2}(?:consultation|site\\s+visit|assessment)|(?:no fee|complimentary)\\s*(?:visit|consultation|site)" },
+    { "id": "design_credit", "pattern": "(?:100%|fully)\\s*credited|design\\s*fee\\s*(?:is\\s*)?(?:credited|waived)" },
+    { "id": "permit_promise", "pattern": "we\\s*(?:handle|take care of|manage)\\s*(?:all|every|the|your)?\\s*(?:permits|permit applications|permit paperwork)" },
+    { "id": "obsolete_phone", "pattern": "705[\\s().-]*790[\\s.-]*3838" },
+    { "id": "universal_base_depth", "tier": "warn", "pattern": "12\\s*[-–]\\s*16\\s*(?:inch|in\\b|\")", "note": "construction.baseDepth is conflicting in the register; warn until the owner settles per-application depths." }
+  ]
+}

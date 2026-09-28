@@ -1,10 +1,12 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Instagram, MapPin } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, businessRef, graph } from '../utils/schema';
 import Reveal from '../components/Reveal';
 import ResponsiveImage from '../components/ResponsiveImage';
 import PhotoGrid from '../components/PhotoGrid';
 import ProjectCard from '../components/ProjectCard';
+import CaseStudySpecs from '../components/CaseStudySpecs';
 import { BUSINESS, canPublish } from '../data/business';
 import { FULL_SIZES, PROJECTS, getProject, projectCoverFull, projectPhotos, projectsInCategory } from '../data/projects';
 
@@ -52,16 +54,21 @@ export default function ProjectDetail() {
   const related = projectsInCategory(project.category).filter((p) => p.slug !== project.slug).slice(0, 3);
   const absolute = (src: string) => `${BUSINESS.canonicalUrl}${src}`;
 
-  const gallerySchema = {
-    '@context': 'https://schema.org',
+  const gallerySchema = graph({
     '@type': 'ImageGallery',
     name: `${project.title} — ${project.town}, ON`,
     description: project.summary,
     url: `${canonical}/`,
     primaryImageOfPage: { '@type': 'ImageObject', contentUrl: absolute(cover.src), width: cover.width, height: cover.height, name: cover.alt },
     associatedMedia: photos.map((img) => ({ '@type': 'ImageObject', contentUrl: absolute(img.src), width: img.width, height: img.height, name: img.alt })),
-    provider: { '@id': `${BUSINESS.canonicalUrl}/#business` },
-  };
+    provider: businessRef,
+    // The town is owner-attested (projects.ts); a local signal for the work itself.
+    locationCreated: { '@type': 'Place', name: `${project.town}, ON` },
+  }, breadcrumb([
+    { name: 'Home', path: '/' },
+    { name: 'Portfolio', path: '/portfolio/' },
+    { name: project.title, path: `/portfolio/${project.slug}/` },
+  ]));
 
   return (
     <div className="bg-brand-nearblack min-h-screen">
@@ -94,6 +101,8 @@ export default function ProjectDetail() {
           <div className="mb-6 overflow-hidden rounded-[2px] border border-brand-dim/40 bg-brand-surface">
             <ResponsiveImage image={cover} sizes={FULL_SIZES} aspect="3/2" priority />
           </div>
+
+          <CaseStudySpecs caseStudy={project.caseStudy} />
 
           {photos.length > 1 && (
             <div className="mt-14 mb-6">

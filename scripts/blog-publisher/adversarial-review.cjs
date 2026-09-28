@@ -80,7 +80,7 @@ PRIOR PUBLISHED SLUGS (don't duplicate these angles):
 ${priorTitlesContext()}
 
 EVALUATE on these axes (1-10 each, 10 = best):
-- factual_accuracy:        Any made-up stats, fake pricing, fabricated standards, wrong product info? Specifically, the contractor uses: Permacon/Unilock/Techo-Bloc pavers + TimberTech composite + Carr Landscape Depot supplier + 12-16" clear stone bases (NOT granular A). Service area: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood.
+- factual_accuracy:        Any made-up stats, fake pricing, fabricated standards, wrong product info? Specifically, the contractor uses: Permacon/Unilock/Techo-Bloc pavers + TimberTech composite + Carr Landscape Depot supplier + compacted 3/4" clear stone bases (NOT granular A) whose depth is project-specific — flag any single universal base depth. Service area: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood.
 - voice_fit:               Operator-honest contractor voice, NOT corporate marketing. "We" not "Golden Maple". No "industry-leading", "passionate team", "state-of-the-art", etc.
 - specificity:             Real Simcoe County references (Lake Simcoe, freeze-thaw, Barrie clay, Bayfield St, etc.) — not generic Ontario filler.
 - seo_value:               Does this target a real long-tail keyword? Will Google rank it? Or is it generic content-mill stuff?
@@ -91,7 +91,7 @@ EVALUATE on these axes (1-10 each, 10 = best):
 - featured_snippet_ready:  Are FAQ answers self-contained (each quotable as a standalone answer)? Do section opening sentences lead with the answer (not the lead-up)? Could Google pull a clean snippet from this?
 - ai_citation_ready:       Is this content "citable" by AI engines (ChatGPT/Claude/Perplexity)? Named facts with specific numbers/brands? Could an AI confidently quote a sentence with attribution? Avoid hedged claims like "many people think" — bias toward declarative facts.
 - numeric_density:         Does almost every section contain at least one specific number, measurement, percentage, range, or named product? Or does it drift into vague claims?
-- e_e_a_t:                 Author bio shows real expertise (years on the tools since 2020, install volume, certifications WSIB / $5M liability)? Brand markers appear naturally without sounding like a marketing aside?
+- e_e_a_t:                 Author bio shows real expertise through the work and point of view — and makes NO unverified claims (no ratings, review counts, WSIB, insurance amounts, warranties, certifications, memberships, founding year or project counts; any of these is a factual_accuracy fail)? Brand markers appear naturally without sounding like a marketing aside?
 
 OUTPUT FORMAT — single JSON object, no prose before/after, no markdown fences:
 

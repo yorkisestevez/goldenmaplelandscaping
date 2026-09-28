@@ -1,9 +1,9 @@
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { publicContact } from '../../data/business';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import { trackEngagement, trackCall } from '../../utils/analytics';
 
 const COMMUNITIES = [
@@ -70,44 +70,29 @@ const FAQS = [
   },
 ];
 
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "Golden Maple Landscaping",
-  "description": "Premium landscaping and hardscape contractor serving Springwater Township, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
-  "url": "https://goldenmaplelandscaping.ca/locations/springwater",
-  "telephone": publicContact.phoneTel,
-  "email": publicContact.email,
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Barrie",
-    "addressRegion": "ON",
-    "addressCountry": "CA",
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 44.3894,
-    "longitude": -79.6903,
-  },
-  "areaServed": {
-    "@type": "AdministrativeArea",
-    "name": "Springwater",
-    "url": "https://en.wikipedia.org/wiki/Springwater,_Ontario",
-  },
-};
+const PAGE_PATH = '/locations/springwater/';
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": FAQS.map((faq) => ({
-    "@type": "Question",
-    "name": faq.q,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.a,
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PAGE_PATH,
+    name: 'Landscaping & hardscape construction in Springwater',
+    serviceType: 'Landscaping and hardscape construction',
+    description: "Premium landscaping and hardscape contractor serving Springwater Township, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
+    areaServed: {
+      "@type": "AdministrativeArea",
+      "name": "Springwater",
+      "sameAs": "https://en.wikipedia.org/wiki/Springwater,_Ontario",
     },
-  })),
-};
+  }),
+  breadcrumb([
+    { name: 'Home', path: '/' },
+    { name: 'Service Areas', path: '/service-areas/' },
+    { name: 'Springwater', path: PAGE_PATH },
+  ]),
+  faqPage(PAGE_PATH, FAQS),
+);
+
 
 export default function SpringwaterLanding() {
   return (
@@ -116,11 +101,8 @@ export default function SpringwaterLanding() {
         title="Landscaping & Outdoor Construction Springwater"
         description="Serving Springwater Township with premium hardscape & landscape construction. Driveways, patios, decks & walls. Local Simcoe County contractor. Free quotes."
         canonical="https://goldenmaplelandscaping.ca/locations/springwater"
-        schema={localBusinessSchema}
+        schema={pageSchema}
       />
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-      </Helmet>
 
       <div className="container-custom">
         <div className="max-w-5xl mx-auto">

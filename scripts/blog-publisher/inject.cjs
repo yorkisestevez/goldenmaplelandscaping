@@ -1,5 +1,8 @@
 // scripts/blog-publisher/inject.cjs
-// Writes the 4 user-facing files (.tsx + routes.ts + Resources.tsx + sitemap.xml)
+// Writes the 3 user-facing files (.tsx + routes.ts + src/data/blogPosts.ts) inside the repo.
+// sitemap.xml is no longer hand-maintained: scripts/generate-sitemap.py builds it
+// from the prerendered pages at postbuild (2026-09-27), so a new post is listed
+// automatically once it is routed.
 // inside the repo. Called in-process from cli.cjs workflow-run.
 
 const fs = require('fs');
@@ -11,8 +14,9 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 // module. ssr:false + prerender({getStaticPaths}) means a new static route is
 // prerendered automatically with no extra wiring.
 const ROUTES_TS = path.join(REPO_ROOT, 'src/routes.ts');
-const RESOURCES_TSX = path.join(REPO_ROOT, 'src/pages/Resources.tsx');
-const SITEMAP_XML = path.join(REPO_ROOT, 'public/sitemap.xml');
+// The post index moved out of Resources.tsx on 2026-09-27 so /resources and the
+// /library hub share it.
+const BLOG_POSTS_TS = path.join(REPO_ROOT, 'src/data/blogPosts.ts');
 const BLOG_DIR = path.join(REPO_ROOT, 'src/pages/blog');
 
 function slugToComponent(slug) {
@@ -20,9 +24,6 @@ function slugToComponent(slug) {
 }
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-function formatIsoDate(iso) {
-  return new Date(iso).toISOString().slice(0, 10);
 }
 
 // Defensive normalization — Gemini sometimes returns readTime as a bare
@@ -139,11 +140,11 @@ function injectIntoRoutes(draft) {
 }
 
 function injectIntoResources(draft) {
-  let src = fs.readFileSync(RESOURCES_TSX, 'utf8');
-  if (src.includes(`slug: '${draft.slug}'`)) throw new Error(`Resources.tsx already lists slug '${draft.slug}'`);
+  let src = fs.readFileSync(BLOG_POSTS_TS, 'utf8');
+  if (src.includes(`slug: '${draft.slug}'`) || src.includes(`slug: "${draft.slug}"`)) throw new Error(`blogPosts.ts already lists slug '${draft.slug}'`);
 
-  const arrayStart = src.indexOf('const BLOG_POSTS = [');
-  if (arrayStart === -1) throw new Error('Could not locate BLOG_POSTS in Resources.tsx');
+  const arrayStart = src.indexOf('export const BLOG_POSTS: BlogPostMeta[] = [');
+  if (arrayStart === -1) throw new Error('Could not locate BLOG_POSTS in src/data/blogPosts.ts');
   const firstBrace = src.indexOf('{', arrayStart);
   if (firstBrace === -1) throw new Error('Could not locate first BLOG_POSTS entry');
 
@@ -158,18 +159,7 @@ function injectIntoResources(draft) {
 `;
 
   src = src.slice(0, firstBrace) + newEntry + '  ' + src.slice(firstBrace);
-  fs.writeFileSync(RESOURCES_TSX, src);
-}
-
-function injectIntoSitemap(draft) {
-  let src = fs.readFileSync(SITEMAP_XML, 'utf8');
-  const url = `https://goldenmaplelandscaping.ca/resources/${draft.slug}/`;
-  const alreadyListed = src.includes(url) || src.includes(`https://goldenmaplelandscaping.ca/resources/${draft.slug}</loc>`);
-  if (alreadyListed) throw new Error(`sitemap.xml already lists ${url}`);
-  const today = formatIsoDate(draft.generatedAt);
-  const newUrl = `  <url><loc>${url}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>\n`;
-  src = src.replace('</urlset>', newUrl + '</urlset>');
-  fs.writeFileSync(SITEMAP_XML, src);
+  fs.writeFileSync(BLOG_POSTS_TS, src);
 }
 
 function injectDraft(draft) {
@@ -178,7 +168,7 @@ function injectDraft(draft) {
   const newTsxPath = path.join(BLOG_DIR, `${compName}.tsx`);
   if (fs.existsSync(newTsxPath)) throw new Error(`${newTsxPath} already exists`);
 
-  // All-or-nothing. The four writes are not atomic, so if a later step throws
+  // All-or-nothing. The three writes are not atomic, so if a later step throws
   // (2026-08-01: routes.ts injection died on the stale App.tsx path) we roll the
   // earlier ones back. Otherwise the half-written post orphans a .tsx that makes
   // EVERY retry fail on the `already exists` guard above — one crash silently
@@ -192,11 +182,9 @@ function injectDraft(draft) {
     snapshot(ROUTES_TS);
     injectIntoRoutes(draft);
 
-    snapshot(RESOURCES_TSX);
+    snapshot(BLOG_POSTS_TS);
     injectIntoResources(draft);
 
-    snapshot(SITEMAP_XML);
-    injectIntoSitemap(draft);
   } catch (err) {
     for (const { path: p, before } of rollback.reverse()) {
       try {
@@ -212,7 +200,7 @@ function injectDraft(draft) {
     slug: draft.slug,
     compName,
     route: `/resources/${draft.slug}`,
-    filesChanged: [relTsx, 'src/routes.ts', 'src/pages/Resources.tsx', 'public/sitemap.xml']
+    filesChanged: [relTsx, 'src/routes.ts', 'src/data/blogPosts.ts']
   };
 }
 

@@ -1,6 +1,7 @@
 import type { Config } from '@react-router/dev/config';
 import { getAutoCombos } from './src/data/serviceLocations';
 import { PROJECTS } from './src/data/projects';
+import { LIBRARY_SECTIONS } from './src/data/library';
 
 export default {
   appDirectory: 'src',
@@ -17,6 +18,8 @@ export default {
     );
     // Dynamic /portfolio/:slug — one route per attested project (src/data/projects.ts).
     const projects = PROJECTS.map((p) => `/portfolio/${p.slug}`);
-    return [...staticPaths, ...serviceCombos, ...autoLocations, ...projects];
+    // Dynamic /library/:section — one hub per Library topic (src/data/library.ts).
+    const librarySections = LIBRARY_SECTIONS.map((s) => `/library/${s.slug}`);
+    return [...staticPaths, ...serviceCombos, ...autoLocations, ...projects, ...librarySections];
   },
 } satisfies Config;

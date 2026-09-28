@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Check, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, graph, serviceNode } from '../utils/schema';
 import Testimonials from '../components/Testimonials';
 
 // Premium patio projects ($35K-$75K).
@@ -25,9 +26,13 @@ export default function PatiosBarrie() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
-        title="Premium Patios in Barrie | $35K-$75K Outdoor Rooms | Golden Maple"
+        title="Patio Contractor Barrie | Premium Patios $35K-$75K"
         description="Premium patio and outdoor-room projects in Barrie and Simcoe County. Real planning ranges, clear-stone bases, drainage-aware construction, and project-specific written workmanship terms."
         canonical="https://goldenmaplelandscaping.ca/patios-barrie"
+        schema={graph(
+          serviceNode({ path: '/patios-barrie/', name: 'Patio design and construction in Barrie', serviceType: 'Patio construction', areaServed: 'Barrie' }),
+          breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Patio design and construction in Barrie', path: '/patios-barrie/' }]),
+        )}
       />
 
       <section className="section-padding pt-48">
@@ -39,13 +44,11 @@ export default function PatiosBarrie() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Premium Patio Projects · $35K-$75K
-              </span>
-              <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
+              <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Patio Contractor in Barrie · Premium Projects $35K-$75K</h1>
+              <p className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 Patios planned for <br />
                 <span className="italic text-brand-gold-dark">20 Simcoe winters.</span>
-              </h1>
+              </p>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 Real cost range, no sales pressure. Most premium patio projects Golden Maple is built to serve run between $35,000 and $75,000 depending on size, access, base prep, drainage, steps, and material choice. The cost estimator gives you a planning range first. If the number works, we book the site walk.
               </p>

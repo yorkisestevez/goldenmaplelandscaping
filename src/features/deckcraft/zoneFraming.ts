@@ -42,6 +42,12 @@ export function zoneReference(zone:DeckZone,cfg:ZoneFramingConfig):ZoneReference
   return frameRectangle({widthIn:zone.size.w,depthIn:zone.size.h,topIn:cfg.top,ledger:zone.attached,joistSpacingIn:cfg.spacing as 12|16,joistSize:cfg.framingSize as JoistSize});
 }
 
+/** A landing carries stair stringers at its edges, so its beams sit on both edges (outer face on the edge) instead of
+ * behind a deck's joist cantilever, which on a 4-ft landing put the two post rows 1.8 ft apart, on overlapping footings. */
+export function landingReference(zone:DeckZone,cfg:ZoneFramingConfig):ZoneReference{
+  return frameRectangle({widthIn:zone.size.w,depthIn:zone.size.h,topIn:cfg.top,ledger:zone.attached,joistSpacingIn:cfg.spacing as 12|16,joistSize:cfg.framingSize as JoistSize,edgeBeams:true});
+}
+
 /** Posts and beams of one zone, clipped to its outline, or to `bearingOutline` (the part of the zone behind
  * any angled bearing lines, see angledFraming.ts). */
 export function frameZoneBearings({zone,reference:ref}:FramedZone,offset:V3,out:{supports:V3[];beams:Member[]},bearingOutline:PlanPoint[]=zone.outline){

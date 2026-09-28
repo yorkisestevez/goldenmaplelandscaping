@@ -5,20 +5,43 @@
 ## Business Profile
 
 - **Public name:** Golden Maple Landscaping
-- **Founder contact:** Yorkis Estevez
+- **Founder:** Yorkis Estevez — Founder & Lead Builder
+- **Founded:** 2020 (per site schema)
 - **Phone:** +17053008015
 - **Email:** yorkis@goldenmaplelandscaping.ca
 - **Website:** https://goldenmaplelandscaping.ca
 - **Location policy:** Barrie, ON; street address is not published.
 - **Hours:** Contact the team to confirm current hours.
-- **Service enquiries:** Interlocking stone; Composite decking; Retaining walls; Landscape design; Outdoor living / backyard transformations. Confirm availability and scope for your address.
-- **Municipality pages:** Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood, Bradford West Gwillimbury, Newmarket. A published page does not confirm active service coverage.
-- **Estimator:** https://goldenmaplelandscaping.ca/cost-estimator — indicative planning calculation, not a quote or universal construction specification.
-- **Booking:** https://goldenmaplelandscaping.ca/book — confirm appointment scope and any fees before booking.
+
+## What Golden Maple does
+
+- **Interlocking stone** — patios, walkways, and driveways planned around site conditions and Ontario freeze-thaw cycles.
+- **Composite decking** — composite deck options for Ontario weather; product choice and manufacturer terms are confirmed with the selected product documentation.
+- **Retaining walls** — engineered structural walls with geogrid reinforcement for sloped lots; engineering to project review.
+- **Landscape design** — full-property design: site assessment, renderings, planting plans, and construction scope.
+- **Outdoor living / backyard transformations** — complete outdoor spaces. Confirm availability and scope for your address.
+
+Service areas with dedicated pages: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood, Bradford West Gwillimbury, Newmarket. A published page does not confirm active service coverage — confirm availability for your address.
+
+## Starting a project
+
+1. **Discovery call** — Contact us to confirm the current consultation and design scope.
+2. **Cost estimator** — https://goldenmaplelandscaping.ca/cost-estimator: an indicative planning calculation, not a quote or universal construction specification.
+3. **Book a consultation** — https://goldenmaplelandscaping.ca/book: confirm appointment scope and any fees before booking.
+4. **Written scope** — every project gets a written scope; excavation/base depth, drainage, and materials are confirmed per project, not assumed.
+
+## Common questions
+
+- **Do you warranty your work?** Ask for the current written workmanship terms for your project.
+- **Are you insured?** Ask us for current coverage documentation.
+- **How much does landscaping cost?** See the cost estimator (https://goldenmaplelandscaping.ca/cost-estimator) for indicative planning figures; final pricing is confirmed in the written scope.
+- **Do I need a permit?** Permit needs and responsibilities are confirmed for each project.
+- **Where do you work?** Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood, Bradford West Gwillimbury, Newmarket. Confirm availability and scope for your address.
 
 ## Public-claim guardrails
 
 - No review rating/count or customer testimonial is validated by this document.
+- Ask us for current coverage documentation.
 - Ask us for current coverage documentation.
 - Ask for the current written workmanship terms for your project.
 - Contact us to confirm the current consultation and design scope.
@@ -31,6 +54,17 @@
 ## Structured Content Map (for AI crawler citation)
 
 Following the emerging `llms.txt` standard — explicit paths to the highest-signal pages on the site, ordered by AI-citation value.
+
+### Outdoor Construction Library (topic hubs)
+
+- [Outdoor Construction Library](https://goldenmaplelandscaping.ca/library/) — every guide grouped by construction topic, each linked to the matching Barrie service page
+- [Patio & Interlock Construction](https://goldenmaplelandscaping.ca/library/patios/) — base, bedding, jointing, why patios sink, interlock costs
+- [Retaining Wall Construction](https://goldenmaplelandscaping.ca/library/retaining-walls/) — engineering triggers in Ontario, drainage, geogrid, costs
+- [Interlock Driveways](https://goldenmaplelandscaping.ca/library/driveways/) — driveway lifespan, heated driveways, driveway bases
+- [Building for Ontario Soil, Water & Frost](https://goldenmaplelandscaping.ca/library/ontario-conditions/) — clear stone vs Granular A, drainage, winter damage, excavation
+- [Hardscape & Decking Materials](https://goldenmaplelandscaping.ca/library/materials/) — paver brands, natural stone, porcelain, composite decking
+- [Planning, Permits & Costs](https://goldenmaplelandscaping.ca/library/planning/) — permits and bylaws, costs, quotes, choosing a contractor
+- [Yorkis Estevez, Founder & Lead Builder](https://goldenmaplelandscaping.ca/about/yorkis-estevez/) — founder profile and editorial standards ("Reviewed by" marks articles he has checked)
 
 ### Cost & investment
 
@@ -98,6 +132,10 @@ Following the emerging `llms.txt` standard — explicit paths to the highest-sig
 - [Retaining Walls in Barrie](https://goldenmaplelandscaping.ca/services/retaining-walls-barrie)
 - [Composite Decking in Barrie](https://goldenmaplelandscaping.ca/services/composite-decking-barrie)
 - [Landscape Design in Barrie](https://goldenmaplelandscaping.ca/services/landscape-design-barrie)
+- [Interlock Driveways in Barrie](https://goldenmaplelandscaping.ca/services/interlocking-driveways-barrie/) — driveway bases sized for vehicle loads, clay subgrade and freeze-thaw; borders and edge restraint
+- [Porcelain Patios in Barrie](https://goldenmaplelandscaping.ca/services/porcelain-patios-barrie/) — outdoor porcelain pavers: setting methods, slip resistance, base requirements
+- [Outdoor Kitchens in Barrie](https://goldenmaplelandscaping.ca/services/outdoor-kitchens-barrie/) — island foundations, gas and power routing by licensed trades, winter-proof materials
+- [Front Entrance Landscaping in Barrie](https://goldenmaplelandscaping.ca/services/front-entrance-landscaping-barrie/) — front steps, landings and walkways built for frost and drainage
 
 ## Crawler Policy
 

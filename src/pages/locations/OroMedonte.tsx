@@ -1,9 +1,9 @@
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { publicContact } from '../../data/business';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import { trackEngagement, trackCall } from '../../utils/analytics';
 
 const COMMUNITIES = [
@@ -69,44 +69,29 @@ const FAQS = [
   },
 ];
 
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "Golden Maple Landscaping",
-  "description": "Premium landscaping and hardscape contractor serving Oro-Medonte, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design for estate properties.",
-  "url": "https://goldenmaplelandscaping.ca/locations/oro-medonte",
-  "telephone": publicContact.phoneTel,
-  "email": publicContact.email,
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Barrie",
-    "addressRegion": "ON",
-    "addressCountry": "CA",
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 44.3894,
-    "longitude": -79.6903,
-  },
-  "areaServed": {
-    "@type": "AdministrativeArea",
-    "name": "Oro-Medonte",
-    "url": "https://en.wikipedia.org/wiki/Oro-Medonte",
-  },
-};
+const PAGE_PATH = '/locations/oro-medonte/';
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": FAQS.map((faq) => ({
-    "@type": "Question",
-    "name": faq.q,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.a,
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PAGE_PATH,
+    name: 'Landscaping & hardscape construction in Oro-Medonte',
+    serviceType: 'Landscaping and hardscape construction',
+    description: "Premium landscaping and hardscape contractor serving Oro-Medonte, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design for estate properties.",
+    areaServed: {
+      "@type": "AdministrativeArea",
+      "name": "Oro-Medonte",
+      "sameAs": "https://en.wikipedia.org/wiki/Oro-Medonte",
     },
-  })),
-};
+  }),
+  breadcrumb([
+    { name: 'Home', path: '/' },
+    { name: 'Service Areas', path: '/service-areas/' },
+    { name: 'Oro-Medonte', path: PAGE_PATH },
+  ]),
+  faqPage(PAGE_PATH, FAQS),
+);
+
 
 export default function OroMedonteLanding() {
   return (
@@ -115,11 +100,8 @@ export default function OroMedonteLanding() {
         title="Landscaping Contractor Oro-Medonte"
         description="Luxury outdoor living spaces for Oro-Medonte properties. Interlocking patios, composite decks & retaining walls. Built by Barrie's top-rated landscape team. Free quotes."
         canonical="https://goldenmaplelandscaping.ca/locations/oro-medonte"
-        schema={localBusinessSchema}
+        schema={pageSchema}
       />
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-      </Helmet>
 
       <div className="container-custom">
         <div className="max-w-5xl mx-auto">

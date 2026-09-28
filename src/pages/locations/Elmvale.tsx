@@ -1,9 +1,9 @@
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { publicContact } from '../../data/business';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import { trackEngagement, trackCall } from '../../utils/analytics';
 
 const COMMUNITIES = [
@@ -73,57 +73,39 @@ const FAQS = [
   },
 ];
 
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "Golden Maple Landscaping",
-  "description": "Premium landscaping and hardscape contractor serving Elmvale, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
-  "url": "https://goldenmaplelandscaping.ca/locations/elmvale",
-  "telephone": publicContact.phoneTel,
-  "email": publicContact.email,
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Barrie",
-    "addressRegion": "ON",
-    "addressCountry": "CA",
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 44.5836,
-    "longitude": -79.8658,
-  },
-  "areaServed": {
-    "@type": "City",
-    "name": "Elmvale",
-    "url": "https://en.wikipedia.org/wiki/Elmvale",
-  },
-};
+const PAGE_PATH = '/locations/elmvale/';
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": FAQS.map((faq) => ({
-    "@type": "Question",
-    "name": faq.q,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.a,
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PAGE_PATH,
+    name: 'Landscaping & hardscape construction in Elmvale',
+    serviceType: 'Landscaping and hardscape construction',
+    description: "Premium landscaping and hardscape contractor serving Elmvale, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
+    areaServed: {
+      "@type": "City",
+      "name": "Elmvale",
+      "sameAs": "https://en.wikipedia.org/wiki/Elmvale",
     },
-  })),
-};
+  }),
+  breadcrumb([
+    { name: 'Home', path: '/' },
+    { name: 'Service Areas', path: '/service-areas/' },
+    { name: 'Elmvale', path: PAGE_PATH },
+  ]),
+  faqPage(PAGE_PATH, FAQS),
+);
+
 
 export default function ElmvaleLanding() {
   return (
     <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
         title="Landscaping & Hardscape Contractor Elmvale"
-        description="Premium interlocking, decking & landscape design for Elmvale homeowners. Locally owned, Barrie-based. 5-star rated. Book your free Elmvale consultation today."
+        description="Premium interlocking, decking & landscape design for Elmvale homeowners. Locally owned and Barrie-based. Book your Elmvale project consultation today."
         canonical="https://goldenmaplelandscaping.ca/locations/elmvale"
-        schema={localBusinessSchema}
+        schema={pageSchema}
       />
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-      </Helmet>
 
       <div className="container-custom">
         <div className="max-w-5xl mx-auto">

@@ -3,6 +3,10 @@ import { motion } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Linkedin, Link as LinkIcon, Share2, Check } from 'lucide-react';
 import SEO from './SEO';
+import { breadcrumb, businessRef, canonicalUrl as toCanonical, founderRef, graph, isoDate } from '../utils/schema';
+import { AUTHORED_BY_FOUNDER, reviewFor } from '../data/editorialReviews';
+import { sectionFor } from '../data/library';
+import { FOUNDER } from '../data/founder';
 
 import { isOwnedPhoto } from '../data/portfolioImages';
 import { BUSINESS, canPublish } from '../data/business';
@@ -42,47 +46,37 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
 
   // Build canonical from the route — server-side and crawlers see this even before JS runs.
   const origin = BUSINESS.canonicalUrl;
-  const canonicalUrl = `${origin}${location.pathname}`;
+  const canonicalUrl = toCanonical(location.pathname);
+  // Authorship and review come ONLY from src/data/editorialReviews.ts — most posts
+  // are robot drafts, so neither is assumed.
+  const slug = location.pathname.replace(/^\/resources\/|\/$/g, '');
+  const founderPublishable = canPublish(BUSINESS.founder);
+  const review = founderPublishable ? reviewFor(slug) : undefined;
+  const writtenByFounder = founderPublishable && AUTHORED_BY_FOUNDER.has(slug);
+  const librarySection = sectionFor(slug);
   // photoRights is confirmed ONLY for register-backed photos (owner-attested portfolio +
   // Instagram bake). Legacy blog heroes under /images/projects stay on the logo.
   const photoApproved = canPublish(BUSINESS.reviews.photoRights) && isOwnedPhoto(heroImage);
   const ogImageUrl = photoApproved ? (heroImage.startsWith('http') ? heroImage : `${origin}${heroImage}`) : `${origin}/logo.svg`;
 
-  // BreadcrumbList helps Google render the page hierarchy in search results.
-  const breadcrumbSchema = {
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": `${origin}/` },
-      { "@type": "ListItem", "position": 2, "name": "Resources", "item": `${origin}/resources` },
-      { "@type": "ListItem", "position": 3, "name": title, "item": canonicalUrl },
-    ],
-  };
-
-  // Article schema for E-E-A-T signals — Google + AI assistants use this for citation/snippet.
-  // Enhanced 2026-06-04 with abstract (from tldr), keywords, wordCount, dateModified.
+  // Article + BreadcrumbList (+ the post's own FAQPage/HowTo) in one @graph.
+  // author/publisher reference root.tsx's #business rather than re-declaring an
+  // Organization. Dates go through isoDate(): posts pass "March 15, 2026", which
+  // is not valid schema.org Date and was being emitted verbatim until 2026-09.
+  const published = isoDate(date);
   const articleSchema: Record<string, unknown> = {
-    "@context": "https://schema.org",
     "@type": "Article",
+    "@id": `${canonicalUrl}#article`,
     "headline": title,
     "description": seoDescription,
     "image": ogImageUrl,
-    "datePublished": date,
-    "dateModified": dateModified || date,
-    "author": { "@type": "Organization", "name": BUSINESS.publicName.value, "url": origin },
-    "publisher": {
-      "@type": "Organization",
-      "name": BUSINESS.publicName.value,
-      "url": origin,
-      "logo": {
-        "@type": "ImageObject",
-        "url": `${origin}/logo.svg`,
-      },
-
-    },
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": canonicalUrl,
-    },
+    "datePublished": published,
+    "dateModified": dateModified ? isoDate(dateModified) : published,
+    "author": writtenByFounder ? founderRef : businessRef,
+    "publisher": businessRef,
+    "mainEntityOfPage": review
+      ? { "@id": canonicalUrl }
+      : { "@type": "WebPage", "@id": canonicalUrl },
     "articleSection": category,
     "inLanguage": "en-CA",
   };
@@ -90,11 +84,28 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
   if (keywords) articleSchema.keywords = keywords;
   if (wordCount && wordCount > 0) articleSchema.wordCount = wordCount;
 
-  // Combine Article + Breadcrumb + (optional) FAQPage/HowTo into a single @graph block
-  // so a single SEO component emits everything in one JSON-LD payload.
-  const graph: unknown[] = [articleSchema, breadcrumbSchema];
-  if (schema) graph.push(schema);
-  const combinedSchema = { "@context": "https://schema.org", "@graph": graph };
+  // reviewedBy / lastReviewed are WebPage properties, not Article ones.
+  const reviewedPage = review
+    ? { "@type": "WebPage", "@id": canonicalUrl, url: canonicalUrl, reviewedBy: founderRef, lastReviewed: review.reviewedOn }
+    : null;
+
+  const combinedSchema = graph(
+    articleSchema,
+    reviewedPage,
+    breadcrumb(librarySection
+      ? [
+          { name: 'Home', path: '/' },
+          { name: 'Library', path: '/library/' },
+          { name: librarySection.title, path: `/library/${librarySection.slug}/` },
+          { name: title, path: location.pathname },
+        ]
+      : [
+          { name: 'Home', path: '/' },
+          { name: 'Resources', path: '/resources/' },
+          { name: title, path: location.pathname },
+        ]),
+    schema as Record<string, unknown> | undefined,
+  );
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(currentUrl);
@@ -125,7 +136,17 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">{category}</span>
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
+                {category}
+                {librarySection && (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    <Link to={`/library/${librarySection.slug}`} className="hover:text-brand-bonewhite transition-colors">
+                      Part of the Library: {librarySection.title}
+                    </Link>
+                  </>
+                )}
+              </span>
               <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.1] mb-10">{title}</h1>
               
               <div className="flex items-center gap-8 mb-16">
@@ -136,6 +157,16 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
                   <Clock size={14} strokeWidth={1.5} className="text-brand-gold-dark" /> {readTime}
                 </span>
               </div>
+              {(writtenByFounder || review) && (
+                <p className="-mt-10 mb-16 font-sans text-sm text-brand-muted">
+                  {writtenByFounder ? 'Written' : 'Reviewed'} by{' '}
+                  <Link to={FOUNDER.profilePath} className="text-brand-bonewhite underline decoration-brand-gold/50 underline-offset-4 hover:text-brand-gold-dark">
+                    {FOUNDER.name}
+                  </Link>
+                  , {FOUNDER.role}
+                  {review && <> · reviewed {review.reviewedOn}</>}
+                </p>
+              )}
             </motion.div>
 
             {photoApproved && <div className="aspect-[21/9] rounded-[2px] overflow-hidden mb-20 border border-brand-dim/10">
