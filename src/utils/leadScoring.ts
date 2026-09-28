@@ -15,7 +15,8 @@ export type LeadScoreInput = {
 };
 
 const premiumLocations = ['barrie', 'innisfil', 'springwater', 'oro-medonte', 'midhurst', 'horseshoe', 'shanty bay'];
-const moneyServices = ['outdoor', 'backyard', 'patio', 'interlock', 'retaining', 'wall', 'slope', 'drainage', 'hardscape'];
+// 'deck' joined 2026-09-23 (owner): decks are a priority service like patios and walls.
+const moneyServices = ['outdoor', 'backyard', 'patio', 'interlock', 'retaining', 'wall', 'slope', 'drainage', 'hardscape', 'deck'];
 const lowFitWords = ['cheap', 'small repair', 'just pricing', 'lawn', 'maintenance', 'garden bed', 'sod only'];
 
 function text(input: LeadScoreInput) {

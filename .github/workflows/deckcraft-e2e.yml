@@ -1,0 +1,52 @@
+# DeckCraft end-to-end smoke tests (Playwright) on the production build.
+#
+# Runs on pull requests that touch the deck designer, and on demand. It is NOT part of the deploy path:
+# netlify-deploy.yml (push to main) is unchanged, so a slow or flaky browser run can never block or
+# trigger a production deploy. Adds a few minutes of Actions time per matching PR.
+name: DeckCraft E2E
+
+on:
+  pull_request:
+    paths:
+      - 'src/features/deckcraft/**'
+      - 'src/pages/DeckDesigner.*'
+      - 'src/components/BookingScheduler.tsx'
+      - 'public/__forms.html'
+      - 'e2e/**'
+      - 'playwright.config.ts'
+      - 'package-lock.json'
+      - '.github/workflows/deckcraft-e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deckcraft-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci --legacy-peer-deps
+      - run: npx playwright install --with-deps chromium
+      - name: Build the site
+        run: npm run build
+      - name: Run DeckCraft smoke tests
+        run: npx playwright test
+      - name: Keep the report when a test fails
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: deckcraft-e2e-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
