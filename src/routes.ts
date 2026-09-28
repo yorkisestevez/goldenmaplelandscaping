@@ -25,11 +25,15 @@ export default [
 
   // Core pages
   route('about', 'pages/About.tsx'),
+  route('about/yorkis-estevez', 'pages/AuthorProfile.tsx'),
   route('service-areas', 'pages/ServiceAreas.tsx'),
   route('portfolio', 'pages/Portfolio.tsx'),
   route('portfolio/:slug', 'pages/ProjectDetail.tsx'),
   route('contact', 'pages/Contact.tsx'),
   route('resources', 'pages/Resources.tsx'),
+  // Outdoor Construction Library — topic hubs over /resources posts (src/data/library.ts).
+  route('library', 'pages/library/LibraryHub.tsx'),
+  route('library/:section', 'pages/library/LibrarySection.tsx'),
 
   // Process
   route('process', 'pages/ProcessPage.tsx'),

@@ -11,7 +11,7 @@
 //      src/pages/blog/*.tsx — and the `already exists` guard then made every
 //      retry fail too. One crash ended the cadence until a human noticed.
 //
-// These run against the REAL routes.ts / Resources.tsx and a REAL
+// These run against the REAL routes.ts / src/data/blogPosts.ts and a REAL
 // archived draft, then restore them — a fixture copy would not have caught (1),
 // since the whole bug was that the real file had moved.
 
@@ -24,7 +24,7 @@ const { injectDraft, slugToComponent } = require('../inject.cjs');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const ROUTES_TS = path.join(REPO_ROOT, 'src/routes.ts');
-const RESOURCES_TSX = path.join(REPO_ROOT, 'src/pages/Resources.tsx');
+const RESOURCES_TSX = path.join(REPO_ROOT, 'src/data/blogPosts.ts');
 const DRAFTS_DIR = path.join(__dirname, '..', 'drafts');
 
 const TOUCHED = [ROUTES_TS, RESOURCES_TSX];
@@ -125,7 +125,7 @@ describe('injectDraft: failure is all-or-nothing', () => {
     const snap = snapshot();
     pending = { snap, extra: [tsxPath] };
 
-    // Force a mid-run failure: pre-seed Resources.tsx (the LAST step) with this
+    // Force a mid-run failure: pre-seed blogPosts.ts (the LAST step) with this
     // slug so injectIntoResources throws after .tsx + routes.ts are written.
     const resources = fs.readFileSync(RESOURCES_TSX, 'utf8');
     fs.writeFileSync(RESOURCES_TSX, `${resources}\n// slug: '${slug}'\n`);

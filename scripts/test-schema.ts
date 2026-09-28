@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict';
 import { BUSINESS, canPublish } from '../src/data/business.ts';
 import {
-  BUSINESS_ID, FOUNDER_ID, businessNode, canonicalUrl, faqPage, founderPersonNode, isoDate, serviceNode, siteGraph,
+  BUSINESS_ID, FOUNDER_ID, businessNode, canonicalUrl, collectionPage, faqPage, founderPersonNode, isoDate, profilePage, serviceNode, siteGraph,
 } from '../src/utils/schema.ts';
 
 // --- URL + date helpers ---------------------------------------------------
@@ -60,5 +60,16 @@ assert.match(JSON.stringify(founderPersonNode(proven)?.hasCredential), /Certifie
 const unconfirmedFounder = { ...BUSINESS, founder: { ...BUSINESS.founder, status: 'published_unverified' as const, lastVerified: null } } as unknown as typeof BUSINESS;
 assert.equal(founderPersonNode(unconfirmedFounder), null);
 assert.equal('founder' in businessNode(unconfirmedFounder), false);
+
+// --- author profile + Library hubs --------------------------------------
+assert.equal(person.url, 'https://goldenmaplelandscaping.ca/about/yorkis-estevez/', 'the Person entity points at its profile page');
+assert.equal('sameAs' in person, false, 'the company Instagram is not a personal profile');
+const profile = profilePage();
+assert.ok(profile);
+assert.deepEqual(profile.mainEntity, { '@id': FOUNDER_ID });
+assert.equal(profilePage(unconfirmedFounder), null, 'no ProfilePage while the founder fact is unpublishable');
+const hub = collectionPage({ path: '/library/', name: 'x', description: 'y', items: [{ name: 'a', path: '/library/patios' }] });
+assert.equal(hub['@id'], 'https://goldenmaplelandscaping.ca/library/');
+assert.equal(JSON.stringify(hub.mainEntity).includes('https://goldenmaplelandscaping.ca/library/patios/'), true);
 
 console.log('schema entity graph: passed');

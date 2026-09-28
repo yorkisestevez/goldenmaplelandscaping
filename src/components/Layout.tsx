@@ -81,6 +81,7 @@ const Navbar = () => {
   ];
 
   const resourceLinks = [
+    { href: "/library", label: "Outdoor Construction Library" },
     { href: "/cost-guide", label: "Free 2026 Cost Guide (PDF)" },
     { href: "/buyers-guide", label: "Buyer's Guide" },
     { href: "/cost-estimator", label: "Cost Estimator" },
@@ -356,6 +357,7 @@ const Navbar = () => {
               <div className="flex flex-col gap-6">
                 <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold font-medium">Resources</span>
                 <div className="grid grid-cols-1 gap-4">
+                  <Link to="/library" className="font-sans text-sm text-brand-porcelain-soft hover:text-brand-gold transition-colors py-2 block">Construction Library</Link>
                   <Link to="/buyers-guide" className="font-sans text-sm text-brand-porcelain-soft hover:text-brand-gold transition-colors py-2 block">Buyer's Guide</Link>
                   <Link to="/cost-estimator" className="font-sans text-sm text-brand-porcelain-soft hover:text-brand-gold transition-colors py-2 block">Cost Estimator</Link>
                   <Link to="/resources" className="font-sans text-sm text-brand-gold hover:text-brand-gold-light transition-colors py-2 block">All Articles →</Link>
@@ -448,6 +450,7 @@ const Footer = () => {
               <li><Link to="/services" className="hover:text-brand-gold-dark transition-colors">Services</Link></li>
               <li><Link to="/portfolio" className="hover:text-brand-gold-dark transition-colors">Portfolio</Link></li>
               <li><Link to="/about" className="hover:text-brand-gold-dark transition-colors">Our Story</Link></li>
+              <li><Link to="/library" className="hover:text-brand-gold-dark transition-colors">Construction Library</Link></li>
               <li><Link to="/contact" className="hover:text-brand-gold-dark transition-colors">Contact</Link></li>
               <li><Link to="/service-areas" className="hover:text-brand-gold-dark transition-colors">Service Areas</Link></li>
             </ul>
