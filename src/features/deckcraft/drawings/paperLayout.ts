@@ -46,10 +46,10 @@ export function paperLayout(set:DrawingSet,sheet:Sheet,index:number):PaperPrim[]
   // The plan, to scale, centred in the drawing area.
   const to=sheetTransform(sheet);
   for(const item of sheet.items)out.push(...drawItem(item,to,sheet.ratio));
-  // Graphic scale bar under the plan: 0, 4 and 8 ft.
-  const barY=SHEET.area.y+SHEET.area.h+.3,step=48/sheet.ratio;
+  // Graphic scale bar under the plan: 0, 4 and 8 ft, or longer steps at a site plan's engineer's scale.
+  const stepFt=[4,10,20,50,100,200].find(ft=>ft*12/sheet.ratio>=.25)!,barY=SHEET.area.y+SHEET.area.h+.3,step=stepFt*12/sheet.ratio;
   out.push({kind:'line',a:{x:SHEET.area.x,y:barY},b:{x:SHEET.area.x+2*step,y:barY},weight:.012,dash:null});
-  for(const k of [0,1,2]){out.push({kind:'line',a:{x:SHEET.area.x+k*step,y:barY-.04},b:{x:SHEET.area.x+k*step,y:barY+.04},weight:.01,dash:null},{kind:'text',at:{x:SHEET.area.x+k*step,y:barY+.15},text:`${k*4}'`,size:.07,anchor:'middle'});}
+  for(const k of [0,1,2]){out.push({kind:'line',a:{x:SHEET.area.x+k*step,y:barY-.04},b:{x:SHEET.area.x+k*step,y:barY+.04},weight:.01,dash:null},{kind:'text',at:{x:SHEET.area.x+k*step,y:barY+.15},text:`${k*stepFt}'`,size:.07,anchor:'middle'});}
   out.push({kind:'text',at:{x:SHEET.area.x+2*step+.15,y:barY+.03},text:`${sheet.id} ${sheet.title.toUpperCase()} · SCALE ${sheet.scaleLabel}`,size:.1,anchor:'start',bold:true});
 
   // Title block, top to bottom.

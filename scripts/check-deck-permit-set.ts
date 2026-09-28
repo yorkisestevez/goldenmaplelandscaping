@@ -7,7 +7,11 @@ import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {deckAttachesToHouse,getHouseContact} from '../src/features/deckcraft/houseContact';
 import type {DeckData} from '../src/features/deckcraft/types';
-import {DETAIL_SCALES,SCALES,SHEET,feetInches,type DrawItem,type DrawingSet,type LayerId} from '../src/features/deckcraft/drawings/drawingTypes';
+import {DETAIL_SCALES,SCALES,SHEET,SITE_SCALES,feetInches,type DrawItem,type DrawingSet,type LayerId,type Pt} from '../src/features/deckcraft/drawings/drawingTypes';
+import {sitePlan} from '../src/features/deckcraft/drawings/sitePlan';
+import {houseOutline} from '../src/features/deckcraft/houseFootprint';
+import {parseDesign,serializeDesign} from '../src/features/deckcraft/designPersistence';
+import {estimateKeyOf} from '../src/features/deckcraft/designer/useDeckEstimate';
 import {ledgerFlashing} from '../src/features/deckcraft/drawings/pricedParts';
 import {elevationSolids} from '../src/features/deckcraft/drawings/elevations';
 import {hiddenPoint,viewLines,viewSolids,type ElevationView,type Solid} from '../src/features/deckcraft/drawings/hiddenLines';
@@ -22,7 +26,9 @@ import {legacyScenarios} from './deck-legacy-scenarios';
 // standard scale, the title block carries business.ts facts, no text claims a review outcome, the DXF reads back
 // layer for layer, and the PDF has one page per sheet. The elevations' hidden-line removal is checked on scenes with
 // known answers and, on every design, against a brute-force visibility test; the typical section against the framing
-// it is drawn from. `--update` rewrites the per-sheet golden after a reviewed drawing change.
+// it is drawn from. The site plan's lot lines and the deck's setbacks are measured again from the entered lot and the
+// drawn deck, and a lot not entered, or a deck over a lot line, stamps the set DRAFT. `--update` rewrites the per-sheet
+// golden after a reviewed drawing change.
 let checks=0;const ok=(cond:unknown,msg:string)=>{assert(cond,msg);checks++;};
 const GOLDEN=new URL('./deck-permit-set-golden.json',import.meta.url),update=process.argv.includes('--update');
 const BANNED=/\b(code[- ]compliant|permit[- ]ready|engineered|stamped|approved|certified|guaranteed)\b/i;
@@ -43,6 +49,11 @@ const fixtures:Record<string,Partial<DeckData>>={
   'glass railing':pick('railing/glass'),
   'frameless glass':{railingType:'Frameless Glass'},
   'add-on deck':{deckType:'Add-on'},
+  // With a lot for the site plan (A-0).
+  'lot 50 x 120, yard south':{permitSite:{lotWidthFt:50,lotDepthFt:120,leftYardFt:10,rearYardFt:40,yardFaces:'S'}},
+  'lot corner, wrap-around':{width:34,length:12,wrap:{left:{widthFt:8,runFt:10}},permitSite:{lotWidthFt:66,lotDepthFt:110,leftYardFt:12,rearYardFt:35,yardFaces:'W',corner:'left'}},
+  'lot L-shape, yard northeast':{...pick('std/L-Shape/Straight/Straight/freestanding-2lvl'),permitSite:{lotWidthFt:60,lotDepthFt:130,leftYardFt:8,rearYardFt:30,yardFaces:'NE',corner:'right'}},
+  'lot too shallow, no north':{permitSite:{lotWidthFt:40,lotDepthFt:100,leftYardFt:4,rearYardFt:14}},
 };
 
 const count=(items:DrawItem[],layer:LayerId,kind?:DrawItem['kind'])=>items.filter(i=>i.layer===layer&&(!kind||i.kind===kind)).length;
@@ -101,18 +112,19 @@ for(const [name,patch] of Object.entries(fixtures)){
   const t0=performance.now();
   const set:DrawingSet=buildPermitSet({data,model,reviewItems:e.flags,materialName:'Test decking',railingName:'Test railing',date:'September 28, 2026',priceBook:'2026-09-28'});
   slowest=Math.max(slowest,performance.now()-t0);
-  const [a1,s1,s2,s3,s4,s5]=set.sheets,tag=name;
-  ok(set.sheets.map(s=>s.id).join()==='A-1,S-1,S-2,S-3,S-4,S-5',`${tag}: sheets A-1, S-1 to S-5`);
+  const [a0,a1,s1,s2,s3,s4,s5]=set.sheets,tag=name;
+  ok(set.sheets.map(s=>s.id).join()==='A-0,A-1,S-1,S-2,S-3,S-4,S-5',`${tag}: sheets A-0, A-1, S-1 to S-5`);
   for(const s of set.sheets){
     const w=(s.extents.maxX-s.extents.minX)/s.ratio,h=(s.extents.maxY-s.extents.minY)/s.ratio;
-    ok([...DETAIL_SCALES,...SCALES].some(x=>x.ratio===s.ratio&&x.label===s.scaleLabel)&&(w<=SHEET.area.w+1e-9&&h<=SHEET.area.h+1e-9||s.ratio===SCALES.at(-1)!.ratio),`${tag} ${s.id}: fits at ${s.scaleLabel}`);
+    ok([...DETAIL_SCALES,...SITE_SCALES].some(x=>x.ratio===s.ratio&&x.label===s.scaleLabel)&&(w<=SHEET.area.w+1e-9&&h<=SHEET.area.h+1e-9||s.ratio===(s.id==='A-0'?SITE_SCALES:SCALES).at(-1)!.ratio),`${tag} ${s.id}: fits at ${s.scaleLabel}`);
+    ok(s.id==='A-0'||[...DETAIL_SCALES,...SCALES].some(x=>x.ratio===s.ratio),`${tag} ${s.id}: only the site plan uses an engineer's scale`);
     ok(s.notes.length>0&&s.legend.length>0,`${tag} ${s.id}: notes and legend`);
     const texts=[...s.items.flatMap(i=>i.kind==='text'||i.kind==='dim'?[i.text]:[]),...s.notes,set.footer,...paperLayout(set,s,0).flatMap(p=>p.kind==='text'?[p.text]:[])];
     ok(texts.every(t=>!BANNED.test(t)),`${tag} ${s.id}: no text claims a review outcome (${texts.find(t=>BANNED.test(t))})`);
     const paper=paperLayout(set,s,set.sheets.indexOf(s)).flatMap(p=>p.kind==='text'?[p.text]:[]).join(' ');
     ok(paper.includes(set.reviewItems.length?'DRAFT':'PLANNING DRAWING')&&paper.includes(s.id)&&paper.includes(s.scaleLabel),`${tag} ${s.id}: stamp, sheet number and scale on the sheet`);
-    // Notes (0.072 in text) end above the footer (0.065 in text).
-    const prims=paperLayout(set,s,0).flatMap(p=>p.kind==='text'?[p]:[]),notesEnd=Math.max(...prims.filter(p=>p.size===.072).map(p=>p.at.y)),footerTop=Math.min(...prims.filter(p=>p.size===.065).map(p=>p.at.y));
+    // Notes (0.072 in text) end above the footer (0.065 in text), both in the title block.
+    const prims=paperLayout(set,s,0).flatMap(p=>p.kind==='text'&&p.at.x>SHEET.w-SHEET.margin-SHEET.titleW?[p]:[]),notesEnd=Math.max(...prims.filter(p=>p.size===.072).map(p=>p.at.y)),footerTop=Math.min(...prims.filter(p=>p.size===.065).map(p=>p.at.y));
     ok(notesEnd<footerTop-.25,`${tag} ${s.id}: the notes end above the footer (${notesEnd.toFixed(2)} < ${footerTop.toFixed(2)})`);
   }
   ok(set.footer===PERMIT_FOOTER&&set.firm.name===BUSINESS.publicName.value&&set.firm.phone===publicContact.phoneDisplay&&set.firm.email===publicContact.email,`${tag}: title block facts come from business.ts`);
@@ -153,6 +165,36 @@ for(const [name,patch] of Object.entries(fixtures)){
         ok(shown===!votes[0],`${tag} ${view}: edge ${k} at ${t} is ${shown?'drawn':'hidden'} but a brute-force test says ${votes[0]?'hidden':'visible'}`);
       }
     }
+  }
+  // A-0: the house, every level and tread; the lot lines where the lot is entered, and the deck's setbacks to them.
+  const site=sitePlan(data,model),houseRings=houseOutline(data),lot=data.permitSite;
+  ok(JSON.stringify(a0.items)===JSON.stringify(site.items)&&SITE_SCALES.some(x=>x.ratio===a0.ratio),`${tag}: A-0 is the site plan at a site scale (${a0.scaleLabel})`);
+  ok(count(a0.items,'A-HOUS','poly')===houseRings.length&&count(a0.items,'A-DECK-OTLN','poly')===levels.length&&count(a0.items,'A-STRS','poly')===model.treads.length,`${tag}: A-0 draws the house, ${levels.length} level outlines and ${model.treads.length} treads`);
+  const a0Texts=a0.items.flatMap(i=>i.kind==='text'||i.kind==='dim'?[i.text]:[]),siteIssues=set.reviewItems.filter(i=>i.startsWith('Site plan:'));
+  ok(a0Texts.includes('PROPOSED DECK')&&a0Texts.includes('EXISTING HOUSE'),`${tag}: A-0 names the proposed deck and the existing house`);
+  if(!lot){
+    ok(count(a0.items,'C-PROP')===0&&a0Texts.includes('PROPERTY LINES NOT ENTERED')&&!a0.legend.includes('C-PROP'),`${tag}: A-0 without a lot draws no lot lines and says so`);
+    ok(siteIssues.length===1&&/enter the lot/.test(siteIssues[0]),`${tag}: a lot not entered is a review item, so the set is stamped DRAFT`);
+  }else{
+    const hMinX=Math.min(...houseRings.flat().map(q=>q.x)),L=hMinX-lot.leftYardFt*12,R=L+lot.lotWidthFt*12,B=lot.rearYardFt*12,F=B-lot.lotDepthFt*12;
+    const prop=a0.items.filter(i=>i.kind==='poly'&&i.layer==='C-PROP') as Extract<DrawItem,{kind:'poly'}>[];
+    ok(prop.length===1&&prop[0].closed&&JSON.stringify(prop[0].points)===JSON.stringify([{x:L,y:F},{x:R,y:F},{x:R,y:B},{x:L,y:B}]),`${tag}: A-0 draws the lot ${lot.lotWidthFt} × ${lot.lotDepthFt} ft around the house as entered`);
+    // The deck's extent measured again from the level outlines and S-3's treads.
+    const deck:Pt[]=[...levels.flatMap(l=>l.footprint.outline.map(q=>({x:q.x+l.offset.x,y:q.y+l.offset.z}))),...s3.items.flatMap(i=>i.kind==='poly'&&i.layer==='A-STRS'?i.points:[])];
+    const want={left:Math.min(...deck.map(q=>q.x))-L,right:R-Math.max(...deck.map(q=>q.x)),rear:B-Math.max(...deck.map(q=>q.y))};
+    ok(!!site.setbacks&&(['left','right','rear'] as const).every(k=>Math.abs(site.setbacks![k]-want[k])<1e-6),`${tag}: A-0 setbacks ${JSON.stringify(want)} measured to the deck and its stairs`);
+    for(const k of ['left','right','rear'] as const)if(want[k]>0)ok(a0Texts.includes(feetInches(want[k]))&&a0Texts.includes(`(${(want[k]*.0254).toFixed(2)} m)`),`${tag}: A-0 gives the ${k} setback in feet and metres`);
+    ok(a0Texts.includes(feetInches(R-L))&&a0Texts.includes(feetInches(B-F))&&a0.legend.includes('C-PROP'),`${tag}: A-0 dimensions the lot's width and depth`);
+    const circles=a0.items.filter(i=>i.kind==='circle') as Extract<DrawItem,{kind:'circle'}>[];
+    if(lot.yardFaces){
+      // North on the plan: the yard (+y) faces the given bearing, so north lies (90 - bearing) degrees from +x (y down).
+      const bearing={N:0,NE:45,E:90,SE:135,S:180,SW:225,W:270,NW:315}[lot.yardFaces],n=a0.items.find(i=>i.kind==='text'&&i.text==='N') as Extract<DrawItem,{kind:'text'}>|undefined;
+      const angle=n&&circles.length===1?Math.atan2(n.at.y-circles[0].c.y-.035*a0.ratio,n.at.x-circles[0].c.x)*180/Math.PI:NaN,expect=90-bearing;
+      ok(Math.abs(((angle-expect)%360+540)%360-180)<.5,`${tag}: the north arrow points ${expect}° on the plan for a yard facing ${lot.yardFaces} (drew ${angle.toFixed(1)}°)`);
+    }else ok(circles.length===0&&siteIssues.some(i=>/which way the back yard faces/.test(i)),`${tag}: no north arrow until the yard's direction is entered, and that is a review item`);
+    const over=(['left','right','rear'] as const).filter(k=>want[k]<=0);
+    ok(over.length===0?!siteIssues.some(i=>/reaches the/.test(i)):siteIssues.some(i=>/reaches the/.test(i))&&a0.notes.some(n=>over.every(k=>n.includes(`over the ${k==='rear'?'rear':`${k} side`} lot line by`))),`${tag}: a deck over a lot line is a review item and the notes say by how much`);
+    ok(a0.notes.some(n=>n.includes('zoning by-law'))&&!a0.notes.some(n=>/\d+(\.\d+)? ?m (minimum|required)/i.test(n)),`${tag}: A-0 leaves the required setbacks to the zoning by-law and quotes none`);
   }
   // S-4: the typical section is its framing zone: plies, posts and footings per row, the bays dimensioned, ledger or not.
   const section=typicalSection(data,model,{materialName:'Test decking',railingName:'Test railing'},{x:0,y:0}),ref=section.reference,rows=ref.beamRows.length;
@@ -199,7 +241,7 @@ for(const [name,patch] of Object.entries(fixtures)){
   ok(dxf.entities.every(x=>dxf.layers.has(x.layer)),`${tag}: every DXF entity is on a declared layer`);
   ok(byLayer('S-FTNG','INSERT')===footings&&byLayer('S-POST','INSERT')===footings,`${tag}: DXF footing and post inserts`);
   const unique=(layer:LayerId,kind:DrawItem['kind'])=>new Set(set.sheets.flatMap(sh=>sh.items.filter(i=>i.layer===layer&&i.kind===kind).map(i=>JSON.stringify(i)))).size;
-  for(const layer of ['S-JOIS','S-BEAM','S-FRMG','S-POST','A-RAIL','A-DECK-FNSH','C-TOPO','S-FTNG-HIDN'] as LayerId[])
+  for(const layer of ['S-JOIS','S-BEAM','S-FRMG','S-POST','A-RAIL','A-DECK-FNSH','C-TOPO','S-FTNG-HIDN','C-PROP'] as LayerId[])
     ok(byLayer(layer,'LINE')===unique(layer,'line')&&byLayer(layer,'POLYLINE')===unique(layer,'poly'),`${tag}: DXF ${layer} lines and polylines match the sheets`);
   current[name]={set:digest({...set,sheets:[]}),...Object.fromEntries(set.sheets.map(sh=>[sh.id,digest(sh)]))};
 }
@@ -209,11 +251,21 @@ for(const [name,patch] of Object.entries(fixtures)){
   const data={...structuredClone(DEFAULT_DECK)},e=calculateEstimate(data);
   const set=buildPermitSet({data,model:e.model,reviewItems:[],materialName:'Test decking',railingName:'Test railing',date:'September 28, 2026',priceBook:'2026-09-28'});
   const pdf=Buffer.from(buildPermitPdf(jsPDF,set)).toString('latin1');
-  ok(pdf.startsWith('%PDF-')&&(pdf.match(/\/Type \/Page\b/g)??[]).length===6,'The permit PDF has six pages');
+  ok(pdf.startsWith('%PDF-')&&(pdf.match(/\/Type \/Page\b/g)??[]).length===7,'The permit PDF has seven pages');
   ok(/\/MediaBox \[0 0 1224\.?\d* 792\.?\d*\]/.test(pdf),'Its pages are 11 × 17 in landscape');
   // The takeoff's own issues always join the review list; the stamp follows the list.
   ok(set.reviewItems.length>=e.model.issues.length&&e.model.issues.every(i=>set.reviewItems.includes(i)),'The takeoff issues are review items');
   const clean={...set,reviewItems:[]};ok(paperLayout(clean,clean.sheets[0],0).some(p=>p.kind==='text'&&p.text==='PLANNING DRAWING'),'With no review items the stamp reads PLANNING DRAWING');
+}
+
+// The lot is part of the saved design: it survives a save and reload, bad values are refused, and it never re-prices.
+{
+  const lot={lotWidthFt:50,lotDepthFt:120,leftYardFt:10,rearYardFt:40.25,yardFaces:'SW' as const,corner:'left' as const},data={...structuredClone(DEFAULT_DECK),permitSite:lot};
+  ok(JSON.stringify(parseDesign(serializeDesign(data)).permitSite)===JSON.stringify(lot),'A saved design keeps its lot');
+  ok(parseDesign(serializeDesign(DEFAULT_DECK)).permitSite===undefined,'A design without a lot loads without one');
+  const refused=(site:unknown)=>{try{parseDesign(JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration:{permitSite:site}}));return false;}catch{return true;}};
+  ok(refused({...lot,lotWidthFt:5})&&refused({...lot,rearYardFt:-1})&&refused({...lot,yardFaces:'Up'})&&refused({...lot,corner:'back'})&&refused({lotWidthFt:50}),'Out-of-range, unknown or missing lot values are refused');
+  ok(estimateKeyOf(data)===estimateKeyOf(DEFAULT_DECK),'Entering the lot never re-prices the design');
 }
 ok(oracleSkipped<oracleSamples*.02,`Brute-force samples on a visibility boundary stay rare (${oracleSkipped} of ${oracleSamples+oracleSkipped})`);
 
@@ -222,4 +274,4 @@ else{
   ok(existsSync(GOLDEN),'deck-permit-set-golden.json exists (run with --update after a reviewed drawing change)');
   for(const [name,sheets] of Object.entries(current))for(const [id,d] of Object.entries(sheets))ok(golden[name]?.[id]===d,`${name} ${id}: the drawing matches its golden (run --update after reviewing a drawing change)`);
 }
-console.log(`DECK PERMIT SET OK: ${checks} checks. ${Object.keys(fixtures).length} designs drawn as A-1 and S-1 to S-5 with every priced footing, post and member on its layer; elevations' hidden lines agree with ${oracleSamples} brute-force samples; DXF R12 read back; six-page 11 × 17 PDF. Slowest set ${slowest.toFixed(0)} ms.`);
+console.log(`DECK PERMIT SET OK: ${checks} checks. ${Object.keys(fixtures).length} designs drawn as A-0, A-1 and S-1 to S-5 with every priced footing, post and member on its layer and the site plan's setbacks measured again; elevations' hidden lines agree with ${oracleSamples} brute-force samples; DXF R12 read back; seven-page 11 × 17 PDF. Slowest set ${slowest.toFixed(0)} ms.`);

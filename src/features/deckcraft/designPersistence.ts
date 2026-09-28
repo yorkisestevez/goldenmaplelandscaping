@@ -5,6 +5,7 @@ import {hardscapeProduct,hardscapeProblem} from './hardscapeCatalogue';
 import {patioInlayProblem,PATIO_INLAY_LIMITS} from './patioInlays';
 export {pruneEdgeNames} from './edgeNames';
 import {validatePergola} from './pergolaValidation';
+import {validatePermitSite} from './permitSite';
 import { DEFAULT_DECK } from './defaults';
 import {normalizeUnderDeck} from './underDeckOptions';
 import {boundaryBounds,boundaryProblem} from './lib/freeOutline';
@@ -388,6 +389,7 @@ export function validateDesign(input:unknown):DeckData {
       return cleanFeature;
     });
   }
+  if(input.permitSite!==undefined)clean.permitSite=validatePermitSite(input.permitSite);
   if(input.yardAllowances!==undefined){
     const a=input.yardAllowances;
     if(!record(a)||!ALLOWANCE_FINISHES.some(f=>f.id===a.finish)||!['none','wood','gas'].includes(a.firePit as string)||!['none','basic','full'].includes(a.kitchen as string)||typeof a.lighting!=='boolean')throw new Error('Invalid backyard allowances.');
@@ -422,7 +424,7 @@ export function defaultLevel3(data:DeckData):NonNullable<DeckData['level3']>{
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','stairPath','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','customFront','boardColours','inlays','skirting','deckFinishes','underDeck','deckOutlines','deckOutlineOffsets','boardLayout','boundaryLocks','railSections','railDefault','pergola']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','stairPath','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','permitSite','customFront','boardColours','inlays','skirting','deckFinishes','underDeck','deckOutlines','deckOutlineOffsets','boardLayout','boundaryLocks','railSections','railDefault','pergola']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);
