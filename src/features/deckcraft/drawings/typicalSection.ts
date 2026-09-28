@@ -6,6 +6,7 @@ import {getHardwareLayout} from '../hardwareLayout';
 import {ACTUAL_DEPTH_IN,DESIGN,type JoistSize} from '../structure/spanTables';
 import {type DrawItem,type LayerId,type Pt,feetInches} from './drawingTypes';
 import {translate} from './elevations';
+import {ledgerFlashing} from './pricedParts';
 
 /**
  * Sheet S-4: a typical section through the main deck's deepest framing zone, cut between two joists and looking
@@ -22,11 +23,13 @@ export interface TypicalSection{
   mark:{x:number;y0:number;y1:number};
   /** The pier diameter drawn, and whether the price book names it. */
   pier:{diameter:number;priced:boolean};
+  /** How far the guard posts' centre line sits inside the front edge, inches. */
+  guardInset:number;
 }
 
 const TEXT=.08;
 
-export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialName:string;railingName:string},origin:Pt):TypicalSection{
+export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialName:string;railingName:string},origin:Pt,hardware=getHardwareLayout(data,model)):TypicalSection{
   const main=model.levels[0],outline=main.footprint.outline,back=Math.min(...outline.map(p=>p.y));
   const framed:{origin:Pt;w:number;reference:ZoneReference}[]=main.zones?.length?main.zones.map(f=>({origin:f.zone.origin,w:f.zone.size.w,reference:f.reference}))
     :[{origin:{x:Math.min(...outline.map(p=>p.x)),y:back>1e-6?back:0},w:main.footprint.bounds.w,reference:main.reference}];
@@ -38,7 +41,7 @@ export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialNa
   const blocks=data.foundation==='Deck Blocks',helical=data.foundation==='Helical Piles',postBase=blocks?6.5:4.5,depth=blocks?0:data.foundationDepthIn??48;
   const pricedPier=!blocks&&!helical&&(data.soilCondition==='Clay'||data.soilCondition==='Fill'),pier=pricedPier?16:12;
   const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
-  const hardware=getHardwareLayout(data,model),fascia=catalogueAccessoryLayout(data,model).fascia.length>0;
+  const fascia=catalogueAccessoryLayout(data,model).fascia.length>0;
   const items:DrawItem[]=[];
   // Section coordinates: u from the zone's back edge toward the yard, v up from grade; the sheet's y is −v.
   const P=(u:number,v:number):Pt=>({x:u,y:-v});
@@ -119,7 +122,8 @@ export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialNa
     [P(last.z+(blocks?6:helical?1.4:pier/2),blocks?3:-depth/2),footing],
   ];
   const leftSide:[Pt,string][]=attached?[
-    [P(.75,joistTop-jd*.3),`${size} ledger, ${bolts} bolts (as priced), flashed`],
+    [P(.75,joistTop-jd*.3),`${size} ledger, ${bolts} bolts (as priced)`],
+    [P(1.2,joistTop+.2),ledgerFlashing(data).label],
     [P(2.3,joistTop-jd+2),`${hangers} joist hangers (as priced)`],
   ]:[[P(rows[0].z-half,beamBottom+ref.beamDepthIn/2),'House-side beam; deck not fastened to house']];
   if(ref.blockingZsIn.some(z=>z>uStart+.75&&z<uEnd-.75)){const z=ref.blockingZsIn.find(z=>z>uStart+.75&&z<uEnd-.75)!;(z<d/3?leftSide:right).push([P(z,joistTop-jd/2),`${size} blocking, rows as on S-2`]);}
@@ -139,5 +143,5 @@ export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialNa
   const x=main.offset.x+zone.origin.x+cut,y=main.offset.z+zone.origin.y;
   const b=items.flatMap(i=>i.kind==='line'||i.kind==='dim'?[i.a,i.b]:i.kind==='poly'?i.points:i.kind==='circle'?[i.c]:[i.at]);
   const minX=Math.min(...b.map(p=>p.x)),minY=Math.min(...b.map(p=>p.y));
-  return {items:translate(items,origin.x-minX,origin.y-minY),reference:ref,depthIn:d,attached,mark:{x,y0:y-36,y1:y+d+44},pier:{diameter:pier,priced:pricedPier}};
+  return {items:translate(items,origin.x-minX,origin.y-minY),reference:ref,depthIn:d,attached,mark:{x,y0:y-36,y1:y+d+44},pier:{diameter:pier,priced:pricedPier},guardInset:d-g};
 }
