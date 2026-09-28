@@ -1,4 +1,4 @@
-import {LAYERS,SHEET,type DrawItem,type DrawingSet,type LayerId,type Pt,type Sheet,sheetTransform} from './drawingTypes';
+import {LAYERS,NTS,SHEET,type DrawItem,type DrawingSet,type LayerId,type Pt,type Sheet,sheetTransform} from './drawingTypes';
 
 /**
  * A sheet laid out on paper (inches, y down): the border and title block, the plan drawn to scale, the legend, notes,
@@ -47,10 +47,13 @@ export function paperLayout(set:DrawingSet,sheet:Sheet,index:number):PaperPrim[]
   const to=sheetTransform(sheet);
   for(const item of sheet.items)out.push(...drawItem(item,to,sheet.ratio));
   // Graphic scale bar under the plan: 0, 4 and 8 ft, or longer steps at a site plan's engineer's scale.
-  const stepFt=[4,10,20,50,100,200].find(ft=>ft*12/sheet.ratio>=.25)!,barY=SHEET.area.y+SHEET.area.h+.3,step=stepFt*12/sheet.ratio;
-  out.push({kind:'line',a:{x:SHEET.area.x,y:barY},b:{x:SHEET.area.x+2*step,y:barY},weight:.012,dash:null});
-  for(const k of [0,1,2]){out.push({kind:'line',a:{x:SHEET.area.x+k*step,y:barY-.04},b:{x:SHEET.area.x+k*step,y:barY+.04},weight:.01,dash:null},{kind:'text',at:{x:SHEET.area.x+k*step,y:barY+.15},text:`${k*stepFt}'`,size:.07,anchor:'middle'});}
-  out.push({kind:'text',at:{x:SHEET.area.x+2*step+.15,y:barY+.03},text:`${sheet.id} ${sheet.title.toUpperCase()} · SCALE ${sheet.scaleLabel}`,size:.1,anchor:'start',bold:true});
+  // A sheet of tables has no scale bar.
+  const stepFt=[4,10,20,50,100,200].find(ft=>ft*12/sheet.ratio>=.25)!,barY=SHEET.area.y+SHEET.area.h+.3,step=sheet.scaleLabel===NTS?-.15:stepFt*12/sheet.ratio;
+  if(sheet.scaleLabel!==NTS){
+    out.push({kind:'line',a:{x:SHEET.area.x,y:barY},b:{x:SHEET.area.x+2*step,y:barY},weight:.012,dash:null});
+    for(const k of [0,1,2]){out.push({kind:'line',a:{x:SHEET.area.x+k*step,y:barY-.04},b:{x:SHEET.area.x+k*step,y:barY+.04},weight:.01,dash:null},{kind:'text',at:{x:SHEET.area.x+k*step,y:barY+.15},text:`${k*stepFt}'`,size:.07,anchor:'middle'});}
+  }
+  out.push({kind:'text',at:{x:SHEET.area.x+2*step+.15,y:barY+.03},text:`${sheet.id} ${sheet.title.toUpperCase()} · ${sheet.scaleLabel===NTS?'NOT TO SCALE':`SCALE ${sheet.scaleLabel}`}`,size:.1,anchor:'start',bold:true});
 
   // Title block, top to bottom.
   const x=tx+.15,w=tw-.3;let y=m+.35;
@@ -62,9 +65,11 @@ export function paperLayout(set:DrawingSet,sheet:Sheet,index:number):PaperPrim[]
   out.push({kind:'rect',x:tx+.15,y:y-.12,w:w,h:.34,weight:.02});
   out.push({kind:'text',at:{x:tx+tw/2,y:y+.1},text:draft?`DRAFT · ${set.reviewItems.length} REVIEW ITEM${set.reviewItems.length===1?'':'S'} OPEN`:'PLANNING DRAWING',size:.11,anchor:'middle',bold:true});
   y+=.42;rule();
-  text('LEGEND',.07,true);
-  for(const id of sheet.legend){const layer=LAYERS[id as LayerId];out.push({kind:'line',a:{x,y:y-.035},b:{x:x+.35,y:y-.035},weight:Math.max(layer.weight,.01),dash:layer.dash});out.push({kind:'text',at:{x:x+.45,y},text:layer.label,size:.075,anchor:'start'});y+=.14;}
-  y+=.04;rule();
+  if(sheet.legend.length){
+    text('LEGEND',.07,true);
+    for(const id of sheet.legend){const layer=LAYERS[id as LayerId];out.push({kind:'line',a:{x,y:y-.035},b:{x:x+.35,y:y-.035},weight:Math.max(layer.weight,.01),dash:layer.dash});out.push({kind:'text',at:{x:x+.45,y},text:layer.label,size:.075,anchor:'start'});y+=.14;}
+    y+=.04;rule();
+  }
   text('NOTES',.07,true);
   sheet.notes.forEach((note,i)=>{const lines=wrap(note,w-.15,.072);lines.forEach((line,k)=>{out.push({kind:'text',at:{x:k?x+.15:x,y},text:k?line:`${i+1}. ${line}`,size:.072,anchor:'start'});y+=.1;});y+=.03;});
   // The footer and the sheet number sit at the bottom of the title block.

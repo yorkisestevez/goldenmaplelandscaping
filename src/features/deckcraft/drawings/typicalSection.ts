@@ -6,7 +6,7 @@ import {getHardwareLayout} from '../hardwareLayout';
 import {ACTUAL_DEPTH_IN,DESIGN,type JoistSize} from '../structure/spanTables';
 import {type DrawItem,type LayerId,type Pt,feetInches} from './drawingTypes';
 import {translate} from './elevations';
-import {ledgerFlashing} from './pricedParts';
+import {ledgerFlashing,pierOf} from './pricedParts';
 
 /**
  * Sheet S-4: a typical section through the main deck's deepest framing zone, cut between two joists and looking
@@ -39,7 +39,7 @@ export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialNa
   const size=data.framingSize as JoistSize,jd=ACTUAL_DEPTH_IN[size]??9.25,top=main.top,joistTop=top-DESIGN.deckingThicknessIn;
   const plies=ref.beam.plies,half=plies*.75,beamBottom=ref.beamBottomIn,beamTop=beamBottom+ref.beamDepthIn;
   const blocks=data.foundation==='Deck Blocks',helical=data.foundation==='Helical Piles',postBase=blocks?6.5:4.5,depth=blocks?0:data.foundationDepthIn??48;
-  const pricedPier=!blocks&&!helical&&(data.soilCondition==='Clay'||data.soilCondition==='Fill'),pier=pricedPier?16:12;
+  const {priced:pricedPier,diameter:pier}=pierOf(data);
   const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
   const fascia=catalogueAccessoryLayout(data,model).fascia.length>0;
   const items:DrawItem[]=[];
