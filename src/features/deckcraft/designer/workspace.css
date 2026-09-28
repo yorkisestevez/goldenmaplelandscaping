@@ -3,7 +3,7 @@
 .deck-designer :is(h1,h2,h3,h4,legend){font-stretch:normal;letter-spacing:-.025em}
 .deck-designer :is(button,input,select,textarea){font-family:var(--dc-body)}
 .deck-designer .dd-primary,.deck-designer .dd-secondary{border-radius:8px;min-height:44px;padding:10px 14px;font-weight:600;font-size:13px}
-.deck-designer .dd-secondary{border-color:#d6d2cb;background:#fff}.deck-designer .dd-secondary:hover{background:#f2eee8;border-color:#bab4aa}
+.deck-designer .dd-secondary{border-color:#d6d2cb;background:#fff}.deck-designer .dd-secondary:hover{background:#f2eee8;border-color:#bab4aa}.deck-designer .dd-secondary:where([aria-pressed=true]),.deck-designer .dd-secondary:where([aria-pressed=true]):hover{background:var(--dc-ink);border-color:var(--dc-ink)}
 .deck-designer .dd-primary{background:#262a2c;border-color:#262a2c;color:#fff}.deck-designer .dd-primary:hover{background:#414749}
 .deck-designer .dd-field :is(input:not([type=checkbox],[type=radio],[type=range],[type=color]),select,textarea),.deck-designer select,.deck-designer .dd-share-link input{border:1px solid #d7d4cd;border-radius:8px;background:#fff;font-size:14px}
 .deck-designer .dd-field .dd-number input{font-size:17px;font-variant-numeric:tabular-nums}
