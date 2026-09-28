@@ -24,6 +24,9 @@ export const BUSINESS_ID = `${ORIGIN}/#business`;
 export const WEBSITE_ID = `${ORIGIN}/#website`;
 export const FOUNDER_ID = `${ORIGIN}/#yorkis-estevez`;
 export const businessRef = { '@id': BUSINESS_ID } as const;
+export const founderRef = { '@id': FOUNDER_ID } as const;
+/** Mirrors FOUNDER.profilePath (src/data/founder.ts) without importing image data into schema code. */
+export const FOUNDER_PROFILE_PATH = '/about/yorkis-estevez';
 
 /**
  * Absolute, trailing-slash URL for an on-site path. Netlify `pretty_urls` serves
@@ -151,6 +154,7 @@ export function founderPersonNode(r: Register = BUSINESS): JsonLd | null {
     '@id': FOUNDER_ID,
     name: r.founder.value.name,
     jobTitle: r.founder.value.role,
+    url: canonicalUrl(FOUNDER_PROFILE_PATH),
     worksFor: businessRef,
     knowsAbout: [...FOUNDER_KNOWS_ABOUT],
     ...nonEmpty('hasCredential', credentialsFor(r, 'person')),
@@ -202,6 +206,36 @@ export function faqPage(path: string, faqs: readonly FaqInput[]): JsonLd {
       const [q, a] = 'q' in f ? [f.q, f.a] : [f.question, f.answer];
       return { '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } };
     }),
+  };
+}
+
+/** Hub/listing page: CollectionPage + ItemList of on-site URLs. */
+export function collectionPage(o: { path: string; name: string; description: string; items: { name: string; path: string }[] }): JsonLd {
+  return {
+    '@type': 'CollectionPage',
+    '@id': canonicalUrl(o.path),
+    url: canonicalUrl(o.path),
+    name: o.name,
+    description: o.description,
+    isPartOf: { '@id': WEBSITE_ID },
+    publisher: businessRef,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: o.items.map((item, i) => ({ '@type': 'ListItem', position: i + 1, name: item.name, url: canonicalUrl(item.path) })),
+    },
+  };
+}
+
+/** The founder's profile page. Null while the founder fact is unpublishable. */
+export function profilePage(r: Register = BUSINESS): JsonLd | null {
+  if (!canPublish(r.founder)) return null;
+  return {
+    '@type': 'ProfilePage',
+    '@id': canonicalUrl(FOUNDER_PROFILE_PATH),
+    url: canonicalUrl(FOUNDER_PROFILE_PATH),
+    name: `${r.founder.value.name}, ${r.founder.value.role}`,
+    isPartOf: { '@id': WEBSITE_ID },
+    mainEntity: founderRef,
   };
 }
 

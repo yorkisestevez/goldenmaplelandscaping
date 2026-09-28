@@ -55,6 +55,17 @@ Service areas with dedicated pages: Barrie, Innisfil, Oro-Medonte, Springwater, 
 
 Following the emerging `llms.txt` standard — explicit paths to the highest-signal pages on the site, ordered by AI-citation value.
 
+### Outdoor Construction Library (topic hubs)
+
+- [Outdoor Construction Library](https://goldenmaplelandscaping.ca/library/) — every guide grouped by construction topic, each linked to the matching Barrie service page
+- [Patio & Interlock Construction](https://goldenmaplelandscaping.ca/library/patios/) — base, bedding, jointing, why patios sink, interlock costs
+- [Retaining Wall Construction](https://goldenmaplelandscaping.ca/library/retaining-walls/) — engineering triggers in Ontario, drainage, geogrid, costs
+- [Interlock Driveways](https://goldenmaplelandscaping.ca/library/driveways/) — driveway lifespan, heated driveways, driveway bases
+- [Building for Ontario Soil, Water & Frost](https://goldenmaplelandscaping.ca/library/ontario-conditions/) — clear stone vs Granular A, drainage, winter damage, excavation
+- [Hardscape & Decking Materials](https://goldenmaplelandscaping.ca/library/materials/) — paver brands, natural stone, porcelain, composite decking
+- [Planning, Permits & Costs](https://goldenmaplelandscaping.ca/library/planning/) — permits and bylaws, costs, quotes, choosing a contractor
+- [Yorkis Estevez, Founder & Lead Builder](https://goldenmaplelandscaping.ca/about/yorkis-estevez/) — founder profile and editorial standards ("Reviewed by" marks articles he has checked)
+
 ### Cost & investment
 
 - [How Much Does Landscaping Cost in Barrie? 2026 Price Guide](https://goldenmaplelandscaping.ca/resources/landscaping-cost-guide-barrie) — full price ranges by service across Simcoe County

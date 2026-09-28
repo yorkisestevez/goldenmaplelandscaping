@@ -3,7 +3,10 @@ import { motion } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Linkedin, Link as LinkIcon, Share2, Check } from 'lucide-react';
 import SEO from './SEO';
-import { breadcrumb, businessRef, canonicalUrl as toCanonical, graph, isoDate } from '../utils/schema';
+import { breadcrumb, businessRef, canonicalUrl as toCanonical, founderRef, graph, isoDate } from '../utils/schema';
+import { AUTHORED_BY_FOUNDER, reviewFor } from '../data/editorialReviews';
+import { sectionFor } from '../data/library';
+import { FOUNDER } from '../data/founder';
 
 import { isOwnedPhoto } from '../data/portfolioImages';
 import { BUSINESS, canPublish } from '../data/business';
@@ -44,6 +47,13 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
   // Build canonical from the route — server-side and crawlers see this even before JS runs.
   const origin = BUSINESS.canonicalUrl;
   const canonicalUrl = toCanonical(location.pathname);
+  // Authorship and review come ONLY from src/data/editorialReviews.ts — most posts
+  // are robot drafts, so neither is assumed.
+  const slug = location.pathname.replace(/^\/resources\/|\/$/g, '');
+  const founderPublishable = canPublish(BUSINESS.founder);
+  const review = founderPublishable ? reviewFor(slug) : undefined;
+  const writtenByFounder = founderPublishable && AUTHORED_BY_FOUNDER.has(slug);
+  const librarySection = sectionFor(slug);
   // photoRights is confirmed ONLY for register-backed photos (owner-attested portfolio +
   // Instagram bake). Legacy blog heroes under /images/projects stay on the logo.
   const photoApproved = canPublish(BUSINESS.reviews.photoRights) && isOwnedPhoto(heroImage);
@@ -62,12 +72,11 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
     "image": ogImageUrl,
     "datePublished": published,
     "dateModified": dateModified ? isoDate(dateModified) : published,
-    "author": businessRef,
+    "author": writtenByFounder ? founderRef : businessRef,
     "publisher": businessRef,
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": canonicalUrl,
-    },
+    "mainEntityOfPage": review
+      ? { "@id": canonicalUrl }
+      : { "@type": "WebPage", "@id": canonicalUrl },
     "articleSection": category,
     "inLanguage": "en-CA",
   };
@@ -75,13 +84,26 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
   if (keywords) articleSchema.keywords = keywords;
   if (wordCount && wordCount > 0) articleSchema.wordCount = wordCount;
 
+  // reviewedBy / lastReviewed are WebPage properties, not Article ones.
+  const reviewedPage = review
+    ? { "@type": "WebPage", "@id": canonicalUrl, url: canonicalUrl, reviewedBy: founderRef, lastReviewed: review.reviewedOn }
+    : null;
+
   const combinedSchema = graph(
     articleSchema,
-    breadcrumb([
-      { name: 'Home', path: '/' },
-      { name: 'Resources', path: '/resources/' },
-      { name: title, path: location.pathname },
-    ]),
+    reviewedPage,
+    breadcrumb(librarySection
+      ? [
+          { name: 'Home', path: '/' },
+          { name: 'Library', path: '/library/' },
+          { name: librarySection.title, path: `/library/${librarySection.slug}/` },
+          { name: title, path: location.pathname },
+        ]
+      : [
+          { name: 'Home', path: '/' },
+          { name: 'Resources', path: '/resources/' },
+          { name: title, path: location.pathname },
+        ]),
     schema as Record<string, unknown> | undefined,
   );
 
@@ -114,7 +136,17 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">{category}</span>
+              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
+                {category}
+                {librarySection && (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    <Link to={`/library/${librarySection.slug}`} className="hover:text-brand-bonewhite transition-colors">
+                      Part of the Library: {librarySection.title}
+                    </Link>
+                  </>
+                )}
+              </span>
               <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.1] mb-10">{title}</h1>
               
               <div className="flex items-center gap-8 mb-16">
@@ -125,6 +157,16 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
                   <Clock size={14} strokeWidth={1.5} className="text-brand-gold-dark" /> {readTime}
                 </span>
               </div>
+              {(writtenByFounder || review) && (
+                <p className="-mt-10 mb-16 font-sans text-sm text-brand-muted">
+                  {writtenByFounder ? 'Written' : 'Reviewed'} by{' '}
+                  <Link to={FOUNDER.profilePath} className="text-brand-bonewhite underline decoration-brand-gold/50 underline-offset-4 hover:text-brand-gold-dark">
+                    {FOUNDER.name}
+                  </Link>
+                  , {FOUNDER.role}
+                  {review && <> · reviewed {review.reviewedOn}</>}
+                </p>
+              )}
             </motion.div>
 
             {photoApproved && <div className="aspect-[21/9] rounded-[2px] overflow-hidden mb-20 border border-brand-dim/10">

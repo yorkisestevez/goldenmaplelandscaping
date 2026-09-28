@@ -1,5 +1,5 @@
 // scripts/blog-publisher/inject.cjs
-// Writes the 3 user-facing files (.tsx + routes.ts + Resources.tsx) inside the repo.
+// Writes the 3 user-facing files (.tsx + routes.ts + src/data/blogPosts.ts) inside the repo.
 // sitemap.xml is no longer hand-maintained: scripts/generate-sitemap.py builds it
 // from the prerendered pages at postbuild (2026-09-27), so a new post is listed
 // automatically once it is routed.
@@ -14,7 +14,9 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 // module. ssr:false + prerender({getStaticPaths}) means a new static route is
 // prerendered automatically with no extra wiring.
 const ROUTES_TS = path.join(REPO_ROOT, 'src/routes.ts');
-const RESOURCES_TSX = path.join(REPO_ROOT, 'src/pages/Resources.tsx');
+// The post index moved out of Resources.tsx on 2026-09-27 so /resources and the
+// /library hub share it.
+const BLOG_POSTS_TS = path.join(REPO_ROOT, 'src/data/blogPosts.ts');
 const BLOG_DIR = path.join(REPO_ROOT, 'src/pages/blog');
 
 function slugToComponent(slug) {
@@ -138,11 +140,11 @@ function injectIntoRoutes(draft) {
 }
 
 function injectIntoResources(draft) {
-  let src = fs.readFileSync(RESOURCES_TSX, 'utf8');
-  if (src.includes(`slug: '${draft.slug}'`)) throw new Error(`Resources.tsx already lists slug '${draft.slug}'`);
+  let src = fs.readFileSync(BLOG_POSTS_TS, 'utf8');
+  if (src.includes(`slug: '${draft.slug}'`) || src.includes(`slug: "${draft.slug}"`)) throw new Error(`blogPosts.ts already lists slug '${draft.slug}'`);
 
-  const arrayStart = src.indexOf('const BLOG_POSTS = [');
-  if (arrayStart === -1) throw new Error('Could not locate BLOG_POSTS in Resources.tsx');
+  const arrayStart = src.indexOf('export const BLOG_POSTS: BlogPostMeta[] = [');
+  if (arrayStart === -1) throw new Error('Could not locate BLOG_POSTS in src/data/blogPosts.ts');
   const firstBrace = src.indexOf('{', arrayStart);
   if (firstBrace === -1) throw new Error('Could not locate first BLOG_POSTS entry');
 
@@ -157,7 +159,7 @@ function injectIntoResources(draft) {
 `;
 
   src = src.slice(0, firstBrace) + newEntry + '  ' + src.slice(firstBrace);
-  fs.writeFileSync(RESOURCES_TSX, src);
+  fs.writeFileSync(BLOG_POSTS_TS, src);
 }
 
 function injectDraft(draft) {
@@ -180,7 +182,7 @@ function injectDraft(draft) {
     snapshot(ROUTES_TS);
     injectIntoRoutes(draft);
 
-    snapshot(RESOURCES_TSX);
+    snapshot(BLOG_POSTS_TS);
     injectIntoResources(draft);
 
   } catch (err) {
@@ -198,7 +200,7 @@ function injectDraft(draft) {
     slug: draft.slug,
     compName,
     route: `/resources/${draft.slug}`,
-    filesChanged: [relTsx, 'src/routes.ts', 'src/pages/Resources.tsx']
+    filesChanged: [relTsx, 'src/routes.ts', 'src/data/blogPosts.ts']
   };
 }
 
