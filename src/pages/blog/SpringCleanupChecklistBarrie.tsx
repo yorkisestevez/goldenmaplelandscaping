@@ -143,7 +143,7 @@ export default function SpringCleanupChecklistBarrie() {
 
       <AuthorBio bio={`${BUSINESS.publicName.value} publishes this general educational guide. Project-specific scope, materials, permits, and written terms should be confirmed before work begins.`} />
 
-      <div dangerouslySetInnerHTML={{ __html: "<p>If your spring walkthrough turned up settlement, drainage issues, or a retaining wall that does not look quite right, contact us to confirm the current assessment, location availability, and written-quote process. <a href=\"/contact\">Contact us</a> to confirm the current site-visit policy and scheduling availability.</p>" }} />
+      <div dangerouslySetInnerHTML={{ __html: "<p>If your spring walkthrough turned up settlement, drainage issues, or a retaining wall that does not look quite right, contact us to confirm the current assessment, location availability, and written-quote process. <a href=\"/contact\">Contact us</a> to confirm the current site-visit policy and scheduling availability.</p><p>Would rather hand the clean-up itself off? Golden Maple does <a href=\"/services/seasonal-cleanup-barrie\">spring and fall clean-ups</a> in Barrie, Innisfil, Oro-Medonte and Springwater: debris hauled away, beds and shrubs tidied, and patios swept with the joints re-sanded.</p>" }} />
     </BlogPostLayout>
   );
 }

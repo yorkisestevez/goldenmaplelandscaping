@@ -39,9 +39,10 @@ const ServicesGrid = () => {
         <div className="flex flex-wrap gap-x-8 gap-y-4 mt-12 pt-6 border-t border-brand-dim text-xs text-brand-muted">
           <span className="text-brand-gold-dark uppercase tracking-widest text-[10px] font-medium">Complete the space</span>
           <Link to="/services/landscape-design-barrie" className="hover:text-brand-ink">Landscape design</Link>
-          <Link to="/contact" className="hover:text-brand-ink">Outdoor kitchens</Link>
+          <Link to="/services/outdoor-kitchens-barrie" className="hover:text-brand-ink">Outdoor kitchens</Link>
           <Link to="/contact" className="hover:text-brand-ink">Fire features</Link>
           <Link to="/contact" className="hover:text-brand-ink">Landscape lighting</Link>
+          <Link to="/services/seasonal-cleanup-barrie" className="hover:text-brand-ink">Spring &amp; fall clean-ups</Link>
         </div>
       </div>
     </section>

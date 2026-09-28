@@ -152,6 +152,13 @@ export const BUSINESS = {
     porcelainPatios: offeredPerOwner('Porcelain patios'),
     outdoorKitchens: offeredPerOwner('Outdoor kitchens'),
     frontEntrances: offeredPerOwner('Front entrance landscaping (steps, landings, walkways)'),
+    seasonalCleanups: {
+      value: 'Seasonal clean-ups (spring and fall)',
+      status: 'confirmed' as const,
+      lastVerified: '2026-09-28',
+      source: 'Owner instruction 2026-09-28 (Claude Code session): "we now offer seasonal clean up, make sure thats part of our website"; scope, seasons, pricing and area answered in the same session',
+      notes: 'Spring and fall. Scope: leaves and debris (hauled away), garden beds and shrubs (weeding, cutting back, pruning, edging, mulch), patio and interlock care (sweep or wash, polymeric sand top-up, flag heaving or settlement). NOT lawn care (no aeration or overseeding). Area: Barrie, Innisfil, Oro-Medonte, Springwater. Quoted per property; no published prices.',
+    },
   },
 
   commercialPolicies: {

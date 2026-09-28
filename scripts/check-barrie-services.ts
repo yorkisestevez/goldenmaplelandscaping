@@ -10,6 +10,7 @@
  *   contains that keyword's h1Contains phrase
  * - every keyword-map owner is a routed page (one owner URL per keyword)
  * - FAQ questions aren't duplicated across pages (one answer set per entity)
+ * - each page sets exactly one of estimatorType or cta, and cta.to is a site path
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -59,6 +60,10 @@ for (const def of BARRIE_SERVICES) {
     questions.set(lower(f.q), def.slug);
   }
   for (const link of def.related) assert.match(link.to, /^\/[a-z0-9/-]*$/, `${where}: related link ${link.to} must be a site path`);
+
+  // Exactly one CTA source: the estimator type, or a custom CTA for services it doesn't price.
+  assert.ok(Boolean(def.estimatorType) !== Boolean(def.cta), `${where}: set exactly one of estimatorType or cta`);
+  if (def.cta) assert.match(def.cta.to, /^\/[a-z0-9/-]*(\?[a-z0-9=&-]+)?$/, `${where}: cta.to ${def.cta.to} must be a site path`);
 }
 
 // Every keyword has exactly one owner, and that owner is a routed page.

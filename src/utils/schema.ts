@@ -71,6 +71,7 @@ export const BUSINESS_KNOWS_ABOUT = [
   'Landscape design',
   'Natural stone',
   'Outdoor living spaces',
+  'Seasonal property clean-ups',
 ] as const;
 
 export const FOUNDER_KNOWS_ABOUT = [

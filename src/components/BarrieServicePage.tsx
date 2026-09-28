@@ -15,7 +15,13 @@ import type { BarrieServiceDef } from '../data/barrieServices';
  */
 export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
   const path = `/services/${def.slug}/`;
-  const estimatorHref = `/cost-estimator?type=${def.estimatorType}`;
+  // Estimator-priced pages keep the planning-range CTA; others (e.g. seasonal clean-ups) supply their own.
+  const cta = def.cta ?? {
+    label: 'See My Cost Range',
+    to: `/cost-estimator?type=${def.estimatorType}`,
+    band: ['Start with a planning range.', 'Then we walk the site.'] as [string, string],
+    bandBody: 'The cost estimator gives you a planning range first. If the number works, we visit, measure, and put the base, drainage and materials in a written scope for your property.',
+  };
   const schema = graph(
     serviceNode({ path, name: def.h1, serviceType: def.serviceType, description: def.description, areaServed: 'Barrie' }),
     breadcrumb([
@@ -48,7 +54,7 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
                 <p key={i} className="font-sans text-lg text-brand-muted leading-relaxed mb-8 font-light">{para}</p>
               ))}
               <div className="flex flex-col sm:flex-row gap-10 mt-12">
-                <Link to={estimatorHref} className="btn-primary">See My Cost Range</Link>
+                <Link to={cta.to} className="btn-primary">{cta.label}</Link>
                 <Link to="/contact" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
                   Talk to us about your project <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
@@ -121,14 +127,14 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
       <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">
           <h2 className="font-display text-4xl md:text-7xl font-light mb-12 leading-tight">
-            Start with a planning range. <br />
-            <span className="text-brand-gold italic">Then we walk the site.</span>
+            {cta.band[0]} <br />
+            <span className="text-brand-gold italic">{cta.band[1]}</span>
           </h2>
           <p className="font-sans text-lg text-brand-porcelain/80 max-w-2xl mx-auto mb-16 font-light">
-            The cost estimator gives you a planning range first. If the number works, we visit, measure, and put the base, drainage and materials in a written scope for your property.
+            {cta.bandBody}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link to={estimatorHref} className="btn-primary px-12 py-4">See My Cost Range</Link>
+            <Link to={cta.to} className="btn-primary px-12 py-4">{cta.label}</Link>
             <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or contact us →</Link>
           </div>
         </div>

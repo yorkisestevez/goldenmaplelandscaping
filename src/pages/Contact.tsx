@@ -1,6 +1,6 @@
 import { PROJECT_BUDGET_RANGES } from '../data/projectBudgets';
-import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, Clock, Shield, Award, CheckCircle, ChevronDown } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -19,6 +19,11 @@ const encode = (data: Record<string, string>) =>
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
+// ?service= values that preselect a Service Interest option (e.g. the seasonal clean-up page's CTA).
+const SERVICE_FROM_QUERY: Record<string, string> = {
+  'seasonal-cleanup': 'Seasonal Clean-Up (Spring / Fall)',
+};
+
 export default function Contact() {
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -31,6 +36,13 @@ export default function Contact() {
     details: '',
     'bot-field': '',
   });
+
+  // Applied after mount so the prerendered HTML and the first client render match.
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const preset = SERVICE_FROM_QUERY[searchParams.get('service') ?? ''];
+    if (preset) setForm((f) => ({ ...f, service: preset }));
+  }, [searchParams]);
 
   const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -216,6 +228,7 @@ export default function Contact() {
                         <option>Premium Patio Rebuild</option>
                         <option>Full Backyard Transformation</option>
                         <option>Front Entrance / Walkway Package</option>
+                        <option>Seasonal Clean-Up (Spring / Fall)</option>
                         <option>Other Hardscape Project</option>
                       </select>
                       <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-gold-dark pointer-events-none" />
