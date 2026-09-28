@@ -79,14 +79,22 @@ spans assume this.
 
 - **Beam rows:** the fewest that keep every joist span within the table. Each free end is cantilevered as far as the
   cantilever rule allows, rounded down to the inch.
-- **Freestanding decks:** a house-side beam, set in by the same cantilever as the front.
+- **Freestanding decks:** a house-side beam, set in by the same cantilever as the front. Zones along one house edge
+  share the smallest of those, so the house-side beam is one straight line.
 - **Beam size:** the same lumber size as the joists, as in Barrie's "same depth as joists" template.
   - 2-ply when its posts can stand at least 8 ft apart; otherwise 3-ply.
+- **Posts:**
   - Posts sit 12 in in from the beam ends and are evenly spaced within the beam's span.
+  - They are never closer than 24 in, so two pier footings don't overlap (the rule
+    yorkisestevez/goldenmaplelandscaping#102 set).
+  - A beam shorter than 4 ft stands on one centre post. That is the only case where a beam overhangs more than 12 in:
+    up to 2 ft.
 - **Beam mount:** a drop beam needs its underside at least 6 in above grade (Barrie's 6 in of pier; at the lowest,
-  the beam sits in a saddle on the pier). Lower decks set the beam flush with the joists. Joists hung on a flush beam
-  cannot cantilever past it, so its outer face is the deck edge.
-- **Joists:** laid out from the rim at the chosen spacing, with rim joists at both ends.
+  the beam sits in a saddle on the pier). Lower decks set the beam flush with the joists.
+  - Joists hung on a flush beam cannot cantilever past it, so its outer face is the deck edge.
+  - Landings frame the same way, with beams on both edges, because their stringers bear there.
+- **Joists:** laid out from the rim at the chosen spacing, with rim joists at both ends. Blocking rows are evenly
+  spaced so no gap exceeds 82 in.
 
 ## Where the sources disagree, and what the engine does
 

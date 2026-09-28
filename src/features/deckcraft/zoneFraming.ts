@@ -38,8 +38,19 @@ export function cleanPolygon(points:PlanPoint[]):PlanPoint[]{
   return out;
 }
 
-export function zoneReference(zone:DeckZone,cfg:ZoneFramingConfig):ZoneReference{
-  return frameRectangle({widthIn:zone.size.w,depthIn:zone.size.h,topIn:cfg.top,ledger:zone.attached,joistSpacingIn:cfg.spacing as 12|16,joistSize:cfg.framingSize as JoistSize});
+export function zoneReference(zone:DeckZone,cfg:ZoneFramingConfig,houseCantileverIn?:number):ZoneReference{
+  return frameRectangle({widthIn:zone.size.w,depthIn:zone.size.h,topIn:cfg.top,ledger:zone.attached,joistSpacingIn:cfg.spacing as 12|16,joistSize:cfg.framingSize as JoistSize,houseCantileverIn});
+}
+
+/** Freestanding zones that start on the house edge share one straight house-side beam: each is reframed with the
+ * smallest house-side cantilever among them (the engine trims it further where a zone's own span needs). */
+export function shareHouseSideBeam(zones:FramedZone[],cfg:ZoneFramingConfig):FramedZone[]{
+  // The house edge is the level's own back line (a free outline may sit anywhere in plan), not y = 0.
+  const free=zones.filter(z=>!z.zone.attached&&z.reference.beamRows[0]?.kind==='house'&&!z.reference.edgeBeams);
+  const back=Math.min(...free.map(z=>z.zone.origin.y)),onEdge=free.filter(z=>Math.abs(z.zone.origin.y-back)<.01);
+  if(onEdge.length<2)return zones;
+  const shared=Math.min(...onEdge.map(z=>z.reference.beamRows[0].z));
+  return zones.map(z=>onEdge.includes(z)?{zone:z.zone,reference:zoneReference(z.zone,cfg,shared)}:z);
 }
 
 /** A landing carries stair stringers at its edges, so its beams sit on both edges (outer face on the edge) instead of

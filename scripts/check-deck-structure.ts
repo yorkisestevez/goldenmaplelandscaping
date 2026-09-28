@@ -58,8 +58,10 @@ for(const w of [12,24,30,48,96,144,192,240,360,480])for(const d of [36,60,96,120
   ok(f.beam.plies===3||f.beamSpanLimitIn>=DESIGN.targetPostSpacingIn,`${tag}: 2-ply only where it spans ${DESIGN.targetPostSpacingIn} in`);
   for(const r of f.beamRows){
     const xs=f.posts.filter(p=>p.z===r.z&&p.row===r.kind).map(p=>p.x).sort((a,b)=>a-b);
-    ok(xs[0]<=BEAM_CANTILEVER.maxIn+1e-9&&w-xs.at(-1)!<=BEAM_CANTILEVER.maxIn+1e-9,`${tag}: the ${r.kind} beam overhangs its end posts by no more than ${BEAM_CANTILEVER.maxIn} in`);
-    ok(w<DESIGN.minPostSpacingIn?xs.length===1&&Math.abs(xs[0]-w/2)<1e-9:xs.length>=2&&xs.every((x,i)=>i===0||x-xs[i-1]>=DESIGN.minPostSpacingIn-1e-9),`${tag}: posts under the ${r.kind} beam at least ${DESIGN.minPostSpacingIn} in apart, or one centre post`);
+    // A beam too short for two posts 24 in apart, each set in 12 in, stands on one centre post (the short-beam rule).
+    const short=w<DESIGN.minPostSpacingIn+2*DESIGN.beamEndOverhangIn;
+    ok(short?xs.length===1&&Math.abs(xs[0]-w/2)<1e-9:xs.length>=2&&Math.abs(xs[0]-BEAM_CANTILEVER.maxIn)<1e-9&&Math.abs(w-xs.at(-1)!-BEAM_CANTILEVER.maxIn)<1e-9,`${tag}: the ${r.kind} beam overhangs its end posts by ${BEAM_CANTILEVER.maxIn} in, or stands on one centre post when shorter than ${DESIGN.minPostSpacingIn+2*DESIGN.beamEndOverhangIn} in`);
+    ok(xs.every((x,i)=>i===0||x-xs[i-1]>=DESIGN.minPostSpacingIn-1e-9),`${tag}: posts under the ${r.kind} beam at least ${DESIGN.minPostSpacingIn} in apart`);
     ok(xs.every((x,i)=>i===0||x-xs[i-1]<=f.beamSpanLimitIn+1e-6),`${tag}: posts under the ${r.kind} beam within its span`);
   }
   ok(f.joistXsIn[0]===.75&&f.joistXsIn.at(-1)===w-.75&&f.joistXsIn.every((x,i)=>i===0||(x>f.joistXsIn[i-1]&&x-f.joistXsIn[i-1]<=joistSpacingIn+1e-9)),`${tag}: joists within ${joistSpacingIn} in, rims at both ends`);
@@ -68,5 +70,12 @@ for(const w of [12,24,30,48,96,144,192,240,360,480])for(const d of [36,60,96,120
   const jd=ACTUAL_DEPTH_IN[joistSize],bd=f.beamDepthIn,top=topIn-DESIGN.deckingThicknessIn;
   ok(f.beamMount==='drop'?Math.abs(f.beamBottomIn-(top-jd-bd))<1e-9&&f.beamBottomIn>=DESIGN.minDropBeamUndersideIn:Math.abs(f.beamBottomIn-(top-bd))<1e-9&&top-jd-bd<DESIGN.minDropBeamUndersideIn,`${tag}: ${f.beamMount} beam height`);
   zones++;
+}
+// 5. A shared house-side cantilever (zones along one house edge): the house row sits there, within the rule.
+for(const d of [60,96,144,192,288])for(const hc of [0,6,12,18,30])for(const joistSize of SIZES){
+  const f=frameRectangle({widthIn:96,depthIn:d,topIn:48,ledger:false,joistSpacingIn:16,joistSize,houseCantileverIn:hc}),tag=`${d} deep freestanding ${joistSize}, house cantilever ${hc}`;
+  const zs=f.beamRows.map(r=>r.z);
+  ok(f.beamRows[0].kind==='house'&&zs[0]<=hc&&zs[0]<=joistCantileverLimitIn(joistSize,f.joistSpanIn)+1e-9,`${tag}: house row at ${zs[0]}, within the given and the allowed cantilever`);
+  ok(zs.every((z,i)=>i===0||Math.abs(z-zs[i-1]-f.joistSpanIn)<1e-6)&&f.joistSpanIn<=f.joistSpanLimitIn+1e-9&&Math.abs(d-zs.at(-1)!-f.cantileverIn)<1e-6&&f.cantileverIn<=joistCantileverLimitIn(joistSize,f.joistSpanIn)+1e-9,`${tag}: spans and front cantilever within the rules`);
 }
 console.log(`DECK STRUCTURE OK: ${checks} checks. Transcribed OBC 2024, Barrie, Springwater and Orillia values are pinned; ${zones} zones framed within the joist, beam, cantilever, post-spacing and blocking rules, landings included.`);

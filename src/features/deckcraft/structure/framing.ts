@@ -1,4 +1,4 @@
-import {ACTUAL_DEPTH_IN,DESIGN,beamSpanLimitIn,joistCantileverRule,joistSpanLimitIn,maxBlockingGapIn,pickBeam,type BeamChoice,type JoistSize} from './spanTables';
+import {ACTUAL_DEPTH_IN,DESIGN,beamSpanLimitIn,joistCantileverLimitIn,joistCantileverRule,joistSpanLimitIn,maxBlockingGapIn,pickBeam,type BeamChoice,type JoistSize} from './spanTables';
 
 /**
  * Framing of one rectangular deck zone, from the span tables in spanTables.ts.
@@ -36,6 +36,9 @@ export interface RectFramingInput{
   beam?:BeamChoice;
   /** Beams on the free edges and no joist cantilever, whatever the mount (a landing). */
   edgeBeams?:boolean;
+  /** Freestanding only: the house-side cantilever to use, so zones along one house edge share a straight house-side
+   * beam. At most the cantilever the rule allows; the front is laid out behind it as if on a ledger at that line. */
+  houseCantileverIn?:number;
 }
 export interface RectFraming{
   beamRows:BeamRow[];posts:FramingPost[];beam:BeamChoice;
@@ -71,12 +74,12 @@ function spansFor(depthIn:number,ledger:boolean,n:number,size:JoistSize,cantilev
   return {cantileverIn:c,spanIn:(depthIn-k*c)/n};
 }
 
-/** Posts under a beam of the full zone width: end posts set in by the beam overhang, the rest evenly spaced. A beam
- * too short for two posts DESIGN.minPostSpacingIn apart stands on one post at its middle; one a little longer sets its
- * two posts exactly that far apart, which keeps each overhang within the limit. */
+/** Posts under a beam of the full zone width: end posts set in by the beam overhang, the rest evenly spaced. A beam too
+ * short for two posts DESIGN.minPostSpacingIn apart with that overhang stands on one post at its middle, so neither its
+ * own posts nor its neighbours' (each set in by the overhang) crowd each other's footings. */
 function postXs(widthIn:number,spanLimitIn:number){
-  if(widthIn<DESIGN.minPostSpacingIn)return [widthIn/2];
-  const inset=Math.min(DESIGN.beamEndOverhangIn,(widthIn-DESIGN.minPostSpacingIn)/2),run=widthIn-2*inset;
+  if(widthIn<DESIGN.minPostSpacingIn+2*DESIGN.beamEndOverhangIn)return [widthIn/2];
+  const inset=DESIGN.beamEndOverhangIn,run=widthIn-2*inset;
   const bays=Math.max(1,Math.ceil(run/spanLimitIn-1e-9));
   return Array.from({length:bays+1},(_,i)=>inset+run*i/bays);
 }
@@ -99,11 +102,16 @@ export function frameRectangle(input:RectFramingInput):RectFraming{
   const joistDepth=ACTUAL_DEPTH_IN[joistSize],beamDepth=ACTUAL_DEPTH_IN[input.beam?.size??joistSize];
   const joistTop=input.topIn-DESIGN.deckingThicknessIn,dropBottom=joistTop-joistDepth-beamDepth;
   const beamMount=dropBottom>=DESIGN.minDropBeamUndersideIn?'drop':'flush',edgeBeams=beamMount==='flush'||!!input.edgeBeams,cantilever=!edgeBeams;
-  let n=1,layout=spansFor(d,ledger,1,joistSize,cantilever);
-  while(layout.spanIn>joistLimit+1e-9&&n<20)layout=spansFor(d,ledger,++n,joistSize,cantilever);
-  const {cantileverIn:c,spanIn:s}=layout,start=ledger?0:c;
+  // A given house-side cantilever fixes the house-side row; the rest is laid out behind it like a ledgered zone.
+  let houseC=!ledger&&cantilever&&input.houseCantileverIn!==undefined?Math.max(0,Math.floor(input.houseCantileverIn)):undefined;
+  const lay=(k:number)=>houseC===undefined?spansFor(d,ledger,k,joistSize,cantilever):spansFor(d-houseC,true,k,joistSize,cantilever);
+  let n=1,layout=lay(1);
+  while(layout.spanIn>joistLimit+1e-9&&n<20)layout=lay(++n);
+  // The given house-side cantilever still answers to the rule for this zone's own span: trim it until it does.
+  while(houseC!==undefined&&houseC>joistCantileverLimitIn(joistSize,layout.spanIn)+1e-9){houseC=Math.floor(joistCantileverLimitIn(joistSize,layout.spanIn));n=1;layout=lay(1);while(layout.spanIn>joistLimit+1e-9&&n<20)layout=lay(++n);}
+  const {cantileverIn:c,spanIn:s}=layout,hc=houseC??c,start=ledger?0:hc;
   const rows:BeamRow[]=[];
-  if(!ledger)rows.push({z:start,kind:'house',supportedLengthIn:s/2+c});
+  if(!ledger)rows.push({z:start,kind:'house',supportedLengthIn:s/2+hc});
   for(let i=1;i<=n;i++)rows.push({z:start+s*i,kind:i===n?'front':'intermediate',supportedLengthIn:i===n?s/2+c:s});
   const governing=Math.max(...rows.map(r=>r.supportedLengthIn));
   const beam=input.beam??pickBeam(joistSize,governing),beamSpan=beamSpanLimitIn(beam,governing);
