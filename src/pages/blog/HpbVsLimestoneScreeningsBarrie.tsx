@@ -1,5 +1,7 @@
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
+import { Link } from 'react-router-dom';
+import { publicContact } from '../../data/business';
 
 export default function HpbVsLimestoneScreeningsBarrie() {
   const faqSchema = {
@@ -122,7 +124,9 @@ export default function HpbVsLimestoneScreeningsBarrie() {
 
       <AuthorBio bio={"Yorkis Estevez is the founder of Golden Maple Landscaping, an interlocking and outdoor construction company serving Barrie and Simcoe County. His crews build interlock driveways and patios on 12–16 inches of compacted clear stone with HPB bedding, engineered for Ontario freeze-thaw. He writes about the base-and-bedding decisions that determine whether a patio lasts 25 years or needs a relay in 8."} />
 
-      <div dangerouslySetInnerHTML={{ __html: "<p>Choosing the right bedding is a small decision with a 25-year consequence. If you are planning an interlocking patio or driveway in Barrie, call Golden Maple Landscaping at (705) 300-8015 or <a href=\"/book\">book a site visit</a> — we will look at your soil, your drainage, and give you a straight answer on what belongs under your pavers. You can also run your own numbers on our <a href=\"/cost-estimator\">cost estimator</a> first.</p>" }} />
+      <p>
+        Choosing the right bedding is a small decision with a 25-year consequence. If you are planning an interlocking patio or driveway in Barrie, call Golden Maple Landscaping at {publicContact.phoneDisplay} or <Link to="/book">book a site visit</Link> — we will look at your soil, your drainage, and give you a straight answer on what belongs under your pavers. You can also run your own numbers on the <Link to="/cost-estimator">cost estimator</Link> first.
+      </p>
     </BlogPostLayout>
   );
 }

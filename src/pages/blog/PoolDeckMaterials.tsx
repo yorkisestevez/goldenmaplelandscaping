@@ -12,7 +12,7 @@ export default function PoolDeckMaterials() {
         "name": "What is the best material for a pool deck in Ontario?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Porcelain pavers (Porcea Algonquin or Coast) are the best all-around pool deck material in Ontario. They're frost-proof, slip-rated R11 wet, stain-proof, and stay 5–10°C cooler underfoot than concrete pavers in direct sun. For a more traditional look, Techo-Bloc Blu HD² Smooth or Unilock Umbriano are excellent concrete-paver options. Avoid natural travertine — it stains from sunscreen and pool chemicals in the climate."
+          "text": "Porcelain pavers (Porcea Algonquin or Coast) are the best all-around pool deck material in Ontario. They have very low water absorption, are available in slip-rated finishes, and resist staining. Surface temperature varies by colour, finish, sun, and weather; confirm the selected product's current technical data. For a more traditional look, Techo-Bloc Blu HD² Smooth or Unilock Umbriano are excellent concrete-paver options. Avoid natural travertine — it stains from sunscreen and pool chemicals in the climate."
         }
       },
       {
@@ -72,7 +72,7 @@ export default function PoolDeckMaterials() {
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
         <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">Quick Answer</div>
         <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">
-          For Ontario pool decks: <strong className="text-brand-gold-dark not-italic">porcelain pavers (Porcea)</strong> are the all-around winner — frost-proof, R11 slip-rated, 5–10°C cooler than concrete, stain-proof. <strong className="text-brand-gold-dark not-italic">Techo-Bloc Blu HD² or Unilock Umbriano</strong> are best in concrete pavers. <strong>Avoid travertine.</strong> Budget $40–80/sqft installed, plus coping at $35–80/lin ft. Total typical cost for an 800 sqft surround: <strong>$35,000–$70,000</strong>.
+          For Ontario pool decks: <strong className="text-brand-gold-dark not-italic">porcelain pavers (Porcea)</strong> are a strong option because they combine very low water absorption with slip-rated, stain-resistant finishes; confirm the exact product's current technical data. <strong className="text-brand-gold-dark not-italic">Techo-Bloc Blu HD² or Unilock Umbriano</strong> are best in concrete pavers. <strong>Avoid travertine.</strong> Budget $40–80/sqft installed, plus coping at $35–80/lin ft. Total typical cost for an 800 sqft surround: <strong>$35,000–$70,000</strong>.
         </p>
       </div>
 
@@ -83,7 +83,7 @@ export default function PoolDeckMaterials() {
       <ol>
         <li><strong>Frost resistance.</strong> The deck endures 60-85 freeze-thaw cycles per winter in Simcoe County. Materials that absorb water (porous concrete, soft natural stone, cheap travertine) crack within 2–3 seasons.</li>
         <li><strong>Slip resistance when wet.</strong> R10 minimum, R11 preferred. Smooth indoor-finish slabs and polished stone are dangerous around water.</li>
-        <li><strong>Heat retention.</strong> Dark concrete pavers can hit 60°C+ in direct July sun — too hot for bare feet. Lighter colours and porcelain stay 10–20°C cooler.</li>
+        <li><strong>Surface temperature.</strong> Colour, finish, sun exposure, and weather all affect how hot a pool-deck surface feels. Compare representative samples in direct sun and confirm the selected product's current technical data.</li>
         <li><strong>Stain resistance.</strong> Sunscreen, pool chemicals, salt, leaves, wine, BBQ grease. Sealed pavers help; porcelain doesn't even need sealing.</li>
         <li><strong>Coping fit.</strong> The cap stone around the pool edge has to match the deck visually and seal the pool wall mechanically. Brand consistency between deck and coping is essential.</li>
       </ol>
@@ -97,7 +97,7 @@ export default function PoolDeckMaterials() {
               <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Material</th>
               <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Cost / sqft</th>
               <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Slip Rating</th>
-              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Heat (vs concrete)</th>
+              <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Heat note</th>
               <th className="p-4 text-brand-gold-dark font-medium uppercase tracking-wider text-[11px]">Best For</th>
             </tr>
           </thead>
@@ -106,7 +106,7 @@ export default function PoolDeckMaterials() {
               <td className="p-4 text-brand-gold-dark">Porcelain (Porcea)</td>
               <td className="p-4">$58–65</td>
               <td className="p-4">R11</td>
-              <td className="p-4">5–10°C cooler</td>
+              <td className="p-4">Varies by colour and finish</td>
               <td className="p-4">Best all-around. Modern, low-maintenance.</td>
             </tr>
             <tr className="border-t border-brand-dim/60">
@@ -141,7 +141,7 @@ export default function PoolDeckMaterials() {
               <td className="p-4">Oakville Blue Ice (natural)</td>
               <td className="p-4">$65–75</td>
               <td className="p-4">R10</td>
-              <td className="p-4">3–6°C cooler</td>
+              <td className="p-4">Varies by colour and finish</td>
               <td className="p-4">Genuine Ontario stone. One-of-a-kind look.</td>
             </tr>
             <tr className="border-t border-brand-dim/60">
@@ -155,7 +155,7 @@ export default function PoolDeckMaterials() {
               <td className="p-4 text-brand-muted">Travertine</td>
               <td className="p-4 text-brand-muted">$50–65</td>
               <td className="p-4 text-brand-muted">R10</td>
-              <td className="p-4 text-brand-muted">Cooler</td>
+              <td className="p-4 text-brand-muted">Varies by colour and finish</td>
               <td className="p-4 text-brand-muted line-through">Not recommended for Ontario — stains, frost spalling.</td>
             </tr>
             <tr className="border-t border-brand-dim/60">
@@ -176,12 +176,12 @@ export default function PoolDeckMaterials() {
       <ul>
         <li><strong>Zero porosity (under 0.5%).</strong> Water can't enter the paver, so freeze-thaw can't damage it. Concrete pavers, by comparison, sit at 4–6% porosity.</li>
         <li><strong>Stain-proof surface.</strong> Sunscreen, red wine, leaves — wipes off with water. No sealing, no annual maintenance.</li>
-        <li><strong>Cooler underfoot.</strong> Porcelain reflects more heat than concrete. In a side-by-side test on a 32°C July afternoon, the Porcea Algonquin patio measured 42°C; the adjacent Techo-Bloc Blu HD² measured 51°C.</li>
+        <li><strong>Surface temperature depends on the selection.</strong> Colour, finish, sun exposure, and weather affect every pool-deck material. Compare representative samples in direct sun and confirm current manufacturer documentation for the exact product.</li>
         <li><strong>Consistent colour.</strong> Each paver is fired identically. No batch variation, no efflorescence (the white mineral haze that plagues some concrete pavers).</li>
         <li><strong>Thinner profile (20mm).</strong> Lighter to handle, faster to install. Doesn't require the deeper base of 60mm concrete pavers.</li>
       </ul>
 
-      <p>Trade-offs: porcelain is <strong>more expensive (~25–35% higher than mid-tier concrete)</strong>, and edges show wear if the install isn't precise — there's no margin for sloppy cuts. Contractors use diamond wet-saw cuts on 100% of porcelain edges. A budget contractor with a chop saw will give you chipped edges within a season.</p>
+      <p>Trade-offs: porcelain is <strong>more expensive (~25–35% higher than mid-tier concrete)</strong>, and edges show wear if the install isn't precise — there's no margin for sloppy cuts. Contractors use diamond wet-saw cuts on 100% of porcelain edges. Precision cuts require appropriate wet-cutting equipment and careful edge handling; confirm the installation method for the selected slab.</p>
 
       <h2>Concrete Pavers: When They're the Right Call</h2>
 
@@ -252,7 +252,7 @@ export default function PoolDeckMaterials() {
       <p>An 800 sqft surround with coping, drainage, and lighting takes <strong>4–7 days on-site</strong>. Tear-out of an existing deck adds 2–3 days. Pool must be drained or covered during install.</p>
 
       <h3>What about dark colours around a pool?</h3>
-      <p>Dark concrete pavers look stunning but get hot. Contractors commonly steer clients toward dark perimeter accents (border courses, coping) with a lighter primary deck colour. Dark porcelain (Porcea Thundercloud) stays cooler than dark concrete because of porcelain's surface reflectance.</p>
+      <p>Dark concrete pavers look stunning but get hot. Contractors commonly steer clients toward dark perimeter accents (border courses, coping) with a lighter primary deck colour. Dark porcelain can also become hot in direct sun, so compare representative samples and current manufacturer data before choosing a finish.</p>
 
       <h3>Do you handle the pool itself?</h3>
       <p>Pool-deck scope, trade coordination, and any referrals should be confirmed for the specific project before work begins.</p>
