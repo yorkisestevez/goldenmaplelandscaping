@@ -1,0 +1,1171 @@
+{
+ "schemaVersion": 1,
+ "verifiedOn": "2026-09-27",
+ "status": "draft - not in the reviewed manifest until independently verified",
+ "recipes": [
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-smooth",
+   "patternId": "chevron-pattern-02-100-diamond",
+   "patternName": "Chevron pattern 02 - 100% Diamond",
+   "originalPatternId": "chevron-pattern-02-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 180.783,
+    "depthMm": 313.3757,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Rows are strips of the actual stone (a side along each row, rows edge to edge): exact, with no residual. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed.",
+    "repeatBasisMm": [
+     [
+      180.783,
+      0.0
+     ],
+     [
+      0.0,
+      313.3757
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -45.30431,
+      "yMm": -78.343918,
+      "rotationDeg": 30.039711
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -45.30431,
+      "yMm": 78.343918,
+      "rotationDeg": 149.960289
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 02",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "actual-stone-strips-no-residual",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -1,
+      0
+     ],
+     [
+      -1,
+      2
+     ]
+    ],
+    "sourceStonesObserved": 99,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 0,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": 0.766,
+    "coverage": 1.0,
+    "stonesPerRepeat": 2,
+    "repeatAreaMm2": 56652.999,
+    "stockAreaPerRepeatMm2": 56653.0,
+    "expectedStonesPerRepeat": 2
+   }
+  },
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-granitex-made-to-order",
+   "patternId": "chevron-pattern-02-100-diamond",
+   "patternName": "Chevron pattern 02 - 100% Diamond",
+   "originalPatternId": "chevron-pattern-02-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 180.783,
+    "depthMm": 313.3757,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Rows are strips of the actual stone (a side along each row, rows edge to edge): exact, with no residual. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed.",
+    "repeatBasisMm": [
+     [
+      180.783,
+      0.0
+     ],
+     [
+      0.0,
+      313.3757
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -45.30431,
+      "yMm": -78.343918,
+      "rotationDeg": 30.039711
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -45.30431,
+      "yMm": 78.343918,
+      "rotationDeg": 149.960289
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 02",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "actual-stone-strips-no-residual",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -1,
+      0
+     ],
+     [
+      -1,
+      2
+     ]
+    ],
+    "sourceStonesObserved": 99,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 0,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": 0.766,
+    "coverage": 1.0,
+    "stonesPerRepeat": 2,
+    "repeatAreaMm2": 56652.999,
+    "stockAreaPerRepeatMm2": 56653.0,
+    "expectedStonesPerRepeat": 2
+   }
+  },
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-smooth",
+   "patternId": "chevron-pattern-03-100-diamond",
+   "patternName": "Chevron pattern 03 - 100% Diamond",
+   "originalPatternId": "chevron-pattern-03-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 180.783,
+    "depthMm": 940.127,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Rows are strips of the actual stone (a side along each row, rows edge to edge): exact, with no residual. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed.",
+    "repeatBasisMm": [
+     [
+      180.783,
+      0.0
+     ],
+     [
+      0.0,
+      940.127
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -45.30431,
+      "yMm": -78.343918,
+      "rotationDeg": 30.039711
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -45.30431,
+      "yMm": 78.343918,
+      "rotationDeg": 149.960289
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -135.478709,
+      "yMm": 235.031754,
+      "rotationDeg": 149.960289
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -135.478709,
+      "yMm": 391.719589,
+      "rotationDeg": 30.039711
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -135.478709,
+      "yMm": 548.407425,
+      "rotationDeg": 149.960289
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -135.478709,
+      "yMm": 705.095261,
+      "rotationDeg": 30.039711
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 03",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "actual-stone-strips-no-residual",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -1,
+      0
+     ],
+     [
+      -3,
+      6
+     ]
+    ],
+    "sourceStonesObserved": 103,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 0,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": 0.883,
+    "coverage": 1.0,
+    "stonesPerRepeat": 6,
+    "repeatAreaMm2": 169958.979,
+    "stockAreaPerRepeatMm2": 169959.0,
+    "expectedStonesPerRepeat": 6
+   }
+  },
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-granitex-made-to-order",
+   "patternId": "chevron-pattern-03-100-diamond",
+   "patternName": "Chevron pattern 03 - 100% Diamond",
+   "originalPatternId": "chevron-pattern-03-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 180.783,
+    "depthMm": 940.127,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Rows are strips of the actual stone (a side along each row, rows edge to edge): exact, with no residual. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed.",
+    "repeatBasisMm": [
+     [
+      180.783,
+      0.0
+     ],
+     [
+      0.0,
+      940.127
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -45.30431,
+      "yMm": -78.343918,
+      "rotationDeg": 30.039711
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -45.30431,
+      "yMm": 78.343918,
+      "rotationDeg": 149.960289
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -135.478709,
+      "yMm": 235.031754,
+      "rotationDeg": 149.960289
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -135.478709,
+      "yMm": 391.719589,
+      "rotationDeg": 30.039711
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -135.478709,
+      "yMm": 548.407425,
+      "rotationDeg": 149.960289
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -135.478709,
+      "yMm": 705.095261,
+      "rotationDeg": 30.039711
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 03",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "actual-stone-strips-no-residual",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -1,
+      0
+     ],
+     [
+      -3,
+      6
+     ]
+    ],
+    "sourceStonesObserved": 103,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 0,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": 0.883,
+    "coverage": 1.0,
+    "stonesPerRepeat": 6,
+    "repeatAreaMm2": 169958.979,
+    "stockAreaPerRepeatMm2": 169959.0,
+    "expectedStonesPerRepeat": 6
+   }
+  },
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-smooth",
+   "patternId": "cubic-pattern-04-100-diamond",
+   "patternName": "Cubic pattern 04 - 100% Diamond",
+   "originalPatternId": "cubic-pattern-04-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 313.5012,
+    "depthMm": 271.5,
+    "jointMm": 0,
+    "jointStatus": "nominal-clearance-60-degree-set-out",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Three stone directions are set out on an exact 60-degree lattice from the published 181 mm side; the stone (acute angle 60.0794 degrees) fits its lozenge with up to 0.2506 mm at each acute tip. This is a nominal geometric clearance, not an installed joint. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed. Nominal clearance residual-0.2506mm.",
+    "repeatBasisMm": [
+     [
+      -313.5012,
+      0.0
+     ],
+     [
+      -156.7506,
+      -271.5
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -391.751196,
+      "yMm": -316.532976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -235.000598,
+      "yMm": -316.532976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -156.5,
+      "yMm": -90.5,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 04",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "exact-60-degree-set-out-from-published-181-mm-side",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -2,
+      1
+     ],
+     [
+      -1,
+      -1
+     ]
+    ],
+    "sourceStonesObserved": 101,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 1,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 0.99844,
+    "stonesPerRepeat": 3,
+    "repeatAreaMm2": 85115.576,
+    "stockAreaPerRepeatMm2": 84979.5,
+    "expectedStonesPerRepeat": 3
+   }
+  },
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-granitex-made-to-order",
+   "patternId": "cubic-pattern-04-100-diamond",
+   "patternName": "Cubic pattern 04 - 100% Diamond",
+   "originalPatternId": "cubic-pattern-04-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 313.5012,
+    "depthMm": 271.5,
+    "jointMm": 0,
+    "jointStatus": "nominal-clearance-60-degree-set-out",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Three stone directions are set out on an exact 60-degree lattice from the published 181 mm side; the stone (acute angle 60.0794 degrees) fits its lozenge with up to 0.2506 mm at each acute tip. This is a nominal geometric clearance, not an installed joint. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed. Nominal clearance residual-0.2506mm.",
+    "repeatBasisMm": [
+     [
+      -313.5012,
+      0.0
+     ],
+     [
+      -156.7506,
+      -271.5
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -391.751196,
+      "yMm": -316.532976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -235.000598,
+      "yMm": -316.532976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -156.5,
+      "yMm": -90.5,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 04",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "exact-60-degree-set-out-from-published-181-mm-side",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -2,
+      1
+     ],
+     [
+      -1,
+      -1
+     ]
+    ],
+    "sourceStonesObserved": 101,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 1,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 0.99844,
+    "stonesPerRepeat": 3,
+    "repeatAreaMm2": 85115.576,
+    "stockAreaPerRepeatMm2": 84979.5,
+    "expectedStonesPerRepeat": 3
+   }
+  },
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-smooth",
+   "patternId": "cubic-diamond-pattern-05-100-diamond",
+   "patternName": "Cubic diamond pattern 05 - 100% Diamond",
+   "originalPatternId": "cubic-diamond-pattern-05-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 313.5012,
+    "depthMm": 452.5,
+    "jointMm": 0,
+    "jointStatus": "nominal-clearance-60-degree-set-out",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Three stone directions are set out on an exact 60-degree lattice from the published 181 mm side; the stone (acute angle 60.0794 degrees) fits its lozenge with up to 0.2506 mm at each acute tip. This is a nominal geometric clearance, not an installed joint. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed. Nominal clearance residual-0.2506mm.",
+    "repeatBasisMm": [
+     [
+      -313.5012,
+      0.0
+     ],
+     [
+      -156.7506,
+      -452.5
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -313.375897,
+      "yMm": -180.782976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -156.625299,
+      "yMm": -180.782976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -548.376495,
+      "yMm": -407.25,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -234.875299,
+      "yMm": -226.25,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -391.625897,
+      "yMm": -316.75,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 05",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "exact-60-degree-set-out-from-published-181-mm-side",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -2,
+      1
+     ],
+     [
+      -1,
+      -2
+     ]
+    ],
+    "sourceStonesObserved": 111,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 0,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 0.998361,
+    "stonesPerRepeat": 5,
+    "repeatAreaMm2": 141859.293,
+    "stockAreaPerRepeatMm2": 141632.5,
+    "expectedStonesPerRepeat": 5
+   }
+  },
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-granitex-made-to-order",
+   "patternId": "cubic-diamond-pattern-05-100-diamond",
+   "patternName": "Cubic diamond pattern 05 - 100% Diamond",
+   "originalPatternId": "cubic-diamond-pattern-05-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 313.5012,
+    "depthMm": 452.5,
+    "jointMm": 0,
+    "jointStatus": "nominal-clearance-60-degree-set-out",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Three stone directions are set out on an exact 60-degree lattice from the published 181 mm side; the stone (acute angle 60.0794 degrees) fits its lozenge with up to 0.2506 mm at each acute tip. This is a nominal geometric clearance, not an installed joint. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed. Nominal clearance residual-0.2506mm.",
+    "repeatBasisMm": [
+     [
+      -313.5012,
+      0.0
+     ],
+     [
+      -156.7506,
+      -452.5
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -313.375897,
+      "yMm": -180.782976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -156.625299,
+      "yMm": -180.782976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -548.376495,
+      "yMm": -407.25,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -234.875299,
+      "yMm": -226.25,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -391.625897,
+      "yMm": -316.75,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 05",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "exact-60-degree-set-out-from-published-181-mm-side",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -2,
+      1
+     ],
+     [
+      -1,
+      -2
+     ]
+    ],
+    "sourceStonesObserved": 111,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 0,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 0.998361,
+    "stonesPerRepeat": 5,
+    "repeatAreaMm2": 141859.293,
+    "stockAreaPerRepeatMm2": 141632.5,
+    "expectedStonesPerRepeat": 5
+   }
+  },
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-smooth",
+   "patternId": "cubic-diamond-pattern-06-100-diamond",
+   "patternName": "Cubic diamond pattern 06 - 100% Diamond",
+   "originalPatternId": "cubic-diamond-pattern-06-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 627.0024,
+    "depthMm": 362.0,
+    "jointMm": 0,
+    "jointStatus": "nominal-clearance-60-degree-set-out",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Three stone directions are set out on an exact 60-degree lattice from the published 181 mm side; the stone (acute angle 60.0794 degrees) fits its lozenge with up to 0.2506 mm at each acute tip. This is a nominal geometric clearance, not an installed joint. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed. Nominal clearance residual-0.2506mm.",
+    "repeatBasisMm": [
+     [
+      -156.7506,
+      271.5
+     ],
+     [
+      -627.0024,
+      -362.0
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -626.877093,
+      "yMm": -361.782976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -626.877093,
+      "yMm": -180.782976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -391.625897,
+      "yMm": -45.25,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -234.875299,
+      "yMm": 45.25,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -470.126495,
+      "yMm": -271.282976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -313.375897,
+      "yMm": -271.282976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -156.625299,
+      "yMm": -180.782976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -783.627691,
+      "yMm": -271.282976,
+      "rotationDeg": 120
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 06",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "exact-60-degree-set-out-from-published-181-mm-side",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -1,
+      2
+     ],
+     [
+      -4,
+      0
+     ]
+    ],
+    "sourceStonesObserved": 117,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 1,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": -0.0,
+    "coverage": 0.998367,
+    "stonesPerRepeat": 8,
+    "repeatAreaMm2": 226974.869,
+    "stockAreaPerRepeatMm2": 226612.0,
+    "expectedStonesPerRepeat": 8
+   }
+  },
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-granitex-made-to-order",
+   "patternId": "cubic-diamond-pattern-06-100-diamond",
+   "patternName": "Cubic diamond pattern 06 - 100% Diamond",
+   "originalPatternId": "cubic-diamond-pattern-06-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 627.0024,
+    "depthMm": 362.0,
+    "jointMm": 0,
+    "jointStatus": "nominal-clearance-60-degree-set-out",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Three stone directions are set out on an exact 60-degree lattice from the published 181 mm side; the stone (acute angle 60.0794 degrees) fits its lozenge with up to 0.2506 mm at each acute tip. This is a nominal geometric clearance, not an installed joint. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed. Nominal clearance residual-0.2506mm.",
+    "repeatBasisMm": [
+     [
+      -156.7506,
+      271.5
+     ],
+     [
+      -627.0024,
+      -362.0
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -626.877093,
+      "yMm": -361.782976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -626.877093,
+      "yMm": -180.782976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -391.625897,
+      "yMm": -45.25,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -234.875299,
+      "yMm": 45.25,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -470.126495,
+      "yMm": -271.282976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -313.375897,
+      "yMm": -271.282976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -156.625299,
+      "yMm": -180.782976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -783.627691,
+      "yMm": -271.282976,
+      "rotationDeg": 120
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 06",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "exact-60-degree-set-out-from-published-181-mm-side",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -1,
+      2
+     ],
+     [
+      -4,
+      0
+     ]
+    ],
+    "sourceStonesObserved": 117,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 1,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": -0.0,
+    "coverage": 0.998367,
+    "stonesPerRepeat": 8,
+    "repeatAreaMm2": 226974.869,
+    "stockAreaPerRepeatMm2": 226612.0,
+    "expectedStonesPerRepeat": 8
+   }
+  },
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-smooth",
+   "patternId": "geometric-pattern-07-100-diamond",
+   "patternName": "Geometric pattern 07 - 100% Diamond",
+   "originalPatternId": "geometric-pattern-07-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 627.0024,
+    "depthMm": 543.0,
+    "jointMm": 0,
+    "jointStatus": "nominal-clearance-60-degree-set-out",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Three stone directions are set out on an exact 60-degree lattice from the published 181 mm side; the stone (acute angle 60.0794 degrees) fits its lozenge with up to 0.2506 mm at each acute tip. This is a nominal geometric clearance, not an installed joint. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed. Nominal clearance residual-0.2506mm.",
+    "repeatBasisMm": [
+     [
+      -627.0024,
+      0.0
+     ],
+     [
+      -313.5012,
+      -543.0
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -626.877093,
+      "yMm": -271.282976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -940.378289,
+      "yMm": -633.282976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -313.375897,
+      "yMm": -361.782976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -313.375897,
+      "yMm": -180.782976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -548.376495,
+      "yMm": -316.75,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -548.376495,
+      "yMm": -497.75,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -470.126495,
+      "yMm": -271.282976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -783.627691,
+      "yMm": -633.282976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -783.627691,
+      "yMm": -361.782976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -156.625299,
+      "yMm": -180.782976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -705.127093,
+      "yMm": -407.25,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -391.625897,
+      "yMm": -407.25,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 07",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "exact-60-degree-set-out-from-published-181-mm-side",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -4,
+      2
+     ],
+     [
+      -2,
+      -2
+     ]
+    ],
+    "sourceStonesObserved": 104,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 0,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 0.998378,
+    "stonesPerRepeat": 12,
+    "repeatAreaMm2": 340462.303,
+    "stockAreaPerRepeatMm2": 339918.0,
+    "expectedStonesPerRepeat": 12
+   }
+  },
+  {
+   "productId": "techo-diamond-paver",
+   "finishId": "hd-granitex-made-to-order",
+   "patternId": "geometric-pattern-07-100-diamond",
+   "patternName": "Geometric pattern 07 - 100% Diamond",
+   "originalPatternId": "geometric-pattern-07-100-diamond",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 627.0024,
+    "depthMm": 543.0,
+    "jointMm": 0,
+    "jointStatus": "nominal-clearance-60-degree-set-out",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas diagram (page 12) digitized as a lozenge tiling of the published 313 x 181 x 100 mm Diamond stone. Three stone directions are set out on an exact 60-degree lattice from the published 181 mm side; the stone (acute angle 60.0794 degrees) fits its lozenge with up to 0.2506 mm at each acute tip. This is a nominal geometric clearance, not an installed joint. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. The drawing is uncoloured: no colour or tonal composition is claimed. Nominal clearance residual-0.2506mm.",
+    "repeatBasisMm": [
+     [
+      -627.0024,
+      0.0
+     ],
+     [
+      -313.5012,
+      -543.0
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -626.877093,
+      "yMm": -271.282976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -940.378289,
+      "yMm": -633.282976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -313.375897,
+      "yMm": -361.782976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -313.375897,
+      "yMm": -180.782976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -548.376495,
+      "yMm": -316.75,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -548.376495,
+      "yMm": -497.75,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -470.126495,
+      "yMm": -271.282976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -783.627691,
+      "yMm": -633.282976,
+      "rotationDeg": 120
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -783.627691,
+      "yMm": -361.782976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -156.625299,
+      "yMm": -180.782976,
+      "rotationDeg": 60
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -705.127093,
+      "yMm": -407.25,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "313-181-100-mm-181-313-100",
+      "xMm": -391.625897,
+      "yMm": -407.25,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_DIAMOND 07",
+    "method": "faces of the drawn vector joint graph, keyed to the lozenge lattice by half-cell position",
+    "construction": "exact-60-degree-set-out-from-published-181-mm-side",
+    "profileKey": "techo-diamond-paver",
+    "stoneAcuteAngleDeg": 60.07942,
+    "stoneSideMm": 180.783,
+    "periodLatticeTriangles": [
+     [
+      -4,
+      2
+     ],
+     [
+      -2,
+      -2
+     ]
+    ],
+    "sourceStonesObserved": 104,
+    "nonRhombicFaces": 0,
+    "splitStonesRejoined": 0,
+    "colourComposition": "not shown in the source; none claimed"
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 0.998378,
+    "stonesPerRepeat": 12,
+    "repeatAreaMm2": 340462.303,
+    "stockAreaPerRepeatMm2": 339918.0,
+    "expectedStonesPerRepeat": 12
+   }
+  }
+ ]
+}

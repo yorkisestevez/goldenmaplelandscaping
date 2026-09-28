@@ -1,7 +1,8 @@
 # 3D viewer assets
 
-Every file here is CC0 1.0 (public domain), from Poly Haven (https://polyhaven.com). Each was downloaded on
-2026-09-25 and converted by a script in `scripts/`. The downloads themselves are not committed.
+Every file here is CC0 1.0 (public domain), from Poly Haven (https://polyhaven.com). The original material scans were downloaded on
+2026-09-25; the replacement meadow environment was downloaded on 2026-09-26. Files are converted by scripts in `scripts/`.
+The source downloads themselves are not committed.
 
 ## Lawn: `lawn-color.webp`, `lawn-normal.webp`, `lawn-roughness.webp`, `lawn.json`
 
@@ -25,15 +26,29 @@ Every file here is CC0 1.0 (public domain), from Poly Haven (https://polyhaven.c
 
 ## Sky: `sky/sky-day-*`, `sky/sky-evening-*`, `sky/sky.json`
 
-- Day: Suburban Field 02 by Jacopo Voltolina (2020-10-22), https://polyhaven.com/a/suburban_field_02.
-  File: https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/8k/suburban_field_02_8k.hdr
-- Evening: Steinbach Field by Adrian Kubasa (2024-01-28), https://polyhaven.com/a/steinbach_field.
-  File: https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/8k/steinbach_field_8k.hdr
+- Day and evening: Meadow, https://polyhaven.com/a/meadow.
+  Source: https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/8k/meadow_8k.hdr
+  MD5: c1e25ad9fb1aba9ebc8babb952292727 (108457266 bytes).
+  Both use the same photographed tree-lined clearing so changing the preview's lighting retains its surroundings.
+  Evening applies a cool skylight grade and dims this environment to 16%; this is an evening lighting study, not a separately photographed night sky.
 - Converted by `scripts/build-deck-sky.ts`:
-  - The sun and its lens flare (12° round it) are painted out of the day sky with the sky beside it. Its energy
-    becomes the scene's directional light, whose direction, colour and intensity are in `sky.json`. The evening sun is
-    too dim to paint out and stays as the dusk glow.
+  - A bright sun and lens flare (12° round it) can be extracted into the directional light. Meadow's tree-filtered sun
+    is below the extraction threshold; its soft light stays in the environment, with directional-light intensity zero.
   - Both skies are white-balanced so sun plus sky light a horizontal card in neutral grey, and scaled so that card's
     irradiance is π.
   - `sky-*-ibl.hdr` is the 1024 × 512 lighting image (Radiance RGBE, run-length encoded).
   - `sky-*-band.webp` is the 8192 × 1024 horizon from −4° to +41°, stored as the sRGB of radiance ÷ `bandScale`.
+
+## Interior staging: `room-lounge.webp`
+
+- Lebombo by Greg Zaal, CC0, https://polyhaven.com/a/lebombo.
+- Source: https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/lebombo.jpg
+  MD5: 64ac9ae7e4711d96da237d85e929337a (1873244 bytes), downloaded 2026-09-26.
+- Resized to 2048 × 1024 and encoded as WebP at quality 86. Window-room shader projects this panorama onto
+  a virtual room box behind each pane, with camera parallax and daytime/evening brightness.
+- This is generic visual staging; it is not a photograph or reconstruction of the customer's interior.
+
+## Furnished staging: room-atelier.webp
+
+Generated with Codex imagegen on 2026-09-26 for generic contemporary living-room staging: cream sofa, walnut table, oak flooring and warm lighting. Encoded at 1600 px wide as WebP quality 90. It is a rectilinear interior photograph-style asset projected behind each house opening; it is not the customer's actual interior and is not a whole-house generated render. Daylight glass instead receives a planar reflection of the actual editable DeckCraft scene. Both sliding leaves use the same opening-space projection.
+

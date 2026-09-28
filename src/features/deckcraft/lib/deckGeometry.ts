@@ -19,6 +19,7 @@ import { notchDeckAroundHouse } from '../houseFootprint';
 import { activeWrap, wrapOutline } from './wrapGeometry';
 import { activeCornerChamfers, type ActiveChamfers } from './cornerChamfers';
 import { activeCustomFront, customOutline } from './customOutline';
+import {freeFootprint} from './freeOutline';
 
 export interface PlanPoint { x: number; y: number }
 /** How squarely an edge must face a side to count as that side. A 45° angled corner (0.707) faces no
@@ -39,6 +40,8 @@ export interface FootprintPlan {
   /** Simple polygon, positive shoelace area (interior to the LEFT of edges). */
   outline: PlanPoint[];
   bounds: { w: number; h: number };
+  /** Signed local bounding origin for a freely moved polygon; absent preserves legacy pattern anchoring. */
+  origin?:PlanPoint;
   isCurved: boolean;
   /** Wrap-around outlines name every edge (e.g. 'wingR-end'); other shapes leave this unset. */
   edgeIds?: string[];
@@ -58,11 +61,13 @@ const n = (v: unknown, fallback = 0) => (Number.isFinite(Number(v)) ? Number(v) 
  */
 /** The main deck's outline before any house notching (shape or wrap outline, split at house corners). */
 export function unnotchedMainOutline(data: DeckData): PlanPoint[] {
+  const free=freeFootprint(data,1);if(free)return free.outline;
   const wrap = activeWrap(data);
   return wrap ? wrapOutline(wrap).outline : shapeFootprint(data, 1).outline;
 }
 
 export function getFootprint(data: DeckData, level: 1 | 2 = 1): FootprintPlan {
+  const free=freeFootprint(data,level);if(free)return level===1?{...free,outline:splitAtHouseCorners(data,free.outline)}:free;
   const wrap = level === 1 ? activeWrap(data) : null;
   if (wrap) return notchDeckAroundHouse(data, { ...wrapOutline(wrap), bounds: { w: wrap.W, h: wrap.L }, isCurved: false });
   const fp = shapeFootprint(data, level);
@@ -277,6 +282,13 @@ export function getRailingSegments(
 }
 
 export interface BoardRun {
+  /** Stable source identity for a physically edited board, retained through clipping and stock splitting. */
+  layoutId?:string;layoutColour?:string;layoutKind?:'region'|'breaker'|'piece';
+  /** Requested source blank/silhouette for editing an existing explicit piece without anchoring to a clipped tip. */
+  layoutSource?:{cx:number;cy:number;lengthIn:number;widthIn:number;angleDeg:number;polygon?:PlanPoint[];sourceAngleDeg?:number};
+  /** Clipped/notched fragments from one physical stock blank share this identity. Layout-only metadata. */
+  layoutStockId?:string;
+  layoutStockSource?:{cx:number;cy:number;lengthIn:number;widthIn:number;angleDeg:number};
   width?:number;
   polygon?:PlanPoint[];
   role?:'field'|'border'|'breaker'|'inlay'|'inlay-frame'|'inlay-fill';
@@ -439,7 +451,7 @@ function alignHerringbone(fp:FootprintPlan,boardWidth:number,gap:number,outlines
 }
 export function getHerringboneRows(fp:FootprintPlan,boardWidth:number,gap:number,inset:number,align?:{leftLine?:number;rightLine?:number}):BoardRun[]{
   const outlines=offsetPolygons([fp.outline],inset),runs:BoardRun[]=[];
-  let [cx,cy]=[fp.bounds.w/2,fp.bounds.h/2];
+  let [cx,cy]=[(fp.origin?.x??0)+fp.bounds.w/2,(fp.origin?.y??0)+fp.bounds.h/2];
   if(align&&(align.leftLine!==undefined||align.rightLine!==undefined))[cx,cy]=alignHerringbone(fp,boardWidth,gap,outlines,cx,cy,align);
   for(const {tile,angle} of herringboneTiles(fp,boardWidth,gap,cx,cy))for(const poly of polygonCut(outlines,[tile])){
     if(poly.length<3)continue;

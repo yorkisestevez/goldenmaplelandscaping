@@ -40,6 +40,11 @@ const step=(h:DesignHistory<D>,before:D,key:string,at:number)=>recordChange(h,be
   const u=undoChange(h,{w:8})!;const again=step(u.history,u.design,editKey({length:1}),10*GROUP_MS+3);
   ok(again.past.length===u.history.past.length+1,'An edit right after an undo is a new step');
   ok(editKey({b:1,a:2})===editKey({a:3,b:4})&&editKey({a:1})!==editKey({b:1}),'The key names the fields, in any order');
+  for(const key of ['boardLayout','boardColours']){
+    let discrete=emptyHistory<D>();discrete=step(discrete,{w:1},editKey({[key]:[]}),0);discrete=step(discrete,{w:2},editKey({[key]:[]}),1);
+    const one=undoChange(discrete,{w:3})!;
+    ok(discrete.past.length===2&&one.design.w===2&&undoChange(one.history,one.design)?.design.w===1,'Two rapid board-layout applications keep separate undo steps');
+  }
 }
 // 3. The history is capped, keeping the most recent steps.
 {

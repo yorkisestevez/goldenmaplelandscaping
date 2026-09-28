@@ -1,3 +1,4 @@
+import type {PergolaQuoteContext} from '../pergolaPricing';
 import type {DeckEstimate} from '../designFacts';
 import type {DeckData} from '../types';
 import type {OptionGroup} from './optionGroups';
@@ -95,10 +96,10 @@ export const DELTA_MEASURE='deckcraft-option-delta';
 function measured(start:number){
   try{performance.measure(DELTA_MEASURE,{start,end:performance.now()});performance.clearMeasures(DELTA_MEASURE);}catch{/* Timing is optional. */}
 }
-interface Run{base:DeltaBase;data:DeckData;groups:readonly OptionGroup[];onPriced:()=>void}
+interface Run{base:DeltaBase;data:DeckData;groups:readonly OptionGroup[];onPriced:()=>void;pergolaQuote?:PergolaQuoteContext}
 
 /** On the page: one option per idle slice, then `onPriced`. Returns a cancel. */
-function runOnPage({base,data,groups,onPriced}:Run,schedule:Schedule):()=>void{
+function runOnPage({base,data,groups,onPriced,pergolaQuote}:Run,schedule:Schedule):()=>void{
   const queue=queueFor(base,groups);
   let stopped=false,cancel:(()=>void)|null=null;
   const next=()=>{
@@ -107,7 +108,7 @@ function runOnPage({base,data,groups,onPriced}:Run,schedule:Schedule):()=>void{
     cancel=schedule(()=>{
       if(stopped)return;
       const start=performance.now(),{key,patch}=queue.shift()!;
-      try{if(!cache.has(key))remember(key,summarize(priceOption(data,patch)));}catch{/* Left unpriced: the option shows no figure. */}
+      try{if(!cache.has(key))remember(key,summarize(priceOption(data,patch,pergolaQuote)));}catch{/* Left unpriced: the option shows no figure. */}
       measured(start);
       onPriced();
       next();
@@ -148,6 +149,6 @@ export function runOptionDeltas({schedule,...run}:Run&{schedule?:Schedule}):()=>
   if(!pricing)return runOnPage(run,schedule??whenIdle);
   const job=++jobs,items=queueFor(run.base,run.groups),entry:Run&{onPage?:()=>void}={...run};
   running.set(job,entry);
-  pricing.postMessage({job,data:run.data,items});
+  pricing.postMessage({job,data:run.data,items,pergolaQuote:run.pergolaQuote});
   return ()=>{running.delete(job);entry.onPage?.();worker?.postMessage({cancel:job});};
 }

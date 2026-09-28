@@ -1,7 +1,7 @@
-import {useEffect,useId,useRef,useState,type KeyboardEvent,type RefObject} from 'react';
+import {useEffect,useId,useRef,type KeyboardEvent,type RefObject} from 'react';
 import {dollars} from '../designFacts';
 import {quoteLabel,quoteTag,type Ledger} from './priceLedgerModel';
-import {announceChange,describeChange,type ChangeRecord} from './useChangeLedger';
+import {describeChange,type ChangeRecord} from './useChangeLedger';
 
 const Tag=({kinds}:{kinds:readonly ('supplier'|'builder')[]})=><span className="dd-tag" data-kind={kinds.length>1?'both':kinds[0]}>{quoteTag(kinds)}</span>;
 
@@ -50,13 +50,7 @@ export default function PriceLedger({ledger,variant,changes,onFullList}:{
   </section>;
 }
 
-/** One polite announcement per gesture: the newest change, once it has settled (drags and the lighting sync included). */
-export function ChangeAnnouncer({record}:{record?:ChangeRecord}){
-  const [text,setText]=useState('');
-  const next=record&&record.kind!=='loaded'?announceChange(record):'';
-  useEffect(()=>{if(!next)return;const timer=setTimeout(()=>setText(next),700);return ()=>clearTimeout(timer);},[next]);
-  return <p className="dd-sr" role="status">{text}</p>;
-}
+export {default as ChangeAnnouncer} from './ChangeAnnouncer';
 
 const FOCUSABLE='a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
 

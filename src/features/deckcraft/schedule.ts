@@ -4,7 +4,7 @@ import type {DeckTakeoff,Member} from './deckTakeoff';
 import {getHardwareLayout} from './hardwareLayout';
 import {planStock} from './stockPlan';
 import {getStairBoards} from './stairBoards';
-export interface ConnectorScheduleRow {name:string;qty:number;unit:string;rate:number|null;basis:string}
+export interface ConnectorScheduleRow {quoteResolved?:boolean;name:string;qty:number;unit:string;rate:number|null;basis:string}
 export interface StockScheduleRow {name:string;section:string;stockLengthIn:number;orderedPieces:number;cutsIn:number[][];unresolvedIn:number[];installedLf:number;orderedLf:number}
 export function stairStock(data:DeckData,model:DeckTakeoff):StockScheduleRow[]{
   const cuts=getStairBoards(data,model).map(p=>p.w);

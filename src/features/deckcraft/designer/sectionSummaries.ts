@@ -1,10 +1,10 @@
 import {allowanceItems} from '../yardSettings';
 import {shapeWords} from '../designFacts';
 import {getHouseConfig} from '../houseSettings';
-import {LIGHTING_CATALOGUE} from '../lightingCatalogue';
+import {LIGHTING_RUNTIME_CATALOGUE} from '../lightingRuntimeCatalogue';
 import {isSystemProduct} from '../lightingSystem';
 import {activeWrap} from '../lib/wrapGeometry';
-import {DECKING_CATALOGUE,RAILING_CATALOGUE} from '../manufacturerCatalog';
+import {DECKING_CATALOGUE,RAILING_CATALOGUE} from '../manufacturerRuntimeCatalogue';
 import {screenOn} from '../privacyScreens';
 import {glassRailingName} from '../framelessGlass';
 import type {DeckData} from '../types';
@@ -32,15 +32,17 @@ const SUMMARIES:Record<SectionId,(data:DeckData)=>string>={
   },
   stairs:data=>{
     const rail=RAILING_CATALOGUE.find(r=>r.id===data.catalogueRailingId);
-    return words([data.stairFlights>0?`${plural(data.stairFlights,'flight')}, ${data.stairWidth} in, ${data.stairType.toLowerCase()}`:'no stairs',rail?rail.name:data.railingType==='None'?'no railing':data.railingType==='Frameless Glass'?glassRailingName(data):`${data.railingType} railing`]);
+    const path=data.stairPath?.points;
+    const stairs=data.stairFlights>0?path?`${path.length>2?'Wrapped':'Edge'} stairs · ${path.slice(1).map((p,i)=>`${ft(Math.hypot(p.x-path[i].x,p.y-path[i].y)/12)} ft`).join(' + ')}${data.stairRiserCount?` · ${data.stairRiserCount} risers`:''}`:`${plural(data.stairFlights,'flight')}, ${data.stairWidth} in, ${data.stairType.toLowerCase()}`:'no stairs';
+    return words([stairs,rail?rail.name:data.railingType==='None'?'no railing':data.railingType==='Frameless Glass'?glassRailingName(data):`${data.railingType} railing`]);
   },
   lighting:data=>{
-    const lights=data.lightingSystem.selectedItems.reduce((n,i)=>{const p=LIGHTING_CATALOGUE.find(x=>x.id===i.productId);return n+(p&&!isSystemProduct(p)?i.qty:0);},0);
-    return lights?words([plural(lights,'light'),data.autoLighting?.posts&&'post caps',data.autoLighting?.stairs&&'step lights']):'None yet';
+    const lights=data.lightingSystem.selectedItems.reduce((n,i)=>{const p=LIGHTING_RUNTIME_CATALOGUE.find(x=>x.id===i.productId);return n+(p&&!isSystemProduct(p)?i.qty:0);},0);
+    return lights||data.autoLighting?.border?words([lights&&plural(lights,'selected light'),data.autoLighting?.posts&&'post caps',data.autoLighting?.stairs&&'step lights',data.autoLighting?.border&&'picture-frame edge lights']):'None yet';
   },
   extras:data=>{
     const screens=(data.privacyScreens??[]).filter(screenOn).length,accessories=data.catalogueAccessories?.length??0;
-    return words([screens&&plural(screens,'privacy screen'),!!data.skirting&&'skirting',data.benchLf>0&&`${ft(data.benchLf)} ft bench`,data.pergolaSqft>0&&`${data.pergolaSqft} sq ft pergola`,data.hasDemo&&'old deck removed',data.hasDrainage&&'drainage',accessories&&plural(accessories,'accessory','accessories')]);
+    return words([screens&&plural(screens,'privacy screen'),!!data.skirting&&'skirting',data.benchLf>0&&`${ft(data.benchLf)} ft bench`,data.pergolaSqft>0&&`${data.pergolaSqft} sq ft pergola`,data.hasDemo&&'old deck removed',data.hasDrainage&&'drainage',data.underDeck?.ceiling!=='none'&&!!data.underDeck?.ceiling&&'ceiling',data.underDeck?.gravel&&'gravel & fabric',data.underDeck?.floorMesh&&'floor insect mesh',accessories&&plural(accessories,'accessory','accessories')]);
   },
   site:data=>words([dashes(data.municipality),`${dashes(data.siteType).toLowerCase()} site`,data.foundation.toLowerCase()]),
   backyard:data=>{
