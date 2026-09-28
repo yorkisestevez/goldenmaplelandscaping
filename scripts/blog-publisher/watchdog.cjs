@@ -96,6 +96,31 @@ function httpsGet(url, _hops = 0) {
   });
 }
 
+// Transient network faults worth retrying rather than reporting as a real
+// miss. Mirrors skills/blog-fleet-watchdog/check.js's TRANSIENT_RE — a
+// single ECONNRESET on a GitHub Actions runner is noise, not a broken page.
+// (2026-08-21: the rot-scan below was firing severity:high on a lone
+// ECONNRESET with zero retry — false alarm on a page that was actually up.)
+const TRANSIENT_RE = /ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENOTFOUND|ECONNREFUSED|socket hang up|timeout/i;
+
+async function httpsGetResilient(url, { attempts = 3 } = {}) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await httpsGet(url);
+    } catch (e) {
+      lastErr = e;
+      const msg = String((e && e.message) || e);
+      if (i < attempts - 1 && TRANSIENT_RE.test(msg)) {
+        await new Promise((r) => setTimeout(r, 600 * (i + 1))); // linear backoff
+        continue;
+      }
+      break;
+    }
+  }
+  throw lastErr;
+}
+
 async function telegram(text) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -406,7 +431,7 @@ async function checkPostRot(findings) {
   for (const postUrl of sample) {
     let html;
     try {
-      const r = await httpsGet(postUrl);
+      const r = await httpsGetResilient(postUrl);
       if (r.status !== 200) {
         findings.push({
           severity: 'high',
