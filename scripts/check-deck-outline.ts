@@ -163,7 +163,7 @@ for(const [name,patch] of [['rectangle',{}],['L-shape',{shape:'L-Shape',cutoutWi
 {
   const page=designerSource(),step=read('src/features/deckcraft/designer/steps/DimensionsStep.tsx'),editor=read('src/features/deckcraft/designer/OutlineEditor.tsx'),actions=read('src/features/deckcraft/designer/deckShapeActions.ts');
   ok(step.includes("['Custom','Custom outline']")&&step.includes("const OutlineEditor=lazy(()=>import('../OutlineEditor'));"),'The shape menu offers a custom outline, and its editor loads only when chosen');
-  ok(/return \{shape,customFront:kept\?\?frontFromOutline\(unnotchedMainOutline\(data\)\)\?\?rectangleFront\(data\.width,data\.length\),levels:1\};/.test(actions)&&step.includes('update(chooseShape(data,e.target.value as DeckShape))'),'Choosing it starts from the deck as drawn (or the outline it had), one level');
+  ok(/return \{shape,deckOutlines,customFront:kept\?\?frontFromOutline\(unnotchedMainOutline\(data\)\)\?\?rectangleFront\(data\.width,data\.length\),levels:1\};/.test(actions)&&step.includes('update(chooseShape(data,e.target.value as DeckShape))'),'Choosing the legacy outline preset clears the free outline and starts from the deck as drawn, one level');
   const drawn=deckReleaseData({...base(),levels:2}),picked=chooseShape(drawn,'Custom'),kept=chooseShape({...drawn,customFront:T},'Custom');
   ok(picked.levels===1&&JSON.stringify(picked.customFront)===JSON.stringify(frontFromOutline(unnotchedMainOutline(drawn)))&&JSON.stringify(kept.customFront)===JSON.stringify(T),'The shape action starts from the deck as drawn, or keeps a clean outline');
   ok(JSON.stringify(chooseShape(drawn,'L-Shape'))==='{"shape":"L-Shape"}','Any other shape changes only the shape');

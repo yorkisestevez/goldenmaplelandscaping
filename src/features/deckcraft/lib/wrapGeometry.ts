@@ -79,6 +79,7 @@ export function wrapBlockers(data:DeckData):string[]{
 
 /** The wrap as built, in inches, or null when there is none or it is paused by `wrapBlockers`. */
 export function activeWrap(data:DeckData):ActiveWrap|null{
+  if(data.deckOutlines?.main)return null;
   const w=data.wrap;if(!w||(!w.left&&!w.right)||wrapBlockers(data).length)return null;
   const house=getHouseConfig(data),HW=house.widthFt*12,HD=house.depthFt*12,L=Math.max(12,num(data.length,12)*12);
   const wing=(g?:{widthFt:number;runFt:number})=>g?{widthIn:clamp(num(g.widthFt,8)*12,WRAP_WING_WIDTH_FT[0]*12,WRAP_WING_WIDTH_FT[1]*12),runIn:clamp(num(g.runFt,8)*12,Math.min(WRAP_RUN_FT[0]*12,HD),HD)}:undefined;
@@ -105,6 +106,7 @@ export function activeWrap(data:DeckData):ActiveWrap|null{
  * left wing + house + right wing wide. A design without a wrap is returned unchanged.
  */
 export function normalizeWrap(data:DeckData):DeckData{
+  if(data.deckOutlines?.main)return data;
   const w=data.wrap;if(!w||(!w.left&&!w.right))return data;
   const next={...data,houseConfig:getHouseConfig(data)};
   const wrap=activeWrap(next);

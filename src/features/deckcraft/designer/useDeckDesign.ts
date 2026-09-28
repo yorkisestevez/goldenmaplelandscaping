@@ -1,4 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
+import {prepareDesignUpdate} from './designUpdate';
 import {deckReleaseData,DECK_RELEASE_STORAGE_KEY,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../deckRelease';
 import {DEFAULT_DECK} from '../defaults';
 import {DESIGN_STORAGE_KEY,pruneEdgeNames} from '../designPersistence';
@@ -8,6 +9,7 @@ import {trackDeck} from '../deckAnalytics';
 import {editKey,emptyHistory,recordChange,redoChange,undoChange,type DesignHistory} from './designHistory';
 import type {DeckData,TerrainConfig,YardFeature} from '../types';
 import {deckSizeForArea,readDeckArea} from '../estimatorHandoff';
+const RECOVERY_STORAGE_KEY='golden-maple.deck-studio.unrestored.v1';
 
 /**
  * The working design and everything that keeps it: autosave and restore on this device, shared design
@@ -19,9 +21,14 @@ import {deckSizeForArea,readDeckArea} from '../estimatorHandoff';
 export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
   const [data,setData]=useState<DeckData>(()=>deckReleaseData(structuredClone(DEFAULT_DECK)));
   const [mounted,setMounted]=useState(false);
+  const [designReady,setDesignReady]=useState(false);
   const [hasWebGL,setHasWebGL]=useState(true);
   const [saved,setSaved]=useState(false);
   const [storageReady,setStorageReady]=useState(false);
+  const [autosavePaused,setAutosavePaused]=useState(false);
+  const [unrestoredDesign,setUnrestoredDesign]=useState<string|null>(null);
+  const [autosaveState,setAutosaveState]=useState<'loading'|'saving'|'saved'|'error'>('loading');
+  const [lastAutosaveAt,setLastAutosaveAt]=useState('');
   const [designStatus,setDesignStatus]=useState('');
   const [designError,setDesignError]=useState('');
   const [linkBackup,setLinkBackup]=useState(false);
@@ -35,6 +42,15 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
   const [historySize,setHistorySize]=useState({past:0,future:0});
   const syncHistorySize=()=>setHistorySize({past:history.current.past.length,future:history.current.future.length});
   const replace=(next:DeckData)=>{source.current=`replace:${++replaced.current}`;setData(next);};
+  // Only an explicit import or new design may resume after a failed restore.
+  // Keep the exact original bytes first; ordinary edits and shared links cannot discard them.
+  const resumeAutosave=()=>{
+    if(autosavePaused&&unrestoredDesign){
+      try{localStorage.setItem(RECOVERY_STORAGE_KEY,unrestoredDesign);}
+      catch{setDesignError('Your previous file is preserved. Auto-save remains paused; use Save JSON to keep this design.');return;}
+    }
+    setAutosavePaused(false);
+  };
   // A shared design link (#d=…) opens in place of the working design. The visitor's own design is kept
   // (never overwritten by a second link) so they can go back to it.
   async function openSharedLink(value:string,own:string|null){
@@ -58,6 +74,7 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
     setMounted(true);
     try {const c=document.createElement('canvas');setHasWebGL(!!(c.getContext('webgl2')||c.getContext('webgl')));}catch{setHasWebGL(false);}
     let stored:string|null=null;
+    try{setUnrestoredDesign(localStorage.getItem(RECOVERY_STORAGE_KEY));}catch{/* Recovery remains available from the current file below. */}
     try{
       const current=localStorage.getItem(DECK_RELEASE_STORAGE_KEY);stored=current??localStorage.getItem(DESIGN_STORAGE_KEY);
       if(stored){
@@ -67,7 +84,10 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
           setDesignStatus('Your deck and house have been restored. Your earlier design also had backyard features; you can add them back in the Backyard section.');
         }else{setData(restored);setDesignStatus(restored.yardFeatures?.length?'Your deck, house and backyard have been restored.':'Your deck and house have been restored.');}
       }
-    }catch{setDesignError('Your previous design could not be restored. You can import a saved JSON file.');}
+    }catch{
+      if(stored){setUnrestoredDesign(stored);setAutosavePaused(true);}
+      setDesignError(stored?'Your previous file is preserved. Auto-save is paused. Open Files to download it, import another design, or start a new design.':'Your previous design could not be restored. You can import a saved JSON file.');
+    }
     try{setLinkBackup(!!localStorage.getItem(DESIGN_LINK_BACKUP_KEY));}catch{/* No storage, no backup. */}
     setStorageReady(true);
     // A deck handed over by the cost estimator (?sqft=300) starts at about that size, unless a shared design
@@ -79,17 +99,32 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
       else if(!link)setDesignStatus(status=>`${status?`${status} `:''}Your cost estimate had a deck of ${words}; change the size under Deck shape & size to start from it.`);
       try{const query=new URLSearchParams(window.location.search);query.delete('sqft');const rest=query.toString();window.history.replaceState(null,'',window.location.pathname+(rest?`?${rest}`:'')+window.location.hash);}catch{/* The size stays in the address; reopening starts from it again. */}
     }
-    if(link)void openSharedLink(link,stored);
+    if(link)void openSharedLink(link,stored).finally(()=>setDesignReady(true));else setDesignReady(true);
     // A link pasted into this open tab only changes the hash.
-    const onHash=()=>{const next=designLinkFromHash(window.location.hash);if(!next)return;let own:string|null=null;try{own=serializeDesign(dataRef.current);}catch{/* Nothing to keep. */}void openSharedLink(next,own);};
+    const onHash=()=>{const next=designLinkFromHash(window.location.hash);if(!next)return;setDesignReady(false);let own:string|null=null;try{own=serializeDesign(dataRef.current);}catch{/* Nothing to keep. */}void openSharedLink(next,own).finally(()=>setDesignReady(true));};
     window.addEventListener('hashchange',onHash);
     return ()=>window.removeEventListener('hashchange',onHash);
   },[]);
-  useEffect(()=>{if(!storageReady)return;const timer=setTimeout(()=>{try{localStorage.setItem(DECK_RELEASE_STORAGE_KEY,serializeDesign(data));}catch{setDesignError('Automatic saving is unavailable on this device. Use Save JSON to keep your design.');}},450);return ()=>clearTimeout(timer);},[data,storageReady]);
+  useEffect(()=>{
+    if(!storageReady)return;
+    if(autosavePaused){setAutosaveState('error');return;}
+    setAutosaveState('saving');
+    const timer=setTimeout(()=>{
+      try{
+        localStorage.setItem(DECK_RELEASE_STORAGE_KEY,serializeDesign(data));
+        setLastAutosaveAt(new Date().toISOString());setAutosaveState('saved');
+        setDesignError(previous=>previous.startsWith('Automatic saving is unavailable')?'':previous);
+      }catch{setAutosaveState('error');setDesignError('Automatic saving is unavailable on this device. Use Save JSON to keep your design.');}
+    },450);
+    return ()=>clearTimeout(timer);
+  },[data,storageReady,autosavePaused]);
   const retryWebGL=()=>{try{const c=document.createElement('canvas');setHasWebGL(!!(c.getContext('webgl2')||c.getContext('webgl')));}catch{setHasWebGL(false);}};
   // An edit can make a named stair or level edge unusable (a wrap removed, a corner cut back, a wider or
   // turned stair); it is dropped at once so no hidden choice stays in force.
-  const update=(patch:Partial<DeckData>)=>{setSaved(false);source.current??=editKey(patch);setData(prev=>pruneEdgeNames(deckReleaseData({...prev,...patch})));};
+  const update=(patch:Partial<DeckData>)=>{
+    try{const next=prepareDesignUpdate(dataRef.current,patch);setDesignError('');setSaved(false);source.current??=editKey(patch);dataRef.current=next;setData(next);}
+    catch(error){setDesignError(`${error instanceof Error?error.message:'The edit could not be applied.'} Unlock the measured edge before changing its length or direction.`);}
+  };
   useEffect(()=>{
     const kind=source.current;source.current=null;
     // A change that leaves the design as it was (a number box re-committing its value) is not a step.
@@ -103,5 +138,5 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
   const undo=()=>step(undoChange),redo=()=>step(redoChange);
   const restoreEarlierYard=()=>{if(!earlierYard)return;update({yardFeatures:earlierYard.yardFeatures,...(earlierYard.terrainConfig?{terrainConfig:earlierYard.terrainConfig}:{})});setEarlierYard(null);};
   const dismissEarlierYard=()=>setEarlierYard(null);
-  return {data,setData,update,replace,undo,redo,canUndo:historySize.past>0,canRedo:historySize.future>0,earlierYard,restoreEarlierYard,dismissEarlierYard,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign};
+  return {data,setData,update,replace,undo,redo,canUndo:historySize.past>0,canRedo:historySize.future>0,earlierYard,restoreEarlierYard,dismissEarlierYard,mounted,designReady,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,autosaveState,lastAutosaveAt,autosavePaused,unrestoredDesign,resumeAutosave,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign};
 }

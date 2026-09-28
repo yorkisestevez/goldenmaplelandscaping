@@ -209,7 +209,7 @@ for(const c of built){
   const panel=read('src/features/deckcraft/designer/PreviewPanel.tsx'),page=read('src/pages/DeckDesigner.tsx'),editor=read('src/features/deckcraft/designer/PlanEditor.tsx'),css=read('src/pages/DeckDesigner.css');
   ok(page.includes("useState<PreviewMode>('plan')"),'The page opens on the site plan');
   ok(panel.includes("export const loadPlanEditor=()=>import('./PlanEditor');")&&panel.includes('const PlanEditor=lazy(loadPlanEditor);')&&![panel,page].some(t=>/from '[./]*(designer\/)?PlanEditor'/.test(t)),'The plan editor is loaded on demand, never with the page');
-  ok(panel.includes(`<ConstructionPlan model={estimate.model} data={data} variant="site" wholeHouse={tool==='house'}/>`)&&panel.includes('framingPlan=<ConstructionPlan model={estimate.model} data={data}/>'),'The Plan tab draws the site plan and the Framing tab the contractor plan');
+  ok(panel.includes(`<ConstructionPlan model={estimate.model} data={data} yard={estimate.yardModel} variant="site" wholeHouse={tool==='house'}/>`)&&panel.includes('framingPlan=<ConstructionPlan model={estimate.model} data={data}/>'),'The Plan tab draws the site plan and the Framing tab the contractor plan');
   ok(panel.includes("const show3d=mounted&&hasWebGL&&mode!=='plan'&&mode!=='drawing';")&&page.includes("desktopOnly=window.matchMedia?.('(min-width: 761px) and (pointer: fine)').matches?[loadViewer]:[];")&&page.includes(',...desktopOnly])load()'),'The 3D viewer loads for a 3D view, and ahead of time on a desktop only');
   ok(read('src/features/deckcraft/pdfAssets.ts').includes('createElement(ConstructionPlan,{model,data})')&&read('src/features/deckcraft/ProposalSheet.tsx').includes('<ConstructionPlan model={estimate.model} data={data}/>'),'The PDF and the printable proposal draw the contractor plan');
   // One commit per gesture: a pointer move only moves the ghost; the design changes when the drag ends.
@@ -337,7 +337,7 @@ const r5={outline:0,stairs:0,house:0,shape:0};
     slid++;
   }
   ok(checkedTargets>=40&&slid>=10,`Stair marks checked against the model (${checkedTargets}) and handles slid (${slid})`);
-  ok(pageSource.includes('tool={planTool} setTool={setPlanTool} stairEdges={stairEdges}')&&read('src/features/deckcraft/designer/PreviewPanel.tsx').includes('tool={tool} stairEdges={stairEdges}')&&editor.includes('stairTargets(data,model,stairEdges)'),'The Stairs tool is handed the page\'s own stair edges');
+  ok(/tool=\{planTool\} setTool=\{setPlanTool\}[^\n]*stairEdges=\{stairEdges\}/.test(pageSource)&&read('src/features/deckcraft/designer/PreviewPanel.tsx').includes('tool={tool} stairEdges={stairEdges}')&&editor.includes('stairTargets(data,model,stairEdges)'),'The Stairs tool is handed the page\'s own stair edges');
 
   // 6c. House: the wall ends, 12–100 ft, the House field's own change with its openings clamped, the other end kept.
   const houseCases:Record<string,DeckData>={
@@ -404,10 +404,10 @@ const r5={outline:0,stairs:0,house:0,shape:0};
 {
   const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
   const panel=read('src/features/deckcraft/designer/PreviewPanel.tsx'),page=read('src/pages/DeckDesigner.tsx'),editor=read('src/features/deckcraft/designer/PlanEditor.tsx'),css=read('src/pages/DeckDesigner.css');
-  ok(PLAN_TOOLS.map(t=>t[1]).join('|')==='Size & place|Draw outline|Stairs|House'&&panel.includes('role="radiogroup" aria-label="Plan tools"')&&panel.includes('role="radio" aria-checked={tool===id}'),'The plan has one tool at a time: Size & place, Draw outline, Stairs, House');
-  ok(page.includes("const [planTool,setPlanTool]=useState<PlanTool>('size');"),'The plan opens with Size & place');
+  ok(PLAN_TOOLS.map(t=>t[1]).join('|')==='Select parts|Shape & points|Board layout|Inlays|Rails & screens|Patios & walls|Size & place|Stairs|House'&&panel.includes('role="radiogroup" aria-label="Plan tools"')&&panel.includes('role="radio" aria-checked={tool===id}'),'The plan has one tool at a time, including independently placed inlays and rail and screen sections');
+  ok(page.includes("const [planTool,setPlanTool]=useState<PlanTool>('outline');"),'The plan opens with direct point and edge editing');
   const custom=planShortcut(deckReleaseData(base()),'Custom');ok(custom.tool==='outline'&&panel.includes('if(r.tool)setTool(r.tool);')&&!panel.includes('onOpenDeck'),'Draw my own switches to the Draw outline tool');
-  ok(panel.includes(`variant="site" wholeHouse={tool==='house'}/>`)&&editor.includes("planFrame(model,{data,variant:'site',wholeHouse:tool==='house'})"),'The House tool draws the whole house, on the plan and under its editor alike');
+  ok(panel.includes(`variant="site" wholeHouse={tool==='house'}/>`)&&editor.includes("planFrame(model,{data,yard,variant:'site',wholeHouse:tool==='house'})"),'The House tool draws the whole house, on the plan and under its editor alike');
   for(const c of built.filter(b=>b.withData&&b.data.houseVisible!==false)){
     const whole=renderToStaticMarkup(createElement(ConstructionPlan,{model:c.model,data:c.data,variant:'site',wholeHouse:true})),f=planFrame(c.model,{data:c.data,variant:'site',wholeHouse:true}),hp=getHousePlacement(c.data);
     ok(viewBoxOf(whole)===f.viewBox&&f.left<=hp.x0+.001&&f.right>=hp.x1-.001&&!/M-?[\d.]+ -?[\d.]+V-?[\d.]+l-7 3l14 6l-7 3V0/.test(whole),`${c.name}: the House tool shows both house wall ends, with no side break lines`);

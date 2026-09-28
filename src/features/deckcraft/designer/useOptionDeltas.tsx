@@ -1,3 +1,5 @@
+import {usePergolaQuote} from './usePergolaQuote';
+import {pergolaQuoteKey} from '../pergolaPricing';
 import {useEffect,useMemo,useRef,useState,useSyncExternalStore,type ReactElement} from 'react';
 import type {DeckData} from '../types';
 import type {SelectEffect} from './fields';
@@ -43,22 +45,24 @@ export interface OptionDeltas{
 }
 
 export function useOptionDeltas(section:SectionId,data:DeckData,props:DeltaProps):OptionDeltas{
+  const {quote}=usePergolaQuote(data);
   const [auto]=useState(deltasByDefault);
   const on=auto||props.shown;
   const groups=optionGroups(section,data);
   const base:DeltaBase={key:props.key,subtotal:props.subtotal,quotes:props.quotes,lines:props.lines};
   // Each priced option re-renders the texts beside the options (they subscribe), not the section body.
   const store=useMemo(()=>{let version=0;const subscribers=new Set<()=>void>();return {get:()=>version,subscribe:(fn:()=>void)=>{subscribers.add(fn);return ()=>{subscribers.delete(fn);};},bump:()=>{version++;for(const fn of subscribers)fn();}};},[]);
-  const latest=useRef({base,data,groups});latest.current={base,data,groups};
+  const context=data.pergola?{key:pergolaQuoteKey(data),quote}:undefined;
+  const latest=useRef({base,data,groups,context});latest.current={base,data,groups,context};
   const priced=on&&groups.length>0;
   useEffect(()=>{
     if(!priced)return;
     let stop:(()=>void)|undefined,cancelled=false;
     const start=(loaded:Engine)=>{
       engine=loaded;if(cancelled)return;
-      const {base,data,groups}=latest.current;
+      const {base,data,groups,context}=latest.current;
       store.bump();// the ones already priced for this design show at once
-      stop=loaded.runOptionDeltas({base,data,groups,onPriced:store.bump});
+      stop=loaded.runOptionDeltas({base,data,groups,onPriced:store.bump,pergolaQuote:context});
     };
     if(engine)start(engine);else loadOptionDeltas().then(start).catch(()=>{/* Tried again on the next change. */});
     return ()=>{cancelled=true;stop?.();};

@@ -73,7 +73,8 @@ for(const [label,patch] of plainDesigns){
   const on={...d,deckFinishes:{fascia:COCOA,treads:SALT,risers:COCOA,...(d.catalogueRailingId?{railingColor:'Matte Black'}:{})}},eo=priced(on);
   const {issues:_i,...model}=e.model,{issues:_j,...modelOn}=eo.model;
   ok(digest(model)===digest(modelOn)&&digest(getHardwareLayout(d,e.model))===digest(getHardwareLayout(on,eo.model)),`${label}: part finishes leave the takeoff and hardware untouched`);
-  ok(Math.abs(eo.subtotal-e.subtotal)<1e-6,`${label}: fascia, stair and railing colours of the deck's own line leave the priced subtotal as it was`);
+  const finishSupply=(estimate:typeof e)=>estimate.sections.filter(s=>['Deck-part finishes','Stair and level cladding'].includes(s.title)).reduce((n,s)=>n+s.total,0);
+  ok(Math.abs((eo.subtotal-finishSupply(eo))-(e.subtotal-finishSupply(e)))<1e-6,`${label}: part colours change only their exact fascia/cladding supply, never construction or railing rates`);
 }
 
 // 2. The border in its own colour: every border board, and nothing else, is its own stock at its collection's rate; the
@@ -256,7 +257,7 @@ for(const system of RAILING_CATALOGUE){
   ok(buildDeckDesignSubmission(fields,{data:plain,estimate:price(plain),summary:'s',reviewItems:[],link:'l',sentAt:new Date(0),consent:null}).details.includes('Samples: please bring a Coconut Husk sample'),'Without part colours the sample request reads as before');
   ok(designFeatures(d).includes('deck_part_finishes')&&designFeatures(d).includes('deck_railing_colour')&&!designFeatures(base({...railOf('dk_contemporary'),deckFinishes:{railingColor:'Bronze'}})).includes('deck_part_finishes'),'The funnel counts part colours and a railing colour apart');
   const rates=unconfirmedRates();
-  ok(rates.some(r=>r.id==='fascia-boards'&&r.status==='owner-decision')&&rates.some(r=>r.id==='railing-colour'&&r.status==='owner-decision'),'The rate register lists the fascia quote and the railing colour premium as owner decisions');
+  ok(rates.some(r=>r.id==='fascia-boards'&&r.status==='estimate')&&rates.some(r=>r.id==='railing-colour'&&r.status==='owner-decision'),'The register identifies the sourced fascia benchmarks and outstanding railing colour premium');
 }
 
 // 10. Never $0: every row these finishes add or change is priced above zero or left blank for a quote.
@@ -279,7 +280,7 @@ for(const system of RAILING_CATALOGUE){
   const imports=/from\s+['"][^'"]*railing-finish-provenance/;
   ok(!imports.test(designer)&&!['deckPartFinishes.ts','calculations.ts','designPersistence.ts','components/viewer3d/Deck3DViewer.tsx'].some(f=>imports.test(read(`src/features/deckcraft/${f}`))),'The provenance file is a record the check holds the colours to, not page weight');
   const viewer=read('src/features/deckcraft/components/viewer3d/Deck3DViewer.tsx');
-  ok(viewer.includes("usePartMaterial(partRef(data,'fascia'),board)")&&viewer.includes('material={structure?materials.wood:fasciaMat} name="rim-and-fascia"')&&viewer.includes('material={fasciaMat} name="selected-manufacturer-fascia"')&&viewer.includes('<FinishedBoards items={stairBoards} material={treadMat}/>')&&viewer.includes('<FinishedBoards items={model.riserBoards} material={riserMat}/>'),'In 3D the rim and fascia, a manufacturer fascia, the treads and the risers take their own swatch when set');
+  ok(viewer.includes("usePartMaterial(partRef(data,'fascia')??")&&viewer.includes('<Members items={edgeMembers} material={materials.wood} name="rim-and-fascia"')&&viewer.includes('<Slabs slabs={finishedFascia} material={fasciaMat} courses={false} eased name="rim-and-fascia"')&&viewer.includes('<Slabs slabs={accessoryFascia} material={fasciaMat} courses={false} eased name="selected-manufacturer-fascia"')&&viewer.includes('<FinishedBoards items={stairBoards} material={treadMat}/>')&&viewer.includes('<FinishedBoards items={drawnRisers} material={riserMat}/>')&&viewer.includes('<Cladding3D data={data} model={model} material={fasciaMat}'),'In 3D the framing keeps raw lumber while mitered fascia, supplier fascia, stair and level cladding, treads and risers take their own swatch when set');
   ok(viewer.includes('const railMat=railColour??(data.railingType===')&&viewer.includes('railingScreenHex(rail.system.id,rail.colour)'),'The 3D railing takes its colour\'s screen approximation');
   const screen=/from\s+['"][^'"]*railingScreenColours/;
   ok(!screen.test(designer.replace(read('src/features/deckcraft/designer/DeckFinishesPanel.tsx'),''))&&!['deckPartFinishes.ts','calculations.ts','designPersistence.ts','designFacts.ts','sendDesign.ts'].some(f=>screen.test(read(`src/features/deckcraft/${f}`))),'Screen colours load with the 3D view and the finishes panel, not with the page');

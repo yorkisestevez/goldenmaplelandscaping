@@ -46,8 +46,9 @@ export function zoneReference(zone:DeckZone,cfg:ZoneFramingConfig):ZoneReference
 export function frameZoneBearings({zone,reference:ref}:FramedZone,offset:V3,out:{supports:V3[];beams:Member[]},bearingOutline:PlanPoint[]=zone.outline){
   const o=zone.origin;
   for(const p of ref.posts){const x=p.x*12+o.x,z=p.z*12+o.y;if(outlineSpans(bearingOutline,x,'x').some(([a,b])=>z>=a&&z<=b))out.supports.push({x:x+offset.x,y:Math.max(0,ref.bBotY*12),z:z+offset.z});}
-  // A row clipped exactly where it meets an angled bearing line leaves a zero-length span: no member there.
-  for(const row of ref.beamRows)for(const [a,b]of outlineSpans(bearingOutline,row.z*12+o.y,'z'))if(bearingOutline===zone.outline||b-a>=1)for(let ply=0;ply<ref.bPly;ply++){
+  // Any clipped row can touch a polygon vertex without crossing its interior.
+  // That point has no physical length and must not become lumber or a stock cut.
+  for(const row of ref.beamRows)for(const [a,b]of outlineSpans(bearingOutline,row.z*12+o.y,'z'))if(b-a>1e-6&&(bearingOutline===zone.outline||b-a>=1))for(let ply=0;ply<ref.bPly;ply++){
     const y=(ref.bBotY+ref.bh/2)*12,z=row.z*12+o.y+offset.z+(ply-(ref.bPly-1)/2)*1.5;
     out.beams.push({a:{x:a+offset.x,y,z},b:{x:b+offset.x,y,z},width:1.5,depth:ref.bh*12});
   }
@@ -59,7 +60,7 @@ export function frameZoneJoists({zone,reference:ref}:FramedZone,offset:V3,cfg:Zo
   const ups=buildUps.filter(x=>x>=o.x&&x<=o.x+w);
   const regular=ref.jXs.map((x:number)=>Math.max(.75,Math.min(w-.75,x*12))+o.x).filter((x:number)=>!ups.some(u=>Math.abs(u-x)<1.5));
   const joists:Member[]=[];
-  for(const x of [...regular,...ups].sort((a,b)=>a-b))for(const [a,b]of outlineSpans(zone.outline,x,'x'))joists.push({a:{x:x+offset.x,y,z:a+offset.z},b:{x:x+offset.x,y,z:b+offset.z},width:1.5,depth:cfg.joistDepth});
+  for(const x of [...regular,...ups].sort((a,b)=>a-b))for(const [a,b]of outlineSpans(zone.outline,x,'x'))if(b-a>1e-6)joists.push({a:{x:x+offset.x,y,z:a+offset.z},b:{x:x+offset.x,y,z:b+offset.z},width:1.5,depth:cfg.joistDepth});
   for(let z=o.y+96;z<o.y+zone.size.h-3;z+=96)for(let i=0;i<joists.length-1;i++){const a=joists[i],b=joists[i+1];if(z+offset.z<=Math.min(a.a.z,a.b.z)||z+offset.z>=Math.max(a.a.z,a.b.z)||z+offset.z<=Math.min(b.a.z,b.b.z)||z+offset.z>=Math.max(b.a.z,b.b.z)||b.a.x-a.a.x<2)continue;out.blocking.push({a:{x:a.a.x+.75,y:a.a.y,z:z+offset.z},b:{x:b.a.x-.75,y:b.a.y,z:z+offset.z},width:1.5,depth:cfg.joistDepth});}
   out.joists.push(...joists);
 }

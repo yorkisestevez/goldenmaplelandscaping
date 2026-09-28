@@ -1,0 +1,20 @@
+import {test,expect} from '@playwright/test';
+import {mkdirSync} from 'node:fs';
+import {resolve} from 'node:path';
+test('short desktop switches full side panels and preserves the assistant draft beside the drawing',async({page,context})=>{
+ await page.setViewportSize({width:1280,height:720});
+ await context.addInitScript(()=>localStorage.clear());
+ await context.route('**/.netlify/functions/deck-assistant',r=>r.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{message:'Unavailable during controlled layout test.'}})}));
+ await page.goto('/deck-designer/');
+ await page.getByRole('button',{name:'Describe a change',exact:true}).click();
+ const dock=page.getByRole('region',{name:'Design assistant',exact:true});await expect(dock).toBeVisible();
+ const input=dock.getByRole('textbox',{name:'What would you like to change?',exact:true});await input.fill('Make the deck slightly wider');
+ await page.getByRole('navigation',{name:'Design tasks'}).getByRole('button',{name:'Deck shape & size',exact:true}).click();
+ await expect(page.locator('.dd-workspace-inspector')).toBeVisible();await expect(dock).toBeHidden();
+ await page.getByRole('button',{name:'Back to assistant'}).click();await expect(dock).toBeVisible();
+ await expect(input).toHaveValue('Make the deck slightly wider');
+ expect(await dock.locator('.dd-instructions-body').evaluate(el=>el.clientHeight)).toBeGreaterThan(200);
+ const preview=dock.getByRole('button',{name:'Preview edit',exact:true});await preview.scrollIntoViewIfNeeded();await expect(preview).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ const dir=resolve('../../outputs/deckcraft-contractor-ready-review/assistant');mkdirSync(dir,{recursive:true});await input.scrollIntoViewIfNeeded();await page.screenshot({path:resolve(dir,'dock-inspector-1280-720.png')});
+});
