@@ -58,6 +58,7 @@ const SketchDesigner=lazy(()=>import('../features/deckcraft/sketch/SketchDesigne
 const ContractorPresets=lazy(()=>import('../features/deckcraft/designer/ContractorPresetDialog'));
 const EasyEditTools=lazy(()=>import('../features/deckcraft/designer/EasyEditTools'));
 const IssueReviewDialog=lazy(()=>import('../features/deckcraft/designer/IssueReviewDialog'));
+const PermitSetDialog=lazy(()=>import('../features/deckcraft/drawings/PermitSetDialog'));
 const JobRevisionDialog=lazy(()=>import('../features/deckcraft/designer/JobRevisionDialog'));
 const loadSendDialog=()=>import('../features/deckcraft/SendDesignDialog');
 const loadProposalDialog=()=>import('../features/deckcraft/ProposalDialog');
@@ -82,7 +83,7 @@ export default function DeckDesigner(){
   const [sketchOpen,setSketchOpen]=useState(false);
   const [pendingInlay,setPendingInlay]=useState<DeckInlay|null>(null);
   const [presetsOpen,setPresetsOpen]=useState(false);
-  const [jobsOpen,setJobsOpen]=useState(false),[askOpen,setAskOpen]=useState(false),[issuesOpen,setIssuesOpen]=useState(false);
+  const [jobsOpen,setJobsOpen]=useState(false),[askOpen,setAskOpen]=useState(false),[issuesOpen,setIssuesOpen]=useState(false),[permitOpen,setPermitOpen]=useState(false);
   const [quoteReviewOpen,setQuoteReviewOpen]=useState(false),[assistantTargets,setAssistantTargets]=useState<AgentRequest|null>(null);
   const [jobLabel,setJobLabel]=useState('');
   const [selection,setSelection]=useState<{partIds:string[];boards:{level:number;index:number}[]}>({partIds:[],boards:[]});
@@ -116,7 +117,7 @@ export default function DeckDesigner(){
   // field, where the browser's own undo applies to the text.
   useEffect(()=>{
     const onKey=(e:KeyboardEvent)=>{
-      if(sketchOpen||presetsOpen||jobsOpen||quoteReviewOpen||issuesOpen)return;
+      if(sketchOpen||presetsOpen||jobsOpen||quoteReviewOpen||issuesOpen||permitOpen)return;
       if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
       const t=e.target as HTMLElement|null;if(t&&(t.isContentEditable||/^(input|textarea|select)$/i.test(t.tagName)))return;
       const key=e.key.toLowerCase();
@@ -374,7 +375,7 @@ export default function DeckDesigner(){
     case 'stairs':return <StairsStep data={data} update={update} stairEdges={stairEdges} deltas={deltas} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas();}}/>;
     case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas();}} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch} deltas={deltas}/>;
     case 'backyard':return <BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/>;
-    case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={()=>saveJSON()} onDownloadSummary={download} onExport={kind=>void exportModel(kind)}/>;
+    case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={()=>saveJSON()} onDownloadSummary={download} onExport={kind=>void exportModel(kind)} onOpenPermit={()=>setPermitOpen(true)}/>;
   }};
   // "Draw it on the plan" (the Deck section's outline editor): the Draw outline tool, with the plan brought into view.
   const showCanvas=()=>{setWorkspaceView('canvas');requestAnimationFrame(()=>document.getElementById('deck-live-preview')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'}));};
@@ -416,6 +417,7 @@ export default function DeckDesigner(){
     {quoteReviewOpen&&<Suspense fallback={<p role="status">Opening quote-cost review…</p>}><QuoteReviewPanel data={data} estimate={estimate} onUpdate={atomicUpdate} onClose={()=>setQuoteReviewOpen(false)}/></Suspense>}
     <ChangeAnnouncer record={changes.records.at(-1)}/>
     {jobsOpen&&<Suspense fallback={<p role="status">Opening saved jobs…</p>}><JobRevisionDialog data={data} onRestore={restoreRevision} onClose={()=>setJobsOpen(false)} onSaved={status=>setJobLabel(`${status.job} · ${status.revision}`)}/></Suspense>}
+    {permitOpen&&<Suspense fallback={<p role="status">Drawing the permit sheets…</p>}><PermitSetDialog data={data} model={estimate.model} reviewItems={reviewFlags} materialName={material.name} railingName={railingName} date={proposalDate()} onClose={()=>setPermitOpen(false)} onOutput={kind=>trackDeck('deckcraft_output',`deck_${kind}`)}/></Suspense>}
     {issuesOpen&&<Suspense fallback={<p role="status">Opening design review…</p>}><IssueReviewDialog data={data} model={estimate.model} messages={currentIssues} onLocate={locateIssue} onClose={()=>setIssuesOpen(false)}/></Suspense>}
     {sketchOpen&&<Suspense fallback={<p role="status">Opening your sketch canvas…</p>}><SketchDesigner data={data} onClose={()=>setSketchOpen(false)} onApply={patch=>{atomicUpdate(patch);setSketchOpen(false);setMode('plan');setPlanTool('outline');setBoardPaint(null);setExteriorOpen(false);setSelectedHouseOpeningId('');setDesignStatus('The same design is ready on the plan. Pull any point or edge, or tap an edge dimension.');showCanvas();}}/></Suspense>}
     {presetsOpen&&<Suspense fallback={<p role="status">Opening contractor presets…</p>}><ContractorPresets data={data} onApply={patch=>{atomicUpdate(patch);setPresetsOpen(false);}} onClose={()=>setPresetsOpen(false)}/></Suspense>}
