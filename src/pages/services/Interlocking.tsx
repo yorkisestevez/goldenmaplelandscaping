@@ -29,7 +29,7 @@ export default function Interlocking() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Interlocking Stone Installation Barrie"
+        title="Interlock Contractor Barrie | Interlocking Patios & Walkways"
         description="Interlocking stone patios, driveways, and walkways for Barrie-area properties. Discuss materials, site conditions, and project scope with our team."
         canonical="https://goldenmaplelandscaping.ca/services/interlocking-barrie"
         schema={pageSchema}
@@ -44,13 +44,11 @@ export default function Interlocking() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Hardscape Construction
-              </span>
-              <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
+              <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Interlock Contractor in Barrie</h1>
+              <p className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 A patio that's <br />
                 <span className="italic text-brand-gold-dark">planned for your property.</span>
-              </h1>
+              </p>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 You've seen what happens when an interlocking patio is built wrong. Sunken corners. Joints full of weeds. The whole thing pitching toward the foundation by year three. We're here to make sure that's not the story you tell about yours. We can discuss materials, drainage, access, and a written project scope for your property.
               </p>
@@ -58,6 +56,9 @@ export default function Interlocking() {
                 <Link to="/contact" className="btn-primary">Get My Estimate</Link>
                 <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
                   View Portfolio <ArrowRight size={16} strokeWidth={1.5} />
+                </Link>
+                <Link to="/services/interlocking-driveways-barrie" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
+                  Interlock driveways <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
             </motion.div>

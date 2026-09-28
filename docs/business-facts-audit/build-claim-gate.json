@@ -1,7 +1,7 @@
 {
   "passed": true,
-  "routes_checked": 137,
-  "schemas_checked": 258,
+  "routes_checked": 141,
+  "schemas_checked": 266,
   "allowed_by_register": [],
   "findings": [],
   "warnings": [

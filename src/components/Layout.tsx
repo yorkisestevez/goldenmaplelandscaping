@@ -14,6 +14,18 @@ const SOCIAL_LINKS = [
 ] as const;
 
 
+// Service pages linked from the mobile menu and the site-wide footer.
+const SERVICE_LINKS = [
+  { href: "/services/interlocking-barrie", label: "Interlocking Stone" },
+  { href: "/services/interlocking-driveways-barrie", label: "Interlock Driveways" },
+  { href: "/services/porcelain-patios-barrie", label: "Porcelain Patios" },
+  { href: "/services/composite-decking-barrie", label: "Composite Decking" },
+  { href: "/services/retaining-walls-barrie", label: "Retaining Walls" },
+  { href: "/services/outdoor-kitchens-barrie", label: "Outdoor Kitchens" },
+  { href: "/services/front-entrance-landscaping-barrie", label: "Front Entrances" },
+  { href: "/services/landscape-design-barrie", label: "Landscape Design" },
+];
+
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -82,12 +94,6 @@ const Navbar = () => {
     { href: "/resources/unilock-vs-techo-bloc-vs-permacon", label: "Paver Brand Comparison" },
   ];
 
-  const services = [
-    { href: "/services/interlocking-barrie", label: "Interlocking Stone" },
-    { href: "/services/composite-decking-barrie", label: "Composite Decking" },
-    { href: "/services/retaining-walls-barrie", label: "Retaining Walls" },
-    { href: "/services/landscape-design-barrie", label: "Landscape Design" },
-  ];
 
   return (
     <>
@@ -361,7 +367,7 @@ const Navbar = () => {
               <div className="flex flex-col gap-6">
                 <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold font-medium">Flagship Services</span>
                 <div className="grid grid-cols-1 gap-4">
-                  {services.map((service, idx) => (
+                  {SERVICE_LINKS.map((service, idx) => (
                     <motion.div
                       key={service.href}
                       initial={{ opacity: 0, y: 10 }}
@@ -450,11 +456,9 @@ const Footer = () => {
           <div>
             <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Expertise</h4>
             <ul className="space-y-5 font-sans text-[13px] text-brand-muted font-light">
-              <li>Interlocking & Hardscape</li>
-              <li>Composite Decking</li>
-              <li>Natural Stone & Flagstone</li>
-              <li>Porcelain Installation</li>
-              <li>Retaining Walls</li>
+              {SERVICE_LINKS.map((service) => (
+                <li key={service.href}><Link to={service.href} className="hover:text-brand-gold-dark transition-colors">{service.label}</Link></li>
+              ))}
             </ul>
           </div>
 

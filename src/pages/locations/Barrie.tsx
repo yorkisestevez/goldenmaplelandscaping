@@ -97,7 +97,7 @@ export default function BarrieLanding() {
   return (
     <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
-        title="Landscaping Contractor Barrie ON"
+        title="Landscaping & Hardscape Contractor in Barrie, ON"
         description="Landscaping and hardscape services for Barrie properties, including interlocking patios, composite decks, retaining walls, and landscape design. Contact us to confirm current project scope."
         canonical="https://goldenmaplelandscaping.ca/locations/barrie"
         schema={pageSchema}

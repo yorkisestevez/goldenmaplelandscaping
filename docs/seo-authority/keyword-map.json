@@ -1,0 +1,246 @@
+{
+  "_doc": [
+    "One owner URL per money keyword (SEO authority campaign, 2026-09-27). Read by scripts/check-barrie-services.ts:",
+    "every owner must be a routed page, and pages built from src/data/barrieServices.ts must carry their keyword in the H1.",
+    "h1Contains = the phrase the owner page H1 must contain (null = not enforced, e.g. home page or a blog post).",
+    "baseline90d = Google Search Console, sc-domain:goldenmaplelandscaping.ca, 2026-06-27..2026-09-25: query+page rows on the main domain only (seo. subdomain excluded) whose query contains every token group for the keyword (method in docs/seo-authority/gap-map-2026-09.md).",
+    "(see docs/seo-authority/gap-map-2026-09.md for method). Re-measure ~2 weeks after these pages are live."
+  ],
+  "baselineWindow": {
+    "start": "2026-06-27",
+    "end": "2026-09-25",
+    "source": "GSC searchAnalytics query+page"
+  },
+  "keywords": [
+    {
+      "keyword": "interlock contractor Barrie",
+      "owner": "/services/interlocking-barrie/",
+      "h1Contains": "Interlock Contractor",
+      "baseline90d": {
+        "queries": 9,
+        "impressions": 607,
+        "clicks": 0,
+        "weightedPosition": 30.9,
+        "topPage": "/services/interlocking-barrie/",
+        "topQueries": [
+          "interlock stone barrie",
+          "interlocking stone barrie",
+          "interlock patios barrie"
+        ]
+      }
+    },
+    {
+      "keyword": "patio contractor Barrie",
+      "owner": "/patios-barrie/",
+      "h1Contains": "Patio Contractor",
+      "baseline90d": {
+        "queries": 2,
+        "impressions": 91,
+        "clicks": 0,
+        "weightedPosition": 17.8,
+        "topPage": "/services/interlocking-barrie/",
+        "topQueries": [
+          "interlock patios barrie",
+          "patio builder barrie"
+        ]
+      }
+    },
+    {
+      "keyword": "retaining wall contractor Barrie",
+      "owner": "/services/retaining-walls-barrie/",
+      "h1Contains": "Retaining Wall Contractor",
+      "baseline90d": {
+        "queries": 1,
+        "impressions": 43,
+        "clicks": 0,
+        "weightedPosition": 18.1,
+        "topPage": "/",
+        "topQueries": [
+          "retaining walls barrie"
+        ]
+      }
+    },
+    {
+      "keyword": "landscape construction Barrie",
+      "owner": "/luxury-landscape-barrie/",
+      "h1Contains": "Landscape Construction",
+      "baseline90d": {
+        "queries": 8,
+        "impressions": 367,
+        "clicks": 0,
+        "weightedPosition": 14.9,
+        "topPage": "/",
+        "topQueries": [
+          "barrie landscaping companies",
+          "landscaping company barrie",
+          "landscape construction barrie"
+        ]
+      }
+    },
+    {
+      "keyword": "hardscape contractor Barrie",
+      "owner": "/locations/barrie/",
+      "h1Contains": "Hardscape Contractor",
+      "baseline90d": {
+        "queries": 1,
+        "impressions": 118,
+        "clicks": 0,
+        "weightedPosition": 8.4,
+        "topPage": "/",
+        "topQueries": [
+          "hardscaping barrie"
+        ]
+      }
+    },
+    {
+      "keyword": "backyard renovation Barrie",
+      "owner": "/full-backyard-transformations-barrie/",
+      "h1Contains": "Backyard Renovation",
+      "baseline90d": {
+        "queries": 0,
+        "impressions": 0,
+        "clicks": 0,
+        "weightedPosition": null,
+        "topPage": null,
+        "topQueries": []
+      }
+    },
+    {
+      "keyword": "landscape designer Barrie",
+      "owner": "/services/landscape-design-barrie/",
+      "h1Contains": "Landscape Designer",
+      "baseline90d": {
+        "queries": 7,
+        "impressions": 229,
+        "clicks": 0,
+        "weightedPosition": 34,
+        "topPage": "/",
+        "topQueries": [
+          "landscape design barrie",
+          "luxury backyard design barrie",
+          "barrie landscape design services"
+        ]
+      }
+    },
+    {
+      "keyword": "composite deck contractor Barrie",
+      "owner": "/services/composite-decking-barrie/",
+      "h1Contains": "Composite Deck Builder",
+      "baseline90d": {
+        "queries": 7,
+        "impressions": 91,
+        "clicks": 0,
+        "weightedPosition": 44.7,
+        "topPage": "/locations/barrie/",
+        "topQueries": [
+          "deck builder holly barrie",
+          "deck builder barrie",
+          "deck contractor barrie"
+        ]
+      }
+    },
+    {
+      "keyword": "porcelain patio Barrie",
+      "owner": "/services/porcelain-patios-barrie/",
+      "h1Contains": "Porcelain Patios",
+      "baseline90d": {
+        "queries": 0,
+        "impressions": 0,
+        "clicks": 0,
+        "weightedPosition": null,
+        "topPage": null,
+        "topQueries": []
+      }
+    },
+    {
+      "keyword": "outdoor kitchen Barrie",
+      "owner": "/services/outdoor-kitchens-barrie/",
+      "h1Contains": "Outdoor Kitchens",
+      "baseline90d": {
+        "queries": 1,
+        "impressions": 1,
+        "clicks": 0,
+        "weightedPosition": 29,
+        "topPage": "/portfolio/luxury-outdoor-kitchen",
+        "topQueries": [
+          "outdoor kitchen design barrie"
+        ]
+      }
+    },
+    {
+      "keyword": "backyard drainage Barrie",
+      "owner": "/resources/backyard-drainage-solutions-barrie/",
+      "h1Contains": null,
+      "baseline90d": {
+        "queries": 6,
+        "impressions": 10,
+        "clicks": 0,
+        "weightedPosition": 6.3,
+        "topPage": "/resources/backyard-drainage-solutions-barrie/",
+        "topQueries": [
+          "drainage solutions",
+          "yard drainage installation near me",
+          "landscape drainage solutions"
+        ]
+      }
+    },
+    {
+      "keyword": "sloped backyard landscaping Barrie",
+      "owner": "/sloped-backyard-solutions-barrie/",
+      "h1Contains": "Sloped Backyard Landscaping",
+      "baseline90d": {
+        "queries": 0,
+        "impressions": 0,
+        "clicks": 0,
+        "weightedPosition": null,
+        "topPage": null,
+        "topQueries": []
+      }
+    },
+    {
+      "keyword": "interlock driveway Barrie",
+      "owner": "/services/interlocking-driveways-barrie/",
+      "h1Contains": "Interlock Driveways",
+      "baseline90d": {
+        "queries": 1,
+        "impressions": 64,
+        "clicks": 0,
+        "weightedPosition": 39.1,
+        "topPage": "/services/interlocking-barrie/",
+        "topQueries": [
+          "interlock driveway barrie"
+        ]
+      }
+    },
+    {
+      "keyword": "front entrance landscaping Barrie",
+      "owner": "/services/front-entrance-landscaping-barrie/",
+      "h1Contains": "Front Entrance Landscaping",
+      "baseline90d": {
+        "queries": 0,
+        "impressions": 0,
+        "clicks": 0,
+        "weightedPosition": null,
+        "topPage": null,
+        "topQueries": []
+      }
+    },
+    {
+      "keyword": "landscaping Barrie",
+      "owner": "/",
+      "h1Contains": null,
+      "baseline90d": {
+        "queries": 30,
+        "impressions": 1728,
+        "clicks": 1,
+        "weightedPosition": 21.2,
+        "topPage": "/",
+        "topQueries": [
+          "landscaping barrie",
+          "landscaper barrie",
+          "barrie landscaping"
+        ]
+      }
+    }
+  ]
+}
