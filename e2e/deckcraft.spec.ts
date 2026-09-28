@@ -6,6 +6,8 @@ import {expect,test,type Locator,type Page} from '@playwright/test';
  * with empty storage. Form posts never leave the browser: the send test answers them itself.
  */
 const KNOWN_CONSOLE=[/`selected` on <option>/,/THREE\./,/WebGL|GPU stall|swiftshader|GroupMarkerNotSet/i,/React DevTools/,/Failed to load resource/];
+/** CI runners draw the software (SwiftShader) proposal views about three times slower than a workstation. */
+const PROPOSAL_WAIT=process.env.CI?2:1;
 
 /** Keep every test local, including trackers, fonts, remote media and form destinations. The send workflow
  * separately intercepts the local form POST and verifies its fields without sending anything. */
@@ -120,7 +122,7 @@ const proposalPages=(page:Page)=>proposalDialog(page).locator('.dd-proposal-page
 async function openProposal(page:Page){
   await openSection(page,'Proposal & files');
   await page.getByRole('button',{name:'Print proposal'}).click();
-  await expect(proposalDialog(page)).toBeVisible({timeout:120_000});
+  await expect(proposalDialog(page)).toBeVisible({timeout:120_000*PROPOSAL_WAIT});
   return proposalDialog(page);
 }
 /** The pages of a PDF file, and the pictures in it. */
@@ -1466,7 +1468,7 @@ test('sends a design to Golden Maple and hands the link to booking',async({page}
 });
 
 test('opens the proposal: a 3D cover and views, features, finishes, the site plan, the investment with its quote tags, next steps and the appendix',async({page})=>{
-  test.setTimeout(180_000);
+  test.setTimeout(180_000*PROPOSAL_WAIT);
   const problems=await openDesigner(page);
   const priced=wholeDollars(await price(page).textContent());
   const dialog=await openProposal(page);
@@ -1511,7 +1513,7 @@ test('opens the proposal: a 3D cover and views, features, finishes, the site pla
 });
 
 test('puts a lit design at night on the proposal cover, then gives the visitor back their view and design',async({page})=>{
-  test.setTimeout(180_000);
+  test.setTimeout(180_000*PROPOSAL_WAIT);
   const problems=await openDesigner(page);
   await viewTab(page,'3D');
   await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
@@ -1628,10 +1630,10 @@ test('lights a heavily lit design at night within the GPU’s texture units, and
 });
 
 test('downloads the proposal as a multi-page PDF, from Proposal & files and from the proposal itself',async({page},info)=>{
-  test.setTimeout(240_000);
+  test.setTimeout(240_000*PROPOSAL_WAIT);
   await openDesigner(page);
   await openSection(page,'Proposal & files');
-  const [download]=await Promise.all([page.waitForEvent('download',{timeout:120_000}),page.getByRole('button',{name:'Download PDF'}).click()]);
+  const [download]=await Promise.all([page.waitForEvent('download',{timeout:120_000*PROPOSAL_WAIT}),page.getByRole('button',{name:'Download PDF'}).click()]);
   expect(download.suggestedFilename()).toBe('golden-maple-deck-proposal.pdf');
   const file=info.outputPath('proposal.pdf');await download.saveAs(file);
   const bytes=readFileSync(file);
@@ -1642,7 +1644,7 @@ test('downloads the proposal as a multi-page PDF, from Proposal & files and from
   expect(pdfImages(bytes)).toBeGreaterThanOrEqual(6);
   // From the proposal itself, with the pictures it already has.
   const dialog=await openProposal(page);
-  const [again]=await Promise.all([page.waitForEvent('download',{timeout:120_000}),dialog.getByRole('button',{name:'Download PDF'}).click()]);
+  const [again]=await Promise.all([page.waitForEvent('download',{timeout:120_000*PROPOSAL_WAIT}),dialog.getByRole('button',{name:'Download PDF'}).click()]);
   const second=info.outputPath('proposal-2.pdf');await again.saveAs(second);
   expect(pdfPages(readFileSync(second))).toBe(pdfPages(bytes));
 });
