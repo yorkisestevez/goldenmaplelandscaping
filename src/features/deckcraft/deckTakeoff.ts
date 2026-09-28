@@ -9,7 +9,6 @@ import {polygonCut,polygonBoard,splitBoard,offsetPolygons,signedArea} from './li
 import {getFinishedFootprint} from './lib/finishedFootprint';
 import {applyInlays,bandBuildUps,keepBreakers,planInlays,INLAY_KIND_NAMES,type InlayPlan} from './lib/inlayGeometry';
 import {frameInlays} from './inlayFraming';
-import {computeStruct,computeStairs} from './referenceConstruction';
 import {type DeckData, RAILING_COSTS} from './types';
 import {DECKING_CATALOGUE} from './manufacturerRuntimeCatalogue';
 import {finishedFasciaOffset} from './lib/finishedFootprint';
@@ -21,7 +20,7 @@ import {getHousePlacement} from './housePlacement';
 import {blocksTowardDeck,getHouseBlocks,rectPolygon} from './houseFootprint';
 import {angledBearing,angledCornerEdges,bearingOutline,frameAngledBearing} from './angledFraming';
 import {angledStairAllowed,angledStairFits,isChamferEdgeId} from './lib/cornerChamfers';
-import {outlineSpans,cleanPolygon,zoneReference,frameZoneBearings,frameZoneJoists,frameHouseSideBeams,type DeckZone,type FramedZone,type ZoneFramingConfig} from './zoneFraming';
+import {outlineSpans,cleanPolygon,zoneReference,frameZoneBearings,frameZoneJoists,frameHouseSideBeams,type DeckZone,type FramedZone,type ZoneFramingConfig,type ZoneReference} from './zoneFraming';
 import {edgeFacing,getFootprint,getBoardRows,getPictureFrameRuns,getStairPlacement,getRailingSegments,getHerringboneRows,clipToConvex,type StairPlacement,type PlanPoint,type FootprintPlan,type BoardRun} from './lib/deckGeometry';
 export type V3={x:number;y:number;z:number};
 export type Member={a:V3;b:V3;width:number;depth:number;role?:string;spliceStart?:boolean;spliceEnd?:boolean;stair?:{risers:number;rise:number;run:number;top:number;bottom:number}};
@@ -34,7 +33,7 @@ export type DeckLevel={kind?:'deck'|'landing'|'winder';index?:number;rim?:Member
   layoutBreakers?:PlacedLayoutBreaker[];
   layoutIssues?:string[];
   /** Main deck with angled corners only: the angled front edges (their board ends sit on angled nailers). */
-  angledEdges?:{a:PlanPoint;b:PlanPoint}[];footprint:FootprintPlan;deckingFootprint?:FootprintPlan;top:number;offset:V3;boards:BoardRun[];supports:V3[];joists:Member[];beams:Member[];blocking:Member[];breakers:number[];reference:any;zones?:FramedZone[];
+  angledEdges?:{a:PlanPoint;b:PlanPoint}[];footprint:FootprintPlan;deckingFootprint?:FootprintPlan;top:number;offset:V3;boards:BoardRun[];supports:V3[];joists:Member[];beams:Member[];blocking:Member[];breakers:number[];reference:ZoneReference;zones?:FramedZone[];
   /** Wrap-around main deck only: hip centre lines and the framing zones with their joist direction. */
   hips?:WrapHip[];wrapZones?:{id:string;label:string;outline:PlanPoint[];joistDir:PlanPoint}[];
   /** Decorative inlays planned on this level (lib/inlayGeometry.ts), built or not; absent when it has none. */
@@ -69,7 +68,7 @@ function levelZones(footprint:FootprintPlan,attached:boolean,cfg:ZoneFramingConf
   const W=footprint.bounds.w,outline=footprint.outline;
   let cuts:number[]=[];
   if(footprint.isCurved){
-    const allow=zoneReference(single[0],cfg).cant*12-2;
+    const allow=zoneReference(single[0],cfg).cantileverIn-2;
     if(allow<10)return single;
     const front=(x:number)=>Math.max(...outlineSpans(outline,Math.min(W-1e-6,Math.max(1e-6,x)),'x').map(([,b])=>b));
     let start=0,lo=Infinity,hi=-Infinity;

@@ -84,7 +84,7 @@ export function addConstructionDetails(level:DeckLevel,boardWidth:number,borderR
   const {offset,footprint,top}=level,depth=level.joists[0]?.depth||9.25;
   const framingY=top-1-depth/2;
   // Beam-row centre lines of every framing zone (a single-zone level uses its own reference).
-  const rowZs=(level.zones??[{zone:{origin:{x:0,y:0}},reference:level.reference}]).flatMap(z=>(z.reference.beamRows as {z:number}[]).map(r=>r.z*12+z.zone.origin.y));
+  const rowZs=(level.zones??[{zone:{origin:{x:0,y:0}},reference:level.reference}]).flatMap(z=>z.reference.beamRows.map(r=>r.z+z.zone.origin.y));
   addBearings(level,rowZs);
   addRim(level);
   const keys=new Set<string>();
@@ -212,7 +212,10 @@ export function memberLength(m:Member){return len(m);}
  * (the joist would stop short of it). Joists run along z (or along x in a wrap wing); beams run
  * across them. */
 export function unsupportedJoistEnds(level:DeckLevel,contact?:{onContact(a:{x:number;y:number},b:{x:number;y:number}):boolean}):V3[]{
-  const reach=(level.reference?.cant??2)*12+1,loose:V3[]=[],beams=level.beams.filter(b=>b.role!=='hip'),hips=level.hips??[];
+  // A joist end bears on a beam whose centre line is within the edge reach: the cantilever past a drop beam, or half
+  // a flush edge beam's width. Zones of one level differ (each cantilever is held to a share of its own span), so
+  // the largest applies.
+  const reach=Math.max(level.reference?.edgeReachIn??24,...(level.zones??[]).map(z=>z.reference.edgeReachIn))+1,loose:V3[]=[],beams=level.beams.filter(b=>b.role!=='hip'),hips=level.hips??[];
   for(const j of level.joists){
     const k=Math.abs(j.b.z-j.a.z)<1e-6&&Math.abs(j.b.x-j.a.x)>1e-6?'x':'z',c=k==='z'?'x':'z';
     const [lo,hi]=j.a[k]<=j.b[k]?[j.a,j.b]:[j.b,j.a];

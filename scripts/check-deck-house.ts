@@ -38,7 +38,7 @@ const unplaced=deck({width:20,houseConfig:house({widthFt:12})});
   ok(Math.abs(railGain-8)<.05,`The exposed 8 ft back stretch is railed (gain ${railGain.toFixed(2)} ft)`);
   const sideBeam=m.levels[0].beams.filter(b=>b.role==='house-side-beam');
   ok(sideBeam.length>0&&sideBeam.every(b=>Math.min(b.a.x,b.b.x)>=144-.01&&Math.max(b.a.x,b.b.x)<=240+.01),'A house-side beam spans only the exposed stretch');
-  ok(m.levels[0].supports.some(p=>p.x>144&&p.z<12),'Posts carry the house-side beam');
+  ok(m.levels[0].supports.some(p=>p.x>144&&sideBeam.some(b=>Math.abs(p.z-b.a.z)<=3)),'Posts carry the house-side beam');
   ok(unsupportedJoistEnds(m.levels[0],contact).length===0,'Every joist end bears on the ledger or a beam');
   ok(!guardRuns(m).some(r=>contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z})),'No railing along the ledger');
   ok(calculateEstimate(wide).total>calculateEstimate(unplaced).total,'Exposed framing and railing are priced');

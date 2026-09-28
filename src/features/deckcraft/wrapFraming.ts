@@ -8,7 +8,7 @@ import type {DeckLevel,Member,V3} from './deckTakeoff';
 /**
  * Framing and decking of a wrap-around main deck. Each zone (main deck, left wing, right wing) is
  * framed in its own frame exactly like a plain attached deck (joists away from its ledger, beams
- * parallel to it, the reference engine's beam rows and posts), then turned into plan. Zones meet on
+ * parallel to it, the framing engine's beam rows and posts), then turned into plan. Zones meet on
  * a doubled hip that runs from the house corner to the outside corner:
  * - jack joists from both zones hang off the hip on skewed hangers;
  * - each zone beam ends on a junction post under the hip;
@@ -72,9 +72,9 @@ export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOu
       frameZoneBearings(part,zero,local);
       const o=part.zone.origin;
       // Junction posts: every beam row that runs into the hip ends on a post under it.
-      for(const row of part.reference.beamRows as {z:number}[]){const z=row.z*12+o.y;rowZs.push(z);for(const span of outlineSpans(part.zone.outline,z,'z'))for(const x of span){
+      for(const row of part.reference.beamRows){const z=row.z+o.y;rowZs.push(z);for(const span of outlineSpans(part.zone.outline,z,'z'))for(const x of span){
         const p={x,y:z};if(!onHip(p)||local.supports.some(s=>Math.hypot(s.x-p.x,s.z-p.y)<1))continue;
-        local.supports.push({x,y:Math.max(0,part.reference.bBotY*12),z});
+        local.supports.push({x,y:Math.max(0,part.reference.beamBottomIn),z});
       }}
     }
     if(geom.id==='main')frameHouseSideBeams(input.houseSide,geom.size.h,cfg,zero,local);
@@ -120,7 +120,7 @@ export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOu
   }
   // One post where the main-deck and wing beams meet the same point on a hip.
   out.supports=out.supports.filter((p,i)=>!out.supports.some((q,j)=>j<i&&Math.hypot(p.x-q.x,p.z-q.z)<1));
-  const hipMax=doubledMemberSpanIn(cfg),endAllowance=out.reference.cant*12*Math.SQRT2,y=cfg.top-1-cfg.joistDepth/2;
+  const hipMax=doubledMemberSpanIn(cfg),endAllowance=out.reference.cantileverIn*Math.SQRT2,y=cfg.top-1-cfg.joistDepth/2;
   for(const hip of hips){
     const total=Math.hypot(hip.b.x-hip.a.x,hip.b.y-hip.a.y),u={x:(hip.b.x-hip.a.x)/total,y:(hip.b.y-hip.a.y)/total},n={x:-u.y,y:u.x};
     const at=(t:number)=>({x:hip.a.x+u.x*t,y:hip.a.y+u.y*t});
