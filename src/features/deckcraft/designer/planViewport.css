@@ -24,4 +24,4 @@
 .dd-preview-details .dd-note{font-size:12px;line-height:1.6}
 .dd-preview-details .dd-title-block{margin-top:0}
 @media(max-width:600px){.dd-canvas>.dd-plan-viewport{height:390px!important}.dd-plan-navigation{bottom:10px;right:10px}.dd-plan-pan-hint{font-size:11px}}
-@media(max-width:800px){.dd-preview-docked .dd-canvas>.dd-plan-viewport{height:clamp(220px,30vh,300px)!important}.dd-plan-viewport{scroll-margin-top:136px;scroll-margin-bottom:120px}}
+@media(max-width:800px){.dd-preview-docked .dd-canvas>.dd-plan-viewport{height:clamp(220px,30vh,300px)!important}.dd-plan-viewport{scroll-margin-top:136px}}

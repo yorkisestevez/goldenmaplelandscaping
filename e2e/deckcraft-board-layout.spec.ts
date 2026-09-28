@@ -24,8 +24,13 @@ async function applyRegion(page:Page,context:BrowserContext,angle:number,free=fa
  await expect(page.locator('.dd-board-layout-selection')).toBeVisible();await page.getByRole('spinbutton',{name:'Board direction',exact:true}).fill(String(angle));await page.getByRole('combobox',{name:'Layout board colour',exact:true}).selectOption(free?'tt_prime_plus:Sea Salt Gray':'tt_prime_plus:Dark Cocoa');await page.getByRole('button',{name:'Apply layout',exact:true}).click();
  await expect.poll(async()=>(await state(page)).boards.filter(b=>b.layoutKind==='region'&&b.angleDeg===angle).length).toBeGreaterThan(0);
 }
+// Zoom, fit and pan stay reachable and uncovered: brought into view as scrolling, focus or a tap brings them, they sit above
+// the live-price bar and every button takes the pointer at its centre. Whether they also fit the first screen depends on
+// the device height, not on the product.
 async function navigationClear(page:Page){
- const box=await page.getByRole('group',{name:'Drawing navigation',exact:true}).boundingBox(),price=await page.getByRole('region',{name:'Live price',exact:true}).boundingBox();expect(box&&price).toBeTruthy();expect(box!.y+box!.height).toBeLessThanOrEqual(price!.y);
+ const navigation=page.getByRole('group',{name:'Drawing navigation',exact:true});await navigation.scrollIntoViewIfNeeded();
+ const box=await navigation.boundingBox(),price=await page.getByRole('region',{name:'Live price',exact:true}).boundingBox();expect(box&&price).toBeTruthy();expect(box!.y+box!.height).toBeLessThanOrEqual(price!.y);
+ expect(await navigation.evaluate(el=>[...el.querySelectorAll('button')].every(button=>{const r=button.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!hit&&button.contains(hit);}))).toBe(true);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)).toBe(0);
  for(const name of ['Select board','Select area','Add breaker']){const b=await page.getByRole('button',{name,exact:true}).boundingBox();expect(b!.height).toBeGreaterThanOrEqual(44);expect(b!.width).toBeGreaterThanOrEqual(44);}
 }
