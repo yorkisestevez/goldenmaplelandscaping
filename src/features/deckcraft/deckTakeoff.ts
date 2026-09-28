@@ -21,7 +21,7 @@ import {getHousePlacement} from './housePlacement';
 import {blocksTowardDeck,getHouseBlocks,rectPolygon} from './houseFootprint';
 import {angledBearing,angledCornerEdges,bearingOutline,frameAngledBearing} from './angledFraming';
 import {angledStairAllowed,angledStairFits,isChamferEdgeId} from './lib/cornerChamfers';
-import {outlineSpans,cleanPolygon,zoneReference,frameZoneBearings,frameZoneJoists,frameHouseSideBeams,type DeckZone,type FramedZone,type ZoneFramingConfig} from './zoneFraming';
+import {outlineSpans,cleanPolygon,zoneReference,landingReference,frameZoneBearings,frameZoneJoists,frameHouseSideBeams,type DeckZone,type FramedZone,type ZoneFramingConfig} from './zoneFraming';
 import {edgeFacing,getFootprint,getBoardRows,getPictureFrameRuns,getStairPlacement,getRailingSegments,getHerringboneRows,clipToConvex,type StairPlacement,type PlanPoint,type FootprintPlan,type BoardRun} from './lib/deckGeometry';
 export type V3={x:number;y:number;z:number};
 export type Member={a:V3;b:V3;width:number;depth:number;role?:string;spliceStart?:boolean;spliceEnd?:boolean;stair?:{risers:number;rise:number;run:number;top:number;bottom:number}};
@@ -134,7 +134,7 @@ export function buildDeckTakeoff(data:DeckData){
     const customDeck=kind==='deck'&&index===0&&data.shape==='Custom',o=footprint.outline;
     const stepXs=customDeck?o.flatMap((p,i)=>{const q=o[(i+1)%o.length];return Math.abs(p.x-q.x)<.5&&Math.abs(p.y-q.y)>.5&&p.x>.5&&p.x<footprint.bounds.w-.5?[p.x]:[];}):[];
     const free=kind==='deck'&&!!freeFootprint(data,(index+1) as 1|2|3);
-    const zones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0,attached&&index===0?mainContact.contacts.filter(c=>c.kind==='flush').map(c=>c.a.x):[],angled.filter(cornerCut).flatMap(e=>[e.a.x,e.b.x]).filter(x=>!stepXs.some(s=>Math.abs(s-x)<.5)),free).map(zone=>({zone,reference:zoneReference(zone,cfg)})),reference=zones[0].reference;
+    const zones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0,attached&&index===0?mainContact.contacts.filter(c=>c.kind==='flush').map(c=>c.a.x):[],angled.filter(cornerCut).flatMap(e=>[e.a.x,e.b.x]).filter(x=>!stepXs.some(s=>Math.abs(s-x)<.5)),free).map(zone=>({zone,reference:kind==='landing'?landingReference(zone,cfg):zoneReference(zone,cfg)})),reference=zones[0].reference;
     const supports:V3[]=[],joists:Member[]=[],beams:Member[]=[],blocking:Member[]=[];
     for(const zone of zones){
       // Angled corners: the zone's rows and posts stay behind each angled beam, which carries the joist ends there.
@@ -412,7 +412,10 @@ export function buildDeckTakeoff(data:DeckData){
         }
         const pa=point(outer,a),pb=point(outer,b);if(data.railingType!=='None'&&data.railDefault!==false){railRuns.push({a:{x:pa.x,y,z:pa.y},b:{x:pb.x,y:end.y-Math.min(i+1,2)*rise,z:pb.y}});const ia=point(inner,a),ib=point(inner,b);railRuns.push({a:{x:ia.x,y,z:ia.y},b:{x:ib.x,y:end.y-Math.min(i+1,2)*rise,z:ib.y}});}
       }
-      for(let i=0;i<=3;i++)for(const radius of [inner,outer]){const p=point(radius,i*Math.PI/6);support.push({x:p.x,y:Math.max(0,end.y-Math.max(0,i-1)*rise-joistDepth-1),z:p.y});}
+      // A post under the outer end of each radial frame. The inner ends all lie on the 12-in radius, 6 to 17 in apart,
+      // where separate footings would overlap: one post at the middle tread's inner edge carries them.
+      for(let i=0;i<=3;i++){const p=point(outer,i*Math.PI/6);support.push({x:p.x,y:Math.max(0,end.y-Math.max(0,i-1)*rise-joistDepth-1),z:p.y});}
+      const pivot=point(inner,Math.PI/4);support.push({x:pivot.x,y:Math.max(0,end.y-rise-joistDepth-1),z:pivot.y});
       const outline=[point(inner,0),point(outer,0),point(outer,Math.PI/2),point(inner,Math.PI/2)],xs=outline.map(p=>p.x),zs=outline.map(p=>p.y),minX=Math.min(...xs),minZ=Math.min(...zs);
       levels.push({kind:'winder',index:levels.length,footprint:{outline:outline.map(p=>({x:p.x-minX,y:p.y-minZ})),bounds:{w:Math.max(...xs)-minX,h:Math.max(...zs)-minZ},isCurved:false},top:end.y,offset:{x:minX,y:0,z:minZ},boards:[],supports:support,joists:framing,beams:winderBeams,blocking:[],breakers:[],reference:deck.reference,rim:[]});
       const p=point(inner+stair.width/2,Math.PI/2),lowerStart={x:p.x,y:end.y-2*rise,z:p.y};

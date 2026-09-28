@@ -19,6 +19,8 @@ import {junctionCases,junctionPrice} from './deck-level-junction-cases';
  * - The 41d3eba baseline still guards against adding redundant railing. The authorized September 26 pricing review
  *   changes sourced supply and width-adjusted stair allowances; independent pricing checks verify those amounts.
  *   Existing pending quote scopes remain, with explicit cladding installation and paver order adjustments.
+ *   The owner-approved September 28 footing correction removes crowded footings (a winder's inner posts, posts under one
+ *   short beam), so footings and their post anchors may only go down from the baseline, never up.
  * - Geometry: levels touch (or keep the old spacing with a note), the step and 36 in fit on the lower level, the faces
  *   between levels are boarded outside the openings, every straight stair has stepped side panels down to the ground or
  *   the deck it stands on, the top riser sits on the rim's face, and skirting and rim corners are closed.
@@ -27,7 +29,7 @@ let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);che
 const near=(a:number,b:number,eps=.01)=>Math.abs(a-b)<=eps;
 const read=(path:string)=>readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
 const baseline=JSON.parse(read('scripts/deck-level-junction-baseline.json')).cases as Record<string,ReturnType<typeof junctionPrice>>;
-const NEW_QUOTE='Stair and level cladding (builder quote)',REVIEW_PRICE_SECTIONS=new Set(['Railing System','Stairs','Stair and level cladding','Labour (Construction & Build)','HST (13%)','Decking','Accent-colour boards','Deck-part finishes','in-lite® Lighting System','Yard · Paving materials, wall allowances and shared delivery']);
+const NEW_QUOTE='Stair and level cladding (builder quote)',REVIEW_PRICE_SECTIONS=new Set(['Railing System','Stairs','Stair and level cladding','Labour (Construction & Build)','HST (13%)','Decking','Accent-colour boards','Deck-part finishes','in-lite® Lighting System','Yard · Paving materials, wall allowances and shared delivery']),FEWER_FOOTINGS=new Set(['Foundation & Footings','Hardware & Fasteners']);
 const quoteScope=(label:string)=>label.replace(/ (?:supply and installation|installation \(builder quote\)|supply \(supplier quote\))$/,'');
 const cases=junctionCases();
 
@@ -39,7 +41,7 @@ for(const [name,c] of Object.entries(cases)){
   ok(now.quoteRequired.every(q=>was.quoteRequired.some(old=>quoteScope(old)===quoteScope(q))||q===NEW_QUOTE||q==='Paver packaging, colour and freight adjustments (supplier quote)')&&was.quoteRequired.every(q=>now.quoteRequired.some(next=>quoteScope(next)===quoteScope(q))),`${name}: quote scope is preserved, with explicit cladding and paver order confirmation`);
   const cladding=calculateEstimate(c.design,DECK_SETTINGS).sections.find(s=>s.title==='Stair and level cladding');
   if(cladding)ok(cladding.items.some(i=>i.cost===null),`${name}: cladding installation is still a quote even when exact supply is known`);
-  ok(moved.every(t=>REVIEW_PRICE_SECTIONS.has(t)),`${name}: only the documented railing, stair-width and cladding sections can change`);
+  ok(moved.every(t=>REVIEW_PRICE_SECTIONS.has(t)||FEWER_FOOTINGS.has(t)&&(now.sections[t]??0)<(was.sections[t]??0)),`${name}: only the documented railing, stair-width and cladding sections can change, and footings only go down`);
   if(c.expect==='same'){ok(near(now.railingLf,was.railingLf),`${name}: pricing review preserves guard quantities`);same++;}
   else{
     ok(now.railingLf<=was.railingLf+1e-6,`${name}: redundant guards remain removed; current stair/cladding prices are independently checked`);

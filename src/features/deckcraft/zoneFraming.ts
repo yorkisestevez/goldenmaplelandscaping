@@ -37,15 +37,34 @@ export function cleanPolygon(points:PlanPoint[]):PlanPoint[]{
   return out;
 }
 
+/** Two posts under one beam less than 2 ft apart (the reference sets a post 1 ft in from each end, so any beam under
+ * 4 ft long) would stand on overlapping footings, and one post carries a beam that short: they become one post midway. */
+export function unCrowdedPosts<P extends {x:number;z:number}>(posts:P[]):P[]{
+  const out:P[]=[];
+  for(const p of posts){const q=out.find(q=>Math.abs(q.z-p.z)<.01&&Math.abs(q.x-p.x)<24);if(q)q.x=(q.x+p.x)/2;else out.push({...p});}
+  return out;
+}
+
 export function zoneReference(zone:DeckZone,cfg:ZoneFramingConfig):ZoneReference{
   return computeStruct({width:zone.size.w/12,depth:zone.size.h/12,heightIn:cfg.top,house:zone.attached?'wood':'brick',ft:'PT',joistSp:String(cfg.spacing),joistSz:cfg.framingSize,beamMount:cfg.top<18?'flush':'drop',bSzSel:'auto',bPlySel:'auto',pf:cfg.pictureFrame});
+}
+
+/** A landing carries stair stringers at its edges, so its beam rows sit at both edges (0.2 ft in, as the back row
+ * already is) rather than behind a deck's joist cantilever: on a 4-ft landing that cantilever put the two post rows
+ * 1.8 ft apart, on overlapping footings. Same rows and posts, spread evenly between the edges. */
+export function landingReference(zone:DeckZone,cfg:ZoneFramingConfig):ZoneReference{
+  const ref=zoneReference(zone,cfg),depth=zone.size.h/12,zs=[...new Set(ref.beamRows.map((r:{z:number})=>r.z))].sort((a,b)=>a-b);
+  if(zs.length<2)return ref;
+  const moved=new Map(zs.map((z,i)=>[z,.2+i*(depth-.4)/(zs.length-1)]));
+  return {...ref,beamRows:ref.beamRows.map((r:{z:number})=>({...r,z:moved.get(r.z)!})),posts:ref.posts.map((p:{z:number})=>({...p,z:moved.get(p.z)!}))};
 }
 
 /** Posts and beams of one zone, clipped to its outline, or to `bearingOutline` (the part of the zone behind
  * any angled bearing lines, see angledFraming.ts). */
 export function frameZoneBearings({zone,reference:ref}:FramedZone,offset:V3,out:{supports:V3[];beams:Member[]},bearingOutline:PlanPoint[]=zone.outline){
   const o=zone.origin;
-  for(const p of ref.posts){const x=p.x*12+o.x,z=p.z*12+o.y;if(outlineSpans(bearingOutline,x,'x').some(([a,b])=>z>=a&&z<=b))out.supports.push({x:x+offset.x,y:Math.max(0,ref.bBotY*12),z:z+offset.z});}
+  const posts=ref.posts.map((p:{x:number;z:number})=>({x:p.x*12+o.x,z:p.z*12+o.y})).filter(({x,z}:{x:number;z:number})=>outlineSpans(bearingOutline,x,'x').some(([a,b])=>z>=a&&z<=b));
+  for(const {x,z} of unCrowdedPosts<{x:number;z:number}>(posts))out.supports.push({x:x+offset.x,y:Math.max(0,ref.bBotY*12),z:z+offset.z});
   // Any clipped row can touch a polygon vertex without crossing its interior.
   // That point has no physical length and must not become lumber or a stock cut.
   for(const row of ref.beamRows)for(const [a,b]of outlineSpans(bearingOutline,row.z*12+o.y,'z'))if(b-a>1e-6&&(bearingOutline===zone.outline||b-a>=1))for(let ply=0;ply<ref.bPly;ply++){
@@ -71,7 +90,8 @@ export function frameHouseSideBeams(stretches:[number,number][],depthIn:number,c
   for(const [x0,x1] of stretches){
     const side=computeStruct({width:(x1-x0)/12,depth:depthIn/12,heightIn:cfg.top,house:'brick',ft:'PT',joistSp:String(cfg.spacing),joistSz:cfg.framingSize,beamMount:cfg.top<18?'flush':'drop',bSzSel:'auto',bPlySel:'auto',pf:cfg.pictureFrame});
     const row=side.beamRows.find((r:{type:string})=>r.type==='house_beam');if(!row)continue;
-    for(const p of side.posts)if(p.type==='mammoth')out.supports.push({x:x0+p.x*12+offset.x,y:Math.max(0,side.bBotY*12),z:p.z*12+offset.z});
+    const posts=side.posts.filter((p:{type:string})=>p.type==='mammoth').map((p:{x:number;z:number})=>({x:x0+p.x*12,z:p.z*12}));
+    for(const {x,z} of unCrowdedPosts<{x:number;z:number}>(posts))out.supports.push({x:x+offset.x,y:Math.max(0,side.bBotY*12),z:z+offset.z});
     for(let ply=0;ply<side.bPly;ply++){const y=(side.bBotY+side.bh/2)*12,z=row.z*12+offset.z+(ply-(side.bPly-1)/2)*1.5;out.beams.push({a:{x:x0+offset.x,y,z},b:{x:x1+offset.x,y,z},width:1.5,depth:side.bh*12,role:'house-side-beam'});}
   }
 }

@@ -14,7 +14,7 @@ assert.deepEqual(json(runtime.RAILING_CATALOGUE),withoutSource(original.RAILING_
 assert.deepEqual(json(runtime.MANUFACTURER_ACCESSORIES),withoutSource(original.MANUFACTURER_ACCESSORIES.filter(p=>p.previewSupported)),'Every supported installed accessory retains its exact name, kind and installation note');
 assert.equal(runtime.MANUFACTURER_ACCESSORIES.length,9);
 assert.equal(full.MANUFACTURER_ACCESSORIES.length,14);
-assert.equal(PRICE_BOOK.fingerprint,'5a73c092');
+assert.equal(PRICE_BOOK.fingerprint,'23d6112e');
 // Display objects do not share mutable colour or product records with the engine.
 for(let i=0;i<full.DECKING_CATALOGUE.length;i++){assert.notEqual(full.DECKING_CATALOGUE[i],runtime.DECKING_CATALOGUE[i]);assert.notEqual(full.DECKING_CATALOGUE[i].colors,runtime.DECKING_CATALOGUE[i].colors);}
 console.log('MANUFACTURER RUNTIME OK: exact original full catalogue; all rates, colours, flags and installed accessory fields retained; presentation provenance remains available.');
