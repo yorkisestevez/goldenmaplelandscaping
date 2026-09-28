@@ -3,6 +3,7 @@ import {createPortal} from 'react-dom';
 import {planFrame} from '../ConstructionPlan';
 import {trackDeck} from '../deckAnalytics';
 import type {DeckTakeoff} from '../deckTakeoff';
+import type {YardModel} from '../yardModel';
 import {customOutline,customShapeWords} from '../lib/customOutline';
 import {getFootprint} from '../lib/deckGeometry';
 import {OUTLINE_PRESETS} from '../lib/outlineEdits';
@@ -36,8 +37,8 @@ const ARROWS=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home','End'];
  * shows a ghost with the new figures and changes the design once, when it ends: one estimate, one undo step. Only the
  * handles take the pointer away from the page (touch-action:none), so a phone still scrolls over the plan.
  */
-export default function PlanEditor({data,model,update,onEdited,tool='size',stairEdges=[],onStatus,toolbar,onOpenSection}:{
-  data:DeckData;model:DeckTakeoff;update:Update;onEdited?:()=>void;tool?:PlanTool;
+export default function PlanEditor({data,model,yard,update,onEdited,tool='size',stairEdges=[],onStatus,toolbar,onOpenSection}:{
+  data:DeckData;model:DeckTakeoff;yard?:YardModel;update:Update;onEdited?:()=>void;tool?:PlanTool;
   /** The edges the page offers stairs on (the Stairs section's edge menu). */
   stairEdges?:StairEdge[];
   /** The plan's status line (what a tool did, or why it could not). */
@@ -45,7 +46,7 @@ export default function PlanEditor({data,model,update,onEdited,tool='size',stair
   /** Where the tool's own buttons go, under the drawing. */
   toolbar?:RefObject<HTMLElement|null>;onOpenSection?:(id:'deck'|'stairs'|'house')=>void;
 }){
-  const frame=useMemo(()=>planFrame(model,{data,variant:'site',wholeHouse:tool==='house'}),[model,data,tool]);
+  const frame=useMemo(()=>planFrame(model,{data,yard,variant:'site',wholeHouse:tool==='house'}),[model,data,yard,tool]);
   const box=useRef<HTMLDivElement>(null),[size,setSize]=useState<{w:number;h:number}|null>(null);
   useLayoutEffect(()=>{
     const el=box.current;if(!el)return;
@@ -172,7 +173,7 @@ export default function PlanEditor({data,model,update,onEdited,tool='size',stair
     {!front&&<button type="button" className="dd-primary" onClick={()=>{update(chooseShape(data,'Custom'));onEdited?.();trackDeck('deckcraft_plan','deck_plan_outline');onStatus?.('Now your own outline, traced from the deck: drag its edges.');}}>Start from this deck</button>}
     {link('deck','Steps, 45° corners and every edge as a button: open Deck shape & size')}
   </>:tool==='stairs'?<>
-    {!targets.length&&<p className="dd-note">This deck has no open edge for stairs.</p>}
+    {!targets.length&&<p className="dd-note">{data.stairPath?'Edit stair path section widths, riser count and tread depth in Stairs & railings settings. Clear the path there to return to individual stair placement.':'This deck has no open edge for stairs.'}</p>}
     {stair&&!stairShown&&<p className="dd-note">The stairs take the whole of their edge, so there is nothing to slide.</p>}
     {link('stairs','Flights, width and layout: open Stairs & railings')}
   </>:tool==='house'?link('house','Doors, windows, roof and blocks: open House'):null;

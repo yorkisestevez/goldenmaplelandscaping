@@ -24,5 +24,8 @@ createServer((req,res)=>{
   res.writeHead(200,{'Content-Type':type,...(gzip?{'Content-Encoding':'gzip',Vary:'Accept-Encoding'}:{})});
   if(req.method==='HEAD'){res.end();return;}
   const stream=createReadStream(file);
+  // A local rebuild can replace a file between the existence check and the read.
+  // Drop that request without terminating the preview server.
+  stream.on('error',()=>res.destroy());
   (gzip?stream.pipe(createGzip()):stream).pipe(res);
 }).listen(PORT,'127.0.0.1',()=>console.log(`e2e static server on http://127.0.0.1:${PORT}`));

@@ -1,13 +1,15 @@
 import type {DeckData,LightingZone} from './types';
-import {getLightingProduct,type LightingCatalogueProduct} from './lightingCatalogue';
+import {getLightingRuntimeProduct,type LightingRuntimeProduct} from './lightingRuntimeCatalogue';
+import {buildDeckTakeoff,type DeckTakeoff} from './deckTakeoff';
+import {BORDER_LIGHTING,borderLightingPlan,borderLightingSelected,borderLightingEnabled} from './borderLighting';
 
-export function defaultLightingZone(product:LightingCatalogueProduct):LightingZone{
+export function defaultLightingZone(product:LightingRuntimeProduct):LightingZone{
   if(product.geometry==='recessed')return 'deck';
   if(product.geometry==='wall'||product.geometry==='undercap')return 'stairs';
   if(product.geometry==='bollard'||product.geometry==='spot')return 'landscape';
   return 'house';
 }
-export const isSystemProduct=(p:LightingCatalogueProduct)=>['transformer','cable','accessory'].includes(p.geometry);
+export const isSystemProduct=(p:LightingRuntimeProduct)=>['transformer','cable','accessory'].includes(p.geometry);
 
 type SelectedLight=DeckData['lightingSystem']['selectedItems'][number];
 export const MAX_FIXTURE_QTY=30;
@@ -26,7 +28,7 @@ export const AUTO_LIGHTING={
 } as const satisfies Record<string,{productId:string;zone?:LightingZone}>;
 /** Keeps simple-option fixtures equal to the modeled mounts (posts, treads, lit screen posts).
  * Manual selections are untouched unless they reuse a product the simple option now manages. */
-export function syncAutoLighting(data:DeckData,counts:{posts:number;stairs:number;privacy:number}):SelectedLight[]{
+export function syncAutoLighting(data:DeckData,counts:{posts:number;stairs:number;privacy:number;border?:number}):SelectedLight[]{
   const items=data.lightingSystem?.selectedItems??[];
   const wanted:SelectedLight[]=[];
   const add=(spec:{productId:string;zone:LightingZone},count:number)=>{if(count>0)wanted.push({productId:spec.productId,qty:Math.min(MAX_FIXTURE_QTY,count),zone:spec.zone,auto:true});};
@@ -35,21 +37,27 @@ export function syncAutoLighting(data:DeckData,counts:{posts:number;stairs:numbe
   add(AUTO_LIGHTING.privacy,counts.privacy);
   const managed=new Set(wanted.map(w=>w.productId));
   const manual=items.filter(i=>!i.auto&&!managed.has(i.productId));
-  const hasTransformer=manual.some(i=>getLightingProduct(i.productId)?.geometry==='transformer');
-  if(wanted.length&&!hasTransformer)wanted.push({productId:AUTO_LIGHTING.transformer.productId,qty:1,auto:true});
+  const hasTransformer=manual.some(i=>getLightingRuntimeProduct(i.productId)?.geometry==='transformer');
+  if((wanted.length||(borderLightingEnabled(data)&&(counts.border??0)>0))&&!hasTransformer)wanted.push({productId:AUTO_LIGHTING.transformer.productId,qty:1,auto:true});
   return [...manual,...wanted];
 }
 /** Installation selection alone determines quantities; preview switches never change a purchase. */
-export function activeLightingItems(data:DeckData){
-  return (data.lightingSystem?.selectedItems??[]).flatMap(item=>{
-    const product=getLightingProduct(item.productId);if(!product||!product.supported||item.qty<=0)return [];
+export function activeLightingItems(data:DeckData,model?:DeckTakeoff){
+  const manual=(data.lightingSystem?.selectedItems??[]).flatMap(item=>{
+    const product=getLightingRuntimeProduct(item.productId);if(!product||!product.supported||item.qty<=0)return [];
     const zone=item.zone??defaultLightingZone(product);
+    if(zone==='border')return []; // Dedicated option owns these actual mounts; manual choices stay in their zones.
     if(!isSystemProduct(product)&&data.lightingZoneEnabled?.[zone]===false)return [];
     return [{...product,qty:item.qty,zone,productId:product.id}];
   });
+  // Border mounts are derived rather than stored as a second same-product row, so
+  // manual EVO HYDE selections in other zones survive toggling this option.
+  if(!borderLightingSelected(data))return manual;
+  const border=borderLightingPlan(data,model??buildDeckTakeoff(data)),product=getLightingRuntimeProduct(BORDER_LIGHTING.productId)!;
+  return [...manual,...(border.mounts.length?[{...product,qty:border.mounts.length,zone:'border' as const,productId:product.id}]:[])];
 }
-export function lightingSystemCheck(data:DeckData){
-  const items=activeLightingItems(data),warnings:string[]=[],fixtures=items.filter(p=>!isSystemProduct(p)),hubs=items.filter(p=>p.transformer),cables=items.filter(p=>p.cable);
+export function lightingSystemCheck(data:DeckData,model?:DeckTakeoff){
+  const items=activeLightingItems(data,model),warnings:string[]=[],fixtures=items.filter(p=>!isSystemProduct(p)),hubs=items.filter(p=>p.transformer),cables=items.filter(p=>p.cable);
   const unknownLoad=fixtures.filter(p=>p.va===undefined),knownLoadVa=fixtures.reduce((n,p)=>n+(p.va??0)*p.qty,0),capacityVa=hubs.reduce((n,p)=>n+p.transformer!.capacityVa*p.qty,0);
   if(fixtures.length&&!hubs.length)warnings.push('Lighting requires a compatible transformer; none is included.');
   if(unknownLoad.length)warnings.push(`Transformer sizing remains unresolved: VA load needs confirmation for ${unknownLoad.map(p=>p.name).join(', ')}.`);
@@ -59,9 +67,9 @@ export function lightingSystemCheck(data:DeckData){
   for(const item of items){
     if(item.configurationRequired)warnings.push(`${item.name}: choose the exact installation configuration with the supplier.`);
     for(const warning of item.specWarnings)warnings.push(`${item.name}: ${warning}`);
-    for(const id of item.requiredAccessoryIds??[])if(!items.some(p=>p.id===id))warnings.push(`${item.name} requires ${getLightingProduct(id)?.name??id}; it is not included.`);
+    for(const id of item.requiredAccessoryIds??[])if(!items.some(p=>p.id===id))warnings.push(`${item.name} requires ${getLightingRuntimeProduct(id)?.name??id}; it is not included.`);
     if(item.requiresSmartHub&&!hubs.some(h=>h.transformer!.smart))warnings.push(`${item.name} requires a compatible Smart HUB.`);
-    if(item.compatibleTransformerIds?.length&&hubs.length&&!hubs.some(h=>item.compatibleTransformerIds!.includes(h.id)))warnings.push(`${item.name} requires ${item.compatibleTransformerIds.map(id=>getLightingProduct(id)?.name??id).join(' or ')}.`);
+    if(item.compatibleTransformerIds?.length&&hubs.length&&!hubs.some(h=>item.compatibleTransformerIds!.includes(h.id)))warnings.push(`${item.name} requires ${item.compatibleTransformerIds.map(id=>getLightingRuntimeProduct(id)?.name??id).join(' or ')}.`);
     for(const hub of hubs)if(item.incompatibleTransformerIds?.includes(hub.id)||hub.incompatibleProductIds?.includes(item.id))warnings.push(`${item.name} is incompatible with ${hub.name}; use a separate compatible circuit.`);
     if(item.requiredCableGauge&&!cables.some(c=>c.cable!.gauge===item.requiredCableGauge))warnings.push(`${item.name} requires ${item.requiredCableGauge} cable; include the specified cable rather than relying on the generic wire allowance.`);
     if(item.maxCableRunFt&&distance>item.maxCableRunFt)warnings.push(`${item.name}: requested ${distance} ft cable run exceeds its ${item.maxCableRunFt.toFixed(0)} ft limit.`);

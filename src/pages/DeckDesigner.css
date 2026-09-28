@@ -38,21 +38,13 @@
 .dd-error{color:var(--dc-alert)!important}
 
 /* Header: a forest band with the wordmark; the title and a one-line lede under it. */
-.dd-header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;min-height:56px;padding:0 24px;background:var(--dc-ink);color:var(--dc-cream);border-bottom:2px solid var(--dc-gold)}
-.dd-header a{color:inherit;text-decoration:none}.dd-back{justify-self:start;display:inline-flex;align-items:center;min-height:44px;font-size:13px}.dd-back:hover{text-decoration:underline}
-.dd-wordmark{display:flex;flex-direction:column;align-items:center;font-family:var(--font-display,Georgia,serif);font-size:22px;font-weight:500;line-height:1}.dd-wordmark span{margin-top:3px;font-family:var(--dc-head);font-size:11px;font-weight:600;font-stretch:87.5%;letter-spacing:.24em;color:var(--dc-gold)}
 .dd-send-top{justify-self:end;min-height:44px;padding:0 18px;border:0;border-radius:0;font:inherit;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer}
-.dd-title{padding:20px 24px 14px}.dd-title h1{margin:0;font-size:28px;line-height:1.15}.dd-title p{max-width:64ch;margin:6px 0 0;font-size:15px;line-height:1.5;color:var(--dc-ink-2)}
 
 /* File toolbar: a ruled strip across the table. */
-.dd-design-tools{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 16px;padding:8px 24px;background:var(--dc-sheet);border-top:1px solid var(--dc-rule);border-bottom:1px solid var(--dc-rule)}
-.dd-design-tools>div{margin-right:auto;font-size:13px}.dd-design-tools>div strong{font-family:var(--dc-head);font-size:15px;font-weight:600;font-stretch:87.5%}.dd-design-tools small{display:block;margin-top:2px;font-size:11px;color:var(--dc-muted)}.dd-design-tools>p{flex-basis:100%;margin:0;font-size:13px;line-height:1.5}
 .dd-reset{position:relative;font-size:13px}.dd-reset summary{display:flex;align-items:center;min-height:44px;padding:0 10px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}.dd-reset[open]{flex-basis:100%}.dd-reset p{margin:4px 0 8px}
 .dd-share{display:contents}.dd-share-link{flex-basis:100%;display:flex;gap:8px;align-items:center}.dd-share-link input{flex:1}.dd-share>p{flex-basis:100%;margin:0}
 
 /* Workspace: the drawing, the sections and (from 1280 px) the price schedule, in DOM order. */
-.dd-workspace{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start;padding:0 24px 48px}
-@media(min-width:1000px){.dd-workspace{grid-template-columns:minmax(0,1.35fr) minmax(380px,.85fr)}}
 
 /* The drawing sheet: a 2 px outer rule and a 1 px inner rule 4 px inside it. */
 .dd-preview{position:relative;min-width:0;padding:14px 16px 16px;background:var(--dc-sheet);border:2px solid var(--dc-ink);outline:1px solid var(--dc-ink);outline-offset:-7px}
@@ -106,7 +98,7 @@
 .dd-plan-status{min-height:1.55em;margin:6px 0 0;font-size:12px;line-height:1.55;color:var(--dc-ink-2)}
 /* R5: the plan's tools (one at a time), an outline's edges, the stair edges to tap and the tool's own buttons. Handles and
    edges are drawn in gold; only the handles keep the pointer (the outline and stair lines never do). */
-.dd-plan-tools{display:grid;grid-template-columns:repeat(4,minmax(0,auto));justify-content:start;margin:0 0 10px;border:1px solid var(--dc-ink);background:var(--dc-sheet);width:fit-content;max-width:100%}
+.dd-plan-tools{display:grid;grid-template-columns:repeat(5,minmax(0,auto));justify-content:start;margin:0 0 10px;border:1px solid var(--dc-ink);background:var(--dc-sheet);width:fit-content;max-width:100%}
 .dd-plan-tools button{min-height:44px;padding:0 14px;background:none;border:0;border-radius:0;color:var(--dc-ink);font-size:13px;font-weight:500}.dd-plan-tools button+button{border-left:1px solid var(--dc-rule-soft)}.dd-plan-tools [aria-checked=true]{background:var(--dc-ink);color:var(--dc-cream)}
 .dd-outline-plan line,.dd-stair-targets line{fill:none;stroke:var(--dc-gold-deep);stroke-width:3px;stroke-dasharray:8 5;vector-effect:non-scaling-stroke}.dd-outline-plan line[data-on],.dd-stair-targets line[data-on]{stroke-width:5px;stroke-dasharray:none}
 .dd-plan-handle[data-handle=edge][data-kind=across]::before{width:24px;height:12px}.dd-plan-handle[data-handle=edge][data-kind=angled-d1]::before,.dd-plan-handle[data-handle^=chamfer]::before{width:24px;height:12px;transform:rotate(-45deg)}.dd-plan-handle[data-handle=edge][data-kind=angled-d2]::before{width:24px;height:12px;transform:rotate(45deg)}
@@ -150,18 +142,9 @@
 .dd-chip-reset{min-height:44px;padding:0 12px;border:1px solid var(--dc-ink);border-radius:0;background:none;color:var(--dc-ink);font-size:12px}.dd-chip-reset[aria-pressed=true]{background:var(--dc-ink);color:var(--dc-cream)}
 .dd-chip-custom{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--dc-ink-2)}.dd-chip-custom input{width:44px;height:44px;padding:2px;border:1px solid var(--dc-muted);border-radius:0;background:#fff}
 
-/* Sections: one ruled row per section, opened in any order; a closed section's body is unmounted. */
+/* Shared inspector body and related-task controls. */
 .dd-controls{min-width:0;scroll-margin-top:20px}
-.dd-sections{background:var(--dc-sheet);border:1px solid var(--dc-ink)}.dd-section{scroll-margin-top:16px}.dd-section+.dd-section{border-top:1px solid var(--dc-rule-soft)}.dd-workspace:has(.dd-preview-docked) .dd-section{scroll-margin-top:calc(30vh + 110px)}
-.deck-designer .dd-section-head{margin:0;font:inherit}
-.dd-section-head button{position:relative;display:grid;grid-template-columns:12px minmax(0,1fr) auto 10px;align-items:center;gap:4px 14px;width:100%;min-height:56px;padding:14px 20px;background:none;border:0;border-left:3px solid transparent;text-align:left;color:var(--dc-ink);font:inherit}
-.dd-section-head button::after{content:'';grid-area:1/4;width:8px;height:8px;border-right:1.5px solid var(--dc-ink);border-bottom:1.5px solid var(--dc-ink);transform:translateY(-2px) rotate(45deg)}.dd-section-head button[aria-expanded=true]{border-left-color:var(--dc-gold-deep)}.dd-section-head button[aria-expanded=true]::after{transform:translateY(2px) rotate(-135deg)}
-.deck-designer .dd-section-head button:focus-visible{outline-offset:-4px}.dd-section-head button:hover .dd-section-name{text-decoration:underline;text-underline-offset:4px}
-.dd-section-mark{grid-area:1/1;width:12px;height:12px;border:1.5px solid var(--dc-gold-deep)}.dd-section-mark[data-changed]{background:var(--dc-gold-deep)}
-.dd-section-name{grid-area:1/2;min-width:0;font-family:var(--dc-head);font-size:19px;font-weight:600;font-stretch:87.5%;line-height:1.2}
-.dd-section-price{grid-area:1/3;max-width:15em;font-family:var(--dc-mono);font-size:13px;font-weight:500;line-height:1.4;text-align:right}.dd-section-price[data-kind=quote]{font-family:var(--dc-body);font-weight:600;color:var(--dc-gold-ink)}.dd-section-price[data-kind=none],.dd-section-price[data-kind=note]{font-family:var(--dc-body);font-size:12px;font-weight:400;color:var(--dc-muted)}
-.dd-section-choice{grid-area:2/2/3/4;min-width:0;font-size:13px;line-height:1.45;color:var(--dc-ink-2);overflow-wrap:anywhere}
-.dd-panel:focus{outline:none}.dd-sections .dd-section-body{padding:4px 20px 24px}.dd-section-body[hidden]{display:none}
+.dd-panel:focus{outline:none}.dd-section-body[hidden]{display:none}
 .dd-panel>p{margin:8px 0 16px;font-size:13px;line-height:1.6;color:var(--dc-ink-2)}.dd-panel h3{margin:24px 0 12px;font-size:17px;line-height:1.25}.dd-panel h4{margin:18px 0 8px;font-size:14px}
 .dd-section-body>p.dd-section-next{margin:24px 0 0;padding-top:4px;border-top:1px solid var(--dc-rule-soft)}.dd-section-next .dd-linklike{font-size:13px}
 
@@ -218,12 +201,6 @@
 .dd-ledger :is(.dd-ledger-quotes,.dd-ledger-changes) :is(h3,h4){margin:14px 0 4px;font-size:14px}.dd-ledger-quotes ul,.dd-ledger-changes ol{margin:0;padding:0;list-style:none}.dd-ledger-quotes li,.dd-ledger-changes li{padding:5px 0;border-top:1px dotted var(--dc-rule-soft)}
 .dd-ledger-changes strong{margin-right:4px;font-family:var(--dc-mono);font-weight:500;white-space:nowrap}.dd-ledger-changes li[data-kind=quote] strong{color:var(--dc-gold-ink)}.dd-ledger .dd-note{margin:10px 0 4px}.dd-ledger-more{font-size:13px}
 .dd-ledger-sheet{width:100%;max-width:min(560px,100%);max-height:85vh;margin:auto auto 0;padding:0;border:2px solid var(--dc-ink);border-bottom:0;border-radius:0;background:var(--dc-sheet);color:var(--dc-ink);overflow:auto;overscroll-behavior:contain}.dd-ledger-sheet::backdrop{background:#14261c99}.dd-ledger-drawer{border:0;padding-top:12px}.dd-ledger-sheet .dd-ledger-close{float:right;margin:12px 16px 0 8px}
-@media(min-width:1280px){.dd-workspace{grid-template-columns:minmax(0,1.35fr) minmax(340px,.85fr) minmax(260px,280px)}.dd-ledger-column{display:block;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto}}
-
-/* Below 1280 px: the price bar (it opens the schedule's drawer); phones also pin the drawing while editing (PhoneDeckBar). */
-.dd-phone-bar{display:none}@media(max-width:1279.98px){.deck-designer{padding-bottom:84px}.dd-phone-bar{display:flex;align-items:center;gap:8px;position:fixed;left:0;right:0;bottom:0;z-index:40;padding:8px 16px calc(8px + env(safe-area-inset-bottom));background:var(--dc-sheet);border-top:2px solid var(--dc-ink);color:var(--dc-ink);font-family:var(--dc-body)}.dd-phone-bar small{display:block;font-size:11px;color:var(--dc-muted)}.dd-phone-bar strong{font-family:var(--dc-mono);font-size:20px;font-weight:500}.dd-phone-bar button{padding:0 12px;white-space:nowrap}.dd-phone-bar .dd-phone-price{display:grid;justify-items:start;flex:0 1 auto;min-width:0;min-height:44px;margin:0 auto 0 -8px;padding:2px 8px;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}.dd-phone-bar .dd-phone-price small:last-child{color:var(--dc-gold-ink);text-decoration:underline;text-underline-offset:2px}}
-@media(min-width:761px){.dd-phone-dock{display:none}}
-body.dd-send-open .dd-phone-bar,body.dd-proposal-open .dd-phone-bar{display:none}
 
 /* Send my design: the modal form. */
 body.dd-send-open{overflow:hidden}
@@ -234,20 +211,14 @@ body.dd-send-open{overflow:hidden}
 /* Layout below the desktop widths. */
 @media(max-width:999.98px){.dd-quantities{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){
-.dd-header{display:flex;justify-content:space-between;gap:10px;min-height:48px;padding:0 12px}.dd-back{max-width:7.5em;font-size:12px;line-height:1.25}.dd-wordmark{font-size:18px}.dd-send-top{padding:0 12px;font-size:12px}
-.dd-title{padding:14px 12px 10px}.dd-title h1{font-size:22px}.dd-title p{font-size:14px}
-.dd-design-tools{margin:0 0 14px;padding:8px 12px}.dd-design-tools>div{flex-basis:100%;margin-bottom:2px}
-.dd-workspace{display:flex;flex-direction:column;gap:16px;padding:0 12px 40px}.dd-controls{width:100%}
 .dd-preview{width:100%;padding:12px 12px 14px}.dd-preview h2{font-size:19px}.dd-canvas{touch-action:pan-y}.dd-canvas>div{aspect-ratio:1.25!important}
 .dd-scene-tools .dd-view-toggle{width:100%}.dd-scene-tools .dd-view-toggle button{flex:1 1 auto;padding:0 8px}.dd-day-night button{min-width:84px}
 .dd-title-block{grid-template-columns:repeat(2,minmax(0,1fr))}.dd-title-block>:nth-child(-n+2){grid-column:auto}
 .dd-plan-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.dd-plan-shortcuts .dd-secondary{padding:0 4px}
-.dd-plan-tools{grid-template-columns:repeat(4,minmax(0,1fr));width:100%}.dd-plan-tools button{padding:0 4px;font-size:12px;line-height:1.2}.dd-plan-tool-extras .dd-outline-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-.dd-section-head button{gap:4px 12px;padding:12px 14px}.dd-section-name{font-size:18px}.dd-section-price{max-width:9.5em}.dd-sections .dd-section-body{padding:4px 14px 20px}
+.dd-plan-tools{grid-template-columns:repeat(5,minmax(0,1fr));width:100%}.dd-plan-tools button{padding:0 4px;font-size:12px;line-height:1.2}.dd-plan-tool-extras .dd-outline-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 .dd-fields{gap:12px}.dd-fields.three{gap:8px}.dd-field :is(input,select,textarea),.dd-share-link input,.deck-designer select{font-size:16px}.dd-field .dd-number input{padding-left:8px;font-size:17px}
 .dd-screen-move{grid-template-columns:44px minmax(0,1fr) 44px 3em}.dd-screen-move>span{grid-column:1/-1}
 .dd-send-panel{padding:20px 16px 24px}.dd-send-panel h2{font-size:22px}
-.dd-preview-docked{position:sticky;top:0;z-index:30;padding:6px 10px 8px}.dd-preview-docked>:not(.dd-preview-head):not(.dd-sheet-panel){display:none!important}.dd-preview-docked .dd-sheet-panel>:not(.dd-canvas){display:none!important}.dd-preview-docked .dd-preview-head{gap:2px;margin:0 0 6px}.dd-preview-docked h2{font-size:16px}.dd-preview-docked h2 small{display:none}.dd-preview-docked .dd-canvas>div,.dd-preview-docked .dd-canvas>svg{aspect-ratio:auto!important;height:30vh!important}
 }
 @media(max-width:520px){.dd-lighting{grid-template-columns:minmax(0,1fr)}.dd-send-panel .dd-fields{grid-template-columns:1fr}}
 @media(max-width:420px){.dd-fields,.dd-fields.three{grid-template-columns:minmax(0,1fr)!important}}
