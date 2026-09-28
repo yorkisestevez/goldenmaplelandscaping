@@ -27,9 +27,9 @@ export function polygonUnion(polys:PlanPoint[][]):PlanPoint[][]{
   c.Execute(ClipperLib.ClipType.ctUnion,out,ClipperLib.PolyFillType.pftNonZero,ClipperLib.PolyFillType.pftNonZero);
   return out.map(points).filter(p=>signedArea(p)>.001);
 }
-export function polygonBoard(polygon:PlanPoint[],angleDeg:number,role:BoardRun['role']='field'):BoardRun{
+export function polygonBoard(polygon:PlanPoint[],angleDeg:number,role:BoardRun['role']='field',inlay?:string):BoardRun{
   const a=angleDeg*Math.PI/180,ux=Math.cos(a),uy=Math.sin(a),u=polygon.map(p=>p.x*ux+p.y*uy),v=polygon.map(p=>-p.x*uy+p.y*ux),lo=Math.min(...u),hi=Math.max(...u),vl=Math.min(...v),vh=Math.max(...v),uc=(lo+hi)/2,vc=(vl+vh)/2;
-  return {cx:uc*ux-vc*uy,cy:uc*uy+vc*ux,length:hi-lo,width:vh-vl,angleDeg,polygon,role};
+  return {cx:uc*ux-vc*uy,cy:uc*uy+vc*ux,length:hi-lo,width:vh-vl,angleDeg,polygon,role,...(inlay?{inlay}:{})};
 }
 export function boardOutline(b:BoardRun,width:number):PlanPoint[]{
   if(b.polygon)return b.polygon;
@@ -42,7 +42,7 @@ export function splitBoard(b:BoardRun,width:number,stock:number,gap:number):Boar
   const count=Math.ceil(b.length/stock),length=(b.length-gap*(count-1))/count,a=b.angleDeg*Math.PI/180,ux=Math.cos(a),uy=Math.sin(a),out:BoardRun[]=[];
   for(let i=0;i<count;i++){
     const along=-b.length/2+length/2+i*(length+gap),strip={...b,cx:b.cx+ux*along,cy:b.cy+uy*along,length,width:(b.width??width)+.01,polygon:undefined};
-    for(const poly of polygonCut([boardOutline(b,width)],[boardOutline(strip,width)]))out.push(polygonBoard(poly,b.angleDeg,b.role));
+    for(const poly of polygonCut([boardOutline(b,width)],[boardOutline(strip,width)]))out.push(polygonBoard(poly,b.angleDeg,b.role,b.inlay));
   }
   return out;
 }

@@ -1,7 +1,12 @@
-import type {DeckData,DoorStyle,HouseCladding,HouseConfig,HouseOpening} from './types';
+import type {DeckData,DoorStyle,HouseCladding,HouseConfig,HouseOpening,RoofFinish} from './types';
 
-/** House looks (never priced). */
-export const HOUSE_CLADDINGS:readonly HouseCladding[]=['Siding','Brick','Stone','Stucco','Board & batten','Vertical siding'];
+/** House looks (never priced). The first six are the studio's original claddings; the rest are generic types. */
+export const HOUSE_CLADDINGS:readonly HouseCladding[]=['Siding','Brick','Stone','Stucco','Board & batten','Vertical siding','Fibre-cement lap','Cedar shakes','Ledgestone','Fieldstone','Norman brick','Roman brick','Horizontal metal'];
+/** The studio's first six claddings. */
+export const ORIGINAL_HOUSE_CLADDINGS:readonly HouseCladding[]=HOUSE_CLADDINGS.slice(0,6);
+/** Roof finishes as the studio lists them. The originals keep their stored values ('Shingles', 'Metal'). */
+export const ROOF_FINISHES:readonly RoofFinish[]=['Shingles','Architectural shingles','Metal','Cedar shakes','Slate','Clay tile','Concrete tile'];
+export const ROOF_FINISH_LABELS:Record<RoofFinish,string>={Shingles:'Asphalt shingles (3-tab)','Architectural shingles':'Architectural shingles',Metal:'Standing-seam metal','Cedar shakes':'Cedar shakes',Slate:'Slate','Clay tile':'Clay tile','Concrete tile':'Concrete tile'};
 export const DOOR_STYLES:readonly DoorStyle[]=['Single','French','Sliding'];
 /** Roof pitch, rise per 12 of run. */
 export const ROOF_PITCH_RANGE=[3,12] as const;

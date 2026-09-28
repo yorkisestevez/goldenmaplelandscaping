@@ -35,3 +35,7 @@ sources/meta/*.jpg
 # Regenerable review sheets (node scripts/photos/harvest-meta-photos.mjs --sheets); keep the markdown + shortlist.json
 docs/portfolio/meta-sheet-*.jpg
 docs/portfolio/shortlist-*.jpg
+
+# Playwright (DeckCraft e2e) output
+test-results/
+playwright-report/

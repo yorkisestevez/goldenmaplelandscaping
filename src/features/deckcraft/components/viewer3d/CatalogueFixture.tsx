@@ -1,3 +1,5 @@
+import {SCENE_LOOK} from './sceneLook';
+
 type ProductShape={name:string;geometry:string;finish?:string;dimensionsIn:{height?:number;width?:number;length?:number;diameter?:number;mountingDepth?:number}};
 
 /** Family envelopes use published dimensions where available. Unspecified
@@ -5,7 +7,8 @@ type ProductShape={name:string;geometry:string;finish?:string;dimensionsIn:{heig
 export default function CatalogueFixture({product,evening,enabled=true}:{product:ProductShape;evening:boolean;enabled?:boolean}){
  const {geometry:g,dimensionsIn:d}=product,finish=(product.finish||'').toLowerCase();
  const color=finish.includes('white')?'#e6e5df':finish.includes('rose')?'#a99084':finish.includes('silver')||finish.includes('steel')?'#a7afb1':'#272d2c';
- const dark=<meshStandardMaterial color={color} metalness={finish.includes('white')?.1:.6} roughness={.4}/>;
+ // Silver and steel finishes are bare metal; the others are powder coat (sceneLook.ts).
+ const dark=finish.includes('silver')||finish.includes('steel')?<meshStandardMaterial color={color} metalness={.6} roughness={.4}/>:<meshPhysicalMaterial color={color} {...SCENE_LOOK.powderCoat}/>;
  const lit=<meshStandardMaterial color="#ffefd7" emissive="#ffd1a0" emissiveIntensity={enabled?(evening?4.5:.5):0} toneMapped={false}/>;
  const diameter=d.diameter??d.width??2.2,w=d.width??d.diameter??2.5,h=d.height??3,depth=d.length??1.5;
  if(g==='recessed'){const height=d.height??d.mountingDepth??1.4,r=diameter/2;return <group name="recessed-catalogue-housing"><mesh position={[0,-height/2,0]}><cylinderGeometry args={[r,r*.93,height,24]}/>{dark}</mesh><mesh position={[0,.08,0]}><cylinderGeometry args={[r*.83,r*.83,.12,24]}/>{lit}</mesh></group>;}

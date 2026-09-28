@@ -1,0 +1,58 @@
+{
+ "day": {
+  "source": "suburban_field_02_8k.hdr",
+  "sunAzimuthDeg": 36.22,
+  "sunElevationDeg": 38.59,
+  "sunIntensity": 4.2747,
+  "sunColor": [
+   1,
+   0.9324,
+   0.8349
+  ],
+  "sunPixels": 298119,
+  "sunShare": 0.846,
+  "sunPainted": true,
+  "skyIrradiance": 0.4752,
+  "bandScale": 0.7362,
+  "bandTopDeg": 41,
+  "bandBottomDeg": -4,
+  "horizonColor": [
+   0.0969,
+   0.0856,
+   0.0671
+  ],
+  "whiteBalance": [
+   1.0832,
+   0.9985,
+   0.8259
+  ]
+ },
+ "evening": {
+  "source": "steinbach_field_8k.hdr",
+  "sunAzimuthDeg": 54.26,
+  "sunElevationDeg": 10.77,
+  "sunIntensity": 0,
+  "sunColor": [
+   1,
+   1,
+   1
+  ],
+  "sunPixels": 146981,
+  "sunShare": 0.002,
+  "sunPainted": false,
+  "skyIrradiance": 3.1416,
+  "bandScale": 10.3622,
+  "bandTopDeg": 41,
+  "bandBottomDeg": -4,
+  "horizonColor": [
+   0.0796,
+   0.0829,
+   0.0442
+  ],
+  "whiteBalance": [
+   0.9852,
+   1.0137,
+   0.9177
+  ]
+ }
+}
