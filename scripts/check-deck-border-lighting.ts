@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {writeFileSync} from 'node:fs';
+import {existsSync,writeFileSync} from 'node:fs';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
@@ -79,5 +79,8 @@ ok(off.quoteRequired.includes(BORDER_SUPPORT_QUOTE),'Selected custom structural 
 const reel={...base,lightingSystem:{wireDistance:100,selectedItems:[{productId:'cbl_25_14_2',qty:2}]}};
 ok(!calculateEstimate(reel).sections.find(s=>s.title==='in-lite® Lighting System')?.items.some(i=>i.name==='Low-voltage cable'),'Purchased reels do not double-charge generic cable allowance');
 assert.throws(()=>validateDesign({...base,lightingSystem:{wireDistance:0,selectedItems:[{productId:'evo_hyde_550',qty:30,zone:'border'}]}}));checks++;
-writeFileSync(new URL('../../../outputs/deckcraft-border-lighting-proof.json',import.meta.url),JSON.stringify({checks,scenarios:proof},null,2));
+// The proof goes to the outer research workspace's outputs/ when this checkout sits in it; a site checkout or CI
+// runner has no such folder, and the check itself never depends on it.
+const proofDir=new URL('../../../outputs/',import.meta.url);
+if(existsSync(proofDir))writeFileSync(new URL('deckcraft-border-lighting-proof.json',proofDir),JSON.stringify({checks,scenarios:proof},null,2));
 console.log(`Deck-border lighting: PASS (${checks} checks, ${proof.length} designs; placement/supply/night/export/persistence parity)`);

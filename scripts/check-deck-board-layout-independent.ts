@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdirSync,writeFileSync} from 'node:fs';
+import {existsSync,mkdirSync,writeFileSync} from 'node:fs';
 import {isDeepStrictEqual} from 'node:util';
 import Clipper from 'clipper-lib';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
@@ -239,7 +239,11 @@ for(const [main,colour] of [
 const reserve=DECKING_CATALOGUE.find(m=>m.id==='tt_reserve')!,compatibleRef=colourRef(reserve.id,reserve.colors[0].name),compatible=base({boardLayout:layout({regions:[{id:'compatible-composite',level:1,polygon:rect(20,20,60,60),angleDeg:33,colour:compatibleRef}]})});
 ok(parseDesign(serializeDesign(compatible)).boardLayout?.regions[0].colour===compatibleRef,'Compatible real composite collection colour survives strict import');
 
-const out=new URL('../../../outputs/deckcraft-workspace-review/board-editing/',import.meta.url);mkdirSync(out,{recursive:true});
-writeFileSync(new URL('independent-geometry-proof.json',out),JSON.stringify({status:failures.length?'FAIL':'PASS',checks,failures,fixtures:results},null,2));
+// The proof goes to the outer research workspace's outputs/ only when this checkout sits in it; a site checkout or CI
+// runner never gets folders created outside the repository.
+if(existsSync(new URL('../../../outputs/',import.meta.url))){
+  const out=new URL('../../../outputs/deckcraft-workspace-review/board-editing/',import.meta.url);mkdirSync(out,{recursive:true});
+  writeFileSync(new URL('independent-geometry-proof.json',out),JSON.stringify({status:failures.length?'FAIL':'PASS',checks,failures,fixtures:results},null,2));
+}
 console.log(`Independent board-layout geometry: ${checks} checks across ${results.length} fixtures; ${failures.length} failures`);
 if(failures.length){console.error(failures.slice(0,25).join('\n'));process.exitCode=1;}
