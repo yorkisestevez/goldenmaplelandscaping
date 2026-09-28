@@ -15,6 +15,12 @@ export default [
   route('landscape-design-barrie', 'pages/LandscapeDesignBarrieAds.tsx'),
   route('services/composite-decking-barrie', 'pages/services/CompositeDecking.tsx'),
   route('composite-decking-barrie', 'pages/CompositeDeckingBarrieAds.tsx'),
+  // Data-driven Barrie money pages (src/data/barrieServices.ts). Static routes win
+  // over services/:slug; scripts/check-barrie-services.ts keeps the slugs disjoint.
+  route('services/interlocking-driveways-barrie', 'pages/services/barrie/InterlockingDriveways.tsx'),
+  route('services/porcelain-patios-barrie', 'pages/services/barrie/PorcelainPatios.tsx'),
+  route('services/outdoor-kitchens-barrie', 'pages/services/barrie/OutdoorKitchens.tsx'),
+  route('services/front-entrance-landscaping-barrie', 'pages/services/barrie/FrontEntranceLandscaping.tsx'),
   route('services/:slug', 'pages/services/ServiceLocation.tsx'),
 
   // Core pages

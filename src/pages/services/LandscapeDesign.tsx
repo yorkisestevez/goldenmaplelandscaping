@@ -44,7 +44,7 @@ export default function LandscapeDesign() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Landscape Design Barrie"
+        title="Landscape Designer Barrie | Landscape Design & 3D Plans"
         description="Landscape design planning for Barrie-area properties. Discuss current design scope, deliverables, and project options with our team."
         canonical="https://goldenmaplelandscaping.ca/services/landscape-design-barrie"
         schema={pageSchema}
@@ -59,13 +59,11 @@ export default function LandscapeDesign() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Architectural Planning
-              </span>
-              <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
+              <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Landscape Designer in Barrie</h1>
+              <p className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 See it first. <br />
                 <span className="italic text-brand-gold-dark">Then we build it.</span>
-              </h1>
+              </p>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 The most expensive mistake in landscaping is finding out, halfway through construction, that what's being built doesn't match what you imagined. We've solved that. Before a single stone moves, you walk your finished backyard in 3D. The colours. The light. The way the space flows on a Sunday morning. You sign off on the picture, then we build the picture. Surprises are for birthdays — not your backyard.
               </p>

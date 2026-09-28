@@ -23,7 +23,7 @@ export default function LuxuryLandscapeBarrie() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
-        title="Luxury Landscape Construction Barrie | Premium Residential Hardscape | Golden Maple"
+        title="Landscape Construction Barrie | Premium Residential Hardscape"
         description="Premium residential landscape construction in Barrie, Innisfil, Oro-Medonte. Pool decks, multi-trade coordination, phased builds. Engineered residential landscapes, not installed yards. Project starts $90K."
         canonical="https://goldenmaplelandscaping.ca/luxury-landscape-barrie"
         schema={graph(
@@ -41,13 +41,11 @@ export default function LuxuryLandscapeBarrie() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Premium Projects · $90K-$160K+
-              </span>
-              <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
+              <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Landscape Construction in Barrie · Premium Projects $90K-$160K+</h1>
+              <p className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 Engineered <br />
                 <span className="italic text-brand-gold-dark">residential landscapes.</span>
-              </h1>
+              </p>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 Pool decks, full property regrades, multi-trade coordination, phased multi-season builds. Premium projects start at an in-person consult — there's no honest way to price a $120,000 build from a phone call. We walk the property, talk through the soil and the grades, and come back with a design before the first quote. Most Premium builds land between $94,000 and $158,000.
               </p>

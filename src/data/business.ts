@@ -40,6 +40,15 @@ const unknown = <T>(source: string, notes?: string): BusinessFact<T | null> => (
   notes,
 });
 
+/** Owner answered on 2026-09-27 that Golden Maple sells this service and wants a Barrie page for it. */
+const offeredPerOwner = (value: string): BusinessFact<string> => ({
+  value,
+  status: 'confirmed',
+  lastVerified: '2026-09-27',
+  source: 'Owner answer 2026-09-27 (Claude Code session, SEO authority plan): Golden Maple offers this service and wants a dedicated Barrie page',
+  notes: 'Confirms the service is offered. Pricing, timelines and specs on the page stay project-specific unless separately confirmed.',
+});
+
 export const BUSINESS = {
   canonicalUrl: 'https://goldenmaplelandscaping.ca',
   publicName: published('Golden Maple Landscaping', 'Existing site-wide public copy'),
@@ -130,6 +139,16 @@ export const BUSINESS = {
     ['Interlocking stone', 'Composite decking', 'Retaining walls', 'Landscape design', 'Outdoor living / backyard transformations'],
     'Existing services and navigation',
   ),
+  /**
+   * Services with a dedicated Barrie money page (src/data/barrieServices.ts). A page is
+   * routed only while its offering passes canPublish() — scripts/check-barrie-services.ts.
+   */
+  serviceOfferings: {
+    interlockDriveways: offeredPerOwner('Interlock driveways'),
+    porcelainPatios: offeredPerOwner('Porcelain patios'),
+    outdoorKitchens: offeredPerOwner('Outdoor kitchens'),
+    frontEntrances: offeredPerOwner('Front entrance landscaping (steps, landings, walkways)'),
+  },
 
   commercialPolicies: {
     minimumInvestment: unknown<string>('Existing site has inconsistent general and service-specific price claims', 'Confirm universal minimum and any service-specific exceptions before publishing as a policy.'),

@@ -121,6 +121,10 @@ Following the emerging `llms.txt` standard — explicit paths to the highest-sig
 - [Retaining Walls in Barrie](https://goldenmaplelandscaping.ca/services/retaining-walls-barrie)
 - [Composite Decking in Barrie](https://goldenmaplelandscaping.ca/services/composite-decking-barrie)
 - [Landscape Design in Barrie](https://goldenmaplelandscaping.ca/services/landscape-design-barrie)
+- [Interlock Driveways in Barrie](https://goldenmaplelandscaping.ca/services/interlocking-driveways-barrie/) — driveway bases sized for vehicle loads, clay subgrade and freeze-thaw; borders and edge restraint
+- [Porcelain Patios in Barrie](https://goldenmaplelandscaping.ca/services/porcelain-patios-barrie/) — outdoor porcelain pavers: setting methods, slip resistance, base requirements
+- [Outdoor Kitchens in Barrie](https://goldenmaplelandscaping.ca/services/outdoor-kitchens-barrie/) — island foundations, gas and power routing by licensed trades, winter-proof materials
+- [Front Entrance Landscaping in Barrie](https://goldenmaplelandscaping.ca/services/front-entrance-landscaping-barrie/) — front steps, landings and walkways built for frost and drainage
 
 ## Crawler Policy
 

@@ -31,7 +31,7 @@ export default function CompositeDecking() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Composite Decking Installation Barrie"
+        title="Composite Deck Builder Barrie | Composite Decking Installation"
         description="Composite deck planning and installation for Barrie-area properties. Discuss materials, design options, and project-specific scope with our team."
         canonical="https://goldenmaplelandscaping.ca/services/composite-decking-barrie"
         schema={pageSchema}
@@ -46,13 +46,11 @@ export default function CompositeDecking() {
               viewport={{ once: true }}
               transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Outdoor Living Construction
-              </span>
-              <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
-                A deck you'll <br />
-                <span className="italic text-brand-gold-dark">made for your outdoor routine.</span>
-              </h1>
+              <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Composite Deck Builder in Barrie</h1>
+              <p className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
+                A deck built <br />
+                <span className="italic text-brand-gold-dark">for your outdoor routine.</span>
+              </p>
               <p className="font-sans text-lg text-brand-muted leading-relaxed mb-16 font-light">
                 Compare composite product styles, maintenance guidance, framing, railings, lighting, and access needs. We can discuss current options and a project-specific written scope.
               </p>
