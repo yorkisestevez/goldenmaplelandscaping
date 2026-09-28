@@ -137,7 +137,8 @@ for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another 
   ok(e.subtotal>=plain.subtotal-.005&&e.subtotal-plain.subtotal<=perBoard+.01,'The same collection in a second colour costs the same, give or take one board it cannot share offcuts with');
   const other={...base(),boardColours:[row('r3'),row('r5',colourRef('tt_reserve','Antique Leather'))]},eo=price(other),acc2=accentSection(eo)!;
   const reserveRow=eo.stockSchedule.find(r=>r.name.startsWith('TimberTech PRO Reserve · Antique Leather'))!;
-  ok(acc2.items.length===2&&Math.abs((acc2.items[1].cost as number)-reserveRow.orderedLf*12.15*(5.5/12)*1.35)<.01,'Another collection is priced at its own rate');
+  const reserveRate=DECKING_CATALOGUE.find(m=>m.id==='tt_reserve')!.costPerSqft!;
+  ok(acc2.items.length===2&&Math.abs((acc2.items[1].cost as number)-reserveRow.orderedLf*reserveRate*(5.5/12)*1.35)<.01,'Another collection is priced at its current sourced rate');
   const lab=labourItem(e)!;
   ok(lab&&lab.cost===null&&lab.qty===boardFinishPlan(own,e.model).pieces&&e.quoteRequired.includes('Accent-colour board labour (builder quote)'),'Fitting accent boards is a builder-quote labour line, never $0');
   ok(describeDesign(own,e).priceLabel==='Priced portion only','With a builder-quote line the price reads as the priced portion only');

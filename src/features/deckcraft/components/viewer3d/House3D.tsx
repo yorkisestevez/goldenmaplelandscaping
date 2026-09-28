@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import type {DeckData,GableAccent,HouseConfig,RoofFinish} from '../../types';
 import type {Box} from '../../deckTakeoff';
 import {getHousePlacement} from '../../housePlacement';
+import {getHouseConfig} from '../../houseSettings';
 import {getHouseBlocks,type HouseBlockPlan} from '../../houseFootprint';
 import {houseLayout} from './houseLayout';
 import HouseParts from './HouseParts';
@@ -47,7 +48,7 @@ function HouseBlock3D({block,config,map,look,trim,accents}:{block:HouseBlockPlan
  const {x0,x1,y0,y1}=block.rect,bx=(x0+x1)/2,bz=(y0+y1)/2,h=block.wallHeightIn,w=x1-x0,d=y1-y0;
  // Gutters run along the eaves: the sides parallel to the ridge.
  const gutters=block.ridge==='z'?[x0-10,x1+10].map(x=>({x,y:h-2,z:bz,w:5,h:4,d:d+24})):[y0-10,y1+10].map(z=>({x:bx,y:h-2,z,w:w+24,h:4,d:5}));
- return <group name={`house-block-${block.id}`}>
+ return <group name={`house-block-${block.id}`} userData={{pickPartId:`house:${block.id}`}}>
   <HouseParts items={[{x:bx,y:4,z:bz,w:w+1,h:8,d:d+1}]} color="#93968d" name="house-block-plinth" surface="stucco"/>
   <mesh geometry={roof} castShadow receiveShadow><meshStandardMaterial color={config.roofColor} map={map} bumpMap={map} bumpScale={look.bumpScale} metalness={look.metalness} roughness={look.roughness} side={THREE.DoubleSide}/></mesh>
   {gable&&<mesh geometry={gable} castShadow receiveShadow><meshStandardMaterial color={config.claddingColor} roughness={.9} side={THREE.DoubleSide}/></mesh>}
@@ -62,7 +63,8 @@ function roofTexture(finish:RoofFinish){const size=ROOF_TEXTURE_SIZE,pixels=roof
 export default function House3D({data,width,...interaction}:{data:DeckData;width:number}&HouseInteraction){
  // Keyed on the placed house, so moving the house (placement, wrap, deck width) rebuilds it too.
  const placement=getHousePlacement(data),placeKey=`${placement.x0}:${placement.x1}:${placement.depthIn}`;
- const layout=useMemo(()=>houseLayout(data,width),[data.houseConfig,data.deckType,data.houseVisible,data.houseWallHeightIn,data.houseDoorWidthIn,data.houseDoorOffset,data.height,width,placeKey]);
+ const defaultHouseKey=data.houseConfig?'':JSON.stringify(getHouseConfig(data).openings);
+ const layout=useMemo(()=>houseLayout(data,width),[data.houseConfig,data.deckType,data.houseVisible,data.houseWallHeightIn,data.houseDoorWidthIn,data.houseDoorOffset,data.height,width,placeKey,defaultHouseKey]);
  const blocks=useMemo(()=>getHouseBlocks(data),[layout]);
  const walls=useMemo(()=>houseWallSpecs(data,layout.config,blocks),[layout,blocks]);
  const {minX,maxX,depth,wallHeight,roofRise,config}=layout,cx=(minX+maxX)/2,evening=data.sceneLighting==='Evening',look=ROOF_LOOK[config.roofFinish],trim=houseTrimColors(config);
@@ -79,7 +81,7 @@ export default function House3D({data,width,...interaction}:{data:DeckData;width
  // Horizontal courses on the gable triangles for coursed claddings; stucco and vertical boards stay plain there.
  const gableSkin=useMemo(()=>{const boxes:Box[]=[],pitch=GABLE_COURSE[config.cladding];if(!gable||!pitch)return boxes;const base=sideGables?depth:maxX-minX;for(let y=wallHeight;y<wallHeight+roofRise;y+=pitch){const h=Math.min(pitch-.2,wallHeight+roofRise-y),span=base*(1-(y+h-wallHeight)/roofRise);if(span<=0)continue;if(sideGables){for(const x of [minX-.3,maxX+.3])if(!accented.includes(x<cx?'left':'right'))boxes.push({x,y:y+h/2,z:-depth/2,w:.6,h,d:span});}else for(const z of [.3,-depth-.3])if(!accented.includes(z>0?'front':'back'))boxes.push({x:cx,y:y+h/2,z,w:span,h,d:.6});}return boxes;},[gable,config.cladding,wallHeight,roofRise,minX,maxX,depth,cx,sideGables,accented]);
  if(!layout.visible)return null;
- return <group name="complete-editable-house">
+ return <group name="complete-editable-house" userData={{pickPartId:"house:main"}}>
   {walls.map(f=><group key={f.wall.id} name={`house-${f.name}-facade`} position={f.origin} rotation={[0,f.yaw,0]}><HouseFacade span={f.span} height={f.height} openings={f.openings} hidden={f.hidden} finish={facadeFinish(config,f.wall.id)} wallId={f.wall.id} blockId={f.block.id} evening={evening} {...interaction}/></group>)}
   <HouseParts items={[{x:cx,y:4,z:-depth/2,w:maxX-minX+1,h:8,d:depth+1}]} color="#93968d" name="house-foundation-plinth" surface="stucco"/>
   <mesh geometry={roof} castShadow receiveShadow><meshStandardMaterial color={config.roofColor} map={map} bumpMap={map} bumpScale={look.bumpScale} metalness={look.metalness} roughness={look.roughness} side={THREE.DoubleSide}/></mesh>

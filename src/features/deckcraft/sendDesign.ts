@@ -1,3 +1,5 @@
+import {DECK_DESIGN_FORM,ATTACH_PROPOSAL_PDF,PROPOSAL_PDF_NAME} from './sendDesignConstants';
+export {DECK_DESIGN_FORM,ATTACH_PROPOSAL_PDF,PROPOSAL_PDF_NAME} from './sendDesignConstants';
 import {BUSINESS,publicContact} from '../../data/business';
 import {PROJECT_BUDGET_RANGES} from '../../data/projectBudgets';
 import {scoreGoldenMapleLead} from '../../utils/leadScoring';
@@ -17,20 +19,9 @@ import {partSamples} from './deckPartFinishes';
  * the plain-language summary with the priced estimate, the review items, the customer's notes and
  * the consent record. Every key built here is declared in public/__forms.html, the form's only schema.
  */
-export const DECK_DESIGN_FORM='deck-design';
 /** The CRM infers the lead source from this: it contains "website", so the lead is filed under Website. */
 export const DECK_DESIGN_SOURCE='website-deck-designer';
 export const MAX_DETAILS_CHARS=12_000;
-/**
- * Attach the branded proposal PDF to a sent design as a Netlify form file (`proposal_pdf`). On since
- * 2026-09-28 (owner: make "one click sends the branded proposal" true); the PDF is well under Netlify's
- * 8 MB request limit, and netlify/functions/submission-created.ts puts its link at the top of the CRM
- * lead's details. It needs `<input type="file" name="proposal_pdf">` in public/__forms.html
- * (check-deck-pdf enforces both ways). A failed upload still falls back to sending without the file.
- */
-export const ATTACH_PROPOSAL_PDF=true;
-/** The proposal PDF's file name, for the download and the attachment (the PDF builder loads only when asked for). */
-export const PROPOSAL_PDF_NAME='golden-maple-deck-proposal.pdf';
 /**
  * Offer "bring a sample of my decking colour" on the send form: the crew brings sample boards to a visit
  * (owner, 2026-09-23). Switching this off sends the field blank and hides the box.

@@ -4,6 +4,10 @@ import path from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  build:{minify:'terser',terserOptions:{compress:{passes:2}}},
+  worker:{format:'es',rollupOptions:{output:{manualChunks(id){
+    if(id.includes('/node_modules/clipper-lib/'))return 'geometry-clipping';
+  }}}},
   plugins: [tailwindcss(), reactRouter()],
   server: {
     // Dev-only: PORT env wins so preview tooling can assign a free port

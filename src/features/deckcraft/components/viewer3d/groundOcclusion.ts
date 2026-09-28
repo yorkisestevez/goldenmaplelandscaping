@@ -1,3 +1,4 @@
+import {useSyncExternalStore} from 'react';
 import * as THREE from 'three';
 import {FullScreenQuad} from 'three/examples/jsm/postprocessing/Pass.js';
 
@@ -37,9 +38,10 @@ export class GroundOcclusion{
   render(gl:THREE.WebGLRenderer,scene:THREE.Scene,b:GroundBounds){
     const ft=1/12,cx=(b.minX+b.width/2)*ft,cz=(b.minZ+b.depth/2)*ft,cam=this.camera;
     cam.left=-b.width*ft/2;cam.right=b.width*ft/2;cam.top=b.depth*ft/2;cam.bottom=-b.depth*ft/2;cam.position.set(cx,2000,cz);cam.up.set(0,0,-1);cam.lookAt(cx,0,cz);cam.updateProjectionMatrix();cam.updateMatrixWorld();
-    // Only what casts shadows covers the ground: the lawn, the grass, the sky and outlines are left out.
+    // Only what casts shadows covers the ground: the lawn, the grass, the sky and outlines are left out, and so is what
+    // lies on the ground itself (userData.coversGround false: paving, walls, the lawn bank), which takes this map too.
     const hidden:THREE.Object3D[]=[];
-    scene.traverse(o=>{if(!o.visible)return;const casts=(o as THREE.Mesh).isMesh&&o.castShadow;if(!casts&&((o as THREE.Mesh).isMesh||(o as THREE.Line).isLine||(o as THREE.Points).isPoints)){o.visible=false;hidden.push(o);}});
+    scene.traverse(o=>{if(!o.visible)return;const casts=(o as THREE.Mesh).isMesh&&o.castShadow&&o.userData.coversGround!==false;if(!casts&&((o as THREE.Mesh).isMesh||(o as THREE.Line).isLine||(o as THREE.Points).isPoints)){o.visible=false;hidden.push(o);}});
     const {background,fog,overrideMaterial}=scene,clear=gl.getClearColor(new THREE.Color()),alpha=gl.getClearAlpha(),target=gl.getRenderTarget();
     try{
       scene.background=null;scene.fog=null;scene.overrideMaterial=this.cover;
@@ -55,3 +57,10 @@ export class GroundOcclusion{
   }
   dispose(){this.covered.dispose();for(const t of this.blurred)t.dispose();this.cover.dispose();this.blur.dispose();this.quad.dispose();}
 }
+
+/** The lawn's occlusion map and its bounds, shared with the yard's hardscape (Real Life G5): a patio under a deck is
+ * shaded from the sky as the lawn there is. Turf publishes it once drawn; null until then. */
+export type SharedOcclusion={texture:THREE.Texture;bounds:GroundBounds}|null;
+let shared:SharedOcclusion=null;const listeners=new Set<()=>void>();
+export function publishGroundOcclusion(value:SharedOcclusion){if(shared?.texture===value?.texture&&shared?.bounds===value?.bounds)return;shared=value;for(const listen of listeners)listen();}
+export function useGroundOcclusion(){return useSyncExternalStore(listen=>{listeners.add(listen);return ()=>{listeners.delete(listen);};},()=>shared,()=>null);}

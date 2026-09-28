@@ -343,7 +343,7 @@ for(const [label,patch,status] of [
   ok(viewer.includes('name="inlay-blocking"'),'The 3D framing view draws inlay framing in its own colour');
   ok(plan.includes('Amber: inlay blocking')&&plan.includes('`Inlay ${k+1}`')&&plan.includes('p.pieces.map('),'The plan draws and names each inlay, every piece of a band, and the framing');
   ok(/lazy\(loadInlayEditor\)/.test(designer)&&read('scripts/check-deck-bundle.ts').includes('/^InlayEditor-/'),'The inlay editor loads on demand, off the page\'s first load');
-  ok(['Add a framed rectangle','Add a diamond','Add a band','Add a medallion'].every(t=>editor.includes(`>${t}</button>`)),'The editor adds each kind of inlay');
+  ok(editor.includes('INLAY_PRESETS.map(')&&editor.includes('onPlaceInlay(createInlayPreset(')&&read('src/features/deckcraft/designer/InlayPlanEditor.tsx').includes('placeInlayPatch('),'The preset library arms the plan placement editor; valid clicks use the shared geometry action');
   ok(read('src/features/deckcraft/constructionDetails.ts').includes('if(onInlaySupport((face?')&&read('src/features/deckcraft/constructionDetails.ts').includes('||inSolidInlay(level,fx,fz))continue;'),'Board ends on inlay framing or a medallion\'s solid blocking get no second block');
 }
 

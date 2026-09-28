@@ -1,4 +1,4 @@
-import {MANUFACTURER_ACCESSORIES} from './manufacturerCatalog';
+import {MANUFACTURER_ACCESSORIES} from './manufacturerRuntimeCatalogue';
 import type {DeckData} from './types';
 import type {DeckTakeoff,Box,Member} from './deckTakeoff';
 import {getHardwareLayout} from './hardwareLayout';

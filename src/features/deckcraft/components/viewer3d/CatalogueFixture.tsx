@@ -1,6 +1,8 @@
 import {SCENE_LOOK} from './sceneLook';
+import {DEFAULT_KELVIN} from '../../fixtureLight';
+import {kelvinColour,lensGlow} from './fixtureLighting';
 
-type ProductShape={name:string;geometry:string;finish?:string;dimensionsIn:{height?:number;width?:number;length?:number;diameter?:number;mountingDepth?:number}};
+type ProductShape={name:string;geometry:string;finish?:string;colorTemperatureK?:number;dimensionsIn:{height?:number;width?:number;length?:number;diameter?:number;mountingDepth?:number}};
 
 /** Family envelopes use published dimensions where available. Unspecified
  * profile/cord/stem details are illustrative and disclosed in the catalogue. */
@@ -9,7 +11,8 @@ export default function CatalogueFixture({product,evening,enabled=true}:{product
  const color=finish.includes('white')?'#e6e5df':finish.includes('rose')?'#a99084':finish.includes('silver')||finish.includes('steel')?'#a7afb1':'#272d2c';
  // Silver and steel finishes are bare metal; the others are powder coat (sceneLook.ts).
  const dark=finish.includes('silver')||finish.includes('steel')?<meshStandardMaterial color={color} metalness={.6} roughness={.4}/>:<meshPhysicalMaterial color={color} {...SCENE_LOOK.powderCoat}/>;
- const lit=<meshStandardMaterial color="#ffefd7" emissive="#ffd1a0" emissiveIntensity={enabled?(evening?4.5:.5):0} toneMapped={false}/>;
+ // The lens in the product's rated colour temperature, bright enough at night for tone mapping to compress, not clip.
+ const lit=<meshStandardMaterial color="#fff6e8" emissive={kelvinColour(product.colorTemperatureK??DEFAULT_KELVIN)} emissiveIntensity={lensGlow(enabled,evening)}/>;
  const diameter=d.diameter??d.width??2.2,w=d.width??d.diameter??2.5,h=d.height??3,depth=d.length??1.5;
  if(g==='recessed'){const height=d.height??d.mountingDepth??1.4,r=diameter/2;return <group name="recessed-catalogue-housing"><mesh position={[0,-height/2,0]}><cylinderGeometry args={[r,r*.93,height,24]}/>{dark}</mesh><mesh position={[0,.08,0]}><cylinderGeometry args={[r*.83,r*.83,.12,24]}/>{lit}</mesh></group>;}
  if(g==='wall'){const faceH=d.diameter??h,bodyDepth=d.diameter?(d.height??d.length??1):depth;return <group name="wall-catalogue-housing"><mesh rotation={[d.diameter?Math.PI/2:0,0,0]}>{d.diameter?<cylinderGeometry args={[diameter/2,diameter/2,bodyDepth,24]}/>:<boxGeometry args={[w,faceH,bodyDepth]}/>}{dark}</mesh><mesh position={[0,-faceH/2-.02,bodyDepth*.23]}><boxGeometry args={[w*.72,.08,Math.min(bodyDepth*.55,1)]}/>{lit}</mesh></group>;}
