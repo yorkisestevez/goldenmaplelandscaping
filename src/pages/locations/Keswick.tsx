@@ -117,7 +117,7 @@ export default function KeswickLanding() {
     <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
         title="Landscaping & Hardscape Contractor Keswick"
-        description="Premium interlocking, decking & landscape design for Keswick homeowners. Locally owned, Barrie-based. 5-star rated. Book your free Keswick consultation today."
+        description="Premium interlocking, decking & landscape design for Keswick homeowners. Locally owned and Barrie-based. Book your Keswick project consultation today."
         canonical="https://goldenmaplelandscaping.ca/locations/keswick"
         schema={localBusinessSchema}
       />

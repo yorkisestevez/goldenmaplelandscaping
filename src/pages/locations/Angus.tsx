@@ -116,7 +116,7 @@ export default function AngusLanding() {
     <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
         title="Landscaping & Hardscape Contractor Angus"
-        description="Premium interlocking, decking & landscape design for Angus homeowners. Locally owned, Barrie-based. 5-star rated. Book your free Angus consultation today."
+        description="Premium interlocking, decking & landscape design for Angus homeowners. Locally owned and Barrie-based. Book your Angus project consultation today."
         canonical="https://goldenmaplelandscaping.ca/locations/angus"
         schema={localBusinessSchema}
       />

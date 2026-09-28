@@ -98,16 +98,26 @@ export const BUSINESS = {
     wsib: published('WSIB Certified', 'Existing llms.txt and trust-bar copy'),
     liabilityInsurance: published('$5,000,000 liability coverage', 'Existing llms.txt and trust-bar copy'),
     workmanshipWarranty: published('5-year sink and settlement warranty', 'Existing service copy and llms.txt', 'Exact coverage, exclusions, remedy, and contract wording require confirmation.'),
-    cmhaPaverInstaller: {
-      value: 'CMHA Certified Concrete Paver Installer',
-      status: 'conflicting' as const,
-      lastVerified: null,
-      source: 'Owner confirmation required; current site instead refers to ICPI',
-      notes: 'Do not claim either credential until current certification is documented.',
-    },
+    cmhaPaverInstaller: ownerReported(
+      'CMHA Certified Concrete Paver Installer',
+      'Owner stated on 2026-09-27 (Claude Code planning session) that he holds this credential; certificate or directory listing not yet supplied',
+      'Not listed in the public CMHA directory PDF dated 2023-12-29 (may predate certification). Confirm by recording the certificate number or a current CMHA directory URL here with lastVerified; scripts/claim-rules.json then allows the claim.',
+    ),
     icpi: published('ICPI specifications / installation references', 'Existing service copy and llms.txt', 'ICPI terminology may be obsolete or superseded; certification status is not verified.'),
-    techoPro: unknown<string>('No current Techo-Pro credential record in tracked source'),
+    techoPro: ownerReported(
+      'Techo-Pro (Techo-Bloc contractor program)',
+      'Owner stated on 2026-09-27 (Claude Code planning session) that Golden Maple is enrolled; proof not yet supplied',
+      'The only public mention found is goldenmaplegroup.com (self-published), which is not independent proof. Confirm with a Techo-Bloc contractor-locator URL or program document.',
+    ),
     permaconCertification: unknown<string>('No Permacon authorization/certification record in tracked source'),
+  },
+
+  memberships: {
+    landscapeOntario: ownerReported(
+      'Landscape Ontario member',
+      'Owner stated on 2026-09-27 (Claude Code planning session); member number or directory listing not yet supplied',
+      'Confirm with a member-directory URL or membership number before any membership claim or memberOf schema is published.',
+    ),
   },
 
   serviceArea: {

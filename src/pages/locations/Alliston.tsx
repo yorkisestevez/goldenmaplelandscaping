@@ -117,7 +117,7 @@ export default function AllistonLanding() {
     <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
         title="Landscaping & Hardscape Contractor Alliston"
-        description="Premium interlocking, decking & landscape design for Alliston homeowners. Locally owned, Barrie-based. 5-star rated. Book your free Alliston consultation today."
+        description="Premium interlocking, decking & landscape design for Alliston homeowners. Locally owned and Barrie-based. Book your Alliston project consultation today."
         canonical="https://goldenmaplelandscaping.ca/locations/alliston"
         schema={localBusinessSchema}
       />

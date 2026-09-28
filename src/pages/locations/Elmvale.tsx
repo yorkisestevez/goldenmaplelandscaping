@@ -117,7 +117,7 @@ export default function ElmvaleLanding() {
     <div className="pt-32 pb-24 bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO
         title="Landscaping & Hardscape Contractor Elmvale"
-        description="Premium interlocking, decking & landscape design for Elmvale homeowners. Locally owned, Barrie-based. 5-star rated. Book your free Elmvale consultation today."
+        description="Premium interlocking, decking & landscape design for Elmvale homeowners. Locally owned and Barrie-based. Book your Elmvale project consultation today."
         canonical="https://goldenmaplelandscaping.ca/locations/elmvale"
         schema={localBusinessSchema}
       />

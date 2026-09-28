@@ -239,12 +239,16 @@ async function cmdWorkflowRun() {
     prUrl = sh(`gh pr create --base main --head "${branch}" --title ${JSON.stringify(prTitle)} --body-file "${bodyFile}"`).trim();
     fs.unlinkSync(bodyFile);
     console.log(`[workflow-run] PR opened: ${prUrl}`);
-    // AUTO-MERGE (2026-07-28, Yorkis: "set it free — we want clients").
-    // Posts publish without manual approval. The only remaining gate is the
-    // adversarial reviewer's 'block' verdict, which throws earlier and never
-    // reaches PR creation. Set BLOG_AUTOMERGE=0 to fall back to manual merge.
-    if (process.env.BLOG_AUTOMERGE !== '0') {
+    // REVIEW-FIRST (2026-09-27, Yorkis: "draft PRs for my review"). The PR is
+    // the owner's review surface; nothing goes live until he merges it.
+    // Auto-merge is now opt-in (BLOG_AUTOMERGE=1) and, when used, only runs
+    // after the same lint + build + postbuild claim gate Netlify runs, so an
+    // unverified claim or a broken page can never be merged by the robot.
+    // (2026-07-28 → 2026-09-27 it was opt-out: "set it free — we want clients".)
+    if (process.env.BLOG_AUTOMERGE === '1') {
       try {
+        sh('npm run lint');
+        sh('npm run build');
         sh(`gh pr merge "${prUrl}" --squash --delete-branch --admin`);
         console.log('[workflow-run] AUTO-MERGED — published without manual approval');
       } catch (e) {
