@@ -15,6 +15,14 @@ export interface BlogPostMeta {
 }
 
 export const BLOG_POSTS: BlogPostMeta[] = [
+  {
+    slug: "hpb-vs-limestone-screenings-barrie",
+    title: "HPB vs Limestone Screenings: What Belongs Under Your Pavers in Barrie",
+    excerpt: "HPB vs limestone screenings under pavers in Barrie: 3/8-inch clear HPB drains through a 1-inch bedding layer; screenings hold water and heave on clay.",
+    category: "Engineering",
+    readTime: "10 min",
+    image: "/images/projects/paver-driveway.JPG",
+  },
           {
     slug: "backyard-entertaining-wasaga-beach",
     title: "Outdoor Entertaining in Wasaga Beach: How to Build a Backyard That Works",
