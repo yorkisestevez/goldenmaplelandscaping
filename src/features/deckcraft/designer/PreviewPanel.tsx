@@ -231,6 +231,14 @@ export default function PreviewPanel({data,update,applyComponent=update,estimate
 
   const sheet=sheetOf(mode),onPlan=sheet==='plan',framing=sheet==='framing',current=SHEETS.findIndex(s=>s[2]===sheet);
 
+  // The plan tools are one row that scrolls sideways on a phone. When the tool changes (from the row or from a section)
+
+  // or the plan opens again, bring the chosen one into sight, clear of the row's edge, moving the row and never the page.
+
+  const tools=useRef<HTMLDivElement>(null);
+
+  useEffect(()=>{const row=tools.current,on=row?.querySelector('[aria-checked=true]');if(!row||!on)return;const r=row.getBoundingClientRect(),b=on.getBoundingClientRect();row.scrollLeft+=Math.min(0,b.left-r.left-4)+Math.max(0,b.right-r.right+4);},[tool,onPlan]);
+
   const drawing=onPlan?'Site plan':framing?'Framing':'3D view';
 
   const pick=(to:Sheet)=>{if(to!==sheet)setMode(to==='plan'?'plan':to==='3d'?'3d':'drawing');};
@@ -275,7 +283,7 @@ export default function PreviewPanel({data,update,applyComponent=update,estimate
 
       {onPlan&&<><p className="dd-plan-coach">{COACH[tool](data.shape==='Custom')}</p>
 
-        <div className="dd-plan-tools" role="radiogroup" aria-label="Plan tools" onKeyDown={toolKeys}>{PLAN_TOOLS.map(([id,label])=><button key={id} id={`dd-tool-${id}`} type="button" role="radio" aria-checked={tool===id} tabIndex={tool===id?0:-1} onClick={()=>pickTool(id)}>{label}</button>)}</div></>}
+        <div className="dd-plan-tools" ref={tools} role="radiogroup" aria-label="Plan tools" onKeyDown={toolKeys}>{PLAN_TOOLS.map(([id,label])=><button key={id} id={`dd-tool-${id}`} type="button" role="radio" aria-checked={tool===id} tabIndex={tool===id?0:-1} onClick={()=>pickTool(id)}>{label}</button>)}</div></>}
 
       {sheet==='3d'&&<div className="dd-scene-tools"><div className="dd-view-toggle" role="group" aria-label="Camera">{camera('3d','Corner')}{camera('overview','Overview')}{camera('front','Front')}{camera('top','Above')}</div><div className="dd-day-night" role="group" aria-label="Day or night preview"><button type="button" aria-pressed={data.sceneLighting!=='Evening'} onClick={()=>update({sceneLighting:'Daylight'})}><span aria-hidden="true">☀</span> Day</button><button type="button" aria-pressed={data.sceneLighting==='Evening'} onClick={()=>update({sceneLighting:'Evening'})}><span aria-hidden="true">☾</span> Night</button></div><label className="dd-check dd-preview-light-switch"><input type="checkbox" role="switch" checked={data.lightingPreviewOn!==false} onChange={e=>update({lightingPreviewOn:e.target.checked})}/><span>Preview lights {data.lightingPreviewOn===false?'off':'on'}</span></label></div>}
 
