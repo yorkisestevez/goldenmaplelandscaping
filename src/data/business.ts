@@ -192,7 +192,7 @@ export const BUSINESS = {
       status: 'confirmed' as const,
       lastVerified: '2026-09-13',
       source: 'Owner attestation 2026-09-13 (Claude Code session, contact sheet docs/portfolio/contact-sheet-2026-09-13.jpg): every entry in scripts/portfolio-sources.mjs is a Golden Maple job photographed by the owner or crew. Manufacturer, AI, render and unconfirmed files are listed in EXCLUDED and are never emitted.',
-      notes: 'Publication is gated per image: build-portfolio-images.mjs refuses unattested sources and --check (npm run lint) fails on drift. Project records carry title, town, category and a descriptive summary only, with no investment figures, durations or testimonials. Revert to unknown if the register is bypassed.',
+      notes: 'Publication is gated per image: build-portfolio-images.mjs refuses unattested sources and --check (npm run lint) fails on drift. Project records carry title, town, category and a descriptive summary; figures, durations and build specs appear only via individually attested caseStudy fields (scripts/check-case-studies.ts). No testimonials. Revert to unknown if the register is bypassed.',
     },
     photoRights: {
       value: 'Owner-photographed job photos under /images/portfolio and the company Instagram bake under /images/instagram',

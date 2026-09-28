@@ -3,10 +3,15 @@
  * the Home "selected work" block, Services covers and the estimator proof strip.
  *
  * Every photo id must exist in the attested manifest (see portfolioImages.ts);
- * the type system enforces that. Records carry ONLY what the owner confirmed on
- * 2026-09-13: what is in the frame, the town, and a category. No investment
- * figures, durations, testimonials or narrative claims — those need a traceable
- * source before they can be published (src/data/business.ts).
+ * the type system enforces that. The base record carries ONLY what the owner
+ * confirmed on 2026-09-13: what is in the frame, the town, and a category.
+ *
+ * Case-study facts (area, excavation, base, bedding, product, drainage, duration,
+ * budget bracket, construction-stage photos) are allowed ONLY through the optional
+ * `caseStudy` block, where every field is individually attested (who, when, from
+ * what record) — scripts/check-case-studies.ts enforces it in `npm run lint`.
+ * Never add figures, durations or testimonials anywhere else; nothing in the
+ * summary may be a number the owner hasn't attested.
  *
  * Towns: jobs the owner did not place are labelled "Simcoe County".
  *
@@ -14,6 +19,7 @@
  * Node at build time to prerender every project route.
  */
 import { CARD_SIZES, FULL_SIZES, portfolioImage, type ImageRef, type PortfolioImageId } from './portfolioImages';
+import type { ProjectBudgetRangeValue } from './projectBudgets';
 
 export const PROJECT_CATEGORIES = [
   'Patios & interlocking',
@@ -33,6 +39,41 @@ export interface ProjectPhoto {
   alt: string;
 }
 
+/** One owner-confirmed fact: the value plus who confirmed it, when, and from what record. */
+export interface Attested<T> {
+  value: T;
+  attestedBy: string;
+  /** ISO date the owner confirmed this value. */
+  attestedOn: string;
+  /** Where it came from, e.g. "job sheet 2025-06-12", "voice memo 2026-10-02", "invoice #1042". */
+  source: string;
+}
+
+export const CONSTRUCTION_STAGES = ['before', 'excavation', 'base', 'bedding', 'laying', 'finished'] as const;
+export type ConstructionStage = (typeof CONSTRUCTION_STAGES)[number];
+
+/**
+ * First-hand build record for a project page. Every field is optional and only
+ * rendered when present, so a case study can grow one attested fact at a time
+ * (intake questions: docs/seo-authority/case-study-intake.md).
+ */
+export interface CaseStudy {
+  areaSqFt?: Attested<number>;
+  /** What the owner needed solved: drainage, settlement, grade, access... */
+  problem?: Attested<string>;
+  excavationDepthIn?: Attested<number>;
+  /** e.g. "Geotextile + compacted 3/4-inch clear stone". */
+  base?: Attested<string>;
+  /** e.g. "HPB (high-performance bedding)". */
+  bedding?: Attested<string>;
+  paverProduct?: Attested<{ brand: string; product: string }>;
+  drainage?: Attested<string>;
+  durationDays?: Attested<number>;
+  budgetBracket?: Attested<ProjectBudgetRangeValue>;
+  /** Construction-stage photos — each must be an attested register photo for THIS project with a matching `stage`. */
+  phasePhotos?: { stage: ConstructionStage; id: PortfolioImageId; alt: string }[];
+}
+
 export interface ProjectRecord {
   slug: string;
   title: string;
@@ -46,6 +87,8 @@ export interface ProjectRecord {
   /** Shown first on Home "selected work". */
   featured?: boolean;
   instagramPermalink?: string;
+  /** Attested first-hand build record (see CaseStudy). Absent until the owner supplies it. */
+  caseStudy?: CaseStudy;
 }
 
 export const PROJECTS: readonly ProjectRecord[] = [
