@@ -1347,10 +1347,20 @@ test('shares a link that reopens the design and keeps the visitor’s own',async
 
 test('sends a design to Golden Maple and hands the link to booking',async({page})=>{
   await openDesigner(page);
-  let posted='';
+  // The branded proposal rides along as a multipart file (ATTACH_PROPOSAL_PDF); a plain post is the fallback.
+  let posted='',pdf:{name:string;type:string;head:string;size:number}|null=null;
   await page.route(url=>new URL(url).pathname==='/',async route=>{
-    if(route.request().method()!=='POST')return route.continue();
-    posted=route.request().postData()??'';
+    const request=route.request();
+    if(request.method()!=='POST')return route.continue();
+    const type=request.headers()['content-type']??'';
+    if(type.startsWith('multipart/form-data')){
+      const form=await new Response(request.postDataBuffer(),{headers:{'content-type':type}}).formData(),text=new URLSearchParams();
+      for(const [key,value] of form.entries()){
+        if(typeof value==='string')text.append(key,value);
+        else pdf={name:value.name,type:value.type,size:value.size,head:new TextDecoder().decode((await value.arrayBuffer()).slice(0,5))};
+      }
+      posted=text.toString();
+    }else posted=request.postData()??'';
     await route.fulfill({status:200,contentType:'text/html',body:'ok'});
   });
   await sendButton(page).click();
@@ -1381,6 +1391,9 @@ test('sends a design to Golden Maple and hands the link to booking',async({page}
   expect(fields.get('budget')).toBe('');
   expect(fields.get('lead_tier')).toMatch(/^[ABCD]$/);
   expect(fields.get('details')).toContain('Timeline: Within 6 months');
+  // "One click sends the branded proposal": the sent design carries the proposal PDF itself.
+  expect(pdf).toMatchObject({name:'golden-maple-deck-proposal.pdf',type:'application/pdf',head:'%PDF-'});
+  expect(pdf!.size).toBeGreaterThan(20_000);
   await dialog.getByRole('link',{name:'Book a call'}).click();
   await expect(page).toHaveURL(/\/book/);
   expect(await page.evaluate(()=>(history.state?.usr?.bookingNotes as string|undefined)??'')).toContain('#d=1');

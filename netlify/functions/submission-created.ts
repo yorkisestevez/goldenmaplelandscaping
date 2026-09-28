@@ -8,7 +8,8 @@ import crypto from 'node:crypto';
 
 interface NetlifySubmission {
   form_name: string;
-  data: Record<string, string>;
+  // Text fields are strings; a file field (the deck design's proposal_pdf) arrives as its file's link.
+  data: Record<string, unknown>;
   created_at: string;
   ip: string;
   user_agent: string;
@@ -23,9 +24,25 @@ interface NetlifyEvent {
 
 const BRIDGE_ATTEMPTS = 3;
 
-function isHoneypot(data: Record<string, string> | undefined): boolean {
+function isHoneypot(data: Record<string, unknown> | undefined): boolean {
   if (!data) return false;
   return ['bot-field', 'bot_field'].some((key) => String(data[key] ?? '').trim() !== '');
+}
+
+/** A Netlify file field arrives as its file's URL or as an object carrying `url`; anything else is no file. */
+export function uploadedFileUrl(value: unknown): string | undefined {
+  const url = typeof value === 'string' ? value : value && typeof value === 'object' ? (value as { url?: unknown }).url : undefined;
+  return typeof url === 'string' && /^https:\/\//.test(url) ? url : undefined;
+}
+
+/**
+ * The CRM keeps only name, email, phone, address, details and value, so a sent deck design's branded
+ * proposal PDF rides as the first line of `details` (ahead of anything the CRM might truncate).
+ */
+export function withProposalLink(formName: string, data: Record<string, unknown>): Record<string, unknown> {
+  const url = formName === 'deck-design' ? uploadedFileUrl(data.proposal_pdf) : undefined;
+  if (!url) return data;
+  return { ...data, proposal_pdf: url, details: `Branded proposal PDF: ${url}\n\n${String(data.details ?? '')}` };
 }
 
 async function postBridge(
@@ -93,7 +110,7 @@ export const handler = async (event: NetlifyEvent) => {
   // (browser-generated UUID for Meta CAPI dedup). The spread preserves it.
   const flat = {
     form_name: payload.form_name,
-    ...payload.data,
+    ...withProposalLink(payload.form_name, payload.data ?? {}),
     netlify_created_at: payload.created_at,
     netlify_ip: payload.ip,
     netlify_user_agent: payload.user_agent,

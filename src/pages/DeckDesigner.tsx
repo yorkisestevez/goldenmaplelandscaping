@@ -304,10 +304,14 @@ export default function DeckDesigner(){
       console.log('[dev] deck-design payload (would POST to Netlify):',payload);
     }else{
       // With the PDF attachment switched on, try a multipart post first; any failure sends without the file.
+      // The attached copy never re-renders the proposal's 3D views behind the send dialog (slow on a phone, and it
+      // would move the customer's view): it takes the 3D view already on screen, if any. The lead's reopen link
+      // rebuilds the full proposal with every view.
       let sent=false;
       if(ATTACH_PROPOSAL_PDF)try{
         const form=new FormData();for(const [key,value] of Object.entries(payload))form.append(key,value);
-        form.append('proposal_pdf',new Blob([await makeProposalPdf()],{type:'application/pdf'}),PROPOSAL_PDF_NAME);
+        const onScreen=snapshot.current?.(1800),shots:ProposalShot[]=onScreen?[{label:'3D view',src:onScreen}]:[];
+        form.append('proposal_pdf',new Blob([await makeProposalPdf(shots)],{type:'application/pdf'}),PROPOSAL_PDF_NAME);
         sent=(await fetch('/',{method:'POST',body:form})).ok;
       }catch{/* Fall through to the plain submission. */}
       if(!sent){

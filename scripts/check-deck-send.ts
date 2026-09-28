@@ -14,6 +14,7 @@ import {scoreGoldenMapleLead} from '../src/utils/leadScoring';
 import {SendDesignForm} from '../src/features/deckcraft/SendDesignDialog';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {designerSource} from './deck-designer-source';
+import {withProposalLink} from '../netlify/functions/submission-created';
 
 /**
  * "Send my design": every field reaches Netlify (and so the CRM), the consent record is honest, the
@@ -148,6 +149,18 @@ ok(!read('src/features/deckcraft/SendDesignDialog.tsx').includes('data-netlify')
   ok(/useLocation\(\)\.state/.test(booking)&&booking.includes('bookingNotes')&&!/searchParams/.test(booking),'The booking form reads the design link from router state, not the URL');
   ok(bookingNotesFor('https://example.test/x').includes('https://example.test/x'),'Booking notes carry the link');
   ok(/deck designer/.test(privacy),'The privacy policy names the deck designer');
+}
+
+// The relay puts the branded proposal PDF's link first in the CRM lead's details (2026-09-28), because
+// the CRM keeps only a few fields. Netlify hands a file field over as a link (or an object carrying one).
+{
+  const url='https://example.netlify.app/.netlify/forms/file/abc/golden-maple-deck-proposal.pdf';
+  const fromObject=withProposalLink('deck-design',{details:'Open the exact design: x',proposal_pdf:{url,filename:'p.pdf'}});
+  ok(String(fromObject.details).startsWith(`Branded proposal PDF: ${url}\n\nOpen the exact design: x`)&&fromObject.proposal_pdf===url,'A sent design\'s proposal PDF link leads the CRM details');
+  ok(String(withProposalLink('deck-design',{details:'d',proposal_pdf:url}).details).startsWith(`Branded proposal PDF: ${url}`),'A plain file link is carried the same way');
+  ok(withProposalLink('deck-design',{details:'d'}).details==='d','Without a file the details are unchanged (the no-attachment fallback)');
+  ok(withProposalLink('deck-design',{details:'d',proposal_pdf:'javascript:alert(1)'}).details==='d','Only an https file link is ever written into the lead');
+  ok(withProposalLink('contact',{details:'d',proposal_pdf:url}).details==='d','Other forms pass through untouched');
 }
 
 console.log(`DECK SEND OK — ${declared.size} declared fields, lead content, honest consent, CRM intake rules and wiring; ${checks} checks.`);
