@@ -8,3 +8,9 @@ export const PROJECT_BUDGET_RANGES = [
   { value: '100k-250k', label: '$100,000 – $250,000' },
   { value: '250k+', label: '$250,000+' },
 ] as const;
+
+export type ProjectBudgetRangeValue = (typeof PROJECT_BUDGET_RANGES)[number]['value'];
+
+export function budgetRangeLabel(value: ProjectBudgetRangeValue): string {
+  return PROJECT_BUDGET_RANGES.find((r) => r.value === value)!.label;
+}

@@ -6,6 +6,7 @@ import Reveal from '../components/Reveal';
 import ResponsiveImage from '../components/ResponsiveImage';
 import PhotoGrid from '../components/PhotoGrid';
 import ProjectCard from '../components/ProjectCard';
+import CaseStudySpecs from '../components/CaseStudySpecs';
 import { BUSINESS, canPublish } from '../data/business';
 import { FULL_SIZES, PROJECTS, getProject, projectCoverFull, projectPhotos, projectsInCategory } from '../data/projects';
 
@@ -61,6 +62,8 @@ export default function ProjectDetail() {
     primaryImageOfPage: { '@type': 'ImageObject', contentUrl: absolute(cover.src), width: cover.width, height: cover.height, name: cover.alt },
     associatedMedia: photos.map((img) => ({ '@type': 'ImageObject', contentUrl: absolute(img.src), width: img.width, height: img.height, name: img.alt })),
     provider: businessRef,
+    // The town is owner-attested (projects.ts); a local signal for the work itself.
+    locationCreated: { '@type': 'Place', name: `${project.town}, ON` },
   }, breadcrumb([
     { name: 'Home', path: '/' },
     { name: 'Portfolio', path: '/portfolio/' },
@@ -98,6 +101,8 @@ export default function ProjectDetail() {
           <div className="mb-6 overflow-hidden rounded-[2px] border border-brand-dim/40 bg-brand-surface">
             <ResponsiveImage image={cover} sizes={FULL_SIZES} aspect="3/2" priority />
           </div>
+
+          <CaseStudySpecs caseStudy={project.caseStudy} />
 
           {photos.length > 1 && (
             <div className="mt-14 mb-6">

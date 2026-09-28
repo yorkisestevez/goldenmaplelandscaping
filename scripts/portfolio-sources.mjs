@@ -17,6 +17,9 @@
  *   attestedBy    who confirmed it is a Golden Maple job photographed by the owner
  *   attestedOn    ISO date of that confirmation, or null (=> NOT emitted)
  *   cardPosition  sharp `position` for the 4:3 card crop ('attention' | 'south' | 'centre' ...)
+ *   stage         optional construction stage for case-study phase photos:
+ *                 before | excavation | base | bedding | laying | finished
+ *                 (checked against src/data/projects.ts caseStudy.phasePhotos)
  *   version       bump to re-crop; never overwrite an existing versioned file
  *                 (netlify.toml serves /images/* immutable for a year)
  */
