@@ -1,0 +1,93 @@
+.dd-boundary-editor{position:absolute;inset:0;pointer-events:none;z-index:4}
+/* The host's 3D container aspect ratio must not shorten this overlay relative to the SVG plan. */
+.dd-canvas>.dd-boundary-editor,.dd-preview-docked .dd-canvas>.dd-boundary-editor{aspect-ratio:auto!important;height:100%!important}
+.dd-boundary-editor>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.dd-boundary-outline{fill:none;stroke:#7a8f83;stroke-width:1.5;stroke-dasharray:5 4;vector-effect:non-scaling-stroke;opacity:.8}
+.dd-boundary-outline[data-selected]{stroke:var(--dc-gold-deep,#a66a48);stroke-width:2;stroke-dasharray:none;opacity:1}
+.dd-boundary-locked-edge{stroke:var(--dc-ink,#292a27);stroke-width:3;vector-effect:non-scaling-stroke;pointer-events:none}
+.dd-boundary-lock-label{display:none}
+.dd-boundary-label-leaders line{stroke:#b58d74;stroke-width:1;vector-effect:non-scaling-stroke;opacity:.7}
+.dd-boundary-dimension-label{position:absolute;z-index:6;min-height:44px;min-width:44px;max-width:170px;padding:5px 9px;border:1px solid #d7c5b7;border-radius:8px;background:#fffefaed;color:#784e37;font:600 12px/1.2 var(--dc-font-body,Arial,sans-serif);pointer-events:auto;cursor:pointer;box-shadow:0 1px 3px #0001}
+.dd-boundary-dimension-label[data-locked]{color:#292a27;border-color:#69756c;background:#eee9df}
+.dd-boundary-dimension-label[aria-expanded=true],.dd-boundary-dimension-label:focus-visible{outline:2px solid #a66a48;outline-offset:2px;background:white}
+.dd-boundary-feedback text{fill:#275d67;stroke:#fffefa;stroke-width:3;paint-order:stroke;font-weight:700}
+.dd-boundary-snap-guide{stroke:#287b88;stroke-width:1.5;stroke-dasharray:5 3;vector-effect:non-scaling-stroke}
+.dd-boundary-dimension-preview{fill:#287b8812;stroke:#287b88;stroke-width:2;stroke-dasharray:6 3;vector-effect:non-scaling-stroke}
+.dd-boundary-dimension-endpoint{fill:#fffefa;stroke:#287b88;stroke-width:3;vector-effect:non-scaling-stroke}
+.dd-boundary-dimension-preview[data-invalid],.dd-boundary-dimension-endpoint[data-invalid]{stroke:#a32222}
+.dd-boundary-inline{position:absolute;z-index:12;transform-origin:top left;pointer-events:auto;overflow:auto;padding:12px;border:1px solid #d7c5b7;border-radius:12px;background:#fffefa;box-shadow:0 8px 30px #292a2730}
+.dd-boundary-inline-heading{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:13px}
+.dd-boundary-inline-heading>button{flex:none;min-width:44px;padding:4px;font-size:22px}
+.dd-boundary-inline>p{font-size:12px;margin:6px 0 10px;color:#526357}
+.dd-boundary-inline form{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.dd-boundary-inline form>button{grid-column:1/-1;font-weight:700}
+.dd-boundary-inline label{display:flex;flex-direction:column;gap:4px;font-size:12px;min-width:0}
+.dd-boundary-inline input{width:100%;min-width:0;padding:8px}
+.dd-boundary-inline-actions{display:flex;gap:8px;margin-top:8px}.dd-boundary-inline-actions>button{flex:1}
+.dd-boundary-free{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:44px;margin:8px 0;font-weight:600;font-size:12px}
+.dd-boundary-controls .dd-boundary-free input{min-width:22px;min-height:22px;width:22px;height:22px;accent-color:#287b88}
+.dd-boundary-free>span{font-weight:400;color:#526357}
+.dd-boundary-snap-status{position:absolute;top:12px;left:12px;max-width:calc(100% - 24px);padding:7px 10px;border:1px solid #b8d5d8;border-radius:8px;background:#eef7f7;color:#275d67;font:600 12px/1.4 Arial,sans-serif;pointer-events:none;z-index:7}
+.dd-boundary-insert-target{stroke:transparent;stroke-width:18;vector-effect:non-scaling-stroke;pointer-events:stroke;cursor:copy}
+.dd-boundary-editor[data-add-pull] .dd-boundary-insert-target{stroke:#287b8870;stroke-width:22;cursor:crosshair;touch-action:none}
+.dd-boundary-editor[data-add-pull] .dd-boundary-edge::before{background:#d5eef0;border-color:#287b88}
+.dd-boundary-actions button[aria-pressed=true]{background:#287b88;color:#fff;border-color:#287b88}
+.dd-boundary-pull-direction{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;margin:10px 0}
+.dd-boundary-pull-direction label{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:12px;font-weight:600}
+.dd-boundary-pull-direction input,.dd-boundary-pull-direction select{min-width:0;width:100%;padding:8px}
+.dd-boundary-pull-direction p{grid-column:1/-1;font-size:12px;color:#43574a;margin:0}
+.dd-boundary-position{display:block;color:var(--dc-muted,#61695f);font-size:12px;font-variant-numeric:tabular-nums;margin:8px 0}
+.dd-boundary-ghost{fill:rgba(212,175,99,.16);stroke:var(--dc-gold-deep,#a66a48);stroke-width:2.5;stroke-dasharray:6 3;vector-effect:non-scaling-stroke}
+.dd-boundary-ghost[data-invalid]{fill:rgba(170,38,38,.12);stroke:#a32222}
+.dd-boundary-handle{position:absolute;transform:translate(-50%,-50%);display:grid;place-items:center;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border:0;background:transparent;cursor:grab;pointer-events:auto;touch-action:none;z-index:1;color:var(--dc-ink,#292a27);font:700 14px/1 Arial,sans-serif}
+.dd-boundary-handle::before{content:"";position:absolute;inset:12px;border:2px solid var(--dc-gold-deep,#a66a48);background:var(--dc-sheet,#fffefa);box-shadow:0 1px 3px #0003}
+.dd-boundary-point::before{border-radius:50%}
+.dd-boundary-edge::before{inset:11px 9px;border-radius:3px}
+.dd-boundary-handle>span{position:relative;font-size:15px}
+.dd-boundary-handle:not([data-level-selected]){opacity:.55}
+.dd-boundary-handle[data-level-selected]{z-index:2}
+.dd-boundary-point[data-level-selected]{z-index:3}
+.dd-boundary-handle[data-selected],.dd-boundary-handle[data-active]{z-index:5;opacity:1}
+.dd-boundary-handle[data-selected]::before,.dd-boundary-handle[data-active]::before{background:var(--dc-gold,#dcbfa8);border-color:var(--dc-ink,#292a27)}
+.dd-boundary-handle[data-active]{cursor:grabbing}
+.dd-boundary-handle[data-invalid]::before{background:#f9dddd;border-color:#a32222}
+.dd-boundary-handle[data-locked]::before{border-width:3px;border-color:var(--dc-ink,#292a27);background:#e9e4d8}
+.dd-boundary-handle:focus-visible{outline:2px solid var(--dc-ink,#292a27);outline-offset:1px;border-radius:6px}
+.dd-boundary-area{width:62px;min-width:62px;font-size:12px}
+.dd-boundary-area::before{inset:8px 3px;border-radius:5px}
+.dd-boundary-area>span{font-size:11px}
+.dd-boundary-controls{color:var(--dc-ink,#292a27);font-size:14px;line-height:1.45}
+.dd-boundary-controls button,.dd-boundary-controls select,.dd-boundary-controls input{min-height:44px;border:1px solid #687a6e;background:var(--dc-sheet,#fffefa);color:var(--dc-ink,#292a27);font:inherit;border-radius:4px}
+.dd-boundary-controls button{padding:8px 12px;cursor:pointer}
+.dd-boundary-controls button:disabled,.dd-boundary-controls input:disabled,.dd-boundary-controls select:disabled{opacity:.55;cursor:default}
+.dd-boundary-controls button:focus-visible,.dd-boundary-controls input:focus-visible,.dd-boundary-controls select:focus-visible,.dd-boundary-fine summary:focus-visible{outline:2px solid var(--dc-gold-deep,#a66a48);outline-offset:3px}
+.dd-boundary-levels{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.dd-boundary-levels [aria-pressed=true]{background:var(--dc-ink,#292a27);color:var(--dc-sheet,#fffefa);border-color:var(--dc-ink,#292a27)}
+.dd-boundary-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.dd-boundary-actions>span{flex:1 1 140px;font-weight:600}
+.dd-boundary-help{margin:10px 0;color:#43574a;font-size:12px}
+.dd-boundary-fine{margin:8px 0;border-top:1px solid #d8cfbe;padding-top:4px}
+.dd-boundary-fine summary{min-height:44px;display:list-item;align-content:center;cursor:pointer;padding:10px 0;font-weight:600}
+.dd-boundary-fine form{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;align-items:end;gap:8px}
+.dd-boundary-fine label{display:flex;flex-direction:column;gap:4px;font-size:12px;min-width:0}
+.dd-boundary-fine select,.dd-boundary-fine input{width:100%;min-width:0;padding:8px;font-size:14px}
+.dd-boundary-fine p{font-size:12px;color:#43574a;margin:6px 0}
+.dd-boundary-dimensions{margin:12px 0;padding:12px;border:1px solid #d8cfbe;border-radius:8px;background:#f7f4ed}
+.dd-boundary-dimension-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.dd-boundary-lock-state{font-size:11px;color:#43574a;border:1px solid #d8cfbe;border-radius:20px;padding:3px 8px}
+.dd-boundary-lock-state[data-locked]{color:var(--dc-ink,#292a27);background:#e9e4d8;border-color:#687a6e;font-weight:700}
+.dd-boundary-dimensions form{display:grid;grid-template-columns:1fr 1.3fr .9fr;gap:8px;align-items:end}
+.dd-boundary-dimensions label{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:12px;font-weight:600}
+.dd-boundary-dimensions select,.dd-boundary-dimensions input{width:100%;min-width:0;padding:8px;font-size:14px;font-variant-numeric:tabular-nums}
+.dd-boundary-dimensions form>button{grid-column:1/-1;font-weight:700}
+.dd-boundary-lock-actions{display:flex;align-items:center;gap:10px;margin-top:8px}
+.dd-boundary-lock-actions>button{flex:none;font-weight:600}
+.dd-boundary-lock-actions>span,.dd-boundary-dimensions>p{font-size:12px;color:#43574a}
+.dd-boundary-dimensions>p{margin:8px 0 0}
+.dd-boundary-notice{margin:10px 0;font-size:13px;color:var(--dc-ink,#292a27)}
+.dd-boundary-notice[data-invalid]{color:#9b2020;font-weight:600}
+.dd-boundary-toolbar{position:absolute;left:0;right:0;top:100%;pointer-events:auto;background:var(--dc-sheet,#fffefa);padding:12px;z-index:5}
+.dd-boundary-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:480px){.dd-boundary-fine form{grid-template-columns:1fr 1fr}.dd-boundary-fine label:first-child{grid-column:1/-1}.dd-boundary-fine button{grid-column:1/-1}.dd-boundary-actions>span{flex-basis:100%}.dd-boundary-actions button{flex:1}.dd-boundary-controls{font-size:13px}}
+@media(max-width:360px){.dd-boundary-dimensions form{grid-template-columns:1fr 1fr}.dd-boundary-dimensions label:first-child{grid-column:1/-1}.dd-boundary-lock-actions{align-items:flex-start;flex-wrap:wrap}.dd-boundary-lock-actions>span{flex-basis:100%}}
+.dd-boundary-dimension-label{width:max-content}

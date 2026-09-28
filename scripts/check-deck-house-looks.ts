@@ -119,10 +119,18 @@ const top=(d:DeckData,name='roof')=>Math.max(...part(d,name)!.vertices.map(v=>v[
   ok(visibleOn(between,'main-front').length===4&&apart(between,'main-front'),'A window added among the existing deck-facing openings finds the clear gap between them');
   // An opening hidden behind a bump-out takes no wall space: the deck door behind a narrow bump-out
   // (its centre covered, its edges not) leaves the 96–156 in gap beside the bump-out whole (centre 126 in).
-  const narrow=deck({footprint:{rects:[{id:'bump1',kind:'house',wall:'Front',offsetFt:13.5,widthFt:4,depthFt:3}]}}),door=houseOf(narrow).openings.find(o=>o.id==='deck-door')!;
+  // Explicit measured fixture: this tests occlusion/gap allocation independently of
+  // the generated windows, whose layout now avoids railing terminals.
+  const narrow=deck({footprint:{rects:[{id:'bump1',kind:'house',wall:'Front',offsetFt:13.5,widthFt:4,depthFt:3}]},openings:[
+    {id:'deck-door',type:'Door',facade:'Front',offsetPct:50,bottomIn:36,widthIn:72,heightIn:84},
+    {id:'left',type:'Window',facade:'Front',offsetPct:100/6,bottomIn:48,widthIn:48,heightIn:54},
+    {id:'right',type:'Window',facade:'Front',offsetPct:500/6,bottomIn:48,widthIn:48,heightIn:54},
+  ]}),door=houseOf(narrow).openings.find(o=>o.id==='deck-door')!;
   ok(openingHidden(door,getHouseWalls(narrow),houseOf(narrow)),'The deck door behind the narrow bump-out is hidden');
   const gapFill={...narrow,houseConfig:addHouseOpening(narrow,'Window:Double-hung','main-front','gf').houseConfig},g=spanOf(gapFill,'gf');
   ok(near((g[0]+g[1])/2,126),'A hidden opening reserves no wall space');
+  const withoutHidden={...narrow,houseConfig:removeHouseOpening(houseOf(narrow),'deck-door')};
+  ok(JSON.stringify(addHouseOpening(withoutHidden,'Window:Double-hung','main-front','gf').added)===JSON.stringify(gapFill.houseConfig.openings.find(o=>o.id==='gf')),'Removing the hidden door leaves the new opening at exactly the same place');
   // On a crowded wall the opening goes in the widest gap left, never on top of an existing one's centre.
   const crowded={...garageHouse,houseConfig:addHouseOpening(garageHouse,'Door:French','main-front','fd').houseConfig},fd=spanOf(crowded,'fd'),mid=(fd[0]+fd[1])/2;
   ok(visibleOn(crowded,'main-front').filter(o=>o.id!=='fd').every(o=>{const s=spanOf(crowded,o.id);return mid<s[0]||mid>s[1];}),'A crowded wall still takes the opening, in its widest gap');

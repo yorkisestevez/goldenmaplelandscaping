@@ -2,7 +2,7 @@ import {getHouseConfig,ORIGINAL_HOUSE_CLADDINGS} from './houseSettings';
 import {HOUSE_COLOUR_FIELDS} from './houseFinishes';
 import {DEFAULT_DECK} from './defaults';
 import {isSystemProduct} from './lightingSystem';
-import {LIGHTING_CATALOGUE} from './lightingCatalogue';
+import {LIGHTING_RUNTIME_CATALOGUE} from './lightingRuntimeCatalogue';
 import {screenOn} from './privacyScreens';
 import {activeCornerChamfers} from './lib/cornerChamfers';
 import {allowanceItems} from './yardSettings';
@@ -100,7 +100,7 @@ export function designFeatures(data:DeckData):string[]{
   add(DECK_PARTS.some(p=>data.deckFinishes?.[p]),'deck_part_finishes');
   add(data.deckFinishes?.railingColor,'deck_railing_colour');
   add(data.privacyScreens?.some(screenOn),'deck_privacy_screen');
-  add(data.lightingSystem.selectedItems.some(i=>{const p=LIGHTING_CATALOGUE.find(x=>x.id===i.productId);return i.qty>0&&!!p&&!isSystemProduct(p);}),'deck_lighting');
+  add(data.lightingSystem.selectedItems.some(i=>{const p=LIGHTING_RUNTIME_CATALOGUE.find(x=>x.id===i.productId);return i.qty>0&&!!p&&!isSystemProduct(p);}),'deck_lighting');
   add(data.benchLf>0,'deck_bench');
   add(data.pergolaSqft>0,'deck_pergola');
   add(data.hasDemo,'deck_demolition');

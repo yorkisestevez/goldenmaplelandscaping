@@ -61,7 +61,8 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # Dictation starts only from the editor's Talk control and browser permission.
+    Permissions-Policy = "camera=(), microphone=(self), geolocation=()"
 
 # Netlify Forms — built-in spam filtering (Akismet) + honeypot is wired in the Contact form
 [build.processing]

@@ -79,3 +79,15 @@ export function houseSurfaceMaterial(surface:HouseSurface,color:string,roughness
   const dispose=material.dispose.bind(material);material.dispose=()=>{alive=false;dispose();};
   return material;
 }
+
+/**
+ * The same scans on geometry that carries its own UVs in inches over the repeat (the yard's merged pieces, Real Life G5):
+ * a plain standard material, no shader patch. The colour is doubled against the detail map's mean of 0.5.
+ */
+export function scanMaterial(set:'masonry'|'rock',color:string,{roughness=.9,normalScale=.8,anisotropy=4,vertexColors=false,onLoad}:{roughness?:number;normalScale?:number;anisotropy?:number;vertexColors?:boolean;onLoad?:()=>void}={}){
+  const material=new THREE.MeshStandardMaterial({color:new THREE.Color(color).multiplyScalar(2),roughness,metalness:0,vertexColors,map:HALF,normalMap:FLAT,normalScale:new THREE.Vector2(normalScale,normalScale)});
+  let alive=true;
+  mapsFor(set,anisotropy).then(maps=>{if(alive){Object.assign(material,maps);onLoad?.();}});
+  const dispose=material.dispose.bind(material);material.dispose=()=>{alive=false;dispose();};
+  return material;
+}
