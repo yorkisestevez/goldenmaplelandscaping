@@ -41,7 +41,7 @@ export type DrawItem=
   |{kind:'dim';a:Pt;b:Pt;offset:number;text:string;layer:'A-ANNO-DIMS'};
 
 export interface Sheet{
-  id:'A-1'|'S-1'|'S-2'|'S-3'|'S-4';title:string;
+  id:'A-1'|'S-1'|'S-2'|'S-3'|'S-4'|'S-5';title:string;
   /** Plan inches per paper inch (48 = 1/4" = 1'-0"), and how the title block names it. */
   ratio:number;scaleLabel:string;
   items:DrawItem[];
@@ -71,6 +71,9 @@ export const SCALES:{ratio:number;label:string}[]=[
   {ratio:24,label:'1/2" = 1\'-0"'},{ratio:32,label:'3/8" = 1\'-0"'},{ratio:48,label:'1/4" = 1\'-0"'},
   {ratio:64,label:'3/16" = 1\'-0"'},{ratio:96,label:'1/8" = 1\'-0"'},{ratio:128,label:'3/32" = 1\'-0"'},{ratio:192,label:'1/16" = 1\'-0"'},
 ];
+
+/** Detail scales, largest first: the details sheet tries these before the plan scales. */
+export const DETAIL_SCALES:{ratio:number;label:string}[]=[{ratio:8,label:'1 1/2" = 1\'-0"'},{ratio:12,label:'1" = 1\'-0"'},{ratio:16,label:'3/4" = 1\'-0"'}];
 
 /** The largest standard scale that fits a plan extent in the drawing area. */
 export function pickScale(extents:Sheet['extents']):{ratio:number;label:string}{
@@ -104,9 +107,9 @@ export function drawnExtents(items:DrawItem[],ratio:number,pad=.3):Sheet['extent
 }
 
 /** The largest standard scale at which items, text included, fit the drawing area (the smallest scale otherwise). */
-export function fitScale(items:DrawItem[]):{ratio:number;label:string;extents:Sheet['extents']}{
-  for(const s of SCALES){const e=drawnExtents(items,s.ratio);if((e.maxX-e.minX)/s.ratio<=SHEET.area.w&&(e.maxY-e.minY)/s.ratio<=SHEET.area.h)return {...s,extents:e};}
-  const last=SCALES.at(-1)!;return {...last,extents:drawnExtents(items,last.ratio)};
+export function fitScale(items:DrawItem[],scales=SCALES):{ratio:number;label:string;extents:Sheet['extents']}{
+  for(const s of scales){const e=drawnExtents(items,s.ratio);if((e.maxX-e.minX)/s.ratio<=SHEET.area.w&&(e.maxY-e.minY)/s.ratio<=SHEET.area.h)return {...s,extents:e};}
+  const last=scales.at(-1)!;return {...last,extents:drawnExtents(items,last.ratio)};
 }
 
 /** Feet and inches to the nearest half inch: 16'-0", 11'-8 1/2". */

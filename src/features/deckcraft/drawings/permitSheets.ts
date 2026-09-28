@@ -4,9 +4,11 @@ import type {DeckData} from '../types';
 import {getHousePlacement} from '../housePlacement';
 import {getHouseContact} from '../houseContact';
 import {getHardwareLayout} from '../hardwareLayout';
-import {type DrawItem,type DrawingSet,type LayerId,type Pt,type Sheet,feetInches,fitScale,pickScale} from './drawingTypes';
+import {DETAIL_SCALES,SCALES,type DrawItem,type DrawingSet,type LayerId,type Pt,type Sheet,feetInches,fitScale,pickScale} from './drawingTypes';
 import {elevationItems,translate} from './elevations';
 import {typicalSection} from './typicalSection';
+import {connectionParts,ledgerFlashing} from './pricedParts';
+import {detailItems} from './details';
 
 /**
  * The permit drawing set built from the takeoff model: A-1 elevations, S-1 foundation plan, S-2 framing plan, S-3
@@ -71,8 +73,8 @@ function finish(id:Sheet['id'],title:string,items:DrawItem[],notes:string[],lege
 }
 
 /** A sheet at the largest standard scale its items fit, text included (the elevations and the section). */
-function fitted(id:Sheet['id'],title:string,items:DrawItem[],notes:string[],legend:LayerId[]):Sheet{
-  const {ratio,label,extents}=fitScale(items);
+function fitted(id:Sheet['id'],title:string,items:DrawItem[],notes:string[],legend:LayerId[],scales=SCALES):Sheet{
+  const {ratio,label,extents}=fitScale(items,scales);
   return {id,title,ratio,scaleLabel:label,items,extents,notes,legend};
 }
 
@@ -84,7 +86,7 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
   const reference=main.reference,joistSize=data.framingSize,mainFront=main.offset.z+main.footprint.bounds.h;
   // Diagonal and herringbone decking is framed at 12 in, whatever spacing is selected (deckTakeoff.ts).
   const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
-  const section=typicalSection(data,model,{materialName:input.materialName,railingName:input.railingName},{x:0,y:0});
+  const section=typicalSection(data,model,{materialName:input.materialName,railingName:input.railingName},{x:0,y:0},hardware);
 
   // S-1: footings and posts, dimensioned along each beam row and out from the house.
   const s1:DrawItem[]=[...base];
@@ -183,18 +185,35 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
     `Section 1 is cut between two joists where marked on S-2, looking toward the deck's right-hand end: ${rows} beam row${rows===1?'':'s'}, joist span ${feetInches(ref.joistSpanIn)}${ref.edgeBeams?'':`, cantilever ${feetInches(ref.cantileverIn)}`}, framed as on S-2.`,
     s2Notes[0],
     `Beam: ${ref.beam.plies}-ply ${ref.beam.size}, ${ref.beamMount==='drop'?'the joists bearing on top':'flush with the joists, which hang on hangers'}; ${feetInches(ref.beamSpanLimitIn)} limit between posts at its supported length, from OBC 2024 Table 9.23.4.2.-H (3-ply) or Springwater's deck guide (2-ply, supported length up to 3.6 m).`,
-    section.attached?`Ledger fastened to the house rim with ${hardware.ledgerBolts.length} bolts, as priced, and flashed; no ledger on brick veneer or an I-joist rim (Barrie).`:'Freestanding: the deck stands on its own beams and posts and is not fastened to the house.',
+    section.attached?`Ledger fastened to the house rim with ${hardware.ledgerBolts.length} bolts, as priced; no ledger on brick veneer or an I-joist rim (Barrie). ${ledgerFlashing(data).note}`:'Freestanding: the deck stands on its own beams and posts and is not fastened to the house.',
     s1Notes[2],
     s1Notes[1]+(blocks||helical?'':section.pier.priced?' 16 in piers, as priced for clay or fill soil.':' The pier is drawn 12 in across; the price book does not fix its diameter, so confirm it with the base size.'),
     s2Notes[3],
     guardNote,
+  ];
+  const s4=fitted('S-4','Typical section',s4Items,s4Notes,['A-DECK-FNSH','S-FRMG','S-BLKG','S-LEDG','S-BEAM','S-POST','S-FTNG','A-RAIL','C-TOPO']);
+
+  // S-5: typical details, below the section in model space. The connection parts they show, by how the estimate
+  // carries each (the connector schedule): priced, a supplier quote, or to confirm in the railing kit.
+  const details=detailItems({data,model,reference:ref,guardInset:section.guardInset,pier:section.pier,materialName:input.materialName,railingName:input.railingName,hardware},{x:planLeft,y:s4.extents.maxY+360});
+  const parts=connectionParts(data,model,hardware),shown=['Joist hangers','Ledger bolts','Post anchors','Joist-to-beam ties','Post-to-beam caps','Stringer connectors','Railing post anchors/bolts','Deck screws','Hidden clips'];
+  const byStatus=(status:string)=>shown.flatMap(n=>{const p=parts.get(n);return p&&p.status===status?[`${n.toLowerCase()} (${p.qty})`]:[];}).join(', ');
+  const carried=[['In this estimate',byStatus('priced')],['Supplier quote',byStatus('supplier quote')],['Confirm in the railing kit',byStatus('confirm in the railing kit')]].filter(([,list])=>list).map(([label,list])=>`${label}: ${list}.`).join(' ');
+  const s5Notes=[
+    'Typical details drawn from this design\'s member sizes and counts. Connectors and fasteners are shown schematically: install each to its manufacturer\'s instructions.',
+    `Connections shown, as the estimate carries them. ${carried}`,
+    ...(details.titles.includes('LEDGER CONNECTION')?[ledgerFlashing(data).note]:[]),
+    s1Notes[1],
+    ...(data.railingType==='None'?[]:[`${guardNote} ${model.railing.frameless?"Install the glass and its shoe or spigots to the manufacturer's instructions and confirm the framing behind them.":"Fasten each guard post to its manufacturer's instructions and confirm the framing under it."}`]),
+    ...s3Notes.filter(n=>n.startsWith('Stair:')||n.startsWith('Barrie requires a handrail')),
   ];
   const deckWords=`${data.width} × ${data.length} ft ${data.deckType==='Attached'?'attached':'freestanding'} deck, ${data.height} in above grade`;
   return {
     sheets:[
       fitted('A-1','Elevations',a1Items,a1Notes,['A-DECK-FNSH','S-FRMG','S-BEAM','S-POST','S-FTNG','S-FTNG-HIDN','A-RAIL','A-STRS','A-HOUS','C-TOPO']),
       ...plans,
-      fitted('S-4','Typical section',s4Items,s4Notes,['A-DECK-FNSH','S-FRMG','S-BLKG','S-LEDG','S-BEAM','S-POST','S-FTNG','A-RAIL','C-TOPO']),
+      s4,
+      fitted('S-5','Typical details',details.items,s5Notes,['A-DECK-FNSH','S-FRMG','S-LEDG','S-BEAM','S-POST','S-FTNG','A-RAIL','A-STRS','C-TOPO'],[...DETAIL_SCALES,...SCALES]),
     ],
     project:{title:deckWords,date:input.date,priceBook:input.priceBook},
     firm:{name:BUSINESS.publicName.value,phone:publicContact.phoneDisplay,email:publicContact.email,url:BUSINESS.canonicalUrl.replace(/^https:\/\//,'')},

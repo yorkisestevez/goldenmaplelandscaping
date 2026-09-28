@@ -5,7 +5,8 @@
   "S-1": "c98d6a066b941272",
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "70517196257b492f",
-  "S-4": "feeeee801835a15e"
+  "S-4": "5505c92210d3c959",
+  "S-5": "7d59239832f967aa"
  },
  "L-shape freestanding 2 levels": {
   "set": "8bec97933ffbaa67",
@@ -13,7 +14,8 @@
   "S-1": "94bc9f868ac51090",
   "S-2": "df71d22c10b828a3",
   "S-3": "47db3241bfd70b00",
-  "S-4": "ec01bd0bdbf4910d"
+  "S-4": "ec01bd0bdbf4910d",
+  "S-5": "cbdaefdba873a5ca"
  },
  "curved attached": {
   "set": "a2ecc125a0b7e5e0",
@@ -21,7 +23,8 @@
   "S-1": "3f127a0be39682d5",
   "S-2": "48156e1a5607371e",
   "S-3": "8fdb4a8dff4dc74b",
-  "S-4": "a6c2855981748156"
+  "S-4": "fd5deb14215afc3c",
+  "S-5": "878eb27e9b70d424"
  },
  "multi-corner winder": {
   "set": "7c9347f190c873ac",
@@ -29,7 +32,8 @@
   "S-1": "80e4e62d6e9143b4",
   "S-2": "5c459fa4a92bf8d5",
   "S-3": "0f7540141601d597",
-  "S-4": "927351abd9dbc680"
+  "S-4": "6676ad513e01e9f8",
+  "S-5": "ddd41c39f3a1fc4f"
  },
  "rectangle landing": {
   "set": "ddfe6623bafb6efa",
@@ -37,7 +41,8 @@
   "S-1": "52631e4c793ede3d",
   "S-2": "6072259d4d9fc4a3",
   "S-3": "2b1b616fdd8af851",
-  "S-4": "b3b71b96a9625cfe"
+  "S-4": "ec685c66e36bacaa",
+  "S-5": "ccec26596cf19dac"
  },
  "wrap-around": {
   "set": "dd6b2221af3489f0",
@@ -45,7 +50,8 @@
   "S-1": "136a1db94ee426c9",
   "S-2": "31e8efc90f892044",
   "S-3": "4b1fc3fed725019a",
-  "S-4": "6e17dbe67c8cb6a5"
+  "S-4": "f56d632908de6b5f",
+  "S-5": "3ae61e1cb56fcae6"
  },
  "low flush deck": {
   "set": "3eb64ada32c96c25",
@@ -53,7 +59,8 @@
   "S-1": "5c2bf84b6045978b",
   "S-2": "98c1c9ea16964f29",
   "S-3": "9bb493d0909cbd10",
-  "S-4": "723eca6d5a752846"
+  "S-4": "6e6a5984ceec5f0d",
+  "S-5": "58d8bd390e9975a3"
  },
  "walkout 8 ft": {
   "set": "327e2074dc98b5c7",
@@ -61,7 +68,8 @@
   "S-1": "acc2aaf2a7b68cdf",
   "S-2": "8e17d403f284a895",
   "S-3": "8db28f610135a407",
-  "S-4": "0d7926b752b8ebcd"
+  "S-4": "deeae437ea6ec842",
+  "S-5": "eebf199b6e35a241"
  },
  "deck blocks": {
   "set": "4ec51fb48cb6bfab",
@@ -69,7 +77,8 @@
   "S-1": "c8bbad7accd853fd",
   "S-2": "87d2d64f101158d8",
   "S-3": "ccc3879c041eea1e",
-  "S-4": "ec5a62fd4bf86b1e"
+  "S-4": "290e9ad0abb34974",
+  "S-5": "425bd1a19a526d37"
  },
  "helical piles": {
   "set": "8da0dc646ec97b20",
@@ -77,7 +86,8 @@
   "S-1": "e71dba8b903eff7a",
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "70517196257b492f",
-  "S-4": "a3eb013609bd4f99"
+  "S-4": "bcd715fd1d82922d",
+  "S-5": "9347cb1ff305d951"
  },
  "no railing": {
   "set": "74c640191c05b04d",
@@ -85,7 +95,8 @@
   "S-1": "c98d6a066b941272",
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "1fa4ca5bb5473028",
-  "S-4": "668d1becb22922f5"
+  "S-4": "29d3f5f8d26f9994",
+  "S-5": "affe748a5ed8c168"
  },
  "glass railing": {
   "set": "10936b3aec31a2d5",
@@ -93,6 +104,25 @@
   "S-1": "c98d6a066b941272",
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "ad4b75ae1c4f57bc",
-  "S-4": "28e846ba985fda6a"
+  "S-4": "58f98b3ea91402fc",
+  "S-5": "b8aa6c7e1dd4c391"
+ },
+ "frameless glass": {
+  "set": "1412a071f1a4e2ce",
+  "A-1": "8cbc655794306870",
+  "S-1": "c98d6a066b941272",
+  "S-2": "c5de9ae5dc4a0888",
+  "S-3": "6f34d33a81408820",
+  "S-4": "6ff043f4007c5a1c",
+  "S-5": "27351d88ad00d4fe"
+ },
+ "add-on deck": {
+  "set": "bb7c9d9e100958d6",
+  "A-1": "3708e01cb47be295",
+  "S-1": "c98d6a066b941272",
+  "S-2": "c5de9ae5dc4a0888",
+  "S-3": "70517196257b492f",
+  "S-4": "6412305606ace9e7",
+  "S-5": "e08e206d01e68376"
  }
 }
