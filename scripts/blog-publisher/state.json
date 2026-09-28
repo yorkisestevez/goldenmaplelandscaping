@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-09-21T00:00:00.000Z",
+  "lastRunAt": "2026-09-28T12:59:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -23,7 +23,8 @@
     "auto-019",
     "auto-020",
     "auto-021",
-    "auto-022"
+    "auto-022",
+    "auto-023"
   ],
   "publishedSlugs": [],
   "currentDraft": "backyard-entertaining-wasaga-beach",
@@ -356,6 +357,15 @@
         "numericCount": 40
       },
       "generatedBy": "claude-cloud-routine"
+    },
+    {
+      "topicId": "auto-023",
+      "slug": "hpb-vs-limestone-screenings-barrie",
+      "at": "2026-09-28T12:59:00.000Z",
+      "validation": {
+        "ok": true
+      },
+      "generatedBy": "muse-autopilot"
     }
   ]
 }
