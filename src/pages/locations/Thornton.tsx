@@ -1,9 +1,9 @@
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { publicContact } from '../../data/business';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import { trackEngagement, trackCall } from '../../utils/analytics';
 
 const COMMUNITIES = [
@@ -73,43 +73,28 @@ const FAQS = [
   },
 ];
 
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "Golden Maple Landscaping",
-  "description": "Premium landscaping and hardscape contractor serving Thornton, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
-  "url": "https://goldenmaplelandscaping.ca/locations/thornton",
-  "telephone": publicContact.phoneTel,
-  "email": publicContact.email,
-  "address": {
-    "@type": "PostalAddress",
-    "addressLocality": "Barrie",
-    "addressRegion": "ON",
-    "addressCountry": "CA",
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 44.2708,
-    "longitude": -79.722,
-  },
-  "areaServed": {
-    "@type": "City",
-    "name": "Thornton",
-  },
-};
+const PAGE_PATH = '/locations/thornton/';
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": FAQS.map((faq) => ({
-    "@type": "Question",
-    "name": faq.q,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.a,
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PAGE_PATH,
+    name: 'Landscaping & hardscape construction in Thornton',
+    serviceType: 'Landscaping and hardscape construction',
+    description: "Premium landscaping and hardscape contractor serving Thornton, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
+    areaServed: {
+      "@type": "City",
+      "name": "Thornton",
     },
-  })),
-};
+  }),
+  breadcrumb([
+    { name: 'Home', path: '/' },
+    { name: 'Service Areas', path: '/service-areas/' },
+    { name: 'Thornton', path: PAGE_PATH },
+  ]),
+  faqPage(PAGE_PATH, FAQS),
+);
+
 
 export default function ThorntonLanding() {
   return (
@@ -118,11 +103,8 @@ export default function ThorntonLanding() {
         title="Landscaping & Hardscape Contractor Thornton"
         description="Premium interlocking, decking & landscape design for Thornton homeowners. Locally owned and Barrie-based. Book your Thornton project consultation today."
         canonical="https://goldenmaplelandscaping.ca/locations/thornton"
-        schema={localBusinessSchema}
+        schema={pageSchema}
       />
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-      </Helmet>
 
       <div className="container-custom">
         <div className="max-w-5xl mx-auto">

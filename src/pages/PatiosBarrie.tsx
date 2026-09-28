@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Check, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, graph, serviceNode } from '../utils/schema';
 import Testimonials from '../components/Testimonials';
 
 // Premium patio projects ($35K-$75K).
@@ -28,6 +29,10 @@ export default function PatiosBarrie() {
         title="Premium Patios in Barrie | $35K-$75K Outdoor Rooms | Golden Maple"
         description="Premium patio and outdoor-room projects in Barrie and Simcoe County. Real planning ranges, clear-stone bases, drainage-aware construction, and project-specific written workmanship terms."
         canonical="https://goldenmaplelandscaping.ca/patios-barrie"
+        schema={graph(
+          serviceNode({ path: '/patios-barrie/', name: 'Patio design and construction in Barrie', serviceType: 'Patio construction', areaServed: 'Barrie' }),
+          breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Patio design and construction in Barrie', path: '/patios-barrie/' }]),
+        )}
       />
 
       <section className="section-padding pt-48">

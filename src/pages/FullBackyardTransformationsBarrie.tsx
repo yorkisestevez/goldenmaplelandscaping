@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check, Layers } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
 import { BUSINESS, publicClaimCopy } from '../data/business';
 
 const packages = [
@@ -44,6 +45,11 @@ export default function FullBackyardTransformationsBarrie() {
         title="Full Backyard Transformations Barrie | $90K+ Outdoor Living | Golden Maple"
         description="Complete backyard transformations in Barrie and Simcoe County: patios, retaining walls, steps, lighting, fire, outdoor kitchens, drainage, and premium hardscape systems."
         canonical="https://goldenmaplelandscaping.ca/full-backyard-transformations-barrie"
+        schema={graph(
+          serviceNode({ path: '/full-backyard-transformations-barrie/', name: 'Backyard renovation in Barrie', serviceType: 'Backyard renovation', areaServed: 'Barrie' }),
+          breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Backyard renovation in Barrie', path: '/full-backyard-transformations-barrie/' }]),
+          faqPage('/full-backyard-transformations-barrie/', faqs),
+        )}
       />
       <section className="section-padding pt-48">
         <div className="container-custom">

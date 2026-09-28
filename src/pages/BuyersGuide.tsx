@@ -1,4 +1,5 @@
 import SEO from '../components/SEO';
+import { businessRef } from '../utils/schema';
 import { Shield, Hammer, Droplet, Sun, CheckCircle } from 'lucide-react';
 
 export default function BuyersGuide() {
@@ -7,14 +8,12 @@ export default function BuyersGuide() {
     "@type": "Article",
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://goldenmaplelandscaping.ca/buyers-guide"
+      "@id": "https://goldenmaplelandscaping.ca/buyers-guide/"
     },
     "headline": "How to Hire a Landscaper in Barrie: The 2026 Simcoe County Buyer's Guide",
     "description": "The ultimate guide to hiring a hardscape contractor in Barrie, ON. Learn about base depths, materials like interlock vs. composite, and what to ask your landscaper.",
-    "author": {
-      "@type": "Organization",
-      "name": "Golden Maple Landscaping"
-    }
+    "author": businessRef,
+    "publisher": businessRef
   };
 
   return (

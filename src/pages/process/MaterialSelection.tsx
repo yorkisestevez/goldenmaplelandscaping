@@ -11,6 +11,7 @@ export default function MaterialSelection() {
       <SEO 
         title="Landscape Material Curation Barrie | Premium Partners | Golden Maple"
         description="Selecting the right materials is critical for durability and luxury. We curate premium collections from partners like Unilock and Techo-Bloc for our Simcoe County clients."
+        canonical="https://goldenmaplelandscaping.ca/process/material-selection/"
       />
 
       <section className="section-padding pt-48">

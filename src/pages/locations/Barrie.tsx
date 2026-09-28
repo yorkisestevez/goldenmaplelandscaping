@@ -1,10 +1,10 @@
-import { Helmet } from 'react-helmet-async';
 import { motion } from 'motion/react';
 import { MapPin, Shield, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { trackEngagement, trackCall } from '../../utils/analytics';
-import { BUSINESS, publicClaimCopy, publicContact, publicPostalAddress } from '../../data/business';
+import { BUSINESS, publicClaimCopy, publicContact } from '../../data/business';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 
 const NEIGHBOURHOODS = [
   "South Barrie / Mapleview",
@@ -69,34 +69,29 @@ const FAQS = [
   },
 ];
 
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "Golden Maple Landscaping",
-  "description": "Premium landscaping and hardscape contractor serving Barrie, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
-  "url": "https://goldenmaplelandscaping.ca/locations/barrie",
-  "telephone": publicContact.phoneTel,
-  "email": publicContact.email,
-  "address": publicPostalAddress(),
-  "areaServed": {
-    "@type": "City",
-    "name": "Barrie",
-    "url": "https://en.wikipedia.org/wiki/Barrie",
-  },
-};
+const PAGE_PATH = '/locations/barrie/';
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": FAQS.map((faq) => ({
-    "@type": "Question",
-    "name": faq.q,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.a,
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({
+    path: PAGE_PATH,
+    name: 'Landscaping & hardscape construction in Barrie',
+    serviceType: 'Landscaping and hardscape construction',
+    description: "Premium landscaping and hardscape contractor serving Barrie, Ontario. Specializing in interlocking stone, composite decking, retaining walls, and landscape design.",
+    areaServed: {
+      "@type": "City",
+      "name": "Barrie",
+      "sameAs": "https://en.wikipedia.org/wiki/Barrie",
     },
-  })),
-};
+  }),
+  breadcrumb([
+    { name: 'Home', path: '/' },
+    { name: 'Service Areas', path: '/service-areas/' },
+    { name: 'Barrie', path: PAGE_PATH },
+  ]),
+  faqPage(PAGE_PATH, FAQS),
+);
+
 
 export default function BarrieLanding() {
   return (
@@ -105,11 +100,8 @@ export default function BarrieLanding() {
         title="Landscaping Contractor Barrie ON"
         description="Landscaping and hardscape services for Barrie properties, including interlocking patios, composite decks, retaining walls, and landscape design. Contact us to confirm current project scope."
         canonical="https://goldenmaplelandscaping.ca/locations/barrie"
-        schema={localBusinessSchema}
+        schema={pageSchema}
       />
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-      </Helmet>
 
       <div className="container-custom">
         <div className="max-w-5xl mx-auto">

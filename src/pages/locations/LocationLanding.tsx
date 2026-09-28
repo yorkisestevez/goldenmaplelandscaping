@@ -11,7 +11,8 @@ import {
   LOCATION_KEYS,
   type LocationKey,
 } from '../../data/serviceLocations';
-import { BUSINESS, publicClaimCopy, publicContact, publicPostalAddress } from '../../data/business';
+import { BUSINESS, publicClaimCopy, publicContact } from '../../data/business';
+import { breadcrumb, graph, serviceNode } from '../../utils/schema';
 
 export default function LocationLanding() {
   const { slug } = useParams<{ slug: string }>();
@@ -28,22 +29,23 @@ export default function LocationLanding() {
 
   const otherLocations = LOCATION_KEYS.filter((l) => l !== key);
 
-  const schema = {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    '@id': `https://goldenmaplelandscaping.ca/locations/${key}`,
-    name: `Golden Maple Landscaping — ${location.name}`,
-    image:
-      'https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg',
-    url: `https://goldenmaplelandscaping.ca/locations/${key}`,
-    telephone: publicContact.phoneTel,
-    email: publicContact.email,
-    address: publicPostalAddress(),
-    areaServed: {
-      '@type': 'City',
-      name: location.name,
-    },
-  };
+  // Page-level nodes only; they reference the single #business declared in root.tsx.
+  const pagePath = `/locations/${key}/`;
+  const schema = graph(
+    serviceNode({
+      path: pagePath,
+      name: `Landscaping & hardscape construction in ${location.name}`,
+      serviceType: 'Landscaping and hardscape construction',
+      description: seoDescription,
+      areaServed: location.name,
+    }),
+    breadcrumb([
+      { name: 'Home', path: '/' },
+      { name: 'Service Areas', path: '/service-areas/' },
+      { name: location.name, path: pagePath },
+    ]),
+  );
+
 
   return (
     <div className="bg-brand-nearblack min-h-screen">

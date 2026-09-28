@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Linkedin, Link as LinkIcon, Share2, Check } from 'lucide-react';
 import SEO from './SEO';
+import { breadcrumb, businessRef, canonicalUrl as toCanonical, graph, isoDate } from '../utils/schema';
 
 import { isOwnedPhoto } from '../data/portfolioImages';
 import { BUSINESS, canPublish } from '../data/business';
@@ -42,43 +43,27 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
 
   // Build canonical from the route — server-side and crawlers see this even before JS runs.
   const origin = BUSINESS.canonicalUrl;
-  const canonicalUrl = `${origin}${location.pathname}`;
+  const canonicalUrl = toCanonical(location.pathname);
   // photoRights is confirmed ONLY for register-backed photos (owner-attested portfolio +
   // Instagram bake). Legacy blog heroes under /images/projects stay on the logo.
   const photoApproved = canPublish(BUSINESS.reviews.photoRights) && isOwnedPhoto(heroImage);
   const ogImageUrl = photoApproved ? (heroImage.startsWith('http') ? heroImage : `${origin}${heroImage}`) : `${origin}/logo.svg`;
 
-  // BreadcrumbList helps Google render the page hierarchy in search results.
-  const breadcrumbSchema = {
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": `${origin}/` },
-      { "@type": "ListItem", "position": 2, "name": "Resources", "item": `${origin}/resources` },
-      { "@type": "ListItem", "position": 3, "name": title, "item": canonicalUrl },
-    ],
-  };
-
-  // Article schema for E-E-A-T signals — Google + AI assistants use this for citation/snippet.
-  // Enhanced 2026-06-04 with abstract (from tldr), keywords, wordCount, dateModified.
+  // Article + BreadcrumbList (+ the post's own FAQPage/HowTo) in one @graph.
+  // author/publisher reference root.tsx's #business rather than re-declaring an
+  // Organization. Dates go through isoDate(): posts pass "March 15, 2026", which
+  // is not valid schema.org Date and was being emitted verbatim until 2026-09.
+  const published = isoDate(date);
   const articleSchema: Record<string, unknown> = {
-    "@context": "https://schema.org",
     "@type": "Article",
+    "@id": `${canonicalUrl}#article`,
     "headline": title,
     "description": seoDescription,
     "image": ogImageUrl,
-    "datePublished": date,
-    "dateModified": dateModified || date,
-    "author": { "@type": "Organization", "name": BUSINESS.publicName.value, "url": origin },
-    "publisher": {
-      "@type": "Organization",
-      "name": BUSINESS.publicName.value,
-      "url": origin,
-      "logo": {
-        "@type": "ImageObject",
-        "url": `${origin}/logo.svg`,
-      },
-
-    },
+    "datePublished": published,
+    "dateModified": dateModified ? isoDate(dateModified) : published,
+    "author": businessRef,
+    "publisher": businessRef,
     "mainEntityOfPage": {
       "@type": "WebPage",
       "@id": canonicalUrl,
@@ -90,11 +75,15 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
   if (keywords) articleSchema.keywords = keywords;
   if (wordCount && wordCount > 0) articleSchema.wordCount = wordCount;
 
-  // Combine Article + Breadcrumb + (optional) FAQPage/HowTo into a single @graph block
-  // so a single SEO component emits everything in one JSON-LD payload.
-  const graph: unknown[] = [articleSchema, breadcrumbSchema];
-  if (schema) graph.push(schema);
-  const combinedSchema = { "@context": "https://schema.org", "@graph": graph };
+  const combinedSchema = graph(
+    articleSchema,
+    breadcrumb([
+      { name: 'Home', path: '/' },
+      { name: 'Resources', path: '/resources/' },
+      { name: title, path: location.pathname },
+    ]),
+    schema as Record<string, unknown> | undefined,
+  );
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(currentUrl);

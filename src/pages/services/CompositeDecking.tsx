@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import Testimonials from '../../components/Testimonials';
 import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
@@ -12,15 +13,12 @@ const FAQ = [
   { q: 'How is timing determined?', a: 'Timing depends on design, approvals, access, materials, weather, and the project scope. We can discuss a current schedule after reviewing your project.' },
 ];
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a },
-  })),
-};
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({ path: '/services/composite-decking-barrie/', name: 'Composite deck building in Barrie', serviceType: 'Composite deck construction', areaServed: 'Barrie' }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Composite deck building in Barrie', path: '/services/composite-decking-barrie/' }]),
+  faqPage('/services/composite-decking-barrie/', FAQ),
+);
 
 export default function CompositeDecking() {
   const processSteps = [
@@ -36,7 +34,7 @@ export default function CompositeDecking() {
         title="Composite Decking Installation Barrie"
         description="Composite deck planning and installation for Barrie-area properties. Discuss materials, design options, and project-specific scope with our team."
         canonical="https://goldenmaplelandscaping.ca/services/composite-decking-barrie"
-        schema={faqSchema}
+        schema={pageSchema}
       />
       
       <section className="section-padding pt-48">

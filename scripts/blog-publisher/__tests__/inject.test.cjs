@@ -11,7 +11,7 @@
 //      src/pages/blog/*.tsx — and the `already exists` guard then made every
 //      retry fail too. One crash ended the cadence until a human noticed.
 //
-// These run against the REAL routes.ts / Resources.tsx / sitemap.xml and a REAL
+// These run against the REAL routes.ts / Resources.tsx and a REAL
 // archived draft, then restore them — a fixture copy would not have caught (1),
 // since the whole bug was that the real file had moved.
 
@@ -25,10 +25,9 @@ const { injectDraft, slugToComponent } = require('../inject.cjs');
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const ROUTES_TS = path.join(REPO_ROOT, 'src/routes.ts');
 const RESOURCES_TSX = path.join(REPO_ROOT, 'src/pages/Resources.tsx');
-const SITEMAP_XML = path.join(REPO_ROOT, 'public/sitemap.xml');
 const DRAFTS_DIR = path.join(__dirname, '..', 'drafts');
 
-const TOUCHED = [ROUTES_TS, RESOURCES_TSX, SITEMAP_XML];
+const TOUCHED = [ROUTES_TS, RESOURCES_TSX];
 
 // A real archived draft — real headings, real HTML, real FAQ shape.
 function loadRealDraft(slug) {
@@ -72,17 +71,16 @@ describe('injectDraft: RR7 route wiring', () => {
     assert.ok(fs.existsSync(tsxPath), 'blog page component should be written');
   });
 
-  test('writes the canonical trailing slash on the sitemap loc', () => {
-    const slug = 'zz-test-inject-sitemap-slash';
+  test('does not touch a static sitemap — generate-sitemap.py builds it from the prerender', () => {
+    const slug = 'zz-test-inject-no-sitemap';
     const comp = slugToComponent(slug);
     const tsxPath = path.join(REPO_ROOT, 'src/pages/blog', `${comp}.tsx`);
     pending = { snap: snapshot(), extra: [tsxPath] };
 
-    injectDraft(loadRealDraft(slug));
+    const result = injectDraft(loadRealDraft(slug));
 
-    const sitemap = fs.readFileSync(SITEMAP_XML, 'utf8');
-    assert.match(sitemap, new RegExp(`<loc>https://goldenmaplelandscaping.ca/resources/${slug}/</loc>`));
-    assert.doesNotMatch(sitemap, new RegExp(`<loc>https://goldenmaplelandscaping.ca/resources/${slug}</loc>`));
+    assert.ok(!result.filesChanged.some((f) => f.includes('sitemap')), 'filesChanged must not list a sitemap');
+    assert.ok(!fs.existsSync(path.join(REPO_ROOT, 'public/sitemap.xml')), 'public/sitemap.xml must stay deleted — the build generates it');
   });
 
   test('appends inside the blog block, above // Locations', () => {
@@ -127,11 +125,10 @@ describe('injectDraft: failure is all-or-nothing', () => {
     const snap = snapshot();
     pending = { snap, extra: [tsxPath] };
 
-    // Force a mid-run failure: pre-seed the sitemap (the LAST step) with this
-    // slug's URL so injectIntoSitemap throws after .tsx + routes.ts are written.
-    const url = `https://goldenmaplelandscaping.ca/resources/${slug}/`;
-    const sitemap = fs.readFileSync(SITEMAP_XML, 'utf8');
-    fs.writeFileSync(SITEMAP_XML, sitemap.replace('</urlset>', `  <url><loc>${url}</loc></url>\n</urlset>`));
+    // Force a mid-run failure: pre-seed Resources.tsx (the LAST step) with this
+    // slug so injectIntoResources throws after .tsx + routes.ts are written.
+    const resources = fs.readFileSync(RESOURCES_TSX, 'utf8');
+    fs.writeFileSync(RESOURCES_TSX, `${resources}\n// slug: '${slug}'\n`);
 
     assert.throws(() => injectDraft(loadRealDraft(slug)), /already lists/);
 
