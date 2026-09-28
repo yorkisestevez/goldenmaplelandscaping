@@ -32,7 +32,7 @@ function boxMesh(name:string,b:Box):ExportMesh{
   const a=b.angle||0;return prism(name,b,{x:Math.cos(a)*b.w,y:0,z:-Math.sin(a)*b.w},{x:0,y:b.h,z:0},{x:Math.sin(a)*b.d,y:0,z:Math.cos(a)*b.d});
 }
 /** Ear clipping keeps concave notches and clipped corners instead of filling their bounds. */
-function extrudePolygon(name:string,input:PlanPoint[],at:(p:PlanPoint,t:number)=>V3):ExportMesh{
+export function extrudePolygon(name:string,input:PlanPoint[],at:(p:PlanPoint,t:number)=>V3):ExportMesh{
   const poly=input.filter((p,i)=>{const q=input[(i+input.length-1)%input.length];return Math.hypot(p.x-q.x,p.y-q.y)>1e-7;});
   const turn=(a:PlanPoint,b:PlanPoint,c:PlanPoint)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
   const area=poly.reduce((sum,p,i)=>{const q=poly[(i+1)%poly.length];return sum+p.x*q.y-q.x*p.y;},0);

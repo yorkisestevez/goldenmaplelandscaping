@@ -4,7 +4,8 @@ import {LAYERS,type DrawItem,type DrawingSet,type LayerId,type Pt} from './drawi
  * The permit plans as one layered 2D DXF (AutoCAD R12 / AC1009, the most widely read revision): model space at full
  * size in inches, house at the top as on the sheets (DXF y = −plan y). Every sheet's geometry goes in once, on its
  * layer, so a contractor can turn the foundation, framing and guard layers on and off. Footings and posts are block
- * inserts; dimensions are drawn out as lines and text on A-ANNO-DIMS; text heights follow the framing sheet's scale.
+ * inserts; dimensions are drawn out as lines and text on A-ANNO-DIMS; the plans' text heights follow the framing
+ * sheet's scale. The elevations and the section are built below the plans in model space, their text at their own scale.
  */
 const f=(n:number)=>(Math.abs(n)<1e-9?0:Math.round(n*1e6)/1e6).toString();
 const code=(c:number,v:string|number)=>`${c}\n${typeof v==='number'?f(v):v}\n`;
@@ -37,8 +38,8 @@ const square=(fill:boolean)=>code(0,'POLYLINE')+code(8,'0')+code(66,1)+code(70,1
 export function buildPermitDxf(set:DrawingSet):string{
   // One copy of each item across the sheets (outlines and posts repeat from sheet to sheet).
   const seen=new Set<string>(),items:{item:DrawItem;scale:number}[]=[];
-  for(const sheet of set.sheets)for(const item of sheet.items){const key=JSON.stringify(item);if(!seen.has(key)){seen.add(key);items.push({item,scale:sheet.ratio});}}
   const textScale=set.sheets.find(s=>s.id==='S-2')?.ratio??48;
+  for(const sheet of set.sheets)for(const item of sheet.items){const key=JSON.stringify(item);if(!seen.has(key)){seen.add(key);items.push({item,scale:/^S-[123]$/.test(sheet.id)?textScale:sheet.ratio});}}
   const pts=items.flatMap(({item})=>item.kind==='line'||item.kind==='dim'?[item.a,item.b]:item.kind==='poly'?item.points:item.kind==='circle'?[item.c]:[item.at]);
   const min={x:Math.min(...pts.map(p=>p.x)),y:Math.max(...pts.map(p=>p.y))},max={x:Math.max(...pts.map(p=>p.x)),y:Math.min(...pts.map(p=>p.y))};
   const used=[...new Set(items.map(i=>i.item.layer))] as LayerId[];
@@ -55,6 +56,6 @@ export function buildPermitDxf(set:DrawingSet):string{
     +code(9,'$EXTMIN')+at(min)+code(9,'$EXTMAX')+at(max)+code(0,'ENDSEC')
     +code(0,'SECTION')+code(2,'TABLES')+ltypes+layerTable+style+code(0,'ENDSEC')
     +code(0,'SECTION')+code(2,'BLOCKS')+block('FOOTING',code(0,'CIRCLE')+code(8,'0')+at({x:0,y:0})+code(40,.5))+block('BLOCK',square(false))+block('POST',square(true))+code(0,'ENDSEC')
-    +code(0,'SECTION')+code(2,'ENTITIES')+items.map(({item})=>entity(item,textScale)).join('')+titleItems.map(i=>entity(i,textScale)).join('')+code(0,'ENDSEC')
+    +code(0,'SECTION')+code(2,'ENTITIES')+items.map(({item,scale})=>entity(item,scale)).join('')+titleItems.map(i=>entity(i,textScale)).join('')+code(0,'ENDSEC')
     +code(0,'EOF');
 }
