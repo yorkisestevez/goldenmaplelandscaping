@@ -336,7 +336,7 @@ for(const [width,length] of [[16,12],[24,20],[40,16]] as const)for(const [l,r] o
   ok('cornerChamfers' in patch&&patch.cornerChamfers===undefined&&patch.wrap?.left&&status==='Switched to square front corners so the corner can be mitred.','A wing squares angled corners and says so');
   ok(wrapFixNames(design({cornerChamfers:corners(4,0),pattern:'Diagonal'})).join()==='straight boards,square front corners'&&!('cornerChamfers' in wrapFix(base())),'The wrap fix names only what it changes');
   ok(page.includes('stairEdges={levelEdges}')&&/levelEdges=namedEdges\.filter\(e=>wrap&&!isChamferEdgeId\(e\.id\)\)/.test(page),'Level pickers never offer an angled face');
-  ok(read('features/deckcraft/designer/useDeckDesign.ts').includes('setData(prev=>pruneEdgeNames(deckReleaseData({...prev,...patch})))'),'Every edit drops a stair or level edge name the design can no longer use');
+  ok(read('features/deckcraft/designer/useDeckDesign.ts').includes('prepareDesignUpdate(dataRef.current,patch)')&&read('features/deckcraft/designer/designUpdate.ts').includes('pruneEdgeNames(deckReleaseData({...data,...resizeBoundaryPatch(data,patch)}))'),'Every guarded edit drops a stair or level edge name the design can no longer use');
   ok(read('features/deckcraft/designPersistence.ts').includes('const named=pruneEdgeNames(clean);'),'Loading drops the same names');
   ok(page.includes('angledStairAllowed(data)&&angledStairFits(e.lenIn,data.stairWidth)'),'The stair picker offers an angled face on the same rule');
 }

@@ -1,7 +1,7 @@
 import {useMemo} from 'react';
-import {accentCollections,colourRef,deckColourRef} from '../boardFinishes';
+import {accentCollections,colourRef,deckColourRef,parseColourRef} from '../boardFinishes';
 import type {DeckTakeoff} from '../deckTakeoff';
-import {newSkirting,SKIRTING_LIMITS,SKIRTING_STYLE_NAMES,SKIRTING_STYLES,skirtingPlan} from '../skirting';
+import {newSkirting,SKIRTING_LIMITS,SKIRTING_STYLE_NAMES,SKIRTING_STYLES,skirtingPlan,foldedBoardCandidate} from '../skirting';
 import type {DeckData,SkirtingConfig,SkirtingStyle} from '../types';
 import {NumberField,type Update} from './fields';
 
@@ -22,7 +22,8 @@ export default function SkirtingEditor({data,update,model}:{data:DeckData;update
   // Saved in the same shape loading gives it: optional parts left out when empty.
   const save=(patch:Partial<SkirtingConfig>)=>{
     if(!config)return;const next={...config,...patch};
-    update({skirting:{style:next.style,...(next.colour?{colour:next.colour}:{}),clearanceIn:Math.min(cmax,Math.max(cmin,next.clearanceIn)),...(next.openEdges?.length?{openEdges:next.openEdges}:{}),...(next.accessPanels?{accessPanels:Math.round(Math.min(pmax,Math.max(pmin,next.accessPanels)))}:{})}});
+    const canFold=next.style==='Horizontal boards'&&foldedBoardCandidate(next.colour??main);
+    update({skirting:{style:next.style,...(next.colour?{colour:next.colour}:{}),clearanceIn:Math.min(cmax,Math.max(cmin,next.clearanceIn)),...(next.openEdges?.length?{openEdges:next.openEdges}:{}),...(next.accessPanels?{accessPanels:Math.round(Math.min(pmax,Math.max(pmin,next.accessPanels)))}:{}),...(canFold&&next.cornerTreatment?{cornerTreatment:next.cornerTreatment}:{})}});
   };
   const setSide=(id:string,skirted:boolean)=>{const rest=(config?.openEdges??[]).filter(e=>e!==id);save({openEdges:skirted?rest:[...rest,id].slice(-SKIRTING_LIMITS.openEdges)});};
   const colourValue=config?.colour&&colours.some(c=>c.ref===config.colour)?config.colour:'';
@@ -38,6 +39,11 @@ export default function SkirtingEditor({data,update,model}:{data:DeckData;update
         <NumberField label="Gap above the ground" value={plan.clearanceIn} min={cmin} max={cmax} unit="in" increment={.5} hint="Lets air and water out from under the deck; 2 in is typical." onValue={clearanceIn=>save({clearanceIn})}/>
         <NumberField label="Access panels" value={config.accessPanels??0} min={pmin} max={pmax} unit="" increment={1} hint="Framed, removable panels to reach under the deck." onValue={n=>save({accessPanels:Math.round(n)})}/>
       </div>
+      {config.style==='Horizontal boards'&&parseColourRef(plan.colour)?.material.isComposite&&<>
+        <label className="dd-field"><span>Skirting corners</span><select aria-label="Skirting corners" value={plan.foldedCorners?'Folded solid boards':''} onChange={e=>save({cornerTreatment:e.target.value?'Folded solid boards':undefined})}><option value="">Mitred board joins</option><option value="Folded solid boards" disabled={!foldedBoardCandidate(plan.colour)}>Folded solid boards (custom fabrication)</option></select></label>
+        {!foldedBoardCandidate(plan.colour)&&<p className="dd-note">This collection has a scalloped profile. For custom folded corners, choose a full-profile composite or PVC skirting colour; a square board edge alone does not make the core solid.</p>}
+        {plan.foldedCorners&&<p className="dd-note">A solid deck board wraps around each outside corner with continuous grain. Requires solid-profile stock and builder confirmation of the selected product and fabrication method. Heat-folding and warranty coverage are not assumed; custom fabrication is included in the outstanding skirting quote.</p>}
+      </>}
       {plan.edges.length>0&&<fieldset className="dd-skirting-sides"><legend>Sides to skirt</legend>
         {plan.edges.map(e=><label key={e.id} className="dd-check"><input type="checkbox" checked={!e.open} onChange={ev=>setSide(e.id,ev.target.checked)}/><span>{capital(e.label)} · {e.lengthFt.toFixed(1)} ft</span></label>)}
       </fieldset>}

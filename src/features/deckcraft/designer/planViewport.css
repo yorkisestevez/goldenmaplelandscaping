@@ -1,0 +1,27 @@
+.dd-canvas>.dd-plan-viewport{position:relative;isolation:isolate;aspect-ratio:auto!important;height:clamp(380px,55vh,620px)!important;overflow:hidden;background:#f5f3ed;touch-action:pan-y}
+.dd-plan-stage{position:absolute;inset:0 0 70px;transform-origin:center;will-change:transform}
+.dd-plan-stage>.dd-site-plan{display:block;width:100%;height:100%;background:transparent!important}
+.dd-plan-stage>.dd-site-plan .dd-plan-grid{opacity:.35}
+.dd-plan-stage>.dd-site-plan g[aria-label="House"]>rect,.dd-plan-stage>.dd-site-plan g[aria-label="House"]>polygon{fill:#e8e5dd;stroke:#70766b;stroke-width:.7}
+.dd-plan-stage>.dd-site-plan .dd-break{opacity:.45}
+.dd-plan-stage>.dd-site-plan .dd-dim,.dd-plan-stage>.dd-site-plan .dd-dim-tick{stroke:#aa7556;opacity:.7}
+.dd-plan-stage>.dd-boundary-editor{height:100%!important;aspect-ratio:auto!important}
+.dd-plan-viewport[data-pan]{touch-action:none;cursor:grab}
+.dd-plan-viewport[data-panning]{cursor:grabbing}
+.dd-plan-viewport[data-pan] .dd-boundary-handle{cursor:grab}
+.dd-plan-viewport:focus-visible{outline:2px solid var(--dc-gold-deep,#9b6346);outline-offset:-3px}
+.dd-plan-navigation{position:absolute;bottom:16px;right:16px;display:flex;align-items:center;gap:2px;padding:4px;border:1px solid #dedbd4;border-radius:12px;background:#fffffff2;box-shadow:0 4px 18px #2725220d;z-index:8;color:#292a27}
+.dd-plan-navigation button{display:grid;place-items:center;min-width:44px;min-height:44px;padding:0;border:0;border-radius:8px;background:transparent;color:inherit;cursor:pointer}
+.dd-plan-navigation button:hover{background:#f1eee8}
+.dd-plan-navigation button[aria-pressed=true]{background:#292a27;color:white}
+.dd-plan-navigation button:disabled{opacity:.35;cursor:default}
+.dd-plan-navigation button:focus-visible{outline:2px solid #9b6346;outline-offset:1px}
+.dd-plan-navigation output{min-width:42px;text-align:center;font:500 12px/1.2 var(--dc-body,Arial,sans-serif);font-variant-numeric:tabular-nums}
+.dd-plan-navigation-divider{height:22px;border-left:1px solid #dedbd4;margin:0 4px}
+.dd-plan-pan-hint{position:absolute;top:12px;left:12px;right:12px;width:fit-content;max-width:calc(100% - 24px);margin:0;padding:8px 12px;background:#292a27;color:white;border-radius:8px;font:500 12px/1.4 var(--dc-body,Arial,sans-serif);z-index:8;pointer-events:none}
+.dd-preview-details{margin:12px 0 0;border-top:1px solid var(--dc-rule-soft,#dedbd4);font-size:12px;color:var(--dc-muted,#6a6d65)}
+.dd-preview-details>summary{min-height:44px;align-content:center;cursor:pointer;font-weight:500}
+.dd-preview-details .dd-note{font-size:12px;line-height:1.6}
+.dd-preview-details .dd-title-block{margin-top:0}
+@media(max-width:600px){.dd-canvas>.dd-plan-viewport{height:390px!important}.dd-plan-navigation{bottom:10px;right:10px}.dd-plan-pan-hint{font-size:11px}}
+@media(max-width:800px){.dd-preview-docked .dd-canvas>.dd-plan-viewport{height:clamp(220px,30vh,300px)!important}.dd-plan-viewport{scroll-margin-top:136px;scroll-margin-bottom:120px}}

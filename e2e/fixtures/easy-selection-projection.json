@@ -1,0 +1,13 @@
+{
+  "fixture": "20x20 measured deck, left 4x6 screen-a at20%",
+  "screen": {
+    "x": 4,
+    "y": 117,
+    "z": 69.6,
+    "w": 48,
+    "h": 5.5,
+    "d": 1,
+    "angle": 1.5707963267948966,
+    "screenId": "screen-a"
+  }
+}

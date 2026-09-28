@@ -1,3 +1,4 @@
+import {pergolaDescription} from './pergolaDescription';
 import {BUSINESS,canPublish,publicContact} from '../../data/business';
 import {boardFinishPlan,borderFinishRef,darkSlateBorder,deckColourRef,parseColourRef} from './boardFinishes';
 import {DECK_PARTS,partRef,railingFinish} from './deckPartFinishes';
@@ -9,6 +10,7 @@ import {DECKING_CATALOGUE,MANUFACTURER_ACCESSORIES} from './manufacturerCatalog'
 import {railingScreenHex} from './railingScreenColours';
 import {GLASS_FINISH_HEX,GLASS_FINISH_NAMES} from './framelessGlass';
 import {skirtingPlan} from './skirting';
+import {hasBoardLayout} from './boardLayoutPricing';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {ColourRef,DeckData} from './types';
 
@@ -89,7 +91,7 @@ const FACT_GROUPS:readonly (readonly [FeatureGroupId,RegExp])[]=[
   ['boards',/ boards( with \d+ border rows?)?$|^Accent boards:|^Inlays?:|^Deck parts:/],
   ['railing',/ railing · \d+ stair flights?\b|^Railing colour:|^Frameless glass:|^Privacy screens:|^Skirting:/],
   ['lighting',/^Lighting:/],
-  ['living',/^Backyard:/],
+  ['living',/^Backyard:|^Aluminum pergola:/],
   ['house',/^House |^Exterior \(appearance only/],
 ];
 export const factGroup=(fact:string):FeatureGroupId=>FACT_GROUPS.find(([,rule])=>rule.test(fact))?.[0]??'more';
@@ -111,6 +113,7 @@ export function lightingLines(data:DeckData):string[]{
  * groups are left out.
  */
 export function proposalFeatures(data:DeckData,facts:readonly string[],exterior?:string|null):FeatureGroup[]{
+  const detailedPergola=pergolaDescription(data);facts=facts.map(f=>f.startsWith('Aluminum pergola:')&&detailedPergola?detailedPergola:f);
   const lights=lightingLines(data),byGroup=new Map<FeatureGroupId,string[]>(GROUPS.map(([id])=>[id,[]]));
   for(const fact of [...facts,...(exterior&&!facts.includes(exterior)?[exterior]:[])]){
     const group=factGroup(fact);
@@ -119,7 +122,7 @@ export function proposalFeatures(data:DeckData,facts:readonly string[],exterior?
     byGroup.get(group)!.push(fact);
   }
   byGroup.get('lighting')!.push(...lights);
-  const built=[...(data.pergolaSqft>0?[`Pergola, ${data.pergolaSqft} sq ft`]:[]),...(data.benchLf>0?[`Built-in bench, ${data.benchLf} ft`]:[]),...(data.hasDrainage?['Under-deck drainage system']:[])];
+  const built=[...(data.pergolaSqft>0&&!data.pergola?[`Pergola, ${data.pergolaSqft} sq ft`]:[]),...(data.benchLf>0?[`Built-in bench, ${data.benchLf} ft`]:[]),...(data.hasDrainage?['Under-deck drainage system']:[])];
   byGroup.get('living')!.unshift(...built);
   return GROUPS.flatMap(([id,title])=>{const items=byGroup.get(id)!;return items.length?[{id,title,items}]:[];});
 }
@@ -144,8 +147,8 @@ export function proposalFinishes(data:DeckData,model:DeckTakeoff):FinishTile[]{
   // Border boards: in their own colour, as Deckorators Dark Slate (its own product), or in the deck's colour.
   const framed=data.pattern==='Picture Frame'&&data.pictureFrameRows>0,dark=darkSlateBorder(data);
   if(framed&&!dark&&!borderFinishRef(data))add(deckColourRef(data),PART_USE.border);
-  const plan=data.boardColours?.length||data.inlays?.length||data.deckFinishes?.border?boardFinishPlan(data,model):null;
-  for(const group of plan?.stock??[])add(group.ref,group.kind==='accent'?'Accent boards':group.kind==='border'?PART_USE.border:INLAY_USE[group.part??'inside']);
+  const plan=data.boardColours?.length||data.inlays?.length||data.deckFinishes?.border||hasBoardLayout(data)?boardFinishPlan(data,model):null;
+  for(const group of plan?.stock??[])add(group.ref,group.kind==='layout'?'Custom board layout':group.kind==='accent'?'Accent boards':group.kind==='border'?PART_USE.border:INLAY_USE[group.part??'inside']);
   if(framed&&dark){
     const slate=MANUFACTURER_ACCESSORIES.find(a=>a.id==='dk_dark_slate_border');
     tiles.set('dark-slate',{key:'dark-slate',colour:'Dark Slate',collection:slate?.name??'Deckorators Dark Slate picture-frame board',uses:[PART_USE.border],swatch:slate?.swatch});
@@ -167,7 +170,15 @@ export function proposalFinishes(data:DeckData,model:DeckTakeoff):FinishTile[]{
  * has about 7.9 in for the schedule), so a sheet never overflows.
  */
 export type InvestmentPart={kind:'lines';lines:LedgerLine[]}|{kind:'totals'}|{kind:'quotes';quotes:LedgerQuote[];continued:boolean};
-export const INVESTMENT_ROOM=7.5;
+// Reserve room for the editorial heading, its introduction and the contact footer on a Letter sheet.
+export const INVESTMENT_ROOM=7.1;
+/** Included portions of the under-deck total, read from the final engine rows (including overrides). */
+export function underDeckCostSplit(estimate:{sections:{title:string;items:{name:string;cost:number|null}[]}[]}):{label:string;amount:number}[]{
+  const items=estimate.sections.find(s=>s.title==='Under-deck options')?.items;if(!items)return [];
+  const groups=[{label:'Materials and ancillary allowances',amount:0},{label:'Delivery and handling allowances',amount:0},{label:'Installation planning allowance',amount:0}];
+  for(const i of items)if(i.cost!==null)groups[/installation planning allowance/i.test(i.name)?2:/delivery|handling/i.test(i.name)?1:0].amount+=i.cost;
+  return groups.filter(g=>g.amount>0);
+}
 export function investmentSheets(ledger:Ledger,room=INVESTMENT_ROOM):InvestmentPart[][]{
   const rows=(text:string,chars:number)=>Math.max(1,Math.ceil(text.length/chars));
   const sheets:InvestmentPart[][]=[[]];let used=0;
@@ -175,7 +186,7 @@ export function investmentSheets(ledger:Ledger,room=INVESTMENT_ROOM):InvestmentP
   const fit=(h:number)=>{if(used+h>room&&sheet().length){sheets.push([]);used=0;}used+=h;};
   for(const line of ledger.lines){
     const head=sheet().at(-1)?.kind==='lines'?0:.32;
-    fit(head+.29*rows(line.title,88));
+    fit(head+.29*rows(line.title,88)+(line.title==='Under-deck options'?.65:0));
     const last=sheet().at(-1);
     if(last?.kind==='lines')last.lines.push(line);else sheet().push({kind:'lines',lines:[line]});
   }

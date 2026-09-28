@@ -128,9 +128,10 @@ for(const [label,patch] of houses)for(const deckType of ['Attached','Freestandin
   const second=model.levels.findIndex(l=>l.kind==='deck'&&l.index===1);
   ok(near(plan.edges.find(e=>e.id==='deck1-front')!.lengthFt,16-8,.01)&&!plan.edges.some(e=>e.id==='deck2-back'),'Where the second level meets the main deck, neither edge is skirted');
   ok(near(inches(runsOn(plan,second)),(8+6+6)*12,.05),'The second level is skirted on its three open sides');
-  // A step down with a flight between: each edge loses the flight's width plus 2 in.
+  // A step down: the levels meet and the step stands on the lower level (owner decision 2026-09-25), so it joins like a
+  // flush level: the main deck keeps skirting only past the second level, and the second level's back is not skirted.
   const s=base({height:48,stairFlights:0,levels:2,height2:24,width2:8,length2:6,level2Position:'Front',skirting:skirt()}),sm=buildDeckTakeoff(s),sp=skirtingPlan(s,sm)!;
-  ok(near(sp.edges.find(e=>e.id==='deck1-front')!.lengthFt*12,16*12-50,.05)&&near(sp.edges.find(e=>e.id==='deck2-back')!.lengthFt*12,8*12-50,.05),'A level connection leaves its width plus 2 in open on both levels');
+  ok(near(sp.edges.find(e=>e.id==='deck1-front')!.lengthFt,16-8,.01)&&!sp.edges.some(e=>e.id==='deck2-back')&&sm.connections[0].run===0,'A step-down joins like a flush level: neither shared edge is skirted');
   // No run of one level overlaps another level's run, or sits inside another level.
   for(const dd of [d,s,validateDesign(base({levels:3,height:60,height2:48,skirting:skirt()})),base({levels:2,height:48,height2:40,level2FullStep:true,level2Position:'Left',skirting:skirt()})]){
     const m=buildDeckTakeoff(dd),p=skirtingPlan(dd,m)!;

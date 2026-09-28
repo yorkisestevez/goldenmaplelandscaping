@@ -1,0 +1,624 @@
+{
+ "schemaVersion": 1,
+ "verifiedOn": "2026-09-27",
+ "recipes": [
+  {
+   "productId": "permacon-boulevard-300-paver",
+   "finishId": "smooth",
+   "patternId": "source-97-modular-drawn-4E1F",
+   "patternName": "Modular \u2014 as drawn 4E:1F (67% E / 33% F by area) \u00b7 source mix differs",
+   "originalPatternId": "modular",
+   "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=97",
+   "sourcePdfPage": 97,
+   "sourcePdfSha256": "13fb8c7e2a195fd4b10ebfe5f229851670e8861859bea0f3dc432fa378500055",
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "widthMm": 600,
+    "depthMm": 750,
+    "repeatBasisMm": [
+     [
+      -450,
+      0
+     ],
+     [
+      -150,
+      -600
+     ]
+    ],
+    "jointMm": 0,
+    "cells": [
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 0,
+      "yMm": 150,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 150,
+      "yMm": 150,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "f-300-300-100-mm",
+      "xMm": 150,
+      "yMm": 300,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 450,
+      "yMm": 450,
+      "rotationDeg": 90
+     }
+    ],
+    "version": 1,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Permacon 2026 Ontario product guide PDF97 drawing, verified against all 63 complete source faces (no missing or extra stone, both extraction methods agreeing, perturbation controls rejected). The repeat as drawn is 4E:1F: 67% E / 33% F by area, 80% E / 20% F by pieces. The caption printed beside it reads \"67% F + 33% E (stacked with \"67% I + 33% H\")\", which does not describe this drawing; the drawn stones are used and the caption is not. Permacon states its laying patterns are shown by way of example. Nominal zero-joint topology of full published stock: no installed joint schedule, spacer detail or pack ratio is established."
+   },
+   "digitization": {
+    "sourceDiagram": "2026 Ontario product guide / PDF 97",
+    "printedCaption": "67% F + 33% E (stacked with \"67% I + 33% H\")",
+    "captionConflict": true,
+    "drawnStockCount": {
+     "E": 4,
+     "F": 1
+    },
+    "drawnAreaPct": {
+     "E": 66.67,
+     "F": 33.33
+    },
+    "drawnPiecePct": {
+     "E": 80.0,
+     "F": 20.0
+    },
+    "sourceFacesMatched": 63,
+    "verifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-b-permacon-boulevard/cand-67F33E.png",
+    "periodsPerBasis": [
+     49,
+     37
+    ],
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 14,
+     "stonesPerRepeatRecipe": 14,
+     "notes": "Bands of 3 stacked lying stones with narrow uprights, then two bands of square + lying stones above and below + uprights on the sides, each band shifted one third of the 63 px period. The triple groups are triples in both. Every line position matches; the count is an estimate at this small size.",
+     "item": "item-12",
+     "batch": "batch-b-permacon-boulevard",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "physicalStocks": 5,
+    "repeatAreaMm2": 270000
+   }
+  },
+  {
+   "productId": "permacon-boulevard-300-paver",
+   "finishId": "granitech-textured",
+   "patternId": "source-97-modular-drawn-4E1F",
+   "patternName": "Modular \u2014 as drawn 4E:1F (67% E / 33% F by area) \u00b7 source mix differs",
+   "originalPatternId": "modular",
+   "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=97",
+   "sourcePdfPage": 97,
+   "sourcePdfSha256": "13fb8c7e2a195fd4b10ebfe5f229851670e8861859bea0f3dc432fa378500055",
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "widthMm": 600,
+    "depthMm": 750,
+    "repeatBasisMm": [
+     [
+      -450,
+      0
+     ],
+     [
+      -150,
+      -600
+     ]
+    ],
+    "jointMm": 0,
+    "cells": [
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 0,
+      "yMm": 150,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 150,
+      "yMm": 150,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "f-300-300-100-mm",
+      "xMm": 150,
+      "yMm": 300,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 450,
+      "yMm": 450,
+      "rotationDeg": 90
+     }
+    ],
+    "version": 1,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Permacon 2026 Ontario product guide PDF97 drawing, verified against all 63 complete source faces (no missing or extra stone, both extraction methods agreeing, perturbation controls rejected). The repeat as drawn is 4E:1F: 67% E / 33% F by area, 80% E / 20% F by pieces. The caption printed beside it reads \"67% F + 33% E (stacked with \"67% I + 33% H\")\", which does not describe this drawing; the drawn stones are used and the caption is not. Permacon states its laying patterns are shown by way of example. Nominal zero-joint topology of full published stock: no installed joint schedule, spacer detail or pack ratio is established."
+   },
+   "digitization": {
+    "sourceDiagram": "2026 Ontario product guide / PDF 97",
+    "printedCaption": "67% F + 33% E (stacked with \"67% I + 33% H\")",
+    "captionConflict": true,
+    "drawnStockCount": {
+     "E": 4,
+     "F": 1
+    },
+    "drawnAreaPct": {
+     "E": 66.67,
+     "F": 33.33
+    },
+    "drawnPiecePct": {
+     "E": 80.0,
+     "F": 20.0
+    },
+    "sourceFacesMatched": 63,
+    "verifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-b-permacon-boulevard/cand-67F33E.png",
+    "periodsPerBasis": [
+     49,
+     37
+    ],
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 14,
+     "stonesPerRepeatRecipe": 14,
+     "notes": "Bands of 3 stacked lying stones with narrow uprights, then two bands of square + lying stones above and below + uprights on the sides, each band shifted one third of the 63 px period. The triple groups are triples in both. Every line position matches; the count is an estimate at this small size.",
+     "item": "item-12",
+     "batch": "batch-b-permacon-boulevard",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "physicalStocks": 5,
+    "repeatAreaMm2": 270000
+   }
+  },
+  {
+   "productId": "permacon-boulevard-300-paver",
+   "finishId": "smooth",
+   "patternId": "source-97-modular-drawn-2H1F2E",
+   "patternName": "Modular \u2014 as drawn 2H:1F:2E (67% H / 17% F / 17% E by area) \u00b7 source mix differs",
+   "originalPatternId": "modular",
+   "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=97",
+   "sourcePdfPage": 97,
+   "sourcePdfSha256": "13fb8c7e2a195fd4b10ebfe5f229851670e8861859bea0f3dc432fa378500055",
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "widthMm": 1050,
+    "depthMm": 600,
+    "repeatBasisMm": [
+     [
+      -300,
+      -600
+     ],
+     [
+      -750,
+      300
+     ]
+    ],
+    "jointMm": 0,
+    "cells": [
+     {
+      "unitId": "h-300-600-100-mm",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "f-300-300-100-mm",
+      "xMm": 150,
+      "yMm": 300,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 450,
+      "yMm": 300,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "h-300-600-100-mm",
+      "xMm": 600,
+      "yMm": 0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 900,
+      "yMm": 300,
+      "rotationDeg": 90
+     }
+    ],
+    "version": 1,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Permacon 2026 Ontario product guide PDF97 drawing, verified against all 28 complete source faces (no missing or extra stone, both extraction methods agreeing, perturbation controls rejected). The repeat as drawn is 2H:1F:2E: 67% H / 17% F / 17% E by area, 40% H / 20% F / 40% E by pieces. The caption printed beside it reads \"67% H + 25% F + 8% E\", which does not describe this drawing; the drawn stones are used and the caption is not. Permacon states its laying patterns are shown by way of example. Nominal zero-joint topology of full published stock: no installed joint schedule, spacer detail or pack ratio is established."
+   },
+   "digitization": {
+    "sourceDiagram": "2026 Ontario product guide / PDF 97",
+    "printedCaption": "67% H + 25% F + 8% E",
+    "captionConflict": true,
+    "drawnStockCount": {
+     "H": 2,
+     "F": 1,
+     "E": 2
+    },
+    "drawnAreaPct": {
+     "H": 66.67,
+     "F": 16.67,
+     "E": 16.67
+    },
+    "drawnPiecePct": {
+     "H": 40.0,
+     "F": 20.0,
+     "E": 40.0
+    },
+    "sourceFacesMatched": 28,
+    "verifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-b-permacon-boulevard/cand-67H25F8E.png",
+    "periodsPerBasis": [
+     15,
+     14
+    ],
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 5,
+     "stonesPerRepeatRecipe": 5,
+     "notes": "3-size pattern on a 1-unit grid: 2x4 rectangle upright, 2x4 rectangle lying, 2x2 square and two 2x1 halves per repeat (lattice (2,4)/(5,-2) units, area 24). Every joint in the recipe matches row by row out to all four border edges.",
+     "item": "item-02",
+     "batch": "batch-b-permacon-boulevard",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "physicalStocks": 5,
+    "repeatAreaMm2": 540000
+   }
+  },
+  {
+   "productId": "permacon-boulevard-300-paver",
+   "finishId": "granitech-textured",
+   "patternId": "source-97-modular-drawn-2H1F2E",
+   "patternName": "Modular \u2014 as drawn 2H:1F:2E (67% H / 17% F / 17% E by area) \u00b7 source mix differs",
+   "originalPatternId": "modular",
+   "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=97",
+   "sourcePdfPage": 97,
+   "sourcePdfSha256": "13fb8c7e2a195fd4b10ebfe5f229851670e8861859bea0f3dc432fa378500055",
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "widthMm": 1050,
+    "depthMm": 600,
+    "repeatBasisMm": [
+     [
+      -300,
+      -600
+     ],
+     [
+      -750,
+      300
+     ]
+    ],
+    "jointMm": 0,
+    "cells": [
+     {
+      "unitId": "h-300-600-100-mm",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "f-300-300-100-mm",
+      "xMm": 150,
+      "yMm": 300,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 450,
+      "yMm": 300,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "h-300-600-100-mm",
+      "xMm": 600,
+      "yMm": 0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 900,
+      "yMm": 300,
+      "rotationDeg": 90
+     }
+    ],
+    "version": 1,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Permacon 2026 Ontario product guide PDF97 drawing, verified against all 28 complete source faces (no missing or extra stone, both extraction methods agreeing, perturbation controls rejected). The repeat as drawn is 2H:1F:2E: 67% H / 17% F / 17% E by area, 40% H / 20% F / 40% E by pieces. The caption printed beside it reads \"67% H + 25% F + 8% E\", which does not describe this drawing; the drawn stones are used and the caption is not. Permacon states its laying patterns are shown by way of example. Nominal zero-joint topology of full published stock: no installed joint schedule, spacer detail or pack ratio is established."
+   },
+   "digitization": {
+    "sourceDiagram": "2026 Ontario product guide / PDF 97",
+    "printedCaption": "67% H + 25% F + 8% E",
+    "captionConflict": true,
+    "drawnStockCount": {
+     "H": 2,
+     "F": 1,
+     "E": 2
+    },
+    "drawnAreaPct": {
+     "H": 66.67,
+     "F": 16.67,
+     "E": 16.67
+    },
+    "drawnPiecePct": {
+     "H": 40.0,
+     "F": 20.0,
+     "E": 40.0
+    },
+    "sourceFacesMatched": 28,
+    "verifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-b-permacon-boulevard/cand-67H25F8E.png",
+    "periodsPerBasis": [
+     15,
+     14
+    ],
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 5,
+     "stonesPerRepeatRecipe": 5,
+     "notes": "3-size pattern on a 1-unit grid: 2x4 rectangle upright, 2x4 rectangle lying, 2x2 square and two 2x1 halves per repeat (lattice (2,4)/(5,-2) units, area 24). Every joint in the recipe matches row by row out to all four border edges.",
+     "item": "item-02",
+     "batch": "batch-b-permacon-boulevard",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "physicalStocks": 5,
+    "repeatAreaMm2": 540000
+   }
+  },
+  {
+   "productId": "permacon-boulevard-300-paver",
+   "finishId": "smooth",
+   "patternId": "source-97-modular-drawn-3H2F1E",
+   "patternName": "Modular \u2014 as drawn 3H:2F:1E (71% H / 24% F / 6% E by area) \u00b7 source mix differs",
+   "originalPatternId": "modular",
+   "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=97",
+   "sourcePdfPage": 97,
+   "sourcePdfSha256": "13fb8c7e2a195fd4b10ebfe5f229851670e8861859bea0f3dc432fa378500055",
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "widthMm": 900,
+    "depthMm": 1350,
+    "repeatBasisMm": [
+     [
+      300,
+      -600
+     ],
+     [
+      -900,
+      -750
+     ]
+    ],
+    "jointMm": 0,
+    "cells": [
+     {
+      "unitId": "f-300-300-100-mm",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "h-300-600-100-mm",
+      "xMm": 0,
+      "yMm": 300,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "h-300-600-100-mm",
+      "xMm": 300,
+      "yMm": 300,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "f-300-300-100-mm",
+      "xMm": 300,
+      "yMm": 600,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 600,
+      "yMm": 600,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "h-300-600-100-mm",
+      "xMm": 600,
+      "yMm": 750,
+      "rotationDeg": 90
+     }
+    ],
+    "version": 1,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Permacon 2026 Ontario product guide PDF97 drawing, verified against all 22 complete source faces (no missing or extra stone, both extraction methods agreeing, perturbation controls rejected). The repeat as drawn is 3H:2F:1E: 71% H / 24% F / 6% E by area, 50% H / 33% F / 17% E by pieces. The caption printed beside it reads \"71% H + 25% F + 5% E (sums to 101%)\", which does not describe this drawing; the drawn stones are used and the caption is not. Permacon states its laying patterns are shown by way of example. Nominal zero-joint topology of full published stock: no installed joint schedule, spacer detail or pack ratio is established."
+   },
+   "digitization": {
+    "sourceDiagram": "2026 Ontario product guide / PDF 97",
+    "printedCaption": "71% H + 25% F + 5% E (sums to 101%)",
+    "captionConflict": true,
+    "drawnStockCount": {
+     "H": 3,
+     "F": 2,
+     "E": 1
+    },
+    "drawnAreaPct": {
+     "H": 70.59,
+     "F": 23.53,
+     "E": 5.88
+    },
+    "drawnPiecePct": {
+     "H": 50.0,
+     "F": 33.33,
+     "E": 16.67
+    },
+    "sourceFacesMatched": 22,
+    "verifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-b-permacon-boulevard/cand-71H25F5E.png",
+    "periodsPerBasis": [
+     11,
+     6
+    ],
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 6,
+     "stonesPerRepeatRecipe": 6,
+     "notes": "3-size pattern: 2 upright 2x4 + 1 lying 4x2 + 2 squares 2x2 + 1 half 2x1 per repeat (my hand estimate of the lattice, area 34 units). Every stone edge matches row by row, including the cut stones at all borders.",
+     "item": "item-09",
+     "batch": "batch-b-permacon-boulevard",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "physicalStocks": 6,
+    "repeatAreaMm2": 765000
+   }
+  },
+  {
+   "productId": "permacon-boulevard-300-paver",
+   "finishId": "granitech-textured",
+   "patternId": "source-97-modular-drawn-3H2F1E",
+   "patternName": "Modular \u2014 as drawn 3H:2F:1E (71% H / 24% F / 6% E by area) \u00b7 source mix differs",
+   "originalPatternId": "modular",
+   "sourceUrl": "https://permacon.ca/wp-content/uploads/2022/12/2026-guideproduitsamengta-14avr-3.pdf#page=97",
+   "sourcePdfPage": 97,
+   "sourcePdfSha256": "13fb8c7e2a195fd4b10ebfe5f229851670e8861859bea0f3dc432fa378500055",
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "widthMm": 900,
+    "depthMm": 1350,
+    "repeatBasisMm": [
+     [
+      300,
+      -600
+     ],
+     [
+      -900,
+      -750
+     ]
+    ],
+    "jointMm": 0,
+    "cells": [
+     {
+      "unitId": "f-300-300-100-mm",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "h-300-600-100-mm",
+      "xMm": 0,
+      "yMm": 300,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "h-300-600-100-mm",
+      "xMm": 300,
+      "yMm": 300,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "f-300-300-100-mm",
+      "xMm": 300,
+      "yMm": 600,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "e-150-300-100-mm",
+      "xMm": 600,
+      "yMm": 600,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "h-300-600-100-mm",
+      "xMm": 600,
+      "yMm": 750,
+      "rotationDeg": 90
+     }
+    ],
+    "version": 1,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Permacon 2026 Ontario product guide PDF97 drawing, verified against all 22 complete source faces (no missing or extra stone, both extraction methods agreeing, perturbation controls rejected). The repeat as drawn is 3H:2F:1E: 71% H / 24% F / 6% E by area, 50% H / 33% F / 17% E by pieces. The caption printed beside it reads \"71% H + 25% F + 5% E (sums to 101%)\", which does not describe this drawing; the drawn stones are used and the caption is not. Permacon states its laying patterns are shown by way of example. Nominal zero-joint topology of full published stock: no installed joint schedule, spacer detail or pack ratio is established."
+   },
+   "digitization": {
+    "sourceDiagram": "2026 Ontario product guide / PDF 97",
+    "printedCaption": "71% H + 25% F + 5% E (sums to 101%)",
+    "captionConflict": true,
+    "drawnStockCount": {
+     "H": 3,
+     "F": 2,
+     "E": 1
+    },
+    "drawnAreaPct": {
+     "H": 70.59,
+     "F": 23.53,
+     "E": 5.88
+    },
+    "drawnPiecePct": {
+     "H": 50.0,
+     "F": 33.33,
+     "E": 16.67
+    },
+    "sourceFacesMatched": 22,
+    "verifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-b-permacon-boulevard/cand-71H25F5E.png",
+    "periodsPerBasis": [
+     11,
+     6
+    ],
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 6,
+     "stonesPerRepeatRecipe": 6,
+     "notes": "3-size pattern: 2 upright 2x4 + 1 lying 4x2 + 2 squares 2x2 + 1 half 2x1 per repeat (my hand estimate of the lattice, area 34 units). Every stone edge matches row by row, including the cut stones at all borders.",
+     "item": "item-09",
+     "batch": "batch-b-permacon-boulevard",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "physicalStocks": 6,
+    "repeatAreaMm2": 765000
+   }
+  }
+ ]
+}

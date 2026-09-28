@@ -4,7 +4,7 @@ import {dollars,type DeckEstimate} from './designFacts';
 import {isBuilderQuote,priceLedger,quoteLabel,quoteTag,type Ledger,type LedgerLine,type LedgerQuote,type QuoteKind} from './designer/priceLedgerModel';
 import {exteriorSummary} from './houseLooks';
 import {PRICE_BOOK,priceBookLabel} from './priceBook';
-import {eyebrowNumber,investmentSheets,proposalAddress,proposalContact,proposalCoverTitle,proposalFeatures,proposalFinishes,proposalRunningTitle,proposalSummary,PROPOSAL_WORDS,SHEET_EYEBROWS,type FeatureGroupId,type ProposalShot} from './proposalModel';
+import {eyebrowNumber,investmentSheets,underDeckCostSplit,proposalAddress,proposalContact,proposalCoverTitle,proposalFeatures,proposalFinishes,proposalRunningTitle,proposalSummary,PROPOSAL_WORDS,SHEET_EYEBROWS,type FeatureGroupId,type ProposalShot} from './proposalModel';
 import type {DeckData} from './types';
 
 /** The estimate the proposal shows: the engine's whole result (calculateEstimate). */
@@ -63,9 +63,9 @@ function Sheet({label,number,head,contact,children}:{label:string;number:number;
 }
 
 /** The schedule's priced lines, in the engine's order: a quote tag where a line is not priced at all, never $0. */
-const LedgerLines=({lines}:{lines:LedgerLine[]})=><table className="dd-proposal-ledger">
+const LedgerLines=({lines,underDeck}:{lines:LedgerLine[];underDeck:ReturnType<typeof underDeckCostSplit>})=><table className="dd-proposal-ledger">
   <thead><tr><th scope="col">Item</th><th scope="col">Amount (CAD)</th></tr></thead>
-  <tbody>{lines.map(l=><tr key={l.title}><th scope="row">{l.title}</th><td>{l.quotes.length&&l.amount<.005?<Tag kinds={l.quotes}/>:l.text}</td></tr>)}</tbody>
+  <tbody>{lines.map(l=><tr key={l.title}><th scope="row">{l.title}{l.title==='Under-deck options'&&<small className="dd-proposal-included-costs">{underDeck.map(g=><span key={g.label}>{g.label}: {dollars(g.amount)}</span>)}</small>}</th><td>{l.quotes.length&&l.amount<.005?<Tag kinds={l.quotes}/>:l.text}</td></tr>)}</tbody>
 </table>;
 function Totals({ledger}:{ledger:Ledger}){
   const row=(label:string,value:number,className?:string)=><tr className={className}><th scope="row">{label}</th><td>{dollars(value)}</td></tr>;
@@ -87,8 +87,8 @@ const Quotes=({quotes,continued}:{quotes:LedgerQuote[];continued:boolean})=><sec
 
 /**
  * The luxury proposal (R8), in the Golden Maple estimate branding (R9): the same family as the estimate PDF Golden
- * Maple sends its customers (the CRM's ReportLab engine, theme GM_LANDSCAPING). A deep forest cover inside a gold
- * double frame with the GM mark, the spaced gold wordmark and the 3D hero framed under it; bone inner sheets with the
+ * Maple sends its customers (the CRM's ReportLab engine, theme GM_LANDSCAPING). A compact forest masthead with the GM
+ * mark above a generous project introduction and the actual 3D view; warm paper inner sheets with the
  * running head, gold section eyebrows, serif headings, forest-headed tables, gold callouts and the contact footer with
  * its page number. The sheets: the cover, more views, the lighting and features, the manufacturer finishes, the site
  * plan, the investment (itemized from the price schedule, priceLedgerModel.ts, with every selection still to be
@@ -130,12 +130,12 @@ export function ProposalSheet({data,estimate,facts,reviewItems,image,date,shots,
           <h2>{title}</h2>
           <p className="dd-proposal-summary">{proposalSummary(data,estimate.model.quantities.area,backyard)}</p>
           {address&&<p className="dd-proposal-address">{address}</p>}
-          <dl className="dd-proposal-meta">
-            {name&&<div><dt>Prepared for</dt><dd>{name}</dd></div>}
-            <div><dt>Proposal date</dt><dd>{date}</dd></div>
-            <div><dt>Price book</dt><dd>{PRICE_BOOK.version}</dd></div>
-          </dl>
         </div>
+        <dl className="dd-proposal-meta">
+          {name&&<div><dt>Prepared for</dt><dd>{name}</dd></div>}
+          <div><dt>Proposal date</dt><dd>{date}</dd></div>
+          <div><dt>Price book</dt><dd>{PRICE_BOOK.version}</dd></div>
+        </dl>
         <footer className="dd-proposal-cover-foot">
           <p>{contact.name}</p>
           <p>{contact.area} · {contact.phone} · {contact.email} · {contact.site}</p>
@@ -171,7 +171,7 @@ export function ProposalSheet({data,estimate,facts,reviewItems,image,date,shots,
     </>)}
     {invest.map((parts,i)=>sheet(i?'Investment, continued':'Investment',<>
       <Heading number={i?section:next()} eyebrow={SHEET_EYEBROWS.investment} lede={i===0?`${PROPOSAL_WORDS.estimate} · ${priceBookLabel()} · CAD`:undefined}>Investment{i>0&&<small> continued</small>}</Heading>
-      {parts.map((part,k)=>part.kind==='lines'?<LedgerLines key={k} lines={part.lines}/>:part.kind==='totals'?<Totals key={k} ledger={ledger}/>:<Quotes key={k} quotes={part.quotes} continued={part.continued}/>)}
+      {parts.map((part,k)=>part.kind==='lines'?<LedgerLines key={k} lines={part.lines} underDeck={underDeckCostSplit(estimate)}/>:part.kind==='totals'?<Totals key={k} ledger={ledger}/>:<Quotes key={k} quotes={part.quotes} continued={part.continued}/>)}
     </>))}
     {sheet('Next steps',<>
       <Heading number={next()} eyebrow={SHEET_EYEBROWS.next} lede="From this design to your written quote.">Next steps</Heading>
@@ -197,7 +197,7 @@ export function ProposalSheet({data,estimate,facts,reviewItems,image,date,shots,
       <section aria-label="Material and hardware list"><h3>Material and hardware list</h3>
         <p className="dd-proposal-fine">Quantities follow the modelled parts. Items without a confirmed rate are listed for a quote and are not in the estimate.</p>
         <div className="dd-proposal-materials">{materials.map(s=><section key={s.title}><h4>{s.title}</h4><ul>{s.items.map((item,k)=><li key={k}>
-          <span>{item.name}{item.spec&&<small> {item.spec}</small>}</span> <span className="dd-proposal-qty">{item.qty} {item.unit}</span>{item.cost===null&&<> <Tag kinds={[isBuilderQuote(item)?'builder':'supplier']}/></>}
+          <span>{item.name}{item.spec&&<small> {item.spec}</small>}</span> <span className="dd-proposal-qty">{item.qty} {item.unit}</span>{item.cost===null&&!item.quoteResolved&&<> <Tag kinds={[isBuilderQuote(item)?'builder':'supplier']}/></>}
         </li>)}</ul></section>)}</div>
       </section>
       <p className="dd-proposal-fine dd-proposal-endline">{contact.name} · {contact.phone} · {contact.email} · {contact.site} · {contact.area}</p>
