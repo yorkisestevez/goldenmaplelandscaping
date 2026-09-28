@@ -7,20 +7,14 @@ import {expect,test,type Locator,type Page} from '@playwright/test';
  */
 const KNOWN_CONSOLE=[/`selected` on <option>/,/THREE\./,/WebGL|GPU stall|swiftshader|GroupMarkerNotSet/i,/React DevTools/,/Failed to load resource/];
 
-/**
- * The suite never reaches the live trackers. CI builds carry no tracker IDs, but a local build picks up .env.local,
- * and then every run is recorded as real traffic (a sent design can even fire the Lead conversion). Clarity's own
- * script also fails tests: it stops itself on every SPA URL change, and an upload it has in flight at that moment
- * rejects with "Cannot read properties of null (reading 'sequence')", which the page cannot catch because the script
- * is cross-origin. Each tracker script is answered with an empty one, so nothing loads after it.
- */
-const TRACKERS=/^https:\/\/([\w-]+\.)*(googletagmanager\.com|facebook\.net|clarity\.ms)\//;
-/** Google Fonts (the site's Inter and Cormorant, the designer's Archivo and Plex Mono) are answered with an empty
- * stylesheet for the same reason: no test waits on the internet, and text shows in the fallback faces. */
-const FONTS=/^https:\/\/fonts\.(googleapis|gstatic)\.com\//;
+/** Keep every test local, including trackers, fonts, remote media and form destinations. The send workflow
+ * separately intercepts the local form POST and verifies its fields without sending anything. */
 test.beforeEach(async({context})=>{
-  await context.route(TRACKERS,route=>route.fulfill({status:200,contentType:'text/javascript',body:''}));
-  await context.route(FONTS,route=>route.fulfill({status:200,contentType:'text/css',body:''}));
+  await context.route('**/*',route=>{
+    const url=new URL(route.request().url());
+    if(!/^https?:$/.test(url.protocol)||['localhost','127.0.0.1','[::1]'].includes(url.hostname))return route.continue();
+    return route.fulfill({status:200,contentType:route.request().resourceType()==='stylesheet'?'text/css':'text/javascript',body:''});
+  });
 });
 
 /*
@@ -35,12 +29,10 @@ type Section=typeof SECTION_NAMES[number];
 /** The drawing's sheets: the site plan, the 3D view and the framing. */
 type ViewTab='Plan'|'3D'|'Framing';
 
-/** From 1280 px the price schedule has a column of its own; below that the price bar opens it in a drawer. */
-const wide=(page:Page)=>(page.viewportSize()?.width??0)>=1280;
-/** The price schedule: the column beside the drawing, or the drawer once opened from the price bar. */
+/** The full price schedule, opened explicitly from the persistent price bar on every screen size. */
 const schedule=(page:Page)=>page.getByRole('region',{name:'Price schedule',exact:true});
-/** The priced amount, live: the schedule's priced subtotal, or on a narrower screen the price bar's. */
-const price=(page:Page)=>wide(page)?schedule(page).getByRole('status',{name:'Priced subtotal'}):phoneBar(page).locator('strong');
+/** The priced amount stays available while switching between the canvas and focused inspectors. */
+const price=(page:Page)=>phoneBar(page).getByRole('status',{name:'Priced subtotal'});
 /** One line of the schedule, by its engine title ("Railing System"). */
 const scheduleLine=(page:Page,title:string)=>schedule(page).getByRole('row').filter({has:page.getByRole('rowheader',{name:title,exact:true})});
 /** The selections still to be quoted, each with a supplier or builder tag; one of them by its name. */
@@ -56,11 +48,11 @@ const ZERO=/\$0(?![\d.,])/;
 /** Whole dollars in a figure ("$24,388" → 24388, "−$380" → −380). */
 const wholeDollars=(text:string|null)=>(/^\s*[−-]/.test(text??'')?-1:1)*Number((text??'').replace(/[^\d]/g,''));
 /** A decking collection's button in Boards & finish, by the collection's name; its price effect is its description. */
-const collection=(page:Page,name:string)=>sectionBody(page,'Boards & finish').getByRole('button',{name:`${name} material sample`});
+const collection=(page:Page,name:string)=>sectionBody(page,'Boards & finish').getByRole('button',{name:`${name} material sample`,includeHidden:true});
 /** The text a control is described by (its aria-describedby): an option's or a select's price effect. */
 const describedBy=(control:Locator)=>control.evaluate(el=>(el.getAttribute('aria-describedby')??'').split(/\s+/).map(id=>document.getElementById(id)?.textContent??'').join(' ').trim());
 /** The drawing's heading, which names the sheet and the deck's size ("Site plan · 16 × 12 ft deck"). */
-const size=(page:Page)=>preview(page).getByRole('heading',{level:2});
+const size=(page:Page)=>preview(page).getByRole('heading',{level:2,includeHidden:true});
 /** The design summary in the estimate. */
 const summary=(page:Page)=>page.locator('.dd-summary');
 /** The drawing panel; the drawing area in it; the plan on screen (the site plan, or the Framing sheet's plan); the 3D canvas. */
@@ -74,7 +66,7 @@ const ghost=(page:Page)=>drawing(page).locator('.dd-plan-ghost');
 const shortcuts=(page:Page)=>page.getByRole('group',{name:'Shape shortcuts'});
 const planStatus=(page:Page)=>preview(page).locator('.dd-plan-status');
 /** The plan's tools (R5): Size & place, Draw outline, Stairs and House, one at a time. Picks one. */
-async function planTool(page:Page,name:'Size & place'|'Draw outline'|'Stairs'|'House'){
+async function planTool(page:Page,name:'Size & place'|'Shape & points'|'Stairs'|'House'){
   const tool=page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true});
   await tool.click();
   await expect(tool).toHaveAttribute('aria-checked','true');
@@ -83,6 +75,22 @@ async function planTool(page:Page,name:'Size & place'|'Draw outline'|'Stairs'|'H
 const stairMark=(page:Page,edge:string)=>drawing(page).getByRole('button',{name:`Put the stairs on the ${edge}`,exact:true});
 /** Every request for the 3D viewer's chunk (three.js), from now on. */
 const viewerRequests=(page:Page)=>{const urls:string[]=[];page.on('request',r=>{if(/Deck3DViewer-/.test(r.url()))urls.push(r.url());});return urls;};
+/** Scrolls a control to the middle of the screen, clear of the sticky header and price bar, and lets layout settle.
+ * Pointer input by coordinates does not scroll by itself, and the price bar covers the foot of the drawing. */
+const scrollToCentre=(control:Locator)=>control.evaluate(el=>{el.scrollIntoView({block:'center'});return new Promise<void>(done=>requestAnimationFrame(()=>requestAnimationFrame(()=>done())));});
+/** The Inlays panel in Boards & finish. The plan's inlay controls repeat the selected inlay's card, so this is scoped. */
+const inlayPanel=(page:Page)=>sectionBody(page,'Boards & finish').getByRole('region',{name:'Inlays'});
+/** Add only arms an inlay; it is placed where the visitor taps the deck. Taps a plan point, in inches from the default
+ * 16 × 12 ft deck's corner at the house (by default its middle, where Add used to put an inlay), and waits for the
+ * placement to finish. */
+async function placeInlay(page:Page,point={x:96,y:72}){
+  const surface=page.getByLabel('Inlay placement surface',{exact:true});
+  await scrollToCentre(surface);
+  const at=await surface.evaluate((el,p)=>{const q=new DOMPoint(p.x,p.y).matrixTransform((el as SVGSVGElement).getScreenCTM()!);return {x:q.x,y:q.y,onSurface:document.elementFromPoint(q.x,q.y)===el};},point);
+  expect(at.onSurface,'the tap lands on the plan, clear of the price bar and other controls').toBe(true);
+  await page.mouse.click(at.x,at.y);
+  await expect(surface).toHaveCount(0);
+}
 /** The accent-board paint tool's chip over the drawing. */
 const paintChip=(page:Page)=>page.locator('.dd-paint-chip');
 /** The save, import, share, undo, redo and start-over tools. */
@@ -93,7 +101,7 @@ const openingCount=async(page:Page)=>Number(/(\d+) of/.exec((await openingsBar(p
 /** The header's "Send my design" button, and the send dialog (named by a heading that changes once sent). */
 const sendButton=(page:Page)=>page.locator('.dd-send-top');
 const sendDialog=(page:Page)=>page.locator('[role=dialog].dd-send-panel');
-/** Phones: the bar that keeps the price on screen. */
+/** The workspace bar that keeps the price available on all screen sizes. */
 const phoneBar=(page:Page)=>page.getByRole('region',{name:'Live price'});
 /** Parts of sections that tests read. */
 const backyardSubtotal=(page:Page)=>page.locator('.dd-backyard-subtotal');
@@ -124,6 +132,15 @@ async function expand(scope:Page|Locator,summaryText:string){
   const summaryEl=scope.locator('summary',{hasText:summaryText});
   if(!await summaryEl.evaluate(el=>(el.parentElement as HTMLDetailsElement).open))await summaryEl.click();
 }
+async function openFiles(page:Page){await expand(fileTools(page),'Files');}
+async function closeFiles(page:Page){const details=fileTools(page).locator('details.dd-workspace-files');if(await details.evaluate(el=>(el as HTMLDetailsElement).open))await details.locator('summary').first().click();}
+async function showCanvas(page:Page){if(!await preview(page).isVisible())await sectionList(page).getByRole('button',{name:'Show canvas',exact:true}).click();await expect(preview(page)).toBeVisible();}
+async function showOpenings(page:Page){await showCanvas(page);await expand(preview(page),'Doors & windows');}
+async function withSchedule<T>(page:Page,read:()=>Promise<T>):Promise<T>{
+  const dialog=page.getByRole('dialog',{name:'Price schedule'}),wasOpen=await dialog.isVisible();
+  if(!wasOpen){await phoneBar(page).getByRole('button',{name:'Price schedule',exact:true}).click();await expect(dialog).toBeVisible();}
+  try{return await read();}finally{if(!wasOpen&&await dialog.isVisible())await dialog.getByRole('button',{name:'Close',exact:true}).click();}
+}
 /** The section rows; a section's row button (named by the section alone); its body, once open. */
 const sectionList=(page:Page)=>page.getByRole('region',{name:'Deck configuration'});
 const sectionButton=(page:Page,name:Section)=>sectionList(page).getByRole('button',{name,exact:true});
@@ -144,6 +161,7 @@ async function sectionReady(page:Page,name:Section){
 }
 /** Shows one of the drawing's sheets: the site plan, the 3D view or the framing. */
 async function viewTab(page:Page,name:ViewTab){
+  await showCanvas(page);
   await page.getByRole('tab',{name,exact:true}).click();
   await expect(page.getByRole('tab',{name,exact:true})).toHaveAttribute('aria-selected','true');
 }
@@ -164,6 +182,7 @@ async function contractorFiles(page:Page){
 }
 /** The exterior studio, opened from the doors and windows bar. */
 async function openExterior(page:Page){
+  await showOpenings(page);
   const button=openingsBar(page).getByRole('button',{name:'Exterior finishes',exact:true});
   if(await button.getAttribute('aria-expanded')!=='true')await button.click();
   return page.getByRole('region',{name:'Exterior finishes'});
@@ -176,10 +195,13 @@ async function openDesigner(page:Page){
   await page.goto('/deck-designer/');
   await expect(page.getByRole('heading',{level:1})).toContainText(TITLE);
   await expect(price(page)).toContainText('$');
+  // Existing sizing workflows explicitly select their tool; boundary.spec verifies the new default.
+  await planTool(page,'Size & place');
+  await expand(preview(page),'Start with a shape');
   return problems;
 }
-async function setNumber(page:Page,label:string,value:number){
-  const input=page.getByLabel(label,{exact:true});
+async function setNumber(scope:Page|Locator,label:string,value:number){
+  const input=scope.getByLabel(label,{exact:true});
   await input.fill(String(value));await input.press('Enter');
 }
 
@@ -195,13 +217,14 @@ test('reaches every feature of the designer',async({page})=>{
     for(const name of ['Deck depth, front edge','Deck width, right end','Deck width, left end','Deck position along the house'])await reach(`Plan handle: ${name}`,planHandle(page,name));
     await reach('Typing the width on the plan',drawing(page).getByRole('button',{name:'Deck width 16 ft: type a new width'}));
     for(const name of ['Rectangle','L-shape','Multi-corner','Curved','Wrap left','Wrap right','Wrap both','Split level','Draw my own'])await reach(`Shape shortcut: ${name}`,shortcuts(page).getByRole('button',{name,exact:true}));
-    for(const name of ['Size & place','Draw outline','Stairs','House'])await reach(`Plan tool: ${name}`,page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true}));
+    for(const name of ['Shape & points','Size & place','Stairs','House'])await reach(`Plan tool: ${name}`,page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true}));
     await planTool(page,'Stairs');
     await reach('Stairs on the plan',planHandle(page,'Stairs, position along the edge'));
     await planTool(page,'House');
     await reach('House size on the plan',planHandle(page,'House width, right wall'));
-    await planTool(page,'Draw outline');
-    await reach('Outline shapes on the plan',page.getByRole('group',{name:'Outline shapes'}).getByRole('button',{name:'T, centre bump-out'}));
+    await planTool(page,'Shape & points');
+    await reach('Add a boundary point',page.getByRole('button',{name:'Add point',exact:true}));
+    await reach('Move any corner',page.getByRole('button',{name:'Main deck point 3',exact:true}));
     await planTool(page,'Size & place');
   });
   await test.step('House editor',async()=>{
@@ -210,6 +233,7 @@ test('reaches every feature of the designer',async({page})=>{
     await reach('House shape',page.getByRole('button',{name:'Add bump-out',exact:true}));
   });
   await test.step('Doors & windows bar',async()=>{
+    await showOpenings(page);
     await reach('Doors & windows bar',openingsBar(page).getByLabel('Style of the new door or window'));
     await reach('Adding a door or window',openingsBar(page).getByRole('button',{name:'Add',exact:true}));
   });
@@ -238,7 +262,7 @@ test('reaches every feature of the designer',async({page})=>{
     const accents=page.getByRole('region',{name:'Accent boards'});
     await accents.getByRole('button',{name:'Paint with Dark Cocoa (TimberTech EDGE Prime+)'}).click();
     await reach('Accent paint tool',paintChip(page));
-    await paintChip(page).getByRole('button',{name:'Done'}).click();
+    await showCanvas(page);await paintChip(page).getByRole('button',{name:'Done'}).click();
     await expect(paintChip(page)).toHaveCount(0);
     const inlays=page.getByRole('region',{name:'Inlays'});
     for(const kind of ['Add a framed rectangle','Add a diamond','Add a band','Add a medallion'])await reach(`Inlays: ${kind}`,inlays.getByRole('button',{name:kind,exact:true}));
@@ -295,15 +319,15 @@ test('reaches every feature of the designer',async({page})=>{
   await test.step('Send my design',async()=>{
     await reach('Send from the header',sendButton(page));
     await reach('Send from the proposal',page.getByRole('region',{name:'Send your design to Golden Maple'}).getByRole('button',{name:'Send my design'}));
-    // The phone bar is hidden on a desktop screen; it is there for phones.
-    await expect(page.getByRole('region',{name:'Live price',includeHidden:true}).getByRole('button',{name:'Send',exact:true,includeHidden:true}),'Send from the phone bar is on the page').toBeAttached();
+    await reach('Full price schedule from the persistent price bar',phoneBar(page).getByRole('button',{name:'Price schedule',exact:true}));
   });
   await test.step('Save, import, share, undo, redo and start over',async()=>{
-    const tools=fileTools(page);
+    const tools=fileTools(page);await openFiles(page);
     for(const name of ['Undo','Redo','Save JSON','Import design','Share link'])await reach(name,tools.getByRole('button',{name,exact:true}));
     await expect(tools.getByLabel('Import Golden Maple design JSON'),'The design file picker is on the page').toBeAttached();
     await expand(tools,'Start over');
     await reach('Start over',tools.getByRole('button',{name:'Start a new design'}));
+    await closeFiles(page);
   });
   await test.step('Framing sheet: the 2D framing plan, the 3D contractor views and the quantities',async()=>{
     const view=await contractorView(page);
@@ -314,7 +338,7 @@ test('reaches every feature of the designer',async({page})=>{
     await reach('The plan drawing',plan(page));
   });
   await test.step('Share link, and going back to your own design',async()=>{
-    const tools=fileTools(page);
+    const tools=fileTools(page);await openFiles(page);
     await tools.getByRole('button',{name:'Share link',exact:true}).click();
     const link=await tools.getByLabel('Link to this design').inputValue();
     // The visitor's own design is kept only when it differs from the shared one.
@@ -322,43 +346,31 @@ test('reaches every feature of the designer',async({page})=>{
     await setNumber(page,'Deck width',24);
     await expect(size(page)).toContainText('24 × 12 ft');
     await page.waitForTimeout(800);// autosave runs 450 ms after the last change
-    await page.goto(link);
+    await page.goto(link);await openFiles(page);
     await reach('Go back to my own design',tools.getByRole('button',{name:'Go back to my own design'}));
   });
   expect(problems).toEqual([]);
 });
 
-test('opens sections in any order, keeps several open on a wide screen, and has no numbered steps',async({page})=>{
+test('opens tasks in any order, keeps one focused inspector, preserves choices and supports keyboard navigation',async({page})=>{
   const problems=await openDesigner(page);
-  // Every section starts closed; there is no "1 of 6", Back or Continue. The only "N of M" is the drawing's sheet number.
-  for(const name of SECTION_NAMES)await expect(sectionButton(page,name)).toHaveAttribute('aria-expanded','false');
-  await expect(page.getByText(/^\d of \d$/)).toHaveCount(1);
-  await expect(page.getByLabel('Drawing title block').getByText(/^\d of 3$/)).toHaveCount(1);
   await expect(page.getByRole('button',{name:/^(← )?Back$|^Continue|^Review my estimate/})).toHaveCount(0);
-  // Stairs before the deck.
+  await expand(preview(page),'Drawing details & construction notes');
+  await expect(page.getByLabel('Drawing title block').getByText(/^\d of 3$/)).toHaveCount(1);
   const before=await price(page).textContent();
-  await openSection(page,'Stairs & railings');
-  await page.getByLabel('Number of stair flights',{exact:true}).selectOption('2');
+  await openSection(page,'Stairs & railings');await page.getByLabel('Number of stair flights',{exact:true}).selectOption('2');
   await expect(price(page)).not.toHaveText(before??'');
-  await expect(sectionButton(page,'Stairs & railings')).toHaveAccessibleDescription(/^2 flights, 48 in, straight · Aluminum railing \$[\d,]+ Changed from the default design$/);
-  await openSection(page,'Deck shape & size');
-  await setNumber(page,'Deck width',20);
-  await expect(size(page)).toContainText('20 × 12 ft');
-  await expect(sectionButton(page,'Stairs & railings')).toHaveAttribute('aria-expanded','true');
-  await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveValue('2');
-  // The link at the end of a section opens its related section.
+  await openSection(page,'Deck shape & size');await setNumber(page,'Deck width',20);await expect(size(page)).toContainText('20 × 12 ft');
+  await expect(sectionButton(page,'Stairs & railings')).toHaveAttribute('aria-expanded','false');
+  await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveCount(0);
+  await openSection(page,'Stairs & railings');await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveValue('2');
   await sectionBody(page,'Stairs & railings').getByRole('button',{name:'Light the steps and posts: open Lighting'}).click();
   await expect(sectionButton(page,'Lighting')).toHaveAttribute('aria-expanded','true');
   await expect(page.getByRole('group',{name:'Deck lighting',exact:true})).toBeVisible();
-  // A closed section's body goes; the design keeps its choices.
-  await sectionButton(page,'Stairs & railings').click();
-  await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveCount(0);
-  await openSection(page,'Stairs & railings');
-  await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveValue('2');
-  // A section opened from the keyboard takes focus to its first field.
-  await sectionButton(page,'Site & foundation').focus();
-  await page.keyboard.press('Enter');
-  await expect(page.getByLabel('Project area',{exact:true})).toBeFocused();
+  await openSection(page,'Stairs & railings');await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveValue('2');
+  await sectionButton(page,'Site & foundation').focus();await page.keyboard.press('Enter');
+  await expect(sectionBody(page,'Site & foundation')).toBeFocused();
+  await expect(page.getByLabel('Project area',{exact:true})).toBeVisible();
   expect(problems).toEqual([]);
 });
 
@@ -411,8 +423,9 @@ test('@phone keeps every control at least 44 px tall at 375 px',async({page})=>{
   // and its link back to the look for a wall with a finish of its own.
   await openSection(page,'Boards & finish');
   await page.getByRole('region',{name:'Accent boards'}).getByRole('button',{name:'Paint with Dark Cocoa (TimberTech EDGE Prime+)'}).click();
+  await showCanvas(page);
   expect(await underTouchSize(paintChip(page)),'The paint tool').toEqual([]);
-  await paintChip(page).getByRole('button',{name:'Done'}).click();
+  await showCanvas(page);await paintChip(page).getByRole('button',{name:'Done'}).click();
   const studio=await openExterior(page);
   expect(await underTouchSize(studio),'Exterior finishes: walls').toEqual([]);
   await studio.getByLabel('Walls to finish',{exact:true}).selectOption({label:'House, deck-facing wall'});
@@ -461,8 +474,8 @@ test('adds a patio in the backyard step, priced as its own subtotal',async({page
   await expect(backyardSubtotal(page)).toContainText('Backyard subtotal: $');
   await expect(price(page)).not.toHaveText(before??'');
   await openSection(page,'Proposal & files');
-  await expect(schedule(page)).toContainText('Deck subtotal');
-  await expect(schedule(page)).toContainText('Backyard subtotal');
+  await withSchedule(page,async()=>{ await expect(schedule(page)).toContainText('Deck subtotal'); });
+  await withSchedule(page,async()=>{ await expect(schedule(page)).toContainText('Backyard subtotal'); });
   await expect(summary(page)).toContainText('Backyard: a ');
   expect(problems).toEqual([]);
 });
@@ -479,7 +492,7 @@ test('adds a fire pit and turf as labelled estimator allowances, and takes them 
   await expect(backyardSubtotal(page)).toContainText('Backyard subtotal: $');
   await expect(price(page)).not.toHaveText(before??'');
   await openSection(page,'Proposal & files');
-  await expect(schedule(page)).toContainText('Fire pit, wood-burning (estimator allowance)');
+  await withSchedule(page,async()=>{ await expect(schedule(page)).toContainText('Fire pit, wood-burning (estimator allowance)'); });
   await expect(summary(page)).toContainText('Backyard: allowances for a wood-burning fire pit and 500 sq ft of artificial turf (Elevated finish)');
   await openSection(page,'Backyard');
   await page.getByLabel('Fire pit',{exact:true}).selectOption('none');
@@ -496,6 +509,7 @@ test('a deck link to the cost estimator opens the designer at that size',async({
   await page.goto('/cost-estimator?type=deck&sqft=300');
   await expect(page).toHaveURL(/\/deck-designer\/?$/);
   await expect(size(page)).toContainText('20 × 15 ft');
+  await openFiles(page);
   await expect(page.getByText(/Started from your cost estimate: a deck of about 300 sq ft \(20 × 15 ft\)/)).toBeVisible();
   expect(problems).toEqual([]);
 });
@@ -575,7 +589,7 @@ test('paints a row of accent boards, lists and keeps it, and prices the fitting 
   await panel.getByRole('button',{name:'Paint this row'}).click();
   await expect(panel.getByRole('listitem')).toHaveText(/Row 6 from the house · Dark Cocoa \(TimberTech EDGE Prime\+\)/);
   await expect(price(page)).not.toHaveText(before??'');
-  await expect(quoteLine(page,'Accent-colour board labour')).toHaveText('Builder quote Accent-colour board labour');
+  await withSchedule(page,async()=>{ await expect(quoteLine(page,'Accent-colour board labour')).toHaveText('Builder quote Accent-colour board labour'); });
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
   await page.reload();
   await openSection(page,'Boards & finish');
@@ -600,7 +614,7 @@ test('paints a single board by clicking it in the 3D view',async({page})=>{
   await canvas.click({position:{x:box.width*.5,y:box.height*.4}});
   await expect(panel.getByRole('heading',{name:/Your accent boards · 1 board$/})).toBeVisible();
   await expect(panel.getByRole('listitem')).toHaveText(/One board in row \d+ from the house · Sea Salt Gray/);
-  await paintChip(page).getByRole('button',{name:'Done'}).click();
+  await showCanvas(page);await paintChip(page).getByRole('button',{name:'Done'}).click();
   await expect(paintChip(page)).toHaveCount(0);
   expect(problems).toEqual([]);
 });
@@ -609,12 +623,18 @@ test('adds a framed inlay, fits it to the deck, and shows it and its framing on 
   const problems=await openDesigner(page);
   const before=await price(page).textContent();
   await openSection(page,'Boards & finish');
-  const inlays=page.getByRole('region',{name:'Inlays'});
+  const inlays=inlayPanel(page);
   await inlays.getByRole('button',{name:'Add a framed rectangle'}).click();
+  // Add changes nothing until the inlay is placed on the deck.
+  await expect(page.getByText('Choose a position on the deck',{exact:true})).toBeVisible();
+  await expect(price(page)).toHaveText(before??'');
+  await placeInlay(page);
   await expect(inlays.getByRole('status')).toContainText('Built:');
   await expect(price(page)).not.toHaveText(before??'');
-  await setNumber(page,'Inlay 1 width',30);
-  await expect(page.getByLabel('Inlay 1 width',{exact:true})).toHaveValue('20');
+  // The preset's inside runs front to back; the summary names the inside the visitor picks.
+  await inlays.getByLabel('Inlay 1 inside boards',{exact:true}).selectOption('Herringbone');
+  await setNumber(inlays,'Inlay 1 width',30);
+  await expect(inlays.getByLabel('Inlay 1 width',{exact:true})).toHaveValue('20');
   await expect(inlays.getByRole('status')).toContainText('Not built: It reaches past the deck’s field');
   await inlays.getByRole('button',{name:'Fit to deck'}).click();
   await expect(inlays.getByRole('status')).toContainText('Built:');
@@ -633,21 +653,26 @@ test('adds a band and a compass medallion, and lists the medallion labour for a 
   const problems=await openDesigner(page);
   const before=await price(page).textContent();
   await openSection(page,'Boards & finish');
-  const inlays=page.getByRole('region',{name:'Inlays'});
+  const inlays=inlayPanel(page);
   await inlays.getByRole('button',{name:'Add a band'}).click();
+  await placeInlay(page);
   await expect(inlays.getByRole('status').first()).toContainText('cut in like a breaker board');
   await expect(price(page)).not.toHaveText(before??'');
   // Across a straight deck, a band is its rows in another colour: nothing is cut.
-  await page.getByLabel('Inlay 1 runs',{exact:true}).selectOption('across');
+  await inlays.getByLabel('Inlay 1 runs',{exact:true}).selectOption('across');
   await expect(inlays.getByRole('status').first()).toContainText('with no cutting');
+  // The band fills the middle of the 12 ft deep deck, so the medallion is made smaller while it waits to be placed,
+  // then tapped in 3 ft toward the house, clear of the band.
   await inlays.getByRole('button',{name:'Add a medallion'}).click();
+  await setNumber(page.getByLabel('Inlay plan controls',{exact:true}),'Inlay 2 size',4);
+  await placeInlay(page,{x:96,y:36});
   await expect(inlays.getByRole('status').nth(1)).toContainText('on solid blocking');
   await expect(await framingPlan(page)).toContainText('Inlay 2');
   await openSection(page,'Proposal & files');
-  await expect(summary(page)).toContainText(/Inlays: a band one board wide across the deck; a [\d.]+ ft compass medallion in eight wedges/);
+  await expect(summary(page)).toContainText(/Inlays: a band two boards wide across the deck; a 4 ft compass medallion in eight wedges/);
   // The breakdown shows the labour as needing a quote; the list of quotes names the medallion's.
-  await expect(scheduleLine(page,'Labour (Construction & Build)')).toHaveText(/^Labour \(Construction & Build\)\$[\d,]+ \+ quote$/);
-  await expect(quoteLine(page,'Medallion inlay labour')).toHaveText('Builder quote Medallion inlay labour');
+  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Labour (Construction & Build)')).toHaveText(/^Labour \(Construction & Build\)\$[\d,]+ \+ quote$/); });
+  await withSchedule(page,async()=>{ await expect(quoteLine(page,'Medallion inlay labour')).toHaveText('Builder quote Medallion inlay labour'); });
   expect(problems).toEqual([]);
 });
 
@@ -660,7 +685,7 @@ test('adds skirting under the deck, lists it for a builder quote, and keeps it a
   await expect(skirting.getByRole('status')).toContainText('Listed for a builder quote');
   // The three open sides are offered; the side against the house never is.
   await expect(skirting.getByRole('group',{name:'Sides to skirt'}).getByRole('checkbox')).toHaveCount(3);
-  await expect(quoteLine(page,'Deck skirting')).toHaveText('Builder quote Deck skirting');
+  await withSchedule(page,async()=>{ await expect(quoteLine(page,'Deck skirting')).toHaveText('Builder quote Deck skirting'); });
   // A quote, never a price: the priced amount does not move.
   await expect(price(page)).toHaveText(before??'');
   await page.getByLabel('Skirting style',{exact:true}).selectOption('Lattice');
@@ -671,7 +696,7 @@ test('adds skirting under the deck, lists it for a builder quote, and keeps it a
   await expect(page.getByLabel('Skirting style',{exact:true})).toHaveValue('Lattice');
   await openSection(page,'Proposal & files');
   // The face is a supplier product; the backing, panels and labour are the builder's.
-  await expect(scheduleLine(page,'Deck skirting')).toHaveText('Deck skirtingSupplier & builder quotes');
+  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Deck skirting')).toHaveText('Deck skirtingSupplier & builder quotes'); });
   await expect(fullList(page)).toContainText('Skirting labour');
   await expect(summary(page)).toContainText(/Skirting: lattice in /);
   expect(problems).toEqual([]);
@@ -687,7 +712,7 @@ test('gives the border and stair treads their own colours, quotes a tread line w
   // Treads from a line without a price make the stairs a supplier quote.
   await parts.getByLabel('Stair tread colour',{exact:true}).selectOption('tt_terrain_plus:Dark Oak');
   await expect(partSwatches(page)).toHaveText(['Espresso · TimberTech PRO Legacy','Dark Oak · TimberTech Composite Terrain+ · supplier quote']);
-  await expect(quoteLine(page,'Stair treads and risers in TimberTech Composite Terrain+')).toHaveText('Supplier quote Stair treads and risers in TimberTech Composite Terrain+');
+  await withSchedule(page,async()=>{ await expect(quoteLine(page,'Stair treads and risers in TimberTech Composite Terrain+')).toHaveText('Supplier quote Stair treads and risers in TimberTech Composite Terrain+'); });
   await openSection(page,'Stairs & railings');
   await page.getByLabel('Manufacturer railing system',{exact:true}).selectOption('tt_classic_composite');
   await page.getByLabel('Railing colour',{exact:true}).selectOption('Matte Black');
@@ -700,8 +725,8 @@ test('gives the border and stair treads their own colours, quotes a tread line w
   await openSection(page,'Stairs & railings');
   await expect(page.getByLabel('Railing colour',{exact:true})).toHaveValue('Matte Black');
   await openSection(page,'Proposal & files');
-  await expect(scheduleLine(page,'Stairs')).toHaveText('StairsSupplier quote');
-  await expect(schedule(page)).toContainText('Deck-part finishes');
+  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Stairs')).toHaveText('StairsSupplier quote'); });
+  await withSchedule(page,async()=>{ await expect(schedule(page)).toContainText('Deck-part finishes'); });
   await expect(summary(page)).toContainText('Deck parts: border boards in Espresso (TimberTech PRO Legacy); stair treads in Dark Oak (TimberTech Composite Terrain+)');
   await expect(summary(page)).toContainText('Railing colour: Matte Black (TimberTech Classic Composite · balusters); screen colour illustrative');
   expect(problems).toEqual([]);
@@ -709,40 +734,62 @@ test('gives the border and stair treads their own colours, quotes a tread line w
 
 test('lists what each change does to the price, tags quotes and never shows $0 for one',async({page})=>{
   const problems=await openDesigner(page);
-  await expect(schedule(page)).toContainText('Golden Maple price book');
-  await expect(changes(page)).toHaveCount(0);
+  await withSchedule(page,async()=>{ await expect(schedule(page)).toContainText('Golden Maple price book'); });
+  await withSchedule(page,async()=>{ await expect(changes(page)).toHaveCount(0); });
   await openSection(page,'Stairs & railings');
   // A downgrade and a priced upgrade.
   await page.getByLabel('Number of stair flights',{exact:true}).selectOption('0');
-  await expect(changes(page).first()).toHaveText(/^\u2212\$[\d,]+ Stair flights → 0 \(\d+ fewer to quote\)$/);
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\u2212\$[\d,]+ Stair flights → 0 \(\d+ fewer to quote\)$/); });
   await page.getByLabel('Railing style',{exact:true}).selectOption('Glass Panels');
-  await expect(changes(page).first()).toHaveText(/^\+\$[\d,]+ Railing style → Glass Panels$/);
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\+\$[\d,]+ Railing style → Glass Panels$/); });
   await expect(announcement(page)).toHaveText(/^Railing style: Glass Panels\. \+\$[\d,]+\. Priced subtotal \$[\d,]+\.$/);
-  await expect(changes(page)).toHaveCount(2);
+  await withSchedule(page,async()=>{ await expect(changes(page)).toHaveCount(2); });
   // A choice that turns a priced section into a quote says so, with what left the priced total.
   const before=await price(page).textContent();
   await page.getByLabel('Manufacturer railing system',{exact:true}).selectOption('tt_classic_composite');
-  await expect(changes(page).first()).toHaveText(/^Now a supplier quote Manufacturer railing → TimberTech Classic Composite · balusters \(priced total \u2212\$[\d,]+\)$/);
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^Now a supplier quote Manufacturer railing → TimberTech Classic Composite · balusters \(priced total \u2212\$[\d,]+\)$/); });
   await expect(price(page)).not.toHaveText(before??'');
-  await expect(scheduleLine(page,'Railing System')).toHaveText('Railing SystemSupplier quote');
-  await expect(quoteLine(page,'TimberTech Classic Composite · balusters')).toHaveText('Supplier quote TimberTech Classic Composite · balusters');
+  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Railing System')).toHaveText('Railing SystemSupplier quote'); });
+  await withSchedule(page,async()=>{ await expect(quoteLine(page,'TimberTech Classic Composite · balusters')).toHaveText('Supplier quote TimberTech Classic Composite · balusters'); });
   // A builder quote beside it; nothing unpriced reads $0, and the total says it is the priced portion.
   await openSection(page,'Privacy, skirting & extras');
   await page.getByRole('region',{name:'Skirting under the deck'}).getByRole('checkbox',{name:'Add skirting under the deck'}).check();
-  await expect(quoteLine(page,'Deck skirting')).toHaveText('Builder quote Deck skirting');
-  await expect(changes(page).first()).toHaveText(/^Now a builder quote Skirting$/);
-  expect(await schedule(page).textContent()).not.toMatch(ZERO);
-  await expect(schedule(page)).toContainText('Priced portion including HST');
+  await withSchedule(page,async()=>{ await expect(quoteLine(page,'Deck skirting')).toHaveText('Builder quote Deck skirting'); });
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^Now a builder quote Skirting$/); });
+  await withSchedule(page,async()=>{ expect(await schedule(page).textContent()).not.toMatch(ZERO); });
+  await withSchedule(page,async()=>{ await expect(schedule(page)).toContainText('Priced portion including HST'); });
   // Undo shows what it gave back; a new design clears the list.
   await fileTools(page).getByRole('button',{name:'Undo'}).click();
-  await expect(changes(page).first()).toHaveText('No price change Undo (1 fewer to quote)');
-  await expand(fileTools(page),'Start over');
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText('No price change Undo (1 fewer to quote)'); });
+  await openFiles(page);await expand(fileTools(page),'Start over');
   await fileTools(page).getByRole('button',{name:'Start a new design'}).click();
-  await expect(changes(page)).toHaveText(['New design loaded']);
+  await withSchedule(page,async()=>{ await expect(changes(page)).toHaveText(['New design loaded']); });
   // The full price list in Proposal & files lists every item, the unpriced ones tagged.
-  await schedule(page).getByRole('button',{name:'Full price list'}).click();
+  await withSchedule(page,async()=>{ await schedule(page).getByRole('button',{name:'Full price list'}).click(); });
   await expect(fullList(page)).toContainText('Installation Labour');
   expect(await fullList(page).textContent()).not.toMatch(ZERO);
+  expect(problems).toEqual([]);
+});
+
+test('joins deck levels as built: the step stands on the lower level and the cladding is a builder quote',async({page})=>{
+  test.setTimeout(150_000);
+  const shaderProblems:string[]=[];
+  page.on('console',m=>{if(/Shader Error|WebGLProgram/.test(m.text()))shaderProblems.push(m.text().slice(0,300));});
+  const problems=await openDesigner(page);
+  // Every stair's sides are boarded: a builder quote beside the stairs, never $0.
+  await withSchedule(page,async()=>{ await expect(quoteLine(page,'Stair and level cladding')).toHaveText('Builder quote Stair and level cladding'); });
+  await openSection(page,'Deck shape & size');
+  await page.getByLabel('Number of levels',{exact:true}).selectOption('2');
+  // A second level adds its price (the levels meet, so no guard runs along the lower edge of the join).
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\+\$[\d,]+ Number of levels → 2/); });
+  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Stair and level cladding')).toHaveText(/^Stair and level cladding\$[\d,]+ \+ quote$/); });
+  await withSchedule(page,async()=>{ expect(await schedule(page).textContent()).not.toMatch(ZERO); });
+  await viewTab(page,'3D');
+  const canvas=viewer3d(page);
+  await canvas.scrollIntoViewIfNeeded();
+  await expect(canvas).toBeVisible({timeout:20000});
+  await page.waitForTimeout(3000);
+  expect(shaderProblems).toEqual([]);
   expect(problems).toEqual([]);
 });
 
@@ -756,16 +803,16 @@ test('offers a frameless glass railing in three mounts, as a supplier quote with
   await page.getByLabel('Railing style',{exact:true}).selectOption('Frameless Glass');
   // The railing materials leave the priced total and become a quote; the change says so. Its labour is the Glass Panels
   // basis (20 ft a crew-day and ×1.40 on the job), so from aluminum the priced total can go up.
-  await expect(changes(page).first()).toHaveText(/^Now a supplier quote Railing style → Frameless Glass \(priced total [+−]\$[\d,]+\)$/);
-  await expect(scheduleLine(page,'Railing System')).toHaveText('Railing SystemSupplier quote');
-  await expect(quoteLine(page,'Frameless glass railing on a top-mount base shoe')).toHaveText('Supplier quote Frameless glass railing on a top-mount base shoe');
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^Now a supplier quote Railing style → Frameless Glass \(priced total [+−]\$[\d,]+\)$/); });
+  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Railing System')).toHaveText('Railing SystemSupplier quote'); });
+  await withSchedule(page,async()=>{ await expect(quoteLine(page,'Frameless glass railing on a top-mount base shoe')).toHaveText('Supplier quote Frameless glass railing on a top-mount base shoe'); });
   await expect(page.getByLabel('Glass railing mount',{exact:true})).toHaveValue('Top-mount base shoe');
   await expect(plan(page).locator('g[aria-label="Frameless glass railing · Top-mount base shoe"]')).toHaveCount(1);
   await page.getByLabel('Glass railing mount',{exact:true}).selectOption('Spigots');
   await page.getByLabel('Glass hardware finish',{exact:true}).selectOption('Silver');
-  await expect(quoteLine(page,'Frameless glass railing on spigots')).toHaveCount(1);
+  await withSchedule(page,async()=>{ await expect(quoteLine(page,'Frameless glass railing on spigots')).toHaveCount(1); });
   await expect(plan(page).locator('g[aria-label="Frameless glass railing · Spigots"] circle').first()).toBeAttached();
-  expect(await schedule(page).textContent()).not.toMatch(ZERO);
+  await withSchedule(page,async()=>{ expect(await schedule(page).textContent()).not.toMatch(ZERO); });
   // No posts, so no post-cap lights.
   await openSection(page,'Lighting');
   const cap=page.getByRole('checkbox',{name:/^Cap light on each railing post/});
@@ -790,7 +837,7 @@ test('offers a frameless glass railing in three mounts, as a supplier quote with
 
 test('shows the price effect beside each option, and picking one moves the priced subtotal by exactly that much',async({page})=>{
   const problems=await openDesigner(page);
-  await openSection(page,'Boards & finish');
+  await openSection(page,'Boards & finish');await expand(sectionBody(page,'Boards & finish'),'Change collection');
   // A desktop prices the options on its own: no "Show price effect" to press.
   await expect(sectionBody(page,'Boards & finish').getByRole('button',{name:'Show price effect'})).toHaveCount(0);
   // A dearer collection reads "+$…" as its description (its name is unchanged); the current one has none.
@@ -802,7 +849,7 @@ test('shows the price effect beside each option, and picking one moves the price
   await expect(collection(page,'TimberTech Composite Prime')).toHaveAccessibleDescription('supplier quote');
   // Picking the dearer one moves the schedule's priced subtotal by exactly its delta.
   const delta=wholeDollars(await describedBy(vintage)),before=await price(page).textContent();
-  await vintage.click();
+  await vintage.click();await expand(sectionBody(page,'Boards & finish'),'Change collection');
   await expect(vintage).toHaveAttribute('aria-pressed','true');
   await expect(price(page)).not.toHaveText(before??'');
   expect(wholeDollars(await price(page).textContent())-wholeDollars(before)).toBe(delta);
@@ -821,7 +868,7 @@ test('shows the price effect beside each option, and picking one moves the price
   await flights.selectOption('2');
   await expect(price(page)).not.toHaveText(was??'');
   expect(wholeDollars(await price(page).textContent())-wholeDollars(was)).toBe(two);
-  for(const name of ['Boards & finish','Stairs & railings'] as const)expect(await sectionBody(page,name).textContent()).not.toMatch(ZERO);
+  for(const name of ['Boards & finish','Stairs & railings'] as const){await openSection(page,name);expect(await sectionBody(page,name).textContent()).not.toMatch(ZERO);}
   expect(problems).toEqual([]);
 });
 
@@ -830,6 +877,7 @@ test('@phone shows each option’s price effect only once asked, then keeps it f
   page.on('request',r=>{if(/\/optionDeltas[-.][\w.-]+\.js/.test(r.url()))engine.push(r.url());});
   const problems=await openDesigner(page);
   await openSection(page,'Boards & finish');
+  await expand(sectionBody(page,'Boards & finish'),'Change collection');
   const show=sectionBody(page,'Boards & finish').getByRole('button',{name:'Show price effect'});
   await expect(show).toHaveAttribute('aria-pressed','false');
   // One engine run can pass 50 ms on a throttled phone, so nothing is priced (or even downloaded) until asked.
@@ -852,8 +900,8 @@ test('@phone shows each option’s price effect only once asked, then keeps it f
 
 test('@phone opens the price schedule from the price bar and gives focus back when it closes',async({page})=>{
   const problems=await openDesigner(page);
-  const opener=phoneBar(page).getByRole('button',{name:/^Priced subtotal/});
-  await expect(opener).toContainText(/to quote/);
+  const opener=phoneBar(page).getByRole('button',{name:'Price schedule',exact:true});
+  await expect(phoneBar(page)).toContainText(/to quote/);
   const amount=await price(page).textContent();
   await opener.click();
   const drawer=page.getByRole('dialog',{name:'Price schedule'});
@@ -867,8 +915,8 @@ test('@phone opens the price schedule from the price bar and gives focus back wh
   await expect(close).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await expect(more).toBeFocused();
-  await expect(schedule(page).getByRole('status',{name:'Priced subtotal'})).toHaveText(amount??'');
-  await expect(quotes(page).getByRole('listitem').first()).toContainText('quote');
+  await withSchedule(page,async()=>{ await expect(schedule(page).getByRole('status',{name:'Priced subtotal'})).toHaveText(amount??''); });
+  await withSchedule(page,async()=>{ await expect(quotes(page).getByRole('listitem').first()).toContainText('quote'); });
   await page.keyboard.press('Escape');
   await expect(drawer).toHaveCount(0);
   await expect(opener).toBeFocused();
@@ -901,14 +949,14 @@ test('drags the deck’s front edge on the plan: a ghost while dragging, then on
   await expect(handle).toHaveAttribute('aria-valuetext',/^16 × 1[3-9](\.5)? ft · \d+ sq ft$/);
   await expect(size(page)).toContainText('16 × 12 ft');
   await expect(price(page)).toHaveText(before??'');
-  await expect(changes(page)).toHaveCount(0);
+  await expect(fileTools(page).getByRole('button',{name:'Undo'})).toBeDisabled();
   await page.mouse.up();
   await expect(ghost(page)).toHaveCount(0);
   const depth=Number(await handle.getAttribute('aria-valuenow'));
   expect(depth).toBeGreaterThan(12);
   await expect(size(page)).toContainText(`16 × ${depth} ft`);
   await expect(price(page)).not.toHaveText(before??'');
-  await expect(changes(page)).toHaveCount(1);
+  await withSchedule(page,async()=>{ await expect(changes(page)).toHaveCount(1); });
   // One undo takes the whole drag back, and there is nothing more to undo.
   const undo=fileTools(page).getByRole('button',{name:'Undo'});
   await undo.click();
@@ -1023,12 +1071,15 @@ test('@phone drags a plan handle by touch, and a swipe over the plan still scrol
   await expect(size(page)).toContainText('16 × 12 ft');
   // Dragging the right end by touch widens the deck, once, and does not scroll the page.
   await settled();
-  await page.evaluate(()=>scrollTo(0,0));
-  expect(await settled()).toBe(0);
-  const b=(await handle.boundingBox())!;
-  await swipe(b.x+b.width/2,b.y+b.height/2,70,0);
+  // At the top of the page the handle is under the fixed price bar, so it is brought to the middle of the screen.
+  await scrollToCentre(handle);
+  // Sticky navigation may retain a small focus offset; the touch drag must preserve that actual starting scroll.
+  const dragScroll=await settled();
+  const b=(await handle.boundingBox())!,grip={x:b.x+b.width/2,y:b.y+b.height/2};
+  expect(await page.evaluate(p=>document.elementFromPoint(p.x,p.y)?.closest('[role=slider]')?.getAttribute('aria-label'),grip),'the finger lands on the handle').toBe('Deck width, right end');
+  await swipe(grip.x,grip.y,70,0);
   await expect.poll(async()=>Number(await handle.getAttribute('aria-valuenow'))).toBeGreaterThan(16);
-  expect(await settled()).toBe(0);
+  expect(await settled()).toBe(dragScroll);
   const width=Number(await handle.getAttribute('aria-valuenow'));
   await expect(size(page)).toContainText(`${width} × 12 ft`);
   await fileTools(page).getByRole('button',{name:'Undo'}).click();
@@ -1051,7 +1102,7 @@ test('places the stairs on an edge from the plan and slides them along it, one u
   await expect(planStatus(page)).toHaveText('Stairs on the left side.');
   await expect(handle).toHaveAttribute('aria-valuetext',/^Stairs [\d.]+ ft from the back end of the left side$/);
   await expect(handle).toBeFocused();
-  await expect(changes(page)).toHaveCount(1);
+  await withSchedule(page,async()=>{ await expect(changes(page)).toHaveCount(1); });
   const placed=await price(page).textContent();
   // Slide them toward the house: a ghost while dragging, then one change.
   const box=(await handle.boundingBox())!,x=box.x+box.width/2,y=box.y+box.height/2;
@@ -1060,12 +1111,12 @@ test('places the stairs on an edge from the plan and slides them along it, one u
   await page.waitForTimeout(700);
   await page.mouse.move(x,y-60,{steps:4});
   await expect(ghost(page)).toHaveCount(1);
-  await expect(changes(page)).toHaveCount(1);
+  await expect(price(page)).toHaveText(placed??'');
   await page.mouse.up();
   await expect(ghost(page)).toHaveCount(0);
   const offset=Number(await handle.getAttribute('aria-valuenow'));
   expect(offset).toBeLessThan(50);
-  await expect(changes(page)).toHaveCount(2);
+  await withSchedule(page,async()=>{ await expect(changes(page)).toHaveCount(2); });
   await openSection(page,'Stairs & railings');
   await expect(page.getByLabel('Primary stair location',{exact:true})).toHaveValue('Left');
   await expect(page.getByLabel('Position along the edge',{exact:true})).toHaveValue(String(offset));
@@ -1099,7 +1150,7 @@ test('resizes the house from its wall end on the plan, as the House section’s 
   expect(width).toBeGreaterThan(27);
   // The other wall end stays where it was on the drawing (the drawing rescales to the wider house, so allow a little).
   expect(Math.abs((await left.boundingBox())!.x-leftAt.x)).toBeLessThan(40);
-  await expect(changes(page)).toHaveCount(1);
+  await withSchedule(page,async()=>{ await expect(changes(page)).toHaveCount(1); });
   await openSection(page,'House');
   await expect(page.getByLabel('House width',{exact:true})).toHaveValue(String(width));
   // From the keyboard: Home is the House section's smallest house (a moment later, so it is an undo step of its own).
@@ -1115,103 +1166,56 @@ test('resizes the house from its wall end on the plan, as the House section’s 
   expect(problems).toEqual([]);
 });
 
-test('starts a T outline on the plan and drags one of its edges, one change and one undo step',async({page})=>{
-  const problems=await openDesigner(page);
-  const before=await price(page).textContent();
-  await planTool(page,'Draw outline');
-  await page.getByRole('group',{name:'Outline shapes'}).getByRole('button',{name:'T, centre bump-out'}).click();
-  await expect(planStatus(page)).toHaveText('Starting shape: T, centre bump-out. Drag an edge to change it.');
-  await expect(price(page)).not.toHaveText(before??'');
-  const drawn=await price(page).textContent();
-  const edge=planHandle(page,'Front edge 2');
-  await expect(edge).toHaveAttribute('aria-valuenow','12');
+test('drags a free outline edge diagonally with one commit and undo',async({page})=>{
+  const problems=await openDesigner(page);await planTool(page,'Shape & points');
+  const before=await price(page).textContent(),edge=page.getByRole('button',{name:'Main deck edge 3',exact:true});
+  await scrollToCentre(edge);
   const box=(await edge.boundingBox())!,x=box.x+box.width/2,y=box.y+box.height/2;
-  await page.mouse.move(x,y);await page.mouse.down();
-  await page.mouse.move(x,y+30,{steps:4});
-  await page.waitForTimeout(700);
-  await page.mouse.move(x,y+60,{steps:4});
-  await expect(ghost(page)).toHaveCount(1);
-  await expect(price(page)).toHaveText(drawn??'');
-  await page.mouse.up();
-  await expect(ghost(page)).toHaveCount(0);
-  await expect(edge).not.toHaveAttribute('aria-valuenow','12');
-  await expect(price(page)).not.toHaveText(drawn??'');
-  await expect(changes(page)).toHaveCount(2);
-  // The Deck section's outline editor shows the same outline.
-  await openSection(page,'Deck shape & size');
-  await expect(page.getByRole('group',{name:'Custom outline'}).getByRole('status')).toContainText('Custom outline: 8 corners');
-  await fileTools(page).getByRole('button',{name:'Undo'}).click();
-  await expect(edge).toHaveAttribute('aria-valuenow','12');
-  await expect(price(page)).toHaveText(drawn??'');
-  expect(problems).toEqual([]);
+  expect(await page.evaluate(p=>document.elementFromPoint(p.x,p.y)?.closest('button')?.getAttribute('aria-label'),{x,y}),'the press lands on the edge').toBe('Main deck edge 3');
+  await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+30,y+35,{steps:6});
+  await expect(drawing(page).locator('.dd-boundary-ghost')).toHaveCount(1);await expect(price(page)).toHaveText(before??'');
+  await page.mouse.up();await expect(drawing(page).locator('.dd-boundary-ghost')).toHaveCount(0);await expect(price(page)).not.toHaveText(before??'');
+  await withSchedule(page,async()=>{ await expect(changes(page)).toHaveCount(1); });await fileTools(page).getByRole('button',{name:'Undo'}).click();
+  await expect(price(page)).toHaveText(before??'');await expect(fileTools(page).getByRole('button',{name:'Undo'})).toBeDisabled();expect(problems).toEqual([]);
 });
 
-test('moves an outline edge on the plan with the arrow keys, Home and End, and says when the rules refuse a move',async({page})=>{
-  const problems=await openDesigner(page);
-  await shortcuts(page).getByRole('button',{name:'Draw my own',exact:true}).click();
-  await expect(page.getByRole('radio',{name:'Draw outline'})).toHaveAttribute('aria-checked','true');
-  await expect(planStatus(page)).toHaveText('Now your own outline: drag its edges on the plan, or start from a shape below it.');
-  const edge=planHandle(page,'Front edge 1');
-  await edge.focus();
-  await page.keyboard.press('ArrowUp');
-  await expect(edge).toHaveAttribute('aria-valuenow','12.5');
-  await expect(edge).toHaveAttribute('aria-valuetext','12.5 ft out from the house, 16 ft long');
-  await expect(size(page)).toContainText('16 × 12.5 ft');
-  await page.keyboard.press('Shift+ArrowUp');
-  await expect(edge).toHaveAttribute('aria-valuenow','13.5');
-  await page.keyboard.press('End');
-  await expect(edge).toHaveAttribute('aria-valuenow','40');
-  await page.keyboard.press('Home');
-  await expect(edge).toHaveAttribute('aria-valuenow','4');
-  await expect(edge).toBeFocused();
-  // Below 4 ft the outline rules refuse it, and the plan says why; the outline stays.
-  await page.keyboard.press('ArrowDown');
-  await expect(planStatus(page)).toContainText('That change does not fit the outline rules');
-  await expect(edge).toHaveAttribute('aria-valuenow','4');
-  await planHandle(page,'Right side').focus();
-  await page.keyboard.press('ArrowRight');
-  await expect(size(page)).toContainText('16.5 × 4 ft');
-  await openSection(page,'Deck shape & size');
-  await expect(page.getByRole('group',{name:'Custom outline'}).getByRole('status')).toContainText('16.5 × 4 ft overall');
-  expect(problems).toEqual([]);
+test('moves an outline point in both directions and refuses crossed edges',async({page})=>{
+  const problems=await openDesigner(page);await planTool(page,'Shape & points');
+  const point=page.getByRole('button',{name:'Main deck point 3',exact:true});await point.focus();
+  await page.keyboard.press('Shift+ArrowRight');await page.keyboard.press('Shift+ArrowDown');
+  await expand(preview(page),'Fine adjust a point');
+  await expect(page.getByLabel('Selected point X in feet')).toHaveValue('17');await expect(page.getByLabel('Selected point Y in feet')).toHaveValue('13');
+  await page.getByLabel('Selected point X in feet').fill('-1');await page.getByLabel('Selected point Y in feet').fill('6');
+  await preview(page).getByRole('button',{name:'Apply',exact:true}).click();await expect(preview(page).locator('.dd-boundary-notice')).toContainText('cross');
+  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('golden-maple.deck-studio.deck-only.v1')??'{}').configuration?.deckOutlines?.main?.[2]??null)).toEqual({x:17,y:13});
+  await page.reload();await expect(page.getByRole('radio',{name:'Shape & points',exact:true})).toHaveAttribute('aria-checked','true');
+  await expand(preview(page),'Fine adjust a point');await page.getByLabel('Selected boundary point').selectOption('2');
+  await expect(page.getByLabel('Selected point X in feet')).toHaveValue('17');await expect(page.getByLabel('Selected point Y in feet')).toHaveValue('13');expect(problems).toEqual([]);
 });
 
-test('@phone drags an outline edge by touch in the Draw outline tool, and a swipe over the plan still scrolls the page',async({page})=>{
-  const problems=await openDesigner(page);
-  await planTool(page,'Draw outline');
-  await page.getByRole('button',{name:'Start from this deck'}).click();
-  const edge=planHandle(page,'Front edge 1');
-  await expect(edge).toHaveAttribute('aria-valuenow','12');
-  const cdp=await page.context().newCDPSession(page);
-  const touch=(type:'touchStart'|'touchMove'|'touchEnd',x:number,y:number)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'?[]:[{x,y}]});
-  const swipe=async(x:number,y:number,dx:number,dy:number)=>{
-    await touch('touchStart',x,y);
-    for(let i=1;i<=10;i++){await touch('touchMove',x+dx*i/10,y+dy*i/10);await page.waitForTimeout(20);}
-    await page.waitForTimeout(200);
-    await touch('touchEnd',x+dx,y+dy);
-  };
-  const pageY=()=>page.evaluate(()=>window.scrollY);
-  const settled=async()=>{let last=-1;await expect.poll(async()=>{const now=await pageY(),same=now===last;last=now;return same;},{intervals:[200]}).toBe(true);return last;};
-  // The drawing at the top of the screen (the outline's front edge is low on it).
-  const toDrawing=async()=>{await drawing(page).evaluate(el=>el.scrollIntoView({block:'start'}));return settled();};
-  // A swipe up over the drawing, away from the handles, scrolls the page and leaves the outline alone.
-  const top=await toDrawing();
-  const area=(await drawing(page).boundingBox())!;
-  await swipe(area.x+24,area.y+area.height-24,0,-220);
-  await expect.poll(pageY).toBeGreaterThan(top+60);
-  await expect(edge).toHaveAttribute('aria-valuenow','12');
-  // Dragging the front edge by touch moves it once, and does not scroll the page.
-  await settled();
-  const still=await toDrawing();
-  const b=(await edge.boundingBox())!;
-  await swipe(b.x+b.width/2,b.y+b.height/2,0,40);
-  await expect.poll(async()=>Number(await edge.getAttribute('aria-valuenow'))).toBeGreaterThan(12);
-  expect(await settled()).toBe(still);
-  const depth=Number(await edge.getAttribute('aria-valuenow'));
-  await expect(size(page)).toContainText(`16 × ${depth} ft`);
-  await fileTools(page).getByRole('button',{name:'Undo'}).click();
-  await expect(edge).toHaveAttribute('aria-valuenow','12');
-  expect(problems).toEqual([]);
+test('@phone drags a boundary point by touch and leaves the page scrollable',async({page})=>{
+  const problems=await openDesigner(page);await planTool(page,'Shape & points');
+  const point=page.getByRole('button',{name:'Main deck point 3',exact:true});
+  await point.scrollIntoViewIfNeeded();
+  // Complete navigation scrolling before measuring a touch target or page movement.
+  await expect.poll(async()=>{const before=await page.evaluate(()=>window.scrollY);await page.waitForTimeout(150);return Math.abs((await page.evaluate(()=>window.scrollY))-before);}).toBe(0);
+  const b=(await point.boundingBox())!,x=b.x+b.width/2,y=b.y+b.height/2;
+  const cdp=await page.context().newCDPSession(page),start=await page.evaluate(()=>window.scrollY);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+  expect(await page.evaluate(()=>window.scrollY),'page stays still when the handle takes focus').toBe(start);
+  for(let i=1;i<=8;i++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+24*i/8,y:y+30*i/8}]});
+  expect(await page.evaluate(()=>window.scrollY),'page stays still during the drag').toBe(start);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  expect(await page.evaluate(()=>window.scrollY)).toBe(start);await expect(preview(page).locator('.dd-boundary-notice')).toContainText('updated');
+  await expand(preview(page),'Fine adjust a point');expect(Number(await page.getByLabel('Selected point X in feet').inputValue())).toBeGreaterThan(16);expect(Number(await page.getByLabel('Selected point Y in feet').inputValue())).toBeGreaterThan(12);
+  await fileTools(page).getByRole('button',{name:'Undo'}).click();await expect(page.getByLabel('Selected point X in feet')).toHaveValue('16');
+  // An ordinary swipe on the page margin still scrolls after editing.
+  await page.evaluate(()=>window.scrollTo({top:100,behavior:'instant'}));
+  const beforeSwipe=await page.evaluate(()=>window.scrollY);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:2,y:440}]});
+  for(let i=1;i<=8;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:2,y:440-240*i/8}]});await page.waitForTimeout(20);}
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBeGreaterThan(beforeSwipe+80);expect(problems).toEqual([]);
 });
 
 test('adds a bump-out to the house',async({page})=>{
@@ -1224,6 +1228,7 @@ test('adds a bump-out to the house',async({page})=>{
 
 test('adds, restyles and removes a window from the doors and windows bar',async({page})=>{
   await openDesigner(page);
+  await showOpenings(page);
   const bar=openingsBar(page);
   const count=()=>openingCount(page);
   const start=await count();
@@ -1314,7 +1319,7 @@ test('saves a design file and imports it again',async({page},info)=>{
   await openSection(page,'Deck shape & size');
   await setNumber(page,'Deck width',18);
   await expect(size(page)).toContainText('18 × 12 ft');
-  const tools=fileTools(page);
+  const tools=fileTools(page);await openFiles(page);
   const [download]=await Promise.all([page.waitForEvent('download'),tools.getByRole('button',{name:'Save JSON'}).click()]);
   const file=info.outputPath('design.json');await download.saveAs(file);
   expect(JSON.parse(readFileSync(file,'utf8')).format).toBe('golden-maple-deck-design');
@@ -1329,7 +1334,7 @@ test('shares a link that reopens the design and keeps the visitor’s own',async
   await openSection(page,'Deck shape & size');
   await setNumber(page,'Deck width',24);
   await expect(size(page)).toContainText('24 × 12 ft');
-  const tools=fileTools(page);
+  const tools=fileTools(page);await openFiles(page);
   await tools.getByRole('button',{name:'Share link'}).click();
   const link=await tools.getByLabel('Link to this design').inputValue();
   expect(link).toMatch(/\/deck-designer#d=1[zj]/);
@@ -1337,7 +1342,7 @@ test('shares a link that reopens the design and keeps the visitor’s own',async
   await setNumber(page,'Deck width',30);
   await expect(size(page)).toContainText('30 × 12 ft');
   await page.waitForTimeout(800);
-  await page.goto(link);
+  await page.goto(link);await openFiles(page);
   await expect(size(page)).toContainText('24 × 12 ft');
   await expect(tools).toContainText('shared with you');
   await expect(page).not.toHaveURL(/#d=/);
@@ -1348,10 +1353,12 @@ test('shares a link that reopens the design and keeps the visitor’s own',async
 test('sends a design to Golden Maple and hands the link to booking',async({page})=>{
   await openDesigner(page);
   // The branded proposal rides along as a multipart file (ATTACH_PROPOSAL_PDF); a plain post is the fallback.
-  let posted='',pdf:{name:string;type:string;head:string;size:number}|null=null;
-  await page.route(url=>new URL(url).pathname==='/',async route=>{
+  // Only a local post is intercepted, so the test can never reach the live form service.
+  let posted='',postedOrigin='',pdf:{name:string;type:string;head:string;size:number}|null=null;
+  await page.route(url=>['localhost','127.0.0.1','[::1]'].includes(url.hostname)&&url.pathname==='/',async route=>{
     const request=route.request();
     if(request.method()!=='POST')return route.continue();
+    postedOrigin=new URL(request.url()).origin;
     const type=request.headers()['content-type']??'';
     if(type.startsWith('multipart/form-data')){
       const form=await new Response(request.postDataBuffer(),{headers:{'content-type':type}}).formData(),text=new URLSearchParams();
@@ -1379,6 +1386,7 @@ test('sends a design to Golden Maple and hands the link to booking',async({page}
   await dialog.getByRole('button',{name:'Send my design'}).click();
   await expect(dialog.getByRole('heading',{name:'Design sent'})).toBeVisible();
   const fields=new URLSearchParams(posted);
+  expect(postedOrigin).toBe(new URL(page.url()).origin);
   expect(fields.get('form-name')).toBe('deck-design');
   expect(fields.get('name')).toBe('DeckCraft Test');
   expect(fields.get('marketing_consent')).toBe('no');
@@ -1451,7 +1459,7 @@ test('puts a lit design at night on the proposal cover, then gives the visitor b
   await page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'}).click();
   await page.getByRole('button',{name:'Add post & step lights'}).click();
   await page.getByRole('group',{name:'Camera'}).getByRole('button',{name:'Front',exact:true}).click();
-  const priced=await price(page).textContent(),changed=await changes(page).count();
+  const priced=await price(page).textContent(),changed=await withSchedule(page,()=>changes(page).count());
   await openProposal(page);
   await expect(proposalSheet(page,'Cover').getByRole('img',{name:'3D view of the proposed deck, corner view at night'})).toBeVisible();
   await expect(proposalSheet(page,'Views').getByRole('img')).toHaveCount(3);
@@ -1462,7 +1470,7 @@ test('puts a lit design at night on the proposal cover, then gives the visitor b
   await expect(page.getByRole('group',{name:'Camera'}).getByRole('button',{name:'Front',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(page.getByRole('group',{name:'Day or night preview'}).getByRole('button',{name:'Night'})).toHaveAttribute('aria-pressed','true');
   await expect(price(page)).toHaveText(priced??'');
-  await expect(changes(page)).toHaveCount(changed);
+  await withSchedule(page,async()=>{ await expect(changes(page)).toHaveCount(changed); });
   expect(problems).toEqual([]);
 });
 
@@ -1498,6 +1506,65 @@ test('draws the 3D view at night with lights and glass, within the GPU’s textu
   });
   expect(units.programs).toBeGreaterThan(5);
   expect(units.worst).toBeLessThanOrEqual(Math.min(16,units.limit));
+  expect(shaderProblems).toEqual([]);
+  expect(problems).toEqual([]);
+});
+
+/**
+ * Night lighting at its heaviest (lighting plan L1): a cap light and a post light on every post and three under-step
+ * lights on every 8 ft step, plus house and path lights. Step and post lights all light through the fixture light
+ * texture instead of real three lights, so every compiled shader stays within the GPU's texture units and none fails
+ * to compile; the lens glows are drawn, and go with the preview lights.
+ */
+test('lights a heavily lit design at night within the GPU’s texture units, and the glows go with the preview lights',async({page})=>{
+  test.setTimeout(150_000);
+  const shaderProblems:string[]=[];
+  page.on('console',m=>{if(/Shader Error|WebGLProgram|FRAGMENT|VERTEX/.test(m.text()))shaderProblems.push(m.text().slice(0,300));});
+  const design={format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration:{height:48,stairWidth:96,sceneLighting:'Evening',lightingPreviewOn:true,
+    lightingSystem:{wireDistance:40,selectedItems:[{productId:'puck',qty:30,zone:'posts'},{productId:'wedge',qty:30,zone:'posts'},{productId:'evo_hyde',qty:30,zone:'stairs'},{productId:'blink',qty:4,zone:'house'},{productId:'liv',qty:6,zone:'landscape'},{productId:'hub100',qty:2}]}}};
+  // three announces each renderer and scene it makes to window.__THREE_DEVTOOLS__, which is how the test reaches them.
+  await page.addInitScript(text=>{
+    try{localStorage.setItem('golden-maple.deck-studio.deck-only.v1',text);}catch{}
+    const w=window as unknown as {__THREE_DEVTOOLS__:EventTarget;__renderers:unknown[];__scenes:unknown[]};w.__renderers=[];w.__scenes=[];w.__THREE_DEVTOOLS__=new EventTarget();
+    w.__THREE_DEVTOOLS__.addEventListener('observe',e=>{const d=(e as CustomEvent).detail;if(d?.isWebGLRenderer)w.__renderers.push(d);if(d?.isScene)w.__scenes.push(d);});
+  },JSON.stringify(design));
+  const problems=await openDesigner(page);
+  await viewTab(page,'3D');
+  const canvas=viewer3d(page);
+  await canvas.scrollIntoViewIfNeeded();
+  await expect(canvas).toBeVisible({timeout:20000});
+  await page.waitForTimeout(4000);// every material's shader compiles on the next frames
+  const scene=()=>page.evaluate(()=>{
+    type Obj={name:string;children:Obj[]};const scenes=(window as unknown as {__scenes:Obj[]}).__scenes;
+    const names:string[]=[];const walk=(o:Obj)=>{names.push(o.name);o.children.forEach(walk);};scenes.forEach(walk);
+    return {glows:names.includes('fixture-lens-glows'),steps:names.filter(n=>/^evo_hyde-\d+$/.test(n)).length,posts:names.filter(n=>/^wedge-\d+$/.test(n)).length,realLights:names.filter(n=>/-(surface|area)-illumination$/.test(n)).length};
+  });
+  const lit=await scene();
+  expect(lit.glows).toBe(true);
+  expect(lit.steps).toBeGreaterThan(8);
+  expect(lit.posts).toBeGreaterThan(8);
+  expect(lit.realLights).toBeLessThanOrEqual(16);
+  const units=await page.evaluate(()=>{
+    type Program={program:WebGLProgram};
+    const renderer=(window as unknown as {__renderers:{getContext:()=>WebGL2RenderingContext;info:{programs:Program[]|null}}[]}).__renderers.at(-1)!;
+    const gl=renderer.getContext(),samplers=new Set<number>([gl.SAMPLER_2D,gl.SAMPLER_CUBE,gl.SAMPLER_3D,gl.SAMPLER_2D_SHADOW,gl.SAMPLER_2D_ARRAY,gl.SAMPLER_2D_ARRAY_SHADOW,gl.SAMPLER_CUBE_SHADOW,gl.INT_SAMPLER_2D,gl.UNSIGNED_INT_SAMPLER_2D]);
+    let worst=0;
+    for(const {program} of renderer.info.programs??[]){let used=0;for(let i=0,n=gl.getProgramParameter(program,gl.ACTIVE_UNIFORMS);i<n;i++){const u=gl.getActiveUniform(program,i);if(u&&samplers.has(u.type))used+=u.size;}worst=Math.max(worst,used);}
+    return {worst,limit:gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) as number,programs:renderer.info.programs?.length??0};
+  });
+  expect(units.programs).toBeGreaterThan(5);
+  expect(units.worst).toBeLessThanOrEqual(Math.min(16,units.limit));
+  // A drawn night scene whose lit materials carry the fixture light (asserted on the renderer, never on pixels).
+  const drawn=await page.evaluate(()=>{
+    type Program={program:WebGLProgram};
+    const r=(window as unknown as {__renderers:{getContext:()=>WebGL2RenderingContext;info:{render:{frame:number};programs:Program[]|null}}[]}).__renderers.at(-1)!,gl=r.getContext();
+    const lit=(r.info.programs??[]).filter(({program})=>{for(let i=0,n=gl.getProgramParameter(program,gl.ACTIVE_UNIFORMS);i<n;i++)if(gl.getActiveUniform(program,i)?.name==='fxData')return true;return false;}).length;
+    return {frame:r.info.render.frame,lit};
+  });
+  expect(drawn.frame).toBeGreaterThan(0);
+  expect(drawn.lit).toBeGreaterThan(0);
+  await page.getByRole('switch',{name:/Preview lights/}).uncheck();
+  await expect.poll(async()=>(await scene()).glows).toBe(false);
   expect(shaderProblems).toEqual([]);
   expect(problems).toEqual([]);
 });
@@ -1552,36 +1619,29 @@ test('@phone never downloads the 3D viewer until the 3D tab is chosen',async({pa
   expect(problems).toEqual([]);
 });
 
-test('@phone keeps the price in view and pins the plan while editing, without the 3D viewer',async({page})=>{
-  const viewer=viewerRequests(page);
-  const problems=await openDesigner(page);
-  const bar=phoneBar(page);
-  await expect(bar).toBeVisible();
-  const before=await bar.locator('strong').textContent();
-  // Work in the sections, well below the preview: the price stays on screen.
-  await openSection(page,'Deck shape & size');
-  await page.getByLabel('Deck width',{exact:true}).scrollIntoViewIfNeeded();
-  await setNumber(page,'Deck width',20);
-  await expect(bar.locator('strong')).not.toHaveText(before??'');
-  expect(await bar.evaluate(el=>{const r=el.getBoundingClientRect();return r.bottom<=window.innerHeight+1&&r.top>=window.innerHeight-120;})).toBe(true);
-  // Pin the deck: the plan stays at the top, compact, while the fields scroll; the 3D view is not downloaded for it.
-  await bar.getByRole('button',{name:'Show deck'}).click();
-  await expect(bar.getByRole('button',{name:'Hide deck'})).toHaveAttribute('aria-pressed','true');
-  await page.getByLabel('Height above ground',{exact:true}).scrollIntoViewIfNeeded();
-  expect(await preview(page).evaluate(el=>{const r=el.getBoundingClientRect();return Math.abs(r.top)<2&&r.height<window.innerHeight*.5;})).toBe(true);
-  await expect(plan(page)).toBeVisible();
-  await page.waitForTimeout(6000);// past the page's own prefetch
-  expect(viewer).toHaveLength(0);
+test('@phone keeps the price visible while editing and returns to the canvas without loading 3D',async({page})=>{
+  const viewer=viewerRequests(page),problems=await openDesigner(page),bar=phoneBar(page),before=await price(page).textContent();
+  // This workspace flow uses the new default editor; the shared legacy helper chooses Size & place for its sizing tests.
+  await planTool(page,'Shape & points');
+  await openSection(page,'Deck shape & size');await setNumber(page,'Deck width',20);
+  await expect(price(page)).not.toHaveText(before??'');await expect(preview(page)).toBeHidden();
+  // The bar stays a strip at the foot of the screen: the amount beside the price schedule, the items still to quote and
+  // the quote review, stacked, so at most 160 px tall.
+  expect(await bar.evaluate(el=>{const r=el.getBoundingClientRect();return r.bottom<=window.innerHeight+1&&r.top>=window.innerHeight-160;})).toBe(true);
+  await expect(price(page)).toBeInViewport();
+  await showCanvas(page);await expect(plan(page)).toBeVisible();await expect(size(page)).toContainText('20 × 12 ft');
+  await expect(page.getByRole('group',{name:'Drawing navigation'})).toBeVisible();
+  await page.waitForTimeout(6000);expect(viewer).toHaveLength(0);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
-  await bar.getByRole('button',{name:'Hide deck'}).click();
-  await expect(preview(page)).not.toHaveClass(/dd-preview-docked/);
-  expect(problems).toEqual([]);
+  await openSection(page,'Deck shape & size');await expect(page.getByLabel('Deck width',{exact:true})).toHaveValue('20');
+  await expect(bar).toBeVisible();expect(problems).toEqual([]);
 });
 
 test('@phone fits the screen, with the send button in reach',async({page})=>{
   await openDesigner(page);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
-  const send=sendButton(page);
+  await openSection(page,'Proposal & files');
+  const send=page.getByRole('region',{name:'Send your design to Golden Maple'}).getByRole('button',{name:'Send my design'});
   await expect(send).toBeVisible();
   await send.click();
   const dialog=page.getByRole('dialog',{name:'Send your design to Golden Maple'});

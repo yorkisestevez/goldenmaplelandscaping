@@ -241,7 +241,7 @@ function segment(model:DeckTakeoff,level:number,edge:number){
  * model put it), measured the way the Stairs section's position is, from the edge's left or back end. */
 export interface PrimaryStair{level:number;edge:number;a:PlanPoint;b:PlanPoint;dir:PlanPoint;outward:PlanPoint;len:number;width:number;free:number;offset:number;centre:PlanPoint;depth:number;name:string}
 export function primaryStair(data:DeckData,model:DeckTakeoff,stairEdges:readonly {id:string;name:string}[]=[]):PrimaryStair|null{
-  if(!(Number(data.stairFlights)>0))return null;
+  if(data.stairPath||!(Number(data.stairFlights)>0))return null;
   const f=model.flights.find(x=>x.kind==='grade'&&/^grade-0(-upper)?$/.test(x.id));if(!f)return null;
   const S={x:f.start.x,y:f.start.z},width=f.width;
   for(const level of deckLevels(model)){
@@ -291,6 +291,7 @@ export function stairHandle(data:DeckData,p:PrimaryStair|null):PlanHandle|null{
  */
 export interface StairTarget{key:string;name:string;level:number;edge:number;a:PlanPoint;b:PlanPoint;patch:Partial<DeckData>}
 export function stairTargets(data:DeckData,model:DeckTakeoff,stairEdges:readonly {id:string;name:string}[]):StairTarget[]{
+  if(data.stairPath)return [];
   const levels=model.levels,decks=deckLevels(model);
   // Grade stairs leave from the lowest deck level (the later one on a tie), as the model builds them.
   const exit=decks.reduce((best,i)=>levels[i].top<=levels[best].top?i:best,0);
@@ -358,7 +359,7 @@ const lower=(s:string)=>s.charAt(0).toLowerCase()+s.slice(1);
 export function planShortcut(data:DeckData,id:PlanShortcutId):{patch:Partial<DeckData>|null;status:string;tool?:PlanTool}{
   if(id==='split'){
     if(data.levels>=2)return {patch:{levels:1},status:'Back to one level.'};
-    if(data.shape==='Custom')return {patch:null,status:'A custom outline is one level. Choose another shape for a split level.'};
+    if(data.shape==='Custom'&&!data.deckOutlines?.main)return {patch:null,status:'A custom outline is one level. Choose another shape for a split level.'};
     return {patch:splitLevel(data),status:'Added a lower level one step down across the front. Drag its gold handle to set its depth.'};
   }
   if(id==='wrap-left'||id==='wrap-right'||id==='wrap-both'){
@@ -370,7 +371,7 @@ export function planShortcut(data:DeckData,id:PlanShortcutId):{patch:Partial<Dec
     for(const side of ['left','right'] as const)if(!!next.wrap?.[side]!==target[side]){const r=setWing(next,house,side,target[side]);patch={...patch,...r.patch};next={...next,...r.patch};fix=r.status||fix;}
     return {patch,status:on?'Wrap-around removed.':[`Wrapped round ${id==='wrap-both'?'both house corners':`the ${id==='wrap-left'?'left':'right'} house corner`}.`,fix].filter(Boolean).join(' ')};
   }
-  if(data.shape===id)return {patch:null,status:'',...(id==='Custom'?{tool:'outline' as const}:{})};
+  if(data.shape===id&&!data.deckOutlines?.main)return {patch:null,status:'',...(id==='Custom'?{tool:'outline' as const}:{})};
   const patch=chooseShape(data,id),paused=data.wrap&&(data.wrap.left||data.wrap.right)?wrapBlockers({...data,...patch}):[];
   const done=id==='Custom'?'Now your own outline: drag its edges on the plan, or start from a shape below it.':`Now ${SHAPE_WORDS[id]}.${id==='L-Shape'||id==='Multi-corner'?' Drag the gold cut-out handles to size the corner.':''}`;
   return {patch,status:paused.length?`${done} The wrap-around is paused: ${lower(paused[0])}`:done,...(id==='Custom'?{tool:'outline' as const}:{})};

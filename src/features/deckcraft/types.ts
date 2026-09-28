@@ -1,3 +1,8 @@
+import {sourcedDeckingSqft} from './supplierRates';
+/** Private job-specific additions. Supply follows material markup; installation follows labour treatment. */
+export interface QuoteResolution {scopeKey:string;fingerprint:string;supplyCost:number;installationCost:number;confirmedOn:string;source:string;note:string;additionalScope:true}
+import type {PergolaQuoteContext} from './pergolaPricing';
+import type {PergolaSelection} from './pergolaCatalog';
 export type DeckType = 'Attached' | 'Freestanding' | 'Floating' | 'Add-on';
 export type Municipality = 'Toronto' | 'Barrie' | 'Simcoe County' | 'Burlington-Oakville' | 'Rural-Other';
 export type SiteType = 'Standard' | 'Waterfront-Lakefront' | 'Hillside' | 'Urban Tight' | 'Island-Ferry';
@@ -7,6 +12,18 @@ export type IntendedLoad = 'Standard' | 'Heavy';
 export type DeckShape = 'Rectangle' | 'L-Shape' | 'Multi-corner' | 'Curved' | 'Custom';
 /** A point of a custom outline's front, in feet (see lib/customOutline.ts). */
 export interface OutlinePoint {x:number;y:number}
+/** Physical board edits, level-local inches. Ordering is significant: the last overlapping edit wins. */
+export interface BoardLayoutPoint {x:number;y:number}
+interface BoardLayoutEntry {id:string;level:1|2|3;colour?:ColourRef}
+export interface BoardLayoutRegion extends BoardLayoutEntry {polygon:BoardLayoutPoint[];angleDeg:number;/** Replace a selected picture-frame board with field decking instead of leaving a hole. */replaceBorder?:true}
+export interface BoardLayoutBreaker extends BoardLayoutEntry {start:BoardLayoutPoint;end:BoardLayoutPoint;widthIn?:number}
+export interface BoardLayoutPiece extends BoardLayoutEntry {
+  cx:number;cy:number;lengthIn:number;widthIn:number;angleDeg:number;
+  /** An existing cut silhouette, before the target rotation, in level-local inches. When supplied, sourceAngleDeg
+   * describes its source stock direction; angleDeg rotates it physically around cx/cy. Move both together. */
+  polygon?:BoardLayoutPoint[];sourceAngleDeg?:number;
+}
+export interface BoardLayoutConfig {regions:BoardLayoutRegion[];breakers:BoardLayoutBreaker[];pieces:BoardLayoutPiece[]}
 /** A real product colour, `${collectionId}:${colourName}` from DECKING_CATALOGUE (see boardFinishes.ts). */
 export type ColourRef = string;
 /** Deck boards in another real product colour: one board ('piece') or its whole row ('course'), found by the
@@ -24,14 +41,16 @@ export type InlayFill = 'Straight' | 'Diagonal' | 'Herringbone';
  *   wedges in alternating inside and frame colours ('compass'). */
 interface InlayBase {id:string;level?:1|2|3;fill?:ColourRef}
 export type DeckInlay =
-  | InlayBase&{kind:'rug'|'diamond';dxFt?:number;dyFt?:number;widthFt:number;depthFt:number;frameRows?:1|2;pattern?:InlayFill;frame?:ColourRef}
+  | InlayBase&{kind:'rug'|'diamond';dxFt?:number;dyFt?:number;rotationDeg?:number;widthFt:number;depthFt:number;frameRows?:1|2;pattern?:InlayFill;frame?:ColourRef}
   | InlayBase&{kind:'band';direction:'across'|'along';atFt?:number;boards:1|2|3|4}
-  | InlayBase&{kind:'medallion';dxFt?:number;dyFt?:number;diameterFt:number;style:'round'|'compass';frame?:ColourRef};
+  | InlayBase&{kind:'medallion';dxFt?:number;dyFt?:number;rotationDeg?:number;diameterFt:number;style:'round'|'compass'|'compass-rose'|'sunburst';frame?:ColourRef}
+  /** Simple polygon, level-local inch offsets around the inlay origin. */
+  | InlayBase&{kind:'custom';points:OutlinePoint[];dxFt?:number;dyFt?:number;rotationDeg?:number;name?:string;frameRows?:1|2;pattern?:InlayFill;frame?:ColourRef};
 /** Skirting under the deck (see skirting.ts): boards or lattice closing in the space between the deck's rim and the
  * ground, clearanceIn above it. A colour left out is the deck's own; `openEdges` names deck sides left open
  * ('deck1-front', 'landing1-left', …). Absent on every existing design. Listed for a builder quote, never priced. */
 export type SkirtingStyle = 'Horizontal boards' | 'Vertical boards' | 'Lattice';
-export interface SkirtingConfig {style:SkirtingStyle;colour?:ColourRef;clearanceIn:number;openEdges?:string[];accessPanels?:number}
+export interface SkirtingConfig {style:SkirtingStyle;colour?:ColourRef;clearanceIn:number;openEdges?:string[];accessPanels?:number;cornerTreatment?:'Folded solid boards'}
 /** Deck parts in their own real product colour (see deckPartFinishes.ts): the border boards, the fascia over the rim,
  * the stair treads and risers, each from a collection of the deck's own kind; and the railing in one of its system's
  * manufacturer colours (a colour name from railing-finish-provenance.json). A part left out is the deck's own colour.
@@ -39,15 +58,19 @@ export interface SkirtingConfig {style:SkirtingStyle;colour?:ColourRef;clearance
 export interface DeckFinishes {fascia?:ColourRef;treads?:ColourRef;risers?:ColourRef;border?:ColourRef;railingColor?:string}
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
 export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Frameless Glass' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
+/** Perimeter guard override, measured along an actual polygon edge from its first endpoint. */
+export interface RailSection {id:string;level:1|2|3;edgeId:string;startPct:number;endPct:number;enabled:boolean}
 /** How a frameless glass railing holds its panels (framelessGlass.ts). */
 export type GlassMount = 'Top-mount base shoe' | 'Fascia-mount base shoe' | 'Spigots';
 /** A frameless glass railing's shoe, spigots and handrail: black powder coat, or clear anodized / 316 stainless. */
 export type GlassFinish = 'Black' | 'Silver';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
-export type LightingZone = 'deck'|'posts'|'stairs'|'landscape'|'house'|'privacy';
+export type LightingZone = 'deck'|'posts'|'stairs'|'landscape'|'house'|'privacy'|'border';
 /** A single freestanding screen on one exposed deck edge; priced by its face area. */
 export type PrivacyProductId='slatted'|'hideaway'|'oasis';
 export interface PrivacyScreen {id:string;side:'Left'|'Right'|'Front'|'Back';lengthFt:number;heightFt:4|5|6;offsetPct:number;lights:boolean;
+  /** An exact polygon edge; absent keeps the original main-deck side placement and clearances. */
+  level?:1|2|3;edgeId?:string;
   /** Undefined = on. An off screen stays in the design but is not drawn, lit or priced. */
   enabled?:boolean;
   /** Undefined = Golden Maple slatted screen. Manufacturer screens are supplier-quote items. */
@@ -142,7 +165,20 @@ export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;pa
   /** The connecting step or stair runs the full shared edge (a split level). */
   fullStep?:boolean}
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature';
-export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled:boolean;xFt:number;zFt:number;widthFt:number;depthFt:number;heightIn:number;rotationDeg:number;productId:string;color:string}
+export interface YardHardscape {finishId:string;colorId:string;unitId:string;patternId:string;angleDeg:number;jointMm:number;capUnitId?:string}
+/** Decorative paving zones, centre-relative patio-local inches before patio rotation. */
+export interface PatioInlay {id:string;name:string;shape:'rectangle'|'diamond'|'circle'|'compass'|'band'|'custom';xIn:number;yIn:number;widthIn:number;depthIn:number;rotationDeg:number;points?:{x:number;y:number}[];productId:string;color:string;hardscape?:YardHardscape}
+export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled:boolean;xFt:number;zFt:number;widthFt:number;depthFt:number;heightIn:number;rotationDeg:number;productId:string;color:string;
+  /** Wall front-grade datum relative to local terrain, inches. Absent means zero. */
+  baseElevationIn?:number;
+  /** Patio perimeter in local inches about the feature centre, before rotation. */
+  outline?:{x:number;y:number}[];
+  /** Open retaining-wall centreline in local inches; widthFt is its total run. */
+  wallPath?:{x:number;y:number}[];
+  /** A documented supplier variant. Absent preserves the original yard defaults. */
+  hardscape?:YardHardscape;
+  inlays?:PatioInlay[];
+}
 export interface TerrainConfig {widthFt:number;depthFt:number;elevationIn:number;slopePct:number}
 /** Backyard items priced at the site cost estimator's allowances. Not drawn in 3D: placed and confirmed at the site visit. */
 export interface YardAllowances {finish:'budget'|'mid'|'premium';firePit:'none'|'wood'|'gas';kitchen:'none'|'basic'|'full';turfSqft:number;lighting:boolean}
@@ -187,7 +223,22 @@ export const INLITE_PRODUCTS: LightingProduct[] = [
   { id: 'cable_12_2', name: '12/2 Cable (100ft)', category: 'Accessory', cost: 245, laborCost: 0, description: 'Heavy Duty Low Voltage Cable' },
 ];
 
+/** Optional under-deck work. Absent keeps existing designs off, except the legacy hasDrainage switch. */
+export interface UnderDeckConfig {drainage:'none'|'rainescape'|'dryspace'|'zipup';ceiling:'none'|'aluminum'|'pvc'|'cedar';scope:'main'|'all';gravel:boolean;gravelDepthIn:number;floorMesh:boolean}
+/** Saved local edge vector; both endpoints may translate together, but length and direction stay measured. */
+export interface BoundaryEdgeLock {level:1|2|3;edge:number;dxIn:number;dyIn:number}
 export interface DeckData {
+  railSections?:RailSection[];
+  /** Absent = guard every eligible perimeter and stair edge. False = explicit enabled perimeter sections only. */
+  railDefault?:boolean;
+  boundaryLocks?:BoundaryEdgeLock[];
+  /** Physical directions, finite breaker segments and individual stock-piece edits; absent preserves old layouts. */
+  boardLayout?:BoardLayoutConfig;
+  /** Freely edited complete deck boundaries, local feet; absent preserves every legacy shape. */
+  deckOutlines?: {main?:OutlinePoint[];second?:OutlinePoint[];third?:OutlinePoint[]};
+  /** Fixed world origin of an edited lower level, feet. */
+  deckOutlineOffsets?: {second?:OutlinePoint;third?:OutlinePoint};
+  underDeck?: UnderDeckConfig;
   yardFeatures?: YardFeature[];
   terrainConfig?: TerrainConfig;
   yardAllowances?: YardAllowances;
@@ -208,6 +259,12 @@ export interface DeckData {
   deckFinishes?: DeckFinishes;
   /** A named exposed edge (e.g. 'wingR-end') for the primary stair flight; overrides stairPosition. */
   stairEdgeId?: string;
+  /** Open stair attachment path, in local inches on the lowest deck perimeter. */
+  stairPath?: {points:{x:number;y:number}[]};
+  /** Grade-flight riser count; absent means derive uniform rises from the deck elevation. */
+  stairRiserCount?: number;
+  /** Grade-flight going in inches; absent keeps the selected product's tread layout. */
+  stairTreadDepthIn?: number;
   /** Named wrap edge of the main deck for the second level; overrides level2Position. */
   level2EdgeId?: string;
   /** The step or stair between the main deck and the second level runs their full shared edge. */
@@ -295,13 +352,14 @@ export interface DeckData {
     wireDistance: number;
   };
   /** Simple post/stair lighting intent; kept separate so it survives a zero count. */
-  autoLighting?: {posts?:boolean;stairs?:boolean;stairStyle?:'evo_hyde'|'evo_flex'};
+  autoLighting?: {posts?:boolean;stairs?:boolean;border?:boolean;stairStyle?:'evo_hyde'|'evo_flex'};
   benchLf: number;
   /** Priced privacy area. Derived from privacyScreens whenever screens are present. */
   privacySqft: number;
   privacyScreens?: PrivacyScreen[];
   hasDrainage: boolean;
   hasDemo: boolean;
+  pergola?:PergolaSelection;
   pergolaSqft: number;
   
   // Add-on specific
@@ -311,6 +369,9 @@ export interface DeckData {
 
   // Contractor overrides
   customLaborCost?: number;
+  quoteResolutions?: QuoteResolution[];
+  /** Private revision snapshot; excluded by public serializers and agent context. */
+  pergolaQuoteCosts?: PergolaQuoteContext;
   materialMarkup?: number;
   customOverrides?: Record<string, { qty?: number; cost?: number }>;
 
@@ -325,11 +386,11 @@ export interface DeckData {
 // Golden Maple sells four decking lines: pressure treated, cedar, TimberTech and
 // Deckorators. Trex and Ipe were removed 2026-07-15 (not sold).
 //
-// costPerSqft = TRUE supplier cost per square foot of deck surface, from the Carr
-// Landscape Depot 2025 price book TRADE column (per-board price ÷ length = $/lin-ft,
-// × 2.1818 lin-ft per sqft for a 5.5" board). Contractor markup applied separately
-// in calculations.ts (materialMarkup). Colours within a collection are all the same
-// price — Carr prices per collection, not per colour.
+// costPerSqft is the purchasing basis before contractor markup. Unchanged lines
+// retain Carr's archived 2025 trade rates; cedar remains an allowance. Terrain and
+// Reserve use dated representative retail SKUs in supplierRates.ts, not trade quotes.
+// Board price ÷ length ÷ (5.5/12) converts to this engine's square-foot basis.
+// Collection benchmarks do not establish every colour/profile's final order price.
 //
 // `colors[].swatch` is the swatch FILE NAME in src/assets/swatches — every one is
 // REAL manufacturer product photography (timbertech.com/colors, deckorators.com)
@@ -366,16 +427,18 @@ export const MATERIAL_TIERS = [
     ],
   },
   {
-    id: 'tt_terrain', name: 'TimberTech PRO Terrain+', tier: 'Mid Composite', priceRange: '$12.15/sqft cost',
-    costPerSqft: 12.15, isComposite: true, isHidden: false, // Carr Terrain+ $66.84/12'
+    id: 'tt_terrain', name: 'TimberTech Terrain', tier: 'Mid Composite', priceRange: `$${sourcedDeckingSqft('tt_terrain').toFixed(2)}/sqft benchmark`,
+    costPerSqft: sourcedDeckingSqft('tt_terrain'), isComposite: true, isHidden: false,
+    note: 'DeckMart regular retail purchasing benchmark checked September 26, 2026; clearance pricing excluded. Confirm the selected colour, profile, stock length and delivery before a final quote.',
     colors: [
       { name: 'Brown Oak', swatch: 'tt-terrain-brown-oak.jpg' },
       { name: 'Silver Maple', swatch: 'tt-terrain-silver-maple.jpg' },
     ],
   },
   {
-    id: 'tt_reserve', name: 'TimberTech PRO Reserve', tier: 'Mid-Premium Composite', priceRange: '$12.15/sqft cost',
-    costPerSqft: 12.15, isComposite: true, isHidden: false, // Carr Reserve $66.84/12' (book lists = Terrain+ ladder — confirm)
+    id: 'tt_reserve', name: 'TimberTech PRO Reserve', tier: 'Mid-Premium Composite', priceRange: `$${sourcedDeckingSqft('tt_reserve').toFixed(2)}/sqft benchmark`,
+    costPerSqft: sourcedDeckingSqft('tt_reserve'), isComposite: true, isHidden: false,
+    note: 'DeckMart retail purchasing benchmark checked September 26, 2026. Confirm the selected colour, profile, stock length and delivery before a final quote.',
     colors: [
       { name: 'Antique Leather', swatch: 'tt-reserve-antique-leather.jpg' },
       { name: 'Dark Roast', swatch: 'tt-reserve-dark-roast.jpg' },

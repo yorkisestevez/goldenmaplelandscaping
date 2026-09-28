@@ -1,4 +1,5 @@
 import {createPricingQueue,type PricingRequest,type PricingResult} from './optionPricing';
+import {createQuoteAwarePricingReceiver} from './quoteAwarePricingReceiver';
 
 /**
  * The option deltas' worker (R6): prices options off the main thread, one per task, so no option's engine run (a
@@ -6,4 +7,5 @@ import {createPricingQueue,type PricingRequest,type PricingResult} from './optio
  */
 const scope=self as unknown as {postMessage:(result:PricingResult)=>void;addEventListener:(type:'message',listener:(event:MessageEvent<PricingRequest>)=>void)=>void};
 const receive=createPricingQueue(result=>scope.postMessage(result),step=>setTimeout(step,0));
-scope.addEventListener('message',event=>receive(event.data));
+const quoteAware=createQuoteAwarePricingReceiver(receive,()=>import('../quoteResolutions'),job=>job.items.forEach(item=>scope.postMessage({job:job.job,key:item.key,figures:null})));
+scope.addEventListener('message',event=>quoteAware(event.data));

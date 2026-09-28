@@ -1,6 +1,6 @@
-import {contrastColour} from '../boardFinishes';
-import {DECKING_CATALOGUE} from '../manufacturerCatalog';
-import type {BoardPattern,DeckData,DeckInlay,InlayFill} from '../types';
+import {contrastColour,parseColourRef} from '../boardFinishes';
+import {DECKING_CATALOGUE} from '../manufacturerRuntimeCatalogue';
+import type {BoardPattern,DeckData,DeckInlay,InlayFill,OutlinePoint} from '../types';
 import {getBoardRows,getHerringboneRows,getPictureFrameRuns,type BoardRun,type FootprintPlan,type PlanPoint} from './deckGeometry';
 import {boardOutline,offsetPolygons,polygonBoard,polygonCut,signedArea} from './polygonCuts';
 
@@ -17,7 +17,7 @@ import {boardOutline,offsetPolygons,polygonBoard,polygonCut,signedArea} from './
  * and leaves room for two boards inside a frame; one that breaks a rule is kept but not built, and says why.
  * Framing: inlayFraming.ts, plus build-up joists under bands running front to back (bandBuildUps, in deckTakeoff.ts).
  */
-export const INLAY_LIMITS={max:8,rugFt:[2,20] as const,diamondFt:[2,14] as const,medallionFt:[3,10] as const,bandBoards:[1,4] as const,offsetFt:[-30,30] as const};
+export const INLAY_LIMITS={max:8,rugFt:[2,20] as const,diamondFt:[2,14] as const,medallionFt:[3,10] as const,bandBoards:[1,4] as const,offsetFt:[-30,30] as const,rotationDeg:[-360,360] as const,customPoints:64,customCoordinateIn:240,customSpanIn:240};
 export type InlayStatus='ok'|'outside'|'overlap'|'small'|'blocked';
 type Band=Extract<DeckInlay,{kind:'band'}>;
 type Shaped=Exclude<DeckInlay,{kind:'band'}>;
@@ -26,6 +26,8 @@ export interface InlayPlan{
   /** Outer edge of the inlay (a band's largest piece), and the edge of the fill inside its frame (positive shoelace
    * area; empty for a band, which has no frame). */
   outline:PlanPoint[];inner:PlanPoint[];
+  /** Custom concave frames can leave more than one separate interior. */
+  inners?:PlanPoint[][];
   /** Every area the inlay covers: its outline, or each piece of a band where the field's outline splits it. */
   pieces:PlanPoint[][];
   frameRows:1|2;pattern:InlayFill;
@@ -60,7 +62,7 @@ const MESSAGES:Record<Exclude<InlayStatus,'ok'|'blocked'>,string>={
   small:'It is too small for its frame: the inside needs room for at least two boards.',
 };
 const BAND_OUTSIDE='It runs alongside the deck’s edge, border or a corner of the deck. Keep one full board beside it: move it.';
-export const INLAY_KIND_NAMES:Record<DeckInlay['kind'],string>={rug:'framed rectangle',diamond:'diamond',band:'band',medallion:'medallion'};
+export const INLAY_KIND_NAMES:Record<DeckInlay['kind'],string>={rug:'framed rectangle',diamond:'diamond',band:'band',medallion:'medallion',custom:'custom polygon'};
 const area=(polys:PlanPoint[][])=>polys.reduce((n,p)=>n+Math.abs(signedArea(p)),0);
 const perimeter=(p:PlanPoint[])=>p.reduce((n,a,i)=>{const b=p[(i+1)%p.length];return n+Math.hypot(b.x-a.x,b.y-a.y);},0);
 const bounds=(polys:PlanPoint[][])=>{const v=polys.flat();return {x0:Math.min(...v.map(p=>p.x)),x1:Math.max(...v.map(p=>p.x)),y0:Math.min(...v.map(p=>p.y)),y1:Math.max(...v.map(p=>p.y))};};
@@ -71,13 +73,93 @@ const polygonAround=(c:PlanPoint,r:number)=>Array.from({length:MEDALLION_SIDES},
 /** A band's width across its boards, in plan inches. */
 export const bandWidthIn=(boards:number,boardWidth:number,gap:number)=>boards*boardWidth+(boards-1)*gap;
 
+/** Strict point descriptors: importing a polygon must never execute a getter. */
+export function validateCustomInlayPoints(input:unknown):OutlinePoint[]{
+  if(!Array.isArray(input)||Object.getPrototypeOf(input)!==Array.prototype||input.length<3||input.length>INLAY_LIMITS.customPoints)throw new Error('A custom inlay needs 3 to 64 points.');
+  const arrayKeys=Reflect.ownKeys(input);
+  if(arrayKeys.length!==input.length+1||arrayKeys.some(k=>k!=='length'&&(typeof k!=='string'||!/^\d+$/.test(k))))throw new Error('Invalid custom inlay point list.');
+  const points:OutlinePoint[]=[];
+  for(let i=0;i<input.length;i++){
+    const entry=Object.getOwnPropertyDescriptor(input,String(i));
+    if(!entry||!entry.enumerable||!('value'in entry))throw new Error('Invalid custom inlay point list.');
+    const raw=entry.value;
+    if(!raw||typeof raw!=='object'||![Object.prototype,null].includes(Object.getPrototypeOf(raw)))throw new Error('Invalid custom inlay point.');
+    if(Reflect.ownKeys(raw).length!==2)throw new Error('A custom point has only x and y.');
+    const x=Object.getOwnPropertyDescriptor(raw,'x'),y=Object.getOwnPropertyDescriptor(raw,'y');
+    if(!x?.enumerable||!y?.enumerable||!('value'in x)||!('value'in y)||typeof x.value!=='number'||typeof y.value!=='number'||!Number.isFinite(x.value)||!Number.isFinite(y.value)||Math.abs(x.value)>INLAY_LIMITS.customCoordinateIn||Math.abs(y.value)>INLAY_LIMITS.customCoordinateIn)throw new Error('Custom inlay points must be finite inches within ±240.');
+    points.push({x:x.value,y:y.value});
+  }
+  const b=bounds([points]);
+  if(b.x1-b.x0>INLAY_LIMITS.customSpanIn||b.y1-b.y0>INLAY_LIMITS.customSpanIn)throw new Error('Keep a custom inlay within 20 ft across and out.');
+  const cross=(a:PlanPoint,b:PlanPoint,c:PlanPoint)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+  const on=(a:PlanPoint,b:PlanPoint,p:PlanPoint)=>Math.abs(cross(a,b,p))<1e-8&&p.x>=Math.min(a.x,b.x)-1e-8&&p.x<=Math.max(a.x,b.x)+1e-8&&p.y>=Math.min(a.y,b.y)-1e-8&&p.y<=Math.max(a.y,b.y)+1e-8;
+  for(let i=0;i<points.length;i++){
+    const a=points[i],b=points[(i+1)%points.length],prior=points[(i+points.length-1)%points.length];
+    if(Math.hypot(b.x-a.x,b.y-a.y)<.001||Math.abs(cross(prior,a,b))<1e-8&&(a.x-prior.x)*(b.x-a.x)+(a.y-prior.y)*(b.y-a.y)<0)throw new Error('Custom inlay edges must not repeat or double back.');
+    for(let j=i+1;j<points.length;j++){
+      if(j===i+1||i===0&&j===points.length-1)continue;
+      const c=points[j],e=points[(j+1)%points.length];
+      if(cross(a,b,c)*cross(a,b,e)<0&&cross(c,e,a)*cross(c,e,b)<0||on(a,b,c)||on(a,b,e)||on(c,e,a)||on(c,e,b))throw new Error('Custom inlay edges cross or touch themselves.');
+    }
+  }
+  const signed=signedArea(points);if(Math.abs(signed)<.000001)throw new Error('A custom inlay needs a nonzero area.');
+  return signed<0?points.reverse():points;
+}
+/** Canonical public inlay validation shared by import, direct placement and agent edits. */
+export function validateDeckInlay(input:unknown):DeckInlay{
+  if(!input||typeof input!=='object'||Array.isArray(input)||![Object.prototype,null].includes(Object.getPrototypeOf(input)))throw new Error('Invalid inlay.');
+  for(const key of Reflect.ownKeys(input)){
+    const descriptor=Object.getOwnPropertyDescriptor(input,key);
+    if(typeof key!=='string'||!descriptor?.enumerable||!('value'in descriptor))throw new Error('Invalid inlay record.');
+  }
+  const raw=input as Record<string,unknown>,number=(v:unknown,lo:number,hi:number,label:string)=>{
+    if(typeof v!=='number'||!Number.isFinite(v)||v<lo||v>hi)throw new Error(`${label} must be between ${lo} and ${hi}.`);return v;
+  };
+  if(typeof raw.id!=='string'||!/^[a-z0-9-]{1,24}$/.test(raw.id)||!['rug','diamond','band','medallion','custom'].includes(raw.kind as string))throw new Error('Invalid inlay id or kind.');
+  const common=['id','kind','level','fill'],shaped=['dxFt','dyFt','rotationDeg','frame'];
+  const allowed=new Set([...common,...(raw.kind==='band'?['direction','atFt','boards']:raw.kind==='medallion'?[...shaped,'diameterFt','style']:raw.kind==='custom'?[...shaped,'points','name','frameRows','pattern']:[...shaped,'widthFt','depthFt','frameRows','pattern'])]);
+  if(Object.keys(raw).some(k=>!allowed.has(k)))throw new Error('Unknown or irrelevant inlay field.');
+  if(raw.level!==undefined&&![1,2,3].includes(raw.level as number))throw new Error('Invalid inlay level.');
+  for(const key of ['frame','fill'])if(raw[key]!==undefined&&!parseColourRef(raw[key]))throw new Error('Unknown inlay colour.');
+  const level=raw.level!==undefined&&raw.level!==1?{level:raw.level as 2|3}:{},fill=raw.fill!==undefined?{fill:raw.fill as string}:{},frame=raw.frame!==undefined?{frame:raw.frame as string}:{};
+  const offset=(v:unknown)=>v===undefined||v===0?undefined:number(v,...INLAY_LIMITS.offsetFt,'Inlay position');
+  if(raw.kind==='band'){
+    if(raw.rotationDeg!==undefined)throw new Error('A full-field band has no separate rotation.');
+    if(raw.direction!=='across'&&raw.direction!=='along'||!Number.isInteger(raw.boards)||(raw.boards as number)<1||(raw.boards as number)>4)throw new Error('Invalid band direction or board count.');
+    const atFt=offset(raw.atFt);return {id:raw.id,kind:'band',...level,direction:raw.direction,...(atFt!==undefined?{atFt}:{}),boards:raw.boards as 1|2|3|4,...fill};
+  }
+  const dxFt=offset(raw.dxFt),dyFt=offset(raw.dyFt),rotationDeg=raw.rotationDeg===undefined?undefined:number(raw.rotationDeg,...INLAY_LIMITS.rotationDeg,'Inlay rotation');
+  const placement={...(dxFt!==undefined?{dxFt}:{}),...(dyFt!==undefined?{dyFt}:{}),...(rotationDeg?{rotationDeg}:{})};
+  if(raw.kind==='medallion'){
+    if(!['round','compass','compass-rose','sunburst'].includes(raw.style as string))throw new Error('Invalid medallion style.');
+    return {id:raw.id,kind:'medallion',...level,...placement,diameterFt:number(raw.diameterFt,...INLAY_LIMITS.medallionFt,'Medallion size'),style:raw.style as 'round'|'compass'|'compass-rose'|'sunburst',...frame,...fill};
+  }
+  if(raw.frameRows!==undefined&&raw.frameRows!==1&&raw.frameRows!==2)throw new Error('Invalid inlay frame rows.');
+  if(raw.pattern!==undefined&&!['Straight','Diagonal','Herringbone'].includes(raw.pattern as string))throw new Error('Invalid inlay pattern.');
+  const finish={...(raw.frameRows===2?{frameRows:2 as const}:{}),...(raw.pattern!==undefined&&raw.pattern!=='Straight'?{pattern:raw.pattern as 'Diagonal'|'Herringbone'}:{}),...frame,...fill};
+  if(raw.kind==='custom'){
+    if(raw.name!==undefined&&(typeof raw.name!=='string'||raw.name.length>40))throw new Error('A custom inlay name is at most 40 characters.');
+    const name=typeof raw.name==='string'?raw.name.trim():'';
+    return {id:raw.id,kind:'custom',...level,...placement,points:validateCustomInlayPoints(raw.points),...(name?{name}:{}),...finish};
+  }
+  const limits=raw.kind==='rug'?INLAY_LIMITS.rugFt:INLAY_LIMITS.diamondFt,widthFt=number(raw.widthFt,limits[0],limits[1],'Inlay width'),depthFt=raw.kind==='diamond'?widthFt:number(raw.depthFt,limits[0],limits[1],'Inlay depth');
+  return {id:raw.id,kind:raw.kind as 'rug'|'diamond',...level,...placement,widthFt,depthFt,...finish};
+}
+const rotatePoints=(points:PlanPoint[],c:PlanPoint,angle:number)=>{
+  if(!angle)return points;
+  const a=angle*Math.PI/180,co=Math.cos(a),si=Math.sin(a);
+  return points.map(p=>({x:c.x+(p.x-c.x)*co-(p.y-c.y)*si,y:c.y+(p.x-c.x)*si+(p.y-c.y)*co}));
+};
+
 /** The outline of a rug, diamond or medallion in level-local plan inches (a band's comes from the field). */
 export function inlayOutline(inlay:Shaped,centre:PlanPoint):PlanPoint[]{
   const cx=centre.x+(inlay.dxFt??0)*12,cy=centre.y+(inlay.dyFt??0)*12;
-  if(inlay.kind==='medallion')return polygonAround({x:cx,y:cy},inlay.diameterFt*6);
-  if(inlay.kind==='diamond'){const h=inlay.widthFt*12/Math.SQRT2;return [{x:cx,y:cy-h},{x:cx+h,y:cy},{x:cx,y:cy+h},{x:cx-h,y:cy}];}
+  const c={x:cx,y:cy},rotate=(p:PlanPoint[])=>rotatePoints(p,c,inlay.rotationDeg??0);
+  if(inlay.kind==='custom')return rotate(inlay.points.map(p=>({x:cx+p.x,y:cy+p.y})));
+  if(inlay.kind==='medallion')return rotate(polygonAround(c,inlay.diameterFt*6));
+  if(inlay.kind==='diamond'){const h=inlay.widthFt*12/Math.SQRT2;return rotate([{x:cx,y:cy-h},{x:cx+h,y:cy},{x:cx,y:cy+h},{x:cx-h,y:cy}]);}
   const w=inlay.widthFt*6,d=inlay.depthFt*6;
-  return [{x:cx-w,y:cy-d},{x:cx+w,y:cy-d},{x:cx+w,y:cy+d},{x:cx-w,y:cy+d}];
+  return rotate([{x:cx-w,y:cy-d},{x:cx+w,y:cy-d},{x:cx+w,y:cy+d},{x:cx-w,y:cy+d}]);
 }
 /** The fill's boards run across (front to back, 90°), at 45°, or in a herringbone (45° and 135°). */
 export const fillAngles=(pattern:InlayFill)=>pattern==='Straight'?[90]:pattern==='Diagonal'?[45]:[45,135];
@@ -131,23 +213,32 @@ export function planInlays(inlays:DeckInlay[],ctx:InlayContext,opts:{boards?:boo
       const boards=!withBoards||span.rows?[]:pieces.flatMap(piece=>real(getBoardRows(fp(piece,centre),{boardWidth,gap,angleDeg:across?0:90,inset:0,maxBoardLen:stockLength}))).map(r=>({...r,role:'inlay-fill' as const,inlay:inlay.id}));
       return {...base,status:'ok' as const,boards};
     }
-    const medallion=inlay.kind==='medallion',frameRows=inlay.kind==='medallion'?1:inlay.frameRows??1,pattern:InlayFill=inlay.kind==='medallion'?'Straight':inlay.pattern??'Straight',outline=inlayOutline(inlay,centre);
+    const medallion=inlay.kind==='medallion',custom=inlay.kind==='custom',rotation=inlay.rotationDeg??0,complex=custom||Math.abs(rotation%360)>1e-8,frameRows=medallion?1:inlay.frameRows??1,pattern:InlayFill=medallion?'Straight':inlay.pattern??'Straight',outline=inlayOutline(inlay,centre);
     const c={x:centre.x+(inlay.dxFt??0)*12,y:centre.y+(inlay.dyFt??0)*12};
     // A medallion's inside keeps its 16 sides, one frame row in (so its wedges line up with the vertices).
-    const inner=inlay.kind==='medallion'?polygonAround(c,inlay.diameterFt*6-pitch/Math.cos(Math.PI/MEDALLION_SIDES)):offsetPolygons([outline],frameRows*pitch)[0]??[];
+    const interiors=inlay.kind==='medallion'?[rotatePoints(polygonAround(c,inlay.diameterFt*6-pitch/Math.cos(Math.PI/MEDALLION_SIDES)),c,rotation)]:offsetPolygons([outline],frameRows*pitch);
+    const inner=interiors[0]??[];
     const base={id:inlay.id,kind:inlay.kind,frameRows,pattern,outline,inner,pieces:[outline],boards:[] as BoardRun[],edgeFt:perimeter(outline)/12,fillSqft:inner.length?Math.abs(signedArea(inner))/144:0,
-      ...(medallion?{solid:offsetPolygons([outline],-boardWidth)[0]??outline,quote:true}:{})};
+      ...(custom?{inners:interiors,fillSqft:area(interiors)/144}:{}),
+      ...(medallion||complex?{solid:offsetPolygons([outline],-boardWidth)[0]??outline,quote:true}:{})};
     if(ctx.blocked)return {...base,status:'blocked' as const,message:ctx.blocked};
     let status:InlayStatus='ok';
-    if(!inner.length||!offsetPolygons([inner],pitch*.99).length)status='small';
+    if(!inner.length||!offsetPolygons(interiors,pitch*.99).length)status='small';
     else if(area(polygonCut([outline],allowed,true))>1)status='outside';
     else if(overlaps([outline]))status='overlap';
     if(status!=='ok')return {...base,status,message:MESSAGES[status]};
     built.push(outline);
     if(!withBoards)return {...base,status};
     const frame=getPictureFrameRuns(fp(outline,c),frameRows,boardWidth,gap).map(b=>({...b,role:'inlay-frame' as const,inlay:inlay.id}));
-    const fill=inlay.kind==='medallion'&&inlay.style==='compass'?compassWedges(c,inner,inlay.diameterFt*6,ctx).map(b=>({...b,inlay:inlay.id}))
-      :real(pattern==='Herringbone'?getHerringboneRows(fp(inner,c),boardWidth,gap,0):getBoardRows(fp(inner,c),{boardWidth,gap,angleDeg:pattern==='Diagonal'?45:90,inset:0,maxBoardLen:stockLength})).map(b=>({...b,role:'inlay-fill' as const,inlay:inlay.id}));
+    const unrotate=(p:PlanPoint[])=>rotatePoints(p,c,-rotation),rotateRun=(b:BoardRun):BoardRun=>{
+      if(!rotation)return b;
+      const middle=rotatePoints([{x:b.cx,y:b.cy}],c,rotation)[0];
+      return {...b,cx:middle.x,cy:middle.y,angleDeg:b.angleDeg+rotation,...(b.polygon?{polygon:rotatePoints(b.polygon,c,rotation)}:{})};
+    };
+    const medallionFill=inlay.kind==='medallion'&&inlay.style!=='round'
+      ?(inlay.style==='compass'?compassWedges(c,unrotate(inner),inlay.diameterFt*6,ctx):radialMedallion(c,unrotate(inner),inlay.style,ctx)).map(rotateRun):null;
+    const fill=medallionFill?medallionFill.map(b=>({...b,inlay:inlay.id}))
+      :interiors.flatMap(poly=>real(pattern==='Herringbone'?getHerringboneRows(fp(unrotate(poly),c),boardWidth,gap,0).map(rotateRun):getBoardRows(fp(poly,c),{boardWidth,gap,angleDeg:(pattern==='Diagonal'?45:90)+rotation,inset:0,maxBoardLen:stockLength}))).map(b=>({...b,role:'inlay-fill' as const,inlay:inlay.id}));
     return {...base,status,boards:[...frame,...fill]};
   });
 }
@@ -165,6 +256,25 @@ function compassWedges(c:PlanPoint,inner:PlanPoint[],radius:number,ctx:InlayCont
     return polygonCut([wedge],joints,true).flatMap(piece=>getBoardRows({outline:piece,bounds:{w:2*c.x,h:2*c.y},isCurved:false},{boardWidth,gap,angleDeg,inset:0,maxBoardLen:stockLength}))
       .filter(b=>!b.polygon||Math.abs(signedArea(b.polygon))>=1).map(b=>({...b,role:i%2?'inlay-frame' as const:'inlay-fill' as const}));
   }).flat();
+}
+
+/** Sixteen radial rays, or an eight-point rose with split colour halves and a real surrounding field.
+ * Sector domains meet at the centre, so subtracting the rose never creates a discarded polygon hole. */
+function radialMedallion(c:PlanPoint,inner:PlanPoint[],style:'compass-rose'|'sunburst',ctx:InlayContext):BoardRun[]{
+  const {boardWidth,gap,stockLength}=ctx,radius=Math.hypot(inner[0].x-c.x,inner[0].y-c.y);
+  const ray=(a:number,r:number)=>({x:c.x+Math.cos(a)*r,y:c.y+Math.sin(a)*r});
+  const spokeJoints=Array.from({length:16},(_,i)=>{
+    const a=i*Math.PI/8,tip=ray(a,radius+12),nx=-Math.sin(a)*gap/2,ny=Math.cos(a)*gap/2;
+    return [{x:c.x+nx,y:c.y+ny},{x:tip.x+nx,y:tip.y+ny},{x:tip.x-nx,y:tip.y-ny},{x:c.x-nx,y:c.y-ny}];
+  });
+  const rose=Array.from({length:16},(_,i)=>ray(i*Math.PI/8,i%2?radius*.30:radius*(i%4===0?.97:.72))),grownRose=offsetPolygons([rose],-gap/2);
+  const rows=(polys:PlanPoint[][],angle:number,role:'inlay-fill'|'inlay-frame')=>polys.flatMap(outline=>getBoardRows({outline,bounds:{w:2*c.x,h:2*c.y},isCurved:false},{boardWidth,gap,angleDeg:angle,inset:0,maxBoardLen:stockLength})).filter(b=>!b.polygon||Math.abs(signedArea(b.polygon))>=1).map(b=>({...b,role}));
+  return inner.flatMap((a,i)=>{
+    const b=inner[(i+1)%inner.length],sector=[c,a,b];
+    if(style==='sunburst')return rows(polygonCut([sector],spokeJoints,true),(i+.5)*22.5,i%2?'inlay-frame':'inlay-fill');
+    const star=polygonCut([[c,rose[i],rose[(i+1)%16]]],spokeJoints,true),background=polygonCut(polygonCut([sector],grownRose,true),spokeJoints,true);
+    return [...rows(star,Math.floor((i+1)/2)*45,i%2?'inlay-frame':'inlay-fill'),...rows(background,90,'inlay-fill')];
+  });
 }
 
 /** Cut the level's field, border and breaker boards around the built inlays (with the board gap), recolour the rows
@@ -219,7 +329,7 @@ export function stripeToBand(data:Pick<DeckData,'inlays'|'deckingMaterial'|'deck
 export function levelInlayContext(data:Pick<DeckData,'deckingMaterial'|'boardWidth'|'pictureFrameRows'|'pattern'>,level:{footprint:FootprintPlan;deckingFootprint?:FootprintPlan}):InlayContext{
   const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)||DECKING_CATALOGUE[0];
   const gap=material.isComposite?.1875:.25,borders=data.pictureFrameRows||(data.pattern==='Picture Frame'?1:0);
-  return {fieldPolygons:offsetPolygons([(level.deckingFootprint??level.footprint).outline],borders*(data.boardWidth+gap)),boardWidth:data.boardWidth,gap,stockLength:material.id==='cedar'?144:192,centre:{x:level.footprint.bounds.w/2,y:level.footprint.bounds.h/2},straight:data.pattern==='Straight'||data.pattern==='Picture Frame'};
+  return {fieldPolygons:offsetPolygons([(level.deckingFootprint??level.footprint).outline],borders*(data.boardWidth+gap)),boardWidth:data.boardWidth,gap,stockLength:material.id==='cedar'?144:192,centre:{x:(level.footprint.origin?.x??0)+level.footprint.bounds.w/2,y:(level.footprint.origin?.y??0)+level.footprint.bounds.h/2},straight:data.pattern==='Straight'||data.pattern==='Picture Frame'};
 }
 
 /** The nearest version of an inlay that fits, clear of the other inlays on its level: at its size, first moved toward
@@ -235,17 +345,19 @@ export function fitInlay(inlay:DeckInlay,others:DeckInlay[],ctx:InlayContext):De
     for(let boards=inlay.boards;boards>=1;boards--)for(const a of spots){const c:Band={...inlay,boards:boards as Band['boards'],atFt:a};if(!a)delete c.atFt;if(fits(c))return c;}
     return null;
   }
-  const lo=inlay.kind==='rug'?INLAY_LIMITS.rugFt[0]:inlay.kind==='diamond'?INLAY_LIMITS.diamondFt[0]:INLAY_LIMITS.medallionFt[0];
+  const lo=inlay.kind==='rug'||inlay.kind==='custom'?INLAY_LIMITS.rugFt[0]:inlay.kind==='diamond'?INLAY_LIMITS.diamondFt[0]:INLAY_LIMITS.medallionFt[0];
   const b=bounds(allowed);
   // Quick reject: an outline outside the field's bounding box cannot fit.
   const inBox=(c:Shaped)=>inlayOutline(c,ctx.centre).every(p=>p.x>=b.x0-.01&&p.x<=b.x1+.01&&p.y>=b.y0-.01&&p.y<=b.y1+.01);
   const x0=inlay.dxFt??0,y0=inlay.dyFt??0,steps=Array.from({length:21},(_,i)=>i-10);
   const around=steps.flatMap(x=>steps.map(y=>({x:x0+x,y:y0+y}))).filter(p=>p.x>=olo&&p.x<=ohi&&p.y>=olo&&p.y<=ohi).sort((a,b)=>Math.hypot(a.x-x0,a.y-y0)-Math.hypot(b.x-x0,b.y-y0));
   for(let s=0;;s+=.5){
-    const sized:Shaped=inlay.kind==='medallion'?{...inlay,diameterFt:Math.max(lo,inlay.diameterFt-s)}:{...inlay,widthFt:Math.max(lo,inlay.widthFt-s),depthFt:inlay.kind==='diamond'?Math.max(lo,inlay.widthFt-s):Math.max(lo,inlay.depthFt-s)};
+    const customExtent=inlay.kind==='custom'?Math.max(bounds([inlay.points]).x1-bounds([inlay.points]).x0,bounds([inlay.points]).y1-bounds([inlay.points]).y0)/12:0;
+    const scale=customExtent?Math.min(1,Math.max(lo,customExtent-s)/customExtent):1;
+    const sized:Shaped=inlay.kind==='custom'?{...inlay,points:inlay.points.map(p=>({x:p.x*scale,y:p.y*scale}))}:inlay.kind==='medallion'?{...inlay,diameterFt:Math.max(lo,inlay.diameterFt-s)}:{...inlay,widthFt:Math.max(lo,inlay.widthFt-s),depthFt:inlay.kind==='diamond'?Math.max(lo,inlay.widthFt-s):Math.max(lo,inlay.depthFt-s)};
     const spots=[...[1,.5,0].map(t=>({x:snap(x0*t),y:snap(y0*t)})),...around];
     for(const p of spots){const c:Shaped={...sized,dxFt:snap(p.x),dyFt:snap(p.y)};if(inBox(c)&&fits(c))return {...c,...(c.dxFt?{}:{dxFt:undefined}),...(c.dyFt?{}:{dyFt:undefined})};}
-    if(sized.kind==='medallion'?sized.diameterFt===lo:sized.widthFt===lo&&sized.depthFt===lo)return null;
+    if(sized.kind==='custom'?customExtent-s<=lo:sized.kind==='medallion'?sized.diameterFt===lo:sized.widthFt===lo&&sized.depthFt===lo)return null;
   }
 }
 
@@ -267,6 +379,7 @@ export function inlayWords(plans:InlayPlan[],inlays:DeckInlay[]):string|undefine
   const inside:Record<InlayFill,string>={Straight:'boards running front to back',Diagonal:'boards at 45°',Herringbone:'a herringbone'},count=['one','two','three','four'];
   return `Inlays: ${built.map(p=>{const i=inlays.find(x=>x.id===p.id)!;
     if(i.kind==='band')return `a band ${count[i.boards-1]} board${i.boards===1?'':'s'} wide ${i.direction==='across'?'across the deck':'running front to back'}`;
-    if(i.kind==='medallion')return `a ${i.diameterFt} ft ${i.style==='compass'?'compass medallion in eight wedges':'round medallion with boards running front to back inside'}`;
+    if(i.kind==='medallion')return `a ${i.diameterFt} ft ${i.style==='compass'?'compass medallion in eight wedges':i.style==='compass-rose'?'compass rose with eight split pointed rays':i.style==='sunburst'?'sunburst with sixteen radial rays':'round medallion with boards running front to back inside'}`;
+    if(i.kind==='custom')return `a framed ${i.name||'custom polygon'} with ${inside[p.pattern]} inside`;
     return `${i.kind==='diamond'?`a ${i.widthFt} ft diamond`:`a ${i.widthFt} × ${i.depthFt} ft framed rectangle`} with ${inside[p.pattern]} inside`;}).join('; ')}`;
 }

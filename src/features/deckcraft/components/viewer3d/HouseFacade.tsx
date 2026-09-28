@@ -1,5 +1,5 @@
-import {useEffect,useMemo,useRef} from 'react';
-import {useThree,type ThreeEvent} from '@react-three/fiber';
+import {createContext,useContext,useEffect,useMemo,useRef} from 'react';
+import {useLoader,useThree,type ThreeEvent} from '@react-three/fiber';
 import * as THREE from 'three';
 import type {HouseOpening} from '../../types';
 import type {Box} from '../../deckTakeoff';
@@ -10,10 +10,13 @@ import {openingColour,openingColors,type OpeningColors} from '../../houseFinishe
 import type {FacadeFinish} from '../../houseWallFinishes';
 import {facadeSkins,openingShapes,type OpeningShape} from './houseCladdingSkins';
 import {splitAtBand} from './houseWainscot';
-import {paneGeometry,windowGlass} from './windowGlass';
+import {paneGeometry,createWindowGlass,type WindowRoom} from './windowGlass';
+import {reflectionBinding,registerWindowReflection,type WindowReflection} from './windowReflections';
 import {backingSurface,claddingSurface} from './houseSurfaceKinds';
+import roomPhoto from './assets/room-atelier.webp';
 
 const NONE:[number,number][]=[];
+const WindowContext=createContext<{reflection:WindowReflection;room:WindowRoom}|null>(null);
 type Shape=OpeningShape;
 
 /** A 2 in frame just inside an opening's glass, for the original (unstyled) glass doors and windows. */
@@ -21,9 +24,15 @@ const openingFrame=(o:Shape):Box[]=>{const w=Math.max(1,o.w-3),h=Math.max(1,o.h-
 
 /** A glass pane (windowGlass.ts): reflective glass with a room behind it, lit in the evening. */
 function Glass({x,y,z,w,h,evening,tilt=0}:{x:number;y:number;z:number;w:number;h:number;evening:boolean;tilt?:number}){
+ const photo=useLoader(THREE.TextureLoader,roomPhoto);
+ useMemo(()=>{photo.colorSpace=THREE.SRGBColorSpace;photo.wrapS=THREE.RepeatWrapping;photo.needsUpdate=true;},[photo]);
  const geometry=useMemo(()=>paneGeometry(w,h),[w,h]);
+ const context=useContext(WindowContext);
+ const fallback=useMemo(()=>reflectionBinding(),[]);
+ const material=useMemo(()=>createWindowGlass(evening,photo,{reflection:context?.reflection??fallback,room:context?.room??{x,y,w,h,door:false},offset:[x-(context?.room.x??x),y-(context?.room.y??y),z]}),[evening,photo,context,fallback,x,y,z,w,h]);
  useEffect(()=>()=>geometry.dispose(),[geometry]);
- return <mesh position={[x,y,z]} rotation={[tilt,0,0]} geometry={geometry} material={windowGlass(evening)}/>;
+ useEffect(()=>()=>material.dispose(),[material]);
+ return <mesh userData={{houseWindow:true}} position={[x,y,z]} rotation={[tilt,0,0]} geometry={geometry} material={material}/>;
 }
 
 /**
@@ -113,6 +122,14 @@ export default function HouseFacade({span,height,openings,hidden=NONE,finish,eve
  const moveDrag=(e:ThreeEvent<PointerEvent>)=>{const active=drag.current;if(!active)return;e.stopPropagation();const hit=e.ray.intersectPlane(active.plane,new THREE.Vector3());if(!hit)return;hit.applyMatrix4(active.inverse);onMoveHouseOpening?.(active.opening.id,{offsetPct:active.opening.offsetPct+(hit.x-active.start.x)/span*100,bottomIn:active.opening.bottomIn+hit.y-active.start.y});};
  const endDrag=(e:ThreeEvent<PointerEvent>)=>{if(!drag.current)return;e.stopPropagation();restoreControls();(e.target as unknown as {releasePointerCapture:(id:number)=>void}).releasePointerCapture(e.pointerId);};
  const shapes=useMemo(()=>openingShapes(span,openings),[span,openings]);
+ const scene=useThree(s=>s.scene),reflection=useMemo(()=>reflectionBinding(),[]);
+ const hasGlass=shapes.some(o=>o.type!=='Garage');
+ useEffect(()=>{if(!facadeRef.current||!hasGlass)return;const remove=registerWindowReflection(scene,facadeRef.current,reflection);invalidate();return remove;},[scene,reflection,hasGlass,invalidate]);
+ const rooms=useMemo(()=>{
+   const anchor=shapes.filter(o=>o.type==='Door'&&o.style!=='Single').sort((a,b)=>b.w-a.w)[0];
+   const shared=anchor?{x:anchor.x,y:anchor.y,w:span,h:anchor.h,door:true}:null;
+   return new Map(shapes.map(o=>[o.id,{reflection,room:shared&&o.bottomIn>=anchor!.bottomIn&&o.y<anchor!.bottomIn+108?shared:{x:o.x,y:o.y,w:o.w,h:o.h,door:o.type==='Door'}}]));
+ },[shapes,reflection,span]);
  const wall=useMemo(()=>houseWallParts(span,height,openings,hidden),[span,height,openings,hidden]);
  // The cladding over the wall (houseCladdingSkins.ts); a very large wall in a newer cladding is drawn plain. A wainscot
  // splits the wall at its top: the band in its own cladding under a trim cap, the wall's cladding above.
@@ -123,7 +140,7 @@ export default function HouseFacade({span,height,openings,hidden=NONE,finish,eve
  const pick=onSelectHouseWall&&((e:ThreeEvent<MouseEvent>)=>{if(e.delta>4)return;e.stopPropagation();onSelectHouseWall(wallId);invalidate();});
  const picked=!!selectedHouseWallId&&(selectedHouseWallId===wallId||selectedHouseWallId===blockId);
  const trim=useMemo(()=>{const boxes:Box[]=[];for(const o of shapes){for(const side of [-1,1])boxes.push({x:o.x+side*(o.w/2+1.5),y:o.y,z:1.8,w:3,h:o.h+6,d:2.2});for(const side of [-1,1])boxes.push({x:o.x,y:o.y+side*(o.h/2+1.5),z:1.8,w:o.w,h:3,d:2.2});}for(const x of [-span/2+1.5,span/2-1.5])boxes.push({x,y:height/2,z:1.2,w:3,h:height,d:1.8});boxes.push({x:0,y:height-2,z:1.5,w:span,h:4,d:2});return boxes;},[span,height,shapes]);
- return <group ref={facadeRef} onClick={pick}>
+ return <group ref={facadeRef} userData={{pickPartId:`wall:${wallId}`}} onClick={pick}>
   <HouseParts name="wall-with-actual-opening-cutouts" items={split?split.upper:wall} color={look.backing} surface={backingSurface(look.cladding)}/>
   <HouseParts items={skins.skin.pieces} color={look.color} name={look.partName} variation={look.variation} roughness={look.roughness} metalness={look.metalness} surface={claddingSurface(look.cladding)}/>
   {band&&split&&wainscot&&<>
@@ -133,10 +150,12 @@ export default function HouseFacade({span,height,openings,hidden=NONE,finish,eve
   </>}
   <HouseParts items={trim} color={trimColor} name="opening-and-corner-trim"/>
   {picked&&<PickedWall span={span} height={height}/>}
-  {shapes.map(o=>{const c=openingColors(colours,o);return <group key={o.id} name={`${o.facade}-${o.type}-${o.id}`} onPointerDown={e=>startDrag(e,o)} onPointerMove={moveDrag} onPointerUp={endDrag} onLostPointerCapture={restoreControls}>
+  {shapes.map(o=>{const c=openingColors(colours,o);return <group key={o.id} userData={{pickPartId:`opening:${o.id}`}} name={`${o.facade}-${o.type}-${o.id}`} onPointerDown={e=>startDrag(e,o)} onPointerMove={moveDrag} onPointerUp={endDrag} onLostPointerCapture={restoreControls}>
     {o.id===selectedHouseOpeningId&&<mesh position={[o.x,o.y,3.2]}><boxGeometry args={[o.w+7,o.h+7,.6]}/><meshBasicMaterial color="#df9b30" wireframe depthTest/></mesh>}
     <mesh position={[o.x,o.y,-12]}><boxGeometry args={[o.w,o.h,.5]}/><meshStandardMaterial color={evening?'#9b7b54':'#414947'} emissive={evening?'#efb873':'#000000'} emissiveIntensity={evening?.16:0} roughness={1}/></mesh>
+    <WindowContext.Provider value={rooms.get(o.id)!}>
     {o.type==='Garage'?<GarageDoor o={o} c={c}/>:o.type==='Door'&&o.style?<StyledDoor o={o} c={c} evening={evening}/>:o.type==='Window'&&o.style?<StyledWindow o={o} c={c} evening={evening}/>:<Glass x={o.x} y={o.y} z={.8} w={o.w-3} h={o.h-3} evening={evening}/>}
+    </WindowContext.Provider>
     {/* The original glass door or window gets a frame only once a colour is chosen for it (it has none otherwise). */}
     {o.type!=='Garage'&&!o.style&&openingColour(colours,o)&&<HouseParts items={openingFrame(o)} color={o.type==='Door'?c.slab:c.windowFrame} name="opening-frame"/>}
     <HouseParts items={[...(o.w>42&&o.type!=='Garage'&&!o.style?[{x:o.x,y:o.y,z:1.2,w:1.5,h:o.h,d:1.8}]:[]),...(o.type==='Window'&&!o.style?[{x:o.x,y:o.y,z:1.2,w:o.w,h:1.2,d:1.8}]:[])]} color={c.mullions} name="opening-mullions"/>

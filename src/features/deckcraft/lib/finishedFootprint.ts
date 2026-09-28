@@ -1,9 +1,11 @@
 import type {DeckData} from '../types';
 import type {EdgeContact,FootprintPlan,PlanPoint} from './deckGeometry';
-import {MANUFACTURER_ACCESSORIES} from '../manufacturerCatalog';
+import {MANUFACTURER_ACCESSORIES} from '../manufacturerRuntimeCatalogue';
 
 export const PICTURE_FRAME_OVERHANG_IN=1.5;
-export const pictureFrameOverhang=(data:DeckData)=>Math.max(0,Math.min(1.5,data.pictureFrameOverhangIn??PICTURE_FRAME_OVERHANG_IN));
+/** The lighting option is an explicit custom supported/recessed edge concept. The
+ * ordinary saved overhang remains unchanged, and returns when the option is off. */
+export const pictureFrameOverhang=(data:DeckData)=>data.autoLighting?.border&&(data.pictureFrameRows||data.pattern==='Picture Frame')?2.5:Math.max(0,Math.min(1.5,data.pictureFrameOverhangIn??PICTURE_FRAME_OVERHANG_IN));
 /** Structural outline follows rim centre lines in the existing construction model. */
 export function finishedFasciaOffset(data:DeckData){
   return MANUFACTURER_ACCESSORIES.some(p=>p.kind==='fascia'&&data.catalogueAccessories?.includes(p.id))?1.525:.75;
@@ -27,6 +29,7 @@ export function getFinishedFootprint(data:DeckData,fp:FootprintPlan,contact?:Edg
 export function pictureFrameCompatibility(data:DeckData):string[]{
   if(!(data.pictureFrameRows||data.pattern==='Picture Frame'))return [];
   const overhang=pictureFrameOverhang(data),notes=[`Deck width/depth refer to the structural rim centre-line footprint. Exposed outer picture-frame edges project ${overhang} in beyond the finished rim/fascia; the house edge terminates at the ledger.`];
+  if(data.autoLighting?.border)notes.push('The 2.5 in lighting border is a custom supported/recessed edge concept. Extra support is not shown as verified framing; obtain the manufacturer-compatible builder detail and quote before construction. EVO HYDE 550 needs 5–6 cm mounting space under an overhang.');
   if(['tt_vintage','tt_landmark','tt_harvest','tt_harvest_plus'].includes(data.deckingMaterial)){if(overhang>.5)notes.push(`Requested ${overhang} in picture-frame overhang exceeds TimberTech Advanced PVC’s 0.5 in installation limit. Reduce the overhang control to 0.5 in or obtain an approved alternative edge assembly. Source: TimberTech Advanced PVC Decking Installation Guide.`);}
   else if(data.deckingMaterial.startsWith('tt_')){if(overhang>1)notes.push(`Requested ${overhang} in picture-frame overhang exceeds TimberTech Composite’s 1 in limit. Reduce the overhang or confirm an alternative edge assembly. Source: TimberTech Composite Installation Guide, page 2.`);if(['tt_terrain','tt_terrain_plus','tt_prime','tt_prime_plus'].includes(data.deckingMaterial))notes.push('Scalloped Terrain / Prime boards permit end overhang only. The outer side of picture-frame boards requires supported, supplier-approved edge detailing even when the overall projection is reduced.');}
   if(['deck_voyage','deck_summit'].includes(data.deckingMaterial)&&overhang>1)notes.push(`Requested ${overhang} in picture-frame overhang exceeds Deckorators Surestone’s 1 in cantilever limit. Reduce the overhang control or obtain an approved alternative edge assembly. Source: Deckorators Surestone Technology installation instructions.`);

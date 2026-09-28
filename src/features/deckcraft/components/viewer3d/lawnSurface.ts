@@ -59,8 +59,10 @@ export function lawnMaterial(){
 
 /** The yard's ground (clipped round excavations) plus a far ring from its edge to FAR_RING_IN, flattening to the yard's
  * middle height. UVs in lawn tiles; uv1 is the occlusion map's. */
+/** The lawn's surface height at z (inches): the terrain plane, the lawn sitting just under it. */
+export const lawnHeight=(t:{elevationIn:number;slopePct:number},z:number)=>t.elevationIn+z*t.slopePct/100-.7;
 export function groundGeometry(yard:YardModel,cuts:{x:number;y:number}[][],width:number,depth:number,bounds:GroundBounds){
-  const positions:number[]=[],uvs:number[]=[],uv1:number[]=[],t=yard.terrain,height=(z:number)=>t.elevationIn+z*t.slopePct/100-.7;
+  const positions:number[]=[],uvs:number[]=[],uv1:number[]=[],t=yard.terrain,height=(z:number)=>lawnHeight(t,z);
   const push=(x:number,y:number,z:number)=>{positions.push(x,y,z);uvs.push(x/TILE_IN,z/TILE_IN);uv1.push(...occlusionUv(bounds,x,z));};
   const n=24,tw=bounds.width,td=bounds.depth,minX=bounds.minX,minZ=bounds.minZ;
   for(let ix=0;ix<n;ix++)for(let iz=0;iz<n;iz++){

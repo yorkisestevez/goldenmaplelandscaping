@@ -120,6 +120,13 @@ async function build(file:string,name:'day'|'evening'){
   const sunUp=Math.max(0,sunDir[1]),total=skyE.map((e,c)=>e+energy[c]*sunUp);
   const grey=luma(total[0],total[1],total[2]),balance=total.map(t=>grey/t),scale=Math.PI/grey;
   const gain=balance.map(b=>b*scale);
+  // Reusing one photographed clearing retains its trees when switching modes. Give that evening study a cool
+  // skylight grade, keeping luminance irradiance at π; unlike daylight this is intentionally not neutral white.
+  const eveningGrade=name==='evening'&&dayFile===eveningFile?[.48,.72,1.25]:[1,1,1];
+  if(eveningGrade[0]!==1){
+    const e=luma(...(skyE.map((v,c)=>v*gain[c]*eveningGrade[c]) as [number,number,number]));
+    for(let c=0;c<3;c++)gain[c]*=eveningGrade[c]*Math.PI/e;
+  }
   for(const img of [ibl,band])for(let i=0;i<img.length;i+=3)for(let c=0;c<3;c++)img[i+c]*=gain[c];
   const sunRgb=energy.map((e,c)=>e*gain[c]),sunIntensity=luma(sunRgb[0],sunRgb[1],sunRgb[2]),sunColor=bright?sunRgb.map(c=>c/Math.max(...sunRgb)):[1,1,1];
   // The band as sRGB of radiance ÷ bandScale, where bandScale is its 99.5th-percentile brightness.
@@ -138,7 +145,7 @@ async function build(file:string,name:'day'|'evening'){
     sunIntensity:+sunIntensity.toFixed(4),sunColor:sunColor.map(c=>+c.toFixed(4)),sunPixels:count,sunShare:+sunShare.toFixed(3),sunPainted:bright,
     skyIrradiance:+luma(...(skyE.map((e,c)=>e*gain[c]) as [number,number,number])).toFixed(4),
     bandScale:+bandScale.toFixed(4),bandTopDeg:BAND_TOP_DEG,bandBottomDeg:BAND_BOTTOM_DEG,
-    horizonColor:horizon.map(c=>+(c/hn).toFixed(4)),whiteBalance:balance.map(b=>+b.toFixed(4)),
+    horizonColor:horizon.map(c=>+(c/hn).toFixed(4)),whiteBalance:balance.map(b=>+b.toFixed(4)),eveningGrade,
   };
 }
 

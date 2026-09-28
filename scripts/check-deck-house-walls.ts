@@ -256,7 +256,7 @@ const NEW_KEYS=/"(wallFinishes|wainscot|gableAccent|finish)"/;
 {
   const facade=read('features/deckcraft/components/viewer3d/HouseFacade.tsx'),house=read('features/deckcraft/components/viewer3d/House3D.tsx'),panel=read('features/deckcraft/designer/PreviewPanel.tsx'),viewer=read('features/deckcraft/components/viewer3d/Deck3DViewer.tsx');
   ok(/onSelectHouseWall&&\(\(e:ThreeEvent<MouseEvent>\)=>\{if\(e\.delta>4\)return;e\.stopPropagation\(\);onSelectHouseWall\(wallId\)/.test(facade),'A click on a wall (not an orbit drag) picks it');
-  ok(/onSelectHouseWall=\{exteriorOpen\?setHouseWall:undefined\}/.test(panel)&&/selectedHouseWallId=\{exteriorOpen\?houseWall:undefined\}/.test(panel),'Walls can be picked in 3D only while the exterior studio is open');
+  ok(/onSelectHouseWall=\{!picking&&exteriorOpen\?setHouseWall:undefined\}/.test(panel)&&/selectedHouseWallId=\{exteriorOpen\?houseWall:undefined\}/.test(panel),'Exterior wall finishing picks remain scoped to the open studio and yield to explicit object selection');
   ok(/picked&&<PickedWall/.test(facade)&&/raycast=\{\(\)=>null\}/.test(facade)&&/selectedHouseWallId===blockId/.test(facade),'The picked wall (or every wall of a picked block) is outlined, never in the way of a click');
   ok(/picked-wall-outline/.test(viewer)&&/o\.visible=false/.test(viewer),'The proposal snapshot leaves the outline out');
   ok(/finish=\{facadeFinish\(config,f\.wall\.id\)\}/.test(house)&&/accents=\{accents\.filter/.test(house)&&/walls\.filter\(isGableEnd\)/.test(house),'Each wall and gable end, main house and blocks, draws its own resolved finish');

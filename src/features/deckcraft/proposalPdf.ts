@@ -3,8 +3,9 @@ import {dollars,type DeckEstimate} from './designFacts';
 import {isBuilderQuote,priceLedger,quoteLabel,quoteTag,type QuoteKind} from './designer/priceLedgerModel';
 import {PRICE_BOOK,priceBookLabel} from './priceBook';
 import {eyebrowNumber,proposalAddress,proposalContact,proposalCoverTitle,proposalFeatures,proposalFinishes,proposalRunningTitle,proposalSummary,proposalTitle,PROPOSAL_WORDS,SHEET_EYEBROWS,type ProposalShot} from './proposalModel';
-import {PROPOSAL_PDF_NAME} from './sendDesign';
+import {PROPOSAL_PDF_NAME} from './sendDesignConstants';
 import type {DeckData} from './types';
+import {underDeckCostSplit} from './proposalModel';
 
 export {PROPOSAL_PDF_NAME};
 
@@ -12,7 +13,7 @@ export {PROPOSAL_PDF_NAME};
  * The downloadable proposal as a real PDF (R8), in the Golden Maple estimate branding (R9): the same sheets, words and
  * figures as the printable proposal (ProposalSheet.tsx, both built from proposalModel.ts and the price schedule), set
  * as the estimate PDF Golden Maple sends its customers is (the CRM's ReportLab engine, theme GM_LANDSCAPING): a forest
- * cover in a gold double frame with the mark, the spaced gold wordmark and the 3D hero; bone inner pages with the
+ * masthead with the mark and gold wordmark above a spacious project introduction and the actual 3D hero; warm paper inner pages with the
  * running head, gold eyebrows, forest-headed tables, gold callouts and the contact footer with its page number. jsPDF
  * cannot use web fonts (and the proposal ships no font files), so its built-in Times sets the display lines and
  * Helvetica the rest; nothing is set in italics. Business name and contact details come only from src/data/business.ts.
@@ -94,7 +95,7 @@ export function buildProposalPdf(PDF:typeof JsPDF,input:ProposalPdfInput,{compre
 
   // Sheets: every page after the cover gets the running head and the contact footer once the pages are laid out.
   let y=TOP,label='',section=0;
-  const sheet=(name:string)=>{doc.addPage();label=name;fill(BONE);doc.rect(0,0,W,H,'F');y=TOP;};
+  const sheet=(name:string)=>{doc.addPage();label=name;fill(ROW_A);doc.rect(0,0,W,H,'F');y=TOP;};
   const continued=()=>sheet(label.endsWith(', continued')?label:`${label}, continued`);
   const room=(h:number,onBreak?:()=>void)=>{if(y+h>BOTTOM){continued();onBreak?.();return true;}return false;};
   const text=(t:string,size:number,c:RGB,{x=M,width=CW,style='normal',face='helvetica',lh=1.38,gap=0}:{x?:number;width?:number;style?:'normal'|'bold';face?:'times'|'helvetica';lh?:number;gap?:number}={})=>{
@@ -103,8 +104,8 @@ export function buildProposalPdf(PDF:typeof JsPDF,input:ProposalPdfInput,{compre
   /** A sheet's heading as the estimate sets a section: the numbered gold eyebrow, the serif title, the gold rule. */
   const heading=(title:string,eyebrow:string,lede?:string,number=++section)=>{
     font('helvetica',8,GOLD_INK,'bold');spaced(`${eyebrowNumber(number)} · ${eyebrow}`,M,y+8,.64);y+=14;
-    font('times',25,FOREST);doc.text(pdfText(title),M,y+21);y+=28;
-    rule(M,y,W-M,GOLD,1.2);y+=12;
+    font('times',32,FOREST);doc.text(pdfText(title),M,y+29);y+=38;
+    rule(M,y,M+48,GOLD_DK,1.2);y+=12;
     if(lede)text(lede,12,TEXT,{face:'times',width:CW*.82,lh:1.25,gap:12});else y+=4;
   };
   /**
@@ -124,60 +125,58 @@ export function buildProposalPdf(PDF:typeof JsPDF,input:ProposalPdfInput,{compre
     if(col===1)y=Math.max(y,left);
   };
 
-  // 1. The cover: forest inside the gold double frame; the mark, the eyebrow, the spaced wordmark and the ornament; the
-  // 3D hero framed in gold; the document, the project and who it is for; the business's published contact line.
-  fill(FOREST);doc.rect(0,0,W,H,'F');
-  stroke(GOLD);doc.setLineWidth(1.3);doc.rect(38,38,W-76,H-76);doc.setLineWidth(.5);doc.rect(44,44,W-88,H-88);
-  emblem(W/2,96,33,GOLD);
-  font('helvetica',9,GOLD,'bold');spaced(PROPOSAL_WORDS.eyebrow,W/2,151,2.6,'center');
-  font('times',42,GOLD,'bold');spaced(contact.wordmark.top,W/2,196,5.5,'center');
-  if(contact.wordmark.sub){font('helvetica',11,LIGHT);spaced(contact.wordmark.sub,W/2,221,11,'center');}
-  ornament(W/2,239,GOLD);
+  // 1. Editorial cover: a compact forest masthead, a generous project title, the actual design image and project facts.
+  // Drawing order keeps the cover's reading order intact even though the image sits below the project introduction.
+  fill(ROW_A);doc.rect(0,0,W,H,'F');fill(FOREST);doc.rect(0,0,W,138,'F');
+  emblem(M+25,73,25,GOLD);
+  font('helvetica',8,GOLD,'bold');spaced(PROPOSAL_WORDS.eyebrow,M,121,1.15);
+  font('times',29,GOLD,'bold');spaced(contact.wordmark.top,W-M,75,2.7,'right');
+  if(contact.wordmark.sub){font('helvetica',9,LIGHT);spaced(contact.wordmark.sub,W-M,96,4.4,'right');}
+  rule(M,139,M+64,GOLD_DK,2);
   // Laid out from the foot up, so the hero takes what the words leave: the footer, the details row, then the words.
-  const META_Y=654,textW=CW-24;
-  font('times',26,GOLD);const titleLines=lines(proposalCoverTitle(data,backyard),textW).slice(0,2);
+  const META_Y=650,textW=CW;
+  font('times',36,FOREST);const titleLines=lines(proposalCoverTitle(data,backyard),textW).slice(0,2);
   // The summary, in one line or two balanced ones (never a lone word left on the second).
-  font('helvetica',7.5,WARM);const summary=proposalSummary(data,estimate.model.quantities.area,backyard);
-  let summaryLines=spacedLines(summary,textW,1.2);
-  if(summaryLines.length===2)summaryLines=spacedLines(summary,Math.min(textW,spacedWidth(pdfText(summary).toUpperCase(),1.2)/2+30),1.2);
+  font('helvetica',8.5,MUTED);const summary=proposalSummary(data,estimate.model.quantities.area,backyard);
+  let summaryLines=spacedLines(summary,textW,.45);
   summaryLines=summaryLines.slice(0,2);
-  const addressLine=address?spacedLines(address,textW,1.2)[0]:'';
-  const heroTop=256,heroBottom=META_Y-26-(addressLine?11:0)-11*(summaryLines.length-1)-19-28*(titleLines.length-1)-31-29-13;
-  const cover=shots[0],hx=62,hw=W-2*hx,hh=heroBottom-heroTop;
-  stroke(GOLD);doc.setLineWidth(.8);doc.rect(hx,heroTop,hw,hh);
+  const addressLines=address?spacedLines(address,textW,.45).slice(0,2):[];
+  const introEnd=210+39*(titleLines.length-1)+19+12*(summaryLines.length-1)+(addressLines.length?16+12*(addressLines.length-1):0);
+  const heroTop=introEnd+22,heroBottom=609;
+  const cover=shots[0],hx=M,hw=CW,hh=heroBottom-heroTop;
   // The hero: the cover view; without one (no WebGL), the site plan on its sheet; without that, a note.
-  const drawn=!!cover&&image(cover.src,hx+3,heroTop+3,hw-6,hh-6,'cover');
+  const drawn=!!cover&&image(cover.src,hx,heroTop,hw,hh,'cover');
   let heroNote=drawn?`${cover.label} · ${PROPOSAL_WORDS.illustration}`:'';
   if(!drawn){
-    fill(SHEET);doc.rect(hx+3,heroTop+3,hw-6,hh-6,'F');
+    fill(SAGE);doc.rect(hx,heroTop,hw,hh,'F');
     if(image(input.sitePlan,hx+12,heroTop+12,hw-24,hh-24,'contain'))heroNote='The 3D view is not available on this device: the site plan shows the layout.';
-    else{font('helvetica',10,MUTED);doc.text(pdfText('The 3D view is not available on this device. The plans in this proposal show the layout.'),W/2,heroTop+hh/2,{align:'center'});}
+    else{font('times',15,FOREST);const note=lines('The 3D view is not available on this device. The plans in this proposal show the layout.',hw-56);note.forEach((l,i)=>doc.text(l,hx+28,heroTop+hh/2+i*19));}
   }
   y=heroBottom+13;
-  if(heroNote){font('helvetica',7,WARM3);doc.text(pdfText(heroNote),W/2,y,{align:'center'});}
-  y+=29;font('helvetica',11.5,LIGHT,'bold');spaced(PROPOSAL_WORDS.doctype,W/2,y,4.4,'center');
-  y+=31;font('times',26,GOLD);titleLines.forEach((l,i)=>doc.text(l,W/2,y+i*28,{align:'center'}));y+=28*(titleLines.length-1);
-  y+=19;font('helvetica',7.5,WARM);summaryLines.forEach((l,i)=>doc.text(l,W/2-spacedWidth(l,1.2)/2,y+i*11,{charSpace:1.2}));y+=11*(summaryLines.length-1);
-  if(addressLine){y+=11;font('helvetica',7.5,WARM2);doc.text(addressLine,W/2-spacedWidth(addressLine,1.2)/2,y,{charSpace:1.2});}
+  if(heroNote){font('helvetica',7,MUTED);doc.text(pdfText(heroNote),M,y);}
+  y=174;font('helvetica',8.5,GOLD_INK,'bold');spaced(PROPOSAL_WORDS.doctype,M,y,1.7);
+  y=210;font('times',36,FOREST);titleLines.forEach((l,i)=>doc.text(l,M,y+i*39));y+=39*(titleLines.length-1);
+  y+=19;font('helvetica',8.5,MUTED);summaryLines.forEach((l,i)=>doc.text(l,M,y+i*12,{charSpace:.45}));y+=12*(summaryLines.length-1);
+  if(addressLines.length){y+=16;font('helvetica',8.5,MUTED);addressLines.forEach((l,i)=>doc.text(l,M,y+i*12,{charSpace:.45}));}
   const meta:[string,string][]=[...(name?[['Prepared for',name]] as [string,string][]:[]),['Proposal date',date],['Price book',PRICE_BOOK.version]];
   meta.forEach(([k,v],i)=>{
-    const x=W/2+(i-(meta.length-1)/2)*(meta.length>2?156:170);
-    font('helvetica',7,GOLD,'bold');spaced(k,x,META_Y,1.8,'center');
-    font('times',14.5,LIGHT);doc.text(lines(v,150)[0]??'',x,META_Y+19,{align:'center'});
+    const x=M+i*(CW/meta.length);
+    font('helvetica',7,GOLD_INK,'bold');spaced(k,x,META_Y,1.2);
+    font('times',14,FOREST);doc.text(lines(v,CW/meta.length-16)[0]??'',x,META_Y+20);
   });
-  rule(150,698,W-150,GOLD,.6);
-  font('helvetica',8,GOLD,'bold');spaced(contact.name,W/2,715,2,'center');
-  font('helvetica',7.5,WARM4);doc.text(pdfText(`${contact.area} · ${contact.phone} · ${contact.email} · ${contact.site}`),W/2,729,{align:'center'});
+  rule(M,700,W-M,LINE,.6);
+  font('helvetica',8,FOREST,'bold');spaced(contact.name,M,719,1.1);
+  font('helvetica',7.5,MUTED);doc.text(pdfText(`${contact.area} · ${contact.phone} · ${contact.email} · ${contact.site}`),M,737);
 
-  // 2. Views: the other cameras, framed in gold and captioned on a forest band.
+  // 2. Views: the other cameras, with quiet editorial captions on the paper ground.
   const views=shots.slice(1,4);
   if(views.length){
     sheet('Views');heading('Views',SHEET_EYEBROWS.views,`Your design from ${views.length===1?'another angle':`${views.length===2?'two':'three'} more angles`}.`);
     const put=(v:ProposalShot,x:number,w:number,h:number)=>{
-      fill(FOREST);doc.rect(x,y,w,h+18,'F');
-      if(!image(v.src,x+2,y+2,w-4,h-2,'cover')){fill(SAGE);doc.rect(x+2,y+2,w-4,h-2,'F');}
-      stroke(GOLD);doc.setLineWidth(.8);doc.rect(x,y,w,h+18);
-      font('helvetica',6.8,GOLD,'bold');spaced(v.label,x+8,y+h+11.5,1.1);
+      fill(ROW_A);doc.rect(x,y,w,h+18,'F');
+      if(!image(v.src,x,y,w,h,'cover')){fill(SAGE);doc.rect(x,y,w,h,'F');}
+      rule(x,y+h+18,x+w,LINE,.6);
+      font('helvetica',6.8,GOLD_INK,'bold');spaced(v.label,x,y+h+11.5,1.1);
     };
     if(views.length===3){put(views[0],M,CW,262);y+=262+18+14;const w=(CW-12)/2;put(views[1],M,w,150);put(views[2],M+w+12,w,150);y+=150+18+14;}
     else for(const v of views){const h=views.length===2?214:380;put(v,M,CW,h);y+=h+18+14;}
@@ -238,13 +237,15 @@ export function buildProposalPdf(PDF:typeof JsPDF,input:ProposalPdfInput,{compre
   const box=(top:number)=>{stroke(GOLD);doc.setLineWidth(1.2);doc.rect(M,top,CW,y-top);};
   tableHead();
   for(const line of ledger.lines){
-    font('helvetica',8.6,TEXT);const ls=lines(line.title,CW-170),h=ls.length*11.2+8;
+    const split=line.title==='Under-deck options'?underDeckCostSplit(estimate):[];
+    font('helvetica',8.6,TEXT);const ls=lines(line.title,CW-170),h=ls.length*11.2+8+split.length*10;
     if(y+h>BOTTOM){box(tableTop);continued();againHeading();tableHead();}
-    fill(band++%2?ROW_B:ROW_A);doc.rect(M,y,CW,h,'F');
+    fill(band++%2?SHEET:ROW_A);doc.rect(M,y,CW,h,'F');
     font('helvetica',8.6,TEXT);ls.forEach((l,i)=>doc.text(l,M+10,y+11+i*11.2));
+    font('helvetica',7.2,MUTED);split.forEach((g,i)=>doc.text(pdfText(`${g.label}: ${dollars(g.amount)}`),M+10,y+ls.length*11.2+11+i*10));
     if(line.quotes.length&&line.amount<.005)tag(line.quotes,W-M-10,y+11);
     else{font('helvetica',8.6,FOREST,'bold');doc.text(pdfText(line.text),W-M-10,y+11,{align:'right'});}
-    y+=h;rule(M,y,W-M,GOLD,.4);
+    y+=h;rule(M,y,W-M,LINE,.4);
   }
   box(tableTop);
   const sums:[string,number,string?][]=[...(ledger.split?[['Deck subtotal',ledger.split.deck],['Backyard subtotal',ledger.split.backyard]] as [string,number][]:[]),[ledger.quotes.length?'Priced subtotal':'Subtotal',ledger.subtotal,PROPOSAL_WORDS.estimate],[ledger.hstTitle,ledger.hst],[ledger.totalLabel,ledger.total]];
@@ -327,7 +328,7 @@ export function buildProposalPdf(PDF:typeof JsPDF,input:ProposalPdfInput,{compre
     const items=s.items.filter(i=>Number(i.qty)>0);if(!items.length)return [];
     font('times',10.5,FOREST);const titleN=lines(s.title,(CW-24)/2).length;
     const rows=items.map(item=>{
-      const label=`${item.name}${item.spec?` - ${item.spec}`:''}`,qty=`${item.qty} ${item.unit}`,quote:QuoteKind|null=item.cost===null?(isBuilderQuote(item)?'builder':'supplier'):null;
+      const label=`${item.name}${item.spec?` - ${item.spec}`:''}`,qty=`${item.qty} ${item.unit}`,quote:QuoteKind|null=item.cost===null&&!item.quoteResolved?(isBuilderQuote(item)?'builder':'supplier'):null;
       font('helvetica',7.2,TEXT);const n=lines(label,(CW-24)/2-70).length+(quote?1:0);
       return {h:n*9+5,draw:(x:number,w:number)=>{
         font('helvetica',7.2,TEXT);const ls=lines(label,w-70);ls.forEach((l,k)=>doc.text(l,x,y+8+k*9));
