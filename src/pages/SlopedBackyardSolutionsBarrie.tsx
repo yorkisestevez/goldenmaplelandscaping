@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check, Shield } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
 import { BUSINESS, publicClaimCopy } from '../data/business';
 
 const packages = [
@@ -37,6 +38,11 @@ export default function SlopedBackyardSolutionsBarrie() {
         title="Sloped Backyard & Retaining Wall Solutions Barrie | Golden Maple"
         description="Turn a sloped, wet, or unusable Barrie backyard into a level outdoor living space with retaining walls, drainage, steps, and premium hardscape construction."
         canonical="https://goldenmaplelandscaping.ca/sloped-backyard-solutions-barrie"
+        schema={graph(
+          serviceNode({ path: '/sloped-backyard-solutions-barrie/', name: 'Sloped backyard and retaining wall solutions in Barrie', serviceType: 'Grading, drainage and retaining walls', areaServed: 'Barrie' }),
+          breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Sloped backyard and retaining wall solutions in Barrie', path: '/sloped-backyard-solutions-barrie/' }]),
+          faqPage('/sloped-backyard-solutions-barrie/', faqs),
+        )}
       />
       <section className="section-padding pt-48">
         <div className="container-custom">

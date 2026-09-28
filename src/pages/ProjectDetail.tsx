@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Instagram, MapPin } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, businessRef, graph } from '../utils/schema';
 import Reveal from '../components/Reveal';
 import ResponsiveImage from '../components/ResponsiveImage';
 import PhotoGrid from '../components/PhotoGrid';
@@ -52,16 +53,19 @@ export default function ProjectDetail() {
   const related = projectsInCategory(project.category).filter((p) => p.slug !== project.slug).slice(0, 3);
   const absolute = (src: string) => `${BUSINESS.canonicalUrl}${src}`;
 
-  const gallerySchema = {
-    '@context': 'https://schema.org',
+  const gallerySchema = graph({
     '@type': 'ImageGallery',
     name: `${project.title} — ${project.town}, ON`,
     description: project.summary,
     url: `${canonical}/`,
     primaryImageOfPage: { '@type': 'ImageObject', contentUrl: absolute(cover.src), width: cover.width, height: cover.height, name: cover.alt },
     associatedMedia: photos.map((img) => ({ '@type': 'ImageObject', contentUrl: absolute(img.src), width: img.width, height: img.height, name: img.alt })),
-    provider: { '@id': `${BUSINESS.canonicalUrl}/#business` },
-  };
+    provider: businessRef,
+  }, breadcrumb([
+    { name: 'Home', path: '/' },
+    { name: 'Portfolio', path: '/portfolio/' },
+    { name: project.title, path: `/portfolio/${project.slug}/` },
+  ]));
 
   return (
     <div className="bg-brand-nearblack min-h-screen">

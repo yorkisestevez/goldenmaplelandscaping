@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Grid, Check, ArrowRight, Shield, Award, CheckCircle } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import Testimonials from '../../components/Testimonials';
 
 const FAQ = [
@@ -10,15 +11,12 @@ const FAQ = [
   { q: 'What product and workmanship terms apply?', a: 'Ask for the current written workmanship terms and applicable manufacturer information for the product selected.' },
 ];
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a },
-  })),
-};
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({ path: '/services/interlocking-barrie/', name: 'Interlocking patios, walkways & driveways in Barrie', serviceType: 'Interlocking paver installation', areaServed: 'Barrie' }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Interlocking patios, walkways & driveways in Barrie', path: '/services/interlocking-barrie/' }]),
+  faqPage('/services/interlocking-barrie/', FAQ),
+);
 
 export default function Interlocking() {
   const processSteps = [
@@ -34,7 +32,7 @@ export default function Interlocking() {
         title="Interlocking Stone Installation Barrie"
         description="Interlocking stone patios, driveways, and walkways for Barrie-area properties. Discuss materials, site conditions, and project scope with our team."
         canonical="https://goldenmaplelandscaping.ca/services/interlocking-barrie"
-        schema={faqSchema}
+        schema={pageSchema}
       />
       
       <section className="section-padding pt-48">

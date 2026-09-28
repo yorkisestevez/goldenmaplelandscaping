@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import Testimonials from '../../components/Testimonials';
 import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
@@ -21,15 +22,12 @@ const FAQ = [
   }
 ];
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a },
-  })),
-};
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({ path: '/services/retaining-walls-barrie/', name: 'Retaining wall construction in Barrie', serviceType: 'Retaining wall construction', areaServed: 'Barrie' }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Retaining wall construction in Barrie', path: '/services/retaining-walls-barrie/' }]),
+  faqPage('/services/retaining-walls-barrie/', FAQ),
+);
 
 export default function RetainingWalls() {
   const engineeringSteps = [
@@ -45,7 +43,7 @@ export default function RetainingWalls() {
         title="Retaining Wall Construction Barrie"
         description="Custom retaining walls for Barrie properties. Armour stone, natural stone & block walls built with engineering precision. Solve grading issues beautifully."
         canonical="https://goldenmaplelandscaping.ca/services/retaining-walls-barrie"
-        schema={faqSchema}
+        schema={pageSchema}
       />
       
       <section className="section-padding pt-48">

@@ -11,7 +11,7 @@ export default function Book() {
     name: 'Book a Project Conversation',
     description:
       'Pick a time to discuss your project and confirm the current consultation scope.',
-    url: 'https://goldenmaplelandscaping.ca/book',
+    url: 'https://goldenmaplelandscaping.ca/book/',
   };
 
   return (

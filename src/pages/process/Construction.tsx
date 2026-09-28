@@ -11,6 +11,7 @@ export default function Construction() {
       <SEO 
         title="Landscape Construction Barrie | Project-Specific Planning | Golden Maple"
         description="Learn how site conditions, materials, and project scope inform landscape construction planning in Simcoe County."
+        canonical="https://goldenmaplelandscaping.ca/process/construction/"
       />
 
       <section className="section-padding pt-48">

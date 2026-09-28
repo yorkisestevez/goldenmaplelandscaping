@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
-import { BUSINESS, publicContact, publicPostalAddress, publicGbpServiceAreas } from '../data/business';
+import { BUSINESS } from '../data/business';
+import { canonicalUrl as toCanonical } from '../utils/schema';
 
 interface SEOProps {
   title: string;
@@ -18,37 +19,10 @@ export default function SEO({ title, description, canonical, schema, image, noin
   // URLs. Canonicals must match the final 200 URL exactly; otherwise Google
   // sees sitemap URL -> 301 -> page whose canonical points back across the
   // redirect, creating duplicate/alternate-canonical indexing exclusions.
-  const canonicalUrl = canonical
-    ? canonical === 'https://goldenmaplelandscaping.ca/' || canonical.endsWith('/')
-      ? canonical
-      : `${canonical}/`
-    : undefined;
+  const canonicalUrl = canonical ? toCanonical(canonical) : undefined;
 
-  const localBusinessSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'LandscapeService',
-    name: BUSINESS.publicName.value,
-    image: `${BUSINESS.canonicalUrl}/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg`,
-    '@id': `${BUSINESS.canonicalUrl}/#business`,
-    url: BUSINESS.canonicalUrl,
-    telephone: publicContact.phoneTel,
-    email: publicContact.email,
-    address: publicPostalAddress(),
-    openingHoursSpecification: BUSINESS.hours.value.map((hours) => ({
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: hours.days,
-      opens: hours.opens,
-      closes: hours.closes,
-    })),
-    sameAs: [
-      BUSINESS.urls.facebook.value,
-      BUSINESS.urls.instagram.value,
-      BUSINESS.urls.homeStars.value,
-      BUSINESS.urls.yelp.value,
-    ],
-    areaServed: publicGbpServiceAreas.map((name) => ({ '@type': 'City', name })),
-  };
-
+  // The business entity is NOT emitted here — root.tsx declares #business once
+  // for every route. `schema` is page-level only and should reference it.
   return (
     <Helmet>
       <title>{fullTitle}</title>
@@ -70,10 +44,6 @@ export default function SEO({ title, description, canonical, schema, image, noin
 
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
       
-      <script type="application/ld+json">
-        {JSON.stringify(localBusinessSchema)}
-      </script>
-
       {schema && (
         <script type="application/ld+json">
           {JSON.stringify(schema)}

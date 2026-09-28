@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Check, ArrowRight, Phone } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, graph, serviceNode } from '../utils/schema';
 import Testimonials from '../components/Testimonials';
 import { publicContact } from '../data/business';
 import { trackCall } from '../utils/analytics';
@@ -25,6 +26,10 @@ export default function LuxuryLandscapeBarrie() {
         title="Luxury Landscape Construction Barrie | Premium Residential Hardscape | Golden Maple"
         description="Premium residential landscape construction in Barrie, Innisfil, Oro-Medonte. Pool decks, multi-trade coordination, phased builds. Engineered residential landscapes, not installed yards. Project starts $90K."
         canonical="https://goldenmaplelandscaping.ca/luxury-landscape-barrie"
+        schema={graph(
+          serviceNode({ path: '/luxury-landscape-barrie/', name: 'Landscape construction in Barrie', serviceType: 'Landscape construction', areaServed: 'Barrie' }),
+          breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Landscape construction in Barrie', path: '/luxury-landscape-barrie/' }]),
+        )}
       />
 
       <section className="section-padding pt-48">

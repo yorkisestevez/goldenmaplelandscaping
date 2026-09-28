@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import Testimonials from '../../components/Testimonials';
 import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
@@ -25,15 +26,12 @@ const FAQ = [
   }
 ];
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ.map((item) => ({
-    "@type": "Question",
-    name: item.q,
-    acceptedAnswer: { "@type": "Answer", text: item.a },
-  })),
-};
+// Page-level nodes only; they reference the single #business declared in root.tsx.
+const pageSchema = graph(
+  serviceNode({ path: '/services/landscape-design-barrie/', name: 'Landscape design in Barrie', serviceType: 'Landscape design', areaServed: 'Barrie' }),
+  breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Landscape design in Barrie', path: '/services/landscape-design-barrie/' }]),
+  faqPage('/services/landscape-design-barrie/', FAQ),
+);
 
 export default function LandscapeDesign() {
   const designSteps = [
@@ -49,7 +47,7 @@ export default function LandscapeDesign() {
         title="Landscape Design Barrie"
         description="Landscape design planning for Barrie-area properties. Discuss current design scope, deliverables, and project options with our team."
         canonical="https://goldenmaplelandscaping.ca/services/landscape-design-barrie"
-        schema={faqSchema}
+        schema={pageSchema}
       />
       
       <section className="section-padding pt-48">

@@ -44,7 +44,13 @@ export const BUSINESS = {
   canonicalUrl: 'https://goldenmaplelandscaping.ca',
   publicName: published('Golden Maple Landscaping', 'Existing site-wide public copy'),
   legalName: ownerReported('Golden Maple Landscaping Inc.', 'Owner-provided context; not independently verified', 'Do not represent this as independently verified legal registry information.'),
-  founder: published({ name: 'Yorkis Estevez', role: 'Founder & Lead Builder' }, 'src/data/founder.ts and existing site copy'),
+  founder: {
+    value: { name: 'Yorkis Estevez', role: 'Founder & Lead Builder' },
+    status: 'confirmed' as const,
+    lastVerified: '2026-09-27',
+    source: 'Owner attestation 2026-09-27 (Claude Code session approving the SEO authority plan): name spelling, role, and consent to be named as author or reviewer where that is true',
+    notes: 'Confirms identity and role only. Credentials, memberships, years of experience and project counts are separate facts with their own status.',
+  },
   foundingYear: published('2020', 'Existing root schema and llms.txt'),
 
   contact: {

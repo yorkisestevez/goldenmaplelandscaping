@@ -11,6 +11,7 @@ export default function Completion() {
       <SEO 
         title="Landscape Project Completion & Handover Barrie | Golden Maple"
         description="Learn how project completion, walkthroughs, and written workmanship terms are discussed for Simcoe County landscape projects."
+        canonical="https://goldenmaplelandscaping.ca/process/completion/"
       />
 
       <section className="section-padding pt-48">

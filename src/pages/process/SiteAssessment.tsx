@@ -11,6 +11,7 @@ export default function SiteAssessment() {
       <SEO 
         title="Landscape Site Analysis Barrie | Engineering & Assessment | Golden Maple"
         description="The Golden Maple site analysis goes beyond measurements. We evaluate soil, drainage, and structural integrity for your Simcoe County landscape project to ensure your investment lasts."
+        canonical="https://goldenmaplelandscaping.ca/process/site-assessment/"
       />
 
       <section className="section-padding pt-48">

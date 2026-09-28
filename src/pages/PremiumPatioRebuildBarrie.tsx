@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check, AlertTriangle } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
 import { BUSINESS, publicClaimCopy } from '../data/business';
 
 const rebuildTriggers = ['Sinking or rocking pavers', 'Water pooling near foundation', 'Weeds/joint failure every season', 'Uneven steps or trip hazards', 'Old concrete/pavers to remove', 'You want to discuss a rebuild plan'];
@@ -36,6 +37,11 @@ export default function PremiumPatioRebuildBarrie() {
         title="Premium Patio Rebuilds Barrie | Fix Sinking Interlock | Golden Maple"
         description="Plan a patio rebuild in Barrie with project-specific drainage, base, materials, and written workmanship terms."
         canonical="https://goldenmaplelandscaping.ca/premium-patio-rebuild-barrie"
+        schema={graph(
+          serviceNode({ path: '/premium-patio-rebuild-barrie/', name: 'Patio rebuilds in Barrie', serviceType: 'Interlock patio rebuild', areaServed: 'Barrie' }),
+          breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Patio rebuilds in Barrie', path: '/premium-patio-rebuild-barrie/' }]),
+          faqPage('/premium-patio-rebuild-barrie/', faqs),
+        )}
       />
       <section className="section-padding pt-48">
         <div className="container-custom">

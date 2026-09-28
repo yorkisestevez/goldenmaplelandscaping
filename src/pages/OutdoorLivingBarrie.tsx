@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Check, ArrowRight, Phone } from 'lucide-react';
 import SEO from '../components/SEO';
+import { breadcrumb, graph, serviceNode } from '../utils/schema';
 import Testimonials from '../components/Testimonials';
 import { publicContact } from '../data/business';
 import { trackCall } from '../utils/analytics';
@@ -26,6 +27,10 @@ export default function OutdoorLivingBarrie() {
         title="Outdoor Living Planning in Barrie | Golden Maple"
         description="Premium outdoor living projects in Barrie, Innisfil, Springwater, and Oro-Medonte. Patio, walls, steps, lighting, fire, drainage, and pergola elements engineered as one system."
         canonical="https://goldenmaplelandscaping.ca/outdoor-living-barrie"
+        schema={graph(
+          serviceNode({ path: '/outdoor-living-barrie/', name: 'Outdoor living planning and construction in Barrie', serviceType: 'Outdoor living construction', areaServed: 'Barrie' }),
+          breadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services/' }, { name: 'Outdoor living planning and construction in Barrie', path: '/outdoor-living-barrie/' }]),
+        )}
       />
 
       <section className="section-padding pt-48">

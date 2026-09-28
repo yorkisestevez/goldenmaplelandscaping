@@ -99,7 +99,7 @@ export default function CostGuide() {
     name: '2026 Simcoe County Backyard Cost Guide',
     description:
       'Free PDF guide with real 2026 pricing for interlocking, decking, retaining walls, and full backyard renovations in Barrie and Simcoe County, Ontario.',
-    url: 'https://goldenmaplelandscaping.ca/cost-guide',
+    url: 'https://goldenmaplelandscaping.ca/cost-guide/',
   };
 
   return (

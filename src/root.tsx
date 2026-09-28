@@ -17,45 +17,12 @@ import SiteChrome from './components/Layout';
 import { initAnalytics, trackPageView } from './utils/analytics';
 import { initAttributionCapture } from './utils/utmCapture';
 import { initBehaviorCapture } from './utils/behavior';
-import { BUSINESS, canPublish, publicContact, publicPostalAddress, publicGbpServiceAreas } from './data/business';
+import { siteGraph } from './utils/schema';
 
-// Canonical business entity for all routes. Publication status lives in
-// src/data/business.ts; unverified review data intentionally never enters schema.
-const businessGraph = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': ['LocalBusiness', 'HomeAndConstructionBusiness', 'GeneralContractor'],
-      '@id': `${BUSINESS.canonicalUrl}/#business`,
-      name: BUSINESS.publicName.value,
-      description: `${BUSINESS.publicName.value}: discuss ${BUSINESS.services.value.join(', ')}. Confirm project scope and availability for your address.`,
-      url: `${BUSINESS.canonicalUrl}/`,
-      image: `${BUSINESS.canonicalUrl}/logo-mark.png`,
-      logo: `${BUSINESS.canonicalUrl}/logo-mark.png`,
-      ...(canPublish(BUSINESS.founder) ? { founder: { '@type': 'Person', name: BUSINESS.founder.value.name } } : {}),
-      ...(canPublish(BUSINESS.foundingYear) ? { foundingDate: BUSINESS.foundingYear.value } : {}),
-      telephone: publicContact.phoneTel,
-      email: publicContact.email,
-      priceRange: '$$$',
-      currenciesAccepted: 'CAD',
-      address: publicPostalAddress(),
-      areaServed: publicGbpServiceAreas.map((name) => ({ '@type': 'City', name })),
-      ...(canPublish(BUSINESS.hours) ? { openingHoursSpecification: BUSINESS.hours.value.map((hours) => ({
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: hours.days,
-        opens: hours.opens,
-        closes: hours.closes,
-      })) } : {}),
-      sameAs: [
-        BUSINESS.urls.facebook.value,
-        BUSINESS.urls.instagram.value,
-        BUSINESS.urls.homeStars.value,
-        BUSINESS.urls.yelp.value,
-        BUSINESS.urls.yellowPages.value,
-      ],
-    },
-  ],
-};
+// Canonical entity graph for all routes: #website, the ONE typed #business node
+// and (when publishable) the #yorkis-estevez Person. Pages reference these ids
+// instead of re-declaring the business — see src/utils/schema.ts.
+const businessGraph = siteGraph();
 
 const gscToken = import.meta.env.VITE_SEARCH_CONSOLE_TOKEN as string | undefined;
 
