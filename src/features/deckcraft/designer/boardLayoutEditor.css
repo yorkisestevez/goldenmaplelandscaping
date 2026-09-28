@@ -4,4 +4,4 @@
 .dd-board-layout-controls>label:not(.dd-board-layout-free):not(.dd-board-layout-picker){display:grid;gap:5px;margin:12px 0;font-size:.82rem;font-weight:600}
 .dd-board-layout-controls>.dd-board-layout-free{display:flex;align-items:center;gap:8px;min-height:44px;margin:12px 0;font-size:.82rem}
 .dd-board-layout-controls>.dd-board-layout-free input[type=checkbox]{width:22px;height:22px;min-height:22px;flex:none}
-@media(max-width:800px){.dd-board-layout-svg{scroll-margin-top:136px;scroll-margin-bottom:120px}}
+@media(max-width:800px){.dd-board-layout-svg{scroll-margin-top:136px}}
