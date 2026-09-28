@@ -197,11 +197,15 @@ async function cmdWorkflowRun() {
     }
   }
 
-  // 3) Inject
+  // 3) Inject. injectDraft ends with the contact gate (contact-gate.cjs): a page
+  //    that still hardcodes a phone number or email is rolled back and never
+  //    reaches the commit below. 2026-09-28: one that did (auto-023) failed
+  //    postbuild and blocked every production deploy after it.
   try {
     injection = injectDraft(draft);
   } catch (e) {
-    try { await telegram.sendErrorAlert('inject:' + draft.slug, e); } catch {}
+    const stage = e.code === 'CONTACT_GATE' ? 'contact-gate:' : 'inject:';
+    try { await telegram.sendErrorAlert(stage + draft.slug, e); } catch {}
     throw e;
   }
 
