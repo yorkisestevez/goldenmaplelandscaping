@@ -420,6 +420,9 @@ const r5={outline:0,stairs:0,house:0,shape:0};
   ok(!/===\s*'Back'|Math\.abs\([\w.]*\.y\)\s*<|\.y\s*<\s*\.5|isContactEdge|exposedSides\(/.test(overlay),'The plan tools never test the house line or a Back edge themselves (houseContact.ts decides)');
   ok(css.split('touch-action:none').length===2&&/\.dd-plan-handle\{[^}]*touch-action:none/.test(css)&&!/\.dd-outline-plan[^{]*\{[^}]*touch-action:none/.test(css),'Only the handles keep the pointer; the outline lines and the rest of the plan let a phone scroll');
   ok(/\.dd-plan-tools button\{min-height:44px/.test(css)&&/\.dd-plan-target\{[^}]*width:44px;height:44px/.test(css),'The tools and the stair marks are 44 px targets');
+  // The workspace's last word on the strip: columns made as needed, never a fixed count that a new tool wraps past.
+  const strip=[...read('src/features/deckcraft/designer/workspace.css').matchAll(/\.deck-designer \.dd-plan-tools\{([^}]*)\}/g)].pop()?.[1]??'';
+  ok(/grid-template-columns:none/.test(strip)&&/grid-auto-flow:column/.test(strip)&&/grid-auto-columns:minmax\((4[4-9]|[5-9]\d)px,1fr\)/.test(strip)&&/overflow-x:auto/.test(strip),`The ${PLAN_TOOLS.length} plan tools take one row whatever their number, at least 44 px each, scrolling sideways where they cannot fit`);
 }
 console.log(`R5 plan tools: ${r5.outline} outline moves, ${r5.stairs} stair marks, ${r5.house} house widths, ${r5.shape} wing and corner handles checked.`);
 

@@ -437,6 +437,64 @@ test('@phone keeps every control at least 44 px tall at 375 px',async({page})=>{
   expect(problems).toEqual([]);
 });
 
+/**
+ * The plan tools' row as laid out: its height, how many rows the tools take, whether it scrolls sideways, whether the
+ * page does, and each tool's size, whether its label fits, and whether it is in view in the row.
+ */
+const toolRow=(page:Page)=>page.getByRole('radiogroup',{name:'Plan tools'}).evaluate(row=>{
+  const box=row.getBoundingClientRect(),tools=[...row.querySelectorAll('[role=radio]')].map(el=>{
+    const r=el.getBoundingClientRect();
+    return {name:el.textContent??'',top:Math.round(r.top),width:r.width,height:r.height,inView:r.left>=box.left&&r.right<=box.right,labelFits:el.scrollWidth<=el.clientWidth&&el.scrollHeight<=el.clientHeight};
+  });
+  return {height:box.height,rows:new Set(tools.map(t=>t.top)).size,scrolls:row.scrollWidth>row.clientWidth,pageFits:document.documentElement.scrollWidth<=innerWidth,tools};
+});
+/** Every tool is a 44 px target whose label fits, and the tools take one row without the page scrolling sideways. */
+async function expectOneToolRow(page:Page,where:string){
+  const row=await toolRow(page);
+  expect(row.tools.length,where).toBeGreaterThanOrEqual(9);
+  expect(row.rows,`${where}: the plan tools take one row`).toBe(1);
+  expect(row.height,`${where}: the row is one tool tall`).toBeLessThan(60);
+  for(const t of row.tools){
+    expect(Math.min(t.width,t.height),`${where}: "${t.name}" is a 44 px target`).toBeGreaterThanOrEqual(44);
+    expect(t.labelFits,`${where}: "${t.name}" fits its label`).toBe(true);
+  }
+  expect(row.pageFits,`${where}: no sideways page scroll`).toBe(true);
+  return row;
+}
+
+test('keeps the plan tools on one row, all in view, on a desktop and a landscape tablet',async({page})=>{
+  const problems=await openDesigner(page);
+  for(const viewport of [{width:1280,height:720},{width:1024,height:768}]){
+    await page.setViewportSize(viewport);
+    const where=`${viewport.width} × ${viewport.height}`;
+    const row=await expectOneToolRow(page,where);
+    expect(row.scrolls,`${where}: the row does not scroll`).toBe(false);
+    expect(row.tools.filter(t=>!t.inView).map(t=>t.name),`${where}: every tool is in view`).toEqual([]);
+  }
+  expect(problems).toEqual([]);
+});
+
+test('@phone keeps the plan tools on one row that scrolls sideways, and keeps the chosen tool in view',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  const problems=await openDesigner(page);
+  const row=await expectOneToolRow(page,'390 px');
+  expect(row.scrolls,'The row scrolls sideways to its last tools').toBe(true);
+  const inView=async(name:string)=>(await toolRow(page)).tools.find(t=>t.name===name)?.inView;
+  // The row is drawn again when the plan comes back: the chosen tool, at the far end, is brought into view.
+  await planTool(page,'House');
+  await viewTab(page,'Framing');
+  await viewTab(page,'Plan');
+  await expect(page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name:'House',exact:true})).toHaveAttribute('aria-checked','true');
+  expect(await inView('House'),'House, chosen before, is in view on the plan again').toBe(true);
+  // A section can choose a tool too; it is brought into view however the row was scrolled.
+  await openSection(page,'Stairs & railings');
+  await sectionBody(page,'Stairs & railings').getByRole('button',{name:'Edit railings by section',exact:true}).click();
+  await expect(page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name:'Rails & screens',exact:true})).toHaveAttribute('aria-checked','true');
+  expect(await inView('Rails & screens'),'Rails & screens, chosen from the Stairs & railings section, is in view').toBe(true);
+  await expectOneToolRow(page,'390 px, after choosing tools');
+  expect(problems).toEqual([]);
+});
+
 test('prices the default deck and reprices when the size changes',async({page})=>{
   const problems=await openDesigner(page);
   const before=await price(page).textContent();
