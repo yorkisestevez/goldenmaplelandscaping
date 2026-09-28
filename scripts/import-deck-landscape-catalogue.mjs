@@ -21,6 +21,8 @@ for(const record of recovery.recipes??[]){
  const product=products.find(p=>p.id===record.productId),finish=product?.finishes.find(f=>f.id===record.finishId);let pattern=finish?.patterns.find(p=>p.id===record.patternId);
  if(!pattern&&record.originalPatternId&&finish){const original=finish.patterns.find(p=>p.id===record.originalPatternId);if(original){pattern={...original,id:record.patternId,name:record.patternName};finish.patterns.push(pattern);}}
  if(!pattern)throw Error(`Recovered pattern cannot bind ${record.productId}/${record.finishId}/${record.patternId}`);
+ // A drawing whose stones contradict its own printed mix keeps the drawing, and its name says so.
+ if(record.digitization?.captionConflict){if(!/source mix differs/.test(record.patternName??''))throw Error(`Caption conflict must be named: ${record.productId}/${record.finishId}/${record.patternId}`);pattern.name=record.patternName;}
  pattern.layout=record.layout;pattern.sourceUrl=record.sourceUrl;pattern.layoutNotes=record.layout.jointNotes;pattern.recoveryEvidence={sourceUrl:record.sourceUrl,sourcePdfSha256:record.sourcePdfSha256,sourcePdfPage:record.sourcePdfPage,verifiedOn:record.verifiedOn,checks:record.checks,digitization:record.digitization};delete pattern.evidenceGap;
  finish.defaultPatternId??=pattern.id;
 }
@@ -65,8 +67,12 @@ const compactLayout=(r,rawUnits)=>({widthMm:r.widthMm,depthMm:r.depthMm,jointMm:
 // Unit indexes still refer to each finish's raw unit table; only identical
 // compact layouts share a pool entry. The lazy public source remains complete.
 const layouts=[],layoutIndexes=new Map();const pooledLayout=(r,units)=>{const layout=compactLayout(r,units),key=JSON.stringify(layout);if(!layoutIndexes.has(key)){layoutIndexes.set(key,layouts.length);layouts.push(layout);}return layoutIndexes.get(key);};
-const rows=products.map(p=>[p.id,p.name,p.brand,p.category,p.sourceUrl,(p.finishes??[]).map(f=>[f.id,(f.colors??[]).map(c=>[c.id,c.localImageUrl??undefined,c.hex??undefined]),(f.units??[]).map(u=>[u.id,u.widthMm??null,u.lengthMm??null,u.heightMm??null,u.role,u.shape??(u.illustrative?'irregular-envelope':undefined),u.colorIds]),(f.patterns??[]).filter(p=>p.layout?.cells?.length).map(p=>({id:p.id,name:p.name,sourceUrl:p.sourceUrl,layout:pooledLayout(p.layout,f.units??[])}))])]);
+const rows=products.map(p=>[p.id,p.name,p.brand,p.category,p.sourceUrl,(p.finishes??[]).map(f=>[f.id,(f.colors??[]).map(c=>[c.id,c.localImageUrl?1:undefined,c.hex??undefined]),(f.units??[]).map(u=>[u.id,u.widthMm??null,u.lengthMm??null,u.heightMm??null,u.role,u.shape??(u.illustrative?'irregular-envelope':undefined),u.colorIds]),(f.patterns??[]).filter(p=>p.layout?.cells?.length).map(p=>({id:p.id,name:p.name,sourceUrl:p.sourceUrl,layout:pooledLayout(p.layout,f.units??[])}))])]);
 fs.writeFileSync(path.join(root,'src/data/hardscape-index.json'),JSON.stringify({schemaVersion:3,verifiedOn:'2026-09-27',layouts,products:rows}));
+// Swatch photos are used only by the lazily loaded 3D view, so their paths stay out of
+// the synchronous engineering index (route and pricing worker) and load with the viewer.
+const swatches={};for(const p of products)for(const f of p.finishes??[])for(const c of f.colors??[])if(c.localImageUrl){if(!c.localImageUrl.startsWith('/deckcraft/hardscape/'))throw Error(`Unexpected swatch path ${c.localImageUrl}`);((swatches[p.id]??={})[f.id]??={})[c.id]=c.localImageUrl.slice('/deckcraft/hardscape/'.length);}
+fs.writeFileSync(path.join(root,'public/deckcraft/hardscape-swatches.json'),JSON.stringify({schemaVersion:1,verifiedOn:'2026-09-27',base:'/deckcraft/hardscape/',swatches}));
 fs.writeFileSync(path.join(root,'public/deckcraft/hardscape-catalogue.json'),JSON.stringify({schemaVersion:1,verifiedOn:'2026-09-27',products}));
 const count=field=>products.reduce((n,p)=>n+(p.finishes??[]).reduce((v,f)=>v+(f[field]??[]).length,0),0);
 const colours=products.flatMap(p=>(p.finishes??[]).flatMap(f=>f.colors??[]));

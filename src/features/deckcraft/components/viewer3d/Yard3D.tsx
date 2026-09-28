@@ -1,4 +1,4 @@
-import {useEffect,useLayoutEffect,useMemo} from 'react';
+import {useEffect,useLayoutEffect,useMemo,useState} from 'react';
 import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -32,6 +32,13 @@ function boxGeometry(b:YardBox){
  * bank lie on the ground, so they don't count as covering it in the occlusion map.
  */
 const JOINT_SHADE=.5;
+/** Manufacturer swatch photos load with this lazy view, not with the page's first estimate:
+ * the model names each photo by product/finish/colour and the view resolves it here. */
+type SwatchMap={base:string;swatches:Record<string,Record<string,Record<string,string>>>};
+let swatchMap:Promise<SwatchMap|null>|undefined;
+const loadSwatches=()=>swatchMap??=fetch('/deckcraft/hardscape-swatches.json').then(r=>r.ok?r.json() as Promise<SwatchMap>:null).catch(()=>{swatchMap=undefined;return null;});
+function useSwatchMap(){const [map,setMap]=useState<SwatchMap|null>(null);useEffect(()=>{let live=true;void loadSwatches().then(m=>{if(live)setMap(m);});return ()=>{live=false;};},[]);return map;}
+const swatchUrl=(map:SwatchMap|null,key?:string)=>{if(!map||!key)return undefined;const [product,finish,color]=key.split('/'),file=map.swatches[product]?.[finish]?.[color];return file?map.base+file:undefined;};
 const SCANNED:Partial<Record<YardRole,{set:'masonry'|'rock';repeatIn:number;normalScale:number;roughness:number}>>={
  paver:{set:'masonry',repeatIn:14,normalScale:.6,roughness:.85},
  'wall-block':{set:'rock',repeatIn:18,normalScale:.8,roughness:.9},
@@ -61,10 +68,10 @@ function pieceUvs(g:THREE.BufferGeometry,b:YardBox,i:number,repeatIn:number,pave
  }
  return new THREE.Float32BufferAttribute(uv,2);
 }
-function YardBatch({items,color,role,occlusion,paverSize}:{items:YardBox[];color:string;role:YardRole;occlusion:SharedOcclusion;paverSize?:{w:number;d:number;angle:number}}){
- const scanned=SCANNED[role],supplierImage=items[0]?.surface?.imageUrl,simplified=!supplierImage&&role==='paver'&&!!paverSize&&items.every(b=>b.illustrative),water=role==='water';
+function YardBatch({items,color,role,occlusion,paverSize,supplierImage}:{items:YardBox[];color:string;role:YardRole;occlusion:SharedOcclusion;paverSize?:{w:number;d:number;angle:number};supplierImage?:string}){
+ const scanned=SCANNED[role],supplierSurface=!!items[0]?.surface,simplified=!supplierSurface&&role==='paver'&&!!paverSize&&items.every(b=>b.illustrative),water=role==='water';
  const geometry=useMemo(()=>{const pieces=items.filter(b=>!b.renderDuplicate).map((b,i)=>{let g=boxGeometry(b);if(g.index){const converted=g.toNonIndexed();g.dispose();g=converted;}const p=g.getAttribute('position'),c=new THREE.Float32BufferAttribute(new Float32Array(p.count*3),3),shade=.93+.07*(Math.abs(Math.sin(i*89.3))%1);
-  if(scanned||simplified||supplierImage)g.setAttribute('uv',pieceUvs(g,b,i,scanned?.repeatIn??48,simplified?paverSize:undefined));
+  if(scanned||simplified||supplierSurface)g.setAttribute('uv',pieceUvs(g,b,i,scanned?.repeatIn??48,simplified?paverSize:undefined));
   else{const uv=new THREE.Float32BufferAttribute(new Float32Array(p.count*2),2);for(let v=0;v<p.count;v++)uv.setXY(v,p.getX(v)/(water?RIPPLE_IN:18),p.getZ(v)/(water?RIPPLE_IN:18));g.setAttribute('uv',uv);}
   // The lawn's occlusion map's UVs, for hardscape under the deck.
   const uv1=new THREE.Float32BufferAttribute(new Float32Array(p.count*2),2);if(occlusion)for(let v=0;v<p.count;v++)uv1.setXY(v,...occlusionUv(occlusion.bounds,p.getX(v),p.getZ(v)));g.setAttribute('uv1',uv1);
@@ -112,9 +119,9 @@ function WaterMotion({model}:{model:YardModel}){
 }
 export default function Yard3D({model,inspection=false}:{model:YardModel;inspection?:boolean}){
  const hidden=new Set<YardRole>(['pump','drain-pipe','water-pipe']);
- const groups=useMemo(()=>{const map=new Map<string,YardBox[]>();for(const box of yardPreviewBoxes(model,inspection)){if(!inspection&&(hidden.has(box.role)||GRADED_ROLES.includes(box.role)))continue;const b=inspection?box:seatOnLawn(box,model.terrain);const key=b.role+':'+b.color+':'+(b.surface?.imageUrl??'')+(b.illustrative?':simplified':'');if(map.has(key))map.get(key)!.push(b);else map.set(key,[b]);}return [...map.entries()];},[model,inspection]);
+ const groups=useMemo(()=>{const map=new Map<string,YardBox[]>();for(const box of yardPreviewBoxes(model,inspection)){if(!inspection&&(hidden.has(box.role)||GRADED_ROLES.includes(box.role)))continue;const b=inspection?box:seatOnLawn(box,model.terrain);const key=b.role+':'+b.color+':'+(b.surface?.swatchKey??'')+(b.illustrative?':simplified':'');if(map.has(key))map.get(key)!.push(b);else map.set(key,[b]);}return [...map.entries()];},[model,inspection]);
  // The simplified paving preview draws the sample paver's joints (yardPreview.ts keeps its size and angle).
  const paverSize=useMemo(()=>{const sample=model.boxes.find(b=>b.role==='paver');return sample?{w:sample.w,d:sample.d,angle:sample.angle||0}:undefined;},[model]);
- const occlusion=useGroundOcclusion();
- return <group name="combined-yard-features">{groups.map(([key,items])=><YardBatch key={key} items={items} role={items[0].role} color={!inspection&&items[0].role==='bedding'?shade(items[0].color,JOINT_SHADE):items[0].color} occlusion={occlusion} paverSize={items[0].illustrative?paverSize:undefined}/>)}{!inspection&&<RetainedBanks model={model} occlusion={occlusion}/>}<WaterMotion model={model}/>{inspection&&model.members.map(m=>{const a=new THREE.Vector3(m.a.x,m.a.y,m.a.z),b=new THREE.Vector3(m.b.x,m.b.y,m.b.z),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());return <mesh key={m.id} position={a.clone().add(b).multiplyScalar(.5)} quaternion={q}><cylinderGeometry args={[m.width/2,m.width/2,a.distanceTo(b),10]}/><meshStandardMaterial color={m.color} roughness={.65}/></mesh>;})}</group>;
+ const occlusion=useGroundOcclusion(),swatches=useSwatchMap();
+ return <group name="combined-yard-features">{groups.map(([key,items])=><YardBatch key={key} items={items} role={items[0].role} color={!inspection&&items[0].role==='bedding'?shade(items[0].color,JOINT_SHADE):items[0].color} occlusion={occlusion} paverSize={items[0].illustrative?paverSize:undefined} supplierImage={swatchUrl(swatches,items[0].surface?.swatchKey)}/>)}{!inspection&&<RetainedBanks model={model} occlusion={occlusion}/>}<WaterMotion model={model}/>{inspection&&model.members.map(m=>{const a=new THREE.Vector3(m.a.x,m.a.y,m.a.z),b=new THREE.Vector3(m.b.x,m.b.y,m.b.z),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());return <mesh key={m.id} position={a.clone().add(b).multiplyScalar(.5)} quaternion={q}><cylinderGeometry args={[m.width/2,m.width/2,a.distanceTo(b),10]}/><meshStandardMaterial color={m.color} roughness={.65}/></mesh>;})}</group>;
 }

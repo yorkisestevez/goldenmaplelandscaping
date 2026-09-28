@@ -11,16 +11,24 @@ export function hardscapeBlanks(f:YardFeature,limit=20001):HardscapeBlank[]{
  const profile=hardscapeProfile(s.product.id,s.unit),bond=shapedBond(s.product.id,s.unit);
  if(bond&&h.patternId===bond.id){
   const kind=profile!.bond;
-  if(kind==='hex-point'||kind==='hex-flat'){
-   const flat=kind==='hex-flat',rise=flat?.25:Math.min(...profile!.polygons[0].map(p=>p[1]).filter(y=>y>.05)),px=flat?.75*L:L,py=flat?W:(1-rise)*W;
-   for(let r=Math.floor(y0/py)-2;r<=Math.ceil(y1/py)+1&&out.length<limit;r++)for(let col=Math.floor(x0/px)-2;col<=Math.ceil(x1/px)+1&&out.length<limit;col++)add(col*px+(flat?0:Math.abs(r%2)*L/2),r*py+(flat?Math.abs(col%2)*W/2:0),l,w,0,`shape-${r}-${col}`);
+  if(kind==='hex-point'||kind==='hex-flat'||kind==='diamond'){
+   // A uniform joint: move every outline edge out by half the joint and tile that outline edge to edge
+   // (translations across facing edges). Facing edges are then exactly the joint apart at any edge angle;
+   // adding the joint to the rectangular envelope would narrow sloped joints (a rhombus to about 0.68 of it).
+   const v=profile!.polygons[0].map(([u,q])=>({x:(u-.5)*l,y:(q-.5)*w})),n=v.length,ccw=v.reduce((a,p,i)=>a+p.x*v[(i+1)%n].y-v[(i+1)%n].x*p.y,0)>0;
+   const outward=(a:{x:number;y:number},b:{x:number;y:number})=>{const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy);return ccw?{x:dy/len,y:-dx/len}:{x:-dy/len,y:dx/len};};
+   const o=v.map((p,i)=>{const a=outward(v[(i+n-1)%n],p),b=outward(p,v[(i+1)%n]),k=j/2/(1+a.x*b.x+a.y*b.y);return {x:p.x+(a.x+b.x)*k,y:p.y+(a.y+b.y)*k};});
+   const t0={x:o[0].x+o[1].x,y:o[0].y+o[1].y},t1={x:o[1].x+o[2].x,y:o[1].y+o[2].y},det=t0.x*t1.y-t0.y*t1.x,reach=l+w+j;
+   const corners=[{x:x0-reach,y:y0-reach},{x:x1+reach,y:y0-reach},{x:x1+reach,y:y1+reach},{x:x0-reach,y:y1+reach}],ms=corners.map(p=>(t1.y*p.x-t1.x*p.y)/det),ns=corners.map(p=>(t0.x*p.y-t0.y*p.x)/det);
+   for(let m=Math.floor(Math.min(...ms));m<=Math.ceil(Math.max(...ms))&&out.length<limit;m++)for(let q=Math.floor(Math.min(...ns));q<=Math.ceil(Math.max(...ns))&&out.length<limit;q++)add(m*t0.x+q*t1.x,m*t0.y+q*t1.y,l,w,0,`shape-${m}-${q}`);
   }else{
-   const short=kind==='vertex'?profile!.polygons[0].at(-1)![1]*w:0,py=kind==='vertex'?w+short+2*j:kind==='triangle'?w+2*j:W,px=kind==='triangle'?l+2*j:L;
+   // Triangle pairs part along the hypotenuse normal by the joint; vertex pairs along their sloped edge.
+   const hyp=Math.hypot(l,w),sx=j/2*w/hyp,sy=j/2*l/hyp,short=kind==='vertex'?profile!.polygons[0].at(-1)![1]*w:0,slope=kind==='vertex'?j*Math.hypot(1,(w-short)/l):0;
+   const py=kind==='vertex'?w+short+slope+j:w+j+2*sy,px=kind==='triangle'?l+j+2*sx:L;
    for(let r=Math.floor(y0/py)-2;r<=Math.ceil(y1/py)+1&&out.length<limit;r++)for(let col=Math.floor(x0/px)-2;col<=Math.ceil(x1/px)+1&&out.length<limit;col++){
     const x=col*px,y=r*py;
-    if(kind==='diamond'){add(x,y,l,w,0,`shape-${r}-${col}-a`);add(x+L/2,y+W/2,l,w,0,`shape-${r}-${col}-b`);}
-    else if(kind==='triangle'){add(x+l/2+j/2,y+w/2-j/2,l,w,0,`shape-${r}-${col}-a`);add(x+l/2-j/2,y+w/2+j/2,l,w,Math.PI,`shape-${r}-${col}-b`);}
-    else {add(x+L/2,y+w/2,l,w,0,`shape-${r}-${col}-a`);add(x+L/2,y+w/2+short+j,l,w,Math.PI,`shape-${r}-${col}-b`);}
+    if(kind==='triangle'){add(x+l/2+sx,y+w/2-sy,l,w,0,`shape-${r}-${col}-a`);add(x+l/2-sx,y+w/2+sy,l,w,Math.PI,`shape-${r}-${col}-b`);}
+    else {add(x+L/2,y+w/2,l,w,0,`shape-${r}-${col}-a`);add(x+L/2,y+w/2+short+slope,l,w,Math.PI,`shape-${r}-${col}-b`);}
    }
   }
   return out;

@@ -145,18 +145,22 @@ async function main(){
   }
  });
  await scenario('Inspected manufacturer diagrams retain their original intrinsic direction',()=>{
-  // Independent visual checks: Techo hatch atlas PDF6 (Everest03), PDF9
-  // (Para09), and Permacon Ontario product guide PDF17/PDF19 (18x36 slabs).
+  // Independent visual checks: Techo hatch atlas PDF6 (Everest03, and the source-face
+  // verified Everest07 drawn at 45 degrees) and Permacon Ontario product guide
+  // PDF17/PDF19 (18x36 slabs). Para09's earlier recipe contradicted its atlas drawing
+  // (PDF9) and is withheld: the runtime index (recipes only) must not offer it as an original.
+  const para9=HARDSCAPE_PRODUCTS.find(p=>p.id==='techo-para-slab')!.finishes.flatMap(f=>f.patterns).find(p=>p.id==='l77-herringbone-laying-pattern-09-100-500x750');
+  check(!para9,'Para09 source-mismatched recipe is withheld from the runtime recipes');
   const cases=[
    ['techo-everest-slab','linear-pattern-03-100-250x500',0],
-   ['techo-para-slab','l77-herringbone-laying-pattern-09-100-500x750',45],
+   ['techo-everest-slab','herringbone-pattern-07-80-250x500-20-250x250',45],
    ['permacon-melia-18-36-durafusion-slab','manufacturer-herringbone',45],
    ['permacon-melville-18-36-durafusion-slab','manufacturer-herringbone',45],
   ] as const;
   for(const [productId,patternId,angle]of cases){
    const product=HARDSCAPE_PRODUCTS.find(p=>p.id===productId)!,finish=product.finishes.find(f=>f.patterns.some(p=>p.id===patternId))!,recipe=finish.patterns.find(p=>p.id===patternId)!;
    check(!!recipe,`${productId}: inspected pattern is available`);close(recipe.layout.angleDeg??0,angle,'Intrinsic direction agrees with actual supplier drawing');
-   if(productId==='techo-everest-slab'){close(recipe.layout.widthMm,500,'Everest03 horizontal repeat width');close(recipe.layout.depthMm,250,'Everest03 horizontal course depth');check(recipe.layout.cells.every(c=>c.rotationDeg===0),'Everest03 is horizontal stock rather than a vertically rotated stand-in');}
+   if(patternId==='linear-pattern-03-100-250x500'){close(recipe.layout.widthMm,500,'Everest03 horizontal repeat width');close(recipe.layout.depthMm,250,'Everest03 horizontal course depth');check(recipe.layout.cells.every(c=>c.rotationDeg===0),'Everest03 is horizontal stock rather than a vertically rotated stand-in');}
   }
  });
  await scenario('Every inlay outline physically removes field paving and counts cut stock once',()=>{
@@ -214,6 +218,18 @@ async function main(){
   const f={...base,productId:'permacon-melville',color:'#aaa69b',hardscape:undefined,rotationDeg:0,inlays:[inlay({shape:'circle',widthIn:48,depthIn:48,rotationDeg:0,xIn:0,yIn:0})]},m=buildYardModel(data(f)),stones=m.boxes.filter(b=>b.role==='paver'),stockCount=new Set(stones.map(b=>b.unitId)).size;
   check(stones.length>stockCount,'Fixture contains an inlay that cuts stock into multiple physical fragments');
   check(stones.filter(b=>!b.renderDuplicate).length===stockCount,'3D and plan draw each original stone once with its complete cut contours');
+ });
+ await scenario('Off-axis stones without inlays render as whole stones, not seamed decomposition cells',()=>{
+  // An off-axis rectangle decomposes into several solid cells; without its whole contour the plan and 3D showed seams.
+  const aberdeen=HARDSCAPE_PRODUCTS.find(p=>p.id==='techo-aberdeen-slab')!,af=aberdeen.finishes[0],ar=af.patterns[0];
+  const supplier={...base,productId:aberdeen.id,rotationDeg:0,inlays:undefined,hardscape:{finishId:af.id,colorId:af.colors[0].id,unitId:ar.layout.cells[0].unitId,patternId:ar.id,angleDeg:31,jointMm:0}};
+  const legacy={...base,productId:'permacon-melville',color:'#aaa69b',hardscape:undefined,rotationDeg:31,inlays:undefined};
+  for(const [label,f] of [['supplier recipe at 31 degrees',supplier],['legacy rows on a 31 degree patio',legacy]] as const){
+   const stones=buildYardModel(data(f as YardFeature)).boxes.filter(b=>b.role==='paver'),byStone=new Map<string,typeof stones>();for(const b of stones)byStone.set(b.unitId!,[...(byStone.get(b.unitId!)??[]),b]);
+   const split=[...byStone.values()].filter(cells=>cells.length>1);
+   check(split.length>0,`${label}: fixture splits off-axis stones into several solid cells`);
+   check(split.every(cells=>cells.filter(b=>b.renderContours).length===1&&cells.filter(b=>b.renderDuplicate).length===cells.length-1),`${label}: every split stone is drawn once from its whole cut contour`);
+  }
  });
  await scenario('Different supplier zones produce unique quote-section identifiers',()=>{
   const q=buildYardTakeoff(data({...base,inlays:[inlay()]}));check(new Set(q.sections.map(s=>s.id)).size===q.sections.length,'No duplicate supply quote identifiers');

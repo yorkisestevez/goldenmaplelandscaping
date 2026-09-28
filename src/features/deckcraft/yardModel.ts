@@ -9,14 +9,16 @@ import {getHousePlacement} from './housePlacement';
 import {hasHouseBlocks,houseOutline} from './houseFootprint';
 import {yardFeatureOutline,yardWallPath,yardPathEnvelope,yardPathBackStrip,pathRun} from './yardPathGeometry';
 import {yardShapeProblem} from './yardShapeEditing';
-import {hardscapeSelection,hardscapeProblem,rectangularUnit} from './hardscapeCatalogue';
+import {hardscapeSelection,hardscapeProblem,hardscapeSwatchKey,rectangularUnit} from './hardscapeCatalogue';
+import type {HardscapeUnit} from './hardscapeCatalogue';
 import {hardscapeBlanks} from './hardscapeLayout';
 import {hardscapeProfile,hardscapeStockPolygons} from './hardscapeShapes';
 import {yardWallCourses} from './yardElevations';
 import {patioInlayPlans,patioInlayFeature} from './patioInlays';
 
 export type YardRole='paver'|'base'|'bedding'|'wall-block'|'wall-cap'|'wall-drainage'|'backfill'|'liner'|'water'|'basin'|'pump'|'rock'|'drain-pipe'|'water-pipe';
-export interface YardSurface {imageUrl:string;cx:number;cz:number;angle:number;lengthIn:number;widthIn:number;heightIn:number;kind:'paver'|'wall';sourceUrl:string}
+/** `swatchKey` names the manufacturer photo; the lazily loaded 3D view resolves it (hardscape-swatches.json). */
+export interface YardSurface {swatchKey:string;cx:number;cz:number;angle:number;lengthIn:number;widthIn:number;heightIn:number;kind:'paver'|'wall';sourceUrl:string}
 export type YardBox=Box&{id:string;featureId:string;role:YardRole;color:string;illustrative?:boolean;unitId?:string;surface?:YardSurface;stockAreaSqft?:number;stockUnitId?:string;renderContours?:PlanPoint[][];renderDuplicate?:boolean};
 export type YardMember=Member&{id:string;featureId:string;role:YardRole;color:string};
 export interface YardFeatureModel {config:YardFeature;footprints:PlanPoint[][];topIn:number;boxes:YardBox[];members:YardMember[];warnings:string[];quantities:Record<string,number>;pavingZones?:{feature:YardFeature;areaSqft:number;stockAreaSqft:number;inlayId?:string}[];stockSchedule?:{unitId:string;widthMm:number;lengthMm:number;heightMm:number;pieces:number;productId?:string;inlayId?:string}[];sourceUrl?:string;excluded:boolean;supportClearances?:PlanPoint[][];quoteRequired?:boolean;exclusionReason?:'paver-budget'}
@@ -24,6 +26,10 @@ export interface YardExcavationRegion {featureId:string;polygon:PlanPoint[];bott
 const S=100000;
 export const yardSignedArea=(p:PlanPoint[])=>p.reduce((n,a,i)=>{const b=p[(i+1)%p.length];return n+a.x*b.y-b.x*a.y;},0)/2;
 export const yardArea=(p:PlanPoint[][])=>Math.abs(p.reduce((n,x)=>n+yardSignedArea(x),0))/144;
+/** One stock unit's coverage face, for order areas: its digitized manufacturer outline where there is one
+ * (a rhombus covers half its rectangular envelope), otherwise the nominal rectangle. An internal
+ * opening, such as Aquastorm's drainage void, stays part of the ground the unit covers. */
+const stockFaceSqft=(productId:string,unit:HardscapeUnit,lengthIn:number,widthIn:number)=>{if(!hardscapeProfile(productId,unit))return lengthIn*widthIn/144;return Math.max(...hardscapeStockPolygons(productId,unit,0,0,0).map(p=>Math.abs(yardSignedArea(p))))/144;};
 export function yardClip(subject:PlanPoint[][],clip:PlanPoint[][]=[],operation:'union'|'difference'|'intersection'='union'):PlanPoint[][]{
  if(!subject.length)return [];if(!clip.length&&operation==='intersection')return [];
  const c=new ClipperLib.Clipper(),out=[];
@@ -171,7 +177,9 @@ export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff){
    for(const p of plans.filter(p=>p.status!=='ok'))localWarnings.push(`${p.inlay.name}: ${p.message}`);
    const laySupplier=(zone:YardFeature,mask:PlanPoint[][],inlayId?:string)=>{const sel=hardscapeSelection(zone)!;const za=zone.rotationDeg*Math.PI/180,zc=Math.cos(za),zs=Math.sin(za),before=model.boxes.length;
     for(const blank of hardscapeBlanks(zone)){const centre={x:zone.xFt*12+zc*blank.cx-zs*blank.cy,y:zone.zFt*12+zs*blank.cx+zc*blank.cy},angle=za+blank.angle,stock=sel.finish.units.find(u=>u.id===blank.unitId)??sel.unit;
-     const contours=yardClip(hardscapeStockPolygons(sel.product.id,stock,centre.x,centre.y,angle),mask,'intersection'),profile=hardscapeProfile(sel.product.id,stock);let fragment=0;for(const p of yardSolidCells(contours)){add('paver',p,top,stock.heightMm/25.4,zone.color,!rectangularUnit(stock)&&!profile);const b=model.boxes.at(-1)!;b.unitId=`${zone.id}-paver-${blank.id}`;b.stockAreaSqft=blank.length*blank.width/144;b.stockUnitId=stock.id;if(profile||valid.length){if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}if(sel.color.imageUrl)b.surface={imageUrl:sel.color.imageUrl,cx:centre.x,cz:centre.y,angle,lengthIn:blank.length,widthIn:blank.width,heightIn:stock.heightMm/25.4,kind:'paver',sourceUrl:sel.product.sourceUrl};}
+     const contours=yardClip(hardscapeStockPolygons(sel.product.id,stock,centre.x,centre.y,angle),mask,'intersection'),profile=hardscapeProfile(sel.product.id,stock);
+     // a stone split into several solid cells (any off-axis angle) is drawn once from its whole cut contour, never as seamed pieces
+     const cells=yardSolidCells(contours),whole=!!profile||valid.length>0||cells.length>1;let fragment=0;for(const p of cells){add('paver',p,top,stock.heightMm/25.4,zone.color,!rectangularUnit(stock)&&!profile);const b=model.boxes.at(-1)!;b.unitId=`${zone.id}-paver-${blank.id}`;b.stockAreaSqft=stockFaceSqft(sel.product.id,stock,blank.length,blank.width);b.stockUnitId=stock.id;if(whole){if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}if(sel.color.swatch)b.surface={swatchKey:hardscapeSwatchKey(sel.product.id,sel.finish.id,sel.color.id),cx:centre.x,cz:centre.y,angle,lengthIn:blank.length,widthIn:blank.width,heightIn:stock.heightMm/25.4,kind:'paver',sourceUrl:sel.product.sourceUrl};}
     }
     const recipe=sel.finish.patterns.find(p=>p.id===zone.hardscape!.patternId);if(inlayId&&recipe?.layout.installationJointMm!==undefined)localWarnings.push(`${zone.name}: supplier installation joint ${recipe.layout.installationJointMm} mm differs from nominal pattern modules; confirm installed spacing before ordering.`);
     const stock=[...new Map(model.boxes.slice(before).map(b=>[b.unitId,b])).values()],stockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);model.pavingZones??=[];model.pavingZones.push({feature:zone,areaSqft:yardArea(mask),stockAreaSqft,...(inlayId?{inlayId}:{})});
@@ -185,7 +193,7 @@ export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff){
    }else{
    const rows=spec?.rows||[{depth:12,lengths:[24]}],gap=.125;let row=0;
    for(let v=-d/2;v<d/2-.001;){const r=rows[row%rows.length],depth=r.depth;let col=0;
-    for(let u=-w/2-(row%2?(r.lengths[0]+gap)/2:0);u<w/2-.001;){const len=r.lengths[col%r.lengths.length],contours=yardClip([localRect(u+len/2,v+depth/2,len,depth)],field,'intersection');let fragment=0;for(const p of yardSolidCells(contours)){add('paver',p,top,thick,f.color,spec?.illustrative||!spec);const b=model.boxes.at(-1)!;b.unitId=`${f.id}-paver-${row}-${col}`;if(valid.length){if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}}u+=len+gap;col++;}
+    for(let u=-w/2-(row%2?(r.lengths[0]+gap)/2:0);u<w/2-.001;){const len=r.lengths[col%r.lengths.length],contours=yardClip([localRect(u+len/2,v+depth/2,len,depth)],field,'intersection'),cells=yardSolidCells(contours),whole=valid.length>0||cells.length>1;let fragment=0;for(const p of cells){add('paver',p,top,thick,f.color,spec?.illustrative||!spec);const b=model.boxes.at(-1)!;b.unitId=`${f.id}-paver-${row}-${col}`;if(whole){if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}}u+=len+gap;col++;}
     v+=depth+gap;row++;
    }
    }
@@ -215,7 +223,7 @@ export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff){
       for(let u=start-(row%2&&f.hardscape?.patternId!=='stack-bond'?unitLength/2:0);u<end-.001;u+=unitLength,slot++){
        const left=Math.max(start,u),right=Math.min(end,u+unitLength);if(right-left<=.05)continue;
        const centre=(left+right)/2,blank=rectangle(p.x+ux*centre,p.y+uy*centre,right-left-(supplier?0:.05),role==='wall-cap'?capDepth:d,angle),cuts=yardClip(yardClip([blank],zone,'intersection'),occupiedUnits,'difference');
-       for(const cut of yardSolidCells(cuts)){add(role,cut,top,height,f.color,!supplier||!rectangularUnit(supplier.unit));const b=model.boxes.at(-1)!;b.unitId=`${f.id}-${role}-${row}-${seg}-${slot}`;if(supplier?.color.imageUrl)b.surface={imageUrl:supplier.color.imageUrl,cx:p.x+ux*(u+unitLength/2),cz:p.y+uy*(u+unitLength/2),angle,lengthIn:unitLength,widthIn:role==='wall-cap'?capDepth:d,heightIn:role==='wall-cap'?height:course,kind:role==='wall-cap'?'paver':'wall',sourceUrl:supplier.product.sourceUrl};}
+       for(const cut of yardSolidCells(cuts)){add(role,cut,top,height,f.color,!supplier||!rectangularUnit(supplier.unit));const b=model.boxes.at(-1)!;b.unitId=`${f.id}-${role}-${row}-${seg}-${slot}`;if(supplier?.color.swatch)b.surface={swatchKey:hardscapeSwatchKey(supplier.product.id,supplier.finish.id,supplier.color.id),cx:p.x+ux*(u+unitLength/2),cz:p.y+uy*(u+unitLength/2),angle,lengthIn:unitLength,widthIn:role==='wall-cap'?capDepth:d,heightIn:role==='wall-cap'?height:course,kind:role==='wall-cap'?'paver':'wall',sourceUrl:supplier.product.sourceUrl};}
        occupiedUnits=yardClip([...occupiedUnits,...cuts]);
       }
      }
@@ -235,8 +243,8 @@ export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff){
     warnings.push(...localWarnings);continue;
    }
    model.topIn=top;let courses=0;
-   for(let y=bottom;y<top-cap-.001;y+=course){const ch=Math.min(course,top-cap-y);for(let u=-w/2-(courses%2&&f.hardscape?.patternId!=='stack-bond'?length/2:0);u<w/2;u+=length){const l=Math.max(-w/2,u),r=Math.min(w/2,u+length);if(r-l>.01){add('wall-block',localRect((l+r)/2,0,r-l-(supplier?0:.05),d),y+ch,ch-(supplier?0:.03),f.color,!supplier||!rectangularUnit(supplier.unit));const b=model.boxes.at(-1)!;b.unitId=`${f.id}-wall-${courses}-${u}`;if(supplier?.color.imageUrl)b.surface={imageUrl:supplier.color.imageUrl,cx:x+c*(u+length/2),cz:z+s*(u+length/2),angle:a,lengthIn:length,widthIn:d,heightIn:course,kind:'wall',sourceUrl:supplier.product.sourceUrl};}}courses++;}
-   if(cap)for(let u=-w/2;u<w/2;u+=capLength){const len=Math.min(capLength,w/2-u);add('wall-cap',localRect(u+len/2,0,len-(supplier?0:.05),capDepth),top,cap,f.color,!supplier||!rectangularUnit(supplier.cap!));const b=model.boxes.at(-1)!;b.unitId=`${f.id}-cap-${u}`;if(supplier?.color.imageUrl)b.surface={imageUrl:supplier.color.imageUrl,cx:x+c*(u+capLength/2),cz:z+s*(u+capLength/2),angle:a,lengthIn:capLength,widthIn:capDepth,heightIn:cap,kind:'paver',sourceUrl:supplier.product.sourceUrl};}
+   for(let y=bottom;y<top-cap-.001;y+=course){const ch=Math.min(course,top-cap-y);for(let u=-w/2-(courses%2&&f.hardscape?.patternId!=='stack-bond'?length/2:0);u<w/2;u+=length){const l=Math.max(-w/2,u),r=Math.min(w/2,u+length);if(r-l>.01){add('wall-block',localRect((l+r)/2,0,r-l-(supplier?0:.05),d),y+ch,ch-(supplier?0:.03),f.color,!supplier||!rectangularUnit(supplier.unit));const b=model.boxes.at(-1)!;b.unitId=`${f.id}-wall-${courses}-${u}`;if(supplier?.color.swatch)b.surface={swatchKey:hardscapeSwatchKey(supplier.product.id,supplier.finish.id,supplier.color.id),cx:x+c*(u+length/2),cz:z+s*(u+length/2),angle:a,lengthIn:length,widthIn:d,heightIn:course,kind:'wall',sourceUrl:supplier.product.sourceUrl};}}courses++;}
+   if(cap)for(let u=-w/2;u<w/2;u+=capLength){const len=Math.min(capLength,w/2-u);add('wall-cap',localRect(u+len/2,0,len-(supplier?0:.05),capDepth),top,cap,f.color,!supplier||!rectangularUnit(supplier.cap!));const b=model.boxes.at(-1)!;b.unitId=`${f.id}-cap-${u}`;if(supplier?.color.swatch)b.surface={swatchKey:hardscapeSwatchKey(supplier.product.id,supplier.finish.id,supplier.color.id),cx:x+c*(u+capLength/2),cz:z+s*(u+capLength/2),angle:a,lengthIn:capLength,widthIn:capDepth,heightIn:cap,kind:'paver',sourceUrl:supplier.product.sourceUrl};}
    const drainage=localRect(0,d/2+6,w,12),backfill=localRect(0,d/2+18,w,12);
    add('wall-drainage',drainage,top-cap,Math.max(1,retainedDepth),'#989a91',true);add('backfill',backfill,top-cap,Math.max(1,retainedDepth),'#765e42',true);
    add('base',localRect(0,6,w+12,d+24),bottom,6,'#8c8a7c',true);pipe('drain-pipe',-w/2,d/2+6,w/2,d/2+6,bottom+2,4);

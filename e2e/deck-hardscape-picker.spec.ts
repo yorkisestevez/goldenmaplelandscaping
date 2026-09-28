@@ -26,7 +26,9 @@ for(const touch of [false,true])test(`${touch?'@phone ':''}original paver outlin
  await open(page,touch);
  for(const [brand,id,bond] of [['Unilock','unilock-hex-paver','shape-hex-point'],['Techo-Bloc','techo-diamond-paver','shape-diamond'],['Permacon','permacon-vertex-slab','shape-vertex']]){
   await picker(page).getByLabel('Hardscape supplier',{exact:true}).selectOption(brand);await picker(page).getByLabel('Supplier hardscape product',{exact:true}).selectOption(id);await ready(page);
-  await expect(picker(page).getByLabel('Hardscape laying pattern',{exact:true})).toHaveValue(bond);await expect(picker(page).getByRole('group',{name:'Original stock shape',exact:true})).toContainText('Supplier stock shape');
+  // A recovered manufacturer original (e.g. Unilock Hex AM, Techo Diamond 01) is the default; the shape-specific bond stays available.
+  const original=(hardscapeProduct(id)!.finishes[0] as {defaultPatternId?:string}).defaultPatternId;
+  await expect(picker(page).getByLabel('Hardscape laying pattern',{exact:true})).toHaveValue(original??bond);expect(await picker(page).getByLabel('Hardscape laying pattern',{exact:true}).locator(`option[value="${bond}"]`).count()).toBe(1);await expect(picker(page).getByRole('group',{name:'Original stock shape',exact:true})).toContainText('Supplier stock shape');
   expect(await picker(page).getByLabel('Hardscape laying pattern',{exact:true}).locator('option[value="herringbone"]').count()).toBe(0);
   const guides=picker(page).getByRole('group',{name:'Original manufacturer patterns',exact:true});await expect(guides).toBeVisible();expect(await guides.getByRole('link').count()).toBeGreaterThan(0);
   if(id==='permacon-vertex-slab'){await expect(guides).toContainText('Arrows');await expect(guides).toContainText('Lines of Capio');}
