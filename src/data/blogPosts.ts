@@ -15,6 +15,14 @@ export interface BlogPostMeta {
 }
 
 export const BLOG_POSTS: BlogPostMeta[] = [
+    {
+    slug: "best-pavers-ontario-winters",
+    title: "Best Pavers for Ontario Winters: What Freeze-Thaw Testing Actually Means",
+    excerpt: "Barrie gets roughly 80 freeze-thaw cycles a year. Here's what ASTM testing means for Unilock, Techo-Bloc and Permacon pavers in Simcoe County.",
+    category: "Materials",
+    readTime: "10 min",
+    image: "/images/projects/best.JPEG",
+  },
   {
     slug: "hpb-vs-limestone-screenings-barrie",
     title: "HPB vs Limestone Screenings: What Belongs Under Your Pavers in Barrie",
