@@ -1,116 +1,192 @@
-import {getHouseBlocks,normalizeHouseBlocks} from '../features/deckcraft/houseFootprint';
-import { Component, Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import {Suspense,lazy,useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {Link} from 'react-router-dom';
 import SEO from '../components/SEO';
-import { deckReleaseData, DECK_RELEASE_STORAGE_KEY, calculateDeckReleaseEstimate as calculateEstimate, parseDeckReleaseDesign as parseDesign, serializeDeckReleaseDesign as serializeDesign, exportDeckReleaseDXF as exportDeckDXF, exportDeckReleaseOBJ as exportDeckOBJ } from '../features/deckcraft/deckRelease';
-import { DEFAULT_DECK, DECK_SETTINGS } from '../features/deckcraft/defaults';
-import { type DeckData, type LightingZone, type HouseOpening, type PrivacyProductId, type PrivacyScreen } from '../features/deckcraft/types';
-import { MAX_PRIVACY_SCREENS, MAX_PRIVACY_SQFT, MAX_SCREEN_PANELS, PRIVACY_HEIGHTS, PRIVACY_PRODUCTS, PRIVACY_SIDES, newPrivacyScreen, pricedPrivacyArea, privacySides, screenFaceSqft, screenOn, screenProduct, withPrivacyProduct } from '../features/deckcraft/privacyScreens';
-import { DECKING_CATALOGUE, RAILING_CATALOGUE, MANUFACTURER_ACCESSORIES } from '../features/deckcraft/manufacturerCatalog';
-import ConstructionPlan from '../features/deckcraft/ConstructionPlan';
-import { swatchUrl } from '../features/deckcraft/lib/swatches';
-import { DESIGN_STORAGE_KEY, MAX_DESIGN_BYTES, defaultLevel3 } from '../features/deckcraft/designPersistence';
-
-import { extrasLayout } from '../features/deckcraft/extrasLayout';
-import { LIGHTING_CATALOGUE, LIGHTING_CATEGORIES, type LightingCatalogueProduct } from '../features/deckcraft/lightingCatalogue';
-import HouseEditor from '../features/deckcraft/HouseEditor';
-import HouseOpeningsBar from '../features/deckcraft/HouseOpeningsBar';
-import ProposalDialog from '../features/deckcraft/ProposalSheet';
+import {deckReleaseData,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
+import {DEFAULT_DECK} from '../features/deckcraft/defaults';
+import type {DeckData,HouseOpening,PrivacyScreen} from '../features/deckcraft/types';
+import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,pricedPrivacyArea,privacySides,screenOn,screenProduct} from '../features/deckcraft/privacyScreens';
+import {MAX_DESIGN_BYTES} from '../features/deckcraft/designPersistence';
+import {designFeatures,setDeckAnalyticsSink,stepLabel,trackDeck} from '../features/deckcraft/deckAnalytics';
+import {ATTACH_PROPOSAL_PDF,DECK_DESIGN_FORM,PROPOSAL_PDF_NAME} from '../features/deckcraft/sendDesign';
+import type {ProposalShot} from '../features/deckcraft/proposalModel';
 import {getHouseConfig,clampHouseOpening} from '../features/deckcraft/houseSettings';
-import {availableStairSides,exposedHouseLine,getHouseContact} from '../features/deckcraft/houseContact';
-import {activeWrap,describeWrap,porchStairForDoor,wrapBlockers,wrapHips,WRAP_EDGE_NAMES,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from '../features/deckcraft/lib/wrapGeometry';
-
-import { defaultLightingZone, isSystemProduct, lightingSystemCheck, syncAutoLighting, MAX_FIXTURE_QTY, STAIR_LIGHT_STYLES } from '../features/deckcraft/lightingSystem';
+import {getHouseContact} from '../features/deckcraft/houseContact';
+import {dollars} from '../features/deckcraft/designFacts';
+import {activeWrap,edgeNameOf} from '../features/deckcraft/lib/wrapGeometry';
+import {angledStairAllowed,angledStairFits,isChamferEdgeId} from '../features/deckcraft/lib/cornerChamfers';
+import {CAMERA_MODES,type PlanTool,type PreviewMode} from '../features/deckcraft/designer/constants';
+import PhoneDeckBar from '../features/deckcraft/designer/PhoneDeckBar';
+import PriceLedger,{ChangeAnnouncer} from '../features/deckcraft/designer/PriceLedger';
+import {priceLedger} from '../features/deckcraft/designer/priceLedgerModel';
+import {priceState,useChangeLedger} from '../features/deckcraft/designer/useChangeLedger';
+import {downloadFile} from '../features/deckcraft/designer/fields';
+import {useDeckDesign} from '../features/deckcraft/designer/useDeckDesign';
+import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
+import type {DeltaProps} from '../features/deckcraft/designer/useOptionDeltas';
+import DesignTools from '../features/deckcraft/designer/DesignTools';
+import PreviewPanel,{loadExteriorStudio,loadViewer} from '../features/deckcraft/designer/PreviewPanel';
+import SectionList from '../features/deckcraft/designer/SectionList';
+import {SECTIONS,SECTION_BY_ID,loadBackyardStep,loadBoardColourPanel,loadDeckFinishesPanel,loadDimensionsStep,loadEstimateStep,loadHouseSection,loadInlayEditor,loadMaterialsStep,loadSiteExtrasStep,loadSkirtingEditor,loadStairsStep,sectionsOfPatch,type SectionId} from '../features/deckcraft/designer/sections';
+import type {BoardPaintChoice} from '../features/deckcraft/boardFinishes';
+import type {paintBoard as PaintBoard} from '../features/deckcraft/boardPaint';
+import {trackEngagement,trackLead} from '../utils/analytics';
+import {getAttributionFields} from '../utils/utmCapture';
+import {getBehaviorFields} from '../utils/behavior';
+import {genEventId} from '../utils/eventId';
 import './DeckDesigner.css';
 
-const Viewer = lazy(() => import('../features/deckcraft/components/viewer3d/Deck3DViewer'));
-const STEPS = ['Dimensions', 'Materials', 'Stairs & railings', 'Site & extras', 'Your estimate'];
-const LIGHTING_ZONES:readonly [LightingZone,string][]=[['deck','Deck / recessed'],['posts','Railing posts'],['stairs','Stairs'],['privacy','Privacy screens'],['landscape','Landscape'],['house','House']];
-const allowedLightingZones=(geometry:string):LightingZone[]=>geometry==='recessed'?['deck','stairs','posts','landscape']:geometry==='wall'?['deck','stairs','posts','privacy','house']:geometry==='undercap'?['deck','stairs','posts','privacy']:geometry==='bollard'||geometry==='spot'?['landscape']:['house'];
-const dollars = (n: number) => new Intl.NumberFormat('en-CA', {style:'currency',currency:'CAD',maximumFractionDigits:0}).format(n);
+/**
+ * The drawing-set type, on this page only: Archivo (headings, section names, the title block) and IBM Plex Mono
+ * (figures), from Google Fonts with display=swap, so text shows at once in the fallback faces DeckDesigner.css
+ * sizes to match. Body text stays in the site's Inter; Cormorant stays in the wordmark.
+ */
+const DECK_FONTS='https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87.5,500..600&family=IBM+Plex+Mono:wght@500&display=swap';
+export const links=()=>[
+  {rel:'preconnect',href:'https://fonts.googleapis.com'},
+  {rel:'preconnect',href:'https://fonts.gstatic.com',crossOrigin:'anonymous' as const},
+  {rel:'stylesheet',href:DECK_FONTS},
+];
 
-class ViewerBoundary extends Component<{children:ReactNode;fallback:ReactNode},{failed:boolean}> {
-  state={failed:false};
-  static getDerivedStateFromError(){return {failed:true};}
-  render(){return this.state.failed ? this.props.fallback : this.props.children;}
-}
-function Field({label,children,hint}:{label:string;children:ReactNode;hint?:string}){
-  return <label className="dd-field"><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>;
-}
-function MaterialSwatch({file,alt}:{file?:string;alt:string}){
-  const url=swatchUrl(file);const [failedUrl,setFailedUrl]=useState('');
-  return url&&failedUrl!==url?<img src={url} alt={alt} onError={()=>setFailedUrl(url)}/>:<span className="dd-swatch-unavailable" role="img" aria-label={`${alt}: manufacturer sample unavailable`}>Manufacturer sample unavailable</span>;
-}
-function NumberField({label,value,min,max,unit,increment,hint,onValue,disabled}:{label:string;value:number;min:number;max:number;unit:string;increment:number;hint?:string;onValue:(n:number)=>void;disabled?:boolean}){
-  const [draft,setDraft]=useState(String(value));
-  const pending=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
-  useEffect(()=>()=>clearTimeout(pending.current),[]);
-  useEffect(()=>setDraft(String(value)),[value]);
-  const commit=()=>{clearTimeout(pending.current);const n=Number(draft);if(draft.trim()===''||!Number.isFinite(n)){setDraft(String(value));return;}const next=Math.min(max,Math.max(min,n));setDraft(String(next));onValue(next);};
-  return <Field label={label} hint={hint}><span className="dd-number"><input aria-label={label} type="number" inputMode="decimal" min={min} max={max} step={increment} value={draft} disabled={disabled} onChange={e=>{clearTimeout(pending.current);setDraft(e.target.value);const n=Number(e.target.value);if(e.target.value!==''&&Number.isFinite(n)&&n>=min&&n<=max)pending.current=setTimeout(()=>onValue(n),150);}} onBlur={commit} onKeyDown={e=>{if(e.key==='Enter')e.currentTarget.blur();}}/><span>{unit}</span></span></Field>;
-}
-function downloadFile(body:string,type:string,name:string){
-  const url=URL.createObjectURL(new Blob([body],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
+// Loaded on demand (and fetched once the page settles), so they are not part of the page's first load: every
+// section's body (through the registry in sections.ts) and the send and proposal dialogs.
+const loadSendDialog=()=>import('../features/deckcraft/SendDesignDialog');
+const loadProposalDialog=()=>import('../features/deckcraft/ProposalDialog');
+const HouseSection=lazy(loadHouseSection),DimensionsStep=lazy(loadDimensionsStep),MaterialsStep=lazy(loadMaterialsStep),StairsStep=lazy(loadStairsStep),SiteExtrasStep=lazy(loadSiteExtrasStep),EstimateStep=lazy(loadEstimateStep);
+const BackyardStep=lazy(loadBackyardStep),SendDesignDialog=lazy(loadSendDialog),ProposalDialog=lazy(loadProposalDialog);
+// Phones (the layout's single column) show one section at a time; wider screens keep several open.
+const onePhoneSection=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(max-width: 760px)').matches;
+const reducedMotion=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
+// DeckCraft's funnel events go through the site's analytics (GA4, Meta and the behaviour trail sent with leads).
+setDeckAnalyticsSink((event,label)=>trackEngagement(event,label));
+
+/**
+ * The public deck designer: wires the working design (useDeckDesign), the live estimate (useDeckEstimate),
+ * the preview and the sections (sections.ts, opened in any order) together, and owns the outputs (proposal,
+ * PDF, summary, exports) and sending the design. The section bodies and preview are presentational; every
+ * effect lives here, in the order the page has always run them.
+ */
 export default function DeckDesigner(){
-  const [data,setData]=useState<DeckData>(()=>deckReleaseData(structuredClone(DEFAULT_DECK)));
-  const [step,setStep]=useState(0);
+  // The open sections. Every section starts closed, in the prerendered page and on the client alike; none is saved.
+  const [open,setOpen]=useState<ReadonlySet<SectionId>>(()=>new Set());
+  const closeSections=useCallback(()=>setOpen(new Set()),[]);
+  // Your changes (the price schedule): every edit, undo, redo and whole new design is noted as it happens.
+  const changes=useChangeLedger();
+  const {data,setData,update:applyUpdate,replace:replaceDesign,undo:undoDesign,redo:redoDesign,canUndo,canRedo,earlierYard,restoreEarlierYard:restoreYard,dismissEarlierYard,mounted,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign}=useDeckDesign({onReplaced:()=>{closeSections();changes.loaded();}});
+  const replace=(next:DeckData)=>{changes.loaded();replaceDesign(next);};
+  const undo=()=>{if(canUndo)changes.undo();undoDesign();},redo=()=>{if(canRedo)changes.redo();redoDesign();};
+  const restoreEarlierYard=()=>{if(earlierYard)changes.edit(earlierYard,data);restoreYard();};
+  // Section reach: the first edit in each section counts once per visit, attributed through the fields it owns.
+  const changedSections=useRef(new Set<SectionId>());
+  const update=(patch:Partial<DeckData>)=>{
+    for(const id of sectionsOfPatch(patch,data))if(!changedSections.current.has(id)){changedSections.current.add(id);trackDeck('deckcraft_section',`deck_changed_${id}`);}
+    changes.edit(patch,data);
+    applyUpdate(patch);
+  };
+  // Ctrl/Cmd+Z undoes a design change and Ctrl/Cmd+Shift+Z (or Ctrl+Y) redoes it, except while typing in a
+  // field, where the browser's own undo applies to the text.
+  useEffect(()=>{
+    const onKey=(e:KeyboardEvent)=>{
+      if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
+      const t=e.target as HTMLElement|null;if(t&&(t.isContentEditable||/^(input|textarea|select)$/i.test(t.tagName)))return;
+      const key=e.key.toLowerCase();
+      if(key==='z'&&!e.shiftKey){e.preventDefault();undo();}
+      else if((key==='z'&&e.shiftKey)||(key==='y'&&!e.metaKey)){e.preventDefault();redo();}
+    };
+    window.addEventListener('keydown',onKey);return ()=>window.removeEventListener('keydown',onKey);
+  });
   const [lightingSearch,setLightingSearch]=useState('');
   const [selectedHouseOpeningId,setSelectedHouseOpeningId]=useState('');
-  const [houseSettingsOpen,setHouseSettingsOpen]=useState(false);
-  const [mode,setMode]=useState<'3d'|'overview'|'plan'|'structure'|'foundation'|'hardware'|'front'|'top'>('3d');
-  const [mounted,setMounted]=useState(false);
-  const [hasWebGL,setHasWebGL]=useState(true);
-  const [saved,setSaved]=useState(false);
-  const [storageReady,setStorageReady]=useState(false);
-  const [designStatus,setDesignStatus]=useState('');
-  const [designError,setDesignError]=useState('');
+  const [exteriorOpen,setExteriorOpen]=useState(false);
+  // The drawing opens on the site plan: the customer sizes the deck against the house first. 3D is a sheet of its own.
+  const [mode,setMode]=useState<PreviewMode>('plan');
+  // Opening the exterior studio shows the 3D view (looks never show on the plan).
+  // The site plan's tool (R5). A deck that becomes a custom outline is drawn with the Draw outline tool.
+  const [planTool,setPlanTool]=useState<PlanTool>('size');
+  useEffect(()=>{if(data.shape==='Custom')setPlanTool(t=>t==='size'?'outline':t);},[data.shape]);
+  const openExterior=useCallback((open:boolean)=>{setExteriorOpen(open);if(open)setMode(m=>CAMERA_MODES.includes(m)?m:'3d');},[]);
   const [wrapStatus,setWrapStatus]=useState('');
-  const [proposal,setProposal]=useState<{image:string|null;date:string}|null>(null);
+  const [proposal,setProposal]=useState<{shots:ProposalShot[];date:string}|null>(null);
+  // The proposal's pictures ask the 3D view for day or night while they are taken (never a change to the design).
+  const [snapshotLighting,setSnapshotLighting]=useState<'Daylight'|'Evening'|null>(null);
   const [preparing,setPreparing]=useState(false);
-  const snapshot=useRef<(()=>string|null)|null>(null);
-  const onSnapshotReady=useCallback((capture:(()=>string|null)|null)=>{snapshot.current=capture;},[]);
+  const [sendOpen,setSendOpen]=useState(false);
+  const [pdfBusy,setPdfBusy]=useState(false);
+  // Whether a 3D view has been shown yet: the 3D viewer loads only when one is (or for a snapshot), so a snapshot waits
+  // longer for a viewer that has never loaded.
+  const shown3d=useRef(false);
+  useEffect(()=>{if(mode!=='plan'&&mode!=='drawing')shown3d.current=true;},[mode]);
+  // Phones: pinning the drawing while editing is the visitor's choice. It pins the sheet on screen (the plan, unless the
+  // 3D sheet is showing), so it never loads the 3D view on its own.
+  const [docked,setDocked]=useState(false);
+  const toggleDock=()=>{const next=!docked;setDocked(next);if(next)trackDeck('deckcraft_view','deck_view_docked');};
+  const snapshot=useRef<((longEdgePx?:number)=>string|null)|null>(null);
+  const onSnapshotReady=useCallback((capture:((longEdgePx?:number)=>string|null)|null)=>{snapshot.current=capture;},[]);
   const closeProposal=useCallback(()=>setProposal(null),[]);
-  const fileInput=useRef<HTMLInputElement>(null);
-  const panelRef=useRef<HTMLDivElement>(null);
-  const interacted=useRef(false);
+  const closeSend=useCallback(()=>setSendOpen(false),[]);
+  // Funnel: the page load counts the first step, as the wizard did; each preview mode and design feature is counted
+  // once per visit (fixed labels only). Opening a section counts its old step and the section (openSection).
+  useEffect(()=>{trackDeck('deckcraft_step',stepLabel(0));},[]);
+  useEffect(()=>{trackDeck('deckcraft_view',`deck_view_${mode}`);},[mode]);
+  // Fetch the section bodies and the on-demand panels once the page has settled, so opening one is instant; not when
+  // the visitor has asked the browser to save data. A desktop also fetches the 3D viewer then (without drawing it); a
+  // phone never downloads three.js until a 3D view is chosen.
   useEffect(()=>{
-    setMounted(true);
-    try {const c=document.createElement('canvas');setHasWebGL(!!(c.getContext('webgl2')||c.getContext('webgl')));}catch{setHasWebGL(false);}
-    try{const stored=localStorage.getItem(DECK_RELEASE_STORAGE_KEY)??localStorage.getItem(DESIGN_STORAGE_KEY);if(stored){setData(parseDesign(stored));setDesignStatus('Your deck and house have been restored. Any deferred yard features remain in the older saved design.');}}catch{setDesignError('Your previous design could not be restored. You can import a saved JSON file.');}
-    setStorageReady(true);
+    if((navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData)return;
+    const desktopOnly=window.matchMedia?.('(min-width: 761px) and (pointer: fine)').matches?[loadViewer]:[];
+    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel,...desktopOnly])load().catch(()=>{/* Loaded again when opened. */});},4000);
+    return()=>clearTimeout(timer);
   },[]);
-  useEffect(()=>{if(!storageReady)return;const timer=setTimeout(()=>{try{localStorage.setItem(DECK_RELEASE_STORAGE_KEY,serializeDesign(data));}catch{setDesignError('Automatic saving is unavailable on this device. Use Save JSON to keep your design.');}},450);return ()=>clearTimeout(timer);},[data,storageReady]);
-  useEffect(()=>{if(interacted.current)panelRef.current?.focus({preventScroll:true});},[step]);
-  const retryWebGL=()=>{try{const c=document.createElement('canvas');setHasWebGL(!!(c.getContext('webgl2')||c.getContext('webgl')));}catch{setHasWebGL(false);}};
-  const update=(patch:Partial<DeckData>)=>{setSaved(false);setData(prev=>deckReleaseData({...prev,...patch}));};
+  /** Opens a section (analytics: its old wizard step, and the section, once per visit). On a phone it closes the others. */
+  function openSection(id:SectionId,bringIntoView=false){
+    const section=SECTION_BY_ID[id];
+    trackDeck('deckcraft_step',stepLabel(section.legacyStep));
+    trackDeck('deckcraft_section',`deck_section_${section.id}`);
+    const single=onePhoneSection();
+    setOpen(prev=>new Set([...(single?[]:prev),id]));
+    // A section closing above this one moves it up, off the screen; one opened from elsewhere is brought into view.
+    if(single||bringIntoView)requestAnimationFrame(()=>{
+      const row=document.getElementById(`dd-section-${id}`),top=row?.getBoundingClientRect().top??0;
+      if(row&&(bringIntoView||top<0||top>window.innerHeight))row.scrollIntoView({block:'start',behavior:bringIntoView&&!reducedMotion()?'smooth':'auto'});
+    });
+  }
+  const toggleSection=(id:SectionId)=>{if(open.has(id))setOpen(prev=>{const next=new Set(prev);next.delete(id);return next;});else openSection(id);};
+  const featureKey=designFeatures(data).join(' ');
+  useEffect(()=>{for(const label of featureKey.split(' '))if(label)trackDeck('deckcraft_feature',label);},[featureKey]);
+  const {estimate,estimateKey,lightingCheck,autoCounts,hasFixtures,reviewFlags,described}=useDeckEstimate(data,setData);
+  // Where options are not priced without asking (phones, Save-Data), "Show price effect" holds for the visit; never saved.
+  const [deltasShown,setDeltasShown]=useState(false);
+  const {material,railingName}=described;
+  // The price schedule, from the estimate alone; the change list follows its priced subtotal and quotes.
+  const schedule=useMemo(()=>priceLedger(estimate),[estimate]);
+  const notePrice=changes.price;
+  // The price effect beside each option (R6) is measured from this estimate and its schedule.
+  const deltas:DeltaProps={key:estimateKey,subtotal:estimate.subtotal,quotes:estimate.quoteRequired,lines:schedule.lines,shown:deltasShown,setShown:setDeltasShown};
+  useEffect(()=>{notePrice(priceState(schedule));},[schedule,notePrice]);
+  const showFullList=()=>openSection('proposal',true);
+  // Accent boards: the tool's colour and scope are page state (never saved). Picking a colour shows the 3D deck;
+  // closing Boards & finish puts the tool down.
+  const [boardPaint,setBoardPaintState]=useState<BoardPaintChoice|null>(null),[paintMessage,setPaintMessage]=useState('');
+  const setBoardPaint=useCallback((next:BoardPaintChoice|null)=>{setBoardPaintState(next);setPaintMessage('');if(next)setMode(m=>CAMERA_MODES.includes(m)?m:'3d');},[]);
+  useEffect(()=>{if(!open.has('boards'))setBoardPaintState(null);},[open]);
+  // The painting action comes with the accent-board panel (loaded with Boards & finish), so it is not in the page's first load.
+  const painter=useRef<typeof PaintBoard|null>(null);
+  const boardsOpen=open.has('boards');
+  useEffect(()=>{if(boardsOpen)loadBoardColourPanel().then(m=>{painter.current=m.paintBoard;}).catch(()=>{/* Loaded again with the panel. */});},[boardsOpen]);
+  const onPaintBoard=useCallback((target:{level:number;index:number})=>{
+    if(!boardPaint||!painter.current)return;
+    const result=painter.current(data,estimate.model,target,boardPaint.colour,boardPaint.scope);
+    if('error' in result){setPaintMessage(result.error);return;}
+    setPaintMessage('');update({boardColours:result.boardColours});
+  },[boardPaint,data,estimate.model,update]);
   const houseConfig=getHouseConfig(data);
   const effectiveHouseOpeningId=houseConfig.openings.find(o=>o.id===selectedHouseOpeningId)?.id??houseConfig.openings[0]?.id??'';
-  // Picking a door or window (in 3D or the doors & windows bar) works on every step; the full house
-  // settings on step 1 open only when asked for.
+  // Picking a door or window (in 3D or the doors & windows bar) works whatever is open; "Size & position" in the bar
+  // opens the House section and brings it into view.
   const pickedHouseOpeningId=houseConfig.openings.some(o=>o.id===selectedHouseOpeningId)?selectedHouseOpeningId:'';
   const selectHouseOpening=(id:string)=>setSelectedHouseOpeningId(id);
-  const editHouseOpening=()=>{setHouseSettingsOpen(true);setStep(0);requestAnimationFrame(()=>document.querySelector('.dd-house-editor')?.scrollIntoView({behavior:'smooth',block:'start'}));};
+  const editHouseOpening=()=>openSection('house',true);
   const moveHouseOpening=(id:string,patch:Partial<HouseOpening>)=>{setSelectedHouseOpeningId(id);update({houseConfig:{...houseConfig,openings:houseConfig.openings.map(o=>o.id===id?clampHouseOpening({...o,...patch},houseConfig):o)}});};
-  // Appearance-only gestures must not rebuild every deck cut and stock group.
-  // Installation zones remain part of this key; house appearance does not affect deck pricing.
-  // Where a screen sits on its edge never changes the price, so dragging one does not re-run the estimate.
-  // House size, attached blocks and floor heights can move the ledger and add warnings; looks and openings never price.
-  const estimateKey=JSON.stringify({...data,privacyScreens:data.privacyScreens?.map(({side:_side,offsetPct:_offset,...screen})=>screen),houseFit:data.houseConfig&&[data.houseConfig.widthFt,data.houseConfig.depthFt,data.houseConfig.floorHeightIn,data.houseConfig.footprint?.rects.map(b=>[b.kind,b.wall,b.offsetFt,b.widthFt,b.depthFt,b.floorHeightIn])],houseConfig:undefined,houseVisible:undefined,customerName:undefined,projectAddress:undefined,scopeOfWork:undefined,yardFeatures:undefined,terrainConfig:undefined,houseWallHeightIn:undefined,houseDoorOffset:undefined,houseDoorWidthIn:undefined,sceneLighting:undefined,lightingPreviewOn:undefined});
-  const estimate=useMemo(()=>calculateEstimate(data,DECK_SETTINGS),[estimateKey]);
-  const lightingCheck=useMemo(()=>lightingSystemCheck(data),[data]);
-  const lightingSuggestion=(p:LightingCatalogueProduct)=>{const zone=data.lightingSystem.selectedItems.find(x=>x.productId===p.id)?.zone??defaultLightingZone(p);return Math.min(30,zone==='posts'?estimate.model.quantities.railingPosts:zone==='stairs'?estimate.model.quantities.stairTreads:0);};
-  const extras=useMemo(()=>extrasLayout(data,estimate.model),[data,estimate.model]);
-  // Simple post/step/screen lights follow the modeled mounts; only write when the selection really changes.
-  const autoCounts={posts:estimate.model.railing.posts.length,stairs:estimate.model.treads.length,privacy:extras.privacyMounts.length};
-  const autoKey=JSON.stringify([data.autoLighting,autoCounts,data.lightingSystem.selectedItems]);
-  useEffect(()=>{
-    if(JSON.stringify(syncAutoLighting(data,autoCounts))===JSON.stringify(data.lightingSystem.selectedItems))return;
-    setData(prev=>deckReleaseData({...prev,lightingSystem:{...prev.lightingSystem,selectedItems:syncAutoLighting(prev,autoCounts)}}));
-  },[autoKey]);
-  const isAutoLight=(id:string)=>data.lightingSystem.selectedItems.some(x=>x.productId===id&&x.auto);
-  const hasFixtures=lightingCheck.items.some(p=>!isSystemProduct(p));
   const screens=data.privacyScreens??[];
   const screenArea=pricedPrivacyArea(screens);
   const sides=privacySides(data);
@@ -123,224 +199,157 @@ export default function DeckDesigner(){
   })});
   const setScreen=(id:string,patch:Partial<PrivacyScreen>)=>writeScreen(id,s=>({...s,...patch}));
   const canAddScreen=screens.length<MAX_PRIVACY_SCREENS&&screenArea+12<=MAX_PRIVACY_SQFT;
-  const stairStyle=data.autoLighting?.stairStyle??'evo_hyde';
-  const simpleLighting=<fieldset className="dd-simple-lighting"><legend>Deck lighting</legend>
-    <label className="dd-check"><input type="checkbox" checked={!!data.autoLighting?.posts} disabled={!data.autoLighting?.posts&&!autoCounts.posts} onChange={e=>update({autoLighting:{...data.autoLighting,posts:e.target.checked}})}/><span>Cap light on each railing post{autoCounts.posts?` (${Math.min(autoCounts.posts,MAX_FIXTURE_QTY)})`:' · add a railing first'}</span></label>
-    <label className="dd-check"><input type="checkbox" checked={!!data.autoLighting?.stairs} disabled={!data.autoLighting?.stairs&&!autoCounts.stairs} onChange={e=>update({autoLighting:{...data.autoLighting,stairs:e.target.checked}})}/><span>Light under each step{autoCounts.stairs?` (${Math.min(autoCounts.stairs,MAX_FIXTURE_QTY)})`:' · add a stair flight first'}</span></label>
-    <Field label="Under-step light" hint={STAIR_LIGHT_STYLES[stairStyle].note}><select aria-label="Under-step light style" value={stairStyle} onChange={e=>update({autoLighting:{...data.autoLighting,stairStyle:e.target.value as keyof typeof STAIR_LIGHT_STYLES}})}>{Object.entries(STAIR_LIGHT_STYLES).map(([id,style])=><option key={id} value={id}>{style.label}</option>)}</select></Field>
-    {stairStyle==='evo_flex'&&data.stairWidth<44&&<p className="dd-quote-notice">A 1 m EVO FLEX strip is longer than these {data.stairWidth} in steps can hold. Widen the stairs to about 44 in, or choose EVO HYDE.</p>}
-    <p className="dd-note">Post caps use PUCK lights, with a HUB-100 transformer, from our existing price book. Switch the preview to Night to see them.</p>
-  </fieldset>;
-  const screenCard=(s:PrivacyScreen,i:number)=>{
-    const product=screenProduct(s),on=screenOn(s),n=i+1;
-    return <fieldset key={s.id} className={`dd-screen${on?'':' dd-screen-off'}`}>
-      <legend>Screen {n} · {Math.round(screenFaceSqft(s))} sq ft{on?'':' · off'}</legend>
-      <label className="dd-check"><input type="checkbox" role="switch" aria-label={`Screen ${n} on`} checked={on} onChange={e=>setScreen(s.id,{enabled:e.target.checked})}/><span>{on?'Screen on':'Screen off'}<small>{on?'Shown, lit and included in your estimate.':'Kept in your design, but hidden and left out of the estimate.'}</small></span></label>
-      <div className="dd-fields">
-        <Field label="Screen product"><select aria-label={`Screen ${n} product`} value={product.id} onChange={e=>writeScreen(s.id,o=>withPrivacyProduct(o,e.target.value as PrivacyProductId))}>{PRIVACY_PRODUCTS.map(p=><option key={p.id} value={p.id}>{p.name}{p.pricedBySqft?'':' (supplier quote)'}</option>)}</select></Field>
-        <Field label="Deck edge"><select aria-label={`Screen ${n} deck edge`} value={s.side} onChange={e=>setScreen(s.id,{side:e.target.value as PrivacyScreen['side']})}>{PRIVACY_SIDES.map(side=><option key={side} value={side} disabled={!sides.includes(side)}>{side}{sides.includes(side)?'':' (house wall)'}</option>)}</select></Field>
-        {product.panel?<>
-          <Field label="Design"><select aria-label={`Screen ${n} design`} value={s.design??product.designs[0]} onChange={e=>setScreen(s.id,{design:e.target.value})}>{product.designs.map(d=><option key={d} value={d}>{d}</option>)}</select></Field>
-          {product.finishes.length>0&&<Field label="Finish"><select aria-label={`Screen ${n} finish`} value={s.finish??product.finishes[0]} onChange={e=>setScreen(s.id,{finish:e.target.value as 'Black'|'White'})}>{product.finishes.map(f=><option key={f} value={f}>{product.finishLabels?.[f]??f}</option>)}</select></Field>}
-          <NumberField label={`Screen ${n} panels`} value={s.panels??1} min={1} max={MAX_SCREEN_PANELS} unit="" increment={1} hint={`${product.panel.widthIn} × ${product.panel.heightIn} in stock panels`} onValue={panels=>setScreen(s.id,{panels:Math.round(panels)})}/>
-        </>:<>
-          <Field label="Height"><select aria-label={`Screen ${n} height`} value={s.heightFt} onChange={e=>setScreen(s.id,{heightFt:Number(e.target.value) as PrivacyScreen['heightFt']})}>{PRIVACY_HEIGHTS.map(h=><option key={h} value={h}>{h} ft</option>)}</select></Field>
-          <NumberField label={`Screen ${n} length`} value={s.lengthFt} min={2} max={60} unit="ft" increment={0.5} onValue={lengthFt=>setScreen(s.id,{lengthFt})}/>
-        </>}
-      </div>
-      <div className="dd-screen-move" role="group" aria-label={`Move screen ${n} along its edge`}>
-        <span>Move along the edge</span>
-        <button type="button" className="dd-secondary" aria-label={`Move screen ${n} toward the start of the edge`} onClick={()=>setScreen(s.id,{offsetPct:Math.max(0,s.offsetPct-5)})}>‹</button>
-        <input type="range" min={0} max={100} step={1} value={s.offsetPct} aria-label={`Screen ${n} position along the edge`} onChange={e=>setScreen(s.id,{offsetPct:Number(e.target.value)})}/>
-        <button type="button" className="dd-secondary" aria-label={`Move screen ${n} toward the end of the edge`} onClick={()=>setScreen(s.id,{offsetPct:Math.min(100,s.offsetPct+5)})}>›</button>
-        <output>{Math.round(s.offsetPct)}%</output>
-      </div>
-      {product.panel&&<div className="dd-quote-notice"><strong>{product.maker}</strong><p>{product.notes} The cut pattern in the preview is illustrative. <a href={product.sourceUrl} target="_blank" rel="noreferrer">Manufacturer details ↗</a></p><small className="dd-quote-badge">Supplier quote required</small></div>}
-      <label className="dd-check"><input type="checkbox" checked={s.lights} disabled={!on} onChange={e=>setScreen(s.id,{lights:e.target.checked})}/><span>Light this screen<small>BLINK on each screen post · existing price-book allowance</small></span></label>
-      <button type="button" className="dd-secondary" onClick={()=>update({privacyScreens:screens.filter(o=>o.id!==s.id)})}>Remove screen {n}</button>
-    </fieldset>;
-  };
-  const reviewFlags=[...new Set([...estimate.flags,...extras.warnings])];
-  const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)??DECKING_CATALOGUE[0];
-  const catalogueRail=RAILING_CATALOGUE.find(r=>r.id===data.catalogueRailingId);
-  const railingName=catalogueRail?.name??data.railingType;
-  const quoteRequired=estimate.quoteRequired??[];
-  const priceLabel=quoteRequired.length?'Priced portion only':'Current planning estimate';
-  const number=(key:keyof DeckData,label:string,min=0,max=100,unit='',increment=1,hint?:string)=><NumberField key={key} label={label} value={Number(data[key]??48)} min={min} max={max} unit={unit} increment={increment} hint={hint} onValue={n=>update({[key]:n})}/>;
-  const select=(key:keyof DeckData,label:string,choices:readonly (string|number)[],hint?:string)=><Field label={label} hint={hint}><select aria-label={label} value={String(data[key])} onChange={e=>update({[key]:typeof choices[0]==='number'?Number(e.target.value):e.target.value,...(key==='railingType'?{catalogueRailingId:undefined}:{}),...(key==='pictureFrameRows'&&Number(e.target.value)===0?{borderFinish:'Matching'}:{})})}>{choices.map(v=><option key={v} value={v}>{v}</option>)}</select></Field>;
-  const toggle=(key:keyof DeckData,label:string)=><label className="dd-check"><input type="checkbox" checked={Boolean(data[key])} onChange={e=>update({[key]:e.target.checked})}/><span>{label}</span></label>;
-  // Wrap-around: side wings around one or both house corners, mitred on corner-to-corner hips.
-  const wrap=activeWrap(data),wrapPaused=wrapBlockers(data),attachedDeck=data.deckType==='Attached'||data.deckType==='Add-on';
-  const wrapFix=():Partial<DeckData>=>({shape:'Rectangle',hasInlay:false,...(data.pattern==='Diagonal'||data.pattern==='Herringbone'?{pattern:'Straight' as const}:{})});
-  const wrapFixNames=()=>[data.shape!=='Rectangle'&&'a rectangle',data.hasInlay&&'no inlay',(data.pattern==='Diagonal'||data.pattern==='Herringbone')&&'straight boards'].filter(Boolean) as string[];
-  const setWing=(side:'left'|'right',on:boolean)=>{
-    const current=data.wrap??{},next={...current};
-    if(on)next[side]=current[side]??{widthFt:8,runFt:Math.min(8,houseConfig.depthFt)};else{delete next[side];delete next[side==='left'?'porchLeft':'porchRight'];}
-    const changed=on?wrapFixNames():[];
-    setWrapStatus(changed.length?`Switched to ${changed.join(', ')} so the corner can be mitred.`:'');
-    update({wrap:next.left||next.right?next:undefined,...(on?wrapFix():{})});
-  };
-  const setWingSize=(side:'left'|'right',patch:Partial<{widthFt:number;runFt:number}>)=>{const wing=data.wrap?.[side];if(wing)update({wrap:{...data.wrap,[side]:{...wing,...patch}}});};
-  const wrapHipNotes=wrap?wrapHips(wrap):[];
-  const porchKey=(side:'left'|'right')=>side==='left'?'porchLeft' as const:'porchRight' as const;
-  // A porch starts 45° mitred (as deep as its wing is wide) and leaves room for the other porch.
-  const setPorch=(side:'left'|'right',on:boolean)=>{
-    const next={...data.wrap},key=porchKey(side),other=next[porchKey(side==='left'?'right':'left')];
-    if(on)next[key]=next[key]??{depthFt:Math.min(24,Math.max(4,next[side]?.widthFt??8)),runFt:Math.max(4,Math.min(12,houseConfig.widthFt-3-(other?.runFt??0)))};else delete next[key];
-    update({wrap:next});
-  };
-  const setPorchSize=(side:'left'|'right',patch:Partial<{depthFt:number;runFt:number}>)=>{const key=porchKey(side),porch=data.wrap?.[key];if(porch)update({wrap:{...data.wrap,[key]:{...porch,...patch}}});};
-  const hipNote=(h:{angleDeg:number;corner:'front'|'far'},want:string)=>Math.abs(h.angleDeg-45)<.5?`Mitred at 45°: the hip runs from the house corner to the outside corner.`:`Corner-to-corner hip at ${h.angleDeg.toFixed(0)}° to the ${h.corner==='front'?'back':'street-side'} wall. A true 45° mitre needs ${want}.`;
-  const trimFt=(inches:number)=>(inches/12).toFixed(1).replace(/\.0$/,'');
-  const wrapSection=<fieldset className="dd-wrap"><legend>Wrap around the house</legend>
-    <p className="dd-note">Continue the deck around one or both house corners. A side wing is fastened to the house side wall with its own ledger, and each corner is mitred on a doubled hip from the house corner to the deck&apos;s outside corner.</p>
-    {!attachedDeck&&<p className="dd-note">Attach the deck to the house (Attached or Add-on) to wrap it around a corner.</p>}
-    {(['left','right'] as const).map(side=>{const wing=data.wrap?.[side],label=side==='left'?'Left':'Right',hip=wrapHipNotes.find(h=>h.side===side&&h.corner==='front'),farHip=wrapHipNotes.find(h=>h.side===side&&h.corner==='far'),porch=data.wrap?.[porchKey(side)],otherPorch=data.wrap?.[porchKey(side==='left'?'right':'left')];
-      return <div key={side} className="dd-wrap-wing">
-        <label className="dd-check"><input type="checkbox" checked={!!wing} disabled={!attachedDeck&&!wing} onChange={e=>setWing(side,e.target.checked)}/><span>Around the {side} corner</span></label>
-        {wing&&<><div className="dd-fields">
-          <NumberField label={`${label} wing width`} value={wing.widthFt} min={WRAP_WING_WIDTH_FT[0]} max={WRAP_WING_WIDTH_FT[1]} unit="ft" increment={0.5} hint="Out from the house side wall" onValue={widthFt=>setWingSize(side,{widthFt})}/>
-          <NumberField label={`${label} wing run along the house`} value={porch?houseConfig.depthFt:wing.runFt} min={WRAP_RUN_FT[0]} max={houseConfig.depthFt} unit="ft" increment={0.5} disabled={!!porch} hint={porch?'Runs the full house depth to reach the porch':`Back from the deck-facing wall, up to the ${houseConfig.depthFt} ft house depth`} onValue={runFt=>setWingSize(side,{runFt})}/>
-        </div>
-        {hip&&<p className="dd-note" role="status">{hipNote(hip,`a ${data.length} ft wing (the deck depth)`)}</p>}
-        <label className="dd-check"><input type="checkbox" checked={!!porch} disabled={!wrap} onChange={e=>setPorch(side,e.target.checked)}/><span>Continue round the far corner as a porch<small>Along the street side of the house, with its own ledger on that wall.</small></span></label>
-        {porch&&<><div className="dd-fields">
-          <NumberField label={`${label} porch depth`} value={porch.depthFt} min={WRAP_PORCH_DEPTH_FT[0]} max={WRAP_PORCH_DEPTH_FT[1]} unit="ft" increment={0.5} hint="Out from the street-side wall" onValue={depthFt=>setPorchSize(side,{depthFt})}/>
-          <NumberField label={`${label} porch run along the street side`} value={porch.runFt} min={WRAP_PORCH_RUN_FT[0]} max={Math.max(WRAP_PORCH_RUN_FT[0],houseConfig.widthFt-3-(otherPorch?.runFt??0))} unit="ft" increment={0.5} hint={otherPorch?'The two porches stop at least 3 ft apart':`Up to ${houseConfig.widthFt-3} ft of the ${houseConfig.widthFt} ft house front`} onValue={runFt=>setPorchSize(side,{runFt})}/>
-        </div>
-        {farHip&&<p className="dd-note" role="status">{hipNote(farHip,`a ${wing.widthFt} ft deep porch (the wing width)`)}</p>}</>}</>}
-      </div>;})}
-    {wrap?.left&&wrap.right&&<p className="dd-note" role="status">Deck width is set by the house: {trimFt(wrap.left.widthIn)} ft left wing + {houseConfig.widthFt} ft house + {trimFt(wrap.right.widthIn)} ft right wing = {trimFt(wrap.W)} ft.</p>}
-    {(data.wrap?.porchLeft||data.wrap?.porchRight)&&<p className="dd-note">Porch wraps price labour at the two-corner wrap factor. The extra porch-wrap labour is listed for a builder quote until Golden Maple sets its rate.</p>}
-    {wrapStatus&&<p className="dd-note" role="status">{wrapStatus}</p>}
-    {data.wrap&&wrapPaused.length>0&&<div className="dd-quote-notice" role="status"><strong>The wrap-around is paused</strong><ul>{wrapPaused.map(r=><li key={r}>{r}</li>)}</ul>{attachedDeck&&<button type="button" className="dd-secondary" onClick={()=>{setWrapStatus(`Switched to ${wrapFixNames().join(', ')} so the corner can be mitred.`);update(wrapFix());}}>Use a rectangle with straight boards</button>}</div>}
-  </fieldset>;
-  const move=(n:number)=>{interacted.current=true;setStep(n);const reduce=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;document.querySelector('.dd-controls')?.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});};
-  // Plain-language facts for the customer summary, the download and (later) the proposal.
-  const mainFootprint=estimate.model.levels[0].footprint,ledger=getHouseContact(data,mainFootprint),pastHouseFt=exposedHouseLine(data,mainFootprint,ledger).reduce((n,[a,b])=>n+(b-a)/12,0);
-  const stairEdges=mainFootprint.edgeIds?mainFootprint.outline.flatMap((a,i)=>{const b=mainFootprint.outline[(i+1)%mainFootprint.outline.length],id=mainFootprint.edgeIds![i],len=Math.hypot(b.x-a.x,b.y-a.y);return ledger.isContactEdge(i)||len<36?[]:[{id,name:WRAP_EDGE_NAMES[id]??id,ft:(len/12).toFixed(1)}];}):[];
-  const placedHouse=data.housePlacement,sillIn=houseConfig.floorHeightIn;
-  // Front entry: a street-side door facing a porch can take the primary stair straight off the porch.
-  const doorStair=porchStairForDoor(data);
-  // Split level: a lower section one step down across the whole front, joined by a full-width step.
-  const splitLevel=()=>update({levels:Math.max(2,data.levels),level2Position:'Front',level2EdgeId:undefined,level2Offset:50,height2:Math.max(8,data.height-7),width2:Math.min(40,Math.max(4,data.width)),length2:Math.min(40,Math.max(6,Math.round(data.length*1.5)/2)),level2FullStep:true});
-  const edgeName=(id?:string)=>id?(WRAP_EDGE_NAMES[id]??id).toLowerCase():undefined;
-  const l3=data.levels>2?data.level3:undefined,setL3=(patch:Partial<NonNullable<DeckData['level3']>>)=>{if(l3)update({level3:{...l3,...patch}});};
-  const levelsSection=<>
-    <div className="dd-summary-actions"><button type="button" className="dd-secondary" onClick={splitLevel}>Make it a split level</button></div>
-    <p className="dd-note">A split level adds a lower section one step down across the front, joined by a full-width step. You can adjust it below.</p>
-    {data.levels>1&&<><h3>Second level</h3>
-      <div className="dd-fields three">{number('width2','Second level width',4,40,'ft',0.5)}{number('length2','Second level depth',4,40,'ft',0.5)}{number('height2','Second level height',8,144,'in')}</div>
-      <div className="dd-fields">{select('level2Position','Connect second level to',['Front','Left','Right'])}{stairEdges.length>0&&<Field label="Second level wrap edge" hint="Join it to a wing end or side"><select aria-label="Second level wrap edge" value={data.level2EdgeId??''} onChange={e=>update({level2EdgeId:e.target.value||undefined})}><option value="">Use the side above</option>{stairEdges.map(e=><option key={e.id} value={e.id}>{e.name} · {e.ft} ft</option>)}</select></Field>}{number('level2Offset','Second level alignment',0,100,'%')}</div>
-      <label className="dd-check"><input type="checkbox" checked={!!data.level2FullStep} onChange={e=>update({level2FullStep:e.target.checked||undefined})}/><span>Full-width step between the main deck and the second level<small>The step or stair runs the whole shared edge. Up to three steps need no railing.</small></span></label>
-      <p className="dd-note">The connection follows the height difference between the two sections. Move the section along its chosen edge with the alignment control. A section never runs into the house: it slides along the edge until it clears the wall.</p></>}
-    {l3&&<><h3>Third level</h3>
-      <div className="dd-fields three">
-        <NumberField label="Third level width" value={l3.widthFt} min={4} max={40} unit="ft" increment={0.5} onValue={widthFt=>setL3({widthFt})}/>
-        <NumberField label="Third level depth" value={l3.lengthFt} min={4} max={40} unit="ft" increment={0.5} onValue={lengthFt=>setL3({lengthFt})}/>
-        <NumberField label="Third level height" value={l3.heightIn} min={8} max={144} unit="in" increment={1} onValue={heightIn=>setL3({heightIn})}/>
-      </div>
-      <div className="dd-fields">
-        <Field label="Join the third level to"><select aria-label="Join the third level to" value={l3.parent} onChange={e=>setL3({parent:Number(e.target.value) as 1|2,edgeId:undefined})}><option value={1}>Main deck</option><option value={2}>Second level</option></select></Field>
-        <Field label="Third level side"><select aria-label="Third level side" value={l3.position} onChange={e=>setL3({position:e.target.value as 'Front'|'Left'|'Right',edgeId:undefined})}>{(['Front','Left','Right'] as const).map(v=><option key={v} value={v}>{v}</option>)}</select></Field>
-        {l3.parent===1&&stairEdges.length>0&&<Field label="Third level wrap edge" hint="Join it to a wing end or side"><select aria-label="Third level wrap edge" value={l3.edgeId??''} onChange={e=>setL3({edgeId:e.target.value||undefined})}><option value="">Use the side above</option>{stairEdges.map(e=><option key={e.id} value={e.id}>{e.name} · {e.ft} ft</option>)}</select></Field>}
-        <NumberField label="Third level alignment" value={l3.offsetPct} min={0} max={100} unit="%" increment={1} onValue={offsetPct=>setL3({offsetPct})}/>
-      </div>
-      <label className="dd-check"><input type="checkbox" checked={!!l3.fullStep} onChange={e=>setL3({fullStep:e.target.checked||undefined})}/><span>Full-width step to the third level<small>The step or stair runs the whole shared edge.</small></span></label></>}
-  </>;
-  const onScreens=screens.filter(screenOn),autoLights=data.lightingSystem.selectedItems.filter(i=>i.auto&&i.zone);
-  const designFacts=[
-    `Deck area: ${estimate.model.quantities.area.toFixed(0)} sq ft`,
-    data.shape==='L-Shape'?`L-shape with a ${data.cutoutWidth} × ${data.cutoutLength} ft corner cut-out at the front right`:data.shape==='Multi-corner'?`Two corner cut-outs: ${data.cutoutWidth} × ${data.cutoutLength} ft (front right) and ${data.cutoutWidth2} × ${data.cutoutLength2} ft (front left)`:data.shape==='Curved'?'Curved front edge':wrap?`Main deck ${data.width} × ${data.length} ft along the deck-facing wall, with wrap-around wings`:`Rectangle ${data.width} × ${data.length} ft`,
-    ...(data.levels>1?[`Second level ${data.width2} × ${data.length2} ft at ${data.height2} in, off the ${edgeName(data.level2EdgeId)??String(data.level2Position??'Front').toLowerCase()+' side'}${data.level2FullStep?', joined by a full-width step':''}`]:[]),
-    ...(l3?[`Third level ${l3.widthFt} × ${l3.lengthFt} ft at ${l3.heightIn} in, off the ${l3.parent===2?'second level':'main deck'} (${(l3.parent===1&&edgeName(l3.edgeId))||l3.position.toLowerCase()+' side'})${l3.fullStep?', joined by a full-width step':''}`]:[]),
-    ...(wrap?[describeWrap(wrap)]:[]),
-    ledger.contacts.length?`Attached to the house with ${ledger.ledgerLf.toFixed(1)} ft of ledger${ledger.contacts.length>1&&wrap?` (${ledger.contacts.filter(c=>c.kind==='ledger'&&c.blockId==='main').map(c=>`${(c.lengthIn/12).toFixed(1)} ft on the ${c.wall==='front'?'deck-facing':c.wall==='far'?'street-side':c.wall+' side'} wall`).join(', ')})`:''}${pastHouseFt>0?`; ${pastHouseFt.toFixed(1)} ft of the back edge extends past the house (railing, beam and posts)`:''}${getHouseBlocks(data).slice(1).filter(k=>ledger.contacts.some(c=>c.blockId===k.id)).map(k=>{const mine=ledger.contacts.filter(c=>c.blockId===k.id),face=mine.filter(c=>c.kind==='ledger').reduce((n,c)=>n+c.lengthIn,0)/12,sides=mine.filter(c=>c.kind==='flush');return k.kind==='garage'?`; ${face.toFixed(1)} ft of that ledger is on the attached garage wall`:`; deck notched around a ${((k.rect.x1-k.rect.x0)/12).toFixed(1)} × ${((k.rect.y1-Math.max(0,k.rect.y0))/12).toFixed(1)} ft bump-out: ${face.toFixed(1)} ft of ledger on its face${sides.length?`, ${sides.length} × ${(sides[0].lengthIn/12).toFixed(1)} ft bolted flush wall${sides.length>1?'s':''}`:''}`;}).join('')}`:'Freestanding: no ledger on the house',
-    `House ${houseConfig.widthFt} × ${houseConfig.depthFt} ft, ${houseConfig.storeys}-storey, ${wrap?'between the wrap-around wings':placedHouse?(placedHouse.anchor==='center'?'centred on the deck':`lined up with the deck's ${placedHouse.anchor} end`)+(placedHouse.offsetIn?`, shifted ${(Math.abs(placedHouse.offsetIn)/12).toFixed(1)} ft ${placedHouse.offsetIn>0?'right':'left'}`:''):'centred on the deck'}${sillIn!==undefined?`; door sill ${sillIn} in above grade`:''}${normalizeHouseBlocks(houseConfig).map(b=>`; ${b.kind==='garage'?'attached garage':b.wall==='Front'?'bump-out':'wing'} ${b.widthFt} × ${b.depthFt} ft on the ${{Front:'deck-facing wall',Back:'street side',Left:'left side',Right:'right side'}[b.wall]}`).join('')}`,
-    ...(onScreens.length?[`Privacy screens: ${onScreens.map(s=>{const p=screenProduct(s);return `${s.side.toLowerCase()} edge ${p.panel?`${p.name.replace(' privacy screen','')} ${s.design}, ${s.panels} panel${s.panels===1?'':'s'}`:`slatted ${s.lengthFt} × ${s.heightFt} ft`}${s.lights?', lit':''}`;}).join('; ')}`]:[]),
-    ...(autoLights.length?[`Lighting: ${autoLights.map(i=>`${i.qty} × ${i.zone==='posts'?'post-cap lights':i.zone==='stairs'?'under-step lights':i.zone==='privacy'?'screen lights':'lights'}`).join(', ')}`]:[]),
-  ];
-  const summary=[`Deck: ${data.width} × ${data.length} ft, ${data.height} in above grade`,`${wrap?'Wrap-around':data.shape}, ${data.levels} level(s), ${data.deckType}`,...designFacts,`${material.name} — ${data.deckingColor}`,`${data.pattern} boards; ${railingName} railing`,`${data.stairFlights} stair flight(s), ${data.stairWidth} in wide; ${data.stairType}`,`${data.foundation}; ${data.municipality}; ${data.siteType}`,`${priceLabel}: ${dollars(estimate.subtotal)} + HST (${dollars(estimate.total)} including HST)${quoteRequired.length?'; Excludes supplier quotes: '+quoteRequired.join(', '):''}`].join('\n');
+  const wrap=activeWrap(data);
+  // Exposed main-deck edges (wing ends and sides) that stairs and extra levels can join.
+  const mainFootprint=estimate.model.levels[0].footprint,ledger=getHouseContact(data,mainFootprint);
+  const namedEdges=mainFootprint.edgeIds?mainFootprint.outline.flatMap((a,i)=>{const b=mainFootprint.outline[(i+1)%mainFootprint.outline.length],id=mainFootprint.edgeIds![i],len=Math.hypot(b.x-a.x,b.y-a.y);return ledger.isContactEdge(i)||len<36?[]:[{id,name:edgeNameOf(id),ft:(len/12).toFixed(1),lenIn:len}];}):[];
+  // Wrap and custom-outline decks offer every exposed edge. An angled face (an angled corner, or a custom
+  // outline's 45° edge) takes a stair only as a single straight flight wide enough for it; levels never join one.
+  const stairEdges=namedEdges.filter(e=>wrap||(data.shape==='Custom'&&!isChamferEdgeId(e.id))||(isChamferEdgeId(e.id)&&angledStairAllowed(data)&&angledStairFits(e.lenIn,data.stairWidth))).map(({lenIn:_len,...e})=>e);
+  const levelEdges=namedEdges.filter(e=>wrap&&!isChamferEdgeId(e.id)).map(({lenIn:_len,...e})=>e);
+  const {facts:designFacts,summary,proposalFacts}=described;
   function download(){
     try{
       const body=`GOLDEN MAPLE — YOUR DECK DESIGN\n\n${summary}\n\n${estimate.sections.map(s=>`${s.title}: ${s.quoteRequired&&s.total===0?'Supplier quote required':dollars(s.total)}${s.quoteRequired&&s.total>0?' (priced portion; supplier quote required)':''}`).join('\n')}\n\nPlanning estimate only. Final measurements, engineering, product availability and written scope must be confirmed.\n\nConfiguration:\n${serializeDesign(data)}`;
-      downloadFile(body,'text/plain','golden-maple-deck-summary.txt');setSaved(true);setDesignError('');
-    }catch{setDesignError('The summary could not be generated on this device. Please try again, or use “Talk through your design”.');}
+      downloadFile(body,'text/plain','golden-maple-deck-summary.txt');setSaved(true);setDesignError('');trackDeck('deckcraft_output','deck_summary');
+    }catch{setDesignError('The summary could not be generated on this device. Please try again, or use “Send my design”.');}
   }
-  // The proposal uses a customer view of the deck: contractor and plan modes switch to 3D for the snapshot, then back.
-  async function openProposal(){
-    setPreparing(true);
-    // The snapshot shows the house without a selection outline.
-    if(pickedHouseOpeningId){setSelectedHouseOpeningId('');await new Promise(r=>setTimeout(r,250));}
-    const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms)),previous=mode,customerView=['3d','overview','front','top'].includes(mode);
-    let image:string|null=null;
+  // The 3D pictures for the proposal and the PDF (R8): the cover and two or three more views, each from a camera preset
+  // (Corner, Front, Overview), in daylight; the cover is the night view when the design has lights to show. The plans
+  // and the contractor views switch to 3D for the pictures; afterwards the drawing goes back to the sheet, camera and
+  // light the visitor had (a camera preset starts from its own position, so a visitor's orbit is not kept). Pictures
+  // already being taken are shared, never taken twice at once.
+  const capturing=useRef<Promise<ProposalShot[]>|null>(null);
+  function captureViews():Promise<ProposalShot[]>{
+    capturing.current??=takeViews().finally(()=>{capturing.current=null;});
+    return capturing.current;
+  }
+  async function takeViews():Promise<ProposalShot[]>{
+    if(!hasWebGL)return [];
+    const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms));
+    // A frame of the 3D view (requestAnimationFrame), or half a second if the tab is hidden and frames have stopped.
+    const frame=()=>new Promise<void>(r=>{let done=false;const go=()=>{if(!done){done=true;r();}};requestAnimationFrame(()=>go());setTimeout(go,500);});
+    const settle=async(ms:number)=>{await wait(ms);for(let i=0;i<3;i++)await frame();};
+    // The pictures show the house without a selection outline.
+    if(pickedHouseOpeningId){setSelectedHouseOpeningId('');await wait(250);}
+    const night=hasFixtures&&data.lightingPreviewOn!==false,previous=mode,loading=!shown3d.current;
+    const views:{mode:PreviewMode;light:'Daylight'|'Evening';label:string}[]=[
+      {mode:'3d',light:night?'Evening':'Daylight',label:night?'Corner view at night':'Corner view'},
+      {mode:'front',light:'Daylight',label:'Front view'},
+      {mode:'overview',light:'Daylight',label:'Overview'},
+      ...(night?[{mode:'3d' as const,light:'Daylight' as const,label:'Corner view by day'}]:[]),
+    ];
+    // The camera the visitor is on is taken last, so every picture starts from its preset rather than their orbit.
+    const order=[...views.filter(v=>v.mode!==previous),...views.filter(v=>v.mode===previous)];
+    const shots=new Map<string,string>();
     try{
-      if(hasWebGL){
-        if(!customerView){setMode('3d');await wait(900);}
-        for(let i=0;i<50&&!snapshot.current;i++)await wait(100);
-        if(!customerView)await wait(600);
-        image=snapshot.current?.()??null;
+      for(const [i,view] of order.entries()){
+        setMode(view.mode);setSnapshotLighting(view.light);
+        if(i===0){
+          // A viewer that has not loaded yet (no 3D view shown so far) gets longer to arrive and load its textures.
+          for(let t=0;t<(loading?100:50)&&!snapshot.current;t++)await wait(100);
+          await settle(loading?1500:700);
+        }else await settle(450);
+        // Print resolution: the cover full-bleed on Letter, the other views at up to the sheet's width.
+        const src=snapshot.current?.(view===views[0]?2400:1800);if(src)shots.set(view.label,src);
       }
     }finally{
-      if(!customerView)setMode(previous);
-      setPreparing(false);
+      setMode(previous);setSnapshotLighting(null);
     }
-    setProposal({image,date:new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'})});
+    return views.flatMap(v=>{const src=shots.get(v.label);return src?[{label:v.label,src}]:[];});
   }
-  const proposalFacts=[`${data.width} × ${data.length} ft ${wrap?'wrap-around':data.shape.toLowerCase()} deck, ${data.height} in above grade, ${data.deckType.toLowerCase()}`,`${material.name} · ${data.deckingColor}, ${data.pattern.toLowerCase()} boards${data.pictureFrameRows?` with ${data.pictureFrameRows} border row${data.pictureFrameRows>1?'s':''}`:''}`,`${railingName} railing · ${data.stairFlights} stair flight${data.stairFlights===1?'':'s'}${data.stairFlights?`, ${data.stairWidth} in wide, ${data.stairType.toLowerCase()}`:''}`,...designFacts];
-  function exportModel(kind:'dxf'|'obj'){
+  const proposalDate=()=>new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
+  async function openProposal(){
+    setPreparing(true);
+    let shots:ProposalShot[]=[];
+    try{shots=await captureViews();}finally{setPreparing(false);}
+    setProposal({shots,date:proposalDate()});
+    trackDeck('deckcraft_output','deck_proposal');
+  }
+  // The PDF engine and its builder load only when a PDF is asked for. The proposal dialog hands over the pictures it
+  // already has, so they are not taken again.
+  async function makeProposalPdf(ready?:ProposalShot[]):Promise<ArrayBuffer>{
+    const [{jsPDF},{buildProposalPdf},assets,{exteriorSummary},shots]=await Promise.all([import('jspdf'),import('../features/deckcraft/proposalPdf'),import('../features/deckcraft/pdfAssets'),import('../features/deckcraft/houseLooks'),ready??captureViews()]);
+    const [sitePlan,plan,logo,swatches]=await Promise.all([assets.planImage(estimate.model,data,2000,'site'),assets.planImage(estimate.model,data),assets.logoImage(),assets.swatchImages(data,estimate.model)]);
+    // The house exterior line (appearance only, not priced) loads with the PDF engine, never with the page.
+    const exterior=exteriorSummary(data);
+    return buildProposalPdf(jsPDF,{data,estimate,facts:exterior?[...proposalFacts,exterior]:proposalFacts,reviewItems:reviewFlags,date:proposalDate(),shots,sitePlan,plan,logo,swatches});
+  }
+  async function downloadPdf(ready?:ProposalShot[]){
+    setPdfBusy(true);setDesignError('');
+    try{downloadFile(await makeProposalPdf(ready),'application/pdf',PROPOSAL_PDF_NAME);trackDeck('deckcraft_output','deck_pdf');}
+    catch{setDesignError('The PDF could not be made on this device. Use “Print proposal” and choose “Save as PDF” instead.');}
+    finally{setPdfBusy(false);}
+  }
+  // The export geometry loads only when a file is asked for.
+  async function exportModel(kind:'dxf'|'obj'){
     try{
-      const body=kind==='dxf'?exportDeckDXF(data,estimate.model):exportDeckOBJ(data,estimate.model);
-      downloadFile(body,kind==='dxf'?'application/dxf':'text/plain',`golden-maple-deck.${kind}`);setDesignError('');
+      const {exportDeckReleaseDXF,exportDeckReleaseOBJ}=await import('../features/deckcraft/deckReleaseExports');
+      const body=kind==='dxf'?exportDeckReleaseDXF(data,estimate.model):exportDeckReleaseOBJ(data,estimate.model);
+      downloadFile(body,kind==='dxf'?'application/dxf':'text/plain',`golden-maple-deck.${kind}`);setDesignError('');trackDeck('deckcraft_output',`deck_${kind}`);
     }catch{setDesignError(`The ${kind.toUpperCase()} export could not be generated for this design. Adjust a dimension or contact us and we’ll prepare it.`);}
   }
+  // The design tools clear the file picker once this settles.
   async function importFile(file?:File){
     if(!file)return;setDesignError('');
-    try{if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 100 KB.');const restored=parseDesign(await file.text());setData(restored);setSaved(false);setDesignStatus('Deck and house imported. Yard features are omitted from this deck-only studio. Your estimate uses the current Golden Maple price book.');}
+    try{if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 100 KB.');const restored=parseDesign(await file.text());replace(restored);setSaved(false);setDesignStatus(`Design imported${restored.yardFeatures?.length?', with its backyard':''}. Your estimate uses the current Golden Maple price book.`);trackDeck('deckcraft_output','deck_json_import');}
     catch(error){setDesignError(error instanceof Error?error.message:'The design could not be imported.');}
-    finally{if(fileInput.current)fileInput.current.value='';}
   }
-  function saveJSON(){try{downloadFile(serializeDesign(data),'application/json','golden-maple-deck-design.json');setDesignStatus('Design JSON saved. Import this file to continue on another device.');setDesignError('');}catch{setDesignError('Saving the design file failed on this device. Use “Download summary” for a plain-text copy instead.');}}
+  // A sent design posts to the deck-design Netlify form (relayed to the CRM) with the site's attribution,
+  // then counts as a lead conversion worth the priced subtotal, as the cost estimator does.
+  async function postDesign(fields:Record<string,string>){
+    const eventId=genEventId(),payload={...getAttributionFields(),...getBehaviorFields(),...fields,event_id:eventId};
+    if(import.meta.env.DEV){
+      // eslint-disable-next-line no-console
+      console.log('[dev] deck-design payload (would POST to Netlify):',payload);
+    }else{
+      // With the PDF attachment switched on, try a multipart post first; any failure sends without the file.
+      // The attached copy never re-renders the proposal's 3D views behind the send dialog (slow on a phone, and it
+      // would move the customer's view): it takes the 3D view already on screen, if any. The lead's reopen link
+      // rebuilds the full proposal with every view.
+      let sent=false;
+      if(ATTACH_PROPOSAL_PDF)try{
+        const form=new FormData();for(const [key,value] of Object.entries(payload))form.append(key,value);
+        const onScreen=snapshot.current?.(1800),shots:ProposalShot[]=onScreen?[{label:'3D view',src:onScreen}]:[];
+        form.append('proposal_pdf',new Blob([await makeProposalPdf(shots)],{type:'application/pdf'}),PROPOSAL_PDF_NAME);
+        sent=(await fetch('/',{method:'POST',body:form})).ok;
+      }catch{/* Fall through to the plain submission. */}
+      if(!sent){
+        const res=await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(payload).toString()});
+        if(!res.ok)throw new Error(`The form service answered ${res.status}.`);
+      }
+    }
+    trackLead(DECK_DESIGN_FORM,'high-intent',Number(fields.value)||undefined,eventId,{email:fields.email,phone:fields.phone},{payload});
+  }
+  function saveJSON(){try{downloadFile(serializeDesign(data),'application/json','golden-maple-deck-design.json');trackDeck('deckcraft_output','deck_json_save');setDesignStatus('Design JSON saved. Import this file to continue on another device.');setDesignError('');}catch{setDesignError('Saving the design file failed on this device. Use “Download summary” for a plain-text copy instead.');}}
+  // Each open section's body, with the page state it needs (the list wraps it in Suspense while its chunk loads).
+  const renderSection=(id:SectionId)=>{switch(id){
+    case 'house':return <HouseSection data={data} update={update} selectedOpeningId={effectiveHouseOpeningId} onSelectOpening={setSelectedHouseOpeningId} openExterior={()=>openExterior(true)}/>;
+    case 'deck':return <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} onDrawOnPlan={drawOnPlan}/>;
+    case 'boards':return <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage} deltas={deltas}/>;
+    case 'stairs':return <StairsStep data={data} update={update} stairEdges={stairEdges} deltas={deltas}/>;
+    case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch} deltas={deltas}/>;
+    case 'backyard':return <BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/>;
+    case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={saveJSON} onDownloadSummary={download} onExport={kind=>void exportModel(kind)}/>;
+  }};
+  // "Draw it on the plan" (the Deck section's outline editor): the Draw outline tool, with the plan brought into view.
+  const drawOnPlan=()=>{setPlanTool('outline');setMode('plan');requestAnimationFrame(()=>document.getElementById('deck-live-preview')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'}));};
+  const startOver=()=>{replace(deckReleaseData(structuredClone(DEFAULT_DECK)));closeSections();setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');};
   return <div className="deck-designer">
     <SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>
-    <header className="dd-header"><Link to="/cost-estimator" className="dd-back">← All project types</Link><Link to="/" className="dd-wordmark">Golden Maple<span>DECK STUDIO</span></Link><Link to="/contact" className="dd-contact">Talk through your design ↗</Link></header>
-    <div className="dd-intro"><p className="dd-eyebrow">YOUR SPACE. YOUR SPECIFICATIONS.</p><h1>A deck that takes shape <br/><em>with every choice.</em></h1><p>Set the dimensions. Explore real material colours. See how your choices change the design and the estimate.</p></div>
-    <section className="dd-design-tools" aria-label="Save and restore design">
-      <div><strong>Your working design</strong><small>Automatically saved on this device</small></div>
-      <button className="dd-secondary" onClick={saveJSON}>Save JSON</button>
-      <button className="dd-secondary" onClick={()=>fileInput.current?.click()}>Import design</button>
-      <input ref={fileInput} type="file" accept=".json,application/json" hidden aria-label="Import Golden Maple design JSON" onChange={e=>void importFile(e.target.files?.[0])}/>
-      <details className="dd-reset"><summary>Start over</summary><p>Replace this device’s current design with the default deck.</p><button className="dd-secondary" onClick={()=>{setData(deckReleaseData(structuredClone(DEFAULT_DECK)));setStep(0);setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');}}>Start a new design</button></details>
-      {designStatus&&<p role="status">{designStatus}</p>}{designError&&<p role="alert" className="dd-error">{designError}</p>}
-    </section>
+    <header className="dd-header"><Link to="/cost-estimator" className="dd-back">← All project types</Link><Link to="/" className="dd-wordmark">Golden Maple<span>DECK STUDIO</span></Link><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
+    <div className="dd-title"><h1>Draw your deck on your house.</h1><p>Drag the deck to size on the plan of your house, pick every finish, and see an itemized price as you go.</p></div>
+    <DesignTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={saveJSON} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo}/>
     <main className="dd-workspace">
-      <aside id="deck-live-preview" className="dd-preview">
-        <div className="dd-preview-head"><div><span className="dd-eyebrow">YOUR DECK, LIVE</span><h2>{data.width} × {data.length} ft <small>· {data.height} in high</small></h2></div><div className="dd-view-toggle"><button aria-pressed={mode==='3d'} onClick={()=>setMode('3d')}>3D</button><button aria-pressed={mode==='overview'} onClick={()=>setMode('overview')}>Overview</button><button aria-pressed={mode==='front'} onClick={()=>setMode('front')}>Front</button><button aria-pressed={mode==='top'} onClick={()=>setMode('top')}>Above</button><button aria-pressed={mode==='plan'} onClick={()=>setMode('plan')}>Plan</button></div></div>
-        <div className="dd-scene-tools"><span>See your deck in</span><div className="dd-day-night" role="group" aria-label="Day or night preview"><button type="button" aria-pressed={data.sceneLighting!=='Evening'} onClick={()=>{update({sceneLighting:'Daylight'});if(mode==='plan')setMode('3d');}}><span aria-hidden="true">☀</span> Day</button><button type="button" aria-pressed={data.sceneLighting==='Evening'} onClick={()=>{update({sceneLighting:'Evening'});if(mode==='plan')setMode('3d');}}><span aria-hidden="true">☾</span> Night</button></div><label className="dd-check dd-preview-light-switch"><input type="checkbox" role="switch" checked={data.lightingPreviewOn!==false} onChange={e=>update({lightingPreviewOn:e.target.checked})}/><span>Preview lights {data.lightingPreviewOn===false?'off':'on'}</span></label></div>
-        {data.sceneLighting==='Evening'&&!hasFixtures&&<div className="dd-night-hint" role="status"><p><strong>No lights on this design yet.</strong> Light every railing post and stair riser in one step.</p><button type="button" className="dd-primary" disabled={!autoCounts.posts&&!autoCounts.stairs} onClick={()=>update({autoLighting:{...data.autoLighting,posts:autoCounts.posts>0,stairs:autoCounts.stairs>0},lightingPreviewOn:true})}>Add post &amp; step lights</button><small>Adds the fixtures and a transformer to your estimate.</small></div>}
-        <details className="dd-contractor-view" onToggle={e=>{if(!e.currentTarget.open&&(mode==="structure"||mode==="hardware"||mode==="foundation"))setMode("3d");}}><summary>Advanced contractor view</summary><p className="dd-note">Inspect framing, connections and below-ground components.</p><div className="dd-view-toggle" role="group" aria-label="Contractor preview modes"><button aria-pressed={mode==='structure'} onClick={()=>setMode('structure')}>Framing</button><button aria-pressed={mode==='hardware'} onClick={()=>setMode('hardware')}>Hardware</button><button aria-pressed={mode==='foundation'} onClick={()=>setMode('foundation')}>Below ground</button></div><dl className="dd-quantities" aria-label="Modeled quantities">{[['Support posts',estimate.model.quantities.supportPosts],['Footings',estimate.model.quantities.footings],['Joists',estimate.model.quantities.joists],['Railing posts',estimate.model.quantities.railingPosts],['Stair treads',estimate.model.quantities.stairTreads],['Stringers',estimate.model.quantities.stringers],['Breaker boards',estimate.model.quantities.breakerBoards],['Blocking pieces',estimate.model.quantities.blocking]].map(([label,n])=><div key={label}><dt>{label}</dt><dd>{n}</dd></div>)}</dl></details>
-        <div className="dd-canvas">{mounted && mode!=='plan' && hasWebGL ? <ViewerBoundary fallback={<ConstructionPlan model={estimate.model} data={data}/>}><Suspense fallback={<div className="dd-loading">Preparing your deck…</div>}><Viewer deckOnly data={data} model={estimate.model} view={mode} structure={mode==='structure'||mode==='hardware'} cutaway={mode==='foundation'} selectedHouseOpeningId={pickedHouseOpeningId||(step===0&&houseSettingsOpen?effectiveHouseOpeningId:undefined)} onSelectHouseOpening={selectHouseOpening} onMoveHouseOpening={moveHouseOpening} onContextLost={()=>setHasWebGL(false)} onMovePrivacyScreen={(id,offsetPct)=>setScreen(id,{offsetPct})} onSnapshotReady={onSnapshotReady}/></Suspense></ViewerBoundary> : <ConstructionPlan model={estimate.model} data={data}/>}</div>
-        {mounted && !hasWebGL && <p className="dd-note">Showing the plan view because 3D graphics are unavailable on this device. <button type="button" className="dd-linklike" onClick={retryWebGL}>Try the 3D view again</button></p>}
-        <HouseOpeningsBar data={data} selectedId={pickedHouseOpeningId} onSelect={selectHouseOpening} onChange={update} onEditDetails={editHouseOpening}/>
-        <div className="dd-finish"><MaterialSwatch file={material.colors.find(c=>c.name===data.deckingColor)?.swatch} alt={data.deckingColor}/><div><strong>{data.deckingColor}</strong><span>{material.name}</span></div><span className="dd-finish-pattern">{data.pattern}</span></div>
-        <div className="dd-live-price"><span>{priceLabel} <small>CAD · before HST</small></span><strong>{dollars(estimate.subtotal)}</strong></div>
-        {quoteRequired.length>0&&<div className="dd-quote-notice" role="status"><strong>Supplier quotes needed</strong><p>The amount above excludes unpriced selections and is not a complete project estimate.</p><ul>{quoteRequired.map(name=><li key={name}>{name}</li>)}</ul></div>}
-        
-        <p className="dd-note">The model is a design illustration. Colours vary by screen; confirm with samples. The shared model includes cut boards, framing, connected levels and stair components. Site measurements, connections and engineering need confirmation before construction.</p>
-      </aside>
+      <PreviewPanel data={data} update={update} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} snapshotLighting={snapshotLighting} tool={planTool} setTool={setPlanTool} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior}/>
       <section className="dd-controls" aria-label="Deck configuration">
-        <a className="dd-preview-link" href="#deck-live-preview">↑ View updated deck</a><nav className="dd-steps" aria-label="Design steps">{STEPS.map((s,i)=><button key={s} aria-current={step===i?'step':undefined} onClick={()=>move(i)}><span>{String(i+1).padStart(2,'0')}</span>{s}</button>)}</nav>
-        <div className="dd-panel" ref={panelRef} tabIndex={-1}>
-          {step===0 && <><p className="dd-eyebrow">01 / THE FOOTPRINT</p><h2>Start with the space.</h2><p>Width and depth describe the structural framing footprint. Picture-framed decking uses your outer-frame overhang setting beyond the finished fascia (default 1½ in). Measure height up from grade.</p><div className="dd-fields three">{wrap?.left&&wrap.right?<NumberField label="Deck width" value={data.width} min={4} max={200} unit="ft" increment={0.5} disabled hint="Set by the wrap-around" onValue={()=>{}}/>:number('width','Deck width',4,60,'ft',0.5)}{number('length','Deck depth',4,60,'ft',0.5)}{number('height','Height above ground',8,144,'in')}</div><div className="dd-fields">{select('deckType','How the deck connects',['Attached','Freestanding','Floating','Add-on'])}{select('shape','Deck shape',['Rectangle','L-Shape','Multi-corner','Curved'])}</div>{['L-Shape','Multi-corner'].includes(data.shape)&&<div className="dd-fields">{number('cutoutWidth','Corner cutout width',0,data.width*0.8,'ft',0.5)}{number('cutoutLength','Corner cutout depth',0,data.length*0.8,'ft',0.5)}</div>}{data.shape==='Multi-corner'&&<div className="dd-fields">{number('cutoutWidth2','Second cutout width',0,(data.width-data.cutoutWidth)*0.8,'ft',0.5)}{number('cutoutLength2','Second cutout depth',0,data.length*0.8,'ft',0.5)}</div>}<div className="dd-fields"><Field label="Number of levels"><select aria-label="Number of levels" value={data.levels} onChange={e=>{const levels=Number(e.target.value);update({levels,...(levels===3&&!data.level3?{level3:defaultLevel3(data)}:{})});}}>{[1,2,3].map(n=><option key={n} value={n}>{n}</option>)}</select></Field>{select('pattern','Board layout',['Straight','Diagonal','Picture Frame','Herringbone'])}</div>{wrapSection}{levelsSection}<details className="dd-advanced" open={houseSettingsOpen} onToggle={e=>setHouseSettingsOpen(e.currentTarget.open)}><summary>House dimensions, finishes, doors &amp; windows</summary><p className="dd-note">Click a door or window in 3D to select it, then drag it along its wall. Use the controls below for exact dimensions and movement.</p><HouseEditor data={data} onChange={update} selectedId={effectiveHouseOpeningId} onSelect={setSelectedHouseOpeningId}/></details></>}
-          {step===1 && <><p className="dd-eyebrow">02 / THE FINISH</p><h2>Find your material.</h2><p>Choose a collection, then compare actual manufacturer colour swatches on your deck.</p><div className="dd-materials">{DECKING_CATALOGUE.filter(m=>!m.isHidden).map(m=><button key={m.id} aria-pressed={m.id===data.deckingMaterial} onClick={()=>update({deckingMaterial:m.id,deckingColor:m.colors[0].name})}><MaterialSwatch file={m.colors[0].swatch} alt={`${m.name} material sample`}/><span><strong>{m.name}</strong><small>{m.tier}</small>{m.costPerSqft===null&&<small className="dd-quote-badge">Supplier quote required</small>}</span></button>)}</div>{material.sourceUrl&&<p className="dd-note"><a href={material.sourceUrl} target="_blank" rel="noreferrer">Manufacturer collection details ↗</a></p>}{material.availabilityNote&&<p className="dd-quote-notice">{material.availabilityNote}</p>}{material.costPerSqft===null&&<p className="dd-quote-notice">This collection needs a supplier quote. Its material price is excluded from the priced portion shown.</p>}<h3>Colour · {data.deckingColor}</h3><div className="dd-colours">{material.colors.map(c=><button key={c.name} aria-label={c.name} aria-pressed={data.deckingColor===c.name} onClick={()=>update({deckingColor:c.name})}><MaterialSwatch file={c.swatch} alt={c.name}/><span>{c.name}</span></button>)}</div><div className="dd-fields">{select('fasteningSystem','Fasteners',['Face','Hidden'])}{select('pictureFrameRows','Border rows',[0,1,2])}{(data.pictureFrameRows>0||data.pattern==='Picture Frame')&&<NumberField label="Outer frame overhang beyond fascia" value={data.pictureFrameOverhangIn??1.5} min={0} max={1.5} unit="in" increment={0.5} hint="Default 1½ in; reduce where the manufacturer or edge detail requires it." onValue={pictureFrameOverhangIn=>update({pictureFrameOverhangIn})}/>}{(data.pictureFrameRows>0||data.pattern==='Picture Frame')&&<Field label="Border finish"><select aria-label="Border finish" value={data.borderFinish??'Matching'} onChange={e=>update({borderFinish:e.target.value as 'Matching'|'Dark Slate',...(e.target.value==='Dark Slate'?{pictureFrameRows:data.pictureFrameRows===2?2:1}:{})})}><option value="Matching">Match the selected decking colour</option><option value="Dark Slate">Deckorators Dark Slate — supplier quote</option></select></Field>}</div>{data.borderFinish==='Dark Slate'&&<div className="dd-quote-notice"><MaterialSwatch file="dk-border-dark-slate.jpg" alt="Deckorators Dark Slate border"/><p>Dedicated Deckorators picture-frame board. Border material requires a supplier quote; local availability and cross-collection compatibility need confirmation. <a href="https://www.deckorators.com/products/picture-frame-board" target="_blank" rel="noreferrer">Manufacturer details ↗</a></p></div>}{reviewFlags.filter(flag=>/overhang|cantilever/i.test(flag)).map(flag=><p className="dd-quote-notice" key={flag}>{flag}</p>)}{toggle('hasInlay','Add a decorative inlay')}{data.hasInlay&&number('inlayLf','Inlay length',0,200,'ft')}</>}
-          {step===2 && <><p className="dd-eyebrow">03 / ACCESS & EDGES</p><h2>Make it work for you.</h2><p>Stair dimensions and railing runs affect the materials and installation—not just the deck area.</p><div className="dd-fields">{select('railingType','Railing style',['None','Wood Picket','Aluminum','Cable','Glass Panels','Fortress AL13','TT Classic','TT Impression'])}<Field label="Manufacturer railing system" hint="Brand-specific selections require a supplier quote."><select aria-label="Manufacturer railing system" value={data.catalogueRailingId??''} onChange={e=>{const rail=RAILING_CATALOGUE.find(r=>r.id===e.target.value);update(rail?{catalogueRailingId:rail.id,railingType:rail.baseType}:{catalogueRailingId:undefined});}}><option value="">Generic style / existing price-book allowance</option>{RAILING_CATALOGUE.map(r=><option key={r.id} value={r.id}>{r.name} — supplier quote</option>)}</select></Field>{catalogueRail&&<p className="dd-quote-notice">{catalogueRail.notes} <a href={catalogueRail.sourceUrl} target="_blank" rel="noreferrer">Manufacturer details ↗</a></p>}<p className="dd-note">Railing quantities come from the modeled edges and stair flights.</p>{select('stairFlights','Number of stair flights',[0,1,2,3])}{number('stairWidth','Stair width',36,120,'in')}{select('stairType','Stair layout',['Straight','Landing','Winder'])}{select('stairPosition','Primary stair location',availableStairSides(data))}{stairEdges.length>0&&<Field label="Stair edge" hint="Pick a wing end or side, or follow the stair location"><select aria-label="Stair edge" value={data.stairEdgeId??''} onChange={e=>update({stairEdgeId:e.target.value||undefined})}><option value="">Follow the stair location</option>{stairEdges.map(e=><option key={e.id} value={e.id}>{e.name} · {e.ft} ft</option>)}</select></Field>}{doorStair&&<div className="dd-summary-actions"><button type="button" className="dd-secondary" onClick={()=>update({stairEdgeId:doorStair.edgeId,stairOffset:Math.round(doorStair.offsetPct*10)/10})}>Line the stairs up with the street-side door</button></div>}{number('stairOffset','Position along the edge',0,100,'%')}{data.stairType!=='Straight'&&select('stairTurn','Stair turning direction',['Left','Right'])}{data.stairType==='Landing'&&number('landingDepthIn','Landing depth',36,120,'in',6)}</div>{data.stairFlights>1&&<p className="dd-note">All flights are included in pricing. The primary flight uses your chosen location; additional flights use the other deck edges.</p>}{data.stairType==='Winder'&&<p className="dd-note">Winder treads turn through the selected direction. Review the tread and connection notes in your estimate before construction.</p>}{simpleLighting}</>}
-          {step===3 && <><p className="dd-eyebrow">04 / BEYOND THE SURFACE</p><h2>The site matters, too.</h2><p>These details help account for access, foundations, construction conditions and the finishing touches.</p><div className="dd-fields">{select('municipality','Project area',['Barrie','Simcoe County','Toronto','Burlington-Oakville','Rural-Other'])}{select('siteType','Site conditions',['Standard','Waterfront-Lakefront','Hillside','Urban Tight','Island-Ferry'])}{select('soilCondition','Soil conditions',['Unknown','Sandy','Clay','Shallow Bedrock','Fill'])}{select('foundation','Foundation preference',['Concrete Piers','Helical Piles','Deck Blocks'])}{data.foundation!=='Deck Blocks'&&number('foundationDepthIn','Illustrative footing depth',24,144,'in',6,'Shown in Below ground view. Actual depth and price need site confirmation.')}{select('buildSeason','Build season',['Spring-Summer','Fall','Winter'])}{select('intendedLoad','Intended load',['Standard','Heavy'])}</div><h3>Additional work</h3>{toggle('hasDemo','Remove an existing deck')}{toggle('hasDrainage','Add an under-deck drainage system')}<div className="dd-fields">{number('benchLf','Built-in bench',0,100,'ft')}{number('pergolaSqft','Pergola area',0,600,'sq ft')}</div><h3>Privacy screens</h3><p className="dd-note">Our slatted screen is priced by face area at the existing privacy-screen rate. HIDEAWAY and Oasis aluminum screens are drawn to their stock panel sizes and listed for a supplier quote. Drag any screen in the 3D view to slide it along its edge; 0% starts at the house on side edges, or the left end on front and back edges.</p>{screens.map(screenCard)}<div className="dd-screen-actions"><button type="button" className="dd-secondary" disabled={!canAddScreen} onClick={()=>update({privacyScreens:[...screens,newPrivacyScreen(data,screens)]})}>+ Add privacy screen</button><span className="dd-note">{screens.length} of {MAX_PRIVACY_SCREENS} screens · {screenArea} of {MAX_PRIVACY_SQFT} sq ft priced slatted screen</span></div><h3>Manufacturer finishing accessories</h3><p className="dd-note">Choose compatible components for the modeled deck. All branded accessories require supplier pricing and installation confirmation.</p><div className="dd-catalogue-accessories">{MANUFACTURER_ACCESSORIES.filter(a=>a.previewSupported).map(a=><div key={a.id}><label className="dd-check"><input type="checkbox" checked={data.catalogueAccessories?.includes(a.id)??false} onChange={e=>update({catalogueAccessories:e.target.checked?[...(data.catalogueAccessories??[]).filter(id=>a.kind==='fastener'||MANUFACTURER_ACCESSORIES.find(x=>x.id===id)?.kind!==a.kind),a.id]:(data.catalogueAccessories??[]).filter(id=>id!==a.id),...(a.kind==='fastener'&&/concealoc|stealthlock/.test(a.id)&&e.target.checked?{fasteningSystem:'Hidden'}:{})})}/><span>{a.name}<small>Supplier quote required</small></span></label><p className="dd-note">{a.notes} <a href={a.sourceUrl} target="_blank" rel="noreferrer">Manufacturer details ↗</a></p></div>)}</div><details className="dd-advanced"><summary>Products requiring a separate layout</summary><p>These products are in the manufacturer catalogue. They cannot be added to this preview until their specific geometry and connections are designed.</p>{MANUFACTURER_ACCESSORIES.filter(a=>!a.previewSupported&&a.id!=='dk_dark_slate_border').map(a=><div key={a.id}><h4>{a.name}</h4><p className="dd-note">{a.notes} <a href={a.sourceUrl} target="_blank" rel="noreferrer">Manufacturer details ↗</a></p></div>)}</details><h3>Landscape & deck lighting</h3>{simpleLighting}<p className="dd-note">Or browse verified products and existing price-book allowances. Some family selections need a specific finish or variant before installation and pricing can be confirmed.</p><fieldset className="dd-lighting-zones"><legend>Include lighting installation by zone</legend><p className="dd-note">Disabled zones retain your fixture quantities but are excluded from installation and pricing. Preview lights and Day/Night only change the scene.</p>{LIGHTING_ZONES.map(([zone,label])=><label key={zone} className="dd-check"><input type="checkbox" checked={data.lightingZoneEnabled?.[zone]!==false} onChange={e=>update({lightingZoneEnabled:{...data.lightingZoneEnabled,[zone]:e.target.checked}})}/><span>{label}</span></label>)}</fieldset><Field label="Find lighting"><input type="search" aria-label="Find lighting" placeholder="Search fixtures, controllers or cables" value={lightingSearch} onChange={e=>setLightingSearch(e.target.value)}/></Field>{LIGHTING_CATEGORIES.map(category=>{const products=LIGHTING_CATALOGUE.filter(p=>p.supported&&p.category===category&&(!lightingSearch||(`${p.name} ${p.description??''}`).toLowerCase().includes(lightingSearch.toLowerCase())));if(!products.length)return null;const selected=products.reduce((n,p)=>n+(data.lightingSystem.selectedItems.find(x=>x.productId===p.id)?.qty??0),0);return <details className="dd-advanced dd-lighting-category" key={category} open={lightingSearch?true:undefined}><summary>{category} · {products.length} options{selected?` · ${selected} selected`:''}</summary><div className="dd-lighting">{products.map(p=><article key={p.id}><Field label={p.name} hint={p.description}><input type="number" min={0} max={30} aria-label={`${p.name} quantity`} disabled={isAutoLight(p.id)} value={data.lightingSystem.selectedItems.find(x=>x.productId===p.id)?.qty||0} onChange={e=>{const qty=Math.min(30,Math.max(0,Math.round(Number(e.target.value)||0)));update({lightingSystem:{...data.lightingSystem,selectedItems:[...data.lightingSystem.selectedItems.filter(x=>x.productId!==p.id),...(qty?[{productId:p.id,qty,...(data.lightingSystem.selectedItems.find(x=>x.productId===p.id)?.zone?{zone:data.lightingSystem.selectedItems.find(x=>x.productId===p.id)!.zone}:{})}]:[])]}});}}/></Field>{!isSystemProduct(p)&&<Field label={`${p.name} installation zone`}><select aria-label={`${p.name} installation zone`} value={data.lightingSystem.selectedItems.find(x=>x.productId===p.id)?.zone??defaultLightingZone(p)} disabled={isAutoLight(p.id)||!data.lightingSystem.selectedItems.some(x=>x.productId===p.id)} onChange={e=>update({lightingSystem:{...data.lightingSystem,selectedItems:data.lightingSystem.selectedItems.map(x=>x.productId===p.id?{...x,zone:e.target.value as LightingZone}:x)}})}>{LIGHTING_ZONES.filter(([zone])=>allowedLightingZones(p.geometry).includes(zone)).map(([zone,label])=><option value={zone} key={zone}>{label}{data.lightingZoneEnabled?.[zone]===false?' (installation disabled)':''}</option>)}</select></Field>}{!isSystemProduct(p)&&!isAutoLight(p.id)&&lightingSuggestion(p)>0&&<button className="dd-secondary dd-lighting-suggest" onClick={()=>update({lightingSystem:{...data.lightingSystem,selectedItems:[...data.lightingSystem.selectedItems.filter(x=>x.productId!==p.id),{productId:p.id,qty:lightingSuggestion(p),zone:data.lightingSystem.selectedItems.find(x=>x.productId===p.id)?.zone??defaultLightingZone(p)}]}})}>Use {lightingSuggestion(p)} lights from modeled post/tread count</button>}<small className="dd-quote-badge">{p.cost===null||p.laborCost===null?'Supplier / installation quote required':'Existing price-book allowance'}</small>{isAutoLight(p.id)&&<p className="dd-note">Set by the simple deck lighting and privacy screen options above.</p>}{p.configurationRequired&&<p className="dd-note">Choose the exact variant with your supplier; the preview shows this product family.</p>}<details className="dd-lighting-specs"><summary>Product specifications</summary><p className="dd-note">{Object.entries(p.dimensionsIn).map(([label,n])=>`${label}: ${n?.toFixed(2)} in`).join(' · ')||'Dimensions require manufacturer confirmation.'}{p.voltage?` · ${p.voltage}`:''}</p><p className="dd-note">{p.va!==undefined?`${p.va} VA`:'VA not verified'}{p.watts!==undefined?` · ${p.watts} W`:''}</p>{[...p.compatibilityNotes,...p.specWarnings].map((note,i)=><p key={i} className="dd-note">{note}</p>)}<a href={p.sourceUrl} target="_blank" rel="noreferrer">Manufacturer product / system details ↗</a></details></article>)}</div></details>;})}<details className="dd-advanced"><summary>Lighting outside this 12 V preview</summary><p>These manufacturer products need a different electrical system or verified compatibility and cannot be selected for this circuit.</p>{LIGHTING_CATALOGUE.filter(p=>!p.supported).map(p=><p key={p.id} className="dd-note"><a href={p.sourceUrl} target="_blank" rel="noreferrer">{p.name} ↗</a> — {[...p.compatibilityNotes,...p.specWarnings].join(' ')}</p>)}</details>{lightingCheck.warnings.length>0&&<details className="dd-advanced"><summary>Lighting compatibility · {lightingCheck.warnings.length} items to confirm</summary><p className="dd-note">Known fixture load: {lightingCheck.knownLoadVa.toFixed(1)} VA · selected transformer capacity: {lightingCheck.capacityVa.toFixed(1)} VA. Unknown fixture loads still require confirmation.</p><ul className="dd-review-flags">{lightingCheck.warnings.map(w=><li key={w}>{w}</li>)}</ul></details>}<Field label="Lighting wire distance"><span className="dd-number"><input type="number" aria-label="Lighting wire distance" min={0} max={500} value={data.lightingSystem.wireDistance} onChange={e=>update({lightingSystem:{...data.lightingSystem,wireDistance:Math.min(500,Math.max(0,Number(e.target.value)||0))}})}/><span>ft</span></span></Field><details className="dd-advanced"><summary>Framing & construction preferences</summary><p>These preferences need confirmation during the site assessment.</p><div className="dd-fields">{select('framingSize','Joist size',['2x8','2x10','2x12'])}{select('joistSpacing','Joist spacing in inches',[12,16])}{select('boardWidth','Board width in inches',[5.5,3.5])}</div></details></>}
-          
-          {step===4 && <><p className="dd-eyebrow">05 / YOUR PLANNING ESTIMATE</p><h2>A clearer picture of the work.</h2><p>Your selected dimensions, materials, stairs and extras are priced using Golden Maple’s existing deck price book. Products without confirmed rates are listed for a supplier quote.</p><div className="dd-summary"><strong>{data.width} × {data.length} ft · {wrap?'Wrap-around':data.shape}</strong><span>{material.name} · {data.deckingColor}</span><span>{data.stairFlights} stair flight(s) · {railingName} railing</span>{designFacts.map(fact=><span key={fact}>{fact}</span>)}</div><div className="dd-breakdown">{estimate.sections.map(s=><div key={s.title}><span>{s.title}</span><strong>{s.quoteRequired&&s.total===0?'Supplier quote required':dollars(s.total)}{s.quoteRequired&&s.total>0&&<small>Priced portion · supplier quote required</small>}</strong></div>)}<div className="dd-total"><span>{quoteRequired.length?'Priced portion including HST':'Including HST'}</span><strong>{dollars(estimate.total)}</strong></div></div>{quoteRequired.length>0&&<div className="dd-quote-notice"><strong>Not a complete project price</strong><p>Supplier quotes are still required for: {quoteRequired.join('; ')}. These unpriced items are excluded above.</p></div>}<p className="dd-note">This is a planning estimate based on selected inputs and the configured price book. Final measurements, site conditions, engineering and product availability must be confirmed in your written quote.</p><h3>Your proposal</h3><p className="dd-note">Add your name and project address to print a one-page proposal. They stay on this device and are only printed on your proposal.</p><div className="dd-fields"><Field label="Your name"><input aria-label="Your name" type="text" maxLength={120} autoComplete="name" value={data.customerName} onChange={e=>update({customerName:e.target.value})}/></Field><Field label="Project address"><input aria-label="Project address" type="text" maxLength={200} autoComplete="street-address" value={data.projectAddress} onChange={e=>update({projectAddress:e.target.value})}/></Field></div><div className="dd-summary-actions"><button className="dd-primary" onClick={()=>void openProposal()} disabled={preparing}>{preparing?'Preparing your proposal…':'Print proposal'}</button><button className="dd-secondary" onClick={saveJSON}>Save design JSON</button><button className="dd-secondary" onClick={download}>{saved?'Download summary again':'Download summary'}</button><Link className="dd-secondary" to="/contact">Discuss this deck ↗</Link></div>{reviewFlags.length>0&&<section aria-label="Construction review items"><h3>Confirm before construction</h3><ul className="dd-review-flags">{reviewFlags.map(flag=><li key={flag}>{flag}</li>)}</ul></section>}<h3>Advanced contractor details</h3><p className="dd-note">Open the schedules and exports below to review construction quantities and details.</p><details className="dd-advanced"><summary>Connection schedule &amp; rate basis</summary><p>Quantities follow the modeled connections. Items needing a supplier quote are excluded from the estimate until their rate is confirmed.</p><div className="dd-takeoff-list"><section>{estimate.connectorSchedule.filter(row=>row.qty>0).map(row=><div key={row.name}><span>{row.name}<small>{row.basis}</small></span><strong className="dd-rate-note">{row.qty} {row.unit}<small>{row.rate===null?'Supplier quote required':dollars(row.rate)+' per '+row.unit}</small></strong></div>)}</section></div></details>{estimate.model.stairSupport&&<details className="dd-advanced"><summary>Stair support spacing &amp; manufacturer basis</summary><p className="dd-note">Modeled stringer spacing: {estimate.model.stairSupport.spacingIn} in on centre (requested {estimate.model.stairSupport.requestedSpacingIn} in). Status: {estimate.model.stairSupport.status.replaceAll('-',' ')}. This records the selected support basis; it does not certify the stair assembly.</p>{estimate.model.stairSupport.notes.map((note,i)=><p key={i} className="dd-note">{note}</p>)}{estimate.model.stairSupport.sourceUrl&&<a href={estimate.model.stairSupport.sourceUrl} target="_blank" rel="noreferrer">Manufacturer stair support reference ↗</a>}</details>}<details className="dd-advanced"><summary>Material stock &amp; cuts</summary><p>Cuts include saw kerf. Deck-board orders retain the existing waste allowance; other rows show their stated stock or per-riser allowance basis. Cut lengths are in inches; each group corresponds to one stock piece.</p>{estimate.stockSchedule.map((row,rowIndex)=><div key={row.section+row.name+rowIndex}><table className="dd-cut-table"><caption>{row.name} · {row.section}</caption><thead><tr><th>Stock length</th><th>Order quantity</th><th>Installed / ordered</th></tr></thead><tbody><tr><td>{row.stockLengthIn} in</td><td>{row.orderedPieces} pieces</td><td>{row.installedLf.toFixed(1)} / {row.orderedLf.toFixed(1)} ft</td></tr></tbody></table><details className="dd-cut-detail"><summary>Show {row.cutsIn.length} cutting groups</summary><p className="dd-note">{row.cutsIn.map((cuts,i)=>'#'+(i+1)+': '+cuts.map(n=>n.toFixed(2)).join(' + ')).join('; ')}</p></details>{row.unresolvedIn.length>0&&<p className="dd-error dd-note">Stock length needs confirmation: {row.unresolvedIn.map(n=>n.toFixed(1)+' in').join(', ')}</p>}</div>)}</details><details className="dd-advanced"><summary>CAD &amp; 3D model exports</summary><p>DXF includes construction solids with Z up; OBJ uses Y up. Both use inches and the current modeled parts. Hardware and lighting use schematic envelopes. These exports support design coordination and require engineering review before construction.</p><div className="dd-summary-actions"><button className="dd-secondary" onClick={()=>exportModel('dxf')}>Download DXF</button><button className="dd-secondary" onClick={()=>exportModel('obj')}>Download OBJ</button></div></details><details className="dd-advanced"><summary>Full material and hardware list</summary><div className="dd-takeoff-list">{estimate.sections.map(s=><section key={s.title}><h3>{s.title}</h3>{s.items.filter(i=>Number(i.qty)>0).map((i,j)=><div key={j}><span>{i.name}<small>{i.spec}</small></span><strong>{i.qty} {i.unit}{i.cost===null&&<small>Supplier quote required</small>}</strong></div>)}</section>)}</div></details>{saved&&<p role="status" className="dd-note">Your design summary has been downloaded. Save JSON preserves an importable design.</p>}</>}
-          <div className="dd-navigation"><button className="dd-secondary" disabled={step===0} onClick={()=>move(step-1)}>← Back</button><span>{step+1} of {STEPS.length}</span>{step<STEPS.length-1&&<button className="dd-primary" onClick={()=>move(step+1)}>{step===STEPS.length-2?'Review my estimate':'Continue'} →</button>}</div>
-        </div>
+        <SectionList data={data} ledger={schedule} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection}/>
       </section>
+      <PriceLedger ledger={schedule} variant="column" changes={changes.records} onFullList={showFullList}/>
     </main>
-    {proposal&&<ProposalDialog data={data} estimate={estimate} facts={proposalFacts} reviewItems={reviewFlags} image={proposal.image} date={proposal.date} onClose={closeProposal}/>}
+    <PhoneDeckBar ledger={schedule} changes={changes.records} onFullList={showFullList} docked={docked} onToggleDock={toggleDock} onSend={()=>setSendOpen(true)}/>
+    <ChangeAnnouncer record={changes.records.at(-1)}/>
+    {sendOpen&&<Suspense fallback={null}><SendDesignDialog data={data} estimate={estimate} summary={summary} reviewItems={reviewFlags} send={postDesign} onPrint={()=>{setSendOpen(false);void openProposal();}} onDownloadPdf={downloadPdf} onClose={closeSend}/></Suspense>}
+    {proposal&&<Suspense fallback={null}><ProposalDialog data={data} estimate={estimate} facts={proposalFacts} reviewItems={reviewFlags} image={proposal.shots[0]?.src??null} shots={proposal.shots} date={proposal.date} onClose={closeProposal} onDownloadPdf={()=>void downloadPdf(proposal.shots)} pdfBusy={pdfBusy}/></Suspense>}
   </div>;
 }

@@ -1,0 +1,227 @@
+{
+ "note": "Captured on 2026-09-23 from the code before the exterior finishes (F4) work: the original claddings, roofs and exported house parts. Never regenerate without owner approval.",
+ "house": {
+  "default": {
+   "parts": 52,
+   "digest": "9f468fe7a73f712f8c808dad"
+  },
+  "hidden": {
+   "parts": 0,
+   "digest": "4f53cda18c2baa0c0354bb5f"
+  },
+  "cladding/Siding": {
+   "parts": 52,
+   "digest": "1f0da4e52a5016e1f3cc7b36"
+  },
+  "cladding/Brick": {
+   "parts": 52,
+   "digest": "1f0da4e52a5016e1f3cc7b36"
+  },
+  "cladding/Stone": {
+   "parts": 52,
+   "digest": "1f0da4e52a5016e1f3cc7b36"
+  },
+  "cladding/Stucco": {
+   "parts": 52,
+   "digest": "1f0da4e52a5016e1f3cc7b36"
+  },
+  "cladding/Board & batten": {
+   "parts": 52,
+   "digest": "1f0da4e52a5016e1f3cc7b36"
+  },
+  "cladding/Vertical siding": {
+   "parts": 52,
+   "digest": "1f0da4e52a5016e1f3cc7b36"
+  },
+  "roof/hip-metal-2": {
+   "parts": 51,
+   "digest": "544ced84ebccf179fac067d1"
+  },
+  "roof/flat-3": {
+   "parts": 51,
+   "digest": "b456da9a0020e72a2fcdabd5"
+  },
+  "roof/gable-x-9": {
+   "parts": 52,
+   "digest": "5101fd012d9b8b4888719491"
+  },
+  "roof/gable-4": {
+   "parts": 52,
+   "digest": "0fb983a08b99b404d06bd223"
+  },
+  "openings/every-style": {
+   "parts": 137,
+   "digest": "c06739d2c617ce249f6db034"
+  },
+  "blocks/bump-wing-garage": {
+   "parts": 122,
+   "digest": "0a3defacc4ff04b3cdec2655"
+  },
+  "placement/left": {
+   "parts": 52,
+   "digest": "a7e6d77f03032715d78cd46f"
+  },
+  "house/wide-tall": {
+   "parts": 51,
+   "digest": "c3be798c024376aabc40734e"
+  },
+  "deck/l-shape": {
+   "parts": 52,
+   "digest": "3ae8e0b3f1db9f8611e541ef"
+  },
+  "deck/wrap": {
+   "parts": 52,
+   "digest": "13e980bdd57e0c74fee9f7f8"
+  }
+ },
+ "skins": {
+  "Siding/plain": {
+   "pieces": 16,
+   "digest": "f525490e0e0d1d847836f94d"
+  },
+  "Siding/openings": {
+   "pieces": 60,
+   "digest": "07acdd86a75607fda4c239a4"
+  },
+  "Siding/hidden": {
+   "pieces": 34,
+   "digest": "6e79cb066dc8b89120b3f197"
+  },
+  "Siding/garage": {
+   "pieces": 69,
+   "digest": "33ad5e983854024f8350fd60"
+  },
+  "Siding/odd": {
+   "pieces": 15,
+   "digest": "99e0b38b097594651ef8b6bf"
+  },
+  "Siding/largest": {
+   "pieces": 129,
+   "digest": "28c87dd7f9725e373292f290"
+  },
+  "Brick/plain": {
+   "pieces": 1911,
+   "digest": "791686a1294532d15897939f"
+  },
+  "Brick/openings": {
+   "pieces": 2714,
+   "digest": "b15d067860c769a562775119"
+  },
+  "Brick/hidden": {
+   "pieces": 742,
+   "digest": "fe3095fb92af4336081a2c46"
+  },
+  "Brick/garage": {
+   "pieces": 8408,
+   "digest": "634dc5e133bec6391672ea0f"
+  },
+  "Brick/odd": {
+   "pieces": 670,
+   "digest": "38187c6fdcc54d8dd3ba85ec"
+  },
+  "Brick/largest": {
+   "pieces": 51621,
+   "digest": "d586bf7d43f7b585c81c0bd2"
+  },
+  "Stone/plain": {
+   "pieces": 379,
+   "digest": "db9f42e314393bf2dd197c8d"
+  },
+  "Stone/openings": {
+   "pieces": 566,
+   "digest": "07beef689389f6745b4dab4e"
+  },
+  "Stone/hidden": {
+   "pieces": 157,
+   "digest": "3e88956f870647d4f2dcf8c9"
+  },
+  "Stone/garage": {
+   "pieces": 1742,
+   "digest": "b87620e2a11ced9ce9484481"
+  },
+  "Stone/odd": {
+   "pieces": 135,
+   "digest": "dd82a61eabf330044acba7f0"
+  },
+  "Stone/largest": {
+   "pieces": 10152,
+   "digest": "e6e55635dfbbf72ef0b48116"
+  },
+  "Stucco/plain": {
+   "pieces": 0,
+   "digest": "4f53cda18c2baa0c0354bb5f"
+  },
+  "Stucco/openings": {
+   "pieces": 0,
+   "digest": "4f53cda18c2baa0c0354bb5f"
+  },
+  "Stucco/hidden": {
+   "pieces": 0,
+   "digest": "4f53cda18c2baa0c0354bb5f"
+  },
+  "Stucco/garage": {
+   "pieces": 0,
+   "digest": "4f53cda18c2baa0c0354bb5f"
+  },
+  "Stucco/odd": {
+   "pieces": 0,
+   "digest": "4f53cda18c2baa0c0354bb5f"
+  },
+  "Stucco/largest": {
+   "pieces": 0,
+   "digest": "4f53cda18c2baa0c0354bb5f"
+  },
+  "Board & batten/plain": {
+   "pieces": 22,
+   "digest": "5b0c1fba628d35d5c940021f"
+  },
+  "Board & batten/openings": {
+   "pieces": 30,
+   "digest": "7271ef598ba049e3c3468823"
+  },
+  "Board & batten/hidden": {
+   "pieces": 12,
+   "digest": "64483740d19fa95f2495e278"
+  },
+  "Board & batten/garage": {
+   "pieces": 39,
+   "digest": "900548b5fa5692b4e1e26b1f"
+  },
+  "Board & batten/odd": {
+   "pieces": 9,
+   "digest": "c9dc3b223bd8445fed5ca5f2"
+  },
+  "Board & batten/largest": {
+   "pieces": 75,
+   "digest": "69019aa627cd50a88b7994e3"
+  },
+  "Vertical siding/plain": {
+   "pieces": 60,
+   "digest": "01ddf707d29a305b005f6159"
+  },
+  "Vertical siding/openings": {
+   "pieces": 78,
+   "digest": "0dde25f887a4b21b056a0d0a"
+  },
+  "Vertical siding/hidden": {
+   "pieces": 33,
+   "digest": "95b3f5baf762e154b0f7e479"
+  },
+  "Vertical siding/garage": {
+   "pieces": 108,
+   "digest": "d8238f99ab43f84c8dd7e12d"
+  },
+  "Vertical siding/odd": {
+   "pieces": 23,
+   "digest": "75d84a88c78f423fd4d88eda"
+  },
+  "Vertical siding/largest": {
+   "pieces": 200,
+   "digest": "47528139548d6d4f8099d220"
+  }
+ },
+ "roof": {
+  "Shingles": "887b209711c892c7ab893e39",
+  "Metal": "832f0327a5906a4a54a63fe0"
+ }
+}

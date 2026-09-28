@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {buildDeckTakeoff,type Member} from '../src/features/deckcraft/deckTakeoff';
+import {buildDeckTakeoff,guardRuns,type Member} from '../src/features/deckcraft/deckTakeoff';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {getHardwareLayout} from '../src/features/deckcraft/hardwareLayout';
 import {getHouseContact} from '../src/features/deckcraft/houseContact';
@@ -89,7 +89,7 @@ function checkWrap(d:DeckData,tag:string){
   }
   ok(probes>50&&missed===0,`${tag}: decking covers the deck (${missed} of ${probes} probes uncovered)`);
   // Railing, stairs and border stay off the house.
-  ok(!m.railing.rails.some(r=>contact.onContact(plan(r.a),plan(r.b))),`${tag}: no railing along a ledger`);
+  ok(!guardRuns(m).some(r=>contact.onContact(plan(r.a),plan(r.b))),`${tag}: no railing along a ledger`);
   const {x0,x1,depthIn}=getHousePlacement(d),inHouse=(p:PlanPoint)=>p.x>x0+.5&&p.x<x1-.5&&p.y<-.5&&p.y>-depthIn+.5;
   ok(!finished.some(inHouse)&&!polys.flat().some(inHouse)&&!m.treads.some(t=>inHouse({x:t.x,y:t.z})),`${tag}: no deck, border or stair inside the house`);
   cases++;
@@ -223,7 +223,7 @@ function checkBump(d:DeckData,tag:string,bumpId='bump1'){
   ok(beams.some(b=>b.a.z>bump.rect.y1+.5&&Math.min(b.a.x,b.b.x)<hi-1&&Math.max(b.a.x,b.b.x)>lo+1),`${tag}: the deck in front of the bump-out has its own beam`);
   for(const z of (l.zones??[]).filter(z=>z.zone.origin.y>.5))ok(beams.some(b=>b.a.z>z.zone.origin.y+.5&&Math.min(b.a.x,b.b.x)<z.zone.origin.x+z.zone.size.w-1&&Math.max(b.a.x,b.b.x)>z.zone.origin.x+1),`${tag}: every strip framed off the bump-out face has its own beam`);
   ok([...l.joists,...l.beams,...l.blocking,...(l.rim??[])].every(mm=>len(mm)<=192.001),`${tag}: no member is longer than 16 ft stock`);
-  ok(!m.railing.rails.some(r=>contact.onContact(plan(r.a),plan(r.b))),`${tag}: no railing along a ledger or flush wall`);
+  ok(!guardRuns(m).some(r=>contact.onContact(plan(r.a),plan(r.b))),`${tag}: no railing along a ledger or flush wall`);
   // Decking covers the notched deck, and nothing of the deck lands inside any part of the house.
   const finished=l.deckingFootprint!.outline,polys=l.boards.map(b=>boardOutline(b,d.boardWidth)),xs=finished.map(p=>p.x),ys=finished.map(p=>p.y);
   ok(polys.reduce((n,p)=>n+Math.abs(area(p)),0)<=Math.abs(area(finished))+1,`${tag}: no two boards overlap`);
