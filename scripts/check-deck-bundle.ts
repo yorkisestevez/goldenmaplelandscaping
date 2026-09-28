@@ -62,7 +62,7 @@ import {basename} from 'node:path';
 // September 27: source-backed multi-size recipes and physical patio inlays participate
 // in saved-design validation and the initial takeoff. Keep their controls, photos and
 // library lazy; bound the shared route/pricing model at270/205 KB for this feature set.
-const BUDGET_KB={routeInitial:270,routeCss:12,viewer:340,pdf:150,deltaWorker:205,swatchWorker:5,sketch:27,contractorTool:15};
+const BUDGET_KB={routeInitial:270,routeCss:12,viewer:340,pdf:150,deltaWorker:205,swatchWorker:5,sketch:27,contractorTool:15,permitSet:12};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);
@@ -93,6 +93,13 @@ for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep',
   ok(files.some(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')),`${body} is its own chunk`);
   if(body==='BoardLayoutEditor')ok(!initial.some(f=>f.startsWith(`${body}-`)),'Board-layout interaction controls stay outside the first estimate');
   if(body==='HardscapePicker'||body==='YardShapeEditor'){ok(!initial.some(f=>f.startsWith(`${body}-`)),`${body} stays outside the first estimate`);ok(files.filter(f=>f.startsWith(`${body}-`)&&f.endsWith('.js')).reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,`${body} stays within the optional-tool budget`);}
+}
+// The permit drawing set (drawings/) loads only when it is opened, with its PDF renderer loading only for a PDF.
+{
+  const permit=files.filter(f=>/^(PermitSetDialog|renderPdf)-.*\.js$/.test(f)),permitKB=permit.reduce((n,f)=>n+gz(f),0);
+  ok(permit.some(f=>f.startsWith('PermitSetDialog-'))&&permit.some(f=>f.startsWith('renderPdf-')),`The permit set and its PDF renderer are chunks of their own: ${permit.join(', ')}`);
+  ok(!initial.some(f=>/^(PermitSetDialog|renderPdf)-/.test(f)),'The permit set stays outside the first estimate');
+  ok(permitKB<=BUDGET_KB.permitSet,`The permit set is ${permitKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.permitSet} KB): ${permit.join(', ')}`);
 }
 const viewer=files.find(f=>/^Deck3DViewer-.*\.js$/.test(f)),pdf=files.find(f=>/^jspdf.*\.js$/.test(f)),deltaWorker=files.find(f=>/^optionDeltas\.worker-.*\.js$/.test(f));
 ok(viewer&&gz(viewer)<=BUDGET_KB.viewer,`3D viewer chunk is ${viewer?gz(viewer).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.viewer} KB)`);
