@@ -26,7 +26,10 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The build runs `npm run lint` (netlify.toml), which includes the full DeckCraft
+    # check suite (91 scripts since the consolidated designer, 2026-09-28) and a terser
+    # build; 10 minutes no longer fits. A timeout only ever leaves the old site live.
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -16,13 +16,14 @@ type HouseSize=Pick<HouseConfig,'widthFt'|'depthFt'>;
  * outline it had before; it sets the width and depth and is one level.
  */
 export function chooseShape(data:DeckData,shape:DeckShape):Partial<DeckData>{
-  if(shape!=='Custom')return {shape};
+  const deckOutlines=data.deckOutlines?{...data.deckOutlines,main:undefined}:undefined;
+  if(shape!=='Custom')return {shape,...(data.deckOutlines?{deckOutlines}:{})};
   const kept=data.customFront&&!outlineProblems(data.customFront).length?data.customFront:null;
-  return {shape,customFront:kept??frontFromOutline(unnotchedMainOutline(data))??rectangleFront(data.width,data.length),levels:1};
+  return {shape,deckOutlines,customFront:kept??frontFromOutline(unnotchedMainOutline(data))??rectangleFront(data.width,data.length),levels:1};
 }
 
 /** What a wrap-around needs before its corner can be mitred: a rectangle, no inlay, straight boards and square front corners. */
-export const wrapFix=(data:DeckData):Partial<DeckData>=>({shape:'Rectangle',hasInlay:false,...(data.pattern==='Diagonal'||data.pattern==='Herringbone'?{pattern:'Straight' as const}:{}),...(data.cornerChamfers?{cornerChamfers:undefined}:{})});
+export const wrapFix=(data:DeckData):Partial<DeckData>=>({shape:'Rectangle',hasInlay:false,...(data.deckOutlines?{deckOutlines:{...data.deckOutlines,main:undefined}}:{}),...(data.pattern==='Diagonal'||data.pattern==='Herringbone'?{pattern:'Straight' as const}:{}),...(data.cornerChamfers?{cornerChamfers:undefined}:{})});
 /** The changes `wrapFix` makes to this design, in words. */
 export const wrapFixNames=(data:DeckData)=>[data.shape!=='Rectangle'&&'a rectangle',data.hasInlay&&'no inlay',(data.pattern==='Diagonal'||data.pattern==='Herringbone')&&'straight boards',activeCornerChamfers({...data,shape:'Rectangle'})&&'square front corners'].filter(Boolean) as string[];
 /** The status line after `wrapFix`. */

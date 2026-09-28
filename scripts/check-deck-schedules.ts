@@ -7,7 +7,9 @@ import {LIGHTING_COSTS,MATERIAL_TIERS,CREW_DAY_RATES,RAILING_COSTS,STAIR_TREAD_C
 import {createHash} from 'node:crypto';
 // SHA-256 of JSON.stringify(original exported constant), read from the untouched
 // C:/Business/projects/deckcraft-pro/src/types.ts on 2026-09-07. No machine path dependency.
-const original={LIGHTING_COSTS:'20c5e22050818def66ae8eb4491877649c293212bbd18efb856bcaaf3f3e2289',MATERIAL_TIERS:'0a958a5855f52d5e20b57c0c1f32bfde15efa2da6abe6f08df981258efca007d',CREW_DAY_RATES:'e0d370541608575252914f41a83f2d9b68df78436b3abbad3537700fdad8c832',RAILING_COSTS:'7b73b487cf1d1f2f92165e68ed40a09792c8a29520a6ea91437c5952c8cb7ae1',STAIR_TREAD_COSTS:'adac3f188ff5b56bdacdea1a958b82e8b8850072b35a6856d0a5821db5e3b44d',WASTE_FACTORS:'84247fc9dbcbbfb435cee1b7e137125a839e9315e5234a8a150f1bf9191ffdb1'};
+// MATERIAL_TIERS was deliberately revised in the owner-authorized 2026-09-26 pricing review;
+// its sourced Terrain/Reserve benchmarks are also tested in check-deck-pricing-review.ts.
+const original={LIGHTING_COSTS:'20c5e22050818def66ae8eb4491877649c293212bbd18efb856bcaaf3f3e2289',MATERIAL_TIERS:'4b3acbe6a735eb14a97a89309105930d71fa3756f7552c8e1a93f0b9c1627faf',CREW_DAY_RATES:'e0d370541608575252914f41a83f2d9b68df78436b3abbad3537700fdad8c832',RAILING_COSTS:'7b73b487cf1d1f2f92165e68ed40a09792c8a29520a6ea91437c5952c8cb7ae1',STAIR_TREAD_COSTS:'adac3f188ff5b56bdacdea1a958b82e8b8850072b35a6856d0a5821db5e3b44d',WASTE_FACTORS:'84247fc9dbcbbfb435cee1b7e137125a839e9315e5234a8a150f1bf9191ffdb1'};
 for(const key of ['LIGHTING_COSTS','MATERIAL_TIERS','CREW_DAY_RATES','RAILING_COSTS','STAIR_TREAD_COSTS','WASTE_FACTORS'] as const){const current={LIGHTING_COSTS,MATERIAL_TIERS,CREW_DAY_RATES,RAILING_COSTS,STAIR_TREAD_COSTS,WASTE_FACTORS}[key];assert.equal(createHash('sha256').update(JSON.stringify(current)).digest('hex'),original[key],`${key}: original commercial source preserved`);}
 let count=0;
 for(const width of [8,24,40])for(const length of [8,24])for(const pattern of ['Straight','Diagonal','Herringbone'] as const){

@@ -1,0 +1,2025 @@
+{
+ "schemaVersion": 1,
+ "verifiedOn": "2026-09-27",
+ "scope": "Techo-Bloc AutoCAD hatch-atlas originals promoted only after the independent source-face verifier passed them (a blind hand count was run as a veto). Nominal zero-joint topology of full published stock; no installed joint, spacer or pack ratio is certified.",
+ "recipes": [
+  {
+   "productId": "techo-everest-slab",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-07-80-250x500-20-250x250",
+   "patternName": "Herringbone pattern 07 - 80% 250x500 | 20% - 250x250",
+   "originalPatternId": "herringbone-pattern-07-80-250x500-20-250x250",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=6",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 6,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 750,
+    "depthMm": 500,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 106 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected).",
+    "repeatBasisMm": [
+     [
+      -250,
+      -250
+     ],
+     [
+      -750,
+      500
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "250-250-60-mm-250-250-60",
+      "xMm": -500.0,
+      "yMm": 250.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-500-60-mm-250-500-60",
+      "xMm": -250.0,
+      "yMm": 0.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "250-500-60-mm-250-500-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ],
+    "angleDeg": 45.0
+   },
+   "digitization": {
+    "atlasLabel": "TB01_EVEREST 07",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 45.0,
+    "scalePtPerMm": 0.03177,
+    "stonesObserved": 106,
+    "moduleSnapWorst": 0.004,
+    "periodModules": [
+     [
+      -1,
+      -1
+     ],
+     [
+      -3,
+      2
+     ]
+    ],
+    "stockMix": {
+     "250-250-60-mm-250-250-60": 1,
+     "250-500-60-mm-250-500-60": 2
+    },
+    "drawnStockCount": {
+     "250x500": 2,
+     "250x250": 1
+    },
+    "drawnAreaPct": {
+     "250x500": 80.0,
+     "250x250": 20.0
+    },
+    "drawnPiecePct": {
+     "250x500": 66.67,
+     "250x250": 33.33
+    },
+    "printedCaption": "Herringbone pattern 07 - 80% 250x500 | 20% - 250x250",
+    "captionDifferencePts": 0.0,
+    "captionMatchesPieces": false,
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/everest-07.png",
+    "sourceFacesMatched": 106,
+    "completeSourceFaces": 106,
+    "periodsPerBasis": [
+     95,
+     73
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 3,
+     "stonesPerRepeatRecipe": 3,
+     "notes": "45-degree herringbone of 1:2 stones plus a square at the foot of each rising arm: 1 square + 1 '/' + 1 '\\' per repeat. At each apex the '\\' stone's end forms the peak. The recipe has the same squares, the same chevron spacing (~138 px across, ~55 px down) and junction lines of the same orientation. No mirror or drift seen; the fine detail is small at this resolution.",
+     "item": "item-05",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 1.0,
+    "physicalStocks": 3,
+    "stockAreaMm2": 312500,
+    "repeatAreaMm2": 312500.0
+   }
+  },
+  {
+   "productId": "techo-everest-slab",
+   "finishId": "hd",
+   "patternId": "l81-modular-pattern-10-80-500x500-20-250x250",
+   "patternName": "Modular pattern 10 - 80% 500x500 | 20% - 250x250",
+   "originalPatternId": "l81-modular-pattern-10-80-500x500-20-250x250",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=7",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 7,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 500,
+    "depthMm": 500,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 85 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected).",
+    "repeatBasisMm": [
+     [
+      -500,
+      250
+     ],
+     [
+      -250,
+      -500
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -500.0,
+      "yMm": -250.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-250-60-mm-250-250-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_EVEREST 10",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 0.0,
+    "scalePtPerMm": 0.03173,
+    "stonesObserved": 85,
+    "moduleSnapWorst": 0.013,
+    "periodModules": [
+     [
+      -2,
+      1
+     ],
+     [
+      -1,
+      -2
+     ]
+    ],
+    "stockMix": {
+     "500-500-60-mm-500-500-60": 1,
+     "250-250-60-mm-250-250-60": 1
+    },
+    "drawnStockCount": {
+     "500x500": 1,
+     "250x250": 1
+    },
+    "drawnAreaPct": {
+     "500x500": 80.0,
+     "250x250": 20.0
+    },
+    "drawnPiecePct": {
+     "500x500": 50.0,
+     "250x250": 50.0
+    },
+    "printedCaption": "Modular pattern 10 - 80% 500x500 | 20% - 250x250",
+    "captionDifferencePts": 0.0,
+    "captionMatchesPieces": false,
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/everest-10.png",
+    "sourceFacesMatched": 85,
+    "completeSourceFaces": 85,
+    "periodsPerBasis": [
+     68,
+     68
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 2,
+     "stonesPerRepeatRecipe": 2,
+     "notes": "Hopscotch/pinwheel: 1 large square + 1 small square per repeat, with the small square at the lower right of the large one. Same hand and positions everywhere.",
+     "item": "item-29",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "overlapAreaMm2": -0.0,
+    "coverage": 1.0,
+    "physicalStocks": 2,
+    "stockAreaMm2": 312500,
+    "repeatAreaMm2": 312500.0
+   }
+  },
+  {
+   "productId": "techo-everest-slab",
+   "finishId": "hd",
+   "patternId": "modular-pattern-11-63-500x500-25-250x500-12-250x250",
+   "patternName": "Modular pattern 11 - 63% 500x500 | 25% 250x500 | 12% 250x250",
+   "originalPatternId": "modular-pattern-11-63-500x500-25-250x500-12-250x250",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=7",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 7,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 1750,
+    "depthMm": 2000,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 84 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected).",
+    "repeatBasisMm": [
+     [
+      -1750,
+      -250
+     ],
+     [
+      -250,
+      2000
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "250-250-60-mm-250-250-60",
+      "xMm": -1750.0,
+      "yMm": 250.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -1750.0,
+      "yMm": 1000.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-250-60-mm-250-250-60",
+      "xMm": -1750.0,
+      "yMm": 1500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-500-60-mm-250-500-60",
+      "xMm": -1500.0,
+      "yMm": 250.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "250-250-60-mm-250-250-60",
+      "xMm": -1500.0,
+      "yMm": 750.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -1500.0,
+      "yMm": 1500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-500-60-mm-250-500-60",
+      "xMm": -1250.0,
+      "yMm": 0.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -1250.0,
+      "yMm": 500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-500-60-mm-250-500-60",
+      "xMm": -1250.0,
+      "yMm": 1000.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -1000.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-500-60-mm-250-500-60",
+      "xMm": -1000.0,
+      "yMm": 1000.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -1000.0,
+      "yMm": 1250.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-250-60-mm-250-250-60",
+      "xMm": -1000.0,
+      "yMm": 1750.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-250-60-mm-250-250-60",
+      "xMm": -750.0,
+      "yMm": 500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-500-60-mm-250-500-60",
+      "xMm": -750.0,
+      "yMm": 750.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-500-60-mm-250-500-60",
+      "xMm": -750.0,
+      "yMm": 1750.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -500.0,
+      "yMm": 250.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-500-60-mm-250-500-60",
+      "xMm": -500.0,
+      "yMm": 1000.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -500.0,
+      "yMm": 1500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-250-60-mm-250-250-60",
+      "xMm": -250.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -250.0,
+      "yMm": 750.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-250-60-mm-250-250-60",
+      "xMm": -250.0,
+      "yMm": 1250.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_EVEREST 11",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 0.0,
+    "scalePtPerMm": 0.032106,
+    "stonesObserved": 84,
+    "moduleSnapWorst": 0.013,
+    "periodModules": [
+     [
+      -7,
+      -1
+     ],
+     [
+      -1,
+      8
+     ]
+    ],
+    "stockMix": {
+     "250-250-60-mm-250-250-60": 7,
+     "500-500-60-mm-500-500-60": 9,
+     "250-500-60-mm-250-500-60": 7
+    },
+    "drawnStockCount": {
+     "500x500": 9,
+     "250x500": 7,
+     "250x250": 7
+    },
+    "drawnAreaPct": {
+     "500x500": 63.16,
+     "250x500": 24.56,
+     "250x250": 12.28
+    },
+    "drawnPiecePct": {
+     "500x500": 39.13,
+     "250x500": 30.43,
+     "250x250": 30.43
+    },
+    "printedCaption": "Modular pattern 11 - 63% 500x500 | 25% 250x500 | 12% 250x250",
+    "captionDifferencePts": 0.44,
+    "captionMatchesPieces": false,
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/everest-11.png",
+    "sourceFacesMatched": 84,
+    "completeSourceFaces": 84,
+    "periodsPerBasis": [
+     40,
+     35
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 23,
+     "stonesPerRepeatRecipe": 23,
+     "notes": "Large squares, small squares and 1:2 rectangles (both orientations). The highlighted module has 23 stones (9 large, 7 small, 5 upright, 2 lying). The recipe matches it stone for stone and matches at the top, bottom and right edges.",
+     "item": "item-10",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 1.0,
+    "physicalStocks": 23,
+    "stockAreaMm2": 3562500,
+    "repeatAreaMm2": 3562500.0
+   }
+  },
+  {
+   "productId": "techo-everest-slab",
+   "finishId": "hd",
+   "patternId": "modular-pattern-12-45-500x500-45-250x500-10-250x250",
+   "patternName": "Modular pattern 12 - 45% 500x500 | 45% 250x500 | 10% 250x250",
+   "originalPatternId": "modular-pattern-12-45-500x500-45-250x500-10-250x250",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=7",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 7,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 750,
+    "depthMm": 750,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 79 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected). Drawn mix by area: 44.4% 250x500, 44.4% 500x500, 11.1% 250x250; the printed whole-number caption differs by up to 1.1 points.",
+    "repeatBasisMm": [
+     [
+      -750,
+      0
+     ],
+     [
+      0,
+      -750
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "250-500-60-mm-250-500-60",
+      "xMm": -250.0,
+      "yMm": -500.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "250-250-60-mm-250-250-60",
+      "xMm": -250.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": 0.0,
+      "yMm": -500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "250-500-60-mm-250-500-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ],
+    "angleDeg": 45.0
+   },
+   "digitization": {
+    "atlasLabel": "TB01_EVEREST 12",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 45.0,
+    "scalePtPerMm": 0.032167,
+    "stonesObserved": 79,
+    "moduleSnapWorst": 0.012,
+    "periodModules": [
+     [
+      -3,
+      0
+     ],
+     [
+      0,
+      -3
+     ]
+    ],
+    "stockMix": {
+     "250-500-60-mm-250-500-60": 2,
+     "250-250-60-mm-250-250-60": 1,
+     "500-500-60-mm-500-500-60": 1
+    },
+    "drawnStockCount": {
+     "250x500": 2,
+     "500x500": 1,
+     "250x250": 1
+    },
+    "drawnAreaPct": {
+     "250x500": 44.44,
+     "500x500": 44.44,
+     "250x250": 11.11
+    },
+    "drawnPiecePct": {
+     "250x500": 50.0,
+     "500x500": 25.0,
+     "250x250": 25.0
+    },
+    "printedCaption": "Modular pattern 12 - 45% 500x500 | 45% 250x500 | 10% 250x250",
+    "captionDifferencePts": 1.11,
+    "captionMatchesPieces": false,
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/everest-12.png",
+    "sourceFacesMatched": 79,
+    "completeSourceFaces": 79,
+    "periodsPerBasis": [
+     56,
+     55
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 9,
+     "stonesPerRepeatRecipe": 9,
+     "notes": "45-degree square-and-strip plaid. The highlighted module is 1 large square, 4 narrow strips and 4 small corner squares. The recipe shows the same line families, strip widths and large-square spacing; my confidence in the exact strip grouping is moderate at this resolution.",
+     "item": "item-19",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 1.0,
+    "physicalStocks": 4,
+    "stockAreaMm2": 562500,
+    "repeatAreaMm2": 562500.0
+   }
+  },
+  {
+   "productId": "techo-para-slab",
+   "finishId": "hd",
+   "patternId": "linear-laying-pattern-10-75-500x750-25-500x250",
+   "patternName": "Linear laying pattern 10 75% 500x750 | 25% 500x250",
+   "originalPatternId": "linear-laying-pattern-10-75-500x750-25-500x250",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=9",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 9,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 1000,
+    "depthMm": 500,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 49 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected).",
+    "repeatBasisMm": [
+     [
+      0,
+      -500
+     ],
+     [
+      -1000,
+      0
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -250.0,
+      "yMm": 0.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-750-60-mm-500-750-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_PARA 750 10",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 0.0,
+    "scalePtPerMm": 0.031918,
+    "stonesObserved": 49,
+    "moduleSnapWorst": 0.023,
+    "periodModules": [
+     [
+      0,
+      -4
+     ],
+     [
+      -8,
+      0
+     ]
+    ],
+    "stockMix": {
+     "500-250-60-mm-250-500-60": 1,
+     "500-750-60-mm-500-750-60": 1
+    },
+    "drawnStockCount": {
+     "500x750": 1,
+     "500x250": 1
+    },
+    "drawnAreaPct": {
+     "500x750": 75.0,
+     "500x250": 25.0
+    },
+    "drawnPiecePct": {
+     "500x750": 50.0,
+     "500x250": 50.0
+    },
+    "printedCaption": "Linear laying pattern 10 75% 500x750 | 25% 500x250",
+    "captionDifferencePts": 0.0,
+    "captionMatchesPieces": false,
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/para-750-10.png",
+    "sourceFacesMatched": 49,
+    "completeSourceFaces": 49,
+    "periodsPerBasis": [
+     42,
+     35
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 2,
+     "stonesPerRepeatRecipe": 2,
+     "notes": "Stack bond: 1 rectangle + 1 narrow stone per repeat. All grid lines coincide.",
+     "item": "item-27",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 1.0,
+    "physicalStocks": 2,
+    "stockAreaMm2": 500000,
+    "repeatAreaMm2": 500000.0
+   }
+  },
+  {
+   "productId": "techo-para-slab",
+   "finishId": "hd",
+   "patternId": "linear-laying-pattern-11-50-500x750-50-500x500",
+   "patternName": "Linear Laying Pattern 11 — as drawn 2:2 (60% 500x750 / 40% 500x500 by area) · source mix differs",
+   "originalPatternId": "linear-laying-pattern-11-50-500x750-50-500x500",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=9",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 9,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 1250,
+    "depthMm": 1000,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 35 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected). The printed caption \"Linear Laying Pattern 11 50% 500x750 | 50% 500x500\" differs from the drawn stones by up to 10.0 points by area and matches the drawn piece count, not the area; the drawn stones are used and the caption is not.",
+    "repeatBasisMm": [
+     [
+      0,
+      -1000
+     ],
+     [
+      -1250,
+      0
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "500-750-60-mm-500-750-60",
+      "xMm": -1000.0,
+      "yMm": -500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -500.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -250.0,
+      "yMm": -500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-750-60-mm-500-750-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_PARA 750 11",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 0.0,
+    "scalePtPerMm": 0.031824,
+    "stonesObserved": 35,
+    "moduleSnapWorst": 0.024,
+    "periodModules": [
+     [
+      0,
+      -8
+     ],
+     [
+      -10,
+      0
+     ]
+    ],
+    "stockMix": {
+     "500-750-60-mm-500-750-60": 2,
+     "500-500-60-mm-500-500-60": 2
+    },
+    "drawnStockCount": {
+     "500x750": 2,
+     "500x500": 2
+    },
+    "drawnAreaPct": {
+     "500x750": 60.0,
+     "500x500": 40.0
+    },
+    "drawnPiecePct": {
+     "500x750": 50.0,
+     "500x500": 50.0
+    },
+    "printedCaption": "Linear Laying Pattern 11 50% 500x750 | 50% 500x500",
+    "captionDifferencePts": 10.0,
+    "captionMatchesPieces": true,
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/para-750-11.png",
+    "sourceFacesMatched": 35,
+    "completeSourceFaces": 35,
+    "periodsPerBasis": [
+     25,
+     21
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 4,
+     "stonesPerRepeatRecipe": 4,
+     "notes": "Rows of alternating rectangle + square, alternate rows offset 40 px; repeat 2 rectangles + 2 squares over two rows. All joints match in every row.",
+     "item": "item-21",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    },
+    "captionConflict": true
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 1.0,
+    "physicalStocks": 4,
+    "stockAreaMm2": 1250000,
+    "repeatAreaMm2": 1250000.0
+   }
+  },
+  {
+   "productId": "techo-para-slab",
+   "finishId": "hd",
+   "patternId": "linear-laying-pattern-12-40-500x500-32-500x250-28-500x750",
+   "patternName": "Linear Laying Pattern 12 — as drawn 4:6:2 (40% 500x500 / 30% 500x250 / 30% 500x750 by area) · source mix differs",
+   "originalPatternId": "linear-laying-pattern-12-40-500x500-32-500x250-28-500x750",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=9",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 9,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 2500,
+    "depthMm": 1000,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 56 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected). The printed caption \"Linear Laying Pattern 12 40% 500x500 | 32% 500x250 | 28% 500x750\" differs from the drawn stones by up to 2.0 points by area and matches neither the drawn area nor the piece count; the drawn stones are used and the caption is not.",
+    "repeatBasisMm": [
+     [
+      0,
+      -1000
+     ],
+     [
+      -2500,
+      0
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -2375.0,
+      "yMm": -500.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-750-60-mm-500-750-60",
+      "xMm": -2125.0,
+      "yMm": -500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -2000.0,
+      "yMm": 0.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -1750.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -1375.0,
+      "yMm": -500.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -1250.0,
+      "yMm": 0.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -1125.0,
+      "yMm": -500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-750-60-mm-500-750-60",
+      "xMm": -1000.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -625.0,
+      "yMm": -500.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -375.0,
+      "yMm": -500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -250.0,
+      "yMm": 0.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_PARA 750 12",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 0.0,
+    "scalePtPerMm": 0.031824,
+    "stonesObserved": 56,
+    "moduleSnapWorst": 0.104,
+    "periodModules": [
+     [
+      0,
+      -8
+     ],
+     [
+      -20,
+      0
+     ]
+    ],
+    "stockMix": {
+     "500-250-60-mm-250-500-60": 6,
+     "500-750-60-mm-500-750-60": 2,
+     "500-500-60-mm-500-500-60": 4
+    },
+    "drawnStockCount": {
+     "500x500": 4,
+     "500x250": 6,
+     "500x750": 2
+    },
+    "drawnAreaPct": {
+     "500x500": 40.0,
+     "500x250": 30.0,
+     "500x750": 30.0
+    },
+    "drawnPiecePct": {
+     "500x500": 33.33,
+     "500x250": 50.0,
+     "500x750": 16.67
+    },
+    "printedCaption": "Linear Laying Pattern 12 40% 500x500 | 32% 500x250 | 28% 500x750",
+    "captionDifferencePts": 2.0,
+    "captionMatchesPieces": false,
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/para-750-12.png",
+    "sourceFacesMatched": 56,
+    "completeSourceFaces": 56,
+    "periodsPerBasis": [
+     40,
+     14
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 12,
+     "stonesPerRepeatRecipe": 12,
+     "notes": "Rows of large + square + square + 3 narrow stones; two-row repeat of 12. Joints match; even rows sit a constant ~3 px off in the recipe, not growing towards the edges.",
+     "item": "item-22",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    },
+    "captionConflict": true
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 1.0,
+    "physicalStocks": 12,
+    "stockAreaMm2": 2500000,
+    "repeatAreaMm2": 2500000.0
+   }
+  },
+  {
+   "productId": "techo-para-slab",
+   "finishId": "hd",
+   "patternId": "modular-laying-pattern-13-25-500x250-50-500x500-25-500x750",
+   "patternName": "Modular Laying Pattern 13 25% 500X250 | 50% 500X500 | 25% 500x750",
+   "originalPatternId": "modular-laying-pattern-13-25-500x250-50-500x500-25-500x750",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=9",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 9,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 1750,
+    "depthMm": 1500,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 57 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected).",
+    "repeatBasisMm": [
+     [
+      -500,
+      1500
+     ],
+     [
+      -1750,
+      -750
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -1750.0,
+      "yMm": 750.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -1500.0,
+      "yMm": -250.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -1500.0,
+      "yMm": 250.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -1500.0,
+      "yMm": 750.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-750-60-mm-500-750-60",
+      "xMm": -1250.0,
+      "yMm": -250.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -1000.0,
+      "yMm": 250.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -1000.0,
+      "yMm": 500.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -1000.0,
+      "yMm": 1000.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -750.0,
+      "yMm": 500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -750.0,
+      "yMm": 1000.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -500.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -250.0,
+      "yMm": 500.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-750-60-mm-500-750-60",
+      "xMm": -250.0,
+      "yMm": 750.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_PARA 750 13",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 0.0,
+    "scalePtPerMm": 0.031824,
+    "stonesObserved": 57,
+    "moduleSnapWorst": 0.091,
+    "periodModules": [
+     [
+      -4,
+      12
+     ],
+     [
+      -14,
+      -6
+     ]
+    ],
+    "stockMix": {
+     "500-250-60-mm-250-500-60": 6,
+     "500-500-60-mm-500-500-60": 6,
+     "500-750-60-mm-500-750-60": 2
+    },
+    "drawnStockCount": {
+     "500x500": 6,
+     "500x250": 6,
+     "500x750": 2
+    },
+    "drawnAreaPct": {
+     "500x500": 50.0,
+     "500x250": 25.0,
+     "500x750": 25.0
+    },
+    "drawnPiecePct": {
+     "500x500": 42.86,
+     "500x250": 42.86,
+     "500x750": 14.29
+    },
+    "printedCaption": "Modular Laying Pattern 13 25% 500X250 | 50% 500X500 | 25% 500x750",
+    "captionDifferencePts": 0.0,
+    "captionMatchesPieces": false,
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/para-750-13.png",
+    "sourceFacesMatched": 57,
+    "completeSourceFaces": 57,
+    "periodsPerBasis": [
+     28,
+     22
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 14,
+     "stonesPerRepeatRecipe": 14,
+     "notes": "Multi-size random-look ashlar. The highlighted module has 14 stones; every stone edge in and around it, and along all four sides and corners, coincides. The source's empty strip at the right drawing edge is filled in the recipe, a drawing artefact.",
+     "item": "item-07",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "overlapAreaMm2": -0.0,
+    "coverage": 1.0,
+    "physicalStocks": 14,
+    "stockAreaMm2": 3000000,
+    "repeatAreaMm2": 3000000.0
+   }
+  },
+  {
+   "productId": "techo-para-slab",
+   "finishId": "hd",
+   "patternId": "herringbone-laying-pattern-14-18-500x250-32-500x500-50-500x750",
+   "patternName": "Herringbone Laying Pattern 14 18% 500X250 |32% 500X500 | 50% 500X750",
+   "originalPatternId": "herringbone-laying-pattern-14-18-500x250-32-500x500-50-500x750",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=9",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 9,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 750,
+    "depthMm": 750,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 50 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected). Drawn mix by area: 50.0% 500x750, 33.3% 500x500, 16.7% 500x250; the printed whole-number caption differs by up to 1.3 points.",
+    "repeatBasisMm": [
+     [
+      -500,
+      -500
+     ],
+     [
+      -750,
+      750
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "500-250-60-mm-250-500-60",
+      "xMm": -500.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-500-60-mm-500-500-60",
+      "xMm": -500.0,
+      "yMm": 250.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "500-750-60-mm-500-750-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_PARA 750 14",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 0.0,
+    "scalePtPerMm": 0.031761,
+    "stonesObserved": 46,
+    "moduleSnapWorst": 0.047,
+    "periodModules": [
+     [
+      -4,
+      -4
+     ],
+     [
+      -6,
+      6
+     ]
+    ],
+    "stockMix": {
+     "500-250-60-mm-250-500-60": 1,
+     "500-500-60-mm-500-500-60": 1,
+     "500-750-60-mm-500-750-60": 1
+    },
+    "drawnStockCount": {
+     "500x750": 1,
+     "500x500": 1,
+     "500x250": 1
+    },
+    "drawnAreaPct": {
+     "500x750": 50.0,
+     "500x500": 33.33,
+     "500x250": 16.67
+    },
+    "drawnPiecePct": {
+     "500x750": 33.33,
+     "500x500": 33.33,
+     "500x250": 33.33
+    },
+    "printedCaption": "Herringbone Laying Pattern 14 18% 500X250 |32% 500X500 | 50% 500X750",
+    "captionDifferencePts": 1.33,
+    "captionMatchesPieces": false,
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/para-750-14.png",
+    "sourceFacesMatched": 50,
+    "completeSourceFaces": 50,
+    "periodsPerBasis": [
+     38,
+     31
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 3,
+     "stonesPerRepeatRecipe": 3,
+     "notes": "1 large rectangle + 1 square + 1 half-square per repeat. Every stone checked row by row matches, top to bottom and left to right.",
+     "item": "item-16",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 1.0,
+    "physicalStocks": 3,
+    "stockAreaMm2": 750000,
+    "repeatAreaMm2": 750000.0
+   }
+  },
+  {
+   "productId": "techo-eva-paver",
+   "finishId": "smooth",
+   "patternId": "modular-pattern-01-100-various",
+   "patternName": "Modular pattern 01 - 100% Various",
+   "originalPatternId": "modular-pattern-01-100-various",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 1680,
+    "depthMm": 1680,
+    "jointMm": 0,
+    "jointStatus": "nominal-clearance-module-set-out",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. Stock is set out on a 112 mm module that holds every published size; stones shorter than their module slots leave up to 1 mm of nominal clearance, not an installed joint. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 171 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected).",
+    "repeatBasisMm": [
+     [
+      -336,
+      336
+     ],
+     [
+      -1680,
+      -1680
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1680.0,
+      "yMm": -1456.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -1680.0,
+      "yMm": -1344.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1680.0,
+      "yMm": -1120.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1456.0,
+      "yMm": -1456.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-335-60-mm-223-335-60",
+      "xMm": -1456.0,
+      "yMm": -1232.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1344.0,
+      "yMm": -1344.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1344.0,
+      "yMm": -896.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -1232.0,
+      "yMm": -1232.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -1232.0,
+      "yMm": -1008.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1232.0,
+      "yMm": -784.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-335-60-mm-223-335-60",
+      "xMm": -1120.0,
+      "yMm": -672.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1008.0,
+      "yMm": -1008.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -1008.0,
+      "yMm": -896.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -896.0,
+      "yMm": -672.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -896.0,
+      "yMm": -560.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -784.0,
+      "yMm": -336.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -672.0,
+      "yMm": -672.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-335-60-mm-223-335-60",
+      "xMm": -672.0,
+      "yMm": -448.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -672.0,
+      "yMm": -224.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -672.0,
+      "yMm": -112.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -448.0,
+      "yMm": -224.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-335-60-mm-223-335-60",
+      "xMm": -448.0,
+      "yMm": 0.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -336.0,
+      "yMm": -224.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -224.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -224.0,
+      "yMm": 112.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-335-60-mm-223-335-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_EVA 01",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 0.0,
+    "scalePtPerMm": 0.042179,
+    "stonesObserved": 171,
+    "moduleSnapWorst": 0.025,
+    "periodModules": [
+     [
+      -3,
+      3
+     ],
+     [
+      -15,
+      -15
+     ]
+    ],
+    "stockMix": {
+     "223-112-60-mm-112-223-60": 12,
+     "223-223-60-mm-223-223-60": 9,
+     "223-335-60-mm-223-335-60": 5
+    },
+    "drawnStockCount": {
+     "223x223": 9,
+     "223x335": 5,
+     "223x112": 12
+    },
+    "drawnAreaPct": {
+     "223x223": 39.93,
+     "223x335": 33.33,
+     "223x112": 26.74
+    },
+    "drawnPiecePct": {
+     "223x223": 34.62,
+     "223x335": 19.23,
+     "223x112": 46.15
+    },
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/eva-01.png",
+    "sourceFacesMatched": 171,
+    "completeSourceFaces": 171,
+    "periodsPerBasis": [
+     131,
+     25
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 26,
+     "stonesPerRepeatRecipe": 26,
+     "notes": "Multi-size random-look pattern. The highlighted diagonal module has about 26 stones (3 upright + 2 lying large, 9 squares, 8 lying and 4 upright halves). The recipe matches stone for stone in the module and at the corners and edges.",
+     "item": "item-28",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 0.992818,
+    "physicalStocks": 26,
+    "stockAreaMm2": 1120798,
+    "repeatAreaMm2": 1128960.0
+   }
+  },
+  {
+   "productId": "techo-eva-paver",
+   "finishId": "slate",
+   "patternId": "modular-pattern-01-100-various",
+   "patternName": "Modular pattern 01 - 100% Various",
+   "originalPatternId": "modular-pattern-01-100-various",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 12,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 1680,
+    "depthMm": 1680,
+    "jointMm": 0,
+    "jointStatus": "nominal-clearance-module-set-out",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. Stock is set out on a 112 mm module that holds every published size; stones shorter than their module slots leave up to 1 mm of nominal clearance, not an installed joint. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 171 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected).",
+    "repeatBasisMm": [
+     [
+      -336,
+      336
+     ],
+     [
+      -1680,
+      -1680
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1680.0,
+      "yMm": -1456.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -1680.0,
+      "yMm": -1344.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1680.0,
+      "yMm": -1120.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1456.0,
+      "yMm": -1456.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-335-60-mm-223-335-60",
+      "xMm": -1456.0,
+      "yMm": -1232.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1344.0,
+      "yMm": -1344.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1344.0,
+      "yMm": -896.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -1232.0,
+      "yMm": -1232.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -1232.0,
+      "yMm": -1008.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1232.0,
+      "yMm": -784.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-335-60-mm-223-335-60",
+      "xMm": -1120.0,
+      "yMm": -672.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -1008.0,
+      "yMm": -1008.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -1008.0,
+      "yMm": -896.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -896.0,
+      "yMm": -672.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -896.0,
+      "yMm": -560.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -784.0,
+      "yMm": -336.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -672.0,
+      "yMm": -672.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-335-60-mm-223-335-60",
+      "xMm": -672.0,
+      "yMm": -448.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -672.0,
+      "yMm": -224.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -672.0,
+      "yMm": -112.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -448.0,
+      "yMm": -224.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-335-60-mm-223-335-60",
+      "xMm": -448.0,
+      "yMm": 0.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -336.0,
+      "yMm": -224.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-112-60-mm-112-223-60",
+      "xMm": -224.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-223-60-mm-223-223-60",
+      "xMm": -224.0,
+      "yMm": 112.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "223-335-60-mm-223-335-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_EVA 01",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 0.0,
+    "scalePtPerMm": 0.042179,
+    "stonesObserved": 171,
+    "moduleSnapWorst": 0.025,
+    "periodModules": [
+     [
+      -3,
+      3
+     ],
+     [
+      -15,
+      -15
+     ]
+    ],
+    "stockMix": {
+     "223-112-60-mm-112-223-60": 12,
+     "223-223-60-mm-223-223-60": 9,
+     "223-335-60-mm-223-335-60": 5
+    },
+    "drawnStockCount": {
+     "223x223": 9,
+     "223x335": 5,
+     "223x112": 12
+    },
+    "drawnAreaPct": {
+     "223x223": 39.93,
+     "223x335": 33.33,
+     "223x112": 26.74
+    },
+    "drawnPiecePct": {
+     "223x223": 34.62,
+     "223x335": 19.23,
+     "223x112": 46.15
+    },
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/eva-01.png",
+    "sourceFacesMatched": 171,
+    "completeSourceFaces": 171,
+    "periodsPerBasis": [
+     131,
+     25
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 26,
+     "stonesPerRepeatRecipe": 26,
+     "notes": "Multi-size random-look pattern. The highlighted diagonal module has about 26 stones (3 upright + 2 lying large, 9 squares, 8 lying and 4 upright halves). The recipe matches stone for stone in the module and at the corners and edges.",
+     "item": "item-28",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 0.992818,
+    "physicalStocks": 26,
+    "stockAreaMm2": 1120798,
+    "repeatAreaMm2": 1128960.0
+   }
+  },
+  {
+   "productId": "techo-victorien-paver",
+   "finishId": "dry-cast",
+   "patternId": "herringbone-pattern-07-100-victorien",
+   "patternName": "Herringbone pattern 07 - 100% Victorien",
+   "originalPatternId": "herringbone-pattern-07-100-victorien",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=20",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 20,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 324,
+    "depthMm": 324,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure, digitized from its drawn joints: every complete stone is identified by its published full size and direction, and the shortest translations that carry every drawn stone onto a drawn stone give the repeat. No stone is resized. The atlas gives no numeric installed joint; mould edges, spacers and pack ratios are not certified. Independently verified against all 136 complete stones of the figure (vector and raster extraction agreeing, perturbation controls rejected).",
+    "repeatBasisMm": [
+     [
+      -216,
+      -216
+     ],
+     [
+      -324,
+      324
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "108-216-60-mm-108-216-60",
+      "xMm": -324.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "108-216-60-mm-108-216-60",
+      "xMm": -324.0,
+      "yMm": 108.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "108-216-60-mm-108-216-60",
+      "xMm": -216.0,
+      "yMm": 108.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "108-216-60-mm-108-216-60",
+      "xMm": -108.0,
+      "yMm": -108.0,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "108-216-60-mm-108-216-60",
+      "xMm": -108.0,
+      "yMm": 108.0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "108-216-60-mm-108-216-60",
+      "xMm": 0.0,
+      "yMm": 0.0,
+      "rotationDeg": 0
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_VICTORIEN 07",
+    "method": "faces of the drawn joint graph, snapped to the stock module; repeat from full drawn-stone translation support",
+    "tiltDeg": 0.0,
+    "scalePtPerMm": 0.063173,
+    "stonesObserved": 136,
+    "moduleSnapWorst": 0.015,
+    "periodModules": [
+     [
+      -2,
+      -2
+     ],
+     [
+      -3,
+      3
+     ]
+    ],
+    "stockMix": {
+     "108-216-60-mm-108-216-60": 6
+    },
+    "drawnStockCount": {
+     "108x216": 6
+    },
+    "drawnAreaPct": {
+     "108x216": 100.0
+    },
+    "drawnPiecePct": {
+     "108x216": 100.0
+    },
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c2-techo-atlas-motifs/victorien-07.png",
+    "sourceFacesMatched": 136,
+    "completeSourceFaces": 136,
+    "periodsPerBasis": [
+     105,
+     91
+    ],
+    "perturbationControlsRejected": true,
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 6,
+     "stonesPerRepeatRecipe": 6,
+     "notes": "1:2 stones: an upright pair, a lying pair, then a single upright + single lying, with the pairs stepping diagonally one stone width. Repeat 3 upright + 3 lying (lattice (2,2)/(5,-1) stone widths). The recipe matches joint for joint out to the edges (same drawing as item-04).",
+     "item": "item-11",
+     "batch": "batch-c2-techo-atlas-motifs",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "overlapAreaMm2": 0.0,
+    "coverage": 1.0,
+    "physicalStocks": 6,
+    "stockAreaMm2": 139968,
+    "repeatAreaMm2": 139968.0
+   }
+  },
+  {
+   "productId": "techo-westmount-paver",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-04-100-westmount",
+   "patternName": "Herringbone pattern 04 - 100% Westmount",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=21",
+   "sourcePdfSha256": "993bdc4f27a991be65833ad1ab623eb569edeb2688b55e98cf55ffd4a35ea328",
+   "sourcePdfPage": 21,
+   "verifiedOn": "2026-09-27",
+   "layout": {
+    "version": 1,
+    "widthMm": 240,
+    "depthMm": 360,
+    "jointMm": 0,
+    "jointStatus": "unspecified-zero-nominal-model",
+    "jointNotes": "Actual Techo-Bloc AutoCAD hatch-atlas figure (page 21): double herringbone (two-stone groups), rebuilt from full published 60 x 240 x 80 mm Westmount stock. The atlas draws the stone at about 4.2:1 rather than the published 4:1, so the figure is a nominal diagram; no stone is resized. The atlas gives no numeric installed joint; spacer nibs, chamfers and pack quantities are not certified. Topology independently verified at the drawing's own stone proportion (about 4.2:1, laid only for verification): all 76 complete drawn stones matched and every other chirality was rejected. Installed with the published 60 x 240 mm (4:1) stock, so the finished bond is proportionally shorter than the illustration.",
+    "repeatBasisMm": [
+     [
+      -240,
+      -240
+     ],
+     [
+      -120,
+      120
+     ]
+    ],
+    "cells": [
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 0,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 0,
+      "yMm": 60,
+      "rotationDeg": 0
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 180,
+      "yMm": 120,
+      "rotationDeg": 90
+     },
+     {
+      "unitId": "60-240-80-mm-60-240-80",
+      "xMm": 120,
+      "yMm": 120,
+      "rotationDeg": 90
+     }
+    ]
+   },
+   "digitization": {
+    "atlasLabel": "TB01_WESTMOUNT 04",
+    "variant": "mirror",
+    "method": "stones per repeat, their arrangement and chirality read from the drawn faces and shaded module; lattice from full published stock",
+    "correctsEarlierImport": "three-stone groups",
+    "drawnStoneProportion": "about 4.2:1 (published 4:1)",
+    "independentVerifier": "work/source-face-verifier/verify.py",
+    "verifiedAtDrawnStoneMm": {
+     "60-240-80-mm-60-240-80": [
+      60,
+      252.9
+     ]
+    },
+    "verifierReport": "outputs/deckcraft-source-face-verification/batch-c3-techo-westmount/westmount-04-mirror.png",
+    "sourceFacesMatched": 76,
+    "completeSourceFaces": 76,
+    "periodsPerBasis": [
+     59,
+     45
+    ],
+    "rejectedVariants": [
+     "direct"
+    ],
+    "blindReview": {
+     "verdict": "PASS",
+     "stonesPerRepeatSource": 4,
+     "stonesPerRepeatRecipe": 4,
+     "notes": "Double herringbone of 1:4 stones: 2 upright + 2 lying per repeat, stepping '/', with the upright pair above the lying pair, left ends flush. Recipe identical in pairs, direction and positions out to the corners.",
+     "item": "item-08",
+     "batch": "batch-c3-techo-westmount",
+     "countsAsConfirmation": false,
+     "decoyGate": "failed: known-bad decoy(s) ['para-09'] were passed"
+    }
+   },
+   "checks": {
+    "physicalStocks": 4,
+    "repeatAreaMm2": 57600,
+    "stockAreaMm2": 57600
+   }
+  }
+ ],
+ "withheldRecipes": [
+  {
+   "productId": "techo-para-slab",
+   "finishId": "hd",
+   "patternId": "l77-herringbone-laying-pattern-09-100-500x750",
+   "reason": "Withheld: the earlier Para 750 herringbone 09 recipe does not match the Techo-Bloc AutoCAD hatch-atlas drawing (page 9). Independent source-face verification matched 14 of 28 complete drawn stones, with 14 missing and 13 extra. The drawing does not close into a repeat the generator can prove, so no replacement is offered; use the linked Techo-Bloc guide."
+  },
+  {
+   "productId": "techo-westmount-paver",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-05-100-westmount",
+   "reason": "Withheld: the earlier Westmount herringbone 05 recipe (stones in pairs) does not match the Techo-Bloc AutoCAD hatch-atlas figure (page 21), which draws a single herringbone; no corrected recipe passed independent verification, so use the linked Techo-Bloc guide."
+  },
+  {
+   "productId": "techo-westmount-paver",
+   "finishId": "hd",
+   "patternId": "herringbone-pattern-06-100-westmount",
+   "reason": "Withheld: the earlier Westmount herringbone 06 recipe (a single herringbone) does not match the Techo-Bloc AutoCAD hatch-atlas figure (page 21), which draws one upright stone between two lying stones; no corrected recipe passed independent verification, so use the linked Techo-Bloc guide."
+  }
+ ],
+ "evidenceGaps": [
+  {
+   "productId": "techo-eva-paver",
+   "patternId": "linear-pattern-02-100-various",
+   "sourceUrl": "https://www.techo-bloc.com/assets/a2/b0/a2b028a8-8390-491a-a35f-f8111cc607bb/AutoCAD%20Hatch%20Patterns%20PDF.pdf#page=12",
+   "reason": "The Techo-Bloc AutoCAD hatch-atlas figure TB01_EVA 02 (page 12) was digitized, but its drawn stones do not form a translation repeat that can be proven within the figure. No recipe is offered and the published Eva stock is not re-arranged into an invented bond; use the linked Techo-Bloc guide."
+  }
+ ]
+}

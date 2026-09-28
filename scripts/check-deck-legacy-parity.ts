@@ -1,5 +1,7 @@
 import {createHash} from 'node:crypto';
-import {existsSync,readFileSync,writeFileSync} from 'node:fs';
+import {copyFileSync,existsSync,readFileSync,writeFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {getHardwareLayout} from '../src/features/deckcraft/hardwareLayout';
@@ -34,7 +36,9 @@ function fingerprint(patch:Partial<DeckData>){
       issues:digest(issues),
       flags:digest(flags),
       hardware:digest(getHardwareLayout(d,model)),
-      extras:digest(extrasLayout(d,model)),
+      // Only the new UI pick identity is excluded; every coordinate, dimension,
+      // fixture, price and pre-existing metadata stays protected by the golden.
+      extras:digest((()=>{const extras=extrasLayout(d,model),physical=(box:typeof extras.wood[number])=>{const {screenId:_pickIdentity,...rest}=box;return rest;};return {...extras,wood:extras.wood.map(physical),metal:extras.metal.map(physical)};})()),
       catalogue:digest(catalogueAccessoryLayout(d,model)),
       exports:digest(deckExportMeshes(d,model).map(m=>[m.name,m.vertices,m.faces])),
       estimate:digest(priced),
@@ -44,6 +48,73 @@ function fingerprint(patch:Partial<DeckData>){
 }
 
 const current=Object.fromEntries(Object.entries(scenarios).map(([name,patch])=>[name,fingerprint(patch)]));
+// A reviewed warning correction may never conceal a quantity, drawing or price change.
+if(process.argv.includes('--accept-reviewed-wording')){
+  if(update||report||process.argv.includes('--accept-pricing')||process.argv.includes('--accept-reviewed-drawings'))throw new Error('Wording review must be separate');
+  const previous=JSON.parse(readFileSync(GOLDEN,'utf8')) as Record<string,Record<string,unknown>>;
+  if(Object.keys(previous).sort().join('|')!==Object.keys(current).sort().join('|'))throw new Error('Wording scenario sets differ');
+  for(const [name,value] of Object.entries(current)){
+    const next=value as Record<string,unknown>,old=previous[name];
+    if('throws' in next||typeof next.flags!=='string')throw new Error(`Invalid wording scenario: ${name}`);
+    for(const field of new Set([...Object.keys(old),...Object.keys(next)]))if(field!=='flags'&&stable(old[field])!==stable(next[field]))throw new Error(`Wording acceptance would change ${name}/${field}`);
+  }
+  const i=process.argv.indexOf('--wording-backup'),path=i>=0?process.argv[i+1]:undefined;
+  if(!path||path.startsWith('--')||existsSync(resolve(path)))throw new Error('A new separate --wording-backup is required');
+  copyFileSync(GOLDEN,resolve(path));
+  const accepted=Object.fromEntries(Object.entries(current).map(([name,next])=>[name,{...previous[name],flags:next.flags}]));
+  writeFileSync(GOLDEN,JSON.stringify(accepted,null,1)+'\n');
+  console.log('Accepted reviewed wording only; every price, quantity and drawing fingerprint verified unchanged; previous golden backed up.');process.exit(0);
+}
+// Accept a reviewed drawing correction only with independent old-source reconstruction
+// evidence. This mode never changes quantities, hardware, catalogue, issues or prices.
+// --review-evidence points to the recorded old/current six drawing fingerprints;
+// --drawing-backup is a new file for the exact pre-accept golden. Verification writes nothing.
+if(process.argv.includes('--accept-reviewed-drawings')||process.argv.includes('--verify-reviewed-drawings')){
+  if(update||report||process.argv.includes('--accept-pricing'))throw new Error('Drawing review cannot be combined with another acceptance mode');
+  const arg=(name:string)=>{const i=process.argv.indexOf(name),value=i<0?undefined:process.argv[i+1];if(!value||value.startsWith('--'))throw new Error(`Required ${name} path`);return resolve(value);};
+  const evidence=JSON.parse(readFileSync(arg('--review-evidence'),'utf8')) as {version:number;sourceReference:string;reconstructedBefore:Record<string,Record<string,unknown>>;reviewedCurrent:Record<string,Record<string,unknown>>};
+  const initialReview=evidence.version===1&&evidence.sourceReference==='5f2aa9ef2037695455d22131fc887f07d4f7a67a';
+  const windowOnlyReview=evidence.version===2&&evidence.sourceReference==='accepted-window-source:75db6c6dcf7d0362224ff944b8ab3878363ce22607cf89d9232a18de42633fcc';
+  if(!initialReview&&!windowOnlyReview)throw new Error('Unrecognized drawing reconstruction evidence');
+  const previous=JSON.parse(readFileSync(GOLDEN,'utf8')) as Record<string,Record<string,unknown>>;
+  const fields=['model','issues','hardware','extras','catalogue','exports'] as const,protectedFields=['model','issues','hardware','catalogue'] as const;
+  const names=Object.keys(current).sort();
+  if(names.length!==213)throw new Error('The reviewed evidence covers exactly 213 legacy scenarios');
+  for(const table of [previous,evidence.reconstructedBefore,evidence.reviewedCurrent])if(Object.keys(table).sort().join('\n')!==names.join('\n'))throw new Error('Drawing review scenario sets differ');
+  for(const name of names){
+    const old=previous[name],next=current[name] as Record<string,unknown>,before=evidence.reconstructedBefore[name],reviewed=evidence.reviewedCurrent[name];
+    if('throws' in next)throw new Error(`Cannot accept drawings for ${name}`);
+    for(const field of fields){
+      if(typeof before[field]!=='string'||before[field]!==old[field])throw new Error(`Old-source reconstruction differs: ${name}/${field}`);
+      if(typeof reviewed[field]!=='string'||reviewed[field]!==next[field])throw new Error(`Review evidence is stale: ${name}/${field}`);
+    }
+    for(const field of protectedFields)if(old[field]!==next[field])throw new Error(`Protected drawing field changed: ${name}/${field}`);
+    if(windowOnlyReview){
+      if(old.extras!==next.extras)throw new Error(`Window-only review changed fixtures: ${name}`);
+      for(const field of ['estimate','total'])if(before[field]!==old[field]||reviewed[field]!==next[field]||old[field]!==next[field])throw new Error(`Window-only review changed pricing: ${name}/${field}`);
+    }
+  }
+  if(process.argv.includes('--verify-reviewed-drawings')){console.log('DRAWING REVIEW VERIFIED — all 213 old-source snapshots reconstructed; current evidence matches and model/issues/hardware/catalogue are unchanged. Nothing written.');process.exit(0);}
+  const backup=arg('--drawing-backup');
+  if(backup===resolve(fileURLToPath(GOLDEN))||existsSync(backup))throw new Error('Drawing backup must be a new, separate file');
+  copyFileSync(GOLDEN,backup);
+  const accepted=Object.fromEntries(names.map(name=>{const next=current[name] as Record<string,unknown>;return [name,{...previous[name],extras:next.extras,exports:next.exports}];}));
+  writeFileSync(GOLDEN,JSON.stringify(accepted,null,1)+'\n');
+  console.log('Accepted reviewed extras and exports only for 213 scenarios; pre-accept golden backed up and all approved pricing fields preserved.');process.exit(0);
+}
+// Owner-authorized price-book revisions may accept price/wording fingerprints only.
+// Every geometry, hardware and export baseline stays intact, including the known
+// step-light drawing difference; this never approves or hides a visual change.
+if(process.argv.includes('--accept-pricing')){
+  const previous=JSON.parse(readFileSync(GOLDEN,'utf8')) as Record<string,Record<string,unknown>>;
+  const accepted=Object.fromEntries(Object.entries(current).map(([name,next])=>{
+    const old=previous[name];if(!old||'throws' in next)throw new Error(`Cannot accept pricing for ${name}`);
+    return [name,{...old,flags:next.flags,estimate:next.estimate,total:next.total}];
+  }));
+  writeFileSync(GOLDEN,JSON.stringify(accepted,null,1)+'\n');
+  console.log('Accepted pricing and review wording only; drawing baselines preserved.');
+  process.exit(0);
+}
 if(!report&&(update||!existsSync(GOLDEN))){
   writeFileSync(GOLDEN,JSON.stringify(current,null,1)+'\n');
   console.log(`Legacy parity golden written: ${Object.keys(current).length} scenarios.`);

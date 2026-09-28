@@ -42,3 +42,7 @@ __pycache__/
 # Playwright (DeckCraft e2e) output
 test-results/
 playwright-report/
+
+# Local consolidation diagnostics and generated review/test artifacts
+/work/
+/work-inspect-hardscape.ts

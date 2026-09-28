@@ -1,3 +1,4 @@
+import {pergolaLayout} from './pergolaLayout';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {DeckData} from './types';
 import {sceneBounds} from './components/viewer3d/sceneBounds';
@@ -9,6 +10,7 @@ import {isChamferEdgeId} from './lib/cornerChamfers';
 import {getHouseBlocks,hasHouseBlocks,houseOutline} from './houseFootprint';
 import {polygonCut} from './lib/polygonCuts';
 import {boardFinishPlan} from './boardFinishes';
+import {hasBoardLayout} from './boardLayoutPricing';
 
 /** Plan tones for accent-colour groups; the legend names the real product colours. */
 const ACCENT_TONES=['#6f4e37','#3f5c5a','#8c5a3c','#4f4a6b','#5d6b3a','#7a3f3f'];
@@ -45,7 +47,8 @@ export interface PlanFrame{
 export function planFrame(model:DeckTakeoff,{data,yard,variant='contractor',legendRows=0,wholeHouse=false}:{data?:DeckData;yard?:YardModel;variant?:PlanVariant;legendRows?:number;
   /** Site plan only (its House tool, R5): draw the house's whole deck-facing wall, so both wall ends show. */
   wholeHouse?:boolean}={}):PlanFrame{
-  const b=sceneBounds(model);
+  const b=sceneBounds(model),pergola=data?pergolaLayout(data,model,[],false):null;
+  for(const p of pergola?.footprint??[]){b.minX=Math.min(b.minX,p.x);b.maxX=Math.max(b.maxX,p.x);b.minZ=Math.min(b.minZ,p.y);b.maxZ=Math.max(b.maxZ,p.y);}
   for(const p of yard?.features.filter(f=>!f.excluded).flatMap(f=>f.footprints.flat())??[]){b.minX=Math.min(b.minX,p.x);b.maxX=Math.max(b.maxX,p.x);b.minZ=Math.min(b.minZ,p.y);b.maxZ=Math.max(b.maxZ,p.y);}
   const site=variant==='site',house=data&&data.houseVisible!==false?getHousePlacement(data):null,wrap=data?activeWrap(data):null;
   const reach=site?Math.max(SITE_REACH,...(wholeHouse&&house?[b.minX-house.x0,house.x1-b.maxX]:[])):48;
@@ -63,12 +66,12 @@ export function planFrame(model:DeckTakeoff,{data,yard,variant='contractor',lege
 }
 
 /** Contractor plan from the shared model. With `data` it also shows the house, ledgers and edge lengths. */
-export default function ConstructionPlan({model,yard,data,variant='contractor',wholeHouse}:{model:DeckTakeoff;yard?:YardModel;data?:DeckData;variant?:PlanVariant;wholeHouse?:boolean}){
- const site=variant==='site';
+export default function ConstructionPlan({model,yard,data,variant='contractor',wholeHouse,viewportFrame}:{model:DeckTakeoff;yard?:YardModel;data?:DeckData;variant?:PlanVariant;wholeHouse?:boolean;viewportFrame?:PlanFrame}){
+ const site=variant==='site',pergola=data?pergolaLayout(data,model,[],false):null;
  const main=model.levels[0],outline=main.footprint.outline;
  const contact=data?getHouseContact(data,main.footprint):null;
  // Accent-colour boards (boardFinishes.ts): each colour group gets a plan tone, named in the legend.
- const finish=data?.boardColours?.length||data?.inlays?.length?boardFinishPlan(data,model):null,tones=new Map(finish?.groups.map((g,k)=>[g.ref,ACCENT_TONES[k%ACCENT_TONES.length]]));
+ const finish=data?.boardColours?.length||data?.inlays?.length||data&&hasBoardLayout(data)?boardFinishPlan(data!,model):null,tones=new Map(finish?.groups.map((g,k)=>[g.ref,ACCENT_TONES[k%ACCENT_TONES.length]]));
  const accentFill=(level:number,index:number)=>{const ref=finish?.colours[level]?.[index];return ref?tones.get(ref):undefined;};
  const legendRows=finish?.groups.length?1:0;
  const frame=planFrame(model,{data,yard,variant,legendRows,...(site&&wholeHouse?{wholeHouse}:{})}),{b,house,band,top,left,right,reach}=frame;
@@ -95,7 +98,7 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
   for(const [x,cut] of [[left,house.x0<left-.5],[right,house.x1>right+.5]] as const)if(cut){const m=-band/2;breaks.push(`M${x} ${-band-6}V${m-6}l-7 3l14 6l-7 3V0`);}
  }
  const dims=frame.dims,ox=main.offset.x,oz=main.offset.z;
- return <svg viewBox={frame.viewBox} role="img" aria-label={site?'Site plan: the deck against the house':'Deck construction plan from the shared model'} className={site?'dd-site-plan':undefined} style={{width:'100%',height:'100%',background:site?'#fbfbf8':'#faf8f1'}}>
+ return <svg viewBox={site&&viewportFrame?viewportFrame.viewBox:frame.viewBox} role="img" aria-label={site?'Site plan: the deck against the house':'Deck construction plan from the shared model'} className={site?'dd-site-plan':undefined} style={{width:'100%',height:'100%',background:site?'#fbfbf8':'#faf8f1'}}>
    <title>{site?`Site plan · ${data?.width} × ${data?.length} ft deck`:`Deck plan · ${model.quantities.joists} joists · ${model.quantities.footings} footings`}</title>
    <defs><marker id="dd-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L6 3L0 6z" fill="#5f5a50"/></marker><pattern id="dd-house-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#b9b1a2" strokeWidth="1"/></pattern><pattern id="dd-grid" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0V12H0" fill="none" stroke="#dde3da" strokeWidth=".6"/></pattern><pattern id="dd-grid-5" width="60" height="60" patternUnits="userSpaceOnUse"><rect width="60" height="60" fill="url(#dd-grid)"/><path d="M60 0V60H0" fill="none" stroke="#c6cfc3" strokeWidth="1"/></pattern></defs>
    {/* The contractor plan's grid shows on screen only (the page's CSS shows it; the PDF's picture has no CSS): a 1 ft
@@ -116,12 +119,12 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
      {breaks.map((path,i)=><g key={i} className="dd-break"><path d={path} fill="none" stroke="#fbfbf8" strokeWidth="4"/><path d={path} fill="none" stroke="#14261c" strokeWidth="1"/></g>)}
      <text x={(hx0+hx1)/2} y={-band/2+3} textAnchor="middle" fontSize="9" fontWeight="600" fill="#14261c" paintOrder="stroke" stroke="#fbfbf8" strokeWidth="3">{`HOUSE · ${feet(house.widthIn)} wide`}</text>
    </g>}
-   {yard?.boxes.filter(p=>['paver','wall-block','wall-cap','water'].includes(p.role)).map(p=><polygon key={p.id} points={p.polygon?.map(v=>`${v.x},${v.y}`).join(' ')} fill={p.color} stroke="#66695d" strokeWidth=".2"/>)}
+   {yard?.boxes.filter(p=>!p.renderDuplicate&&['paver','wall-block','wall-cap','water'].includes(p.role)).map(p=>p.renderContours?<path key={p.id} d={p.renderContours.map(poly=>'M'+poly.map(v=>`${v.x},${v.y}`).join(' L')+' Z').join(' ')} fill={p.color} fillRule="nonzero" stroke="#66695d" strokeWidth=".2"/>:<polygon key={p.id} points={p.polygon?.map(v=>`${v.x},${v.y}`).join(' ')} fill={p.color} stroke="#66695d" strokeWidth=".2"/>)}
    {yard?.features.filter(f=>!f.excluded).map(f=><text key={f.config.id} x={f.config.xFt*12} y={f.config.zFt*12} textAnchor="middle" fontSize="7" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2" fill="#333">{f.config.name}</text>)}
    {model.levels.map((l,i)=><g key={i}>
      <polygon points={l.footprint.outline.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={l.kind==='winder'?'none':'#e5d7bb'} stroke="#7c6b51" strokeWidth="1"/>
-     {l.boards.map((board,j)=>{const cut=board as typeof board&{width?:number;polygon?:{x:number;y:number}[];role?:string},width=cut.width??5.5;
-       return cut.polygon?<polygon key={j} points={cut.polygon.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={cut.role==='inlay'?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>:<rect key={j} x={board.cx+l.offset.x-board.length/2} y={board.cy+l.offset.z-width/2} width={board.length} height={width} transform={`rotate(${board.angleDeg} ${board.cx+l.offset.x} ${board.cy+l.offset.z})`} fill={cut.role==='inlay'?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>;
+     {l.boards.map((board,j)=>{const cut=board as typeof board&{width?:number;polygon?:{x:number;y:number}[];role?:string;layoutColour?:string},width=cut.width??5.5;
+       return cut.polygon?<polygon key={j} points={cut.polygon.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={cut.role==='inlay'&&!cut.layoutColour?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>:<rect key={j} x={board.cx+l.offset.x-board.length/2} y={board.cy+l.offset.z-width/2} width={board.length} height={width} transform={`rotate(${board.angleDeg} ${board.cx+l.offset.x} ${board.cy+l.offset.z})`} fill={cut.role==='inlay'&&!cut.layoutColour?'#71644e':accentFill(i,j)??'none'} stroke="#ac9572" strokeWidth=".3"/>;
      })}
      {!site&&l.joists.map((j,k)=><line key={k} x1={j.a.x} y1={j.a.z} x2={j.b.x} y2={j.b.z} stroke="#787b72" strokeDasharray="3 2" strokeWidth=".6"/>)}
      {/* Decorative inlays: their outline, name and (on the contractor plan) the framing under them (inlayFraming.ts). */}
@@ -170,5 +173,6 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
    {!site&&<text x={b.minX} y={b.maxZ+56} fontSize="7" fill="#514b41">{`Dashed: joists · Solid: beams${contact?.contacts.length?' · Bronze: ledger on the house':''}${contact?.flushLf?' · Bronze dashed: bolted flush wall':''}${hips.length?' · Heavy dashed: doubled hip':''}${model.levels.some(l=>l.inlays?.some(p=>p.status==='ok'))?' · Amber: inlay blocking':''}`}</text>}
    {finish&&finish.groups.length>0&&<text x={b.minX} y={site?b.maxZ+62:b.maxZ+80} fontSize="7" fill="#514b41" aria-label="Accent boards">Accent boards:{finish.groups.map(g=><tspan key={g.ref}> <tspan fill={tones.get(g.ref)}>■</tspan> {g.color.name} ({g.material.name}, {g.boards.length})</tspan>)}</text>}
    <text x={b.minX} y={site?b.maxZ+74:b.maxZ+68} fontSize="6" fill={site?'#3e4d43':'#716a5e'}>Design illustration · final connections and sizing require site review</text>
+ {pergola&&<g aria-label="Aluminum pergola footprint"><polygon points={pergola.footprint.map(p=>`${p.x},${p.y}`).join(' ')} fill="#46665b" fillOpacity={.16} stroke="#36554b" strokeWidth={2} strokeDasharray="6 3"/><text x={data!.pergola!.xFt*12} y={data!.pergola!.zFt*12} fontSize={9} textAnchor="middle" fill="#36554b">ALUMINUM PERGOLA · {pergola.conceptual?'CONCEPT':'LISTED ENVELOPE'}</text></g>}
  </svg>;
 }

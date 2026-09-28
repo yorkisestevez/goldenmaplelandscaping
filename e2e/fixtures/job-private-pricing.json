@@ -1,0 +1,191 @@
+{
+  "library": {
+    "format": "golden-maple-deck-jobs",
+    "version": 1,
+    "jobs": [
+      {
+        "id": "job-muj0nsca-3ykav8r",
+        "name": "Private rates",
+        "revisions": [
+          {
+            "id": "revision-muj0nsc0-7jvo0tu",
+            "name": "Rate A",
+            "savedAt": "2026-09-26T23:24:07.344Z",
+            "data": {
+              "houseVisible": true,
+              "houseWallHeightIn": 120,
+              "houseDoorOffset": 50,
+              "houseDoorWidthIn": 72,
+              "sceneLighting": "Daylight",
+              "level2Position": "Front",
+              "level2Offset": 50,
+              "stairTurn": "Right",
+              "landingDepthIn": 48,
+              "deckType": "Attached",
+              "municipality": "Barrie",
+              "siteType": "Standard",
+              "soilCondition": "Unknown",
+              "buildSeason": "Spring-Summer",
+              "intendedLoad": "Standard",
+              "foundation": "Concrete Piers",
+              "width": 16,
+              "length": 12,
+              "height": 36,
+              "cutoutWidth": 8,
+              "cutoutLength": 6,
+              "width2": 12,
+              "length2": 10,
+              "height2": 12,
+              "cutoutWidth2": 6,
+              "cutoutLength2": 5,
+              "shape": "Rectangle",
+              "levels": 1,
+              "pattern": "Straight",
+              "deckingMaterial": "tt_prime_plus",
+              "deckingColor": "Coconut Husk",
+              "framingSize": "2x10",
+              "boardWidth": 5.5,
+              "joistSpacing": 16,
+              "fasteningSystem": "Face",
+              "pictureFrameRows": 0,
+              "hasInlay": false,
+              "inlayLf": 0,
+              "railingType": "Aluminum",
+              "railingLf": 0,
+              "stairFlights": 1,
+              "stairWidth": 48,
+              "stairType": "Straight",
+              "stairPosition": "Front",
+              "stairOffset": 50,
+              "lightingSystem": {
+                "wireDistance": 20,
+                "selectedItems": []
+              },
+              "benchLf": 0,
+              "privacySqft": 0,
+              "hasDrainage": false,
+              "hasDemo": false,
+              "pergolaSqft": 0,
+              "customerName": "",
+              "projectAddress": "",
+              "scopeOfWork": "Professional installation of a custom outdoor deck system including framing, decking, and finishing as per selected specifications. All work to be completed to local building codes and industry best practices.",
+              "projectKind": "deck",
+              "materialMarkup": 12,
+              "customLaborCost": 12000,
+              "customOverrides": {
+                "Decking boards": {
+                  "cost": 420
+                }
+              },
+              "addOnTransitionLabor": 310,
+              "addOnHardwareCost": 120,
+              "addOnFlashingLf": 9
+            }
+          },
+          {
+            "id": "revision-muj0nscb-w5z8t75",
+            "name": "Rate B",
+            "savedAt": "2026-09-26T23:24:07.355Z",
+            "data": {
+              "houseVisible": true,
+              "houseWallHeightIn": 120,
+              "houseDoorOffset": 50,
+              "houseDoorWidthIn": 72,
+              "sceneLighting": "Daylight",
+              "level2Position": "Front",
+              "level2Offset": 50,
+              "stairTurn": "Right",
+              "landingDepthIn": 48,
+              "deckType": "Attached",
+              "municipality": "Barrie",
+              "siteType": "Standard",
+              "soilCondition": "Unknown",
+              "buildSeason": "Spring-Summer",
+              "intendedLoad": "Standard",
+              "foundation": "Concrete Piers",
+              "width": 22,
+              "length": 12,
+              "height": 36,
+              "cutoutWidth": 8,
+              "cutoutLength": 6,
+              "width2": 12,
+              "length2": 10,
+              "height2": 12,
+              "cutoutWidth2": 6,
+              "cutoutLength2": 5,
+              "shape": "Rectangle",
+              "levels": 1,
+              "pattern": "Straight",
+              "deckingMaterial": "tt_prime_plus",
+              "deckingColor": "Coconut Husk",
+              "framingSize": "2x10",
+              "boardWidth": 5.5,
+              "joistSpacing": 16,
+              "fasteningSystem": "Face",
+              "pictureFrameRows": 0,
+              "hasInlay": false,
+              "inlayLf": 0,
+              "railingType": "Aluminum",
+              "railingLf": 0,
+              "stairFlights": 1,
+              "stairWidth": 48,
+              "stairType": "Straight",
+              "stairPosition": "Front",
+              "stairOffset": 50,
+              "lightingSystem": {
+                "wireDistance": 20,
+                "selectedItems": []
+              },
+              "benchLf": 0,
+              "privacySqft": 0,
+              "hasDrainage": false,
+              "hasDemo": false,
+              "pergolaSqft": 0,
+              "customerName": "",
+              "projectAddress": "",
+              "scopeOfWork": "Professional installation of a custom outdoor deck system including framing, decking, and finishing as per selected specifications. All work to be completed to local building codes and industry best practices.",
+              "projectKind": "deck",
+              "materialMarkup": 47,
+              "customLaborCost": 26000,
+              "customOverrides": {
+                "Decking boards": {
+                  "cost": 900
+                }
+              },
+              "addOnTransitionLabor": 650,
+              "addOnHardwareCost": 260,
+              "addOnFlashingLf": 18
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "ratesA": {
+    "materialMarkup": 12,
+    "customLaborCost": 12000,
+    "customOverrides": {
+      "Decking boards": {
+        "cost": 420
+      }
+    },
+    "addOnTransitionLabor": 310,
+    "addOnHardwareCost": 120,
+    "addOnFlashingLf": 9
+  },
+  "ratesB": {
+    "materialMarkup": 47,
+    "customLaborCost": 26000,
+    "customOverrides": {
+      "Decking boards": {
+        "cost": 900
+      }
+    },
+    "addOnTransitionLabor": 650,
+    "addOnHardwareCost": 260,
+    "addOnFlashingLf": 18
+  },
+  "firstExpected": 25737.911201780764,
+  "expectedCurrent": 30301.614177780764,
+  "expectedSaved": 51273.915483337245
+}

@@ -1,77 +1,77 @@
 {
- "note": "Captured on 2026-09-23 from the code before the exterior finishes (F4) work: the original claddings, roofs and exported house parts. Never regenerate without owner approval.",
+ "note": "Captured on 2026-09-23 from the code before the exterior finishes (F4) work: the original claddings, roofs and exported house parts. Never regenerate without owner approval. Generated-window positions reviewed and corrected 2026-09-26 under the user's request to correct graphics; all old house cases independently reconstructed. Only house snapshots updated; skins and roof unchanged. Second reviewed window-only correction 2026-09-26 raises synthetic sills to deck height +60 in with wall-fit height; sixteen house fingerprints updated after reconstruction; skins/roof preserved.",
  "house": {
   "default": {
-   "parts": 52,
-   "digest": "9f468fe7a73f712f8c808dad"
+   "parts": 51,
+   "digest": "7e44789c989d6c0f5a39fb14"
   },
   "hidden": {
    "parts": 0,
    "digest": "4f53cda18c2baa0c0354bb5f"
   },
   "cladding/Siding": {
-   "parts": 52,
-   "digest": "1f0da4e52a5016e1f3cc7b36"
+   "parts": 51,
+   "digest": "ccee9f5c394ce3e3d377fbf0"
   },
   "cladding/Brick": {
-   "parts": 52,
-   "digest": "1f0da4e52a5016e1f3cc7b36"
+   "parts": 51,
+   "digest": "ccee9f5c394ce3e3d377fbf0"
   },
   "cladding/Stone": {
-   "parts": 52,
-   "digest": "1f0da4e52a5016e1f3cc7b36"
+   "parts": 51,
+   "digest": "ccee9f5c394ce3e3d377fbf0"
   },
   "cladding/Stucco": {
-   "parts": 52,
-   "digest": "1f0da4e52a5016e1f3cc7b36"
+   "parts": 51,
+   "digest": "ccee9f5c394ce3e3d377fbf0"
   },
   "cladding/Board & batten": {
-   "parts": 52,
-   "digest": "1f0da4e52a5016e1f3cc7b36"
+   "parts": 51,
+   "digest": "ccee9f5c394ce3e3d377fbf0"
   },
   "cladding/Vertical siding": {
-   "parts": 52,
-   "digest": "1f0da4e52a5016e1f3cc7b36"
+   "parts": 51,
+   "digest": "ccee9f5c394ce3e3d377fbf0"
   },
   "roof/hip-metal-2": {
-   "parts": 51,
-   "digest": "544ced84ebccf179fac067d1"
+   "parts": 50,
+   "digest": "9e33661f8c57b119f7bdde10"
   },
   "roof/flat-3": {
-   "parts": 51,
-   "digest": "b456da9a0020e72a2fcdabd5"
+   "parts": 50,
+   "digest": "80fa903f20cee5935f808122"
   },
   "roof/gable-x-9": {
-   "parts": 52,
-   "digest": "5101fd012d9b8b4888719491"
+   "parts": 51,
+   "digest": "ce999afdfb3fcccf994be8b7"
   },
   "roof/gable-4": {
-   "parts": 52,
-   "digest": "0fb983a08b99b404d06bd223"
+   "parts": 51,
+   "digest": "a9a6a776100aa5c43d294e74"
   },
   "openings/every-style": {
    "parts": 137,
    "digest": "c06739d2c617ce249f6db034"
   },
   "blocks/bump-wing-garage": {
-   "parts": 122,
-   "digest": "0a3defacc4ff04b3cdec2655"
+   "parts": 130,
+   "digest": "025318d8af0f02992fbc77d8"
   },
   "placement/left": {
-   "parts": 52,
-   "digest": "a7e6d77f03032715d78cd46f"
+   "parts": 51,
+   "digest": "1e154118ace0d5ef76168f33"
   },
   "house/wide-tall": {
-   "parts": 51,
-   "digest": "c3be798c024376aabc40734e"
+   "parts": 50,
+   "digest": "5e3caa0206e6157a28818a56"
   },
   "deck/l-shape": {
-   "parts": 52,
-   "digest": "3ae8e0b3f1db9f8611e541ef"
+   "parts": 51,
+   "digest": "145614d44eb3e20f451b2ce0"
   },
   "deck/wrap": {
-   "parts": 52,
-   "digest": "13e980bdd57e0c74fee9f7f8"
+   "parts": 51,
+   "digest": "4d55a0b04914a7c44989728f"
   }
  },
  "skins": {
