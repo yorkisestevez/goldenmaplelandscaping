@@ -4,11 +4,12 @@
 # netlify-deploy.yml (push to main) is unchanged, so a slow or flaky browser run can never block or
 # trigger a production deploy.
 #
-# The suite runs one test at a time (WebGL on SwiftShader is CPU-bound) and takes about 35 minutes on
+# The suite runs one test at a time (WebGL on SwiftShader is CPU-bound) and takes about 37 minutes on
 # one runner, so it is split into six shards on separate runners. `--fully-parallel` lets Playwright
-# split inside a spec file (deckcraft.spec.ts alone is about 12 minutes on CI); within a shard the tests
-# still run one at a time, in file order. Each shard takes about 10-14 minutes including the build. The
-# final `e2e` job reports the combined result as one check.
+# split inside a spec file (deckcraft.spec.ts alone is about 15 minutes on CI); within a shard the tests
+# still run one at a time, in file order. Shards split by test count, so the one that draws the proposal,
+# PDF and pergola 3D tests is the long pole: about 15.5 minutes of tests, 18 minutes in all, where the
+# others take 5-9. The final `e2e` job reports the combined result as one check.
 name: DeckCraft E2E
 
 on:
@@ -56,7 +57,7 @@ jobs:
         run: npm run build
       # A step timeout fails (rather than cancels) an overrunning shard, so its report is still uploaded.
       - name: Run DeckCraft smoke tests
-        timeout-minutes: 20
+        timeout-minutes: 22
         run: npx playwright test --shard=${{ matrix.shard }}/6 --fully-parallel
       - name: Keep the report when a test fails
         if: failure()

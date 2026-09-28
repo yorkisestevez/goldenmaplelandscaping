@@ -11,8 +11,9 @@ const launchOptions={args:['--enable-unsafe-swiftshader','--use-angle=swiftshade
 
 export default defineConfig({
   testDir:'e2e',
-  // CI runners draw SwiftShader WebGL 2-3x slower than a workstation; the heaviest 3D tests take about 60s here.
-  timeout:process.env.CI?240_000:90_000,
+  // CI runners draw SwiftShader WebGL about 3x slower than a workstation: the heaviest 3D tests take about 60s
+  // here and up to 3 minutes there.
+  timeout:process.env.CI?300_000:90_000,
   expect:{timeout:15_000},
   fullyParallel:false,
   workers:1,
