@@ -49,7 +49,7 @@ function checkWrap(d:DeckData,tag:string){
   ok(getHardwareLayout(d,m).ledgerBolts.length===contact.contacts.reduce((n,c)=>n+Math.ceil(c.lengthIn/12-1e-9),0),`${tag}: one ledger bolt per foot of each ledger`);
   // Framing: every joist end bears, every span fits the joist table.
   ok(unsupportedJoistEnds(l,contact).length===0,`${tag}: every joist end bears on a ledger, hip or beam`);
-  const jSpan=l.reference.jSpan*12+1,beams=l.beams.filter(b=>b.role!=='hip');
+  const jSpan=l.reference.joistSpanLimitIn+1,beams=l.beams.filter(b=>b.role!=='hip');
   for(const j of l.joists){
     const k=Math.abs(j.b.z-j.a.z)<1e-6?'x':'z',c=k==='z'?'x':'z',lo=Math.min(j.a[k],j.b[k]),hi=Math.max(j.a[k],j.b[k]);
     const stops=[...beams.filter(b=>Math.abs(b.a[k]-b.b[k])<1e-6&&j.a[c]>=Math.min(b.a[c],b.b[c])-.1&&j.a[c]<=Math.max(b.a[c],b.b[c])+.1&&b.a[k]>lo-1&&b.a[k]<hi+1).map(b=>b.a[k]),...[j.a,j.b].filter(p=>contact.onContact(plan(p),plan(p))||hips.some(h=>distanceToSegment(plan(p),h.a,h.b)<2)).map(p=>p[k])].sort((a,b)=>a-b);
@@ -65,7 +65,7 @@ function checkWrap(d:DeckData,tag:string){
     const along=(p:{x:number;z:number})=>((p.x-h.a.x)*(h.b.x-h.a.x)+(p.z-h.a.y)*(h.b.y-h.a.y))/total;
     const bearings=[0,...l.supports.filter(p=>distanceToSegment(plan(p),h.a,h.b)<1.5).map(along)].sort((a,b)=>a-b);
     ok(bearings.every((t,i)=>i===0||t-bearings[i-1]<=hipMax),`${tag}: every ${h.side} hip span is within the two-ply span table`);
-    ok(total-bearings.at(-1)!<=l.reference.cant*12*Math.SQRT2+1,`${tag}: the ${h.side} hip overhangs its last post by no more than the cantilever allowance`);
+    ok(total-bearings.at(-1)!<=l.reference.cantileverIn*Math.SQRT2+1,`${tag}: the ${h.side} hip overhangs its last post by no more than the cantilever allowance`);
     const junctions=beams.flatMap(b=>[b.a,b.b]).filter(p=>distanceToSegment(plan(p),h.a,h.b)<2);
     ok(junctions.every(p=>l.supports.some(s=>Math.hypot(s.x-p.x,s.z-p.z)<3)),`${tag}: a post under every beam that meets the ${h.side} hip`);
   }
@@ -204,7 +204,7 @@ function checkBump(d:DeckData,tag:string,bumpId='bump1'){
   const onFace=ends.filter(p=>face.some(c=>Math.abs(p.y-c.a.y)<.5&&p.x>Math.min(c.a.x,c.b.x)-.5&&p.x<Math.max(c.a.x,c.b.x)+.5));
   ok(onFace.length>0&&onFace.every(p=>hw.hangers.some(h=>Math.hypot(h.x-p.x,h.z-p.y)<.1)),`${tag}: joists hang off the bump-out face on hangers`);
   ok(!ends.some(p=>flush.some(c=>{const t=p.y-Math.min(c.a.y,c.b.y);return Math.abs(p.x-c.a.x)<1&&t>1&&t<c.lengthIn-1;})),`${tag}: no joist ends on a flush wall`);
-  const jSpan=l.reference.jSpan*12+1,beams=l.beams.filter(b=>b.role!=='hip'),hips=l.hips??[];
+  const jSpan=l.reference.joistSpanLimitIn+1,beams=l.beams.filter(b=>b.role!=='hip'),hips=l.hips??[];
   for(const j of l.joists){
     const k=Math.abs(j.b.z-j.a.z)<1e-6?'x':'z',c=k==='z'?'x':'z',lo=Math.min(j.a[k],j.b[k]),hi=Math.max(j.a[k],j.b[k]);
     const stops=[...beams.filter(b=>Math.abs(b.a[k]-b.b[k])<1e-6&&j.a[c]>=Math.min(b.a[c],b.b[c])-.1&&j.a[c]<=Math.max(b.a[c],b.b[c])+.1&&b.a[k]>lo-1&&b.a[k]<hi+1).map(b=>b.a[k]),...[j.a,j.b].filter(p=>contact.onContact(plan(p),plan(p))||hips.some(h=>distanceToSegment(plan(p),h.a,h.b)<2)).map(p=>p[k])].sort((a,b)=>a-b);

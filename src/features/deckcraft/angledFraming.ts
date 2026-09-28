@@ -20,7 +20,7 @@ export function angledCornerEdges(fp:FootprintPlan):AngledEdge[]{
   return (fp.edgeIds??[]).flatMap((id,i)=>isChamferEdgeId(id)?[{a:fp.outline[i],b:fp.outline[(i+1)%fp.outline.length]}]:[]);
 }
 
-const rowZsIn=({zone,reference:ref}:FramedZone)=>(ref.beamRows as {z:number}[]).map(r=>r.z*12+zone.origin.y);
+const rowZsIn=({zone,reference:ref}:FramedZone)=>ref.beamRows.map(r=>r.z+zone.origin.y);
 
 /** The bearing line an angled edge needs inside one zone, or null when the zone's front beam row already
  * carries those joist ends (the corner is cut back no further than the front overhang). */
@@ -45,10 +45,10 @@ export function bearingOutline(framed:FramedZone,bearings:AngledBearing[]):PlanP
  * where it meets each beam row, near each end, and close enough that no gap exceeds the beam span. */
 export function frameAngledBearing(framed:FramedZone,bearing:AngledBearing,offset:V3,out:{supports:V3[];beams:Member[]}){
   const {reference:ref}=framed,{a,b}=bearing,len=Math.hypot(b.x-a.x,b.y-a.y);if(len<1)return;
-  const u={x:(b.x-a.x)/len,y:(b.y-a.y)/len},n={x:-u.y,y:u.x},y=(ref.bBotY+ref.bh/2)*12;
-  for(let ply=0;ply<ref.bPly;ply++){
-    const s=(ply-(ref.bPly-1)/2)*1.5;
-    out.beams.push({a:{x:a.x+n.x*s+offset.x,y,z:a.y+n.y*s+offset.z},b:{x:b.x+n.x*s+offset.x,y,z:b.y+n.y*s+offset.z},width:1.5,depth:ref.bh*12,role:'angled-beam'});
+  const u={x:(b.x-a.x)/len,y:(b.y-a.y)/len},n={x:-u.y,y:u.x},y=ref.beamBottomIn+ref.beamDepthIn/2;
+  for(let ply=0;ply<ref.beam.plies;ply++){
+    const s=(ply-(ref.beam.plies-1)/2)*1.5;
+    out.beams.push({a:{x:a.x+n.x*s+offset.x,y,z:a.y+n.y*s+offset.z},b:{x:b.x+n.x*s+offset.x,y,z:b.y+n.y*s+offset.z},width:1.5,depth:ref.beamDepthIn,role:'angled-beam'});
   }
   // A post already standing within a foot of a station and within 6 in of the beam (a beam row's own post
   // near the crossing) carries that station: the station moves onto it and no second footing goes in.
@@ -59,12 +59,12 @@ export function frameAngledBearing(framed:FramedZone,bearing:AngledBearing,offse
   for(const z of rowZsIn(framed))if(Math.abs(b.y-a.y)>1e-6&&(z-a.y)*(z-b.y)<=1e-6){const t=(z-a.y)/(b.y-a.y)*len;if(t>=-.5&&t<=len+.5)stations.push(Math.min(len,Math.max(0,t)));}
   for(const end of [0,len])if(!stations.some(t=>Math.abs(t-end)<24))stations.push(end===0?Math.min(12,len/4):len-Math.min(12,len/4));
   const placed=stations.map(t=>{const p=carrier(t);return p?onBeam(p):t;}).sort((p,q)=>p-q);
-  const maxGap=ref.govSpan*12,filled:number[]=[];
+  const maxGap=ref.beamSpanLimitIn,filled:number[]=[];
   for(let i=0;i<placed.length;i++){
     if(i>0){const gap=placed[i]-placed[i-1],extra=Math.ceil(gap/maxGap)-1;for(let k=1;k<=extra;k++)filled.push(placed[i-1]+gap*k/(extra+1));}
     filled.push(placed[i]);
   }
-  const postY=Math.max(0,ref.bBotY*12);
+  const postY=Math.max(0,ref.beamBottomIn);
   for(const t of filled.filter((t,i,all)=>i===0||t-all[i-1]>=1)){
     const s=at(t);
     if(!carrier(t)&&!out.supports.some(p=>Math.hypot(p.x-s.x,p.z-s.z)<1))out.supports.push({x:s.x,y:postY,z:s.z});
