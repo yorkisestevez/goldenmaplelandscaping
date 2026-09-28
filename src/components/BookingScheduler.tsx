@@ -1,4 +1,5 @@
 import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowRight,
@@ -69,12 +70,17 @@ export default function BookingScheduler() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
 
+  // The deck designer's "Book a call" passes its design link through router state (never the URL).
+  const prefill = (useLocation().state ?? null) as { bookingNotes?: unknown; serviceInterest?: unknown } | null;
   const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
-    service_interest: SERVICE_OPTIONS[0],
-    notes: '',
+    service_interest:
+      typeof prefill?.serviceInterest === 'string' && SERVICE_OPTIONS.includes(prefill.serviceInterest)
+        ? prefill.serviceInterest
+        : SERVICE_OPTIONS[0],
+    notes: typeof prefill?.bookingNotes === 'string' ? prefill.bookingNotes.slice(0, 4000) : '',
   });
 
   const onChange = (

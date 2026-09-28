@@ -1,0 +1,49 @@
+import {chamferLabourFactor} from './lib/cornerChamfers';
+import {MATERIAL_TIERS} from './types';
+
+/**
+ * Rates the deck estimate uses today that the owner has not confirmed: the list to settle with the owner.
+ * Nothing public shows it (`npm run deck:rates` prints it). Values are read from the live tables, so the
+ * list cannot drift from what the estimate actually charges.
+ *
+ * Confirming a rate as it stands changes nothing. Changing one is a price change: run
+ * `tsx scripts/check-deck-legacy-parity.ts --report` to see its effect on every legacy design, then, with
+ * the owner's approval, update the golden (--update) and PRICE_BOOK (priceBook.ts).
+ */
+export type RateStatus='conflict'|'estimate'|'unconfirmed'|'owner-decision';
+/** Rates the owner has confirmed as they stand, kept out of the list (and why). */
+export const CONFIRMED_RATES=[{id:'crew-day-rate',on:'2026-09-23',note:'Crew day rate: $3,700/day in every area.'}] as const;
+export interface RateNote{id:string;rate:string;value:string;status:RateStatus;where:string;note:string}
+
+const tier=(id:string)=>MATERIAL_TIERS.find(m=>m.id===id);
+const perSqft=(id:string)=>`$${tier(id)?.costPerSqft?.toFixed(2)}/sq ft`;
+
+export function unconfirmedRates():RateNote[]{
+  const one=chamferLabourFactor({leftIn:48,rightIn:0,reduced:false,shrunk:false}),two=chamferLabourFactor({leftIn:48,rightIn:48,reduced:false,shrunk:false});
+  return [
+    {id:'cedar',rate:'Western Red Cedar decking',value:perSqft('cedar'),status:'estimate',where:'types.ts MATERIAL_TIERS (cedar)',
+      note:'A market-rate estimate: cedar is not stocked at Carr. Confirm with a supplier.'},
+    {id:'tt-reserve',rate:'TimberTech PRO Reserve decking',value:`${perSqft('tt_reserve')} (the same as Terrain+)`,status:'unconfirmed',where:'types.ts MATERIAL_TIERS (tt_reserve)',
+      note:'The price book lists Reserve on the Terrain+ price ladder. Confirm the Reserve price with Carr.'},
+    {id:'tt-terrain',rate:'TimberTech Terrain decking',value:perSqft('tt_terrain'),status:'unconfirmed',where:'manufacturerCatalog.ts (tt_terrain)',
+      note:'The legacy price-book entry was labelled Terrain+; the rate is kept pending supplier confirmation.'},
+    {id:'angled-corner-labour',rate:'Angled front corner labour',value:`×${one.toFixed(2)} one corner, ×${two.toFixed(2)} two`,status:'owner-decision',where:'lib/cornerChamfers.ts chamferLabourFactor',
+      note:'Reuses the L-Shape and Multi-corner labour factors. Awaiting the owner\'s sign-off.'},
+    {id:'porch-wrap-labour',rate:'Porch wrap labour premium',value:'Builder quote (labour priced at the two-corner wrap factor)',status:'owner-decision',where:'calculations.ts (porch wrap)',
+      note:'Listed for a builder quote until the owner sets a factor.'},
+    {id:'accent-board-labour',rate:'Accent-colour board labour',value:'Builder quote (the boards themselves are priced at their own collection rate)',status:'owner-decision',where:'calculations.ts (accent-colour boards)',
+      note:'Fitting boards in a second colour has no labour rate in the price book. Listed for a builder quote until the owner sets one.'},
+    {id:'inlay-labour',rate:'Decorative inlay labour',value:'Breaker-board rate (1.5 crew-hours per 10 ft) on each frame\'s fitted edge and each cut-in band\'s length, plus the inside at its pattern\'s labour factor over the deck\'s',status:'owner-decision',where:'lib/inlayGeometry.ts inlayCrewDays',
+      note:'Reuses existing rates, as the owner chose on 2026-09-23. A band of recoloured rows across a straight deck adds none. A dedicated inlay rate would replace it.'},
+    {id:'medallion-labour',rate:'Medallion inlay labour',value:'Builder quote (the boards and solid blocking are priced)',status:'owner-decision',where:'calculations.ts (medallion inlays)',
+      note:'Cutting and fitting a round or compass medallion has no labour rate in the price book. Listed for a builder quote until the owner sets one.'},
+    {id:'skirting',rate:'Deck skirting (face, backing, access panels and labour)',value:'Builder quote (every row listed with its quantity, none priced)',status:'owner-decision',where:'calculations.ts (deck skirting)',
+      note:'The price book has no skirting rates. Listed for a builder quote until the owner sets rates; setting them is a price-book change.'},
+    {id:'fascia-boards',rate:'Fascia boards in a chosen colour',value:'Supplier quote (the exposed rim length is listed; fitting stays in the priced labour)',status:'owner-decision',where:'calculations.ts (deck-part finishes)',
+      note:'The price book has no fascia board rate. Listed for a supplier quote until the owner sets one; setting it is a price-book change.'},
+    {id:'railing-colour',rate:'Manufacturer railing colours',value:'No change to the railing rate; the supplier confirms availability and any colour premium',status:'owner-decision',where:'deckPartFinishes.ts (railing colours)',
+      note:'Eight lines (five TimberTech, three Deckorators) are not confirmed as sold in Canada; the owner chose to offer them with a supplier-confirmation note.'},
+    {id:'frameless-glass',rate:'Frameless glass railing (glass, shoe or spigots, stair handrail)',value:'Supplier quote; installation labour on the Glass Panels basis (20 ft per crew-day and its ×1.40 on the job)',status:'owner-decision',where:'calculations.ts (frameless glass)',
+      note:'The price book and the Carr data have no frameless glass rate. The owner chose on 2026-09-25 to list it for a supplier quote and reuse the Glass Panels labour until a rate is set; setting one is a price-book change.'},
+  ];
+}

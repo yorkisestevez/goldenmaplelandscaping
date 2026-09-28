@@ -1,3 +1,5 @@
+import {activeCornerChamfers} from './cornerChamfers';
+import {customEdgeName} from './customOutline';
 import type {DeckData} from '../types';
 import {getHouseConfig} from '../houseSettings';
 import {blockKindLabel,normalizeHouseBlocks,openingWallId} from '../houseFootprint';
@@ -54,6 +56,7 @@ export function wrapBlockers(data:DeckData):string[]{
   const out:string[]=[];
   if(data.deckType!=='Attached'&&data.deckType!=='Add-on')out.push('A wrap-around is fastened to the house walls, so the deck must be attached (or an add-on).');
   if(data.shape!=='Rectangle')out.push('The main deck must be a rectangle; the wings replace the corner cut-outs.');
+  if(activeCornerChamfers(data))out.push('The front corners must be square for a wrap-around; remove the angled corners.');
   if(data.pattern==='Diagonal'||data.pattern==='Herringbone')out.push('Diagonal and herringbone boards would run along the corner hip; choose straight or picture-frame boards.');
   if(data.hasInlay)out.push('A centre inlay does not continue across the mitred corners; remove the inlay.');
   // Attached house blocks the wings or porches would run into. Measured against the main block's
@@ -115,6 +118,8 @@ export function wrapLabourFactor(wrap:ActiveWrap|null){return !wrap?1:wrapHips(w
 /** Porch wraps add labour the price book has no factor for yet: listed for a builder quote. */
 export const hasPorchWrap=(wrap:ActiveWrap|null)=>!!(wrap?.porchLeft||wrap?.porchRight);
 
+/** Plain name of a named deck edge (wrap, angled corner or custom outline), or the id itself. */
+export const edgeNameOf=(id:string)=>WRAP_EDGE_NAMES[id]??customEdgeName(id)??id;
 /** Plain names for exposed wrap edges (stair and screen pickers, the plan). */
 export const WRAP_EDGE_NAMES:Record<string,string>={
   'main-front':'Front edge','main-left':'Left end','main-right':'Right end','main-back-exposed':'Back edge past the house',
@@ -122,6 +127,7 @@ export const WRAP_EDGE_NAMES:Record<string,string>={
   'main-ledger':'Ledger on the deck-facing wall','wingL-ledger':'Ledger on the left side wall','wingR-ledger':'Ledger on the right side wall',
   'porchL-street':'Left porch, street edge','porchL-end':'Left porch end','porchR-street':'Right porch, street edge','porchR-end':'Right porch end',
   'porchL-ledger':'Ledger on the street-side wall (left porch)','porchR-ledger':'Ledger on the street-side wall (right porch)',
+  'main-chamfer-left':'Front-left angled corner','main-chamfer-right':'Front-right angled corner',
 };
 
 /** The deck outline around the house corners, with an id per edge (edge i runs from point i to i + 1). */

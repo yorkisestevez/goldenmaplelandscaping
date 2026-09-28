@@ -1,5 +1,6 @@
 import type {DeckData} from './types';
-import {getFootprint,type EdgeContact,type EdgeName,type FootprintPlan,type PlanPoint} from './lib/deckGeometry';
+import type {DeckTakeoff,Member} from './deckTakeoff';
+import {getFootprint,SIDE_DOT,type EdgeContact,type EdgeName,type FootprintPlan,type PlanPoint} from './lib/deckGeometry';
 import {getHousePlacement} from './housePlacement';
 import {activeWrap} from './lib/wrapGeometry';
 import {getHouseWalls,hasHouseBlocks} from './houseFootprint';
@@ -120,7 +121,7 @@ export function exposedHouseLine(data:DeckData,fp:FootprintPlan,contact:EdgeCont
 
 const SIDE_DIRECTIONS:Record<EdgeName,PlanPoint>={Front:{x:0,y:1},Left:{x:-1,y:0},Right:{x:1,y:0},Back:{x:0,y:-1}};
 const outwardOf=(a:PlanPoint,b:PlanPoint)=>{const len=Math.hypot(b.x-a.x,b.y-a.y)||1;return {x:(b.y-a.y)/len,y:-(b.x-a.x)/len};};
-const faces=(a:PlanPoint,b:PlanPoint,side:EdgeName)=>{const o=outwardOf(a,b),d=SIDE_DIRECTIONS[side];return o.x*d.x+o.y*d.y>.7;};
+const faces=(a:PlanPoint,b:PlanPoint,side:EdgeName)=>{const o=outwardOf(a,b),d=SIDE_DIRECTIONS[side];return o.x*d.x+o.y*d.y>SIDE_DOT;};
 
 /** Exposed (non-house) outline edges facing a side, longest first. */
 export function exposedEdges(fp:FootprintPlan,contact:EdgeContact,side:EdgeName){
@@ -136,4 +137,9 @@ export function exposedSides(fp:FootprintPlan,contact:EdgeContact):EdgeName[]{
 /** Stair sides available on the main deck. */
 export function availableStairSides(data:DeckData):EdgeName[]{
   const fp=getFootprint(data,1);return exposedSides(fp,getHouseContact(data,fp));
+}
+/** The rim pieces the house does not cover (a manufacturer fascia and a fascia colour go on these), level by level.
+ * On the main deck, onContact alone decides which pieces lie along a wall. */
+export function exposedRim(data:DeckData,model:Pick<DeckTakeoff,'levels'>,contact:HouseContact=getHouseContact(data,model.levels[0].footprint)):Member[]{
+  return model.levels.flatMap(l=>(l.rim??[]).filter(r=>!(l.index===0&&contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z}))));
 }

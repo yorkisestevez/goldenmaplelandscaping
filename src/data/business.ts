@@ -78,6 +78,10 @@ export const BUSINESS = {
       notes: 'Do not publish or route calls to this number until the owner confirms its status.',
     },
     email: published('yorkis@goldenmaplelandscaping.ca', 'Existing public contact links and schema'),
+    mailingAddress: unknown<string>(
+      'Owner has not supplied a mailing address for consent requests',
+      'CASL (SOR/2012-36 s.4) requires a mailing address in any request for consent to send offers. Until the owner supplies one, the deck designer omits its offers checkbox. Setting it publishes the address on the deck designer.',
+    ),
   },
 
   addressPolicy: published(

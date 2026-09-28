@@ -1,0 +1,17 @@
+{
+ "source": "Poly Haven leafy_grass (CC0), 1K",
+ "tileInches": 78.74,
+ "meanSrgb": [
+  76,
+  96,
+  48
+ ],
+ "grade": {
+  "mean": [
+   77,
+   97,
+   49
+  ],
+  "tint": 0.35
+ }
+}

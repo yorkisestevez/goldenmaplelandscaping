@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { Grid, Layout, AlignJustify, ListTree, ChefHat, Map, ArrowRight, MapPin, Ruler } from 'lucide-react';
 import { trackEngagement } from '../utils/analytics';
 import { ESTIMATOR_LOCATIONS } from '../data/locations';
+import { deckDesignerHref } from '../features/deckcraft/estimatorHandoff';
 
 const PROJECT_OPTIONS = [
   { id: 'patio',   label: 'Patio',         icon: Grid },
@@ -32,6 +33,8 @@ export default function HeroEstimator() {
   const onContinue = () => {
     if (!ready) return;
     trackEngagement('cta_click', `hero_estimator_${projectType}_${sizeBucket}_${city}`);
+    // Decks are priced only in the deck designer, the site's one deck price.
+    if (projectType === 'deck') { navigate(deckDesignerHref(sqft)); return; }
     const params = new URLSearchParams({
       type: projectType!,
       sqft: String(sqft),

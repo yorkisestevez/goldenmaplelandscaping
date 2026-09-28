@@ -4,6 +4,7 @@ import {computeEstimate,type EstimateInput} from '../../utils/estimateEngine';
 import {hardscapeTakeoff,disposalBinsFor,c} from '../../utils/takeoff';
 import type {DeckData} from './types';
 import {buildYardModel,type YardModel} from './yardModel';
+import {ALLOWANCE_FINISHES,allowanceItems} from './yardSettings';
 
 export interface PublicYardSection {id:string;label:string;amountCents:number|null;quantity?:number;unit?:string;note?:string;featureIds?:string[]}
 export interface PublicYardMaterial {productId:string;label:string;installedAreaSqft:number;orderAreaSqft:number;skids:number;amountCents:number|null;featureIds:string[]}
@@ -36,6 +37,20 @@ export function buildYardTakeoff(data:DeckData,model:YardModel=buildYardModel(da
  if(knownWalls.length)warnings.push('Walls use the existing estimator mid-tier, height-adjusted assembly band; the selected wall label is not a verified unit-material price. Engineering and the chosen block/stone supply quote remain to be confirmed.');
  if(water.length)warnings.push('Shared disposal includes modeled water-feature excavation. Water-feature excavation labour, equipment, rock delivery and construction remain unpriced.');
  const engine=computeEstimate(input),precise=engine.precise;
+ // Fire pit, kitchen, turf and lighting: each is what the site's cost estimator adds for it on this backyard (the
+ // same engine re-run with the item added, as the estimator's own price hints do), in a fixed order so the shared
+ // site-work minimums are charged once. Walls and patios keep the figures above; the finish tier is held on both
+ // sides of each difference so it never moves a wall.
+ const finish=data.yardAllowances?.finish??'mid',finishLabel=ALLOWANCE_FINISHES.find(f=>f.id===finish)!.label,allowances:PublicYardSection[]=[];
+ const priced=(i:EstimateInput)=>computeEstimate(i).precise?.subtotalCents??0;
+ let prefix:EstimateInput={...input,tier:finish};
+ for(const item of allowanceItems(data.yardAllowances)){
+  const next:EstimateInput={...prefix,selectedElements:[...prefix.selectedElements,item.id],sizes:{...prefix.sizes,...item.sizes},details:{...prefix.details,...item.details}};
+  const cents=priced(next)-priced(prefix),first=prefix.selectedElements.length===0;
+  allowances.push({id:`allowance-${item.id}`,label:`${item.label} (estimator allowance)`,amountCents:cents>0?cents:null,...(item.quantity?{quantity:item.quantity,unit:item.unit}:{}),note:cents>0?`What the site's cost estimator adds for this on your backyard${item.usesFinish?` (${finishLabel} finish)`:''}: a planning allowance, not a quote. The final price follows the product chosen at the site visit.${first?" Includes the backyard's one-time site work (the estimator's minimum excavation, restoration and crew time, and any site conditions), charged once.":''}`:'The estimator has no allowance for this here; builder quote required.'});
+  prefix=next;
+ }
+ if(allowances.length)warnings.push("The backyard allowances (fire pit, outdoor kitchen, turf and landscape lighting) are planning figures from the site's cost estimator. They are not drawn in the 3D view; their placement and final price are confirmed at the site visit.");
  const categories={excavation:precise?.perCategoryCents.excavation||0,materials:precise?.perCategoryCents.materials||0,labour:precise?.perCategoryCents.labour||0,disposal:0,restoration:precise?.perCategoryCents.restoration||0};
  const common=knownArea>0?hardscapeTakeoff({sqft:knownArea,paver:referencePaver,shape:'simple',surface:'grass',element:'patio'}):null;
  const skids=materials.reduce((n,p)=>n+p.skids,0),edgePieces=Math.ceil(model.quantities.patioPerimeterLf/8),bins=disposalBinsFor(model.quantities.excavationYd3*27,'full-depth');
@@ -49,9 +64,9 @@ export function buildYardTakeoff(data:DeckData,model:YardModel=buildYardModel(da
  if(active.length){
   for(const [id,label]of [['excavation','Shared excavation and base installation'],['materials','Paving materials, wall allowances and shared delivery'],['labour','Installation labour'],['disposal','Shared excavation disposal'],['restoration','Shared site restoration']] as const)if(categories[id]>0)sections.push({id:`yard-${id}`,label,amountCents:categories[id],...(id==='disposal'?{quantity:bins,unit:'bins',note:'Joint volume converted to the current full-depth disposal capacity; no separate minimum bin per feature.'}:{})});
  }
- sections.push(...unknown);
- const knownSubtotalCents=Object.values(categories).reduce((n,v)=>n+v,0),knownHstCents=Math.round(knownSubtotalCents*baseline.facts.hstRate),quoteRequired=unknown.length>0;
+ sections.push(...allowances,...unknown);
+ const knownSubtotalCents=Object.values(categories).reduce((n,v)=>n+v,0)+allowances.reduce((n,a)=>n+(a.amountCents??0),0),knownHstCents=Math.round(knownSubtotalCents*baseline.facts.hstRate),quoteRequired=unknown.length>0||allowances.some(a=>a.amountCents===null);
  const floorTopUpCents=common&&!knownWalls.length&&!Object.values(input.conditions).some(Boolean)?Math.max(0,categories.excavation+categories.labour-common.excavationRetailCents-common.installRetailCents):null;
- return {sections,materials,warnings,quoteRequired,knownSubtotalCents,knownHstCents,knownGrandTotalCents:knownSubtotalCents+knownHstCents,subtotalCents:quoteRequired?null:knownSubtotalCents,hstCents:quoteRequired?null:knownHstCents,grandTotalCents:quoteRequired?null:knownSubtotalCents+knownHstCents,quantities:{...model.quantities,polySandBags:common?.quantities.polySandBags||0,fabricRolls:common?.quantities.fabricRolls||0,aggregateTonnes:common?.quantities.aggregateTonnes||0,deliveryLoads:common?.quantities.deliveryLoads||0,edgePieces,skids,bins},sharedSiteWorkCount:input.selectedElements.length?1:0,sharedSiteWork:{floorTopUpCents,note:'Current crew/excavation floors applied once across all yard features. No separate mobilization fee. Top-up is not separately identifiable for mixed wall/site-condition allowances; coordinate shared operations with the deck scope.'},wallAllowance:{equivalentLinearFeet:equivalentWallLf,description:'Existing estimator mid-tier height-adjusted assembly allowance; not a unit-material quotation.'}};
+ return {sections,materials,warnings,quoteRequired,knownSubtotalCents,knownHstCents,knownGrandTotalCents:knownSubtotalCents+knownHstCents,subtotalCents:quoteRequired?null:knownSubtotalCents,hstCents:quoteRequired?null:knownHstCents,grandTotalCents:quoteRequired?null:knownSubtotalCents+knownHstCents,quantities:{...model.quantities,polySandBags:common?.quantities.polySandBags||0,fabricRolls:common?.quantities.fabricRolls||0,aggregateTonnes:common?.quantities.aggregateTonnes||0,deliveryLoads:common?.quantities.deliveryLoads||0,edgePieces,skids,bins},sharedSiteWorkCount:input.selectedElements.length||allowances.length?1:0,sharedSiteWork:{floorTopUpCents,note:'Current crew/excavation floors applied once across all yard features. No separate mobilization fee. Top-up is not separately identifiable for mixed wall/site-condition allowances; coordinate shared operations with the deck scope.'},wallAllowance:{equivalentLinearFeet:equivalentWallLf,description:'Existing estimator mid-tier height-adjusted assembly allowance; not a unit-material quotation.'}};
 }
 export type YardTakeoff=ReturnType<typeof buildYardTakeoff>;
