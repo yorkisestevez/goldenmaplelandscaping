@@ -11,10 +11,10 @@ import type {DeckData} from '../types';
 
 /**
  * What re-prices the design: the design without its appearance (house looks and openings, screen positions, scene
- * lighting, the proposal's name and address, a backyard feature's concept colour). House size, attached blocks and floor
+ * lighting, the proposal's name and address, a backyard feature's concept colour, the permit site plan's lot). House size, attached blocks and floor
  * heights stay in it, because they can move the ledger. The option deltas (R6) are keyed by it too.
  */
-export const estimateKeyOf=(data:DeckData)=>data.quoteResolutions?.length?JSON.stringify({...data,generatedImageUrl:undefined,isGeneratingImage:undefined,houseVisible:undefined,sceneLighting:undefined,lightingPreviewOn:undefined,boundaryLocks:undefined}):JSON.stringify({...data,privacyScreens:data.privacyScreens?.map(({side:_side,offsetPct:_offset,...screen})=>screen),houseFit:data.houseConfig&&[data.houseConfig.widthFt,data.houseConfig.depthFt,data.houseConfig.floorHeightIn,data.houseConfig.footprint?.rects.map(b=>[b.kind,b.wall,b.offsetFt,b.widthFt,b.depthFt,b.floorHeightIn])],houseConfig:undefined,houseVisible:undefined,customerName:undefined,projectAddress:undefined,scopeOfWork:undefined,yardFeatures:data.yardFeatures?.map(({color:_color,...feature})=>feature),houseWallHeightIn:undefined,houseDoorOffset:undefined,houseDoorWidthIn:undefined,sceneLighting:undefined,lightingPreviewOn:undefined});
+export const estimateKeyOf=(data:DeckData)=>data.quoteResolutions?.length?JSON.stringify({...data,generatedImageUrl:undefined,isGeneratingImage:undefined,houseVisible:undefined,sceneLighting:undefined,lightingPreviewOn:undefined,boundaryLocks:undefined,permitSite:undefined}):JSON.stringify({...data,privacyScreens:data.privacyScreens?.map(({side:_side,offsetPct:_offset,...screen})=>screen),houseFit:data.houseConfig&&[data.houseConfig.widthFt,data.houseConfig.depthFt,data.houseConfig.floorHeightIn,data.houseConfig.footprint?.rects.map(b=>[b.kind,b.wall,b.offsetFt,b.widthFt,b.depthFt,b.floorHeightIn])],houseConfig:undefined,houseVisible:undefined,customerName:undefined,projectAddress:undefined,scopeOfWork:undefined,yardFeatures:data.yardFeatures?.map(({color:_color,...feature})=>feature),houseWallHeightIn:undefined,houseDoorOffset:undefined,houseDoorWidthIn:undefined,sceneLighting:undefined,lightingPreviewOn:undefined,permitSite:undefined});
 
 /**
  * The live estimate and what hangs off it. The estimate key decides what re-prices: appearance never

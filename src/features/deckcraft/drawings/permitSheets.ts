@@ -9,11 +9,13 @@ import {elevationItems,translate} from './elevations';
 import {typicalSection} from './typicalSection';
 import {connectionParts,ledgerFlashing} from './pricedParts';
 import {detailItems} from './details';
+import {sitePlan} from './sitePlan';
 
 /**
- * The permit drawing set built from the takeoff model: A-1 elevations, S-1 foundation plan, S-2 framing plan, S-3
- * decking and guard plan, and S-4 typical section. Every member, post and footing drawn is one the takeoff prices; the
- * sheets add dimensions, callouts and notes.
+ * The permit drawing set built from the takeoff model: A-0 site plan, A-1 elevations, S-1 foundation plan, S-2 framing
+ * plan, S-3 decking and guard plan, S-4 typical section and S-5 typical details. Every member, post and footing drawn is
+ * one the takeoff prices; the sheets add dimensions, callouts and notes. The site plan's open items (a lot not entered,
+ * a deck over a lot line) join the review items, so the set is stamped DRAFT until they are resolved.
  * The notes cite the public references the framing engine uses (docs/deckcraft/structure-sources.md) and never claim
  * a review outcome: the municipality's review decides.
  */
@@ -87,6 +89,7 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
   // Diagonal and herringbone decking is framed at 12 in, whatever spacing is selected (deckTakeoff.ts).
   const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
   const section=typicalSection(data,model,{materialName:input.materialName,railingName:input.railingName},{x:0,y:0},hardware);
+  const site=sitePlan(data,model),a0=fitted('A-0','Site plan',site.items,site.notes,[...(site.lot?['C-PROP' as const]:[]),'A-HOUS','A-DECK-OTLN','A-STRS',...(site.lot?['A-ANNO-DIMS' as const]:[])],[site.scale]);
 
   // S-1: footings and posts, dimensioned along each beam row and out from the house.
   const s1:DrawItem[]=[...base];
@@ -167,8 +170,10 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
     finish('S-3','Decking and guard plan',s3,s3Notes,['A-DECK-OTLN','A-DECK-BRDS','A-RAIL','A-STRS','A-HOUS']),
   ];
 
-  // A-1 and S-4 sit below the plans in model space (30 ft clear), so the one DXF holds every sheet without overlap.
-  const planLeft=Math.min(...plans.map(p=>p.extents.minX)),planBottom=Math.max(...plans.map(p=>p.extents.maxY));
+  // A-1, S-4 and S-5 sit below the plans in model space (30 ft clear), so the one DXF holds every sheet without overlap.
+  // The site plan shares the plans' model space, so its lot lines sit true to the deck; a lot reaching past them moves
+  // the other sheets down.
+  const planLeft=Math.min(...plans.map(p=>p.extents.minX)),planBottom=Math.max(...plans.map(p=>p.extents.maxY),...(site.lot?[a0.extents.maxY]:[]));
   const a1Items=elevationItems(data,model,{x:planLeft,y:planBottom+360}),a1Fit=fitScale(a1Items);
   const levelWords=model.levels.map((l,i)=>i===0?'':`; ${l.kind==='landing'?'landing':l.kind==='winder'?'winder':`level ${(l.index??i)+1}`} ${feetInches(l.top)}`).join('');
   const a1Notes=[
@@ -210,6 +215,7 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
   const deckWords=`${data.width} × ${data.length} ft ${data.deckType==='Attached'?'attached':'freestanding'} deck, ${data.height} in above grade`;
   return {
     sheets:[
+      a0,
       fitted('A-1','Elevations',a1Items,a1Notes,['A-DECK-FNSH','S-FRMG','S-BEAM','S-POST','S-FTNG','S-FTNG-HIDN','A-RAIL','A-STRS','A-HOUS','C-TOPO']),
       ...plans,
       s4,
@@ -217,7 +223,7 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
     ],
     project:{title:deckWords,date:input.date,priceBook:input.priceBook},
     firm:{name:BUSINESS.publicName.value,phone:publicContact.phoneDisplay,email:publicContact.email,url:BUSINESS.canonicalUrl.replace(/^https:\/\//,'')},
-    reviewItems:[...new Set([...input.reviewItems,...model.issues])],
+    reviewItems:[...new Set([...input.reviewItems,...model.issues,...site.issues])],
     footer:PERMIT_FOOTER,
   };
 }

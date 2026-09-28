@@ -24,6 +24,7 @@ export const LAYERS={
   'A-DECK-FNSH':{label:'Decking, fascia and skirting',aci:7,weight:.012,dash:null},
   'A-DECK-EXTR':{label:'Benches, screens and pergola',aci:9,weight:.008,dash:null},
   'C-TOPO':{label:'Grade',aci:8,weight:.024,dash:null},
+  'C-PROP':{label:'Property line',aci:1,weight:.018,dash:[.3,.06,.06,.06]},
   'A-ANNO-DIMS':{label:'Dimensions',aci:7,weight:.006,dash:null},
   'A-ANNO-TEXT':{label:'Notes and labels',aci:7,weight:.006,dash:null},
 } as const;
@@ -41,7 +42,7 @@ export type DrawItem=
   |{kind:'dim';a:Pt;b:Pt;offset:number;text:string;layer:'A-ANNO-DIMS'};
 
 export interface Sheet{
-  id:'A-1'|'S-1'|'S-2'|'S-3'|'S-4'|'S-5';title:string;
+  id:'A-0'|'A-1'|'S-1'|'S-2'|'S-3'|'S-4'|'S-5';title:string;
   /** Plan inches per paper inch (48 = 1/4" = 1'-0"), and how the title block names it. */
   ratio:number;scaleLabel:string;
   items:DrawItem[];
@@ -70,6 +71,11 @@ export const SHEET={w:17,h:11,margin:.5,titleW:3.25,
 export const SCALES:{ratio:number;label:string}[]=[
   {ratio:24,label:'1/2" = 1\'-0"'},{ratio:32,label:'3/8" = 1\'-0"'},{ratio:48,label:'1/4" = 1\'-0"'},
   {ratio:64,label:'3/16" = 1\'-0"'},{ratio:96,label:'1/8" = 1\'-0"'},{ratio:128,label:'3/32" = 1\'-0"'},{ratio:192,label:'1/16" = 1\'-0"'},
+];
+
+/** Site plan scales, largest first: the plan scales, then engineer's scales for a lot too big for them. */
+export const SITE_SCALES:{ratio:number;label:string}[]=[...SCALES,
+  {ratio:240,label:"1\" = 20'-0\""},{ratio:360,label:"1\" = 30'-0\""},{ratio:480,label:"1\" = 40'-0\""},{ratio:600,label:"1\" = 50'-0\""},{ratio:1200,label:"1\" = 100'-0\""},{ratio:2400,label:"1\" = 200'-0\""},
 ];
 
 /** Detail scales, largest first: the details sheet tries these before the plan scales. */

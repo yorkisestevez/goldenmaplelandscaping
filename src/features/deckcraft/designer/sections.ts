@@ -68,7 +68,7 @@ export const SECTIONS:readonly DesignSection[]=[
     fields:['yardFeatures','terrainConfig','yardAllowances'],
     ledger:['Yard · *'],related:{id:'proposal',text:'See the estimate and send it'}},
   {id:'proposal',name:'Proposal & files',legacyStep:5,load:loadEstimateStep,
-    fields:['customerName','projectAddress','scopeOfWork'],
+    fields:['customerName','projectAddress','scopeOfWork','permitSite'],
     ledger:[],related:{id:'deck',text:'Change the size or shape'}},
 ];
 export const SECTION_BY_ID=Object.fromEntries(SECTIONS.map(s=>[s.id,s])) as Record<SectionId,DesignSection>;
@@ -137,7 +137,7 @@ export const FIELD_NAMES:Partial<Record<FieldPath|'sceneLighting'|'lightingPrevi
   privacyScreens:'Privacy screens',privacySqft:'Privacy screen area',skirting:'Skirting',benchLf:'Built-in bench',pergolaSqft:'Pergola',hasDemo:'Remove an existing deck',hasDrainage:'Under-deck drainage',catalogueAccessories:'Manufacturer accessories',
   municipality:'Project area',siteType:'Site conditions',soilCondition:'Soil conditions',foundation:'Foundation',foundationDepthIn:'Footing depth',buildSeason:'Build season',intendedLoad:'Intended load',framingSize:'Joist size',joistSpacing:'Joist spacing',boardWidth:'Board width',
   yardFeatures:'Backyard features',terrainConfig:'Terrain',yardAllowances:'Backyard allowances',
-  customerName:'Your name',projectAddress:'Project address',scopeOfWork:'Scope of work',
+  customerName:'Your name',projectAddress:'Project address',scopeOfWork:'Scope of work',permitSite:'Lot and setbacks',
   sceneLighting:'Day or night preview',lightingPreviewOn:'Preview lights',
 };
 export const fieldName=(field:string)=>FIELD_NAMES[field as keyof typeof FIELD_NAMES]??'Design change';

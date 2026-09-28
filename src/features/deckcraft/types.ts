@@ -182,6 +182,23 @@ export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled
 export interface TerrainConfig {widthFt:number;depthFt:number;elevationIn:number;slopePct:number}
 /** Backyard items priced at the site cost estimator's allowances. Not drawn in 3D: placed and confirmed at the site visit. */
 export interface YardAllowances {finish:'budget'|'mid'|'premium';firePit:'none'|'wood'|'gas';kitchen:'none'|'basic'|'full';turfSqft:number;lighting:boolean}
+export type CompassPoint='N'|'NE'|'E'|'SE'|'S'|'SW'|'W'|'NW';
+/** The lot for the permit set's site plan (drawings/sitePlan.ts), in feet as a plan of survey gives it: a rectangular
+ * lot square to the house. Left and right are as seen from the yard, like every other side in the designer. */
+export interface PermitSite {
+  /** Along the house: the frontage of an interior lot. */
+  lotWidthFt:number;
+  /** From the front (street) lot line to the rear lot line. */
+  lotDepthFt:number;
+  /** From the left lot line to the house's left-most wall. */
+  leftYardFt:number;
+  /** From the wall the deck is on to the rear lot line. */
+  rearYardFt:number;
+  /** Which way the back yard faces, for the north arrow. Absent draws no arrow. */
+  yardFaces?:CompassPoint;
+  /** A corner lot: a second street along this side. */
+  corner?:'left'|'right';
+}
 
 export type FoundationType = 'Concrete Piers' | 'Helical Piles' | 'Deck Blocks';
 
@@ -242,6 +259,8 @@ export interface DeckData {
   yardFeatures?: YardFeature[];
   terrainConfig?: TerrainConfig;
   yardAllowances?: YardAllowances;
+  /** The lot, for the permit set's site plan; absent on every existing design. */
+  permitSite?: PermitSite;
   houseConfig?: HouseConfig;
   housePlacement?: HousePlacement;
   wrap?: WrapConfig;
