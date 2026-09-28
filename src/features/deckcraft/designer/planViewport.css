@@ -1,4 +1,5 @@
-.dd-canvas>.dd-plan-viewport{position:relative;isolation:isolate;aspect-ratio:auto!important;height:clamp(380px,55vh,620px)!important;overflow:hidden;background:#f5f3ed;touch-action:pan-y}
+/* Zoom and pan only move the view, so nothing in it may anchor the page's scroll (Chromium nudged it 1px). */
+.dd-canvas>.dd-plan-viewport{position:relative;isolation:isolate;aspect-ratio:auto!important;height:clamp(380px,55vh,620px)!important;overflow:hidden;overflow-anchor:none;background:#f5f3ed;touch-action:pan-y}
 .dd-plan-stage{position:absolute;inset:0 0 70px;transform-origin:center;will-change:transform}
 .dd-plan-stage>.dd-site-plan{display:block;width:100%;height:100%;background:transparent!important}
 .dd-plan-stage>.dd-site-plan .dd-plan-grid{opacity:.35}

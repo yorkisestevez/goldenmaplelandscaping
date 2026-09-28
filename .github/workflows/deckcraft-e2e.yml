@@ -2,7 +2,11 @@
 #
 # Runs on pull requests that touch the deck designer, and on demand. It is NOT part of the deploy path:
 # netlify-deploy.yml (push to main) is unchanged, so a slow or flaky browser run can never block or
-# trigger a production deploy. Adds a few minutes of Actions time per matching PR.
+# trigger a production deploy.
+#
+# The suite runs one test at a time (WebGL on SwiftShader is CPU-bound) and no longer fits one job's
+# time limit, so it is split into four shards on separate runners. Each shard builds the site and runs
+# a quarter of the spec files. The final `e2e` job reports the combined result as one check.
 name: DeckCraft E2E
 
 on:
@@ -26,9 +30,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  e2e:
+  shard:
+    name: e2e shard ${{ matrix.shard }}/4
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -40,13 +49,24 @@ jobs:
       - name: Build the site
         run: npm run build
       - name: Run DeckCraft smoke tests
-        run: npx playwright test
+        run: npx playwright test --shard=${{ matrix.shard }}/4
       - name: Keep the report when a test fails
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: deckcraft-e2e-report
+          name: deckcraft-e2e-report-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/
           retention-days: 7
+
+  e2e:
+    needs: shard
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: All shards passed
+        run: |
+          echo "Shards: ${{ needs.shard.result }}"
+          test "${{ needs.shard.result }}" = success
