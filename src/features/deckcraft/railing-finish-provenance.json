@@ -1,0 +1,996 @@
+{
+  "title": "DeckCraft railing colours: manufacturer sources",
+  "retrieved": "2026-09-23",
+  "approved": "2026-09-23: the owner approved this list for the railing colour control and chose to ship all 19 systems. The 8 lines marked canada \"unconfirmed\" carry a flag asking the supplier to confirm availability and any colour premium.",
+  "method": "Colour names were read from the manufacturer product pages on timbertech.com and deckorators.com, fetched on 2026-09-23. They were cross-checked against TimberTech's official product feed (shop.timbertech.com/wp-content/cache/products/*.json, the same data the product-page swatch picker loads), the TimberTech 2026 Product Guide PDF, and the Deckorators Shopify product JSON and sell-sheet PDFs. screenHex with hexSource 'swatch' is the per-channel median of the centre 60% of the manufacturer's own swatch image. It is for on-screen preview only and is not colour-accurate.",
+  "use": "railColours are the colours the railing colour control offers (deckPartFinishes.ts RAILING_COLOURS must match them, name and screen hex; scripts/check-deck-part-finishes.ts checks it). infillColours are recorded for reference; the preview draws the infill in the rail colour. screenHex is a screen approximation for the illustrative 3D preview only, never a colour match. The railing rate is unchanged by a colour.",
+  "systems": [
+    {
+      "id": "tt_classic_composite",
+      "name": "TimberTech Classic Composite Series (balusters)",
+      "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+      "additionalSources": [
+        "https://assets.timbertech.com/content/dam/wp-content/TimberTech-AZEK-Exteriors-Product-Guide.pdf (2026 Product Guide, pp. 22-23)",
+        "https://shop.timbertech.com/wp-content/cache/products/products-classic-composite-series.json (official swatch feed used by the product page)",
+        "https://www.timbertech.ca/products/railing/classiccomposite"
+      ],
+      "canada": "listed",
+      "notes": "Rail, post sleeve, cap and skirt colours: White (gloss), Matte White, Matte Black, Matte Espresso. Trademark Rail top rail comes only in White and Matte White. Premier and Radiance top rails come in 10' only in White, Matte White and Matte Black. Matte colours carry an extra 25-year Fade & Stain warranty. Canada: timbertech.ca/products/railing/classiccomposite shows swatches Matte Black, Matte Espresso, Matte White, Black and White. The extra gloss 'Black' is not on timbertech.com or in the 2026 Product Guide and is probably stale (the .ca site is (c) 2018-2023). The .ca page also says limited products may be special-order with extended lead times.",
+      "railColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg",
+          "note": "Listed as 'White' in the spec text and 'Gloss White' in the FAQ and 2026 Product Guide."
+        },
+        {
+          "name": "Matte White",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#fafbf6",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2021/03/Matte-White.jpg"
+        },
+        {
+          "name": "Matte Black",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#202020",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2023/01/matte-black-product-swatch.jpg"
+        },
+        {
+          "name": "Matte Espresso",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#544c49",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2022/05/TimberTech-Matte-Espresso-Classic-Composite-Series-Railing-color-swatch-PDP.jpg",
+          "note": "Only 6' and 8' sections (Universal Rail Packs and Premier/Radiance top rails); no 10' length."
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg",
+          "note": "Square composite baluster."
+        },
+        {
+          "name": "Matte White",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#fafbf6",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2021/03/Matte-White.jpg",
+          "note": "Square composite baluster."
+        },
+        {
+          "name": "Matte Black",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#202020",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2023/01/matte-black-product-swatch.jpg",
+          "note": "Square composite baluster."
+        },
+        {
+          "name": "Matte Espresso",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#544c49",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2022/05/TimberTech-Matte-Espresso-Classic-Composite-Series-Railing-color-swatch-PDP.jpg",
+          "note": "Square composite baluster."
+        },
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1c1c1c",
+          "hexSource": "name-estimate",
+          "note": "Aluminum balusters, square and round: 'Black only' per the product page. TimberTech publishes no swatch for them; the hex is estimated. Needs a custom rail pack."
+        }
+      ]
+    },
+    {
+      "id": "tt_classic_cable",
+      "name": "TimberTech Classic Composite Series - CableRail infill",
+      "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+      "additionalSources": [
+        "https://assets.timbertech.com/content/dam/wp-content/TimberTech-AZEK-Exteriors-Product-Guide.pdf (2026 Product Guide, Classic Composite infills: CableRail kits, 'CableRail 500' Stainless Steel Cable')"
+      ],
+      "canada": "listed",
+      "notes": "CableRail is an infill option of the Classic Composite Series and needs a Custom Rail Pack. Rails and posts come in the same four colours as the baluster version. Canada: timbertech.ca/products/railing/classiccomposite shows swatches Matte Black, Matte Espresso, Matte White, Black and White. The extra gloss 'Black' is not on timbertech.com or in the 2026 Product Guide and is probably stale (the .ca site is (c) 2018-2023). The .ca page also says limited products may be special-order with extended lead times. The timbertech.ca page lists 'Cable Rail balusters' as an infill.",
+      "railColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg",
+          "note": "Listed as 'White' in the spec text and 'Gloss White' in the FAQ and 2026 Product Guide."
+        },
+        {
+          "name": "Matte White",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#fafbf6",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2021/03/Matte-White.jpg"
+        },
+        {
+          "name": "Matte Black",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#202020",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2023/01/matte-black-product-swatch.jpg"
+        },
+        {
+          "name": "Matte Espresso",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#544c49",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2022/05/TimberTech-Matte-Espresso-Classic-Composite-Series-Railing-color-swatch-PDP.jpg",
+          "note": "Only 6' and 8' sections (Universal Rail Packs and Premier/Radiance top rails); no 10' length."
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "Stainless steel",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#a8a9ad",
+          "hexSource": "name-estimate",
+          "note": "CableRail infill uses stainless steel cable (2026 Product Guide). This is a material, not a colour option, so the hex is estimated. The CableRail intermediate balusters have one SKU each with no colour named."
+        }
+      ]
+    },
+    {
+      "id": "tt_classic_glass",
+      "name": "TimberTech Classic Composite Series - glass infill",
+      "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+      "additionalSources": [
+        "https://assets.timbertech.com/content/dam/wp-content/TimberTech-AZEK-Exteriors-Product-Guide.pdf (2026 Product Guide: '6' Glass Channel Kit White' AZTGLASS6W and '6' Glass Channel Kit Black' AZTGLASS6B, glass panel sourced locally)"
+      ],
+      "canada": "listed",
+      "notes": "The Glass Channel Kit comes without glass; the glass panel is sourced locally, so TimberTech offers no glass colour or tint. Needs a Custom Rail Pack and does not work with Drink Rail. Rails and posts come in the same four colours as the baluster version. Canada: timbertech.ca/products/railing/classiccomposite shows swatches Matte Black, Matte Espresso, Matte White, Black and White. The extra gloss 'Black' is not on timbertech.com or in the 2026 Product Guide and is probably stale (the .ca site is (c) 2018-2023). The .ca page also says limited products may be special-order with extended lead times.",
+      "railColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg",
+          "note": "Listed as 'White' in the spec text and 'Gloss White' in the FAQ and 2026 Product Guide."
+        },
+        {
+          "name": "Matte White",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#fafbf6",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2021/03/Matte-White.jpg"
+        },
+        {
+          "name": "Matte Black",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#202020",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2023/01/matte-black-product-swatch.jpg"
+        },
+        {
+          "name": "Matte Espresso",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#544c49",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2022/05/TimberTech-Matte-Espresso-Classic-Composite-Series-Railing-color-swatch-PDP.jpg",
+          "note": "Only 6' and 8' sections (Universal Rail Packs and Premier/Radiance top rails); no 10' length."
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "White (Glass Channel Kit)",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "name-estimate",
+          "note": "The colour of the aluminum glass-channel kit, not the glass. The hex reuses TimberTech's gloss White swatch as an estimate."
+        },
+        {
+          "name": "Black (Glass Channel Kit)",
+          "sourceUrl": "https://www.timbertech.com/product/classic-composite-series/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1c1c1c",
+          "hexSource": "name-estimate",
+          "note": "The colour of the aluminum glass-channel kit, not the glass."
+        }
+      ]
+    },
+    {
+      "id": "tt_impression_express",
+      "name": "TimberTech Impression Rail Express (balusters)",
+      "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+      "additionalSources": [
+        "https://assets.timbertech.com/content/dam/wp-content/TimberTech-AZEK-Exteriors-Product-Guide.pdf (2026 Product Guide, pp. 27-29)",
+        "https://www.timbertech.ca/products/railing/impression-rail-express"
+      ],
+      "canada": "listed",
+      "notes": "Powder-coated aluminum. Posts, caps and skirts come in White, Black and Dark Bronze. The White swatch in TimberTech's feed is the same image used for composite rail White (AZEK-Rail-White-Swatch.jpg). Canada: timbertech.ca/products/railing/impression-rail-express lists White, Dark Bronze and Black. Its infill list shows only aluminum balusters, balusters with open mid-rail and glass channel kits, with no horizontal or vertical cable (the .ca site is (c) 2018-2023 and may be stale).",
+      "railColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg"
+        },
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#363535",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/03/rail_color_black.png"
+        },
+        {
+          "name": "Dark Bronze",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#5b5141",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/04/rail_color_darkbronze.png"
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg",
+          "note": "Pre-assembled aluminum baluster panel; the panel SKU is sold in each rail colour."
+        },
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#363535",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/03/rail_color_black.png",
+          "note": "Baluster panel."
+        },
+        {
+          "name": "Dark Bronze",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#5b5141",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/04/rail_color_darkbronze.png",
+          "note": "Baluster panel."
+        }
+      ]
+    },
+    {
+      "id": "tt_impression_cable",
+      "name": "TimberTech Impression Rail Express - horizontal cable",
+      "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+      "additionalSources": [
+        "https://assets.timbertech.com/content/dam/wp-content/TimberTech-AZEK-Exteriors-Product-Guide.pdf (2026 Product Guide p. 29: horizontal cable level/stair kits AZTIXHCLP6W/B/BR, posts in W/B/BR, '316SS Cable & Hardware')"
+      ],
+      "canada": "listed",
+      "notes": "The product page lists 'Horizontal Cable Rail' as an infill. The 2026 Product Guide has horizontal-cable section kits and 36\"/42\" post kits in all three colours. A separate vertical cable panel with stainless intermediate balusters also exists. Canada: timbertech.ca/products/railing/impression-rail-express lists White, Dark Bronze and Black. Its infill list shows only aluminum balusters, balusters with open mid-rail and glass channel kits, with no horizontal or vertical cable (the .ca site is (c) 2018-2023 and may be stale).",
+      "railColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg"
+        },
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#363535",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/03/rail_color_black.png"
+        },
+        {
+          "name": "Dark Bronze",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#5b5141",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/04/rail_color_darkbronze.png"
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "Stainless steel",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#a8a9ad",
+          "hexSource": "name-estimate",
+          "note": "316 stainless steel cable and hardware (2026 Product Guide; '1/8\" T-316' receivers and 'Bright Polished' dome caps). The hex is estimated. The centre baluster and top support channel kit comes in White, Black and Dark Bronze to match the rail."
+        }
+      ]
+    },
+    {
+      "id": "tt_impression_glass",
+      "name": "TimberTech Impression Rail Express - glass",
+      "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+      "additionalSources": [
+        "https://assets.timbertech.com/content/dam/wp-content/TimberTech-AZEK-Exteriors-Product-Guide.pdf (2026 Product Guide: Universal Glass Panel Kit AZTIXUGLASSP6W / 6B / 6BR, '1/4\" Tempered Glass Sold Separately')"
+      ],
+      "canada": "listed",
+      "notes": "Glass Channel Kit, with or without open mid-rail. The 1/4\" tempered glass is not included and is sourced separately, so TimberTech gives no glass colour. Glass does not work with Drink Rail. Canada: timbertech.ca/products/railing/impression-rail-express lists White, Dark Bronze and Black. Its infill list shows only aluminum balusters, balusters with open mid-rail and glass channel kits, with no horizontal or vertical cable (the .ca site is (c) 2018-2023 and may be stale).",
+      "railColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg"
+        },
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#363535",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/03/rail_color_black.png"
+        },
+        {
+          "name": "Dark Bronze",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#5b5141",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/04/rail_color_darkbronze.png"
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "White (Glass Panel Kit)",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "name-estimate",
+          "note": "The colour of the glass-panel kit hardware, not the glass."
+        },
+        {
+          "name": "Black (Glass Panel Kit)",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#363535",
+          "hexSource": "name-estimate",
+          "note": "Kit hardware colour. The hex reuses the IRX Black swatch value."
+        },
+        {
+          "name": "Dark Bronze (Glass Panel Kit)",
+          "sourceUrl": "https://www.timbertech.com/product/impressionrail-express/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#5b5141",
+          "hexSource": "name-estimate",
+          "note": "Kit hardware colour. The hex reuses the IRX Dark Bronze swatch value."
+        }
+      ]
+    },
+    {
+      "id": "tt_pinnacle",
+      "name": "TimberTech Pinnacle Rail",
+      "sourceUrl": "https://www.timbertech.com/product/pinnacle-rail/",
+      "additionalSources": [
+        "https://assets.timbertech.com/content/dam/wp-content/TimberTech-AZEK-Exteriors-Product-Guide.pdf (2026 Product Guide p. 20: infill & panels colour WHITE)"
+      ],
+      "canada": "unconfirmed",
+      "notes": "PVC with aluminum reinforcement, White only. The product page's Details section mentions 'infill upgrades such as black aluminum balusters', but neither the Infill Options list nor the 2026 guide includes a black aluminum baluster for Pinnacle (the guide says 'custom infill options available', contact a Market Development Manager). I left it out. Canada: timbertech.ca (AZEK Building Products, footer (c) 2018-2023, looks unmaintained) lists only Classic Composite Series, RadianceRail Express and Impression Rail Express under Railing. This system is NOT listed on timbertech.ca, so Canadian availability is unconfirmed; check with an Ontario TimberTech dealer. timbertech.com only says local inventory varies by colour, length and distributor.",
+      "railColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/pinnacle-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg",
+          "note": "Kits, top rail and post sleeves/caps/skirts are all 'White' only. The swatch is the one TimberTech's feed uses for Pinnacle White."
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/pinnacle-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg",
+          "note": "Solid square PVC balusters and the Chippendale Type 1 and Square Web decorative panels. The 2026 guide gives the infill colour as WHITE."
+        }
+      ]
+    },
+    {
+      "id": "tt_statement",
+      "name": "TimberTech Statement Rail",
+      "sourceUrl": "https://www.timbertech.com/product/statement-rail/",
+      "additionalSources": [
+        "https://assets.timbertech.com/content/dam/wp-content/TimberTech-AZEK-Exteriors-Product-Guide.pdf (2026 Product Guide p. 20: Statement RAB kits ST60275-...-AL)"
+      ],
+      "canada": "unconfirmed",
+      "notes": "PVC with aluminum reinforcement, White only. Canada: timbertech.ca (AZEK Building Products, footer (c) 2018-2023, looks unmaintained) lists only Classic Composite Series, RadianceRail Express and Impression Rail Express under Railing. This system is NOT listed on timbertech.ca, so Canadian availability is unconfirmed; check with an Ontario TimberTech dealer. timbertech.com only says local inventory varies by colour, length and distributor.",
+      "railColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/statement-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg",
+          "note": "Kits, top rail and post components are White only."
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.timbertech.com/product/statement-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f4f0ed",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/07/AZEK-Rail-White-Swatch.jpg",
+          "note": "Hollow square PVC balusters."
+        },
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.timbertech.com/product/statement-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1c1c1c",
+          "hexSource": "name-estimate",
+          "note": "'Black aluminum balusters' per the product page; sold as Round Aluminum Baluster (RAB) kits. There is no swatch, so the hex is estimated."
+        }
+      ]
+    },
+    {
+      "id": "tt_fulton",
+      "name": "TimberTech Fulton Rail (steel)",
+      "sourceUrl": "https://www.timbertech.com/product/fulton-rail/",
+      "additionalSources": [
+        "https://assets.timbertech.com/content/dam/wp-content/TimberTech-AZEK-Exteriors-Product-Guide.pdf (2026 Product Guide: Fulton Rail colour BLACK, steel balusters rectangular only)"
+      ],
+      "canada": "unconfirmed",
+      "notes": "Galvanized steel with a 15-year residential warranty. Black is the only colour. Canada: timbertech.ca (AZEK Building Products, footer (c) 2018-2023, looks unmaintained) lists only Classic Composite Series, RadianceRail Express and Impression Rail Express under Railing. This system is NOT listed on timbertech.ca, so Canadian availability is unconfirmed; check with an Ontario TimberTech dealer. timbertech.com only says local inventory varies by colour, length and distributor.",
+      "railColours": [
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.timbertech.com/product/fulton-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#363535",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/03/rail_color_black.png",
+          "note": "TimberTech's feed uses the same 'Black' swatch as Impression Rail Express. The FAQ recommends Rust-Oleum Flat Black Enamel for touch-ups."
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.timbertech.com/product/fulton-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#363535",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2020/03/rail_color_black.png",
+          "note": "Steel balusters, rectangular only, pre-assembled in Black panels."
+        }
+      ]
+    },
+    {
+      "id": "tt_reliance",
+      "name": "TimberTech Reliance Rail",
+      "sourceUrl": "https://www.timbertech.com/product/reliance-rail/",
+      "additionalSources": [
+        "https://assets.timbertech.com/content/dam/wp-content/TimberTech-AZEK-Exteriors-Product-Guide.pdf (2026 Product Guide pp. 33-35: colours MATTE WHITE, KHAKI; infills HOLLOW SQUARE BALUSTERS, BLACK ALUMINUM BALUSTERS)"
+      ],
+      "canada": "unconfirmed",
+      "notes": "Premium vinyl in Core and Contour styles. Level kits come in 10' only in Matte White. Drink Rail works with Core only. Canada: timbertech.ca (AZEK Building Products, footer (c) 2018-2023, looks unmaintained) lists only Classic Composite Series, RadianceRail Express and Impression Rail Express under Railing. This system is NOT listed on timbertech.ca, so Canadian availability is unconfirmed; check with an Ontario TimberTech dealer. timbertech.com only says local inventory varies by colour, length and distributor.",
+      "railColours": [
+        {
+          "name": "Matte White",
+          "sourceUrl": "https://www.timbertech.com/product/reliance-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#fafbf6",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2021/03/Matte-White.jpg",
+          "note": "TimberTech's feed reuses the composite Matte White swatch image for Reliance (vinyl)."
+        },
+        {
+          "name": "Khaki",
+          "sourceUrl": "https://www.timbertech.com/product/reliance-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#b7a67f",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2025/01/khaki-color-swatch.webp"
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "Matte White",
+          "sourceUrl": "https://www.timbertech.com/product/reliance-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#fafbf6",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2021/03/Matte-White.jpg",
+          "note": "Square vinyl balusters in Matte White kits."
+        },
+        {
+          "name": "Khaki",
+          "sourceUrl": "https://www.timbertech.com/product/reliance-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#b7a67f",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2025/01/khaki-color-swatch.webp",
+          "note": "Square vinyl balusters in Khaki kits."
+        },
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.timbertech.com/product/reliance-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1c1c1c",
+          "hexSource": "name-estimate",
+          "note": "Round aluminum baluster kits exist in both Matte White and Khaki rail colours; the 2026 guide calls the infill 'BLACK ALUMINUM BALUSTERS'. There is no swatch, so the hex is estimated."
+        }
+      ]
+    },
+    {
+      "id": "tt_advantage",
+      "name": "TimberTech Advantage Rail",
+      "sourceUrl": "https://www.timbertech.com/product/advantage-rail/",
+      "additionalSources": [
+        "https://assets.timbertech.com/content/dam/wp-content/TimberTech-AZEK-Exteriors-Product-Guide.pdf (2026 Product Guide p. 25)"
+      ],
+      "canada": "unconfirmed",
+      "notes": "Composite rail with no gloss White option. Posts, sleeves, caps, skirts, Drink Rail and angle adapters all come in Matte White, Matte Black and Matte Espresso. Canada: timbertech.ca (AZEK Building Products, footer (c) 2018-2023, looks unmaintained) lists only Classic Composite Series, RadianceRail Express and Impression Rail Express under Railing. This system is NOT listed on timbertech.ca, so Canadian availability is unconfirmed; check with an Ontario TimberTech dealer. timbertech.com only says local inventory varies by colour, length and distributor.",
+      "railColours": [
+        {
+          "name": "Matte White",
+          "sourceUrl": "https://www.timbertech.com/product/advantage-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#fafbf6",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2021/03/Matte-White.jpg"
+        },
+        {
+          "name": "Matte Black",
+          "sourceUrl": "https://www.timbertech.com/product/advantage-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#202020",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2023/01/matte-black-product-swatch.jpg"
+        },
+        {
+          "name": "Matte Espresso",
+          "sourceUrl": "https://www.timbertech.com/product/advantage-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#544c49",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2022/05/TimberTech-Matte-Espresso-Classic-Composite-Series-Railing-color-swatch-PDP.jpg"
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "Matte White",
+          "sourceUrl": "https://www.timbertech.com/product/advantage-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#fafbf6",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2021/03/Matte-White.jpg",
+          "note": "Square hollow composite baluster."
+        },
+        {
+          "name": "Matte Black",
+          "sourceUrl": "https://www.timbertech.com/product/advantage-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#202020",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2023/01/matte-black-product-swatch.jpg",
+          "note": "Square hollow composite baluster."
+        },
+        {
+          "name": "Matte Espresso",
+          "sourceUrl": "https://www.timbertech.com/product/advantage-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#544c49",
+          "hexSource": "swatch",
+          "swatchUrl": "https://shop.timbertech.com/wp-content/uploads/2022/05/TimberTech-Matte-Espresso-Classic-Composite-Series-Railing-color-swatch-PDP.jpg",
+          "note": "Square hollow composite baluster."
+        },
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.timbertech.com/product/advantage-rail/",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1c1c1c",
+          "hexSource": "name-estimate",
+          "note": "'Black Round Aluminum Balusters', available with all three rail colours. There is no swatch, so the hex is estimated."
+        }
+      ]
+    },
+    {
+      "id": "dk_contemporary",
+      "name": "Deckorators Aluminum Contemporary Railing",
+      "sourceUrl": "https://www.deckorators.com/products/contemporary-railing",
+      "additionalSources": [
+        "https://www.deckorators.com/cdn/shop/files/15854_ContemporaryRailSellSheet_LR.pdf (sell sheet: Textured Black, Textured White, Bronze)",
+        "https://www.deckorators.com/cdn/shop/files/15029-deckorators-contemporary-rail-ordering-guide-en.pdf (older ordering guide, also lists Weathered Brown)"
+      ],
+      "canada": "listed",
+      "notes": "Powder-coated aluminum. Weathered Brown appears in several gallery photos and in the older ordering guide (15029) but is not a selectable colour on the current product page or sell sheet. I treat it as dropped and did not list it. The aluminum post kits come in the same three colours. Canada: the Deckorators en-CA storefront (https://www.deckorators.com/en-ca/products/contemporary-railing) lists exactly the same colour options, with no Canada-specific restriction stated.",
+      "railColours": [
+        {
+          "name": "Bronze",
+          "sourceUrl": "https://www.deckorators.com/products/contemporary-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#433836",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/bronze--swatch.jpg"
+        },
+        {
+          "name": "Textured Black",
+          "sourceUrl": "https://www.deckorators.com/products/contemporary-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1e1e1d",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_black--swatch.jpg"
+        },
+        {
+          "name": "Textured White",
+          "sourceUrl": "https://www.deckorators.com/products/contemporary-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#e4e4e1",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_white--swatch.jpg"
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "Bronze",
+          "sourceUrl": "https://www.deckorators.com/products/contemporary-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#433836",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/bronze--swatch.jpg",
+          "note": "Welded panel: the square balusters come in the panel colour. The page says 'welded panels' and sells one colour per kit."
+        },
+        {
+          "name": "Textured Black",
+          "sourceUrl": "https://www.deckorators.com/products/contemporary-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1e1e1d",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_black--swatch.jpg",
+          "note": "Welded panel balusters."
+        },
+        {
+          "name": "Textured White",
+          "sourceUrl": "https://www.deckorators.com/products/contemporary-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#e4e4e1",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_white--swatch.jpg",
+          "note": "Welded panel balusters."
+        }
+      ]
+    },
+    {
+      "id": "dk_rapid",
+      "name": "Deckorators Aluminum Rapid Rail",
+      "sourceUrl": "https://www.deckorators.com/products/rapid-rail",
+      "additionalSources": [
+        "https://www.deckorators.com/cdn/shop/files/15853_RapidRailSellSheet_LR.pdf (sell sheet: Textured Black, Textured White)",
+        "https://www.deckorators.com/products/lowes-rapid-rail (home-centre version: Matte Black only)"
+      ],
+      "canada": "listed",
+      "notes": "A separate home-centre SKU, also called 'Aluminum Rapid Rail' (/products/lowes-rapid-rail, 'Available at Home Centers'), comes only in Matte Black with 'matte black aluminum square balusters'. It is not the dealer Rapid Rail. Canada: the Deckorators en-CA storefront (https://www.deckorators.com/en-ca/products/rapid-rail) lists exactly the same colour options, with no Canada-specific restriction stated.",
+      "railColours": [
+        {
+          "name": "Textured Black",
+          "sourceUrl": "https://www.deckorators.com/products/rapid-rail",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1e1e1d",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_black--swatch.jpg",
+          "note": "All sizes are 6'x36\", 8'x36\", 6'x42\" and 8'x42\"."
+        },
+        {
+          "name": "Textured White",
+          "sourceUrl": "https://www.deckorators.com/products/rapid-rail",
+          "retrieved": "2026-09-23",
+          "screenHex": "#e4e4e1",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_white--swatch.jpg",
+          "note": "Only 6'x36\" and 8'x36\"; no 42\" size."
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "Textured Black",
+          "sourceUrl": "https://www.deckorators.com/products/rapid-rail",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1e1e1d",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_black--swatch.jpg",
+          "note": "Drop-through balusters come in the kit colour. The page sells one colour per kit and names no separate baluster colour."
+        },
+        {
+          "name": "Textured White",
+          "sourceUrl": "https://www.deckorators.com/products/rapid-rail",
+          "retrieved": "2026-09-23",
+          "screenHex": "#e4e4e1",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_white--swatch.jpg",
+          "note": "Drop-through balusters come in the kit colour."
+        }
+      ]
+    },
+    {
+      "id": "dk_preassembled",
+      "name": "Deckorators Pre-assembled Aluminum Rail",
+      "sourceUrl": "https://www.deckorators.com/products/pre-assembled-aluminum-railing",
+      "additionalSources": [],
+      "canada": "unconfirmed",
+      "notes": "Marked 'Available at Home Centers'. The installation document is titled 'Contemporary Aluminum Railing (Pre-assembled) Installation (Lowe's Exclusive)'. The en-CA page shows the same options but names no Canadian retail channel, so Ontario availability needs checking. Canada: the Deckorators en-CA storefront (https://www.deckorators.com/en-ca/products/pre-assembled-aluminum-railing) lists exactly the same colour options, with no Canada-specific restriction stated.",
+      "railColours": [
+        {
+          "name": "Matte Black",
+          "sourceUrl": "https://www.deckorators.com/products/pre-assembled-aluminum-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#534a4d",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/matte_black--swatch.jpg",
+          "note": "Sizes 6'x36\", 8'x36\" and 6'x42\". Manufacturer swatch chip reads as a lifted charcoal (#534a4d); much lighter on screen than Textured Black."
+        },
+        {
+          "name": "Textured White",
+          "sourceUrl": "https://www.deckorators.com/products/pre-assembled-aluminum-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#e4e4e1",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_white--swatch.jpg",
+          "note": "Sizes 6'x36\", 8'x36\" and 6'x42\"."
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "Matte Black",
+          "sourceUrl": "https://www.deckorators.com/products/pre-assembled-aluminum-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#534a4d",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/matte_black--swatch.jpg",
+          "note": "The panel is pre-assembled; balusters come in the panel colour and no separate baluster colour is listed. Manufacturer swatch chip reads as a lifted charcoal (#534a4d); much lighter on screen than Textured Black."
+        },
+        {
+          "name": "Textured White",
+          "sourceUrl": "https://www.deckorators.com/products/pre-assembled-aluminum-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#e4e4e1",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_white--swatch.jpg",
+          "note": "Pre-assembled panel."
+        }
+      ]
+    },
+    {
+      "id": "dk_composite",
+      "name": "Deckorators Composite Rail",
+      "sourceUrl": "https://www.deckorators.com/products/composite-rail",
+      "additionalSources": [
+        "https://www.deckorators.com/cdn/shop/files/15856_CompositeRailingSellSheet_LR.pdf (sell sheet: rail colour White; balusters Black Round Aluminum or White Square Composite)"
+      ],
+      "canada": "listed",
+      "notes": "On this product the colour choice is the baluster style and colour; the rail itself is always White. Post sleeve kits are White. Canada: the Deckorators en-CA storefront (https://www.deckorators.com/en-ca/products/composite-rail) lists exactly the same colour options, with no Canada-specific restriction stated.",
+      "railColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.deckorators.com/products/composite-rail",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f2f2f2",
+          "hexSource": "name-estimate",
+          "note": "The rail colour is White only; kits are named 'Composite White Horizontal Rail'. The Composite Rail page has no rail swatch, so the hex matches Deckorators' White accessory swatch."
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "Round Black Aluminum",
+          "sourceUrl": "https://www.deckorators.com/products/composite-rail",
+          "retrieved": "2026-09-23",
+          "screenHex": "#131417",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/round_black_aluminum--swatch.jpg",
+          "note": "The swatch is a photo of a black round baluster."
+        },
+        {
+          "name": "Round White Aluminum",
+          "sourceUrl": "https://www.deckorators.com/products/composite-rail",
+          "retrieved": "2026-09-23",
+          "screenHex": "#dfdad6",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/round_white_aluminum--swatch.jpg",
+          "note": "Listed on the current product page; the older sell sheet omits it."
+        },
+        {
+          "name": "Square White Composite",
+          "sourceUrl": "https://www.deckorators.com/products/composite-rail",
+          "retrieved": "2026-09-23",
+          "screenHex": "#bebebe",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/square_white_composite--swatch.jpg",
+          "note": "CAUTION: the manufacturer swatch is a shaded photo, so it samples mid-grey (#bebebe). For a white preview, use about #f2f2f2 (Deckorators' White accessory swatch)."
+        }
+      ]
+    },
+    {
+      "id": "dk_classic_composite",
+      "name": "Deckorators Classic Composite Rail",
+      "sourceUrl": "https://www.deckorators.com/products/grab-and-go-classic-railing",
+      "additionalSources": [],
+      "canada": "unconfirmed",
+      "notes": "Sold as 'Grab & Go Classic' composite rail kits and marked 'Available at Home Centers'; the installation guide is titled Lowe's Exclusive and footed www.lowes.com. The en-CA page shows the same options but names no Canadian retail channel, so Ontario availability needs checking. Canada: the Deckorators en-CA storefront (https://www.deckorators.com/en-ca/products/grab-and-go-classic-railing) lists exactly the same colour options, with no Canada-specific restriction stated.",
+      "railColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.deckorators.com/products/grab-and-go-classic-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f2f2f2",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/white_accessory--swatch.jpg",
+          "note": "Only colour offered (all four sizes)."
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "White",
+          "sourceUrl": "https://www.deckorators.com/products/grab-and-go-classic-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f2f2f2",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/white_accessory--swatch.jpg",
+          "note": "The kit includes 13 (6') or 18 (8') square composite balusters (installation guide). The page gives one colour for the whole kit, White."
+        }
+      ]
+    },
+    {
+      "id": "dk_contemporary_composite",
+      "name": "Deckorators Contemporary Composite Rail",
+      "sourceUrl": "https://www.deckorators.com/products/grab-and-go-contemporary-railing",
+      "additionalSources": [],
+      "canada": "unconfirmed",
+      "notes": "Sold as 'Grab & Go Contemporary' kits in one size only (6' x 36\", actual 68\" L x 36\" H) and marked 'Available at Home Centers'; the installation guide is footed www.lowes.com. The en-CA page shows the same options but names no Canadian retail channel, so Ontario availability needs checking. Canada: the Deckorators en-CA storefront (https://www.deckorators.com/en-ca/products/grab-and-go-contemporary-railing) lists exactly the same colour options, with no Canada-specific restriction stated.",
+      "railColours": [
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.deckorators.com/products/grab-and-go-contemporary-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#383838",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/black_accessory--swatch.jpg"
+        },
+        {
+          "name": "White",
+          "sourceUrl": "https://www.deckorators.com/products/grab-and-go-contemporary-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#f2f2f2",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/white_accessory--swatch.jpg"
+        },
+        {
+          "name": "Gray",
+          "sourceUrl": "https://www.deckorators.com/products/grab-and-go-contemporary-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#7b7167",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/gray_accessory--swatch.jpg"
+        },
+        {
+          "name": "Brown",
+          "sourceUrl": "https://www.deckorators.com/products/grab-and-go-contemporary-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#4b3d34",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/brown--swatch.jpg"
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "Black",
+          "sourceUrl": "https://www.deckorators.com/products/grab-and-go-contemporary-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1c1c1c",
+          "hexSource": "name-estimate",
+          "note": "The kit includes 14 (level) or 12 (stair) 32-3/4\" round aluminum balusters (installation guide). The text gives no baluster colour; the manufacturer renders for the White, Gray and Brown kits all show black balusters. Treat this as unconfirmed."
+        }
+      ]
+    },
+    {
+      "id": "dk_cable",
+      "name": "Deckorators Contemporary Cable Rail",
+      "sourceUrl": "https://www.deckorators.com/products/contemporary-cable-railing",
+      "additionalSources": [
+        "https://www.deckorators.com/products/cable-continuous-top-rail (optional Cable Continuous Top Rail: Textured Black only)"
+      ],
+      "canada": "listed",
+      "notes": "Aluminum top rail with pre-drilled line, corner and end posts; rail, post and cable kits are sold separately. The stainless cable system has a 10-year warranty. Canada: the Deckorators en-CA storefront (https://www.deckorators.com/en-ca/products/contemporary-cable-railing) lists exactly the same colour options, with no Canada-specific restriction stated.",
+      "railColours": [
+        {
+          "name": "Textured Black",
+          "sourceUrl": "https://www.deckorators.com/products/contemporary-cable-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1e1e1d",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_black--swatch.jpg"
+        },
+        {
+          "name": "Textured White",
+          "sourceUrl": "https://www.deckorators.com/products/contemporary-cable-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#e4e4e1",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_white--swatch.jpg"
+        },
+        {
+          "name": "Bronze",
+          "sourceUrl": "https://www.deckorators.com/products/contemporary-cable-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#433836",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/bronze--swatch.jpg"
+        }
+      ],
+      "infillColours": [
+        {
+          "name": "Stainless steel",
+          "sourceUrl": "https://www.deckorators.com/products/contemporary-cable-railing",
+          "retrieved": "2026-09-23",
+          "screenHex": "#a8a9ad",
+          "hexSource": "name-estimate",
+          "note": "'316 stainless-steel cable available in lengths from 5' to 50''. The hex is estimated. 'Powder-coated cable spacers match the top rail.'"
+        }
+      ]
+    },
+    {
+      "id": "dk_glass",
+      "name": "Deckorators Glass Rail Post Kit",
+      "sourceUrl": "https://www.deckorators.com/products/aluminum-glass-rail-post-kit",
+      "additionalSources": [
+        "https://www.deckorators.com/cdn/shop/files/15852_GlassRailPostKitsSellSheet_LR.pdf (sell sheet: Textured Black)",
+        "https://www.deckorators.com/products/glass-continuous-top-rail (Glass Continuous Top Rail: Textured Black only)"
+      ],
+      "canada": "listed",
+      "notes": "Glass panels are not included and Deckorators names no glass colour or tint. The kit takes 1/4\" (6mm) or 1/2\" (13mm) glass; the continuous top rail works only with 1/4\" glass. Textured Black is the only finish. Canada: the Deckorators en-CA storefront (https://www.deckorators.com/en-ca/products/aluminum-glass-rail-post-kit) lists exactly the same colour options, with no Canada-specific restriction stated.",
+      "railColours": [
+        {
+          "name": "Textured Black",
+          "sourceUrl": "https://www.deckorators.com/products/aluminum-glass-rail-post-kit",
+          "retrieved": "2026-09-23",
+          "screenHex": "#1e1e1d",
+          "hexSource": "swatch",
+          "swatchUrl": "https://www.deckorators.com/cdn/shop/files/textured_black--swatch.jpg",
+          "note": "Posts and the optional Glass Continuous Top Rail are Textured Black only."
+        }
+      ],
+      "infillColours": []
+    }
+  ]
+}

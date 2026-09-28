@@ -15,8 +15,8 @@ import EstimateWorkbench from './EstimateWorkbench';
 import BudgetTarget from './BudgetTarget';
 import BudgetGapCoach from './BudgetGapCoach';
 import { buildPermalink, decodeBuild } from '../utils/buildPermalink';
-import { PROJECT_TYPE_IMAGES, DECK_BRAND_IMAGES, PAVER_SWATCHES } from '../data/estimatorImages';
-import { PAVER_BRANDS, DECK_BRANDS, ADD_ONS, defaultPaverForTier, sortPaversForDisplay, type PaverTier } from '../data/carrPrices';
+import { PROJECT_TYPE_IMAGES, PAVER_SWATCHES } from '../data/estimatorImages';
+import { PAVER_BRANDS, ADD_ONS, defaultPaverForTier, sortPaversForDisplay, type PaverTier } from '../data/carrPrices';
 import { ESTIMATOR_LOCATIONS, type EstimatorLocationKey } from '../data/locations';
 import { getEstimatorRangeCopy } from '../utils/pricingDoctrine';
 import { computeEstimate, deltaFor, widenFactors, widenTotals, type EstimateInput, type EstimateLine, type PreciseResult } from '../utils/estimateEngine';
@@ -25,6 +25,7 @@ import AnimatedPrice, { AnimatedDollars, AnimatedMoney } from './ui/AnimatedPric
 import SizeControl from './ui/SizeControl';
 import { cn } from '../utils/cn';
 import { BUSINESS, canPublish } from '../data/business';
+import { deckDesignerHref } from '../features/deckcraft/estimatorHandoff';
 
 
 const PROJECT_TYPES = [
@@ -32,7 +33,7 @@ const PROJECT_TYPES = [
   { id: 'stone', label: 'Natural Stone / Flagstone', desc: 'Irregular or cut stone', icon: Hexagon },
   { id: 'wall', label: 'Retaining Wall', desc: 'Block or armour stone', icon: AlignJustify },
   { id: 'steps', label: 'Steps & Walkway', desc: 'Precast or natural stone', icon: ListTree },
-  { id: 'deck', label: 'Composite Deck', desc: 'TimberTech AZEK', icon: Layout },
+  { id: 'deck', label: 'Composite Deck', desc: 'In our 3D deck designer', icon: Layout },
   { id: 'kitchen', label: 'Outdoor Kitchen', desc: 'Cooking and dining', icon: ChefHat },
   { id: 'firepit', label: 'Fire Pit', desc: 'Prefab or custom built', icon: Flame },
   { id: 'pergola', label: 'Pergola / Shade Structure', desc: 'Wood or aluminum', icon: Sun },
@@ -213,6 +214,9 @@ const DETAIL_DIAGRAMS: Record<string, ReactNode> = {
 };
 
 const VALID_PROJECT_TYPES = new Set(['patio', 'stone', 'wall', 'steps', 'deck', 'kitchen', 'firepit', 'pergola', 'turf', 'lighting', 'full']);
+/** A deck on its own, which only the deck designer prices. */
+const onlyDeck = (projectType: string | null, elements: string[]) =>
+  projectType === 'deck' || (projectType === 'full' && elements.length > 0 && elements.every(e => e === 'deck'));
 
 export default function Estimator() {
   const navigate = useNavigate();
@@ -300,6 +304,13 @@ export default function Estimator() {
     const buildParam = searchParams.get('build');
     if (buildParam) {
       const saved = decodeBuild(buildParam);
+      // A deck is priced only in the deck designer (the site's one deck price), so a saved deck-only build
+      // opens there, at its size.
+      if (saved && onlyDeck(saved.projectType, saved.selectedElements)) {
+        trackEngagement('estimator_deck_handoff', 'restored');
+        navigate(deckDesignerHref(saved.sizes.deck), { replace: true });
+        return;
+      }
       if (saved) {
         setProjectType(saved.projectType);
         setSelectedElements(saved.selectedElements);
@@ -320,6 +331,13 @@ export default function Estimator() {
       }
       // A corrupt or outdated link starts a clean estimate rather than a
       // half-applied one — a wrong restore is worse than no restore.
+    }
+
+    // A deck link (?type=deck&sqft=300, e.g. the home-page quick estimator) goes to the deck designer.
+    if (searchParams.get('type') === 'deck') {
+      trackEngagement('estimator_deck_handoff', 'link');
+      navigate(deckDesignerHref(Number(searchParams.get('sqft'))), { replace: true });
+      return;
     }
 
     // Returning visitor with a completed estimate and no unlock yet → the
@@ -403,17 +421,19 @@ export default function Estimator() {
   };
 
   const isHardscape = projectType === 'patio' || projectType === 'stone' || projectType === 'wall' || projectType === 'steps';
-  const isDeck = projectType === 'deck' || (projectType === 'full' && selectedElements.includes('deck'));
+  /** A deck in a full backyard stays one of the visitor's choices but is never priced here: the deck
+   *  designer is the site's one deck price (owner decision 2026-09-23). Everything the engine prices,
+   *  and every size and answer that moves it, comes from these elements. */
+  const pricedElements = useMemo(() => selectedElements.filter(e => e !== 'deck'), [selectedElements]);
   const totalSqft = useMemo(() => {
-    const els = projectType === 'full' ? selectedElements : (projectType ? [projectType] : []);
+    const els = projectType === 'full' ? pricedElements : (projectType ? [projectType] : []);
     return els.reduce((sum, el) => {
       const v = sizes[el];
       return sum + (typeof v === 'number' ? v : 0);
     }, 0);
-  }, [projectType, selectedElements, sizes]);
+  }, [projectType, pricedElements, sizes]);
 
   const selectedPaver = PAVER_BRANDS.find(p => p.id === paverBrandId) || PAVER_BRANDS[2];
-  const selectedDeck = DECK_BRANDS.find(d => d.id === deckBrandId) || DECK_BRANDS[0];
 
   /** The single object the pricing engine reads. Everything that can move the
    *  number lives in here — which is also what makes honest speculative pricing
@@ -421,9 +441,9 @@ export default function Estimator() {
    *  same engine, so a "+$3,900" hint can never promise a number the estimate
    *  won't then produce. */
   const build: EstimateInput = useMemo(() => ({
-    projectType, selectedElements, sizes, details, conditions,
+    projectType, selectedElements: pricedElements, sizes, details, conditions,
     location, tier, paverBrandId, deckBrandId, addOns,
-  }), [projectType, selectedElements, sizes, details, conditions, location, tier, paverBrandId, deckBrandId, addOns]);
+  }), [projectType, pricedElements, sizes, details, conditions, location, tier, paverBrandId, deckBrandId, addOns]);
 
   const estimate = useMemo(() => computeEstimate(build), [build]);
 
@@ -443,8 +463,9 @@ export default function Estimator() {
   /** Shareable link that restores this exact build. Computed only at the result
    *  step — it's what the save gate trades for. */
   const permalink = useMemo(
-    () => (step === TOTAL_STEPS ? buildPermalink(build, targetBudget) : undefined),
-    [build, targetBudget, step],
+    // The link keeps every choice, the unpriced deck included, so it reopens exactly as left.
+    () => (step === TOTAL_STEPS ? buildPermalink({ ...build, selectedElements }, targetBudget) : undefined),
+    [build, selectedElements, targetBudget, step],
   );
 
   /** Apply a gap-coach lever to the live build. Only ever touches scope or
@@ -464,10 +485,10 @@ export default function Estimator() {
    *  turning alone genuinely does move this number. Do not let UI copy claim
    *  answers alone earn it; that would misdescribe this formula. */
   const answeredDetails = useMemo(() => {
-    const els = projectType === 'full' ? selectedElements : (projectType ? [projectType] : []);
+    const els = projectType === 'full' ? pricedElements : (projectType ? [projectType] : []);
     const keys = els.flatMap(el => (DETAIL_QUESTIONS[el] ?? []).map(q => `${el}.${q.id}`));
     return keys.filter(k => details[k]).length;
-  }, [projectType, selectedElements, details]);
+  }, [projectType, pricedElements, details]);
 
   const confidence = useMemo(() => {
     let c = 30;
@@ -645,6 +666,24 @@ export default function Estimator() {
     />
   );
 
+  /** Where a full backyard's deck is priced. Opens in a new tab so the estimate in progress is kept. */
+  const renderDeckHandoff = () => (
+    <div className="rounded-2xl border border-brand-gold/40 bg-brand-gold/10 p-5">
+      <p className="font-sans text-[13px] text-brand-bone leading-relaxed mb-3">
+        Your deck is designed and priced in our 3D deck designer, which gives the one deck price on our site. It isn&rsquo;t included in this estimate.
+      </p>
+      <a
+        href={deckDesignerHref(sizes.deck)}
+        target="_blank"
+        rel="noopener"
+        onClick={() => trackEngagement('estimator_deck_handoff', 'full')}
+        className="font-sans text-[12px] uppercase tracking-[0.15em] text-brand-gold-dark underline underline-offset-4"
+      >
+        Design and price your deck<span className="sr-only"> (opens in a new tab)</span> →
+      </a>
+    </div>
+  );
+
   const renderSizeInputs = (type: string) => {
     switch (type) {
       case 'patio':
@@ -739,7 +778,9 @@ export default function Estimator() {
   };
 
   const nextStep = () => {
-    if (step === 1 && projectType === 'deck') { navigate('/deck-designer'); return; }
+    if (step === 1 && projectType === 'deck') { trackEngagement('estimator_deck_handoff', 'type'); navigate(deckDesignerHref()); return; }
+    // A backyard of just a deck has nothing for this estimator to price.
+    if (step === 2 && onlyDeck(projectType, selectedElements)) { trackEngagement('estimator_deck_handoff', 'full_only'); navigate(deckDesignerHref(sizes.deck)); return; }
     if (canAdvance() && step < TOTAL_STEPS) {
       const next = step + 1;
       fireStep(next);
@@ -767,25 +808,22 @@ export default function Estimator() {
     refreshVault();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
-  const showBrandPicker = isHardscape || isDeck || projectType === 'full';
+  const showBrandPicker = isHardscape || projectType === 'full';
 
   // Filter brands by tier and use case (driveway vs patio)
   const eligiblePavers = sortPaversForDisplay(
     PAVER_BRANDS.filter(p => p.tier === tier && (p.useCase === 'patio' || p.useCase === 'patio-driveway' || p.useCase === 'driveway'))
   );
-  const eligibleDecks = DECK_BRANDS.filter(d => tier === 'premium' ? true : d.id === 'timbertech-prime');
 
   const showPaverPicker = showBrandPicker
-    && (isHardscape || (projectType === 'full' && !selectedElements.every(e => e === 'deck')))
+    && (isHardscape || (projectType === 'full' && pricedElements.length > 0))
     && eligiblePavers.length > 0;
-  const showDeckPicker = (isDeck || (projectType === 'full' && selectedElements.includes('deck')))
-    && eligibleDecks.length > 0;
 
   /** Brand cards. Rendered on step 5 and again inside the result workbench, so
    *  the material choice stays changeable after the number exists — `compact`
    *  drops the explanatory copy that only earns its space the first time. */
   const renderBrandPickers = (compact = false) => {
-    if (!showPaverPicker && !showDeckPicker) return null;
+    if (!showPaverPicker) return null;
     return (
       <>
         {showPaverPicker && (
@@ -835,44 +873,6 @@ export default function Estimator() {
           </div>
         )}
 
-        {showDeckPicker && (
-          <div className="mb-2">
-            <div className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark mb-4">Decking Brand</div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {eligibleDecks.map(d => (
-                <button
-                  key={d.id}
-                  type="button"
-                  onClick={() => setDeckBrandId(d.id)}
-                  className={cn(
-                    "p-4 rounded-2xl border text-left transition-all duration-200",
-                    deckBrandId === d.id ? "bg-gradient-to-b from-brand-gold/30 to-brand-gold/10 border-brand-gold shadow-[0_0_0_1px_rgba(212,175,99,0.4)]" : "bg-brand-cream-light border-brand-dim hover:border-brand-gold/60 hover:bg-brand-midsurface"
-                  )}
-                >
-                  {/* TimberTech product shot — dealer asset, choosing a finish
-                      by name alone is guesswork. */}
-                  {DECK_BRAND_IMAGES[d.id] ? (
-                    <img
-                      src={DECK_BRAND_IMAGES[d.id].src}
-                      alt={DECK_BRAND_IMAGES[d.id].alt}
-                      width={320} height={240}
-                      loading="lazy" decoding="async"
-                      className={cn('w-full rounded-xl object-cover border border-brand-dim mb-3', compact ? 'h-36' : 'h-48')}
-                    />
-                  ) : null}
-                  <div className="flex items-baseline justify-between gap-2 mb-1">
-                    <span className="font-sans text-[10px] uppercase tracking-wider text-brand-gold-dark">{d.brand}</span>
-                    <span className="font-display text-[13px] text-brand-bone">${d.installedPerSqft}/sqft installed</span>
-                  </div>
-                  <div className="font-sans text-[13px] text-brand-bone mb-1">{d.product}</div>
-                  {!compact && (
-                    <div className="font-sans text-[11px] font-normal text-brand-bonewhite/80">{d.description}</div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </>
     );
   };
@@ -1172,7 +1172,7 @@ export default function Estimator() {
                           </button>
                           <div className={cn(isOpen ? 'block' : 'hidden', 'md:block', 'mt-6')}>
                             {renderSizeInputs(el)}
-                            {renderDetailQuestions(el)}
+                            {el === 'deck' ? renderDeckHandoff() : renderDetailQuestions(el)}
                           </div>
                         </div>
                         );
@@ -1410,7 +1410,7 @@ export default function Estimator() {
                 totalHigh={display.high}
                 confidencePercent={confidence}
                 precise={estimate.precise}
-                brandName={isDeck ? `${selectedDeck.brand} ${selectedDeck.product}` : `${selectedPaver.brand} ${selectedPaver.product}`}
+                brandName={`${selectedPaver.brand} ${selectedPaver.product}`}
                 sqft={totalSqft}
                 city={selectedLocation.name}
                 /* The result is a workbench, not a receipt. Everything that
@@ -1437,7 +1437,7 @@ export default function Estimator() {
                   sizeControl={
                     projectType === 'full' ? (
                       <div className="space-y-6">
-                        {selectedElements.map(el => (
+                        {pricedElements.map(el => (
                           <div key={el}>
                             <div className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-bonewhite/60 mb-3">
                               {PROJECT_TYPES.find(p => p.id === el)?.label ?? el}
@@ -1459,6 +1459,10 @@ export default function Estimator() {
                   </>
                 }
               />
+
+              {projectType === 'full' && selectedElements.includes('deck') && (
+                <div className="mt-6">{renderDeckHandoff()}</div>
+              )}
 
               {details['wall.wallPurpose'] === 'structure' && (
                 <div className="mt-6 px-6 py-4 rounded-2xl bg-brand-gold/8 border border-brand-gold/25">
@@ -1493,7 +1497,7 @@ export default function Estimator() {
                   selectedElements,
                   totalLow: estimate.totalLow,
                   totalHigh: estimate.totalHigh,
-                  brandName: isDeck ? `${selectedDeck.brand} ${selectedDeck.product}` : `${selectedPaver.brand} ${selectedPaver.product}`,
+                  brandName: `${selectedPaver.brand} ${selectedPaver.product}`,
                   city: selectedLocation.name,
                   sqft: totalSqft,
                   addOns,

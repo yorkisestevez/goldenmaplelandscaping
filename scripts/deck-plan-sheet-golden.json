@@ -1,0 +1,69 @@
+{
+ "note": "ConstructionPlan default (contractor) markup, captured from bd5fd89 before R4 added the site variant. Regenerate only for an owner-approved change to the contractor plan.",
+ "cases": {
+  "default": {
+   "sha256": "727ec208fd2772ae11d1e5325235d72cd582a4339b61069f8dab6db3fe8c9c3d",
+   "bytes": 11734
+  },
+  "default, model only": {
+   "sha256": "ca5fbbb13a60b13111484ba71cb5ab6f2a8793e03c51299e7af21fea2c965af7",
+   "bytes": 10433
+  },
+  "house hidden": {
+   "sha256": "135dd2eb81daa72cad9fc6bd8ef88e67d3acde430ca1462b75d57fe9a1dc98f8",
+   "bytes": 11319
+  },
+  "house blocks (bump-out, wing, garage)": {
+   "sha256": "1cd3c4bbfc40f1345016ebe2415c5d088d69a8ecd94810411f57426383ad5e1c",
+   "bytes": 13499
+  },
+  "narrow house placed left": {
+   "sha256": "040008a4f3b10ee730a176e0e593eb43830feb229d60d343d8dada72951de435",
+   "bytes": 16508
+  },
+  "wrap left with a porch": {
+   "sha256": "48571e4d0671ac9c6d0ac05c3f4f2ff4c9c5873a15aa8f85bad8de5abfba59e1",
+   "bytes": 43812
+  },
+  "wrap both": {
+   "sha256": "d2e1635e6b9cf28454f9148e92b4a45ab78caabbe6def5659ac87a3f61380d3d",
+   "bytes": 40777
+  },
+  "accent row and rug inlay": {
+   "sha256": "85918a68327f87ac16975c79b47a95253c345966b70968507ea3663b5ced5698",
+   "bytes": 22516
+  },
+  "band and medallion inlays": {
+   "sha256": "7c9bdd1e58297a7df1b3c7f186398d4cda0989cb55df4d61bba63440055dafd5",
+   "bytes": 33836
+  },
+  "custom outline T": {
+   "sha256": "eb4bff8ae772cb5c63f7a21b45879f5e5ca9404732f9b6b4e3e0969b1d1d1fc2",
+   "bytes": 17942
+  },
+  "angled front corners": {
+   "sha256": "09697841032a1b3dd638074cb8c77a9875577aea41b791114a51c7217ce43b47",
+   "bytes": 14090
+  },
+  "L-shape, picture frame, landing stairs": {
+   "sha256": "95d2a575eae653213d34c2b13281fbdd3b95f338e7e53498fbb5f3ff0492cdfa",
+   "bytes": 31128
+  },
+  "multi-corner freestanding, 2 levels": {
+   "sha256": "33f6ecce9c67cb6020150a44302d710b34f7271d6a9d28d83bd05c86666e215e",
+   "bytes": 33891
+  },
+  "curved, herringbone, winder stairs": {
+   "sha256": "dbc69332927666b151d306299ee4f1fd3b0738b5be4e8d71c69d7c31db469cca",
+   "bytes": 49242
+  },
+  "split level with a third level": {
+   "sha256": "759f3a775bf9d3ced54dab1d19eddd3d84985db1d2a149b4bf2df158ad0ce2c6",
+   "bytes": 36664
+  },
+  "yard patio": {
+   "sha256": "021c2f115b9afa5f052d48fb68d5de641950bb5f9249f8763af80bc81058a3d6",
+   "bytes": 54762
+  }
+ }
+}

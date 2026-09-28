@@ -1,3 +1,5 @@
+import {SIDE_DOT} from './lib/deckGeometry';
+import {activeCornerChamfers,isChamferEdgeId} from './lib/cornerChamfers';
 import type {DeckData} from './types';
 import type {Box,DeckTakeoff} from './deckTakeoff';
 import {activeLightingItems,isSystemProduct,MAX_FIXTURE_QTY} from './lightingSystem';
@@ -33,6 +35,8 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
   edges.sort((a,b)=>Math.abs(b.dz)-Math.abs(a.dz)||b.len-a.len);
   function allocate(inches:number,callback:(x:number,z:number,len:number,angle:number,dx:number,dz:number)=>void){let left=inches;
     for(const e of edges){if(left<=0)break;const len=Math.min(left,Math.max(0,e.len-24));if(len<=0)continue;
+      // An angled corner too short for 2 ft of seating or screen after its end clearances gets none.
+      if(isChamferEdgeId(fp.edgeIds?.[e.index])&&e.len-24<24)continue;
       const x=e.p.x+e.dx*(12+len/2)-e.dz*14,z=e.p.y+e.dz*(12+len/2)+e.dx*14;
       // Keep seating/screens away from any stair tread projected at the deck edge.
       const blocked=model.treads.some(t=>Math.abs(t.y-top)<9&&Math.hypot(t.x-x,t.z-z)<len/2+24);
@@ -55,7 +59,7 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
   if(data.privacyScreens){
     const ys=fp.outline.map(p=>p.y),xs=fp.outline.map(p=>p.x),cx=(Math.min(...xs)+Math.max(...xs))/2,cz=(Math.min(...ys)+Math.max(...ys))/2;
     const midX=(e:typeof edges[number])=>(e.p.x+e.q.x)/2,midZ=(e:typeof edges[number])=>(e.p.y+e.q.y)/2;
-    const onSide={Left:(e:typeof edges[number])=>Math.abs(e.dz)>.7&&midX(e)<cx,Right:(e:typeof edges[number])=>Math.abs(e.dz)>.7&&midX(e)>cx,Front:(e:typeof edges[number])=>Math.abs(e.dx)>.7&&midZ(e)>cz,Back:(e:typeof edges[number])=>Math.abs(e.dx)>.7&&midZ(e)<cz};
+    const onSide={Left:(e:typeof edges[number])=>Math.abs(e.dz)>SIDE_DOT&&midX(e)<cx,Right:(e:typeof edges[number])=>Math.abs(e.dz)>SIDE_DOT&&midX(e)>cx,Front:(e:typeof edges[number])=>Math.abs(e.dx)>SIDE_DOT&&midZ(e)>cz,Back:(e:typeof edges[number])=>Math.abs(e.dx)>SIDE_DOT&&midZ(e)<cz};
     data.privacyScreens.forEach((s,i)=>{
       if(!screenOn(s))return;
       const product=screenProduct(s),label=`Privacy screen ${i+1} (${s.side} edge)`,skipped=product.pricedBySqft?'it is priced but not drawn':'it is not drawn';
@@ -101,7 +105,7 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
     if(w&&d){for(const px of [x+3,x+w-3])for(const pz of [z+3,z+d-3])wood.push({x:px,y:top+48,z:pz,w:5.5,h:96,d:5.5});for(const pz of [z,z+d])wood.push({x:x+w/2,y:top+97,z:pz,w:w+12,h:9.25,d:3});for(let px=x;px<=x+w;px+=16)wood.push({x:px,y:top+104,z:z+d/2,w:1.5,h:7.25,d:d+18});for(let pz=z;pz<=z+d;pz+=12)wood.push({x:x+w/2,y:top+109,z:pz,w:w+18,h:1.5,d:1.5});}
     if(pergolaArea<data.pergolaSqft-1)warnings.push(`Pergola layout fits ${pergolaArea.toFixed(1)} of ${data.pergolaSqft} requested square feet within the footprint.`);
   }
-  if(data.hasDrainage)for(const l of model.levels){if(l.top<24){warnings.push('Under-deck drainage needs at least 24 in of model clearance; raise the deck or remove drainage.');continue;}for(const j of l.joists){const len=Math.hypot(j.b.x-j.a.x,j.b.z-j.a.z);drainage.push({x:(j.a.x+j.b.x)/2,y:j.a.y-6,z:(j.a.z+j.b.z)/2,w:Math.max(4,data.joistSpacing-1.5),h:.15,d:len,angle:Math.atan2(j.b.x-j.a.x,j.b.z-j.a.z)});}drainage.push({x:l.offset.x+l.footprint.bounds.w/2,y:l.top-20,z:l.offset.z+l.footprint.bounds.h-2,w:l.footprint.bounds.w,h:3,d:4});drainage.push({x:l.offset.x+3,y:Math.max(4,(l.top-20)/2),z:l.offset.z+l.footprint.bounds.h+1,w:3,h:Math.max(3,l.top-20),d:3});}
+  if(data.hasDrainage)for(const l of model.levels){if(l.top<24){warnings.push('Under-deck drainage needs at least 24 in of model clearance; raise the deck or remove drainage.');continue;}for(const j of l.joists){const len=Math.hypot(j.b.x-j.a.x,j.b.z-j.a.z);drainage.push({x:(j.a.x+j.b.x)/2,y:j.a.y-6,z:(j.a.z+j.b.z)/2,w:Math.max(4,data.joistSpacing-1.5),h:.15,d:len,angle:Math.atan2(j.b.x-j.a.x,j.b.z-j.a.z)});}const clip=l.kind==='deck'&&l.index===0?activeCornerChamfers(data):null,front0=clip?.leftIn??0,front1=l.footprint.bounds.w-(clip?.rightIn??0);drainage.push({x:l.offset.x+(front0+front1)/2,y:l.top-20,z:l.offset.z+l.footprint.bounds.h-2,w:front1-front0,h:3,d:4});drainage.push({x:l.offset.x+front0+3,y:Math.max(4,(l.top-20)/2),z:l.offset.z+l.footprint.bounds.h+1,w:3,h:Math.max(3,l.top-20),d:3});}
   const perimeter=edges.reduce((s,e)=>s+e.len,0);
   function perimeterPoint(index:number,count:number){let t=(index+.5)*perimeter/Math.max(1,count);for(const e of edges){if(t<=e.len)return {x:e.p.x+e.dx*t-e.dz*4,z:e.p.y+e.dz*t+e.dx*4,angle:-Math.atan2(e.dz,e.dx)};t-=e.len;}return {x:6,z:6,angle:0};}
   const selected=activeLightingItems(data),counts=new Map<string,number>(),indices=new Map<string,number>();

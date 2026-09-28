@@ -39,3 +39,6 @@ docs/portfolio/shortlist-*.jpg
 # Python bytecode from the postbuild gates
 __pycache__/
 *.pyc
+# Playwright (DeckCraft e2e) output
+test-results/
+playwright-report/
