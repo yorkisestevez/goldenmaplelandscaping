@@ -19,6 +19,11 @@ export const LAYERS={
   'S-LEDG':{label:'Ledger',aci:30,weight:.024,dash:null},
   'A-RAIL':{label:'Guard (railing)',aci:6,weight:.014,dash:null},
   'A-STRS':{label:'Stairs',aci:4,weight:.01,dash:null},
+  'S-FRMG':{label:'Joists, rims and blocking',aci:2,weight:.01,dash:null},
+  'S-FTNG-HIDN':{label:'Footings below grade',aci:1,weight:.008,dash:[.06,.04]},
+  'A-DECK-FNSH':{label:'Decking, fascia and skirting',aci:7,weight:.012,dash:null},
+  'A-DECK-EXTR':{label:'Benches, screens and pergola',aci:9,weight:.008,dash:null},
+  'C-TOPO':{label:'Grade',aci:8,weight:.024,dash:null},
   'A-ANNO-DIMS':{label:'Dimensions',aci:7,weight:.006,dash:null},
   'A-ANNO-TEXT':{label:'Notes and labels',aci:7,weight:.006,dash:null},
 } as const;
@@ -36,7 +41,7 @@ export type DrawItem=
   |{kind:'dim';a:Pt;b:Pt;offset:number;text:string;layer:'A-ANNO-DIMS'};
 
 export interface Sheet{
-  id:'S-1'|'S-2'|'S-3';title:string;
+  id:'A-1'|'S-1'|'S-2'|'S-3'|'S-4';title:string;
   /** Plan inches per paper inch (48 = 1/4" = 1'-0"), and how the title block names it. */
   ratio:number;scaleLabel:string;
   items:DrawItem[];
@@ -71,6 +76,37 @@ export const SCALES:{ratio:number;label:string}[]=[
 export function pickScale(extents:Sheet['extents']):{ratio:number;label:string}{
   const w=extents.maxX-extents.minX,h=extents.maxY-extents.minY;
   return SCALES.find(s=>w/s.ratio<=SHEET.area.w&&h/s.ratio<=SHEET.area.h)??SCALES.at(-1)!;
+}
+
+/** Plan points an item is drawn through (text by its anchor). */
+export function itemPoints(i:DrawItem):Pt[]{return i.kind==='line'||i.kind==='dim'?[i.a,i.b]:i.kind==='poly'?i.points:i.kind==='circle'?[i.c]:[i.at];}
+
+/**
+ * The extent of items drawn at `ratio`, text included: a line of text is about half its height wide per character on
+ * paper, so its plan size depends on the scale. `pad` is paper inches around the whole.
+ */
+export function drawnExtents(items:DrawItem[],ratio:number,pad=.3):Sheet['extents']{
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  const add=(x:number,y:number)=>{minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);};
+  for(const i of items){
+    if(i.kind==='text'){
+      const w=i.text.length*i.height*.52*ratio,h=i.height*ratio,x0=i.anchor==='start'?0:i.anchor==='middle'?-w/2:-w,turned=Math.abs(Math.abs(i.rotate??0)-90)<1;
+      if(turned)add(i.at.x-h,i.at.y+(i.rotate!>0?x0:-x0-w)),add(i.at.x+h*.3,i.at.y+(i.rotate!>0?x0+w:-x0));
+      else add(i.at.x+x0,i.at.y-h),add(i.at.x+x0+w,i.at.y+h*.3);
+    }else if(i.kind==='dim'){
+      const len=Math.hypot(i.b.x-i.a.x,i.b.y-i.a.y)||1,n={x:-(i.b.y-i.a.y)/len,y:(i.b.x-i.a.x)/len},reach=i.offset+Math.sign(i.offset||1)*.2*ratio;
+      for(const p of [i.a,i.b])add(p.x,p.y),add(p.x+n.x*reach,p.y+n.y*reach);
+    }else if(i.kind==='circle')add(i.c.x-i.r,i.c.y-i.r),add(i.c.x+i.r,i.c.y+i.r);
+    else if(i.kind==='symbol')add(i.at.x-i.size/2,i.at.y-i.size/2),add(i.at.x+i.size/2,i.at.y+i.size/2);
+    else for(const p of itemPoints(i))add(p.x,p.y);
+  }
+  return {minX:minX-pad*ratio,minY:minY-pad*ratio,maxX:maxX+pad*ratio,maxY:maxY+pad*ratio};
+}
+
+/** The largest standard scale at which items, text included, fit the drawing area (the smallest scale otherwise). */
+export function fitScale(items:DrawItem[]):{ratio:number;label:string;extents:Sheet['extents']}{
+  for(const s of SCALES){const e=drawnExtents(items,s.ratio);if((e.maxX-e.minX)/s.ratio<=SHEET.area.w&&(e.maxY-e.minY)/s.ratio<=SHEET.area.h)return {...s,extents:e};}
+  const last=SCALES.at(-1)!;return {...last,extents:drawnExtents(items,last.ratio)};
 }
 
 /** Feet and inches to the nearest half inch: 16'-0", 11'-8 1/2". */

@@ -4,11 +4,14 @@ import type {DeckData} from '../types';
 import {getHousePlacement} from '../housePlacement';
 import {getHouseContact} from '../houseContact';
 import {getHardwareLayout} from '../hardwareLayout';
-import {type DrawItem,type DrawingSet,type LayerId,type Pt,type Sheet,feetInches,pickScale} from './drawingTypes';
+import {type DrawItem,type DrawingSet,type LayerId,type Pt,type Sheet,feetInches,fitScale,pickScale} from './drawingTypes';
+import {elevationItems,translate} from './elevations';
+import {typicalSection} from './typicalSection';
 
 /**
- * The permit drawing set built from the takeoff model: S-1 foundation plan, S-2 framing plan, S-3 decking and guard
- * plan. Every member, post and footing drawn is one the takeoff prices; the sheets add dimensions, callouts and notes.
+ * The permit drawing set built from the takeoff model: A-1 elevations, S-1 foundation plan, S-2 framing plan, S-3
+ * decking and guard plan, and S-4 typical section. Every member, post and footing drawn is one the takeoff prices; the
+ * sheets add dimensions, callouts and notes.
  * The notes cite the public references the framing engine uses (docs/deckcraft/structure-sources.md) and never claim
  * a review outcome: the municipality's review decides.
  */
@@ -67,12 +70,21 @@ function finish(id:Sheet['id'],title:string,items:DrawItem[],notes:string[],lege
   return {id,title,ratio,scaleLabel:label,items,extents,notes,legend};
 }
 
+/** A sheet at the largest standard scale its items fit, text included (the elevations and the section). */
+function fitted(id:Sheet['id'],title:string,items:DrawItem[],notes:string[],legend:LayerId[]):Sheet{
+  const {ratio,label,extents}=fitScale(items);
+  return {id,title,ratio,scaleLabel:label,items,extents,notes,legend};
+}
+
 export function buildPermitSet(input:PermitSetInput):DrawingSet{
   const {data,model}=input,main=model.levels[0],b=bounds(model),hardware=getHardwareLayout(data,model);
   const contact=data.houseVisible===false?null:getHouseContact(data,main.footprint);
   const base=[...outlines(model),...houseWall(data,model)];
   const footings=model.quantities.footings,blocks=data.foundation==='Deck Blocks',helical=data.foundation==='Helical Piles';
-  const reference=main.reference,joistSize=data.framingSize,spacing=data.joistSpacing,mainFront=main.offset.z+main.footprint.bounds.h;
+  const reference=main.reference,joistSize=data.framingSize,mainFront=main.offset.z+main.footprint.bounds.h;
+  // Diagonal and herringbone decking is framed at 12 in, whatever spacing is selected (deckTakeoff.ts).
+  const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
+  const section=typicalSection(data,model,{materialName:input.materialName,railingName:input.railingName},{x:0,y:0});
 
   // S-1: footings and posts, dimensioned along each beam row and out from the house.
   const s1:DrawItem[]=[...base];
@@ -109,7 +121,7 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
   // Beam rows along the house (a wrap-around's wing beams run the other way and are dimensioned by their own rows).
   const mainRows=[...new Set(main.beams.filter(m=>m.role!=='hip'&&Math.abs(m.a.z-m.b.z)<1e-6&&m.a.z>0).map(m=>Math.round(m.a.z*2)/2))].sort((p,q)=>p-q);
   s2.push(...chain([{x:b.maxX,y:0},...collapse(mainRows).map(z=>({x:b.maxX,y:z})),{x:b.maxX,y:main.footprint.bounds.h+main.offset.z}],-24));
-  s2.push(...overall(main,false));
+  s2.push(...overall(main,false),...sectionMark(section.mark));
   const bolts=hardware.ledgerBolts.length,hangers=hardware.hangers.length+(hardware.skewedHangers?.length??0);
   const s2Notes=[
     `Joists: ${joistSize} S-P-F No. 1/No. 2 @ ${spacing}" o.c.; spans within OBC 2024 Table 9.23.4.2.-A (with bridging), ${feetInches(reference.joistSpanLimitIn)} at this size and spacing.`,
@@ -138,26 +150,68 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
   }
   const flights=model.stringers.filter(m=>m.stair).reduce((list,m)=>list.some(f=>f.risers===m.stair!.risers&&Math.abs(f.rise-m.stair!.rise)<.01)?list:[...list,m.stair!],[] as NonNullable<Member['stair']>[]);
   const height=model.railing.height;
+  const guardNote=data.railingType==='None'?'No guard is drawn. OBC 9.8.8.1 requires one where the deck is more than 600 mm above the ground within 1.2 m of it.'
+    :`Guard: ${input.railingName}, ${height} in high. OBC 9.8.8.3 and Barrie's Deck Specs: 36 in (900 mm) where the deck is 5'-11" (1.8 m) or less above grade, 42 in (1070 mm) above.`;
   const s3Notes=[
     `Decking: ${input.materialName}${data.deckingColor?`, ${data.deckingColor}`:''}; ${data.pattern.toLowerCase()} pattern.`,
-    ...(data.railingType==='None'?['No guard is drawn. OBC 9.8.8.1 requires one where the deck is more than 600 mm above the ground within 1.2 m of it.']
-      :[`Guard: ${input.railingName}, ${height} in high. OBC 9.8.8.3 and Barrie's Deck Specs: 36 in (900 mm) where the deck is 5'-11" (1.8 m) or less above grade, 42 in (1070 mm) above.`]),
+    guardNote,
     ...flights.map(f=>`Stair: ${f.risers} risers of ${f.rise.toFixed(2)} in and a ${f.run.toFixed(2)} in run. OBC Table 9.8.4.1 (private stairs): rise 125–200 mm (4.9–7.9 in), run 255–355 mm (10.0–14.0 in).`),
     ...(flights.some(f=>f.risers>3)?['Barrie requires a handrail where a stair has more than 3 risers.']:[]),
   ];
 
+  const plans=[
+    finish('S-1','Foundation plan',s1,s1Notes,['S-FTNG','S-POST','A-DECK-OTLN','A-HOUS','A-ANNO-DIMS']),
+    finish('S-2','Framing plan',s2,s2Notes,['S-JOIS','S-BEAM','S-BLKG','S-LEDG','S-POST','A-ANNO-DIMS']),
+    finish('S-3','Decking and guard plan',s3,s3Notes,['A-DECK-OTLN','A-DECK-BRDS','A-RAIL','A-STRS','A-HOUS']),
+  ];
+
+  // A-1 and S-4 sit below the plans in model space (30 ft clear), so the one DXF holds every sheet without overlap.
+  const planLeft=Math.min(...plans.map(p=>p.extents.minX)),planBottom=Math.max(...plans.map(p=>p.extents.maxY));
+  const a1Items=elevationItems(data,model,{x:planLeft,y:planBottom+360}),a1Fit=fitScale(a1Items);
+  const levelWords=model.levels.map((l,i)=>i===0?'':`; ${l.kind==='landing'?'landing':l.kind==='winder'?'winder':`level ${(l.index??i)+1}`} ${feetInches(l.top)}`).join('');
+  const a1Notes=[
+    'Front, left and right elevations, projected from the 3D design and seen from the yard. Framing behind the rim, fascia or skirting is not drawn; footings below grade are dashed.',
+    'Grade is drawn level, as the design assumes. Measure the grade at each post and confirm post lengths and footing depths on site.',
+    'The house is drawn from the design\'s house model for context: its openings and roof are approximate, and it is cut where it runs past the deck.',
+    `Deck surface ${feetInches(main.top)} above grade${levelWords}.`,
+    guardNote,
+    ...(flights.length?[`${flights.length} stair flight${flights.length===1?'':'s'}: rise, run and handrail notes on S-3.`]:[]),
+  ];
+  const s4Items=translate(section.items,planLeft,a1Fit.extents.maxY+360);
+  const ref=section.reference,rows=ref.beamRows.length;
+  const s4Notes=[
+    `Section 1 is cut between two joists where marked on S-2, looking toward the deck's right-hand end: ${rows} beam row${rows===1?'':'s'}, joist span ${feetInches(ref.joistSpanIn)}${ref.edgeBeams?'':`, cantilever ${feetInches(ref.cantileverIn)}`}, framed as on S-2.`,
+    s2Notes[0],
+    `Beam: ${ref.beam.plies}-ply ${ref.beam.size}, ${ref.beamMount==='drop'?'the joists bearing on top':'flush with the joists, which hang on hangers'}; ${feetInches(ref.beamSpanLimitIn)} limit between posts at its supported length, from OBC 2024 Table 9.23.4.2.-H (3-ply) or Springwater's deck guide (2-ply, supported length up to 3.6 m).`,
+    section.attached?`Ledger fastened to the house rim with ${hardware.ledgerBolts.length} bolts, as priced, and flashed; no ledger on brick veneer or an I-joist rim (Barrie).`:'Freestanding: the deck stands on its own beams and posts and is not fastened to the house.',
+    s1Notes[2],
+    s1Notes[1]+(blocks||helical?'':section.pier.priced?' 16 in piers, as priced for clay or fill soil.':' The pier is drawn 12 in across; the price book does not fix its diameter, so confirm it with the base size.'),
+    s2Notes[3],
+    guardNote,
+  ];
   const deckWords=`${data.width} × ${data.length} ft ${data.deckType==='Attached'?'attached':'freestanding'} deck, ${data.height} in above grade`;
   return {
     sheets:[
-      finish('S-1','Foundation plan',s1,s1Notes,['S-FTNG','S-POST','A-DECK-OTLN','A-HOUS','A-ANNO-DIMS']),
-      finish('S-2','Framing plan',s2,s2Notes,['S-JOIS','S-BEAM','S-BLKG','S-LEDG','S-POST','A-ANNO-DIMS']),
-      finish('S-3','Decking and guard plan',s3,s3Notes,['A-DECK-OTLN','A-DECK-BRDS','A-RAIL','A-STRS','A-HOUS']),
+      fitted('A-1','Elevations',a1Items,a1Notes,['A-DECK-FNSH','S-FRMG','S-BEAM','S-POST','S-FTNG','S-FTNG-HIDN','A-RAIL','A-STRS','A-HOUS','C-TOPO']),
+      ...plans,
+      fitted('S-4','Typical section',s4Items,s4Notes,['A-DECK-FNSH','S-FRMG','S-BLKG','S-LEDG','S-BEAM','S-POST','S-FTNG','A-RAIL','C-TOPO']),
     ],
     project:{title:deckWords,date:input.date,priceBook:input.priceBook},
     firm:{name:BUSINESS.publicName.value,phone:publicContact.phoneDisplay,email:publicContact.email,url:BUSINESS.canonicalUrl.replace(/^https:\/\//,'')},
     reviewItems:[...new Set([...input.reviewItems,...model.issues])],
     footer:PERMIT_FOOTER,
   };
+}
+
+/** Where section 1 is cut: the cutting-plane ends, arrows toward the way it looks (+x), and "1/S-4" at each end. */
+function sectionMark(m:{x:number;y0:number;y1:number}):DrawItem[]{
+  const out:DrawItem[]=[];
+  for(const [y,dir] of [[m.y0,1],[m.y1,-1]] as const){
+    out.push({kind:'line',layer:'A-ANNO-TEXT',a:{x:m.x,y},b:{x:m.x,y:y+dir*14}});
+    out.push({kind:'line',layer:'A-ANNO-TEXT',a:{x:m.x,y},b:{x:m.x+12,y}},{kind:'poly',closed:false,layer:'A-ANNO-TEXT',points:[{x:m.x+8,y:y-2.5},{x:m.x+12,y},{x:m.x+8,y:y+2.5}]});
+    out.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:m.x+14,y:y+3},text:'1/S-4',height:SMALL,anchor:'start'});
+  }
+  return out;
 }
 
 /** Beam members grouped into rows: the plies of one beam lie side by side, 1.5 in apart, over the same span. */

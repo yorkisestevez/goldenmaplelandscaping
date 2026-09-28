@@ -1,14 +1,98 @@
 {
- "default": "9bb12693e56f98a1",
- "L-shape freestanding 2 levels": "27236a53935763a1",
- "curved attached": "fe8f49454583f779",
- "multi-corner winder": "a2254cc93a7208a3",
- "rectangle landing": "dadb6f5d2d956cbd",
- "wrap-around": "a0d764f9b94e5e6f",
- "low flush deck": "4c4d5f4093c68839",
- "walkout 8 ft": "4478fe51dda4224d",
- "deck blocks": "1061cc5d236075bd",
- "helical piles": "e3ccc2e9e0b73c94",
- "no railing": "c1e0741f0db8d2d7",
- "glass railing": "546dbc2c3c21aa2c"
+ "default": {
+  "set": "8da0dc646ec97b20",
+  "A-1": "3708e01cb47be295",
+  "S-1": "c98d6a066b941272",
+  "S-2": "c5de9ae5dc4a0888",
+  "S-3": "70517196257b492f",
+  "S-4": "feeeee801835a15e"
+ },
+ "L-shape freestanding 2 levels": {
+  "set": "8bec97933ffbaa67",
+  "A-1": "7cb84668f1774117",
+  "S-1": "94bc9f868ac51090",
+  "S-2": "df71d22c10b828a3",
+  "S-3": "47db3241bfd70b00",
+  "S-4": "ec01bd0bdbf4910d"
+ },
+ "curved attached": {
+  "set": "a2ecc125a0b7e5e0",
+  "A-1": "3ce644713183765b",
+  "S-1": "3f127a0be39682d5",
+  "S-2": "48156e1a5607371e",
+  "S-3": "8fdb4a8dff4dc74b",
+  "S-4": "a6c2855981748156"
+ },
+ "multi-corner winder": {
+  "set": "7c9347f190c873ac",
+  "A-1": "2ad8fac31d145da9",
+  "S-1": "80e4e62d6e9143b4",
+  "S-2": "5c459fa4a92bf8d5",
+  "S-3": "0f7540141601d597",
+  "S-4": "927351abd9dbc680"
+ },
+ "rectangle landing": {
+  "set": "ddfe6623bafb6efa",
+  "A-1": "8e7a3ba59f7577a2",
+  "S-1": "52631e4c793ede3d",
+  "S-2": "6072259d4d9fc4a3",
+  "S-3": "2b1b616fdd8af851",
+  "S-4": "b3b71b96a9625cfe"
+ },
+ "wrap-around": {
+  "set": "dd6b2221af3489f0",
+  "A-1": "b0b414e2f9c3e682",
+  "S-1": "136a1db94ee426c9",
+  "S-2": "31e8efc90f892044",
+  "S-3": "4b1fc3fed725019a",
+  "S-4": "6e17dbe67c8cb6a5"
+ },
+ "low flush deck": {
+  "set": "3eb64ada32c96c25",
+  "A-1": "82c8a47f6f393e67",
+  "S-1": "5c2bf84b6045978b",
+  "S-2": "98c1c9ea16964f29",
+  "S-3": "9bb493d0909cbd10",
+  "S-4": "723eca6d5a752846"
+ },
+ "walkout 8 ft": {
+  "set": "327e2074dc98b5c7",
+  "A-1": "07fa695ccf5222d2",
+  "S-1": "acc2aaf2a7b68cdf",
+  "S-2": "8e17d403f284a895",
+  "S-3": "8db28f610135a407",
+  "S-4": "0d7926b752b8ebcd"
+ },
+ "deck blocks": {
+  "set": "4ec51fb48cb6bfab",
+  "A-1": "ca522f62cc642663",
+  "S-1": "c8bbad7accd853fd",
+  "S-2": "87d2d64f101158d8",
+  "S-3": "ccc3879c041eea1e",
+  "S-4": "ec5a62fd4bf86b1e"
+ },
+ "helical piles": {
+  "set": "8da0dc646ec97b20",
+  "A-1": "00cffa2c61ad934c",
+  "S-1": "e71dba8b903eff7a",
+  "S-2": "c5de9ae5dc4a0888",
+  "S-3": "70517196257b492f",
+  "S-4": "a3eb013609bd4f99"
+ },
+ "no railing": {
+  "set": "74c640191c05b04d",
+  "A-1": "32823f81693a637e",
+  "S-1": "c98d6a066b941272",
+  "S-2": "c5de9ae5dc4a0888",
+  "S-3": "1fa4ca5bb5473028",
+  "S-4": "668d1becb22922f5"
+ },
+ "glass railing": {
+  "set": "10936b3aec31a2d5",
+  "A-1": "aa9240fa75d62f79",
+  "S-1": "c98d6a066b941272",
+  "S-2": "c5de9ae5dc4a0888",
+  "S-3": "ad4b75ae1c4f57bc",
+  "S-4": "28e846ba985fda6a"
+ }
 }
