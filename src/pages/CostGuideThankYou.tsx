@@ -27,6 +27,7 @@ export default function CostGuideThankYou() {
         title="Your Cost Guide Is On The Way"
         description="Your free 2026 Simcoe County Backyard Cost Guide is downloading. Check your email for the PDF link and follow-up budget worksheets."
         canonical="https://goldenmaplelandscaping.ca/cost-guide/thank-you"
+        noindex
       />
 
       <section className="section-padding pt-48">

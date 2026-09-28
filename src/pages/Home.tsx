@@ -317,6 +317,50 @@ export default function Home() {
   // for one business. root.tsx's `businessGraph` already emits the single
   // canonical #business entity (with real reviews/rating) on every route,
   // this one included. Do not re-add a per-page schema here.
+  // FAQPage structured data for the "Common Questions" section below.
+  // This is NOT a business-entity schema (root.tsx's businessGraph remains the
+  // single canonical #business entity), so the "do not re-add a per-page
+  // schema" rule above does not apply. Q3/Q4 answers resolve through
+  // publicClaimCopy -- the same helper the rendered JSX uses -- so the schema
+  // can never drift from the visible answers.
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Why do you dig so much deeper than other contractors?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Freeze-thaw, drainage, soil, access, and the intended use all affect site preparation. We confirm the project-specific excavation and base plan in the written scope.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Why TimberTech instead of regular wood decking?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: "Because nobody wants to spend their weekends sanding and staining a deck. TimberTech AZEK doesn't rot, warp, or splinter — even after decades of Simcoe County snow and ice. It looks like real wood without any of the maintenance, and it comes with up to a 50-year warranty.",
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What if something goes wrong after the project is done?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available for your project.'),
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is there a fee to get started?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: publicClaimCopy(BUSINESS.commercialPolicies.consultation, 'Contact us to confirm the current consultation and design scope.'),
+        },
+      },
+    ],
+  };
 
   return (
     <>
@@ -324,6 +368,7 @@ export default function Home() {
         title="Barrie Landscaping Company | Patios, Interlock & Retaining Walls"
         description="Barrie landscaping for interlocking patios, driveways, retaining walls and outdoor spaces across Simcoe County. Get an instant cost range and contact us to confirm project details."
         canonical="https://goldenmaplelandscaping.ca/"
+        schema={faqSchema}
       />
       <HeroDepth />
       <ServicesGrid />

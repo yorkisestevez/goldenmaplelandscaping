@@ -8,6 +8,8 @@ const AREAS: { name: string; desc: string; slug: string | null }[] = [
   { name: "Innisfil", desc: "Premium backyard renovations and retaining walls in Innisfil, ON.", slug: "innisfil" },
   { name: "Oro-Medonte", desc: "Custom hardscape construction for rural and lakeside properties.", slug: "oro-medonte" },
   { name: "Springwater", desc: "Premium outdoor construction for Midhurst, Elmvale & Springwater Township.", slug: "springwater" },
+  { name: "Bradford", desc: "Interlocking, driveways and drainage-first landscaping in Bradford and Bond Head.", slug: "bradford-west-gwillimbury" },
+  { name: "Newmarket", desc: "Patios, decks and retaining walls across Newmarket's moraine-edge neighbourhoods.", slug: "newmarket" },
   { name: "Angus", desc: "Professional landscaping and interlocking stone services in Angus.", slug: null },
   { name: "Orillia", desc: "Expert landscape design and construction in the Orillia area.", slug: null },
   { name: "Shanty Bay", desc: "Bespoke outdoor living spaces for Shanty Bay estates.", slug: null },
@@ -19,7 +21,7 @@ export default function ServiceAreas() {
     <div className="pt-32 bg-brand-nearblack min-h-screen">
       <SEO 
         title="Service Areas | Barrie & Simcoe County"
-        description="Golden Maple Landscaping serves Barrie, Innisfil, Oro-Medonte, Springwater, Angus, Orillia, and surrounding areas in Simcoe County. Premium interlocking and landscape design."
+        description="Golden Maple Landscaping serves Barrie, Innisfil, Oro-Medonte, Springwater, Angus, Orillia, Bradford, Newmarket, and surrounding areas in Simcoe County and York Region. Premium interlocking and landscape design."
         canonical="https://goldenmaplelandscaping.ca/service-areas"
       />
       
@@ -117,7 +119,7 @@ export default function ServiceAreas() {
         <div className="text-center bg-brand-midsurface p-16 border border-brand-gold/10 rounded-[2px]">
           <h2 className="font-display text-4xl text-brand-bone mb-8">Serving your neighborhood.</h2>
           <p className="font-sans font-light text-brand-muted mb-12 max-w-2xl mx-auto">
-            Contact Golden Maple Landscaping today to schedule a design consultation. We serve Barrie, Simcoe County, and surrounding Cottage Country communities where project scope aligns with our expertise.
+            Contact Golden Maple Landscaping today to schedule a design consultation. We serve Barrie, Simcoe County, York Region, and surrounding Cottage Country communities where project scope aligns with our expertise.
           </p>
           <Link to="/contact" className="btn-primary px-12 py-5">Discuss Your Property</Link>
         </div>

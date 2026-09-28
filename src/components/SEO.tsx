@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async';
-import { BUSINESS, publicContact, publicPostalAddress, publicServiceAreas } from '../data/business';
+import { BUSINESS, publicContact, publicPostalAddress, publicGbpServiceAreas } from '../data/business';
 
 interface SEOProps {
   title: string;
@@ -7,9 +7,10 @@ interface SEOProps {
   canonical?: string;
   schema?: object;
   image?: string;
+  noindex?: boolean;
 }
 
-export default function SEO({ title, description, canonical, schema, image }: SEOProps) {
+export default function SEO({ title, description, canonical, schema, image, noindex }: SEOProps) {
   const siteName = BUSINESS.publicName.value;
   const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
   const defaultImage = 'https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg';
@@ -45,13 +46,14 @@ export default function SEO({ title, description, canonical, schema, image }: SE
       BUSINESS.urls.homeStars.value,
       BUSINESS.urls.yelp.value,
     ],
-    areaServed: publicServiceAreas.map((name) => ({ '@type': 'City', name })),
+    areaServed: publicGbpServiceAreas.map((name) => ({ '@type': 'City', name })),
   };
 
   return (
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
+      {noindex && <meta name="robots" content="noindex, nofollow" />}
       
       {/* Open Graph */}
       <meta property="og:title" content={fullTitle} />

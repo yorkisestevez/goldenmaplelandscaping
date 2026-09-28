@@ -17,7 +17,7 @@ import SiteChrome from './components/Layout';
 import { initAnalytics, trackPageView } from './utils/analytics';
 import { initAttributionCapture } from './utils/utmCapture';
 import { initBehaviorCapture } from './utils/behavior';
-import { BUSINESS, canPublish, publicContact, publicPostalAddress, publicServiceAreas } from './data/business';
+import { BUSINESS, canPublish, publicContact, publicPostalAddress, publicGbpServiceAreas } from './data/business';
 
 // Canonical business entity for all routes. Publication status lives in
 // src/data/business.ts; unverified review data intentionally never enters schema.
@@ -39,7 +39,7 @@ const businessGraph = {
       priceRange: '$$$',
       currenciesAccepted: 'CAD',
       address: publicPostalAddress(),
-      ...(canPublish(BUSINESS.serviceArea.primary) && canPublish(BUSINESS.serviceArea.secondary) ? { areaServed: publicServiceAreas.map((name) => ({ '@type': 'City', name })) } : {}),
+      areaServed: publicGbpServiceAreas.map((name) => ({ '@type': 'City', name })),
       ...(canPublish(BUSINESS.hours) ? { openingHoursSpecification: BUSINESS.hours.value.map((hours) => ({
         '@type': 'OpeningHoursSpecification',
         dayOfWeek: hours.days,

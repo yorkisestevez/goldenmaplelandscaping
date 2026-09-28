@@ -112,7 +112,7 @@ export const BUSINESS = {
 
   serviceArea: {
     primary: published(['Barrie', 'Innisfil', 'Oro-Medonte', 'Springwater'], 'Existing dedicated location routes'),
-    secondary: published(['Orillia', 'Wasaga Beach', 'Midland', 'Collingwood'], 'Existing service-location matrix and root schema', 'Active service coverage needs owner confirmation.'),
+    secondary: published(['Orillia', 'Wasaga Beach', 'Midland', 'Collingwood', 'Bradford West Gwillimbury', 'Newmarket'], 'Existing service-location matrix and root schema; Bradford West Gwillimbury + Newmarket added per owner direction 2026-09-25', 'Active service coverage needs owner confirmation.'),
   },
   services: published(
     ['Interlocking stone', 'Composite decking', 'Retaining walls', 'Landscape design', 'Outdoor living / backyard transformations'],
@@ -175,7 +175,7 @@ export const publicContact = {
   email: BUSINESS.contact.email.value,
 } as const;
 
-export const publicServiceAreas = [
+/** Google Business Profile service areas, in GBP order. Names only. */ export const publicGbpServiceAreas = ['Barrie', 'Orillia', 'Innisfil', 'Newmarket', 'Angus', 'Oro-Medonte', 'Essa', 'Wasaga Beach', 'Thornton', 'Simcoe', 'Keswick', 'Midhurst', 'Alliston', 'Shanty Bay', 'Bradford West Gwillimbury', 'Coldwater', 'Stayner', 'Cookstown', 'Elmvale', 'Tottenham'] as const; export const publicServiceAreas = [
   ...BUSINESS.serviceArea.primary.value,
   ...BUSINESS.serviceArea.secondary.value,
 ] as const;
