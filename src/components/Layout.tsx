@@ -23,6 +23,7 @@ const SERVICE_LINKS = [
   { href: "/services/retaining-walls-barrie", label: "Retaining Walls" },
   { href: "/services/outdoor-kitchens-barrie", label: "Outdoor Kitchens" },
   { href: "/services/front-entrance-landscaping-barrie", label: "Front Entrances" },
+  { href: "/services/seasonal-cleanup-barrie", label: "Seasonal Clean-Ups" },
   { href: "/services/landscape-design-barrie", label: "Landscape Design" },
 ];
 

@@ -32,6 +32,7 @@ function renderBusinessBrief() {
 - **Retaining walls** — engineered structural walls with geogrid reinforcement for sloped lots; engineering to project review.
 - **Landscape design** — full-property design: site assessment, renderings, planting plans, and construction scope.
 - **Outdoor living / backyard transformations** — complete outdoor spaces. Confirm availability and scope for your address.
+- **Seasonal clean-ups** — spring and fall: leaves and debris cleared and hauled away, garden beds and shrubs tidied, patios and interlock swept or washed with joints re-sanded. Barrie, Innisfil, Oro-Medonte and Springwater; quoted per property. Lawn care is not included.
 
 Service areas with dedicated pages: ${areas}. A published page does not confirm active service coverage — confirm availability for your address.
 

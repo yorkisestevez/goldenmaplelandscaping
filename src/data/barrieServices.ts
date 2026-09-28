@@ -12,6 +12,9 @@
  * conflicting), no price ranges until the owner supplies them, no credential,
  * warranty, review or "free" claims, no promise to handle permits.
  *
+ * Services the cost estimator doesn't price (seasonal clean-ups) set `cta`
+ * instead of `estimatorType`.
+ *
  * Side-effect-free: react-router.config.ts may import it at build time.
  */
 import { BUSINESS, publicClaimCopy, type BusinessFact } from './business';
@@ -37,8 +40,13 @@ export interface BarrieServiceDef {
   projectCategories: ProjectCategory[];
   projectsHeading: string;
   related: { label: string; to: string }[];
-  /** /cost-estimator?type= value (VALID_PROJECT_TYPES in Estimator.tsx). */
-  estimatorType: 'patio' | 'steps' | 'kitchen' | 'wall' | 'full';
+  /**
+   * /cost-estimator?type= value (VALID_PROJECT_TYPES in Estimator.tsx). A page sets
+   * exactly one of estimatorType or cta (scripts/check-barrie-services.ts).
+   */
+  estimatorType?: 'patio' | 'steps' | 'kitchen' | 'wall' | 'full';
+  /** For services the estimator doesn't price: replaces the estimator buttons and the dark band copy. */
+  cta?: { label: string; to: string; band: [string, string]; bandBody: string };
   offering: BusinessFact<string>;
 }
 
@@ -344,6 +352,88 @@ export const BARRIE_SERVICES: readonly BarrieServiceDef[] = [
     ],
     estimatorType: 'steps',
     offering: BUSINESS.serviceOfferings.frontEntrances,
+  },
+  {
+    // Scope, seasons, area and quote-per-property are the owner's 2026-09-28 answers
+    // (BUSINESS.serviceOfferings.seasonalCleanups.notes). No lawn care: never list
+    // aeration, overseeding or mowing as included.
+    slug: 'seasonal-cleanup-barrie',
+    primaryKeyword: 'Seasonal Clean-Ups',
+    title: 'Seasonal Clean-Ups Barrie | Spring & Fall Yard Clean-Up',
+    description: 'Spring and fall clean-ups in Barrie, Innisfil, Oro-Medonte and Springwater: debris hauled away, beds and shrubs tidied, patios swept and joints re-sanded.',
+    h1: 'Seasonal Clean-Ups in Barrie',
+    tagline: ['A clean start in spring,', 'a clean close in fall.'],
+    serviceType: 'Seasonal property clean-up',
+    intro: [
+      "A seasonal clean-up is the reset a property needs twice a year. In spring it's clearing out what winter left behind: leaves matted into the beds, branches on the lawn, grit and salt along the driveway. In fall it's closing the yard up before the snow, so nothing sits on the beds, lawn or patio all winter.",
+      "Golden Maple builds patios, walkways and retaining walls, so our clean-ups come with a builder's eye. While we clean, we look at the hardscape: joints that washed out, pavers that lifted, a drain that's clogged, a wall that's starting to lean. You get a clean yard and a written note of anything that needs attention.",
+    ],
+    scopeHeading: 'What a clean-up covers',
+    scope: [
+      'Leaves, branches and winter debris cleared from beds, lawn edges, corners and hardscape',
+      'All debris bagged and hauled away',
+      'Beds weeded and perennials cut back',
+      'Shrubs and hedges pruned at the right time for each plant',
+      'Bed edges re-cut and fresh mulch laid',
+      'Patios, walkways and driveways swept or washed',
+      'Polymeric sand topped up where joints have washed out',
+      'A written note of any heaving, settlement or drainage problems we find',
+    ],
+    sections: [
+      {
+        heading: 'Spring clean-up: after the thaw',
+        body: [
+          "Spring clean-ups start once the snow is gone and the ground is firm enough to work on without leaving ruts in the lawn and beds. Winter leaves behind more than it looks like from the window: wet leaves packed into the beds, broken branches, grit and salt along the driveway, and sand washed out of paver joints by snowmelt.",
+          "We clear the debris, cut back last year's perennial growth before the new shoots come up, prune shrubs and hedges that are ready for it, re-cut the bed edges and lay fresh mulch. On the hardscape, we sweep or wash the surfaces and top up the joints that lost their sand over the winter.",
+        ],
+      },
+      {
+        heading: 'Fall clean-up: before the snow',
+        body: [
+          "Fall clean-ups are best timed after most of the leaves are down and before the first snow that stays. Leaves left on a lawn over winter mat down and smother the grass, and wet leaves left on pavers can stain the surface.",
+          'We clear the leaves and debris, cut back the perennials that won\'t stand through winter, tidy the beds and prune what should be pruned before the cold. We clear the patios and walkways and pull leaves out of the channel drains, so meltwater has somewhere to go in spring.',
+        ],
+      },
+      {
+        heading: 'Why a hardscape crew does it differently',
+        body: [
+          'Most patio damage starts small: a joint that lost its sand, a paver that lifted a few millimetres, a downspout that now empties against the edge. A clean-up is the one time each season someone looks closely at every hard surface on the property, which makes it the right time to catch those problems.',
+          "We clean hardscape the way it was built to be cleaned. Pressure-washing a paver patio up close blasts the sand out of the joints and leaves them open to weeds and ants, so wherever a surface is washed, the joints are topped up with polymeric sand afterward.",
+          "If something needs more than a clean-up, like a settled section of patio or a wall that has moved, we write it down and you decide what to do about it. Repairs aren't started as part of a clean-up.",
+        ],
+      },
+      {
+        heading: 'Booking and pricing',
+        body: [
+          'Clean-ups are quoted per property. The price depends on the size of the property, how many beds and shrubs there are, and how much debris there is to haul away. Tell us the address, the season and what you need, and we confirm the scope and the price before the crew arrives.',
+          'We do seasonal clean-ups in Barrie, Innisfil, Oro-Medonte and Springwater. Spring and fall are the busy weeks, so it helps to get in touch before the season starts.',
+        ],
+      },
+    ],
+    faqs: [
+      { q: 'When should I book a spring clean-up in Barrie?', a: "Get in touch before the snow is gone. The clean-up itself happens once the ground has firmed up enough to work on without leaving ruts in the lawn and beds." },
+      { q: 'When is the best time for a fall clean-up?', a: 'After most of the leaves have come down and before the first snow that stays. Too early and the trees drop another layer after we leave; too late and wet leaves freeze onto the lawn and patio.' },
+      { q: 'Do you take the leaves and debris away?', a: 'Yes. Leaves, branches and yard debris are bagged and hauled away as part of the clean-up.' },
+      { q: 'Can you re-sand my patio joints during a clean-up?', a: "Yes. Where joints have washed out, we top them up with polymeric sand. If pavers have lifted or sunk, that's a repair rather than a clean-up, and we'll note it for you." },
+      { q: 'Do you do lawn aeration or overseeding?', a: 'Not as part of a clean-up. Our clean-ups cover leaves and debris, garden beds and shrubs, and patio and interlock care.' },
+      { q: 'How much does a seasonal clean-up cost?', a: 'Every property is quoted individually, based on its size, the number of beds and shrubs, and how much debris there is to haul away. The scope and price are confirmed before any work starts.' },
+      { q: 'Which areas do you cover for clean-ups?', a: 'Barrie, Innisfil, Oro-Medonte and Springwater.' },
+    ],
+    projectCategories: [],
+    projectsHeading: 'Clean-up work by Golden Maple',
+    related: [
+      { label: 'Spring Cleanup Checklist for Barrie Homeowners', to: '/resources/spring-cleanup-checklist-barrie' },
+      { label: 'How to Protect Your Interlocking Stone From Winter Damage', to: '/resources/winter-damage-prevention-interlocking' },
+      { label: 'Polymeric Sand vs. Regular Sand', to: '/resources/polymeric-sand-vs-regular-sand-patio' },
+      { label: 'Interlocking patios & walkways', to: '/services/interlocking-barrie' },
+    ],
+    cta: {
+      label: 'Request a Clean-Up Quote',
+      to: '/contact?service=seasonal-cleanup',
+      band: ['Book your spring or fall clean-up.', 'Quoted for your property.'],
+      bandBody: 'Tell us the address, the season and what needs doing. We confirm the scope and the price for your property before the crew arrives.',
+    },
+    offering: BUSINESS.serviceOfferings.seasonalCleanups,
   },
 ];
 

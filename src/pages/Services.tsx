@@ -75,6 +75,13 @@ const SERVICE_CARDS: Array<{ id: string; title: string; desc: string; icon: type
     link: '/services/outdoor-kitchens-barrie'
   },
   {
+    id: 'cleanups',
+    title: 'Seasonal Clean-Ups',
+    desc: 'Spring and fall clean-ups: debris hauled away, beds and shrubs tidied, patios swept and joints re-sanded, with a builder\'s eye on the hardscape.',
+    icon: Leaf,
+    link: '/services/seasonal-cleanup-barrie'
+  },
+  {
     id: 'firepits',
     title: 'Fire Features',
     desc: 'The gathering spot that turns a cool evening into the best part of your week. Your family\'s new favourite place.',

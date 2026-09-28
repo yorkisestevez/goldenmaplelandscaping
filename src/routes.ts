@@ -22,6 +22,7 @@ export default [
   route('services/porcelain-patios-barrie', 'pages/services/barrie/PorcelainPatios.tsx'),
   route('services/outdoor-kitchens-barrie', 'pages/services/barrie/OutdoorKitchens.tsx'),
   route('services/front-entrance-landscaping-barrie', 'pages/services/barrie/FrontEntranceLandscaping.tsx'),
+  route('services/seasonal-cleanup-barrie', 'pages/services/barrie/SeasonalCleanup.tsx'),
   route('services/:slug', 'pages/services/ServiceLocation.tsx'),
 
   // Core pages

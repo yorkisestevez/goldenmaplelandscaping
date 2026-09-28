@@ -1,7 +1,7 @@
 {
   "passed": true,
-  "routes_checked": 149,
-  "schemas_checked": 282,
+  "routes_checked": 151,
+  "schemas_checked": 286,
   "allowed_by_register": [],
   "findings": [],
   "warnings": [
@@ -39,6 +39,11 @@
       "route": "/resources/how-to-choose-landscaping-contractor-barrie",
       "rule": "universal_base_depth",
       "excerpt": "e clay soil and extreme freeze-thaw cycles, the base needs to be 12-16 inches deep. If they say 6-8 inches, they're building to the bare minimum. Your patio will look great in"
+    },
+    {
+      "route": "/resources/hpb-vs-limestone-screenings-barrie",
+      "rule": "universal_base_depth",
+      "excerpt": " the same drainage logic applies \u2014 which is why our base spec is 12\u201316 inches of compacted clear stone, not granular A , on driveway work. When Limestone Screenings Are Still "
     },
     {
       "route": "/resources/interlocking-cost-barrie",

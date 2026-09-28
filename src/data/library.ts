@@ -66,6 +66,7 @@ export const LIBRARY_SECTIONS = [
     services: [
       { label: 'Sloped backyard landscaping in Barrie', to: '/sloped-backyard-solutions-barrie' },
       { label: 'Landscape construction in Barrie', to: '/luxury-landscape-barrie' },
+      { label: 'Seasonal clean-ups in Barrie', to: '/services/seasonal-cleanup-barrie' },
     ],
   },
   {

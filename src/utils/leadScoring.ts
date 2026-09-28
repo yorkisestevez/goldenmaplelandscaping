@@ -18,6 +18,11 @@ const premiumLocations = ['barrie', 'innisfil', 'springwater', 'oro-medonte', 'm
 // 'deck' joined 2026-09-23 (owner): decks are a priority service like patios and walls.
 const moneyServices = ['outdoor', 'backyard', 'patio', 'interlock', 'retaining', 'wall', 'slope', 'drainage', 'hardscape', 'deck'];
 const lowFitWords = ['cheap', 'small repair', 'just pricing', 'lawn', 'maintenance', 'garden bed', 'sod only'];
+// Seasonal clean-ups joined 2026-09-28 (owner): a real, small-ticket service. Tag the lead
+// instead of burying it under the budget and low-fit penalties (its wording naturally
+// mentions beds, lawns and maintenance). Needs a seasonal word so "is site clean-up
+// included?" on a patio lead doesn't count.
+const cleanupPattern = /\b(?:seasonal|spring|fall|autumn|yard|leaf|leaves)\s+clean[\s-]?ups?\b/;
 
 function text(input: LeadScoreInput) {
   return [
@@ -35,6 +40,8 @@ export function scoreGoldenMapleLead(input: LeadScoreInput) {
   const haystack = text(input);
   let score = 0;
   const reasons: string[] = [];
+  const isCleanup = cleanupPattern.test(haystack);
+  if (isCleanup) reasons.push('seasonal_cleanup');
 
   // Historical under-25k submissions span both sides of the new target;
   // leave their budget component neutral without a numerical estimate.
@@ -46,7 +53,7 @@ export function scoreGoldenMapleLead(input: LeadScoreInput) {
     score += 15; reasons.push('budget_or_estimate_35k_plus');
   } else if (budget === '13k-25k' || (estimateHigh >= PROJECT_BUDGET_TARGET && estimateHigh < 35000)) {
     score += 10; reasons.push('budget_or_estimate_13k_plus');
-  } else if (budget === 'under-13k' || (estimateHigh > 0 && estimateHigh < PROJECT_BUDGET_TARGET)) {
+  } else if (!isCleanup && (budget === 'under-13k' || (estimateHigh > 0 && estimateHigh < PROJECT_BUDGET_TARGET))) {
     score -= 30; reasons.push('below_target_budget');
   }
 
@@ -65,7 +72,7 @@ export function scoreGoldenMapleLead(input: LeadScoreInput) {
   if (input.hasPhotos) {
     score += 10; reasons.push('photos_supplied');
   }
-  if (lowFitWords.some(w => haystack.includes(w))) {
+  if (!isCleanup && lowFitWords.some(w => haystack.includes(w))) {
     score -= 25; reasons.push('low_fit_language');
   }
 
