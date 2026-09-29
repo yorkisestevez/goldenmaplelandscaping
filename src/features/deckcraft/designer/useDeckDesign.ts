@@ -105,13 +105,18 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
     window.addEventListener('hashchange',onHash);
     return ()=>window.removeEventListener('hashchange',onHash);
   },[]);
+  // A change made less than 450 ms before the designer closes (the cost estimator's "Use this deck", or leaving the
+  // page in the app) is written as it closes, so the next visit opens exactly the deck that was used. Never while
+  // autosave is paused over a preserved file.
+  const unsaved=useRef(false),pausedRef=useRef(autosavePaused);pausedRef.current=autosavePaused;
+  useEffect(()=>()=>{if(unsaved.current&&!pausedRef.current)try{localStorage.setItem(DECK_RELEASE_STORAGE_KEY,serializeDesign(dataRef.current));}catch{/* Storage unavailable: nothing more to keep. */}},[]);
   useEffect(()=>{
     if(!storageReady)return;
     if(autosavePaused){setAutosaveState('error');return;}
-    setAutosaveState('saving');
+    setAutosaveState('saving');unsaved.current=true;
     const timer=setTimeout(()=>{
       try{
-        localStorage.setItem(DECK_RELEASE_STORAGE_KEY,serializeDesign(data));
+        localStorage.setItem(DECK_RELEASE_STORAGE_KEY,serializeDesign(data));unsaved.current=false;
         setLastAutosaveAt(new Date().toISOString());setAutosaveState('saved');
         setDesignError(previous=>previous.startsWith('Automatic saving is unavailable')?'':previous);
       }catch{setAutosaveState('error');setDesignError('Automatic saving is unavailable on this device. Use Save JSON to keep your design.');}

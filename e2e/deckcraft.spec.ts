@@ -562,38 +562,52 @@ test('adds a fire pit and turf as labelled estimator allowances, and takes them 
   expect(problems).toEqual([]);
 });
 
-// One deck price on the site: the cost estimator hands every deck to the designer, at its size.
-test('a deck link to the cost estimator opens the designer at that size',async({page})=>{
+// One deck price on the site: the designer's. It opens inside the cost estimator, and prices a full backyard's deck.
+test('a deck link to the cost estimator opens the designer there, at that size',async({page})=>{
   const problems:string[]=[];
   page.on('pageerror',e=>problems.push(String(e)));
   await page.goto('/cost-estimator?type=deck&sqft=300');
-  await expect(page).toHaveURL(/\/deck-designer\/?$/);
+  await expect(page).toHaveURL(/\/cost-estimator\/?\?studio=deck$/);
+  await expect(page.getByRole('region',{name:'Cost estimator'})).toContainText('Cost estimator · deck');
   await expect(size(page)).toContainText('20 × 15 ft');
   await openFiles(page);
   await expect(page.getByText(/Started from your cost estimate: a deck of about 300 sq ft \(20 × 15 ft\)/)).toBeVisible();
+  // Back returns to the estimator, with the deck still chosen.
+  await page.getByRole('button',{name:'Project types'}).click();
+  await expect(page.getByRole('button',{name:'Composite Deck',pressed:true})).toBeVisible();
   expect(problems).toEqual([]);
 });
 
-test('a full-backyard estimate leaves the deck to the designer and does not price it',async({page})=>{
+test('a full-backyard estimate prices its deck with the designer and adds it to the total',async({page})=>{
   const problems:string[]=[];
   page.on('pageerror',e=>problems.push(String(e)));
   await page.goto('/cost-estimator?type=full');
   const live=page.getByRole('complementary',{name:'Live estimate'});
   await expect(live).toContainText('$');
-  await page.waitForTimeout(1500);// the live figure counts up to its value
-  const before=await live.textContent();
   await page.getByRole('button',{name:'Composite Deck',pressed:false}).click();
   await expect(page.getByRole('button',{name:'Composite Deck',pressed:true})).toBeVisible();
-  const handoff=page.getByRole('link',{name:/Design and price your deck/});
-  await expect(handoff).toHaveAttribute('href','/deck-designer?sqft=300');
-  await expect(handoff).toHaveAttribute('target','_blank');
+  // A starter deck at the chosen 300 sq ft, priced by the designer and on the live receipt.
+  const card=page.locator('[data-estimator-deck="starter"]');
+  await expect(card).toContainText('20 × 15 ft');
+  await expect(card).toContainText('included in this estimate');
+  await expect(live).toContainText('Deck (starter)');
+  const starterText=(await card.textContent())?.match(/\$([\d,]+\.\d{2})/)?.[1];
+  expect(starterText).toBeTruthy();
+  // The designer shows whole dollars; the estimate shows the same price to the cent.
+  const starter=Math.round(Number(starterText!.replace(/,/g,''))).toLocaleString('en-CA');
   await expect(page.getByText('How high off the ground?')).toHaveCount(0);
-  await page.waitForTimeout(1500);
-  await expect(live).toHaveText(before??'');
-  // A backyard that is only a deck goes straight to the designer.
+  // Designing it opens the designer in the estimator, at that size and that price; using it brings it back.
+  await page.getByRole('button',{name:/Design your deck in 3D/}).click();
+  await expect(page).toHaveURL(/studio=full/);
+  await expect(size(page)).toContainText('20 × 15 ft');
+  await expect(page.getByRole('region',{name:'Cost estimator'})).toContainText(`$${starter}`);
+  await page.getByRole('button',{name:'Use this deck in my estimate'}).click();
+  await expect(page.locator('[data-estimator-deck="design"]')).toContainText('Your 3D deck design',{ignoreCase:true});
+  await expect(live).toContainText('Deck (your 3D design)');
+  // A backyard that is only a deck is the designer's whole estimate.
   for(const name of ['Patio / Interlock','Retaining Wall','Landscape Lighting'])await page.getByRole('button',{name,exact:true,pressed:true}).click();
   await page.getByRole('button',{name:'Continue →'}).first().click();
-  await expect(page).toHaveURL(/\/deck-designer\/?$/);
+  await expect(page).toHaveURL(/studio=deck/);
   await expect(size(page)).toContainText('20 × 15 ft');
   expect(problems).toEqual([]);
 });

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { motion } from 'motion/react';
-import { Pickaxe, Package, Hammer, Trash2, Sparkles, Check, X } from 'lucide-react';
+import { Pickaxe, Package, Hammer, Trash2, Sparkles, Check, X, Layout } from 'lucide-react';
 import AnimatedPrice, { AnimatedMoney } from './ui/AnimatedPrice';
 import type { PreciseResult } from '../utils/estimateEngine';
 import { BUSINESS, publicClaimCopy } from '../data/business';
@@ -24,6 +24,9 @@ export interface BreakdownProps {
    *  invoice-style: exact category figures, subtotal, HST, grand total — with
    *  the widened range demoted to secondary context. */
   precise?: PreciseResult | null;
+  /** A full backyard's deck, as the 3D deck designer priced it. Its cents are
+   *  already inside `precise` (subtotal, HST and total); this is its own line. */
+  deck?: { cents: number; label: string; drawn: boolean; quoteItems: number } | null;
   brandName?: string;
   sqft?: number;
   city?: string;
@@ -202,6 +205,25 @@ export default function EstimateBreakdown(props: BreakdownProps) {
               </motion.div>
             );
           })}
+          {props.deck && props.deck.cents > 0 ? (
+            <div className="py-5 flex items-start gap-4" data-breakdown-line="deck">
+              <div className="w-9 h-9 rounded-xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold-dark shrink-0">
+                <Layout size={16} strokeWidth={1.75} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-baseline gap-4">
+                  <span className="font-sans text-[14px] text-brand-bone">{props.deck.drawn ? 'Composite Deck · your 3D design' : 'Composite Deck · starter deck'}</span>
+                  <span className="font-display text-lg md:text-xl text-brand-gold-dark tabular-nums whitespace-nowrap tracking-tight">
+                    {money(props.deck.cents)}
+                  </span>
+                </div>
+                <p className="font-sans text-[12px] font-light text-brand-muted mt-1.5 leading-relaxed">
+                  {props.deck.label}. Priced by our 3D deck designer
+                  {props.deck.quoteItems > 0 ? `, the priced portion: ${props.deck.quoteItems} item${props.deck.quoteItems === 1 ? ' is' : 's are'} still to quote` : ''}.
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {/* Invoice footer — subtotal / HST / total, to the cent. */}

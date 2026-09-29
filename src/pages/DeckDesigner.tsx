@@ -1,4 +1,4 @@
-import {Suspense,lazy,useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {Suspense,lazy,useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {Link} from 'react-router-dom';
 import SEO from '../components/SEO';
 import {deckReleaseData,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
@@ -11,7 +11,7 @@ import {ATTACH_PROPOSAL_PDF,DECK_DESIGN_FORM,PROPOSAL_PDF_NAME} from '../feature
 import type {ProposalShot} from '../features/deckcraft/proposalModel';
 import {getHouseConfig,clampHouseOpening} from '../features/deckcraft/houseSettings';
 import {getHouseContact} from '../features/deckcraft/houseContact';
-import {dollars} from '../features/deckcraft/designFacts';
+import {dollars,type DeckEstimate} from '../features/deckcraft/designFacts';
 import {activeWrap,edgeNameOf} from '../features/deckcraft/lib/wrapGeometry';
 import {angledStairAllowed,angledStairFits,isChamferEdgeId} from '../features/deckcraft/lib/cornerChamfers';
 import {CAMERA_MODES,type PlanTool,type PreviewMode} from '../features/deckcraft/designer/constants';
@@ -77,6 +77,17 @@ setDeckAnalyticsSink((event,label)=>trackEngagement(event,label));
  * effect lives here, in the order the page has always run them.
  */
 export default function DeckDesigner(){
+  return <DeckCraftWorkspace/>;
+}
+
+/** The cost estimator's hold on the designer when it opens it inside itself: a bar above the workspace, drawn from the
+ *  live design and estimate. The estimator's page keeps its own title and address, so the designer adds none. */
+export interface DeckCraftEmbed{
+  renderBar:(live:{data:DeckData;estimate:DeckEstimate})=>ReactNode;
+}
+
+/** The whole designer: the /deck-designer page, and the cost estimator's deck step (`embed`). */
+export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // The open sections. Every section starts closed, in the prerendered page and on the client alike; none is saved.
   const [open,setOpen]=useState<ReadonlySet<SectionId>>(()=>new Set(['deck']));
   const [workspaceView,setWorkspaceView]=useState<'canvas'|'inspector'>('canvas');
@@ -401,8 +412,8 @@ export default function DeckDesigner(){
     else openSection(action.section,true);
   };
   const currentIssues=[...new Set([...reviewFlags,...lightingCheck.warnings])];
-  return <div className="deck-designer" data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined}>
-    <SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>
+  return <div className="deck-designer" data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>
+    {embed?embed.renderBar({data,estimate}):<SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>}
     <header className="dd-header"><Link to="/" className="dd-workspace-brand" aria-label="Golden Maple home"><span className="dd-brand-symbol" aria-hidden="true">↗</span><span>DeckCraft<small>Golden Maple</small></span></Link><div className="dd-workspace-project"><h1>Draw your deck on your house.</h1><span className="dd-save-state"><i aria-hidden="true"/>{autosavePaused?'Auto-save paused':mounted?'Auto-save on this device':'Loading your design'}</span></div><WorkspaceTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={()=>saveJSON()} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} autosavePaused={autosavePaused} onDownloadPrevious={unrestoredDesign?()=>downloadFile(unrestoredDesign,'application/json','golden-maple-previous-design.json'):undefined}/><div id="dd-workspace-agent-slot"><button type="button" className="dd-agent-open" disabled={!mounted||!designReady} aria-haspopup="dialog" onClick={()=>setPresetsOpen(true)}>Presets</button><button type="button" className="dd-agent-open" aria-haspopup="dialog" onClick={()=>setAgentOpen(true)}>Agents</button></div><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
     {mounted&&<Suspense fallback={null}><EasyEditTools onAsk={()=>{showCanvas();setAskOpen(true);requestAnimationFrame(()=>{if(window.matchMedia('(max-width:800px)').matches)document.getElementById('dd-assistant-dock')?.scrollIntoView({block:'start',behavior:'smooth'});});}} onJobs={()=>setJobsOpen(true)} onIssues={()=>setIssuesOpen(true)} issues={currentIssues.length} ready={designReady} autosaveState={autosaveState} savedAt={lastAutosaveAt} jobLabel={jobLabel}/></Suspense>}
     <main className="dd-workspace">
