@@ -1,5 +1,7 @@
 /**
- * Carr Landscape Depot pricing — sourced from carr-price-list skill (2025 price book).
+ * Carr Landscape Depot pricing — sourced from carr-price-list skill. 2025 price book,
+ * except the takeoff aggregates (¾" clear stone, HPB), which moved to the 2026 book
+ * (effective 2026-05-01) on 2026-09-23. A full 2026 refresh is still outstanding.
  * `materialRetailPerSqft` is Carr's RETAIL material price (base color) — the number
  * shown on the brand-picker cards. `installedPerSqft` is the all-in installed anchor
  * (excavation, base, crew, disposal, margin) that the estimate math is built on; it
@@ -209,12 +211,16 @@ export const DELIVERY_ZONE1 = 285;
  */
 export const CARR_TRADE = {
   aggregates: {
-    /** ¾" Clear Stone (open-graded ICPI base), $/tonne trade. */
-    clearStone34PerTonne: 29.50,
-    /** HPB 1" bedding layer, $/tonne trade. */
-    hpbPerTonne: 26.22,
-    /** Locked coverage rule: 1 tonne covers 100 sqft at 4" depth. */
-    coverageSqftPerTonnePer4in: 100,
+    /** ¾" Clear Stone (open-graded ICPI base), $/tonne trade — Carr 2026 book
+     *  (2025 was $29.50). Yard $/tonne, not the page-6 load price. */
+    clearStone34PerTonne: 31.50,
+    /** HPB 1" bedding layer, $/tonne trade — Carr 2026 book (2025 was $26.22). */
+    hpbPerTonne: 28.90,
+    /** Carr depth chart (2025 printed p.60, compacted aggregate; carried over,
+     *  not reprinted in the 2026 book): tonnes = sqft × depth_in × 0.005,
+     *  i.e. sqft × depth / 200. Replaces the old "1 t per 100 sqft at 4""
+     *  rule (sqft × depth / 400), which ordered half the base stone. */
+    tonnesPerSqftPerInch: 0.005,
     /** For converting tonnes → truck yd³ when packing delivery loads. */
     tonnesPerYd3: 1.4,
   },

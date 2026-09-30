@@ -11,11 +11,11 @@
     "crewDayRateDeck": 3700
   },
   "carr2025": {
-    "note": "Carr Landscape Depot 2025 TRADE book — maintained in THIS repo (not the deckcraft exporter). src/data/carrPrices.ts CARR_TRADE mirrors these; check-pricing-parity.ts enforces equality + sane bounds. CAD, pre-HST. fullDepthSqftPerBin lives in facts.binPerSqftFullDepth.",
+    "note": "Carr Landscape Depot 2025 TRADE book — maintained in THIS repo (not the deckcraft exporter). src/data/carrPrices.ts CARR_TRADE mirrors these; check-pricing-parity.ts enforces equality + sane bounds. CAD, pre-HST. fullDepthSqftPerBin lives in facts.binPerSqftFullDepth. EXCEPTION since 2026-09-23: aggregates.clearStone34PerTonne and hpbPerTonne are the 2026 book (effective 2026-05-01), and tonnesPerSqftPerInch is Carr's depth chart (0.005 compacted, replacing the old 1 t / 100 sqft / 4 in rule that under-counted by half). The key keeps its carr2025 name until the full 2026 refresh.",
     "aggregates": {
-      "clearStone34PerTonne": 29.5,
-      "hpbPerTonne": 26.22,
-      "coverageSqftPerTonnePer4in": 100,
+      "clearStone34PerTonne": 31.5,
+      "hpbPerTonne": 28.9,
+      "tonnesPerSqftPerInch": 0.005,
       "tonnesPerYd3": 1.4
     },
     "consumables": {
@@ -50,14 +50,14 @@
     }
   },
   "calibration": {
-    "note": "Takeoff-engine calibration, maintained in THIS repo. Solved 2026-08-26 so the reference job (500 sqft mid Mondrian Plus, Barrie Z1, grass, simple) lands at $41.25/sqft pre-HST with >=35% margin. check-pricing-parity.ts runs the reference build and hard-fails outside these rails.",
+    "note": "Takeoff-engine calibration, maintained in THIS repo. Solved 2026-08-26 so the reference job (500 sqft mid Mondrian Plus, Barrie Z1, grass, simple) lands at $41.25/sqft pre-HST with >=35% margin. Re-solved 2026-09-23 (owner chose to hold $41.25) after the aggregate fix doubled base-stone tonnage and aggregates moved to Carr 2026: same method, combined excavation+install $/sqft with a 40% excavation split, 8.79/13.19 -> 8.20/12.29. Reference margin 38.3% -> 35.6% (hard floor met, below the 38-42 target band, so the gate warns). check-pricing-parity.ts runs the reference build and hard-fails outside these rails.",
     "retailPerSqftTarget": 41.25,
     "retailPerSqftBand": [40, 42],
     "floorCostPerSqftBand": [25, 26],
     "minGrossMarginPct": 35,
     "targetGrossMarginPctBand": [38, 42],
-    "excavationPerSqftRetail": 8.79,
-    "installLabourPerSqftRetail": 13.19,
+    "excavationPerSqftRetail": 8.2,
+    "installLabourPerSqftRetail": 12.29,
     "excavLabourSplit": 0.4,
     "crewDayCostCad": 2450,
     "takeoffBand": [0.95, 1.25],

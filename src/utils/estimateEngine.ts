@@ -13,8 +13,8 @@
  *      every branch below, so the arithmetic cannot drift by accident.
  *
  * ENGINE v3 (2026-08-26, deliberate repricing): patio and natural-stone work is
- * now priced by QUANTITY TAKEOFF (src/utils/takeoff.ts) from the Carr 2025
- * trade book — pavers + waste, 12" clear-stone base tonnage, HPB bedding, poly
+ * now priced by QUANTITY TAKEOFF (src/utils/takeoff.ts) from the Carr trade
+ * book (2025; aggregates 2026 since 2026-09-23) — pavers + waste, 12" clear-stone base tonnage, HPB bedding, poly
  * sand, edge restraint, fabric, truck-packed delivery, and disposal bins
  * counted by what the job actually hauls. The result carries a `precise` block
  * (integer cents: category figures, subtotal, 13% HST, grand total) — the
