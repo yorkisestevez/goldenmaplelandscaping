@@ -12,8 +12,8 @@ import '../designer/easyEditTools.css';
 
 export const PERMIT_PDF_NAME='golden-maple-deck-permit-drawings.pdf',PERMIT_DXF_NAME='golden-maple-deck-permit-plans.dxf';
 
-/** The permit drawing set: a preview of each 11 × 17 sheet (site plan, elevations, three plans, a typical section and
- * details), the vector PDF and layered DXF of the same sheets, and the lot the site plan is drawn from. */
+/** The permit drawing set: a preview of each 11 × 17 sheet (site plan, elevations, three plans, a typical section,
+ * details and schedules), the vector PDF and layered DXF of the same sheets, and the lot the site plan is drawn from. */
 export default function PermitSetDialog({data,model,reviewItems,materialName,railingName,date,onClose,onOutput,onSiteChange}:{
   data:DeckData;model:DeckTakeoff;reviewItems:readonly string[];materialName:string;railingName:string;date:string;
   onClose:()=>void;onOutput?:(kind:'permit_pdf'|'permit_dxf')=>void;
@@ -37,7 +37,7 @@ export default function PermitSetDialog({data,model,reviewItems,materialName,rai
   return <dialog ref={dialog} className="dd-easy-dialog dd-permit-dialog" aria-labelledby="dd-permit-title" onCancel={e=>{e.preventDefault();onClose();}} style={{width:'min(1100px,96vw)',maxWidth:'96vw'}}>
     <header><div><small>PERMIT DRAWINGS · PLANNING SET</small><h2 id="dd-permit-title">Permit drawing set</h2></div><button type="button" aria-label="Close permit drawings" onClick={onClose}>×</button></header>
     <div className="dd-easy-dialog-body">
-      <p>11 × 17 sheets drawn to scale from this design: a site plan with the lot lines and the deck’s setbacks; the front and side elevations; the footings and posts, the framing with its sizes, and the decking, guard and stairs in plan; a typical section through the framing; and typical construction details. Bring them to your permit application; the municipality’s review decides what may be built.</p>
+      <p>11 × 17 sheets drawn to scale from this design: a site plan with the lot lines and the deck’s setbacks; the front and side elevations; the footings and posts, the framing with its sizes, and the decking, guard and stairs in plan; a typical section through the framing; typical construction details; and schedules of the footings, members, stairs, guard, connections and lumber. Bring them to your permit application; the municipality’s review decides what may be built.</p>
       {set.reviewItems.length>0&&<p role="status">These sheets are stamped DRAFT while {set.reviewItems.length} review item{set.reviewItems.length===1?'':'s'} {set.reviewItems.length===1?'is':'are'} open{designItems>0&&siteItems.length>0?`: ${designItems} in “Review issues” and ${siteItems.length} for the site plan, on sheet A-0.`:siteItems.length>0?': the site plan’s, on sheet A-0.':'. Resolve them in “Review issues” first.'}</p>}
       <div role="tablist" aria-label="Sheets" style={{display:'flex',gap:'.5rem',flexWrap:'wrap',margin:'.5rem 0'}}>
         {set.sheets.map((s,i)=><button key={s.id} type="button" role="tab" aria-selected={i===current} className={i===current?'dd-primary':'dd-secondary'} onClick={()=>setCurrent(i)}>{s.id} · {s.title}</button>)}

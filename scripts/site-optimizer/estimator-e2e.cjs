@@ -1,15 +1,19 @@
-/* Estimator funnel E2E — 25 checks against the dev server (default :3011).
+/* Estimator funnel E2E against the dev server (default :3011).
  *
  * Run:  NODE_PATH=C:/Users/yorki/node_modules node scripts/site-optimizer/estimator-e2e.cjs
  * (Playwright is a global install at C:\Users\yorki\node_modules, not a repo dep.)
  *
  * Covers: chrome-less shell, receipt rail, precise invoice math (subtotal+HST=total
- * to the cent), disposal quantity detail, vault recording, the repeat-pricing gate,
- * email unlock + persistence, the My-estimates drawer, ?type= prefill, and the
- * mobile sticky bar. Selector notes (hard-won): project-type cards are DIVs, not
- * buttons — use text locators; input values do NOT appear in innerText — read
- * inputValue() off input[inputmode="numeric"]; the Claude-Preview panel freezes
- * AnimatePresence — headless Playwright only.
+ * to the cent), disposal quantity detail, vault recording, NO repeat-pricing gate
+ * (the estimator is fully unlocked since 2026-09-28: no email to price again, on
+ * return visits or old vaults), the My-estimates drawer, ?type= prefill, the mobile
+ * sticky bar, and the 3D deck designer inside the estimator: a deck opens the
+ * designer here (and Back returns), ?type=deck links open it at their size, and a
+ * full backyard's deck is priced by the designer into the totals (starter deck,
+ * then "Use this deck in my estimate"). Selector notes (hard-won): project-type
+ * cards are DIVs, not buttons — use text locators; input values do NOT appear in
+ * innerText — read inputValue() off input[inputmode="numeric"]; the Claude-Preview
+ * panel freezes AnimatePresence — headless Playwright only.
  */
 const { chromium } = require('playwright');
 
@@ -18,6 +22,11 @@ let passed = 0, failed = 0;
 const ok = (name, cond, extra = '') => {
   if (cond) { passed++; console.log(`  PASS  ${name}`); }
   else { failed++; console.log(`  FAIL  ${name} ${extra}`); }
+};
+const cents = s => Math.round(parseFloat(s.replace(/,/g, '')) * 100);
+const invoice = body => {
+  const m = body.match(/Subtotal\s*\$([\d,]+\.\d{2})[\s\S]*?HST \(13%\)\s*\$([\d,]+\.\d{2})[\s\S]*?Estimated total\s*\$([\d,]+\.\d{2})/);
+  return m ? m.slice(1).map(cents) : null;
 };
 
 (async () => {
@@ -57,36 +66,29 @@ const ok = (name, cond, extra = '') => {
   ok('quantity detail: tonnes', /tonnes base & bedding aggregate/.test(body));
   ok('site-visit honesty line', body.includes('same math we bring to your site visit'));
 
-  const nums = body.match(/Subtotal\s*\$([\d,]+\.\d{2})[\s\S]*?HST \(13%\)\s*\$([\d,]+\.\d{2})[\s\S]*?Estimated total\s*\$([\d,]+\.\d{2})/);
-  if (nums) {
-    const [sub, hst, tot] = nums.slice(1).map(s => Math.round(parseFloat(s.replace(/,/g, '')) * 100));
-    ok('invoice adds up to the cent', sub + hst === tot, `${sub} + ${hst} != ${tot}`);
-  } else ok('invoice rows parseable', false);
+  const nums = invoice(body);
+  if (nums) ok('invoice adds up to the cent', nums[0] + nums[1] === nums[2], `${nums[0]} + ${nums[1]} != ${nums[2]}`);
+  else ok('invoice rows parseable', false);
 
-  // ---- 2. Vault recorded ----
+  // ---- 2. Vault recorded, with no unlock state ----
   const vault1 = await page.evaluate(() => JSON.parse(localStorage.getItem('gm_estimator') || 'null'));
   ok('vault recorded 1 estimate', vault1 && vault1.estimates.length === 1, JSON.stringify(vault1)?.slice(0, 120));
-  ok('vault not yet unlocked', vault1 && vault1.unlockedAt === null);
+  ok('vault holds no email or unlock', vault1 && !('email' in vault1) && !('unlockedAt' in vault1));
 
-  // ---- 3. Repeat gate ----
+  // ---- 3. No repeat gate: price another project straight away ----
   await page.getByRole('button', { name: /Price Another Project/ }).click();
   await page.waitForTimeout(600);
-  ok('unlock gate shown on 2nd run', await page.locator('text=Price as many projects as you like').isVisible());
-  await page.fill('input[name="email"]', 'e2e-test@example.com');
-  await page.getByRole('button', { name: /Unlock unlimited estimates/ }).click();
-  await page.waitForTimeout(700);
-  ok('gate cleared after email', await page.locator('text=What are you looking to build?').isVisible());
-  ok('dev unlock payload logged', consoleLogs.some(l => l.includes('estimator-unlock payload')));
-  const vault2 = await page.evaluate(() => JSON.parse(localStorage.getItem('gm_estimator') || 'null'));
-  ok('vault unlocked with email', vault2 && vault2.unlockedAt !== null && vault2.email === 'e2e-test@example.com');
+  ok('second estimate needs no email', await page.locator('text=What are you looking to build?').isVisible());
+  ok('no email field on the wizard', !(await page.locator('input[name="email"]').count()));
+  ok('no unlock payload ever posted', !consoleLogs.some(l => l.includes('estimator-unlock payload')));
 
-  // ---- 4. Unlock persists across reload; drawer present ----
+  // ---- 4. Reload: still no gate; drawer present ----
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(500);
-  ok('no gate after reload (unlocked)', !(await page.locator('text=Price as many projects as you like').count()));
+  ok('no gate after reload', await page.locator('text=What are you looking to build?').isVisible());
   ok('My estimates drawer button', await page.locator('text=My estimates (1)').count() > 0);
 
-  // ---- 5. Fresh visitor with 1 estimate, NOT unlocked, gates on return ----
+  // ---- 5. An old vault (from the gated era, never unlocked) does not gate ----
   const ctx2 = await browser.newContext({ viewport: { width: 1440, height: 950 } });
   const p2 = await ctx2.newPage();
   await p2.goto(`${BASE}/cost-estimator/`, { waitUntil: 'networkidle' });
@@ -96,9 +98,8 @@ const ok = (name, cond, extra = '') => {
   })));
   await p2.reload({ waitUntil: 'networkidle' });
   await p2.waitForTimeout(700);
-  ok('return visit gates immediately', await p2.locator('text=Price as many projects as you like').isVisible());
-  const gatedBody = await p2.locator('body').innerText();
-  ok('gate shows prior estimate value', gatedBody.includes('$20,624.86'));
+  ok('return visit with an old vault is not gated', await p2.locator('text=What are you looking to build?').isVisible());
+  ok('old vault estimate still listed', await p2.locator('text=My estimates (1)').count() > 0);
 
   // ---- 6. Prefill link lands step 2 with sqft applied ----
   const ctx3 = await browser.newContext({ viewport: { width: 1440, height: 950 } });
@@ -123,6 +124,75 @@ const ok = (name, cond, extra = '') => {
   await p4.waitForTimeout(700);
   const sticky = await p4.locator('div.md\\:hidden.fixed').innerText().catch(() => '');
   ok('mobile sticky shows precise dollars + HST tag', /\$[\d,]+/.test(sticky) && sticky.includes('+HST'), sticky.replace(/\n/g, ' | '));
+
+  // ---- 8. A deck opens the 3D designer inside the estimator; Back returns ----
+  const ctx5 = await browser.newContext({ viewport: { width: 1440, height: 950 } });
+  const p5 = await ctx5.newPage();
+  await p5.goto(`${BASE}/cost-estimator/`, { waitUntil: 'networkidle' });
+  await p5.locator('text=Composite Deck').first().click();
+  await p5.getByRole('button', { name: /^Continue/ }).first().click();
+  await p5.locator('.deck-designer[data-embedded]').waitFor({ timeout: 30000 });
+  ok('deck opens the designer on the estimator page', new URL(p5.url()).pathname.startsWith('/cost-estimator') && new URL(p5.url()).searchParams.get('studio') === 'deck', p5.url());
+  ok('designer workspace rendered', await p5.locator('text=Draw your deck on your house.').count() > 0);
+  ok('estimator bar over the designer', await p5.locator('[aria-label="Cost estimator"] >> text=Cost estimator · deck').count() > 0);
+  ok('estimator frame steps aside', !(await p5.locator('header >> text=Cost Estimator').count()) && !(await p5.locator('text=Plan your landscaping investment').count()));
+  await p5.waitForTimeout(1500);
+  const barPrice = await p5.locator('.dd-estimator-price strong').innerText();
+  ok('bar shows the live deck price', /^\$[\d,]+$/.test(barPrice), barPrice);
+  await p5.goBack();
+  await p5.waitForTimeout(800);
+  ok('browser Back closes the designer', await p5.locator('text=What are you looking to build?').isVisible() && !(await p5.locator('.deck-designer').count()));
+  await p5.getByRole('button', { name: /^Continue/ }).first().click();
+  await p5.locator('.deck-designer[data-embedded]').waitFor({ timeout: 30000 });
+  await p5.getByRole('button', { name: /Project types/ }).click();
+  await p5.waitForTimeout(800);
+  ok('bar Back returns to the estimator', await p5.locator('text=What are you looking to build?').isVisible());
+
+  // ---- 9. ?type=deck (home-page quick estimator) opens the designer at its size ----
+  const ctx6 = await browser.newContext({ viewport: { width: 1440, height: 950 } });
+  const p6 = await ctx6.newPage();
+  await p6.goto(`${BASE}/cost-estimator/?type=deck&sqft=300`, { waitUntil: 'networkidle' });
+  await p6.locator('.deck-designer[data-embedded]').waitFor({ timeout: 30000 });
+  await p6.waitForTimeout(1200);
+  // The designer's status line is visually quiet (not in innerText); read the DOM text and the size field.
+  const b6 = await p6.evaluate(() => document.body.textContent);
+  const width6 = await p6.locator('input[aria-label="Deck width"]').first().inputValue().catch(e => String(e).slice(0, 80));
+  ok('?type=deck opens the designer at the handed-over size', b6.includes('Started from your cost estimate: a deck of about 300 sq ft (20 × 15 ft)') && width6 === '20', `width=${width6}`);
+  ok('the size leaves the address once read', !new URL(p6.url()).searchParams.has('sqft') && new URL(p6.url()).searchParams.get('studio') === 'deck', p6.url());
+
+  // ---- 10. Full backyard: the deck is priced by the designer, in the totals ----
+  const ctx7 = await browser.newContext({ viewport: { width: 1440, height: 950 } });
+  const p7 = await ctx7.newPage();
+  await p7.goto(`${BASE}/cost-estimator/`, { waitUntil: 'networkidle' });
+  await p7.locator('text=Full Backyard (multiple)').first().click();
+  await p7.getByRole('button', { name: /^Continue/ }).first().click();
+  await p7.waitForTimeout(500);
+  await p7.getByRole('button', { name: 'Patio / Interlock' }).click();
+  await p7.getByRole('button', { name: 'Composite Deck' }).click();
+  await p7.locator('[data-estimator-deck="starter"]').waitFor({ timeout: 30000 });
+  const card = await p7.locator('[data-estimator-deck="starter"]').innerText();
+  ok('deck card shows the designer starter price', /Starter deck/i.test(card) && /\$[\d,]+\.\d{2}/.test(card) && card.includes('included in this estimate'), card.replace(/\n/g, ' | ').slice(0, 200));
+  const railDeck = await p7.locator('aside[aria-label="Live estimate"]').innerText();
+  ok('receipt rail has the deck line', railDeck.includes('Deck (starter)'), railDeck.replace(/\n/g, ' | ').slice(0, 300));
+  for (let i = 0; i < 4; i++) { await p7.getByRole('button', { name: /^Continue/ }).first().click(); await p7.waitForTimeout(450); }
+  await p7.getByRole('button', { name: /See Estimate/ }).first().click();
+  await p7.waitForTimeout(1600);
+  const b7 = await p7.locator('body').innerText();
+  ok('breakdown lists the deck', b7.includes('Composite Deck · starter deck'));
+  const inv7 = invoice(b7);
+  ok('invoice with the deck adds up to the cent', inv7 && inv7[0] + inv7[1] === inv7[2], JSON.stringify(inv7));
+  const vault7 = await p7.evaluate(() => JSON.parse(localStorage.getItem('gm_estimator') || 'null'));
+  ok('vault records the total with the deck', vault7 && inv7 && vault7.estimates[0]?.subtotalCents === inv7[0], `${vault7?.estimates[0]?.subtotalCents} vs ${inv7?.[0]}`);
+  await p7.getByRole('button', { name: /Design your deck in 3D/ }).first().click();
+  await p7.locator('.deck-designer[data-embedded]').waitFor({ timeout: 30000 });
+  await p7.waitForTimeout(1200);
+  ok('full backyard opens the designer in full mode', new URL(p7.url()).searchParams.get('studio') === 'full', p7.url());
+  await p7.getByRole('button', { name: /Use this deck in my estimate/ }).click();
+  await p7.locator('[data-estimator-deck="design"]').first().waitFor({ timeout: 30000 });
+  const b7b = await p7.locator('body').innerText();
+  ok('drawn deck replaces the starter in the estimate', b7b.includes('Composite Deck · your 3D design') && /your 3d deck design/i.test(b7b) && !b7b.includes('Composite Deck · starter deck'));
+  const inv7b = invoice(b7b);
+  ok('invoice with the drawn deck adds up to the cent', inv7b && inv7b[0] + inv7b[1] === inv7b[2], JSON.stringify(inv7b));
 
   await browser.close();
   console.log(`\n${passed} passed, ${failed} failed`);

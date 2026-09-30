@@ -42,7 +42,7 @@ export type DrawItem=
   |{kind:'dim';a:Pt;b:Pt;offset:number;text:string;layer:'A-ANNO-DIMS'};
 
 export interface Sheet{
-  id:'A-0'|'A-1'|'S-1'|'S-2'|'S-3'|'S-4'|'S-5';title:string;
+  id:'A-0'|'A-1'|'S-1'|'S-2'|'S-3'|'S-4'|'S-5'|'S-6';title:string;
   /** Plan inches per paper inch (48 = 1/4" = 1'-0"), and how the title block names it. */
   ratio:number;scaleLabel:string;
   items:DrawItem[];
@@ -72,6 +72,9 @@ export const SCALES:{ratio:number;label:string}[]=[
   {ratio:24,label:'1/2" = 1\'-0"'},{ratio:32,label:'3/8" = 1\'-0"'},{ratio:48,label:'1/4" = 1\'-0"'},
   {ratio:64,label:'3/16" = 1\'-0"'},{ratio:96,label:'1/8" = 1\'-0"'},{ratio:128,label:'3/32" = 1\'-0"'},{ratio:192,label:'1/16" = 1\'-0"'},
 ];
+
+/** The scale label of a sheet of tables (S-6): it has no scale bar. */
+export const NTS='Not to scale';
 
 /** Site plan scales, largest first: the plan scales, then engineer's scales for a lot too big for them. */
 export const SITE_SCALES:{ratio:number;label:string}[]=[...SCALES,

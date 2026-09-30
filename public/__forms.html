@@ -116,6 +116,12 @@
       <input type="text" name="precise_subtotal" />
       <input type="text" name="precise_hst" />
       <input type="text" name="precise_total" />
+      <!-- A full backyard's deck, priced by the 3D deck designer inside the
+           estimator (its figure is inside the totals above); a drawn deck's
+           link reopens the exact design. Declared 2026-09-28, same commit. -->
+      <input type="text" name="deck_subtotal" />
+      <input type="text" name="deck_summary" />
+      <input type="text" name="deck_design_link" />
       <input type="text" name="utm_source" />
       <input type="text" name="utm_medium" />
       <input type="text" name="utm_campaign" />
@@ -133,10 +139,11 @@
       <input type="text" name="session_duration_sec" />
       <textarea name="behavior_json"></textarea>
     </form>
-    <!-- estimator-unlock (Estimator.tsx UnlockCard): the light email-only gate
-         behind "first estimate free, unlimited pricing after email". POSTs via
-         JS fetch like every other form — runtime JSX must NOT carry
-         data-netlify (see the file-header trap). Declared 2026-08-26. -->
+    <!-- estimator-unlock: RETIRED 2026-09-28. It was the email gate behind
+         "first estimate free, unlimited pricing after email"; the estimator is
+         now fully unlocked and nothing posts this form. The schema stays so
+         the form and its past submissions remain browsable in Netlify.
+         Declared 2026-08-26. -->
     <form name="estimator-unlock" netlify netlify-honeypot="bot-field" hidden>
       <input type="text" name="name" />
       <input type="email" name="email" />

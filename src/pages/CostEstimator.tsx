@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, ArrowLeft } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -37,6 +38,9 @@ function EstimatorTopBar() {
 }
 
 export default function CostEstimator() {
+  // While the 3D deck designer is open inside the estimator it is the whole
+  // page, with its own bar back to the estimate (Estimator reports it).
+  const [studioOpen, setStudioOpen] = useState(false);
   const schema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -81,12 +85,13 @@ export default function CostEstimator() {
         image="https://goldenmaplelandscaping.ca/images/og/cost-estimator-v1.jpg"
         schema={schema}
       />
-      <EstimatorTopBar />
-      <div className="pt-24 pb-32 bg-brand-nearblack min-h-screen text-brand-bonewhite">
-        <h1 className="font-display text-3xl text-center px-4 mb-6">Plan your landscaping investment</h1>
-        <Estimator />
+      {!studioOpen && <EstimatorTopBar />}
+      <div className={studioOpen ? undefined : 'pt-24 pb-32 bg-brand-nearblack min-h-screen text-brand-bonewhite'}>
+        {!studioOpen && <h1 className="font-display text-3xl text-center px-4 mb-6">Plan your landscaping investment</h1>}
+        <Estimator onStudioChange={setStudioOpen} />
 
         {/* SEO content */}
+        {!studioOpen && (
         <Reveal className="container-custom max-w-4xl mt-16 px-4">
           <div className="prose prose-invert prose-brand max-w-none font-sans font-normal text-brand-bonewhite/85">
             <h2 className="font-display text-3xl text-brand-bonewhite mb-8">How we price landscaping in Barrie & Simcoe County</h2>
@@ -106,9 +111,9 @@ export default function CostEstimator() {
               <li><strong>Elevated:</strong> Mondrian Plus, Wilfred, Rosebel — refined textures and modern profiles. Our most popular tier.</li>
               <li><strong>Premium:</strong> Mega Melville, Brooklyn, Metrik — large-format flagship and statement-finish slabs.</li>
             </ul>
-            <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Decks are priced in the deck designer</h3>
+            <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">Decks are designed in 3D, right in the estimator</h3>
             <p>
-              Composite decks are designed and priced in our <Link to="/deck-designer">3D deck designer</Link>, the one deck price on this site. It prices your exact size, height, stairs, railing and TimberTech collection, and a deck you add to a full backyard here opens there at its size.
+              Choose a composite deck and our <Link to="/deck-designer">3D deck designer</Link> opens right here, the one deck price on this site. It prices your exact size, height, stairs, railing and TimberTech collection. Add a deck to a full backyard and the designer prices it into your total: a starter deck at your size to begin with, then the exact deck you draw.
             </p>
             <h3 className="font-display text-xl text-brand-bonewhite mt-10 mb-4">From estimate to exact quote</h3>
             <p>
@@ -116,6 +121,7 @@ export default function CostEstimator() {
             </p>
           </div>
         </Reveal>
+        )}
       </div>
     </>
   );

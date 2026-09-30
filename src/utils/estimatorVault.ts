@@ -1,17 +1,15 @@
 /**
- * Estimator vault — the device-local memory behind "first estimate free,
- * email unlocks repeats".
+ * Estimator vault — the device-local "My estimates" drawer.
  *
- * localStorage `gm_estimator` holds the visitor's unlock state (email, when)
- * and their last few completed estimates (permalink + summary), so a returning
- * visitor can reopen and compare builds. Same defensive read/write pattern as
- * utils/behavior.ts: every storage touch is try/catch'd and the module is
- * SSR-safe — the prerender never executes a read because all callers live in
- * effects/handlers.
- *
- * Privacy posture: the email lives here only so the device stays unlocked.
- * It is sent ONCE, to the `estimator-unlock` Netlify form (→ CRM bridge),
- * at the moment the visitor submits it — never re-transmitted after that.
+ * localStorage `gm_estimator` holds the visitor's last few completed estimates
+ * (permalink + summary), so a returning visitor can reopen and compare builds.
+ * Every estimate is free and unlimited: the repeat-pricing email gate that
+ * once lived here was removed 2026-09-28 (owner decision), and the vault no
+ * longer stores or reads an email. Older vaults may still carry `email` /
+ * `unlockedAt` keys; they are ignored and dropped on the next write. Same
+ * defensive read/write pattern as utils/behavior.ts: every storage touch is
+ * try/catch'd and the module is SSR-safe — the prerender never executes a
+ * read because all callers live in effects/handlers.
  */
 
 const KEY = 'gm_estimator';
@@ -29,12 +27,10 @@ export interface VaultEstimate {
 }
 
 export interface EstimatorVault {
-  email: string | null;
-  unlockedAt: string | null;
   estimates: VaultEstimate[];
 }
 
-const EMPTY_VAULT: EstimatorVault = { email: null, unlockedAt: null, estimates: [] };
+const EMPTY_VAULT: EstimatorVault = { estimates: [] };
 
 export function readVault(): EstimatorVault {
   if (typeof window === 'undefined') return EMPTY_VAULT;
@@ -43,8 +39,6 @@ export function readVault(): EstimatorVault {
     if (!raw) return EMPTY_VAULT;
     const parsed = JSON.parse(raw) as Partial<EstimatorVault>;
     return {
-      email: typeof parsed.email === 'string' ? parsed.email : null,
-      unlockedAt: typeof parsed.unlockedAt === 'string' ? parsed.unlockedAt : null,
       estimates: Array.isArray(parsed.estimates) ? parsed.estimates.slice(0, MAX_ESTIMATES) : [],
     };
   } catch {
@@ -59,15 +53,6 @@ function writeVault(v: EstimatorVault): void {
   } catch {
     // Storage full / blocked — the estimator still works, just doesn't remember.
   }
-}
-
-export function isUnlocked(): boolean {
-  return readVault().unlockedAt !== null;
-}
-
-export function unlockVault(email: string): void {
-  const v = readVault();
-  writeVault({ ...v, email: email || v.email, unlockedAt: v.unlockedAt ?? new Date().toISOString() });
 }
 
 /** Record a completed estimate. Dedupes on permalink so a re-render or a

@@ -75,7 +75,7 @@ const r = await ga4.collect(win, {
   propertyId: '519541477',
   leadEvents: ['generate_lead','chat_open','booking_step'],
   funnelEvents: ['page_view','cta_click','estimator_step','estimator_detail','booking_step',
-    'chat_open','generate_lead','estimator_unlock_shown','estimator_unlock_completed',
+    'chat_open','generate_lead','estimator_deck_studio',
     'estimator_vault_restore','estimator_build_saved','estimator_gap_lever_applied'],
 });
 // VERIFIED SHAPES (2026-08-26): weekly → r.data = {totals, funnel:{order,current,prior},
@@ -126,8 +126,7 @@ week with a green site is a successful no-op run.
   `innerWidth` first; if it is 0 the whole sweep is void. A false P0 here is dangerous:
   Step 6's revert protocol could revert a good change over a measurement artifact.
 - **P1 — funnel cliffs** (optimize mode): estimator step drop-off spiking vs prior
-  period; `estimator_unlock_completed / estimator_unlock_shown < 0.25` with shown ≥ 20
-  (→ backlog item 3 is pre-authorized); forms at zero with meaningful traffic;
+  period; forms at zero with meaningful traffic;
   generate_lead down >40% week-over-week with flat traffic.
 
   **Read both of those last two against the SPAM bucket before acting** (established
@@ -155,8 +154,12 @@ week with a green site is a successful no-op run.
      small fixed bottom-right pill on step 7: precise total + "Save build" scroll.
   2. Real project-photo proof strip near `EstimateBookingCTA` (use existing
      `public/images/projects/` photos + existing alt-text conventions).
-  3. Return-visit gate softening — ONLY if the P1 threshold tripped: let a returning
-     visitor view their saved estimate freely; gate only starting a NEW run.
+  3. RETIRED 2026-09-28: return-visit gate softening. Yorkis removed the repeat-pricing
+     email gate entirely (every estimate is free and unlimited; `estimator_unlock_*`
+     events no longer fire). Do not reintroduce an email gate in front of pricing.
+     The 3D deck designer now opens inside the estimator and prices a full backyard's
+     deck into its totals; `estimator_deck_studio` labels (`deck_type`, `full_design`,
+     `full_used`, `deck_to_full`, …) show how often decks are designed there.
   4. Result-page length experiments (desktop scroll is ~6,000px): tighten spacing,
      collapse secondary cards — never remove the invoice, save card, or booking CTA.
   5. Sitemap canonical-URL drift (found 2026-09-02): `scripts/blog-publisher/inject.cjs:166`
