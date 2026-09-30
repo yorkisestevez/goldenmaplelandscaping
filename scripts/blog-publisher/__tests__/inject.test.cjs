@@ -19,8 +19,9 @@ const { test, describe, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
-const { injectDraft, slugToComponent } = require('../inject.cjs');
+const { injectDraft, slugToComponent, buildTsx } = require('../inject.cjs');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const ROUTES_TS = path.join(REPO_ROOT, 'src/routes.ts');
@@ -136,5 +137,80 @@ describe('injectDraft: failure is all-or-nothing', () => {
     assert.ok(!fs.existsSync(tsxPath), 'orphaned .tsx must be removed on failure');
     const routes = fs.readFileSync(ROUTES_TS, 'utf8');
     assert.ok(!routes.includes(`pages/blog/${comp}.tsx`), 'routes.ts must be rolled back');
+  });
+});
+
+// 2026-09-28: auto-023's CTA said "call Golden Maple Landscaping at
+// (705) 300-8015". The postbuild contact check failed on it and every
+// production deploy after it failed. See contact-gate.test.cjs for the unit
+// cases; these run the real injector and the real check.
+describe('injectDraft: contact details come only from src/data/business.ts', () => {
+  const CHECK = path.join(REPO_ROOT, 'scripts', 'check-contact-centralization.py');
+  const STUB = { phoneDisplay: '<DISPLAY>', phoneTel: '<TEL>', email: '<EMAIL>' };
+
+  test('a CTA with the phone number and email produces a page that passes the contact check', () => {
+    const slug = 'zz-test-inject-contacts';
+    const comp = slugToComponent(slug);
+    const tsxPath = path.join(REPO_ROOT, 'src/pages/blog', `${comp}.tsx`);
+    pending = { snap: snapshot(), extra: [tsxPath] };
+
+    const draft = loadRealDraft(slug);
+    draft.cta_paragraph =
+      'If you are planning a patio in Barrie, call Golden Maple Landscaping at (705) 300-8015 ' +
+      '(<a href="tel:+17053008015">tap to call</a>) or email ' +
+      '<a href="mailto:yorkis@goldenmaplelandscaping.ca">yorkis@goldenmaplelandscaping.ca</a>.';
+    draft.faqs = [...(draft.faqs || []), {
+      question: 'How do I reach you?',
+      answer: 'Call (705) 300-8015 or email yorkis@goldenmaplelandscaping.ca.',
+    }];
+
+    // injectDraft runs the gate itself, so returning at all means it passed.
+    injectDraft(draft);
+
+    const r = spawnSync('python3', [CHECK, tsxPath], { cwd: REPO_ROOT, encoding: 'utf8' });
+    assert.equal(r.status, 0, `contact check must pass on the generated page:\n${r.stdout}${r.stderr}`);
+    assert.equal(JSON.parse(r.stdout).passed, true);
+
+    const tsx = fs.readFileSync(tsxPath, 'utf8');
+    assert.equal(tsx.match(/^import \{ publicContact \} from '\.\.\/\.\.\/data\/business';$/gm)?.length, 1,
+      'the page must import publicContact exactly once');
+
+    // The CTA is the last __html block. Evaluate it the way React would.
+    const blocks = [...tsx.matchAll(/dangerouslySetInnerHTML=\{\{ __html: (.*) \}\} \/>$/gm)];
+    const cta = new Function('publicContact', `return (${blocks[blocks.length - 1][1]});`)(STUB);
+    assert.equal(cta,
+      '<p>If you are planning a patio in Barrie, call Golden Maple Landscaping at <DISPLAY> ' +
+      '(<a href="tel:<TEL>">tap to call</a>) or email <a href="mailto:<EMAIL>"><EMAIL></a>.</p>');
+
+    // The FAQ answer is also emitted into the FAQPage schema.
+    assert.match(tsx, /"text": "Call " \+ publicContact\.phoneDisplay \+ " or email " \+ publicContact\.email \+ "\."/);
+  });
+
+  test('a page with no contact details does not import publicContact', () => {
+    const tsx = buildTsx(loadRealDraft('zz-test-inject-no-contacts'));
+    assert.ok(!tsx.includes('publicContact'), 'an unused import would be dead code');
+  });
+
+  test('refuses a contact the injector cannot render, and rolls every write back', () => {
+    const slug = 'zz-test-inject-contact-gate';
+    const comp = slugToComponent(slug);
+    const tsxPath = path.join(REPO_ROOT, 'src/pages/blog', `${comp}.tsx`);
+    const snap = snapshot();
+    pending = { snap, extra: [tsxPath] };
+
+    // Section headings are plain JSX text, not HTML, so they are not rewritten.
+    const draft = loadRealDraft(slug);
+    draft.sections[0].heading = 'Call (705) 300-8015 before you dig';
+
+    assert.throws(() => injectDraft(draft), (err) => {
+      assert.equal(err.code, 'CONTACT_GATE');
+      assert.match(err.message, new RegExp(`${comp}\\.tsx:\\d+`));
+      return true;
+    });
+
+    assert.ok(!fs.existsSync(tsxPath), 'the refused page must not be left on disk');
+    for (const { path: p, before } of snap) {
+      assert.equal(fs.readFileSync(p, 'utf8'), before, `${path.basename(p)} must be rolled back`);
+    }
   });
 });
