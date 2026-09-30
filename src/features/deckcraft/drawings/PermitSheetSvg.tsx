@@ -1,10 +1,10 @@
-import {SHEET,type DrawingSet,type Sheet} from './drawingTypes';
+import {NTS,SHEET,type DrawingSet,type Sheet} from './drawingTypes';
 import {paperLayout} from './paperLayout';
 
 /** One permit sheet as an SVG, in paper inches on an 11 × 17 page: the preview of what the PDF prints. */
 export default function PermitSheetSvg({set,sheet,index}:{set:DrawingSet;sheet:Sheet;index:number}){
   const prims=paperLayout(set,sheet,index);
-  return <svg viewBox={`0 0 ${SHEET.w} ${SHEET.h}`} role="img" aria-label={`${sheet.id} ${sheet.title}, scale ${sheet.scaleLabel}`} style={{width:'100%',height:'auto',background:'#fff'}}>
+  return <svg viewBox={`0 0 ${SHEET.w} ${SHEET.h}`} role="img" aria-label={`${sheet.id} ${sheet.title}, ${sheet.scaleLabel===NTS?'not to scale':`scale ${sheet.scaleLabel}`}`} style={{width:'100%',height:'auto',background:'#fff'}}>
     <title>{`${sheet.id} ${sheet.title}`}</title>
     {prims.map((p,i)=>{switch(p.kind){
       case 'line':return <line key={i} x1={p.a.x} y1={p.a.y} x2={p.b.x} y2={p.b.y} stroke={p.grey?'#777':'#111'} strokeWidth={p.weight} strokeDasharray={p.dash?.join(' ')}/>;

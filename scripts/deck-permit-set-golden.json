@@ -7,7 +7,8 @@
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "70517196257b492f",
   "S-4": "5505c92210d3c959",
-  "S-5": "7d59239832f967aa"
+  "S-5": "7d59239832f967aa",
+  "S-6": "35f60a34476100f9"
  },
  "L-shape freestanding 2 levels": {
   "set": "2bbaa7830ff27584",
@@ -17,7 +18,8 @@
   "S-2": "df71d22c10b828a3",
   "S-3": "47db3241bfd70b00",
   "S-4": "ec01bd0bdbf4910d",
-  "S-5": "cbdaefdba873a5ca"
+  "S-5": "cbdaefdba873a5ca",
+  "S-6": "26b254dc3c0f3842"
  },
  "curved attached": {
   "set": "99a8a95c725ce7eb",
@@ -27,7 +29,8 @@
   "S-2": "48156e1a5607371e",
   "S-3": "8fdb4a8dff4dc74b",
   "S-4": "fd5deb14215afc3c",
-  "S-5": "878eb27e9b70d424"
+  "S-5": "878eb27e9b70d424",
+  "S-6": "b2a10a8bc855562d"
  },
  "multi-corner winder": {
   "set": "1aeb8454a445f5e1",
@@ -37,7 +40,8 @@
   "S-2": "5c459fa4a92bf8d5",
   "S-3": "0f7540141601d597",
   "S-4": "6676ad513e01e9f8",
-  "S-5": "ddd41c39f3a1fc4f"
+  "S-5": "ddd41c39f3a1fc4f",
+  "S-6": "de7fd51bffb52ccb"
  },
  "rectangle landing": {
   "set": "1b2124ca2a5915a9",
@@ -47,7 +51,8 @@
   "S-2": "6072259d4d9fc4a3",
   "S-3": "2b1b616fdd8af851",
   "S-4": "ec685c66e36bacaa",
-  "S-5": "ccec26596cf19dac"
+  "S-5": "ccec26596cf19dac",
+  "S-6": "834327a61ed9e216"
  },
  "wrap-around": {
   "set": "8e01dc9a81ee0380",
@@ -57,7 +62,8 @@
   "S-2": "31e8efc90f892044",
   "S-3": "4b1fc3fed725019a",
   "S-4": "f56d632908de6b5f",
-  "S-5": "3ae61e1cb56fcae6"
+  "S-5": "3ae61e1cb56fcae6",
+  "S-6": "0ba62a2ba3a061a4"
  },
  "low flush deck": {
   "set": "b85525b5e410b7bf",
@@ -67,7 +73,8 @@
   "S-2": "98c1c9ea16964f29",
   "S-3": "9bb493d0909cbd10",
   "S-4": "6e6a5984ceec5f0d",
-  "S-5": "58d8bd390e9975a3"
+  "S-5": "58d8bd390e9975a3",
+  "S-6": "c8a2a16dbe40465c"
  },
  "walkout 8 ft": {
   "set": "74a2c5588b90b8f5",
@@ -77,7 +84,8 @@
   "S-2": "8e17d403f284a895",
   "S-3": "8db28f610135a407",
   "S-4": "deeae437ea6ec842",
-  "S-5": "eebf199b6e35a241"
+  "S-5": "eebf199b6e35a241",
+  "S-6": "c8df9da4dc1e0259"
  },
  "deck blocks": {
   "set": "0bca661d7b218736",
@@ -87,7 +95,8 @@
   "S-2": "87d2d64f101158d8",
   "S-3": "ccc3879c041eea1e",
   "S-4": "290e9ad0abb34974",
-  "S-5": "425bd1a19a526d37"
+  "S-5": "425bd1a19a526d37",
+  "S-6": "3c82f0a6ae3ea54a"
  },
  "helical piles": {
   "set": "f835ba8fef5c498a",
@@ -97,7 +106,8 @@
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "70517196257b492f",
   "S-4": "bcd715fd1d82922d",
-  "S-5": "9347cb1ff305d951"
+  "S-5": "9347cb1ff305d951",
+  "S-6": "67f9ea2834a60754"
  },
  "no railing": {
   "set": "0738ee51411dd939",
@@ -107,7 +117,8 @@
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "1fa4ca5bb5473028",
   "S-4": "29d3f5f8d26f9994",
-  "S-5": "affe748a5ed8c168"
+  "S-5": "affe748a5ed8c168",
+  "S-6": "8c82fd5fe3c190b3"
  },
  "glass railing": {
   "set": "eb586995150a8833",
@@ -117,7 +128,8 @@
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "ad4b75ae1c4f57bc",
   "S-4": "58f98b3ea91402fc",
-  "S-5": "b8aa6c7e1dd4c391"
+  "S-5": "b8aa6c7e1dd4c391",
+  "S-6": "063f9ca8480735ba"
  },
  "frameless glass": {
   "set": "24ee8e9e6938ca18",
@@ -127,7 +139,8 @@
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "6f34d33a81408820",
   "S-4": "6ff043f4007c5a1c",
-  "S-5": "27351d88ad00d4fe"
+  "S-5": "27351d88ad00d4fe",
+  "S-6": "e8c2fb5c0d0e4c91"
  },
  "add-on deck": {
   "set": "043ed2d2371c473d",
@@ -137,7 +150,8 @@
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "70517196257b492f",
   "S-4": "6412305606ace9e7",
-  "S-5": "e08e206d01e68376"
+  "S-5": "e08e206d01e68376",
+  "S-6": "46d76dd7824a8552"
  },
  "lot 50 x 120, yard south": {
   "set": "8da0dc646ec97b20",
@@ -147,7 +161,8 @@
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "70517196257b492f",
   "S-4": "a21fb7ef2de1aa36",
-  "S-5": "8f77efd1c85b87c6"
+  "S-5": "8f77efd1c85b87c6",
+  "S-6": "71ec80f2a9362ebe"
  },
  "lot corner, wrap-around": {
   "set": "dd6b2221af3489f0",
@@ -157,7 +172,8 @@
   "S-2": "31e8efc90f892044",
   "S-3": "4b1fc3fed725019a",
   "S-4": "94cb4828652af0c6",
-  "S-5": "202608002ac8afd6"
+  "S-5": "202608002ac8afd6",
+  "S-6": "955db7530da157da"
  },
  "lot L-shape, yard northeast": {
   "set": "8bec97933ffbaa67",
@@ -167,7 +183,8 @@
   "S-2": "df71d22c10b828a3",
   "S-3": "47db3241bfd70b00",
   "S-4": "58035b7f115d3988",
-  "S-5": "1ca7798ff558700c"
+  "S-5": "1ca7798ff558700c",
+  "S-6": "68bf0b56ec41a514"
  },
  "lot too shallow, no north": {
   "set": "905ba98b34abef53",
@@ -177,6 +194,7 @@
   "S-2": "c5de9ae5dc4a0888",
   "S-3": "70517196257b492f",
   "S-4": "677f71c5c4184bb5",
-  "S-5": "c11f65d59c5fea39"
+  "S-5": "c11f65d59c5fea39",
+  "S-6": "50aa321ae950c4e0"
  }
 }
