@@ -1,6 +1,7 @@
 import { type RouteConfig, index, route } from '@react-router/dev/routes';
 
 
+
 // Mirrors the former <Routes> tree in App.tsx. In framework mode RR7 code-splits
 // each route module automatically (no manual React.lazy needed).
 export default [
@@ -16,8 +17,8 @@ export default [
   route('landscape-design-barrie', 'pages/LandscapeDesignBarrieAds.tsx'),
   route('services/composite-decking-barrie', 'pages/services/CompositeDecking.tsx'),
   route('composite-decking-barrie', 'pages/CompositeDeckingBarrieAds.tsx'),
-  // Data-driven Barrie money pages (src/data/barrieServices.ts). Static routes win
-  // over services/:slug; scripts/check-barrie-services.ts keeps the slugs disjoint.
+  route('paver-patios', 'pages/PaverPatioBarrieAds.tsx'),
+  // Data-driven Barrie money pages (src/data/barrieServices.ts). Static routes win — over services/:slug; scripts/check-barrie-services.ts keeps the slugs disjoint.
   route('services/interlocking-driveways-barrie', 'pages/services/barrie/InterlockingDriveways.tsx'),
   route('services/porcelain-patios-barrie', 'pages/services/barrie/PorcelainPatios.tsx'),
   route('services/outdoor-kitchens-barrie', 'pages/services/barrie/OutdoorKitchens.tsx'),
