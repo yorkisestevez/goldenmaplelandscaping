@@ -206,7 +206,7 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
     <PrivacyScreens3D panels={extras.panels} handles={extras.screenHandles} onMove={onMovePrivacyScreen}/>
     <LightingFixtures items={extras.fixtures} evening={data.sceneLighting==='Evening'} enabled={data.lightingPreviewOn!==false}/>
     <Yard3D model={yard} inspection={inspection||cutaway}/>
-    <Environment3D data={data} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} yard={yard} {...interaction}/>
+    <Environment3D data={data} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
   </group>;
 }
 /** Hands the page a function that renders the current view and returns it as an image (for the
