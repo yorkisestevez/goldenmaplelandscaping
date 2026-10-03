@@ -1,3 +1,4 @@
+import {pergolaDescription} from './pergolaPricing';
 import {exposedHouseLine,getHouseContact} from './houseContact';
 import {getHouseBlocks,normalizeHouseBlocks} from './houseFootprint';
 import {getHouseConfig} from './houseSettings';
@@ -41,7 +42,9 @@ export function describeDesign(data:DeckData,estimate:DeckEstimate){
   const accent=data.boardColours?.length?accentWords(boardFinishPlan(data,estimate.model)):undefined;
   const inlaid=data.inlays?.length?inlayWords(estimate.model.levels.flatMap(l=>l.inlays??[]),data.inlays):undefined;
   const skirting=data.skirting?skirtingPlan(data,estimate.model):null;
+  const pergola=pergolaDescription(data);
   const facts=[
+    ...(pergola?[pergola]:[]),
     `Deck area: ${estimate.model.quantities.area.toFixed(0)} sq ft`,
     custom?customShapeWords(custom):data.shape==='L-Shape'?`L-shape with a ${data.cutoutWidth} × ${data.cutoutLength} ft corner cut-out at the front right`:data.shape==='Multi-corner'?`Two corner cut-outs: ${data.cutoutWidth} × ${data.cutoutLength} ft (front right) and ${data.cutoutWidth2} × ${data.cutoutLength2} ft (front left)`:data.shape==='Curved'?'Curved front edge':wrap?`Main deck ${data.width} × ${data.length} ft along the deck-facing wall, with wrap-around wings`:`Rectangle ${data.width} × ${data.length} ft${chamfers?` with ${describeChamfers(chamfers)}`:''}`,
     ...(data.levels>1?[`Second level ${data.width2} × ${data.length2} ft at ${data.height2} in, off the ${edgeName(data.level2EdgeId)??String(data.level2Position??'Front').toLowerCase()+' side'}${data.level2FullStep?', joined by a full-width step':''}`]:[]),

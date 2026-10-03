@@ -1,3 +1,4 @@
+import {pergolaLayout} from './pergolaLayout';
 import {SIDE_DOT} from './lib/deckGeometry';
 import {activeCornerChamfers,isChamferEdgeId} from './lib/cornerChamfers';
 import type {DeckData} from './types';
@@ -96,7 +97,7 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
   function inside(x:number,z:number){let odd=false;for(let i=0,j=fp.outline.length-1;i<fp.outline.length;j=i++){const a=fp.outline[i],b=fp.outline[j];if((a.y>z)!==(b.y>z)&&x<(b.x-a.x)*(z-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;}
   // Largest centred rectangle contained by the actual polygon, sampled at 6-inch increments.
   let pergolaArea=0;
-  if(data.pergolaSqft>0){let best={x:0,z:0,w:0,d:0};const wanted=data.pergolaSqft*144;
+  if(data.pergolaSqft>0&&!data.pergola){let best={x:0,z:0,w:0,d:0};const wanted=data.pergolaSqft*144;
     const cell=12,cols=Math.max(0,Math.floor((fp.bounds.w-12)/cell)),rows=Math.max(0,Math.floor((fp.bounds.h-12)/cell));
     const runs=Array.from({length:rows},()=>Array(cols).fill(0));
     for(let row=0;row<rows;row++)for(let col=cols-1;col>=0;col--){const x=6+col*cell,z=6+row*cell;const fits=[[x,z],[x+cell,z],[x,z+cell],[x+cell,z+cell]].every(([px,pz])=>inside(px,pz));runs[row][col]=fits?1+(runs[row][col+1]||0):0;}
@@ -172,5 +173,7 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
     const mounts=item.zone==='posts'?model.railing.posts.length:item.zone==='stairs'?model.treads.length:item.zone==='privacy'?privacyMounts.length:0;
     if(item.qty>=MAX_FIXTURE_QTY&&mounts>item.qty)warnings.push(`${item.name}: ${item.qty} fixtures is the per-product limit in this studio, so ${mounts-item.qty} ${item.zone==='stairs'?'treads':'posts'} stay unlit. Ask us to light the rest.`);
   }
-  return {wood,metal,drainage,fixtures,warnings:[...new Set(warnings)],pergolaArea,privacyMounts,panels:panelBoxes,screenHandles};
+  const pergola=pergolaLayout(data,model,[...wood,...metal,...panelBoxes]);
+  warnings.push(...(pergola?.warnings??[]));
+  return {...(pergola?{pergola}:{}),wood,metal,drainage,fixtures,warnings:[...new Set(warnings)],pergolaArea,privacyMounts,panels:panelBoxes,screenHandles};
 }

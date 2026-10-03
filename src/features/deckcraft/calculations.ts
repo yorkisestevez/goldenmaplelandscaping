@@ -1,3 +1,5 @@
+import {pergolaPricing} from './pergolaPricing';
+import {pergolaLayout} from './pergolaLayout';
 import { activeWrap, hasPorchWrap, wrapLabourFactor } from './lib/wrapGeometry';
 import { activeCornerChamfers, chamferLabourFactor } from './lib/cornerChamfers';
 import { activeCustomFront, customLabourFactor, customOutline } from './lib/customOutline';
@@ -424,12 +426,12 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
 
   // Permits
   let permitFee = 0;
-  if (deckType === 'Attached' || area > 108 || height > 24 || pergolaSqft > 0) {
+  if (deckType === 'Attached' || area > 108 || height > 24 || pergolaSqft > 0 || !!data.pergola) {
     permitFee = permitFees[municipality] || 200;
   }
   const caFee = (siteType === 'Waterfront-Lakefront' || siteType === 'Island-Ferry') ? 560 : 0;
   let engineeringFee = 0;
-  if (intendedLoad === 'Heavy' || levels >= 3 || pergolaSqft > 0 || soilCondition === 'Shallow Bedrock') {
+  if (intendedLoad === 'Heavy' || levels >= 3 || pergolaSqft > 0 || !!data.pergola || soilCondition === 'Shallow Bedrock') {
     engineeringFee = settingsEngineeringFee;
     flags.push('Engineering Required');
   }
@@ -465,7 +467,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     privacy: privacySqft * 70 * markupMult,
     drainage: hasDrainage ? area * 12 * markupMult : 0,
     demo: hasDemo ? area * 14 * markupMult : 0,
-    pergola: pergolaSqft * 65 * markupMult,
+    pergola: data.pergola ? 0 : pergolaSqft * 65 * markupMult,
     // Add-on module specific
     structuralTieIn: deckType === 'Add-on' ? (data.addOnHardwareCost || 450) * markupMult : 0,
     ledgerFlashing: deckType === 'Add-on' ? (data.addOnFlashingLf || flashingLf) * 12 * markupMult : 0,
@@ -594,7 +596,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
         ...quotedScreens.map(name => ({ name: 'Manufacturer privacy screen', spec: name, qty: 1, unit: 'screen', cost: null })),
         { name: 'Drainage System', spec: 'Under-deck', qty: hasDrainage ? area : 0, unit: 'sqft', cost: addOnCosts.drainage },
         { name: 'Demo & Removal', spec: 'Existing Deck', qty: hasDemo ? area : 0, unit: 'sqft', cost: addOnCosts.demo },
-        { name: 'Pergola', spec: 'Wood/Aluminum', qty: pergolaSqft, unit: 'sqft', cost: addOnCosts.pergola },
+        { name: 'Pergola', spec: 'Wood/Aluminum', qty: data.pergola ? 0 : pergolaSqft, unit: 'sqft', cost: addOnCosts.pergola },
         { name: 'Structural Tie-in', spec: 'Hardware to Existing', qty: deckType === 'Add-on' ? 1 : 0, unit: 'ls', cost: addOnCosts.structuralTieIn },
         { name: 'Ledger Flashing', spec: 'Connection Width', qty: deckType === 'Add-on' ? (data.addOnFlashingLf || flashingLf) : 0, unit: 'lf', cost: addOnCosts.ledgerFlashing },
         { name: 'Transition Labor', spec: 'Leveling & Siding Prep', qty: deckType === 'Add-on' ? 1 : 0, unit: 'ls', cost: addOnCosts.transitionLabor },
@@ -709,6 +711,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // HST is computed AFTER custom overrides so tax always tracks the final
   // pre-tax number. Rendered as a section so every view (results, proposal,
   // PDF) shows it without extra wiring.
+  const aluminum=pergolaPricing(data,materialMarkup??35,settings?.pergolaQuote);
+  if(aluminum){sections.push(aluminum.section);quoteRequired.push(...aluminum.outstanding);flags.push(...aluminum.outstanding,...(pergolaLayout(data,model)?.warnings??[]));}
   const subtotal = sections.reduce((sum, s) => sum + s.total, 0);
   const hst = subtotal * 0.13;
   sections.push({

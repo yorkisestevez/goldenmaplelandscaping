@@ -1,3 +1,8 @@
+import {pergolaLayout} from '../../pergolaLayout';
+import Pergola3D,{type PergolaInteraction} from './Pergola3D';
+import PergolaTools from './PergolaTools';
+import type {Update} from '../../designer/fields';
+import type {PergolaSelection} from '../../pergolaCatalog';
 import NotchedStringers from './NotchedStringers';
 import {Suspense,useCallback,useEffect,useMemo,useLayoutEffect,useRef,useState} from 'react';
 import {Canvas,useThree,type ThreeEvent} from '@react-three/fiber';
@@ -140,7 +145,7 @@ function CameraView({view,w,d,cx,cz,height,depth}:{view:string;w:number;d:number
  const {camera,controls,invalidate}=useThree();
  useEffect(()=>{const r=Math.max(w,d),target=new THREE.Vector3(cx,view==='foundation'?-depth/24:height*.5,cz);camera.position.set(cx+r*.9,height+r*.7,cz+r*1.3);if(view==='front')camera.position.set(cx,height*.6,cz+r*1.8);if(view==='top')camera.position.set(cx,r*2+.1,cz+.01);if(view==='hardware')camera.position.set(cx+r*.6,height*.25,cz+r*1.2);if(view==='foundation')camera.position.set(cx+r*.9,height+r*.65,cz+r*1.4);camera.lookAt(target);if(controls&&'target' in controls){(controls as any).target.copy(target);(controls as any).update();}invalidate();},[view,w,d,cx,cz,height,depth,camera,controls,invalidate]);return null;
 }
-function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen,boardPaint,...interaction}:{data:DeckData;model:DeckTakeoff;structure:boolean;cutaway:boolean;inspection:boolean;yard:YardModel;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;boardPaint?:BoardPaint}&HouseInteraction){
+function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen,boardPaint,pergolaInteraction,...interaction}:{data:DeckData;model:DeckTakeoff;structure:boolean;cutaway:boolean;inspection:boolean;yard:YardModel;pergolaInteraction?:PergolaInteraction;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;boardPaint?:BoardPaint}&HouseInteraction){
   const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)||DECKING_CATALOGUE[0];
   const swatch=material.colors.find(c=>c.name===data.deckingColor)||material.colors[0];
   const board=useSwatchTexture(swatchUrl(swatch.swatch),getMaterialFallbackColor(material.id));
@@ -201,7 +206,7 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
     <RailingDetails data={data} model={model}/>
     {model.railing.frameless&&<FramelessGlass3D layout={model.railing.frameless}/>}
     <Boxes items={extras.wood} material={board} name="benches-privacy-pergola"/>
-    <Boxes items={extras.metal} material={materials.metal} name="accessory-frames"/>
+    <Pergola3D data={data} layout={extras.pergola??null} interaction={pergolaInteraction}/><Boxes items={extras.metal} material={materials.metal} name="accessory-frames"/>
     <Boxes items={extras.drainage} material={materials.metal} name="under-deck-drainage"/>
     <PrivacyScreens3D panels={extras.panels} handles={extras.screenHandles} onMove={onMovePrivacyScreen}/>
     <LightingFixtures items={extras.fixtures} evening={data.sceneLighting==='Evening'} enabled={data.lightingPreviewOn!==false}/>
@@ -219,7 +224,7 @@ function SnapshotBridge({onReady}:{onReady?:(capture:((longEdgePx?:number)=>stri
   useEffect(()=>{
     if(!onReady)return;
     onReady((longEdgePx?:number)=>{
-      const picked:THREE.Object3D[]=[];scene.traverse(o=>{if(o.name==='picked-wall-outline'&&o.visible){o.visible=false;picked.push(o);}});
+      const picked:THREE.Object3D[]=[];scene.traverse(o=>{if((o.name==='picked-wall-outline'||o.name==='picked-pergola-outline')&&o.visible){o.visible=false;picked.push(o);}});
       const ratio=gl.getPixelRatio(),edge=Math.max(gl.domElement.width,gl.domElement.height),scale=longEdgePx&&edge&&longEdgePx>edge?Math.min(3,longEdgePx/edge):1;
       try{if(scale>1)gl.setPixelRatio(ratio*scale);const pipeline=pipelineFor(gl);if(pipeline)pipeline.capture(scale);else gl.render(scene,camera);return gl.domElement.toDataURL('image/jpeg',.9);}catch{return null;}
       finally{for(const o of picked)o.visible=true;if(scale>1){gl.setPixelRatio(ratio);invalidate();}}
@@ -228,16 +233,20 @@ function SnapshotBridge({onReady}:{onReady?:(capture:((longEdgePx?:number)=>stri
   },[gl,scene,camera,invalidate,onReady]);
   return null;
 }
-export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,boardPaint,...interaction}:{data:DeckData;model:DeckTakeoff;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:((longEdgePx?:number)=>string|null)|null)=>void;boardPaint?:BoardPaint}&HouseInteraction){
-  const data=useMemo<DeckData>(()=>{if(!deckOnly)return rawData;const {yardFeatures:_yard,terrainConfig:_terrain,...deck}=rawData;return deck;},[rawData,deckOnly]);
+export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,boardPaint,onUpdate,...interaction}:{onUpdate?:Update;data:DeckData;model:DeckTakeoff;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:((longEdgePx?:number)=>string|null)|null)=>void;boardPaint?:BoardPaint}&HouseInteraction){
+  const [selected,setSelected]=useState(false),[pergolaMode,setPergolaMode]=useState<'move'|'rotate'>('move'),[draft,setDraft]=useState<Partial<PergolaSelection>|null>(null);
+  const placedData=draft&&rawData.pergola?{...rawData,pergola:{...rawData.pergola,...draft}}:rawData;
+  const data=useMemo<DeckData>(()=>{if(!deckOnly)return placedData;const {yardFeatures:_yard,terrainConfig:_terrain,...deck}=placedData;return deck;},[placedData,deckOnly]);
   const yard=useMemo(()=>!deckOnly&&calculatedYard?calculatedYard:buildYardModel(data,model),[deckOnly,calculatedYard,model,data.yardFeatures,data.terrainConfig,data.width,data.length,data.houseConfig?.widthFt,data.houseConfig?.depthFt,data.houseConfig?.footprint,data.housePlacement,data.houseVisible,data.deckType]);
+  const pergola=useMemo(()=>pergolaLayout(rawData,model,[],false),[rawData,model]);
   const bounds=sceneBounds(model),house=houseLayout(data,model.levels[0].footprint.bounds.w);
+  if(pergola){for(const p of pergola.footprint){bounds.minX=Math.min(bounds.minX,p.x);bounds.maxX=Math.max(bounds.maxX,p.x);bounds.minZ=Math.min(bounds.minZ,p.y);bounds.maxZ=Math.max(bounds.maxZ,p.y);}bounds.top=Math.max(bounds.top,pergola.roofHigh);}
   if(view==='overview'&&house.visible){bounds.minX=Math.min(bounds.minX,house.minX-14);bounds.maxX=Math.max(bounds.maxX,house.maxX+14);bounds.minZ=Math.min(bounds.minZ,-house.depth-14);bounds.top=Math.max(bounds.top,house.wallHeight+house.roofRise);for(const {rect:b,wallHeightIn} of getHouseBlocks(data).slice(1)){bounds.minX=Math.min(bounds.minX,b.x0-14);bounds.maxX=Math.max(bounds.maxX,b.x1+14);bounds.minZ=Math.min(bounds.minZ,b.y0-14);bounds.top=Math.max(bounds.top,wallHeightIn+house.roofRise);}}
   if(view==='overview')for(const feature of yard.features.filter(f=>!f.excluded)){for(const p of feature.footprints.flat()){bounds.minX=Math.min(bounds.minX,p.x);bounds.maxX=Math.max(bounds.maxX,p.x);bounds.minZ=Math.min(bounds.minZ,p.y);bounds.maxZ=Math.max(bounds.maxZ,p.y);}for(const b of feature.boxes)bounds.top=Math.max(bounds.top,b.y+b.h/2);}
   const w=(bounds.maxX-bounds.minX)/12,d=(bounds.maxZ-bounds.minZ)/12,cx=(bounds.maxX+bounds.minX)/24,cz=(bounds.maxZ+bounds.minZ)/24,r=Math.max(w,d),height=bounds.top/12,evening=data.sceneLighting==='Evening';
   const lights=activeLightingItems(data).reduce((n,item)=>n+(isIlluminatingFixture(item.productId)?item.qty:0),0);
   const simplifiedPaving=!structure&&!cutaway&&view!=='hardware'&&hasSimplifiedPaving(yard);
-  return <div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
+  return <>{onUpdate&&!structure&&!cutaway&&!boardPaint&&<PergolaTools data={data} selected={selected} setSelected={setSelected} mode={pergolaMode} setMode={setPergolaMode} update={onUpdate}/>}<div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
     <Canvas shadows="percentage" frameloop="demand" dpr={[1,1.5]} camera={{fov:38,position:[cx+r*1.1,height+r*.85,cz+r*1.65],near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar}} gl={{antialias:false,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:SCENE_LOOK.exposure}} onCreated={({gl})=>{const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
         // Leaving 3D (e.g. for the Plan view) disposes the renderer and also fires this event;
         // only a canvas still on the page has really lost its GPU context.
@@ -247,10 +256,10 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
       <Suspense fallback={<StudioLight evening={evening}/>}><Sky3D evening={evening}/></Suspense>
       <fogExp2 attach="fog" args={['#8a8b80',SCENE_LOOK.sky.fogDensity]}/>
       <CameraView view={view} w={w} d={d} cx={cx} cz={cz} height={height} depth={data.foundationDepthIn??48}/>
-      <Scene data={data} model={model} structure={structure} cutaway={cutaway} inspection={structure||view==='hardware'} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} {...interaction}/>
+      <Scene data={data} model={model} structure={structure} cutaway={cutaway} inspection={structure||view==='hardware'} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} pergolaInteraction={onUpdate&&rawData.pergola&&!boardPaint&&!structure&&!cutaway?{selected,mode:pergolaMode,onSelect:()=>setSelected(true),onDraft:setDraft,onCommit:patch=>onUpdate({pergola:{...rawData.pergola!,...patch}})}:undefined} {...interaction}/>
       <SnapshotBridge onReady={onSnapshotReady}/>
       <RenderPipeline evening={evening}/>
       <OrbitControls makeDefault target={[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={r*.25} maxDistance={r*4} enableDamping={false}/>
     </Canvas>{simplifiedPaving&&<p className="absolute top-3 left-3 right-3 w-fit rounded-md bg-white/95 px-3 py-2 text-xs text-[#38413b] shadow-sm pointer-events-none">Simplified paving preview · {yard.quantities.paverPieces.toLocaleString()} pavers retained in quantities, construction view and exports.</p>}<p className={`absolute bottom-3 left-4 right-4 text-[10px] pointer-events-none ${evening?'text-white':'text-[#474c43]'}`}>Drag to orbit · pinch or scroll to zoom{evening&&data.lightingPreviewOn!==false&&lights>MAX_PREVIEW_LIGHTS?` · ${lights} fixtures shown; light spread preview limited to ${MAX_PREVIEW_LIGHTS} fixtures`:''}</p>
-  </div>;
+  </div></>;
 }

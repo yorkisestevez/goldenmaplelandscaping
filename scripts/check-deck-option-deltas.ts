@@ -76,7 +76,7 @@ const baseOf=(d:DeckData,e:ReturnType<typeof calculateDeckReleaseEstimate>):Delt
   ok(site.includes("select('foundation','Foundation preference',FOUNDATIONS,"),'Site & foundation offers the foundations');
   ok(fields.includes('onChange={e=>update(selectPatch(key,typeof choices[0]===\'number\'?Number(e.target.value):e.target.value))}'),'Every select applies selectPatch');
   ok(history.includes('setData(prev=>pruneEdgeNames(deckReleaseData({...prev,...patch})))'),'The page\'s update is the patch through the release boundary with stale edge names dropped');
-  ok(estimateHook.includes('const autoCounts={posts:estimate.model.railing.posts.length,stairs:estimate.model.treads.length,privacy:extras.privacyMounts.length};')&&estimateHook.includes('selectedItems:syncAutoLighting(prev,autoCounts)')&&estimateHook.includes('const estimateKey=estimateKeyOf(data);'),'The page\'s light sync and estimate key are the ones measured here');
+  ok(estimateHook.includes('const autoCounts={posts:estimate.model.railing.posts.length,stairs:estimate.model.treads.length,privacy:extras.privacyMounts.length};')&&estimateHook.includes('selectedItems:syncAutoLighting(prev,autoCounts)')&&estimateHook.includes('const designKey=estimateKeyOf(data);')&&estimateHook.includes('const estimateKey=designKey+'),'The page\'s light sync and estimate key are the ones measured here');
   for(const [name,src,section] of [['MaterialsStep',materials,'boards'],['StairsStep',stairs,'stairs'],['SiteExtrasStep',site,'part']] as const)ok(src.includes(`useOptionDeltas(${section==='part'?'part':`'${section}'`},data,deltas)`)&&src.includes('<DeltaToggle deltas={effect}/>'),`${name} shows its groups' price effect, with "Show price effect" where it is asked for`);
 }
 

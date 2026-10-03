@@ -1,3 +1,5 @@
+import {pergolaDescription} from './pergolaPricing';
+import {pergolaVertices,PERGOLA_FACES,pergolaParts} from './pergolaGeometry';
 import type {DeckData} from './types';
 import type {DeckTakeoff,Box,Member,V3} from './deckTakeoff';
 import {getHardwareLayout} from './hardwareLayout';
@@ -105,6 +107,7 @@ export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
   boxes('ledger_bolt',hardware.ledgerBolts.map(p=>({x:p.x,y:p.y,z:p.z,w:.5,h:.5,d:3})));
   boxes(hardware.hidden?'hidden_clip':'deck_screw',hardware.screws.map(p=>({x:p.x,y:p.y-.6,z:p.z,w:hardware.hidden?.6:.18,h:hardware.hidden?.12:1.2,d:hardware.hidden?.4:.18})));
   const extras=extrasLayout(data,model);boxes('bench_privacy_pergola_wood',extras.wood);boxes('extra_metal',extras.metal);boxes('drainage',extras.drainage);boxes('privacy_panel',extras.panels);
+  if(extras.pergola)pergolaParts(data,extras.pergola).forEach((p,i)=>out.push({name:`aluminum_pergola_${p.role}_${i}`,vertices:pergolaVertices(p),faces:PERGOLA_FACES}));
   // Skirting only when the design has it: face boards or lattice, 2×4 backing and access-panel trim.
   const skirting=data.skirting?skirtingPlan(data,model):null;
   if(skirting)for(const [part,items] of [['face',skirting.faces],['backing',skirting.backing],['access_panel_frame',skirting.frames]] as const)items.forEach((s,i)=>out.push(slabMesh(`skirting_${part}_${i+1}`,s)));
@@ -120,11 +123,13 @@ export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
 const f=(n:number)=>Number(n.toFixed(5)).toString();
 export function exportDeckOBJ(data:DeckData,model:DeckTakeoff):string{
   const lines=['# Golden Maple Deck Studio — modeled construction solids','# Units: inches; X along house, Y up, Z toward yard.','# Planning model; fixture/hardware envelopes are schematic. Engineering and site confirmation required.'];let offset=1;
+  const pergola=pergolaDescription(data);if(pergola)lines.push(`# ${pergola}`);
   for(const m of deckExportMeshes(data,model)){lines.push(`o ${m.name}`,...m.vertices.map(v=>`v ${f(v.x)} ${f(v.y)} ${f(v.z)}`),...m.faces.map(face=>`f ${face.map(i=>i+offset).join(' ')}`));offset+=m.vertices.length;}
   return lines.join('\n')+'\n';
 }
 export function exportDeckDXF(data:DeckData,model:DeckTakeoff):string{
   const lines=['0','SECTION','2','HEADER','9','$ACADVER','1','AC1015','9','$INSUNITS','70','1','0','ENDSEC','0','SECTION','2','ENTITIES'];
+  const pergola=pergolaDescription(data);if(pergola)lines.push('999',pergola);
   // DXF is Z-up: convert the shared model's (x,y,z) to (x,z,y).
   const point=(v:V3,i:number)=>[String(10+i),f(v.x),String(20+i),f(v.z),String(30+i),f(v.y)];
   for(const m of deckExportMeshes(data,model))for(const face of m.faces){

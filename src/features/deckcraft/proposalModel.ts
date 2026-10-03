@@ -89,7 +89,7 @@ const FACT_GROUPS:readonly (readonly [FeatureGroupId,RegExp])[]=[
   ['boards',/ boards( with \d+ border rows?)?$|^Accent boards:|^Inlays?:|^Deck parts:/],
   ['railing',/ railing · \d+ stair flights?\b|^Railing colour:|^Frameless glass:|^Privacy screens:|^Skirting:/],
   ['lighting',/^Lighting:/],
-  ['living',/^Backyard:/],
+  ['living',/^Backyard:|^Aluminum pergola:/],
   ['house',/^House |^Exterior \(appearance only/],
 ];
 export const factGroup=(fact:string):FeatureGroupId=>FACT_GROUPS.find(([,rule])=>rule.test(fact))?.[0]??'more';
@@ -119,7 +119,7 @@ export function proposalFeatures(data:DeckData,facts:readonly string[],exterior?
     byGroup.get(group)!.push(fact);
   }
   byGroup.get('lighting')!.push(...lights);
-  const built=[...(data.pergolaSqft>0?[`Pergola, ${data.pergolaSqft} sq ft`]:[]),...(data.benchLf>0?[`Built-in bench, ${data.benchLf} ft`]:[]),...(data.hasDrainage?['Under-deck drainage system']:[])];
+  const built=[...(data.pergolaSqft>0&&!data.pergola?[`Pergola, ${data.pergolaSqft} sq ft`]:[]),...(data.benchLf>0?[`Built-in bench, ${data.benchLf} ft`]:[]),...(data.hasDrainage?['Under-deck drainage system']:[])];
   byGroup.get('living')!.unshift(...built);
   return GROUPS.flatMap(([id,title])=>{const items=byGroup.get(id)!;return items.length?[{id,title,items}]:[];});
 }

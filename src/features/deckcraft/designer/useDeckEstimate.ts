@@ -1,3 +1,4 @@
+import {usePergolaQuote} from './usePergolaQuote';
 import {useEffect,useMemo,type Dispatch,type SetStateAction} from 'react';
 import {calculateDeckReleaseEstimate as calculateEstimate,deckReleaseData} from '../deckRelease';
 import {DECK_SETTINGS} from '../defaults';
@@ -24,8 +25,10 @@ export function useDeckEstimate(data:DeckData,setData:Dispatch<SetStateAction<De
   // Where a screen sits on its edge never changes the price, so dragging one does not re-run the estimate.
   // House size, attached blocks and floor heights can move the ledger and add warnings; looks and openings never price.
   // Backyard features and terrain price; a feature's concept colour never does.
-  const estimateKey=estimateKeyOf(data);
-  const estimate=useMemo(()=>calculateEstimate(data,DECK_SETTINGS),[estimateKey]);
+  const {quote,revision}=usePergolaQuote(data);
+  const designKey=estimateKeyOf(data);
+  const estimateKey=designKey+(data.pergola?`:${revision}`:'');
+  const estimate=useMemo(()=>calculateEstimate(data,{...DECK_SETTINGS,pergolaQuote:quote}),[estimateKey]);
   const lightingCheck=useMemo(()=>lightingSystemCheck(data),[data]);
   const extras=useMemo(()=>extrasLayout(data,estimate.model),[data,estimate.model]);
   // Simple post/step/screen lights follow the modeled mounts; only write when the selection really changes.

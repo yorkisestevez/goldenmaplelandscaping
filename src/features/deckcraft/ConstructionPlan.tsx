@@ -1,3 +1,4 @@
+import {pergolaLayout} from './pergolaLayout';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {DeckData} from './types';
 import {sceneBounds} from './components/viewer3d/sceneBounds';
@@ -45,7 +46,8 @@ export interface PlanFrame{
 export function planFrame(model:DeckTakeoff,{data,yard,variant='contractor',legendRows=0,wholeHouse=false}:{data?:DeckData;yard?:YardModel;variant?:PlanVariant;legendRows?:number;
   /** Site plan only (its House tool, R5): draw the house's whole deck-facing wall, so both wall ends show. */
   wholeHouse?:boolean}={}):PlanFrame{
-  const b=sceneBounds(model);
+  const b=sceneBounds(model),pergola=data?pergolaLayout(data,model,[],false):null;
+  for(const p of pergola?.footprint??[]){b.minX=Math.min(b.minX,p.x);b.maxX=Math.max(b.maxX,p.x);b.minZ=Math.min(b.minZ,p.y);b.maxZ=Math.max(b.maxZ,p.y);}
   for(const p of yard?.features.filter(f=>!f.excluded).flatMap(f=>f.footprints.flat())??[]){b.minX=Math.min(b.minX,p.x);b.maxX=Math.max(b.maxX,p.x);b.minZ=Math.min(b.minZ,p.y);b.maxZ=Math.max(b.maxZ,p.y);}
   const site=variant==='site',house=data&&data.houseVisible!==false?getHousePlacement(data):null,wrap=data?activeWrap(data):null;
   const reach=site?Math.max(SITE_REACH,...(wholeHouse&&house?[b.minX-house.x0,house.x1-b.maxX]:[])):48;
@@ -64,7 +66,7 @@ export function planFrame(model:DeckTakeoff,{data,yard,variant='contractor',lege
 
 /** Contractor plan from the shared model. With `data` it also shows the house, ledgers and edge lengths. */
 export default function ConstructionPlan({model,yard,data,variant='contractor',wholeHouse}:{model:DeckTakeoff;yard?:YardModel;data?:DeckData;variant?:PlanVariant;wholeHouse?:boolean}){
- const site=variant==='site';
+ const site=variant==='site',pergola=data?pergolaLayout(data,model,[],false):null;
  const main=model.levels[0],outline=main.footprint.outline;
  const contact=data?getHouseContact(data,main.footprint):null;
  // Accent-colour boards (boardFinishes.ts): each colour group gets a plan tone, named in the legend.
@@ -170,5 +172,6 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
    {!site&&<text x={b.minX} y={b.maxZ+56} fontSize="7" fill="#514b41">{`Dashed: joists · Solid: beams${contact?.contacts.length?' · Bronze: ledger on the house':''}${contact?.flushLf?' · Bronze dashed: bolted flush wall':''}${hips.length?' · Heavy dashed: doubled hip':''}${model.levels.some(l=>l.inlays?.some(p=>p.status==='ok'))?' · Amber: inlay blocking':''}`}</text>}
    {finish&&finish.groups.length>0&&<text x={b.minX} y={site?b.maxZ+62:b.maxZ+80} fontSize="7" fill="#514b41" aria-label="Accent boards">Accent boards:{finish.groups.map(g=><tspan key={g.ref}> <tspan fill={tones.get(g.ref)}>■</tspan> {g.color.name} ({g.material.name}, {g.boards.length})</tspan>)}</text>}
    <text x={b.minX} y={site?b.maxZ+74:b.maxZ+68} fontSize="6" fill={site?'#3e4d43':'#716a5e'}>Design illustration · final connections and sizing require site review</text>
+ {pergola&&<g aria-label="Aluminum pergola footprint"><polygon points={pergola.footprint.map(p=>`${p.x},${p.y}`).join(' ')} fill="#46665b" fillOpacity={.16} stroke="#36554b" strokeWidth={2} strokeDasharray="6 3"/><text x={data!.pergola!.xFt*12} y={data!.pergola!.zFt*12} fontSize={9} textAnchor="middle" fill="#36554b">ALUMINUM PERGOLA · {pergola.conceptual?'CONCEPT':'LISTED ENVELOPE'}</text></g>}
  </svg>;
 }

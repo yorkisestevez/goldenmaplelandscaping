@@ -1,3 +1,4 @@
+import type {PergolaSelection} from './pergolaCatalog';
 export type DeckType = 'Attached' | 'Freestanding' | 'Floating' | 'Add-on';
 export type Municipality = 'Toronto' | 'Barrie' | 'Simcoe County' | 'Burlington-Oakville' | 'Rural-Other';
 export type SiteType = 'Standard' | 'Waterfront-Lakefront' | 'Hillside' | 'Urban Tight' | 'Island-Ferry';
@@ -302,6 +303,7 @@ export interface DeckData {
   privacyScreens?: PrivacyScreen[];
   hasDrainage: boolean;
   hasDemo: boolean;
+  pergola?:PergolaSelection;
   pergolaSqft: number;
   
   // Add-on specific

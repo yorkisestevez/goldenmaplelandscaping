@@ -38,7 +38,7 @@ const ZERO=/\$0(?![\d.,])/;
 // 1. Every title the engine can give an estimate section (read from calculations.ts), HST aside, belongs to exactly one
 // design section, and every title a section claims is one the engine can give.
 {
-  const engine=read('src/features/deckcraft/calculations.ts');
+  const engine=read('src/features/deckcraft/calculations.ts')+read('src/features/deckcraft/pergolaPricing.ts');
   const titles=[...engine.matchAll(/title:\s*([^,\n]+?),/g)].flatMap(m=>[...m[1].matchAll(/'([^']+)'|`([^`$]*)\$\{/g)].map(t=>t[1]??`${t[2]}*`));
   const owners=(t:string)=>t.endsWith('*')?SECTIONS.filter(s=>s.ledger.includes(t)):SECTIONS.filter(s=>ownsTitle(s,t));
   ok(titles.length>=18&&titles.includes('HST (13%)')&&titles.includes('Structural Framing (*')&&titles.includes('Yard · *'),`The engine's section titles are read (${titles.length})`);
