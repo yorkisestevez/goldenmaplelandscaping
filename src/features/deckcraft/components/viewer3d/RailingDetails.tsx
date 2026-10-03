@@ -3,6 +3,7 @@ import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import type {DeckTakeoff,V3} from '../../deckTakeoff';
+import {useFixtureLit} from './fixtureLighting';
 
 type Part={position:THREE.Vector3;axis:THREE.Vector3;size:THREE.Vector3};
 const vec=(p:V3)=>new THREE.Vector3(p.x,p.y,p.z);
@@ -35,6 +36,7 @@ export default function RailingDetails({data,model}:{data:DeckData;model:DeckTak
     edge:new THREE.MeshStandardMaterial({color:'#6d9b88',metalness:.1,roughness:.18,transparent:true,opacity:.32}),
   }),[]);
   useEffect(()=>()=>Object.values(materials).forEach(m=>m.dispose()),[materials]);
+  useFixtureLit(materials.stainless);useFixtureLit(materials.dark);useFixtureLit(materials.rubber);
   const layout=useMemo(()=>{
     const glass:THREE.Matrix4[]=[],clamps:Part[]=[],pads:Part[]=[],bolts:Part[]=[],cables:Part[]=[],barrels:Part[]=[],nuts:Part[]=[],grommets:Part[]=[],edges:Part[]=[];
     const cylinder=(out:Part[],position:THREE.Vector3,axis:THREE.Vector3,radius:number,length:number)=>out.push({position,axis,size:new THREE.Vector3(radius,length,radius)});

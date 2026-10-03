@@ -8,6 +8,7 @@ import {yardClip,type YardModel} from '../../yardModel';
 import {GroundOcclusion,type GroundBounds} from './groundOcclusion';
 import {LAWN_MEAN,groundGeometry,lawnMaterial} from './lawnSurface';
 import {onShadowChange} from './renderPipeline';
+import {useFixtureLit,useFixtureLitRef} from './fixtureLighting';
 
 /** The ground's shade waits this long after the last change to what casts before it redraws. */
 const OCCLUSION_SETTLE_MS=250;
@@ -23,6 +24,8 @@ export default function Turf({width,depth,radius:_radius,yard}:{width:number;dep
  const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),invalidate=useThree(s=>s.invalidate),ref=useRef<THREE.InstancedMesh>(null);
  const material=useMemo(lawnMaterial,[]);
  const cuts=useMemo(()=>yardClip(yard.excavationRegions.map(e=>e.polygon)),[yard]);
+  // The bottom step's light pools on the lawn and its blades.
+  useFixtureLit(material);const litBlades=useFixtureLitRef();
  const bounds=useMemo<GroundBounds>(()=>{const tw=yard.terrain.widthFt*12,td=yard.terrain.depthFt*12;return {minX:width/2-tw/2,minZ:depth/2-td/2,width:tw,depth:td};},[yard,width,depth]);
  const geometry=useMemo(()=>groundGeometry(yard,cuts,width,depth,bounds),[yard,cuts,width,depth,bounds]);
  useEffect(()=>()=>geometry.dispose(),[geometry]);
@@ -52,6 +55,6 @@ export default function Turf({width,depth,radius:_radius,yard}:{width:number;dep
  },[width,depth,invalidate,yard,cuts]);
  return <group name="textured-lawn">
   <mesh name="lawn-to-the-horizon" receiveShadow geometry={geometry}><primitive object={material} attach="material"/></mesh>
-  <instancedMesh name="close-view-grass-blades" ref={ref} args={[blade,undefined,count]} receiveShadow><meshStandardMaterial color="#ffffff" vertexColors roughness={.95} side={THREE.DoubleSide}/></instancedMesh>
+  <instancedMesh name="close-view-grass-blades" ref={ref} args={[blade,undefined,count]} receiveShadow><meshStandardMaterial ref={litBlades} color="#ffffff" vertexColors roughness={.95} side={THREE.DoubleSide}/></instancedMesh>
  </group>;
 }

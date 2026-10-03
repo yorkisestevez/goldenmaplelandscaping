@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type {V3} from '../../deckTakeoff';
 import {GLASS,GLASS_FINISH_HEX,HANDRAIL,SHOE,SPIGOT,type FramelessGlassLayout} from '../../framelessGlass';
 import {SCENE_LOOK} from './sceneLook';
+import {useFixtureLit} from './fixtureLighting';
 
 const vec=(p:V3)=>new THREE.Vector3(p.x,p.y,p.z);
 const UP=new THREE.Vector3(0,1,0);
@@ -45,6 +46,8 @@ export default function FramelessGlass3D({layout}:{layout:FramelessGlassLayout})
       stainless:new THREE.MeshStandardMaterial({color:'#bdc4c6',metalness:.93,roughness:.24})};
   },[layout.finish,hex]);
   useEffect(()=>()=>Object.values(materials).forEach(m=>m.dispose()),[materials]);
+  // Shoes, spigots, handrail and clamps catch the night's step and post lights; the glass stays as it is.
+  useFixtureLit(materials.metal);useFixtureLit(materials.rubber);useFixtureLit(materials.stainless);
   const parts=useMemo(()=>{
     const glass:THREE.Matrix4[]=[],edges:THREE.Matrix4[]=[],shoes:THREE.Matrix4[]=[],gaskets:THREE.Matrix4[]=[],bolts:THREE.Matrix4[]=[];
     const spigots:THREE.Matrix4[]=[],plates:THREE.Matrix4[]=[],rails:THREE.Matrix4[]=[],brackets:THREE.Matrix4[]=[];

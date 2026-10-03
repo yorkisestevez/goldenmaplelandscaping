@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type {YardBox,YardModel,YardRole} from '../../yardModel';
 import {yardPreviewBoxes} from './yardPreview';
+import {useFixtureLitRef} from './fixtureLighting';
 
 function surfaceTexture(){const n=128,bytes=new Uint8Array(n*n*4);for(let y=0;y<n;y++)for(let x=0;x<n;x++){const v=.77+.23*(Math.abs(Math.sin(x*127.1+y*311.7)*43758.5453)%1),i=(y*n+x)*4;bytes[i]=bytes[i+1]=bytes[i+2]=v*255;bytes[i+3]=255;}const t=new THREE.DataTexture(bytes,n,n);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;t.needsUpdate=true;return t;}
 function boxGeometry(b:YardBox){
@@ -16,8 +17,9 @@ function YardBatch({items,color,role}:{items:YardBox[];color:string;role:YardRol
  const map=useMemo(surfaceTexture,[]),water=role==='water';
  useEffect(()=>()=>geometry?.dispose(),[geometry]);
  useEffect(()=>()=>map.dispose(),[map]);
+ const lit=useFixtureLitRef();
  if(!geometry)return null;
- return <mesh name={`yard-${role}`} geometry={geometry} castShadow={!water} receiveShadow>{water?<meshPhysicalMaterial color={color} roughness={.12} metalness={.06} transmission={.4} transparent opacity={.67} thickness={8} ior={1.333} envMapIntensity={1.1} clearcoat={1} depthWrite={false}/>:<meshStandardMaterial color={color} vertexColors bumpMap={map} bumpScale={role==='rock'?.35:.08} roughness={role==='liner'?.65:.92} metalness={role==='pump'?.25:0}/>}</mesh>;
+ return <mesh name={`yard-${role}`} geometry={geometry} castShadow={!water} receiveShadow>{water?<meshPhysicalMaterial color={color} roughness={.12} metalness={.06} transmission={.4} transparent opacity={.67} thickness={8} ior={1.333} envMapIntensity={1.1} clearcoat={1} depthWrite={false}/>:<meshStandardMaterial ref={lit} color={color} vertexColors bumpMap={map} bumpScale={role==='rock'?.35:.08} roughness={role==='liner'?.65:.92} metalness={role==='pump'?.25:0}/>}</mesh>;
 }
 function WaterMotion({model}:{model:YardModel}){
  const invalidate=useThree(s=>s.invalidate);

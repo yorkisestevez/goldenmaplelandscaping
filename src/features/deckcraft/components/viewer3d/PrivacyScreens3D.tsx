@@ -2,6 +2,7 @@ import {useEffect,useMemo,useRef} from 'react';
 import * as THREE from 'three';
 import {useThree,type ThreeEvent} from '@react-three/fiber';
 import {screenOffsetFromPoint,type PrivacyPanelBox,type PrivacyScreenHandle} from '../../extrasLayout';
+import {useFixtureLitRef} from './fixtureLighting';
 
 const FINISH_COLOR={Black:'#1f2222',White:'#ebe7dc'} as const;
 // Illustrative cut families only; each manufacturer design has its own artwork.
@@ -23,9 +24,10 @@ function cutAlphaMap(design:string){
 function Panel({panel}:{panel:PrivacyPanelBox}){
   const alpha=useMemo(()=>cutAlphaMap(panel.design),[panel.design]);
   useEffect(()=>()=>alpha?.dispose(),[alpha]);
+  const lit=useFixtureLitRef();
   return <mesh position={[panel.x,panel.y,panel.z]} rotation={[0,panel.angle??0,0]} castShadow receiveShadow>
     <boxGeometry args={[panel.w,panel.h,Math.max(panel.d,.1)]}/>
-    <meshStandardMaterial color={FINISH_COLOR[panel.finish]} metalness={.35} roughness={.6} alphaMap={alpha??undefined} alphaTest={alpha?.5:0} side={THREE.DoubleSide}/>
+    <meshStandardMaterial ref={lit} color={FINISH_COLOR[panel.finish]} metalness={.35} roughness={.6} alphaMap={alpha??undefined} alphaTest={alpha?.5:0} side={THREE.DoubleSide}/>
   </mesh>;
 }
 

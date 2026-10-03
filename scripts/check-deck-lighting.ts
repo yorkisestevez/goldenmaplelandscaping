@@ -3,10 +3,11 @@ import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {LIGHTING_CATALOGUE} from '../src/features/deckcraft/lightingCatalogue';
 import {activeLightingItems,lightingSystemCheck,syncAutoLighting,AUTO_LIGHTING,MAX_FIXTURE_QTY} from '../src/features/deckcraft/lightingSystem';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
-import {extrasLayout,screenOffsetFromPoint} from '../src/features/deckcraft/extrasLayout';
+import {extrasLayout,postFacing,screenOffsetFromPoint,treadNose,walkableAt} from '../src/features/deckcraft/extrasLayout';
 import {deckExportMeshes} from '../src/features/deckcraft/designExports';
 import type {DeckData} from '../src/features/deckcraft/types';
-import {MAX_PREVIEW_LIGHTS,MAX_SHADOW_LIGHTS,previewLightPlan,isIlluminatingFixture} from '../src/features/deckcraft/lightingPreview';
+import {MAX_PREVIEW_LIGHTS,MAX_SHADOW_LIGHTS,previewLightPlan,castsPreviewLight} from '../src/features/deckcraft/lightingPreview';
+import {DEFAULT_KELVIN,FX_MAX_FIXTURES,FX_TEXELS,LEGACY_HYDE,fixtureNight,kelvinSrgb,packFixtureLights} from '../src/features/deckcraft/fixtureLight';
 const data:DeckData={...structuredClone(DEFAULT_DECK),lightingSystem:{selectedItems:[{productId:'wedge',qty:4,zone:'stairs'},{productId:'hyve',qty:4,zone:'deck'},{productId:'hub100',qty:1}],wireDistance:80}};
 const on=calculateEstimate(data),off=calculateEstimate({...data,lightingPreviewOn:false,sceneLighting:'Evening'});
 const landscape={...data,terrainConfig:{widthFt:80,depthFt:80,elevationIn:6,slopePct:2},lightingSystem:{selectedItems:[{productId:'ace',qty:2,zone:'landscape' as const}],wireDistance:0}};
@@ -107,8 +108,10 @@ assert(!withCable.sections.find(s=>s.title==='in-lite® Lighting System')!.items
     assert.equal(screenOffsetFromPoint(h,h.x,h.z),offsetPct,`Drag frame round-trips ${offsetPct}% on the ${side} edge`);
   }
 }
-// Night preview lights: a well-lit design must not run WebGL out of texture units (16 per shader). Every
-// shadow-casting light takes one in each lit material, so only MAX_SHADOW_LIGHTS of the preview lights cast shadows.
+// Night preview lights: a well-lit design must not run WebGL out of texture units (16 per shader). Only long-throw
+// fixtures get real three lights (every shadow-casting one takes a unit in each lit material), so at most
+// MAX_PREVIEW_LIGHTS of them light the preview and MAX_SHADOW_LIGHTS cast shadows. Step, post and screen-post lights all
+// light their surroundings through the fixture light patch instead, with no count limit, and a cap PUCK only glows.
 {
   const at=(productId:string,zone:string,n:number)=>Array.from({length:n},(_,i)=>({productId,zone,x:i,y:0,z:0,angle:0}));
   const heavy=[...at('fusion','deck',12),...at('sway_pendant','house',3),...at('liv','landscape',6),...at('scope','landscape',3),...at('evo_hyde','stairs',8),...at('fusion','posts',20),...at('smart_hub150','',1),...at('wedge','stairs',7)];
@@ -116,10 +119,72 @@ assert(!withCable.sections.find(s=>s.title==='in-lite® Lighting System')!.items
   assert(plan.size<=MAX_PREVIEW_LIGHTS,`At most ${MAX_PREVIEW_LIGHTS} fixtures light the preview (got ${plan.size})`);
   assert(MAX_SHADOW_LIGHTS<=4,'Few enough preview lights cast shadows to leave texture units for the materials');
   assert.equal(shadows.length,Math.min(MAX_SHADOW_LIGHTS,plan.size),'A heavy lighting design casts shadows from exactly the capped number of lights');
-  assert.equal(new Set(shadows.map(i=>heavy[i].zone)).size,Math.min(shadows.length,new Set(heavy.filter(p=>isIlluminatingFixture(p.productId)).map(p=>p.zone)).size),'Shadows are shared across zones, not spent on the first zone');
-  assert(![...plan.keys()].some(i=>!isIlluminatingFixture(heavy[i].productId)),'Only fixtures that cast light get a preview light');
+  const rank=(i:number)=>fixtureNight(heavy[i].productId,heavy[i].zone).shadowPriority;
+  assert(shadows.every(i=>[...plan.keys()].every(j=>plan.get(j)||rank(j)<=rank(i))),'Shadows go to the longest-throw fixtures first');
+  assert(new Set([...plan.keys()].map(i=>heavy[i].zone)).size===3,'Real lights are still shared across the zones that have them');
+  assert(![...plan.keys()].some(i=>!castsPreviewLight(heavy[i].productId,heavy[i].zone)),'Only long-throw fixtures take a real preview light');
+  assert(![...plan.keys()].some(i=>['stairs','posts'].includes(heavy[i].zone)),'No step or post light takes a real light or casts a shadow');
+  assert(!castsPreviewLight('puck','posts')&&fixtureNight('puck','posts').route==='glow-only','A PUCK in a post cap faces the sky: it glows and lights nothing');
+  assert.equal(fixtureNight('evo_hyde','stairs').route,'patch','An under-step light lights its step through the fixture light patch');
+  assert.equal(fixtureNight('wedge','posts').route,'patch','A post light lights the deck through the fixture light patch');
   const small=[...at('fusion','deck',2),...at('evo_hyde','stairs',1)],smallPlan=previewLightPlan(small);
-  assert.equal(smallPlan.size,3);
-  assert([...smallPlan.values()].every(Boolean),'A small design keeps a shadow on every preview light, as before');
+  assert.equal(smallPlan.size,2,'The under-step light is not a real light');
+  assert([...smallPlan.values()].every(Boolean),'A small design keeps a shadow on every real preview light, as before');
+  // The fixture light texture: every near-field fixture, in world feet, only at night with the preview lights on.
+  const many=[...at('wedge','posts',30),...at('evo_hyde','stairs',30),...at('blink','privacy',30),...at('evo_hyde_550','stairs',30),...at('puck','posts',30)];
+  const packed=packFixtureLights(many,{evening:true,enabled:true});
+  assert.equal(packed.count,120,'Every step, post and screen-post light is packed; cap PUCKs are not');
+  assert.equal(packed.dropped,0,`A design with every simple option at its per-product cap fits the ${FX_MAX_FIXTURES} rows`);
+  assert.equal(packFixtureLights(many,{evening:false,enabled:true}).count,0,'Nothing lights by day');
+  assert.equal(packFixtureLights(many,{evening:true,enabled:false}).count,0,'Nothing lights with the preview lights off');
+  for(let i=0;i<packed.count;i++){
+    const row=packed.data.subarray(i*FX_TEXELS*4,(i+1)*FX_TEXELS*4),source=many[i];
+    assert(Math.abs(row[0]-source.x/12)<1&&Math.abs(row[2]-source.z/12)<1,'Packed positions are in world feet');
+    assert(row[3]>0&&row[3]<(source.zone==='stairs'?3:8),'Step lights reach less than 3 ft, post and screen lights less than 8 ft');
+    assert(Math.abs(Math.hypot(row[4],row[5],row[6])-1)<1e-6,'Each light has a unit aim');
+    assert(row[8]>=row[9]&&row[9]>=row[10]&&row[10]>0,'Warm white: more red than green than blue');
+  }
+  const [r27,g27,b27]=kelvinSrgb(2700),[r30,g30,b30]=kelvinSrgb(3000),[r40,g40,b40]=kelvinSrgb(4000);
+  assert(r27>=r30&&r30>=r40&&b27<b30&&b30<b40&&g27<g30&&g30<g40,'Lower colour temperatures are warmer');
+  assert.deepEqual(fixtureNight('puck','posts').kelvin,DEFAULT_KELVIN,'An unrated fixture shows 3000 K');
 }
-console.log(`DECK LIGHTING OK — ${LIGHTING_CATALOGUE.filter(p=>p.supported).length} supported products, zone/preview/export/quote, circuit, under-step, privacy-screen and manufacturer-screen checks, and night preview lights within the GPU's texture units.`);
+// Placement: under-step lights tuck flush under the nose, spread evenly along it (winders too); post lights face the
+// deck or stair they guard.
+{
+  const wide:DeckData={...structuredClone(DEFAULT_DECK),stairWidth:96};
+  const e=calculateEstimate(wide),treads=e.model.treads.length;
+  const three:DeckData={...wide,lightingSystem:{wireDistance:20,selectedItems:[{productId:'evo_hyde',qty:treads*3,zone:'stairs'},{productId:'hub100',qty:1}]}};
+  const layout=extrasLayout(three,calculateEstimate(three).model).fixtures.filter(f=>f.zone==='stairs');
+  assert.equal(layout.length,treads*3,'Three under-step lights on every step');
+  e.model.treads.forEach((t,ti)=>{
+    const nose=treadNose(t),mine=layout.filter((_,k)=>k%treads===ti);
+    const along=mine.map(f=>(f.x-nose.x)*Math.cos(nose.angle)-(f.z-nose.z)*Math.sin(nose.angle)).sort((a,b)=>a-b);
+    assert(Math.abs(along[1])<.01&&Math.abs(along[2]-along[1]-nose.width/3)<.01&&Math.abs(along[1]-along[0]-nose.width/3)<.01,'Lights on one step are evenly spaced, one in the middle');
+    for(const f of mine)assert(Math.abs(f.y+LEGACY_HYDE.height/2-(t.y-t.h/2))<.05,'The under-step housing sits flush on the tread underside');
+  });
+  const winder:DeckData={...structuredClone(DEFAULT_DECK),height:60,stairType:'Winder',autoLighting:{stairs:true}};
+  const we=calculateEstimate(winder),wCounts={posts:we.model.railing.posts.length,stairs:we.model.treads.length,privacy:0};
+  const wLit:DeckData={...winder,lightingSystem:{...winder.lightingSystem,selectedItems:syncAutoLighting(winder,wCounts)}},wModel=calculateEstimate(wLit).model;
+  const winders=wModel.treads.map((t,i)=>({t,i})).filter(({t})=>t.polygon);
+  assert(winders.length>0,'The winder design has winder treads');
+  const wLayout=extrasLayout(wLit,wModel).fixtures.filter(f=>f.zone==='stairs');
+  for(const {t,i} of winders){
+    const f=wLayout[i],a=t.polygon![2],b=t.polygon![3],len=Math.hypot(b.x-a.x,b.y-a.y),ux=(b.x-a.x)/len,uz=(b.y-a.y)/len;
+    const off=Math.abs((f.x-a.x)*uz-(f.z-a.y)*ux),along=(f.x-a.x)*ux+(f.z-a.y)*uz;
+    assert(off<1&&along>0&&along<len,'A winder\'s light sits under its own nose edge');
+    const c={x:t.polygon!.reduce((n,p)=>n+p.x,0)/4,y:t.polygon!.reduce((n,p)=>n+p.y,0)/4};
+    assert((f.x-c.x)*Math.sin(f.angle)+(f.z-c.y)*Math.cos(f.angle)>0,'A winder\'s light faces out over the step below');
+  }
+  const posts=e.model.railing.posts.length,postLit:DeckData={...wide,lightingSystem:{wireDistance:20,selectedItems:[{productId:'wedge',qty:posts,zone:'posts'},{productId:'puck',qty:posts,zone:'posts'},{productId:'hub100',qty:1}]}};
+  const pModel=calculateEstimate(postLit).model,pLayout=extrasLayout(postLit,pModel).fixtures,facing=postFacing(pModel),top=pModel.levels[0].top;
+  const wedges=pLayout.filter(f=>f.productId==='wedge'),caps=pLayout.filter(f=>f.productId==='puck');
+  assert.equal(wedges.length,posts,'A post light on every post');
+  assert.equal(caps.length,posts,'A cap light on every post, alongside the post light');
+  wedges.forEach((f,k)=>{
+    const post=pModel.railing.posts[k];
+    assert(Math.abs(f.y-(post.y+pModel.railing.height-7))<1e-6,'A cap light and a post light share a post without stacking');
+    assert(Math.abs(Math.sin(f.angle)-facing[k].x)<1e-9&&Math.abs(Math.cos(f.angle)-facing[k].y)<1e-9,'A post light faces the way its post faces');
+    if(Math.abs(post.y-top)<.01)assert(walkableAt(pModel,post.x+facing[k].x*12,post.z+facing[k].y*12),'A deck post\'s light faces the deck');
+  });
+}
+console.log(`DECK LIGHTING OK — ${LIGHTING_CATALOGUE.filter(p=>p.supported).length} supported products, zone/preview/export/quote, circuit, under-step, privacy-screen and manufacturer-screen checks, night preview lights within the GPU's texture units, the fixture light texture, and flush, evenly spaced, deck-facing post and step lights.`);

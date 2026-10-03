@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { buildSwatchMaps, type SwatchImage, type SwatchMaps } from './swatchMaps';
 import type { SwatchResult } from './swatchMaps.worker';
 import { clearSurfaceMaps, disposeSurface, setSurfaceMaps, surfaceMaterial } from './surfaceShaders';
+import { useFixtureLit } from './fixtureLighting';
 
 /** The photo is read at up to this many pixels on its longer side (one swatch is 2000 px square). */
 const READ_EDGE = 900;
@@ -94,6 +95,9 @@ export function useSwatchTexture(url: string, fallbackColor: string): THREE.Mesh
     });
     return () => { cancelled = true; clearSurfaceMaps(material); };
   }, [url, material, gl, invalidate]);
+
+  // Boards, treads, risers, fascia and skirting take the night's step and post lights.
+  useFixtureLit(material);
 
   // Acceptance gate: dispose on unmount path.
   useEffect(() => () => disposeSurface(material), [material]);

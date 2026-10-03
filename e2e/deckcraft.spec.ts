@@ -1489,6 +1489,65 @@ test('draws the 3D view at night with lights and glass, within the GPU’s textu
   expect(problems).toEqual([]);
 });
 
+/**
+ * Night lighting at its heaviest (lighting plan L1): a cap light and a post light on every post and three under-step
+ * lights on every 8 ft step, plus house and path lights. Step and post lights all light through the fixture light
+ * texture instead of real three lights, so every compiled shader stays within the GPU's texture units and none fails
+ * to compile; the lens glows are drawn, and go with the preview lights.
+ */
+test('lights a heavily lit design at night within the GPU’s texture units, and the glows go with the preview lights',async({page})=>{
+  test.setTimeout(150_000);
+  const shaderProblems:string[]=[];
+  page.on('console',m=>{if(/Shader Error|WebGLProgram|FRAGMENT|VERTEX/.test(m.text()))shaderProblems.push(m.text().slice(0,300));});
+  const design={format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration:{height:48,stairWidth:96,sceneLighting:'Evening',lightingPreviewOn:true,
+    lightingSystem:{wireDistance:40,selectedItems:[{productId:'puck',qty:30,zone:'posts'},{productId:'wedge',qty:30,zone:'posts'},{productId:'evo_hyde',qty:30,zone:'stairs'},{productId:'blink',qty:4,zone:'house'},{productId:'liv',qty:6,zone:'landscape'},{productId:'hub100',qty:2}]}}};
+  // three announces each renderer and scene it makes to window.__THREE_DEVTOOLS__, which is how the test reaches them.
+  await page.addInitScript(text=>{
+    try{localStorage.setItem('golden-maple.deck-studio.deck-only.v1',text);}catch{}
+    const w=window as unknown as {__THREE_DEVTOOLS__:EventTarget;__renderers:unknown[];__scenes:unknown[]};w.__renderers=[];w.__scenes=[];w.__THREE_DEVTOOLS__=new EventTarget();
+    w.__THREE_DEVTOOLS__.addEventListener('observe',e=>{const d=(e as CustomEvent).detail;if(d?.isWebGLRenderer)w.__renderers.push(d);if(d?.isScene)w.__scenes.push(d);});
+  },JSON.stringify(design));
+  const problems=await openDesigner(page);
+  await viewTab(page,'3D');
+  const canvas=viewer3d(page);
+  await canvas.scrollIntoViewIfNeeded();
+  await expect(canvas).toBeVisible({timeout:20000});
+  await page.waitForTimeout(4000);// every material's shader compiles on the next frames
+  const scene=()=>page.evaluate(()=>{
+    type Obj={name:string;children:Obj[]};const scenes=(window as unknown as {__scenes:Obj[]}).__scenes;
+    const names:string[]=[];const walk=(o:Obj)=>{names.push(o.name);o.children.forEach(walk);};scenes.forEach(walk);
+    return {glows:names.includes('fixture-lens-glows'),steps:names.filter(n=>/^evo_hyde-\d+$/.test(n)).length,posts:names.filter(n=>/^wedge-\d+$/.test(n)).length,realLights:names.filter(n=>/-(surface|area)-illumination$/.test(n)).length};
+  });
+  const lit=await scene();
+  expect(lit.glows).toBe(true);
+  expect(lit.steps).toBeGreaterThan(8);
+  expect(lit.posts).toBeGreaterThan(8);
+  expect(lit.realLights).toBeLessThanOrEqual(16);
+  const units=await page.evaluate(()=>{
+    type Program={program:WebGLProgram};
+    const renderer=(window as unknown as {__renderers:{getContext:()=>WebGL2RenderingContext;info:{programs:Program[]|null}}[]}).__renderers.at(-1)!;
+    const gl=renderer.getContext(),samplers=new Set<number>([gl.SAMPLER_2D,gl.SAMPLER_CUBE,gl.SAMPLER_3D,gl.SAMPLER_2D_SHADOW,gl.SAMPLER_2D_ARRAY,gl.SAMPLER_2D_ARRAY_SHADOW,gl.SAMPLER_CUBE_SHADOW,gl.INT_SAMPLER_2D,gl.UNSIGNED_INT_SAMPLER_2D]);
+    let worst=0;
+    for(const {program} of renderer.info.programs??[]){let used=0;for(let i=0,n=gl.getProgramParameter(program,gl.ACTIVE_UNIFORMS);i<n;i++){const u=gl.getActiveUniform(program,i);if(u&&samplers.has(u.type))used+=u.size;}worst=Math.max(worst,used);}
+    return {worst,limit:gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) as number,programs:renderer.info.programs?.length??0};
+  });
+  expect(units.programs).toBeGreaterThan(5);
+  expect(units.worst).toBeLessThanOrEqual(Math.min(16,units.limit));
+  // A drawn night scene whose lit materials carry the fixture light (asserted on the renderer, never on pixels).
+  const drawn=await page.evaluate(()=>{
+    type Program={program:WebGLProgram};
+    const r=(window as unknown as {__renderers:{getContext:()=>WebGL2RenderingContext;info:{render:{frame:number};programs:Program[]|null}}[]}).__renderers.at(-1)!,gl=r.getContext();
+    const lit=(r.info.programs??[]).filter(({program})=>{for(let i=0,n=gl.getProgramParameter(program,gl.ACTIVE_UNIFORMS);i<n;i++)if(gl.getActiveUniform(program,i)?.name==='fxData')return true;return false;}).length;
+    return {frame:r.info.render.frame,lit};
+  });
+  expect(drawn.frame).toBeGreaterThan(0);
+  expect(drawn.lit).toBeGreaterThan(0);
+  await page.getByRole('switch',{name:/Preview lights/}).uncheck();
+  await expect.poll(async()=>(await scene()).glows).toBe(false);
+  expect(shaderProblems).toEqual([]);
+  expect(problems).toEqual([]);
+});
+
 test('downloads the proposal as a multi-page PDF, from Proposal & files and from the proposal itself',async({page},info)=>{
   test.setTimeout(240_000);
   await openDesigner(page);

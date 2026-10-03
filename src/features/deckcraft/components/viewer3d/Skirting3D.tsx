@@ -8,6 +8,7 @@ import {parseColourRef} from '../../boardFinishes';
 import {swatchUrl} from '../../lib/swatches';
 import {getMaterialFallbackColor} from '../../lib/deckGeometry';
 import {useSwatchTexture} from './useSwatchTexture';
+import {useFixtureLit} from './fixtureLighting';
 import {boardVariation} from './surfaceShaders';
 
 /** A skirting board's face width: board styles show one course of grain per board (lattice shows one piece). */
@@ -63,6 +64,7 @@ export default function Skirting3D({data,model,finished,wood}:{data:DeckData;mod
   const face=useSwatchTexture(parsed?swatchUrl(parsed.color.swatch):'',getMaterialFallbackColor(parsed?.material.id??''));
   const trim=useMemo(()=>new THREE.MeshStandardMaterial({color:'#3a342d',roughness:.75}),[]);
   useEffect(()=>()=>trim.dispose(),[trim]);
+  useFixtureLit(trim);
   useEffect(()=>{
     // Both sides draw (a thin slab seen from under the deck), and lattice lets the ground show through its openings.
     const alpha=lattice?latticeAlpha():null;

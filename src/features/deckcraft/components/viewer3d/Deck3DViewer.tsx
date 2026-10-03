@@ -1,5 +1,5 @@
 import NotchedStringers from './NotchedStringers';
-import {Suspense,useCallback,useEffect,useMemo,useLayoutEffect,useRef,useState} from 'react';
+import {Suspense,useCallback,useContext,useEffect,useMemo,useLayoutEffect,useRef,useState} from 'react';
 import {Canvas,useThree,type ThreeEvent} from '@react-three/fiber';
 import {OrbitControls} from '@react-three/drei';
 import * as THREE from 'three';
@@ -15,7 +15,11 @@ import HardwareDetails from './HardwareDetails';
 import FootingDetails from './FootingDetails';
 import {getMaterialFallbackColor} from '../../lib/deckGeometry';
 import {extrasLayout} from '../../extrasLayout';
-import LightingFixtures,{MAX_PREVIEW_LIGHTS,isIlluminatingFixture} from './LightingFixtures';
+import LightingFixtures,{MAX_PREVIEW_LIGHTS} from './LightingFixtures';
+import FixtureGlows from './FixtureGlows';
+import {FixtureLightContext,createFixtureLighting,useFixtureLit} from './fixtureLighting';
+import {packFixtureLights} from '../../fixtureLight';
+import {castsPreviewLight} from '../../lightingPreview';
 import {sceneBounds} from './sceneBounds';
 import {getStairBoards} from '../../stairBoards';
 import {houseLayout} from './houseLayout';
@@ -44,7 +48,8 @@ import Sky3D,{StudioLight} from './Sky3D';
 const powderCoat=(color:string)=>new THREE.MeshPhysicalMaterial({color,...SCENE_LOOK.powderCoat});
 
 /** Unit boxes (Members, Boxes) take a swatch material's box-projected grain (surfaceShaders.ts): along each piece, never stretched. */
-function useBoxMaterial(material:THREE.Material){return useMemo(()=>boxVariant(material),[material]);}
+// The box-projected variant is its own material (a clone), so it takes the fixture light patch itself.
+function useBoxMaterial(material:THREE.Material){const box=useMemo(()=>boxVariant(material),[material]);useFixtureLit(box);return box;}
 function Members({items,material:given,name}:{items:Member[];material:THREE.Material;name:string}){
   const ref=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate),material=useBoxMaterial(given);
   useLayoutEffect(()=>{
@@ -147,6 +152,10 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   const darkBorder=darkSlateBorder(data);
   const borderMaterial=useSwatchTexture(darkBorder?swatchUrl('dk-border-dark-slate.jpg'):'','#343635');
   const extras=useMemo(()=>extrasLayout(data,model),[data,model]);
+  const evening=data.sceneLighting==='Evening',lightsOn=data.lightingPreviewOn!==false;
+  // Every near-field fixture lights its surroundings at night, with no count limit: only the texture is re-uploaded.
+  const fx=useContext(FixtureLightContext),invalidate=useThree(s=>s.invalidate);
+  useLayoutEffect(()=>{if(!fx)return;fx.update(packFixtureLights(extras.fixtures,{evening,enabled:lightsOn}));invalidate();},[fx,extras.fixtures,evening,lightsOn,invalidate]);
   const catalogueExtras=useMemo(()=>catalogueAccessoryLayout(data,model),[data,model]);
   const stairBoards=useMemo(()=>getStairBoards(data,model),[data,model]);
   const stairVeneer=useMemo(()=>stairVeneerLayout(data,model),[data,model]);
@@ -155,6 +164,8 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   const shared=useMemo(()=>({inlay:new THREE.MeshStandardMaterial({color:'#514236',roughness:.7}),inlayFraming:new THREE.MeshStandardMaterial({color:'#c08a3e',roughness:.8}),metal:powderCoat(SCENE_LOOK.powderCoatColor),concrete:new THREE.MeshStandardMaterial({color:'#a5a49a',roughness:0.9}),glass:new THREE.MeshPhysicalMaterial({color:'#cbdfe3',roughness:0.08,metalness:0.1,transparent:true,opacity:0.23,depthWrite:false})}),[]);
   useEffect(()=>()=>Object.values(shared).forEach(m=>m.dispose()),[shared]);
   const materials=useMemo(()=>({...shared,wood:framing}),[shared,framing]);
+  // Near-field fixtures (under-step, post and screen-post lights) light these (fixtureLighting.ts); glass stays as it is.
+  useFixtureLit(materials.wood);useFixtureLit(materials.inlay);useFixtureLit(materials.inlayFraming);useFixtureLit(materials.metal);useFixtureLit(materials.concrete);
   // Accent boards (boardFinishes.ts): worked out only when the design has some, or while the tool is on.
   const painting=!!boardPaint&&!structure;
   const finish=useMemo(()=>data.boardColours?.length||data.inlays?.length||data.deckFinishes?.border||painting?boardFinishPlan(data,model):null,[model,data.boardColours,data.inlays,data.deckingMaterial,data.deckingColor,data.pattern,data.boardWidth,data.borderFinish,data.deckFinishes?.border,painting]);
@@ -164,6 +175,7 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   const rail=railingFinish(data),railHex=rail?railingScreenHex(rail.system.id,rail.colour):undefined;
   const railColour=useMemo(()=>railHex?powderCoat(railHex):null,[railHex]);
   useEffect(()=>()=>railColour?.dispose(),[railColour]);
+  useFixtureLit(railColour);
   const boards:FinishBox[]=useMemo(()=>model.levels.flatMap((l,li)=>l.boards.map((b,bi)=>{const cut=b as typeof b&{width?:number;polygon?:{x:number;y:number}[];role?:string};return {x:b.cx+l.offset.x,y:l.top-0.5,z:b.cy+l.offset.z,w:b.length,h:1,d:cut.width??data.boardWidth,angle:-b.angleDeg*Math.PI/180,role:cut.role,polygon:cut.polygon?.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z})),ref:{level:li,index:bi},accent:finish?.colours[li]?.[bi]??null};})),[model,data.boardWidth,finish]);
   const hoverSet=useRef<(box:FinishBox|null)=>void>(()=>{}),registerHover=useCallback((set:(box:FinishBox|null)=>void)=>{hoverSet.current=set;},[]);
   const pick=useMemo<BoardPick|undefined>(()=>{
@@ -176,7 +188,7 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   const railPosts:Box[]=model.railing.posts.map(p=>({x:p.x,y:p.y+model.railing.height/2,z:p.z,w:3.5,h:model.railing.height,d:3.5}));
   const edgeMembers:Member[]=model.levels.flatMap(l=>l.rim??[]);
   const railMat=railColour??(data.railingType==='Wood Picket'?board:materials.metal);
-  return <group scale={1/12}>
+  return <><group scale={1/12}>
     {!structure&&<><FinishedBoards items={boards.filter(b=>b.role!=='inlay'&&!b.accent&&(!darkBorder||b.role!=='border'))} material={board} pick={pick}/><FinishedBoards items={boards.filter(b=>b.role==='inlay')} material={materials.inlay}/>{darkBorder&&<FinishedBoards items={boards.filter(b=>b.role==='border')} material={borderMaterial}/>}{finish?.groups.map(g=><AccentBoards key={g.ref} colour={g.ref} items={boards.filter(b=>b.accent===g.ref)} pick={pick}/>)}{painting&&<HoverOutline boards={boards} addresses={finish?.addresses} scope={boardPaint!.scope} register={registerHover}/>}</>}
     <Members items={model.levels.flatMap(l=>l.joists)} material={materials.wood} name="joists"/>
     <Members items={model.levels.flatMap(l=>l.blocking.filter(b=>!b.role?.startsWith('inlay-')))} material={materials.wood} name="blocking"/>
@@ -204,10 +216,10 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
     <Boxes items={extras.metal} material={materials.metal} name="accessory-frames"/>
     <Boxes items={extras.drainage} material={materials.metal} name="under-deck-drainage"/>
     <PrivacyScreens3D panels={extras.panels} handles={extras.screenHandles} onMove={onMovePrivacyScreen}/>
-    <LightingFixtures items={extras.fixtures} evening={data.sceneLighting==='Evening'} enabled={data.lightingPreviewOn!==false}/>
+    <LightingFixtures items={extras.fixtures} evening={evening} enabled={lightsOn}/>
     <Yard3D model={yard} inspection={inspection||cutaway}/>
     <Environment3D data={data} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} yard={yard} {...interaction}/>
-  </group>;
+  </group><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
 }
 /** Hands the page a function that renders the current view and returns it as an image (for the
  * printable proposal). Rendering right before reading keeps the drawing buffer valid without
@@ -235,7 +247,10 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
   if(view==='overview'&&house.visible){bounds.minX=Math.min(bounds.minX,house.minX-14);bounds.maxX=Math.max(bounds.maxX,house.maxX+14);bounds.minZ=Math.min(bounds.minZ,-house.depth-14);bounds.top=Math.max(bounds.top,house.wallHeight+house.roofRise);for(const {rect:b,wallHeightIn} of getHouseBlocks(data).slice(1)){bounds.minX=Math.min(bounds.minX,b.x0-14);bounds.maxX=Math.max(bounds.maxX,b.x1+14);bounds.minZ=Math.min(bounds.minZ,b.y0-14);bounds.top=Math.max(bounds.top,wallHeightIn+house.roofRise);}}
   if(view==='overview')for(const feature of yard.features.filter(f=>!f.excluded)){for(const p of feature.footprints.flat()){bounds.minX=Math.min(bounds.minX,p.x);bounds.maxX=Math.max(bounds.maxX,p.x);bounds.minZ=Math.min(bounds.minZ,p.y);bounds.maxZ=Math.max(bounds.maxZ,p.y);}for(const b of feature.boxes)bounds.top=Math.max(bounds.top,b.y+b.h/2);}
   const w=(bounds.maxX-bounds.minX)/12,d=(bounds.maxZ-bounds.minZ)/12,cx=(bounds.maxX+bounds.minX)/24,cz=(bounds.maxZ+bounds.minZ)/24,r=Math.max(w,d),height=bounds.top/12,evening=data.sceneLighting==='Evening';
-  const lights=activeLightingItems(data).reduce((n,item)=>n+(isIlluminatingFixture(item.productId)?item.qty:0),0);
+  // Only long-throw fixtures take real preview lights; the rest all light through the fixture light patch.
+  const lights=activeLightingItems(data).reduce((n,item)=>n+(castsPreviewLight(item.productId,item.zone)?item.qty:0),0);
+  const fixtureLight=useMemo(()=>createFixtureLighting(),[]);
+  useEffect(()=>()=>fixtureLight.dispose(),[fixtureLight]);
   const simplifiedPaving=!structure&&!cutaway&&view!=='hardware'&&hasSimplifiedPaving(yard);
   return <div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
     <Canvas shadows="percentage" frameloop="demand" dpr={[1,1.5]} camera={{fov:38,position:[cx+r*1.1,height+r*.85,cz+r*1.65],near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar}} gl={{antialias:false,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:SCENE_LOOK.exposure}} onCreated={({gl})=>{const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
@@ -247,7 +262,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
       <Suspense fallback={<StudioLight evening={evening}/>}><Sky3D evening={evening}/></Suspense>
       <fogExp2 attach="fog" args={['#8a8b80',SCENE_LOOK.sky.fogDensity]}/>
       <CameraView view={view} w={w} d={d} cx={cx} cz={cz} height={height} depth={data.foundationDepthIn??48}/>
-      <Scene data={data} model={model} structure={structure} cutaway={cutaway} inspection={structure||view==='hardware'} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} {...interaction}/>
+      <FixtureLightContext.Provider value={fixtureLight}><Scene data={data} model={model} structure={structure} cutaway={cutaway} inspection={structure||view==='hardware'} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} {...interaction}/></FixtureLightContext.Provider>
       <SnapshotBridge onReady={onSnapshotReady}/>
       <RenderPipeline evening={evening}/>
       <OrbitControls makeDefault target={[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={r*.25} maxDistance={r*4} enableDamping={false}/>
