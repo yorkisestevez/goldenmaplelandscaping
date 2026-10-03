@@ -1,12 +1,23 @@
+import {validateScenePresentation} from './scenePresentation';
+import {validatePoolFeatures} from './poolTypes';
+import {validateStairTargets} from './stairTargets';
+import {validateYardFinishedSettings} from './yardFinishedSettings';
+import {assertUniqueObjectIds} from './editorOrganization';
 import {pruneEdgeNames} from './edgeNames';
 import {validateStairPath} from './lib/stairPath';
-import {yardShapeProblem,yardShapeRunIn} from './yardShapeEditing';
-import {hardscapeProduct,hardscapeProblem} from './hardscapeCatalogue';
+import {yardShapeProblem,yardShapeRunIn} from './yardShapeGeometry';
+import {hardscapeProduct,hardscapeProblem,hardscapeSelection} from './hardscapeCatalogue';
+import {earthworkProblem} from './yardEarthwork';
+import {wallConstructionProblem} from './wallConstruction';
 import {patioInlayProblem,PATIO_INLAY_LIMITS} from './patioInlays';
 export {pruneEdgeNames} from './edgeNames';
 import {validatePergola} from './pergolaValidation';
 import {validatePermitSite} from './permitSite';
 import { DEFAULT_DECK } from './defaults';
+import {validateSiteModel} from './siteModel';
+import {validateLandscapeObjects} from './landscapeTypes';
+import {validateEditorOrganization} from './editorOrganization';
+import {validateCircularArcs,arcGeometry,inspectArcShape} from './circularArcs';
 import {normalizeUnderDeck} from './underDeckOptions';
 import {boundaryBounds,boundaryProblem} from './lib/freeOutline';
 import {validateBoardLayout} from './boardLayout';
@@ -41,7 +52,8 @@ export const WAINSCOT_HEIGHT_IN=[12,72] as const;
 const liveWalls=(h:HouseConfig,f:Record<string,HouseFinish>)=>Object.entries(f).filter(([id])=>id.startsWith('main-')||h.footprint?.rects.some(b=>id.startsWith(b.id+'-')));
 
 export const DESIGN_STORAGE_KEY = 'golden-maple.deck-studio.design.v1';
-export const MAX_DESIGN_BYTES = 100_000;
+export const MAX_DESIGN_BYTES = 1_000_000;
+export const MAX_PUBLIC_DESIGN_BYTES = 100_000;
 const enums: Partial<Record<keyof DeckData, readonly (string | number)[]>> = {
   deckType:['Attached','Freestanding','Floating','Add-on'], municipality:['Toronto','Barrie','Simcoe County','Burlington-Oakville','Rural-Other'],
   siteType:['Standard','Waterfront-Lakefront','Hillside','Urban Tight','Island-Ferry'],soilCondition:['Unknown','Sandy','Clay','Shallow Bedrock','Fill'],
@@ -76,6 +88,11 @@ export function validateDesign(input:unknown):DeckData {
   if(!record(input))throw new Error('The design configuration is missing.');
   const clean:DeckData=structuredClone(DEFAULT_DECK);
   const target=clean as unknown as Record<string,unknown>;
+  const poolsDescriptor=Object.getOwnPropertyDescriptor(input,'pools');if(poolsDescriptor){if(!('value'in poolsDescriptor)||!poolsDescriptor.enumerable)throw Error('Pool settings must be plain saved values.');if(poolsDescriptor.value!==undefined){if(!validatePoolFeatures(poolsDescriptor.value))throw Error('Invalid pool settings.');clean.pools=structuredClone(poolsDescriptor.value);}}
+  if(input.siteModel!==undefined)clean.siteModel=validateSiteModel(input.siteModel);
+  if(input.landscapeObjects!==undefined){if(!validateLandscapeObjects(input.landscapeObjects))throw Error('Invalid landscape objects.');clean.landscapeObjects=structuredClone(input.landscapeObjects) as NonNullable<DeckData['landscapeObjects']>;}
+  if(input.editorOrganization!==undefined)clean.editorOrganization=validateEditorOrganization(input.editorOrganization);
+  if(input.scenePresentation!==undefined)clean.scenePresentation=validateScenePresentation(input.scenePresentation);
   for(const [key,values] of Object.entries(enums))if(Object.hasOwn(input,key)){
     if(!values.includes(input[key] as never))throw new Error(`Unsupported ${key} selection.`);
     target[key]=input[key];
@@ -364,29 +381,46 @@ export function validateDesign(input:unknown):DeckData {
   }
   // Three levels always carry a third section; an older file without one gets the default.
   if(clean.levels===3&&!clean.level3)clean.level3=defaultLevel3(clean);
+  if(input.stairTargets!==undefined)clean.stairTargets=validateStairTargets(input.stairTargets);
   if(input.terrainConfig!==undefined){const t=input.terrainConfig;if(!record(t))throw new Error('Invalid terrain configuration.');clean.terrainConfig={widthFt:numeric(t.widthFt,20,250,'Terrain width'),depthFt:numeric(t.depthFt,20,250,'Terrain depth'),elevationIn:numeric(t.elevationIn,-120,120,'Terrain grade'),slopePct:numeric(t.slopePct,-30,30,'Terrain slope')};}
+  if(input.yardEarthwork!==undefined){const problem=earthworkProblem(input.yardEarthwork);if(problem)throw Error(problem);clean.yardEarthwork={...input.yardEarthwork as object};}
   if(input.yardFeatures!==undefined){
     if(!Array.isArray(input.yardFeatures)||input.yardFeatures.length>20)throw new Error('A design supports up to 20 yard features.');
     const ids=new Set<string>();clean.yardFeatures=input.yardFeatures.map(f=>{
       if(!record(f)||typeof f.id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(f.id)||ids.has(f.id)||!['patio','retaining-wall','water-feature'].includes(f.kind as string)||typeof f.name!=='string'||f.name.length>80||typeof f.enabled!=='boolean'||typeof f.color!=='string'||!/^#[0-9a-fA-F]{6}$/.test(f.color))throw new Error('Invalid or duplicate yard feature.');
       ids.add(f.id);const kind=f.kind as YardFeature['kind'];const products=kind==='patio'?PATIO_PRODUCTS:kind==='retaining-wall'?WALL_PRODUCTS:WATER_PRODUCTS;
       if(typeof f.productId!=='string'||!products.some(p=>p.id===f.productId)&&!hardscapeProduct(f.productId))throw new Error('This yard product is not supported for the selected feature.');
-      const cleanFeature:YardFeature={id:f.id,kind,name:f.name,enabled:f.enabled,color:f.color,productId:f.productId,xFt:numeric(f.xFt,-150,150,'Yard position across'),zFt:numeric(f.zFt,-150,200,'Yard position out'),widthFt:numeric(f.widthFt,2,kind==='patio'?60:kind==='retaining-wall'?80:20,'Feature width'),depthFt:numeric(f.depthFt,kind==='retaining-wall'?1/12:2,kind==='patio'?60:kind==='retaining-wall'?8:20,'Feature depth'),heightIn:numeric(f.heightIn,kind==='patio'?-24:6,kind==='patio'?48:kind==='retaining-wall'?72:96,'Feature height or basin depth'),rotationDeg:numeric(f.rotationDeg,0,359,'Feature rotation')};
+      const cleanFeature:YardFeature={id:f.id,kind,name:f.name,enabled:f.enabled,color:f.color,productId:f.productId,xFt:numeric(f.xFt,-150,150,'Yard position across'),zFt:numeric(f.zFt,-150,200,'Yard position out'),widthFt:numeric(f.widthFt,2,kind==='patio'?60:kind==='retaining-wall'?(Object.getOwnPropertyDescriptor(f,'wallPath')?.value!==undefined?240:80):20,'Feature width'),depthFt:numeric(f.depthFt,kind==='retaining-wall'?.01:kind==='patio'&&(Object.getOwnPropertyDescriptor(f,'stoneSteps')?.value!==undefined||Object.getOwnPropertyDescriptor(f,'stepAssembly')?.value!==undefined)?1/12:2,kind==='patio'?60:kind==='retaining-wall'?8:20,'Feature depth'),heightIn:numeric(f.heightIn,kind==='patio'?-24:6,kind==='patio'?48:kind==='retaining-wall'?72:96,'Feature height or basin depth'),rotationDeg:numeric(f.rotationDeg,0,359,'Feature rotation')};
       const baseDescriptor=Object.getOwnPropertyDescriptor(f,'baseElevationIn');if(baseDescriptor){if(!('value'in baseDescriptor)||!baseDescriptor.enumerable||kind!=='retaining-wall')throw Error('Only walls support a plain base elevation.');cleanFeature.baseElevationIn=numeric(baseDescriptor.value,-120,120,'Wall base elevation');}
+      const constructionDescriptor=Object.getOwnPropertyDescriptor(f,'wallConstruction');if(constructionDescriptor){if(!('value'in constructionDescriptor)||!constructionDescriptor.enumerable)throw Error('Reinforcement inputs must use plain values.');const problem=wallConstructionProblem({...cleanFeature,wallConstruction:constructionDescriptor.value});if(problem)throw Error(problem);if(constructionDescriptor.value!==undefined)cleanFeature.wallConstruction={...constructionDescriptor.value};}
       const variantDescriptor=Object.getOwnPropertyDescriptor(f,'hardscape');if(variantDescriptor&&!('value'in variantDescriptor))throw Error('Supplier selections must use plain values.');if(variantDescriptor?.value!==undefined){const v=variantDescriptor.value;if(!record(v)||Object.getOwnPropertySymbols(v).length||Object.values(Object.getOwnPropertyDescriptors(v)).some(d=>!('value'in d)||!d.enumerable)||Object.keys(v).some(k=>!['finishId','colorId','unitId','patternId','angleDeg','jointMm','capUnitId'].includes(k))||!['finishId','colorId','unitId','patternId'].every(k=>typeof v[k]==='string')||v.capUnitId!==undefined&&typeof v.capUnitId!=='string')throw Error('Invalid supplier variant.');cleanFeature.hardscape={finishId:v.finishId as string,colorId:v.colorId as string,unitId:v.unitId as string,patternId:v.patternId as string,angleDeg:numeric(v.angleDeg,0,360,'Paving direction'),jointMm:numeric(v.jointMm,0,25,'Paving joint'),...(typeof v.capUnitId==='string'?{capUnitId:v.capUnitId}:{})};}
       const variantProblem=hardscapeProblem(cleanFeature);if(variantProblem)throw Error(variantProblem);
+      // Thin manufacturer veneers keep their documented depth. Generic wall inputs
+      // still require at least one inch; supplier stock thickness was checked above.
+      if(kind==='retaining-wall'&&cleanFeature.depthFt<1/12&&!hardscapeSelection(cleanFeature))throw Error('Generic wall depth must be at least one inch.');
       if(f.outline!==undefined||f.wallPath!==undefined){
         if(f.outline!==undefined&&kind!=='patio'||f.wallPath!==undefined&&kind!=='retaining-wall')throw Error('This yard shape is not compatible with its feature.');
-        const points=f.outline??f.wallPath,problem=yardShapeProblem(kind as 'patio'|'retaining-wall',points);if(problem)throw Error(problem);
+        const points=f.outline??f.wallPath;let problem=yardShapeProblem(kind as 'patio'|'retaining-wall',points);if(problem==='Keep the complete wall path between 2 and 240 ft long.'&&f.curves!==undefined)problem=yardShapeProblem('retaining-wall',points,validateCircularArcs(f.curves,points as {x:number;y:number}[],false));if(problem)throw Error(problem);
         const shape=(points as {x:number;y:number}[]).map(p=>({...p}));
         if(kind==='patio'){const w=(Math.max(...shape.map(p=>p.x))-Math.min(...shape.map(p=>p.x)))/12,d=(Math.max(...shape.map(p=>p.y))-Math.min(...shape.map(p=>p.y)))/12;if(Math.abs(w-cleanFeature.widthFt)>1e-6||Math.abs(d-cleanFeature.depthFt)>1e-6)throw Error('Patio dimensions must match the saved outline.');cleanFeature.outline=shape;}
-        else{if(Math.abs(yardShapeRunIn(shape)/12-cleanFeature.widthFt)>1e-6)throw Error('Wall run length must match the saved path.');cleanFeature.wallPath=shape;}
+        else{if(f.curves===undefined&&Math.abs(yardShapeRunIn(shape)/12-cleanFeature.widthFt)>1e-6)throw Error('Wall run length must match the saved path.');cleanFeature.wallPath=shape;}
       }
       const inlayDescriptor=Object.getOwnPropertyDescriptor(f,'inlays');if(inlayDescriptor){if(!('value'in inlayDescriptor)||!inlayDescriptor.enumerable||kind!=='patio'||!Array.isArray(inlayDescriptor.value)||Object.getPrototypeOf(inlayDescriptor.value)!==Array.prototype||inlayDescriptor.value.length>PATIO_INLAY_LIMITS.count)throw Error('Only patios support up to 12 plain inlays.');
         const list=inlayDescriptor.value,ds=Object.getOwnPropertyDescriptors(list),seen=new Set<string>();if(Reflect.ownKeys(list).some(k=>typeof k!=='string'||k!=='length'&&(!/^(0|[1-9]\d*)$/.test(k)||Number(k)>=list.length)))throw Error('Invalid inlay list.');
         cleanFeature.inlays=Array.from({length:list.length},(_,n)=>{const entry=ds[n];if(!entry?.enumerable||!('value'in entry))throw Error('Invalid inlay list.');const i=entry.value,problem=patioInlayProblem(i);if(problem)throw Error(problem);if(seen.has(i.id))throw Error('Duplicate patio inlay id.');seen.add(i.id);return {...i,...(i.points?{points:i.points.map((p:{x:number;y:number})=>({...p}))}:{}),hardscape:{...i.hardscape}};});
       }
-      return cleanFeature;
+      const spineDescriptor=Object.getOwnPropertyDescriptor(f,'pathSpine');if(spineDescriptor){
+        // A walkway's editable centreline. Its outline above stays the construction geometry.
+        const s=spineDescriptor.value,run='Keep the complete wall path between 2 and 240 ft long.';
+        if(!('value'in spineDescriptor)||!spineDescriptor.enumerable||kind!=='patio'||!cleanFeature.outline||!record(s)||Object.values(Object.getOwnPropertyDescriptors(s)).some(d=>!('value'in d)||!d.enumerable)||Object.keys(s).some(k=>!['points','curves','widthIn','ends'].includes(k))||typeof s.widthIn!=='number'||!(s.widthIn>=12&&s.widthIn<=240)||s.ends!=='square'&&s.ends!=='round')throw Error('Invalid walkway centreline.');
+        let problem=yardShapeProblem('retaining-wall',s.points);if(problem&&problem!==run)throw Error(problem);
+        const points=(s.points as {x:number;y:number}[]).map(p=>({x:p.x,y:p.y})),curves=s.curves===undefined?undefined:validateCircularArcs(s.curves,points,false);
+        if(problem&&(problem=yardShapeProblem('retaining-wall',points,curves)))throw Error(problem);
+        cleanFeature.pathSpine={points,...(curves?{curves}:{}),widthIn:s.widthIn,ends:s.ends};
+      }
+      if(f.curves!==undefined){if(!cleanFeature.outline&&!cleanFeature.wallPath)throw Error('Circular arcs require saved canonical control points.');if(kind==='water-feature')throw Error('Water features cannot contain arcs.');const points=cleanFeature.outline??cleanFeature.wallPath??(kind==='patio'?[{x:-cleanFeature.widthFt*6,y:-cleanFeature.depthFt*6},{x:cleanFeature.widthFt*6,y:-cleanFeature.depthFt*6},{x:cleanFeature.widthFt*6,y:cleanFeature.depthFt*6},{x:-cleanFeature.widthFt*6,y:cleanFeature.depthFt*6}]:[{x:-cleanFeature.widthFt*6,y:0},{x:cleanFeature.widthFt*6,y:0}]);cleanFeature.curves=validateCircularArcs(f.curves,points,kind==='patio');inspectArcShape(points,cleanFeature.curves,kind==='patio',cleanFeature.productId==='techo-raffinato-wall'?102:undefined);if(kind==='retaining-wall'){const run=points.slice(1).reduce((sum,b,i)=>{const a=points[i],arc=cleanFeature.curves?.find(c=>c.edge===i);return sum+(arc?arcGeometry(a,b,arc.bulgeIn).lengthIn:Math.hypot(b.x-a.x,b.y-a.y));},0);if(Math.abs(run/12-cleanFeature.widthFt)>1e-6)throw Error('Wall run must match its exact arcs.');}}
+      for(const key of ['finishedElevationIn','patioSlope','wallTopSteps','stoneSteps','stepAssembly','pavingInterface'] as const){const d=Object.getOwnPropertyDescriptor(f,key);if(d){if(!d.enumerable||!('value'in d))throw Error('Elevation settings must use plain values.');Object.defineProperty(cleanFeature,key,{value:d.value,enumerable:true,writable:true,configurable:true});}}
+      return validateYardFinishedSettings(cleanFeature);
     });
   }
   if(input.permitSite!==undefined)clean.permitSite=validatePermitSite(input.permitSite);
@@ -407,6 +441,7 @@ export function validateDesign(input:unknown):DeckData {
   const stairSides=availableStairSides(named);
   if(!stairSides.includes(named.stairPosition))named.stairPosition=stairSides[0]??'Front';
   if(input.boundaryLocks!==undefined)named.boundaryLocks=validateBoundaryLocks(input.boundaryLocks,named);
+  assertUniqueObjectIds(named);
   return named;
 }
 
@@ -424,16 +459,16 @@ export function defaultLevel3(data:DeckData):NonNullable<DeckData['level3']>{
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','stairPath','level2EdgeId','level3','yardFeatures','terrainConfig','yardAllowances','permitSite','customFront','boardColours','inlays','skirting','deckFinishes','underDeck','deckOutlines','deckOutlineOffsets','boardLayout','boundaryLocks','railSections','railDefault','pergola']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','stairPath','stairTargets','level2EdgeId','level3','scenePresentation','pools','siteModel','landscapeObjects','editorOrganization','yardFeatures','yardEarthwork','terrainConfig','yardAllowances','permitSite','customFront','boardColours','inlays','skirting','deckFinishes','underDeck','deckOutlines','deckOutlineOffsets','boardLayout','boundaryLocks','railSections','railDefault','pergola']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);
 }
 
 export function parseDesign(text:string):DeckData {
-  if(new TextEncoder().encode(text).length>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 100 KB.');
+  if(new TextEncoder().encode(text).length>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 1 MB.');
   let value:unknown;try{value=JSON.parse(text);}catch{throw new Error('Choose a valid Golden Maple JSON design file.');}
   if(!record(value)||value.format!=='golden-maple-deck-design'||value.version!==1)throw new Error('This design format or version is not supported.');
-  if(record(value.configuration)&&Object.hasOwn(value.configuration,'quoteResolutions'))throw new Error('Public design files cannot include private contractor quote records. Import them through Review quote costs.');
+  if(record(value.configuration)&&['quoteResolutions','poolQuoteInputs'].some(key=>Object.hasOwn(value.configuration as object,key)))throw new Error('Public design files cannot include private contractor quote records. Import them through Review quote costs.');
   return validateDesign(value.configuration);
 }

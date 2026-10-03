@@ -1,3 +1,4 @@
+import {physicalSupportTimber} from './physicalQuote';
 import {activeCornerChamfers} from './lib/cornerChamfers';
 import type {DeckData} from './types';
 import type {DeckTakeoff,Member} from './deckTakeoff';
@@ -6,6 +7,10 @@ import {planStock} from './stockPlan';
 import {getStairBoards} from './stairBoards';
 export interface ConnectorScheduleRow {quoteResolved?:boolean;name:string;qty:number;unit:string;rate:number|null;basis:string}
 export interface StockScheduleRow {name:string;section:string;stockLengthIn:number;orderedPieces:number;cutsIn:number[][];unresolvedIn:number[];installedLf:number;orderedLf:number}
+/** Stable keys shared by the drawing schedule and quantity CSVs. */
+const rowHash=(key:string)=>{let value=2166136261;for(const c of key){value=Math.imul(value^c.charCodeAt(0),16777619);}return (value>>>0).toString(16).toUpperCase().padStart(8,'0');};
+export const connectorRowId=(name:string)=>`C-${rowHash(name).slice(-6)}`;
+export const stockRowId=(row:Pick<StockScheduleRow,'name'|'section'|'stockLengthIn'>)=>`F-${rowHash(`${row.name}|${row.section}|${row.stockLengthIn}`).slice(-6)}`;
 export function stairStock(data:DeckData,model:DeckTakeoff):StockScheduleRow[]{
   const cuts=getStairBoards(data,model).map(p=>p.w);
   if(!cuts.length)return [];
@@ -31,7 +36,7 @@ export function connectorSchedule(data:DeckData,model:DeckTakeoff,h=getHardwareL
     {name:'Post anchors',qty:h.postAnchors,unit:'ea',rate:22,basis:'Existing Deck Craft Pro anchor allowance'},
     {name:'Joist-to-beam ties',qty:h.beamTies.length,unit:'ea',rate:null,basis:'Supplier quote required; no confirmed existing unit rate'},
     {name:'Post-to-beam caps',qty:h.postCaps.length,unit:'ea',rate:null,basis:'Supplier quote required; match beam plies and post width'},
-    {name:'Support post timber',qty:model.quantities.supportPosts,unit:'posts',rate:null,basis:'Confirm timber inclusion in footing allowance; separate post-length rate unavailable'},
+    physicalSupportTimber(data,model)??{name:'Support post timber',qty:model.quantities.supportPosts,unit:'posts',rate:null,basis:'Confirm timber inclusion in footing allowance; separate post-length rate unavailable'},
     {name:'Blocking connections',qty:h.blockingAngles.length,unit:'ea',rate:null,basis:'Supplier quote required for selected angle and fastener set'},
     {name:'Stringer connectors',qty:h.stringerConnectors.length,unit:'ea',rate:null,basis:'Supplier quote required for stair connector and fastener set'},
     {name:'Splice fasteners',qty:h.spliceBolts.length,unit:'ea',rate:null,basis:'Supplier quote required after connection design'},

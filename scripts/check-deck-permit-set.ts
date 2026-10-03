@@ -18,9 +18,10 @@ import {hiddenPoint,viewLines,viewSolids,type ElevationView,type Solid} from '..
 import {typicalSection} from '../src/features/deckcraft/drawings/typicalSection';
 import {beamLines,scheduleTables} from '../src/features/deckcraft/drawings/schedules';
 import {partStatus} from '../src/features/deckcraft/drawings/pricedParts';
-import {connectorSchedule,constructionStock} from '../src/features/deckcraft/schedule';
+import {connectorSchedule,constructionStock,connectorRowId} from '../src/features/deckcraft/schedule';
 import {getHardwareLayout} from '../src/features/deckcraft/hardwareLayout';
 import {PERMIT_FOOTER,buildPermitSet} from '../src/features/deckcraft/drawings/permitSheets';
+import {CODE_REFERENCES,validateCodeReferences} from '../src/features/deckcraft/drawings/codeReferences';
 import {paperLayout} from '../src/features/deckcraft/drawings/paperLayout';
 import {buildPermitDxf} from '../src/features/deckcraft/drawings/renderDxf';
 import {buildPermitPdf} from '../src/features/deckcraft/drawings/renderPdf';
@@ -108,6 +109,8 @@ function readDxf(text:string){
 }
 
 type Digest=Record<string,string>;
+validateCodeReferences();
+assert.throws(()=>validateCodeReferences([{...CODE_REFERENCES[0],status:'verified'}]),/cannot be verified/,'A reference cannot be marked verified without clause evidence and a named review');
 const golden:Record<string,Digest>=existsSync(GOLDEN)?JSON.parse(readFileSync(GOLDEN,'utf8')):{},current:Record<string,Digest>={};
 const digest=(v:unknown)=>createHash('sha256').update(stable(v)).digest('hex').slice(0,16);
 let slowest=0,oracleSamples=0,oracleSkipped=0;
@@ -116,20 +119,23 @@ for(const [name,patch] of Object.entries(fixtures)){
   const t0=performance.now();
   const set:DrawingSet=buildPermitSet({data,model,reviewItems:e.flags,materialName:'Test decking',railingName:'Test railing',date:'September 28, 2026',priceBook:'2026-09-28'});
   slowest=Math.max(slowest,performance.now()-t0);
-  const [a0,a1,s1,s2,s3,s4,s5,s6]=set.sheets,tag=name;
-  ok(set.sheets.map(s=>s.id).join()==='A-0,A-1,S-1,S-2,S-3,S-4,S-5,S-6',`${tag}: sheets A-0, A-1, S-1 to S-6`);
+  const [g0,a0,a1,s1,s2,s3,s4,s5,s6]=set.sheets,tag=name;
+  ok(set.sheets.map(s=>s.id).join()==='G-0,A-0,A-1,S-1,S-2,S-3,S-4,S-5,S-6',`${tag}: sheets G-0, A-0, A-1, S-1 to S-6`);
+  ok(CODE_REFERENCES.every(ref=>g0.items.some(i=>i.kind==='text'&&i.text.includes(ref.citation)&&(ref.status==='verified'||i.text.includes('(confirm)')))),`${tag}: G-0 lists every code reference and marks unverified clauses`);
+  const register=g0.items.flatMap(i=>i.kind==='text'?[i.text]:[]).join(' ');
+  ok(CODE_REFERENCES.every((_,i)=>register.includes(`C-${String(i+1).padStart(2,'0')}`))&&set.reviewItems.filter(i=>!i.startsWith('Code reference:')).every((_,i)=>register.includes(`R-${String(i+1).padStart(2,'0')}`))&&register.includes('ACTION'),`${tag}: G-0 itemizes every code and site/design review action`);
   for(const s of set.sheets){
     const w=(s.extents.maxX-s.extents.minX)/s.ratio,h=(s.extents.maxY-s.extents.minY)/s.ratio;
     // The schedules are tables, not to scale; they still have to fit the drawing area.
-    ok(s.id==='S-6'?s.scaleLabel===NTS&&w<=SHEET.area.w+1e-9&&h<=SHEET.area.h+1e-9:[...DETAIL_SCALES,...SITE_SCALES].some(x=>x.ratio===s.ratio&&x.label===s.scaleLabel)&&(w<=SHEET.area.w+1e-9&&h<=SHEET.area.h+1e-9||s.ratio===(s.id==='A-0'?SITE_SCALES:SCALES).at(-1)!.ratio),`${tag} ${s.id}: fits at ${s.scaleLabel} (${w.toFixed(2)} x ${h.toFixed(2)} in)`);
-    ok(s.id==='A-0'||s.id==='S-6'||[...DETAIL_SCALES,...SCALES].some(x=>x.ratio===s.ratio),`${tag} ${s.id}: only the site plan uses an engineer's scale`);
-    ok(s.notes.length>0&&(s.legend.length>0||s.id==='S-6'),`${tag} ${s.id}: notes and legend`);
+    ok(s.id==='S-6'||s.id==='G-0'?s.scaleLabel===NTS&&w<=SHEET.area.w+1e-9&&h<=SHEET.area.h+1e-9:[...DETAIL_SCALES,...SITE_SCALES].some(x=>x.ratio===s.ratio&&x.label===s.scaleLabel)&&(w<=SHEET.area.w+1e-9&&h<=SHEET.area.h+1e-9||s.ratio===(s.id==='A-0'?SITE_SCALES:SCALES).at(-1)!.ratio),`${tag} ${s.id}: fits at ${s.scaleLabel} (${w.toFixed(2)} x ${h.toFixed(2)} in)`);
+    ok(s.id==='A-0'||s.id==='S-6'||s.id==='G-0'||[...DETAIL_SCALES,...SCALES].some(x=>x.ratio===s.ratio),`${tag} ${s.id}: only the site plan uses an engineer's scale`);
+    ok(s.notes.length>0&&(s.legend.length>0||s.id==='S-6'||s.id==='G-0'),`${tag} ${s.id}: notes and legend`);
     const texts=[...s.items.flatMap(i=>i.kind==='text'||i.kind==='dim'?[i.text]:[]),...s.notes,set.footer,...paperLayout(set,s,0).flatMap(p=>p.kind==='text'?[p.text]:[])];
     ok(texts.every(t=>!BANNED.test(t)),`${tag} ${s.id}: no text claims a review outcome (${texts.find(t=>BANNED.test(t))})`);
     const paper=paperLayout(set,s,set.sheets.indexOf(s)).flatMap(p=>p.kind==='text'?[p.text]:[]).join(' ');
     ok(paper.includes(set.reviewItems.length?'DRAFT':'PLANNING DRAWING')&&paper.includes(s.id)&&paper.includes(s.scaleLabel===NTS?'NOT TO SCALE':s.scaleLabel),`${tag} ${s.id}: stamp, sheet number and scale on the sheet`);
-    // Notes (0.072 in text) end above the footer (0.065 in text), both in the title block.
-    const prims=paperLayout(set,s,0).flatMap(p=>p.kind==='text'&&p.at.x>SHEET.w-SHEET.margin-SHEET.titleW?[p]:[]),notesEnd=Math.max(...prims.filter(p=>p.size===.072).map(p=>p.at.y)),footerTop=Math.min(...prims.filter(p=>p.size===.065).map(p=>p.at.y));
+    // The larger notes end above the footer; exclude the sheet title at the bottom.
+    const prims=paperLayout(set,s,0).flatMap(p=>p.kind==='text'&&p.at.x>SHEET.w-SHEET.margin-SHEET.titleW?[p]:[]),notesEnd=Math.max(...prims.filter(p=>p.size===.09&&p.at.y<10).map(p=>p.at.y)),footerTop=Math.min(...prims.filter(p=>p.size===.075&&p.at.y>8).map(p=>p.at.y));
     ok(notesEnd<footerTop-.25,`${tag} ${s.id}: the notes end above the footer (${notesEnd.toFixed(2)} < ${footerTop.toFixed(2)})`);
   }
   ok(set.footer===PERMIT_FOOTER&&set.firm.name===BUSINESS.publicName.value&&set.firm.phone===publicContact.phoneDisplay&&set.firm.email===publicContact.email,`${tag}: title block facts come from business.ts`);
@@ -231,7 +237,7 @@ for(const [name,patch] of Object.entries(fixtures)){
     if(flights.length)ok(sum(col('STAIRS','Risers'))===model.quantities.totalRisers&&sum(col('STAIRS','Stringers'))===model.stringers.length,`${tag}: S-6 stairs add up to ${model.quantities.totalRisers} risers and ${model.stringers.length} stringers`);
     if(guarded6)ok(col('GUARD','Posts')[0]===String(model.railing.posts.length),`${tag}: S-6 guard posts are the takeoff's ${model.railing.posts.length}`);
     const rows=connectorSchedule(data,model,hardware),words={'priced':'Priced','supplier quote':'Supplier quote','confirm in the railing kit':'Confirm in the railing kit','confirm in the footing allowance':'Confirm in the footing allowance'};
-    ok(JSON.stringify(table('CONNECTIONS')!.rows)===JSON.stringify(rows.map(r=>[r.name,String(r.qty),r.unit,words[partStatus(data,r)]])),`${tag}: S-6 lists every connection part with the estimate's count and status`);
+    ok(JSON.stringify(table('CONNECTIONS')!.rows)===JSON.stringify(rows.map(r=>[`${r.name} [${connectorRowId(r.name)}]`,String(r.qty),r.unit,words[partStatus(data,r)]])),`${tag}: S-6 lists every connection part with the estimate's count and status`);
     const stock=constructionStock(model);
     ok(sum(col('FRAMING LUMBER','Pieces'))===stock.reduce((n,r)=>n+r.orderedPieces,0)&&table('FRAMING LUMBER')!.rows.length===stock.length,`${tag}: S-6 framing lumber is the stock plan's`);
     const drawn=new Set(s6.items.flatMap(i=>i.kind==='text'?[i.text]:[]));
@@ -280,7 +286,7 @@ for(const [name,patch] of Object.entries(fixtures)){
   const data={...structuredClone(DEFAULT_DECK)},e=calculateEstimate(data);
   const set=buildPermitSet({data,model:e.model,reviewItems:[],materialName:'Test decking',railingName:'Test railing',date:'September 28, 2026',priceBook:'2026-09-28'});
   const pdf=Buffer.from(buildPermitPdf(jsPDF,set)).toString('latin1');
-  ok(pdf.startsWith('%PDF-')&&(pdf.match(/\/Type \/Page\b/g)??[]).length===8,'The permit PDF has eight pages');
+  ok(pdf.startsWith('%PDF-')&&(pdf.match(/\/Type \/Page\b/g)??[]).length===9,'The permit PDF has nine pages');
   ok(/\/MediaBox \[0 0 1224\.?\d* 792\.?\d*\]/.test(pdf),'Its pages are 11 × 17 in landscape');
   // The takeoff's own issues always join the review list; the stamp follows the list.
   ok(set.reviewItems.length>=e.model.issues.length&&e.model.issues.every(i=>set.reviewItems.includes(i)),'The takeoff issues are review items');
@@ -303,4 +309,4 @@ else{
   ok(existsSync(GOLDEN),'deck-permit-set-golden.json exists (run with --update after a reviewed drawing change)');
   for(const [name,sheets] of Object.entries(current))for(const [id,d] of Object.entries(sheets))ok(golden[name]?.[id]===d,`${name} ${id}: the drawing matches its golden (run --update after reviewing a drawing change)`);
 }
-console.log(`DECK PERMIT SET OK: ${checks} checks. ${Object.keys(fixtures).length} designs drawn as A-0, A-1 and S-1 to S-6 with every priced footing, post and member on its layer and the site plan's setbacks measured again; elevations' hidden lines agree with ${oracleSamples} brute-force samples; DXF R12 read back; eight-page 11 × 17 PDF. Slowest set ${slowest.toFixed(0)} ms.`);
+console.log(`DECK PERMIT SET OK: ${checks} checks. ${Object.keys(fixtures).length} designs drawn as G-0, A-0, A-1 and S-1 to S-6 with every priced footing, post and member on its layer and the site plan's setbacks measured again; elevations' hidden lines agree with ${oracleSamples} brute-force samples; DXF R12 read back; nine-page 11 × 17 PDF. Slowest set ${slowest.toFixed(0)} ms.`);

@@ -1,3 +1,5 @@
+import {buildPoolQuote} from './poolQuoteRegistry';
+import {physicalFoundationSections} from './physicalQuote';
 import {applyQuoteResolutions,type QuoteResolutionReview} from './quoteCostRegistry';
 import {pergolaPricing,pergolaQuoteKey} from './pergolaPricing';
 import {pergolaLayout} from './pergolaLayout';
@@ -46,6 +48,7 @@ import {
 } from './types';
 
 export interface EstimateResult {
+  poolQuoteReview?:import('./poolQuoteRuntime').PoolQuoteReview;
   quoteResolutionReview?:QuoteResolutionReview;
   yardModel:YardModel;
   yardTakeoff:YardTakeoff;
@@ -650,6 +653,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
 
   const underDeck=buildUnderDeckPricing(data,model,markupMult,crewDayRate);
   if(missingStairPath)sections.push({title:'Unresolved stair path',icon:'🪜',quoteRequired:true,total:0,items:[{name:stairPathQuote,spec:'Saved stair path is not buildable; redraw it or resolve its landing, perimeter and clearance issues. No supply or installation amount is included.',qty:1,unit:'layout',cost:null}]});
+  const physicalSections=physicalFoundationSections(data,model);sections.push(...physicalSections);quoteRequired.push(...physicalSections.flatMap(s=>s.items.map(i=>i.name)));
   sections.push(...underDeck.sections);quoteRequired.push(...underDeck.quoteRequired);flags.push(...underDeck.flags);
   // Apply custom overrides
   if (data.customOverrides) {
@@ -806,7 +810,8 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // PDF) shows it without extra wiring.
   const aluminum=pergolaPricing(data,materialMarkup??35,settings?.pergolaQuote??(data.pergolaQuoteCosts?.key===pergolaQuoteKey(data)?data.pergolaQuoteCosts.quote:undefined));
   if(aluminum){sections.push(aluminum.section);quoteRequired.push(...aluminum.outstanding);flags.push(...aluminum.outstanding,...(pergolaLayout(data,model)?.warnings??[]));}
-  const quoteResolutionReview=applyQuoteResolutions(data,sections,quoteRequired,markupMult,connectors);
+  const poolQuote=buildPoolQuote(data,yardModel,markupMult);if(poolQuote){sections.push(...poolQuote.sections);quoteRequired.push(...poolQuote.pending);flags.push(...poolQuote.flags);}
+  const quoteResolutionReview=applyQuoteResolutions(data,sections,quoteRequired,markupMult,connectors,yardTakeoff);
   if(quoteResolutionReview?.inactive)flags.push(`${quoteResolutionReview.inactive} saved additional-cost record(s) are inactive after scope, design or pricing changes. Reconfirm them before inclusion.`);
   const subtotal = sections.reduce((sum, s) => sum + s.total, 0);
   const hst = subtotal * 0.13;
@@ -832,6 +837,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   if(veneer.woodBoxes.length){const stock=planStock(veneer.woodBoxes.map(b=>b.w),192);boardSchedules.push({name:'Flat 2×6 stair veneer supports — confirm inclusion in assembly allowance',section:'1.5 × 5.5 in framing',stockLengthIn:192,orderedPieces:stock.bins.length,cutsIn:stock.bins.map(b=>b.cutsIn),unresolvedIn:stock.unresolved,installedLf:stock.installedLf,orderedLf:stock.purchasedLf});}
 
   return {
+    ...(poolQuote?{poolQuoteReview:poolQuote.review}:{}),
     ...(quoteResolutionReview?{quoteResolutionReview}:{}),
     yardModel,yardTakeoff,
     quoteRequired:[...new Set(quoteRequired)],

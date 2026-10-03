@@ -15,7 +15,7 @@ import type {LayerId,Pt} from './drawingTypes';
 export type ElevationView='front'|'left'|'right';
 export interface Solid{vertices:V3[];faces:number[][];layer:LayerId;
   /** The layer for the part below grade (y < 0), drawn dashed; without it, nothing below grade is drawn. */
-  belowGrade?:LayerId}
+  belowGrade?:LayerId;gradeElevationIn?:number}
 /** A projected point: u to the viewer's right, v up, d away from the viewer. */
 export type ViewPt={u:number;v:number;d:number};
 export interface Occluder{pts:ViewPt[];minU:number;maxU:number;minV:number;maxV:number;minD:number;
@@ -139,9 +139,9 @@ export function viewLines(solids:Solid[],view:ElevationView):{a:Pt;b:Pt;layer:La
     const s=solids[e.solid],at=(t:number):Pt=>({x:e.a.u+(e.b.u-e.a.u)*t,y:e.a.v+(e.b.v-e.a.v)*t});
     for(const [t0,t1] of e.visible){
       // Split at grade (v = 0).
-      const cuts=[t0,t1],dv=e.b.v-e.a.v;if(Math.abs(dv)>1e-12){const g=-e.a.v/dv;if(g>t0&&g<t1)cuts.splice(1,0,g);}
+      const cuts=[t0,t1],dv=e.b.v-e.a.v;if(Math.abs(dv)>1e-12){const g=((s.gradeElevationIn??0)-e.a.v)/dv;if(g>t0&&g<t1)cuts.splice(1,0,g);}
       for(let i=0;i+1<cuts.length;i++){
-        const p=at(cuts[i]),q=at(cuts[i+1]),below=(p.y+q.y)/2<-1e-6;
+        const p=at(cuts[i]),q=at(cuts[i+1]),below=(p.y+q.y)/2<(s.gradeElevationIn??0)-1e-6;
         if(!below)out.push({a:p,b:q,layer:s.layer});else if(s.belowGrade)out.push({a:p,b:q,layer:s.belowGrade});
       }
     }

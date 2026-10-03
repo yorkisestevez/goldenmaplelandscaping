@@ -61,7 +61,7 @@ ok(!!yardShapeProblem('retaining-wall',[{x:0,y:0},{x:80,y:80},{x:0,y:80},{x:80,y
 ok(!!yardShapeProblem('retaining-wall',[{x:0,y:0},{x:60,y:0},{x:60,y:60},{x:0,y:0}]),'Closed wall path cannot create a hidden duplicate endpoint');
 rejected(()=>yardShapePull(patio,'point',0,Infinity,0),'A non-finite pull cannot return partial geometry');
 rejected(()=>yardShapeMove(patio,3000,0),'Whole movement respects world yard coordinate limits');
-rejected(()=>yardShapeResize(l,81,1),'Total wall run limit still applies to a custom L');
+rejected(()=>yardShapeEdit(wall,[{x:-1200,y:-1200},{x:1200,y:-1200},{x:1200,y:1200}]),'240 ft total wall path limit applies within valid point coordinates');
 rejected(()=>yardShapeResize(pulled,61,12),'Patio numeric dimensions cannot exceed the pricing/editing envelope');
 const fine=yardShapeLocalPoints(patio);fine.splice(1,0,{x:-95.5,y:-72});ok(!!yardShapeProblem('patio',fine),'Short pull-point segments are refused');
 near(yardShapeSignedArea(yardShapeLocalPoints(patio))/144,192,'Independent rectangle area matches the legacy patio');

@@ -68,6 +68,7 @@ async function main(){
   const seq=await Promise.all([f.api.execute(request([{type:'design.patch',patch:{width:22}}])),f.api.execute(request([{type:'design.patch',patch:{length:20}}]))]);
   check(seq.every(r=>r.ok)&&f.state.data.width===22&&f.state.data.length===20,'Unconditional queued patches merge with latest design rather than stale closure');
   const action=request([{type:'action',action:'review.open'}]);await Promise.all([f.api.execute(action),f.api.execute(action)]);check(f.actions===1,'Concurrent identical action ids open review once');
+  check(f.api.describe().actions.includes('permit.pdf')&&f.api.describe().actions.includes('export.dxf2d'),'Assistant describes both permit downloads');
   ok(await f.api.execute(request([{type:'view.set',view:'front'}])));check(f.api.read().view==='front','View commands await visible view');
   ok(await f.api.execute(request([{type:'section.open',section:'boards'}])));check(f.api.read().openSections.includes('boards'),'Section commands open semantic editor section');
   const share=ok(await f.api.execute(request([{type:'action',action:'share.create'}])));check(!!share.result?.url,'Share action returns a local generated URL');

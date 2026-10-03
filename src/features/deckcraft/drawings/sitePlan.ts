@@ -1,3 +1,4 @@
+import {usesPhysicalElevations} from '../elevationDatum';
 import type {DeckTakeoff} from '../deckTakeoff';
 import type {CompassPoint,DeckData} from '../types';
 import {getHouseBlocks,houseOutline} from '../houseFootprint';
@@ -206,7 +207,7 @@ export function sitePlan(data:DeckData,model:DeckTakeoff):SitePlan{
   };
   const main=blocks[0].rect;
   tag([['EXISTING HOUSE',TEXT],[`${blocks[0].storeys}-storey, as modelled`,SMALL]],house,[{x:main.x0,y:main.y0},{x:main.x1,y:main.y0},{x:main.x1,y:main.y1},{x:main.x0,y:main.y1}],H);
-  tag([['PROPOSED DECK',TEXT],[`${grouped(deckSqft)} sq ft`,SMALL],[`${feetInches(model.levels[0].top)} above grade`,SMALL]],levels,levels[0],D);
+  tag([['PROPOSED DECK',TEXT],[`${grouped(deckSqft)} sq ft`,SMALL],[`${feetInches(model.levels[0].top)} ${usesPhysicalElevations(data)?'relative to project datum':'above grade'}`,SMALL]],levels,levels[0],D);
 
   notes.push(
     'Add anything this sheet does not show, with its distance to the deck: a shed, pool, detached garage, fence, easement, or a well or septic system.',

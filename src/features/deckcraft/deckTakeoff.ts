@@ -1,3 +1,5 @@
+import {foundationDatums} from './foundationDatums';
+import {stairTargetId,validateStairTargets} from './stairTargets';
 import {addConstructionDetails,addRim,finishBoards,memberLength,unsupportedJoistEnds} from './constructionDetails';
 import {boundaryBounds,freeFootprint} from './lib/freeOutline';
 import {resolveStairPath,stairPathOffset} from './lib/stairPath';
@@ -24,7 +26,7 @@ import {outlineSpans,cleanPolygon,zoneReference,landingReference,shareHouseSideB
 import {edgeFacing,getFootprint,getBoardRows,getPictureFrameRuns,getStairPlacement,getRailingSegments,getHerringboneRows,clipToConvex,type StairPlacement,type PlanPoint,type FootprintPlan,type BoardRun} from './lib/deckGeometry';
 export type V3={x:number;y:number;z:number};
 export type Member={a:V3;b:V3;width:number;depth:number;role?:string;spliceStart?:boolean;spliceEnd?:boolean;stair?:{risers:number;rise:number;run:number;top:number;bottom:number}};
-export type Box={x:number;y:number;z:number;w:number;h:number;d:number;angle?:number;polygon?:PlanPoint[];kind?:'tread'|'winder'|'riser'};
+export type Box={x:number;y:number;z:number;w:number;h:number;d:number;angle?:number;polygon?:PlanPoint[];kind?:'tread'|'winder'|'riser';flightId?:string};
 export type RailRun={a:V3;b:V3};
 /** The guard: posts, rails, balusters and glass members. `frameless` is set only for a frameless glass railing. */
 export type TakeoffRailing={posts:V3[];rails:Member[];balusters:Member[];glass:Member[];height:number;frameless?:FramelessGlassLayout};
@@ -190,7 +192,7 @@ export function buildDeckTakeoff(data:DeckData){
   levels.push(makeLevel(mainFp,data.height,{x:0,y:0,z:0},deckAttachesToHouse(data)&&(!data.deckOutlines?.main||mainContact.contacts.length>0),'deck',0));
   /** A stair flight. A straight one carries its plan directions (outward = downhill) and how far its treads and risers
    * run past `width` at each end (a full-width step reaching its level's finished edge). */
-  type Flight={id:string;kind:'grade'|'connection';risers:number;rise:number;run:number;width:number;start:V3;end:V3;type:string;stringerOffsets:number[];along?:PlanPoint;outward?:PlanPoint;endExtend?:number};
+  type Flight={id:string;kind:'grade'|'connection';risers:number;rise:number;run:number;width:number;start:V3;end:V3;type:string;stringerOffsets:number[];along?:PlanPoint;outward?:PlanPoint;endExtend?:number;endWidth?:number;terminationEdge?:{a:PlanPoint;b:PlanPoint};winderCenter?:PlanPoint;winderRadiusIn?:number};
   const stairSupport=getStairSupport(data,gap);
   const issues:string[]=[],flights:Flight[]=[],connections:{from:number;to:number;opening:StairPlacement;run:number}[]=[];
   const openings=new Map<number,StairPlacement[]>();
@@ -198,15 +200,18 @@ export function buildDeckTakeoff(data:DeckData){
   // A railed step that stands on a lower level: its side lines (in world plan inches), where its own rails replace that level's guard.
   const stepSides:{level:number;origin:PlanPoint;dir:PlanPoint;length:number}[]=[];
   const run=stairSupport.runIn;
+  const targets=validateStairTargets(data.stairTargets??[]);
+  let gradeRun=data.stairTreadDepthIn??run;
+  const gradeSettings=(id:string,top:number)=>{const target=targets.find(t=>t.flightId===id),bottom=target?.elevationIn??0,n=target?.riserCount??data.stairRiserCount??Math.max(1,Math.ceil((top-bottom)/7.75));gradeRun=target?.treadDepthIn??data.stairTreadDepthIn??run;return {target,bottom,n,rise:(top-bottom)/n};};
   function addStraight(origin:V3,outward:PlanPoint,along:PlanPoint,width:number,n:number,rise:number,kind:Flight['kind'],id:string,startOffset=(data.pictureFrameRows||data.pattern==='Picture Frame')?finishedFasciaOffset(data):0,opts:{rails?:boolean;stringers?:boolean;endExtend?:number}={}){
-    const run=kind==='grade'?(data.stairTreadDepthIn??stairSupport.runIn):stairSupport.runIn;
+    const run=kind==='grade'?gradeRun:stairSupport.runIn;
     const e=opts.endExtend??0;
     const start={x:origin.x+outward.x*startOffset,y:origin.y,z:origin.z+outward.y*startOffset};
     const end={x:start.x+outward.x*run*Math.max(0,n-1),y:start.y-n*rise,z:start.z+outward.y*run*Math.max(0,n-1)};
     const yaw=Math.atan2(outward.x,outward.y),stringerOffsets=getStringerOffsets(width,stairSupport.spacingIn,stairSupport.minimumStringers);
     for(let i=0;i<n;i++)riserBoards.push(...makeRiserBoards({x:start.x+outward.x*i*run,y:start.y-i*rise,z:start.z+outward.y*i*run},along,outward,width+2*e,rise,stairSupport,data.deckingMaterial,id,i));
     if(rise<=1)issues.push('A stair rise is no greater than the modeled tread thickness; this transition needs a reviewed threshold detail.');
-    for(let i=1;i<n;i++){const d=(i-.5)*run+stairSupport.treadNosingIn/2;treads.push({x:start.x+outward.x*d,y:start.y-i*rise-.5,z:start.z+outward.y*d,w:width+2*e,h:1,d:run+stairSupport.treadNosingIn,angle:yaw,kind:'tread'});}
+    for(let i=1;i<n;i++){const d=(i-.5)*run+stairSupport.treadNosingIn/2;treads.push({x:start.x+outward.x*d,y:start.y-i*rise-.5,z:start.z+outward.y*d,w:width+2*e,h:1,d:run+stairSupport.treadNosingIn,angle:yaw,kind:'tread',...(kind==='grade'?{flightId:stairTargetId(id)}:{})});}
     if(opts.stringers!==false)for(const shift of stringerOffsets){stringers.push({a:{x:start.x+along.x*shift,y:start.y-9,z:start.z+along.y*shift},b:{x:end.x+along.x*shift,y:end.y-4,z:end.z+along.y*shift},width:1.5,depth:9.25,role:'stringer',stair:{risers:n,rise,run,top:start.y,bottom:end.y}});}
     if(data.railingType!=='None'&&data.railDefault!==false&&opts.rails!==false)for(const side of [-1,1]){const shift=side*width/2;railRuns.push({a:{x:start.x+along.x*shift,y:start.y,z:start.z+along.y*shift},b:{x:end.x+along.x*shift,y:end.y,z:end.z+along.y*shift}});}
     flights.push({id,kind,risers:n,rise,run,width,start,end,type:'Straight',stringerOffsets,along,outward,...(e?{endExtend:e}:{})});return end;
@@ -310,7 +315,8 @@ export function buildDeckTakeoff(data:DeckData){
   // drop such a choice (pruneEdgeNames); this covers a design that skipped them.
   const angledIndex=isChamferEdgeId(data.stairEdgeId)?mainFp.edgeIds?.indexOf(data.stairEdgeId!)??-1:-1;
   const angledFace=angledIndex<0?0:Math.hypot(mainFp.outline[(angledIndex+1)%mainFp.outline.length].x-mainFp.outline[angledIndex].x,mainFp.outline[(angledIndex+1)%mainFp.outline.length].y-mainFp.outline[angledIndex].y);
-  const angledOk=angledIndex>=0&&exitLevel===0&&angledStairAllowed(data)&&angledStairFits(angledFace,data.stairWidth);
+  const angledTarget=targets.find(t=>t.flightId==='grade-0');
+  const angledOk=angledIndex>=0&&exitLevel===0&&angledStairAllowed(angledTarget?{...data,height:data.height-angledTarget.elevationIn,stairRiserCount:angledTarget.riserCount}:data)&&angledStairFits(angledFace,data.stairWidth);
   const stairName=isChamferEdgeId(data.stairEdgeId)&&!angledOk?undefined:data.stairEdgeId;
   if(angledIndex>=0&&!angledOk&&data.stairFlights>0)issues.push('A stair on an angled corner must be one straight flight of up to 14 risers from the main deck, on a face at least as wide as the stair, so it uses the chosen stair side instead.');
   const named=stairName&&mainFp.edgeIds&&data.stairFlights>0?getStairPlacement({...data,stairEdgeId:stairName},mainFp,mainContact):null;
@@ -321,7 +327,7 @@ export function buildDeckTakeoff(data:DeckData){
   if(!data.stairPath&&data.stairFlights>edges.length)issues.push('The requested stair exit count exceeds available exposed deck edges.');
   let risers=0;
   if(data.stairPath&&data.stairFlights>0){
-    const path=resolveStairPath(data,deck.footprint,exitLevel===0?mainContact:undefined,openings.get(exitLevel)),n=data.stairRiserCount??Math.max(1,Math.ceil(deck.top/7.75)),rise=deck.top/n,going=data.stairTreadDepthIn??run;
+    const path=resolveStairPath(data,deck.footprint,exitLevel===0?mainContact:undefined,openings.get(exitLevel)),{n,rise,bottom}=gradeSettings('grade-path',deck.top),going=gradeRun;
     issues.push(...path.issues);risers=n;
     const segments=path.segments,startOffset=(data.pictureFrameRows||data.pattern==='Picture Frame')?finishedFasciaOffset(data):0,reach=startOffset+(n-1)*going+stairSupport.treadNosingIn;
     const offset=(d:number)=>stairPathOffset(segments,d).map(p=>({x:p.x+deck.offset.x,y:p.y+deck.offset.z})),near=offset(startOffset),endLine=offset(startOffset+(n-1)*going),far=offset(reach);
@@ -335,7 +341,7 @@ export function buildDeckTakeoff(data:DeckData){
       if(segments.length>1)issues.push('Wrapped stairs use shared mitred treads and a corner stringer. Corner connections and foundation support require builder review.');
       const box=(polygon:PlanPoint[],y:number,h:number,kind:Box['kind'])=>{const b=boundaryBounds(polygon);return {x:b.x+b.w/2,y,z:b.y+b.h/2,w:b.w,h,d:b.h,polygon,kind};};
       for(let i=0;i<segments.length;i++){
-        const s=segments[i],id=`grade-path-${i}`,a=near[i],b=near[i+1],endA=endLine[i],endB=endLine[i+1],start={x:(a.x+b.x)/2,y:deck.top,z:(a.y+b.y)/2},end={x:(endA.x+endB.x)/2,y:0,z:(endA.y+endB.y)/2};
+        const s=segments[i],id=`grade-path-${i}`,a=near[i],b=near[i+1],endA=endLine[i],endB=endLine[i+1],start={x:(a.x+b.x)/2,y:deck.top,z:(a.y+b.y)/2},end={x:(endA.x+endB.x)/2,y:bottom,z:(endA.y+endB.y)/2};
         stairOpenings.push(s);addOpening(exitLevel,s);
         const ri=riserBoards.length,ti=treads.length,si=stringers.length;
         addStraight({x:s.origin.x+s.along.x*s.width/2+deck.offset.x,y:deck.top,z:s.origin.y+s.along.y*s.width/2+deck.offset.z},s.outward,s.along,s.width,n,rise,'grade',id,startOffset,{rails:false});
@@ -351,12 +357,12 @@ export function buildDeckTakeoff(data:DeckData){
           const pieces=makeRiserBoards(center,u,s.outward,width,rise,stairSupport,data.deckingMaterial,id,r);
           // End pieces cut at the shared mitre; stock splices stay supported by the stringer schedule.
           let from=0;for(const piece of pieces){const to=from+piece.w,t0=from/width,t1=to/width,at=(a:PlanPoint,b:PlanPoint,t:number)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});piece.polygon=[at(p0,p1,t0),at(p0,p1,t1),at(q0,q1,t1),at(q0,q1,t0)];riserBoards.push(piece);from=to;}
-          if(r<n-1){const outer=offset(d+going+stairSupport.treadNosingIn);treads.push({...box([p0,p1,outer[i+1],outer[i]],deck.top-(r+1)*rise-.5,1,'tread'),angle:Math.atan2(s.outward.x,s.outward.y)});}
+          if(r<n-1){const outer=offset(d+going+stairSupport.treadNosingIn);treads.push({...box([p0,p1,outer[i+1],outer[i]],deck.top-(r+1)*rise-.5,1,'tread'),angle:Math.atan2(s.outward.x,s.outward.y),flightId:'grade-path'});}
         }
-        Object.assign(built,{width:allowanceWidth/n,start,end,stringerOffsets:actual});
+        Object.assign(built,{width:allowanceWidth/n,start,end,stringerOffsets:actual,endWidth:Math.hypot(endB.x-endA.x,endB.y-endA.y),terminationEdge:{a:{...endA},b:{...endB}}});
       }
-      for(let i=1;i<segments.length;i++){const a=near[i],b=endLine[i];stringers.push({a:{x:a.x,y:deck.top-9,z:a.y},b:{x:b.x,y:-4,z:b.y},width:3,depth:9.25,role:'stringer',stair:{risers:n,rise,run:going,top:deck.top,bottom:0}});}
-      if(data.railingType!=='None'&&data.railDefault!==false)for(const i of [0,segments.length]){const a=near[i],b=endLine[i];railRuns.push({a:{x:a.x,y:deck.top,z:a.y},b:{x:b.x,y:0,z:b.y}});}
+      for(let i=1;i<segments.length;i++){const a=near[i],b=endLine[i];stringers.push({a:{x:a.x,y:deck.top-9,z:a.y},b:{x:b.x,y:bottom-4,z:b.y},width:3,depth:9.25,role:'stringer',stair:{risers:n,rise,run:going,top:deck.top,bottom}});}
+      if(data.railingType!=='None'&&data.railDefault!==false)for(const i of [0,segments.length]){const a=near[i],b=endLine[i];railRuns.push({a:{x:a.x,y:deck.top,z:a.y},b:{x:b.x,y:bottom,z:b.y}});}
     }
   }
   else
@@ -370,8 +376,8 @@ export function buildDeckTakeoff(data:DeckData){
     if(stair.width<36)issues.push(`Stair opening is only ${stair.width.toFixed(1)} inches wide; enlarge this polygon edge before construction.`);
     stairOpenings.push(stair);addOpening(exitLevel,stair);
     const start={x:stair.origin.x+stair.along.x*stair.width/2+deck.offset.x,y:deck.top,z:stair.origin.y+stair.along.y*stair.width/2+deck.offset.z};
-    const n=data.stairRiserCount??Math.max(1,Math.ceil(deck.top/7.75)),rise=deck.top/n;risers=n;
-    if(data.stairRiserCount&&(rise>7.75||rise<4.875))issues.push(`Edited stair count gives ${rise.toFixed(2)}-inch rises; review the rise limits before construction.`);
+    const {n,rise,target}=gradeSettings(`grade-${flight}`,deck.top);risers=n;
+    if((target||data.stairRiserCount)&&(rise>7.75||rise<4.875))issues.push(`Edited stair count gives ${rise.toFixed(2)}-inch rises; review the rise limits before construction.`);
     const turn=data.stairTurn==='Left'?-1:1,nextOut={x:stair.along.x*turn,y:stair.along.y*turn},nextAlong={x:-stair.outward.x*turn,y:-stair.outward.y*turn};
     if(data.stairType==='Straight'||n<4){(n>14?addInlineLanding:addStraight)(start,stair.outward,stair.along,stair.width,n,rise,'grade',`grade-${flight}`);continue;}
     if(data.stairType==='Landing'){
@@ -397,7 +403,7 @@ export function buildDeckTakeoff(data:DeckData){
       for(let i=0;i<3;i++){
         const a=i*Math.PI/6,b=(i+1)*Math.PI/6,polygon=[point(inner,a),point(outer,a),point(outer,b),point(inner,b)],y=end.y-i*rise;
         if(i>0){const p=point(inner,a),q=point(outer,a);riserBoards.push(...makeRiserBoards({x:(p.x+q.x)/2,y:y+rise,z:(p.y+q.y)/2},{x:(q.x-p.x)/stair.width,y:(q.y-p.y)/stair.width},{x:nextOut.x*Math.sin(a)+stair.outward.x*Math.cos(a),y:nextOut.y*Math.sin(a)+stair.outward.y*Math.cos(a)},stair.width,rise,stairSupport,data.deckingMaterial,`grade-${flight}-winders`,i-1));}
-        const xs=polygon.map(p=>p.x),zs=polygon.map(p=>p.y);treads.push({x:(Math.min(...xs)+Math.max(...xs))/2,y:y-.5,z:(Math.min(...zs)+Math.max(...zs))/2,w:Math.max(...xs)-Math.min(...xs),h:1,d:Math.max(...zs)-Math.min(...zs),polygon,kind:'winder'});
+        const xs=polygon.map(p=>p.x),zs=polygon.map(p=>p.y);treads.push({x:(Math.min(...xs)+Math.max(...xs))/2,y:y-.5,z:(Math.min(...zs)+Math.max(...zs))/2,w:Math.max(...xs)-Math.min(...xs),h:1,d:Math.max(...zs)-Math.min(...zs),polygon,kind:'winder',flightId:`grade-${flight}`});
         for(const angle of [a,b]){const p=point(inner,angle),q=point(outer,angle);framing.push({a:{x:p.x,y:y-1-joistDepth/2,z:p.y},b:{x:q.x,y:y-1-joistDepth/2,z:q.y},width:1.5,depth:joistDepth,role:'winder-frame'});}
         // Individual winder planks run in world Z; transverse framing is
         // spaced at no more than seven inches and bears on the perimeter frame.
@@ -419,7 +425,7 @@ export function buildDeckTakeoff(data:DeckData){
       const outline=[point(inner,0),point(outer,0),point(outer,Math.PI/2),point(inner,Math.PI/2)],xs=outline.map(p=>p.x),zs=outline.map(p=>p.y),minX=Math.min(...xs),minZ=Math.min(...zs);
       levels.push({kind:'winder',index:levels.length,footprint:{outline:outline.map(p=>({x:p.x-minX,y:p.y-minZ})),bounds:{w:Math.max(...xs)-minX,h:Math.max(...zs)-minZ},isCurved:false},top:end.y,offset:{x:minX,y:0,z:minZ},boards:[],supports:support,joists:framing,beams:winderBeams,blocking:[],breakers:[],reference:deck.reference,rim:[]});
       const p=point(inner+stair.width/2,Math.PI/2),lowerStart={x:p.x,y:end.y-2*rise,z:p.y};
-      flights.push({id:`grade-${flight}-winders`,kind:'grade',risers:2,rise,run:12*Math.PI/3,width:stair.width,start:end,end:lowerStart,type:'Winder',stringerOffsets:[]});
+      flights.push({id:`grade-${flight}-winders`,kind:'grade',risers:2,rise,run:12*Math.PI/3,width:stair.width,start:end,end:lowerStart,type:'Winder',stringerOffsets:[],winderCenter:{x:center.x,y:center.z},winderRadiusIn:inner+stair.width/2});
       if(lower)addStraight(lowerStart,nextOut,nextAlong,stair.width,lower,rise,'grade',`grade-${flight}-lower`,0);
     }
   }
@@ -512,10 +518,18 @@ export function buildDeckTakeoff(data:DeckData){
     const loose=unsupportedJoistEnds(level,level.index===0?mainContact:undefined);
     if(loose.length)issues.push(`${loose.length} joist end${loose.length===1?'':'s'} on the ${['main deck','second level','third level'][level.index??0]} do not bear on a ledger or beam (for example a shallow notch wing). Add a beam and posts under that edge before construction.`);
   }
-  const foundationSaddle=data.foundation==='Deck Blocks'?6.5:4.5;
+  const foundationSaddle=data.foundation==='Deck Blocks'?6.5:4.5,foundationSupports=foundationDatums(data,levels);
+  const missingTargets=targets.filter(t=>!flights.some(f=>f.kind==='grade'&&stairTargetId(f.id)===t.flightId));
+  if(missingTargets.length)issues.push('A saved stair target no longer has a matching grade flight. Refit or remove the target before construction.');
+  if(targets.some(t=>t.surface==='patio'&&!data.yardFeatures?.some(f=>f.enabled&&f.kind==='patio'&&f.id===t.patioId)))issues.push('A stair landing patio target is absent or disabled; confirm the landing surface before construction.');
+  if(foundationSupports.some(f=>f.status==='coverage-pending'))issues.push('Deck foundation footprint survey coverage is incomplete; affected ground, footing and post quantities remain pending.');
+  if(foundationSupports.some(f=>f.status==='clearance-pending')&&(data.siteModel||data.terrainConfig))issues.push('Local proposed ground leaves insufficient foundation saddle or post clearance; review excavation or framing before construction.');
+  if(data.soilCondition==='Unknown'&&(data.siteModel||data.terrainConfig))issues.push('Local foundation datums are modeled; soil bearing, footing diameter and installed pile/embedment depth still require confirmation.');
   if(levels.some(l=>l.supports.some(p=>p.y>0&&p.y<=foundationSaddle)||l.top<joistDepth+1+foundationSaddle))issues.push('Selected deck elevation leaves insufficient clearance for framing and the foundation saddle; review low-profile framing or excavation before construction.');
-  const quantities={riserBoardPieces:riserBoards.length,riserBoardLf:riserBoards.reduce((n,b)=>n+b.w/12,0),riserBoardArea:riserBoards.reduce((n,b)=>n+b.w*b.h/144,0),inlayLf:levels.reduce((n,l)=>n+l.boards.filter(b=>b.role==='inlay').reduce((n,b)=>n+b.length/12,0),0),totalRisers:flights.reduce((n,f)=>n+f.risers,0),landingArea:levels.filter(l=>l.kind==='landing').reduce((n,l)=>n+polygonArea(l.footprint),0),breakerBoards:levels.reduce((n,l)=>n+l.breakers.length+(l.layoutBreakers?.length??0),0),blocking:levels.reduce((n,l)=>n+l.blocking.length,0),stairRailingLf:railRuns.filter(r=>r.a.y!==r.b.y).reduce((n,r)=>n+distance(r.a,r.b)/12,0),footings:levels.reduce((sum,l)=>sum+l.supports.length,0),supportPosts:levels.reduce((sum,l)=>sum+l.supports.filter(p=>p.y>foundationSaddle).length,0),joists:levels.reduce((sum,l)=>sum+l.joists.length,0),railingPosts:posts.length,railingSections:railSections,railingLf:railRuns.reduce((sum,r)=>sum+distance(r.a,r.b)/12,0),risersPerFlight:risers,stairFlights:stairOpenings.length,stairTreads:treads.length,stringers:stringers.length,installedBoardPieces:levels.reduce((sum,l)=>sum+(data.boardLayout?physicalBoardPieceCount(l.boards,data.boardWidth):l.boards.length),0),area:levels.reduce((sum,l)=>sum+(l.kind==='winder'?0:polygonArea(l.footprint)),0),framingLf:levels.reduce((sum,l)=>sum+[...l.joists,...l.beams,...l.blocking,...(l.rim||[])].reduce((n,m)=>n+distance(m.a,m.b)/12,0),0)};
-  return {levels,treads,riserBoards,stairSupport,stringers,flights,connections,issues,railing:{posts,rails,balusters,glass,height:railHeight,...(frameless?{frameless}:{})} as TakeoffRailing,quantities,gap,stockLength};
+  const quantities={riserBoardPieces:riserBoards.length,riserBoardLf:riserBoards.reduce((n,b)=>n+b.w/12,0),riserBoardArea:riserBoards.reduce((n,b)=>n+b.w*b.h/144,0),inlayLf:levels.reduce((n,l)=>n+l.boards.filter(b=>b.role==='inlay').reduce((n,b)=>n+b.length/12,0),0),totalRisers:flights.reduce((n,f)=>n+f.risers,0),landingArea:levels.filter(l=>l.kind==='landing').reduce((n,l)=>n+polygonArea(l.footprint),0),breakerBoards:levels.reduce((n,l)=>n+l.breakers.length+(l.layoutBreakers?.length??0),0),blocking:levels.reduce((n,l)=>n+l.blocking.length,0),stairRailingLf:railRuns.filter(r=>r.a.y!==r.b.y).reduce((n,r)=>n+distance(r.a,r.b)/12,0),footings:foundationSupports.filter(f=>f.status!=='coverage-pending').length,supportPosts:foundationSupports.filter(f=>f.postHeightIn!==null&&f.postHeightIn>0).length,joists:levels.reduce((sum,l)=>sum+l.joists.length,0),railingPosts:posts.length,railingSections:railSections,railingLf:railRuns.reduce((sum,r)=>sum+distance(r.a,r.b)/12,0),risersPerFlight:risers,stairFlights:stairOpenings.length,stairTreads:treads.length,stringers:stringers.length,installedBoardPieces:levels.reduce((sum,l)=>sum+(data.boardLayout?physicalBoardPieceCount(l.boards,data.boardWidth):l.boards.length),0),area:levels.reduce((sum,l)=>sum+(l.kind==='winder'?0:polygonArea(l.footprint)),0),framingLf:levels.reduce((sum,l)=>sum+[...l.joists,...l.beams,...l.blocking,...(l.rim||[])].reduce((n,m)=>n+distance(m.a,m.b)/12,0),0)};
+  const resolvedFoundations=foundationSupports.filter(f=>f.bottomElevationIn!==null&&f.headTopElevationIn!==null);
+  const foundationQuantities={supportPostLf:foundationSupports.reduce((n,f)=>n+(f.postHeightIn??0)/12,0),concretePierYd3:resolvedFoundations.filter(f=>f.foundation!=='Helical Piles'&&f.foundation!=='Deck Blocks').reduce((n,f)=>n+Math.PI*36*(f.headTopElevationIn!-f.bottomElevationIn!)/46656,0),pileShaftLf:resolvedFoundations.filter(f=>f.foundation==='Helical Piles').reduce((n,f)=>n+(f.headTopElevationIn!-f.bottomElevationIn!)/12,0),foundationCoveragePending:foundationSupports.filter(f=>f.status==='coverage-pending').length,foundationClearancePending:foundationSupports.filter(f=>f.status==='clearance-pending').length,foundationSoilPending:data.soilCondition==='Unknown'?1:0};
+  return {foundationSupports,foundationQuantities,levels,treads,riserBoards,stairSupport,stringers,flights,connections,issues,railing:{posts,rails,balusters,glass,height:railHeight,...(frameless?{frameless}:{})} as TakeoffRailing,quantities,gap,stockLength};
 }
 export type DeckTakeoff=ReturnType<typeof buildDeckTakeoff>;
 /** The guard runs at walking-surface height, whatever the railing: a frameless railing's runs, or each framed run

@@ -19,14 +19,14 @@ export interface SwatchMaps{
   /** Mean sRGB colour (0–255) of the photo's strips, and of the atlas. */
   sourceMean:[number,number,number];atlasMean:[number,number,number];
 }
-export const ATLAS_WIDTH=512,STRIP_ROWS=128,STRIP_GUTTER=8,STRIP_BODY=STRIP_ROWS-2*STRIP_GUTTER;
+export const ATLAS_WIDTH=1024,STRIP_ROWS=128,STRIP_GUTTER=8,STRIP_BODY=STRIP_ROWS-2*STRIP_GUTTER;
 /** Roughness of a composite's capped surface and of real wood; raised grain is a little smoother than its grooves. */
-export const BOARD_ROUGHNESS={composite:.62,wood:.75,relief:.12};
+export const BOARD_ROUGHNESS={composite:.48,wood:.75,relief:.08};
 /** How much of the photo's board-to-board tone difference each strip keeps. Multi-tone lines (Tigerwood) differ a lot
  * between the photo's four boards; at their full spread short pieces between butt joints read as a patchwork. */
-export const BOARD_TONE_SPREAD=.6;
+export const BOARD_TONE_SPREAD=.8;
 /** The steepest tilt the grain's relief gives the surface, in degrees. */
-export const GRAIN_TILT_DEG=30;
+export const GRAIN_TILT_DEG=14;
 
 const lumaAt=(d:SwatchImage['data'],i:number)=>(.2126*d[i]+.7152*d[i+1]+.0722*d[i+2])/255;
 

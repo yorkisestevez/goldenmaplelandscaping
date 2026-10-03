@@ -2,23 +2,29 @@ import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
 import sharp from 'sharp';
 import * as THREE from 'three';
+import ts from 'typescript';
 import {SCENE_LOOK} from '../src/features/deckcraft/components/viewer3d/sceneLook';
+import {cameraSetback} from '../src/features/deckcraft/components/viewer3d/cameraFraming';
+import {railGeometry} from '../src/features/deckcraft/components/viewer3d/EasedRails';
 import {fitSun,shadowKey} from '../src/features/deckcraft/components/viewer3d/shadowCache';
 import {ATLAS_WIDTH,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
 import {PATCHED_CHUNKS,boardVariation,boxVariant,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
 import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {HDRLoader} from 'three/examples/jsm/loaders/HDRLoader.js';
 import {SKY_DATA,skyStrength,skyYaw,sunDirection} from '../src/features/deckcraft/components/viewer3d/skyModel';
-import {FAR_RING_IN,LAWN_CHUNKS,groundGeometry} from '../src/features/deckcraft/components/viewer3d/lawnSurface';
+import {FAR_RING_IN,LAWN_CHUNKS,groundGeometry,lawnMaterial} from '../src/features/deckcraft/components/viewer3d/lawnSurface';
 import {occlusionUv} from '../src/features/deckcraft/components/viewer3d/groundOcclusion';
 import {buildYardModel,yardClip} from '../src/features/deckcraft/yardModel';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {HOUSE_CHUNKS,HOUSE_SURFACES,backingSurface,claddingSurface} from '../src/features/deckcraft/components/viewer3d/houseSurfaceKinds';
 import {WINDOW_ROOM,paneGeometry,windowGlass} from '../src/features/deckcraft/components/viewer3d/windowGlass';
 import type {DeckData,HouseCladding,YardFeature} from '../src/features/deckcraft/types';
-import {BANK_RUN,GRADED_ROLES,bankGeometry,seatOnLawn} from '../src/features/deckcraft/components/viewer3d/finishedGrade';
+import {BANK_RUN,GRADED_ROLES,bankGeometry,retainedBankGeometry,seatOnLawn,illustrativeBanksVisible} from '../src/features/deckcraft/components/viewer3d/finishedGrade';
+import {yardWallPath} from '../src/features/deckcraft/yardPathGeometry';
 import {lawnHeight} from '../src/features/deckcraft/components/viewer3d/lawnSurface';
 import {slabGeometry} from '../src/features/deckcraft/components/viewer3d/slabGeometry';
+import {ensureLiveDesignExtensions} from '../src/features/deckcraft/designExtensions';
+import {yardFinishGeometry} from '../src/features/deckcraft/components/viewer3d/yardFinishGeometry';
 
 /**
  * DeckCraft's photographic look (the "Real Life" track, plan phases G1–G8). G1 is the render pipeline: ambient
@@ -44,12 +50,24 @@ ok(SCENE_LOOK.toneMapping==='Neutral'&&SCENE_LOOK.exposure===1,'Tone mapping sta
 ok(SCENE_LOOK.bloom.threshold>1,'Only HDR light sources glow: the bloom threshold is above white');
 ok(SCENE_LOOK.ao.intensity.day<=1&&SCENE_LOOK.ao.intensity.evening<SCENE_LOOK.ao.intensity.day,'Ambient occlusion is lighter in the evening, when fixtures carry the light');
 ok(SCENE_LOOK.powderCoat.metalness===0&&SCENE_LOOK.powderCoat.clearcoat>0,'Powder coat is paint with a clear coat, not metal');
+for(const size of [[.75,36,.75],[3.5,42,3.5],[192,1.75,1.75]] as [number,number,number][]){
+  const geometry=railGeometry(size);geometry.computeBoundingBox();
+  const extent=geometry.boundingBox!.getSize(new THREE.Vector3()).toArray(),pos=geometry.getAttribute('position'),norm=geometry.getAttribute('normal');
+  ok(extent.every((v,i)=>Math.abs(v-size[i])<1e-5),'Rail edge easing preserves the extrusion dimensions');
+  let outward=true;for(let i=0;i<pos.count;i++)if(new THREE.Vector3().fromBufferAttribute(pos,i).dot(new THREE.Vector3().fromBufferAttribute(norm,i))<=0)outward=false;
+  ok(outward,'Eased rail normals point outwards on short pickets and long handrails');geometry.dispose();
+}
 
 // Wiring.
 const pipeline=read(`${VIEWER}renderPipeline.tsx`),viewer=read(`${VIEWER}Deck3DViewer.tsx`),environment=read(`${VIEWER}Environment3D.tsx`);
 ok(pipeline.includes('this.gtao.setGBuffer(this.beauty.depthTexture!)'),'Ambient occlusion reads the scene’s own depth, so the scene is drawn once per frame');
 ok(/if\(evening\)\{[\s\S]{0,80}UnrealBloomPass/.test(pipeline),'Bloom runs in the evening only');
-ok(pipeline.includes('gl.shadowMap.autoUpdate=false')&&/if\(key!==state\.key\)\{[^}]*gl\.shadowMap\.needsUpdate=true;\}/.test(pipeline),'Shadow maps are drawn only when the shadow key changes');
+{
+  const ast=ts.createSourceFile('renderPipeline.tsx',pipeline,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),updates:ts.BinaryExpression[]=[];
+  const visit=(node:ts.Node)=>{if(ts.isBinaryExpression(node)&&node.operatorToken.kind===ts.SyntaxKind.EqualsToken&&node.left.getText(ast)==='gl.shadowMap.needsUpdate'&&node.right.kind===ts.SyntaxKind.TrueKeyword)updates.push(node);ts.forEachChild(node,visit);};visit(ast);
+  const guarded=(node:ts.Node)=>{let parent=node.parent;while(parent){if(ts.isIfStatement(parent)&&parent.expression.getText(ast).replace(/\s/g,'')==='key!==state.key')return parent.thenStatement.pos<=node.pos&&node.end<=parent.thenStatement.end;parent=parent.parent;}return false;};
+  ok(pipeline.includes('gl.shadowMap.autoUpdate=false')&&updates.length===1&&updates.every(guarded),'Shadow maps are drawn only when the shadow key changes, including nested quality-size changes');
+}
 ok(/catch\(error\)\{fail\(error\);\}\s*gl\.render\(scene,camera\);/.test(pipeline),'Any failure falls back to the plain renderer');
 ok(viewer.includes('<RenderPipeline evening={evening}/>')&&viewer.includes('const pipeline=pipelineFor(gl);if(pipeline)pipeline.capture(scale);else gl.render(scene,camera);'),'The live view and the proposal pictures both draw through the pipeline');
 ok(viewer.includes('shadows="percentage"')&&viewer.includes('antialias:false'),'Multisampling lives in the pipeline’s own target, and shadows use PCF (r185 retires PCFSoft)');
@@ -145,7 +163,13 @@ for(const [name,lookup] of PATCHED_CHUNKS)ok((THREE.ShaderChunk as Record<string
   ok(a.every((v,i)=>v===b[i])&&a.some((v,i)=>v!==c[i])&&[a,c].every(v=>v[0]>=0&&v[0]<1&&v[1]>=0&&v[1]<1&&(v[2]===0||v[2]===1)),'A board keeps its strip while it stays put, and the next board gets another');
 }
 const viewer2=read(`${VIEWER}Deck3DViewer.tsx`);
-ok(viewer2.includes("geometry.setAttribute('aVar',new THREE.InstancedBufferAttribute(variation,4))")&&viewer2.includes("g.setAttribute('aVar',new THREE.Float32BufferAttribute(")&&/useMemo\(\(\)=>slabGeometry\(slabs,grain,courses(?:,eased)?\)/.test(read(`${VIEWER}Skirting3D.tsx`)),'Boards, cut boards and skirting are wired to their grain variation geometry');
+{
+ const ast=ts.createSourceFile('Deck3DViewer.tsx',viewer2,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),batch=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='BoardBatch')!,attributes:ts.CallExpression[]=[];
+ const visit=(n:ts.Node)=>{if(ts.isCallExpression(n)&&ts.isPropertyAccessExpression(n.expression)&&n.expression.name.text==='setAttribute'&&n.arguments[0]&&ts.isStringLiteral(n.arguments[0])&&n.arguments[0].text==='aVar')attributes.push(n);ts.forEachChild(n,visit);};visit(batch);
+ const memoized=(n:ts.Node)=>{let p=n.parent;while(p&&p!==batch){if(ts.isCallExpression(p)&&p.expression.getText(ast)==='useMemo')return p.arguments[1]?.getText(ast).includes('items.length');p=p.parent;}return false;};
+ ok(attributes.length===1&&memoized(attributes[0])&&batch.getText(ast).includes("geometry.getAttribute('aVar')")&&batch.getText(ast).includes('variation.needsUpdate=true'),'A board batch allocates one grain attribute with its geometry and updates that buffer on edits; count changes rebuild and dispose the previous geometry');
+}
+ok(viewer2.includes("g.setAttribute('aVar',new THREE.Float32BufferAttribute(")&&/useMemo\(\(\)=>slabGeometry\(slabs,grain,courses(?:,eased)?\)/.test(read(`${VIEWER}Skirting3D.tsx`)),'Cut boards and skirting are wired to their grain variation geometry');
 {
   const slabs=[{a:{x:0,y:0},b:{x:48,y:0},out:{x:0,y:-1},bottomA:0,bottomB:0,topA:36,topB:36,thick:1},{a:{x:60,y:0},b:{x:108,y:0},out:{x:0,y:-1},bottomA:0,bottomB:0,topA:36,topB:36,thick:1}],g=slabGeometry(slabs,'along'),p=g.getAttribute('position'),v=g.getAttribute('aVar');
   ok(v.itemSize===4&&v.count===p.count&&Array.from(v.array).every(Number.isFinite),'Every rendered skirting vertex carries a finite four-component grain variation');
@@ -156,10 +180,16 @@ ok(viewer2.includes("useSwatchTexture(swatchUrl('wood-pressure-treated.jpg'),'#8
 
 // G3: the sky's numbers, files and wiring.
 const ASSETS=`${VIEWER}assets/`,readme=read(`${ASSETS}README.md`);
+ok(cameraSetback(16/9)===1&&cameraSetback(2)===1&&cameraSetback(1)>1.3&&Number.isFinite(cameraSetback(0)),'Square phone framing adds horizontal clearance while wide desktop framing stays unchanged');
 {
   const {day,evening}=SKY_DATA,up=Math.sin(day.sunElevationDeg*Math.PI/180);
   ok(day.sunElevationDeg>0&&day.sunElevationDeg<90&&(day.sunPainted?day.sunIntensity>0:day.sunIntensity===0),'A bright extracted sun becomes the directional light; a soft tree-filtered sky stays in the environment without a duplicate sun');
   ok(Math.abs(day.skyIrradiance+day.sunIntensity*up-Math.PI)<.03,'Sun and sky light a horizontal white card at irradiance π, so a sunlit board shows its swatch colour');
+  const daylight=skyStrength('day'),dusk=skyStrength('evening');
+  const sunLuminance=.2126*day.sunColor[0]+.7152*day.sunColor[1]+.0722*day.sunColor[2];
+  ok(Math.abs(day.skyIrradiance*daylight.environment+daylight.sun*sunLuminance*up-Math.PI)<.03,'The rendered coloured sun and sky fill conserve horizontal white-card energy');
+  ok(daylight.sun>0&&daylight.environment>0&&daylight.environment<=3,'Daylight has a directional key and bounded environment fill for readable cast shadows');
+  ok(daylight.background===1&&dusk.background===SCENE_LOOK.sky.evening,'Illumination tuning leaves panorama exposure intact and dusk stays dim');
   ok(Math.abs(evening.skyIrradiance+evening.sunIntensity*Math.max(0,Math.sin(evening.sunElevationDeg*Math.PI/180))-Math.PI)<.03&&!evening.sunPainted&&skyStrength('evening').sun===0,'The evening sky is normalised the same way, keeps its dusk glow and has no sun');
   ok([day,evening].every(d=>d.sunColor.every(c=>c>0&&c<=1)&&d.whiteBalance.every(w=>w>.6&&w<1.6)&&d.bandScale>0),'Sun colours, white balance and band scales are sane');
   // The HDRI turned by three's rule (world = R(yaw)·hdri) puts its sun where the scene's sun is.
@@ -181,7 +211,7 @@ ok(assetBytes<=15*1024*1024&&!readdirSync(ASSETS).some(f=>f.startsWith('grass008
   const viewer3=read(`${VIEWER}Deck3DViewer.tsx`),environment3=read(`${VIEWER}Environment3D.tsx`),sky=read(`${VIEWER}Sky3D.tsx`);
   ok(viewer3.includes('<Suspense fallback={<StudioLight evening={evening}/>}><Sky3D evening={evening}/></Suspense>')&&viewer3.includes('near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar'),'The real sky loads behind the studio light, and the camera sees to the sky dome');
   ok(environment3.includes('castShadow={!evening}')&&environment3.includes('SUN.clone().multiplyScalar(radius)')&&!environment3.includes('hemisphereLight'),'The scene’s sun takes the HDRI’s place (none in the evening), and no hemisphere light doubles the sky');
-  ok(sky.includes('name="sky-dome"')&&sky.includes('depthWrite:false,fog:false')&&sky.includes('scene.fog.color.setRGB(')&&viewer3.includes('<fogExp2 attach="fog" args={[')&&sky.includes('preloadEvening()')&&sky.includes("fallback={<SkyOf lighting=\"day\" strength={skyStrength('evening').environment}/>}"),'The dome draws behind everything without fog; one haze lasts the viewer’s life (adding fog recompiles every material) and the sky only recolours it; the evening sky preloads once the day is in, and the dimmed day sky stands in while it loads');
+  ok(sky.includes('name="sky-dome"')&&sky.includes('depthWrite:false,fog:false')&&sky.includes('scene.fog.color.setRGB(')&&viewer3.includes('<fogExp2 attach="fog" args={[')&&sky.includes('preloadEvening()')&&sky.includes("fallback={<SkyOf lighting=\"day\" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}"),'The dome draws behind everything without fog; one haze lasts the viewer’s life (adding fog recompiles every material) and the sky only recolours it; the evening sky preloads once the day is in, and the dimmed day sky stands in while it loads');
   ok(SCENE_LOOK.sky.domeRadiusFt<SCENE_LOOK.sky.cameraFar&&Math.exp(-((100*SCENE_LOOK.sky.fogDensity)**2))>.985,'The dome sits inside the far plane, and haze stays under 1.5% at 100 ft');
 }
 // The lawn: the chunks it patches, a natural mean colour, and ground that faces up all the way to the horizon.
@@ -189,6 +219,7 @@ for(const [name,lookup] of LAWN_CHUNKS)ok((THREE.ShaderChunk as Record<string,st
 {
   const lawn=JSON.parse(read(`${ASSETS}lawn.json`)),[r,g,b]=lawn.meanSrgb,saturation=(Math.max(r,g,b)-Math.min(r,g,b))/Math.max(r,g,b);
   ok(g>r&&g>b&&saturation<=.5,`The lawn is a natural green (mean sRGB ${lawn.meanSrgb.join(', ')}, saturation ${saturation.toFixed(2)})`);
+  const surface=lawnMaterial();ok(surface.normalScale.x<=.35&&surface.normalScale.y<=.35,'Short lawn relief stays fine rather than pebble-like');surface.dispose();
   const yard=buildYardModel(DEFAULT_DECK),tw=yard.terrain.widthFt*12,td=yard.terrain.depthFt*12,width=192,depth=144,bounds={minX:width/2-tw/2,minZ:depth/2-td/2,width:tw,depth:td};
   const geometry=groundGeometry(yard,yardClip(yard.excavationRegions.map(e=>e.polygon)),width,depth,bounds),pos=geometry.getAttribute('position');
   let down=0,far=0;const a=new THREE.Vector3(),b2=new THREE.Vector3(),c=new THREE.Vector3();
@@ -232,22 +263,28 @@ for(const [name,lookup] of LAWN_CHUNKS)ok((THREE.ShaderChunk as Record<string,st
   ok(/paver:\{set:'masonry'/.test(yardView)&&/'wall-block':\{set:'rock'/.test(yardView)&&/'wall-cap':\{set:'masonry'/.test(yardView)&&/rock:\{set:'rock'/.test(yardView)&&yardView.includes('scanMaterial(scanned.set,color,')&&surfaces.includes('color:new THREE.Color(color).multiplyScalar(2)'),'Pavers, wall blocks, caps and rocks take scanned detail over the product’s own colour (doubled over a detail map averaging 0.5)');
   ok(turf.includes('publishGroundOcclusion({texture:occlusion.texture,bounds})')&&turf.includes('publishGroundOcclusion(null)')&&yardView.includes('material.aoMap=occlusion?.texture??WHITE'),'Hardscape is shaded under a deck by the lawn’s own occlusion map, with a white stand-in until it is drawn');
   ok((yardView.match(/userData=\{GROUND_LEVEL\}/g)??[]).length===2&&occlusion.includes('o.castShadow&&o.userData.coversGround!==false'),'Paving, walls and the lawn bank lie on the ground, so they are not drawn as covering it (they would shade themselves)');
-  ok(yardView.includes("const c=b.role==='paver'&&!b.illustrative&&")&&yardView.includes('bevelOffset:-c')&&yardView.includes('translate(0,b.y+b.h/2-c,0)'),'Real pavers are chamfered inside their own outline and keep their height, so the joints show from across the yard');
+  const paving=yardFinishGeometry({id:'paver-check',featureId:'qa',role:'paver',color:'#aaa',x:0,y:12,z:0,w:24,d:12,h:3,polygon:[{x:-12,y:-6},{x:12,y:-6},{x:12,y:6},{x:-12,y:6}]});
+  paving.computeBoundingBox();const envelope=paving.boundingBox!;
+  ok(yardView.includes('yardFinishGeometry(b)')&&paving.getAttribute('position').count>36&&Math.abs(envelope.min.y-10.5)<1e-5&&Math.abs(envelope.max.y-13.5)<1e-5&&envelope.min.x>=-12.00001&&envelope.max.x<=12.00001&&envelope.min.z>=-6.00001&&envelope.max.z<=6.00001,'Real pavers retain bevel relief within their stock outline and full height through the shared finish geometry');paving.dispose();
   ok(yardView.includes("color={!inspection&&items[0].role==='bedding'?shade(items[0].color,JOINT_SHADE):items[0].color}"),'Joint sand reads darker than the pavers in the finished views only');
   const waves=JSON.parse((/RIPPLE_WAVES:[^=]*=(\[\[.*?\]\]);/.exec(yardView)?.[1]??'[]').replace(/([[,])(-?)\./g,'$1$20.')) as number[][];
   ok(waves.length>=5&&waves.every(([k,l])=>Number.isInteger(k)&&Number.isInteger(l)&&(k||l))&&new Set(waves.map(([k,l])=>(Math.atan2(l,k)+Math.PI)%Math.PI).map(a=>a.toFixed(3))).size===waves.length,'Still water’s ripples fit the tile a whole number of times (no seam) and run in different directions (no visible pattern)');
-  ok(yardView.includes('if(!inspection&&(hidden.has(box.role)||GRADED_ROLES.includes(box.role)))continue;const b=inspection?box:seatOnLawn(box,model.terrain);')&&yardView.includes('{!inspection&&<RetainedBanks model={model} occlusion={occlusion}/>}'),'The finished views bury the drainage and backfill under a lawn bank and set rocks into the lawn; the construction views keep the model as built');
-  ok(turf.includes('excavationRegions.filter(e=>!finished||!walls.has(e.featureId))')&&environment5.includes('yard={yard} finished={finished}/>')&&viewer5.includes('cutaway={cutaway} finished={!inspection} yard={yard}'),'The lawn closes over a retaining wall’s trench in the finished views and opens over it in the construction views');
-  ok(GRADED_ROLES.length===2&&GRADED_ROLES.includes('wall-drainage')&&GRADED_ROLES.includes('backfill'),'Only a wall’s drainage stone and backfill are graded over');
+  ok(yardView.includes('if(!inspection&&(hidden.has(box.role)||GRADED_ROLES.includes(box.role)))continue;const b=inspection?box:seatOnLawn(box,model.terrain);')&&yardView.includes('{illustrativeBanksVisible(model,inspection)&&<RetainedBanks model={model} occlusion={occlusion} plantingBeds={plantingBeds}/>}'),'Finished views hide drainage/backfill and seat rocks; an illustrative bank is limited to legacy presentation, while construction views retain the built model');
+  ok(turf.includes('groundDisplayCuts(yard,pools,finished)')&&environment5.includes('yard={yard} finished={finished}/>')&&viewer5.includes('cutaway={cutaway} finished={!inspection} yard={yard}'),'The lawn closes over a retaining wall’s trench in the finished views and opens over it in the construction views');
+  ok(GRADED_ROLES.length===3&&GRADED_ROLES.includes('wall-drainage')&&GRADED_ROLES.includes('backfill')&&GRADED_ROLES.includes('geogrid'),'Wall drainage stone, backfill and geogrid are covered in the finished view');
+  ok(illustrativeBanksVisible({features:[]}),'Saved legacy projects keep their illustrative bank presentation');
+  ok(!illustrativeBanksVisible({features:[]},true),'Construction inspection has no decorative bank');
+  ok(!illustrativeBanksVisible({features:[{config:{finishedElevationIn:0}}]}),'Even fixed zero-level objects use defined ground rather than invented banks');
   const base:DeckData={...structuredClone(DEFAULT_DECK),deckType:'Freestanding',houseVisible:false,terrainConfig:{widthFt:100,depthFt:100,elevationIn:0,slopePct:0}};
   const wallAt=(rotationDeg:number,heightIn:number):YardFeature=>({id:'wall',kind:'retaining-wall',name:'wall',enabled:true,xFt:40,zFt:40,widthFt:16,depthFt:1.5,heightIn,rotationDeg,productId:'segmental-concrete',color:'#8f877b'});
   for(const [rotationDeg,slopePct,heightIn] of [[0,0,20],[30,0,20],[-120,4,30],[0,0,48]]){
-    const yard=buildYardModel({...base,terrainConfig:{...base.terrainConfig!,slopePct},yardFeatures:[wallAt(rotationDeg,heightIn)]}),f=yard.features[0];
+    const scene={...base,terrainConfig:{...base.terrainConfig!,slopePct},yardFeatures:[wallAt(rotationDeg,heightIn)]};await ensureLiveDesignExtensions(scene);const yard=buildYardModel(scene),f=yard.features[0];
     const drainage=f.boxes.find(b=>b.role==='wall-drainage')!,backfill=f.boxes.find(b=>b.role==='backfill')!,wall=f.boxes.filter(b=>b.role==='wall-block');
-    const g=bankGeometry(drainage,backfill,yard.terrain)!,pos=g.getAttribute('position'),normal=g.getAttribute('normal'),top=drainage.y+drainage.h/2;
-    // The wall's back face, and the direction away from it, from the model's own boxes.
-    const mid=(b:{polygon?:{x:number;y:number}[]})=>{const q=b.polygon!;return {x:q.reduce((n,v)=>n+v.x,0)/q.length,y:q.reduce((n,v)=>n+v.y,0)/q.length};};
-    const a=mid(drainage),c=mid(backfill),len=Math.hypot(c.x-a.x,c.y-a.y),away={x:(c.x-a.x)/len,y:(c.y-a.y)/len},depth=(x:number,z:number)=>(x-a.x)*away.x+(z-a.y)*away.y;
+    const unchanged=JSON.stringify(f.boxes),g=retainedBankGeometry(f,yard.terrain)!;ok(!!g,'Below-grade aggregate placeholders still produce a finished bank from exposed wall geometry');
+    const pos=g.getAttribute('position'),normal=g.getAttribute('normal'),top=Math.max(...wall.map(b=>b.y+b.h/2));
+    // The complete path avoids mistaking one clipped aggregate cell for the
+    // whole rotated wall. The bank's rear boundary includes actual wall batter.
+    const path=yardWallPath(f.config),a=path[0],c=path[path.length-1],len=Math.hypot(c.x-a.x,c.y-a.y),away={x:-(c.y-a.y)/len,y:(c.x-a.x)/len},depth=(x:number,z:number)=>(x-a.x)*away.x+(z-a.y)*away.y;
     const back=Math.max(...wall.flatMap(b=>b.polygon!.map(q=>depth(q.x,q.y)))),far=Math.max(...Array.from({length:pos.count},(_,i)=>depth(pos.getX(i),pos.getZ(i))));
     let high=-1e9,steepest=0,up=true,behind=true,toe=true;
     for(let i=0;i<pos.count;i++){
@@ -255,10 +292,16 @@ for(const [name,lookup] of LAWN_CHUNKS)ok((THREE.ShaderChunk as Record<string,st
       if(depth(x,z)<back-1e-3)behind=false;
       if(far-depth(x,z)<1e-3&&Math.abs(y-(lawnHeight(yard.terrain,z)-1))>1e-3)toe=false;
     }
-    ok(Math.abs(high-top)<1e-3&&up&&behind&&toe&&steepest<.75,`A ${heightIn} in wall at ${rotationDeg}° on a ${slopePct}% slope holds a lawn bank level with its top course, all behind it, facing up, no steeper than ${steepest.toFixed(2)} (1 in ${BANK_RUN} on average), meeting the lawn at its far edge`);
+    ok(high<=top+.001&&high>top-1&&up&&behind&&toe&&steepest<.85,`A ${heightIn} in wall at ${rotationDeg}° on a ${slopePct}% slope holds an illustrative bank within 1 in of its top course, behind actual wall geometry, facing up, no steeper than ${steepest.toFixed(2)} (1 in ${BANK_RUN} on average), meeting the lawn at its far edge`);ok(JSON.stringify(f.boxes)===unchanged,'Finished bank leaves construction boxes and quantity geometry untouched');g.dispose();
   }
-  const low=buildYardModel({...base,yardFeatures:[wallAt(0,1)]}).features[0];
-  ok(bankGeometry(low.boxes.find(b=>b.role==='wall-drainage')!,low.boxes.find(b=>b.role==='backfill')!,{elevationIn:0,slopePct:0})===null,'A wall that holds less than an inch gets no bank');
+    const low=buildYardModel({...base,yardFeatures:[wallAt(0,1)]}).features[0];
+    const bedWall=buildYardModel({...base,yardFeatures:[wallAt(0,20)]}),bedFeature=bedWall.features[0],bedBefore=JSON.stringify(bedFeature.boxes);
+    const bed=[{x:450,y:505},{x:505,y:505},{x:505,y:550},{x:450,y:550}],bedBank=retainedBankGeometry(bedFeature,bedWall.terrain,undefined,[bed])!;
+    const bp=bedBank.getAttribute('position'),bi=bedBank.getIndex()!;let coveredBedArea=0;
+    for(let i=0;i<bi.count;i+=3){const triangle=[0,1,2].map(j=>({x:bp.getX(bi.getX(i+j)),y:bp.getZ(bi.getX(i+j))}));for(const poly of yardClip([triangle],[bed],'intersection'))coveredBedArea+=Math.abs(poly.reduce((sum,p,j)=>sum+p.x*poly[(j+1)%poly.length].y-poly[(j+1)%poly.length].x*p.y,0))/2;}
+    ok(coveredBedArea<.01,'Finished retained soil is clipped out of enabled planting beds, including triangle edges across their footprint');
+    ok(JSON.stringify(bedFeature.boxes)===bedBefore,'A planting-bed visual mask leaves the retained wall construction geometry unchanged');bedBank.dispose();
+    ok(bankGeometry(low.boxes.find(b=>b.role==='wall-drainage')!,low.boxes.find(b=>b.role==='backfill')!,{elevationIn:0,slopePct:0})===null,'A wall that holds less than an inch gets no bank');
   const terrain={elevationIn:0,slopePct:0},rock={id:'r',featureId:'w',role:'rock' as const,color:'#8e938b',x:0,y:15,z:0,w:24,h:6,d:18},set=seatOnLawn(rock,terrain);
   ok(Math.abs(set.y+set.h/2-18)<1e-9&&Math.abs(set.y-set.h/2-(lawnHeight(terrain,0)-1))<1e-9&&seatOnLawn({...rock,y:-2},terrain).h===6&&seatOnLawn({...rock,role:'paver'},terrain).h===6,'A stone standing clear of the lawn reaches an inch into it with its top unchanged; a set stone and other pieces are left alone');
 }

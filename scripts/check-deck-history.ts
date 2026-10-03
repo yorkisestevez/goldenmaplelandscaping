@@ -56,10 +56,10 @@ const step=(h:DesignHistory<D>,before:D,key:string,at:number)=>recordChange(h,be
 {
   const read=(p:string)=>readFileSync(new URL(`../src/${p}`,import.meta.url),'utf8');
   const hook=read('features/deckcraft/designer/useDeckDesign.ts'),estimateHook=read('features/deckcraft/designer/useDeckEstimate.ts'),page=read('pages/DeckDesigner.tsx'),tools=read('features/deckcraft/designer/DesignTools.tsx');
-  ok(/const update=\(patch:Partial<DeckData>\)=>\{[^}]*source\.current\?\?=editKey\(patch\)/.test(hook),'Every edit names itself for the history');
-  ok(/const replace=\(next:DeckData\)=>\{source\.current=`replace:/.test(hook)&&hook.includes('replace(shared)')&&hook.includes('replace(parseDesign(own))'),'Opened links and going back to your own design are replaceable steps');
-  ok(/if\(kind&&lastData\.current!==data/.test(hook)&&/source\.current=null;setData\(result\.design\)/.test(hook),'Only a named change is recorded; undo and redo record nothing');
-  ok(/setData\(restored\)/.test(hook)&&/setData\(deck\);setEarlierYard/.test(hook),'Restoring the saved design on load is not a step');
+  ok(/source\.current\?\?=editKey\(\w+\)/.test(hook)&&hook.includes('const next=prepareDesignUpdate('),'Every edit names itself for the history');
+  ok(hook.includes('source.current=`replace:')&&hook.includes('applyReplacement(shared)')&&hook.includes('if(restored)applyReplacement(restored)'),'Opened links and going back to your own design are replaceable steps');
+  ok(/if\(kind&&lastData\.current!==data/.test(hook)&&/source\.current=null;dataRef\.current=result\.design;setData\(result\.design\)/.test(hook),'Only a named change is recorded; undo and redo record nothing');
+  ok(/setData\(restored\)/.test(hook)&&/setData\(deck\);dataRef\.current=deck;setEarlierYard/.test(hook),'Restoring the saved design on load is not a step');
   ok(/JSON\.stringify\(lastData\.current\)!==JSON\.stringify\(data\)/.test(hook),'A change that leaves the design as it was is not a step');
   ok(/setData\(prev=>deckReleaseData\(\{\.\.\.prev,lightingSystem:/.test(estimateHook)&&!/\b(update|replace)\(/.test(estimateHook),'The automatic lighting sync never becomes a step');
   ok(page.includes('replace(restored)')&&page.includes('replace(deckReleaseData(structuredClone(DEFAULT_DECK)))')&&!/\bsetData\(/.test(page.replace(/useDeckEstimate\(data,setData\)/,'')),'Import and Start over are undoable; the page never sets the design around the history');

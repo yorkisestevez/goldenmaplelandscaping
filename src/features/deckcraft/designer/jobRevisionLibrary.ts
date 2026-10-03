@@ -1,3 +1,4 @@
+import {validatePoolQuoteInputs} from '../poolQuoteTypes';
 import '../quoteResolutions';
 import {storedPergolaQuote} from '../pergolaQuoteStorage';
 import {cleanPergolaQuote,type PergolaQuoteContext} from '../pergolaPricing';
@@ -10,6 +11,8 @@ import {extrasLayout} from '../extrasLayout';
 import {syncAutoLighting} from '../lightingSystem';
 import {houseRailingReviewFlags} from '../houseRailingClearance';
 import {captureContractorPreset} from './contractorPresets';
+import {hydrateStoredProject,preserveRecoveryText,saveStoredProject} from '../projectStorage';
+import {ensureDesignExtensions,ensureLiveDesignExtensions} from '../designExtensions';
 
 export const JOB_STORAGE_KEY='golden-maple.deck-studio.jobs.v1';
 export const ACTIVE_JOB_KEY='golden-maple.deck-studio.active-job.v1';
@@ -17,14 +20,14 @@ export interface ActiveJobLabel {job:string;revision:string;savedAt:string}
 export function readActiveJobLabel():ActiveJobLabel|null {try{const text=localStorage.getItem(ACTIVE_JOB_KEY);if(!text||text.length>600)return null;const v=JSON.parse(text);if(!v||Object.keys(v).sort().join(',')!=='job,revision,savedAt'||typeof v.job!=='string'||!v.job.trim()||v.job.length>80||typeof v.revision!=='string'||!v.revision.trim()||v.revision.length>80||typeof v.savedAt!=='string'||!Number.isFinite(Date.parse(v.savedAt)))return null;return v;}catch{return null;}}
 export function writeActiveJobLabel(status:ActiveJobLabel):void {localStorage.setItem(ACTIVE_JOB_KEY,JSON.stringify(status));}
 export function clearActiveJobLabel():void {localStorage.removeItem(ACTIVE_JOB_KEY);}
-export const JOB_LIMITS={jobs:20,revisions:60,name:80,bytes:2_000_000,fileBytes:100_000} as const;
+export const JOB_LIMITS={jobs:20,revisions:60,name:80,bytes:4_000_000,fileBytes:100_000,revisionBytes:1_000_000} as const;
 export interface JobRevision {id:string;name:string;savedAt:string;data:DeckData}
 export interface SavedDeckJob {id:string;name:string;revisions:JobRevision[]}
 export interface JobLibrary {format:'golden-maple-deck-jobs';version:1;jobs:SavedDeckJob[]}
 export const emptyJobLibrary=():JobLibrary=>({format:'golden-maple-deck-jobs',version:1,jobs:[]});
-const PRIVATE=['quoteResolutions','pergolaQuoteCosts','materialMarkup','customLaborCost','customOverrides','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf'] as const;
+const PRIVATE=['poolQuoteInputs','quoteResolutions','pergolaQuoteCosts','materialMarkup','customLaborCost','customOverrides','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf'] as const;
 const PERSONAL=['customerName','projectAddress','scopeOfWork'] as const;
-const OPTIONAL='foundationDepthIn houseConfig housePlacement wrap cornerChamfers stairEdgeId stairPath stairRiserCount stairTreadDepthIn level2EdgeId level2FullStep level2Position level2Offset level3 stairOffset stairTurn landingDepthIn lightingZoneEnabled autoLighting catalogueRailingId catalogueAccessories glassMount glassFinish borderFinish pictureFrameOverhangIn houseVisible houseWallHeightIn houseDoorOffset houseDoorWidthIn sceneLighting lightingPreviewOn privacyScreens railSections railDefault yardFeatures terrainConfig yardAllowances permitSite customFront boardColours inlays skirting deckFinishes underDeck deckOutlines deckOutlineOffsets boardLayout boundaryLocks pergola projectKind'.split(' ');
+const OPTIONAL='scenePresentation pools stairTargets foundationDepthIn houseConfig housePlacement wrap cornerChamfers stairEdgeId stairPath stairRiserCount stairTreadDepthIn level2EdgeId level2FullStep level2Position level2Offset level3 stairOffset stairTurn landingDepthIn lightingZoneEnabled autoLighting catalogueRailingId catalogueAccessories glassMount glassFinish borderFinish pictureFrameOverhangIn houseVisible houseWallHeightIn houseDoorOffset houseDoorWidthIn sceneLighting lightingPreviewOn privacyScreens railSections railDefault yardFeatures yardEarthwork terrainConfig yardAllowances permitSite customFront boardColours inlays skirting deckFinishes underDeck deckOutlines deckOutlineOffsets boardLayout boundaryLocks pergola projectKind siteModel landscapeObjects editorOrganization'.split(' ');
 const allowedData=new Set([...Object.keys(DEFAULT_DECK),...OPTIONAL,...PRIVATE]);
 const fail=(s:string):never=>{throw Error(s);};
 const canonical=(v:unknown):string=>Array.isArray(v)?`[${v.map(canonical)}]`:v&&typeof v==='object'?`{${Object.entries(v).filter(([,x])=>x!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,x])=>`${JSON.stringify(k)}:${canonical(x)}`).join(',')}}`:JSON.stringify(v)??'undefined';
@@ -34,7 +37,7 @@ const bytes=(v:unknown)=>new TextEncoder().encode(JSON.stringify(v)).length;
 function safe(value:unknown,depth=0):void {
  if(depth>24)fail('Job library nesting is too deep.');if(value===null||typeof value==='boolean'||typeof value==='string')return;if(typeof value==='number'){if(!Number.isFinite(value))fail('Job numbers must be finite.');return;}if(!value||typeof value!=='object')fail('Use JSON values in a job library.');
  if(Object.getPrototypeOf(value)!==(Array.isArray(value)?Array.prototype:Object.prototype)&&Object.getPrototypeOf(value)!==null)fail('Custom object prototypes are not supported.');if(Object.getOwnPropertySymbols(value).length)fail('Symbol fields are not supported.');const d=Object.getOwnPropertyDescriptors(value);
- if(Array.isArray(value)){if(value.length>1000)fail('A job array is too large.');for(let i=0;i<value.length;i++)if(!Object.hasOwn(d,String(i)))fail('Sparse arrays are not supported.');}
+ if(Array.isArray(value)){if(value.length>2000)fail('A job array is too large.');for(let i=0;i<value.length;i++)if(!Object.hasOwn(d,String(i)))fail('Sparse arrays are not supported.');}
  for(const [k,p] of Object.entries(d)){if(Array.isArray(value)&&k==='length')continue;if(!('value'in p)||!p.enumerable||['__proto__','constructor','prototype'].includes(k)||Array.isArray(value)&&(!/^(0|[1-9]\d*)$/.test(k)||Number(k)>=(value as unknown[]).length))fail('Unsupported job field or accessor.');safe(p.value,depth+1);}
 }
 function object(v:unknown):Record<string,unknown>{if(!v||typeof v!=='object'||Array.isArray(v))fail('Expected a job object.');return v as Record<string,unknown>;}
@@ -51,14 +54,30 @@ export function cleanJobDesign(value:unknown,portable=false):DeckData {
  for(const k of ['materialMarkup','customLaborCost','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf'] as const)if(raw[k]!==undefined&&(typeof raw[k]!=='number'||!Number.isFinite(raw[k])||Number(raw[k])<0||Number(raw[k])>(k==='materialMarkup'?500:1_000_000)))fail(`Invalid private ${k}.`);
  if(raw.customOverrides!==undefined){const pricingOnly={...structuredClone(DEFAULT_DECK),customOverrides:raw.customOverrides} as DeckData;captureContractorPreset(pricingOnly,'Validate private prices',true,'validate');}
  if(raw.pergolaQuoteCosts!==undefined){const v=object(raw.pergolaQuoteCosts);if(Object.keys(v).sort().join(',')!=='key,quote'||typeof v.key!=='string'||v.key.length>30000)fail('Invalid private pergola quote snapshot.');const quote=cleanPergolaQuote(v.quote);if(canonical(quote)!==canonical(v.quote))fail('Invalid private pergola costs.');clean.pergolaQuoteCosts={key:v.key as string,quote} as PergolaQuoteContext;}
+ if(raw.poolQuoteInputs!==undefined&&!validatePoolQuoteInputs(raw.poolQuoteInputs))fail('Invalid private pool prices.');
  if(raw.quoteResolutions!==undefined)clean.quoteResolutions=validateQuoteResolutions(raw.quoteResolutions);
- if(bytes(clean)>JOB_LIMITS.fileBytes)fail('A revision exceeds 100 KB.');return clean;
+ if(bytes(clean)>JOB_LIMITS.revisionBytes)fail('A private revision exceeds 1 MB.');return clean;
 }
 export function parseJobLibrary(value:unknown,portable=false):JobLibrary {
  safe(value);const raw=object(value);keys(raw,['format','version','jobs']);if(raw.format!=='golden-maple-deck-jobs'||raw.version!==1||!Array.isArray(raw.jobs)||raw.jobs.length>JOB_LIMITS.jobs)fail('Unsupported job library or too many jobs.');
  const ids=new Set<string>(),names=new Set<string>();let count=0;
  const jobs=(raw.jobs as unknown[]).map(v=>{const j=object(v);keys(j,['id','name','revisions']);const jobId=id(j.id),jobName=name(j.name);if(ids.has(jobId)||names.has(jobName.toLocaleLowerCase()))fail('Job names and identifiers must be unique.');ids.add(jobId);names.add(jobName.toLocaleLowerCase());if(!Array.isArray(j.revisions)||j.revisions.length<1)fail('A saved job needs at least one revision.');const revNames=new Set<string>();const revisions=(j.revisions as unknown[]).map(v=>{const r=object(v);keys(r,['id','name','savedAt','data']);const revId=id(r.id),revName=name(r.name);if(ids.has(revId)||revNames.has(revName.toLocaleLowerCase()))fail('Revision names and identifiers must be unique.');ids.add(revId);revNames.add(revName.toLocaleLowerCase());if(typeof r.savedAt!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(r.savedAt)||!Number.isFinite(Date.parse(r.savedAt))||new Date(r.savedAt).toISOString()!==r.savedAt)fail('Invalid revision date.');if(++count>JOB_LIMITS.revisions)fail('Keep at most 60 revisions in this library.');return {id:revId,name:revName,savedAt:r.savedAt,data:cleanJobDesign(r.data,portable)};});return {id:jobId,name:jobName,revisions};});
- const library={format:raw.format,version:1,jobs} as JobLibrary;if(bytes(library)>JOB_LIMITS.bytes)fail('The local job library exceeds 2 MB.');return library;
+ const library={format:raw.format,version:1,jobs} as JobLibrary;if(bytes(library)>JOB_LIMITS.bytes)fail('The local job library exceeds 4 MB.');return library;
+}
+/** Complete private working state uses the job validator; public links/exports
+ * retain their separate stripped serializer. Generated preview images are not
+ * durable project input. */
+export function serializePrivateProject(data:DeckData):string {const {generatedImageUrl:_image,isGeneratingImage:_busy,...snapshot}=data;const quote=storedPergolaQuote(data),configuration=cleanJobDesign(JSON.parse(JSON.stringify({...snapshot,...(quote?{pergolaQuoteCosts:quote}:{})})));return JSON.stringify({format:'deckcraft-private-project',version:1,configuration});}
+export function parsePrivateProject(text:string):DeckData {if(new TextEncoder().encode(text).length>1_000_000)fail('A private project exceeds 1 MB.');const raw=JSON.parse(text);safe(raw);const v=object(raw);keys(v,['format','version','configuration']);if(v.format!=='deckcraft-private-project'||v.version!==1)fail('Unsupported private project format.');return cleanJobDesign(v.configuration);}
+let hydrated=false,libraryRevision:number|undefined,unrestoredLibrary:string|undefined;
+export async function hydrateJobLibrary():Promise<{library:JobLibrary;recoveryText?:string;migrated:boolean}>{
+ const restored=await hydrateStoredProject('jobs',[JOB_STORAGE_KEY],async text=>{const raw=JSON.parse(text);if(Array.isArray(raw?.jobs))await Promise.all(raw.jobs.slice(0,JOB_LIMITS.jobs).flatMap((job:unknown)=>Array.isArray((job as SavedDeckJob)?.revisions)?(job as SavedDeckJob).revisions.slice(0,JOB_LIMITS.revisions).map(revision=>ensureDesignExtensions(revision?.data)):[]));return parseJobLibrary(raw);});hydrated=true;libraryRevision=restored.record?.revision??0;unrestoredLibrary=restored.unrestoredText;
+ const library=restored.record?parseJobLibrary(JSON.parse(restored.record.json)):emptyJobLibrary();await Promise.all(library.jobs.flatMap(job=>job.revisions.map(revision=>ensureLiveDesignExtensions(revision.data))));
+ return {library,...(unrestoredLibrary!==undefined?{recoveryText:unrestoredLibrary}:{}),migrated:restored.migrated};
+}
+export async function persistJobLibrary(next:JobLibrary,{replaceUnrestored=false}:{replaceUnrestored?:boolean}={}):Promise<JobLibrary>{
+ safe(next);await Promise.all(next.jobs.flatMap(job=>job.revisions.map(revision=>ensureDesignExtensions(revision.data))));const clean=parseJobLibrary(next);if(!hydrated)await hydrateJobLibrary();if(unrestoredLibrary!==undefined){if(!replaceUnrestored)fail('The previous library is preserved. Save its recovery file before replacing it explicitly.');await preserveRecoveryText('jobs',unrestoredLibrary,'Library explicitly replaced after failed restore.');}
+ const record=await saveStoredProject('jobs',JSON.stringify(clean),{...(unrestoredLibrary===undefined?{expectedRevision:libraryRevision}:{})});libraryRevision=record.revision;unrestoredLibrary=undefined;return clean;
 }
 export function parseJobText(text:string):JobLibrary {if(new TextEncoder().encode(text).length>JOB_LIMITS.fileBytes)fail('Choose a portable job library smaller than 100 KB.');return parseJobLibrary(JSON.parse(text),true);}
 const newId=(prefix:string)=>`${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,9)}`;

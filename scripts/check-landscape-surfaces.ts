@@ -1,0 +1,46 @@
+import 'fake-indexeddb/auto';
+import {encodeDesignLink,decodeDesignLink,designLinkFromHash} from '../src/features/deckcraft/designLink';
+import assert from 'node:assert/strict';
+import {writeFileSync,readFileSync,mkdirSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {newLandscapeObject} from '../src/features/deckcraft/landscapeCatalogue';
+import {LANDSCAPE_SURFACES,puttingCupWorld,landscapeSurfaceDepth} from '../src/features/deckcraft/landscapeSurfaces';
+import {validateLandscapeObjects} from '../src/features/deckcraft/landscapeTypesRuntime';
+import {activePuttingCups,landscapeBedAreas,landscapeTakeoff,landscapeQuoteSections} from '../src/features/deckcraft/landscapeModelRuntime';
+import {createLandscapeSurfaceMaterial} from '../src/features/deckcraft/components/viewer3d/landscapeSurfaceMaterial';
+import {landscapeBedGeometry} from '../src/features/deckcraft/components/viewer3d/Landscape3D';
+import {ensureDesignExtensions} from '../src/features/deckcraft/designExtensions';
+import {serializeDeckReleaseDesign,parseDeckReleaseDesign,deckReleaseData} from '../src/features/deckcraft/deckRelease';
+import {exportProjectBundle,importProjectBundle} from '../src/features/deckcraft/projectBundle';
+import {assertUnlockedChanges} from '../src/features/deckcraft/editorOrganization';
+import {createDeckAgentController,type DeckAgentHostState} from '../src/features/deckcraft/designer/deckAgentController';
+import {parseSiteInstruction} from '../src/features/deckcraft/designer/siteVoiceCommands';
+import {createPlanningPool} from '../src/features/deckcraft/poolAssembly';
+let checks=0;const ok=(v:unknown,label='')=>{assert.ok(v,label);checks++;},close=(a:number,b:number)=>ok(Math.abs(a-b)<1e-5,`${a} ≈ ${b}`);
+async function main(){
+ const all=LANDSCAPE_SURFACES.map((s,i)=>newLandscapeObject(s.id,'finish-'+i,0,0));ok(validateLandscapeObjects(all));
+ const legacy={...all[0],widthIn:120,depthIn:120};close(landscapeTakeoff([legacy]).mulchYd3,100*3/324);
+ const rock={...newLandscapeObject('river-rock-bed','rock',0,0),widthIn:120,depthIn:120,surfaceDepthIn:4,baseDepthIn:6,edging:true};
+ const green={...newLandscapeObject('putting-green','green',60,0),widthIn:120,depthIn:120,baseDepthIn:4,edging:true};
+ const q=landscapeTakeoff([rock,green]);close(q.bedAreaSqft,150);close(q.mulchYd3,0);close(q.aggregateYd3!,50*4/324);close(q.turfAreaSqft!,100);close(q.baseYd3!,(50*6+100*4)/324);close(q.edgingLf,60);ok(q.cupCount===1);
+ close(landscapeTakeoff([rock,{...green,enabled:false}]).aggregateYd3!,100*4/324);
+ for(const s of LANDSCAPE_SURFACES){const o={...newLandscapeObject(s.id,s.id,0,0),widthIn:120,depthIn:120},takeoff=landscapeTakeoff([o]);close(takeoff.bedAreaSqft,100);close(takeoff.mulchYd3,s.type==='mulch'?100*landscapeSurfaceDepth(o)/324:0);close(takeoff.aggregateYd3??0,s.type==='aggregate'?100*landscapeSurfaceDepth(o)/324:0);close(takeoff.turfAreaSqft??0,s.type==='turf'?100:0);const resource=createLandscapeSurfaceMaterial(s.id);ok((resource.material.map?.image as {width:number})?.width===256);ok(resource.material.normalMap&&resource.material.roughnessMap);ok(resource.material.map!.repeat.x>0);let disposed=0;resource.material.addEventListener('dispose',()=>disposed++);resource.material.map!.addEventListener('dispose',()=>disposed++);resource.material.normalMap!.addEventListener('dispose',()=>disposed++);resource.material.roughnessMap!.addEventListener('dispose',()=>disposed++);resource.dispose();ok(disposed===4);}
+ for(const invalid of [{...green,baseDepthIn:-1},{...green,surfaceDepthIn:NaN},{...rock,puttingCups:[{x:0,z:0}]},{...green,puttingCups:[{x:59,z:0}]},{...green,puttingCups:[{x:0,z:0},{x:1,z:0}]},{...green,puttingCups:[{x:0,z:0,cost:2}]}])ok(!validateLandscapeObjects([invalid]));
+ const rotated={...green,rotationDeg:90,puttingCups:[{x:24,z:12}]},cup=puttingCupWorld(rotated,rotated.puttingCups[0]);close(cup.x,48);close(cup.z,24);ok(validateLandscapeObjects([rotated]));
+ const blocker={...rock,id:'blocker',widthIn:12,depthIn:12,xIn:green.xIn,zIn:green.zIn};ok(activePuttingCups(green,landscapeBedAreas([green,blocker]).get(green.id)!).length===0);ok(landscapeTakeoff([green,blocker]).warnings.some(w=>w.includes('putting cup')));
+ const pending=landscapeQuoteSections([all[7]],landscapeTakeoff([all[7]]));ok(pending.some(s=>s.id.includes('base-pending')));ok(pending.every(s=>s.amountCents===null));ok(landscapeQuoteSections([rock,green],q).some(s=>s.quantity===1&&s.unit==='ea'));
+ const data={...structuredClone(DEFAULT_DECK),landscapeObjects:[rock,green],siteModel:{version:1 as const,points:[{id:'a',xIn:-200,zIn:-200,elevationIn:-60},{id:'b',xIn:200,zIn:-200,elevationIn:-20},{id:'c',xIn:200,zIn:200,elevationIn:60},{id:'d',xIn:-200,zIn:200,elevationIn:20}],grading:[]}};
+ await ensureDesignExtensions(data);const geom=landscapeBedGeometry(data,landscapeBedAreas([rock],data).get('rock')!,4),positions=geom.getAttribute('position');for(let i=0;i<positions.count;i++)ok(Math.abs(positions.getY(i)*12-(positions.getX(i)*12*.1+positions.getZ(i)*12*.2+4.05))<1e-4);geom.dispose();
+ const round=parseDeckReleaseDesign(serializeDeckReleaseDesign(data));assert.deepEqual(round.landscapeObjects,data.landscapeObjects);checks++;assert.deepEqual((await importProjectBundle(await exportProjectBundle(data))).landscapeObjects,data.landscapeObjects);checks++;
+ const shared=await decodeDesignLink(designLinkFromHash(new URL(await encodeDesignLink(data,'https://example.test')).hash)!);assert.deepEqual(shared.landscapeObjects,data.landscapeObjects);checks++;
+ const pool=createPlanningPool({id:'pool-hole',xIn:0,zIn:0,copingTopElevationIn:0}),poolData={...data,pools:[pool]},poolGreen={...green,xIn:0};await ensureDesignExtensions(poolData);close(landscapeTakeoff([poolGreen],poolData).turfAreaSqft!,0);ok(activePuttingCups(poolGreen,landscapeBedAreas([poolGreen],poolData).get('green')!).length===0);
+ const locked={...data,editorOrganization:{layers:[],groups:[],objects:[{id:'rock',layerId:'',locked:true}]}};assert.throws(()=>assertUnlockedChanges(locked,{...locked,landscapeObjects:[{...rock,surfaceDepthIn:6},green]}));checks++;
+ let state:DeckAgentHostState={data:deckReleaseData(data),view:'plan',openSections:[],canUndo:false,canRedo:false,ready:true},commits=0,previous=state.data;
+ const api=createDeckAgentController({getState:()=>state,commitDesign:next=>{previous=state.data;state={...state,data:next,canUndo:true};commits++;},undo:()=>{state={...state,data:previous,canUndo:false};},redo:()=>{},setView:()=>{},openSection:()=>{},waitForRender:async()=>{}}),snapshot=api.read(),instruction=parseSiteInstruction('set river rock material to white stone',snapshot);ok(instruction&&'command'in instruction);if(!instruction||!('command'in instruction))throw Error('Voice surface edit unavailable');
+ const request={id:'finish-preview',expectedRevision:snapshot.revision,commands:[instruction.command]},preview=await api.preview(request);ok(preview.ok,JSON.stringify(preview));ok(commits===0);ok((await api.execute({...request,id:'finish-apply'})).ok);ok(commits===1);ok(state.data.landscapeObjects?.[0].assetId==='white-stone-bed');ok(!(await api.preview({...request,id:'stale-finish'})).ok);ok((await api.execute({id:'finish-undo',expectedRevision:api.read().revision,commands:[{type:'history.undo'}]})).ok);assert.deepEqual(state.data.landscapeObjects,data.landscapeObjects);checks++;api.dispose();
+ if(process.argv.includes('--example')){const output=resolve('../../outputs/landscape-surfaces');mkdirSync(output,{recursive:true});const source={...structuredClone(DEFAULT_DECK),houseVisible:false,stairFlights:0,yardFeatures:[],pools:[],siteModel:{version:1,points:[{id:'sw',xIn:-120,zIn:-120,elevationIn:0},{id:'se',xIn:900,zIn:-120,elevationIn:0},{id:'ne',xIn:900,zIn:960,elevationIn:0},{id:'nw',xIn:-120,zIn:960,elevationIn:0}],grading:[]},landscapeObjects:[],scenePresentation:{viewMode:'finished',cameras:[{id:'material-garden',name:'Material garden',positionIn:[1000,760,1080],targetIn:[340,0,410],fov:42},{id:'green-detail',name:'Putting green and stone detail',positionIn:[730,250,940],targetIn:[430,0,600],fov:42}],activeCameraId:'material-garden'}} as import('../src/features/deckcraft/types').DeckData;const features=LANDSCAPE_SURFACES.map((s,i)=>({...newLandscapeObject(s.id,'cover-'+i,150+(i%3)*180,240+Math.floor(i/3)*210),widthIn:156,depthIn:180,baseDepthIn:s.type==='turf'?4:2,edging:true}));source.landscapeObjects=[...(source.landscapeObjects??[]).filter((o:{kind:string})=>o.kind!=='bed'),...features];await ensureDesignExtensions(source);writeFileSync(resolve(output,'landscape-material-garden.raw.json'),JSON.stringify(source,null,2));writeFileSync(resolve(output,'landscape-material-garden.json'),serializeDeckReleaseDesign(source));writeFileSync(resolve(output,'landscape-material-garden.url.txt'),(await encodeDesignLink(source,'http://127.0.0.1:4329')).replace('/deck-designer#','/deck-designer/#'));writeFileSync(resolve(output,'landscape-material-garden.deckcraft'),new Uint8Array(await (await exportProjectBundle(source)).arrayBuffer()));}
+ console.log(`Landscape surface checks passed: ${checks}`);
+}main().catch(e=>{console.error(e);process.exitCode=1;});
+
+

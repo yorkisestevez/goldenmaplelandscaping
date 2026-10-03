@@ -7,5 +7,5 @@ import {createQuoteAwarePricingReceiver} from './quoteAwarePricingReceiver';
  */
 const scope=self as unknown as {postMessage:(result:PricingResult)=>void;addEventListener:(type:'message',listener:(event:MessageEvent<PricingRequest>)=>void)=>void};
 const receive=createPricingQueue(result=>scope.postMessage(result),step=>setTimeout(step,0));
-const quoteAware=createQuoteAwarePricingReceiver(receive,()=>import('../quoteResolutions'),job=>job.items.forEach(item=>scope.postMessage({job:job.job,key:item.key,figures:null})));
+const quoteAware=createQuoteAwarePricingReceiver(receive,data=>Promise.all([import('../designExtensions').then(module=>module.ensureLiveDesignExtensions(data)),...(data.quoteResolutions?.length?[import('../quoteResolutions')]:[])]),job=>job.items.forEach(item=>scope.postMessage({job:job.job,key:item.key,figures:null})));
 scope.addEventListener('message',event=>quoteAware(event.data));

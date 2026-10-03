@@ -1,14 +1,17 @@
+import {usesPhysicalElevations} from '../elevationDatum';
 import type {DeckData} from '../types';
 import type {DeckTakeoff} from '../deckTakeoff';
 import {deckExportMeshes,extrudePolygon} from '../designExports';
 import {type DrawItem,type LayerId,type Pt,feetInches,fitScale,itemPoints} from './drawingTypes';
+import {buildElevationProfile,elevationLabel} from '../elevationProfiles';
+import {sampleSiteHeight} from '../siteSurface';
 import {type ElevationView,type Solid,mergeLines,project,viewLines} from './hiddenLines';
 
 /**
  * Sheet A-1: the front, left and right elevations, projected from the same solids as the 3D model and the OBJ/DXF
  * export (designExports.ts), with hidden lines removed. Each level's decking is drawn as one slab (the boards'
  * outline); hardware too small to read at scale is left out. The house is drawn for context, cut where it runs past
- * the deck. Grade is level at y = 0, as the design assumes.
+ * the deck. Ground follows each marked datum section; legacy drawings retain the zero-grade assumption.
  */
 const PARTS:[RegExp,LayerId,LayerId?][]=[
   [/^house_/,'A-HOUS'],
@@ -28,7 +31,7 @@ const TITLES:Record<ElevationView,string>={front:'FRONT ELEVATION',left:'LEFT SI
 
 /** The design's solids for the elevations, each on its layer. */
 export function elevationSolids(data:DeckData,model:DeckTakeoff):Solid[]{
-  const solids:Solid[]=[],boards=new Set<number>();
+  const physical=usesPhysicalElevations(data),solids:Solid[]=[],boards=new Set<number>();
   model.levels.forEach((l,i)=>{
     const slab=(outline:{x:number;y:number}[])=>extrudePolygon(`level_${i+1}_decking`,outline,(p,t)=>({x:p.x+l.offset.x,y:l.top-1+t,z:p.y+l.offset.z}));
     // An outline the slab cannot be made from falls back to the level's own boards.
@@ -39,7 +42,7 @@ export function elevationSolids(data:DeckData,model:DeckTakeoff):Solid[]{
     const board=/^level_(\d+)_board_\d+$/.exec(m.name);
     if(board){if(boards.has(Number(board[1])))solids.push({vertices:m.vertices,faces:m.faces,layer:'A-DECK-FNSH'});continue;}
     const part=PARTS.find(([re])=>re.test(m.name));
-    if(part)solids.push({vertices:m.vertices,faces:m.faces,layer:part[1],...(part[2]?{belowGrade:part[2]}:{})});
+    if(part){const foundation=/^level_(\d+)_(concrete_pier|pile_shaft|pile_helix|deck_block)_(\d+)$/.exec(m.name),datum=foundation?model.foundationSupports?.find(s=>s.levelIndex===Number(foundation[1])-1&&s.supportIndex===Number(foundation[3])):undefined;solids.push({vertices:m.vertices,faces:m.faces,layer:part[1],...(part[2]?{belowGrade:part[2]}:{}),...(physical?{gradeElevationIn:datum?.gradeElevationIn??-Infinity}:{})});}
   }
   return solids;
 }
@@ -70,7 +73,7 @@ function bounds(items:DrawItem[]){
 
 /** One elevation, in sheet orientation: x = u across the view, y = −v (down the page), grade at y = 0. */
 function elevation(data:DeckData,model:DeckTakeoff,solids:Solid[],view:ElevationView,withGuard:boolean,withFooting:boolean):DrawItem[]{
-  const lines=viewLines(solids,view),deck=lines.filter(l=>l.layer!=='A-HOUS'),house=lines.filter(l=>l.layer==='A-HOUS');
+  const physical=usesPhysicalElevations(data),lines=viewLines(solids,view),deck=lines.filter(l=>l.layer!=='A-HOUS'),house=lines.filter(l=>l.layer==='A-HOUS');
   const us=deck.flatMap(l=>[l.a.x,l.b.x]),uMin=Math.min(...us),uMax=Math.max(...us);
   const tops=model.levels.map(l=>l.top),highest=Math.max(...tops),cap=highest+(view==='front'?HOUSE_ABOVE:Math.max(model.railing.height,36)+12);
   const box={x0:uMin-HOUSE_SIDE,x1:uMax+HOUSE_SIDE,y0:-1e6,y1:cap};
@@ -86,8 +89,10 @@ function elevation(data:DeckData,model:DeckTakeoff,solids:Solid[],view:Elevation
     if(hv>cap+1)items.push(breakLine({x:Math.max(h0,box.x0),y:-cap},{x:Math.min(h1,box.x1),y:-cap}));
     left=Math.min(left,Math.max(h0,box.x0));right=Math.max(right,Math.min(h1,box.x1));
   }
-  items.push({kind:'line',layer:'C-TOPO',a:{x:left-24,y:0},b:{x:right+24,y:0}});
-  items.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:left-28,y:1},text:'GRADE',height:.08,anchor:'end'});
+  const supports=model.levels.flatMap(l=>l.supports),reference=view==='front'?Math.max(0,...supports.map(p=>p.z)):view==='left'?Math.min(0,...supports.map(p=>p.x)):Math.max(...supports.map(p=>p.x),data.width*12);
+  const atU=(u:number)=>view==='front'?{x:u,y:reference}:{x:reference,y:view==='left'?u:-u};
+  if(physical){const profile=buildElevationProfile(data,{id:`elevation-${view}`,name:view,segments:[{a:atU(left-24),b:atU(right+24)}]});for(const [key,layer] of [['existingIn','C-EXST'],['proposedIn','C-PGRD']] as const){let previous:typeof profile.points[number]|undefined;for(const p of profile.points){if(p[key]===null){previous=undefined;continue;}if(previous&&previous[key]!==null)items.push({kind:'line',layer,a:{x:left-24+previous.stationIn,y:-previous[key]!},b:{x:left-24+p.stationIn,y:-p[key]!}});previous=p;}}items.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:left,y:20},text:`GROUND REFERENCE SECTION at ${view==='front'?'Z':'X'}=${reference.toFixed(2)} in; datum 0.00; coverage gaps pending`,height:.06,anchor:'start'});}
+  else {items.push({kind:'line',layer:'C-TOPO',a:{x:left-24,y:0},b:{x:right+24,y:0}});items.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:left-28,y:1},text:'GRADE',height:.08,anchor:'end'});}
 
   // Datums on the front view: the walking surface of each level. Every view dimensions the main deck's height.
   const main=model.levels[0],distinct=[...new Set(tops.map(t=>Math.round(t*2)/2))].sort((p,q)=>p-q);
@@ -98,16 +103,25 @@ function elevation(data:DeckData,model:DeckTakeoff,solids:Solid[],view:Elevation
     const at=model.levels.filter(l=>Math.abs(l.top-t)<.26),surface=at.find(l=>l.kind!=='landing'&&l.kind!=='winder');
     const label=surface?surface===main?'DECK':`LEVEL ${(surface.index??1)+1} DECK`:at[0]?.kind==='winder'?'WINDER':'LANDING';
     items.push({kind:'line',layer:'A-ANNO-DIMS',a:{x:uMax+8,y:-t},b:{x:datum+60,y:-t}});
-    items.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:datum,y:-t-2},text:`${label} +${feetInches(t)}`,height:.07,anchor:'start'});
+    items.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:datum,y:-t-2},text:physical?`${label} ${elevationLabel(t)} datum`:`${label} +${feetInches(t)}`,height:.07,anchor:'start'});
   }
-  items.push({kind:'dim',layer:'A-ANNO-DIMS',a:{x:uMax,y:0},b:{x:uMax,y:-main.top},offset:30,text:feetInches(main.top)});
+  const clearanceAt=atU(uMax),localGrade=physical?sampleSiteHeight(data,clearanceAt.x,clearanceAt.y):0;
+  if(localGrade!==undefined)items.push({kind:'dim',layer:'A-ANNO-DIMS',a:{x:uMax,y:-localGrade},b:{x:uMax,y:-main.top},offset:30,text:`${feetInches(main.top-localGrade)}${physical?' local clearance':''}`});
+  else items.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:uMax+30,y:-main.top},text:'GROUND CLEARANCE PENDING',height:.07,anchor:'start'});
   if(withGuard&&data.railingType!=='None'&&model.railing.rails.length+model.railing.glass.length>0){
     items.push({kind:'dim',layer:'A-ANNO-DIMS',a:{x:u0,y:-main.top},b:{x:u0,y:-(main.top+model.railing.height)},offset:-24,text:`${feetInches(model.railing.height)} guard`});
   }
   const foundationDepth=data.foundation==='Deck Blocks'?0:data.foundationDepthIn??48;
   if(withFooting&&foundationDepth){
-    const [s]=model.levels.flatMap(l=>l.supports).map(p=>project(view,p).u).sort((p,q)=>p-q);
-    if(s!==undefined)items.push({kind:'dim',layer:'A-ANNO-DIMS',a:{x:s-6,y:0},b:{x:s-6,y:foundationDepth},offset:14,text:`${feetInches(foundationDepth)} below grade`});
+    if(physical){
+      // The footing is projected from its own location, not the ground section's X/Z.
+      const foundation=model.foundationSupports.filter(f=>f.gradeElevationIn!==null&&f.bottomElevationIn!==null).sort((a,b)=>project(view,{x:a.x,y:0,z:a.z}).u-project(view,{x:b.x,y:0,z:b.z}).u)[0];
+      if(foundation){const s=project(view,{x:foundation.x,y:0,z:foundation.z}).u;items.push({kind:'dim',layer:'A-ANNO-DIMS',a:{x:s-6,y:-foundation.gradeElevationIn!},b:{x:s-6,y:-foundation.bottomElevationIn!},offset:14,text:`${feetInches(foundation.gradeElevationIn!-foundation.bottomElevationIn!)} below projected support local grade`});}
+      else items.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:uMin,y:foundationDepth+8},text:'FOUNDATION DEPTH DATUM PENDING',height:.07,anchor:'start'});
+    }else{
+      const [s]=model.levels.flatMap(l=>l.supports).map(p=>project(view,p).u).sort((p,q)=>p-q);
+      if(s!==undefined)items.push({kind:'dim',layer:'A-ANNO-DIMS',a:{x:s-6,y:0},b:{x:s-6,y:foundationDepth},offset:14,text:`${feetInches(foundationDepth)} below grade`});
+    }
   }
   const below=foundationDepth+12;
   items.push({kind:'dim',layer:'A-ANNO-DIMS',a:{x:u0,y:below},b:{x:u1,y:below},offset:14,text:`${feetInches(u1-u0)} ${view==='front'?'overall width':'overall depth'}`});

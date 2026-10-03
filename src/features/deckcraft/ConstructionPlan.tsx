@@ -1,7 +1,10 @@
+import {lazy,Suspense} from 'react';
+const LandscapePlanLayer=lazy(()=>import('./designer/LandscapePlanLayer'));
 import {pergolaLayout} from './pergolaLayout';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {DeckData} from './types';
 import {sceneBounds} from './components/viewer3d/sceneBounds';
+import {elevationLabel,usesPhysicalElevations} from './elevationDatum';
 import type {YardModel} from './yardModel';
 import {getHouseContact} from './houseContact';
 import {getHousePlacement} from './housePlacement';
@@ -50,6 +53,7 @@ export function planFrame(model:DeckTakeoff,{data,yard,variant='contractor',lege
   const b=sceneBounds(model),pergola=data?pergolaLayout(data,model,[],false):null;
   for(const p of pergola?.footprint??[]){b.minX=Math.min(b.minX,p.x);b.maxX=Math.max(b.maxX,p.x);b.minZ=Math.min(b.minZ,p.y);b.maxZ=Math.max(b.maxZ,p.y);}
   for(const p of yard?.features.filter(f=>!f.excluded).flatMap(f=>f.footprints.flat())??[]){b.minX=Math.min(b.minX,p.x);b.maxX=Math.max(b.maxX,p.x);b.minZ=Math.min(b.minZ,p.y);b.maxZ=Math.max(b.maxZ,p.y);}
+  if(variant==='site')for(const o of data?.landscapeObjects?.filter(o=>o.enabled)??[]){const reach=Math.hypot(o.widthIn,o.depthIn)/2;b.minX=Math.min(b.minX,o.xIn-reach);b.maxX=Math.max(b.maxX,o.xIn+reach);b.minZ=Math.min(b.minZ,o.zIn-reach);b.maxZ=Math.max(b.maxZ,o.zIn+reach);}
   const site=variant==='site',house=data&&data.houseVisible!==false?getHousePlacement(data):null,wrap=data?activeWrap(data):null;
   const reach=site?Math.max(SITE_REACH,...(wholeHouse&&house?[b.minX-house.x0,house.x1-b.maxX]:[])):48;
   // A wrap-around runs back along the house side walls, so draw the house deep enough to show them.
@@ -104,6 +108,7 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
    {/* The contractor plan's grid shows on screen only (the page's CSS shows it; the PDF's picture has no CSS): a 1 ft
        grid, 5 ft lines bolder, over the yard. The site plan's is always drawn. */}
    {site?<rect className="dd-plan-grid" x={frame.x} y={0} width={frame.w} height={frame.y+frame.h} fill="url(#dd-grid-5)"/>:<rect className="dd-plan-grid" display="none" x={left-40} y={0} width={right-left+80} height={b.maxZ+18} fill="url(#dd-grid-5)"/>}
+   {site&&data?.landscapeObjects?.length&&<Suspense fallback={null}><LandscapePlanLayer data={data}/></Suspense>}
    {house&&!site&&<g aria-label="House">
      {blockPolys?blockPolys.map((poly,i)=><polygon key={i} points={poly.map(p=>`${p.x},${p.y}`).join(' ')} fill="url(#dd-house-hatch)" stroke="#6d675c" strokeWidth=".8"/>)
        :<rect x={house.x0} y={-band} width={house.x1-house.x0} height={band} fill="url(#dd-house-hatch)" stroke="#6d675c" strokeWidth=".8"/>}
@@ -120,7 +125,7 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
      <text x={(hx0+hx1)/2} y={-band/2+3} textAnchor="middle" fontSize="9" fontWeight="600" fill="#14261c" paintOrder="stroke" stroke="#fbfbf8" strokeWidth="3">{`HOUSE · ${feet(house.widthIn)} wide`}</text>
    </g>}
    {yard?.boxes.filter(p=>!p.renderDuplicate&&['paver','wall-block','wall-cap','water'].includes(p.role)).map(p=>p.renderContours?<path key={p.id} d={p.renderContours.map(poly=>'M'+poly.map(v=>`${v.x},${v.y}`).join(' L')+' Z').join(' ')} fill={p.color} fillRule="nonzero" stroke="#66695d" strokeWidth=".2"/>:<polygon key={p.id} points={p.polygon?.map(v=>`${v.x},${v.y}`).join(' ')} fill={p.color} stroke="#66695d" strokeWidth=".2"/>)}
-   {yard?.features.filter(f=>!f.excluded).map(f=><text key={f.config.id} x={f.config.xFt*12} y={f.config.zFt*12} textAnchor="middle" fontSize="7" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2" fill="#333">{f.config.name}</text>)}
+   {yard?.features.filter(f=>!f.excluded).map(f=><text key={f.config.id} x={f.config.xFt*12} y={f.config.zFt*12} textAnchor="middle" fontSize="7" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2" fill="#333">{f.config.name}{(data&&usesPhysicalElevations(data))?` · finish ${elevationLabel(f.topIn)}`:''}</text>)}
    {model.levels.map((l,i)=><g key={i}>
      <polygon points={l.footprint.outline.map(p=>`${p.x+l.offset.x},${p.y+l.offset.z}`).join(' ')} fill={l.kind==='winder'?'none':'#e5d7bb'} stroke="#7c6b51" strokeWidth="1"/>
      {l.boards.map((board,j)=>{const cut=board as typeof board&{width?:number;polygon?:{x:number;y:number}[];role?:string;layoutColour?:string},width=cut.width??5.5;
@@ -132,7 +137,7 @@ export default function ConstructionPlan({model,yard,data,variant='contractor',w
      {(l.inlays??[]).filter(p=>p.status==='ok').map((p,k)=>{const c=p.outline.reduce((s,v)=>({x:s.x+v.x/p.outline.length,y:s.y+v.y/p.outline.length}),{x:0,y:0});return <g key={`in${k}`} aria-label={`Inlay ${k+1}`}>{p.pieces.map((piece,j)=><polygon key={j} points={piece.map(v=>`${v.x+l.offset.x},${v.y+l.offset.z}`).join(' ')} fill="none" stroke="#6b4521" strokeWidth="1"/>)}<text x={c.x+l.offset.x} y={c.y+l.offset.z+2.5} textAnchor="middle" fontSize="7" fontWeight="600" fill="#3d2a1c" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{`Inlay ${k+1}`}</text></g>;})}
      {!site&&l.beams.map((j,k)=><line key={k} x1={j.a.x} y1={j.a.z} x2={j.b.x} y2={j.b.z} stroke="#826947" strokeWidth="1"/>)}
      {!site&&l.supports.map((p,k)=><circle key={k} cx={p.x} cy={p.z} r={4} fill="#545b54"/>)}
-     <text x={l.offset.x+10} y={l.offset.z+15} fontSize="7" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2" fill="#444">{`${l.kind==='landing'?'Landing':l.kind==='winder'?'Winder':'Deck '+((l.index??i)+1)} · ${l.top.toFixed(1)} in above grade`}</text>
+     <text x={l.offset.x+10} y={l.offset.z+15} fontSize="7" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2" fill="#444">{`${l.kind==='landing'?'Landing':l.kind==='winder'?'Winder':'Deck '+((l.index??i)+1)} · ${l.top.toFixed(1)} in ${(data&&usesPhysicalElevations(data))?'relative to datum':'above grade'}`}</text>
    </g>)}
    {!site&&hips.map((h,i)=>{const mx=(h.a.x+h.b.x)/2,my=(h.a.y+h.b.y)/2;return <g key={`hip${i}`} aria-label={`Hip at ${h.angleDeg.toFixed(0)} degrees`}><line x1={h.a.x} y1={h.a.y} x2={h.b.x} y2={h.b.y} stroke="#5b3d1c" strokeWidth="2.4" strokeDasharray="6 3"/><text x={mx+(h.side==='right'?6:-6)} y={my} textAnchor={h.side==='right'?'start':'end'} fontSize="6.5" fontWeight="600" fill="#5b3d1c" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2.5">{Math.abs(h.angleDeg-45)<.5?'Hip · 45° mitre':`Hip · ${h.angleDeg.toFixed(0)}° to back wall`}</text></g>;})}
    {!site&&zones.map(z=>{const cx=z.outline.reduce((n,p)=>n+p.x,0)/z.outline.length,cy=z.outline.reduce((n,p)=>n+p.y,0)/z.outline.length;return <g key={z.id} aria-label={`${z.label}: joist direction`}><line x1={cx-z.joistDir.x*14} y1={cy-z.joistDir.y*14} x2={cx+z.joistDir.x*14} y2={cy+z.joistDir.y*14} stroke="#5f5a50" strokeWidth="1.2" markerEnd="url(#dd-arrow)"/><text x={cx+Math.abs(z.joistDir.y)*8} y={cy+Math.abs(z.joistDir.x)*10+2} fontSize="6" fill="#4a453d" paintOrder="stroke" stroke="#faf8f1" strokeWidth="2">{`${z.label} · joists`}</text></g>;})}

@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {copyFileSync,existsSync,readFileSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
@@ -9,6 +10,9 @@ import {extrasLayout} from '../src/features/deckcraft/extrasLayout';
 import {catalogueAccessoryLayout} from '../src/features/deckcraft/catalogueAccessories';
 import {deckExportMeshes} from '../src/features/deckcraft/designExports';
 import type {DeckData} from '../src/features/deckcraft/types';
+import type {DeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {usesPhysicalElevations} from '../src/features/deckcraft/elevationDatum';
+import {stairTargetId} from '../src/features/deckcraft/stairTargets';
 import {legacyScenarios} from './deck-legacy-scenarios';
 
 // Existing designs must build, draw and price exactly as before while the house/wrap
@@ -24,13 +28,48 @@ const scenarios=legacyScenarios();
 const stable=(value:unknown)=>JSON.stringify(value,(_k,v)=>typeof v==='number'?(Object.is(v,-0)||Math.abs(v)<5e-7?0:Math.round(v*1e6)/1e6):v);
 const digest=(value:unknown)=>createHash('sha256').update(stable(value)).digest('hex').slice(0,20);
 
+const LEGACY_SITE_NOTE='Current crew/excavation floors applied once across all yard features. No separate mobilization fee. Top-up is not separately identifiable for mixed wall/site-condition allowances; coordinate shared operations with the deck scope.';
+/** The recorded golden predates optional wall/site/landscape scaffolding. Verify
+ * that scaffolding is exactly inert for legacy decks, then fingerprint every
+ * pre-existing figure, quantity and geometry against the unchanged golden. */
+function legacyPriced(estimate:ReturnType<typeof calculateEstimate>,data:DeckData){
+ assert.ok(!data.yardFeatures?.length&&!data.siteModel&&!data.landscapeObjects?.length,'The legacy price projection covers deck-only designs');
+ const {model:_model,flags:_flags,...priced}=estimate,copy=structuredClone(priced);
+ const newQuantities=['geogridSqft','geogridOrderSqft','geogridPlanningSqft','geogridPlanningOrderSqft','wallFilterFabricSqft','siteEarthworkFillYd3','sharedExcavationYd3','deckFoundationExcavationYd3'] as const;
+ for(const quantity of newQuantities)for(const record of [copy.yardModel.quantities,copy.yardTakeoff.quantities]){assert.equal(record[quantity],0,`New ${quantity} must remain zero on a legacy deck`);delete (record as Partial<typeof record>)[quantity];}
+ const yard=copy.yardModel;for(const key of ['formationRegions','sharedExcavationRegions'] as const){assert.deepEqual(yard[key],[],`New ${key} must be empty on a legacy deck`);delete (yard as Partial<typeof yard>)[key];}for(const key of ['sharedExcavationYd3','deckFoundationExcavationYd3'] as const){assert.equal(yard[key],0);delete (yard as Partial<typeof yard>)[key];}assert.equal(yard.foundationExcavationPending,false);delete (yard as Partial<typeof yard>).foundationExcavationPending;
+ const clearance=copy.yardModel.deckClearance;assert.equal(clearance.stairCoverageComplete,true);assert.equal(clearance.framingCoverageComplete,true);delete (clearance as Partial<typeof clearance>).stairCoverageComplete;delete (clearance as Partial<typeof clearance>).framingCoverageComplete;
+ const takeoff=copy.yardTakeoff;assert.deepEqual(takeoff.landscape,{plantCount:0,boulderCount:0,furnitureCount:0,bedAreaSqft:0,mulchYd3:0,edgingLf:0,items:[],warnings:[]});delete (takeoff as Partial<typeof takeoff>).landscape;
+ const soil=takeoff.earthwork;for(const key of ['bankYd3','reusedYd3','exportBankYd3','benchmarkBins','bins','pricedYardBins','yardBankYd3','deckFoundationBankYd3'] as const)assert.equal(soil[key],0);for(const key of ['looseSpoilYd3','spoilTonnes','volumeBins','payloadBins'] as const)assert.equal(soil[key],null);assert.deepEqual(soil.inputs,{});assert.equal(soil.haulingInputsComplete,false);delete (takeoff as Partial<typeof takeoff>).earthwork;
+ assert.match(takeoff.sharedSiteWork.note,/once/i);assert.match(takeoff.sharedSiteWork.note,/mobilization/i);assert.match(takeoff.sharedSiteWork.note,/coordinate.*deck scope/i);takeoff.sharedSiteWork.note=LEGACY_SITE_NOTE;
+ return copy;
+}
+
+
+/** Additive datums and selection identities are excluded only after validating
+ * their exact relationship to unchanged legacy geometry. Original quantities,
+ * coordinates, prices, exports, warnings and all prior fields stay protected. */
+function legacyGeometry(model:DeckTakeoff,data:DeckData){
+ assert.ok(!usesPhysicalElevations(data),'Physical elevation designs cannot use the legacy projection');
+ const {issues:_issues,...geometry}=structuredClone(model),base=data.foundation==='Deck Blocks'?6.5:4.5,depth=data.foundation==='Deck Blocks'?0:data.foundationDepthIn??48,near=(a:number,b:number)=>assert.ok(Math.abs(a-b)<1e-7,`Derived legacy datum differs: ${a}/${b}`);
+ const supports=geometry.levels.flatMap((l,li)=>l.supports.map((p,pi)=>({p,li,pi})));assert.equal(geometry.foundationSupports.length,supports.length);
+ for(let i=0;i<supports.length;i++){
+  const {p,li,pi}=supports[i],f=geometry.foundationSupports[i];assert.equal(f.id,`footing:${li}:${pi}`);assert.equal(f.levelIndex,li);assert.equal(f.supportIndex,pi);assert.equal(f.x,p.x);assert.equal(f.z,p.z);assert.equal(f.bearingElevationIn,p.y);assert.equal(f.foundation,data.foundation);assert.equal(f.depthIn,depth);assert.equal(f.gradeElevationIn,0);assert.equal(f.bottomElevationIn,-depth);assert.equal(f.headTopElevationIn,data.foundation==='Deck Blocks'?6:2);assert.equal(f.postBaseElevationIn,base);assert.equal(f.postHeightIn,Math.max(0,p.y-base));assert.equal(f.status,p.y<=base?'clearance-pending':'modeled');
+ }
+ const quantities=geometry.foundationQuantities;near(quantities.supportPostLf,supports.reduce((n,{p})=>n+Math.max(0,p.y-base)/12,0));near(quantities.concretePierYd3,data.foundation==='Concrete Piers'?supports.length*Math.PI*36*(depth+2)/46656:0);near(quantities.pileShaftLf,data.foundation==='Helical Piles'?supports.length*(depth+2)/12:0);assert.equal(quantities.foundationCoveragePending,0);assert.equal(quantities.foundationClearancePending,supports.filter(({p})=>p.y<=base).length);assert.equal(quantities.foundationSoilPending,data.soilCondition==='Unknown'?1:0);
+ delete (geometry as Partial<typeof geometry>).foundationSupports;delete (geometry as Partial<typeof geometry>).foundationQuantities;
+ for(const tread of geometry.treads){if(tread.flightId!==undefined){assert.ok(geometry.flights.some(f=>f.kind==='grade'&&stairTargetId(f.id)===tread.flightId),'New tread identity names an existing unchanged grade flight');delete (tread as Partial<typeof tread>).flightId;}}
+ for(const flight of geometry.flights){if(flight.winderCenter!==undefined||flight.winderRadiusIn!==undefined){const c=flight.winderCenter!,r=flight.winderRadiusIn!;assert.ok(c&&Number.isFinite(r)&&r>0);assert.equal(flight.type,'Winder');assert.equal(flight.risers,2);near(r,12+flight.width/2);near(Math.hypot(flight.start.x-c.x,flight.start.z-c.y),r);near(Math.hypot(flight.end.x-c.x,flight.end.z-c.y),r);near((flight.start.x-c.x)*(flight.end.x-c.x)+(flight.start.z-c.y)*(flight.end.z-c.y),0);near(flight.start.y-flight.end.y,2*flight.rise);delete (flight as Partial<typeof flight>).winderCenter;delete (flight as Partial<typeof flight>).winderRadiusIn;}}
+ return geometry;
+}
+
 function fingerprint(patch:Partial<DeckData>){
   const d:DeckData={...base(),...patch};
   try{
     const estimate=calculateEstimate(d),model=estimate.model;
     // Issues/flags are fingerprinted apart from geometry and price, so a new
     // "confirm before construction" warning can never mask a build or price change.
-    const {model:_model,flags,...priced}=estimate,{issues,...geometry}=model;
+    const {model:_model,flags}=estimate,priced=legacyPriced(estimate,d),{issues}=model,geometry=legacyGeometry(model,d);
     return {
       model:digest(geometry),
       issues:digest(issues),

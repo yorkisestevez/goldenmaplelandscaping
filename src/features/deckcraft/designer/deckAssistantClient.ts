@@ -1,6 +1,6 @@
 import type {AgentRequest,AgentSnapshot} from './deckAgentController';
-import {parseNaturalLanguageCommands,type AssistedSelection} from './naturalLanguageCommands';
-import {buildAssistantContext,parseAssistantPlan,assistantPlanRequest} from './assistantPlan';
+import type {AssistedSelection} from './naturalLanguageCommands';
+
 
 export interface AssistantTurn {role:'user'|'assistant';content:string}
 export interface AssistantAvailability {ready:boolean;source:'local-ai'|'exact-only';model?:string;message:string}
@@ -35,7 +35,8 @@ export async function interpretAssistantRequest(text:string,snapshot:AgentSnapsh
  if(!snapshot.ready)throw Error('Wait until the design has finished restoring.');
  if(typeof text!=='string'||!text.trim()||text.length>1200)throw Error('Describe the change in up to 1,200 characters.');
  if(!Array.isArray(conversation)||conversation.length>8||conversation.some(t=>!t||!['user','assistant'].includes(t.role)||typeof t.content!=='string'||t.content.length>1200)||conversation.reduce((n,t)=>n+t.content.length,0)>8000)throw Error('This conversation is too long. Start a new request.');
- if(!conversation.length){const exact=parseNaturalLanguageCommands(text,snapshot,selection);if(exact.ok===true)return {kind:'edit',request:exact.request,summary:exact.summary,assumptions:[],source:'exact',message:'Understood as a measured edit.'};}
+ if(!conversation.length){const {parseNaturalLanguageCommands}=await import('./naturalLanguageCommands');if(signal?.aborted)throw signal.reason??new DOMException('Cancelled','AbortError');const exact=parseNaturalLanguageCommands(text,snapshot,selection);if(exact.ok===true)return {kind:'edit',request:exact.request,summary:exact.summary,assumptions:[],source:'exact',message:'Understood as a measured edit.'};if(exact.localOnly)return {kind:'clarify',question:exact.clarification,choices:[],source:'exact',message:exact.clarification};}
+ const {buildAssistantContext,parseAssistantPlan,assistantPlanRequest}=await import('./assistantPlan');
  const response=await jsonRequest('POST',{prompt:text.trim(),context:buildAssistantContext(snapshot,selection),conversation:conversation.map(t=>({role:t.role,content:t.content}))},signal);
  if(response.ok!==true||response.source!=='local-ai')throw Error('AI interpretation did not complete. No edit was applied.');
  const parsed=parseAssistantPlan(response.plan);if(parsed.ok===false)throw Error(`The proposed edit was not valid: ${parsed.error}`);

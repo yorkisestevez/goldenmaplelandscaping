@@ -2,7 +2,11 @@ import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {calculateDeckReleaseEstimate} from '../src/features/deckcraft/deckRelease';
 import {createQuoteAwarePricingReceiver} from '../src/features/deckcraft/designer/quoteAwarePricingReceiver';
-import type {PricingRequest} from '../src/features/deckcraft/designer/optionPricing';
+import {createPricingQueue,type PricingRequest,type PricingResult} from '../src/features/deckcraft/designer/optionPricing';
+import {ensureLiveDesignExtensions} from '../src/features/deckcraft/designExtensions';
+import {landscapeModelReady} from '../src/features/deckcraft/landscapeModel';
+import {editorOrganizationReady} from '../src/features/deckcraft/editorOrganization';
+import {siteEngineReady} from '../src/features/deckcraft/siteSurface';
 const data={...structuredClone(DEFAULT_DECK),quoteResolutions:[{scopeKey:'quote-0000000000000000',fingerprint:'scope-0000000000000000',supplyCost:100,installationCost:200,confirmedOn:'2026-09-26',source:'Synthetic',note:'Synthetic additional costs',additionalScope:true as const}]};
 let count=0;const check=(v:unknown,s:string)=>{assert(v,s);count++;};
 check(calculateDeckReleaseEstimate(DEFAULT_DECK).total>0,'Public pricing works without loading optional private quote costing');
@@ -19,5 +23,24 @@ let reject!:()=>void;const errors=createQuoteAwarePricingReceiver(r=>received.pu
 errors(job(4));reject();await Promise.resolve();await Promise.resolve();check(failed.join()==='4'&&!received.some(r=>'job'in r&&r.job===4),'Missing extension returns unavailable figures rather than pricing missing costs at zero');
 let open!:()=>void;const supersede=createQuoteAwarePricingReceiver(r=>received.push(r),()=>new Promise<void>(resolve=>open=resolve),j=>failed.push(j.job));
 const old=job(5),latest={...job(5),items:[{key:'latest-option',patch:{length:16}}]};supersede(old);supersede(latest);open();await Promise.resolve();await Promise.resolve();check(received.includes(latest)&&!received.includes(old),'A replacement job supersedes its stale pending request');
+// Real cold-worker queue: cancelled landscape work never resumes, while the
+// surviving job receives non-null engine figures after its model initializes.
+check(!landscapeModelReady()&&!editorOrganizationReady()&&!siteEngineReady(),'Optional worker engines start cold');
+const coldData={...structuredClone(DEFAULT_DECK),landscapeObjects:[{id:'plant-1',name:'Cold plant',enabled:true,kind:'plant' as const,assetId:'grass-clump' as const,xIn:120,zIn:120,rotationDeg:0,heightIn:24,widthIn:24,depthIn:24}]};
+const results:PricingResult[]=[],awaiting=new Map<number,(r:PricingResult)=>void>();let coldLoads=0;
+const queue=createPricingQueue(result=>{results.push(result);awaiting.get(result.job)?.(result);},step=>setTimeout(step,0));
+const cold=createQuoteAwarePricingReceiver(queue,async candidate=>{coldLoads++;await ensureLiveDesignExtensions(candidate);if(candidate.quoteResolutions?.length)await import('../src/features/deckcraft/quoteResolutions');},request=>{for(const item of request.items){const result={job:request.job,key:item.key,figures:null};results.push(result);awaiting.get(request.job)?.(result);}});
+const coldJob=(id:number,candidate:typeof DEFAULT_DECK):Extract<PricingRequest,{job:number}>=>({job:id,data:candidate,items:[{key:`cold-${id}`,patch:{width:18}}]});
+const figure=(id:number,candidate:typeof DEFAULT_DECK)=>new Promise<PricingResult>(resolve=>{awaiting.set(id,resolve);cold(coldJob(id,candidate));});
+cold(coldJob(10,coldData));cold({cancel:10});const landscape=await figure(11,coldData);
+check(coldLoads===1&&landscapeModelReady()&&!!landscape.figures&&!results.some(r=>r.job===10),'Cold landscape loads once, prices the surviving option and keeps cancellation effective');
+check(landscape.figures!.quoteRequired.some(q=>q.includes('Cold plant')),'Cold plant supply/installation scope stays quoted');
+const organized={...coldData,editorOrganization:{layers:[],groups:[],objects:[]}},organization=await figure(12,organized);
+check(coldLoads===2&&editorOrganizationReady()&&!!organization.figures,'Adding organization after a landscape job loads its separate validator');
+const surveyed={...organized,siteModel:{version:1 as const,points:[{id:'a',xIn:0,zIn:0,elevationIn:0},{id:'b',xIn:600,zIn:0,elevationIn:0},{id:'c',xIn:0,zIn:600,elevationIn:0}],grading:[]}},site=await figure(13,surveyed);
+check(coldLoads===3&&siteEngineReady()&&!!site.figures,'Adding measured site after earlier extensions loads triangulation before pricing');
+let emptyLoads=0;const emptyReceiver=createQuoteAwarePricingReceiver(()=>{},async()=>{emptyLoads++;},()=>{});
+emptyReceiver(coldJob(20,{...DEFAULT_DECK,landscapeObjects:[]}));await Promise.resolve();await Promise.resolve();
+emptyReceiver(coldJob(21,coldData));await Promise.resolve();await Promise.resolve();check(emptyLoads===2,'A previous empty landscape load cannot mark the nonempty takeoff engine ready');
 await import('../src/features/deckcraft/quoteResolutions');check(calculateDeckReleaseEstimate(data).total===calculateDeckReleaseEstimate(DEFAULT_DECK).total,'Loaded extension never activates unbound synthetic costs');
 console.log(`${count} quote-loader and cancellation checks passed`);

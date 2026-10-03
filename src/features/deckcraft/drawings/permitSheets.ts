@@ -1,3 +1,6 @@
+import {profileSheets,profilePlanReferences} from './profileLayout';
+import {poolPlanDrawingItems,poolSectionDrawingItems} from '../poolDrawings';
+import {getPoolModels} from '../poolModel';
 import {BUSINESS,publicContact} from '../../../data/business';
 import type {DeckTakeoff,Member} from '../deckTakeoff';
 import type {DeckData} from '../types';
@@ -10,7 +13,11 @@ import {typicalSection} from './typicalSection';
 import {connectionParts,ledgerFlashing} from './pricedParts';
 import {detailItems} from './details';
 import {sitePlan} from './sitePlan';
+import {siteElevationPlanItems,siteProfileDrawingItems} from './siteProfiles';
+import {ELEVATION_DATUM,elevationLabel,usesPhysicalElevations} from '../elevationDatum';
+import {buildYardModel} from '../yardModel';
 import {scheduleItems,scheduleTables} from './schedules';
+import {codeNoteItems,unverifiedCodeReferences,validateCodeReferences} from './codeReferences';
 
 /**
  * The permit drawing set built from the takeoff model: A-0 site plan, A-1 elevations, S-1 foundation plan, S-2 framing
@@ -82,7 +89,8 @@ function fitted(id:Sheet['id'],title:string,items:DrawItem[],notes:string[],lege
 }
 
 export function buildPermitSet(input:PermitSetInput):DrawingSet{
-  const {data,model}=input,main=model.levels[0],b=bounds(model),hardware=getHardwareLayout(data,model);
+  validateCodeReferences();
+  const {data,model}=input,physical=usesPhysicalElevations(data)||!!data.pools?.some(p=>p.enabled),main=model.levels[0],b=bounds(model),hardware=getHardwareLayout(data,model);
   const contact=data.houseVisible===false?null:getHouseContact(data,main.footprint);
   const base=[...outlines(model),...houseWall(data,model)];
   const footings=model.quantities.footings,blocks=data.foundation==='Deck Blocks',helical=data.foundation==='Helical Piles';
@@ -90,7 +98,9 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
   // Diagonal and herringbone decking is framed at 12 in, whatever spacing is selected (deckTakeoff.ts).
   const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
   const section=typicalSection(data,model,{materialName:input.materialName,railingName:input.railingName},{x:0,y:0},hardware);
-  const site=sitePlan(data,model),a0=fitted('A-0','Site plan',site.items,site.notes,[...(site.lot?['C-PROP' as const]:[]),'A-HOUS','A-DECK-OTLN','A-STRS',...(site.lot?['A-ANNO-DIMS' as const]:[])],[site.scale]);
+  const site=sitePlan(data,model);if(physical){site.items.push(...siteElevationPlanItems(data,model));site.notes.push(ELEVATION_DATUM,'EG: existing ground; PG: proposed ground. Finished levels and section locations refer to A-2.');}
+  site.items.push(...poolPlanDrawingItems(data,model));if(data.pools?.some(p=>p.enabled)){site.notes.push('Pool elevations use the project datum. Pool structure, suitability, service routing and site approvals remain pending until recorded.');for(const p of getPoolModels(data,model))site.issues.push(...p.pending.map(note=>p.config.name+': '+note));}
+  const a0=fitted('A-0','Site plan',site.items,site.notes,[...(site.lot?['C-PROP' as const]:[]),'A-HOUS','A-DECK-OTLN','A-STRS',...(site.lot?['A-ANNO-DIMS' as const]:[])],[site.scale]);
 
   // S-1: footings and posts, dimensioned along each beam row and out from the house.
   const s1:DrawItem[]=[...base];
@@ -102,7 +112,7 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
   const rowZs=[...new Set(main.supports.map(s=>Math.round(s.z*2)/2))].sort((p,q)=>p-q);
   s1.push(...chain([{x:b.minX,y:0},...rowZs.map(z=>({x:b.minX,y:z})),{x:b.minX,y:mainFront}],24),...overall(main,false));
   const s1Notes=[
-    `${footings} ${data.foundation.toLowerCase()}${blocks?'':' footings'}, each under a post, as priced.`,
+    physical?`${model.foundationSupports.length} foundation locations; ${footings} modeled ${data.foundation.toLowerCase()}. Supports without ground coverage remain pending; post lengths use each local datum.`:`${footings} ${data.foundation.toLowerCase()}${blocks?'':' footings'}, each under a post, as priced.`,
     blocks?'Deck blocks rest on compacted, undisturbed soil. Confirm with the municipality that a floating deck is permitted for this height and attachment.'
       :`Footings bear on undisturbed soil below frost. Barrie's Deck Specs call for 4'-0" minimum depth and a base sized by pier spacing; confirm depth and base size with the municipality.`,
     '6x6 posts shown: OBC 9.17.4.1 sets 140 × 140 mm as the minimum unless calculations show otherwise.',
@@ -179,9 +189,9 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
   const levelWords=model.levels.map((l,i)=>i===0?'':`; ${l.kind==='landing'?'landing':l.kind==='winder'?'winder':`level ${(l.index??i)+1}`} ${feetInches(l.top)}`).join('');
   const a1Notes=[
     'Front, left and right elevations, projected from the 3D design and seen from the yard. Framing behind the rim, fascia or skirting is not drawn; footings below grade are dashed.',
-    'Grade is drawn level, as the design assumes. Measure the grade at each post and confirm post lengths and footing depths on site.',
+    physical?`Grade profiles use the marked reference sections; they are not a flattened silhouette of the complete site. ${data.siteModel?'Gaps are unsurveyed and remain pending.':'Ground is the entered planning terrain plane; no survey coverage or vertical benchmark is established.'}`:'Grade is drawn level, as the design assumes. Measure the grade at each post and confirm post lengths and footing depths on site.',
     'The house is drawn from the design\'s house model for context: its openings and roof are approximate, and it is cut where it runs past the deck.',
-    `Deck surface ${feetInches(main.top)} above grade${levelWords}.`,
+    physical?`Deck surface ${elevationLabel(main.top)} relative to project datum${levelWords}. Local ground clearance varies.`:`Deck surface ${feetInches(main.top)} above grade${levelWords}.`,
     guardNote,
     ...(flights.length?[`${flights.length} stair flight${flights.length===1?'':'s'}: rise, run and handrail notes on S-3.`]:[]),
   ];
@@ -193,11 +203,11 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
     `Beam: ${ref.beam.plies}-ply ${ref.beam.size}, ${ref.beamMount==='drop'?'the joists bearing on top':'flush with the joists, which hang on hangers'}; ${feetInches(ref.beamSpanLimitIn)} limit between posts at its supported length, from OBC 2024 Table 9.23.4.2.-H (3-ply) or Springwater's deck guide (2-ply, supported length up to 3.6 m).`,
     section.attached?`Ledger fastened to the house rim with ${hardware.ledgerBolts.length} bolts, as priced; no ledger on brick veneer or an I-joist rim (Barrie). ${ledgerFlashing(data).note}`:'Freestanding: the deck stands on its own beams and posts and is not fastened to the house.',
     s1Notes[2],
-    s1Notes[1]+(blocks||helical?'':section.pier.priced?' 16 in piers, as priced for clay or fill soil.':' The pier is drawn 12 in across; the price book does not fix its diameter, so confirm it with the base size.'),
+    s1Notes[1]+(blocks||helical?'':physical?' The model shows a 12 in schematic pier; final diameter and bearing design are pending. A priced footing allowance does not establish its dimensions.':section.pier.priced?' 16 in piers, as priced for clay or fill soil.':' The pier is drawn 12 in across; the price book does not fix its diameter, so confirm it with the base size.'),
     s2Notes[3],
     guardNote,
   ];
-  const s4=fitted('S-4','Typical section',s4Items,s4Notes,['A-DECK-FNSH','S-FRMG','S-BLKG','S-LEDG','S-BEAM','S-POST','S-FTNG','A-RAIL','C-TOPO']);
+  const s4=fitted('S-4','Typical section',s4Items,s4Notes,['A-DECK-FNSH','S-FRMG','S-BLKG','S-LEDG','S-BEAM','S-POST','S-FTNG','A-RAIL',...(physical?['C-EXST' as const,'C-PGRD' as const]:['C-TOPO' as const])]);
 
   // S-5: typical details, below the section in model space. The connection parts they show, by how the estimate
   // carries each (the connector schedule): priced, a supplier quote, or to confirm in the railing kit.
@@ -218,16 +228,27 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
   const S6_RATIO=48,s6Items=scheduleItems(scheduleTables(data,model,{railingName:input.railingName},hardware),{x:planLeft,y:s5.extents.maxY+360},S6_RATIO);
   const s6Notes=[
     'Schedules of what S-1 to S-5 draw, counted from the same members and parts the estimate prices.',
-    'Grade to beam is the height from grade to the underside of the beam, with grade level as the design assumes. Measure at each post and cut it to fit.',
+    physical?'Foundation and post levels use proposed ground at each support footprint. Missing coverage and footing/site inputs remain pending.':'Grade to beam is the height from grade to the underside of the beam, with grade level as the design assumes. Measure at each post and cut it to fit.',
     'In the estimate: Priced is included. Supplier quote is listed for a supplier price and is not included yet. Confirm in the railing kit (or the footing allowance) may come with that item; confirm it before ordering.',
     'Framing lumber is planned in 16 ft stock from the modelled cut lengths, saw kerf included.',
     'Member sizes, spans and their code references are on S-2 and S-4; footing depth and size on S-1 and S-5.',
   ];
-  const deckWords=`${data.width} × ${data.length} ft ${data.deckType==='Attached'?'attached':'freestanding'} deck, ${data.height} in above grade`;
+  const reviewItems=[...new Set([...input.reviewItems,...model.issues,...site.issues,...(physical?buildYardModel(data,model).warnings:[]),...unverifiedCodeReferences().map(ref=>`Code reference: ${ref.citation} requires confirmation`)])];
+  const g0Ratio=48,g0Items=codeNoteItems({x:planLeft,y:s6Items.length?drawnExtents(s6Items,S6_RATIO).maxY+360:s5.extents.maxY+360},reviewItems,g0Ratio);
+  const g0:Sheet={id:'G-0',title:'General notes and code references',ratio:g0Ratio,scaleLabel:NTS,items:g0Items,extents:drawnExtents(g0Items,g0Ratio),notes:[
+    'References are an index to the drawing notes; they do not establish that the design meets a code requirement.',
+    'Every (confirm) item needs its exact clause, edition and applicability checked before use.',
+    'Confirm site-specific zoning, loads, soil, frost depth and connections with the authority having jurisdiction.',
+  ],legend:[]};
+  const a2=physical?profileSheets(siteProfileDrawingItems(data,model,{x:0,y:0}),poolSectionDrawingItems(data,model,{x:0,y:0}),[ELEVATION_DATUM,'True-scale section profiles: existing ground, proposed ground, finished surface and excavation formation. Match section starts to A-0.',data.siteModel?'Quantities integrate the complete surfaces; these reference sections do not substitute for full coverage.':'Ground profiles use the entered planning terrain plane. Survey and benchmark confirmation remain pending.',...(data.pools?.some(p=>p.enabled)?['Pool assembly and site conflicts remain pending where marked. See G-0 for the complete review list.']:[])]):[];
+  if(a2.length>1){a0.items=profilePlanReferences(a0.items,a2);a0.extents=drawnExtents(a0.items,a0.ratio);}
+  const deckWords=`${data.width} × ${data.length} ft ${data.deckType==='Attached'?'attached':'freestanding'} deck, ${data.height} in ${physical?'relative to project datum':'above grade'}`;
   return {
     sheets:[
+      g0,
       a0,
-      fitted('A-1','Elevations',a1Items,a1Notes,['A-DECK-FNSH','S-FRMG','S-BEAM','S-POST','S-FTNG','S-FTNG-HIDN','A-RAIL','A-STRS','A-HOUS','C-TOPO']),
+      fitted('A-1','Elevations',a1Items,a1Notes,['A-DECK-FNSH','S-FRMG','S-BEAM','S-POST','S-FTNG','S-FTNG-HIDN','A-RAIL','A-STRS','A-HOUS',...(physical?['C-EXST' as const,'C-PGRD' as const]:['C-TOPO' as const])]),
+      ...a2,
       ...plans,
       s4,
       s5,
@@ -235,7 +256,7 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
     ],
     project:{title:deckWords,date:input.date,priceBook:input.priceBook},
     firm:{name:BUSINESS.publicName.value,phone:publicContact.phoneDisplay,email:publicContact.email,url:BUSINESS.canonicalUrl.replace(/^https:\/\//,'')},
-    reviewItems:[...new Set([...input.reviewItems,...model.issues,...site.issues])],
+    reviewItems,
     footer:PERMIT_FOOTER,
   };
 }

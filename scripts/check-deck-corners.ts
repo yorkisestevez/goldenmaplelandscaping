@@ -25,6 +25,7 @@ import {getFootprint,SIDE_DOT,type PlanPoint} from '../src/features/deckcraft/li
 import {boardOutline,offsetPolygons,signedArea} from '../src/features/deckcraft/lib/polygonCuts';
 import {activeWrap,distanceToSegment,wrapBlockers} from '../src/features/deckcraft/lib/wrapGeometry';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
+import {prepareDesignUpdate} from '../src/features/deckcraft/designer/designUpdate';
 import {setWing,wrapFix,wrapFixNames} from '../src/features/deckcraft/designer/deckShapeActions';
 import type {BoardRun} from '../src/features/deckcraft/lib/deckGeometry';
 import type {DeckLevel,Member} from '../src/features/deckcraft/deckTakeoff';
@@ -336,7 +337,8 @@ for(const [width,length] of [[16,12],[24,20],[40,16]] as const)for(const [l,r] o
   ok('cornerChamfers' in patch&&patch.cornerChamfers===undefined&&patch.wrap?.left&&status==='Switched to square front corners so the corner can be mitred.','A wing squares angled corners and says so');
   ok(wrapFixNames(design({cornerChamfers:corners(4,0),pattern:'Diagonal'})).join()==='straight boards,square front corners'&&!('cornerChamfers' in wrapFix(base())),'The wrap fix names only what it changes');
   ok(page.includes('stairEdges={levelEdges}')&&/levelEdges=namedEdges\.filter\(e=>wrap&&!isChamferEdgeId\(e\.id\)\)/.test(page),'Level pickers never offer an angled face');
-  ok(read('features/deckcraft/designer/useDeckDesign.ts').includes('prepareDesignUpdate(dataRef.current,patch)')&&read('features/deckcraft/designer/designUpdate.ts').includes('pruneEdgeNames(deckReleaseData({...data,...resizeBoundaryPatch(data,patch)}))'),'Every guarded edit drops a stair or level edge name the design can no longer use');
+  const namedCorner=design({cornerChamfers:corners(6,6),stairEdgeId:'main-chamfer-right'}),before=JSON.stringify(namedCorner),square=prepareDesignUpdate(namedCorner,{cornerChamfers:undefined});
+  ok(namedCorner.stairEdgeId==='main-chamfer-right'&&!square.stairEdgeId&&JSON.stringify(namedCorner)===before,'The shared guarded edit drops a stair edge removed by squaring a corner and keeps the original design intact');
   ok(read('features/deckcraft/designPersistence.ts').includes('const named=pruneEdgeNames(clean);'),'Loading drops the same names');
   ok(page.includes('angledStairAllowed(data)&&angledStairFits(e.lenIn,data.stairWidth)'),'The stair picker offers an angled face on the same rule');
 }

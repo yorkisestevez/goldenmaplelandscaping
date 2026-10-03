@@ -92,7 +92,7 @@ const pond={id:'pond-1',kind:'water-feature' as const,name:'Pond',enabled:true,x
   ok(allowanceRows(four)[0].description!.includes("one-time site work")&&allowanceRows(four).slice(1).every(s=>!s.description!.includes('one-time site work')),'Without a patio or wall, the first allowance carries the one-time site work, and says so');
   ok(JSON.stringify(deckSections(four))===JSON.stringify(deckSections(base))&&Math.abs(splitSubtotal(four).deck-base.subtotal)<1e-6,'Allowances leave every deck section as it was');
   ok(Math.abs(splitSubtotal(four).backyard-four.yardTakeoff.knownSubtotalCents/100)<1e-6&&Math.abs(four.hst-four.subtotal*.13)<1e-6,'The allowances are the backyard subtotal, with HST once');
-  ok(four.flags.some(f=>f.includes('not drawn in the 3D view')),'The estimate says allowances are not drawn in 3D and are placed at the site visit');
+  ok(four.flags.some(f=>/not drawn in (?:the )?3D(?: view)?/i.test(f)&&/site visit/i.test(f)),'The estimate says allowances are not drawn in 3D and are placed at the site visit');
   // Choices move the allowance the way the estimator's do.
   ok(amount(withAllowances({firePit:'gas'}),/Fire pit/)>amount(four,/Fire pit/)&&amount(withAllowances({kitchen:'full'}),/kitchen/)>amount(four,/kitchen/),'A gas fire pit and a full-build kitchen cost more');
   const tiers=(['budget','mid','premium'] as const).map(finish=>withAllowances({finish}));
@@ -127,11 +127,11 @@ const pond={id:'pond-1',kind:'water-feature' as const,name:'Pond',enabled:true,x
   const page=designerSource(),registry=readFileSync(new URL('../src/features/deckcraft/designer/sections.ts',import.meta.url),'utf8');
   ok(SECTIONS.map(s=>s.id).join().endsWith('backyard,proposal')&&SECTION_BY_ID.backyard.load===loadBackyardStep&&SECTION_BY_ID.backyard.legacyStep===STEPS.indexOf('Backyard')&&page.includes("'Backyard','Your estimate'"),'The Backyard section comes just before the proposal and counts as the old Backyard step');
   ok(registry.includes("export const loadBackyardStep=()=>import('./steps/BackyardStep');")&&page.includes('BackyardStep=lazy(loadBackyardStep)')&&page.includes("case 'backyard':return <BackyardStep ")&&page.includes("const active=[...open][0]??'deck'")&&page.includes('<Suspense key={active}')&&page.includes('{renderBody(active)}'),'The Backyard body loads lazily through the registry, and only while it is the selected inspector');
-  ok(page.includes('<YardEditor data={data} onChange={update}/>'),'The backyard is edited through the undoable update');
+  ok(/<YardEditor\b(?=[^>]*\bdata=\{data\})(?=[^>]*\bonChange=\{update\})/.test(page),'The backyard is edited through the undoable update');
   ok(page.includes('deckOnly={!hasBackyardLayout(data)} yardModel={estimate.yardModel}')&&page.includes('onUpdate={update}'),'The 3D view shows the backyard only when the design has patios, walls, water or terrain (allowances are not drawn)');
   ok(page.includes('update({yardAllowances:hasYardAllowances(next)?next:undefined})')&&page.includes('<select aria-label="Fire pit"')&&page.includes('<select aria-label="Outdoor kitchen"')&&page.includes('Artificial turf')&&page.includes('Landscape lighting for the yard')&&page.includes('<select aria-label="Finish level"'),'The Backyard step offers the four allowances and drops them when the last is switched off');
   ok(!page.includes('yardAllowances:undefined,'),'The live estimate re-prices when an allowance changes');
-  ok(/if\(!current&&restored\.yardFeatures\?\.length\)\{\s*const \{yardFeatures,terrainConfig,\.\.\.deck\}=restored;setData\(deck\);setEarlierYard/.test(page)&&page.includes('Add {earlierYard===1?\'it\':\'them\'} back'),'An older autosave\'s backyard is offered back, never restored silently');
+  ok(page.includes('hydrated.legacyKey===DESIGN_STORAGE_KEY&&restored.yardFeatures?.length')&&page.includes('const {yardFeatures,terrainConfig,...deck}=restored;setData(deck);dataRef.current=deck;setEarlierYard')&&page.includes('Add {earlierYard===1?\'it\':\'them\'} back'),'An older autosave\'s backyard is offered back, never restored silently');
   ok(page.includes('Deck subtotal')&&page.includes('Backyard subtotal'),'The estimate shows deck and backyard subtotals');
   ok(page.includes('yardFeatures:data.yardFeatures?.map(({color:_color,...feature})=>feature)')&&!page.includes('terrainConfig:undefined'),'The live estimate re-prices when the backyard or terrain changes (only a concept colour does not)');
 }

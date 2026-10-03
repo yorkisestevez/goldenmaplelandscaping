@@ -1,6 +1,7 @@
 import index from '../../data/hardscape-index.json';
 import type {YardFeature} from './types';
 import {shapedBond} from './hardscapeShapes';
+import {wallCapOptions} from './wallCaps';
 
 /** The compact, generated engineering index is the authority for saved selections.
  * Product photos, prose and supplier pattern guides are fetched separately by the picker. */
@@ -26,14 +27,14 @@ export const HARDSCAPE_PATTERNS=[{id:'running-bond',name:'Running bond'},{id:'st
 export function hardscapeProduct(id:string){return HARDSCAPE_PRODUCTS.find(p=>p.id===id);}
 /** Key of a colour's manufacturer photo in the lazily fetched public/deckcraft/hardscape-swatches.json. */
 export const hardscapeSwatchKey=(productId:string,finishId:string,colorId:string)=>`${productId}/${finishId}/${colorId}`;
-export function hardscapeSelection(f:YardFeature){const product=hardscapeProduct(f.productId),finish=product?.finishes.find(v=>v.id===f.hardscape?.finishId),color=finish?.colors.find(c=>c.id===f.hardscape?.colorId),unit=finish?.units.find(u=>u.id===f.hardscape?.unitId),cap=finish?.units.find(u=>u.id===f.hardscape?.capUnitId);return product&&finish&&color&&unit?{product,finish,color,unit,cap}:undefined;}
+export function hardscapeSelection(f:YardFeature){const product=hardscapeProduct(f.productId),finish=product?.finishes.find(v=>v.id===f.hardscape?.finishId),color=finish?.colors.find(c=>c.id===f.hardscape?.colorId),unit=finish?.units.find(u=>u.id===f.hardscape?.unitId);if(!product||!finish||!color||!unit)return undefined;const caps=f.kind==='retaining-wall'?wallCapOptions(HARDSCAPE_PRODUCTS,product,finish,color.id,unit,f.heightIn):[],cap=caps.find(u=>u.id===f.hardscape?.capUnitId);return {product,finish,color,unit,cap,caps};}
 export function hardscapeProblem(f:YardFeature):string{
  const p=hardscapeProduct(f.productId);if(!p)return f.hardscape?'A supplier variant needs a catalogue product.':'';
  if(f.kind==='water-feature'||(p.category==='wall')!==(f.kind==='retaining-wall'))return 'The supplier product does not match this feature.';
  const s=hardscapeSelection(f);if(!s)return 'Choose a documented finish, colour and unit size.';
  if(!hardscapeBody(s.unit.role))return 'Choose a paving or wall-body unit for this feature.';
  if(s.unit.colorIds&&!s.unit.colorIds.includes(s.color.id))return 'That stock unit is not listed in this colour.';
- if(f.hardscape?.capUnitId!==undefined&&(f.kind!=='retaining-wall'||!s.cap||!/(^|[- ])(cap|coping)([- ]|$)/.test(s.cap.role)||s.cap.colorIds&&!s.cap.colorIds.includes(s.color.id)||s.cap.heightMm/25.4>f.heightIn||s.cap.lengthMm<s.unit.lengthMm||s.cap.lengthMm>s.unit.lengthMm+304.8))return 'Choose a compatible cap in this colour, no taller than the exposed wall and at least as deep as its body unit.';
+ if(f.hardscape?.capUnitId!==undefined&&(f.kind!=='retaining-wall'||!s.cap))return 'Choose a documented compatible cap that fits the selected wall and exposed height.';
  const a=f.hardscape!,recipe=s.finish.patterns.find(p=>p.id===a.patternId),bond=shapedBond(p.id,s.unit);if(!HARDSCAPE_PATTERNS.some(p=>p.id===a.patternId)&&!recipe&&a.patternId!==bond?.id||!Number.isFinite(a.angleDeg)||a.angleDeg<0||a.angleDeg>=360||!Number.isFinite(a.jointMm)||a.jointMm<0||a.jointMm>25)return 'Invalid laying direction, pattern or joint size.';
  // Older saved files allowed envelope-based contractor patterns on shaped stock.
  // Preserve them on restore; the picker offers source-compatible choices for new work.

@@ -1,18 +1,17 @@
 import {Suspense,useEffect,useMemo} from 'react';
-import {useLoader,useThree} from '@react-three/fiber';
+import {useThree} from '@react-three/fiber';
 import {Environment,Lightformer,useEnvironment} from '@react-three/drei';
 import * as THREE from 'three';
-import {SKY_DATA as SKY,skyStrength,skyYaw,type Lighting} from './skyModel';
+import {SKY_DATA as SKY,skyStrength,skyYaw,VISIBLE_SKY_MIN_DEG,visibleSkyStrength,visibleSkyHorizon,type Lighting} from './skyModel';
 import dayLighting from './assets/sky/sky-day-ibl.hdr?url';
 import eveningLighting from './assets/sky/sky-evening-ibl.hdr?url';
-import dayBand from './assets/sky/sky-day-band.webp';
-import eveningBand from './assets/sky/sky-evening-band.webp';
 import {SCENE_LOOK} from './sceneLook';
 
 /**
- * The real sky (Real Life G3): a CC0 HDRI lights the scene with its sun painted out (scripts/build-deck-sky.ts), the
- * scene's sun takes the HDRI's place in it and casts the shadows, and a dome that follows the camera shows the photo's
- * own horizon, blended into the lighting HDRI above it. The ground's far edge fades into the horizon's haze.
+ * The real sky (Real Life G3): a CC0 HDRI supplies environment fill. An extracted sun, or a neutral key replacing
+ * part of a soft HDR's energy, casts shadows. The visible dome samples only the photographed
+ * upper sky: nearby roofs and rocks from the captured panorama are not scenery in this design.
+ * Lighting/reflections retain the complete original HDRI; the far lawn fades into the clean sky's haze.
  * Until the files arrive the old studio light stands in (StudioLight), so the view never goes blank.
  */
 const {sky:LOOK}=SCENE_LOOK;
@@ -21,33 +20,29 @@ const DOME_VERTEX=/* glsl */`
 varying vec3 vDir;
 void main(){vDir=position;vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.);gl_Position=p.xyww;}`;
 const DOME_FRAGMENT=/* glsl */`
-uniform sampler2D band;uniform sampler2D lighting;uniform mat3 turn;uniform float bandScale,bandTop,bandBottom,strength;
+uniform sampler2D lighting;uniform mat3 turn;uniform float minimumElevation,strength;
 varying vec3 vDir;
 const float PI=3.141592653589793;
 void main(){
   vec3 d=normalize(turn*vDir);
   float el=asin(clamp(d.y,-1.,1.)),u=atan(d.z,d.x)/(2.*PI)+.5,seam=fract(u+.5);
-  // Gradients from whichever u doesn't jump where the panorama wraps, so the wrap never picks a blurry mip.
+  // The original photo's upper sky becomes the visible hemisphere. The HDRI
+  // that illuminates and reflects from the design is unchanged.
+  float displayed=max(0.,el),sampleEl=minimumElevation+displayed*(1.-minimumElevation/(PI*.5)),v=sampleEl/PI+.5;
   float dux=abs(dFdx(u))<abs(dFdx(seam))?dFdx(u):dFdx(seam),duy=abs(dFdy(u))<abs(dFdy(seam))?dFdy(u):dFdy(seam);
-  float vb=clamp((el-bandBottom)/(bandTop-bandBottom),0.,1.),vl=el/PI+.5;
-  vec3 horizon=textureGrad(band,vec2(u,vb),vec2(dux,dFdx(vb)),vec2(duy,dFdy(vb))).rgb*bandScale;
-  vec3 above=textureGrad(lighting,vec2(u,vl),vec2(dux,dFdx(vl)),vec2(duy,dFdy(vl))).rgb;
-  gl_FragColor=vec4(mix(horizon,above,smoothstep(bandTop-.05,bandTop,el))*strength,1.);
+  vec3 sky=textureGrad(lighting,vec2(u,v),vec2(dux,dFdx(v)),vec2(duy,dFdy(v))).rgb;
+  gl_FragColor=vec4(sky*strength,1.);
 }`;
 
-/** The sky dome: the photo's horizon band, then the lighting HDRI above it, drawn behind everything, following the camera. */
-function SkyDome({band,lighting,data,yaw,strength}:{band:THREE.Texture;lighting:THREE.Texture;data:typeof SKY.day;yaw:number;strength:number}){
+/** The clean photographed sky, following the camera and drawn behind everything. */
+function SkyDome({lighting,yaw,strength}:{lighting:THREE.Texture;yaw:number;strength:number}){
   const material=useMemo(()=>new THREE.ShaderMaterial({
-    uniforms:{band:{value:null},lighting:{value:null},turn:{value:new THREE.Matrix3()},bandScale:{value:1},bandTop:{value:0},bandBottom:{value:0},strength:{value:1}},
+    uniforms:{lighting:{value:null},turn:{value:new THREE.Matrix3()},minimumElevation:{value:VISIBLE_SKY_MIN_DEG*Math.PI/180},strength:{value:1}},
     vertexShader:DOME_VERTEX,fragmentShader:DOME_FRAGMENT,side:THREE.BackSide,depthWrite:false,fog:false,
   }),[]);
   useEffect(()=>()=>material.dispose(),[material]);
-  const u=material.uniforms;
-  u.band.value=band;u.lighting.value=lighting;u.bandScale.value=data.bandScale;u.strength.value=strength;
-  u.bandTop.value=data.bandTopDeg*Math.PI/180;u.bandBottom.value=data.bandBottomDeg*Math.PI/180;
-  // The same turn three gives the lighting (the transpose of the rotation), so dome and reflections agree.
+  const u=material.uniforms;u.lighting.value=lighting;u.strength.value=strength;
   u.turn.value.setFromMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0,yaw,0))).transpose();
-  // It follows the camera, so the horizon never comes closer.
   return <mesh name="sky-dome" material={material} frustumCulled={false} renderOrder={-1} raycast={()=>null}
     ref={mesh=>{if(mesh)mesh.onBeforeRender=(_r,_s,camera)=>{mesh.position.copy(camera.position);mesh.updateMatrixWorld();};}}>
     <sphereGeometry args={[LOOK.domeRadiusFt,64,32]}/>
@@ -55,18 +50,16 @@ function SkyDome({band,lighting,data,yaw,strength}:{band:THREE.Texture;lighting:
 }
 
 /** The HDRI's light, its dome and the horizon haze. Suspends while the files load. */
-/** One sky: its light, its dome and the haze's colour. strength overrides the sky's own (the day sky dimmed, standing in
- * for the evening while that loads). */
-function SkyOf({lighting,strength=skyStrength(lighting).environment}:{lighting:Lighting;strength?:number}){
+/** One sky: illumination and panorama exposure are independent. The day sky can stand in at dusk while it loads. */
+function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyStrength(lighting).environment}:{lighting:Lighting;strength?:number;illumination?:number}){
   const data=SKY[lighting],yaw=skyYaw(lighting);
   const map=useEnvironment({files:lighting==='evening'?eveningLighting:dayLighting});
-  const band=useLoader(THREE.TextureLoader,lighting==='evening'?eveningBand:dayBand),gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),invalidate=useThree(s=>s.invalidate);
-  useMemo(()=>{band.colorSpace=THREE.SRGBColorSpace;band.wrapS=THREE.RepeatWrapping;band.anisotropy=Math.min(8,gl.capabilities.getMaxAnisotropy());band.needsUpdate=true;},[band,gl]);
+  const scene=useThree(s=>s.scene),invalidate=useThree(s=>s.invalidate),horizon=useMemo(()=>visibleSkyHorizon(map)??data.horizonColor,[map,data]);
   // The viewer keeps one fog for its life (adding or removing fog recompiles every material); the sky only recolours it.
-  useEffect(()=>{if(scene.fog){scene.fog.color.setRGB(data.horizonColor[0],data.horizonColor[1],data.horizonColor[2]).multiplyScalar(strength);invalidate();}},[scene,data,strength,invalidate]);
+  useEffect(()=>{if(scene.fog){scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);invalidate();}},[scene,horizon,strength,invalidate]);
   return <>
-    <Environment map={map} environmentIntensity={strength} environmentRotation={new THREE.Euler(0,yaw,0)}/>
-    <SkyDome band={band} lighting={map} data={data} yaw={yaw} strength={strength}/>
+    <Environment map={map} environmentIntensity={illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
+    <SkyDome lighting={map} yaw={yaw} strength={strength}/>
   </>;
 }
 
@@ -74,13 +67,13 @@ function SkyOf({lighting,strength=skyStrength(lighting).environment}:{lighting:L
  * loads behind the day sky dimmed, so switching to Night never drops back to the studio light. */
 export default function Sky3D({evening}:{evening:boolean}){
   useEffect(()=>{preloadEvening();},[]);
-  return evening?<Suspense fallback={<SkyOf lighting="day" strength={skyStrength('evening').environment}/>}><SkyOf lighting="evening"/></Suspense>:<SkyOf lighting="day"/>;
+  return evening?<Suspense fallback={<SkyOf lighting="day" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}><SkyOf lighting="evening"/></Suspense>:<SkyOf lighting="day"/>;
 }
 // The day sky loads with the viewer; the evening's follows once the day's is in (preloadEvening), so switching to
 // Night (and the proposal's night pictures) rarely waits, without a phone fetching both skies up front.
-useEnvironment.preload({files:dayLighting});useLoader.preload(THREE.TextureLoader,dayBand);
+useEnvironment.preload({files:dayLighting});
 let eveningPreloaded=false;
-function preloadEvening(){if(eveningPreloaded)return;eveningPreloaded=true;useEnvironment.preload({files:eveningLighting});useLoader.preload(THREE.TextureLoader,eveningBand);}
+function preloadEvening(){if(eveningPreloaded)return;eveningPreloaded=true;useEnvironment.preload({files:eveningLighting});}
 
 /** The studio light the viewer had before G3: three soft panels and a hemisphere light, while the sky loads or if it can't. */
 export function StudioLight({evening}:{evening:boolean}){

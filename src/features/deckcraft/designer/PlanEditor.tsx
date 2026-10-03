@@ -1,6 +1,6 @@
 import {useLayoutEffect,useMemo,useRef,useState,type KeyboardEvent,type PointerEvent,type RefObject} from 'react';
 import {createPortal} from 'react-dom';
-import {planFrame} from '../ConstructionPlan';
+import {planFrame,type PlanFrame} from '../ConstructionPlan';
 import {trackDeck} from '../deckAnalytics';
 import type {DeckTakeoff} from '../deckTakeoff';
 import type {YardModel} from '../yardModel';
@@ -37,8 +37,8 @@ const ARROWS=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home','End'];
  * shows a ghost with the new figures and changes the design once, when it ends: one estimate, one undo step. Only the
  * handles take the pointer away from the page (touch-action:none), so a phone still scrolls over the plan.
  */
-export default function PlanEditor({data,model,yard,update,onEdited,tool='size',stairEdges=[],onStatus,toolbar,onOpenSection}:{
-  data:DeckData;model:DeckTakeoff;yard?:YardModel;update:Update;onEdited?:()=>void;tool?:PlanTool;
+export default function PlanEditor({data,model,yard,update,onEdited,tool='size',stairEdges=[],onStatus,toolbar,onOpenSection,viewportFrame}:{
+  viewportFrame?:PlanFrame;data:DeckData;model:DeckTakeoff;yard?:YardModel;update:Update;onEdited?:()=>void;tool?:PlanTool;
   /** The edges the page offers stairs on (the Stairs section's edge menu). */
   stairEdges?:StairEdge[];
   /** The plan's status line (what a tool did, or why it could not). */
@@ -46,7 +46,7 @@ export default function PlanEditor({data,model,yard,update,onEdited,tool='size',
   /** Where the tool's own buttons go, under the drawing. */
   toolbar?:RefObject<HTMLElement|null>;onOpenSection?:(id:'deck'|'stairs'|'house')=>void;
 }){
-  const frame=useMemo(()=>planFrame(model,{data,yard,variant:'site',wholeHouse:tool==='house'}),[model,data,yard,tool]);
+  const frame=useMemo(()=>viewportFrame??planFrame(model,{data,yard,variant:'site',wholeHouse:tool==='house'}),[model,data,yard,tool,viewportFrame]);
   const box=useRef<HTMLDivElement>(null),[size,setSize]=useState<{w:number;h:number}|null>(null);
   useLayoutEffect(()=>{
     const el=box.current;if(!el)return;

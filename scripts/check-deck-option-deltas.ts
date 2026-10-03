@@ -18,6 +18,7 @@ import {createPricingQueue,priceOption,type PricingResult} from '../src/features
 import {priceLedger} from '../src/features/deckcraft/designer/priceLedgerModel';
 import {SECTIONS} from '../src/features/deckcraft/designer/sections';
 import {selectPatch} from '../src/features/deckcraft/designer/selectPatch';
+import {prepareDesignUpdate} from '../src/features/deckcraft/designer/designUpdate';
 import {estimateKeyOf} from '../src/features/deckcraft/designer/useDeckEstimate';
 
 /**
@@ -77,8 +78,10 @@ const baseOf=(d:DeckData,e:ReturnType<typeof calculateDeckReleaseEstimate>):Delt
   ok(stairs.includes("select('railingType','Railing style',RAILING_STYLES,")&&stairs.includes("select('stairFlights','Number of stair flights',STAIR_FLIGHTS,")&&stairs.includes("select('stairType','Stair layout',STAIR_LAYOUTS,")&&stairs.includes('onChange={e=>update(catalogueRailingPatch(e.target.value))}'),'Stairs & railings offer the groups\' choices and apply their patches');
   ok(site.includes("select('foundation','Foundation preference',FOUNDATIONS,"),'Site & foundation offers the foundations');
   ok(fields.includes('onChange={e=>update(selectPatch(key,typeof choices[0]===\'number\'?Number(e.target.value):e.target.value))}'),'Every select applies selectPatch');
-  const guardedUpdate=read('src/features/deckcraft/designer/designUpdate.ts');
-  ok(history.includes('prepareDesignUpdate(dataRef.current,patch)')&&guardedUpdate.includes('pruneEdgeNames(deckReleaseData({...data,...resizeBoundaryPatch(data,patch)}))'),'The page\'s guarded update scales edited outlines through the release boundary with stale edge names dropped');
+  ok(history.includes('import {prepareDesignUpdate}')&&history.includes('const next=prepareDesignUpdate('),'The live guarded update calls the shared design preparation helper');
+  const outlined=design({width:20,length:16,deckOutlines:{main:[{x:0,y:0},{x:20,y:0},{x:20,y:16},{x:0,y:16}]},stairEdgeId:'removed-edge'}),original=JSON.stringify(outlined);
+  const resized=prepareDesignUpdate(outlined,{width:40,length:8});
+  ok(JSON.stringify(resized.deckOutlines?.main)===JSON.stringify([{x:0,y:0},{x:40,y:0},{x:40,y:8},{x:0,y:8}])&&!resized.stairEdgeId&&JSON.stringify(outlined)===original,'The shared update scales the existing outline, drops unusable edge names and never mutates its baseline');
   ok(estimateHook.includes('const autoCounts={posts:estimate.model.railing.posts.length,stairs:estimate.model.treads.length,privacy:extras.privacyMounts.length,border:extras.borderMounts.length};')&&estimateHook.includes('selectedItems:syncAutoLighting(prev,autoCounts)')&&estimateHook.includes('const designKey=estimateKeyOf(data);')&&estimateHook.includes('const estimateKey=designKey+'),'The page\'s light sync and estimate key are the ones measured here');
   for(const [name,src,section] of [['MaterialsStep',materials,'boards'],['StairsStep',stairs,'stairs'],['SiteExtrasStep',site,'part']] as const)ok(src.includes(`useOptionDeltas(${section==='part'?'part':`'${section}'`},data,deltas)`)&&src.includes('<DeltaToggle deltas={effect}/>'),`${name} shows its groups' price effect, with "Show price effect" where it is asked for`);
 }
@@ -270,7 +273,7 @@ ok(synced>0,`An option the light sync follows is covered (${synced})`);
   for(const f of ['optionDeltas.ts','optionGroups.ts','useOptionDeltas.tsx','selectPatch.ts'])walk(resolve(root,'src/features/deckcraft/designer',f));
   ok(seen.size>20,`The delta modules' import graph is read (${seen.size} files)`);
   ok(![...bare].some(s=>/^three\b|^@react-three\//.test(s))&&![...seen].some(f=>/viewer3d/.test(f)),`The option deltas never import three.js or the 3D viewer (${[...bare].join(', ')})`);
-  // Public worker stays engine-only; private cost records load one optional engine extension.
+  // Public worker stays engine-only; optional private and site/landscape engines stay outside its initial graph.
   const workerSeen=new Set<string>(),workerBare=new Set<string>(),lazy:string[]=[];
   const walkWorker=(file:string)=>{
     if(workerSeen.has(file))return;workerSeen.add(file);
@@ -282,7 +285,7 @@ ok(synced>0,`An option the light sync follows is covered (${synced})`);
     }
   };
   walkWorker(resolve(root,'src/features/deckcraft/designer/optionDeltas.worker.ts'));
-  ok(workerSeen.size>20&&[...workerBare].every(s=>s==='clipper-lib')&&lazy.length===1&&lazy[0]==="../quoteResolutions",`The worker's graph is the engine alone: ${workerSeen.size} files, packages ${[...workerBare].join(', ')||'none'}, ${lazy.length} lazy imports`);
+  ok(workerSeen.size>20&&[...workerBare].every(s=>s==='clipper-lib')&&lazy.includes("../quoteResolutions")&&lazy.includes("./siteSurfaceEngine")&&lazy.includes("./landscapeModelRuntime")&&!([...workerSeen].some(f=>/(?:siteSurfaceEngine|siteModelRuntime|landscapeTypesRuntime|editorOrganizationRuntime|landscapeModelRuntime|landscapeCatalogue)\.ts$/.test(f))),`The worker's graph is the engine alone: ${workerSeen.size} files, packages ${[...workerBare].join(', ')||'none'}, ${lazy.length} lazy imports`);
   ok(![...workerSeen].some(f=>/[\\/](designer[\\/](sections|priceLedgerModel|useChangeLedger|fields)|steps[\\/])/.test(f)),'The worker never reaches the sections, the ledger or any section body');
 }
 

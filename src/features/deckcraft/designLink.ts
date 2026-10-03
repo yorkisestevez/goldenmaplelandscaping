@@ -1,7 +1,7 @@
 import {BUSINESS} from '../../data/business';
 import {DEFAULT_DECK} from './defaults';
 import {parseDeckReleaseDesign,serializeDeckReleaseDesign} from './deckRelease';
-import {MAX_DESIGN_BYTES} from './designPersistence';
+import {MAX_PUBLIC_DESIGN_BYTES as MAX_DESIGN_BYTES} from './designPersistence';
 import {PRICE_BOOK,readPriceBookVersion} from './priceBook';
 import type {DeckData} from './types';
 
@@ -43,7 +43,8 @@ export function withoutPersonalDetails(data:DeckData):DeckData{
 /** The design file a link carries (minified, personal details removed), with the price book it was priced with. */
 export function designLinkJson(data:DeckData):string{
   const file=JSON.parse(serializeDeckReleaseDesign(data)) as {configuration:Record<string,unknown>;priceBook?:string};
-  for(const key of PERSONAL_FIELDS)delete file.configuration[key];
+  for(const key of [...PERSONAL_FIELDS,'poolQuoteInputs'])delete file.configuration[key];
+  const site=file.configuration.siteModel as Record<string,unknown>|undefined;if(site)delete site.overlay;
   file.priceBook=PRICE_BOOK.version;
   return JSON.stringify(file);
 }
@@ -106,7 +107,7 @@ export async function decodeDesignLinkFile(value:string):Promise<{design:DeckDat
   let text:string;
   try{text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);}catch{throw new DesignLinkError(DAMAGED);}
   let design:DeckData;
-  try{design=parseDeckReleaseDesign(text);}
+  try{await (await import('./designExtensions')).ensureDesignExtensions(JSON.parse(text));design=parseDeckReleaseDesign(text);}
   catch(error){
     // File-format problems read as a damaged link; a validation reason is kept for support calls.
     const reason=error instanceof Error?error.message:'';

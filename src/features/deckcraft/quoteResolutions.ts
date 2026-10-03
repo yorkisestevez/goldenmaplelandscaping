@@ -3,6 +3,7 @@ import {RAILING_CATALOGUE} from './manufacturerRuntimeCatalogue';
 import type {DeckData,QuoteResolution} from './types';
 import type {ConnectorScheduleRow} from './schedule';
 import type {EstimateResult} from './calculations';
+import type {YardTakeoff} from './yardTakeoff';
 
 type Section=EstimateResult['sections'][number];
 export interface QuoteScope {key:string;fingerprint:string;name:string;labels:string[];rows:{section:number;item:number;name:string;spec:string;qty:number|string;unit:string;sectionTitle:string}[]}
@@ -11,7 +12,7 @@ const fail=(s:string):never=>{throw Error(s);};
 /** Defence in depth on the synchronous price path. Full import validation lives in the lazy review/job modules. */
 function checkedCostRecords(value:unknown):QuoteResolution[]{
  const keys=['scopeKey','fingerprint','supplyCost','installationCost','confirmedOn','source','note','additionalScope'];
- if(!Array.isArray(value)||value.length>100||Object.getPrototypeOf(value)!==Array.prototype||Object.getOwnPropertySymbols(value).length)fail('Invalid private quote costs.');
+ if(!Array.isArray(value)||value.length>400||Object.getPrototypeOf(value)!==Array.prototype||Object.getOwnPropertySymbols(value).length)fail('Invalid private quote costs.');
  const array=Object.getOwnPropertyDescriptors(value),seen=new Set<string>();if(Object.keys(array).some(k=>k!=='length'&&(!/^(0|[1-9]\d*)$/.test(k)||Number(k)>=(value as unknown[]).length)))fail('Invalid private quote costs.');
  for(let i=0;i<(value as unknown[]).length;i++)if(!array[i]||!('value'in array[i]))fail('Invalid private quote costs.');
  for(const record of value as QuoteResolution[]){if(!record||typeof record!=='object'||Object.getPrototypeOf(record)!==Object.prototype)fail('Invalid private quote costs.');const d=Object.getOwnPropertyDescriptors(record);if(Object.getOwnPropertySymbols(record).length||Object.keys(d).length!==keys.length||keys.some(k=>!d[k]||!('value'in d[k])||!d[k].enumerable))fail('Invalid private quote costs.');
@@ -24,11 +25,11 @@ const hash=(text:string)=>{let a=2166136261,b=3339675911;for(let i=0;i<text.leng
 const words=(s:string)=>s.toLowerCase().replace(/\((builder|supplier) quote\)/g,'').replace(/\b(builder|supplier|quote|required|with selected finish|custom-layout|accent boards|boards|supply and installation)\b/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 /** Non-cost stock/price confirmations belong to the pergola contractor controls.
  * An added fee cannot confirm availability, kit completeness or a provisional listing. */
-export const isQuoteStatusRequirement=(label:string)=>label==='Pergola supply/accessory costs require contractor confirmation; public listing prices are provisional.'||label.startsWith('Pergola availability and kit completeness require confirmation (catalog:');
+export const isQuoteStatusRequirement=(label:string)=>label.startsWith('Pool · ')||label==='Pergola supply/accessory costs require contractor confirmation; public listing prices are provisional.'||label.startsWith('Pergola availability and kit completeness require confirmation (catalog:')||label==='Soil reuse, loose spoil and hauling confirmation'||label==='Unsurveyed earthwork — field elevations required'||/: botanical specification and planting spacing confirmation$/.test(label)||/: (?:selected wall system and site design confirmation|drain outlet route and length confirmation|engineering and selected system confirmation|manufacturer backing and top-course assembly confirmation|retained ground and reinforcement placement confirmation|drain outlet elevation and fall confirmation)$/.test(label)||label.includes('excluded layout needs revision');
 /** Current quote labels are bound to the actual null-cost rows, not guessed supplier prices. */
 export function buildQuoteScopes(data:DeckData,sections:Section[],labels:readonly string[],connectors:ConnectorScheduleRow[]=[]):QuoteScope[]{
  const groups:{name:string;labels:string[];rows:QuoteScope['rows']}[]=[];
- sections.forEach((s,si)=>{const rows=s.items.flatMap((i,ii)=>i.cost===null&&Number(i.qty)>0?[{section:si,item:ii,name:i.name,spec:i.spec,qty:i.qty,unit:i.unit,sectionTitle:s.title}]:[]);if(!rows.length)return;if(s.title==='Labour (Construction & Build)'||s.title==='in-lite® Lighting System'||s.title==='Add-ons & Extras'||s.title==='Deck-part finishes'||s.title==='Manufacturer deck accessories'||s.title==='Terrain stair support connections'||s.title.startsWith('Yard ·'))rows.forEach(r=>groups.push({name:r.name,labels:[],rows:[r]}));else groups.push({name:s.title,labels:[],rows});});
+ sections.forEach((s,si)=>{const rows=s.items.flatMap((i,ii)=>i.cost===null&&Number(i.qty)>0&&!isQuoteStatusRequirement(i.name)?[{section:si,item:ii,name:i.name,spec:i.spec,qty:i.qty,unit:i.unit,sectionTitle:s.title}]:[]);if(!rows.length)return;if(s.title==='Labour (Construction & Build)'||s.title==='in-lite® Lighting System'||s.title==='Add-ons & Extras'||s.title==='Deck-part finishes'||s.title==='Manufacturer deck accessories'||s.title==='Terrain stair support connections'||s.title.startsWith('Yard ·'))rows.forEach(r=>groups.push({name:r.name,labels:[],rows:[r]}));else groups.push({name:s.title,labels:[],rows});});
  for(const [ci,c] of connectors.entries())if(c.qty>0&&c.rate===null&&!c.basis.startsWith('Priced by'))groups.push({name:c.name,labels:[],rows:[{section:-1,item:ci,name:c.name,spec:c.basis,qty:c.qty,unit:c.unit,sectionTitle:'Connection components'}]});
  for(const label of [...new Set(labels)]){
   if(isQuoteStatusRequirement(label))continue;
@@ -44,10 +45,29 @@ export function buildQuoteScopes(data:DeckData,sections:Section[],labels:readonl
  const design=Object.fromEntries(Object.entries(data).filter(([k,v])=>!ignored.has(k)&&v!==undefined));const basis=hash(canonical({design,connectors,sections:sections.filter(s=>s.total>0||s.quoteRequired).map(s=>({title:s.title,total:s.total,items:s.items})),labels:[...new Set(labels)].sort()}));
  return groups.map(g=>{const identity=canonical({name:g.name,labels:[...new Set(g.labels)].sort(),rows:g.rows.map(r=>({section:sections[r.section]?.title??'Connection components',name:r.name})).sort((a,b)=>canonical(a).localeCompare(canonical(b)))}),key=`quote-${hash(identity)}`;return {key,fingerprint:`scope-${hash(basis+canonical({identity,rows:g.rows.map(r=>({...r,section:sections[r.section]?.title??'Connection components',item:r.name}))}))}`,name:g.name,labels:[...new Set(g.labels)],rows:g.rows};});
 }
-export function applyQuoteResolutions(data:DeckData,sections:Section[],labels:string[],markup:number,connectors:ConnectorScheduleRow[]=[]):QuoteResolutionReview|undefined {
+export function applyQuoteResolutions(data:DeckData,sections:Section[],labels:string[],markup:number,connectors:ConnectorScheduleRow[]=[],yardTakeoff?:YardTakeoff):QuoteResolutionReview|undefined {
  if(!data.quoteResolutions?.length)return undefined;const entries=checkedCostRecords(data.quoteResolutions),scopes=buildQuoteScopes(data,sections,labels,connectors),active:string[]=[],items:Section['items']=[];
- for(const scope of scopes){const entry=entries.find(e=>e.scopeKey===scope.key&&e.fingerprint===scope.fingerprint);if(!entry)continue;active.push(scope.key);const amount=entry.supplyCost*markup+entry.installationCost;scope.rows.forEach(r=>{if(r.section<0){connectors[r.item].quoteResolved=true;connectors[r.item].basis=`Covered by confirmed additional scope dated ${entry.confirmedOn}. Original basis: ${connectors[r.item].basis}`;return;}const item=sections[r.section].items[r.item];item.quoteResolved=true;item.spec=`Covered by confirmed additional scope dated ${entry.confirmedOn}. Original scope basis: ${item.spec}`;});for(const label of scope.labels){let i;while((i=labels.indexOf(label))>=0)labels.splice(i,1);}items.push({name:scope.name,spec:`Confirmed additional scope dated ${entry.confirmedOn}; price includes material markup on additional supply and the confirmed installation scope. Existing priced work remains included separately.`,qty:1,unit:'scope',cost:amount});}
- if(items.length){for(const s of sections)if(s.quoteRequired&&!(s.title==='Aluminum pergola'&&labels.some(isQuoteStatusRequirement))&&!s.items.some(i=>i.cost===null&&!i.quoteResolved&&Number(i.qty)>0)&&!scopes.some(q=>q.rows.some(r=>sections[r.section]===s)&&!active.includes(q.key)))s.quoteRequired=false;sections.push({title:'Confirmed additional quote costs',icon:'✓',description:'Confirmed missing scope: supply includes material markup; installation has no second markup. HST is added below. Planning allowances still require review.',total:items.reduce((n,i)=>n+(i.cost??0),0),items});}
+ for(const scope of scopes){
+  const entry=entries.find(e=>e.scopeKey===scope.key&&e.fingerprint===scope.fingerprint);if(!entry)continue;active.push(scope.key);const amount=entry.supplyCost*markup+entry.installationCost;
+  scope.rows.forEach(r=>{if(r.section<0){connectors[r.item].quoteResolved=true;connectors[r.item].basis=`Covered by confirmed additional scope dated ${entry.confirmedOn}. Original basis: ${connectors[r.item].basis}`;return;}const item=sections[r.section].items[r.item];item.quoteResolved=true;item.spec=`Covered by confirmed additional scope dated ${entry.confirmedOn}. Original scope basis: ${item.spec}`;});
+  for(const label of scope.labels){let i;while((i=labels.indexOf(label))>=0)labels.splice(i,1);}
+  const priced={name:scope.name,spec:`Confirmed additional scope dated ${entry.confirmedOn}; price includes material markup on additional supply and the confirmed installation scope. Existing priced work remains included separately.`,qty:1,unit:'scope',cost:amount,quoteResolved:true};
+  // Keep wall/patio confirmations in the backyard subtotal. A separate deck-only
+  // additions bucket previously attributed these costs to the deck.
+  const yard=scope.rows.length&&scope.rows.every(r=>r.section>=0&&r.sectionTitle.startsWith('Yard ·'))?sections[scope.rows[0].section]:undefined;
+  if(yard){yard.items.push(priced);yard.total+=amount;}else items.push(priced);
+ }
+ if(active.length){for(const s of sections)if(s.quoteRequired&&!(s.title==='Aluminum pergola'&&labels.some(isQuoteStatusRequirement))&&!s.items.some(i=>i.cost===null&&!i.quoteResolved&&Number(i.qty)>0)&&!scopes.some(q=>q.rows.some(r=>sections[r.section]===s)&&!active.includes(q.key)))s.quoteRequired=false;}
+ if(items.length)sections.push({title:'Confirmed additional quote costs',icon:'✓',description:'Confirmed missing scope: supply includes material markup; installation has no second markup. HST is added below. Planning allowances still require review.',total:items.reduce((n,i)=>n+(i.cost??0),0),items});
+  // Reconcile public yard summaries with active private scope amounts without
+  // adding a second HST charge or exposing the supplier record itself.
+  if(yardTakeoff){
+    const yardSections=sections.filter(s=>s.title.startsWith('Yard ·'));
+    const sum=yardSections.reduce((n,s)=>n+Math.round(s.total*100),0),tax=Math.round(sum*.13),pending=yardSections.some(s=>s.quoteRequired);
+    yardTakeoff.knownSubtotalCents=sum;yardTakeoff.knownHstCents=tax;yardTakeoff.knownGrandTotalCents=sum+tax;yardTakeoff.quoteRequired=pending;
+    yardTakeoff.subtotalCents=pending?null:sum;yardTakeoff.hstCents=pending?null:tax;yardTakeoff.grandTotalCents=pending?null:sum+tax;
+    for(const row of yardTakeoff.sections){const section=yardSections.find(s=>s.title===`Yard · ${row.label}`);if(section&&!section.quoteRequired&&section.items.some(i=>i.quoteResolved))row.amountCents=Math.round(section.total*100);}
+  }
  const inactive=entries.length-active.length;return {scopes,active,inactive};
 }
 

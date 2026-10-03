@@ -169,8 +169,23 @@ export interface YardHardscape {finishId:string;colorId:string;unitId:string;pat
 /** Decorative paving zones, centre-relative patio-local inches before patio rotation. */
 export interface PatioInlay {id:string;name:string;shape:'rectangle'|'diamond'|'circle'|'compass'|'band'|'custom';xIn:number;yIn:number;widthIn:number;depthIn:number;rotationDeg:number;points?:{x:number;y:number}[];productId:string;color:string;hardscape?:YardHardscape}
 export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled:boolean;xFt:number;zFt:number;widthFt:number;depthFt:number;heightIn:number;rotationDeg:number;productId:string;color:string;
+  /** Explicit, fixed-level solid-stone stair flight. Stock and support inputs stay recorded. */
+  stoneSteps?:import('./stoneSteps').StoneSteps;
+  stepAssembly?:import('./stepAssembly').StepAssembly;
+  /** Opt-in finish connection: working/reinforcement space may receive paving after construction. */
+  pavingInterface?:{jointIn:number;supportNote?:string};
+  /** Fixed top at the feature centre in the project datum. Absent preserves legacy grade-following. */
+  finishedElevationIn?:number;
+  /** Rise percentages in patio-local across/out axes; rotates with the patio. */
+  patioSlope?:{xPct:number;zPct:number};
+  /** Each station begins a new horizontal cap-top run, measured on the exact path. */
+  wallTopSteps?:{stationIn:number;elevationIn:number}[];
+  /** Exact circular segments over the saved control points; meshes are derived. */
+  curves?:import('./circularArcs').CircularArc[];
   /** Wall front-grade datum relative to local terrain, inches. Absent means zero. */
   baseElevationIn?:number;
+  /** Reinforcement budgeting inputs; these never certify a structural design. */
+  wallConstruction?:import('./wallConstruction').WallConstruction;
   /** Patio perimeter in local inches about the feature centre, before rotation. */
   outline?:{x:number;y:number}[];
   /** Open retaining-wall centreline in local inches; widthFt is its total run. */
@@ -178,7 +193,11 @@ export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled
   /** A documented supplier variant. Absent preserves the original yard defaults. */
   hardscape?:YardHardscape;
   inlays?:PatioInlay[];
+  /** A walkway's centreline, kept so it can be edited again. The outline is derived from it and stays authoritative. */
+  pathSpine?:YardPathSpine;
 }
+/** Walkway centreline in the patio's local inches: control points and exact arcs, with the paved width and end shape. */
+export interface YardPathSpine {points:{x:number;y:number}[];curves?:import('./circularArcs').CircularArc[];widthIn:number;ends:'square'|'round'}
 export interface TerrainConfig {widthFt:number;depthFt:number;elevationIn:number;slopePct:number}
 /** Backyard items priced at the site cost estimator's allowances. Not drawn in 3D: placed and confirmed at the site visit. */
 export interface YardAllowances {finish:'budget'|'mid'|'premium';firePit:'none'|'wood'|'gas';kitchen:'none'|'basic'|'full';turfSqft:number;lighting:boolean}
@@ -245,6 +264,12 @@ export interface UnderDeckConfig {drainage:'none'|'rainescape'|'dryspace'|'zipup
 /** Saved local edge vector; both endpoints may translate together, but length and direction stay measured. */
 export interface BoundaryEdgeLock {level:1|2|3;edge:number;dxIn:number;dyIn:number}
 export interface DeckData {
+  stairTargets?:import('./stairTargets').StairTarget[];
+  siteModel?:import('./siteModel').SiteModel;
+  landscapeObjects?:import('./landscapeTypes').LandscapeObject[];
+  pools?:import('./poolTypes').PoolFeature[];
+  poolQuoteInputs?:import('./poolQuoteTypes').PoolQuoteInputs;
+  editorOrganization?:import('./editorOrganization').EditorOrganization;
   railSections?:RailSection[];
   /** Absent = guard every eligible perimeter and stair edge. False = explicit enabled perimeter sections only. */
   railDefault?:boolean;
@@ -257,6 +282,7 @@ export interface DeckData {
   deckOutlineOffsets?: {second?:OutlinePoint;third?:OutlinePoint};
   underDeck?: UnderDeckConfig;
   yardFeatures?: YardFeature[];
+  yardEarthwork?:import('./yardEarthwork').YardEarthwork;
   terrainConfig?: TerrainConfig;
   yardAllowances?: YardAllowances;
   /** The lot, for the permit set's site plan; absent on every existing design. */
@@ -303,6 +329,7 @@ export interface DeckData {
   houseDoorOffset?: number;
   houseDoorWidthIn?: number;
   sceneLighting?: 'Daylight' | 'Evening';
+  scenePresentation?:import('./scenePresentation').ScenePresentation;
   level2Position?: 'Front' | 'Left' | 'Right';
   level2Offset?: number;
   stairTurn?: 'Left' | 'Right';

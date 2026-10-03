@@ -9,7 +9,7 @@ export default function PlanViewport({children,frame}:{children:(zoom:number,fra
   const box=useRef<HTMLDivElement>(null);
   const [view,setView]=useState({zoom:1,x:0,y:0}),[pan,setPan]=useState(false),[panning,setPanning]=useState(false);
   const live=useRef(view);live.current=view;
-  const gesture=useRef<{id:number;x:number;y:number;originX:number;originY:number}|null>(null);
+  const gesture=useRef<{id:number;x:number;y:number;originX:number;originY:number;tapPan?:boolean}|null>(null);
   const frozen=useRef<PlanFrame|null>(null);
   const freeze=()=>{frozen.current??=frame;};
   const zoom=(factor:number,at?:{x:number;y:number})=>setView(old=>{
@@ -32,15 +32,20 @@ export default function PlanViewport({children,frame}:{children:(zoom:number,fra
     if(!event.currentTarget.contains(event.target as Node))return;
     freeze();
     // An explicit insertion tool takes precedence over a previously enabled camera pan.
-    if((event.target as Element).closest('.dd-boundary-editor[data-add-pull],.dd-yard-shape-editor[data-add-pull],.dd-yard-shape-editor[data-drawing],.dd-inlay-plan-editor[data-placement],.dd-patio-inlay-overlay[data-placing]')){if(pan)setPan(false);return;}
-    if(!pan&&event.button!==1)return;
+    if((event.target as Element).closest('.dd-landscape-plan[data-drawing],.dd-boundary-editor[data-add-pull],.dd-yard-shape-editor[data-add-pull],.dd-yard-shape-editor[data-drawing],.dd-inlay-plan-editor[data-placement],.dd-patio-inlay-overlay[data-placing]')){if(pan)setPan(false);return;}
+    const hardscapePan=!!(event.target as Element).closest('.dd-hardscape-plan-picks,[data-area-pick]');
+    if(!pan&&event.button!==1&&!hardscapePan)return;
     if((event.target as HTMLElement).closest('.dd-plan-navigation,.dd-boundary-inline,[data-plan-editor-ui],[role="toolbar"]'))return;
+    if(gesture.current&&gesture.current.id!==event.pointerId){gesture.current=null;setPanning(false);return;}
+    if(hardscapePan&&!pan&&event.button===0){gesture.current={id:event.pointerId,x:event.clientX,y:event.clientY,originX:live.current.x,originY:live.current.y,tapPan:true};return;}
     event.preventDefault();event.stopPropagation();
     event.currentTarget.focus({preventScroll:true});event.currentTarget.setPointerCapture(event.pointerId);
     gesture.current={id:event.pointerId,x:event.clientX,y:event.clientY,originX:live.current.x,originY:live.current.y};setPanning(true);
   };
   const move=(event:PointerEvent<HTMLDivElement>)=>{
     const g=gesture.current;if(!g||g.id!==event.pointerId)return;
+    if(g.tapPan&&Math.hypot(event.clientX-g.x,event.clientY-g.y)<5)return;
+    if(g.tapPan){g.tapPan=false;event.currentTarget.setPointerCapture(event.pointerId);setPanning(true);}
     event.preventDefault();setView(old=>({...old,x:g.originX+event.clientX-g.x,y:g.originY+event.clientY-g.y}));
   };
   const end=(event:PointerEvent<HTMLDivElement>)=>{if(gesture.current?.id!==event.pointerId)return;gesture.current=null;setPanning(false);};

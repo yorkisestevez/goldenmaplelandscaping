@@ -9,7 +9,7 @@ import {Field,NumberField,type Update} from '../fields';
  * The Backyard section: patios, retaining walls and water features around the deck, plus a fire pit, outdoor kitchen, turf and
  * landscape lighting at the cost estimator's allowances, all with their own subtotal.
  */
-export default function BackyardStep({data,update,estimate,earlierYard,onRestoreEarlierYard,onDismissEarlierYard}:{data:DeckData;update:Update;estimate:DeckEstimate;earlierYard:number;onRestoreEarlierYard:()=>void;onDismissEarlierYard:()=>void}){
+export default function BackyardStep({data,update,onApplyElevation,estimate,earlierYard,onRestoreEarlierYard,onDismissEarlierYard,onDesign,selectedFeatureId,onSelectFeature,onGeometry}:{onGeometry?:(data:DeckData|null)=>void;data:DeckData;update:Update;onApplyElevation?:Update;estimate:DeckEstimate;earlierYard:number;onRestoreEarlierYard:()=>void;onDismissEarlierYard:()=>void;onDesign?:()=>void;selectedFeatureId?:string;onSelectFeature?:(id:string)=>void}){
   const active=(data.yardFeatures??[]).filter(f=>f.enabled),split=splitSubtotal(estimate),yard=estimate.yardTakeoff;
   const a=data.yardAllowances??NO_ALLOWANCES;
   // Switching the last allowance off removes them, so the design saves exactly as one without allowances.
@@ -18,7 +18,8 @@ export default function BackyardStep({data,update,estimate,earlierYard,onRestore
   const amount=(id:string)=>{const row=yard.sections.find(s=>s.id===`allowance-${id}`);return row?row.amountCents===null?'Builder quote required':`Allowance: ${dollars(row.amountCents/100)}`:undefined;};
   return <>
     {earlierYard>0&&<div className="dd-quote-notice" role="status"><strong>Your earlier design had a backyard</strong><p>It had {earlierYard} backyard feature{earlierYard===1?'':'s'} (patios, walls or water). Add {earlierYard===1?'it':'them'} back to this design?</p><div className="dd-summary-actions"><button type="button" className="dd-primary" onClick={onRestoreEarlierYard}>Add {earlierYard===1?'it':'them'} back</button><button type="button" className="dd-secondary" onClick={onDismissEarlierYard}>No thanks</button></div></div>}
-    <YardEditor data={data} onChange={update}/>
+    {onDesign&&<div className="dd-summary-actions"><button type="button" className="dd-primary" onClick={onDesign}>Design patios &amp; walls on the plan</button></div>}
+    <YardEditor onGeometry={onGeometry} data={data} onChange={update} onApplyElevation={onApplyElevation} selectedFeatureId={selectedFeatureId} onSelectFeature={onSelectFeature}/>
     <section className="dd-allowances" aria-labelledby="dd-allowances-title">
       <h3 id="dd-allowances-title">Fire pit, kitchen, turf and lighting</h3>
       <p className="dd-note">These are priced at the allowances in our online cost estimator: planning figures, not quotes. They are not drawn in 3D; we place them with you at the site visit.</p>

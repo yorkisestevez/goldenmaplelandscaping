@@ -1,68 +1,68 @@
 {
- "day": {
-  "source": "meadow_8k.hdr",
-  "sunAzimuthDeg": -40.56,
-  "sunElevationDeg": 69.02,
-  "sunIntensity": 0,
-  "sunColor": [
-   1,
-   1,
-   1
-  ],
-  "sunPixels": 289646,
-  "sunShare": 0.033,
-  "sunPainted": false,
-  "skyIrradiance": 3.1416,
-  "bandScale": 7.1827,
-  "bandTopDeg": 41,
-  "bandBottomDeg": -4,
-  "horizonColor": [
-   0.2911,
-   0.1869,
-   0.0858
-  ],
-  "whiteBalance": [
-   1.0016,
-   1.0029,
-   0.9677
-  ],
-  "eveningGrade": [
-   1,
-   1,
-   1
-  ]
- },
- "evening": {
-  "source": "meadow_8k.hdr",
-  "sunAzimuthDeg": -40.56,
-  "sunElevationDeg": 69.02,
-  "sunIntensity": 0,
-  "sunColor": [
-   1,
-   1,
-   1
-  ],
-  "sunPixels": 289646,
-  "sunShare": 0.033,
-  "sunPainted": false,
-  "skyIrradiance": 3.1416,
-  "bandScale": 6.9774,
-  "bandTopDeg": 41,
-  "bandBottomDeg": -4,
-  "horizonColor": [
-   0.1976,
-   0.1902,
-   0.1516
-  ],
-  "whiteBalance": [
-   1.0016,
-   1.0029,
-   0.9677
-  ],
-  "eveningGrade": [
-   0.48,
-   0.72,
-   1.25
-  ]
- }
+  "day": {
+    "source": "suburban_garden_4k.hdr",
+    "sunAzimuthDeg": 36.04,
+    "sunElevationDeg": 64.17,
+    "sunIntensity": 3.1818,
+    "sunColor": [
+      1,
+      0.9497,
+      0.8998
+    ],
+    "sunPixels": 137935,
+    "sunShare": 0.911,
+    "sunPainted": true,
+    "skyIrradiance": 0.2776,
+    "bandScale": 0.2216,
+    "bandTopDeg": 41,
+    "bandBottomDeg": -4,
+    "horizonColor": [
+      0.0443,
+      0.044,
+      0.0322
+    ],
+    "whiteBalance": [
+      1.0674,
+      0.9948,
+      0.882
+    ],
+    "eveningGrade": [
+      1,
+      1,
+      1
+    ]
+  },
+  "evening": {
+    "source": "meadow_8k.hdr",
+    "sunAzimuthDeg": -40.56,
+    "sunElevationDeg": 69.02,
+    "sunIntensity": 0,
+    "sunColor": [
+      1,
+      1,
+      1
+    ],
+    "sunPixels": 289646,
+    "sunShare": 0.033,
+    "sunPainted": false,
+    "skyIrradiance": 3.1416,
+    "bandScale": 6.9774,
+    "bandTopDeg": 41,
+    "bandBottomDeg": -4,
+    "horizonColor": [
+      0.1976,
+      0.1902,
+      0.1516
+    ],
+    "whiteBalance": [
+      1.0016,
+      1.0029,
+      0.9677
+    ],
+    "eveningGrade": [
+      0.48,
+      0.72,
+      1.25
+    ]
+  }
 }

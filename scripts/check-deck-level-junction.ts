@@ -35,7 +35,9 @@ const NEW_QUOTE='Stair and level cladding (builder quote)',REVIEW_PRICE_SECTIONS
   ENGINE_SECTIONS=(title:string)=>/^Structural Framing \(/.test(title)||FEWER_FOOTINGS.has(title),
   // Framing connectors the engine's beam layout calls for (a splice where two beam lines meet) stay builder quotes.
   ENGINE_QUOTES=new Set(['Splice fasteners']);
-const quoteScope=(label:string)=>label.replace(/ (?:supply and installation|installation \(builder quote\)|supply \(supplier quote\))$/,'');
+const quoteScope=(label:string)=>label.replace(/: engineering and selected system confirmation$/,': selected wall system and site design confirmation').replace(/ (?:supply and installation|installation \(builder quote\)|supply \(supplier quote\))$/,'');
+const WALL_SCOPE_LABELS=['selected wall system and site design confirmation','manufacturer backing and top-course assembly confirmation','Preliminary manufacturer assembly survey and quote','Wall body stock supply','Selected cap stock supply','Wall body and cap installation','retained ground and reinforcement placement confirmation','drain outlet elevation and fall confirmation','Geogrid stock supply','Geogrid installation','Compacted leveling aggregate and placement','Drainage stone and placement','Reinforced backfill and compaction','Wall separator fabric and installation','Main perforated drain and installation','Drain outlet extension and installation','Drain outlet fittings and termination','Cap adhesive and installation','Core-fill stone, connectors and special stock','Wall packaging, freight and order adjustments','Wall survey/design services','drain outlet route and length confirmation'];
+function addedYardScope(design:DeckData,label:string){return ['Soil reuse, loose spoil and hauling confirmation','Hauling and disposal price adjustments'].includes(label)||(design.yardFeatures??[]).some(f=>f.enabled&&f.kind==='retaining-wall'&&WALL_SCOPE_LABELS.some(scope=>label===`${f.name}: ${scope}`));}
 const cases=junctionCases();
 
 // 1. Prices against the baseline.
@@ -43,8 +45,10 @@ let same=0,guard=0,fallbacks=0;
 for(const [name,c] of Object.entries(cases)){
   const was=baseline[name],now=junctionPrice(c.design);ok(was,`${name}: in the baseline`);
   const moved=Object.keys({...was.sections,...now.sections}).filter(t=>!near(was.sections[t]??0,now.sections[t]??0));
-  ok(now.quoteRequired.every(q=>was.quoteRequired.some(old=>quoteScope(old)===quoteScope(q))||q===NEW_QUOTE||ENGINE_QUOTES.has(q)||q==='Paver packaging, colour and freight adjustments (supplier quote)')&&was.quoteRequired.every(q=>now.quoteRequired.some(next=>quoteScope(next)===quoteScope(q))),`${name}: quote scope is preserved, with explicit cladding and paver order confirmation`);
-  const cladding=calculateEstimate(c.design,DECK_SETTINGS).sections.find(s=>s.title==='Stair and level cladding');
+  ok(now.quoteRequired.every(q=>was.quoteRequired.some(old=>quoteScope(old)===quoteScope(q))||q===NEW_QUOTE||ENGINE_QUOTES.has(q)||q==='Paver packaging, colour and freight adjustments (supplier quote)'||addedYardScope(c.design,q))&&was.quoteRequired.every(q=>now.quoteRequired.some(next=>quoteScope(next)===quoteScope(q))),`${name}: existing quote scope is preserved, with explicit cladding, wall execution, hauling and paver order confirmation`);
+  const detailed=calculateEstimate(c.design,DECK_SETTINGS);
+  for(const row of detailed.yardTakeoff.sections.filter(row=>addedYardScope(c.design,row.label)))ok(row.amountCents===null&&detailed.sections.some(section=>section.quoteRequired&&section.total===0&&section.items.some(item=>item.name===row.label&&item.cost===null)),`${name}: added wall/hauling scope stays unpriced and separately identified`);
+  const cladding=detailed.sections.find(s=>s.title==='Stair and level cladding');
   if(cladding)ok(cladding.items.some(i=>i.cost===null),`${name}: cladding installation is still a quote even when exact supply is known`);
   ok(moved.every(t=>REVIEW_PRICE_SECTIONS.has(t)||ENGINE_SECTIONS(t)||FEWER_FOOTINGS.has(t)&&(now.sections[t]??0)<(was.sections[t]??0)),`${name}: only the documented railing, stair-width and cladding sections and the framing engine's sections can change`);
   if(c.expect==='same'){ok(near(now.railingLf,was.railingLf),`${name}: pricing review preserves guard quantities`);same++;}
