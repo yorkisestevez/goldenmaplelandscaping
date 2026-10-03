@@ -47,7 +47,7 @@ function slabGeometry(slabs:SkirtingSlab[],grain:'along'|'up',courses=true){
   g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('uv1',new THREE.Float32BufferAttribute(uv1,2));g.setAttribute('aVar',new THREE.Float32BufferAttribute(variation,4));
   g.computeVertexNormals();g.computeBoundingSphere();return g;
 }
-function Slabs({slabs,material,grain='along',courses=true,name}:{slabs:SkirtingSlab[];material:THREE.Material;grain?:'along'|'up';courses?:boolean;name:string}){
+export function Slabs({slabs,material,grain='along',courses=true,name}:{slabs:SkirtingSlab[];material:THREE.Material;grain?:'along'|'up';courses?:boolean;name:string}){
   const geometry=useMemo(()=>slabGeometry(slabs,grain,courses),[slabs,grain,courses]),invalidate=useThree(s=>s.invalidate);
   useEffect(()=>{invalidate();return ()=>geometry.dispose();},[geometry,invalidate]);
   return slabs.length?<mesh name={name} geometry={geometry} material={material} castShadow receiveShadow/>:null;
@@ -71,6 +71,6 @@ export default function Skirting3D({data,model,finished,wood}:{data:DeckData;mod
   },[face,lattice,invalidate]);
   if(!plan)return null;
   return <group name="deck-skirting">{finished
-    ?<><Slabs slabs={plan.faces} material={face} grain={plan.style==='Vertical boards'?'up':'along'} courses={!lattice} name="skirting-face"/><Slabs slabs={plan.frames} material={trim} name="skirting-access-panels"/></>
+    ?<><Slabs slabs={plan.faces} material={face} grain={plan.style==='Vertical boards'?'up':'along'} courses={!lattice} name="skirting-face"/><Slabs slabs={plan.frames} material={trim} name="skirting-access-panels"/><Slabs slabs={plan.corners} material={face} grain="up" courses={false} name="skirting-corner-trim"/></>
     :<><Slabs slabs={plan.backing} material={wood} name="skirting-backing"/><Slabs slabs={plan.frames} material={wood} name="skirting-access-frames"/></>}</group>;
 }

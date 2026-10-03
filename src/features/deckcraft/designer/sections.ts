@@ -53,7 +53,7 @@ export const SECTIONS:readonly DesignSection[]=[
     ledger:['Decking','Picture-frame border finish','Accent-colour boards','Accent colours & inlays','Deck-part finishes'],related:{id:'stairs',text:'Add stairs and a railing'}},
   {id:'stairs',name:'Stairs & railings',legacyStep:2,load:loadStairsStep,
     fields:['stairFlights','stairWidth','stairType','stairPosition','stairEdgeId','stairOffset','stairTurn','landingDepthIn','railingType','railingLf','catalogueRailingId','glassMount','glassFinish','deckFinishes.railingColor'],
-    ledger:['Stairs','Railing System','Terrain stair support connections'],related:{id:'lighting',text:'Light the steps and posts'}},
+    ledger:['Stairs','Railing System','Stair and level cladding','Terrain stair support connections'],related:{id:'lighting',text:'Light the steps and posts'}},
   {id:'lighting',name:'Lighting',legacyStep:3,load:loadSiteExtrasStep,
     fields:['autoLighting','lightingSystem','lightingZoneEnabled'],
     ledger:['in-lite® Lighting System'],related:{id:'extras',text:'Add privacy screens or skirting'}},

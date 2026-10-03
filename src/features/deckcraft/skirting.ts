@@ -57,6 +57,8 @@ export interface SkirtingPlan{
   edges:SkirtingEdge[];runs:SkirtingRun[];
   /** Face boards or lattice panels; the 2×4 backing (studs and rails); the trim round each access panel. */
   faces:SkirtingSlab[];backing:SkirtingSlab[];frames:SkirtingSlab[];
+  /** A trim board at each outside corner, closing the slot the two faces leave there (drawn only; not in the quantities). */
+  corners:SkirtingSlab[];
   lengthFt:number;faceSqft:number;backingLf:number;latticePanels:number;
   accessPanels:{requested:number;placed:number;widthIn:number;heightsIn:number[]};
   /** Ventilation, access and drainage, and anything left open: confirm-before-construction notes. */
@@ -217,6 +219,27 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
     }
   });
   const placed=heightsIn.length;
+  // Outside corners: the faces stand off the rim, so two runs meeting at a corner leave a slot between their ends. A
+  // corner trim board a little proud of both faces closes it, as a built skirting's corner trim does.
+  const corners:SkirtingSlab[]=[],seen=new Set<string>(),proud=RIM_FACE+FACE+.1;
+  runs.forEach((r1,i)=>runs.forEach((r2,j)=>{
+    if(i===j)return;
+    const u1={x:(r1.b.x-r1.a.x)/r1.lengthIn,y:(r1.b.y-r1.a.y)/r1.lengthIn};
+    for(const [end1,end2] of [['b','a'],['b','b'],['a','a'],['a','b']] as const){
+      const c=r1[end1],d=r2[end2];if(Math.hypot(c.x-d.x,c.y-d.y)>1)continue;
+      const key=`${Math.round(c.x)}:${Math.round(c.y)}`;if(seen.has(key))continue;
+      const past=end1==='b'?u1:{x:-u1.x,y:-u1.y},u2={x:(r2.b.x-r2.a.x)/r2.lengthIn,y:(r2.b.y-r2.a.y)/r2.lengthIn},away2=end2==='a'?u2:{x:-u2.x,y:-u2.y};
+      // Outside corner: the next run's face looks along the way this run was going.
+      const turnsOut=r2.out.x*past.x+r2.out.y*past.y;if(turnsOut<=.01)continue;
+      seen.add(key);
+      const turn=Math.acos(Math.max(-1,Math.min(1,past.x*away2.x+past.y*away2.y))),ext=proud*Math.tan(turn/2);
+      const at=(t:number)=>({x:c.x+past.x*t+r1.out.x*(RIM_FACE+proud)/2,y:c.y+past.y*t+r1.out.y*(RIM_FACE+proud)/2});
+      const bottom=Math.min(end1==='b'?r1.bottomB:r1.bottomA,end2==='a'?r2.bottomA:r2.bottomB),top=Math.min(r1.top,r2.top);
+      // Slab geometry wants `out` on the right of a→b, as the faces have it.
+      const [p,q]=end1==='b'?[at(0),at(ext)]:[at(ext),at(0)];
+      if(top-bottom>=MIN_FACE)corners.push({a:p,b:q,out:r1.out,thick:proud-RIM_FACE,bottomA:bottom,topA:top,bottomB:bottom,topB:top});
+    }
+  }));
 
   const listed=[...edges.values()].filter(e=>e.lengthFt>=.5),notes:string[]=[];
   if(!runs.length)notes.push(listed.length&&listed.every(e=>e.open)?'Skirting: every side is left open, so none is listed.':'Skirting: no deck edge has room for it: the framing sits too close to the ground.');
@@ -232,7 +255,7 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
   const opened=listed.filter(e=>e.open);
   if(opened.length&&runs.length)notes.push(`Skirting left open by choice: ${opened.map(e=>e.label.toLowerCase()).join('; ')}.`);
   if(config.colour&&colour!==config.colour)notes.push('The chosen skirting colour does not suit this decking, so the skirting is shown and listed in the deck colour.');
-  return {style,colour,clearanceIn,edges:listed,runs,faces,backing,frames,
+  return {style,colour,clearanceIn,edges:listed,runs,faces,backing,frames,corners,
     lengthFt:runs.reduce((n,r)=>n+r.lengthIn,0)/12,faceSqft:runs.reduce((n,r)=>n+r.faceSqft,0),backingLf:backingIn/12,latticePanels,
     accessPanels:{requested,placed,widthIn:ACCESS.w,heightsIn},notes};
 }

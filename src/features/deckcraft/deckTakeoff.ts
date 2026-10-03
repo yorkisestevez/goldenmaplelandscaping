@@ -157,22 +157,27 @@ export function buildDeckTakeoff(data:DeckData){
     return result;
   }
   levels.push(makeLevel(mainFp,data.height,{x:0,y:0,z:0},deckAttachesToHouse(data),'deck',0));
-  type Flight={id:string;kind:'grade'|'connection';risers:number;rise:number;run:number;width:number;start:V3;end:V3;type:string;stringerOffsets:number[]};
+  /** A stair flight. A straight one carries its plan directions (outward = downhill) and how far its treads and risers
+   * run past `width` at each end (a full-width step reaching its level's finished edge). */
+  type Flight={id:string;kind:'grade'|'connection';risers:number;rise:number;run:number;width:number;start:V3;end:V3;type:string;stringerOffsets:number[];along?:PlanPoint;outward?:PlanPoint;endExtend?:number};
   const stairSupport=getStairSupport(data,gap);
   const issues:string[]=[],flights:Flight[]=[],connections:{from:number;to:number;opening:StairPlacement;run:number}[]=[];
   const openings=new Map<number,StairPlacement[]>();
   const addOpening=(index:number,p:StairPlacement)=>openings.set(index,[...(openings.get(index)||[]),p]);
+  // A railed step that stands on a lower level: its side lines (in world plan inches), where its own rails replace that level's guard.
+  const stepSides:{level:number;origin:PlanPoint;dir:PlanPoint;length:number}[]=[];
   const run=stairSupport.runIn;
-  function addStraight(origin:V3,outward:PlanPoint,along:PlanPoint,width:number,n:number,rise:number,kind:Flight['kind'],id:string,startOffset=(data.pictureFrameRows||data.pattern==='Picture Frame')?finishedFasciaOffset(data):0,opts:{rails?:boolean;stringers?:boolean}={}){
+  function addStraight(origin:V3,outward:PlanPoint,along:PlanPoint,width:number,n:number,rise:number,kind:Flight['kind'],id:string,startOffset=(data.pictureFrameRows||data.pattern==='Picture Frame')?finishedFasciaOffset(data):0,opts:{rails?:boolean;stringers?:boolean;endExtend?:number}={}){
+    const e=opts.endExtend??0;
     const start={x:origin.x+outward.x*startOffset,y:origin.y,z:origin.z+outward.y*startOffset};
     const end={x:start.x+outward.x*run*Math.max(0,n-1),y:start.y-n*rise,z:start.z+outward.y*run*Math.max(0,n-1)};
     const yaw=Math.atan2(outward.x,outward.y),stringerOffsets=getStringerOffsets(width,stairSupport.spacingIn,stairSupport.minimumStringers);
-    for(let i=0;i<n;i++)riserBoards.push(...makeRiserBoards({x:start.x+outward.x*i*run,y:start.y-i*rise,z:start.z+outward.y*i*run},along,outward,width,rise,stairSupport,data.deckingMaterial,id,i));
+    for(let i=0;i<n;i++)riserBoards.push(...makeRiserBoards({x:start.x+outward.x*i*run,y:start.y-i*rise,z:start.z+outward.y*i*run},along,outward,width+2*e,rise,stairSupport,data.deckingMaterial,id,i));
     if(rise<=1)issues.push('A stair rise is no greater than the modeled tread thickness; this transition needs a reviewed threshold detail.');
-    for(let i=1;i<n;i++){const d=(i-.5)*run+stairSupport.treadNosingIn/2;treads.push({x:start.x+outward.x*d,y:start.y-i*rise-.5,z:start.z+outward.y*d,w:width,h:1,d:run+stairSupport.treadNosingIn,angle:yaw,kind:'tread'});}
+    for(let i=1;i<n;i++){const d=(i-.5)*run+stairSupport.treadNosingIn/2;treads.push({x:start.x+outward.x*d,y:start.y-i*rise-.5,z:start.z+outward.y*d,w:width+2*e,h:1,d:run+stairSupport.treadNosingIn,angle:yaw,kind:'tread'});}
     if(opts.stringers!==false)for(const shift of stringerOffsets){stringers.push({a:{x:start.x+along.x*shift,y:start.y-9,z:start.z+along.y*shift},b:{x:end.x+along.x*shift,y:end.y-4,z:end.z+along.y*shift},width:1.5,depth:9.25,role:'stringer',stair:{risers:n,rise,run,top:start.y,bottom:end.y}});}
     if(data.railingType!=='None'&&opts.rails!==false)for(const side of [-1,1]){const shift=side*width/2;railRuns.push({a:{x:start.x+along.x*shift,y:start.y,z:start.z+along.y*shift},b:{x:end.x+along.x*shift,y:end.y,z:end.z+along.y*shift}});}
-    flights.push({id,kind,risers:n,rise,run,width,start,end,type:'Straight',stringerOffsets});return end;
+    flights.push({id,kind,risers:n,rise,run,width,start,end,type:'Straight',stringerOffsets,along,outward,...(e?{endExtend:e}:{})});return end;
   }
   function addInlineLanding(start:V3,outward:PlanPoint,along:PlanPoint,width:number,n:number,rise:number,kind:Flight['kind'],id:string){
     const upper=Math.ceil(n/2),lower=n-upper,end=addStraight(start,outward,along,width,upper,rise,kind,`${id}-upper`),depth=Math.max(width,data.landingDepthIn||48);
@@ -187,6 +192,7 @@ export function buildDeckTakeoff(data:DeckData){
   // runs into the house: it slides along its parent's edge until clear (its back then lines up with
   // the house wall), keeping the opening on its edge; if it cannot, the design is flagged.
   const house=getHousePlacement(data),deckIndex:number[]=[0];
+  const worldOutline=(l:DeckLevel)=>l.footprint.outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}));
   function attachLevel(parentIndex:number,fp:FootprintPlan,top:number,place:{side:'Front'|'Left'|'Right'|'Back';edgeId?:string;offsetPct:number;fullStep?:boolean},index:number,label:string,id:string){
     const parent=levels[parentIndex],pfp=parent.footprint,contact=parentIndex===0?mainContact:undefined;
     let side:'Front'|'Left'|'Right'|'Back'=place.side;
@@ -194,31 +200,61 @@ export function buildDeckTakeoff(data:DeckData){
     const edgeLen=side==='Front'||side==='Back'?fp.bounds.w:fp.bounds.h;
     const opening=getStairPlacement({...data,stairFlights:1,stairPosition:side,stairOffset:place.offsetPct,stairWidth:Math.abs(parent.top-top)<.01||place.fullStep?edgeLen:Math.min(data.stairWidth,edgeLen),stairEdgeId:place.edgeId},pfp,contact);
     if(!opening){issues.push(`The ${label} has no open ${side.toLowerCase()} edge to join; choose another side.`);return;}
-    const delta=Math.abs(parent.top-top),n=delta>.01?Math.ceil(delta/7.75):0,rise=n?delta/n:0,distance=n>14?Math.max(0,n-2)*run+Math.max(opening.width,data.landingDepthIn||48):Math.max(0,n-1)*run;
+    const delta=Math.abs(parent.top-top),n=delta>.01?Math.ceil(delta/7.75):0,rise=n?delta/n:0,spaced=n>14?Math.max(0,n-2)*run+Math.max(opening.width,data.landingDepthIn||48):Math.max(0,n-1)*run;
     const center={x:parent.offset.x+opening.origin.x+opening.along.x*opening.width/2,z:parent.offset.z+opening.origin.y+opening.along.y*opening.width/2};
-    const o=opening.outward,offset=o.y>.5?{x:center.x-fp.bounds.w/2,y:0,z:center.z+distance}:o.x<-.5?{x:center.x-distance-fp.bounds.w,y:0,z:center.z-fp.bounds.h/2}:o.x>.5?{x:center.x+distance,y:0,z:center.z-fp.bounds.h/2}:{x:center.x-fp.bounds.w/2,y:0,z:center.z-distance-fp.bounds.h};
-    // Keep clear of the house by sliding along the parent edge (x for front/back, z for sides).
-    const k=Math.abs(o.y)>.5?'x':'z',size=k==='x'?fp.bounds.w:fp.bounds.h;
+    const o=opening.outward,k=Math.abs(o.y)>.5?'x':'z',size=k==='x'?fp.bounds.w:fp.bounds.h;
     const hits=(v:V3)=>v.x+fp.bounds.w>house.x0+.5&&v.x<house.x1-.5&&v.z+fp.bounds.h>-house.depthIn+.5&&v.z<-.5;
-    // Where this level's own opening sits along its edge: centred unless it had to slide.
-    let childOffsetPct=50;
-    if(hits(offset)){
-      const lo=k==='x'?house.x0:-house.depthIn,hi=k==='x'?house.x1:0,a0=center[k]-opening.width/2,a1=center[k]+opening.width/2;
-      const shift=[hi-offset[k],lo-size-offset[k]].filter(s=>offset[k]+s<=a0+.01&&offset[k]+s+size>=a1-.01).sort((p,q)=>Math.abs(p)-Math.abs(q))[0];
-      if(shift!==undefined){offset[k]+=shift;childOffsetPct=size-opening.width>1e-9?Math.min(100,Math.max(0,(a0-offset[k])/(size-opening.width)*100)):50;}
-      else issues.push(`The ${label} runs into the house. Make it smaller or join it on another side before construction.`);
+    // Where the level goes `distance` out from its parent's edge, slid along that edge (x for front/back, z for sides)
+    // to keep clear of the house; its own opening is centred unless it had to slide.
+    const placeAt=(distance:number)=>{
+      const offset:V3=o.y>.5?{x:center.x-fp.bounds.w/2,y:0,z:center.z+distance}:o.x<-.5?{x:center.x-distance-fp.bounds.w,y:0,z:center.z-fp.bounds.h/2}:o.x>.5?{x:center.x+distance,y:0,z:center.z-fp.bounds.h/2}:{x:center.x-fp.bounds.w/2,y:0,z:center.z-distance-fp.bounds.h};
+      let childOffsetPct=50,intoHouse=false;
+      if(hits(offset)){
+        const lo=k==='x'?house.x0:-house.depthIn,hi=k==='x'?house.x1:0,a0=center[k]-opening.width/2,a1=center[k]+opening.width/2;
+        const shift=[hi-offset[k],lo-size-offset[k]].filter(s=>offset[k]+s<=a0+.01&&offset[k]+s+size>=a1-.01).sort((p,q)=>Math.abs(p)-Math.abs(q))[0];
+        if(shift!==undefined){offset[k]+=shift;childOffsetPct=size-opening.width>1e-9?Math.min(100,Math.max(0,(a0-offset[k])/(size-opening.width)*100)):50;}
+        else intoHouse=true;
+      }
+      const outline=fp.outline.map(p=>({x:p.x+offset.x,y:p.y+offset.z}));
+      const overlaps=deckIndex.filter(i=>polygonCut([outline],[worldOutline(levels[i])]).some(p=>Math.abs(signedArea(p))>1));
+      return {distance,offset,childOffsetPct,intoHouse,outline,overlaps};
+    };
+    // Levels meet as they are built (owner decision 2026-09-25): the step between them stands on the lower level, off
+    // the higher level's edge, so there is no trench beside it and no slot at its ends. The step and 36 in in front of
+    // it must fit on the lower level, and the join must not run into the house or another level the old spacing
+    // cleared; otherwise the levels keep the old spacing (a stair-run apart, or a landing apart past 14 risers).
+    let placed=placeAt(spaced);
+    if(n>0&&n<=14&&spaced>0){
+      const touching=placeAt(0),parentHigher=parent.top>=top,dir=parentHigher?o:{x:-o.x,y:-o.y};
+      const lower=parentHigher?touching.outline:worldOutline(parent),edge={x:parent.offset.x+opening.origin.x,y:parent.offset.z+opening.origin.y},u=opening.along;
+      const reach=((data.pictureFrameRows||data.pattern==='Picture Frame')?finishedFasciaOffset(data):0)+(n-1)*run+stairSupport.treadNosingIn+36;
+      const at=(t:number,d:number)=>({x:edge.x+u.x*t+dir.x*d,y:edge.y+u.y*t+dir.y*d});
+      const room=[at(.5,.01),at(opening.width-.5,.01),at(opening.width-.5,reach),at(.5,reach)];
+      const outside=polygonCut([room],[lower],true).reduce((n,p)=>n+Math.abs(signedArea(p)),0);
+      const fits=outside<=1&&!(touching.intoHouse&&!placed.intoHouse)&&touching.overlaps.every(i=>placed.overlaps.includes(i));
+      if(fits)placed=touching;
+      else issues.push(`The step between the ${parentIndex===0?'main deck':'second level'} and the ${label} does not fit on the lower level (${Math.round(reach)} in needed in front of the higher edge), so the levels are kept a stair-run apart. Make the lower level deeper to join them.`);
     }
+    const distance=placed.distance,offset=placed.offset,childOffsetPct=placed.childOffsetPct;
+    if(placed.intoHouse)issues.push(`The ${label} runs into the house. Make it smaller or join it on another side before construction.`);
     const levelIndex=levels.length;
     levels.push(makeLevel(fp,top,offset,false,'deck',index));deckIndex.push(levelIndex);
     // Real outlines, not bounding boxes: a wrap-around's box covers the house between its wings.
-    const world=(l:DeckLevel)=>l.footprint.outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}));
-    for(const i of deckIndex.slice(0,-1))if(polygonCut([world(levels[levelIndex])],[world(levels[i])]).some(p=>Math.abs(signedArea(p))>1))issues.push(`The ${label} overlaps ${i===0?'the main deck':'another deck level'}. Join it on another side or change its size before construction.`);
+    for(const i of deckIndex.slice(0,-1))if(polygonCut([worldOutline(levels[levelIndex])],[worldOutline(levels[i])]).some(p=>Math.abs(signedArea(p))>1))issues.push(`The ${label} overlaps ${i===0?'the main deck':'another deck level'}. Join it on another side or change its size before construction.`);
     const opposite=side==='Front'?'Back':side==='Left'?'Right':side==='Right'?'Left':'Front';
     const other=getStairPlacement({...data,stairFlights:1,stairPosition:opposite,stairOffset:childOffsetPct,stairWidth:opening.width,stairEdgeId:undefined},fp)!;
     addOpening(parentIndex,opening);addOpening(levelIndex,other);connections.push({from:parentIndex,to:levelIndex,opening,run:distance});
     // A full-width split-level step of up to three risers needs no stair guards; a single riser sits on the lower rim.
-    const stepOpts=place.fullStep?{rails:n>3,stringers:n>1}:{};
+    // A step as wide as the level's edge runs its treads and risers out to the rim face at each end, so its ends line up
+    // with the finished edge below (no notch). Stringers and rails keep the framing width.
+    const flush=distance===0&&n>1&&Math.abs(opening.width-edgeLen)<.5?finishedFasciaOffset(data):0;
+    const stepOpts=place.fullStep?{rails:n>3,stringers:n>1,endExtend:flush}:{endExtend:flush};
     if(n){const parentHigher=parent.top>=top;const start=parentHigher?{x:center.x,y:parent.top,z:center.z}:{x:center.x+o.x*distance,y:top,z:center.z+o.y*distance};(n>14?addInlineLanding:(a:V3,b:PlanPoint,c:PlanPoint,d:number,e:number,f:number,g:Flight['kind'],h:string)=>addStraight(a,b,c,d,e,f,g,h,undefined,stepOpts))(start,parentHigher?o:{x:-o.x,y:-o.y},opening.along,opening.width,n,rise,'connection',id);}
+    // Standing on the lower level, a railed step's own rails guard its sides there.
+    if(n&&n<=14&&distance===0&&data.railingType!=='None'&&stepOpts.rails!==false){
+      const dir=parent.top>=top?o:{x:-o.x,y:-o.y},length=((data.pictureFrameRows||data.pattern==='Picture Frame')?finishedFasciaOffset(data):0)+(n-1)*run;
+      for(const side of [-1,1])stepSides.push({level:parent.top>=top?levelIndex:parentIndex,origin:{x:center.x+opening.along.x*side*opening.width/2,y:center.z+opening.along.y*side*opening.width/2},dir,length});
+    }
   }
   if(data.levels>1)attachLevel(0,getFootprint(data,2),data.height2,{side:data.level2Position||'Front',edgeId:data.level2EdgeId,offsetPct:data.level2Offset??50,fullStep:data.level2FullStep},1,'second level','level-connection');
   if(data.levels>2&&data.level3&&deckIndex.length===2){
@@ -306,10 +342,22 @@ export function buildDeckTakeoff(data:DeckData){
   for(const [index,level]of levels.entries()){
     if(level.kind!=='deck')continue;
     let segments=getRailingSegments(data,level.footprint,null,index===0?mainContact:undefined);
-    for(const opening of openings.get(index)||[]){
-      const ox=opening.origin.x,oz=opening.origin.y,ux=opening.along.x,uz=opening.along.y;
-      segments=segments.flatMap(s=>{const cross=(s.a.x-ox)*uz-(s.a.y-oz)*ux,crossB=(s.b.x-ox)*uz-(s.b.y-oz)*ux;if(Math.abs(cross)>.01||Math.abs(crossB)>.01)return[s];const a=(s.a.x-ox)*ux+(s.a.y-oz)*uz,b=(s.b.x-ox)*ux+(s.b.y-oz)*uz,lo=Math.min(a,b),hi=Math.max(a,b);if(hi<=0||lo>=opening.width)return[s];const result=[];if(lo<0)result.push({...s,a:{x:ox+ux*lo,y:oz+uz*lo},b:{x:ox,y:oz}});if(hi>opening.width)result.push({...s,a:{x:ox+ux*opening.width,y:oz+uz*opening.width},b:{x:ox+ux*hi,y:oz+uz*hi}});return result;});
+    // Cuts the stretch lo…hi (along u from origin, level plan inches) out of every guard segment lying on that line.
+    const cutAlong=(origin:PlanPoint,u:PlanPoint,lo:number,hi:number,tol=.01)=>{
+      const ox=origin.x,oz=origin.y,ux=u.x,uz=u.y;
+      segments=segments.flatMap(s=>{const cross=(s.a.x-ox)*uz-(s.a.y-oz)*ux,crossB=(s.b.x-ox)*uz-(s.b.y-oz)*ux;if(Math.abs(cross)>tol||Math.abs(crossB)>tol)return[s];const a=(s.a.x-ox)*ux+(s.a.y-oz)*uz,b=(s.b.x-ox)*ux+(s.b.y-oz)*uz,l=Math.min(a,b),h=Math.max(a,b);if(h<=lo||l>=hi)return[s];const result=[],at=(t:number)=>({x:ox+ux*t,y:oz+uz*t});
+        // The pieces run along u, as the stair-opening cut always made them.
+        if(l<lo)result.push({...s,a:at(l),b:at(lo)});if(h>hi)result.push({...s,a:at(hi),b:at(h)});return result;});
+    };
+    for(const opening of openings.get(index)||[])cutAlong(opening.origin,opening.along,0,opening.width);
+    // Where a higher level meets this one, its edge stands over this edge: that level's own guard (or the step) is
+    // the guard, so this level has none along the shared stretch (owner decision 2026-09-25).
+    for(const other of levels){
+      if(other===level||other.kind!=='deck'||other.top<=level.top+.01)continue;
+      const poly=other.footprint.outline.map(p=>({x:p.x+other.offset.x-level.offset.x,y:p.y+other.offset.z-level.offset.z}));
+      poly.forEach((p,i)=>{const q=poly[(i+1)%poly.length],len=Math.hypot(q.x-p.x,q.y-p.y);if(len>.5)cutAlong(p,{x:(q.x-p.x)/len,y:(q.y-p.y)/len},0,len,.5);});
     }
+    for(const side of stepSides)if(side.level===index)cutAlong({x:side.origin.x-level.offset.x,y:side.origin.y-level.offset.z},side.dir,0,side.length,.5);
     for(const s of segments)railRuns.push({a:{x:s.a.x+level.offset.x,y:level.top,z:s.a.y+level.offset.z},b:{x:s.b.x+level.offset.x,y:level.top,z:s.b.y+level.offset.z}});
   }
   const posts:V3[]=[],rails:Member[]=[],balusters:Member[]=[],glass:Member[]=[];

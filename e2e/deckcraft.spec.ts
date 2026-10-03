@@ -340,7 +340,7 @@ test('opens sections in any order, keeps several open on a wide screen, and has 
   await openSection(page,'Stairs & railings');
   await page.getByLabel('Number of stair flights',{exact:true}).selectOption('2');
   await expect(price(page)).not.toHaveText(before??'');
-  await expect(sectionButton(page,'Stairs & railings')).toHaveAccessibleDescription(/^2 flights, 48 in, straight · Aluminum railing \$[\d,]+ Changed from the default design$/);
+  await expect(sectionButton(page,'Stairs & railings')).toHaveAccessibleDescription(/^2 flights, 48 in, straight · Aluminum railing \$[\d,]+ \+ quote Changed from the default design$/);
   await openSection(page,'Deck shape & size');
   await setNumber(page,'Deck width',20);
   await expect(size(page)).toContainText('20 × 12 ft');
@@ -743,6 +743,28 @@ test('lists what each change does to the price, tags quotes and never shows $0 f
   await schedule(page).getByRole('button',{name:'Full price list'}).click();
   await expect(fullList(page)).toContainText('Installation Labour');
   expect(await fullList(page).textContent()).not.toMatch(ZERO);
+  expect(problems).toEqual([]);
+});
+
+test('joins deck levels as built: the step stands on the lower level and the cladding is a builder quote',async({page})=>{
+  test.setTimeout(150_000);
+  const shaderProblems:string[]=[];
+  page.on('console',m=>{if(/Shader Error|WebGLProgram/.test(m.text()))shaderProblems.push(m.text().slice(0,300));});
+  const problems=await openDesigner(page);
+  // Every stair's sides are boarded: a builder quote beside the stairs, never $0.
+  await expect(quoteLine(page,'Stair and level cladding')).toHaveText('Builder quote Stair and level cladding');
+  await openSection(page,'Deck shape & size');
+  await page.getByLabel('Number of levels',{exact:true}).selectOption('2');
+  // A second level adds its price (the levels meet, so no guard runs along the lower edge of the join).
+  await expect(changes(page).first()).toHaveText(/^\+\$[\d,]+ Number of levels → 2/);
+  await expect(scheduleLine(page,'Stair and level cladding')).toHaveText('Stair and level claddingBuilder quote');
+  expect(await schedule(page).textContent()).not.toMatch(ZERO);
+  await viewTab(page,'3D');
+  const canvas=viewer3d(page);
+  await canvas.scrollIntoViewIfNeeded();
+  await expect(canvas).toBeVisible({timeout:20000});
+  await page.waitForTimeout(3000);
+  expect(shaderProblems).toEqual([]);
   expect(problems).toEqual([]);
 });
 

@@ -8,6 +8,7 @@ import {boardFinishPlan,colourName,darkSlateBorder,parseColourRef,type StockGrou
 import {DECK_PARTS,partRef,railingFinish,stairTreadKey} from './deckPartFinishes';
 import {inlayCrewDays,PATTERN_LABOUR} from './lib/inlayGeometry';
 import {SKIRTING_STYLE_NAMES,skirtingPlan,skirtingRows} from './skirting';
+import {claddingPlan} from './stairCladding';
 import {buildDeckTakeoff,type DeckTakeoff} from './deckTakeoff';
 import {DECK_SETTINGS} from './defaults';
 import {DECKING_CATALOGUE,RAILING_CATALOGUE} from './manufacturerCatalog';
@@ -701,6 +702,17 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     if(rows.length){sections.push({title:'Deck skirting',icon:'🧱',quoteRequired:true,total:0,description:`${SKIRTING_STYLE_NAMES[skirting.style]} under the deck, listed for a builder quote: the price book has no skirting rates yet, so it is not in the priced total.`,items:rows});quoteRequired.push('Deck skirting (builder quote)');}
     flags.push(...skirting.notes);
   }
+  // Stair sides, step ends and the faces between levels (stairCladding.ts): fascia boards the price book has no rate for,
+  // so they are listed for a builder quote, never priced or $0 (owner decision 2026-09-25).
+  const cladding=claddingPlan(data,model),claddingSqft=cladding.sqft['stair-side']+cladding.sqft['step-end']+cladding.sqft['level-drop'];
+  if(claddingSqft>=.1){
+    const fasciaColour=partRef(data,'fascia'),parts=[['stair-side','stair sides'],['step-end','step ends'],['level-drop','faces between levels']] as const;
+    const words=parts.filter(([k])=>cladding.sqft[k]>=.05).map(([k,w])=>`${w} ${Math.ceil(cladding.sqft[k]*10)/10} sq ft`).join(', ');
+    sections.push({title:'Stair and level cladding',icon:'🪜',quoteRequired:true,total:0,description:'Fascia boards over the stair stringers, the ends of steps and the faces between deck levels, listed for a builder quote: the price book has no fascia or cladding rate, so they are not in the priced total.',
+      items:[{name:'Stair and level cladding',spec:`Fascia boards supplied and fitted${fasciaColour?` in ${colourName(fasciaColour)}`:''} over the ${words}. Builder quote required: the price book has no fascia or cladding rate.`,qty:Math.ceil(claddingSqft*10)/10,unit:'sqft',cost:null}]});
+    quoteRequired.push('Stair and level cladding (builder quote)');
+  }
+  flags.push(...cladding.notes);
   flags.push(...yardTakeoff.warnings);
   for(const row of yardTakeoff.sections){
     const unknown=row.amountCents===null;if(unknown)quoteRequired.push(row.label);

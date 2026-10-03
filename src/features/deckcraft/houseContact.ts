@@ -1,4 +1,5 @@
 import type {DeckData} from './types';
+import {levelJunctions,onJunction} from './lib/levelJunctions';
 import type {DeckTakeoff,Member} from './deckTakeoff';
 import {getFootprint,SIDE_DOT,type EdgeContact,type EdgeName,type FootprintPlan,type PlanPoint} from './lib/deckGeometry';
 import {getHousePlacement} from './housePlacement';
@@ -141,5 +142,7 @@ export function availableStairSides(data:DeckData):EdgeName[]{
 /** The rim pieces the house does not cover (a manufacturer fascia and a fascia colour go on these), level by level.
  * On the main deck, onContact alone decides which pieces lie along a wall. */
 export function exposedRim(data:DeckData,model:Pick<DeckTakeoff,'levels'>,contact:HouseContact=getHouseContact(data,model.levels[0].footprint)):Member[]{
-  return model.levels.flatMap(l=>(l.rim??[]).filter(r=>!(l.index===0&&contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z}))));
+  // A lower level's rim where a higher level meets it is hidden under that level (lib/levelJunctions.ts).
+  const junctions=model.levels.length>1?levelJunctions(model.levels):[];
+  return model.levels.flatMap((l,i)=>(l.rim??[]).filter(r=>!(l.index===0&&contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z}))&&!junctions.some(j=>j.lower===i&&onJunction(j,{x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z}))));
 }

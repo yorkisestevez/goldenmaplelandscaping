@@ -12,6 +12,7 @@ import {glassHardwarePieces} from './framelessGlass';
 import {stringerCutProfile} from './components/viewer3d/stringerProfile';
 import type {PlanPoint} from './lib/deckGeometry';
 import {skirtingPlan,type SkirtingSlab} from './skirting';
+import {claddingPlan,drawnRiserBoards} from './stairCladding';
 
 export type ExportMesh={name:string;vertices:V3[];faces:number[][]};
 const add=(a:V3,b:V3):V3=>({x:a.x+b.x,y:a.y+b.y,z:a.z+b.z});
@@ -94,7 +95,7 @@ export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
       out.push(boxMesh(`${name}_post_base_${i}`,{x:p.x,y:data.foundation==='Deck Blocks'?6.25:4.25,z:p.z,w:7,h:.4,d:7}));
     });
   });
-  boxes('stair_tread_board',getStairBoards(data,model));boxes('closed_stair_riser',model.riserBoards);model.stringers.forEach((m,i)=>out.push(stringerMesh(`stair_stringer_${i+1}`,m,model)));
+  boxes('stair_tread_board',getStairBoards(data,model));boxes('closed_stair_riser',drawnRiserBoards(data,model));model.stringers.forEach((m,i)=>out.push(stringerMesh(`stair_stringer_${i+1}`,m,model)));
   const veneer=stairVeneerLayout(data,model);boxes('stair_veneer_2x6',veneer.woodBoxes);boxes('stair_veneer_angle',veneer.bracketBoxes);
   boxes('railing_post',model.railing.posts.map(p=>({x:p.x,y:p.y+model.railing.height/2,z:p.z,w:3.5,h:model.railing.height,d:3.5})));
   members('rail',model.railing.rails);members('baluster',model.railing.balusters);members('glass_panel',model.railing.glass);
@@ -107,7 +108,11 @@ export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
   const extras=extrasLayout(data,model);boxes('bench_privacy_pergola_wood',extras.wood);boxes('extra_metal',extras.metal);boxes('drainage',extras.drainage);boxes('privacy_panel',extras.panels);
   // Skirting only when the design has it: face boards or lattice, 2×4 backing and access-panel trim.
   const skirting=data.skirting?skirtingPlan(data,model):null;
-  if(skirting)for(const [part,items] of [['face',skirting.faces],['backing',skirting.backing],['access_panel_frame',skirting.frames]] as const)items.forEach((s,i)=>out.push(slabMesh(`skirting_${part}_${i+1}`,s)));
+  if(skirting)for(const [part,items] of [['face',skirting.faces],['backing',skirting.backing],['access_panel_frame',skirting.frames],['corner',skirting.corners]] as const)items.forEach((s,i)=>out.push(slabMesh(`skirting_${part}_${i+1}`,s)));
+  // Stair sides, step ends, faces between levels and rim corner fillers (stairCladding.ts).
+  const cladding=claddingPlan(data,model),counts:Record<string,number>={};
+  for(const s of cladding.slabs)out.push(slabMesh(`cladding_${s.part.replace('-','_')}_${counts[s.part]=(counts[s.part]??0)+1}`,s));
+  cladding.fillers.forEach((s,i)=>out.push(slabMesh(`rim_corner_filler_${i+1}`,s)));
   const accessories=catalogueAccessoryLayout(data,model);members('manufacturer_fascia',accessories.fascia);boxes('joist_tape',accessories.tape);boxes('ledger_flashing',accessories.flashing);
   extras.fixtures.forEach((p,i)=>{
     const product=getLightingProduct(p.productId),dim=product?.dimensionsIn??{},g=product?.geometry,h=dim.height??(g==='bollard'?18:g==='transformer'?12:1),w=dim.length??dim.diameter??dim.width??2,d=dim.diameter??dim.width??2;

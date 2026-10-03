@@ -31,6 +31,8 @@ import {stairVeneerLayout} from '../../stairVeneerLayout';
 import {hasSimplifiedPaving} from './yardPreview';
 import PrivacyScreens3D from './PrivacyScreens3D';
 import Skirting3D from './Skirting3D';
+import Cladding3D from './Cladding3D';
+import {drawnRiserBoards} from '../../stairCladding';
 import {boardFinishPlan,darkSlateBorder,parseColourRef} from '../../boardFinishes';
 import {partRef,railingFinish} from '../../deckPartFinishes';
 import {railingScreenHex} from '../../railingScreenColours';
@@ -157,6 +159,8 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
   const materials=useMemo(()=>({...shared,wood:framing}),[shared,framing]);
   // Accent boards (boardFinishes.ts): worked out only when the design has some, or while the tool is on.
   const painting=!!boardPaint&&!structure;
+  // The top riser of each flight stands on the rim's face (stairCladding.ts), never inside the rim or in its plane.
+  const drawnRisers=useMemo(()=>drawnRiserBoards(data,model),[data,model]);
   const finish=useMemo(()=>data.boardColours?.length||data.inlays?.length||data.deckFinishes?.border||painting?boardFinishPlan(data,model):null,[model,data.boardColours,data.inlays,data.deckingMaterial,data.deckingColor,data.pattern,data.boardWidth,data.borderFinish,data.deckFinishes?.border,painting]);
   // Deck parts in their own colour (the border is drawn with the accent groups above); the railing in its colour's
   // screen approximation, illustrative only.
@@ -191,7 +195,8 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
     {data.skirting&&<Skirting3D data={data} model={model} finished={!structure&&!cutaway} wood={materials.wood}/>}
     <HardwareDetails data={data} model={model} inspection={inspection}/><FootingDetails data={data} model={model} cutaway={cutaway}/>
     <FinishedBoards items={stairBoards} material={treadMat}/>
-    {!structure&&<group name="closed-stair-riser-boards"><FinishedBoards items={model.riserBoards} material={riserMat}/></group>}
+    {!structure&&<group name="closed-stair-riser-boards"><FinishedBoards items={drawnRisers} material={riserMat}/></group>}
+    {!structure&&<Cladding3D data={data} model={model} material={fasciaMat} finished={!cutaway}/>}
     <NotchedStringers model={model} material={materials.wood}/>
     <Boxes items={stairVeneer.woodBoxes} material={materials.wood} name="terrain-stair-veneer-support-blocks"/>
     {inspection&&<Boxes items={stairVeneer.bracketBoxes} material={materials.metal} name="terrain-stair-veneer-support-angles"/>}
