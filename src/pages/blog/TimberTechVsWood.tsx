@@ -37,8 +37,8 @@ export default function TimberTechVsWood() {
       <ul>
         <li><strong>Initial build:</strong> ~$25,000 - $35,000 (higher upfront, premium materials)</li>
         <li><strong>Annual maintenance:</strong> Soap and water. $0.</li>
-        <li><strong>Board replacement:</strong> $0 (TimberTech AZEK carries up to a 50-year warranty)</li>
-        <li><strong>Full replacement:</strong> Not needed. Period.</li>
+        <li><strong>Board replacement:</strong> Rarely needed — capped boards don't rot, and manufacturer warranty terms vary by product line</li>
+        <li><strong>Full replacement:</strong> Not expected within the 20 years compared here, provided the framing underneath is sound</li>
       </ul>
 
       <p><strong>Total 20-year cost: $25,000 - $35,000</strong></p>
@@ -51,7 +51,7 @@ export default function TimberTechVsWood() {
         <li><strong>PVC core, not wood-plastic composite:</strong> It doesn't absorb moisture. At all. This is critical in Ontario where boards sit under snow for 4-5 months.</li>
         <li><strong>Mould and mildew resistant:</strong> No organic material means nothing for mould to feed on.</li>
         <li><strong>Won't splinter, crack, or warp:</strong> Your kids and pets can walk barefoot on it safely for decades.</li>
-        <li><strong>Colour holds:</strong> UV-resistant capping technology means the colour you chose in year one is the colour you'll have in year twenty.</li>
+        <li><strong>Colour holds:</strong> UV-resistant capping keeps the colour far closer to day one than wood — any surface in full sun mellows a little over time.</li>
       </ul>
 
       <h2>The ROI Argument</h2>
