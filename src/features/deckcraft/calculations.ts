@@ -1,3 +1,6 @@
+import {buildSkirting} from './skirting';
+import {buildDrySpace} from './drySpace';
+import {boardFinishStatus} from './boardFinishes';
 import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock} from './stockPlan';
 import {buildDeckTakeoff,type DeckTakeoff} from './deckTakeoff';
@@ -5,6 +8,8 @@ import {DECK_SETTINGS} from './defaults';
 import {DECKING_CATALOGUE,RAILING_CATALOGUE} from './manufacturerCatalog';
 import {catalogueAccessoryLayout} from './catalogueAccessories';
 import {lightingSystemCheck} from './lightingSystem';
+import {privacyScreenLayout} from './privacyScreens';
+import {getFramelessSystem} from './framelessSystems';
 import {pictureFrameCompatibility} from './lib/finishedFootprint';
 import {buildYardModel,type YardModel} from './yardModel';
 import {buildYardTakeoff,type YardTakeoff} from './yardTakeoff';
@@ -127,7 +132,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const separateBorder=data.borderFinish==='Dark Slate'&&model.levels.some(l=>l.boards.some(b=>b.role==='border'));
   const pricedBoardStock=separateBorder?deckBoardStock({...model,levels:model.levels.map(l=>({...l,boards:l.boards.filter(b=>b.role!=='border')}))},wasteFactor):boardStock;
   const totalDeckingLf = pricedBoardStock.orderedLf;
-  const standard_board_length = selectedMaterial.id === 'cedar' ? 12 : 16;
+  const standard_board_length = model.stockLength / 12;
   const finalBoards = pricedBoardStock.orderedBoards;
   // costPerSqft → $/lin-ft conversion is (boardWidthIn / 12): a 5.5" board covers
   // 5.5/12 sqft per lin-ft. (Was /5.5, which billed per-sqft prices per lin-ft —
@@ -150,7 +155,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const breaker_positions1=model.levels[0].breakers.map(x=>x/12);
   const breaker_positions2=model.levels[1]?.breakers.map(x=>x/12)||[];
   const breaker_interval=standard_board_length;
-  // Breaker decking and its four-member build-ups are already in the shared
+  // Breaker decking, field-end supports and ladder blocking are already in the shared
   // board and framing takeoff. These legacy extra-charge fields must stay zero.
   const total_breaker_boards=0,breaker_blocking_lf=0,breaker_screws=0;
   const breaker_labor_hrs=model.levels.reduce((n,l)=>n+l.breakers.length*(l.footprint.bounds.h/120)*1.5,0);
@@ -412,7 +417,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     lighting: totalLightingCost,
     bench: benchLf * 155 * markupMult,
     privacy: privacySqft * 70 * markupMult,
-    drainage: hasDrainage ? area * 12 * markupMult : 0,
+    drainage: hasDrainage&&!data.drySpace ? area * 12 * markupMult : 0,
     demo: hasDemo ? area * 14 * markupMult : 0,
     pergola: pergolaSqft * 65 * markupMult,
     // Add-on module specific
@@ -540,7 +545,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       items: [
         { name: 'Built-in Bench', spec: 'Matching Decking', qty: benchLf, unit: 'lf', cost: addOnCosts.bench },
         { name: 'Privacy Screen', spec: 'Louvered/Slatted', qty: privacySqft, unit: 'sqft', cost: addOnCosts.privacy },
-        { name: 'Drainage System', spec: 'Under-deck', qty: hasDrainage ? area : 0, unit: 'sqft', cost: addOnCosts.drainage },
+        { name: 'Drainage System', spec: 'Under-deck', qty: hasDrainage&&!data.drySpace ? area : 0, unit: 'sqft', cost: addOnCosts.drainage },
         { name: 'Demo & Removal', spec: 'Existing Deck', qty: hasDemo ? area : 0, unit: 'sqft', cost: addOnCosts.demo },
         { name: 'Pergola', spec: 'Wood/Aluminum', qty: pergolaSqft, unit: 'sqft', cost: addOnCosts.pergola },
         { name: 'Structural Tie-in', spec: 'Hardware to Existing', qty: deckType === 'Add-on' ? 1 : 0, unit: 'ls', cost: addOnCosts.structuralTieIn },
@@ -576,14 +581,49 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   }
   const catalogueRail=RAILING_CATALOGUE.find(r=>r.id===data.catalogueRailingId);
   if(catalogueRail){requireSection('Railing System',catalogueRail.name);flags.push(catalogueRail.notes);}
+  const frameless=getFramelessSystem(data);
+  if(frameless){
+    const section=sections.find(s=>s.title==='Railing System');
+    const glass=model.railing.glass,levelLf=model.railing.shoeLengthIn/12;
+    const unresolved=model.railing.unmodeledSectionIds.length;
+    if(section){section.total=0;section.quoteRequired=true;section.items=[
+      {name:frameless.name,spec:'Illustrative level-panel count; dimensions require supplier stock/shop layout. Not a glass order or cutting list.',qty:glass.length,unit:'panels',cost:null},
+      {name:frameless.mount==='spigot'?'Spigot assemblies':'Continuous base shoe',spec:frameless.mount==='spigot'?'Two illustrative mounts per panel; exact engineered positions and fixings unresolved.':'Installed schematic length; stock bars, joins, drainage and anchorage unresolved.',qty:frameless.mount==='spigot'?model.railing.spigotCount:Math.round(levelLf*10)/10,unit:frameless.mount==='spigot'?'assemblies':'lf',cost:null},
+      {name:'Anchorage, support and glass retention design',spec:'Supplier/engineer must specify fasteners, blocking/load path, gaskets, glass type and any required retention/top rail.',qty:1,unit:'scope',cost:null},
+      ...(unresolved?[{name:'Unresolved guards and handrails',spec:'Sloped, winder or short sections are not modeled by this level-glass system. Obtain a separate accepted design before procurement or construction.',qty:unresolved,unit:'sections',cost:null}]:[]),
+    ];}
+    requireSection('Labour (Construction & Build)','Revised installation labour including frameless glass');
+    quoteRequired.push(`${frameless.name} — glass, mounts, anchorage and installation`);
+    flags.push('Frameless glass and total installation labour require a revised supplier/crew quote; generic railing rates and productivity have not been accepted for this system.',...frameless.limitations);
+  }
   if(separateBorder){const lf=model.levels.reduce((n,l)=>n+l.boards.filter(b=>b.role==='border').reduce((s,b)=>s+b.length/12,0),0);quoteRequired.push('Deckorators Dark Slate picture-frame boards');sections.push({title:'Picture-frame border finish',icon:'🪵',quoteRequired:true,total:0,items:[{name:'Deckorators Dark Slate',spec:'Dedicated border product; installed cuts are in the stock schedule. Supplier board lengths, order allowance and pricing require confirmation.',qty:Math.ceil(lf*10)/10,unit:'lf',cost:null}]});}
   const catalogueAccessories=catalogueAccessoryLayout(data,model);
+  const screens=privacyScreenLayout(data,model);
+  if(screens.quoteRequired){
+    flags.push(...screens.warnings);quoteRequired.push('Privacy screen panels, posts, brackets, anchorage and installation');
+    sections.push({title:'Manufacturer privacy screens',icon:'▥',quoteRequired:true,total:0,items:[...screens.schedule.map(r=>({name:r.description,spec:`${r.rowId} · modeled quantity only; supplier quote and mounting design required.`,qty:r.quantity,unit:r.unit,cost:null})),...(screens.unplacedCount?[{name:'Selected privacy panels not placed',spec:'No geometry or mounting schedule exists for these panels. Resolve layout before ordering.',qty:screens.unplacedCount,unit:'panel',cost:null}]:[])]});
+    if(data.privacySqft>0)flags.push('Both generic privacy screen area and manufacturer screen rows are selected. Review the scope to avoid a duplicate allowance.');
+  }
   if(catalogueAccessories.rows.length){
     const rows=catalogueAccessories.rows.filter(r=>r.qty>0);
     sections.push({title:'Manufacturer deck accessories',icon:'🔩',quoteRequired:true,total:0,items:rows.map(r=>({name:r.name,spec:r.spec,qty:r.qty,unit:r.unit,cost:null}))});
     quoteRequired.push(...rows.map(r=>r.name));
     if(data.catalogueAccessories?.some(id=>id==='tt_concealoc'||id==='dk_stealthlock')){const section=sections.find(s=>s.title==='Hardware & Fasteners');if(section){for(const item of section.items)if(item.name==='Hidden Clips'||item.name==='Deck Screws')item.cost=null;section.quoteRequired=true;section.total=section.items.reduce((n,i)=>n+(i.cost??0),0);}}
     if(data.catalogueAccessories?.includes('tt_protac_flashing')){const section=sections.find(s=>s.title==='Add-ons & Extras');if(section){for(const item of section.items)if(item.name==='Ledger Flashing')item.cost=null;section.total=section.items.reduce((n,i)=>n+(i.cost??0),0);}}
+  }
+  const skirt=buildSkirting(data,model),dry=buildDrySpace(data,model),finishes=boardFinishStatus(data,model);
+  if(data.skirting?.enabled){
+    flags.push(...skirt.issues);quoteRequired.push('Skirting boards, backing, connections and installation');
+    sections.push({title:'Deck skirting & support framing',icon:'▤',quoteRequired:true,total:0,items:[...skirt.rows.map(r=>({...r,cost:null})),{name:'Skirting connections, access and installation',spec:'Non-load-bearing backing preview; site grade, fastening, ventilation and access detail required.',qty:1,unit:'scope',cost:null}]});
+  }
+  if(dry.selected){
+    flags.push(...dry.issues);quoteRequired.push(`${dry.product.name} — drainage, flashing, discharge and installation`);
+    sections.push({title:'Under-deck dry space',icon:'☂',quoteRequired:true,total:0,items:[...dry.rows.map(r=>({...r,cost:null})),{name:`${dry.product.name} installation review`,spec:dry.modeled?'Partial schematic quantities; resolve excluded bays, discharge and waterproofing details.':'Selected system is not modeled for this framing. Resolve layout before ordering.',qty:1,unit:'scope',cost:null}]});
+  }
+  if(finishes.overrides.length){
+    flags.push(`${finishes.matched.length} individual board colour previews; ${finishes.unmatched.length} unmatched selections retained. RGB colours do not select an available SKU or approve painting composite decking.`);
+    quoteRequired.push('Individual board colour / product matching');
+    sections.push({title:'Individual board finish review',icon:'◧',quoteRequired:true,total:0,items:[{name:'Custom board colour matching',spec:'Preview colours only. Base material quantities/prices remain unchanged; obtain actual product availability and revised pricing.',qty:finishes.overrides.length,unit:'boards',cost:null}]});
   }
   if(catalogueMaterial?.availabilityNote)flags.push(catalogueMaterial.availabilityNote);
   if(veneer.applicable){

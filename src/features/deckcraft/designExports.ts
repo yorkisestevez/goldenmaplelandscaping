@@ -1,7 +1,12 @@
+import {buildSkirting} from './skirting';
+import {buildDrySpace} from './drySpace';
+import {boardFinishStatus} from './boardFinishes';
 import type {DeckData} from './types';
 import type {DeckTakeoff,Box,Member,V3} from './deckTakeoff';
 import {getHardwareLayout} from './hardwareLayout';
 import {extrasLayout} from './extrasLayout';
+import {privacyScreenLayout} from './privacyScreens';
+import {lightingEnvelope} from './lightingPlacement';
 import {getStairBoards} from './stairBoards';
 import {catalogueAccessoryLayout} from './catalogueAccessories';
 import {getLightingProduct} from './lightingCatalogue';
@@ -63,6 +68,7 @@ function cylinder(name:string,x:number,z:number,bottom:number,top:number,radius:
 
 /** Inch-scale solids from the same takeoff used by the estimate and viewer. */
 export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
+  if(data.installation&&data.installation.framing!=='Pressure-treated lumber')throw new Error('Selected framing is planning-only. Timber model exports cannot represent this framing system.');
   const out:ExportMesh[]=[];
   for(const part of buildHouseGeometry(data,data.width*12).parts)out.push({name:`house_${part.name}`,vertices:part.vertices.map(([x,y,z])=>({x,y,z})),faces:part.faces});
   const boxes=(name:string,items:Box[])=>items.forEach((b,i)=>out.push(boxMesh(`${name}_${i+1}`,b)));
@@ -73,7 +79,7 @@ export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
   model.levels.forEach((l,index)=>{
     const name=`level_${index+1}`;
     boxes(`${name}_board`,l.boards.map(b=>({x:b.cx+l.offset.x,y:l.top-.5,z:b.cy+l.offset.z,w:b.length,h:1,d:b.width??data.boardWidth,angle:-b.angleDeg*Math.PI/180,polygon:b.polygon?.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}))})));
-    members(`${name}_joist`,l.joists);members(`${name}_beam`,l.beams);members(`${name}_blocking`,l.blocking);
+    members(`${name}_joist`,l.joists.filter(m=>m.role!=='breaker-field-support'));members(`${name}_joist_breaker_support`,l.joists.filter(m=>m.role==='breaker-field-support'));members(`${name}_beam`,l.beams);members(`${name}_blocking`,l.blocking.filter(m=>m.role!=='breaker-ladder'));members(`${name}_blocking_breaker_ladder`,l.blocking.filter(m=>m.role==='breaker-ladder'));
     members(`${name}_rim`,l.rim??[]);
     const postBase=data.foundation==='Deck Blocks'?6.5:4.5;
     boxes(`${name}_post`,l.supports.filter(p=>p.y>postBase).map(p=>({x:p.x,y:(p.y+postBase)/2,z:p.z,w:5.5,h:p.y-postBase,d:5.5})));
@@ -90,15 +96,20 @@ export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
   boxes('stair_tread_board',getStairBoards(data,model));boxes('closed_stair_riser',model.riserBoards);model.stringers.forEach((m,i)=>out.push(stringerMesh(`stair_stringer_${i+1}`,m,model)));
   const veneer=stairVeneerLayout(data,model);boxes('stair_veneer_2x6',veneer.woodBoxes);boxes('stair_veneer_angle',veneer.bracketBoxes);
   boxes('railing_post',model.railing.posts.map(p=>({x:p.x,y:p.y+model.railing.height/2,z:p.z,w:3.5,h:model.railing.height,d:3.5})));
-  members('rail',model.railing.rails);members('baluster',model.railing.balusters);members('glass_panel',model.railing.glass);
+  members('rail',model.railing.rails);members('baluster',model.railing.balusters);members(model.railing.frameless?'frameless_glass_panel_envelope':'glass_panel',model.railing.glass);
+  boxes('frameless_glass_mount_envelope',model.railing.mounts);
   const hardware=getHardwareLayout(data,model);
   boxes('joist_hanger',hardware.hangers.map(p=>({x:p.x,y:p.y,z:p.z,w:1.8,h:6,d:1.7})));
   boxes('ledger_bolt',hardware.ledgerBolts.map(p=>({x:p.x,y:p.y,z:p.z,w:.5,h:.5,d:3})));
   boxes(hardware.hidden?'hidden_clip':'deck_screw',hardware.screws.map(p=>({x:p.x,y:p.y-.6,z:p.z,w:hardware.hidden?.6:.18,h:hardware.hidden?.12:1.2,d:hardware.hidden?.4:.18})));
   const extras=extrasLayout(data,model);boxes('bench_privacy_pergola_wood',extras.wood);boxes('extra_metal',extras.metal);boxes('drainage',extras.drainage);
+  const skirt=buildSkirting(data,model),dry=buildDrySpace(data,model);
+  boxes('skirting_board',skirt.boards);boxes('skirting_support_frame',skirt.framing);
+  boxes('dry_space_envelope',dry.boxes);members('dry_space_pitched_member',dry.members);
+  const screens=privacyScreenLayout(data,model);boxes('privacy_screen_panel_envelope',screens.panels);boxes('privacy_screen_post',screens.posts);boxes('privacy_screen_bracket',screens.brackets);
   const accessories=catalogueAccessoryLayout(data,model);members('manufacturer_fascia',accessories.fascia);boxes('joist_tape',accessories.tape);boxes('ledger_flashing',accessories.flashing);
   extras.fixtures.forEach((p,i)=>{
-    const product=getLightingProduct(p.productId),dim=product?.dimensionsIn??{},g=product?.geometry,h=dim.height??(g==='bollard'?18:g==='transformer'?12:1),w=dim.length??dim.diameter??dim.width??2,d=dim.diameter??dim.width??2;
+    const product=getLightingProduct(p.productId),dim=product?.dimensionsIn??{},g=product?.geometry,h=g==='wall'&&dim.diameter?dim.diameter:dim.height??(g==='bollard'?18:g==='transformer'?12:1),w=product?lightingEnvelope(product).length:2,d=product?lightingEnvelope(product).depth:2;
     const y=p.y+(g==='bollard'||g==='spot'?h/2:g==='pendant'?-18-h/2:g==='ceiling'?-h/2:0);
     out.push(boxMesh(`light_${p.productId}_${i+1}`,{x:p.x,y,z:p.z,w,h,d,angle:p.angle}));
   });
@@ -108,11 +119,13 @@ export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
 const f=(n:number)=>Number(n.toFixed(5)).toString();
 export function exportDeckOBJ(data:DeckData,model:DeckTakeoff):string{
   const lines=['# Golden Maple Deck Studio — modeled construction solids','# Units: inches; X along house, Y up, Z toward yard.','# Planning model; fixture/hardware envelopes are schematic. Engineering and site confirmation required.'];let offset=1;
+  for(const finish of boardFinishStatus(data,model).matched)lines.push(`# Board colour preview ${finish.id}: ${finish.color}; not an approved product SKU or OBJ material.`);
   for(const m of deckExportMeshes(data,model)){lines.push(`o ${m.name}`,...m.vertices.map(v=>`v ${f(v.x)} ${f(v.y)} ${f(v.z)}`),...m.faces.map(face=>`f ${face.map(i=>i+offset).join(' ')}`));offset+=m.vertices.length;}
   return lines.join('\n')+'\n';
 }
 export function exportDeckDXF(data:DeckData,model:DeckTakeoff):string{
   const lines=['0','SECTION','2','HEADER','9','$ACADVER','1','AC1015','9','$INSUNITS','70','1','0','ENDSEC','0','SECTION','2','ENTITIES'];
+  for(const finish of boardFinishStatus(data,model).matched)lines.push('999',`Board colour preview ${finish.id}: ${finish.color}; product matching required`);
   // DXF is Z-up: convert the shared model's (x,y,z) to (x,z,y).
   const point=(v:V3,i:number)=>[String(10+i),f(v.x),String(20+i),f(v.z),String(30+i),f(v.y)];
   for(const m of deckExportMeshes(data,model))for(const face of m.faces){

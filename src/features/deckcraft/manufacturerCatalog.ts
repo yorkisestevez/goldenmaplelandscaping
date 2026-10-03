@@ -1,4 +1,5 @@
 import {MATERIAL_TIERS,type MaterialColor,type RailingType} from './types';
+import {FRAMELESS_SYSTEMS} from './framelessSystems';
 
 export interface CatalogueDecking {
   id:string;name:string;tier:string;priceRange:string;costPerSqft:number|null;isComposite:boolean;isHidden:boolean;
@@ -47,6 +48,7 @@ const rail=(id:string,name:string,baseType:RailingType,sourceUrl:string,notes='M
 const timberRail='https://www.timbertech.com/products/railing/railing-overview/';
 const deckoratorsRail='https://www.deckorators.com/collections/railing';
 export const RAILING_CATALOGUE:CatalogueRailing[]=[
+  ...FRAMELESS_SYSTEMS.map(s=>rail(s.id,s.name,'Glass Panels',s.sourceUrl,`${s.dimensionNote} ${s.limitations.join(' ')}`)),
   rail('tt_classic_composite','TimberTech Classic Composite · balusters','TT Classic','https://www.timbertech.com/product/classic-composite-series/'),
   rail('tt_classic_cable','TimberTech Classic Composite · CableRail','Cable','https://www.timbertech.com/product/classic-composite-series/','Custom rail pack required. Cable components and brand-specific supplier rate require confirmation.'),
   rail('tt_classic_glass','TimberTech Classic Composite · glass','Glass Panels','https://www.timbertech.com/product/classic-composite-series/','Custom rail pack and glass channel required. Glass is sold separately; glass is incompatible with the drink rail.'),

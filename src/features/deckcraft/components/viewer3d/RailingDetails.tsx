@@ -20,10 +20,10 @@ function FittingBatch({parts,shape,material,name}:{parts:Part[];shape:'box'|'cyl
   </instancedMesh>;
 }
 
-function GlassBatch({matrices,material}:{matrices:THREE.Matrix4[];material:THREE.Material}){
+function GlassBatch({matrices,material,frameless}:{matrices:THREE.Matrix4[];material:THREE.Material;frameless:boolean}){
   const mesh=useRef<THREE.InstancedMesh>(null),invalidate=useThree(s=>s.invalidate);
   useLayoutEffect(()=>{if(!mesh.current)return;matrices.forEach((m,i)=>mesh.current!.setMatrixAt(i,m));mesh.current.count=matrices.length;mesh.current.instanceMatrix.needsUpdate=true;mesh.current.computeBoundingSphere();invalidate();},[matrices,invalidate]);
-  return <instancedMesh ref={mesh} key={matrices.length} args={[undefined,material,Math.max(1,matrices.length)]} name="half-inch-inset-glass-panels" renderOrder={2}><boxGeometry args={[1,1,1]}/></instancedMesh>;
+  return <instancedMesh ref={mesh} key={matrices.length} args={[undefined,material,Math.max(1,matrices.length)]} name={frameless?'frameless-glass-panel-envelopes':'half-inch-inset-glass-panels'} renderOrder={2}><boxGeometry args={[1,1,1]}/></instancedMesh>;
 }
 
 export default function RailingDetails({data,model}:{data:DeckData;model:DeckTakeoff}){
@@ -40,11 +40,11 @@ export default function RailingDetails({data,model}:{data:DeckData;model:DeckTak
     const cylinder=(out:Part[],position:THREE.Vector3,axis:THREE.Vector3,radius:number,length:number)=>out.push({position,axis,size:new THREE.Vector3(radius,length,radius)});
     if(data.railingType==='Glass Panels')for(const panel of model.railing.glass){
       const a=vec(panel.a),b=vec(panel.b),direction=b.clone().sub(a),horizontal=new THREE.Vector3(direction.x,0,direction.z),span=horizontal.length();if(span<5)continue;
-      horizontal.normalize();const normal=new THREE.Vector3(-horizontal.z,0,horizontal.x),trim=2.15,t=trim/span;
+      horizontal.normalize();const normal=new THREE.Vector3(-horizontal.z,0,horizontal.x),trim=model.railing.frameless?0:2.15,t=trim/span;
       const first=a.clone().lerp(b,t),last=b.clone().lerp(a,t),center=first.clone().add(last).multiplyScalar(.5);
       // A sheared box keeps stair panels vertical while their top/bottom follow the slope.
       const matrix=new THREE.Matrix4().makeBasis(last.clone().sub(first),new THREE.Vector3(0,panel.depth,0),normal.clone().multiplyScalar(panel.width));matrix.setPosition(center);glass.push(matrix);
-      for(const endpoint of [first,last])for(const height of [-panel.depth*.31,panel.depth*.31]){
+      if(!model.railing.frameless)for(const endpoint of [first,last])for(const height of [-panel.depth*.31,panel.depth*.31]){
         const p=endpoint.clone().add(new THREE.Vector3(0,height,0));
         for(const side of [-1,1]){
           // Opposed padded jaws grip both faces without floating away from the post.
@@ -83,7 +83,7 @@ export default function RailingDetails({data,model}:{data:DeckData;model:DeckTak
   },[data.railingType,model]);
   if(data.railingType!=='Glass Panels'&&data.railingType!=='Cable')return null;
   return <group name="railing-product-details">
-    {layout.glass.length>0&&<GlassBatch matrices={layout.glass} material={materials.glass}/>}
+    {layout.glass.length>0&&<GlassBatch matrices={layout.glass} material={materials.glass} frameless={model.railing.frameless}/>}
     <FittingBatch parts={layout.clamps} shape="box" material={materials.dark} name="glass-clamp-jaws"/>
     <FittingBatch parts={layout.pads} shape="box" material={materials.rubber} name="glass-clamp-pads"/>
     <FittingBatch parts={layout.bolts} shape="hex" material={materials.stainless} name="glass-clamp-screws"/>

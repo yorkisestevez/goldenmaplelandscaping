@@ -1,3 +1,8 @@
+import {addBreakerLadders,breakerJointGap,breakerStations,type BreakerAssembly} from './breakerLayout';
+import {editableRailingLayout} from './railingLayout';
+import {getFramelessSystem} from './framelessSystems';
+import {buildFramelessGeometry} from './framelessGeometry';
+import {landingSplit} from './layoutControls';
 import {addConstructionDetails,finishBoards} from './constructionDetails';
 import {polygonCut,polygonBoard,splitBoard,offsetPolygons} from './lib/polygonCuts';
 import {getFinishedFootprint} from './lib/finishedFootprint';
@@ -8,10 +13,10 @@ import {finishedFasciaOffset} from './lib/finishedFootprint';
 import {getStairSupport,getStringerOffsets,makeRiserBoards,type RiserBoard} from './stairConstruction';
 import {getFootprint,getBoardRows,getPictureFrameRuns,getStairPlacement,getRailingSegments,getHerringboneRows,type StairPlacement,type PlanPoint,type FootprintPlan,type BoardRun} from './lib/deckGeometry';
 export type V3={x:number;y:number;z:number};
-export type Member={a:V3;b:V3;width:number;depth:number;role?:string;spliceStart?:boolean;spliceEnd?:boolean;stair?:{risers:number;rise:number;run:number;top:number;bottom:number}};
+export type Member={a:V3;b:V3;width:number;depth:number;role?:string;assemblyId?:string;spliceStart?:boolean;spliceEnd?:boolean;stair?:{risers:number;rise:number;run:number;top:number;bottom:number}};
 export type Box={x:number;y:number;z:number;w:number;h:number;d:number;angle?:number;polygon?:PlanPoint[];kind?:'tread'|'winder'|'riser'};
 export type RailRun={a:V3;b:V3};
-export type DeckLevel={kind?:'deck'|'landing'|'winder';index?:number;rim?:Member[];footprint:FootprintPlan;deckingFootprint?:FootprintPlan;top:number;offset:V3;boards:BoardRun[];supports:V3[];joists:Member[];beams:Member[];blocking:Member[];breakers:number[];reference:any};
+export type DeckLevel={kind?:'deck'|'landing'|'winder';index?:number;rim?:Member[];footprint:FootprintPlan;deckingFootprint?:FootprintPlan;top:number;offset:V3;boards:BoardRun[];supports:V3[];joists:Member[];beams:Member[];blocking:Member[];breakers:number[];breakerAssemblies?:BreakerAssembly[];reference:any};
 const distance=(a:V3,b:V3)=>Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z);
 const mix=(a:V3,b:V3,t:number):V3=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t});
 export function polygonArea(fp:FootprintPlan){return Math.abs(fp.outline.reduce((a,p,i)=>{const q=fp.outline[(i+1)%fp.outline.length];return a+p.x*q.y-q.x*p.y;},0))/288;}
@@ -23,10 +28,11 @@ function spans(fp:FootprintPlan,x:number,axis:'x'|'z'){
 export function buildDeckTakeoff(data:DeckData){
   const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)||DECKING_CATALOGUE[0];
   const gap=material.isComposite?0.1875:0.25;
-  const stockLength=material.id==='cedar'?144:192;
+  const stockLength=data.boardStockLengthIn??(material.id==='cedar'?144:192);
+  const jointGap=breakerJointGap(data,gap);
   const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
   const joistDepth=data.framingSize==='2x8'?7.25:data.framingSize==='2x12'?11.25:9.25;
-  const levels:DeckLevel[]=[];const railRuns:RailRun[]=[];const treads:Box[]=[];const riserBoards:RiserBoard[]=[];const stringers:Member[]=[];const stairOpenings:StairPlacement[]=[];
+  const levels:DeckLevel[]=[];const railRuns:RailRun[]=[];const winderRailRuns:RailRun[]=[];const treads:Box[]=[];const riserBoards:RiserBoard[]=[];const stringers:Member[]=[];const stairOpenings:StairPlacement[]=[];
   const mainFp=getFootprint(data,1);
   function makeLevel(footprint:FootprintPlan,top:number,offset:V3,attached:boolean,kind:DeckLevel['kind']='deck',index=0){
     const reference=computeStruct({width:footprint.bounds.w/12,depth:footprint.bounds.h/12,heightIn:top,house:attached?'wood':'brick',ft:'PT',joistSp:String(spacing),joistSz:data.framingSize,beamMount:top<18?'flush':'drop',bSzSel:'auto',bPlySel:'auto',pf:!!data.pictureFrameRows||data.pattern==='Picture Frame'});
@@ -35,21 +41,27 @@ export function buildDeckTakeoff(data:DeckData){
     for(const row of reference.beamRows)for(const [a,b]of spans(footprint,row.z*12,'z'))for(let ply=0;ply<reference.bPly;ply++)beams.push({a:{x:a+offset.x,y:(reference.bBotY+reference.bh/2)*12,z:row.z*12+offset.z+(ply-(reference.bPly-1)/2)*1.5},b:{x:b+offset.x,y:(reference.bBotY+reference.bh/2)*12,z:row.z*12+offset.z+(ply-(reference.bPly-1)/2)*1.5},width:1.5,depth:reference.bh*12});
     const borders=data.pictureFrameRows||(data.pattern==='Picture Frame'?1:0),inset=borders*(data.boardWidth+gap);
     const deckingFootprint=getFinishedFootprint(data,footprint,attached),fieldPolygons=offsetPolygons([deckingFootprint.outline],inset),fieldXs=fieldPolygons.flat().map(p=>p.x),fieldLeft=fieldXs.length?Math.min(...fieldXs):inset;
-    const fieldWidth=fieldXs.length?Math.max(...fieldXs)-fieldLeft:0,breakerZone=data.boardWidth+2*gap;
-    let breakerCount=0;while((fieldWidth-breakerCount*breakerZone)/(breakerCount+1)>stockLength+1e-6)breakerCount++;
-    const segment=(fieldWidth-breakerCount*breakerZone)/(breakerCount+1);
-    const breakers=data.pattern==='Straight'||data.pattern==='Picture Frame'?Array.from({length:breakerCount},(_,i)=>fieldLeft+(i+1)*segment+i*breakerZone+gap+data.boardWidth/2):[];
-
-    const buildUps=[...breakers.flatMap(x=>[-1.5,-.5,.5,1.5].map(k=>x+k*(1.5+.375))),...(borders?[1.5+2.375,1.5+2*2.375,footprint.bounds.w-1.5-2.375,footprint.bounds.w-1.5-2*2.375]:[])];
-    const regular=reference.jXs.map((x:number)=>Math.max(.75,Math.min(footprint.bounds.w-.75,x*12))).filter((x:number)=>!buildUps.some(u=>Math.abs(u-x)<1.5));
-    for(const x of [...regular,...buildUps].sort((a,b)=>a-b))for(const [a,b]of spans(footprint,x,'x'))joists.push({a:{x:x+offset.x,y:top-1-joistDepth/2,z:a+offset.z},b:{x:x+offset.x,y:top-1-joistDepth/2,z:b+offset.z},width:1.5,depth:joistDepth});
-    for(let z=96;z<footprint.bounds.h-3;z+=96)for(let i=0;i<joists.length-1;i++){const a=joists[i],b=joists[i+1];if(z+offset.z<=Math.min(a.a.z,a.b.z)||z+offset.z>=Math.max(a.a.z,a.b.z)||z+offset.z<=Math.min(b.a.z,b.b.z)||z+offset.z>=Math.max(b.a.z,b.b.z)||b.a.x-a.a.x<2)continue;blocking.push({a:{x:a.a.x+.75,y:a.a.y,z:z+offset.z},b:{x:b.a.x-.75,y:b.a.y,z:z+offset.z},width:1.5,depth:joistDepth});}
+    const fieldWidth=fieldXs.length?Math.max(...fieldXs)-fieldLeft:0;
+    const straight=data.pattern==='Straight'||data.pattern==='Picture Frame';
+    const breakers=straight?breakerStations(fieldLeft,fieldWidth,data.boardWidth,jointGap,stockLength,data.breakerLayout==='Center'):[];
+    const required=fieldWidth>stockLength+1e-6;
+    const breakerAssemblies:BreakerAssembly[]=breakers.map((x,i)=>({id:`L${index+1}-BR${i+1}`,x,reason:required?'stock-length':'requested-center',jointGapIn:jointGap,supportStyle:'ladder',status:'connection-review',sourceUrl:material.id.startsWith('tt_')?'https://www.timbertech.com/resources/installation-guides/':''}));
+    const supportsAt=breakerAssemblies.flatMap(b=>[-1,1].map(side=>({x:b.x+side*(data.boardWidth/2+jointGap+.75),id:b.id})));
+    const borderJoists=borders?[1.5+2.375,1.5+2*2.375,footprint.bounds.w-1.5-2.375,footprint.bounds.w-1.5-2*2.375]:[];
+    const buildUps=[...supportsAt.map(p=>p.x),...borderJoists];
+    const regular=reference.jXs.map((x:number)=>Math.max(.75,Math.min(footprint.bounds.w-.75,x*12))).filter((x:number)=>!buildUps.some(u=>Math.abs(u-x)<1.5)&&!breakers.some(b=>Math.abs(b-x)<data.boardWidth/2+jointGap+1.5));
+    const baseXs=[...new Set<number>([...regular,...buildUps])].sort((a,b)=>a-b),joistXs:number[]=[];
+    // Moving a field joist to clear a divider must not enlarge its adjoining bay.
+    for(let i=0;i<baseXs.length;i++){const a=baseXs[i];joistXs.push(a);if(i+1<baseXs.length){const b=baseXs[i+1],n=Math.ceil((b-a)/spacing);for(let k=1;k<n;k++)joistXs.push(a+(b-a)*k/n);}}
+    for(const x of joistXs)for(const [a,b]of spans(footprint,x,'x'))joists.push({a:{x:x+offset.x,y:top-1-joistDepth/2,z:a+offset.z},b:{x:x+offset.x,y:top-1-joistDepth/2,z:b+offset.z},width:1.5,depth:joistDepth,...(supportsAt.find(p=>Math.abs(p.x-x)<.001)?{role:'breaker-field-support',assemblyId:supportsAt.find(p=>Math.abs(p.x-x)<.001)!.id}:{})});
+    const blockingInterval=material.id.startsWith('tt_')?48:96;
+    for(let z=blockingInterval;z<footprint.bounds.h-3;z+=blockingInterval)for(let i=0;i<joists.length-1;i++){const a=joists[i],b=joists[i+1];if((a.assemblyId&&a.assemblyId===b.assemblyId)||z+offset.z<=Math.min(a.a.z,a.b.z)||z+offset.z>=Math.max(a.a.z,a.b.z)||z+offset.z<=Math.min(b.a.z,b.b.z)||z+offset.z>=Math.max(b.a.z,b.b.z)||b.a.x-a.a.x<2)continue;blocking.push({a:{x:a.a.x+.75,y:a.a.y,z:z+offset.z},b:{x:b.a.x-.75,y:b.a.y,z:z+offset.z},width:1.5,depth:joistDepth,role:'field-blocking'});}
     const field=data.pattern==='Herringbone'?getHerringboneRows(deckingFootprint,data.boardWidth,gap,inset):getBoardRows(deckingFootprint,{boardWidth:data.boardWidth,gap,angleDeg:data.pattern==='Diagonal'?45:0,inset,maxBoardLen:breakers.length?100000:stockLength});
     const boards:BoardRun[]=[...(borders?getPictureFrameRuns(deckingFootprint,borders as 1|2,data.boardWidth,gap):[])];
-    for(const b of field){let intervals:[number,number][]=[[b.cx-b.length/2,b.cx+b.length/2]];if(!b.angleDeg)for(const x of breakers){const lo=x-data.boardWidth/2-gap,hi=x+data.boardWidth/2+gap;intervals=intervals.flatMap(([a,z])=>z<=lo||a>=hi?[[a,z]]:[...(a<lo?[[a,lo]]:[]),...(z>hi?[[hi,z]]:[])] as [number,number][]);}if(b.angleDeg)boards.push(b);else for(const [a,z]of intervals)if(z-a>.001){if(b.polygon)for(const p of polygonCut([b.polygon],[[{x:a,y:-10000},{x:z,y:-10000},{x:z,y:10000},{x:a,y:10000}]]))boards.push(polygonBoard(p,0,b.role));else boards.push({...b,cx:(a+z)/2,length:z-a});}}
-    for(const x of breakers)for(const [a,b]of spans(deckingFootprint,x,'x')){const from=a+inset,to=b-inset;for(let z=from;z<to;z+=stockLength+gap){const len=Math.min(stockLength,to-z);boards.push({cx:x,cy:z+len/2,length:len,angleDeg:90,role:'breaker'});}}
+    for(const b of field){let intervals:[number,number][]=[[b.cx-b.length/2,b.cx+b.length/2]];if(!b.angleDeg)for(const x of breakers){const lo=x-data.boardWidth/2-jointGap,hi=x+data.boardWidth/2+jointGap;intervals=intervals.flatMap(([a,z])=>z<=lo||a>=hi?[[a,z]]:[...(a<lo?[[a,lo]]:[]),...(z>hi?[[hi,z]]:[])] as [number,number][]);}if(b.angleDeg)boards.push(b);else for(const [a,z]of intervals)if(z-a>.001){if(b.polygon)for(const p of polygonCut([b.polygon],[[{x:a,y:-10000},{x:z,y:-10000},{x:z,y:10000},{x:a,y:10000}]]))boards.push(polygonBoard(p,0,b.role));else boards.push({...b,cx:(a+z)/2,length:z-a});}}
+    for(const x of breakers)for(const [a,b]of spans(deckingFootprint,x,'x')){const from=a+inset,to=b-inset;for(let z=from;z<to;z+=stockLength+jointGap){const len=Math.min(stockLength,to-z);boards.push({cx:x,cy:z+len/2,length:len,angleDeg:90,role:'breaker'});}}
     const installed=boards.flatMap(b=>splitBoard(b,data.boardWidth,stockLength,gap));
-    const result:DeckLevel={kind,index,footprint,deckingFootprint,top,offset,supports,joists,beams,blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,kind==='deck'&&index===0&&data.hasInlay?data.inlayLf*12:0,stockLength,inset),breakers,reference};addConstructionDetails(result,data.boardWidth);return result;
+    const result:DeckLevel={kind,index,footprint,deckingFootprint,top,offset,supports,joists,beams,blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,kind==='deck'&&index===0&&data.hasInlay?data.inlayLf*12:0,stockLength,inset),breakers,breakerAssemblies,reference};addBreakerLadders(result,data.boardWidth,spacing);addConstructionDetails(result,data.boardWidth);return result;
   }
   levels.push(makeLevel(mainFp,data.height,{x:0,y:0,z:0},data.deckType==='Attached'||data.deckType==='Add-on','deck',0));
   type Flight={id:string;kind:'grade'|'connection';risers:number;rise:number;run:number;width:number;start:V3;end:V3;type:string;stringerOffsets:number[]};
@@ -70,7 +82,7 @@ export function buildDeckTakeoff(data:DeckData){
     flights.push({id,kind,risers:n,rise,run,width,start,end,type:'Straight',stringerOffsets});return end;
   }
   function addInlineLanding(start:V3,outward:PlanPoint,along:PlanPoint,width:number,n:number,rise:number,kind:Flight['kind'],id:string){
-    const upper=Math.ceil(n/2),lower=n-upper,end=addStraight(start,outward,along,width,upper,rise,kind,`${id}-upper`),depth=Math.max(width,data.landingDepthIn||48);
+    const {upper,lower}=landingSplit(n,kind==='grade'?data.landingAfterRisers:undefined),end=addStraight(start,outward,along,width,upper,rise,kind,`${id}-upper`),depth=Math.max(width,data.landingDepthIn||48);
     const cx=end.x+outward.x*depth/2,cz=end.z+outward.y*depth/2,w=Math.abs(along.x)*width+Math.abs(outward.x)*depth,h=Math.abs(along.y)*width+Math.abs(outward.y)*depth;
     const fp:FootprintPlan={bounds:{w,h},isCurved:false,outline:[{x:0,y:0},{x:w,y:0},{x:w,y:h},{x:0,y:h}]};
     levels.push(makeLevel(fp,end.y,{x:cx-w/2,y:0,z:cz-h/2},false,'landing',levels.length));
@@ -108,7 +120,8 @@ export function buildDeckTakeoff(data:DeckData){
     const turn=data.stairTurn==='Left'?-1:1,nextOut={x:stair.along.x*turn,y:stair.along.y*turn},nextAlong={x:-stair.outward.x*turn,y:-stair.outward.y*turn};
     if(data.stairType==='Straight'||n<4){(n>14?addInlineLanding:addStraight)(start,stair.outward,stair.along,stair.width,n,rise,'grade',`grade-${flight}`);continue;}
     if(data.stairType==='Landing'){
-      const upper=Math.ceil(n/2),lower=n-upper,end=addStraight(start,stair.outward,stair.along,stair.width,upper,rise,'grade',`grade-${flight}-upper`);
+      if(data.landingStraight){addInlineLanding(start,stair.outward,stair.along,stair.width,n,rise,'grade',`grade-${flight}`);continue;}
+      const {upper,lower}=landingSplit(n,data.landingAfterRisers),end=addStraight(start,stair.outward,stair.along,stair.width,upper,rise,'grade',`grade-${flight}-upper`);
       const depth=Math.max(stair.width,data.landingDepthIn||48),cx=end.x+stair.outward.x*depth/2,cz=end.z+stair.outward.y*depth/2;
       const w=Math.abs(stair.along.x)*stair.width+Math.abs(stair.outward.x)*depth,h=Math.abs(stair.along.y)*stair.width+Math.abs(stair.outward.y)*depth;
       const fp:FootprintPlan={bounds:{w,h},isCurved:false,outline:[{x:0,y:0},{x:w,y:0},{x:w,y:h},{x:0,y:h}]};
@@ -143,7 +156,7 @@ export function buildDeckTakeoff(data:DeckData){
           cross.sort((a,b)=>a-b);
           for(let k=0;k+1<cross.length;k+=2)if(cross[k+1]-cross[k]>1.5)framing.push({a:{x:cross[k]+.75,y:framingY,z},b:{x:cross[k+1]-.75,y:framingY,z},width:1.5,depth:joistDepth,role:'winder-infill'});
         }
-        const pa=point(outer,a),pb=point(outer,b);if(data.railingType!=='None'){railRuns.push({a:{x:pa.x,y,z:pa.y},b:{x:pb.x,y:end.y-Math.min(i+1,2)*rise,z:pb.y}});const ia=point(inner,a),ib=point(inner,b);railRuns.push({a:{x:ia.x,y,z:ia.y},b:{x:ib.x,y:end.y-Math.min(i+1,2)*rise,z:ib.y}});}
+        const pa=point(outer,a),pb=point(outer,b);if(data.railingType!=='None'){const ia=point(inner,a),ib=point(inner,b);const runs=[{a:{x:pa.x,y,z:pa.y},b:{x:pb.x,y:end.y-Math.min(i+1,2)*rise,z:pb.y}},{a:{x:ia.x,y,z:ia.y},b:{x:ib.x,y:end.y-Math.min(i+1,2)*rise,z:ib.y}}];railRuns.push(...runs);winderRailRuns.push(...runs);}
       }
       for(let i=0;i<=3;i++)for(const radius of [inner,outer]){const p=point(radius,i*Math.PI/6);support.push({x:p.x,y:Math.max(0,end.y-Math.max(0,i-1)*rise-joistDepth-1),z:p.y});}
       const outline=[point(inner,0),point(outer,0),point(outer,Math.PI/2),point(inner,Math.PI/2)],xs=outline.map(p=>p.x),zs=outline.map(p=>p.y),minX=Math.min(...xs),minZ=Math.min(...zs);
@@ -163,20 +176,31 @@ export function buildDeckTakeoff(data:DeckData){
     for(const s of segments)railRuns.push({a:{x:s.a.x+level.offset.x,y:level.top,z:s.a.y+level.offset.z},b:{x:s.b.x+level.offset.x,y:level.top,z:s.b.y+level.offset.z}});
   }
   const posts:V3[]=[],rails:Member[]=[],balusters:Member[]=[],glass:Member[]=[];
-  const railHeight=data.height>71?42:36,maxSpan=((RAILING_COSTS as any)[data.railingType]?.spacing||6)*12;
+  const framelessSystem=getFramelessSystem(data);
+  const railHeight=framelessSystem?.previewHeightIn??(data.height>71?42:36),maxSpan=framelessSystem?.panelMaxIn??((RAILING_COSTS as any)[data.railingType]?.spacing||6)*12;
+  const editableRails=editableRailingLayout(railRuns,maxSpan,data.removedRailingSections);
+  const activeRailRuns=editableRails.runs;
+  railRuns.splice(0,railRuns.length,...activeRailRuns);
   const postKeys=new Set<string>();let railSections=0;
-  for(const r of railRuns){
-    const length=distance(r.a,r.b);if(length<1)continue;const bays=Math.ceil(length/maxSpan);railSections+=bays;
+  for(const r of activeRailRuns){
+    const length=distance(r.a,r.b);if(length<1)continue;const bays=r.bayCount;railSections+=bays;
+    if(framelessSystem)continue;
     for(let b=0;b<=bays;b++){const p=mix(r.a,r.b,b/bays),key=[p.x,p.y,p.z].map(n=>n.toFixed(1)).join(':');if(!postKeys.has(key)){posts.push(p);postKeys.add(key);}}
     for(const h of [3,railHeight-1.25])rails.push({a:{...r.a,y:r.a.y+h},b:{...r.b,y:r.b.y+h},width:2,depth:h===3?1.5:2.5});
     if(data.railingType==='Glass Panels')for(let b=0;b<bays;b++){const a=mix(r.a,r.b,b/bays),end=mix(r.a,r.b,(b+1)/bays);glass.push({a:{...a,y:a.y+railHeight/2},b:{...end,y:end.y+railHeight/2},width:0.5,depth:railHeight-8});}
     else if(data.railingType==='Cable')for(let i=1;i<=9;i++){const h=3+(railHeight-6)*i/10;balusters.push({a:{...r.a,y:r.a.y+h},b:{...r.b,y:r.b.y+h},width:0.125,depth:0.125});}
     else {const count=Math.ceil(length/4.5);for(let i=1;i<count;i++){const p=mix(r.a,r.b,i/count);balusters.push({a:{...p,y:p.y+4},b:{...p,y:p.y+railHeight-3},width:0.75,depth:0.75});}}
   }
+  const framelessLayout=framelessSystem?buildFramelessGeometry(editableRails.sections,framelessSystem,winderRailRuns,levels):undefined;
+  if(framelessLayout){glass.push(...framelessLayout.glass);issues.push(...framelessLayout.issues);}
   if(flights.length)issues.push(...stairSupport.issues,'Closed-riser thickness is allowed for in the illustrated stringer notch faces. Confirm the resulting stringer throat, bearing and manufacturer attachment detail before cutting.');
   const foundationSaddle=data.foundation==='Deck Blocks'?6.5:4.5;
+  if(editableRails.sections.some(s=>!s.enabled))issues.push('Railing sections have been removed from this design. Unprotected edges and stair handrails require safety review before construction; removal is not an approval.');
+  if(editableRails.staleIds.length)issues.push('Some saved railing removals no longer match this geometry. Those sections default to present; review the section map after changing dimensions or layout.');
   if(levels.some(l=>l.supports.some(p=>p.y>0&&p.y<=foundationSaddle)||l.top<joistDepth+1+foundationSaddle))issues.push('Selected deck elevation leaves insufficient clearance for framing and the foundation saddle; review low-profile framing or excavation before construction.');
+  if(levels.some(l=>l.breakers.length))issues.push('Breaker boards use modeled ladder blocking and dedicated field-end support joists. Connections, bearing, board-end fasteners and product-specific gaps require review; this is not a certified assembly.');
+  if(data.breakerLayout==='Center'&&!['Straight','Picture Frame'].includes(data.pattern))issues.push('Center breaker preference is only modeled for straight field boards; angled layouts retain supported stock joints and need a separate divider design.');
   const quantities={riserBoardPieces:riserBoards.length,riserBoardLf:riserBoards.reduce((n,b)=>n+b.w/12,0),riserBoardArea:riserBoards.reduce((n,b)=>n+b.w*b.h/144,0),inlayLf:levels.reduce((n,l)=>n+l.boards.filter(b=>b.role==='inlay').reduce((n,b)=>n+b.length/12,0),0),totalRisers:flights.reduce((n,f)=>n+f.risers,0),landingArea:levels.filter(l=>l.kind==='landing').reduce((n,l)=>n+polygonArea(l.footprint),0),breakerBoards:levels.reduce((n,l)=>n+l.breakers.length,0),blocking:levels.reduce((n,l)=>n+l.blocking.length,0),stairRailingLf:railRuns.filter(r=>r.a.y!==r.b.y).reduce((n,r)=>n+distance(r.a,r.b)/12,0),footings:levels.reduce((sum,l)=>sum+l.supports.length,0),supportPosts:levels.reduce((sum,l)=>sum+l.supports.filter(p=>p.y>foundationSaddle).length,0),joists:levels.reduce((sum,l)=>sum+l.joists.length,0),railingPosts:posts.length,railingSections:railSections,railingLf:railRuns.reduce((sum,r)=>sum+distance(r.a,r.b)/12,0),risersPerFlight:risers,stairFlights:stairOpenings.length,stairTreads:treads.length,stringers:stringers.length,installedBoardPieces:levels.reduce((sum,l)=>sum+l.boards.length,0),area:levels.reduce((sum,l)=>sum+(l.kind==='winder'?0:polygonArea(l.footprint)),0),framingLf:levels.reduce((sum,l)=>sum+[...l.joists,...l.beams,...l.blocking,...(l.rim||[])].reduce((n,m)=>n+distance(m.a,m.b)/12,0),0)};
-  return {levels,treads,riserBoards,stairSupport,stringers,flights,connections,issues,railing:{posts,rails,balusters,glass,height:railHeight},quantities,gap,stockLength};
+  return {levels,treads,riserBoards,stairSupport,stringers,flights,connections,issues,railing:{posts,rails,balusters,glass,mounts:framelessLayout?.mounts??[],frameless:!!framelessSystem,unmodeledSectionIds:framelessLayout?.unmodeledSectionIds??[],spigotCount:framelessLayout?.spigotCount??0,shoeLengthIn:framelessLayout?.shoeLengthIn??0,height:railHeight,sections:editableRails.sections,staleRemovalIds:editableRails.staleIds},quantities,gap,stockLength};
 }
 export type DeckTakeoff=ReturnType<typeof buildDeckTakeoff>;

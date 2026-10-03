@@ -51,7 +51,8 @@ export function addConstructionDetails(level:DeckLevel,boardWidth:number){
     for(const sign of [-1,1]){
       const x=board.cx+ux*board.length/2*sign+offset.x,z=board.cy+uz*board.length/2*sign+offset.z;
       const onJoist=level.joists.some(j=>Math.abs(j.a.x-x)<.76&&z>=j.a.z-.1&&z<=j.b.z+.1);
-      if(onJoist)continue;
+      const onBlock=Math.abs(board.angleDeg-90)<.001&&level.blocking.some(b=>b.role==='breaker-ladder'&&Math.abs(b.a.z-z)<=b.width/2+.01&&x-(board.width??boardWidth)/2>=Math.min(b.a.x,b.b.x)-.01&&x+(board.width??boardWidth)/2<=Math.max(b.a.x,b.b.x)+.01);
+      if(onJoist||onBlock)continue;
       for(const shift of [-.9375,.9375]){
         const zz=z+shift,interval=interiorSpans(zz-offset.z).find(([a,b])=>x>=a-.01&&x<=b+.01);if(!interval)continue;
         const active=[...new Set(level.joists.filter(j=>zz>=j.a.z&&zz<=j.b.z).map(j=>j.a.x))].sort((a,b)=>a-b);

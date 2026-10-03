@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import type {DeckData} from '../src/features/deckcraft/types';
+import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {getStairBoards} from '../src/features/deckcraft/stairBoards';
+import {getFinishBoards,finishBoardId,validateBoardFinishes,boardFinishStatus,isFinishBoardClick,MAX_BOARD_FINISHES} from '../src/features/deckcraft/boardFinishes';
+import {DEFAULT_SKIRTING,buildSkirting} from '../src/features/deckcraft/skirting';
+import {MANUFACTURER_ACCESSORIES} from '../src/features/deckcraft/manufacturerCatalog';
+let checks=0;function test(name:string,run:()=>void){run();checks++;console.log(`PASS ${name}`);}
+const base:DeckData={...structuredClone(DEFAULT_DECK),width:24,length:12,height:48,shape:'Rectangle',levels:1,stairFlights:1,stairPosition:'Front',stairType:'Straight',stairOffset:50};
+const model=buildDeckTakeoff(base),boards=getFinishBoards(base,model),first=boards[0];
+test('legacy has no custom colour overrides',()=>assert.deepEqual(boardFinishStatus(base,model).overrides,[]));
+test('registry IDs are unique, bounded and valid',()=>{assert.equal(new Set(boards.map(b=>b.id)).size,boards.length);assert.ok(boards.every(b=>b.id.length<96));assert.equal(validateBoardFinishes(boards.slice(0,512).map(b=>({id:b.id,color:'#ab34Ef'}))).length,Math.min(512,boards.length));});
+test('deck registry retains every original cut',()=>{const deck=boards.filter(b=>b.group==='deck');assert.equal(deck.length,model.levels.reduce((n,l)=>n+l.boards.length,0));const original=model.levels[0].boards[0];assert.equal(deck[0].w,original.length);assert.equal(deck[0].x,original.cx+model.levels[0].offset.x);});
+test('stair registry retains original tread cuts and risers',()=>{assert.deepEqual(boards.filter(b=>b.group==='stairs').map(({id,label,group,role,...b})=>b),getStairBoards(base,model));assert.equal(boards.filter(b=>b.group==='risers').length,model.riserBoards.length);});
+test('array reorder does not change geometry IDs',()=>{const reordered=structuredClone(model);reordered.levels.forEach(l=>l.boards.reverse());reordered.riserBoards.reverse();assert.deepEqual(getFinishBoards(base,reordered).map(b=>b.id).sort(),boards.map(b=>b.id).sort());});
+test('cut geometry change generates different ID',()=>assert.notEqual(finishBoardId('deck',first,first.role),finishBoardId('deck',{...first,w:first.w+1},first.role)));
+test('polygon vertex order does not change identity',()=>{const box={x:2,y:1,z:2,w:4,h:1,d:4,polygon:[{x:0,y:0},{x:4,y:0},{x:0,y:4}]};assert.equal(finishBoardId('deck',box),finishBoardId('deck',{...box,polygon:[...box.polygon].reverse()}));assert.notEqual(finishBoardId('deck',box),finishBoardId('deck',{...box,polygon:[{x:0,y:0},{x:4,y:0},{x:1,y:4}]}));});
+test('colours normalize, strip unknown fields and reject duplicates',()=>assert.deepEqual(validateBoardFinishes([{id:first.id,color:'#aAbB01',price:1},{id:first.id,color:'#FF0000'}]),[{id:first.id,color:'#AABB01'}]));
+test('invalid colours and IDs are not accepted',()=>assert.deepEqual(validateBoardFinishes([{id:first.id,color:'red'},{id:first.id,color:'#fff'},{id:'__proto__',color:'#ffffff'},null]),[]));
+test('import bounded to 512 raw entries',()=>{const entries=Array.from({length:600},(_,i)=>({id:`bf_deck_${i.toString(16).padStart(16,'0')}`,color:'#000000'}));assert.equal(validateBoardFinishes(entries).length,MAX_BOARD_FINISHES);});
+test('stale overrides never retarget another piece',()=>{const stale=finishBoardId('deck',{...first,x:999999});const state=boardFinishStatus({...base,boardFinishes:[{id:first.id,color:'#123456'},{id:stale,color:'#abcdef'}]},model);assert.equal(state.matched.length,1);assert.equal(state.unmatched.length,1);assert.equal(state.unmatched[0].id,stale);});
+test('orbit drag is not a board click',()=>{assert.ok(isFinishBoardClick(0));assert.ok(isFinishBoardClick(4));assert.ok(!isFinishBoardClick(4.1));assert.ok(!isFinishBoardClick(NaN));assert.ok(!isFinishBoardClick(-1));});
+test('horizontal and vertical skirting boards participate',()=>{for(const orientation of ['Horizontal','Vertical'] as const){const d={...base,skirting:{...DEFAULT_SKIRTING,enabled:true,orientation}};const layout=buildSkirting(d,model),finish=getFinishBoards(d,model).filter(b=>b.group==='skirting');assert.ok(finish.length);assert.equal(finish.length,layout.boards.length);assert.ok(finish.every(b=>b.role===`skirting-${orientation.toLowerCase()}`));assert.equal(new Set(finish.map(b=>b.id)).size,finish.length);}});
+test('disabled skirting does not create selectable pieces',()=>assert.equal(getFinishBoards({...base,skirting:{...DEFAULT_SKIRTING,enabled:false}},model).filter(b=>b.group==='skirting').length,0));
+test('manufacturer fascia selectable only when present',()=>{const p=MANUFACTURER_ACCESSORIES.find(p=>p.kind==='fascia'&&p.previewSupported)!;assert.ok(p);const d={...base,catalogueAccessories:[p.id]};assert.ok(getFinishBoards(d,model).some(b=>b.group==='fascia'));});
+test('changing colours does not change geometry or registry IDs',()=>assert.deepEqual(getFinishBoards({...base,boardFinishes:[{id:first.id,color:'#C82E32'}]},model),boards));
+console.log(`${checks} board finish checks passed.`);

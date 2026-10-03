@@ -4,8 +4,9 @@ import {activeLightingItems,isSystemProduct} from './lightingSystem';
 import {getHouseConfig} from './houseSettings';
 import {finishedFasciaOffset} from './lib/finishedFootprint';
 import {getTerrainConfig} from './yardSettings';
+import {lightingTargets,placeLightingOnTarget,lightingEnvelope} from './lightingPlacement';
 
-export type FixturePlacement={productId:string;x:number;y:number;z:number;angle:number;zone?:string};
+export type FixturePlacement={productId:string;x:number;y:number;z:number;angle:number;zone?:string;instanceIndex?:number};
 /** Physical accessory layouts in model inches; also consumed by CAD/model export. */
 export function extrasLayout(data:DeckData,model:DeckTakeoff){
   const wood:Box[]=[],metal:Box[]=[],drainage:Box[]=[],fixtures:FixturePlacement[]=[],warnings:string[]=[];
@@ -44,14 +45,25 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
     if(w&&d){for(const px of [x+3,x+w-3])for(const pz of [z+3,z+d-3])wood.push({x:px,y:top+48,z:pz,w:5.5,h:96,d:5.5});for(const pz of [z,z+d])wood.push({x:x+w/2,y:top+97,z:pz,w:w+12,h:9.25,d:3});for(let px=x;px<=x+w;px+=16)wood.push({x:px,y:top+104,z:z+d/2,w:1.5,h:7.25,d:d+18});for(let pz=z;pz<=z+d;pz+=12)wood.push({x:x+w/2,y:top+109,z:pz,w:w+18,h:1.5,d:1.5});}
     if(pergolaArea<data.pergolaSqft-1)warnings.push(`Pergola layout fits ${pergolaArea.toFixed(1)} of ${data.pergolaSqft} requested square feet within the footprint.`);
   }
-  if(data.hasDrainage)for(const l of model.levels){if(l.top<24){warnings.push('Under-deck drainage needs at least 24 in of model clearance; raise the deck or remove drainage.');continue;}for(const j of l.joists){const len=Math.hypot(j.b.x-j.a.x,j.b.z-j.a.z);drainage.push({x:(j.a.x+j.b.x)/2,y:j.a.y-6,z:(j.a.z+j.b.z)/2,w:Math.max(4,data.joistSpacing-1.5),h:.15,d:len,angle:Math.atan2(j.b.x-j.a.x,j.b.z-j.a.z)});}drainage.push({x:l.offset.x+l.footprint.bounds.w/2,y:l.top-20,z:l.offset.z+l.footprint.bounds.h-2,w:l.footprint.bounds.w,h:3,d:4});drainage.push({x:l.offset.x+3,y:Math.max(4,(l.top-20)/2),z:l.offset.z+l.footprint.bounds.h+1,w:3,h:Math.max(3,l.top-20),d:3});}
+  if(data.hasDrainage&&!data.drySpace)for(const l of model.levels){if(l.top<24){warnings.push('Under-deck drainage needs at least 24 in of model clearance; raise the deck or remove drainage.');continue;}for(const j of l.joists){const len=Math.hypot(j.b.x-j.a.x,j.b.z-j.a.z);drainage.push({x:(j.a.x+j.b.x)/2,y:j.a.y-6,z:(j.a.z+j.b.z)/2,w:Math.max(4,data.joistSpacing-1.5),h:.15,d:len,angle:Math.atan2(j.b.x-j.a.x,j.b.z-j.a.z)});}drainage.push({x:l.offset.x+l.footprint.bounds.w/2,y:l.top-20,z:l.offset.z+l.footprint.bounds.h-2,w:l.footprint.bounds.w,h:3,d:4});drainage.push({x:l.offset.x+3,y:Math.max(4,(l.top-20)/2),z:l.offset.z+l.footprint.bounds.h+1,w:3,h:Math.max(3,l.top-20),d:3});}
   const perimeter=edges.reduce((s,e)=>s+e.len,0);
   function perimeterPoint(index:number,count:number){let t=(index+.5)*perimeter/Math.max(1,count);for(const e of edges){if(t<=e.len)return {x:e.p.x+e.dx*t-e.dz*4,z:e.p.y+e.dz*t+e.dx*4,angle:-Math.atan2(e.dz,e.dx)};t-=e.len;}return {x:6,z:6,angle:0};}
   const selected=activeLightingItems(data),counts=new Map<string,number>(),indices=new Map<string,number>();
   for(const item of selected)counts.set(item.zone,(counts.get(item.zone)??0)+item.qty);
   const house=getHouseConfig(data),houseVisible=data.houseVisible!==false,houseLeft=(data.width-house.widthFt)*6;
   let utilityIndex=0;
+  const occupiedTargets=new Set((data.lightingPlacements??[]).filter(p=>selected.some(s=>s.id===p.productId&&p.index<s.qty)).map(p=>p.targetId));
   for(const item of selected)for(let i=0;i<item.qty;i++){
+    const manual=data.lightingPlacements?.find(p=>p.productId===item.id&&p.index===i);
+    const customizedZone=data.lightingPlacements?.some(p=>selected.some(s=>s.id===p.productId&&p.index<s.qty&&s.zone===item.zone));
+    if(manual||item.zone==='rails'||customizedZone&&!isSystemProduct(item)){
+      const targets=lightingTargets(data,model,item.zone),target=manual?targets.find(t=>t.id===manual.targetId):targets.find(t=>!occupiedTargets.has(t.id)&&lightingEnvelope(item).length+(item.zone==='posts'?0:4)<=t.length);
+      if(!target){warnings.push(`${item.name} #${i+1}: ${manual?'saved mounting location no longer matches the design; choose a new target':'no unoccupied mounting point fits this fixture'}. The selected fixture remains in quantities but is not drawn.`);continue;}
+      const placed=placeLightingOnTarget(data,model,item,target,manual?.positionPct??50,manual?.face??'inside');
+      if(placed.fixture){fixtures.push({...placed.fixture,instanceIndex:i});occupiedTargets.add(target.id);}
+      if(placed.warning)warnings.push(placed.warning);
+      continue;
+    }
     const index=indices.get(item.zone)??0;indices.set(item.zone,index+1);
     const p=perimeterPoint(index,counts.get(item.zone)??1),g=item.geometry,d=item.dimensionsIn,zone=item.zone;
     let y=top+.15;
@@ -68,10 +80,10 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
     }else if(zone==='posts'){
       const post=model.railing.posts[index%Math.max(1,model.railing.posts.length)];
       if(!post){warnings.push(`${item.name}: the posts zone requires railing posts.`);continue;}
-      p.x=post.x;p.z=post.z+1.9+(d.width??1)/2;y=post.y+model.railing.height-7-Math.floor(index/model.railing.posts.length)*8;p.angle=0;
+      p.x=post.x;p.z=post.z+1.9+lightingEnvelope(item).depth/2;y=post.y+model.railing.height-7-Math.floor(index/model.railing.posts.length)*8;p.angle=0;
       if(g==='recessed'){p.z=post.z;y=post.y+model.railing.height+.18;}
       if(!['wall','recessed','undercap'].includes(g)){warnings.push(`${item.name} cannot use a post mount; choose a compatible fixture or installation zone.`);continue;}
-      if((d.length??d.diameter??d.width??2)>3.5)warnings.push(`${item.name} is wider than a modeled 3.5 in railing post; a manufacturer-approved mounting plate or another location is required.`);
+      if(lightingEnvelope(item).length>3.5){warnings.push(`${item.name} is wider than a modeled 3.5 in railing post; a manufacturer-approved mounting plate or another location is required. Fixture is not drawn.`);continue;}
     }else if(zone==='stairs'){
       const t=model.treads[index%Math.max(1,model.treads.length)];
       if(!t){warnings.push(`${item.name}: the stairs zone needs a stair flight.`);continue;}
@@ -79,9 +91,9 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
       p.x=t.x+Math.cos(a)*along;p.z=t.z-Math.sin(a)*along;p.angle=a;
       if(g==='recessed')y=t.y+t.h/2+.15;
       else if(g==='wall'||g==='undercap'){
-        const mount=t.d/2-(g==='undercap'?.1:model.stairSupport.treadNosingIn-(d.width??1)/2);
+        const mount=t.d/2-(g==='undercap'?.1:model.stairSupport.treadNosingIn-lightingEnvelope(item).depth/2);
         p.x+=nx*mount;p.z+=nz*mount;y=t.y-t.h/2-(g==='undercap'?.55:2.7);
-        if((d.length??d.diameter??d.width??2)>t.w-4){warnings.push(`${item.name} is too long for this tread; choose a shorter fixture or a deck/house location.`);continue;}
+        if(lightingEnvelope(item).length>t.w-4){warnings.push(`${item.name} is too long for this tread; choose a shorter fixture or a deck/house location.`);continue;}
       }else{warnings.push(`${item.name} is not a recessed or surface stair fixture; choose its intended installation zone.`);continue;}
     }else if(zone==='house'&&g==='wall'){
       if(!houseVisible){warnings.push(`${item.name}: enable the house to place wall fixtures.`);continue;}
@@ -93,14 +105,16 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
       p.x-=Math.sin(p.angle)*28;p.z-=Math.cos(p.angle)*28;y=terrain.elevationIn+p.z*terrain.slopePct/100;p.angle+=Math.PI;
       if(g==='wall'||g==='undercap'){warnings.push(`${item.name} needs a real wall or cap; select the deck, posts or house zone.`);continue;}
     }else if(g==='wall'||g==='undercap'){
-      const length=d.length??d.width??4,eligible=edges.filter(e=>e.len>=length+12),edge=eligible[index%Math.max(1,eligible.length)];
+      const length=lightingEnvelope(item).length,eligible=edges.filter(e=>e.len>=length+12),edge=eligible[index%Math.max(1,eligible.length)];
       if(!edge){warnings.push(`${item.name} does not fit an exposed deck edge at its full catalogue length.`);continue;}
       const slots=Math.ceil((counts.get(zone)??1)/eligible.length),slot=Math.floor(index/eligible.length),along=edge.len*(slot+.5)/slots;
       if(edge.len/slots<length+2){warnings.push(`${item.name}: selected fixtures would overlap on the available fascia; reduce quantities or choose another supported zone.`);continue;}
-      const outward=finishedFasciaOffset(data)+(g==='wall'?(d.width??1)/2:.2);
+      const outward=finishedFasciaOffset(data)+(g==='wall'?lightingEnvelope(item).depth/2:.2);
       p.x=edge.p.x+edge.dx*along+edge.dz*outward;p.z=edge.p.y+edge.dz*along-edge.dx*outward;p.angle=-Math.atan2(edge.dz,edge.dx)+Math.PI;y=top-(g==='undercap'?1.7:4.5);
     }
-    fixtures.push({productId:item.id,...p,y,zone});
+    fixtures.push({productId:item.id,...p,y,zone,instanceIndex:i});
   }
+  const occupied=new Set<string>();
+  for(const fixture of fixtures){const key=[fixture.x,fixture.y,fixture.z].map(n=>n.toFixed(1)).join(':');if(occupied.has(key))warnings.push('Some light fixtures share a mounting point. Adjust individual positions before installation.');occupied.add(key);}
   return {wood,metal,drainage,fixtures,warnings:[...new Set(warnings)],pergolaArea};
 }

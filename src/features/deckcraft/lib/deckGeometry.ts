@@ -40,6 +40,10 @@ export function getFootprint(data: DeckData, level: 1 | 2 = 1): FootprintPlan {
   const W = Math.max(12, n(level === 1 ? data.width : data.width2) * 12);
   const L = Math.max(12, n(level === 1 ? data.length : data.length2) * 12);
   const bounds = { w: W, h: L };
+  if(level===1&&data.shape==='L-Shape'&&data.cutoutCorner==='Left'){
+    const right=getFootprint({...data,cutoutCorner:'Right'},level);
+    return {...right,outline:right.outline.map(p=>({x:W-p.x,y:p.y})).reverse()};
+  }
 
   if (level === 1 && data.shape === 'Curved') {
     const s = Math.min(L * 0.15, W * 0.2);

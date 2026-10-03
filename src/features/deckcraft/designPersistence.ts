@@ -1,13 +1,22 @@
 import { DEFAULT_DECK } from './defaults';
+import {validateInstallation} from './installationSystem';
+import {validateRailingReview} from './railingJobPack';
+import {validateSkirting} from './skirting';
+import {validateDrySpace} from './drySpace';
+import {validateBoardFinishes} from './boardFinishes';
 import { type DeckData, type HouseConfig, type HouseOpening, type YardFeature } from './types';
 import {PATIO_PRODUCTS,WALL_PRODUCTS,WATER_PRODUCTS} from './yardSettings';
 import {clampHouseOpening} from './houseSettings';
 import { LIGHTING_CATALOGUE } from './lightingCatalogue';
+import type {LightingPlacementOverride} from './lightingPlacement';
+import {PRIVACY_SCREEN_PRODUCTS,type PrivacyScreenSelection} from './privacyScreens';
 import { DECKING_CATALOGUE, RAILING_CATALOGUE, MANUFACTURER_ACCESSORIES } from './manufacturerCatalog';
 
 export const DESIGN_STORAGE_KEY = 'golden-maple.deck-studio.design.v1';
 export const MAX_DESIGN_BYTES = 100_000;
 const enums: Partial<Record<keyof DeckData, readonly (string | number)[]>> = {
+  boardStockLengthIn:[144,192,240],breakerLayout:['Auto','Center'],
+  cutoutCorner:['Left','Right'],
   deckType:['Attached','Freestanding','Floating','Add-on'], municipality:['Toronto','Barrie','Simcoe County','Burlington-Oakville','Rural-Other'],
   siteType:['Standard','Waterfront-Lakefront','Hillside','Urban Tight','Island-Ferry'],soilCondition:['Unknown','Sandy','Clay','Shallow Bedrock','Fill'],
   buildSeason:['Spring-Summer','Fall','Winter'],intendedLoad:['Standard','Heavy'],foundation:['Concrete Piers','Helical Piles','Deck Blocks'],
@@ -17,6 +26,7 @@ const enums: Partial<Record<keyof DeckData, readonly (string | number)[]>> = {
   stairFlights:[0,1,2,3],stairType:['Straight','Winder','Landing'],stairPosition:['Front','Left','Right','Back'],
   sceneLighting:['Daylight','Evening'],level2Position:['Front','Left','Right'],stairTurn:['Left','Right'],
   borderFinish:['Matching','Dark Slate'],
+  railingHardwareFinish:['Black','Satin'],
 };
 const ranges: Partial<Record<keyof DeckData, readonly [number,number]>> = {
   width:[4,60],length:[4,60],height:[8,144],width2:[4,40],length2:[4,40],height2:[8,144],
@@ -24,9 +34,10 @@ const ranges: Partial<Record<keyof DeckData, readonly [number,number]>> = {
   foundationDepthIn:[24,144],stairWidth:[36,120],stairOffset:[0,100],inlayLf:[0,200],
   benchLf:[0,100],privacySqft:[0,500],pergolaSqft:[0,600],
   pictureFrameOverhangIn:[0,1.5],
+  landingAfterRisers:[1,18],
   houseWallHeightIn:[96,240],houseDoorOffset:[0,100],houseDoorWidthIn:[30,144],level2Offset:[0,100],landingDepthIn:[36,120],
 };
-const booleans = ['hasInlay','hasDrainage','hasDemo','houseVisible','lightingPreviewOn'] as const;
+const booleans = ['hasInlay','hasDrainage','hasDemo','houseVisible','lightingPreviewOn','landingStraight'] as const;
 const texts = ['customerName','projectAddress','scopeOfWork'] as const;
 function record(value:unknown):value is Record<string,unknown>{return !!value&&typeof value==='object'&&!Array.isArray(value);}
 function numeric(value:unknown,min:number,max:number,label:string):number {
@@ -39,11 +50,44 @@ export function validateDesign(input:unknown):DeckData {
   if(!record(input))throw new Error('The design configuration is missing.');
   const clean:DeckData=structuredClone(DEFAULT_DECK);
   const target=clean as unknown as Record<string,unknown>;
+  if(input.privacyScreens!==undefined){
+    if(!Array.isArray(input.privacyScreens)||input.privacyScreens.length>12)throw new Error('A design supports up to 12 privacy screen rows.');
+    const seen=new Set<string>();
+    clean.privacyScreens=input.privacyScreens.map(p=>{
+      if(!record(p)||typeof p.id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(p.id)||seen.has(p.id)||typeof p.enabled!=='boolean')throw new Error('Invalid or duplicate privacy screen row.');
+      seen.add(p.id);const product=PRIVACY_SCREEN_PRODUCTS.find(x=>x.id===p.productId);
+      if(!product||!product.finishes.includes(p.finish as 'Black'|'White'))throw new Error('Unknown screen product or finish.');
+      const levelIndex=numeric(p.levelIndex,0,32,'Screen level'),edgeIndex=numeric(p.edgeIndex,0,64,'Screen edge'),count=numeric(p.count,1,12,'Screen count');
+      if(![levelIndex,edgeIndex,count].every(Number.isInteger))throw new Error('Screen level, edge and count must be whole numbers.');
+      return {id:p.id,productId:product.id,levelIndex,edgeIndex,count,offsetPct:numeric(p.offsetPct,0,100,'Screen position'),enabled:p.enabled,finish:p.finish as PrivacyScreenSelection['finish']};
+    });
+  }
+  if(input.lightingPlacements!==undefined){
+    if(!Array.isArray(input.lightingPlacements)||input.lightingPlacements.length>256)throw new Error('Invalid individual lighting placements.');
+    const seen=new Set<string>();
+    clean.lightingPlacements=input.lightingPlacements.map(p=>{
+      if(!record(p)||typeof p.productId!=='string'||!LIGHTING_CATALOGUE.some(l=>l.id===p.productId&&l.supported)||typeof p.targetId!=='string'||p.targetId.length>160||!/^[a-z_]+_[0-9:.|\-]+$/.test(p.targetId)||!['inside','outside'].includes(p.face as string))throw new Error('Invalid lighting mounting target.');
+      const index=numeric(p.index,0,29,'Fixture index'),id=`${p.productId}:${index}`;
+      if(!Number.isInteger(index)||seen.has(id))throw new Error('Invalid or duplicate individual fixture.');seen.add(id);
+      return {productId:p.productId,index,targetId:p.targetId,positionPct:numeric(p.positionPct,0,100,'Fixture position'),face:p.face as LightingPlacementOverride['face']};
+    });
+  }
+  if(input.installation!==undefined)clean.installation=validateInstallation(input.installation);
+  if(input.railingReview!==undefined)clean.railingReview=validateRailingReview(input.railingReview);
+  if(input.skirting!==undefined)clean.skirting=validateSkirting(input.skirting);
+  if(input.drySpace!==undefined)clean.drySpace=validateDrySpace(input.drySpace);
+  if(input.boardFinishes!==undefined)clean.boardFinishes=validateBoardFinishes(input.boardFinishes);
+  if(input.removedRailingSections!==undefined){
+    const ids=input.removedRailingSections;
+    if(!Array.isArray(ids)||ids.length>512||ids.some(id=>typeof id!=='string'||id.length>160||!/^rail_[0-9:.|\-]+$/.test(id))||new Set(ids).size!==ids.length)throw new Error('Invalid or duplicate railing section removals.');
+    clean.removedRailingSections=[...ids];
+  }
   for(const [key,values] of Object.entries(enums))if(Object.hasOwn(input,key)){
     if(!values.includes(input[key] as never))throw new Error(`Unsupported ${key} selection.`);
     target[key]=input[key];
   }
   for(const [key,[min,max]] of Object.entries(ranges))if(Object.hasOwn(input,key))target[key]=numeric(input[key],min,max,key);
+  if(clean.landingAfterRisers!==undefined&&!Number.isInteger(clean.landingAfterRisers))throw new Error('Landing position must be a whole number of risers.');
   for(const key of booleans)if(Object.hasOwn(input,key)){
     if(typeof input[key]!=='boolean')throw new Error(`${key} must be true or false.`);
     target[key]=input[key];
@@ -76,14 +120,14 @@ export function validateDesign(input:unknown):DeckData {
     clean.lightingSystem={wireDistance:numeric(lighting.wireDistance,0,500,'Wire distance'),selectedItems:lighting.selectedItems.map(item=>{
       if(!record(item)||typeof item.productId!=='string'||!LIGHTING_CATALOGUE.some(p=>p.id===item.productId&&p.supported)||seen.has(item.productId))throw new Error('Unknown, unsupported or duplicate lighting product.');
       seen.add(item.productId);const qty=numeric(item.qty,0,30,'Lighting quantity');if(!Number.isInteger(qty))throw new Error('Lighting quantities must be whole numbers.');
-      if(item.zone!==undefined&&!['deck','posts','stairs','landscape','house'].includes(item.zone as string))throw new Error('Unsupported lighting installation zone.');
-      return {productId:item.productId,qty,...(item.zone?{zone:item.zone as 'deck'|'posts'|'stairs'|'landscape'|'house'}:{})};
+      if(item.zone!==undefined&&!['deck','posts','rails','stairs','landscape','house'].includes(item.zone as string))throw new Error('Unsupported lighting installation zone.');
+      return {productId:item.productId,qty,...(item.zone?{zone:item.zone as 'deck'|'posts'|'rails'|'stairs'|'landscape'|'house'}:{})};
     }).filter(item=>item.qty>0)};
   }
   if(input.lightingZoneEnabled!==undefined){
     if(!record(input.lightingZoneEnabled))throw new Error('Invalid lighting installation zones.');
     clean.lightingZoneEnabled={};
-    for(const zone of ['deck','posts','stairs','landscape','house'] as const)if(Object.hasOwn(input.lightingZoneEnabled,zone)){
+    for(const zone of ['deck','posts','rails','stairs','landscape','house'] as const)if(Object.hasOwn(input.lightingZoneEnabled,zone)){
       if(typeof input.lightingZoneEnabled[zone]!=='boolean')throw new Error('Installation zone must be enabled or disabled.');
       clean.lightingZoneEnabled[zone]=input.lightingZoneEnabled[zone];
     }
@@ -121,6 +165,14 @@ export function validateDesign(input:unknown):DeckData {
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
+  if(clean.installation)configuration.installation=clean.installation;
+  if(clean.railingReview)configuration.railingReview=clean.railingReview;
+  if(clean.skirting)configuration.skirting=clean.skirting;
+  if(clean.drySpace)configuration.drySpace=clean.drySpace;
+  if(clean.boardFinishes)configuration.boardFinishes=clean.boardFinishes;
+  if(clean.removedRailingSections)configuration.removedRailingSections=clean.removedRailingSections;
+  if(clean.lightingPlacements)configuration.lightingPlacements=clean.lightingPlacements;
+  if(clean.privacyScreens)configuration.privacyScreens=clean.privacyScreens;
   for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'deckingMaterial','deckingColor','lightingSystem','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','yardFeatures','terrainConfig']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }

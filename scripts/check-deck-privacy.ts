@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {privacyScreenEdges,privacyScreenLayout,type PrivacyScreenSelection} from '../src/features/deckcraft/privacyScreens';
+import type {DeckData} from '../src/features/deckcraft/types';
+let checks=0;function check(name:string,fn:()=>void){try{fn();checks++;}catch(e){throw new Error(name,{cause:e});}}
+const base:DeckData={...structuredClone(DEFAULT_DECK),width:24,length:12,height:36,shape:'Rectangle',deckType:'Attached',levels:1,stairFlights:1,stairPosition:'Front',stairOffset:50,stairWidth:48};
+const row:PrivacyScreenSelection={id:'test',productId:'hideaway-horizon',levelIndex:0,edgeIndex:1,count:1,offsetPct:50,finish:'Black',enabled:true};
+const run=(patch:Partial<DeckData>={},rows:PrivacyScreenSelection[]=[row])=>{const d={...base,...patch,privacyScreens:rows};return privacyScreenLayout(d,buildDeckTakeoff(d));};
+check('legacy design has no screens or prices',()=>{const l=privacyScreenLayout(base,buildDeckTakeoff(base));assert.equal(l.boxes.length,0);assert.equal(l.selectedCount,0);assert.equal(l.quoteRequired,false);});
+check('stock panel and accessories match bill of materials',()=>{const l=run();assert.equal(l.drawnCount,1);assert.equal(l.posts.length,2);assert.equal(l.brackets.length,2);assert.equal(l.panels[0].w,36);assert.equal(l.panels[0].h,68);assert.equal(l.schedule.find(s=>s.unit==='pack')?.quantity,1);assert(l.schedule.every(s=>s.unitPrice===null&&s.status==='quote-required'));});
+check('too many stock panels are not shrunk or partially drawn',()=>{const l=run({},[{...row,count:4}]);assert.equal(l.drawnCount,0);assert.equal(l.selectedCount,4);assert.equal(l.schedule.length,0);assert(l.warnings.length>0);});
+check('stairs reject crossing row',()=>{const l=run({},[{...row,edgeIndex:2,count:3}]);assert.equal(l.drawnCount,0);assert(l.warnings.some(w=>w.includes('stair')));});
+check('house edge cannot host a screen',()=>{const l=run({},[{...row,edgeIndex:0}]);assert.equal(l.drawnCount,0);assert(!l.edges.some(e=>e.levelIndex===0&&e.edgeIndex===0));});
+check('disabled row contributes nothing',()=>{const l=run({},[{...row,enabled:false}]);assert.equal(l.selectedCount,0);assert.equal(l.drawnCount,0);assert.equal(l.schedule.length,0);});
+check('dimension changes invalidate a formerly fitting row',()=>{assert.equal(run({},[{...row,count:2}]).drawnCount,2);assert.equal(run({length:6},[{...row,count:2}]).drawnCount,0);});
+check('missing level, product and finish do not invent geometry',()=>{for(const p of [{levelIndex:99},{productId:'not-a-product'},{productId:'hideaway-solid',finish:'White' as const}])assert.equal(run({},[{...row,...p}]).drawnCount,0);});
+check('guard removal and None do not alter privacy geometry',()=>{assert.deepEqual(run({railingType:'None'}).boxes,run().boxes);const m=buildDeckTakeoff(base);assert.deepEqual(run({removedRailingSections:m.railing.sections.map(s=>s.id)}).boxes,run().boxes);});
+check('privacy does not remove guard geometry',()=>{const a=buildDeckTakeoff(base),b=buildDeckTakeoff({...base,privacyScreens:[row]});assert.deepEqual(a.railing,b.railing);assert.deepEqual(a.quantities,b.quantities);});
+check('screen rows cannot collide',()=>{const l=run({},[row,{...row,id:'second'}]);assert.equal(l.drawnCount,1);assert.equal(l.unplacedCount,1);assert(l.warnings.some(w=>w.includes('overlaps')));});
+check('positions, sizes and rotations finite across shapes',()=>{for(const shape of ['Rectangle','L-Shape','Multi-corner','Curved'] as const){const d={...base,shape},m=buildDeckTakeoff(d);for(const e of privacyScreenEdges(d,m))for(const offsetPct of [0,50,100]){const l=privacyScreenLayout({...d,privacyScreens:[{...row,levelIndex:e.levelIndex,edgeIndex:e.edgeIndex,offsetPct}]},m);for(const b of l.boxes)for(const k of ['x','y','z','w','h','d','angle'] as const)assert(Number.isFinite(b[k]??0));}}});
+check('same-height section connection stays open',()=>{const l=run({levels:2,height2:36,width2:12,length2:10,level2Position:'Right'},[{...row,edgeIndex:1}]);assert.equal(l.drawnCount,0);});
+check('second section edge supports panels',()=>{const d={...base,levels:2,height2:24,width2:12,length2:10,level2Position:'Front' as const},m=buildDeckTakeoff(d);assert(privacyScreenEdges(d,m).some(e=>e.levelIndex===1));const candidates=privacyScreenEdges(d,m).filter(e=>e.levelIndex===1).map(e=>privacyScreenLayout({...d,privacyScreens:[{...row,levelIndex:1,edgeIndex:e.edgeIndex,offsetPct:0}]},m));assert(candidates.some(l=>l.drawnCount===1));});
+check('landing access is excluded and tiny landing rejects stock',()=>{const d={...base,height:72,stairType:'Landing' as const,landingStraight:true,landingDepthIn:48},m=buildDeckTakeoff(d),landingIndex=m.levels.findIndex(l=>l.kind==='landing');assert(landingIndex>=0);for(const e of privacyScreenEdges(d,m).filter(e=>e.levelIndex===landingIndex)){const l=privacyScreenLayout({...d,privacyScreens:[{...row,levelIndex:landingIndex,edgeIndex:e.edgeIndex}]},m);assert.equal(l.drawnCount,0);}});
+console.log(`Deck privacy screen checks passed: ${checks}`);

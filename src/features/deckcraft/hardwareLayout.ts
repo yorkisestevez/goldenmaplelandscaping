@@ -59,5 +59,5 @@ export function getHardwareLayout(data:DeckData,model:DeckTakeoff){
   const railBolts=model.railing.posts.flatMap(p=>[-1,1].flatMap(x=>[-1,1].map(z=>({x:p.x+x*1.85,y:p.y+.4,z:p.z+z*1.85}))));
   const spliceBolts:V3[]=[];
   for(const l of model.levels)for(const members of [l.joists,l.beams]){const ends=new Map<string,{p:V3;count:number}>();for(const m of members)for(const p of [m.a,m.b]){const k=key(p),e=ends.get(k);if(e)e.count++;else ends.set(k,{p,count:1});}for(const {p,count} of ends.values())if(count>1)for(const shift of [-2,2])spliceBolts.push({...p,y:p.y+shift});}
-  return {hangers,screws,ledgerBolts,hidden,beamTies,postCaps,blockingAngles,stringerConnectors,railBolts,spliceBolts,postAnchors:model.quantities.footings,railBrackets:model.quantities.railingSections*4,railCaps:model.quantities.railingPosts};
+  return {hangers,screws,ledgerBolts,hidden,beamTies,postCaps,blockingAngles,stringerConnectors,railBolts,spliceBolts,postAnchors:model.quantities.footings,railBrackets:model.railing.frameless?0:model.quantities.railingSections*4,railCaps:model.quantities.railingPosts};
 }

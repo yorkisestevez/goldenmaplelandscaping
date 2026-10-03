@@ -15,14 +15,14 @@ function helixGeometry(radius:number,pitch:number){
   indices.push(0,2,1,1,2,3);const last=steps*4;indices.push(last,last+1,last+2,last+1,last+3,last+2);
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(points,3));geo.setIndex(indices);geo.computeVertexNormals();return geo;
 }
-export default function FootingDetails({data,model,cutaway}:{data:DeckData;model:DeckTakeoff;cutaway:boolean}){
+export default function FootingDetails({data,model,cutaway,referencePlane=true}:{data:DeckData;model:DeckTakeoff;cutaway:boolean;referencePlane?:boolean}){
   const depth=data.foundationDepthIn??48;
   const helical=data.foundation==='Helical Piles',blocks=data.foundation==='Deck Blocks';
   const helix=useMemo(()=>helixGeometry(6,4),[]);useEffect(()=>()=>helix.dispose(),[helix]);
   const supports=model.levels.flatMap(l=>l.supports),saddleOffset=blocks?2:0;
   const steel=useMemo(()=>new THREE.MeshStandardMaterial({color:'#aab2b5',metalness:0.86,roughness:0.34,side:THREE.DoubleSide}),[]);useEffect(()=>()=>steel.dispose(),[steel]);
   return <group name="footings">
-    {cutaway&&<><Line points={[[0,0,0],[model.levels[0].footprint.bounds.w,0,0],[model.levels[0].footprint.bounds.w,0,model.levels[0].footprint.bounds.h],[0,0,model.levels[0].footprint.bounds.h],[0,0,0]]} color="#879381" lineWidth={1} dashed dashSize={6} gapSize={4}/><Html position={[model.levels[0].footprint.bounds.w+8,0,model.levels[0].footprint.bounds.h]}><span style={{fontSize:10,color:'#5a6452',whiteSpace:'nowrap'}}>Ground level</span></Html><mesh receiveShadow rotation={[-Math.PI/2,0,0]} position={[model.levels[0].footprint.bounds.w/2,-depth-10,model.levels[0].footprint.bounds.h/2]}><planeGeometry args={[1800,1800]}/><meshStandardMaterial color="#c9b79b" roughness={1}/></mesh></>}
+    {cutaway&&<><Line points={[[0,0,0],[model.levels[0].footprint.bounds.w,0,0],[model.levels[0].footprint.bounds.w,0,model.levels[0].footprint.bounds.h],[0,0,model.levels[0].footprint.bounds.h],[0,0,0]]} color="#879381" lineWidth={1} dashed dashSize={6} gapSize={4}/><Html position={[model.levels[0].footprint.bounds.w+8,0,model.levels[0].footprint.bounds.h]}><span style={{fontSize:10,color:'#5a6452',whiteSpace:'nowrap'}}>Ground level</span></Html>{referencePlane&&<mesh receiveShadow rotation={[-Math.PI/2,0,0]} position={[model.levels[0].footprint.bounds.w/2,-depth-10,model.levels[0].footprint.bounds.h/2]}><planeGeometry args={[1800,1800]}/><meshStandardMaterial color="#c9b79b" roughness={1}/></mesh>}</>}
     {supports.map((p,i)=><group key={i} position={[p.x,0,p.z]} name={`footing-${i+1}`}>
       {blocks?<mesh castShadow receiveShadow position={[0,3,0]}><boxGeometry args={[12,6,12]}/><meshStandardMaterial color="#b4b1a5" roughness={0.95}/></mesh>:helical?<>
         <mesh castShadow receiveShadow position={[0,(9-depth)/2,0]} material={steel}><cylinderGeometry args={[1.5,1.5,Math.max(1,depth-3),24]}/></mesh>

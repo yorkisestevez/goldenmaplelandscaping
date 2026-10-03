@@ -1,3 +1,10 @@
+import type {InstallationSelection} from './installationSystem';
+import type {LightingPlacementOverride} from './lightingPlacement';
+import type {PrivacyScreenSelection} from './privacyScreens';
+import type {RailingReview} from './railingJobPack';
+import type {SkirtingSelection} from './skirting';
+import type {DrySpaceSelection} from './drySpace';
+import type {BoardFinishOverride} from './boardFinishes';
 export type DeckType = 'Attached' | 'Freestanding' | 'Floating' | 'Add-on';
 export type Municipality = 'Toronto' | 'Barrie' | 'Simcoe County' | 'Burlington-Oakville' | 'Rural-Other';
 export type SiteType = 'Standard' | 'Waterfront-Lakefront' | 'Hillside' | 'Urban Tight' | 'Island-Ferry';
@@ -8,7 +15,7 @@ export type DeckShape = 'Rectangle' | 'L-Shape' | 'Multi-corner' | 'Curved';
 export type BoardPattern = 'Straight' | 'Diagonal' | 'Picture Frame' | 'Herringbone';
 export type RailingType = 'None' | 'Wood Picket' | 'Aluminum' | 'Cable' | 'Glass Panels' | 'Trex Select' | 'Trex Transcend' | 'Fortress AL13' | 'TT Classic' | 'TT Impression';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
-export type LightingZone = 'deck'|'posts'|'stairs'|'landscape'|'house';
+export type LightingZone = 'deck'|'posts'|'rails'|'stairs'|'landscape'|'house';
 export interface HouseOpening {id:string;type:'Door'|'Window';facade:'Front'|'Back'|'Left'|'Right';offsetPct:number;bottomIn:number;widthIn:number;heightIn:number}
 export interface HouseConfig {widthFt:number;depthFt:number;storeys:1|2|3;storeyHeightIn:number;roofShape:'Gable'|'Hip'|'Flat';roofFinish:'Shingles'|'Metal';roofColor:string;cladding:'Brick'|'Siding';claddingColor:string;trimColor:string;openings:HouseOpening[]}
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature';
@@ -56,6 +63,13 @@ export const INLITE_PRODUCTS: LightingProduct[] = [
 ];
 
 export interface DeckData {
+  skirting?: SkirtingSelection;
+  drySpace?: DrySpaceSelection;
+  boardFinishes?: BoardFinishOverride[];
+  railingReview?: RailingReview;
+  railingHardwareFinish?: 'Black'|'Satin';
+  lightingPlacements?: LightingPlacementOverride[];
+  privacyScreens?: PrivacyScreenSelection[];
   yardFeatures?: YardFeature[];
   terrainConfig?: TerrainConfig;
   houseConfig?: HouseConfig;
@@ -74,6 +88,10 @@ export interface DeckData {
   level2Offset?: number;
   stairTurn?: 'Left' | 'Right';
   landingDepthIn?: number;
+  /** Optional quick-layout controls. Omission preserves legacy layouts. */
+  landingStraight?: boolean;
+  landingAfterRisers?: number;
+  cutoutCorner?: 'Left'|'Right';
   /** User-selected illustrative embedment, not a geotechnical design depth. */
   foundationDepthIn?: number;
   // What we're building — 'deck' keeps the original 6-step flow;
@@ -113,6 +131,9 @@ export interface DeckData {
 
   // Step 3
   deckingMaterial: string;
+  boardStockLengthIn?: 144 | 192 | 240;
+  breakerLayout?: 'Auto' | 'Center';
+  installation?: InstallationSelection;
   deckingColor?: string;
   framingSize: '2x8' | '2x10' | '2x12';
   boardWidth: 5.5 | 3.5;
@@ -124,6 +145,7 @@ export interface DeckData {
 
   // Step 4
   railingType: RailingType;
+  removedRailingSections?: string[];
   railingLf: number;
   stairFlights: number;
   stairWidth: number;
