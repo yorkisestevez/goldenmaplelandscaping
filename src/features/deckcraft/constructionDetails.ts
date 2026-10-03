@@ -49,14 +49,16 @@ export function addRim(level:DeckLevel){
 
 /** Back one board end at (x, z) with a full-width block between the actual neighbouring joists
  * (joists run along z). A doubled block gives independent fastening zones on either side of the
- * joint. `spans(z)` gives the framed intervals across the level at z. */
-export function blockBoardEnd(x:number,z:number,joists:Member[],spans:(z:number)=>[number,number][],keys:Set<string>,framingY:number,depth:number,out:Member[]){
+ * joint. `spans(z)` gives the framed intervals across the level at z. With `clear`, a block within that
+ * distance of a board-end block already in the bay is left out rather than stacked on it. */
+export function blockBoardEnd(x:number,z:number,joists:Member[],spans:(z:number)=>[number,number][],keys:Set<string>,framingY:number,depth:number,out:Member[],clear=0){
   const onJoist=joists.some(j=>Math.abs(j.a.x-x)<.76&&z>=j.a.z-.1&&z<=j.b.z+.1);
   if(onJoist)return;
   for(const shift of [-.9375,.9375]){
     const zz=z+shift,interval=spans(zz).find(([a,b])=>x>=a-.01&&x<=b+.01);if(!interval)continue;
     const active=[...new Set(joists.filter(j=>zz>=j.a.z&&zz<=j.b.z).map(j=>j.a.x))].sort((a,b)=>a-b);
     const left=Math.max(interval[0],active.filter(v=>v<x).at(-1)??interval[0]),right=Math.min(interval[1],active.find(v=>v>x)??interval[1]);if(right-left<=1.5)continue;
+    if(clear&&out.some(m=>m.role==='board-end'&&Math.abs(m.a.x-left-.75)<.01&&Math.abs(m.b.x-right+.75)<.01&&Math.abs(m.a.z-zz)<clear))continue;
     const key=`${left.toFixed(3)}:${right.toFixed(3)}:${zz.toFixed(2)}`;if(keys.has(key))continue;keys.add(key);
     out.push({a:{x:left+.75,y:framingY,z:zz},b:{x:right-.75,y:framingY,z:zz},width:1.5,depth,role:'board-end'});
   }
@@ -71,7 +73,7 @@ export function splitOnBearingsAlong(member:Member,bearings:number[],stock=192):
   out.push({...member,a:at(from),b:member.b,spliceStart:from>0});return out;
 }
 
-export function addConstructionDetails(level:DeckLevel,_boardWidth:number){
+export function addConstructionDetails(level:DeckLevel,boardWidth:number){
   const {offset,footprint,top}=level,depth=level.joists[0]?.depth||9.25;
   const framingY=top-1-depth/2;
   // Beam-row centre lines of every framing zone (a single-zone level uses its own reference).
@@ -84,11 +86,43 @@ export function addConstructionDetails(level:DeckLevel,_boardWidth:number){
     for(let i=0;i<footprint.outline.length;i++){const a=footprint.outline[i],b=footprint.outline[(i+1)%footprint.outline.length];if((a.y<=z&&b.y>z)||(b.y<=z&&a.y>z))xs.push(a.x+(z-a.y)*(b.x-a.x)/(b.y-a.y));}
     xs.sort((a,b)=>a-b);const out:[number,number][]=[];for(let i=0;i+1<xs.length;i+=2)out.push([xs[i]+offset.x,xs[i+1]+offset.x]);return out;
   };
-  // Back every individual board end (including diagonal/parquet cuts and butt joints).
+  // Back every individual board end (including diagonal/parquet cuts and butt joints) where its centreline
+  // ends. A cut at an angle ends the centreline past the actual end face; when that face stands clear of the
+  // rim (a 45° cut against a border row), the centreline's end can sit a joist bay away from it, so that end
+  // is blocked at the middle of its face instead. Ends that reach the rim keep their centreline backing.
+  // Face-blocked ends go last and never stack a block on one already in the bay.
+  const atFaces:PlanPoint[]=[];
   for(const board of level.boards){
     const angle=board.angleDeg*Math.PI/180,ux=Math.cos(angle),uz=Math.sin(angle);
-    for(const sign of [-1,1])blockBoardEnd(board.cx+ux*board.length/2*sign+offset.x,board.cy+uz*board.length/2*sign+offset.z,level.joists,z=>interiorSpans(z-offset.z),keys,framingY,depth,level.blocking);
+    for(const sign of [-1,1]){
+      const x=board.cx+ux*board.length/2*sign,z=board.cy+uz*board.length/2*sign;
+      const faces=endFaces(board,sign,boardWidth),face=faces.reduce<typeof faces[number]|undefined>((best,f)=>!best||f.len>best.len?f:best,undefined);
+      if(face&&distanceToSegment({x,y:z},face.p,face.q)>.5&&!reachesRim(footprint.outline,faces)){atFaces.push({x:(face.p.x+face.q.x)/2,y:(face.p.y+face.q.y)/2});continue;}
+      blockBoardEnd(x+offset.x,z+offset.z,level.joists,y=>interiorSpans(y-offset.z),keys,framingY,depth,level.blocking);
+    }
   }
+  for(const p of atFaces)blockBoardEnd(p.x+offset.x,p.y+offset.z,level.joists,y=>interiorSpans(y-offset.z),keys,framingY,depth,level.blocking,.3);
+}
+
+/** Whether any of a board's end faces reaches the rim: comes within its 1.5 in of an outline edge, or runs
+ * past the outline into the decking overhang. */
+function reachesRim(outline:PlanPoint[],faces:ReturnType<typeof endFaces>){
+  const edges=outline.map((a,i)=>[a,outline[(i+1)%outline.length]] as const);
+  return faces.some(({p,q})=>[p,q].some(e=>!insidePolygon(e,outline)||edges.some(([a,b])=>distanceToSegment(e,a,b)<=1.55))||outline.some(v=>distanceToSegment(v,p,q)<=1.55));
+}
+const insidePolygon=(p:PlanPoint,poly:PlanPoint[])=>{let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)inside=!inside;}return inside;};
+
+/** The end faces of a board at one end (sign ±1 along its length): its outline's edges within a board
+ * width of that end, and on that end's half of the board, that are not long sides. */
+function endFaces(board:BoardRun,sign:number,boardWidth:number){
+  const poly=board.polygon??boardPolygon(board,boardWidth),a=board.angleDeg*Math.PI/180,u={x:Math.cos(a),y:Math.sin(a)};
+  const us=poly.map(p=>(p.x*u.x+p.y*u.y)*sign),end=Math.max(...us),half=(end+Math.min(...us))/2,reach=(board.width??boardWidth)+.01;
+  return poly.flatMap((p,i)=>{
+    const j=(i+1)%poly.length,q=poly[j],len=Math.hypot(q.x-p.x,q.y-p.y);
+    if(len<.5||us[i]<end-reach||us[j]<end-reach||us[i]+us[j]<=2*half)return [];
+    const f={x:(q.x-p.x)/len,y:(q.y-p.y)/len};
+    return Math.abs(f.x*u.x+f.y*u.y)>.99?[]:[{p,q,len,f}];
+  });
 }
 
 export function memberLength(m:Member){return len(m);}
