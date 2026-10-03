@@ -8,7 +8,9 @@ import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
 
 const FAQ = [
-  { q: 'What should I compare when considering composite decking?', a: 'Compare product characteristics, maintenance guidance, framing, railings, and the manufacturer documentation for the specific product line.' },
+  { q: 'What should I compare when choosing composite decking?', a: 'Three things: the board family (capped composite, Advanced PVC or mineral-based), the look you want, and the frame under it. Composite boards need joists at 16 in on centre, or 12 in for a diagonal layout, so the framing matters as much as the boards. You can compare collections side by side, with their price effect, in our 3D deck designer.' },
+  { q: 'How much does a composite deck cost?', a: 'It depends on size, height, boards, railings and stairs. Our 3D deck designer prices the exact deck you draw from Golden Maple\'s price book as you go, and marks anything that still needs a supplier quote.' },
+  { q: 'Does composite decking need maintenance?', a: 'Less than wood: no staining or sealing. Wash it with soap and water, keep wet leaves off (they leave tannin stains), and clear snow with an all-plastic shovel. Follow the care guide for your specific board.' },
   { q: 'How do I confirm product and installation details?', a: 'Ask us to confirm current product availability, installation scope, and any applicable written manufacturer or workmanship terms for your project.' },
   { q: 'How is timing determined?', a: 'Timing depends on design, approvals, access, materials, weather, and the project scope. We can discuss a current schedule after reviewing your project.' },
 ];
@@ -61,6 +63,13 @@ export default function CompositeDecking() {
                   className="btn-primary"
                 >
                   Get My Free Estimate
+                </Link>
+                <Link
+                  to="/deck-designer"
+                  onClick={() => trackEngagement('cta_click', 'deck_lander_designer')}
+                  className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-gold transition-colors"
+                >
+                  Design &amp; price it in 3D
                 </Link>
                 <a
                   href={`tel:${publicContact.phoneTel}`}

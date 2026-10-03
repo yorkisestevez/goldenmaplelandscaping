@@ -28,6 +28,7 @@ Service areas with dedicated pages: Barrie, Innisfil, Oro-Medonte, Springwater, 
 
 1. **Discovery call** — Contact us to confirm the current consultation and design scope.
 2. **Cost estimator** — https://goldenmaplelandscaping.ca/cost-estimator: an indicative planning calculation, not a quote or universal construction specification.
+   **Deck designer (DeckCraft)** — https://goldenmaplelandscaping.ca/deck-designer: draw a deck on your house in 3D and choose boards, railings, stairs and lighting; it prices the drawn design from Golden Maple's price book, marks items needing a supplier quote, and can produce a planning drawing set. Measurements and engineering are confirmed on site before a written quote.
 3. **Book a consultation** — https://goldenmaplelandscaping.ca/book: confirm appointment scope and any fees before booking.
 4. **Written scope** — every project gets a written scope; excavation/base depth, drainage, and materials are confirmed per project, not assumed.
 

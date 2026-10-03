@@ -224,3 +224,5 @@ body.dd-send-open{overflow:hidden}
 @media(max-width:420px){.dd-fields,.dd-fields.three{grid-template-columns:minmax(0,1fr)!important}}
 
 /* The proposal (R8) has its own stylesheet, proposal.css, loaded with its dialog. */
+
+.dd-faq{max-width:880px;margin:0 auto;padding:32px 16px 48px}.dd-faq details{border-top:1px solid var(--dc-rule-soft);padding:12px 0}.dd-faq summary{font-weight:600;cursor:pointer}.dd-faq p{margin:8px 0 0;line-height:1.6}

@@ -65,7 +65,7 @@ const Navbar = () => {
 
   const flagshipServices = [
     { href: "/services/interlocking-barrie", label: "Interlocking Stone", desc: "Patios, walkways, driveways" },
-    { href: "/services/composite-decking-barrie", label: "Composite Decking", desc: "TimberTech & Trex builds" },
+    { href: "/services/composite-decking-barrie", label: "Composite Decking", desc: "TimberTech & Deckorators builds" },
     { href: "/services/retaining-walls-barrie", label: "Retaining Walls", desc: "Engineered with geogrid" },
     { href: "/services/landscape-design-barrie", label: "Landscape Design", desc: "3D plans + fixed quotes" },
   ];

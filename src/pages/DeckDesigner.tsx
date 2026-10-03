@@ -1,6 +1,8 @@
 import {Suspense,lazy,useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
 import SEO from '../components/SEO';
+import {faqPage,graph} from '../utils/schema';
+import {DESIGNER_FAQ} from '../features/deckcraft/designerFaq';
 import {deckReleaseData,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
 import {DEFAULT_DECK} from '../features/deckcraft/defaults';
 import type {DeckData,DeckInlay,HouseOpening,PrivacyScreen} from '../features/deckcraft/types';
@@ -69,6 +71,9 @@ const reducedMotion=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(pre
 
 // DeckCraft's funnel events go through the site's analytics (GA4, Meta and the behaviour trail sent with leads).
 setDeckAnalyticsSink((event,label)=>trackEngagement(event,label));
+
+// FAQPage from the same array the page renders below the workspace.
+const DESIGNER_SCHEMA=graph(faqPage('/deck-designer',DESIGNER_FAQ));
 
 /**
  * The public deck designer: wires the working design (useDeckDesign), the live estimate (useDeckEstimate),
@@ -402,7 +407,7 @@ export default function DeckDesigner(){
   };
   const currentIssues=[...new Set([...reviewFlags,...lightingCheck.warnings])];
   return <div className="deck-designer" data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined}>
-    <SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>
+    <SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer" schema={DESIGNER_SCHEMA}/>
     <header className="dd-header"><Link to="/" className="dd-workspace-brand" aria-label="Golden Maple home"><span className="dd-brand-symbol" aria-hidden="true">↗</span><span>DeckCraft<small>Golden Maple</small></span></Link><div className="dd-workspace-project"><h1>Draw your deck on your house.</h1><span className="dd-save-state"><i aria-hidden="true"/>{autosavePaused?'Auto-save paused':mounted?'Auto-save on this device':'Loading your design'}</span></div><WorkspaceTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={()=>saveJSON()} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} autosavePaused={autosavePaused} onDownloadPrevious={unrestoredDesign?()=>downloadFile(unrestoredDesign,'application/json','golden-maple-previous-design.json'):undefined}/><div id="dd-workspace-agent-slot"><button type="button" className="dd-agent-open" disabled={!mounted||!designReady} aria-haspopup="dialog" onClick={()=>setPresetsOpen(true)}>Presets</button><button type="button" className="dd-agent-open" aria-haspopup="dialog" onClick={()=>setAgentOpen(true)}>Agents</button></div><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
     {mounted&&<Suspense fallback={null}><EasyEditTools onAsk={()=>{showCanvas();setAskOpen(true);requestAnimationFrame(()=>{if(window.matchMedia('(max-width:800px)').matches)document.getElementById('dd-assistant-dock')?.scrollIntoView({block:'start',behavior:'smooth'});});}} onJobs={()=>setJobsOpen(true)} onIssues={()=>setIssuesOpen(true)} issues={currentIssues.length} ready={designReady} autosaveState={autosaveState} savedAt={lastAutosaveAt} jobLabel={jobLabel}/></Suspense>}
     <main className="dd-workspace">
@@ -413,6 +418,7 @@ export default function DeckDesigner(){
       <aside id="dd-assistant-dock" className="dd-assistant-slot" hidden={!askOpen}><button type="button" className="dd-assistant-back" onClick={showCanvas}>↑ Back to drawing</button></aside>
       <WorkspacePrice onQuoteReview={()=>setQuoteReviewOpen(true)} ledger={schedule} changes={changes.records} onFullList={showFullList}/>
     </main>
+    <section className="dd-faq" aria-labelledby="dd-faq-title"><h2 id="dd-faq-title">Deck designer questions</h2>{DESIGNER_FAQ.map(f=><details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>)}</section>
     {mounted&&<Suspense fallback={null}><DeckAgentBridge open={agentOpen} onClose={()=>setAgentOpen(false)} plainLanguageOpen={askOpen} dockTargetId="dd-assistant-dock" onTargetsChange={setAssistantTargets} onClosePlainLanguage={()=>{setAskOpen(false);setAssistantTargets(null);}} selection={selection} adapter={{data,estimate,reviewFlags,view:mode,openSections:[...open],canUndo,canRedo,ready:mounted&&designReady,commitDesign:next=>{const diff=Object.fromEntries(Object.keys({...data,...next}).filter(k=>JSON.stringify(data[k as keyof DeckData])!==JSON.stringify(next[k as keyof DeckData])).map(k=>[k,next[k as keyof DeckData]]));changes.edit(diff,data,true);replaceDesign(next);},undo,redo,setView:setMode,openSection:id=>openSection(id,true),actions:{'save.json':()=>saveJSON(true),'export.obj':()=>exportModel('obj',true),'export.dxf':()=>exportModel('dxf',true),'proposal.open':()=>openProposal(true),'proposal.pdf':()=>downloadPdf(undefined,true),'review.open':()=>setSendOpen(true)}}}/></Suspense>}
     {quoteReviewOpen&&<Suspense fallback={<p role="status">Opening quote-cost review…</p>}><QuoteReviewPanel data={data} estimate={estimate} onUpdate={atomicUpdate} onClose={()=>setQuoteReviewOpen(false)}/></Suspense>}
     <ChangeAnnouncer record={changes.records.at(-1)}/>
