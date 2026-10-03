@@ -46,6 +46,7 @@
     "react-router-dom": "^7.18.1",
     "tailwind-merge": "^3.5.0",
     "three": "0.185.1",
+    "three-gpu-pathtracer": "^0.0.24",
     "vite": "^6.2.0"
   },
   "devDependencies": {
