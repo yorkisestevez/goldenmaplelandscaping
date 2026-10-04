@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
@@ -199,9 +200,9 @@ for(const [kindName,wanted] of f3)for(const pattern of patterns)for(const [shape
 }
 {
   // A one-board band running front to back gets exactly a breaker's four build-up joists; one on a breaker takes its place.
-  const d=base({inlays:[band({atFt:-4})]}),m=buildDeckTakeoff(d),p=m.levels[0].inlays![0],mid=p.band!.to-d.boardWidth/2+m.levels[0].offset.x;
+  const d=base({width:24,inlays:[band({atFt:-4})]}),m=buildDeckTakeoff(d),p=m.levels[0].inlays![0],mid=p.band!.to-d.boardWidth/2+m.levels[0].offset.x;
   ok([-2.8125,-.9375,.9375,2.8125].every(k=>m.levels[0].joists.some(j=>Math.abs(j.a.x-(mid+k))<.001)),'A one-board band sits on a breaker\'s four build-up joists (±0.94 and ±2.81 in)');
-  const plain=buildDeckTakeoff(base()),centred=buildDeckTakeoff(base({inlays:[band()]}));
+  const plain=buildDeckTakeoff(base({width:24})),centred=buildDeckTakeoff(base({width:24,inlays:[band()]}));
   ok(plain.levels[0].breakers.length===1&&centred.levels[0].breakers.length===0&&m.levels[0].breakers.length===1,'A band on the breaker takes its place; one clear of it leaves it');
   const fieldPieces=(t:typeof m)=>t.levels[0].boards.filter(b=>b.role==='field').length;
   ok(fieldPieces(centred)===fieldPieces(plain)&&centred.levels[0].boards.filter(b=>b.role==='field').every(b=>b.length<=m.stockLength+.01),'With the band in the breaker’s place, the field boards run to it as they ran to the breaker: no extra joints');
@@ -282,8 +283,8 @@ for(const [label,patch,status] of [
   // A band cut in off the breaker: its length at the breaker rate. One on the breaker: the breaker's labour goes.
   const off=price(base({inlays:[band({atFt:-4})]})),offPlan=off.model.levels[0].inlays![0];
   ok(Math.abs(labour(off)-labour(plain)-offPlan.edgeFt/10*1.5/8*3700)<.01&&Math.abs(offPlan.edgeFt-(box(offPlan.pieces[0]).y1-box(offPlan.pieces[0]).y0)/12)<1e-9,'A band running front to back: its length at the breaker rate, 1.5 crew-hours per 10 ft');
-  const on=price(base({inlays:[band()]})),onPlan=on.model.levels[0].inlays![0],breakerDays=plain.model.levels[0].footprint.bounds.h/120*1.5/8;
-  ok(Math.abs(labour(on)-labour(plain)-(onPlan.edgeFt/10*1.5/8-breakerDays)*3700)<.01,'A band in a breaker\'s place is charged instead of that breaker');
+  const breakerPlain=price(base({width:24})),on=price(base({width:24,inlays:[band()]})),onPlan=on.model.levels[0].inlays![0],breakerDays=breakerPlain.model.levels[0].footprint.bounds.h/120*1.5/8;
+  ok(Math.abs(labour(on)-labour(breakerPlain)-(onPlan.edgeFt/10*1.5/8-breakerDays)*3700)<.01,'A band in a breaker\'s place is charged instead of that breaker');
   const rows=price(base({inlays:[band({direction:'across',boards:2})]}));
   ok(labour(rows)===labour(plain)&&!labourItem(rows).items[0].spec.includes('for inlays'),'A band of recoloured rows adds no labour');
   const across=price(base({pattern:'Diagonal',inlays:[band({direction:'across',boards:2})]})),acrossPlan=across.model.levels[0].inlays![0];

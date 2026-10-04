@@ -35,7 +35,7 @@ for(const device of [{name:'desktop',width:1440,height:1000,touch:false},{name:'
   await expect(modal(page).getByRole('button',{name:'Finish outline',exact:true})).toBeEnabled();
   const finish=modal(page).getByRole('button',{name:'Finish outline',exact:true});await finish.scrollIntoViewIfNeeded();const size=await finish.boundingBox();expect(size!.height).toBeGreaterThanOrEqual(44);expect(size!.width).toBeGreaterThanOrEqual(44);
   await page.screenshot({path:resolve(proof,`${device.name}-square-draft.png`)});
-  if(device.touch)await finish.click();else{await modal(page).getByRole('group',{name:'Sketch canvas',exact:true}).focus();await page.keyboard.press('Enter');}
+  if(!device.touch){await modal(page).getByRole('group',{name:'Sketch canvas',exact:true}).focus();await page.keyboard.press('Enter');await expect(modal(page).getByLabel('Exact drawing length',{exact:true})).toBeFocused();}await finish.click();
   const saved=await draft(page);expect(saved.shapes).toHaveLength(1);const points=saved.shapes[0].points;expect(points).toHaveLength(4);
   for(let i=0;i<points.length;i++){const p=points[i],q=points[(i+1)%points.length];expect(Math.min(Math.abs(p.x-q.x),Math.abs(p.y-q.y))).toBeLessThan(1e-7);}
   // Browser input coordinates round at subpixel precision; locked axes above remain exact.

@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerRuntimeCatalogue';
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';

@@ -7,7 +7,7 @@ export default function FootingDetails({data,model,cutaway}:{data:DeckData;model
  const supports=model.foundationSupports.filter(f=>f.gradeElevationIn!==null),dimension=supports.find(f=>f.depthIn>0),pending=model.foundationQuantities.foundationCoveragePending;
  return <group name="footings">
   {supports.map(f=>{const solids=foundationSolids(f);return <group key={f.id} userData={{pickPartId:f.id}} name={f.id}>
-   {solids.boxes.filter(b=>b.part!=='post').map(b=><mesh key={b.part} castShadow receiveShadow position={[b.x,b.y,b.z]}><boxGeometry args={[b.w,b.h,b.d]}/><meshStandardMaterial color={b.part==='deck-block'?'#b4b1a5':'#aab2b5'} metalness={b.part==='post-base'?.86:0} roughness={b.part==='post-base'?.34:.95}/></mesh>)}
+   {solids.boxes.filter(b=>b.part!=='post').map((b,i)=><mesh key={`${b.part}-${i}`} castShadow receiveShadow position={[b.x,b.y,b.z]}><boxGeometry args={[b.w,b.h,b.d]}/><meshStandardMaterial color={b.part==='deck-block'?'#b4b1a5':'#aab2b5'} metalness={b.part==='post-base'?.86:0} roughness={b.part==='post-base'?.34:.95}/></mesh>)}
    {solids.cylinders.map(p=><mesh key={p.part} castShadow receiveShadow position={[p.x,(p.top+p.bottom)/2,p.z]}><cylinderGeometry args={[p.radius,p.radius,p.top-p.bottom,foundationRadialSegments(data)]}/><meshStandardMaterial color={p.part==='concrete-pier'?'#b0ada2':'#aab2b5'} metalness={p.part==='concrete-pier'?0:.86} roughness={p.part==='concrete-pier'?.98:.34}/></mesh>)}
   </group>;})}
   {cutaway&&dimension&&<group>

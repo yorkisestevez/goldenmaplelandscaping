@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import {createDeckAgentController,type DeckAgentHostState,type AgentCommand,type AgentResponse} from '../src/features/deckcraft/designer/deckAgentController';
+import {applyWalkway} from '../src/features/deckcraft/shapeTools';
+import type {YardFeature} from '../src/features/deckcraft/types';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {deckReleaseData,calculateDeckReleaseEstimate,serializeDeckReleaseDesign,parseDeckReleaseDesign} from '../src/features/deckcraft/deckRelease';
 import {emptyHistory,recordChange,undoChange,redoChange} from '../src/features/deckcraft/designer/designHistory';
@@ -21,6 +23,15 @@ let counter=0;
 const request=(commands:AgentCommand[],expectedRevision?:number)=>({id:`check-${++counter}`,commands,...(expectedRevision===undefined?{}:{expectedRevision})});
 const ok=(r:AgentResponse)=>{if('error' in r)throw new Error(`${r.error.code}: ${r.error.message}`);check(r.ok,'Command succeeds');return r;};
 async function main(){
+  const walkwayHost=fixture(),walk=applyWalkway({id:'walk-regression',name:'Walkway',kind:'patio',enabled:true,xFt:0,zFt:0,widthFt:10,depthFt:4,heightIn:0,rotationDeg:0,productId:'permacon-melville',color:'#aaaaaa'} as YardFeature,{points:[{x:360,y:360},{x:480,y:360}],edges:[{kind:'line'}],closed:false},48,'round');
+  const walkPatch={yardFeatures:[walk]},preview=ok(await walkwayHost.api.preview(request([{type:'design.patch',patch:walkPatch}])));
+  check(JSON.stringify(preview.snapshot.design.yardFeatures![0].pathSpine)===JSON.stringify(walk.pathSpine)&&walkwayHost.commits===0,'Walkway centreline passes preview without writes');
+  ok(await walkwayHost.api.execute(request([{type:'design.patch',patch:walkPatch}])));
+  check(JSON.stringify(walkwayHost.state.data.yardFeatures![0].pathSpine)===JSON.stringify(walk.pathSpine),'Applying a walkway preserves its centreline');
+  for(const spine of [{...walk.pathSpine,widthIn:400},{...walk.pathSpine,ends:'invalid'},{...walk.pathSpine,extra:true}]){
+    const count=walkwayHost.commits,bad={...walk,pathSpine:spine} as unknown as YardFeature;
+    check(!(await walkwayHost.api.preview(request([{type:'design.patch',patch:{yardFeatures:[bad]}}]))).ok&&walkwayHost.commits===count,'Invalid walkway metadata stays rejected without writes');
+  }
   const f=fixture(),start=f.api.read();
   check(Object.isFrozen(start)&&Object.isFrozen(start.design)&&Object.isFrozen(start.boundaries[0].points),'Read snapshots are recursively immutable');
   check(!('customerName' in start.design)&&!('materialMarkup' in start.design),'Read does not expose contact details or contractor overrides');

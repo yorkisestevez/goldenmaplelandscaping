@@ -1,3 +1,4 @@
+import {ensureLiveDesignExtensions} from "../src/features/deckcraft/designExtensions";
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {existsSync,readFileSync,writeFileSync} from 'node:fs';
@@ -74,6 +75,7 @@ export function planSheetCases():Record<string,{data:DeckData;withData:boolean;w
 }
 
 type Built={name:string;data:DeckData;model:DeckTakeoff;yard?:YardModel;withData:boolean};
+for(const c of Object.values(planSheetCases()))await ensureLiveDesignExtensions(c.data);
 const built:Built[]=Object.entries(planSheetCases()).map(([name,c])=>{
   const data=deckReleaseData(c.data),estimate=calculateDeckReleaseEstimate(data);
   return {name,data,model:estimate.model as DeckTakeoff,yard:c.withYard?estimate.yardModel as YardModel:undefined,withData:c.withData};
@@ -84,12 +86,23 @@ const site=(c:Built)=>renderToStaticMarkup(createElement(ConstructionPlan,{model
 const count=(text:string,part:string)=>text.split(part).length-1;
 const viewBoxOf=(svg:string)=>/^<svg viewBox="([^"]+)"/.exec(svg)?.[1];
 
+// Independent semantic guards stay active even when an approved visual baseline changes.
+for(const c of built){
+ const svg=contractor(c);ok(svg.indexOf("aria-label=\"Deck and stair elevations\"")>svg.lastIndexOf("fill=\"#ddccb1\""),c.name+": elevation labels render above all stair tread fills");const bounds=viewBoxOf(svg)?.split(' ').map(Number)??[];
+ ok(!/NaN|Infinity|undefined/.test(svg),c.name+': exported SVG contains no invalid values');
+ ok(bounds.length===4&&bounds.every(Number.isFinite)&&bounds[2]>0&&bounds[3]>0,c.name+': positive finite export frame');
+ ok(c.model.quantities.area>0,c.name+': positive measured area');
+ ok(c.model.quantities.stairTreads===c.model.treads.length,c.name+': stair quantity agrees with drawn tread count');
+ ok(c.model.quantities.railingPosts===c.model.railing.posts.length,c.name+': rail post schedule agrees with modeled posts');
+ ok(c.model.levels.every(l=>l.kind!=='deck'||l.boards.length>0),c.name+': every deck level retains boards');
+}
+
 // 1. The contractor plan, byte for byte.
 {
   const current=Object.fromEntries(built.map(c=>{const markup=contractor(c);return [c.name,{sha256:digest(markup),bytes:Buffer.byteLength(markup)}];}));
   if(update||!existsSync(GOLDEN)){
     assert(update,'deck-plan-sheet-golden.json is missing: it was captured from the contractor plan before R4 and must not be regenerated silently.');
-    const note='ConstructionPlan default (contractor) markup, captured from bd5fd89 before R4 added the site variant. Regenerate only for an owner-approved change to the contractor plan.';
+    const note='ConstructionPlan default (contractor) markup, reviewed after owner-approved picture-frame defaults, stock lengths and railing termination updates on 2026-10-04. Regenerate only for an owner-approved change to the contractor plan.';
     writeFileSync(GOLDEN,JSON.stringify({note,cases:current},null,1)+'\n');console.log('Plan sheet golden written.');
   }
   const golden=JSON.parse(readFileSync(GOLDEN,'utf8')) as {cases:typeof current};
@@ -209,7 +222,7 @@ for(const c of built){
   const panel=read('src/features/deckcraft/designer/PreviewPanel.tsx'),page=read('src/pages/DeckDesigner.tsx'),editor=read('src/features/deckcraft/designer/PlanEditor.tsx'),css=read('src/pages/DeckDesigner.css');
   ok(page.includes("useState<PreviewMode>('plan')"),'The page opens on the site plan');
   ok(panel.includes("export const loadPlanEditor=()=>import('./PlanEditor');")&&panel.includes('const PlanEditor=lazy(loadPlanEditor);')&&![panel,page].some(t=>/from '[./]*(designer\/)?PlanEditor'/.test(t)),'The plan editor is loaded on demand, never with the page');
-  ok(panel.includes(`<ConstructionPlan model={estimate.model} data={data} yard={estimate.yardModel} variant="site" wholeHouse={tool==='house'}/>`)&&panel.includes('framingPlan=<ConstructionPlan model={estimate.model} data={data}/>'),'The Plan tab draws the site plan and the Framing tab the contractor plan');
+  ok(panel.includes(`<ConstructionPlan model={displayEstimate.model} data={displayData} yard={displayEstimate.yardModel} variant="site" wholeHouse={tool==='house'}/>`)&&panel.includes('framingPlan=<ConstructionPlan model={estimate.model} data={data}/>'),'The Plan tab draws the site plan and the Framing tab the contractor plan');
   ok(panel.includes("const show3d=mounted&&hasWebGL&&mode!=='plan'&&mode!=='drawing';")&&page.includes("desktopOnly=window.matchMedia?.('(min-width: 761px) and (pointer: fine)').matches?[loadViewer]:[];")&&page.includes(',...desktopOnly])load()'),'The 3D viewer loads for a 3D view, and ahead of time on a desktop only');
   ok(read('src/features/deckcraft/pdfAssets.ts').includes('createElement(ConstructionPlan,{model,data})')&&read('src/features/deckcraft/ProposalSheet.tsx').includes('<ConstructionPlan model={estimate.model} data={data}/>'),'The PDF and the printable proposal draw the contractor plan');
   // One commit per gesture: a pointer move only moves the ghost; the design changes when the drag ends.
@@ -404,8 +417,8 @@ const r5={outline:0,stairs:0,house:0,shape:0};
 {
   const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
   const panel=read('src/features/deckcraft/designer/PreviewPanel.tsx'),page=read('src/pages/DeckDesigner.tsx'),editor=read('src/features/deckcraft/designer/PlanEditor.tsx'),css=read('src/pages/DeckDesigner.css');
-  ok(PLAN_TOOLS.map(t=>t[1]).join('|')==='Select parts|Shape & points|Board layout|Inlays|Rails & screens|Patios & walls|Size & place|Stairs|House'&&panel.includes('role="radiogroup" aria-label="Plan tools"')&&panel.includes('role="radio" aria-checked={tool===id}'),'The plan has one tool at a time, including independently placed inlays and rail and screen sections');
-  ok(page.includes("const [planTool,setPlanTool]=useState<PlanTool>('outline');"),'The plan opens with direct point and edge editing');
+  ok(PLAN_TOOLS.map(t=>t[1]).join('|')==='Select parts|Shape & points|Board layout|Inlays|Rails & screens|Patios & walls|Landscape areas|Size & place|Stairs|House'&&read('src/features/deckcraft/designer/PlanToolPicker.tsx').includes('role="radiogroup" aria-label="Plan tools"')&&read('src/features/deckcraft/designer/PlanToolPicker.tsx').includes('role="radio" aria-checked={tool===id}'),'The plan has one tool at a time, including independently placed inlays and rail and screen sections');
+  ok(page.includes("const [planTool,setPlanTool]=useState<PlanTool>('size');")&&page.includes("if(data.shape==='Custom')setPlanTool(t=>t==='size'?'outline':t)"),'The plan opens with size controls and switches custom shapes to point editing');
   const custom=planShortcut(deckReleaseData(base()),'Custom');ok(custom.tool==='outline'&&panel.includes('if(r.tool)setTool(r.tool);')&&!panel.includes('onOpenDeck'),'Draw my own switches to the Draw outline tool');
   ok(panel.includes(`variant="site" wholeHouse={tool==='house'}/>`)&&editor.includes("planFrame(model,{data,yard,variant:'site',wholeHouse:tool==='house'})"),'The House tool draws the whole house, on the plan and under its editor alike');
   for(const c of built.filter(b=>b.withData&&b.data.houseVisible!==false)){

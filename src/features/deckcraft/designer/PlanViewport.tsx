@@ -1,9 +1,10 @@
+import {useArchitectKeys} from './architectKeys';
 import {useEffect,useRef,useState,type PointerEvent,type ReactNode} from 'react';
 import {Hand,Maximize,Minus,Plus} from 'lucide-react';
 import type {PlanFrame} from '../ConstructionPlan';
 import './planViewport.css';
 
-const limit=(value:number)=>Math.max(.5,Math.min(3,value));
+const limit=(value:number)=>Math.max(.15,Math.min(3,value));
 /** Navigation changes only the view: neither pricing nor the design's undo history. */
 export default function PlanViewport({children,frame}:{children:(zoom:number,frame:PlanFrame)=>ReactNode;frame:PlanFrame}){
   const box=useRef<HTMLDivElement>(null);
@@ -17,10 +18,11 @@ export default function PlanViewport({children,frame}:{children:(zoom:number,fra
     return {zoom:next,x:at?at.x-(at.x-old.x)*ratio:old.x*ratio,y:at?at.y-(at.y-old.y)*ratio:old.y*ratio};
   });
   const fit=()=>{frozen.current=frame;gesture.current=null;setPanning(false);setView({zoom:1,x:0,y:0});};
+  useArchitectKeys({z:fit});
   useEffect(()=>{
     const el=box.current;if(!el)return;
     const wheel=(event:WheelEvent)=>{
-      if(!event.ctrlKey&&!event.metaKey)return;
+      if(event.altKey)return;
       if((event.target as HTMLElement).closest('button,input,select'))return;
       event.preventDefault();freeze();const b=el.getBoundingClientRect(),stage=el.firstElementChild as HTMLElement;
       zoom(Math.exp(-event.deltaY*.003),{x:event.clientX-b.x-stage.offsetLeft-stage.offsetWidth/2,y:event.clientY-b.y-stage.offsetTop-stage.offsetHeight/2});
@@ -32,10 +34,10 @@ export default function PlanViewport({children,frame}:{children:(zoom:number,fra
     if(!event.currentTarget.contains(event.target as Node))return;
     freeze();
     // An explicit insertion tool takes precedence over a previously enabled camera pan.
-    if((event.target as Element).closest('.dd-landscape-plan[data-drawing],.dd-boundary-editor[data-add-pull],.dd-yard-shape-editor[data-add-pull],.dd-yard-shape-editor[data-drawing],.dd-inlay-plan-editor[data-placement],.dd-patio-inlay-overlay[data-placing]')){if(pan)setPan(false);return;}
+    if(event.button!==1&&(event.target as Element).closest('.dd-landscape-plan[data-drawing],.dd-boundary-editor[data-add-pull],.dd-yard-shape-editor[data-add-pull],.dd-yard-shape-editor[data-drawing],.dd-inlay-plan-editor[data-placement],.dd-patio-inlay-overlay[data-placing]')){if(pan)setPan(false);return;}
     const hardscapePan=!!(event.target as Element).closest('.dd-hardscape-plan-picks,[data-area-pick]');
     if(!pan&&event.button!==1&&!hardscapePan)return;
-    if((event.target as HTMLElement).closest('.dd-plan-navigation,.dd-boundary-inline,[data-plan-editor-ui],[role="toolbar"]'))return;
+    if((event.target as HTMLElement).closest(event.button===1?'.dd-plan-navigation,input,select,button':'.dd-plan-navigation,.dd-boundary-inline,[data-plan-editor-ui],[role="toolbar"]'))return;
     if(gesture.current&&gesture.current.id!==event.pointerId){gesture.current=null;setPanning(false);return;}
     if(hardscapePan&&!pan&&event.button===0){gesture.current={id:event.pointerId,x:event.clientX,y:event.clientY,originX:live.current.x,originY:live.current.y,tapPan:true};return;}
     event.preventDefault();event.stopPropagation();
@@ -60,7 +62,7 @@ export default function PlanViewport({children,frame}:{children:(zoom:number,fra
     <div className="dd-plan-navigation" role="group" aria-label="Drawing navigation">
       <button type="button" aria-label="Pan drawing" aria-pressed={pan} title="Pan the view without changing your deck" onClick={()=>setPan(old=>!old)}><Hand size={17}/></button>
       <span className="dd-plan-navigation-divider" aria-hidden="true"/>
-      <button type="button" aria-label="Zoom out" disabled={view.zoom<=.5} onClick={()=>{freeze();zoom(.8);}}><Minus size={17}/></button>
+      <button type="button" aria-label="Zoom out" disabled={view.zoom<=.15} onClick={()=>{freeze();zoom(.8);}}><Minus size={17}/></button>
       <output aria-label="Drawing zoom">{Math.round(view.zoom*100)}%</output>
       <button type="button" aria-label="Zoom in" disabled={view.zoom>=3} onClick={()=>{freeze();zoom(1.25);}}><Plus size={17}/></button>
       <button type="button" aria-label="Fit drawing" title="Fit the entire design" onClick={fit}><Maximize size={17}/></button>

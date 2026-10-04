@@ -1,4 +1,4 @@
-import {offsetPolygons,polygonCut,polygonBoard} from './polygonCuts';
+import {offsetPolygons,polygonCut,polygonBoard,splitBoard} from './polygonCuts';
 // Shared deck-plan geometry — the single source of truth for the deck's
 // footprint polygon, stair placement, railing runs, and board layout.
 // Consumed by DeckDiagram (2D SVG) and viewer3d/ (three.js).
@@ -305,8 +305,7 @@ export interface BoardRun {
 /**
  * Field decking as scanline strips clipped to the outline. Diagonal rotates
  * the polygon -45deg, scans, and rotates run centers back. Long runs split at
- * maxBoardLen (20 ft stock) with alternating half-length stagger so butt
- * joints don't line up — same "breaker" intent as the 2D diagram.
+ * the supplied stock length only when a clipped course cannot fit one board.
  */
 /** Even-odd test: is the point inside the polygon? */
 function insidePolygon(pt:PlanPoint,poly:PlanPoint[]){let odd=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>pt.y)!==(b.y>pt.y)&&pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;}
@@ -336,13 +335,10 @@ export function getBoardRows(fp: FootprintPlan, opts: {
   }
   else if(opts.anchor==='top')for(let y=top-boardWidth;y+boardWidth>bottom+.001;y-=pitch)rows.push(y);
   else for(let y=bottom;y<top-.001;y+=pitch)rows.push(y);
-  for(const [row,y] of rows.entries()){
-    let x=left,first=true;
-    while(x<right-.001){
-      const length=Math.min(first&&row%2?stock/2:stock,right-x),tile=[world(x,y),world(x+length,y),world(x+length,y+boardWidth),world(x,y+boardWidth)];
-      for(const poly of polygonCut(field,[tile]))runs.push(polygonBoard(poly,angleDeg));
-      x+=length+gap;first=false;
-    }
+  for(const y of rows){
+    const tile=[world(left,y),world(right,y),world(right,y+boardWidth),world(left,y+boardWidth)];
+    // Clip first: short courses at diagonal tips and notches can remain single boards.
+    for(const poly of polygonCut(field,[tile]))runs.push(...splitBoard(polygonBoard(poly,angleDeg),boardWidth,stock,gap));
   }
   return runs;
 }

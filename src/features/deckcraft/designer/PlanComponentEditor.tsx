@@ -1,3 +1,4 @@
+import {useArchitectKeys} from './architectKeys';
 import {useEffect,useLayoutEffect,useMemo,useRef,useState,type RefObject} from 'react';
 import {createPortal} from 'react-dom';
 import {planFrame,type PlanFrame} from '../ConstructionPlan';
@@ -35,6 +36,7 @@ export function PlanComponentEditor({data,model,update,toolbar,viewportFrame,vie
  const visibleParts=parts.filter(p=>(filter==='all'||filter==='editable'?!['beam','post','footing'].includes(p.kind)||filter==='all':p.kind===filter)&&`${p.label} ${p.id} ${p.dimensions.join(' ')}`.toLowerCase().includes(search.toLowerCase()));
  const announce=(message:string,error=false)=>{setNotice(message);setInvalid(error);onStatus?.(message);};
  const replaceSelection=(next:string[])=>{setIds(next);onSelectionChange?.(next);const id=next.at(-1)??'';setSelectedId(id);const part=parts.find(p=>p.id===id);setDraft(part?componentEditValues(data,part):{});setDirty(false);setNotice('');setInvalid(false);if(part?.kind==='wall')setAddWall(part.refId!);};
+ useArchitectKeys({a:()=>replaceSelection(visibleParts.map(p=>p.id)),l:()=>{if(!selected)return false;replaceSelection(visibleParts.filter(p=>p.kind===selected.kind).map(p=>p.id));},n:()=>replaceSelection([])});
  const choose=(id:string,toggle=false,range=false)=>{if(!id){replaceSelection([]);return;}if(range&&selectedId){const a=visibleParts.findIndex(p=>p.id===selectedId),b=visibleParts.findIndex(p=>p.id===id);if(a>=0&&b>=0){replaceSelection([...new Set([...ids,...visibleParts.slice(Math.min(a,b),Math.max(a,b)+1).map(p=>p.id)])]);return;}}replaceSelection(toggle||multi?(ids.includes(id)?ids.filter(x=>x!==id):[...ids,id]):[id]);};
  useEffect(()=>{if(!selection||JSON.stringify(selection)===JSON.stringify(ids))return;const next=selection.filter(id=>parts.some(p=>p.id===id));setIds(next);const id=next.at(-1)??'';setSelectedId(id);const part=parts.find(p=>p.id===id);setDraft(part?componentEditValues(data,part):{});setDirty(false);},[selection]);
  useEffect(()=>{

@@ -22,6 +22,15 @@ function resolveColour(text:string,snapshot:AgentSnapshot):{ref:ColourRef;label:
 /** Entire clauses must match. Unsupported words never become a guessed edit or an external action. */
 export function parseNaturalLanguageCommands(input:unknown,snapshot:AgentSnapshot,selection:AssistedSelection={partIds:[],boards:[]}):InstructionResult {
  if(typeof input!=='string'||!input.trim()||input.length>600||/[\u0000-\u001f]/.test(input.replace(/\n/g,'')))return no('Enter a short instruction, up to 600 characters.');if(!snapshot.ready)return no('Wait until the design has finished restoring.');
+ // Resolve explicit relative measurements locally instead of letting a model choose a different delta.
+ const relative=measuredWords(short(input).replace(/ (more|less|extra) (feet|foot|ft|inches|inch|in)\b/g,' $2 $1'));
+ const growth=relative.match(/^(?:please )?give (?:the )?(?:main )?deck (\d+(?:\.\d+)?) (feet|foot|ft|inches|inch|in) (more|less|extra)(?: of)? (width|depth|length)(?:[,.]? and keep (?:its |the )?(depth|length|width) unchanged)?$/);
+ const resize=relative.match(/^(?:please )?make (?:the )?(?:main )?deck (\d+(?:\.\d+)?) (feet|foot|ft|inches|inch|in) (wider|narrower|deeper|shorter)$/);
+ if(growth||resize){const match=(growth??resize)!,key=growth?(growth[4]==='width'?'width':'length'):/^(wider|narrower)$/.test(match[3])?'width':'length',delta=Number(match[1])*(/^(inches|inch|in)$/.test(match[2])?1/12:1)*(/^(less|narrower|shorter)$/.test(match[3])?-1:1),value=snapshot.design[key]+delta;
+  if(growth?.[5]&&(growth[5]==='width'?'width':'length')===key)return no('That request changes and preserves the same dimension. Specify which dimension should change.',true);
+  if(value<4||value>60)return no('Deck width and length must each be 4–60 feet.');
+  return {ok:true,request:{id:'relative-'+crypto.randomUUID(),expectedRevision:snapshot.revision,commands:[{type:'design.patch',patch:{[key]:value}}]},summary:[`Deck ${key}: ${snapshot.design[key]} ft → ${value} ft.`]};
+ }
  const clauses=input.split(/;|\n/).map(short).filter(Boolean);if(clauses.length>8)return no('Use at most eight short instructions, separated by semicolons.');
  const commands:AgentCommand[]=[],summary:string[]=[];let editsBoards=false;
  for(let raw of clauses){raw=measuredWords(raw.replace(/^(please |can you |could you )/,'').replace(/^(make|set|change) the /,'$1 ').replace(/\b(?:this|these) (?=stairs?\b)/,'')).replace(/([a-z])(?=\d)/g,'$1 ').replace(/(\d)(?=[a-z])/g,'$1 ');let m:RegExpMatchArray|null;

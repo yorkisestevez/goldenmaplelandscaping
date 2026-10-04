@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {deckingStock,designStockLength} from '../src/features/deckcraft/deckingStock';
+import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+assert.equal(DEFAULT_DECK.pictureFrameOverhangIn,0,'New decks do not assume an unsupported border overhang');
+assert.deepEqual(deckingStock('tt_prime_plus').lengthsIn,[192,240]);
+assert.equal(deckingStock('unknown').confirmed,false);
+assert.equal(deckingStock('tt_prime_plus',3.5).confirmed,false);
+assert.equal(designStockLength({...DEFAULT_DECK,deckFinishes:{border:'tt_vintage:Coastline'}}),192);
+assert.equal(designStockLength({...DEFAULT_DECK,borderFinish:'Dark Slate'}),192);
+assert.equal(designStockLength({...DEFAULT_DECK,deckingMaterial:'cedar'}),144);
+const m=buildDeckTakeoff({...DEFAULT_DECK,width:18});
+assert.equal(m.stockLength,240);assert.equal(m.levels[0].breakers.length,0);
+assert(m.levels[0].boards.every(b=>b.length<=240));
+console.log('Product stock lengths: 10 checks passed');

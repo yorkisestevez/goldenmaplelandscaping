@@ -25,7 +25,7 @@ export default function PriceLedger({ledger,variant,changes,onFullList}:{
     <p className="dd-ledger-stamp">{ledger.stamp}</p>
     <table className="dd-ledger-table">
       <tbody>{ledger.lines.map(line=><tr key={line.title} className="dd-ledger-line">
-        <th scope="row">{line.title}{full&&<ul className="dd-ledger-items">{line.items.map((item,i)=><li key={i}><span>{item.name}</span> <span className="dd-ledger-qty">{item.qty} {item.unit}</span>{item.quote&&<> <Tag kinds={[item.quote]}/></>}</li>)}</ul>}</th>
+        <th scope="row">{line.title}{full&&<ul className="dd-ledger-items">{line.items.map((item,i)=><li key={i}><span>{item.name}</span> <span className="dd-ledger-qty">{item.qty} {item.unit}</span>{item.quote?<> <Tag kinds={[item.quote]}/></>:<small className="dd-ledger-qty"> · {item.status==='confirmed'?'Confirmed scope':'Planning allowance'}</small>}</li>)}</ul>}</th>
         <td>{line.quotes.length&&line.amount<.005?<Tag kinds={line.quotes}/>:line.text}</td>
       </tr>)}</tbody>
       <tbody className="dd-ledger-sums">

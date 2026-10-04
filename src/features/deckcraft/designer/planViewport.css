@@ -1,6 +1,7 @@
 /* Zoom and pan only move the view, so nothing in it may anchor the page's scroll (Chromium nudged it 1px). */
 .dd-canvas>.dd-plan-viewport{position:relative;isolation:isolate;aspect-ratio:auto!important;height:clamp(380px,55vh,620px)!important;overflow:hidden;overflow-anchor:none;background:#f5f3ed;touch-action:pan-y}
 .dd-plan-stage{position:absolute;inset:0 0 70px;transform-origin:center;will-change:transform}
+.dd-plan-stage>.dd-plan-editor{position:absolute;inset:0;height:100%!important;aspect-ratio:auto!important;pointer-events:none}
 .dd-plan-stage>.dd-site-plan{display:block;width:100%;height:100%;background:transparent!important}
 .dd-plan-stage>.dd-site-plan .dd-plan-grid{opacity:.35}
 .dd-plan-stage>.dd-site-plan g[aria-label="House"]>rect,.dd-plan-stage>.dd-site-plan g[aria-label="House"]>polygon{fill:#e8e5dd;stroke:#70766b;stroke-width:.7}
@@ -26,3 +27,5 @@
 .dd-preview-details .dd-title-block{margin-top:0}
 @media(max-width:600px){.dd-canvas>.dd-plan-viewport{height:390px!important}.dd-plan-navigation{bottom:10px;right:10px}.dd-plan-pan-hint{font-size:11px}}
 @media(max-width:800px){.dd-preview-docked .dd-canvas>.dd-plan-viewport{height:clamp(220px,30vh,300px)!important}.dd-plan-viewport{scroll-margin-top:136px}}
+
+.dd-plan-editor>svg[aria-label="Stair size and shape controls"]{z-index:2}

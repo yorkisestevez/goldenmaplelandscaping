@@ -2,7 +2,7 @@ import {needsAdvancedYard} from '../yardModel';
 import type {DeckData} from '../types';
 import type {PricingRequest} from './optionPricing';
 type Job=Extract<PricingRequest,{job:number}>;
-const extensions=(data:DeckData)=>(data.quoteResolutions?.length?1:0)|(data.siteModel!==undefined?2:0)|(data.landscapeObjects!==undefined?4:0)|(data.editorOrganization!==undefined?8:0)|(data.landscapeObjects?.length?16:0)|(data.stairTargets!==undefined?32:0)|(data.yardFeatures?.some(f=>f.wallTopSteps!==undefined)?64:0)|(needsAdvancedYard(data)?128:0)|(data.pools?.length?256:0)|(data.poolQuoteInputs!==undefined?512:0);
+const extensions=(data:DeckData)=>(data.quoteResolutions?.length?1:0)|(data.siteModel!==undefined?2:0)|(data.landscapeObjects!==undefined?4:0)|(data.editorOrganization!==undefined?8:0)|(data.landscapeObjects?.length?16:0)|(data.stairTargets!==undefined?32:0)|(data.yardFeatures?.some(f=>f.wallTopSteps!==undefined)?64:0)|(needsAdvancedYard(data)?128:0)|(data.pools?.length?256:0)|(data.poolQuoteInputs!==undefined?512:0)|(data.inlays?.length?1024:0);
 /** A pending load is shared only when it covers the requested extension set.
  * Cancelled or superseded jobs never resume, and a later optional field still
  * loads its own engine even after an earlier private quote job completed. */

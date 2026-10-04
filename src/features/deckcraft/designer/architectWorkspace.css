@@ -1,0 +1,38 @@
+/* A compact menu strip replaces the permanent task rail. Loaded with workspace help. */
+.deck-designer:has(.dd-workspace-nav) .dd-workspace{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto}
+.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav{grid-column:1;grid-row:1;position:relative;top:auto;z-index:45;display:flex;align-items:center;gap:8px;overflow:visible;padding:0 12px;background:#f4f5f0;border:0;border-bottom:1px solid #d6dad1}
+.deck-designer .dd-workspace-nav .dd-nav-group{position:relative;margin:0;flex:none;display:block}
+.deck-designer .dd-nav-group>summary{min-height:44px;padding:0 12px;align-content:center;font-size:12px;cursor:pointer;color:#374337}
+.deck-designer .dd-nav-menu{position:absolute;left:0;top:100%;width:220px;padding:6px;background:#fff;border:1px solid #cdd3c8;box-shadow:0 8px 24px #20321b22;border-radius:4px;z-index:50}
+.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav button{display:flex;flex-direction:row;justify-content:flex-start;gap:8px;min-height:44px;width:100%;margin:0;padding:8px;font-size:12px;text-align:left}
+.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav .dd-nav-canvas{display:none}
+.deck-designer:has(.dd-workspace-nav) .dd-preview{grid-column:1;grid-row:2;padding:8px 12px;min-width:0}
+.deck-designer:has(.dd-workspace-nav) .dd-preview-head{margin-bottom:6px;gap:8px}
+.deck-designer:has(.dd-workspace-nav) .dd-preview h2{font-size:13px}
+.deck-designer:has(.dd-workspace-nav) .dd-workspace-price{grid-column:1;grid-row:3;padding:6px 14px;gap:8px}
+.deck-designer:has(.dd-workspace-nav) .dd-workspace-amount>strong{font-size:20px}
+.deck-designer:has(.dd-workspace-nav) .dd-sheet-panel>.dd-summary-actions{display:inline-flex;margin:0 8px 6px 0}
+.deck-designer:has(.dd-workspace-nav) .dd-sheet-panel>.dd-secondary{margin:0 0 6px}
+.deck-designer:has(.dd-workspace-nav) .dd-canvas{border-radius:4px}
+@media(max-width:800px){.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav{position:relative;top:auto;gap:0;padding:0 6px}.dd-nav-group>summary{font-size:11px;padding:0 9px}.dd-nav-group:last-child .dd-nav-menu{left:auto;right:0}.deck-designer:has(.dd-workspace-nav) .dd-preview{padding:8px}.deck-designer:has(.dd-workspace-nav) .dd-preview-head{flex-wrap:wrap}.deck-designer:has(.dd-workspace-nav) .dd-preview h2{margin:0}.deck-designer:has(.dd-workspace-nav) .dd-workspace-price{padding:6px 10px}.deck-designer:has(.dd-workspace-nav) .dd-workspace-amount>small{flex-basis:auto}}
+
+/* Drawing mode reserves the screen for geometry; project controls remain one click away. */
+.deck-designer:has(.dd-workspace-nav) .dd-preview-head{display:flex;align-items:center;justify-content:space-between}
+.deck-designer[data-drawing-focus=true] .dd-workspace-nav,.deck-designer[data-drawing-focus=true] .dd-workspace-price{display:none}
+.deck-designer[data-drawing-focus=true]:has(.dd-easy-tools) .dd-workspace{height:calc(100dvh - 72px - var(--dd-easy-tools-height,0px));min-height:0;grid-template-rows:minmax(0,1fr);padding-bottom:0}
+.deck-designer[data-drawing-focus=true]:has(.dd-workspace-nav) .dd-preview{grid-row:1;padding:6px 10px}
+.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-plan-viewport,.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-site-plan{height:max(280px,calc(100dvh - 270px))!important}
+.deck-designer[data-drawing-focus=true] .dd-canvas>[aria-label="Interactive deck construction model"]{height:max(280px,calc(100dvh - 270px))!important}
+.deck-designer .dd-drawing-focus-toggle{margin-right:6px!important}
+html:has(.deck-designer[data-drawing-focus=true]){scroll-padding-bottom:12px}
+@media(max-width:800px){.deck-designer[data-drawing-focus=true]:has(.dd-easy-tools) .dd-workspace{height:auto;min-height:calc(100dvh - 64px)}.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-plan-viewport,.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-site-plan{height:max(360px,calc(100dvh - 320px))!important}}
+
+.deck-designer[data-drawing-focus=true] .dd-preview-head{flex-direction:row;justify-content:flex-start;padding-right:130px;min-height:48px}
+.deck-designer[data-drawing-focus=true] .dd-preview-head h2,.deck-designer[data-drawing-focus=true] .dd-sheet-panel>.dd-summary-actions,.deck-designer[data-drawing-focus=true] .dd-sheet-panel>button[title="Keyboard shortcuts (F1)"]{display:none}
+.deck-designer[data-drawing-focus=true] .dd-drawing-focus-toggle{position:absolute;top:8px;right:10px;min-height:44px;font-size:12px}
+@media(max-width:400px){.deck-designer[data-drawing-focus=true] .dd-sheet-tabs button{padding:0 10px}.deck-designer[data-drawing-focus=true] .dd-drawing-focus-toggle{padding:0 8px;font-size:11px}}
+
+/* Keep actual save/recovery feedback visible while the job toolbar is collapsed. */
+.deck-designer[data-drawing-focus=true] .dd-easy-tools{display:flex;padding:3px 12px;min-height:24px}
+.deck-designer[data-drawing-focus=true] .dd-easy-tools>div:last-child,.deck-designer[data-drawing-focus=true] .dd-easy-tools strong,.deck-designer[data-drawing-focus=true] .dd-save-state{display:none}
+.deck-designer[data-drawing-focus=true] .dd-easy-tools span{margin:0}

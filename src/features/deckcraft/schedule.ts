@@ -5,6 +5,9 @@ import type {DeckTakeoff,Member} from './deckTakeoff';
 import {getHardwareLayout} from './hardwareLayout';
 import {planStock} from './stockPlan';
 import {getStairBoards} from './stairBoards';
+import {colourName,deckColourRef,darkSlateBorder} from './boardFinishes';
+import {partRef} from './deckPartFinishes';
+import {deckingStock} from './deckingStock';
 export interface ConnectorScheduleRow {quoteResolved?:boolean;name:string;qty:number;unit:string;rate:number|null;basis:string}
 export interface StockScheduleRow {name:string;section:string;stockLengthIn:number;orderedPieces:number;cutsIn:number[][];unresolvedIn:number[];installedLf:number;orderedLf:number}
 /** Stable keys shared by the drawing schedule and quantity CSVs. */
@@ -12,12 +15,17 @@ const rowHash=(key:string)=>{let value=2166136261;for(const c of key){value=Math
 export const connectorRowId=(name:string)=>`C-${rowHash(name).slice(-6)}`;
 export const stockRowId=(row:Pick<StockScheduleRow,'name'|'section'|'stockLengthIn'>)=>`F-${rowHash(`${row.name}|${row.section}|${row.stockLengthIn}`).slice(-6)}`;
 export function stairStock(data:DeckData,model:DeckTakeoff):StockScheduleRow[]{
-  const cuts=getStairBoards(data,model).map(p=>p.w);
-  if(!cuts.length)return [];
-  const plan=planStock(cuts,model.stockLength);
+  const boards=getStairBoards(data,model);
+  if(!boards.length)return [];
+  const rows:StockScheduleRow[]=[];
+  for(const role of ['field','border'] as const){
+    const cuts=boards.filter(b=>(b.role??'field')===role).map(b=>b.w);if(!cuts.length)continue;
+    const ref=partRef(data,role==='border'?'border':'treads')??deckColourRef(data),slate=role==='border'&&darkSlateBorder(data),label=slate?'Dark Slate — supplier confirms product':colourName(ref),stock=deckingStock(slate?'dark-slate':ref.split(':')[0],data.boardWidth),plan=planStock(cuts,stock.maxLengthIn);
+    rows.push({name:role==='border'?'Stair picture-frame boards — assembly allowance; detail quote required':'Stair tread decking — included in per-riser allowance',section:`${data.boardWidth} in decking · ${label}; ${plan.offcutLf.toFixed(1)} lf offcuts; saw kerf included; ${stock.confirmed?'manufacturer-listed stock length, supplier availability pending':'stock-length allowance, supplier confirmation required'}`,stockLengthIn:stock.maxLengthIn,orderedPieces:plan.bins.length,cutsIn:plan.bins.map(b=>b.cutsIn),unresolvedIn:plan.unresolved,installedLf:plan.installedLf,orderedLf:plan.purchasedLf});
+  }
   const stringers=planStock(model.stringers.map(m=>Math.hypot(m.b.x-m.a.x,m.b.y-m.a.y,m.b.z-m.a.z)),192);
   const risers=planStock(model.riserBoards.map(b=>b.w),model.stairSupport.riserStockLengthIn);
-  return [{name:'Stair tread decking — included in per-riser allowance',section:`${data.boardWidth} in decking`,stockLengthIn:model.stockLength,orderedPieces:plan.bins.length,cutsIn:plan.bins.map(b=>b.cutsIn),unresolvedIn:plan.unresolved,installedLf:plan.installedLf,orderedLf:plan.purchasedLf},
+  return [...rows,
     {name:'Stair stringers — included in per-riser allowance',section:'1.5 × 9.25 in framing',stockLengthIn:192,orderedPieces:stringers.bins.length,cutsIn:stringers.bins.map(b=>b.cutsIn),unresolvedIn:stringers.unresolved,installedLf:stringers.installedLf,orderedLf:stringers.purchasedLf},
     {name:'Closed stair riser faces — included in per-riser allowance',section:`${model.stairSupport.riserThicknessIn} × ${model.stairSupport.riserStockWidthIn} in; rip to actual rise less tread thickness`,stockLengthIn:model.stairSupport.riserStockLengthIn,orderedPieces:risers.bins.length,cutsIn:risers.bins.map(b=>b.cutsIn),unresolvedIn:risers.unresolved,installedLf:risers.installedLf,orderedLf:risers.purchasedLf}];
 }

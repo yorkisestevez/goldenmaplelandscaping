@@ -1,3 +1,4 @@
+import {Suspense,lazy,useCallback,useContext,useEffect,useMemo,useLayoutEffect,useRef,useState} from 'react';
 import ScenePresentationTools from './ScenePresentationTools';
 
 import SavedCameraBridge from './SavedCameraBridge';
@@ -38,7 +39,7 @@ import SelectionBridge,{type ObjectPick} from './SelectionBridge';
 
 import type {SelectionState} from '../../designer/selectionState';
 
-import {Suspense,lazy,useCallback,useContext,useEffect,useMemo,useLayoutEffect,useRef,useState} from 'react';
+
 
 import {Canvas,useThree,type ThreeEvent} from '@react-three/fiber';
 
@@ -116,7 +117,7 @@ import Cladding3D from './Cladding3D';
 
 import {drawnRiserBoards} from '../../stairCladding';
 
-import {boardFinishPlan,darkSlateBorder,parseColourRef} from '../../boardFinishes';
+import {boardFinishPlan,darkSlateBorder,borderFinishRef,parseColourRef} from '../../boardFinishes';
 
 import {hasBoardLayout} from '../../boardLayoutPricing';
 
@@ -380,7 +381,8 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
   const darkBorder=darkSlateBorder(data);
 
-  const borderMaterial=useSwatchTexture(darkBorder?swatchUrl('dk-border-dark-slate.jpg'):'','#343635');
+  const borderRef=borderFinishRef(data),borderColour=borderRef?parseColourRef(borderRef):null,stairBorder=darkBorder||!!borderColour;
+  const borderMaterial=useSwatchTexture(darkBorder?swatchUrl('dk-border-dark-slate.jpg'):borderColour?swatchUrl(borderColour.color.swatch):'','#343635');
 
   const extras=useMemo(()=>extrasLayout(data,model),[data,model]);
 
@@ -496,7 +498,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <HardwareDetails data={data} model={model} inspection={inspection}/><FootingDetails data={data} model={model} cutaway={cutaway}/>
 
-    <FinishedBoards items={stairBoards} material={treadMat}/>
+    <FinishedBoards items={stairBoards.filter(b=>!stairBorder||b.role!=='border')} material={treadMat}/>{stairBorder&&<FinishedBoards items={stairBoards.filter(b=>b.role==='border')} material={borderMaterial}/>}
 
     {!structure&&<group name="closed-stair-riser-boards"><FinishedBoards items={drawnRisers} material={riserMat}/></group>}
 

@@ -104,7 +104,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // Flashing covers every wall the deck meets: ledgers plus bump-out flush walls (same as ledger length without them).
   const flashingLf=getHouseContact(data,model.levels[0].footprint).flashingLf;
   const connectors=connectorSchedule(data,model,hardware);
-  const framingStock=constructionStock(model);
+  const framingStock=constructionStock(model),stairSchedule=stairStock(data,model);
   const {
     width, length, height, cutoutWidth, cutoutLength, width2, length2, height2, cutoutWidth2, cutoutLength2, shape, levels, pattern,
     deckType, municipality, siteType, soilCondition, buildSeason, intendedLoad, foundation,
@@ -799,6 +799,12 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     const unknown=row.amountCents===null;if(unknown)quoteRequired.push(row.label);
     sections.push({title:`Yard · ${row.label}`,icon:'🌿',quoteRequired:unknown,total:(row.amountCents??0)/100,description:row.note,items:[{name:row.label,spec:row.note??'Shared yard construction takeoff using the existing Golden Maple website price basis; Ontario HST added once at project level.',qty:row.quantity??1,unit:row.unit??'allowance',cost:unknown?null:row.amountCents!/100}]});
   }
+  const stairFrame=stairSchedule.find(r=>r.name.startsWith('Stair picture-frame'));
+  if(stairFrame){
+    const label='Stair picture-frame detail (builder / supplier quote)';
+    quoteRequired.push(label);
+    sections.push({title:'Stair picture-frame detail',icon:'🪜',quoteRequired:true,total:0,items:[{name:label,spec:`${stairFrame.section}. ${stairFrame.installedLf.toFixed(1)} lf installed from ${stairFrame.orderedPieces} stock boards (${stairFrame.orderedLf.toFixed(1)} lf ordered). The Stairs assembly allowance already includes generic tread supply and installation. Quote only the net adjustment for this selected border product, mitre cutting, backing, fastening and delivery, crediting that allowance; no duplicate full supply charge. Supplier confirms stock availability and builder confirms supported joints.`,qty:stairFrame.orderedPieces,unit:'boards',cost:null}]});
+  }
   const borderLighting=borderLightingPlan(data,model);
   if(borderLighting.selected)flags.push(...borderLighting.warnings);
   if(borderLighting.selected&&borderLighting.availableMounts.length){
@@ -842,7 +848,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     yardModel,yardTakeoff,
     quoteRequired:[...new Set(quoteRequired)],
     connectorSchedule:connectors,
-    stockSchedule:[...boardSchedules,...framingStock,...stairStock(data,model)],
+    stockSchedule:[...boardSchedules,...framingStock,...stairSchedule],
     model,
     total: finalTotal,
     subtotal,

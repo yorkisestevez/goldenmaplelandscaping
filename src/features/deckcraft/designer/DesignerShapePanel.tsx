@@ -1,3 +1,4 @@
+import {useArchitectKeys,revealControl} from './architectKeys';
 import {useState} from 'react';
 import {createPortal} from 'react-dom';
 import type {DeckData,YardFeature} from '../types';
@@ -60,6 +61,7 @@ export default function DesignerShapePanel({data,update,selected,selection,frame
  });
  const world=selected?yardFeaturePath(selected):null,spine=selected?yardSpinePath(selected):null,isPatio=selected?.kind==='patio';
  const edgeIndex=selected&&world?Math.min(selection.index,edgeCount(world)-1):0;
+ useArchitectKeys({o:()=>revealControl(document.querySelector('[aria-label="Designer corner radius"]')),h:()=>revealControl(document.querySelector('[aria-label="Designer corner cut"]')),'ctrl+e':()=>revealControl(document.querySelector('[aria-label="Designer offset distance"]'))},!draw);
  const snapPoints=(data.yardFeatures??[]).filter(f=>f.kind==='patio'||f.kind==='retaining-wall').flatMap(f=>{const p=yardFeaturePath(f);return [...p.points,...p.points.slice(0,edgeCount(p)).map((q,i)=>{const b=p.points[(i+1)%p.points.length];return {x:(q.x+b.x)/2,y:(q.y+b.y)/2};})];}).concat((data.landscapeObjects??[]).filter(o=>o.kind==='bed').flatMap(o=>landscapeOutlinePaths(o)[0]?.filter((_,i)=>i%8===0).map(p=>({x:p.x,y:p.z}))??[]));
  return <section className="dd-designer-panel" aria-label="Designer shape tools">
   <h4>Draw with designer tools</h4>

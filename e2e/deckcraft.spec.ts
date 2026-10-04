@@ -67,9 +67,10 @@ const planHandle=(page:Page,name:string)=>page.getByRole('slider',{name,exact:tr
 const ghost=(page:Page)=>drawing(page).locator('.dd-plan-ghost');
 const shortcuts=(page:Page)=>page.getByRole('group',{name:'Shape shortcuts'});
 const planStatus=(page:Page)=>preview(page).locator('.dd-plan-status');
-/** The plan's tools (R5): Size & place, Draw outline, Stairs and House, one at a time. Picks one. */
-async function planTool(page:Page,name:'Size & place'|'Shape & points'|'Stairs'|'House'){
+/** The plan's tools (R5): Deck size, Draw outline, Stairs and House, one at a time. Picks one. */
+async function planTool(page:Page,name:'Deck size'|'Shape & points'|'Stairs'|'House'){
   const tool=page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true});
+  if(name==='Shape & points'&&!await tool.isVisible())await page.getByRole('button',{name:'More tools',exact:true}).click();
   await tool.click();
   await expect(tool).toHaveAttribute('aria-checked','true');
 }
@@ -198,7 +199,7 @@ async function openDesigner(page:Page){
   await expect(page.getByRole('heading',{level:1})).toContainText(TITLE);
   await expect(price(page)).toContainText('$');
   // Existing sizing workflows explicitly select their tool; boundary.spec verifies the new default.
-  await planTool(page,'Size & place');
+  await planTool(page,'Deck size');
   await expand(preview(page),'Start with a shape');
   return problems;
 }
@@ -219,7 +220,8 @@ test('reaches every feature of the designer',async({page})=>{
     for(const name of ['Deck depth, front edge','Deck width, right end','Deck width, left end','Deck position along the house'])await reach(`Plan handle: ${name}`,planHandle(page,name));
     await reach('Typing the width on the plan',drawing(page).getByRole('button',{name:'Deck width 16 ft: type a new width'}));
     for(const name of ['Rectangle','L-shape','Multi-corner','Curved','Wrap left','Wrap right','Wrap both','Split level','Draw my own'])await reach(`Shape shortcut: ${name}`,shortcuts(page).getByRole('button',{name,exact:true}));
-    for(const name of ['Shape & points','Size & place','Stairs','House'])await reach(`Plan tool: ${name}`,page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true}));
+    await page.getByRole('button',{name:'More tools',exact:true}).click();
+    for(const name of ['Shape & points','Deck size','Stairs','House'])await reach(`Plan tool: ${name}`,page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true}));
     await planTool(page,'Stairs');
     await reach('Stairs on the plan',planHandle(page,'Stairs, position along the edge'));
     await planTool(page,'House');
@@ -227,7 +229,7 @@ test('reaches every feature of the designer',async({page})=>{
     await planTool(page,'Shape & points');
     await reach('Add a boundary point',page.getByRole('button',{name:'Add point',exact:true}));
     await reach('Move any corner',page.getByRole('button',{name:'Main deck point 3',exact:true}));
-    await planTool(page,'Size & place');
+    await planTool(page,'Deck size');
   });
   await test.step('House editor',async()=>{
     await openSection(page,'House');
@@ -1695,7 +1697,7 @@ test('@phone never downloads the 3D viewer until the 3D tab is chosen',async({pa
 
 test('@phone keeps the price visible while editing and returns to the canvas without loading 3D',async({page})=>{
   const viewer=viewerRequests(page),problems=await openDesigner(page),bar=phoneBar(page),before=await price(page).textContent();
-  // This workspace flow uses the new default editor; the shared legacy helper chooses Size & place for its sizing tests.
+  // This workspace flow uses the new default editor; the shared legacy helper chooses Deck size for its sizing tests.
   await planTool(page,'Shape & points');
   await openSection(page,'Deck shape & size');await setNumber(page,'Deck width',20);
   await expect(price(page)).not.toHaveText(before??'');await expect(preview(page)).toBeHidden();

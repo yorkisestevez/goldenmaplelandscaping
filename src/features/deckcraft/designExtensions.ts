@@ -1,3 +1,4 @@
+import {loadInlayGeometry,inlayGeometryReady} from './lib/inlayGeometry';
 import {loadStepAssemblyRuntime,stepAssemblyReady} from './stepAssemblyRegistry';
 import {configuration,descriptorValue,arrayHasItems,hasAdvancedYard,hasWallTopSteps,hasYardAssemblies,hasStepAssemblies} from './designExtensionPresence';
 export {hasAdvancedYard,hasWallTopSteps,hasYardAssemblies,hasStepAssemblies} from './designExtensionPresence';
@@ -17,6 +18,7 @@ import {DesignExtensionLoadError} from './designExtensionState';
  * separately after validated values are ready to become live state. */
 export async function ensureDesignExtensions(raw:unknown):Promise<void>{
  const d=configuration(raw),present=(key:string)=>descriptorValue(d,key)!==undefined,loads:Promise<void>[]=[];
+ if(arrayHasItems(descriptorValue(d,'inlays')))loads.push(loadInlayGeometry().catch(error=>{throw new DesignExtensionLoadError('Decorative inlay geometry',error);}));
  const pools=arrayHasItems(descriptorValue(d,'pools')),privatePools=present('poolQuoteInputs');if(pools||privatePools)loads.push(loadPoolDesignExtensions(pools,privatePools));
  if(hasAdvancedYard(raw))loads.push(loadAdvancedYardRuntime().catch(error=>{throw new DesignExtensionLoadError('Finished-elevation geometry',error);}));
  if(hasYardAssemblies(raw))loads.push(loadYardAssembliesRuntime());
@@ -27,5 +29,5 @@ export async function ensureDesignExtensions(raw:unknown):Promise<void>{
  if(present('landscapeObjects')){loads.push(loadLandscapeTypesRuntime());if(arrayHasItems(descriptorValue(d,'landscapeObjects')))loads.push(loadLandscapeModelRuntime());}
  if(present('editorOrganization'))loads.push(loadEditorOrganizationRuntime());await Promise.all(loads);
 }
-export function designExtensionsReady(raw:unknown){const d=configuration(raw),present=(key:string)=>descriptorValue(d,key)!==undefined;return (!hasStepAssemblies(raw)||stepAssemblyReady())&&poolDesignReady(arrayHasItems(descriptorValue(d,'pools')),present('poolQuoteInputs'))&&(!hasYardAssemblies(raw)||yardAssembliesReady())&&(!hasAdvancedYard(raw)||advancedYardRuntimeReady())&&(!present('stairTargets')||stairTargetsReady())&&(!hasWallTopSteps(raw)||wallTopStepsReady()&&wallStationReady())&&(!present('siteModel')||siteModelReady())&&(!present('landscapeObjects')||landscapeTypesReady()&&(!arrayHasItems(descriptorValue(d,'landscapeObjects'))||landscapeModelReady()))&&(!present('editorOrganization')||editorOrganizationReady());}
+export function designExtensionsReady(raw:unknown){const d=configuration(raw),present=(key:string)=>descriptorValue(d,key)!==undefined;return (!arrayHasItems(descriptorValue(d,'inlays'))||inlayGeometryReady())&&(!hasStepAssemblies(raw)||stepAssemblyReady())&&poolDesignReady(arrayHasItems(descriptorValue(d,'pools')),present('poolQuoteInputs'))&&(!hasYardAssemblies(raw)||yardAssembliesReady())&&(!hasAdvancedYard(raw)||advancedYardRuntimeReady())&&(!present('stairTargets')||stairTargetsReady())&&(!hasWallTopSteps(raw)||wallTopStepsReady()&&wallStationReady())&&(!present('siteModel')||siteModelReady())&&(!present('landscapeObjects')||landscapeTypesReady()&&(!arrayHasItems(descriptorValue(d,'landscapeObjects'))||landscapeModelReady()))&&(!present('editorOrganization')||editorOrganizationReady());}
 export async function ensureLiveDesignExtensions(raw:unknown){await ensureDesignExtensions(raw);const d=configuration(raw);if(d.siteModel&&'value'in d.siteModel&&d.siteModel.value!==undefined&&!siteEngineReady())try{await loadSiteEngine();}catch(error){throw new DesignExtensionLoadError('Measured terrain',error);}}

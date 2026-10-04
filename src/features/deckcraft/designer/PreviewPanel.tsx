@@ -1,7 +1,11 @@
+import {useArchitectKeys,revealControl} from './architectKeys';
+const CanvasContextMenu=lazy(()=>import('./CanvasContextMenu'));
+const ArchitectShortcuts=lazy(()=>import('./ArchitectShortcuts'));
+const documentDrawing=()=>typeof document!=='undefined'&&!!document.querySelector('.dd-shape-draw-surface,.dd-yard-shape-editor[data-drawing],.dd-landscape-plan[data-drawing]');
 import {hasBackyardLayout} from '../backyard';
 import {yardShapeFrame} from '../yardShapeGeometry';
 
-import {Suspense,lazy,useEffect,useMemo,useRef,useState,type KeyboardEvent} from 'react';
+import {Suspense,lazy,useEffect,useMemo,useRef,useState} from 'react';
 
 import type {SelectionState} from './selectionState';
 
@@ -17,7 +21,7 @@ import type {DeckEstimate} from '../designFacts';
 
 import type {DeckData,DeckInlay,HouseOpening,PrivacyScreen} from '../types';
 
-import {FRAMING_MODES,PLAN_TOOLS,type AutoCounts,type PlanTool,type PreviewMode} from './constants';
+import {FRAMING_MODES,type AutoCounts,type PlanTool,type PreviewMode} from './constants';
 
 import {ViewerBoundary,type Update} from './fields';
 
@@ -64,6 +68,8 @@ const BoardLayoutEditor=lazy(()=>import('./BoardLayoutEditor'));
 
 const PlanComponentEditor=lazy(()=>import('./PlanComponentEditor'));
 const EdgeSectionEditor=lazy(()=>import('./EdgeSectionEditor'));
+const StepShapeHandles=lazy(()=>import('./StepShapeHandles'));
+const PlanToolPicker=lazy(()=>import('./PlanToolPicker'));
 const HardscapeInspector=lazy(()=>import('./HardscapeInspector'));
 const HardscapePlanSelection=lazy(()=>import('./HardscapePlanSelection'));
 const LandscapePlanEditor=lazy(()=>import('./LandscapePlanEditor'));
@@ -72,6 +78,7 @@ const PlanEditingWorkspace=lazy(()=>import('./PlanEditingWorkspace'));
 const SceneEditingWorkspace=lazy(()=>import('./SceneEditingWorkspace'));
 const YardShapeEditor=lazy(()=>import('./YardShapeEditor'));
 const InlayPlanEditor=lazy(()=>import('./InlayPlanEditor'));
+const ElevationWorkspace=lazy(()=>import('./ElevationWorkspace'));
 
 
 
@@ -103,7 +110,7 @@ const COACH:Record<PlanTool,(custom:boolean)=>string>={
 
   boards:()=>'Select a board, draw an area or add a breaker. Set any direction or colour, then apply the layout.',
 
-  stairs:()=>'Tap a gold edge to put the stairs there, then drag their handle to slide them along it.',
+  stairs:()=>'Drag the stairs to a highlighted deck edge and release to place them. You can also tap an edge. Undo restores the previous position.',
 
   house:()=>'Drag the gold handles on the house’s wall ends to set its width.',
 
@@ -166,7 +173,7 @@ export interface PreviewPanelProps{
 
   /** Opens a section and brings it into view (the plan tools' links to the rest of their settings). */
 
-  onOpenSection:(id:'deck'|'stairs'|'house'|'lighting'|'extras'|'site'|'backyard')=>void;
+  onOpenSection:(id:'boards'|'deck'|'stairs'|'house'|'lighting'|'extras'|'site'|'backyard')=>void;
 
   /** Phones: the visitor pinned a compact drawing to the top of the screen while editing (PhoneDeckBar). */
 
@@ -213,6 +220,9 @@ export default function PreviewPanel({previewData,onPreviewData,data,update,appl
   // The plan's status line: what a shape shortcut did (and any fix it made), until the next change on the plan.
 
   const [planStatus,setPlanStatus]=useState('');
+  const propertiesDock=useRef<HTMLDetailsElement>(null);
+  useEffect(()=>{if(propertiesDock.current)propertiesDock.current.open=tool!=='size'||!!selection.hardscape||!!selection.partIds.length||!!selection.boards.length;},[tool,selection.hardscape?.id,selection.partIds.length,selection.boards.length]);
+  const [elevationsOpen,setElevationsOpen]=useState(false);
 
   const [boundaryLevel,setBoundaryLevel]=useState<1|2|3>(1);
 
@@ -223,17 +233,8 @@ export default function PreviewPanel({previewData,onPreviewData,data,update,appl
   const toolbar=useRef<HTMLDivElement>(null);
   const mixed=selection.partIds.length>0&&selection.boards.length>0;
   const mixedControls=<div className="dd-3d-selection-card" role="alert"><strong>Mixed part and board selection</strong><p>Select one editing group before Apply. No selected object will be silently left out.</p><button type="button" className="dd-secondary" onClick={()=>selectObjects({partIds:selection.partIds,boards:[]})}>Edit selected parts only</button><button type="button" className="dd-secondary" onClick={()=>selectObjects({partIds:[],boards:selection.boards})}>Edit selected boards only</button><button type="button" className="dd-secondary" onClick={()=>selectObjects({partIds:[],boards:[]})}>Clear all selected objects</button></div>;
-  const pickTool=(next:PlanTool,focus=false)=>{if(next!==tool){setTool(next);setPlanStatus('');}if(focus)document.getElementById(`dd-tool-${next}`)?.focus();};
+  const pickTool=(next:PlanTool,focus=false)=>{if(selection.hardscape&&!['yard','landscape'].includes(next))selectObjects({partIds:[],boards:[]});if(next==='stairs'){selectObjects({partIds:estimate.model.flights.some(f=>f.kind==='grade')?['stairs:primary']:[],boards:[]});}if(next!==tool){setTool(next);setPlanStatus('');}if(focus)document.getElementById(`dd-tool-${next}`)?.focus();};
 
-  const toolKeys=(e:KeyboardEvent)=>{
-
-    const i=PLAN_TOOLS.findIndex(([id])=>id===tool),n=PLAN_TOOLS.length;
-
-    const to=({ArrowLeft:(i+n-1)%n,ArrowUp:(i+n-1)%n,ArrowRight:(i+1)%n,ArrowDown:(i+1)%n,Home:0,End:n-1} as Record<string,number>)[e.key];
-
-    if(to!==undefined){e.preventDefault();pickTool(PLAN_TOOLS[to][0],true);}
-
-  };
 
   const viewerPaint=useMemo(()=>boardPaint&&onPaintBoard?{scope:boardPaint.scope,onPaint:onPaintBoard}:undefined,[boardPaint,onPaintBoard]);
 
@@ -241,15 +242,8 @@ export default function PreviewPanel({previewData,onPreviewData,data,update,appl
 
   const viewData=useMemo(()=>snapshotLighting&&snapshotLighting!==data.sceneLighting?{...data,sceneLighting:snapshotLighting}:data,[data,snapshotLighting]);
 
+  useArchitectKeys({n:()=>{selectObjects({partIds:[],boards:[]});onSelectFeature?.('');},e:()=>{if(sheetOf(mode)!=='plan'||tool==='yard'||tool==='landscape')return false;pickTool(tool==='outline'?'size':'outline');},j:()=>revealControl(propertiesDock.current?.querySelector('summary')??null)},!snapshotLighting&&!documentDrawing());
   const sheet=sheetOf(mode),onPlan=sheet==='plan',framing=sheet==='framing',current=SHEETS.findIndex(s=>s[2]===sheet);
-
-  // The plan tools are one row that scrolls sideways on a phone. When the tool changes (from the row or from a section)
-
-  // or the plan opens again, bring the chosen one into sight, clear of the row's edge, moving the row and never the page.
-
-  const tools=useRef<HTMLDivElement>(null);
-
-  useEffect(()=>{const row=tools.current,on=row?.querySelector('[aria-checked=true]');if(!row||!on)return;const r=row.getBoundingClientRect(),b=on.getBoundingClientRect();row.scrollLeft+=Math.min(0,b.left-r.left-4)+Math.max(0,b.right-r.right+4);},[tool,onPlan]);
 
   const drawing=onPlan?'Site plan':framing?'Framing':'3D view';
 
@@ -273,6 +267,9 @@ export default function PreviewPanel({previewData,onPreviewData,data,update,appl
 
   const [candidateEstimate,setCandidateEstimate]=useState<{data:DeckData;estimate:DeckEstimate}|null>(null);
   useEffect(()=>{let alive=true;setCandidateEstimate(null);if(previewData)import('../deckRelease').then(({calculateDeckReleaseEstimate})=>{const estimate=calculateDeckReleaseEstimate(previewData);if(alive)setCandidateEstimate({data:previewData,estimate});});return ()=>{alive=false;};},[previewData]);
+  // Direct pulls already validate their geometry and commit once at pointer release.
+  // Claim preview ownership so an older assistant proposal cannot cover the new outline.
+  const applyPlanEdit:Update=patch=>{window.dispatchEvent(new CustomEvent('deckcraft-edit-preview',{detail:Symbol('plan-edit')}));applyComponent(patch);};
   const shown=candidateEstimate?.data===previewData?candidateEstimate:null,displayData=shown?.data??data,displayEstimate=shown?.estimate??estimate;
   const sitePlan=<ConstructionPlan model={displayEstimate.model} data={displayData} yard={displayEstimate.yardModel} variant="site" wholeHouse={tool==='house'}/>,framingPlan=<ConstructionPlan model={estimate.model} data={data}/>,flat=framing?framingPlan:sitePlan;
 
@@ -294,11 +291,10 @@ export default function PreviewPanel({previewData,onPreviewData,data,update,appl
 
     <div id="dd-sheet" className="dd-sheet-panel" role="tabpanel" aria-labelledby={`dd-tab-${current}`}>
 
-      {onPlan&&onSketch&&<div className="dd-sketch-launch"><span>One design, two ways to draw<small>Sketch its shape, or pull points and edges on the plan</small></span><button type="button" className="dd-secondary" disabled={!sketchReady} aria-haspopup="dialog" aria-label="Sketch a design" onClick={onSketch}>Sketch mode</button></div>}
-
-      {onPlan&&<><p className="dd-plan-coach">{COACH[tool](data.shape==='Custom')}</p>
-
-        <div className="dd-plan-tools" ref={tools} role="radiogroup" aria-label="Plan tools" onKeyDown={toolKeys}>{PLAN_TOOLS.map(([id,label])=><button key={id} id={`dd-tool-${id}`} type="button" role="radio" aria-checked={tool===id} tabIndex={tool===id?0:-1} onClick={()=>pickTool(id)}>{label}</button>)}</div></>}
+      {!snapshotLighting&&<div className="dd-summary-actions"><button type="button" className="dd-secondary" aria-expanded={elevationsOpen} aria-controls="dd-elevation-tools" onClick={()=>setElevationsOpen(!elevationsOpen)}>{elevationsOpen?'Close elevations & build':'Elevations & build'}</button></div>}
+      {elevationsOpen&&!snapshotLighting&&<div id="dd-elevation-tools"><Suspense fallback={<p role="status">Loading elevations &amp; build…</p>}><ElevationWorkspace data={data} estimate={estimate} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} selectedFeatureId={selectedFeatureId} onSelectFeature={onSelectFeature} onOpenSection={onOpenSection} onClose={()=>setElevationsOpen(false)}/></Suspense></div>}
+      <Suspense fallback={null}><ArchitectShortcuts/></Suspense><Suspense fallback={null}>{!snapshotLighting&&<CanvasContextMenu data={data} model={estimate.model} selection={selection} onSelect={selectObjects} onTool={setTool} onSection={onOpenSection} onBoundary={setBoundaryLevel} onApply={applyComponent}/>}</Suspense>
+      {onPlan&&<Suspense fallback={null}><PlanToolPicker tool={tool} onPick={pickTool} hint={COACH[tool](data.shape==='Custom')} onSketch={onSketch} sketchReady={sketchReady}/></Suspense>}
 
       {sheet==='3d'&&<div className="dd-scene-tools"><div className="dd-view-toggle" role="group" aria-label="Camera">{camera('3d','Corner')}{camera('overview','Overview')}{camera('front','Front')}{camera('top','Above')}</div><div className="dd-day-night" role="group" aria-label="Day or night preview"><button type="button" aria-pressed={data.sceneLighting!=='Evening'} onClick={()=>update({sceneLighting:'Daylight'})}><span aria-hidden="true">☀</span> Day</button><button type="button" aria-pressed={data.sceneLighting==='Evening'} onClick={()=>update({sceneLighting:'Evening'})}><span aria-hidden="true">☾</span> Night</button></div><label className="dd-check dd-preview-light-switch"><input type="checkbox" role="switch" checked={data.lightingPreviewOn!==false} onChange={e=>update({lightingPreviewOn:e.target.checked})}/><span>Preview lights {data.lightingPreviewOn===false?'off':'on'}</span></label></div>}
 
@@ -314,15 +310,17 @@ export default function PreviewPanel({previewData,onPreviewData,data,update,appl
 
           the plan until three.js has loaded. */}
 
-      <div className="dd-canvas">{show3d?<ViewerBoundary fallback={flat}><Suspense fallback={loading}><SceneEditingWorkspace data={data} model={estimate.model} selection={selection} onSelection={selectObjects} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})}>{interaction=><Viewer editInteraction={snapshotLighting?undefined:interaction} onUpdate={update} deckOnly={!hasBackyardLayout(data)} yardModel={displayEstimate.yardModel} data={shown?{...displayData,sceneLighting:viewData.sceneLighting}:viewData} model={displayEstimate.model} view={mode} structure={mode==='structure'||mode==='hardware'} cutaway={mode==='foundation'} selectedHouseOpeningId={pickedHouseOpeningId||(houseOpen?effectiveHouseOpeningId:undefined)} onSelectHouseOpening={undefined} onMoveHouseOpening={undefined} onContextLost={()=>setHasWebGL(false)} onMovePrivacyScreen={undefined} onSnapshotReady={previewData?undefined:onSnapshotReady} boardPaint={picking?undefined:viewerPaint} selection={selection} selectionEnabled={!snapshotLighting} onObjectPick={objectPick} selectedHouseWallId={exteriorOpen?houseWall:undefined} onSelectHouseWall={!picking&&exteriorOpen?setHouseWall:undefined}/>}</SceneEditingWorkspace></Suspense></ViewerBoundary>
+      <div className="dd-selection-workspace"><div className="dd-canvas">{show3d?<ViewerBoundary fallback={flat}><Suspense fallback={loading}><SceneEditingWorkspace data={data} model={estimate.model} selection={selection} onSelection={selectObjects} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})}>{interaction=><Viewer editInteraction={snapshotLighting?undefined:interaction} onUpdate={update} deckOnly={!hasBackyardLayout(data)} yardModel={displayEstimate.yardModel} data={shown?{...displayData,sceneLighting:viewData.sceneLighting}:viewData} model={displayEstimate.model} view={mode} structure={mode==='structure'||mode==='hardware'} cutaway={mode==='foundation'} selectedHouseOpeningId={pickedHouseOpeningId||(houseOpen?effectiveHouseOpeningId:undefined)} onSelectHouseOpening={undefined} onMoveHouseOpening={undefined} onContextLost={()=>setHasWebGL(false)} onMovePrivacyScreen={undefined} onSnapshotReady={previewData?undefined:onSnapshotReady} boardPaint={picking?undefined:viewerPaint} selection={selection} selectionEnabled={!snapshotLighting} onObjectPick={objectPick} selectedHouseWallId={exteriorOpen?houseWall:undefined} onSelectHouseWall={!picking&&exteriorOpen?setHouseWall:undefined}/>}</SceneEditingWorkspace></Suspense></ViewerBoundary>
 
-        :onPlan?<Suspense fallback={flat}><PlanEditingWorkspace data={data} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})}>{stagePlan=>((tool==='outline'||tool==='boards'||tool==='components'||tool==='edges'||tool==='yard'||tool==='landscape'||tool==='inlays')?<PlanViewport key={tool==='yard'||tool==='landscape'?'yard':'deck'} frame={yardShapeFrame(planFrame(estimate.model,{data,yard:estimate.yardModel,variant:'site'}),tool==='yard'||tool==='landscape'?data.yardFeatures??[]:[])}>{(zoom,frame)=><><ConstructionPlan model={displayEstimate.model} data={displayData} yard={displayEstimate.yardModel} variant="site" viewportFrame={frame}/>{mounted&&!mixed&&<Suspense fallback={null}>{tool==='landscape'?<LandscapePlanEditor data={data} frame={frame} zoom={zoom} selection={selection.hardscape} onSelect={pickHardscape} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} toolbar={toolbar}/>:tool==='inlays'?<InlayPlanEditor data={data} model={estimate.model} update={stagePlan} toolbar={toolbar} viewportFrame={frame} viewZoom={zoom} pendingInlay={pendingInlay} onPendingInlay={onPendingInlay} onStatus={setPlanStatus}/>:tool==='yard'?<YardShapeEditor selectedFeatureId={selectedFeatureId} onSelectFeature={onSelectFeature} onSelectTarget={onSelectYardTarget} data={data} update={stagePlan} toolbar={toolbar} viewportFrame={frame} viewZoom={zoom} onStatus={setPlanStatus} onOpenSettings={()=>onOpenSection('backyard')}/>:tool==='edges'?<EdgeSectionEditor data={data} model={estimate.model} update={stagePlan} toolbar={toolbar} viewportFrame={frame} viewZoom={zoom} onOpenSettings={()=>onOpenSection('extras')}/>:tool==='components'?<PlanComponentEditor selection={selection.partIds} onSelectionChange={ids=>selectObjects({partIds:ids,boards:[]})} data={data} model={estimate.model} update={stagePlan} toolbar={toolbar} viewportFrame={frame} viewZoom={zoom} onOpenSection={id=>onOpenSection(id.toLowerCase() as 'deck'|'stairs'|'house'|'lighting'|'extras'|'site')} onEditBoundary={level=>{setBoundaryLevel(level??1);pickTool('outline');}} onEditBoards={level=>{setBoundaryLevel(level??1);pickTool('boards');}}/>:tool==='boards'?<BoardLayoutEditor selection={selection.boards} onSelectionChange={boards=>selectObjects({partIds:[],boards})} requestedLevel={boundaryLevel} data={data} model={estimate.model} update={stagePlan} toolbar={toolbar} viewportFrame={frame}/>:<PlanBoundaryEditor requestedLevel={boundaryLevel} data={data} model={estimate.model} update={stagePlan} onEdited={()=>setPlanStatus('')} toolbar={toolbar} viewZoom={zoom} viewportFrame={frame}/>}</Suspense>}{mounted&&!['boards','inlays','landscape'].includes(tool)&&<Suspense fallback={null}><HardscapePlanSelection organization={data.editorOrganization} model={displayEstimate.yardModel} frame={frame} selection={selection.hardscape} inspection={data.scenePresentation?.viewMode==='inspection'} onSelect={pickHardscape}/></Suspense>}{assistantTargets&&<Suspense fallback={null}><AssistantTargets request={assistantTargets} data={data} model={estimate.model} frame={frame}/></Suspense>}</>}</PlanViewport>:<PlanViewport frame={planFrame(displayEstimate.model,{data:displayData,yard:displayEstimate.yardModel,variant:'site',wholeHouse:tool==='house'})}>{(_,frame)=><><ConstructionPlan model={displayEstimate.model} data={displayData} yard={displayEstimate.yardModel} variant="site" viewportFrame={frame} wholeHouse={tool==='house'}/>{mounted&&<Suspense fallback={null}><PlanEditor viewportFrame={frame} data={data} model={estimate.model} yard={estimate.yardModel} update={stagePlan} onEdited={()=>setPlanStatus('')} tool={tool} stairEdges={stairEdges} onStatus={setPlanStatus} toolbar={toolbar} onOpenSection={onOpenSection}/><HardscapePlanSelection organization={data.editorOrganization} model={displayEstimate.yardModel} frame={frame} selection={selection.hardscape} inspection={data.scenePresentation?.viewMode==='inspection'} onSelect={pickHardscape}/></Suspense>}</>}</PlanViewport>)}</PlanEditingWorkspace></Suspense>:flat}{assistantTargets&&onPlan&&!['outline','boards','components','edges','yard','landscape','inlays'].includes(tool)&&<Suspense fallback={null}><AssistantTargets request={assistantTargets} data={data} model={estimate.model} frame={planFrame(estimate.model,{data,yard:estimate.yardModel,variant:'site',wholeHouse:tool==='house'})}/></Suspense>}</div>
+        :onPlan?<Suspense fallback={flat}><PlanEditingWorkspace data={data} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})}>{stagePlan=>((tool==='outline'||tool==='boards'||tool==='components'||tool==='edges'||tool==='yard'||tool==='landscape'||tool==='inlays')?<PlanViewport key={tool==='yard'||tool==='landscape'?'yard':'deck'} frame={yardShapeFrame(planFrame(estimate.model,{data,yard:estimate.yardModel,variant:'site'}),tool==='yard'||tool==='landscape'?data.yardFeatures??[]:[])}>{(zoom,frame)=><><ConstructionPlan onSelectStairs={()=>pickTool('stairs')} model={displayEstimate.model} data={displayData} yard={displayEstimate.yardModel} variant="site" viewportFrame={frame}/>{mounted&&!mixed&&(!selection.hardscape||tool==='landscape'&&selection.hardscape.kind==='landscape'||tool==='yard'&&selection.hardscape.kind==='yard'&&!data.yardFeatures?.some(f=>f.id===selection.hardscape?.id&&(f.stepAssembly||f.stoneSteps)))&&<Suspense fallback={null}>{tool==='landscape'?<LandscapePlanEditor data={data} frame={frame} zoom={zoom} selection={selection.hardscape} onSelect={pickHardscape} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} toolbar={toolbar}/>:tool==='inlays'?<InlayPlanEditor data={data} model={estimate.model} update={stagePlan} toolbar={toolbar} viewportFrame={frame} viewZoom={zoom} pendingInlay={pendingInlay} onPendingInlay={onPendingInlay} onStatus={setPlanStatus}/>:tool==='yard'?<YardShapeEditor selectedFeatureId={selectedFeatureId} onSelectFeature={onSelectFeature} onSelectTarget={onSelectYardTarget} data={data} update={stagePlan} toolbar={toolbar} viewportFrame={frame} viewZoom={zoom} onStatus={setPlanStatus} onOpenSettings={()=>onOpenSection('backyard')}/>:tool==='edges'?<EdgeSectionEditor data={data} model={estimate.model} update={stagePlan} toolbar={toolbar} viewportFrame={frame} viewZoom={zoom} onOpenSettings={()=>onOpenSection('extras')}/>:tool==='components'?<PlanComponentEditor selection={selection.partIds} onSelectionChange={ids=>selectObjects({partIds:ids,boards:[]})} data={data} model={estimate.model} update={stagePlan} toolbar={toolbar} viewportFrame={frame} viewZoom={zoom} onOpenSection={id=>onOpenSection(id.toLowerCase() as 'deck'|'stairs'|'house'|'lighting'|'extras'|'site')} onEditBoundary={level=>{setBoundaryLevel(level??1);pickTool('outline');}} onEditBoards={level=>{setBoundaryLevel(level??1);pickTool('boards');}}/>:tool==='boards'?<BoardLayoutEditor selection={selection.boards} onSelectionChange={boards=>selectObjects({partIds:[],boards})} requestedLevel={boundaryLevel} data={data} model={estimate.model} update={stagePlan} toolbar={toolbar} viewportFrame={frame}/>:<PlanBoundaryEditor requestedLevel={boundaryLevel} data={data} model={estimate.model} update={applyPlanEdit} onEdited={()=>setPlanStatus('')} toolbar={toolbar} viewZoom={zoom} viewportFrame={frame}/>}</Suspense>}{mounted&&!['boards','inlays','landscape'].includes(tool)&&<Suspense fallback={null}><HardscapePlanSelection organization={data.editorOrganization} model={displayEstimate.yardModel} frame={frame} selection={selection.hardscape} inspection={data.scenePresentation?.viewMode==='inspection'} onSelect={pickHardscape}/><StepShapeHandles data={data} model={estimate.model} frame={frame} selection={selection.hardscape} onApply={applyComponent}/></Suspense>}{assistantTargets&&<Suspense fallback={null}><AssistantTargets request={assistantTargets} data={data} model={estimate.model} frame={frame}/></Suspense>}</>}</PlanViewport>:<PlanViewport frame={planFrame(displayEstimate.model,{data:displayData,yard:displayEstimate.yardModel,variant:'site',wholeHouse:tool==='house'})}>{(_,frame)=><><ConstructionPlan onSelectStairs={()=>pickTool('stairs')} model={displayEstimate.model} data={displayData} yard={displayEstimate.yardModel} variant="site" viewportFrame={frame} wholeHouse={tool==='house'}/>{mounted&&<Suspense fallback={null}>{!selection.hardscape&&<PlanEditor viewportFrame={frame} data={data} model={estimate.model} yard={estimate.yardModel} update={applyPlanEdit} onEdited={()=>setPlanStatus('')} tool={tool} stairEdges={stairEdges} onStatus={setPlanStatus} toolbar={toolbar} onOpenSection={onOpenSection}/>}<HardscapePlanSelection organization={data.editorOrganization} model={displayEstimate.yardModel} frame={frame} selection={selection.hardscape} inspection={data.scenePresentation?.viewMode==='inspection'} onSelect={pickHardscape}/><StepShapeHandles data={data} model={estimate.model} frame={frame} selection={selection.hardscape} onApply={applyComponent}/></Suspense>}</>}</PlanViewport>)}</PlanEditingWorkspace></Suspense>:flat}{assistantTargets&&onPlan&&!['outline','boards','components','edges','yard','landscape','inlays'].includes(tool)&&<Suspense fallback={null}><AssistantTargets request={assistantTargets} data={data} model={estimate.model} frame={planFrame(estimate.model,{data,yard:estimate.yardModel,variant:'site',wholeHouse:tool==='house'})}/></Suspense>}</div>
 
-      {mounted&&!snapshotLighting&&<Suspense fallback={null}><HardscapeInspector data={data} selection={selection.hardscape} onSelect={pickHardscape} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} onClose={()=>{selectObjects({partIds:[],boards:[]});onPreviewData?.(null);}}/></Suspense>}{previewData&&<p role="status">Showing proposed geometry · apply the preview to save one undoable edit.</p>}{mixed&&!snapshotLighting&&mixedControls}{show3d&&!selection.hardscape&&!mixed&&!snapshotLighting&&<Suspense fallback={<p role="status">Loading selected object…</p>}><PreviewedObjectInspector data={data} model={estimate.model} selection={selection} onSelection={selectObjects} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} onOpenSection={id=>onOpenSection(id.toLowerCase() as 'deck'|'stairs'|'house'|'lighting'|'extras'|'site')} onEditBoundary={level=>{setBoundaryLevel(level??1);}} onEditBoards={level=>{setBoundaryLevel(level??1);}}/></Suspense>}
+      <details ref={propertiesDock} className="dd-selection-inspector" aria-label="Selected object settings"><summary>{selection.hardscape?'Selected shape · dimensions & materials':'Drawing controls · dimensions & materials'}</summary>{mounted&&!snapshotLighting&&<Suspense fallback={null}><HardscapeInspector data={data} selection={selection.hardscape} onSelect={pickHardscape} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} onClose={()=>{selectObjects({partIds:[],boards:[]});onPreviewData?.(null);}}/></Suspense>}{previewData&&<p role="status">Showing proposed geometry · apply the preview to save one undoable edit.</p>}{mixed&&!snapshotLighting&&mixedControls}{show3d&&!selection.hardscape&&!mixed&&!snapshotLighting&&<Suspense fallback={<p role="status">Loading selected object…</p>}><PreviewedObjectInspector data={data} model={estimate.model} selection={selection} onSelection={selectObjects} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} onOpenSection={id=>onOpenSection(id.toLowerCase() as 'deck'|'stairs'|'house'|'lighting'|'extras'|'site')} onEditBoundary={level=>{setBoundaryLevel(level??1);}} onEditBoards={level=>{setBoundaryLevel(level??1);}}/></Suspense>}
+
+      <div className="dd-plan-tool-extras" ref={toolbar}/></details></div>
 
       {onPlan&&<>{(tool==='size'||tool==='outline')&&<details className="dd-boundary-presets"><summary>Start with a shape</summary><div className="dd-plan-shortcuts" role="group" aria-label="Shape shortcuts">{SHORTCUTS.map(([id,label])=><button key={id} type="button" className="dd-secondary" aria-pressed={shortcutOn(data,id)} onClick={()=>shortcut(id)}>{label}</button>)}</div></details>}
 
-        <div className="dd-plan-tool-extras" ref={toolbar}/>
+
 
         <p className="dd-plan-status" role="status">{planStatus}</p></>}
 

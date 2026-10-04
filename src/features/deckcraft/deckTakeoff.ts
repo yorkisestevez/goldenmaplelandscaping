@@ -1,3 +1,4 @@
+import {designStockLength} from './deckingStock';
 import {foundationDatums} from './foundationDatums';
 import {stairTargetId,validateStairTargets} from './stairTargets';
 import {addConstructionDetails,addRim,finishBoards,memberLength,unsupportedJoistEnds} from './constructionDetails';
@@ -93,7 +94,7 @@ function levelZones(footprint:FootprintPlan,attached:boolean,cfg:ZoneFramingConf
 export function buildDeckTakeoff(data:DeckData){
   const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)||DECKING_CATALOGUE[0];
   const gap=material.isComposite?0.1875:0.25;
-  const stockLength=material.id==='cedar'?144:192;
+  const stockLength=designStockLength(data);
   const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
   const joistDepth=data.framingSize==='2x8'?7.25:data.framingSize==='2x12'?11.25:9.25;
   const levels:DeckLevel[]=[];const railRuns:RailRun[]=[];const treads:Box[]=[];const riserBoards:RiserBoard[]=[];const stringers:Member[]=[];const stairOpenings:StairPlacement[]=[];
@@ -203,6 +204,9 @@ export function buildDeckTakeoff(data:DeckData){
   const targets=validateStairTargets(data.stairTargets??[]);
   let gradeRun=data.stairTreadDepthIn??run;
   const gradeSettings=(id:string,top:number)=>{const target=targets.find(t=>t.flightId===id),bottom=target?.elevationIn??0,n=target?.riserCount??data.stairRiserCount??Math.max(1,Math.ceil((top-bottom)/7.75));gradeRun=target?.treadDepthIn??data.stairTreadDepthIn??run;return {target,bottom,n,rise:(top-bottom)/n};};
+  const treadRailEnd=(a:V3,b:V3,n:number,rise:number):V3=>n>1?{...mix(a,b,1-.5/(n-1)),y:b.y+rise}:a;
+  // Keep the axis-aligned 5-inch base plate inside the tread, with half an inch of clearance.
+  const railInset=(along:PlanPoint)=>2.5*(Math.abs(along.x)+Math.abs(along.y))+.5;
   function addStraight(origin:V3,outward:PlanPoint,along:PlanPoint,width:number,n:number,rise:number,kind:Flight['kind'],id:string,startOffset=(data.pictureFrameRows||data.pattern==='Picture Frame')?finishedFasciaOffset(data):0,opts:{rails?:boolean;stringers?:boolean;endExtend?:number}={}){
     const run=kind==='grade'?gradeRun:stairSupport.runIn;
     const e=opts.endExtend??0;
@@ -213,7 +217,10 @@ export function buildDeckTakeoff(data:DeckData){
     if(rise<=1)issues.push('A stair rise is no greater than the modeled tread thickness; this transition needs a reviewed threshold detail.');
     for(let i=1;i<n;i++){const d=(i-.5)*run+stairSupport.treadNosingIn/2;treads.push({x:start.x+outward.x*d,y:start.y-i*rise-.5,z:start.z+outward.y*d,w:width+2*e,h:1,d:run+stairSupport.treadNosingIn,angle:yaw,kind:'tread',...(kind==='grade'?{flightId:stairTargetId(id)}:{})});}
     if(opts.stringers!==false)for(const shift of stringerOffsets){stringers.push({a:{x:start.x+along.x*shift,y:start.y-9,z:start.z+along.y*shift},b:{x:end.x+along.x*shift,y:end.y-4,z:end.z+along.y*shift},width:1.5,depth:9.25,role:'stringer',stair:{risers:n,rise,run,top:start.y,bottom:end.y}});}
-    if(data.railingType!=='None'&&data.railDefault!==false&&opts.rails!==false)for(const side of [-1,1]){const shift=side*width/2;railRuns.push({a:{x:start.x+along.x*shift,y:start.y,z:start.z+along.y*shift},b:{x:end.x+along.x*shift,y:end.y,z:end.z+along.y*shift}});}
+    // Terminal grade guards stand on the last tread, not on the ground beyond its final riser.
+    // Upper runs still meet their landing/winder guard at the shared endpoint.
+    const railEnd=kind==='grade'&&!id.endsWith('-upper')?treadRailEnd(start,end,n,rise):end;
+    if(data.railingType!=='None'&&data.railDefault!==false&&opts.rails!==false)for(const side of [-1,1]){const shift=side*width/2,lowerShift=shift-(kind==='grade'&&!id.endsWith('-upper')&&n>1?side*railInset(along):0);railRuns.push({a:{x:start.x+along.x*shift,y:start.y,z:start.z+along.y*shift},b:{x:railEnd.x+along.x*lowerShift,y:railEnd.y,z:railEnd.z+along.y*lowerShift}});}
     flights.push({id,kind,risers:n,rise,run,width,start,end,type:'Straight',stringerOffsets,along,outward,...(e?{endExtend:e}:{})});return end;
   }
   function addInlineLanding(start:V3,outward:PlanPoint,along:PlanPoint,width:number,n:number,rise:number,kind:Flight['kind'],id:string){
@@ -362,7 +369,7 @@ export function buildDeckTakeoff(data:DeckData){
         Object.assign(built,{width:allowanceWidth/n,start,end,stringerOffsets:actual,endWidth:Math.hypot(endB.x-endA.x,endB.y-endA.y),terminationEdge:{a:{...endA},b:{...endB}}});
       }
       for(let i=1;i<segments.length;i++){const a=near[i],b=endLine[i];stringers.push({a:{x:a.x,y:deck.top-9,z:a.y},b:{x:b.x,y:bottom-4,z:b.y},width:3,depth:9.25,role:'stringer',stair:{risers:n,rise,run:going,top:deck.top,bottom}});}
-      if(data.railingType!=='None'&&data.railDefault!==false)for(const i of [0,segments.length]){const a=near[i],b=endLine[i];railRuns.push({a:{x:a.x,y:deck.top,z:a.y},b:{x:b.x,y:bottom,z:b.y}});}
+      if(data.railingType!=='None'&&data.railDefault!==false)for(const i of [0,segments.length]){const a={x:near[i].x,y:deck.top,z:near[i].y},b={x:endLine[i].x,y:bottom,z:endLine[i].y};const end=treadRailEnd(a,b,n,rise),next=near[i===0?1:i-1],length=Math.hypot(next.x-a.x,next.y-a.z),inward={x:(next.x-a.x)/length,y:(next.y-a.z)/length},inset=n>1?railInset(inward):0;railRuns.push({a,b:{x:end.x+inward.x*inset,y:end.y,z:end.z+inward.y*inset}});}
     }
   }
   else
@@ -449,7 +456,13 @@ export function buildDeckTakeoff(data:DeckData){
     }
     for(const side of stepSides)if(side.level===index)cutAlong({x:side.origin.x-level.offset.x,y:side.origin.y-level.offset.z},side.dir,0,side.length,.5);
     segments=applyRailSections(data,level.footprint,(level.index+1) as 1|2|3,segments);
-    for(const s of segments)railRuns.push({a:{x:s.a.x+level.offset.x,y:level.top,z:s.a.y+level.offset.z},b:{x:s.b.x+level.offset.x,y:level.top,z:s.b.y+level.offset.z}});
+    // Mount the whole 5-inch post plate on the finished boards, including diagonal corners.
+    const mounting=offsetPolygons([(level.deckingFootprint??level.footprint).outline],3.6);
+    const seat=(p:PlanPoint)=>{let best=p,dist=Infinity;for(const poly of mounting)for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy))),q={x:a.x+t*dx,y:a.y+t*dy},d=Math.hypot(q.x-p.x,q.y-p.y);if(d<dist){best=q;dist=d;}}return best;};
+    for(const s of segments){const ends=[s.a,s.b].map(p=>{const q=data.railingType==='Frameless Glass'?p:seat(p),old={x:p.x+level.offset.x,y:level.top,z:p.y+level.offset.z},next={x:q.x+level.offset.x,y:level.top,z:q.y+level.offset.z};
+      // Keep a stair's upper post shared with the deck guard after moving the mounting line.
+      for(const r of railRuns)if(r.a.y!==r.b.y)for(const end of ['a','b'] as const)if(Math.abs(r[end].y-old.y)<.001&&Math.hypot(r[end].x-old.x,r[end].z-old.z)<=finishedFasciaOffset(data)+.01)r[end]={...next};return next;});railRuns.push({a:ends[0],b:ends[1]});}
+
   }
   const posts:V3[]=[],rails:Member[]=[],balusters:Member[]=[],glass:Member[]=[];
   const railHeight=data.height>71?42:36,maxSpan=((RAILING_COSTS as any)[data.railingType]?.spacing||6)*12;
@@ -463,7 +476,7 @@ export function buildDeckTakeoff(data:DeckData){
     for(const h of [3,railHeight-1.25])rails.push({a:{...r.a,y:r.a.y+h},b:{...r.b,y:r.b.y+h},width:2,depth:h===3?1.5:2.5});
     if(data.railingType==='Glass Panels')for(let b=0;b<bays;b++){const a=mix(r.a,r.b,b/bays),end=mix(r.a,r.b,(b+1)/bays);glass.push({a:{...a,y:a.y+railHeight/2},b:{...end,y:end.y+railHeight/2},width:0.5,depth:railHeight-8});}
     else if(data.railingType==='Cable')for(let i=1;i<=9;i++){const h=3+(railHeight-6)*i/10;balusters.push({a:{...r.a,y:r.a.y+h},b:{...r.b,y:r.b.y+h},width:0.125,depth:0.125});}
-    else {const count=Math.ceil(length/4.5);for(let i=1;i<count;i++){const p=mix(r.a,r.b,i/count);balusters.push({a:{...p,y:p.y+4},b:{...p,y:p.y+railHeight-3},width:0.75,depth:0.75});}}
+    else {const count=Math.ceil(length/4.5);for(let i=1;i<count;i++){const p=mix(r.a,r.b,i/count);balusters.push({a:{...p,y:p.y+3},b:{...p,y:p.y+railHeight-1.25},width:0.75,depth:0.75});}}
   }
   // A custom outline's stair must not run over the deck itself (a flight off a step inside a U, into the other arm).
   if(data.shape==='Custom'){
