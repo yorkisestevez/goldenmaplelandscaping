@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import BlogPostLayout from '../../components/BlogPostLayout';
 import AuthorBio from '../../components/AuthorBio';
 import { BUSINESS } from '../../data/business';
@@ -7,13 +8,13 @@ export default function TimberTechVsWood() {
     <BlogPostLayout
       title="TimberTech vs. Wood Decking: The Real Cost Over 20 Years"
       seoTitle="TimberTech vs Wood Decking Cost Comparison Ontario | Golden Maple"
-      seoDescription="Honest 20-year cost comparison between TimberTech composite decking and traditional wood decking in Ontario. Includes maintenance, replacement, and ROI analysis."
+      seoDescription="How TimberTech composite and wood decking compare over 20 years in Ontario: upkeep, lifespan, and how to price your own deck."
       category="Decking"
       date="March 8, 2026"
       readTime="8 min read"
       heroImage="/images/projects/TimberTech Dark Cocoa PrimeCollection Composite Decking Beauty1.jpg"
     >
-      <p>Every homeowner who walks into a lumber yard sees the same thing: pressure-treated wood at $2-3 per linear foot, and composite decking at $8-12. The math seems simple. <strong>But that's the wrong math.</strong></p>
+      <p>Every homeowner who walks into a lumber yard sees the same thing: pressure-treated wood on one rack, composite boards at several times the price on the next. The math seems simple. <strong>But that's the wrong math.</strong></p>
 
       <p>The real question isn't "what does it cost today?" It's "what will it cost over the next 20 years?" And when you run those numbers honestly, the answer might surprise you.</p>
 
@@ -22,26 +23,24 @@ export default function TimberTechVsWood() {
       <p>Let's say you build a 400-square-foot pressure-treated deck. Here's what you're actually signing up for:</p>
 
       <ul>
-        <li><strong>Initial build:</strong> ~$12,000 - $15,000 (materials + labour)</li>
-        <li><strong>Annual staining/sealing:</strong> $400-$800/year × 20 years = $8,000 - $16,000</li>
-        <li><strong>Board replacement:</strong> Warped, cracked, or rotted boards — budget $500-$1,500 over 20 years</li>
-        <li><strong>Full replacement at year 12-15:</strong> $12,000 - $15,000 again (wood decks rarely last beyond 15 years in Ontario)</li>
+        <li><strong>Initial build:</strong> The lowest upfront price of any decking</li>
+        <li><strong>Staining and sealing:</strong> Every couple of seasons, for the life of the deck</li>
+        <li><strong>Board replacement:</strong> Warped, cracked or rotted boards replaced along the way</li>
+        <li><strong>Full replacement:</strong> Wood decks in Ontario often need resurfacing or rebuilding well inside 20 years</li>
       </ul>
 
-      <p><strong>Total 20-year cost: $32,500 - $47,500</strong></p>
-
-      <p>That's not including your weekends. Staining a deck takes a full day of prep and a full day of application — every single year. Over 20 years, that's 40 weekends you'll never get back.</p>
+      <p>That's not including your weekends. Staining a deck takes a day of prep and a day of application, every couple of seasons, for as long as you own it.</p>
 
       <h2>The True Cost of TimberTech Over 20 Years</h2>
 
       <ul>
-        <li><strong>Initial build:</strong> ~$25,000 - $35,000 (higher upfront, premium materials)</li>
-        <li><strong>Annual maintenance:</strong> Soap and water. $0.</li>
+        <li><strong>Initial build:</strong> Higher upfront, for premium boards</li>
+        <li><strong>Maintenance:</strong> Soap and water</li>
         <li><strong>Board replacement:</strong> Rarely needed — capped boards don't rot, and manufacturer warranty terms vary by product line</li>
         <li><strong>Full replacement:</strong> Not expected within the 20 years compared here, provided the framing underneath is sound</li>
       </ul>
 
-      <p><strong>Total 20-year cost: $25,000 - $35,000</strong></p>
+      <p><strong>See the difference for your deck.</strong> Draw it in our <Link to="/deck-designer" className="text-brand-gold-dark hover:underline">3D deck designer</Link>, then switch between pressure-treated and TimberTech. The price updates from Golden Maple's price book as you go, so you compare your real deck instead of an average one.</p>
 
       <h2>Why TimberTech AZEK Specifically?</h2>
 
