@@ -86,7 +86,7 @@ const designs:[string,Partial<DeckData>][]=[
   ['post and step lights',{autoLighting:{posts:true,stairs:true},lightingSystem:{wireDistance:20,selectedItems:[{productId:'puck',qty:10,zone:'posts',auto:true},{productId:'evo_hyde',qty:4,zone:'stairs',auto:true},{productId:'hub100',qty:1,auto:true}]}}],
   ['a slatted screen and a manufacturer screen',{privacySqft:48,privacyScreens:[screen,hideaway]}],
   ['every extra',{benchLf:8,privacySqft:48,pergolaSqft:64,hasDrainage:true,hasDemo:true}],
-  ['under-deck supply and installation',{height:108,underDeck:{drainage:'rainescape',ceiling:'pvc',scope:'main',gravel:true,gravelDepthIn:3,floorMesh:true}}],
+  ['under-deck supply and installation',{height:108,underDeck:{drainage:'none',ceiling:'pvc',scope:'main',gravel:true,gravelDepthIn:3,floorMesh:true}}],
   ['integrated under-deck ceiling',{height:108,underDeck:{drainage:'dryspace',ceiling:'none',scope:'all',gravel:false,gravelDepthIn:3,floorMesh:false}}],
   ['lattice skirting',{height:48,skirting:{style:'Lattice',clearanceIn:2,accessPanels:1}}],
   ['board skirting',{height:30,skirting:{style:'Horizontal boards',clearanceIn:2}}],

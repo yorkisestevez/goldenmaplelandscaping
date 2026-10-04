@@ -13,6 +13,7 @@ import {getHousePlacement} from './housePlacement';
 import {openingWallId} from './houseFootprint';
 import {borderLightingPlan} from './borderLighting';
 import {edgeSectionId} from './lib/edgeSections';
+import {hasEffectiveDrainage} from './underDeckOptions';
 
 export type FixturePlacement={productId:string;x:number;y:number;z:number;angle:number;zone?:string};
 /** The original EVO HYDE allowance's housing, in inches: the EVO HYDE profile (22 × 16 mm) at the short 180C length,
@@ -173,7 +174,7 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
     if(w&&d){for(const px of [x+3,x+w-3])for(const pz of [z+3,z+d-3])wood.push({x:px,y:top+48,z:pz,w:5.5,h:96,d:5.5});for(const pz of [z,z+d])wood.push({x:x+w/2,y:top+97,z:pz,w:w+12,h:9.25,d:3});for(let px=x;px<=x+w;px+=16)wood.push({x:px,y:top+104,z:z+d/2,w:1.5,h:7.25,d:d+18});for(let pz=z;pz<=z+d;pz+=12)wood.push({x:x+w/2,y:top+109,z:pz,w:w+18,h:1.5,d:1.5});}
     if(pergolaArea<data.pergolaSqft-1)warnings.push(`Pergola layout fits ${pergolaArea.toFixed(1)} of ${data.pergolaSqft} requested square feet within the footprint.`);
   }
-  if(data.hasDrainage)for(const l of model.levels){if(l.top<24){warnings.push('Under-deck drainage needs at least 24 in of model clearance; raise the deck or remove drainage.');continue;}for(const j of l.joists){const len=Math.hypot(j.b.x-j.a.x,j.b.z-j.a.z);drainage.push({x:(j.a.x+j.b.x)/2,y:j.a.y-6,z:(j.a.z+j.b.z)/2,w:Math.max(4,data.joistSpacing-1.5),h:.15,d:len,angle:Math.atan2(j.b.x-j.a.x,j.b.z-j.a.z)});}const clip=l.kind==='deck'&&l.index===0?activeCornerChamfers(data):null,front0=clip?.leftIn??0,front1=l.footprint.bounds.w-(clip?.rightIn??0);drainage.push({x:l.offset.x+(front0+front1)/2,y:l.top-20,z:l.offset.z+l.footprint.bounds.h-2,w:front1-front0,h:3,d:4});drainage.push({x:l.offset.x+front0+3,y:Math.max(4,(l.top-20)/2),z:l.offset.z+l.footprint.bounds.h+1,w:3,h:Math.max(3,l.top-20),d:3});}
+  if(hasEffectiveDrainage(data))for(const l of model.levels){if(l.top<24){warnings.push('Under-deck drainage needs at least 24 in of model clearance; raise the deck or remove drainage.');continue;}for(const j of l.joists){const len=Math.hypot(j.b.x-j.a.x,j.b.z-j.a.z);drainage.push({x:(j.a.x+j.b.x)/2,y:j.a.y-6,z:(j.a.z+j.b.z)/2,w:Math.max(4,data.joistSpacing-1.5),h:.15,d:len,angle:Math.atan2(j.b.x-j.a.x,j.b.z-j.a.z)});}const clip=l.kind==='deck'&&l.index===0?activeCornerChamfers(data):null,front0=clip?.leftIn??0,front1=l.footprint.bounds.w-(clip?.rightIn??0);drainage.push({x:l.offset.x+(front0+front1)/2,y:l.top-20,z:l.offset.z+l.footprint.bounds.h-2,w:front1-front0,h:3,d:4});drainage.push({x:l.offset.x+front0+3,y:Math.max(4,(l.top-20)/2),z:l.offset.z+l.footprint.bounds.h+1,w:3,h:Math.max(3,l.top-20),d:3});}
   const perimeter=edges.reduce((s,e)=>s+e.len,0);
   function perimeterPoint(index:number,count:number){let t=(index+.5)*perimeter/Math.max(1,count);for(const e of edges){if(t<=e.len)return {x:e.p.x+e.dx*t-e.dz*4,z:e.p.y+e.dz*t+e.dx*4,angle:-Math.atan2(e.dz,e.dx)};t-=e.len;}return {x:6,z:6,angle:0};}
   const border=borderLightingPlan(data,model);warnings.push(...border.warnings);

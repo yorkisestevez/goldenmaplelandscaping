@@ -13,6 +13,7 @@ import {skirtingPlan} from './skirting';
 import {hasBoardLayout} from './boardLayoutPricing';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {ColourRef,DeckData} from './types';
+import {hasEffectiveDrainage} from './underDeckOptions';
 
 /**
  * What the luxury proposal (R8, in the Golden Maple estimate branding since R9) shows, worked out once for the printable
@@ -122,7 +123,7 @@ export function proposalFeatures(data:DeckData,facts:readonly string[],exterior?
     byGroup.get(group)!.push(fact);
   }
   byGroup.get('lighting')!.push(...lights);
-  const built=[...(data.pergolaSqft>0&&!data.pergola?[`Pergola, ${data.pergolaSqft} sq ft`]:[]),...(data.benchLf>0?[`Built-in bench, ${data.benchLf} ft`]:[]),...(data.hasDrainage?['Under-deck drainage system']:[])];
+  const built=[...(data.pergolaSqft>0&&!data.pergola?[`Pergola, ${data.pergolaSqft} sq ft`]:[]),...(data.benchLf>0?[`Built-in bench, ${data.benchLf} ft`]:[]),...(hasEffectiveDrainage(data)?['Under-deck drainage system']:[])];
   byGroup.get('living')!.unshift(...built);
   return GROUPS.flatMap(([id,title])=>{const items=byGroup.get(id)!;return items.length?[{id,title,items}]:[];});
 }

@@ -14,7 +14,7 @@ const document:SketchDocument={version:1,shapes:[
   {id:'house',kind:'house',label:'Existing house',points:rectangle(100,100,360,200)},
   {id:'deck',kind:'deck',label:'New deck',points:rectangle(100,300,240,144),widthFt:20,depthFt:12,heightIn:30},
 ]};
-const initial=deckReleaseData({...structuredClone(DEFAULT_DECK),customerName:'Private local name',projectAddress:'Private address',materialMarkup:19.75,underDeck:{drainage:'rainescape',ceiling:'pvc',scope:'main',gravel:true,gravelDepthIn:4,floorMesh:true},boardLayout:{regions:[{id:'old-region',level:1,angleDeg:33,polygon:rectangle(0,0,100,100)}],pieces:[],breakers:[]}});
+const initial=deckReleaseData({...structuredClone(DEFAULT_DECK),customerName:'Private local name',projectAddress:'Private address',materialMarkup:19.75,underDeck:{drainage:'none',ceiling:'pvc',scope:'main',gravel:true,gravelDepthIn:4,floorMesh:true},boardLayout:{regions:[{id:'old-region',level:1,angleDeg:33,polygon:rectangle(0,0,100,100)}],pieces:[],breakers:[]}});
 let state:DeckAgentHostState={data:initial,view:'plan',openSections:[],canUndo:false,canRedo:false,ready:true},history=emptyHistory<DeckData>(),commits=0;
 const api=createDeckAgentController({getState:()=>state,commitDesign:next=>{history=recordChange(history,state.data,`replace:${++commits}`,commits);state={...state,data:next,canUndo:true,canRedo:false};},undo:()=>{const next=undoChange(history,state.data);assert.ok(next);history=next.history;state={...state,data:next.design,canUndo:history.past.length>0,canRedo:true};},redo:()=>{},setView:()=>{},openSection:()=>{},waitForRender:async test=>{assert.ok(test(state),'Host must acknowledge actual applied geometry');}});
 const before=serializeDeckReleaseDesign(state.data),start=api.read();

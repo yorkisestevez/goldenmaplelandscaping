@@ -8,6 +8,7 @@ import {activeCornerChamfers} from './lib/cornerChamfers';
 import {allowanceItems} from './yardSettings';
 import {DECK_PARTS} from './deckPartFinishes';
 import type {DeckData} from './types';
+import {hasEffectiveDrainage} from './underDeckOptions';
 
 /**
  * DeckCraft funnel analytics: a closed set of events with fixed, self-describing labels. The designer
@@ -104,7 +105,7 @@ export function designFeatures(data:DeckData):string[]{
   add(data.benchLf>0,'deck_bench');
   add(data.pergolaSqft>0,'deck_pergola');
   add(data.hasDemo,'deck_demolition');
-  add(data.hasDrainage,'deck_drainage');
+  add(hasEffectiveDrainage(data),'deck_drainage');
   add(data.sceneLighting==='Evening','deck_night_preview');
   const yard=(data.yardFeatures??[]).filter(f=>f.enabled);
   const allowances=new Set(allowanceItems(data.yardAllowances).map(i=>i.id));

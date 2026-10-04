@@ -114,7 +114,7 @@ ok(!read('src/features/deckcraft/SendDesignDialog.tsx').includes('data-netlify')
 // 5b. Timeline, budget and the site's shared lead score reach the CRM, in details as well as in their own fields.
 {
   ok(DECK_BUDGETS===PROJECT_BUDGET_RANGES,'Deck budgets are the site\'s shared enquiry ranges');
-  const d=design({width:24,length:20,levels:2,siteType:'Hillside',hasDrainage:true});
+  const d=design({width:24,length:20,levels:2,siteType:'Hillside',hasDrainage:true,underDeck:{drainage:'dryspace' as const,ceiling:'none' as const,scope:'main' as const,gravel:false,gravelDepthIn:3,floorMesh:false}});
   ok(designConditions(d).join()==='levels,slope,drainage'&&designConditions(design()).length===0,'Site conditions are named in the words the lead scoring looks for');
   const f=fields({timeline:'within-6-months',budget:'25k-50k',notes:'Access is down the side of the house.'});
   const {out,estimate}=await submission(d,f);

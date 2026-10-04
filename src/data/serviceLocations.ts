@@ -96,11 +96,11 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     shortName: 'Composite Decking',
     blurb:
       'Composite deck options for Ontario weather; available products and any manufacturer warranty are confirmed with the selected product documentation.',
-    startingPriceText: '$45–$85',
-    perUnitText: 'per square foot installed',
+    startingPriceText: 'Priced live',
+    perUnitText: 'in our 3D deck designer, for the exact deck you draw',
     scope: [
       'Pressure-treated structural framing on engineered concrete piers',
-      'TimberTech AZEK Vintage or Trex Transcend deck boards',
+      'TimberTech composite or Advanced PVC, or Deckorators deck boards',
       'Hidden fastener system — no visible screws',
       'Aluminum or composite railing systems',
       'Integrated low-voltage LED post and stair lighting',
@@ -110,8 +110,8 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       'Compare composite and wood using purchase cost, maintenance requirements and the selected product documentation. Composite still requires care; neither material has a universal maintenance cost or lifespan.',
     faqs: [
       {
-        q: 'TimberTech vs. Trex — which is better?',
-        a: "Both are product options worth comparing. Manufacturer warranty availability, duration, exclusions, and transferability depend on the selected product and current manufacturer documentation; confirm them before purchase.",
+        q: 'TimberTech or Deckorators — which should I choose?',
+        a: "Both make capped composite. TimberTech also makes Advanced PVC boards, and Deckorators makes mineral-based Surestone boards. Compare the collections side by side in our 3D deck designer, then confirm warranty terms for the exact product in the manufacturer's current documentation.",
       },
       {
         q: 'Will composite get hot in summer?',
@@ -119,11 +119,11 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       },
       {
         q: 'Do composite boards fade?',
-        a: 'Modern capped composites (TimberTech AZEK, Trex Transcend) have engineered UV-stable surfaces. Expect minimal fade in the first 5 years, slight mellowing thereafter — far less than wood.',
+        a: "Capped boards are built to resist fading far better than wood, but any surface in full sun mellows over time. Fade and stain coverage depends on the product line, so check the manufacturer's current terms for the board you pick.",
       },
       {
         q: 'How long does construction take?',
-        a: 'A 300–500 sqft deck typically takes 7–10 working days from footings to railing. Larger multi-level decks run 2–3 weeks.',
+        a: 'It depends on size, height, access, approvals and weather. Footings, framing, decking and railings are separate stages, and we confirm a schedule for your project once the design and site are reviewed.',
       },
     ],
     heroImg: '/images/portfolio/deck-and-garden-walkway-1-v1-full-1280.webp',

@@ -40,6 +40,7 @@ Service areas with dedicated pages: ${areas}. A published page does not confirm 
 
 1. **Discovery call** — ${publicClaimCopy(BUSINESS.commercialPolicies.consultation, 'Free 15-minute discovery call.')}
 2. **Cost estimator** — ${BUSINESS.canonicalUrl}/cost-estimator: an indicative planning calculation, not a quote or universal construction specification.
+   **Deck designer (DeckCraft)** — ${BUSINESS.canonicalUrl}/deck-designer: draw a deck on your house in 3D and choose boards, railings, stairs and lighting; it prices the drawn design from Golden Maple's price book, marks items needing a supplier quote, and can produce a planning drawing set. Measurements and engineering are confirmed on site before a written quote.
 3. **Book a consultation** — ${BUSINESS.canonicalUrl}/book: confirm appointment scope and any fees before booking.
 4. **Written scope** — every project gets a written scope; excavation/base depth, drainage, and materials are confirmed per project, not assumed.
 

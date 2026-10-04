@@ -5,6 +5,7 @@ import {getTerrainConfig} from './yardSettings';
 import {edgeFacing,type EdgeName,type PlanPoint} from './lib/deckGeometry';
 import {accentAllowed,colourName,deckColourRef,parseColourRef} from './boardFinishes';
 import {mitredRunCaps,type SlabCap} from './lib/mitredSlabs';
+import {hasEffectiveDrainage} from './underDeckOptions';
 
 /**
  * Skirting under the deck: boards or lattice closing in the space between each deck edge's rim and the ground.
@@ -292,7 +293,7 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
     notes.push(placed?`Skirting access: ${placed} framed access panel${placed===1?'':'s'}, ${ACCESS.w} in wide, to reach the footings and framing under the deck${placed<requested?` (${requested} asked for; the rest do not fit where the skirting is tall enough)`:''}.`
       :requested?'Skirting access: no access panel fits (one needs about 20 in of skirting height). Plan another way to reach the space under the deck.'
       :'Skirting access: no access panel is included, so the space under the deck is reached only by taking skirting off. One is recommended.');
-    notes.push(`Skirting drainage: grade the ground under the deck so water runs out from under it; the ${inches(clearanceIn)} in gap at the bottom lets it out${terrain.slopePct?', and on this sloped yard the skirting follows the ground':''}.${data.hasDrainage?' Keep the under-deck drainage outlet clear of the skirting.':''}`);
+    notes.push(`Skirting drainage: grade the ground under the deck so water runs out from under it; the ${inches(clearanceIn)} in gap at the bottom lets it out${terrain.slopePct?', and on this sloped yard the skirting follows the ground':''}.${hasEffectiveDrainage(data)?' Keep the under-deck drainage outlet clear of the skirting.':''}`);
     if(style==='Lattice'&&runs.some(r=>r.top-Math.min(r.bottomA,r.bottomB)>LATTICE.h+.5))notes.push('Skirting: lattice comes in 4 ft panels, so skirting taller than 4 ft is two panels high, with a rail at the joint.');
     if(lowIn>=6)notes.push(`Skirting: ${round1(lowIn/12)} ft of deck edge sits too close to the ground for skirting (under ${MIN_FACE} in of face above the ${inches(clearanceIn)} in clearance) and is left open.`);
   }
