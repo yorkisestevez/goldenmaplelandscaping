@@ -9,6 +9,7 @@ import {screenOn} from '../privacyScreens';
 import {glassRailingName} from '../framelessGlass';
 import type {DeckData} from '../types';
 import type {DesignSection,SectionId} from './sections';
+import {hasEffectiveDrainage} from '../underDeckOptions';
 
 /**
  * What each section row says about the design's current choice ("TimberTech EDGE Prime+ · Coconut Husk · Straight").
@@ -42,7 +43,7 @@ const SUMMARIES:Record<SectionId,(data:DeckData)=>string>={
   },
   extras:data=>{
     const screens=(data.privacyScreens??[]).filter(screenOn).length,accessories=data.catalogueAccessories?.length??0;
-    return words([screens&&plural(screens,'privacy screen'),!!data.skirting&&'skirting',data.benchLf>0&&`${ft(data.benchLf)} ft bench`,data.pergolaSqft>0&&`${data.pergolaSqft} sq ft pergola`,data.hasDemo&&'old deck removed',data.hasDrainage&&'drainage',data.underDeck?.ceiling!=='none'&&!!data.underDeck?.ceiling&&'ceiling',data.underDeck?.gravel&&'gravel & fabric',data.underDeck?.floorMesh&&'floor insect mesh',accessories&&plural(accessories,'accessory','accessories')]);
+    return words([screens&&plural(screens,'privacy screen'),!!data.skirting&&'skirting',data.benchLf>0&&`${ft(data.benchLf)} ft bench`,data.pergolaSqft>0&&`${data.pergolaSqft} sq ft pergola`,data.hasDemo&&'old deck removed',hasEffectiveDrainage(data)&&'drainage',data.underDeck?.ceiling!=='none'&&!!data.underDeck?.ceiling&&'ceiling',data.underDeck?.gravel&&'gravel & fabric',data.underDeck?.floorMesh&&'floor insect mesh',accessories&&plural(accessories,'accessory','accessories')]);
   },
   site:data=>words([dashes(data.municipality),`${dashes(data.siteType).toLowerCase()} site`,data.foundation.toLowerCase()]),
   backyard:data=>{

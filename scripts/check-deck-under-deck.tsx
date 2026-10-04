@@ -8,7 +8,7 @@ import {designLinkJson} from '../src/features/deckcraft/designLink';
 import {describeDesign} from '../src/features/deckcraft/designFacts';
 import {priceLedger} from '../src/features/deckcraft/designer/priceLedgerModel';
 import {ProposalSheet} from '../src/features/deckcraft/ProposalSheet';
-import {normalizeUnderDeck,UNDER_DECK_OFF,underDeckConfig} from '../src/features/deckcraft/underDeckOptions';
+import {DRAINAGE_OPTIONS,normalizeUnderDeck,RETIRED_DRAINAGE_NOTE,UNDER_DECK_OFF,underDeckConfig,underDeckWords} from '../src/features/deckcraft/underDeckOptions';
 import {buildUnderDeckPricing,underDeckGroundArea,UNDER_DECK_RATES,UNDER_DECK_POLICY} from '../src/features/deckcraft/underDeckPricing';
 import {sectionOfTitle,SECTION_OF_FIELD} from '../src/features/deckcraft/designer/sections';
 import type {DeckData,UnderDeckConfig} from '../src/features/deckcraft/types';
@@ -29,7 +29,7 @@ close(underDeckGroundArea({...base.model,levels:[rect(0,0,10,10),rect(5,0,10,10)
 close(underDeckGroundArea({...base.model,levels:[rect(0,0,10,2),rect(0,8,10,2),rect(0,2,2,6),rect(8,2,2,6)]}),64,'Union subtracts uncovered central courtyard hole');
 close(underDeckGroundArea({...base.model,levels:[rect(0,0,10,10),rect(20,0,4,4)]}),116,'Disjoint ground platforms both count once');
 
-for(const drainage of ['rainescape','dryspace','zipup'] as const){
+for(const drainage of ['dryspace','zipup'] as const){
   const data=sample({drainage}),estimate=calculateDeckReleaseEstimate(data),s=estimate.sections.find(s=>s.title==='Under-deck options')!;
   ok(s.items.some(i=>i.name.includes('installation')&&Number(i.qty)>0&&Number(i.cost)>0),`${drainage} includes separate installation`);
   ok(s.items.some(i=>i.name.includes('delivery')&&Number(i.cost)>0),`${drainage} includes delivery / handling`);
@@ -39,8 +39,17 @@ for(const drainage of ['rainescape','dryspace','zipup'] as const){
   close(estimate.hst,estimate.subtotal*.13,`${drainage} tax applies once`);
   close(s.total,s.items.reduce((n,i)=>n+(i.cost??0),0),`${drainage} includes all known components in section total`);
 }
+// Trex RainEscape is retired (owner, 2026-10-04): saved and legacy designs keep the value, price it as no drainage, and say so.
 const legacy=calculateDeckReleaseEstimate({...sample(),underDeck:undefined,hasDrainage:true});
-close(legacy.total,calculateDeckReleaseEstimate(sample({drainage:'rainescape',scope:'all'})).total,'Legacy drainage upgrades deterministically to stock plus labour budget');
+close(legacy.total,base.total,'Legacy drainage switch (RainEscape) prices as no drainage');
+ok(legacy.flags.includes(RETIRED_DRAINAGE_NOTE),'Legacy drainage switch tells the customer RainEscape is no longer offered');
+const retired=sample({drainage:'rainescape'}),retiredEstimate=calculateDeckReleaseEstimate(retired);
+close(retiredEstimate.total,base.total,'Saved RainEscape prices as no drainage');
+ok(retiredEstimate.flags.includes(RETIRED_DRAINAGE_NOTE)&&!retiredEstimate.sections.flatMap(s=>s.items).some(i=>/RainEscape/.test(i.name)),'Saved RainEscape raises the note and lists no RainEscape items');
+ok(parseDesign(serializeDesign(retired)).underDeck?.drainage==='rainescape','Saved RainEscape survives save and load, so the note keeps showing until a new system is chosen');
+ok(!Object.hasOwn(DRAINAGE_OPTIONS,'rainescape'),'RainEscape is not offered in the drainage choices');
+ok(!underDeckWords(retired).some(w=>/RainEscape/.test(w)),'Proposal wording never lists retired drainage');
+ok(!calculateDeckReleaseEstimate(sample({drainage:'dryspace'})).flags.includes(RETIRED_DRAINAGE_NOTE),'Choosing DrySpace clears the retired note');
 ok(underDeckConfig({...sample({drainage:'none'}),hasDrainage:true}).drainage==='none','Explicit new config supersedes stale legacy switch');
 for(const drainage of ['dryspace','zipup'] as const){
   const p=buildUnderDeckPricing(sample({drainage,ceiling:'cedar'}),base.model);
@@ -61,10 +70,10 @@ close(labour(mesh).cost!,labour(buildUnderDeckPricing(sample({floorMesh:true}),b
 const customRate=buildUnderDeckPricing(sample({floorMesh:true}),base.model,1,4100);close(labour(customRate).cost!,customRate.crewDays*4100,'Installation uses current editable crew-day rate');
 const lowData=sample({floorMesh:true},{height:36}),low=buildUnderDeckPricing(lowData,calculateDeckReleaseEstimate(lowData).model);
 ok(low.crewDays>mesh.crewDays&&low.flags.some(s=>s.includes('1.5')),'Restricted height changes installation allowance transparently');
-const longData=sample({drainage:'rainescape'},{length:30}),long=buildUnderDeckPricing(longData,calculateDeckReleaseEstimate(longData).model);
+const longData=sample({drainage:'zipup'},{length:30}),long=buildUnderDeckPricing(longData,calculateDeckReleaseEstimate(longData).model);
 ok(long.quoteRequired.some(s=>s.includes('Long drainage'))&&long.sections[0].items.some(s=>s.spec.includes('Never splice')),'Long runs retain explicit waterproof transition quote');
 
-const combined=sample({drainage:'rainescape',ceiling:'pvc',gravel:true,floorMesh:true});
+const combined=sample({drainage:'none',ceiling:'pvc',gravel:true,floorMesh:true});
 const saved=parseDesign(serializeDesign(combined));assert.deepEqual(saved.underDeck,combined.underDeck);checks++;
 const shared=JSON.parse(designLinkJson(combined));assert.deepEqual(shared.configuration.underDeck,combined.underDeck);checks++;
 ok(validateDesign({...combined,underDeck:{...combined.underDeck,gravelDepthIn:-2}}).underDeck?.gravelDepthIn===2,'Saved/imported configuration normalizes depth');

@@ -2,7 +2,7 @@ import type {DeckData,SkirtingConfig} from '../types';
 import {DEFAULT_DECK} from '../defaults';
 import {validateDesign} from '../designPersistence';
 import {partAllowed} from '../boardFinishes';
-import {underDeckConfig} from '../underDeckOptions';
+import {effectiveUnderDeck,underDeckConfig} from '../underDeckOptions';
 import {calculateDeckReleaseEstimate,deckReleaseData} from '../deckRelease';
 import {extrasLayout} from '../extrasLayout';
 import {syncAutoLighting} from '../lightingSystem';
@@ -33,7 +33,7 @@ function validateSettings(value:unknown):PresetSettings{
  if(settings.deckFinishes!==null)nested(settings.deckFinishes,['border','fascia','treads','risers','railingColor'],'Deck finishes');
  if(settings.autoLighting!==null)nested(settings.autoLighting,['posts','stairs','border','stairStyle'],'Lighting intent');
  if(settings.lightingZoneEnabled!==null)nested(settings.lightingZoneEnabled,['deck','posts','stairs','landscape','house','privacy','border'],'Lighting zones');
- if(settings.underDeck!==null){const c=nested(settings.underDeck,['drainage','ceiling','scope','gravel','gravelDepthIn','floorMesh'],'Under-deck specification');keys(c,['drainage','ceiling','scope','gravel','gravelDepthIn','floorMesh'],['drainage','ceiling','scope','gravel','gravelDepthIn','floorMesh'],'Under-deck specification');if(!['none','rainescape','dryspace','zipup'].includes(c.drainage as string)||!['none','aluminum','pvc','cedar'].includes(c.ceiling as string)||!['main','all'].includes(c.scope as string)||typeof c.gravel!=='boolean'||typeof c.floorMesh!=='boolean')fail('Unsupported under-deck selection.');number(c.gravelDepthIn,2,6,'Gravel depth');if(['dryspace','zipup'].includes(c.drainage as string)&&c.ceiling!=='none')fail('Integrated drainage ceilings cannot include a second ceiling.');}
+ if(settings.underDeck!==null){const c=nested(settings.underDeck,['drainage','ceiling','scope','gravel','gravelDepthIn','floorMesh'],'Under-deck specification');keys(c,['drainage','ceiling','scope','gravel','gravelDepthIn','floorMesh'],['drainage','ceiling','scope','gravel','gravelDepthIn','floorMesh'],'Under-deck specification');if(c.drainage==='rainescape')c.drainage='none';/* retired 2026-10-04: older presets load without it */if(!['none','dryspace','zipup'].includes(c.drainage as string)||!['none','aluminum','pvc','cedar'].includes(c.ceiling as string)||!['main','all'].includes(c.scope as string)||typeof c.gravel!=='boolean'||typeof c.floorMesh!=='boolean')fail('Unsupported under-deck selection.');number(c.gravelDepthIn,2,6,'Gravel depth');if(['dryspace','zipup'].includes(c.drainage as string)&&c.ceiling!=='none')fail('Integrated drainage ceilings cannot include a second ceiling.');}
  const raw={...DEFAULT_DECK,...Object.fromEntries(Object.entries(settings).filter(([,v])=>v!==null))};
  const clean=validateDesign(raw) as unknown as Record<string,unknown>;
  for(const [field,v] of Object.entries(settings))if(v!==null&&canonical(v)!==canonical(clean[field]))fail(`${field} has conflicting or incompatible selections. Choose compatible finishes and border settings before saving.`);
@@ -55,7 +55,7 @@ export function exportPresetLibrary(library:PresetLibrary):string{const clean=pa
 export function captureContractorPreset(data:DeckData,name:string,includePricing=false,id=`preset-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`):ContractorPreset{
  const settings=Object.fromEntries(PRESET_FIELDS.map(field=>[field,data[field]===undefined?null:structuredClone(data[field])])) as PresetSettings;
  if(data.skirting){const {openEdges:_edges,accessPanels:_access,...spec}=data.skirting;settings.skirting=spec;}
- settings.underDeck=underDeckConfig(data);
+ settings.underDeck=effectiveUnderDeck(underDeckConfig(data));
  const preset={id,name,settings,...(includePricing?{pricing:{materialMarkup:data.materialMarkup??null,customLaborCost:data.customLaborCost??null,customOverrides:data.customOverrides?structuredClone(data.customOverrides):null}}:{})};
  return parsePresetLibrary({...emptyPresetLibrary(),presets:[preset]}).presets[0];
 }

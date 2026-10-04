@@ -11,6 +11,7 @@ import type {DeckData} from './types';
 import {boardFinishPlan,colourName,deckColourRef} from './boardFinishes';
 import {skirtingPlan} from './skirting';
 import {partSamples} from './deckPartFinishes';
+import {hasEffectiveDrainage} from './underDeckOptions';
 
 /**
  * "Send my design to Golden Maple": the `deck-design` Netlify form. Netlify stores the submission and
@@ -87,7 +88,7 @@ export interface SendContext{data:DeckData;estimate:DeckEstimate;summary:string;
  * access or drainage all make a job more involved (and protect margin), as on every other form.
  */
 export function designConditions(data:DeckData):string[]{
-  return [data.levels>1&&'levels',data.siteType==='Hillside'&&'slope',data.siteType==='Urban Tight'&&'access',data.hasDrainage&&'drainage'].filter(Boolean) as string[];
+  return [data.levels>1&&'levels',data.siteType==='Hillside'&&'slope',data.siteType==='Urban Tight'&&'access',hasEffectiveDrainage(data)&&'drainage'].filter(Boolean) as string[];
 }
 /** The lead score the contact and estimator forms send, from this design, its estimate and the form. */
 export function deckLeadScore(f:SendDesignFields,ctx:Pick<SendContext,'data'|'estimate'>){

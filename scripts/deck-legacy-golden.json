@@ -2268,13 +2268,13 @@
  "extras/all": {
   "model": "43c8a6f60bc1be05927e",
   "issues": "e23936dcef4546e9f5d0",
-  "flags": "5cacab10de62ac9928e7",
+  "flags": "2a7c1086be3e41df7e95",
   "hardware": "06c6c70f1c8a7b4cf85e",
-  "extras": "db9266fdd7742856598c",
+  "extras": "839f1c64ddf9f93cba27",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "a1545d1dd7bc9c58b0b9",
-  "estimate": "55160743cc0a023e1043",
-  "total": 60672.31
+  "exports": "e7e7b2cad5a71a57b70d",
+  "estimate": "f7c5bf7deb261009e121",
+  "total": 47889.42
  },
  "accessories/all": {
   "model": "678167029a4785e4c970",

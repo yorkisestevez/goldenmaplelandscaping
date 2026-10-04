@@ -298,7 +298,7 @@ for(const [width,length] of [[16,12],[24,20],[40,16]] as const)for(const [l,r] o
 
 // 9. Outputs: the words, the plan, the exports, the analytics label, drainage and a saved or shared design.
 {
-  const d=design({cornerChamfers:{frontLeftFt:4,frontRightFt:3},hasDrainage:true,height:48}),estimate=calculateDeckReleaseEstimate(d),model=estimate.model as DeckTakeoff;
+  const d=design({cornerChamfers:{frontLeftFt:4,frontRightFt:3},hasDrainage:true,underDeck:{drainage:'dryspace' as const,ceiling:'none' as const,scope:'main' as const,gravel:false,gravelDepthIn:3,floorMesh:false},height:48}),estimate=calculateDeckReleaseEstimate(d),model=estimate.model as DeckTakeoff;
   const words=describeDesign(d,estimate);
   ok(words.facts.includes('Rectangle 16 × 12 ft with 45° angled front corners: 4 ft front left, 3 ft front right'),'The design facts describe the corners');
   ok(String(words.summary).includes('Rectangle with angled front corners, 1 level(s)'),'The summary names the shape');

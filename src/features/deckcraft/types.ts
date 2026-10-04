@@ -241,6 +241,7 @@ export const INLITE_PRODUCTS: LightingProduct[] = [
 ];
 
 /** Optional under-deck work. Absent keeps existing designs off, except the legacy hasDrainage switch. */
+/** drainage 'rainescape' is retired (not sold since 2026-10-04): accepted from saved designs, priced as none. */
 export interface UnderDeckConfig {drainage:'none'|'rainescape'|'dryspace'|'zipup';ceiling:'none'|'aluminum'|'pvc'|'cedar';scope:'main'|'all';gravel:boolean;gravelDepthIn:number;floorMesh:boolean}
 /** Saved local edge vector; both endpoints may translate together, but length and direction stay measured. */
 export interface BoundaryEdgeLock {level:1|2|3;edge:number;dxIn:number;dyIn:number}

@@ -13,11 +13,11 @@ import {buildProposalPdf} from '../src/features/deckcraft/proposalPdf';
 import {buildUnderDeckPricing,UNDER_DECK_RATES,UNDER_DECK_POLICY} from '../src/features/deckcraft/underDeckPricing';
 import type {UnderDeckConfig} from '../src/features/deckcraft/types';
 const out=new URL('../../../outputs/deckcraft-under-deck-review/',import.meta.url);mkdirSync(out,{recursive:true});
-const config:UnderDeckConfig={drainage:'rainescape',ceiling:'pvc',scope:'main',gravel:true,gravelDepthIn:3,floorMesh:true};
+const config:UnderDeckConfig={drainage:'none',ceiling:'pvc',scope:'main',gravel:true,gravelDepthIn:3,floorMesh:true};
 const data={...structuredClone(DEFAULT_DECK),height:108,hasDrainage:true,underDeck:config},estimate=calculateDeckReleaseEstimate(data),facts=describeDesign(data,estimate).proposalFacts,date='September 26, 2026';
 writeFileSync(new URL('../../under-deck-design.json',import.meta.url),serializeDesign(data));
 const cases=[];
-for(const drainage of ['rainescape','dryspace','zipup'] as const){const d={...data,underDeck:{...config,drainage,ceiling:drainage==='rainescape'?'pvc' as const:'none' as const}},e=calculateDeckReleaseEstimate(d),p=buildUnderDeckPricing(d,e.model,1+d.materialMarkup/100);cases.push({name:drainage,totalBeforeHst:p.sections[0].total,crewDays:p.crewDays,area:p.area,groundArea:p.groundArea,rows:p.sections[0].items,quoteRequired:p.quoteRequired});}
+for(const drainage of ['dryspace','zipup'] as const){const d={...data,underDeck:{...config,drainage,ceiling:'none' as const}},e=calculateDeckReleaseEstimate(d),p=buildUnderDeckPricing(d,e.model,1+d.materialMarkup/100);cases.push({name:drainage,totalBeforeHst:p.sections[0].total,crewDays:p.crewDays,area:p.area,groundArea:p.groundArea,rows:p.sections[0].items,quoteRequired:p.quoteRequired});}
 writeFileSync(new URL('pricing-proof.json',out),JSON.stringify({rates:UNDER_DECK_RATES,policy:UNDER_DECK_POLICY,sampleDesign:config,projectSubtotal:estimate.subtotal,hst:estimate.hst,projectTotal:estimate.total,cases},null,2));
 if(process.argv.includes('--seed-only'))process.exit(0);
 const sceneFile=new URL('../../under-deck-scene.json',import.meta.url),shots=existsSync(sceneFile)?[JSON.parse(readFileSync(sceneFile,'utf8'))]:[];

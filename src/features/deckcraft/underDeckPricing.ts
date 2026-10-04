@@ -1,10 +1,10 @@
 import type {DeckData} from './types';
 import {polygonArea,type DeckTakeoff} from './deckTakeoff';
 import {polygonUnion,signedArea} from './lib/polygonCuts';
-import {underDeckConfig,underDeckSelected} from './underDeckOptions';
+import {RETIRED_DRAINAGE_NOTE,effectiveUnderDeck,underDeckConfig,underDeckSelected} from './underDeckOptions';
 
 /** CAD before HST, checked 26 Sep 2026. Published supply benchmarks, never installed contractor quotes. */
-export const UNDER_DECK_RATES={rainescape12:45.13,rainescape16:63.18,rainescapeOutlet:58.51,rainescapeTape50:102.30,rainescapeCaulk:17.64,dryspace12OC12:971.68,dryspace16OC12:1004.40,dryspace16OC16:1344.37,zipupPanel12:140.35,zipupRail12:87.75,aluminumPanel:37.44,pvcPanel:31.83,cedarSqft:5.80,fabricRoll600:189,meshRoll400:151,clearStoneTonne:31.50,caddyDeliveredTonne:195,downpipe10:36.88} as const;
+export const UNDER_DECK_RATES={dryspace12OC12:971.68,dryspace16OC12:1004.40,dryspace16OC16:1344.37,zipupPanel12:140.35,zipupRail12:87.75,aluminumPanel:37.44,pvcPanel:31.83,cedarSqft:5.80,fabricRoll600:189,meshRoll400:151,clearStoneTonne:31.50,caddyDeliveredTonne:195,downpipe10:36.88} as const;
 /** Explicit planning assumptions / allowances; only the crew-day rate comes from the existing price book. */
 export const UNDER_DECK_POLICY={version:'2026-09-26-under-deck-v1',panelWaste:1.10,fabricWaste:1.20,meshWaste:1.20,stoneWaste:1.10,stoneDensityTonnesM3:1.6,ceilingTrimLf:3,furringSqft:1.25,fastenersSqft:.35,cedarFinishSqft:1.25,zipupWallTrimLf:5,gutterLf:8,gutterOutlet:70,gutterDropSpacingFt:12,deliveryHandling:150,meshFixingsSqft:.25,fabricPinsSqft:.20,drainageSqftDay:200,dryspaceSqftDay:180,zipupSqftDay:160,aluminumSqftDay:240,pvcSqftDay:200,cedarSqftDay:160,groundSqftDay:300,meshSqftDay:400,gutterLfDay:60,mobilizationDays:.25,lowAccessFactor:1.5} as const;
 export interface UnderDeckRow{name:string;spec:string;qty:number;unit:string;cost:number|null;unitPrice?:number;laborCost?:number}
@@ -15,7 +15,8 @@ const round=(n:number)=>Math.round(n*100)/100;
 export function underDeckGroundArea(model:DeckTakeoff):number{return Math.abs(polygonUnion(model.levels.filter(l=>!l.kind||l.kind==='deck').map(l=>l.footprint.outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}))),true).reduce((n,p)=>n+signedArea(p)/144,0));}
 
 export function buildUnderDeckPricing(data:DeckData,model:DeckTakeoff,markup=1,crewDayRate=3700){
-  const c=underDeckConfig(data),flags:string[]=[],quoteRequired:string[]=[],rows:UnderDeckRow[]=[];
+  const saved=underDeckConfig(data),c=effectiveUnderDeck(saved),flags:string[]=[],quoteRequired:string[]=[],rows:UnderDeckRow[]=[];
+  if(saved.drainage==='rainescape')flags.push(RETIRED_DRAINAGE_NOTE);
   const platforms=model.levels.filter(l=>!l.kind||l.kind==='deck'),selected=c.scope==='all'?platforms:platforms.slice(0,1);
   const area=selected.reduce((n,l)=>n+polygonArea(l.footprint),0),groundArea=underDeckGroundArea(model);
   let days=0,gutterLf=0,drops=0,downpipes=0,clearance=Infinity;
@@ -32,14 +33,8 @@ export function buildUnderDeckPricing(data:DeckData,model:DeckTakeoff,markup=1,c
       const maxStock=c.drainage==='zipup'||c.drainage==='dryspace'&&data.joistSpacing===12?12:16,zones=Math.ceil(run/maxStock);
       const outlets=Math.max(1,Math.ceil(w/UNDER_DECK_POLICY.gutterDropSpacingFt))*zones;gutterLf+=w*zones;drops+=outlets;downpipes+=outlets*Math.max(1,Math.ceil((l.top+24)/120));
       if(!isRectangle||l.zones&&l.zones.length>1)pending('Under-deck fitted drainage layout', 'Stock envelope budget included. Confirm zones, joist directions, beam crossings, post penetrations, drops and cut losses before a fixed quote.');
-      if(run>16)pending('Long drainage run collection detail','Supply budget includes separate stock-length collection zones. Never splice RainEscape troughs to extend them; intermediate gutters, waterproof transitions and final layout need a builder quote.');
-      if(c.drainage==='rainescape'){
-        const segments=Math.ceil(run/16),stock=run/segments<=12?12:16;
-        add(`RainEscape ${stock} ft troughs`,bays*segments,'pcs',stock===12?UNDER_DECK_RATES.rainescape12:UNDER_DECK_RATES.rainescape16,'Home Depot Canada published CAD supply; one trough per joist bay / collection zone.');
-        add('RainEscape bay outlets',bays*segments,'pcs',UNDER_DECK_RATES.rainescapeOutlet,'One manufacturer downspout per trough; external gutters priced separately.');
-        add('RainEscape 50 ft butyl tape',Math.ceil(((bays+1)*run+2*w)*1.10/50),'rolls',UNDER_DECK_RATES.rainescapeTape50,'Planning seam length plus 10%; confirm manufacturer installation layout.');
-        add('RainEscape butyl caulk',Math.max(1,Math.ceil(w*run/100)),'tubes',UNDER_DECK_RATES.rainescapeCaulk,'Planning allowance: one tube per 100 envelope sq ft.');
-      }else if(c.drainage==='dryspace'){
+      if(run>16)pending('Long drainage run collection detail','Supply budget includes separate stock-length collection zones. Never splice drainage stock to extend it; intermediate gutters, waterproof transitions and final layout need a builder quote.');
+      if(c.drainage==='dryspace'){
         const stock=data.joistSpacing===12?12:run<=12?12:16,segments=Math.ceil(run/stock),kits=Math.ceil(bays/6)*segments;
         if(run>stock&&run<=16)pending('DrySpace intermediate collection detail','12 in-centre kits use 12 ft stock; longer runs require a separately confirmed intermediate drainage layout. Supply budget included.');
         const rate=data.joistSpacing===12?UNDER_DECK_RATES.dryspace12OC12:stock===12?UNDER_DECK_RATES.dryspace16OC12:UNDER_DECK_RATES.dryspace16OC16;
@@ -58,15 +53,15 @@ export function buildUnderDeckPricing(data:DeckData,model:DeckTakeoff,markup=1,c
     add('Gutter and hangers allowance',gutterLf*1.10,'lf',UNDER_DECK_POLICY.gutterLf,'Planning supply allowance $8/lf including hangers/end caps. Collects each platform separately.');
     add('Peak aluminum 10 ft downpipes',downpipes,'pcs',UNDER_DECK_RATES.downpipe10,'Home Depot Canada CAD benchmark. Drops at maximum 12 ft gutter spacing; whole pipe lengths from platform height plus 2 ft outlet extension.');
     add('Gutter outlets and downpipe fittings allowance',drops,'sets',UNDER_DECK_POLICY.gutterOutlet,'Planning supply allowance $70 per drop, including elbows, outlets and straps; straight downpipes listed separately. Discharge position needs site confirmation.');
-    days+=area/(c.drainage==='rainescape'?UNDER_DECK_POLICY.drainageSqftDay:c.drainage==='dryspace'?UNDER_DECK_POLICY.dryspaceSqftDay:UNDER_DECK_POLICY.zipupSqftDay)+gutterLf/UNDER_DECK_POLICY.gutterLfDay;
+    days+=area/(c.drainage==='dryspace'?UNDER_DECK_POLICY.dryspaceSqftDay:UNDER_DECK_POLICY.zipupSqftDay)+gutterLf/UNDER_DECK_POLICY.gutterLfDay;
     pending('Under-deck discharge and waterproofing confirmation','Planning drainage supply and installation included. Confirm pitch, ledger flashing, above/below-beam clearances, post penetrations and legal discharge. Underground drains, sump, demolition and repairs are excluded pending site quote.');
   }
   if(c.ceiling!=='none'){
-    if(c.drainage==='none')pending('Waterproofing above the decorative ceiling','Ceiling supply and installation included; decorative aluminum, PVC and wood are not drainage systems. Select RainEscape for a drainage allowance. PVC must have suitable above-joist drainage.');
+    if(c.drainage==='none')pending('Waterproofing above the decorative ceiling','Ceiling supply and installation included; decorative aluminum, PVC and wood are not drainage systems. For a dry underside choose DrySpace or Zip-UP, which include their own ceiling. PVC needs waterproofing above it, confirmed before order.');
     const envelope=selected.reduce((n,l)=>{const p=l.footprint.outline;return n+(Math.max(...p.map(v=>v.x))-Math.min(...p.map(v=>v.x)))*(Math.max(...p.map(v=>v.y))-Math.min(...p.map(v=>v.y)))/144;},0);
     const perimeter=selected.reduce((n,l)=>n+l.footprint.outline.reduce((s,p,i,o)=>s+Math.hypot(p.x-o[(i+1)%o.length].x,p.y-o[(i+1)%o.length].y)/12,0),0);
     if(c.ceiling==='aluminum')add('Peak aluminum 10 ft × 16 in nonvented panels',Math.ceil(envelope*1.10/(10*16/12)),'panels',UNDER_DECK_RATES.aluminumPanel,'Home Depot Canada black soffit benchmark; conservative envelope and 10% stock waste.');
-    if(c.ceiling==='pvc')add('Trusscore PVC 8 ft × 16 in panels',Math.ceil(envelope*1.10/(8*16/12)),'panels',UNDER_DECK_RATES.pvcPanel,'Home Depot Canada white Wall&CeilingBoard benchmark. Sheltered from direct sun; above-joist drainage required.');
+    if(c.ceiling==='pvc')add('Trusscore PVC 8 ft × 16 in panels',Math.ceil(envelope*1.10/(8*16/12)),'panels',UNDER_DECK_RATES.pvcPanel,'Home Depot Canada white Wall&CeilingBoard benchmark. Sheltered from direct sun; needs waterproofing above, confirmed before order.');
     if(c.ceiling==='cedar'){
       add('Western red cedar knotty 1×4 T&G',envelope*1.10,'sqft',UNDER_DECK_RATES.cedarSqft,'Springwater Lumber published CAD supply; 10% envelope waste. Confirm exposed-face coverage, moisture and sheltered exterior suitability.');
       add('Cedar protective finish allowance',envelope*1.10,'sqft',UNDER_DECK_POLICY.cedarFinishSqft,'Planning supply allowance $1.25/sqft; finish labour is included in the cedar productivity allowance.');
