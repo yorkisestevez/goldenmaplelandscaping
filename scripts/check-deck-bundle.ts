@@ -66,7 +66,8 @@ import {basename} from 'node:path';
 // section, 18.0 KB gzip with its PDF renderer, still loaded only when the dialog opens. Bound it at 20 KB.
 // September 28 (A2, S-5): six typical details drawn from the design add 4.7 KB (22.7 KB), still lazy. Bound it at 25 KB.
 // September 28 (A2, A-0): the site plan and the lot editor add 5.4 KB (28.1 KB), still lazy. Bound it at 30 KB.
-const BUDGET_KB={routeInitial:270,routeCss:12,viewer:340,pdf:150,deltaWorker:205,swatchWorker:5,sketch:27,contractorTool:15,permitSet:30};
+// September 28 (A2, S-6): the schedules add 3.1 KB (31.2 KB), still lazy. Bound it at 35 KB.
+const BUDGET_KB={routeInitial:270,routeCss:12,viewer:340,pdf:150,deltaWorker:205,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);

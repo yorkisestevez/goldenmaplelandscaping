@@ -22,11 +22,15 @@ import type { EstimatorLocationKey } from '../data/locations';
 // old link restores the same build and simply reprices under the new engine —
 // the link's promise is "reopens this estimate with every choice you made",
 // not "freezes the price". Bump the version only when the Packed shape itself
-// changes meaning.
+// changes meaning. The optional drawn-deck field (`x`, 2026-09) is additive: a
+// link without it reopens exactly as before.
 const VERSION = 1;
 
 export interface SavedBuild extends EstimateInput {
   targetBudget: number | null;
+  /** A full backyard's deck as drawn in the deck designer: its share-link
+   *  payload (features/deckcraft/designLink.ts). Null for a plain deck. */
+  deckDesign: string | null;
 }
 
 interface Packed {
@@ -42,6 +46,7 @@ interface Packed {
   k: string;                 // deckBrandId
   a: string[];               // addOns
   g: number | null;          // target budget
+  x?: string;                // drawn deck (deck designer share-link payload)
 }
 
 const toBase64Url = (s: string) =>
@@ -52,7 +57,7 @@ const fromBase64Url = (s: string) => {
   return decodeURIComponent(escape(atob(b64 + '==='.slice((b64.length + 3) % 4))));
 };
 
-export function encodeBuild(build: EstimateInput, targetBudget: number | null): string {
+export function encodeBuild(build: EstimateInput, targetBudget: number | null, deckDesign?: string | null): string {
   const packed: Packed = {
     v: VERSION,
     p: build.projectType,
@@ -66,6 +71,7 @@ export function encodeBuild(build: EstimateInput, targetBudget: number | null): 
     k: build.deckBrandId,
     a: build.addOns,
     g: targetBudget,
+    ...(deckDesign ? { x: deckDesign } : {}),
   };
   return toBase64Url(JSON.stringify(packed));
 }
@@ -97,6 +103,8 @@ export function decodeBuild(param: string): SavedBuild | null {
       deckBrandId: typeof raw.k === 'string' ? raw.k : 'timbertech-prime',
       addOns: Array.isArray(raw.a) ? raw.a : [],
       targetBudget: typeof raw.g === 'number' ? raw.g : null,
+      // Only the shape is checked here; the deck designer validates the design itself when it opens it.
+      deckDesign: typeof raw.x === 'string' && /^1[zj][A-Za-z0-9_-]+$/.test(raw.x) ? raw.x : null,
     };
   } catch {
     return null;
@@ -104,7 +112,7 @@ export function decodeBuild(param: string): SavedBuild | null {
 }
 
 /** Absolute URL that restores this exact build. */
-export function buildPermalink(build: EstimateInput, targetBudget: number | null): string {
+export function buildPermalink(build: EstimateInput, targetBudget: number | null, deckDesign?: string | null): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://goldenmaplelandscaping.ca';
-  return `${origin}/cost-estimator?build=${encodeBuild(build, targetBudget)}`;
+  return `${origin}/cost-estimator?build=${encodeBuild(build, targetBudget, deckDesign)}`;
 }

@@ -8,6 +8,7 @@ import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
 import { scoreGoldenMapleLead } from '../utils/leadScoring';
+import { designHash, type EstimatorDeck } from '../features/deckcraft/estimatorHandoff';
 
 const encode = (data: Record<string, string>) =>
   Object.keys(data)
@@ -46,21 +47,22 @@ export interface EstimatePayload {
   preciseSubtotalCents?: number | null;
   preciseHstCents?: number | null;
   preciseGrandTotalCents?: number | null;
+  /** A full backyard's deck as the 3D deck designer priced it (already inside
+   *  the totals above). A drawn deck carries the link that reopens it. */
+  deck?: EstimatorDeck | null;
 }
 
 export default function EstimateLeadCapture({
   estimate,
   permalink,
-  onUnlock,
+  onSaved,
 }: {
   estimate: EstimatePayload;
   /** Link that restores this exact build — the thing being traded for, and the
    *  reason this gate isn't withholding anything the customer already earned. */
   permalink?: string;
-  /** Fired once name+email are captured — receives the email so the caller
-   *  can also unlock the estimator vault (saving a build IS giving an email;
-   *  asking again at the repeat gate would be asking twice for the same thing). */
-  onUnlock?: (email: string) => void;
+  /** Fired once the build is saved (name + email captured). */
+  onSaved?: () => void;
 }) {
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -150,6 +152,12 @@ export default function EstimateLeadCapture({
       precise_subtotal: estimate.preciseSubtotalCents != null ? (estimate.preciseSubtotalCents / 100).toFixed(2) : '',
       precise_hst: estimate.preciseHstCents != null ? (estimate.preciseHstCents / 100).toFixed(2) : '',
       precise_total: estimate.preciseGrandTotalCents != null ? (estimate.preciseGrandTotalCents / 100).toFixed(2) : '',
+      // The deck, priced by the 3D deck designer (its figure is inside the totals above).
+      deck_subtotal: estimate.deck ? (estimate.deck.subtotalCents / 100).toFixed(2) : '',
+      deck_summary: estimate.deck
+        ? `${estimate.deck.source === 'design' ? '3D design' : 'Starter deck'}: ${estimate.deck.label}${estimate.deck.quoteRequired.length ? `. Supplier quote: ${estimate.deck.quoteRequired.join('; ')}` : ''}`
+        : '',
+      deck_design_link: estimate.deck?.design ? `${window.location.origin}/deck-designer${designHash(estimate.deck.design)}` : '',
     };
 
     if (import.meta.env.DEV) {
@@ -157,7 +165,7 @@ export default function EstimateLeadCapture({
       console.log('[dev] cost-estimator payload (would POST to Netlify):', payload);
       trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone }, { payload });
       setStatus('success');
-      onUnlock?.(form.email);
+      onSaved?.();
       return;
     }
 
@@ -170,7 +178,7 @@ export default function EstimateLeadCapture({
       if (!res.ok) throw new Error('Network response was not ok');
       trackLead('cost-estimator', 'high-intent', conversionValue, eventId, { email: form.email, phone: form.phone }, { payload });
       setStatus('success');
-      onUnlock?.(form.email);
+      onSaved?.();
     } catch {
       setStatus('error');
       setErrorMsg(`Connection issue. Call ${publicContact.phoneDisplay} to discuss your project.`);

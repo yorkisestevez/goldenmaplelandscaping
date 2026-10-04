@@ -4,16 +4,17 @@ import type {DeckData} from '../types';
 import {getHousePlacement} from '../housePlacement';
 import {getHouseContact} from '../houseContact';
 import {getHardwareLayout} from '../hardwareLayout';
-import {DETAIL_SCALES,SCALES,type DrawItem,type DrawingSet,type LayerId,type Pt,type Sheet,feetInches,fitScale,pickScale} from './drawingTypes';
+import {DETAIL_SCALES,NTS,SCALES,type DrawItem,type DrawingSet,type LayerId,type Pt,type Sheet,drawnExtents,feetInches,fitScale,pickScale} from './drawingTypes';
 import {elevationItems,translate} from './elevations';
 import {typicalSection} from './typicalSection';
 import {connectionParts,ledgerFlashing} from './pricedParts';
 import {detailItems} from './details';
 import {sitePlan} from './sitePlan';
+import {scheduleItems,scheduleTables} from './schedules';
 
 /**
  * The permit drawing set built from the takeoff model: A-0 site plan, A-1 elevations, S-1 foundation plan, S-2 framing
- * plan, S-3 decking and guard plan, S-4 typical section and S-5 typical details. Every member, post and footing drawn is
+ * plan, S-3 decking and guard plan, S-4 typical section, S-5 typical details and S-6 schedules. Every member, post and footing drawn is
  * one the takeoff prices; the sheets add dimensions, callouts and notes. The site plan's open items (a lot not entered,
  * a deck over a lot line) join the review items, so the set is stamped DRAFT until they are resolved.
  * The notes cite the public references the framing engine uses (docs/deckcraft/structure-sources.md) and never claim
@@ -212,6 +213,16 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
     ...(data.railingType==='None'?[]:[`${guardNote} ${model.railing.frameless?"Install the glass and its shoe or spigots to the manufacturer's instructions and confirm the framing behind them.":"Fasten each guard post to its manufacturer's instructions and confirm the framing under it."}`]),
     ...s3Notes.filter(n=>n.startsWith('Stair:')||n.startsWith('Barrie requires a handrail')),
   ];
+  const s5=fitted('S-5','Typical details',details.items,s5Notes,['A-DECK-FNSH','S-FRMG','S-LEDG','S-BEAM','S-POST','S-FTNG','A-RAIL','A-STRS','C-TOPO'],[...DETAIL_SCALES,...SCALES]);
+  // S-6: the schedules, below the details in model space, laid out in paper inches at S-2's text scale.
+  const S6_RATIO=48,s6Items=scheduleItems(scheduleTables(data,model,{railingName:input.railingName},hardware),{x:planLeft,y:s5.extents.maxY+360},S6_RATIO);
+  const s6Notes=[
+    'Schedules of what S-1 to S-5 draw, counted from the same members and parts the estimate prices.',
+    'Grade to beam is the height from grade to the underside of the beam, with grade level as the design assumes. Measure at each post and cut it to fit.',
+    'In the estimate: Priced is included. Supplier quote is listed for a supplier price and is not included yet. Confirm in the railing kit (or the footing allowance) may come with that item; confirm it before ordering.',
+    'Framing lumber is planned in 16 ft stock from the modelled cut lengths, saw kerf included.',
+    'Member sizes, spans and their code references are on S-2 and S-4; footing depth and size on S-1 and S-5.',
+  ];
   const deckWords=`${data.width} × ${data.length} ft ${data.deckType==='Attached'?'attached':'freestanding'} deck, ${data.height} in above grade`;
   return {
     sheets:[
@@ -219,7 +230,8 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
       fitted('A-1','Elevations',a1Items,a1Notes,['A-DECK-FNSH','S-FRMG','S-BEAM','S-POST','S-FTNG','S-FTNG-HIDN','A-RAIL','A-STRS','A-HOUS','C-TOPO']),
       ...plans,
       s4,
-      fitted('S-5','Typical details',details.items,s5Notes,['A-DECK-FNSH','S-FRMG','S-LEDG','S-BEAM','S-POST','S-FTNG','A-RAIL','A-STRS','C-TOPO'],[...DETAIL_SCALES,...SCALES]),
+      s5,
+      {id:'S-6',title:'Schedules',ratio:S6_RATIO,scaleLabel:NTS,items:s6Items,extents:drawnExtents(s6Items,S6_RATIO),notes:s6Notes,legend:[]},
     ],
     project:{title:deckWords,date:input.date,priceBook:input.priceBook},
     firm:{name:BUSINESS.publicName.value,phone:publicContact.phoneDisplay,email:publicContact.email,url:BUSINESS.canonicalUrl.replace(/^https:\/\//,'')},
