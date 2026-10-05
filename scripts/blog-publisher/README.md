@@ -10,7 +10,7 @@ Automated weekly SEO blog posts for goldenmaplelandscaping.ca.
 2. Picks the next unused topic from `topics.json`.
 3. Calls the local `claude` CLI (via `claude-provider.cjs`) → structured 1500-2200 word post (title, sections, FAQs, internal links, FAQPage schema).
 4. Validates word count / banned phrases / hero allowlist / internal link count.
-5. Writes the new `.tsx`, updates `routes.ts`, `Resources.tsx`, `sitemap.xml`, updates `state.json`, archives the draft.
+5. Writes the new `.tsx`, updates `routes.ts` and `src/data/blogPosts.ts`, updates `state.json`, archives the draft. A phone number or email in the draft's HTML (intro, sections, FAQ answers, CTA, table, author bio, including `tel:`/`mailto:` links) is rendered from `publicContact` in `src/data/business.ts`. `injectDraft` then runs `scripts/check-contact-centralization.py` on the files it wrote (`contact-gate.cjs`) and, if any still hardcodes a contact, e.g. in a title or heading, rolls the post back and throws. `cli.cjs` alerts that as stage `contact-gate:<slug>`. 2026-09-28: auto-023 hardcoded the number in its CTA, failed postbuild, and blocked every production deploy after it.
 6. Pushes an `auto/blog-*` branch and opens a PR, then **stops**. Nothing is live until Yorkis merges it (owner decision 2026-09-27: every post is reviewed). `cli.cjs` only auto-merges with `BLOG_AUTOMERGE=1`, and then only after `npm run lint` + `npm run build` (the postbuild claim gate) pass.
 7. Telegrams the operator with a summary ("New blog draft - PR open").
 
@@ -49,7 +49,8 @@ scripts/blog-publisher/
 ├── cli.cjs              entry — workflow-run / generate-only
 ├── generate.cjs         claude-provider.cjs call + validation
 ├── claude-provider.cjs  local `claude` CLI generation (replaced the dead Gemini call)
-├── inject.cjs           writes the 4 user-facing files
+├── inject.cjs           writes the 3 user-facing files
+├── contact-gate.cjs     refuses a post that hardcodes a phone number or email
 ├── telegram.cjs         env-driven Telegram sender
 ├── topics.json          the topic backlog (45 entries)
 ├── state.json           used topic ids + history (generatedBy tag records how each post was made)
