@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { ArrowRight, Shield, Award, CheckCircle, Star, Quote, ChevronRight, Compass, Clock } from 'lucide-react';
+import { ArrowRight, Shield, Award, CheckCircle, ChevronRight, Compass, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
 import BuyersGuide from '../components/BuyersGuide';
 import Manifesto from '../components/Manifesto';
@@ -144,62 +144,6 @@ const SelectedWork = () => (
     </div>
   </section>
 );
-
-const Testimonials = () => {
-  const reviews = [
-    {
-      name: "Michael R.",
-      location: "Barrie",
-      text: "We got three quotes. Two contractors wanted to dig 6 inches. Yorkis said he'd go 14. Three winters later, not a single stone has moved. You get what you pay for — and with Golden Maple, you get perfection.",
-    },
-    {
-      name: "Sarah L.",
-      location: "Innisfil",
-      text: "I was nervous spending this much on our backyard. Then Yorkis showed us the 3D render and I literally started tearing up — it was the exact space I'd been dreaming about since we moved to Innisfil. And the finished product? Even better.",
-    },
-    {
-      name: "David K.",
-      location: "Midhurst",
-      text: "After being ghosted by two other contractors, Golden Maple was a completely different experience. Daily updates, a clean site, and they finished on time. Our neighbours keep coming over to ask who did the work.",
-    }
-  ];
-
-  return (
-    <section className="section-padding bg-brand-cream">
-      <div className="container-custom">
-        <Reveal className="text-center max-w-3xl mx-auto mb-12 md:mb-24">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-green-dark mb-6 block font-medium">
-            Real Homeowners. Real Results.
-          </span>
-          <h2 className="font-display text-4xl md:text-7xl font-light text-brand-ink">
-            Don't take our word for it.
-          </h2>
-        </Reveal>
-        <div className="no-scrollbar -mx-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-8 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-10 md:overflow-visible md:px-0 md:pb-0">
-          {reviews.map((review, idx) => (
-            <Reveal key={idx} delay={idx * 0.12} className="w-[84vw] shrink-0 snap-start bg-brand-cream-light p-8 md:w-auto md:shrink md:p-12 rounded-[2px] border border-brand-ink/10 shadow-[0_18px_50px_-30px_rgba(33,30,21,0.45)] relative">
-              <Quote size={40} strokeWidth={1} className="text-brand-green-dark/15 absolute top-10 left-10" />
-              <div className="relative z-10">
-                <div className="flex gap-1 mb-8">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className="fill-brand-gold-dark text-brand-gold-dark" />
-                  ))}
-                </div>
-                <p className="font-sans text-brand-ink italic leading-relaxed mb-10 font-light">
-                  "{review.text}"
-                </p>
-                <div>
-                  <p className="font-display text-xl font-light text-brand-ink">{review.name}</p>
-                  <p className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-green-dark mt-1 font-medium">{review.location}, ON</p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
 
 const FinalCTA = () => {
   return (
@@ -379,7 +323,6 @@ export default function Home() {
       <ContractorPainPoints />
       <WhyGoldenMaple />
       <Process />
-      <Testimonials />
       <section className="section-padding bg-brand-nearblack border-t border-brand-dim/5">
       <div className="container-custom">
         <div className="max-w-3xl mx-auto mb-10 md:mb-20 text-center">

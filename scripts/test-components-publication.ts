@@ -35,4 +35,8 @@ const testimonials = component('Testimonials.tsx');
 assert.match(testimonials, /if\s*\(!canPublish\(BUSINESS\.reviews\.testimonials\)\)\s*return null/, 'unapproved testimonials must not render');
 assert.match(testimonials, /const REVIEWS = \[/, 'testimonial records must remain preserved in source');
 
+const home = readFileSync(resolve('src/pages/Home.tsx'), 'utf8');
+assert.doesNotMatch(home, /const\s+Testimonials\s*=/, 'Home must not bypass the centralized testimonial publication gate');
+assert.doesNotMatch(home, /Real Homeowners\. Real Results\./i, 'Home must not publish unapproved testimonial copy');
+
 console.log('component publication gates: passed');
