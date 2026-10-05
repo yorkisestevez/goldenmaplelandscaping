@@ -89,9 +89,12 @@ export default [
   route('resources/pool-deck-materials-ontario', 'pages/blog/PoolDeckMaterials.tsx'),
   route('resources/paver-walkway-cost-barrie', 'pages/blog/PaverWalkwayCostBarrie.tsx'),
   route('resources/polymeric-sand-vs-regular-sand-patio', 'pages/blog/PolymericSandVsRegularSandPatio.tsx'),
-  route('resources/interlocking-driveway-lifespan-ontario', 'pages/blog/InterlockingDrivewayLifespanOntario.tsx'),
+
   route('resources/best-pavers-pool-deck-simcoe-county', 'pages/blog/BestPaversPoolDeckSimcoeCounty.tsx'),
-  route('resources/concrete-vs-interlocking-patio-barrie', 'pages/blog/ConcreteVsInterlockingPatioBarrie.tsx'),
+  
+  route('resources/concrete-vs-interlocking-patio-barrie', 'pages/blog/ConcreteVsInterlockin
+        
+        gPatioBarrie.tsx'),
   route('resources/natural-stone-vs-pavers-barrie', 'pages/blog/NaturalStoneVsPaversBarrie.tsx'),
   route('resources/outdoor-living-planning-innisfil', 'pages/blog/OutdoorLivingPlanningInnisfil.tsx'),
   route('resources/retaining-wall-cost-oro-medonte', 'pages/blog/RetainingWallCostOroMedonte.tsx'),
@@ -107,8 +110,11 @@ export default [
   route('resources/landscaper-quote-excavation-line-item', 'pages/blog/LandscaperQuoteExcavationLineItem.tsx'),
   route('resources/sodding-vs-seeding-simcoe-county', 'pages/blog/SoddingVsSeedingSimcoeCounty.tsx'),
   route('resources/heated-driveway-worth-it-barrie', 'pages/blog/HeatedDrivewayWorthItBarrie.tsx'),
+  
   route('resources/backyard-entertaining-wasaga-beach', 'pages/blog/BackyardEntertainingWasagaBeach.tsx'),
   route('resources/hpb-vs-limestone-screenings-barrie', 'pages/blog/HpbVsLimestoneScreeningsBarrie.tsx'),
+
+  route('resources/best-pavers-ontario-winters', 'pages/blog/BestPaversOntarioWinters.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),
