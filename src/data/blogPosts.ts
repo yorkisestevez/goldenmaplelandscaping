@@ -16,6 +16,14 @@ export interface BlogPostMeta {
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    slug: "best-pavers-ontario-winters",
+    title: "Best Pavers for Ontario Winters: What Freeze-Thaw Testing Means",
+    excerpt: "Pavers that pass CSA A231.2 lose under 500 g/m² after 49 freeze-thaw cycles in 3% salt solution — what that means for Simcoe County winters.",
+    category: "Materials",
+    readTime: "9 min",
+    image: "/images/projects/paver-driveway.JPG",
+  },
+  {
     slug: "hpb-vs-limestone-screenings-barrie",
     title: "HPB vs Limestone Screenings: What Belongs Under Your Pavers in Barrie",
     excerpt: "HPB vs limestone screenings under pavers in Barrie: 3/8-inch clear HPB drains through a 1-inch bedding layer; screenings hold water and heave on clay.",
