@@ -109,6 +109,7 @@ export default [
   route('resources/heated-driveway-worth-it-barrie', 'pages/blog/HeatedDrivewayWorthItBarrie.tsx'),
   route('resources/backyard-entertaining-wasaga-beach', 'pages/blog/BackyardEntertainingWasagaBeach.tsx'),
   route('resources/hpb-vs-limestone-screenings-barrie', 'pages/blog/HpbVsLimestoneScreeningsBarrie.tsx'),
+  route('resources/best-pavers-ontario-winters', 'pages/blog/BestPaversOntarioWinters.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),

@@ -15,6 +15,14 @@ export interface BlogPostMeta {
 }
 
 export const BLOG_POSTS: BlogPostMeta[] = [
+    {
+    slug: "best-pavers-ontario-winters",
+    title: "Best Pavers for Ontario Winters: What Freeze-Thaw Testing Actually Means",
+    excerpt: "All major paver brands meet Ontario freeze-thaw standards; a 25-year driveway needs 80mm pavers, under 5% absorption, and a clear-stone base.",
+    category: "Materials",
+    readTime: "10 min",
+    image: "/images/projects/paver-driveway.JPG",
+  },
   {
     slug: "hpb-vs-limestone-screenings-barrie",
     title: "HPB vs Limestone Screenings: What Belongs Under Your Pavers in Barrie",
