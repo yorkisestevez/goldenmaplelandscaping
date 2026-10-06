@@ -1,0 +1,281 @@
+{
+  "format": "golden-maple-deck-design",
+  "version": 1,
+  "units": "inches-and-feet",
+  "configuration": {
+    "deckType": "Attached",
+    "municipality": "Barrie",
+    "siteType": "Standard",
+    "soilCondition": "Clay",
+    "buildSeason": "Spring-Summer",
+    "intendedLoad": "Standard",
+    "foundation": "Helical Piles",
+    "shape": "Rectangle",
+    "levels": 1,
+    "pattern": "Picture Frame",
+    "framingSize": "2x10",
+    "boardWidth": 5.5,
+    "joistSpacing": 12,
+    "fasteningSystem": "Hidden",
+    "pictureFrameRows": 1,
+    "railingType": "TT Impression",
+    "stairFlights": 1,
+    "stairType": "Straight",
+    "stairPosition": "Right",
+    "sceneLighting": "Daylight",
+    "level2Position": "Front",
+    "stairTurn": "Right",
+    "borderFinish": "Matching",
+    "width": 26,
+    "length": 13.76,
+    "height": 28,
+    "width2": 18,
+    "length2": 10,
+    "height2": 18,
+    "cutoutWidth": 8,
+    "cutoutLength": 6,
+    "cutoutWidth2": 6,
+    "cutoutLength2": 5,
+    "foundationDepthIn": 48,
+    "stairWidth": 60,
+    "stairOffset": 50,
+    "inlayLf": 0,
+    "benchLf": 0,
+    "privacySqft": 0,
+    "pergolaSqft": 0,
+    "pictureFrameOverhangIn": 1,
+    "houseWallHeightIn": 120,
+    "houseDoorOffset": 50,
+    "houseDoorWidthIn": 72,
+    "level2Offset": 50,
+    "landingDepthIn": 48,
+    "hasInlay": false,
+    "hasDrainage": false,
+    "hasDemo": false,
+    "houseVisible": true,
+    "lightingPreviewOn": true,
+    "level2FullStep": true,
+    "customerName": "",
+    "projectAddress": "",
+    "scopeOfWork": "Professional installation of a custom outdoor deck system including framing, decking, and finishing as per selected specifications. All work to be completed to local building codes and industry best practices.",
+    "deckingMaterial": "tt_harvest",
+    "deckingColor": "Brownstone",
+    "lightingSystem": {
+      "wireDistance": 80,
+      "selectedItems": [
+        {
+          "productId": "smart_hub150",
+          "qty": 1
+        },
+        {
+          "productId": "fusion",
+          "qty": 8,
+          "zone": "deck"
+        }
+      ]
+    },
+    "autoLighting": {
+      "posts": false,
+      "stairs": true,
+      "stairStyle": "evo_hyde"
+    },
+    "privacyScreens": [],
+    "catalogueRailingId": "tt_impression_express",
+    "catalogueAccessories": [],
+    "houseConfig": {
+      "widthFt": 40,
+      "depthFt": 34,
+      "storeys": 2,
+      "storeyHeightIn": 110,
+      "roofShape": "Gable",
+      "roofFinish": "Metal",
+      "roofColor": "#2a2c2e",
+      "cladding": "Vertical siding",
+      "claddingColor": "#3b3f3c",
+      "trimColor": "#1f2021",
+      "openings": [
+        {
+          "id": "patio-door",
+          "type": "Door",
+          "facade": "Front",
+          "offsetPct": 50,
+          "bottomIn": 28,
+          "widthIn": 120,
+          "heightIn": 96,
+          "style": "Sliding"
+        },
+        {
+          "id": "win-l",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 20,
+          "bottomIn": 52,
+          "widthIn": 72,
+          "heightIn": 72,
+          "style": "Picture"
+        },
+        {
+          "id": "win-r",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 80,
+          "bottomIn": 52,
+          "widthIn": 72,
+          "heightIn": 72,
+          "style": "Picture"
+        },
+        {
+          "id": "up-0",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 20,
+          "bottomIn": 154,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-1",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 40,
+          "bottomIn": 154,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-2",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 60,
+          "bottomIn": 154,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-3",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 80,
+          "bottomIn": 154,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        }
+      ],
+      "floorHeightIn": 28,
+      "roofPitch": 9,
+      "ridge": "x",
+      "fasciaColor": "#1f2021",
+      "gutterColor": "#1f2021",
+      "doorColor": "#7a5a3a",
+      "windowColor": "#1f2021",
+      "garageDoorColor": "#9b7147"
+    },
+    "yardFeatures": [],
+    "terrainConfig": {
+      "widthFt": 250,
+      "depthFt": 250,
+      "elevationIn": 0,
+      "slopePct": 0
+    },
+    "inlays": [
+      {
+        "id": "centre-circle",
+        "kind": "medallion",
+        "dyFt": 0.8,
+        "diameterFt": 7,
+        "style": "round",
+        "frame": "tt_harvest:Kona"
+      },
+      {
+        "id": "left-circle",
+        "kind": "medallion",
+        "dxFt": -7.5,
+        "dyFt": -0.5,
+        "diameterFt": 4,
+        "style": "compass",
+        "frame": "tt_harvest:Kona",
+        "fill": "tt_harvest:Slate Gray"
+      },
+      {
+        "id": "right-circle",
+        "kind": "medallion",
+        "dxFt": 7.5,
+        "dyFt": -0.5,
+        "diameterFt": 4,
+        "style": "compass",
+        "frame": "tt_harvest:Kona",
+        "fill": "tt_harvest:Slate Gray"
+      }
+    ],
+    "deckFinishes": {
+      "border": "tt_harvest:Kona",
+      "fascia": "tt_harvest:Kona",
+      "risers": "tt_harvest:Kona",
+      "railingColor": "Black"
+    },
+    "deckOutlines": {
+      "main": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 26,
+          "y": 0
+        },
+        {
+          "x": 26,
+          "y": 9
+        },
+        {
+          "x": 23.94,
+          "y": 10.54
+        },
+        {
+          "x": 21.7,
+          "y": 11.81
+        },
+        {
+          "x": 19.32,
+          "y": 12.77
+        },
+        {
+          "x": 16.84,
+          "y": 13.43
+        },
+        {
+          "x": 14.29,
+          "y": 13.76
+        },
+        {
+          "x": 11.71,
+          "y": 13.76
+        },
+        {
+          "x": 9.16,
+          "y": 13.43
+        },
+        {
+          "x": 6.68,
+          "y": 12.77
+        },
+        {
+          "x": 4.3,
+          "y": 11.81
+        },
+        {
+          "x": 2.06,
+          "y": 10.54
+        },
+        {
+          "x": 0,
+          "y": 9
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,305 @@
+{
+  "format": "golden-maple-deck-design",
+  "version": 1,
+  "units": "inches-and-feet",
+  "configuration": {
+    "deckType": "Attached",
+    "municipality": "Barrie",
+    "siteType": "Standard",
+    "soilCondition": "Clay",
+    "buildSeason": "Spring-Summer",
+    "intendedLoad": "Standard",
+    "foundation": "Helical Piles",
+    "shape": "Rectangle",
+    "levels": 1,
+    "pattern": "Picture Frame",
+    "framingSize": "2x10",
+    "boardWidth": 5.5,
+    "joistSpacing": 12,
+    "fasteningSystem": "Hidden",
+    "pictureFrameRows": 1,
+    "railingType": "Cable",
+    "stairFlights": 1,
+    "stairType": "Straight",
+    "stairPosition": "Left",
+    "sceneLighting": "Daylight",
+    "level2Position": "Front",
+    "stairTurn": "Right",
+    "borderFinish": "Matching",
+    "width": 28,
+    "length": 19,
+    "height": 48,
+    "width2": 18,
+    "length2": 10,
+    "height2": 18,
+    "cutoutWidth": 8,
+    "cutoutLength": 6,
+    "cutoutWidth2": 6,
+    "cutoutLength2": 5,
+    "foundationDepthIn": 48,
+    "stairWidth": 48,
+    "stairOffset": 50,
+    "inlayLf": 0,
+    "benchLf": 14,
+    "privacySqft": 0,
+    "pergolaSqft": 0,
+    "pictureFrameOverhangIn": 1,
+    "houseWallHeightIn": 120,
+    "houseDoorOffset": 50,
+    "houseDoorWidthIn": 72,
+    "level2Offset": 50,
+    "landingDepthIn": 48,
+    "hasInlay": false,
+    "hasDrainage": false,
+    "hasDemo": false,
+    "houseVisible": true,
+    "lightingPreviewOn": true,
+    "level2FullStep": true,
+    "customerName": "",
+    "projectAddress": "",
+    "scopeOfWork": "Professional installation of a custom outdoor deck system including framing, decking, and finishing as per selected specifications. All work to be completed to local building codes and industry best practices.",
+    "deckingMaterial": "tt_vintage",
+    "deckingColor": "Mahogany",
+    "lightingSystem": {
+      "wireDistance": 80,
+      "selectedItems": [
+        {
+          "productId": "smart_hub150",
+          "qty": 1
+        },
+        {
+          "productId": "fusion",
+          "qty": 8,
+          "zone": "deck"
+        }
+      ]
+    },
+    "autoLighting": {
+      "posts": true,
+      "stairs": true,
+      "stairStyle": "evo_hyde"
+    },
+    "privacyScreens": [],
+    "catalogueAccessories": [],
+    "houseConfig": {
+      "widthFt": 40,
+      "depthFt": 34,
+      "storeys": 2,
+      "storeyHeightIn": 110,
+      "roofShape": "Gable",
+      "roofFinish": "Metal",
+      "roofColor": "#2a2c2e",
+      "cladding": "Vertical siding",
+      "claddingColor": "#3b3f3c",
+      "trimColor": "#1f2021",
+      "openings": [
+        {
+          "id": "patio-door",
+          "type": "Door",
+          "facade": "Front",
+          "offsetPct": 50,
+          "bottomIn": 48,
+          "widthIn": 120,
+          "heightIn": 96,
+          "style": "Sliding"
+        },
+        {
+          "id": "win-l",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 20,
+          "bottomIn": 72,
+          "widthIn": 72,
+          "heightIn": 72,
+          "style": "Picture"
+        },
+        {
+          "id": "win-r",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 80,
+          "bottomIn": 72,
+          "widthIn": 72,
+          "heightIn": 72,
+          "style": "Picture"
+        },
+        {
+          "id": "up-0",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 20,
+          "bottomIn": 154,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-1",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 40,
+          "bottomIn": 154,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-2",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 60,
+          "bottomIn": 154,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-3",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 80,
+          "bottomIn": 154,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        }
+      ],
+      "floorHeightIn": 48,
+      "roofPitch": 9,
+      "ridge": "x",
+      "fasciaColor": "#1f2021",
+      "gutterColor": "#1f2021",
+      "doorColor": "#7a5a3a",
+      "windowColor": "#1f2021",
+      "garageDoorColor": "#9b7147"
+    },
+    "yardFeatures": [],
+    "terrainConfig": {
+      "widthFt": 250,
+      "depthFt": 250,
+      "elevationIn": 0,
+      "slopePct": 0
+    },
+    "deckFinishes": {
+      "border": "tt_vintage:Dark Hickory",
+      "fascia": "tt_vintage:Dark Hickory",
+      "risers": "tt_vintage:Dark Hickory"
+    },
+    "deckOutlines": {
+      "main": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 28,
+          "y": 0
+        },
+        {
+          "x": 28,
+          "y": 7
+        },
+        {
+          "x": 27.9,
+          "y": 8.57
+        },
+        {
+          "x": 27.59,
+          "y": 10.11
+        },
+        {
+          "x": 27.09,
+          "y": 11.59
+        },
+        {
+          "x": 26.39,
+          "y": 13
+        },
+        {
+          "x": 25.52,
+          "y": 14.31
+        },
+        {
+          "x": 24.49,
+          "y": 15.49
+        },
+        {
+          "x": 23.31,
+          "y": 16.52
+        },
+        {
+          "x": 22,
+          "y": 17.39
+        },
+        {
+          "x": 20.59,
+          "y": 18.09
+        },
+        {
+          "x": 19.11,
+          "y": 18.59
+        },
+        {
+          "x": 17.57,
+          "y": 18.9
+        },
+        {
+          "x": 16,
+          "y": 19
+        },
+        {
+          "x": 14.43,
+          "y": 18.9
+        },
+        {
+          "x": 12.89,
+          "y": 18.59
+        },
+        {
+          "x": 11.41,
+          "y": 18.09
+        },
+        {
+          "x": 10,
+          "y": 17.39
+        },
+        {
+          "x": 8.69,
+          "y": 16.52
+        },
+        {
+          "x": 7.51,
+          "y": 15.49
+        },
+        {
+          "x": 6.48,
+          "y": 14.31
+        },
+        {
+          "x": 5.61,
+          "y": 13
+        },
+        {
+          "x": 4.91,
+          "y": 11.59
+        },
+        {
+          "x": 4.41,
+          "y": 10.11
+        },
+        {
+          "x": 4.1,
+          "y": 8.57
+        },
+        {
+          "x": 4,
+          "y": 7
+        },
+        {
+          "x": 0,
+          "y": 7
+        }
+      ]
+    }
+  }
+}
