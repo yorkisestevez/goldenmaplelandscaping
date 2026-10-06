@@ -267,7 +267,7 @@ function showcase(){
         drawRule("#o-rule", 1.1);
         tl.fromTo(q(".o-tile"), { opacity: 0, y: 40, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: E.out, stagger: 0.12 }, 0.5);`}];
   specs.forEach((s,i)=>{
-    const last=i===specs.length-1,dur=SEG+(last?0.4:0.4);
+    const dur=SEG; // butt-joined: each orbit fades up from the ink ground, a dip between designs
     scenes.push({id:`deck-${s.slug}`,start:T0+i*SEG,dur,body:`
         <video id="d-orbit" data-start="0" data-duration="4.3" src="assets/renders/${s.slug}-orbit.mp4" muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>
         <div class="plate" data-layout-allow-overflow id="d-plate"><div id="d-push" style="position:absolute;inset:0">
@@ -326,7 +326,7 @@ function bumper(){
   const W=1920,H=1080;
   const scenes=[{id:'strips',start:0,dur:3.4,body:`
         <div class="sheet"></div>
-        ${specs.map((s,i)=>`<div class="strip" style="position:absolute;top:0;left:${i*480}px;width:480px;height:1080px;overflow:hidden;border-right:${i<3?'4px solid var(--sheet)':'0'}"><div class="strip-pan" style="position:absolute;top:-34px;left:${-480*i-60}px;width:2040px;height:1148px"><img src="assets/renders/${s.slug}/${i%2?'night':'day'}/hero.jpg" style="inset:0;width:2040px;height:1148px" alt="" /></div></div>`).join('')}
+        ${specs.map((s,i)=>`<div class="strip" data-layout-allow-overflow style="position:absolute;top:0;left:${i*480}px;width:480px;height:1080px;overflow:hidden;border-right:${i<3?'4px solid var(--sheet)':'0'}"><div class="strip-pan" style="position:absolute;top:-34px;left:${-480*i-60}px;width:2040px;height:1148px"><img src="assets/renders/${s.slug}/${i%2?'night':'day'}/hero.jpg" style="inset:0;width:2040px;height:1148px" alt="" /></div></div>`).join('')}
         <div class="scrim-bottom" style="height:420px"></div>
         <p class="mono" id="b-names" style="position:absolute;left:0;right:0;bottom:84px;display:flex;justify-content:space-around;font-size:22px;color:var(--sheet);font-weight:700">${specs.map(s=>`<span>${esc(s.name)}</span>`).join('')}</p>`,
     script:`
@@ -337,7 +337,7 @@ function bumper(){
         <div class="sheet" id="lock-sheet"></div><div class="grid" data-layout-allow-overflow id="lock-grid"></div>
         <div id="lock-logo" style="position:absolute;left:300px;top:330px;width:420px"><img src="assets/brand/logo-mark.png" style="width:420px;height:auto;display:block" alt="Golden Maple" /></div>
         <p class="mono" id="lock-kicker" style="position:absolute;left:840px;top:372px;font-size:26px;color:var(--gold-deep);font-weight:700">Golden Maple Landscaping</p>
-        <h2 class="serif" style="position:absolute;left:834px;top:418px;font-size:140px;line-height:1;font-weight:600;color:var(--ink)"><span class="line">${words('Designed in')}</span><span class="line">${words('DeckCraft.','w it')}</span></h2>
+        <h2 class="serif" id="lock-head" style="position:absolute;left:834px;top:418px;font-size:140px;line-height:1;font-weight:600;color:var(--ink)"><span class="line">${words('Designed in')}</span><span class="line">${words('DeckCraft.','w it')}</span></h2>
         <div class="rule" id="lock-rule" style="left:840px;top:720px;width:380px"></div>
         <p class="mono cta-url" id="lock-url" style="position:absolute;left:840px;top:752px;font-size:28px;font-weight:700">${URL_TEXT}</p>`,
     script:`
@@ -345,6 +345,8 @@ function bumper(){
         tl.fromTo("#lock-grid", { opacity: 0, x: 0 }, { opacity: 0.7, x: -36, duration: 3.1, ease: "none" }, 0.3);
         tl.fromTo("#lock-logo", { opacity: 0, scale: 0.86 }, { opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.4)" }, 0.5);
         fadeUp("#lock-kicker", 0.65, { y: 12 });
+        // Held back until the sheet has covered the photo strips, so the ink type never sits on a dark photo.
+        tl.fromTo("#lock-head", { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "none" }, 0.72);
         rise("h2 .w > span", 0.75, { stagger: 0.08 });
         drawRule("#lock-rule", 1.25);
         fadeUp("#lock-url", 1.4, { y: 12 });`}];
