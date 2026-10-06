@@ -39,7 +39,9 @@ async function frameView(page:Page,width:number,height:number){
     for(const [k,v] of Object.entries({position:'fixed',left:'0',top:'0',width:width+'px',height:height+'px','max-width':'none','max-height':'none','aspect-ratio':'auto','z-index':'2147483646'}))view.style.setProperty(k,v,'important');
     view.querySelectorAll<HTMLElement>(':scope>p').forEach(p=>p.style.setProperty('display','none','important'));
   },{width,height});
-  await page.waitForFunction(({width,height})=>{const c=document.querySelector<HTMLCanvasElement>('[aria-label="Interactive deck construction model"] canvas');return !!c&&c.width===width&&c.height===height;},{width,height},{timeout:30_000});
+  const canvasSize=()=>page.evaluate(()=>{const c=document.querySelector<HTMLCanvasElement>('[aria-label="Interactive deck construction model"] canvas');return c?`${c.width}x${c.height}`:'no canvas';});
+  await page.waitForFunction(({width,height})=>{const c=document.querySelector<HTMLCanvasElement>('[aria-label="Interactive deck construction model"] canvas');return !!c&&c.width===width&&c.height===height;},{width,height},{timeout:90_000})
+    .catch(async error=>{throw new Error(`3D view never reached ${width}x${height} (canvas ${await canvasSize()}): ${error.message}`);});
   await page.waitForTimeout(500);
 }
 

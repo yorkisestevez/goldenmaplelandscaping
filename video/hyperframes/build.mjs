@@ -174,7 +174,7 @@ function reel(s,i){
         rise("h1 .w > span", 1.5, { stagger: 0.09 });`},
     // 2–3 · Photo band (y 600–1920) under an ink type zone: the plate is scaled to show the whole deck and glides
     // sideways; the band stays put across both scenes while the type above it changes.
-    {id:'render',start:3.2,dur:5,body:`
+    {id:'render',start:3.2,dur:4.8,body:`
         <div class="plate" data-layout-allow-overflow id="hero-plate" style="top:${BAND}px"><div id="hero-pan" style="position:absolute;left:0;top:0;width:${BW}px;height:${BH}px"><img src="${R('day','hero-t')}" style="left:0;top:0;width:${BW}px;height:${BH}px" alt="" /></div>
           <div class="band-fade"></div></div>
         ${bandMarks}
@@ -185,37 +185,37 @@ function reel(s,i){
       script:`
         tl.fromTo("#hero-bg", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: E.soft }, 0);
         tl.fromTo("#hero-plate", { opacity: 0, scale: 1.05 }, { opacity: 1, scale: 1, duration: 0.9, ease: E.soft }, 0.1);
-        tl.fromTo("#hero-pan", { x: ${Math.round(-btravel*.1)} }, { x: ${Math.round(-btravel*.85)}, duration: 5, ease: E.glide }, 0);
+        tl.fromTo("#hero-pan", { x: ${Math.round(-btravel*.1)} }, { x: ${Math.round(-btravel*.85)}, duration: 4.8, ease: E.glide }, 0);
         marks(0.4);
         fadeUp("#hero-kicker", 0.35, { y: 14 });
         rise("#hero-name .w > span", 0.5, { stagger: 0.1, d: 0.8 });
         drawRule("#hero-rule", 1.05);
         fadeUp("#hero-tag", 1.2, { y: 22 });`,
       css:`#root{background:var(--black)}`, pre:`<div class="ink" id="hero-bg"></div>`},
-    {id:'facts',start:7.8,dur:4.6,body:`
+    {id:'facts',start:8,dur:4.4,body:`
         <div class="plate" data-layout-allow-overflow id="spec-plate" style="top:${BAND}px"><div id="spec-pan" style="position:absolute;left:0;top:0;width:${BW}px;height:${BH}px">
           <img src="${R('day','front-t')}" style="left:0;top:0;width:${BW}px;height:${BH}px" alt="" />
           <img id="spec-night" src="${R('night','front-t')}" style="left:0;top:0;width:${BW}px;height:${BH}px" alt="" />
         </div><div class="band-fade"></div></div>
         ${bandMarks}
-        <div class="mono" id="spec-kicker" style="position:absolute;left:88px;top:150px;font-size:26px;color:var(--gold);font-weight:700">${esc(s.name)} · By the numbers</div>
-        <div style="position:absolute;left:88px;top:196px;display:flex;align-items:flex-end;gap:22px">
+        <div class="mono" id="spec-kicker" style="position:absolute;left:88px;top:140px;font-size:26px;color:var(--gold);font-weight:700">${esc(s.name)} · By the numbers</div>
+        <div style="position:absolute;left:88px;top:222px;display:flex;align-items:flex-end;gap:22px">
           <span class="serif" id="spec-sqft" style="font-size:170px;line-height:.8;font-weight:600;color:var(--sheet);font-variant-numeric:lining-nums tabular-nums">0</span>
           <span class="mono" id="spec-unit" style="font-size:30px;color:var(--gold);font-weight:700;padding-bottom:8px">Sq ft</span>
         </div>
-        <div class="rule" id="spec-rule" style="left:88px;top:352px;width:904px;height:2px"></div>
-        <div id="spec-lines" style="position:absolute;left:88px;top:374px;width:904px">
+        <div class="rule" id="spec-rule" style="left:88px;top:372px;width:904px;height:2px"></div>
+        <div id="spec-lines" style="position:absolute;left:88px;top:392px;width:904px">
           <p class="spec-line mono" style="font-size:24px;color:var(--gold);font-weight:700">${plural(s.levels,'level')} · ${esc(s.railing)} railing</p>
           <p class="spec-line" style="margin-top:10px;font-size:36px;color:var(--sheet);font-weight:500">${esc(s.decking)}</p>
         </div>
-        <div id="spec-chips" style="position:absolute;left:88px;top:496px;width:940px;display:flex;flex-wrap:wrap;gap:12px">
+        <div id="spec-chips" style="position:absolute;left:88px;top:508px;width:940px;display:flex;flex-wrap:wrap;gap:12px">
           ${s.features.map(f=>`<span class="chip mono">${esc(f)}</span>`).join('')}
         </div>
         <div class="mono pill" data-layout-allow-overlap id="spec-day" style="position:absolute;left:88px;top:${BAND+60}px">Daylight</div>
         <div class="mono pill" data-layout-allow-overlap id="spec-dusk" style="position:absolute;left:88px;top:${BAND+60}px;color:var(--gold)">After dark · Lit in DeckCraft</div>`,
       script:`
-        tl.fromTo("#spec-pan", { x: ${Math.round(-btravel*.8)} }, { x: ${Math.round(-btravel*.25)}, duration: 4.6, ease: E.glide }, 0);
-        tl.fromTo("#spec-plate", { opacity: 0 }, { opacity: 1, duration: 0.6, ease: E.soft }, 0);
+        // A hard cut from the render: same photo band, new page of type above it.
+        tl.fromTo("#spec-pan", { x: ${Math.round(-btravel*.8)} }, { x: ${Math.round(-btravel*.25)}, duration: 4.4, ease: E.glide }, 0);
         fadeUp("#spec-kicker", 0.15, { y: 12 });
         countUp("#spec-sqft", ${s.sqft}, 0.25, 1.3);
         fadeUp("#spec-unit", 0.55, { y: 10 });
