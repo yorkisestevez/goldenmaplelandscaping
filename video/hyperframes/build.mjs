@@ -152,6 +152,8 @@ function reel(s,i){
   const W=1080,H=1920,PW=2560,PH=1920; // the 2560x1920 *-t plates are scaled into the photo band and glide sideways
   const R=(scene,shot)=>`assets/renders/${scene}/${shot}.jpg`;
   const BAND=600,BH=H-BAND,BW=Math.round(BH*PW/PH),btravel=BW-W;
+  // Names up to 12 characters fit one line at 168px; longer ones shrink to stay on one line above the tagline.
+  const nameSize=s.name.length>12?Math.floor(1760/s.name.length):168;
   // Replicas name the builder whose award design they redraw, on the photo band where it stays legible.
   const credit=(id,top)=>s.credit?`
         <div class="mono" data-layout-allow-overlap id="${id}" style="position:absolute;left:88px;top:${top}px;font-size:20px;font-weight:700;color:var(--cream);padding:9px 14px;background:rgba(35,34,31,.72)">${esc(s.credit)}</div>`:'';
@@ -186,7 +188,7 @@ function reel(s,i){
           <div class="band-fade"></div></div>
         ${bandMarks}
         <div class="mono" id="hero-kicker" style="position:absolute;left:88px;top:150px;font-size:26px;color:var(--gold);font-weight:700">${esc(s.kicker??'Then built')} · Design ${n2(i)}</div>
-        <h1 class="serif" id="hero-name" style="position:absolute;left:82px;top:200px;font-size:168px;line-height:1.02;font-weight:600;color:var(--sheet)">${words(s.name)}</h1>
+        <h1 class="serif" id="hero-name" style="position:absolute;left:82px;top:200px;font-size:${nameSize}px;line-height:1.02;font-weight:600;color:var(--sheet)">${words(s.name)}</h1>
         <div class="rule" id="hero-rule" style="left:88px;top:405px;width:340px"></div>
         <p id="hero-tag" style="position:absolute;left:88px;top:436px;width:900px;font-size:44px;line-height:1.25;color:var(--sheet)">${esc(s.tagline)}</p>${credit('hero-credit',BAND+60)}`,
       script:`
