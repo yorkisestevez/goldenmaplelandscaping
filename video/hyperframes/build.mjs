@@ -324,9 +324,11 @@ function showcase(){
 // ================================================================= bumper (1920x1080, 6s)
 function bumper(){
   const W=1920,H=1080;
+  // Each strip is centred on its own deck (the hero stills frame the deck about the middle), nudged so neighbours differ.
+  const STRIP_SHIFT=[-60,40,-20,60];
   const scenes=[{id:'strips',start:0,dur:3.4,body:`
         <div class="sheet"></div>
-        ${specs.map((s,i)=>`<div class="strip" data-layout-allow-overflow style="position:absolute;top:0;left:${i*480}px;width:480px;height:1080px;overflow:hidden;border-right:${i<3?'4px solid var(--sheet)':'0'}"><div class="strip-pan" style="position:absolute;top:-34px;left:${-480*i-60}px;width:2040px;height:1148px"><img src="assets/renders/${s.slug}/${i%2?'night':'day'}/hero.jpg" style="inset:0;width:2040px;height:1148px" alt="" /></div></div>`).join('')}
+        ${specs.map((s,i)=>`<div class="strip" data-layout-allow-overflow style="position:absolute;top:0;left:${i*480}px;width:480px;height:1080px;overflow:hidden;border-right:${i<3?'4px solid var(--sheet)':'0'}"><div class="strip-pan" style="position:absolute;top:-34px;left:-${1020-240-STRIP_SHIFT[i]}px;width:2040px;height:1148px"><img src="assets/renders/${s.slug}/${i%2?'night':'day'}/hero.jpg" style="inset:0;width:2040px;height:1148px" alt="" /></div></div>`).join('')}
         <div class="scrim-bottom" style="height:420px"></div>
         <p class="mono" id="b-names" style="position:absolute;left:0;right:0;bottom:84px;display:flex;justify-content:space-around;font-size:22px;color:var(--sheet);font-weight:700">${specs.map(s=>`<span>${esc(s.name)}</span>`).join('')}</p>`,
     script:`
