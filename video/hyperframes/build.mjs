@@ -3,12 +3,16 @@
 // project uses. Every number on screen comes from specs.json, which the DeckCraft engine computes
 // (video/designs/build-designs.ts); the renders come from video/render-assets.sh.
 //   node build.mjs   →   projects/reel-<slug> (1080x1920, 15s) · projects/showcase (1920x1080, 30s) · projects/bumper (6s)
+//   node build.mjs --specs ../designs/replica-reels.json --only reels   →   reels for another set of designs only
+// A spec may carry `kicker` (replaces "Then built") and `credit` (a line naming the original builder, for replicas).
 import {copyFileSync,cpSync,existsSync,mkdirSync,readFileSync,rmSync,writeFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {dirname,join} from 'node:path';
 
 const here=dirname(new URL(import.meta.url).pathname);
-const specs=JSON.parse(readFileSync(join(here,'../designs/specs.json'),'utf8'));
+const arg=(name,fallback)=>{const i=process.argv.indexOf(name);return i>0?process.argv[i+1]:fallback;};
+const specs=JSON.parse(readFileSync(join(here,arg('--specs','../designs/specs.json')),'utf8'));
+const only=arg('--only','all');
 const OUT=join(here,'../out');
 const HF='0.8.134';
 const URL_TEXT='goldenmaplelandscaping.ca/deck-designer';
@@ -148,6 +152,9 @@ function reel(s,i){
   const W=1080,H=1920,PW=2560,PH=1920; // the 2560x1920 *-t plates are scaled into the photo band and glide sideways
   const R=(scene,shot)=>`assets/renders/${scene}/${shot}.jpg`;
   const BAND=600,BH=H-BAND,BW=Math.round(BH*PW/PH),btravel=BW-W;
+  // Replicas name the builder whose award design they redraw, on the photo band where it stays legible.
+  const credit=(id,top)=>s.credit?`
+        <div class="mono" data-layout-allow-overlap id="${id}" style="position:absolute;left:88px;top:${top}px;font-size:20px;font-weight:700;color:var(--cream);padding:9px 14px;background:rgba(35,34,31,.72)">${esc(s.credit)}</div>`:'';
   const bandMarks=`<div class="mark tl" style="left:40px;top:${BAND+24}px"></div><div class="mark tr" style="right:40px;top:${BAND+24}px"></div><div class="mark bl" style="left:40px;bottom:40px"></div><div class="mark br" style="right:40px;bottom:40px"></div>`;
   const scenes=[
     {id:'plan',start:0,dur:3.6,body:`
@@ -178,10 +185,10 @@ function reel(s,i){
         <div class="plate" data-layout-allow-overflow id="hero-plate" style="top:${BAND}px"><div id="hero-pan" style="position:absolute;left:0;top:0;width:${BW}px;height:${BH}px"><img src="${R('day','hero-t')}" style="left:0;top:0;width:${BW}px;height:${BH}px" alt="" /></div>
           <div class="band-fade"></div></div>
         ${bandMarks}
-        <div class="mono" id="hero-kicker" style="position:absolute;left:88px;top:150px;font-size:26px;color:var(--gold);font-weight:700">Then built · Design ${n2(i)}</div>
+        <div class="mono" id="hero-kicker" style="position:absolute;left:88px;top:150px;font-size:26px;color:var(--gold);font-weight:700">${esc(s.kicker??'Then built')} · Design ${n2(i)}</div>
         <h1 class="serif" id="hero-name" style="position:absolute;left:82px;top:200px;font-size:168px;line-height:1.02;font-weight:600;color:var(--sheet)">${words(s.name)}</h1>
         <div class="rule" id="hero-rule" style="left:88px;top:405px;width:340px"></div>
-        <p id="hero-tag" style="position:absolute;left:88px;top:436px;width:900px;font-size:44px;line-height:1.25;color:var(--sheet)">${esc(s.tagline)}</p>`,
+        <p id="hero-tag" style="position:absolute;left:88px;top:436px;width:900px;font-size:44px;line-height:1.25;color:var(--sheet)">${esc(s.tagline)}</p>${credit('hero-credit',BAND+60)}`,
       script:`
         tl.fromTo("#hero-bg", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: E.soft }, 0);
         tl.fromTo("#hero-plate", { opacity: 0, scale: 1.05 }, { opacity: 1, scale: 1, duration: 0.9, ease: E.soft }, 0.1);
@@ -190,7 +197,8 @@ function reel(s,i){
         fadeUp("#hero-kicker", 0.35, { y: 14 });
         rise("#hero-name .w > span", 0.5, { stagger: 0.1, d: 0.8 });
         drawRule("#hero-rule", 1.05);
-        fadeUp("#hero-tag", 1.2, { y: 22 });`,
+        fadeUp("#hero-tag", 1.2, { y: 22 });${s.credit?`
+        fadeUp("#hero-credit", 1.5, { y: 10 });`:''}`,
       css:`#root{background:var(--black)}`, pre:`<div class="ink" id="hero-bg"></div>`},
     {id:'facts',start:8,dur:4.4,body:`
         <div class="plate" data-layout-allow-overflow id="spec-plate" style="top:${BAND}px"><div id="spec-pan" style="position:absolute;left:0;top:0;width:${BW}px;height:${BH}px">
@@ -212,7 +220,7 @@ function reel(s,i){
           ${s.features.map(f=>`<span class="chip mono">${esc(f)}</span>`).join('')}
         </div>
         <div class="mono pill" data-layout-allow-overlap id="spec-day" style="position:absolute;left:88px;top:${BAND+60}px">Daylight</div>
-        <div class="mono pill" data-layout-allow-overlap id="spec-dusk" style="position:absolute;left:88px;top:${BAND+60}px;color:var(--gold)">After dark · Lit in DeckCraft</div>`,
+        <div class="mono pill" data-layout-allow-overlap id="spec-dusk" style="position:absolute;left:88px;top:${BAND+60}px;color:var(--gold)">After dark · Lit in DeckCraft</div>${credit('spec-credit',BAND+128)}`,
       script:`
         // A hard cut from the render: same photo band, new page of type above it.
         tl.fromTo("#spec-pan", { x: ${Math.round(-btravel*.8)} }, { x: ${Math.round(-btravel*.25)}, duration: 4.4, ease: E.glide }, 0);
@@ -226,7 +234,8 @@ function reel(s,i){
         // Day turns to night on the same camera pose: the night plate rides the same pan.
         tl.fromTo("#spec-night", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: E.soft }, 2.6);
         tl.fromTo("#spec-day", { opacity: 1 }, { opacity: 0, duration: 0.35, ease: "power1.in", immediateRender: false }, 2.6);
-        tl.fromTo("#spec-dusk", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: E.out }, 3.0);`,
+        tl.fromTo("#spec-dusk", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: E.out }, 3.0);${s.credit?`
+        fadeUp("#spec-credit", 0.6, { y: 10 });`:''}`,
       css:`#root{background:var(--black)}`},
     {id:'ask',start:12,dur:3,body:`
         <div class="sheet" id="end-sheet"></div><div class="grid" data-layout-allow-overflow id="end-grid"></div>
@@ -356,6 +365,6 @@ function bumper(){
   writeProject('bumper',{w:W,h:H,dur:6,title:'DeckCraft bumper',scenes,renders});
 }
 
-specs.forEach(reel);showcase();bumper();
-console.log(`wrote projects/: ${specs.map(s=>'reel-'+s.slug).join(', ')}, showcase, bumper`);
+specs.forEach(reel);if(only!=='reels'){showcase();bumper();}
+console.log(`wrote projects/: ${specs.map(s=>'reel-'+s.slug).join(', ')}${only!=='reels'?', showcase, bumper':''}`);
 if(missing.size)console.warn(`${missing.size} render(s) not there yet (run video/render-assets.sh):\n  `+[...missing].join('\n  '));
