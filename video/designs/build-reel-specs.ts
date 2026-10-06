@@ -12,9 +12,9 @@ const REELS:Reel[]=[
   {slug:'kiki-half-moon',dir:'drdecks',name:'Kiki Half-Moon',tagline:'A twelve-foot radius. Not a straight board in sight.',
     features:['12 ft radius curve','Cable rail on the arc','Bent border'],credit:'Inspired by Dr. Decks’ Kiki · NADRA 2025 Deck of the Year'},
   {slug:'milton-circles',dir:'drdecks',name:'Milton Circles',tagline:'Three circles in one sweeping bay.',
-    features:['7 ft round medallion','Twin compass inlays','AZEK Harvest Brownstone'],credit:'Inspired by Dr. Decks, Milton WA · NADRA award winner'},
+    features:['7 ft round medallion','Twin compass inlays','Curved bay'],credit:'Inspired by Dr. Decks, Milton WA · NADRA award winner'},
   {slug:'lakefront-heights',dir:'award',name:'Lakefront Heights',tagline:'Ten feet up. Dry underneath.',
-    features:['DrySpace under both tiers','Walkout patio below','Dark Bronze rail'],credit:'Inspired by Casey Fence & Deck · NADRA 2022'},
+    features:['DrySpace under both tiers','Patio below','Dark Bronze rail'],credit:'Inspired by Casey Fence & Deck · NADRA 2022'},
   {slug:'virginia-cascade',dir:'award',name:'Virginia Cascade',tagline:'Three tiers down from a louvered roof.',
     features:['Three-tier cascade','Louvered roof','Dry walkout below'],credit:'Inspired by Deckscapes of Virginia · NADRA 2024'},
 ];
