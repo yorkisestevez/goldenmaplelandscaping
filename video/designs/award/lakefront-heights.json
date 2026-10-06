@@ -1,0 +1,258 @@
+{
+  "format": "golden-maple-deck-design",
+  "version": 1,
+  "units": "inches-and-feet",
+  "configuration": {
+    "deckType": "Attached",
+    "municipality": "Barrie",
+    "siteType": "Standard",
+    "soilCondition": "Clay",
+    "buildSeason": "Spring-Summer",
+    "intendedLoad": "Standard",
+    "foundation": "Helical Piles",
+    "shape": "Rectangle",
+    "levels": 2,
+    "pattern": "Picture Frame",
+    "framingSize": "2x10",
+    "boardWidth": 5.5,
+    "joistSpacing": 12,
+    "fasteningSystem": "Hidden",
+    "pictureFrameRows": 1,
+    "railingType": "TT Impression",
+    "stairFlights": 0,
+    "stairType": "Straight",
+    "stairPosition": "Front",
+    "sceneLighting": "Daylight",
+    "level2Position": "Front",
+    "stairTurn": "Right",
+    "borderFinish": "Matching",
+    "width": 30,
+    "length": 14,
+    "height": 120,
+    "width2": 20,
+    "length2": 10,
+    "height2": 84,
+    "cutoutWidth": 8,
+    "cutoutLength": 6,
+    "cutoutWidth2": 6,
+    "cutoutLength2": 5,
+    "foundationDepthIn": 48,
+    "stairWidth": 96,
+    "stairOffset": 50,
+    "inlayLf": 0,
+    "benchLf": 0,
+    "privacySqft": 0,
+    "pergolaSqft": 0,
+    "pictureFrameOverhangIn": 1,
+    "houseWallHeightIn": 120,
+    "houseDoorOffset": 50,
+    "houseDoorWidthIn": 72,
+    "level2Offset": 50,
+    "landingDepthIn": 48,
+    "hasInlay": false,
+    "hasDrainage": true,
+    "hasDemo": false,
+    "houseVisible": true,
+    "lightingPreviewOn": true,
+    "level2FullStep": false,
+    "customerName": "",
+    "projectAddress": "",
+    "scopeOfWork": "Professional installation of a custom outdoor deck system including framing, decking, and finishing as per selected specifications. All work to be completed to local building codes and industry best practices.",
+    "deckingMaterial": "tt_landmark",
+    "deckingColor": "Castle Gate",
+    "lightingSystem": {
+      "wireDistance": 80,
+      "selectedItems": [
+        {
+          "productId": "smart_hub150",
+          "qty": 1
+        },
+        {
+          "productId": "fusion",
+          "qty": 8,
+          "zone": "deck"
+        }
+      ]
+    },
+    "autoLighting": {
+      "posts": true,
+      "stairs": true,
+      "stairStyle": "evo_hyde"
+    },
+    "privacyScreens": [],
+    "catalogueRailingId": "tt_impression_express",
+    "catalogueAccessories": [],
+    "houseConfig": {
+      "widthFt": 48,
+      "depthFt": 32,
+      "storeys": 3,
+      "storeyHeightIn": 120,
+      "roofShape": "Gable",
+      "roofFinish": "Metal",
+      "roofColor": "#2a2c2e",
+      "cladding": "Board & batten",
+      "claddingColor": "#e9e6df",
+      "trimColor": "#f7f6f1",
+      "openings": [
+        {
+          "id": "patio-door",
+          "type": "Door",
+          "facade": "Front",
+          "offsetPct": 50,
+          "bottomIn": 120,
+          "widthIn": 144,
+          "heightIn": 96,
+          "style": "Sliding"
+        },
+        {
+          "id": "main-win-l",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 22,
+          "bottomIn": 144,
+          "widthIn": 72,
+          "heightIn": 66,
+          "style": "Picture"
+        },
+        {
+          "id": "main-win-r",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 78,
+          "bottomIn": 144,
+          "widthIn": 72,
+          "heightIn": 66,
+          "style": "Picture"
+        },
+        {
+          "id": "walkout-door",
+          "type": "Door",
+          "facade": "Front",
+          "offsetPct": 50,
+          "bottomIn": 0,
+          "widthIn": 144,
+          "heightIn": 96,
+          "style": "Sliding"
+        },
+        {
+          "id": "lower-win-l",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 22,
+          "bottomIn": 30,
+          "widthIn": 60,
+          "heightIn": 54,
+          "style": "Picture"
+        },
+        {
+          "id": "lower-win-r",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 78,
+          "bottomIn": 30,
+          "widthIn": 60,
+          "heightIn": 54,
+          "style": "Picture"
+        },
+        {
+          "id": "up-1",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 20,
+          "bottomIn": 270,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-2",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 40,
+          "bottomIn": 270,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-3",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 60,
+          "bottomIn": 270,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-4",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 80,
+          "bottomIn": 270,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        }
+      ],
+      "footprint": {
+        "rects": [
+          {
+            "id": "garage1",
+            "kind": "garage",
+            "wall": "Left",
+            "offsetFt": 6,
+            "widthFt": 24,
+            "depthFt": 24,
+            "storeys": 1,
+            "roofShape": "Gable"
+          }
+        ]
+      },
+      "floorHeightIn": 120,
+      "roofPitch": 9,
+      "ridge": "x",
+      "fasciaColor": "#1f2021",
+      "gutterColor": "#4a3b2c",
+      "doorColor": "#9b7147",
+      "windowColor": "#1f2021",
+      "garageDoorColor": "#9b7147"
+    },
+    "yardFeatures": [
+      {
+        "id": "under-deck-patio",
+        "kind": "patio",
+        "name": "Under-deck patio",
+        "enabled": true,
+        "color": "#b8b1a4",
+        "productId": "permacon-brooklyn",
+        "xFt": 15,
+        "zFt": 7,
+        "widthFt": 28,
+        "depthFt": 13,
+        "heightIn": 0,
+        "rotationDeg": 0
+      }
+    ],
+    "terrainConfig": {
+      "widthFt": 250,
+      "depthFt": 250,
+      "elevationIn": 0,
+      "slopePct": 0
+    },
+    "deckFinishes": {
+      "border": "tt_landmark:American Walnut",
+      "fascia": "tt_landmark:American Walnut",
+      "risers": "tt_landmark:American Walnut",
+      "railingColor": "Dark Bronze"
+    },
+    "underDeck": {
+      "drainage": "dryspace",
+      "ceiling": "none",
+      "scope": "all",
+      "gravel": false,
+      "gravelDepthIn": 3,
+      "floorMesh": false
+    }
+  }
+}
