@@ -1,0 +1,220 @@
+{
+  "format": "golden-maple-deck-design",
+  "version": 1,
+  "units": "inches-and-feet",
+  "configuration": {
+    "deckType": "Attached",
+    "municipality": "Barrie",
+    "siteType": "Standard",
+    "soilCondition": "Clay",
+    "buildSeason": "Spring-Summer",
+    "intendedLoad": "Standard",
+    "foundation": "Helical Piles",
+    "shape": "Rectangle",
+    "levels": 2,
+    "pattern": "Picture Frame",
+    "framingSize": "2x10",
+    "boardWidth": 5.5,
+    "joistSpacing": 12,
+    "fasteningSystem": "Hidden",
+    "pictureFrameRows": 1,
+    "railingType": "Frameless Glass",
+    "stairFlights": 1,
+    "stairType": "Straight",
+    "stairPosition": "Front",
+    "sceneLighting": "Evening",
+    "level2Position": "Front",
+    "stairTurn": "Right",
+    "borderFinish": "Matching",
+    "glassMount": "Fascia-mount base shoe",
+    "glassFinish": "Black",
+    "width": 24,
+    "length": 14,
+    "height": 30,
+    "width2": 18,
+    "length2": 10,
+    "height2": 18,
+    "cutoutWidth": 8,
+    "cutoutLength": 6,
+    "cutoutWidth2": 6,
+    "cutoutLength2": 5,
+    "foundationDepthIn": 48,
+    "stairWidth": 96,
+    "stairOffset": 50,
+    "inlayLf": 0,
+    "benchLf": 0,
+    "privacySqft": 0,
+    "pergolaSqft": 0,
+    "pictureFrameOverhangIn": 1,
+    "houseWallHeightIn": 120,
+    "houseDoorOffset": 50,
+    "houseDoorWidthIn": 72,
+    "level2Offset": 50,
+    "landingDepthIn": 48,
+    "hasInlay": false,
+    "hasDrainage": false,
+    "hasDemo": false,
+    "houseVisible": true,
+    "lightingPreviewOn": true,
+    "level2FullStep": true,
+    "customerName": "",
+    "projectAddress": "",
+    "scopeOfWork": "Professional installation of a custom outdoor deck system including framing, decking, and finishing as per selected specifications. All work to be completed to local building codes and industry best practices.",
+    "deckingMaterial": "tt_vintage",
+    "deckingColor": "English Walnut",
+    "lightingSystem": {
+      "wireDistance": 80,
+      "selectedItems": [
+        {
+          "productId": "smart_hub150",
+          "qty": 1
+        },
+        {
+          "productId": "fusion",
+          "qty": 8,
+          "zone": "deck"
+        }
+      ]
+    },
+    "autoLighting": {
+      "posts": true,
+      "stairs": true,
+      "stairStyle": "evo_hyde"
+    },
+    "privacyScreens": [],
+    "catalogueAccessories": [],
+    "houseConfig": {
+      "widthFt": 46,
+      "depthFt": 32,
+      "storeys": 2,
+      "storeyHeightIn": 132,
+      "roofShape": "Gable",
+      "roofFinish": "Metal",
+      "roofColor": "#2a2c2e",
+      "cladding": "Board & batten",
+      "claddingColor": "#f1ede3",
+      "trimColor": "#f7f6f1",
+      "openings": [
+        {
+          "id": "patio-door",
+          "type": "Door",
+          "facade": "Front",
+          "offsetPct": 50,
+          "bottomIn": 30,
+          "widthIn": 144,
+          "heightIn": 96,
+          "style": "Sliding"
+        },
+        {
+          "id": "win-left",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 27,
+          "bottomIn": 54,
+          "widthIn": 72,
+          "heightIn": 66,
+          "style": "Picture"
+        },
+        {
+          "id": "win-right",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 73,
+          "bottomIn": 54,
+          "widthIn": 72,
+          "heightIn": 66,
+          "style": "Picture"
+        },
+        {
+          "id": "up-1",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 20,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-2",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 40,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-3",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 60,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-4",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 80,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "garage-door",
+          "type": "Garage",
+          "facade": "Back",
+          "offsetPct": 50,
+          "bottomIn": 0,
+          "widthIn": 108,
+          "heightIn": 90,
+          "wallId": "garage1-back",
+          "style": "Carriage"
+        }
+      ],
+      "footprint": {
+        "rects": [
+          {
+            "id": "garage1",
+            "kind": "garage",
+            "wall": "Left",
+            "offsetFt": 6,
+            "widthFt": 24,
+            "depthFt": 24,
+            "storeys": 1,
+            "roofShape": "Gable"
+          }
+        ]
+      },
+      "roofPitch": 9,
+      "ridge": "x",
+      "fasciaColor": "#1f2021",
+      "gutterColor": "#1f2021",
+      "doorColor": "#9b7147",
+      "windowColor": "#1f2021",
+      "garageDoorColor": "#9b7147"
+    },
+    "yardFeatures": [],
+    "terrainConfig": {
+      "widthFt": 250,
+      "depthFt": 250,
+      "elevationIn": 0,
+      "slopePct": 0
+    },
+    "skirting": {
+      "style": "Horizontal boards",
+      "colour": "tt_vintage:Dark Hickory",
+      "clearanceIn": 2
+    },
+    "deckFinishes": {
+      "border": "tt_vintage:Dark Hickory",
+      "fascia": "tt_vintage:Dark Hickory",
+      "risers": "tt_vintage:Dark Hickory"
+    }
+  }
+}

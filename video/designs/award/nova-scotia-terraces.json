@@ -1,0 +1,244 @@
+{
+  "format": "golden-maple-deck-design",
+  "version": 1,
+  "units": "inches-and-feet",
+  "configuration": {
+    "deckType": "Attached",
+    "municipality": "Barrie",
+    "siteType": "Standard",
+    "soilCondition": "Clay",
+    "buildSeason": "Spring-Summer",
+    "intendedLoad": "Standard",
+    "foundation": "Helical Piles",
+    "shape": "Rectangle",
+    "levels": 3,
+    "pattern": "Picture Frame",
+    "framingSize": "2x10",
+    "boardWidth": 5.5,
+    "joistSpacing": 12,
+    "fasteningSystem": "Hidden",
+    "pictureFrameRows": 1,
+    "railingType": "TT Classic",
+    "stairFlights": 1,
+    "stairType": "Straight",
+    "stairPosition": "Front",
+    "sceneLighting": "Evening",
+    "level2Position": "Front",
+    "stairTurn": "Right",
+    "borderFinish": "Matching",
+    "width": 30,
+    "length": 18,
+    "height": 42,
+    "width2": 24,
+    "length2": 14,
+    "height2": 22,
+    "cutoutWidth": 8,
+    "cutoutLength": 6,
+    "cutoutWidth2": 6,
+    "cutoutLength2": 5,
+    "foundationDepthIn": 48,
+    "stairWidth": 72,
+    "stairOffset": 50,
+    "inlayLf": 0,
+    "benchLf": 16,
+    "privacySqft": 0,
+    "pergolaSqft": 0,
+    "pictureFrameOverhangIn": 1,
+    "houseWallHeightIn": 120,
+    "houseDoorOffset": 50,
+    "houseDoorWidthIn": 72,
+    "level2Offset": 40,
+    "landingDepthIn": 48,
+    "hasInlay": false,
+    "hasDrainage": false,
+    "hasDemo": false,
+    "houseVisible": true,
+    "lightingPreviewOn": true,
+    "level2FullStep": true,
+    "customerName": "",
+    "projectAddress": "",
+    "scopeOfWork": "Professional installation of a custom outdoor deck system including framing, decking, and finishing as per selected specifications. All work to be completed to local building codes and industry best practices.",
+    "deckingMaterial": "tt_legacy",
+    "deckingColor": "Pecan",
+    "lightingSystem": {
+      "wireDistance": 90,
+      "selectedItems": [
+        {
+          "productId": "smart_hub150",
+          "qty": 1
+        },
+        {
+          "productId": "fusion",
+          "qty": 10,
+          "zone": "deck"
+        }
+      ]
+    },
+    "autoLighting": {
+      "posts": true,
+      "stairs": true,
+      "stairStyle": "evo_hyde"
+    },
+    "privacyScreens": [],
+    "catalogueRailingId": "tt_classic_composite",
+    "catalogueAccessories": [],
+    "houseConfig": {
+      "widthFt": 46,
+      "depthFt": 32,
+      "storeys": 2,
+      "storeyHeightIn": 132,
+      "roofShape": "Gable",
+      "roofFinish": "Metal",
+      "roofColor": "#2a2c2e",
+      "cladding": "Board & batten",
+      "claddingColor": "#f1ede3",
+      "trimColor": "#f7f6f1",
+      "openings": [
+        {
+          "id": "patio-door",
+          "type": "Door",
+          "facade": "Front",
+          "offsetPct": 50,
+          "bottomIn": 30,
+          "widthIn": 144,
+          "heightIn": 96,
+          "style": "Sliding"
+        },
+        {
+          "id": "win-left",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 27,
+          "bottomIn": 54,
+          "widthIn": 72,
+          "heightIn": 66,
+          "style": "Picture"
+        },
+        {
+          "id": "win-right",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 73,
+          "bottomIn": 54,
+          "widthIn": 72,
+          "heightIn": 66,
+          "style": "Picture"
+        },
+        {
+          "id": "up-1",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 20,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-2",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 40,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-3",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 60,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-4",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 80,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "garage-door",
+          "type": "Garage",
+          "facade": "Back",
+          "offsetPct": 50,
+          "bottomIn": 0,
+          "widthIn": 108,
+          "heightIn": 90,
+          "wallId": "garage1-back",
+          "style": "Carriage"
+        }
+      ],
+      "footprint": {
+        "rects": [
+          {
+            "id": "garage1",
+            "kind": "garage",
+            "wall": "Left",
+            "offsetFt": 6,
+            "widthFt": 24,
+            "depthFt": 24,
+            "storeys": 1,
+            "roofShape": "Gable"
+          }
+        ]
+      },
+      "roofPitch": 9,
+      "ridge": "x",
+      "fasciaColor": "#1f2021",
+      "gutterColor": "#1f2021",
+      "doorColor": "#9b7147",
+      "windowColor": "#1f2021",
+      "garageDoorColor": "#9b7147"
+    },
+    "level3": {
+      "widthFt": 14,
+      "lengthFt": 12,
+      "heightIn": 42,
+      "parent": 1,
+      "position": "Right",
+      "offsetPct": 60
+    },
+    "yardFeatures": [
+      {
+        "id": "stone-wall",
+        "kind": "retaining-wall",
+        "name": "Stone wall",
+        "enabled": true,
+        "color": "#8f877b",
+        "productId": "segmental-concrete",
+        "xFt": -6,
+        "zFt": 20,
+        "widthFt": 24,
+        "depthFt": 1.5,
+        "heightIn": 30,
+        "rotationDeg": 90
+      }
+    ],
+    "terrainConfig": {
+      "widthFt": 250,
+      "depthFt": 250,
+      "elevationIn": 0,
+      "slopePct": 0
+    },
+    "skirting": {
+      "style": "Horizontal boards",
+      "colour": "tt_legacy:Mocha",
+      "clearanceIn": 2,
+      "accessPanels": 1
+    },
+    "deckFinishes": {
+      "border": "tt_legacy:Mocha",
+      "fascia": "tt_legacy:Mocha",
+      "risers": "tt_legacy:Mocha",
+      "railingColor": "Matte Espresso"
+    }
+  }
+}

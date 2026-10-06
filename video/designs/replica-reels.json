@@ -1,0 +1,70 @@
+[
+  {
+    "slug": "kiki-half-moon",
+    "name": "Kiki Half-Moon",
+    "tagline": "A twelve-foot radius. Not a straight board in sight.",
+    "features": [
+      "12 ft radius curve",
+      "Cable rail on the arc",
+      "Bent border"
+    ],
+    "sqft": 422,
+    "levels": 1,
+    "decking": "TimberTech AZEK Vintage · Mahogany",
+    "railing": "Cable",
+    "scene": "Daylight",
+    "kicker": "Drawn in DeckCraft",
+    "credit": "Inspired by Dr. Decks’ Kiki · NADRA 2025 Deck of the Year"
+  },
+  {
+    "slug": "milton-circles",
+    "name": "Milton Circles",
+    "tagline": "Three circles in one sweeping bay.",
+    "features": [
+      "7 ft round medallion",
+      "Twin compass inlays",
+      "Curved bay"
+    ],
+    "sqft": 319,
+    "levels": 1,
+    "decking": "TimberTech AZEK Harvest · Brownstone",
+    "railing": "TT Impression",
+    "scene": "Daylight",
+    "kicker": "Drawn in DeckCraft",
+    "credit": "Inspired by Dr. Decks, Milton WA · NADRA award winner"
+  },
+  {
+    "slug": "lakefront-heights",
+    "name": "Lakefront Heights",
+    "tagline": "Ten feet up. Dry underneath.",
+    "features": [
+      "DrySpace under both tiers",
+      "Patio below",
+      "Dark Bronze rail"
+    ],
+    "sqft": 620,
+    "levels": 2,
+    "decking": "TimberTech AZEK Landmark · Castle Gate",
+    "railing": "TT Impression",
+    "scene": "Daylight",
+    "kicker": "Drawn in DeckCraft",
+    "credit": "Inspired by Casey Fence & Deck · NADRA 2022"
+  },
+  {
+    "slug": "virginia-cascade",
+    "name": "Virginia Cascade",
+    "tagline": "Three tiers down from a louvered roof.",
+    "features": [
+      "Three-tier cascade",
+      "Louvered roof",
+      "Dry walkout below"
+    ],
+    "sqft": 1032,
+    "levels": 3,
+    "decking": "TimberTech AZEK Vintage · Mahogany",
+    "railing": "Glass Panels",
+    "scene": "Evening",
+    "kicker": "Drawn in DeckCraft",
+    "credit": "Inspired by Deckscapes of Virginia · NADRA 2024"
+  }
+]
