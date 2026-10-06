@@ -1,0 +1,62 @@
+[
+  {
+    "slug": "shanty-bay",
+    "name": "Shanty Bay",
+    "tagline": "Two levels. Zero sightline lost.",
+    "features": [
+      "Frameless glass",
+      "Picture-frame border",
+      "Integrated lighting"
+    ],
+    "sqft": 516,
+    "levels": 2,
+    "decking": "TimberTech AZEK Vintage · English Walnut",
+    "railing": "Frameless Glass",
+    "scene": "Evening"
+  },
+  {
+    "slug": "oro-station",
+    "name": "Oro Station",
+    "tagline": "Three levels down to the waterfall.",
+    "features": [
+      "Three-level cascade",
+      "Paver terrace + seat wall",
+      "Pondless waterfall"
+    ],
+    "sqft": 804,
+    "levels": 3,
+    "decking": "TimberTech AZEK Landmark · American Walnut",
+    "railing": "Glass Panels",
+    "scene": "Evening"
+  },
+  {
+    "slug": "minets-point",
+    "name": "Minets Point",
+    "tagline": "Clipped corners. Private by design.",
+    "features": [
+      "45° corner cuts",
+      "Lit privacy screen",
+      "Hidden fasteners"
+    ],
+    "sqft": 404,
+    "levels": 1,
+    "decking": "TimberTech PRO Legacy · Ashwood",
+    "railing": "Aluminum",
+    "scene": "Daylight"
+  },
+  {
+    "slug": "snow-valley",
+    "name": "Snow Valley",
+    "tagline": "Shade, glass, and room for everyone.",
+    "features": [
+      "Aluminum pergola",
+      "Glass panel railing",
+      "Wide feature stair"
+    ],
+    "sqft": 448,
+    "levels": 1,
+    "decking": "Deckorators Voyage (Surestone) · Sedona",
+    "railing": "Glass Panels",
+    "scene": "Daylight"
+  }
+]

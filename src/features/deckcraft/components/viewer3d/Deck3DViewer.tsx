@@ -250,6 +250,7 @@ function Scene({data,model,structure,cutaway,inspection,yard,onMovePrivacyScreen
 export type DeckSnapshotCapture=((longEdgePx?:number)=>string|null)&{ready?:()=>Promise<boolean>};
 function SnapshotBridge({onReady}:{onReady?:(capture:DeckSnapshotCapture|null)=>void}){
   const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera),invalidate=useThree(s=>s.invalidate);
+  const controls=useThree(s=>s.controls),controlsRef=useRef(controls);controlsRef.current=controls;
   useEffect(()=>{
     if(!onReady)return;
     let active=true;
@@ -265,7 +266,17 @@ function SnapshotBridge({onReady}:{onReady?:(capture:DeckSnapshotCapture|null)=>
       return active&&applied&&!gl.getContext().isContextLost();
     };
     onReady(capture);
-    return ()=>{active=false;onReady(null);};
+    // Marketing render harness (scripts/render-deck-orbit.ts): only with ?deck-capture=1 in the URL does the page
+    // expose the capture and a camera pose, so a script can step a camera move and grab each frame.
+    const harness=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('deck-capture')==='1';
+    if(harness)(window as unknown as {__deckCapture?:unknown}).__deckCapture={
+      ready:()=>capture.ready!(),
+      home:()=>({position:camera.position.toArray(),target:((controlsRef.current as {target?:THREE.Vector3}|null)?.target??new THREE.Vector3()).toArray()}),
+      // No controls.update(): its change event would draw the frame a second time before the shot draws it.
+      pose:(position:[number,number,number],target:[number,number,number])=>{camera.position.set(...position);(controlsRef.current as {target?:THREE.Vector3}|null)?.target?.set(...target);camera.lookAt(...target);camera.updateMatrixWorld();},
+      shot:(longEdgePx?:number)=>capture(longEdgePx),
+    };
+    return ()=>{active=false;onReady(null);if(harness)delete (window as unknown as {__deckCapture?:unknown}).__deckCapture;};
   },[gl,scene,camera,invalidate,onReady]);
   return null;
 }

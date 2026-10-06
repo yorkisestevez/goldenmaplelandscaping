@@ -1,0 +1,345 @@
+{
+  "format": "golden-maple-deck-design",
+  "version": 1,
+  "units": "inches-and-feet",
+  "configuration": {
+    "deckType": "Attached",
+    "municipality": "Barrie",
+    "siteType": "Standard",
+    "soilCondition": "Clay",
+    "buildSeason": "Spring-Summer",
+    "intendedLoad": "Standard",
+    "foundation": "Helical Piles",
+    "shape": "Rectangle",
+    "levels": 3,
+    "pattern": "Picture Frame",
+    "framingSize": "2x10",
+    "boardWidth": 5.5,
+    "joistSpacing": 12,
+    "fasteningSystem": "Hidden",
+    "pictureFrameRows": 2,
+    "railingType": "Glass Panels",
+    "stairFlights": 1,
+    "stairType": "Straight",
+    "stairPosition": "Front",
+    "sceneLighting": "Evening",
+    "level2Position": "Front",
+    "stairTurn": "Right",
+    "borderFinish": "Matching",
+    "width": 30,
+    "length": 14,
+    "height": 30,
+    "width2": 20,
+    "length2": 12,
+    "height2": 18,
+    "cutoutWidth": 8,
+    "cutoutLength": 6,
+    "cutoutWidth2": 6,
+    "cutoutLength2": 5,
+    "foundationDepthIn": 48,
+    "stairWidth": 96,
+    "stairOffset": 50,
+    "inlayLf": 0,
+    "benchLf": 8,
+    "privacySqft": 0,
+    "pergolaSqft": 160,
+    "pictureFrameOverhangIn": 1,
+    "houseWallHeightIn": 120,
+    "houseDoorOffset": 50,
+    "houseDoorWidthIn": 72,
+    "level2Offset": 50,
+    "landingDepthIn": 48,
+    "hasInlay": false,
+    "hasDrainage": false,
+    "hasDemo": false,
+    "houseVisible": true,
+    "lightingPreviewOn": true,
+    "level2FullStep": true,
+    "customerName": "",
+    "projectAddress": "",
+    "scopeOfWork": "Professional installation of a custom outdoor deck system including framing, decking, and finishing as per selected specifications. All work to be completed to local building codes and industry best practices.",
+    "deckingMaterial": "tt_landmark",
+    "deckingColor": "American Walnut",
+    "lightingSystem": {
+      "wireDistance": 120,
+      "selectedItems": [
+        {
+          "productId": "smart_hub150",
+          "qty": 1
+        },
+        {
+          "productId": "fusion",
+          "qty": 12,
+          "zone": "deck"
+        },
+        {
+          "productId": "sway_pendant",
+          "qty": 3,
+          "zone": "house"
+        },
+        {
+          "productId": "liv",
+          "qty": 6,
+          "zone": "landscape"
+        },
+        {
+          "productId": "scope",
+          "qty": 3,
+          "zone": "landscape"
+        }
+      ]
+    },
+    "autoLighting": {
+      "posts": true,
+      "stairs": true,
+      "stairStyle": "evo_hyde"
+    },
+    "privacyScreens": [
+      {
+        "id": "screen-left",
+        "side": "Left",
+        "lengthFt": 6.75,
+        "heightFt": 6,
+        "offsetPct": 0,
+        "lights": true,
+        "product": "hideaway",
+        "design": "Horizon",
+        "panels": 2,
+        "finish": "Black"
+      }
+    ],
+    "catalogueRailingId": "tt_impression_glass",
+    "catalogueAccessories": [
+      "tt_fascia",
+      "tt_concealoc"
+    ],
+    "houseConfig": {
+      "widthFt": 46,
+      "depthFt": 32,
+      "storeys": 2,
+      "storeyHeightIn": 132,
+      "roofShape": "Gable",
+      "roofFinish": "Metal",
+      "roofColor": "#2a2c2e",
+      "cladding": "Board & batten",
+      "claddingColor": "#f1ede3",
+      "trimColor": "#f7f6f1",
+      "openings": [
+        {
+          "id": "patio-door",
+          "type": "Door",
+          "facade": "Front",
+          "offsetPct": 50,
+          "bottomIn": 30,
+          "widthIn": 144,
+          "heightIn": 96,
+          "style": "Sliding"
+        },
+        {
+          "id": "win-left",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 27,
+          "bottomIn": 54,
+          "widthIn": 72,
+          "heightIn": 66,
+          "style": "Picture"
+        },
+        {
+          "id": "win-right",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 73,
+          "bottomIn": 54,
+          "widthIn": 72,
+          "heightIn": 66,
+          "style": "Picture"
+        },
+        {
+          "id": "up-1",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 20,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-2",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 40,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-3",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 60,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "up-4",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 80,
+          "bottomIn": 162,
+          "widthIn": 48,
+          "heightIn": 60,
+          "style": "Casement"
+        },
+        {
+          "id": "garage-door",
+          "type": "Garage",
+          "facade": "Back",
+          "offsetPct": 50,
+          "bottomIn": 0,
+          "widthIn": 108,
+          "heightIn": 90,
+          "wallId": "garage1-back",
+          "style": "Carriage"
+        }
+      ],
+      "footprint": {
+        "rects": [
+          {
+            "id": "garage1",
+            "kind": "garage",
+            "wall": "Left",
+            "offsetFt": 6,
+            "widthFt": 24,
+            "depthFt": 24,
+            "storeys": 1,
+            "roofShape": "Gable"
+          }
+        ]
+      },
+      "roofPitch": 9,
+      "ridge": "x",
+      "fasciaColor": "#1f2021",
+      "gutterColor": "#1f2021",
+      "doorColor": "#9b7147",
+      "windowColor": "#1f2021",
+      "garageDoorColor": "#9b7147"
+    },
+    "cornerChamfers": {
+      "frontLeftFt": 4,
+      "frontRightFt": 4
+    },
+    "level3": {
+      "widthFt": 16,
+      "lengthFt": 10,
+      "heightIn": 8,
+      "parent": 2,
+      "position": "Front",
+      "offsetPct": 50,
+      "fullStep": true
+    },
+    "yardFeatures": [
+      {
+        "id": "terrace",
+        "kind": "patio",
+        "name": "Lower terrace",
+        "enabled": true,
+        "color": "#b8b1a4",
+        "productId": "permacon-brooklyn",
+        "xFt": 15,
+        "zFt": 49,
+        "widthFt": 22,
+        "depthFt": 16,
+        "heightIn": 0,
+        "rotationDeg": 0
+      },
+      {
+        "id": "seat-wall",
+        "kind": "retaining-wall",
+        "name": "Seat wall",
+        "enabled": true,
+        "color": "#8f877b",
+        "productId": "segmental-concrete",
+        "xFt": 15,
+        "zFt": 58.5,
+        "widthFt": 22,
+        "depthFt": 1.5,
+        "heightIn": 20,
+        "rotationDeg": 0
+      },
+      {
+        "id": "waterfall",
+        "kind": "water-feature",
+        "name": "Pondless waterfall",
+        "enabled": true,
+        "color": "#657478",
+        "productId": "pondless-waterfall",
+        "xFt": 42,
+        "zFt": 34,
+        "widthFt": 8,
+        "depthFt": 6,
+        "heightIn": 36,
+        "rotationDeg": 0
+      }
+    ],
+    "terrainConfig": {
+      "widthFt": 250,
+      "depthFt": 250,
+      "elevationIn": 0,
+      "slopePct": 0
+    },
+    "yardAllowances": {
+      "finish": "premium",
+      "firePit": "gas",
+      "kitchen": "full",
+      "turfSqft": 0,
+      "lighting": true
+    },
+    "inlays": [
+      {
+        "id": "dining-rug",
+        "kind": "rug",
+        "dxFt": -1,
+        "dyFt": 1,
+        "widthFt": 10,
+        "depthFt": 5,
+        "pattern": "Herringbone",
+        "frame": "tt_vintage:Dark Hickory",
+        "fill": "tt_vintage:English Walnut"
+      },
+      {
+        "id": "lounge-compass",
+        "kind": "medallion",
+        "level": 2,
+        "diameterFt": 6,
+        "style": "compass",
+        "frame": "tt_vintage:Dark Hickory",
+        "fill": "tt_vintage:Mahogany"
+      },
+      {
+        "id": "terrace-band",
+        "kind": "band",
+        "level": 3,
+        "direction": "across",
+        "boards": 2,
+        "fill": "tt_vintage:Dark Hickory"
+      }
+    ],
+    "skirting": {
+      "style": "Horizontal boards",
+      "colour": "tt_vintage:Dark Hickory",
+      "clearanceIn": 2,
+      "accessPanels": 1
+    },
+    "deckFinishes": {
+      "border": "tt_vintage:Dark Hickory",
+      "fascia": "tt_vintage:Dark Hickory",
+      "risers": "tt_vintage:Dark Hickory",
+      "railingColor": "Black"
+    }
+  }
+}

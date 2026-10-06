@@ -1,0 +1,190 @@
+{
+  "format": "golden-maple-deck-design",
+  "version": 1,
+  "units": "inches-and-feet",
+  "configuration": {
+    "deckType": "Attached",
+    "municipality": "Barrie",
+    "siteType": "Standard",
+    "soilCondition": "Clay",
+    "buildSeason": "Spring-Summer",
+    "intendedLoad": "Standard",
+    "foundation": "Helical Piles",
+    "shape": "Rectangle",
+    "levels": 1,
+    "pattern": "Picture Frame",
+    "framingSize": "2x10",
+    "boardWidth": 5.5,
+    "joistSpacing": 12,
+    "fasteningSystem": "Hidden",
+    "pictureFrameRows": 1,
+    "railingType": "Aluminum",
+    "stairFlights": 1,
+    "stairType": "Straight",
+    "stairPosition": "Front",
+    "sceneLighting": "Daylight",
+    "level2Position": "Front",
+    "stairTurn": "Right",
+    "borderFinish": "Matching",
+    "width": 30,
+    "length": 14,
+    "height": 30,
+    "width2": 20,
+    "length2": 10,
+    "height2": 14,
+    "cutoutWidth": 8,
+    "cutoutLength": 6,
+    "cutoutWidth2": 6,
+    "cutoutLength2": 5,
+    "foundationDepthIn": 48,
+    "stairWidth": 96,
+    "stairOffset": 50,
+    "inlayLf": 0,
+    "benchLf": 0,
+    "privacySqft": 60,
+    "pergolaSqft": 0,
+    "pictureFrameOverhangIn": 1,
+    "houseWallHeightIn": 120,
+    "houseDoorOffset": 50,
+    "houseDoorWidthIn": 72,
+    "level2Offset": 50,
+    "landingDepthIn": 48,
+    "hasInlay": false,
+    "hasDrainage": false,
+    "hasDemo": false,
+    "houseVisible": true,
+    "lightingPreviewOn": true,
+    "level2FullStep": true,
+    "customerName": "",
+    "projectAddress": "",
+    "scopeOfWork": "Professional installation of a custom outdoor deck system including framing, decking, and finishing as per selected specifications. All work to be completed to local building codes and industry best practices.",
+    "deckingMaterial": "tt_legacy",
+    "deckingColor": "Ashwood",
+    "lightingSystem": {
+      "wireDistance": 90,
+      "selectedItems": [
+        {
+          "productId": "smart_hub150",
+          "qty": 1
+        },
+        {
+          "productId": "fusion",
+          "qty": 10,
+          "zone": "deck"
+        }
+      ]
+    },
+    "autoLighting": {
+      "posts": true,
+      "stairs": true,
+      "stairStyle": "evo_hyde"
+    },
+    "privacyScreens": [
+      {
+        "id": "screen-right",
+        "side": "Right",
+        "lengthFt": 10,
+        "heightFt": 6,
+        "offsetPct": 50,
+        "lights": true
+      }
+    ],
+    "catalogueAccessories": [],
+    "houseConfig": {
+      "widthFt": 44,
+      "depthFt": 30,
+      "storeys": 2,
+      "storeyHeightIn": 126,
+      "roofShape": "Flat",
+      "roofFinish": "Metal",
+      "roofColor": "#2a2c2e",
+      "cladding": "Horizontal metal",
+      "claddingColor": "#3d4043",
+      "trimColor": "#3b3d3e",
+      "openings": [
+        {
+          "id": "slider",
+          "type": "Door",
+          "facade": "Front",
+          "offsetPct": 50,
+          "bottomIn": 31,
+          "widthIn": 144,
+          "heightIn": 96,
+          "style": "Sliding"
+        },
+        {
+          "id": "pic-l",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 17,
+          "bottomIn": 43,
+          "widthIn": 84,
+          "heightIn": 72,
+          "style": "Picture"
+        },
+        {
+          "id": "pic-r",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 83,
+          "bottomIn": 43,
+          "widthIn": 84,
+          "heightIn": 72,
+          "style": "Picture"
+        },
+        {
+          "id": "up-l",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 25,
+          "bottomIn": 168,
+          "widthIn": 96,
+          "heightIn": 60,
+          "style": "Picture"
+        },
+        {
+          "id": "up-r",
+          "type": "Window",
+          "facade": "Front",
+          "offsetPct": 75,
+          "bottomIn": 168,
+          "widthIn": 96,
+          "heightIn": 60,
+          "style": "Picture"
+        }
+      ],
+      "floorHeightIn": 31,
+      "fasciaColor": "#1f2021",
+      "gutterColor": "#1f2021",
+      "doorColor": "#9b7147",
+      "windowColor": "#1f2021",
+      "garageDoorColor": "#3b3d3e",
+      "wainscot": {
+        "cladding": "Ledgestone",
+        "color": "#cdb38a",
+        "heightIn": 30
+      }
+    },
+    "cornerChamfers": {
+      "frontLeftFt": 4,
+      "frontRightFt": 4
+    },
+    "yardFeatures": [],
+    "terrainConfig": {
+      "widthFt": 250,
+      "depthFt": 250,
+      "elevationIn": 0,
+      "slopePct": 0
+    },
+    "skirting": {
+      "style": "Horizontal boards",
+      "colour": "tt_legacy:Espresso",
+      "clearanceIn": 2
+    },
+    "deckFinishes": {
+      "border": "tt_legacy:Espresso",
+      "fascia": "tt_legacy:Espresso",
+      "risers": "tt_legacy:Espresso"
+    }
+  }
+}
