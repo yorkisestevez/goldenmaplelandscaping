@@ -1,5 +1,5 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
-import {savedConfiguration} from './nav';
+import {savedConfiguration,showProjectControls} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import sharp from 'sharp';
@@ -63,7 +63,7 @@ for(const configuration of [{name:'desktop',width:1440,height:1000,touch:false},
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)).toBe(0);expect(await modal(page).evaluate(el=>el.scrollWidth-el.clientWidth)).toBe(0);await page.screenshot({path:resolve(proof,`${configuration.name}-plan-preview.png`)});
   await modal(page).getByRole('tab',{name:'3D',exact:true}).click();const previewCanvas=modal(page).getByRole('tabpanel',{name:'3D sketch preview'}).locator('canvas');await expect(previewCanvas).toBeVisible({timeout:30000});await expect.poll(async()=>{const stats=await sharp(await previewCanvas.screenshot()).stats();return Math.max(...stats.channels.slice(0,3).map(channel=>channel.stdev));},{timeout:30000,message:'3D sketch preview must render actual scene pixels before capture or Apply'}).toBeGreaterThan(10);await page.screenshot({path:resolve(proof,`${configuration.name}-3d-preview.png`)});
   await modal(page).getByRole('button',{name:'Apply design',exact:true}).click();await expect(modal(page)).toBeHidden();const applied=await state(page);expect(applied.design.levels).toBe(2);expect(applied.design.width).toBeCloseTo(20,6);expect(applied.design.length).toBeCloseTo(12,6);expect(applied.design.height2).toBe(24);expect(applied.design.stairFlights).toBe(1);expect(applied.design.stairWidth).toBeCloseTo(48,6);expect(applied.pricing.areaSqft).toBeCloseTo(expectedArea,3);expect(applied.design.deckingColor).toBe('Sea Salt Gray');expect(applied.pricing.priceBook).toEqual(original.pricing.priceBook);
-  success(await request(page,[{type:'history.undo'}]));expect((await state(page)).design).toEqual(original.design);expect((await state(page)).pricing).toEqual(original.pricing);success(await request(page,[{type:'history.redo'}]));expect((await state(page)).design).toEqual(applied.design);await expect(page.getByRole('region',{name:'Live price'})).toBeVisible();await page.screenshot({path:resolve(proof,`${configuration.name}-applied-design.png`)});
+  success(await request(page,[{type:'history.undo'}]));expect((await state(page)).design).toEqual(original.design);expect((await state(page)).pricing).toEqual(original.pricing);success(await request(page,[{type:'history.redo'}]));expect((await state(page)).design).toEqual(applied.design);await showProjectControls(page);await expect(page.getByRole('region',{name:'Live price'})).toBeVisible();await page.screenshot({path:resolve(proof,`${configuration.name}-applied-design.png`)});
  });
 });
 
