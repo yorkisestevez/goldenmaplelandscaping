@@ -42,8 +42,18 @@ const PLAN_TABS:Record<string,string>={
   'Landscape':'Landscape','Board layout':'Materials','Inlays':'Materials','Select parts':'Main',
 };
 
+/** The design inspector is a dialog over the drawing. Plan tools underneath it are not clickable until it is dismissed. */
+export async function dismissDesignInspector(page:Page){
+  const inspector=page.getByRole('dialog',{name:'Design inspector',exact:true});
+  if(await inspector.isVisible()){
+    await inspector.getByRole('button',{name:'Done · back to drawing',exact:true}).click();
+    await expect(inspector).toBeHidden();
+  }
+}
+
 /** Picks a plan tool, opening its category tab when that radio is not on the current ribbon. */
 export async function pickPlanTool(page:Page,name:string){
+  await dismissDesignInspector(page);
   const radio=page.getByRole('radio',{name,exact:true});
   if(!await radio.isVisible()){
     const tab=PLAN_TABS[name]??'Building';
@@ -75,11 +85,7 @@ export async function openSketch(page:Page){
 
 /** Opens a design-task section from its menu. The menu closes after the choice, and the inspector dialog covers that menu until it is dismissed. */
 export async function openDesignTask(page:Page,name:string){
-  const inspector=page.getByRole('dialog',{name:'Design inspector',exact:true});
-  if(await inspector.isVisible()){
-    await inspector.getByRole('button',{name:'Done · back to drawing',exact:true}).click();
-    await expect(inspector).toBeHidden();
-  }
+  await dismissDesignInspector(page);
   await showProjectControls(page);
   const nav=page.getByRole('navigation',{name:'Design tasks'});
   const button=nav.getByRole('button',{name,exact:true});
