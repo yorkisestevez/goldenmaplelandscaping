@@ -102,7 +102,7 @@ for(const c of built){
   const current=Object.fromEntries(built.map(c=>{const markup=contractor(c);return [c.name,{sha256:digest(markup),bytes:Buffer.byteLength(markup)}];}));
   if(update||!existsSync(GOLDEN)){
     assert(update,'deck-plan-sheet-golden.json is missing: it was captured from the contractor plan before R4 and must not be regenerated silently.');
-    const note='ConstructionPlan default (contractor) markup. Reviewed 2026-10-04 after the owner-requested picture-frame default, stock-length seam policy and railing termination, 2026-10-06 after the owner-approved inside-corner fix (new designs seat railing posts on the boards; designs saved before the 2026-10 rules keep their drawings), and 2026-10-07 after wrap-around boards were mitred at 45° (the hip stops on the nearer outer edge; legacy saves keep the corner-to-corner hip). Regenerate only for an owner-approved change to the contractor plan.';
+    const note='ConstructionPlan default (contractor) markup. Reviewed 2026-10-04 after the owner-requested picture-frame default, stock-length seam policy and railing termination, 2026-10-06 after the owner-approved inside-corner fix (new designs seat railing posts on the boards; designs saved before the 2026-10 rules keep their drawings), and 2026-10-07 after wrap-around boards were set to turn at the house corner (a straight seam out from that corner; legacy saves keep the corner-to-corner hip). Regenerate only for an owner-approved change to the contractor plan.';
     writeFileSync(GOLDEN,JSON.stringify({note,cases:current},null,1)+'\n');console.log('Plan sheet golden written.');
   }
   const golden=JSON.parse(readFileSync(GOLDEN,'utf8')) as {cases:typeof current};

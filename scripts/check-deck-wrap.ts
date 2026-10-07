@@ -65,13 +65,13 @@ function checkWrap(d:DeckData,tag:string){
     const along=(p:{x:number;z:number})=>((p.x-h.a.x)*(h.b.x-h.a.x)+(p.z-h.a.y)*(h.b.y-h.a.y))/total;
     const bearings=[0,...l.supports.filter(p=>distanceToSegment(plan(p),h.a,h.b)<1.5).map(along)].sort((a,b)=>a-b);
     ok(bearings.every((t,i)=>i===0||t-bearings[i-1]<=hipMax),`${tag}: every ${h.side} hip span is within the two-ply span table`);
-    ok(total-bearings.at(-1)!<=l.reference.cantileverIn*Math.SQRT2+1,`${tag}: the ${h.side} hip overhangs its last post by no more than the cantilever allowance`);
-    ok(Math.abs(h.angleDeg-45)<1e-6,`${tag}: the ${h.side} ${h.corner} hip is mitred at 45°`);
-    const legWidth=h.side==='left'?wrap.left!.widthIn:wrap.right!.widthIn,legDepth=h.corner==='front'?wrap.L:(h.side==='left'?wrap.porchLeft!.depthIn:wrap.porchRight!.depthIn),leg=Math.min(legWidth,legDepth);
+    const straight=Math.abs(h.a.x-h.b.x)<1||Math.abs(h.a.y-h.b.y)<1;
+    ok(total-bearings.at(-1)!<=l.reference.cantileverIn*(straight?1:Math.SQRT2)+1,`${tag}: the ${h.side} hip overhangs its last post by no more than the cantilever allowance`);
+    ok(Math.abs(h.angleDeg-90)<1e-6,`${tag}: the ${h.side} ${h.corner} boards turn on a straight line at the house corner`);
     const expectB=h.corner==='front'
-      ?(h.side==='left'?(legWidth<=legDepth?{x:0,y:leg}:{x:wrap.x0-wrap.L,y:wrap.L}):(legWidth<=legDepth?{x:wrap.W,y:leg}:{x:wrap.x1+wrap.L,y:wrap.L}))
-      :(h.side==='left'?(legWidth<=legDepth?{x:0,y:-wrap.houseDepthIn-leg}:{x:wrap.x0-legDepth,y:-wrap.houseDepthIn-legDepth}):(legWidth<=legDepth?{x:wrap.W,y:-wrap.houseDepthIn-leg}:{x:wrap.x1+legDepth,y:-wrap.houseDepthIn-legDepth}));
-    ok(Math.hypot(h.b.x-expectB.x,h.b.y-expectB.y)<1e-4,`${tag}: the ${h.side} ${h.corner} hip stops where the 45° line meets the nearer outer edge`);
+      ?(h.side==='left'?{x:wrap.x0,y:wrap.L}:{x:wrap.x1,y:wrap.L})
+      :(h.side==='left'?{x:wrap.x0,y:-wrap.houseDepthIn-wrap.porchLeft!.depthIn}:{x:wrap.x1,y:-wrap.houseDepthIn-wrap.porchRight!.depthIn});
+    ok(Math.hypot(h.b.x-expectB.x,h.b.y-expectB.y)<1e-4,`${tag}: the ${h.side} ${h.corner} seam runs straight out from the house corner`);
     const junctions=beams.flatMap(b=>[b.a,b.b]).filter(p=>distanceToSegment(plan(p),h.a,h.b)<2);
     ok(junctions.every(p=>l.supports.some(s=>Math.hypot(s.x-p.x,s.z-p.z)<3)),`${tag}: a post under every beam that meets the ${h.side} hip`);
   }
@@ -87,7 +87,7 @@ function checkWrap(d:DeckData,tag:string){
       const hipAng=Math.atan2(h.b.y-h.a.y,h.b.x-h.a.x),parallel=(a:PlanPoint,c:PlanPoint)=>Math.abs(Math.sin(Math.atan2(c.y-a.y,c.x-a.x)-hipAng))<1e-3;
       if(poly.some((v,i)=>parallel(v,poly[(i+1)%poly.length])&&distanceToSegment(v,h.a,h.b)<d.boardWidth))mitred.add(`${h.side}:${h.corner}`);}
   }
-  ok(hips.every(h=>mitred.has(`${h.side}:${h.corner}`)),`${tag}: field boards are cut on the 45° hip (${[...mitred].join(', ')||'none'})`);
+  ok(hips.every(h=>mitred.has(`${h.side}:${h.corner}`)),`${tag}: field boards meet the straight seam (${[...mitred].join(', ')||'none'})`);
   checks++;
   const finished=l.deckingFootprint!.outline,polys=l.boards.map(b=>boardOutline(b,d.boardWidth)),xs=finished.map(p=>p.x),ys=finished.map(p=>p.y);
   ok(polys.reduce((n,p)=>n+Math.abs(area(p)),0)<=Math.abs(area(finished))+1,`${tag}: no two boards overlap (board area within the deck area)`);
@@ -154,7 +154,7 @@ checkWrap(design({length:12,height:36,houseConfig:house(12,30),wrap:{left:{width
   const hip=buildDeckTakeoff(legacy).levels[0].hips![0];
   ok(Math.abs(hip.angleDeg-45)>1&&Math.hypot(hip.b.x,hip.b.y-12*12)<1e-4,'A legacy uneven wrap still runs the hip to the outside corner');
   const current=activeWrap(design({width:34,length:12,houseConfig:house(45,25),wrap:{left:{widthFt:8,runFt:10}}}))!;
-  ok(current.miter==='45'&&Math.abs(wrapHips(current)[0].angleDeg-45)<1e-6&&Math.hypot(wrapHips(current)[0].b.x,wrapHips(current)[0].b.y-8*12)<1e-4,'A new uneven wrap mitres at 45° and stops 8 ft out, not at the front corner');
+  ok(current.miter==='house'&&Math.abs(wrapHips(current)[0].angleDeg-90)<1e-6&&Math.hypot(wrapHips(current)[0].b.x-8*12,wrapHips(current)[0].b.y-12*12)<1e-4,'A new wrap turns the boards on a straight line at the house corner, out to the front edge');
 }
 // 2. Stairs on a wing end, pricing, labour and review items.
 {

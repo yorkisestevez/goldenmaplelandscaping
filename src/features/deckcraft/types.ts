@@ -147,7 +147,7 @@ export interface HousePlacement {anchor:'left'|'center'|'right';offsetIn:number}
 /** One side wing of a wrap-around deck: how far it reaches out from the house side wall, and how
  * far it runs back along that wall from the deck-facing wall. */
 export interface WrapWing {widthFt:number;runFt:number}
-/** Wrap-around deck: side wings around one or both house corners. Current rules mitre each corner at 45°; a legacy save keeps a corner-to-corner hip. */
+/** Wrap-around deck: side wings around one or both house corners. Current rules turn the boards on a straight line at the house corner; a legacy save keeps a corner-to-corner hip. */
 /** A porch wrap: the deck continues around a far house corner along the street-side wall. */
 export interface WrapPorch {depthFt:number;runFt:number}
 export interface WrapConfig {left?:WrapWing;right?:WrapWing;
