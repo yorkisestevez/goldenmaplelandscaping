@@ -1,4 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
+import {showProjectControls} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {DeckAgentApi,AgentCommand} from '../src/features/deckcraft/designer/deckAgentController';
@@ -12,6 +13,7 @@ for(const phone of [false,true])test.describe(phone?'phone confirmed quote costs
   await context.addInitScript('window.__name=(target,value)=>target;localStorage.clear();');
   await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&r.request().method()==='GET'?r.continue():r.fulfill({status:503,body:'No external writes in local QA'}));
   await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
+  await showProjectControls(page);
   const before=await read(page);const tap=async(locator:ReturnType<Page['getByRole']>)=>phone?locator.tap():locator.click();
   await tap(page.getByRole('button',{name:'Review quote costs',exact:true}));const d=page.getByRole('dialog',{name:'Complete the missing costs',exact:true});await expect(d).toBeVisible();
   await d.getByRole('button',{name:/Stair and level cladding/}).click();

@@ -232,7 +232,7 @@ export default function PreviewPanel({pro,previewData,onPreviewData,data,update,
 
   const [planStatus,setPlanStatus]=useState('');
   const propertiesDock=useRef<HTMLDetailsElement>(null);
-  useEffect(()=>{if(propertiesDock.current)propertiesDock.current.open=tool!=='size'||!!selection.hardscape||!!selection.partIds.length||!!selection.boards.length;},[tool,selection.hardscape?.id,selection.partIds.length,selection.boards.length]);
+  useEffect(()=>{if(propertiesDock.current)propertiesDock.current.open=tool!=='size'||!!selection.hardscape||!!selection.partIds.length||!!selection.boards.length;},[tool,selection.hardscape?.id,selection.partIds.length,selection.boards.length,!!pro]);
   const [elevationsOpen,setElevationsOpen]=useState(false),[elevationArea,setElevationArea]=useState<ElevationArea>();
   /** Opens the Elevations & build workspace at one of its areas (the Pro Terrain tab), or closes it when that area shows. */
   const toggleElevations=(area:ElevationArea)=>{if(elevationsOpen&&elevationArea===area)setElevationsOpen(false);else{setElevationArea(area);setElevationsOpen(true);requestAnimationFrame(()=>document.getElementById('dd-elevation-tools')?.scrollIntoView({block:'nearest'}));}};

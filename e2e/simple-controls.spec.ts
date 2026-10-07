@@ -1,5 +1,7 @@
 import {test,expect,type Page} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {proofDir} from './nav';
+const shots=proofDir('simple-controls');
 const read=(page:Page)=>page.evaluate(()=>(window as any).deckcraft.read().design);
 for(const phone of [false,true])test(`simple controls keep common tools visible and isolate the selected object ${phone?'@phone':''}`,async({page,context})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
@@ -8,22 +10,23 @@ for(const phone of [false,true])test(`simple controls keep common tools visible 
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  const tools=page.getByRole('radiogroup',{name:'Plan tools'}),deck=tools.getByRole('radio',{name:'Deck size',exact:true});
- await expect(deck).toHaveAttribute('aria-checked','true');await expect(tools.getByRole('radio')).toHaveCount(6);
+ await expect(deck).toHaveAttribute('aria-checked','true');await expect(tools.getByRole('radio')).toHaveCount(7);
  expect(await tools.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
  await expect(page.getByRole('button',{name:'Main deck point 1',exact:true})).toHaveCount(0);
  await expect(page.getByRole('slider',{name:'Deck width, right end',exact:true})).toBeVisible();
  const aligned=()=>page.evaluate(()=>{const h=document.querySelector('[data-handle="width-right"]')!,b=h.getBoundingClientRect(),m=(document.querySelector('.dd-plan-stage>.dd-site-plan') as SVGSVGElement).getScreenCTM()!,d=(window as any).deckcraft.read().design,p=new DOMPoint(Number(d.width)*12,Number(d.length)*6).matrixTransform(m);return Math.hypot(b.x+b.width/2-p.x,b.y+b.height/2-p.y);});
  await expect.poll(aligned).toBeLessThan(2);
- await tools.scrollIntoViewIfNeeded();await page.screenshot({path:`../outputs/simple-controls/${phone?'phone':'desktop'}-tools.png`});
+ await tools.scrollIntoViewIfNeeded();await page.screenshot({path:`${shots}/${phone?'phone':'desktop'}-tools.png`});
  const before=await read(page);
  await page.getByRole('button',{name:'Zoom in',exact:true}).click();await expect.poll(aligned).toBeLessThan(2);
  const handle=page.getByRole('slider',{name:'Deck width, right end',exact:true});await handle.scrollIntoViewIfNeeded();const box=(await handle.boundingBox())!,dragPixels=await handle.evaluate(el=>{const svg=el.parentElement!.querySelector('svg')!,m=svg.getScreenCTM()!;return Math.hypot(m.a,m.b)*24;});await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+box.width/2+dragPixels,box.y+box.height/2,{steps:8});await page.mouse.up();await expect.poll(async()=>(await read(page)).width).toBe(Number(before.width)+2);await page.getByRole('button',{name:'Undo',exact:true}).click();expect(await read(page)).toEqual(before);await page.getByRole('button',{name:'Fit drawing',exact:true}).click();
- await page.getByRole('button',{name:'More tools',exact:true}).click();await expect(tools.getByRole('radio')).toHaveCount(10);
+ await page.getByRole('tab',{name:'Materials',exact:true}).click();await expect(page.getByRole('radio',{name:'Board layout',exact:true})).toBeVisible();await expect(page.getByRole('radio',{name:'Inlays',exact:true})).toBeVisible();
+ await page.getByRole('tab',{name:'Building',exact:true}).click();
  const shape=tools.getByRole('radio',{name:'Shape & points',exact:true});await shape.click();await expect(page.getByRole('button',{name:'Main deck point 1',exact:true})).toBeVisible();
- await page.getByRole('button',{name:'Fewer tools',exact:true}).click();await expect(shape).toBeVisible();await expect(shape).toHaveAttribute('aria-checked','true');
+ await expect(shape).toBeVisible();await expect(shape).toHaveAttribute('aria-checked','true');
  await shape.press('Home');await expect(deck).toBeFocused();await expect(deck).toHaveAttribute('aria-checked','true');expect(await read(page)).toEqual(before);
  const width=page.getByRole('slider',{name:'Deck width, right end',exact:true});await width.focus();await width.press('ArrowRight');await expect.poll(async()=>(await read(page)).width).toBeGreaterThan(before.width);await page.getByRole('button',{name:'Undo',exact:true}).click();expect(await read(page)).toEqual(before);
  await page.locator('.dd-hardscape-plan-picks polygon').first().click();await expect(page.getByRole('button',{name:'Resize step right side',exact:true})).toBeVisible();await expect(width).toHaveCount(0);await expect(page.getByRole('button',{name:'Main deck point 1',exact:true})).toHaveCount(0);await expect(page.locator('.dd-plan-tool-extras')).toBeEmpty();
- await page.getByRole('button',{name:'Fit drawing',exact:true}).click();await page.screenshot({path:`../outputs/simple-controls/${phone?'phone':'desktop'}-selection.png`});
+ await page.getByRole('button',{name:'Fit drawing',exact:true}).click();await page.screenshot({path:`${shots}/${phone?'phone':'desktop'}-selection.png`});
  await deck.click();await expect(width).toBeVisible();await expect(page.getByRole('button',{name:'Resize step right side',exact:true})).toHaveCount(0);expect(await read(page)).toEqual(before);expect(errors).toEqual([]);
 });

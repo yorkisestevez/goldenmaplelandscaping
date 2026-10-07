@@ -1,4 +1,5 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
+import {savedConfiguration} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import sharp from 'sharp';
@@ -92,7 +93,7 @@ test('structured sketch preview retains products, preserves an arbitrary measure
  const tooFar:SketchDocument={version:1,shapes:rectangle.shapes.map(s=>s.kind==='house'?s:{...s,points:s.points.map(p=>({...p,y:p.y+8}))})};expect((await request(page,[{type:'sketch.generate',document:tooFar}],true)).ok).toBe(false);expect((await state(page)).design).toEqual(original.design);
  const landing=success(await request(page,[{type:'sketch.generate',document:connected}],true));expect(landing.snapshot.design.levels).toBe(2);expect(landing.snapshot.design.width2).toBe(10);expect(landing.snapshot.design.length2).toBe(6);expect(landing.snapshot.design.height2).toBe(12);expect(landing.snapshot.design.stairFlights).toBe(1);expect(landing.snapshot.design.stairWidth).toBe(48);expect(landing.snapshot.pricing.areaSqft).toBeCloseTo(300,3);expect((await state(page)).design).toEqual(original.design);
  const applied=success(await request(page,[{type:'sketch.generate',document:stepped}]));expect(applied.snapshot.design).toEqual(custom.snapshot.design);expect(applied.snapshot.pricing).toEqual(custom.snapshot.pricing);
- await expect.poll(()=>page.evaluate(()=>{const c=JSON.parse(localStorage.getItem('golden-maple.deck-studio.deck-only.v1')??'{}').configuration;return {name:c?.customerName,address:c?.projectAddress,width:c?.width,outline:c?.deckOutlines?.main};})).toEqual({name:'QA Sketch Customer',address:'QA fixture address',width:20,outline:applied.snapshot.design.deckOutlines?.main});
+ await expect.poll(async()=>{const c=await savedConfiguration(page);return {name:c?.customerName,address:c?.projectAddress,width:c?.width,outline:c?.deckOutlines?.main};}).toEqual({name:'QA Sketch Customer',address:'QA fixture address',width:20,outline:applied.snapshot.design.deckOutlines?.main});
  success(await request(page,[{type:'history.undo'}]));expect((await state(page)).design).toEqual(original.design);expect((await state(page)).pricing).toEqual(original.pricing);
  success(await request(page,[{type:'history.redo'}]));expect((await state(page)).design).toEqual(applied.snapshot.design);
  const crossing:SketchDocument={version:1,shapes:[house,{...rectangle.shapes[1],points:[{x:100,y:300},{x:340,y:444},{x:340,y:300},{x:100,y:444}]}]};

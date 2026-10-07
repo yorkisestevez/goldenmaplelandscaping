@@ -1,4 +1,5 @@
 import {readFileSync} from 'node:fs';
+import {savedConfiguration} from './nav';
 import {expect,test,type Locator,type Page} from '@playwright/test';
 
 /**
@@ -72,7 +73,7 @@ const planStatus=(page:Page)=>preview(page).locator('.dd-plan-status');
 /** The plan's tools (R5): Deck size, Draw outline, Stairs and House, one at a time. Picks one. */
 async function planTool(page:Page,name:'Deck size'|'Shape & points'|'Stairs'|'House'){
   const tool=page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true});
-  if(name==='Shape & points'&&!await tool.isVisible())await page.getByRole('button',{name:'More tools',exact:true}).click();
+  if(!await tool.isVisible())await page.getByRole('tablist',{name:'Tool categories'}).getByRole('tab',{name:'Building',exact:true}).click();
   await tool.click();
   await expect(tool).toHaveAttribute('aria-checked','true');
 }
@@ -267,7 +268,6 @@ test('reaches every feature of the designer',async({page})=>{
     for(const name of ['Deck depth, front edge','Deck width, right end','Deck width, left end','Deck position along the house'])await reach(`Plan handle: ${name}`,planHandle(page,name));
     await reach('Typing the width on the plan',drawing(page).getByRole('button',{name:'Deck width 16 ft: type a new width'}));
     for(const name of ['Rectangle','L-shape','Multi-corner','Curved','Wrap left','Wrap right','Wrap both','Split level','Draw my own'])await reach(`Shape shortcut: ${name}`,shortcuts(page).getByRole('button',{name,exact:true}));
-    await page.getByRole('button',{name:'More tools',exact:true}).click();
     for(const name of ['Shape & points','Deck size','Stairs','House'])await reach(`Plan tool: ${name}`,page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true}));
     await planTool(page,'Stairs');
     await reach('Stairs on the plan',planHandle(page,'Stairs, position along the edge'));
@@ -1318,7 +1318,7 @@ test('moves an outline point in both directions and refuses crossed edges',async
   await expect(page.getByLabel('Selected point X in feet')).toHaveValue('17');await expect(page.getByLabel('Selected point Y in feet')).toHaveValue('13');
   await page.getByLabel('Selected point X in feet').fill('-1');await page.getByLabel('Selected point Y in feet').fill('6');
   await preview(page).getByRole('button',{name:'Apply',exact:true}).click();await expect(preview(page).locator('.dd-boundary-notice')).toContainText('cross');
-  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('golden-maple.deck-studio.deck-only.v1')??'{}').configuration?.deckOutlines?.main?.[2]??null)).toEqual({x:17,y:13});
+  await expect.poll(async()=>(await savedConfiguration(page))?.deckOutlines?.main?.[2]??null).toEqual({x:17,y:13});
   await page.reload();await expect(page.getByRole('radio',{name:'Shape & points',exact:true})).toHaveAttribute('aria-checked','true');
   await expand(preview(page),'Fine adjust a point');await page.getByLabel('Selected boundary point').selectOption('2');
   await expect(page.getByLabel('Selected point X in feet')).toHaveValue('17');await expect(page.getByLabel('Selected point Y in feet')).toHaveValue('13');expect(problems).toEqual([]);
@@ -1468,7 +1468,7 @@ test('shares a link that reopens the design and keeps the visitor’s own',async
   const tools=fileTools(page);await openFiles(page);
   await tools.getByRole('button',{name:'Share link'}).click();
   const link=await tools.getByLabel('Link to this design').inputValue();
-  expect(link).toMatch(/\/deck-designer#d=1[zj]/);
+  expect(link).toMatch(/\/deck-designer\/?#d=1[zj]/);
   await expect(tools).toContainText('Your name and project address are not included');
   await setNumber(page,'Deck width',30);
   await expect(size(page)).toContainText('30 × 12 ft');

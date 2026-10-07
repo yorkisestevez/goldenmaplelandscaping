@@ -1,4 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
+import {pickPlanTool} from './nav';
 import {mkdirSync,writeFileSync,readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import * as THREE from 'three';
@@ -12,7 +13,7 @@ const proof=resolve(process.cwd(),'../../outputs/deckcraft-easy-edit-review/sele
 const projection=JSON.parse(readFileSync(resolve(process.cwd(),'e2e/fixtures/easy-selection-projection.json'),'utf8')) as {screen:{x:number;y:number;z:number}};
 const fixture:DeckData={...DEFAULT_DECK,width:20,length:20,height:48,stairFlights:0,houseConfig:{...getHouseConfig(DEFAULT_DECK),widthFt:30,depthFt:20,storeys:2,openings:[{id:'selection-a',type:'Window',facade:'Front',widthIn:48,heightIn:36,bottomIn:100,offsetPct:25},{id:'selection-b',type:'Window',facade:'Front',widthIn:48,heightIn:36,bottomIn:100,offsetPct:75}]},privacyScreens:[{id:'screen-a',side:'Left',lengthFt:4,heightFt:6,offsetPct:20,lights:false},{id:'screen-b',side:'Left',lengthFt:4,heightFt:6,offsetPct:60,lights:false}],customerName:'Selection QA'};
 const read=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.read());
-async function tool(page:Page,name:string){const show=page.getByRole('button',{name:'Show canvas',exact:true});if(await show.isVisible())await show.click();await page.getByRole('radio',{name,exact:true}).click();}
+async function tool(page:Page,name:string){const show=page.getByRole('button',{name:'Show canvas',exact:true});if(await show.isVisible())await show.click();await pickPlanTool(page,name);}
 async function undo(page:Page){await page.getByRole('region',{name:'Save and restore design',exact:true}).getByRole('button',{name:'Undo',exact:true}).click();}
 test.beforeEach(async({context,page})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');

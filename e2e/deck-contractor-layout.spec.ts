@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {openDesignTask,showProjectControls} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 test('short desktop switches full side panels and preserves the assistant draft beside the drawing',async({page,context})=>{
@@ -6,10 +7,11 @@ test('short desktop switches full side panels and preserves the assistant draft 
  await context.addInitScript(()=>localStorage.clear());
  await context.route('**/.netlify/functions/deck-assistant',r=>r.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{message:'Unavailable during controlled layout test.'}})}));
  await page.goto('/deck-designer/');
+ await showProjectControls(page);
  await page.getByRole('button',{name:'Describe a change',exact:true}).click();
  const dock=page.getByRole('region',{name:'Design assistant',exact:true});await expect(dock).toBeVisible();
  const input=dock.getByRole('textbox',{name:'What would you like to change?',exact:true});await input.fill('Make the deck slightly wider');
- await page.getByRole('navigation',{name:'Design tasks'}).getByRole('button',{name:'Deck shape & size',exact:true}).click();
+ await openDesignTask(page,'Deck shape & size');
  await expect(page.locator('.dd-workspace-inspector')).toBeVisible();await expect(dock).toBeHidden();
  await page.getByRole('button',{name:'Back to assistant'}).click();await expect(dock).toBeVisible();
  await expect(input).toHaveValue('Make the deck slightly wider');

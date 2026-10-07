@@ -22,7 +22,8 @@ export default function CanvasContextMenu({data,model,selection,onSelect,onTool,
  useEffect(()=>{const root=anchor.current?.closest('.dd-preview');if(!root)return;
   const open=(x:number,y:number,target:SelectionState)=>{returnTo.current=root.querySelector<HTMLElement>('.dd-plan-viewport,canvas');onSelect(target);setError('');setPopup({x,y,target});};
   const context=(e:Event)=>{const event=e as MouseEvent,t=event.target as Element;if(!t.closest('.dd-canvas')||t.closest('input,textarea,select,.dd-plan-navigation')||drawing(root)||t.tagName==='CANVAS')return;event.preventDefault();
-   let pick:Pick|null=null;const hard=t.closest('[data-context-hardscape]'),part=t.closest('[data-component-id]');
+   // A right-click on a patio can report the plan viewport as its target while the patio polygon is still the element under the cursor.
+   let pick:Pick|null=null;const under=document.elementsFromPoint(event.clientX,event.clientY),marked=(sel:string)=>(t.closest(sel)??under.map(el=>el.closest(sel)).find(Boolean)??null) as Element|null,hard=marked('[data-context-hardscape]'),part=marked('[data-component-id]');
    if(hard)pick={hardscape:JSON.parse(hard.getAttribute('data-context-hardscape')!)};else if(part)pick={partId:part.getAttribute('data-component-id')!};
    else{const svg=root.querySelector<SVGSVGElement>('.dd-plan-stage .dd-site-plan'),matrix=svg?.getScreenCTM();if(svg&&matrix){const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());const hit=parts.filter(p=>['stairs','deck','house'].includes(p.kind)).sort((a,b)=>['stairs','deck','house'].indexOf(a.kind)-['stairs','deck','house'].indexOf(b.kind)).find(part=>part.polygon&&inside(p,part.polygon));if(hit)pick={partId:hit.id};}}
    open(event.clientX,event.clientY,pick?{partIds:pick.partId?[pick.partId]:[],boards:pick.board?[pick.board]:[],hardscape:pick.hardscape}:emptySelection());

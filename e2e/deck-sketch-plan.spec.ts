@@ -1,4 +1,5 @@
 import {expect,test,type Locator,type Page} from '@playwright/test';
+import {savedConfiguration} from './nav';
 import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -64,7 +65,7 @@ for(const touch of [false,true])test(`${touch?'@phone ':''}Current plan sketch a
  const point=page.getByRole('button',{name:'Main deck point 6',exact:true});await point.scrollIntoViewIfNeeded();await point.focus();await point.press('ArrowRight');await expect.poll(async()=>(await state(page)).boundaries[0].points[5].x).toBeCloseTo(resized.boundaries[0].points[5].x+1,6);const pulled=await settled(page);
  await open(page,touch);const reopened=await exported(page);parity(mainOf(reopened),pulled);await page.screenshot({path:resolve(proof,`${touch?'phone':'desktop'}-reopened-current-plan.png`)});const secondNoOp=await editOnPlan(page,touch);expect(secondNoOp.design).toEqual(pulled.design);expect(secondNoOp.pricing).toEqual(pulled.pricing);expect(secondNoOp.history).toEqual(pulled.history);
  await page.getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(async()=>(await state(page)).design).toEqual(resized.design);await page.getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(async()=>(await state(page)).design).toEqual(original.design);
- await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('golden-maple.deck-studio.deck-only.v1')??'{}').configuration.customerName)).toBe('Sketch plan QA');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ await expect.poll(async()=>(await savedConfiguration(page))?.customerName).toBe('Sketch plan QA');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  writeFileSync(resolve(proof,`${touch?'phone':'desktop'}-roundtrip.json`),JSON.stringify({original,initial,noOp,resizedDraft,resized,pulled,reopened,secondNoOp},null,2));
 });
 

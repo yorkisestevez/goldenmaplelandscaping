@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {showProjectControls} from './nav';
 
 for(const phone of [false,true])test.describe(phone?'phone voice recovery':'desktop voice recovery',()=>{
  test.use({viewport:phone?{width:390,height:844}:{width:1500,height:1050},isMobile:phone,hasTouch:phone});
@@ -16,7 +17,7 @@ for(const phone of [false,true])test.describe(phone?'phone voice recovery':'desk
   });
   await page.goto('/deck-designer/');await page.waitForFunction(()=>(window as any).deckcraft?.read().ready);
   const before=await page.evaluate(()=>(window as any).deckcraft.read());
-  await page.getByRole('button',{name:'Describe a change',exact:true}).click();
+  await showProjectControls(page);await page.getByRole('button',{name:'Describe a change',exact:true}).click();
   const text=page.getByRole('textbox',{name:'What would you like to change?',exact:true});
   await page.getByRole('button',{name:'Talk',exact:true}).click();
   await page.evaluate(()=>{(window as any).qaSay('make the deck twenty feet wide');(window as any).qaLate=(window as any).qaMic.onresult;});

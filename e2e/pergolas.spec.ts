@@ -1,9 +1,10 @@
 import {expect,test,type Page} from '@playwright/test';
+import {openDesignTask} from './nav';
 import {readFileSync,mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 const extrasName='Privacy, skirting & extras';
 async function openExtras(page:Page){
- await page.getByRole('navigation',{name:'Design tasks'}).getByRole('button',{name:extrasName,exact:true}).click();
+ await openDesignTask(page,extrasName);
  await expect(page.getByRole('region',{name:'Aluminum pergolas'})).toBeVisible();
 }
 async function show3D(page:Page){const canvasButton=page.getByRole('button',{name:'Show canvas',exact:true});if(await canvasButton.isVisible())await canvasButton.click();await page.getByRole('tab',{name:'3D',exact:true}).click();}

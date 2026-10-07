@@ -1,11 +1,12 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
+import {showProjectControls} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 const out=resolve(process.cwd(),'../../outputs/deckcraft-assistant-review/browser');mkdirSync(out,{recursive:true});
 const read=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.read());
 const dialog=(page:Page)=>page.getByRole('region',{name:'Design assistant',exact:true});
-async function open(page:Page){await page.getByRole('button',{name:'Describe a change',exact:true}).click();await expect(dialog(page)).toBeVisible();}
+async function open(page:Page){await showProjectControls(page);await page.getByRole('button',{name:'Describe a change',exact:true}).click();await expect(dialog(page)).toBeVisible();}
 async function prepare(context:BrowserContext,page:Page,speech=false){
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(()=>{localStorage.clear();});

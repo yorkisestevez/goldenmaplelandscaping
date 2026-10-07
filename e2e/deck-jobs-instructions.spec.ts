@@ -1,4 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
+import {showProjectControls} from './nav';
 import {mkdirSync,writeFileSync,readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -7,8 +8,8 @@ const proof=resolve(process.cwd(),'../../outputs/deckcraft-easy-edit-review/jobs
 const jobs=(page:Page)=>page.getByRole('dialog',{name:'Jobs & options',exact:true}),assistant=(page:Page)=>page.getByRole('region',{name:'Design assistant',exact:true});
 const state=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.read());let sequence=0;
 async function command(page:Page,commands:AgentCommand[]){const r=await page.evaluate(async({commands,id})=>{const api=(window as unknown as {deckcraft:DeckAgentApi}).deckcraft;return api.execute({id,expectedRevision:api.read().revision,commands});},{commands,id:`job-qa-${++sequence}`});if('error'in r)throw Error(JSON.stringify(r));return r;}
-async function openJobs(page:Page){await page.getByRole('button',{name:'Jobs & versions',exact:true}).click();await expect(jobs(page)).toBeVisible();}
-async function openAssistant(page:Page){await page.getByRole('button',{name:'Describe a change',exact:true}).click();await expect(assistant(page)).toBeVisible();}
+async function openJobs(page:Page){await showProjectControls(page);await page.getByRole('button',{name:'Jobs & versions',exact:true}).click();await expect(jobs(page)).toBeVisible();}
+async function openAssistant(page:Page){await showProjectControls(page);await page.getByRole('button',{name:'Describe a change',exact:true}).click();await expect(assistant(page)).toBeVisible();}
 async function assertComparisonFlow(page:Page,name:'jobs'|'instructions'){
  const dialog=name==='jobs'?jobs(page):assistant(page),cards=dialog.locator('.dd-jobs-comparison article'),delta=dialog.locator('.dd-jobs-delta');const deltaBox=await delta.boundingBox();
  for(let i=0;i<await cards.count();i++){const card=cards.nth(i),cardBox=await card.boundingBox(),planBox=await card.locator('.dd-comparison-plan').boundingBox(),svgBox=await card.locator('svg').boundingBox(),priceBox=await card.locator(':scope > strong').boundingBox();expect(planBox!.height).toBeLessThanOrEqual(241);expect(svgBox!.height).toBeLessThanOrEqual(planBox!.height+.5);expect(priceBox!.y).toBeGreaterThanOrEqual(planBox!.y+planBox!.height);expect(priceBox!.y+priceBox!.height).toBeLessThanOrEqual(cardBox!.y+cardBox!.height);expect(deltaBox!.y).toBeGreaterThanOrEqual(cardBox!.y+cardBox!.height);}

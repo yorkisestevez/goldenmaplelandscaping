@@ -17,7 +17,7 @@ async function world(page:Page,p:OutlinePoint){return canvas(page).evaluate((el,
 async function tap(page:Page,p:OutlinePoint,touch=false){await canvas(page).scrollIntoViewIfNeeded();const screen=await world(page,p);if(touch)await page.touchscreen.tap(screen.x,screen.y);else await page.mouse.click(screen.x,screen.y);}
 async function open(page:Page,touch=false){
  const entry=page.getByRole('button',{name:'Draw a custom inlay',exact:true});
- if(!await entry.isVisible()){await activate(page,page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name:'Inlays',exact:true}),touch);}
+ if(!await entry.isVisible()){if(!await page.getByRole('radio',{name:'Inlays',exact:true}).isVisible())await activate(page,page.getByRole('tab',{name:'Materials',exact:true}),touch);await activate(page,page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name:'Inlays',exact:true}),touch);}
  await activate(page,await entry.isVisible()?entry:page.getByRole('button',{name:'Draw custom inlay',exact:true}),touch);await expect(modal(page)).toBeVisible();
 }
 async function unchanged(page:Page,before:Awaited<ReturnType<typeof state>>){const after=await state(page);expect(after.design).toEqual(before.design);expect(after.pricing).toEqual(before.pricing);expect(after.history).toEqual(before.history);}

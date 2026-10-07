@@ -1,4 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
+import {savedConfiguration} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -76,9 +77,9 @@ test('an open line creates its exact stair opening, remains editable and persist
  const controls=await stairControls(page);await controls.getByRole('spinbutton',{name:'Number of risers',exact:true}).fill('6');await controls.getByRole('spinbutton',{name:'Tread depth',exact:true}).fill('12.5');await expect.poll(async()=>(await state(page)).quantities.stairTreads).toBe(5);await expect.poll(async()=>(await state(page)).ready).toBe(true);const tallerCount=await state(page);expect(tallerCount.pricing.total).toBeGreaterThan(applied.pricing.total);await controls.getByRole('spinbutton',{name:'Stair path section 1 width',exact:true}).fill('96');
  await expect.poll(async()=>{const s=await state(page);return {risers:s.design.stairRiserCount,depth:s.design.stairTreadDepthIn,width:lengths(s.design.stairPath!.points)[0]};}).toEqual({risers:6,depth:12.5,width:96});
  await expect.poll(async()=>(await state(page)).ready).toBe(true);const edited=await state(page);expect(edited.quantities.stairTreads).toBe(5);expect(edited.pricing.areaSqft).toBeCloseTo(192,3);expect(edited.pricing.total).toBeLessThan(tallerCount.pricing.total);
- await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('golden-maple.deck-studio.deck-only.v1')??'{}').configuration.stairRiserCount)).toBe(6);
+ await expect.poll(async()=>(await savedConfiguration(page))?.stairRiserCount).toBe(6);
  // The width is edited after the risers: wait for autosave to hold it too, or a slow runner reloads the earlier width.
- await expect.poll(()=>page.evaluate(()=>JSON.stringify(JSON.parse(localStorage.getItem('golden-maple.deck-studio.deck-only.v1')??'{}').configuration.stairPath))).toBe(JSON.stringify(edited.design.stairPath));
+ await expect.poll(async()=>JSON.stringify((await savedConfiguration(page))?.stairPath)).toBe(JSON.stringify(edited.design.stairPath));
  await page.reload();await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);expect((await state(page)).design.stairPath).toEqual(edited.design.stairPath);expect((await state(page)).design.stairRiserCount).toBe(6);expect((await state(page)).design.stairTreadDepthIn).toBe(12.5);expect((await state(page)).pricing).toEqual(edited.pricing);
  writeFileSync(resolve(proof,'desktop-line-persistence.json'),JSON.stringify({applied,edited,reloaded:await state(page)},null,2));await stairControls(page);await page.screenshot({path:resolve(proof,'desktop-line-editable-persisted.png')});
 });
