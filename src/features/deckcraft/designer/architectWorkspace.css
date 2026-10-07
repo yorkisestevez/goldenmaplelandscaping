@@ -14,15 +14,15 @@
 .deck-designer:has(.dd-workspace-nav) .dd-sheet-panel>.dd-summary-actions{display:inline-flex;margin:0 8px 6px 0}
 .deck-designer:has(.dd-workspace-nav) .dd-sheet-panel>.dd-secondary{margin:0 0 6px}
 .deck-designer:has(.dd-workspace-nav) .dd-canvas{border-radius:4px}
-@media(max-width:800px){.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav{position:relative;top:auto;gap:0;padding:0 6px}.dd-nav-group>summary{font-size:11px;padding:0 9px}.dd-nav-group:last-child .dd-nav-menu{left:auto;right:0}.deck-designer:has(.dd-workspace-nav) .dd-preview{padding:8px}.deck-designer:has(.dd-workspace-nav) .dd-preview-head{flex-wrap:wrap}.deck-designer:has(.dd-workspace-nav) .dd-preview h2{margin:0}.deck-designer:has(.dd-workspace-nav) .dd-workspace-price{padding:6px 10px}.deck-designer:has(.dd-workspace-nav) .dd-workspace-amount>small{flex-basis:auto}}
+@media(max-width:800px){.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav{position:relative;top:auto;gap:0;padding:0 6px}.dd-nav-group>summary{font-size:11px;padding:0 9px}.dd-nav-group:last-child .dd-nav-menu{left:auto;right:0}.deck-designer:has(.dd-workspace-nav) .dd-preview{padding:8px}.deck-designer:has(.dd-workspace-nav) .dd-preview-head{flex-wrap:wrap}.deck-designer:has(.dd-workspace-nav) .dd-preview h2{margin:0}.deck-designer:has(.dd-workspace-nav) .dd-workspace-price{padding:6px 10px;row-gap:0}.deck-designer:has(.dd-workspace-nav) .dd-workspace-amount>small{flex-basis:auto}}
 
 /* Drawing mode reserves the screen for geometry; project controls remain one click away. */
 .deck-designer:has(.dd-workspace-nav) .dd-preview-head{display:flex;align-items:center;justify-content:space-between}
 .deck-designer[data-drawing-focus=true] .dd-workspace-nav,.deck-designer[data-drawing-focus=true] .dd-workspace-price{display:none}
 .deck-designer[data-drawing-focus=true]:has(.dd-easy-tools) .dd-workspace{height:calc(100dvh - 72px - var(--dd-easy-tools-height,0px));min-height:0;grid-template-rows:minmax(0,1fr);padding-bottom:0}
 .deck-designer[data-drawing-focus=true]:has(.dd-workspace-nav) .dd-preview{grid-row:1;padding:6px 10px}
-.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-plan-viewport,.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-site-plan{height:max(280px,calc(100dvh - 270px))!important}
-.deck-designer[data-drawing-focus=true] .dd-canvas>[aria-label="Interactive deck construction model"]{height:max(280px,calc(100dvh - 270px))!important}
+.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-plan-viewport,.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-site-plan{height:max(280px,calc(100dvh - 300px))!important}
+.deck-designer[data-drawing-focus=true] .dd-canvas>[aria-label="Interactive deck construction model"]{height:max(280px,calc(100dvh - 300px))!important}
 .deck-designer .dd-drawing-focus-toggle{margin-right:6px!important}
 html:has(.deck-designer[data-drawing-focus=true]){scroll-padding-bottom:12px}
 @media(max-width:800px){.deck-designer[data-drawing-focus=true]:has(.dd-easy-tools) .dd-workspace{height:auto;min-height:calc(100dvh - 64px)}.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-plan-viewport,.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-site-plan{height:max(360px,calc(100dvh - 320px))!important}}

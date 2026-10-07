@@ -3,6 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {savedConfiguration} from './nav';
 import type {HardscapeProduct} from '../src/features/deckcraft/hardscapeCatalogue';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 const workingKey='golden-maple.deck-studio.deck-only.v1',recoveryKey='golden-maple.deck-studio.unrestored.v1';
@@ -63,8 +64,8 @@ for(const reason of ['joint','colour'] as const)test(`source ${reason} restore f
  }
  await expect.poll(()=>page.evaluate(key=>localStorage.getItem(key),recoveryKey)).toBe(raw);
  await expect(page.locator('[data-autosave-state="saved"]')).toBeVisible();
- expect(await page.evaluate(key=>localStorage.getItem(key),workingKey)).not.toBe(raw);
- await patch(page,24);await expect.poll(()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)??'{}').configuration?.width,workingKey)).toBe(24);
+ await expect.poll(async()=>(await savedConfiguration(page))?.yardFeatures?.some(feature=>feature.id==='restore-patio')??false).toBe(false);
+ await patch(page,24);await expect.poll(async()=>(await savedConfiguration(page))?.width).toBe(24);
  await page.reload();await ready(page);expect((await read(page)).design.width).toBe(24);
  expect(await page.evaluate(key=>localStorage.getItem(key),recoveryKey)).toBe(raw);
  await downloadPrevious(page,raw);

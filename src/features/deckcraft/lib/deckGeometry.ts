@@ -210,7 +210,8 @@ export function getStairPlacement(data: DeckData, target: { w:number;h:number } 
   const candidates=named?[named]:all.filter(s=>s.outward.x*desired.x+s.outward.y*desired.y>SIDE_DOT&&!contact?.isContactEdge(s.index));
   if(!candidates.length)return null;
   const requested=Math.max(24,n(data.stairWidth,48)),eligible=candidates.filter(s=>s.length>=requested);
-  const chosen=(eligible.length?eligible:candidates).sort((a,b)=>b.length-a.length)[0];
+  // Lengths that differ only by coordinate dust are the same edge. Keep outline order so a tie does not flip.
+  const chosen=(eligible.length?eligible:candidates).sort((a,b)=>Math.abs(a.length-b.length)<=1e-4?a.index-b.index:b.length-a.length)[0];
   const width=Math.min(requested,chosen.length),offset=Math.min(1,Math.max(0,n(data.stairOffset,50)/100));
   // Preserve intuitive left-to-right / back-to-front offsets regardless of winding.
   const reverse=chosen.along.x<-.5||chosen.along.y<-.5;

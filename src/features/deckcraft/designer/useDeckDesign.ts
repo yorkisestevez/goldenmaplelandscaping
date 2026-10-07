@@ -61,7 +61,7 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
   const unsaved=useRef(false),pausedRef=useRef(autosavePaused);pausedRef.current=autosavePaused;
   const resumeAutosave=async()=>{
     if(autosavePaused&&unrestoredDesign){
-      try{await (await storage()).preserveRecoveryText('current',unrestoredDesign,'Project explicitly replaced after failed restore.');revision.current=undefined;}
+      try{localStorage.setItem(RECOVERY_STORAGE_KEY,unrestoredDesign);await (await storage()).preserveRecoveryText('current',unrestoredDesign,'Project explicitly replaced after failed restore.');revision.current=undefined;}
       catch{setDesignError('Your previous file is preserved. Auto-save remains paused; use Save JSON to keep this design.');return;}
     }
     pausedRef.current=false;setAutosavePaused(false);

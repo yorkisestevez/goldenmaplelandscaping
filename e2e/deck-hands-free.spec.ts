@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {showProjectControls} from './nav';
 
 test.use({viewport:{width:1440,height:1000}});
 test.beforeEach(async({context,page})=>{
@@ -11,7 +12,7 @@ test.beforeEach(async({context,page})=>{
  });
  await page.route('**/.netlify/functions/deck-assistant',route=>route.fulfill({json:{ready:false,source:'exact-only'}}));
  await page.goto('/deck-designer/');await page.waitForFunction(()=>(window as any).deckcraft?.read().ready);
- await page.getByRole('button',{name:'Describe a change',exact:true}).click();
+ await showProjectControls(page);await page.getByRole('button',{name:'Describe a change',exact:true}).click();
 });
 const read=(page:any)=>page.evaluate(()=>(window as any).deckcraft.read());
 const say=async(page:any,text:string)=>{await page.waitForFunction(()=>!!(window as any).qaMic?.onresult);await page.evaluate((value:string)=>(window as any).qaSay(value),text);};
@@ -23,7 +24,7 @@ test('voice edits, selection, views, undo and stop share the live model',async({
  const name=await page.evaluate(()=>(window as any).deckcraftWorkspace.read().objects.find((o:any)=>o.id.startsWith('deck:')).id);
  await say(page,`select ${name}`);await expect.poll(()=>page.evaluate(()=>(window as any).deckcraftWorkspace.read().selection.partIds[0])).toBe(name);
  await say(page,'show me from above');await expect.poll(async()=>(await read(page)).view).toBe('top');
- await expect(page.getByRole('complementary',{name:'Selected object settings',exact:true})).toBeVisible();
+ await expect(page.locator('.dd-selection-inspector')).toHaveJSProperty('open',true);
  await expect(page.locator('.dd-canvas canvas')).toBeVisible();await expect(page.getByText('Loading selected object…',{exact:true})).toHaveCount(0);
  await page.screenshot({path:'test-results/hands-free-desktop.png'});
  await say(page,'stop');await expect(page.getByRole('button',{name:'Start voice control',exact:true})).toBeVisible();
@@ -31,8 +32,9 @@ test('voice edits, selection, views, undo and stop share the live model',async({
 });
 test('preview mode applies by voice and typing ends listening',async({page})=>{
  const before=await read(page);await page.getByRole('button',{name:'Start voice control',exact:true}).click();await page.getByRole('checkbox',{name:'Apply changes automatically'}).uncheck();
- await say(page,'make the deck 22 by 14 feet');await expect(page.getByRole('region',{name:'Instruction preview',exact:true})).toBeVisible();expect((await read(page)).revision).toBe(before.revision);
- await expect(page.getByText('Showing proposed geometry · apply the preview to save one undoable edit.',{exact:true})).toBeVisible();
+  await say(page,'make the deck 22 by 14 feet');await expect(page.getByRole('region',{name:'Instruction preview',exact:true})).toBeVisible();expect((await read(page)).revision).toBe(before.revision);
+  const dock=page.locator('.dd-selection-inspector');if(await dock.getAttribute('open')===null)await dock.locator('summary').click();
+  await expect(page.getByText('Showing proposed geometry · apply the preview to save one undoable edit.',{exact:true})).toBeVisible();
  await say(page,'apply');await expect.poll(async()=>(await read(page)).design.width).toBe(22);
  await page.getByRole('textbox',{name:'What would you like to change?',exact:true}).fill('make the deck 18 by 12 feet');await expect(page.getByRole('button',{name:'Start voice control',exact:true})).toBeVisible();
 });
@@ -50,9 +52,9 @@ test('cancel interrupts pending AI work and backgrounding stops the microphone',
  await expect(page.getByText('Cancelled the pending request. Applied changes are unchanged.',{exact:true})).toBeVisible();await page.waitForTimeout(4000);expect((await read(page)).design).toEqual(before.design);
  await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{value:'hidden',configurable:true});document.dispatchEvent(new Event('visibilitychange'));Object.defineProperty(document,'visibilityState',{value:'visible',configurable:true});});await expect(page.getByRole('button',{name:'Start voice control',exact:true})).toBeVisible();
 });
-test('desktop inspector stays beside the canvas; phone has no horizontal overflow',async({page})=>{
+test('desktop inspector stays clear of the canvas; phone has no horizontal overflow',async({page})=>{
  await page.getByRole('button',{name:'Close instruction assistant',exact:true}).click();
- for(const width of [1280,1440]){await page.setViewportSize({width,height:1000});const canvas=await page.locator('.dd-canvas').boundingBox(),panel=await page.getByRole('complementary',{name:'Selected object settings',exact:true}).boundingBox();expect(panel!.x).toBeGreaterThanOrEqual(canvas!.x+canvas!.width);}
+ for(const width of [1280,1440]){await page.setViewportSize({width,height:1000});const canvas=await page.locator('.dd-canvas').boundingBox(),panel=await page.locator('.dd-selection-inspector').boundingBox();expect(panel!.y).toBeGreaterThanOrEqual(canvas!.y+canvas!.height-1);expect(panel!.x).toBeGreaterThanOrEqual(0);expect(panel!.x+panel!.width).toBeLessThanOrEqual(width+1);}
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 

@@ -1,4 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
+import {savedConfiguration,showProjectControls} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -19,8 +20,9 @@ for(const phone of [false,true])test.describe(phone?'phone actionable review':'d
  test.use({viewport:phone?{width:390,height:844}:{width:1440,height:1000},hasTouch:phone,isMobile:phone});
  test(`${phone?'@phone ':''}warning highlights its real measured opening without an edit; related lighting settings remain reachable`,async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));const original=await read(page);
+  await showProjectControls(page);
   await page.getByRole('button',{name:/^Review \d+ issues?$/}).click();
-  const dialog=page.getByRole('dialog',{name:'Find and resolve issues'});await expect(dialog).toBeVisible();
+  const dialog=page.getByRole('dialog',{name:'Construction readiness',exact:true});await expect(dialog).toBeVisible();
   await expect(dialog.locator('[data-issue-id="opening-clash:site-window"]')).toContainText('railing crosses window');
   await dialog.getByRole('button',{name:'Locate measured opening',exact:true}).click();
   await expect(page.getByRole('combobox',{name:'Select plan part',exact:true})).toHaveValue('opening:site-window');
@@ -33,12 +35,12 @@ for(const phone of [false,true])test.describe(phone?'phone actionable review':'d
  });
  test(`${phone?'@phone ':''}save status follows actual stored design and reports quota failure honestly`,async({page})=>{
   await expect(page.locator('[data-autosave-state="saved"]')).toBeVisible();
-  await page.evaluate(()=>{const original=Storage.prototype.setItem;(window as unknown as {qaSetItem:typeof original}).qaSetItem=original;Storage.prototype.setItem=function(key,value){if(key==='golden-maple.deck-studio.deck-only.v1')throw new DOMException('Quota exceeded','QuotaExceededError');original.call(this,key,value);};});
+  await page.evaluate(()=>{const original=IDBObjectStore.prototype.put;(window as unknown as {qaPut:typeof original}).qaPut=original;IDBObjectStore.prototype.put=function(...args){if(this.name==='projects')throw new DOMException('Quota exceeded','QuotaExceededError');return original.apply(this,args);};});
   const result=await page.evaluate(async()=>{const api=(window as unknown as {deckcraft:DeckAgentApi}).deckcraft;return api.execute({id:'qa-save-failure',expectedRevision:api.read().revision,commands:[{type:'design.patch',patch:{width:18}}]});});expect(result.ok).toBe(true);
   await expect(page.locator('[data-autosave-state="error"]')).toContainText('Not saved');
-  await page.evaluate(()=>{Storage.prototype.setItem=(window as unknown as {qaSetItem:typeof Storage.prototype.setItem}).qaSetItem;});
+  await page.evaluate(()=>{IDBObjectStore.prototype.put=(window as unknown as {qaPut:typeof IDBObjectStore.prototype.put}).qaPut;});
   await page.evaluate(async()=>{const api=(window as unknown as {deckcraft:DeckAgentApi}).deckcraft;return api.execute({id:'qa-save-recovery',expectedRevision:api.read().revision,commands:[{type:'design.patch',patch:{width:19}}]});});
   await expect(page.locator('[data-autosave-state="saved"]')).toBeVisible();
-  expect(await page.evaluate(key=>JSON.parse(localStorage.getItem(key)!).configuration.width,storageKey)).toBe(19);
+  await expect.poll(async()=>(await savedConfiguration(page))?.width).toBe(19);
  });
 });

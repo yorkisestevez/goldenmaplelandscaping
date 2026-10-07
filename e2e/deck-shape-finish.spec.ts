@@ -1,4 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
+import {pickPlanTool} from './nav';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 const read=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.read());
@@ -8,7 +9,7 @@ test('right-click applies a drawn area and breaker as one undoable edit each',as
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({status:200,body:''}));
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/deck-designer/');await expect.poll(async()=>{try{return (await read(page)).ready;}catch{return false;}}).toBe(true);
- await page.getByRole('radio',{name:'Board layout',exact:true}).click();
+ await pickPlanTool(page,'Board layout');
  for(const mode of ['Select area','Add breaker']){
   const before=await read(page);await page.getByRole('button',{name:mode,exact:true}).click();
   const canvas=page.getByRole('group',{name:'Board layout selection canvas',exact:true});await canvas.scrollIntoViewIfNeeded();

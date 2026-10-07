@@ -1,9 +1,17 @@
 import {expect,test,type Page} from '@playwright/test';
+import {pickPlanTool,showProjectControls} from './nav';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {AgentCommand,AgentResponse} from '../src/features/deckcraft/designer/deckAgentController';
 
-const STORAGE='golden-maple.deck-studio.deck-only.v1';
+/** Autosave commits the private project in IndexedDB. Legacy localStorage is only a migration source. */
+async function savedProject(page:Page){
+  return page.evaluate(async()=>{
+    const db=await new Promise<IDBDatabase>((resolve,reject)=>{const request=indexedDB.open('golden-maple.deckcraft-projects.v1');request.onerror=()=>reject(request.error);request.onsuccess=()=>resolve(request.result);});
+    try{return await new Promise<string|null>((resolve,reject)=>{const tx=db.transaction('projects','readonly'),request=tx.objectStore('projects').get('current');request.onerror=()=>reject(request.error);request.onsuccess=()=>resolve(request.result?.json??null);});}
+    finally{db.close();}
+  });
+}
 test.beforeEach(async({context})=>{
   // Local proof only: prevent scripts, pixels, fonts and telemetry from contacting ANY external host.
   await context.route('**/*',route=>{
@@ -18,19 +26,19 @@ async function execute(page:Page,commands:AgentCommand[],id=`browser-${Date.now(
 const good=(r:AgentResponse)=>{expect(r.ok,JSON.stringify(r)).toBe(true);if('error' in r)throw new Error(r.error.message);return r;};
 
 test('agent previews leave autosave untouched; validated batch is acknowledged and reverses with one undo',async({page})=>{
-  await open(page);await expect.poll(()=>page.evaluate(key=>!!localStorage.getItem(key),STORAGE)).toBe(true);
-  const before=await page.evaluate(key=>({snapshot:window.deckcraft!.read(),saved:localStorage.getItem(key)}),STORAGE);
+  await open(page);await expect.poll(async()=>!!await savedProject(page)).toBe(true);
+  const before=await page.evaluate(()=>({snapshot:window.deckcraft!.read()}));const saved=await savedProject(page);
   const preview=good(await page.evaluate(()=>window.deckcraft!.preview({id:'preview-only',commands:[{type:'design.patch',patch:{width:24,length:18,skirting:{style:'Horizontal boards',clearanceIn:2}}}]})));
   expect(preview.snapshot.pricing.total).toBeGreaterThan(before.snapshot.pricing.total);expect(preview.snapshot.quotes.some(q=>/skirting/i.test(q))).toBe(true);
-  expect(await page.evaluate(key=>localStorage.getItem(key),STORAGE)).toBe(before.saved);
+  expect(await savedProject(page)).toBe(saved);
   expect((await page.evaluate(()=>window.deckcraft!.read())).design).toEqual(before.snapshot.design);
   const changed=good(await execute(page,[{type:'design.patch',patch:{width:20}},{type:'design.patch',patch:{length:18}}],'atomic-edit'));
   expect(changed.snapshot.design.width).toBe(20);expect(changed.snapshot.design.length).toBe(18);expect(changed.snapshot.history.canUndo).toBe(true);
-  await expect(page.getByRole('heading',{level:2}).filter({hasText:/20 × 18/}).first()).toBeVisible();
+  await showProjectControls(page);await expect(page.getByRole('heading',{level:2}).filter({hasText:/20 × 18/}).first()).toBeVisible();
   const repeated=good(await execute(page,[{type:'design.patch',patch:{width:20}},{type:'design.patch',patch:{length:18}}],'atomic-edit'));expect(repeated.replayed).toBe(true);
   const undo=good(await execute(page,[{type:'history.undo'}]));expect(undo.snapshot.design).toEqual(before.snapshot.design);
   good(await execute(page,[{type:'history.redo'}]));
-  await expect.poll(()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)!).configuration.width,STORAGE)).toBe(20);
+  await expect.poll(async()=>JSON.parse((await savedProject(page))!).configuration.width).toBe(20);
   await page.reload();await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);expect((await page.evaluate(()=>window.deckcraft!.read())).design.width).toBe(20);
 });
 
@@ -60,7 +68,7 @@ test('agent edits all three boundaries, creates private-free share links and dow
   }
   const after=await page.evaluate(()=>window.deckcraft!.read());expect(after.boundaries[1].offset).toEqual(initial.boundaries[1].offset);expect(after.boundaries[2].offset).toEqual(initial.boundaries[2].offset);
   expect(after.pricing.total).toBeCloseTo(after.pricing.subtotal+after.pricing.hst,6);expect(after.quotes.some(q=>/custom.*outline|bespoke/i.test(q))).toBe(true);
-  const share=good(await execute(page,[{type:'action',action:'share.create'}]));expect(share.result!.url).toContain('/deck-designer#d=');
+  const share=good(await execute(page,[{type:'action',action:'share.create'}]));expect(share.result!.url).toMatch(/\/deck-designer\/?#d=/);
   const [json]=await Promise.all([page.waitForEvent('download'),execute(page,[{type:'action',action:'save.json'}])]);const file=JSON.parse(readFileSync((await json.path())!,'utf8'));expect(file.configuration.deckOutlines.main).toHaveLength(6);
   const [obj]=await Promise.all([page.waitForEvent('download'),execute(page,[{type:'action',action:'export.obj'}])]);expect(readFileSync((await obj.path())!,'utf8')).toMatch(/\nv /);
   const shared=await page.context().newPage();await shared.goto(share.result!.url);await expect.poll(()=>shared.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);expect((await shared.evaluate(()=>window.deckcraft!.read())).design.deckOutlines).toEqual(after.design.deckOutlines);await shared.close();
@@ -81,5 +89,5 @@ test('agent tools fit phone and keep the regular editor available @phone',async(
   await open(page);await page.getByRole('button',{name:'Agents',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Work with your agent'});await expect(dialog).toBeVisible();
   const fits=await dialog.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&el.scrollWidth<=el.clientWidth;});expect(fits).toBe(true);
   if(process.env.DECK_AGENT_PROOF==='1')await page.screenshot({path:resolve('../../outputs/DeckCraft-agent-tools-phone.png')});
-  await dialog.getByRole('button',{name:'Close agent tools'}).click();await expect(dialog).toBeHidden();await expect(page.getByRole('button',{name:'Main deck point 1',exact:true})).toBeVisible();
+  await dialog.getByRole('button',{name:'Close agent tools'}).click();await expect(dialog).toBeHidden();await pickPlanTool(page,'Shape & points');await expect(page.getByRole('button',{name:'Main deck point 1',exact:true})).toBeVisible();
 });

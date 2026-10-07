@@ -1,4 +1,5 @@
 import {readFileSync} from 'node:fs';
+import {savedConfiguration} from './nav';
 import {expect,test,type Locator,type Page} from '@playwright/test';
 
 /**
@@ -71,8 +72,10 @@ const shortcuts=(page:Page)=>page.getByRole('group',{name:'Shape shortcuts'});
 const planStatus=(page:Page)=>preview(page).locator('.dd-plan-status');
 /** The plan's tools (R5): Deck size, Draw outline, Stairs and House, one at a time. Picks one. */
 async function planTool(page:Page,name:'Deck size'|'Shape & points'|'Stairs'|'House'){
+  const inspector=page.getByRole('dialog',{name:'Design inspector',exact:true});
+  if(await inspector.isVisible())await inspector.getByRole('button',{name:'Done · back to drawing',exact:true}).click();
   const tool=page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true});
-  if(name==='Shape & points'&&!await tool.isVisible())await page.getByRole('button',{name:'More tools',exact:true}).click();
+  if(!await tool.isVisible())await page.getByRole('tablist',{name:'Tool categories'}).getByRole('tab',{name:'Building',exact:true}).click();
   await tool.click();
   await expect(tool).toHaveAttribute('aria-checked','true');
 }
@@ -267,7 +270,6 @@ test('reaches every feature of the designer',async({page})=>{
     for(const name of ['Deck depth, front edge','Deck width, right end','Deck width, left end','Deck position along the house'])await reach(`Plan handle: ${name}`,planHandle(page,name));
     await reach('Typing the width on the plan',drawing(page).getByRole('button',{name:'Deck width 16 ft: type a new width'}));
     for(const name of ['Rectangle','L-shape','Multi-corner','Curved','Wrap left','Wrap right','Wrap both','Split level','Draw my own'])await reach(`Shape shortcut: ${name}`,shortcuts(page).getByRole('button',{name,exact:true}));
-    await page.getByRole('button',{name:'More tools',exact:true}).click();
     for(const name of ['Shape & points','Deck size','Stairs','House'])await reach(`Plan tool: ${name}`,page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true}));
     await planTool(page,'Stairs');
     await reach('Stairs on the plan',planHandle(page,'Stairs, position along the edge'));
@@ -289,6 +291,8 @@ test('reaches every feature of the designer',async({page})=>{
     await reach('Adding a door or window',openingsBar(page).getByRole('button',{name:'Add',exact:true}));
   });
   await test.step('Exterior finishes (F4, F5)',async()=>{
+    // Doors & windows leaves the drawing, which closes the House inspector. The link lives in that section.
+    await openSection(page,'House');
     await reach('Exterior finishes from the House section',page.getByRole('button',{name:'exterior finishes',exact:true}));
     const studio=await openExterior(page);
     await reach('Exterior finishes',studio.getByRole('group',{name:'House cladding',exact:true}));
@@ -315,6 +319,8 @@ test('reaches every feature of the designer',async({page})=>{
     await reach('Accent paint tool',paintChip(page));
     await showCanvas(page);await paintChip(page).getByRole('button',{name:'Done'}).click();
     await expect(paintChip(page)).toHaveCount(0);
+    // The paint chip sits on the drawing, so closing it leaves the section. Inlays are in Boards & finish.
+    await openSection(page,'Boards & finish');
     const inlays=page.getByRole('region',{name:'Inlays'});
     for(const kind of ['Add a framed rectangle','Add a diamond','Add a band','Add a medallion'])await reach(`Inlays: ${kind}`,inlays.getByRole('button',{name:kind,exact:true}));
     await reach('Deck-part finishes: fascia (F6)',deckParts(page).getByLabel('Fascia colour',{exact:true}));
@@ -397,7 +403,10 @@ test('reaches every feature of the designer',async({page})=>{
     await setNumber(page,'Deck width',24);
     await expect(size(page)).toContainText('24 × 12 ft');
     await page.waitForTimeout(800);// autosave runs 450 ms after the last change
-    await page.goto(link);await openFiles(page);
+    await page.goto(link);
+    await expect(size(page)).toContainText('24 × 12 ft');
+    await showCanvas(page);
+    await openFiles(page);
     await reach('Go back to my own design',tools.getByRole('button',{name:'Go back to my own design'}));
   });
   expect(problems).toEqual([]);
@@ -503,15 +512,32 @@ const toolRow=(page:Page)=>page.getByRole('radiogroup',{name:'Plan tools'}).eval
   });
   return {height:box.height,rows:new Set(tools.map(t=>t.top)).size,scrolls:row.scrollWidth>row.clientWidth,pageFits:document.documentElement.scrollWidth<=innerWidth,tools};
 });
-/** Every tool is a 44 px target whose label fits, and the tools take one row without the page scrolling sideways. */
-async function expectOneToolRow(page:Page,where:string){
+/** The category ribbon. Select parts is on every category. Sketch is a button beside the radios, not one of them. */
+const PLAN_RIBBONS=[
+  ['Building',['Deck size','Shape & points','Stairs','Patios & walls','House','Rails & screens','Select parts']],
+  ['Landscape',['Landscape','Patios & walls','Select parts']],
+  ['Materials',['Board layout','Inlays','Select parts']],
+  ['Main',['Select parts','Deck size']],
+] as const;
+async function showToolCategory(page:Page,name:string){
+  const tab=page.getByRole('tablist',{name:'Tool categories'}).getByRole('tab',{name,exact:true});
+  if(await tab.getAttribute('aria-selected')!=='true')await tab.click();
+  await expect(tab).toHaveAttribute('aria-selected','true');
+}
+/** Every tool is a 44 px target whose label fits and is in view, without the page scrolling sideways.
+ * On a desktop the category is one row. On a phone the same tools sit in the category grid. */
+async function expectPlanTools(page:Page,where:string,names:readonly string[],layout:'row'|'grid'){
   const row=await toolRow(page);
-  expect(row.tools.length,where).toBeGreaterThanOrEqual(9);
-  expect(row.rows,`${where}: the plan tools take one row`).toBe(1);
-  expect(row.height,`${where}: the row is one tool tall`).toBeLessThan(60);
+  expect(row.tools.map(t=>t.name),where).toEqual([...names]);
+  if(layout==='row'){
+    expect(row.rows,`${where}: the plan tools take one row`).toBe(1);
+    expect(row.height,`${where}: the row is one tool tall`).toBeLessThan(60);
+  }else expect(row.rows,`${where}: the category grid stays within two rows`).toBeLessThanOrEqual(2);
+  expect(row.scrolls,`${where}: the tools do not scroll out of the row`).toBe(false);
   for(const t of row.tools){
     expect(Math.min(t.width,t.height),`${where}: "${t.name}" is a 44 px target`).toBeGreaterThanOrEqual(44);
     expect(t.labelFits,`${where}: "${t.name}" fits its label`).toBe(true);
+    expect(t.inView,`${where}: "${t.name}" is in view`).toBe(true);
   }
   expect(row.pageFits,`${where}: no sideways page scroll`).toBe(true);
   return row;
@@ -522,31 +548,31 @@ test('keeps the plan tools on one row, all in view, on a desktop and a landscape
   for(const viewport of [{width:1280,height:720},{width:1024,height:768}]){
     await page.setViewportSize(viewport);
     const where=`${viewport.width} × ${viewport.height}`;
-    const row=await expectOneToolRow(page,where);
-    expect(row.scrolls,`${where}: the row does not scroll`).toBe(false);
-    expect(row.tools.filter(t=>!t.inView).map(t=>t.name),`${where}: every tool is in view`).toEqual([]);
+    for(const [category,names] of PLAN_RIBBONS){
+      await showToolCategory(page,category);
+      await expectPlanTools(page,`${where} · ${category}`,names,'row');
+    }
   }
   expect(problems).toEqual([]);
 });
 
-test('@phone keeps the plan tools on one row that scrolls sideways, and keeps the chosen tool in view',async({page})=>{
+test('@phone keeps every plan tool a 44 px target, and keeps the chosen tool in view',async({page})=>{
   await page.setViewportSize({width:390,height:844});
   const problems=await openDesigner(page);
-  const row=await expectOneToolRow(page,'390 px');
-  expect(row.scrolls,'The row scrolls sideways to its last tools').toBe(true);
+  await expectPlanTools(page,'390 px',PLAN_RIBBONS[0][1],'grid');
   const inView=async(name:string)=>(await toolRow(page)).tools.find(t=>t.name===name)?.inView;
-  // The row is drawn again when the plan comes back: the chosen tool, at the far end, is brought into view.
+  // Leaving the plan and coming back keeps the chosen tool checked and on screen.
   await planTool(page,'House');
   await viewTab(page,'Framing');
   await viewTab(page,'Plan');
   await expect(page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name:'House',exact:true})).toHaveAttribute('aria-checked','true');
   expect(await inView('House'),'House, chosen before, is in view on the plan again').toBe(true);
-  // A section can choose a tool too; it is brought into view however the row was scrolled.
+  // A section can choose a tool too, and that tool stays on screen.
   await openSection(page,'Stairs & railings');
   await sectionBody(page,'Stairs & railings').getByRole('button',{name:'Edit railings by section',exact:true}).click();
   await expect(page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name:'Rails & screens',exact:true})).toHaveAttribute('aria-checked','true');
   expect(await inView('Rails & screens'),'Rails & screens, chosen from the Stairs & railings section, is in view').toBe(true);
-  await expectOneToolRow(page,'390 px, after choosing tools');
+  await expectPlanTools(page,'390 px, after choosing tools',PLAN_RIBBONS[0][1],'grid');
   expect(problems).toEqual([]);
 });
 
@@ -801,7 +827,7 @@ test('adds a band and a compass medallion, and lists the medallion labour for a 
   await openSection(page,'Proposal & files');
   await expect(summary(page)).toContainText(/Inlays: a band two boards wide across the deck; a 4 ft compass medallion in eight wedges/);
   // The breakdown shows the labour as needing a quote; the list of quotes names the medallion's.
-  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Labour (Construction & Build)')).toHaveText(/^Labour \(Construction & Build\)\$[\d,]+ \+ quote$/); });
+  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Labour (Construction & Build)')).toHaveText(/^Labour \(Construction & Build\)\$[\d,]+ \+ quote · allowance$/); });
   await withSchedule(page,async()=>{ await expect(quoteLine(page,'Medallion inlay labour')).toHaveText('Builder quote Medallion inlay labour'); });
   expect(problems).toEqual([]);
 });
@@ -912,7 +938,7 @@ test('joins deck levels as built: the step stands on the lower level and the cla
   await page.getByLabel('Number of levels',{exact:true}).selectOption('2');
   // A second level adds its price (the levels meet, so no guard runs along the lower edge of the join).
   await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\+\$[\d,]+ Number of levels → 2/); });
-  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Stair and level cladding')).toHaveText(/^Stair and level cladding\$[\d,]+ \+ quote$/); });
+  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Stair and level cladding')).toHaveText(/^Stair and level cladding\$[\d,]+ \+ quote · allowance$/); });
   await withSchedule(page,async()=>{ expect(await schedule(page).textContent()).not.toMatch(ZERO); });
   await viewTab(page,'3D');
   const canvas=viewer3d(page);
@@ -1318,8 +1344,8 @@ test('moves an outline point in both directions and refuses crossed edges',async
   await expect(page.getByLabel('Selected point X in feet')).toHaveValue('17');await expect(page.getByLabel('Selected point Y in feet')).toHaveValue('13');
   await page.getByLabel('Selected point X in feet').fill('-1');await page.getByLabel('Selected point Y in feet').fill('6');
   await preview(page).getByRole('button',{name:'Apply',exact:true}).click();await expect(preview(page).locator('.dd-boundary-notice')).toContainText('cross');
-  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('golden-maple.deck-studio.deck-only.v1')??'{}').configuration?.deckOutlines?.main?.[2]??null)).toEqual({x:17,y:13});
-  await page.reload();await expect(page.getByRole('radio',{name:'Shape & points',exact:true})).toHaveAttribute('aria-checked','true');
+  await expect.poll(async()=>(await savedConfiguration(page))?.deckOutlines?.main?.[2]??null).toEqual({x:17,y:13});
+  await page.reload();await planTool(page,'Shape & points');
   await expand(preview(page),'Fine adjust a point');await page.getByLabel('Selected boundary point').selectOption('2');
   await expect(page.getByLabel('Selected point X in feet')).toHaveValue('17');await expect(page.getByLabel('Selected point Y in feet')).toHaveValue('13');expect(problems).toEqual([]);
 });
@@ -1468,13 +1494,17 @@ test('shares a link that reopens the design and keeps the visitor’s own',async
   const tools=fileTools(page);await openFiles(page);
   await tools.getByRole('button',{name:'Share link'}).click();
   const link=await tools.getByLabel('Link to this design').inputValue();
-  expect(link).toMatch(/\/deck-designer#d=1[zj]/);
+  expect(link).toMatch(/\/deck-designer\/?#d=1[zj]/);
   await expect(tools).toContainText('Your name and project address are not included');
+  // Sharing closes the section so the file menu can open. The width field is in that section.
+  await openSection(page,'Deck shape & size');
   await setNumber(page,'Deck width',30);
   await expect(size(page)).toContainText('30 × 12 ft');
   await page.waitForTimeout(800);
-  await page.goto(link);await openFiles(page);
+  await page.goto(link);
   await expect(size(page)).toContainText('24 × 12 ft');
+  await showCanvas(page);
+  await openFiles(page);
   await expect(tools).toContainText('shared with you');
   await expect(page).not.toHaveURL(/#d=/);
   await tools.getByRole('button',{name:'Go back to my own design'}).click();
@@ -1755,7 +1785,12 @@ test('@phone keeps the price visible while editing and returns to the canvas wit
   // This workspace flow uses the new default editor; the shared legacy helper chooses Deck size for its sizing tests.
   await planTool(page,'Shape & points');
   await openSection(page,'Deck shape & size');await setNumber(page,'Deck width',20);
-  await expect((await price(page))).not.toHaveText(before??'');await expect(preview(page)).toBeHidden();
+  const inspector=page.getByRole('dialog',{name:'Design inspector',exact:true});
+  await expect((await price(page))).not.toHaveText(before??'');
+  // The section opens over the drawing. The plan stays on screen, and the price stays in the bar.
+  await expect(inspector.getByRole('heading',{level:2,name:'Deck shape & size',exact:true})).toBeVisible();
+  await expect(preview(page)).toBeVisible();
+  await expect(plan(page)).toBeVisible();
   // The bar stays a strip at the foot of the screen: the amount beside the price schedule, the items still to quote and
   // the quote review, stacked, so at most 160 px tall.
   expect(await bar.evaluate(el=>{const r=el.getBoundingClientRect();return r.bottom<=window.innerHeight+1&&r.top>=window.innerHeight-160;})).toBe(true);

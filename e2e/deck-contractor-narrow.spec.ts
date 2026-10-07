@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {showProjectControls} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 
@@ -9,7 +10,9 @@ test.describe('compact contractor controls',()=>{
   await context.route('**/*',r=>{const url=new URL(r.request().url());return ['127.0.0.1','localhost'].includes(url.hostname)&&['GET','HEAD'].includes(r.request().method())?r.continue():r.fulfill({status:200,body:''});});
   await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth)).toBe(0);
-  for(const label of ['Presets','Agents','Undo','Redo','Describe a change','Jobs & versions']){const box=await page.getByRole('button',{name:label,exact:true}).boundingBox();expect(box!.width).toBeGreaterThanOrEqual(44);expect(box!.height).toBeGreaterThanOrEqual(44);expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(320);}
+  for(const label of ['Presets','Agents','Undo','Redo']){const box=await page.getByRole('button',{name:label,exact:true}).boundingBox();expect(box!.width).toBeGreaterThanOrEqual(44);expect(box!.height).toBeGreaterThanOrEqual(44);expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(320);}
+  await showProjectControls(page);
+  for(const label of ['Describe a change','Jobs & versions']){const box=await page.getByRole('button',{name:label,exact:true}).boundingBox();expect(box!.width).toBeGreaterThanOrEqual(44);expect(box!.height).toBeGreaterThanOrEqual(44);expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(320);}
   await page.getByRole('radio',{name:'Select parts',exact:true}).click();await page.getByRole('combobox',{name:'Select plan part',exact:true}).selectOption('house:main');
   const input=page.getByRole('spinbutton',{name:'Main house width (ft)',exact:true});const original=Number(await input.inputValue());
   await input.fill(String(original+1));await page.getByRole('button',{name:'Apply part changes',exact:true}).click();await expect(input).toHaveValue(String(original+1));

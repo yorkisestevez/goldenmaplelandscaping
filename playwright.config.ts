@@ -6,7 +6,7 @@ import {defineConfig,devices} from '@playwright/test';
  * WebGL runs on SwiftShader in headless mode; the tests assert on the page, never on canvas pixels.
  */
 const PORT=Number(process.env.E2E_PORT||4031);
-const channel=process.env.CI?undefined:(process.env.E2E_CHANNEL||'msedge');
+const channel=process.env.CI||process.env.E2E_CHANNEL==='chromium'?undefined:(process.env.E2E_CHANNEL||'msedge');
 const launchOptions={args:['--enable-unsafe-swiftshader','--use-angle=swiftshader']};
 
 export default defineConfig({

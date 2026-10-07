@@ -67,8 +67,11 @@ export default function PlanEditor({data,model,yard,update,onEdited,tool='size',
   const [typing,setTyping]=useState<Dim|null>(null),[draft,setDraft]=useState(''),cancelled=useRef(false);
   const [focused,setFocused]=useState('');
   const dimButtons=useRef<Partial<Record<Dim,HTMLButtonElement|null>>>({});
-  const handleEls=useRef<Record<string,HTMLDivElement|null>>({}),focusNext=useRef<string|null>(null);
-  useLayoutEffect(()=>{const id=focusNext.current,el=id?handleEls.current[id]:null;if(el){el.focus();focusNext.current=null;}});
+  const handleEls=useRef<Record<string,HTMLDivElement|null>>({}),focusNext=useRef<string|null>(null),focusDim=useRef<Dim|null>(null);
+  useLayoutEffect(()=>{
+    const id=focusNext.current,el=id?handleEls.current[id]:null;if(el){el.focus();focusNext.current=null;}
+    const dim=focusDim.current;if(!dim||typing)return;const button=dimButtons.current[dim];if(button){button.focus();focusDim.current=null;}
+  });
   const main=model.levels[0],outline=main.footprint.outline,mx=main.offset.x,mz=main.offset.z;
   // Draw outline: the same edits as the Deck section's outline editor.
   const outlineEdit=useOutlineEdit(data,update,()=>{onEdited?.();trackDeck('deckcraft_plan','deck_plan_outline');});
@@ -178,8 +181,10 @@ export default function PlanEditor({data,model,yard,update,onEdited,tool='size',
   // applies it and lets the focus go where it went.
   const close=(id:Dim,apply:boolean,refocus=true)=>{
     // The box goes away at once; a blur it fires on the way out must not apply it a second time.
+    // Focus returns after the figure's button is back in the document (the form and the button swap).
     cancelled.current=true;
-    setTyping(null);if(refocus)requestAnimationFrame(()=>dimButtons.current[id]?.focus());
+    if(refocus)focusDim.current=id;
+    setTyping(null);
     const n=Number(draft),current=id==='width'?Number(data.width):Number(data.length);
     if(!apply||draft.trim()===''||!Number.isFinite(n))return;
     const value=clampFt(n,...DECK_SIZE_FT);

@@ -49,8 +49,10 @@ test('designer drawing: L, T and A pick the next edge, Ctrl+Z steps back through
 });
 test('right-click deletes a patio in one undo step and opens the stair shape tool',async({page})=>{
  await expect.poll(async()=>(await read(page)).design.yardFeatures?.length??0).toBe(1);
+ await page.getByRole('radio',{name:'Patios & walls',exact:true}).click();
  const menu=page.getByRole('menu',{name:'Object edit menu'});
- await page.locator('.dd-hardscape-plan-picks polygon').first().click({button:'right'});await expect(menu).toContainText('Menu patio');
+ const patio=await page.locator('.dd-hardscape-plan-picks').evaluate(svg=>{const poly=[...svg.querySelectorAll('polygon')].find(node=>node.getAttribute('data-context-hardscape')?.includes('menu-patio'));if(!poly)return null;const box=(poly as SVGGraphicsElement).getBBox(),point=(svg as SVGSVGElement).createSVGPoint();point.x=box.x+box.width/2;point.y=box.y+box.height/2;const screen=point.matrixTransform((svg as SVGSVGElement).getScreenCTM()!);return {x:screen.x,y:screen.y};});
+ expect(patio).toBeTruthy();await page.mouse.click(patio!.x,patio!.y,{button:'right'});await expect(menu).toContainText('Menu patio');
  await menu.getByRole('menuitem',{name:'Delete',exact:true}).click();await expect.poll(async()=>(await read(page)).design.yardFeatures?.length??0).toBe(0);
  await page.getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(async()=>(await read(page)).design.yardFeatures?.length??0).toBe(1);
  await page.getByRole('radio',{name:'Select parts',exact:true}).click();

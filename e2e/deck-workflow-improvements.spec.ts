@@ -1,7 +1,9 @@
 import {test,expect} from '@playwright/test';
 import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
+import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-const proof='C:/Users/yorki/OneDrive/Documents/ChatGPT/Deckcraft pro/outputs/workflow-improvements';
+import {showProjectControls} from './nav';
+const proof=resolve('../../outputs/workflow-improvements');
 for(const phone of [false,true])test.describe(phone?'phone workflow':'desktop workflow',()=>{
  if(phone)test.use({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
  test((phone?'@phone ':'')+'estimating, options, readiness, recovery and customer export',async({page,context})=>{
@@ -10,6 +12,7 @@ for(const phone of [false,true])test.describe(phone?'phone workflow':'desktop wo
  await context.addInitScript(data=>localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration:data})),DEFAULT_DECK);
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&r.request().method()==='GET'?r.continue():r.fulfill({status:200,body:''}));
  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
+ await showProjectControls(page);
  await page.getByRole('button',{name:'Review quote costs',exact:true}).click();const quote=page.getByRole('dialog',{name:'Complete the missing costs'});await expect(quote).toBeVisible();
  await quote.locator('summary').filter({hasText:'Live quantities, costs & margin'}).click();await expect(quote.getByRole('heading',{name:'Waste & ordering'})).toBeVisible();await expect(quote.getByRole('heading',{name:'Material markup & margin'})).toBeVisible();await quote.screenshot({path:proof+'/'+(phone?'phone':'desktop')+'-costs.png'});await quote.getByRole('button',{name:'Close quote cost review'}).click();
  const openJobs=async()=>{await page.getByRole('button',{name:'Jobs & versions',exact:true}).click();await expect(page.getByRole('dialog',{name:'Jobs & options',exact:true})).toBeVisible();};
