@@ -1785,7 +1785,12 @@ test('@phone keeps the price visible while editing and returns to the canvas wit
   // This workspace flow uses the new default editor; the shared legacy helper chooses Deck size for its sizing tests.
   await planTool(page,'Shape & points');
   await openSection(page,'Deck shape & size');await setNumber(page,'Deck width',20);
-  await expect((await price(page))).not.toHaveText(before??'');await expect(preview(page)).toBeHidden();
+  const inspector=page.getByRole('dialog',{name:'Design inspector',exact:true});
+  await expect((await price(page))).not.toHaveText(before??'');
+  // The section opens over the drawing. The plan stays on screen, and the price stays in the bar.
+  await expect(inspector.getByRole('heading',{level:2,name:'Deck shape & size',exact:true})).toBeVisible();
+  await expect(preview(page)).toBeVisible();
+  await expect(plan(page)).toBeVisible();
   // The bar stays a strip at the foot of the screen: the amount beside the price schedule, the items still to quote and
   // the quote review, stacked, so at most 160 px tall.
   expect(await bar.evaluate(el=>{const r=el.getBoundingClientRect();return r.bottom<=window.innerHeight+1&&r.top>=window.innerHeight-160;})).toBe(true);
