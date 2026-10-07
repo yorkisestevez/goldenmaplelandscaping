@@ -1,5 +1,6 @@
 import {test,expect,type Page,type Locator} from '@playwright/test';
-import {savedConfiguration} from './nav';
+import {openDesignTask,savedConfiguration} from './nav';
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import sharp from 'sharp';
@@ -52,7 +53,7 @@ for(const touch of [false,true])test(`${touch?'@phone ':''}existing custom corne
 });
 
 for(const touch of [false,true])test(`${touch?'@phone ':''}materials Add opens an uncommitted plan placement and one Undo restores the original job`,async({page})=>{
- const before=await ready(page);await activate(page.getByRole('button',{name:'Boards & finish',exact:true}),touch);const add=page.getByRole('button',{name:'Add a framed rectangle',exact:true});await expect(add).toBeVisible();await activate(add,touch);await expect(controls(page)).toBeVisible();await expect(page.getByRole('radio',{name:'Inlays',exact:true})).toHaveAttribute('aria-checked','true');await expect(page.getByText('Choose a position on the deck',{exact:true})).toBeVisible();expect((await state(page)).design).toEqual(before.design);expect((await state(page)).pricing).toEqual(before.pricing);expect((await state(page)).history).toEqual(before.history);
+ const before=await ready(page);await openDesignTask(page,'Boards & finish');const add=page.getByRole('button',{name:'Add a framed rectangle',exact:true});await expect(add).toBeVisible();await activate(add,touch);await expect(controls(page)).toBeVisible();await expect(page.getByRole('radio',{name:'Inlays',exact:true})).toHaveAttribute('aria-checked','true');await expect(page.getByText('Choose a position on the deck',{exact:true})).toBeVisible();expect((await state(page)).design).toEqual(before.design);expect((await state(page)).pricing).toEqual(before.pricing);expect((await state(page)).history).toEqual(before.history);
  await point(page,{x:110.125,y:137.75},touch);await expect.poll(async()=>(await state(page)).design.inlays?.length).toBe(1);const placed=await ready(page),inlay=placed.design.inlays![0] as Exclude<DeckInlay,{kind:'band'}>;expect(inlay.dxFt).toBeCloseTo((110.125-144)/12,5);expect(inlay.dyFt).toBeCloseTo((137.75-120)/12,5);expect({...placed.design,inlays:before.design.inlays}).toEqual(before.design);await activate(page.getByRole('button',{name:'Undo',exact:true}),touch);await expect.poll(async()=>(await state(page)).design).toEqual(before.design);expect((await state(page)).pricing).toEqual(before.pricing);expect((await state(page)).history.canUndo).toBe(before.history.canUndo);
 });
 test('compass rose generates real 3D boards without changing the design or estimate',async({page})=>{
