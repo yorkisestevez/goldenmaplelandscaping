@@ -14,3 +14,9 @@ export function createDrawingDirection(){
  };
  return {point,release,reset};
 }
+/** With Shift holding the bearing, snaps still count: the first point closes the outline (closing wins), and another
+ * snap target sets the length along the held line instead of breaking it. */
+export function lockedSnap(locked:PlanPoint,snap:(p:PlanPoint)=>{point:PlanPoint;closing:boolean;snapped?:boolean},along:(p:PlanPoint)=>PlanPoint){
+ const hit=snap(locked);
+ return hit.closing?{point:hit.point,closing:true}:{point:hit.snapped?along(hit.point):locked,closing:false};
+}

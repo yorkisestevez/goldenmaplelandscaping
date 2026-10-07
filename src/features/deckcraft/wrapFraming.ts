@@ -1,6 +1,7 @@
 import {addBearings,blockBoardEnd,splitOnBearingsAlong,type FramedSet} from './constructionDetails';
 import {cleanPolygon,outlineSpans,zoneReference,frameZoneBearings,frameZoneJoists,frameHouseSideBeams,doubledMemberSpanIn,type DeckZone,type ZoneFramingConfig,type ZoneReference} from './zoneFraming';
 import {getBoardRows,type BoardRun,type PlanPoint} from './lib/deckGeometry';
+import {usesCurrentBuildRules,type BuildRules} from './buildRules';
 import {offsetPolygons,polygonBoard,polygonCut,signedArea} from './lib/polygonCuts';
 import {distanceToSegment,halfPlane,toLocal,toPlan,wrapHips,wrapZones,type ActiveWrap,type WrapFrame,type WrapHip,type WrapZoneGeometry} from './lib/wrapGeometry';
 import type {DeckLevel,Member,V3} from './deckTakeoff';
@@ -51,9 +52,32 @@ function mainStrips(outline:PlanPoint[],size:{w:number;h:number},houseCut:PlanPo
   return out;
 }
 
+/**
+ * A field board's pieces beside the breakers (centre lines across it): each breaker's strip, a board width plus a gap
+ * each side, is cleared. With `laid` (2026-10 rules: the spans breaker j is actually laid along) a board a breaker's
+ * centre line misses (beside a bump-out corner) runs on, notched round the breaker's end where it does reach the board;
+ * that cut is kept only where it covers more of the deck than clearing the whole strip. A sliver (≤ .01 sq in) of a
+ * notched cut is dropped, or with `whole` (the main deck's long-standing behaviour) replaced by a copy of the board
+ * given the span's centre and length.
+ */
+export function clearBreakers(b:BoardRun,breakers:number[],boardWidth:number,gap:number,laid?:(j:number)=>[number,number][],whole?:boolean):BoardRun[]{
+  const cut=(laidOnly:boolean)=>{let intervals:[number,number][]=[[b.cx-b.length/2,b.cx+b.length/2]];const notches:PlanPoint[][]=[],out:BoardRun[]=[];
+    for(const [j,x] of breakers.entries()){const lo=x-boardWidth/2-gap,hi=x+boardWidth/2+gap,spans=laidOnly&&b.polygon?laid!(j):undefined;
+      if(spans){const ys=b.polygon!.map(p=>p.y),y0=Math.min(...ys),y1=Math.max(...ys);if(!spans.some(([f,t])=>f<=y0+.001&&t>=y1-.001)){for(const [f,t] of spans)if(f-gap<y1-.001&&t+gap>y0+.001)notches.push([{x:lo,y:f-gap},{x:hi,y:f-gap},{x:hi,y:t+gap},{x:lo,y:t+gap}]);continue;}}
+      intervals=intervals.flatMap(([a,z])=>z<=lo||a>=hi?[[a,z]]:[...(a<lo?[[a,lo]]:[]),...(z>hi?[[hi,z]]:[])] as [number,number][]);}
+    for(const [a,z] of intervals)if(z-a>.001){if(b.polygon)for(const p of polygonCut(notches.length?polygonCut([b.polygon],notches,true):[b.polygon],[[{x:a,y:-1e4},{x:z,y:-1e4},{x:z,y:1e4},{x:a,y:1e4}]]))if(!notches.length||Math.abs(signedArea(p))>.01)out.push(polygonBoard(p,0,b.role));else if(whole)out.push({...b,cx:(a+z)/2,length:z-a});}
+    return out;
+  };
+  const covered=(r:BoardRun[])=>r.reduce((n,q)=>n+(q.polygon?Math.abs(signedArea(q.polygon)):q.length*(q.width??boardWidth)),0),cleared=cut(false),kept=laid?cut(true):cleared;
+  return covered(kept)>covered(cleared)+.01?kept:cleared;
+}
+
 export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOutline:PlanPoint[];inset:number;borders:number;boardWidth:number;gap:number;stockLength:number;houseSide:[number,number][];
   /** House blocks reaching into the main deck (plan polygons) and the x of their side walls. */
-  houseCut?:PlanPoint[][];houseCutXs?:number[]}):WrapFramingResult{
+  houseCut?:PlanPoint[][];houseCutXs?:number[];
+  /** The design's build rules (buildRules.ts). The 2026-10 rules lay unstaggered courses and clear field boards only
+   * beside a breaker actually laid (never a bare strip beside a bump-out); absent or 'legacy' keeps the quoted layout. */
+  buildRules?:BuildRules}):WrapFramingResult{
   const {wrap,cfg,inset,borders,boardWidth,gap,stockLength}=input,zero:V3={x:0,y:0,z:0};
   const hips=wrapHips(wrap),field=offsetPolygons([input.deckingOutline],inset);
   const out:WrapFramingResult={supports:[],beams:[],joists:[],blocking:[],fieldBoards:[],breakers:[],zones:[],hips,reference:undefined as unknown as ZoneReference};
@@ -98,10 +122,8 @@ export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOu
     // Field boards parallel to this zone's house wall, split at breakers, plus the breaker boards.
     const boards:BoardRun[]=[];
     for(const poly of localField){
-      for(const b of getBoardRows({outline:poly,bounds:geom.size,isCurved:false},{boardWidth,gap,angleDeg:0,inset:0,maxBoardLen:breakers.length?100000:stockLength})){
-        let intervals:[number,number][]=[[b.cx-b.length/2,b.cx+b.length/2]];
-        for(const x of breakers){const lo=x-boardWidth/2-gap,hi=x+boardWidth/2+gap;intervals=intervals.flatMap(([a,z])=>z<=lo||a>=hi?[[a,z]]:[...(a<lo?[[a,lo]]:[]),...(z>hi?[[hi,z]]:[])] as [number,number][]);}
-        for(const [a,z] of intervals)if(z-a>.001)for(const p of polygonCut([b.polygon!],[[{x:a,y:-1e4},{x:z,y:-1e4},{x:z,y:1e4},{x:a,y:1e4}]]))boards.push(polygonBoard(p,0,b.role));
+      for(const b of getBoardRows({outline:poly,bounds:geom.size,isCurved:false},{boardWidth,gap,angleDeg:0,inset:0,maxBoardLen:breakers.length?100000:stockLength,buildRules:input.buildRules})){
+        boards.push(...clearBreakers(b,breakers,boardWidth,gap,usesCurrentBuildRules(input)?j=>outlineSpans(poly,breakers[j],'x'):undefined));
       }
       for(const x of breakers)for(const [a,b] of outlineSpans(poly,x,'x'))for(let z=a;z<b;z+=stockLength+gap){
         const run=Math.min(stockLength,b-z);

@@ -1,6 +1,8 @@
 import type {DeckInlay,InlayFill} from '../types';
 import {getBoardRows,getHerringboneRows,getPictureFrameRuns,type BoardRun,type FootprintPlan,type PlanPoint} from './deckGeometry';
-import {offsetPolygons,polygonBoard,polygonCut,signedArea} from './polygonCuts';
+import {boardOutline,offsetPolygons,polygonBoard,polygonCut,signedArea} from './polygonCuts';
+import {frameInlays} from '../inlayFramingRuntime';
+export {frameInlays};
 import {bandWidthIn,inlayOutline,registerInlayGeometry,type InlayContext,type InlayPlan,type InlayStatus} from './inlayGeometry';
 type Band=Extract<DeckInlay,{kind:'band'}>;
 const MESSAGES:Record<Exclude<InlayStatus,'ok'|'blocked'>,string>={
@@ -61,7 +63,7 @@ export function planInlays(inlays:DeckInlay[],ctx:InlayContext,opts:{boards?:boo
       if(overlaps(pieces))return {...base,status:'overlap' as const,message:MESSAGES.overlap};
       built.push(...pieces);
       // Cut in: the band's boards run its length, in rows that exactly fill its width.
-      const boards=!withBoards||span.rows?[]:pieces.flatMap(piece=>real(getBoardRows(fp(piece,centre),{boardWidth,gap,angleDeg:across?0:90,inset:0,maxBoardLen:stockLength}))).map(r=>({...r,role:'inlay-fill' as const,inlay:inlay.id}));
+      const boards=!withBoards||span.rows?[]:pieces.flatMap(piece=>real(getBoardRows(fp(piece,centre),{boardWidth,gap,angleDeg:across?0:90,inset:0,maxBoardLen:stockLength,buildRules:ctx.buildRules}))).map(r=>({...r,role:'inlay-fill' as const,inlay:inlay.id}));
       return {...base,status:'ok' as const,boards};
     }
     const medallion=inlay.kind==='medallion',custom=inlay.kind==='custom',rotation=inlay.rotationDeg??0,complex=custom||Math.abs(rotation%360)>1e-8,frameRows=medallion?1:inlay.frameRows??1,pattern:InlayFill=medallion?'Straight':inlay.pattern??'Straight',outline=inlayOutline(inlay,centre);
@@ -89,7 +91,7 @@ export function planInlays(inlays:DeckInlay[],ctx:InlayContext,opts:{boards?:boo
     const medallionFill=inlay.kind==='medallion'&&inlay.style!=='round'
       ?(inlay.style==='compass'?compassWedges(c,unrotate(inner),inlay.diameterFt*6,ctx):radialMedallion(c,unrotate(inner),inlay.style,ctx)).map(rotateRun):null;
     const fill=medallionFill?medallionFill.map(b=>({...b,inlay:inlay.id}))
-      :interiors.flatMap(poly=>real(pattern==='Herringbone'?getHerringboneRows(fp(unrotate(poly),c),boardWidth,gap,0).map(rotateRun):getBoardRows(fp(poly,c),{boardWidth,gap,angleDeg:(pattern==='Diagonal'?45:90)+rotation,inset:0,maxBoardLen:stockLength}))).map(b=>({...b,role:'inlay-fill' as const,inlay:inlay.id}));
+      :interiors.flatMap(poly=>real(pattern==='Herringbone'?getHerringboneRows(fp(unrotate(poly),c),boardWidth,gap,0).map(rotateRun):getBoardRows(fp(poly,c),{boardWidth,gap,angleDeg:(pattern==='Diagonal'?45:90)+rotation,inset:0,maxBoardLen:stockLength,buildRules:ctx.buildRules}))).map(b=>({...b,role:'inlay-fill' as const,inlay:inlay.id}));
     return {...base,status,boards:[...frame,...fill]};
   });
 }
@@ -104,7 +106,7 @@ function compassWedges(c:PlanPoint,inner:PlanPoint[],radius:number,ctx:InlayCont
   return Array.from({length:8},(_,i)=>{
     // Boards square to the wedge's direction (45i°): rows start at its outer tip (getBoardRows starts at the low side).
     const angleDeg=(45*i+90)%360,wedge=[c,v(2*i-1),v(2*i),v(2*i+1)];
-    return polygonCut([wedge],joints,true).flatMap(piece=>getBoardRows({outline:piece,bounds:{w:2*c.x,h:2*c.y},isCurved:false},{boardWidth,gap,angleDeg,inset:0,maxBoardLen:stockLength}))
+    return polygonCut([wedge],joints,true).flatMap(piece=>getBoardRows({outline:piece,bounds:{w:2*c.x,h:2*c.y},isCurved:false},{boardWidth,gap,angleDeg,inset:0,maxBoardLen:stockLength,buildRules:ctx.buildRules}))
       .filter(b=>!b.polygon||Math.abs(signedArea(b.polygon))>=1).map(b=>({...b,role:i%2?'inlay-frame' as const:'inlay-fill' as const}));
   }).flat();
 }
@@ -119,7 +121,7 @@ function radialMedallion(c:PlanPoint,inner:PlanPoint[],style:'compass-rose'|'sun
     return [{x:c.x+nx,y:c.y+ny},{x:tip.x+nx,y:tip.y+ny},{x:tip.x-nx,y:tip.y-ny},{x:c.x-nx,y:c.y-ny}];
   });
   const rose=Array.from({length:16},(_,i)=>ray(i*Math.PI/8,i%2?radius*.30:radius*(i%4===0?.97:.72))),grownRose=offsetPolygons([rose],-gap/2);
-  const rows=(polys:PlanPoint[][],angle:number,role:'inlay-fill'|'inlay-frame')=>polys.flatMap(outline=>getBoardRows({outline,bounds:{w:2*c.x,h:2*c.y},isCurved:false},{boardWidth,gap,angleDeg:angle,inset:0,maxBoardLen:stockLength})).filter(b=>!b.polygon||Math.abs(signedArea(b.polygon))>=1).map(b=>({...b,role}));
+  const rows=(polys:PlanPoint[][],angle:number,role:'inlay-fill'|'inlay-frame')=>polys.flatMap(outline=>getBoardRows({outline,bounds:{w:2*c.x,h:2*c.y},isCurved:false},{boardWidth,gap,angleDeg:angle,inset:0,maxBoardLen:stockLength,buildRules:ctx.buildRules})).filter(b=>!b.polygon||Math.abs(signedArea(b.polygon))>=1).map(b=>({...b,role}));
   return inner.flatMap((a,i)=>{
     const b=inner[(i+1)%inner.length],sector=[c,a,b];
     if(style==='sunburst')return rows(polygonCut([sector],spokeJoints,true),(i+.5)*22.5,i%2?'inlay-frame':'inlay-fill');
@@ -128,5 +130,31 @@ function radialMedallion(c:PlanPoint,inner:PlanPoint[],style:'compass-rose'|'sun
   });
 }
 
+/** Cut the level's field, border and breaker boards around the built inlays (with the board gap), recolour the rows
+ * of a band across a straight field, and add the inlay boards. A board the inlays do not touch is kept exactly. */
+export function applyInlays(boards:BoardRun[],plans:InlayPlan[],boardWidth:number,gap:number):BoardRun[]{
+  const built=plans.filter(p=>p.status==='ok');if(!built.length)return boards;
+  const rows=built.filter(p=>p.band?.rows),holes=built.filter(p=>!p.band?.rows).flatMap(p=>p.pieces.map(q=>offsetPolygons([q],-gap)[0]).filter(Boolean));
+  const box=(poly:PlanPoint[])=>({x0:Math.min(...poly.map(p=>p.x)),x1:Math.max(...poly.map(p=>p.x)),y0:Math.min(...poly.map(p=>p.y)),y1:Math.max(...poly.map(p=>p.y))});
+  const holeBoxes=holes.map(box),out:BoardRun[]=[];
+  for(const b of boards){
+    // A band across a straight field is its rows: the field boards along them take the band's colour, uncut.
+    const band=b.role==='field'&&Math.abs(Math.sin(b.angleDeg*Math.PI/180))<1e-6?rows.find(p=>b.cy>p.band!.from&&b.cy<p.band!.to):undefined;
+    if(band){out.push({...b,role:'inlay-fill',inlay:band.id});continue;}
+    const poly=boardOutline(b,boardWidth),bb=box(poly);
+    if(!holeBoxes.some(h=>h.x0<bb.x1&&h.x1>bb.x0&&h.y0<bb.y1&&h.y1>bb.y0)){out.push(b);continue;}
+    const pieces=polygonCut([poly],holes,true);
+    if(pieces.length===1&&Math.abs(Math.abs(signedArea(pieces[0]))-Math.abs(signedArea(poly)))<.01){out.push(b);continue;}
+    for(const piece of pieces)if(Math.abs(signedArea(piece))>.5)out.push(polygonBoard(piece,b.angleDeg,b.role));
+  }
+  return [...out,...built.flatMap(p=>p.boards)];
+}
 
-registerInlayGeometry({planInlays});
+/** The breakers left once bands running front to back are in: a band takes the place of any breaker it covers or
+ * comes within a board of (the field boards end at the band instead, as they did at the breaker). */
+export function keepBreakers(breakers:number[],plans:InlayPlan[],boardWidth:number,gap:number):number[]{
+  const along=plans.filter(p=>p.status==='ok'&&p.band?.direction==='along'),pitch=boardWidth+gap;
+  return along.length?breakers.filter(x=>!along.some(p=>x+boardWidth/2>p.band!.from-pitch&&x-boardWidth/2<p.band!.to+pitch)):breakers;
+}
+
+registerInlayGeometry({planInlays,applyInlays,keepBreakers,frameInlays});

@@ -39,6 +39,9 @@ export function yardShapeProblem(kind:YardShapeKind,value:unknown,curves?:Circul
 
 /** Saved custom points are local inches; absent fields retain the exact legacy rectangle or straight wall. */
 export function yardShapeLocalPoints(f:YardFeature):PlanPoint[]{
+ // A fire feature has no editable shape, but plans, sections and checks read its footprint like a patio's:
+ // round bowls and rings as a 24-sided circle, linear tables as their rectangle.
+ if(f.kind==='fire-feature'){const w=f.widthFt*12,d=f.depthFt*12;return /linear/.test(f.productId)?[{x:-w/2,y:-d/2},{x:w/2,y:-d/2},{x:w/2,y:d/2},{x:-w/2,y:d/2}]:Array.from({length:24},(_,i)=>{const a=i*Math.PI/12;return {x:Math.cos(a)*w/2,y:Math.sin(a)*w/2};});}
  const kind=shapeKind(f),saved=kind==='patio'?f.outline:f.wallPath;if(saved)return saved.map(copy);
  const w=f.widthFt*12,d=f.depthFt*12;
  return kind==='patio'?[{x:-w/2,y:-d/2},{x:w/2,y:-d/2},{x:w/2,y:d/2},{x:-w/2,y:d/2}]:[{x:-w/2,y:0},{x:w/2,y:0}];
@@ -46,7 +49,7 @@ export function yardShapeLocalPoints(f:YardFeature):PlanPoint[]{
 export function yardShapeWorldPoint(f:YardFeature,p:PlanPoint):PlanPoint{const a=f.rotationDeg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return {x:f.xFt*12+c*p.x-s*p.y,y:f.zFt*12+s*p.x+c*p.y};}
 export function yardShapeLocalPoint(f:YardFeature,p:PlanPoint):PlanPoint{const a=f.rotationDeg*Math.PI/180,c=Math.cos(a),s=Math.sin(a),x=p.x-f.xFt*12,y=p.y-f.zFt*12;return {x:c*x+s*y,y:-s*x+c*y};}
 export const yardShapeWorldPoints=(f:YardFeature)=>yardShapeLocalPoints(f).map(p=>yardShapeWorldPoint(f,p));
-export const yardShapeCurveWorldPoints=(f:YardFeature)=>tessellateArcs(yardShapeLocalPoints(f),f.curves,f.kind==='patio').map(p=>yardShapeWorldPoint(f,p));
+export const yardShapeCurveWorldPoints=(f:YardFeature)=>tessellateArcs(yardShapeLocalPoints(f),f.curves,f.kind!=='retaining-wall').map(p=>yardShapeWorldPoint(f,p));
 /** The editing view includes saved shapes even when their installed model is excluded. */
 export function yardShapeFrame<T extends {x:number;y:number;w:number;h:number;viewBox:string}>(frame:T,features:readonly YardFeature[]):T{
  const points=features.filter(f=>f.kind==='patio'||f.kind==='retaining-wall').flatMap(yardShapeCurveWorldPoints).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));if(!points.length)return frame;

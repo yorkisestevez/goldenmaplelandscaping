@@ -8,6 +8,8 @@ import {calculateDeckReleaseEstimate,parseDeckReleaseDesign,serializeDeckRelease
 import {getHouseContact} from '../src/features/deckcraft/houseContact';
 import {getHouseBlocks} from '../src/features/deckcraft/houseFootprint';
 import {getStairSupport} from '../src/features/deckcraft/stairConstruction';
+import {finishedFasciaOffset} from '../src/features/deckcraft/lib/finishedFootprint';
+import {hasPictureFrame} from '../src/features/deckcraft/borderLighting';
 import {encodeDesignLink,decodeDesignLink,designLinkFromHash} from '../src/features/deckcraft/designLink';
 import type {DeckData} from '../src/features/deckcraft/types';
 
@@ -47,8 +49,17 @@ const three=generated(doc(house,main,lower,third));equal(three.data.levels,3,'Th
 const irregular:SketchShape={...main,points:[{x:0,y:200},{x:160,y:200},{x:160,y:260},{x:80,y:260},{x:80,y:320},{x:0,y:320}]};
 const l=generated(doc(house,irregular));near(l.model.quantities.area,144,'Concave L outline retains actual144sqft, not bounding192sqft');equal(l.data.deckOutlines?.main?.length,6,'Concave corners remain editable');
 const wood=generated(doc(house,main),{...current,deckingMaterial:'cedar',deckingColor:'Western Red Cedar'});equal(wood.data.deckingMaterial,'cedar','Wood product preserved');
-const treated:DeckData={...current,deckingMaterial:'pressure_treated',deckingColor:'Pressure Treated'},treatedRun=getStairSupport(treated,.25).runIn,treatedStair={...stairs,depthFt:(treatedRun+.5)/12,points:rect(60,400,40,(treatedRun+.5)/1.2)},treatedSplit=generated(doc(house,main,lower,treatedStair),treated);
+// The exact footprint is one run plus the nosing, and on a framed deck (the default since 2026-10-04) the stair starts
+// at the finished fascia face, beyond the rim. Drawn without that offset it really is 0.75 in short, and must warn.
+const treated:DeckData={...current,deckingMaterial:'pressure_treated',deckingColor:'Pressure Treated'},treatedSupport=getStairSupport(treated,.25),treatedRun=treatedSupport.runIn,exactDepth=(d:DeckData)=>treatedRun+treatedSupport.treadNosingIn+(hasPictureFrame(d)?finishedFasciaOffset(d):0),treatedDepth=exactDepth(treated),treatedStair={...stairs,depthFt:treatedDepth/12,points:rect(60,400,40,treatedDepth/1.2)},treatedSplit=generated(doc(house,main,lower,treatedStair),treated);
+ok(hasPictureFrame(treated)&&treatedDepth>treatedRun+treatedSupport.treadNosingIn,'The wood stair fixture is on the default framed deck, so its exact footprint includes the fascia offset');
 near(treatedSplit.model.flights.find(f=>f.kind==='grade')!.run,treatedRun,'Pressure-treated stair run uses actual wood board gap');ok(!treatedSplit.result.warnings.some(s=>s.includes('reconciles')),'Exact wood stair footprint needs no false reconciliation');
+{
+  const unframed:DeckData={...treated,pictureFrameRows:0},depth=exactDepth(unframed),plain=generated(doc(house,main,lower,{...stairs,depthFt:depth/12,points:rect(60,400,40,depth/1.2)}),unframed);
+  ok(!plain.result.warnings.some(s=>s.includes('reconciles')),'An exact unframed wood stair footprint (run plus nosing) needs no reconciliation');
+  const short=treatedRun+treatedSupport.treadNosingIn,missed=generated(doc(house,main,lower,{...stairs,depthFt:short/12,points:rect(60,400,40,short/1.2)}),treated);
+  ok(missed.result.warnings.some(s=>s.includes('reconciles')),'A framed wood stair drawn without the fascia offset is reconciled, with a warning');
+}
 const wing=shape('House wing','house',220,0,60,200,{id:'wing',widthFt:6,depthFt:20});const winged=generated(doc(house,main,wing));equal(winged.data.houseConfig?.footprint?.rects?.length,1,'Attached rectangular house block is represented');near(getHouseBlocks(winged.data)[1].rect.x0,264,'Measured wing left edge preserved');
 
 for(const [name,input] of [

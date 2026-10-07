@@ -1,7 +1,8 @@
 import {validateYardFinishedSettings} from './yardFinishedSettings';
 import type {YardFeature} from './types';
 import type {PlanPoint} from './lib/deckGeometry';
-import {arcGeometry,tessellateArcs,inspectArcShape} from './circularArcs';
+import {arcGeometry,tessellateArcs} from './circularArcs';
+import {inspectArcShape} from './circularArcShape';
 import {hardscapeProblem} from './hardscapeCatalogue';
 import {yardShapeEdit,yardShapeLocalPoints,yardShapeProblem,yardShapeRunIn,yardShapeWorldPoint,yardShapeWorldPoints,YARD_SHAPE_LIMITS} from './yardShapeEditing';
 
@@ -92,7 +93,7 @@ export function curveYardEdge(f:YardFeature,index:number,bulgeIn:number):YardFea
  const crosses=(a:PlanPoint,b:PlanPoint,c:PlanPoint,d:PlanPoint)=>{const cross=(p:PlanPoint,q:PlanPoint,r:PlanPoint)=>(q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x);return cross(a,b,c)*cross(a,b,d)<-1e-8&&cross(c,d,a)*cross(c,d,b)<-1e-8;};
  const n=sampled.length-(kind==='patio'?0:1);for(let i=0;i<n;i++)for(let j=i+2;j<n;j++){if(kind==='patio'&&i===0&&j===n-1)continue;if(crosses(sampled[i],sampled[(i+1)%total],sampled[j],sampled[(j+1)%total]))throw Error('Those curves cross. Reduce the bend.');}
  let length=0;for(let i=0;i<edgeCount;i++){const a=points[i],b=points[(i+1)%points.length],c=curves.find(c=>c.edge===i);length+=c?arcGeometry(a,b,c.bulgeIn).lengthIn:Math.hypot(b.x-a.x,b.y-a.y);}
- if(kind==='retaining-wall'&&(length<24||length>960))throw Error('Keep the complete wall path between 2 and 80 ft.');
+ if(kind==='retaining-wall'&&(length<YARD_SHAPE_LIMITS.wallMinRunIn||length>YARD_SHAPE_LIMITS.wallMaxRunIn))throw Error('Keep the complete wall path between 2 and 240 ft.');
  if(kind==='patio'){const b=bounds(sampled);if(b.x1-b.x0>720||b.y1-b.y0>720)throw Error('Keep the complete patio within 60 ft across and out.');}
  return validateYardFinishedSettings({...f,curves:curves.length?curves:undefined,...(curves.length?(kind==='patio'?{outline:points}:{wallPath:points}):{}),...(kind==='retaining-wall'?{widthFt:length/12}:{})});
 }

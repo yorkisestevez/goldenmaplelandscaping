@@ -1,13 +1,17 @@
 import assert from 'node:assert/strict';
 import {writeFileSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import type {DeckData,YardFeature} from '../src/features/deckcraft/types';
-import {buildYardModel,yardArea,yardClip} from '../src/features/deckcraft/yardModel';
+import {buildYardModel,yardArea,yardClip,loadAdvancedYardRuntime} from '../src/features/deckcraft/yardModel';
 import {buildYardTakeoff} from '../src/features/deckcraft/yardTakeoff';
 import {hardscapeSelection,HARDSCAPE_PRODUCTS,hardscapeBody,hardscapeProblem} from '../src/features/deckcraft/hardscapeCatalogue';
 import {wallConstructionPlan} from '../src/features/deckcraft/wallConstruction';
 import {yardEarthworkPlan,earthworkProblem} from '../src/features/deckcraft/yardEarthwork';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
+// Sloped terrain routes the wall through the lazily loaded advanced yard runtime, as the app loads it for such designs.
+await loadAdvancedYardRuntime();
 let checks=0;const ok=(v:unknown,m:string)=>{assert.ok(v,m);checks++;},near=(a:number,b:number,m:string)=>ok(Math.abs(a-b)<1e-5,`${m}: ${a} vs ${b}`);
 const wall:YardFeature={id:'wall',kind:'retaining-wall',name:'QA wall',enabled:true,xFt:40,zFt:45,widthFt:20,depthFt:1,heightIn:24,rotationDeg:0,productId:'segmental-concrete',color:'#aaa69b'};
 const data=(f:YardFeature[],extra:Partial<DeckData>={}):DeckData=>({...structuredClone(DEFAULT_DECK),houseVisible:false,yardFeatures:f,terrainConfig:{widthFt:250,depthFt:250,elevationIn:0,slopePct:0},...extra});
@@ -29,4 +33,4 @@ for(const id of ['techo-borealis-wall','techo-rocka-wall','permacon-orion-wall']
 const hairpin={...stock('techo-raffinato-wall'),xFt:0,zFt:0,widthFt:(20+Math.hypot(18,3)),wallPath:[{x:-240,y:360},{x:0,y:360},{x:-216,y:396}],heightIn:36};const hm=buildYardModel(data([hairpin])),hf=hm.features[0],first=hf.boxes.find(b=>b.role==='wall-block')!,row=hf.boxes.filter(b=>b.role==='wall-block'&&Math.abs(b.y-first.y)<.001);near(yardArea(yardClip(hf.footprints,yardClip(row.map(b=>b.polygon!)),'difference')),0,'Acute supplier course has no missing patch');near(row.reduce((n,b)=>n+yardArea([b.polygon!]),0),yardArea(hf.footprints),'Acute course does not double-fill corners');
 const hauling=yardEarthworkPlan(20,5,{soilReusePct:50,spoilSwellPct:100,looseSpoilTonnesPerYd3:.8,binPayloadTonnes:5,binVolumeYd3:14});near(hauling.reusedYd3,5,'Reuse cannot exceed fill demand');near(hauling.exportBankYd3,15,'Export bank soil subtracts reuse once');near(hauling.looseSpoilYd3!,30,'Swell changes loose volume');near(hauling.spoilTonnes!,24,'Mass uses loose density');near(hauling.bins,5,'Payload can govern the bin count');ok(hauling.haulingInputsComplete,'Explicit hauling inputs recognized');ok(yardEarthworkPlan(20,5).looseSpoilYd3===null,'Unknown swell is pending rather than invented');near(yardEarthworkPlan(0,0).bins,0,'No excavation needs no bin');for(const bad of [{soilReusePct:101},{spoilSwellPct:-1},{binVolumeYd3:0},{binPayloadTonnes:Infinity},{looseSpoilTonnesPerYd3:NaN},{junk:0}])ok(!!earthworkProblem(bad),'Invalid hauling input rejected');const earthData={...data([wall]),yardEarthwork:hauling.inputs};assert.deepEqual(parseDesign(serializeDesign(earthData)).yardEarthwork,hauling.inputs);checks++;const explicit=buildYardTakeoff(earthData);near(explicit.quantities.bins,explicit.earthwork.bins,'Displayed bins and disposal calculation agree');
 const all=HARDSCAPE_PRODUCTS.filter(p=>p.category==='wall').flatMap(p=>{const fs=p.finishes.find(f=>f.units.some(u=>hardscapeBody(u.role)));if(!fs)return [{wall:p.id,status:'accessory only'}];const s=hardscapeSelection(stock(p.id))!;return [{wall:p.id,status:s.caps.length?'documented cap options':['techo-borealis-wall','techo-rocka-wall','permacon-orion-wall'].includes(p.id)?'cap-free':'assembly/top-course review',options:s.caps.length}];});
-writeFileSync('../wall-cap-audit.json',JSON.stringify({verifiedCaps:capsAudit,allWalls:all},null,2));console.log(`Wall construction/cap integration: ${checks} checks passed.`);
+const audit=join(tmpdir(),'wall-cap-audit.json');writeFileSync(audit,JSON.stringify({verifiedCaps:capsAudit,allWalls:all},null,2));console.log(`Wall construction/cap integration: ${checks} checks passed (cap audit: ${audit}).`);

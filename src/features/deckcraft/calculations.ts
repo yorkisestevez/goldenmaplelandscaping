@@ -10,7 +10,9 @@ import { activeCustomFront, customLabourFactor, customOutline } from './lib/cust
 import {freeFootprint,freeOutlineLabourFactor} from './lib/freeOutline';
 import { outlineSpans } from './zoneFraming';
 import {getHardwareLayout} from './hardwareLayout';
-import {deckBoardStock} from './stockPlan';
+import {deckBoardStock,type ProductStock} from './stockPlan';
+import {productStock} from './deckingStock';
+import {usesCurrentBuildRules} from './buildRules';
 import {hasBoardLayout,layoutBoardStock,layoutAutomaticBreakerLf,boardLayoutAllowance,BOARD_LAYOUT_POLICY,BOARD_LAYOUT_SUPPORT_QUOTE} from './boardLayoutPricing';
 import {boardFinishPlan,colourName,darkSlateBorder,parseColourRef,type StockGroup} from './boardFinishes';
 import {DECK_PARTS,partRef,railingFinish,stairTreadKey} from './deckPartFinishes';
@@ -46,6 +48,9 @@ import {
   RailingType,
   LIGHTING_COSTS
 } from './types';
+
+/** Decking supply rates exclude delivery, so every design lists it for a supplier quote. */
+export const DECKING_DELIVERY_QUOTE='Decking delivery (supplier quote)';
 
 export interface EstimateResult {
   poolQuoteReview?:import('./poolQuoteRuntime').PoolQuoteReview;
@@ -170,17 +175,20 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // Total Linear Feet (LF) = (Area / Coverage) * Waste
   const layoutRecords=[...(data.boardLayout?.regions??[]),...(data.boardLayout?.breakers??[]),...(data.boardLayout?.pieces??[])];
   const presentLayoutLevels=new Set(model.levels.filter(l=>l.kind==='deck').map(l=>l.index+1));
-  const customBoardLayout=model.levels.some(l=>l.boards.some(b=>!!b.layoutId)),stockFor=(m:DeckTakeoff,w:number)=>customBoardLayout?layoutBoardStock(data,m,w,{straight:wasteFactors.Straight||1.10,diagonal:wasteFactors.Diagonal||1.15},model):deckBoardStock(m,w);
+  // Each product is bought in its own listed lengths (deckingStock.productStock); legacy designs keep their one stock length.
+  const mainStock=productStock(data,data.deckingMaterial);
+  const customBoardLayout=model.levels.some(l=>l.boards.some(b=>!!b.layoutId)),stockFor=(m:DeckTakeoff,w:number,stock:ProductStock=mainStock)=>customBoardLayout?layoutBoardStock(data,m,w,{straight:wasteFactors.Straight||1.10,diagonal:wasteFactors.Diagonal||1.15},model,stock):deckBoardStock(m,w,stock);
   const boardStock=stockFor(model,wasteFactor);
   const separateBorder=darkSlateBorder(data)&&model.levels.some(l=>l.boards.some(b=>b.role==='border'&&!(b as typeof b&{layoutColour?:string}).layoutColour));
   const darkBoard=(li:number,bi:number,role?:string)=>separateBorder&&role==='border'&&!(model.levels[li].boards[bi] as typeof model.levels[number]['boards'][number]&{layoutColour?:string}).layoutColour;
   // Accent-colour and inlay boards (boardFinishes.ts) leave the main stock and are ordered as their own boards.
   const finish=data.boardColours?.length||data.inlays?.length||data.deckFinishes?.border||customBoardLayout?boardFinishPlan(data,model):null,accent=finish?.pieces?finish:null,separate=finish?.stock.length?finish:null;
   const accentKeys=new Set(separate?.stock.flatMap(g=>g.boards.map(b=>`${b.level}:${b.index}`)));
-  const boardsWhere=(keep:(level:number,index:number,role?:string)=>boolean,waste=wasteFactor)=>stockFor({...model,levels:model.levels.map((l,li)=>({...l,boards:l.boards.filter((b,bi)=>keep(li,bi,b.role))}))},waste);
+  const boardsWhere=(keep:(level:number,index:number,role?:string)=>boolean,waste=wasteFactor,stock=mainStock)=>stockFor({...model,levels:model.levels.map((l,li)=>({...l,boards:l.boards.filter((b,bi)=>keep(li,bi,b.role))}))},waste,stock);
   const pricedBoardStock=separate?boardsWhere((li,bi,role)=>!darkBoard(li,bi,role)&&!accentKeys.has(`${li}:${bi}`)):separateBorder?boardsWhere((li,bi,role)=>!darkBoard(li,bi,role)):boardStock;
   const totalDeckingLf = pricedBoardStock.orderedLf;
-  const standard_board_length = selectedMaterial.id === 'cedar' ? 12 : 16;
+  // The main product's longest board, in feet (legacy 16 / cedar 12), so breaker wording names a real board length.
+  const standard_board_length = Math.max(...mainStock.lengthsIn)/12;
   const finalBoards = pricedBoardStock.orderedBoards;
   // costPerSqft → $/lin-ft conversion is (boardWidthIn / 12): a 5.5" board covers
   // 5.5/12 sqft per lin-ft. (Was /5.5, which billed per-sqft prices per lin-ft —
@@ -438,7 +446,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   // Inlay boards use the waste allowance of what they are: a frame is picture-frame work, a fill its own pattern.
   // The border in its own colour (deckFinishes.border) is priced the same way, in the Deck-part finishes section.
   const groupRow=(g:StockGroup)=>{
-    const keys=new Set(g.boards.map(b=>`${b.level}:${b.index}`)),stock=boardsWhere((li,bi)=>keys.has(`${li}:${bi}`),g.wasteKey?wasteFactors[g.wasteKey]||wasteFactor:wasteFactor),rate=collectionRate(g.material.id);
+    const keys=new Set(g.boards.map(b=>`${b.level}:${b.index}`)),stock=boardsWhere((li,bi)=>keys.has(`${li}:${bi}`),g.wasteKey?wasteFactors[g.wasteKey]||wasteFactor:wasteFactor,productStock(data,g.material.id)),rate=collectionRate(g.material.id);
     const part=()=>g.part==='band'?'Inlay band':g.part==='medallion'?'Medallion inlay':g.part==='frame'?'Inlay frame':`Inlay inside, ${g.wasteKey!.toLowerCase()}`;
     const label=g.kind==='inlay'?`${part()} · ${g.material.name} · ${g.color.name}`:g.kind==='border'?`Border · ${g.material.name} · ${g.color.name}`:`${g.material.name} · ${g.color.name}`;
     return {group:g,stock,label,cost:rate===null?null:stock.orderedLf*rate*((customBoardLayout?BOARD_LAYOUT_POLICY.stockWidthIn:deckingRateWidth(g.material.id,boardWidthIn))/12)*markupMult};
@@ -491,9 +499,12 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const lightingData=screenLayout?{...data,lightingSystem:{...lSys,selectedItems:syncAutoLighting(data,{posts:model.railing.posts.length,stairs:model.treads.length,privacy:screenLayout.privacyMounts.length,border:borderLightingPlan(data,model).availableMounts.length}).filter(i=>i.zone!=='privacy'||screenLayout.privacyMounts.length>0)}}:data;
   const lightingCheck=lightingSystemCheck(lightingData,model),selectedLightingItems=lightingCheck.items;
   flags.push(...lightingCheck.warnings,...pictureFrameCompatibility(data));
+  // Decking supply benchmarks exclude delivery: listed for a supplier quote, never priced or silently dropped.
+  quoteRequired.push(DECKING_DELIVERY_QUOTE);
   quoteRequired.push(...selectedLightingItems.filter(p=>p.cost===null||p.laborCost===null).map(p=>p.cost!==null?`${p.name} installation (builder quote)`:p.laborCost!==null?`${p.name} supply (supplier quote)`:`${p.name} supply and installation`));
   if(selectedLightingItems.some(p=>p.rateSource))flags.push('Lighting supply uses the Islington Nurseries 2026 published trade price list (CAD). Confirm availability and delivery before ordering; installation is quoted separately where no labour rate exists.');
-  if(deckingMaterial in DECKING_RATE_SOURCES)flags.push('Selected decking uses a current DeckMart retail purchasing benchmark rather than the archived Carr trade rate. The listed total is an estimate; confirm the selected colour, profile, stock lengths and delivery before quoting.');
+  // The per-foot note came with the 2026-10 listed-stock purchasing; saves from before it keep 9b2ee11's flag word for word.
+  if(deckingMaterial in DECKING_RATE_SOURCES)flags.push(`Selected decking uses a current DeckMart retail purchasing benchmark rather than the archived Carr trade rate. The listed total is an estimate${usesCurrentBuildRules(data)?' priced per foot from its 12 ft board, also for longer stock':''}; confirm the selected colour, profile, stock lengths and delivery before quoting.`);
   // Manufacturer privacy screens have no price-book rate: listed for a supplier quote, never priced at zero.
   const quotedScreens=quotedPrivacyScreens(activeScreens);
   quoteRequired.push(...quotedScreens.map(name=>`${name} supply and installation`));
@@ -556,6 +567,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
       total: m_deckingCost + m_breaker_board_cost + m_breaker_blocking_cost,
       items: [
         { name: selectedMaterial.name, spec: `${pattern}${customBoardLayout?' with custom board layout':''}; ${pricedBoardStock.bins.reduce((n,b)=>n+b.cutsIn.length,0)} ${customBoardLayout?'stock cuts':'installed pieces'}, ${pricedBoardStock.spareBoards} spare stock boards${separateBorder?'; contrast border priced separately':''}${separate?`; ${[accent?'accent-colour':'',finish!.inlayPieces?'inlay':'',finish!.borderPieces?'border':'',layoutRows.length?'custom-layout':''].filter(Boolean).join(' and ')} boards priced separately`:''}`, qty: finalBoards, unit: 'boards', cost: m_deckingCost },
+        { name: DECKING_DELIVERY_QUOTE, spec: 'Supplier quote required: delivery of the ordered decking stock is not in the supply rate.', qty: 1, unit: 'allowance', cost: null },
         ...(false ? [
           { name: `Breaker Board Rows (${breaker_rows} rows)`, spec: `${total_breaker_boards} boards × ${standard_board_length}ft — perpendicular to field, full deck width`, qty: total_breaker_boards, unit: 'boards', cost: m_breaker_board_cost },
           { name: `Breaker Row Blocking (PT 2×10)`, spec: `${breaker_rows} rows × joist bay blocking @ ${(joistSpacing / 12 - 0.1).toFixed(1)}ft each`, qty: Math.ceil(breaker_blocking_lf / 8), unit: 'pcs', cost: m_breaker_blocking_cost }
@@ -836,10 +848,11 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
 
   if (finalCostPerSqft > 0 && finalCostPerSqft < 40) flags.push('Estimate may be incomplete - review inputs');
   if (finalCostPerSqft > 250) flags.push('Estimate is high - review inputs');
-  const stockRow=(name:string,stock:ReturnType<typeof deckBoardStock>):StockScheduleRow=>({name,section:`${customBoardLayout?BOARD_LAYOUT_POLICY.stockWidthIn:boardWidth} in decking`,stockLengthIn:model.stockLength,orderedPieces:stock.orderedBoards,cutsIn:stock.bins.map(b=>b.cutsIn),unresolvedIn:stock.unresolved,installedLf:stock.installedLf,orderedLf:stock.orderedLf});
+  // Mixed listed lengths name each packed board's length (binLengthsIn); the row's stock length is the longest listed board.
+  const stockRow=(name:string,stock:ReturnType<typeof deckBoardStock>,product:ProductStock=mainStock):StockScheduleRow=>({name,section:`${customBoardLayout?BOARD_LAYOUT_POLICY.stockWidthIn:boardWidth} in decking`,stockLengthIn:Math.max(...product.lengthsIn),orderedPieces:stock.orderedBoards,cutsIn:stock.bins.map(b=>b.cutsIn),...(new Set(product.lengthsIn).size>1?{binLengthsIn:stock.bins.map(b=>b.lengthIn)}:{}),unresolvedIn:stock.unresolved,installedLf:stock.installedLf,orderedLf:stock.orderedLf});
   const boardSchedules=[stockRow(`${selectedMaterial.name} — ${pricedBoardStock.spareBoards} spare boards included`,pricedBoardStock)];
-  if(separateBorder){const stock=boardsWhere((li,bi,role)=>darkBoard(li,bi,role));boardSchedules.push(stockRow(`Dark Slate border — quote required; ${stock.spareBoards} spare boards allowed`,stock));}
-  for(const r of [...accentRows,...borderRows,...layoutRows])boardSchedules.push(stockRow(`${r.label} ${r.group.kind==='accent'?'accent boards':'boards'} — ${r.cost===null?'quote required; ':''}${r.stock.spareBoards} spare boards included`,r.stock));
+  if(separateBorder){const slate=productStock(data,'dark-slate'),stock=boardsWhere((li,bi,role)=>darkBoard(li,bi,role),wasteFactor,slate);boardSchedules.push(stockRow(`Dark Slate border — quote required; ${stock.spareBoards} spare boards allowed`,stock,slate));}
+  for(const r of [...accentRows,...borderRows,...layoutRows])boardSchedules.push(stockRow(`${r.label} ${r.group.kind==='accent'?'accent boards':'boards'} — ${r.cost===null?'quote required; ':''}${r.stock.spareBoards} spare boards included`,r.stock,productStock(data,r.group.material.id)));
   if(veneer.woodBoxes.length){const stock=planStock(veneer.woodBoxes.map(b=>b.w),192);boardSchedules.push({name:'Flat 2×6 stair veneer supports — confirm inclusion in assembly allowance',section:'1.5 × 5.5 in framing',stockLengthIn:192,orderedPieces:stock.bins.length,cutsIn:stock.bins.map(b=>b.cutsIn),unresolvedIn:stock.unresolved,installedLf:stock.installedLf,orderedLf:stock.purchasedLf});}
 
   return {

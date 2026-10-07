@@ -9,11 +9,15 @@ import {buildYardModel} from './yardModel';
 import {buildDeckTakeoff} from './deckTakeoff';
 import {patioTopPlane,tiltStockPoint} from './yardElevationGeometry';
 import {sitePlaneHeight} from './siteSurface';
-import {landscapeWorld,landscapeOutlinePaths} from './landscapeOutline';
+import {landscapeWorld,landscapeOutlinePaths,insideLandscapeRing} from './landscapeOutline';
 import {landscapeConnected,landscapeStructureExclusions,landscapeClip} from './landscapeFill';
 import {landscapeAsset} from './landscapeCatalogue';
-export interface LandscapeItemTakeoff {objectId:string;name:string;kind:LandscapeObject['kind'];count:number;areaSqft:number;mulchYd3:number;edgingLf:number;aggregateYd3?:number;turfAreaSqft?:number;baseYd3?:number;cupCount?:number;quoteRequired:true}
-export interface LandscapeTakeoff {plantCount:number;boulderCount:number;furnitureCount:number;bedAreaSqft:number;mulchYd3:number;edgingLf:number;aggregateYd3?:number;turfAreaSqft?:number;baseYd3?:number;cupCount?:number;items:LandscapeItemTakeoff[];warnings:string[]}
+import {bedLevel,exposedRun,planeFillYd3,planeGround,ringGround,RAISED_BED,type BedGround,type BedLevel} from './raisedBeds';
+import {designSiteSurface,integrateSiteFeatureFill} from './siteSurface';
+export interface LandscapeItemTakeoff {objectId:string;name:string;kind:LandscapeObject['kind'];count:number;areaSqft:number;mulchYd3:number;edgingLf:number;aggregateYd3?:number;turfAreaSqft?:number;baseYd3?:number;cupCount?:number;quoteRequired:true;
+ /** Raised beds only (raisedBeds.ts): level soil top (project datum), planting soil, highest soil over the outline's ground, timber/steel edging and holding wall run. */
+ soilTopIn?:number;soilYd3?:number;raisedMaxIn?:number;raisedEdgeLf?:number;wallLf?:number;wallLinked?:boolean;unheld?:boolean}
+export interface LandscapeTakeoff {plantCount:number;boulderCount:number;furnitureCount:number;bedAreaSqft:number;mulchYd3:number;edgingLf:number;aggregateYd3?:number;turfAreaSqft?:number;baseYd3?:number;cupCount?:number;soilYd3?:number;raisedEdgeLf?:number;items:LandscapeItemTakeoff[];warnings:string[]}
 const SCALE=1000;
 const signedArea=(p:LandscapePoint[])=>p.reduce((n,a,i)=>{const b=p[(i+1)%p.length];return n+a.x*b.z-b.x*a.z;},0)/2;
 const area=(polys:LandscapePoint[][])=>Math.abs(polys.reduce((n,p)=>n+signedArea(p),0));
@@ -46,6 +50,7 @@ export function landscapeTakeoff(objects:LandscapeObject[]=[],data?:DeckData):La
   if(o.kind==='plant'){q.plantCount++;if(!o.speciesRecord)q.warnings.push(o.name+': species, nursery stock and spacing have not been specified.');}
   else if(o.kind==='boulder')q.boulderCount++;else if(o.kind==='furniture')q.furnitureCount++;
   else {const remaining=beds.get(o.id)??[];item.areaSqft=area(remaining)/144;const finish=landscapeSurface(o.assetId),volume=item.areaSqft*landscapeSurfaceDepth(o)/324;item.mulchYd3=finish?.type==='mulch'?volume:0;item.aggregateYd3=finish?.type==='aggregate'?volume:0;item.turfAreaSqft=finish?.type==='turf'?item.areaSqft:0;item.baseYd3=item.areaSqft*(o.baseDepthIn??0)/324;item.cupCount=activePuttingCups(o,remaining).length;q.bedAreaSqft+=item.areaSqft;q.mulchYd3+=item.mulchYd3;for(const key of ['aggregateYd3','turfAreaSqft','baseYd3','cupCount'] as const)q[key]=(q[key]??0)+(item[key]??0);if(o.assetId!=='mulch-bed'&&item.areaSqft>.001&&o.baseDepthIn===undefined)q.warnings.push(o.name+': base depth, subgrade preparation and drainage remain unspecified.');if(item.cupCount!==(o.puttingCups??[]).length)q.warnings.push(o.name+': a putting cup is covered by another area or excluded by a pool. Adjust its position.');
+   if(o.raisedIn!==undefined)raisedTakeoff(o,remaining,item,q,data);
    if(o.edging)for(const p of remaining.filter(p=>!o.outline||o.holeEdging||signedArea(p)>0))for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length],length=Math.hypot(b.x-a.x,b.z-a.z);if(length<.0001)continue;let dx=(b.x-a.x)/length,dz=(b.z-a.z)/length;if(dx<-.000001||Math.abs(dx)<.000001&&dz<0){dx=-dx;dz=-dz;}const key=[Math.round(dx*1e6),Math.round(dz*1e6),Math.round((dx*a.z-dz*a.x)*1000)].join('/'),u=dx*a.x+dz*a.z,v=dx*b.x+dz*b.z,list=edges.get(key)??[];list.push({start:Math.min(u,v),end:Math.max(u,v),item});edges.set(key,list);}
    if(Math.abs(item.areaSqft-area(landscapeOutlinePaths(o))/144)>.01)q.warnings.push(o.name+(data?.pools?.some(p=>p.enabled)?': overlapping area is excluded by a pool or belongs to a later enabled bed; finish quantities and edging use the remaining boundary.':': covered ground is excluded by structures or other landscape areas; finish quantities and edging use the remaining boundary.'));}
   q.items.push(item);
@@ -55,6 +60,51 @@ export function landscapeTakeoff(objects:LandscapeObject[]=[],data?:DeckData):La
  for(const spans of edges.values()){const stops=[...new Set(spans.flatMap(s=>[s.start,s.end]))].sort((a,b)=>a-b);for(let i=0;i+1<stops.length;i++){const mid=(stops[i]+stops[i+1])/2,owner=spans.find(s=>s.start<=mid&&s.end>=mid);if(owner)owner.item.edgingLf+=(stops[i+1]-stops[i])/12;}}
  q.edgingLf=q.items.reduce((n,item)=>n+item.edgingLf,0);
  return q;
+}
+const raisedLevels=new WeakMap<DeckData,WeakMap<LandscapeObject,BedLevel|null>>();
+/** The ground a raised bed stands on: the design's measured surface (survey, grading, transitions and ground-fit
+ * banks), or the legacy terrain plane; each with its exact planting-soil integral. */
+function raisedGround(data:DeckData){
+ const surface=designSiteSurface(data);
+ if(surface)return {ground:surface as BedGround,fill:(polys:LandscapePoint[][],top:number)=>integrateSiteFeatureFill(surface,polys.map(p=>p.map(v=>({x:v.x,y:v.z}))),top)};
+ const t=getTerrainConfig(data),plane={x:0,z:t.slopePct/100,constant:t.elevationIn};
+ return {ground:planeGround(plane),fill:(polys:LandscapePoint[][],top:number)=>planeFillYd3(polys,plane,top)};
+}
+/** A raised bed's level soil top from its full outline (raisedBeds.ts); undefined when not raised or off measured ground. */
+export function raisedBedLevel(data:DeckData,o:LandscapeObject):BedLevel|undefined{
+ if(o.kind!=='bed'||o.raisedIn===undefined)return;
+ let byObject=raisedLevels.get(data);if(!byObject)raisedLevels.set(data,byObject=new WeakMap());
+ let level=byObject.get(o);if(level===undefined){level=bedLevel(raisedGround(data).ground,landscapeOutlinePaths(o)[0],o.raisedIn)??null;byObject.set(o,level);}
+ return level??undefined;
+}
+/** Planting soil, edging and holding for one raised bed. Quantities only: prices stay quote lines. */
+function raisedTakeoff(o:LandscapeObject,remaining:LandscapePoint[][],item:LandscapeItemTakeoff,q:LandscapeTakeoff,data?:DeckData){
+ const kind=o.edge?.kind,level=data&&raisedBedLevel(data,o);item.soilYd3=0;
+ if(kind==='timber'||kind==='steel')item.raisedEdgeLf=remaining.filter(p=>signedArea(p)>0).reduce((n,p)=>n+p.reduce((m,a,i)=>{const b=p[(i+1)%p.length];return m+Math.hypot(b.x-a.x,b.z-a.z);},0),0)/12;
+ if(kind==='wall')item.wallLinked=false;
+ if(!level||!data)q.warnings.push(o.name+': the raised bed is off measured ground, so its soil top and planting soil are pending. Survey the ground under it.');
+ else{
+  const {ground,fill}=raisedGround(data),wall=kind==='wall'?data.yardFeatures?.find(f=>f.id===o.edge!.wallFeatureId&&f.kind==='retaining-wall'&&f.enabled):undefined;
+  item.soilTopIn=level.topIn;item.raisedMaxIn=level.topIn-level.lowIn;item.soilYd3=remaining.length?fill(remaining,level.topIn):0;
+  if(!level.complete)q.warnings.push(o.name+': part of the raised bed is off measured ground; its planting soil covers the measured part only.');
+  if(kind==='wall'){item.wallLinked=!!wall;item.wallLf=wall?wall.widthFt:exposedRun(ringGround(ground,landscapeOutlinePaths(o)[0]),level.topIn)/12;if(!wall)q.warnings.push(o.name+': its holding wall is not linked to an enabled retaining wall, so no wall is drawn or priced. Link the wall that holds this bed.');}
+  else if(!kind&&item.raisedMaxIn>RAISED_BED.unheldIn){item.unheld=true;q.warnings.push(`${o.name}: the raised soil stands up to ${item.raisedMaxIn.toFixed(1)} in above the ground with no holding wall or edging. Choose a retaining wall, timber or steel edge.`);}
+ }
+ q.soilYd3=(q.soilYd3??0)+item.soilYd3;if(item.raisedEdgeLf!==undefined)q.raisedEdgeLf=(q.raisedEdgeLf??0)+item.raisedEdgeLf;
+}
+/** The soil top a plant, boulder or chair stands on inside an enabled raised bed (the last one listed wins). */
+function raisedSupport(data:DeckData,x:number,z:number){
+ const beds=data.landscapeObjects?.filter(b=>b.enabled&&b.kind==='bed'&&b.raisedIn!==undefined)??[];
+ for(let i=beds.length-1;i>=0;i--){const b=beds[i],[outer,...holes]=landscapeOutlinePaths(b),p={x,z};if(!insideLandscapeRing(p,outer)||holes.some(h=>insideLandscapeRing(p,h)))continue;const level=raisedBedLevel(data,b);if(level)return {y:level.topIn+landscapeSurfaceDepth(b),measured:level.complete&&!!data.siteModel};}
+}
+function raisedQuoteLines(o:LandscapeObject,item:LandscapeItemTakeoff):import('./yardTakeoff').PublicYardSection[]{
+ const out:import('./yardTakeoff').PublicYardSection[]=[],featureIds=[o.id],inches=(n:number)=>n.toFixed(1)+' in',kind=o.edge?.kind;
+ if(item.soilTopIn===undefined)out.push({id:`landscape-soil-pending-${o.id}`,label:`${item.name} — planting soil (ground not measured)`,amountCents:null,featureIds,note:'Survey the ground under the raised bed. No soil quantity is invented.'});
+ else if((item.soilYd3??0)>.001)out.push({id:`landscape-soil-${o.id}`,label:`${item.name} — planting soil supply and placement`,amountCents:null,quantity:item.soilYd3,unit:'cu yd',featureIds,note:`Level soil top at ${inches(item.soilTopIn)} (project datum): ${inches(o.raisedIn??0)} over the bed's lowest edge grade, never more than 2 in below its highest ground. Measured between that level and the proposed ground over the remaining bed area. Confirm the soil mix, settlement allowance, delivery and placement.`});
+ if((item.raisedEdgeLf??0)>.001)out.push({id:`landscape-raised-edge-${o.id}`,label:`${item.name} — ${kind} raised-bed edging supply and installation`,amountCents:null,quantity:item.raisedEdgeLf,unit:'ft',featureIds,note:`Remaining bed perimeter${item.raisedMaxIn!==undefined?`; the soil stands up to ${inches(item.raisedMaxIn)} over the ground`:''}. Confirm the product, height, corner posts, anchoring and cuts.`});
+ if(kind==='wall'&&!item.wallLinked)out.push({id:`landscape-wall-pending-${o.id}`,label:`${item.name} — holding wall (not yet designed)`,amountCents:null,...(item.wallLf?{quantity:item.wallLf,unit:'ft'}:{}),featureIds,note:'Run where the soil stands over the ground. Add or link an enabled retaining wall to hold this bed; no wall price is assumed.'});
+ if(item.unheld)out.push({id:`landscape-hold-pending-${o.id}`,label:`${item.name} — holding edge not specified`,amountCents:null,featureIds,note:`The raised soil stands up to ${inches(item.raisedMaxIn??0)} over the ground. Choose a retaining wall, timber or steel edge; nothing is priced to hold it yet.`});
+ return out;
 }
 const supports=new WeakMap<DeckData,ReturnType<typeof buildYardModel>>();
 export function landscapePlacement(data:DeckData,o:LandscapeObject){
@@ -68,6 +118,7 @@ export function landscapePlacement(data:DeckData,o:LandscapeObject){
   }
   return {x:o.xIn/12,y:0,z:o.zIn/12,measured:false,normal:undefined,pendingReason:'Selected patio support is missing, disabled, excluded, or does not cover the entire furniture footprint.'};
  }
+ if(o.kind!=='bed'){const raised=raisedSupport(data,o.xIn,o.zIn);if(raised)return {x:o.xIn/12,y:raised.y/12,z:o.zIn/12,measured:raised.measured,normal:undefined,pendingReason:undefined};}
  const measured=sampleSiteHeight(data,o.xIn,o.zIn);if(measured!==undefined)return {x:o.xIn/12,y:measured/12,z:o.zIn/12,measured:!!data.siteModel,normal:undefined,pendingReason:undefined};
  const t=getTerrainConfig(data);return {x:o.xIn/12,y:(t.elevationIn+o.zIn*t.slopePct/100)/12,z:o.zIn/12,measured:false,normal:undefined,pendingReason:undefined};
 }
@@ -102,6 +153,7 @@ export function landscapeQuoteSections(objects:import('./landscapeTypes').Landsc
    const object=objects.find(o=>o.id===item.objectId)!;
    for(const [key,label,unit] of [['aggregateYd3','decorative stone supply and placement','cu yd'],['turfAreaSqft','artificial turf supply and installation','sq ft'],['baseYd3','recorded base aggregate supply and placement','cu yd'],['cupCount','putting cup supply and installation','ea']] as const){const quantity=item[key]??0;if(quantity>.001)unknown.push({id:`landscape-${key}-${item.objectId}`,label:`${item.name} — ${label}`,amountCents:null,quantity,unit,featureIds:[item.objectId],note:'Measured remaining plan area; layer volumes use recorded vertical depth. Confirm product, ordering waste, purchasing units, delivery and labour. Cup drainage, turf seams and infill remain installation inputs. Reconcile package inclusions and shared earthwork.'});}
    if(object.assetId!=='mulch-bed'&&object.baseDepthIn===undefined&&item.areaSqft>.001)unknown.push({id:`landscape-base-pending-${item.objectId}`,label:`${item.name} — base and drainage specification pending`,amountCents:null,featureIds:[item.objectId],note:'Enter a base depth and installation specification. No excavation, disposal, geotextile, density or drainage quantity is invented.'});
+   if(object.raisedIn!==undefined)unknown.push(...raisedQuoteLines(object,item));
    if(item.edgingLf>.001)unknown.push({id:`landscape-edging-${item.objectId}`,label:`${item.name} — edging supply and installation`,amountCents:null,quantity:item.edgingLf,unit:'ft',featureIds:[item.objectId],note:'Unique measured boundary length; shared collinear edges are counted once. Confirm selected product, purchasing pack, cuts and anchoring.'});
   }else unknown.push({id:`landscape-${item.objectId}`,label:`${item.name} — supply and installation`,amountCents:null,quantity:item.count,unit:'ea',featureIds:[item.objectId],note:'Generic visual proxy; confirm actual species/product, nursery stock or SKU, supply, delivery and installation.'});
  }

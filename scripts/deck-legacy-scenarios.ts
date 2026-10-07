@@ -2,8 +2,79 @@ import {MANUFACTURER_ACCESSORIES} from '../src/features/deckcraft/manufacturerCa
 import type {DeckData} from '../src/features/deckcraft/types';
 
 /**
- * The existing-design scenarios the legacy parity golden (check-deck-legacy-parity.ts) fingerprints, by name: each a
- * patch on the default deck. The price schedule check (check-deck-ledger.ts) renders the same designs.
+ * 9b2ee11's DEFAULT_DECK, verbatim and frozen: the default every design saved before 2026-10-06 was built on. It has no
+ * picture frame, no pictureFrameOverhangIn (so a border falls back to the 1.5 in standard) and no buildRules (so the
+ * legacy takeoff rules price it). The live DEFAULT_DECK is for new designs (one-row flush frame, '2026-10' rules);
+ * building the legacy scenarios on it would price old saves under new rules and hide a regression in the legacy path.
+ * Never edit it to follow a new default.
+ */
+export const LEGACY_DEFAULT_DECK:Readonly<DeckData>=Object.freeze<DeckData>({
+    houseVisible: true,
+    houseWallHeightIn: 120,
+    houseDoorOffset: 50,
+    houseDoorWidthIn: 72,
+    sceneLighting: 'Daylight',
+    level2Position: 'Front',
+    level2Offset: 50,
+    stairTurn: 'Right',
+    landingDepthIn: 48,
+    deckType: 'Attached',
+    municipality: 'Barrie',
+    materialMarkup: 35,
+    siteType: 'Standard',
+    soilCondition: 'Unknown',
+    buildSeason: 'Spring-Summer',
+    intendedLoad: 'Standard',
+    foundation: 'Concrete Piers',
+    width: 16,
+    length: 12,
+    height: 36,
+    cutoutWidth: 8,
+    cutoutLength: 6,
+    width2: 12,
+    length2: 10,
+    height2: 12,
+    cutoutWidth2: 6,
+    cutoutLength2: 5,
+    shape: 'Rectangle',
+    levels: 1,
+    pattern: 'Straight',
+    deckingMaterial: 'tt_prime_plus',
+    deckingColor: 'Coconut Husk',
+    framingSize: '2x10',
+    boardWidth: 5.5,
+    joistSpacing: 16,
+    fasteningSystem: 'Face',
+    pictureFrameRows: 0,
+    hasInlay: false,
+    inlayLf: 0,
+    railingType: 'Aluminum',
+    railingLf: 0,
+    stairFlights: 1,
+    stairWidth: 48,
+    stairType: 'Straight',
+    stairPosition: 'Front',
+    stairOffset: 50,
+    lightingSystem: {
+      selectedItems: [],
+      wireDistance: 20
+    },
+    benchLf: 0,
+    privacySqft: 0,
+    hasDrainage: false,
+    hasDemo: false,
+    pergolaSqft: 0,
+    customerName: '',
+    projectAddress: '',
+    scopeOfWork: 'Professional installation of a custom outdoor deck system including framing, decking, and finishing as per selected specifications. All work to be completed to local building codes and industry best practices.'});
+/** A fresh, editable copy of LEGACY_DEFAULT_DECK: the base every legacy scenario is patched onto. */
+export const legacyBaseDeck=():DeckData=>structuredClone(LEGACY_DEFAULT_DECK) as DeckData;
+
+/**
+ * The existing-design scenarios, by name, each a patch. The legacy parity golden (check-deck-legacy-parity.ts) and the
+ * level-junction cases apply them to legacyBaseDeck() (9b2ee11's default), so they price old saves. The price schedule
+ * (check-deck-ledger.ts), the permit-set check and audit-deck-pricing.ts still apply them to the live DEFAULT_DECK (framed,
+ * 2026-10 rules), so they render different designs from the ones the parity golden fingerprints until those move too.
  */
 export function legacyScenarios():Record<string,Partial<DeckData>>{
   const scenarios:Record<string,Partial<DeckData>>={};

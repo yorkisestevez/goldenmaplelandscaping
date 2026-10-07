@@ -43,4 +43,13 @@ ok(!!frame?.quoteRequired&&frame.items[0].cost===null,'Unconfirmed detail stays 
 ok(frame!.items[0].spec.includes('net adjustment')&&frame!.items[0].spec.includes('crediting'),'Existing assembly allowance is credited, not double charged');
 ok(estimate.quoteRequired.includes(frame!.items[0].name),'Pending detail reaches estimate completeness gate');
 const noFrame=calculateEstimate({...d,pictureFrameRows:0,pattern:'Straight'});ok(!noFrame.sections.some(s=>s.title==='Stair picture-frame detail'),'No fabricated frame quote for an unframed stair');
+// Saves from before the 2026-10 build rules (marked 'legacy' or unmarked) keep 9b2ee11's unframed treads on a framed deck: one tread
+// row in 9b's wording, no border row, no stair-frame detail section or quote line.
+for(const legacy of [{...cases[0],buildRules:'legacy' as const},(({buildRules:_rules,...rest})=>rest)(cases[0]),{...cases[0],buildRules:'legacy' as const,pictureFrameRows:0 as const,pattern:'Picture Frame' as const}]){
+ const lm=buildDeckTakeoff(legacy),rows=stairStock(legacy,lm),est=calculateEstimate(legacy);
+ ok(getStairBoards(legacy,lm).every(b=>b.role===undefined),'Legacy framed stairs draw no stair frame pieces');
+ ok(rows.length>0&&!rows.some(r=>r.name.startsWith('Stair picture-frame')),'Legacy framed stairs have no border stock row');
+ ok(rows[0].name==='Stair tread decking — included in per-riser allowance'&&rows[0].section===`${legacy.boardWidth} in decking`,'Legacy tread row keeps its 9b2ee11 wording');
+ ok(!est.sections.some(s=>s.title==='Stair picture-frame detail')&&!est.quoteRequired.some(q=>q.startsWith('Stair picture-frame')),'Legacy framed stairs show no stair-frame detail line');
+}
 console.log(`${checks} stair frame coverage and stock checks passed across ${scenarios} layouts.`);

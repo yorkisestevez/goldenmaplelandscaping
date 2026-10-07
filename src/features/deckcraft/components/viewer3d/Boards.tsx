@@ -61,8 +61,9 @@ export const Boards = React.memo(function Boards({ data, footprint, topY, materi
       return [...frame, ...herringboneRuns(footprint, boardWidth, fieldInset + boardWidth)];
     }
     const angle = data.pattern === 'Diagonal' ? 45 : 0;
-    return [...frame, ...getBoardRows(footprint, { boardWidth, gap: GAP, angleDeg: angle, inset: fieldInset })];
-  }, [data.pattern, data.pictureFrameRows, boardWidth, footprint]);
+    // The design's build rules pick the rows (getBoardRows): legacy saves keep the staggered half-board courses.
+    return [...frame, ...getBoardRows(footprint, { boardWidth, gap: GAP, angleDeg: angle, inset: fieldInset, buildRules: data.buildRules })];
+  }, [data.pattern, data.pictureFrameRows, data.buildRules, boardWidth, footprint]);
 
   useLayoutEffect(() => {
     const mesh = ref.current;

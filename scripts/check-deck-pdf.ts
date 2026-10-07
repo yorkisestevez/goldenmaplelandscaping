@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
+// Inlay geometry is a lazy runtime in the app (ensureDesignExtensions); register it before calculating inlay fixtures.
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import {readFileSync} from 'node:fs';
 import {deflateSync} from 'node:zlib';
 import {jsPDF} from 'jspdf';
 import {BUSINESS,canPublish,publicContact} from '../src/data/business';
 import {calculateDeckReleaseEstimate} from '../src/features/deckcraft/deckRelease';
 import {describeDesign,dollars} from '../src/features/deckcraft/designFacts';
-import {priceLedger,quoteLabel,quoteTag} from '../src/features/deckcraft/designer/priceLedgerModel';
+import {lineBasis,priceLedger,quoteLabel,quoteTag} from '../src/features/deckcraft/designer/priceLedgerModel';
 import {exteriorSummary} from '../src/features/deckcraft/houseLooks';
 import {PRICE_BOOK} from '../src/features/deckcraft/priceBook';
 import {buildProposalPdf,pdfText,PROPOSAL_PDF_NAME,type ProposalPdfInput} from '../src/features/deckcraft/proposalPdf';
@@ -104,6 +106,8 @@ for(const [name,make] of Object.entries(PROPOSAL_CASES)){
     const value=line.quotes.length&&line.amount<.005?quoteTag(line.quotes).toUpperCase():line.text,next=text.indexOf(pdfText(`${line.title} ${value}`),at);
     ok(next>=at,`${name}: ${line.title} reads ${value}, in the engine's order`);at=next;
   }
+  // Priced lines are planning allowances until a quote is recorded; the fine print never implies otherwise.
+  ok(ledger.lines.every(l=>!lineBasis(l)||has(text,lineBasis(l)!))&&!has(text,'without a confirmed rate'),`${name}: priced lines carry their allowance or confirmed basis`);
   ok(!ZERO.test(text),`${name}: no "$0" anywhere`);
   ok(has(text,`${ledger.quotes.length?'Priced subtotal':'Subtotal'} ${dollars(ledger.subtotal)} ${PROPOSAL_WORDS.estimate}`)&&has(text,`${ledger.hstTitle} ${dollars(ledger.hst)}`)&&has(text,`${ledger.totalLabel} ${dollars(ledger.total)}`),`${name}: subtotal, HST and total are the schedule's`);
   ok((text.match(/HST \(13%\)/g)??[]).length===1&&Math.abs(ledger.lines.reduce((n,l)=>n+l.amount,0)-ledger.subtotal)<.01,`${name}: HST once; the lines add up to the subtotal`);

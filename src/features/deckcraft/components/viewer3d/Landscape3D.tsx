@@ -1,8 +1,8 @@
-import {landscapeSurfaceCells,landscapeCellTriangles} from '../../landscapeSurfaceGeometry';
+import {landscapeSurfaceCells,landscapeCellTriangles,raisedBedTop} from '../../landscapeSurfaceGeometry';
 import {landscapeSurfaceDepth,puttingCupWorld} from '../../landscapeSurfaces';
 import {createLandscapeSurfaceMaterial} from './landscapeSurfaceMaterial';
 import {getPoolModels} from '../../poolModel';
-import {Suspense,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
+import {lazy,Suspense,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
 import {useGLTF,useTexture} from '@react-three/drei';
 import * as THREE from 'three';
@@ -14,6 +14,10 @@ import {createSiteSurface,siteClip,siteSolidCells,sitePlaneHeight} from '../../s
 import {getTerrainConfig} from '../../yardSettings';
 import {useRenderQuality} from './SceneRenderQuality';
 import {useFixtureLit} from './fixtureLighting';
+
+const SurfaceDetail=lazy(()=>import('./SurfaceDetail'));
+/** A raised bed's soil face, timber or steel edging (where no linked wall holds it): loaded with the first raised bed. */
+const RaisedBedFaces3D=lazy(()=>import('./RaisedBedFaces3D'));
 
 /** World-foot transforms from planned inch envelopes, independently of the
  * downloaded glTF's source metres, source origin or quantisation matrices. */
@@ -42,27 +46,24 @@ function AssetInstances({data,items,lod}:{data:DeckData;items:LandscapeObject[];
 }
 /** Clip each bed into the proposed TIN faces. This follows exact measured
  * elevation and grading breaks, including holes left by overlapping beds. */
-export function landscapeBedGeometry(data:DeckData,polys:LandscapePoint[][],depthIn:number){
- const {positions,uv}=landscapeCellTriangles(landscapeSurfaceCells(data,polys),depthIn);
+export function landscapeBedGeometry(data:DeckData,polys:LandscapePoint[][],depthIn:number,object?:LandscapeObject){
+ const {positions,uv}=landscapeCellTriangles(landscapeSurfaceCells(data,polys,object),depthIn);
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.computeVertexNormals();geometry.computeBoundingSphere();return geometry;
 }
 function Bed({data,object,polys,material}:{data:DeckData;object:LandscapeObject;polys:LandscapePoint[][];material:THREE.Material}){
- const geometry=useMemo(()=>landscapeBedGeometry(data,polys,landscapeSurfaceDepth(object)),[data,polys,object]);useEffect(()=>()=>geometry.dispose(),[geometry]);
- const edges=useMemo(()=>polys.map(p=>{const points=[...p,p[0]].map(v=>{const pos=landscapePlacement(data,{...object,xIn:v.x,zIn:v.z});return new THREE.Vector3(v.x/12,pos.y+((landscapeSurfaceDepth(object))+.1)/12,v.z/12);});return new THREE.BufferGeometry().setFromPoints(points);}),[data,polys,object]);useEffect(()=>()=>edges.forEach(g=>g.dispose()),[edges]);
- return <group name={'landscape-bed-'+object.id} userData={{landscapeIds:[object.id]}}><mesh geometry={geometry} material={material} receiveShadow dispose={null} userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id]}}/>{activePuttingCups(object,polys).map((cup,i)=>{const p=puttingCupWorld(object,cup),h=landscapePlacement(data,{...object,xIn:p.x,zIn:p.z}).y+(landscapeSurfaceDepth(object)+.09)/12;return <group key={i} position={[p.x/12,h,p.z/12]} userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id]}}><mesh rotation={[-Math.PI/2,0,0]}><circleGeometry args={[2.125/12,32]}/><meshStandardMaterial color="#242b22" roughness={.9}/></mesh><mesh position={[0,1.4,0]}><cylinderGeometry args={[.018,.018,2.8,8]}/><meshStandardMaterial color="#eee9dc"/></mesh><mesh position={[.2,2.65,0]}><planeGeometry args={[.4,.25]}/><meshStandardMaterial color="#c7ab58" side={THREE.DoubleSide}/></mesh></group>;})}{object.edging&&edges.map((g,i)=><lineLoop key={i} geometry={g}><lineBasicMaterial color="#675443"/></lineLoop>)}</group>;
-}
-function MulchBeds({data,objects}:{data:DeckData;objects:LandscapeObject[]}){
- const q=useRenderQuality(),textures=useTexture(['/deckcraft/landscape/mulch-diffuse.jpg','/deckcraft/landscape/mulch-normal.jpg','/deckcraft/landscape/mulch-roughness.jpg']),areas=useMemo(()=>landscapeBedAreas(objects,data),[objects,data]);
- const material=useMemo(()=>{const [map,normalMap,roughnessMap]=textures;map.colorSpace=THREE.SRGBColorSpace;for(const t of textures){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=q.anisotropy;t.needsUpdate=true;}return new THREE.MeshStandardMaterial({map,normalMap,normalScale:new THREE.Vector2(.45,.45),roughnessMap,roughness:.95});},[textures,q.anisotropy]);useFixtureLit(material);useEffect(()=>()=>material.dispose(),[material]);
- return <>{objects.filter(o=>o.enabled&&o.kind==='bed'&&o.assetId==='mulch-bed').map(o=><Bed key={o.id} data={data} object={o} polys={areas.get(o.id)??[]} material={material}/>)}</>;
+ const geometry=useMemo(()=>landscapeBedGeometry(data,polys,landscapeSurfaceDepth(object),object),[data,polys,object]);useEffect(()=>()=>geometry.dispose(),[geometry]);
+ const top=useMemo(()=>raisedBedTop(data,object),[data,object]),surfaceY=(xIn:number,zIn:number)=>top!==undefined?top/12:landscapePlacement(data,{...object,xIn,zIn}).y;
+ const edges=useMemo(()=>polys.map(p=>{const points=[...p,p[0]].map(v=>new THREE.Vector3(v.x/12,surfaceY(v.x,v.z)+((landscapeSurfaceDepth(object))+.1)/12,v.z/12));return new THREE.BufferGeometry().setFromPoints(points);}),[data,polys,object,top]);useEffect(()=>()=>edges.forEach(g=>g.dispose()),[edges]);
+ return <group name={'landscape-bed-'+object.id} userData={{landscapeIds:[object.id]}}><mesh geometry={geometry} material={material} receiveShadow dispose={null} userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id]}}/>{activePuttingCups(object,polys).map((cup,i)=>{const p=puttingCupWorld(object,cup),h=surfaceY(p.x,p.z)+(landscapeSurfaceDepth(object)+.09)/12;return <group key={i} position={[p.x/12,h,p.z/12]} userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id]}}><mesh rotation={[-Math.PI/2,0,0]}><circleGeometry args={[2.125/12,32]}/><meshStandardMaterial color="#242b22" roughness={.9}/></mesh><mesh position={[0,1.4,0]}><cylinderGeometry args={[.018,.018,2.8,8]}/><meshStandardMaterial color="#eee9dc"/></mesh><mesh position={[.2,2.65,0]}><planeGeometry args={[.4,.25]}/><meshStandardMaterial color="#c7ab58" side={THREE.DoubleSide}/></mesh></group>;})}{object.edging&&edges.map((g,i)=><lineLoop key={i} geometry={g}><lineBasicMaterial color="#675443"/></lineLoop>)}{top!==undefined&&<Suspense fallback={null}><RaisedBedFaces3D data={data} object={object} polys={polys}/></Suspense>}</group>;
 }
 function SurfaceBed({data,object,polys}:{data:DeckData;object:LandscapeObject;polys:LandscapePoint[][]}){
- const q=useRenderQuality(),resource=useMemo(()=>createLandscapeSurfaceMaterial(object.assetId,q.anisotropy),[object.assetId,q.anisotropy]);useFixtureLit(resource.material);useEffect(()=>()=>resource.dispose(),[resource]);
- return <Bed data={data} object={object} polys={polys} material={resource.material}/>;
+ const q=useRenderQuality(),invalidate=useThree(s=>s.invalidate),resource=useMemo(()=>createLandscapeSurfaceMaterial(object.assetId,q.anisotropy),[object.assetId,q.anisotropy]);useFixtureLit(resource.material);
+ useEffect(()=>{resource.loadPhotos(invalidate);return ()=>resource.dispose();},[resource,invalidate]);
+ return <><Bed data={data} object={object} polys={polys} material={resource.material}/><Suspense fallback={null}><SurfaceDetail data={data} object={object} polys={polys}/></Suspense></>;
 }
 function Beds({data,objects}:{data:DeckData;objects:LandscapeObject[]}){
- const areas=useMemo(()=>landscapeBedAreas(objects,data),[objects,data]),legacy=objects.filter(o=>o.enabled&&o.kind==='bed'&&o.assetId==='mulch-bed'),newBeds=objects.filter(o=>o.enabled&&o.kind==='bed'&&o.assetId!=='mulch-bed');
- return <>{legacy.length>0&&<Suspense fallback={null}><MulchBeds data={data} objects={objects}/></Suspense>}{newBeds.map(o=><SurfaceBed key={o.id} data={data} object={o} polys={areas.get(o.id)??[]}/>)}</>;
+ const areas=useMemo(()=>landscapeBedAreas(objects,data),[objects,data]),beds=objects.filter(o=>o.enabled&&o.kind==='bed');
+ return <>{beds.map(o=><SurfaceBed key={o.id} data={data} object={o} polys={areas.get(o.id)??[]}/>)}</>;
 }
 function MatureSpread({data,objects}:{data:DeckData;objects:LandscapeObject[]}){
  const geometry=useMemo(()=>{const points:number[]=[];for(const o of objects.filter(o=>o.enabled&&o.kind==='plant'&&o.speciesRecord)){const r=o.speciesRecord!.matureSpreadIn[1]/2;for(let i=0;i<64;i++){for(const n of [i,i+1]){const a=n/64*Math.PI*2,xIn=o.xIn+Math.cos(a)*r,zIn=o.zIn+Math.sin(a)*r,p=landscapePlacement(data,{...o,xIn,zIn});points.push(p.x,p.y+.035,p.z);}}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));return g;},[data,objects]);useEffect(()=>()=>geometry.dispose(),[geometry]);

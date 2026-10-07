@@ -1,7 +1,8 @@
 import {Html,Line} from '@react-three/drei';
 import type {DeckData} from '../../types';
 import type {DeckTakeoff} from '../../deckTakeoff';
-import {foundationSolids,foundationRadialSegments} from '../../foundationDatums';
+import {foundationRadialSegments} from '../../foundationDatums';
+import {foundationSolids} from '../../foundationSolids';
 /** The same local-datum foundation solids are used by takeoff and mesh exports. */
 export default function FootingDetails({data,model,cutaway}:{data:DeckData;model:DeckTakeoff;cutaway:boolean}){
  const supports=model.foundationSupports.filter(f=>f.gradeElevationIn!==null),dimension=supports.find(f=>f.depthIn>0),pending=model.foundationQuantities.foundationCoveragePending;

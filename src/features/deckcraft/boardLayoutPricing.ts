@@ -1,7 +1,7 @@
 import type {DeckData} from './types';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {BoardRun} from './lib/deckGeometry';
-import {deckBoardStock,planStock} from './stockPlan';
+import {deckBoardStock,orderListedStock,planStock,takeoffStock,type ProductStock} from './stockPlan';
 import {PATTERN_LABOUR} from './lib/inlayGeometry';
 
 /** Planning bases already used by DeckCraft: full 5.5 in stock, the diagonal laying factor,
@@ -15,8 +15,9 @@ export function hasBoardLayout(data:DeckData):boolean{
   const layout=(data as DeckData&{boardLayout?:{regions?:unknown[];breakers?:unknown[];pieces?:unknown[]}}).boardLayout;
   return !!layout&&(!!layout.regions?.length||!!layout.breakers?.length||!!layout.pieces?.length);
 }
-export function layoutBoardStock(data:DeckData,model:DeckTakeoff,wasteFactor:number,layoutWaste?:{straight:number;diagonal:number},completeModel:DeckTakeoff=model){
-  if(!hasBoardLayout(data))return deckBoardStock(model,wasteFactor);
+/** `stock` is the product's listed lengths (deckingStock.productStock); it defaults to the takeoff's main product. */
+export function layoutBoardStock(data:DeckData,model:DeckTakeoff,wasteFactor:number,layoutWaste?:{straight:number;diagonal:number},completeModel:DeckTakeoff=model,stock:ProductStock|undefined=takeoffStock(model)){
+  if(!hasBoardLayout(data))return deckBoardStock(model,wasteFactor,stock);
   const cuts:number[]=[],seen=new Set<string>();let allowanceIn=0;
   const pieceCounts=(m:DeckTakeoff)=>{const count=new Map<string,number>();m.levels.forEach((l,li)=>l.boards.forEach(raw=>{const b=raw as LayoutRun;if(b.layoutKind==='piece'&&b.layoutId){const key=`${li}:${b.layoutId}`;count.set(key,(count.get(key)??0)+1);}}));return count;};
   const complete=pieceCounts(completeModel),included=pieceCounts(model);
@@ -44,9 +45,11 @@ export function layoutBoardStock(data:DeckData,model:DeckTakeoff,wasteFactor:num
     for(const cut of group.cuts.sort((a,b)=>a[0]-b[0])){const last=merged.at(-1);if(last&&cut[0]<=last[1]+1e-5)last[1]=Math.max(last[1],cut[1]);else merged.push([...cut]);}
     for(const [lo,hi] of merged){let remaining=hi-lo;while(remaining>1e-7){const length=Math.min(remaining,model.stockLength);cuts.push(length);allowanceIn+=length*Math.max(1,group.factor);remaining-=length;}}
   }
+  // Listed lengths: each packed board is bought at the shortest length that holds it (the legacy single length is unchanged).
+  if(stock&&(stock.trimIn>0||new Set(stock.lengthsIn).size>1))return orderListedStock(cuts,allowanceIn/12,stock);
   const plan=planStock(cuts,model.stockLength),minimum=Math.ceil(allowanceIn/model.stockLength);
   const orderedBoards=Math.max(plan.bins.length,minimum);
-  return {...plan,orderedBoards,spareBoards:orderedBoards-plan.bins.length,orderedLf:orderedBoards*model.stockLength/12};
+  return {...plan,orderedBoards,spareBoards:orderedBoards-plan.bins.length,orderedLf:orderedBoards*model.stockLength/12,spareLengthIn:model.stockLength};
 }
 const runArea=(b:LayoutRun,width:number)=>b.polygon?.length?Math.abs(b.polygon.reduce((n,p,i,a)=>{const q=a[(i+1)%a.length];return n+p.x*q.y-q.x*p.y;},0))/288:b.length*(b.width??width)/144;
 /** Surviving automatic breaker stock, after a custom layout carves its original boards. */

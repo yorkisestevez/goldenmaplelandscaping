@@ -1,9 +1,12 @@
-/** Loopback-only production preview with the local Ollama editing assistant. */
+/** Loopback-only production preview with the local Ollama editing assistant and AI Site Designer ($0, no cloud calls). */
 import {createReadStream,existsSync,statSync} from 'node:fs';
 import {createServer} from 'node:http';
 import {extname,join,resolve,sep} from 'node:path';
 import {createGzip} from 'node:zlib';
 import {createDeckAssistantService,DECK_ASSISTANT_PATH,ASSISTANT_BACKEND_LIMITS} from '../server/deckAssistantBackend';
+import {createAiTurnService,DESIGNER_AI_PATH,inlineDispatch,type AiTurnService} from '../server/aiTurnService';
+import {createSpendLedger,createVisitorLimiter,memoryKv} from '../server/aiSpendLedger';
+import {ollamaProvider} from '../server/siteDesignerAi';
 
 const root=resolve(import.meta.dirname,'../build/client');
 const port=Number(process.argv.find(v=>v.startsWith('--port='))?.slice(7)??4319);
@@ -11,6 +14,10 @@ const model=process.argv.find(v=>v.startsWith('--model='))?.slice(8)??'qwen3:14b
 if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Use a local port from 1024 through 65535.');
 if(!existsSync(join(root,'__spa-fallback.html')))throw Error('Build the client before starting the assistant preview.');
 const assistant=createDeckAssistantService({ollamaUrl:'http://127.0.0.1:11434',model});
+// The AI Site Designer on the same local model ($0): jobs run in this process, state in memory.
+const kv=memoryKv();let designer:AiTurnService|undefined;
+designer=createAiTurnService('designer',{provider:ollamaProvider({url:'http://127.0.0.1:11434',model}),kv,now:Date.now,log:line=>console.warn(line),
+  ledger:createSpendLedger({kv,capUsd:25}),limiter:createVisitorLimiter({kv,dailyTurns:200,salt:'local-preview'}),dispatch:inlineDispatch(()=>designer)});
 const types:Record<string,string>={'.html':'text/html; charset=utf-8','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.ico':'image/x-icon','.woff2':'font/woff2','.txt':'text/plain','.xml':'application/xml','.pdf':'application/pdf','.glb':'model/gltf-binary'};
 const headers={'X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin','Permissions-Policy':'camera=(), microphone=(self), geolocation=()'};
 createServer(async(req,res)=>{
@@ -23,7 +30,7 @@ createServer(async(req,res)=>{
     if(host!==`127.0.0.1:${port}`){res.writeHead(403,{...headers,'Content-Type':'application/json'}).end(JSON.stringify({ok:false,error:{code:'origin_rejected',message:`Open this local preview at http://127.0.0.1:${port}/deck-designer/.`}}));return;}
     const url=new URL(req.url??'/',`http://127.0.0.1:${port}`);
     if(url.origin!==`http://127.0.0.1:${port}`){res.writeHead(400,headers).end();return;}
-    if(url.pathname===DECK_ASSISTANT_PATH){
+    if(url.pathname===DECK_ASSISTANT_PATH||url.pathname===DESIGNER_AI_PATH){
       const chunks:Buffer[]=[];let bytes=0;
       if(req.method==='POST'){
         const reject=(status:number,code:string,message:string)=>res.writeHead(status,{...headers,'Content-Type':'application/json','Cache-Control':'no-store'}).end(JSON.stringify({ok:false,error:{code,message}}));
@@ -36,7 +43,8 @@ createServer(async(req,res)=>{
       }
       const requestHeaders=new Headers();
       for(const [key,value]of Object.entries(req.headers))if(value!==undefined)requestHeaders.set(key,Array.isArray(value)?value.join(','):value);
-      const response=await assistant.handle(new Request(url,{method:req.method,headers:requestHeaders,...(req.method==='POST'?{body:Buffer.concat(chunks)}:{}),signal:abort.signal}));
+      const forward=new Request(url,{method:req.method,headers:requestHeaders,...(req.method==='POST'?{body:Buffer.concat(chunks)}:{}),signal:abort.signal});
+      const response=url.pathname===DESIGNER_AI_PATH?await designer!.handle(forward,{ip:'127.0.0.1'}):await assistant.handle(forward);
       if(abort.signal.aborted)return;
       res.writeHead(response.status,{...headers,...Object.fromEntries(response.headers)}).end(Buffer.from(await response.arrayBuffer()));return;
     }

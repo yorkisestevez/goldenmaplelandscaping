@@ -1,6 +1,6 @@
 import {useEffect,useId,useRef,type KeyboardEvent,type RefObject} from 'react';
 import {dollars} from '../designFacts';
-import {quoteLabel,quoteTag,type Ledger} from './priceLedgerModel';
+import {lineBasis,quoteLabel,quoteTag,type Ledger} from './priceLedgerModel';
 import {describeChange,type ChangeRecord} from './useChangeLedger';
 
 const Tag=({kinds}:{kinds:readonly ('supplier'|'builder')[]})=><span className="dd-tag" data-kind={kinds.length>1?'both':kinds[0]}>{quoteTag(kinds)}</span>;
@@ -26,7 +26,7 @@ export default function PriceLedger({ledger,variant,changes,onFullList}:{
     <table className="dd-ledger-table">
       <tbody>{ledger.lines.map(line=><tr key={line.title} className="dd-ledger-line">
         <th scope="row">{line.title}{full&&<ul className="dd-ledger-items">{line.items.map((item,i)=><li key={i}><span>{item.name}</span> <span className="dd-ledger-qty">{item.qty} {item.unit}</span>{item.quote?<> <Tag kinds={[item.quote]}/></>:<small className="dd-ledger-qty"> · {item.status==='confirmed'?'Confirmed scope':'Planning allowance'}</small>}</li>)}</ul>}</th>
-        <td>{line.quotes.length&&line.amount<.005?<Tag kinds={line.quotes}/>:line.text}</td>
+        <td>{line.quotes.length&&line.amount<.005?<Tag kinds={line.quotes}/>:<>{line.text}{!full&&lineBasis(line)==='Planning allowance'&&<small className="dd-ledger-qty"> · allowance</small>}</>}</td>
       </tr>)}</tbody>
       <tbody className="dd-ledger-sums">
         {/* With a backyard, the deck and backyard subtotals come before HST. */}

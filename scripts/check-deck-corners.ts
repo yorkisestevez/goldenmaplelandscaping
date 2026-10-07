@@ -244,10 +244,12 @@ for(const [width,length] of [[16,12],[24,20],[40,16]] as const)for(const [l,r] o
   cases.push([24,18,'Herringbone',0,[2,7],false],[16,12,'Herringbone',0,[6,6],false],[20,14,'Herringbone',0,[3,3],false],[12,10,'Herringbone',0,[3,3],false]);
   // Short joint pieces and square ends just inside an angled rim, clear of its nailer, still get backing.
   cases.push([18,12,'Diagonal',0,[7,7],false],[16,10,'Diagonal',0,[0,3],false],[14,14,'Diagonal',0,[3,5],false]);
-  // A 40 ft deck has breakers; a 14 ft corner on a 30 ft depth puts one across the angled edge.
+  // A 40 ft deck on 16 ft stock (tt_prime, an unlisted allowance) has two breakers; a 14 ft corner on a 30 ft depth
+  // puts one across the angled edge. On 20 ft listed stock (Prime+) a 50 ft deck has two, and a 20 ft corner crosses one.
   for(const rows of [0,1] as const)for(const legs of [[14,0],[0,14],[20,6]] as [number,number][])cases.push([40,30,'Straight',rows,legs,true]);
+  for(const rows of [0,1] as const)for(const legs of [[20,0],[0,20],[20,6]] as [number,number][])cases.push([50,30,'Straight',rows,legs,true]);
   for(const [width,length,pattern,rows,legs,inlay] of cases){
-    const d=design({width,length,pattern,pictureFrameRows:rows,hasInlay:inlay,inlayLf:inlay?length:0,cornerChamfers:corners(...legs)}),m=buildDeckTakeoff(d),level=m.levels[0],tag=`${width}x${length} ${pattern} rows ${rows} legs ${legs}${inlay?' inlay':''}`;
+    const d=design({width,length,pattern,pictureFrameRows:rows,hasInlay:inlay,inlayLf:inlay?length:0,cornerChamfers:corners(...legs),...(width===40&&length===30?{deckingMaterial:'tt_prime',deckingColor:'Maritime Gray'}:{})}),m=buildDeckTakeoff(d),level=m.levels[0],tag=`${width}x${length} ${pattern} rows ${rows} legs ${legs}${inlay?' inlay':''}`;
     const polys=level.boards.map(b=>boardOutline(b,d.boardWidth)),fp=(level.deckingFootprint??level.footprint).outline;
     let missing=0,overlap=0,samples=0;const step=width>20?6.13:3.17;
     for(let y=Math.min(...fp.map(p=>p.y))+.37;y<Math.max(...fp.map(p=>p.y));y+=step)for(let x=Math.min(...fp.map(p=>p.x))+.29;x<Math.max(...fp.map(p=>p.x));x+=step){
@@ -265,7 +267,13 @@ for(const [width,length] of [[16,12],[24,20],[40,16]] as const)for(const [l,r] o
     const borders=d.pictureFrameRows||(pattern==='Picture Frame'?1:0),field=offsetPolygons([fp],borders*(d.boardWidth+m.gap));
     const inField=(b:typeof level.boards[number])=>boardOutline(b,d.boardWidth).every(p=>field.some(poly=>distance(p,poly)<.05));
     ok(level.boards.filter(b=>b.role==='breaker'||b.role==='inlay').every(inField),`${tag}: breakers and the inlay stay inside the field, clear of the border rows`);
-    if(width===40&&length===30)ok(level.boards.some(b=>b.role==='breaker'&&(b.polygon?.length??4)>4||b.role==='breaker'&&extent(boardOutline(b,d.boardWidth),90).length<length*12-1),`${tag}: a breaker is cut short by the angled edge`);
+    if(width===50&&length===30){
+      // Prime+ (20 ft listed stock): the breaker under the 20 ft corner stops on the angled edge, the other runs the full depth.
+      ok(m.stockLength>192&&level.breakers.length===2,`${tag}: 20 ft stock lays two breakers on a 50 ft deck (${level.breakers.length})`);
+      const laid=level.breakers.map(x=>level.boards.filter(b=>b.role==='breaker'&&Math.abs(b.cx-x)<6).reduce((n,b)=>n+extent(boardOutline(b,d.boardWidth),90).length,0)),cut=legs[0]>=20?0:1;
+      ok(laid[cut]<laid[1-cut]-24,`${tag}: the breaker under the 20 ft corner is cut short by the angled edge (${laid.map(n=>n.toFixed(1)).join(' vs ')} in)`);
+    }
+    if((width===40||width===50)&&length===30)ok(level.boards.some(b=>b.role==='breaker'&&(b.polygon?.length??4)>4||b.role==='breaker'&&extent(boardOutline(b,d.boardWidth),90).length<length*12-1),`${tag}: a breaker is cut short by the angled edge`);
     if(inlay)ok(level.boards.some(b=>b.role==='inlay'),`${tag}: the inlay is laid`);
     // Boards run flush to each angled field edge: sample just inside it; only board joints may show.
     for(const e of level.angledEdges??[]){

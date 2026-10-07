@@ -25,6 +25,8 @@ import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
 import type {DeltaProps} from '../features/deckcraft/designer/useOptionDeltas';
 import WorkspaceTools from '../features/deckcraft/designer/WorkspaceTools';
 import WorkspacePrice from '../features/deckcraft/designer/WorkspacePrice';
+import {useDesignerMode} from '../features/deckcraft/designer/designerMode';
+import type {ProPage} from '../features/deckcraft/designer/pro/proTypes';
 import {loadExteriorStudio,loadViewer} from '../features/deckcraft/designer/previewLoaders';
 const PreviewPanel=lazy(()=>import('../features/deckcraft/designer/PreviewPanel'));
 import SectionList from '../features/deckcraft/designer/SectionList';
@@ -61,6 +63,7 @@ const EasyEditTools=lazy(()=>import('../features/deckcraft/designer/EasyEditTool
 const IssueReviewDialog=lazy(()=>import('../features/deckcraft/designer/IssueReviewDialog'));
 const PermitSetDialog=lazy(()=>import('../features/deckcraft/drawings/PermitSetDialog'));
 const JobRevisionDialog=lazy(()=>import('../features/deckcraft/designer/JobRevisionDialog'));
+const ProMenuBar=lazy(()=>import('../features/deckcraft/designer/pro/ProMenuBar'));
 const loadSendDialog=()=>import('../features/deckcraft/SendDesignDialog');
 const loadProposalDialog=()=>import('../features/deckcraft/ProposalDialog');
 const HouseSection=lazy(loadHouseSection),DimensionsStep=lazy(loadDimensionsStep),MaterialsStep=lazy(loadMaterialsStep),StairsStep=lazy(loadStairsStep),SiteExtrasStep=lazy(loadSiteExtrasStep),EstimateStep=lazy(loadEstimateStep);
@@ -137,7 +140,8 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // field, where the browser's own undo applies to the text.
   useEffect(()=>{
     const onKey=(e:KeyboardEvent)=>{
-      if(sketchOpen||presetsOpen||jobsOpen||quoteReviewOpen||issuesOpen||permitOpen)return;
+      // A drawing draft handles its own Ctrl+Z first (useDraftKeys) and marks the key as taken.
+      if(e.defaultPrevented||sketchOpen||presetsOpen||jobsOpen||quoteReviewOpen||issuesOpen||permitOpen)return;
       if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
       const t=e.target as HTMLElement|null;if(t&&(t.isContentEditable||/^(input|textarea|select)$/i.test(t.tagName)))return;
       const key=e.key.toLowerCase();
@@ -154,6 +158,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // Opening the exterior studio shows the 3D view (looks never show on the plan).
   // The site plan's tool (R5). A deck that becomes a custom outline is drawn with the Draw outline tool.
   const [planTool,setPlanTool]=useState<PlanTool>('size');
+  const pro=useDesignerMode();
   const assistantYardFeature=data.yardFeatures?.find(f=>f.id===selectedYardFeatureId);
   const yardInFocus=planTool==='yard'||workspaceView==='inspector'&&open.has('backyard');
   const assistantSelection={...selection,...(data.pools?.some(p=>p.id===selectedYardFeatureId)?{poolId:selectedYardFeatureId}:{}),...(yardInFocus&&assistantYardFeature&&assistantYardFeature.kind!=='water-feature'?{yard:yardTarget.id===selectedYardFeatureId?yardTarget:{id:selectedYardFeatureId,target:'area' as const,index:0}}:{})};
@@ -453,14 +458,19 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     else openSection(action.section,true);
   };
   const currentIssues=[...new Set([...reviewFlags,...lightingCheck.warnings,...estimate.quoteRequired])];
-  return <div className="deck-designer" data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>
+  // The Pro workspace (Designer Mode) reaches the same actions through a menu bar and ribbon. The page hands over its own
+  // functions as they are; the Pro chunks, loaded only in Designer Mode, build the menu and ribbon actions from them.
+  const proPage:ProPage|undefined=pro?{open,renderSection,data,apply:atomicUpdate,ready:mounted&&designReady,issueCount:currentIssues.length,canUndo,canRedo,undo,redo,openSection,setPlanTool,setMode,showCanvas,showFullList,saveJSON,openProposal,downloadPdf,exportModel,exportPermit,setPresetsOpen,setPermitOpen,setJobsOpen,setSendOpen,setQuoteReviewOpen,setIssuesOpen,setSketchOpen,setAgentOpen,setAskOpen}:undefined;
+  return <div className="deck-designer" data-pro={pro||undefined} data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>
     {embed?embed.renderBar({data,estimate}):<SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>}
     <header className="dd-header"><Link to="/" className="dd-workspace-brand" aria-label="Golden Maple home"><span className="dd-brand-symbol" aria-hidden="true">↗</span><span>DeckCraft<small>Golden Maple</small></span></Link><div className="dd-workspace-project"><h1>Draw your deck on your house.</h1><span className="dd-save-state"><i aria-hidden="true"/>{autosavePaused?'Auto-save paused':mounted?'Auto-save on this device':'Loading your design'}</span></div><WorkspaceTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={()=>saveJSON()} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} autosavePaused={autosavePaused} onDownloadPrevious={unrestoredDesign?()=>downloadFile(unrestoredDesign,'application/json','golden-maple-previous-design.json'):undefined}/><div id="dd-workspace-agent-slot"><button type="button" className="dd-agent-open" disabled={!mounted||!designReady} aria-haspopup="dialog" onClick={()=>setPresetsOpen(true)}>Presets</button><button type="button" className="dd-agent-open" aria-haspopup="dialog" onClick={()=>setAgentOpen(true)}>Agents</button></div><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
+    {proPage&&mounted&&<Suspense fallback={null}><ProMenuBar page={proPage}/></Suspense>}
     {mounted&&<Suspense fallback={null}><EasyEditTools onAsk={()=>{showCanvas();setAskOpen(true);requestAnimationFrame(()=>{if(window.matchMedia('(max-width:800px)').matches)document.getElementById('dd-assistant-dock')?.scrollIntoView({block:'start',behavior:'smooth'});});}} onJobs={()=>setJobsOpen(true)} onIssues={()=>setIssuesOpen(true)} issues={currentIssues.length} ready={designReady} autosaveState={autosaveState} savedAt={lastAutosaveAt} jobLabel={jobLabel}/></Suspense>}
     <main className="dd-workspace">
-      <Suspense fallback={<div className="dd-preview" role="status">Preparing design workspace…</div>}><PreviewPanel previewData={geometryPreview} onPreviewData={setGeometryPreview} assistantTargets={assistantTargets} data={data} update={update} applyComponent={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} onSelectYardTarget={setYardTarget} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} snapshotLighting={snapshotLighting} tool={planTool} setTool={setPlanTool} pendingInlay={pendingInlay} onPendingInlay={setPendingInlay} externalSelection={selection} onSelectionChange={setSelection} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior} onSketch={()=>setSketchOpen(true)} sketchReady={mounted&&designReady}/></Suspense>
+      <Suspense fallback={<div className="dd-preview" role="status">Preparing design workspace…</div>}><PreviewPanel pro={proPage} previewData={geometryPreview} onPreviewData={setGeometryPreview} assistantTargets={assistantTargets} data={data} update={update} applyComponent={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} onSelectYardTarget={setYardTarget} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} snapshotLighting={snapshotLighting} tool={planTool} setTool={setPlanTool} pendingInlay={pendingInlay} onPendingInlay={setPendingInlay} externalSelection={selection} onSelectionChange={setSelection} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior} onSketch={()=>setSketchOpen(true)} sketchReady={mounted&&designReady}/></Suspense>
       <section className="dd-controls" aria-label="Deck configuration">
-        <SectionList data={data} ledger={schedule} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection} onAssistant={askOpen?showCanvas:undefined} onCanvas={showCanvas} inspectorVisible={workspaceView==='inspector'}/>
+        {/* In the Pro workspace the open section docks beside the drawing (ProProperties) instead of this pop-over. */}
+        {!proPage&&<SectionList data={data} ledger={schedule} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection} onAssistant={askOpen?showCanvas:undefined} onCanvas={showCanvas} inspectorVisible={workspaceView==='inspector'}/>}
       </section>
       <aside id="dd-assistant-dock" className="dd-assistant-slot" hidden={!askOpen}><button type="button" className="dd-assistant-back" onClick={showCanvas}>↑ Back to drawing</button></aside>
       <WorkspacePrice onQuoteReview={()=>setQuoteReviewOpen(true)} ledger={schedule} changes={changes.records} onFullList={showFullList}/>

@@ -2,7 +2,7 @@ import type {DeckData} from '../types';
 import {deckReleaseData} from '../deckRelease';
 import {pruneEdgeNames} from '../designPersistence';
 import {resizeBoundaryPatch} from '../lib/freeOutline';
-import {validateBoundaryLocks} from './boundaryDimensions';
+import {validateBoundaryLocks} from './boundaryLocks';
 import {assertUnlockedChanges} from '../editorOrganization';
 
 /** All UI edits preserve measured edges, including changes made outside the drawing tools. */

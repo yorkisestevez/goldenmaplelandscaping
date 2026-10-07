@@ -6,3 +6,7 @@ export function drawingSnap(raw:PlanPoint,points:PlanPoint[],targets:PlanPoint[]
  const hit=targets.reduce<PlanPoint|undefined>((best,p)=>distance(p)<=reach&&(!best||distance(p)<distance(best))?p:best,undefined);
  return {point:hit??raw,closing:false,snapped:!!hit};
 }
+/** Deck corners and the house's corners in plan coordinates, so patios and walls can be drawn tight against them. */
+export function siteSnapPoints(levels:{footprint:{outline:PlanPoint[]};offset:{x:number;z:number}}[],house:PlanPoint[][]=[]){
+ return [...levels.flatMap(l=>l.footprint.outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}))),...house.flat()];
+}

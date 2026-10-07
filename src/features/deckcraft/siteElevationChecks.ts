@@ -6,7 +6,15 @@ import {sitePlaneHeight} from './siteSurface';
 import {transitionClip,transitionArea} from './gradingTransitionGeometry';
 import {yardFeatureOutline} from './yardPathGeometry';
 import {poolPermanentExclusion} from './poolGeometry';
+import type {SiteFeaturePad} from './siteModel';
+import {insideRings} from './patioGroundContact';
 export interface GradeDiscontinuity {a:PlanPoint;b:PlanPoint;maxJumpIn:number;wallId?:string;stepId?:string}
+/** The surface without the ground inside ground-fit patios: their edge is meant to step from the untouched ground the
+ * paving covers to the graded bank, so it is no grading jump. */
+export function outsideFeaturePads<T extends Pick<SiteSurface,'proposedTriangles'>>(surface:T,pads:SiteFeaturePad[]=[]):T{
+ if(!pads.length)return surface;
+ return {...surface,proposedTriangles:surface.proposedTriangles.filter(t=>{const x=(t.vertices[0].xIn+t.vertices[1].xIn+t.vertices[2].xIn)/3,z=(t.vertices[0].zIn+t.vertices[1].zIn+t.vertices[2].zIn)/3;return !pads.some(p=>insideRings(p.rings,x,z));})};
+}
 /** Match partial shared edges as well as full TIN edges. Exterior coverage
  * boundaries are not treated as an inferred adjacent ground elevation. */
 export function gradeDiscontinuities(surface:Pick<SiteSurface,'proposedTriangles'>,walls:YardFeatureModel[]=[]):GradeDiscontinuity[]{

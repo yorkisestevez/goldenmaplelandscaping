@@ -49,7 +49,11 @@ const reseed=planSketchOf(additions.data).document;equal(generatePlanSketchDesig
 
 rejected(d=>{const s=shape(d,'garden');s.points=[s.points[0],s.points[3],s.points[2],s.points[4]];});
 rejected(d=>{const s=shape(d,'wall');s.points.push({...s.points[0]});});
-rejected(d=>{shape(d,'wall').widthFt=81;});
+// Drawn (path) walls run up to 240 ft (owner-approved 2026-10-06); the sketch rescales the whole path to the typed run.
+{const long=edited(d=>{shape(d,'wall').widthFt=81;}),w=retained(long.data,wall);near(w.widthFt,81,'A path wall may run past the old 80 ft cap');near(yardShapeRunIn(w.wallPath!),972,'An 81 ft path is rescaled to exactly 972 in');}
+{const max=edited(d=>{shape(d,'wall').widthFt=240;}),w=retained(max.data,wall);near(w.widthFt,240,'A path wall reaches the 240 ft limit from the sketch');near(yardShapeRunIn(w.wallPath!),2880,'A 240 ft path is rescaled to exactly 2880 in');equal(w.wallPath!.length,wall.wallPath!.length,'The longest wall keeps every pull point');}
+rejected(d=>{shape(d,'wall').widthFt=240.25;});
+rejected(d=>{shape(d,'garden').widthFt=61;});
 rejected(d=>{shape(d,'garden').heightIn=49;});
 const stale=clone(current);stale.yardFeatures![0].xFt+=1;const staleResult=generatePlanSketchDesign(baseline,stale,baseline);ok(!staleResult.ok,'Changed yard source geometry invalidates a stale sketch');equal(staleResult.patch,undefined,'Stale input cannot expose a patch');
 const blank=generateSketchDesign({version:1,shapes:[...baseline.shapes.filter(s=>s.kind==='deck'),addedPatio]},current);ok(!blank.ok,'A new blank deck sketch explicitly rejects unsupported yard additions');ok(blank.errors.some(s=>s.includes('Current plan')),'The rejection explains how to edit yard safely');equal(blank.patch,undefined,'Blank mode never drops existing yard metadata');

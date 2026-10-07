@@ -4,16 +4,15 @@ import {buildYardModel} from '../yardModel';
 import {buildElevationProfile,elevationProfileSpecs,ELEVATION_DATUM,elevationLabel,profileSegmentPoint} from '../elevationProfiles';
 import type {DrawItem,Pt,LayerId} from './drawingTypes';
 import {siteContours} from '../siteContours';
-import {createSiteSurface} from '../siteSurface';
-import {getTerrainConfig} from '../yardSettings';
+import {designSiteSurface} from '../siteSurface';
 import {yardShapeCurveWorldPoints} from '../yardShapeGeometry';
 import {yardSurfaceIn} from '../yardElevations';
 import {usesPhysicalElevations} from '../elevationDatum';
 export function siteElevationPlanItems(data:DeckData,deck:DeckTakeoff):DrawItem[]{
- if(!usesPhysicalElevations(data))return [];const surface=data.siteModel?createSiteSurface(data.siteModel,getTerrainConfig(data)):undefined,items:DrawItem[]=[];
+ if(!usesPhysicalElevations(data))return [];const surface=designSiteSurface(data),items:DrawItem[]=[];
  if(surface)for(const [kind,triangles,layer] of [['existing',surface.existingTriangles,'C-EXST'],['proposed',surface.proposedTriangles,'C-PGRD']] as const){const contours=siteContours(triangles);for(const c of contours.lines)items.push({kind:'line',a:c.a,b:c.b,layer});for(const a of contours.arrows){const b={x:a.x+a.dx*18,y:a.y+a.dy*18};items.push({kind:'line',a:{x:a.x,y:a.y},b,layer},{kind:'text',at:b,text:`${kind} ${a.slopePct.toFixed(1)}% fall`,layer:'A-ANNO-TEXT',height:.06,anchor:'start'});}for(const low of contours.lowPoints)items.push({kind:'text',at:{x:low.xIn,y:low.zIn},text:`${kind} low ${elevationLabel(low.elevationIn)}`,layer:'A-ANNO-TEXT',height:.06,anchor:'start'});}
  for(const p of data.siteModel?.points??[])items.push({kind:'text',at:{x:p.xIn,y:p.zIn},text:`EG ${elevationLabel(p.elevationIn)} / PG ${elevationLabel(surface?.sample(p.xIn,p.zIn))}`,layer:'A-ANNO-TEXT',height:.06,anchor:'start'});
- for(const f of data.yardFeatures??[]){if(!f.enabled||f.kind==='water-feature')continue;items.push({kind:'poly',closed:f.kind==='patio',points:yardShapeCurveWorldPoints(f),layer:'C-FNSH'},{kind:'text',at:{x:f.xFt*12,y:f.zFt*12},text:`${f.name} ${f.kind==='retaining-wall'&&f.wallTopSteps?.length?'reference cap':'finished'} ${elevationLabel(yardSurfaceIn(data,f))}${f.kind==='patio'?` · local X ${f.patioSlope?.xPct??0}% / Z ${f.patioSlope?.zPct??0}%`:''}`,layer:'A-ANNO-TEXT',height:.08,anchor:'middle'});}
+ for(const f of data.yardFeatures??[]){if(!f.enabled||f.kind==='water-feature')continue;items.push({kind:'poly',closed:f.kind!=='retaining-wall',points:yardShapeCurveWorldPoints(f),layer:'C-FNSH'},{kind:'text',at:{x:f.xFt*12,y:f.zFt*12},text:`${f.name} ${f.kind==='retaining-wall'&&f.wallTopSteps?.length?'reference cap':'finished'} ${elevationLabel(yardSurfaceIn(data,f))}${f.kind==='patio'?` · local X ${f.patioSlope?.xPct??0}% / Z ${f.patioSlope?.zPct??0}%`:''}`,layer:'A-ANNO-TEXT',height:.08,anchor:'middle'});}
  elevationProfileSpecs(data,deck).filter(s=>!s.poolRef).forEach((s,i)=>{for(const segment of s.segments){const count=segment.bulgeIn?64:1,points=Array.from({length:count+1},(_,k)=>profileSegmentPoint(segment,k/count));items.push({kind:'poly',points,closed:false,layer:'A-ANNO-DIMS'});}const p=s.segments[0]?.a;if(p)items.push({kind:'text',at:p,text:`${i+1}/A-2 section start`,layer:'A-ANNO-TEXT',height:.06,anchor:'start'});});return items;
 }
 export function siteProfileDrawingItems(data:DeckData,deck:DeckTakeoff,origin:Pt):DrawItem[]{

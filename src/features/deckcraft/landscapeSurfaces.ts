@@ -10,6 +10,10 @@ export const LANDSCAPE_SURFACES = [
  {id:'crushed-granite-bed',name:'Crushed granite',type:'aggregate',color:'#aa9281',grainIn:.3,defaultDepthIn:3},
  {id:'artificial-grass',name:'Artificial grass',type:'turf',color:'#466738',grainIn:.06,defaultDepthIn:.5},
  {id:'putting-green',name:'Putting green',type:'turf',color:'#608348',grainIn:.04,defaultDepthIn:.25},
+ {id:'pea-gravel-bed',name:'Pea gravel',type:'aggregate',color:'#b3a38b',grainIn:.375,defaultDepthIn:3},
+ {id:'clear-limestone-bed',name:'Clear limestone',type:'aggregate',color:'#a7aaa4',grainIn:.75,defaultDepthIn:3},
+ {id:'limestone-screenings-bed',name:'Limestone screenings',type:'aggregate',color:'#a6a397',grainIn:.12,defaultDepthIn:3},
+ {id:'granular-base-bed',name:'Granular base',type:'aggregate',color:'#8c8475',grainIn:.7,defaultDepthIn:3},
 ] as const;
 export const landscapeSurface=(id:LandscapeAssetId)=>LANDSCAPE_SURFACES.find(s=>s.id===id);
 export const landscapeSurfaceDepth=(o:LandscapeObject)=>o.surfaceDepthIn??o.mulchDepthIn??0;

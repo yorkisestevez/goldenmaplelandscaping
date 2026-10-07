@@ -88,6 +88,7 @@ function checkWrap(d:DeckData,tag:string){
     probes++;if(!polys.some(poly=>nearPoly(p,poly,m.gap+.02)))missed++;
   }
   ok(probes>50&&missed===0,`${tag}: decking covers the deck (${missed} of ${probes} probes uncovered)`);
+  ok(l.boards.every(b=>b.length<=m.stockLength+.001),`${tag}: every decking piece is cut from one stock board`);
   // Railing, stairs and border stay off the house.
   ok(!guardRuns(m).some(r=>contact.onContact(plan(r.a),plan(r.b))),`${tag}: no railing along a ledger`);
   const {x0,x1,depthIn}=getHousePlacement(d),inHouse=(p:PlanPoint)=>p.x>x0+.5&&p.x<x1-.5&&p.y<-.5&&p.y>-depthIn+.5;
@@ -233,6 +234,7 @@ function checkBump(d:DeckData,tag:string,bumpId='bump1'){
     probes++;if(!polys.some(poly=>nearPoly(p,poly,m.gap+.02)))missed++;
   }
   ok(probes>50&&missed===0,`${tag}: decking covers the notched deck (${missed} of ${probes} probes uncovered)`);
+  ok(l.boards.every(b=>b.length<=m.stockLength+.001),`${tag}: every decking piece is cut from one stock board`);
   const square=(p:{x:number;z:number},h:number)=>[{x:p.x-h,y:p.z-h},{x:p.x+h,y:p.z-h},{x:p.x+h,y:p.z+h},{x:p.x-h,y:p.z+h}];
   const strip=(mm:Member)=>{const L=Math.hypot(mm.b.x-mm.a.x,mm.b.z-mm.a.z)||1,nx=-(mm.b.z-mm.a.z)/L*mm.width/2,nz=(mm.b.x-mm.a.x)/L*mm.width/2;return [{x:mm.a.x-nx,y:mm.a.z-nz},{x:mm.b.x-nx,y:mm.b.z-nz},{x:mm.b.x+nx,y:mm.b.z+nz},{x:mm.a.x+nx,y:mm.a.z+nz}];};
   const deckParts=[finished,...polys,...l.supports.map(p=>square(p,1.75)),...[...l.joists,...l.beams,...l.blocking].map(strip),...m.treads.map(t=>square({x:t.x,z:t.z},Math.min(t.w,t.d)/2-.1))].map(p=>area(p)<0?[...p].reverse():p);
@@ -258,6 +260,14 @@ function checkBump(d:DeckData,tag:string,bumpId='bump1'){
     const d=design({...deck,height,...boards,stairPosition:'Front',houseConfig:{...house(26,deck.wrap?22:16),footprint:{rects:[{id:'bump1',kind:'house',wall:'Front',offsetFt:bump.off(26),widthFt:bump.w,depthFt:bump.d}]}}});
     if(deck.wrap)assert(activeWrap(d),`${shape}: the wrap stays active around a bump-out clear of its corners`);
     checkBump(d,`${shape} ${bump.tag} ${boards.pattern} ${height}in`);
+  }
+  // A plain 24 ft deck whose breaker centre line falls just inside a bump-out: no breaker is laid beside the bump-out,
+  // so the field boards there run on to its wall (designs saved before the 2026-10 rules keep their quoted layout).
+  for(const [tag,bump] of [['bump at 14 ft',{w:8,d:3,off:14}],['narrow bump at 14 ft',{w:6,d:4,off:14}]] as const)for(const boards of [boardsets[0],boardsets[1],boardsets[3]]){
+    const d=design({width:24,length:12,height:36,...boards,stairPosition:'Front',houseConfig:{...house(28,16),footprint:{rects:[{id:'bump1',kind:'house',wall:'Front',offsetFt:bump.off,widthFt:bump.w,depthFt:bump.d}]}}});
+    const l=buildDeckTakeoff(d).levels[0],x0=getHouseBlocks(d).find(b=>b.id==='bump1')!.rect.x0;
+    ok(l.breakers.some(x=>x>x0-.01&&x-d.boardWidth/2-.25<x0),`plain 24 ft ${tag}: the fixture's breaker strip straddles the bump-out wall`);
+    checkBump(d,`plain 24 ft ${tag} ${boards.pattern}/${boards.pictureFrameRows}`);
   }
   // A garage flush with the deck-facing wall: the deck running past the house onto it gets a ledger on
   // the garage (no house-side beam there) and the garage-ledger review item.

@@ -71,6 +71,9 @@ export function priceLedger(estimate:DeckEstimate):Ledger{
   };
 }
 
+/** A line's priced amount: a planning allowance until every priced item has a recorded quote; null when unpriced. */
+export const lineBasis=(line:LedgerLine)=>{const priced=line.items.filter(i=>!i.quote);return line.amount<.005||!priced.length?null:priced.some(i=>i.status==='allowance')?'Planning allowance':'Confirmed';};
+
 /** A quote's label without the "(builder quote)" or "(supplier quote)" its tag already says. */
 export const quoteLabel=(label:string)=>label.replace(/\s*\((builder|supplier) quote\)$/i,'');
 

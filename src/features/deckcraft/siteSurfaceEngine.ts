@@ -14,7 +14,7 @@ import type {DeckTakeoff,Member,Box} from './deckTakeoff';
 
 import type {SiteModel,SiteBoundaryPoint,SiteGradingRegion} from './siteModel';
 
-import {validateSiteModel} from './siteModel';
+import {validateDerivedSiteModel} from './siteModelRuntime';
 
 import {getTerrainConfig} from './yardSettings';
 
@@ -26,15 +26,19 @@ import {yardFeatureOutline} from './yardPathGeometry';
 
 import {patioTopPlane,applyPlaneFormation} from './yardElevationGeometry';
 
+import {designSiteModel,buildFeaturePads,featurePadGeometry,labelFeaturePads} from './siteFeatureGrading';
+
 export interface SiteVertex {xIn:number;zIn:number;elevationIn:number}
 
 export interface SitePlane {x:number;z:number;constant:number}
 
 export interface SiteSurfaceTriangle {vertices:[SiteVertex,SiteVertex,SiteVertex];plane:SitePlane;existingPlane:SitePlane;gradingId?:string}
 
-export interface SiteCutFill {cutYd3:number;fillYd3:number;netFillYd3:number;gradedAreaSqft:number;uncoveredAreaSqft:number;complete:boolean}
+export interface SiteCutFill {cutYd3:number;fillYd3:number;netFillYd3:number;gradedAreaSqft:number;uncoveredAreaSqft:number;complete:boolean;
+ /** The part of cut/fill/area that is ground-fit banks round patios (already inside the totals above). */
+ bankCutYd3?:number;bankFillYd3?:number;bankAreaSqft?:number}
 
-export interface SiteSurface {transitionModels?:GradingTransitionModel[];existingTriangles:SiteSurfaceTriangle[];proposedTriangles:SiteSurfaceTriangle[];coverage:SiteBoundaryPoint[][];bounds:{minX:number;maxX:number;minZ:number;maxZ:number};cutFill:SiteCutFill;legacy:boolean;sample:(xIn:number,zIn:number,kind?:'existing'|'proposed')=>number|undefined;extrema:(polygons:SiteBoundaryPoint[][],kind?:'existing'|'proposed')=>{min:number;max:number;complete:boolean};lineBreaks:(a:SiteBoundaryPoint,b:SiteBoundaryPoint,kind?:'existing'|'proposed')=>number[]}
+export interface SiteSurface {featurePadModels?:import('./siteFeatureGrading').SiteFeaturePadModel[];transitionModels?:GradingTransitionModel[];existingTriangles:SiteSurfaceTriangle[];proposedTriangles:SiteSurfaceTriangle[];coverage:SiteBoundaryPoint[][];bounds:{minX:number;maxX:number;minZ:number;maxZ:number};cutFill:SiteCutFill;legacy:boolean;sample:(xIn:number,zIn:number,kind?:'existing'|'proposed')=>number|undefined;extrema:(polygons:SiteBoundaryPoint[][],kind?:'existing'|'proposed')=>{min:number;max:number;complete:boolean};lineBreaks:(a:SiteBoundaryPoint,b:SiteBoundaryPoint,kind?:'existing'|'proposed')=>number[]}
 
 export interface SiteFormation {featureId:string;polygons:SiteBoundaryPoint[][];bottomIn:number;formationPlane?:SitePlane}
 
@@ -107,25 +111,54 @@ export function siteAffineIntegral(poly:SiteBoundaryPoint[],plane:SitePlane){let
 
 const positiveIntegral=(poly:SiteBoundaryPoint[],plane:SitePlane)=>{const p=positive(poly,plane);return p.length?Math.max(0,siteAffineIntegral(p,plane)):0;};
 
+/** Outlines indexed by edge on a coarse grid, for exact face-in-outline tests (memoized on the outline array). */
+const outlineIndex=new WeakMap<SiteBoundaryPoint[][],{bounds:SiteSurface['bounds'];edges:[SiteBoundaryPoint,SiteBoundaryPoint][];cells:Map<string,number[]>}>(),OUTLINE_CELL=24;
+function indexOutlines(polys:SiteBoundaryPoint[][]){
+ let index=outlineIndex.get(polys);if(index)return index;
+ const edges=polys.flatMap(p=>p.map((a,i)=>[a,p[(i+1)%p.length]] as [SiteBoundaryPoint,SiteBoundaryPoint])),cells=new Map<string,number[]>();
+ edges.forEach(([a,b],n)=>{for(let x=Math.floor(Math.min(a.x,b.x)/OUTLINE_CELL);x<=Math.floor(Math.max(a.x,b.x)/OUTLINE_CELL);x++)for(let z=Math.floor(Math.min(a.y,b.y)/OUTLINE_CELL);z<=Math.floor(Math.max(a.y,b.y)/OUTLINE_CELL);z++){const k=x+','+z,l=cells.get(k);if(l)l.push(n);else cells.set(k,[n]);}});
+ index={bounds:polys.length?polygonBounds(polys):{minX:Infinity,maxX:-Infinity,minZ:Infinity,maxZ:-Infinity},edges,cells};outlineIndex.set(polys,index);return index;
+}
+/** Where a convex face stands against outlines (non-zero fill, as siteClip reads them): 'out' or 'in' when no outline
+ * edge runs through its interior (it is then wholly on one side; read at its centroid), else 'cross'. Exact, with no
+ * grid snapping, so a face wholly inside can be used as it is instead of a clipped copy. */
+function faceSide(polys:SiteBoundaryPoint[][],face:SiteBoundaryPoint[]):'in'|'out'|'cross'{
+ const index=indexOutlines(polys),box=polygonBounds([face]);if(!boundsOverlap(box,index.bounds))return 'out';
+ const f=siteSignedArea(face)<0?[...face].reverse():face,cuts=f.map((a,i)=>{const b=f[(i+1)%f.length],dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);return {x:-dy/l,z:dx/l,constant:(dy*a.x-dx*a.y)/l};}),seen=new Set<number>();
+ for(let x=Math.floor(box.minX/OUTLINE_CELL);x<=Math.floor(box.maxX/OUTLINE_CELL);x++)for(let z=Math.floor(box.minZ/OUTLINE_CELL);z<=Math.floor(box.maxZ/OUTLINE_CELL);z++)for(const n of index.cells.get(x+','+z)??[]){if(seen.has(n))continue;seen.add(n);const [a,b]=index.edges[n];let t0=0,t1=1,inside=true;
+  for(const c of cuts){const fa=sitePlaneHeight(c,a.x,a.y)-EPS,fb=sitePlaneHeight(c,b.x,b.y)-EPS;if(fa<0&&fb<0){inside=false;break;}if(fa<0)t0=Math.max(t0,fa/(fa-fb));else if(fb<0)t1=Math.min(t1,fa/(fa-fb));if(t0>=t1){inside=false;break;}}
+  if(inside&&(t1-t0)*Math.hypot(b.x-a.x,b.y-a.y)>EPS)return 'cross';}
+ const cx=f.reduce((n,v)=>n+v.x,0)/f.length,cz=f.reduce((n,v)=>n+v.y,0)/f.length;let winding=0;
+ for(const p of polys)for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length],side=(b.x-a.x)*(cz-a.y)-(cx-a.x)*(b.y-a.y);if(a.y<=cz){if(b.y>cz&&side>0)winding++;}else if(b.y<=cz&&side<0)winding--;}
+ return winding!==0?'in':'out';
+}
+/** siteClip(polygons, [face], 'intersection') for a convex face, without the clipper where the face is wholly in or out. */
+function faceZone(polygons:SiteBoundaryPoint[][],face:SiteBoundaryPoint[]):SiteBoundaryPoint[][]{const side=faceSide(polygons,face);return side==='out'?[]:side==='in'?[siteSignedArea(face)<0?[...face].reverse():face]:siteClip(polygons,[face],'intersection');}
+
+/** A point within this of a face reads it: faces clipped on Clipper's 1e-5 in grid can leave hairline gaps. */
+const SAMPLE_TOLERANCE_IN=1e-5;
+
 function spatialSampler(ts:SiteSurfaceTriangle[],bounds:SiteSurface['bounds']){
 
  const size=Math.max(1,Math.min(64,Math.ceil(Math.sqrt(ts.length/2)))),width=Math.max(EPS,bounds.maxX-bounds.minX),depth=Math.max(EPS,bounds.maxZ-bounds.minZ),cx=(x:number)=>Math.max(0,Math.min(size-1,Math.floor((x-bounds.minX)/width*size))),cz=(z:number)=>Math.max(0,Math.min(size-1,Math.floor((z-bounds.minZ)/depth*size))),buckets=new Map<number,SiteSurfaceTriangle[]>();
 
  for(const t of ts){const xs=t.vertices.map(v=>v.xIn),zs=t.vertices.map(v=>v.zIn);for(let x=cx(Math.min(...xs));x<=cx(Math.max(...xs));x++)for(let z=cz(Math.min(...zs));z<=cz(Math.max(...zs));z++){const key=z*size+x,list=buckets.get(key)??[];list.push(t);buckets.set(key,list);}}
 
- return (x:number,z:number)=>{if(!Number.isFinite(x+z)||x<bounds.minX-EPS||x>bounds.maxX+EPS||z<bounds.minZ-EPS||z>bounds.maxZ+EPS)return undefined;for(const t of buckets.get(cz(z)*size+cx(x))??[]){const [a,b,c]=t.vertices,cross=(u:SiteVertex,v:SiteVertex)=>(v.xIn-u.xIn)*(z-u.zIn)-(v.zIn-u.zIn)*(x-u.xIn),p=cross(a,b),q=cross(b,c),r=cross(c,a);if(p>=-EPS&&q>=-EPS&&r>=-EPS||p<=EPS&&q<=EPS&&r<=EPS)return sitePlaneHeight(t.plane,x,z);}return undefined;};
+ return (x:number,z:number)=>{if(!Number.isFinite(x+z)||x<bounds.minX-EPS||x>bounds.maxX+EPS||z<bounds.minZ-EPS||z>bounds.maxZ+EPS)return undefined;for(const t of buckets.get(cz(z)*size+cx(x))??[]){const [a,b,c]=t.vertices,cross=(u:SiteVertex,v:SiteVertex)=>(v.xIn-u.xIn)*(z-u.zIn)-(v.zIn-u.zIn)*(x-u.xIn),reach=(u:SiteVertex,v:SiteVertex)=>SAMPLE_TOLERANCE_IN*Math.hypot(v.xIn-u.xIn,v.zIn-u.zIn),p=cross(a,b),q=cross(b,c),r=cross(c,a),ta=reach(a,b),tb=reach(b,c),tc=reach(c,a);if(p>=-ta&&q>=-tb&&r>=-tc||p<=ta&&q<=tb&&r<=tc)return sitePlaneHeight(t.plane,x,z);}return undefined;};
 
 }
 
 function lineBreaks(ts:SiteSurfaceTriangle[],a:SiteBoundaryPoint,b:SiteBoundaryPoint){const dx=b.x-a.x,dz=b.y-a.y,values=[0,1];for(const t of ts){const poly=planOf(t);for(let i=0;i<3;i++){const p=poly[i],q=poly[(i+1)%3],ex=q.x-p.x,ez=q.y-p.y,den=dx*ez-dz*ex;if(Math.abs(den)<EPS)continue;const px=p.x-a.x,pz=p.y-a.y,u=(px*ez-pz*ex)/den,v=(px*dz-pz*dx)/den;if(u>EPS&&u<1-EPS&&v>=-EPS&&v<=1+EPS)values.push(u);}}return [...new Set(values.map(v=>Number(v.toFixed(10))))].sort((a,b)=>a-b);}
 
-const cache=new WeakMap<SiteModel,SiteSurface>();
+const cache=new WeakMap<SiteModel,SiteSurface>(),padSurfaces=new WeakMap<SiteModel,Map<string,SiteSurface>>();
 
 export function createSiteSurface(siteModel:SiteModel|undefined,terrain:TerrainConfig):SiteSurface{
 
- if(siteModel){const saved=cache.get(siteModel);if(saved)return saved;}
+ if(siteModel){const saved=cache.get(siteModel);if(saved)return saved;
+  // A design whose pads differ only in names or nearby paving shares the bank geometry; only labels are redone.
+  const shape=featurePadGeometry(siteModel),shared=shape&&padSurfaces.get(shape.site)?.get(shape.key);if(shared){const view=labelFeaturePads(shared,siteModel);cache.set(siteModel,view);return view;}}
 
- const model=siteModel?validateSiteModel(siteModel):undefined,points=model?.points??[{id:'a',xIn:-terrain.widthFt*6,zIn:-terrain.depthFt*6,elevationIn:terrain.elevationIn-terrain.depthFt*6*terrain.slopePct/100},{id:'b',xIn:terrain.widthFt*6,zIn:-terrain.depthFt*6,elevationIn:terrain.elevationIn-terrain.depthFt*6*terrain.slopePct/100},{id:'c',xIn:terrain.widthFt*6,zIn:terrain.depthFt*6,elevationIn:terrain.elevationIn+terrain.depthFt*6*terrain.slopePct/100},{id:'d',xIn:-terrain.widthFt*6,zIn:terrain.depthFt*6,elevationIn:terrain.elevationIn+terrain.depthFt*6*terrain.slopePct/100}],tin=Delaunator.from(points,p=>p.xIn,p=>p.zIn),existingTriangles:SiteSurfaceTriangle[]=[];
+ const model=siteModel?validateDerivedSiteModel(siteModel):undefined,points=model?.points??[{id:'a',xIn:-terrain.widthFt*6,zIn:-terrain.depthFt*6,elevationIn:terrain.elevationIn-terrain.depthFt*6*terrain.slopePct/100},{id:'b',xIn:terrain.widthFt*6,zIn:-terrain.depthFt*6,elevationIn:terrain.elevationIn-terrain.depthFt*6*terrain.slopePct/100},{id:'c',xIn:terrain.widthFt*6,zIn:terrain.depthFt*6,elevationIn:terrain.elevationIn+terrain.depthFt*6*terrain.slopePct/100},{id:'d',xIn:-terrain.widthFt*6,zIn:terrain.depthFt*6,elevationIn:terrain.elevationIn+terrain.depthFt*6*terrain.slopePct/100}],tin=Delaunator.from(points,p=>p.xIn,p=>p.zIn),existingTriangles:SiteSurfaceTriangle[]=[];
 
  for(let i=0;i<tin.triangles.length;i+=3){const vertices=[points[tin.triangles[i]],points[tin.triangles[i+1]],points[tin.triangles[i+2]]] as [SiteVertex,SiteVertex,SiteVertex],poly=vertices.map(v=>({x:v.xIn,y:v.zIn}));if(Math.abs(siteSignedArea(poly))<EPS)continue;const plane=planeFor(vertices),clipped=model?.boundary?siteClip([poly],[model.boundary],'intersection'):[poly];existingTriangles.push(...triangles(clipped,plane,plane));}
 
@@ -142,7 +175,7 @@ export function createSiteSurface(siteModel:SiteModel|undefined,terrain:TerrainC
  const existingSample=spatialSampler(existingTriangles,bounds),triangleBounds=new WeakMap<SiteSurfaceTriangle,SiteSurface['bounds']>();for(const t of [...existingTriangles,...proposedTriangles])triangleBounds.set(t,polygonBounds([planOf(t)]));
 
  let finalSample:ReturnType<typeof spatialSampler>|undefined;
- const surface:SiteSurface={existingTriangles,proposedTriangles,coverage,bounds,cutFill,legacy:!model,sample:(x,z,kind='proposed')=>{if(!model)return terrain.elevationIn+z*terrain.slopePct/100;if(kind==='proposed'&&finalSample)return finalSample(x,z);const measured=existingSample(x,z);if(measured===undefined||kind==='existing')return measured;for(let i=grading.length-1;i>=0;i--)if(contains(grading[i].boundary,x,z))return sitePlaneHeight(gradingPlane(grading[i]),x,z);return measured;},extrema:(polygons,kind='proposed')=>{if(!model){const heights=polygons.flat().map(p=>terrain.elevationIn+p.y*terrain.slopePct/100);return {min:Math.min(...heights),max:Math.max(...heights),complete:true};}let min=Infinity,max=-Infinity,covered=0;const requested=polygonBounds(polygons);for(const triangle of kind==='existing'?existingTriangles:proposedTriangles){if(!boundsOverlap(requested,triangleBounds.get(triangle)!))continue;const zone=siteClip(polygons,[planOf(triangle)],'intersection');covered+=siteArea(zone);for(const v of zone.flat()){const h=sitePlaneHeight(triangle.plane,v.x,v.y);min=Math.min(min,h);max=Math.max(max,h);}}return {min,max,complete:Math.max(0,siteArea(siteClip(polygons))-covered)<1e-3};},lineBreaks:(a,b,kind='proposed')=>lineBreaks(kind==='existing'?existingTriangles:proposedTriangles,a,b)};
+ const surface:SiteSurface={existingTriangles,proposedTriangles,coverage,bounds,cutFill,legacy:!model,sample:(x,z,kind='proposed')=>{if(!model)return terrain.elevationIn+z*terrain.slopePct/100;if(kind==='proposed'&&finalSample)return finalSample(x,z);const measured=existingSample(x,z);if(measured===undefined||kind==='existing')return measured;for(let i=grading.length-1;i>=0;i--)if(contains(grading[i].boundary,x,z))return sitePlaneHeight(gradingPlane(grading[i]),x,z);return measured;},extrema:(polygons,kind='proposed')=>{if(!model){const heights=polygons.flat().map(p=>terrain.elevationIn+p.y*terrain.slopePct/100);return {min:Math.min(...heights),max:Math.max(...heights),complete:true};}let min=Infinity,max=-Infinity,covered=0;const requested=polygonBounds(polygons);for(const triangle of kind==='existing'?existingTriangles:proposedTriangles){if(!boundsOverlap(requested,triangleBounds.get(triangle)!))continue;const zone=faceZone(polygons,planOf(triangle));covered+=siteArea(zone);for(const v of zone.flat()){const h=sitePlaneHeight(triangle.plane,v.x,v.y);min=Math.min(min,h);max=Math.max(max,h);}}return {min,max,complete:Math.max(0,siteArea(siteClip(polygons))-covered)<1e-3};},lineBreaks:(a,b,kind='proposed')=>lineBreaks(kind==='existing'?existingTriangles:proposedTriangles,a,b)};
 
  if(model?.transitions?.some(t=>t.enabled)){
   // Capture source levels against the base grading; transitions never sample
@@ -150,23 +183,68 @@ export function createSiteSurface(siteModel:SiteModel|undefined,terrain:TerrainC
   surface.transitionModels=buildGradingTransitions(surface,model.transitions);
   const faces=surface.transitionModels.filter(m=>m.status==='ready').flatMap(m=>m.triangles.map(face=>({face,id:m.id,polygon:face.vertices.map(v=>({x:v.xIn,y:v.zIn})),bounds:polygonBounds([face.vertices.map(v=>({x:v.xIn,y:v.zIn}))])}))),updated:SiteSurfaceTriangle[]=[];
   for(const base of proposedTriangles){const original=planOf(base),bounds=polygonBounds([original]);let remaining=[original];for(const t of faces){if(!boundsOverlap(bounds,t.bounds))continue;const zone=siteClip(remaining,[t.polygon],'intersection');if(!zone.length)continue;updated.push(...triangles(zone,t.face.plane,base.existingPlane,`transition:${t.id}`));remaining=siteClip(remaining,[t.polygon],'difference');if(!remaining.length)break;}updated.push(...triangles(remaining,base.plane,base.existingPlane,base.gradingId));}
-  proposedTriangles.splice(0,proposedTriangles.length,...updated);
+  proposedTriangles.length=0;for(const t of updated)proposedTriangles.push(t);
   cutFill.cutYd3=0;cutFill.fillYd3=0;cutFill.gradedAreaSqft=0;
   for(const t of proposedTriangles){const polygon=planOf(t),delta=subtract(t.existingPlane,t.plane);cutFill.cutYd3+=positiveIntegral(polygon,delta)/46656;cutFill.fillYd3+=positiveIntegral(polygon,negate(delta))/46656;if(t.gradingId)cutFill.gradedAreaSqft+=siteArea([polygon])/144;triangleBounds.set(t,polygonBounds([polygon]));}
   cutFill.uncoveredAreaSqft+=surface.transitionModels.reduce((n,m)=>n+m.missingAreaSqft,0);cutFill.complete=cutFill.complete&&surface.transitionModels.every(m=>m.status==='ready');cutFill.netFillYd3=cutFill.fillYd3-cutFill.cutYd3;
   finalSample=spatialSampler(proposedTriangles,bounds);
  }
- if(siteModel)cache.set(siteModel,surface);return surface;
+ if(model?.featurePads?.length){
+  // Ground-fit banks round patios, against the ground above (grading and transitions applied). Each base face a bank
+  // touches is swapped for its exact planar pieces (siteFeatureGrading.ts); inside the patios the ground stays as it
+  // was, so their own excavation and raised fill are not counted twice.
+  // Totals stay against the existing ground; each bank's own cut and fill is against the ground before it (so grading
+  // under a bank is never relabelled as bank earthwork), as buildFeaturePads measured it.
+  const pads=buildFeaturePads(surface,model.featurePads),next=proposedTriangles.flatMap(t=>pads.replacements.get(t)??[t]);
+  proposedTriangles.length=0;for(const t of next)proposedTriangles.push(t);
+  cutFill.cutYd3=0;cutFill.fillYd3=0;cutFill.gradedAreaSqft=0;
+  for(const t of proposedTriangles){const polygon=planOf(t),delta=subtract(t.existingPlane,t.plane);cutFill.cutYd3+=positiveIntegral(polygon,delta)/46656;cutFill.fillYd3+=positiveIntegral(polygon,negate(delta))/46656;if(t.gradingId)cutFill.gradedAreaSqft+=siteArea([polygon])/144;if(!triangleBounds.has(t))triangleBounds.set(t,polygonBounds([polygon]));}
+  cutFill.bankCutYd3=pads.models.reduce((n,m)=>n+m.cutYd3,0);cutFill.bankFillYd3=pads.models.reduce((n,m)=>n+m.fillYd3,0);cutFill.bankAreaSqft=pads.models.reduce((n,m)=>n+m.areaSqft,0);
+  // Earthwork is incomplete where a bank meets unmeasured ground; a bank that is not built for want of room (it would
+  // not daylight within reach) leaves nothing uncounted, and says so in its own warning.
+  cutFill.complete=cutFill.complete&&!pads.models.some(m=>m.issues?.some(i=>i!=='reach'));cutFill.netFillYd3=cutFill.fillYd3-cutFill.cutYd3;
+  surface.featurePadModels=pads.models;finalSample=spatialSampler(proposedTriangles,bounds);
+ }
+ if(!siteModel)return surface;
+ let out=surface;const shape=featurePadGeometry(siteModel);
+ if(shape){let shared=padSurfaces.get(shape.site);if(!shared)padSurfaces.set(shape.site,shared=new Map());shared.delete(shape.key);shared.set(shape.key,surface);while(shared.size>4)shared.delete(shared.keys().next().value!);out=labelFeaturePads(surface,siteModel);}
+ cache.set(siteModel,out);return out;
 
 }
 
-export function sampleSiteHeight(data:Pick<DeckData,'siteModel'|'terrainConfig'>,xIn:number,zIn:number,kind:'existing'|'proposed'='proposed'){const terrain=getTerrainConfig(data as DeckData);return data.siteModel?createSiteSurface(data.siteModel,terrain).sample(xIn,zIn,kind):terrain.elevationIn+zIn*terrain.slopePct/100;}
+export function sampleSiteHeight(data:Pick<DeckData,'siteModel'|'terrainConfig'>&Partial<Pick<DeckData,'yardFeatures'>>,xIn:number,zIn:number,kind:'existing'|'proposed'='proposed'){const terrain=getTerrainConfig(data as DeckData);return data.siteModel?createSiteSurface(designSiteModel(data),terrain).sample(xIn,zIn,kind):terrain.elevationIn+zIn*terrain.slopePct/100;}
+
+/** The proposed ground under a straight line a→b, read along it in inches: the survey's own breaks, thinned where the
+ * ground runs within `toleranceIn` of straight, and then where a piece would be shorter than 24 in, so long as the line
+ * stays within 1 in of the ground (a dense survey would otherwise cut skirting into slivers). Stretches outside the
+ * survey take the nearest measured height and mark the profile `estimated`; null when none of it is measured. */
+const PROFILE_PIECE_IN=24,PROFILE_SLACK_IN=1;
+export function siteGroundProfile(surface:SiteSurface,a:SiteBoundaryPoint,b:SiteBoundaryPoint,toleranceIn:number){
+ const length=Math.hypot(b.x-a.x,b.y-a.y),ts=surface.lineBreaks(a,b,'proposed').map(f=>f*length),raw=ts.map(t=>surface.sample(a.x+(b.x-a.x)*t/length,a.y+(b.y-a.y)*t/length,'proposed'));
+ const known=raw.map((g,i)=>g===undefined?-1:i).filter(i=>i>=0);if(!known.length)return null;
+ const gs=raw.map((g,i)=>g??raw[known.reduce((best,k)=>Math.abs(k-i)<Math.abs(best-i)?k:best,known[0])]!),keep=new Set([0,ts.length-1]);
+ /** The ground's furthest departure from the chord i→j (at the breaks between; the ground is straight between them). */
+ const departure=(i:number,j:number)=>{let worst=-1,at=-1;for(let k=i+1;k<j;k++){const d=Math.abs(gs[k]-(gs[i]+(gs[j]-gs[i])*(ts[k]-ts[i])/(ts[j]-ts[i]||1)));if(d>worst){worst=d;at=k;}}return {worst,at};};
+ const split=(i:number,j:number)=>{const {worst,at}=departure(i,j);if(worst>toleranceIn){keep.add(at);split(i,at);split(at,j);}};
+ split(0,ts.length-1);const kept=[...keep].sort((p,q)=>p-q);
+ // Short pieces: drop the interior break whose removal moves the line least, while that stays within the slack.
+ for(let guard=kept.length;guard>0;guard--){let best:{index:number;worst:number}|undefined;
+  for(let n=1;n<kept.length;n++){if(ts[kept[n]]-ts[kept[n-1]]>=PROFILE_PIECE_IN)continue;
+   for(const index of [n-1,n]){if(index<=0||index>=kept.length-1)continue;const {worst}=departure(kept[index-1],kept[index+1]);if(worst<=PROFILE_SLACK_IN&&(!best||worst<best.worst))best={index,worst};}}
+  if(!best)break;kept.splice(best.index,1);}
+ const t=kept.map(i=>ts[i]),g=kept.map(i=>gs[i]);
+ return {estimated:known.length<raw.length,
+  /** Ground height at `at` inches along the line. */
+  at:(at:number)=>{let i=1;while(i<t.length-1&&t[i]<at)i++;return g[i-1]+(g[i]-g[i-1])*(t[i]>t[i-1]?(at-t[i-1])/(t[i]-t[i-1]):0);},
+  /** from, every ground break strictly between, to. */
+  stops:(from:number,to:number)=>[from,...t.filter(v=>v>from+.01&&v<to-.01),to]};
+}
 
 /** Dedicated engineered fill above proposed ground and below a feature's
 
  * formation. It cannot overlap the soil fill below the shared lower envelope. */
 
-export function integrateSiteFeatureFill(surface:SiteSurface,polygons:SiteBoundaryPoint[][],formationIn:number|SitePlane){let volume=0;const requested=polygonBounds(polygons),floor=typeof formationIn==='number'?{x:0,z:0,constant:formationIn}:formationIn;for(const triangle of surface.proposedTriangles){if(!boundsOverlap(requested,polygonBounds([planOf(triangle)])))continue;const zone=siteClip(polygons,[planOf(triangle)],'intersection');for(const cell of siteSolidCells(zone))volume+=positiveIntegral(cell,subtract(floor,triangle.plane))/46656;}return volume;}
+export function integrateSiteFeatureFill(surface:SiteSurface,polygons:SiteBoundaryPoint[][],formationIn:number|SitePlane){let volume=0;const requested=polygonBounds(polygons),floor=typeof formationIn==='number'?{x:0,z:0,constant:formationIn}:formationIn;for(const triangle of surface.proposedTriangles){if(!boundsOverlap(requested,polygonBounds([planOf(triangle)])))continue;const zone=faceZone(polygons,planOf(triangle));for(const cell of siteSolidCells(zone))volume+=positiveIntegral(cell,subtract(floor,triangle.plane))/46656;}return volume;}
 
 /** A horizontal construction course filled only up to proposed retained
 
@@ -178,7 +256,7 @@ export function siteMaterialBand(surface:SiteSurface,polygons:SiteBoundaryPoint[
 
  const add=(polygon:SiteBoundaryPoint[],topPlane:SitePlane)=>{if(!polygon.length)return;const volume=positiveIntegral(polygon,subtract(topPlane,floor))/46656;if(volume<=EPS)return;regions.push({polygon,topPlane,bottomIn,volumeYd3:volume});volumeYd3+=volume;const area=Math.abs(siteSignedArea(polygon))/144;planAreaSqft+=area;topAreaSqft+=area*Math.sqrt(1+topPlane.x**2+topPlane.z**2);};
 
- for(const triangle of surface.proposedTriangles){if(!boundsOverlap(requested,polygonBounds([planOf(triangle)])))continue;const zone=siteClip(polygons,[planOf(triangle)],'intersection');for(const cell of siteSolidCells(zone)){const filled=positive(cell,subtract(triangle.plane,floor));if(!filled.length)continue;const toCeiling=subtract(triangle.plane,ceiling);add(positive(filled,toCeiling),ceiling);if(!filled.every(v=>Math.abs(sitePlaneHeight(toCeiling,v.x,v.y))<EPS))add(positive(filled,negate(toCeiling)),triangle.plane);}}
+ for(const triangle of surface.proposedTriangles){if(!boundsOverlap(requested,polygonBounds([planOf(triangle)])))continue;const zone=faceZone(polygons,planOf(triangle));for(const cell of siteSolidCells(zone)){const filled=positive(cell,subtract(triangle.plane,floor));if(!filled.length)continue;const toCeiling=subtract(triangle.plane,ceiling);add(positive(filled,toCeiling),ceiling);if(!filled.every(v=>Math.abs(sitePlaneHeight(toCeiling,v.x,v.y))<EPS))add(positive(filled,negate(toCeiling)),triangle.plane);}}
 
  return {regions,volumeYd3,planAreaSqft,topAreaSqft};
 
@@ -186,7 +264,7 @@ export function siteMaterialBand(surface:SiteSurface,polygons:SiteBoundaryPoint[
 
 /** Coverage at or below proposed ground, for buried reinforcement. */
 
-export function sitePolygonsBelowGround(surface:SiteSurface,polygons:SiteBoundaryPoint[][],elevationIn:number){const out:SiteBoundaryPoint[][]=[],requested=polygonBounds(polygons),height={x:0,z:0,constant:elevationIn};for(const triangle of surface.proposedTriangles){if(!boundsOverlap(requested,polygonBounds([planOf(triangle)])))continue;for(const cell of siteSolidCells(siteClip(polygons,[planOf(triangle)],'intersection'))){const p=positive(cell,subtract(triangle.plane,height));if(p.length)out.push(p);}}return siteClip(out);}
+export function sitePolygonsBelowGround(surface:SiteSurface,polygons:SiteBoundaryPoint[][],elevationIn:number){const out:SiteBoundaryPoint[][]=[],requested=polygonBounds(polygons),height={x:0,z:0,constant:elevationIn};for(const triangle of surface.proposedTriangles){if(!boundsOverlap(requested,polygonBounds([planOf(triangle)])))continue;for(const cell of siteSolidCells(faceZone(polygons,planOf(triangle)))){const p=positive(cell,subtract(triangle.plane,height));if(p.length)out.push(p);}}return siteClip(out);}
 
 /** Exact vertical-area allowance along a directed retained-side line. */
 
@@ -254,7 +332,7 @@ export function integrateSiteExcavation(surface:SiteSurface,formations:SiteForma
 
  const add=(cell:SiteBoundaryPoint[],formation:SitePlane,existing:SitePlane,featureId:string)=>{const cut=positive(cell,subtract(existing,formation));if(cut.length){const volume=positiveIntegral(cut,subtract(existing,formation))/46656;if(volume>EPS)regions.push({featureId,polygon:cut,bottomIn:sitePlaneHeight(formation,cut[0].x,cut[0].y),formationPlane:formation,volumeYd3:volume});}fillYd3+=positiveIntegral(cell,subtract(formation,existing))/46656;};
 
- for(const triangle of surface.proposedTriangles){const original=planOf(triangle),triangleBounds=polygonBounds([original]);let available=[original];for(const f of ordered){if(!boundsOverlap(triangleBounds,f.bounds))continue;const zone=siteClip(available,f.polygons,'intersection');if(!zone.length)continue;const floor={x:0,z:0,constant:f.bottomIn},difference=subtract(triangle.plane,floor);for(const cell of siteSolidCells(zone)){const lowerFloor=positive(cell,difference),lowerGrading=positive(cell,negate(difference));if(lowerFloor.length)add(lowerFloor,floor,triangle.existingPlane,f.featureId);if(lowerGrading.length&&!cell.every(v=>Math.abs(sitePlaneHeight(difference,v.x,v.y))<EPS))add(lowerGrading,triangle.plane,triangle.existingPlane,`site-grading:${triangle.gradingId??'existing'}`);}available=siteClip(available,f.polygons,'difference');if(!available.length)break;}for(const cell of siteSolidCells(available))add(cell,triangle.plane,triangle.existingPlane,`site-grading:${triangle.gradingId??'existing'}`);}
+ for(const triangle of surface.proposedTriangles){const original=planOf(triangle),triangleBounds=polygonBounds([original]);let available=[original];for(const f of ordered){if(!boundsOverlap(triangleBounds,f.bounds))continue;const side=available.length===1&&available[0]===original?faceSide(f.polygons,original):'cross';if(side==='out')continue;const zone=side==='in'?[siteSignedArea(original)<0?[...original].reverse():original]:siteClip(available,f.polygons,'intersection');if(!zone.length)continue;const floor={x:0,z:0,constant:f.bottomIn},difference=subtract(triangle.plane,floor);for(const cell of siteSolidCells(zone)){const lowerFloor=positive(cell,difference),lowerGrading=positive(cell,negate(difference));if(lowerFloor.length)add(lowerFloor,floor,triangle.existingPlane,f.featureId);if(lowerGrading.length&&!cell.every(v=>Math.abs(sitePlaneHeight(difference,v.x,v.y))<EPS))add(lowerGrading,triangle.plane,triangle.existingPlane,`site-grading:${triangle.gradingId??'existing'}`);}available=side==='in'?[]:siteClip(available,f.polygons,'difference');if(!available.length)break;}for(const cell of siteSolidCells(available))add(cell,triangle.plane,triangle.existingPlane,`site-grading:${triangle.gradingId??'existing'}`);}
 
  return {regions,excavationYd3:regions.reduce((n,r)=>n+r.volumeYd3,0),fillYd3};
 
@@ -276,7 +354,7 @@ function integratePlaneExcavation(surface:SiteSurface,formations:SiteFormation[]
 
   const original=planOf(triangle),bounds=polygonBounds([original]);let cells=siteSolidCells([original]).map(polygon=>({polygon,plane:triangle.plane,featureId:`site-grading:${triangle.gradingId??'existing'}`}));
 
-  for(const f of requested){if(boundsOverlap(bounds,f.bounds))cells=applyPlaneFormation(cells,siteClip(f.polygons,[original],'intersection'),f.plane,f.featureId,siteClip,siteSolidCells);}
+  for(const f of requested){if(boundsOverlap(bounds,f.bounds)&&faceSide(f.polygons,original)!=='out')cells=applyPlaneFormation(cells,siteClip(f.polygons,[original],'intersection'),f.plane,f.featureId,siteClip,siteSolidCells);}
 
   for(const cell of cells){const delta=subtract(triangle.existingPlane,cell.plane),cut=positive(cell.polygon,delta),volume=cut.length?positiveIntegral(cut,delta)/46656:0;
 
@@ -291,6 +369,8 @@ function integratePlaneExcavation(surface:SiteSurface,formations:SiteFormation[]
 }
 
 
+
+export {designSiteModel} from './siteFeatureGrading';
 
 import * as siteEngine from './siteSurfaceEngine';
 

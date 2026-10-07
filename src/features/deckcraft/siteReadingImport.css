@@ -1,0 +1,26 @@
+.dd-reading-import{border-top:1px solid #d5ddd2;margin-top:20px;padding-top:16px}
+.dd-reading-import .dd-reading-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.dd-reading-import h4{margin:0}
+.dd-reading-import p{font-size:13px;line-height:1.5}
+.dd-reading-import label{display:grid;gap:5px;font-size:13px}
+.dd-reading-import label.dd-check{display:flex;align-items:center;gap:8px;min-height:44px}
+.dd-reading-import input,.dd-reading-import select,.dd-reading-import button{min-height:44px;max-width:100%}
+.dd-reading-import input:not([type=checkbox]),.dd-reading-import select{border:1px solid #bbc7b9;border-radius:6px;padding:8px;background:#fff;color:#29342a}
+.dd-reading-import input[type=checkbox]{width:22px;min-height:22px;height:22px}
+.dd-reading-import fieldset{border:1px solid #d2dacd;border-radius:8px;margin:12px 0;padding:10px 12px;display:grid;gap:8px}
+.dd-reading-import legend{font-weight:600;font-size:13px;padding:0 4px}
+.dd-reading-columns,.dd-reading-presets{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.dd-reading-presets{display:grid;gap:8px;align-items:end;grid-column:1/-1}
+.dd-reading-pairs{display:grid;gap:8px}
+.dd-reading-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:end}
+.dd-reading-plan{width:100%;max-height:380px;border:1px solid #d2dacd;background:#f4f5ef;touch-action:manipulation;cursor:crosshair}
+.dd-reading-plan text{fill:#24311f;font-family:inherit}
+.dd-reading-house{fill:#dfe2da;stroke:#8b958a}
+.dd-reading-deck{fill:rgba(15,110,86,.08);stroke:#0f6e56;stroke-dasharray:8 6}
+.dd-reading-line{fill:none;stroke:#c4382f;stroke-linejoin:round}
+.dd-reading-shot{fill:#1d7a5f}
+.dd-reading-ref{fill:#fff;stroke:#7a5a12;stroke-width:2}
+.dd-reading-plan .dd-reading-target{fill:#b0451e;font-weight:700}
+.dd-reading-table{width:100%;border-collapse:collapse;font-size:13px;display:block;overflow:auto;max-height:420px}
+.dd-reading-table th,.dd-reading-table td{padding:4px 6px;text-align:left;white-space:nowrap;border-bottom:1px solid #e3e8df}
+.dd-reading-table select{min-width:8.5em}

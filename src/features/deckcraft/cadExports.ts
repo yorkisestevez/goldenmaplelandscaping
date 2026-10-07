@@ -104,12 +104,13 @@ export function exportDeckGlb(data:DeckData,model:DeckTakeoff):ArrayBuffer{
 export type DeckCsvKind='materials'|'cuts'|'connectors';
 const cell=(value:unknown)=>{let text=String(value??'');if(/^[=+\-@\t\r]/.test(text))text=`'${text}`;return `"${text.replaceAll('"','""')}"`;};
 const csv=(rows:unknown[][])=>rows.map(row=>row.map(cell).join(',')).join('\r\n')+'\r\n';
-/** Quantity-only CSVs: unresolved rates stay explicitly labelled, and private costs are never exported. */
+/** Quantity-only CSVs: rates read as allowance, confirmed (a recorded quote) or quote required, and private costs are never exported. */
 export function exportDeckCsv(estimate:EstimateResult,kind:DeckCsvKind):string{
-  if(kind==='materials')return csv([['estimate item ID','section','item','specification','quantity','unit','status','drawing schedule row'],...estimate.sections.flatMap((section,sectionIndex)=>section.items.flatMap((item,itemIndex)=>Number(item.qty)>0?[[`M-${sectionIndex+1}-${itemIndex+1}`,section.title,item.name,item.spec,item.qty,item.unit,item.cost===null&&!item.quoteResolved?'quote required':'priced',estimate.connectorSchedule.some(row=>row.name===item.name)?connectorRowId(item.name):'']]:[]))]);
-  if(kind==='connectors')return csv([['schedule row ID','drawing sheet','connector','quantity','unit','status','selection basis'],...estimate.connectorSchedule.map(row=>[connectorRowId(row.name),'S-6',row.name,row.qty,row.unit,row.rate===null&&!row.quoteResolved?'quote required':'priced',row.basis])]);
+  if(kind==='materials')return csv([['estimate item ID','section','item','specification','quantity','unit','status','drawing schedule row'],...estimate.sections.flatMap((section,sectionIndex)=>section.items.flatMap((item,itemIndex)=>Number(item.qty)>0?[[`M-${sectionIndex+1}-${itemIndex+1}`,section.title,item.name,item.spec,item.qty,item.unit,item.quoteResolved?'confirmed':item.cost===null?'quote required':'allowance',estimate.connectorSchedule.some(row=>row.name===item.name)?connectorRowId(item.name):'']]:[]))]);
+  if(kind==='connectors')return csv([['schedule row ID','drawing sheet','connector','quantity','unit','status','selection basis'],...estimate.connectorSchedule.map(row=>[connectorRowId(row.name),'S-6',row.name,row.qty,row.unit,row.quoteResolved?'confirmed':row.rate===null?'quote required':'allowance',row.basis])]);
   return csv([['schedule row ID','drawing sheet','section','item','stock length (in)','stock piece','cut lengths (in)','ordered pieces','status'],...estimate.stockSchedule.flatMap(row=>[
-    ...row.cutsIn.map((cuts,i)=>[stockRowId(row),row.name==='Framing lumber'?'S-6':'',row.section,row.name,row.stockLengthIn,i+1,cuts.map(num).join(' + '),row.orderedPieces,'planned']),
+    // Mixed listed lengths: each stock piece is bought at its own length (binLengthsIn), as priced.
+    ...row.cutsIn.map((cuts,i)=>[stockRowId(row),row.name==='Framing lumber'?'S-6':'',row.section,row.name,row.binLengthsIn?.[i]??row.stockLengthIn,i+1,cuts.map(num).join(' + '),row.orderedPieces,'planned']),
     ...row.unresolvedIn.map(length=>[stockRowId(row),row.name==='Framing lumber'?'S-6':'',row.section,row.name,row.stockLengthIn,'',num(length),row.orderedPieces,'stock length to confirm']),
   ])]);
 }

@@ -6,6 +6,8 @@ import type {YardModel} from '../../yardModel';
 import {yardSolidCells,yardClip} from '../../yardModel';
 import {occlusionUv,type GroundBounds} from './groundOcclusion';
 import {snapshotHeight} from './siteRendering';
+import {lawnGround,surveyHeightOn,SURVEY_FEATHER_IN} from './lawnGround';
+import {insideRings} from '../../patioGroundContact';
 
 /**
  * The lawn's surface (Real Life G3), apart from its files so the check scripts can test it: the patched material
@@ -66,27 +68,83 @@ export function lawnMaterial(){
   return m;
 }
 
+/** Polygons (outer rings with any holes, as yardClip returns them) as up-facing triangles with no added vertices. */
+function ringTriangles(rings:{x:number;y:number}[][]){
+ const area=(r:{x:number;y:number}[])=>r.reduce((n,a,i)=>{const b=r[(i+1)%r.length];return n+a.x*b.y-b.x*a.y;},0)/2,inside=(p:{x:number;y:number},r:{x:number;y:number}[])=>{let odd=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const a=r[i],b=r[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;};
+ const sign=Math.sign(rings.reduce((n,r)=>Math.abs(area(r))>Math.abs(n)?area(r):n,0))||1,outers=rings.filter(r=>Math.sign(area(r))===sign),holes=rings.filter(r=>Math.sign(area(r))!==sign),out:[{x:number;y:number},{x:number;y:number},{x:number;y:number}][]=[];
+ for(const outer of outers){
+  // triangulateShape drops a repeated closing point in place, so the indices are read from the arrays it was handed.
+  const contour=outer.map(p=>new THREE.Vector2(p.x,p.y)),own=holes.filter(h=>inside(h[0],outer)).map(h=>h.map(p=>new THREE.Vector2(p.x,p.y))),tris=THREE.ShapeUtils.triangulateShape(contour,own),points=[contour,...own].flat().map(v=>({x:v.x,y:v.y}));
+  for(const [i,j,k] of tris){const a=points[i],b=points[j],c=points[k];out.push((b.y-a.y)*(c.x-a.x)-(b.x-a.x)*(c.y-a.y)>0?[a,b,c]:[a,c,b]);}
+ }
+ return out;
+}
+/** Off a survey edge by less than this, a vertex is on it: a bank clipped to the survey can land ~1e-4 in off the
+ * clipped edge, and a missed bend there opens a crack (lawnGround.ts reads the edge with the same tolerance). */
+const RIM_ON_EDGE_IN=1e-3;
+/** Vertices of the drawn ground that sit on the survey's edge but are not corners of it: where the ground bends along
+ * that edge (a graded bank reaching the last shots). */
+function surveyRimBreaks(site:NonNullable<YardModel['siteSurface']>,kind:'existing'|'proposed'){
+ const edges=site.coverage.flatMap(ring=>ring.map((a,i)=>({a,b:ring[(i+1)%ring.length]}))),seen=new Set<string>(),out:{x:number;y:number}[]=[];
+ for(const t of kind==='existing'?site.existingTriangles:site.proposedTriangles)for(const v of t.vertices){const key=`${Math.round(v.xIn*1e4)}:${Math.round(v.zIn*1e4)}`;if(seen.has(key))continue;seen.add(key);
+  if(edges.some(({a,b})=>{const dx=b.x-a.x,dz=b.y-a.y,l=dx*dx+dz*dz;if(l<1e-12)return false;const u=((v.xIn-a.x)*dx+(v.zIn-a.y)*dz)/l;return u>1e-6&&u<1-1e-6&&Math.abs((v.xIn-a.x)*dz-(v.zIn-a.y)*dx)/Math.sqrt(l)<RIM_ON_EDGE_IN;}))out.push({x:v.xIn,y:v.zIn});}
+ return out;
+}
 /** The yard's ground (clipped round excavations) plus a far ring from its edge to FAR_RING_IN, flattening to the yard's
  * middle height. UVs in lawn tiles; uv1 is the occlusion map's. */
 /** The lawn's surface height at z (inches): the terrain plane, the lawn sitting just under it. */
 export const lawnHeight=(t:{elevationIn:number;slopePct:number},z:number)=>t.elevationIn+z*t.slopePct/100-.7;
 export function groundGeometry(yard:YardModel,cuts:{x:number;y:number}[][],width:number,depth:number,bounds:GroundBounds,kind:'existing'|'proposed'='proposed'){
-  const positions:number[]=[],uvs:number[]=[],uv1:number[]=[],t=yard.terrain,height=(z:number)=>lawnHeight(t,z);
+  // The lawn round the survey reads the estimated lawn even where a vertex clipped to the survey's edge rounds a hair onto
+  // the survey (a sliver triangle there climbs hundreds of inches per inch across it).
+  const positions:number[]=[],uvs:number[]=[],uv1:number[]=[],t=yard.terrain,lawn=lawnGround(yard,kind),height=(x:number,z:number)=>lawn.estimated(x,z);
   const push=(x:number,y:number,z:number)=>{positions.push(x,y,z);uvs.push(x/TILE_IN,z/TILE_IN);uv1.push(...occlusionUv(bounds,x,z));};
+  // Clipping leaves triangles with a repeated point along cut edges: they draw nothing, so they are not kept. (A
+  // collinear one with three distinct points is kept: standing on edge, it closes a bend in the ground.)
+  const same=(a:{x:number;y:number},b:{x:number;y:number})=>Math.abs(a.x-b.x)<1e-6&&Math.abs(a.y-b.y)<1e-6,flat=(a:{x:number;y:number},b:{x:number;y:number},c:{x:number;y:number})=>same(a,b)||same(b,c)||same(a,c);
   const measured=yard.siteSurface,oldCuts=measured?yardClip([...cuts,...measured.coverage]):cuts;
-  if(measured)for(const triangle of kind==='existing'?measured.existingTriangles:measured.proposedTriangles){const polygon=triangle.vertices.map(v=>({x:v.xIn,y:v.zIn}));for(const p of yardSolidCells(yardClip([polygon],cuts,'difference')))for(let i=1;i<p.length-1;i++)for(const v of [p[0],p[i+1],p[i]])push(v.x,triangle.plane.x*v.x+triangle.plane.z*v.y+triangle.plane.constant-.7,v.y);}
-  const n=24,tw=bounds.width,td=bounds.depth,minX=bounds.minX,minZ=bounds.minZ;
-  for(let ix=0;ix<n;ix++)for(let iz=0;iz<n;iz++){
-    const x=minX+ix*tw/n,z=minZ+iz*td/n,cell=[{x,y:z},{x:x+tw/n,y:z},{x:x+tw/n,y:z+td/n},{x,y:z+td/n}];
-    for(const p of yardSolidCells(yardClip([cell],oldCuts,'difference')))for(let i=1;i<p.length-1;i++)for(const v of [p[0],p[i+1],p[i]])push(v.x,height(v.y),v.y);
+  // Where the drawn ground bends on the survey's edge (a graded bank reaching it), the estimated lawn outside gets a
+  // vertex too, so the two meet without a crack.
+  const rim=measured?surveyRimBreaks(measured,kind):[],withRim=(polys:{x:number;y:number}[][])=>rim.length?polys.map(p=>p.flatMap((a,i)=>{const b=p[(i+1)%p.length],dx=b.x-a.x,dz=b.y-a.y,l=dx*dx+dz*dz;if(l<1e-12)return [a];const on=rim.map(r=>({r,t:((r.x-a.x)*dx+(r.y-a.y)*dz)/l})).filter(({r,t})=>t>1e-6&&t<1-1e-6&&Math.abs((r.x-a.x)*dz-(r.y-a.y)*dx)/Math.sqrt(l)<RIM_ON_EDGE_IN).sort((u,v)=>u.t-v.t);return [a,...on.map(o=>o.r)];})):polys;
+  // A survey triangle cut by paving can leave a hair of itself (under 1e-3 in wide) outside the cut, where the paving's
+  // outline and the graded pad's differ by rounding: the ground under the paving, peeking out. Those hairs are dropped.
+  const box=(r:{x:number;y:number}[])=>({minX:Math.min(...r.map(p=>p.x)),maxX:Math.max(...r.map(p=>p.x)),minZ:Math.min(...r.map(p=>p.y)),maxZ:Math.max(...r.map(p=>p.y))}),cutBoxes=cuts.map(box);
+  const hair=(a:{x:number;y:number},b:{x:number;y:number},c:{x:number;y:number})=>Math.abs((b.x-a.x)*(c.y-a.y)-(c.x-a.x)*(b.y-a.y))<1e-3*Math.max(Math.hypot(b.x-a.x,b.y-a.y),Math.hypot(c.x-b.x,c.y-b.y),Math.hypot(a.x-c.x,a.y-c.y));
+  if(measured)for(const triangle of kind==='existing'?measured.existingTriangles:measured.proposedTriangles){
+   const polygon=triangle.vertices.map(v=>({x:v.xIn,y:v.zIn})),cells=yardSolidCells(yardClip([polygon],cuts,'difference')),b=box(polygon),whole=!cutBoxes.some(c=>c.maxX>=b.minX&&c.minX<=b.maxX&&c.maxZ>=b.minZ&&c.minZ<=b.maxZ);
+   for(const p of cells)for(let i=1;i<p.length-1;i++)if(!flat(p[0],p[i+1],p[i])&&(whole||!hair(p[0],p[i+1],p[i])))for(const v of [p[0],p[i+1],p[i]])push(v.x,surveyHeightOn(triangle,v.x,v.y)-.7,v.y);
   }
-  // The far ring: the yard's edge walked in 64 steps, joined by bands to a circle round the yard's middle.
-  const cx=width/2,cz=minZ+td/2,mid=height(cz),edge:{x:number;z:number}[]=[];
-  const corners=[[minX,minZ],[minX+tw,minZ],[minX+tw,minZ+td],[minX,minZ+td]];
-  for(let side=0;side<4;side++){const [ax,az]=corners[side],[bx,bz]=corners[(side+1)%4];for(let k=0;k<16;k++)edge.push({x:ax+(bx-ax)*k/16,z:az+(bz-az)*k/16});}
-  const bands=[0,.01,.03,.07,.15,.3,.55,1],ring=(e:{x:number;z:number},s:number)=>{
+  const n=24,tw=bounds.width,td=bounds.depth,minX=bounds.minX,minZ=bounds.minZ,near=measured?.bounds,reach=SURVEY_FEATHER_IN+Math.max(tw,td)/n;
+  // Only a cell an outline reaches into is clipped; the rest lie wholly in or out of the cut-outs (a traced survey
+  // boundary has hundreds of corners, and clipping thousands of cells against it took seconds).
+  const holes=oldCuts.map(r=>({r,...box(r)}));
+  const cellPieces=(cell:{x:number;y:number}[],x0:number,z0:number,x1:number,z1:number)=>{
+   const close=holes.filter(h=>h.maxX>=x0&&h.minX<=x1&&h.maxZ>=z0&&h.minZ<=z1);if(!close.length)return [cell];
+   for(const {r} of close)for(let i=0;i<r.length;i++){const a=r[i],b=r[(i+1)%r.length];if(Math.max(a.x,b.x)>=x0&&Math.min(a.x,b.x)<=x1&&Math.max(a.y,b.y)>=z0&&Math.min(a.y,b.y)<=z1)return yardClip([cell],oldCuts,'difference');}
+   return insideRings(close.map(h=>h.r),(x0+x1)/2,(z0+z1)/2)?[]:[cell];
+  };
+  for(let ix=0;ix<n;ix++)for(let iz=0;iz<n;iz++){
+    const x=minX+ix*tw/n,z=minZ+iz*td/n;
+    // Round the survey, where the estimated lawn bends from the measured edge to its mean level, cells split to about a foot.
+    const split=near&&x<near.maxX+reach&&x+tw/n>near.minX-reach&&z<near.maxZ+reach&&z+td/n>near.minZ-reach?Math.min(6,Math.ceil(Math.max(tw,td)/n/12)):1;
+    for(let sx=0;sx<split;sx++)for(let sz=0;sz<split;sz++){
+      const x0=x+sx*tw/n/split,z0=z+sz*td/n/split,x1=x+(sx+1)*tw/n/split,z1=z+(sz+1)*td/n/split,cell=[{x:x0,y:z0},{x:x1,y:z0},{x:x1,y:z1},{x:x0,y:z1}];
+      // Ear-clipped, not sliced into trapezoids: slicing adds vertices a neighbouring cell does not share, and on the
+      // curved estimated lawn those open hairline cracks.
+      for(const [a,b,c] of ringTriangles(withRim(cellPieces(cell,x0,z0,x1,z1))))if(!flat(a,b,c))for(const v of [a,b,c])push(v.x,height(v.x,v.y),v.y);
+    }
+  }
+  // The far ring: the yard's edge, joined by bands to a circle round the yard's middle. It starts from every vertex the
+  // ground has on that edge, at the ground's own height there, so where the lawn still bends near the survey the two
+  // share each point and no slit opens between them. (Clipped cells are rounded to ~1e-5 in, hence the tolerance.)
+  const cx=width/2,cz=minZ+td/2,mid=measured?lawn.farIn:height(cx,cz),maxX=minX+tw,maxZ=minZ+td,E=1e-4,onRim=new Map<number,{x:number;y:number;z:number}>();
+  const around=(x:number,z:number)=>Math.abs(z-minZ)<E?x-minX:Math.abs(x-maxX)<E?tw+z-minZ:Math.abs(z-maxZ)<E?tw+td+maxX-x:Math.abs(x-minX)<E?2*tw+td+maxZ-z:NaN;
+  for(let i=0;i<positions.length;i+=3){const s=around(positions[i],positions[i+2]);if(Number.isFinite(s)){const k=Math.round(s*1e6);if(!onRim.has(k))onRim.set(k,{x:positions[i],y:positions[i+1],z:positions[i+2]});}}
+  for(const [x,z] of [[minX,minZ],[maxX,minZ],[maxX,maxZ],[minX,maxZ]]){const k=Math.round(around(x,z)*1e6);if(!onRim.has(k))onRim.set(k,{x,y:height(x,z),z});}
+  const edge=[...onRim].sort((a,b)=>a[0]-b[0]).map(([,v])=>v);
+  const bands=[0,.01,.03,.07,.15,.3,.55,1],ring=(e:{x:number;y:number;z:number},s:number)=>{
     const a=Math.atan2(e.z-cz,e.x-cx),far={x:cx+Math.cos(a)*FAR_RING_IN,z:cz+Math.sin(a)*FAR_RING_IN},x=e.x+(far.x-e.x)*s,z=e.z+(far.z-e.z)*s;
-    return [x,height(e.z)+(mid-height(e.z))*Math.min(1,s*6),z] as const;
+    return [x,e.y+(mid-e.y)*Math.min(1,s*6),z] as const;
   };
   for(let i=0;i<edge.length;i++){const e0=edge[i],e1=edge[(i+1)%edge.length];for(let b=0;b<bands.length-1;b++){
     const a0=ring(e0,bands[b]),a1=ring(e1,bands[b]),b0=ring(e0,bands[b+1]),b1=ring(e1,bands[b+1]);
@@ -102,13 +160,17 @@ export function groundGeometry(yard:YardModel,cuts:{x:number;y:number}[][],width
  * it does not establish a measured retaining structure or grading transition.
  * Faces are derived from adjacent TIN planes. They do not extend measured coverage
  * or create a decorative bank, and leave construction quantities unchanged. */
-export function groundEdgeGeometry(yard:YardModel,kind:'existing'|'proposed'='proposed',visualHoles:{x:number;y:number}[][]=[],includeSurveyCuts=true){
- const values:number[]=[],surface=yard.siteSurface;
+export function groundEdgeGeometry(yard:YardModel,kind:'existing'|'proposed'='proposed',visualHoles:{x:number;y:number}[][]=[],includeSurveyCuts=true,
+ /** Paving outlines: a step in the ground along one of these is the paving's own edge (PatioEdges3D.tsx patioEdgeGeometry draws it). */
+ edgeHoles:{x:number;y:number}[][]=[]){
+ const values:number[]=[],surface=yard.siteSurface,lawn=lawnGround(yard,kind);
  type Edge={from:number;to:number;plane:{x:number;z:number;constant:number}};
  type Line={x:number;z:number;dx:number;dz:number;origin:number;edges:Edge[]};
  const lines=new Map<string,Line>(),boundary=surface?.coverage.flatMap(p=>p.map((a,i)=>({a,b:p[(i+1)%p.length]})))??[];
  const emit=(a:{x:number;z:number;top:number;bottom:number},b:typeof a)=>{if(Math.abs(a.top-a.bottom)+Math.abs(b.top-b.bottom)<.001)return;const da=a.top-a.bottom,db=b.top-b.bottom;if(da*db<0){const t=da/(da-db),mid={x:a.x+(b.x-a.x)*t,z:a.z+(b.z-a.z)*t,top:a.top+(b.top-a.top)*t,bottom:a.bottom+(b.bottom-a.bottom)*t};emit(a,mid);emit(mid,b);return;}for(const v of [[a.x,a.top,a.z],[b.x,b.top,b.z],[b.x,b.bottom,b.z],[a.x,a.top,a.z],[b.x,b.bottom,b.z],[a.x,a.bottom,a.z]])values.push(...v);};
+ const onPaving=(x:number,z:number)=>edgeHoles.some(poly=>poly.some((p,i)=>{const q=poly[(i+1)%poly.length],dx=q.x-p.x,dz=q.y-p.y,l=dx*dx+dz*dz,u=l?Math.max(0,Math.min(1,((x-p.x)*dx+(z-p.y)*dz)/l)):0;return Math.hypot(x-p.x-dx*u,z-p.y-dz*u)<.001;}));
  const add=(a:Parameters<typeof emit>[0],b:typeof a)=>{
+  if(edgeHoles.length&&onPaving(a.x,a.z)&&onPaving(b.x,b.z)&&onPaving((a.x+b.x)/2,(a.z+b.z)/2))return;
   if(!visualHoles.length){emit(a,b);return;}const ux=b.x-a.x,uz=b.z-a.z,stops=[0,1];
   for(const poly of visualHoles)for(let i=0;i<poly.length;i++){const p=poly[i],q=poly[(i+1)%poly.length],vx=q.x-p.x,vz=q.y-p.y,den=ux*vz-uz*vx;if(Math.abs(den)<1e-10)continue;const t=((p.x-a.x)*vz-(p.y-a.z)*vx)/den,u=((p.x-a.x)*uz-(p.y-a.z)*ux)/den;if(t>0&&t<1&&u>=0&&u<=1)stops.push(t);}
   const inside=(x:number,z:number)=>visualHoles.some(poly=>{let hit=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const p=poly[i],q=poly[j];if((p.y>z)!==(q.y>z)&&x<(q.x-p.x)*(z-p.y)/(q.y-p.y)+p.x)hit=!hit;}return hit;}),point=(t:number)=>({x:a.x+ux*t,z:a.z+uz*t,top:a.top+(b.top-a.top)*t,bottom:a.bottom+(b.bottom-a.bottom)*t});
@@ -132,7 +194,7 @@ export function groundEdgeGeometry(yard:YardModel,kind:'existing'|'proposed'='pr
    if(active.length===1&&!boundary.some(edge=>{const vx=edge.b.x-edge.a.x,vz=edge.b.y-edge.a.y,len=Math.hypot(vx,vz);if(len<.001)return false;const on=(p:typeof a)=>Math.abs((p.x-edge.a.x)*vz-(p.z-edge.a.y)*vx)/len<.0001&&((p.x-edge.a.x)*vx+(p.z-edge.a.y)*vz)/(len*len)>=-.00001&&((p.x-edge.a.x)*vx+(p.z-edge.a.y)*vz)/(len*len)<=1.00001;return on(a)&&on(b);}))continue;
    const heights=(p:typeof a)=>active.map(e=>e.plane.x*p.x+e.plane.z*p.z+e.plane.constant-.7),ha=heights(a),hb=heights(b);
    if(active.length===1&&!includeSurveyCuts)continue;
-   if(active.length===1){ha.push(lawnHeight(yard.terrain,a.z));hb.push(lawnHeight(yard.terrain,b.z));}
+   if(active.length===1){ha.push(lawn.height(a.x,a.z));hb.push(lawn.height(b.x,b.z));}
    // Upper/lower ownership can switch where two affine planes cross.
    // Split there before taking their envelope so zero-height jumps remain closed.
    const splits=[0,1];for(let u=0;u<ha.length;u++)for(let v=u+1;v<ha.length;v++){const da=ha[u]-ha[v],db=hb[u]-hb[v];if(da*db<0)splits.push(da/(da-db));}

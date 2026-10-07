@@ -7,6 +7,8 @@ export type AssistantPlan=
 export type AssistantPlanResult={ok:true;plan:AssistantPlan}|{ok:false;error:string};
 export type AssistantJson=string|number|boolean|null|AssistantJson[]|{[key:string]:AssistantJson};
 export interface AssistantContext {
+ /** The measured yard (siteBrief.ts), ahead of everything else; current ground, coverage and clearance warnings. */
+ siteBrief?:Record<string,AssistantJson>;siteWarnings?:string[];
  version:1;revision:number;units:'feet-and-inches';
  design:Record<string,AssistantJson>;
  catalogue:{decking:{id:string;name:string;colours:string[]}[];railing:{id:string;name:string;baseType:string}[];lighting:{id:string;name:string}[];options:Record<string,string[]>};
@@ -17,6 +19,8 @@ export interface AssistantContext {
  yardBoundaries?:{id:string;kind:string;enabled:boolean;points:{x:number;y:number}[];coordinateSpace:'world-inches'}[];
  yardOmittedIds?:string[];
  siteDataOmitted?:boolean;landscapeOmittedCount?:number;editorDataOmitted?:boolean;
+  /** The current estimate's subtotal (CAD, before tax) and how many lines are quoted separately. */
+ price?:{subtotal:number;quoteItems:number};
  truncated:boolean;
 }
 export interface AssistantRequestOptions {id:string;expectedRevision:number;snapshot?:AgentSnapshot;selection?:AssistedSelection;requestText?:string}

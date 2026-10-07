@@ -20,7 +20,7 @@ import {patioInlayPlans,patioInlayFeature} from './patioInlays';
 import {createSiteSurface,integrateSiteExcavation,integrateSiteFeatureFill,siteSurfaceSnapshot,siteMaterialBand,sitePolygonsBelowGround,siteRetainedSideArea,sitePlaneHeight,siteDeckClearances} from './siteSurface';
 import type {SitePlane} from './siteSurface';
 
-export type YardRole='stone-step'|'geogrid'|'paver'|'base'|'bedding'|'wall-block'|'wall-cap'|'wall-drainage'|'backfill'|'liner'|'water'|'basin'|'pump'|'rock'|'drain-pipe'|'water-pipe';
+export type YardRole='stone-step'|'geogrid'|'paver'|'base'|'bedding'|'wall-block'|'wall-cap'|'wall-drainage'|'backfill'|'liner'|'water'|'basin'|'pump'|'rock'|'drain-pipe'|'water-pipe'|'fire-pad'|'fire-body'|'fire-ring'|'fire-burner';
 /** `swatchKey` names the manufacturer photo; the lazily loaded 3D view resolves it (hardscape-swatches.json). */
 export interface YardSurface {swatchKey:string;cx:number;cz:number;angle:number;lengthIn:number;widthIn:number;heightIn:number;kind:'paver'|'wall';sourceUrl:string}
 export type YardBox=Box&{id:string;featureId:string;role:YardRole;color:string;illustrative?:boolean;unitId?:string;stonePart?:'tread'|'support-step'|'filler'|'riser-block'|'support-block'|'landing';stepFlightId?:string;stepRow?:number;surface?:YardSurface;stockAreaSqft?:number;stockUnitId?:string;renderContours?:PlanPoint[][];renderDuplicate?:boolean;topPlane?:SitePlane;bottomPlane?:SitePlane;bottomIn?:number;normalThicknessIn?:number};
@@ -118,7 +118,8 @@ function buildLegacyYardModel(data:DeckData,deckModel?:DeckTakeoff){
  // The house with its bump-outs, wings and garage: attached blocks are unioned with the main block.
  const house=getHousePlacement(data),houseFootprint=data.houseVisible===false?[]:hasHouseBlocks(data)?houseOutline(data):[yardRectangle((house.x0+house.x1)/2,-house.depthIn/2,house.widthIn,house.depthIn)];
  let occupied:PlanPoint[][]=[...houseFootprint];
- const enabled=(data.yardFeatures||[]).filter(f=>f.enabled).sort((a,b)=>Number(a.kind==='patio')-Number(b.kind==='patio'));
+ // Fire features route a design to the advanced runtime (needsAdvancedYard), which models them; never here.
+ const enabled=(data.yardFeatures||[]).filter(f=>f.enabled&&f.kind!=='fire-feature').sort((a,b)=>Number(a.kind==='patio')-Number(b.kind==='patio'));
  const ids=new Set<string>(),supportCutouts:PlanPoint[][]=[],budgetExcludedIds:string[]=[];let reservedPavers=0;
  const measuredDeck=site&&deckModel?siteDeckClearances(site,deckModel):undefined,stairCoverageComplete=measuredDeck?.stairCoverageComplete??true,framingCoverageComplete=measuredDeck?.framingCoverageComplete??true;
  const treadClearances=(deckModel?.treads||[]).map(t=>t.y+t.h/2-Math.max(...treadFootprint(t).map(p=>gradeAt(p.y,p.x))));
@@ -341,6 +342,6 @@ let advanced:AdvancedYardRuntime|undefined,loading:Promise<void>|undefined;
 export function registerAdvancedYardRuntime(value:AdvancedYardRuntime){advanced=value;}
 export const advancedYardRuntimeReady=()=>!!advanced;
 export async function loadAdvancedYardRuntime(){if(advanced)return;loading??=import('./yardModelAdvancedRuntime').then(value=>{advanced=value;},error=>{loading=undefined;throw error;});await loading;}
-/** New physical geometry is derived only after its optional runtime is ready. */
-export function needsAdvancedYard(data:Pick<DeckData,'siteModel'|'terrainConfig'|'yardFeatures'|'stairTargets'|'pools'>){return !!data.pools?.length||!!data.siteModel||!!data.stairTargets?.length||!!data.terrainConfig&&(data.terrainConfig.elevationIn!==0||data.terrainConfig.slopePct!==0)||!!data.yardFeatures?.some(f=>f.finishedElevationIn!==undefined||f.patioSlope!==undefined||f.wallTopSteps!==undefined);}
+/** New physical geometry is derived only after its optional runtime is ready. Seat (freestanding) walls are modelled there. */
+export function needsAdvancedYard(data:Pick<DeckData,'siteModel'|'terrainConfig'|'yardFeatures'|'stairTargets'|'pools'>){return !!data.pools?.length||!!data.siteModel||!!data.stairTargets?.length||!!data.terrainConfig&&(data.terrainConfig.elevationIn!==0||data.terrainConfig.slopePct!==0)||!!data.yardFeatures?.some(f=>f.kind==='fire-feature'||f.finishedElevationIn!==undefined||f.patioSlope!==undefined||f.wallTopSteps!==undefined||!!f.wallConstruction?.freestanding);}
 export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff):YardModel{if(needsAdvancedYard(data)){if(!advanced)throw Error('Geometry is loading. Retry shortly.');return advanced.buildYardModel(data,deckModel);}return buildLegacyYardModel(data,deckModel) as YardModel;}

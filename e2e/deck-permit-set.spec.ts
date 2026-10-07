@@ -8,10 +8,19 @@ test.beforeEach(async({context})=>{
   await context.route('**/*',route=>{const url=new URL(route.request().url());return ['127.0.0.1','localhost','[::1]'].includes(url.hostname)&&['GET','HEAD'].includes(route.request().method())?route.fallback():route.abort();});
 });
 
+/** Opens Proposal & files; the canvas-first workspace hides the section menus behind the project controls and a menu group. */
+async function openProposalFiles(page:Page){
+  const section=page.getByRole('region',{name:'Deck configuration'}).getByRole('button',{name:'Proposal & files',exact:true});
+  // Drawing focus (the default) hides the menus; its toggle reads "Show project controls" while pressed.
+  const focus=page.locator('.dd-drawing-focus-toggle');
+  await expect(focus).toBeVisible();
+  if(await focus.getAttribute('aria-pressed')==='true')await focus.click();
+  if(!await section.isVisible())await page.locator('nav[aria-label="Design tasks"] details').filter({has:page.locator('button[aria-label="Proposal & files"]')}).locator('summary').click();
+  if(await section.getAttribute('aria-expanded')==='false')await section.click();
+}
 async function openPermitSet(page:Page){
   await page.goto('/deck-designer/');
-  const section=page.getByRole('region',{name:'Deck configuration'}).getByRole('button',{name:'Proposal & files',exact:true});
-  if(await section.getAttribute('aria-expanded')==='false')await section.click();
+  await openProposalFiles(page);
   await page.locator('summary',{hasText:'Permit drawings (planning set)'}).click();
   await page.getByRole('button',{name:'Open permit drawings',exact:true}).click();
   const dialog=page.getByRole('dialog',{name:'Permit drawing set'});
@@ -21,7 +30,7 @@ async function openPermitSet(page:Page){
 
 test('opens the permit set, previews each sheet and downloads the PDF and DXF',async({page},info)=>{
   const dialog=await openPermitSet(page);
-  await dialog.getByText('Review all 15 open items').click();
+  await dialog.getByText(/^Review all \d+ open items$/).click();
   await expect(dialog.getByText('Check the exact clause, current edition and local applicability on G-0.').first()).toBeVisible();
   for(const [id,title] of [['G-0','General notes and code references'],['A-0','Site plan'],['A-1','Elevations'],['S-1','Foundation plan'],['S-2','Framing plan'],['S-3','Decking and guard plan'],['S-4','Typical section'],['S-5','Typical details'],['S-6','Schedules']]){
     await dialog.getByRole('tab',{name:`${id} · ${title}`}).click();
@@ -83,8 +92,7 @@ test('@phone the permit set opens and previews on a phone',async({page})=>{
 
 test('CAD downloads and assistant permit actions use the current design',async({page},info)=>{
   await page.goto('/deck-designer/');
-  const section=page.getByRole('region',{name:'Deck configuration'}).getByRole('button',{name:'Proposal & files',exact:true});
-  if(await section.getAttribute('aria-expanded')==='false')await section.click();
+  await openProposalFiles(page);
   await page.locator('summary',{hasText:'CAD & 3D model exports'}).click();
   for(const [label,extension,signature] of [['Download COLLADA (.dae)','dae','<COLLADA'],['Download GLB','glb','glTF'],['Materials CSV','csv','"estimate item ID","section"']] as const){
     const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:label}).click()]);

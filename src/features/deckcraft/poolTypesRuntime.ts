@@ -1,5 +1,5 @@
 import {registerPoolTypesRuntime,POOL_SCOPES,type PoolFeature} from './poolTypes';
-import {validateCircularArcs,inspectArcShape} from './circularArcs';
+import {validateCircularArcs,inspectArcShape} from './circularArcShape';
 import {yardShapeProblem} from './yardShapeGeometry';
 import {poolLocalBounds,poolShapeSignature} from './poolGeometry';
 const record=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v)&&[Object.prototype,null].includes(Object.getPrototypeOf(v))&&!Object.getOwnPropertySymbols(v).length&&Object.values(Object.getOwnPropertyDescriptors(v)).every(d=>d.enumerable&&'value'in d);

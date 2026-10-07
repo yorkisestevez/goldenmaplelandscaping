@@ -6,6 +6,7 @@ import type {PlanTool} from './constants';
 import {emptySelection,type SelectionState} from './selectionState';
 import {listPlanComponents,applyComponentEdit} from './componentEditActions';
 import {isObjectLocked} from '../editorOrganization';
+import {applyLandscapeEdit} from '../landscapeEdits';
 import {sceneEditTarget} from './sceneEditCommands';
 import {revealControl} from './architectKeys';
 import './canvasContextMenu.css';
@@ -37,15 +38,19 @@ export default function CanvasContextMenu({data,model,selection,onSelect,onTool,
  const s=popup.target,part=parts.find(p=>p.id===s.partIds[0]),hard=s.hardscape,feature=data.yardFeatures?.find(f=>f.id===hard?.id),object=data.landscapeObjects?.find(o=>o.id===hard?.id)??feature??data.pools?.find(p=>p.id===hard?.id),has=!!(part||hard||s.boards.length),locked=isObjectLocked(data.editorOrganization,hard?.id??part?.id??'');
  const properties=()=>{close(false);if(part?.kind==='deck')onSection('deck');else if(part?.kind==='house'||part?.kind==='wall')onSection('house');else if(part?.kind==='stairs')onSection('stairs');else{if(part)onTool('components');requestAnimationFrame(()=>{const dock=anchor.current?.closest('.dd-preview')?.querySelector<HTMLDetailsElement>('.dd-selection-inspector');if(dock){dock.open=true;const expand=[...dock.querySelectorAll<HTMLButtonElement>('button')].find(b=>b.textContent==='Show settings');expand?.click();revealControl(dock.querySelector('summary'));}});}};
  const act=(action:'duplicate'|'remove')=>{if(!part||locked)return;const result=applyComponentEdit(data,model,part.id,{action});if("error" in result){setError(result.error);return;}onApply(result.patch);onSelect({partIds:result.selectedId?[result.selectedId]:[],boards:[]});close();};
- const pointTool:PlanTool|undefined=part?.kind==='deck'?'outline':hard?.kind==='landscape'&&data.landscapeObjects?.find(o=>o.id===hard.id)?.kind==='bed'?'landscape':hard?.kind==='yard'&&!feature?.stoneSteps&&!feature?.stepAssembly?'yard':undefined;
+ // Patios, walls and planting beds delete from here too; each is one undo step and respects layer locks.
+ const bed=hard?.kind==='landscape'?data.landscapeObjects?.find(o=>o.id===hard.id&&o.kind==='bed'):undefined,removable=!!(feature||bed);
+ const remove=()=>{if(locked)return;try{onApply(bed?applyLandscapeEdit(data,bed.id,{action:'delete'}):{yardFeatures:(data.yardFeatures??[]).filter(f=>f.id!==feature!.id)});onSelect(emptySelection());close();}catch(e){setError((e as Error).message);}};
+ const pointTool:PlanTool|undefined=part?.kind==='stairs'?'stairs':part?.kind==='deck'?'outline':hard?.kind==='landscape'&&data.landscapeObjects?.find(o=>o.id===hard.id)?.kind==='bed'?'landscape':hard?.kind==='yard'&&!feature?.stoneSteps&&!feature?.stepAssembly?'yard':undefined;
  const root=anchor.current?.closest('.dd-preview'),in3d=!!root?.querySelector('.dd-canvas canvas'),sceneModes=in3d?sceneEditTarget(data,model,s).modes:[];
  return <><span ref={anchor} hidden/>{createPortal(<div ref={menu} className="dd-object-menu" role="menu" aria-label="Object edit menu" style={{left:popup.x,top:popup.y}} onContextMenu={e=>e.preventDefault()} onKeyDown={e=>{e.stopPropagation();const items=[...e.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')],i=items.indexOf(document.activeElement as HTMLButtonElement);if(e.key==='Escape'){e.preventDefault();close();}else if(e.key==='Tab'){close(false);}else{const to=({ArrowDown:(i+1)%items.length,ArrowUp:(i+items.length-1)%items.length,Home:0,End:items.length-1} as Record<string,number>)[e.key];if(to!==undefined){e.preventDefault();items[to]?.focus();}}}}>
   <strong>{part?.label??object?.name??(s.boards.length?'Selected board':'Drawing')}</strong>
   {has&&<button role="menuitem" type="button" onClick={properties}>Properties… <kbd>J</kbd></button>}
-  {pointTool&&<button role="menuitem" type="button" disabled={locked} onClick={()=>{if(part?.level)onBoundary(part.level);onTool(pointTool);close();}}>Edit points / shape</button>}
+  {pointTool&&<button role="menuitem" type="button" disabled={locked} onClick={()=>{if(part?.level)onBoundary(part.level);onTool(pointTool);close();}}>{pointTool==='stairs'?'Edit stair shape':'Edit points / shape'}</button>}
   {part?.kind==='deck'&&<button role="menuitem" type="button" onClick={()=>{close(false);onSection('boards');}}>Materials…</button>}
   {sceneModes.map(mode=>{const label=mode[0].toUpperCase()+mode.slice(1);return <button role="menuitem" type="button" key={mode} disabled={locked} onClick={()=>{[...root?.querySelectorAll<HTMLButtonElement>('.dd-scene-edit-toolbar .dd-area-actions>button')??[]].find(b=>b.textContent===label)?.click();close();}}>{label}</button>;})}
   {part&&['opening','screen'].includes(part.kind)&&<><button role="menuitem" type="button" disabled={locked} onClick={()=>act('duplicate')}>Duplicate</button><button role="menuitem" type="button" disabled={locked} onClick={()=>act('remove')}>Delete</button></>}
+  {removable&&<button role="menuitem" type="button" disabled={locked} onClick={remove}>Delete</button>}
   {has&&<button role="menuitem" type="button" onClick={()=>{onSelect(emptySelection());close();}}>Deselect <kbd>N</kbd></button>}
   {!has&&<button role="menuitem" type="button" onClick={()=>{anchor.current?.closest('.dd-preview')?.querySelector<HTMLButtonElement>('[aria-label="Fit drawing"]')?.click();close();}}>{in3d?'Close menu':<>Fit drawing <kbd>Z</kbd></>}</button>}
   {locked&&<small>Locked — unlock in Layers to edit.</small>}{error&&<p role="alert">{error}</p>}

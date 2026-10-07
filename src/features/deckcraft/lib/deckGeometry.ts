@@ -1,4 +1,5 @@
-import {offsetPolygons,polygonCut,polygonBoard,splitBoard} from './polygonCuts';
+import {insidePolygon,offsetPolygons,polygonCut,polygonBoard,splitBoard} from './polygonCuts';
+import {usesCurrentBuildRules,type BuildRules} from '../buildRules';
 // Shared deck-plan geometry — the single source of truth for the deck's
 // footprint polygon, stair placement, railing runs, and board layout.
 // Consumed by DeckDiagram (2D SVG) and viewer3d/ (three.js).
@@ -304,11 +305,11 @@ export interface BoardRun {
 
 /**
  * Field decking as scanline strips clipped to the outline. Diagonal rotates
- * the polygon -45deg, scans, and rotates run centers back. Long runs split at
- * the supplied stock length only when a clipped course cannot fit one board.
+ * the polygon -45deg, scans, and rotates run centers back. Under the 2026-10
+ * build rules a clipped course splits at the supplied stock length only when it
+ * cannot fit one board; legacy designs keep the alternating half-length stagger
+ * (butt joints that don't line up) they were drawn and priced with.
  */
-/** Even-odd test: is the point inside the polygon? */
-function insidePolygon(pt:PlanPoint,poly:PlanPoint[]){let odd=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>pt.y)!==(b.y>pt.y)&&pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;}
 
 export function getBoardRows(fp: FootprintPlan, opts: {
   boardWidth: number; gap: number; angleDeg: number; inset: number; maxBoardLen?: number;
@@ -318,6 +319,8 @@ export function getBoardRows(fp: FootprintPlan, opts: {
   /** Line the rows up with the longest field edge they run along (a custom outline's 45° edge), so the board
    * against it is full width and any ripped row falls elsewhere. */
   alignToEdges?: boolean;
+  /** The design's build rules (buildRules.ts): absent or 'legacy' keeps the staggered half-board rows. */
+  buildRules?: BuildRules;
 }): BoardRun[] {
   const {boardWidth,gap,angleDeg,inset}=opts,stock=opts.maxBoardLen??240;
   const field=offsetPolygons([fp.outline],inset);if(!field.length)return [];
@@ -335,7 +338,15 @@ export function getBoardRows(fp: FootprintPlan, opts: {
   }
   else if(opts.anchor==='top')for(let y=top-boardWidth;y+boardWidth>bottom+.001;y-=pitch)rows.push(y);
   else for(let y=bottom;y<top-.001;y+=pitch)rows.push(y);
-  for(const y of rows){
+  if(!usesCurrentBuildRules(opts))for(const [row,y] of rows.entries()){
+    let x=left,first=true;
+    while(x<right-.001){
+      const length=Math.min(first&&row%2?stock/2:stock,right-x),tile=[world(x,y),world(x+length,y),world(x+length,y+boardWidth),world(x,y+boardWidth)];
+      for(const poly of polygonCut(field,[tile]))runs.push(polygonBoard(poly,angleDeg));
+      x+=length+gap;first=false;
+    }
+  }
+  else for(const y of rows){
     const tile=[world(left,y),world(right,y),world(right,y+boardWidth),world(left,y+boardWidth)];
     // Clip first: short courses at diagonal tips and notches can remain single boards.
     for(const poly of polygonCut(field,[tile]))runs.push(...splitBoard(polygonBoard(poly,angleDeg),boardWidth,stock,gap));

@@ -3,13 +3,16 @@ import {activeCornerChamfers} from './lib/cornerChamfers';
 import type {DeckData} from './types';
 import type {DeckTakeoff,Member} from './deckTakeoff';
 import {getHardwareLayout} from './hardwareLayout';
-import {planStock} from './stockPlan';
+import {orderListedStock,planStock} from './stockPlan';
 import {getStairBoards} from './stairBoards';
 import {colourName,deckColourRef,darkSlateBorder} from './boardFinishes';
 import {partRef} from './deckPartFinishes';
-import {deckingStock} from './deckingStock';
+import {deckingStock,productStock} from './deckingStock';
+import {usesCurrentBuildRules} from './buildRules';
 export interface ConnectorScheduleRow {quoteResolved?:boolean;name:string;qty:number;unit:string;rate:number|null;basis:string}
-export interface StockScheduleRow {name:string;section:string;stockLengthIn:number;orderedPieces:number;cutsIn:number[][];unresolvedIn:number[];installedLf:number;orderedLf:number}
+/** binLengthsIn: the length each cutting group is bought in, present only when the product lists more than one length
+ * (each packed board is bought at the shortest listed length that holds it); stockLengthIn is then the longest. */
+export interface StockScheduleRow {name:string;section:string;stockLengthIn:number;binLengthsIn?:number[];orderedPieces:number;cutsIn:number[][];unresolvedIn:number[];installedLf:number;orderedLf:number}
 /** Stable keys shared by the drawing schedule and quantity CSVs. */
 const rowHash=(key:string)=>{let value=2166136261;for(const c of key){value=Math.imul(value^c.charCodeAt(0),16777619);}return (value>>>0).toString(16).toUpperCase().padStart(8,'0');};
 export const connectorRowId=(name:string)=>`C-${rowHash(name).slice(-6)}`;
@@ -18,10 +21,13 @@ export function stairStock(data:DeckData,model:DeckTakeoff):StockScheduleRow[]{
   const boards=getStairBoards(data,model);
   if(!boards.length)return [];
   const rows:StockScheduleRow[]=[];
+  // Saves from before the 2026-10 build rules keep 9b2ee11's tread-row wording, so the row ID and cut list match old exports.
+  const legacy=!usesCurrentBuildRules(data);
   for(const role of ['field','border'] as const){
     const cuts=boards.filter(b=>(b.role??'field')===role).map(b=>b.w);if(!cuts.length)continue;
-    const ref=partRef(data,role==='border'?'border':'treads')??deckColourRef(data),slate=role==='border'&&darkSlateBorder(data),label=slate?'Dark Slate — supplier confirms product':colourName(ref),stock=deckingStock(slate?'dark-slate':ref.split(':')[0],data.boardWidth),plan=planStock(cuts,stock.maxLengthIn);
-    rows.push({name:role==='border'?'Stair picture-frame boards — assembly allowance; detail quote required':'Stair tread decking — included in per-riser allowance',section:`${data.boardWidth} in decking · ${label}; ${plan.offcutLf.toFixed(1)} lf offcuts; saw kerf included; ${stock.confirmed?'manufacturer-listed stock length, supplier availability pending':'stock-length allowance, supplier confirmation required'}`,stockLengthIn:stock.maxLengthIn,orderedPieces:plan.bins.length,cutsIn:plan.bins.map(b=>b.cutsIn),unresolvedIn:plan.unresolved,installedLf:plan.installedLf,orderedLf:plan.purchasedLf});
+    // Same purchase rule as the deck boards: shortest listed length per packed board (legacy: the one legacy length).
+    const ref=partRef(data,role==='border'?'border':'treads')??deckColourRef(data),slate=role==='border'&&darkSlateBorder(data),label=slate?'Dark Slate — supplier confirms product':colourName(ref),id=slate?'dark-slate':ref.split(':')[0],stock=deckingStock(id,data.boardWidth),product=productStock(data,id),mixed=new Set(product.lengthsIn).size>1,plan=orderListedStock(cuts,0,product);
+    rows.push({name:role==='border'?'Stair picture-frame boards — assembly allowance; detail quote required':'Stair tread decking — included in per-riser allowance',section:legacy&&role==='field'?`${data.boardWidth} in decking`:`${data.boardWidth} in decking · ${label}; ${plan.offcutLf.toFixed(1)} lf offcuts; saw kerf included; ${stock.confirmed?'manufacturer-listed stock length, supplier availability pending':'stock-length allowance, supplier confirmation required'}`,stockLengthIn:Math.max(...product.lengthsIn),...(mixed?{binLengthsIn:plan.bins.map(b=>b.lengthIn)}:{}),orderedPieces:plan.bins.length,cutsIn:plan.bins.map(b=>b.cutsIn),unresolvedIn:plan.unresolved,installedLf:plan.installedLf,orderedLf:plan.purchasedLf});
   }
   const stringers=planStock(model.stringers.map(m=>Math.hypot(m.b.x-m.a.x,m.b.y-m.a.y,m.b.z-m.a.z)),192);
   const risers=planStock(model.riserBoards.map(b=>b.w),model.stairSupport.riserStockLengthIn);

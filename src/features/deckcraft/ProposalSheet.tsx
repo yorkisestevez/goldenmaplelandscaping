@@ -1,7 +1,7 @@
 import type {ReactNode} from 'react';
 import ConstructionPlan from './ConstructionPlan';
 import {dollars,type DeckEstimate} from './designFacts';
-import {isBuilderQuote,priceLedger,quoteLabel,quoteTag,type Ledger,type LedgerLine,type LedgerQuote,type QuoteKind} from './designer/priceLedgerModel';
+import {isBuilderQuote,lineBasis,priceLedger,quoteLabel,quoteTag,type Ledger,type LedgerLine,type LedgerQuote,type QuoteKind} from './designer/priceLedgerModel';
 import {exteriorSummary} from './houseLooks';
 import {PRICE_BOOK,priceBookLabel} from './priceBook';
 import {eyebrowNumber,investmentSheets,underDeckCostSplit,proposalAddress,proposalContact,proposalCoverTitle,proposalFeatures,proposalFinishes,proposalRunningTitle,proposalSummary,PROPOSAL_WORDS,SHEET_EYEBROWS,type FeatureGroupId,type ProposalShot} from './proposalModel';
@@ -65,7 +65,7 @@ function Sheet({label,number,head,contact,children}:{label:string;number:number;
 /** The schedule's priced lines, in the engine's order: a quote tag where a line is not priced at all, never $0. */
 const LedgerLines=({lines,underDeck}:{lines:LedgerLine[];underDeck:ReturnType<typeof underDeckCostSplit>})=><table className="dd-proposal-ledger">
   <thead><tr><th scope="col">Item</th><th scope="col">Amount (CAD)</th></tr></thead>
-  <tbody>{lines.map(l=><tr key={l.title}><th scope="row">{l.title}{l.title==='Under-deck options'&&<small className="dd-proposal-included-costs">{underDeck.map(g=><span key={g.label}>{g.label}: {dollars(g.amount)}</span>)}</small>}</th><td>{l.quotes.length&&l.amount<.005?<Tag kinds={l.quotes}/>:l.text}</td></tr>)}</tbody>
+  <tbody>{lines.map(l=><tr key={l.title}><th scope="row">{l.title}{l.title==='Under-deck options'&&<small className="dd-proposal-included-costs">{underDeck.map(g=><span key={g.label}>{g.label}: {dollars(g.amount)}</span>)}</small>}</th><td>{l.quotes.length&&l.amount<.005?<Tag kinds={l.quotes}/>:<>{l.text}{lineBasis(l)&&<small className="dd-proposal-included-costs">{lineBasis(l)}</small>}</>}</td></tr>)}</tbody>
 </table>;
 function Totals({ledger}:{ledger:Ledger}){
   const row=(label:string,value:number,className?:string)=><tr className={className}><th scope="row">{label}</th><td>{dollars(value)}</td></tr>;
@@ -195,7 +195,7 @@ export function ProposalSheet({data,estimate,facts,reviewItems,image,date,shots,
         <p className="dd-proposal-fine">Drawn from the same design model as the estimate. Dimensions and connections need site confirmation before construction.</p>
       </section>
       <section aria-label="Material and hardware list"><h3>Material and hardware list</h3>
-        <p className="dd-proposal-fine">Quantities follow the modelled parts. Items without a confirmed rate are listed for a quote and are not in the estimate.</p>
+        <p className="dd-proposal-fine">Quantities follow the modelled parts. Priced lines are planning allowances from the price book unless marked confirmed; your written quote confirms them. Items without a rate are listed for a quote and are not in the estimate.</p>
         <div className="dd-proposal-materials">{materials.map(s=><section key={s.title}><h4>{s.title}</h4><ul>{s.items.map((item,k)=><li key={k}>
           <span>{item.name}{item.spec&&<small> {item.spec}</small>}</span> <span className="dd-proposal-qty">{item.qty} {item.unit}</span>{item.cost===null&&!item.quoteResolved&&<> <Tag kinds={[isBuilderQuote(item)?'builder':'supplier']}/></>}
         </li>)}</ul></section>)}</div>

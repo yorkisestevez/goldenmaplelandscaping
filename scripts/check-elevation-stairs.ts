@@ -4,7 +4,7 @@ import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {previewStairRefit} from '../src/features/deckcraft/stairRefit';
 import {validateStairTargets,stairTargetId} from '../src/features/deckcraft/stairTargets';
-import {foundationSolids} from '../src/features/deckcraft/foundationDatums';
+import {foundationSolids} from '../src/features/deckcraft/foundationSolids';
 import {getHardwareLayout} from '../src/features/deckcraft/hardwareLayout';
 import {deckExportMeshes,type ExportMesh} from '../src/features/deckcraft/designExports';
 import {buildYardModel} from '../src/features/deckcraft/yardModel';

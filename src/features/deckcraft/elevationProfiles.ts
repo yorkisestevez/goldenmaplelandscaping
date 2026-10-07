@@ -5,7 +5,7 @@ import type {YardModel,YardBox} from './yardModel';
 import type {PlanPoint} from './lib/deckGeometry';
 import {arcGeometry} from './circularArcs';
 import {yardShapeLocalPoints,yardShapeWorldPoint,yardShapeCurveWorldPoints} from './yardShapeGeometry';
-import {createSiteSurface,sitePlaneHeight} from './siteSurface';
+import {createSiteSurface,designSiteModel,sitePlaneHeight} from './siteSurface';
 import {getTerrainConfig} from './yardSettings';
 import {yardSurfaceIn} from './yardElevations';
 import {patioTopPlane} from './yardElevationGeometry';
@@ -56,7 +56,7 @@ export function elevationProfileSpecs(data:DeckData,deck?:DeckTakeoff):Elevation
 }
 const inside=(p:PlanPoint,poly:PlanPoint[])=>{let result=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j],dx=b.x-a.x,dy=b.y-a.y;if(Math.abs((p.x-a.x)*dy-(p.y-a.y)*dx)<EPS&&p.x>=Math.min(a.x,b.x)-EPS&&p.x<=Math.max(a.x,b.x)+EPS&&p.y>=Math.min(a.y,b.y)-EPS&&p.y<=Math.max(a.y,b.y)+EPS)return true;if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)result=!result;}return result;};
 export function buildElevationProfile(data:DeckData,spec:ElevationProfileSpec,yard?:YardModel):ElevationProfile{
- const terrain=getTerrainConfig(data),surface=data.siteModel?createSiteSurface(data.siteModel,terrain):undefined,lengths=spec.segments.map(profileSegmentLength),lengthIn=lengths.reduce((a,b)=>a+b,0),feature=data.yardFeatures?.find(f=>f.id===spec.featureId),points:ElevationProfilePoint[]=[],modeled=yard?.features.find(f=>f.config.id===spec.featureId),footprints=modeled?.footprints??(feature?.kind==='patio'?[yardShapeCurveWorldPoints(feature)]:[]),regions=yard?.formationRegions??yard?.sharedExcavationRegions??yard?.excavationRegions??[];
+ const terrain=getTerrainConfig(data),surface=data.siteModel?createSiteSurface(designSiteModel(data),terrain):undefined,lengths=spec.segments.map(profileSegmentLength),lengthIn=lengths.reduce((a,b)=>a+b,0),feature=data.yardFeatures?.find(f=>f.id===spec.featureId),points:ElevationProfilePoint[]=[],modeled=yard?.features.find(f=>f.config.id===spec.featureId),footprints=modeled?.footprints??(feature?.kind==='patio'?[yardShapeCurveWorldPoints(feature)]:[]),regions=yard?.formationRegions??yard?.sharedExcavationRegions??yard?.excavationRegions??[];
  // Signed rings preserve clipped holes; an excluded feature has no finished surface.
  const pool=spec.poolRef?(yard?.pools??getPoolModels(data)).find(p=>p.config.id===spec.poolRef!.id):undefined,poolFootprints=pool?(spec.poolRef!.level==='rim'?pool.copingFootprints:pool.openingFootprints):[];
  const covered=(p:PlanPoint)=>feature?.enabled!==false&&!modeled?.excluded&&footprints.reduce((sum,poly)=>sum+(inside(p,poly)?Math.sign(poly.reduce((n,a,i)=>{const b=poly[(i+1)%poly.length];return n+a.x*b.y-b.x*a.y;},0)):0),0)!==0;

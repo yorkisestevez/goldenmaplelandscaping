@@ -29,7 +29,7 @@ for(const t of tufts){
  check(Object.values(t).every(Number.isFinite));
  check(!inside(t.x,t.z));
  check(Math.abs(t.y-(lawnHeight(yard.terrain,t.z)-.04))<1e-6);
- check(t.height>=.7&&t.height<=1.6);
+ check(t.height>=1.3&&t.height<=2.4);
 }
 assert.deepEqual(lawnTufts(yard,192,144,masks),tufts);checks++;
 check(lawnTufts(yard,192,144,masks,16000).length<=16000);

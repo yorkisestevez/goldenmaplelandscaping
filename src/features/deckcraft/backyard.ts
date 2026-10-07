@@ -1,4 +1,4 @@
-import {ALLOWANCE_FINISHES,PATIO_PRODUCTS,WALL_PRODUCTS,WATER_PRODUCTS,allowanceItems} from './yardSettings';
+import {ALLOWANCE_FINISHES,PATIO_PRODUCTS,WALL_PRODUCTS,WATER_PRODUCTS,allowanceItems,fireProduct} from './yardSettings';
 import type {YardModel} from './yardModel';
 import type {DeckData,YardAllowances} from './types';
 
@@ -36,13 +36,15 @@ export function describeBackyard(yard:YardModel,allowances?:YardAllowances):stri
     if(f.excluded)return `${c.name} (excluded: its layout needs revising)`;
     if(c.kind==='patio')return `a ${Math.round(f.quantities.paverAreaSqft??f.quantities.areaSqft??0)} sq ft patio (${name})`;
     if(c.kind==='retaining-wall')return `a ${c.widthFt} ft retaining wall (${name}, ${c.heightIn} in exposed)`;
+    if(c.kind==='fire-feature')return `a ${fireProduct(c)?.name.toLowerCase()??'fire feature'} (fire pit allowance)`;
     return `a ${name.toLowerCase()} (supplier quote)`;
   });
-  const items=allowanceItems(allowances),finish=items.some(i=>i.usesFinish)?` (${ALLOWANCE_FINISHES.find(f=>f.id===allowances!.finish)!.label} finish)`:'';
+  // A placed fire feature replaces the fire pit allowance (yardTakeoff), so it is not described twice.
+  const items=allowanceItems(allowances&&yard.features.some(f=>f.config.kind==='fire-feature'&&!f.excluded)?{...allowances,firePit:'none'}:allowances),finish=items.some(i=>i.usesFinish)?` (${ALLOWANCE_FINISHES.find(f=>f.id===allowances!.finish)!.label} finish)`:'';
   const allowed=items.length?`allowances for ${list(items.map(i=>i.words))}${finish}`:'';
   return parts.length||allowed?`Backyard: ${[parts.join(', '),allowed].filter(Boolean).join('; ')}`:null;
 }
 
 const ALLOWANCE_WORDS={firepit:'fire pit',kitchen:'outdoor kitchen',turf:'artificial turf',lighting:'landscape lighting'} as const;
 /** The backyard's kinds in the words the site's lead scoring reads (a patio or wall is hardscape scope). */
-export const backyardElements=(data:Pick<DeckData,'yardFeatures'|'yardAllowances'>)=>[...new Set([...(data.yardFeatures??[]).filter(f=>f.enabled).map(f=>f.kind==='retaining-wall'?'retaining wall':f.kind==='water-feature'?'water feature':'patio'),...allowanceItems(data.yardAllowances).map(i=>ALLOWANCE_WORDS[i.id])])];
+export const backyardElements=(data:Pick<DeckData,'yardFeatures'|'yardAllowances'>)=>[...new Set([...(data.yardFeatures??[]).filter(f=>f.enabled).map(f=>f.kind==='retaining-wall'?'retaining wall':f.kind==='water-feature'?'water feature':f.kind==='fire-feature'?'fire pit':'patio'),...allowanceItems(data.yardAllowances).map(i=>ALLOWANCE_WORDS[i.id])])];

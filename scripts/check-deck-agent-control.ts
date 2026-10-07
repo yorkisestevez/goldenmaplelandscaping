@@ -146,6 +146,22 @@ async function main(){
     const noLevelBefore=serializeDeckReleaseDesign(g.state.data);
     check(!(await g.api.preview(request([{type:'layout.region',region:{...region,id:'absent_area',level:2}}]))).ok&&!(await g.api.execute(request([{type:'layout.breaker',breaker:{...breaker,id:'absent_breaker',level:3}}]))).ok&&serializeDeckReleaseDesign(g.state.data)===noLevelBefore,'Explicit layout edits reject an absent level without mutation');
   }
-  console.log(`PASS: ${checks} agent control checks (strict validation, atomic history, concurrency, previews, privacy, persistence, all three boundaries).`);
+  {
+    // Takeoff rules (buildRules.ts) are read-only: snapshots carry them, every edit keeps them, a different value is refused.
+    const fresh=fixture(),old=fixture(parseDeckReleaseDesign(serializeDeckReleaseDesign({...deckReleaseData(structuredClone(DEFAULT_DECK)),buildRules:undefined})));
+    check(fresh.api.read().design.buildRules==='2026-10'&&old.api.read().design.buildRules==='legacy','Snapshots carry the design\'s takeoff rules');
+    check(!fresh.api.describe().editableFields.includes('buildRules'),'The descriptor does not list takeoff rules as editable');
+    for(const [h,own,other] of [[fresh,'2026-10','legacy'],[old,'legacy','2026-10']] as const){
+      const saved=serializeDeckReleaseDesign(h.state.data),commits=h.commits,design=h.api.read().design;
+      for(const command of [{type:'design.replace',design:{...design,buildRules:other}},{type:'design.patch',patch:{buildRules:other}},{type:'design.patch',patch:{width:20,buildRules:other}},{type:'design.patch',patch:{width:20},unset:['buildRules']}] as AgentCommand[]){
+        const r=await h.api.execute(request([command]));check('error' in r&&(command.type==='design.patch'&&command.unset?/unset/:/takeoff rules it was saved under/).test(r.error.message)&&h.commits===commits&&serializeDeckReleaseDesign(h.state.data)===saved,`A ${own} design refuses ${command.type} to other takeoff rules without writes`);}
+      const total=h.api.read().pricing.total,{buildRules:_omit,...omitted}=design;
+      check(ok(await h.api.preview(request([{type:'design.replace',design:{...design}}]))).snapshot.pricing.total===total,`An identity replace keeps a ${own} design's price`);
+      check(ok(await h.api.execute(request([{type:'design.replace',design:omitted as typeof design}]))).snapshot.design.buildRules===own&&h.state.data.buildRules===own,`A replace without the marker keeps a ${own} design's rules`);
+      check(ok(await h.api.execute(request([{type:'design.patch',patch:{width:19,buildRules:own}}]))).snapshot.design.buildRules===own,`A patch that repeats ${own} rules applies`);
+      check(ok(await h.api.execute(request([{type:'design.patch',patch:{length:13}}]))).snapshot.design.buildRules===own&&parseDeckReleaseDesign(serializeDeckReleaseDesign(h.state.data)).buildRules===own,`Edits to a ${own} design save its rules`);
+    }
+  }
+  console.log(`PASS: ${checks} agent control checks (strict validation, atomic history, concurrency, previews, privacy, persistence, all three boundaries, read-only takeoff rules).`);
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

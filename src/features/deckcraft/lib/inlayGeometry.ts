@@ -1,8 +1,10 @@
 import {contrastColour,parseColourRef} from '../boardFinishes';
+import {designStockLength,type StockData} from '../deckingStock';
 import {DECKING_CATALOGUE} from '../manufacturerRuntimeCatalogue';
 import type {BoardPattern,DeckData,DeckInlay,InlayFill,OutlinePoint} from '../types';
+import type {BuildRules} from '../buildRules';
 import {getBoardRows,getHerringboneRows,getPictureFrameRuns,type BoardRun,type FootprintPlan,type PlanPoint} from './deckGeometry';
-import {boardOutline,offsetPolygons,polygonBoard,polygonCut,signedArea} from './polygonCuts';
+import {offsetPolygons,signedArea} from './polygonCuts';
 
 /**
  * Decorative inlays (DeckInlay) set into the field of a deck level. Plan inches, level-local; pure data, no three.js.
@@ -54,6 +56,8 @@ export interface InlayContext{
   straight?:boolean;
   /** A reason no inlay can be built on this level (a wrap-around deck, or the legacy centre stripe). */
   blocked?:string;
+  /** The design's build rules (buildRules.ts): absent or 'legacy' keeps the staggered rows an inlay was quoted with (getBoardRows). */
+  buildRules?:BuildRules;
 }
 
 const MESSAGES:Record<Exclude<InlayStatus,'ok'|'blocked'>,string>={
@@ -183,7 +187,7 @@ function bandSpan(band:Band,ctx:InlayContext){
 
 /** Plan every inlay on a level, in order: later inlays that overlap an earlier one are not built. `boards:false` plans
  * placement only; `taken` are areas already occupied (by inlays planned elsewhere). */
-type InlayRuntime=Pick<typeof import('./inlayGeometryRuntime'),'planInlays'>;
+type InlayRuntime=Pick<typeof import('./inlayGeometryRuntime'),'planInlays'|'applyInlays'|'keepBreakers'|'frameInlays'>;
 let runtime:InlayRuntime|undefined,loading:Promise<void>|undefined;
 export function registerInlayGeometry(value:InlayRuntime){runtime=value;}
 export const inlayGeometryReady=()=>!!runtime;
@@ -194,33 +198,14 @@ export function planInlays(...args:Parameters<InlayRuntime['planInlays']>):Inlay
  if(!runtime)throw new Error('Decorative inlay geometry is not loaded. Prepare design extensions before calculating.');
  return runtime.planInlays(...args);
 }
+/** Cutting the field around built inlays, the breakers they replace and the framing under them (applyInlays,
+ * keepBreakers: lib/inlayGeometryRuntime.ts; frameInlays: inlayFramingRuntime.ts). Only a loaded runtime plans an
+ * inlay, and deckTakeoff calls these only for a level with plans. */
+const built=()=>{if(!runtime)throw new Error('Decorative inlay geometry is not loaded. Prepare design extensions before calculating.');return runtime;};
+export const applyInlays=(...a:Parameters<InlayRuntime['applyInlays']>)=>built().applyInlays(...a);
+export const keepBreakers=(...a:Parameters<InlayRuntime['keepBreakers']>)=>built().keepBreakers(...a);
+export const frameInlays=(...a:Parameters<InlayRuntime['frameInlays']>)=>built().frameInlays(...a);
 
-/** Cut the level's field, border and breaker boards around the built inlays (with the board gap), recolour the rows
- * of a band across a straight field, and add the inlay boards. A board the inlays do not touch is kept exactly. */
-export function applyInlays(boards:BoardRun[],plans:InlayPlan[],boardWidth:number,gap:number):BoardRun[]{
-  const built=plans.filter(p=>p.status==='ok');if(!built.length)return boards;
-  const rows=built.filter(p=>p.band?.rows),holes=built.filter(p=>!p.band?.rows).flatMap(p=>p.pieces.map(q=>offsetPolygons([q],-gap)[0]).filter(Boolean));
-  const box=(poly:PlanPoint[])=>({x0:Math.min(...poly.map(p=>p.x)),x1:Math.max(...poly.map(p=>p.x)),y0:Math.min(...poly.map(p=>p.y)),y1:Math.max(...poly.map(p=>p.y))});
-  const holeBoxes=holes.map(box),out:BoardRun[]=[];
-  for(const b of boards){
-    // A band across a straight field is its rows: the field boards along them take the band's colour, uncut.
-    const band=b.role==='field'&&Math.abs(Math.sin(b.angleDeg*Math.PI/180))<1e-6?rows.find(p=>b.cy>p.band!.from&&b.cy<p.band!.to):undefined;
-    if(band){out.push({...b,role:'inlay-fill',inlay:band.id});continue;}
-    const poly=boardOutline(b,boardWidth),bb=box(poly);
-    if(!holeBoxes.some(h=>h.x0<bb.x1&&h.x1>bb.x0&&h.y0<bb.y1&&h.y1>bb.y0)){out.push(b);continue;}
-    const pieces=polygonCut([poly],holes,true);
-    if(pieces.length===1&&Math.abs(Math.abs(signedArea(pieces[0]))-Math.abs(signedArea(poly)))<.01){out.push(b);continue;}
-    for(const piece of pieces)if(Math.abs(signedArea(piece))>.5)out.push(polygonBoard(piece,b.angleDeg,b.role));
-  }
-  return [...out,...built.flatMap(p=>p.boards)];
-}
-
-/** The breakers left once bands running front to back are in: a band takes the place of any breaker it covers or
- * comes within a board of (the field boards end at the band instead, as they did at the breaker). */
-export function keepBreakers(breakers:number[],plans:InlayPlan[],boardWidth:number,gap:number):number[]{
-  const along=plans.filter(p=>p.status==='ok'&&p.band?.direction==='along'),pitch=boardWidth+gap;
-  return along.length?breakers.filter(x=>!along.some(p=>x+boardWidth/2>p.band!.from-pitch&&x-boardWidth/2<p.band!.to+pitch)):breakers;
-}
 /** Build-up joists under bands running front to back, as under a breaker: two under each band board (0.94 in either
  * side of its middle) and one under each outer joint (2.81 in beyond the outer boards' middles). A one-board band
  * gets exactly a breaker's four. Plan x, level-local. */
@@ -244,10 +229,10 @@ export function stripeToBand(data:Pick<DeckData,'inlays'|'deckingMaterial'|'deck
 }
 
 /** The inlay context of a built deck level (for the editor's fit and status checks). */
-export function levelInlayContext(data:Pick<DeckData,'deckingMaterial'|'boardWidth'|'pictureFrameRows'|'pattern'>,level:{footprint:FootprintPlan;deckingFootprint?:FootprintPlan}):InlayContext{
+export function levelInlayContext(data:StockData&Pick<DeckData,'pictureFrameRows'|'pattern'>,level:{footprint:FootprintPlan;deckingFootprint?:FootprintPlan}):InlayContext{
   const material=DECKING_CATALOGUE.find(m=>m.id===data.deckingMaterial)||DECKING_CATALOGUE[0];
   const gap=material.isComposite?.1875:.25,borders=data.pictureFrameRows||(data.pattern==='Picture Frame'?1:0);
-  return {fieldPolygons:offsetPolygons([(level.deckingFootprint??level.footprint).outline],borders*(data.boardWidth+gap)),boardWidth:data.boardWidth,gap,stockLength:material.id==='cedar'?144:192,centre:{x:(level.footprint.origin?.x??0)+level.footprint.bounds.w/2,y:(level.footprint.origin?.y??0)+level.footprint.bounds.h/2},straight:data.pattern==='Straight'||data.pattern==='Picture Frame'};
+  return {fieldPolygons:offsetPolygons([(level.deckingFootprint??level.footprint).outline],borders*(data.boardWidth+gap)),boardWidth:data.boardWidth,gap,stockLength:designStockLength(data),centre:{x:(level.footprint.origin?.x??0)+level.footprint.bounds.w/2,y:(level.footprint.origin?.y??0)+level.footprint.bounds.h/2},straight:data.pattern==='Straight'||data.pattern==='Picture Frame',buildRules:data.buildRules};
 }
 
 /** The nearest version of an inlay that fits, clear of the other inlays on its level: at its size, first moved toward

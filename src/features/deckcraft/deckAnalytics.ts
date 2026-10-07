@@ -1,6 +1,7 @@
 import {getHouseConfig,ORIGINAL_HOUSE_CLADDINGS} from './houseSettings';
-import {HOUSE_COLOUR_FIELDS} from './houseFinishes';
+import {HOUSE_COLOUR_FIELDS} from './houseSettings';
 import {DEFAULT_DECK} from './defaults';
+import {usesCurrentBuildRules} from './buildRules';
 import {isSystemProduct} from './lightingSystem';
 import {LIGHTING_RUNTIME_CATALOGUE} from './lightingRuntimeCatalogue';
 import {screenOn} from './privacyScreens';
@@ -89,7 +90,12 @@ export function designFeatures(data:DeckData):string[]{
   add(data.railingType==='Frameless Glass','deck_frameless_glass');
   add(data.railingType==='Frameless Glass'&&data.glassMount&&data.glassMount!=='Top-mount base shoe',data.glassMount==='Spigots'?'deck_glass_spigots':'deck_glass_fascia_mount');
   add(data.catalogueAccessories?.length,'deck_accessory');
-  add(data.pictureFrameRows>0,'deck_border_rows');
+  // New designs start with a one-row border (owner 2026-10-04), so only a departure from it is a choice. `deck_border_rows`
+  // (one or more rows) is retired so its GA4 history keeps that meaning; a save made before the default (legacy rules,
+  // rows 0) reopens as it was drawn, so it is not counted as having removed the border. The Picture Frame layout draws a
+  // one-row border even at rows 0 (deckTakeoff's `rows||(pattern==='Picture Frame'?1:0)`), so that is not a removal either.
+  add(data.pictureFrameRows>DEFAULT_DECK.pictureFrameRows,'deck_border_extra_row');
+  add(data.pictureFrameRows<DEFAULT_DECK.pictureFrameRows&&data.pattern!=='Picture Frame'&&usesCurrentBuildRules(data),'deck_border_none');
   add(data.hasInlay,'deck_inlay');
   add(data.boardColours?.length,'deck_board_colours');
   add(data.inlays?.some(i=>i.kind==='rug'),'deck_inlay_rug');

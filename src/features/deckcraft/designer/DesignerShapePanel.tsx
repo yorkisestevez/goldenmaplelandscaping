@@ -2,11 +2,12 @@ import {useArchitectKeys,revealControl} from './architectKeys';
 import {useState} from 'react';
 import {createPortal} from 'react-dom';
 import type {DeckData,YardFeature} from '../types';
+import type {PlanPoint} from '../lib/deckGeometry';
 import type {PlanFrame} from '../ConstructionPlan';
 import type {Update} from './fields';
 import type {LandscapeObject} from '../landscapeTypes';
 import type {YardPullKind} from '../yardShapeEditing';
-import {newYardFeature} from '../yardSettings';
+import {fitNewPatio,newYardFeature} from '../yardSettings';
 import {yardGradeIn} from '../yardElevations';
 import {parseContractorLength} from './boundaryDimensions';
 import {newLandscapeObject} from '../landscapeCatalogue';
@@ -29,18 +30,20 @@ const region=(outer:ShapePath):ShapeRegion=>({outer,holes:[]});
 const bounds=(p:ShapePath)=>{const s=samplePath(p,.25),xs=s.map(q=>q.x),ys=s.map(q=>q.y);return {x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)};};
 
 export interface DesignerShapePanelProps {data:DeckData;update:Update;selected?:YardFeature;selection:{kind:YardPullKind;index:number};frame:PlanFrame;planHost:HTMLElement|null;
- commit:(before:YardFeature,next:YardFeature)=>boolean;announce:(message:string,bad?:boolean)=>void;onDrawing:(active:boolean)=>void;onSelect:(id:string)=>void}
+ commit:(before:YardFeature,next:YardFeature)=>boolean;announce:(message:string,bad?:boolean)=>void;onDrawing:(active:boolean)=>void;onSelect:(id:string)=>void;
+ /** Deck and house corners, so new shapes can be drawn tight against them. */
+ siteSnapPoints?:PlanPoint[]}
 
-/** Designer shape tools for patios, walls and walkways (Realtime Landscaping Architect class): draw any outline with
+/** Designer shape tools for patios, walls and walkways: draw any outline with
  * lines and true arcs, round or cut corners, bend or straighten edges, offset, combine, mirror, and walkways drawn as a
  * centreline with a width. Each action is one undo step and passes the same construction checks as manual edits. */
-export default function DesignerShapePanel({data,update,selected,selection,frame,planHost,commit,announce,onDrawing,onSelect}:DesignerShapePanelProps){
+export default function DesignerShapePanel({data,update,selected,selection,frame,planHost,commit,announce,onDrawing,onSelect,siteSnapPoints=[]}:DesignerShapePanelProps){
  const [draw,setDraw]=useState<Draw|null>(null),[bedAsset,setBedAsset]=useState<LandscapeObject['assetId']>('mulch-bed');
  const [radius,setRadius]=useState('2\''),[cut,setCut]=useState('1\''),[offset,setOffset]=useState('1\''),[other,setOther]=useState(''),[walkWidth,setWalkWidth]=useState(''),[walkEnds,setWalkEnds]=useState<'square'|'round'>('square');
  const [panelHost,setPanelHost]=useState<HTMLDivElement|null>(null);
  const patios=(data.yardFeatures??[]).filter(f=>f.kind==='patio'&&!f.stepAssembly&&!f.stoneSteps&&f.id!==selected?.id);
  const room=(n=1)=>{if((data.yardFeatures?.length??0)+n>20)throw Error('This design supports up to 20 yard features.');};
- const placed=(f:YardFeature)=>{const grade=yardGradeIn(data,f);if(!Number.isFinite(grade))throw Error('Survey the new feature centre before setting its finished level.');return {...f,finishedElevationIn:grade+f.heightIn};};
+ const placed=(f:YardFeature)=>{const grade=yardGradeIn(data,f);if(!Number.isFinite(grade))throw Error('Survey the new feature centre before setting its finished level.');return fitNewPatio(data,{...f,finishedElevationIn:grade+f.heightIn});};
  const attempt=(fn:()=>void)=>{try{fn();}catch(e){announce(e instanceof Error?e.message:'That shape tool could not be applied.',true);}};
  const apply=(next:YardFeature,what:string)=>{if(!selected)return;if(commit(selected,next))announce(`${what}. ${summary(next)} Undo restores the previous shape.`);};
  const summary=(f:YardFeature)=>{const p=yardFeaturePath(f);return f.kind==='patio'?`${(pathArea(p)/144).toFixed(1)} sq ft, ${feetInches(pathLength(p))} around.`:`${feetInches(pathLength(p))} of wall.`;};
@@ -62,7 +65,7 @@ export default function DesignerShapePanel({data,update,selected,selection,frame
  const world=selected?yardFeaturePath(selected):null,spine=selected?yardSpinePath(selected):null,isPatio=selected?.kind==='patio';
  const edgeIndex=selected&&world?Math.min(selection.index,edgeCount(world)-1):0;
  useArchitectKeys({o:()=>revealControl(document.querySelector('[aria-label="Designer corner radius"]')),h:()=>revealControl(document.querySelector('[aria-label="Designer corner cut"]')),'ctrl+e':()=>revealControl(document.querySelector('[aria-label="Designer offset distance"]'))},!draw);
- const snapPoints=(data.yardFeatures??[]).filter(f=>f.kind==='patio'||f.kind==='retaining-wall').flatMap(f=>{const p=yardFeaturePath(f);return [...p.points,...p.points.slice(0,edgeCount(p)).map((q,i)=>{const b=p.points[(i+1)%p.points.length];return {x:(q.x+b.x)/2,y:(q.y+b.y)/2};})];}).concat((data.landscapeObjects??[]).filter(o=>o.kind==='bed').flatMap(o=>landscapeOutlinePaths(o)[0]?.filter((_,i)=>i%8===0).map(p=>({x:p.x,y:p.z}))??[]));
+ const snapPoints=(data.yardFeatures??[]).filter(f=>f.kind==='patio'||f.kind==='retaining-wall').flatMap(f=>{const p=yardFeaturePath(f);return [...p.points,...p.points.slice(0,edgeCount(p)).map((q,i)=>{const b=p.points[(i+1)%p.points.length];return {x:(q.x+b.x)/2,y:(q.y+b.y)/2};})];}).concat((data.landscapeObjects??[]).filter(o=>o.kind==='bed').flatMap(o=>landscapeOutlinePaths(o)[0]?.filter((_,i)=>i%8===0).map(p=>({x:p.x,y:p.z}))??[])).concat(siteSnapPoints);
  return <section className="dd-designer-panel" aria-label="Designer shape tools">
   <h4>Draw with designer tools</h4>
   <div className="dd-designer-row">{DRAWS.map(({id,draw:d})=><button key={id} type="button" aria-pressed={draw?.label===d.label} disabled={!!draw&&draw.label!==d.label} onClick={()=>draw?stop():start(d)}>{d.label}</button>)}<label>Bed surface<select aria-label="Designer bed surface" value={bedAsset} onChange={e=>setBedAsset(e.target.value as LandscapeObject['assetId'])}>{LANDSCAPE_SURFACES.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label></div>

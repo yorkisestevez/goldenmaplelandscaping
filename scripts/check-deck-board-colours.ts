@@ -89,7 +89,8 @@ for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another 
 
 // Changing to shorter stock inserts a breaker through the saved marker; never silently repaint another piece.
 {
- const shorter={...painted,deckingMaterial:'tt_reserve',deckingColor:'Antique Leather'},plan=boardFinishPlan(shorter,buildDeckTakeoff(shorter));
+ // TimberTech Prime has no manufacturer listing on file, so it keeps the 16 ft planning allowance (deckingStock.ts).
+ const shorter={...painted,deckingMaterial:'tt_prime',deckingColor:'Maritime Gray'},plan=boardFinishPlan(shorter,buildDeckTakeoff(shorter));
  ok(plan.pieces===0&&plan.unmatched.length===1&&price(shorter).flags.some(f=>f.includes('no longer lines up with a board')),'An accent displaced by a new stock-length breaker is reported unmatched, never moved');
 }
 

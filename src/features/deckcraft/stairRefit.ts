@@ -5,8 +5,7 @@ import {buildDeckTakeoff,type Box,type DeckTakeoff} from './deckTakeoff';
 import type {PlanPoint} from './lib/deckGeometry';
 import {polygonCut,signedArea} from './lib/polygonCuts';
 import {getHouseBlocks,rectPolygon} from './houseFootprint';
-import {createSiteSurface,sampleSiteHeight} from './siteSurface';
-import {getTerrainConfig} from './yardSettings';
+import {designSiteSurface,sampleSiteHeight} from './siteSurface';
 import {buildYardModel} from './yardModel';
 import {patioTopPlane,planeAt} from './yardElevationGeometry';
 import {stairLandingPolygons} from './stairLandingGeometry';
@@ -31,7 +30,7 @@ export function previewStairRefit(data:DeckData,options:StairRefitOptions={}):St
  if(surfaceKind==='patio'&&!patio)return pending('Choose an enabled patio before requesting a finished-surface stair refit.');
  const patioModel=patio?buildYardModel(data,initial).features.find(f=>f.config.id===patio.id):undefined;
  if(patio&&(!patioModel||patioModel.excluded||!patioModel.footprints.length))return pending('The selected patio has no supported finished footprint. Resolve its coverage or overlaps before fitting a landing.');
- const measured=data.siteModel?createSiteSurface(data.siteModel,getTerrainConfig(data)):undefined;
+ const measured=designSiteSurface(data);
  const extremes=(polygons:PlanPoint[][])=>{
   if(patio){const missing=area(polygonCut(polygons,patioModel!.footprints,true)),grade=patio.finishedElevationIn!==undefined?0:sampleSiteHeight(data,patio.xFt*12,patio.zFt*12);if(missing>.01||!Number.isFinite(grade))return {complete:false,min:null,max:null};const plane=patioTopPlane(patio,grade!);const values=polygons.flat().map(p=>planeAt(plane,p.x,p.y));return {complete:true,min:Math.min(...values),max:Math.max(...values)};}
   if(measured){const range=measured.extrema(polygons,'proposed');return {complete:range.complete,min:range.min,max:range.max};}

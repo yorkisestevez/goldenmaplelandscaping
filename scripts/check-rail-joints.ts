@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
-import {foundationSolids} from '../src/features/deckcraft/foundationDatums';
+import {foundationSolids} from '../src/features/deckcraft/foundationSolids';
 const near=(a:number,b:number)=>Math.abs(a-b)<1e-6;
 let checks=0;
 for(const railingType of ['Wood Picket','Aluminum'] as const)for(const foundation of ['Concrete Piers','Helical Piles','Deck Blocks'] as const){

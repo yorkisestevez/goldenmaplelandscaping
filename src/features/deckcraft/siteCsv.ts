@@ -5,19 +5,22 @@ export type SiteCsvUnit='ft'|'m'|'in';
 export interface SiteCsvOptions {xColumn:string|number;zColumn:string|number;elevationColumn:string|number;horizontalUnit:SiteCsvUnit;verticalUnit:SiteCsvUnit;originX?:number;originZ?:number;elevationDatum?:number;idColumn?:string|number;header?:boolean;delimiter?:','|';'|'\t'}
 const factor=(unit:SiteCsvUnit)=>unit==='ft'?12:unit==='m'?1000/25.4:unit==='in'?1:(()=>{throw Error('Choose ft, m or in for CSV units.');})();
 /** CSV quoting supports escaped quotes, delimiters and line breaks inside
- * fields. Origin values use horizontal units; elevation datum uses vertical
- * units. Subtraction happens before conversion to model inches. */
-function csvRows(text:string,requestedDelimiter?:','|';'|'\t'){
+ * fields. A quote opens a quoted field only at the start of a field; anywhere
+ * else it is a literal inch mark (6' 3"). CR, CRLF and LF all end a row.
+ * Origin values use horizontal units; elevation datum uses vertical units.
+ * Subtraction happens before conversion to model inches. */
+export function csvRows(text:string,requestedDelimiter?:','|';'|'\t'){
  if(typeof text!=='string'||text.length>5_000_000)throw Error('CSV text is missing or too large.');
- const input=text.replace(/^\uFEFF/,''),counts=new Map<string,number>([[',',0],[';',0],['\t',0]]);let headerQuoted=false;for(let i=0;i<input.length;i++){const ch=input[i];if(ch==='"'){if(headerQuoted&&input[i+1]==='"')i++;else headerQuoted=!headerQuoted;}else if(!headerQuoted){if(ch==='\n'||ch==='\r')break;if(counts.has(ch))counts.set(ch,counts.get(ch)!+1);}}
+ const input=text.replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n'),counts=new Map<string,number>([[',',0],[';',0],['\t',0]]);let headerQuoted=false,fieldStart=true;for(let i=0;i<input.length;i++){const ch=input[i];if(headerQuoted){if(ch==='"'){if(input[i+1]==='"')i++;else headerQuoted=false;}continue;}if(ch==='\n')break;if(ch==='"'&&fieldStart){headerQuoted=true;fieldStart=false;continue;}if(counts.has(ch)){counts.set(ch,counts.get(ch)!+1);fieldStart=true;}else if(ch.trim())fieldStart=false;}
  const delimiter=requestedDelimiter??[...counts].sort((a,b)=>b[1]-a[1])[0][0],rows:{fields:string[];line:number}[]=[];
- let field='',fields:string[]=[],quoted=false,closed=false,line=1,startLine=1;
+ // `blank` tracks an all-space field so each quote test is O(1) (re-trimming the field was quadratic).
+ let field='',fields:string[]=[],quoted=false,closed=false,blank=true,line=1,startLine=1;
  for(let i=0;i<=input.length;i++){const ch=input[i];
   if(quoted){if(ch==='"'){if(input[i+1]==='"'){field+='"';i++;}else {quoted=false;closed=true;}}else if(ch===undefined)throw Error(`Row ${startLine}: unclosed quoted field.`);else {field+=ch;if(ch==='\n')line++;}continue;}
-  if(ch==='"'){if(field.trim()||closed)throw Error(`Row ${line}: unexpected quote.`);quoted=true;field='';continue;}
-  if(ch===delimiter||ch==='\n'||ch===undefined){fields.push(field.trim());field='';closed=false;if(ch!==delimiter){if(fields.some(v=>v!==''))rows.push({fields,line:startLine});fields=[];line++;startLine=line;}continue;}
+  if(ch==='"'&&blank&&!closed){quoted=true;field='';continue;}
+  if(ch===delimiter||ch==='\n'||ch===undefined){fields.push(field.trim());field='';closed=false;blank=true;if(ch!==delimiter){if(fields.some(v=>v!==''))rows.push({fields,line:startLine});fields=[];line++;startLine=line;}continue;}
   if(ch==='\r')continue;
-  if(closed&&ch.trim())throw Error(`Row ${line}: text follows a closing quote.`);field+=ch;
+  if(closed&&ch.trim())throw Error(`Row ${line}: text follows a closing quote.`);field+=ch;if(ch.trim())blank=false;
  }
  if(!rows.length)throw Error('CSV contains no rows.');
  return rows;

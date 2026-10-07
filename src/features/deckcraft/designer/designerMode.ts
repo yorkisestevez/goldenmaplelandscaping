@@ -1,7 +1,8 @@
 import {useSyncExternalStore} from 'react';
 
-/** Designer mode: the pro shape toolkit for the design team. Off by default and remembered on this device; `?designer=1`
- * turns it on. Imported only by the lazily loaded plan editors, so the public route never pays for it. */
+/** Designer mode: the Pro workspace and shape toolkit for the design team. Off by default and remembered on this
+ * device; `?designer=1` turns it on. The page reads only this small flag; the Pro menus, ribbon and editors load
+ * lazily, so the public route never pays for them. It is a convenience switch, not access control. */
 const KEY='deckcraft.designer-mode';
 let on:boolean|undefined;
 const listeners=new Set<()=>void>();

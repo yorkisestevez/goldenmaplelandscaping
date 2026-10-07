@@ -67,7 +67,13 @@ import {basename} from 'node:path';
 // September 28 (A2, S-5): six typical details drawn from the design add 4.7 KB (22.7 KB), still lazy. Bound it at 25 KB.
 // September 28 (A2, A-0): the site plan and the lot editor add 5.4 KB (28.1 KB), still lazy. Bound it at 30 KB.
 // September 28 (A2, S-6): the schedules add 3.1 KB (31.2 KB), still lazy. Bound it at 35 KB.
-const BUDGET_KB={routeInitial:270,routeCss:12,viewer:340,pdf:150,deltaWorker:205,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35};
+// October 4 (Pro workspace, Phase 1): the route reads the Designer Mode flag and hands its own functions to the lazy Pro
+// menu bar and ribbon, 0.44 KB (269.7 → 270.1 KB); every Pro component and stylesheet stays lazy. The owner approved
+// raising the route budget to 271 KB.
+// October 5 (Ground fit G1-G2): skirting runs to the measured ground, patios take a ground fit, and graded banks are
+// priced (bank geometry stays in the lazy site engine): route 270.2 -> 271.0 KB, option-deltas worker 204.8 -> 205.8 KB.
+// Raised to 272/207 KB on the owner's go-ahead for the Ground fit round (confirm at review).
+const BUDGET_KB={routeInitial:272,routeCss:12,viewer:340,pdf:150,deltaWorker:207,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);

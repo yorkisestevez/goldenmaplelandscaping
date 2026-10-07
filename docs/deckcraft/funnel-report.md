@@ -10,7 +10,7 @@ Every event goes to GA4 as an event name with an `event_label` parameter (`track
 | `deckcraft_step` | `deck_step_1_dimensions` … `deck_step_5_backyard`, `deck_step_6_estimate`. Since the redesign, a label means "opened a section" (see below). | once per visit |
 | `deckcraft_section` | `deck_section_<id>` when a section is opened, and `deck_changed_<id>` on the first edit in it. The ids are `house`, `deck`, `boards`, `stairs`, `lighting`, `extras`, `site`, `backyard` and `proposal`. | once per visit |
 | `deckcraft_plan` | Size & place tool: `deck_plan_drag` (a handle on the site plan dragged, or moved from the keyboard), `deck_plan_typed` (a width or depth typed on the plan), `deck_plan_shortcut` (a shape shortcut). Stairs tool: `deck_plan_stairs` (stairs put on an edge or slid along it). Draw outline tool: `deck_plan_outline` (a custom outline started, or an edge moved). House tool: `deck_plan_house` (the house resized from its wall ends). | once per visit |
-| `deckcraft_feature` | `deck_shape_*`, `deck_pattern_*`, `deck_wrap`, `deck_corner_chamfer`, `deck_level_2`, `deck_stairs_*`, `deck_lighting`, `deck_bench`, `deck_backyard`, `deck_patio`, `deck_retaining_wall`, `deck_water_feature`, `deck_fire_pit`, `deck_outdoor_kitchen`, `deck_turf`, `deck_landscape_lighting`, … | once per visit |
+| `deckcraft_feature` | `deck_shape_*`, `deck_pattern_*`, `deck_wrap`, `deck_corner_chamfer`, `deck_level_2`, `deck_stairs_*`, `deck_border_extra_row`, `deck_border_none` (see "The picture-frame border labels" below), `deck_lighting`, `deck_bench`, `deck_backyard`, `deck_patio`, `deck_retaining_wall`, `deck_water_feature`, `deck_fire_pit`, `deck_outdoor_kitchen`, `deck_turf`, `deck_landscape_lighting`, … | once per visit |
 | `deckcraft_view` | `deck_view_plan` (the site plan, sent on every page load), `deck_view_3d`, `deck_view_overview`, `deck_view_front`, `deck_view_top` (the 3D sheet's cameras), `deck_view_drawing` (the Framing sheet's 2D plan), `deck_view_structure`, `deck_view_hardware`, `deck_view_foundation`, `deck_view_docked` (a phone pinned the drawing while editing) | once per visit |
 | `deckcraft_output` | `deck_pdf`, `deck_proposal`, `deck_summary`, `deck_json_save`, `deck_json_import` | every time |
 | `deckcraft_link` | `deck_link_opened`, `deck_link_failed`, `deck_link_went_back` | every time |
@@ -37,6 +37,13 @@ The "Drawing Set" redesign (phases R1 to R7, built 2026-09-24) goes live as one 
 - **The price effect beside each option sends no event of its own.** A choice made after seeing it is counted as before, by `deck_changed_<id>` and the feature labels. The phone's "Show price effect" button is not counted.
 
 Because visitors no longer have to pass step 2 to reach step 6, the step funnel's percentages are not comparable across the release. Judge the redesign by the send rate instead: `deck_send_sent` ÷ page views of `/deck-designer`, for the four weeks before the release against the four weeks after. Write the release date here when it ships: ____.
+
+## The picture-frame border labels (2026-10)
+New designs start with a one-row picture-frame border (owner, 2026-10-04), so the border is no longer a feature of its own and only a departure from the default is counted:
+
+- `deck_border_extra_row`: the visitor added a second border row.
+- `deck_border_none`: the visitor removed the default border. Choosing the Picture Frame layout draws a one-row border even with Border rows at 0, so that design still has a border and is not counted. A design saved before the default changed reopens under the legacy build rules with the border it was drawn with (often none); it was never given the border, so it is not counted here.
+- `deck_border_rows` is retired. Until this release it meant "one or more border rows", and its GA4 history keeps that meaning. From the release date it is no longer sent; compare it with `deck_border_extra_row` + `deck_border_none` only with that change in mind.
 
 ## One-time setting
 GA4 → Admin → Custom definitions → **Create custom dimension**: name `Event label`, scope **Event**, event parameter `event_label`. Without it the labels are not available in reports. It only applies to data collected after it is created.

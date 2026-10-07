@@ -18,8 +18,8 @@ export function wallCoursePath(points:PlanPoint[],offsetIn:number):PlanPoint[]{
 }
 /** Include the complete batter envelope in the front-grade burial check.
  * Iterate because lower terrain may add a course, which adds setback. */
-export function wallConstructionForPath(f:YardFeature,grade:number,points:PlanPoint[],gradeAt:(z:number,x?:number)=>number,surface?:SiteSurface){
- const plan=(grades:number[])=>{if(!f.wallTopSteps?.length)return wallConstructionPlan(f,grade,grades);if(!steps)throw Error('Stepped wall geometry is loading. Prepare the design before calculating or exporting.');return steps.steppedWallPlan(f,grade,grades);};
+export function wallConstructionForPath(f:YardFeature,grade:number,points:PlanPoint[],gradeAt:(z:number,x?:number)=>number,surface?:SiteSurface,paved=false){
+ const plan=(grades:number[])=>{if(!f.wallTopSteps?.length)return wallConstructionPlan(f,grade,grades,paved);if(!steps)throw Error('Stepped wall geometry is loading. Prepare the design before calculating or exporting.');return steps.steppedWallPlan(f,grade,grades);};
  const depth=f.depthFt*12,extrema=(paths:PlanPoint[][])=>{if(surface){const range=surface.extrema(paths);return Number.isFinite(range.min+range.max)?[range.min,range.max]:[grade];}return paths.flat().map(v=>gradeAt(v.y,v.x));},grades=extrema(yardPathEnvelope(points,depth));let p=plan(grades);
  for(let i=0;i<8;i++){const next=plan([...grades,...extrema(yardPathEnvelope(wallCoursePath(points,p.maxSetbackIn),depth))]);if(next.count===p.count)return next;p=next;}
  return p;

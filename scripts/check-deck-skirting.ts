@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+// Sloped-ground yard and foundation geometry is a lazy runtime in the app (ensureDesignExtensions); load it before calculating.
+import {loadAdvancedYardRuntime} from '../src/features/deckcraft/yardModel';
+await loadAdvancedYardRuntime();
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';

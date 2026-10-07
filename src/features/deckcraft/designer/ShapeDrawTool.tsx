@@ -1,4 +1,5 @@
-import {useArchitectKeys,revealControl} from './architectKeys';
+import {useArchitectKeys,useDraftKeys,revealControl} from './architectKeys';
+import {lockedSnap} from './drawingDirection';
 import {useDrawingDirection} from './useDrawingDirection';
 import {useEffect,useRef,useState,type FormEvent,type PointerEvent} from 'react';
 import {createPortal} from 'react-dom';
@@ -43,7 +44,11 @@ export default function ShapeDrawTool({frame,mode,closed,label,snapPoints,panelH
   if(angleSnap&&from&&polyline&&segment==='line'){const d=dist(from,raw),step=Math.PI/12,a=Math.round(Math.atan2(raw.y-from.y,raw.x-from.x)/step)*step,L=grid?Math.max(grid,Math.round(d/grid)*grid):d;return {x:from.x+Math.cos(a)*L,y:from.y+Math.sin(a)*L};}
   return grid?{x:Math.round(raw.x/grid)*grid,y:Math.round(raw.y/grid)*grid}:raw;
  };
- const snap=(raw:PlanPoint,shift:boolean)=>directionPoint(polyline?pts.at(-1):undefined,shift&&polyline?raw:normalSnap(raw),shift&&polyline);
+ const snap=(raw:PlanPoint,shift:boolean)=>{
+  const from=polyline?pts.at(-1):undefined;if(!shift||!polyline)return directionPoint(from,normalSnap(raw),false);
+  // Shift holds the bearing; the first point still closes the outline and other points still set the length.
+  return lockedSnap(directionPoint(from,raw,true),p=>drawingSnap(p,pts,[...pts,...snapPoints],closed,22/scale.current),p=>directionPoint(from,p,true)).point;
+ };
  const finish=(path:ShapePath)=>{const problem=pathProblem(path);if(problem)throw Error(problem);const widthIn=mode==='path'?parseContractorLength(width):undefined;onFinish(mode==='path'?{path,widthIn,ends}:{path});};
  const place=(p:PlanPoint)=>{try{
   setNotice('');
@@ -64,6 +69,8 @@ export default function ShapeDrawTool({frame,mode,closed,label,snapPoints,panelH
  const undo=()=>{if(mid){setMid(undefined);return;}setPts(pts.slice(0,-1));setEdges(edges.slice(0,-1));setNotice('');};
  const placeTyped=(e?:FormEvent)=>{e?.preventDefault();try{const from=pts.at(-1);if(!from)throw Error('Place the first point on the plan, then type the next edge.');const L=parseContractorLength(typedLength),a=Number(typedAngle)*Math.PI/180;if(!Number.isFinite(a))throw Error('Enter the direction in degrees: 0 runs across, 90 runs out into the yard.');place({x:from.x+Math.cos(a)*L,y:from.y+Math.sin(a)*L});setTypedLength('');}catch(err){fail(err);}};
  useArchitectKeys({'ctrl+a':()=>setAngleSnap(v=>!v),'ctrl+g':()=>setGrid(v=>{if(v){previousGrid.current=v;return 0;}return previousGrid.current;}),g:()=>revealControl(panelRef.current?.querySelector('[aria-label="Snap grid"]')??null),enter:()=>revealControl(panelRef.current?.querySelector('[aria-label="Typed edge length"]')??null)});
+ // While drawing, Ctrl+Z steps back through the draft (not the saved design); L, T and A pick the next edge; C closes.
+ useDraftKeys({'ctrl+z':()=>{if(!pts.length&&!mid)return false;undo();},...(polyline?{l:()=>{setSegment('line');setMid(undefined);},t:()=>{setSegment('tangent');setMid(undefined);},a:()=>{setSegment('arc3');setMid(undefined);},c:()=>{if(!pts.length)return false;finishDraft();}}:{})});
  useEffect(()=>{
   const key=(e:KeyboardEvent)=>{const typing=['INPUT','SELECT','TEXTAREA'].includes((e.target as HTMLElement)?.tagName);
    if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey)return;
@@ -101,7 +108,7 @@ export default function ShapeDrawTool({frame,mode,closed,label,snapPoints,panelH
   {mode==='path'&&<div className="dd-shape-draw-snap"><label>Walkway width<input aria-label="Walkway width" value={width} onChange={e=>setWidth(e.target.value)}/></label><label>Ends<select aria-label="Walkway ends" value={ends} onChange={e=>setEnds(e.target.value as 'square'|'round')}><option value="square">Square</option><option value="round">Round</option></select></label></div>}
   {readout&&<p className="dd-shape-draw-readout" role="status">{readout}</p>}
   <div className="dd-shape-draw-actions">{polyline&&<button type="button" onClick={finishDraft} disabled={pts.length<(closed?3:2)}>Finish</button>}<button type="button" onClick={undo} disabled={!pts.length&&!mid}>Undo point</button><button type="button" onClick={onCancel}>Cancel</button></div>
-  <p className="dd-shape-draw-hint">{polyline?`Click to place points${closed?'; join the first point to close (tap it or drag from the last point)' :''}. Enter edits length and angle; right-click finishes. Backspace undoes, Esc cancels. Hold Shift to keep the current line angle while changing its length.`:mode==='rectangle'?'Click one corner, then the opposite corner.':'Click the centre, then a point on the edge.'}</p>
+  <p className="dd-shape-draw-hint">{polyline?`Click to place points${closed?'; join the first point to close (tap it or drag from the last point)' :''}. Enter edits length and angle; right-click or C finishes. Backspace or Ctrl+Z undoes a point, Esc cancels. L, T and A pick line, tangent arc or 3-point arc. Hold Shift to keep the current line angle while changing its length.`:mode==='rectangle'?'Click one corner, then the opposite corner.':'Click the centre, then a point on the edge.'}</p>
   {notice&&<p className="dd-shape-draw-notice" role="alert">{notice}</p>}
  </section>;
  return <>

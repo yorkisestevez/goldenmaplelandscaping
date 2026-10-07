@@ -1,11 +1,13 @@
 import {pergolaLayout} from './pergolaLayout';
 import {SIDE_DOT} from './lib/deckGeometry';
+import {insidePolygon as pip} from './lib/polygonCuts';
 import {activeCornerChamfers,isChamferEdgeId} from './lib/cornerChamfers';
 import type {DeckData} from './types';
 import type {Box,DeckTakeoff} from './deckTakeoff';
 import {activeLightingItems,isSystemProduct,MAX_FIXTURE_QTY} from './lightingSystem';
 import {getHouseConfig} from './houseSettings';
 import {finishedFasciaOffset} from './lib/finishedFootprint';
+import {usesCurrentBuildRules} from './buildRules';
 import {getTerrainConfig} from './yardSettings';
 import {screenLengthIn,screenOn,screenProduct} from './privacyScreens';
 import {getHouseContact} from './houseContact';
@@ -31,7 +33,7 @@ export function screenOffsetFromPoint(handle:PrivacyScreenHandle,px:number,pz:nu
   return Math.round(reversed?100-pct:pct);
 }
 type PlanPt={x:number;y:number};
-function insidePolygon(poly:PlanPt[],x:number,z:number){let odd=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>z)!==(b.y>z)&&x<(b.x-a.x)*(z-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;}
+const insidePolygon=(poly:PlanPt[],x:number,z:number)=>pip({x,y:z},poly);
 /**
  * A tread's nose: the edge over the riser below, where an under-step light mounts. Straight treads face their stair's
  * outward direction; a winder's nose is its polygon's lower edge (corners 2 to 3), facing away from the tread.
@@ -140,8 +142,11 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
       const lo=t-len/2,hi=t+len/2,key=`${source.index}:${edgeSectionId(sfp,e.index)}`,taken=screenSpans.get(key)??[];
       if(taken.some(o=>(custom||o.custom)&&Math.max(lo,o.lo)<Math.min(hi,o.hi)-.01)){warnings.push(`${label} overlaps another screen on that edge; ${skipped}. Slide it or shorten it.`);return;}
       if(custom){
-        const overlaps=(a:{x:number;y:number},b:{x:number;y:number})=>{if(Math.abs((a.x-e.p.x)*e.dz-(a.y-e.p.y)*e.dx)>.5||Math.abs((b.x-e.p.x)*e.dz-(b.y-e.p.y)*e.dx)>.5)return false;const p=(a.x-e.p.x)*e.dx+(a.y-e.p.y)*e.dz,q=(b.x-e.p.x)*e.dx+(b.y-e.p.y)*e.dz;return Math.max(lo,Math.min(p,q))<Math.min(hi,Math.max(p,q))-.01;};
-        const stair=model.flights.some(f=>Math.abs(f.start.y-screenTop)<.01&&f.along&&overlaps({x:f.start.x-f.along.x*f.width/2,y:f.start.z-f.along.y*f.width/2},{x:f.start.x+f.along.x*f.width/2,y:f.start.z+f.along.y*f.width/2}));
+        const overlaps=(a:{x:number;y:number},b:{x:number;y:number},tol=.5)=>{if(Math.abs((a.x-e.p.x)*e.dz-(a.y-e.p.y)*e.dx)>tol||Math.abs((b.x-e.p.x)*e.dz-(b.y-e.p.y)*e.dx)>tol)return false;const p=(a.x-e.p.x)*e.dx+(a.y-e.p.y)*e.dz,q=(b.x-e.p.x)*e.dx+(b.y-e.p.y)*e.dz;return Math.max(lo,Math.min(p,q))<Math.min(hi,Math.max(p,q))-.01;};
+        // A picture-framed stair starts the finished fascia offset out from the edge (2026-10 rules; a design saved before keeps
+        // its quoted 0.5 in test).
+        const stairTol=usesCurrentBuildRules(data)?.5+finishedFasciaOffset(data):.5;
+        const stair=model.flights.some(f=>Math.abs(f.start.y-screenTop)<.01&&f.along&&overlaps({x:f.start.x-f.along.x*f.width/2,y:f.start.z-f.along.y*f.width/2},{x:f.start.x+f.along.x*f.width/2,y:f.start.z+f.along.y*f.width/2},stairTol));
         const sourceIndex=model.levels.indexOf(source),connection=model.connections.some(c=>{if(c.from!==sourceIndex&&c.to!==sourceIndex)return false;const parent=model.levels[c.from],o=c.opening,d=c.to===sourceIndex?c.run:0,a={x:o.origin.x+parent.offset.x+o.outward.x*d,y:o.origin.y+parent.offset.z+o.outward.y*d};return overlaps(a,{x:a.x+o.along.x*o.width,y:a.y+o.along.y*o.width});});
         const covered=model.levels.some(l=>l!==source&&l.kind==='deck'&&l.top>screenTop+.01&&l.footprint.outline.some((a,i)=>{const b=l.footprint.outline[(i+1)%l.footprint.outline.length];return overlaps({x:a.x+l.offset.x,y:a.y+l.offset.z},{x:b.x+l.offset.x,y:b.y+l.offset.z});}));
         if(stair||connection||covered){warnings.push(`${label} overlaps a stair or level-connection opening; ${skipped}. Choose a clear edge interval.`);return;}
@@ -161,7 +166,7 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
     const screenRemaining=allocate(Math.max(0,data.privacySqft)/6*12,(x,z,len,angle,dx,dz)=>screen(x,z,len,angle,dx,dz,72,false));
     if(screenRemaining>.1)warnings.push(`Privacy layout fits ${(data.privacySqft-screenRemaining/2).toFixed(1)} of ${data.privacySqft} requested square feet at 6 ft high.`);
   }
-  function inside(x:number,z:number){let odd=false;for(let i=0,j=fp.outline.length-1;i<fp.outline.length;j=i++){const a=fp.outline[i],b=fp.outline[j];if((a.y>z)!==(b.y>z)&&x<(b.x-a.x)*(z-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;}
+  const inside=(x:number,z:number)=>pip({x,y:z},fp.outline);
   // Largest centred rectangle contained by the actual polygon, sampled at 6-inch increments.
   let pergolaArea=0;
   if(data.pergolaSqft>0&&!data.pergola){let best={x:0,z:0,w:0,d:0};const wanted=data.pergolaSqft*144;

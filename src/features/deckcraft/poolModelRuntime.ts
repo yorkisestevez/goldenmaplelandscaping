@@ -10,7 +10,7 @@ import {arcGeometry} from './circularArcs';
 import {yardSolidCells,yardRectangle,type YardFeatureModel,type YardBox} from './yardModel';
 import {abovePlane,subtractPlanes,planeVolume,planeAt,belowPlane,planeNormalScale,applyPlaneFormation,patioTopPlane} from './yardElevationGeometry';
 import {getTerrainConfig} from './yardSettings';
-import {createSiteSurface,integrateSiteExcavation} from './siteSurface';
+import {designSiteSurface,integrateSiteExcavation} from './siteSurface';
 import {yardPathEnvelope,yardWallPath,yardFeatureOutline} from './yardPathGeometry';
 import {hardscapeSelection} from './hardscapeCatalogue';
 import {PAVER_BRANDS} from '../../data/carrPrices';
@@ -86,7 +86,7 @@ function buildPool(data:DeckData,p:PoolFeature,deck:DeckTakeoff|undefined,site:S
 const cache=new WeakMap<DeckData,{models:PoolFeatureModel[];decks:WeakMap<DeckTakeoff,PoolFeatureModel[]>}>();
 export function getPoolModels(data:DeckData,deck?:DeckTakeoff){
  let saved=cache.get(data);
- if(!saved){const site=data.siteModel?createSiteSurface(data.siteModel,getTerrainConfig(data)):undefined,models=(data.pools??[]).filter(p=>p.enabled).map(p=>buildPool(data,p,undefined,site));for(let i=0;i<models.length;i++)for(let j=i+1;j<models.length;j++)if(poolArea(poolClip(models[i].excavationFootprints,models[j].excavationFootprints,'intersection'))>.001){for(const m of [models[i],models[j]]){const message='Pool construction envelopes overlap another pool; assemblies and shared working space remain unresolved.';m.pending.push(message);m.warnings.push(message);m.status='pending';}}saved={models,decks:new WeakMap()};cache.set(data,saved);}
+ if(!saved){const site=designSiteSurface(data),models=(data.pools??[]).filter(p=>p.enabled).map(p=>buildPool(data,p,undefined,site));for(let i=0;i<models.length;i++)for(let j=i+1;j<models.length;j++)if(poolArea(poolClip(models[i].excavationFootprints,models[j].excavationFootprints,'intersection'))>.001){for(const m of [models[i],models[j]]){const message='Pool construction envelopes overlap another pool; assemblies and shared working space remain unresolved.';m.pending.push(message);m.warnings.push(message);m.status='pending';}}saved={models,decks:new WeakMap()};cache.set(data,saved);}
  if(!deck)return saved.models;
  const previous=saved.decks.get(deck);if(previous)return previous;
  const models=saved.models.map(m=>{const pending=[...m.pending],warnings=[...m.warnings];if(deck.foundationSupports.some(f=>poolArea(poolClip(m.excavationFootprints,[yardRectangle(f.x,f.z,24,24)],'intersection'))>.001))pending.push('Pool excavation intersects a deck foundation planning envelope. Structural separation is unresolved.');if(deck.treads.some(t=>poolArea(poolClip(m.permanentExclusionFootprints,[t.polygon??yardRectangle(t.x,t.z,t.w,t.d,-(t.angle??0))],'intersection'))>.001))pending.push('Pool opening/coping intersects a deck stair tread or landing. Refit or reposition the design.');warnings.push(...pending.slice(m.pending.length));return {...m,pending,warnings,status:pending.length?'pending' as const:m.status};});saved.decks.set(deck,models);return models;

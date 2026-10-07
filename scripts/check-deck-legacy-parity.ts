@@ -13,7 +13,7 @@ import type {DeckData} from '../src/features/deckcraft/types';
 import type {DeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {usesPhysicalElevations} from '../src/features/deckcraft/elevationDatum';
 import {stairTargetId} from '../src/features/deckcraft/stairTargets';
-import {legacyScenarios} from './deck-legacy-scenarios';
+import {LEGACY_DEFAULT_DECK,legacyBaseDeck,legacyScenarios} from './deck-legacy-scenarios';
 
 // Existing designs must build, draw and price exactly as before while the house/wrap
 // work refactors the geometry core. Run with --update only when a change is owner-approved.
@@ -21,8 +21,15 @@ import {legacyScenarios} from './deck-legacy-scenarios';
 const GOLDEN=new URL('./deck-legacy-golden.json',import.meta.url);
 const update=process.argv.includes('--update'),report=process.argv.includes('--report');
 
-const base=():DeckData=>structuredClone(DEFAULT_DECK);
+// The scenarios are saved designs, so they are built on the frozen 9b2ee11 default (no frame, no saved overhang, legacy
+// build rules), never on the live default new designs start from.
+const base=():DeckData=>legacyBaseDeck();
 const scenarios=legacyScenarios();
+// New designs (owner 2026-10-04/06): a one-row flush picture frame under the 2026-10 build rules. Any other change to the
+// live default needs its own saved-design decision, so the frozen base may differ from it only in these three keys.
+assert.equal(DEFAULT_DECK.pictureFrameRows,1);assert.equal(DEFAULT_DECK.pictureFrameOverhangIn,0);assert.equal(DEFAULT_DECK.buildRules,'2026-10');
+assert.ok(!('pictureFrameOverhangIn' in LEGACY_DEFAULT_DECK)&&!('buildRules' in LEGACY_DEFAULT_DECK)&&LEGACY_DEFAULT_DECK.pictureFrameRows===0,'The legacy base has no frame, no saved overhang and no build rules');
+{const {pictureFrameRows:_rows,pictureFrameOverhangIn:_overhang,buildRules:_rules,...rest}=DEFAULT_DECK,{pictureFrameRows:_legacyRows,...legacy}=LEGACY_DEFAULT_DECK;assert.deepEqual(legacy,rest,'The live default differs from the frozen 9b2ee11 default only in the picture frame and build rules');}
 
 // Rounded, -0-free JSON so identity-transform refactors do not trip on float noise.
 const stable=(value:unknown)=>JSON.stringify(value,(_k,v)=>typeof v==='number'?(Object.is(v,-0)||Math.abs(v)<5e-7?0:Math.round(v*1e6)/1e6):v);

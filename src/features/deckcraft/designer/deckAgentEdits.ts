@@ -31,7 +31,12 @@ export interface AgentEditServices {
  * this mutation runtime has no eager runtime import back to its host. */
 export async function planDesign(initial:DeckData,commands:AgentCommand[],services:AgentEditServices):Promise<AgentPlannedDesign> {
   const {fail,clone,canonical,stabilize,designSchema,privateFields}=services;
-  const parseStrict=async(candidate:DeckData,explicit:Record<string,unknown>)=>{await ensureLiveDesignExtensions(candidate);return services.parseStrict(candidate,explicit);};
+  // Takeoff rules (buildRules.ts) are read-only: every edit, a whole replace included, keeps the rules the design was
+  // saved under, so an omitted marker cannot move an old save onto the new rules or a new design back. Absent is legacy.
+  const rules=(v:unknown)=>v===undefined?'legacy':v;
+  const parseStrict=async(candidate:DeckData,explicit:Record<string,unknown>)=>{
+    if(Object.hasOwn(explicit,'buildRules')&&rules(explicit.buildRules)!==rules(data.buildRules))fail(`design.buildRules: a design keeps the takeoff rules it was saved under ('${rules(data.buildRules)}'); repeat them or leave them out.`);
+    candidate={...candidate,buildRules:data.buildRules};await ensureLiveDesignExtensions(candidate);return services.parseStrict(candidate,explicit);};
   await ensureLiveDesignExtensions(initial);
   if(commands.length!==1&&commands.some(c=>c.type==='layout.deleteBoard'))fail('Delete one board per request, then read the new revision before another edit. Inventory indices cannot be reused after a deletion.');
   let data=clone(initial);
@@ -42,6 +47,10 @@ export async function planDesign(initial:DeckData,commands:AgentCommand[],servic
     if(c.type==='landscape.edit'){const {applyLandscapeEdit}=await import('../landscapeEdits');data=await parseStrict({...data,...applyLandscapeEdit(data,c.id,c.edit)},{});
     }else if(c.type.startsWith('pool.')){const {applyPoolCommand}=await import('../poolEdits');data=await parseStrict({...data,...applyPoolCommand(data,c as Extract<AgentCommand,{type:`pool.${string}`}>)},{});
     }else if(c.type.startsWith('site.')){const {applySiteOperation}=await import('../siteOperationRuntime');data=await parseStrict({...data,...applySiteOperation(data,c as Extract<AgentCommand,{type:`site.${string}`}>)},{});
+    }else if(c.type==='yard.create'||c.type==='yard.update'){
+      const {createYardFeature,updateYardFeature}=await import('../yardCreateEdits'),features=data.yardFeatures??[];let next:import('../types').YardFeature;
+      try{next=c.type==='yard.create'?createYardFeature(data,c):updateYardFeature(data,c);}catch(e){fail(e instanceof Error?e.message:'Invalid yard feature.');}
+      data=await parseStrict({...data,yardFeatures:c.type==='yard.create'?[...features,next!]:features.map(f=>f.id===next!.id?next!:f)},{});
     }else if(c.type==='yard.stepAssembly'||c.type==='yard.stepConvert'||c.type==='yard.stepRow'){
       const f=data.yardFeatures?.find(f=>f.id===c.id);if(!f)fail('Choose a current step feature.');const runtime=await import('../stepAssemblyRegistry');await runtime.loadStepAssemblyRuntime();let next=f!;
       if(c.type==='yard.stepConvert')next=runtime.convertStoneSteps(f!);

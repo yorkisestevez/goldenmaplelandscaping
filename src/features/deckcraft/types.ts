@@ -164,11 +164,17 @@ export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;pa
   edgeId?:string;
   /** The connecting step or stair runs the full shared edge (a split level). */
   fullStep?:boolean}
-export type YardFeatureKind='patio'|'retaining-wall'|'water-feature';
+/** 'fire-feature': a fire pit or table (fireFeatures.ts); widthFt/depthFt are its body (round: depth = width),
+ * heightIn its body height, productId a FIRE_PRODUCTS id, color its stone. */
+export type YardFeatureKind='patio'|'retaining-wall'|'water-feature'|'fire-feature';
 export interface YardHardscape {finishId:string;colorId:string;unitId:string;patternId:string;angleDeg:number;jointMm:number;capUnitId?:string}
 /** Decorative paving zones, centre-relative patio-local inches before patio rotation. */
 export interface PatioInlay {id:string;name:string;shape:'rectangle'|'diamond'|'circle'|'compass'|'band'|'custom';xIn:number;yIn:number;widthIn:number;depthIn:number;rotationDeg:number;points?:{x:number;y:number}[];productId:string;color:string;hardscape?:YardHardscape}
 export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled:boolean;xFt:number;zFt:number;widthFt:number;depthFt:number;heightIn:number;rotationDeg:number;productId:string;color:string;
+  /** Fire features only: the id of the patio it stands on. It sits on that patio's top when its footprint is wholly on
+   * the patio; otherwise (or when the patio is gone or excluded) it stands on its own 4 in gravel pad at grade, with a
+   * note. Absent: on its own pad. */
+  supportFeatureId?:string;
   /** Explicit, fixed-level solid-stone stair flight. Stock and support inputs stay recorded. */
   stoneSteps?:import('./stoneSteps').StoneSteps;
   stepAssembly?:import('./stepAssembly').StepAssembly;
@@ -178,6 +184,12 @@ export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled
   finishedElevationIn?:number;
   /** Rise percentages in patio-local across/out axes; rotates with the patio. */
   patioSlope?:{xPct:number;zPct:number};
+  /** Ground fit (patios with a fixed finishedElevationIn on measured ground): the ground round the patio is graded to
+   * its edge, daylighting into the measured ground at `slopeRatio` run per unit of rise. Absent leaves the ground as
+   * it is (saved designs are unchanged). Patios only; requires finishedElevationIn (validateYardFinishedSettings rejects
+   * it otherwise) and is inert while the patio is disabled or carries steps. New patios on measured ground get the default
+   * via yardSettings fitNewPatio; edits go through yardFinishedEdits {action:'groundFit'}. */
+  groundFit?:PatioGroundFit;
   /** Each station begins a new horizontal cap-top run, measured on the exact path. */
   wallTopSteps?:{stationIn:number;elevationIn:number}[];
   /** Exact circular segments over the saved control points; meshes are derived. */
@@ -196,6 +208,12 @@ export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled
   /** A walkway's centreline, kept so it can be edited again. The outline is derived from it and stays authoritative. */
   pathSpine?:YardPathSpine;
 }
+/** How the ground meets a patio: graded banks at this run:rise (3 = 3 ft out per 1 ft of height). */
+export interface PatioGroundFit {slopeRatio:number;
+ /** 'stone': where the patio stands above the ground, a stone edge course holds its raised side instead of a fill bank
+  * (the ground there is left as it is; cut banks still grade the high side). Absent = banks all round. */
+ lowEdge?:'stone'}
+export const GROUND_FIT_LIMITS={minRatio:1.5,maxRatio:10,defaultRatio:3,maxBankRunIn:240} as const;
 /** Walkway centreline in the patio's local inches: control points and exact arcs, with the paved width and end shape. */
 export interface YardPathSpine {points:{x:number;y:number}[];curves?:import('./circularArcs').CircularArc[];widthIn:number;ends:'square'|'round'}
 export interface TerrainConfig {widthFt:number;depthFt:number;elevationIn:number;slopePct:number}
@@ -324,6 +342,8 @@ export interface DeckData {
   catalogueAccessories?: string[];
   borderFinish?: 'Matching'|'Dark Slate';
   pictureFrameOverhangIn?: number;
+  /** Takeoff rules: absent or 'legacy' for designs saved before 2026-10-06, '2026-10' for new ones (see buildRules.ts). */
+  buildRules?: import('./buildRules').BuildRules;
   houseVisible?: boolean;
   houseWallHeightIn?: number;
   houseDoorOffset?: number;

@@ -1,6 +1,7 @@
 import {pergolaDescription} from './pergolaDescription';
 import {BUSINESS,canPublish,publicContact} from '../../data/business';
 import {boardFinishPlan,borderFinishRef,darkSlateBorder,deckColourRef,parseColourRef} from './boardFinishes';
+import {hasPictureFrame} from './borderLighting';
 import {DECK_PARTS,partRef,railingFinish} from './deckPartFinishes';
 import {LIGHTING_ZONES} from './designer/constants';
 import {quoteLabel,type Ledger,type LedgerLine,type LedgerQuote} from './designer/priceLedgerModel';
@@ -145,7 +146,7 @@ export function proposalFinishes(data:DeckData,model:DeckTakeoff):FinishTile[]{
   };
   add(deckColourRef(data),'Decking');
   // Border boards: in their own colour, as Deckorators Dark Slate (its own product), or in the deck's colour.
-  const framed=data.pattern==='Picture Frame'&&data.pictureFrameRows>0,dark=darkSlateBorder(data);
+  const framed=hasPictureFrame(data),dark=darkSlateBorder(data);
   if(framed&&!dark&&!borderFinishRef(data))add(deckColourRef(data),PART_USE.border);
   const plan=data.boardColours?.length||data.inlays?.length||data.deckFinishes?.border||hasBoardLayout(data)?boardFinishPlan(data,model):null;
   for(const group of plan?.stock??[])add(group.ref,group.kind==='layout'?'Custom board layout':group.kind==='accent'?'Accent boards':group.kind==='border'?PART_USE.border:INLAY_USE[group.part??'inside']);

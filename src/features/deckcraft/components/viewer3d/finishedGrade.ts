@@ -82,10 +82,11 @@ export function pathBankGeometry(path:PlanPoint[],depthIn:number,top:number,terr
 }
 /** The legacy illustrative bank follows exposed wall geometry. Drainage and
  * backfill boxes can be clipped below-grade placeholders awaiting site inputs;
- * they do not establish a visible crest or a surveyed grade. Measured sites use
+ * they do not establish a visible crest or a surveyed grade. A freestanding (seat) wall holds no ground: both faces
+ * stay exposed, so it gets no bank. Measured sites use
  * their proposed surface instead of this helper. */
 export function retainedBankGeometry(feature:YardModel['features'][number],terrain:Terrain,bounds?:GroundBounds,cutouts:PlanPoint[][]=[]){
- const blocks=feature.boxes.filter(b=>b.role==='wall-block');if(!blocks.length)return null;
+ const blocks=feature.boxes.filter(b=>b.role==='wall-block');if(!blocks.length||feature.config.wallConstruction?.freestanding)return null;
  const top=Math.max(...blocks.map(b=>b.y+b.h/2)),path=yardWallPath(feature.config);
  if(path.length<2||Math.max(...path.map(p=>top-lawnHeight(terrain,p.y)))<=1)return null;
  const segments=path.slice(1).map((b,i)=>{const a=path[i],dx=b.x-a.x,dz=b.y-a.y,length=Math.hypot(dx,dz);return {a,dx,dz,length};}).filter(s=>s.length>.0001);

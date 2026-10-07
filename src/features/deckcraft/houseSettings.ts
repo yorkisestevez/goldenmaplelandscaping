@@ -3,6 +3,11 @@ import {getFootprint} from './lib/deckGeometry';
 import {getHouseContact} from './houseContact';
 import {getHousePlacement} from './housePlacement';
 
+/** A house colour: six-digit hex. */
+export const HEX_COLOUR=/^#[0-9a-fA-F]{6}$/;
+/** The house exterior colour fields, in the order the studio lists them (their looks are in houseFinishes.ts). */
+export const HOUSE_COLOUR_FIELDS=['fasciaColor','soffitColor','gutterColor','doorColor','windowColor','garageDoorColor'] as const;
+export type HouseColourField=typeof HOUSE_COLOUR_FIELDS[number];
 /** House looks (never priced). The first six are the studio's original claddings; the rest are generic types. */
 export const HOUSE_CLADDINGS:readonly HouseCladding[]=['Siding','Brick','Stone','Stucco','Board & batten','Vertical siding','Fibre-cement lap','Cedar shakes','Ledgestone','Fieldstone','Norman brick','Roman brick','Horizontal metal'];
 /** The studio's first six claddings. */
@@ -32,6 +37,9 @@ export function getHouseConfig(data:DeckData):HouseConfig{
     const bottomIn=data.height+60,heightIn=Math.min(54,house.storeyHeightIn-bottomIn-6);
     openings.push({id,type:'Window',facade:'Front',offsetPct:(span[0]+span[1])/2/(widthFt*12)*100,bottomIn,widthIn,heightIn});
   }
+  // Generated openings use the importer's exact wall limits before entering editor commands.
+  // This avoids one-bit percentage differences being rejected as an unintended geometry change.
+  house.openings=house.openings.map(opening=>clampHouseOpening(opening,house));
   return house;
 }
 /** Length and height (inches) of a house wall by id ('main-front', 'garage1-back', …). An unknown id

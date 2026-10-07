@@ -8,7 +8,7 @@ import {ACTUAL_DEPTH_IN,DESIGN,type JoistSize} from '../structure/spanTables';
 import {type DrawItem,type LayerId,type Pt,feetInches} from './drawingTypes';
 import {sampleSiteHeight} from '../siteSurface';
 import {buildElevationProfile} from '../elevationProfiles';
-import {foundationSolids} from '../foundationDatums';
+import {foundationSolids} from '../foundationSolids';
 import {translate} from './elevations';
 import {ledgerFlashing,pierOf} from './pricedParts';
 

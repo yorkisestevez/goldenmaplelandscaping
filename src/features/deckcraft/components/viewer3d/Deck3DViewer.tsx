@@ -10,8 +10,9 @@ import type {SavedSceneCamera} from '../../scenePresentation';
 import {getPoolModels} from '../../poolModel';
 
 const Pool3D=lazy(()=>import('./Pool3D'));
+const Fire3D=lazy(()=>import('./Fire3D'));
 
-import {foundationSolids} from '../../foundationDatums';
+import {foundationSolids} from '../../foundationSolids';
 
 const Landscape3D=lazy(()=>import('./Landscape3D'));
 
@@ -528,7 +529,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <LightingFixtures items={extras.fixtures} evening={evening} enabled={lightsOn}/>
 
-    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway}/></Suspense>}<Yard3D model={{...yard,features:yard.features.filter(f=>isObjectVisible(data.editorOrganization,f.config.id)),boxes:yard.boxes.filter(b=>isObjectVisible(data.editorOrganization,b.featureId)),members:yard.members.filter(m=>isObjectVisible(data.editorOrganization,m.featureId))}} inspection={inspection||cutaway} plantingBeds={(data.landscapeObjects??[]).filter(o=>o.enabled&&o.kind==='bed'&&isObjectVisible(data.editorOrganization,o.id)).map(o=>landscapeFootprint(o).map(v=>({x:v.x,y:v.z})))}/>
+    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway}/></Suspense>}<Yard3D model={{...yard,features:yard.features.filter(f=>isObjectVisible(data.editorOrganization,f.config.id)),boxes:yard.boxes.filter(b=>isObjectVisible(data.editorOrganization,b.featureId)),members:yard.members.filter(m=>isObjectVisible(data.editorOrganization,m.featureId))}} inspection={inspection||cutaway} plantingBeds={(data.landscapeObjects??[]).filter(o=>o.enabled&&o.kind==='bed'&&isObjectVisible(data.editorOrganization,o.id)).map(o=>landscapeFootprint(o).map(v=>({x:v.x,y:v.z})))}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
 
     <Environment3D data={{...data,houseVisible:data.houseVisible!==false&&isObjectVisible(data.editorOrganization,'house')}} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
 

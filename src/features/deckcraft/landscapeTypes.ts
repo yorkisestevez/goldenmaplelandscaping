@@ -1,7 +1,7 @@
 /** Landscape coordinates and dimensions are world inches, from the deck's
  * back-left framing corner. A mesh never defines a botanical supplier SKU. */
 export type LandscapeKind='plant'|'boulder'|'furniture'|'bed';
-export type LandscapeAssetId='deciduous-tree'|'conifer-tree'|'rounded-shrub'|'hedge-shrub'|'grass-clump'|'natural-boulder'|'outdoor-table'|'outdoor-chair'|'lounge-chair'|'outdoor-sofa'|'outdoor-coffee-table'|'mulch-bed'|'black-mulch-bed'|'cedar-mulch-bed'|'river-rock-bed'|'mexican-beach-pebbles-bed'|'white-stone-bed'|'crushed-granite-bed'|'artificial-grass'|'putting-green';
+export type LandscapeAssetId='deciduous-tree'|'conifer-tree'|'rounded-shrub'|'hedge-shrub'|'grass-clump'|'natural-boulder'|'outdoor-table'|'outdoor-chair'|'lounge-chair'|'outdoor-sofa'|'outdoor-coffee-table'|'mulch-bed'|'black-mulch-bed'|'cedar-mulch-bed'|'river-rock-bed'|'mexican-beach-pebbles-bed'|'white-stone-bed'|'crushed-granite-bed'|'pea-gravel-bed'|'clear-limestone-bed'|'limestone-screenings-bed'|'granular-base-bed'|'artificial-grass'|'putting-green';
 export interface LandscapePoint {x:number;z:number}
 export type {LandscapeOutline,LandscapeRing,LandscapeSegment} from './landscapeOutline';
 export interface LandscapeSpeciesRecord {
@@ -24,7 +24,13 @@ export interface LandscapeObject {
  speciesRecord?:LandscapeSpeciesRecord;
  /** Explicit furniture support; missing/disabled support is pending. */
  supportFeatureId?:string;
+ /** Raised bed (beds only, 0–36 in): a level soil top at the lowest ground along the outline + raisedIn, never below
+  * the highest ground inside − 2 in (raisedBeds.ts). Absent keeps the bed a finish layer draped on the ground. */
+ raisedIn?:number;
+ /** What holds a raised bed's soil (requires raisedIn). A wall is a retaining-wall yard feature, linked by id. */
+ edge?:LandscapeBedEdge;
 }
+export interface LandscapeBedEdge {kind:'wall'|'timber'|'steel';wallFeatureId?:string}
 export const LANDSCAPE_LIMITS={objects:300,polygonPoints:64,coordinateIn:120000,dimensionIn:2400} as const;
 import {DesignExtensionLoadError} from './designExtensionState';
 type Runtime=Pick<typeof import('./landscapeTypesRuntime'),'validateLandscapeSpecies'|'validLandscapePolygon'|'validateLandscapeObjects'>;

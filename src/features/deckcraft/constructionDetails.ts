@@ -3,7 +3,7 @@ import type {DeckLevel,Member,V3} from './deckTakeoff';
 import {inSolidInlay,onInlaySupport} from './inlayFraming';
 import {distanceToSegment} from './lib/wrapGeometry';
 import {angledBeamZAt} from './angledFraming';
-import {offsetPolygons,polygonCut} from './lib/polygonCuts';
+import {insidePolygon as pointInPolygon,offsetPolygons,polygonCut} from './lib/polygonCuts';
 
 const len=(m:Member)=>Math.hypot(m.b.x-m.a.x,m.b.y-m.a.y,m.b.z-m.a.z);
 /** A stock joint may only occur over a physical bearing, never at an arbitrary cut length. */
@@ -203,7 +203,7 @@ function lineSpanInside(polys:PlanPoint[][],p0:PlanPoint,dir:PlanPoint,len:numbe
   }
   return best;
 }
-const pointInPolygon=(p:PlanPoint,poly:PlanPoint[])=>{let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)inside=!inside;}return inside;};
+
 
 export function memberLength(m:Member){return len(m);}
 

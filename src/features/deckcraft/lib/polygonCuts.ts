@@ -4,6 +4,8 @@ import type {PlanPoint,BoardRun} from './deckGeometry';
 const SCALE=10000000;
 const path=(p:PlanPoint[])=>p.map(v=>({X:Math.round(v.x*SCALE),Y:Math.round(v.y*SCALE)}));
 const points=(p:{X:number;Y:number}[])=>p.map(v=>({x:v.X/SCALE,y:v.Y/SCALE}));
+/** Even-odd test: is the point inside the polygon? */
+export function insidePolygon(p:PlanPoint,poly:PlanPoint[]){let odd=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;}
 export const signedArea=(p:PlanPoint[])=>p.reduce((n,v,i)=>{const q=p[(i+1)%p.length];return n+v.x*q.y-q.x*v.y;},0)/2;
 export function offsetPolygons(polys:PlanPoint[][],inset:number):PlanPoint[][]{
   if(!inset)return polys.map(p=>p.map(v=>({...v})));

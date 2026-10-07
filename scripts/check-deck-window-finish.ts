@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+// Measured/sloped-ground foundations are a lazy runtime in the app (ensureDesignExtensions); register it before calculating.
+import '../src/features/deckcraft/foundationDatumsRuntime';
 import * as THREE from 'three';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';

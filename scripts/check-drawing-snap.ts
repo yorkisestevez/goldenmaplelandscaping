@@ -10,3 +10,14 @@ for(const zoom of [.5,1,2,4]){
  const corner={x:200,y:200};assert.deepEqual(drawingSnap({x:200+10/zoom,y:200},points,[corner],true,22/zoom).point,corner);
 }
 console.log('Drawing snap: 24 assertions passed across four zoom scales.');
+
+// Patios and walls snap to the deck's corners (each level at its offset) and to the house corners.
+const {siteSnapPoints}=await import('../src/features/deckcraft/designer/drawingSnap');
+{
+ const levels=[{footprint:{outline:[{x:0,y:0},{x:144,y:0},{x:144,y:120}]},offset:{x:0,z:0}},{footprint:{outline:[{x:0,y:0},{x:48,y:0}]},offset:{x:144,z:24}}];
+ const targets=siteSnapPoints(levels,[[{x:-50,y:-200},{x:300,y:-200}]]);
+ assert.deepEqual(targets,[{x:0,y:0},{x:144,y:0},{x:144,y:120},{x:144,y:24},{x:192,y:24},{x:-50,y:-200},{x:300,y:-200}]);
+ assert.deepEqual(drawingSnap({x:150,y:126},[],targets,true,22).point,{x:144,y:120});
+ assert.deepEqual(siteSnapPoints([]),[]);
+}
+console.log('Site snap targets: deck corners at level offsets and house corners.');

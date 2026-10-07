@@ -89,3 +89,18 @@ test('@phone touch drags diagonally, cancellation restores the outline, and the 
   const free=page.getByRole('switch',{name:/^Free movement/}),label=free.locator('..');await expect(free).toBeChecked();const labelBox=(await label.boundingBox())!;await label.click({position:{x:labelBox.width-8,y:labelBox.height/2}});await expect(free).not.toBeChecked();await label.click({position:{x:labelBox.width-8,y:labelBox.height/2}});await expect(free).toBeChecked();expect(await points(page)).toEqual(after);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.locator('#deck-live-preview').screenshot({path:info.outputPath('phone-free-boundary.png')});await cdp.detach();
 });
+
+test('successive right-edge pulls grow from the new outline and each undo restores one pull',async({page})=>{
+  await page.setViewportSize({width:1440,height:1000});await open(page);
+  const before=await points(page),left=await centre(handle(page,'Main deck point 1'));
+  await drag(page,handle(page,'Main deck edge 2'),24,0);await page.mouse.up();
+  await expect.poll(()=>points(page)).not.toEqual(before);const first=await points(page),delta1=await deliveredMovement(page,24,0);
+  expectDelta(before,first,[1,2],delta1.dx,delta1.dy);await aligned(page);
+  await expect(handle(page,'Apply preview')).toHaveCount(0);
+  const stillLeft=await centre(handle(page,'Main deck point 1'));expect(stillLeft.x).toBeCloseTo(left.x,0);expect(stillLeft.y).toBeCloseTo(left.y,0);
+  await drag(page,handle(page,'Main deck edge 2'),24,0);await page.mouse.up();
+  await expect.poll(()=>points(page)).not.toEqual(first);const second=await points(page),delta2=await deliveredMovement(page,24,0);
+  expectDelta(first,second,[1,2],delta2.dx,delta2.dy);await aligned(page);
+  await tools(page).getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(()=>points(page)).toEqual(first);
+  await tools(page).getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(()=>points(page)).toEqual(before);
+});

@@ -25,7 +25,7 @@ import {CODE_REFERENCES,validateCodeReferences} from '../src/features/deckcraft/
 import {paperLayout} from '../src/features/deckcraft/drawings/paperLayout';
 import {buildPermitDxf} from '../src/features/deckcraft/drawings/renderDxf';
 import {buildPermitPdf} from '../src/features/deckcraft/drawings/renderPdf';
-import {legacyScenarios} from './deck-legacy-scenarios';
+import {legacyBaseDeck,legacyScenarios} from './deck-legacy-scenarios';
 
 // The permit drawing set (drawings/): every priced footing, post and member is on its sheet and layer, each sheet fits a
 // standard scale, the title block carries business.ts facts, no text claims a review outcome, the DXF reads back
@@ -36,6 +36,10 @@ import {legacyScenarios} from './deck-legacy-scenarios';
 // golden after a reviewed drawing change.
 let checks=0;const ok=(cond:unknown,msg:string)=>{assert(cond,msg);checks++;};
 const GOLDEN=new URL('./deck-permit-set-golden.json',import.meta.url),update=process.argv.includes('--update');
+// Owner 2026-10-06: a design saved before the 2026-10 build rules keeps its drawings exactly. Every fixture is also drawn
+// on the frozen 9b2ee11 default (legacyBaseDeck: no frame, legacy rules) and must match 9b2ee11's own golden, kept
+// frozen here; --update never rewrites it.
+const LEGACY_GOLDEN=new URL('./deck-permit-set-legacy-golden.json',import.meta.url),SAVED='saved before 2026-10: ';
 const BANNED=/\b(code[- ]compliant|permit[- ]ready|engineered|stamped|approved|certified|guaranteed)\b/i;
 
 const legacy=legacyScenarios(),pick=(name:string)=>{const p=legacy[name];assert(p,`legacy scenario ${name}`);return p;};
@@ -114,8 +118,8 @@ assert.throws(()=>validateCodeReferences([{...CODE_REFERENCES[0],status:'verifie
 const golden:Record<string,Digest>=existsSync(GOLDEN)?JSON.parse(readFileSync(GOLDEN,'utf8')):{},current:Record<string,Digest>={};
 const digest=(v:unknown)=>createHash('sha256').update(stable(v)).digest('hex').slice(0,16);
 let slowest=0,oracleSamples=0,oracleSkipped=0;
-for(const [name,patch] of Object.entries(fixtures)){
-  const data:DeckData={...structuredClone(DEFAULT_DECK),...patch},e=calculateEstimate(data),model=e.model;
+for(const [name,patch,saved] of [...Object.entries(fixtures).map(([n,p])=>[n,p,false] as const),...Object.entries(fixtures).map(([n,p])=>[SAVED+n,p,true] as const)]){
+  const data:DeckData={...(saved?legacyBaseDeck():structuredClone(DEFAULT_DECK)),...patch},e=calculateEstimate(data),model=e.model;
   const t0=performance.now();
   const set:DrawingSet=buildPermitSet({data,model,reviewItems:e.flags,materialName:'Test decking',railingName:'Test railing',date:'September 28, 2026',priceBook:'2026-09-28'});
   slowest=Math.max(slowest,performance.now()-t0);
@@ -304,9 +308,13 @@ for(const [name,patch] of Object.entries(fixtures)){
 }
 ok(oracleSkipped<oracleSamples*.02,`Brute-force samples on a visibility boundary stay rare (${oracleSkipped} of ${oracleSamples+oracleSkipped})`);
 
-if(update){writeFileSync(GOLDEN,JSON.stringify(current,null,1)+'\n');console.log('Permit set golden written.');}
+const legacyGolden:Record<string,Digest>=JSON.parse(readFileSync(LEGACY_GOLDEN,'utf8'));
+ok(Object.keys(fixtures).every(n=>legacyGolden[n]),'The frozen saved-design golden covers every fixture');
+for(const [name,sheets] of Object.entries(current))if(name.startsWith(SAVED))for(const [id,d] of Object.entries(sheets))ok(legacyGolden[name.slice(SAVED.length)]?.[id]===d,`${name} ${id}: a saved design draws exactly as it did before the 2026-10 rules`);
+const designs=Object.fromEntries(Object.entries(current).filter(([name])=>!name.startsWith(SAVED)));
+if(update){writeFileSync(GOLDEN,JSON.stringify(designs,null,1)+'\n');console.log('Permit set golden written.');}
 else{
   ok(existsSync(GOLDEN),'deck-permit-set-golden.json exists (run with --update after a reviewed drawing change)');
-  for(const [name,sheets] of Object.entries(current))for(const [id,d] of Object.entries(sheets))ok(golden[name]?.[id]===d,`${name} ${id}: the drawing matches its golden (run --update after reviewing a drawing change)`);
+  for(const [name,sheets] of Object.entries(designs))for(const [id,d] of Object.entries(sheets))ok(golden[name]?.[id]===d,`${name} ${id}: the drawing matches its golden (run --update after reviewing a drawing change)`);
 }
 console.log(`DECK PERMIT SET OK: ${checks} checks. ${Object.keys(fixtures).length} designs drawn as G-0, A-0, A-1 and S-1 to S-6 with every priced footing, post and member on its layer and the site plan's setbacks measured again; elevations' hidden lines agree with ${oracleSamples} brute-force samples; DXF R12 read back; nine-page 11 × 17 PDF. Slowest set ${slowest.toFixed(0)} ms.`);

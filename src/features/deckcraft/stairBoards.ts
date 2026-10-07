@@ -3,6 +3,8 @@ import type {Box,DeckTakeoff} from './deckTakeoff';
 import {clipToConvex,type PlanPoint} from './lib/deckGeometry';
 
 import {polygonCut,polygonBoard,splitBoard} from './lib/polygonCuts';
+import {TERRAIN_VENEER_MATERIALS} from './stairVeneerLayout';
+import {usesCurrentBuildRules} from './buildRules';
 export type StairBoard=Box&{role?:'border'|'field'};
 
 /** Actual board cuts covering tread assemblies. Winder strips run world Z,
@@ -14,8 +16,10 @@ export function getStairBoards(data:DeckData,model:DeckTakeoff):StairBoard[]{
     const poly:PlanPoint[]=tread.polygon||[[-1,-1],[1,-1],[1,1],[-1,1]].map(([u,v])=>({x:tread.x+c*u*tread.w/2+s*v*tread.d/2,y:tread.z-s*u*tread.w/2+c*v*tread.d/2}));
     const local=poly.map(p=>({x:c*p.x-s*p.y,y:s*p.x+c*p.y}));
     const minU=Math.min(...local.map(p=>p.x)),maxU=Math.max(...local.map(p=>p.x)),minV=Math.min(...local.map(p=>p.y)),maxV=Math.max(...local.map(p=>p.y));
-    if(data.pictureFrameRows||data.pattern==='Picture Frame'){
+    if((data.pictureFrameRows||data.pattern==='Picture Frame')&&usesCurrentBuildRules(data)&&!TERRAIN_VENEER_MATERIALS.includes(data.deckingMaterial)){
       // A stair gets one front nosing and two mitred end boards; the riser closes its rear.
+      // Terrain veneer treads stay two full boards over their p8 support blocks (stairVeneerLayout).
+      // Saves from before the 2026-10 build rules keep 9b2ee11's two full planks per tread, so their drawing and cut list are unchanged.
       const w=Math.min(data.boardWidth,(maxU-minU)/3,(maxV-minV)/2),g=model.stairSupport.boardGapIn;
       const left=[{x:minU,y:minV},{x:minU+w,y:minV},{x:minU+w,y:maxV-w-g/2},{x:minU,y:maxV-g/2}];
       const right=left.map(p=>({x:minU+maxU-p.x,y:p.y})).reverse();

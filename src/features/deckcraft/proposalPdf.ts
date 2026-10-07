@@ -1,6 +1,6 @@
 import type {jsPDF as JsPDF} from 'jspdf';
 import {dollars,type DeckEstimate} from './designFacts';
-import {isBuilderQuote,priceLedger,quoteLabel,quoteTag,type QuoteKind} from './designer/priceLedgerModel';
+import {isBuilderQuote,lineBasis,priceLedger,quoteLabel,quoteTag,type QuoteKind} from './designer/priceLedgerModel';
 import {PRICE_BOOK,priceBookLabel} from './priceBook';
 import {eyebrowNumber,proposalAddress,proposalContact,proposalCoverTitle,proposalFeatures,proposalFinishes,proposalRunningTitle,proposalSummary,proposalTitle,PROPOSAL_WORDS,SHEET_EYEBROWS,type ProposalShot} from './proposalModel';
 import {PROPOSAL_PDF_NAME} from './sendDesignConstants';
@@ -238,13 +238,15 @@ export function buildProposalPdf(PDF:typeof JsPDF,input:ProposalPdfInput,{compre
   tableHead();
   for(const line of ledger.lines){
     const split=line.title==='Under-deck options'?underDeckCostSplit(estimate):[];
-    font('helvetica',8.6,TEXT);const ls=lines(line.title,CW-170),h=ls.length*11.2+8+split.length*10;
+    const basis=lineBasis(line);font('helvetica',8.6,TEXT);const ls=lines(line.title,CW-170),h=ls.length*11.2+8+split.length*10+(basis?10:0);
     if(y+h>BOTTOM){box(tableTop);continued();againHeading();tableHead();}
     fill(band++%2?SHEET:ROW_A);doc.rect(M,y,CW,h,'F');
     font('helvetica',8.6,TEXT);ls.forEach((l,i)=>doc.text(l,M+10,y+11+i*11.2));
     font('helvetica',7.2,MUTED);split.forEach((g,i)=>doc.text(pdfText(`${g.label}: ${dollars(g.amount)}`),M+10,y+ls.length*11.2+11+i*10));
     if(line.quotes.length&&line.amount<.005)tag(line.quotes,W-M-10,y+11);
     else{font('helvetica',8.6,FOREST,'bold');doc.text(pdfText(line.text),W-M-10,y+11,{align:'right'});}
+    // Drawn after the amount, so the line reads title, amount, then its basis.
+    if(basis){font('helvetica',7.2,MUTED);doc.text(pdfText(basis),W-M-10,y+ls.length*11.2+11+split.length*10,{align:'right'});}
     y+=h;rule(M,y,W-M,LINE,.4);
   }
   box(tableTop);
@@ -323,7 +325,7 @@ export function buildProposalPdf(PDF:typeof JsPDF,input:ProposalPdfInput,{compre
   if(!image(input.plan,M+6,y+6,CW-12,boxH2-12,'contain')){font('helvetica',9,MUTED);doc.text(pdfText('The construction plan could not be drawn on this device. Reopen the design to see it.'),M+12,y+20);}
   y+=boxH2;
   sheet('Appendix · material list');sub('Material and hardware list');
-  text('Quantities follow the modelled parts. Items without a confirmed rate are listed for a quote and are not in the estimate.',7.5,MUTED,{gap:6});
+  text('Quantities follow the modelled parts. Priced lines are planning allowances from the price book unless marked confirmed; your written quote confirms them. Items without a rate are listed for a quote and are not in the estimate.',7.5,MUTED,{gap:6});
   const materialBlocks=estimate.sections.filter(s=>!/^HST/.test(s.title)).flatMap(s=>{
     const items=s.items.filter(i=>Number(i.qty)>0);if(!items.length)return [];
     font('times',10.5,FOREST);const titleN=lines(s.title,(CW-24)/2).length;

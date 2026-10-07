@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+// Decorative inlay geometry is lazy (lib/inlayGeometryRuntime.ts); the showcase designs with inlays need it loaded.
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import {readFileSync} from 'node:fs';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
-import {calculateEstimate} from '../src/features/deckcraft/calculations';
+import {calculateEstimate,DECKING_DELIVERY_QUOTE} from '../src/features/deckcraft/calculations';
+import {hasPictureFrame} from '../src/features/deckcraft/borderLighting';
 import {guardRuns} from '../src/features/deckcraft/deckTakeoff';
 import {deckExportMeshes} from '../src/features/deckcraft/designExports';
 import {claddingPlan,drawnRiserBoards} from '../src/features/deckcraft/stairCladding';
@@ -11,14 +14,16 @@ import {exposedRim} from '../src/features/deckcraft/houseContact';
 import {skirtingPlan,newSkirting} from '../src/features/deckcraft/skirting';
 import {polygonCut,signedArea} from '../src/features/deckcraft/lib/polygonCuts';
 import type {DeckData} from '../src/features/deckcraft/types';
-import {junctionCases,junctionPrice} from './deck-level-junction-cases';
+import {junctionCases,junctionPrice,newDefaultJunctionCases} from './deck-level-junction-cases';
 
 /**
  * Multi-level decks look built (owner decision 2026-09-25): levels meet, the step between them stands on the lower
  * level, and every face between them, every stair side and every outside corner is closed.
  * - The 41d3eba baseline still guards against adding redundant railing. The authorized September 26 pricing review
  *   changes sourced supply and width-adjusted stair allowances; independent pricing checks verify those amounts.
- *   Existing pending quote scopes remain, with explicit cladding installation and paver order adjustments.
+ *   Existing pending quote scopes remain, with explicit cladding installation and paver order adjustments. Two quote
+ *   lines are new since (pricing honesty, 2026-10-04): decking delivery on every design, and the stair picture-frame
+ *   detail on a framed one. Both must stay unpriced quotes, never a price.
  *   The owner-approved September 28 footing correction removes crowded footings (a winder's inner posts, posts under one
  *   short beam), so footings and their post anchors may only go down from the baseline, never up.
  * - Geometry: levels touch (or keep the old spacing with a note), the step and 36 in fit on the lower level, the faces
@@ -29,7 +34,7 @@ let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);che
 const near=(a:number,b:number,eps=.01)=>Math.abs(a-b)<=eps;
 const read=(path:string)=>readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
 const baseline=JSON.parse(read('scripts/deck-level-junction-baseline.json')).cases as Record<string,ReturnType<typeof junctionPrice>>;
-const NEW_QUOTE='Stair and level cladding (builder quote)',REVIEW_PRICE_SECTIONS=new Set(['Railing System','Stairs','Stair and level cladding','Labour (Construction & Build)','HST (13%)','Decking','Accent-colour boards','Deck-part finishes','in-lite® Lighting System','Yard · Paving materials, wall allowances and shared delivery']),FEWER_FOOTINGS=new Set(['Foundation & Footings','Hardware & Fasteners']),
+const NEW_QUOTE='Stair and level cladding (builder quote)',STAIR_FRAME_QUOTE='Stair picture-frame detail (builder / supplier quote)',REVIEW_PRICE_SECTIONS=new Set(['Railing System','Stairs','Stair and level cladding','Labour (Construction & Build)','HST (13%)','Decking','Accent-colour boards','Deck-part finishes','in-lite® Lighting System','Yard · Paving materials, wall allowances and shared delivery']),FEWER_FOOTINGS=new Set(['Foundation & Footings','Hardware & Fasteners']),
   // Owner-approved 2026-09-28: the clean-room framing engine (structure/) sizes beams, posts and footings from public
   // Ontario sources, so its sections move either way against the 41d3eba baseline. The legacy golden pins every price.
   ENGINE_SECTIONS=(title:string)=>/^Structural Framing \(/.test(title)||FEWER_FOOTINGS.has(title),
@@ -45,8 +50,9 @@ let same=0,guard=0,fallbacks=0;
 for(const [name,c] of Object.entries(cases)){
   const was=baseline[name],now=junctionPrice(c.design);ok(was,`${name}: in the baseline`);
   const moved=Object.keys({...was.sections,...now.sections}).filter(t=>!near(was.sections[t]??0,now.sections[t]??0));
-  ok(now.quoteRequired.every(q=>was.quoteRequired.some(old=>quoteScope(old)===quoteScope(q))||q===NEW_QUOTE||ENGINE_QUOTES.has(q)||q==='Paver packaging, colour and freight adjustments (supplier quote)'||addedYardScope(c.design,q))&&was.quoteRequired.every(q=>now.quoteRequired.some(next=>quoteScope(next)===quoteScope(q))),`${name}: existing quote scope is preserved, with explicit cladding, wall execution, hauling and paver order confirmation`);
+  ok(now.quoteRequired.every(q=>was.quoteRequired.some(old=>quoteScope(old)===quoteScope(q))||q===NEW_QUOTE||ENGINE_QUOTES.has(q)||q==='Paver packaging, colour and freight adjustments (supplier quote)'||q===DECKING_DELIVERY_QUOTE||q===STAIR_FRAME_QUOTE&&hasPictureFrame(c.design)||addedYardScope(c.design,q))&&was.quoteRequired.every(q=>now.quoteRequired.some(next=>quoteScope(next)===quoteScope(q))),`${name}: existing quote scope is preserved, with explicit cladding, wall execution, hauling and paver order confirmation`);
   const detailed=calculateEstimate(c.design,DECK_SETTINGS);
+  for(const label of [DECKING_DELIVERY_QUOTE,STAIR_FRAME_QUOTE])if(now.quoteRequired.includes(label))ok(detailed.sections.some(s=>s.items.some(i=>i.name===label&&i.cost===null))&&!detailed.sections.some(s=>s.items.some(i=>i.name===label&&i.cost!==null)),`${name}: ${label} is a quote, never priced`);
   for(const row of detailed.yardTakeoff.sections.filter(row=>addedYardScope(c.design,row.label)))ok(row.amountCents===null&&detailed.sections.some(section=>section.quoteRequired&&section.total===0&&section.items.some(item=>item.name===row.label&&item.cost===null)),`${name}: added wall/hauling scope stays unpriced and separately identified`);
   const cladding=detailed.sections.find(s=>s.title==='Stair and level cladding');
   if(cladding)ok(cladding.items.some(i=>i.cost===null),`${name}: cladding installation is still a quote even when exact supply is known`);
@@ -58,8 +64,10 @@ for(const [name,c] of Object.entries(cases)){
   }
 }
 
-// 2. Geometry of every case.
-for(const [name,c] of Object.entries(cases)){
+// 2. Geometry of every case, and of multi-level designs on the live default (one-row flush frame, 2026-10 rules).
+const fresh=newDefaultJunctionCases();
+ok(Object.keys(fresh).length>=2&&Object.values(fresh).every(c=>hasPictureFrame(c.design)&&c.design.buildRules==='2026-10'),'The geometry also covers the new default: framed, under the 2026-10 rules');
+for(const [name,c] of Object.entries({...cases,...fresh})){
   const d=c.design,e=calculateEstimate(d,DECK_SETTINGS),m=e.model,fell=m.issues.some(i=>i.includes('does not fit on the lower level'));
   if(fell)fallbacks++;
   const plan=claddingPlan(d,m),junctions=levelJunctions(m.levels),fo=finishedFasciaOffset(d);
@@ -142,4 +150,4 @@ for(const [name,c] of Object.entries(cases)){
   ok(/"check:deck":[^\n]*check-deck-level-junction\.ts/.test(read('package.json')),'This check runs in check:deck');
 }
 
-console.log(`DECK LEVEL JUNCTION OK — ${Object.keys(cases).length} designs against the 41d3eba guard baseline (${same} preserve guard quantities, ${guard} preserve guard removal, ${fallbacks} keep the old spacing), faces, stair sides, top risers, corners — ${checks} checks`);
+console.log(`DECK LEVEL JUNCTION OK — ${Object.keys(cases).length} designs against the 41d3eba guard baseline (${same} preserve guard quantities, ${guard} preserve guard removal, ${fallbacks} keep the old spacing) and ${Object.keys(fresh).length} on the new default, faces, stair sides, top risers, corners — ${checks} checks`);

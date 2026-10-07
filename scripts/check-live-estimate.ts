@@ -28,3 +28,25 @@ assert(Math.abs(confirmedCost.totals.confirmed-(100*(1+(design.materialMarkup??3
 assert(Math.abs(confirmedCost.totals.confirmed+confirmedCost.totals.allowance-confirmed.subtotal)<.01);
 const changedQuote=calculate({...design,width:24,length:20,quoteResolutions:[record]});assert.equal(estimateConfidence(changedQuote).totals.confirmed,0);assert.equal(changedQuote.quoteResolutionReview?.inactive,1);
 console.log('Confirmed scope totals and stale quote invalidation passed.');
+
+// Honest pricing in every output: decking delivery is listed for a supplier quote once and never priced; ledger lines
+// say allowance until a quote is recorded; the CSV keeps allowance, confirmed and quote-required apart; the default
+// one-row picture frame reaches the proposal's finishes.
+const {DECKING_DELIVERY_QUOTE}=await import('../src/features/deckcraft/calculations');
+const {priceLedger,lineBasis}=await import('../src/features/deckcraft/designer/priceLedgerModel');
+const {exportDeckCsv}=await import('../src/features/deckcraft/cadExports');
+const {proposalFinishes}=await import('../src/features/deckcraft/proposalModel');
+assert.equal(a.quoteRequired.filter(q=>q===DECKING_DELIVERY_QUOTE).length,1);
+const delivery=a.sections.flatMap(s=>s.items).filter(i=>i.name===DECKING_DELIVERY_QUOTE);
+assert.equal(delivery.length,1);assert.equal(delivery[0].cost,null);
+const ledgerA=priceLedger(a),deckLine=ledgerA.lines.find(l=>l.title==='Decking')!;
+assert.equal(lineBasis(deckLine),'Planning allowance');assert(deckLine.text.endsWith('+ quote'));
+assert(ledgerA.lines.every(l=>l.amount<.005?lineBasis(l)===null:lineBasis(l)!==null));
+const confirmedLedger=priceLedger(confirmed);assert(confirmedLedger.lines.some(l=>lineBasis(l)==='Confirmed'||l.items.some(i=>i.status==='confirmed')));
+const materials=exportDeckCsv(a,'materials');
+assert(materials.includes('"allowance"')&&materials.includes('"quote required"')&&!materials.includes('"priced"'));
+assert(exportDeckCsv(confirmed,'materials').includes('"confirmed"'));
+assert.equal(DEFAULT_DECK.pattern,'Straight');assert(DEFAULT_DECK.pictureFrameRows>0);
+assert(proposalFinishes(DEFAULT_DECK,a.model).some(t=>t.uses.includes('Border')),'The default one-row picture frame is listed in the proposal finishes');
+assert(!proposalFinishes({...structuredClone(DEFAULT_DECK),pictureFrameRows:0},a.model).some(t=>t.uses.includes('Border')));
+console.log('Honest pricing: decking delivery quoted once, allowance/confirmed line basis, three CSV statuses and the default border passed.');

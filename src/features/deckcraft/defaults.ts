@@ -38,6 +38,7 @@ export const DEFAULT_DECK: DeckData = {
     fasteningSystem: 'Face',
     pictureFrameRows: 1,
     pictureFrameOverhangIn: 0,
+    buildRules: '2026-10',
     hasInlay: false,
     inlayLf: 0,
     railingType: 'Aluminum',

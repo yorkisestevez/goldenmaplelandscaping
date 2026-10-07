@@ -2,6 +2,12 @@ import {hardscapeSelection} from './hardscapeCatalogue';
 import type {YardFeatureModel} from './yardModel';
 import type {PublicYardSection} from './yardTakeoff';
 
+/** Seat walls, fire features, ground-fit banks and stone edge courses come only from the advanced yard runtime, which
+ * registers their quote rows (yardTakeoffRuntime.ts) as it loads. */
+let takeoffRuntime:typeof import('./yardTakeoffRuntime')|undefined;
+export function registerYardTakeoffRuntime(value:typeof import('./yardTakeoffRuntime')){takeoffRuntime=value;}
+export function yardTakeoffRuntime(){if(!takeoffRuntime)throw Error('Geometry is loading. Retry shortly.');return takeoffRuntime;}
+
 /** Quantities and prerequisites stay synchronous; extended contractor notes load with quote review. */
 export function wallQuoteScopes(f:YardFeatureModel,hasAssemblyAllowance:boolean):PublicYardSection[]{
  const c=f.config,q=f.quantities,selected=hardscapeSelection(c),rows:PublicYardSection[]=[];
@@ -9,6 +15,8 @@ export function wallQuoteScopes(f:YardFeatureModel,hasAssemblyAllowance:boolean)
  const add=(id:string,label:string,quantity:number,unit:string,note='Measured planning scope; confirm assembly, labour and order details.')=>{if(quantity>0)rows.push({id:`${id}-${c.id}`,label:`${c.name}: ${label}`,amountCents:null,featureIds:[c.id],quantity,unit,note:basis+note});};
  const status=(id:string,label:string,note:string)=>rows.push({id:`${id}-${c.id}`,label:`${c.name}: ${label}`,amountCents:null,featureIds:[c.id],note});
  status('wall-design','selected wall system and site design confirmation','Surveyed grades, foundation, reinforcement, soil/slope/surcharge stability and discharge require system/site design; costs cannot approve it.');
+ // Seat wall (only the advanced runtime sets wallFreestanding, and freestandingReviewPending only with it).
+ if(q.wallFreestanding)yardTakeoffRuntime().seatWall(q,hasAssemblyAllowance,add,status);
  if(q.wallAssemblyPending){
   status('wall-assembly','manufacturer backing and top-course assembly confirmation','Backing/base/middle/top assembly pending; model envelopes are not stock orders.');
   add('wall-assembly-review','Preliminary manufacturer assembly survey and quote',1,'scope');
@@ -37,6 +45,6 @@ export function wallQuoteScopes(f:YardFeatureModel,hasAssemblyAllowance:boolean)
   ['wall-engineering','Wall survey/design services',1,'scope']
  ];
  for(const row of scopes)add(...row);
- if(!(q.drainOutletPipeLf>0))status('wall-outlet-route','drain outlet route and length confirmation','Enter surveyed outlet length; confirm gradient and lawful discharge. Main collection length is separate.');
+ if(!(q.drainOutletPipeLf>0)&&!q.wallFreestanding)status('wall-outlet-route','drain outlet route and length confirmation','Enter surveyed outlet length; confirm gradient and lawful discharge. Main collection length is separate.');
  return rows;
 }

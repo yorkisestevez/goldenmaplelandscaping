@@ -6,7 +6,7 @@ export type YardElevationField='heightIn'|'baseElevationIn';
 export function yardGradeIn(data:DeckData,f:YardFeature){return sampleSiteHeight(data,f.xFt*12,f.zFt*12)??NaN;}
 export function yardSurfaceIn(data:DeckData,f:YardFeature){return f.finishedElevationIn??yardGradeIn(data,f)+(f.kind==='retaining-wall'?(f.baseElevationIn??0):0)+f.heightIn;}
 export function yardElevationEdit(f:YardFeature,field:YardElevationField,value:number):YardFeature{
- if(f.kind==='water-feature')throw Error('Choose a patio or wall to change its elevation.');
+ if(f.kind==='water-feature'||f.kind==='fire-feature')throw Error('Choose a patio or wall to change its elevation.');
  if(field!=='heightIn'&&field!=='baseElevationIn'||field==='baseElevationIn'&&f.kind!=='retaining-wall')throw Error('Only a wall has a separate base elevation.');
  const min=field==='baseElevationIn'?-120:f.kind==='patio'?-24:6,max=field==='baseElevationIn'?120:f.kind==='patio'?48:72;
  if(!Number.isFinite(value)||value<min||value>max)throw Error(`Enter ${min} to ${max} inches for ${field==='baseElevationIn'?'wall base elevation':f.kind==='patio'?'patio surface':'wall height'}.`);

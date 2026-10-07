@@ -1,7 +1,7 @@
 import type {PoolFeatureModel} from '../../poolModel';
-import {groundDisplayCuts} from './finishedSurfaceGeometry';
-import {useMemo,useEffect} from 'react';
-import {useThree} from '@react-three/fiber';
+import {groundDisplayCuts,patioDisplayFootprints} from './finishedSurfaceGeometry';
+import {useMemo,useEffect,useState,useRef,lazy,Suspense} from 'react';
+import {useThree,useFrame} from '@react-three/fiber';
 import * as THREE from 'three';
 import colorUrl from './assets/lawn-color.webp';
 import normalUrl from './assets/lawn-normal.webp';
@@ -15,8 +15,10 @@ import {lawnTufts} from './lawnTufts';
 import GrassBlades from './GrassBlades';
 import {useRenderQuality} from './SceneRenderQuality';
 import type {LandscapeObject} from '../../landscapeTypes';
-import {landscapeFootprint} from '../../landscapeModel';
+import {landscapeBedAreas} from '../../landscapeModel';
 
+// A patio's edge faces (dig, standing base, stone edge course) load only for a yard with a patio.
+const PatioEdges3D=lazy(()=>import('./PatioEdges3D'));
 /** The ground's shade waits this long after the last change to what casts before it redraws. */
 const OCCLUSION_SETTLE_MS=250;
 
@@ -50,7 +52,9 @@ export default function Turf({width,depth,radius:_radius,yard,finished=true,land
  const bounds=useMemo<GroundBounds>(()=>{const tw=yard.terrain.widthFt*12,td=yard.terrain.depthFt*12;const b=yard.siteSurface?.bounds,points=pools.flatMap(p=>p.excavationFootprints.flat()),xs=points.map(p=>p.x),zs=points.map(p=>p.y),minX=Math.min(width/2-tw/2,b?.minX??Infinity,...xs.map(x=>x-24)),minZ=Math.min(depth/2-td/2,b?.minZ??Infinity,...zs.map(z=>z-24)),maxX=Math.max(width/2+tw/2,b?.maxX??-Infinity,...xs.map(x=>x+24)),maxZ=Math.max(depth/2+td/2,b?.maxZ??-Infinity,...zs.map(z=>z+24));return {minX,minZ,width:maxX-minX,depth:maxZ-minZ};},[yard,width,depth,pools]);
  const geometry=useMemo(()=>groundGeometry(yard,cuts,width,depth,bounds,finished?'proposed':'existing'),[yard,cuts,width,depth,bounds,finished]);
  useEffect(()=>()=>geometry.dispose(),[geometry]);
- const edges=useMemo(()=>groundEdgeGeometry(yard,finished?'proposed':'existing',pools.flatMap(p=>finished?p.permanentExclusionFootprints:p.excavationFootprints),!finished),[yard,finished,pools]);
+ // The survey perimeter is bridged in both views: a measured patch higher or lower than the illustrative
+ // lawn otherwise leaves an open seam (sky shows through). The faces are display only, as in inspection.
+ const edges=useMemo(()=>groundEdgeGeometry(yard,finished?'proposed':'existing',finished?[...pools.flatMap(p=>p.permanentExclusionFootprints),...patioDisplayFootprints(yard)]:pools.flatMap(p=>p.excavationFootprints),true,finished?patioDisplayFootprints(yard):[]),[yard,finished,pools]);
  useEffect(()=>()=>edges.dispose(),[edges]);
  // The sky's shade under what covers the ground, redrawn when that changes.
  const occlusion=useMemo(()=>new GroundOcclusion(),[]);
@@ -62,11 +66,16 @@ export default function Turf({width,depth,radius:_radius,yard,finished=true,land
    return ()=>{stop();clearTimeout(timer);};
  },[occlusion,gl,scene,bounds,material,invalidate]);
  useEffect(()=>()=>{publishGroundOcclusion(null);material.aoMap=null;occlusion.dispose();},[occlusion,material]);
- const wallBanks=finished&&yard.features.some(f=>!f.excluded&&f.config.kind==='retaining-wall'),budget=Math.floor(quality.grassBudget*(wallBanks?.8:1)),bladeMasks=useMemo(()=>yardClip([...cuts,...yard.features.filter(f=>!f.excluded).flatMap(f=>f.footprints),...landscapeObjects.filter(o=>o.enabled&&o.kind==='bed').map(o=>landscapeFootprint(o).map(p=>({x:p.x,y:p.z})))]),[cuts,yard,landscapeObjects]);
- const tufts=useMemo(()=>lawnTufts(yard,width,depth,bladeMasks,budget),[yard,width,depth,bladeMasks,budget]);
+ const wallBanks=finished&&yard.features.some(f=>!f.excluded&&f.config.kind==='retaining-wall'),budget=Math.floor(quality.grassBudget*(wallBanks?.8:1)),bladeMasks=useMemo(()=>yardClip([...cuts,...yard.features.filter(f=>!f.excluded).flatMap(f=>f.footprints),...[...landscapeBedAreas(landscapeObjects).values()].flat().map(ring=>ring.map(p=>({x:p.x,y:p.z})))]),[cuts,yard,landscapeObjects]);
+ const camera=useThree(s=>s.camera),[focus,setFocus]=useState<{x:number;z:number}|undefined>(),focusKey=useRef(''),cameraScratch=useMemo(()=>({p:new THREE.Vector3(),d:new THREE.Vector3()}),[]);
+ useFrame(()=>{camera.getWorldPosition(cameraScratch.p);camera.getWorldDirection(cameraScratch.d);const {p,d}=cameraScratch,reach=Math.min(12,Math.max(0,p.y/Math.max(.25,-d.y))),x=Math.round((p.x+d.x*reach)/4)*48,z=Math.round((p.z+d.z*reach)/4)*48,close=Math.abs(p.y)<24,key=close?x+':'+z:'far';if(key!==focusKey.current){focusKey.current=key;setFocus(close?{x,z}:undefined);}});
+ const tufts=useMemo(()=>lawnTufts(yard,width,depth,bladeMasks,budget,focus),[yard,width,depth,bladeMasks,budget,focus]);
  return <group name="textured-lawn">
   <mesh name="lawn-to-the-horizon" receiveShadow geometry={geometry}><primitive object={material} attach="material"/></mesh>
   {edges.getAttribute('position').count>0&&<mesh name={finished?"defined-grade-earth-faces":"survey-construction-cut-faces"} geometry={edges} material={soil} dispose={null} userData={{constructionInspection:!finished,measuredTransition:finished}} receiveShadow></mesh>}
+  {/* Where a patio meets ground higher or lower than itself: the dig still to grade, its base left standing, or the
+      stone edge course holding its raised side (PatioEdges3D.tsx; it draws nothing for a yard without plain paving). */}
+  {finished&&yard.features.some(f=>f.config.kind==='patio')&&<Suspense fallback={null}><PatioEdges3D yard={yard} pools={pools} soil={soil}/></Suspense>}
   <GrassBlades tufts={tufts} budget={budget}/>
  </group>;
 }

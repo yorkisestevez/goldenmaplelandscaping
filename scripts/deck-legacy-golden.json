@@ -7,7 +7,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "f0bbebcfe9adeef1fe03",
-  "estimate": "ad0371df4a24bd9b895f",
+  "estimate": "be90c1422f4d02079bd5",
   "total": 28025.35
  },
  "std/Rectangle/Straight/Straight/freestanding-2lvl": {
@@ -18,7 +18,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "646fff1ef7dc74a6a02b",
-  "estimate": "8fc7b094c010fff72bb9",
+  "estimate": "db91f4630caa51d6cfbd",
   "total": 61777.3
  },
  "std/Rectangle/Straight/Landing/attached": {
@@ -29,7 +29,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "11a6dbd66e68cd166e74",
-  "estimate": "f7afad93cc33469ad704",
+  "estimate": "5b0f8722c1b51dbdd4b2",
   "total": 34048.79
  },
  "std/Rectangle/Straight/Landing/freestanding-2lvl": {
@@ -40,7 +40,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "646fff1ef7dc74a6a02b",
-  "estimate": "a294035454c0aab906f3",
+  "estimate": "e9f2cc329a3a47eb7be5",
   "total": 62285.29
  },
  "std/Rectangle/Straight/Winder/attached": {
@@ -51,7 +51,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "38e1706ab1d68a7b3f8d",
-  "estimate": "32470ed2b313c920920a",
+  "estimate": "4dc2a075d79ab20dd3a8",
   "total": 34835.28
  },
  "std/Rectangle/Straight/Winder/freestanding-2lvl": {
@@ -62,7 +62,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "646fff1ef7dc74a6a02b",
-  "estimate": "577dc51aee7bcd5f5676",
+  "estimate": "95e500b3dda65ef98b3a",
   "total": 62623.95
  },
  "std/Rectangle/Diagonal/Straight/attached": {
@@ -73,7 +73,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e1cc1ce6dbb1fa4f5f28",
-  "estimate": "f199c217038f448fb754",
+  "estimate": "bf818bd076dfebde3548",
   "total": 31951.39
  },
  "std/Rectangle/Diagonal/Straight/freestanding-2lvl": {
@@ -84,7 +84,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "bff693774165802f7ce9",
-  "estimate": "b4397d5125078131ac36",
+  "estimate": "849d7490e9ea679b3c64",
   "total": 69799.72
  },
  "std/Rectangle/Diagonal/Landing/attached": {
@@ -95,7 +95,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b67606d50898760f2a42",
-  "estimate": "c6050ff89fab4e89663e",
+  "estimate": "24c94491a3bda7da9d7f",
   "total": 38371.05
  },
  "std/Rectangle/Diagonal/Landing/freestanding-2lvl": {
@@ -106,7 +106,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "bff693774165802f7ce9",
-  "estimate": "a27c94f52c686f2e8d38",
+  "estimate": "13857682f2133c053122",
   "total": 70409.31
  },
  "std/Rectangle/Diagonal/Winder/attached": {
@@ -117,7 +117,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "58d31723d18ce22fb536",
-  "estimate": "b765ba70f3d92bd385e5",
+  "estimate": "d01cd75007e5be04dfc2",
   "total": 39387.04
  },
  "std/Rectangle/Diagonal/Winder/freestanding-2lvl": {
@@ -128,7 +128,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "bff693774165802f7ce9",
-  "estimate": "e145a5ce9fcbe8d07653",
+  "estimate": "198693e70cff424ac45e",
   "total": 70815.7
  },
  "std/Rectangle/Picture Frame/Straight/attached": {
@@ -139,7 +139,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "64bdcd991ae8df9599f1",
-  "estimate": "a9ca6ad258e6b28c2114",
+  "estimate": "3c86faad8136d90a4299",
   "total": 32733
  },
  "std/Rectangle/Picture Frame/Straight/freestanding-2lvl": {
@@ -150,7 +150,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b7ec9dd8a42581d6e8b0",
-  "estimate": "c021fe6056de1cdc38d2",
+  "estimate": "684bd84ca8d87695152b",
   "total": 72595.96
  },
  "std/Rectangle/Picture Frame/Landing/attached": {
@@ -161,7 +161,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "8f8b8d005ede22029812",
-  "estimate": "067e81787707d5b01837",
+  "estimate": "39597c7e8a68a6b65271",
   "total": 39945.01
  },
  "std/Rectangle/Picture Frame/Landing/freestanding-2lvl": {
@@ -172,7 +172,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b7ec9dd8a42581d6e8b0",
-  "estimate": "ebdb6686b673136de753",
+  "estimate": "cce1614e50f369f57a5c",
   "total": 73230.95
  },
  "std/Rectangle/Picture Frame/Winder/attached": {
@@ -183,7 +183,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "77a6e413ca234cf70cb3",
-  "estimate": "2f1ca6be3dc38a095a10",
+  "estimate": "20b7c6fd07c45003b6a9",
   "total": 40297.62
  },
  "std/Rectangle/Picture Frame/Winder/freestanding-2lvl": {
@@ -194,7 +194,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b7ec9dd8a42581d6e8b0",
-  "estimate": "25bae35e837e9759175c",
+  "estimate": "e21f333611b197db81a8",
   "total": 73654.28
  },
  "std/Rectangle/Herringbone/Straight/attached": {
@@ -205,7 +205,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "15b3f9e72e2e5480b9f7",
-  "estimate": "4af2f187dec0df947dda",
+  "estimate": "7aa141e1e5e96d6a57d6",
   "total": 35533.33
  },
  "std/Rectangle/Herringbone/Straight/freestanding-2lvl": {
@@ -216,7 +216,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "36341696f72f12657380",
-  "estimate": "65c0fc668793126ceae6",
+  "estimate": "c9fcdc3f2733adb4e3f0",
   "total": 76882.86
  },
  "std/Rectangle/Herringbone/Landing/attached": {
@@ -227,7 +227,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "eb2741e44cacbb0c567e",
-  "estimate": "cac3fcf88753f4783115",
+  "estimate": "9c1aa9f767bd667a7afb",
   "total": 42449.4
  },
  "std/Rectangle/Herringbone/Landing/freestanding-2lvl": {
@@ -238,7 +238,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "36341696f72f12657380",
-  "estimate": "0946a57ce52ed1621502",
+  "estimate": "10a6cffa91174d99a846",
   "total": 77543.25
  },
  "std/Rectangle/Herringbone/Winder/attached": {
@@ -249,7 +249,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "8963d44ff95573e638a6",
-  "estimate": "672e4f6d219a3bc77046",
+  "estimate": "f9391c1ea9371cf007c8",
   "total": 43336.76
  },
  "std/Rectangle/Herringbone/Winder/freestanding-2lvl": {
@@ -260,7 +260,7 @@
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "36341696f72f12657380",
-  "estimate": "9e4b4e67c79efa0e0d48",
+  "estimate": "8a7ab674eedefe0b631d",
   "total": 77983.51
  },
  "std/L-Shape/Straight/Straight/attached": {
@@ -271,7 +271,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "3badd31d5c98781b61f4",
-  "estimate": "7b060a9e16122e302f89",
+  "estimate": "d154b51313e2c7aa1a68",
   "total": 29038.98
  },
  "std/L-Shape/Straight/Straight/freestanding-2lvl": {
@@ -282,7 +282,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4a71d8091859b2ca70e9",
-  "estimate": "318adba2f3ec502e5a01",
+  "estimate": "9ef0e327205313944ff3",
   "total": 65627.13
  },
  "std/L-Shape/Straight/Landing/attached": {
@@ -293,7 +293,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "6c1fc176bd69ea22c848",
-  "estimate": "a0ecbdb010ba6c09e955",
+  "estimate": "ce0d97cf5b0bc0f65247",
   "total": 34900.12
  },
  "std/L-Shape/Straight/Landing/freestanding-2lvl": {
@@ -304,7 +304,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4a71d8091859b2ca70e9",
-  "estimate": "5b66ed317c1cd4542f63",
+  "estimate": "d3cfebe611f4423663ab",
   "total": 66185.92
  },
  "std/L-Shape/Straight/Winder/attached": {
@@ -315,7 +315,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "635a79be7f72ee11c3bc",
-  "estimate": "5420d129b98d5ac8d77e",
+  "estimate": "c31e4fb7551509920e93",
   "total": 36106.86
  },
  "std/L-Shape/Straight/Winder/freestanding-2lvl": {
@@ -326,7 +326,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4a71d8091859b2ca70e9",
-  "estimate": "ab19f1c24637edf69275",
+  "estimate": "9eeb74aecc3cfb0f1217",
   "total": 66558.45
  },
  "std/L-Shape/Diagonal/Straight/attached": {
@@ -337,7 +337,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "fa8b11eeaef65ac68301",
-  "estimate": "5f80a8139afcc787b5ee",
+  "estimate": "551f7c8a602142c45904",
   "total": 32231.47
  },
  "std/L-Shape/Diagonal/Straight/freestanding-2lvl": {
@@ -348,7 +348,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e2fb3f1fb4e5b28873d8",
-  "estimate": "6ccc6eba75906c5ec73f",
+  "estimate": "26cc4200199dd17324b8",
   "total": 73172.32
  },
  "std/L-Shape/Diagonal/Landing/attached": {
@@ -359,7 +359,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e49aa5612373d917322f",
-  "estimate": "3b1d28a1bb0ff7245a21",
+  "estimate": "0bf339799ea1b943326c",
   "total": 38951.06
  },
  "std/L-Shape/Diagonal/Landing/freestanding-2lvl": {
@@ -370,7 +370,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e2fb3f1fb4e5b28873d8",
-  "estimate": "16bbbebc5f3afe48446e",
+  "estimate": "af7cbc0d5e3030b275b2",
   "total": 73842.87
  },
  "std/L-Shape/Diagonal/Winder/attached": {
@@ -381,7 +381,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "83ac24502be3ebd4ca2c",
-  "estimate": "bd7a21405830e74beb19",
+  "estimate": "6774492babc0a5fb6283",
   "total": 40086.49
  },
  "std/L-Shape/Diagonal/Winder/freestanding-2lvl": {
@@ -392,7 +392,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e2fb3f1fb4e5b28873d8",
-  "estimate": "3e06f6c8153c3d85d8ee",
+  "estimate": "d5fd87e77018203f7738",
   "total": 74289.9
  },
  "std/L-Shape/Picture Frame/Straight/attached": {
@@ -403,7 +403,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "442e0474385e081e0e5c",
-  "estimate": "e9798dd3ed6c3ac4bd81",
+  "estimate": "b4080a4debb4e03607a0",
   "total": 33406.76
  },
  "std/L-Shape/Picture Frame/Straight/freestanding-2lvl": {
@@ -414,7 +414,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "3f7b48baff216940f4fa",
-  "estimate": "7033c2e10f161fa8f6fb",
+  "estimate": "8c72578f6e596b555998",
   "total": 76149.32
  },
  "std/L-Shape/Picture Frame/Landing/attached": {
@@ -425,7 +425,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "5f1de2bed0db77598531",
-  "estimate": "e2221f96d96cd2f2b75d",
+  "estimate": "cbfb3c9c459b88246b76",
   "total": 40930.74
  },
  "std/L-Shape/Picture Frame/Landing/freestanding-2lvl": {
@@ -436,7 +436,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "3f7b48baff216940f4fa",
-  "estimate": "3973637a1bf8f7ca1fd2",
+  "estimate": "cc5f4be748842f84c034",
   "total": 76847.81
  },
  "std/L-Shape/Picture Frame/Winder/attached": {
@@ -447,7 +447,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "172b43c15a53449259a4",
-  "estimate": "72dc8054e71d251ce64e",
+  "estimate": "e054f0ae860bb84c8300",
   "total": 41403.64
  },
  "std/L-Shape/Picture Frame/Winder/freestanding-2lvl": {
@@ -458,7 +458,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "3f7b48baff216940f4fa",
-  "estimate": "3edc3485c92f03e3d646",
+  "estimate": "d80b12098c075e3d52ae",
   "total": 77313.47
  },
  "std/L-Shape/Herringbone/Straight/attached": {
@@ -469,7 +469,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "0374554770dd05ca5e9a",
-  "estimate": "dd20f714f4fe40849c16",
+  "estimate": "1e7f65b9207f923c5907",
   "total": 35456.52
  },
  "std/L-Shape/Herringbone/Straight/freestanding-2lvl": {
@@ -480,7 +480,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e31c471e1df67d479894",
-  "estimate": "ad06929b4ee3086a669b",
+  "estimate": "053a6b1b2cde6818fa29",
   "total": 79690.51
  },
  "std/L-Shape/Herringbone/Landing/attached": {
@@ -491,7 +491,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "35094ef91b6c540a7ba2",
-  "estimate": "8696dbe656600e57f307",
+  "estimate": "8043c0e57dbf945d3a48",
   "total": 42705.77
  },
  "std/L-Shape/Herringbone/Landing/freestanding-2lvl": {
@@ -502,7 +502,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e31c471e1df67d479894",
-  "estimate": "909739fe4bb7235ec0e5",
+  "estimate": "ad7495adcffd7ab78f4f",
   "total": 80416.94
  },
  "std/L-Shape/Herringbone/Winder/attached": {
@@ -513,7 +513,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "60e3056756a65ea1ab4b",
-  "estimate": "26fa31bda1fd3d49093e",
+  "estimate": "12c003b1f883dc8d29ca",
   "total": 43595.27
  },
  "std/L-Shape/Herringbone/Winder/freestanding-2lvl": {
@@ -524,7 +524,7 @@
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e31c471e1df67d479894",
-  "estimate": "0f67efdadb903b3f621f",
+  "estimate": "715bb574fa1e7653706a",
   "total": 80901.22
  },
  "std/Multi-corner/Straight/Straight/attached": {
@@ -535,7 +535,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b6ff436fb741ca1b6412",
-  "estimate": "320d366730008e86b4d0",
+  "estimate": "713815ebc1770c21821c",
   "total": 30280.01
  },
  "std/Multi-corner/Straight/Straight/freestanding-2lvl": {
@@ -546,7 +546,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "d6d4fa93adccfde6ad7b",
-  "estimate": "f1dff0765ea974b709d4",
+  "estimate": "4cb03f6460d8c1c66159",
   "total": 71045.8
  },
  "std/Multi-corner/Straight/Landing/attached": {
@@ -557,7 +557,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b00ac5470dee8ee1499a",
-  "estimate": "5070743d4531351c443d",
+  "estimate": "8692127175a4d10a0aa5",
   "total": 36818
  },
  "std/Multi-corner/Straight/Landing/freestanding-2lvl": {
@@ -568,7 +568,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "d6d4fa93adccfde6ad7b",
-  "estimate": "133998b4ed78c4492e02",
+  "estimate": "69c0b01c63a6d48e7472",
   "total": 71680.79
  },
  "std/Multi-corner/Straight/Winder/attached": {
@@ -579,7 +579,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "c5c130e0ee42c6b319eb",
-  "estimate": "042ab8dc4b52b8fa3f42",
+  "estimate": "b761fccd6350b0019335",
   "total": 37734.8
  },
  "std/Multi-corner/Straight/Winder/freestanding-2lvl": {
@@ -590,7 +590,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "d6d4fa93adccfde6ad7b",
-  "estimate": "555389e8cdfb0a0968c1",
+  "estimate": "41837e5bf89d53ef0f6a",
   "total": 72104.11
  },
  "std/Multi-corner/Diagonal/Straight/attached": {
@@ -601,7 +601,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "9a83c397154a96d23499",
-  "estimate": "6715705fb508f4816dfc",
+  "estimate": "fc1cfb2d4dc0d6882f33",
   "total": 34028.66
  },
  "std/Multi-corner/Diagonal/Straight/freestanding-2lvl": {
@@ -612,7 +612,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "38c2a8b6f3270feacfea",
-  "estimate": "755d9878e9ee96627921",
+  "estimate": "83807ad7349614afcbcd",
   "total": 80242.62
  },
  "std/Multi-corner/Diagonal/Landing/attached": {
@@ -623,7 +623,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "de7843587262641c86f8",
-  "estimate": "08a8c9841fd76ebdde88",
+  "estimate": "a2b1ba00d10f3de972fa",
   "total": 41197.5
  },
  "std/Multi-corner/Diagonal/Landing/freestanding-2lvl": {
@@ -634,7 +634,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "38c2a8b6f3270feacfea",
-  "estimate": "13307d97c91e583dd7fc",
+  "estimate": "94e533aef170bc097c66",
   "total": 81004.61
  },
  "std/Multi-corner/Diagonal/Winder/attached": {
@@ -645,7 +645,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e733fafd11a07f9cd500",
-  "estimate": "8de4aac7acd37e3a0133",
+  "estimate": "bbc3e7b946f3d869c8e3",
   "total": 42238.14
  },
  "std/Multi-corner/Diagonal/Winder/freestanding-2lvl": {
@@ -656,7 +656,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "38c2a8b6f3270feacfea",
-  "estimate": "c1a5ccc9592a723c3cf0",
+  "estimate": "10db43ce24e240fca653",
   "total": 81512.6
  },
  "std/Multi-corner/Picture Frame/Straight/attached": {
@@ -667,7 +667,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "50b47eacfdd7b074d3f2",
-  "estimate": "39687e64f604234babab",
+  "estimate": "33c49b55539522e12bc5",
   "total": 35460.42
  },
  "std/Multi-corner/Picture Frame/Straight/freestanding-2lvl": {
@@ -678,7 +678,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "85dca67a178cbf5f1edc",
-  "estimate": "a4486a3cecc9c1122d8a",
+  "estimate": "b7f53a5b77c86db0df2a",
   "total": 83547.04
  },
  "std/Multi-corner/Picture Frame/Landing/attached": {
@@ -689,7 +689,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2407acadd62af6648530",
-  "estimate": "9852809d5d4d158b537a",
+  "estimate": "6400c456a92b03114be1",
   "total": 43443.65
  },
  "std/Multi-corner/Picture Frame/Landing/freestanding-2lvl": {
@@ -700,7 +700,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "85dca67a178cbf5f1edc",
-  "estimate": "96704d4941c8a98a6414",
+  "estimate": "d80f2a4940c48b98e682",
   "total": 84340.78
  },
  "std/Multi-corner/Picture Frame/Winder/attached": {
@@ -711,7 +711,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "c1b10473718fc1098ca3",
-  "estimate": "13ba2d590f0ef1813b02",
+  "estimate": "e6da91ca4e360139cd0d",
   "total": 43940.95
  },
  "std/Multi-corner/Picture Frame/Winder/freestanding-2lvl": {
@@ -722,7 +722,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "85dca67a178cbf5f1edc",
-  "estimate": "d7c3d19924fe9e50d725",
+  "estimate": "deb38fcdc95cebc25266",
   "total": 84869.94
  },
  "std/Multi-corner/Herringbone/Straight/attached": {
@@ -733,7 +733,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "825d4ccddbdbbbcebe27",
-  "estimate": "0552bbf939375d8e4e09",
+  "estimate": "425017167d6816473cf1",
   "total": 37172.81
  },
  "std/Multi-corner/Herringbone/Straight/freestanding-2lvl": {
@@ -744,7 +744,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4cfced217fb069eed8eb",
-  "estimate": "2276ba952efb4da93244",
+  "estimate": "db0bcc651bfc9170aa26",
   "total": 87271.4
  },
  "std/Multi-corner/Herringbone/Landing/attached": {
@@ -755,7 +755,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "48117143aff32dfae68e",
-  "estimate": "a69a219632f04f2c69e2",
+  "estimate": "5f49183536127cf10977",
   "total": 44798.91
  },
  "std/Multi-corner/Herringbone/Landing/freestanding-2lvl": {
@@ -766,7 +766,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4cfced217fb069eed8eb",
-  "estimate": "194ac681d1881c3c14d6",
+  "estimate": "c761a9d2168f75944f64",
   "total": 88096.89
  },
  "std/Multi-corner/Herringbone/Winder/attached": {
@@ -777,7 +777,7 @@
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "43453011a765548ae2eb",
-  "estimate": "3f0b7d829d5096f9b445",
+  "estimate": "85857e5402ebd5e79ec3",
   "total": 45704.72
  },
  "std/Multi-corner/Herringbone/Winder/freestanding-2lvl": {
@@ -788,7 +788,7 @@
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4cfced217fb069eed8eb",
-  "estimate": "ebc9d6e696e61c33867d",
+  "estimate": "8a5c5afffdd1a9af595b",
   "total": 88647.21
  },
  "std/Curved/Straight/Straight/attached": {
@@ -799,7 +799,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "16f784a442417c31f468",
-  "estimate": "8a7eb241c184c131192d",
+  "estimate": "fccd5e048125dbdaf5e8",
   "total": 37865.52
  },
  "std/Curved/Straight/Straight/freestanding-2lvl": {
@@ -810,7 +810,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4445e86cc7abe8910f9d",
-  "estimate": "a63048da0ca522eb1c90",
+  "estimate": "996eb9d62a1556df9cee",
   "total": 83533.64
  },
  "std/Curved/Straight/Landing/attached": {
@@ -821,7 +821,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "5cb2ba8d7066ecc74ebe",
-  "estimate": "96a49b3e690f6bda4e1a",
+  "estimate": "05cef808f7ae40212bd9",
   "total": 45027.03
  },
  "std/Curved/Straight/Landing/freestanding-2lvl": {
@@ -832,7 +832,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4445e86cc7abe8910f9d",
-  "estimate": "45b85f0a472bf68111d4",
+  "estimate": "9b1784ef9454b479280a",
   "total": 84295.62
  },
  "std/Curved/Straight/Winder/attached": {
@@ -843,7 +843,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "8f6aef1351867753a737",
-  "estimate": "2b6e181ef6653cbb6bfc",
+  "estimate": "55353d62df1683c9e9f2",
   "total": 46075
  },
  "std/Curved/Straight/Winder/freestanding-2lvl": {
@@ -854,7 +854,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4445e86cc7abe8910f9d",
-  "estimate": "65622328a1d5c0c43422",
+  "estimate": "7148e95d2d1cc876db07",
   "total": 84803.62
  },
  "std/Curved/Diagonal/Straight/attached": {
@@ -865,7 +865,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "a53824c2f0e9e8bfb6f4",
-  "estimate": "4472ca048bb8e7d6c32b",
+  "estimate": "d365034ef9fe4e840a74",
   "total": 43474.78
  },
  "std/Curved/Diagonal/Straight/freestanding-2lvl": {
@@ -876,7 +876,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2a4f7e10b5b25e127c3d",
-  "estimate": "8309c56a36d2fa1a7a9f",
+  "estimate": "60634fd6e74756093ed7",
   "total": 95295.75
  },
  "std/Curved/Diagonal/Landing/attached": {
@@ -887,7 +887,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2aacd9c49676a1511a07",
-  "estimate": "92271da63d92b09331ff",
+  "estimate": "faf1a001f1ee341dd0c9",
   "total": 51291.68
  },
  "std/Curved/Diagonal/Landing/freestanding-2lvl": {
@@ -898,7 +898,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2a4f7e10b5b25e127c3d",
-  "estimate": "fc77819679934d7ea1a9",
+  "estimate": "b71e13aa7b5481c967c2",
   "total": 96210.14
  },
  "std/Curved/Diagonal/Winder/attached": {
@@ -909,7 +909,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "f6b6d60f8bdcac2337f5",
-  "estimate": "54667d6d984dca72acbd",
+  "estimate": "65c16b4aba3f7d0897f3",
   "total": 52567.92
  },
  "std/Curved/Diagonal/Winder/freestanding-2lvl": {
@@ -920,7 +920,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2a4f7e10b5b25e127c3d",
-  "estimate": "faa249a8638f9d0b78c6",
+  "estimate": "4ff92f801224f7a21ca0",
   "total": 96819.73
  },
  "std/Curved/Picture Frame/Straight/attached": {
@@ -931,7 +931,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "65debfd61444be029924",
-  "estimate": "2ecaa9491a362a252613",
+  "estimate": "d6aa23333bbf9997c807",
   "total": 44629.37
  },
  "std/Curved/Picture Frame/Straight/freestanding-2lvl": {
@@ -942,7 +942,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "8ca7d2a4df7959ea2f3c",
-  "estimate": "1bf0ca66b41a87bbbf3b",
+  "estimate": "72e2894000eaa2ad548b",
   "total": 99070.18
  },
  "std/Curved/Picture Frame/Landing/attached": {
@@ -953,7 +953,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "697d7eeb23bc684abf50",
-  "estimate": "79a1c15d4634d08299e6",
+  "estimate": "d3302df44041a5798a47",
   "total": 53392.11
  },
  "std/Curved/Picture Frame/Landing/freestanding-2lvl": {
@@ -964,7 +964,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "8ca7d2a4df7959ea2f3c",
-  "estimate": "c802049c05168fb7462d",
+  "estimate": "b9ee9c0416523b0ef979",
   "total": 100022.66
  },
  "std/Curved/Picture Frame/Winder/attached": {
@@ -975,7 +975,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "029b9c17cb177d9f16c2",
-  "estimate": "1c92232547768e07b560",
+  "estimate": "bfe36efe6b74b668452d",
   "total": 53915.96
  },
  "std/Curved/Picture Frame/Winder/freestanding-2lvl": {
@@ -986,7 +986,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "8ca7d2a4df7959ea2f3c",
-  "estimate": "121353b188340acb9cd6",
+  "estimate": "1938b8133711383ebd7c",
   "total": 100657.65
  },
  "std/Curved/Herringbone/Straight/attached": {
@@ -997,7 +997,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "d7fb72c83dc0684acf00",
-  "estimate": "e8cb36b6bd84064aa441",
+  "estimate": "363a0901771548ef3287",
   "total": 48039.01
  },
  "std/Curved/Herringbone/Straight/freestanding-2lvl": {
@@ -1008,7 +1008,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "501c91ac4a891d611f41",
-  "estimate": "6bc13eea447487f97626",
+  "estimate": "5904c1cb83eb7518a607",
   "total": 104569.27
  },
  "std/Curved/Herringbone/Landing/attached": {
@@ -1019,7 +1019,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "5835f7201add94068546",
-  "estimate": "dbb33407541f114dfefd",
+  "estimate": "2e6469c1db7538344e65",
   "total": 56586.09
  },
  "std/Curved/Herringbone/Landing/freestanding-2lvl": {
@@ -1030,7 +1030,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "501c91ac4a891d611f41",
-  "estimate": "42ebf3fff953cc5afc1d",
+  "estimate": "f8f7517118befaf9037b",
   "total": 105559.86
  },
  "std/Curved/Herringbone/Winder/attached": {
@@ -1041,7 +1041,7 @@
   "extras": "73a97d6a592e051ab1b5",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e0044165cf4270a08df7",
-  "estimate": "e6fe79995f419df43734",
+  "estimate": "fef700bde0e63e480485",
   "total": 57519.06
  },
  "std/Curved/Herringbone/Winder/freestanding-2lvl": {
@@ -1052,7 +1052,7 @@
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "501c91ac4a891d611f41",
-  "estimate": "53afe926b17722665a97",
+  "estimate": "5a1368f13c6065bd30ab",
   "total": 106220.25
  },
  "big/Rectangle/Straight/Straight/attached": {
@@ -1063,7 +1063,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "1e226f69b82bd87630f0",
-  "estimate": "47346cc6b23d3837b15a",
+  "estimate": "9fb917e64eece5e1513f",
   "total": 67441.79
  },
  "big/Rectangle/Straight/Straight/freestanding-2lvl": {
@@ -1074,7 +1074,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "72cbc4504f45a24654ca",
-  "estimate": "68f6072cb37c5b3ca5eb",
+  "estimate": "2e8e7b1e4acf20ebfd69",
   "total": 113508.24
  },
  "big/Rectangle/Straight/Landing/attached": {
@@ -1085,7 +1085,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e56763913d772e644251",
-  "estimate": "b40470c7aa38f1c02fae",
+  "estimate": "6a31e30c974c0d160743",
   "total": 72989.46
  },
  "big/Rectangle/Straight/Landing/freestanding-2lvl": {
@@ -1096,7 +1096,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "0c6c87a481042e9568b4",
-  "estimate": "07bc9a9bd2cd14989a23",
+  "estimate": "79d306ce3ce6a6bcd143",
   "total": 120338.08
  },
  "big/Rectangle/Straight/Winder/attached": {
@@ -1107,7 +1107,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "78f910c2a693fb59dbfd",
-  "estimate": "8437c19a2e0abc7415d3",
+  "estimate": "6b810c54c19bdb887dec",
   "total": 74351.89
  },
  "big/Rectangle/Straight/Winder/freestanding-2lvl": {
@@ -1118,7 +1118,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "6a84f73ba1b4bce9891e",
-  "estimate": "09ad78bbde8356dd1ad1",
+  "estimate": "cefa3011b286ddcd98bc",
   "total": 122128.68
  },
  "big/Rectangle/Diagonal/Straight/attached": {
@@ -1129,7 +1129,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b904ef9b0da1a8a27d93",
-  "estimate": "dc07c3caea89c2ba1972",
+  "estimate": "85e041f2167842a18459",
   "total": 71894.2
  },
  "big/Rectangle/Diagonal/Straight/freestanding-2lvl": {
@@ -1140,7 +1140,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "7295909ce366debdbeb9",
-  "estimate": "f0c89bf0ff518e852ce6",
+  "estimate": "c3033743153a3ad4acaa",
   "total": 123538.33
  },
  "big/Rectangle/Diagonal/Landing/attached": {
@@ -1151,7 +1151,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "becf24e4a2eac2596b42",
-  "estimate": "72ba5a8d7c62bb0d26e6",
+  "estimate": "ca12eb32468beab1f254",
   "total": 78422.53
  },
  "big/Rectangle/Diagonal/Landing/freestanding-2lvl": {
@@ -1162,7 +1162,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "f4f43dbc3db2db303075",
-  "estimate": "795188f069a300230213",
+  "estimate": "47a3cd69d55bdc961989",
   "total": 131604.76
  },
  "big/Rectangle/Diagonal/Winder/attached": {
@@ -1173,7 +1173,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b3e32302fa27191489b5",
-  "estimate": "e41e7987aef8eb7d4080",
+  "estimate": "e855665411bbfeed3872",
   "total": 79537.02
  },
  "big/Rectangle/Diagonal/Winder/freestanding-2lvl": {
@@ -1184,7 +1184,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "3d071cd24fbf09a962d8",
-  "estimate": "4c04c766ea6acd9c930f",
+  "estimate": "c391e878777fb1bae404",
   "total": 133184.67
  },
  "big/Rectangle/Picture Frame/Straight/attached": {
@@ -1195,7 +1195,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "6f38502daec061a45522",
-  "estimate": "9b0f3d38f4ac74ff8190",
+  "estimate": "25a39ace0e7c676ea24a",
   "total": 77677.41
  },
  "big/Rectangle/Picture Frame/Straight/freestanding-2lvl": {
@@ -1206,7 +1206,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "112d40ecea618ef9319c",
-  "estimate": "4109aa9a8153456c9f56",
+  "estimate": "e4cc48787a27f1e85857",
   "total": 132541.41
  },
  "big/Rectangle/Picture Frame/Landing/attached": {
@@ -1217,7 +1217,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "c8121c4aee78a8bb9993",
-  "estimate": "8ec8d492d1a2f52c5ed5",
+  "estimate": "596c50301934ba8d66fb",
   "total": 84518.97
  },
  "big/Rectangle/Picture Frame/Landing/freestanding-2lvl": {
@@ -1228,7 +1228,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4fbacd4c07a721dc14f1",
-  "estimate": "ecb5d22ea858b309e1f5",
+  "estimate": "14afe7eaf366cc46aa5a",
   "total": 140985.07
  },
  "big/Rectangle/Picture Frame/Winder/attached": {
@@ -1239,7 +1239,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "1a011cc32513dcac2d5e",
-  "estimate": "ce89010342de44e1cf9c",
+  "estimate": "7591c6af8fcf7c17ccc1",
   "total": 85503.41
  },
  "big/Rectangle/Picture Frame/Winder/freestanding-2lvl": {
@@ -1250,7 +1250,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e9234b6a64a271ed261a",
-  "estimate": "f20c6b59da8809e6ddd2",
+  "estimate": "8ad0cd382791671da8ab",
   "total": 142444.23
  },
  "big/Rectangle/Herringbone/Straight/attached": {
@@ -1261,7 +1261,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "8eeab690c1c7a9cacb93",
-  "estimate": "bd8030618632cca174c8",
+  "estimate": "df031615dcd302587924",
   "total": 80335.03
  },
  "big/Rectangle/Herringbone/Straight/freestanding-2lvl": {
@@ -1272,7 +1272,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "48c0cde8d090c2206f0d",
-  "estimate": "602aeffbeeb849efa985",
+  "estimate": "c340845419b9add263aa",
   "total": 136113.81
  },
  "big/Rectangle/Herringbone/Landing/attached": {
@@ -1283,7 +1283,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "0af7882331e4ec71ee73",
-  "estimate": "83135475805db011a9f8",
+  "estimate": "875980d53e76f0466b00",
   "total": 87783.64
  },
  "big/Rectangle/Herringbone/Landing/freestanding-2lvl": {
@@ -1294,7 +1294,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2610b9ae129818f17bed",
-  "estimate": "1ab4bfaff4fa1718919e",
+  "estimate": "72b95e75a61fcf74db18",
   "total": 145118.66
  },
  "big/Rectangle/Herringbone/Winder/attached": {
@@ -1305,7 +1305,7 @@
   "extras": "c298ee1292953b63a3fd",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "923f5c3ee622aa14bca5",
-  "estimate": "f9d67cdf8c755114e4ab",
+  "estimate": "a02bd9d60d54725dc9e7",
   "total": 88783.55
  },
  "big/Rectangle/Herringbone/Winder/freestanding-2lvl": {
@@ -1316,7 +1316,7 @@
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "9fc353a85048ea9a8902",
-  "estimate": "c8b7d5a0fc229c58419f",
+  "estimate": "9df108e3f58572460ad5",
   "total": 146602.61
  },
  "big/L-Shape/Straight/Straight/attached": {
@@ -1327,7 +1327,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "16e1c8fa2c61f0709f3a",
-  "estimate": "f49805efcf7ba8970871",
+  "estimate": "6045d5ad4523cb921ac1",
   "total": 68179.06
  },
  "big/L-Shape/Straight/Straight/freestanding-2lvl": {
@@ -1338,7 +1338,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "8692323cd143d25439de",
-  "estimate": "35507c136a385e3839b9",
+  "estimate": "de9cdb7756a8e069be9e",
   "total": 119125.39
  },
  "big/L-Shape/Straight/Landing/attached": {
@@ -1349,7 +1349,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "103d79e03bd5f25c15e2",
-  "estimate": "c4ffa090cf2f61a2c0bf",
+  "estimate": "db397ef808ff7e245efd",
   "total": 74062.37
  },
  "big/L-Shape/Straight/Landing/freestanding-2lvl": {
@@ -1360,7 +1360,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "fc7595009f56b153a322",
-  "estimate": "555016eec1ecb0007276",
+  "estimate": "9427fe222732e069f4e7",
   "total": 126419.27
  },
  "big/L-Shape/Straight/Winder/attached": {
@@ -1371,7 +1371,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "f4640ad1c6760155aae0",
-  "estimate": "cf60dca9b06cc9c96855",
+  "estimate": "abca46482cdfa68ef789",
   "total": 75455.52
  },
  "big/L-Shape/Straight/Winder/freestanding-2lvl": {
@@ -1382,7 +1382,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "cbb402ccba046f4571ca",
-  "estimate": "14f1da8e5e8da5cd8893",
+  "estimate": "5da0364bb7b3d17c43eb",
   "total": 128258.78
  },
  "big/L-Shape/Diagonal/Straight/attached": {
@@ -1393,7 +1393,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "63f5cb66b364e0b31620",
-  "estimate": "63c548e8d0e117729565",
+  "estimate": "3d67975102f304718245",
   "total": 73396.95
  },
  "big/L-Shape/Diagonal/Straight/freestanding-2lvl": {
@@ -1404,7 +1404,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "316e243534cfe048f5fd",
-  "estimate": "17e054d2f2d2815bfb13",
+  "estimate": "579e5e6a279164568fb3",
   "total": 130647.21
  },
  "big/L-Shape/Diagonal/Landing/attached": {
@@ -1415,7 +1415,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e9fe4f21787e02a8de58",
-  "estimate": "63b03026a400db05fdd3",
+  "estimate": "e9d1270cdf4736f1a5ef",
   "total": 80328.06
  },
  "big/L-Shape/Diagonal/Landing/freestanding-2lvl": {
@@ -1426,7 +1426,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2b58b7ccdf085d02310c",
-  "estimate": "d93ba6e9ccef5897997e",
+  "estimate": "92c2fb5fcf2378fe5c14",
   "total": 139269.56
  },
  "big/L-Shape/Diagonal/Winder/attached": {
@@ -1437,7 +1437,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "285abcfec61f69d279c0",
-  "estimate": "d58d494c761257de2eb5",
+  "estimate": "4c3e0f04fdecfa7c4e40",
   "total": 81479.41
  },
  "big/L-Shape/Diagonal/Winder/freestanding-2lvl": {
@@ -1448,7 +1448,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "13b29b5b435f55cafda7",
-  "estimate": "b23134d4d97e0dbae97b",
+  "estimate": "b3bda1feacbce2ba777c",
   "total": 140909.09
  },
  "big/L-Shape/Picture Frame/Straight/attached": {
@@ -1459,7 +1459,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "68011aab6b3cf19216e8",
-  "estimate": "ed6d829abef4b973e211",
+  "estimate": "a9c356f63451cff8f9ae",
   "total": 78978.99
  },
  "big/L-Shape/Picture Frame/Straight/freestanding-2lvl": {
@@ -1470,7 +1470,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "8df32f8c85828df61582",
-  "estimate": "4f193d44a473996909b7",
+  "estimate": "786e1a9a716eaee1cd11",
   "total": 139827.48
  },
  "big/L-Shape/Picture Frame/Landing/attached": {
@@ -1481,7 +1481,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "ec2467cfe915a3c67289",
-  "estimate": "69330947d7bd2ddadf68",
+  "estimate": "c84740b3a790e3f41f28",
   "total": 86240.54
  },
  "big/L-Shape/Picture Frame/Landing/freestanding-2lvl": {
@@ -1492,7 +1492,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "cfaa7ecd58e5b89244fe",
-  "estimate": "4f1c768144e84dee7b93",
+  "estimate": "5925545da68130cbf304",
   "total": 148851.08
  },
  "big/L-Shape/Picture Frame/Winder/attached": {
@@ -1503,7 +1503,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "12826d55338bf6322552",
-  "estimate": "d1db21d88e174341acf1",
+  "estimate": "10f39be0683730408153",
   "total": 87262.95
  },
  "big/L-Shape/Picture Frame/Winder/freestanding-2lvl": {
@@ -1514,7 +1514,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e6d2f4a2ffb951f9d4d0",
-  "estimate": "10e7d17de74ff45a8732",
+  "estimate": "6bd434d7c9624bd550ca",
   "total": 150371.48
  },
  "big/L-Shape/Herringbone/Straight/attached": {
@@ -1525,7 +1525,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "5d11ea339b9c57e18114",
-  "estimate": "bb963f7f697225f1222c",
+  "estimate": "fd45c99dede9446e5fdc",
   "total": 81545.32
  },
  "big/L-Shape/Herringbone/Straight/freestanding-2lvl": {
@@ -1536,7 +1536,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "5303861576284de73c24",
-  "estimate": "fd4d35eac27866827efd",
+  "estimate": "dcb537f53d32a11af834",
   "total": 143310.08
  },
  "big/L-Shape/Herringbone/Landing/attached": {
@@ -1547,7 +1547,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "3f2501502293d8321de8",
-  "estimate": "1b33d895f94032d048ea",
+  "estimate": "b3066433261c2da3344b",
   "total": 89430.27
  },
  "big/L-Shape/Herringbone/Landing/freestanding-2lvl": {
@@ -1558,7 +1558,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "06450feecf29f0a9c4b9",
-  "estimate": "64f535e677fcf835518b",
+  "estimate": "cf451c8aaf80e23e3e0e",
   "total": 153027.46
  },
  "big/L-Shape/Herringbone/Winder/attached": {
@@ -1569,7 +1569,7 @@
   "extras": "212946f12d66283a89e0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2742d70353d72ff9b587",
-  "estimate": "d270e126395813cf7cc9",
+  "estimate": "9aab132d382a24f789e7",
   "total": 90470.12
  },
  "big/L-Shape/Herringbone/Winder/freestanding-2lvl": {
@@ -1580,7 +1580,7 @@
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "cdeaafc9e1659c90f5f7",
-  "estimate": "a4932ac9e2108fddf833",
+  "estimate": "60e0941c571d7b17cc67",
   "total": 154465.72
  },
  "big/Multi-corner/Straight/Straight/attached": {
@@ -1591,7 +1591,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "ec1f97e58557c6fa037d",
-  "estimate": "1e5dcfb0d752a4374213",
+  "estimate": "21d49a634ede29af7b8f",
   "total": 73860.93
  },
  "big/Multi-corner/Straight/Straight/freestanding-2lvl": {
@@ -1602,7 +1602,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "848b537d352b3e7b2c6e",
-  "estimate": "00f6203571e5f5cfa12a",
+  "estimate": "2a7782647b04a9eb1929",
   "total": 127774.1
  },
  "big/Multi-corner/Straight/Landing/attached": {
@@ -1613,7 +1613,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "a62e7e01d4d9030382f8",
-  "estimate": "125982b14814ef22329c",
+  "estimate": "59cb1e9af939a59e9d1e",
   "total": 80247.71
  },
  "big/Multi-corner/Straight/Landing/freestanding-2lvl": {
@@ -1624,7 +1624,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e2fe4dd04eb0056eec60",
-  "estimate": "fc0f2b28f63f89ea917c",
+  "estimate": "cfc2e011770c22507fc1",
   "total": 135763.4
  },
  "big/Multi-corner/Straight/Winder/attached": {
@@ -1635,7 +1635,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b0f09f8e907d29f11533",
-  "estimate": "f4594568fa558518da6c",
+  "estimate": "aace89f1b4e277b19fa2",
   "total": 81686.93
  },
  "big/Multi-corner/Straight/Winder/freestanding-2lvl": {
@@ -1646,7 +1646,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "ab58bba0ad699e110f67",
-  "estimate": "2b8d281e3af18541d2b4",
+  "estimate": "c4b3cbdf3e5b4d8b760a",
   "total": 137676.92
  },
  "big/Multi-corner/Diagonal/Straight/attached": {
@@ -1657,7 +1657,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "29fbbfe0f6c6a389996d",
-  "estimate": "9a6c356c2155601d69f7",
+  "estimate": "2336745c7dc5965c2769",
   "total": 78120.8
  },
  "big/Multi-corner/Diagonal/Straight/freestanding-2lvl": {
@@ -1668,7 +1668,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e057ef58bbadc3aa2c0f",
-  "estimate": "8f2ecf5bad58b7662687",
+  "estimate": "2db79ebb7e3aaed108b6",
   "total": 141374.73
  },
  "big/Multi-corner/Diagonal/Landing/attached": {
@@ -1679,7 +1679,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "3d87743cd0ef40c9c9bd",
-  "estimate": "6edbd03f0fd49562035f",
+  "estimate": "ce36da4b058226385b15",
   "total": 85985.58
  },
  "big/Multi-corner/Diagonal/Landing/freestanding-2lvl": {
@@ -1690,7 +1690,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "096d4d611df7ffd0ad38",
-  "estimate": "0e6f242c7396d05a9dfb",
+  "estimate": "3d256b80ab77e60af908",
   "total": 150832
  },
  "big/Multi-corner/Diagonal/Winder/attached": {
@@ -1701,7 +1701,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b2b499987d14c9c6ecd7",
-  "estimate": "d247c940d040b8759a56",
+  "estimate": "2d5896a87be1d5106233",
   "total": 87192.21
  },
  "big/Multi-corner/Diagonal/Winder/freestanding-2lvl": {
@@ -1712,7 +1712,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "428819cd923c193292a4",
-  "estimate": "818fb6feaa88f1af10f9",
+  "estimate": "cdf71bc5a44a007aef42",
   "total": 152559.92
  },
  "big/Multi-corner/Picture Frame/Straight/attached": {
@@ -1723,7 +1723,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "ce709c3752828e55d6ea",
-  "estimate": "f847758cab34ca63f328",
+  "estimate": "0c474ad71953d30dbf19",
   "total": 85521.89
  },
  "big/Multi-corner/Picture Frame/Straight/freestanding-2lvl": {
@@ -1734,7 +1734,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "bd5a399d7b9651e7c517",
-  "estimate": "0016e680fcfd55b920a1",
+  "estimate": "087b658651fbad336ab6",
   "total": 150706.76
  },
  "big/Multi-corner/Picture Frame/Landing/attached": {
@@ -1745,7 +1745,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "59a36b86ec3c53bdefb6",
-  "estimate": "dbab0fee613df0039461",
+  "estimate": "1cb98bd78ff29f8379cc",
   "total": 93714.41
  },
  "big/Multi-corner/Picture Frame/Landing/freestanding-2lvl": {
@@ -1756,7 +1756,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b27542d91f44859a513d",
-  "estimate": "e7f20ff2daec296dfb84",
+  "estimate": "20a56dadf3bcc4bef22f",
   "total": 160800.99
  },
  "big/Multi-corner/Picture Frame/Winder/attached": {
@@ -1767,7 +1767,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "3593cf68242f6423ccde",
-  "estimate": "0e43e37b3d81e15deb8a",
+  "estimate": "77053dc9f74d93132ae3",
   "total": 94492.78
  },
  "big/Multi-corner/Picture Frame/Winder/freestanding-2lvl": {
@@ -1778,7 +1778,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "5d3e7bd947ca72596bbd",
-  "estimate": "85bda3aff617f822c3ed",
+  "estimate": "8fc4adfdd629a6ccf841",
   "total": 162212.54
  },
  "big/Multi-corner/Herringbone/Straight/attached": {
@@ -1789,7 +1789,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "de1f0e01f7a0dd46ca12",
-  "estimate": "477ee3730f9305cce033",
+  "estimate": "713b9ff9e13bd8e12a5e",
   "total": 86673.13
  },
  "big/Multi-corner/Herringbone/Straight/freestanding-2lvl": {
@@ -1800,7 +1800,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b5af7e4a2c555ea14285",
-  "estimate": "799e93dde9c8f0f58377",
+  "estimate": "477ba1a0f7cc11ad3ba9",
   "total": 154844.57
  },
  "big/Multi-corner/Herringbone/Landing/attached": {
@@ -1811,7 +1811,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "a50dc469711ab3983007",
-  "estimate": "7ca900156e7c99c73c4f",
+  "estimate": "57ad83becc6645255bc1",
   "total": 95212.6
  },
  "big/Multi-corner/Herringbone/Landing/freestanding-2lvl": {
@@ -1822,7 +1822,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "32fd0c41efbfc25cde01",
-  "estimate": "47521b188444206ca5aa",
+  "estimate": "1d1e55b8f947cc3258c7",
   "total": 165465.99
  },
  "big/Multi-corner/Herringbone/Winder/attached": {
@@ -1833,7 +1833,7 @@
   "extras": "b4d4666ef837e35d02c4",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "7868039b1b437a704d9a",
-  "estimate": "4a57e21c7da9812d81de",
+  "estimate": "03a8e7a23bf57254109b",
   "total": 96312.34
  },
  "big/Multi-corner/Herringbone/Winder/freestanding-2lvl": {
@@ -1844,7 +1844,7 @@
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "01bc046f5778d34fba9b",
-  "estimate": "83a913226f689e4f58b6",
+  "estimate": "dc56be51711879032ae9",
   "total": 167110.29
  },
  "big/Curved/Straight/Straight/attached": {
@@ -1855,7 +1855,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2c996863401c6231f103",
-  "estimate": "8e3a44dd086735a64418",
+  "estimate": "f765f6eeede8136000bc",
   "total": 94798.3
  },
  "big/Curved/Straight/Straight/freestanding-2lvl": {
@@ -1866,7 +1866,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "85adf597cf5a31fe8fa3",
-  "estimate": "566a2ee508480c88ea91",
+  "estimate": "1fd6b308df49ae137864",
   "total": 161504.44
  },
  "big/Curved/Straight/Landing/attached": {
@@ -1877,7 +1877,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "92086e6f9cb24b59b26b",
-  "estimate": "b4462253a1b3cf360dc1",
+  "estimate": "510a60df9605efea40ac",
   "total": 102024.2
  },
  "big/Curved/Straight/Landing/freestanding-2lvl": {
@@ -1888,7 +1888,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "de645dcab02097e114df",
-  "estimate": "45a24e71374c4544e814",
+  "estimate": "ff566a9572689d468520",
   "total": 170652.35
  },
  "big/Curved/Straight/Winder/attached": {
@@ -1899,7 +1899,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2f491ed8db4e26e1eb39",
-  "estimate": "9a4219d193d5fefd2a2a",
+  "estimate": "fdd29f86ea9fcf7dc3ac",
   "total": 103540.21
  },
  "big/Curved/Straight/Winder/freestanding-2lvl": {
@@ -1910,7 +1910,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "f21b6f5cb61f9ccc3ca5",
-  "estimate": "8645c33c4ad34942530d",
+  "estimate": "ddc0191a6bb94a1771d7",
   "total": 172689.63
  },
  "big/Curved/Diagonal/Straight/attached": {
@@ -1921,7 +1921,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "98b941e0929b22089c40",
-  "estimate": "b2852f05c1b7238a2462",
+  "estimate": "c98a77387ebb00200eb2",
   "total": 102491.49
  },
  "big/Curved/Diagonal/Straight/freestanding-2lvl": {
@@ -1932,7 +1932,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "c9324c38513e1dc41ffb",
-  "estimate": "50fd0670ee734933ce0c",
+  "estimate": "b4eeb3302ec155802b70",
   "total": 177722.45
  },
  "big/Curved/Diagonal/Landing/attached": {
@@ -1943,7 +1943,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "a63ffd9a531581a00120",
-  "estimate": "12eb78a6aabf8b159ac2",
+  "estimate": "2e99722bdb844b05dd0e",
   "total": 111363.22
  },
  "big/Curved/Diagonal/Landing/freestanding-2lvl": {
@@ -1954,7 +1954,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "ff716e3a898be6d08d83",
-  "estimate": "d85a7b580ded213cc08d",
+  "estimate": "67dac86d3dc55ba65d80",
   "total": 188900.07
  },
  "big/Curved/Diagonal/Winder/attached": {
@@ -1965,7 +1965,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "8aae732eaf001ad42fcd",
-  "estimate": "513e69b511ce06bea07c",
+  "estimate": "f952af15d1c072610c56",
   "total": 112662
  },
  "big/Curved/Diagonal/Winder/freestanding-2lvl": {
@@ -1976,7 +1976,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "564025a3ffd8780d7dcf",
-  "estimate": "3a0d421efc2d6bffb8f9",
+  "estimate": "0651ae4347b449d1e9a6",
   "total": 190775.99
  },
  "big/Curved/Picture Frame/Straight/attached": {
@@ -1987,7 +1987,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "9d6989bdb9862a1a3f4d",
-  "estimate": "416d92fdbbe5ad8f9886",
+  "estimate": "aff74f9c40bce5cee375",
   "total": 110448.55
  },
  "big/Curved/Picture Frame/Straight/freestanding-2lvl": {
@@ -1998,7 +1998,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b3ce4661d879c8ca86e5",
-  "estimate": "091b877d959977485e7c",
+  "estimate": "57aa8a26b67a4931a32d",
   "total": 190848.45
  },
  "big/Curved/Picture Frame/Landing/attached": {
@@ -2009,7 +2009,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b9364cdfd5c192411ffd",
-  "estimate": "584a0b5d7bf7bd7b6cc1",
+  "estimate": "1fc2cf8d78ce09269ed3",
   "total": 119388.34
  },
  "big/Curved/Picture Frame/Landing/freestanding-2lvl": {
@@ -2020,7 +2020,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2632c78816d9e7eb3e68",
-  "estimate": "cc4e021b9e4797370298",
+  "estimate": "9400b9be33f347e361fb",
   "total": 202189.69
  },
  "big/Curved/Picture Frame/Winder/attached": {
@@ -2031,7 +2031,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "7d5cc599cf0dbe413c87",
-  "estimate": "4289bb5f0651483734fb",
+  "estimate": "a1a35105d8a7d203def2",
   "total": 120564.32
  },
  "big/Curved/Picture Frame/Winder/freestanding-2lvl": {
@@ -2042,7 +2042,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "2fb558b33c3647c80763",
-  "estimate": "0f03c6bf0281620487d2",
+  "estimate": "bbfe6cfdff961b6aa266",
   "total": 203957.2
  },
  "big/Curved/Herringbone/Straight/attached": {
@@ -2053,7 +2053,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "8eeaf5280b4d6ca13e9b",
-  "estimate": "d1f9dde497177c079772",
+  "estimate": "feb5c5e035611fec30a6",
   "total": 113606.96
  },
  "big/Curved/Herringbone/Straight/freestanding-2lvl": {
@@ -2064,7 +2064,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "cd1d981cac7e2350483b",
-  "estimate": "380cfe9cab1238e3264a",
+  "estimate": "9055500c80afb54703be",
   "total": 195550.6
  },
  "big/Curved/Herringbone/Landing/attached": {
@@ -2075,7 +2075,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "7deb93ec4636dfb8ea53",
-  "estimate": "8b64c7b75c01ddde98f4",
+  "estimate": "8d8756f1a53eefd412cf",
   "total": 123347.97
  },
  "big/Curved/Herringbone/Landing/freestanding-2lvl": {
@@ -2086,7 +2086,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "e79e73f4037ae91d1d0e",
-  "estimate": "42f132085f3a086d6580",
+  "estimate": "f4a3aac0c5f0214627fc",
   "total": 207678.76
  },
  "big/Curved/Herringbone/Winder/attached": {
@@ -2097,7 +2097,7 @@
   "extras": "589ca0a47bf01e18bd77",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "5df4e047f0c8f262caeb",
-  "estimate": "e0e566777917355bb977",
+  "estimate": "b09b3762da629f76a877",
   "total": 124436.84
  },
  "big/Curved/Herringbone/Winder/freestanding-2lvl": {
@@ -2108,7 +2108,7 @@
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4dfa8588187de9aae5fb",
-  "estimate": "11b93bf41debd8109ac3",
+  "estimate": "85a21cf17c718b97b640",
   "total": 209483.4
  },
  "stairs/left-20": {
@@ -2119,7 +2119,7 @@
   "extras": "e9ebf9cf0f05497f0839",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "c43ae0cbe642ba85d9b8",
-  "estimate": "f57c29bceb1838ee249e",
+  "estimate": "361e855a2522b5fa369c",
   "total": 28495.2
  },
  "stairs/right-80-2flights": {
@@ -2130,7 +2130,7 @@
   "extras": "fe85c692f0531f20950b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "70df5366f1120894f93c",
-  "estimate": "19b920c463994d92bd13",
+  "estimate": "3bd168eae2e5404f8001",
   "total": 33596.67
  },
  "stairs/3flights-freestanding-back": {
@@ -2141,7 +2141,7 @@
   "extras": "98a033747714c96bee8f",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "123cea52b75fd31fcf02",
-  "estimate": "f5e72bb4495a423552ad",
+  "estimate": "443b6405bf28804c2651",
   "total": 44117.35
  },
  "stairs/none": {
@@ -2152,7 +2152,7 @@
   "extras": "967b9e24f51240c0f86e",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "0a0bb91f1d39a76ccc2f",
-  "estimate": "1782a0bc7e5d9c6eb5c9",
+  "estimate": "b9183c602635631e867f",
   "total": 22690.35
  },
  "type/add-on": {
@@ -2163,7 +2163,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "f0bbebcfe9adeef1fe03",
-  "estimate": "5bf02d790c91e94a24f1",
+  "estimate": "533a82c0e6a186051d9e",
   "total": 29965.22
  },
  "type/floating": {
@@ -2174,7 +2174,7 @@
   "extras": "59b90fb27e909691ea90",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "eac4cf616685d6c8bd45",
-  "estimate": "bc56e622a50e3f96040c",
+  "estimate": "aebd0b3767cb974bbfd2",
   "total": 30119.32
  },
  "border/1-dark-slate": {
@@ -2185,7 +2185,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "90dbac0ed32f5dc06d80",
-  "estimate": "67d3ce809dc4cc028fad",
+  "estimate": "fa1ae9b1b04c892d5587",
   "total": 28639.21
  },
  "border/2-matching-lshape": {
@@ -2196,7 +2196,7 @@
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "1f6c63b7e2d03c390f91",
-  "estimate": "b73f66ca6404f5cdfe60",
+  "estimate": "e1dec37a9a7330f07315",
   "total": 30006.09
  },
  "foundation/helical": {
@@ -2207,7 +2207,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "1fefa11162720d0ce6c3",
-  "estimate": "03b471eea01cde7905ff",
+  "estimate": "accdb9c10b70bf1852ba",
   "total": 29329.65
  },
  "foundation/blocks": {
@@ -2218,7 +2218,7 @@
   "extras": "128dcfbb3e0ddb1ff6f8",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "4ae60c46834459a59625",
-  "estimate": "7b7767b483ba92a13c02",
+  "estimate": "2a988f262f3dd09a9c64",
   "total": 24677.02
  },
  "fasteners/hidden": {
@@ -2229,7 +2229,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "972f04d38bb3708596e4",
-  "estimate": "c22a899b0a18c1859f7a",
+  "estimate": "67c7ca2fba0420f7be82",
   "total": 27957.37
  },
  "railing/glass": {
@@ -2240,7 +2240,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "787b5be39d646ddfd38e",
-  "estimate": "911c105f0930b3f09d40",
+  "estimate": "c315971328b55ba24903",
   "total": 52795.67
  },
  "railing/cable-tall": {
@@ -2251,7 +2251,7 @@
   "extras": "3a9d4dbef5858747a0f0",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "b168445dd2b88f2120e9",
-  "estimate": "d85f4fb55cb289636dfe",
+  "estimate": "774be4c45f401adce612",
   "total": 70955.16
  },
  "railing/none": {
@@ -2262,7 +2262,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "187c3b825e0a030414d4",
-  "estimate": "d3bced65d9a333257510",
+  "estimate": "6dcb9ffd3614d47ad6a7",
   "total": 17250.86
  },
  "extras/all": {
@@ -2273,7 +2273,7 @@
   "extras": "db9266fdd7742856598c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "a1545d1dd7bc9c58b0b9",
-  "estimate": "55160743cc0a023e1043",
+  "estimate": "629f2094c2557352eb80",
   "total": 60672.31
  },
  "accessories/all": {
@@ -2284,7 +2284,7 @@
   "extras": "1366874c0132540e6134",
   "catalogue": "48755e3ff28355c6f49c",
   "exports": "b3963ed21ca7dc4785f0",
-  "estimate": "e9a2677eb26490c0322d",
+  "estimate": "d9a248d0dc39dd40e90b",
   "total": 28025.35
  },
  "lighting/manual-zones": {
@@ -2295,7 +2295,7 @@
   "extras": "bf3dcfde6081ea68ba9c",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "93c2d64854e9261e8a67",
-  "estimate": "f6b821251051bfe24ee8",
+  "estimate": "62153897c2aa3f57e975",
   "total": 31398.34
  },
  "lighting/auto-posts-steps": {
@@ -2306,7 +2306,7 @@
   "extras": "8d685ee0575198293276",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "ccd2dfe6e6106ea65430",
-  "estimate": "3fdf422a5e744f1a495a",
+  "estimate": "d3a6bdd04bac67982455",
   "total": 31390.77
  },
  "screens/slatted-lit+hideaway": {
@@ -2317,7 +2317,7 @@
   "extras": "84ddeac6f766892d588f",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "ebba7c4eef84da9d20a2",
-  "estimate": "114412c3074b2b376b83",
+  "estimate": "fbf8d03f0a1cc1546642",
   "total": 34486.69
  },
  "house/custom-openings": {
@@ -2328,7 +2328,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "cb92f17be56e00234c75",
-  "estimate": "ad0371df4a24bd9b895f",
+  "estimate": "be90c1422f4d02079bd5",
   "total": 28025.35
  },
  "house/hidden": {
@@ -2339,7 +2339,7 @@
   "extras": "93948cf844a071ed458b",
   "catalogue": "ed6f0a14cddffc25bb87",
   "exports": "79b9e0e9f9861bf8d16a",
-  "estimate": "ad0371df4a24bd9b895f",
+  "estimate": "be90c1422f4d02079bd5",
   "total": 28025.35
  }
 }

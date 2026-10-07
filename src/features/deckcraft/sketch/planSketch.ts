@@ -14,7 +14,7 @@ import {generateSketchDesign} from './sketchToDesign';
 import {parseSketchDocument,type SketchDocument,type SketchShape,type SketchResult,type SketchPoint} from './sketchTypes';
 import {rectangularSketch} from './sketchGeometry';
 import {snapStairPath} from './sketchStairPath';
-import {newYardFeature} from '../yardSettings';
+import {fitNewPatio,newYardFeature} from '../yardSettings';
 import {yardShapeEdit,yardShapeResize,yardShapeWorldPoints,yardShapeLocalPoint,yardShapeWorldPoint,yardShapeRunIn} from '../yardShapeEditing';
 
 const EPS=1e-6;
@@ -144,7 +144,7 @@ export function generatePlanSketchDesign(document:SketchDocument,current:DeckDat
       if(f.kind!=='patio'&&f.kind!=='retaining-wall'){yard.push(f);continue;}
       const id=yardId(f,i),s=byId.get(id);if(!s){summary.push(`${f.name} removed from the yard.`);continue;}const old=oldById.get(id)!;yard.push(changed(s)?changeYard(s,f,old):f);
     }
-    for(const s of document.shapes.filter(s=>isYard(s)&&!oldById.has(s.id))){const id=`yard-${s.id}`;if(yard.some(f=>f.id===id))throw Error('Give the new yard shape a unique sketch ID.');const f={...newYardFeature(s.kind as 'patio'|'retaining-wall',{...candidate(),siteModel:undefined}),id,name:s.label};const added=changeYard(s,f),grade=yardGradeIn(candidate(),added);if(!Number.isFinite(grade))throw Error('Survey the new feature centre before setting its finished level.');yard.push({...added,finishedElevationIn:grade+added.heightIn});summary.push(`${s.label}: new editable ${s.kind==='patio'?'patio outline':'open wall path'}; selected product remains available in Backyard settings.`);}
+    for(const s of document.shapes.filter(s=>isYard(s)&&!oldById.has(s.id))){const id=`yard-${s.id}`;if(yard.some(f=>f.id===id))throw Error('Give the new yard shape a unique sketch ID.');const f={...newYardFeature(s.kind as 'patio'|'retaining-wall',{...candidate(),siteModel:undefined}),id,name:s.label};const added=changeYard(s,f),grade=yardGradeIn(candidate(),added);if(!Number.isFinite(grade))throw Error('Survey the new feature centre before setting its finished level.');yard.push(fitNewPatio(candidate(),{...added,finishedElevationIn:grade+added.heightIn}));summary.push(`${s.label}: new editable ${s.kind==='patio'?'patio outline':'open wall path'}; selected product remains available in Backyard settings.`);}
     if(yard.length>20)throw Error('This design supports up to 20 yard features.');if(!same(yard,current.yardFeatures??[]))merge({yardFeatures:yard});
 
     const next=candidate(),model=buildDeckTakeoff(next),houses=getHouseBlocks(next);

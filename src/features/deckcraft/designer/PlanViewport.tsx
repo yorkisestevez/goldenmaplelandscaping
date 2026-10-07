@@ -1,13 +1,19 @@
 import {useArchitectKeys} from './architectKeys';
 import {useEffect,useRef,useState,type PointerEvent,type ReactNode} from 'react';
+import {createPortal} from 'react-dom';
 import {Hand,Maximize,Minus,Plus} from 'lucide-react';
 import type {PlanFrame} from '../ConstructionPlan';
+import {useDesignerMode} from './designerMode';
+import ProRulers from './pro/ProRulers';
 import './planViewport.css';
 
 const limit=(value:number)=>Math.max(.15,Math.min(3,value));
-/** Navigation changes only the view: neither pricing nor the design's undo history. */
-export default function PlanViewport({children,frame}:{children:(zoom:number,frame:PlanFrame)=>ReactNode;frame:PlanFrame}){
-  const box=useRef<HTMLDivElement>(null);
+/** Navigation changes only the view: neither pricing nor the design's undo history. The Pro workspace docks the
+ * navigation controls in its tool strip (`navigationTarget`); they keep working the same way there. */
+export default function PlanViewport({children,frame,navigationTarget}:{children:(zoom:number,frame:PlanFrame)=>ReactNode;frame:PlanFrame;navigationTarget?:HTMLElement|null}){
+  const box=useRef<HTMLDivElement>(null),stage=useRef<HTMLDivElement>(null);
+  // Designer Mode (the Pro workspace) adds rulers in feet along the top and left edges.
+  const rulers=useDesignerMode();
   const [view,setView]=useState({zoom:1,x:0,y:0}),[pan,setPan]=useState(false),[panning,setPanning]=useState(false);
   const live=useRef(view);live.current=view;
   const gesture=useRef<{id:number;x:number;y:number;originX:number;originY:number;tapPan?:boolean}|null>(null);
@@ -51,22 +57,24 @@ export default function PlanViewport({children,frame}:{children:(zoom:number,fra
     event.preventDefault();setView(old=>({...old,x:g.originX+event.clientX-g.x,y:g.originY+event.clientY-g.y}));
   };
   const end=(event:PointerEvent<HTMLDivElement>)=>{if(gesture.current?.id!==event.pointerId)return;gesture.current=null;setPanning(false);};
-  return <div ref={box} className="dd-plan-viewport" data-pan={pan||undefined} data-panning={panning||undefined} tabIndex={0} aria-label="Deck drawing canvas" onPointerDownCapture={down} onPointerMove={move} onPointerUp={end} onPointerCancel={end} onLostPointerCapture={end} onKeyDownCapture={freeze} onKeyDown={event=>{
+  const navigation=<div className="dd-plan-navigation" role="group" aria-label="Drawing navigation">
+    <button type="button" aria-label="Pan drawing" aria-pressed={pan} title="Pan the view without changing your deck" onClick={()=>setPan(old=>!old)}><Hand size={17}/></button>
+    <span className="dd-plan-navigation-divider" aria-hidden="true"/>
+    <button type="button" aria-label="Zoom out" disabled={view.zoom<=.15} onClick={()=>{freeze();zoom(.8);}}><Minus size={17}/></button>
+    <output aria-label="Drawing zoom">{Math.round(view.zoom*100)}%</output>
+    <button type="button" aria-label="Zoom in" disabled={view.zoom>=3} onClick={()=>{freeze();zoom(1.25);}}><Plus size={17}/></button>
+    <button type="button" aria-label="Fit drawing" title="Fit the entire design" onClick={fit}><Maximize size={17}/></button>
+  </div>;
+  return <div ref={box} className="dd-plan-viewport" data-pan={pan||undefined} data-panning={panning||undefined} data-rulers={rulers||undefined} tabIndex={0} aria-label="Deck drawing canvas" onPointerDownCapture={down} onPointerMove={move} onPointerUp={end} onPointerCancel={end} onLostPointerCapture={end} onKeyDownCapture={freeze} onKeyDown={event=>{
     if(event.target!==event.currentTarget)return;
     if(event.key==='+'||event.key==='='){event.preventDefault();zoom(1.25);}
     else if(event.key==='-'){event.preventDefault();zoom(.8);}
     else if(event.key==='0'){event.preventDefault();fit();}
     else if(event.key==='Escape'){setPan(false);gesture.current=null;setPanning(false);}
   }}>
-    <div className="dd-plan-stage" style={{transform:`translate(${view.x}px,${view.y}px) scale(${view.zoom})`}}>{children(view.zoom,frozen.current??frame)}</div>
-    <div className="dd-plan-navigation" role="group" aria-label="Drawing navigation">
-      <button type="button" aria-label="Pan drawing" aria-pressed={pan} title="Pan the view without changing your deck" onClick={()=>setPan(old=>!old)}><Hand size={17}/></button>
-      <span className="dd-plan-navigation-divider" aria-hidden="true"/>
-      <button type="button" aria-label="Zoom out" disabled={view.zoom<=.15} onClick={()=>{freeze();zoom(.8);}}><Minus size={17}/></button>
-      <output aria-label="Drawing zoom">{Math.round(view.zoom*100)}%</output>
-      <button type="button" aria-label="Zoom in" disabled={view.zoom>=3} onClick={()=>{freeze();zoom(1.25);}}><Plus size={17}/></button>
-      <button type="button" aria-label="Fit drawing" title="Fit the entire design" onClick={fit}><Maximize size={17}/></button>
-    </div>
+    <div ref={stage} className="dd-plan-stage" style={{transform:`translate(${view.x}px,${view.y}px) scale(${view.zoom})`}}>{children(view.zoom,frozen.current??frame)}</div>
+    {rulers&&<ProRulers stage={stage} frame={frozen.current??frame} view={view}/>}
+    {navigationTarget?createPortal(navigation,navigationTarget):navigation}
     {pan&&<p className="dd-plan-pan-hint" role="status">Drag the canvas to look around. Turn Pan off to edit points.</p>}
   </div>;
 }

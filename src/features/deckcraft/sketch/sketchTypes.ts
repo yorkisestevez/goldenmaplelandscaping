@@ -44,7 +44,8 @@ export function parseSketchDocument(value:unknown):SketchDocument {
     if(path)shape.drawing='edge-path';
     if(s.riserCount!==undefined){if(s.kind!=='stairs')throw Error('Riser count belongs to stairs.');shape.riserCount=number(s.riserCount,1,32,`${label} riser count`);if(!Number.isInteger(shape.riserCount))throw Error('Use a whole number of risers.');}
     if(s.treadDepthIn!==undefined){if(s.kind!=='stairs')throw Error('Tread depth belongs to stairs.');shape.treadDepthIn=number(s.treadDepthIn,10,24,`${label} tread depth`);}
-    if(s.widthFt!==undefined)shape.widthFt=number(s.widthFt,1/12,120,`${label} width (feet)`);
+    // A retaining wall's width is its total path run, which shares the 240 ft path-wall limit.
+    if(s.widthFt!==undefined)shape.widthFt=number(s.widthFt,1/12,s.kind==='retaining-wall'?240:120,`${label} width (feet)`);
     if(s.depthFt!==undefined)shape.depthFt=number(s.depthFt,1/12,120,`${label} depth (feet)`);
     if(s.heightIn!==undefined)shape.heightIn=number(s.heightIn,s.kind==='patio'?-24:0,900,`${label} height (inches)`);
     return shape;
