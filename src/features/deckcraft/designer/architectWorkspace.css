@@ -14,7 +14,7 @@
 .deck-designer:has(.dd-workspace-nav) .dd-sheet-panel>.dd-summary-actions{display:inline-flex;margin:0 8px 6px 0}
 .deck-designer:has(.dd-workspace-nav) .dd-sheet-panel>.dd-secondary{margin:0 0 6px}
 .deck-designer:has(.dd-workspace-nav) .dd-canvas{border-radius:4px}
-@media(max-width:800px){.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav{position:relative;top:auto;gap:0;padding:0 6px}.dd-nav-group>summary{font-size:11px;padding:0 9px}.dd-nav-group:last-child .dd-nav-menu{left:auto;right:0}.deck-designer:has(.dd-workspace-nav) .dd-preview{padding:8px}.deck-designer:has(.dd-workspace-nav) .dd-preview-head{flex-wrap:wrap}.deck-designer:has(.dd-workspace-nav) .dd-preview h2{margin:0}.deck-designer:has(.dd-workspace-nav) .dd-workspace-price{padding:6px 10px}.deck-designer:has(.dd-workspace-nav) .dd-workspace-amount>small{flex-basis:auto}}
+@media(max-width:800px){.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav{position:relative;top:auto;gap:0;padding:0 6px}.dd-nav-group>summary{font-size:11px;padding:0 9px}.dd-nav-group:last-child .dd-nav-menu{left:auto;right:0}.deck-designer:has(.dd-workspace-nav) .dd-preview{padding:8px}.deck-designer:has(.dd-workspace-nav) .dd-preview-head{flex-wrap:wrap}.deck-designer:has(.dd-workspace-nav) .dd-preview h2{margin:0}.deck-designer:has(.dd-workspace-nav) .dd-workspace-price{padding:6px 10px;row-gap:0}.deck-designer:has(.dd-workspace-nav) .dd-workspace-amount>small{flex-basis:auto}}
 
 /* Drawing mode reserves the screen for geometry; project controls remain one click away. */
 .deck-designer:has(.dd-workspace-nav) .dd-preview-head{display:flex;align-items:center;justify-content:space-between}
