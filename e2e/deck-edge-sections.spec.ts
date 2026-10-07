@@ -1,5 +1,5 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
-import {savedConfiguration} from './nav';
+import {pickPlanTool,savedConfiguration} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -8,7 +8,7 @@ const proof=resolve('../../outputs/deckcraft-edge-sections-review');mkdirSync(pr
 const fixture={...DEFAULT_DECK,width:20,length:12,height:48,deckingMaterial:'tt_prime_plus',railingType:'None',stairFlights:1,stairPosition:'Front',privacySqft:0,autoLighting:{posts:true},customerName:'Local screen review',projectAddress:'Local review address'};
 const read=(page:Page)=>page.evaluate(()=>window.deckcraft!.read());
 const controls=(page:Page)=>page.getByRole('region',{name:'Railing and privacy screen controls',exact:true});
-async function open(page:Page){await page.getByRole('radio',{name:'Rails & screens',exact:true}).click();await expect(page.locator('.dd-edge-section-editor svg')).toBeVisible();}
+async function open(page:Page){await pickPlanTool(page,'Rails & screens');await expect(page.locator('.dd-edge-section-editor svg')).toBeVisible();}
 async function choose(page:Page,level=1){const state=await read(page),edge=state.edgeSections.find(e=>e.level===level&&e.label.includes('Left')&&e.eligible.some(r=>r.startPct<=25&&r.endPct>=75))??state.edgeSections.find(e=>e.level===level&&e.eligible.some(r=>r.endPct-r.startPct>=50));expect(edge).toBeTruthy();if(!edge)throw Error('No supported exposed edge');await controls(page).getByLabel('Railing and screen level',{exact:true}).selectOption(String(level));await controls(page).getByLabel('Select deck edge',{exact:true}).selectOption(edge.id);return edge;}
 async function range(page:Page,start:number,end:number){await controls(page).getByRole('spinbutton',{name:'Section start (ft)',exact:true}).fill(String(start));await controls(page).getByRole('spinbutton',{name:'Section end (ft)',exact:true}).fill(String(end));}
 async function undo(page:Page){await page.getByRole('region',{name:'Save and restore design',exact:true}).getByRole('button',{name:'Undo',exact:true}).click();}

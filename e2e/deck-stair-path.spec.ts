@@ -1,5 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
-import {savedConfiguration} from './nav';
+import {openDesignTask,openSketchFiles,openSketchMeasurements,savedConfiguration} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -20,7 +20,7 @@ async function execute(page:Page,commands:AgentCommand[]){
  if('error' in response)throw Error(`${response.error.code}: ${response.error.message}`);
  return response.snapshot;
 }
-async function open(page:Page,resume=false){await page.getByRole('button',{name:'Sketch a design',exact:true}).click();await expect(modal(page)).toBeVisible();if(resume){await modal(page).locator('summary').filter({hasText:'Sketch files & reset'}).click();await modal(page).getByRole('button',{name:'Resume saved sketch',exact:true}).click();}else await modal(page).getByRole('button',{name:'New sketch',exact:true}).click();}
+async function open(page:Page,resume=false){await page.getByRole('button',{name:'Sketch a design',exact:true}).click();await expect(modal(page)).toBeVisible();if(resume)await (await openSketchFiles(page)).getByRole('button',{name:'Resume saved sketch',exact:true}).click();else await modal(page).getByRole('button',{name:'New sketch',exact:true}).click();}
 async function screen(page:Page,p:SketchPoint){
  const canvas=modal(page).getByRole('group',{name:'Sketch canvas',exact:true});await canvas.scrollIntoViewIfNeeded();
  return canvas.evaluate((el,p)=>{const q=new DOMPoint(p.x,p.y).matrixTransform((el as SVGSVGElement).getScreenCTM()!);return {x:q.x,y:q.y};},p);
@@ -39,7 +39,7 @@ async function path(page:Page,points:SketchPoint[],touch=false){
  return drawn;
 }
 async function apply(page:Page){await modal(page).getByRole('button',{name:'Generate design',exact:true}).click();await expect(modal(page).getByRole('tabpanel',{name:'Plan sketch preview'})).toBeVisible();const name=(await draft(page)).shapes.at(-1)!.points.length===2?'line':'wrap';await page.screenshot({path:resolve(proof,`${test.info().project.name}-${name}-plan-preview.png`)});await modal(page).getByRole('button',{name:'Apply design',exact:true}).click();await expect(modal(page)).toBeHidden();await expect.poll(async()=>(await state(page)).ready).toBe(true);return state(page);}
-async function stairControls(page:Page){const button=page.getByRole('region',{name:'Deck configuration'}).getByRole('button',{name:'Stairs & railings',exact:true});if(await button.getAttribute('aria-expanded')==='false')await button.click();const controls=page.getByRole('region',{name:'Stairs & railings',exact:true});await expect(controls.getByRole('spinbutton',{name:'Number of risers',exact:true})).toBeVisible();return controls;}
+async function stairControls(page:Page){await openDesignTask(page,'Stairs & railings');const controls=page.getByRole('dialog',{name:'Design inspector',exact:true}).getByRole('region',{name:'Stairs & railings',exact:true});await expect(controls.getByRole('spinbutton',{name:'Number of risers',exact:true})).toBeVisible();return controls;}
 const lengths=(points:SketchPoint[])=>points.slice(1).map((p,i)=>Math.hypot(p.x-points[i].x,p.y-points[i].y));
 
 test.beforeEach(async({page,context})=>{
@@ -70,7 +70,7 @@ test('right-click finishes each closed shape without adding the cursor position 
 });
 
 test('an open line creates its exact stair opening, remains editable and persists through reload with one Apply undo',async({page})=>{
- const original=await state(page);await seedDeck(page);await path(page,[{x:260,y:440},{x:460,y:440}]);
+ const original=await state(page);await seedDeck(page);await path(page,[{x:260,y:440},{x:460,y:440}]);await openSketchMeasurements(page);
  await modal(page).getByRole('spinbutton',{name:'Number of risers',exact:true}).fill('5');await modal(page).getByRole('spinbutton',{name:/^Tread depth/}).fill('13');
  expect((await state(page)).design).toEqual(original.design);const applied=await apply(page);expect(applied.design.stairPath?.points).toHaveLength(2);expect(lengths(applied.design.stairPath!.points)[0]).toBeCloseTo(120,0);expect(applied.design.stairRiserCount).toBe(5);expect(applied.design.stairTreadDepthIn).toBe(13);expect(applied.pricing.areaSqft).toBeCloseTo(192,3);expect(applied.quantities.stairFlights).toBe(1);expect(applied.quantities.stairTreads).toBe(4);
  await execute(page,[{type:'history.undo'}]);expect((await state(page)).design).toEqual(original.design);expect((await state(page)).pricing).toEqual(original.pricing);await execute(page,[{type:'history.redo'}]);expect((await state(page)).design).toEqual(applied.design);
@@ -85,7 +85,7 @@ test('an open line creates its exact stair opening, remains editable and persist
 });
 
 test('an L path opens both complete perimeter edges without closing into a diagonal or two unrelated default flights',async({page})=>{
- await seedDeck(page);await path(page,[{x:200,y:440},{x:520,y:440},{x:520,y:200}]);await modal(page).getByRole('spinbutton',{name:'Number of risers',exact:true}).fill('4');const applied=await apply(page);
+ await seedDeck(page);await path(page,[{x:200,y:440},{x:520,y:440},{x:520,y:200}]);await openSketchMeasurements(page);await modal(page).getByRole('spinbutton',{name:'Number of risers',exact:true}).fill('4');const applied=await apply(page);
  expect(applied.design.stairPath?.points).toHaveLength(3);const span=lengths(applied.design.stairPath!.points);expect(span[0]).toBeCloseTo(192,0);expect(span[1]).toBeCloseTo(144,0);expect(applied.design.stairRiserCount).toBe(4);expect(applied.quantities.stairFlights).toBe(2);expect(applied.quantities.stairTreads).toBe(6);expect(applied.pricing.areaSqft).toBeCloseTo(192,3);
  const controls=await stairControls(page);await expect(controls.getByRole('spinbutton',{name:'Stair path section 1 width',exact:true})).toHaveValue('192');await expect(controls.getByRole('spinbutton',{name:'Stair path section 2 width',exact:true})).toHaveValue('144');const corner=applied.design.stairPath!.points[1];
  await controls.getByRole('spinbutton',{name:'Stair path section 1 width',exact:true}).fill('168');await expect.poll(async()=>lengths((await state(page)).design.stairPath!.points)[0]).toBe(168);expect((await state(page)).design.stairPath!.points[1]).toEqual(corner);expect(lengths((await state(page)).design.stairPath!.points)[1]).toBeCloseTo(144,4);
@@ -95,7 +95,7 @@ test('an L path opens both complete perimeter edges without closing into a diago
 });
 
 test.describe('phone stair path',()=>{test.use({viewport:{width:390,height:844},hasTouch:true,isMobile:true});test('@phone native touch draws an L and Finish path leaves risers and tread dimensions editable',async({page})=>{
- const original=await state(page);await seedDeck(page);await path(page,[{x:200,y:440},{x:520,y:440},{x:520,y:200}],true);
+ const original=await state(page);await seedDeck(page);await path(page,[{x:200,y:440},{x:520,y:440},{x:520,y:200}],true);await openSketchMeasurements(page);
  await modal(page).getByRole('spinbutton',{name:'Number of risers',exact:true}).fill('5');await modal(page).getByRole('spinbutton',{name:/^Tread depth/}).fill('12');
  const saved=await draft(page);expect(saved.shapes.at(-1)!.points).toHaveLength(3);await page.screenshot({path:resolve(proof,'phone-native-touch-l-path.png')});const applied=await apply(page);expect(applied.design.stairPath?.points).toHaveLength(3);expect(applied.design.stairRiserCount).toBe(5);expect(applied.design.stairTreadDepthIn).toBe(12);expect(applied.quantities.stairTreads).toBe(8);
  await execute(page,[{type:'history.undo'}]);expect((await state(page)).design).toEqual(original.design);await execute(page,[{type:'history.redo'}]);const controls=await stairControls(page);

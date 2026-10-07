@@ -1,4 +1,5 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
+import {openSketchMeasurements} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
@@ -41,7 +42,7 @@ for(const device of [{name:'desktop',width:1440,height:1000,touch:false},{name:'
   // Browser input coordinates round at subpixel precision; locked axes above remain exact.
   expect(Math.max(...points.map(p=>p.x))-Math.min(...points.map(p=>p.x))).toBeCloseTo(420,3);
   expect(Math.max(...points.map(p=>p.y))-Math.min(...points.map(p=>p.y))).toBeCloseTo(240,3);
-  await modal(page).getByRole('spinbutton',{name:/^Measured width/}).fill('20');await modal(page).getByRole('spinbutton',{name:/^Measured depth/}).fill('12');
+  await openSketchMeasurements(page);await modal(page).getByRole('spinbutton',{name:/^Measured width/}).fill('20');await modal(page).getByRole('spinbutton',{name:/^Measured depth/}).fill('12');
   await page.screenshot({path:resolve(proof,`${device.name}-square-outline.png`)});
   await modal(page).getByRole('button',{name:'Generate design',exact:true}).click();await expect(modal(page).getByRole('status',{name:'Sketch preview price'})).toContainText('240 sq ft');
   expect((await state(page)).design).toEqual(original.design);await modal(page).getByRole('button',{name:'Apply design',exact:true}).click();await expect(modal(page)).toHaveCount(0);

@@ -83,6 +83,22 @@ export async function openSketch(page:Page){
   return modal;
 }
 
+/** Measurements, the shape list and sketch files sit in this panel. It starts closed while drawing. */
+export async function openSketchMeasurements(page:Page){
+  const inspector=page.getByRole('dialog',{name:'Sketch a design',exact:true}).locator('details.dd-sketch-inspector');
+  if(!await inspector.evaluate(el=>(el as HTMLDetailsElement).open))await inspector.locator('summary').first().click();
+  await expect(inspector).toHaveJSProperty('open',true);
+  return inspector;
+}
+
+/** Sketch files are nested inside the measurements panel. */
+export async function openSketchFiles(page:Page){
+  await openSketchMeasurements(page);
+  const files=page.getByRole('dialog',{name:'Sketch a design',exact:true}).locator('details.dd-sketch-files');
+  if(!await files.evaluate(el=>(el as HTMLDetailsElement).open))await files.locator('summary').click();
+  return files;
+}
+
 /** Opens a design-task section from its menu. The menu closes after the choice, and the inspector dialog covers that menu until it is dismissed. */
 export async function openDesignTask(page:Page,name:string){
   await dismissDesignInspector(page);
