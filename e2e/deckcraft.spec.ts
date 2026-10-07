@@ -319,6 +319,8 @@ test('reaches every feature of the designer',async({page})=>{
     await reach('Accent paint tool',paintChip(page));
     await showCanvas(page);await paintChip(page).getByRole('button',{name:'Done'}).click();
     await expect(paintChip(page)).toHaveCount(0);
+    // The paint chip sits on the drawing, so closing it leaves the section. Inlays are in Boards & finish.
+    await openSection(page,'Boards & finish');
     const inlays=page.getByRole('region',{name:'Inlays'});
     for(const kind of ['Add a framed rectangle','Add a diamond','Add a band','Add a medallion'])await reach(`Inlays: ${kind}`,inlays.getByRole('button',{name:kind,exact:true}));
     await reach('Deck-part finishes: fascia (F6)',deckParts(page).getByLabel('Fascia colour',{exact:true}));
@@ -401,7 +403,10 @@ test('reaches every feature of the designer',async({page})=>{
     await setNumber(page,'Deck width',24);
     await expect(size(page)).toContainText('24 × 12 ft');
     await page.waitForTimeout(800);// autosave runs 450 ms after the last change
-    await page.goto(link);await openFiles(page);
+    await page.goto(link);
+    await expect(size(page)).toContainText('24 × 12 ft');
+    await showCanvas(page);
+    await openFiles(page);
     await reach('Go back to my own design',tools.getByRole('button',{name:'Go back to my own design'}));
   });
   expect(problems).toEqual([]);
@@ -1496,8 +1501,10 @@ test('shares a link that reopens the design and keeps the visitor’s own',async
   await setNumber(page,'Deck width',30);
   await expect(size(page)).toContainText('30 × 12 ft');
   await page.waitForTimeout(800);
-  await page.goto(link);await openFiles(page);
+  await page.goto(link);
   await expect(size(page)).toContainText('24 × 12 ft');
+  await showCanvas(page);
+  await openFiles(page);
   await expect(tools).toContainText('shared with you');
   await expect(page).not.toHaveURL(/#d=/);
   await tools.getByRole('button',{name:'Go back to my own design'}).click();
