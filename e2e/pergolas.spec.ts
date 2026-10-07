@@ -7,7 +7,7 @@ async function openExtras(page:Page){
  await openDesignTask(page,extrasName);
  await expect(page.getByRole('region',{name:'Aluminum pergolas'})).toBeVisible();
 }
-async function show3D(page:Page){await dismissDesignInspector(page);await page.getByRole('tab',{name:'3D',exact:true}).click();}
+async function show3D(page:Page){await dismissDesignInspector(page);const files=page.getByRole('region',{name:'Save and restore design'}).locator('details.dd-workspace-files');if(await files.evaluate(el=>(el as HTMLDetailsElement).open).catch(()=>false))await files.locator('summary').click();await page.getByRole('tab',{name:'3D',exact:true}).click();}
 async function openFiles(page:Page){await dismissDesignInspector(page);const menu=page.getByRole('region',{name:'Save and restore design'}).locator('details.dd-workspace-files');if(await menu.getAttribute('open')===null)await menu.locator(':scope>summary').click();}
 const shots=proofDir('pergolas');
 const panel=(page:Page)=>page.getByRole('region',{name:'Aluminum pergolas',includeHidden:true});
@@ -76,7 +76,7 @@ test('pergola mesh selection, dragging, rotation, cancel and lighting',async({pa
  await tools.getByRole('button',{name:'Move pergola right half a foot',exact:true}).click();await expect(panel(page).getByLabel('Pergola centre across (ft)',{exact:true})).toHaveValue(String(moved+.5));
  await tools.getByRole('group',{name:'Pergola position and rotation',exact:true}).focus();await page.keyboard.press('Shift+ArrowRight');await expect(panel(page).getByLabel('Pergola rotation (degrees)',{exact:true})).not.toHaveValue(String(angle));
  await tools.getByLabel('Pergola LED lighting',{exact:true}).check();await page.getByRole('button',{name:'Night',exact:false}).click();await expect(page.getByText('No lights on this design yet.',{exact:false})).toHaveCount(0);
- await expect(panel(page)).toContainText('Planned perimeter LEDs');await panel(page).locator('summary',{hasText:'Contractor costs'}).click();await expect(panel(page).getByLabel('Pergola perimeter LED lighting supply cost (CAD)',{exact:true})).toBeVisible();
+ await expect(panel(page)).toContainText('Planned perimeter LEDs');await openExtras(page);await panel(page).locator('summary',{hasText:'Contractor costs'}).click();await expect(panel(page).getByLabel('Pergola perimeter LED lighting supply cost (CAD)',{exact:true})).toBeVisible();await dismissDesignInspector(page);
  await page.getByRole('button',{name:'Corner',exact:true}).click();
  await page.waitForTimeout(300);await page.locator('#deck-live-preview').screenshot({path:resolve(shots,'deckcraft-pergola-editing-night.png')});await canvas.scrollIntoViewIfNeeded();await page.waitForTimeout(300);await canvas.screenshot({path:resolve(shots,'deckcraft-pergola-canvas-night.png')});
  await page.getByRole('switch',{name:/Preview lights/}).uncheck();await page.waitForTimeout(300);await page.locator('#deck-live-preview').screenshot({path:resolve(shots,'deckcraft-pergola-editing-lights-off.png')});await expect(tools.getByLabel('Pergola LED lighting',{exact:true})).toBeChecked();await page.getByRole('switch',{name:/Preview lights/}).check();
