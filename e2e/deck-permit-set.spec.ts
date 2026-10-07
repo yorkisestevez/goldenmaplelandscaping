@@ -1,5 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {readFileSync} from 'node:fs';
+import {openDesignTask} from './nav';
 
 // The permit drawing set in the designer: Proposal & files opens it, its nine sheets preview, the lot for the site plan
 // can be entered from a survey in metres, and the PDF and DXF download with the right names and contents. Nothing is
@@ -8,15 +9,9 @@ test.beforeEach(async({context})=>{
   await context.route('**/*',route=>{const url=new URL(route.request().url());return ['127.0.0.1','localhost','[::1]'].includes(url.hostname)&&['GET','HEAD'].includes(route.request().method())?route.fallback():route.abort();});
 });
 
-/** Opens Proposal & files; the canvas-first workspace hides the section menus behind the project controls and a menu group. */
+/** Opens Proposal & files. Drawing focus hides the task menu until the project controls are shown. */
 async function openProposalFiles(page:Page){
-  const section=page.getByRole('region',{name:'Deck configuration'}).getByRole('button',{name:'Proposal & files',exact:true});
-  // Drawing focus (the default) hides the menus; its toggle reads "Show project controls" while pressed.
-  const focus=page.locator('.dd-drawing-focus-toggle');
-  await expect(focus).toBeVisible();
-  if(await focus.getAttribute('aria-pressed')==='true')await focus.click();
-  if(!await section.isVisible())await page.locator('nav[aria-label="Design tasks"] details').filter({has:page.locator('button[aria-label="Proposal & files"]')}).locator('summary').click();
-  if(await section.getAttribute('aria-expanded')==='false')await section.click();
+  await openDesignTask(page,'Proposal & files');
 }
 async function openPermitSet(page:Page){
   await page.goto('/deck-designer/');

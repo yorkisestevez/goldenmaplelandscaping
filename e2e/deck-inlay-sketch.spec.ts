@@ -4,6 +4,7 @@ import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 import type {OutlinePoint} from '../src/features/deckcraft/types';
+import {pickPlanTool} from './nav';
 
 const proof=resolve(process.cwd(),'../../outputs/deckcraft-inlay-review');mkdirSync(proof,{recursive:true});
 const fixture={...DEFAULT_DECK,width:16,length:12,height:30,deckType:'Freestanding',houseVisible:false,hasInlay:false,inlays:undefined};
@@ -16,9 +17,10 @@ async function activate(page:Page,control:Locator,touch=false){await control.scr
 async function world(page:Page,p:OutlinePoint){return canvas(page).evaluate((el,p)=>{const m=(el as SVGSVGElement).getScreenCTM()!,v=new DOMPoint(p.x,p.y).matrixTransform(m);return{x:v.x,y:v.y};},p);}
 async function tap(page:Page,p:OutlinePoint,touch=false){await canvas(page).scrollIntoViewIfNeeded();const screen=await world(page,p);if(touch)await page.touchscreen.tap(screen.x,screen.y);else await page.mouse.click(screen.x,screen.y);}
 async function open(page:Page,touch=false){
- const entry=page.getByRole('button',{name:'Draw a custom inlay',exact:true});
- if(!await entry.isVisible()){if(!await page.getByRole('radio',{name:'Inlays',exact:true}).isVisible())await activate(page,page.getByRole('tab',{name:'Materials',exact:true}),touch);await activate(page,page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name:'Inlays',exact:true}),touch);}
- await activate(page,await entry.isVisible()?entry:page.getByRole('button',{name:'Draw custom inlay',exact:true}),touch);await expect(modal(page)).toBeVisible();
+ await pickPlanTool(page,'Inlays');
+ if(touch){const b=await page.getByRole('radio',{name:'Inlays',exact:true}).boundingBox();expect(b!.width).toBeGreaterThanOrEqual(44);expect(b!.height).toBeGreaterThanOrEqual(44);}
+ await activate(page,page.getByRole('button',{name:'Draw custom inlay',exact:true}),touch);
+ await expect(modal(page)).toBeVisible();
 }
 async function unchanged(page:Page,before:Awaited<ReturnType<typeof state>>){const after=await state(page);expect(after.design).toEqual(before.design);expect(after.pricing).toEqual(before.pricing);expect(after.history).toEqual(before.history);}
 test.beforeEach(async({page,context})=>{

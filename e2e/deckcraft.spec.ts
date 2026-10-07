@@ -72,6 +72,8 @@ const shortcuts=(page:Page)=>page.getByRole('group',{name:'Shape shortcuts'});
 const planStatus=(page:Page)=>preview(page).locator('.dd-plan-status');
 /** The plan's tools (R5): Deck size, Draw outline, Stairs and House, one at a time. Picks one. */
 async function planTool(page:Page,name:'Deck size'|'Shape & points'|'Stairs'|'House'){
+  const inspector=page.getByRole('dialog',{name:'Design inspector',exact:true});
+  if(await inspector.isVisible())await inspector.getByRole('button',{name:'Done · back to drawing',exact:true}).click();
   const tool=page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{name,exact:true});
   if(!await tool.isVisible())await page.getByRole('tablist',{name:'Tool categories'}).getByRole('tab',{name:'Building',exact:true}).click();
   await tool.click();
