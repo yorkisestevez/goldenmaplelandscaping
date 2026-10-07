@@ -9,15 +9,24 @@ export function proofDir(name:string){
   throw Error(`Cannot create proof directory ${name}`);
 }
 
-/** Durable autosave. New saves commit in IndexedDB; localStorage is only the legacy migration source. */
-export async function savedConfiguration(page:Page){
-  return page.evaluate(async()=>{
+async function storedProjectJson(page:Page,slot:'current'|'jobs'){
+  return page.evaluate(async slot=>{
     const db=await new Promise<IDBDatabase>((resolve,reject)=>{const request=indexedDB.open('golden-maple.deckcraft-projects.v1');request.onerror=()=>reject(request.error);request.onsuccess=()=>resolve(request.result);});
     try{
-      const json=await new Promise<string|null>((resolve,reject)=>{const request=db.transaction('projects','readonly').objectStore('projects').get('current');request.onerror=()=>reject(request.error);request.onsuccess=()=>resolve(request.result?.json??null);});
-      return json?JSON.parse(json).configuration:undefined;
+      const json=await new Promise<string|null>((resolve,reject)=>{const request=db.transaction('projects','readonly').objectStore('projects').get(slot);request.onerror=()=>reject(request.error);request.onsuccess=()=>resolve(request.result?.json??null);});
+      return json?JSON.parse(json):undefined;
     }finally{db.close();}
-  });
+  },slot);
+}
+
+/** Durable autosave. New saves commit in IndexedDB; localStorage is only the legacy migration source. */
+export async function savedConfiguration(page:Page){
+  return (await storedProjectJson(page,'current'))?.configuration;
+}
+
+/** Saved jobs commit in the same database. The old localStorage library is only the first-open migration source. */
+export async function savedJobLibrary(page:Page){
+  return storedProjectJson(page,'jobs');
 }
 
 /** Canvas-first drawing focus hides the task menus, the price bar and the job-tool buttons. */
@@ -64,8 +73,13 @@ export async function openSketch(page:Page){
   return modal;
 }
 
-/** Opens a design-task section from its menu. The menu closes after the choice. */
+/** Opens a design-task section from its menu. The menu closes after the choice, and the inspector dialog covers that menu until it is dismissed. */
 export async function openDesignTask(page:Page,name:string){
+  const inspector=page.getByRole('dialog',{name:'Design inspector',exact:true});
+  if(await inspector.isVisible()){
+    await inspector.getByRole('button',{name:'Done · back to drawing',exact:true}).click();
+    await expect(inspector).toBeHidden();
+  }
   await showProjectControls(page);
   const nav=page.getByRole('navigation',{name:'Design tasks'});
   const button=nav.getByRole('button',{name,exact:true});

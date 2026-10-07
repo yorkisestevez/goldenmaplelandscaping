@@ -22,7 +22,7 @@ for(const phone of [false,true])test.describe(phone?'phone actionable review':'d
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));const original=await read(page);
   await showProjectControls(page);
   await page.getByRole('button',{name:/^Review \d+ issues?$/}).click();
-  const dialog=page.getByRole('dialog',{name:'Find and resolve issues'});await expect(dialog).toBeVisible();
+  const dialog=page.getByRole('dialog',{name:'Construction readiness',exact:true});await expect(dialog).toBeVisible();
   await expect(dialog.locator('[data-issue-id="opening-clash:site-window"]')).toContainText('railing crosses window');
   await dialog.getByRole('button',{name:'Locate measured opening',exact:true}).click();
   await expect(page.getByRole('combobox',{name:'Select plan part',exact:true})).toHaveValue('opening:site-window');
