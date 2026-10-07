@@ -7,7 +7,7 @@ async function openExtras(page:Page){
  await openDesignTask(page,extrasName);
  await expect(page.getByRole('region',{name:'Aluminum pergolas'})).toBeVisible();
 }
-async function show3D(page:Page){await dismissDesignInspector(page);const files=page.getByRole('region',{name:'Save and restore design'}).locator('details.dd-workspace-files');if(await files.evaluate(el=>(el as HTMLDetailsElement).open).catch(()=>false))await files.locator('summary').click();await page.getByRole('tab',{name:'3D',exact:true}).click();}
+async function show3D(page:Page){await dismissDesignInspector(page);const files=page.getByRole('region',{name:'Save and restore design'}).locator('details.dd-workspace-files');if(await files.evaluate(el=>(el as HTMLDetailsElement).open).catch(()=>false))await files.locator(':scope>summary').click();await page.getByRole('tab',{name:'3D',exact:true}).click();}
 async function openFiles(page:Page){await dismissDesignInspector(page);const menu=page.getByRole('region',{name:'Save and restore design'}).locator('details.dd-workspace-files');if(await menu.getAttribute('open')===null)await menu.locator(':scope>summary').click();}
 const shots=proofDir('pergolas');
 const panel=(page:Page)=>page.getByRole('region',{name:'Aluminum pergolas',includeHidden:true});
