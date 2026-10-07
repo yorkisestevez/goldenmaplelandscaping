@@ -10,7 +10,8 @@ import type {DeckLevel,Member,V3} from './deckTakeoff';
  * Framing and decking of a wrap-around main deck. Each zone (main deck, left wing, right wing) is
  * framed in its own frame exactly like a plain attached deck (joists away from its ledger, beams
  * parallel to it, the framing engine's beam rows and posts), then turned into plan. Zones meet on
- * a doubled hip that runs from the house corner to the outside corner:
+ * a doubled hip. Current rules run that hip at 45° from the house corner to the nearer outer edge;
+ * a legacy save runs it on to the outside corner:
  * - jack joists from both zones hang off the hip on skewed hangers;
  * - each zone beam ends on a junction post under the hip;
  * - extra posts keep every hip span within the two-ply span of the beam table, and the hip never
