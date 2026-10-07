@@ -99,6 +99,13 @@ export async function openSketchFiles(page:Page){
   return files;
 }
 
+/** Closes the measurements panel so canvas clicks are not swallowed by the shape list underneath it. */
+export async function closeSketchMeasurements(page:Page){
+  const inspector=page.getByRole('dialog',{name:'Sketch a design',exact:true}).locator('details.dd-sketch-inspector');
+  if(await inspector.evaluate(el=>(el as HTMLDetailsElement).open))await inspector.locator('summary').first().click();
+  await expect(inspector).toHaveJSProperty('open',false);
+}
+
 /** Opens a design-task section from its menu. The menu closes after the choice, and the inspector dialog covers that menu until it is dismissed. */
 export async function openDesignTask(page:Page,name:string){
   await dismissDesignInspector(page);

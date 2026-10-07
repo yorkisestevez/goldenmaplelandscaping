@@ -1,5 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
-import {openDesignTask,openSketchFiles,openSketchMeasurements,savedConfiguration} from './nav';
+import {closeSketchMeasurements,openDesignTask,openSketchFiles,openSketchMeasurements,savedConfiguration} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -20,7 +20,7 @@ async function execute(page:Page,commands:AgentCommand[]){
  if('error' in response)throw Error(`${response.error.code}: ${response.error.message}`);
  return response.snapshot;
 }
-async function open(page:Page,resume=false){await page.getByRole('button',{name:'Sketch a design',exact:true}).click();await expect(modal(page)).toBeVisible();if(resume)await (await openSketchFiles(page)).getByRole('button',{name:'Resume saved sketch',exact:true}).click();else await modal(page).getByRole('button',{name:'New sketch',exact:true}).click();}
+async function open(page:Page,resume=false){await page.getByRole('button',{name:'Sketch a design',exact:true}).click();await expect(modal(page)).toBeVisible();if(resume){await (await openSketchFiles(page)).getByRole('button',{name:'Resume saved sketch',exact:true}).click();await closeSketchMeasurements(page);}else await modal(page).getByRole('button',{name:'New sketch',exact:true}).click();}
 async function screen(page:Page,p:SketchPoint){
  const canvas=modal(page).getByRole('group',{name:'Sketch canvas',exact:true});await canvas.scrollIntoViewIfNeeded();
  return canvas.evaluate((el,p)=>{const q=new DOMPoint(p.x,p.y).matrixTransform((el as SVGSVGElement).getScreenCTM()!);return {x:q.x,y:q.y};},p);

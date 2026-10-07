@@ -62,7 +62,7 @@ test('angled lines, close-on-start, corner undo and invalid/cancelled drafts kee
  await modal(page).getByRole('button',{name:'Draw deck',exact:true}).click();await draw(page,context,[{x:680,y:140},{x:950,y:350},{x:950,y:140},{x:680,y:350}]);
  await modal(page).getByRole('button',{name:'Finish outline',exact:true}).click();await expect(modal(page).getByRole('status').last()).toContainText('cross');expect(await draft(page)).toEqual(saved);
  await modal(page).getByRole('button',{name:'Back a corner',exact:true}).click();await expect(modal(page).locator('.dd-sketch-line-actions')).toContainText('3 corners');
- await page.keyboard.press('Escape');await expect(modal(page)).toBeVisible();await expect(modal(page).getByRole('button',{name:'Finish outline',exact:true})).toHaveCount(0);expect(await draft(page)).toEqual(saved);
+ await page.keyboard.press('Escape');await expect(modal(page)).toBeVisible();await expect(modal(page).getByRole('status').last()).toContainText('Outline cancelled');await expect(modal(page).locator('.dd-sketch-line-actions')).toContainText('0 corners');await expect(modal(page).getByRole('button',{name:'Finish outline',exact:true})).toBeDisabled();expect(await draft(page)).toEqual(saved);
  await draw(page,context,[{x:700,y:150},{x:950,y:160}]);
  await modal(page).getByRole('button',{name:'Back a corner',exact:true}).focus();await page.keyboard.press('Enter');await expect(modal(page).locator('.dd-sketch-line-actions')).toContainText('1 corners');
  await tap(page,context,{x:950,y:160});await page.keyboard.press('Control+z');await expect(modal(page).locator('.dd-sketch-line-actions')).toContainText('1 corners');
