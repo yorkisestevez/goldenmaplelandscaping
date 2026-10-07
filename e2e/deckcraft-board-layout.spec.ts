@@ -1,5 +1,5 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
-import {pickPlanTool,savedConfiguration} from './nav';
+import {pickPlanTool,savedConfiguration,showProjectControls} from './nav';
 import {readFileSync} from 'node:fs';
 import type {DeckAgentApi,AgentCommand} from '../src/features/deckcraft/designer/deckAgentController';
 type Point={x:number;y:number};
@@ -29,6 +29,7 @@ async function applyRegion(page:Page,context:BrowserContext,angle:number,free=fa
 // the live-price bar and every button takes the pointer at its centre. Whether they also fit the first screen depends on
 // the device height, not on the product.
 async function navigationClear(page:Page){
+ await showProjectControls(page);
  const navigation=page.getByRole('group',{name:'Drawing navigation',exact:true});await navigation.scrollIntoViewIfNeeded();
  const box=await navigation.boundingBox(),price=await page.getByRole('region',{name:'Live price',exact:true}).boundingBox();expect(box&&price).toBeTruthy();expect(box!.y+box!.height).toBeLessThanOrEqual(price!.y);
  expect(await navigation.evaluate(el=>[...el.querySelectorAll('button')].every(button=>{const r=button.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!hit&&button.contains(hit);}))).toBe(true);
