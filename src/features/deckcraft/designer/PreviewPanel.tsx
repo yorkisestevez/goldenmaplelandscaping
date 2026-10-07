@@ -1,11 +1,11 @@
+import {Suspense,lazy,useEffect,useMemo,useRef,useState} from 'react';
 import {useArchitectKeys,revealControl} from './architectKeys';
+import {hasBackyardLayout} from '../backyard';
+import {yardShapeFrame} from '../yardShapeGeometry';
 const CanvasContextMenu=lazy(()=>import('./CanvasContextMenu'));
 const ArchitectShortcuts=lazy(()=>import('./ArchitectShortcuts'));
 const documentDrawing=()=>typeof document!=='undefined'&&!!document.querySelector('.dd-shape-draw-surface,.dd-yard-shape-editor[data-drawing],.dd-landscape-plan[data-drawing]');
-import {hasBackyardLayout} from '../backyard';
-import {yardShapeFrame} from '../yardShapeGeometry';
 
-import {Suspense,lazy,useEffect,useMemo,useRef,useState} from 'react';
 
 import type {SelectionState} from './selectionState';
 
