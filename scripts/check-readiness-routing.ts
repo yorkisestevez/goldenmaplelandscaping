@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {calculateDeckReleaseEstimate} from '../src/features/deckcraft/deckRelease';
+import {actionableIssues} from '../src/features/deckcraft/designer/actionableIssues';
+const d=structuredClone(DEFAULT_DECK),before=JSON.stringify(d),e=calculateDeckReleaseEstimate(d);
+for(const message of ['Patio drainage needs an outlet','Retaining wall foundation engineering required','Wall drain outlet route confirmation','Unsurveyed earthwork — field elevations required','Geogrid placement requires engineering'])assert.equal(actionableIssues(d,e.model,[message])[0].actions[0].section,'backyard');
+assert.equal(actionableIssues(d,e.model,['Under-deck drainage needs review'])[0].actions[0].section,'extras');
+assert.equal(actionableIssues(d,e.model,['Footing depth depends on soil'])[0].actions[0].section,'site');
+assert.equal(JSON.stringify(d),before);
+assert.equal(actionableIssues(d,e.model,['x','x']).length,1);
+console.log('Construction readiness: correct yard/deck routing, deduplication and no geometry mutation passed.');

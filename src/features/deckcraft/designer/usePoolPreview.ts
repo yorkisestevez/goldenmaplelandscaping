@@ -1,0 +1,13 @@
+import {useEffect,useRef,useState} from 'react';
+import type {AgentCommand,AgentRequest,AgentResponse} from './deckAgentController';
+import {poolDraftKey} from './poolDraftState';
+import type {DeckData} from '../types';
+export function usePoolPreview(data:DeckData,onApplied?:(id:string)=>void){
+ const dataKey=poolDraftKey(data),currentKey=useRef(dataKey);currentKey.current=dataKey;const priorKey=useRef(dataKey),intent=useRef(0),applying=useRef(false);
+ const [preview,setPreview]=useState<Extract<AgentResponse,{ok:true}>>(),[request,setRequest]=useState<AgentRequest>(),[error,setError]=useState(''),[busy,setBusy]=useState(false),[before,setBefore]=useState<ReturnType<NonNullable<Window['deckcraft']>['read']>>();
+ const clear=()=>{intent.current++;setPreview(undefined);setRequest(undefined);setError('');setBusy(false);};
+ useEffect(()=>{if(priorKey.current===dataKey)return;priorKey.current=dataKey;intent.current++;setPreview(undefined);setRequest(undefined);setBusy(false);if(!applying.current&&(preview||request||busy))setError('Design changed while the pool edit was being reviewed. Preview this operation again.');},[dataKey]);
+ const propose=async(commands:AgentCommand[])=>{const api=window.deckcraft;if(!api){setError('Wait for the shared editor controller to become ready.');return;}const sourceKey=dataKey,token=++intent.current,snapshot=api.read(),r={id:`pool-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,9)}`,expectedRevision:snapshot.revision,commands};setBusy(true);setError('');setPreview(undefined);setRequest(undefined);try{const answer=await api.preview(r);if(currentKey.current!==sourceKey||token!==intent.current){if(token===intent.current)setError('Design changed while generating the pool preview. Preview again.');return;}if(answer.ok===false)throw Error(answer.error.message);setBefore(snapshot);setPreview(answer);setRequest(r);}catch(e){if(token===intent.current)setError((e as Error).message);}finally{if(token===intent.current)setBusy(false);}};
+ const apply=async()=>{if(!request||!preview)return;const api=window.deckcraft;if(!api)return;applying.current=true;setBusy(true);try{if(api.read().revision!==request.expectedRevision)throw Error('Design changed. Preview the pool operation again.');const answer=await api.execute(request);if(answer.ok===false)throw Error(answer.error.message);const id=(request.commands.find(c=>c.type.startsWith('pool.')) as {id?:string})?.id;if(id)onApplied?.(id);clear();}catch(e){setError((e as Error).message);}finally{applying.current=false;setBusy(false);}};
+ return {preview,before,error,busy,propose,apply,clear};
+}

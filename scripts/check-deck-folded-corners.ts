@@ -1,3 +1,5 @@
+import {loadAdvancedYardRuntime} from '../src/features/deckcraft/yardModel';
+await loadAdvancedYardRuntime();
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';

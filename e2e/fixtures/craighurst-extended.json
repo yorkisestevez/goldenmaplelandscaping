@@ -1,0 +1,660 @@
+{
+ "format": "golden-maple-deck-design",
+ "version": 1,
+ "units": "inches-and-feet",
+ "note": "Craighurst survey extended for the S3 site-concept checks: the 11 real shots (P1–P11) are unchanged; the 66 shots with ids SYN-* are SYNTHETIC, on a 48 × 45 in grid from x −144 to 240 in and z 0 to 360 in (outside the real shots' hull grown 18 in), at the least-squares plane of the real shots (e = 2.078 + 0.08616·(x − 46.67) − 0.02025·(z − 65.16) in) plus a gentle hump of 8 in (Gaussian, σ 66 in) centred at x 48, z 240. Not a real measurement: the real-only fixture (craighurst-ground-fit.json) stays the honesty test.",
+ "configuration": {
+  "customerName": "",
+  "projectAddress": "",
+  "scopeOfWork": "",
+  "deckType": "Attached",
+  "municipality": "Barrie",
+  "siteType": "Standard",
+  "soilCondition": "Clay",
+  "buildSeason": "Spring-Summer",
+  "intendedLoad": "Standard",
+  "foundation": "Helical Piles",
+  "foundationDepthIn": 48,
+  "shape": "Rectangle",
+  "levels": 1,
+  "width": 12,
+  "length": 5,
+  "height": 30,
+  "cornerChamfers": {
+   "frontLeftFt": 0,
+   "frontRightFt": 0
+  },
+  "deckingMaterial": "tt_landmark",
+  "deckingColor": "American Walnut",
+  "pattern": "Picture Frame",
+  "pictureFrameRows": 1,
+  "pictureFrameOverhangIn": 1,
+  "borderFinish": "Matching",
+  "boardWidth": 5.5,
+  "framingSize": "2x8",
+  "joistSpacing": 12,
+  "fasteningSystem": "Hidden",
+  "hasInlay": false,
+  "inlayLf": 0,
+  "inlays": [],
+  "deckFinishes": {
+   "border": "tt_landmark:Castle Gate",
+   "fascia": "tt_landmark:Castle Gate",
+   "risers": "tt_landmark:Castle Gate",
+   "railingColor": "Black"
+  },
+  "railingType": "Frameless Glass",
+  "catalogueAccessories": [
+   "tt_fascia",
+   "tt_concealoc"
+  ],
+  "stairFlights": 1,
+  "stairType": "Straight",
+  "stairPosition": "Front",
+  "stairOffset": 25,
+  "stairWidth": 48,
+  "stairTurn": "Right",
+  "landingDepthIn": 48,
+  "skirting": {
+   "style": "Horizontal boards",
+   "colour": "tt_landmark:Castle Gate",
+   "clearanceIn": 2,
+   "accessPanels": 1
+  },
+  "pergolaSqft": 0,
+  "benchLf": 0,
+  "hasDrainage": false,
+  "hasDemo": false,
+  "autoLighting": {
+   "posts": true,
+   "stairs": true,
+   "border": true
+  },
+  "lightingPreviewOn": false,
+  "sceneLighting": "Daylight",
+  "houseVisible": true,
+  "terrainConfig": {
+   "widthFt": 120,
+   "depthFt": 120,
+   "elevationIn": 0,
+   "slopePct": 0
+  },
+  "lightingSystem": {
+   "wireDistance": 90,
+   "selectedItems": [
+    {
+     "productId": "smart_hub150",
+     "qty": 1
+    },
+    {
+     "productId": "fusion",
+     "qty": 12,
+     "zone": "deck"
+    }
+   ]
+  },
+  "houseConfig": {
+   "widthFt": 34,
+   "depthFt": 32,
+   "storeys": 2,
+   "storeyHeightIn": 120,
+   "roofShape": "Hip",
+   "roofPitch": 7,
+   "floorHeightIn": 34.12,
+   "cladding": "Stucco",
+   "claddingColor": "#e8e1d2",
+   "roofFinish": "Architectural shingles",
+   "roofColor": "#2a2c2e",
+   "trimColor": "#1f2021",
+   "footprint": {
+    "rects": [
+     {
+      "id": "garage1",
+      "kind": "garage",
+      "wall": "Left",
+      "offsetFt": 4,
+      "widthFt": 24,
+      "depthFt": 24,
+      "storeys": 1,
+      "roofShape": "Hip"
+     }
+    ]
+   },
+   "openings": [
+    {
+     "id": "slider",
+     "type": "Door",
+     "facade": "Front",
+     "offsetPct": 10.294117647058822,
+     "bottomIn": 34.12,
+     "widthIn": 72,
+     "heightIn": 82,
+     "style": "Sliding"
+    }
+   ],
+   "gableAccent": {
+    "cladding": "Siding",
+    "color": "#e8e1d2"
+   },
+   "doorColor": "#5a3f2b",
+   "windowColor": "#1f2021",
+   "garageDoorColor": "#5a3f2b",
+   "wainscot": {
+    "cladding": "Ledgestone",
+    "color": "#4f4d4b",
+    "heightIn": 37
+   },
+   "fasciaColor": "#1f2021",
+   "gutterColor": "#1f2021"
+  },
+  "siteModel": {
+   "version": 1,
+   "points": [
+    {
+     "id": "P1",
+     "xIn": 156.416,
+     "zIn": 0,
+     "elevationIn": 10.58
+    },
+    {
+     "id": "P2",
+     "xIn": 0,
+     "zIn": 0,
+     "elevationIn": 0
+    },
+    {
+     "id": "P3",
+     "xIn": -4.838,
+     "zIn": -9.421,
+     "elevationIn": -4.17
+    },
+    {
+     "id": "P4",
+     "xIn": 57.726,
+     "zIn": 55.909,
+     "elevationIn": 10.26
+    },
+    {
+     "id": "P5",
+     "xIn": 36.577,
+     "zIn": 45.669,
+     "elevationIn": 6.02
+    },
+    {
+     "id": "P6",
+     "xIn": -0.914,
+     "zIn": 50.294,
+     "elevationIn": -1.58
+    },
+    {
+     "id": "P7",
+     "xIn": -18.562,
+     "zIn": 78.592,
+     "elevationIn": -7.37
+    },
+    {
+     "id": "P8",
+     "xIn": 8.725,
+     "zIn": 131.744,
+     "elevationIn": -4.79
+    },
+    {
+     "id": "P9",
+     "xIn": 56.392,
+     "zIn": 143.122,
+     "elevationIn": 1.25
+    },
+    {
+     "id": "P10",
+     "xIn": 76.594,
+     "zIn": 116.946,
+     "elevationIn": 5.98
+    },
+    {
+     "id": "P11",
+     "xIn": 145.275,
+     "zIn": 103.858,
+     "elevationIn": 6.68
+    },
+    {
+     "id": "SYN-W144-N0",
+     "xIn": -144,
+     "zIn": 0,
+     "elevationIn": -13.03
+    },
+    {
+     "id": "SYN-W96-N0",
+     "xIn": -96,
+     "zIn": 0,
+     "elevationIn": -8.89
+    },
+    {
+     "id": "SYN-W48-N0",
+     "xIn": -48,
+     "zIn": 0,
+     "elevationIn": -4.76
+    },
+    {
+     "id": "SYN-E192-N0",
+     "xIn": 192,
+     "zIn": 0,
+     "elevationIn": 15.92
+    },
+    {
+     "id": "SYN-E240-N0",
+     "xIn": 240,
+     "zIn": 0,
+     "elevationIn": 20.05
+    },
+    {
+     "id": "SYN-W144-N45",
+     "xIn": -144,
+     "zIn": 45,
+     "elevationIn": -13.94
+    },
+    {
+     "id": "SYN-W96-N45",
+     "xIn": -96,
+     "zIn": 45,
+     "elevationIn": -9.8
+    },
+    {
+     "id": "SYN-W48-N45",
+     "xIn": -48,
+     "zIn": 45,
+     "elevationIn": -5.63
+    },
+    {
+     "id": "SYN-E192-N45",
+     "xIn": 192,
+     "zIn": 45,
+     "elevationIn": 15.02
+    },
+    {
+     "id": "SYN-E240-N45",
+     "xIn": 240,
+     "zIn": 45,
+     "elevationIn": 19.14
+    },
+    {
+     "id": "SYN-W144-N90",
+     "xIn": -144,
+     "zIn": 90,
+     "elevationIn": -14.84
+    },
+    {
+     "id": "SYN-W96-N90",
+     "xIn": -96,
+     "zIn": 90,
+     "elevationIn": -10.66
+    },
+    {
+     "id": "SYN-W48-N90",
+     "xIn": -48,
+     "zIn": 90,
+     "elevationIn": -6.37
+    },
+    {
+     "id": "SYN-E192-N90",
+     "xIn": 192,
+     "zIn": 90,
+     "elevationIn": 14.15
+    },
+    {
+     "id": "SYN-E240-N90",
+     "xIn": 240,
+     "zIn": 90,
+     "elevationIn": 18.24
+    },
+    {
+     "id": "SYN-W144-N135",
+     "xIn": -144,
+     "zIn": 135,
+     "elevationIn": -15.73
+    },
+    {
+     "id": "SYN-W96-N135",
+     "xIn": -96,
+     "zIn": 135,
+     "elevationIn": -11.42
+    },
+    {
+     "id": "SYN-W48-N135",
+     "xIn": -48,
+     "zIn": 135,
+     "elevationIn": -6.71
+    },
+    {
+     "id": "SYN-E144-N135",
+     "xIn": 144,
+     "zIn": 135,
+     "elevationIn": 9.83
+    },
+    {
+     "id": "SYN-E192-N135",
+     "xIn": 192,
+     "zIn": 135,
+     "elevationIn": 13.39
+    },
+    {
+     "id": "SYN-E240-N135",
+     "xIn": 240,
+     "zIn": 135,
+     "elevationIn": 17.35
+    },
+    {
+     "id": "SYN-W144-N180",
+     "xIn": -144,
+     "zIn": 180,
+     "elevationIn": -16.6
+    },
+    {
+     "id": "SYN-W96-N180",
+     "xIn": -96,
+     "zIn": 180,
+     "elevationIn": -12.05
+    },
+    {
+     "id": "SYN-W48-N180",
+     "xIn": -48,
+     "zIn": 180,
+     "elevationIn": -6.57
+    },
+    {
+     "id": "SYN-E0-N180",
+     "xIn": 0,
+     "zIn": 180,
+     "elevationIn": -0.21
+    },
+    {
+     "id": "SYN-E48-N180",
+     "xIn": 48,
+     "zIn": 180,
+     "elevationIn": 5.16
+    },
+    {
+     "id": "SYN-E96-N180",
+     "xIn": 96,
+     "zIn": 180,
+     "elevationIn": 8.06
+    },
+    {
+     "id": "SYN-E144-N180",
+     "xIn": 144,
+     "zIn": 180,
+     "elevationIn": 9.98
+    },
+    {
+     "id": "SYN-E192-N180",
+     "xIn": 192,
+     "zIn": 180,
+     "elevationIn": 12.76
+    },
+    {
+     "id": "SYN-E240-N180",
+     "xIn": 240,
+     "zIn": 180,
+     "elevationIn": 16.49
+    },
+    {
+     "id": "SYN-W144-N225",
+     "xIn": -144,
+     "zIn": 225,
+     "elevationIn": -17.47
+    },
+    {
+     "id": "SYN-W96-N225",
+     "xIn": -96,
+     "zIn": 225,
+     "elevationIn": -12.73
+    },
+    {
+     "id": "SYN-W48-N225",
+     "xIn": -48,
+     "zIn": 225,
+     "elevationIn": -6.61
+    },
+    {
+     "id": "SYN-E0-N225",
+     "xIn": 0,
+     "zIn": 225,
+     "elevationIn": 0.8
+    },
+    {
+     "id": "SYN-E48-N225",
+     "xIn": 48,
+     "zIn": 225,
+     "elevationIn": 6.75
+    },
+    {
+     "id": "SYN-E96-N225",
+     "xIn": 96,
+     "zIn": 225,
+     "elevationIn": 9.08
+    },
+    {
+     "id": "SYN-E144-N225",
+     "xIn": 144,
+     "zIn": 225,
+     "elevationIn": 9.93
+    },
+    {
+     "id": "SYN-E192-N225",
+     "xIn": 192,
+     "zIn": 225,
+     "elevationIn": 12.08
+    },
+    {
+     "id": "SYN-E240-N225",
+     "xIn": 240,
+     "zIn": 225,
+     "elevationIn": 15.61
+    },
+    {
+     "id": "SYN-W144-N270",
+     "xIn": -144,
+     "zIn": 270,
+     "elevationIn": -18.39
+    },
+    {
+     "id": "SYN-W96-N270",
+     "xIn": -96,
+     "zIn": 270,
+     "elevationIn": -13.69
+    },
+    {
+     "id": "SYN-W48-N270",
+     "xIn": -48,
+     "zIn": 270,
+     "elevationIn": -7.72
+    },
+    {
+     "id": "SYN-E0-N270",
+     "xIn": 0,
+     "zIn": 270,
+     "elevationIn": -0.55
+    },
+    {
+     "id": "SYN-E48-N270",
+     "xIn": 48,
+     "zIn": 270,
+     "elevationIn": 5.26
+    },
+    {
+     "id": "SYN-E96-N270",
+     "xIn": 96,
+     "zIn": 270,
+     "elevationIn": 7.72
+    },
+    {
+     "id": "SYN-E144-N270",
+     "xIn": 144,
+     "zIn": 270,
+     "elevationIn": 8.82
+    },
+    {
+     "id": "SYN-E192-N270",
+     "xIn": 192,
+     "zIn": 270,
+     "elevationIn": 11.12
+    },
+    {
+     "id": "SYN-E240-N270",
+     "xIn": 240,
+     "zIn": 270,
+     "elevationIn": 14.69
+    },
+    {
+     "id": "SYN-W144-N315",
+     "xIn": -144,
+     "zIn": 315,
+     "elevationIn": -19.35
+    },
+    {
+     "id": "SYN-W96-N315",
+     "xIn": -96,
+     "zIn": 315,
+     "elevationIn": -14.89
+    },
+    {
+     "id": "SYN-W48-N315",
+     "xIn": -48,
+     "zIn": 315,
+     "elevationIn": -9.68
+    },
+    {
+     "id": "SYN-E0-N315",
+     "xIn": 0,
+     "zIn": 315,
+     "elevationIn": -3.78
+    },
+    {
+     "id": "SYN-E48-N315",
+     "xIn": 48,
+     "zIn": 315,
+     "elevationIn": 1.33
+    },
+    {
+     "id": "SYN-E96-N315",
+     "xIn": 96,
+     "zIn": 315,
+     "elevationIn": 4.49
+    },
+    {
+     "id": "SYN-E144-N315",
+     "xIn": 144,
+     "zIn": 315,
+     "elevationIn": 6.86
+    },
+    {
+     "id": "SYN-E192-N315",
+     "xIn": 192,
+     "zIn": 315,
+     "elevationIn": 9.93
+    },
+    {
+     "id": "SYN-E240-N315",
+     "xIn": 240,
+     "zIn": 315,
+     "elevationIn": 13.74
+    },
+    {
+     "id": "SYN-W144-N360",
+     "xIn": -144,
+     "zIn": 360,
+     "elevationIn": -20.3
+    },
+    {
+     "id": "SYN-W96-N360",
+     "xIn": -96,
+     "zIn": 360,
+     "elevationIn": -16.04
+    },
+    {
+     "id": "SYN-W48-N360",
+     "xIn": -48,
+     "zIn": 360,
+     "elevationIn": -11.52
+    },
+    {
+     "id": "SYN-E0-N360",
+     "xIn": 0,
+     "zIn": 360,
+     "elevationIn": -6.74
+    },
+    {
+     "id": "SYN-E48-N360",
+     "xIn": 48,
+     "zIn": 360,
+     "elevationIn": -2.25
+    },
+    {
+     "id": "SYN-E96-N360",
+     "xIn": 96,
+     "zIn": 360,
+     "elevationIn": 1.53
+    },
+    {
+     "id": "SYN-E144-N360",
+     "xIn": 144,
+     "zIn": 360,
+     "elevationIn": 5.02
+    },
+    {
+     "id": "SYN-E192-N360",
+     "xIn": 192,
+     "zIn": 360,
+     "elevationIn": 8.77
+    },
+    {
+     "id": "SYN-E240-N360",
+     "xIn": 240,
+     "zIn": 360,
+     "elevationIn": 12.79
+    }
+   ],
+   "grading": []
+  },
+  "housePlacement": {
+   "anchor": "left",
+   "offsetIn": 0
+  },
+  "glassMount": "Top-mount base shoe",
+  "glassFinish": "Black",
+  "yardFeatures": [
+   {
+    "id": "landing",
+    "kind": "patio",
+    "name": "Stone landing",
+    "enabled": true,
+    "xFt": 4,
+    "zFt": 9.32,
+    "widthFt": 5.5,
+    "depthFt": 3.2,
+    "heightIn": 0,
+    "rotationDeg": 0,
+    "productId": "techo-para-slab",
+    "color": "#2b2b2b",
+    "finishedElevationIn": 5,
+    "hardscape": {
+     "finishId": "hd",
+     "colorId": "onyx-black",
+     "unitId": "500-500-60-mm-500-500-60",
+     "patternId": "stack-bond",
+     "angleDeg": 0,
+     "jointMm": 3
+    }
+   }
+  ],
+  "stairTargets": [
+   {
+    "flightId": "grade-0",
+    "elevationIn": 5,
+    "riserCount": 4,
+    "treadDepthIn": 10.6875,
+    "surface": "patio",
+    "patioId": "landing"
+   }
+  ]
+ }
+}

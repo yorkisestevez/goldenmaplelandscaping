@@ -1,10 +1,11 @@
+import {rendererQuality,type RenderQuality} from './renderQuality';
 import * as THREE from 'three';
 import {Reflector} from 'three/examples/jsm/objects/Reflector.js';
 
 export interface WindowReflection {
   texture:{value:THREE.Texture|null}; matrix:{value:THREE.Matrix4}; ready:{value:number};
 }
-interface FacadeReflection {facade:THREE.Group;binding:WindowReflection;mirror:Reflector|null}
+interface FacadeReflection {facade:THREE.Group;binding:WindowReflection;mirror:Reflector|null;budgetKey?:string}
 const facades=new WeakMap<THREE.Scene,Set<FacadeReflection>>();
 export function reflectionBinding():WindowReflection {
   return {texture:{value:null},matrix:{value:new THREE.Matrix4()},ready:{value:0}};
@@ -15,10 +16,15 @@ export function registerWindowReflection(scene:THREE.Scene,facade:THREE.Group,bi
   return ()=>{set.delete(entry);entry.mirror?.geometry.dispose();entry.mirror?.dispose();binding.ready.value=0;binding.texture.value=null;};
 }
 
+export function reflectionBudget(q:RenderQuality,capabilities:{maxTextureSize:number;maxSamples:number}){
+ return {edge:Math.max(1,Math.min(q.tier==='constrained'?384:q.tier==='balanced'?768:1024,capabilities.maxTextureSize)),samples:Math.max(0,Math.min(2,q.msaaSamples,capabilities.maxSamples))};
+}
+
 /** One clipped, mirrored-camera view per visible house facade, shared by all its panes.
  * Runs before BOTH the live beauty pass and proposal capture; never from a recursive mesh callback. */
 export function renderWindowReflections(gl:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.Camera){
   const entries=facades.get(scene);if(!entries?.size)return;
+  const budget=reflectionBudget(rendererQuality(gl,gl.domElement.clientWidth<600),gl.capabilities),budgetKey=`${budget.edge}/${budget.samples}`;
   const hidden:THREE.Object3D[]=[];
   scene.traverse(o=>{if(o.userData.houseWindow&&o.visible){hidden.push(o);o.visible=false;}});
   const target=gl.getRenderTarget(),viewport=gl.getViewport(new THREE.Vector4()),scissor=gl.getScissor(new THREE.Vector4());
@@ -33,9 +39,10 @@ export function renderWindowReflections(gl:THREE.WebGLRenderer,scene:THREE.Scene
       const normal=new THREE.Vector3(0,0,1).transformDirection(facade.matrixWorld);
       const origin=new THREE.Vector3(0,0,.8).applyMatrix4(facade.matrixWorld);
       if(!visible||cameraPosition.clone().sub(origin).dot(normal)<=0){binding.ready.value=0;continue;}
+      if(entry.mirror&&entry.budgetKey!==budgetKey){entry.mirror.geometry.dispose();entry.mirror.dispose();entry.mirror=null;binding.ready.value=0;binding.texture.value=null;}
       if(!entry.mirror){
-        const edge=gl.domElement.clientWidth<600?768:1024;
-        entry.mirror=new Reflector(new THREE.PlaneGeometry(1,1),{textureWidth:edge,textureHeight:edge,multisample:Math.min(2,gl.capabilities.maxSamples),clipBias:.001});
+        entry.budgetKey=budgetKey;const edge=budget.edge;
+        entry.mirror=new Reflector(new THREE.PlaneGeometry(1,1),{textureWidth:edge,textureHeight:edge,multisample:budget.samples,clipBias:.001});
         if(!gl.extensions.has('EXT_color_buffer_float')&&!gl.extensions.has('EXT_color_buffer_half_float'))entry.mirror.getRenderTarget().texture.type=THREE.UnsignedByteType;
         binding.texture.value=entry.mirror.getRenderTarget().texture;
       }

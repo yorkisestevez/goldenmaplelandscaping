@@ -1,6 +1,6 @@
 # 3D viewer assets
 
-Every file here is CC0 1.0 (public domain), from Poly Haven (https://polyhaven.com). The original material scans were downloaded on
+The photographed scans and environments here are CC0 1.0 (public domain), from Poly Haven (https://polyhaven.com). The original material scans were downloaded on
 2026-09-25; the replacement meadow environment was downloaded on 2026-09-26. Files are converted by scripts in `scripts/`.
 The source downloads themselves are not committed.
 
@@ -26,18 +26,26 @@ The source downloads themselves are not committed.
 
 ## Sky: `sky/sky-day-*`, `sky/sky-evening-*`, `sky/sky.json`
 
-- Day and evening: Meadow, https://polyhaven.com/a/meadow.
+- Day: Suburban Garden by Dimitrios Savva (photography) and Jarod Guest (processing), https://polyhaven.com/a/suburban_garden.
+  Source: https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/4k/suburban_garden_4k.hdr
+  MD5: b4832c8c17072eeb4720d5dd9da2366f (downloaded 2026-09-29).
+  The 4K residential panorama supplies daylight reflections and the generic background. Its photographed sun is
+  extracted into the directional light, aligned with the panorama. This is illustrative staging, not the customer's site.
+- Evening: Meadow, https://polyhaven.com/a/meadow.
   Source: https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/8k/meadow_8k.hdr
   MD5: c1e25ad9fb1aba9ebc8babb952292727 (108457266 bytes).
-  Both use the same photographed tree-lined clearing so changing the preview's lighting retains its surroundings.
-  Evening applies a cool skylight grade and dims this environment to 16%; this is an evening lighting study, not a separately photographed night sky.
+  Evening retains the previous cool tree-lined clearing at 16%; this is an evening lighting study, not a separately photographed night sky.
 - Converted by `scripts/build-deck-sky.ts`:
   - A bright sun and lens flare (12° round it) can be extracted into the directional light. Meadow's tree-filtered sun
-    is below the extraction threshold; its soft light stays in the environment, with directional-light intensity zero.
+    is below the extraction threshold and remains in the evening environment. Suburban Garden's bright sun is extracted.
+    Daylight transfers some extracted sun energy to 2.2× sky fill for readable shaded surfaces, conserving measured
+    horizontal-card luminance. The light intensity compensates the stored sun colour's max normalisation.
+    Panorama exposure stays unchanged. Evening retains environment lighting without a directional key.
   - Both skies are white-balanced so sun plus sky light a horizontal card in neutral grey, and scaled so that card's
     irradiance is π.
   - `sky-*-ibl.hdr` is the 1024 × 512 lighting image (Radiance RGBE, run-length encoded).
-  - `sky-*-band.webp` is the 8192 × 1024 horizon from −4° to +41°, stored as the sRGB of radiance ÷ `bandScale`.
+  - `sky-*-band.webp` is the horizon from −4° to +41°, stored as the sRGB of radiance ÷ `bandScale`; daylight uses the
+    4K source's band and evening the 8K source's band.
 
 ## Interior staging: `room-lounge.webp`
 

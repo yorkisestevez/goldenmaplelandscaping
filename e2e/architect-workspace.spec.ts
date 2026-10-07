@@ -1,0 +1,21 @@
+import {test,expect} from '@playwright/test';
+for(const width of [390,900,1440])test(`ribbon, settings and canvas at ${width}px`,async({page,context})=>{
+ await page.setViewportSize({width,height:900});
+ await context.addInitScript('window.__name=(target,value)=>target;');
+ await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
+ const before=await page.evaluate(()=>(window as any).deckcraft.read().design);
+ const tabs=page.getByRole('tablist',{name:'Tool categories'});
+ await tabs.getByRole('tab',{name:'Materials',exact:true}).click();await expect(page.getByRole('radio',{name:'Board layout',exact:true})).toBeVisible();
+ await page.keyboard.press('Home');await expect(tabs.getByRole('tab',{name:'Building',exact:true})).toBeFocused();
+ await tabs.getByRole('tab',{name:'Landscape',exact:true}).click();await page.getByRole('radio',{name:'Landscape',exact:true}).click();await expect(page.getByRole('radio',{name:'Landscape',exact:true})).toHaveAttribute('aria-checked','true');
+ await tabs.getByRole('tab',{name:'Building',exact:true}).click();await page.getByRole('radio',{name:'Deck size',exact:true}).click();
+ expect(await page.evaluate(()=>(window as any).deckcraft.read().design)).toEqual(before);
+ await page.getByRole('button',{name:'Show project controls',exact:true}).click();const nav=page.getByRole('navigation',{name:'Design tasks'});await nav.locator('summary').filter({hasText:/^Design$/}).click();await nav.getByRole('button',{name:'Boards & finish',exact:true}).click();
+ const inspector=page.getByRole('dialog',{name:'Design inspector',exact:true});await expect(inspector).toBeVisible();await page.keyboard.press('Escape');await expect(inspector).not.toBeVisible();
+ await page.getByRole('radio',{name:'Deck size',exact:true}).scrollIntoViewIfNeeded();
+ const canvas=await page.locator('.dd-plan-viewport').boundingBox();expect(canvas!.width).toBeGreaterThan(width-70);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ await page.screenshot({path:`../outputs/architect-workspace/${width}.png`,fullPage:true});expect(errors).toEqual([]);
+});

@@ -1,5 +1,6 @@
 import type {DeckLevel} from '../deckTakeoff';
 import type {PlanPoint} from './deckGeometry';
+import {insidePolygon as inside} from './polygonCuts';
 
 /**
  * Where two deck levels meet: an edge of the higher level lying on an edge of the lower one (within half an inch), in
@@ -17,11 +18,6 @@ export interface LevelJunction{
 
 const TOL=.5,MIN=1;
 export const worldOutline=(l:DeckLevel)=>l.footprint.outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}));
-function inside(p:PlanPoint,poly:PlanPoint[]){
-  let odd=false;
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}
-  return odd;
-}
 
 export function levelJunctions(levels:DeckLevel[]):LevelJunction[]{
   const out:LevelJunction[]=[];

@@ -61,7 +61,11 @@ ok(!!yardShapeProblem('retaining-wall',[{x:0,y:0},{x:80,y:80},{x:0,y:80},{x:80,y
 ok(!!yardShapeProblem('retaining-wall',[{x:0,y:0},{x:60,y:0},{x:60,y:60},{x:0,y:0}]),'Closed wall path cannot create a hidden duplicate endpoint');
 rejected(()=>yardShapePull(patio,'point',0,Infinity,0),'A non-finite pull cannot return partial geometry');
 rejected(()=>yardShapeMove(patio,3000,0),'Whole movement respects world yard coordinate limits');
-rejected(()=>yardShapeResize(l,81,1),'Total wall run limit still applies to a custom L');
+rejected(()=>yardShapeEdit(wall,[{x:-1200,y:-1200},{x:1200,y:-1200},{x:1200,y:1200}]),'240 ft total wall path limit applies within valid point coordinates');
+// Drawn (path) walls run up to 240 ft (owner-approved 2026-10-06); a straight wall with no drawn path keeps 80 ft.
+const longest=yardShapeResize(l,240,1);near(longest.widthFt,240,'A path wall resizes to the 240 ft limit');near(yardShapeRunIn(longest.wallPath!),2880,'The 240 ft path measures exactly 2880 in');
+rejected(()=>yardShapeResize(l,240.5,1),'A path wall cannot be resized past 240 ft');rejected(()=>yardShapeResize(wall,81,1),'A straight wall without a drawn path keeps the 80 ft limit');
+ok(!yardShapeProblem('retaining-wall',[{x:-1200,y:0},{x:1200,y:0},{x:1200,y:480}]),'A wall path of exactly 240 ft is valid');ok(!!yardShapeProblem('retaining-wall',[{x:-1200,y:0},{x:1200,y:0},{x:1200,y:481}]),'A wall path 1 in over 240 ft is rejected');
 rejected(()=>yardShapeResize(pulled,61,12),'Patio numeric dimensions cannot exceed the pricing/editing envelope');
 const fine=yardShapeLocalPoints(patio);fine.splice(1,0,{x:-95.5,y:-72});ok(!!yardShapeProblem('patio',fine),'Short pull-point segments are refused');
 near(yardShapeSignedArea(yardShapeLocalPoints(patio))/144,192,'Independent rectangle area matches the legacy patio');

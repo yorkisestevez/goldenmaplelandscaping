@@ -3,8 +3,10 @@ import type {ColourRef,DeckData,SkirtingConfig,SkirtingStyle} from './types';
 import {getHouseContact} from './houseContact';
 import {getTerrainConfig} from './yardSettings';
 import {edgeFacing,type EdgeName,type PlanPoint} from './lib/deckGeometry';
+import {insidePolygon as inside} from './lib/polygonCuts';
 import {accentAllowed,colourName,deckColourRef,parseColourRef} from './boardFinishes';
 import {mitredRunCaps,type SlabCap} from './lib/mitredSlabs';
+import {createSiteSurface,designSiteModel,siteGroundProfile} from './siteSurface';
 
 /**
  * Skirting under the deck: boards or lattice closing in the space between each deck edge's rim and the ground.
@@ -13,7 +15,8 @@ import {mitredRunCaps,type SlabCap} from './lib/mitredSlabs';
  *   houseContact.ts (onContact) is the only judge of which those are: nothing here finds the house by its position.
  * - Where two levels meet or overlap, and across every stair and level-connection opening (its width plus 1 in each
  *   side), the skirting stops. Winder treads belong to the stair and are not skirted.
- * - The face runs from the underside of the rim down to the ground (getTerrainConfig, so it follows a slope) plus
+ * - The face runs from the underside of the rim down to the ground (the measured survey where there is one, otherwise
+ *   getTerrainConfig, so it follows a slope) plus
  *   the chosen clearance. A stretch with less than 3 in of face is left open.
  * - Styles: horizontal boards on studs at 16 in, vertical boards on rails no more than 24 in apart, or lattice in
  *   4 × 8 ft panels with a rail at each 4 ft joint. Access panels are framed into the longest runs.
@@ -74,11 +77,6 @@ export interface SkirtingPlan{
 
 type Span=[number,number];
 const cut=(spans:Span[],lo:number,hi:number):Span[]=>spans.flatMap(([s,e]):Span[]=>hi<=s||lo>=e?[[s,e]]:[...(lo>s?[[s,lo] as Span]:[]),...(hi<e?[[hi,e] as Span]:[])]);
-function inside(p:PlanPoint,poly:PlanPoint[]){
-  let odd=false;
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}
-  return odd;
-}
 /** Stretches of the segment a + u·t (0 ≤ t ≤ len) inside a polygon (more than half an inch in from its edges). */
 function insideSpans(a:PlanPoint,u:PlanPoint,len:number,poly:PlanPoint[]):Span[]{
   const ts=[0,len];
@@ -102,6 +100,9 @@ function below(bottomA:number,k:number,L:number,level:number):Span|null{
   const t=(level-bottomA)/k,s=k>0?0:Math.max(0,t),e=k>0?Math.min(L,t):L;
   return e-s>.01?[s,e]:null;
 }
+/** Thinning tolerance for the measured ground under a rim: a run is not cut into slivers where the ground runs
+ * within this of straight. */
+const GROUND_TOLERANCE=.25;
 const round1=(n:number)=>Math.round(n*10)/10;
 const inches=(n:number)=>`${round1(n)}`;
 
@@ -113,6 +114,8 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
   const colour=config.colour&&accentAllowed(data,config.colour)?config.colour:deckColourRef(data);
   const foldedCorners=config.cornerTreatment==='Folded solid boards'&&style==='Horizontal boards'&&foldedBoardCandidate(colour);
   const terrain=getTerrainConfig(data),ground=(y:number)=>terrain.elevationIn+y*terrain.slopePct/100;
+  // On a measured site the skirting runs down to the survey's (proposed) ground, not the terrain setting's plane.
+  const surface=data.siteModel?createSiteSurface(designSiteModel(data),terrain):undefined;let estimatedGround=false;
   const contact=getHouseContact(data,model.levels[0].footprint),open=new Set(config.openEdges??[]);
   const outlines=model.levels.map(l=>l.kind==='winder'?null:l.footprint.outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z})));
   const edges=new Map<string,SkirtingEdge>(),runs:SkirtingRun[]=[];
@@ -144,17 +147,24 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
       }
       const facing=edgeFacing(out),id=`${key}-${facing.toLowerCase()}`;
       const edge=edges.get(id)??{id,label:`${name}, ${SIDE_WORDS[facing]??'back'}`,lengthFt:0,open:open.has(id)};edges.set(id,edge);
-      const top=m.a.y-m.depth/2,bottom=(t:number)=>ground(a.y+u.y*t)+clearanceIn,at=(t:number)=>({x:a.x+u.x*t,y:a.y+u.y*t});
-      for(const [s0,e0] of spans){
-        // Keep what has room for a face: the ground can rise under the deck on a slope.
-        const h0=top-bottom(s0),h1=top-bottom(e0),where=(h:number)=>s0+(h-h0)/(h1-h0)*(e0-s0);
-        const s=h0>=MIN_FACE?s0:h1>=MIN_FACE?where(MIN_FACE):e0,e=h1>=MIN_FACE?e0:h0>=MIN_FACE?where(MIN_FACE):s0,kept=Math.max(0,e-s);
-        if(!edge.open)lowIn+=e0-s0-kept;
-        if(kept<MIN_RUN)continue;
-        edge.lengthFt+=kept/12;
-        if(edge.open)continue;
-        const bA=bottom(s),bB=bottom(e);
-        runs.push({edge:id,level:li,a:at(s),b:at(e),lengthIn:kept,out,top,bottomA:bA,bottomB:bB,faceSqft:kept*(2*top-bA-bB)/2/144});
+      // The ground under the rim as straight pieces: the plane's one, or the survey's own breaks.
+      const profile=surface&&siteGroundProfile(surface,a,b,GROUND_TOLERANCE);estimatedGround||=!!profile&&profile.estimated;
+      const top=m.a.y-m.depth/2,bottom=(t:number)=>(profile?profile.at(t):ground(a.y+u.y*t))+clearanceIn,at=(t:number)=>({x:a.x+u.x*t,y:a.y+u.y*t});
+      for(const [S0,E0] of spans){
+        // A stretch that keeps its face carries on across the ground's breaks; one under MIN_RUN in all is left open.
+        let group:[number,number][]=[],sum=0;
+        const flush=()=>{if(sum>=MIN_RUN){edge.lengthFt+=sum/12;if(!edge.open)for(const [s,e] of group){const bA=bottom(s),bB=bottom(e);runs.push({edge:id,level:li,a:at(s),b:at(e),lengthIn:e-s,out,top,bottomA:bA,bottomB:bB,faceSqft:(e-s)*(2*top-bA-bB)/2/144});}}group=[];sum=0;};
+        const stops=profile?profile.stops(S0,E0):[S0,E0];
+        for(let i=1;i<stops.length;i++){
+          const s0=stops[i-1],e0=stops[i];
+          // Keep what has room for a face: the ground can rise under the deck on a slope.
+          const h0=top-bottom(s0),h1=top-bottom(e0),where=(h:number)=>s0+(h-h0)/(h1-h0)*(e0-s0);
+          const s=h0>=MIN_FACE?s0:h1>=MIN_FACE?where(MIN_FACE):e0,e=h1>=MIN_FACE?e0:h0>=MIN_FACE?where(MIN_FACE):s0,kept=Math.max(0,e-s);
+          if(!edge.open)lowIn+=e0-s0-kept;
+          if(kept<=.01||group.length&&s-group.at(-1)![1]>.01)flush();
+          if(kept>.01){group.push([s,e]);sum+=kept;}
+        }
+        flush();
       }
     }
   });
@@ -294,6 +304,7 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
       :'Skirting access: no access panel is included, so the space under the deck is reached only by taking skirting off. One is recommended.');
     notes.push(`Skirting drainage: grade the ground under the deck so water runs out from under it; the ${inches(clearanceIn)} in gap at the bottom lets it out${terrain.slopePct?', and on this sloped yard the skirting follows the ground':''}.${data.hasDrainage?' Keep the under-deck drainage outlet clear of the skirting.':''}`);
     if(style==='Lattice'&&runs.some(r=>r.top-Math.min(r.bottomA,r.bottomB)>LATTICE.h+.5))notes.push('Skirting: lattice comes in 4 ft panels, so skirting taller than 4 ft is two panels high, with a rail at the joint.');
+    if(estimatedGround)notes.push('Skirting past the survey follows the nearest shot; extend the survey before ordering.');
     if(lowIn>=6)notes.push(`Skirting: ${round1(lowIn/12)} ft of deck edge sits too close to the ground for skirting (under ${MIN_FACE} in of face above the ${inches(clearanceIn)} in clearance) and is left open.`);
   }
   const opened=listed.filter(e=>e.open);

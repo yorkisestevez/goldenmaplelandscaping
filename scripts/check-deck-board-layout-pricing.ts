@@ -7,6 +7,7 @@ import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {boardFinishPlan,colourRef,deckColourRef,parseColourRef} from '../src/features/deckcraft/boardFinishes';
 import {layoutBoardStock,boardLayoutAllowance,layoutAutomaticBreakerLf,BOARD_LAYOUT_SUPPORT_QUOTE,BOARD_LAYOUT_POLICY} from '../src/features/deckcraft/boardLayoutPricing';
 import {deckBoardStock} from '../src/features/deckcraft/stockPlan';
+import {deckingStock,STOCK_TRIM_IN} from '../src/features/deckcraft/deckingStock';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {describeDesign} from '../src/features/deckcraft/designFacts';
 import {proposalFinishes} from '../src/features/deckcraft/proposalModel';
@@ -21,6 +22,10 @@ const layout=(patch:Partial<BoardLayoutConfig>={}):BoardLayoutConfig=>({regions:
 const rect=[{x:20,y:20},{x:160,y:20},{x:160,y:110},{x:20,y:110}];
 const cocoa=colourRef('tt_prime_plus','Dark Cocoa'),reserve=colourRef('tt_reserve','Dark Roast'),unpriced=colourRef('tt_terrain_plus','Dark Oak');
 const cuts=(s:ReturnType<typeof layoutBoardStock>)=>s.bins.flatMap(b=>b.cutsIn).sort((a,b)=>a-b);
+// Recomputed here, not read from the planner: a packed board is bought at the shortest listed length that holds its cuts,
+// the 1/8 in saw kerf between them and the 1/2 in end-trim margin (new designs); spares are bought at the shortest length.
+const boughtAt=(id:string,group:number[])=>{const used=group.reduce((n,c)=>n+c,0)+.125*(group.length-1);return deckingStock(id).lengthsIn.filter(n=>n-STOCK_TRIM_IN+1e-6>=used).sort((a,b)=>a-b)[0];};
+let shortBoards=0;
 {
   const d=base(),m=buildDeckTakeoff(d);
   ok(JSON.stringify(layoutBoardStock(d,m,1.1))===JSON.stringify(deckBoardStock(m,1.1)),'Absent custom layout delegates byte-for-byte to the original stock plan');
@@ -72,7 +77,10 @@ for(const [index,d] of fixtures.entries()){
     if(colour===unpriced)ok(row!.cost===null&&e.quoteRequired?.some(q=>q.includes('Dark Oak')),`${index}: unpriced catalogue collection stays quote-required`);
     else {
       const rate=parseColourRef(colour)!.material.costPerSqft!,markup=1+(d.materialMarkup??25)/100;
-      close(row!.cost!,Number(row!.qty)*16*BOARD_LAYOUT_POLICY.stockWidthIn/12*rate*markup,`${index}: own catalogue rate charges full purchased width and length`);
+      const id=parseColourRef(colour)!.material.id,ordered=e.stockSchedule!.find(s=>s.name.startsWith(`${row!.name} boards`))!,bought=ordered.cutsIn.map(g=>boughtAt(id,g)),spares=Number(row!.qty)-ordered.cutsIn.length;
+      ok(bought.every(Boolean)&&JSON.stringify(ordered.binLengthsIn)===JSON.stringify(bought),`${index}: every board is bought at the shortest listed length that holds its cuts (${[...new Set(bought)].join('/')} in)`);
+      shortBoards+=bought.filter(n=>n===Math.min(...deckingStock(id).lengthsIn)).length;
+      close(row!.cost!,(bought.reduce((n,l)=>n+l,0)+spares*Math.min(...deckingStock(id).lengthsIn))/12*BOARD_LAYOUT_POLICY.stockWidthIn/12*rate*markup,`${index}: own catalogue rate charges full purchased width and length`);
     }
     ok(proposalFinishes(d,m).some(t=>t.key===colour&&t.uses.includes('Custom board layout')),`${index}: proposal names the actual manufacturer colour and use`);
   }
@@ -82,6 +90,7 @@ for(const [index,d] of fixtures.entries()){
   ok(JSON.stringify(restored.boardLayout)===JSON.stringify(validateDesign(d).boardLayout),`${index}: layout and catalogue colour survive JSON round-trip`);
   if(index===7){const html=renderToStaticMarkup(createElement(ProposalSheet,{data:d,estimate:e,facts,reviewItems:e.flags,image:null,date:'September 26, 2026'}));ok(html.includes('Custom board-layout stock')&&html.includes(BOARD_LAYOUT_SUPPORT_QUOTE)&&html.includes('Dark Oak'), 'Printable proposal preserves priced layout stock, pending support and supplier colour scope');}
 }
+ok(shortBoards>0,'Cuts that fit a 16 ft board are bought as 16 ft boards, not at the longest listed length');
 {
   const d=base({boardWidth:3.5,boardLayout:layout({pieces:[{id:'long-rectangle',level:1,cx:120,cy:70,lengthIn:240,widthIn:3.5,angleDeg:0,colour:cocoa}]})}),m=buildDeckTakeoff(d),finish=boardFinishPlan(d,m);
   const kept=finish.stock.find(g=>g.kind==='layout')!.boards,keys=new Set(kept.map(b=>`${b.level}:${b.index}`));

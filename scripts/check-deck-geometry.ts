@@ -10,7 +10,7 @@ for(const pattern of ['Straight','Diagonal','Herringbone'] as const)
 for(const stairType of ['Straight','Landing','Winder'] as const){
  const d={...structuredClone(DEFAULT_DECK),shape,pattern,stairType,height:72,width:24,length:24,cutoutWidth:8,cutoutLength:8,cutoutWidth2:4,cutoutLength2:4,levels:2,height2:36};
  const m=buildDeckTakeoff(d);
- assert(m.levels.every(l=>l.boards.every(b=>b.length>0&&b.length<=192+.001)));
+ assert(m.levels.every(l=>l.boards.every(b=>b.length>0&&b.length<=m.stockLength+.001)),'Decking cuts fit the shared stock length');
  for(const l of m.levels)for(const member of [...l.joists,...l.beams,...(l.rim||[])])assert(Math.hypot(member.b.x-member.a.x,member.b.z-member.a.z)<=192+.001,'All framing fits stock');
  for(const l of m.levels){
   for(const b of l.blocking.filter(b=>b.role==='board-end'))assert(inside({x:(b.a.x+b.b.x)/2-l.offset.x,y:(b.a.z+b.b.z)/2-l.offset.z},l.footprint.outline),'Board-end backing remains inside clipped footprint');

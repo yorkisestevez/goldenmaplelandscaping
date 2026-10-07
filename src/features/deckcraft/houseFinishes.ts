@@ -1,4 +1,8 @@
 import type {HouseCladding,HouseConfig,HouseOpening} from './types';
+import {HEX_COLOUR} from './houseSettings';
+// The colour fields and their format are validated with every design load, so they live in houseSettings.ts; the looks
+// below load with the 3D view and the exterior studio.
+export {HEX_COLOUR,HOUSE_COLOUR_FIELDS,type HouseColourField} from './houseSettings';
 
 /**
  * House exterior colours and wall looks (appearance only, never priced). Every value comes from the design's own
@@ -16,7 +20,6 @@ export const ORIGINAL_OPENING_COLORS={
 } as const;
 const MORTAR='#b8b2a7',STONE_MORTAR='#8f8a80',FIELDSTONE_MORTAR='#aaa497';
 
-export const HEX_COLOUR=/^#[0-9a-fA-F]{6}$/;
 /** Mixes a hex colour toward white (amount > 0) or black (amount < 0), 0 to 1. */
 export function shade(hex:string,amount:number){
   const n=parseInt(hex.slice(1),16),target=amount>0?255:0,t=Math.min(1,Math.abs(amount));
@@ -26,9 +29,6 @@ const luminance=(hex:string)=>{const n=parseInt(hex.slice(1),16);return (.2126*(
 /** A raised panel or moulding on a painted face: a little lighter on a dark colour, a little darker on a light one. */
 const relief=(hex:string,amount=.1)=>shade(hex,luminance(hex)>.6?-amount*.7:amount);
 
-/** The house exterior colour fields, in the order the studio lists them. */
-export const HOUSE_COLOUR_FIELDS=['fasciaColor','soffitColor','gutterColor','doorColor','windowColor','garageDoorColor'] as const;
-export type HouseColourField=typeof HOUSE_COLOUR_FIELDS[number];
 
 export interface HouseTrimColors {trim:string;
   /** Rake boards along the gables. */

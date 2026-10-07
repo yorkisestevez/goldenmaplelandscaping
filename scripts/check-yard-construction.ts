@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/yardModelAdvancedRuntime';
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import type {YardFeature,DeckData} from '../src/features/deckcraft/types';

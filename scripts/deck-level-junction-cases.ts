@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import type {DeckData} from '../src/features/deckcraft/types';
-import {legacyScenarios} from './deck-legacy-scenarios';
+import {legacyBaseDeck,legacyScenarios} from './deck-legacy-scenarios';
 
 /**
  * The multi-level designs the level-junction check (check-deck-level-junction.ts) prices against its baseline,
@@ -16,7 +16,9 @@ export type JunctionExpect='same'|'guard';
 export interface JunctionCase{design:DeckData;expect:JunctionExpect}
 
 const showcases=JSON.parse(readFileSync(new URL('./deck-level-junction-designs.json',import.meta.url),'utf8')) as Record<string,Partial<DeckData>>;
-const base=():DeckData=>structuredClone(DEFAULT_DECK);
+// The baseline prices designs as they were saved before 2026-10-06: on the frozen 9b2ee11 default (no frame, no saved
+// overhang, legacy build rules). newDefaultJunctionCases() covers the live default new designs start from.
+const base=():DeckData=>legacyBaseDeck();
 
 export function junctionCases():Record<string,JunctionCase>{
   const cases:Record<string,JunctionCase>={};
@@ -38,6 +40,18 @@ export function junctionCases():Record<string,JunctionCase>{
     'three levels (default third)':{design:{...d,levels:3,level2Position:'Front',height2:24,level3:{widthFt:12,lengthFt:8,heightIn:8,parent:2,position:'Front',offsetPct:50}},expect:'guard'},
   } satisfies Record<string,JunctionCase>);
   return cases;
+}
+
+/** Multi-level designs on the live DEFAULT_DECK (one-row flush frame, '2026-10' rules). They have no 41d3eba baseline, so
+ * the check runs only its geometry on them. */
+export function newDefaultJunctionCases():Record<string,JunctionCase>{
+  const d=structuredClone(DEFAULT_DECK);
+  return {
+    'new default: two levels (36 → 12 in, 48 in stair)':{design:{...d,levels:2},expect:'guard'},
+    'new default: split level (one full-width riser)':{design:{...d,levels:2,level2Position:'Front',level2Offset:50,height2:d.height-7,width2:d.width,level2FullStep:true},expect:'same'},
+    'new default: full-width step, 3 risers':{design:{...d,levels:2,level2Position:'Front',height2:d.height-20,width2:14,level2FullStep:true},expect:'same'},
+    'new default: three levels':{design:{...d,levels:3,level2Position:'Front',height2:24,level3:{widthFt:12,lengthFt:8,heightIn:8,parent:2,position:'Front',offsetPct:50}},expect:'guard'},
+  };
 }
 
 /** What the baseline records for a design: its price, every section's total and the quote list. */

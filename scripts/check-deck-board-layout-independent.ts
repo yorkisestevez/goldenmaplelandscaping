@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+// Inlay geometry is a lazy runtime in the app (ensureDesignExtensions); register it before calculating inlay fixtures.
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import {existsSync,mkdirSync,writeFileSync} from 'node:fs';
 import {isDeepStrictEqual} from 'node:util';
 import Clipper from 'clipper-lib';
@@ -196,9 +198,17 @@ for(const [name,lengthIn,widthIn] of [['contained breaker notch',2,1],['crossing
  ok(measured<=118/12+.025,`${name}: notch fragments cannot double the requested breaker fitting length`);
 }
 
+// Prime+ lists 16 and 20 ft boards; a cut keeps a 1/2 in end-trim margin, so the longest one-board cut is 239.5 in.
+const fitsData=base({width:24,boardLayout:layout({pieces:[{id:'fits-piece',level:1,cx:144,cy:72,lengthIn:236,widthIn:5.5,angleDeg:0,colour:COCOA}]})}),fitsPiece=geometry('20 ft manual piece fits one listed board',fitsData);
+ok(fitsPiece.stockLength===240-.5&&fitsPiece.levels[0].boards.filter(b=>(b as EditedBoard).layoutId==='fits-piece').length===1,'A 236-inch piece is one 20 ft board, with no seam');
+const fitsStock=calculateDeckReleaseEstimate(fitsData,DECK_SETTINGS).sections.find(s=>s.title==='Custom board-layout stock')!.items.find(i=>i.name.includes('Dark Cocoa'))!;
+// The cut needs a 20 ft board; the waste-allowance spares are bought at the shortest listed length (16 ft).
+near(fitsStock.cost!,(20+(Number(fitsStock.qty)-1)*16)*5.5/12*catalogueRate*1.35,'A cut longer than a 16 ft board holds is bought as a 20 ft board, spares as 16 ft boards',.01);
 const longPiece=geometry('oversize manual piece split into stock cuts',base({width:24,boardLayout:layout({pieces:[{id:'long-piece',level:1,cx:144,cy:72,lengthIn:240,widthIn:5.5,angleDeg:0,colour:COCOA}]})}));
-ok(longPiece.levels[0].boards.filter(b=>(b as EditedBoard).layoutId==='long-piece').length>=2,'A 240-inch physical piece is split and purchased as actual stock cuts');
+ok(longPiece.levels[0].boards.filter(b=>(b as EditedBoard).layoutId==='long-piece').length>=2,'A 240-inch physical piece (no end-trim margin left on a 20 ft board) is split and purchased as actual stock cuts');
 near(physicalBoardPieceCount(longPiece.levels[0].boards.filter(b=>(b as EditedBoard).layoutId==='long-piece'),5.5),2,'Real stock joints remain two distinct physical board pieces');
+const overPiece=geometry('piece longer than the longest listed board',base({width:24,boardLayout:layout({pieces:[{id:'over-piece',level:1,cx:144,cy:72,lengthIn:264,widthIn:5.5,angleDeg:0,colour:COCOA}]})})),overRuns=overPiece.levels[0].boards.filter(b=>(b as EditedBoard).layoutId==='over-piece');
+ok(overRuns.length>=2&&overRuns.every(b=>b.length<=overPiece.stockLength+.025),'A piece longer than the longest listed board is split into cuts that each fit one board');
 
 // Storage and links must preserve the actual layout, not only the visual editor state.
 const serialized=serializeDesign(overlapping),parsed=parseDesign(serialized);

@@ -28,7 +28,12 @@ test('proposal cover matches the restored board finish and subsequent grey choic
     const samples=await hero.evaluate((img:HTMLImageElement)=>{
       const canvas=document.createElement('canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
       const ctx=canvas.getContext('2d',{willReadFrequently:true})!;ctx.drawImage(img,0,0);
-      return [.45,.5,.55].map(x=>Array.from(ctx.getImageData(Math.round(x*canvas.width),Math.round(.32*canvas.height),1,1).data).slice(0,3));
+      // Sample the deck, fascia and stairs as an area. A camera change can put a single fixed pixel on the house,
+      // rail or lawn; corresponding samples across this area still have to show the selected board colour.
+      return Array.from({length:400},(_,i)=>{
+        const x=.22+(i%20+.5)/20*.6,y=.3+(Math.floor(i/20)+.5)/20*.44;
+        return Array.from(ctx.getImageData(Math.round(x*canvas.width),Math.round(y*canvas.height),1,1).data).slice(0,3);
+      });
     });
     await dialog.getByRole('button',{name:'Close',exact:true}).click();
     return samples;
@@ -36,7 +41,8 @@ test('proposal cover matches the restored board finish and subsequent grey choic
   const brown=await cover('Coconut Husk');
   await execute('choose-grey-final',[{type:'design.patch',patch:{deckingColor:'Sea Salt Gray'}}]);
   const grey=await cover('Sea Salt Gray');
-  const warmth=(samples:number[][])=>samples.reduce((sum,[r,g])=>sum+r-g,0)/samples.length;
-  expect(delayed).toBeGreaterThan(0);expect(warmth(brown)-warmth(grey)).toBeGreaterThan(15);
-  await info.attach('actual-cover-colours',{body:JSON.stringify({delayed,brown,grey}),contentType:'application/json'});
+  const warmer=brown.filter(([r,g],i)=>r-g-(grey[i][0]-grey[i][1])>15).length;
+  expect(delayed).toBeGreaterThan(0);
+  expect(warmer,'At least 12% of the deck-area samples must visibly change from warm brown to grey').toBeGreaterThan(brown.length*.12);
+  await info.attach('actual-cover-colours',{body:JSON.stringify({delayed,warmer,samples:brown.length,brown,grey}),contentType:'application/json'});
 });

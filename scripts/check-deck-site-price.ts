@@ -29,7 +29,7 @@ const cents=(n:number)=>Math.round(n*100);
   const answer=/"name": "What does a composite deck cost in Simcoe County\?",[\s\S]*?"text": "([^"]+)"/.exec(page)?.[1]??'';
   const deck={...structuredClone(DEFAULT_DECK),width:20,length:15,height:18},walkout={...deck,height:96};
   const material=MATERIAL_TIERS.find(m=>m.id===deck.deckingMaterial)!;
-  ok(deck.deckType==='Attached'&&deck.railingType==='Aluminum'&&deck.stairFlights===1&&answer.includes(`20 × 15 ft (300 sq ft) attached deck 18 in off the ground in ${material.name} decking, with aluminum railing and one stair`),`The FAQ describes the deck it prices, in the designer's words (${material.name})`);
+  ok(deck.deckType==='Attached'&&deck.railingType==='Aluminum'&&deck.stairFlights===1&&deck.pictureFrameRows===1&&answer.includes(`20 × 15 ft (300 sq ft) attached deck 18 in off the ground in ${material.name} decking, with aluminum railing, one stair and a one-row picture-frame border`),`The FAQ describes the deck it prices, in the designer's words (${material.name})`);
   const ground=calculateDeckReleaseEstimate(deck),high=calculateDeckReleaseEstimate(walkout);
   ok(answer.includes(`has a priced portion of about ${dollars(ground.subtotal)} before HST`),`The FAQ's ground-level price is the designer's priced portion (${dollars(ground.subtotal)} before HST)`);
   ok(answer.includes(`the same deck 8 ft up as a walkout has a priced portion of about ${dollars(high.subtotal)}`),`The FAQ's walkout price is the designer's priced portion (${dollars(high.subtotal)})`);

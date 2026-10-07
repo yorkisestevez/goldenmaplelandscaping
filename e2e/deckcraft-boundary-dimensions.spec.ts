@@ -1,4 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
+import {savedConfiguration} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 
@@ -18,7 +19,7 @@ async function open(page:Page){
 }
 async function outline(page:Page){await page.locator('#dd-tool-outline').click();await expect(page.getByRole('region',{name:'Contractor edge dimensions'})).toBeVisible();await page.getByRole('switch',{name:/^Free movement/}).check();}
 const read=(page:Page)=>page.evaluate(()=>window.deckcraft!.read());
-async function persistedLocks(page:Page){const expected=(await read(page)).design.boundaryLocks;await expect.poll(()=>page.evaluate(()=>{const file=localStorage.getItem('golden-maple.deck-studio.deck-only.v1');return file?JSON.parse(file).configuration.boundaryLocks:undefined;})).toEqual(expected);}
+async function persistedLocks(page:Page){const expected=(await read(page)).design.boundaryLocks;await expect.poll(async()=>(await savedConfiguration(page))?.boundaryLocks).toEqual(expected);}
 async function proof(page:Page,name:string){if(process.env.DECK_DIMENSION_PROOF==='1'){const dir=resolve('../../outputs/deckcraft-contractor-review/dimensions');mkdirSync(dir,{recursive:true});await page.locator('#deck-live-preview').screenshot({path:resolve(dir,name)});}}
 
 test('contractor dimensions rotate actual geometry; saved locks block dragging, permit translation and undo unlock',async({page})=>{

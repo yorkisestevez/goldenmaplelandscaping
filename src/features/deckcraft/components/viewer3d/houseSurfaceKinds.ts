@@ -14,7 +14,7 @@ export const HOUSE_SURFACES:Record<HouseSurface,{set:'masonry'|'rock'|'grain';re
   masonry:{set:'masonry',repeatIn:10,normalScale:.8},
   rock:{set:'rock',repeatIn:24,normalScale:1},
   stucco:{set:'masonry',repeatIn:20,normalScale:.45},
-  woodgrain:{set:'grain',repeatIn:48,normalScale:.35},
+  woodgrain:{set:'grain',repeatIn:48,normalScale:.045},
 };
 export function claddingSurface(cladding:HouseCladding):HouseSurface|undefined{
   switch(cladding){

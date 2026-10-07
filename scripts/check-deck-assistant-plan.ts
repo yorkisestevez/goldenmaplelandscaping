@@ -21,7 +21,9 @@ async function main(){
  check(new TextEncoder().encode(text).length<=20000,'Model context stays within 20KB');
  check(context.revision===snapshot.revision&&context.boundaries.length===snapshot.boundaries.length,'Context retains revision and real levels');
  check(JSON.stringify(context.boundaries[0].points)===JSON.stringify(snapshot.boundaries[0].points),'Every actual measured outline vertex retained');
- for(const privateToken of ['PRIVATE-CUSTOMER','PRIVATE-ADDRESS','PRIVATE-SCOPE','customLaborCost','materialMarkup','customOverrides','priceBook','subtotal','costPerSqft','priceRange','rateSource','quoteRequired','123456'])check(!text.includes(privateToken),`Context excludes ${privateToken}`);
+ for(const privateToken of ['PRIVATE-CUSTOMER','PRIVATE-ADDRESS','PRIVATE-SCOPE','customLaborCost','materialMarkup','customOverrides','priceBook','costPerSqft','priceRange','rateSource','quoteRequired','123456'])check(!text.includes(privateToken),`Context excludes ${privateToken}`);
+ // Wave 2 (AI Site Designer): the model sees only a price summary, never the price book, sections or rates.
+ check(JSON.stringify(context.price)===JSON.stringify({subtotal:Math.round(snapshot.pricing.subtotal),quoteItems:snapshot.quotes.length})&&!text.includes('"sections"')&&!text.includes('"hst"'),'Context carries only the subtotal and quoted-line count');
  check(context.catalogue.decking.some(m=>m.id===snapshot.design.deckingMaterial),'Current material is a real catalogue option');
  check(context.catalogue.options.railingType.includes('Glass Panels')&&!context.catalogue.options.railingType.includes('Glass'),'Actual railing names, no invented family shorthand');
  const selected=buildAssistantContext(snapshot,{partIds:snapshot.parts.slice(0,2).map(p=>p.id),boards:snapshot.boards.slice(0,2).map(b=>({level:b.modelLevel,index:b.index}))});

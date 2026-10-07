@@ -1,10 +1,11 @@
+import {usesPhysicalElevations} from '../elevationDatum';
 import type {DeckData} from '../types';
 import type {DeckTakeoff,Member} from '../deckTakeoff';
 import {getHouseContact} from '../houseContact';
 import {getHouseConfig} from '../houseSettings';
 import {wallLabel} from '../houseFootprint';
 import {getHardwareLayout} from '../hardwareLayout';
-import {connectorSchedule,constructionStock} from '../schedule';
+import {connectorSchedule,constructionStock,connectorRowId,stockRowId} from '../schedule';
 import {SHEET,type DrawItem,type Pt,feetInches} from './drawingTypes';
 import {ledgerFlashing,partStatus,pierOf} from './pricedParts';
 
@@ -73,12 +74,12 @@ export function beamLines(model:DeckTakeoff):BeamLine[]{
 }
 
 export function scheduleTables(data:DeckData,model:DeckTakeoff,names:{railingName:string},hardware=getHardwareLayout(data,model)):ScheduleTable[]{
-  const tables:ScheduleTable[]=[],blocks=data.foundation==='Deck Blocks',helical=data.foundation==='Helical Piles',saddle=blocks?6.5:4.5;
+  const physical=usesPhysicalElevations(data),tables:ScheduleTable[]=[],blocks=data.foundation==='Deck Blocks',helical=data.foundation==='Helical Piles',saddle=blocks?6.5:4.5;
   const pier=pierOf(data),depth=blocks?0:data.foundationDepthIn??48;
   const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
 
   // Footings and posts, by level and height to the beam.
-  const footing=blocks?'Deck block':helical?'Helical pile':pier.priced?'16 in concrete pier':'Concrete pier (12 in shown)';
+  const footing=blocks?'Deck block':helical?'Helical pile':physical?'Concrete pier (12 in schematic; diameter pending)':pier.priced?'16 in concrete pier':'Concrete pier (12 in shown)';
   const footRows:string[][]=[];
   model.levels.forEach((l,i)=>{
     // A post stands where the beam clears the footing's saddle, as the takeoff counts it (on the exact height).
@@ -86,7 +87,9 @@ export function scheduleTables(data:DeckData,model:DeckTakeoff,names:{railingNam
     for(const s of l.supports){const y=Math.round(s.y*2)/2,post=s.y>saddle,k=`${post}|${y}`,g=byHeight.get(k)??{y,post,n:0};g.n++;byHeight.set(k,g);}
     for(const g of [...byHeight.values()].sort((p,q)=>q.y-p.y||Number(q.post)-Number(p.post)))footRows.push([levelName(l,i),footing,blocks?'On grade':feetInches(depth),g.post?'6x6':'None, beam on footing',feetInches(g.y),String(g.n)]);
   });
+  if(physical){footRows.length=0;for(const f of model.foundationSupports){footRows.push([`Level ${f.levelIndex+1} · support ${f.supportIndex+1}`,footing,f.bottomElevationIn===null?'Pending':feetInches(f.depthIn),f.postHeightIn===null?'Pending':f.postHeightIn>0?'6x6':'None',f.gradeElevationIn===null?'Pending':feetInches(f.bearingElevationIn-f.gradeElevationIn),'1']);}}
   tables.push({title:'FOOTINGS AND POSTS',head:['Where','Footing','Below grade','Post','Grade to beam','Qty'],rows:footRows,right:[2,4,5]});
+  if(physical)tables.push({title:'FOUNDATION ELEVATIONS · PROJECT DATUM',head:['Support','Ground (in)','Bottom (in)','Post base (in)','Post length (in)','Status'],rows:model.foundationSupports.map(f=>[`${f.levelIndex+1}/${f.supportIndex+1}`,...[f.gradeElevationIn,f.bottomElevationIn,f.postBaseElevationIn,f.postHeightIn].map(v=>v===null?'Pending':v.toFixed(2)),f.status]),right:[1,2,3,4]});
 
   // Beams, line by line.
   const beams=beamLines(model);
@@ -122,16 +125,16 @@ export function scheduleTables(data:DeckData,model:DeckTakeoff,names:{railingNam
 
   // Every connection part, with how the estimate carries it.
   tables.push({title:'CONNECTIONS',head:['Part','Qty','Unit','In the estimate'],right:[1],
-    rows:connectorSchedule(data,model,hardware).map(r=>[r.name,String(r.qty),r.unit,STATUS_WORDS[partStatus(data,r)]])});
+    rows:connectorSchedule(data,model,hardware).map(r=>[`${r.name} [${connectorRowId(r.name)}]`,String(r.qty),r.unit,STATUS_WORDS[partStatus(data,r)]])});
 
   // Framing lumber as ordered.
   tables.push({title:'FRAMING LUMBER',head:['Lumber','Stock','Pieces','Installed','Ordered'],right:[1,2,3,4],
-    rows:constructionStock(model).map(r=>{const [w,d]=r.section.split(' × ').map(parseFloat);return [`${w===1.5?nominal(d):r.section} framing`,feetInches(r.stockLengthIn),String(r.orderedPieces),feet(r.installedLf),feet(r.orderedLf)];})});
+    rows:constructionStock(model).map(r=>{const [w,d]=r.section.split(' × ').map(parseFloat);return [`${w===1.5?nominal(d):r.section} framing [${stockRowId(r)}]`,feetInches(r.stockLengthIn),String(r.orderedPieces),feet(r.installedLf),feet(r.orderedLf)];})});
   return tables;
 }
 
 // Paper sizes, inches.
-const CELL=.075,TITLE=.1,ROW=.17,PAD=.07,TITLE_GAP=.24,TABLE_GAP=.3,COLUMN_GAP=.35;
+const CELL=.11,TITLE=.14,ROW=.23,PAD=.08,TITLE_GAP=.32,TABLE_GAP=.36,COLUMN_GAP=.38;
 const textWidth=(t:string,h:number)=>t.length*h*.52;
 
 /** A table's size on paper and its column widths. */

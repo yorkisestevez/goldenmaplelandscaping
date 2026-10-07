@@ -14,7 +14,7 @@ export function useDeckAgentController(adapter:DeckAgentAdapter):DeckAgentContro
     getState:()=>({...current.current,ready:connected.current&&current.current.ready}),
     commitDesign:next=>current.current.commitDesign(next),undo:()=>current.current.undo(),redo:()=>current.current.redo(),
     setView:view=>current.current.setView(view),openSection:section=>current.current.openSection(section),
-    actions:Object.fromEntries(['save.json','export.obj','export.dxf','proposal.open','proposal.pdf','review.open'].map(name=>[name,async()=>{const fn=current.current.actions?.[name as keyof NonNullable<DeckAgentHost['actions']>];if(!fn)throw new Error('This host action is unavailable.');await fn();}])) as DeckAgentHost['actions'],
+    actions:Object.fromEntries(['save.json','export.obj','export.dxf','export.dxf2d','permit.pdf','proposal.open','proposal.pdf','review.open'].map(name=>[name,async()=>{const fn=current.current.actions?.[name as keyof NonNullable<DeckAgentHost['actions']>];if(!fn)throw new Error('This host action is unavailable.');await fn();}])) as DeckAgentHost['actions'],
     shareOrigin:adapter.shareOrigin,
     waitForRender:test=>{
       if(test(current.current))return Promise.resolve();

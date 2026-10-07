@@ -25,7 +25,10 @@ import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';
 import type {DeltaProps} from '../features/deckcraft/designer/useOptionDeltas';
 import WorkspaceTools from '../features/deckcraft/designer/WorkspaceTools';
 import WorkspacePrice from '../features/deckcraft/designer/WorkspacePrice';
-import PreviewPanel,{loadExteriorStudio,loadViewer} from '../features/deckcraft/designer/PreviewPanel';
+import {useDesignerMode} from '../features/deckcraft/designer/designerMode';
+import type {ProPage} from '../features/deckcraft/designer/pro/proTypes';
+import {loadExteriorStudio,loadViewer} from '../features/deckcraft/designer/previewLoaders';
+const PreviewPanel=lazy(()=>import('../features/deckcraft/designer/PreviewPanel'));
 import SectionList from '../features/deckcraft/designer/SectionList';
 import {SECTIONS,SECTION_BY_ID,loadBackyardStep,loadBoardColourPanel,loadDeckFinishesPanel,loadDimensionsStep,loadEstimateStep,loadHouseSection,loadInlayEditor,loadMaterialsStep,loadSiteExtrasStep,loadSkirtingEditor,loadStairsStep,sectionsOfPatch,type SectionId} from '../features/deckcraft/designer/sections';
 import type {AgentRequest} from '../features/deckcraft/designer/deckAgentController';
@@ -60,6 +63,7 @@ const EasyEditTools=lazy(()=>import('../features/deckcraft/designer/EasyEditTool
 const IssueReviewDialog=lazy(()=>import('../features/deckcraft/designer/IssueReviewDialog'));
 const PermitSetDialog=lazy(()=>import('../features/deckcraft/drawings/PermitSetDialog'));
 const JobRevisionDialog=lazy(()=>import('../features/deckcraft/designer/JobRevisionDialog'));
+const ProMenuBar=lazy(()=>import('../features/deckcraft/designer/pro/ProMenuBar'));
 const loadSendDialog=()=>import('../features/deckcraft/SendDesignDialog');
 const loadProposalDialog=()=>import('../features/deckcraft/ProposalDialog');
 const HouseSection=lazy(loadHouseSection),DimensionsStep=lazy(loadDimensionsStep),MaterialsStep=lazy(loadMaterialsStep),StairsStep=lazy(loadStairsStep),SiteExtrasStep=lazy(loadSiteExtrasStep),EstimateStep=lazy(loadEstimateStep);
@@ -97,12 +101,20 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   const [jobsOpen,setJobsOpen]=useState(false),[askOpen,setAskOpen]=useState(false),[issuesOpen,setIssuesOpen]=useState(false),[permitOpen,setPermitOpen]=useState(false);
   const [quoteReviewOpen,setQuoteReviewOpen]=useState(false),[assistantTargets,setAssistantTargets]=useState<AgentRequest|null>(null);
   const [jobLabel,setJobLabel]=useState('');
-  const [selection,setSelection]=useState<{partIds:string[];boards:{level:number;index:number}[]}>({partIds:[],boards:[]});
+  const [selection,setSelection]=useState<import('../features/deckcraft/designer/selectionState').SelectionState>({partIds:[],boards:[]});
+  const [geometryPreview,setGeometryPreview]=useState<DeckData|null>(null);
+  // The landscape drawing and its Backyard controls edit the same feature. This choice is UI state only.
+  const [yardFeatureId,setRawYardFeatureId]=useState('');
+  const [yardTarget,setYardTarget]=useState<{id:string;target:'area'|'edge'|'point';index:number}>({id:'',target:'area',index:0});
+  const setYardFeatureId=(id:string)=>{setRawYardFeatureId(id);setYardTarget({id,target:'area',index:0});};
   const clearJobContext=()=>{setJobLabel('');void import('../features/deckcraft/designer/jobRevisionLibrary').then(m=>m.clearActiveJobLabel()).catch(()=>{});};
   const closeSections=useCallback(()=>{setOpen(new Set(['deck']));setWorkspaceView('canvas');},[]);
   // Your changes (the price schedule): every edit, undo, redo and whole new design is noted as it happens.
   const changes=useChangeLedger();
   const {data,setData,update:applyUpdate,replace:replaceDesign,undo:undoDesign,redo:redoDesign,canUndo,canRedo,earlierYard,restoreEarlierYard:restoreYard,dismissEarlierYard,mounted,designReady,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,autosaveState,lastAutosaveAt,autosavePaused,unrestoredDesign,resumeAutosave,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign}=useDeckDesign({onReplaced:()=>{closeSections();changes.loaded();clearJobContext();}});
+  const importState=useRef({data,request:0});importState.current.data=data;
+  const selectedYardFeatureId=[...(data.yardFeatures??[]),...(data.pools??[])].some(f=>f.id===yardFeatureId)?yardFeatureId:data.yardFeatures?.[0]?.id??'';
+  useEffect(()=>{if(yardFeatureId!==selectedYardFeatureId)setYardFeatureId(selectedYardFeatureId);},[yardFeatureId,selectedYardFeatureId]);
   useEffect(()=>{if(mounted)void import('../features/deckcraft/designer/jobRevisionLibrary').then(m=>{const active=m.readActiveJobLabel();if(active)setJobLabel(`${active.job} · ${active.revision}`);}).catch(()=>{});},[mounted]);
   const replace=(next:DeckData)=>{changes.loaded();replaceDesign(next);};
   const undo=()=>{if(canUndo)changes.undo();undoDesign();},redo=()=>{if(canRedo)changes.redo();redoDesign();};
@@ -128,7 +140,8 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // field, where the browser's own undo applies to the text.
   useEffect(()=>{
     const onKey=(e:KeyboardEvent)=>{
-      if(sketchOpen||presetsOpen||jobsOpen||quoteReviewOpen||issuesOpen||permitOpen)return;
+      // A drawing draft handles its own Ctrl+Z first (useDraftKeys) and marks the key as taken.
+      if(e.defaultPrevented||sketchOpen||presetsOpen||jobsOpen||quoteReviewOpen||issuesOpen||permitOpen)return;
       if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
       const t=e.target as HTMLElement|null;if(t&&(t.isContentEditable||/^(input|textarea|select)$/i.test(t.tagName)))return;
       const key=e.key.toLowerCase();
@@ -144,7 +157,11 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   const [mode,setMode]=useState<PreviewMode>('plan');
   // Opening the exterior studio shows the 3D view (looks never show on the plan).
   // The site plan's tool (R5). A deck that becomes a custom outline is drawn with the Draw outline tool.
-  const [planTool,setPlanTool]=useState<PlanTool>('outline');
+  const [planTool,setPlanTool]=useState<PlanTool>('size');
+  const pro=useDesignerMode();
+  const assistantYardFeature=data.yardFeatures?.find(f=>f.id===selectedYardFeatureId);
+  const yardInFocus=planTool==='yard'||workspaceView==='inspector'&&open.has('backyard');
+  const assistantSelection={...selection,...(data.pools?.some(p=>p.id===selectedYardFeatureId)?{poolId:selectedYardFeatureId}:{}),...(yardInFocus&&assistantYardFeature&&assistantYardFeature.kind!=='water-feature'?{yard:yardTarget.id===selectedYardFeatureId?yardTarget:{id:selectedYardFeatureId,target:'area' as const,index:0}}:{})};
   useEffect(()=>{if(planTool!=='inlays')setPendingInlay(null);},[planTool]);
   useEffect(()=>{setPendingInlay(null);},[data]);
   useEffect(()=>{if(data.shape==='Custom')setPlanTool(t=>t==='size'?'outline':t);},[data.shape]);
@@ -338,18 +355,47 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     finally{setPdfBusy(false);}
   }
   // The export geometry loads only when a file is asked for.
-  async function exportModel(kind:'dxf'|'obj',throwOnError=false){
+  async function exportModel(kind:'dxf'|'obj'|'dae'|'glb'|'materials'|'cuts'|'connectors',throwOnError=false){
     try{
-      const {exportDeckReleaseDXF,exportDeckReleaseOBJ}=await import('../features/deckcraft/deckReleaseExports');
-      const body=kind==='dxf'?exportDeckReleaseDXF(data,estimate.model):exportDeckReleaseOBJ(data,estimate.model);
-      downloadFile(body,kind==='dxf'?'application/dxf':'text/plain',`golden-maple-deck.${kind}`);setDesignError('');trackDeck('deckcraft_output',`deck_${kind}`);
+      let body:BlobPart,type:string,name:string;
+      if(kind==='dxf'||kind==='obj'){
+        const {exportDeckReleaseDXF,exportDeckReleaseOBJ}=await import('../features/deckcraft/deckReleaseExports');
+        body=kind==='dxf'?exportDeckReleaseDXF(data,estimate.model):exportDeckReleaseOBJ(data,estimate.model);
+        type=kind==='dxf'?'application/dxf':'text/plain';name=`golden-maple-deck.${kind}`;
+      }else{
+        const {exportDeckCollada,exportDeckGlb,exportDeckCsv}=await import('../features/deckcraft/cadExports');
+        if(kind==='dae'){body=exportDeckCollada(deckReleaseData(data),estimate.model);type='model/vnd.collada+xml';name='golden-maple-deck.dae';}
+        else if(kind==='glb'){body=exportDeckGlb(deckReleaseData(data),estimate.model);type='model/gltf-binary';name='golden-maple-deck.glb';}
+        else{body=exportDeckCsv(estimate,kind);type='text/csv';name=`golden-maple-deck-${kind}.csv`;}
+      }
+      downloadFile(body,type,name);setDesignError('');trackDeck('deckcraft_output',`deck_${kind}`);
     }catch(error){setDesignError(`The ${kind.toUpperCase()} export could not be generated for this design. Adjust a dimension or contact us and we’ll prepare it.`);if(throwOnError)throw error;}
+  }
+  async function exportPermit(kind:'pdf'|'dxf2d',throwOnError=false){
+    try{
+      const [{buildPermitSet},{PRICE_BOOK}]=await Promise.all([import('../features/deckcraft/drawings/permitSheets'),import('../features/deckcraft/priceBook')]);
+      const set=buildPermitSet({data,model:estimate.model,reviewItems:reviewFlags,materialName:material.name,railingName,date:proposalDate(),priceBook:PRICE_BOOK.version});
+      if(kind==='pdf'){
+        const [{jsPDF},{buildPermitPdf}]=await Promise.all([import('jspdf'),import('../features/deckcraft/drawings/renderPdf')]);
+        downloadFile(buildPermitPdf(jsPDF,set),'application/pdf','golden-maple-deck-permit-drawings.pdf');
+      }else{
+        const {buildPermitDxf}=await import('../features/deckcraft/drawings/renderDxf');
+        downloadFile(buildPermitDxf(set),'application/dxf','golden-maple-deck-permit-plans.dxf');
+      }
+      setDesignError('');trackDeck('deckcraft_output',kind==='pdf'?'permit_pdf':'permit_dxf');
+    }catch(error){setDesignError('The permit drawing export could not be generated for this design. Review its dimensions and try again.');if(throwOnError)throw error;}
   }
   // The design tools clear the file picker once this settles.
   async function importFile(file?:File){
-    if(!file)return;setDesignError('');
-    try{if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 100 KB.');const restored=parseDesign(await file.text());replace(restored);clearJobContext();setSaved(false);resumeAutosave();setDesignStatus(`Design imported${restored.yardFeatures?.length?', with its backyard':''}. Your estimate uses the current Golden Maple price book.`);trackDeck('deckcraft_output','deck_json_import');}
-    catch(error){setDesignError(error instanceof Error?error.message:'The design could not be imported.');}
+    if(!file)return;setDesignError('');const baseline=data,request=++importState.current.request;
+    try{
+      if(file.size>MAX_DESIGN_BYTES)throw new Error('Choose a design file smaller than 1 MB.');
+      const text=await file.text(),{prepareDesignFileImport}=await import('../features/deckcraft/designFileImport'),restored=await prepareDesignFileImport(text);
+      if(request!==importState.current.request||baseline!==importState.current.data){if(request===importState.current.request)setDesignStatus('Your newer changes are kept. Import the file again when ready.');return;}
+      if(!(await replaceDesign(restored)))return;
+      changes.loaded();clearJobContext();setSaved(false);await resumeAutosave();setDesignStatus(`Design imported${restored.yardFeatures?.length?', with its backyard':''}. Your estimate uses the current Golden Maple price book.`);trackDeck('deckcraft_output','deck_json_import');
+    }
+    catch(error){if(request===importState.current.request)setDesignError(error instanceof Error?error.message:'The design could not be imported.');}
   }
   // A sent design posts to the deck-design Netlify form (relayed to the CRM) with the site's attribution,
   // then counts as a lead conversion worth the priced subtotal, as the cost estimator does.
@@ -383,9 +429,9 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     case 'house':return <HouseSection data={data} update={update} selectedOpeningId={effectiveHouseOpeningId} onSelectOpening={setSelectedHouseOpeningId} openExterior={()=>openExterior(true)}/>;
     case 'deck':return <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} onDrawOnPlan={drawOnPlan}/>;
     case 'boards':return <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage} deltas={deltas} onEditBoardLayout={()=>{setPlanTool('boards');setMode('plan');showCanvas();}} onPlaceInlay={inlay=>{setPendingInlay(inlay);setPlanTool('inlays');setMode('plan');showCanvas();}}/>;
-    case 'stairs':return <StairsStep data={data} update={update} stairEdges={stairEdges} deltas={deltas} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas();}}/>;
+    case 'stairs':return <StairsStep data={data} update={update} onApplyElevation={atomicUpdate} stairEdges={stairEdges} deltas={deltas} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas();}}/>;
     case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas();}} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch} deltas={deltas}/>;
-    case 'backyard':return <BackyardStep data={data} update={update} estimate={estimate} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard}/>;
+    case 'backyard':return <BackyardStep onGeometry={setGeometryPreview} data={data} update={update} onApplyElevation={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard} onDesign={()=>{setPlanTool('yard');setMode('plan');showCanvas();}}/>;
     case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={()=>saveJSON()} onDownloadSummary={download} onExport={kind=>void exportModel(kind)} onOpenPermit={()=>setPermitOpen(true)}/>;
   }};
   // "Draw it on the plan" (the Deck section's outline editor): the Draw outline tool, with the plan brought into view.
@@ -396,7 +442,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     const next=parseDesign(serializeDesign(candidate));
     // JobRevisionDialog supplies a validated local snapshot. Public serialization intentionally
     // omits contractor prices; retain the exact reviewed local rates, including absent values.
-    for(const key of ['materialMarkup','customLaborCost','customOverrides','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','quoteResolutions','pergolaQuoteCosts'] as const){
+    for(const key of ['materialMarkup','customLaborCost','customOverrides','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','quoteResolutions','pergolaQuoteCosts','poolQuoteInputs'] as const){
       delete next[key];
       if(Object.hasOwn(candidate,key))(next as unknown as Record<string,unknown>)[key]=structuredClone(candidate[key]);
     }
@@ -411,20 +457,25 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     if(action.partIds?.length){setSelection({partIds:action.partIds,boards:[]});setPlanTool('components');setMode('plan');if(action.section==='house')showCanvas();else openSection(action.section,true);}
     else openSection(action.section,true);
   };
-  const currentIssues=[...new Set([...reviewFlags,...lightingCheck.warnings])];
-  return <div className="deck-designer" data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>
+  const currentIssues=[...new Set([...reviewFlags,...lightingCheck.warnings,...estimate.quoteRequired])];
+  // The Pro workspace (Designer Mode) reaches the same actions through a menu bar and ribbon. The page hands over its own
+  // functions as they are; the Pro chunks, loaded only in Designer Mode, build the menu and ribbon actions from them.
+  const proPage:ProPage|undefined=pro?{open,renderSection,data,apply:atomicUpdate,ready:mounted&&designReady,issueCount:currentIssues.length,canUndo,canRedo,undo,redo,openSection,setPlanTool,setMode,showCanvas,showFullList,saveJSON,openProposal,downloadPdf,exportModel,exportPermit,setPresetsOpen,setPermitOpen,setJobsOpen,setSendOpen,setQuoteReviewOpen,setIssuesOpen,setSketchOpen,setAgentOpen,setAskOpen}:undefined;
+  return <div className="deck-designer" data-pro={pro||undefined} data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>
     {embed?embed.renderBar({data,estimate}):<SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>}
     <header className="dd-header"><Link to="/" className="dd-workspace-brand" aria-label="Golden Maple home"><span className="dd-brand-symbol" aria-hidden="true">↗</span><span>DeckCraft<small>Golden Maple</small></span></Link><div className="dd-workspace-project"><h1>Draw your deck on your house.</h1><span className="dd-save-state"><i aria-hidden="true"/>{autosavePaused?'Auto-save paused':mounted?'Auto-save on this device':'Loading your design'}</span></div><WorkspaceTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={()=>saveJSON()} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} autosavePaused={autosavePaused} onDownloadPrevious={unrestoredDesign?()=>downloadFile(unrestoredDesign,'application/json','golden-maple-previous-design.json'):undefined}/><div id="dd-workspace-agent-slot"><button type="button" className="dd-agent-open" disabled={!mounted||!designReady} aria-haspopup="dialog" onClick={()=>setPresetsOpen(true)}>Presets</button><button type="button" className="dd-agent-open" aria-haspopup="dialog" onClick={()=>setAgentOpen(true)}>Agents</button></div><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
+    {proPage&&mounted&&<Suspense fallback={null}><ProMenuBar page={proPage}/></Suspense>}
     {mounted&&<Suspense fallback={null}><EasyEditTools onAsk={()=>{showCanvas();setAskOpen(true);requestAnimationFrame(()=>{if(window.matchMedia('(max-width:800px)').matches)document.getElementById('dd-assistant-dock')?.scrollIntoView({block:'start',behavior:'smooth'});});}} onJobs={()=>setJobsOpen(true)} onIssues={()=>setIssuesOpen(true)} issues={currentIssues.length} ready={designReady} autosaveState={autosaveState} savedAt={lastAutosaveAt} jobLabel={jobLabel}/></Suspense>}
     <main className="dd-workspace">
-      <PreviewPanel assistantTargets={assistantTargets} data={data} update={update} applyComponent={atomicUpdate} estimate={estimate} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} snapshotLighting={snapshotLighting} tool={planTool} setTool={setPlanTool} pendingInlay={pendingInlay} onPendingInlay={setPendingInlay} externalSelection={selection} onSelectionChange={setSelection} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior} onSketch={()=>setSketchOpen(true)} sketchReady={mounted&&designReady}/>
+      <Suspense fallback={<div className="dd-preview" role="status">Preparing design workspace…</div>}><PreviewPanel pro={proPage} previewData={geometryPreview} onPreviewData={setGeometryPreview} assistantTargets={assistantTargets} data={data} update={update} applyComponent={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} onSelectYardTarget={setYardTarget} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} snapshotLighting={snapshotLighting} tool={planTool} setTool={setPlanTool} pendingInlay={pendingInlay} onPendingInlay={setPendingInlay} externalSelection={selection} onSelectionChange={setSelection} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior} onSketch={()=>setSketchOpen(true)} sketchReady={mounted&&designReady}/></Suspense>
       <section className="dd-controls" aria-label="Deck configuration">
-        <SectionList data={data} ledger={schedule} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection} onAssistant={askOpen?showCanvas:undefined} onCanvas={showCanvas} inspectorVisible={workspaceView==='inspector'}/>
+        {/* In the Pro workspace the open section docks beside the drawing (ProProperties) instead of this pop-over. */}
+        {!proPage&&<SectionList data={data} ledger={schedule} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection} onAssistant={askOpen?showCanvas:undefined} onCanvas={showCanvas} inspectorVisible={workspaceView==='inspector'}/>}
       </section>
       <aside id="dd-assistant-dock" className="dd-assistant-slot" hidden={!askOpen}><button type="button" className="dd-assistant-back" onClick={showCanvas}>↑ Back to drawing</button></aside>
       <WorkspacePrice onQuoteReview={()=>setQuoteReviewOpen(true)} ledger={schedule} changes={changes.records} onFullList={showFullList}/>
     </main>
-    {mounted&&<Suspense fallback={null}><DeckAgentBridge open={agentOpen} onClose={()=>setAgentOpen(false)} plainLanguageOpen={askOpen} dockTargetId="dd-assistant-dock" onTargetsChange={setAssistantTargets} onClosePlainLanguage={()=>{setAskOpen(false);setAssistantTargets(null);}} selection={selection} adapter={{data,estimate,reviewFlags,view:mode,openSections:[...open],canUndo,canRedo,ready:mounted&&designReady,commitDesign:next=>{const diff=Object.fromEntries(Object.keys({...data,...next}).filter(k=>JSON.stringify(data[k as keyof DeckData])!==JSON.stringify(next[k as keyof DeckData])).map(k=>[k,next[k as keyof DeckData]]));changes.edit(diff,data,true);replaceDesign(next);},undo,redo,setView:setMode,openSection:id=>openSection(id,true),actions:{'save.json':()=>saveJSON(true),'export.obj':()=>exportModel('obj',true),'export.dxf':()=>exportModel('dxf',true),'proposal.open':()=>openProposal(true),'proposal.pdf':()=>downloadPdf(undefined,true),'review.open':()=>setSendOpen(true)}}}/></Suspense>}
+    {mounted&&<Suspense fallback={null}><DeckAgentBridge onSelect={next=>{setSelection(next);setYardFeatureId(next.hardscape?.id??'');if(next.partIds.length)setPlanTool('components');else if(next.boards.length)setPlanTool('boards');}} onPreviewDesign={next=>setGeometryPreview(next?{...data,...next}:null)} open={agentOpen} onClose={()=>setAgentOpen(false)} plainLanguageOpen={askOpen} dockTargetId="dd-assistant-dock" onTargetsChange={setAssistantTargets} onClosePlainLanguage={()=>{setAskOpen(false);setAssistantTargets(null);}} selection={assistantSelection} adapter={{data,estimate,reviewFlags,view:mode,openSections:[...open],canUndo,canRedo,ready:mounted&&designReady,commitDesign:next=>{const diff=Object.fromEntries(Object.keys({...data,...next}).filter(k=>JSON.stringify(data[k as keyof DeckData])!==JSON.stringify(next[k as keyof DeckData])).map(k=>[k,next[k as keyof DeckData]]));changes.edit(diff,data,true);replaceDesign(next);},undo,redo,setView:setMode,openSection:id=>openSection(id,true),actions:{'save.json':()=>saveJSON(true),'export.obj':()=>exportModel('obj',true),'export.dxf':()=>exportModel('dxf',true),'export.dxf2d':()=>exportPermit('dxf2d',true),'permit.pdf':()=>exportPermit('pdf',true),'proposal.open':()=>openProposal(true),'proposal.pdf':()=>downloadPdf(undefined,true),'review.open':()=>setSendOpen(true)}}}/></Suspense>}
     {quoteReviewOpen&&<Suspense fallback={<p role="status">Opening quote-cost review…</p>}><QuoteReviewPanel data={data} estimate={estimate} onUpdate={atomicUpdate} onClose={()=>setQuoteReviewOpen(false)}/></Suspense>}
     <ChangeAnnouncer record={changes.records.at(-1)}/>
     {jobsOpen&&<Suspense fallback={<p role="status">Opening saved jobs…</p>}><JobRevisionDialog data={data} onRestore={restoreRevision} onClose={()=>setJobsOpen(false)} onSaved={status=>setJobLabel(`${status.job} · ${status.revision}`)}/></Suspense>}

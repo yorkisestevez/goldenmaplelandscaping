@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
+// Inlay geometry is a lazy runtime in the app (ensureDesignExtensions); register it before calculating inlay fixtures.
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import {readFileSync} from 'node:fs';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {BUSINESS,canPublish,publicContact} from '../src/data/business';
 import {calculateDeckReleaseEstimate} from '../src/features/deckcraft/deckRelease';
 import {describeDesign,dollars} from '../src/features/deckcraft/designFacts';
-import {priceLedger,quoteLabel,quoteTag} from '../src/features/deckcraft/designer/priceLedgerModel';
+import {lineBasis,priceLedger,quoteLabel,quoteTag} from '../src/features/deckcraft/designer/priceLedgerModel';
 import {exteriorSummary} from '../src/features/deckcraft/houseLooks';
 import {PRICE_BOOK,priceBookLabel} from '../src/features/deckcraft/priceBook';
 import {ProposalSheet,type ProposalProps} from '../src/features/deckcraft/ProposalSheet';
@@ -97,7 +99,7 @@ for(const [name,make] of Object.entries(PROPOSAL_CASES)){
   ok(JSON.stringify(rows.slice(0,ledger.lines.length).map(r=>r[0]))===JSON.stringify(ledger.lines.map(l=>l.title)),`${name}: ${ledger.lines.length} priced lines in the engine's order, each once`);
   for(const line of ledger.lines){
     const shown=rows.find(r=>r[0]===line.title)?.[1]??'';
-    ok(line.quotes.length&&line.amount<.005?shown===quoteTag(line.quotes)&&!shown.includes('$'):shown===line.text,`${name}: ${line.title} reads ${shown}`);
+    ok(line.quotes.length&&line.amount<.005?shown===quoteTag(line.quotes)&&!shown.includes('$'):shown===[line.text,lineBasis(line)].filter(Boolean).join(' '),`${name}: ${line.title} reads ${shown}, with its allowance or confirmed basis`);
   }
   ok(!ZERO.test(text(invest)),`${name}: no "$0" anywhere in the investment`);
   const sums=text(invest);

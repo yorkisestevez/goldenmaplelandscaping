@@ -74,13 +74,17 @@ type Kind = 'composite' | 'wood';
 const pending = new Map<number, { resolve: (maps: SwatchMaps | null) => void; image: SwatchImage; kind: Kind }>();
 let worker: Worker | null | undefined, nextId = 0;
 const onMainThread = (image: SwatchImage, kind: Kind) => buildSwatchMaps(image, kind, () => new Promise(resolve => setTimeout(resolve, 0)));
+// The worker lives for the page, so its listeners are module functions: written inline, the build folds this code into
+// the hook's effect and the listener kept the first 3D view's renderer, canvas and context alive.
+function onWorkerMessage(event: MessageEvent<SwatchResult>) { pending.get(event.data.id)?.resolve(event.data.maps); pending.delete(event.data.id); }
+/** A worker that fails to load hands its jobs back to the main thread, and no more are sent to it. */
+function onWorkerError() { worker = null; for (const job of pending.values()) onMainThread(job.image, job.kind).then(job.resolve, () => job.resolve(null)); pending.clear(); }
 /** Atlases are built in a worker (swatchMaps.worker.ts); where none can start, on the main thread a strip at a time. */
 function buildAtlas(image: SwatchImage, kind: Kind): Promise<SwatchMaps | null> {
   if (worker === undefined) {
     try { worker = typeof Worker === 'function' ? new Worker(new URL('./swatchMaps.worker.ts', import.meta.url), { type: 'module' }) : null; } catch { worker = null; }
-    worker?.addEventListener('message', (event: MessageEvent<SwatchResult>) => { pending.get(event.data.id)?.resolve(event.data.maps); pending.delete(event.data.id); });
-    // A worker that fails to load hands its jobs back to the main thread, and no more are sent to it.
-    worker?.addEventListener('error', () => { worker = null; for (const job of pending.values()) onMainThread(job.image, job.kind).then(job.resolve, () => job.resolve(null)); pending.clear(); });
+    worker?.addEventListener('message', onWorkerMessage);
+    worker?.addEventListener('error', onWorkerError);
   }
   if (!worker) return onMainThread(image, kind);
   const id = nextId++, job = worker;

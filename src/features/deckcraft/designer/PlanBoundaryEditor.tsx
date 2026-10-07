@@ -233,7 +233,7 @@ export default function PlanBoundaryEditor({data,model,update,onEdited,onStatus,
   const shown=[...boundaries.filter(b=>b.level!==current?.level),...boundaries.filter(b=>b.level===current?.level)];
   useLayoutEffect(()=>{
     const el=box.current;if(!size||!el)return;const rect=el.getBoundingClientRect(),viewport=el.closest('.dd-plan-viewport'),clip=viewport?.getBoundingClientRect()??rect;
-    const obstacles:LabelRect[]=[...el.closest('.dd-preview')?.querySelectorAll('.dd-plan-tools,.dd-plan-navigation')??[]].map(node=>node.getBoundingClientRect()).filter(r=>r.left<clip.right&&r.right>clip.left&&r.top<clip.bottom&&r.bottom>clip.top);
+    const obstacles:LabelRect[]=[...el.closest('.dd-preview')?.querySelectorAll('.dd-plan-tools,.dd-plan-navigation,[data-select-stairs]')??[]].map(node=>node.getBoundingClientRect()).filter(r=>r.left<clip.right&&r.right>clip.left&&r.top<clip.bottom&&r.bottom>clip.top);
     // Keep translated labels off the real point/edge handles, so their drag targets stay usable.
     for(const handle of Object.values(handles.current))if(handle){const r=handle.getBoundingClientRect();obstacles.push({left:r.left+7,right:r.right-7,top:r.top+7,bottom:r.bottom-7});}
     const next:Record<string,{left:number;top:number}>={};

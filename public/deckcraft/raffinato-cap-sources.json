@@ -1,0 +1,55 @@
+{
+  "page": "https://www.techo-bloc.com/shop/caps/raffinato-smooth-cap",
+  "checkedOn": "2026-09-30",
+  "note": "Manufacturer page uses shared colour samples across Smooth and HD2 selections. These are product colour photos, not calibrated PBR scans.",
+  "samples": [
+    {
+      "color": "beige-cream",
+      "sourceUrl": "https://www.techo-bloc.com/assets/d1/74/d174b0b8-5ac7-479c-882c-e3dd15424c6e/Raffinato-Cap-Beige-Cream-9542.jpg",
+      "sha256": "02734f826575d6d92f55a0c1e7c7c04c99f364669f0b329988953dd9e543d5d3",
+      "bytes": 29045
+    },
+    {
+      "color": "greyed-nickel",
+      "sourceUrl": "https://www.techo-bloc.com/assets/b2/44/b244deeb-96f9-43a9-b7e5-72353d9b7b4d/Raffinato-Cap-Greyed-Nickel-9542.jpg",
+      "sha256": "b9d682c55a60872150a8e0edf2bc7210848190e84adaac2c186196609bd2dcc9",
+      "bytes": 7550
+    },
+    {
+      "color": "onyx-black",
+      "sourceUrl": "https://www.techo-bloc.com/assets/0f/7a/0f7abe17-f833-40aa-a078-c097adbe09b0/Raffinato-Cap-HD2Smooth-Onyx-Black-9538_CST.jpg",
+      "sha256": "12dc8810f4c9555496f5dd02a5db411b0a980a28f1dc89ff552f36123d7d0fcd",
+      "bytes": 18996
+    },
+    {
+      "color": "chestnut-brown",
+      "sourceUrl": "https://www.techo-bloc.com/assets/45/b4/45b48c51-3726-4ccc-bc27-49fd5a36cd8d/Raffinato-Cap-Chestnut-Brown-9538.jpg",
+      "sha256": "ea55beb5dfc64b69ce435507753e2b250b9ed5df3038e888ffe4bf5e24c908a4",
+      "bytes": 29737
+    },
+    {
+      "color": "shale-grey",
+      "sourceUrl": "https://www.techo-bloc.com/assets/41/66/4166b3f1-0ae4-4d33-98e8-73f075778670/Raffinato-Cap-HD2Smooth-Shale-Grey-9538_CST.jpg",
+      "sha256": "36202999dcc03d92148b12cb4303e038af6efc4904abfaab0ff7b3aaa18c6a0e",
+      "bytes": 23452
+    },
+    {
+      "color": "champlain-grey",
+      "sourceUrl": "https://www.techo-bloc.com/assets/e1/2a/e12a459d-2949-46e0-bf5e-dd3050506c9d/Raffinato-Cap-Champlain-Grey-9560.jpg",
+      "sha256": "7f54c9e338484e27df1bb930ff3bbd09b822242285e72dbe75252cc834922e61",
+      "bytes": 30433
+    },
+    {
+      "color": "caff-crema",
+      "sourceUrl": "https://www.techo-bloc.com/assets/e1/1b/e11bb7c7-fef9-4b0f-bfaa-a41f074507bb/Raffinato-Cap-HD2Smooth-Caff%C3%A8-Crema-9538.jpg",
+      "sha256": "e23b33e0a2bfb9dfa5ffa0b7b98dbb5de73d3778f6fceac7e7166a65c73619af",
+      "bytes": 32262
+    },
+    {
+      "color": "silver-granite",
+      "sourceUrl": "https://www.techo-bloc.com/assets/0a/d0/0ad0c439-3791-419f-aef8-7990372e399a/Raffinato-Cap-HD2Smooth-Silver-Granite-9542%20%281%29.jpg",
+      "sha256": "3b9ac38fe4be76671f6b0fe5e48c079b4c95108b2cfcfdcce97def23a526013f",
+      "bytes": 143705
+    }
+  ]
+}

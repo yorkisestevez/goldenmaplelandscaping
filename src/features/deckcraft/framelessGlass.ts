@@ -1,6 +1,7 @@
 import type {Box,DeckLevel,Member,RailRun,V3} from './deckTakeoff';
 import type {DeckData,GlassFinish,GlassMount} from './types';
 import {finishedFasciaOffset,pictureFrameOverhang} from './lib/finishedFootprint';
+import {insidePolygon as inside} from './lib/polygonCuts';
 
 /**
  * Frameless glass railing: glass panels held by a continuous base shoe (on the deck or on the rim face) or by
@@ -50,11 +51,6 @@ export interface FramelessGlassLayout{
 const len2=(p:P2)=>Math.hypot(p.x,p.y);
 const shift=(p:V3,o:P2,d:number,dy=0):V3=>({x:p.x+o.x*d,y:p.y+dy,z:p.z+o.y*d});
 const round8=(n:number)=>Math.round(n*8)/8;
-function inside(p:P2,poly:P2[]){
-  let odd=false;
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}
-  return odd;
-}
 /** A tread's plan outline (winders carry their own polygon). */
 function treadOutline(t:Box):P2[]{
   if(t.polygon)return t.polygon;

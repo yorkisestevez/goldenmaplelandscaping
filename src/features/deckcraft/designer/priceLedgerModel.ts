@@ -1,3 +1,4 @@
+import {priceStatus,type PriceStatus} from './estimateConfidence';
 import {splitSubtotal} from '../backyard';
 import {dollars,type DeckEstimate} from '../designFacts';
 import {priceBookLabel} from '../priceBook';
@@ -20,7 +21,7 @@ export const isBuilderQuote=(item:Pick<EstimateItem,'name'|'spec'>)=>/\(builder 
 /** "Supplier quote", "Builder quote", or both. */
 export const quoteTag=(kinds:readonly QuoteKind[])=>kinds.includes('supplier')?kinds.includes('builder')?'Supplier & builder quotes':'Supplier quote':'Builder quote';
 
-export interface LedgerItem{name:string;qty:string;unit:string;quote:QuoteKind|null}
+export interface LedgerItem{name:string;qty:string;unit:string;quote:QuoteKind|null;status:PriceStatus}
 export interface LedgerLine{
   /** The engine's section title. */
   title:string;
@@ -52,7 +53,7 @@ const amountText=(amount:number)=>amount>0&&amount<.5?'Under $1':dollars(amount)
 export function priceLedger(estimate:DeckEstimate):Ledger{
   const hstSection=estimate.sections.find(s=>/^HST/.test(s.title));
   const lines=estimate.sections.filter(s=>s!==hstSection&&(s.total>=.005||s.items.some(i=>Number(i.qty)>0))).map((s):LedgerLine=>{
-    const items=s.items.filter(i=>Number(i.qty)>0).map(i=>({name:i.name,qty:qtyText(i.qty),unit:i.unit,quote:i.cost===null&&!i.quoteResolved?(isBuilderQuote(i)?'builder':'supplier'):null}) as LedgerItem);
+    const items=s.items.filter(i=>Number(i.qty)>0).map(i=>({name:i.name,qty:qtyText(i.qty),unit:i.unit,status:priceStatus(i),quote:i.cost===null&&!i.quoteResolved?(isBuilderQuote(i)?'builder':'supplier'):null}) as LedgerItem);
     const kinds=[...new Set(items.flatMap(i=>i.quote?[i.quote]:[]))];
     const quotes=kinds.length?kinds:s.quoteRequired?['supplier' as const]:[];
     const priced=s.total>=.005,covered=s.items.some(i=>i.quoteResolved)&&!quotes.length&&!priced;
@@ -69,6 +70,9 @@ export function priceLedger(estimate:DeckEstimate):Ledger{
     totalLabel:quotes.length?'Priced portion including HST':'Including HST',quotes,
   };
 }
+
+/** A line's priced amount: a planning allowance until every priced item has a recorded quote; null when unpriced. */
+export const lineBasis=(line:LedgerLine)=>{const priced=line.items.filter(i=>!i.quote);return line.amount<.005||!priced.length?null:priced.some(i=>i.status==='allowance')?'Planning allowance':'Confirmed';};
 
 /** A quote's label without the "(builder quote)" or "(supplier quote)" its tag already says. */
 export const quoteLabel=(label:string)=>label.replace(/\s*\((builder|supplier) quote\)$/i,'');

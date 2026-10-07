@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import {createDeckAgentController,type DeckAgentHostState,type AgentCommand,type AgentResponse} from '../src/features/deckcraft/designer/deckAgentController';
+import {applyWalkway} from '../src/features/deckcraft/shapeTools';
+import type {YardFeature} from '../src/features/deckcraft/types';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {deckReleaseData,calculateDeckReleaseEstimate,serializeDeckReleaseDesign,parseDeckReleaseDesign} from '../src/features/deckcraft/deckRelease';
 import {emptyHistory,recordChange,undoChange,redoChange} from '../src/features/deckcraft/designer/designHistory';
@@ -21,6 +23,15 @@ let counter=0;
 const request=(commands:AgentCommand[],expectedRevision?:number)=>({id:`check-${++counter}`,commands,...(expectedRevision===undefined?{}:{expectedRevision})});
 const ok=(r:AgentResponse)=>{if('error' in r)throw new Error(`${r.error.code}: ${r.error.message}`);check(r.ok,'Command succeeds');return r;};
 async function main(){
+  const walkwayHost=fixture(),walk=applyWalkway({id:'walk-regression',name:'Walkway',kind:'patio',enabled:true,xFt:0,zFt:0,widthFt:10,depthFt:4,heightIn:0,rotationDeg:0,productId:'permacon-melville',color:'#aaaaaa'} as YardFeature,{points:[{x:360,y:360},{x:480,y:360}],edges:[{kind:'line'}],closed:false},48,'round');
+  const walkPatch={yardFeatures:[walk]},preview=ok(await walkwayHost.api.preview(request([{type:'design.patch',patch:walkPatch}])));
+  check(JSON.stringify(preview.snapshot.design.yardFeatures![0].pathSpine)===JSON.stringify(walk.pathSpine)&&walkwayHost.commits===0,'Walkway centreline passes preview without writes');
+  ok(await walkwayHost.api.execute(request([{type:'design.patch',patch:walkPatch}])));
+  check(JSON.stringify(walkwayHost.state.data.yardFeatures![0].pathSpine)===JSON.stringify(walk.pathSpine),'Applying a walkway preserves its centreline');
+  for(const spine of [{...walk.pathSpine,widthIn:400},{...walk.pathSpine,ends:'invalid'},{...walk.pathSpine,extra:true}]){
+    const count=walkwayHost.commits,bad={...walk,pathSpine:spine} as unknown as YardFeature;
+    check(!(await walkwayHost.api.preview(request([{type:'design.patch',patch:{yardFeatures:[bad]}}]))).ok&&walkwayHost.commits===count,'Invalid walkway metadata stays rejected without writes');
+  }
   const f=fixture(),start=f.api.read();
   check(Object.isFrozen(start)&&Object.isFrozen(start.design)&&Object.isFrozen(start.boundaries[0].points),'Read snapshots are recursively immutable');
   check(!('customerName' in start.design)&&!('materialMarkup' in start.design),'Read does not expose contact details or contractor overrides');
@@ -68,6 +79,7 @@ async function main(){
   const seq=await Promise.all([f.api.execute(request([{type:'design.patch',patch:{width:22}}])),f.api.execute(request([{type:'design.patch',patch:{length:20}}]))]);
   check(seq.every(r=>r.ok)&&f.state.data.width===22&&f.state.data.length===20,'Unconditional queued patches merge with latest design rather than stale closure');
   const action=request([{type:'action',action:'review.open'}]);await Promise.all([f.api.execute(action),f.api.execute(action)]);check(f.actions===1,'Concurrent identical action ids open review once');
+  check(f.api.describe().actions.includes('permit.pdf')&&f.api.describe().actions.includes('export.dxf2d'),'Assistant describes both permit downloads');
   ok(await f.api.execute(request([{type:'view.set',view:'front'}])));check(f.api.read().view==='front','View commands await visible view');
   ok(await f.api.execute(request([{type:'section.open',section:'boards'}])));check(f.api.read().openSections.includes('boards'),'Section commands open semantic editor section');
   const share=ok(await f.api.execute(request([{type:'action',action:'share.create'}])));check(!!share.result?.url,'Share action returns a local generated URL');
@@ -134,6 +146,22 @@ async function main(){
     const noLevelBefore=serializeDeckReleaseDesign(g.state.data);
     check(!(await g.api.preview(request([{type:'layout.region',region:{...region,id:'absent_area',level:2}}]))).ok&&!(await g.api.execute(request([{type:'layout.breaker',breaker:{...breaker,id:'absent_breaker',level:3}}]))).ok&&serializeDeckReleaseDesign(g.state.data)===noLevelBefore,'Explicit layout edits reject an absent level without mutation');
   }
-  console.log(`PASS: ${checks} agent control checks (strict validation, atomic history, concurrency, previews, privacy, persistence, all three boundaries).`);
+  {
+    // Takeoff rules (buildRules.ts) are read-only: snapshots carry them, every edit keeps them, a different value is refused.
+    const fresh=fixture(),old=fixture(parseDeckReleaseDesign(serializeDeckReleaseDesign({...deckReleaseData(structuredClone(DEFAULT_DECK)),buildRules:undefined})));
+    check(fresh.api.read().design.buildRules==='2026-10'&&old.api.read().design.buildRules==='legacy','Snapshots carry the design\'s takeoff rules');
+    check(!fresh.api.describe().editableFields.includes('buildRules'),'The descriptor does not list takeoff rules as editable');
+    for(const [h,own,other] of [[fresh,'2026-10','legacy'],[old,'legacy','2026-10']] as const){
+      const saved=serializeDeckReleaseDesign(h.state.data),commits=h.commits,design=h.api.read().design;
+      for(const command of [{type:'design.replace',design:{...design,buildRules:other}},{type:'design.patch',patch:{buildRules:other}},{type:'design.patch',patch:{width:20,buildRules:other}},{type:'design.patch',patch:{width:20},unset:['buildRules']}] as AgentCommand[]){
+        const r=await h.api.execute(request([command]));check('error' in r&&(command.type==='design.patch'&&command.unset?/unset/:/takeoff rules it was saved under/).test(r.error.message)&&h.commits===commits&&serializeDeckReleaseDesign(h.state.data)===saved,`A ${own} design refuses ${command.type} to other takeoff rules without writes`);}
+      const total=h.api.read().pricing.total,{buildRules:_omit,...omitted}=design;
+      check(ok(await h.api.preview(request([{type:'design.replace',design:{...design}}]))).snapshot.pricing.total===total,`An identity replace keeps a ${own} design's price`);
+      check(ok(await h.api.execute(request([{type:'design.replace',design:omitted as typeof design}]))).snapshot.design.buildRules===own&&h.state.data.buildRules===own,`A replace without the marker keeps a ${own} design's rules`);
+      check(ok(await h.api.execute(request([{type:'design.patch',patch:{width:19,buildRules:own}}]))).snapshot.design.buildRules===own,`A patch that repeats ${own} rules applies`);
+      check(ok(await h.api.execute(request([{type:'design.patch',patch:{length:13}}]))).snapshot.design.buildRules===own&&parseDeckReleaseDesign(serializeDeckReleaseDesign(h.state.data)).buildRules===own,`Edits to a ${own} design save its rules`);
+    }
+  }
+  console.log(`PASS: ${checks} agent control checks (strict validation, atomic history, concurrency, previews, privacy, persistence, all three boundaries, read-only takeoff rules).`);
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

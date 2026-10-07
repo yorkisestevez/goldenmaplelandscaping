@@ -15,7 +15,9 @@ export function actionableIssues(data:DeckData,model:DeckTakeoff,messages:readon
       {label:'Review railing connection',section:'stairs',partIds:[`opening:${clash.openingId}`],guidance:'Review the railing and connection layout against the highlighted opening. Confirm a buildable connection with the builder; this does not move the window automatically.'}
     ]};
     let section:SectionId='proposal',label='Review scope',guidance='Review the scope and outstanding quote requirements. This notice is a construction decision, not an automatic geometry correction.';
-    if(/lighting|light|fixture|transformer|cable|voltage|\bVA\b|HUB/i.test(message)){section='lighting';label='Review lighting';guidance='Check selected fixtures, transformer capacity, compatible accessories and cable runs. Preview quantities and prices before committing changes.';}
+    if(/: (?:the measured ground beside it|its finished surface stands up to|its graded bank runs past)/.test(message)){section='backyard';label='Fit to the ground';guidance='Open Ground fit to compare raising the landing, moving the stair, the deck height or a stone edge, each priced.';}
+    else if(/yard|patio|paving|retaining wall|wall (?:base|body|cap|drain|foundation|reinforcement)|geogrid|earthwork|survey|terrain/i.test(message)){section='backyard';label='Review yard & site';guidance='Review the measured yard layout, elevations, drainage and selected construction system. Site and engineering inputs must be confirmed; a price does not resolve them.';}
+    else if(/lighting|light|fixture|transformer|cable|voltage|\bVA\b|HUB/i.test(message)){section='lighting';label='Review lighting';guidance='Check selected fixtures, transformer capacity, compatible accessories and cable runs. Preview quantities and prices before committing changes.';}
     else if(/drain|ceiling|gravel|\bfabric\b|mosquito|mesh|under.deck|skirt/i.test(message)){section='extras';label='Review under-deck options';}
     else if(/stair|riser|tread|railing|handrail|glass/i.test(message)){section='stairs';label='Review stairs & railing';}
     else if(/board|decking|pattern|stock|grain|colour|color|inlay|breaker/i.test(message)){section='boards';label='Review board layout & products';}
@@ -23,6 +25,8 @@ export function actionableIssues(data:DeckData,model:DeckTakeoff,messages:readon
     else if(/house|window|opening|door|ledger|attachment|wall/i.test(message)){section='house';label='Review house measurements';}
     else if(/yard|paving|patio|freight|delivery|terrain/i.test(message)){section='backyard';label='Review yard & site';}
     else if(/outline|polygon|level|deck|edge|connection/i.test(message)){section='deck';label='Review deck shape';}
-    return {id:`review:${index}`,message,actions:[{label,section,guidance}]};
+    // A ground or survey-coverage notice on a measured site can also open Design from my ground (Backyard); navigation only.
+    const site=section==='backyard'&&!!data.siteModel&&/measured ground|survey|coverage|unmeasured/i.test(message)?[{label:'Design from my ground',section:'backyard' as const,guidance:'Open Design from my ground under Backyard: what the survey says, where to measure further, and whole-yard concepts on the measured ground, each priced.'}]:[];
+    return {id:`review:${index}`,message,actions:[{label,section,guidance},...site]};
   });
 }

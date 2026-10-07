@@ -56,7 +56,7 @@ Object.assign(scenarios,{
 let longest=0;
 for(const [name,d] of Object.entries(scenarios)){
   const link=await encodeDesignLink(d,ORIGIN);
-  ok(link.startsWith(`${ORIGIN}/deck-designer#d=1z`),`${name}: a compressed version-1 link to the designer`);
+  ok(link.startsWith(`${ORIGIN}/deck-designer/#d=1z`),`${name}: a compressed version-1 link to the designer`);
   const back=await decodeDesignLink(valueOf(link));
   assert.equal(serializeDeckReleaseDesign(back),serializeDeckReleaseDesign(withoutPersonalDetails(d)),`${name}: the design survives the link byte for byte`);checks++;
   assert.equal(calculateDeckReleaseEstimate(back).total,calculateDeckReleaseEstimate(d).total,`${name}: same price after the link`);checks++;

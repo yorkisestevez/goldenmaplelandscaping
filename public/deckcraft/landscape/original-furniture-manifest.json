@@ -1,0 +1,77 @@
+{
+  "created": "2026-10-01",
+  "origin": "Original geometry authored for DeckCraft; no third-party mesh or texture input",
+  "license": "Project-owned original assets; no external license or attribution dependency",
+  "visualProxy": true,
+  "assets": [
+    {
+      "id": "lounge-chair",
+      "lods": [
+        {
+          "uri": "lounge-chair-lod0.glb",
+          "bytes": 103464,
+          "triangles": 1396,
+          "sha256": "bae94bc87ea4799c1ef9ba8b68cce76dffcbc27eba7a810a27d82245f5d90f6d"
+        },
+        {
+          "uri": "lounge-chair-lod1.glb",
+          "bytes": 71204,
+          "triangles": 948,
+          "sha256": "19e22fd043ffa7da53c5aa9a186fa31b04f63f638be97f289eef69156580b0f1"
+        },
+        {
+          "uri": "lounge-chair-lod2.glb",
+          "bytes": 55076,
+          "triangles": 724,
+          "sha256": "3e3d4a763e5b37cca1129283c1ab6b52a7350c6b58fa8933776443145f058e29"
+        }
+      ]
+    },
+    {
+      "id": "outdoor-sofa",
+      "lods": [
+        {
+          "uri": "outdoor-sofa-lod0.glb",
+          "bytes": 282056,
+          "triangles": 3876,
+          "sha256": "5540c0af83f7577b2446452d353588bb178d1bd568ef7ffdc54618174e0c070c"
+        },
+        {
+          "uri": "outdoor-sofa-lod1.glb",
+          "bytes": 185292,
+          "triangles": 2532,
+          "sha256": "5575548189909e5d03e287b4e674ba85110903c85a11fbb0aa9bfa654ef993ef"
+        },
+        {
+          "uri": "outdoor-sofa-lod2.glb",
+          "bytes": 136904,
+          "triangles": 1860,
+          "sha256": "caf714aec66ff9a151bb7f19aac153d9bdcd8bac422bb2e7dfc39b5742369eb4"
+        }
+      ]
+    },
+    {
+      "id": "outdoor-coffee-table",
+      "lods": [
+        {
+          "uri": "outdoor-coffee-table-lod0.glb",
+          "bytes": 17536,
+          "triangles": 216,
+          "sha256": "9321198b1a8f634d491196b6848497d2e2a2039b64be2f9191c9524c3dcde4d7"
+        },
+        {
+          "uri": "outdoor-coffee-table-lod1.glb",
+          "bytes": 17536,
+          "triangles": 216,
+          "sha256": "9321198b1a8f634d491196b6848497d2e2a2039b64be2f9191c9524c3dcde4d7"
+        },
+        {
+          "uri": "outdoor-coffee-table-lod2.glb",
+          "bytes": 17536,
+          "triangles": 216,
+          "sha256": "9321198b1a8f634d491196b6848497d2e2a2039b64be2f9191c9524c3dcde4d7"
+        }
+      ]
+    }
+  ]
+}

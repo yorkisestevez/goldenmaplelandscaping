@@ -48,6 +48,9 @@ import engineBaseline from '../data/engine-baseline.json';
 
 const CAL = engineBaseline.calibration;
 const HST_RATE = engineBaseline.facts.hstRate;
+/** The gas line a gas fire pit adds (CAD, low–high band): its own trade. DeckCraft prices a placed gas fire
+ * feature's gas line from this same figure (src/features/deckcraft/yardTakeoffRuntime.ts). */
+export const FIREPIT_GAS_LINE_CAD = { low: 1500, high: 3000 } as const;
 
 /** Everything the price depends on. Anything not in here cannot move the number. */
 export interface EstimateInput {
@@ -333,7 +336,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
     } else if (el === 'firepit') {
       allowances.push(el);
       // Gas line run is its own trade
-      if (dv('fuel') === 'gas') { extraFlatLow += 1500; extraFlatHigh += 3000; }
+      if (dv('fuel') === 'gas') { extraFlatLow += FIREPIT_GAS_LINE_CAD.low; extraFlatHigh += FIREPIT_GAS_LINE_CAD.high; }
       const lineLow = tier === 'budget' ? 1500 : tier === 'mid' ? 2500 : 3500;
       const lineHigh = lineLow * 1.5;
       materialLow += lineLow * 0.6;

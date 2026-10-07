@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {calculateDeckReleaseEstimate as calculate} from '../src/features/deckcraft/deckRelease';
+import {optionScopeComparison as compare} from '../src/features/deckcraft/designer/optionScopeComparison';
+const a=calculate(structuredClone(DEFAULT_DECK)),b=calculate({...structuredClone(DEFAULT_DECK),width:24,length:20});
+const same=compare(a,a);assert.equal(same.quantities.length,0);assert.equal(same.area,0);assert.equal(same.addedQuotes.length,0);
+const changed=compare(a,b);assert(changed.quantities.length>0);assert.equal(changed.personHours,b.manHours-a.manHours);
+assert(Math.abs(changed.amounts.reduce((n,r)=>n+r.delta,0)-(b.subtotal-a.subtotal))<.01);
+const pending=compare(a,{...a,quoteRequired:[...a.quoteRequired,'New delivery']});assert.deepEqual(pending.addedQuotes,['New delivery']);
+assert.deepEqual(compare({...a,quoteRequired:['Old scope']},{...a,quoteRequired:[]}).removedQuotes,['Old scope']);
+assert(changed.quantities.every(r=>r.unit&&Number.isFinite(r.delta)));
+console.log('Option comparison: quantity differences, scope changes, labour and subtotal reconciliation passed.');

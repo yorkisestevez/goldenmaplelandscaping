@@ -1,0 +1,171 @@
+/* The Pro workspace (Designer Mode): a CAD-style shell around the same designer. Loaded only with the Pro chunks, and
+   every rule is scoped to .deck-designer[data-pro], so the public designer never changes. */
+
+/* The menus and ribbon replace the task menus, the job-tools bar (Describe a change, Jobs, Review issues: all in the
+   menus), the drawing-focus toggle, the Elevations button (Terrain tab) and the shortcuts button (Help menu). */
+/* One column: the drawing panel over the price bar. (The public layout keys this off the task menus, which Pro drops
+   along with the section pop-over: the open section docks beside the drawing instead.) */
+.deck-designer[data-pro] .dd-workspace{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+.deck-designer[data-pro] .dd-preview{grid-column:1;grid-row:1;min-width:0;padding:8px 12px}
+.deck-designer[data-pro] .dd-workspace-price{grid-column:1;grid-row:2}
+.deck-designer[data-pro] .dd-assistant-slot{grid-column:1}
+.deck-designer[data-pro] .dd-controls,
+.deck-designer[data-pro] .dd-workspace-nav,
+.deck-designer[data-pro] .dd-easy-tools,
+.deck-designer[data-pro] .dd-drawing-focus-toggle,
+.deck-designer[data-pro] .dd-sheet-panel>.dd-summary-actions,
+.deck-designer[data-pro] .dd-sheet-panel>button[title="Keyboard shortcuts (F1)"]{display:none!important}
+
+/* The drawing fills the window between the ribbon and the sheet tabs, as in a CAD program. */
+.deck-designer[data-pro] .dd-canvas>.dd-plan-viewport,
+.deck-designer[data-pro] .dd-canvas>.dd-site-plan,
+.deck-designer[data-pro] .dd-canvas>[aria-label="Interactive deck construction model"]{height:max(340px,calc(100dvh - var(--dd-pro-chrome,400px)))!important}
+/* The workspace fills the window below the header (its last row is the price bar); in Pro the menu bar takes 33 px of
+   that too. The drawing then leaves room for the ribbon, shape shortcuts, sheet tabs and status bar. */
+@media(min-width:801px){.deck-designer[data-pro] .dd-workspace,.deck-designer[data-pro]:has(.dd-easy-tools) .dd-workspace{height:calc(100dvh - 72px - 33px)}}
+.deck-designer[data-pro]{--dd-pro-chrome:510px}
+.deck-designer[data-pro] .dd-canvas{border-radius:2px;background:#e9ebe6}
+/* Sheet tabs under the drawing, like a CAD program's model and layout tabs. */
+.deck-designer[data-pro] .dd-preview .dd-preview-head{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:flex-start;align-items:center;gap:6px 14px;margin:4px 0 0;padding:0 0 0 60px;min-height:0}
+.deck-designer[data-pro] .dd-preview .dd-preview-head h2{margin:0;font-size:12px;font-weight:500;color:#4d574c}
+.deck-designer[data-pro] .dd-preview .dd-preview-head h2 small{color:#5b655a}
+.deck-designer[data-pro] .dd-preview .dd-sheet-tabs{padding:0;gap:0;border:1px solid #cccfc9;border-top:0;border-radius:0 0 4px 4px;background:#e7ebe5}
+.deck-designer[data-pro] .dd-preview .dd-sheet-tabs button{min-height:32px;padding:0 18px;border-radius:0;border-top:3px solid transparent;color:#465348;font-weight:600}
+.deck-designer[data-pro] .dd-preview .dd-sheet-tabs [aria-selected=true]{background:#fafbf8;border-top-color:#437256;box-shadow:none;color:#203e2a}
+
+/* Menu bar */
+.dd-pro-menubar{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;padding:0 8px;min-height:32px;background:#f4f5f0;border-bottom:1px solid #d6dad1;font:500 13px/1 var(--dc-body,Arial,sans-serif);color:#262a26;position:relative;z-index:60}
+.dd-pro-menu{position:relative}
+.dd-pro-menu>button{height:32px;padding:0 10px;border:0;background:none;color:inherit;font:inherit;cursor:pointer}
+.dd-pro-menu>button:hover,.dd-pro-menu>button[aria-expanded=true]{background:#e2e7df}
+.dd-pro-menu>button:focus-visible,.dd-pro-menu-list button:focus-visible{outline:2px solid #437256;outline-offset:-2px}
+.dd-pro-menu-list{position:absolute;top:100%;left:0;min-width:250px;max-width:calc(100vw - 24px);padding:4px 0;background:#fff;border:1px solid #c9cec5;border-radius:4px;box-shadow:0 8px 24px #1d241e26}
+.dd-pro-menu:nth-last-child(-n+2) .dd-pro-menu-list{left:auto;right:0}
+.dd-pro-menu-list button{display:flex;justify-content:space-between;align-items:center;gap:24px;width:100%;min-height:32px;padding:6px 14px;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.dd-pro-menu-list button:hover:not(:disabled),.dd-pro-menu-list button:focus{background:#e7efe4}
+.dd-pro-menu-list button:disabled{color:#767c73;cursor:default}
+.dd-pro-menu-list kbd,.dd-pro-statusbar kbd{font:500 11px var(--dc-mono,ui-monospace,monospace)}
+.dd-pro-menu-list kbd{color:#6d756b}
+.dd-pro-menu-separator{height:1px;margin:4px 0;background:#e3e6e0}
+
+/* Ribbon */
+.dd-pro-ribbon{margin:0 0 8px;background:#fafbf8;border:1px solid #cccfc9;border-radius:4px;color:#262a26}
+.dd-pro-ribbon-tabs{display:flex;overflow-x:auto;background:#e7ebe5;border-bottom:1px solid #cccfc9;scrollbar-width:thin}
+.dd-pro-ribbon-tabs button{flex:none;min-height:34px;padding:0 14px;border:0;border-bottom:3px solid transparent;background:none;font:600 12px var(--dc-body,Arial,sans-serif);color:#465348;cursor:pointer;white-space:nowrap}
+.dd-pro-ribbon-tabs button[aria-selected=true]{background:#fafbf8;border-bottom-color:#437256;color:#203e2a}
+.dd-pro-ribbon-tabs button:focus-visible{outline:2px solid #437256;outline-offset:-2px}
+.dd-pro-ribbon-panel{display:flex;align-items:stretch;overflow-x:auto;padding:6px 4px 2px;scrollbar-width:thin}
+.dd-pro-ribbon-group{display:flex;flex-direction:column;align-items:center;padding:0 8px;border-right:1px solid #dde1d9}
+.dd-pro-ribbon-group:last-child{border-right:0}
+.dd-pro-ribbon-buttons{display:flex;gap:2px}
+.dd-pro-ribbon-caption{margin-top:2px;font:500 10px var(--dc-body,Arial,sans-serif);color:#6d756b;white-space:nowrap}
+.dd-pro-ribbon-button{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;width:72px;min-height:64px;padding:6px 4px;border:1px solid transparent;border-radius:3px;background:none;color:#2f4733;font:500 11px/1.2 var(--dc-body,Arial,sans-serif);text-align:center;cursor:pointer}
+.dd-pro-ribbon-button svg{flex:none;width:22px;height:22px;color:#437256}
+.dd-pro-ribbon-button:hover:not(:disabled){background:#edf1e9;border-color:#d4dccf}
+.dd-pro-ribbon-button[aria-pressed=true]{background:#e2eddf;border-color:#799573;color:#214529}
+.dd-pro-ribbon-button:disabled{opacity:.4;cursor:default}
+.dd-pro-ribbon-button:focus-visible{outline:2px solid #437256;outline-offset:-2px}
+
+/* Left tool strip beside the drawing (the plan's pan and zoom controls dock into it) and, on wide screens, the
+   selected object's settings as a right-hand properties panel. */
+.deck-designer[data-pro] .dd-selection-workspace{grid-template-columns:52px minmax(0,1fr);gap:8px}
+/* Side column: the properties panel over the current tool's options. */
+.dd-pro-side{grid-column:1/-1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.dd-pro-side>.dd-selection-inspector{position:static;max-height:none;padding:0 12px;border:1px solid #cccfc9;border-radius:4px;background:#fff}
+.dd-pro-side>.dd-selection-inspector>summary{min-height:36px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#465348}
+@media(min-width:1100px){
+  /* On wide screens the column sits right of the drawing and is exactly as tall: the panel takes what the tool options
+     leave (they keep at most 40%), and a tall design area scrolls inside the panel. */
+  .deck-designer[data-pro] .dd-selection-workspace{grid-template-columns:52px minmax(0,1fr) 340px}
+  .deck-designer[data-pro] .dd-selection-workspace>.dd-pro-side{grid-column:3;height:max(340px,calc(100dvh - var(--dd-pro-chrome,400px)))}
+  .dd-pro-side>.dd-pro-properties{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain}
+  .dd-pro-side>.dd-selection-inspector{flex:0 1 auto;max-height:40%;overflow:auto}
+  .dd-pro-side>.dd-selection-inspector>summary{position:sticky;top:0;z-index:1;background:#fff}
+}
+
+/* Properties panel: the selected object's title, then its design areas as bars that open one at a time. */
+.dd-pro-properties{display:flex;flex-direction:column;background:#fff;border:1px solid #cccfc9;border-radius:4px;color:#262a26;font-family:var(--dc-body,Arial,sans-serif)}
+.dd-pro-properties-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f4f5f0;border-bottom:1px solid #cccfc9;color:#2f4733}
+.dd-pro-properties-head h2{flex:1;margin:0;font:700 15px/1.2 var(--dc-head,Arial,sans-serif)}
+.dd-pro-properties-head button{display:grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid #cccfc9;border-radius:50%;background:#fff;color:#2f4733;cursor:pointer}
+.dd-pro-properties-head button:focus-visible,.dd-pro-properties-group h3 button:focus-visible{outline:2px solid #437256;outline-offset:-2px}
+.dd-pro-properties-groups{display:flex;flex-direction:column;gap:4px;padding:6px}
+.dd-pro-properties-group h3{margin:0;font-size:inherit}
+.dd-pro-properties-group h3 button,.dd-pro-properties-static{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:44px;padding:6px 10px;border:1px solid #c3cfc0;border-radius:3px;background:#e7ede4;color:#203e2a;font:600 13px/1.25 var(--dc-body,Arial,sans-serif);text-align:left;cursor:pointer}
+.dd-pro-properties-static{justify-content:center;cursor:default}
+.dd-pro-properties-group h3 button small{font-weight:400;font-size:11px;color:#4d574c}
+.dd-pro-properties-group h3 button[aria-expanded=true]{background:#2f4733;border-color:#2f4733;color:#fff}
+.dd-pro-properties-group h3 button[aria-expanded=true] small{color:#dfe8dc}
+/* Panel-sized type: the same settings as the public sections, set compactly like a properties panel. */
+.dd-pro-properties-body{padding:10px 4px 6px;font-size:13px;line-height:1.45}
+.dd-pro-properties-body p,.dd-pro-properties-body .dd-note{font-size:12px;line-height:1.45;color:#4d574c}
+.dd-pro-properties-body h3,.dd-pro-properties-body h4{font-size:13px}
+.dd-pro-properties-body label{font-size:12px}
+.dd-pro-properties-info{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:6px 4px 2px;font-size:12px}
+.dd-pro-properties-info dt{color:#4d574c}
+.dd-pro-properties-info dd{margin:0;font:600 13px var(--dc-mono,ui-monospace,monospace)}
+.dd-pro-strip{display:flex;flex-direction:column;gap:6px;position:sticky;top:8px}
+.dd-pro-strip>div[role=group],.dd-pro-strip-navigation:not(:empty){display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;background:#fff;border:1px solid #cccfc9;border-radius:6px}
+.dd-pro-strip button{display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:4px;background:none;color:#2f4733;cursor:pointer}
+.dd-pro-strip button:hover:not(:disabled){background:#edf1e9}
+.dd-pro-strip button[aria-pressed=true]{background:#2f4733;color:#fff}
+.dd-pro-strip button:focus-visible{outline:2px solid #437256;outline-offset:-2px}
+.dd-pro-strip-navigation .dd-plan-navigation{position:static;flex-direction:column;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+.dd-pro-strip-navigation .dd-plan-navigation button{min-width:44px;min-height:44px}
+.dd-pro-strip-navigation .dd-plan-navigation-divider{width:22px;height:0;margin:4px 0;border-left:0;border-top:1px solid #dedbd4}
+.dd-pro-strip-navigation .dd-plan-navigation output{min-width:0;font-size:11px;padding:2px 0}
+
+/* Status bar: the current tool's hint and the keys it answers to. */
+.dd-pro-statusbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;margin:8px 0 0;padding:6px 10px;background:#ecefe9;border:1px solid #cccfc9;border-radius:4px;font:12px/1.4 var(--dc-body,Arial,sans-serif);color:#3b463c}
+.dd-pro-statusbar p{margin:0;flex:1 1 320px}
+.dd-pro-statusbar ul{display:flex;flex-wrap:wrap;gap:4px 12px;margin:0;padding:0;list-style:none}
+.dd-pro-statusbar li{white-space:nowrap}
+.dd-pro-statusbar kbd{display:inline-block;padding:1px 6px;border-radius:3px;background:#2f4733;color:#fff}
+
+@media(max-width:800px){
+  .deck-designer[data-pro] .dd-selection-workspace{grid-template-columns:minmax(0,1fr)}
+  .dd-pro-strip{position:static;flex-direction:row;flex-wrap:wrap}
+  .dd-pro-strip>div[role=group],.dd-pro-strip-navigation:not(:empty),.dd-pro-strip-navigation .dd-plan-navigation{flex-direction:row}
+  .dd-pro-strip-navigation .dd-plan-navigation-divider{width:0;height:22px;margin:0 4px;border-top:0;border-left:1px solid #dedbd4}
+  .dd-pro-ribbon-button{width:64px}
+}
+
+/* Tools → Wizards: a short guided dialog with its steps listed across the top. */
+.dd-pro-wizard{margin:auto;inset:0;width:min(560px,calc(100vw - 32px));max-height:calc(100dvh - 48px);padding:0;border:1px solid #c3cfc0;border-radius:6px;background:#fff;color:#262a26;font-family:var(--dc-body,Arial,sans-serif);box-shadow:0 18px 48px #1d241e40}
+.dd-pro-wizard::backdrop{background:#1d241e59}
+.dd-pro-wizard>header{padding:14px 18px 10px;background:#f4f5f0;border-bottom:1px solid #d6dad1}
+.dd-pro-wizard h2{margin:0;font:700 18px/1.2 var(--dc-head,Arial,sans-serif);color:#203e2a}
+.dd-pro-wizard header p{margin:4px 0 8px;font-size:12px;color:#4d574c}
+.dd-pro-wizard-steps{display:flex;flex-wrap:wrap;gap:4px;margin:0;padding:0;list-style:none;counter-reset:step}
+.dd-pro-wizard-steps li{counter-increment:step;padding:3px 8px;border:1px solid #c3cfc0;border-radius:3px;font-size:11px;color:#4d574c;background:#fff}
+.dd-pro-wizard-steps li::before{content:counter(step) ". "}
+.dd-pro-wizard-steps li[data-state=done]{background:#e7ede4}
+.dd-pro-wizard-steps li[data-state=now]{background:#2f4733;border-color:#2f4733;color:#fff}
+.dd-pro-wizard-body{display:grid;gap:12px;padding:16px 18px;overflow:auto}
+.dd-pro-wizard-field{display:grid;gap:4px;font-size:13px;font-weight:600;color:#262a26}
+.dd-pro-wizard-field small{font-weight:400;color:#4d574c}
+.dd-pro-wizard-field input,.dd-pro-wizard-field select{min-height:40px;padding:6px 10px;border:1px solid #b9c2b6;border-radius:4px;background:#fff;color:inherit;font:400 14px var(--dc-body,Arial,sans-serif)}
+.dd-pro-wizard-field input:focus-visible,.dd-pro-wizard-field select:focus-visible,.dd-pro-wizard-actions button:focus-visible{outline:2px solid #437256;outline-offset:1px}
+.dd-pro-wizard-review{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0;font-size:13px}
+.dd-pro-wizard-review>div{display:contents}
+.dd-pro-wizard-review dt{color:#4d574c}
+.dd-pro-wizard-review dd{margin:0;font-weight:600}
+.dd-pro-wizard-error{margin:0;padding:8px 10px;border:1px solid #c98a7a;border-radius:4px;background:#fbefeb;color:#7a2a17;font-size:13px}
+.dd-pro-wizard-actions{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid #d6dad1;background:#f8f9f6}
+.dd-pro-wizard-actions button{min-height:40px;padding:0 16px;border:1px solid #b9c2b6;border-radius:4px;background:#fff;color:#262a26;font:600 13px var(--dc-body,Arial,sans-serif);cursor:pointer}
+.dd-pro-wizard-actions button:first-child{margin-right:auto}
+.dd-pro-wizard-actions button:disabled{opacity:.45;cursor:default}
+.dd-pro-wizard-actions .dd-pro-wizard-primary{background:#2f4733;border-color:#2f4733;color:#fff}
+
+/* Layer control beside the sheet tabs (right-aligned), opening upward over the status bar. */
+.dd-pro-layers{position:relative;margin-left:auto}
+.dd-pro-layers-toggle{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border:1px solid #cccfc9;border-radius:4px;background:#fff;color:#2f4733;font:600 12px var(--dc-body,Arial,sans-serif);cursor:pointer}
+.dd-pro-layers-toggle small{font-weight:400;color:#4d574c}
+.dd-pro-layers-toggle[aria-expanded=true]{background:#e7ede4;border-color:#799573}
+.dd-pro-layers-toggle:focus-visible,.dd-pro-layers-manage:focus-visible,.dd-pro-layers-list input:focus-visible{outline:2px solid #437256;outline-offset:1px}
+.dd-pro-layers-list{position:absolute;right:0;bottom:calc(100% + 6px);z-index:30;width:280px;max-height:320px;overflow:auto;padding:8px;background:#fff;border:1px solid #c3cfc0;border-radius:4px;box-shadow:0 8px 24px #1d241e26;font-size:12px}
+.dd-pro-layers-list ul{display:grid;gap:4px;margin:0 0 8px;padding:0;list-style:none}
+.dd-pro-layers-list li{display:flex;align-items:center;gap:10px;min-height:32px;padding:2px 4px;border-bottom:1px solid #eef0ec}
+.dd-pro-layers-list li strong{flex:1;font-size:13px}
+.dd-pro-layers-list label{display:inline-flex;align-items:center;gap:4px}
+.dd-pro-layers-manage{width:100%;min-height:36px;border:1px solid #b9c2b6;border-radius:4px;background:#f4f5f0;color:#203e2a;font:600 12px var(--dc-body,Arial,sans-serif);cursor:pointer}

@@ -1,6 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {expect,test,type Locator,type Page} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {pickPlanTool,savedConfiguration} from './nav';
 
 type Point={x:number;y:number};
 type PointerSample={type:string;x:number;y:number;scale:number};
@@ -21,8 +22,9 @@ const points=(page:Page,level=0)=>outlines(page).nth(level).evaluate(el=>(el.get
 async function files(page:Page){const menu=tools(page).locator('.dd-workspace-files');if(!await menu.evaluate(el=>(el as HTMLDetailsElement).open))await menu.locator('summary').first().click();}
 async function open(page:Page){
   await page.goto('/deck-designer/');
+  await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);
+  await pickPlanTool(page,'Shape & points');
   await expect(handle(page,'Main deck point 1')).toBeVisible();
-  await expect(page.getByRole('radio',{name:'Shape & points',exact:true})).toHaveAttribute('aria-checked','true');
   // These regressions exercise exact unsnapped movement; snapping has its own dedicated acceptance.
   await page.getByRole('switch',{name:/^Free movement/}).check();
   await aligned(page);
@@ -65,9 +67,9 @@ test('Escape, pointer cancellation and invalid final crossing leave the original
 
 test('saved JSON, reload, import and a shared link retain inserted and free coordinates',async({page,context})=>{
   await open(page);await handle(page,'Main deck edge 3').click();await handle(page,'Add point').click();await handle(page,'Main deck point 4').press('Shift+ArrowDown');const before=await points(page),configuration=await exported(page);expect(configuration.deckOutlines.main).toHaveLength(5);
-  await expect.poll(()=>page.evaluate(key=>JSON.parse(localStorage.getItem(key)??'{}').configuration?.deckOutlines?.main?.length,STORAGE)).toBe(5);
-  await page.reload();await expect(handle(page,'Main deck point 5')).toBeVisible();expect(await points(page)).toEqual(before);
-  await files(page);await tools(page).getByRole('button',{name:'Share link',exact:true}).click();const link=await tools(page).getByLabel('Link to this design').inputValue();const visitor=await context.newPage();await visitor.goto(link);await expect(handle(visitor,'Main deck point 5')).toBeVisible();expect(await points(visitor)).toEqual(before);await visitor.close();
+  await expect.poll(async()=>(await savedConfiguration(page))?.deckOutlines?.main?.length).toBe(5);
+  await page.reload();await expect.poll(()=>page.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(page,'Shape & points');await expect(handle(page,'Main deck point 5')).toBeVisible();expect(await points(page)).toEqual(before);
+  await files(page);await tools(page).getByRole('button',{name:'Share link',exact:true}).click();const link=await tools(page).getByLabel('Link to this design').inputValue();const visitor=await context.newPage();await visitor.goto(link);await expect.poll(()=>visitor.evaluate(()=>window.deckcraft?.read().ready??false)).toBe(true);await pickPlanTool(visitor,'Shape & points');await expect(handle(visitor,'Main deck point 5')).toBeVisible();expect(await points(visitor)).toEqual(before);await visitor.close();
   await handle(page,'Main deck point 4').press('Shift+ArrowDown');await files(page);await tools(page).getByLabel('Import Golden Maple design JSON').setInputFiles({name:'boundary.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}))});await expect.poll(()=>points(page)).toEqual(before);
 });
 
@@ -88,4 +90,19 @@ test('@phone touch drags diagonally, cancellation restores the outline, and the 
   // actually toggles the switch outside the glyph, rather than only substituting a larger bbox.
   const free=page.getByRole('switch',{name:/^Free movement/}),label=free.locator('..');await expect(free).toBeChecked();const labelBox=(await label.boundingBox())!;await label.click({position:{x:labelBox.width-8,y:labelBox.height/2}});await expect(free).not.toBeChecked();await label.click({position:{x:labelBox.width-8,y:labelBox.height/2}});await expect(free).toBeChecked();expect(await points(page)).toEqual(after);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.locator('#deck-live-preview').screenshot({path:info.outputPath('phone-free-boundary.png')});await cdp.detach();
+});
+
+test('successive right-edge pulls grow from the new outline and each undo restores one pull',async({page})=>{
+  await page.setViewportSize({width:1440,height:1000});await open(page);
+  const before=await points(page),left=await centre(handle(page,'Main deck point 1'));
+  await drag(page,handle(page,'Main deck edge 2'),24,0);await page.mouse.up();
+  await expect.poll(()=>points(page)).not.toEqual(before);const first=await points(page),delta1=await deliveredMovement(page,24,0);
+  expectDelta(before,first,[1,2],delta1.dx,delta1.dy);await aligned(page);
+  await expect(handle(page,'Apply preview')).toHaveCount(0);
+  const stillLeft=await centre(handle(page,'Main deck point 1'));expect(stillLeft.x).toBeCloseTo(left.x,0);expect(stillLeft.y).toBeCloseTo(left.y,0);
+  await drag(page,handle(page,'Main deck edge 2'),24,0);await page.mouse.up();
+  await expect.poll(()=>points(page)).not.toEqual(first);const second=await points(page),delta2=await deliveredMovement(page,24,0);
+  expectDelta(first,second,[1,2],delta2.dx,delta2.dy);await aligned(page);
+  await tools(page).getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(()=>points(page)).toEqual(first);
+  await tools(page).getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(()=>points(page)).toEqual(before);
 });

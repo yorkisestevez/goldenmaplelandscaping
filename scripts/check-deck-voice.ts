@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {browserSpeechFactory,createVoiceDictation,type RecognitionLike,type DictationEvent,type DictationUpdate} from '../src/features/deckcraft/designer/voiceDictation';
+import {browserSpeechFactory,browserVoiceAvailability,createVoiceDictation,type RecognitionLike,type DictationEvent,type DictationUpdate,type DictationClock} from '../src/features/deckcraft/designer/voiceDictation';
 let checks=0;const check=(v:unknown,message:string)=>{assert.ok(v,message);checks++;};
 class Recognition implements RecognitionLike {
  lang='';continuous=false;interimResults=false;onstart:RecognitionLike['onstart']=null;onend:RecognitionLike['onend']=null;onerror:RecognitionLike['onerror']=null;onresult:RecognitionLike['onresult']=null;starts=0;stops=0;aborts=0;failStart=false;
@@ -16,4 +16,23 @@ for(const [code,word] of [['not-allowed','permission was denied'],['service-not-
 const failed=new Recognition();failed.failStart=true;const failing=createVoiceDictation(()=>failed,()=>{});check(!failing.start()&&failing.read().state==='error','Synchronous permission/service start failure handled');check(failed.aborts===1&&failed.onresult===null,'Failed start cleans session');
 let cancellable:ReturnType<typeof createVoiceDictation>;const cancelled=new Recognition();cancellable=createVoiceDictation(()=>cancelled,u=>{if(u.state==='starting')cancellable.abort();});check(!cancellable.start()&&cancelled.starts===0,'Synchronous close during starting cannot start recording afterward');
 const isolated=voice.read();isolated.error='mutated';check(voice.read().error!=='mutated','Caller cannot mutate adapter state');check(updates.length>10,'Meaningful browser lifecycle emitted');
+class FakeClock implements DictationClock {
+ now=0;nextId=0;tasks=new Map<number,{at:number;callback:()=>void}>();
+ schedule(callback:()=>void,delayMs:number){const id=++this.nextId;this.tasks.set(id,{at:this.now+delayMs,callback});return id;}
+ cancel(id:unknown){this.tasks.delete(id as number);}
+ advance(ms:number){this.now+=ms;for(const [id,task] of [...this.tasks])if(task.at<=this.now){this.tasks.delete(id);task.callback();}}
+}
+check(!browserVoiceAvailability({isSecureContext:false,SpeechRecognition:BrowserRecognition}).ready,'Insecure network preview explains HTTPS before recording');
+check(browserVoiceAvailability({isSecureContext:false}).message.includes('localhost'),'Localhost alternative given for microphone');
+check(!browserVoiceAvailability({isSecureContext:true}).ready,'Secure unsupported browser retains text fallback');
+check(browserVoiceAvailability({isSecureContext:true,SpeechRecognition:BrowserRecognition}).ready,'Secure speech browser can start on explicit Talk');
+const clock=new FakeClock(),timedSessions:Recognition[]=[],timed=createVoiceDictation(()=>{const r=new Recognition();timedSessions.push(r);return r;},()=>{},'en-CA',{clock,startTimeoutMs:100,stopTimeoutMs:50});
+timed.start();const pending=timedSessions[0],lateStart=pending.onstart;clock.advance(99);check(timed.read().state==='starting','Start wait stays active before deadline');clock.advance(1);
+check(timed.read().state==='error'&&pending.aborts===1,'Native silent-start deadline releases session');lateStart?.();check(timed.read().state==='error','Expired native start cannot revive microphone');
+check(timed.start(),'Talk retry works after silent start');const active=timedSessions[1];active.onstart?.();clock.advance(101);check(timed.read().state==='listening'&&clock.tasks.size===0,'Started recognition cancels start deadline');
+active.result([{text:'raise the wall six inches',final:true},{text:'not final',final:false}]);timed.stop();clock.advance(49);check(timed.read().state==='stopping','Stop waits for final native transcript');const finalLate=active.onresult;clock.advance(1);
+check(timed.read().state==='error'&&timed.read().finalText==='raise the wall six inches'&&timed.read().interimText==='','Silent-stop deadline keeps completed text and clears draft');
+check(active.aborts===1&&active.onresult===null&&clock.tasks.size===0,'Silent-stop clears timer and native handlers');finalLate?.({resultIndex:0,results:[Object.assign([{transcript:'stale'}],{isFinal:true})]} as DictationEvent);check(timed.read().finalText==='raise the wall six inches','Late stop result cannot overwrite retained text');
+timed.start();const ending=timedSessions[2];ending.onstart?.();timed.stop();ending.onend?.();clock.advance(100);check(timed.read().state==='idle'&&clock.tasks.size===0,'Normal end cancels stop timeout');
+timed.start();timed.abort();clock.advance(200);check(timed.read().state==='idle'&&clock.tasks.size===0,'Closing or typing cancels all deadlines');
 console.log(`Voice dictation: ${checks} focused lifecycle checks passed.`);

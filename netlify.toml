@@ -12,7 +12,7 @@
   publish = "build/client"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
 
 # Legacy /blog index consolidated into /resources (the working blog index).
 # 301 ensures any backlinks or bookmarks land on the canonical page and pass SEO signals through.

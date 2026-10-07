@@ -5,6 +5,8 @@ import { LIBRARY_SECTIONS } from './src/data/library';
 
 export default {
   appDirectory: 'src',
+  // Scan route dependencies before serving React; late optimizer reloads can mix hook runtimes on a cold start.
+  future: { unstable_optimizeDeps: true },
   // Static SPA (no runtime SSR) + build-time prerender of every route.
   ssr: false,
   async prerender({ getStaticPaths }) {

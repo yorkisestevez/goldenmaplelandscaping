@@ -97,7 +97,7 @@ function pixel(r:number,g:number,b:number,colorSpace:THREE.ColorSpace){
   const t=new THREE.DataTexture(new Uint8Array([r,g,b,255]),1,1,THREE.RGBAFormat);
   t.colorSpace=colorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.needsUpdate=true;return t;
 }
-const FLAT_NORMAL=pixel(128,128,255,THREE.NoColorSpace),PLAIN_ROUGHNESS=pixel(166,166,166,THREE.NoColorSpace);
+const FLAT_NORMAL=pixel(128,128,255,THREE.NoColorSpace),PLAIN_ROUGHNESS=pixel(122,122,122,THREE.NoColorSpace);
 function standIns(fallback:THREE.Color):SurfaceMaps{
   const c=fallback.clone().convertLinearToSRGB();
   return {map:pixel(Math.round(c.r*255),Math.round(c.g*255),Math.round(c.b*255),THREE.SRGBColorSpace),normalMap:FLAT_NORMAL,roughnessMap:PLAIN_ROUGHNESS};

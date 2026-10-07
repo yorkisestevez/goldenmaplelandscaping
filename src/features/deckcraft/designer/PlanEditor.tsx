@@ -1,6 +1,6 @@
-import {useLayoutEffect,useMemo,useRef,useState,type KeyboardEvent,type PointerEvent,type RefObject} from 'react';
+import {useEffect,useLayoutEffect,useMemo,useRef,useState,type KeyboardEvent,type PointerEvent,type RefObject} from 'react';
 import {createPortal} from 'react-dom';
-import {planFrame} from '../ConstructionPlan';
+import {planFrame,type PlanFrame} from '../ConstructionPlan';
 import {trackDeck} from '../deckAnalytics';
 import type {DeckTakeoff} from '../deckTakeoff';
 import type {YardModel} from '../yardModel';
@@ -15,6 +15,8 @@ import {beginEdgeDrag,diagonal,edgeShift,edgeSliders,endEdgeDrag,moveEdgeDrag,pr
 import {DECK_SIZE_FT,beginGesture,clampFt,endGesture,fmtFt,gestureFigure,ghostShift,handlePatch,houseHandles,keyValue,moveGesture,planGhost,planHandles,primaryStair,shapeHandles,stairFigure,stairGhost,stairHandle,stairTargets,type Gesture,type PlanHandle,type PlanHandleId,type StairTarget} from './planEditMath';
 import type {StairEdge} from './steps/DimensionsStep';
 import {useOutlineEdit} from './useOutlineEdit';
+import {stairDragPlacement} from './stairDragPlacement';
+import StairShapeEditor from './StairShapeEditor';
 export {planShortcut} from './planEditMath';
 
 type Dim='width'|'depth';
@@ -37,8 +39,8 @@ const ARROWS=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home','End'];
  * shows a ghost with the new figures and changes the design once, when it ends: one estimate, one undo step. Only the
  * handles take the pointer away from the page (touch-action:none), so a phone still scrolls over the plan.
  */
-export default function PlanEditor({data,model,yard,update,onEdited,tool='size',stairEdges=[],onStatus,toolbar,onOpenSection}:{
-  data:DeckData;model:DeckTakeoff;yard?:YardModel;update:Update;onEdited?:()=>void;tool?:PlanTool;
+export default function PlanEditor({data,model,yard,update,onEdited,tool='size',stairEdges=[],onStatus,toolbar,onOpenSection,viewportFrame}:{
+  viewportFrame?:PlanFrame;data:DeckData;model:DeckTakeoff;yard?:YardModel;update:Update;onEdited?:()=>void;tool?:PlanTool;
   /** The edges the page offers stairs on (the Stairs section's edge menu). */
   stairEdges?:StairEdge[];
   /** The plan's status line (what a tool did, or why it could not). */
@@ -46,7 +48,7 @@ export default function PlanEditor({data,model,yard,update,onEdited,tool='size',
   /** Where the tool's own buttons go, under the drawing. */
   toolbar?:RefObject<HTMLElement|null>;onOpenSection?:(id:'deck'|'stairs'|'house')=>void;
 }){
-  const frame=useMemo(()=>planFrame(model,{data,yard,variant:'site',wholeHouse:tool==='house'}),[model,data,yard,tool]);
+  const frame=useMemo(()=>viewportFrame??planFrame(model,{data,yard,variant:'site',wholeHouse:tool==='house'}),[model,data,yard,tool,viewportFrame]);
   const box=useRef<HTMLDivElement>(null),[size,setSize]=useState<{w:number;h:number}|null>(null);
   useLayoutEffect(()=>{
     const el=box.current;if(!el)return;
@@ -60,11 +62,16 @@ export default function PlanEditor({data,model,yard,update,onEdited,tool='size',
   const px=(x:number,y:number)=>({left:ox+(x-frame.x)*scale,top:oy+(y-frame.y)*scale});
   const gesture=useRef<Gesture|null>(null),[live,setLive]=useState<Gesture|null>(null);
   const edgeDrag=useRef<EdgeDrag|null>(null),[liveEdge,setLiveEdge]=useState<EdgeDrag|null>(null);
+  const stairDrag=useRef<{pointer:number;matrix:DOMMatrix;grab:{x:number;y:number};x:number;y:number;moved:boolean;proposal:ReturnType<typeof stairDragPlacement>}|null>(null);
+  const [stairPreview,setStairPreview]=useState<ReturnType<typeof stairDragPlacement>>(null);
   const [typing,setTyping]=useState<Dim|null>(null),[draft,setDraft]=useState(''),cancelled=useRef(false);
   const [focused,setFocused]=useState('');
   const dimButtons=useRef<Partial<Record<Dim,HTMLButtonElement|null>>>({});
-  const handleEls=useRef<Record<string,HTMLDivElement|null>>({}),focusNext=useRef<string|null>(null);
-  useLayoutEffect(()=>{const id=focusNext.current,el=id?handleEls.current[id]:null;if(el){el.focus();focusNext.current=null;}});
+  const handleEls=useRef<Record<string,HTMLDivElement|null>>({}),focusNext=useRef<string|null>(null),focusDim=useRef<Dim|null>(null);
+  useLayoutEffect(()=>{
+    const id=focusNext.current,el=id?handleEls.current[id]:null;if(el){el.focus();focusNext.current=null;}
+    const dim=focusDim.current;if(!dim||typing)return;const button=dimButtons.current[dim];if(button){button.focus();focusDim.current=null;}
+  });
   const main=model.levels[0],outline=main.footprint.outline,mx=main.offset.x,mz=main.offset.z;
   // Draw outline: the same edits as the Deck section's outline editor.
   const outlineEdit=useOutlineEdit(data,update,()=>{onEdited?.();trackDeck('deckcraft_plan','deck_plan_outline');});
@@ -84,6 +91,7 @@ export default function PlanEditor({data,model,yard,update,onEdited,tool='size',
     return {polygons:planGhost(data,model,live.id,live.value,frame.band),figure:gestureFigure(data,live.id,live.value)};
   },[live,data,model,stair,frame.band]);
   const handles=useMemo(()=>{
+    if(stairPreview)return idle.map(h=>h.id==='stair'?{...h,x:stairPreview.centre.x,y:stairPreview.centre.y}:h);
     if(!live)return idle;
     const dragged=idle.find(h=>h.id===live.id);
     if(SIZE_IDS.has(live.id)){
@@ -94,13 +102,23 @@ export default function PlanEditor({data,model,yard,update,onEdited,tool='size',
     }
     // One of R5's handles follows the pointer along its line; the others wait for the drag to end.
     return dragged?[{...dragged,value:live.value,x:dragged.x+(dragged.move?.x??0)*(live.value-live.start),y:dragged.y+(dragged.move?.y??0)*(live.value-live.start)}]:[];
-  },[idle,live,ghost]);
+  },[idle,live,ghost,stairPreview]);
   const commit=(id:PlanHandleId,value:number)=>{
     update(handlePatch(data,id,value));onEdited?.();
     if(id==='stair')trackDeck('deckcraft_plan','deck_plan_stairs');else if(id==='house-left'||id==='house-right')trackDeck('deckcraft_plan','deck_plan_house');else trackDeck('deckcraft_plan','deck_plan_drag');
   };
-  const cancel=()=>{gesture.current=null;setLive(null);edgeDrag.current=null;setLiveEdge(null);};
+  const cancel=()=>{gesture.current=null;setLive(null);edgeDrag.current=null;setLiveEdge(null);stairDrag.current=null;setStairPreview(null);};
+  useEffect(()=>{cancel();},[data,tool]);
+  useEffect(()=>{const stop=()=>cancel(),hidden=()=>{if(document.hidden)cancel();};window.addEventListener('blur',stop);document.addEventListener('visibilitychange',hidden);return()=>{window.removeEventListener('blur',stop);document.removeEventListener('visibilitychange',hidden);};},[]);
+  const onStairDown=(e:PointerEvent)=>{
+    if(e.button!==0||!stair||stairDrag.current)return;
+    const matrix=box.current?.querySelector('svg')?.getScreenCTM()?.inverse();if(!matrix)return;
+    const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(matrix);
+    e.preventDefault();e.stopPropagation();(e.currentTarget as HTMLElement).focus?.({preventScroll:true});e.currentTarget.setPointerCapture(e.pointerId);
+    stairDrag.current={pointer:e.pointerId,matrix,grab:{x:p.x-stair.centre.x,y:p.y-stair.centre.y},x:e.clientX,y:e.clientY,moved:false,proposal:null};
+  };
   const onPointerDown=(h:PlanHandle)=>(e:PointerEvent<HTMLDivElement>)=>{
+    if(h.id==='stair'){onStairDown(e);return;}
     if(e.pointerType==='mouse'&&e.button!==0)return;
     e.preventDefault();e.currentTarget.focus();e.currentTarget.setPointerCapture?.(e.pointerId);
     const g=beginGesture(h,e.pointerId,e.clientX,e.clientY);gesture.current=g;setLive(g);
@@ -112,20 +130,28 @@ export default function PlanEditor({data,model,yard,update,onEdited,tool='size',
   };
   // A pointer move only moves the ghost (a value, or an outline edge on its 6 in grid).
   const onPointerMove=(e:PointerEvent)=>{
-    const g=gesture.current,d=edgeDrag.current;if(!scale)return;
-    if(d&&e.pointerId===d.pointerId){const next=moveEdgeDrag(d,(e.clientX-d.x)/scale/12,(e.clientY-d.y)/scale/12);if(next!==d){edgeDrag.current=next;setLiveEdge(next);}return;}
+    const sd=stairDrag.current;
+    if(sd&&sd.pointer===e.pointerId){
+      if(!sd.moved&&Math.hypot(e.clientX-sd.x,e.clientY-sd.y)<3)return;
+      const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(sd.matrix);
+      sd.moved=true;sd.proposal=stairDragPlacement(data,model,targets,{x:p.x-sd.grab.x,y:p.y-sd.grab.y},stair?.depth??24);setStairPreview(sd.proposal);return;
+    }
+    const matrix=box.current?.querySelector('svg')?.getScreenCTM(),dragScale=matrix?Math.hypot(matrix.a,matrix.b):scale;
+    const g=gesture.current,d=edgeDrag.current;if(!dragScale)return;
+    if(d&&e.pointerId===d.pointerId){const next=moveEdgeDrag(d,(e.clientX-d.x)/dragScale/12,(e.clientY-d.y)/dragScale/12);if(next!==d){edgeDrag.current=next;setLiveEdge(next);}return;}
     if(!g||e.pointerId!==g.pointerId)return;
-    const next=moveGesture(g,(e.clientX-g.x)/scale,(e.clientY-g.y)/scale);
+    const next=moveGesture(g,(e.clientX-g.x)/dragScale,(e.clientY-g.y)/dragScale);
     if(next!==g){gesture.current=next;setLive(next);}
   };
   // The end of a drag changes the design once: the last outline that fitted under the pointer, or the handle's value.
   const onPointerUp=(e:PointerEvent)=>{
+    const sd=stairDrag.current;if(sd&&sd.pointer===e.pointerId){onPointerMove(e);const proposal=sd.proposal;cancel();if(sd.moved&&proposal){const changed=Object.entries(proposal.patch).some(([k,v])=>data[k as keyof DeckData]!==v);if(changed){update(proposal.patch);onEdited?.();trackDeck('deckcraft_plan','deck_plan_stairs');onStatus?.('Stairs placed on the '+proposal.name+'.');}}return;}
     const d=edgeDrag.current;
     if(d&&e.pointerId===d.pointerId){cancel();const next=endEdgeDrag(d);if(next)outlineEdit.apply(next);if(d.refused)onStatus?.(REFUSED);return;}
     const g=gesture.current;if(!g||e.pointerId!==g.pointerId)return;
     cancel();const value=endGesture(g);if(value!==null)commit(g.id,value);
   };
-  const onLost=(e:PointerEvent)=>{if(gesture.current?.pointerId===e.pointerId||edgeDrag.current?.pointerId===e.pointerId)cancel();};
+  const onLost=(e:PointerEvent)=>{if(stairDrag.current?.pointer===e.pointerId||gesture.current?.pointerId===e.pointerId||edgeDrag.current?.pointerId===e.pointerId)cancel();};
   const onKeyDown=(h:PlanHandle)=>(e:KeyboardEvent)=>{
     if(e.key==='Escape'&&gesture.current){e.preventDefault();cancel();return;}
     const value=keyValue(e.key,e.shiftKey,h.value,h.min,h.max,h.step,h.bigStep);if(value===null)return;
@@ -155,16 +181,18 @@ export default function PlanEditor({data,model,yard,update,onEdited,tool='size',
   // applies it and lets the focus go where it went.
   const close=(id:Dim,apply:boolean,refocus=true)=>{
     // The box goes away at once; a blur it fires on the way out must not apply it a second time.
+    // Focus returns after the figure's button is back in the document (the form and the button swap).
     cancelled.current=true;
-    setTyping(null);if(refocus)requestAnimationFrame(()=>dimButtons.current[id]?.focus());
+    if(refocus)focusDim.current=id;
+    setTyping(null);
     const n=Number(draft),current=id==='width'?Number(data.width):Number(data.length);
     if(!apply||draft.trim()===''||!Number.isFinite(n))return;
     const value=clampFt(n,...DECK_SIZE_FT);
     if(value!==current){update(handlePatch(data,id==='width'?'width-right':'depth',value));onEdited?.();trackDeck('deckcraft_plan','deck_plan_typed');}
   };
   const edgeGhost=liveEdge?.ghost?customOutline(liveEdge.ghost).outline.map(p=>({x:p.x+mx,y:p.y+mz})):null;
-  const polygons=[...(ghost?.polygons??[]),...(edgeGhost?[edgeGhost]:[])];
-  const readout=ghost?.figure??(liveEdge?.refused?'The outline rules stop it here':liveEdge?.ghost?customShapeWords(liveEdge.ghost):null);
+  const polygons=[...(stairPreview?[stairPreview.polygon]:[]),...(ghost?.polygons??[]),...(edgeGhost?[edgeGhost]:[])];
+  const readout=stairPreview?'Release to place stairs on the '+stairPreview.name:ghost?.figure??(liveEdge?.refused?'The outline rules stop it here':liveEdge?.ghost?customShapeWords(liveEdge.ghost):null);
   const ftAt=(x:number,y:number)=>px(mx+x*12,mz+y*12);
   const link=(id:'deck'|'stairs'|'house',text:string)=>onOpenSection&&<button type="button" className="dd-linklike" onClick={()=>onOpenSection(id)}>{text}</button>;
   // The tool's own buttons under the drawing: the outline's starting shapes, and a way into the section with the rest.
@@ -174,15 +202,17 @@ export default function PlanEditor({data,model,yard,update,onEdited,tool='size',
     {link('deck','Steps, 45° corners and every edge as a button: open Deck shape & size')}
   </>:tool==='stairs'?<>
     {!targets.length&&<p className="dd-note">{data.stairPath?'Edit stair path section widths, riser count and tread depth in Stairs & railings settings. Clear the path there to return to individual stair placement.':'This deck has no open edge for stairs.'}</p>}
-    {stair&&!stairShown&&<p className="dd-note">The stairs take the whole of their edge, so there is nothing to slide.</p>}
+    {stair&&<p className="dd-note">Drag the stairs or their handle to any highlighted deck edge. Release to place; Undo restores the previous position. Escape cancels.</p>}
     {link('stairs','Flights, width and layout: open Stairs & railings')}
   </>:tool==='house'?link('house','Doors, windows, roof and blocks: open House'):null;
-  return <div className="dd-plan-editor" ref={box} data-tool={tool}>
+  return <div className="dd-plan-editor" ref={box} data-tool={tool} onKeyDownCapture={e=>{if(e.key==='Escape'&&stairDrag.current){e.preventDefault();e.stopPropagation();cancel();onStatus?.('Stair move cancelled.');}}}>
     <svg viewBox={frame.viewBox} aria-hidden="true" focusable="false">
       {tool==='outline'&&!liveEdge&&<g className="dd-outline-plan">{sliders.map(s=><line key={s.index} className="dd-outline-edge" data-on={focused===`edge-${s.index}`||undefined} x1={mx+s.a.x*12} y1={mz+s.a.y*12} x2={mx+s.b.x*12} y2={mz+s.b.y*12}/>)}</g>}
       {tool==='stairs'&&<g className="dd-stair-targets">{targets.map(t=><line key={t.key} data-on={t.key===current||undefined} x1={t.a.x} y1={t.a.y} x2={t.b.x} y2={t.b.y}/>)}</g>}
+      {tool==='stairs'&&stair&&<polygon data-stair-drag="true" points={stairGhost(stair,stair.offset).map(p=>p.x+','+p.y).join(' ')} style={{fill:'transparent',pointerEvents:'all',cursor:'grab',touchAction:'none'}} tabIndex={0} onPointerDown={onStairDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={cancel} onLostPointerCapture={onLost}/>}
       {polygons.map((p,i)=><polygon key={i} className="dd-plan-ghost" points={p.map(q=>`${q.x},${q.y}`).join(' ')}/>)}
     </svg>
+    {tool==='stairs'&&<StairShapeEditor data={data} model={model} frame={frame} update={update} toolbar={toolbar}/>}
     {/* The drag's live figures (the slider's value text says the same to a screen reader). */}
     {readout&&<p className="dd-plan-readout" aria-hidden="true">{readout}</p>}
     {size&&handles.map(h=><div key={h.id} ref={el=>{handleEls.current[h.id]=el;}} role="slider" tabIndex={0} className="dd-plan-handle" data-handle={h.id} data-active={live?.id===h.id||undefined} aria-label={h.label} aria-orientation={h.orientation} aria-valuemin={h.min} aria-valuemax={h.max} aria-valuenow={h.value} aria-valuetext={live?.id===h.id&&ghost?ghost.figure:h.text} style={px(h.x,h.y)} onPointerDown={onPointerDown(h)} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={cancel} onLostPointerCapture={onLost} onKeyDown={onKeyDown(h)}/>)}

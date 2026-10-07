@@ -29,7 +29,7 @@ export default function LightingFixtures({items,evening,enabled=true}:{items:Fix
     const blinkScale=(product?.dimensionsIn.diameter??3)/3,livScale=(product?.dimensionsIn.height??19.5)/19.5;
     const light=<meshStandardMaterial color="#fff6e8" emissive={kelvinColour(night.kelvin)} emissiveIntensity={glow}/>;
     const dark=<meshPhysicalMaterial color="#252a29" {...SCENE_LOOK.powderCoat}/>;
-    return <group key={`${id}-${i}`} name={`${id}-${i+1}`} position={[p.x,p.y,p.z]} rotation={[0,p.angle,0]}>
+    return <group key={`${id}-${i}`} userData={{pickPartId:`lighting:${p.zone}:${id}`}} name={`${id}-${i+1}`} position={[p.x,p.y,p.z]} rotation={[0,p.angle,0]}>
       {!legacy&&product&&<CatalogueFixture product={product} evening={evening&&enabled} enabled={enabled}/>}
       <group scale={id==='blink'?[blinkScale,blinkScale,1]:id==='liv'?[1,livScale,1]:[1,1,1]}>
       {recessed&&<><mesh><cylinderGeometry args={[id==='puck'?.55:1.3,id==='puck'?.55:1.3,.28,20]}/>{dark}</mesh><mesh position={[0,.17,0]}><cylinderGeometry args={[id==='puck'?.35:1.02,id==='puck'?.35:1.02,.08,20]}/>{light}</mesh>{id==='hyve'&&[-.5,0,.5].map(x=><mesh key={x} position={[x,.23,0]}><boxGeometry args={[.06,.05,1.75]}/>{dark}</mesh>)}</>}

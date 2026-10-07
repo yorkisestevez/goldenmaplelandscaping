@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import assert from 'node:assert/strict';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {calculateDeckReleaseEstimate,deckReleaseData,serializeDeckReleaseDesign,parseDeckReleaseDesign} from '../src/features/deckcraft/deckRelease';

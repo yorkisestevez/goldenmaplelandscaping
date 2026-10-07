@@ -3,6 +3,7 @@ import type {RiserBoard} from './stairConstruction';
 import type {DeckData} from './types';
 import type {SkirtingSlab} from './skirting';
 import type {PlanPoint} from './lib/deckGeometry';
+import {insidePolygon as inside} from './lib/polygonCuts';
 import {getTerrainConfig} from './yardSettings';
 import {finishedFasciaOffset} from './lib/finishedFootprint';
 import {levelJunctions,worldOutline} from './lib/levelJunctions';
@@ -24,11 +25,6 @@ export interface CladdingPlan{slabs:CladdingSlab[];fillers:SkirtingSlab[];sqft:R
 
 const THICK=.75,PROUD=.25,MIN_FACE=.25,RIM_FACE=.75;
 const area=(s:SkirtingSlab)=>Math.hypot(s.b.x-s.a.x,s.b.y-s.a.y)*((s.topA-s.bottomA)+(s.topB-s.bottomB))/2/144;
-function inside(p:PlanPoint,poly:PlanPoint[]){
-  let odd=false;
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}
-  return odd;
-}
 /** The rim's underside along a level (its rim pieces all share one depth). */
 const rimUnderside=(l:DeckLevel)=>{const r=l.rim?.[0];return r?r.a.y-r.depth/2:l.top-10.25;};
 

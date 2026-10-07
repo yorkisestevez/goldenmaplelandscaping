@@ -1,3 +1,15 @@
+import {landscapeBedAreas} from './landscapeModel';
+import {landscapeSurfaceCells} from './landscapeSurfaceGeometry';
+import {landscapeSurfaceDepth} from './landscapeSurfaces';
+import {sitePlaneHeight} from './siteSurface';
+import {getPoolModels} from './poolModel';
+import {poolRenderMeshes} from './poolRenderMeshes';
+import {extrudePolygon} from './lib/physicalMesh';
+export {extrudePolygon} from './lib/physicalMesh';
+import {foundationRadialSegments} from './foundationDatums';
+import {foundationSolids} from './foundationSolids';
+import {usesPhysicalElevations} from './elevationDatum';
+import {yardBoxRings,type ElevationPrism} from './yardElevationGeometry';
 import {pergolaDescription} from './pergolaDescription';
 import {pergolaVertices,PERGOLA_FACES,pergolaParts} from './pergolaGeometry';
 import type {DeckData} from './types';
@@ -27,29 +39,10 @@ function prism(name:string,center:V3,x:V3,y:V3,z:V3):ExportMesh{
   const signs=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
   return {name,vertices:signs.map(([a,b,c])=>add(center,add(scale(x,a/2),add(scale(y,b/2),scale(z,c/2))))),faces};
 }
-function boxMesh(name:string,b:Box):ExportMesh{
+function boxMesh(name:string,b:Box&Partial<ElevationPrism>):ExportMesh{
+  if(b.topPlane||b.bottomPlane||b.bottomIn!==undefined||b.normalThicknessIn!==undefined){const a=b.angle??0,c=Math.cos(a),s=Math.sin(a),polygon=b.polygon??[[-1,-1],[1,-1],[1,1],[-1,1]].map(([u,v])=>({x:b.x+c*u*b.w/2+s*v*b.d/2,y:b.z-s*u*b.w/2+c*v*b.d/2}));const ringMap=new Map(polygon.map((p,i)=>[`${p.x}:${p.y}`,i])),rings=yardBoxRings(b,polygon);return extrudePolygon(name,polygon,(p,t)=>(t?rings.top:rings.bottom)[ringMap.get(`${p.x}:${p.y}`)!]);}
   if(b.polygon?.length)return extrudePolygon(name,b.polygon,(p,t)=>({x:p.x,y:b.y-b.h/2+t*b.h,z:p.y}));
   const a=b.angle||0;return prism(name,b,{x:Math.cos(a)*b.w,y:0,z:-Math.sin(a)*b.w},{x:0,y:b.h,z:0},{x:Math.sin(a)*b.d,y:0,z:Math.cos(a)*b.d});
-}
-/** Ear clipping keeps concave notches and clipped corners instead of filling their bounds. */
-export function extrudePolygon(name:string,input:PlanPoint[],at:(p:PlanPoint,t:number)=>V3):ExportMesh{
-  const poly=input.filter((p,i)=>{const q=input[(i+input.length-1)%input.length];return Math.hypot(p.x-q.x,p.y-q.y)>1e-7;});
-  const turn=(a:PlanPoint,b:PlanPoint,c:PlanPoint)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
-  const area=poly.reduce((sum,p,i)=>{const q=poly[(i+1)%poly.length];return sum+p.x*q.y-q.x*p.y;},0);
-  if(area<0)poly.reverse();
-  const remaining=poly.map((_,i)=>i),triangles:number[][]=[];
-  while(remaining.length>3){let found=false;for(let i=0;i<remaining.length;i++){
-    const a=remaining[(i+remaining.length-1)%remaining.length],b=remaining[i],c=remaining[(i+1)%remaining.length];
-    if(Math.abs(turn(poly[a],poly[b],poly[c]))<1e-7){remaining.splice(i,1);found=true;break;}
-    if(turn(poly[a],poly[b],poly[c])<0)continue;
-    if(remaining.some(k=>k!==a&&k!==b&&k!==c&&turn(poly[a],poly[b],poly[k])>=-1e-7&&turn(poly[b],poly[c],poly[k])>=-1e-7&&turn(poly[c],poly[a],poly[k])>=-1e-7))continue;
-    triangles.push([a,b,c]);remaining.splice(i,1);found=true;break;
-  }if(!found)throw new Error(`Cannot triangulate ${name}; the outline needs review.`);}
-  if(remaining.length===3)triangles.push([...remaining]);
-  const n=poly.length,vertices=[...poly.map(p=>at(p,0)),...poly.map(p=>at(p,1))];
-  const fs=[...triangles.map(t=>[...t].reverse()),...triangles.map(t=>t.map(i=>i+n)),...poly.map((_,i)=>[i,(i+1)%n,(i+1)%n+n,i+n])];
-  const volume=fs.reduce((sum,face)=>sum+face.slice(1,-1).reduce((s,_,i)=>{const a=vertices[face[0]],b=vertices[face[i+1]],c=vertices[face[i+2]],bc=cross(b,c);return s+(a.x*bc.x+a.y*bc.y+a.z*bc.z)/6;},0),0);
-  return {name,vertices,faces:volume<0?fs.map(face=>[...face].reverse()):fs};
 }
 function stringerMesh(name:string,m:Member,model:DeckTakeoff):ExportMesh{
   const poly=stringerCutProfile(m,model);
@@ -66,8 +59,8 @@ function slabMesh(name:string,s:SkirtingSlab):ExportMesh{
   const signs=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
   return {name,faces,vertices:signs.map(([along,up,across])=>{const p=slabPlanPoint(s,along<0?0:1,across<0?1:-1),y=along<0?(up<0?s.bottomA:s.topA):(up<0?s.bottomB:s.topB);return {x:p.x,y,z:p.y};})};
 }
-function cylinder(name:string,x:number,z:number,bottom:number,top:number,radius:number):ExportMesh{
-  const count=16,vertices:V3[]=[];for(const y of [bottom,top])for(let i=0;i<count;i++){const a=i/count*Math.PI*2;vertices.push({x:x+Math.cos(a)*radius,y,z:z+Math.sin(a)*radius});}
+function cylinder(name:string,x:number,z:number,bottom:number,top:number,radius:number,count=16):ExportMesh{
+  const vertices:V3[]=[];for(const y of [bottom,top])for(let i=0;i<count;i++){const a=i/count*Math.PI*2;vertices.push({x:x+Math.cos(a)*radius,y,z:z+Math.sin(a)*radius});}
   const fs:number[][]=[Array.from({length:count},(_,i)=>count-1-i),Array.from({length:count},(_,i)=>i+count)];
   for(let i=0;i<count;i++)fs.push([i,(i+1)%count,(i+1)%count+count,i+count]);return {name,vertices,faces:fs};
 }
@@ -75,10 +68,13 @@ function cylinder(name:string,x:number,z:number,bottom:number,top:number,radius:
 /** Inch-scale solids from the same takeoff used by the estimate and viewer. */
 export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
   const out:ExportMesh[]=[];
+  const cover=landscapeBedAreas(data.landscapeObjects??[],data);
+  for(const o of data.landscapeObjects??[]){if(!o.enabled||o.kind!=='bed')continue;for(const [i,cell] of landscapeSurfaceCells(data,cover.get(o.id)??[],o).entries()){const vertices=cell.polygon.map(p=>({x:p.x,y:sitePlaneHeight(cell.plane,p.x,p.y)+landscapeSurfaceDepth(o)+.05,z:p.y}));out.push({name:`landscape_${o.id}_${i}`,vertices,faces:[vertices.map((_,i)=>i)]});}}
   for(const part of buildHouseGeometry(data,data.width*12).parts)out.push({name:`house_${part.name}`,vertices:part.vertices.map(([x,y,z])=>({x,y,z})),faces:part.faces});
   const boxes=(name:string,items:Box[])=>items.forEach((b,i)=>out.push(boxMesh(`${name}_${i+1}`,b)));
   const members=(name:string,items:Member[])=>items.forEach((m,i)=>out.push(memberMesh(`${name}_${i+1}`,m)));
   const yard=buildYardModel(data,model);
+  for(const pool of getPoolModels(data,model))out.push(...poolRenderMeshes(pool));
   for(const b of yard.boxes)out.push(boxMesh(`yard_${b.id}`,b));
   for(const m of yard.members)out.push(memberMesh(`yard_${m.id}`,m));
   model.levels.forEach((l,index)=>{
@@ -86,17 +82,24 @@ export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
     boxes(`${name}_board`,l.boards.map(b=>({x:b.cx+l.offset.x,y:l.top-.5,z:b.cy+l.offset.z,w:b.length,h:1,d:b.width??data.boardWidth,angle:-b.angleDeg*Math.PI/180,polygon:b.polygon?.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}))})));
     members(`${name}_joist`,l.joists);members(`${name}_beam`,l.beams);members(`${name}_blocking`,l.blocking);
     members(`${name}_rim`,l.rim??[]);
-    const postBase=data.foundation==='Deck Blocks'?6.5:4.5;
-    boxes(`${name}_post`,l.supports.filter(p=>p.y>postBase).map(p=>({x:p.x,y:(p.y+postBase)/2,z:p.z,w:5.5,h:p.y-postBase,d:5.5})));
-    l.supports.forEach((p,i)=>{
-      const depth=data.foundationDepthIn??48;
-      if(data.foundation==='Deck Blocks')out.push(boxMesh(`${name}_deck_block_${i}`,{x:p.x,y:3,z:p.z,w:12,h:6,d:12}));
-      else if(data.foundation==='Helical Piles'){
-        out.push(cylinder(`${name}_pile_shaft_${i}`,p.x,p.z,-depth,2,1.4));
-        out.push(cylinder(`${name}_pile_helix_${i}`,p.x,p.z,-depth+4,-depth+4.3,6));
-      }else out.push(cylinder(`${name}_concrete_pier_${i}`,p.x,p.z,-depth,2,6));
-      out.push(boxMesh(`${name}_post_base_${i}`,{x:p.x,y:data.foundation==='Deck Blocks'?6.25:4.25,z:p.z,w:7,h:.4,d:7}));
-    });
+    if(usesPhysicalElevations(data)){
+      const foundations=model.foundationSupports.filter(f=>f.levelIndex===index);
+      boxes(`${name}_post`,foundations.flatMap(f=>foundationSolids(f).boxes.filter(b=>b.part==='post')));
+      for(const f of foundations){const solids=foundationSolids(f);for(const b of solids.boxes.filter(b=>b.part!=='post'))out.push(boxMesh(`${name}_${b.part.replaceAll('-','_')}_${f.supportIndex}`,b));for(const p of solids.cylinders)out.push(cylinder(`${name}_${p.part.replaceAll('-','_')}_${f.supportIndex}`,p.x,p.z,p.bottom,p.top,p.radius,foundationRadialSegments(data)));}
+    }else{
+      // Preserve original flat-grade solids, naming and sequence exactly.
+      const postBase=data.foundation==='Deck Blocks'?6.5:4.5;
+      boxes(`${name}_post`,l.supports.filter(p=>p.y>postBase).map(p=>({x:p.x,y:(p.y+postBase)/2,z:p.z,w:5.5,h:p.y-postBase,d:5.5})));
+      l.supports.forEach((p,i)=>{
+        const depth=data.foundationDepthIn??48;
+        if(data.foundation==='Deck Blocks')out.push(boxMesh(`${name}_deck_block_${i}`,{x:p.x,y:3,z:p.z,w:12,h:6,d:12}));
+        else if(data.foundation==='Helical Piles'){
+          out.push(cylinder(`${name}_pile_shaft_${i}`,p.x,p.z,-depth,2,1.4));
+          out.push(cylinder(`${name}_pile_helix_${i}`,p.x,p.z,-depth+4,-depth+4.3,6));
+        }else out.push(cylinder(`${name}_concrete_pier_${i}`,p.x,p.z,-depth,2,6));
+        out.push(boxMesh(`${name}_post_base_${i}`,{x:p.x,y:data.foundation==='Deck Blocks'?6.25:4.25,z:p.z,w:7,h:.4,d:7}));
+      });
+    }
   });
   boxes('stair_tread_board',getStairBoards(data,model));boxes('closed_stair_riser',drawnRiserBoards(data,model));model.stringers.forEach((m,i)=>out.push(stringerMesh(`stair_stringer_${i+1}`,m,model)));
   const veneer=stairVeneerLayout(data,model);boxes('stair_veneer_2x6',veneer.woodBoxes);boxes('stair_veneer_angle',veneer.bracketBoxes);

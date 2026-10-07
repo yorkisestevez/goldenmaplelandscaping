@@ -17,7 +17,7 @@ assert.deepEqual(board[0].polygon,second.polygon.map(p=>({x:p.x+second.offset.x,
 ok(targets([{type:'design.patch',patch:{width2:8}}]).map(t=>t.id).join()==='deck:2','Second-level sizing never highlights main deck');
 ok(targets([{type:'design.patch',patch:{stairWidth:60}}]).map(t=>t.id).join()==='stairs:primary','Stair sizing highlights actual stair polygon');
 ok(targets([{type:'component.edit',id:'missing:part',edit:{action:'remove'}}]).length===0,'No invented target for missing part');
-const edge=listEdgeSections(data,model).find(e=>e.eligible.length)!;
+const edge=listEdgeSections(data,model).find(e=>e.eligible.length)!;ok(edge,'An exposed railing edge is listed for the assistant');
 const result=targets([{type:'edge.edit',edit:{action:'rail',level:edge.level,edgeId:edge.edgeId,startPct:25,endPct:75,enabled:false}}])[0];
 assert.deepEqual(result.line,[.25,.75].map(t=>({x:edge.a.x+(edge.b.x-edge.a.x)*t,y:edge.a.y+(edge.b.y-edge.a.y)*t})));checks++;
 ok(targets([{type:'design.patch',patch:{width:18}},{type:'design.patch',patch:{length:16}}]).length===1,'Duplicate physical targets collapse');

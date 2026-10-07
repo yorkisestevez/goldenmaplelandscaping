@@ -1,3 +1,4 @@
+import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 import assert from 'node:assert/strict';
 import {centerInlaySketch,finishInlaySketch,inlaySketchArea,inlaySketchBounds,inlaySketchCorner,inlaySketchProblem,moveInlaySketchPoint,resizeInlaySketch,INLAY_SKETCH_LIMITS} from '../src/features/deckcraft/sketch/inlaySketchGeometry';
 import {INLAY_LIMITS} from '../src/features/deckcraft/lib/inlayGeometry';

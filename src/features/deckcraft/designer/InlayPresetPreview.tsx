@@ -1,3 +1,4 @@
+import '../lib/inlayGeometryRuntime';
 import {memo} from 'react';
 import {createInlayPreset} from '../lib/inlayPresets';
 import {planInlays} from '../lib/inlayGeometry';

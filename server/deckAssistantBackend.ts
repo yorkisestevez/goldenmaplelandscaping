@@ -111,6 +111,10 @@ export function createDeckAssistantService(options:DeckAssistantBackendOptions={
   }};
 }
 
+/** The strict request validation, shared with the cloud provider (server/deckAssistantCloud.ts). Throws an error
+ * carrying `code` and `status` (400) for anything it rejects. */
+export {requestBody as parseDeckAssistantRequest};
+
 /** Safe production adapter: disabled unless a host explicitly supplies local configuration. No paid fallback. */
 export const unconfiguredDeckAssistant=createDeckAssistantService();
 export default (request:Request)=>unconfiguredDeckAssistant.handle(request);

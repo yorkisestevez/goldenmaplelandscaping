@@ -1,6 +1,7 @@
 import type {DeckData} from './types';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {PlanPoint} from './lib/deckGeometry';
+import {insidePolygon as inside} from './lib/polygonCuts';
 import {getHouseContact} from './houseContact';
 import {finishedFasciaOffset} from './lib/finishedFootprint';
 
@@ -17,7 +18,7 @@ export const BORDER_SUPPORT_NOTE='The 2.5 in picture-frame mounting-space previe
 
 type Span=[number,number];
 const cut=(spans:Span[],lo:number,hi:number):Span[]=>spans.flatMap(([s,e]):Span[]=>hi<=s||lo>=e?[[s,e]]:[...(lo>s?[[s,lo] as Span]:[]),...(hi<e?[[hi,e] as Span]:[])]);
-function inside(p:PlanPoint,poly:PlanPoint[]){let odd=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)odd=!odd;}return odd;}
+
 /** Split at polygon crossings, then remove spans covered by another level. */
 function coveredSpans(a:PlanPoint,u:PlanPoint,len:number,poly:PlanPoint[]):Span[]{
   const ts=[0,len];

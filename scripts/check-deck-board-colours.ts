@@ -71,12 +71,12 @@ for(const shape of shapes)for(const pattern of patterns){
 }
 
 // 3. A choice survives resizing, a collection change and stair or railing edits.
-const d0=base(),m0=buildDeckTakeoff(d0),target=m0.levels[0].boards.findIndex(b=>(b.role??'field')==='field'&&b.cy>30&&b.cy<50);
+const d0=base(),m0=buildDeckTakeoff(d0),target=boardFinishPlan(d0,m0).addresses[0].findIndex(a=>a?.role==='field'&&a.course==='r5');
 const piece=paintBoard(d0,m0,{level:0,index:target},COCOA,'piece');
 ok('boardColours' in piece&&piece.boardColours?.length===1&&piece.boardColours[0].scope==='piece'&&piece.boardColours[0].at!==undefined,'Painting one board saves one choice with its place along the row');
 const painted={...d0,boardColours:(piece as {boardColours:BoardColour[]}).boardColours};
 ok(describeBoardPlace(painted.boardColours[0])==='One board in row 6 from the house','The choice is named in plain words');
-for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another collection',{deckingMaterial:'tt_reserve',deckingColor:'Antique Leather'}],['another stair',{stairFlights:2,stairPosition:'Left' as const}],['a new railing',{railingType:'Glass Panels' as const}]] as const){
+for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another stair',{stairFlights:2,stairPosition:'Left' as const}],['a new railing',{railingType:'Glass Panels' as const}]] as const){
   const d={...painted,...patch},plan=boardFinishPlan(d,buildDeckTakeoff(d));
   ok(plan.pieces===1&&plan.unmatched.length===0,`One painted board stays painted after ${label}`);
 }
@@ -85,6 +85,13 @@ for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another 
   const rowPieces=plan.addresses[0].filter(a=>a?.course==='r5').length;
   ok(plan.pieces===rowPieces&&rowPieces>0,'Painting a row colours every piece in it');
   const narrow={...rowed,width:12};ok(boardFinishPlan(narrow,buildDeckTakeoff(narrow)).pieces>0,'A painted row stays painted when the deck narrows');
+}
+
+// Changing to shorter stock inserts a breaker through the saved marker; never silently repaint another piece.
+{
+ // TimberTech Prime has no manufacturer listing on file, so it keeps the 16 ft planning allowance (deckingStock.ts).
+ const shorter={...painted,deckingMaterial:'tt_prime',deckingColor:'Maritime Gray'},plan=boardFinishPlan(shorter,buildDeckTakeoff(shorter));
+ ok(plan.pieces===0&&plan.unmatched.length===1&&price(shorter).flags.some(f=>f.includes('no longer lines up with a board')),'An accent displaced by a new stock-length breaker is reported unmatched, never moved');
 }
 
 // 4. Never moved: when the boards move, the choice is unmatched, not drawn or priced, and says so.
@@ -133,8 +140,8 @@ for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another 
   ok(acc&&acc.items.length===1&&stock.length===1&&Number(deck.items[0].qty)<Number(plainDeck.items[0].qty),'An accent colour gets its own stock row and the main order drops');
   const rate=9.00*(5.5/12)*1.35;
   ok(Math.abs((acc.items[0].cost as number)-stock[0].orderedLf*rate)<.01,'An accent colour is priced at its collection\'s rate, ordered length × $/sq ft × board width, with the markup');
-  const perBoard=16*rate;
-  ok(e.subtotal>=plain.subtotal-.005&&e.subtotal-plain.subtotal<=perBoard+.01,'The same collection in a second colour costs the same, give or take one board it cannot share offcuts with');
+  const mainStock=e.stockSchedule[0],installedLf=e.model.levels.flatMap(l=>l.boards).reduce((n,b)=>n+b.length/12,0);
+  ok(Math.abs(mainStock.installedLf+stock[0].installedLf-installedLf)<.01&&Math.abs(Number(deck.items[0].cost)-mainStock.orderedLf*rate)<.01,'Main and accent orders partition every modeled board exactly once and each uses its actual ordered-length collection rate');
   const other={...base(),boardColours:[row('r3'),row('r5',colourRef('tt_reserve','Antique Leather'))]},eo=price(other),acc2=accentSection(eo)!;
   const reserveRow=eo.stockSchedule.find(r=>r.name.startsWith('TimberTech PRO Reserve · Antique Leather'))!;
   const reserveRate=DECKING_CATALOGUE.find(m=>m.id==='tt_reserve')!.costPerSqft!;

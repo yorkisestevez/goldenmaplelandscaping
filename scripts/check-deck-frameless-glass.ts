@@ -113,11 +113,14 @@ for(const [label,patch] of designs)for(const glassMount of GLASS_MOUNTS){
   ok(e.flags.some(f=>f.startsWith('Stairs with frameless glass'))===(e.model.railing.frameless!.handrails.length>0),`${name}: the handrail note only with stairs`);
 }
 {
-  // A picture-frame overhang that would reach fascia-mounted glass is flagged.
-  const framed=estimate({...base(),pattern:'Picture Frame',pictureFrameRows:1,railingType:'Frameless Glass',glassMount:'Fascia-mount base shoe'});
+  // A picture-frame overhang that would reach fascia-mounted glass is flagged. 1.5 in is the production standard (and
+  // what a saved design without an overhang reopens with); new designs default to a flush frame.
+  const framed=estimate({...base(),pattern:'Picture Frame',pictureFrameRows:1,pictureFrameOverhangIn:1.5,railingType:'Frameless Glass',glassMount:'Fascia-mount base shoe'});
   ok(framed.flags.some(f=>f.startsWith('Fascia-mounted glass: the picture-frame boards overhang')),'A 1.5 in picture-frame overhang against fascia glass is flagged');
   const trimmed=estimate({...base(),pattern:'Picture Frame',pictureFrameRows:1,pictureFrameOverhangIn:.5,railingType:'Frameless Glass',glassMount:'Fascia-mount base shoe'});
   ok(!trimmed.flags.some(f=>f.startsWith('Fascia-mounted glass: the picture-frame boards overhang')),'A 0.5 in overhang clears fascia glass');
+  const flush=estimate({...base(),railingType:'Frameless Glass',glassMount:'Fascia-mount base shoe'});
+  ok(base().pictureFrameRows>0&&base().pictureFrameOverhangIn===0&&flush.model&&!flush.flags.some(f=>f.startsWith('Fascia-mounted glass: the picture-frame boards overhang')),'The default flush (0 in) picture frame clears fascia glass');
 }
 
 // 4. No posts, so no post-cap lights.

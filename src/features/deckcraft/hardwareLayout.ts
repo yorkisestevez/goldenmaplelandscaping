@@ -74,8 +74,7 @@ export function getHardwareLayout(data:DeckData,model:DeckTakeoff){
     const groups:V3[][]=[];for(const p of hits){const last=groups[groups.length-1];if(last&&Math.abs(last[0][k]-p[k])<6)last.push(p);else groups.push([p]);}
     return groups.map(g=>({...g[0],[k]:g.reduce((n,p)=>n+p[k],0)/g.length}));
   })));
-  const baseHeight=data.foundation==='Deck Blocks'?6.5:4.5;
-  const postCaps=model.levels.flatMap(l=>l.supports.filter(p=>p.y>baseHeight).map(p=>({...p})));
+  const postCaps=model.foundationSupports.filter(f=>f.postHeightIn!==null&&f.postHeightIn>0).map(f=>({x:f.x,y:f.bearingElevationIn,z:f.z}));
   const blockingAngles=unique(model.levels.flatMap(l=>l.blocking.flatMap(b=>[b.a,b.b])));
   const stringerConnectors=model.stringers.map(s=>({...s.a}));
   const railBolts=model.railing.posts.flatMap(p=>[-1,1].flatMap(x=>[-1,1].map(z=>({x:p.x+x*1.85,y:p.y+.4,z:p.z+z*1.85}))));

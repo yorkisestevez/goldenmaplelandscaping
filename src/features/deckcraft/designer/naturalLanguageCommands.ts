@@ -1,11 +1,16 @@
+import {parseStepInstruction} from './stepVoiceCommands';
 import type {AgentCommand,AgentRequest,AgentSnapshot} from './deckAgentController';
 import {DECKING_CATALOGUE} from '../manufacturerRuntimeCatalogue';
 import {colourRef} from '../boardFinishes';
 import type {ColourRef} from '../types';
-export interface AssistedSelection {partIds:string[];boards:{level:number;index:number}[]}
-export type InstructionResult={ok:true;request:AgentRequest;summary:string[]}|{ok:false;clarification:string};
-export const INSTRUCTION_EXAMPLES=['Make the deck 20 by 14 feet','Set stairs width to 6 feet','Rotate selected boards to 45 degrees','Colour selected boards Coastline','Set selected window width to 48 inches','Set selected screen height to 6 feet'];
-const no=(clarification:string):InstructionResult=>({ok:false,clarification});
+import {parseYardInstruction} from './yardVoiceCommands';
+import {parsePoolInstruction} from './poolVoiceCommands';
+import {parseSiteInstruction} from './siteVoiceCommands';
+export interface YardVoiceSelection {id:string;target:'area'|'edge'|'point';index:number}
+export interface AssistedSelection {objectIds?:string[];partIds:string[];boards:{level:number;index:number}[];yard?:YardVoiceSelection;poolId?:string;hardscape?:import('./selectionState').HardscapeSelection}
+export type InstructionResult={ok:true;request:AgentRequest;summary:string[]}|{ok:false;clarification:string;localOnly?:boolean};
+export {INSTRUCTION_EXAMPLES,YARD_INSTRUCTION_EXAMPLES} from './instructionExamples';
+const no=(clarification:string,localOnly=false):InstructionResult=>({ok:false,clarification,localOnly});
 const short=(s:string)=>s.trim().toLowerCase().replace(/\s+/g,' ').replace(/[.!]+$/,'');
 const NUMBER_WORDS:Record<string,number>={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
 const measuredWords=(s:string)=>s.replace(/\b(twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)[ -](one|two|three|four|five|six|seven|eight|nine)\b/g,(_,a,b)=>String(NUMBER_WORDS[a]+NUMBER_WORDS[b])).replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b(?=\s+(?:feet|foot|ft|inches|inch|in|degrees|degree|deg|percent|panels|by|x)\b)/g,w=>String(NUMBER_WORDS[w]));
@@ -17,9 +22,23 @@ function resolveColour(text:string,snapshot:AgentSnapshot):{ref:ColourRef;label:
 /** Entire clauses must match. Unsupported words never become a guessed edit or an external action. */
 export function parseNaturalLanguageCommands(input:unknown,snapshot:AgentSnapshot,selection:AssistedSelection={partIds:[],boards:[]}):InstructionResult {
  if(typeof input!=='string'||!input.trim()||input.length>600||/[\u0000-\u001f]/.test(input.replace(/\n/g,'')))return no('Enter a short instruction, up to 600 characters.');if(!snapshot.ready)return no('Wait until the design has finished restoring.');
+ // Resolve explicit relative measurements locally instead of letting a model choose a different delta.
+ const relative=measuredWords(short(input).replace(/ (more|less|extra) (feet|foot|ft|inches|inch|in)\b/g,' $2 $1'));
+ const growth=relative.match(/^(?:please )?give (?:the )?(?:main )?deck (\d+(?:\.\d+)?) (feet|foot|ft|inches|inch|in) (more|less|extra)(?: of)? (width|depth|length)(?:[,.]? and keep (?:its |the )?(depth|length|width) unchanged)?$/);
+ const resize=relative.match(/^(?:please )?make (?:the )?(?:main )?deck (\d+(?:\.\d+)?) (feet|foot|ft|inches|inch|in) (wider|narrower|deeper|shorter)$/);
+ if(growth||resize){const match=(growth??resize)!,key=growth?(growth[4]==='width'?'width':'length'):/^(wider|narrower)$/.test(match[3])?'width':'length',delta=Number(match[1])*(/^(inches|inch|in)$/.test(match[2])?1/12:1)*(/^(less|narrower|shorter)$/.test(match[3])?-1:1),value=snapshot.design[key]+delta;
+  if(growth?.[5]&&(growth[5]==='width'?'width':'length')===key)return no('That request changes and preserves the same dimension. Specify which dimension should change.',true);
+  if(value<4||value>60)return no('Deck width and length must each be 4–60 feet.');
+  return {ok:true,request:{id:'relative-'+crypto.randomUUID(),expectedRevision:snapshot.revision,commands:[{type:'design.patch',patch:{[key]:value}}]},summary:[`Deck ${key}: ${snapshot.design[key]} ft → ${value} ft.`]};
+ }
  const clauses=input.split(/;|\n/).map(short).filter(Boolean);if(clauses.length>8)return no('Use at most eight short instructions, separated by semicolons.');
  const commands:AgentCommand[]=[],summary:string[]=[];let editsBoards=false;
  for(let raw of clauses){raw=measuredWords(raw.replace(/^(please |can you |could you )/,'').replace(/^(make|set|change) the /,'$1 ').replace(/\b(?:this|these) (?=stairs?\b)/,'')).replace(/([a-z])(?=\d)/g,'$1 ').replace(/(\d)(?=[a-z])/g,'$1 ');let m:RegExpMatchArray|null;
+  const step=parseStepInstruction(raw,snapshot,selection);if(step){if('clarification'in step)return no(step.clarification,true);commands.push(step.command);summary.push(...step.summary);continue;}
+  const pool=parsePoolInstruction(raw,snapshot,selection);if(pool){if('clarification'in pool)return no(pool.clarification,true);commands.push(pool.command);summary.push(...pool.summary);continue;}
+  const site=parseSiteInstruction(raw,snapshot,selection);if(site){if('clarification'in site)return no(site.clarification,true);commands.push(site.command);summary.push(...site.summary);continue;}
+  const yard=parseYardInstruction(raw,snapshot,selection);
+  if(yard){if('clarification'in yard)return no(yard.clarification,true);if(clauses.length>1)return no('Review one patio or wall change at a time so the selected edge and construction quantities remain current.',true);commands.push(yard.command);summary.push(...yard.summary);continue;}
   if((m=raw.match(/^rotate (?:this|selected) (?:section|deck level)(?: to)? (-?\d+(?:\.\d+)?) (?:degrees|degree|deg)$/))){if(clauses.length>1)return no('Review a section direction as one separate instruction.');const parts=selection.partIds.map(id=>snapshot.parts.find(p=>p.id===id));if(parts.length!==1||parts[0]?.kind!=='deck'||!parts[0].level)return no('Select exactly one deck level in the plan, then say “rotate this section 45 degrees”.');const level=parts[0].level,boundary=snapshot.boundaries.find(b=>b.level===level),angleDeg=finite(m[1]);if(!boundary)return no('That deck level is not currently present.');if(Math.abs(angleDeg)>360)return no('Board direction must be −360 to 360 degrees.');commands.push({type:'layout.region',region:{id:`instruction-section-${snapshot.revision}-${level}`,level,polygon:boundary.points.map(p=>({...p})),angleDeg}});summary.push(`Deck level ${level}: field boards at ${angleDeg}°. Its outline, border and inlays stay in place.`,`Review actual stock cuts, fitting allowances and support/fastening quote requirements.`);continue;}
   if((m=raw.match(/^(?:make|set|change) (?:the )?deck (?:size (?:to )?)?(\d+(?:\.\d+)?) (?:by|x|×) (\d+(?:\.\d+)?) (?:feet|foot|ft)$/))){const width=finite(m[1]),length=finite(m[2]);if(width<4||width>60||length<4||length>60)return no('Deck width and length must each be 4–60 feet.');commands.push({type:'design.patch',patch:{width,length}});summary.push(`Deck: ${width} ft wide × ${length} ft deep.`);continue;}
   if((m=raw.match(/^(?:make|set|change) (?:deck )?(width|length|depth|height)(?: to)? (\d+(?:\.\d+)?) (feet|foot|ft|inches|inch|in)$/))){const key=m[1]==='depth'?'length':m[1],value=finite(m[2])*(key==='height'?/^(feet|foot|ft)$/.test(m[3])?12:1:/^(inches|inch|in)$/.test(m[3])?1/12:1);if(value<(key==='height'?8:4)||value>(key==='height'?144:60))return no(key==='height'?'Deck height must be 8–144 inches.':'Deck dimensions must be 4–60 feet.');commands.push({type:'design.patch',patch:{[key]:value}});summary.push(`Deck ${key}: ${value} ${key==='height'?'in':'ft'}.`);continue;}

@@ -1,0 +1,16 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import '../src/features/deckcraft/siteSurfaceEngine';
+import '../src/features/deckcraft/landscapeTypesRuntime';
+import {editYardFinished} from '../src/features/deckcraft/yardFinishedEdits';
+import {hardscapeSelection} from '../src/features/deckcraft/hardscapeCatalogue';
+import type {DeckData} from '../src/features/deckcraft/types';
+import {serializeDeckReleaseDesign} from '../src/features/deckcraft/deckRelease';
+import {ensureLiveDesignExtensions} from '../src/features/deckcraft/designExtensions';
+const data=JSON.parse(readFileSync('../../outputs/site-workflow-browser/terraced-scene.json','utf8')) as DeckData;
+data.yardFeatures=data.yardFeatures!.map(f=>{let next=editYardFinished(data,f,{action:'pin'});if(f.kind==='patio'){next=editYardFinished(data,next,{action:'level',elevationIn:next.finishedElevationIn!+3});next=editYardFinished(data,next,{action:'slope',xPct:f.id==='lower-patio'?.5:0,zPct:-2});}else {const course=hardscapeSelection(f)!.unit.heightMm/25.4;next=editYardFinished(data,next,{action:'steps',steps:[{stationIn:f.widthFt*6,elevationIn:next.finishedElevationIn!+course}]});}return next;});
+data.landscapeObjects=data.landscapeObjects?.map(o=>o.kind==='furniture'?{...o,supportFeatureId:'lower-patio'}:o);
+data.yardEarthwork={soilReusePct:10,spoilSwellPct:20,looseSpoilTonnesPerYd3:1.3,binPayloadTonnes:8,binVolumeYd3:10};
+await ensureLiveDesignExtensions(data);
+writeFileSync('../../outputs/elevation-phase/terraced-fixed-slopes.json',JSON.stringify(data,null,2));
+writeFileSync('../../outputs/elevation-phase/terraced-fixed-slopes.deckcraft.json',serializeDeckReleaseDesign(data));
+console.log('Fixed sloping patio / stepped curved wall fixture saved.');

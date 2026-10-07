@@ -2,36 +2,43 @@ import {useEffect,useMemo} from 'react';
 import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import type {SelectionState} from '../../designer/selectionState';
-export interface ObjectPick {partId?:string;board?:{level:number;index:number}}
+import {matchesHardscape} from '../../designer/hardscapeSelection';
+export interface ObjectPick {partId?:string;board?:{level:number;index:number};hardscape?:SelectionState['hardscape']}
 /** Metadata belongs to the actual rendered mesh/group; an instance uses its exact model entry. */
-export function objectPick(object:THREE.Object3D,instanceId?:number):ObjectPick|null{
+export function objectPick(object:THREE.Object3D,instanceId?:number,faceIndex?:number):ObjectPick|null{
  for(let node:THREE.Object3D|null=object;node;node=node.parent){
   if(node.name==='privacy-screen-drag-handles'||node.name==='selection-outline')return null;
+  const ranges=(node as THREE.Mesh).geometry?.userData.hardscapeRanges as {start:number;end:number;pick:NonNullable<SelectionState['hardscape']>}[]|undefined;
+  if(ranges&&faceIndex!==undefined){let lo=0,hi=ranges.length-1;while(lo<=hi){const m=(lo+hi)>>1,r=ranges[m];if(faceIndex<r.start)hi=m-1;else if(faceIndex>=r.end)lo=m+1;else return {hardscape:r.pick};}}
+  if(node.userData.pickHardscape)return {hardscape:node.userData.pickHardscape};
   const board=instanceId===undefined?node.userData.pickBoard:node.userData.pickBoards?.[instanceId];
   const partId=instanceId===undefined?node.userData.pickPartId:node.userData.pickPartIds?.[instanceId]??node.userData.pickPartId;
-  if(board)return {board};if(partId)return {partId};
+  if(board)return {board};if(partId?.startsWith('landscape/'))return {hardscape:{kind:'landscape',id:partId.slice(10)}};if(partId)return {partId};
  }
  return null;
 }
-export default function SelectionBridge({enabled,selection,onPick,revision}:{enabled:boolean;selection:SelectionState;onPick?:(pick:ObjectPick,toggle:boolean)=>void;revision?:unknown}){
+export default function SelectionBridge({enabled,hardscapeOnly=false,selection,onPick,revision}:{enabled:boolean;hardscapeOnly?:boolean;selection:SelectionState;onPick?:(pick:ObjectPick,toggle:boolean)=>void;revision?:unknown}){
  const {gl,scene,camera,invalidate}=useThree(),group=useMemo(()=>new THREE.Group(),[]);
  useEffect(()=>{group.name='selection-outline';scene.add(group);return ()=>{scene.remove(group);};},[group,scene]);
  useEffect(()=>{
   const clear=()=>{for(const child of [...group.children]){group.remove(child);const line=child as THREE.LineSegments;line.geometry?.dispose();(line.material as THREE.Material)?.dispose();}};
   clear();if(!enabled)return;
   scene.updateMatrixWorld(true);
-  const matches=(p:ObjectPick|null)=>!!p&&(p.partId?selection.partIds.includes(p.partId):!!p.board&&selection.boards.some(b=>b.level===p.board!.level&&b.index===p.board!.index));
+  const matches=(p:ObjectPick|null)=>!!p&&(p.hardscape?(selection.objectIds?.includes(p.hardscape.id)||matchesHardscape(selection.hardscape,p.hardscape)):!hardscapeOnly&&(p.partId?selection.partIds.includes(p.partId):!!p.board&&selection.boards.some(b=>b.level===p.board!.level&&b.index===p.board!.index)));
   const add=(geometry:THREE.BufferGeometry,matrix:THREE.Matrix4)=>{const line=new THREE.LineSegments(new THREE.EdgesGeometry(geometry),new THREE.LineBasicMaterial({color:'#d9902f',depthTest:false,transparent:true,opacity:.95}));line.applyMatrix4(matrix);line.renderOrder=100;line.raycast=()=>{};group.add(line);};
   scene.traverse(object=>{if(object.name==='selection-outline'||!object.visible)return;const mesh=object as THREE.Mesh;if(!mesh.isMesh||!mesh.geometry)return;
    if((mesh as THREE.InstancedMesh).isInstancedMesh){const instances=mesh as THREE.InstancedMesh;for(let i=0;i<instances.count;i++)if(matches(objectPick(mesh,i))){const matrix=new THREE.Matrix4();instances.getMatrixAt(i,matrix);add(mesh.geometry,mesh.matrixWorld.clone().multiply(matrix));}}
+   else if(mesh.geometry.userData.hardscapeRanges){const positions=mesh.geometry.getAttribute('position'),chosen:number[]= [];for(const range of mesh.geometry.userData.hardscapeRanges as {start:number;end:number;pick:NonNullable<SelectionState['hardscape']>}[])if(matches({hardscape:range.pick}))for(let v=range.start*3;v<range.end*3;v++)chosen.push(positions.getX(v),positions.getY(v),positions.getZ(v));if(chosen.length){const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(chosen,3));add(geometry,mesh.matrixWorld);geometry.dispose();}}
    else if(matches(objectPick(mesh)))add(mesh.geometry,mesh.matrixWorld);
   });invalidate();return clear;
- },[enabled,selection,scene,group,invalidate,revision]);
+ },[enabled,hardscapeOnly,selection,scene,group,invalidate,revision]);
  useEffect(()=>{if(!enabled||!onPick)return;const canvas=gl.domElement,ray=new THREE.Raycaster();let active:{id:number;x:number;y:number;max:number}|null=null,multiple=false;
-  const down=(e:PointerEvent)=>{if(active){multiple=true;return;}if(e.button!==0)return;multiple=false;active={id:e.pointerId,x:e.clientX,y:e.clientY,max:0};};
+  const down=(e:PointerEvent)=>{if(canvas.dataset.editGesture)return;if(active){multiple=true;return;}if(e.button!==0)return;multiple=false;active={id:e.pointerId,x:e.clientX,y:e.clientY,max:0};};
   const move=(e:PointerEvent)=>{if(active?.id===e.pointerId)active.max=Math.max(active.max,Math.hypot(e.clientX-active.x,e.clientY-active.y));};
-  const up=(e:PointerEvent)=>{const start=active;if(!start||start.id!==e.pointerId)return;active=null;if(multiple||start.max>5||Math.hypot(e.clientX-start.x,e.clientY-start.y)>5)return;const box=canvas.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((e.clientX-box.left)/box.width*2-1,-(e.clientY-box.top)/box.height*2+1),camera);scene.updateMatrixWorld(true);for(const hit of ray.intersectObjects(scene.children,true)){let visible=true;for(let node:THREE.Object3D|null=hit.object;node;node=node.parent)if(!node.visible)visible=false;if(!visible)continue;const pick=objectPick(hit.object,hit.instanceId);if(pick){onPick(pick,e.shiftKey||e.ctrlKey||e.metaKey);break;}}};
-  const cancel=()=>{active=null;multiple=false;};canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',cancel);
-  return ()=>{canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);};
- },[enabled,onPick,gl,scene,camera]);return null;
+  const up=(e:PointerEvent)=>{if(canvas.dataset.editGesture){active=null;return;}const start=active;if(!start||start.id!==e.pointerId)return;active=null;if(multiple||start.max>5||Math.hypot(e.clientX-start.x,e.clientY-start.y)>5)return;pickAt(e);};
+  const pickAt=(e:MouseEvent,context=false)=>{let found:ObjectPick|null=null;const box=canvas.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((e.clientX-box.left)/box.width*2-1,-(e.clientY-box.top)/box.height*2+1),camera);scene.updateMatrixWorld(true);for(const hit of ray.intersectObjects(scene.children,true)){let visible=true;for(let node:THREE.Object3D|null=hit.object;node;node=node.parent)if(!node.visible)visible=false;if(!visible)continue;const pick=objectPick(hit.object,hit.instanceId,hit.faceIndex??undefined);if(pick&&(!hardscapeOnly||pick.hardscape)){found=pick;if(!context)onPick(pick,e.shiftKey||e.ctrlKey||e.metaKey);break;}const mesh=hit.object as THREE.Mesh;if(mesh.isMesh&&!mesh.userData.selectionPassthrough)break;}if(context)canvas.dispatchEvent(new CustomEvent("deckcraft-object-context",{bubbles:true,detail:{x:e.clientX,y:e.clientY,pick:found}}));};
+  const context=(e:MouseEvent)=>{e.preventDefault();active=null;pickAt(e,true);};
+  const cancel=()=>{active=null;multiple=false;};canvas.dataset.objectContextReady='true';canvas.addEventListener('contextmenu',context);canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',cancel);
+  return ()=>{delete canvas.dataset.objectContextReady;canvas.removeEventListener('contextmenu',context);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);};
+ },[enabled,hardscapeOnly,onPick,gl,scene,camera]);return null;
 }

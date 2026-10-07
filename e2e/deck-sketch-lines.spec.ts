@@ -1,4 +1,5 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
+import {openSketchMeasurements} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
@@ -35,13 +36,13 @@ for(const device of [{name:'desktop',width:1440,height:1000,touch:false},{name:'
   await expect(modal(page).getByRole('button',{name:'Finish outline',exact:true})).toBeEnabled();
   const finish=modal(page).getByRole('button',{name:'Finish outline',exact:true});await finish.scrollIntoViewIfNeeded();const size=await finish.boundingBox();expect(size!.height).toBeGreaterThanOrEqual(44);expect(size!.width).toBeGreaterThanOrEqual(44);
   await page.screenshot({path:resolve(proof,`${device.name}-square-draft.png`)});
-  if(device.touch)await finish.click();else{await modal(page).getByRole('group',{name:'Sketch canvas',exact:true}).focus();await page.keyboard.press('Enter');}
+  if(!device.touch){await modal(page).getByRole('group',{name:'Sketch canvas',exact:true}).focus();await page.keyboard.press('Enter');await expect(modal(page).getByLabel('Exact drawing length',{exact:true})).toBeFocused();}await finish.click();
   const saved=await draft(page);expect(saved.shapes).toHaveLength(1);const points=saved.shapes[0].points;expect(points).toHaveLength(4);
   for(let i=0;i<points.length;i++){const p=points[i],q=points[(i+1)%points.length];expect(Math.min(Math.abs(p.x-q.x),Math.abs(p.y-q.y))).toBeLessThan(1e-7);}
   // Browser input coordinates round at subpixel precision; locked axes above remain exact.
   expect(Math.max(...points.map(p=>p.x))-Math.min(...points.map(p=>p.x))).toBeCloseTo(420,3);
   expect(Math.max(...points.map(p=>p.y))-Math.min(...points.map(p=>p.y))).toBeCloseTo(240,3);
-  await modal(page).getByRole('spinbutton',{name:/^Measured width/}).fill('20');await modal(page).getByRole('spinbutton',{name:/^Measured depth/}).fill('12');
+  await openSketchMeasurements(page);await modal(page).getByRole('spinbutton',{name:/^Measured width/}).fill('20');await modal(page).getByRole('spinbutton',{name:/^Measured depth/}).fill('12');
   await page.screenshot({path:resolve(proof,`${device.name}-square-outline.png`)});
   await modal(page).getByRole('button',{name:'Generate design',exact:true}).click();await expect(modal(page).getByRole('status',{name:'Sketch preview price'})).toContainText('240 sq ft');
   expect((await state(page)).design).toEqual(original.design);await modal(page).getByRole('button',{name:'Apply design',exact:true}).click();await expect(modal(page)).toHaveCount(0);
@@ -61,7 +62,7 @@ test('angled lines, close-on-start, corner undo and invalid/cancelled drafts kee
  await modal(page).getByRole('button',{name:'Draw deck',exact:true}).click();await draw(page,context,[{x:680,y:140},{x:950,y:350},{x:950,y:140},{x:680,y:350}]);
  await modal(page).getByRole('button',{name:'Finish outline',exact:true}).click();await expect(modal(page).getByRole('status').last()).toContainText('cross');expect(await draft(page)).toEqual(saved);
  await modal(page).getByRole('button',{name:'Back a corner',exact:true}).click();await expect(modal(page).locator('.dd-sketch-line-actions')).toContainText('3 corners');
- await page.keyboard.press('Escape');await expect(modal(page)).toBeVisible();await expect(modal(page).getByRole('button',{name:'Finish outline',exact:true})).toHaveCount(0);expect(await draft(page)).toEqual(saved);
+ await page.keyboard.press('Escape');await expect(modal(page)).toBeVisible();await expect(modal(page).getByRole('status').last()).toContainText('Outline cancelled');await expect(modal(page).locator('.dd-sketch-line-actions')).toContainText('0 corners');await expect(modal(page).getByRole('button',{name:'Finish outline',exact:true})).toBeDisabled();expect(await draft(page)).toEqual(saved);
  await draw(page,context,[{x:700,y:150},{x:950,y:160}]);
  await modal(page).getByRole('button',{name:'Back a corner',exact:true}).focus();await page.keyboard.press('Enter');await expect(modal(page).locator('.dd-sketch-line-actions')).toContainText('1 corners');
  await tap(page,context,{x:950,y:160});await page.keyboard.press('Control+z');await expect(modal(page).locator('.dd-sketch-line-actions')).toContainText('1 corners');

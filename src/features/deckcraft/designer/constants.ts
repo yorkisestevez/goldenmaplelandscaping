@@ -20,5 +20,5 @@ export type AutoCounts={posts:number;stairs:number;privacy:number;border?:number
  * The site plan's tools (R5), one at a time: size and place the deck (its handles, figures and shape shortcuts), draw a
  * custom outline, place the stairs, and size the house. Page state only; never saved.
  */
-export type PlanTool='size'|'outline'|'boards'|'stairs'|'house'|'components'|'edges'|'yard'|'inlays';
-export const PLAN_TOOLS:readonly (readonly [PlanTool,string])[]=[['components','Select parts'],['outline','Shape & points'],['boards','Board layout'],['inlays','Inlays'],['edges','Rails & screens'],['yard','Patios & walls'],['size','Size & place'],['stairs','Stairs'],['house','House']];
+export type PlanTool='size'|'outline'|'boards'|'stairs'|'house'|'components'|'edges'|'yard'|'landscape'|'inlays';
+export const PLAN_TOOLS:readonly (readonly [PlanTool,string])[]=[['components','Select parts'],['outline','Shape & points'],['boards','Board layout'],['inlays','Inlays'],['edges','Rails & screens'],['yard','Patios & walls'],['landscape','Landscape areas'],['size','Size & place'],['stairs','Stairs'],['house','House']];

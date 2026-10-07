@@ -11,43 +11,43 @@
   },
   "cladding/Siding": {
    "parts": 51,
-   "digest": "ccee9f5c394ce3e3d377fbf0"
+   "digest": "799c5df4b716936b33f6a583"
   },
   "cladding/Brick": {
    "parts": 51,
-   "digest": "ccee9f5c394ce3e3d377fbf0"
+   "digest": "799c5df4b716936b33f6a583"
   },
   "cladding/Stone": {
    "parts": 51,
-   "digest": "ccee9f5c394ce3e3d377fbf0"
+   "digest": "799c5df4b716936b33f6a583"
   },
   "cladding/Stucco": {
    "parts": 51,
-   "digest": "ccee9f5c394ce3e3d377fbf0"
+   "digest": "799c5df4b716936b33f6a583"
   },
   "cladding/Board & batten": {
    "parts": 51,
-   "digest": "ccee9f5c394ce3e3d377fbf0"
+   "digest": "799c5df4b716936b33f6a583"
   },
   "cladding/Vertical siding": {
    "parts": 51,
-   "digest": "ccee9f5c394ce3e3d377fbf0"
+   "digest": "799c5df4b716936b33f6a583"
   },
   "roof/hip-metal-2": {
    "parts": 50,
-   "digest": "9e33661f8c57b119f7bdde10"
+   "digest": "fe182d0a1e30b74d29d61546"
   },
   "roof/flat-3": {
    "parts": 50,
-   "digest": "80fa903f20cee5935f808122"
+   "digest": "d6718d9e461d696dd23cd25d"
   },
   "roof/gable-x-9": {
    "parts": 51,
-   "digest": "ce999afdfb3fcccf994be8b7"
+   "digest": "2a1a9e91105878d3a802f2e2"
   },
   "roof/gable-4": {
    "parts": 51,
-   "digest": "a9a6a776100aa5c43d294e74"
+   "digest": "bfa041386d8c1a1693c67cd2"
   },
   "openings/every-style": {
    "parts": 137,
@@ -55,7 +55,7 @@
   },
   "blocks/bump-wing-garage": {
    "parts": 130,
-   "digest": "025318d8af0f02992fbc77d8"
+   "digest": "897eb487f935729fc283bdaa"
   },
   "placement/left": {
    "parts": 51,
@@ -63,11 +63,11 @@
   },
   "house/wide-tall": {
    "parts": 50,
-   "digest": "5e3caa0206e6157a28818a56"
+   "digest": "0464c7cb6cd5631d95584603"
   },
   "deck/l-shape": {
    "parts": 51,
-   "digest": "145614d44eb3e20f451b2ce0"
+   "digest": "2ec2d3d3eb9b451884e5338b"
   },
   "deck/wrap": {
    "parts": 51,

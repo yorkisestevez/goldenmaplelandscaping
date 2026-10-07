@@ -70,12 +70,12 @@ export function paperLayout(set:DrawingSet,sheet:Sheet,index:number):PaperPrim[]
     for(const id of sheet.legend){const layer=LAYERS[id as LayerId];out.push({kind:'line',a:{x,y:y-.035},b:{x:x+.35,y:y-.035},weight:Math.max(layer.weight,.01),dash:layer.dash});out.push({kind:'text',at:{x:x+.45,y},text:layer.label,size:.075,anchor:'start'});y+=.14;}
     y+=.04;rule();
   }
-  text('NOTES',.07,true);
-  sheet.notes.forEach((note,i)=>{const lines=wrap(note,w-.15,.072);lines.forEach((line,k)=>{out.push({kind:'text',at:{x:k?x+.15:x,y},text:k?line:`${i+1}. ${line}`,size:.072,anchor:'start'});y+=.1;});y+=.03;});
+  text('NOTES',.09,true);
+  sheet.notes.forEach((note,i)=>{const lines=wrap(note,w-.15,.09);lines.forEach((line,k)=>{out.push({kind:'text',at:{x:k?x+.15:x,y},text:k?line:`${i+1}. ${line}`,size:.09,anchor:'start'});y+=.115;});y+=.035;});
   // The footer and the sheet number sit at the bottom of the title block.
-  const footer=wrap(set.footer,w,.065);let fy=H-m-.75-footer.length*.09;
+  const footer=wrap(set.footer,w,.075);let fy=H-m-.75-footer.length*.10;
   out.push({kind:'line',a:{x:tx,y:fy-.18},b:{x:W-m,y:fy-.18},weight:.01,dash:null});
-  for(const line of footer){out.push({kind:'text',at:{x,y:fy},text:line,size:.065,anchor:'start'});fy+=.09;}
+  for(const line of footer){out.push({kind:'text',at:{x,y:fy},text:line,size:.075,anchor:'start'});fy+=.10;}
   out.push({kind:'line',a:{x:tx,y:H-m-.62},b:{x:W-m,y:H-m-.62},weight:.01,dash:null});
   out.push({kind:'text',at:{x,y:H-m-.3},text:sheet.id,size:.32,anchor:'start',bold:true});
   out.push({kind:'text',at:{x:W-m-.15,y:H-m-.38},text:sheet.title,size:.09,anchor:'end'});

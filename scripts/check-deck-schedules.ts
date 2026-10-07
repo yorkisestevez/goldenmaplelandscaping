@@ -32,7 +32,7 @@ for(const stairType of ['Straight','Landing','Winder'] as const)for(const stairW
  const d={...structuredClone(DEFAULT_DECK),height:108,stairType,stairWidth};const e=calculateEstimate(d),boards=getStairBoards(d,e.model);
  assert(boards.length>e.model.treads.length,'Tread assembly consists of individual planks');
  assert(boards.every(b=>b.w<=e.model.stockLength+.001&&b.d<=d.boardWidth+.001&&b.polygon!.length>=3),'Every tread plank fits stock');
- const row=e.stockSchedule.find(s=>s.name.startsWith('Stair tread'));assert(row&&!row.unresolvedIn.length);
- assert.equal(row.cutsIn.flat().length,boards.length,'Tread stock order includes every drawn cut');
+ const rows=e.stockSchedule.filter(s=>s.name.startsWith('Stair tread')||s.name.startsWith('Stair picture-frame'));assert(rows.length&&rows.every(r=>!r.unresolvedIn.length));
+ assert.equal(rows.flatMap(r=>r.cutsIn.flat()).length,boards.length,'Separate tread and picture-frame stock orders include every drawn cut exactly once');
 }
 console.log(`DECK SCHEDULES OK — ${count} stock/hardware scenarios, original commercial constants unchanged, wire and hidden clip rate bases preserved.`);

@@ -23,6 +23,10 @@ export const LAYERS={
   'S-FTNG-HIDN':{label:'Footings below grade',aci:1,weight:.008,dash:[.06,.04]},
   'A-DECK-FNSH':{label:'Decking, fascia and skirting',aci:7,weight:.012,dash:null},
   'A-DECK-EXTR':{label:'Benches, screens and pergola',aci:9,weight:.008,dash:null},
+  'C-EXST':{label:'Existing ground',aci:30,weight:.012,dash:[.12,.06]},
+  'C-PGRD':{label:'Proposed ground',aci:3,weight:.02,dash:null},
+  'C-FNSH':{label:'Finished surface',aci:5,weight:.02,dash:null},
+  'C-FORM':{label:'Construction formation',aci:6,weight:.012,dash:[.06,.04]},
   'C-TOPO':{label:'Grade',aci:8,weight:.024,dash:null},
   'C-PROP':{label:'Property line',aci:1,weight:.018,dash:[.3,.06,.06,.06]},
   'A-ANNO-DIMS':{label:'Dimensions',aci:7,weight:.006,dash:null},
@@ -42,7 +46,7 @@ export type DrawItem=
   |{kind:'dim';a:Pt;b:Pt;offset:number;text:string;layer:'A-ANNO-DIMS'};
 
 export interface Sheet{
-  id:'A-0'|'A-1'|'S-1'|'S-2'|'S-3'|'S-4'|'S-5'|'S-6';title:string;
+  id:'G-0'|'A-0'|'A-1'|'A-2'|`A-2.${number}`|'S-1'|'S-2'|'S-3'|'S-4'|'S-5'|'S-6';title:string;
   /** Plan inches per paper inch (48 = 1/4" = 1'-0"), and how the title block names it. */
   ratio:number;scaleLabel:string;
   items:DrawItem[];
