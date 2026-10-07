@@ -23,10 +23,12 @@ async function execute(page:Page,commands:AgentCommand[]){
 async function open(page:Page,resume=false){await page.getByRole('button',{name:'Sketch a design',exact:true}).click();await expect(modal(page)).toBeVisible();if(resume){await (await openSketchFiles(page)).getByRole('button',{name:'Resume saved sketch',exact:true}).click();await closeSketchMeasurements(page);}else await modal(page).getByRole('button',{name:'New sketch',exact:true}).click();}
 async function screen(page:Page,p:SketchPoint){
  const canvas=modal(page).getByRole('group',{name:'Sketch canvas',exact:true});await canvas.scrollIntoViewIfNeeded();
- return canvas.evaluate((el,p)=>{const q=new DOMPoint(p.x,p.y).matrixTransform((el as SVGSVGElement).getScreenCTM()!);return {x:q.x,y:q.y};},p);
+ const map=()=>canvas.evaluate((el,p)=>{const ctm=(el as SVGSVGElement).getScreenCTM();if(!ctm)return null;const q=new DOMPoint(p.x,p.y).matrixTransform(ctm),box=el.getBoundingClientRect(),view=(el.closest('.dd-sketch-body') as HTMLElement|null)?.getBoundingClientRect();return {x:q.x,y:q.y,top:view?.top??box.top,bottom:view?.bottom??box.bottom};},p);
+ for(let i=0;i<8;i++){const q=await map();if(!q)break;if(q.y>q.top+8&&q.y<q.bottom-8)return {x:q.x,y:q.y};await canvas.evaluate((el,dy)=>{(el.closest('.dd-sketch-body') as HTMLElement|null)?.scrollBy(0,dy);},q.y>=q.bottom-8?q.y-q.bottom+48:q.y-q.top-48);}
+ const q=await map();if(!q)throw Error('Sketch canvas is not on screen');return {x:q.x,y:q.y};
 }
 async function tap(page:Page,p:SketchPoint,touch=false){const q=await screen(page,p);if(touch)await page.touchscreen.tap(q.x,q.y);else await page.mouse.click(q.x,q.y);}
-async function rightFinish(page:Page){const canvas=modal(page).getByRole('group',{name:'Sketch canvas',exact:true});await canvas.scrollIntoViewIfNeeded();const bounds=(await canvas.boundingBox())!;await page.mouse.click(bounds.x+bounds.width/2,bounds.y+bounds.height/2,{button:'right'});}
+async function rightFinish(page:Page){const canvas=modal(page).getByRole('group',{name:'Sketch canvas',exact:true});const point=await canvas.evaluate(el=>{const box=el.getBoundingClientRect(),view=(el.closest('.dd-sketch-body') as HTMLElement).getBoundingClientRect(),top=Math.max(box.top,view.top),bottom=Math.min(box.bottom,view.bottom),left=Math.max(box.left,view.left),right=Math.min(box.right,view.right);return {x:(left+right)/2,y:(top+bottom)/2};});await page.mouse.click(point.x,point.y,{button:'right'});}
 async function seedDeck(page:Page){await page.evaluate(({key,document})=>localStorage.setItem(key,JSON.stringify(document)),{key,document:rectangle});await open(page,true);}
 async function path(page:Page,points:SketchPoint[],touch=false){
  await modal(page).getByRole('button',{name:'Draw stairs',exact:true}).click();
