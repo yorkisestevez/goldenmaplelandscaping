@@ -18,7 +18,7 @@ import {getHouseContact} from '../src/features/deckcraft/houseContact';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
 import {activeWrap} from '../src/features/deckcraft/lib/wrapGeometry';
 import {colourRef} from '../src/features/deckcraft/boardFinishes';
-import {unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
+import {CONFIRMED_RATES,unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
 import {newSkirting,SKIRTING_EDGE,SKIRTING_LIMITS,skirtingPlan,type SkirtingPlan,type SkirtingRun} from '../src/features/deckcraft/skirting';
 import type {DeckData,HouseBlock,SkirtingConfig} from '../src/features/deckcraft/types';
 import {designerSource} from './deck-designer-source';
@@ -208,7 +208,7 @@ for(const [label,patch] of houses)for(const deckType of ['Attached','Freestandin
     ok(e.materialList.filter(i=>/^Skirting/.test(i.item)).every(i=>i.cost!==null&&Number(i.cost)>0),`${label}: the material list carries priced skirting rows`);
     ok(!e.sections.flatMap(x=>x.items).some(i=>/kirting/.test(i.name)&&(i.cost===0||i.cost===null)),`${label}: no skirting line is $0 or null`);
   }
-  ok(unconfirmedRates().some(r=>r.id==='skirting'&&r.status==='owner-decision'&&/Priced/.test(r.value)),'The rate register lists skirting as an owner-priced decision');
+  ok(CONFIRMED_RATES.some(r=>r.id==='skirting'),'The rate register confirms skirting as an owner-priced decision');
 }
 
 // 8. Colour: the deck's own, or another real colour of its kind; anything else falls back to the deck colour.

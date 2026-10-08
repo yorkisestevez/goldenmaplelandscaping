@@ -10,7 +10,7 @@ import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
 import {boardFinishPlan} from '../src/features/deckcraft/boardFinishes';
 import {inSolidInlay} from '../src/features/deckcraft/inlayFraming';
 import {deckBoardStock} from '../src/features/deckcraft/stockPlan';
-import {unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
+import {CONFIRMED_RATES} from '../src/features/deckcraft/rateConfidence';
 import {boardOutline,polygonCut,signedArea} from '../src/features/deckcraft/lib/polygonCuts';
 import {bandBuildUps,fieldAngles,fillAngles,fitInlay,inlayCrewDays,INLAY_LIMITS,levelInlayContext,planInlays,stripeToBand,type InlayPlan} from '../src/features/deckcraft/lib/inlayGeometry';
 import type {PlanPoint} from '../src/features/deckcraft/lib/deckGeometry';
@@ -291,7 +291,7 @@ for(const [label,patch,status] of [
   ok(Math.abs(labour(across)-labour(price(diag))-acrossPlan.edgeFt/10*1.5/8*1.2*3700)<.01&&acrossPlan.edgeFt>0,'A band cut in across a diagonal deck: its length at the breaker rate, under the deck\'s multipliers');
   const med=price(base({inlays:[medallion()]})),row=labourItem(med).items.find(i=>i.name==='Medallion inlay labour');
   ok(labour(med)===labour(plain)&&row&&row.cost!==null&&row.cost>0&&row.qty===1&&!med.quoteRequired.includes('Medallion inlay labour (builder quote)'),'A medallion adds priced man-hours labour by default, not crew-days on Installation Labour');
-  ok(unconfirmedRates().some(r=>r.id==='medallion-labour'&&r.status==='owner-decision'&&/Man-hours/i.test(r.value))&&unconfirmedRates().some(r=>r.id==='inlay-labour'&&r.value.includes('band')),'The rate register lists the medallion labour decision, and bands under the reused rate');
+  ok(CONFIRMED_RATES.some(r=>r.id==='medallion-labour')&&CONFIRMED_RATES.some(r=>r.id==='inlay-labour'),'The rate register confirms medallion and inlay labour decisions');
 }
 
 // 8. Stock: inlay boards are their own order, at the allowance of what they are.

@@ -17,7 +17,7 @@ import {
   quoteCostFromCrewHours,
 } from '../src/features/deckcraft/designer/quoteLabourHours';
 import {readFileSync} from 'node:fs';
-import {unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
+import {CONFIRMED_RATES,unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
 
 let n=0;
 const ok=(v:unknown,s:string)=>{assert.ok(v,s);n++;};
@@ -56,8 +56,8 @@ near(after.subtotal-before.subtotal,costs.installationCost,'Crew-hours labour ad
 ok(!after.quoteRequired.some(q=>/Medallion inlay labour/i.test(q)),'Confirmed crew-hours clears medallion labour quote');
 
 const rates=unconfirmedRates();
-ok(rates.some(r=>r.id==='medallion-labour'&&/Man-hours/i.test(r.value)),'Rate register points medallion labour to man-hours default');
-ok(rates.some(r=>r.id==='accent-board-labour'&&/Man-hours/i.test(r.value)),'Rate register points accent labour to man-hours default');
+ok(CONFIRMED_RATES.some(r=>r.id==='medallion-labour'),'Rate register confirms medallion labour man-hours default');
+ok(CONFIRMED_RATES.some(r=>r.id==='accent-board-labour'),'Rate register confirms accent labour man-hours default');
 
 const panel=readFileSync(new URL('../src/features/deckcraft/designer/QuoteReviewPanel.tsx',import.meta.url),'utf8');
 ok(panel.includes("basis:'total'|'unit'|'crew'")&&panel.includes('Crew members × hours')&&panel.includes('quoteCostFromCrewHours'),'Quote Review exposes the crew-hours entry basis');

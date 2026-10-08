@@ -39,9 +39,9 @@ const borderStock=stairStock(d,buildDeckTakeoff(d)).find(r=>r.name.startsWith('S
 ok(borderStock.section.includes(voyage.colors[0].name)&&borderStock.section.includes(voyage.name),'Selected border product appears in its own material schedule');
 ok(borderStock.stockLengthIn===240&&borderStock.section.includes('availability pending'),'Manufacturer stock length never claims supplier confirmation');
 const estimate=calculateEstimate(d),frame=estimate.sections.find(s=>s.title==='Stair picture-frame detail');
-ok(!!frame?.quoteRequired&&frame.items[0].cost===null,'Unconfirmed detail stays a pending quote, never zero cost');
-ok(frame!.items[0].spec.includes('net adjustment')&&frame!.items[0].spec.includes('crediting'),'Existing assembly allowance is credited, not double charged');
-ok(estimate.quoteRequired.includes(frame!.items[0].name),'Pending detail reaches estimate completeness gate');
+ok(!!frame&&!frame.quoteRequired&&frame.total>0&&frame.items.every(i=>i.cost!==null),'2026-10 stair picture-frame detail is priced (mitre premium, not a pending quote)');
+ok(frame!.items.some(i=>/mitre|Credits the Stairs assembly allowance/i.test(i.spec)),'Existing assembly allowance is credited, not double charged');
+ok(!estimate.quoteRequired.some(q=>q.startsWith('Stair picture-frame')),'Priced detail leaves the quote list');
 const noFrame=calculateEstimate({...d,pictureFrameRows:0,pattern:'Straight'});ok(!noFrame.sections.some(s=>s.title==='Stair picture-frame detail'),'No fabricated frame quote for an unframed stair');
 // Saves from before the 2026-10 build rules (marked 'legacy' or unmarked) keep 9b2ee11's unframed treads on a framed deck: one tread
 // row in 9b's wording, no border row, no stair-frame detail section or quote line.

@@ -19,7 +19,7 @@ import {activeWrap} from '../src/features/deckcraft/lib/wrapGeometry';
 import {DECKING_CATALOGUE,RAILING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {boardFinishPlan,colourRef,partCollections} from '../src/features/deckcraft/boardFinishes';
 import {RAILING_COLOURS,UNCONFIRMED_RAILING_LINES,pruneDeckFinishes,railingColours,stairTreadKey} from '../src/features/deckcraft/deckPartFinishes';
-import {unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
+import {CONFIRMED_RATES,unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
 import {railingScreenHex} from '../src/features/deckcraft/railingScreenColours';
 import {STAIR_TREAD_COSTS,type BoardColour,type DeckData,type DeckFinishes,type HouseBlock} from '../src/features/deckcraft/types';
 import {designerSource} from './deck-designer-source';
@@ -168,7 +168,7 @@ for(const [label,patch] of houses)for(const deckType of ['Attached','Freestandin
   const expected=o.reduce((n,_,i)=>contact.isContactEdge(i)?n:n+edge(i),0),full=o.reduce((n,_,i)=>n+edge(i),0),rim=exposedRim(d,m);
   const rimIn=rim.reduce((n,r)=>n+Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z),0),row=finishes(e)?.items.find(i=>i.name==='Fascia · Dark Cocoa (TimberTech EDGE Prime+)');
   ok(Math.abs(rimIn-expected)<.1,`${label} (${deckType}): the exposed rim is the outline less the house contacts (${(rimIn/12).toFixed(2)} of ${(expected/12).toFixed(2)} ft)`);
-  ok(row&&row.cost!==null&&row.cost>0&&row.unit==='boards'&&e.quoteRequired.includes('Fascia fasteners and delivery (supplier quote)')&&!e.quoteRequired.includes('Fascia boards (supplier quote)'),`${label} (${deckType}): the fascia row is stock-priced from its DeckMart SKU; fasteners stay a supplier quote`);
+  ok(row&&row.cost!==null&&row.cost>0&&row.unit==='boards'&&finishes(e)!.items.some(i=>i.name==='Fascia fasteners'&&i.cost!==null)&&finishes(e)!.items.some(i=>i.name==='Fascia delivery'&&i.cost!==null)&&!e.quoteRequired.includes('Fascia boards (supplier quote)')&&!e.quoteRequired.includes('Fascia fasteners and delivery (supplier quote)'),`${label} (${deckType}): the fascia row is stock-priced from its DeckMart SKU; fasteners and delivery are priced allowances`);
   ok(rim.every(r=>contact.contacts.every(c=>along({a:{x:r.a.x,y:r.a.z},b:{x:r.b.x,y:r.b.z}},c)<.5)),`${label} (${deckType}): no fascia runs along a wall the house covers`);
   if(deckType==='Attached')ok(contact.contacts.length>0&&expected<full-1,`${label}: the house covers part of the attached deck's rim`);
   else ok(contact.contacts.length===0&&Math.abs(rimIn-full)<.1,`${label}: a freestanding deck has fascia all round`);
@@ -254,7 +254,7 @@ for(const system of RAILING_CATALOGUE){
   const d=base({pictureFrameRows:1,...railOf('dk_contemporary'),deckFinishes:{border:ESPRESSO,fascia:COCOA,treads:SALT,railingColor:'Bronze'}}),e=priced(d),described=describeDesign(d,e);
   const fact='Deck parts: border boards in Espresso (TimberTech PRO Legacy); fascia in Dark Cocoa (TimberTech EDGE Prime+); stair treads in Sea Salt Gray (TimberTech EDGE Prime+)';
   ok(described.facts.includes(fact)&&described.proposalFacts.includes(fact)&&described.summary.includes(fact),'The design facts, summary and proposal name each part\'s colour');
-  ok(described.priceLabel==='Priced portion only'&&e.sections.some(s=>s.title==='Deck-part finishes')&&e.quoteRequired.includes('Fascia fasteners and delivery (supplier quote)'),'With sourced fascia supply and a fastener quote, the price reads as the priced portion only; the proposal and PDF list the section');
+  ok(e.sections.some(s=>s.title==='Deck-part finishes'&&s.items.every(i=>i.cost!==null))&&e.quoteRequired.includes('Decking delivery (supplier quote)'),'With sourced fascia supply and priced fasteners, deck-part finishes are fully priced; decking delivery remains a supplier quote');
   const fields:SendDesignFields={name:'A',email:'a@example.com',phone:'7053008015',address:'Barrie',notes:'',offers:false,botField:'',timeline:'',budget:'',samples:true};
   const sent=buildDeckDesignSubmission(fields,{data:d,estimate:e,summary:described.summary,reviewItems:[],link:'https://goldenmaplelandscaping.ca/deck-designer#d',sentAt:new Date(0),consent:null});
   ok(sent.details.includes('Samples: please bring Coconut Husk and the finish colours: Espresso (TimberTech PRO Legacy), Dark Cocoa (TimberTech EDGE Prime+), Sea Salt Gray (TimberTech EDGE Prime+)'),'A sample request lists the part colours');
@@ -264,7 +264,7 @@ for(const system of RAILING_CATALOGUE){
   ok(buildDeckDesignSubmission(fields,{data:plain,estimate:price(plain),summary:'s',reviewItems:[],link:'l',sentAt:new Date(0),consent:null}).details.includes('Samples: please bring a Coconut Husk sample'),'Without part colours the sample request reads as before');
   ok(designFeatures(d).includes('deck_part_finishes')&&designFeatures(d).includes('deck_railing_colour')&&!designFeatures(base({...railOf('dk_contemporary'),deckFinishes:{railingColor:'Bronze'}})).includes('deck_part_finishes'),'The funnel counts part colours and a railing colour apart');
   const rates=unconfirmedRates();
-  ok(rates.some(r=>r.id==='fascia-boards'&&r.status==='estimate')&&rates.some(r=>r.id==='railing-colour'&&r.status==='owner-decision'),'The register identifies the sourced fascia benchmarks and outstanding railing colour premium');
+  ok(rates.some(r=>r.id==='fascia-boards'&&r.status==='estimate')&&CONFIRMED_RATES.some(r=>r.id==='railing-colour'),'The register identifies the sourced fascia benchmarks and confirms the railing colour decision');
 }
 
 // 10. Never $0: every row these finishes add or change is priced above zero or left blank for a quote.

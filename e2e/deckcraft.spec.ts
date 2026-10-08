@@ -930,18 +930,18 @@ test('lists what each change does to the price, tags quotes and never shows $0 f
   expect(problems).toEqual([]);
 });
 
-test('joins deck levels as built: the step stands on the lower level and the cladding is a builder quote',async({page})=>{
+test('joins deck levels as built: the step stands on the lower level and cladding is priced',async({page})=>{
   test.setTimeout(150_000);
   const shaderProblems:string[]=[];
   page.on('console',m=>{if(/Shader Error|WebGLProgram/.test(m.text()))shaderProblems.push(m.text().slice(0,300));});
   const problems=await openDesigner(page);
-  // Every stair's sides are boarded: a builder quote beside the stairs, never $0.
-  await withSchedule(page,async()=>{ await expect(quoteLine(page,'Stair and level cladding')).toHaveText('Builder quote Stair and level cladding'); });
+  // Every stair's sides are boarded: supply + finish allowances are priced (never $0, not a builder quote).
+  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Stair and level cladding')).toHaveText(/^Stair and level cladding\$[\d,]+ · allowance$/); });
   await openSection(page,'Deck shape & size');
   await page.getByLabel('Number of levels',{exact:true}).selectOption('2');
   // A second level adds its price (the levels meet, so no guard runs along the lower edge of the join).
   await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\+\$[\d,]+ Number of levels → 2/); });
-  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Stair and level cladding')).toHaveText(/^Stair and level cladding\$[\d,]+ \+ quote · allowance$/); });
+  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Stair and level cladding')).toHaveText(/^Stair and level cladding\$[\d,]+ · allowance$/); });
   await withSchedule(page,async()=>{ expect(await schedule(page).textContent()).not.toMatch(ZERO); });
   await viewTab(page,'3D');
   const canvas=viewer3d(page);

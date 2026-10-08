@@ -37,7 +37,7 @@ const cocoa=fasciaSupply('tt_prime_plus:Dark Cocoa',[{lengthIn:144,heightIn:10}]
 assert(cocoa.rate.sku==='TT12EDFDC'&&cocoa.boards===2,'Dark Cocoa uses its own DeckMart fascia SKU');close(cocoa.cost,2*153.09*1.35);
 assert(fasciaSupply('tt_harvest:Kona',[{lengthIn:144,heightIn:10}],1.35)===null,'Never invent a fascia price for an unsourced colour');
 const cladding=base.sections.find(s=>s.title==='Stair and level cladding')!;
-assert(cladding.total>0&&cladding.items.some(i=>i.cost===null)&&cladding.items.some(i=>i.cost!==null),'Known cladding supply is priced; fitting stays a builder quote');
+assert(cladding.total>0&&cladding.items.every(i=>i.cost!==null)&&cladding.items.some(i=>i.name==='Stair and level cladding labour'),'Known cladding supply and finish (labour/fasteners/delivery) are priced');
 close(CARR_PAVER_TRADE_2026['permacon-melville'].rate,5.22);
 close(carrPaverFreight2026(120),189);close(carrPaverFreight2026(800),650);close(carrPaverFreight2026(1400),700);
 console.log(`PRICING REVIEW OK: ${Object.keys(LIGHTING_TRADE_RATES).length} sourced supply rates; exact supply totals; builder quote retained; narrow, wide and full-width stair costs; retail/trade bases explicit.`);

@@ -14,7 +14,7 @@ import {
   priceFeatureLabourScope,
   validateFeatureLabour,
 } from '../src/features/deckcraft/featureLabour';
-import {unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
+import {CONFIRMED_RATES,unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
 
 import '../src/features/deckcraft/lib/inlayGeometryRuntime';
 
@@ -54,9 +54,9 @@ ok(accentEst.sections.find(s=>s.title.startsWith('Labour'))!.items.some(i=>i.nam
 ok(!accentEst.quoteRequired.some(q=>/Accent-colour board labour/i.test(q)),'Accent labour is not an outstanding quote by default');
 
 const rates=unconfirmedRates();
-ok(rates.some(r=>r.id==='medallion-labour'&&/Man-hours/i.test(r.value)),'Rate register describes medallion man-hours default');
-ok(rates.some(r=>r.id==='accent-board-labour'&&/Man-hours/i.test(r.value)),'Rate register describes accent man-hours default');
-ok(rates.some(r=>r.id==='custom-inlay-labour'&&/Man-hours/i.test(r.value)),'Rate register describes custom-inlay man-hours default');
+ok(CONFIRMED_RATES.some(r=>r.id==='medallion-labour'),'Rate register confirms medallion man-hours default');
+ok(CONFIRMED_RATES.some(r=>r.id==='accent-board-labour'),'Rate register confirms accent man-hours default');
+ok(CONFIRMED_RATES.some(r=>r.id==='custom-inlay-labour'),'Rate register confirms custom-inlay man-hours default');
 
 const panel=readFileSync(new URL('../src/features/deckcraft/designer/OwnerCostEditor.tsx',import.meta.url),'utf8');
 ok(panel.includes('Inlays &amp; special features')&&panel.includes('Save as my defaults')&&panel.includes('Load my defaults'),'Owner editor exposes per-user feature labour settings');

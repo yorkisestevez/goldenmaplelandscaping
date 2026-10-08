@@ -3,7 +3,7 @@ import {DEFAULT_DECK,DECK_SETTINGS} from '../src/features/deckcraft/defaults';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {G_TAPE_RATE,HOME_DEPOT_CONNECTOR_RATES,HOME_DEPOT_POST_RATES} from '../src/features/deckcraft/connectorRates';
 import {PRICED_CONNECTOR_SECTION_NAMES} from '../src/features/deckcraft/schedule';
-import {unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
+import {CONFIRMED_RATES} from '../src/features/deckcraft/rateConfidence';
 
 let checks=0;const ok=(v:unknown,m:string)=>{assert(v,m);checks++;};
 const near=(a:number,b:number,m:string)=>{assert(Math.abs(a-b)<.02,m);checks++;};
@@ -39,9 +39,9 @@ ok(PRICED_CONNECTOR_SECTION_NAMES.has('Skewed joist and hip hangers'),'Skewed ha
 ok(PRICED_CONNECTOR_SECTION_NAMES.has('G-Tape framing protection'),'G-Tape is in the priced connector set');
 ok(PRICED_CONNECTOR_SECTION_NAMES.has('Support post timber'),'Support post timber is in the priced connector set');
 ok(e.connectorSchedule.some(r=>r.name==='Splice fasteners'?r.rate===null:true)||!e.connectorSchedule.some(r=>r.name==='Splice fasteners'),'Splice fasteners stay unpriced when present');
-ok(unconfirmedRates().some(r=>r.id==='hd-connectors'),'rateConfidence lists the HD connector pack');
-ok(unconfirmedRates().some(r=>r.id==='hd-posts'),'rateConfidence lists HD support posts');
-ok(unconfirmedRates().some(r=>r.id==='g-tape'),'rateConfidence lists G-Tape framing protection');
+ok(CONFIRMED_RATES.some(r=>r.id==='hd-connectors'),'rateConfidence confirms the HD connector pack');
+ok(CONFIRMED_RATES.some(r=>r.id==='hd-posts'),'rateConfidence confirms HD support posts');
+ok(CONFIRMED_RATES.some(r=>r.id==='g-tape'),'rateConfidence confirms G-Tape framing protection');
 
 const withStairs=calculateEstimate({...structuredClone(DEFAULT_DECK),height:72,stairFlights:1,stairWidth:48,stairType:'Straight'},DECK_SETTINGS);
 const stringer=withStairs.connectorSchedule.find(r=>r.name==='Stringer connectors');

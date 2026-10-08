@@ -14,12 +14,13 @@ import {deckBoardStock,type ProductStock} from './stockPlan';
 import {productStock} from './deckingStock';
 import {usesCurrentBuildRules} from './buildRules';
 import {hasBoardLayout,layoutBoardStock,layoutAutomaticBreakerLf,boardLayoutAllowance,BOARD_LAYOUT_POLICY,BOARD_LAYOUT_SUPPORT_QUOTE} from './boardLayoutPricing';
-import {boardFinishPlan,colourName,darkSlateBorder,parseColourRef,type StockGroup} from './boardFinishes';
+import {boardFinishPlan,colourName,darkSlateBorder,deckColourRef,parseColourRef,type StockGroup} from './boardFinishes';
 import {DECK_PARTS,partRef,railingFinish,stairTreadKey} from './deckPartFinishes';
 import {inlayCrewDays,PATTERN_LABOUR} from './lib/inlayGeometry';
 import {SKIRTING_STYLE_NAMES,skirtingPlan} from './skirting';
 import {pricedSkirtingRows} from './skirtingPricing';
 import {claddingPlan} from './stairCladding';
+import {pricedCladdingFinish,pricedFasciaFinish,pricedStairFrameDetail} from './claddingPricing';
 import {STAIR_ALLOWANCE_WIDTH_IN,DECKING_RATE_SOURCES,deckingRateWidth} from './supplierRates';
 import {fasciaSupply} from './fasciaPricing';
 import {featureLabourIsQuote,priceFeatureLabourScope} from './featureLabour';
@@ -784,8 +785,11 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     const items:EstimateResult['sections'][number]['items']=borderRows.map(r=>({name:r.label,spec:`${r.group.boards.length} border pieces, ${r.stock.spareBoards} spare stock boards${r.cost===null?'; supplier quote required':''}`,qty:r.stock.orderedBoards,unit:'boards',cost:r.cost}));
     if(fascia&&fasciaLf>0){
       const supply=fasciaSupply(fascia,exposedRim(data,model).map(r=>({lengthIn:Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z),heightIn:10})),markupMult);
-      items.push({name:`Fascia · ${colourName(fascia)}`,spec:supply?`DeckMart retail supply benchmark: ${supply.boards} × 12 ft fascia boards with 10% order allowance; fitting is in priced labour. Builder confirms joints; fascia fasteners and delivery need a quote.`:'Over the rim the house does not cover. Supplier quote required for this fascia; fitting is in the labour.',qty:supply?supply.boards:Math.ceil(fasciaLf*10)/10,unit:supply?'boards':'lf',cost:supply?supply.cost:null});
-      if(supply){items.push({name:'Fascia fasteners and delivery (supplier quote)',spec:'Supplier quote required: colour-matched fastener packs and delivery are not included in the fascia supply benchmark.',qty:1,unit:'allowance',cost:null});quoteRequired.push('Fascia fasteners and delivery (supplier quote)');}
+      items.push({name:`Fascia · ${colourName(fascia)}`,spec:supply?`DeckMart retail supply benchmark: ${supply.boards} × 12 ft fascia boards with 10% order allowance; fitting is in priced labour. Builder confirms joints.`:'Over the rim the house does not cover. Supplier quote required for this fascia; fitting is in the labour.',qty:supply?supply.boards:Math.ceil(fasciaLf*10)/10,unit:supply?'boards':'lf',cost:supply?supply.cost:null});
+      if(supply){
+        if(usesCurrentBuildRules(data))items.push(...pricedFasciaFinish(supply.boards,markupMult));
+        else{items.push({name:'Fascia fasteners and delivery (supplier quote)',spec:'Supplier quote required: colour-matched fastener packs and delivery are not included in the fascia supply benchmark.',qty:1,unit:'allowance',cost:null});quoteRequired.push('Fascia fasteners and delivery (supplier quote)');}
+      }
     }
     if(items.length){
       sections.push({title:'Deck-part finishes',icon:'🎨',description:'Deck parts in their own real product colour. Colours vary by screen; confirm with samples.',quoteRequired:items.some(i=>i.cost===null)||undefined,total:items.reduce((n,i)=>n+(i.cost??0),0),items});
@@ -814,18 +818,24 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     if(rows.length){const total=rows.reduce((n,r)=>n+(r.cost??0),0);sections.push({title:'Deck skirting',icon:'🧱',total,description:`${SKIRTING_STYLE_NAMES[skirting.style]} under the deck, priced from the skirting rate table (face supply, backing, access panels and install labour).`,items:rows});}
     flags.push(...skirting.notes);
   }
-  // Stair sides, step ends and the faces between levels (stairCladding.ts): fascia boards the price book has no rate for,
-  // so they are listed for a builder quote, never priced or $0 (owner decision 2026-09-25).
+  // Stair sides, step ends and level drops (stairCladding.ts). 2026-10: DeckMart fascia supply + cladding finish rates.
+  // Legacy / unsourced fascia colour: builder quote (owner 2026-09-25, finish pass 2026-10-08).
   const cladding=claddingPlan(data,model),claddingSqft=cladding.sqft['stair-side']+cladding.sqft['step-end']+cladding.sqft['level-drop'];
   if(claddingSqft>=.1){
     const fasciaColour=partRef(data,'fascia'),parts=[['stair-side','stair sides'],['step-end','step ends'],['level-drop','faces between levels']] as const;
     const words=parts.filter(([k])=>cladding.sqft[k]>=.05).map(([k,w])=>`${w} ${Math.ceil(cladding.sqft[k]*10)/10} sq ft`).join(', ');
     const claddingColour=fasciaColour??`${deckingMaterial}:${data.deckingColor??selectedMaterial.colors[0]?.name}`;
     const supply=fasciaSupply(claddingColour,cladding.slabs.map(s=>({lengthIn:Math.hypot(s.b.x-s.a.x,s.b.y-s.a.y),heightIn:Math.max(s.topA-s.bottomA,s.topB-s.bottomB)})),markupMult);
-    sections.push({title:'Stair and level cladding',icon:'🪜',quoteRequired:true,total:supply?.cost??0,description:supply?'Stock-priced fascia supply benchmark. Installation, fasteners and delivery require a builder quote. Tall and triangular faces allow full-width rectangular blanks; the builder confirms cut layout and joints.':'Fascia boards over stair stringers, step ends and level drops require a builder quote for the selected product.',
-      items:[...(supply?[{name:'Stair and level cladding supply',spec:`DeckMart retail benchmark, ${supply.rate.sku}; ${supply.boards} × 12 ft fascia boards including 10% order allowance for ${words}. Confirm availability and cut layout.`,qty:supply.boards,unit:'boards',cost:supply.cost}]:[]),
-        {name:'Stair and level cladding',spec:`Builder quote required: ${supply?'installation, fasteners and delivery (fascia supply is priced separately)':'fascia boards supplied and fitted'}${fasciaColour?` in ${colourName(fasciaColour)}`:''} over the ${words}.`,qty:Math.ceil(claddingSqft*10)/10,unit:'sqft',cost:null}]});
-    quoteRequired.push('Stair and level cladding (builder quote)');
+    const finish=usesCurrentBuildRules(data)&&supply?pricedCladdingFinish(claddingSqft,supply.boards,markupMult):[];
+    if(finish.length){
+      const items=[...(supply?[{name:'Stair and level cladding supply',spec:`DeckMart retail benchmark, ${supply.rate.sku}; ${supply.boards} × 12 ft fascia boards including 10% order allowance for ${words}. Confirm availability and cut layout.`,qty:supply.boards,unit:'boards',cost:supply.cost}]:[]),...finish];
+      sections.push({title:'Stair and level cladding',icon:'🪜',total:items.reduce((n,i)=>n+(i.cost??0),0),description:`Fascia cladding over ${words}: stock-priced supply plus Barrie install, fastener and delivery allowances.`,items});
+    }else{
+      sections.push({title:'Stair and level cladding',icon:'🪜',quoteRequired:true,total:supply?.cost??0,description:supply?'Stock-priced fascia supply benchmark. Installation, fasteners and delivery require a builder quote. Tall and triangular faces allow full-width rectangular blanks; the builder confirms cut layout and joints.':'Fascia boards over stair stringers, step ends and level drops require a builder quote for the selected product.',
+        items:[...(supply?[{name:'Stair and level cladding supply',spec:`DeckMart retail benchmark, ${supply.rate.sku}; ${supply.boards} × 12 ft fascia boards including 10% order allowance for ${words}. Confirm availability and cut layout.`,qty:supply.boards,unit:'boards',cost:supply.cost}]:[]),
+          {name:'Stair and level cladding',spec:`Builder quote required: ${supply?'installation, fasteners and delivery (fascia supply is priced separately)':'fascia boards supplied and fitted'}${fasciaColour?` in ${colourName(fasciaColour)}`:''} over the ${words}.`,qty:Math.ceil(claddingSqft*10)/10,unit:'sqft',cost:null}]});
+      quoteRequired.push('Stair and level cladding (builder quote)');
+    }
   }
   flags.push(...cladding.notes);
   flags.push(...yardTakeoff.warnings);
@@ -835,9 +845,21 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   }
   const stairFrame=stairSchedule.find(r=>r.name.startsWith('Stair picture-frame'));
   if(stairFrame){
-    const label='Stair picture-frame detail (builder / supplier quote)';
-    quoteRequired.push(label);
-    sections.push({title:'Stair picture-frame detail',icon:'🪜',quoteRequired:true,total:0,items:[{name:label,spec:`${stairFrame.section}. ${stairFrame.installedLf.toFixed(1)} lf installed from ${stairFrame.orderedPieces} stock boards (${stairFrame.orderedLf.toFixed(1)} lf ordered). The Stairs assembly allowance already includes generic tread supply and installation. Quote only the net adjustment for this selected border product, mitre cutting, backing, fastening and delivery, crediting that allowance; no duplicate full supply charge. Supplier confirms stock availability and builder confirms supported joints.`,qty:stairFrame.orderedPieces,unit:'boards',cost:null}]});
+    const borderParsed=parseColourRef(partRef(data,'border')??deckColourRef(data));
+    const borderRate=borderParsed?.material.costPerSqft??null;
+    const sameCollection=!borderParsed||borderParsed.material.id===deckingMaterial;
+    // Unsourced border collection (null $/sqft) stays a quote; same-collection boards stay credited in the stair allowance.
+    const canPrice=usesCurrentBuildRules(data)&&(sameCollection||borderRate!==null);
+    if(canPrice){
+      const widthIn=customBoardLayout?BOARD_LAYOUT_POLICY.stockWidthIn:boardWidthIn;
+      const borderSupplyCad=sameCollection||borderRate===null?null:stairFrame.orderedLf*borderRate*(widthIn/12);
+      const items=pricedStairFrameDetail({installedLf:stairFrame.installedLf,orderedLf:stairFrame.orderedLf,orderedPieces:stairFrame.orderedPieces,section:stairFrame.section,markup:markupMult,borderSupplyCad});
+      sections.push({title:'Stair picture-frame detail',icon:'🪜',total:items.reduce((n,i)=>n+i.cost,0),description:'Net premium for mitred stair picture-frame border over the Stairs assembly allowance; different-collection border boards are supplied separately.',items});
+    }else{
+      const label='Stair picture-frame detail (builder / supplier quote)';
+      quoteRequired.push(label);
+      sections.push({title:'Stair picture-frame detail',icon:'🪜',quoteRequired:true,total:0,items:[{name:label,spec:`${stairFrame.section}. ${stairFrame.installedLf.toFixed(1)} lf installed from ${stairFrame.orderedPieces} stock boards (${stairFrame.orderedLf.toFixed(1)} lf ordered). The Stairs assembly allowance already includes generic tread supply and installation. Quote only the net adjustment for this selected border product, mitre cutting, backing, fastening and delivery, crediting that allowance; no duplicate full supply charge. Supplier confirms stock availability and builder confirms supported joints.`,qty:stairFrame.orderedPieces,unit:'boards',cost:null}]});
+    }
   }
   const borderLighting=borderLightingPlan(data,model);
   if(borderLighting.selected)flags.push(...borderLighting.warnings);

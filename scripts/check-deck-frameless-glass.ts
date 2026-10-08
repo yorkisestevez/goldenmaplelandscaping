@@ -9,7 +9,7 @@ import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcr
 import {describeDesign} from '../src/features/deckcraft/designFacts';
 import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
 import {syncAutoLighting} from '../src/features/deckcraft/lightingSystem';
-import {unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
+import {CONFIRMED_RATES} from '../src/features/deckcraft/rateConfidence';
 import {proposalFinishes} from '../src/features/deckcraft/proposalModel';
 import {finishedFasciaOffset} from '../src/features/deckcraft/lib/finishedFootprint';
 import {RAILING_STYLES,optionGroups} from '../src/features/deckcraft/designer/optionGroups';
@@ -158,7 +158,7 @@ for(const [label,patch] of designs)for(const glassMount of GLASS_MOUNTS){
   ok(designFeatures(d).includes('deck_frameless_glass'),'Analytics counts frameless glass');
   ok(RAILING_STYLES.indexOf('Frameless Glass')===RAILING_STYLES.indexOf('Glass Panels')+1,'Frameless glass follows Glass Panels in the railing list');
   ok(optionGroups('stairs',d).find(g=>g.id==='railingType')!.choices.some(c=>c.value==='Frameless Glass'),'The railing option group offers it (so its price effect shows)');
-  ok(unconfirmedRates().some(r=>r.id==='frameless-glass'&&r.status==='owner-decision'),'The rate list records the frameless glass decision');
+  ok(CONFIRMED_RATES.some(r=>r.id==='frameless-glass'),'The rate list confirms the frameless glass always-quote decision');
   const stairs=read('src/features/deckcraft/designer/steps/StairsStep.tsx');
   ok(stairs.includes('aria-label="Glass railing mount"')&&stairs.includes('aria-label="Glass hardware finish"'),'The Stairs section offers the mount and finish');
   ok(/"check:deck":[^\n]*check-deck-frameless-glass\.ts/.test(read('package.json')),'This check runs in check:deck');
