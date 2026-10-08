@@ -16,12 +16,23 @@
  * relevant ID is missing.
  *
  * Clarity and the Meta Pixel wait for the first interaction or ~3s, and only
- * load after advertising/analytics consent. gtag stays in the document head
- * (advanced Consent Mode) so Ads scanners still see the tag. Lead and call
- * events are never gated here — Consent Mode decides storage.
+ * load after advertising/analytics consent. The document head only sets
+ * Consent Mode. gtag.js loads on the first input or browser idle, whichever
+ * comes first, and always within ~2.5s so a visitor who leaves without
+ * touching the page is still counted. Lead and call events are never gated
+ * here — Consent Mode decides storage. A conversion that happens before the
+ * script arrives is queued on dataLayer and the script is requested then.
+ *
+ * GA4 is configured with send_page_view:false and one explicit page_view per
+ * page. The Ads container sends one page_view on config and ignores
+ * send_page_view:false, so the first view does not also send an Ads event.
+ * Later views send one explicit page_view to each tag. The container's
+ * history listener would add a second hit (Ads with an empty title, and a
+ * GA4 hit that keeps the first page's title), so that listener is removed.
  */
 
 import { pushPage, pushClick, getBehaviorFields } from './behavior';
+import { onInteractOrSoon } from './defer';
 import { shouldFireLeadConversion, type LeadFormFields } from './leadQualification';
 
 declare global {
@@ -82,6 +93,9 @@ export function readStoredConsent(): ConsentChoice | null {
 }
 
 let initialized = false;
+let googleTagLoaded = false;
+let googleTagLoading = false;
+let queuedViews: { path: string; title?: string }[] = [];
 let metaArmed = false;
 let pixelScriptRequested = false;
 let clarityScriptRequested = false;
@@ -166,30 +180,130 @@ export function applyConsent(choice: ConsentChoice): void {
   if (choice === 'granted') scheduleDeferredTrackers();
 }
 
-/** Boot gtag.js companions. Call once on app mount. Idempotent. */
-export function initAnalytics(): void {
-  if (!isBrowser || initialized) return;
-  initialized = true;
-
-  // The document head already loads gtag. This path covers a head-less boot.
-  if ((GA4_ID || GOOGLE_ADS_ID) && typeof window.gtag !== 'function') {
-    const primaryId = GA4_ID || GOOGLE_ADS_ID;
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${primaryId}`;
-    document.head.appendChild(script);
-
-    window.dataLayer = window.dataLayer || [];
+function ensureGtagStub(): boolean {
+  const hadStub = typeof window.gtag === 'function';
+  window.dataLayer = window.dataLayer || [];
+  if (!hadStub) {
     window.gtag = function gtag() {
       // eslint-disable-next-line prefer-rest-params
       window.dataLayer!.push(arguments as unknown as unknown[]);
     } as Window['gtag'];
-    window.gtag('consent', 'default', { ...consentUpdate('denied'), wait_for_update: 500 });
-    if (readStoredConsent() === 'granted') window.gtag('consent', 'update', consentUpdate('granted'));
-    window.gtag('js', new Date());
-    if (GA4_ID) window.gtag('config', GA4_ID, { send_page_view: false });
-    if (GOOGLE_ADS_ID) window.gtag('config', GOOGLE_ADS_ID, { send_page_view: false });
   }
+  return hadStub;
+}
+
+function pagePayload(path: string, title?: string) {
+  const page_path = path || `${window.location.pathname}${window.location.search}`;
+  const page_location = new URL(page_path, window.location.origin).href;
+  return {
+    page_path,
+    page_title: title || document.title,
+    page_location,
+  };
+}
+
+/**
+ * The Google tag wraps history.pushState and then sends its own page_view on
+ * every client navigation. Dropping the dataLayer event after that wrap still
+ * lets the hit out, because the tag processes the event inside its own push.
+ * Restoring the native history methods, and keeping a filter outside the
+ * tag's push, stops that second hit. Explicit page_view events do not travel
+ * through this history event, so they still send.
+ */
+function installGoogleHistoryGuard(): void {
+  const nativePush = History.prototype.pushState;
+  const nativeReplace = History.prototype.replaceState;
+  const restoreHistory = () => {
+    if (history.pushState !== nativePush) history.pushState = nativePush;
+    if (history.replaceState !== nativeReplace) history.replaceState = nativeReplace;
+  };
+  const keepFilterOuter = () => {
+    const layer = window.dataLayer;
+    if (!layer) return;
+    const current = layer.push as typeof layer.push & { __gmHistoryFilter?: boolean };
+    if (current.__gmHistoryFilter) return;
+    const inner = current.bind(layer);
+    const wrapped = function push(...args: unknown[]) {
+      const first = args[0] as { event?: unknown } | undefined;
+      if (first && typeof first === 'object' && typeof first.event === 'string' && first.event.includes('history')) {
+        return 0;
+      }
+      return inner(...(args as Parameters<typeof inner>));
+    } as typeof layer.push & { __gmHistoryFilter?: boolean };
+    wrapped.__gmHistoryFilter = true;
+    layer.push = wrapped;
+  };
+  restoreHistory();
+  keepFilterOuter();
+  const id = window.setInterval(() => {
+    restoreHistory();
+    keepFilterOuter();
+  }, 25);
+  window.setTimeout(() => window.clearInterval(id), 15000);
+}
+
+/** One page_view per destination. The first Ads view is the config hit, not this. */
+function emitPageView(path: string, title: string | undefined, includeAds: boolean): void {
+  const payload = pagePayload(path, title);
+  if (GA4_ID) window.gtag?.('event', 'page_view', { ...payload, send_to: GA4_ID });
+  if (includeAds && GOOGLE_ADS_ID) window.gtag?.('event', 'page_view', { ...payload, send_to: GOOGLE_ADS_ID });
+  window.fbq?.('track', 'PageView');
+  pushPage(path, payload.page_title);
+  if (isDev) console.log('[analytics] pageview', path, payload.page_title);
+}
+
+/**
+ * Load gtag.js once. Consent default is already queued by the document head
+ * when that ran; a head-less boot sets it here before any config or event.
+ * Callers that cannot wait for idle (a lead or a call click) invoke this
+ * directly; commands issued after it stay on dataLayer until the script runs.
+ */
+function loadGoogleTag(): void {
+  if (!isBrowser || googleTagLoading || googleTagLoaded) return;
+  if (!GA4_ID && !GOOGLE_ADS_ID) {
+    googleTagLoaded = true;
+    return;
+  }
+  googleTagLoading = true;
+  installGoogleHistoryGuard();
+  const hadStub = ensureGtagStub();
+  const primaryId = GA4_ID || GOOGLE_ADS_ID;
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${primaryId}`;
+  document.head.appendChild(script);
+  if (!hadStub) {
+    window.gtag?.('consent', 'default', { ...consentUpdate('denied'), wait_for_update: 500 });
+  }
+  if (readStoredConsent() === 'granted') window.gtag?.('consent', 'update', consentUpdate('granted'));
+  window.gtag?.('js', new Date());
+  const views = queuedViews.splice(0);
+  const current = views.length
+    ? views[views.length - 1]
+    : { path: `${window.location.pathname}${window.location.search}`, title: document.title };
+  const currentPayload = pagePayload(current.path, current.title);
+  // Ads sends one page_view for this config even with send_page_view:false.
+  // Passing the title and location here is what puts them on that hit.
+  if (GA4_ID) window.gtag?.('config', GA4_ID, { send_page_view: false, ...currentPayload });
+  if (GOOGLE_ADS_ID) window.gtag?.('config', GOOGLE_ADS_ID, { send_page_view: false, ...currentPayload });
+  googleTagLoaded = true;
+  // Config already sent the Ads page_view for the current URL. GA4 does not,
+  // so every queued route still needs its own GA4 event. page_location on
+  // that event is kept even if the address bar has since moved. An explicit
+  // Ads event here would use the live URL and double the current page.
+  const pending = views.length ? views : [current];
+  pending.forEach((view) => {
+    emitPageView(view.path, view.title, false);
+  });
+}
+
+/** Boot deferred trackers. Call once on app mount. Idempotent. */
+export function initAnalytics(): void {
+  if (!isBrowser || initialized) return;
+  initialized = true;
+
+  if (!GA4_ID && !GOOGLE_ADS_ID) googleTagLoaded = true;
+  else onInteractOrSoon(loadGoogleTag, 2500);
 
   if (readStoredConsent() === 'granted') scheduleDeferredTrackers();
 
@@ -204,19 +318,15 @@ export function initAnalytics(): void {
   }
 }
 
-/** One page_view per destination. send_to stops the event reaching every tag. */
+/** One GA4 page_view and, after the first page, one Ads page_view. */
 export function trackPageView(path: string, title?: string): void {
   if (!isBrowser) return;
-  const payload = {
-    page_path: path,
-    page_title: title || document.title,
-    page_location: window.location.href,
-  };
-  if (GA4_ID) window.gtag?.('event', 'page_view', { ...payload, send_to: GA4_ID });
-  if (GOOGLE_ADS_ID) window.gtag?.('event', 'page_view', { ...payload, send_to: GOOGLE_ADS_ID });
-  window.fbq?.('track', 'PageView');
-  pushPage(path, title);
-  if (isDev) console.log('[analytics] pageview', path);
+  const snapshot = title || document.title;
+  if (!googleTagLoaded) {
+    queuedViews.push({ path, title: snapshot });
+    return;
+  }
+  emitPageView(path, snapshot, true);
 }
 
 /**
@@ -252,6 +362,10 @@ export function trackLead(
     if (isDev) console.log('[analytics] trackLead skipped (unqualified)', { formName, eventId });
     return;
   }
+
+  // Queue on the stub if the script has not arrived, and request it now so a
+  // submit during the idle wait is not dropped.
+  loadGoogleTag();
 
   if (GA4_ID) {
     window.gtag?.('event', 'generate_lead', {
@@ -302,6 +416,7 @@ export function trackLead(
  */
 export function trackCall(label = 'phone_call'): void {
   if (!isBrowser) return;
+  loadGoogleTag();
   if (GA4_ID) {
     window.gtag?.('event', 'cta_click', { event_label: label });
   }

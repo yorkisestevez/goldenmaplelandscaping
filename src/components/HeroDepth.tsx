@@ -21,6 +21,7 @@ export default function HeroDepth() {
           href={HERO_DEPTH.flat.src}
           imageSrcSet={HERO_DEPTH.flat.srcSet}
           imageSizes={SIZES}
+          media="(min-width: 1024px)"
           fetchPriority="high"
         />
       </Helmet>
@@ -56,9 +57,9 @@ export default function HeroDepth() {
                 alt={HERO_DEPTH.alt}
                 width={HERO_DEPTH.width}
                 height={HERO_DEPTH.height}
-                loading="eager"
+                loading="lazy"
                 decoding="async"
-                fetchPriority="high"
+                fetchPriority="low"
                 className="home-hero-layer home-hero-flat"
               />
             </div>

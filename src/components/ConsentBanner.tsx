@@ -12,13 +12,17 @@ export function ConsentBanner() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    setOpen(readStoredConsent() === null);
+    const visible = readStoredConsent() === null;
+    setOpen(visible);
+    document.documentElement.classList.toggle('gm-consent-open', visible);
+    return () => document.documentElement.classList.remove('gm-consent-open');
   }, []);
 
   if (!open) return null;
 
   const choose = (choice: ConsentChoice) => {
     applyConsent(choice);
+    document.documentElement.classList.remove('gm-consent-open');
     setOpen(false);
   };
 
@@ -26,11 +30,11 @@ export function ConsentBanner() {
     <div
       className="gm-consent"
       role="dialog"
-      aria-label="Cookie choices"
+      aria-labelledby="gm-consent-title"
     >
-      <p>
-        We use cookies to measure visits and ads. Accept to allow analytics and advertising cookies, or decline to leave them off.{' '}
-        <Link to="/privacy">Privacy policy</Link>
+      <p id="gm-consent-title">
+        Cookies measure visits and ads.{' '}
+        <Link to="/privacy">Privacy</Link>
       </p>
       <div className="gm-consent-actions">
         <button type="button" className="gm-consent-decline" onClick={() => choose('denied')}>

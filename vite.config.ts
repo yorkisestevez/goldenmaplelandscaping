@@ -6,7 +6,7 @@ import {clipperPrivateMinification} from './buildTools/clipperPrivateMinificatio
 import {trailingSlashLinks} from './buildTools/trailingSlashLinks';
 
 export default defineConfig({
-  build:{minify:'terser',terserOptions:{safari10:false,compress:{passes:3}}},
+  build:{minify:'terser',terserOptions:{safari10:false,compress:{passes:3}},modulePreload:false},
   worker:{format:'es',plugins:()=>[clipperPrivateMinification()],rollupOptions:{output:{manualChunks(id){
     if(id.includes('/node_modules/clipper-lib/'))return 'geometry-clipping';
   }}}},

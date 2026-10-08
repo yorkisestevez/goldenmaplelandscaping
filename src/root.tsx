@@ -16,6 +16,7 @@ import {
 import './index.css';
 import SiteChrome from './components/Layout';
 import { initAnalytics, trackPageView } from './utils/analytics';
+import { onInteractOrIdle } from './utils/defer';
 import { initAttributionCapture } from './utils/utmCapture';
 import { initBehaviorCapture } from './utils/behavior';
 import { siteGraph } from './utils/schema';
@@ -43,10 +44,10 @@ export function Layout({ children }: { children: ReactNode }) {
         <link rel="manifest" href="/site.webmanifest" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* media=print keeps the stylesheet off the first-paint critical path.
-            A script that closes its own tag to inject this link does not match
-            what React hydrates, and the deck designer tests treat that as a
-            page error. App flips media to all after hydration. */}
+        {/* media=print keeps the stylesheet off the first paint. The hero copy
+            uses the system stack until App flips this after input or idle.
+            display=swap still applies the face when it arrives. A script that
+            injects a second link does not match what React hydrates. */}
         <link
           id="gm-fonts"
           rel="stylesheet"
@@ -61,14 +62,13 @@ export function Layout({ children }: { children: ReactNode }) {
         </noscript>
         <Meta />
         <Links />
-        {/* Static Google tag so Ads Goals scanners see AW-10839158941 without waiting for JS hydrate.
-            Consent defaults to denied, then upgrades when a stored choice is granted, before config.
-            Both tags use send_page_view:false so the SPA sends one page_view per destination. */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-1BRTV91W3Z" />
+        {/* Consent Mode before any Google tag. gtag.js for G-1BRTV91W3Z and
+            AW-10839158941 is not in this head: it loads on the first input or
+            browser idle, within about 2.5s. The ids stay in this HTML for tag scanners. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});try{if(localStorage.getItem('gm-consent')==='granted'){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}gtag('js',new Date());gtag('config','G-1BRTV91W3Z',{send_page_view:false});gtag('config','AW-10839158941',{send_page_view:false});",
+              "window.dataLayer=window.dataLayer||[];window.gtag=function gtag(){dataLayer.push(arguments);};gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});try{if(localStorage.getItem('gm-consent')==='granted'){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}window.__gmGoogleTags={ga4:'G-1BRTV91W3Z',ads:'AW-10839158941'};",
           }}
         />
         <script
@@ -90,11 +90,13 @@ export default function App() {
 
   // Client-only analytics + attribution init (was in App.tsx).
   useEffect(() => {
-    const fonts = document.getElementById('gm-fonts');
-    if (fonts instanceof HTMLLinkElement) fonts.media = 'all';
     initAttributionCapture();
     initBehaviorCapture();
     initAnalytics();
+    return onInteractOrIdle(() => {
+      const fonts = document.getElementById('gm-fonts');
+      if (fonts instanceof HTMLLinkElement) fonts.media = 'all';
+    }, 8000);
   }, []);
 
   // GA4 + Meta Pixel page_view + scroll-to-top on route change.
