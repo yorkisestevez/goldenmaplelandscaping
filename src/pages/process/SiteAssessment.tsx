@@ -9,8 +9,8 @@ export default function SiteAssessment() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Landscape Site Analysis Barrie | Engineering & Assessment | Golden Maple"
-        description="The Golden Maple site analysis goes beyond measurements. We evaluate soil, drainage, and structural integrity for your Simcoe County landscape project to ensure your investment lasts."
+        title="Landscape Site Visit Barrie | Soil, Drainage & Access | Golden Maple"
+        description="A Golden Maple site visit records soil, drainage, access, and elevations for a Barrie or Simcoe County hardscape before the written scope is issued."
         canonical="https://goldenmaplelandscaping.ca/process/site-assessment/"
       />
 
@@ -27,11 +27,14 @@ export default function SiteAssessment() {
                 Phase Two: Assessment
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.1] mb-12">
-                Engineering <br />
-                <span className="italic text-brand-gold-dark">Precision.</span>
+                The site, <br />
+                <span className="italic text-brand-gold-dark">measured.</span>
               </h1>
-              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
-                Before a single 3D rendering is created, we must first understand the literal foundation of your project. We look for the technical details that others ignore—soil composition, water runoff patterns, and existing structural elevations.
+              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-8 font-light">
+                Before a drawing, we walk the property. The notes from that visit are what the written scope is built from.
+              </p>
+              <p className="font-sans text-base text-brand-muted leading-relaxed mb-16 font-light">
+                On a visit we record how water leaves the house, where the clay is soft, how equipment gets in, and the elevations that set a patio, wall, or deck. Those notes become the excavation and drainage lines in the written scope. A visit is booked after the project form, not from this page alone.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>

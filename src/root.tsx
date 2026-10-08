@@ -80,11 +80,10 @@ export default function App() {
     trackPageView(location.pathname + location.search);
   }, [location.pathname, location.search]);
 
-  // The cost estimator runs as a full-screen app: its page ships its own
-  // minimal top bar, and the global navbar/footer/chat would fight the
-  // wizard's sticky bars for attention (Layout already hid the mobile dock
-  // there — this completes that thought).
-  const bareApp = location.pathname.startsWith('/cost-estimator') || location.pathname.startsWith('/deck-designer');
+  // The deck designer stays chrome-less. The cost estimator uses the site
+  // header so a visitor can reach services, reviews, and contact without
+  // leaving the estimate. Its own sticky bars still sit above the page footer.
+  const bareApp = location.pathname.startsWith('/deck-designer');
 
   return (
     <HelmetProvider>

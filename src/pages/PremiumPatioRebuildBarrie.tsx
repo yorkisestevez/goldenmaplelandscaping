@@ -2,8 +2,6 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Check, AlertTriangle } from 'lucide-react';
 import SEO from '../components/SEO';
 import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
-import { BUSINESS, publicClaimCopy } from '../data/business';
-
 const rebuildTriggers = ['Sinking or rocking pavers', 'Water pooling near foundation', 'Weeds/joint failure every season', 'Uneven steps or trip hazards', 'Old concrete/pavers to remove', 'You want to discuss a rebuild plan'];
 const ranges = [
   { range: '$25K–$45K', title: 'Clean Patio Rebuild', detail: 'Old surface removal, excavation, open-graded base, pavers, edge restraint, polymeric joints.' },
@@ -26,11 +24,7 @@ export default function PremiumPatioRebuildBarrie() {
       q: "Do you haul away the old patio?",
       a: "Yes. Removal and disposal of the failed surface is part of every rebuild scope — the clean rebuild starts with old surface removal, fresh excavation, and an open-graded base built to drain.",
     },
-    {
-      q: "What do the written workmanship terms cover?",
-      a: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available for your project.'),
-    },
-  ];
+  ].filter((item) => item.a);
   return (
     <div className="bg-brand-nearblack min-h-screen text-brand-bonewhite">
       <SEO

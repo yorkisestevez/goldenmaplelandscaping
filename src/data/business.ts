@@ -6,6 +6,8 @@
  * intentionally unknown. Do not turn `published_unverified` values into new
  * guarantees, review schema, or external-directory submissions.
  */
+import { OWNER_FACTS, googleReviewBadge, ownerFact, type OwnerFactSlot } from './ownerFacts';
+
 export type FactStatus = 'confirmed' | 'owner_reported' | 'published_unverified' | 'conflicting' | 'unknown';
 
 export interface BusinessFact<T> {
@@ -40,6 +42,50 @@ const unknown = <T>(source: string, notes?: string): BusinessFact<T | null> => (
   notes,
 });
 
+/**
+ * A BUSINESS fact driven by src/data/ownerFacts.ts.
+ * Empty slot → unknown, nothing renders. Completed slot → confirmed, and it publishes.
+ */
+function slotFact(slot: OwnerFactSlot): BusinessFact<string | null> {
+  const value = ownerFact(slot);
+  if (!value || !slot.lastVerified) {
+    return {
+      value: null,
+      status: 'unknown',
+      lastVerified: null,
+      source: 'src/data/ownerFacts.ts',
+      notes: slot.fill,
+    };
+  }
+  return {
+    value,
+    status: 'confirmed',
+    lastVerified: slot.lastVerified,
+    source: slot.source,
+    notes: slot.fill,
+  };
+}
+
+function reviewAggregateFact(): BusinessFact<{ ratingValue: string; reviewCount: string } | null> {
+  const rating = ownerFact(OWNER_FACTS.googleRating);
+  const count = ownerFact(OWNER_FACTS.googleReviewCount);
+  if (!rating || !count || !OWNER_FACTS.googleRating.lastVerified) {
+    return {
+      value: null,
+      status: 'unknown',
+      lastVerified: null,
+      source: 'src/data/ownerFacts.ts',
+      notes: 'Set googleRating and googleReviewCount together. Until then no rating or review count is published.',
+    };
+  }
+  return {
+    value: { ratingValue: rating, reviewCount: count },
+    status: 'confirmed',
+    lastVerified: OWNER_FACTS.googleRating.lastVerified,
+    source: OWNER_FACTS.googleRating.source,
+  };
+}
+
 /** Owner answered on 2026-09-27 that Golden Maple sells this service and wants a Barrie page for it. */
 const offeredPerOwner = (value: string): BusinessFact<string> => ({
   value,
@@ -60,7 +106,7 @@ export const BUSINESS = {
     source: 'Owner attestation 2026-09-27 (Claude Code session approving the SEO authority plan): name spelling, role, and consent to be named as author or reviewer where that is true',
     notes: 'Confirms identity and role only. Credentials, memberships, years of experience and project counts are separate facts with their own status.',
   },
-  foundingYear: published('2020', 'Existing root schema and llms.txt'),
+  foundingYear: slotFact(OWNER_FACTS.foundingYear),
 
   contact: {
     primaryPhone: {
@@ -110,9 +156,9 @@ export const BUSINESS = {
   },
 
   credentials: {
-    wsib: published('WSIB Certified', 'Existing llms.txt and trust-bar copy'),
-    liabilityInsurance: published('$5,000,000 liability coverage', 'Existing llms.txt and trust-bar copy'),
-    workmanshipWarranty: published('5-year sink and settlement warranty', 'Existing service copy and llms.txt', 'Exact coverage, exclusions, remedy, and contract wording require confirmation.'),
+    wsib: slotFact(OWNER_FACTS.wsibStatus),
+    liabilityInsurance: slotFact(OWNER_FACTS.liabilityCoverage),
+    workmanshipWarranty: slotFact(OWNER_FACTS.warrantyTerm),
     cmhaPaverInstaller: ownerReported(
       'CMHA Certified Concrete Paver Installer',
       'Owner stated on 2026-09-27 (Claude Code planning session) that he holds this credential; certificate or directory listing not yet supplied',
@@ -162,7 +208,7 @@ export const BUSINESS = {
   },
 
   commercialPolicies: {
-    minimumInvestment: unknown<string>('Existing site has inconsistent general and service-specific price claims', 'Confirm universal minimum and any service-specific exceptions before publishing as a policy.'),
+    minimumInvestment: slotFact(OWNER_FACTS.projectMinimum),
     consultation: published('Free 15-minute discovery call; first in-person visit policy requires confirmation', 'Existing /book and llms.txt copy'),
     design: {
       value: '$99 paid design session, credited toward a project',
@@ -192,7 +238,7 @@ export const BUSINESS = {
 
   reviews: {
     projectCounts: published({ barrie: 47, innisfil: 22, 'oro-medonte': 14, springwater: 9, orillia: 11, 'wasaga-beach': 7, midland: 5, collingwood: 4 }, 'Legacy estimator location records labelled 2025; no job ledger supplied', 'Do not display as completed-project proof without traceable project records and approval.'),
-    aggregate: published({ ratingValue: '5.0', reviewCount: '8' }, 'Existing root schema comment and llms.txt', 'Publication is not verification. Do not emit AggregateRating or Review schema until a traceable source and owner approval exist.'),
+    aggregate: reviewAggregateFact(),
     testimonials: unknown<string>('No approved, traceable testimonial consent register in tracked source'),
     portfolio: {
       value: 'scripts/portfolio-sources.mjs (owner-attested allowlist) -> src/data/projects.ts',
@@ -241,20 +287,26 @@ export function canPublish<T>(fact: BusinessFact<T>): boolean {
     && fact.source.trim().length > 0;
 }
 
-/** Conservative shared wording that cannot promote unresolved facts to proof. */
+/**
+ * Confirmed facts publish as the owner's sentence (or verifiedCopy when that
+ * fact is confirmed outside ownerFacts). Unconfirmed insurance, warranty,
+ * review, consultation and design claims publish nothing — no "ask us" hedge.
+ */
 export function publicClaimCopy<T>(fact: BusinessFact<T>, verifiedCopy: string): string {
+  if (fact === BUSINESS.reviews.aggregate) return googleReviewBadge() ?? '';
+  if (fact === BUSINESS.credentials.wsib) return ownerFact(OWNER_FACTS.wsibStatus) ?? '';
+  if (fact === BUSINESS.credentials.liabilityInsurance) return ownerFact(OWNER_FACTS.liabilityCoverage) ?? '';
+  if (fact === BUSINESS.credentials.workmanshipWarranty) return ownerFact(OWNER_FACTS.warrantyTerm) ?? '';
+  if (fact === BUSINESS.commercialPolicies.minimumInvestment) return ownerFact(OWNER_FACTS.projectMinimum) ?? '';
+  if (fact === BUSINESS.commercialPolicies.consultation || fact === BUSINESS.commercialPolicies.design) return '';
   if (canPublish(fact)) return verifiedCopy;
-  if (fact === BUSINESS.reviews.aggregate) return 'Discuss your project with our team.';
-  if (fact === BUSINESS.credentials.wsib || fact === BUSINESS.credentials.liabilityInsurance) return 'Ask us for current coverage documentation.';
-  if (fact === BUSINESS.credentials.workmanshipWarranty) return 'Ask for the current written workmanship terms for your project.';
-  if (fact === BUSINESS.commercialPolicies.consultation || fact === BUSINESS.commercialPolicies.design) return 'Contact us to confirm the current consultation and design scope.';
   if (fact === BUSINESS.commercialPolicies.permits) return 'Permit needs and responsibilities are confirmed for each project.';
-  return 'Please contact us to confirm current project details.';
+  return '';
 }
 
 export const conservativeTrustItems = [
-  publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.'),
-  publicClaimCopy(BUSINESS.credentials.wsib, 'WSIB coverage is documented.'),
-  publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage is documented.'),
-  publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available.'),
-] as const;
+  publicClaimCopy(BUSINESS.reviews.aggregate, ''),
+  publicClaimCopy(BUSINESS.credentials.wsib, ''),
+  publicClaimCopy(BUSINESS.credentials.liabilityInsurance, ''),
+  publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, ''),
+].filter((item) => item.length > 0);

@@ -1,16 +1,13 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowRight, Check, CheckCircle, Phone, Shield } from 'lucide-react';
+import { ArrowRight, Check, Phone } from 'lucide-react';
 import SEO from '../components/SEO';
+import LeadForm from '../components/LeadForm';
+import GoogleReviewsLink from '../components/GoogleReviewsLink';
 import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
-import Testimonials from '../components/Testimonials';
-import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+import { BUSINESS, publicContact } from '../data/business';
 import { portfolioImage, CARD_SIZES, type ImageRef } from '../data/portfolioImages';
-import { trackLead, trackCall } from '../utils/analytics';
-import { getAttributionFields } from '../utils/utmCapture';
-import { getBehaviorFields } from '../utils/behavior';
-import { genEventId } from '../utils/eventId';
+import { trackCall } from '../utils/analytics';
 
 /**
  * Ads landing page: /paver-patios/
@@ -26,11 +23,6 @@ import { genEventId } from '../utils/eventId';
  * Project photos are owner-attested register images only (portfolioImages).
  */
 
-const encode = (data: Record<string, string>) =>
-  Object.keys(data)
-    .map((k) => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
-    .join('&');
-
 const FAQ = [
   {
     q: 'How much does a paver patio cost in Barrie?',
@@ -39,10 +31,6 @@ const FAQ = [
   {
     q: 'What goes underneath the pavers?',
     a: 'Excavation depth, base materials, and drainage are project-specific. We review your soil, grades, and water flow on site, then confirm every detail in a written scope before work starts.',
-  },
-  {
-    q: 'Do you offer a warranty on paver patios?',
-    a: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available for your project.'),
   },
   {
     q: 'Which paver brands do you install?',
@@ -91,273 +79,29 @@ const PROJECT_SHOTS: { image: ImageRef; title: string; town: string }[] = [
   },
 ];
 
-const PROJECT_TYPES = [
-  'New paver patio',
-  'Patio rebuild / replacement',
-  'Paver walkway or entrance',
-  'Paver driveway',
-  'Pool surround',
-  'Something else',
-];
-
-const BUDGET_RANGES = ['Under $15K', '$15K – $30K', '$30K – $60K', '$60K+', 'Not sure yet'];
-
-type Status = 'idle' | 'submitting' | 'success' | 'error';
-
 function PaverQuoteForm() {
-  const [status, setStatus] = useState<Status>('idle');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    service: 'New paver patio',
-    budget: '',
-    details: '',
-    'bot-field': '',
-  });
-
-  const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!form.name.trim() || !form.phone.trim() || !form.details.trim() || !form.budget) {
-      setStatus('error');
-      setErrorMsg('Just need your name, phone, a budget range, and a quick line about your project.');
-      return;
-    }
-    if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) {
-      setStatus('error');
-      setErrorMsg('Please enter a valid email so we can send your estimate.');
-      return;
-    }
-    setStatus('submitting');
-    setErrorMsg('');
-
-    const eventId = genEventId();
-    const payload = {
-      'form-name': 'estimate-request',
-      source: 'paver-patio-ads',
-      event_id: eventId,
-      ...getAttributionFields(),
-      ...getBehaviorFields(),
-      ...form,
-    };
-
-    // Vite dev server doesn't process Netlify form submissions — short-circuit
-    // to success so the full UI + analytics flow can be previewed locally.
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.log('[dev] estimate-request payload (would POST to Netlify):', payload);
-      trackLead('estimate-request', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone }, { payload });
-      setStatus('success');
-      return;
-    }
-
-    try {
-      const res = await fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: encode(payload),
-      });
-      if (!res.ok) throw new Error('Network response was not ok');
-      trackLead('estimate-request', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone }, { payload });
-      setStatus('success');
-    } catch {
-      setStatus('error');
-      setErrorMsg(`Connection issue. Call ${publicContact.phoneDisplay} to discuss your project.`);
-    }
-  };
-
-  const inputClass =
-    'w-full bg-transparent border-b border-brand-porcelain-soft/25 py-3 px-1 font-sans text-brand-porcelain placeholder:text-brand-porcelain-soft/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/50 transition-colors font-light';
-
-  if (status === 'success') {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-brand-burgundy/95 backdrop-blur-md border border-brand-gold/30 rounded-[2px] p-10 shadow-2xl text-center"
-      >
-        <div className="mx-auto w-14 h-14 rounded-full border border-brand-gold flex items-center justify-center mb-6">
-          <CheckCircle size={24} className="text-brand-gold" strokeWidth={1.5} />
-        </div>
-        <h2 className="font-display text-3xl font-light text-brand-porcelain mb-4">
-          We've got it.
-        </h2>
-        <p className="font-sans text-sm text-brand-porcelain-soft leading-relaxed font-light mb-8">
-          Thanks — we'll review your project and be in touch shortly. Want to talk sooner? Pick a time that works for you.
-        </p>
-        <Link
-          to="/book"
-          className="inline-flex items-center justify-center bg-brand-gold text-brand-black font-sans text-[11px] font-medium uppercase tracking-[0.18em] py-4 px-8 rounded-[2px] transition-all duration-300 hover:bg-brand-porcelain w-full mb-5"
-        >
-          Book a Discovery Call
-        </Link>
-        <a
-          href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('paver_ads_form_phone')}
-          className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold hover:underline inline-flex items-center gap-2"
-        >
-          <Phone size={12} strokeWidth={1.5} />
-          {publicContact.phoneDisplay}
-        </a>
-      </motion.div>
-    );
-  }
-
   return (
-    <motion.div
-      id="quote-form"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-brand-burgundy/95 backdrop-blur-md border border-brand-gold/25 rounded-[2px] p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
-    >
-      <h2 className="font-display text-3xl md:text-4xl font-light text-brand-porcelain leading-tight mb-3">
-        Get your <span className="italic text-brand-gold">paver patio estimate</span>
-      </h2>
-      <p className="font-sans text-sm text-brand-porcelain-soft font-light mb-8 leading-relaxed">
-        Tell us about your project — we'll respond with next steps and a project-specific range.
+    <div id="quote-form" className="bg-brand-burgundy/95 backdrop-blur-md border border-brand-gold/25 rounded-[2px] p-5 sm:p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+      <p className="mb-6">
+        <span className="font-sans text-[10px] uppercase tracking-[0.22em] text-brand-gold block mb-2">Planning range</span>
+        <span className="font-display text-4xl text-brand-porcelain">$55–$85</span>
+        <span className="block font-sans text-sm text-brand-porcelain/80 font-light mt-2">per square foot installed for interlocking. A planning range, not a quote for this property.</span>
       </p>
-
-      <form
-        name="estimate-request"
-        method="POST"
-        onSubmit={onSubmit}
-        className="space-y-5"
-        noValidate
-      >
-        <input type="hidden" name="form-name" value="estimate-request" />
-        <input type="hidden" name="source" value="paver-patio-ads" />
-        <p className="hidden">
-          <label>Don't fill this out: <input name="bot-field" onChange={onChange} /></label>
-        </p>
-
-        <div>
-          <label htmlFor="pq-name" className="sr-only">Full Name</label>
-          <input
-            id="pq-name"
-            type="text"
-            name="name"
-            required
-            value={form.name}
-            onChange={onChange}
-            autoComplete="name"
-            className={inputClass}
-            placeholder="Your full name"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="pq-phone" className="sr-only">Phone Number</label>
-          <input
-            id="pq-phone"
-            type="tel"
-            name="phone"
-            required
-            value={form.phone}
-            onChange={onChange}
-            autoComplete="tel"
-            inputMode="tel"
-            className={inputClass}
-            placeholder="Phone number"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="pq-email" className="sr-only">Email Address</label>
-          <input
-            id="pq-email"
-            type="email"
-            name="email"
-            required
-            value={form.email}
-            onChange={onChange}
-            autoComplete="email"
-            inputMode="email"
-            className={inputClass}
-            placeholder="Email address"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label htmlFor="pq-service" className="block font-sans text-[10px] uppercase tracking-[0.2em] text-brand-porcelain-soft/80 mb-1 font-light">
-              Project type
-            </label>
-            <select
-              id="pq-service"
-              name="service"
-              required
-              value={form.service}
-              onChange={onChange}
-              className={`${inputClass} [&>option]:bg-brand-surface [&>option]:text-brand-bonewhite`}
-            >
-              {PROJECT_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="pq-budget" className="block font-sans text-[10px] uppercase tracking-[0.2em] text-brand-porcelain-soft/80 mb-1 font-light">
-              Budget range
-            </label>
-            <select
-              id="pq-budget"
-              name="budget"
-              required
-              value={form.budget}
-              onChange={onChange}
-              className={`${inputClass} [&>option]:bg-brand-surface [&>option]:text-brand-bonewhite`}
-            >
-              <option value="" disabled>Select a range</option>
-              {BUDGET_RANGES.map((b) => (
-                <option key={b} value={b}>{b}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="pq-details" className="sr-only">Project Description</label>
-          <textarea
-            id="pq-details"
-            name="details"
-            required
-            rows={4}
-            value={form.details}
-            onChange={onChange}
-            className={`${inputClass} resize-none`}
-            placeholder="Tell us about your project — size, timing, anything we should know"
-          />
-        </div>
-
-        {status === 'error' && (
-          <p className="font-sans text-xs text-brand-error font-light">{errorMsg}</p>
-        )}
-
-        <button
-          type="submit"
-          disabled={status === 'submitting'}
-          className="w-full py-5 mt-2 inline-flex items-center justify-center gap-3 group bg-brand-gold text-brand-black font-sans text-[11px] font-medium uppercase tracking-[0.18em] rounded-[2px] transition-all duration-300 hover:bg-brand-porcelain disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {status === 'submitting' ? 'Sending…' : (
-            <>
-              Get My Estimate
-              <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />
-            </>
-          )}
-        </button>
-
-        <div className="flex items-start justify-center gap-3 pt-4 text-[11px] text-brand-porcelain-soft font-light leading-relaxed">
-          <Shield size={14} className="text-brand-gold/70 shrink-0 mt-px" strokeWidth={1.5} />
-          <span>We only contact you about your project. No spam, ever — and we never share your number.</span>
-        </div>
-      </form>
-    </motion.div>
+      <p className="font-sans text-sm text-brand-porcelain/80 font-light mb-6">
+        Sinking or uneven interlock is a repair and re-level.{' '}
+        <Link to="/premium-patio-rebuild-barrie/" className="text-brand-gold underline underline-offset-2">See patio rebuilds in Barrie</Link>.
+      </p>
+      <LeadForm
+        formName="estimate-request"
+        source="paver-patio-ads"
+        idPrefix="paver-ads"
+        variant="dark"
+        defaultService="Interlocking patio"
+        submitLabel="Get my estimate"
+        heading="Get your paver patio estimate"
+        intro="Tell us about the patio. We reply about next steps and a range for this property."
+      />
+    </div>
   );
 }
 
@@ -515,7 +259,9 @@ export default function PaverPatioBarrieAds() {
         </div>
       </section>
 
-      <Testimonials count={3} />
+      <section className="section-padding text-center">
+        <GoogleReviewsLink className="btn-primary inline-flex" />
+      </section>
 
       <section className="section-padding bg-brand-burgundy text-brand-porcelain">
         <div className="container-custom text-center">

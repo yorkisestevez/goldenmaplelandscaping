@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
 import SEO from './SEO';
 import RelatedProjects from './RelatedProjects';
+import PlanningQuote from './PlanningQuote';
 import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
 import type { BarrieServiceDef } from '../data/barrieServices';
 
@@ -78,6 +79,17 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
                 ))}
               </ul>
             </motion.div>
+          </div>
+
+          <div className="max-w-xl mb-24">
+            <PlanningQuote
+              source={def.slug}
+              rate={def.slug === 'interlocking-driveways-barrie' ? '$55–$85' : undefined}
+              rateDetail="per square foot installed for interlocking. A planning range, not a quote for your property."
+              categories={def.projectCategories}
+              defaultService={def.slug === 'interlocking-driveways-barrie' ? 'Interlock driveway' : def.slug === 'seasonal-cleanup-barrie' ? 'Seasonal clean-up' : def.slug === 'outdoor-kitchens-barrie' ? 'Outdoor kitchen' : def.slug === 'porcelain-patios-barrie' ? 'Interlocking patio' : 'Not sure yet'}
+              repairHref={def.slug === 'interlocking-driveways-barrie' || def.slug === 'porcelain-patios-barrie' ? '/premium-patio-rebuild-barrie/' : undefined}
+            />
           </div>
 
           <div className="max-w-4xl mx-auto mb-32 space-y-20">

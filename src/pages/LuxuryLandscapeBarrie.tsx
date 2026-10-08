@@ -16,7 +16,6 @@ const CASE_STUDIES = [] as { title: string; range: string; detail: string }[];
 const FAQ = [
   { q: 'How do we start planning?', a: 'Contact us to discuss your property, priorities, and the current consultation and design scope.' },
   { q: 'How are construction details decided?', a: 'Materials, drainage, base preparation, timing, and responsibilities are confirmed for the project-specific written scope.' },
-  { q: 'What terms should I expect?', a: 'Ask for current written workmanship terms, manufacturer information where applicable, and the scope for your project.' },
 ];
 
 export default function LuxuryLandscapeBarrie() {

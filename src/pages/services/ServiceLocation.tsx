@@ -3,7 +3,8 @@ import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, MapPin, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
-import QuickQuote from '../../components/QuickQuote';
+import PlanningQuote from '../../components/PlanningQuote';
+import type { ProjectCategory } from '../../data/projects';
 import Testimonials from '../../components/Testimonials';
 import PublicationTrustBar from '../../components/PublicationTrustBar';
 import { trackCall } from '../../utils/analytics';
@@ -52,7 +53,13 @@ export default function ServiceLocation() {
 
   const titleHero = `${service.shortName} in ${location.name}, Ontario`;
   const seoTitle = `${service.shortName} in ${location.name} | Premium ${service.name} | Golden Maple Landscaping`;
-  const seoDescription = `Premium ${service.name.toLowerCase()} in ${location.name}, ${location.region}. ${service.startingPriceText} ${service.perUnitText}. ${publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available.')} Contact us to confirm project scope.`;
+  const warranty = publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, '');
+  const seoDescription = `Premium ${service.name.toLowerCase()} in ${location.name}, ${location.region}. ${service.startingPriceText} ${service.perUnitText}.${warranty ? ` ${warranty}` : ''} Contact us to confirm project scope.`;
+  const quoteCategories: Partial<Record<ServiceKey, ProjectCategory[]>> = {
+    interlocking: ['Patios & interlocking', 'Driveways'],
+    'composite-decking': ['Decks'],
+    'retaining-walls': ['Walls & steps'],
+  };
 
   // Cross-links: same service in other locations + other services in same location
   const otherLocations = LOCATION_KEYS.filter((l) => l !== parsed.location);
@@ -151,7 +158,14 @@ export default function ServiceLocation() {
             </div>
 
             <div className="lg:col-span-5 w-full">
-              <QuickQuote />
+              <PlanningQuote
+                source={`service-${slug}`}
+                rate={service.startingPriceText.startsWith('$') ? service.startingPriceText : undefined}
+                rateDetail={`${service.perUnitText}. A planning range, not a quote for your property.`}
+                categories={quoteCategories[parsed.service] ?? []}
+                defaultService={parsed.service === 'interlocking' ? 'Interlocking patio' : parsed.service === 'composite-decking' ? 'Composite deck' : parsed.service === 'retaining-walls' ? 'Retaining wall' : 'Landscape design'}
+                repairHref={parsed.service === 'interlocking' ? '/premium-patio-rebuild-barrie/' : undefined}
+              />
             </div>
           </div>
         </div>

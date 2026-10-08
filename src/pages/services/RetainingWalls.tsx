@@ -4,6 +4,7 @@ import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import Testimonials from '../../components/Testimonials';
+import PlanningQuote from '../../components/PlanningQuote';
 import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
 
@@ -102,12 +103,19 @@ export default function RetainingWalls() {
           <div className="mb-40">
             <div className="text-center max-w-3xl mx-auto mb-24">
               <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-                Engineering Standards
+                How the wall is built
               </span>
               <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite leading-tight">
-                Built to hold back time.
+                Built to hold the slope.
               </h2>
             </div>
+            <PlanningQuote
+              source="retaining-walls-barrie"
+              rate="$60–$140"
+              rateDetail="per square foot of wall face. A planning range, not a quote for your property."
+              categories={['Walls & steps']}
+              defaultService="Retaining wall"
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
               {engineeringSteps.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">

@@ -166,23 +166,23 @@ export default function HeroDepth() {
           <div className="home-hero-grid">
             <motion.div className="home-hero-copy max-w-xl" inert={!copyLive} style={frame ? { opacity: copyOpacity, y: copyY } : undefined}>
               <p className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-brand-gold-dark font-medium mb-8">
-                Outdoor living · Barrie & Simcoe County
+                Barrie &amp; Simcoe County · Residential landscape construction
               </p>
               <h1 className="font-display font-normal text-brand-ink mb-8">
-                The backyard<br />you’ve always<br /><span className="italic text-brand-gold-dark">pictured.</span>
+                Interlock, walls<br />and decks<br /><span className="italic text-brand-gold-dark">built to live on.</span>
               </h1>
-              <p className="text-base text-brand-muted leading-relaxed max-w-sm mb-7">
-                Thoughtfully planned patios, decks and outdoor spaces. Built around your home, and the way you want to live.
+              <p className="text-base text-brand-muted leading-relaxed max-w-md mb-7">
+                Golden Maple builds interlocking patios and driveways, retaining walls, and composite decks for homeowners in Barrie and Simcoe County. Yorkis Estevez, founder and lead builder, writes the scope for your property before the crew starts.
               </p>
               <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
                 <Link to="/contact" onClick={() => trackEngagement('cta_click', 'home_start_project')} className="btn-primary gap-5">
-                  Start your project <ArrowRight size={16} aria-hidden="true" />
+                  Get my estimate <ArrowRight size={16} aria-hidden="true" />
                 </Link>
                 <a href="#selected-work" className="home-project-link hidden sm:inline-flex" onClick={() => trackEngagement('cta_click', 'home_selected_work')}>
-                  See the details <ArrowRight size={15} aria-hidden="true" />
+                  See the work <ArrowRight size={15} aria-hidden="true" />
                 </a>
               </div>
-              <p className="hidden md:block text-xs text-brand-muted mt-9">Patios & interlock <span className="mx-2 text-brand-gold-dark">/</span> Decks <span className="mx-2 text-brand-gold-dark">/</span> Landscape design</p>
+              <p className="hidden md:block text-xs text-brand-muted mt-9">Interlock <span className="mx-2 text-brand-gold-dark">/</span> Walls <span className="mx-2 text-brand-gold-dark">/</span> Decks</p>
             </motion.div>
 
             <figure className="min-w-0">
@@ -258,10 +258,10 @@ export default function HeroDepth() {
           <div className="container-custom w-full">
             <p className="text-[11px] tracking-[0.3em] uppercase text-brand-gold font-medium mb-6">Stone · timber · open air</p>
             <p className="home-hero-closing-line font-display font-light text-brand-porcelain">
-              Built from the <span className="italic text-brand-gold">ground up.</span>
+              Built for Barrie <span className="italic text-brand-gold">homeowners.</span>
             </p>
             <Link to="/contact" onClick={() => trackEngagement('cta_click', 'home_hero_depth_cta')} className="btn-primary gap-5 mt-10">
-              Start your project <ArrowRight size={16} aria-hidden="true" />
+              Get my estimate <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
         </motion.div>

@@ -3,7 +3,7 @@ import { Compass, Shield, Heart, CheckCircle, ArrowRight, Phone } from 'lucide-r
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { trackCall } from '../../utils/analytics';
-import { BUSINESS, publicClaimCopy, publicContact } from '../../data/business';
+import { publicContact } from '../../data/business';
 
 export default function Consultation() {
   return (
@@ -37,9 +37,9 @@ export default function Consultation() {
               <div className="bg-brand-surface p-10 border border-brand-gold/20 rounded-[2px] mb-16">
                 <h3 className="font-display text-2xl text-brand-gold-dark mb-4">Start with the Scope.</h3>
                 <p className="font-sans text-brand-muted leading-relaxed font-light mb-6">
-                  {publicClaimCopy(BUSINESS.commercialPolicies.consultation, "Contact us to confirm the current consultation and design scope.")}
+                  The first step is a written brief: the space, the budget range, and when you want to build. A site visit is booked after that brief, not from this page alone.
                 </p>
-                <Link to="/contact" className="btn-primary w-full py-5 text-center px-8">Get My Free Estimate</Link>
+                <Link to="/contact" className="btn-primary w-full py-5 text-center px-8">Get my estimate</Link>
               </div>
             </motion.div>
 

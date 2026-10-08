@@ -271,3 +271,10 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--color-brand-gol
 }
 
 @media (max-width: 639px) { .home-hero .home-project-link { display: none; } }
+
+/* Keep the staged hero's 100vw layers from widening the page at 1024px. */
+.home-hero-stage,
+.home-hero-pin {
+  max-width: 100%;
+  overflow-x: clip;
+}

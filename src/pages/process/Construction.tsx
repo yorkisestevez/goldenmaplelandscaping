@@ -84,7 +84,7 @@ export default function Construction() {
             <div className="max-w-4xl mx-auto">
               <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite mb-12">Built to Outlast.</h2>
               <p className="font-sans text-xl text-brand-muted leading-relaxed font-light mb-12 text-balance lg:px-12">
-                Construction details are confirmed against the site, materials, and written project scope. {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, "Ask for the current written workmanship terms for your project.")}
+                The crew builds the written scope: excavation and base for that soil, drainage away from the house, the materials you approved, and a walkthrough when the surface is finished. {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, '')}
               </p>
               <Link to="/process/completion" className="flex items-center gap-4 text-brand-gold-dark font-sans text-xs uppercase tracking-widest justify-center hover:gap-8 transition-all font-medium py-2">
                 <span>Phase Six: Handover Details</span>

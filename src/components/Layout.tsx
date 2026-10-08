@@ -101,7 +101,7 @@ const Navbar = () => {
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+          "fixed top-0 left-0 right-0 z-50 max-w-full overflow-x-clip transition-all duration-500",
           isScrolled || isMobileMenuOpen
             ? 'bg-brand-nearblack/95 backdrop-blur-md border-b border-brand-dim/70 py-3'
             : 'bg-brand-nearblack/95 backdrop-blur-md border-b border-brand-dim/70 py-5'
@@ -120,17 +120,17 @@ const Navbar = () => {
               className="h-9 md:h-11 w-auto"
             />
             <span className="flex flex-col">
-              <span className="font-display text-xl md:text-3xl leading-none tracking-tight text-brand-bonewhite group-hover:text-brand-gold-dark transition-colors duration-500">
+              <span className="font-display text-lg md:text-2xl xl:text-xl 2xl:text-3xl leading-none tracking-tight text-brand-bonewhite group-hover:text-brand-gold-dark transition-colors duration-500">
                 GOLDEN MAPLE
               </span>
-              <span className="font-sans text-[10px] md:text-[12px] uppercase tracking-[0.45em] font-light text-brand-gold-dark mt-1.5">
+              <span className="font-sans text-[9px] md:text-[11px] uppercase tracking-[0.22em] xl:tracking-[0.14em] 2xl:tracking-[0.28em] font-light text-brand-gold-dark mt-1.5">
                 Landscaping
               </span>
             </span>
           </Link>
 
           {/* Desktop Nav - centered */}
-          <nav className="hidden xl:flex items-center gap-7 mx-auto">
+          <nav className="hidden xl:flex items-center gap-3 2xl:gap-6 mx-auto min-w-0">
             {navLinks.map((link) => (
               link.hasServicesDropdown ? (
                 <div
@@ -143,7 +143,7 @@ const Navbar = () => {
                   <Link
                     to={link.href}
                     className={cn(
-                      "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
+                      "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
                       location.pathname.startsWith('/services') ? "text-brand-gold-dark" : "text-brand-bonewhite"
                     )}
                   >
@@ -221,7 +221,7 @@ const Navbar = () => {
                   <Link 
                     to={link.href} 
                     className={cn(
-                      "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
+                      "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
                       location.pathname.startsWith('/resources') || location.pathname === '/buyers-guide' || location.pathname === '/cost-estimator' ? "text-brand-gold-dark" : "text-brand-bonewhite"
                     )}
                   >
@@ -265,7 +265,7 @@ const Navbar = () => {
                   key={link.href} 
                   to={link.href} 
                   className={cn(
-                    "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap",
+                    "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap",
                     location.pathname === link.href ? "text-brand-gold-dark" : "text-brand-bonewhite"
                   )}
                 >
@@ -276,23 +276,25 @@ const Navbar = () => {
           </nav>
 
           {/* Right Side CTA group */}
-          <div className="hidden xl:flex items-center gap-5 shrink-0">
+          <div className="hidden xl:flex items-center gap-3 2xl:gap-5 shrink-0 ml-3 pl-3 border-l border-brand-dim/50">
             <Link 
               to="/contact" 
               className={cn(
-                "font-sans text-[10px] uppercase tracking-[0.2em] transition-colors hover:text-brand-gold-dark font-medium",
+                "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium",
                 location.pathname === "/contact" ? "text-brand-gold-dark" : "text-brand-bonewhite"
               )}
             >
               Contact
             </Link>
             
-            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('phone_call')} className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold text-brand-gold-dark bg-brand-gold/5 hover:bg-brand-gold hover:text-brand-black hover:shadow-[0_0_16px_rgba(212,175,99,0.25)] transition-all group" aria-label="Call Us">
-              <Phone size={16} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
+            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('phone_call')} className="inline-flex items-center gap-2 font-sans text-[12px] 2xl:text-[13px] tabular-nums text-brand-bonewhite hover:text-brand-gold-dark whitespace-nowrap" aria-label={`Call ${publicContact.phoneDisplay}`}>
+              <Phone size={14} strokeWidth={2} />
+              <span>{publicContact.phoneDisplay}</span>
             </a>
 
-            <Link to="/contact" onClick={() => trackEngagement('cta_click', 'get_estimate_nav')} className="btn-primary py-2.5 px-6 whitespace-nowrap">
-              Get My Free Estimate
+            <Link to="/contact" onClick={() => trackEngagement('cta_click', 'get_estimate_nav')} className="btn-primary !py-2 !px-3 2xl:!py-2.5 2xl:!px-5 whitespace-nowrap !text-[9px] 2xl:!text-[10px]">
+              <span className="2xl:hidden">Get estimate</span>
+              <span className="hidden 2xl:inline">Get my estimate</span>
             </Link>
           </div>
 
@@ -422,7 +424,7 @@ const Footer = () => {
   return (
     <footer className="bg-brand-surface text-brand-bonewhite pt-32 pb-24 md:pb-12">
       <div className="container-custom">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20 mb-32">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 xl:gap-16 mb-32">
           <div className="space-y-10">
             <Link to="/" className="flex flex-col">
               <span className="font-display text-4xl md:text-5xl leading-none tracking-tight text-brand-gold-dark">
@@ -436,12 +438,17 @@ const Footer = () => {
               Architectural outdoor construction serving Barrie, Simcoe County, and Cottage Country. Crafted for Canadian seasons. Designed to last a lifetime.
             </p>
             <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
-                <Shield size={14} strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available.')}
-              </div>
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
-                <Award size={14} strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage is documented.')}
-              </div>
+              {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, '') && (
+                <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
+                  <Shield size={14} strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, '')}
+                </div>
+              )}
+              {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, '') && (
+                <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark font-normal">
+                  <Award size={14} strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, '')}
+                </div>
+              )}
+              <Link to="/reviews" className="font-sans text-[11px] uppercase tracking-[0.18em] text-brand-gold-dark hover:text-brand-bonewhite">Read our Google reviews</Link>
             </div>
           </div>
           
@@ -453,6 +460,7 @@ const Footer = () => {
               <li><Link to="/about" className="hover:text-brand-gold-dark transition-colors">Our Story</Link></li>
               <li><Link to="/library" className="hover:text-brand-gold-dark transition-colors">Construction Library</Link></li>
               <li><Link to="/contact" className="hover:text-brand-gold-dark transition-colors">Contact</Link></li>
+              <li><Link to="/reviews" className="hover:text-brand-gold-dark transition-colors">Google reviews</Link></li>
               <li><Link to="/service-areas" className="hover:text-brand-gold-dark transition-colors">Service Areas</Link></li>
             </ul>
           </div>
@@ -466,7 +474,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Connect</h4>
             <ul className="space-y-6 font-sans text-[13px] text-brand-muted font-light">
               <li className="flex items-start gap-4">
@@ -477,9 +485,9 @@ const Footer = () => {
                 <Phone size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
                 <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('footer_phone')} className="hover:text-brand-gold-dark transition-colors">{publicContact.phoneDisplay}</a>
               </li>
-              <li className="flex items-center gap-4">
+              <li className="flex items-center gap-4 min-w-0">
                 <Mail size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
-                <a href={`mailto:${publicContact.email}`} className="hover:text-brand-gold-dark transition-colors">{publicContact.email}</a>
+                <a href={`mailto:${publicContact.email}`} className="hover:text-brand-gold-dark transition-colors break-all min-w-0">{publicContact.email}</a>
               </li>
               <li className="flex items-center gap-3 pt-2">
                 {SOCIAL_LINKS.map((social) => (
@@ -532,7 +540,7 @@ const Footer = () => {
           to="/contact"
           className="flex-[1.5] bg-brand-gold text-brand-black font-sans text-[10px] uppercase tracking-[0.25em] py-5 flex items-center justify-center gap-3"
         >
-          Get My Free Estimate
+          Get my estimate
         </Link>
       </div>
       )}

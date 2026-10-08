@@ -195,12 +195,12 @@ export default function Services() {
               <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">Drainage, soil, access, intended use, and local requirements inform project-specific site preparation and framing scope.</p>
             </div>
             <div className="space-y-6">
-              <h3 className="font-display text-3xl font-light text-brand-gold">Project documentation</h3>
-              <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">{publicClaimCopy(BUSINESS.credentials.wsib, 'Current coverage documentation is available.')} {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation is available.')}</p>
+              <h3 className="font-display text-3xl font-light text-brand-gold">Written scope</h3>
+              <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">The written scope lists the area, the materials, the drainage plan, and what the price includes. {[publicClaimCopy(BUSINESS.credentials.wsib, ''), publicClaimCopy(BUSINESS.credentials.liabilityInsurance, '')].filter(Boolean).join(' ')}</p>
             </div>
             <div className="space-y-6">
-              <h3 className="font-display text-3xl font-light text-brand-gold">Written project terms</h3>
-              <p className="font-sans text-base text-brand-porcelain/80 leading-relaxed font-light">Ask us for the current written workmanship terms and project-specific scope.</p>
+              <h3 className="font-display text-3xl font-light text-brand-gold">Changes in writing</h3>
+              <p className="font-sans text-base text-brand-porcelain/80 leading-relaxed font-light">If the work changes, the change is written down and approved before the price moves.</p>
             </div>
           </div>
           <Link to="/contact" className="btn-primary px-16 py-5">Let's Talk About Your Project</Link>

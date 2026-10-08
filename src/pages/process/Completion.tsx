@@ -56,17 +56,17 @@ export default function Completion() {
           </div>
 
           <div className="mb-40">
-            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">The Golden Maple <br/> <span className="italic text-brand-gold-dark">Certification of Quality.</span></h2>
+            <h2 className="font-display text-4xl md:text-7xl font-light text-brand-bonewhite mb-24 text-center leading-[1.2]">What you get <br/> <span className="italic text-brand-gold-dark">at handover.</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
               {[
                 { title: "Final Walkthrough", desc: "A project-specific review of the completed scope and any questions you have about the work." },
-                { title: "Written Terms", desc: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, "Current written workmanship terms can be reviewed for your project.") },
+                { title: "Written Terms", desc: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, "") },
                 { title: "Care Information", desc: "Care and maintenance considerations can be discussed for the materials selected for your project." },
                 { title: "System Handover", desc: "Where applicable, project-specific product information and operating details can be reviewed." },
                 { title: "Site Closeout", desc: "Closeout details are confirmed against the project-specific scope." },
                 { title: "Photography Permission", desc: "Any request to photograph a completed space is discussed separately with the property owner." }
-              ].map((item, idx) => (
-                <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 group hover:border-brand-gold/50 transition-all duration-300">
+              ].filter((item) => item.desc).map((item) => (
+                <div key={item.title} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 group hover:border-brand-gold/50 transition-all duration-300">
                   <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-6">{item.title}</h3>
                   <p className="font-sans text-base text-brand-muted leading-relaxed font-light">{item.desc}</p>
                 </div>

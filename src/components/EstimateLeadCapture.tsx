@@ -6,7 +6,7 @@ import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
-import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+import { publicContact } from '../data/business';
 import { scoreGoldenMapleLead } from '../utils/leadScoring';
 import { designHash, type EstimatorDeck } from '../features/deckcraft/estimatorHandoff';
 
@@ -318,7 +318,7 @@ export default function EstimateLeadCapture({
         </button>
 
         <p className="font-sans text-[11px] text-brand-muted/80 text-center font-light pt-2">
-          {publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.')} We never share your info.
+          We use this to save the build and reply about the project. We do not share it.
         </p>
       </form>
     </div>

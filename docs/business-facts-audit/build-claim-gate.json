@@ -1,7 +1,7 @@
 {
   "passed": true,
-  "routes_checked": 151,
-  "schemas_checked": 286,
+  "routes_checked": 155,
+  "schemas_checked": 292,
   "allowed_by_register": [],
   "findings": [],
   "warnings": [
@@ -14,6 +14,11 @@
       "route": "/resources/backyard-entertaining-wasaga-beach",
       "rule": "universal_base_depth",
       "excerpt": "ch sandy soil drains better than Barrie clay, but you still need 12\u201316 inches of compacted clear stone base under any Techo-Bloc or Unilock surface to survive freeze-thaw cycl"
+    },
+    {
+      "route": "/resources/best-pavers-ontario-winters",
+      "rule": "universal_base_depth",
+      "excerpt": "coe County's shoulder seasons. The install matters just as much: 12\u201316 inches of compacted clear stone with HPB bedding keeps water moving so there is nothing sitting in the b"
     },
     {
       "route": "/resources/best-pavers-pool-deck-simcoe-county",

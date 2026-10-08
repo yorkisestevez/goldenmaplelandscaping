@@ -70,7 +70,7 @@ export default function Manifesto() {
                 In an industry known for shortcuts, we'd rather take the extra time and do it properly. When a family is going to live with a space for the next twenty years, it's worth building right the first time.
               </p>
               <p>
-                Discuss who will supervise the work, how site protection and communication will be handled, and which excavation, drainage and material specifications belong in your written scope.
+                Yorkis Estevez is the founder and lead builder. The written quote is the price for the written scope. If the work changes, the change is written down and you approve it before the price moves.
               </p>
               <p>
                 My promise is simple: an honest quote, careful work, and a backyard your family will actually want to spend time in.

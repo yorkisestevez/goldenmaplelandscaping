@@ -155,14 +155,14 @@ export default function BarrieLanding() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                publicClaimCopy(BUSINESS.reviews.aggregate, "Verified reviews are available."),
+                publicClaimCopy(BUSINESS.reviews.aggregate, ""),
                 "Premium materials — Techo-Bloc, Permacon, TimberTech, In-Lite",
                 "Full design service — 3D renders before we break ground",
                 "Transparent pricing — detailed quotes, no hidden fees",
                 "Built for Barrie weather — proper base depth, drainage & Romex",
                 "In-house crew — we never subcontract your project",
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-3">
+              ].filter(Boolean).map((item) => (
+                <div key={item} className="flex items-start gap-3">
                   <CheckCircle size={18} className="text-brand-gold-dark shrink-0 mt-0.5" />
                   <span className="font-sans text-sm text-brand-muted font-light">{item}</span>
                 </div>

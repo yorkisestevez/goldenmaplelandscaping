@@ -70,13 +70,17 @@ export function AnimatedDollars({ cents, className }: { cents: number; className
   );
 }
 
+/** Display only. The posted precise_* fields stay exact to the cent. */
+export function roundPlanningDollars(cents: number): number {
+  return Math.round(cents / 10000) * 100;
+}
+
 const toMoney = (cents: number) =>
-  `$${(cents / 100).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  `$${roundPlanningDollars(cents).toLocaleString('en-CA')}`;
 
 /**
- * An exact dollars-and-cents figure, animated. The takeoff engine prices to
- * the cent, and showing the cents is the point — it reads as a real invoice,
- * not a guess. Same interruptible tween as the range version.
+ * A planning total rounded to the nearest $100. The takeoff engine still
+ * prices to the cent for the CRM; this figure is what the visitor sees.
  */
 export function AnimatedMoney({
   cents,

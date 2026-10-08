@@ -30,8 +30,11 @@ export default function MaterialSelection() {
                 The Luxury of <br />
                 <span className="italic text-brand-gold-dark">Choice.</span>
               </h1>
-              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
-                Not all stone is created equal. We curate a selection of high-performance materials that not only match your home's aesthetic but also withstand the extreme freeze-thaw cycles of Ontario's climate.
+              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-8 font-light">
+                Interlock is usually Techo-Bloc, Permacon, or Unilock. Deck boards are TimberTech or Trex lines the supplier can ship.
+              </p>
+              <p className="font-sans text-base text-brand-muted leading-relaxed mb-16 font-light">
+                You pick the colour and the finish from samples. The product name, the colour, and the manufacturer sheet for that product go in the written scope. Naming a brand here does not mean Golden Maple holds that brand's installer certification.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>

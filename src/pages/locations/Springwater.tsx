@@ -64,10 +64,6 @@ const FAQS = [
     q: "How do you handle clay soil in Springwater?",
     a: "Clay soil is common in Springwater and requires deeper excavation and geotextile fabric to prevent base contamination. We adjust base preparation specs for local soil conditions — this is factored into every quote.",
   },
-  {
-    q: "What warranty do you offer?",
-    a: "Ask us for the current written workmanship terms for your specific project. Manufacturer coverage depends on the selected product and must be confirmed with its current documentation.",
-  },
 ];
 
 const PAGE_PATH = '/locations/springwater/';

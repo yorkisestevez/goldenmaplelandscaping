@@ -1,10 +1,15 @@
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Shield, Award, CheckCircle, Star } from 'lucide-react';
 import SEO from '../components/SEO';
-import { BUSINESS, publicClaimCopy } from '../data/business';
+import GoogleReviewsLink from '../components/GoogleReviewsLink';
 import BookingScheduler from '../components/BookingScheduler';
 
 export default function Book() {
+  const [params] = useSearchParams();
+  const fromEstimator = params.get('from') === 'estimator';
+  const low = params.get('low');
+  const high = params.get('high');
+  const project = params.get('project');
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -60,41 +65,19 @@ export default function Book() {
             transition={{ duration: 1, delay: 0.3 }}
             className="max-w-4xl mx-auto"
           >
+            {fromEstimator && (
+              <p className="font-sans text-sm text-brand-bonewhite bg-brand-surface border border-brand-gold/30 rounded-[2px] p-4 mb-6 text-left">
+                Site visit requested with your estimator
+                {project ? ` (${project}` : ''}
+                {low && high ? `${project ? ', ' : ' ('}$${Number(low).toLocaleString('en-CA')}–$${Number(high).toLocaleString('en-CA')}` : ''}
+                {project || (low && high) ? ').' : '.'} The scheduler below is the same booking form. It does not confirm the visit until someone replies.
+              </p>
+            )}
             <BookingScheduler />
           </motion.div>
 
-          {/* Trust bar below */}
-          <div className="max-w-4xl mx-auto mt-20 pt-16 border-t border-brand-dim/20">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
-              <div className="flex flex-col items-center text-center gap-3">
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={12} className="text-brand-gold fill-brand-gold" strokeWidth={0} />
-                  ))}
-                </div>
-                <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-                  {publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.')}
-                </span>
-              </div>
-              <div className="flex flex-col items-center text-center gap-3">
-                <Shield size={20} className="text-brand-gold" strokeWidth={1.5} />
-                <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-                  {publicClaimCopy(BUSINESS.credentials.wsib, 'Current coverage documentation is available.')}
-                </span>
-              </div>
-              <div className="flex flex-col items-center text-center gap-3">
-                <Award size={20} className="text-brand-gold" strokeWidth={1.5} />
-                <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-                  {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation is available.')}
-                </span>
-              </div>
-              <div className="flex flex-col items-center text-center gap-3">
-                <CheckCircle size={20} className="text-brand-gold" strokeWidth={1.5} />
-                <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-                  {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms')}
-                </span>
-              </div>
-            </div>
+          <div className="max-w-4xl mx-auto mt-20 pt-16 border-t border-brand-dim/20 text-center">
+            <GoogleReviewsLink className="font-sans text-sm text-brand-gold-dark underline underline-offset-2" />
           </div>
         </div>
       </section>

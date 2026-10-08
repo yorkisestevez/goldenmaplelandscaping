@@ -147,7 +147,7 @@ const STEP_NAMES: Record<number, string> = {
 const fmt = (n: number) =>
   n >= 10000 ? `$${(n / 1000).toFixed(0)}k` : `$${n.toLocaleString()}`;
 const preciseMoney = (cents: number) =>
-  `$${(cents / 100).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  `$${(Math.round(cents / 10000) * 100).toLocaleString('en-CA')}`;
 
 /** Large, service-specific concept photograph for every project choice. */
 function TypeThumb({ typeId, eager = false }: { typeId: string; eager?: boolean }) {
@@ -241,6 +241,7 @@ export default function Estimator({ onStudioChange }: {
   const [furthestStep, setFurthestStep] = useState(1);
   /** Scroll target for the result-step sticky bar's "Save build" button. */
   const saveCardRef = useRef<HTMLDivElement>(null);
+  const [saveCardVisible, setSaveCardVisible] = useState(false);
   /** The wizard card — every step change scrolls back to its top. Without
    *  this the viewport stays wherever the Continue button was, and the result
    *  step's payoff (the number) appears off-screen at the exact moment it
@@ -316,6 +317,19 @@ export default function Estimator({ onStudioChange }: {
     : studioParam === 'deck' || studioParam === 'full' ? 'deck'
     : null;
   useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    const node = saveCardRef.current;
+    if (!node || step !== TOTAL_STEPS) {
+      setSaveCardVisible(false);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setSaveCardVisible(entry.isIntersecting),
+      { threshold: 0.25 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [step]);
   useEffect(() => { onStudioChange?.(studio !== null); }, [studio, onStudioChange]);
 
   const openStudio = (mode: StudioMode, via: StudioVia, sqft?: number) => {
@@ -1092,8 +1106,8 @@ export default function Estimator({ onStudioChange }: {
         {/* Progress bar */}
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-brand-dim/40 rounded-t-3xl overflow-hidden">
           <motion.div className="h-full bg-gradient-to-r from-brand-gold/80 via-brand-gold to-brand-gold/80"
-            initial={{ width: '14%' }}
-            animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+            initial={{ width: '0%' }}
+            animate={{ width: `${((step - 1) / (TOTAL_STEPS - 1)) * 100}%` }}
             transition={{ type: 'spring', stiffness: 90, damping: 20 }}
           />
         </div>
@@ -1684,7 +1698,9 @@ export default function Estimator({ onStudioChange }: {
               </div>
 
               <div className="mt-12">
-                <EstimateBookingCTA />
+                <EstimateBookingCTA
+                  bookHref={`/book/?from=estimator&project=${encodeURIComponent(projectType || 'patio')}&low=${display.low}&high=${display.high}`}
+                />
               </div>
 
               <div className="mt-12 text-center">
@@ -1692,7 +1708,7 @@ export default function Estimator({ onStudioChange }: {
               </div>
 
               <p className="mt-8 font-sans text-xs font-normal text-brand-bonewhite/80 text-center max-w-3xl mx-auto leading-[1.6]">
-                {getEstimatorRangeCopy(projectType, selectedElements)} <span className="text-brand-gold-dark font-normal">No job minimum — every project gets priced on its real scope, whatever the size.</span> Final pricing depends on site measurement, material availability, access, drainage, and design complexity.
+                {getEstimatorRangeCopy(projectType, selectedElements)} Final pricing depends on site measurement, material availability, access, drainage, and design complexity.
               </p>
             </motion.div>
           )}
@@ -1736,7 +1752,7 @@ export default function Estimator({ onStudioChange }: {
           the hero number leaves the viewport, which breaks the "number follows
           your changes" loop exactly where it matters. Keep the live price
           pinned; the button jumps to the save card. Gone once saved. */}
-      {step === TOTAL_STEPS && !buildSaved && display.low > 0 && (
+      {step === TOTAL_STEPS && !buildSaved && !saveCardVisible && display.low > 0 && (
         <MobileStickyBar
           low={display.low}
           high={display.high}
@@ -1753,7 +1769,7 @@ export default function Estimator({ onStudioChange }: {
           ~6,000px scroll and the live rail stops at step 6, so on md+ the total
           and the save action both leave the viewport exactly where the build is
           finished. Same guard as the mobile bar above, same "gone once saved". */}
-      {step === TOTAL_STEPS && !buildSaved && display.low > 0 && (
+      {step === TOTAL_STEPS && !buildSaved && !saveCardVisible && display.low > 0 && (
         <DesktopResultCta
           confidence={confidence}
           preciseCents={precise?.subtotalCents ?? null}
@@ -1783,7 +1799,7 @@ function ReceiptRail({ precise, deckLabel, displayLow, displayHigh, confidence, 
   onSkip: () => void;
 }) {
   const money = (cents: number) =>
-    `$${(cents / 100).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `$${(Math.round(cents / 10000) * 100).toLocaleString('en-CA')}`;
   const rows: { label: string; cents: number }[] = [
     { label: 'Excavation & prep', cents: precise.perCategoryCents.excavation },
     { label: 'Materials & delivery', cents: precise.perCategoryCents.materials },
