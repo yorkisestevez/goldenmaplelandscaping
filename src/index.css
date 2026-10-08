@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+/* Cormorant is a condensed display face. The local serif that paints first is
+   wider, so the estimator's one-line title wraps to two lines and the form
+   card jumps when the webfont arrives. Scale the fallback to Cormorant's
+   advance width (measured "What will yours cost?" at 48px: 400.7 / 419.9)
+   and lock its em box to Cormorant's font bounding box. */
+@font-face {
+  font-family: "Cormorant Garamond Fallback";
+  src: local("Times New Roman"), local("Georgia"), local("Liberation Serif"), local("Nimbus Roman"), local("DejaVu Serif");
+  font-weight: 300 700;
+  font-style: oblique 0deg 20deg;
+  size-adjust: 95.42%;
+  ascent-override: 96.42%;
+  descent-override: 30.39%;
+  line-gap-override: 0%;
+}
+
 @theme {
   /* Ivory, charcoal and bronze. Existing token names remain compatible with
      every route; green-named tokens are warm neutrals in this visual system. */
@@ -26,7 +42,7 @@
   --color-brand-porcelain-soft: #C9C3B9;
   --color-brand-error: #B3261E;
   --color-brand-success: #2F6B47;
-  --font-display: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  --font-display: "Cormorant Garamond", "Cormorant Garamond Fallback", "Iowan Old Style", "Palatino Linotype", Palatino, serif;
   --font-sans: Inter, "Segoe UI", system-ui, sans-serif;
 }
 
@@ -249,6 +265,11 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--color-brand-gol
   margin-bottom: 0.65rem;
 }
 
+.home-hero,
+.home-hero-grid,
+.home-hero-frame {
+  max-width: 100%;
+}
 .gm-consent {
   position: fixed;
   z-index: 70;

@@ -1,14 +1,14 @@
-import { ArrowRight, Shield, Award, CheckCircle, Star, Quote, ChevronRight, Compass, Clock } from 'lucide-react';
+import { ArrowRight, Shield, Award, CheckCircle, Compass, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
 import BuyersGuide from '../components/BuyersGuide';
 import Manifesto from '../components/Manifesto';
 import Process from '../components/Process';
 import HeroDepth from '../components/HeroDepth';
+import GoogleReviewsLink from '../components/GoogleReviewsLink';
 import { Link } from 'react-router-dom';
 import Reveal from '../components/Reveal';
-import { trackEngagement, trackCall } from '../utils/analytics';
-import { cn } from '../utils/cn';
-import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+import { BUSINESS, publicClaimCopy } from '../data/business';
+import { OWNER_FACTS, ownerFact } from '../data/ownerFacts';
 import ResponsiveImage from '../components/ResponsiveImage';
 import InstagramFeed from '../components/InstagramFeed';
 import { FEATURED_PROJECTS, getProject, projectCoverFull, projectCover } from '../data/projects';
@@ -49,11 +49,12 @@ const ServicesGrid = () => {
 };
 
 const WhyGoldenMaple = () => {
+  const years = ownerFact(OWNER_FACTS.yearsInBusiness);
   const standards = [
     { icon: Compass, title: 'Project-specific site preparation', body: 'Drainage, soil conditions, access, and final excavation/base depth are reviewed for the written scope of each project.' },
-    { icon: Shield, title: 'Documentation before work begins', body: publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation is available.'), },
-    { icon: Award, title: 'Written project terms', body: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available for your project.'), },
-  ];
+    { icon: Shield, title: 'Coverage on file', body: publicClaimCopy(BUSINESS.credentials.liabilityInsurance, ''), },
+    { icon: Award, title: 'Written workmanship terms', body: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, ''), },
+  ].filter((item) => item.body);
   return (
     <section className="section-padding bg-brand-cream text-brand-ink overflow-hidden relative">
       <div className="container-custom relative z-10">
@@ -86,10 +87,11 @@ const WhyGoldenMaple = () => {
             <div className="aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-ink/10">
               <ResponsiveImage image={projectCoverFull(getProject('cobblestone-driveway')!)} sizes="(min-width: 1024px) 45vw, 100vw" aspect="fill" className="w-full h-full object-cover" />
             </div>
-            <div className="absolute -bottom-10 -left-10 bg-brand-green-dark p-12 hidden md:block rounded-[2px] shadow-xl">
-              <span className="font-display text-7xl font-light text-brand-porcelain block mb-2">10+</span>
-              <span className="font-sans text-[10px] font-normal uppercase tracking-[0.25em] text-brand-porcelain">Years of Excellence</span>
-            </div>
+            {years && (
+              <div className="absolute -bottom-10 -left-10 bg-brand-green-dark p-8 hidden md:block rounded-[2px] shadow-xl max-w-[220px]">
+                <span className="font-display text-3xl font-light text-brand-porcelain block mb-2">{years}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -108,7 +110,7 @@ const SelectedWork = () => (
           Recent work, up close.
         </h2>
       </Reveal>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 mb-14 md:mb-20">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 lg:gap-12 mb-14 md:mb-20">
         {FEATURED_PROJECTS.map((project, idx) => (
           <Reveal key={project.slug} delay={idx * 0.1}>
             <Link to={`/portfolio/${project.slug}`} className="group flex flex-col">
@@ -144,61 +146,22 @@ const SelectedWork = () => (
   </section>
 );
 
-const Testimonials = () => {
-  const reviews = [
-    {
-      name: "Michael R.",
-      location: "Barrie",
-      text: "We got three quotes. Two contractors wanted to dig 6 inches. Yorkis said he'd go 14. Three winters later, not a single stone has moved. You get what you pay for — and with Golden Maple, you get perfection.",
-    },
-    {
-      name: "Sarah L.",
-      location: "Innisfil",
-      text: "I was nervous spending this much on our backyard. Then Yorkis showed us the 3D render and I literally started tearing up — it was the exact space I'd been dreaming about since we moved to Innisfil. And the finished product? Even better.",
-    },
-    {
-      name: "David K.",
-      location: "Midhurst",
-      text: "After being ghosted by two other contractors, Golden Maple was a completely different experience. Daily updates, a clean site, and they finished on time. Our neighbours keep coming over to ask who did the work.",
-    }
-  ];
-
-  return (
-    <section className="section-padding bg-brand-cream">
-      <div className="container-custom">
-        <Reveal className="text-center max-w-3xl mx-auto mb-12 md:mb-24">
-          <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-green-dark mb-6 block font-medium">
-            Real Homeowners. Real Results.
-          </span>
-          <h2 className="font-display text-4xl md:text-7xl font-light text-brand-ink">
-            Don't take our word for it.
-          </h2>
-        </Reveal>
-        <div className="no-scrollbar -mx-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-8 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-10 md:overflow-visible md:px-0 md:pb-0">
-          {reviews.map((review, idx) => (
-            <Reveal key={idx} delay={idx * 0.12} className="w-[84vw] shrink-0 snap-start bg-brand-cream-light p-8 md:w-auto md:shrink md:p-12 rounded-[2px] border border-brand-ink/10 shadow-[0_18px_50px_-30px_rgba(33,30,21,0.45)] relative">
-              <Quote size={40} strokeWidth={1} className="text-brand-green-dark/15 absolute top-10 left-10" />
-              <div className="relative z-10">
-                <div className="flex gap-1 mb-8">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className="fill-brand-gold-dark text-brand-gold-dark" />
-                  ))}
-                </div>
-                <p className="font-sans text-brand-ink italic leading-relaxed mb-10 font-light">
-                  "{review.text}"
-                </p>
-                <div>
-                  <p className="font-display text-xl font-light text-brand-ink">{review.name}</p>
-                  <p className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-green-dark mt-1 font-medium">{review.location}, ON</p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
+const GoogleReviews = () => (
+  <section className="section-padding bg-brand-cream">
+    <div className="container-custom text-center max-w-2xl mx-auto">
+      <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-green-dark mb-6 block font-medium">
+        Reviews
+      </span>
+      <h2 className="font-display text-4xl md:text-6xl font-light text-brand-ink mb-8">
+        Read what homeowners wrote on Google.
+      </h2>
+      <p className="font-sans text-base text-brand-ink-soft font-light leading-relaxed mb-8">
+        We don&apos;t reprint reviews on this site. The current comments, photos, and rating live on our Google listing.
+      </p>
+      <GoogleReviewsLink className="btn-primary inline-flex" />
+    </div>
+  </section>
+);
 
 const FinalCTA = () => {
   return (
@@ -240,19 +203,19 @@ const ContractorPainPoints = () => {
     {
       pain: "They Took Your Deposit and Disappeared",
       cause: "They were responsive before you paid. Now it's been three weeks with no updates, no timeline, and no one answering the phone.",
-      solution: "Yorkis is on-site personally. You get daily photo updates and direct communication from the owner — not an answering machine.",
+      solution: "Yorkis Estevez is the founder and lead builder. You talk to the person responsible for the job, and the written scope is what the crew builds.",
       icon: Clock
     },
     {
       pain: "The 'Final' Price Kept Climbing",
       cause: "What started as a $15K quote turned into $22K after 'unforeseen' extras. Sound familiar?",
-      solution: "We give you a fixed, detailed quote upfront. The price we agree on is the price you pay. No exceptions, no surprises.",
+      solution: "The written quote is the price for the written scope. If the work changes, we write the change and you approve it before the price moves.",
       icon: Shield
     },
     {
       pain: "Your Property Looked Like a Construction Zone",
       cause: "Materials dumped on the lawn, equipment blocking the driveway, debris everywhere for weeks.",
-      solution: "Our crew cleans and organizes the site every single day. Your neighbours won't even know we're there.",
+      solution: "The written scope says how the work area is protected and how the property is left when the job is done.",
       icon: CheckCircle
     }
   ];
@@ -302,103 +265,70 @@ const ContractorPainPoints = () => {
   );
 };
 
+const HOME_FAQS = [
+  {
+    q: 'Why is the base different on every property?',
+    a: 'Freeze-thaw, drainage, soil, access, and how you will use the surface all change the excavation and base. Those details are written into the scope for that property. There is no single depth we publish for every patio.',
+  },
+  {
+    q: 'Why TimberTech instead of regular wood decking?',
+    a: 'TimberTech AZEK is a capped composite. It does not need the seasonal sanding and staining that wood decking does, and the manufacturer publishes its own fade and stain warranty for the board line you choose. We confirm that product paperwork with the written scope.',
+  },
+  {
+    q: 'What if a patio is already sinking?',
+    a: 'A settled or uneven interlock patio is a repair and re-level, not a new install. Start with the Barrie patio rebuild page, or send the quote form with “Patio repair or re-level” selected.',
+  },
+  {
+    q: 'What happens after I send the form?',
+    a: 'We use your name, phone, town, project type, and timing to reply about the scope. Sending the form does not book a date. If you want a time on the calendar, use the booking page once we have the project details.',
+  },
+].concat(
+  [
+    publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, ''),
+  ].filter(Boolean).map((answer) => ({
+    q: 'What workmanship terms are in writing?',
+    a: answer,
+  })),
+);
+
 export default function Home() {
-  // NO local LocalBusiness schema here. This page used to define its own,
-  // which shipped a stale dev Cloud Run URL as the business @id/url/image
-  // into production, plus a postal code (L4M) that disagreed with the
-  // canonical one (L4N) elsewhere — two conflicting LocalBusiness identities
-  // for one business. root.tsx's `businessGraph` already emits the single
-  // canonical #business entity (with real reviews/rating) on every route,
-  // this one included. Do not re-add a per-page schema here.
-  // FAQPage structured data for the "Common Questions" section below.
-  // This is NOT a business-entity schema (root.tsx's businessGraph remains the
-  // single canonical #business entity), so the "do not re-add a per-page
-  // schema" rule above does not apply. Q3/Q4 answers resolve through
-  // publicClaimCopy -- the same helper the rendered JSX uses -- so the schema
-  // can never drift from the visible answers.
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: 'Why do you dig so much deeper than other contractors?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Freeze-thaw, drainage, soil, access, and the intended use all affect site preparation. We confirm the project-specific excavation and base plan in the written scope.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'Why TimberTech instead of regular wood decking?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: "Because nobody wants to spend their weekends sanding and staining a deck. TimberTech AZEK doesn't rot, warp, or splinter — even after decades of Simcoe County snow and ice. It looks like real wood without any of the maintenance, and it comes with up to a 50-year warranty.",
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'What if something goes wrong after the project is done?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available for your project.'),
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'Is there a fee to get started?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: publicClaimCopy(BUSINESS.commercialPolicies.consultation, 'Contact us to confirm the current consultation and design scope.'),
-        },
-      },
-    ],
+    mainEntity: HOME_FAQS.map((faq) => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: { '@type': 'Answer', text: faq.a },
+    })),
   };
 
   return (
     <>
       <SEO
         title="Barrie Landscaping Company | Patios, Interlock & Retaining Walls"
-        description="Barrie landscaping for interlocking patios, driveways, retaining walls and outdoor spaces across Simcoe County. Get an instant cost range and contact us to confirm project details."
+        description="Golden Maple builds interlocking patios, driveways, retaining walls and composite decks for homeowners in Barrie and Simcoe County."
         canonical="https://goldenmaplelandscaping.ca/"
         schema={faqSchema}
       />
       <HeroDepth />
-      <ServicesGrid />
       <SelectedWork />
+      <ServicesGrid />
       <InstagramFeed />
       <Manifesto />
       <ContractorPainPoints />
       <WhyGoldenMaple />
       <Process />
-      <Testimonials />
+      <GoogleReviews />
       <section className="section-padding bg-brand-nearblack border-t border-brand-dim/5">
       <div className="container-custom">
         <div className="max-w-3xl mx-auto mb-10 md:mb-20 text-center">
           <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">Common Questions</span>
-          <h2 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite">Expert Insights.</h2>
+          <h2 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite">Before you ask for a quote.</h2>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 max-w-5xl mx-auto">
-          {[
-            {
-              q: "Why do you dig so much deeper than other contractors?",
-              a: "Freeze-thaw, drainage, soil, access, and the intended use all affect site preparation. We confirm the project-specific excavation and base plan in the written scope."
-            },
-            {
-              q: "Why TimberTech instead of regular wood decking?",
-              a: "Because nobody wants to spend their weekends sanding and staining a deck. TimberTech AZEK doesn't rot, warp, or splinter — even after decades of Simcoe County snow and ice. It looks like real wood without any of the maintenance, and it comes with up to a 50-year warranty."
-            },
-            {
-              q: "What if something goes wrong after the project is done?",
-              a: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available for your project.')
-            },
-            {
-              q: "Is there a fee to get started?",
-              a: publicClaimCopy(BUSINESS.commercialPolicies.consultation, 'Contact us to confirm the current consultation and design scope.')
-            }
-          ].map((faq, idx) => (
-            <div key={idx} className="bg-brand-surface p-7 md:p-10 border border-brand-dim/10 rounded-[2px] hover:border-brand-gold/20 transition-colors">
+          {HOME_FAQS.map((faq) => (
+            <div key={faq.q} className="bg-brand-surface p-7 md:p-10 border border-brand-dim/10 rounded-[2px]">
               <h3 className="font-display text-2xl font-light text-brand-gold-dark mb-4 md:mb-6 leading-tight">{faq.q}</h3>
               <p className="font-sans text-base text-brand-muted leading-relaxed font-light">{faq.a}</p>
             </div>

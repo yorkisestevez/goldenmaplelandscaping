@@ -1,7 +1,8 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { ArrowRight, MapPin, CheckCircle, Phone, Shield, Award } from 'lucide-react';
+import { ArrowRight, MapPin, CheckCircle, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import QuickQuote from '../../components/QuickQuote';
+import GoogleReviewsLink from '../../components/GoogleReviewsLink';
 import { trackCall } from '../../utils/analytics';
 import {
   SERVICES,
@@ -99,22 +100,11 @@ export default function LocationLanding() {
       {/* Trust bar */}
       <section className="border-y border-brand-dim/20 bg-brand-surface/30">
         <div className="container-custom py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
-            <div className="flex items-center gap-4">
-              <CheckCircle size={14} className="text-brand-gold-dark" strokeWidth={1.5} />
-              <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-                {publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.')}
-              </span>
-            </div>
-            <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <Shield size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.wsib, 'Current coverage documentation')}
-            </div>
-            <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <Award size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation')}
-            </div>
-            <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <CheckCircle size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms')}
-            </div>
+          <div className="flex flex-wrap gap-6 items-center">
+            <GoogleReviewsLink className="font-sans text-sm text-brand-gold-dark underline underline-offset-2" />
+            {[publicClaimCopy(BUSINESS.credentials.wsib, ''), publicClaimCopy(BUSINESS.credentials.liabilityInsurance, ''), publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, '')].filter(Boolean).map((item) => (
+              <span key={item} className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">{item}</span>
+            ))}
           </div>
         </div>
       </section>

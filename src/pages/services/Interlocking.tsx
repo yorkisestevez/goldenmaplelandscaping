@@ -3,11 +3,11 @@ import { Grid, Check, ArrowRight, Shield, Award, CheckCircle } from 'lucide-reac
 import SEO from '../../components/SEO';
 import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import Testimonials from '../../components/Testimonials';
+import PlanningQuote from '../../components/PlanningQuote';
 
 const FAQ = [
   { q: 'What should be reviewed before an interlocking project?', a: 'Site conditions, drainage, intended use, materials, and written workmanship terms should be confirmed for the specific project.' },
   { q: 'How are base details determined?', a: 'Excavation and base details are project-specific. They are reviewed from site conditions and the written scope rather than offered as a universal standard.' },
-  { q: 'What product and workmanship terms apply?', a: 'Ask for the current written workmanship terms and applicable manufacturer information for the product selected.' },
 ];
 
 // Page-level nodes only; they reference the single #business declared in root.tsx.
@@ -66,6 +66,15 @@ export default function Interlocking() {
               />
             </div>
           </div>
+
+          <PlanningQuote
+            source="interlocking-barrie"
+            rate="$55–$85"
+            rateDetail="per square foot installed. A planning range, not a quote for your property."
+            categories={['Patios & interlocking', 'Driveways']}
+            defaultService="Interlocking patio"
+            repairHref="/premium-patio-rebuild-barrie/"
+          />
 
           <div className="mb-40">
             <div className="text-center max-w-3xl mx-auto mb-24">

@@ -39,7 +39,7 @@ const fmt = (n: number) =>
   n >= 10000 ? `$${(n / 1000).toFixed(1)}k` : `$${n.toLocaleString()}`;
 
 const money = (cents: number) =>
-  `$${(cents / 100).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  `$${(Math.round(cents / 10000) * 100).toLocaleString('en-CA')}`;
 
 const LINES = [
   { key: 'excavation', label: 'Excavation & Site Prep', icon: Pickaxe },
@@ -54,9 +54,9 @@ const INCLUDES = [
   'Polymeric sand joints',
   'Edge restraint + spikes',
   'Geotextile fabric',
-  publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available.'),
+  publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, ''),
   'Site protection & clean-up',
-];
+].filter(Boolean);
 
 const EXCLUDES = [
   'Building permits',

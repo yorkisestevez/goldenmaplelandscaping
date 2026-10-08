@@ -37,7 +37,7 @@ export default function BuyersGuide() {
             </p>
 
             <h2 className="font-display text-3xl font-light text-brand-bonewhite mt-16 mb-8 border-b border-brand-dim/20 pb-4">
-              1. The Engineering Standard for Barrie, ON
+              1. How a Barrie patio is planned
             </h2>
             <p>
               In Simcoe County, the ground expands and contracts significantly due to the winter frost. Base and drainage requirements should be reviewed for the specific site and intended use.
@@ -79,12 +79,12 @@ export default function BuyersGuide() {
             </h2>
             <ol className="list-decimal pl-6 space-y-6">
               <li>
-                <strong className="text-brand-bonewhite">Are you WSIB covered and do you carry liability insurance?</strong><br />
-                Ask each contractor for current coverage documentation and confirm the coverage that applies to your project.
+                <strong className="text-brand-bonewhite">Can you show current WSIB clearance and a liability certificate?</strong><br />
+                Ask for the documents that apply to this job. This site does not publish an insurance amount or a WSIB status until those documents are on file.
               </li>
               <li>
-                <strong className="text-brand-bonewhite">What is your warranty on sink and settlement?</strong><br />
-                Ask for the current written workmanship terms, including scope, exclusions, and maintenance expectations.
+                <strong className="text-brand-bonewhite">What does the written agreement cover if the surface settles?</strong><br />
+                The agreement should name the work it covers, the exclusions, and the remedy. A year-count on a website is not that agreement.
               </li>
               <li>
                 <strong className="text-brand-bonewhite">Can you provide 3D CAD designs before building?</strong><br />

@@ -3,6 +3,7 @@ import { Check, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import Testimonials from '../../components/Testimonials';
+import PlanningQuote from '../../components/PlanningQuote';
 import { publicContact } from '../../data/business';
 import { trackCall, trackEngagement } from '../../utils/analytics';
 
@@ -89,6 +90,12 @@ export default function CompositeDecking() {
                 Planned for your project.
               </h2>
             </div>
+            <PlanningQuote
+              source="composite-decking-barrie"
+              rate="$45–$85"
+              categories={['Decks']}
+              defaultService="Composite deck"
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
               {processSteps.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">

@@ -66,10 +66,6 @@ const FAQS = [
     q: "How far in advance should I book?",
     a: "We recommend booking your design consultation 6-8 weeks before your desired start date. During peak season (May-August), lead times can stretch to 8-12 weeks.",
   },
-  {
-    q: "What warranty do you offer?",
-    a: "Ask us for the current written workmanship terms for your specific project. Manufacturer coverage depends on the selected product and must be confirmed with its current documentation.",
-  },
 ];
 
 const PAGE_PATH = '/locations/thornton/';

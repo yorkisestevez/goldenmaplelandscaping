@@ -3,6 +3,7 @@ import { Check, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import { breadcrumb, graph, serviceNode } from '../utils/schema';
 import Testimonials from '../components/Testimonials';
+import PlanningQuote from '../components/PlanningQuote';
 
 // Premium patio projects ($35K-$75K).
 // Hook: cost transparency + base-depth differentiator + budget qualification.
@@ -11,7 +12,6 @@ import Testimonials from '../components/Testimonials';
 const FAQ = [
   { q: 'How do we start planning?', a: 'Contact us to discuss your property, priorities, and the current consultation and design scope.' },
   { q: 'How are construction details decided?', a: 'Materials, drainage, base preparation, timing, and responsibilities are confirmed for the project-specific written scope.' },
-  { q: 'What terms should I expect?', a: 'Ask for current written workmanship terms, manufacturer information where applicable, and the scope for your project.' },
 ];
 
 export default function PatiosBarrie() {
@@ -63,6 +63,15 @@ export default function PatiosBarrie() {
               />
             </div>
           </div>
+
+          <PlanningQuote
+            source="patios-barrie"
+            rate="$55–$85"
+            rateDetail="per square foot installed for interlocking. A planning range, not a quote for your property."
+            categories={['Patios & interlocking']}
+            defaultService="Interlocking patio"
+            repairHref="/premium-patio-rebuild-barrie/"
+          />
 
           {/* The wedge — base material */}
           <div className="bg-brand-burgundy/10 border border-brand-burgundy/30 rounded-[2px] p-12 md:p-16 mb-40">

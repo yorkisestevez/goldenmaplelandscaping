@@ -31,13 +31,13 @@ export default function ProjectDetail() {
   if (!portfolioVerified) {
     return (
       <div className="bg-brand-nearblack min-h-screen">
-        <SEO title="Project photos | Golden Maple" description="Ask us for examples that match your property and the work you are planning." canonical={canonical} />
+        <SEO title="Project photos | Golden Maple" description="Completed Golden Maple projects. Describe your property on the project form if you do not see a match." canonical={canonical} />
         <section className="section-padding pt-40 md:pt-48">
           <div className="container-custom max-w-4xl">
             <Link to="/portfolio" className="inline-flex items-center gap-3 font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark hover:text-brand-ink transition-colors mb-12"><ArrowLeft size={14} strokeWidth={2} aria-hidden="true" /> All projects</Link>
             <h1 className="font-display text-4xl md:text-7xl font-light text-brand-ink leading-[1.1] mb-10">Project photos are being prepared.</h1>
             <div className="bg-brand-surface border-l-2 border-brand-gold p-10 rounded-[2px]">
-              <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">Ask us for examples that match your property and the work you are planning.</p>
+              <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">These are completed projects. Describe your property on the project form if you do not see a match.</p>
               <Link to="/contact" className="btn-primary inline-block mt-10">Start a project conversation</Link>
             </div>
           </div>

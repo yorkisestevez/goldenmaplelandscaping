@@ -85,7 +85,7 @@ export default function Portfolio() {
               <div className="bg-brand-surface border-l-2 border-brand-gold p-10 rounded-[2px]">
                 <h2 className="font-display text-3xl font-light text-brand-ink mb-4">Project photos are being prepared.</h2>
                 <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
-                  Ask us for examples that match your property and the work you are planning.
+                  These are completed projects. If none match the property, describe it on the project form.
                 </p>
                 <Link to="/contact" className="btn-primary inline-block mt-10">Start a project conversation</Link>
               </div>

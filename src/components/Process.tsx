@@ -1,4 +1,3 @@
-import { publicClaimCopy, BUSINESS } from '../data/business';
 import { Compass, Shield, Heart, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -24,10 +23,9 @@ export default function Process() {
             </p>
 
             <div className="mb-12 p-8 bg-brand-surface border border-brand-gold/20 rounded-[2px]">
-              <h3 className="font-display text-2xl text-brand-gold-dark mb-4">Free Estimate</h3>
+              <h3 className="font-display text-2xl text-brand-gold-dark mb-4">Project estimate</h3>
               <p className="font-sans text-base text-brand-muted leading-relaxed font-light">
-                {publicClaimCopy(BUSINESS.commercialPolicies.consultation, 'Your first conversation with us is complimentary.')}
-                {' '}We'll listen to what you're imagining, ask the right questions, and tell you honestly whether your project is a fit for what we do. Any next step is confirmed with you before it is scheduled.
+                Tell us the space, the budget range, and when you want to build. We reply about whether the project is a fit. A site visit is booked after that, not from this page alone.
               </p>
             </div>
             

@@ -24,8 +24,11 @@ export default function Design3D() {
                 A Vision in <br />
                 <span className="italic text-brand-gold-dark">3D Rendering.</span>
               </h1>
-              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
-                Why guess what your backyard will look like when you can walk through it? Our high-resolution 3D landscape design process eliminates ambiguity and allows you to experience the spatial flow, lighting, and material textures of your future retreat.
+              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-8 font-light">
+                A 3D view shows the layout, the steps, and where you sit. It is a picture of the plan, not a permit drawing.
+              </p>
+              <p className="font-sans text-base text-brand-muted leading-relaxed mb-16 font-light">
+                Decks can be drawn in the 3D deck designer on this site, which prices that deck from the price book. Patio and wall layouts are drawn for the property after the site visit. The crew builds the written scope, not the picture by itself.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>

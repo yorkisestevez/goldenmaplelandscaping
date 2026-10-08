@@ -1,19 +1,6 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CheckCircle, FileText, Shield, Star, BookOpen } from 'lucide-react';
+import { CheckCircle, FileText, Shield, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
-import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
-import { trackLead } from '../utils/analytics';
-import { getAttributionFields } from '../utils/utmCapture';
-import { getBehaviorFields } from '../utils/behavior';
-import { genEventId } from '../utils/eventId';
-
-const encode = (data: Record<string, string>) =>
-  Object.keys(data)
-    .map((k) => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
-    .join('&');
-
-type Status = 'idle' | 'submitting' | 'error';
+import LeadForm from '../components/LeadForm';
 
 const HIGHLIGHTS = [
   'Real per-sqft prices for interlocking, decking, walls, and full backyards in Simcoe County',
@@ -24,74 +11,6 @@ const HIGHLIGHTS = [
 ];
 
 export default function CostGuide() {
-  const navigate = useNavigate();
-  const [status, setStatus] = useState<Status>('idle');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    location: '',
-    'bot-field': '',
-  });
-
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!form.name.trim() || !form.email.trim()) {
-      setStatus('error');
-      setErrorMsg('Just need your name and email — we\'ll send the guide right over.');
-      return;
-    }
-    setStatus('submitting');
-    setErrorMsg('');
-    try {
-      // Pack the self-reported town into `address` so CRM stores it cleanly,
-      // and append a marker into `details` so the lead view shows what they downloaded.
-      const enrichedDetails = `Downloaded the 2026 Simcoe County Cost Guide${
-        form.location ? ` (location: ${form.location})` : ''
-      }`;
-
-      const eventId = genEventId();
-      const payload = {
-        'form-name': 'cost-guide',
-        source: 'cost-guide-page',
-        event_id: eventId,
-        ...getAttributionFields(),
-        ...getBehaviorFields(),
-        name: form.name,
-        email: form.email,
-        address: form.location,
-        details: enrichedDetails,
-        'bot-field': form['bot-field'],
-      };
-
-      // Vite dev server doesn't process Netlify form submissions — short-circuit
-      // in dev so the success flow + redirect can be previewed.
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.log('[dev] cost-guide payload (would POST to Netlify):', payload);
-        trackLead('cost-guide', 'top-of-funnel', undefined, eventId, { email: form.email }, { payload });
-        navigate('/cost-guide/thank-you');
-        return;
-      }
-
-      const res = await fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: encode(payload),
-      });
-      if (!res.ok) throw new Error('Network response was not ok');
-      trackLead('cost-guide', 'top-of-funnel', undefined, eventId, { email: form.email }, { payload });
-      navigate('/cost-guide/thank-you');
-    } catch {
-      setStatus('error');
-      setErrorMsg(`Connection issue. Email ${publicContact.email} and we'll send it manually.`);
-    }
-  };
-
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -158,101 +77,19 @@ export default function CostGuide() {
             {/* Right: Email Capture */}
             <div className="lg:col-span-5 w-full lg:sticky lg:top-32">
               <div className="bg-brand-surface border border-brand-gold/25 rounded-[2px] p-10 md:p-12 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="flex gap-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={12} className="text-brand-gold fill-brand-gold" strokeWidth={0} />
-                    ))}
-                  </div>
-                  <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark">
-                    {publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.')}
-                  </span>
-                </div>
-
                 <h2 className="font-display text-3xl md:text-4xl font-light text-brand-bonewhite leading-tight mb-3">
                   Send me <span className="italic text-brand-gold-dark">the guide.</span>
                 </h2>
-                <p className="font-sans text-sm text-brand-muted font-light mb-10 leading-relaxed">
-                  Instant download. We'll also send 4 short emails over the next 2 weeks with case studies and budget worksheets — no pitches.
+                <p className="font-sans text-sm text-brand-muted font-light mb-8 leading-relaxed">
+                  The PDF downloads on the next page. We do not add you to an email series from this form.
                 </p>
-
-                <form
-                  name="cost-guide"
-                  method="POST"
-                  onSubmit={onSubmit}
-                  className="space-y-6"
-                  noValidate
-                >
-                  <input type="hidden" name="form-name" value="cost-guide" />
-                  <input type="hidden" name="source" value="cost-guide-page" />
-                  <p className="hidden">
-                    <label>Don't fill this out: <input name="bot-field" onChange={onChange} /></label>
-                  </p>
-
-                  <div>
-                    <label htmlFor="cg-name" className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal mb-3 block">First Name</label>
-                    <input
-                      id="cg-name"
-                      type="text"
-                      name="name"
-                      required
-                      value={form.name}
-                      onChange={onChange}
-                      autoComplete="given-name"
-                      className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
-                      placeholder="Jane"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="cg-email" className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal mb-3 block">Email Address</label>
-                    <input
-                      id="cg-email"
-                      type="email"
-                      name="email"
-                      required
-                      value={form.email}
-                      onChange={onChange}
-                      autoComplete="email"
-                      className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
-                      placeholder="jane@email.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="cg-location" className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal mb-3 block">Town or City <span className="text-brand-muted/70 normal-case tracking-normal">(optional)</span></label>
-                    <input
-                      id="cg-location"
-                      type="text"
-                      name="location"
-                      value={form.location}
-                      onChange={onChange}
-                      className="w-full bg-brand-nearblack border-b border-brand-dim/30 py-3 px-1 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
-                      placeholder="Barrie / Innisfil / Oro-Medonte..."
-                    />
-                  </div>
-
-                  {status === 'error' && (
-                    <p className="font-sans text-xs text-brand-error font-light">{errorMsg}</p>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={status === 'submitting'}
-                    className="btn-primary w-full py-5 mt-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
-                  >
-                    {status === 'submitting' ? 'Sending…' : (
-                      <>
-                        Download The Guide
-                        <ArrowRight size={16} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />
-                      </>
-                    )}
-                  </button>
-
-                  <p className="font-sans text-[10px] text-brand-muted/70 text-center font-light leading-relaxed">
-                    By downloading, you agree to receive occasional emails from Golden Maple. We never share your address.
-                  </p>
-                </form>
+                <LeadForm
+                  formName="cost-guide"
+                  source="cost-guide-page"
+                  idPrefix="cost-guide"
+                  submitLabel="Download the guide"
+                  intent="top-of-funnel"
+                />
               </div>
             </div>
           </div>

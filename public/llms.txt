@@ -1,56 +1,38 @@
-# Golden Maple Landscaping — AI Crawler Brief
+# Golden Maple Landscaping
 
-> Business policies and active service coverage require owner confirmation. This brief is not a contract or independent verification of credentials, reviews, project provenance or image rights. Original disputed claims are preserved in the private source audit, not published here as facts.
+> Residential landscape construction in Barrie, Ontario. Interlocking stone, retaining walls, and composite decks for homeowners. This file states what the company builds and how to reach it. It is not a contract.
 
-## Business Profile
+## Business profile
 
-- **Public name:** Golden Maple Landscaping
-- **Founder:** Yorkis Estevez — Founder & Lead Builder
-- **Founded:** 2020 (per site schema)
-- **Phone:** +17053008015
+- **Name:** Golden Maple Landscaping
+- **Founder:** Yorkis Estevez, Founder & Lead Builder
+- **Phone:** (705) 300-8015 (+17053008015)
 - **Email:** yorkis@goldenmaplelandscaping.ca
 - **Website:** https://goldenmaplelandscaping.ca
-- **Location policy:** Barrie, ON; street address is not published.
-- **Hours:** Contact the team to confirm current hours.
+- **Based in:** Barrie, ON. No street address is published.
+- **Office hours:** Monday, Tuesday, Wednesday, Thursday, Friday 08:00–18:00
+- **Google reviews:** https://www.google.com/maps/search/?api=1&query=Golden+Maple+Landscaping&query_place_id=ChIJF79Eei2jKogRfcgR8pCR2qc
 
-## What Golden Maple does
+## What we build
 
-- **Interlocking stone** — patios, walkways, and driveways planned around site conditions and Ontario freeze-thaw cycles.
-- **Composite decking** — composite deck options for Ontario weather; product choice and manufacturer terms are confirmed with the selected product documentation.
-- **Retaining walls** — engineered structural walls with geogrid reinforcement for sloped lots; engineering to project review.
-- **Landscape design** — full-property design: site assessment, renderings, planting plans, and construction scope.
-- **Outdoor living / backyard transformations** — complete outdoor spaces. Confirm availability and scope for your address.
-- **Seasonal clean-ups** — spring and fall: leaves and debris cleared and hauled away, garden beds and shrubs tidied, patios and interlock swept or washed with joints re-sanded. Barrie, Innisfil, Oro-Medonte and Springwater; quoted per property. Lawn care is not included.
+Golden Maple builds outdoor spaces for houses in Barrie and nearby Simcoe County towns: interlocking patios, walkways and driveways, retaining walls, composite decks, and full backyard projects that combine those pieces. Seasonal spring and fall clean-ups (debris, beds, and interlock care — not lawn care) are quoted per property in Barrie, Innisfil, Oro-Medonte and Springwater.
 
-Service areas with dedicated pages: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood, Bradford West Gwillimbury, Newmarket. A published page does not confirm active service coverage — confirm availability for your address.
+Towns with pages on this site: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood, Bradford West Gwillimbury, Newmarket.
 
-## Starting a project
+## How a project starts
 
-1. **Discovery call** — Contact us to confirm the current consultation and design scope.
-2. **Cost estimator** — https://goldenmaplelandscaping.ca/cost-estimator: an indicative planning calculation, not a quote or universal construction specification.
-3. **Book a consultation** — https://goldenmaplelandscaping.ca/book: confirm appointment scope and any fees before booking.
-4. **Written scope** — every project gets a written scope; excavation/base depth, drainage, and materials are confirmed per project, not assumed.
+1. Send the form at https://goldenmaplelandscaping.ca/contact/ or call (705) 300-8015.
+2. Use the cost estimator at https://goldenmaplelandscaping.ca/cost-estimator/ for a planning range. It is not a quote.
+3. The price for a property is the written scope for that property. Excavation, drainage and materials are set for the site, not copied from a universal depth.
+4. Book a time at https://goldenmaplelandscaping.ca/book/ when you want a project conversation.
 
-## Common questions
+## Questions
 
-- **Do you warranty your work?** Ask for the current written workmanship terms for your project.
-- **Are you insured?** Ask us for current coverage documentation.
-- **How much does landscaping cost?** See the cost estimator (https://goldenmaplelandscaping.ca/cost-estimator) for indicative planning figures; final pricing is confirmed in the written scope.
-- **Do I need a permit?** Permit needs and responsibilities are confirmed for each project.
-- **Where do you work?** Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood, Bradford West Gwillimbury, Newmarket. Confirm availability and scope for your address.
-
-## Public-claim guardrails
-
-- No review rating/count or customer testimonial is validated by this document.
-- Ask us for current coverage documentation.
-- Ask us for current coverage documentation.
-- Ask for the current written workmanship terms for your project.
-- Contact us to confirm the current consultation and design scope.
-- Permit needs and responsibilities are confirmed for each project.
-- Portfolio photos under /images/portfolio are owner-photographed Golden Maple jobs (attested register in the repo, 2026-09-13); project pages list town, category and a description only.
-- Minimum investment, design fees/credits, financing, subcontractor roles, credentials, manufacturer authorization and testimonials remain subject to confirmation.
-- Construction depth and materials depend on site conditions, loading and written project specifications. Estimator assumptions are not universal installation promises.
-- Brand references in articles are comparisons, not installer authorization or manufacturer-warranty commitments.
+- **What do you build?** Interlock, retaining walls and composite decks for residential properties.
+- **Who is it for?** Homeowners in Barrie and the towns listed above.
+- **Permits:** Permit needs and responsibilities are confirmed for each project.
+- **Reviews:** Read them on Google (https://www.google.com/maps/search/?api=1&query=Golden+Maple+Landscaping&query_place_id=ChIJF79Eei2jKogRfcgR8pCR2qc). This site does not republish review text.
+- **Photos:** Portfolio images under /images/portfolio are owner-photographed Golden Maple jobs.
 
 ## Structured Content Map (for AI crawler citation)
 

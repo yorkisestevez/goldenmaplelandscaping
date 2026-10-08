@@ -1,41 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, ArrowLeft } from 'lucide-react';
 import SEO from '../components/SEO';
 import Estimator from '../components/Estimator';
 import Reveal from '../components/Reveal';
-import { publicContact } from '../data/business';
-
-/** The estimator renders chrome-less (root.tsx skips SiteChrome) — this slim
- *  bar is its entire app frame: a way home, and a way to call. */
-function EstimatorTopBar() {
-  return (
-    <header className="fixed top-0 inset-x-0 z-50 bg-brand-burgundy/95 backdrop-blur-md border-b border-brand-gold/20">
-      <div className="max-w-[1280px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
-        <Link to="/" className="flex items-center gap-3 min-w-0 group">
-          <img src="/logo-mark.webp" alt="Golden Maple Landscaping" width={160} height={129} className="h-9 w-auto shrink-0" />
-          <span className="hidden sm:flex flex-col leading-tight">
-            <span className="font-display text-[15px] text-brand-porcelain tracking-wide">Golden Maple</span>
-            <span className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-porcelain-soft">Cost Estimator</span>
-          </span>
-          <span className="sm:hidden font-sans text-[11px] uppercase tracking-[0.2em] text-brand-porcelain-soft inline-flex items-center gap-1.5">
-            <ArrowLeft size={13} /> Back to site
-          </span>
-        </Link>
-        <a
-          href={`tel:${publicContact.phoneTel}`}
-          aria-label={`Call Golden Maple at ${publicContact.phoneDisplay}`}
-          className="inline-flex items-center gap-2 font-sans text-[12px] text-brand-porcelain hover:text-brand-gold transition-colors whitespace-nowrap"
-        >
-          <span className="w-8 h-8 rounded-full border border-brand-gold/40 flex items-center justify-center text-brand-gold">
-            <Phone size={13} />
-          </span>
-          <span className="hidden md:inline tabular-nums">{publicContact.phoneDisplay}</span>
-        </a>
-      </div>
-    </header>
-  );
-}
 
 export default function CostEstimator() {
   // While the 3D deck designer is open inside the estimator it is the whole
@@ -85,8 +52,7 @@ export default function CostEstimator() {
         image="https://goldenmaplelandscaping.ca/images/og/cost-estimator-v1.jpg"
         schema={schema}
       />
-      {!studioOpen && <EstimatorTopBar />}
-      <div className={studioOpen ? undefined : 'pt-24 pb-32 bg-brand-nearblack min-h-screen text-brand-bonewhite'}>
+      <div className={studioOpen ? undefined : 'pt-28 pb-32 bg-brand-nearblack min-h-screen text-brand-bonewhite'}>
         {!studioOpen && <h1 className="font-display text-3xl text-center px-4 mb-6">Plan your landscaping investment</h1>}
         <Estimator onStudioChange={setStudioOpen} />
 

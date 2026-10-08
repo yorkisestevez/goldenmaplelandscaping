@@ -79,8 +79,8 @@ export default function About() {
               { icon: Award, title: "Project documentation", desc: publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation is available.') },
               { icon: CheckCircle, title: "Written workmanship terms", desc: publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms are available for your project.') },
               { icon: Compass, title: "Site-specific preparation", desc: "Final excavation, drainage, and base details are confirmed for each written project scope." }
-            ].map((item, idx) => (
-              <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 text-center">
+            ].filter((item) => item.desc).map((item) => (
+              <div key={item.title} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 text-center">
                 <item.icon className="text-brand-gold mx-auto mb-8" size={32} strokeWidth={1.5} />
                 <h2 className="font-display text-2xl font-light text-brand-bonewhite mb-4">{item.title}</h2>
                 <p className="font-sans text-sm text-brand-muted leading-relaxed font-light">{item.desc}</p>
