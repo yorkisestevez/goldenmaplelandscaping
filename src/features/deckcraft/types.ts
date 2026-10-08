@@ -49,7 +49,7 @@ export type DeckInlay =
   | InlayBase&{kind:'custom';points:OutlinePoint[];dxFt?:number;dyFt?:number;rotationDeg?:number;name?:string;frameRows?:1|2;pattern?:InlayFill;frame?:ColourRef};
 /** Skirting under the deck (see skirting.ts): boards or lattice closing in the space between the deck's rim and the
  * ground, clearanceIn above it. A colour left out is the deck's own; `openEdges` names deck sides left open
- * ('deck1-front', 'landing1-left', …). Absent on every existing design. Listed for a builder quote, never priced. */
+ * ('deck1-front', 'landing1-left', …). Absent on every existing design. Priced from the skirting rate table. */
 export type SkirtingStyle = 'Horizontal boards' | 'Vertical boards' | 'Lattice';
 export interface SkirtingConfig {style:SkirtingStyle;colour?:ColourRef;clearanceIn:number;openEdges?:string[];accessPanels?:number;cornerTreatment?:'Folded solid boards'}
 /** Deck parts in their own real product colour (see deckPartFinishes.ts): the border boards, the fascia over the rim,
