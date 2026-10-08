@@ -10,7 +10,7 @@ import {unsupportedJoistEnds} from '../src/features/deckcraft/constructionDetail
 import {doubledMemberSpanIn} from '../src/features/deckcraft/zoneFraming';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {deckReleaseData} from '../src/features/deckcraft/deckRelease';
-import {activeWrap,describeWrap,distanceToSegment,normalizeWrap,porchStairForDoor,wrapBlockers,wrapLabourFactor,wrapZones,WRAP_PORCH_GAP_IN} from '../src/features/deckcraft/lib/wrapGeometry';
+import {activeWrap,describeWrap,distanceToSegment,normalizeWrap,porchStairForDoor,wrapBlockers,wrapHips,wrapLabourFactor,wrapZones,WRAP_PORCH_GAP_IN} from '../src/features/deckcraft/lib/wrapGeometry';
 import {boardOutline,polygonCut} from '../src/features/deckcraft/lib/polygonCuts';
 import {getHouseBlocks,rectPolygon} from '../src/features/deckcraft/houseFootprint';
 import {catalogueAccessoryLayout} from '../src/features/deckcraft/catalogueAccessories';
@@ -65,21 +65,39 @@ function checkWrap(d:DeckData,tag:string){
     const along=(p:{x:number;z:number})=>((p.x-h.a.x)*(h.b.x-h.a.x)+(p.z-h.a.y)*(h.b.y-h.a.y))/total;
     const bearings=[0,...l.supports.filter(p=>distanceToSegment(plan(p),h.a,h.b)<1.5).map(along)].sort((a,b)=>a-b);
     ok(bearings.every((t,i)=>i===0||t-bearings[i-1]<=hipMax),`${tag}: every ${h.side} hip span is within the two-ply span table`);
-    ok(total-bearings.at(-1)!<=l.reference.cantileverIn*Math.SQRT2+1,`${tag}: the ${h.side} hip overhangs its last post by no more than the cantilever allowance`);
+    const straight=Math.abs(h.a.x-h.b.x)<1||Math.abs(h.a.y-h.b.y)<1;
+    ok(total-bearings.at(-1)!<=l.reference.cantileverIn*(straight?1:Math.SQRT2)+1,`${tag}: the ${h.side} hip overhangs its last post by no more than the cantilever allowance`);
+    ok(Math.abs(h.angleDeg-90)<1e-6,`${tag}: the ${h.side} ${h.corner} boards turn where the deck wraps the house`);
+    const expectB=h.corner==='front'
+      ?(h.side==='left'?{x:0,y:0}:{x:wrap.W,y:0})
+      :(h.side==='left'?{x:0,y:-wrap.houseDepthIn}:{x:wrap.W,y:-wrap.houseDepthIn});
+    ok(Math.hypot(h.b.x-expectB.x,h.b.y-expectB.y)<1e-4,`${tag}: the ${h.side} ${h.corner} seam follows the house-wall plane across the wing`);
     const junctions=beams.flatMap(b=>[b.a,b.b]).filter(p=>distanceToSegment(plan(p),h.a,h.b)<2);
     ok(junctions.every(p=>l.supports.some(s=>Math.hypot(s.x-p.x,s.z-p.z)<3)),`${tag}: a post under every beam that meets the ${h.side} hip`);
   }
   ok([...l.joists,...l.beams,...l.blocking,...(l.rim??[])].every(mm=>len(mm)<=192.001),`${tag}: no member is longer than 16 ft stock`);
   // Boards: parallel to their zone's house wall, never across a hip, and the deck is covered.
-  const zones=l.wrapZones!,field=l.boards.filter(b=>b.role==='field');
+  const zones=l.wrapZones!,field=l.boards.filter(b=>b.role==='field'),mitred=new Set<string>();
   for(const b of field){
     const c={x:b.cx,y:b.cy},zone=zones.find(z=>inside(c,z.outline))??zones.find(z=>nearPoly(c,z.outline,3));
     assert(zone,`${tag}: field board at ${c.x.toFixed(1)},${c.y.toFixed(1)} sits in a zone`);
     const wantAlongX=Math.abs(zone.joistDir.y)>.5;
     assert(wantAlongX?Math.abs(b.angleDeg)<1e-6:Math.abs(Math.abs(b.angleDeg)-90)<1e-6,`${tag}: ${zone.label} boards run parallel to its house wall`);
-    for(const h of hips){const s=(p:PlanPoint)=>(h.b.x-h.a.x)*(p.y-h.a.y)-(h.b.y-h.a.y)*(p.x-h.a.x),poly=boardOutline(b,d.boardWidth);if(!poly.some(v=>distanceToSegment(v,h.a,h.b)<12))continue;const signs=poly.map(s).filter(v=>Math.abs(v)>1e-3*Math.hypot(h.b.x-h.a.x,h.b.y-h.a.y));assert(signs.every(v=>v>0)||signs.every(v=>v<0),`${tag}: no board crosses the ${h.side} ${h.corner} hip`);}
+    for(const h of hips){const s=(p:PlanPoint)=>(h.b.x-h.a.x)*(p.y-h.a.y)-(h.b.y-h.a.y)*(p.x-h.a.x),poly=b.polygon??boardOutline(b,d.boardWidth);if(!poly.some(v=>distanceToSegment(v,h.a,h.b)<12))continue;const signs=poly.map(s).filter(v=>Math.abs(v)>1e-3*Math.hypot(h.b.x-h.a.x,h.b.y-h.a.y));assert(signs.every(v=>v>0)||signs.every(v=>v<0),`${tag}: no board crosses the ${h.side} ${h.corner} hip`);
+      const hipAng=Math.atan2(h.b.y-h.a.y,h.b.x-h.a.x),parallel=(a:PlanPoint,c:PlanPoint)=>Math.abs(Math.sin(Math.atan2(c.y-a.y,c.x-a.x)-hipAng))<1e-3;
+      if(poly.some((v,i)=>parallel(v,poly[(i+1)%poly.length])&&distanceToSegment(v,h.a,h.b)<d.boardWidth))mitred.add(`${h.side}:${h.corner}`);}
   }
+  ok(hips.every(h=>mitred.has(`${h.side}:${h.corner}`)),`${tag}: field boards meet the straight seam (${[...mitred].join(', ')||'none'})`);
   checks++;
+  // Outer rim of each zone gets a full-width board (ripped rows sit against the house, not the face).
+  for(const zone of zones){
+    const mine=field.filter(b=>{const c={x:b.cx,y:b.cy};return inside(c,zone.outline)||nearPoly(c,zone.outline,3);});
+    if(!mine.length)continue;
+    const out=zone.joistDir,rank=(b:typeof mine[number])=>b.cx*out.x+b.cy*out.y,edge=Math.max(...mine.map(rank));
+    const outer=mine.filter(b=>rank(b)>edge-d.boardWidth/2);
+    ok(outer.length&&outer.every(b=>Math.abs((b.width??d.boardWidth)-d.boardWidth)<.05),`${tag}: ${zone.label} outer boards are full width (${outer.map(b=>(b.width??d.boardWidth).toFixed(2)).join(', ')||'none'})`);
+  }
+  ok(field.every(b=>(b.width??d.boardWidth)>=1),`${tag}: no hairline field boards under 1 in`);
   const finished=l.deckingFootprint!.outline,polys=l.boards.map(b=>boardOutline(b,d.boardWidth)),xs=finished.map(p=>p.x),ys=finished.map(p=>p.y);
   ok(polys.reduce((n,p)=>n+Math.abs(area(p)),0)<=Math.abs(area(finished))+1,`${tag}: no two boards overlap (board area within the deck area)`);
   let probes=0,missed=0;
@@ -137,6 +155,16 @@ checkWrap(design({length:12,height:36,houseConfig:house(12,30),wrap:{left:{width
   ok(m.flights.length>0&&Math.abs(m.flights[0].start.x-doorX)<1,'The porch stair lines up with the street door');
 }
 
+// A design saved before the 2026-10 rules keeps the corner-to-corner hip, so its price and drawings stay put.
+{
+  const legacy=design({buildRules:'legacy',width:34,length:12,pictureFrameRows:0,houseConfig:house(45,25),wrap:{left:{widthFt:8,runFt:10}}});
+  const saved=activeWrap(legacy)!;
+  ok(saved.miter==='corner','A legacy wrap keeps the corner-to-corner hip');
+  const hip=buildDeckTakeoff(legacy).levels[0].hips![0];
+  ok(Math.abs(hip.angleDeg-45)>1&&Math.hypot(hip.b.x,hip.b.y-12*12)<1e-4,'A legacy uneven wrap still runs the hip to the outside corner');
+  const current=activeWrap(design({width:34,length:12,houseConfig:house(45,25),wrap:{left:{widthFt:8,runFt:10}}}))!;
+  ok(current.miter==='house'&&Math.abs(wrapHips(current)[0].angleDeg-90)<1e-6&&Math.hypot(wrapHips(current)[0].b.x,wrapHips(current)[0].b.y)<1e-4,'A new wrap keeps the front boards one way and turns beside the house');
+}
 // 2. Stairs on a wing end, pricing, labour and review items.
 {
   const d=design({width:22,length:12,houseConfig:house(26,22),wrap:{right:{widthFt:12,runFt:10}},stairEdgeId:'wingR-end'});

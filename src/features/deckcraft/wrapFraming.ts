@@ -10,7 +10,9 @@ import type {DeckLevel,Member,V3} from './deckTakeoff';
  * Framing and decking of a wrap-around main deck. Each zone (main deck, left wing, right wing) is
  * framed in its own frame exactly like a plain attached deck (joists away from its ledger, beams
  * parallel to it, the framing engine's beam rows and posts), then turned into plan. Zones meet on
- * a doubled hip that runs from the house corner to the outside corner:
+ * a doubled member. Current rules keep the front boards in one direction and run that member along
+ * the house-wall plane across the wing, so the pattern turns where the deck wraps the corner; a
+ * legacy save runs a hip on to the outside corner:
  * - jack joists from both zones hang off the hip on skewed hangers;
  * - each zone beam ends on a junction post under the hip;
  * - extra posts keep every hip span within the two-ply span of the beam table, and the hip never
@@ -120,9 +122,11 @@ export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOu
     local.joists=local.joists.filter(j=>Math.hypot(j.b.x-j.a.x,j.b.z-j.a.z)>=3);
     addBearings(local,rowZs);
     // Field boards parallel to this zone's house wall, split at breakers, plus the breaker boards.
+    // Anchor on the zone's outer edge (local top) so the visible rim gets a full board and any ripped
+    // last row falls against the house wall — not a skinny strip on the face of the deck.
     const boards:BoardRun[]=[];
     for(const poly of localField){
-      for(const b of getBoardRows({outline:poly,bounds:geom.size,isCurved:false},{boardWidth,gap,angleDeg:0,inset:0,maxBoardLen:breakers.length?100000:stockLength,buildRules:input.buildRules})){
+      for(const b of getBoardRows({outline:poly,bounds:geom.size,isCurved:false},{boardWidth,gap,angleDeg:0,inset:0,maxBoardLen:breakers.length?100000:stockLength,buildRules:input.buildRules,anchor:'top'})){
         boards.push(...clearBreakers(b,breakers,boardWidth,gap,usesCurrentBuildRules(input)?j=>outlineSpans(poly,breakers[j],'x'):undefined));
       }
       for(const x of breakers)for(const [a,b] of outlineSpans(poly,x,'x'))for(let z=a;z<b;z+=stockLength+gap){
@@ -142,9 +146,11 @@ export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOu
   }
   // One post where the main-deck and wing beams meet the same point on a hip.
   out.supports=out.supports.filter((p,i)=>!out.supports.some((q,j)=>j<i&&Math.hypot(p.x-q.x,p.z-q.z)<1));
-  const hipMax=doubledMemberSpanIn(cfg),endAllowance=out.reference.cantileverIn*Math.SQRT2,y=cfg.top-1-cfg.joistDepth/2;
+  const hipMax=doubledMemberSpanIn(cfg),y=cfg.top-1-cfg.joistDepth/2;
   for(const hip of hips){
     const total=Math.hypot(hip.b.x-hip.a.x,hip.b.y-hip.a.y),u={x:(hip.b.x-hip.a.x)/total,y:(hip.b.y-hip.a.y)/total},n={x:-u.y,y:u.x};
+    // A diagonal hip's overhang is measured along the slope, so the straight cantilever is × √2. A seam straight off the house corner uses the cantilever as it is.
+    const endAllowance=out.reference.cantileverIn*(Math.abs(hip.b.x-hip.a.x)<1||Math.abs(hip.b.y-hip.a.y)<1?1:Math.SQRT2);
     const at=(t:number)=>({x:hip.a.x+u.x*t,y:hip.a.y+u.y*t});
     // The house-corner end hangs on a skewed hip hanger at the ledgers (t = 0).
     let ts=[0,...out.supports.filter(p=>distanceToSegment({x:p.x,y:p.z},hip.a,hip.b)<HIP_TOLERANCE_IN).map(p=>(p.x-hip.a.x)*u.x+(p.z-hip.a.y)*u.y)].sort((a,b)=>a-b).filter((t,i,all)=>i===0||t-all[i-1]>1);
