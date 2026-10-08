@@ -8,7 +8,7 @@
  * to the date of the change and `fingerprint` to the value the check prints. Rates only change with the
  * owner's approval, so this changes with them.
  */
-export const PRICE_BOOK={version:'2026-10-08',fingerprint:'51898a74'} as const;
+export const PRICE_BOOK={version:'2026-10-08',fingerprint:'68cc7487'} as const;
 
 /** "Golden Maple price book 2026-09-23" */
 export const priceBookLabel=(version:string=PRICE_BOOK.version)=>`Golden Maple price book ${version}`;

@@ -22,8 +22,9 @@ export const LIGHTING_TRADE_RATES:Record<string,number>={
   driver_1:71,smart_driver_1:108,smart_driver_tone_1:114,easy_lock:12,
 };
 export const DECKING_RATE_SOURCES={
-  tt_reserve:{supplier:'DeckMart',basis:'published retail benchmark',checkedOn:'2026-09-26',currency:'CAD',boardPrice:103.54,lengthFt:12,engineWidthIn:5.5,sku:'RCGV5412AL',colour:'Antique Leather',url:'https://www.deckmart.com/products/timbertech-antique-leather'},
-  tt_terrain:{supplier:'DeckMart',basis:'regular retail benchmark; clearance excluded',checkedOn:'2026-09-26',currency:'CAD',boardPrice:74.06,lengthFt:12,engineWidthIn:5.5,sku:'TCGV5412SM',colour:'Silver Maple',url:'https://www.deckmart.com/products/timbertech-silver-maple'},
+  tt_reserve:{supplier:'DeckMart',basis:'published retail benchmark',checkedOn:'2026-10-08',currency:'CAD',boardPrice:103.54,lengthFt:12,engineWidthIn:5.5,sku:'RCGV5412AL',colour:'Antique Leather',url:'https://www.deckmart.com/products/timbertech-antique-leather'},
+  // Live sale $59.25 on 2026-10-08; compare-at $74.06 kept (clearance/sale excluded).
+  tt_terrain:{supplier:'DeckMart',basis:'regular retail benchmark; clearance excluded',checkedOn:'2026-10-08',currency:'CAD',boardPrice:74.06,lengthFt:12,engineWidthIn:5.5,sku:'TCGV5412SM',colour:'Silver Maple',url:'https://www.deckmart.com/products/timbertech-silver-maple'},
 } as const;
 export const sourcedDeckingSqft=(id:keyof typeof DECKING_RATE_SOURCES)=>{const r=DECKING_RATE_SOURCES[id];return r.boardPrice/(r.lengthFt*r.engineWidthIn/12);};
 /** Purchased benchmark boards retain their stock width when a custom narrower cut is drawn. */
@@ -31,9 +32,50 @@ export const deckingRateWidth=(id:string,drawnWidth:number)=>DECKING_RATE_SOURCE
 /** This pricing review adopts a 4 ft basis for the existing stair allowances. Scale actual
  * flights, including full-width level steps, rather than counting risers alone. */
 export const STAIR_ALLOWANCE_WIDTH_IN=48;
+/**
+ * DeckMart 12 ft fascia boards only (risers excluded). Prices are regular retail: when Shopify
+ * lists a compare-at above the sale price, the compare-at is kept (same rule as Terrain decking).
+ * Checked 2026-10-08 via product.js; Deckorators fascia not listed on DeckMart.
+ */
+const fascia=(boardPrice:number,sku:string,url:string)=>({boardPrice,stockIn:144,heightIn:11.95,sku,url});
 export const FASCIA_RETAIL_RATES:Record<string,{boardPrice:number;stockIn:number;heightIn:number;sku:string;url:string}>={
-  'tt_prime_plus:Coconut Husk':{boardPrice:153.09,stockIn:144,heightIn:11.95,sku:'TTFBE12CH',url:'https://www.deckmart.com/products/timbertech-prime-plus-fascia'},
-  'tt_reserve:Antique Leather':{boardPrice:193.05,stockIn:144,heightIn:11.95,sku:'FBRC12AL',url:'https://www.deckmart.com/products/timbertech-reserve-fascia'},
+  'tt_prime_plus:Coconut Husk':fascia(153.09,'TTFBE12CH','https://www.deckmart.com/products/timbertech-prime-plus-fascia'),
+  'tt_prime_plus:Sea Salt Gray':fascia(153.09,'TTFBE12ST','https://www.deckmart.com/products/timbertech-prime-plus-fascia'),
+  'tt_prime_plus:Dark Cocoa':fascia(153.09,'TT12EDFDC','https://www.deckmart.com/products/timbertech-prime-plus-fascia'),
+  // Antique Leather live sale $154.44; compare-at $193.05 kept.
+  'tt_reserve:Antique Leather':fascia(193.05,'FBRC12AL','https://www.deckmart.com/products/timbertech-reserve-fascia'),
+  'tt_reserve:Dark Roast':fascia(193.05,'FBRC12DR','https://www.deckmart.com/products/timbertech-reserve-fascia'),
+  'tt_reserve:Driftwood':fascia(193.05,'FBRC12DW','https://www.deckmart.com/products/timbertech-reserve-fascia'),
+  'tt_reserve:Reclaimed Chestnut':fascia(193.05,'FBRC12RC','https://www.deckmart.com/products/timbertech-reserve-fascia'),
+  'tt_terrain:Brown Oak':fascia(161.79,'FBTC12BO','https://www.deckmart.com/products/timbertech-terrain-fascia'),
+  'tt_terrain:Silver Maple':fascia(152.56,'FBTC12SM','https://www.deckmart.com/products/timbertech-terrain-fascia'),
+  'tt_terrain_plus:Dark Oak':fascia(152.56,'FBTC12DO','https://www.deckmart.com/products/timbertech-terrain-plus-fascia'),
+  'tt_terrain_plus:Weathered Oak':fascia(152.56,'FBTC12WO','https://www.deckmart.com/products/timbertech-terrain-plus-fascia'),
+  'tt_terrain_plus:Natural White Oak':fascia(152.56,'FBTC12NW','https://www.deckmart.com/products/timbertech-terrain-plus-fascia'),
+  'tt_prime:Maritime Gray':fascia(153.09,'FBE12MG','https://www.deckmart.com/products/timbertech-prime-fascia'),
+  'tt_prime:Dark Teak':fascia(153.09,'FBE12DT','https://www.deckmart.com/products/timbertech-prime-fascia'),
+  'tt_legacy:Ashwood':fascia(226.62,'FBLC12AW','https://www.deckmart.com/products/timbertech-legacy-fascia'),
+  'tt_legacy:Espresso':fascia(220.22,'FBLC12E','https://www.deckmart.com/products/timbertech-legacy-fascia'),
+  'tt_legacy:Mocha':fascia(226.62,'FBLC12M','https://www.deckmart.com/products/timbertech-legacy-fascia'),
+  'tt_legacy:Pecan':fascia(226.62,'FBLC12P','https://www.deckmart.com/products/timbertech-legacy-fascia'),
+  'tt_legacy:Tigerwood':fascia(226.62,'FBLC12TW','https://www.deckmart.com/products/timbertech-legacy-fascia'),
+  // Whitewash Cedar live sale $176.18; compare-at $220.22 kept.
+  'tt_legacy:Whitewash Cedar':fascia(220.22,'FBLC12WC','https://www.deckmart.com/products/timbertech-legacy-fascia'),
+  'tt_landmark:American Walnut':fascia(165.88,'ADR5117512AW','https://www.deckmart.com/products/timbertech-landmark-fascia'),
+  'tt_landmark:Boardwalk':fascia(165.88,'ADR5117512BD','https://www.deckmart.com/products/timbertech-landmark-fascia'),
+  'tt_landmark:Castle Gate':fascia(165.88,'ADR5117512CG','https://www.deckmart.com/products/timbertech-landmark-fascia'),
+  // French White Oak live sale $132.70; compare-at $165.88 kept.
+  'tt_landmark:French White Oak':fascia(165.88,'ADR5117512FWO','https://www.deckmart.com/products/timbertech-landmark-fascia'),
+  'tt_vintage:Coastline':fascia(250.24,'ADR5117512CS','https://www.deckmart.com/products/timbertech-vintage-fascia'),
+  'tt_vintage:English Walnut':fascia(250.24,'ADR5117512EW','https://www.deckmart.com/products/timbertech-vintage-fascia'),
+  'tt_vintage:Mahogany':fascia(250.24,'ADR5117512MH','https://www.deckmart.com/products/timbertech-vintage-fascia'),
+  'tt_vintage:Weathered Teak':fascia(250.24,'ADR5117512WT','https://www.deckmart.com/products/timbertech-vintage-fascia'),
+  'tt_vintage:Dark Hickory':fascia(250.24,'ADR5117512DH','https://www.deckmart.com/products/timbertech-vintage-fascia'),
+  'tt_harvest:Slate Gray':fascia(125.03,'ADCR5117512SG','https://www.deckmart.com/products/timbertech-harvest-fascia'),
+  'tt_harvest:Brownstone':fascia(125.03,'ADCR5117512BS','https://www.deckmart.com/products/timbertech-harvest-fascia'),
+  // Harvest+ live sale $137.96; compare-at $172.45 kept.
+  'tt_harvest_plus:Toasted Wheat':fascia(172.45,'ADR5117512TWH','https://www.deckmart.com/products/timbertech-harvest-plus-fascia'),
+  'tt_harvest_plus:Timber Gray':fascia(172.45,'ADR5117512TBG','https://www.deckmart.com/products/timbertech-harvest-plus-fascia'),
 };
 /** Carr 2026, printed trade pages 1-2 of Permacon (PDF pages 7-8).
  * Standard colour, named slab/paver profile, full-bundle basis. Visual hex colour

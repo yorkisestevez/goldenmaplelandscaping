@@ -82,6 +82,7 @@ ok(numbersOnly({a:'x',b:1})===numbersOnly({a:'y',b:1})&&numbersOnly({b:1})!==num
   const parity=read('scripts/check-deck-legacy-parity.ts');
   ok(/if\(!report&&\(update\|\|!existsSync\(GOLDEN\)\)\)/.test(parity)&&/if\(report\)\{[\s\S]*?The golden was not written[\s\S]*?process\.exit\(0\);/.test(parity),'The parity report prints price changes and never writes the golden');
   ok(/"deck:rates":\s*"tsx scripts\/deck-rate-report\.ts"/.test(read('package.json')),'npm run deck:rates prints the register');
+  ok(/"deck:rate-intake":\s*"tsx scripts\/deck-rate-intake\.ts"/.test(read('package.json'))&&/"deck:fetch-rates":\s*"tsx scripts\/deck-fetch-deckmart-rates\.ts"/.test(read('package.json')),'npm run deck:rate-intake and deck:fetch-rates gather owner/supplier data');
 }
 
 console.log(`DECK PRICE BOOK OK — ${PRICE_BOOK.version} (${PRICE_BOOK.fingerprint}): ${Object.keys(tables).length} rate tables and ${Object.keys(golden).length} priced scenarios fingerprinted; links, proposal, PDF and lead carry it; ${checks} checks.`);

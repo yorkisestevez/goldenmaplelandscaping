@@ -11,15 +11,15 @@
   "total": 28025.35
  },
  "std/Rectangle/Straight/Straight/freestanding-2lvl": {
-  "model": "f2bd6d4f840c71ed5d86",
+  "model": "e4feae718c25b41c5149",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "c8f672170fe6ef7404a5",
-  "hardware": "0ca9597a2f753eb47fe0",
+  "hardware": "a4c7a9ed000de821a963",
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "646fff1ef7dc74a6a02b",
-  "estimate": "db91f4630caa51d6cfbd",
-  "total": 61777.3
+  "exports": "f3e638361d13e43a7d37",
+  "estimate": "3c7d3d1d53ae5897b1b2",
+  "total": 61668.5
  },
  "std/Rectangle/Straight/Landing/attached": {
   "model": "ca324b08c9148ec59830",
@@ -33,15 +33,15 @@
   "total": 34048.79
  },
  "std/Rectangle/Straight/Landing/freestanding-2lvl": {
-  "model": "f2bd6d4f840c71ed5d86",
+  "model": "e4feae718c25b41c5149",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "c8f672170fe6ef7404a5",
-  "hardware": "0ca9597a2f753eb47fe0",
+  "hardware": "a4c7a9ed000de821a963",
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "646fff1ef7dc74a6a02b",
-  "estimate": "e9f2cc329a3a47eb7be5",
-  "total": 62285.29
+  "exports": "f3e638361d13e43a7d37",
+  "estimate": "6cb12199b3cebd5df802",
+  "total": 62176.49
  },
  "std/Rectangle/Straight/Winder/attached": {
   "model": "d74f07f62b5d45375a3d",
@@ -55,15 +55,15 @@
   "total": 34835.28
  },
  "std/Rectangle/Straight/Winder/freestanding-2lvl": {
-  "model": "f2bd6d4f840c71ed5d86",
+  "model": "e4feae718c25b41c5149",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "c8f672170fe6ef7404a5",
-  "hardware": "0ca9597a2f753eb47fe0",
+  "hardware": "a4c7a9ed000de821a963",
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "646fff1ef7dc74a6a02b",
-  "estimate": "95e500b3dda65ef98b3a",
-  "total": 62623.95
+  "exports": "f3e638361d13e43a7d37",
+  "estimate": "a79f52a1d372ac382ae1",
+  "total": 62515.15
  },
  "std/Rectangle/Diagonal/Straight/attached": {
   "model": "5308313e911e9e2db7cf",
@@ -143,15 +143,15 @@
   "total": 32733
  },
  "std/Rectangle/Picture Frame/Straight/freestanding-2lvl": {
-  "model": "905497e6123fbbe97651",
+  "model": "58a1209b08b7ae2a21ee",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "34e5a3c54cbe2d0195a5",
-  "hardware": "2a80fd983974a40ff8bb",
+  "hardware": "d2466d82d5eaf3f59d67",
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "b7ec9dd8a42581d6e8b0",
-  "estimate": "684bd84ca8d87695152b",
-  "total": 72595.96
+  "exports": "daff51d3d6999b44aaea",
+  "estimate": "64aa17b231f4be701500",
+  "total": 72480.33
  },
  "std/Rectangle/Picture Frame/Landing/attached": {
   "model": "e0871740a39713278b6e",
@@ -165,15 +165,15 @@
   "total": 39945.01
  },
  "std/Rectangle/Picture Frame/Landing/freestanding-2lvl": {
-  "model": "905497e6123fbbe97651",
+  "model": "58a1209b08b7ae2a21ee",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "34e5a3c54cbe2d0195a5",
-  "hardware": "2a80fd983974a40ff8bb",
+  "hardware": "d2466d82d5eaf3f59d67",
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "b7ec9dd8a42581d6e8b0",
-  "estimate": "cce1614e50f369f57a5c",
-  "total": 73230.95
+  "exports": "daff51d3d6999b44aaea",
+  "estimate": "b76be8e53d1b91323256",
+  "total": 73115.32
  },
  "std/Rectangle/Picture Frame/Winder/attached": {
   "model": "c10b6981c6e84226a229",
@@ -187,15 +187,15 @@
   "total": 40297.62
  },
  "std/Rectangle/Picture Frame/Winder/freestanding-2lvl": {
-  "model": "905497e6123fbbe97651",
+  "model": "58a1209b08b7ae2a21ee",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "34e5a3c54cbe2d0195a5",
-  "hardware": "2a80fd983974a40ff8bb",
+  "hardware": "d2466d82d5eaf3f59d67",
   "extras": "3ab76f770dbd3e4fcdea",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "b7ec9dd8a42581d6e8b0",
-  "estimate": "e21f333611b197db81a8",
-  "total": 73654.28
+  "exports": "daff51d3d6999b44aaea",
+  "estimate": "74d43a9d53c070b7d06d",
+  "total": 73538.64
  },
  "std/Rectangle/Herringbone/Straight/attached": {
   "model": "fc0bda6e18034d522fdc",
@@ -275,15 +275,15 @@
   "total": 29038.98
  },
  "std/L-Shape/Straight/Straight/freestanding-2lvl": {
-  "model": "5de9b68967670128891a",
+  "model": "538f65a7261043103a5f",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "c8f672170fe6ef7404a5",
-  "hardware": "8b347447a1561ff18187",
+  "hardware": "462520f33585323dc55f",
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "4a71d8091859b2ca70e9",
-  "estimate": "9ef0e327205313944ff3",
-  "total": 65627.13
+  "exports": "99672cb06e8fa53e2c9b",
+  "estimate": "9bbe37c7ffe48e8a5dbf",
+  "total": 65517.9
  },
  "std/L-Shape/Straight/Landing/attached": {
   "model": "70e367e21bf100126666",
@@ -297,15 +297,15 @@
   "total": 34900.12
  },
  "std/L-Shape/Straight/Landing/freestanding-2lvl": {
-  "model": "5de9b68967670128891a",
+  "model": "538f65a7261043103a5f",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "cfcb17d8c67a50a3508c",
-  "hardware": "8b347447a1561ff18187",
+  "hardware": "462520f33585323dc55f",
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "4a71d8091859b2ca70e9",
-  "estimate": "d3cfebe611f4423663ab",
-  "total": 66185.92
+  "exports": "99672cb06e8fa53e2c9b",
+  "estimate": "5f4a4167c4702b20a425",
+  "total": 66076.69
  },
  "std/L-Shape/Straight/Winder/attached": {
   "model": "840b4ba3de6bf656d764",
@@ -319,15 +319,15 @@
   "total": 36106.86
  },
  "std/L-Shape/Straight/Winder/freestanding-2lvl": {
-  "model": "5de9b68967670128891a",
+  "model": "538f65a7261043103a5f",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "cfcb17d8c67a50a3508c",
-  "hardware": "8b347447a1561ff18187",
+  "hardware": "462520f33585323dc55f",
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "4a71d8091859b2ca70e9",
-  "estimate": "9eeb74aecc3cfb0f1217",
-  "total": 66558.45
+  "exports": "99672cb06e8fa53e2c9b",
+  "estimate": "09afe4065ca0240eab80",
+  "total": 66449.22
  },
  "std/L-Shape/Diagonal/Straight/attached": {
   "model": "90ebdce4a07162295955",
@@ -396,70 +396,70 @@
   "total": 74289.9
  },
  "std/L-Shape/Picture Frame/Straight/attached": {
-  "model": "d94972bae0a8a0e470be",
+  "model": "bd5d642dc79327ff6e8a",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "2153b23e9a18acda8f6d",
-  "hardware": "97c4c45c5ed8e5822aaf",
+  "hardware": "358184e83bdec0ce821e",
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "442e0474385e081e0e5c",
-  "estimate": "b4080a4debb4e03607a0",
-  "total": 33406.76
+  "exports": "2e15ef53ab7fcc75c678",
+  "estimate": "fb94d558a4c997d82b52",
+  "total": 33304.79
  },
  "std/L-Shape/Picture Frame/Straight/freestanding-2lvl": {
-  "model": "fa6ff46ffa29914fe5b2",
+  "model": "092d0b627828a1e8b689",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "3a5817ca092c2115b802",
-  "hardware": "1b0ba46b4798945394ee",
+  "hardware": "2125c24561050b782aac",
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "3f7b48baff216940f4fa",
-  "estimate": "8c72578f6e596b555998",
-  "total": 76149.32
+  "exports": "f174360c370a75553884",
+  "estimate": "3d4833c696613d03d0b4",
+  "total": 76140.78
  },
  "std/L-Shape/Picture Frame/Landing/attached": {
-  "model": "95cbd4fcb64b129ec96c",
+  "model": "c3f662f9522066e4954c",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "32fa711ad46145995503",
-  "hardware": "d5687753199f6e617d67",
+  "hardware": "c5f71209f4004deda96d",
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "5f1de2bed0db77598531",
-  "estimate": "cbfb3c9c459b88246b76",
-  "total": 40930.74
+  "exports": "936c83e66ea9071bbf74",
+  "estimate": "eecf6c9feacbca833c65",
+  "total": 40929.89
  },
  "std/L-Shape/Picture Frame/Landing/freestanding-2lvl": {
-  "model": "fa6ff46ffa29914fe5b2",
+  "model": "092d0b627828a1e8b689",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "3a5817ca092c2115b802",
-  "hardware": "1b0ba46b4798945394ee",
+  "hardware": "2125c24561050b782aac",
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "3f7b48baff216940f4fa",
-  "estimate": "cc5f4be748842f84c034",
-  "total": 76847.81
+  "exports": "f174360c370a75553884",
+  "estimate": "3e27ae5f9a541301d373",
+  "total": 76839.27
  },
  "std/L-Shape/Picture Frame/Winder/attached": {
-  "model": "c64ed2e98ac327489e53",
+  "model": "f449c73d738720ad69aa",
   "issues": "f353f4fd8e7dc0e8aa26",
   "flags": "1aae80b430f7b4e60777",
-  "hardware": "0b1076229d6e99c10a35",
+  "hardware": "a9828ca425c75c513fe0",
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "172b43c15a53449259a4",
-  "estimate": "e054f0ae860bb84c8300",
-  "total": 41403.64
+  "exports": "396f42a4419f77f02553",
+  "estimate": "a178572299137492d6df",
+  "total": 41301.68
  },
  "std/L-Shape/Picture Frame/Winder/freestanding-2lvl": {
-  "model": "fa6ff46ffa29914fe5b2",
+  "model": "092d0b627828a1e8b689",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "3a5817ca092c2115b802",
-  "hardware": "1b0ba46b4798945394ee",
+  "hardware": "2125c24561050b782aac",
   "extras": "47cf5e528959cd1de103",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "3f7b48baff216940f4fa",
-  "estimate": "d80b12098c075e3d52ae",
-  "total": 77313.47
+  "exports": "f174360c370a75553884",
+  "estimate": "e1524a73d8c3de7edcbc",
+  "total": 77304.92
  },
  "std/L-Shape/Herringbone/Straight/attached": {
   "model": "663d9282f5762f2ad019",
@@ -539,15 +539,15 @@
   "total": 30280.01
  },
  "std/Multi-corner/Straight/Straight/freestanding-2lvl": {
-  "model": "b23081d2a18736d8e0b9",
+  "model": "50f21257682707618793",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "cfcb17d8c67a50a3508c",
-  "hardware": "ab9a9fe3c2b19083d19f",
+  "hardware": "d3cec54df0d6bf7fed48",
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "d6d4fa93adccfde6ad7b",
-  "estimate": "4cb03f6460d8c1c66159",
-  "total": 71045.8
+  "exports": "3d51b5ed9203c3ab42ed",
+  "estimate": "9b69589fed4661e3d326",
+  "total": 70936.57
  },
  "std/Multi-corner/Straight/Landing/attached": {
   "model": "bbb7a12eb3e124c024d5",
@@ -561,15 +561,15 @@
   "total": 36818
  },
  "std/Multi-corner/Straight/Landing/freestanding-2lvl": {
-  "model": "b23081d2a18736d8e0b9",
+  "model": "50f21257682707618793",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "cfcb17d8c67a50a3508c",
-  "hardware": "ab9a9fe3c2b19083d19f",
+  "hardware": "d3cec54df0d6bf7fed48",
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "d6d4fa93adccfde6ad7b",
-  "estimate": "69c0b01c63a6d48e7472",
-  "total": 71680.79
+  "exports": "3d51b5ed9203c3ab42ed",
+  "estimate": "425e39b557c21f528557",
+  "total": 71571.56
  },
  "std/Multi-corner/Straight/Winder/attached": {
   "model": "99695e88278d5c5a891a",
@@ -583,15 +583,15 @@
   "total": 37734.8
  },
  "std/Multi-corner/Straight/Winder/freestanding-2lvl": {
-  "model": "b23081d2a18736d8e0b9",
+  "model": "50f21257682707618793",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "cfcb17d8c67a50a3508c",
-  "hardware": "ab9a9fe3c2b19083d19f",
+  "hardware": "d3cec54df0d6bf7fed48",
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "d6d4fa93adccfde6ad7b",
-  "estimate": "41837e5bf89d53ef0f6a",
-  "total": 72104.11
+  "exports": "3d51b5ed9203c3ab42ed",
+  "estimate": "fefde8b71641f812340a",
+  "total": 71994.89
  },
  "std/Multi-corner/Diagonal/Straight/attached": {
   "model": "c74aa1393f0aa61bd039",
@@ -660,70 +660,70 @@
   "total": 81512.6
  },
  "std/Multi-corner/Picture Frame/Straight/attached": {
-  "model": "1f268a4543abbe7e321e",
+  "model": "c26df14fa8eedb95a508",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "898e14dafebab991581f",
-  "hardware": "d4d7d40c5fea85f21b4a",
+  "hardware": "7a6302999f9b7fbaeaaf",
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "50b47eacfdd7b074d3f2",
-  "estimate": "33c49b55539522e12bc5",
-  "total": 35460.42
+  "exports": "82f39b89c35bb980e4a5",
+  "estimate": "4ae15f5d41ddbc0e94b4",
+  "total": 35459.57
  },
  "std/Multi-corner/Picture Frame/Straight/freestanding-2lvl": {
-  "model": "60ab85f59f38db2758f4",
+  "model": "78a94ca8877c0844710a",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "3a5817ca092c2115b802",
-  "hardware": "72a3a3f12c307d710d89",
+  "hardware": "b73a7c145667df33c811",
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "85dca67a178cbf5f1edc",
-  "estimate": "b7f53a5b77c86db0df2a",
-  "total": 83547.04
+  "exports": "ba82ab172004f2cccdf7",
+  "estimate": "fd7063a79562f42a5823",
+  "total": 83543.2
  },
  "std/Multi-corner/Picture Frame/Landing/attached": {
-  "model": "797cca5bd185bd897388",
+  "model": "08682a00354a2676d28c",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "32fa711ad46145995503",
-  "hardware": "852929b1e9049070ff4e",
+  "hardware": "12b4f5ee2ef4f0c9b216",
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "2407acadd62af6648530",
-  "estimate": "6400c456a92b03114be1",
-  "total": 43443.65
+  "exports": "c6102ad86e921adb1cd2",
+  "estimate": "e8526c8574f1269a9e7b",
+  "total": 43341.69
  },
  "std/Multi-corner/Picture Frame/Landing/freestanding-2lvl": {
-  "model": "60ab85f59f38db2758f4",
+  "model": "78a94ca8877c0844710a",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "3a5817ca092c2115b802",
-  "hardware": "72a3a3f12c307d710d89",
+  "hardware": "b73a7c145667df33c811",
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "85dca67a178cbf5f1edc",
-  "estimate": "d80f2a4940c48b98e682",
-  "total": 84340.78
+  "exports": "ba82ab172004f2cccdf7",
+  "estimate": "39b8b5b4b22a21e2444c",
+  "total": 84336.93
  },
  "std/Multi-corner/Picture Frame/Winder/attached": {
-  "model": "b27229e5d021280165da",
+  "model": "e259a414cb7ed8f967e5",
   "issues": "f353f4fd8e7dc0e8aa26",
   "flags": "1aae80b430f7b4e60777",
-  "hardware": "551d78b7b16b0e978fb6",
+  "hardware": "485fbbae45e4ef2b0717",
   "extras": "be00ea6bfba9601b4584",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "c1b10473718fc1098ca3",
-  "estimate": "e6da91ca4e360139cd0d",
-  "total": 43940.95
+  "exports": "09bd34dc084234c48d7b",
+  "estimate": "714b1d07bb4259d47d00",
+  "total": 43940.1
  },
  "std/Multi-corner/Picture Frame/Winder/freestanding-2lvl": {
-  "model": "60ab85f59f38db2758f4",
+  "model": "78a94ca8877c0844710a",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "3a5817ca092c2115b802",
-  "hardware": "72a3a3f12c307d710d89",
+  "hardware": "b73a7c145667df33c811",
   "extras": "e53ccffb244026b5f87c",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "85dca67a178cbf5f1edc",
-  "estimate": "deb38fcdc95cebc25266",
-  "total": 84869.94
+  "exports": "ba82ab172004f2cccdf7",
+  "estimate": "20ada770c52ba1ac67f8",
+  "total": 84866.09
  },
  "std/Multi-corner/Herringbone/Straight/attached": {
   "model": "cc088031c5fd472b7dbd",
@@ -803,15 +803,15 @@
   "total": 37865.52
  },
  "std/Curved/Straight/Straight/freestanding-2lvl": {
-  "model": "4426487c0b020b1dd506",
+  "model": "b05636c23eeef4d48730",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "cfcb17d8c67a50a3508c",
-  "hardware": "26b2dd0262949d37dd78",
+  "hardware": "09a959127559b43eafa2",
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "4445e86cc7abe8910f9d",
-  "estimate": "996eb9d62a1556df9cee",
-  "total": 83533.64
+  "exports": "ff48899e78cb05c4fe14",
+  "estimate": "1f0455860fe728f5fda6",
+  "total": 83424.84
  },
  "std/Curved/Straight/Landing/attached": {
   "model": "add86def1d89bf597ad6",
@@ -825,15 +825,15 @@
   "total": 45027.03
  },
  "std/Curved/Straight/Landing/freestanding-2lvl": {
-  "model": "4426487c0b020b1dd506",
+  "model": "b05636c23eeef4d48730",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "cfcb17d8c67a50a3508c",
-  "hardware": "26b2dd0262949d37dd78",
+  "hardware": "09a959127559b43eafa2",
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "4445e86cc7abe8910f9d",
-  "estimate": "9b1784ef9454b479280a",
-  "total": 84295.62
+  "exports": "ff48899e78cb05c4fe14",
+  "estimate": "c8f2ce608f40740f3962",
+  "total": 84186.83
  },
  "std/Curved/Straight/Winder/attached": {
   "model": "d0eb694bd1b8ea798186",
@@ -847,15 +847,15 @@
   "total": 46075
  },
  "std/Curved/Straight/Winder/freestanding-2lvl": {
-  "model": "4426487c0b020b1dd506",
+  "model": "b05636c23eeef4d48730",
   "issues": "27bd8b162dbd88a01b3a",
   "flags": "cfcb17d8c67a50a3508c",
-  "hardware": "26b2dd0262949d37dd78",
+  "hardware": "09a959127559b43eafa2",
   "extras": "d16ee43b8d53d7d0c8c8",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "4445e86cc7abe8910f9d",
-  "estimate": "7148e95d2d1cc876db07",
-  "total": 84803.62
+  "exports": "ff48899e78cb05c4fe14",
+  "estimate": "2cd4f39a1bd1edd09c8d",
+  "total": 84694.82
  },
  "std/Curved/Diagonal/Straight/attached": {
   "model": "fae189fc4a571225116a",
@@ -1067,15 +1067,15 @@
   "total": 67441.79
  },
  "big/Rectangle/Straight/Straight/freestanding-2lvl": {
-  "model": "2fb86c5da28e485562e1",
+  "model": "ab58833580117b90fd49",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "e1122a059c74e127500e",
-  "hardware": "d0502e9309b786e62061",
+  "hardware": "d30929d693e8c27ef87e",
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "72cbc4504f45a24654ca",
-  "estimate": "2e8e7b1e4acf20ebfd69",
-  "total": 113508.24
+  "exports": "9d80911f75d0ce595f20",
+  "estimate": "bdde2283a1e186f5f9b0",
+  "total": 113399.01
  },
  "big/Rectangle/Straight/Landing/attached": {
   "model": "5fbc744df0cdbb8c0386",
@@ -1089,15 +1089,15 @@
   "total": 72989.46
  },
  "big/Rectangle/Straight/Landing/freestanding-2lvl": {
-  "model": "9c9c465ba75eadfb47a2",
+  "model": "1b54d52b969d6d7d7807",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "e1122a059c74e127500e",
-  "hardware": "58a27e6facfbd011a74d",
+  "hardware": "6f9b4da7a5cd987a1e25",
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "0c6c87a481042e9568b4",
-  "estimate": "79d306ce3ce6a6bcd143",
-  "total": 120338.08
+  "exports": "dc9eaae0915900776c8c",
+  "estimate": "7f77fcb3e6bce7ff0ef8",
+  "total": 120228.85
  },
  "big/Rectangle/Straight/Winder/attached": {
   "model": "e611b8afbbaf88f17223",
@@ -1111,15 +1111,15 @@
   "total": 74351.89
  },
  "big/Rectangle/Straight/Winder/freestanding-2lvl": {
-  "model": "405aa5864cd7845f3d92",
+  "model": "c453f4cce646a309994e",
   "issues": "f353f4fd8e7dc0e8aa26",
   "flags": "ccf58eaa7f98f9b61746",
-  "hardware": "ca27ba497fd6e405a22b",
+  "hardware": "70468be1131024198f14",
   "extras": "a59865161c0768a47263",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "6a84f73ba1b4bce9891e",
-  "estimate": "cefa3011b286ddcd98bc",
-  "total": 122128.68
+  "exports": "e86afb304f085c060b26",
+  "estimate": "323e4470b1bb1032cc74",
+  "total": 122019.46
  },
  "big/Rectangle/Diagonal/Straight/attached": {
   "model": "59bda49fe44d92c1c429",
@@ -1331,15 +1331,15 @@
   "total": 68179.06
  },
  "big/L-Shape/Straight/Straight/freestanding-2lvl": {
-  "model": "c3198ee20a6a6ccf2fce",
+  "model": "f962522e21c0a4b57986",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "e1122a059c74e127500e",
-  "hardware": "fa1c07c972b1a87aba04",
+  "hardware": "f6201ab1bc2f7a9118d1",
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "8692323cd143d25439de",
-  "estimate": "de9cdb7756a8e069be9e",
-  "total": 119125.39
+  "exports": "62afe0fcece661145cd2",
+  "estimate": "c6786fcf35e7c14ea843",
+  "total": 119016.59
  },
  "big/L-Shape/Straight/Landing/attached": {
   "model": "ffdff75da96b841b5f44",
@@ -1353,15 +1353,15 @@
   "total": 74062.37
  },
  "big/L-Shape/Straight/Landing/freestanding-2lvl": {
-  "model": "39c83b6225f753db4cd3",
+  "model": "c9efa4dde4651e445947",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "e1122a059c74e127500e",
-  "hardware": "4133cfbff37c0c7d2fd9",
+  "hardware": "dc6ff5ee257d0105c8c9",
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "fc7595009f56b153a322",
-  "estimate": "9427fe222732e069f4e7",
-  "total": 126419.27
+  "exports": "f1fc323e9af4788a2f4b",
+  "estimate": "66572c592d670f5f4d09",
+  "total": 126310.04
  },
  "big/L-Shape/Straight/Winder/attached": {
   "model": "1466d1dbc4c0b7c530ba",
@@ -1375,15 +1375,15 @@
   "total": 75455.52
  },
  "big/L-Shape/Straight/Winder/freestanding-2lvl": {
-  "model": "d4db7371679086155635",
+  "model": "0f06d271142d43f07292",
   "issues": "f353f4fd8e7dc0e8aa26",
   "flags": "ccf58eaa7f98f9b61746",
-  "hardware": "8ddcad5405069ffe34d3",
+  "hardware": "01918357b04b603cefee",
   "extras": "ca17915a976114d1e12a",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "cbb402ccba046f4571ca",
-  "estimate": "5da0364bb7b3d17c43eb",
-  "total": 128258.78
+  "exports": "7a0849fd759a355531b9",
+  "estimate": "71376ab897168ff8ea74",
+  "total": 128149.98
  },
  "big/L-Shape/Diagonal/Straight/attached": {
   "model": "8448a919c9d2eec93550",
@@ -1595,15 +1595,15 @@
   "total": 73860.93
  },
  "big/Multi-corner/Straight/Straight/freestanding-2lvl": {
-  "model": "165dafaa7ef3def747da",
+  "model": "a3d04a2a5b5c87c8f457",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "e1122a059c74e127500e",
-  "hardware": "b0c5121266fa5d4c134f",
+  "hardware": "c6ba64485a64f7eb4ad4",
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "848b537d352b3e7b2c6e",
-  "estimate": "2a7782647b04a9eb1929",
-  "total": 127774.1
+  "exports": "b4c7f3039cf5a8bb36a1",
+  "estimate": "9140273c01f0b54c6563",
+  "total": 127665.3
  },
  "big/Multi-corner/Straight/Landing/attached": {
   "model": "0cd85c1023910eb355a1",
@@ -1617,15 +1617,15 @@
   "total": 80247.71
  },
  "big/Multi-corner/Straight/Landing/freestanding-2lvl": {
-  "model": "15457ed44c0616ebad80",
+  "model": "f5d5d5fca000383ffde5",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "520786a4ef62c8822e2a",
-  "hardware": "60d6161f43c19f77a655",
+  "hardware": "945ac7624ec0a39e859c",
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "e2fe4dd04eb0056eec60",
-  "estimate": "cfc2e011770c22507fc1",
-  "total": 135763.4
+  "exports": "28a6f8a32f25c8df7f00",
+  "estimate": "3e7113f24320ea8b1d0f",
+  "total": 135654.17
  },
  "big/Multi-corner/Straight/Winder/attached": {
   "model": "c19b711b8af440c7f02e",
@@ -1639,15 +1639,15 @@
   "total": 81686.93
  },
  "big/Multi-corner/Straight/Winder/freestanding-2lvl": {
-  "model": "7ba9d6ae62ac87ee9149",
+  "model": "87fd9c94bb8f67844f37",
   "issues": "f353f4fd8e7dc0e8aa26",
   "flags": "f6e04f41c200aaa0b613",
-  "hardware": "35bbd801596bea17c50a",
+  "hardware": "69c9b141a580205529d8",
   "extras": "5c1db05e964af43fa4e6",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "ab58bba0ad699e110f67",
-  "estimate": "c4b3cbdf3e5b4d8b760a",
-  "total": 137676.92
+  "exports": "952b6b898e28bc44491c",
+  "estimate": "60ea43b9e1e2577d7990",
+  "total": 137568.12
  },
  "big/Multi-corner/Diagonal/Straight/attached": {
   "model": "ae6067651eaab17894a4",
@@ -1859,15 +1859,15 @@
   "total": 94798.3
  },
  "big/Curved/Straight/Straight/freestanding-2lvl": {
-  "model": "74cbf46e1ed662bf86c0",
+  "model": "abacf591694c91fbc5db",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "520786a4ef62c8822e2a",
-  "hardware": "09f820f1d3978342053f",
+  "hardware": "844d1ff9bd8a56970744",
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "85adf597cf5a31fe8fa3",
-  "estimate": "1fd6b308df49ae137864",
-  "total": 161504.44
+  "exports": "c22305fbd18636f3cca1",
+  "estimate": "4258ff1ad0869e4ce27e",
+  "total": 161395.22
  },
  "big/Curved/Straight/Landing/attached": {
   "model": "743221253e8bcea44f5c",
@@ -1881,15 +1881,15 @@
   "total": 102024.2
  },
  "big/Curved/Straight/Landing/freestanding-2lvl": {
-  "model": "1549c8035957ef8cf68e",
+  "model": "c6c2adaad2e13f5b0ca1",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "520786a4ef62c8822e2a",
-  "hardware": "83ffb246a03c4881b7f6",
+  "hardware": "373156d2314c8a83f2a4",
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "de645dcab02097e114df",
-  "estimate": "ff566a9572689d468520",
-  "total": 170652.35
+  "exports": "997f6b5d6f73a47160a9",
+  "estimate": "18a3560c3e1dea91f33d",
+  "total": 170543.12
  },
  "big/Curved/Straight/Winder/attached": {
   "model": "001f8764b157bbf858d1",
@@ -1903,15 +1903,15 @@
   "total": 103540.21
  },
  "big/Curved/Straight/Winder/freestanding-2lvl": {
-  "model": "fad3eb2e4e296441c979",
+  "model": "58ca877ba91053905215",
   "issues": "f353f4fd8e7dc0e8aa26",
   "flags": "f6e04f41c200aaa0b613",
-  "hardware": "2319bba877d18ba518f6",
+  "hardware": "40a760233fe8b34c0456",
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "f21b6f5cb61f9ccc3ca5",
-  "estimate": "ddc0191a6bb94a1771d7",
-  "total": 172689.63
+  "exports": "acff3ba6a56065011c23",
+  "estimate": "a75f6df74edbfaf2d0f3",
+  "total": 172580.41
  },
  "big/Curved/Diagonal/Straight/attached": {
   "model": "597b6db51f59ddb1aba5",
@@ -1991,15 +1991,15 @@
   "total": 110448.55
  },
  "big/Curved/Picture Frame/Straight/freestanding-2lvl": {
-  "model": "74023aceaa21a6f60f22",
+  "model": "f25b09232e20843fad6d",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "f80970e9a82d16a6cab2",
-  "hardware": "a5dc32f359b54eb6a686",
+  "hardware": "8eac9e21060debee5b67",
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "b3ce4661d879c8ca86e5",
-  "estimate": "57aa8a26b67a4931a32d",
-  "total": 190848.45
+  "exports": "84cbad2c5b4025f064ae",
+  "estimate": "9db70998540d862d8f72",
+  "total": 190844.61
  },
  "big/Curved/Picture Frame/Landing/attached": {
   "model": "12feeaab49d8b14a89f2",
@@ -2013,15 +2013,15 @@
   "total": 119388.34
  },
  "big/Curved/Picture Frame/Landing/freestanding-2lvl": {
-  "model": "6b30181947daeca6f812",
+  "model": "ed04f10a85f26be09564",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "f80970e9a82d16a6cab2",
-  "hardware": "63ed5bec881053ad65ba",
+  "hardware": "c156c98825e69e0d47d7",
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "2632c78816d9e7eb3e68",
-  "estimate": "9400b9be33f347e361fb",
-  "total": 202189.69
+  "exports": "57aaaa9ee225f607ec71",
+  "estimate": "9b059316c1f208c8e3c9",
+  "total": 202185.84
  },
  "big/Curved/Picture Frame/Winder/attached": {
   "model": "8d80e25e309201bada0e",
@@ -2035,15 +2035,15 @@
   "total": 120564.32
  },
  "big/Curved/Picture Frame/Winder/freestanding-2lvl": {
-  "model": "050c8bfa7b9db663f580",
+  "model": "19b9c85f88cedb4ea6e4",
   "issues": "f353f4fd8e7dc0e8aa26",
   "flags": "067e2f630ac45db7d040",
-  "hardware": "5002093070996babf660",
+  "hardware": "b02c2674b4cc8a020a4c",
   "extras": "8058580461f5cf57ec09",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "2fb558b33c3647c80763",
-  "estimate": "bbfe6cfdff961b6aa266",
-  "total": 203957.2
+  "exports": "7042beb0ead727558350",
+  "estimate": "a2770a1acc4cef425ad7",
+  "total": 203953.36
  },
  "big/Curved/Herringbone/Straight/attached": {
   "model": "50fcdfb3047101392988",
@@ -2189,15 +2189,15 @@
   "total": 28639.21
  },
  "border/2-matching-lshape": {
-  "model": "df566ad293f67b55835b",
+  "model": "66f7147d3f74ee8e3a79",
   "issues": "e23936dcef4546e9f5d0",
   "flags": "2153b23e9a18acda8f6d",
-  "hardware": "1e86ad699200ba3803cb",
+  "hardware": "ffc6c862449a8e6ffaf4",
   "extras": "4af634aac27941a44456",
   "catalogue": "ed6f0a14cddffc25bb87",
-  "exports": "1f6c63b7e2d03c390f91",
-  "estimate": "e1dec37a9a7330f07315",
-  "total": 30006.09
+  "exports": "6b301062d36a144b77bd",
+  "estimate": "8d50a1a01c2f8982cb4e",
+  "total": 30005.23
  },
  "foundation/helical": {
   "model": "678167029a4785e4c970",

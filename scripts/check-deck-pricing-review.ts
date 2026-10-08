@@ -33,7 +33,9 @@ for(const id of ['tt_reserve','tt_terrain'] as const){
 assert(reserve.boardPrice>terrain.boardPrice&&reserve.basis.includes('retail')&&terrain.basis.includes('retail'));
 const fascia=fasciaSupply('tt_prime_plus:Coconut Husk',[{lengthIn:144,heightIn:10}],1.35)!;
 assert(fascia.boards===2,'One full stock board plus the 10% order allowance rounds to a spare');close(fascia.cost,2*153.09*1.35);
-assert(fasciaSupply('tt_prime_plus:Dark Cocoa',[{lengthIn:144,heightIn:10}],1.35)===null,'Never borrow another colour SKU price');
+const cocoa=fasciaSupply('tt_prime_plus:Dark Cocoa',[{lengthIn:144,heightIn:10}],1.35)!;
+assert(cocoa.rate.sku==='TT12EDFDC'&&cocoa.boards===2,'Dark Cocoa uses its own DeckMart fascia SKU');close(cocoa.cost,2*153.09*1.35);
+assert(fasciaSupply('tt_harvest:Kona',[{lengthIn:144,heightIn:10}],1.35)===null,'Never invent a fascia price for an unsourced colour');
 const cladding=base.sections.find(s=>s.title==='Stair and level cladding')!;
 assert(cladding.total>0&&cladding.items.some(i=>i.cost===null)&&cladding.items.some(i=>i.cost!==null),'Known cladding supply is priced; fitting stays a builder quote');
 close(CARR_PAVER_TRADE_2026['permacon-melville'].rate,5.22);
