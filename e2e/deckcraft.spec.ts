@@ -919,9 +919,9 @@ test('lists what each change does to the price, tags quotes and never shows $0 f
   await withSchedule(page,async()=>{ await expect(schedule(page)).toContainText('Golden Maple price book'); });
   await withSchedule(page,async()=>{ await expect(changes(page)).toHaveCount(0); });
   await openSection(page,'Stairs & railings');
-  // A downgrade and a priced upgrade.
+  // Removing the flight drops its priced cladding and picture-frame allowances. No quote leaves the list.
   await page.getByLabel('Number of stair flights',{exact:true}).selectOption('0');
-  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\u2212\$[\d,]+ Stair flights → 0 \(\d+ fewer to quote\)$/); });
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\u2212\$[\d,]+ Stair flights → 0$/); });
   await page.getByLabel('Railing style',{exact:true}).selectOption('Glass Panels');
   await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\+\$[\d,]+ Railing style → Glass Panels$/); });
   await expect(announcement(page)).toHaveText(/^Railing style: Glass Panels\. \+\$[\d,]+\. Priced subtotal \$[\d,]+\.$/);
