@@ -67,11 +67,11 @@ function checkWrap(d:DeckData,tag:string){
     ok(bearings.every((t,i)=>i===0||t-bearings[i-1]<=hipMax),`${tag}: every ${h.side} hip span is within the two-ply span table`);
     const straight=Math.abs(h.a.x-h.b.x)<1||Math.abs(h.a.y-h.b.y)<1;
     ok(total-bearings.at(-1)!<=l.reference.cantileverIn*(straight?1:Math.SQRT2)+1,`${tag}: the ${h.side} hip overhangs its last post by no more than the cantilever allowance`);
-    ok(Math.abs(h.angleDeg-90)<1e-6,`${tag}: the ${h.side} ${h.corner} boards turn on a straight line at the house corner`);
+    ok(Math.abs(h.angleDeg-90)<1e-6,`${tag}: the ${h.side} ${h.corner} boards turn where the deck wraps the house`);
     const expectB=h.corner==='front'
-      ?(h.side==='left'?{x:wrap.x0,y:wrap.L}:{x:wrap.x1,y:wrap.L})
-      :(h.side==='left'?{x:wrap.x0,y:-wrap.houseDepthIn-wrap.porchLeft!.depthIn}:{x:wrap.x1,y:-wrap.houseDepthIn-wrap.porchRight!.depthIn});
-    ok(Math.hypot(h.b.x-expectB.x,h.b.y-expectB.y)<1e-4,`${tag}: the ${h.side} ${h.corner} seam runs straight out from the house corner`);
+      ?(h.side==='left'?{x:0,y:0}:{x:wrap.W,y:0})
+      :(h.side==='left'?{x:0,y:-wrap.houseDepthIn}:{x:wrap.W,y:-wrap.houseDepthIn});
+    ok(Math.hypot(h.b.x-expectB.x,h.b.y-expectB.y)<1e-4,`${tag}: the ${h.side} ${h.corner} seam follows the house-wall plane across the wing`);
     const junctions=beams.flatMap(b=>[b.a,b.b]).filter(p=>distanceToSegment(plan(p),h.a,h.b)<2);
     ok(junctions.every(p=>l.supports.some(s=>Math.hypot(s.x-p.x,s.z-p.z)<3)),`${tag}: a post under every beam that meets the ${h.side} hip`);
   }
@@ -154,7 +154,7 @@ checkWrap(design({length:12,height:36,houseConfig:house(12,30),wrap:{left:{width
   const hip=buildDeckTakeoff(legacy).levels[0].hips![0];
   ok(Math.abs(hip.angleDeg-45)>1&&Math.hypot(hip.b.x,hip.b.y-12*12)<1e-4,'A legacy uneven wrap still runs the hip to the outside corner');
   const current=activeWrap(design({width:34,length:12,houseConfig:house(45,25),wrap:{left:{widthFt:8,runFt:10}}}))!;
-  ok(current.miter==='house'&&Math.abs(wrapHips(current)[0].angleDeg-90)<1e-6&&Math.hypot(wrapHips(current)[0].b.x-8*12,wrapHips(current)[0].b.y-12*12)<1e-4,'A new wrap turns the boards on a straight line at the house corner, out to the front edge');
+  ok(current.miter==='house'&&Math.abs(wrapHips(current)[0].angleDeg-90)<1e-6&&Math.hypot(wrapHips(current)[0].b.x,wrapHips(current)[0].b.y)<1e-4,'A new wrap keeps the front boards one way and turns beside the house');
 }
 // 2. Stairs on a wing end, pricing, labour and review items.
 {

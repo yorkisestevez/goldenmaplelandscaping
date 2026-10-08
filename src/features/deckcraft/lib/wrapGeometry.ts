@@ -13,10 +13,11 @@ import type {PlanPoint} from './deckGeometry';
  * house's deck-facing wall, the house at y < 0). A wing runs back along a house side wall to
  * y = −run and reaches out `width` from it. The two board directions meet on a doubled member.
  *
- * Current build rules turn the boards at the house corner. The seam is a straight line from that
- * corner out to the deck edge, along the side wall, and the wing's boards run the other way. A saved
- * design on the legacy rules keeps the older corner-to-corner hip, which is 45° only when the wing
- * width equals the deck depth (or the porch depth equals the wing width).
+ * Current build rules keep one board direction across the whole front of the deck. The wing's boards
+ * run the other way only beside the house, so the pattern turns where the deck wraps the corner. The
+ * two zones meet on a doubled member along the house-wall plane across the wing. A saved design on
+ * the legacy rules keeps the older corner-to-corner hip, which is 45° only when the wing width equals
+ * the deck depth (or the porch depth equals the wing width).
  *
  * Each region framed off one house wall is a zone with its own frame: `local = (lx, lz)` with lz
  * measured away from that zone's ledger (the joist direction) and lx along it. The main zone's
@@ -157,16 +158,16 @@ export function wrapOutline(wrap:ActiveWrap):{outline:PlanPoint[];edgeIds:string
   return {outline,edgeIds};
 }
 
-/** Where the seam meets the deck edge. Current rules run straight out from the house corner; legacy hips keep the outside corner. */
+/** Where the seam meets the outer edge of the wing. Current rules follow the house-wall plane across the wing; legacy hips keep the outside corner. */
 function frontHipPoint(wrap:ActiveWrap,side:WrapSide):PlanPoint{
-  const {L,x0,x1,W}=wrap;
-  if(wrap.miter==='house')return side==='left'?{x:x0,y:L}:{x:x1,y:L};
+  const {L,W}=wrap;
+  if(wrap.miter==='house')return side==='left'?{x:0,y:0}:{x:W,y:0};
   return side==='left'?{x:0,y:L}:{x:W,y:L};
 }
 function farHipPoint(wrap:ActiveWrap,side:WrapSide):PlanPoint{
   const HD=wrap.houseDepthIn;
-  if(side==='left'){const d=wrap.porchLeft!.depthIn;return wrap.miter==='house'?{x:wrap.x0,y:-HD-d}:{x:0,y:-HD-d};}
-  const d=wrap.porchRight!.depthIn;return wrap.miter==='house'?{x:wrap.x1,y:-HD-d}:{x:wrap.W,y:-HD-d};
+  if(side==='left'){const d=wrap.porchLeft!.depthIn;return wrap.miter==='house'?{x:0,y:-HD}:{x:0,y:-HD-d};}
+  const d=wrap.porchRight!.depthIn;return wrap.miter==='house'?{x:wrap.W,y:-HD}:{x:wrap.W,y:-HD-d};
 }
 
 export function wrapHips(wrap:ActiveWrap):WrapHip[]{
@@ -182,31 +183,31 @@ export function wrapHips(wrap:ActiveWrap):WrapHip[]{
 export const toPlan=(f:WrapFrame,p:PlanPoint):PlanPoint=>({x:f.origin.x+p.x*f.ux.x+p.y*f.uz.x,y:f.origin.y+p.x*f.ux.y+p.y*f.uz.y});
 export const toLocal=(f:WrapFrame,p:PlanPoint):PlanPoint=>{const dx=p.x-f.origin.x,dy=p.y-f.origin.y;return {x:dx*f.ux.x+dy*f.ux.y,y:dx*f.uz.x+dy*f.uz.y};};
 
-/** Main deck: the rectangle in front of the house. A house-corner seam gives the side strip to the wing. */
+/** Main deck: the whole front. Current rules keep this zone across the wing's front so boards stay one direction there. */
 function mainZoneOutline(wrap:ActiveWrap):PlanPoint[]{
   const {W,L,x0,x1,left,right}=wrap;
-  if(wrap.miter!=='house')return [...(left?[{x:x0,y:0}]:[{x:0,y:0}]),...(right?[{x:x1,y:0}]:[{x:W,y:0}]),{x:W,y:L},{x:0,y:L}];
-  return [left?{x:x0,y:0}:{x:0,y:0},right?{x:x1,y:0}:{x:W,y:0},right?{x:x1,y:L}:{x:W,y:L},left?{x:x0,y:L}:{x:0,y:L}];
+  if(wrap.miter==='house')return [{x:0,y:0},{x:W,y:0},{x:W,y:L},{x:0,y:L}];
+  return [...(left?[{x:x0,y:0}]:[{x:0,y:0}]),...(right?[{x:x1,y:0}]:[{x:W,y:0}]),{x:W,y:L},{x:0,y:L}];
 }
 function leftWingOutline(wrap:ActiveWrap):PlanPoint[]{
-  const {L,x0,left,porchLeft:pl,houseDepthIn:HD}=wrap,far=pl?HD+pl.depthIn:left!.runIn;
-  if(wrap.miter!=='house')return [{x:0,y:-far},pl?{x:x0,y:-HD}:{x:x0,y:-far},{x:x0,y:0},{x:0,y:L}];
-  return [{x:0,y:-far},{x:x0,y:-far},{x:x0,y:L},{x:0,y:L}];
+  const {L,x0,left,porchLeft:pl,houseDepthIn:HD}=wrap;
+  if(wrap.miter==='house'){const back=pl?-HD:-left!.runIn;return [{x:0,y:back},{x:x0,y:back},{x:x0,y:0},{x:0,y:0}];}
+  const far=pl?HD+pl.depthIn:left!.runIn;return [{x:0,y:-far},pl?{x:x0,y:-HD}:{x:x0,y:-far},{x:x0,y:0},{x:0,y:L}];
 }
 function rightWingOutline(wrap:ActiveWrap):PlanPoint[]{
-  const {W,L,x1,right,porchRight:pr,houseDepthIn:HD}=wrap,far=pr?HD+pr.depthIn:right!.runIn;
-  if(wrap.miter!=='house')return [pr?{x:x1,y:-HD}:{x:x1,y:-far},{x:W,y:-far},{x:W,y:L},{x:x1,y:0}];
-  return [{x:x1,y:-far},{x:W,y:-far},{x:W,y:L},{x:x1,y:L}];
+  const {W,L,x1,right,porchRight:pr,houseDepthIn:HD}=wrap;
+  if(wrap.miter==='house'){const back=pr?-HD:-right!.runIn;return [{x:x1,y:back},{x:W,y:back},{x:W,y:0},{x:x1,y:0}];}
+  const far=pr?HD+pr.depthIn:right!.runIn;return [pr?{x:x1,y:-HD}:{x:x1,y:-far},{x:W,y:-far},{x:W,y:L},{x:x1,y:0}];
 }
 function leftPorchOutline(wrap:ActiveWrap):PlanPoint[]{
   const {x0,porchLeft:pl,houseDepthIn:HD}=wrap,d=pl!.depthIn;
-  if(wrap.miter!=='house')return [{x:0,y:-HD-d},{x:x0+pl!.runIn,y:-HD-d},{x:x0+pl!.runIn,y:-HD},{x:x0,y:-HD}];
-  return [{x:x0,y:-HD-d},{x:x0+pl!.runIn,y:-HD-d},{x:x0+pl!.runIn,y:-HD},{x:x0,y:-HD}];
+  if(wrap.miter==='house')return [{x:0,y:-HD-d},{x:x0+pl!.runIn,y:-HD-d},{x:x0+pl!.runIn,y:-HD},{x:0,y:-HD}];
+  return [{x:0,y:-HD-d},{x:x0+pl!.runIn,y:-HD-d},{x:x0+pl!.runIn,y:-HD},{x:x0,y:-HD}];
 }
 function rightPorchOutline(wrap:ActiveWrap):PlanPoint[]{
   const {W,x1,porchRight:pr,houseDepthIn:HD}=wrap,d=pr!.depthIn;
-  if(wrap.miter!=='house')return [{x:x1-pr!.runIn,y:-HD-d},{x:W,y:-HD-d},{x:x1,y:-HD},{x:x1-pr!.runIn,y:-HD}];
-  return [{x:x1-pr!.runIn,y:-HD-d},{x:x1,y:-HD-d},{x:x1,y:-HD},{x:x1-pr!.runIn,y:-HD}];
+  if(wrap.miter==='house')return [{x:x1-pr!.runIn,y:-HD-d},{x:W,y:-HD-d},{x:W,y:-HD},{x:x1-pr!.runIn,y:-HD}];
+  return [{x:x1-pr!.runIn,y:-HD-d},{x:W,y:-HD-d},{x:x1,y:-HD},{x:x1-pr!.runIn,y:-HD}];
 }
 
 /** Framing zones: the main deck off the deck-facing wall and one wing off each wrapped side wall. */
@@ -214,9 +215,16 @@ export function wrapZones(wrap:ActiveWrap):WrapZoneGeometry[]{
   const {W,L,x0,x1,left,right,porchLeft:pl,porchRight:pr,houseDepthIn:HD}=wrap,zones:WrapZoneGeometry[]=[];
   const zone=(id:WrapZoneId,label:string,outline:PlanPoint[],frame:WrapFrame,size:{w:number;h:number})=>zones.push({id,label,outline,frame,local:outline.map(p=>toLocal(frame,p)),size});
   zone('main','Main deck',mainZoneOutline(wrap),{origin:{x:0,y:0},ux:{x:1,y:0},uz:{x:0,y:1}},{w:W,h:L});
-  // A wing with a porch ends on the far hip instead of a square end; it spans the whole house depth plus the porch depth.
-  if(left){const far=pl?HD+pl.depthIn:left.runIn;zone('wingL','Left wing',leftWingOutline(wrap),{origin:{x:x0,y:-far},ux:{x:0,y:1},uz:{x:-1,y:0}},{w:far+L,h:left.widthIn});}
-  if(right){const far=pr?HD+pr.depthIn:right.runIn;zone('wingR','Right wing',rightWingOutline(wrap),{origin:{x:x1,y:L},ux:{x:0,y:-1},uz:{x:1,y:0}},{w:L+far,h:right.widthIn});}
+  // Current rules: the wing stops at the house-wall plane. Legacy: it reaches the front (and a porch's wing reaches the far hip).
+  if(left){
+    const far=wrap.miter==='house'?(pl?HD:left.runIn):(pl?HD+pl.depthIn:left.runIn);
+    zone('wingL','Left wing',leftWingOutline(wrap),{origin:{x:x0,y:-far},ux:{x:0,y:1},uz:{x:-1,y:0}},{w:wrap.miter==='house'?far:far+L,h:left.widthIn});
+  }
+  if(right){
+    const far=wrap.miter==='house'?(pr?HD:right.runIn):(pr?HD+pr.depthIn:right.runIn);
+    const origin=wrap.miter==='house'?{x:x1,y:0}:{x:x1,y:L};
+    zone('wingR','Right wing',rightWingOutline(wrap),{origin,ux:{x:0,y:-1},uz:{x:1,y:0}},{w:wrap.miter==='house'?far:L+far,h:right.widthIn});
+  }
   // Porches are framed off the street-side wall: joists run away from it (toward the street).
   if(left&&pl)zone('porchL','Left porch',leftPorchOutline(wrap),{origin:{x:x0+pl.runIn,y:-HD},ux:{x:-1,y:0},uz:{x:0,y:-1}},{w:pl.runIn+left.widthIn,h:pl.depthIn});
   if(right&&pr)zone('porchR','Right porch',rightPorchOutline(wrap),{origin:{x:W,y:-HD},ux:{x:-1,y:0},uz:{x:0,y:-1}},{w:right.widthIn+pr.runIn,h:pr.depthIn});

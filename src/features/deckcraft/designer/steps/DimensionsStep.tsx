@@ -27,11 +27,11 @@ export default function DimensionsStep({data,update,houseConfig,wrap,wrapStatus,
   const togglePorch=(side:'left'|'right',on:boolean)=>update(setPorch(data,houseConfig,side,on));
   const sizePorch=(side:'left'|'right',patch:Partial<{depthFt:number;runFt:number}>)=>{const next=setPorchSize(data,side,patch);if(next)update(next);};
   const hipNote=(h:{angleDeg:number;corner:'front'|'far'},want:string)=>wrap?.miter==='house'
-    ?'Boards turn at the house corner and run the other way. The two directions meet on a straight line out from that corner.'
+    ?'The front of the deck keeps one board direction. Beside the house the boards run the other way, so the pattern turns where the deck wraps the corner.'
     :`Corner-to-corner hip at ${h.angleDeg.toFixed(0)}° to the ${h.corner==='front'?'back':'street-side'} wall. A true 45° mitre needs ${want}.`;
   const trimFt=(inches:number)=>(inches/12).toFixed(1).replace(/\.0$/,'');
   const wrapSection=<fieldset className="dd-wrap"><legend>Wrap around the house</legend>
-    <p className="dd-note">{wrap?.miter==='house'||(!wrap&&data.buildRules==='2026-10')?"Continue the deck around one or both house corners. A side wing is fastened to the house side wall with its own ledger. At the house corner the boards turn and run the other way, meeting on a straight line out from that corner.":"Continue the deck around one or both house corners. A side wing is fastened to the house side wall with its own ledger, and each corner is mitred on a doubled hip from the house corner to the deck's outside corner."}</p>
+    <p className="dd-note">{wrap?.miter==='house'||(!wrap&&data.buildRules==='2026-10')?"Continue the deck around one or both house corners. A side wing is fastened to the house side wall with its own ledger. The front of the deck keeps one board direction; beside the house the boards run the other way, so the pattern turns where the deck wraps the corner.":"Continue the deck around one or both house corners. A side wing is fastened to the house side wall with its own ledger, and each corner is mitred on a doubled hip from the house corner to the deck's outside corner."}</p>
     {!attachedDeck&&<p className="dd-note">Attach the deck to the house (Attached or Add-on) to wrap it around a corner.</p>}
     {(['left','right'] as const).map(side=>{const wing=data.wrap?.[side],label=side==='left'?'Left':'Right',hip=wrapHipNotes.find(h=>h.side===side&&h.corner==='front'),farHip=wrapHipNotes.find(h=>h.side===side&&h.corner==='far'),porch=data.wrap?.[porchKey(side)],otherPorch=data.wrap?.[porchKey(side==='left'?'right':'left')];
       return <div key={side} className="dd-wrap-wing">

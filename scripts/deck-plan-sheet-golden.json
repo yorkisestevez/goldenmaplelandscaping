@@ -1,5 +1,5 @@
 {
- "note": "ConstructionPlan default (contractor) markup. Reviewed 2026-10-04 after the owner-requested picture-frame default, stock-length seam policy and railing termination, 2026-10-06 after the owner-approved inside-corner fix (new designs seat railing posts on the boards; designs saved before the 2026-10 rules keep their drawings), and 2026-10-07 after wrap-around boards were set to turn at the house corner (a straight seam out from that corner; legacy saves keep the corner-to-corner hip). Regenerate only for an owner-approved change to the contractor plan.",
+ "note": "ConstructionPlan default (contractor) markup. Reviewed 2026-10-04 after the owner-requested picture-frame default, stock-length seam policy and railing termination, 2026-10-06 after the owner-approved inside-corner fix (new designs seat railing posts on the boards; designs saved before the 2026-10 rules keep their drawings), and 2026-10-07 after wrap-around boards were set to keep one direction across the front and turn beside the house (legacy saves keep the corner-to-corner hip). Regenerate only for an owner-approved change to the contractor plan.",
  "cases": {
   "default": {
    "sha256": "71bf7803223d5a62231be6ac304ece50069ace0ac80ccb8b0b1b8c39616ef45a",
@@ -22,12 +22,12 @@
    "bytes": 14057
   },
   "wrap left with a porch": {
-   "sha256": "adac838796ce01f4495f962232e5749bebb5c8bdb50788ca2c796d77429529fc",
-   "bytes": 35027
+   "sha256": "b2047069ba5ccb768d685a61cecc7e4d7e8973366292cca0138b7f4e580d4499",
+   "bytes": 35434
   },
   "wrap both": {
-   "sha256": "6c268e8bf9ea8715a1841212af86fae05f42ff6584278b1c38514de64dc4432c",
-   "bytes": 30593
+   "sha256": "147e37ed000f55cf3e35a4d2392d5749e8f97eafcd80648e7b6a7f2cbc2e7d02",
+   "bytes": 29716
   },
   "accent row and rug inlay": {
    "sha256": "cc014a51bc1f899b3a534e3e28595c7955fe4918d6d830a92d582707116596bb",
