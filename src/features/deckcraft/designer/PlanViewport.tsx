@@ -8,10 +8,12 @@ import ProRulers from './pro/ProRulers';
 import './planViewport.css';
 
 const limit=(value:number)=>Math.max(.15,Math.min(3,value));
+/** A zoomed or panned sheet stays until Fit. Refitting it under the same zoom percentage jumps every handle.
+ * At the fitted view, an edit that changes the sheet (a typed width, a new outline) drops that hold so the
+ * drawing and its dimension buttons follow the design. */
+const frameStamp=(frame:PlanFrame)=>`${frame.viewBox}|${frame.dims?.width.inches??''}|${frame.dims?.depth.inches??''}`;
 /** Navigation changes only the view: neither pricing nor the design's undo history. The Pro workspace docks the
- * navigation controls in its tool strip (`navigationTarget`); they keep working the same way there.
- * Zoom and pan keep the sheet they started on until Fit. A design edit must not drop that sheet: the view box
- * would refit under the same zoom percentage and every handle would jump. */
+ * navigation controls in its tool strip (`navigationTarget`); they keep working the same way there. */
 export default function PlanViewport({children,frame,navigationTarget}:{children:(zoom:number,frame:PlanFrame)=>ReactNode;frame:PlanFrame;navigationTarget?:HTMLElement|null}){
   const box=useRef<HTMLDivElement>(null),stage=useRef<HTMLDivElement>(null);
   // Designer Mode (the Pro workspace) adds rulers in feet along the top and left edges.
@@ -20,6 +22,8 @@ export default function PlanViewport({children,frame,navigationTarget}:{children
   const live=useRef(view);live.current=view;
   const gesture=useRef<{id:number;x:number;y:number;originX:number;originY:number;tapPan?:boolean}|null>(null);
   const frozen=useRef<PlanFrame|null>(null);
+  const fitted=view.zoom===1&&view.x===0&&view.y===0;
+  if(frozen.current&&fitted&&frameStamp(frozen.current)!==frameStamp(frame))frozen.current=null;
   const freeze=()=>{frozen.current??=frame;};
   const zoom=(factor:number,at?:{x:number;y:number})=>setView(old=>{
     const next=limit(old.zoom*factor),ratio=next/old.zoom;
