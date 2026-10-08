@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { Compass, Shield, Heart, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
@@ -17,12 +16,7 @@ export default function Consultation() {
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div>
               <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-10 block">
                 Phase One: The Brief
               </span>
@@ -35,21 +29,15 @@ export default function Consultation() {
               </p>
 
               <div className="bg-brand-surface p-10 border border-brand-gold/20 rounded-[2px] mb-16">
-                <h3 className="font-display text-2xl text-brand-gold-dark mb-4">Start with the Scope.</h3>
+                <h2 className="font-display text-2xl text-brand-gold-dark mb-4">Start with the Scope.</h2>
                 <p className="font-sans text-brand-muted leading-relaxed font-light mb-6">
                   {publicClaimCopy(BUSINESS.commercialPolicies.consultation, "Contact us to confirm the current consultation and design scope.")}
                 </p>
                 <Link to="/contact" className="btn-primary w-full py-5 text-center px-8">Get My Free Estimate</Link>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
-            >
+            <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
                 src="/images/projects/Golden Maple deck and walkway.jpg"
                 alt="Landscape Consultation in Barrie Ontario"
@@ -57,7 +45,7 @@ export default function Consultation() {
                 referrerPolicy="no-referrer"
               />
               <div className="absolute inset-0 bg-brand-black/20" />
-            </motion.div>
+            </div>
           </div>
 
           <div className="mb-40">

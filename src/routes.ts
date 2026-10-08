@@ -124,4 +124,6 @@ export default [
   route('locations/elmvale', 'pages/locations/Elmvale.tsx'),
   route('locations/stayner', 'pages/locations/Stayner.tsx'),
   route('locations/:slug', 'pages/locations/LocationLanding.tsx'),
+
+  route('*', 'pages/NotFound.tsx'),
 ] satisfies RouteConfig;

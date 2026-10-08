@@ -1,7 +1,6 @@
 import { PROJECT_BUDGET_RANGES } from '../data/projectBudgets';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { CheckCircle, ChevronDown } from 'lucide-react';
 import { trackLead, trackEngagement, trackCall } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
@@ -120,12 +119,7 @@ export default function HeroContactForm() {
     'w-full bg-brand-nearblack border border-brand-dim rounded-2xl px-4 py-3 font-sans text-[14px] text-brand-ink placeholder:text-brand-ink-soft focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-brand-cream-light border border-brand-dim rounded-3xl p-6 md:p-8 shadow-[0_30px_70px_-28px_rgba(33,30,21,0.4)]"
-    >
+    <div className="bg-brand-cream-light border border-brand-dim rounded-3xl p-6 md:p-8 shadow-[0_30px_70px_-28px_rgba(33,30,21,0.4)]">
       {status === 'success' ? (
         <div className="py-8 text-center space-y-5">
           <div className="mx-auto w-14 h-14 rounded-full border border-brand-gold flex items-center justify-center">
@@ -221,6 +215,6 @@ export default function HeroContactForm() {
           </p>
         </form>
       )}
-    </motion.div>
+    </div>
   );
 }

@@ -1,6 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, Shield, Calendar, Phone } from 'lucide-react';
 import { trackLead, trackCall } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
@@ -76,12 +75,7 @@ export default function QuickQuote() {
 
   if (status === 'success') {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-brand-burgundy/90 backdrop-blur-md border border-brand-gold/30 rounded-[2px] p-10 shadow-2xl text-center"
-      >
+      <div className="bg-brand-burgundy/90 backdrop-blur-md border border-brand-gold/30 rounded-[2px] p-10 shadow-2xl text-center">
         <div className="mx-auto w-14 h-14 rounded-full border border-brand-gold flex items-center justify-center mb-6">
           <CheckCircle size={24} className="text-brand-gold" strokeWidth={1.5} />
         </div>
@@ -106,17 +100,12 @@ export default function QuickQuote() {
           <Phone size={12} strokeWidth={1.5} />
           {publicContact.phoneDisplay}
         </a>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-brand-burgundy/90 backdrop-blur-md border border-brand-gold/25 rounded-[2px] p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
-    >
+    <div className="bg-brand-burgundy/90 backdrop-blur-md border border-brand-gold/25 rounded-[2px] p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
       <h2 className="font-display text-3xl md:text-4xl font-light text-brand-porcelain leading-tight mb-3">
         Get a <span className="italic text-brand-gold">project estimate</span>
       </h2>
@@ -204,6 +193,6 @@ export default function QuickQuote() {
           <span>We only contact you about your project. No spam, ever — and we never share your number.</span>
         </div>
       </form>
-    </motion.div>
+    </div>
   );
 }

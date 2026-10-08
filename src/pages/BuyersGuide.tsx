@@ -63,12 +63,12 @@ export default function BuyersGuide() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
               <div className="bg-brand-surface p-8 border border-brand-dim/20">
-                <h4 className="text-brand-bonewhite font-display text-2xl mb-4">Interlocking Stone</h4>
+                <h3 className="text-brand-bonewhite font-display text-2xl mb-4">Interlocking Stone</h3>
                 <p className="text-sm mb-4">Highly durable, versatile designs. Permeable options available for better water management.</p>
                 <div className="text-xs text-brand-gold-dark uppercase tracking-widest">Service life: project-specific</div>
               </div>
               <div className="bg-brand-surface p-8 border border-brand-dim/20">
-                <h4 className="text-brand-bonewhite font-display text-2xl mb-4">Composite Decking</h4>
+                <h3 className="text-brand-bonewhite font-display text-2xl mb-4">Composite Decking</h3>
                 <p className="text-sm mb-4">Review the selected product's current maintenance guidance and manufacturer documentation.</p>
                 <div className="text-xs text-brand-gold-dark uppercase tracking-widest">Service life: project-specific</div>
               </div>

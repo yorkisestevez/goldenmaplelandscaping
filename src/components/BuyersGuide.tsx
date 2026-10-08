@@ -1,6 +1,5 @@
 import { PROJECT_BUDGET_RANGES } from '../data/projectBudgets';
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { BUSINESS, publicClaimCopy } from '../data/business';
 import { BookOpen, Calculator, Calendar, ArrowRight, CheckCircle2, FileText, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -123,16 +122,9 @@ const BuyersGuide = () => {
                 ))}
               </ul>
 
-              <AnimatePresence mode="wait">
+              
                 {!guideSubmitted ? (
-                  <motion.form 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onSubmit={handleGuideSubmit}
-                    className="space-y-6"
-                    name="guide-download"
-                  >
+                  <form onSubmit={handleGuideSubmit} className="space-y-6" name="guide-download">
                     <input type="hidden" name="form-name" value="guide-download" />
                     <input type="hidden" name="source" value="buyers_guide_download" />
                     <p className="hidden">
@@ -163,23 +155,19 @@ const BuyersGuide = () => {
                       {!isGuideLoading && <Download size={16} className="ml-3 group-hover:translate-y-1 transition-transform" strokeWidth={1.5} />}
                     </button>
                     <p className="font-sans text-[10px] text-center text-brand-bonewhite/65 uppercase tracking-widest">Instant PDF Access</p>
-                  </motion.form>
+                  </form>
                 ) : (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-8 bg-brand-gold/5 border border-brand-gold/20 text-center rounded-[2px]"
-                  >
+                  <div className="p-8 bg-brand-gold/5 border border-brand-gold/20 text-center rounded-[2px]">
                     <div className="w-16 h-16 bg-brand-gold rounded-full flex items-center justify-center mx-auto mb-6">
                       <Download size={32} className="text-brand-black" strokeWidth={1.5} />
                     </div>
-                    <h4 className="font-display text-2xl text-brand-bonewhite mb-2">Check Your Downloads</h4>
+                    <h3 className="font-display text-2xl text-brand-bonewhite mb-2">Check Your Downloads</h3>
                     <p className="font-sans text-brand-muted text-sm font-light leading-relaxed">
                       Your guide is on its way. If it doesn't start automatically, <a href="/downloads/golden-maple-buyers-guide.pdf" className="text-brand-gold-dark underline decoration-2 underline-offset-4">click here to download manually</a>.
                     </p>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
+              
             </div>
           </div>
 
@@ -211,16 +199,9 @@ const BuyersGuide = () => {
                 ))}
               </div>
 
-              <AnimatePresence mode="wait">
+              
                 {!estimateSubmitted ? (
-                  <motion.form 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onSubmit={handleEstimateSubmit}
-                    className="space-y-4"
-                    name="estimate-request"
-                  >
+                  <form onSubmit={handleEstimateSubmit} className="space-y-4" name="estimate-request">
                     <input type="hidden" name="form-name" value="estimate-request" />
                     <input type="hidden" name="source" value="estimate_request" />
                     <p className="hidden">
@@ -295,35 +276,26 @@ const BuyersGuide = () => {
                       {isEstimateLoading ? "Submitting..." : "Send My Request"}
                       {!isEstimateLoading && <ArrowRight size={16} className="ml-3 group-hover:translate-x-2 transition-transform" strokeWidth={1.5} />}
                     </button>
-                  </motion.form>
+                  </form>
                 ) : (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="p-10 bg-brand-gold/5 border border-brand-gold/20 text-center rounded-[2px]"
-                  >
+                  <div className="p-10 bg-brand-gold/5 border border-brand-gold/20 text-center rounded-[2px]">
                     <div className="w-16 h-16 bg-brand-gold rounded-full flex items-center justify-center mx-auto mb-6">
                       <CheckCircle2 size={32} className="text-brand-black" strokeWidth={2} />
                     </div>
-                    <h4 className="font-display text-3xl text-brand-bonewhite mb-3 font-light">Request Received</h4>
+                    <h3 className="font-display text-3xl text-brand-bonewhite mb-3 font-light">Request Received</h3>
                     <p className="font-sans text-brand-muted text-sm font-light leading-relaxed">
                       Thank you for trusting Golden Maple. Our project specialist will review your details and follow up.
                     </p>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
+              
             </div>
           </div>
 
         </div>
 
         {/* TIER 3: DESIGN PACKAGE BAR */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-12 bg-brand-cream-light rounded-[2px] p-8 md:p-12 overflow-hidden relative group border border-brand-gold/40 shadow-[0_18px_50px_-30px_rgba(33,30,21,0.4)]"
-        >
+        <div className="mt-12 bg-brand-cream-light rounded-[2px] p-8 md:p-12 overflow-hidden relative group border border-brand-gold/40 shadow-[0_18px_50px_-30px_rgba(33,30,21,0.4)]">
           <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-gold to-transparent opacity-40" />
           <div className="flex flex-col md:flex-row justify-between items-center gap-10 relative z-10">
             <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
@@ -331,7 +303,7 @@ const BuyersGuide = () => {
                 Serious Buyers
               </div>
               <div>
-                <h4 className="font-display text-3xl text-brand-ink mb-2 font-light">Book a <span className="italic text-brand-green-dark">Design Package</span></h4>
+                <h3 className="font-display text-3xl text-brand-ink mb-2 font-light">Book a <span className="italic text-brand-green-dark">Design Package</span></h3>
                 <p className="font-sans text-brand-muted text-sm font-light">
                   {publicClaimCopy(BUSINESS.commercialPolicies.design, 'Design-session details are available on request.')}
                 </p>
@@ -344,7 +316,7 @@ const BuyersGuide = () => {
               Tell Us Your Budget
             </Link>
           </div>
-        </motion.div>
+        </div>
 
       </div>
     </section>

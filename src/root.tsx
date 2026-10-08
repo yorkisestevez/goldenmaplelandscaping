@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect } from 'react';
+import { ConsentBanner } from './components/ConsentBanner';
 import { HelmetProvider } from 'react-helmet-async';
 import {
   Links,
@@ -40,14 +41,30 @@ export function Layout({ children }: { children: ReactNode }) {
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/favicon-180.png" />
         <link rel="manifest" href="/site.webmanifest" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '</script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap" media="print" onload="this.media=\'all\'" /><script>',
+          }}
+        />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap"
+          />
+        </noscript>
         <Meta />
         <Links />
-        {/* Static Google tag so Ads Goals scanners see AW-10839158941 without waiting for JS hydrate. send_page_view stays false. */}
+        {/* Static Google tag so Ads Goals scanners see AW-10839158941 without waiting for JS hydrate.
+            Consent defaults to denied, then upgrades when a stored choice is granted, before config.
+            Both tags use send_page_view:false so the SPA sends one page_view per destination. */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-1BRTV91W3Z" />
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1BRTV91W3Z',{send_page_view:false});gtag('config','AW-10839158941');",
+              "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});try{if(localStorage.getItem('gm-consent')==='granted'){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}gtag('js',new Date());gtag('config','G-1BRTV91W3Z',{send_page_view:false});gtag('config','AW-10839158941',{send_page_view:false});",
           }}
         />
         <script
@@ -88,6 +105,7 @@ export default function App() {
 
   return (
     <HelmetProvider>
+      <ConsentBanner />
       {bareApp ? (
         <main>
           <Outlet />

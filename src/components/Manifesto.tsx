@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { Phone } from 'lucide-react';
 import { FOUNDER } from '../data/founder';
 import { trackCall } from '../utils/analytics';
@@ -10,13 +9,7 @@ export default function Manifesto() {
       <div className="max-w-[1200px] mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 md:gap-24 items-center">
           {/* Portrait Image */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-5 relative"
-          >
+          <div className="lg:col-span-5 relative">
             <div className="aspect-[4/5] md:aspect-[3/4] rounded-[2px] overflow-hidden relative z-10 border border-brand-gold/20 group/photo shadow-2xl">
               <img
                 src={FOUNDER.portrait.src}
@@ -42,16 +35,10 @@ export default function Manifesto() {
             <div aria-hidden="true" className="absolute -right-4 top-1/2 -translate-y-1/2 hidden lg:block">
               <span className="font-display text-[120px] text-brand-gold/5 select-none leading-none uppercase font-light">GOLDEN MAPLE</span>
             </div>
-          </motion.div>
+          </div>
 
           {/* Manifesto Content */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-7"
-          >
+          <div className="lg:col-span-7">
             <div className="font-sans text-[11px] tracking-[0.35em] uppercase text-brand-gold mb-8 md:mb-10 flex items-center gap-6">
               <span>A Note From the Founder</span>
               <div className="h-px bg-brand-gold/20 flex-1" />
@@ -88,7 +75,7 @@ export default function Manifesto() {
                 <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('manifesto_phone')} className="font-display text-2xl text-brand-porcelain hover:text-brand-gold transition-colors font-light">{publicContact.phoneDisplay}</a>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

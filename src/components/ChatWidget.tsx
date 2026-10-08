@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
 import { MessageCircle, X, Send, Leaf } from 'lucide-react';
 import { trackEngagement, trackCall, trackLead } from '../utils/analytics';
 import { openSophieSession, type SophieSession } from '../utils/sophieChat';
@@ -154,35 +153,19 @@ export default function ChatWidget() {
   return (
     <>
       {/* Floating button (hidden while panel open). Sits above the mobile action dock. */}
-      <AnimatePresence>
+      
         {!open && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.25 }}
-            onClick={() => setOpen(true)}
-            aria-label="Open chat assistant"
-            className="fixed z-[60] right-4 bottom-[84px] xl:right-6 xl:bottom-6 w-14 h-14 rounded-full bg-gradient-to-br from-brand-green to-brand-green-dark text-brand-black flex items-center justify-center shadow-[0_10px_30px_-6px_rgba(95,174,126,0.55)] hover:shadow-[0_14px_38px_-6px_rgba(95,174,126,0.7)] hover:-translate-y-0.5 transition-all gm-live-dot"
-          >
+          <button onClick={() => setOpen(true)} aria-label="Open chat assistant" className="fixed z-[60] right-4 bottom-[84px] xl:right-6 xl:bottom-6 w-14 h-14 rounded-full bg-gradient-to-br from-brand-green to-brand-green-dark text-brand-black flex items-center justify-center shadow-[0_10px_30px_-6px_rgba(95,174,126,0.55)] hover:shadow-[0_14px_38px_-6px_rgba(95,174,126,0.7)] hover:-translate-y-0.5 transition-all gm-live-dot">
             <MessageCircle size={24} strokeWidth={1.75} />
             <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-brand-green-light border-2 border-brand-nearblack" />
-          </motion.button>
+          </button>
         )}
-      </AnimatePresence>
+      
 
       {/* Chat panel */}
-      <AnimatePresence>
+      
         {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.97 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed z-[60] right-3 left-3 bottom-[84px] sm:left-auto sm:right-6 xl:bottom-6 sm:w-[384px] h-[68vh] max-h-[600px] flex flex-col rounded-3xl overflow-hidden border border-brand-dim bg-brand-surface shadow-[0_30px_80px_-20px_rgba(33,30,21,0.4)]"
-            role="dialog"
-            aria-label="Golden Maple chat assistant"
-          >
+          <div className="fixed z-[60] right-3 left-3 bottom-[84px] sm:left-auto sm:right-6 xl:bottom-6 sm:w-[384px] h-[68vh] max-h-[600px] flex flex-col rounded-3xl overflow-hidden border border-brand-dim bg-brand-surface shadow-[0_30px_80px_-20px_rgba(33,30,21,0.4)]" role="dialog" aria-label="Golden Maple chat assistant">
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-brand-dim/60 bg-gradient-to-r from-brand-green/15 to-transparent">
               <div className="flex items-center gap-3">
@@ -222,12 +205,7 @@ export default function ChatWidget() {
                 <div className="flex justify-start">
                   <div className="bg-brand-midsurface border border-brand-dim/60 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1.5">
                     {[0, 1, 2].map((d) => (
-                      <motion.span
-                        key={d}
-                        className="w-1.5 h-1.5 rounded-full bg-brand-green-light"
-                        animate={{ opacity: [0.3, 1, 0.3] }}
-                        transition={{ duration: 1, repeat: Infinity, delay: d * 0.18 }}
-                      />
+                      <span key={d} className="w-1.5 h-1.5 rounded-full bg-brand-green-light" />
                     ))}
                   </div>
                 </div>
@@ -271,9 +249,9 @@ export default function ChatWidget() {
             <p className="text-center text-[10px] text-brand-muted/70 font-light pb-2 px-4">
               Estimates are rough — exact pricing comes from a site visit. Not a binding quote.
             </p>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      
     </>
   );
 }

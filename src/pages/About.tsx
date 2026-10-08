@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { Shield, Award, CheckCircle, Compass, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import PublicationTrustBar from '../components/PublicationTrustBar';
@@ -19,12 +18,7 @@ export default function About() {
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div>
               <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
                 Who We Are
               </span>
@@ -52,15 +46,9 @@ export default function About() {
                   See Our Work <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full max-w-[380px] mx-auto"
-            >
+            <div className="relative w-full max-w-[380px] mx-auto">
               {/* Gold glow haloing out from behind the frame */}
               <div className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[120%] aspect-square rounded-full bg-brand-gold/15 blur-3xl" aria-hidden="true" />
               {/* Rotated editorial outlines, offset behind the frame */}
@@ -82,7 +70,7 @@ export default function About() {
                   <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-brand-gold mt-3">{FOUNDER.role}</p>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-40">
@@ -94,7 +82,7 @@ export default function About() {
             ].map((item, idx) => (
               <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 text-center">
                 <item.icon className="text-brand-gold mx-auto mb-8" size={32} strokeWidth={1.5} />
-                <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-4">{item.title}</h3>
+                <h2 className="font-display text-2xl font-light text-brand-bonewhite mb-4">{item.title}</h2>
                 <p className="font-sans text-sm text-brand-muted leading-relaxed font-light">{item.desc}</p>
               </div>
             ))}

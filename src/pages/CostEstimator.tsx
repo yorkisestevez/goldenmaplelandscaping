@@ -13,7 +13,7 @@ function EstimatorTopBar() {
     <header className="fixed top-0 inset-x-0 z-50 bg-brand-burgundy/95 backdrop-blur-md border-b border-brand-gold/20">
       <div className="max-w-[1280px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-3 min-w-0 group">
-          <img src="/logo-mark.png" alt="Golden Maple Landscaping" className="h-9 w-auto shrink-0" />
+          <img src="/logo-mark.webp" alt="Golden Maple Landscaping" width={160} height={129} className="h-9 w-auto shrink-0" />
           <span className="hidden sm:flex flex-col leading-tight">
             <span className="font-display text-[15px] text-brand-porcelain tracking-wide">Golden Maple</span>
             <span className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-porcelain-soft">Cost Estimator</span>

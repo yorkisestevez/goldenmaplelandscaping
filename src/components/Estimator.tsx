@@ -1,7 +1,6 @@
 import { Suspense, lazy, useState, useMemo, useEffect, useRef, type ChangeEvent, type ReactNode } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { trackEngagement } from '../utils/analytics';
-import { motion, AnimatePresence } from 'motion/react';
 import {
   Grid, Hexagon, AlignJustify, ListTree, Layout,
   ChefHat, Flame, Sun, Leaf, Lightbulb, Map, Check, ChevronDown, MapPin, Image as ImageIcon, Upload, X,
@@ -1091,11 +1090,7 @@ export default function Estimator({ onStudioChange }: {
       <div ref={cardRef} className="relative bg-brand-cream-light border border-brand-dim rounded-3xl p-7 md:p-14 overflow-hidden shadow-[0_30px_80px_-30px_rgba(0,0,0,0.6)] lg:order-first scroll-mt-20">
         {/* Progress bar */}
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-brand-dim/40 rounded-t-3xl overflow-hidden">
-          <motion.div className="h-full bg-gradient-to-r from-brand-gold/80 via-brand-gold to-brand-gold/80"
-            initial={{ width: '14%' }}
-            animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
-            transition={{ type: 'spring', stiffness: 90, damping: 20 }}
-          />
+          <div className="h-full bg-gradient-to-r from-brand-gold/80 via-brand-gold to-brand-gold/80" />
         </div>
         {/* Step dots are navigation, not decoration. Any step you've already
             reached is one tap away — being able to move around freely is what
@@ -1121,16 +1116,12 @@ export default function Estimator({ onStudioChange }: {
                   visited ? 'cursor-pointer hover:bg-brand-gold/10' : 'cursor-default',
                 )}
               >
-                <motion.span
-                  animate={{ scale: isCurrent ? 1.4 : 1 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                  className={cn(
+                <span className={cn(
                     'w-1.5 h-1.5 rounded-full transition-colors duration-300',
                     isCurrent ? 'bg-brand-gold shadow-[0_0_12px_rgba(212,175,99,0.6)]'
                       : visited ? 'bg-brand-gold/60 group-hover:bg-brand-gold'
                       : 'bg-brand-dim',
-                  )}
-                />
+                  )} />
               </button>
             );
           })}
@@ -1145,19 +1136,13 @@ export default function Estimator({ onStudioChange }: {
                 <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-brand-gold-dark mb-1.5">Your range so far</div>
                 <div className="font-display text-3xl text-brand-bone leading-none flex items-baseline gap-3">
                   <AnimatedPrice low={display.low} high={display.high} separatorClassName="!mx-1.5" />
-                  <AnimatePresence>
+                  
                     {delta !== null && (
-                      <motion.span
-                        key="delta"
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        className={cn("font-sans text-[13px] font-medium", delta > 0 ? "text-brand-gold-dark" : "text-brand-success")}
-                      >
+                      <span key="delta" className={cn("font-sans text-[13px] font-medium", delta > 0 ? "text-brand-gold-dark" : "text-brand-success")}>
                         {delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta / 100) * 100).toLocaleString()}
-                      </motion.span>
+                      </span>
                     )}
-                  </AnimatePresence>
+                  
                 </div>
               </div>
               <div className="hidden lg:block pl-5 border-l border-brand-gold/15">
@@ -1195,9 +1180,9 @@ export default function Estimator({ onStudioChange }: {
           </div>
         )}
 
-        <AnimatePresence mode="wait">
+        
           {step === 1 && (
-            <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+            <div key="step1">
               <h3 className="font-display text-3xl text-brand-bone mb-3">What are you looking to build?</h3>
               <p className="text-sm text-brand-muted mb-8">Choose your project below. Images illustrate each project type.</p>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
@@ -1225,11 +1210,11 @@ export default function Estimator({ onStudioChange }: {
                   );
                 })}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {step === 2 && (
-            <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+            <div key="step2">
               <h3 className="font-display text-3xl text-brand-bone mb-6">Let's talk size and scope.</h3>
 
               {/* Asked here, not on step 1 — after they've told us what they
@@ -1332,11 +1317,11 @@ export default function Estimator({ onStudioChange }: {
                   {renderDetailQuestions(projectType!)}
                 </div>
               )}
-            </motion.div>
+            </div>
           )}
 
           {step === 3 && (
-            <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+            <div key="step3">
               <h3 className="font-display text-3xl text-brand-bone mb-8">Any special site conditions?</h3>
               <p className="font-sans text-[13px] text-brand-muted mb-8">Select any that apply. These affect labour time, equipment, and final pricing.</p>
               <div className="space-y-4">
@@ -1380,11 +1365,11 @@ export default function Estimator({ onStudioChange }: {
                   );
                 })}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {step === 4 && (
-            <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+            <div key="step4">
               <div className="flex items-center gap-3 mb-8">
                 <MapPin size={22} className="text-brand-gold-dark" strokeWidth={1.5} />
                 <h3 className="font-display text-3xl text-brand-bone">Where's the project?</h3>
@@ -1412,11 +1397,11 @@ export default function Estimator({ onStudioChange }: {
                   </button>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {step === 5 && (
-            <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+            <div key="step5">
               <h3 className="font-display text-3xl text-brand-bone mb-3">Material preference</h3>
               <p className="font-sans text-[13px] text-brand-muted mb-8">Pick a tier first, then a specific brand. Material availability and final selections are confirmed for your project.</p>
 
@@ -1460,11 +1445,11 @@ export default function Estimator({ onStudioChange }: {
               </div>
 
               {renderBrandPickers()}
-            </motion.div>
+            </div>
           )}
 
           {step === 6 && (
-            <motion.div key="step6" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+            <div key="step6">
               <h3 className="font-display text-3xl text-brand-bone mb-3">Add-ons & extras</h3>
               <p className="font-sans text-[13px] text-brand-muted mb-8">Optional. Each item adds a real line to your estimate.</p>
 
@@ -1541,11 +1526,11 @@ export default function Estimator({ onStudioChange }: {
                   </label>
                 )}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {step === 7 && display.lines && (
-            <motion.div key="step7" initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
+            <div key="step7">
               <EstimateBreakdown
                 excavation={display.lines.excavation}
                 materials={display.lines.materials}
@@ -1694,9 +1679,9 @@ export default function Estimator({ onStudioChange }: {
               <p className="mt-8 font-sans text-xs font-normal text-brand-bonewhite/80 text-center max-w-3xl mx-auto leading-[1.6]">
                 {getEstimatorRangeCopy(projectType, selectedElements)} <span className="text-brand-gold-dark font-normal">No job minimum — every project gets priced on its real scope, whatever the size.</span> Final pricing depends on site measurement, material availability, access, drainage, and design complexity.
               </p>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        
 
         {step < TOTAL_STEPS && (
           <div className="mt-14 pt-8 border-t border-brand-dim/60 flex flex-col-reverse gap-4 sm:flex-row sm:justify-between sm:items-center">
@@ -1799,19 +1784,13 @@ function ReceiptRail({ precise, deckLabel, displayLow, displayHigh, confidence, 
         </div>
         <div className="flex items-baseline gap-2.5 mb-1">
           <AnimatedMoney cents={precise.subtotalCents} className="font-display text-[32px] leading-none text-brand-bone tracking-tight" />
-          <AnimatePresence>
+          
             {delta !== null && (
-              <motion.span
-                key="delta"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                className={cn('font-sans text-[12px] font-medium', delta > 0 ? 'text-brand-gold-dark' : 'text-brand-success')}
-              >
+              <span key="delta" className={cn('font-sans text-[12px] font-medium', delta > 0 ? 'text-brand-gold-dark' : 'text-brand-success')}>
                 {delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta / 100) * 100).toLocaleString()}
-              </motion.span>
+              </span>
             )}
-          </AnimatePresence>
+          
         </div>
         <div className="font-sans text-[11px] text-brand-muted mb-4">
           + HST · likely range {fmt(displayLow)}–{fmt(displayHigh)} · ±{confidence}%
@@ -1867,13 +1846,7 @@ function DesktopResultCta({ low, high, confidence, preciseCents, onSave }: {
   low: number; high: number; confidence: number; preciseCents: number | null; onSave: () => void;
 }) {
   return (
-    <motion.div
-      data-testid="desktop-result-cta"
-      initial={{ y: 24, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-5 bg-brand-black border border-brand-gold/30 rounded-full pl-6 pr-3 py-3 shadow-[0_10px_40px_rgba(0,0,0,0.45)]"
-    >
+    <div data-testid="desktop-result-cta" className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-5 bg-brand-black border border-brand-gold/30 rounded-full pl-6 pr-3 py-3 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
       <div className="min-w-0">
         <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">
           Your estimate · ±{confidence}%{preciseCents ? ' · +HST' : ''}
@@ -1893,7 +1866,7 @@ function DesktopResultCta({ low, high, confidence, preciseCents, onSave }: {
       >
         Save build →
       </button>
-    </motion.div>
+    </div>
   );
 }
 
@@ -1906,12 +1879,7 @@ function MobileStickyBar({ low, high, delta, confidence, label, onContinue, sele
 }) {
   if (low === 0) {
     return (
-      <motion.div
-        initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-brand-gold/30 px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
-      >
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-brand-gold/30 px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
         <div className="min-w-0">
           <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">Selected</div>
           <div className="font-display text-lg text-brand-porcelain truncate">{selectedLabel}</div>
@@ -1922,16 +1890,11 @@ function MobileStickyBar({ low, high, delta, confidence, label, onContinue, sele
         >
           {label}
         </button>
-      </motion.div>
+      </div>
     );
   }
   return (
-    <motion.div
-      initial={{ y: 80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-brand-gold/30 px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
-    >
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-brand-gold/30 px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
       <div className="min-w-0">
         <div className="font-sans text-[9px] uppercase tracking-[0.25em] text-brand-gold">{title ?? 'Running Estimate'} · ±{confidence}%{preciseCents ? ' · +HST' : ''}</div>
         <div className="font-display text-lg text-brand-porcelain truncate flex items-baseline gap-2">
@@ -1940,19 +1903,13 @@ function MobileStickyBar({ low, high, delta, confidence, label, onContinue, sele
           ) : (
             <AnimatedPrice low={low} high={high} separatorClassName="!mx-1.5" />
           )}
-          <AnimatePresence>
+          
             {delta !== null && (
-              <motion.span
-                key="delta"
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className={cn("font-sans text-[11px] font-medium", delta > 0 ? "text-brand-gold" : "text-brand-porcelain-soft")}
-              >
+              <span key="delta" className={cn("font-sans text-[11px] font-medium", delta > 0 ? "text-brand-gold" : "text-brand-porcelain-soft")}>
                 {delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta / 100) * 100).toLocaleString()}
-              </motion.span>
+              </span>
             )}
-          </AnimatePresence>
+          
         </div>
       </div>
       <button
@@ -1961,7 +1918,7 @@ function MobileStickyBar({ low, high, delta, confidence, label, onContinue, sele
       >
         {label}
       </button>
-    </motion.div>
+    </div>
   );
 }
 

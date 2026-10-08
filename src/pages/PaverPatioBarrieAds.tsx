@@ -1,6 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { ArrowRight, Check, CheckCircle, Phone, Shield } from 'lucide-react';
 import SEO from '../components/SEO';
 import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
@@ -176,12 +175,7 @@ function PaverQuoteForm() {
 
   if (status === 'success') {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-brand-burgundy/95 backdrop-blur-md border border-brand-gold/30 rounded-[2px] p-10 shadow-2xl text-center"
-      >
+      <div className="bg-brand-burgundy/95 backdrop-blur-md border border-brand-gold/30 rounded-[2px] p-10 shadow-2xl text-center">
         <div className="mx-auto w-14 h-14 rounded-full border border-brand-gold flex items-center justify-center mb-6">
           <CheckCircle size={24} className="text-brand-gold" strokeWidth={1.5} />
         </div>
@@ -204,18 +198,12 @@ function PaverQuoteForm() {
           <Phone size={12} strokeWidth={1.5} />
           {publicContact.phoneDisplay}
         </a>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      id="quote-form"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-brand-burgundy/95 backdrop-blur-md border border-brand-gold/25 rounded-[2px] p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
-    >
+    <div id="quote-form" className="bg-brand-burgundy/95 backdrop-blur-md border border-brand-gold/25 rounded-[2px] p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
       <h2 className="font-display text-3xl md:text-4xl font-light text-brand-porcelain leading-tight mb-3">
         Get your <span className="italic text-brand-gold">paver patio estimate</span>
       </h2>
@@ -357,7 +345,7 @@ function PaverQuoteForm() {
           <span>We only contact you about your project. No spam, ever — and we never share your number.</span>
         </div>
       </form>
-    </motion.div>
+    </div>
   );
 }
 
@@ -387,12 +375,7 @@ export default function PaverPatioBarrieAds() {
       <section className="section-padding pt-40 md:pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div>
               <a
                 href={`tel:${publicContact.phoneTel}`}
                 onClick={() => trackCall('paver_ads_header_phone')}
@@ -422,7 +405,7 @@ export default function PaverPatioBarrieAds() {
                   See Your Cost Range <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
-            </motion.div>
+            </div>
 
             <PaverQuoteForm />
           </div>

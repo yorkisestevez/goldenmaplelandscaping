@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { Hammer, Shield, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
@@ -17,12 +16,7 @@ export default function Construction() {
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div>
               <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-10 block">
                 Phase Five: Implementation
               </span>
@@ -39,15 +33,9 @@ export default function Construction() {
                   Landscape construction in Barrie <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
-            >
+            <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
                 src="/images/projects/Golden Maple deck and walkway.jpg"
                 alt="Landscape Construction Barrie Ontario"
@@ -58,7 +46,7 @@ export default function Construction() {
                 <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Construction Planning</p>
                 <p className="font-display text-xl text-brand-porcelain italic font-light">Project-Specific Scope</p>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           <div className="mb-40">

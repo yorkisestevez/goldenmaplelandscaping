@@ -1,5 +1,4 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, MapPin, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
@@ -104,50 +103,30 @@ export default function ServiceLocation() {
         <div className="container-custom relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
             <div className="lg:col-span-7">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
-                className="flex items-center gap-4 mb-8"
-              >
+              <div className="flex items-center gap-4 mb-8">
                 <MapPin size={14} className="text-brand-gold-dark" strokeWidth={1.5} />
                 <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark">
                   {location.name} · {location.region}
                 </span>
-              </motion.div>
+              </div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.1 }}
-                className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-10"
-              >
+              <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-10">
                 {service.shortName} in <br />
                 <span className="text-brand-gold-dark italic">{location.name}, Ontario.</span>
-              </motion.h1>
+              </h1>
 
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.2 }}
-                className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light max-w-xl mb-10"
-              >
+              <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light max-w-xl mb-10">
                 {service.blurb}
-              </motion.p>
+              </p>
 
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 0.3 }}
-                className="flex flex-wrap items-center gap-6 text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light"
-              >
+              <div className="flex flex-wrap items-center gap-6 text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
                 <span className="flex items-center gap-2">
                   <span className="font-sans text-brand-gold-dark text-xl font-normal normal-case tracking-normal">
                     {service.startingPriceText}
                   </span>
                   <span>{service.perUnitText}</span>
                 </span>
-              </motion.div>
+              </div>
             </div>
 
             <div className="lg:col-span-5 w-full">

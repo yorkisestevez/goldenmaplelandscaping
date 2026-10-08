@@ -1,7 +1,6 @@
 import { PROJECT_BUDGET_RANGES } from '../data/projectBudgets';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, Clock, Shield, Award, CheckCircle, ChevronDown } from 'lucide-react';
 import SEO from '../components/SEO';
 import PublicationTrustBar from '../components/PublicationTrustBar';
@@ -135,12 +134,7 @@ export default function Contact() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div>
               <div className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
                 <h2 className="font-display text-3xl font-light text-brand-bonewhite mb-8 leading-tight">Tell us about your space</h2>
 
@@ -279,15 +273,9 @@ export default function Contact() {
                   </form>
                 )}
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col gap-20"
-            >
+            <div className="flex flex-col gap-20">
               <div className="space-y-16">
                 <h2 className="font-display text-3xl font-light text-brand-bonewhite leading-tight">Get in Touch</h2>
                 <div className="space-y-12">
@@ -347,7 +335,7 @@ export default function Contact() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           <div className="h-[600px] w-full rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10 grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-1000">

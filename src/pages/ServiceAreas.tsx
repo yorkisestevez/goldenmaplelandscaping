@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import { Link } from 'react-router-dom';
@@ -41,14 +40,7 @@ export default function ServiceAreas() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-32">
           {AREAS.map((area, idx) => (
-            <motion.div
-              key={area.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: idx * 0.1 }}
-              className="bg-brand-surface border border-brand-gold/10 p-8 rounded-[2px] flex flex-col hover:border-brand-gold/40 transition-all group"
-            >
+            <div key={area.name} className="bg-brand-surface border border-brand-gold/10 p-8 rounded-[2px] flex flex-col hover:border-brand-gold/40 transition-all group">
               <div className="text-brand-gold mb-6 group-hover:scale-110 transition-transform duration-500">
                 <MapPin size={32} strokeWidth={1.5} />
               </div>
@@ -63,17 +55,12 @@ export default function ServiceAreas() {
                 <span>{area.slug ? "Learn More" : "Request Quote"}</span>
                 <ArrowRight size={14} />
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center mb-32">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          >
+          <div>
             <h2 className="font-display text-4xl md:text-6xl leading-[1.1] mb-10 text-brand-bone">
               Landscaping <br />
               <span className="italic text-brand-gold-dark">Near Me in Barrie.</span>
@@ -96,15 +83,9 @@ export default function ServiceAreas() {
               ))}
             </ul>
             <Link to="/contact" className="btn-primary px-12 py-5">Book Your Design Consultation</Link>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-            className="relative h-[400px] md:h-[600px] rounded-[2px] overflow-hidden"
-          >
+          <div className="relative h-[400px] md:h-[600px] rounded-[2px] overflow-hidden">
             <img
               src="/images/portfolio/lakeside-backyard-1-v1-full-1280.webp"
               alt="Landscaping Service Areas in Simcoe County"
@@ -113,7 +94,7 @@ export default function ServiceAreas() {
             />
             <div className="absolute inset-0 bg-brand-black/20" />
             <div className="absolute inset-0 border border-brand-gold/10" />
-          </motion.div>
+          </div>
         </div>
 
         <div className="text-center bg-brand-midsurface p-16 border border-brand-gold/10 rounded-[2px]">

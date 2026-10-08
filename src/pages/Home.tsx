@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { ArrowRight, Shield, Award, CheckCircle, Star, Quote, ChevronRight, Compass, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
 import BuyersGuide from '../components/BuyersGuide';
@@ -76,7 +75,7 @@ const WhyGoldenMaple = () => {
                     <s.icon className="text-brand-green-dark" size={24} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h4 className="font-display text-2xl font-light text-brand-ink mb-3">{s.title}</h4>
+                    <h3 className="font-display text-2xl font-light text-brand-ink mb-3">{s.title}</h3>
                     <p className="font-sans text-sm text-brand-ink-soft leading-relaxed font-light">{s.body}</p>
                   </div>
                 </Reveal>
@@ -276,14 +275,7 @@ const ContractorPainPoints = () => {
 
         <div className="no-scrollbar -mx-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-8 pb-2 md:mx-0 md:grid md:grid-cols-2 md:gap-12 md:overflow-visible md:px-0 md:pb-0">
           {points.map((point, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-              className="w-[86vw] shrink-0 snap-start bg-brand-surface p-7 md:w-auto md:shrink md:p-12 rounded-[2px] border border-brand-dim/10"
-            >
+            <div key={idx} className="w-[86vw] shrink-0 snap-start bg-brand-surface p-7 md:w-auto md:shrink md:p-12 rounded-[2px] border border-brand-dim/10">
               <div className="flex items-start gap-5 md:gap-8">
                 <div className="w-14 h-14 bg-brand-midsurface flex items-center justify-center rounded-[2px] shrink-0 shadow-sm border border-brand-dim/10">
                   <point.icon className="text-brand-gold-dark" size={24} strokeWidth={1.5} />
@@ -302,7 +294,7 @@ const ContractorPainPoints = () => {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

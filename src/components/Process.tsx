@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { publicClaimCopy, BUSINESS } from '../data/business';
 import { Compass, Shield, Heart, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -11,12 +10,7 @@ export default function Process() {
       
       <div className="max-w-[1200px] mx-auto px-6 md:px-12 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          >
+          <div>
             <div className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold mb-8 md:mb-10 flex items-center gap-6">
               <span>The Process</span>
               <div className="h-px bg-brand-gold/20 flex-1" />
@@ -30,7 +24,7 @@ export default function Process() {
             </p>
 
             <div className="mb-12 p-8 bg-brand-surface border border-brand-gold/20 rounded-[2px]">
-              <h4 className="font-display text-2xl text-brand-gold-dark mb-4">Free Estimate</h4>
+              <h3 className="font-display text-2xl text-brand-gold-dark mb-4">Free Estimate</h3>
               <p className="font-sans text-base text-brand-muted leading-relaxed font-light">
                 {publicClaimCopy(BUSINESS.commercialPolicies.consultation, 'Your first conversation with us is complimentary.')}
                 {' '}We'll listen to what you're imagining, ask the right questions, and tell you honestly whether your project is a fit for what we do. Any next step is confirmed with you before it is scheduled.
@@ -48,7 +42,7 @@ export default function Process() {
                     <step.icon size={22} className="text-brand-gold md:size-[24px]" strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h4 className="font-display text-2xl md:text-3xl text-brand-porcelain mb-2 md:mb-3 font-light">{step.title}</h4>
+                    <h3 className="font-display text-2xl md:text-3xl text-brand-porcelain mb-2 md:mb-3 font-light">{step.title}</h3>
                     <p className="font-sans font-light text-[15px] md:text-base text-brand-porcelain-soft leading-relaxed">{step.desc}</p>
                   </div>
                 </div>
@@ -64,15 +58,9 @@ export default function Process() {
                 <ArrowRight size={16} strokeWidth={1.5} />
               </Link>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-            className="relative h-[450px] md:h-[750px] rounded-[2px] overflow-hidden border border-brand-dim/10"
-          >
+          <div className="relative h-[450px] md:h-[750px] rounded-[2px] overflow-hidden border border-brand-dim/10">
             <img
               src="/images/portfolio/deck-and-garden-walkway-1-v1-full-1280.webp"
               alt="Aerial view of a backyard deck and garden walkway in Simcoe County, ON"
@@ -83,7 +71,7 @@ export default function Process() {
             />
             <div className="absolute inset-0 bg-brand-burgundy/20" />
             <div className="absolute inset-0 border border-brand-gold/10" />
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

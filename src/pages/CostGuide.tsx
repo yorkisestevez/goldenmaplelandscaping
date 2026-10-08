@@ -1,5 +1,4 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CheckCircle, FileText, Shield, Star, BookOpen } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -116,43 +115,23 @@ export default function CostGuide() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 items-start">
             {/* Left: Pitch */}
             <div className="lg:col-span-7">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
-                className="flex items-center gap-4 mb-10"
-              >
+              <div className="flex items-center gap-4 mb-10">
                 <div className="h-px w-16 bg-brand-gold" />
                 <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark">
                   Free Download · 2026 Edition
                 </span>
-              </motion.div>
+              </div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.1 }}
-                className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-12"
-              >
+              <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 The 2026 Simcoe County <br />
                 <span className="text-brand-gold-dark italic">backyard cost guide.</span>
-              </motion.h1>
+              </h1>
 
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.2 }}
-                className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light max-w-xl mb-12"
-              >
+              <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light max-w-xl mb-12">
                 Real 2026 pricing from 42 completed jobs across Barrie, Innisfil, Oro-Medonte and Springwater. The numbers other contractors don't want you to see — and the hidden costs that turn a low quote into a five-figure regret.
-              </motion.p>
+              </p>
 
-              <motion.ul
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 0.4 }}
-                className="space-y-6 mb-16"
-              >
+              <ul className="space-y-6 mb-16">
                 {HIGHLIGHTS.map((h, idx) => (
                   <li key={idx} className="flex items-start gap-5">
                     <CheckCircle size={20} className="text-brand-gold mt-1 shrink-0" strokeWidth={1.5} />
@@ -161,7 +140,7 @@ export default function CostGuide() {
                     </span>
                   </li>
                 ))}
-              </motion.ul>
+              </ul>
 
               <div className="flex items-center gap-8 text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
                 <div className="flex items-center gap-3">
@@ -178,12 +157,7 @@ export default function CostGuide() {
 
             {/* Right: Email Capture */}
             <div className="lg:col-span-5 w-full lg:sticky lg:top-32">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-                className="bg-brand-surface border border-brand-gold/25 rounded-[2px] p-10 md:p-12 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
-              >
+              <div className="bg-brand-surface border border-brand-gold/25 rounded-[2px] p-10 md:p-12 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="flex gap-0.5">
                     {[...Array(5)].map((_, i) => (
@@ -279,7 +253,7 @@ export default function CostGuide() {
                     By downloading, you agree to receive occasional emails from Golden Maple. We never share your address.
                   </p>
                 </form>
-              </motion.div>
+              </div>
             </div>
           </div>
 
@@ -303,18 +277,11 @@ export default function CostGuide() {
                 { title: '5 hidden upcharges', body: 'Drainage, slope, restricted access, geotextile, geogrid — when they apply, what they add.' },
                 { title: 'Red flags in cheap quotes', body: 'The exact phrases and quote structures that signal you\'re about to lose $40K.' },
               ].map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: idx * 0.05 }}
-                  className="bg-brand-surface border border-brand-dim/10 p-10 rounded-[2px] hover:border-brand-gold/20 transition-colors"
-                >
+                <div key={idx} className="bg-brand-surface border border-brand-dim/10 p-10 rounded-[2px] hover:border-brand-gold/20 transition-colors">
                   <BookOpen size={20} className="text-brand-gold mb-6" strokeWidth={1.5} />
                   <h3 className="font-display text-xl font-light text-brand-bonewhite mb-4 leading-tight">{item.title}</h3>
                   <p className="font-sans text-sm text-brand-muted leading-relaxed font-light">{item.body}</p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>

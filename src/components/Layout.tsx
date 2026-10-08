@@ -1,9 +1,9 @@
 ﻿import { Link, useLocation } from 'react-router-dom';
 import React, { useRef, useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
-import { Menu, X, Phone, MapPin, Mail, Shield, CheckCircle, Award, ChevronDown, Instagram, Facebook } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+import { Phone, MapPin, Mail, Shield, Award, ChevronDown, Instagram, Facebook } from 'lucide-react';
 import { trackEngagement, trackCall } from '../utils/analytics';
-import ChatWidget from './ChatWidget';
+const ChatWidget = lazy(() => import('./ChatWidget'));
 import { cn } from '../utils/cn';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
 
@@ -115,8 +115,10 @@ const Navbar = () => {
             className="flex items-center gap-2.5 group relative z-50 shrink-0 mr-6"
           >
             <img
-              src="/logo-mark.png"
+              src="/logo-mark.webp"
               alt="Golden Maple Landscaping"
+              width={160}
+              height={129}
               className="h-9 md:h-11 w-auto"
             />
             <span className="flex flex-col">
@@ -150,15 +152,9 @@ const Navbar = () => {
                     {link.label}
                     <ChevronDown size={10} strokeWidth={2} className={cn("transition-transform", servicesOpen && "rotate-180")} />
                   </Link>
-                  <AnimatePresence>
+                  
                     {servicesOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-[640px]"
-                      >
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-[640px]">
                         <div className="bg-brand-surface border border-brand-dim/40 rounded-[2px] shadow-2xl p-8 grid grid-cols-2 gap-x-8 gap-y-2">
                           <div>
                             <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-brand-gold-dark font-medium mb-4 block">
@@ -206,9 +202,9 @@ const Navbar = () => {
                             </div>
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
+                  
                 </div>
               ) : link.hasDropdown ? (
                 <div 
@@ -228,15 +224,9 @@ const Navbar = () => {
                     {link.label}
                     <ChevronDown size={10} strokeWidth={2} className={cn("transition-transform", resourcesOpen && "rotate-180")} />
                   </Link>
-                  <AnimatePresence>
+                  
                     {resourcesOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-64"
-                      >
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-64">
                         <div className="bg-brand-surface border border-brand-dim/40 rounded-[2px] shadow-2xl py-2 overflow-hidden">
                           {resourceLinks.map((item) => (
                             <Link
@@ -256,9 +246,9 @@ const Navbar = () => {
                             </Link>
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
+                  
                 </div>
               ) : (
                 <Link 
@@ -304,17 +294,23 @@ const Navbar = () => {
             className="xl:hidden relative z-50 w-10 h-10 flex items-center justify-center text-brand-gold-dark"
           >
             <div className="relative w-6 h-5">
-              <motion.span 
-                animate={isMobileMenuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-                className="absolute top-0 left-0 w-full h-0.5 bg-brand-ink block rounded-full"
+              <span
+                className={cn(
+                  'absolute top-0 left-0 w-full h-0.5 bg-brand-ink block rounded-full transition-transform duration-200',
+                  isMobileMenuOpen && 'translate-y-2 rotate-45',
+                )}
               />
-              <motion.span 
-                animate={isMobileMenuOpen ? { opacity: 0 } : { opacity: 1 }}
-                className="absolute top-2.5 left-0 w-full h-0.5 bg-brand-ink block rounded-full"
+              <span
+                className={cn(
+                  'absolute top-2.5 left-0 w-full h-0.5 bg-brand-ink block rounded-full transition-opacity duration-200',
+                  isMobileMenuOpen && 'opacity-0',
+                )}
               />
-              <motion.span 
-                animate={isMobileMenuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-                className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-ink block rounded-full"
+              <span
+                className={cn(
+                  'absolute bottom-0 left-0 w-full h-0.5 bg-brand-ink block rounded-full transition-transform duration-200',
+                  isMobileMenuOpen && '-translate-y-2 -rotate-45',
+                )}
               />
             </div>
           </button>
@@ -322,24 +318,13 @@ const Navbar = () => {
       </header>
 
       {/* Mobile Menu Overlay */}
-      <AnimatePresence>
+      
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-brand-burgundy/98 backdrop-blur-xl pt-40 px-8 pb-32 overflow-y-auto flex flex-col items-center text-center xl:hidden"
-          >
+          <div className="fixed inset-0 z-40 bg-brand-burgundy/98 backdrop-blur-xl pt-40 px-8 pb-32 overflow-y-auto flex flex-col items-center text-center xl:hidden">
             <nav className="w-full max-w-sm flex flex-col gap-14">
               <div className="flex flex-col gap-6">
                 {navLinks.map((link, idx) => (
-                  <motion.div
-                    key={link.href}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + idx * 0.05 }}
-                  >
+                  <div key={link.href}>
                     <Link 
                       to={link.href} 
                       className={cn(
@@ -349,7 +334,7 @@ const Navbar = () => {
                     >
                       {link.label}
                     </Link>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
 
@@ -371,45 +356,29 @@ const Navbar = () => {
                 <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold font-medium">Flagship Services</span>
                 <div className="grid grid-cols-1 gap-4">
                   {SERVICE_LINKS.map((service, idx) => (
-                    <motion.div
-                      key={service.href}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 + idx * 0.05 }}
-                    >
+                    <div key={service.href}>
                       <Link 
                         to={service.href} 
                         className="font-sans text-sm text-brand-porcelain-soft hover:text-brand-gold transition-colors py-2 block"
                       >
                         {service.label}
                       </Link>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>
 
               <div className="flex justify-center gap-10 pt-10 border-t border-brand-dim/10">
                 {SOCIAL_LINKS.map((social, idx) => (
-                  <motion.a
-                    key={social.name}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Golden Maple on ${social.name}`}
-                    onClick={() => trackEngagement('outbound_click', `nav_${social.name.toLowerCase()}`)}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.7 + idx * 0.1 }}
-                    className="w-12 h-12 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-gold hover:border-brand-gold hover:bg-brand-gold/5 transition-all"
-                  >
+                  <a key={social.name} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={`Golden Maple on ${social.name}`} onClick={() => trackEngagement('outbound_click', `nav_${social.name.toLowerCase()}`)} className="w-12 h-12 rounded-full border border-brand-dim/30 flex items-center justify-center text-brand-gold hover:border-brand-gold hover:bg-brand-gold/5 transition-all">
                     <social.Icon size={18} strokeWidth={1.5} aria-hidden="true" />
-                  </motion.a>
+                  </a>
                 ))}
               </div>
             </nav>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      
     </>
   );
 };
@@ -446,7 +415,7 @@ const Footer = () => {
           </div>
           
           <div>
-            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Navigation</h4>
+            <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Navigation</p>
             <ul className="space-y-5 font-sans text-sm text-brand-muted font-light">
               <li><Link to="/services" className="hover:text-brand-gold-dark transition-colors">Services</Link></li>
               <li><Link to="/portfolio" className="hover:text-brand-gold-dark transition-colors">Portfolio</Link></li>
@@ -458,7 +427,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Expertise</h4>
+            <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Expertise</p>
             <ul className="space-y-5 font-sans text-[13px] text-brand-muted font-light">
               {SERVICE_LINKS.map((service) => (
                 <li key={service.href}><Link to={service.href} className="hover:text-brand-gold-dark transition-colors">{service.label}</Link></li>
@@ -467,7 +436,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Connect</h4>
+            <p className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-gold-dark mb-10">Connect</p>
             <ul className="space-y-6 font-sans text-[13px] text-brand-muted font-light">
               <li className="flex items-start gap-4">
                 <MapPin size={18} strokeWidth={1.5} className="text-brand-gold-dark shrink-0" />
@@ -541,17 +510,38 @@ const Footer = () => {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  // Client-only interactive widgets — gated so they never render during the
-  // build-time prerender (avoids any window/document access at SSR).
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  // Chat loads after the first interaction or a few seconds so it stays out of
+  // the LCP window. It is also absent from the prerender.
+  const [chatReady, setChatReady] = useState(false);
+  useEffect(() => {
+    let ready = false;
+    const start = () => {
+      if (ready) return;
+      ready = true;
+      setChatReady(true);
+    };
+    const timer = window.setTimeout(start, 4000);
+    const onInteract = () => {
+      window.clearTimeout(timer);
+      start();
+    };
+    window.addEventListener('pointerdown', onInteract, { once: true });
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('pointerdown', onInteract);
+    };
+  }, []);
 
   return (
     <div className="bg-brand-nearblack min-h-screen selection:bg-brand-gold/20 selection:text-brand-gold-dark">
       <Navbar />
       <main className="flex-grow overflow-x-clip">{children}</main>
       <Footer />
-      {mounted && <ChatWidget />}
+      {chatReady && (
+        <Suspense fallback={null}>
+          <ChatWidget />
+        </Suspense>
+      )}
     </div>
   );
 }
