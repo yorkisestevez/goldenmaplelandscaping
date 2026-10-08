@@ -42,7 +42,7 @@ export default function InlayEditor({data,update,model,onPlaceInlay,onlyId,hideA
     if(!plan)return {ok:false,text:'Not built: its deck level is not in the design.',fixable:false};
     if(plan.status!=='ok')return {ok:false,text:`Not built: ${plan.message}`,fixable:plan.status!=='blocked'};
     if(plan.band)return {ok:true,text:plan.band.rows?`Built: ${plan.band.boards} row${plan.band.boards===1?'':'s'} of the deck in the band’s colour, with no cutting.`:`Built: ${plan.edgeFt.toFixed(1)} ft of band, cut in like a breaker board.`,fixable:false};
-    if(plan.quote)return {ok:true,text:`Built: ${plan.fillSqft.toFixed(1)} sq ft inside the frame, on solid blocking. Its labour is a builder quote.`,fixable:false};
+    if(plan.quote)return {ok:true,text:`Built: ${plan.fillSqft.toFixed(1)} sq ft inside the frame, on solid blocking. Its labour is entered in quote review as crew hours (and any extra materials).`,fixable:false};
     return {ok:true,text:`Built: ${plan.edgeFt.toFixed(1)} ft of fitted frame edge, ${plan.fillSqft.toFixed(1)} sq ft inside.`,fixable:false};
   };
   const colourSelect=(n:number,inlay:DeckInlay,key:'frame'|'fill',label:string)=><label className="dd-field"><span>{label}</span><select aria-label={`Inlay ${n} ${label.toLowerCase()}`} value={(key==='frame'?(inlay.kind==='band'?undefined:inlay.frame):inlay.fill)??''} onChange={e=>patch(inlay.id,{[key]:e.target.value||undefined})}><option value="">The deck colour</option>{colours.map(c=><option key={c.ref} value={c.ref}>{c.label}</option>)}</select></label>;
