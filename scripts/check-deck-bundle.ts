@@ -73,7 +73,9 @@ import {basename} from 'node:path';
 // October 5 (Ground fit G1-G2): skirting runs to the measured ground, patios take a ground fit, and graded banks are
 // priced (bank geometry stays in the lazy site engine): route 270.2 -> 271.0 KB, option-deltas worker 204.8 -> 205.8 KB.
 // Raised to 272/207 KB on the owner's go-ahead for the Ground fit round (confirm at review).
-const BUDGET_KB={routeInitial:272,routeCss:12,viewer:340,pdf:150,deltaWorker:207,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35};
+// October 8 (HD hardware + G-Tape + 6×6 posts): connector schedule and post stock notes pull more into the
+// eager estimate graph — route 272 → 274.5 KB gzip. Raised to 276 KB for that hardware-rates round.
+const BUDGET_KB={routeInitial:276,routeCss:12,viewer:340,pdf:150,deltaWorker:207,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);
