@@ -4,7 +4,7 @@ import type {DeckData} from '../types';
 import type {EstimateResult} from '../calculations';
 import {dollars} from '../designFacts';
 import {DEFAULT_CREW_MEMBERS,DEFAULT_PERSON_HOUR_RATE,quoteCostFromCrewHours} from './quoteLabourHours';
-import {OWNER_COST_LIMITS,parseOwnerMarkup,parseOwnerMoney} from './ownerCostLimits';
+import {OWNER_COST_LIMITS,bookInstallationLabour,parseOwnerMarkup,parseOwnerMoney} from './ownerCostLimits';
 import './ownerCostEditor.css';
 
 type Props={
@@ -38,7 +38,8 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
     setLineDrafts(next);
   },[data.customOverrides]);
 
-  const book=estimate.bookLaborCost;
+  const labourOverridden=data.customLaborCost!==undefined;
+  const book=labourOverridden?0:bookInstallationLabour(estimate);
   const overrides=data.customOverrides??{};
 
   const materialLines=useMemo(()=>estimate.sections
@@ -124,10 +125,12 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
 
     <section aria-labelledby="dd-owner-labour-title">
       <h4 id="dd-owner-labour-title">Labour</h4>
-      <p role="status">Book installation labour: <strong>{dollars(book)}</strong> ({estimate.manHours.toFixed(1)} planned person-hours). Your override replaces that total only — modeled hours stay for crew planning.</p>
+      <p role="status">{labourOverridden
+        ?<>Your labour override is on. Modeled crew planning stays at <strong>{estimate.manHours.toFixed(1)} person-hours</strong>; clear the field to restore book labour.</>
+        :<>Book installation labour: <strong>{dollars(book)}</strong> ({estimate.manHours.toFixed(1)} planned person-hours). Your override replaces that total only.</>}</p>
       <label className="dd-owner-costs-field">Your installation labour · CAD
-        <input aria-label="Your installation labour cost" type="number" min={OWNER_COST_LIMITS.amountMin} max={OWNER_COST_LIMITS.amountMax} step=".01" placeholder={String(Math.round(book*100)/100)} value={labourDraft} onChange={e=>setLabourDraft(e.target.value)} onBlur={commitLabour} onKeyDown={e=>{if(e.key==='Enter')(e.target as HTMLInputElement).blur();}}/>
-        <small>{data.customLaborCost===undefined?'Using the book labour total.':`Override on · book is ${dollars(book)}.`}</small>
+        <input aria-label="Your installation labour cost" type="number" min={OWNER_COST_LIMITS.amountMin} max={OWNER_COST_LIMITS.amountMax} step=".01" placeholder={labourOverridden?undefined:String(Math.round(book*100)/100)} value={labourDraft} onChange={e=>setLabourDraft(e.target.value)} onBlur={commitLabour} onKeyDown={e=>{if(e.key==='Enter')(e.target as HTMLInputElement).blur();}}/>
+        <small>{labourOverridden?'Override on.':'Using the book labour total.'}</small>
       </label>
       <div className="dd-owner-costs-actions">
         <button type="button" className="dd-secondary" onClick={()=>{setLabourDraft('');onUpdate({customLaborCost:undefined});setError('');}}>Use book labour</button>

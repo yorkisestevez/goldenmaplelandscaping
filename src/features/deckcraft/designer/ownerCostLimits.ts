@@ -1,3 +1,5 @@
+import type {EstimateResult} from '../calculations';
+
 /** Private owner cost edits stay on-device with the same bounds as contractor presets. */
 export const OWNER_COST_LIMITS={
   markupMin:0,
@@ -6,6 +8,12 @@ export const OWNER_COST_LIMITS={
   amountMax:1_000_000,
   overrideMax:200,
 } as const;
+
+/** Book installation labour from the Installation Labour line when no private override is on. */
+export function bookInstallationLabour(estimate:EstimateResult){
+  const item=estimate.sections.find(s=>s.title.startsWith('Labour'))?.items.find(i=>i.name==='Installation Labour');
+  return item?.cost??0;
+}
 
 export function parseOwnerMoney(value:string,label:string){
   const n=Number(value);
