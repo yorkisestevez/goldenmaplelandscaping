@@ -81,6 +81,8 @@
   status = 301
 
 # /reviews/ is the canonical. Do not redirect that path to itself.
+# The rule is not forced: /reviews/index.html is a real file, and forcing this
+# match also catches /reviews/ and loops. Both slash forms serve the reviews page.
 [[redirects]]
   from = "/reviews"
   to = "/reviews/"
