@@ -1,5 +1,5 @@
 {
- "note": "ConstructionPlan default (contractor) markup. Reviewed 2026-10-04 after the owner-requested picture-frame default, stock-length seam policy and railing termination, 2026-10-06 after the owner-approved inside-corner fix (new designs seat railing posts on the boards; designs saved before the 2026-10 rules keep their drawings), and 2026-10-07 after wrap-around boards were set to keep one direction across the front and turn beside the house (legacy saves keep the corner-to-corner hip). Regenerate only for an owner-approved change to the contractor plan.",
+ "note": "ConstructionPlan default (contractor) markup. Reviewed 2026-10-04 after the owner-requested picture-frame default, stock-length seam policy and railing termination, 2026-10-06 after the owner-approved inside-corner fix (new designs seat railing posts on the boards; designs saved before the 2026-10 rules keep their drawings), 2026-10-07 after wrap-around boards were set to keep one direction across the front and turn beside the house (legacy saves keep the corner-to-corner hip), and 2026-10-08 after new designs anchor wrap field rows on the outer edge and drop hairline rips. The 2026-10-07 golden was written before that last drawing change and did not match the merged sheets. Regenerate only for an owner-approved change to the contractor plan.",
  "cases": {
   "default": {
    "sha256": "71bf7803223d5a62231be6ac304ece50069ace0ac80ccb8b0b1b8c39616ef45a",
@@ -22,12 +22,12 @@
    "bytes": 14057
   },
   "wrap left with a porch": {
-   "sha256": "b2047069ba5ccb768d685a61cecc7e4d7e8973366292cca0138b7f4e580d4499",
-   "bytes": 35434
+   "sha256": "2e2f606f00464723175f648f1182b89ed06c0a47b1d04f24833d85171fa5f91b",
+   "bytes": 34698
   },
   "wrap both": {
-   "sha256": "147e37ed000f55cf3e35a4d2392d5749e8f97eafcd80648e7b6a7f2cbc2e7d02",
-   "bytes": 29716
+   "sha256": "7f513a019afd5a4be8e9c516a392ed3977ce26e5c173e93498c770c510e8bbf7",
+   "bytes": 29382
   },
   "accent row and rug inlay": {
    "sha256": "cc014a51bc1f899b3a534e3e28595c7955fe4918d6d830a92d582707116596bb",
@@ -58,8 +58,8 @@
    "bytes": 51290
   },
   "split level with a third level": {
-   "sha256": "72adb7e13ea48496bf291a72d2a7e5ff605ba10c037aecabb43970fbdea7351e",
-   "bytes": 29575
+   "sha256": "0957ce58493d2eaee78d2e2ea26e7a72a0e7cb8656fc95afa09bdff3c2b6f0c4",
+   "bytes": 29436
   },
   "yard patio": {
    "sha256": "ff4f71e613f3bdf871f421916db112f6b35d9c48ec51aa8afae424a02a385d8a",
