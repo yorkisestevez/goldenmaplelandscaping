@@ -129,7 +129,18 @@ export default function ProWizards({kind,page,onClose}:{kind:WizardKind;page:Pro
   // Modal while open; closed (so the page is usable again) before it leaves the page.
   useEffect(()=>{const el=dialog.current;if(el&&!el.open)el.showModal();return ()=>el?.close();},[]);
   useEffect(()=>{dialog.current?.querySelector<HTMLElement>('.dd-pro-wizard-body input,.dd-pro-wizard-body select,.dd-pro-wizard-actions button:last-child')?.focus();},[step]);
-  const apply=()=>{try{page.apply(plan.patch(page.data));page.openSection(plan.section);onClose();}catch(e){setError(e instanceof Error?e.message:'This change could not be made.');}};
+  const apply=()=>{void (async()=>{
+    try{
+      const patch=plan.patch(page.data);
+      const api=(window as Window&{deckcraft?:{read:()=>{revision:number};execute:(r:unknown)=>Promise<{ok:true}|{ok?:false;error:{message:string}}>}}).deckcraft;
+      if(api?.read&&api.execute){
+        const before=api.read();
+        const result=await api.execute({id:`pro-wizard-${kind}-${crypto.randomUUID()}`,expectedRevision:before.revision,commands:[{type:'design.patch',patch}]});
+        if('error'in result)throw Error(result.error.message);
+      }else page.apply(patch);
+      page.openSection(plan.section);onClose();
+    }catch(e){setError(e instanceof Error?e.message:'This change could not be made.');}
+  })();};
   const title=TITLES[kind],stepTitle=step<last?plan.steps[step].title:'Review';
   return <dialog ref={dialog} className="dd-pro-wizard" aria-labelledby="dd-pro-wizard-title" aria-describedby="dd-pro-wizard-step" onCancel={e=>{e.preventDefault();onClose();}}>
     <header><h2 id="dd-pro-wizard-title">{title}</h2><p id="dd-pro-wizard-step">Step {step+1} of {last+1} · {stepTitle}</p>

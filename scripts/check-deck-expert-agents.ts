@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {ASSISTANT_PLAN_SCHEMA,ASSISTANT_SYSTEM_PROMPT,parseAssistantPlan,assistantPlanRequest} from '../src/features/deckcraft/designer/assistantPlan';
 import {ASSISTANT_CLOUD_SYSTEM,ASSISTANT_WIRE_SCHEMA,parseAssistantOutput} from '../server/deckAssistantCloud';
 import {parseDeckAssistantRequest} from '../server/deckAssistantBackend';
-import {EXPERT_AGENTS,EXPERT_IDS,assistantSystemPromptFor,expertOf,isExpertId} from '../src/features/deckcraft/designer/expertAgents';
+import {EXPERT_AGENTS,EXPERT_IDS,assistantSystemPromptFor,expertOf,isExpertId,routeExpert} from '../src/features/deckcraft/designer/expertAgents';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {deckReleaseData} from '../src/features/deckcraft/deckRelease';
 import {createDeckAgentController,type DeckAgentHostState} from '../src/features/deckcraft/designer/deckAgentController';
@@ -11,7 +11,7 @@ import {buildAssistantContext} from '../src/features/deckcraft/designer/assistan
 let checks=0;
 const ok=(v:unknown,m:string)=>{assert.ok(v,m);checks++;};
 
-ok(EXPERT_IDS.length===5&&EXPERT_AGENTS.every(e=>isExpertId(e.id)),'Five expert personas are registered');
+ok(EXPERT_IDS.length===6&&EXPERT_AGENTS.every(e=>isExpertId(e.id)),'Six expert personas are registered');
 ok(expertOf('decking').title.includes('Decking')&&expertOf(undefined).id==='general','Expert lookup defaults to general');
 ok(assistantSystemPromptFor('construction',ASSISTANT_SYSTEM_PROMPT).includes('EXPERT MODE — CONSTRUCTION')&&assistantSystemPromptFor('construction',ASSISTANT_SYSTEM_PROMPT).includes('never an already applied'),'Expert prompts keep the base policy and add their mode');
 ok(ASSISTANT_SYSTEM_PROMPT.includes('kind "advice"')&&JSON.stringify(ASSISTANT_PLAN_SCHEMA).includes('"advice"'),'Plan schema and base prompt allow advice');
@@ -38,4 +38,11 @@ ok(ASSISTANT_CLOUD_SYSTEM.includes(ASSISTANT_SYSTEM_PROMPT.slice(0,40)),'Cloud s
 ok(EXPERT_AGENTS.every(e=>e.examples.length>=2&&e.promptAddendum.includes('EXPERT MODE')),'Every expert ships examples and a mode addendum');
 api.dispose();
 
+ok(routeExpert('Compare Vintage and Reserve for this rail')==='decking','Materials questions route to decking');
+ok(routeExpert('Add a gas fire bowl on the patio')==='outdoor','Patio/fire questions route to outdoor');
+ok(routeExpert('Is helical piles better for this height?')==='construction','Foundation questions route to construction');
+ok(routeExpert('Critique this design for a Barrie walkout')==='critique','Critique requests route to critique');
+ok(routeExpert('Make the main deck a little wider','decking')==='decking','An explicit expert is not overridden');
+ok(routeExpert('hello there')==='general','Vague text stays on general');
+ok(expertOf('critique').promptAddendum.includes('DESIGN CRITIQUE'),'Critique expert ships a review addendum');
 console.log(`DECK EXPERT AGENTS OK — ${EXPERT_AGENTS.length} personas, advice plans, cloud wire and request validation; ${checks} checks.`);

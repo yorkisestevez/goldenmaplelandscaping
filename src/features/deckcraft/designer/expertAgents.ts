@@ -5,7 +5,7 @@
  *
  * Experts never bypass deckAgentController. Advice plans carry no commands.
  */
-export const EXPERT_IDS=['general','design','decking','outdoor','construction'] as const;
+export const EXPERT_IDS=['general','design','decking','outdoor','construction','critique'] as const;
 export type ExpertId=(typeof EXPERT_IDS)[number];
 
 export interface ExpertAgent {
@@ -21,6 +21,15 @@ export interface ExpertAgent {
   /** Appended to ASSISTANT_SYSTEM_PROMPT for this expert (policy addendum only). */
   promptAddendum:string;
 }
+
+/** Topic cues for auto-routing when the user is on General (or asks to auto-pick). First match wins by score. */
+const ROUTE_CUES:readonly {id:Exclude<ExpertId,'general'>;weight:number;re:RegExp}[]=[
+  {id:'critique',weight:4,re:/\b(critique|review (the|this|my) design|design review|what(?:'s| is) (?:wrong|missing|weak)|how (?:does|would) this (?:look|read|work)|redesign ideas|honest feedback)\b/i},
+  {id:'decking',weight:3,re:/\b(timbertech|decking|board(?:s|ing)?|collection|colour|color|fascia|skirting|picture[- ]?frame|border|vintage|reserve|terrain|prime\+|edge|aze?k|hidden clips?|fasten(?:er|ing))\b/i},
+  {id:'outdoor',weight:3,re:/\b(patio|fire (?:pit|bowl|table|feature)|retaining|seat wall|pool|landscape|outdoor living|hardscape|yard feature|gas table|wood ring)\b/i},
+  {id:'construction',weight:3,re:/\b(footing|foundation|helical|pier|joist|beam|post|under[- ]?deck|rainescape|dryspace|zip[- ]?up|framing|obc|permit|structural|railing system|cable rail|glass (?:panel|rail))\b/i},
+  {id:'design',weight:2,re:/\b(wider|narrower|deeper|shallower|level|stair|winder|landing|shape|layout|privacy screen|wrap|outline|composition|walkout|second level|picture frame rows?)\b/i},
+];
 
 export const EXPERT_AGENTS:readonly ExpertAgent[]=[
   {
@@ -83,6 +92,18 @@ export const EXPERT_AGENTS:readonly ExpertAgent[]=[
     ],
     promptAddendum:`EXPERT MODE — CONSTRUCTION & STRUCTURE: You specialise in foundation choices, framing practice, under-deck drainage/ceilings, railing systems and Barrie / OBC-minded build advice. Prefer advice for open structural questions; only emit edits for clear editor settings (foundation, underDeck, railingType, fasteningSystem, joistSpacing). Never relocate individual posts, beams or footings. Never invent permit fees, engineering stamps, loads or supplier approvals. When advice implies a setting change, say so and wait for the user to ask you to apply it, or emit a minimal edit only when the request clearly asks to change that setting.`,
   },
+  {
+    id:'critique',
+    label:'Critique',
+    title:'Design critique',
+    blurb:'A longer design review: composition, outdoor living, materials and build risk — advice first, optional next edits.',
+    examples:[
+      'Critique this design for a Barrie walkout family deck',
+      'What is weak about the current layout and finishes?',
+      'Review stairs, privacy and outdoor living together',
+    ],
+    promptAddendum:`EXPERT MODE — DESIGN CRITIQUE: You are a senior outdoor-living design reviewer for Golden Maple (Barrie). Default to kind "advice" with a structured multi-part review in message (use short labelled sections, e.g. Layout · Decking · Outdoor living · Build risk · Next steps). Ground every point in the supplied context (sizes, height, materials, siteBrief, quotes count). Prefer 4–8 concrete observations and 2–4 next-step choices the user can pick to turn into edits. Do not emit edit commands unless the user clearly asks to apply a specific change. Never invent prices, stock, permits or engineering stamps. Keep the tone direct and useful, not salesy.`,
+  },
 ] as const;
 
 export function isExpertId(value:unknown):value is ExpertId{
@@ -99,4 +120,21 @@ export function assistantSystemPromptFor(expert:ExpertId|undefined,base:string):
   return `${base}
 
 ${e.promptAddendum}`;
+}
+
+/**
+ * Pick an expert from the user's words. Used when the dock is on General so a materials question
+ * reaches Decking, a critique reaches Critique, etc. Returns `general` when nothing clear wins.
+ */
+export function routeExpert(text:string,preferred:ExpertId='general'):ExpertId{
+  if(preferred!=='general')return preferred;
+  if(typeof text!=='string'||!text.trim())return 'general';
+  const scores=new Map<Exclude<ExpertId,'general'>,number>();
+  for(const cue of ROUTE_CUES){
+    const hits=text.match(new RegExp(cue.re.source,'gi'));
+    if(hits?.length)scores.set(cue.id,(scores.get(cue.id)??0)+cue.weight*hits.length);
+  }
+  let best:Exclude<ExpertId,'general'>|'general'='general',bestScore=0;
+  for(const [id,score] of scores)if(score>bestScore){best=id;bestScore=score;}
+  return bestScore>=2?best:'general';
 }

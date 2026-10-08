@@ -42,6 +42,7 @@ export function proMenus(a:ProMenuActions,wizard:(kind:WizardKind)=>void=()=>{})
       {label:'Decking expert…',run:()=>a.askExpert('decking')},
       {label:'Outdoor living expert…',run:()=>a.askExpert('outdoor')},
       {label:'Construction expert…',run:()=>a.askExpert('construction')},
+      {label:'Design critique…',run:()=>a.askExpert('critique')},
     ]},
     {label:'Add',items:[
       {label:'Deck shape & size',run:()=>a.openSection('deck')},

@@ -2,7 +2,7 @@ import {ASSISTANT_SYSTEM_PROMPT,assistantPlanSchemaForContext,parseAssistantPlan
 import {assistantSystemPromptFor,isExpertId,type ExpertId} from '../src/features/deckcraft/designer/expertAgents';
 
 export const DECK_ASSISTANT_PATH='/.netlify/functions/deck-assistant';
-export const ASSISTANT_BACKEND_LIMITS={bodyBytes:128*1024,contextBytes:96*1024,prompt:6000,turns:8,turnContent:3000,conversation:12000,responseBytes:256*1024,planContent:48000,timeoutMs:60000,healthTimeoutMs:3000,concurrent:2} as const;
+export const ASSISTANT_BACKEND_LIMITS={bodyBytes:128*1024,contextBytes:96*1024,prompt:6000,turns:12,turnContent:3000,conversation:16000,responseBytes:256*1024,planContent:48000,timeoutMs:60000,healthTimeoutMs:3000,concurrent:2} as const;
 type Fetch=typeof globalThis.fetch;
 export interface DeckAssistantBackendOptions {
   /** Server configuration only. Only the local Ollama origin is accepted; never taken from a request. */
@@ -44,7 +44,7 @@ function requestBody(raw:unknown){
   if(new TextEncoder().encode(JSON.stringify(raw.context)).length>ASSISTANT_BACKEND_LIMITS.contextBytes)error('invalid_request','The design context is too large.',400);
   let context:ReturnType<typeof validateAssistantContext>;
   try{context=validateAssistantContext(raw.context);}catch{error('invalid_context','Use the current public design context; customer and contractor details are not accepted.',400);}
-  const conversation=raw.conversation??[];if(!Array.isArray(conversation)||conversation.length>ASSISTANT_BACKEND_LIMITS.turns)error('invalid_request','Use no more than eight conversation turns.',400);
+  const conversation=raw.conversation??[];if(!Array.isArray(conversation)||conversation.length>ASSISTANT_BACKEND_LIMITS.turns)error('invalid_request','Use no more than twelve conversation turns.',400);
   let total=0;
   const turns=conversation.map(turn=>{if(!object(turn))error('invalid_request','Invalid conversation turn.',400);exactKeys(turn,['role','content']);if(turn.role!=='user'&&turn.role!=='assistant')error('invalid_request','Conversation roles must be user or assistant.',400);const content=text(turn.content,ASSISTANT_BACKEND_LIMITS.turnContent,'Conversation turn');total+=content.length;return {role:turn.role as 'user'|'assistant',content};});
   if(total>ASSISTANT_BACKEND_LIMITS.conversation)error('invalid_request','The conversation is too long. Start a new request.',400);
