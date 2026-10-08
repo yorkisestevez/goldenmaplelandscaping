@@ -3,7 +3,7 @@ import {physicalFoundationSections} from './physicalQuote';
 import {applyQuoteResolutions,type QuoteResolutionReview} from './quoteCostRegistry';
 import {pergolaPricing,pergolaQuoteKey} from './pergolaPricing';
 import {pergolaLayout} from './pergolaLayout';
-import { activeWrap, hasPorchWrap, wrapLabourFactor } from './lib/wrapGeometry';
+import { activeWrap, wrapLabourFactor } from './lib/wrapGeometry';
 import {buildUnderDeckPricing} from './underDeckPricing';
 import { activeCornerChamfers, chamferLabourFactor } from './lib/cornerChamfers';
 import { activeCustomFront, customLabourFactor, customOutline } from './lib/customOutline';
@@ -17,10 +17,12 @@ import {hasBoardLayout,layoutBoardStock,layoutAutomaticBreakerLf,boardLayoutAllo
 import {boardFinishPlan,colourName,darkSlateBorder,parseColourRef,type StockGroup} from './boardFinishes';
 import {DECK_PARTS,partRef,railingFinish,stairTreadKey} from './deckPartFinishes';
 import {inlayCrewDays,PATTERN_LABOUR} from './lib/inlayGeometry';
-import {SKIRTING_STYLE_NAMES,skirtingPlan,skirtingRows} from './skirting';
+import {SKIRTING_STYLE_NAMES,skirtingPlan} from './skirting';
+import {pricedSkirtingRows} from './skirtingPricing';
 import {claddingPlan} from './stairCladding';
 import {STAIR_ALLOWANCE_WIDTH_IN,DECKING_RATE_SOURCES,deckingRateWidth} from './supplierRates';
 import {fasciaSupply} from './fasciaPricing';
+import {featureLabourIsQuote,priceFeatureLabourScope} from './featureLabour';
 import {houseRailingConflicts} from './houseRailingClearance';
 import {buildDeckTakeoff,type DeckTakeoff} from './deckTakeoff';
 import {DECK_SETTINGS} from './defaults';
@@ -716,26 +718,49 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     const inlaid=accentRows.some(r=>r.group.kind==='inlay');
     sections.push({title:inlaid?'Accent colours & inlays':'Accent-colour boards',icon:'🎨',description:inlaid?`Accent-colour and inlay boards, each colour ordered as its own stock boards at its collection’s rate. ${[accentRows.some(r=>r.group.part==='frame'||r.group.part==='inside')&&'Inlay frames carry the picture-frame waste allowance and inlay insides their own pattern’s.',accentRows.some(r=>r.group.part==='band')&&'Bands carry the straight-board allowance.',accentRows.some(r=>r.group.part==='medallion')&&'Medallions carry the herringbone allowance, for their angled cuts.'].filter(Boolean).join(' ')} Colours vary by screen; confirm with samples.`:'Boards in a second colour, ordered as their own stock boards at their collection’s rate with the same waste allowance. Colours vary by screen; confirm with samples.',quoteRequired:unpriced.length>0||undefined,total:accentRows.reduce((n,r)=>n+(r.cost??0),0),
       items:accentRows.map(r=>({name:r.label,spec:`${r.group.boards.length} ${r.group.kind==='inlay'?'inlay':'accent-colour'} pieces, ${r.stock.spareBoards} spare stock boards${r.cost===null?'; supplier quote required':''}`,qty:r.stock.orderedBoards,unit:'boards',cost:r.cost}))});
-    // Fitting a second colour has no labour rate in the price book yet: listed for a builder quote, never $0.
+    // Accent fitting: man-hours + optional extra materials by default (Owner costs · Inlays & special features).
     const labour=sections.find(s=>s.title==='Labour (Construction & Build)');
-    if(accent&&labour){labour.quoteRequired=true;labour.items.push({name:'Accent-colour board labour',spec:`Builder quote required: laying out and fitting ${accent!.pieces} accent-colour board${accent!.pieces===1?'':'s'} has no rate in the price book yet. The priced labour covers the deck as one colour.`,qty:accent!.pieces,unit:'boards',cost:null});}
-    if(accent)quoteRequired.push('Accent-colour board labour (builder quote)');
+    if(accent&&labour){
+      if(featureLabourIsQuote(data.featureLabour,'accent')){
+        labour.quoteRequired=true;labour.items.push({name:'Accent-colour board labour',spec:`Builder quote required: laying out and fitting ${accent.pieces} accent-colour board${accent.pieces===1?'':'s'}. Switch to crew-hours in Owner costs · Inlays & special features to apply your default man-hours.`,qty:accent.pieces,unit:'boards',cost:null});
+        quoteRequired.push('Accent-colour board labour (builder quote)');
+      }else{
+        const priced=priceFeatureLabourScope(data.featureLabour,'accent',accent.pieces);
+        if(priced){labour.items.push({name:priced.label,spec:priced.spec,qty:accent.pieces,unit:'boards',cost:priced.installationCost,laborCost:priced.installationCost});labour.total+=priced.installationCost;
+          if(priced.supplyCost>0){const mat=priced.supplyCost*markupMult;labour.items.push({name:`${priced.label} · extra materials`,spec:`Extra consumables for accent fitting at this job’s material markup.`,qty:1,unit:'allowance',cost:mat});labour.total+=mat;}}
+      }
+    }
     if(accentRows.some(r=>r.group.material.id.split('_')[0]!==deckingMaterial.split('_')[0]))flags.push('Accent boards from a different manufacturer than the decking: confirm the board gap, hidden fasteners and warranty with the supplier before ordering.');
   }
-  // Medallions: their boards and solid blocking are priced; cutting and fitting one has no labour rate in the price
-  // book yet, so it is listed for a builder quote, never $0.
+  // Medallions / custom inlays: boards and blocking priced; labour is man-hours + materials by default.
   const quotedInlays=model.levels.flatMap(l=>(l.inlays??[]).filter(p=>p.status==='ok'&&p.quote));
   const medallions=quotedInlays.filter(p=>p.kind==='medallion');
   if(medallions.length){
-    const labour=sections.find(s=>s.title==='Labour (Construction & Build)'),n=medallions.length;
-    if(labour){labour.quoteRequired=true;labour.items.push({name:'Medallion inlay labour',spec:`Builder quote required: laying out, cutting and fitting ${n===1?'a medallion inlay':`${n} medallion inlays`} (${medallions.reduce((a,p)=>a+p.fillSqft,0).toFixed(1)} sq ft inside the frame${n===1?'':'s'}) has no rate in the price book yet. The priced labour covers the deck without ${n===1?'it':'them'}; the boards and blocking are priced.`,qty:n,unit:n===1?'medallion':'medallions',cost:null});}
-    quoteRequired.push('Medallion inlay labour (builder quote)');
+    const labour=sections.find(s=>s.title==='Labour (Construction & Build)'),n=medallions.length,fill=medallions.reduce((a,p)=>a+p.fillSqft,0).toFixed(1);
+    if(labour){
+      if(featureLabourIsQuote(data.featureLabour,'medallion')){
+        labour.quoteRequired=true;labour.items.push({name:'Medallion inlay labour',spec:`Builder quote required: laying out, cutting and fitting ${n===1?'a medallion inlay':`${n} medallion inlays`} (${fill} sq ft). Switch to crew-hours in Owner costs · Inlays & special features.`,qty:n,unit:n===1?'medallion':'medallions',cost:null});
+        quoteRequired.push('Medallion inlay labour (builder quote)');
+      }else{
+        const priced=priceFeatureLabourScope(data.featureLabour,'medallion',n);
+        if(priced){labour.items.push({name:priced.label,spec:`${priced.spec} (${fill} sq ft inside the frame${n===1?'':'s'}).`,qty:n,unit:n===1?'medallion':'medallions',cost:priced.installationCost,laborCost:priced.installationCost});labour.total+=priced.installationCost;
+          if(priced.supplyCost>0){const mat=priced.supplyCost*markupMult;labour.items.push({name:`${priced.label} · extra materials`,spec:`Extra consumables for medallion fitting at this job’s material markup.`,qty:1,unit:'allowance',cost:mat});labour.total+=mat;}}
+      }
+    }
   }
   const customInlays=quotedInlays.filter(p=>p.kind!=='medallion');
   if(customInlays.length){
-    const labour=sections.find(s=>s.title==='Labour (Construction & Build)'),n=customInlays.length;
-    if(labour){labour.quoteRequired=true;labour.items.push({name:'Custom inlay fabrication labour',spec:`Builder quote required: laying out, cutting, fitting and supporting ${n} custom or rotated inlay${n===1?'':'s'} (${customInlays.reduce((a,p)=>a+p.fillSqft,0).toFixed(1)} sq ft inside the frame) has no documented installation rate. The priced portion includes the deck boards and modelled blocking; decorative fabrication and its site review remain outstanding.`,qty:n,unit:n===1?'inlay':'inlays',cost:null});}
-    quoteRequired.push('Custom inlay fabrication labour (builder quote)');
+    const labour=sections.find(s=>s.title==='Labour (Construction & Build)'),n=customInlays.length,fill=customInlays.reduce((a,p)=>a+p.fillSqft,0).toFixed(1);
+    if(labour){
+      if(featureLabourIsQuote(data.featureLabour,'customInlay')){
+        labour.quoteRequired=true;labour.items.push({name:'Custom inlay fabrication labour',spec:`Builder quote required: laying out, cutting, fitting and supporting ${n} custom or rotated inlay${n===1?'':'s'} (${fill} sq ft). Switch to crew-hours in Owner costs · Inlays & special features.`,qty:n,unit:n===1?'inlay':'inlays',cost:null});
+        quoteRequired.push('Custom inlay fabrication labour (builder quote)');
+      }else{
+        const priced=priceFeatureLabourScope(data.featureLabour,'customInlay',n);
+        if(priced){labour.items.push({name:priced.label,spec:`${priced.spec} (${fill} sq ft inside the frame).`,qty:n,unit:n===1?'inlay':'inlays',cost:priced.installationCost,laborCost:priced.installationCost});labour.total+=priced.installationCost;
+          if(priced.supplyCost>0){const mat=priced.supplyCost*markupMult;labour.items.push({name:`${priced.label} · extra materials`,spec:`Extra consumables for custom inlay fitting at this job’s material markup.`,qty:1,unit:'allowance',cost:mat});labour.total+=mat;}}
+      }
+    }
   }
   if(finish?.unmatched.length){const n=finish.unmatched.length;flags.push(`${n} accent-colour choice${n===1?' no longer lines':'s no longer line'} up with a board after a design change (or no longer suit${n===1?'s':''} this decking), so ${n===1?'it is':'they are'} not shown or priced. Review them in the accent boards panel.`);}
   const catalogueAccessories=catalogueAccessoryLayout(data,model);
@@ -773,23 +798,16 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     const rows=veneer.rows.filter(r=>r.id!=='terrain-veneer-wood');
     if(rows.length){quoteRequired.push(...rows.map(r=>r.name));sections.push({title:'Terrain stair support connections',icon:'🔩',quoteRequired:true,total:0,items:rows.map(r=>({name:r.name,spec:r.basis,qty:r.qty,unit:r.unit,cost:null}))});}
   }
-  // Porch wraps: labour is priced at the two-corner factor; the extra porch labour has no factor in
-  // the price book yet, so it is listed for a builder quote rather than priced at zero.
-  if(hasPorchWrap(wrap)){
-    const labour=sections.find(s=>s.title==='Labour (Construction & Build)');
-    if(labour){labour.quoteRequired=true;labour.items.push({name:'Porch-wrap labour premium',spec:'Builder quote required: the priced labour uses the two-corner wrap factor (×1.50); the extra porch-wrap labour is quoted separately.',qty:1,unit:'allowance',cost:null});}
-    quoteRequired.push('Porch-wrap labour premium (builder quote)');
-  }
+  // Porch wraps fold into wrapLabourFactor (×0.15 on top of the one-/two-corner wrap rate); no separate quote line.
   if([1,2,3].some(n=>n<=data.levels&&!!freeFootprint(data,n as 1|2|3))){
     const label='Custom outline support and connection details (builder quote)';
     quoteRequired.push(label);sections.push({title:'Custom outline construction',icon:'📐',quoteRequired:true,total:0,items:[{name:label,spec:'Deck boards, actual perimeter, modeled framing and base installation allowance are priced. Bespoke angled supports, house attachment and reshaped level connections need a builder review and quote before a construction price is final.',qty:1,unit:'design',cost:null}]});
   }
-  // Skirting under the deck (skirting.ts): the face, backing, access panels and labour, every one a quote. The price
-  // book has no skirting rates, so nothing here is priced or $0; setting a rate later is a price-book change.
+  // Skirting under the deck (skirtingPricing.ts): face, backing, access panels and labour at published rates.
   const skirting=data.skirting?skirtingPlan(data,model):null;
   if(skirting){
-    const rows=skirtingRows(skirting);
-    if(rows.length){sections.push({title:'Deck skirting',icon:'🧱',quoteRequired:true,total:0,description:`${SKIRTING_STYLE_NAMES[skirting.style]} under the deck, listed for a builder quote: the price book has no skirting rates yet, so it is not in the priced total.`,items:rows});quoteRequired.push('Deck skirting (builder quote)');}
+    const rows=pricedSkirtingRows(skirting,markupMult);
+    if(rows.length){const total=rows.reduce((n,r)=>n+(r.cost??0),0);sections.push({title:'Deck skirting',icon:'🧱',total,description:`${SKIRTING_STYLE_NAMES[skirting.style]} under the deck, priced from the skirting rate table (face supply, backing, access panels and install labour).`,items:rows});}
     flags.push(...skirting.notes);
   }
   // Stair sides, step ends and the faces between levels (stairCladding.ts): fascia boards the price book has no rate for,

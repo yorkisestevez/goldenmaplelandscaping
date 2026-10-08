@@ -6,7 +6,7 @@ import type {DeckData} from './types';
 import {ensureDesignExtensions} from './designExtensions';
 
 export const PROJECT_BUNDLE_LIMITS={archive:20_000_000,decoded:18_000_000,design:1_000_000,manifest:32_000,entries:3} as const;
-const FORMAT='deckcraft-project-bundle',PRIVATE=['poolQuoteInputs','quoteResolutions','pergolaQuoteCosts','materialMarkup','customLaborCost','customOverrides','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','customerName','projectAddress','scopeOfWork','generatedImageUrl','isGeneratingImage'];
+const FORMAT='deckcraft-project-bundle',PRIVATE=['poolQuoteInputs','quoteResolutions','pergolaQuoteCosts','materialMarkup','customLaborCost','customOverrides','featureLabour','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','customerName','projectAddress','scopeOfWork','generatedImageUrl','isGeneratingImage'];
 interface BundleEntry {path:string;sha256:string;size:number}
 interface BundleAttachment extends BundleEntry {id:string;name:string;type:string}
 interface BundleManifest {format:typeof FORMAT;version:1;design:BundleEntry;attachments:BundleAttachment[]}

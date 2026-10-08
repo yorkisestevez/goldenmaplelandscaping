@@ -23,7 +23,7 @@ import {designerSource} from './deck-designer-source';
  * every joint where boards end at an inlay, every frame board that runs with the joists and every inside that needs
  * it has framing under it; a band running front to back sits on a breaker's build-up joists and takes a breaker's
  * place; a medallion sits on solid blocking; the placement rules hold; labour is the breaker rate on fitted edges plus
- * the inside's pattern factor, exactly, and a medallion's is a builder quote; the inlay boards are their own stock;
+ * the inside's pattern factor, exactly, and a medallion's defaults to man-hours labour; the inlay boards are their own stock;
  * the legacy centre stripe becomes a band only when asked; and a design without inlays is unchanged.
  */
 let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);checks++;};
@@ -239,7 +239,7 @@ for(const [label,patch,status] of [
 }
 {
   const d=base({wrap:{left:{widthFt:8,runFt:12}},inlays:[rug()]}),m=buildDeckTakeoff(d);
-  ok(!m.levels[0].inlays&&m.levels[0].boards.every(b=>!b.inlay)&&m.issues.some(s=>s.includes('not built on a wrap-around deck')),'Inlays are not built on a wrap-around deck, and it says so');
+  ok(m.levels[0].inlays?.[0]?.status==='ok'&&m.levels[0].boards.some(b=>!!b.inlay)&&m.issues.some(s=>/inlays on a wrap-around sit on the main field/i.test(s)),'Inlays build on a wrap-around main field, with a hip review note');
 }
 
 // 5. Fit to deck: moved toward the middle, then made smaller, until it fits; never moved onto another inlay.
@@ -267,7 +267,7 @@ for(const [label,patch,status] of [
 }
 
 // 7. Labour: the breaker rate on each frame's fitted edge (and each cut-in band) plus the inside's pattern factor,
-// exactly; a band of recoloured rows adds none; a medallion's is a builder quote.
+// exactly; a band of recoloured rows adds none; a medallion's defaults to man-hours labour.
 {
   // The default deck has no labour multipliers (rectangle, straight, low, standard site, spring, aluminum).
   const plain=price(base()),labourItem=(e:typeof plain)=>e.sections.find(s=>s.title.startsWith('Labour'))!,labour=(e:typeof plain)=>labourItem(e).items[0].cost as number;
@@ -290,8 +290,8 @@ for(const [label,patch,status] of [
   const across=price(base({pattern:'Diagonal',inlays:[band({direction:'across',boards:2})]})),acrossPlan=across.model.levels[0].inlays![0];
   ok(Math.abs(labour(across)-labour(price(diag))-acrossPlan.edgeFt/10*1.5/8*1.2*3700)<.01&&acrossPlan.edgeFt>0,'A band cut in across a diagonal deck: its length at the breaker rate, under the deck\'s multipliers');
   const med=price(base({inlays:[medallion()]})),row=labourItem(med).items.find(i=>i.name==='Medallion inlay labour');
-  ok(labour(med)===labour(plain)&&row&&row.cost===null&&row.qty===1&&labourItem(med).quoteRequired&&med.quoteRequired.includes('Medallion inlay labour (builder quote)'),'A medallion adds a builder-quote labour line, never $0, and no crew-days');
-  ok(unconfirmedRates().some(r=>r.id==='medallion-labour'&&r.status==='owner-decision')&&unconfirmedRates().some(r=>r.id==='inlay-labour'&&r.value.includes('band')),'The rate register lists the medallion labour decision, and bands under the reused rate');
+  ok(labour(med)===labour(plain)&&row&&row.cost!==null&&row.cost>0&&row.qty===1&&!med.quoteRequired.includes('Medallion inlay labour (builder quote)'),'A medallion adds priced man-hours labour by default, not crew-days on Installation Labour');
+  ok(unconfirmedRates().some(r=>r.id==='medallion-labour'&&r.status==='owner-decision'&&/Man-hours/i.test(r.value))&&unconfirmedRates().some(r=>r.id==='inlay-labour'&&r.value.includes('band')),'The rate register lists the medallion labour decision, and bands under the reused rate');
 }
 
 // 8. Stock: inlay boards are their own order, at the allowance of what they are.

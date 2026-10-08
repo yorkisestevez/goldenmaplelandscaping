@@ -7,7 +7,7 @@ const PRIVACY_NOTE='Anyone with the link can open a copy of this design. Your na
 const onShared=(how:'copied'|'shared'|'shown')=>trackDeck('deckcraft_link',`deck_link_${how}`);
 
 /** Builds a link that reopens this design, copies it, and offers the phone's share sheet where there is one. */
-export default function ShareDesignLink({data,label='Share link'}:{data:DeckData;label?:string}){
+export default function ShareDesignLink({data,label='Share link',onWarm}:{data:DeckData;label?:string;onWarm?:()=>void}){
   const [link,setLink]=useState('');
   const [status,setStatus]=useState('');
   const [busy,setBusy]=useState(false);
@@ -17,13 +17,13 @@ export default function ShareDesignLink({data,label='Share link'}:{data:DeckData
     setBusy(true);setStatus('');
     try{
       const url=await encodeDesignLink(data);setLink(url);
-      try{await navigator.clipboard.writeText(url);setStatus(`Link copied. ${PRIVACY_NOTE}`);onShared('copied');}
-      catch{setStatus(`Copy the link below. ${PRIVACY_NOTE}`);onShared('shown');}
+      try{await navigator.clipboard.writeText(url);setStatus(`Link copied. ${PRIVACY_NOTE}`);onShared('copied');onWarm?.();}
+      catch{setStatus(`Copy the link below. ${PRIVACY_NOTE}`);onShared('shown');onWarm?.();}
     }catch{setStatus('A link could not be made on this device. Use Save JSON to share the design file instead.');}
     finally{setBusy(false);}
   }
   async function share(){
-    try{await navigator.share({title:'My Golden Maple deck design',url:link});onShared('shared');}
+    try{await navigator.share({title:'My Golden Maple deck design',url:link});onShared('shared');onWarm?.();}
     catch{/* The share sheet was closed; the link is still on screen. */}
   }
   const canShare=typeof navigator!=='undefined'&&typeof navigator.share==='function';

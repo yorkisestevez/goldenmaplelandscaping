@@ -3,7 +3,7 @@ import type {DeckData} from './types';
 import {DEFAULT_DECK} from './defaults';
 import {prepareDesignUpdate} from './designer/designUpdate';
 export function portableReplacement(current:DeckData,next:DeckData):Partial<DeckData>{
- const keys=new Set([...Object.keys(current),...Object.keys(DEFAULT_DECK),...Object.keys(next)]),privateKeys=new Set(['quoteResolutions','pergolaQuoteCosts','materialMarkup','customLaborCost','customOverrides','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','customerName','projectAddress','scopeOfWork','generatedImageUrl','isGeneratingImage']);
+ const keys=new Set([...Object.keys(current),...Object.keys(DEFAULT_DECK),...Object.keys(next)]),privateKeys=new Set(['quoteResolutions','pergolaQuoteCosts','materialMarkup','customLaborCost','customOverrides','featureLabour','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','customerName','projectAddress','scopeOfWork','generatedImageUrl','isGeneratingImage']);
  return Object.fromEntries([...keys].filter(k=>!privateKeys.has(k)).map(k=>[k,(next as unknown as Record<string,unknown>)[k]])) as Partial<DeckData>;
 }
 export default function ProjectFileTools({data,onChange}:{data:DeckData;onChange:(patch:Partial<DeckData>)=>void}){

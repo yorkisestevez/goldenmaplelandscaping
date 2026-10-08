@@ -1,5 +1,5 @@
 import {Suspense,lazy,useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
-import {Link} from 'react-router-dom';
+import {Link,useSearchParams} from 'react-router-dom';
 import SEO from '../components/SEO';
 import {deckReleaseData,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
 import {DEFAULT_DECK} from '../features/deckcraft/defaults';
@@ -27,6 +27,7 @@ import WorkspaceTools from '../features/deckcraft/designer/WorkspaceTools';
 import WorkspacePrice from '../features/deckcraft/designer/WorkspacePrice';
 import {useDesignerMode} from '../features/deckcraft/designer/designerMode';
 import type {ProPage} from '../features/deckcraft/designer/pro/proTypes';
+const noteWarmLead=(...args:Parameters<typeof import('../features/deckcraft/warmLead').noteWarmLead>)=>void import('../features/deckcraft/warmLead').then(m=>m.noteWarmLead(...args));
 import {loadExteriorStudio,loadViewer} from '../features/deckcraft/designer/previewLoaders';
 const PreviewPanel=lazy(()=>import('../features/deckcraft/designer/PreviewPanel'));
 import SectionList from '../features/deckcraft/designer/SectionList';
@@ -159,6 +160,9 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // The site plan's tool (R5). A deck that becomes a custom outline is drawn with the Draw outline tool.
   const [planTool,setPlanTool]=useState<PlanTool>('size');
   const pro=useDesignerMode();
+  const [searchParams]=useSearchParams();
+  const customer=searchParams.get('view')==='customer';
+  const [crewBusy,setCrewBusy]=useState(false);
   const assistantYardFeature=data.yardFeatures?.find(f=>f.id===selectedYardFeatureId);
   const yardInFocus=planTool==='yard'||workspaceView==='inspector'&&open.has('backyard');
   const assistantSelection={...selection,...(data.pools?.some(p=>p.id===selectedYardFeatureId)?{poolId:selectedYardFeatureId}:{}),...(yardInFocus&&assistantYardFeature&&assistantYardFeature.kind!=='water-feature'?{yard:yardTarget.id===selectedYardFeatureId?yardTarget:{id:selectedYardFeatureId,target:'area' as const,index:0}}:{})};
@@ -338,6 +342,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     setDesignError('');
     setProposal({shots,date:proposalDate()});
     trackDeck('deckcraft_output','deck_proposal');
+    noteWarmLead('proposal',{pricedSubtotal:estimate.subtotal,hasName:!!data.customerName.trim(),hasAddress:!!data.projectAddress.trim()});
   }
   // The PDF engine and its builder load only when a PDF is asked for. The proposal dialog hands over the pictures it
   // already has, so they are not taken again.
@@ -350,10 +355,24 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   }
   async function downloadPdf(ready?:ProposalShot[],throwOnError=false){
     setPdfBusy(true);setDesignError('');
-    try{downloadFile(await makeProposalPdf(ready),'application/pdf',PROPOSAL_PDF_NAME);trackDeck('deckcraft_output','deck_pdf');}
+    try{
+      downloadFile(await makeProposalPdf(ready),'application/pdf',PROPOSAL_PDF_NAME);
+      trackDeck('deckcraft_output','deck_pdf');
+      noteWarmLead('pdf',{pricedSubtotal:estimate.subtotal,hasName:!!data.customerName.trim(),hasAddress:!!data.projectAddress.trim()});
+    }
     catch(error){setDesignError('The PDF could not be made on this device. Use “Print proposal” and choose “Save as PDF” instead.');if(throwOnError)throw error;}
     finally{setPdfBusy(false);}
   }
+  async function downloadCrewPack(throwOnError=false){
+    setCrewBusy(true);setDesignError('');
+    try{
+      const {buildCrewPackZip}=await import('../features/deckcraft/crewPack');
+      downloadFile(await buildCrewPackZip(data,estimate,{date:proposalDate(),materialName:material.name,railingName,reviewItems:reviewFlags}),'application/zip','golden-maple-deck-crew-pack.zip');
+      trackDeck('deckcraft_output','deck_crew_pack');
+    }catch(error){setDesignError('The crew pack could not be built for this design. Try the cut-list and materials CSV exports instead.');if(throwOnError)throw error;}
+    finally{setCrewBusy(false);}
+  }
+  const warmShare=()=>noteWarmLead('share',{pricedSubtotal:estimate.subtotal,hasName:!!data.customerName.trim(),hasAddress:!!data.projectAddress.trim()});
   // The export geometry loads only when a file is asked for.
   async function exportModel(kind:'dxf'|'obj'|'dae'|'glb'|'materials'|'cuts'|'connectors',throwOnError=false){
     try{
@@ -432,17 +451,27 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     case 'stairs':return <StairsStep data={data} update={update} onApplyElevation={atomicUpdate} stairEdges={stairEdges} deltas={deltas} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas();}}/>;
     case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas();}} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch} deltas={deltas}/>;
     case 'backyard':return <BackyardStep onGeometry={setGeometryPreview} data={data} update={update} onApplyElevation={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard} onDesign={()=>{setPlanTool('yard');setMode('plan');showCanvas();}}/>;
-    case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={()=>saveJSON()} onDownloadSummary={download} onExport={kind=>void exportModel(kind)} onOpenPermit={()=>setPermitOpen(true)}/>;
+    case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} crewBusy={crewBusy} customer={customer} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={()=>saveJSON()} onDownloadSummary={download} onExport={kind=>void exportModel(kind)} onOpenPermit={()=>setPermitOpen(true)} onCrewPack={()=>void downloadCrewPack()} onOpenJobs={()=>setJobsOpen(true)} onWarmShare={warmShare}/>;
   }};
   // "Draw it on the plan" (the Deck section's outline editor): the Draw outline tool, with the plan brought into view.
   const showCanvas=()=>{setWorkspaceView('canvas');requestAnimationFrame(()=>document.getElementById('deck-live-preview')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'}));};
   const drawOnPlan=()=>{setPlanTool('outline');setMode('plan');showCanvas();};
-  const startOver=()=>{replace(deckReleaseData(structuredClone(DEFAULT_DECK)));clearJobContext();closeSections();setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');resumeAutosave();};
+  const startOver=()=>{
+    void (async()=>{
+      const next=deckReleaseData(structuredClone(DEFAULT_DECK));
+      try{
+        const {readFeatureLabourDefaults,DEFAULT_FEATURE_LABOUR}=await import('../features/deckcraft/featureLabour');
+        const saved=await readFeatureLabourDefaults();
+        if(JSON.stringify(saved)!==JSON.stringify(DEFAULT_FEATURE_LABOUR))next.featureLabour=saved;
+      }catch{/* Built-in man-hours defaults apply when device storage is unavailable. */}
+      replace(next);clearJobContext();closeSections();setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');resumeAutosave();
+    })();
+  };
   const restoreRevision=(candidate:DeckData)=>{
     const next=parseDesign(serializeDesign(candidate));
     // JobRevisionDialog supplies a validated local snapshot. Public serialization intentionally
     // omits contractor prices; retain the exact reviewed local rates, including absent values.
-    for(const key of ['materialMarkup','customLaborCost','customOverrides','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','quoteResolutions','pergolaQuoteCosts','poolQuoteInputs'] as const){
+    for(const key of ['materialMarkup','customLaborCost','customOverrides','featureLabour','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','quoteResolutions','pergolaQuoteCosts','poolQuoteInputs'] as const){
       delete next[key];
       if(Object.hasOwn(candidate,key))(next as unknown as Record<string,unknown>)[key]=structuredClone(candidate[key]);
     }
@@ -461,7 +490,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // The Pro workspace (Designer Mode) reaches the same actions through a menu bar and ribbon. The page hands over its own
   // functions as they are; the Pro chunks, loaded only in Designer Mode, build the menu and ribbon actions from them.
   const proPage:ProPage|undefined=pro?{open,renderSection,data,apply:atomicUpdate,ready:mounted&&designReady,issueCount:currentIssues.length,canUndo,canRedo,undo,redo,openSection,setPlanTool,setMode,showCanvas,showFullList,saveJSON,openProposal,downloadPdf,exportModel,exportPermit,setPresetsOpen,setPermitOpen,setJobsOpen,setSendOpen,setQuoteReviewOpen,setIssuesOpen,setSketchOpen,setAgentOpen,setAskOpen}:undefined;
-  return <div className="deck-designer" data-pro={pro||undefined} data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>
+  return <div className="deck-designer" data-pro={pro||undefined} data-customer={customer||undefined} data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>
     {embed?embed.renderBar({data,estimate}):<SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>}
     <header className="dd-header"><Link to="/" className="dd-workspace-brand" aria-label="Golden Maple home"><span className="dd-brand-symbol" aria-hidden="true">↗</span><span>DeckCraft<small>Golden Maple</small></span></Link><div className="dd-workspace-project"><h1>Draw your deck on your house.</h1><span className="dd-save-state"><i aria-hidden="true"/>{autosavePaused?'Auto-save paused':mounted?'Auto-save on this device':'Loading your design'}</span></div><WorkspaceTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={()=>saveJSON()} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} autosavePaused={autosavePaused} onDownloadPrevious={unrestoredDesign?()=>downloadFile(unrestoredDesign,'application/json','golden-maple-previous-design.json'):undefined}/><div id="dd-workspace-agent-slot"><button type="button" className="dd-agent-open" disabled={!mounted||!designReady} aria-haspopup="dialog" onClick={()=>setPresetsOpen(true)}>Presets</button><button type="button" className="dd-agent-open" aria-haspopup="dialog" onClick={()=>setAgentOpen(true)}>Agents</button></div><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
     {proPage&&mounted&&<Suspense fallback={null}><ProMenuBar page={proPage}/></Suspense>}

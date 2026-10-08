@@ -168,21 +168,25 @@ for(const [label,patch] of houses)for(const deckType of ['Attached','Freestandin
   const expected=o.reduce((n,_,i)=>contact.isContactEdge(i)?n:n+edge(i),0),full=o.reduce((n,_,i)=>n+edge(i),0),rim=exposedRim(d,m);
   const rimIn=rim.reduce((n,r)=>n+Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z),0),row=finishes(e)?.items.find(i=>i.name==='Fascia · Dark Cocoa (TimberTech EDGE Prime+)');
   ok(Math.abs(rimIn-expected)<.1,`${label} (${deckType}): the exposed rim is the outline less the house contacts (${(rimIn/12).toFixed(2)} of ${(expected/12).toFixed(2)} ft)`);
-  ok(row&&row.cost===null&&row.unit==='lf'&&row.qty===Math.ceil(rimIn/12*10)/10&&e.quoteRequired.includes('Fascia boards (supplier quote)')&&finishes(e)!.quoteRequired,`${label} (${deckType}): the fascia row lists that length for a supplier quote`);
+  ok(row&&row.cost!==null&&row.cost>0&&row.unit==='boards'&&e.quoteRequired.includes('Fascia fasteners and delivery (supplier quote)')&&!e.quoteRequired.includes('Fascia boards (supplier quote)'),`${label} (${deckType}): the fascia row is stock-priced from its DeckMart SKU; fasteners stay a supplier quote`);
   ok(rim.every(r=>contact.contacts.every(c=>along({a:{x:r.a.x,y:r.a.z},b:{x:r.b.x,y:r.b.z}},c)<.5)),`${label} (${deckType}): no fascia runs along a wall the house covers`);
   if(deckType==='Attached')ok(contact.contacts.length>0&&expected<full-1,`${label}: the house covers part of the attached deck's rim`);
   else ok(contact.contacts.length===0&&Math.abs(rimIn-full)<.1,`${label}: a freestanding deck has fascia all round`);
   // The same rim feeds a manufacturer fascia, which then carries the colour instead of a row of its own.
   const cat={...d,catalogueAccessories:['tt_fascia']},ec=priced(cat),catRow=section(ec,'Manufacturer deck accessories')?.items.find(i=>i.name==='TimberTech fascia boards');
   const layout=catalogueAccessoryLayout(cat,ec.model),catIn=layout.fascia.reduce((n,f)=>n+Math.hypot(f.b.x-f.a.x,f.b.z-f.a.z),0);
-  ok(Math.abs(catIn-rimIn)<1e-6&&catRow?.qty===row?.qty&&catRow?.spec.startsWith('Colour: Dark Cocoa (TimberTech EDGE Prime+). ')&&catRow.cost===null&&!finishes(ec)?.items.some(i=>i.name.startsWith('Fascia · '))&&!ec.quoteRequired.includes('Fascia boards (supplier quote)'),`${label} (${deckType}): a manufacturer fascia over the same rim takes the colour, with no second fascia row`);
+  ok(Math.abs(catIn-rimIn)<1e-6&&catRow?.qty===Math.ceil(rimIn/12*10)/10&&catRow?.spec.startsWith('Colour: Dark Cocoa (TimberTech EDGE Prime+). ')&&catRow.cost===null&&!finishes(ec)?.items.some(i=>i.name.startsWith('Fascia · '))&&!ec.quoteRequired.includes('Fascia boards (supplier quote)'),`${label} (${deckType}): a manufacturer fascia over the same rim takes the colour, with no second fascia row`);
 }
 {
   const cat=base({catalogueAccessories:['dk_fascia']}),spec=section(price(cat),'Manufacturer deck accessories')!.items.find(i=>i.name==='Deckorators fascia boards')!.spec;
   ok(!spec.startsWith('Colour:')&&spec.startsWith('Collection-matched fascia.'),'Without a fascia colour the manufacturer fascia row reads as before');
   const two=base({levels:2,width2:10,length2:8,height2:20,stairFlights:0,deckFinishes:{fascia:COCOA}}),e2=priced(two),rim2=exposedRim(two,e2.model).reduce((n,r)=>n+Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z),0);
   const main=e2.model.levels[0],contact=getHouseContact(two,main.footprint),mainRim=(main.rim??[]).filter(r=>!contact.onContact({x:r.a.x,y:r.a.z},{x:r.b.x,y:r.b.z})).reduce((n,r)=>n+Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z),0);
-  ok(e2.model.levels.length>1&&rim2>mainRim+1&&finishes(e2)!.items.find(i=>i.name.startsWith('Fascia · '))!.qty===Math.ceil(rim2/12*10)/10,'A second level\'s rim is all exposed and in the fascia length');
+  const fascia2=finishes(e2)!.items.find(i=>i.name.startsWith('Fascia · '))!;
+  ok(e2.model.levels.length>1&&rim2>mainRim+1&&fascia2.unit==='boards'&&fascia2.cost!==null&&fascia2.cost>0,'A second level\'s rim is all exposed and stock-priced with the fascia boards');
+  const unsourced=priced(base({deckFinishes:{fascia:colourRef('tt_harvest','Kona')}}));
+  const kona=finishes(unsourced)?.items.find(i=>i.name.startsWith('Fascia · '));
+  ok(kona&&kona.cost===null&&kona.unit==='lf'&&unsourced.quoteRequired.includes('Fascia boards (supplier quote)'),'An unsourced fascia colour stays a supplier quote');
 }
 
 // 6. Railing colours: every colour offered is in railing-finish-provenance.json for its system (name, source, retrieval
@@ -250,7 +254,7 @@ for(const system of RAILING_CATALOGUE){
   const d=base({pictureFrameRows:1,...railOf('dk_contemporary'),deckFinishes:{border:ESPRESSO,fascia:COCOA,treads:SALT,railingColor:'Bronze'}}),e=priced(d),described=describeDesign(d,e);
   const fact='Deck parts: border boards in Espresso (TimberTech PRO Legacy); fascia in Dark Cocoa (TimberTech EDGE Prime+); stair treads in Sea Salt Gray (TimberTech EDGE Prime+)';
   ok(described.facts.includes(fact)&&described.proposalFacts.includes(fact)&&described.summary.includes(fact),'The design facts, summary and proposal name each part\'s colour');
-  ok(described.priceLabel==='Priced portion only'&&e.sections.some(s=>s.title==='Deck-part finishes'),'With the fascia quote, the price reads as the priced portion only; the proposal and PDF list the section');
+  ok(described.priceLabel==='Priced portion only'&&e.sections.some(s=>s.title==='Deck-part finishes')&&e.quoteRequired.includes('Fascia fasteners and delivery (supplier quote)'),'With sourced fascia supply and a fastener quote, the price reads as the priced portion only; the proposal and PDF list the section');
   const fields:SendDesignFields={name:'A',email:'a@example.com',phone:'7053008015',address:'Barrie',notes:'',offers:false,botField:'',timeline:'',budget:'',samples:true};
   const sent=buildDeckDesignSubmission(fields,{data:d,estimate:e,summary:described.summary,reviewItems:[],link:'https://goldenmaplelandscaping.ca/deck-designer#d',sentAt:new Date(0),consent:null});
   ok(sent.details.includes('Samples: please bring Coconut Husk and the finish colours: Espresso (TimberTech PRO Legacy), Dark Cocoa (TimberTech EDGE Prime+), Sea Salt Gray (TimberTech EDGE Prime+)'),'A sample request lists the part colours');

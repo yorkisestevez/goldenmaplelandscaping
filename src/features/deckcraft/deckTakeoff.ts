@@ -120,11 +120,15 @@ export function buildDeckTakeoff(data:DeckData){
   /** A wrap-around main deck: zones framed off each house wall and joined on hips (see wrapFraming). */
   function makeWrapLevel(footprint:FootprintPlan,top:number,offset:V3,cfg:ZoneFramingConfig,wrap:ActiveWrap):DeckLevel{
     const borders=data.pictureFrameRows||(data.pattern==='Picture Frame'?1:0),inset=borders*(data.boardWidth+gap);
-    const deckingFootprint=getFinishedFootprint(data,footprint,mainContact);
+    const deckingFootprint=getFinishedFootprint(data,footprint,mainContact),fieldPolygons=offsetPolygons([deckingFootprint.outline],inset);
     const framed=frameWrap({wrap,cfg,deckingOutline:deckingFootprint.outline,inset,borders,boardWidth:data.boardWidth,gap,stockLength,houseSide:exposedHouseLine(data,footprint,mainContact),houseCut:blocksTowardDeck(getHouseBlocks(data)).map(b=>rectPolygon(b.rect)),houseCutXs:mainContact.contacts.filter(c=>c.kind==='flush').map(c=>c.a.x),buildRules:data.buildRules});
     const boards:BoardRun[]=[...(borders?getPictureFrameRuns(deckingFootprint,borders as 1|2,data.boardWidth,gap):[]),...framed.fieldBoards];
-    const installed=boards.flatMap(b=>splitBoard(b,data.boardWidth,stockLength,gap));
+    // Decorative inlays on the wrap's main field (same planner as a plain deck; hips already own the wing seams).
+    const levelInlays=(data.inlays??[]).filter(i=>(i.level??1)===1);
+    const inlayPlans=levelInlays.length?planInlays(levelInlays,{fieldPolygons,boardWidth:data.boardWidth,gap,stockLength,buildRules:data.buildRules,centre:{x:(footprint.origin?.x??0)+footprint.bounds.w/2,y:(footprint.origin?.y??0)+footprint.bounds.h/2},straight:true,...(data.hasInlay?{blocked:'Replace the centre inlay stripe with a band (on the finish step) to build decorative inlays on the main deck.'}:{})}):[];
+    const installed=(inlayPlans.length?applyInlays(boards,inlayPlans,data.boardWidth,gap):boards).flatMap(b=>splitBoard(b,data.boardWidth,stockLength,gap));
     const level:DeckLevel={kind:'deck',index:0,footprint,deckingFootprint,top,offset,supports:framed.supports,joists:framed.joists,beams:framed.beams,blocking:framed.blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,0,stockLength,inset),breakers:framed.breakers,reference:framed.reference,hips:framed.hips,wrapZones:planZones(framed.zones)};
+    if(inlayPlans.length){level.inlays=inlayPlans;frameInlays(level,inlayPlans,{boardWidth:data.boardWidth,gap,spacing,pattern:data.pattern});}
     layoutLevel(level,inset);
     addRim(level);wrapBoardEndBlocking(level,framed.zones,framed.hips);
     return level;
@@ -584,7 +588,8 @@ export function buildDeckTakeoff(data:DeckData){
   const thinStrips=levels[0].angledEdges?.length?levels[0].boards.filter(b=>b.angleDeg%90!==0&&(b.width??data.boardWidth)<1.5&&b.length>6).length:0;
   if(thinStrips)issues.push(`${angledWord}: ${thinStrips} decking piece${thinStrips===1?' is':'s are'} ripped narrower than 1.5 in along a run. The installer will need to adjust the board layout ${custom?'along the 45° edges':'at the corner'}.`);
   // Decorative inlays: the ones not built say why; built ones get a framing review note.
-  if(wrap&&(data.inlays??[]).some(i=>(i.level??1)===1))issues.push('Decorative inlays are not built on a wrap-around deck: the zones meet on hips. Remove the wrap-around or the inlays on the main deck.');
+  // Wrap decks place inlays on the main field only (zone boards already stop at the hip).
+  if(wrap&&(data.inlays??[]).some(i=>(i.level??1)===1)&&levels[0].inlays?.some(p=>p.status==='ok'))issues.push('Decorative inlays on a wrap-around sit on the main field; the wings keep their zone board runs. Confirm fastening at the hip with the decking manufacturer before construction.');
   // Where a fill meets a slanted frame edge, some pieces are ripped thin: say so, as angled corners do.
   for(const level of levels)for(const [n,p] of (level.inlays??[]).entries()){const thin=level.boards.filter(b=>b.inlay===p.id&&(b.role==='inlay-fill'||p.kind==='medallion')&&(b.width??data.boardWidth)<1.5&&b.length>6).length;if(thin)issues.push(p.kind==='band'?`${level.index?`Level ${level.index+1} `:''}inlay ${n+1} (band): ${thin} piece${thin===1?' is':'s are'} ripped narrower than 1.5 in where it meets the deck's edge. The installer will adjust the band's ends.`:`${level.index?`Level ${level.index+1} `:''}inlay ${n+1}: ${thin} piece${thin===1?' is':'s are'} ripped narrower than 1.5 in along the frame. The installer will adjust the layout inside the frame.`);}
   for(const level of levels)for(const [n,p] of (level.inlays??[]).entries())if(p.status!=='ok')issues.push(`${level.index?`Level ${level.index+1} `:''}inlay ${n+1} (${INLAY_KIND_NAMES[p.kind]}) is not built: ${p.message}`);

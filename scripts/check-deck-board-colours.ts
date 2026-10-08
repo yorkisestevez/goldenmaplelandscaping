@@ -19,7 +19,7 @@ import {designerSource} from './deck-designer-source';
  * saves and prices exactly as before. Boards are found by where they sit (lib/boardAddress.ts), so a choice
  * survives resizing, a collection change and stair or railing edits, and a change that moves the boards leaves
  * it unmatched, never on another board. Each accent colour is ordered as its own boards at its own collection's
- * rate, a collection without a rate is a supplier quote, and fitting the boards is a builder-quote labour line.
+ * rate, a collection without a rate is a supplier quote, and fitting the boards defaults to man-hours labour.
  */
 let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);checks++;};
 const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
@@ -132,7 +132,7 @@ for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another 
   const d={...base(),boardColours:[row('r3',colourRef(unpriced.id,unpriced.colors[0].name))]};ok(boardFinishPlan(d,buildDeckTakeoff(d)).unmatched.length===1,'A saved colour this deck cannot take is not applied');
 }
 
-// 7. Pricing: each colour is ordered as its own boards at its collection's rate; labour is a builder quote.
+// 7. Pricing: each colour is ordered as its own boards at its collection's rate; labour defaults to man-hours.
 {
   const plain=price(base()),plainDeck=plain.sections.find(s=>s.title==='Decking')!;
   const own={...base(),boardColours:[row('r3')]},e=price(own),acc=accentSection(e)!,deck=e.sections.find(s=>s.title==='Decking')!;
@@ -147,8 +147,7 @@ for(const [label,patch] of [['wider and deeper',{width:24,length:14}],['another 
   const reserveRate=DECKING_CATALOGUE.find(m=>m.id==='tt_reserve')!.costPerSqft!;
   ok(acc2.items.length===2&&Math.abs((acc2.items[1].cost as number)-reserveRow.orderedLf*reserveRate*(5.5/12)*1.35)<.01,'Another collection is priced at its current sourced rate');
   const lab=labourItem(e)!;
-  ok(lab&&lab.cost===null&&lab.qty===boardFinishPlan(own,e.model).pieces&&e.quoteRequired.includes('Accent-colour board labour (builder quote)'),'Fitting accent boards is a builder-quote labour line, never $0');
-  ok(describeDesign(own,e).priceLabel==='Priced portion only','With a builder-quote line the price reads as the priced portion only');
+  ok(lab&&lab.cost!==null&&lab.cost>0&&lab.qty===boardFinishPlan(own,e.model).pieces&&!e.quoteRequired.includes('Accent-colour board labour (builder quote)'),'Fitting accent boards defaults to priced man-hours labour, not a builder quote');
   ok(eo.sections.flatMap(s=>s.items).every(i=>i.cost!==0||!/ccent/.test(i.name)),'No accent line is priced at $0');
   // A deck in a collection without a rate: its own colours as accents are a supplier quote too.
   const q=DECKING_CATALOGUE.find(m=>m.costPerSqft===null&&m.isComposite&&m.colors.length>1)!;

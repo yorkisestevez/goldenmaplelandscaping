@@ -144,8 +144,8 @@ checkWrap(design({length:12,height:36,houseConfig:house(12,30),wrap:{left:{width
   checkWrap(ring,'porches trimmed to stay apart');
   assert.throws(()=>validateDesign({...base(),deckType:'Attached',wrap:{porchLeft:{depthFt:8,runFt:8}}}),/add that wing first/);checks++;
   const e=calculateEstimate(ring),labour=e.sections.find(s=>s.title.startsWith('Labour'))!;
-  ok(e.quoteRequired.includes('Porch-wrap labour premium (builder quote)')&&labour.quoteRequired&&labour.items.some(i=>i.cost===null&&/Porch-wrap/.test(i.name)),'Porch-wrap labour premium is a builder-quote line, never priced at zero');
-  ok(wrapLabourFactor(w)===1.5,'Porch wraps price labour at the two-corner factor');
+  ok(!e.quoteRequired.some(q=>/Porch-wrap/.test(q))&&!labour.items.some(i=>/Porch-wrap/.test(i.name)),'Porch wraps fold into the wrap labour factor; no separate builder-quote line');
+  ok(wrapLabourFactor(w)===1.65,'Porch wraps price labour at the two-corner factor plus ×0.15');
   ok(/round to the street side/.test(describeWrap(w)),'The summary says the deck wraps round to the street side');
   // Front entry: a street-side door facing a porch takes the stair straight off the porch, centred on it.
   const cfg=house(26,22),withDoor=design({width:22,length:12,height:36,houseConfig:{...cfg,openings:[...cfg.openings,{id:'street-door',type:'Door',facade:'Back',offsetPct:80,bottomIn:36,widthIn:36,heightIn:80}]},wrap:{left:{widthFt:8,runFt:8},porchLeft:{depthFt:8,runFt:14}}});

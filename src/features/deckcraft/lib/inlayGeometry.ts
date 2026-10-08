@@ -54,7 +54,7 @@ export interface InlayContext{
   centre:PlanPoint;
   /** The field's boards run across the deck (a straight or picture-frame deck), so a band across it is whole rows. */
   straight?:boolean;
-  /** A reason no inlay can be built on this level (a wrap-around deck, or the legacy centre stripe). */
+  /** A reason no inlay can be built on this level (for example the legacy centre stripe). */
   blocked?:string;
   /** The design's build rules (buildRules.ts): absent or 'legacy' keeps the staggered rows an inlay was quoted with (getBoardRows). */
   buildRules?:BuildRules;

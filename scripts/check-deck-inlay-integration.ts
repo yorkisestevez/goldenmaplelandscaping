@@ -8,11 +8,17 @@ import {createInlayPreset,INLAY_PRESETS} from '../src/features/deckcraft/lib/inl
 import {boardFinishPlan} from '../src/features/deckcraft/boardFinishes';
 import {quoteScopeReview} from '../src/features/deckcraft/designer/quoteReviewModel';
 import {confirmQuoteScope} from '../src/features/deckcraft/quoteResolutionValidation';
+import {DEFAULT_FEATURE_LABOUR,mergeFeatureLabour} from '../src/features/deckcraft/featureLabour';
 import type {DeckData} from '../src/features/deckcraft/types';
 
 let checks=0;
 const check=(v:unknown,message:string)=>{assert.ok(v,message);checks++;};
 const ok=(r:AgentResponse)=>{if('error'in r)throw Error(r.error.message);checks++;return r;};
+const quoteFeatures=mergeFeatureLabour(undefined,{scopes:{
+  accent:{...DEFAULT_FEATURE_LABOUR.scopes.accent,mode:'quote'},
+  medallion:{...DEFAULT_FEATURE_LABOUR.scopes.medallion,mode:'quote'},
+  customInlay:{...DEFAULT_FEATURE_LABOUR.scopes.customInlay,mode:'quote'},
+}});
 const base=deckReleaseData({...structuredClone(DEFAULT_DECK),width:24,length:20,stairFlights:0,pictureFrameRows:1});
 let state:DeckAgentHostState={data:base,view:'plan',openSections:[],ready:true,canUndo:false,canRedo:false},commits=0;
 const past:DeckData[]=[],future:DeckData[]=[];
@@ -25,7 +31,7 @@ const add=request([{type:'inlay.preset',id:'rose-one',presetId:'compass-rose',le
 const preview=ok(await api.preview(add));
 check(commits===0&&serializeDeckReleaseDesign(state.data)===original&&past.length===0,'Preset preview never saves or changes history');
 check(preview.snapshot.inlayShapes[0].status==='ok','Preview plans actual rose geometry');
-check(preview.snapshot.quotes.includes('Medallion inlay labour (builder quote)'),'Decorative labour remains outstanding in preview');
+check(!preview.snapshot.quotes.includes('Medallion inlay labour (builder quote)'),'Decorative labour defaults to man-hours, not an outstanding quote');
 const applied=ok(await api.execute(add));
 check(commits===1&&past.length===1,'One preset placement is one design commit');
 check(applied.snapshot.design.inlays?.[0].kind==='medallion','Compass rose is a real medallion configuration');
@@ -60,14 +66,16 @@ const estimate=calculateDeckReleaseEstimate(state.data),finish=boardFinishPlan(s
 check(finish.inlayPieces>0&&finish.stock.some(s=>s.kind==='inlay'),'Inlay boards use the actual separate stock calculation');
 check(estimate.model.levels[0].blocking.some(b=>b.role==='inlay-solid'),'Complex shapes include modelled solid support quantities');
 const labour=estimate.sections.find(s=>s.title==='Labour (Construction & Build)')!;
-check(labour.items.some(i=>i.name==='Custom inlay fabrication labour'&&i.cost===null),'Custom fabrication is a null-cost quote row, never fake free labour');
-check(labour.items.some(i=>i.name==='Medallion inlay labour'&&i.cost===null),'Medallion labour keeps the legacy scope');
-check(estimate.subtotal>0&&Math.abs(estimate.total-estimate.subtotal-estimate.hst)<1e-6,'Pricing arithmetic balances with pending scopes');
-const scope=quoteScopeReview(state.data,estimate).scopes.find(s=>s.name==='Custom inlay fabrication labour')!;
-check(!!scope&&scope.rows.length===1,'Custom fabrication has one resolvable quote scope');
+check(labour.items.some(i=>i.name==='Custom inlay fabrication labour'&&i.cost!==null&&Number(i.cost)>0),'Custom fabrication is priced as man-hours by default');
+check(labour.items.some(i=>i.name==='Medallion inlay labour'&&i.cost!==null&&Number(i.cost)>0),'Medallion labour is priced as man-hours by default');
+check(estimate.subtotal>0&&Math.abs(estimate.total-estimate.subtotal-estimate.hst)<1e-6,'Pricing arithmetic balances with priced feature labour');
+// Quote-mode path still resolves through Quote Review when the owner opts in.
+const quoteJob={...state.data,featureLabour:quoteFeatures},quoteEstimate=calculateDeckReleaseEstimate(quoteJob);
+const scope=quoteScopeReview(quoteJob,quoteEstimate).scopes.find(s=>s.name==='Custom inlay fabrication labour')!;
+check(!!scope&&scope.rows.length===1,'Quote-mode custom fabrication has one resolvable quote scope');
 const record=confirmQuoteScope(scope,{supplyCost:0,installationCost:250,confirmedOn:'2026-09-27',source:'Local regression fixture',note:'Decorative fitting only, excludes priced deck and blocking.'});
-const quoted={...state.data,quoteResolutions:[record]},confirmed=calculateDeckReleaseEstimate(quoted);
-check(Math.abs(confirmed.subtotal-estimate.subtotal-250)<1e-6,'Confirmed installation adds once with no material markup');
+const quoted={...quoteJob,quoteResolutions:[record]},confirmed=calculateDeckReleaseEstimate(quoted);
+check(Math.abs(confirmed.subtotal-quoteEstimate.subtotal-250)<1e-6,'Confirmed installation adds once with no material markup');
 check(!confirmed.quoteRequired.includes('Custom inlay fabrication labour (builder quote)'),'Only the explicitly confirmed scope clears');
 const moved={...quoted,inlays:quoted.inlays!.map(i=>i.id==='custom-one'&&i.kind!=='band'?{...i,dxFt:(i.dxFt??0)-.5}:i)};
 const changed=calculateDeckReleaseEstimate(moved),without=calculateDeckReleaseEstimate({...moved,quoteResolutions:undefined});

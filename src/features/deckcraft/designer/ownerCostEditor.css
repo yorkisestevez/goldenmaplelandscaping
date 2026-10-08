@@ -1,0 +1,29 @@
+.dd-owner-costs-backdrop{position:fixed;inset:0;z-index:1850;background:#161b1bc9;display:flex;align-items:center;justify-content:center;padding:24px}
+.dd-owner-costs-dialog{width:min(720px,100%);max-height:calc(100dvh - 48px);overflow:auto;border-radius:16px;background:#fcfaf5;box-shadow:0 28px 90px #0005}
+.dd-owner-costs{color:#263532;font:14px/1.5 system-ui,sans-serif;padding:20px 22px 18px}
+.dd-owner-costs[data-variant=inline]{margin:18px 0;border:1px solid #d5d2c9;border-radius:12px;background:#f7f5ef}
+.dd-owner-costs-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+.dd-owner-costs-eyebrow{display:block;font-size:11px;font-weight:750;letter-spacing:.09em;text-transform:uppercase;color:#76512d;margin-bottom:6px}
+.dd-owner-costs h3,.dd-owner-costs h4{margin:0 0 8px;color:#203630;line-height:1.25}
+.dd-owner-costs h3{font-size:22px}.dd-owner-costs h4{font-size:16px;margin-top:18px}
+.dd-owner-costs p{margin:0 0 12px}
+.dd-owner-costs-close{min-width:44px;min-height:44px;border:1px solid #c9d0c6;border-radius:8px;background:#fff;font-size:24px;cursor:pointer;color:#294139}
+.dd-owner-costs-field,.dd-owner-costs-grid label,.dd-owner-costs-lines label{display:flex;flex-direction:column;gap:6px;font-weight:650;font-size:13px;margin:10px 0}
+.dd-owner-costs input{min-height:44px;border:1px solid #bfc9bd;border-radius:7px;padding:10px;font:14px system-ui,sans-serif;background:#fff;color:#273f35}
+.dd-owner-costs small{font-weight:400;color:#536159}
+.dd-owner-costs-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.dd-owner-costs-actions,.dd-owner-costs-footer{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.dd-owner-costs-lines,.dd-owner-costs-crew{border:1px solid #d9ded3;border-radius:8px;padding:0 12px;margin:12px 0;background:#fff}
+.dd-owner-costs summary{min-height:44px;cursor:pointer;display:flex;align-items:center;font-weight:650}
+.dd-owner-costs-lines ul{list-style:none;padding:0;margin:0 0 12px}
+.dd-owner-costs-lines li{border-top:1px solid #e3e5db;padding:8px 0}
+.dd-owner-costs-lines label span small{display:block;margin-top:2px}
+.dd-owner-costs-error{background:#fff0e7;border:1px solid #c98859;padding:12px;border-radius:8px;color:#773615}
+.dd-owner-costs-status{background:#eef5ea;border:1px solid #9bb59a;padding:12px;border-radius:8px;color:#274229}
+.dd-owner-costs-check{display:flex;align-items:center;gap:10px;font-weight:650;font-size:13px;margin:8px 0 12px;min-height:44px}
+.dd-owner-costs-check input{width:20px;height:20px;min-height:20px}
+@media(max-width:700px){
+  .dd-owner-costs-backdrop{padding:0}
+  .dd-owner-costs-dialog{height:100dvh;max-height:100dvh;border-radius:0}
+  .dd-owner-costs-grid{grid-template-columns:1fr}
+}
