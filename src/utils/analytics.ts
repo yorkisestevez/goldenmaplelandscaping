@@ -16,12 +16,18 @@
  * relevant ID is missing.
  *
  * Clarity and the Meta Pixel wait for the first interaction or ~3s, and only
- * load after advertising/analytics consent. gtag stays in the document head
- * (advanced Consent Mode) so Ads scanners still see the tag. Lead and call
- * events are never gated here — Consent Mode decides storage.
+ * load after advertising/analytics consent. The Google tag stays out of the
+ * first paint: the document head only sets Consent Mode, and gtag.js loads on
+ * the first input or idle. Lead and call events are never gated here —
+ * Consent Mode decides storage.
+ *
+ * GA4 is configured with send_page_view:false and one explicit page_view.
+ * The Ads container sends its own page_view on config and on later history
+ * changes, even with that flag, so this module never sends an Ads page_view.
  */
 
 import { pushPage, pushClick, getBehaviorFields } from './behavior';
+import { onInteractOrIdle } from './defer';
 import { shouldFireLeadConversion, type LeadFormFields } from './leadQualification';
 
 declare global {
@@ -82,6 +88,9 @@ export function readStoredConsent(): ConsentChoice | null {
 }
 
 let initialized = false;
+let googleTagLoaded = false;
+let googleTagLoading = false;
+let queuedView: { path: string; title?: string } | null = null;
 let metaArmed = false;
 let pixelScriptRequested = false;
 let clarityScriptRequested = false;
@@ -166,30 +175,72 @@ export function applyConsent(choice: ConsentChoice): void {
   if (choice === 'granted') scheduleDeferredTrackers();
 }
 
-/** Boot gtag.js companions. Call once on app mount. Idempotent. */
-export function initAnalytics(): void {
-  if (!isBrowser || initialized) return;
-  initialized = true;
-
-  // The document head already loads gtag. This path covers a head-less boot.
-  if ((GA4_ID || GOOGLE_ADS_ID) && typeof window.gtag !== 'function') {
-    const primaryId = GA4_ID || GOOGLE_ADS_ID;
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${primaryId}`;
-    document.head.appendChild(script);
-
-    window.dataLayer = window.dataLayer || [];
+function ensureGtagStub(): boolean {
+  const hadStub = typeof window.gtag === 'function';
+  window.dataLayer = window.dataLayer || [];
+  if (!hadStub) {
     window.gtag = function gtag() {
       // eslint-disable-next-line prefer-rest-params
       window.dataLayer!.push(arguments as unknown as unknown[]);
     } as Window['gtag'];
-    window.gtag('consent', 'default', { ...consentUpdate('denied'), wait_for_update: 500 });
-    if (readStoredConsent() === 'granted') window.gtag('consent', 'update', consentUpdate('granted'));
-    window.gtag('js', new Date());
-    if (GA4_ID) window.gtag('config', GA4_ID, { send_page_view: false });
-    if (GOOGLE_ADS_ID) window.gtag('config', GOOGLE_ADS_ID, { send_page_view: false });
   }
+  return hadStub;
+}
+
+function pagePayload(path: string, title?: string) {
+  return {
+    page_path: path,
+    page_title: title || document.title,
+    page_location: window.location.href,
+  };
+}
+
+/** One explicit GA4 page_view. Ads is left to the container so it is not counted twice. */
+function emitPageView(path: string, title?: string): void {
+  const payload = pagePayload(path, title);
+  if (GA4_ID) window.gtag?.('event', 'page_view', { ...payload, send_to: GA4_ID });
+  window.fbq?.('track', 'PageView');
+  pushPage(path, title);
+  if (isDev) console.log('[analytics] pageview', path);
+}
+
+/**
+ * Load gtag.js once. Consent default is already queued by the document head
+ * when that ran; a head-less boot sets it here before any config.
+ */
+function loadGoogleTag(): void {
+  if (!isBrowser || googleTagLoading || googleTagLoaded) return;
+  if (!GA4_ID && !GOOGLE_ADS_ID) {
+    googleTagLoaded = true;
+    return;
+  }
+  googleTagLoading = true;
+  const hadStub = ensureGtagStub();
+  const primaryId = GA4_ID || GOOGLE_ADS_ID;
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${primaryId}`;
+  document.head.appendChild(script);
+  if (!hadStub) {
+    window.gtag?.('consent', 'default', { ...consentUpdate('denied'), wait_for_update: 500 });
+  }
+  if (readStoredConsent() === 'granted') window.gtag?.('consent', 'update', consentUpdate('granted'));
+  window.gtag?.('js', new Date());
+  if (GA4_ID) window.gtag?.('config', GA4_ID, { send_page_view: false });
+  if (GOOGLE_ADS_ID) window.gtag?.('config', GOOGLE_ADS_ID, { send_page_view: false });
+  googleTagLoaded = true;
+  const first = queuedView;
+  queuedView = null;
+  if (first) emitPageView(first.path, first.title);
+}
+
+/** Boot deferred trackers. Call once on app mount. Idempotent. */
+export function initAnalytics(): void {
+  if (!isBrowser || initialized) return;
+  initialized = true;
+
+  if (!GA4_ID && !GOOGLE_ADS_ID) googleTagLoaded = true;
+  else onInteractOrIdle(loadGoogleTag, 8000);
 
   if (readStoredConsent() === 'granted') scheduleDeferredTrackers();
 
@@ -204,19 +255,14 @@ export function initAnalytics(): void {
   }
 }
 
-/** One page_view per destination. send_to stops the event reaching every tag. */
+/** One GA4 page_view. send_to keeps it off the Ads tag, which records the view itself. */
 export function trackPageView(path: string, title?: string): void {
   if (!isBrowser) return;
-  const payload = {
-    page_path: path,
-    page_title: title || document.title,
-    page_location: window.location.href,
-  };
-  if (GA4_ID) window.gtag?.('event', 'page_view', { ...payload, send_to: GA4_ID });
-  if (GOOGLE_ADS_ID) window.gtag?.('event', 'page_view', { ...payload, send_to: GOOGLE_ADS_ID });
-  window.fbq?.('track', 'PageView');
-  pushPage(path, title);
-  if (isDev) console.log('[analytics] pageview', path);
+  if (!googleTagLoaded) {
+    queuedView = { path, title };
+    return;
+  }
+  emitPageView(path, title);
 }
 
 /**

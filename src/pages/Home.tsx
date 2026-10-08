@@ -1,8 +1,6 @@
+import { lazy, Suspense } from 'react';
 import { ArrowRight, Shield, Award, CheckCircle, Compass, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
-import BuyersGuide from '../components/BuyersGuide';
-import Manifesto from '../components/Manifesto';
-import Process from '../components/Process';
 import HeroDepth from '../components/HeroDepth';
 import GoogleReviewsLink from '../components/GoogleReviewsLink';
 import { Link } from 'react-router-dom';
@@ -10,7 +8,11 @@ import Reveal from '../components/Reveal';
 import { BUSINESS, publicClaimCopy } from '../data/business';
 import { OWNER_FACTS, ownerFact } from '../data/ownerFacts';
 import ResponsiveImage from '../components/ResponsiveImage';
-import InstagramFeed from '../components/InstagramFeed';
+
+const InstagramFeed = lazy(() => import('../components/InstagramFeed'));
+const Manifesto = lazy(() => import('../components/Manifesto'));
+const Process = lazy(() => import('../components/Process'));
+const BuyersGuide = lazy(() => import('../components/BuyersGuide'));
 import { FEATURED_PROJECTS, getProject, projectCoverFull, projectCover } from '../data/projects';
 
 const ServicesGrid = () => {
@@ -305,7 +307,7 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="Barrie Landscaping Company | Patios, Interlock & Retaining Walls"
+        title="Barrie Landscaping | Patios, Walls & Decks"
         description="Golden Maple builds interlocking patios, driveways, retaining walls and composite decks for homeowners in Barrie and Simcoe County."
         canonical="https://goldenmaplelandscaping.ca/"
         schema={faqSchema}
@@ -313,11 +315,11 @@ export default function Home() {
       <HeroDepth />
       <SelectedWork />
       <ServicesGrid />
-      <InstagramFeed />
-      <Manifesto />
+      <Suspense fallback={null}><InstagramFeed /></Suspense>
+      <Suspense fallback={null}><Manifesto /></Suspense>
       <ContractorPainPoints />
       <WhyGoldenMaple />
-      <Process />
+      <Suspense fallback={null}><Process /></Suspense>
       <GoogleReviews />
       <section className="section-padding bg-brand-nearblack border-t border-brand-dim/5">
       <div className="container-custom">
@@ -337,7 +339,9 @@ export default function Home() {
       </div>
     </section>
 
-    <BuyersGuide />
+    <Suspense fallback={null}>
+      <BuyersGuide />
+    </Suspense>
     <FinalCTA />
     </>
   );

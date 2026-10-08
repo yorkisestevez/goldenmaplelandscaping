@@ -15,12 +15,16 @@
   NODE_VERSION = "22"
 
 # Legacy /blog index consolidated into /resources (the working blog index).
-# 301 ensures any backlinks or bookmarks land on the canonical page and pass SEO signals through.
-# `/blog` alone is not enough: pretty_urls plus a trailing-slash request (`/blog/`)
-# miss that rule and fall through to the SPA catch-all, which serves the homepage.
+# Both slash forms 301 straight to /resources/. A target without the slash
+# would 301 again when pretty_urls adds it. /blog/* stays a separate splat.
 [[redirects]]
   from = "/blog"
-  to = "/resources"
+  to = "/resources/"
+  status = 301
+
+[[redirects]]
+  from = "/blog/"
+  to = "/resources/"
   status = 301
 
 [[redirects]]

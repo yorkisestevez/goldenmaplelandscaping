@@ -3,6 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { lazy, Suspense } from 'react';
 import { Phone, MapPin, Mail, Shield, Award, ChevronDown, Instagram, Facebook } from 'lucide-react';
 import { trackEngagement, trackCall } from '../utils/analytics';
+import { onInteractOrIdle } from '../utils/defer';
 const ChatWidget = lazy(() => import('./ChatWidget'));
 import { cn } from '../utils/cn';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
@@ -518,27 +519,10 @@ const Footer = () => {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  // Chat loads after the first interaction or a few seconds so it stays out of
-  // the LCP window. It is also absent from the prerender.
+  // Chat is absent from the prerender and stays out of the first paint.
+  // It loads on the first input, or when the browser has been idle.
   const [chatReady, setChatReady] = useState(false);
-  useEffect(() => {
-    let ready = false;
-    const start = () => {
-      if (ready) return;
-      ready = true;
-      setChatReady(true);
-    };
-    const timer = window.setTimeout(start, 4000);
-    const onInteract = () => {
-      window.clearTimeout(timer);
-      start();
-    };
-    window.addEventListener('pointerdown', onInteract, { once: true });
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener('pointerdown', onInteract);
-    };
-  }, []);
+  useEffect(() => onInteractOrIdle(() => setChatReady(true), 8000), []);
 
   return (
     <div className="bg-brand-nearblack min-h-screen selection:bg-brand-gold/20 selection:text-brand-gold-dark">
