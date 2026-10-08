@@ -38,7 +38,6 @@ export default function InlayEditor({data,update,model,onPlaceInlay,onlyId,hideA
     if(fitted)save(inlays.map(i=>i.id===inlay.id?fitted:i));else setMessage('There is no room for that inlay on its deck level, even at its smallest. Remove it or another inlay.');
   };
   const status=(inlay:DeckInlay)=>{
-    if(wrapped&&(inlay.level??1)===1)return {ok:false,text:'Not built: inlays are not built on a wrap-around deck.',fixable:false};
     const plan=planOf(inlay);
     if(!plan)return {ok:false,text:'Not built: its deck level is not in the design.',fixable:false};
     if(plan.status!=='ok')return {ok:false,text:`Not built: ${plan.message}`,fixable:plan.status!=='blocked'};
@@ -79,7 +78,7 @@ export default function InlayEditor({data,update,model,onPlaceInlay,onlyId,hideA
     <h3 id="dd-inlays-title">Inlays</h3>
     <p className="dd-note">Choose a preset or sketch your own shape, then place it on the deck. Adjust its position, size, rotation and colours here. Board materials and support are included; medallions, custom shapes and rotated fabrication need a builder’s installation quote.</p>
     {data.hasInlay&&<p className="dd-quote-notice">Replace the centre inlay stripe above with a band to build inlays on the main deck.</p>}
-    {wrapped&&<p className="dd-quote-notice">Inlays are not built on a wrap-around deck.</p>}
+    {wrapped&&<p className="dd-note">On a wrap-around, inlays sit on the main field; the wings keep their zone board runs.</p>}
     {!hideAdd&&<><div className="dd-inlay-add">{INLAY_PRESETS.map(p=><button key={p.id} type="button" className="dd-secondary" onClick={()=>add(p.id)}><InlayPresetPreview presetId={p.id}/><span>{p.id==='rectangle'?'Add a framed rectangle':p.id==='diamond'?'Add a diamond':p.id==='band'?'Add a band':p.id==='compass'?'Add a medallion':`Add ${p.label.toLowerCase()}`}</span></button>)}<button type="button" className="dd-secondary" onClick={()=>setDrawing(true)}>Draw a custom inlay</button></div><p className="dd-note">Choose a shape, then tap anywhere on a deck level to place it. Escape cancels without changing your design.</p></>}
     {drawing&&<Suspense fallback={<p role="status">Loading custom inlay drawing…</p>}><InlaySketchEditor open onClose={()=>setDrawing(false)} onComplete={(points,name)=>{setDrawing(false);onPlaceInlay?.({id:nextInlayId(inlays),kind:'custom',points,...(name?{name}:{}),...(contrastColour(data)?{frame:contrastColour(data)}:{})});}}/></Suspense>}
     {message&&<p className="dd-note" role="alert">{message}</p>}

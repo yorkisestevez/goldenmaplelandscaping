@@ -367,7 +367,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     setCrewBusy(true);setDesignError('');
     try{
       const {buildCrewPackZip}=await import('../features/deckcraft/crewPack');
-      downloadFile(buildCrewPackZip(data,estimate,{date:proposalDate(),materialName:material.name,railingName}),'application/zip','golden-maple-deck-crew-pack.zip');
+      downloadFile(await buildCrewPackZip(data,estimate,{date:proposalDate(),materialName:material.name,railingName,reviewItems:reviewFlags}),'application/zip','golden-maple-deck-crew-pack.zip');
       trackDeck('deckcraft_output','deck_crew_pack');
     }catch(error){setDesignError('The crew pack could not be built for this design. Try the cut-list and materials CSV exports instead.');if(throwOnError)throw error;}
     finally{setCrewBusy(false);}

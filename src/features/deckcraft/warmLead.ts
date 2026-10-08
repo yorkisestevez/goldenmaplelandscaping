@@ -1,6 +1,6 @@
 /**
  * Homeowners who open a proposal or download a PDF without sending the design are warm leads.
- * Track once per visit and optionally ping the CRM form so Sophie/Yorkis can follow up.
+ * Track once per kind per visit and optionally ping the CRM form so Sophie/Yorkis can follow up.
  */
 import {trackDeck} from './deckAnalytics';
 
@@ -28,16 +28,22 @@ export function noteWarmLead(kind:WarmLeadKind,detail:{pricedSubtotal?:number;ha
     console.log('[dev] warm lead',kind,detail);
     return;
   }
-  // Soft ping: no PII required. Attribution fields ride with the site's form relay when present.
-  try{
-    const body=new URLSearchParams({
-      'form-name':FORM,
-      kind,
-      priced_subtotal:detail.pricedSubtotal!=null?String(Math.round(detail.pricedSubtotal)):'',
-      has_name:detail.hasName?'1':'0',
-      has_address:detail.hasAddress?'1':'0',
-      path:typeof location!=='undefined'?location.pathname:'/deck-designer',
-    });
-    void fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body.toString(),keepalive:true}).catch(()=>{/* follow-up is best-effort */});
-  }catch{/* ignore */}
+  // Soft ping: no PII required. Attribution rides with the site's form fields when available.
+  void (async()=>{
+    try{
+      const {getAttributionFields}=await import('../../utils/utmCapture');
+      const {getBehaviorFields}=await import('../../utils/behavior');
+      const body=new URLSearchParams({
+        'form-name':FORM,
+        kind,
+        priced_subtotal:detail.pricedSubtotal!=null?String(Math.round(detail.pricedSubtotal)):'',
+        has_name:detail.hasName?'1':'0',
+        has_address:detail.hasAddress?'1':'0',
+        path:typeof location!=='undefined'?location.pathname:'/deck-designer',
+        ...getAttributionFields(),
+        ...getBehaviorFields(),
+      });
+      await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body.toString(),keepalive:true});
+    }catch{/* follow-up is best-effort */}
+  })();
 }

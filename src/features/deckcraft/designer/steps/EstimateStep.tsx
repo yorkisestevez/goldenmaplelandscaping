@@ -66,7 +66,7 @@ export default function EstimateStep({data,update,estimate,ledger,material,raili
 
     {!customer&&<>
       <h3>Crew &amp; contractor files</h3>
-      <p className="dd-note">Download a build folder for the crew, or open schedules and CAD exports below.</p>
+      <p className="dd-note">Download a build folder for the crew (cut list, connectors, materials, and the permit PDF/DXF), or open schedules and CAD exports below.</p>
       <div className="dd-summary-actions">
         {onCrewPack&&<button type="button" className="dd-secondary" onClick={onCrewPack} disabled={crewBusy}>{crewBusy?'Building crew pack…':'Download crew pack (ZIP)'}</button>}
         <button type="button" className="dd-secondary" onClick={onOpenPermit}>Open permit drawings</button>
