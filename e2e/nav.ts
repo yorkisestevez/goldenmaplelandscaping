@@ -1,9 +1,11 @@
 import {mkdirSync} from 'node:fs';
 import {expect,type Page} from '@playwright/test';
 
-/** Owner proof shots live beside the checkout. This VM cannot create that folder, so fall back inside the run. */
+/** Owner proof shots live beside the checkout. `E2E_OUTPUTS` points that folder at a writable
+ * directory (CI and this VM cannot create `/outputs`). Otherwise fall back inside the run. */
 export function proofDir(name:string){
-  for(const dir of [`../outputs/${name}`,`test-results/outputs/${name}`]){
+  const roots=process.env.E2E_OUTPUTS?[process.env.E2E_OUTPUTS]:['../outputs','test-results/outputs'];
+  for(const dir of roots.map(root=>`${root}/${name}`)){
     try{mkdirSync(dir,{recursive:true});return dir;}catch{/* parent not writable */}
   }
   throw Error(`Cannot create proof directory ${name}`);
