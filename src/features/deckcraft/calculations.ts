@@ -69,6 +69,8 @@ export interface EstimateResult {
   costPerSqft: number;
   area: number;
   manHours: number;
+  /** Book installation labour before any private `customLaborCost` override. */
+  bookLaborCost: number;
   calculatedRailingLf: number;
   sections: {
     quoteRequired?: boolean;
@@ -863,6 +865,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     costPerSqft: finalCostPerSqft,
     area,
     manHours,
+    bookLaborCost: calculatedLaborCost,
     calculatedRailingLf,
     sections: sections.filter(s => s.total > 0||s.quoteRequired||s.items.some(i=>i.quoteResolved||i.cost===null&&Number(i.qty)>0)),
     flags: Array.from(new Set([...flags, ...railingFlags])),

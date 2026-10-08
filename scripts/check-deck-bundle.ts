@@ -142,7 +142,7 @@ for(const tool of ['ContractorPresetDialog','PlanComponentEditor','JobRevisionDi
   const styles=files.filter(f=>f.startsWith(`${styleName}-`)&&f.endsWith('.css'));
   ok(styles.length>0&&styles.every(f=>!css.includes(f)),`${tool} styles load with the optional tool`);
 }
-for(const name of ['QuoteReviewPanel','AssistantTargets','deckAssistantClient','InlayPlanEditor','InlaySketchEditor']){const chunks=files.filter(f=>f.startsWith(name+'-')&&f.endsWith('.js'));ok(chunks.length>0&&chunks.every(f=>!initial.includes(f)),name+' stays outside the initial drawing');ok(chunks.reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,name+' stays within the existing 15 KB optional-tool cap');}
+for(const name of ['QuoteReviewPanel','OwnerCostEditor','AssistantTargets','deckAssistantClient','InlayPlanEditor','InlaySketchEditor']){const chunks=files.filter(f=>f.startsWith(name+'-')&&f.endsWith('.js'));ok(chunks.length>0&&chunks.every(f=>!initial.includes(f)),name+' stays outside the initial drawing');ok(chunks.reduce((n,f)=>n+gz(f),0)<=BUDGET_KB.contractorTool,name+' stays within the existing 15 KB optional-tool cap');}
 const headroom=(kb:number,budget:number)=>`${kb.toFixed(1)}/${budget} KB (${(budget-kb).toFixed(1)} KB headroom)`;
 const sectionChunks=files.filter(f=>/^(EdgeSectionEditor|edgeSectionActions)-.*\.(js|css)$/.test(f));
 ok(sectionChunks.some(f=>/^EdgeSectionEditor-.*\.js$/.test(f)),'Railing/screen controls are their own optional chunk');

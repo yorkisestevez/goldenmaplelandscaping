@@ -57,6 +57,7 @@ export const links=()=>[
 // Loaded on demand (and fetched once the page settles), so they are not part of the page's first load: every
 // section's body (through the registry in sections.ts) and the send and proposal dialogs.
 const QuoteReviewPanel=lazy(()=>import('../features/deckcraft/designer/QuoteReviewPanel'));
+const OwnerCostEditor=lazy(()=>import('../features/deckcraft/designer/OwnerCostEditor'));
 const DeckAgentBridge=lazy(()=>import('../features/deckcraft/designer/DeckAgentBridge'));
 const SketchDesigner=lazy(()=>import('../features/deckcraft/sketch/SketchDesigner'));
 const ContractorPresets=lazy(()=>import('../features/deckcraft/designer/ContractorPresetDialog'));
@@ -100,7 +101,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   const [pendingInlay,setPendingInlay]=useState<DeckInlay|null>(null);
   const [presetsOpen,setPresetsOpen]=useState(false);
   const [jobsOpen,setJobsOpen]=useState(false),[askOpen,setAskOpen]=useState(false),[issuesOpen,setIssuesOpen]=useState(false),[permitOpen,setPermitOpen]=useState(false);
-  const [quoteReviewOpen,setQuoteReviewOpen]=useState(false),[assistantTargets,setAssistantTargets]=useState<AgentRequest|null>(null);
+  const [quoteReviewOpen,setQuoteReviewOpen]=useState(false),[ownerCostsOpen,setOwnerCostsOpen]=useState(false),[assistantTargets,setAssistantTargets]=useState<AgentRequest|null>(null);
   const [jobLabel,setJobLabel]=useState('');
   const [selection,setSelection]=useState<import('../features/deckcraft/designer/selectionState').SelectionState>({partIds:[],boards:[]});
   const [geometryPreview,setGeometryPreview]=useState<DeckData|null>(null);
@@ -142,7 +143,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   useEffect(()=>{
     const onKey=(e:KeyboardEvent)=>{
       // A drawing draft handles its own Ctrl+Z first (useDraftKeys) and marks the key as taken.
-      if(e.defaultPrevented||sketchOpen||presetsOpen||jobsOpen||quoteReviewOpen||issuesOpen||permitOpen)return;
+      if(e.defaultPrevented||sketchOpen||presetsOpen||jobsOpen||quoteReviewOpen||ownerCostsOpen||issuesOpen||permitOpen)return;
       if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
       const t=e.target as HTMLElement|null;if(t&&(t.isContentEditable||/^(input|textarea|select)$/i.test(t.tagName)))return;
       const key=e.key.toLowerCase();
@@ -451,7 +452,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     case 'stairs':return <StairsStep data={data} update={update} onApplyElevation={atomicUpdate} stairEdges={stairEdges} deltas={deltas} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas();}}/>;
     case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas();}} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch} deltas={deltas}/>;
     case 'backyard':return <BackyardStep onGeometry={setGeometryPreview} data={data} update={update} onApplyElevation={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard} onDesign={()=>{setPlanTool('yard');setMode('plan');showCanvas();}}/>;
-    case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} crewBusy={crewBusy} customer={customer} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={()=>saveJSON()} onDownloadSummary={download} onExport={kind=>void exportModel(kind)} onOpenPermit={()=>setPermitOpen(true)} onCrewPack={()=>void downloadCrewPack()} onOpenJobs={()=>setJobsOpen(true)} onWarmShare={warmShare}/>;
+    case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} crewBusy={crewBusy} customer={customer} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={()=>saveJSON()} onDownloadSummary={download} onExport={kind=>void exportModel(kind)} onOpenPermit={()=>setPermitOpen(true)} onCrewPack={()=>void downloadCrewPack()} onOpenJobs={()=>setJobsOpen(true)} onWarmShare={warmShare} onOwnerCosts={customer?undefined:()=>setOwnerCostsOpen(true)}/>;
   }};
   // "Draw it on the plan" (the Deck section's outline editor): the Draw outline tool, with the plan brought into view.
   const showCanvas=()=>{setWorkspaceView('canvas');requestAnimationFrame(()=>document.getElementById('deck-live-preview')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'}));};
@@ -492,10 +493,11 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
         {!proPage&&<SectionList data={data} ledger={schedule} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection} onAssistant={askOpen?showCanvas:undefined} onCanvas={showCanvas} inspectorVisible={workspaceView==='inspector'}/>}
       </section>
       <aside id="dd-assistant-dock" className="dd-assistant-slot" hidden={!askOpen}><button type="button" className="dd-assistant-back" onClick={showCanvas}>↑ Back to drawing</button></aside>
-      <WorkspacePrice onQuoteReview={()=>setQuoteReviewOpen(true)} ledger={schedule} changes={changes.records} onFullList={showFullList}/>
+      <WorkspacePrice onQuoteReview={()=>setQuoteReviewOpen(true)} onOwnerCosts={customer?undefined:()=>setOwnerCostsOpen(true)} ledger={schedule} changes={changes.records} onFullList={showFullList}/>
     </main>
     {mounted&&<Suspense fallback={null}><DeckAgentBridge onSelect={next=>{setSelection(next);setYardFeatureId(next.hardscape?.id??'');if(next.partIds.length)setPlanTool('components');else if(next.boards.length)setPlanTool('boards');}} onPreviewDesign={next=>setGeometryPreview(next?{...data,...next}:null)} open={agentOpen} onClose={()=>setAgentOpen(false)} plainLanguageOpen={askOpen} dockTargetId="dd-assistant-dock" onTargetsChange={setAssistantTargets} onClosePlainLanguage={()=>{setAskOpen(false);setAssistantTargets(null);}} selection={assistantSelection} adapter={{data,estimate,reviewFlags,view:mode,openSections:[...open],canUndo,canRedo,ready:mounted&&designReady,commitDesign:next=>{const diff=Object.fromEntries(Object.keys({...data,...next}).filter(k=>JSON.stringify(data[k as keyof DeckData])!==JSON.stringify(next[k as keyof DeckData])).map(k=>[k,next[k as keyof DeckData]]));changes.edit(diff,data,true);replaceDesign(next);},undo,redo,setView:setMode,openSection:id=>openSection(id,true),actions:{'save.json':()=>saveJSON(true),'export.obj':()=>exportModel('obj',true),'export.dxf':()=>exportModel('dxf',true),'export.dxf2d':()=>exportPermit('dxf2d',true),'permit.pdf':()=>exportPermit('pdf',true),'proposal.open':()=>openProposal(true),'proposal.pdf':()=>downloadPdf(undefined,true),'review.open':()=>setSendOpen(true)}}}/></Suspense>}
     {quoteReviewOpen&&<Suspense fallback={<p role="status">Opening quote-cost review…</p>}><QuoteReviewPanel data={data} estimate={estimate} onUpdate={atomicUpdate} onClose={()=>setQuoteReviewOpen(false)}/></Suspense>}
+    {ownerCostsOpen&&!customer&&<Suspense fallback={<p role="status">Opening your cost editor…</p>}><OwnerCostEditor data={data} estimate={estimate} onUpdate={atomicUpdate} onClose={()=>setOwnerCostsOpen(false)} variant="dialog"/></Suspense>}
     <ChangeAnnouncer record={changes.records.at(-1)}/>
     {jobsOpen&&<Suspense fallback={<p role="status">Opening saved jobs…</p>}><JobRevisionDialog data={data} onRestore={restoreRevision} onClose={()=>setJobsOpen(false)} onSaved={status=>setJobLabel(`${status.job} · ${status.revision}`)}/></Suspense>}
     {permitOpen&&<Suspense fallback={<p role="status">Drawing the permit sheets…</p>}><PermitSetDialog data={data} model={estimate.model} reviewItems={reviewFlags} materialName={material.name} railingName={railingName} date={proposalDate()} onClose={()=>setPermitOpen(false)} onOutput={kind=>trackDeck('deckcraft_output',`deck_${kind}`)} onSiteChange={site=>update({permitSite:site})}/></Suspense>}
