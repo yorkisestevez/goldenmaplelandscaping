@@ -15,12 +15,16 @@
   NODE_VERSION = "22"
 
 # Legacy /blog index consolidated into /resources (the working blog index).
-# 301 ensures any backlinks or bookmarks land on the canonical page and pass SEO signals through.
-# `/blog` alone is not enough: pretty_urls plus a trailing-slash request (`/blog/`)
-# miss that rule and fall through to the SPA catch-all, which serves the homepage.
+# Both slash forms 301 straight to /resources/. A target without the slash
+# would 301 again when pretty_urls adds it. /blog/* stays a separate splat.
 [[redirects]]
   from = "/blog"
-  to = "/resources"
+  to = "/resources/"
+  status = 301
+
+[[redirects]]
+  from = "/blog/"
+  to = "/resources/"
   status = 301
 
 [[redirects]]
@@ -31,16 +35,68 @@
 # Unprerendered service stub — only the Barrie-suffixed pages exist.
 [[redirects]]
   from = "/services/landscape-design"
-  to = "/services/landscape-design-barrie"
+  to = "/services/landscape-design-barrie/"
   status = 301
 
-# SPA fallback — routes NOT prerendered at build time fall back to the generic
-# client shell (RR7 emits it as __spa-fallback.html). Prerendered routes are served
-# as their own static file first; this only catches the rest (unknown slugs, deep links).
+[[redirects]]
+  from = "/services/landscape-design/"
+  to = "/services/landscape-design-barrie/"
+  status = 301
+
+# Old indexed URLs. Both slash forms: pretty_urls requests the slashed path.
+[[redirects]]
+  from = "/pages/about"
+  to = "/about/"
+  status = 301
+
+[[redirects]]
+  from = "/pages/about/"
+  to = "/about/"
+  status = 301
+
+[[redirects]]
+  from = "/pages/process"
+  to = "/process/"
+  status = 301
+
+[[redirects]]
+  from = "/pages/process/"
+  to = "/process/"
+  status = 301
+
+[[redirects]]
+  from = "/resources/project-cost-estimator"
+  to = "/cost-estimator/"
+  status = 301
+
+[[redirects]]
+  from = "/resources/project-cost-estimator/"
+  to = "/cost-estimator/"
+  status = 301
+
+[[redirects]]
+  from = "/quote"
+  to = "/contact/"
+  status = 301
+
+[[redirects]]
+  from = "/quote/"
+  to = "/contact/"
+  status = 301
+
+# /reviews/ is the canonical. Do not redirect that path to itself.
+# The rule is not forced: /reviews/index.html is a real file, and forcing this
+# match also catches /reviews/ and loops. Both slash forms serve the reviews page.
+[[redirects]]
+  from = "/reviews"
+  to = "/reviews/"
+  status = 301
+
+# Unknown paths return the branded 404. A real file (prerendered route) still wins.
 [[redirects]]
   from = "/*"
-  to = "/__spa-fallback.html"
-  status = 200
+  to = "/404.html"
+  status = 404
 
 # Cache static assets aggressively
 [[headers]]

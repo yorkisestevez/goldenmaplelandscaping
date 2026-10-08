@@ -27,7 +27,7 @@ export default function OutdoorLivingPlanningInnisfil() {
               "name": "How long will interlocking pavers last in Simcoe County's climate?",
               "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Properly installed interlocking pavers — on a 12 to 16 inch clear stone base, with quality polymeric sand and good surface drainage — routinely last 25–30 years in Simcoe County's freeze-thaw climate. The base is where most premature failures start, not the paver material itself. Ask for the current written workmanship terms for the project."
+                  "text": "Properly installed interlocking pavers — on a 12 to 16 inch clear stone base, with quality polymeric sand and good surface drainage — routinely last 25–30 years in Simcoe County's freeze-thaw climate. The base is where most premature failures start, not the paver material itself."
               }
           },
           {
@@ -118,7 +118,7 @@ export default function OutdoorLivingPlanningInnisfil() {
         </div>
         <div className="mb-8">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-3">How long will interlocking pavers last in Simcoe County's climate?</h3>
-          <div dangerouslySetInnerHTML={{ __html: "<p>Properly installed interlocking pavers — on a 12 to 16 inch clear stone base, with quality polymeric sand and good surface drainage — routinely last 25–30 years in Simcoe County's freeze-thaw climate. The base is where most premature failures start, not the paver material itself. Ask for the current written workmanship terms for the project.</p>" }} />
+          <div dangerouslySetInnerHTML={{ __html: "<p>Properly installed interlocking pavers — on a 12 to 16 inch clear stone base, with quality polymeric sand and good surface drainage — routinely last 25–30 years in Simcoe County's freeze-thaw climate. The base is where most premature failures start, not the paver material itself.</p>" }} />
         </div>
         <div className="mb-8">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-3">Can contractors phase the project across two summers?</h3>

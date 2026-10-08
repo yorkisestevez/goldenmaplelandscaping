@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { BUSINESS, publicClaimCopy } from '../data/business';
 import { Grid, Hexagon, AlignJustify, ListTree, Layout, ChefHat, Flame, Sun, Leaf, Lightbulb, Map, ArrowRight, Layers } from 'lucide-react';
@@ -127,14 +126,7 @@ export default function Services() {
               const cover = service.category ? coverForCategory(service.category) : undefined;
               const hasProjects = service.category ? projectsInCategory(service.category).length > 0 : false;
               return (
-              <motion.div
-                key={service.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: idx * 0.1 }}
-                className="bg-brand-surface rounded-[2px] border border-brand-dim/10 hover:border-brand-gold/30 transition-all duration-500 flex flex-col group shadow-2xl overflow-hidden"
-              >
+              <div key={service.id} className="bg-brand-surface rounded-[2px] border border-brand-dim/10 hover:border-brand-gold/30 transition-all duration-500 flex flex-col group shadow-2xl overflow-hidden">
                 {cover && (
                   <Link to={service.link} className="block overflow-hidden border-b border-brand-dim/10" aria-label={`${service.title}: see a completed project`}>
                     <ResponsiveImage image={cover} sizes={CARD_SIZES} aspect="3/2" className="transition-transform duration-700 motion-safe:group-hover:scale-[1.03]" />
@@ -166,7 +158,7 @@ export default function Services() {
                   )}
                 </div>
                 </div>
-              </motion.div>
+              </div>
               );
             })}
           </div>
@@ -195,12 +187,12 @@ export default function Services() {
               <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">Drainage, soil, access, intended use, and local requirements inform project-specific site preparation and framing scope.</p>
             </div>
             <div className="space-y-6">
-              <h3 className="font-display text-3xl font-light text-brand-gold">Project documentation</h3>
-              <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">{publicClaimCopy(BUSINESS.credentials.wsib, 'Current coverage documentation is available.')} {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation is available.')}</p>
+              <h3 className="font-display text-3xl font-light text-brand-gold">Written scope</h3>
+              <p className="font-sans text-sm text-brand-porcelain/80 leading-relaxed font-light">The written scope lists the area, the materials, the drainage plan, and what the price includes. {[publicClaimCopy(BUSINESS.credentials.wsib, ''), publicClaimCopy(BUSINESS.credentials.liabilityInsurance, '')].filter(Boolean).join(' ')}</p>
             </div>
             <div className="space-y-6">
-              <h3 className="font-display text-3xl font-light text-brand-gold">Written project terms</h3>
-              <p className="font-sans text-base text-brand-porcelain/80 leading-relaxed font-light">Ask us for the current written workmanship terms and project-specific scope.</p>
+              <h3 className="font-display text-3xl font-light text-brand-gold">Changes in writing</h3>
+              <p className="font-sans text-base text-brand-porcelain/80 leading-relaxed font-light">If the work changes, the change is written down and approved before the price moves.</p>
             </div>
           </div>
           <Link to="/contact" className="btn-primary px-16 py-5">Let's Talk About Your Project</Link>

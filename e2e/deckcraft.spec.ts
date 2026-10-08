@@ -670,16 +670,19 @@ test('a full-backyard estimate prices its deck with the designer and adds it to 
   await expect(card).toContainText('20 × 15 ft');
   await expect(card).toContainText('included in this estimate');
   await expect(live).toContainText('Deck (starter)');
-  const starterText=(await card.textContent())?.match(/\$([\d,]+\.\d{2})/)?.[1];
+  const starterText=(await card.locator('.tabular-nums').textContent())?.match(/\$([\d,]+)/)?.[1];
   expect(starterText).toBeTruthy();
-  // The designer shows whole dollars; the estimate shows the same price to the cent.
-  const starter=Math.round(Number(starterText!.replace(/,/g,''))).toLocaleString('en-CA');
+  // Displayed estimator totals round to the nearest $100. The designer bar still shows whole dollars.
+  const shown=Number(starterText!.replace(/,/g,''));
   await expect(page.getByText('How high off the ground?')).toHaveCount(0);
   // Designing it opens the designer in the estimator, at that size and that price; using it brings it back.
   await page.getByRole('button',{name:/Design your deck in 3D/}).click();
   await expect(page).toHaveURL(/studio=full/);
   await expect(size(page)).toContainText('20 × 15 ft');
-  await expect(page.getByRole('region',{name:'Cost estimator'})).toContainText(`$${starter}`);
+  const designerText=await page.getByRole('region',{name:'Cost estimator'}).locator('strong').textContent();
+  const designer=Number((designerText??'').replace(/[^\d]/g,''));
+  expect(designer).toBeGreaterThan(0);
+  expect(shown).toBe(Math.round(designer/100)*100);
   await page.getByRole('button',{name:'Use this deck in my estimate'}).click();
   await expect(page.locator('[data-estimator-deck="design"]')).toContainText('Your 3D deck design',{ignoreCase:true});
   await expect(live).toContainText('Deck (your 3D design)');

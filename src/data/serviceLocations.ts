@@ -66,7 +66,7 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       'Premium Techo-Bloc, Permacon, or Unilock pavers',
       'Polymeric or Romex jointing',
       'Drainage planning + 1.5–2% slope away from foundation',
-      'Ask for current written workmanship terms for your project',
+      'Written scope covering base, drainage, materials, and the work included',
     ],
     whyMatters:
       "A patio's performance depends on what is below the surface: appropriate excavation, compaction, drainage and materials. Ask for the proposed base specification in your written scope; the right depth depends on the site and intended loading.",
@@ -81,11 +81,11 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       },
       {
         q: 'What stops the patio from sinking?',
-        a: 'Site-appropriate excavation, compaction, separation and drainage help manage settlement risk. Ask for the materials, depth, drainage design and inspection records applicable to your project in the written scope.',
+        a: 'On clay, we separate the subgrade with geotextile, compact the base in lifts, and grade the surface so water leaves the foundation. The depth and the stone are written for that property. A patio that has already settled is a re-level, not a new install.',
       },
       {
-        q: "What's included in your warranty?",
-        a: 'Ask us for the current written workmanship terms, coverage, exclusions, and remedy for your project before contracting.',
+        q: 'What is written down before you start?',
+        a: 'The scope lists the area, the base and drainage plan for that property, the paver, and what is included in the price. Work that is not in that scope is a written change before the price moves.',
       },
     ],
     heroImg: '/images/projects/paver-driveway.JPG',
@@ -157,7 +157,7 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       },
       {
         q: "What's the lifespan of an engineered retaining wall?",
-        a: 'Service life varies with materials, design, loading, drainage and maintenance. Do not treat a general lifespan estimate as a project warranty; request the applicable written terms.',
+        a: 'A segmental wall lasts when the drain tile, clear-stone backfill, and reinforcement stay intact. Those details are in the written scope. A year-count on this page is not a warranty.',
       },
       {
         q: 'Can you tier a tall slope?',
@@ -187,11 +187,11 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     faqs: [
       {
         q: 'Is the design fee refunded if I build with you?',
-        a: 'Design-session pricing and any construction credit are currently subject to confirmation. Ask for the current written policy before booking.',
+        a: 'Any fee for the drawings is written in the design agreement before you book. That agreement also says whether the fee changes the construction price.',
       },
       {
         q: 'Can I take your design to another builder?',
-        a: 'Confirm design ownership, permitted use and transfer rights in the design agreement before commissioning work.',
+        a: 'The design agreement says who owns the drawings and whether you can hand them to another builder. Read that clause before you commission the plan.',
       },
       {
         q: 'How long does the design process take?',
@@ -199,7 +199,7 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
       },
       {
         q: 'What if I just want plants and beds, not hardscaping?',
-        a: 'Tell us which planting, garden, lighting or irrigation work you have in mind. Confirm current service availability and scope before booking.',
+        a: 'Tell us if the job is planting beds, lighting, or irrigation, with or without hardscape. We confirm which of those we can include before the visit is booked.',
       },
     ],
     heroImg: '/images/portfolio/gazebo-patio-1-v1-full-1280.webp',

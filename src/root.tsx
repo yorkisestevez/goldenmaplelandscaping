@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect } from 'react';
+import { ConsentBanner } from './components/ConsentBanner';
 import { HelmetProvider } from 'react-helmet-async';
 import {
   Links,
@@ -15,6 +16,7 @@ import {
 import './index.css';
 import SiteChrome from './components/Layout';
 import { initAnalytics, trackPageView } from './utils/analytics';
+import { onInteractOrIdle } from './utils/defer';
 import { initAttributionCapture } from './utils/utmCapture';
 import { initBehaviorCapture } from './utils/behavior';
 import { siteGraph } from './utils/schema';
@@ -40,14 +42,33 @@ export function Layout({ children }: { children: ReactNode }) {
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/favicon-180.png" />
         <link rel="manifest" href="/site.webmanifest" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* media=print keeps the stylesheet off the first paint. The hero copy
+            uses the system stack until App flips this after input or idle.
+            display=swap still applies the face when it arrives. A script that
+            injects a second link does not match what React hydrates. */}
+        <link
+          id="gm-fonts"
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap"
+          media="print"
+        />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap"
+          />
+        </noscript>
         <Meta />
         <Links />
-        {/* Static Google tag so Ads Goals scanners see AW-10839158941 without waiting for JS hydrate. send_page_view stays false. */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-1BRTV91W3Z" />
+        {/* Consent Mode before any Google tag. gtag.js for G-1BRTV91W3Z and
+            AW-10839158941 is not in this head: it loads on the first input or
+            browser idle, within about 2.5s. The ids stay in this HTML for tag scanners. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1BRTV91W3Z',{send_page_view:false});gtag('config','AW-10839158941');",
+              "window.dataLayer=window.dataLayer||[];window.gtag=function gtag(){dataLayer.push(arguments);};gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});try{if(localStorage.getItem('gm-consent')==='granted'){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}window.__gmGoogleTags={ga4:'G-1BRTV91W3Z',ads:'AW-10839158941'};",
           }}
         />
         <script
@@ -69,22 +90,38 @@ export default function App() {
 
   // Client-only analytics + attribution init (was in App.tsx).
   useEffect(() => {
-    initAttributionCapture();
-    initBehaviorCapture();
-    initAnalytics();
+    try {
+      initAttributionCapture();
+      initBehaviorCapture();
+      initAnalytics();
+    } catch {
+      /* A tracker must not take the page down. */
+    }
+    return onInteractOrIdle(() => {
+      const fonts = document.getElementById('gm-fonts');
+      if (fonts instanceof HTMLLinkElement) fonts.media = 'all';
+    }, 8000);
   }, []);
 
   // GA4 + Meta Pixel page_view + scroll-to-top on route change.
   useEffect(() => {
     if (typeof window !== 'undefined') window.scrollTo(0, 0);
-    trackPageView(location.pathname + location.search);
+    try {
+      trackPageView(location.pathname + location.search);
+    } catch {
+      /* A tracker must not take the page down. */
+    }
   }, [location.pathname, location.search]);
 
-  // The cost estimator runs as a full-screen app: its page ships its own
-  // minimal top bar, and the global navbar/footer/chat would fight the
-  // wizard's sticky bars for attention (Layout already hid the mobile dock
-  // there — this completes that thought).
-  const bareApp = location.pathname.startsWith('/cost-estimator') || location.pathname.startsWith('/deck-designer');
+  // The deck designer stays chrome-less. The cost estimator uses the site
+  // header so a visitor can reach services, reviews, and contact without
+  // leaving the estimate. Its own sticky bars still sit above the page footer.
+  // A regex, not a quoted path: the trailing-slash rewrite would turn
+  // startsWith('/deck-designer') into startsWith('/deck-designer/'), which
+  // misses the prerender path and hydrates a different tree. The cookie
+  // banner stays off this page: it is role=dialog, and the designer ignores
+  // keyboard shortcuts while a dialog is open.
+  const bareApp = /^\/deck-designer(?:\/|$)/.test(location.pathname);
 
   return (
     <HelmetProvider>
@@ -93,9 +130,12 @@ export default function App() {
           <Outlet />
         </main>
       ) : (
-        <SiteChrome>
-          <Outlet />
-        </SiteChrome>
+        <>
+          <ConsentBanner />
+          <SiteChrome>
+            <Outlet />
+          </SiteChrome>
+        </>
       )}
     </HelmetProvider>
   );

@@ -339,9 +339,9 @@ export function getBoardRows(fp: FootprintPlan, opts: {
   }
   else if(opts.anchor==='top')for(let y=top-boardWidth;y+boardWidth>bottom+.001;y-=pitch)rows.push(y);
   else for(let y=bottom;y<top-.001;y+=pitch)rows.push(y);
-  // Hairline rips from field math (under 1 in across the board) are not installable and read as
-  // stretched/uneven boards in the 3D view — drop them; the neighbouring full board already covers the course.
-  const keep=(b:BoardRun)=>(b.width??boardWidth)>=1;
+  // Hairline rips (under 1 in) are not installable. Drop them only under the 2026-10 rules. A design
+  // saved before those rules keeps every clipped piece, including a sliver, so its drawings stay put.
+  const keep=(b:BoardRun)=>!usesCurrentBuildRules(opts)||(b.width??boardWidth)>=1;
   if(!usesCurrentBuildRules(opts))for(const [row,y] of rows.entries()){
     let x=left,first=true;
     while(x<right-.001){

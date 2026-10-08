@@ -17,7 +17,8 @@ async function patioSurface(page:Page){
  const b=(await surface.boundingBox())!,side=Math.min(85,b.width*.26,b.height*.28),start={x:b.x+b.width*.4,y:b.y+b.height*.45};
  return {surface,side,start,square:[start,{x:start.x+side,y:start.y},{x:start.x+side,y:start.y+side},{x:start.x,y:start.y+side}]};
 }
-async function applyDrawn(page:Page){const apply=page.getByRole('button',{name:'Apply preview',exact:true});await expect(apply).toBeVisible();await apply.click();await expect.poll(async()=>(await read(page)).design.yardFeatures?.length??0).toBe(1);}
+// Finishing a patio commits it. The old Apply preview step was removed when plan tools started saving the edit directly.
+async function applyDrawn(page:Page){await expect(page.getByRole('button',{name:'Apply preview',exact:true})).toHaveCount(0);await expect.poll(async()=>(await read(page)).design.yardFeatures?.length??0).toBe(1);}
 test('Ctrl+Z removes the last patio point without touching the design, and C finishes the patio',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  const before=await read(page),{surface,square}=await patioSurface(page),dots=surface.locator('.dd-yard-shape-draft-point');

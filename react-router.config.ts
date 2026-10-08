@@ -11,7 +11,7 @@ export default {
   ssr: false,
   async prerender({ getStaticPaths }) {
     // All static (non-param) routes come from the route config automatically.
-    const staticPaths = getStaticPaths();
+    const staticPaths = getStaticPaths().filter((p) => !p.includes('*'));
     // Dynamic /services/:slug — 36 service×location combos (excludes the 4 hand-built Barrie pages).
     const serviceCombos = getAutoCombos().map((c) => `/services/${c.slug}`);
     // Dynamic /locations/:slug — the 6 auto location landings.
@@ -22,6 +22,6 @@ export default {
     const projects = PROJECTS.map((p) => `/portfolio/${p.slug}`);
     // Dynamic /library/:section — one hub per Library topic (src/data/library.ts).
     const librarySections = LIBRARY_SECTIONS.map((s) => `/library/${s.slug}`);
-    return [...staticPaths, ...serviceCombos, ...autoLocations, ...projects, ...librarySections];
+    return [...staticPaths, '/404', ...serviceCombos, ...autoLocations, ...projects, ...librarySections];
   },
 } satisfies Config;

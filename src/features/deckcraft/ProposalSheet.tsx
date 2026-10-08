@@ -36,7 +36,7 @@ const ICONS:Record<FeatureGroupId,string>={
 const Icon=({id}:{id:FeatureGroupId})=><svg className="dd-proposal-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d={ICONS[id]} fill="none" stroke="currentColor" strokeWidth="1.2"/></svg>;
 const LOGO='/logo-mark.png';
 /** The gold GM and maple-leaf mark, inside the thin gold ring the estimate PDF draws (no disc behind it). */
-const Emblem=()=><span className="dd-proposal-emblem"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="31.4" fill="none" stroke="currentColor" strokeWidth=".8"/></svg><img src={LOGO} alt="" width={46} height={37}/></span>;
+const Emblem=()=><span className="dd-proposal-emblem"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="31.4" fill="none" stroke="currentColor" strokeWidth=".8"/></svg><img src={LOGO} alt="Golden Maple Landscaping" width={46} height={37}/></span>;
 /** The gold rule with a small diamond that the estimate PDF sets under its wordmark. */
 const Ornament=()=><span className="dd-proposal-ornament" aria-hidden="true"><i/></span>;
 type Contact=ReturnType<typeof proposalContact>;

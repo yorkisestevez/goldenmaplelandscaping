@@ -1,1 +1,4 @@
-/* /index.html 200
+# Redirects live in netlify.toml. This file used to rewrite every path to /index.html
+# with status 200. Netlify reads _redirects before netlify.toml and keeps the first
+# match, so that splat hid the old-URL 301s and the /* -> /404.html 404 rule.
+# Prerendered routes, including /deck-designer/, are real files and are served as files.

@@ -1,12 +1,11 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { Mail, CheckCircle, FileText, Phone } from 'lucide-react';
 import { trackLead } from '../utils/analytics';
 import { getAttributionFields } from '../utils/utmCapture';
 import { getBehaviorFields } from '../utils/behavior';
 import { genEventId } from '../utils/eventId';
-import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+import { publicContact } from '../data/business';
 import { scoreGoldenMapleLead } from '../utils/leadScoring';
 import { designHash, type EstimatorDeck } from '../features/deckcraft/estimatorHandoff';
 
@@ -187,12 +186,7 @@ export default function EstimateLeadCapture({
 
   if (status === 'success') {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 180, damping: 18 }}
-        className="bg-gradient-to-b from-brand-gold/10 to-brand-cream-light backdrop-blur-xl border border-brand-gold/30 rounded-3xl p-9 text-center shadow-[0_20px_60px_-30px_rgba(212,175,99,0.3)]"
-      >
+      <div className="bg-gradient-to-b from-brand-gold/10 to-brand-cream-light backdrop-blur-xl border border-brand-gold/30 rounded-3xl p-9 text-center shadow-[0_20px_60px_-30px_rgba(212,175,99,0.3)]">
         <div className="mx-auto w-14 h-14 rounded-full bg-brand-gold/15 border border-brand-gold/40 flex items-center justify-center mb-5">
           <CheckCircle size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
         </div>
@@ -238,7 +232,7 @@ export default function EstimateLeadCapture({
           <Phone size={15} strokeWidth={1.5} />
           Book a project call
         </Link>
-      </motion.div>
+      </div>
     );
   }
 
@@ -318,7 +312,7 @@ export default function EstimateLeadCapture({
         </button>
 
         <p className="font-sans text-[11px] text-brand-muted/80 text-center font-light pt-2">
-          {publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.')} We never share your info.
+          We use this to save the build and reply about the project. We do not share it.
         </p>
       </form>
     </div>

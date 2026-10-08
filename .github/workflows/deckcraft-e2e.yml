@@ -17,6 +17,9 @@ on:
     paths:
       - 'src/features/deckcraft/**'
       - 'src/pages/DeckDesigner.*'
+      # The designer hydrates inside the document shell. A consent dialog or
+      # a head-script change can break keyboard shortcuts and the smoke tests.
+      - 'src/root.tsx'
       - 'src/components/BookingScheduler.tsx'
       - 'public/__forms.html'
       - 'e2e/**'

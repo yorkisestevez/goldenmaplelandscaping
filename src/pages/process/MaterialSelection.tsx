@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { Shield, Heart, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
@@ -17,12 +16,7 @@ export default function MaterialSelection() {
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div>
               <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-10 block">
                 Phase Four: Curation
               </span>
@@ -30,21 +24,18 @@ export default function MaterialSelection() {
                 The Luxury of <br />
                 <span className="italic text-brand-gold-dark">Choice.</span>
               </h1>
-              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
-                Not all stone is created equal. We curate a selection of high-performance materials that not only match your home's aesthetic but also withstand the extreme freeze-thaw cycles of Ontario's climate.
+              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-8 font-light">
+                Interlock is usually Techo-Bloc, Permacon, or Unilock. Deck boards are TimberTech or Trex lines the supplier can ship.
+              </p>
+              <p className="font-sans text-base text-brand-muted leading-relaxed mb-16 font-light">
+                You pick the colour and the finish from samples. The product name, the colour, and the manufacturer sheet for that product go in the written scope. Naming a brand here does not mean Golden Maple holds that brand's installer certification.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
-            >
+            <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
                 src="/images/projects/luxury decking.jpg"
                 alt="Luxury Landscape Materials Barrie"
@@ -52,7 +43,7 @@ export default function MaterialSelection() {
                 referrerPolicy="no-referrer"
               />
               <div className="absolute inset-0 bg-brand-black/20" />
-            </motion.div>
+            </div>
           </div>
 
           <div className="mb-40">

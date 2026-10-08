@@ -1,5 +1,11 @@
 import {defineConfig,devices} from '@playwright/test';
 
+// Workers fork after this file loads. E2E_OUTPUTS makes their fs writes to `outputs/` land in that directory.
+if(process.env.E2E_OUTPUTS && !process.env.NODE_OPTIONS?.includes('register-outputs.mjs')){
+  const hook=`--import ${new URL('./e2e/register-outputs.mjs',import.meta.url).href}`;
+  process.env.NODE_OPTIONS=[process.env.NODE_OPTIONS,hook].filter(Boolean).join(' ');
+}
+
 /**
  * DeckCraft smoke tests against the production build (run `npm run build` first). Locally they drive the
  * installed Microsoft Edge so no browser download is needed; CI installs Playwright's Chromium.

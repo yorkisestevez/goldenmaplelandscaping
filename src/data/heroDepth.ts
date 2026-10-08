@@ -39,12 +39,12 @@
 
 const BASE = '/images/concepts/backyard-hero-depth';
 const VERSION = 'v1';
-const WIDTHS = [1280, 1920, 2560] as const;
+const WIDTHS = [768, 1280, 1920] as const;
 
 type LayerName = 'flat' | 'bg' | 'mid' | 'fg';
 
 const layer = (name: LayerName) => ({
-  src: `${BASE}-${name}-${VERSION}-1920.webp`,
+  src: `${BASE}-${name}-${VERSION}-1280.webp`,
   srcSet: WIDTHS.map((w) => `${BASE}-${name}-${VERSION}-${w}.webp ${w}w`).join(', '),
 });
 

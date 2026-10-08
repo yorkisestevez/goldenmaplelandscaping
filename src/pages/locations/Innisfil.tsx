@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
@@ -63,10 +62,6 @@ const FAQS = [
     q: "How far in advance should I book?",
     a: "We recommend booking your design consultation 6-8 weeks before your desired start date. During peak season (May-August), lead times can stretch to 8-12 weeks.",
   },
-  {
-    q: "What warranty do you offer?",
-    a: "Ask us for the current written workmanship terms for your specific project. Manufacturer coverage depends on the selected product and must be confirmed with its current documentation.",
-  },
 ];
 
 const PAGE_PATH = '/locations/innisfil/';
@@ -106,11 +101,7 @@ export default function InnisfilLanding() {
       <div className="container-custom">
         <div className="max-w-5xl mx-auto">
           {/* Hero */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
+          <div>
             <span className="flex items-center gap-2 font-sans text-xs tracking-widest uppercase text-brand-gold-dark mb-6">
               <MapPin size={16} /> Serving Innisfil & Alcona
             </span>
@@ -140,16 +131,10 @@ export default function InnisfilLanding() {
                 <Phone size={18} /> Call {publicContact.phoneDisplay}
               </a>
             </div>
-          </motion.div>
+          </div>
 
           {/* Why Choose Us */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
               Why Innisfil Homeowners Choose <span className="text-brand-gold-dark italic">Golden Maple</span>
             </h2>
@@ -176,7 +161,7 @@ export default function InnisfilLanding() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Services */}
           <div className="mb-24">
@@ -185,14 +170,7 @@ export default function InnisfilLanding() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {SERVICES.map((service, idx) => (
-                <motion.div
-                  key={service.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: idx * 0.1 }}
-                  className="bg-brand-surface p-8 border border-brand-dim/20 rounded-sm group hover:border-brand-gold/30 transition-all"
-                >
+                <div key={service.title} className="bg-brand-surface p-8 border border-brand-dim/20 rounded-sm group hover:border-brand-gold/30 transition-all">
                   <h3 className="font-display text-2xl mb-4 text-brand-bonewhite">{service.title}</h3>
                   <p className="font-sans text-sm text-brand-muted font-light leading-relaxed mb-6">{service.desc}</p>
                   <Link
@@ -202,19 +180,13 @@ export default function InnisfilLanding() {
                     <span>View Service</span>
                     <ArrowRight size={14} />
                   </Link>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
 
           {/* Communities */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
               Innisfil Areas <span className="text-brand-gold-dark italic">We Serve</span>
             </h2>
@@ -226,16 +198,10 @@ export default function InnisfilLanding() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Pricing */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-10">
               What Does Landscaping Cost <span className="text-brand-gold-dark italic">in Innisfil?</span>
             </h2>
@@ -260,16 +226,10 @@ export default function InnisfilLanding() {
             <p className="font-sans text-sm text-brand-muted font-light mt-6">
               Waterfront properties may require additional engineering for drainage and conservation authority approvals. We'll flag likely permit or conservation reviews during design — confirm site-specific requirements before construction. Use our <Link to="/cost-estimator?city=innisfil" className="text-brand-gold-dark hover:underline">Cost Estimator</Link> for an instant ballpark.
             </p>
-          </motion.div>
+          </div>
 
           {/* FAQ */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <h2 className="font-display text-3xl md:text-5xl text-brand-bonewhite mb-12">
               Frequently Asked <span className="text-brand-gold-dark italic">Questions</span>
             </h2>
@@ -281,7 +241,7 @@ export default function InnisfilLanding() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* CTA */}
           <div className="text-center bg-brand-surface p-12 md:p-16 border border-brand-dim/20 rounded-sm">

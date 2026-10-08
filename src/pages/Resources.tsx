@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, BookOpen, Calculator } from 'lucide-react';
 import SEO from '../components/SEO';
@@ -18,11 +17,7 @@ export default function Resources() {
       <section className="section-padding pt-40 md:pt-48">
         <div className="container-custom">
           <div className="max-w-3xl mb-24">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
+            <div>
               <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-8 block">Resources</span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-10">
                 Expert guides for <br />
@@ -31,16 +26,11 @@ export default function Resources() {
               <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
                 Use these guides to prepare questions about site conditions, materials, maintenance, and written project terms.
               </p>
-            </motion.div>
+            </div>
           </div>
 
           {/* Buyer's Guide Feature Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <Link to="/buyers-guide" className="group block">
               <div className="bg-brand-surface border border-brand-gold/20 rounded-[2px] p-10 md:p-16 flex flex-col md:flex-row items-center gap-12 hover:border-brand-gold/40 transition-all duration-500">
                 <div className="w-20 h-20 bg-brand-gold/10 flex items-center justify-center rounded-full shrink-0 border border-brand-gold/20 group-hover:bg-brand-gold/20 transition-colors">
@@ -54,15 +44,10 @@ export default function Resources() {
                 <ArrowRight className="text-brand-gold shrink-0 group-hover:translate-x-2 transition-transform" size={24} strokeWidth={1.5} />
               </div>
             </Link>
-          </motion.div>
+          </div>
 
           {/* Cost estimator band */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-            className="mb-24"
-          >
+          <div className="mb-24">
             <Link to="/cost-estimator" className="group block">
               <div className="bg-brand-surface border border-brand-gold/20 rounded-[2px] p-10 md:p-16 flex flex-col md:flex-row items-center gap-12 hover:border-brand-gold/40 transition-all duration-500">
                 <div className="w-20 h-20 bg-brand-gold/10 flex items-center justify-center rounded-full shrink-0 border border-brand-gold/20 group-hover:bg-brand-gold/20 transition-colors">
@@ -76,7 +61,7 @@ export default function Resources() {
                 <ArrowRight className="text-brand-gold shrink-0 group-hover:translate-x-2 transition-transform" size={24} strokeWidth={1.5} />
               </div>
             </Link>
-          </motion.div>
+          </div>
 
           {/* Library topic chips — /library groups these posts by construction topic */}
           <nav aria-label="Browse by topic" className="mb-16 flex flex-wrap items-center gap-3">
@@ -97,12 +82,7 @@ export default function Resources() {
           {/* Blog Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {BLOG_POSTS.map((post, idx) => (
-              <motion.div
-                key={post.slug}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.05 * idx }}
-              >
+              <div key={post.slug}>
                 <Link to={`/resources/${post.slug}`} className="group block h-full">
                   <div className="bg-brand-surface border border-brand-dim/10 rounded-[2px] overflow-hidden h-full flex flex-col hover:border-brand-gold/20 transition-all duration-500">
                     <div className="aspect-[16/10] overflow-hidden">
@@ -129,7 +109,7 @@ export default function Resources() {
                     </div>
                   </div>
                 </Link>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

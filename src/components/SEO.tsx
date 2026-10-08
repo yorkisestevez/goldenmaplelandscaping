@@ -1,6 +1,9 @@
 import { Helmet } from 'react-helmet-async';
 import { BUSINESS } from '../data/business';
 import { canonicalUrl as toCanonical } from '../utils/schema';
+import { composeDescription, composeTitle } from '../utils/seoText';
+
+export { composeDescription, composeTitle };
 
 interface SEOProps {
   title: string;
@@ -13,7 +16,8 @@ interface SEOProps {
 
 export default function SEO({ title, description, canonical, schema, image, noindex }: SEOProps) {
   const siteName = BUSINESS.publicName.value;
-  const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
+  const fullTitle = composeTitle(title, siteName);
+  const metaDescription = composeDescription(description);
   const defaultImage = 'https://goldenmaplelandscaping.ca/images/projects/Golden%20Maple%20deck%20and%20walkway.jpg';
   // Netlify's `pretty_urls = true` serves prerendered routes at trailing-slash
   // URLs. Canonicals must match the final 200 URL exactly; otherwise Google
@@ -26,12 +30,12 @@ export default function SEO({ title, description, canonical, schema, image, noin
   return (
     <Helmet>
       <title>{fullTitle}</title>
-      <meta name="description" content={description} />
+      <meta name="description" content={metaDescription} />
       {noindex && <meta name="robots" content="noindex, nofollow" />}
       
       {/* Open Graph */}
       <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
+      <meta property="og:description" content={metaDescription} />
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content={siteName} />
       <meta property="og:image" content={image || defaultImage} />
@@ -39,7 +43,7 @@ export default function SEO({ title, description, canonical, schema, image, noin
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
+      <meta name="twitter:description" content={metaDescription} />
       <meta name="twitter:image" content={image || defaultImage} />
 
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}

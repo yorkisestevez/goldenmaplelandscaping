@@ -122,11 +122,12 @@ export function frameWrap(input:{wrap:ActiveWrap;cfg:ZoneFramingConfig;deckingOu
     local.joists=local.joists.filter(j=>Math.hypot(j.b.x-j.a.x,j.b.z-j.a.z)>=3);
     addBearings(local,rowZs);
     // Field boards parallel to this zone's house wall, split at breakers, plus the breaker boards.
-    // Anchor on the zone's outer edge (local top) so the visible rim gets a full board and any ripped
-    // last row falls against the house wall — not a skinny strip on the face of the deck.
+    // Under the 2026-10 rules, anchor on the zone's outer edge (local top) so the visible rim gets a
+    // full board and any ripped last row falls against the house wall. A saved design keeps the old
+    // bottom-up rows, so its drawings stay put.
     const boards:BoardRun[]=[];
     for(const poly of localField){
-      for(const b of getBoardRows({outline:poly,bounds:geom.size,isCurved:false},{boardWidth,gap,angleDeg:0,inset:0,maxBoardLen:breakers.length?100000:stockLength,buildRules:input.buildRules,anchor:'top'})){
+      for(const b of getBoardRows({outline:poly,bounds:geom.size,isCurved:false},{boardWidth,gap,angleDeg:0,inset:0,maxBoardLen:breakers.length?100000:stockLength,buildRules:input.buildRules,...(usesCurrentBuildRules(input)?{anchor:'top' as const}:{})})){
         boards.push(...clearBreakers(b,breakers,boardWidth,gap,usesCurrentBuildRules(input)?j=>outlineSpans(poly,breakers[j],'x'):undefined));
       }
       for(const x of breakers)for(const [a,b] of outlineSpans(poly,x,'x'))for(let z=a;z<b;z+=stockLength+gap){
