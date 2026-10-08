@@ -3,6 +3,17 @@ import {createPortal} from 'react-dom';
 import type {DeckData} from '../types';
 import type {EstimateResult} from '../calculations';
 import {dollars} from '../designFacts';
+import {
+  DEFAULT_FEATURE_LABOUR,
+  FEATURE_LABOUR_LABELS,
+  FEATURE_LABOUR_SCOPES,
+  mergeFeatureLabour,
+  readFeatureLabourDefaults,
+  saveFeatureLabourDefaults,
+  validateFeatureLabour,
+  type FeatureLabourScope,
+  type FeatureLabourSettings,
+} from '../featureLabour';
 import {DEFAULT_CREW_MEMBERS,DEFAULT_PERSON_HOUR_RATE,quoteCostFromCrewHours} from './quoteLabourHours';
 import {OWNER_COST_LIMITS,bookInstallationLabour,parseOwnerMarkup,parseOwnerMoney} from './ownerCostLimits';
 import './ownerCostEditor.css';
@@ -22,16 +33,19 @@ const LABOUR_ITEM='Installation Labour';
 /** Private owner editor for material markup, installation labour, and priced line overrides. */
 export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant='dialog'}:Props){
   const [error,setError]=useState('');
+  const [status,setStatus]=useState('');
   const [markupDraft,setMarkupDraft]=useState(String(data.materialMarkup??35));
   const [labourDraft,setLabourDraft]=useState(data.customLaborCost===undefined?'':String(data.customLaborCost));
   const [crewMembers,setCrewMembers]=useState(String(DEFAULT_CREW_MEMBERS));
   const [hours,setHours]=useState('');
   const [personHourRate,setPersonHourRate]=useState(String(DEFAULT_PERSON_HOUR_RATE));
   const [lineDrafts,setLineDrafts]=useState<Record<string,string>>({});
+  const [feature,setFeature]=useState<FeatureLabourSettings>(()=>validateFeatureLabour(data.featureLabour));
   const closeRef=useRef(onClose);closeRef.current=onClose;
 
   useEffect(()=>setMarkupDraft(String(data.materialMarkup??35)),[data.materialMarkup]);
   useEffect(()=>setLabourDraft(data.customLaborCost===undefined?'':String(data.customLaborCost)),[data.customLaborCost]);
+  useEffect(()=>setFeature(validateFeatureLabour(data.featureLabour)),[data.featureLabour]);
   useEffect(()=>{
     const next:Record<string,string>={};
     for(const [name,row] of Object.entries(data.customOverrides??{}))if(row.cost!==undefined)next[name]=String(row.cost);
@@ -41,6 +55,17 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
   const labourOverridden=data.customLaborCost!==undefined;
   const book=labourOverridden?0:bookInstallationLabour(estimate);
   const overrides=data.customOverrides??{};
+  const commitFeature=(next:FeatureLabourSettings)=>{
+    try{
+      const clean=validateFeatureLabour(next);
+      setFeature(clean);
+      onUpdate({featureLabour:clean});
+      setError('');setStatus('Inlay & special-feature labour updated for this job.');
+    }catch(e){setFeature(validateFeatureLabour(data.featureLabour));setError(e instanceof Error?e.message:'Feature labour settings could not be saved.');}
+  };
+  const patchScope=(id:FeatureLabourScope,patch:Partial<FeatureLabourSettings['scopes'][FeatureLabourScope]>)=>{
+    commitFeature(mergeFeatureLabour(feature,{scopes:{[id]:{...feature.scopes[id],...patch}} as FeatureLabourSettings['scopes']}));
+  };
 
   const materialLines=useMemo(()=>estimate.sections
     .filter(s=>MATERIAL_SECTIONS.test(s.title))
@@ -86,8 +111,16 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
   };
 
   const clearAll=()=>{
-    onUpdate({materialMarkup:undefined,customLaborCost:undefined,customOverrides:undefined});
-    setMarkupDraft('35');setLabourDraft('');setLineDrafts({});setError('');
+    onUpdate({materialMarkup:undefined,customLaborCost:undefined,customOverrides:undefined,featureLabour:undefined});
+    setMarkupDraft('35');setLabourDraft('');setLineDrafts({});setFeature(validateFeatureLabour(undefined));setError('');setStatus('Owner costs reset to book defaults.');
+  };
+  const saveDeviceDefaults=async()=>{
+    try{await saveFeatureLabourDefaults(feature);setStatus('Saved as your device defaults for new jobs.');setError('');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be saved.');}
+  };
+  const loadDeviceDefaults=async()=>{
+    try{const next=await readFeatureLabourDefaults();commitFeature(next);setStatus('Loaded your device defaults onto this job.');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be loaded.');}
   };
 
   const body=<div className="dd-owner-costs" data-variant={variant}>
@@ -147,10 +180,45 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
       </details>
     </section>
 
+    <section aria-labelledby="dd-owner-features-title">
+      <h4 id="dd-owner-features-title">Inlays &amp; special features</h4>
+      <p>Accent boards, medallions and custom inlays default to man-hours plus any extra materials. Board supply stays on the material lines. Edit your rates here per job, or save them as this device’s defaults.</p>
+      <label className="dd-owner-costs-field">Person-hour rate · CAD
+        <input aria-label="Feature labour person-hour rate" type="number" min="0.01" max={OWNER_COST_LIMITS.amountMax} step=".01" value={feature.personHourRate} onChange={e=>setFeature(f=>({...f,personHourRate:Number(e.target.value)}))} onBlur={e=>commitFeature({...feature,personHourRate:Number(e.target.value)})} onKeyDown={e=>{if(e.key==='Enter')(e.target as HTMLInputElement).blur();}}/>
+        <small>Default CAD {DEFAULT_FEATURE_LABOUR.personHourRate.toFixed(2)} from $3,700 ÷ 27.</small>
+      </label>
+      {FEATURE_LABOUR_SCOPES.map(id=>{
+        const s=feature.scopes[id];
+        return <details key={id} className="dd-owner-costs-crew" open={s.mode==='crew-hours'}>
+          <summary>{FEATURE_LABOUR_LABELS[id]}</summary>
+          <label className="dd-owner-costs-field">Pricing
+            <select aria-label={`${FEATURE_LABOUR_LABELS[id]} pricing`} value={s.mode} onChange={e=>patchScope(id,{mode:e.target.value as 'crew-hours'|'quote'})}>
+              <option value="crew-hours">Man-hours + materials (default)</option>
+              <option value="quote">Builder quote (enter in Quote Review)</option>
+            </select>
+          </label>
+          {s.mode==='crew-hours'&&<>
+            <div className="dd-owner-costs-grid">
+              <label>Crew members<input aria-label={`${FEATURE_LABOUR_LABELS[id]} crew`} type="number" min="1" max="12" step="1" value={s.crewMembers} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],crewMembers:Number(e.target.value)}}))} onBlur={e=>patchScope(id,{crewMembers:Number(e.target.value)})}/></label>
+              <label>Hours{s.hoursPerUnit?' / unit':''}<input aria-label={`${FEATURE_LABOUR_LABELS[id]} hours`} type="number" min=".25" max="999" step=".25" value={s.hours} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],hours:Number(e.target.value)}}))} onBlur={e=>patchScope(id,{hours:Number(e.target.value)})}/></label>
+              <label>Extra materials · CAD<input aria-label={`${FEATURE_LABOUR_LABELS[id]} materials`} type="number" min="0" max={OWNER_COST_LIMITS.amountMax} step=".01" value={s.materialsCad} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],materialsCad:Number(e.target.value)}}))} onBlur={e=>patchScope(id,{materialsCad:Number(e.target.value)})}/></label>
+            </div>
+            <label className="dd-owner-costs-check"><input type="checkbox" checked={s.hoursPerUnit} onChange={e=>patchScope(id,{hoursPerUnit:e.target.checked})}/> Hours are per board / medallion / inlay</label>
+          </>}
+        </details>;
+      })}
+      <div className="dd-owner-costs-actions">
+        <button type="button" className="dd-secondary" onClick={()=>void saveDeviceDefaults()}>Save as my defaults</button>
+        <button type="button" className="dd-secondary" onClick={()=>void loadDeviceDefaults()}>Load my defaults</button>
+        <button type="button" className="dd-secondary" onClick={()=>commitFeature(structuredClone(DEFAULT_FEATURE_LABOUR))}>Reset feature labour</button>
+      </div>
+    </section>
+
     <footer className="dd-owner-costs-footer">
       <button type="button" className="dd-secondary" onClick={clearAll}>Reset markup, labour &amp; line overrides</button>
       {onClose&&<button type="button" className="dd-primary" onClick={onClose}>Done</button>}
     </footer>
+    {status&&<p className="dd-owner-costs-status" role="status">{status}</p>}
     {error&&<p className="dd-owner-costs-error" role="alert">{error}</p>}
   </div>;
 

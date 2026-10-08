@@ -81,9 +81,10 @@ assert.deepEqual(far,{...custom,dxFt:28,dyFt:28,rotationDeg:37},'Fit never mutat
 const outside=planInlays([{...custom,dxFt:30}],ctx,{boards:false})[0];ok(outside.status==='outside'&&outside.boards.length===0,'Unfitted custom is retained with no fake boards');
 const overlap=planInlays([custom,{...custom,id:'overlap'}],ctx,{boards:false});ok(overlap[1].status==='overlap','Overlapping custom additions are not built');
 
-// Actual quoted fabrication: known materials/stock and framing stay in priced sections, no invented installation rate.
+// Custom fabrication labour defaults to man-hours + materials; boards/blocking stay on priced material lines.
 const estimated=calculateDeckReleaseEstimate(db.data,DECK_SETTINGS),labour=estimated.sections.find(s=>s.title.startsWith('Labour'));
-ok(labour?.quoteRequired&&labour.items.some(i=>i.name==='Custom inlay fabrication labour'&&i.cost===null),'Custom fabrication is an explicit null-cost labour quote');
+ok(labour&&labour.items.some(i=>i.name==='Custom inlay fabrication labour'&&i.cost!==null&&i.cost>0),'Custom fabrication is priced as man-hours by default');
+ok(!estimated.quoteRequired.includes('Custom inlay fabrication labour (builder quote)'),'Custom fabrication is not an outstanding builder quote by default');
 ok(estimated.model.quantities.blocking>buildDeckTakeoff(base()).quantities.blocking,'Custom supports affect actual physical quantities');
 
 // Hostile/malformed import must be rejected before getters run and without partial data writes.

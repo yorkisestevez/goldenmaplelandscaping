@@ -41,7 +41,7 @@ near(overridden.sections.find(s=>s.title==='Decking')!.items.find(i=>i.name===de
 const panel=readFileSync(new URL('../src/features/deckcraft/designer/OwnerCostEditor.tsx',import.meta.url),'utf8');
 const review=readFileSync(new URL('../src/features/deckcraft/designer/QuoteReviewPanel.tsx',import.meta.url),'utf8');
 const page=readFileSync(new URL('../src/pages/DeckDesigner.tsx',import.meta.url),'utf8');
-ok(panel.includes('Material markup')&&panel.includes('Your installation labour')&&panel.includes('Override priced material lines'),'Owner editor covers materials and labour');
+ok(panel.includes('Material markup')&&panel.includes('Your installation labour')&&panel.includes('Override priced material lines')&&panel.includes('Inlays &amp; special features'),'Owner editor covers materials, labour and feature labour settings');
 ok(review.includes('OwnerCostEditor')&&review.includes('variant="inline"'),'Quote review hosts the owner cost editor');
 ok(page.includes('setQuoteReviewOpen')&&page.includes('QuoteReviewPanel'),'Designer opens quote review for owner costs');
 ok(OWNER_COST_LIMITS.markupMax===500&&OWNER_COST_LIMITS.amountMax===1_000_000,'Owner cost limits match contractor preset bounds');

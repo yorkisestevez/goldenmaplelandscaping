@@ -11,6 +11,7 @@ import {extrasLayout} from '../extrasLayout';
 import {syncAutoLighting} from '../lightingSystem';
 import {houseRailingReviewFlags} from '../houseRailingClearance';
 import {captureContractorPreset} from './contractorPresets';
+import {validateFeatureLabour} from '../featureLabour';
 import {hydrateStoredProject,preserveRecoveryText,saveStoredProject} from '../projectStorage';
 import {ensureDesignExtensions,ensureLiveDesignExtensions} from '../designExtensions';
 
@@ -25,7 +26,7 @@ export interface JobRevision {id:string;name:string;savedAt:string;data:DeckData
 export interface SavedDeckJob {id:string;name:string;revisions:JobRevision[]}
 export interface JobLibrary {format:'golden-maple-deck-jobs';version:1;jobs:SavedDeckJob[]}
 export const emptyJobLibrary=():JobLibrary=>({format:'golden-maple-deck-jobs',version:1,jobs:[]});
-const PRIVATE=['poolQuoteInputs','quoteResolutions','pergolaQuoteCosts','materialMarkup','customLaborCost','customOverrides','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf'] as const;
+const PRIVATE=['poolQuoteInputs','quoteResolutions','pergolaQuoteCosts','materialMarkup','customLaborCost','customOverrides','featureLabour','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf'] as const;
 const PERSONAL=['customerName','projectAddress','scopeOfWork'] as const;
 const OPTIONAL='scenePresentation pools stairTargets foundationDepthIn houseConfig housePlacement wrap cornerChamfers stairEdgeId stairPath stairRiserCount stairTreadDepthIn level2EdgeId level2FullStep level2Position level2Offset level3 stairOffset stairTurn landingDepthIn lightingZoneEnabled autoLighting catalogueRailingId catalogueAccessories glassMount glassFinish borderFinish pictureFrameOverhangIn houseVisible houseWallHeightIn houseDoorOffset houseDoorWidthIn sceneLighting lightingPreviewOn privacyScreens railSections railDefault yardFeatures yardEarthwork terrainConfig yardAllowances permitSite customFront boardColours inlays skirting deckFinishes underDeck deckOutlines deckOutlineOffsets boardLayout boundaryLocks pergola projectKind siteModel landscapeObjects editorOrganization'.split(' ');
 const allowedData=new Set([...Object.keys(DEFAULT_DECK),...OPTIONAL,...PRIVATE]);
@@ -53,6 +54,7 @@ export function cleanJobDesign(value:unknown,portable=false):DeckData {
  // Reuse the contractor pricing validator, without borrowing its specification compatibility rules.
  for(const k of ['materialMarkup','customLaborCost','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf'] as const)if(raw[k]!==undefined&&(typeof raw[k]!=='number'||!Number.isFinite(raw[k])||Number(raw[k])<0||Number(raw[k])>(k==='materialMarkup'?500:1_000_000)))fail(`Invalid private ${k}.`);
  if(raw.customOverrides!==undefined){const pricingOnly={...structuredClone(DEFAULT_DECK),customOverrides:raw.customOverrides} as DeckData;captureContractorPreset(pricingOnly,'Validate private prices',true,'validate');}
+ if(raw.featureLabour!==undefined)clean.featureLabour=validateFeatureLabour(raw.featureLabour);
  if(raw.pergolaQuoteCosts!==undefined){const v=object(raw.pergolaQuoteCosts);if(Object.keys(v).sort().join(',')!=='key,quote'||typeof v.key!=='string'||v.key.length>30000)fail('Invalid private pergola quote snapshot.');const quote=cleanPergolaQuote(v.quote);if(canonical(quote)!==canonical(v.quote))fail('Invalid private pergola costs.');clean.pergolaQuoteCosts={key:v.key as string,quote} as PergolaQuoteContext;}
  if(raw.poolQuoteInputs!==undefined&&!validatePoolQuoteInputs(raw.poolQuoteInputs))fail('Invalid private pool prices.');
  if(raw.quoteResolutions!==undefined)clean.quoteResolutions=validateQuoteResolutions(raw.quoteResolutions);

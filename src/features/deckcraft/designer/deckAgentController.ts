@@ -32,7 +32,7 @@ export const AGENT_VIEWS=['plan','drawing','3d','overview','front','top','struct
 export const AGENT_SECTIONS=['house','deck','boards','stairs','lighting','extras','site','backyard','proposal'] as const;
 export const AGENT_ACTIONS=['save.json','export.obj','export.dxf','export.dxf2d','permit.pdf','proposal.open','proposal.pdf','review.open'] as const;
 export type AgentAction=typeof AGENT_ACTIONS[number];
-const PRIVATE_FIELDS=['poolQuoteInputs','quoteResolutions','pergolaQuoteCosts','customerName','projectAddress','scopeOfWork','customLaborCost','materialMarkup','customOverrides','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','generatedImageUrl','isGeneratingImage'] as const;
+const PRIVATE_FIELDS=['poolQuoteInputs','quoteResolutions','pergolaQuoteCosts','customerName','projectAddress','scopeOfWork','customLaborCost','materialMarkup','customOverrides','featureLabour','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','generatedImageUrl','isGeneratingImage'] as const;
 export type AgentDesign=Omit<DeckData,typeof PRIVATE_FIELDS[number]>;
 export interface DeckAgentHostState {data:DeckData;estimate?:EstimateResult;reviewFlags?:string[];view:PreviewMode;openSections:SectionId[];canUndo:boolean;canRedo:boolean;ready:boolean}
 export interface DeckAgentHost {

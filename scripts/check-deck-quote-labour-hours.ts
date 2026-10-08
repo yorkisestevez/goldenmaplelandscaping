@@ -40,11 +40,13 @@ reject(()=>quoteCostFromCrewHours({crewMembers:3,hours:1.1}),'Rejects non-quarte
 reject(()=>quoteCostFromCrewHours({crewMembers:3,hours:4,personHourRate:-1}),'Rejects negative rate');
 reject(()=>quoteCostFromCrewHours({crewMembers:3,hours:4,materials:0.001}),'Rejects sub-cent materials');
 
-// End-to-end: medallion labour scope resolves via crew-hours → installationCost.
+// End-to-end: quote-mode medallion labour resolves via crew-hours → installationCost.
 import '../src/features/deckcraft/lib/inlayGeometryRuntime';
-const med=deckReleaseData({...structuredClone(DEFAULT_DECK),width:20,length:14,inlays:[{id:'m1',kind:'medallion',style:'round',diameterFt:4}]});
+import {DEFAULT_FEATURE_LABOUR,mergeFeatureLabour} from '../src/features/deckcraft/featureLabour';
+const quoteMode=mergeFeatureLabour(undefined,{scopes:{medallion:{...DEFAULT_FEATURE_LABOUR.scopes.medallion,mode:'quote'}}});
+const med=deckReleaseData({...structuredClone(DEFAULT_DECK),width:20,length:14,inlays:[{id:'m1',kind:'medallion',style:'round',diameterFt:4}],featureLabour:quoteMode});
 const before=calculateDeckReleaseEstimate(med);
-ok(before.quoteRequired.some(q=>/Medallion inlay labour/i.test(q)),'Medallion labour starts as a quote requirement');
+ok(before.quoteRequired.some(q=>/Medallion inlay labour/i.test(q)),'Quote-mode medallion labour is a quote requirement');
 const scope=quoteScopeReview(med,before).scopes.find(s=>s.labels.some(l=>/Medallion inlay labour/i.test(l))||/Medallion/i.test(s.name));
 ok(!!scope,'Medallion labour binds a quote scope');
 const costs=quoteCostFromCrewHours({crewMembers:2,hours:6,materials:0});
@@ -54,8 +56,8 @@ near(after.subtotal-before.subtotal,costs.installationCost,'Crew-hours labour ad
 ok(!after.quoteRequired.some(q=>/Medallion inlay labour/i.test(q)),'Confirmed crew-hours clears medallion labour quote');
 
 const rates=unconfirmedRates();
-ok(rates.some(r=>r.id==='medallion-labour'&&/Crew-hours/i.test(r.value)),'Rate register points medallion labour to crew-hours entry');
-ok(rates.some(r=>r.id==='accent-board-labour'&&/Crew-hours/i.test(r.value)),'Rate register points accent labour to crew-hours entry');
+ok(rates.some(r=>r.id==='medallion-labour'&&/Man-hours/i.test(r.value)),'Rate register points medallion labour to man-hours default');
+ok(rates.some(r=>r.id==='accent-board-labour'&&/Man-hours/i.test(r.value)),'Rate register points accent labour to man-hours default');
 
 const panel=readFileSync(new URL('../src/features/deckcraft/designer/QuoteReviewPanel.tsx',import.meta.url),'utf8');
 ok(panel.includes("basis:'total'|'unit'|'crew'")&&panel.includes('Crew members × hours')&&panel.includes('quoteCostFromCrewHours'),'Quote Review exposes the crew-hours entry basis');

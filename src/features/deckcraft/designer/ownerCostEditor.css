@@ -19,6 +19,9 @@
 .dd-owner-costs-lines li{border-top:1px solid #e3e5db;padding:8px 0}
 .dd-owner-costs-lines label span small{display:block;margin-top:2px}
 .dd-owner-costs-error{background:#fff0e7;border:1px solid #c98859;padding:12px;border-radius:8px;color:#773615}
+.dd-owner-costs-status{background:#eef5ea;border:1px solid #9bb59a;padding:12px;border-radius:8px;color:#274229}
+.dd-owner-costs-check{display:flex;align-items:center;gap:10px;font-weight:650;font-size:13px;margin:8px 0 12px;min-height:44px}
+.dd-owner-costs-check input{width:20px;height:20px;min-height:20px}
 @media(max-width:700px){
   .dd-owner-costs-backdrop{padding:0}
   .dd-owner-costs-dialog{height:100dvh;max-height:100dvh;border-radius:0}
