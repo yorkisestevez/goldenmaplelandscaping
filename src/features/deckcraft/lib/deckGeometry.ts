@@ -339,18 +339,21 @@ export function getBoardRows(fp: FootprintPlan, opts: {
   }
   else if(opts.anchor==='top')for(let y=top-boardWidth;y+boardWidth>bottom+.001;y-=pitch)rows.push(y);
   else for(let y=bottom;y<top-.001;y+=pitch)rows.push(y);
+  // Hairline rips from field math (under 1 in across the board) are not installable and read as
+  // stretched/uneven boards in the 3D view — drop them; the neighbouring full board already covers the course.
+  const keep=(b:BoardRun)=>(b.width??boardWidth)>=1;
   if(!usesCurrentBuildRules(opts))for(const [row,y] of rows.entries()){
     let x=left,first=true;
     while(x<right-.001){
       const length=Math.min(first&&row%2?stock/2:stock,right-x),tile=[world(x,y),world(x+length,y),world(x+length,y+boardWidth),world(x,y+boardWidth)];
-      for(const poly of polygonCut(field,[tile]))runs.push(polygonBoard(poly,angleDeg));
+      for(const poly of polygonCut(field,[tile])){const b=polygonBoard(poly,angleDeg);if(keep(b))runs.push(b);}
       x+=length+gap;first=false;
     }
   }
   else for(const y of rows){
     const tile=[world(left,y),world(right,y),world(right,y+boardWidth),world(left,y+boardWidth)];
     // Clip first: short courses at diagonal tips and notches can remain single boards.
-    for(const poly of polygonCut(field,[tile]))runs.push(...splitBoard(polygonBoard(poly,angleDeg),boardWidth,stock,gap));
+    for(const poly of polygonCut(field,[tile])){const b=polygonBoard(poly,angleDeg);if(keep(b))runs.push(...splitBoard(b,boardWidth,stock,gap));}
   }
   return runs;
 }

@@ -89,6 +89,15 @@ function checkWrap(d:DeckData,tag:string){
   }
   ok(hips.every(h=>mitred.has(`${h.side}:${h.corner}`)),`${tag}: field boards meet the straight seam (${[...mitred].join(', ')||'none'})`);
   checks++;
+  // Outer rim of each zone gets a full-width board (ripped rows sit against the house, not the face).
+  for(const zone of zones){
+    const mine=field.filter(b=>{const c={x:b.cx,y:b.cy};return inside(c,zone.outline)||nearPoly(c,zone.outline,3);});
+    if(!mine.length)continue;
+    const out=zone.joistDir,rank=(b:typeof mine[number])=>b.cx*out.x+b.cy*out.y,edge=Math.max(...mine.map(rank));
+    const outer=mine.filter(b=>rank(b)>edge-d.boardWidth/2);
+    ok(outer.length&&outer.every(b=>Math.abs((b.width??d.boardWidth)-d.boardWidth)<.05),`${tag}: ${zone.label} outer boards are full width (${outer.map(b=>(b.width??d.boardWidth).toFixed(2)).join(', ')||'none'})`);
+  }
+  ok(field.every(b=>(b.width??d.boardWidth)>=1),`${tag}: no hairline field boards under 1 in`);
   const finished=l.deckingFootprint!.outline,polys=l.boards.map(b=>boardOutline(b,d.boardWidth)),xs=finished.map(p=>p.x),ys=finished.map(p=>p.y);
   ok(polys.reduce((n,p)=>n+Math.abs(area(p)),0)<=Math.abs(area(finished))+1,`${tag}: no two boards overlap (board area within the deck area)`);
   let probes=0,missed=0;
