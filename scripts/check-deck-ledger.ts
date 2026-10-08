@@ -188,12 +188,12 @@ const paths:[string,boolean][]=[
   ['accent boards without a rate',has('Accent-colour boards',s=>s.items.some(i=>i.cost===null))],
   ['inlays',has('Accent colours & inlays',()=>true)],
   ['medallion labour',all.some(e=>e.quoteRequired.includes('Medallion inlay labour (builder quote)'))],
-  ['porch wrap',all.some(e=>e.quoteRequired.includes('Porch-wrap labour premium (builder quote)'))],
+  ['porch wrap priced in labour',all.some(e=>e.sections.some(s=>s.title.startsWith('Labour')&&s.total>0)&&!e.quoteRequired.some(q=>/Porch-wrap/.test(q)))],
   ['lighting quote',has('in-lite',s=>!!s.quoteRequired)],
   ['priced lighting',has('in-lite',s=>!s.quoteRequired&&s.total>0)],
   ['manufacturer privacy screen',has('Add-ons & Extras',s=>s.items.some(i=>i.name==='Manufacturer privacy screen'))],
   ['extras with a finish to quote',all.some(e=>e.quoteRequired.includes('Built-in Bench with selected finish'))],
-  ['F7 skirting',has('Deck skirting',s=>!!s.quoteRequired)],
+  ['F7 skirting',has('Deck skirting',s=>!s.quoteRequired&&s.total>0&&s.items.every(i=>i.cost!==null&&Number(i.cost)>0))],
   ['under-deck known supplies and installation with pending site details',has('Under-deck options',s=>s.total>0&&!!s.quoteRequired&&s.items.some(i=>i.name==='Under-deck installation planning allowance'&&Number(i.cost)>0))],
   ['legacy drainage replaced without duplicate charge',all.some(e=>e.sections.some(s=>s.title==='Under-deck options'))&&!all.some(e=>e.sections.flatMap(s=>s.items).some(i=>i.name==='Drainage System'))],
   ['F6 border boards',has('Deck-part finishes',s=>s.items.some(i=>i.cost!==null))],
@@ -211,10 +211,11 @@ for(const [path,covered] of paths)ok(covered,`The designs cover ${path}`);
 
 // 4. Builder or supplier, as the engine words it.
 const expect=(label:string,kind:QuoteKind)=>ok(kinds.get(label)===kind,`"${label.replace(/^item:/,'')}" is a ${kind} quote (got ${kinds.get(label)??'none'})`);
-for(const label of ['Accent-colour board labour (builder quote)','Medallion inlay labour (builder quote)','Porch-wrap labour premium (builder quote)','Deck skirting (builder quote)','Fire pit, wood-burning (estimator allowance)'])expect(label,'builder');
+for(const label of ['Accent-colour board labour (builder quote)','Medallion inlay labour (builder quote)','Fire pit, wood-burning (estimator allowance)'])expect(label,'builder');
 for(const label of ['Joist-to-beam ties','Deckorators Dark Slate picture-frame boards','Fascia boards (supplier quote)','Stair treads and risers in TimberTech Composite Terrain+','Built-in Bench with selected finish',unrated[0].name,RAILING_CATALOGUE[0].name,`${nullLight.name} supply and installation`])expect(label,'supplier');
-for(const item of ['Accent-colour board labour','Medallion inlay labour','Porch-wrap labour premium','Skirting backing','Skirting labour'])expect(`item:${item}`,'builder');
-for(const item of ['Skirting face','Manufacturer privacy screen','Deckorators Dark Slate'])expect(`item:${item}`,'supplier');
+for(const item of ['Accent-colour board labour','Medallion inlay labour'])expect(`item:${item}`,'builder');
+for(const item of ['Manufacturer privacy screen','Deckorators Dark Slate'])expect(`item:${item}`,'supplier');
+ok([...kinds.keys()].every(k=>!/Porch-wrap|Deck skirting|Skirting /.test(k)),'Porch wrap and skirting are priced, not quote tags');
 for(const [label,kind] of kinds)if(!label.startsWith('item:')){
   if(/\(builder quote\)/.test(label))ok(kind==='builder',`"${label}" says builder quote and is one`);
   if(/\(supplier quote\)/.test(label))ok(kind==='supplier',`"${label}" says supplier quote and is one`);

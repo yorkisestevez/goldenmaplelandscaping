@@ -122,10 +122,14 @@ export function normalizeWrap(data:DeckData):DeckData{
   return next;
 }
 
-/** Wrap-arounds reuse the studio's existing labour factors, no new rate: one mitred corner prices
- * like Multi-corner (×1.25), two like Curved (×1.50). */
-export function wrapLabourFactor(wrap:ActiveWrap|null){return !wrap?1:wrapHips(wrap).length>=2?1.5:1.25;}
-/** Porch wraps add labour the price book has no factor for yet: listed for a builder quote. */
+/** Wrap-arounds reuse the studio's existing labour factors: one corner like Multi-corner (×1.25),
+ * two like Curved (×1.50). A porch adds ×0.15 (owner 2026-10-08) instead of a separate builder-quote line. */
+export function wrapLabourFactor(wrap:ActiveWrap|null){
+  if(!wrap)return 1;
+  const base=wrapHips(wrap).length>=2?1.5:1.25;
+  return hasPorchWrap(wrap)?+(base+.15).toFixed(2):base;
+}
+/** True when a wrap continues as a porch past the street-side wall. */
 export const hasPorchWrap=(wrap:ActiveWrap|null)=>!!(wrap?.porchLeft||wrap?.porchRight);
 
 /** Plain name of a named deck edge (wrap, angled corner or custom outline), or the id itself. */

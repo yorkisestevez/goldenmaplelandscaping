@@ -3,7 +3,7 @@ import {physicalFoundationSections} from './physicalQuote';
 import {applyQuoteResolutions,type QuoteResolutionReview} from './quoteCostRegistry';
 import {pergolaPricing,pergolaQuoteKey} from './pergolaPricing';
 import {pergolaLayout} from './pergolaLayout';
-import { activeWrap, hasPorchWrap, wrapLabourFactor } from './lib/wrapGeometry';
+import { activeWrap, wrapLabourFactor } from './lib/wrapGeometry';
 import {buildUnderDeckPricing} from './underDeckPricing';
 import { activeCornerChamfers, chamferLabourFactor } from './lib/cornerChamfers';
 import { activeCustomFront, customLabourFactor, customOutline } from './lib/customOutline';
@@ -17,7 +17,8 @@ import {hasBoardLayout,layoutBoardStock,layoutAutomaticBreakerLf,boardLayoutAllo
 import {boardFinishPlan,colourName,darkSlateBorder,parseColourRef,type StockGroup} from './boardFinishes';
 import {DECK_PARTS,partRef,railingFinish,stairTreadKey} from './deckPartFinishes';
 import {inlayCrewDays,PATTERN_LABOUR} from './lib/inlayGeometry';
-import {SKIRTING_STYLE_NAMES,skirtingPlan,skirtingRows} from './skirting';
+import {SKIRTING_STYLE_NAMES,skirtingPlan} from './skirting';
+import {pricedSkirtingRows} from './skirtingPricing';
 import {claddingPlan} from './stairCladding';
 import {STAIR_ALLOWANCE_WIDTH_IN,DECKING_RATE_SOURCES,deckingRateWidth} from './supplierRates';
 import {fasciaSupply} from './fasciaPricing';
@@ -773,23 +774,16 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     const rows=veneer.rows.filter(r=>r.id!=='terrain-veneer-wood');
     if(rows.length){quoteRequired.push(...rows.map(r=>r.name));sections.push({title:'Terrain stair support connections',icon:'🔩',quoteRequired:true,total:0,items:rows.map(r=>({name:r.name,spec:r.basis,qty:r.qty,unit:r.unit,cost:null}))});}
   }
-  // Porch wraps: labour is priced at the two-corner factor; the extra porch labour has no factor in
-  // the price book yet, so it is listed for a builder quote rather than priced at zero.
-  if(hasPorchWrap(wrap)){
-    const labour=sections.find(s=>s.title==='Labour (Construction & Build)');
-    if(labour){labour.quoteRequired=true;labour.items.push({name:'Porch-wrap labour premium',spec:'Builder quote required: the priced labour uses the two-corner wrap factor (×1.50); the extra porch-wrap labour is quoted separately.',qty:1,unit:'allowance',cost:null});}
-    quoteRequired.push('Porch-wrap labour premium (builder quote)');
-  }
+  // Porch wraps fold into wrapLabourFactor (×0.15 on top of the one-/two-corner wrap rate); no separate quote line.
   if([1,2,3].some(n=>n<=data.levels&&!!freeFootprint(data,n as 1|2|3))){
     const label='Custom outline support and connection details (builder quote)';
     quoteRequired.push(label);sections.push({title:'Custom outline construction',icon:'📐',quoteRequired:true,total:0,items:[{name:label,spec:'Deck boards, actual perimeter, modeled framing and base installation allowance are priced. Bespoke angled supports, house attachment and reshaped level connections need a builder review and quote before a construction price is final.',qty:1,unit:'design',cost:null}]});
   }
-  // Skirting under the deck (skirting.ts): the face, backing, access panels and labour, every one a quote. The price
-  // book has no skirting rates, so nothing here is priced or $0; setting a rate later is a price-book change.
+  // Skirting under the deck (skirtingPricing.ts): face, backing, access panels and labour at published rates.
   const skirting=data.skirting?skirtingPlan(data,model):null;
   if(skirting){
-    const rows=skirtingRows(skirting);
-    if(rows.length){sections.push({title:'Deck skirting',icon:'🧱',quoteRequired:true,total:0,description:`${SKIRTING_STYLE_NAMES[skirting.style]} under the deck, listed for a builder quote: the price book has no skirting rates yet, so it is not in the priced total.`,items:rows});quoteRequired.push('Deck skirting (builder quote)');}
+    const rows=pricedSkirtingRows(skirting,markupMult);
+    if(rows.length){const total=rows.reduce((n,r)=>n+(r.cost??0),0);sections.push({title:'Deck skirting',icon:'🧱',total,description:`${SKIRTING_STYLE_NAMES[skirting.style]} under the deck, priced from the skirting rate table (face supply, backing, access panels and install labour).`,items:rows});}
     flags.push(...skirting.notes);
   }
   // Stair sides, step ends and the faces between levels (stairCladding.ts): fascia boards the price book has no rate for,

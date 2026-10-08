@@ -49,7 +49,7 @@ export default function DimensionsStep({data,update,houseConfig,wrap,wrapStatus,
         {farHip&&<p className="dd-note" role="status">{hipNote(farHip,`a ${wing.widthFt} ft deep porch (the wing width)`)}</p>}</>}</>}
       </div>;})}
     {wrap?.left&&wrap.right&&<p className="dd-note" role="status">Deck width is set by the house: {trimFt(wrap.left.widthIn)} ft left wing + {houseConfig.widthFt} ft house + {trimFt(wrap.right.widthIn)} ft right wing = {trimFt(wrap.W)} ft.</p>}
-    {(data.wrap?.porchLeft||data.wrap?.porchRight)&&<p className="dd-note">Porch wraps price labour at the two-corner wrap factor. The extra porch-wrap labour is listed for a builder quote until Golden Maple sets its rate.</p>}
+    {(data.wrap?.porchLeft||data.wrap?.porchRight)&&<p className="dd-note">Porch wraps add ×0.15 to the wrap labour factor (on top of the one- or two-corner wrap rate) for the street-side porch framing.</p>}
     {wrapStatus&&<p className="dd-note" role="status">{wrapStatus}</p>}
     {data.wrap&&wrapPaused.length>0&&<div className="dd-quote-notice" role="status"><strong>The wrap-around is paused</strong><ul>{wrapPaused.map(r=><li key={r}>{r}</li>)}</ul>{attachedDeck&&<button type="button" className="dd-secondary" onClick={()=>{setWrapStatus(wrapFixStatus(wrapFixNames(data)));update(wrapFix(data));}}>Use a rectangle with straight boards</button>}</div>}
   </fieldset>;

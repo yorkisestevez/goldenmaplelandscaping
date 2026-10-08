@@ -239,7 +239,7 @@ for(const [label,patch,status] of [
 }
 {
   const d=base({wrap:{left:{widthFt:8,runFt:12}},inlays:[rug()]}),m=buildDeckTakeoff(d);
-  ok(!m.levels[0].inlays&&m.levels[0].boards.every(b=>!b.inlay)&&m.issues.some(s=>s.includes('not built on a wrap-around deck')),'Inlays are not built on a wrap-around deck, and it says so');
+  ok(m.levels[0].inlays?.[0]?.status==='ok'&&m.levels[0].boards.some(b=>!!b.inlay)&&m.issues.some(s=>/inlays on a wrap-around sit on the main field/i.test(s)),'Inlays build on a wrap-around main field, with a hip review note');
 }
 
 // 5. Fit to deck: moved toward the middle, then made smaller, until it fits; never moved onto another inlay.

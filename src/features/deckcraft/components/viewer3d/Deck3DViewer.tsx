@@ -352,13 +352,28 @@ export interface BoardPaint{scope:'piece'|'course';onPaint:(target:{level:number
 
 function CameraView({view,w,d,cx,cz,height,depth,points,sceneFrame,saved}:{view:string;w:number;d:number;cx:number;cz:number;height:number;depth:number;points:{x:number;y:number;z:number}[];sceneFrame?:{target:[number,number,number];position:[number,number,number]};saved?:SavedSceneCamera}){
 
- const {camera,controls,invalidate}=useThree();
+ const {camera,controls,invalidate,set,size}=useThree();
 
- const aspect=useThree(s=>s.size.width/Math.max(1,s.size.height)),setback=cameraSetback(aspect);
+ const aspect=size.width/Math.max(1,size.height),setback=cameraSetback(aspect);
 
  const frame=saved?{target:saved.targetIn.map(n=>n/12) as [number,number,number],position:saved.positionIn.map(n=>n/12) as [number,number,number]}:sceneFrame??(view==='overview'?overviewCamera({w,d,cx,cz,height,aspect,points},38):undefined);
 
- useLayoutEffect(()=>{const r=Math.max(w,d),target=new THREE.Vector3(cx,view==='foundation'?-depth/24:height*.5,cz);camera.position.set(cx+r*.9,height+r*.7,cz+r*1.3);if(view==='3d')camera.position.y=height*.65+r*.4;if(view==='front')camera.position.set(cx,height*.6,cz+r*1.8);if(view==='top')camera.position.set(cx,r*2+.1,cz+.01);if(view==='hardware')camera.position.set(cx+r*.6,height*.25,cz+r*1.2);if(view==='foundation')camera.position.set(cx+r*.9,height+r*.65,cz+r*1.4);if(frame){target.set(...frame.target);camera.position.set(...frame.position);}else camera.position.sub(target).multiplyScalar(setback).add(target);if(camera instanceof THREE.PerspectiveCamera){camera.fov=saved?.fov??38;camera.updateProjectionMatrix();}camera.lookAt(target);if(controls&&'target' in controls){(controls as any).target.copy(target);(controls as any).update();}invalidate();},[view,w,d,cx,cz,height,depth,setback,aspect,frame?.position[0],frame?.position[1],frame?.position[2],frame?.target[0],frame?.target[1],frame?.target[2],saved?.fov,camera,controls,invalidate]);return null;
+ // Above uses an orthographic camera so board widths read true (no foreshortening) for sales and plan checks.
+ useLayoutEffect(()=>{
+  const r=Math.max(w,d),target=new THREE.Vector3(cx,view==='foundation'?-depth/24:height*.5,cz);
+  const wantOrtho=view==='top'&&!frame&&!saved;
+  if(wantOrtho!==(camera instanceof THREE.OrthographicCamera)){
+   const next=wantOrtho
+    ?new THREE.OrthographicCamera(-10,10,10,-10,SCENE_LOOK.sky.cameraNear,SCENE_LOOK.sky.cameraFar)
+    :new THREE.PerspectiveCamera(saved?.fov??38,aspect,SCENE_LOOK.sky.cameraNear,SCENE_LOOK.sky.cameraFar);
+   set({camera:next});
+   return;
+  }
+  camera.position.set(cx+r*.9,height+r*.7,cz+r*1.3);if(view==='3d')camera.position.y=height*.65+r*.4;if(view==='front')camera.position.set(cx,height*.6,cz+r*1.8);if(view==='top')camera.position.set(cx,r*2+.1,cz+.01);if(view==='hardware')camera.position.set(cx+r*.6,height*.25,cz+r*1.2);if(view==='foundation')camera.position.set(cx+r*.9,height+r*.65,cz+r*1.4);if(frame){target.set(...frame.target);camera.position.set(...frame.position);}else if(!(camera instanceof THREE.OrthographicCamera))camera.position.sub(target).multiplyScalar(setback).add(target);
+  if(camera instanceof THREE.PerspectiveCamera){camera.fov=saved?.fov??38;camera.aspect=aspect;camera.updateProjectionMatrix();}
+  if(camera instanceof THREE.OrthographicCamera){const half=Math.max(w,d)*.55/Math.max(.5,setback*.85);camera.left=-half*aspect;camera.right=half*aspect;camera.top=half;camera.bottom=-half;camera.near=.1;camera.far=SCENE_LOOK.sky.cameraFar;camera.updateProjectionMatrix();}
+  camera.lookAt(target);if(controls&&'target' in controls){(controls as any).target.copy(target);(controls as any).update();}invalidate();
+ },[view,w,d,cx,cz,height,depth,setback,aspect,frame?.position[0],frame?.position[1],frame?.position[2],frame?.target[0],frame?.target[1],frame?.target[2],saved?.fov,camera,controls,invalidate,set,size.width,size.height]);return null;
 
 }
 

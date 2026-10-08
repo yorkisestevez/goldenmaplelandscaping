@@ -25,8 +25,8 @@ export function validateInlayCandidate(data:DeckData,model:DeckTakeoff,inlay:Dec
  if(offsets(inlay).some(n=>!Number.isFinite(n)||n<INLAY_LIMITS.offsetFt[0]||n>INLAY_LIMITS.offsetFt[1]))throw Error('Keep the inlay offset within 30 feet of its deck level’s middle.');
  const n=inlay.level??1,level=inlayPlanLevel(model,n);if(!level)throw Error('Choose a deck level that exists.');
  const ctx=levelInlayContext(data,level);
- if(level.wrapZones)ctx.blocked='Inlays are not built on a wrap-around deck.';
- else if(n===1&&data.hasInlay)ctx.blocked='Replace the earlier centre stripe with a band before placing decorative inlays.';
+ // Wrap decks support inlays on the main field (zone boards already stop at the hip).
+ if(n===1&&data.hasInlay)ctx.blocked='Replace the earlier centre stripe with a band before placing decorative inlays.';
  const others=(data.inlays??[]).filter(i=>i.id!==inlay.id&&(i.level??1)===n);
  const plan=planInlays([...others,inlay],ctx,{boards:false}).at(-1)!;
  if(plan.status!=='ok')throw Error(plan.message??'This inlay does not fit here.');return plan;

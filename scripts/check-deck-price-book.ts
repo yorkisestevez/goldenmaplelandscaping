@@ -18,6 +18,7 @@ import {PRIVACY_PRODUCTS} from '../src/features/deckcraft/privacyScreens';
 import {STAIR_ALLOWANCE_WIDTH_IN,LIGHTING_TRADE_RATES,DECKING_RATE_SOURCES,CARR_PAVER_TRADE_2026,FASCIA_RETAIL_RATES} from '../src/features/deckcraft/supplierRates';
 import {UNDER_DECK_RATES,UNDER_DECK_POLICY} from '../src/features/deckcraft/underDeckPricing';
 import {BOARD_LAYOUT_POLICY} from '../src/features/deckcraft/boardLayoutPricing';
+import {SKIRTING_RATES} from '../src/features/deckcraft/skirtingPricing';
 
 /**
  * The price book stamp: a named version that proposals, the PDF, sent designs and design links carry, and a
@@ -30,7 +31,7 @@ const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
 // 1. The fingerprint: numbers in every rate table (names and wording can change freely) and every priced total.
 const fnv=(s:string)=>{let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return h.toString(16).padStart(8,'0');};
 const numbersOnly=(value:unknown)=>JSON.stringify(value,(_k,v)=>typeof v==='string'?undefined:v);
-const tables={MATERIAL_TIERS,WASTE_FACTORS,CREW_DAY_RATES,PERMIT_FEES,DEFAULT_ENGINEERING_FEE,RAILING_COSTS,STAIR_LABOR_MULTIPLIER,STAIR_TREAD_COSTS,LIGHTING_COSTS,INLITE_PRODUCTS,DECKING_CATALOGUE,RAILING_CATALOGUE,MANUFACTURER_ACCESSORIES,LIGHTING_CATALOGUE,PRIVACY_PRODUCTS,STAIR_ALLOWANCE_WIDTH_IN,LIGHTING_TRADE_RATES,DECKING_RATE_SOURCES,CARR_PAVER_TRADE_2026,FASCIA_RETAIL_RATES,UNDER_DECK_RATES,UNDER_DECK_POLICY,BOARD_LAYOUT_POLICY};
+const tables={MATERIAL_TIERS,WASTE_FACTORS,CREW_DAY_RATES,PERMIT_FEES,DEFAULT_ENGINEERING_FEE,RAILING_COSTS,STAIR_LABOR_MULTIPLIER,STAIR_TREAD_COSTS,LIGHTING_COSTS,INLITE_PRODUCTS,DECKING_CATALOGUE,RAILING_CATALOGUE,MANUFACTURER_ACCESSORIES,LIGHTING_CATALOGUE,PRIVACY_PRODUCTS,STAIR_ALLOWANCE_WIDTH_IN,LIGHTING_TRADE_RATES,DECKING_RATE_SOURCES,CARR_PAVER_TRADE_2026,FASCIA_RETAIL_RATES,UNDER_DECK_RATES,UNDER_DECK_POLICY,BOARD_LAYOUT_POLICY,SKIRTING_RATES};
 const golden=JSON.parse(read('scripts/deck-legacy-golden.json')) as Record<string,{total?:number}>;
 const totals=Object.keys(golden).sort().map(k=>`${k}=${golden[k].total}`).join('|');
 ok(Object.keys(golden).length>=200&&Object.values(golden).every(g=>typeof g.total==='number'),'Every legacy scenario has a priced total');

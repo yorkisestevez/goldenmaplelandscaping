@@ -21,7 +21,7 @@ const plain={...data,skirting:{...data.skirting!,cornerTreatment:undefined}},sta
 for(const key of ['lengthFt','faceSqft','backingLf','latticePanels'] as const)ok(plan[key]===standard[key],`${key}: custom folds preserve the takeoff quantity`);
 const e=calculateEstimate(data,DECK_SETTINGS),ep=calculateEstimate(plain,DECK_SETTINGS);
 ok(e.total===ep.total&&e.subtotal===ep.subtotal,'Folds never add an invented supply or installation price');
-ok(e.sections.find(s=>s.title==='Deck skirting')!.items.every(i=>i.cost===null),'All custom skirting scope remains visibly quoted');
+ok(e.sections.find(s=>s.title==='Deck skirting')!.items.every(i=>i.cost!==null&&Number(i.cost)>0),'Skirting rows stay priced; folds do not invent extra lines');
 ok(parseDesign(serializeDesign(data)).skirting?.cornerTreatment==='Folded solid boards','The corner choice survives saving and sharing');
 assert.throws(()=>validateDesign({...data,skirting:{...data.skirting,cornerTreatment:'Heat all boards'}}));checks++;
 for(const patch of [{deckingMaterial:'cedar',deckingColor:'Western Red Cedar'},{deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk'},{deckingMaterial:'tt_terrain',deckingColor:'Silver Maple'},{skirting:{...data.skirting!,style:'Lattice' as const}},{skirting:{...data.skirting!,style:'Vertical boards' as const}}])

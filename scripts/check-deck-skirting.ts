@@ -25,7 +25,7 @@ import {designerSource} from './deck-designer-source';
 
 /**
  * Skirting under the deck (skirting.ts). A design without it builds, saves and prices exactly as before, and one
- * with it builds and prices the same deck: skirting only adds a "Deck skirting" section whose every row is a quote.
+ * with it builds the same deck: skirting only adds a priced "Deck skirting" section from SKIRTING_RATES.
  * The house decides which main-deck edges it covers (houseContact.ts); those, the edges where levels meet and the
  * stair and level-connection openings (their width plus 1 in each side) are never skirted, winders never are, and the
  * face follows the ground plus the chosen clearance, slope included.
@@ -45,7 +45,7 @@ const inches=(runs:SkirtingRun[])=>runs.reduce((n,r)=>n+r.lengthIn,0);
 const COCOA=colourRef('tt_prime_plus','Dark Cocoa');
 
 // 1. Absent: nothing runs. No section, flag, fact, feature, export part or saved key, and a design with skirting builds
-//    the same deck and the same priced portion: skirting only adds its quote section.
+//    the same deck: skirting only adds its priced section.
 const plainDesigns:[string,Partial<DeckData>][]=[['rectangle',{}],['L-shape two levels',{shape:'L-Shape',width:20,length:16,levels:2,height:48,height2:24}],['wrap',{width:34,length:12,wrap:{left:{widthFt:8,runFt:10}}}],['herringbone freestanding',{pattern:'Herringbone',deckType:'Freestanding'}]];
 for(const [label,patch] of plainDesigns){
   const d=base(patch),e=price(d),on={...d,skirting:skirt()},eo=price(on);
@@ -56,8 +56,9 @@ for(const [label,patch] of plainDesigns){
   ok(skirtingPlan(d,e.model)===null,`${label}: the skirting plan is null without skirting`);
   const {issues:_i,...model}=e.model,{issues:_j,...modelOn}=eo.model;
   ok(digest(model)===digest(modelOn)&&digest(getHardwareLayout(d,e.model))===digest(getHardwareLayout(on,eo.model)),`${label}: skirting leaves the deck's takeoff and hardware untouched`);
-  const priced=(x:typeof e)=>digest(x.sections.filter(s=>s.title!=='Deck skirting'));
-  ok(priced(e)===priced(eo)&&e.subtotal===eo.subtotal&&e.total===eo.total,`${label}: skirting leaves every priced section, the subtotal and the total unchanged`);
+  const priced=(x:typeof e)=>digest(x.sections.filter(s=>s.title!=='Deck skirting'&&!/HST/.test(s.title)));
+  const skirtSection=section(eo)!;
+  ok(priced(e)===priced(eo)&&skirtSection&&skirtSection.total>0&&near(eo.subtotal,e.subtotal+skirtSection.total,.02),`${label}: skirting leaves every other priced section unchanged and adds its own total`);
   const deckParts=(x:typeof e,y:DeckData)=>digest(deckExportMeshes(y,x.model).filter(m=>!m.name.startsWith('skirting_')).map(m=>[m.name,m.vertices,m.faces]));
   ok(deckParts(e,d)===deckParts(eo,on),`${label}: the export's deck parts are unchanged by skirting`);
 }
@@ -193,22 +194,21 @@ for(const [label,patch] of houses)for(const deckType of ['Attached','Freestandin
   ok(planOf(base({height:48,skirting:skirt({accessPanels:0})})).notes.some(n=>n.includes('One is recommended')),'No access panel asked for: a note recommends one');
 }
 
-// 7. Pricing: a "Deck skirting" section that is a quote, every row cost null, never $0; the priced total is unchanged.
+// 7. Pricing: a priced "Deck skirting" section from SKIRTING_RATES; every row has a positive cost.
 {
   for(const [label,d] of [['boards with a panel',base({height:48,skirting:skirt()})],['lattice, no panel',base({height:60,skirting:skirt({style:'Lattice',accessPanels:0})})],['vertical boards on two levels',base({levels:2,height:48,height2:24,skirting:skirt({style:'Vertical boards',accessPanels:3})})]] as const){
     const e=price(d),s=section(e)!;
-    ok(s&&s.quoteRequired===true&&s.total===0,`${label}: the skirting section is a quote with no priced total`);
-    ok(s.items.length>=3&&s.items.every(i=>i.cost===null&&i.unitPrice===undefined&&Number(i.qty)>0),`${label}: every skirting row is cost null with a real quantity (never $0)`);
+    ok(s&&!s.quoteRequired&&s.total>0,`${label}: the skirting section is priced with a positive total`);
+    ok(s.items.length>=3&&s.items.every(i=>i.cost!==null&&Number(i.cost)>0&&Number(i.qty)>0),`${label}: every skirting row is priced with a real quantity (never $0 or null)`);
     ok(['Skirting face','Skirting backing','Skirting labour'].every(n=>s.items.some(i=>i.name===n))&&s.items.some(i=>i.name==='Skirting access panels')===(d.skirting!.accessPanels!>0),`${label}: face, backing and labour rows, and access panels only when there are some`);
-    const p=skirtingPlan(d,e.model)!;
-    ok(near(Number(s.items.find(i=>i.name==='Skirting face')!.qty),Math.round(p.faceSqft*10)/10,1e-9)&&near(Number(s.items.find(i=>i.name==='Skirting backing')!.qty),Math.round(p.backingLf*10)/10,1e-9),`${label}: the rows carry the plan's face area and backing length`);
-    ok(e.quoteRequired.includes('Deck skirting (builder quote)')&&describeDesign(d,e).priceLabel==='Priced portion only','The skirting quote is listed, and the price reads as the priced portion only');
-    ok(e.materialList.filter(i=>/^Skirting/.test(i.item)).every(i=>i.cost===null),`${label}: the material list carries the skirting rows as quotes`);
-    ok(!e.sections.flatMap(x=>x.items).some(i=>/kirting/.test(i.name)&&i.cost===0),`${label}: no skirting line anywhere is priced at $0`);
+    const p=skirtingPlan(d,e.model)!,face=s.items.find(i=>i.name==='Skirting face')!,backing=s.items.find(i=>i.name==='Skirting backing')!;
+    ok(near(Number(backing.qty),Math.round(p.backingLf*100)/100,.01),`${label}: backing carries the plan's length`);
+    ok(face.unit==='boards'||near(Number(face.qty),Math.round(p.faceSqft*100)/100,.01),`${label}: face is fascia boards or face area`);
+    ok(!e.quoteRequired.some(q=>/kirting/i.test(q)),`${label}: skirting is not listed for a builder quote`);
+    ok(e.materialList.filter(i=>/^Skirting/.test(i.item)).every(i=>i.cost!==null&&Number(i.cost)>0),`${label}: the material list carries priced skirting rows`);
+    ok(!e.sections.flatMap(x=>x.items).some(i=>/kirting/.test(i.name)&&(i.cost===0||i.cost===null)),`${label}: no skirting line is $0 or null`);
   }
-  const custom=base({height:48,skirting:skirt(),customOverrides:{'Skirting face':{cost:500}}});
-  ok(section(price(custom))!.items.every(i=>i.cost===null),'A contractor override cannot turn a skirting quote into a price');
-  ok(unconfirmedRates().some(r=>r.id==='skirting'&&r.status==='owner-decision'),'The rate register lists skirting as an owner decision');
+  ok(unconfirmedRates().some(r=>r.id==='skirting'&&r.status==='owner-decision'&&/Priced/.test(r.value)),'The rate register lists skirting as an owner-priced decision');
 }
 
 // 8. Colour: the deck's own, or another real colour of its kind; anything else falls back to the deck colour.
@@ -282,4 +282,4 @@ for(const [label,patch] of houses)for(const deckType of ['Attached','Freestandin
   ok(/"check:deck":[^\n]*check-deck-skirting\.ts/.test(read('package.json')),'This check runs in check:deck');
 }
 
-console.log(`DECK SKIRTING OK — absent-means-nothing on ${plainDesigns.length} designs, the house rule on ${houses.length*2} houses and decks, openings, levels, slope, styles, access panels, quotes, colours, open sides, saving, outputs and wiring; ${checks} checks.`);
+console.log(`DECK SKIRTING OK — absent-means-nothing on ${plainDesigns.length} designs, the house rule on ${houses.length*2} houses and decks, openings, levels, slope, styles, access panels, priced rows, colours, open sides, saving, outputs and wiring; ${checks} checks.`);

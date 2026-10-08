@@ -9,7 +9,7 @@
 
   IMPORTANT: this file must be the ONLY schema source for the forms below
   (contact, quick-quote, cost-estimator, cost-guide, guide-download,
-  estimate-request, deck-design). Do NOT put data-netlify
+  estimate-request, deck-design, deck-warm-lead). Do NOT put data-netlify
   on the runtime JSX versions of these forms — the prerendered pages get
   scanned too, and their slim static markup (attribution inputs are added by
   JS at runtime, so they're absent from prerendered HTML) re-registers the
@@ -290,6 +290,31 @@
       <input type="text" name="price_book" />
       <!-- The branded proposal PDF (ATTACH_PROPOSAL_PDF in src/features/deckcraft/sendDesign.ts), 2026-09-28. -->
       <input type="file" name="proposal_pdf" />
+      <input type="text" name="utm_source" />
+      <input type="text" name="utm_medium" />
+      <input type="text" name="utm_campaign" />
+      <input type="text" name="utm_content" />
+      <input type="text" name="utm_term" />
+      <input type="text" name="gclid" />
+      <input type="text" name="fbclid" />
+      <input type="text" name="landing_page" />
+      <input type="text" name="referrer" />
+      <input type="text" name="visitor_id" />
+      <input type="text" name="ga4_client_id" />
+      <input type="text" name="clarity_recording_url" />
+      <input type="text" name="visit_count" />
+      <input type="text" name="first_visit_at" />
+      <input type="text" name="session_duration_sec" />
+      <textarea name="behavior_json"></textarea>
+    </form>
+    <!-- deck-warm-lead (proposal/PDF/share without Send): soft CRM ping from warmLead.ts. No PII required.
+         Declared 2026-10-08 so Netlify keeps kind and attribution fields. -->
+    <form name="deck-warm-lead" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="kind" />
+      <input type="text" name="priced_subtotal" />
+      <input type="text" name="has_name" />
+      <input type="text" name="has_address" />
+      <input type="text" name="path" />
       <input type="text" name="utm_source" />
       <input type="text" name="utm_medium" />
       <input type="text" name="utm_campaign" />
