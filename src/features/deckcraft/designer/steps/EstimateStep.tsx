@@ -13,20 +13,16 @@ export interface EstimateStepProps{
   customer?:boolean;
   onSend:()=>void;onOpenProposal:()=>void;onDownloadPdf:()=>void;onSaveJSON:()=>void;onDownloadSummary:()=>void;
   onExport:(kind:'dxf'|'obj'|'dae'|'glb'|'materials'|'cuts'|'connectors')=>void;onOpenPermit:()=>void;
-  onCrewPack?:()=>void;onOpenJobs?:()=>void;onWarmShare?:()=>void;onOwnerCosts?:()=>void;
+  onCrewPack?:()=>void;onOpenJobs?:()=>void;onWarmShare?:()=>void;
 }
 
 /** The Proposal & files section: close pack (options → share → proposal → send), crew export, and contractor details. */
-export default function EstimateStep({data,update,estimate,ledger,material,railingName,designFacts,wrapped,reviewFlags,saved,preparing,pdfBusy,crewBusy,customer,onSend,onOpenProposal,onDownloadPdf,onSaveJSON,onDownloadSummary,onExport,onOpenPermit,onCrewPack,onOpenJobs,onWarmShare,onOwnerCosts}:EstimateStepProps){
+export default function EstimateStep({data,update,estimate,ledger,material,railingName,designFacts,wrapped,reviewFlags,saved,preparing,pdfBusy,crewBusy,customer,onSend,onOpenProposal,onDownloadPdf,onSaveJSON,onDownloadSummary,onExport,onOpenPermit,onCrewPack,onOpenJobs,onWarmShare}:EstimateStepProps){
   return <>
     <p>Your selected dimensions, materials, stairs, extras and backyard are priced using Golden Maple’s existing price book. Priced lines are planning allowances until a supplier or builder quote is recorded; products and work without a rate are listed for a quote.</p>
     <div className="dd-summary"><strong>{data.width} × {data.length} ft · {shapeWords(data,wrapped)}</strong><span>{material.name} · {data.deckingColor}</span><span>{data.stairFlights} stair flight(s) · {railingName} railing</span>{designFacts.map(fact=><span key={fact}>{fact}</span>)}</div>
     <PriceLedger ledger={ledger} variant="full"/>
-    {!customer&&onOwnerCosts&&<section className="dd-owner-costs-entry" aria-labelledby="dd-owner-costs-entry-title">
-      <h3 id="dd-owner-costs-entry-title">Your material &amp; labour costs</h3>
-      <p className="dd-note">Set your material markup, replace installation labour with your own CAD total (or crew × hours), and override priced material lines. Opens the private cost review for this job.</p>
-      <button type="button" className="dd-secondary" onClick={onOwnerCosts}>Edit your costs</button>
-    </section>}
+    {!customer&&<p className="dd-note">Owners: use <strong>Review quote costs</strong> on the price bar to edit material markup, installation labour, and priced material lines.</p>}
 
     <section className="dd-close-pack" aria-labelledby="dd-close-pack-title">
       <h3 id="dd-close-pack-title">Close this design</h3>

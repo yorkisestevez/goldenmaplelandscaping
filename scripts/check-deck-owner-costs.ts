@@ -43,7 +43,7 @@ const review=readFileSync(new URL('../src/features/deckcraft/designer/QuoteRevie
 const page=readFileSync(new URL('../src/pages/DeckDesigner.tsx',import.meta.url),'utf8');
 ok(panel.includes('Material markup')&&panel.includes('Your installation labour')&&panel.includes('Override priced material lines'),'Owner editor covers materials and labour');
 ok(review.includes('OwnerCostEditor')&&review.includes('variant="inline"'),'Quote review hosts the owner cost editor');
-ok(page.includes('onOwnerCosts')&&page.includes('setQuoteReviewOpen'),'Designer opens owner costs through quote review');
+ok(page.includes('setQuoteReviewOpen')&&page.includes('QuoteReviewPanel'),'Designer opens quote review for owner costs');
 ok(OWNER_COST_LIMITS.markupMax===500&&OWNER_COST_LIMITS.amountMax===1_000_000,'Owner cost limits match contractor preset bounds');
 
 console.log(`DECK OWNER COSTS OK — ${n} checks.`);
