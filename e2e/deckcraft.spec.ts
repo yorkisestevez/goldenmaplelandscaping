@@ -398,16 +398,22 @@ test('reaches every feature of the designer',async({page})=>{
     const tools=fileTools(page);await openFiles(page);
     await tools.getByRole('button',{name:'Share link',exact:true}).click();
     const link=await tools.getByLabel('Link to this design').inputValue();
-    // The visitor's own design is kept only when it differs from the shared one.
+    // The link is the design as shared. A later edit stays on this device, and opening the link
+    // shows the shared copy. Autosave can flash the edited size while that copy is decoded.
     await openSection(page,'Deck shape & size');
     await setNumber(page,'Deck width',24);
     await expect(size(page)).toContainText('24 × 12 ft');
     await page.waitForTimeout(800);// autosave runs 450 ms after the last change
     await page.goto(link);
-    await expect(size(page)).toContainText('24 × 12 ft');
+    // The edited size can flash while the saved project restores. The shared copy is in place once the page says so.
+    await expect(tools).toContainText('shared with you');
+    await expect(size(page)).toContainText('16 × 12 ft');
     await showCanvas(page);
     await openFiles(page);
-    await reach('Go back to my own design',tools.getByRole('button',{name:'Go back to my own design'}));
+    const back=tools.getByRole('button',{name:'Go back to my own design'});
+    await reach('Go back to my own design',back);
+    await back.click();
+    await expect(size(page)).toContainText('24 × 12 ft');
   });
   expect(problems).toEqual([]);
 });
