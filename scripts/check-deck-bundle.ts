@@ -76,6 +76,8 @@ import {basename} from 'node:path';
 // October 8 (HD hardware + G-Tape + 6×6 posts): connector schedule and post stock notes pull more into the
 // eager estimate graph — route 272 → 274.5 KB gzip. Raised to 276 KB for that hardware-rates round.
 // Same round: option-deltas worker graph 207 → 210.1 KB gzip. Raised to 212 KB.
+// October 8 (stair cladding / picture-frame / fascia finish): priced finish helpers ride with the estimate
+// graph into the option-deltas worker — 210.1 → 210.9 KB gzip; stays within 212 KB.
 const BUDGET_KB={routeInitial:276,routeCss:12,viewer:340,pdf:150,deltaWorker:212,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
