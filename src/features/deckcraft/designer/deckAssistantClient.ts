@@ -1,5 +1,6 @@
 import type {AgentRequest,AgentSnapshot} from './deckAgentController';
 import type {AssistedSelection} from './naturalLanguageCommands';
+import type {ExpertId} from './expertAgents';
 
 
 export interface AssistantTurn {role:'user'|'assistant';content:string}
@@ -8,7 +9,8 @@ export type AssistantSource='local-ai'|'cloud-ai';
 export interface AssistantAvailability {ready:boolean;source:AssistantSource|'exact-only';model?:string;message:string}
 export type AssistantInterpretation=
  |{kind:'edit';request:AgentRequest;summary:string[];assumptions:string[];source:AssistantSource|'exact';model?:string;message:string}
- |{kind:'clarify';question:string;choices:string[];source:AssistantSource|'exact';model?:string;message:string};
+ |{kind:'clarify';question:string;choices:string[];source:AssistantSource|'exact';model?:string;message:string}
+ |{kind:'advice';message:string;assumptions:string[];question:string;choices:string[];source:AssistantSource|'exact';model?:string};
 const ENDPOINT='/.netlify/functions/deck-assistant';
 const unavailable='AI interpretation is not connected here. Measured instructions still work; try “make the deck 20 by 14 feet”.';
 const boundedText=(value:unknown,max:number)=>typeof value==='string'?value.trim().slice(0,max):'';
@@ -50,17 +52,18 @@ export async function checkAssistantAvailability(signal?:AbortSignal):Promise<As
 }
 
 /** Model proposals never directly mutate the design. The UI previews through the existing controller. */
-export async function interpretAssistantRequest(text:string,snapshot:AgentSnapshot,selection:AssistedSelection,conversation:AssistantTurn[]=[],signal?:AbortSignal):Promise<AssistantInterpretation>{
+export async function interpretAssistantRequest(text:string,snapshot:AgentSnapshot,selection:AssistedSelection,conversation:AssistantTurn[]=[],signal?:AbortSignal,expert:ExpertId='general'):Promise<AssistantInterpretation>{
  if(signal?.aborted)throw signal.reason??new DOMException('Cancelled','AbortError');
  if(!snapshot.ready)throw Error('Wait until the design has finished restoring.');
  if(typeof text!=='string'||!text.trim()||text.length>1200)throw Error('Describe the change in up to 1,200 characters.');
  if(!Array.isArray(conversation)||conversation.length>8||conversation.some(t=>!t||!['user','assistant'].includes(t.role)||typeof t.content!=='string'||t.content.length>1200)||conversation.reduce((n,t)=>n+t.content.length,0)>8000)throw Error('This conversation is too long. Start a new request.');
  if(!conversation.length){const {parseNaturalLanguageCommands}=await import('./naturalLanguageCommands');if(signal?.aborted)throw signal.reason??new DOMException('Cancelled','AbortError');const exact=parseNaturalLanguageCommands(text,snapshot,selection);if(exact.ok===true)return {kind:'edit',request:exact.request,summary:exact.summary,assumptions:[],source:'exact',message:'Understood as a measured edit.'};if(exact.localOnly)return {kind:'clarify',question:exact.clarification,choices:[],source:'exact',message:exact.clarification};}
  const {buildAssistantContext,parseAssistantPlan,assistantPlanRequest}=await import('./assistantPlan');
- const response=await untilDone(await jsonRequest('POST',{prompt:text.trim(),context:buildAssistantContext(snapshot,selection),conversation:conversation.map(t=>({role:t.role,content:t.content}))},signal),signal);
+ const response=await untilDone(await jsonRequest('POST',{prompt:text.trim(),context:buildAssistantContext(snapshot,selection),conversation:conversation.map(t=>({role:t.role,content:t.content})),expert},signal),signal);
  if(response.ok!==true||!isSource(response.source))throw Error('AI interpretation did not complete. No edit was applied.');
  const source=response.source,parsed=parseAssistantPlan(response.plan);if(parsed.ok===false)throw Error(`The proposed edit was not valid: ${parsed.error}`);
  const plan=parsed.plan,model=boundedText(response.model,100);
  if(plan.kind==='clarify')return {kind:'clarify',question:plan.question,choices:plan.choices,message:plan.message,source,model};
+ if(plan.kind==='advice')return {kind:'advice',message:plan.message,assumptions:plan.assumptions,question:plan.question,choices:plan.choices,source,model};
  return {kind:'edit',request:assistantPlanRequest(plan,{id:`assistant-${crypto.randomUUID()}`,expectedRevision:snapshot.revision,snapshot,selection,requestText:text}),summary:[plan.message],assumptions:plan.assumptions,source,model,message:plan.message};
 }

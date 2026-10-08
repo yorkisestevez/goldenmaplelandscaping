@@ -7,11 +7,12 @@ import {resolveWorkspaceSelection,workspaceObjects} from './workspaceVoiceComman
 import {createPortal} from 'react-dom';
 import type {AgentRequest} from './deckAgentController';
 import type {AssistedSelection} from './naturalLanguageCommands';
+import type {ExpertId} from './expertAgents';
 import './assistantWorkspace.css';
 const NaturalLanguagePanel=lazy(()=>import('./NaturalLanguagePanel'));
 
 /** Loaded after hydration so the editor's first route does not include its automation console. */
-export default function DeckAgentBridge({adapter,open,onClose,plainLanguageOpen=false,onClosePlainLanguage,selection={partIds:[],boards:[]},dockTargetId,onTargetsChange,onSelect,onPreviewDesign}:{adapter:DeckAgentAdapter;open:boolean;onClose:()=>void;plainLanguageOpen?:boolean;onClosePlainLanguage?:()=>void;selection?:AssistedSelection;dockTargetId?:string;onTargetsChange?:(request:AgentRequest|null)=>void;onSelect?:(selection:SelectionState)=>void;onPreviewDesign?:(design:AgentSnapshot['design']|null)=>void}){
+export default function DeckAgentBridge({adapter,open,onClose,plainLanguageOpen=false,onClosePlainLanguage,selection={partIds:[],boards:[]},dockTargetId,onTargetsChange,onSelect,onPreviewDesign,initialExpert='general'}:{adapter:DeckAgentAdapter;open:boolean;onClose:()=>void;plainLanguageOpen?:boolean;onClosePlainLanguage?:()=>void;selection?:AssistedSelection;dockTargetId?:string;onTargetsChange?:(request:AgentRequest|null)=>void;onSelect?:(selection:SelectionState)=>void;onPreviewDesign?:(design:AgentSnapshot['design']|null)=>void;initialExpert?:ExpertId}){
   const controller=useDeckAgentController(adapter);
   const current=useRef({selection,onSelect});current.current={selection,onSelect};
   useEffect(()=>{
@@ -20,6 +21,6 @@ export default function DeckAgentBridge({adapter,open,onClose,plainLanguageOpen=
     host.deckcraftWorkspace=api;return()=>{if(host.deckcraftWorkspace===api)host.deckcraftWorkspace=previous;};
   },[controller]);
   const target=dockTargetId&&typeof document!=='undefined'?document.getElementById(dockTargetId):null;
-  const panel=plainLanguageOpen&&<Suspense fallback={<p role="status">Opening edit assistant…</p>}><NaturalLanguagePanel presentation={dockTargetId?'dock':'dialog'} controller={controller} onSelect={onSelect} onPreviewDesign={onPreviewDesign} selection={selection} onTargetsChange={onTargetsChange} onClose={()=>onClosePlainLanguage?.()}/></Suspense>;
+  const panel=plainLanguageOpen&&<Suspense fallback={<p role="status">Opening edit assistant…</p>}><NaturalLanguagePanel presentation={dockTargetId?'dock':'dialog'} controller={controller} onSelect={onSelect} onPreviewDesign={onPreviewDesign} selection={selection} onTargetsChange={onTargetsChange} initialExpert={initialExpert} onClose={()=>onClosePlainLanguage?.()}/></Suspense>;
   return <><AgentControlPanel controller={controller} open={open} onClose={onClose}/>{target?createPortal(panel,target):panel}</>;
 }

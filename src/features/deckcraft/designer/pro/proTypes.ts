@@ -19,6 +19,8 @@ export interface ProPage{
   setPresetsOpen:(open:boolean)=>void;setPermitOpen:(open:boolean)=>void;setJobsOpen:(open:boolean)=>void;setSendOpen:(open:boolean)=>void;
   setQuoteReviewOpen:(open:boolean)=>void;setIssuesOpen:(open:boolean)=>void;setSketchOpen:(open:boolean)=>void;
   setAgentOpen:(open:boolean)=>void;setAskOpen:(open:boolean)=>void;
+  /** Opens the design assistant dock on a named expert (layout, decking, outdoor, build, …). */
+  setAskExpert:(expert:import('../expertAgents').ExpertId)=>void;
 }
 
 /** The design-wide commands the Pro ribbon needs (the drawing panel owns tools and sheets). */
@@ -35,13 +37,13 @@ export interface ProMenuActions extends ProCommands{
   saveFile:()=>void;jobs:()=>void;
   proposal:()=>void;pdf:()=>void;exportDxf:()=>void;exportObj:()=>void;exportPlanDxf:()=>void;send:()=>void;
   tool:(tool:PlanTool)=>void;sheet:(mode:PreviewMode)=>void;
-  quoteCosts:()=>void;fullList:()=>void;ask:()=>void;issues:()=>void;sketch:()=>void;agents:()=>void;
+  quoteCosts:()=>void;fullList:()=>void;ask:()=>void;askExpert:(expert:import('../expertAgents').ExpertId)=>void;issues:()=>void;sketch:()=>void;agents:()=>void;
 }
 export const proMenuActions=(p:ProPage):ProMenuActions=>({...proCommands(p),ready:p.ready,issueCount:p.issueCount,
   saveFile:()=>p.saveJSON(),jobs:()=>p.setJobsOpen(true),
   proposal:()=>void p.openProposal(),pdf:()=>void p.downloadPdf(),exportDxf:()=>void p.exportModel('dxf'),exportObj:()=>void p.exportModel('obj'),exportPlanDxf:()=>void p.exportPermit('dxf2d'),send:()=>p.setSendOpen(true),
   tool:next=>{p.setPlanTool(next);p.setMode('plan');p.showCanvas();},sheet:next=>{p.setMode(next);p.showCanvas();},
-  quoteCosts:()=>p.setQuoteReviewOpen(true),fullList:p.showFullList,ask:()=>{p.showCanvas();p.setAskOpen(true);},issues:()=>p.setIssuesOpen(true),
+  quoteCosts:()=>p.setQuoteReviewOpen(true),fullList:p.showFullList,ask:()=>{p.showCanvas();p.setAskOpen(true);},askExpert:expert=>{p.setAskExpert(expert);},issues:()=>p.setIssuesOpen(true),
   sketch:()=>p.setSketchOpen(true),agents:()=>p.setAgentOpen(true)});
 
 export type ProMenuItem={label:string;run:()=>void;keys?:string;disabled?:boolean;dialog?:boolean};

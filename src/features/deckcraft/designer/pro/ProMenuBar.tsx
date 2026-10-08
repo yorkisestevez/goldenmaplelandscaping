@@ -38,6 +38,10 @@ export function proMenus(a:ProMenuActions,wizard:(kind:WizardKind)=>void=()=>{})
       {label:'Edit shape & points',run:()=>a.tool('outline')},
       '-',
       {label:'Describe a change…',run:a.ask},
+      {label:'Layout expert…',run:()=>a.askExpert('design')},
+      {label:'Decking expert…',run:()=>a.askExpert('decking')},
+      {label:'Outdoor living expert…',run:()=>a.askExpert('outdoor')},
+      {label:'Construction expert…',run:()=>a.askExpert('construction')},
     ]},
     {label:'Add',items:[
       {label:'Deck shape & size',run:()=>a.openSection('deck')},
