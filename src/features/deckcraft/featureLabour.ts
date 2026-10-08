@@ -61,14 +61,17 @@ export const DEFAULT_FEATURE_LABOUR:FeatureLabourSettings={
 };
 
 const fail=(m:string):never=>{throw Error(m);};
-function money(n:unknown,label:string){
-  if(typeof n!=='number'||!Number.isFinite(n)||n<0||n>1_000_000||Math.abs(n*100-Math.round(n*100))>1e-6)fail(`${label} must be a CAD amount with at most two decimals.`);
-  return Math.round(n*100)/100;
+function money(n:unknown,label:string):number{
+  if(typeof n!=='number'||!Number.isFinite(n)||n<0||n>1_000_000)fail(`${label} must be a CAD amount with at most two decimals.`);
+  const amount=n as number;
+  if(Math.abs(amount*100-Math.round(amount*100))>1e-6)fail(`${label} must be a CAD amount with at most two decimals.`);
+  return Math.round(amount*100)/100;
 }
-function positive(n:unknown,label:string,max:number,step:number){
+function positive(n:unknown,label:string,max:number,step:number):number{
   if(typeof n!=='number'||!Number.isFinite(n)||n<=0||n>max)fail(`${label} must be greater than 0 and at most ${max}.`);
-  if(Math.abs(n/step-Math.round(n/step))>1e-9)fail(`${label} must use ${step} steps.`);
-  return n;
+  const amount=n as number;
+  if(Math.abs(amount/step-Math.round(amount/step))>1e-9)fail(`${label} must use ${step} steps.`);
+  return amount;
 }
 
 export function validateFeatureLabour(raw:unknown):FeatureLabourSettings{
@@ -94,7 +97,12 @@ export function validateFeatureLabour(raw:unknown):FeatureLabourSettings{
   return {version:1,personHourRate,scopes};
 }
 
-export function mergeFeatureLabour(base:FeatureLabourSettings|undefined,patch:Partial<FeatureLabourSettings>):FeatureLabourSettings{
+export type FeatureLabourPatch={
+  personHourRate?:number;
+  scopes?:Partial<Record<FeatureLabourScope,Partial<FeatureLabourScopeSettings>>>;
+};
+
+export function mergeFeatureLabour(base:FeatureLabourSettings|undefined,patch:FeatureLabourPatch):FeatureLabourSettings{
   const cur=validateFeatureLabour(base);
   return validateFeatureLabour({
     version:1,

@@ -12,6 +12,7 @@ import {
   saveFeatureLabourDefaults,
   validateFeatureLabour,
   type FeatureLabourScope,
+  type FeatureLabourScopeSettings,
   type FeatureLabourSettings,
 } from '../featureLabour';
 import {DEFAULT_CREW_MEMBERS,DEFAULT_PERSON_HOUR_RATE,quoteCostFromCrewHours} from './quoteLabourHours';
@@ -63,8 +64,8 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
       setError('');setStatus('Inlay & special-feature labour updated for this job.');
     }catch(e){setFeature(validateFeatureLabour(data.featureLabour));setError(e instanceof Error?e.message:'Feature labour settings could not be saved.');}
   };
-  const patchScope=(id:FeatureLabourScope,patch:Partial<FeatureLabourSettings['scopes'][FeatureLabourScope]>)=>{
-    commitFeature(mergeFeatureLabour(feature,{scopes:{[id]:{...feature.scopes[id],...patch}} as FeatureLabourSettings['scopes']}));
+  const patchScope=(id:FeatureLabourScope,patch:Partial<FeatureLabourScopeSettings>)=>{
+    commitFeature(mergeFeatureLabour(feature,{scopes:{[id]:{...feature.scopes[id],...patch}}}));
   };
 
   const materialLines=useMemo(()=>estimate.sections
@@ -199,9 +200,9 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
           </label>
           {s.mode==='crew-hours'&&<>
             <div className="dd-owner-costs-grid">
-              <label>Crew members<input aria-label={`${FEATURE_LABOUR_LABELS[id]} crew`} type="number" min="1" max="12" step="1" value={s.crewMembers} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],crewMembers:Number(e.target.value)}}))} onBlur={e=>patchScope(id,{crewMembers:Number(e.target.value)})}/></label>
-              <label>Hours{s.hoursPerUnit?' / unit':''}<input aria-label={`${FEATURE_LABOUR_LABELS[id]} hours`} type="number" min=".25" max="999" step=".25" value={s.hours} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],hours:Number(e.target.value)}}))} onBlur={e=>patchScope(id,{hours:Number(e.target.value)})}/></label>
-              <label>Extra materials · CAD<input aria-label={`${FEATURE_LABOUR_LABELS[id]} materials`} type="number" min="0" max={OWNER_COST_LIMITS.amountMax} step=".01" value={s.materialsCad} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],materialsCad:Number(e.target.value)}}))} onBlur={e=>patchScope(id,{materialsCad:Number(e.target.value)})}/></label>
+              <label>Crew members<input aria-label={`${FEATURE_LABOUR_LABELS[id]} crew`} type="number" min="1" max="12" step="1" value={s.crewMembers} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],crewMembers:Number(e.target.value)}}}))} onBlur={e=>patchScope(id,{crewMembers:Number(e.target.value)})}/></label>
+              <label>Hours{s.hoursPerUnit?' / unit':''}<input aria-label={`${FEATURE_LABOUR_LABELS[id]} hours`} type="number" min=".25" max="999" step=".25" value={s.hours} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],hours:Number(e.target.value)}}}))} onBlur={e=>patchScope(id,{hours:Number(e.target.value)})}/></label>
+              <label>Extra materials · CAD<input aria-label={`${FEATURE_LABOUR_LABELS[id]} materials`} type="number" min="0" max={OWNER_COST_LIMITS.amountMax} step=".01" value={s.materialsCad} onChange={e=>setFeature(f=>({...f,scopes:{...f.scopes,[id]:{...f.scopes[id],materialsCad:Number(e.target.value)}}}))} onBlur={e=>patchScope(id,{materialsCad:Number(e.target.value)})}/></label>
             </div>
             <label className="dd-owner-costs-check"><input type="checkbox" checked={s.hoursPerUnit} onChange={e=>patchScope(id,{hoursPerUnit:e.target.checked})}/> Hours are per board / medallion / inlay</label>
           </>}
