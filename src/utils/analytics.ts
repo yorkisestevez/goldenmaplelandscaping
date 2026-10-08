@@ -101,20 +101,43 @@ let pixelScriptRequested = false;
 let clarityScriptRequested = false;
 let deferredArmed = false;
 
+type FbqStub = NonNullable<Window['fbq']> & {
+  queue: unknown[];
+  loaded?: boolean;
+  version?: string;
+  push?: FbqStub;
+  callMethod?: (...args: unknown[]) => void;
+};
+
+/**
+ * Meta's snippet. Callers use `fbq?.()`, and an optional call does not bind
+ * `this` to the function, so `this.queue` throws and takes the page down.
+ * The queue lives on the function object (`n.queue`), the same way Meta writes it.
+ */
 function installFbqStub(): void {
   if (!isBrowser || window.fbq) return;
-  const n = function fbq(this: { callMethod?: (...args: unknown[]) => void; queue: unknown[] }) {
+  let n: FbqStub;
+  n = function fbq() {
     // eslint-disable-next-line prefer-rest-params
     const args = arguments;
-    if (typeof this.callMethod === 'function') this.callMethod.apply(this, args as unknown as unknown[]);
-    else this.queue.push(args);
-  } as Window['fbq'] & { queue: unknown[]; loaded?: boolean; version?: string; push?: unknown };
+    if (typeof n.callMethod === 'function') n.callMethod.apply(n, args as unknown as unknown[]);
+    else n.queue.push(args);
+  } as FbqStub;
   window.fbq = n;
   if (!window._fbq) window._fbq = n;
   n.push = n;
   n.loaded = true;
   n.version = '2.0';
   n.queue = [];
+}
+
+/** A tracker failure must not reject the React render. */
+function guardAnalytics(run: () => void): void {
+  try {
+    run();
+  } catch (error) {
+    if (isDev) console.warn('[analytics] swallowed', error);
+  }
 }
 
 /** Queue Meta events immediately once consent is granted; the network script waits. */
@@ -138,6 +161,7 @@ function loadClarity(): void {
   if (!isBrowser || !CLARITY_ID || clarityScriptRequested) return;
   clarityScriptRequested = true;
   /* eslint-disable */
+  // Queue on c[a], not `this`. Optional calls do not bind the function.
   (function (c: any, l: Document, a: string, r: string, i: string) {
     c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
     const t = l.createElement(r) as HTMLScriptElement;
@@ -155,11 +179,13 @@ function scheduleDeferredTrackers(): void {
   armMeta();
   let started = false;
   const start = () => {
-    if (started) return;
-    started = true;
-    cleanup();
-    loadMetaScript();
-    loadClarity();
+    guardAnalytics(() => {
+      if (started) return;
+      started = true;
+      cleanup();
+      loadMetaScript();
+      loadClarity();
+    });
   };
   const events = ['pointerdown', 'keydown', 'touchstart'] as const;
   const cleanup = () => {
@@ -170,20 +196,23 @@ function scheduleDeferredTrackers(): void {
 }
 
 export function applyConsent(choice: ConsentChoice): void {
-  if (!isBrowser) return;
-  try {
-    localStorage.setItem(CONSENT_KEY, choice);
-  } catch {
-    /* private mode */
-  }
-  window.gtag?.('consent', 'update', consentUpdate(choice));
-  if (choice === 'granted') scheduleDeferredTrackers();
+  guardAnalytics(() => {
+    if (!isBrowser) return;
+    try {
+      localStorage.setItem(CONSENT_KEY, choice);
+    } catch {
+      /* private mode */
+    }
+    window.gtag?.('consent', 'update', consentUpdate(choice));
+    if (choice === 'granted') scheduleDeferredTrackers();
+  });
 }
 
 function ensureGtagStub(): boolean {
   const hadStub = typeof window.gtag === 'function';
   window.dataLayer = window.dataLayer || [];
   if (!hadStub) {
+    // Push onto window.dataLayer, not `this`. Optional calls do not bind the function.
     window.gtag = function gtag() {
       // eslint-disable-next-line prefer-rest-params
       window.dataLayer!.push(arguments as unknown as unknown[]);
@@ -259,6 +288,10 @@ function emitPageView(path: string, title: string | undefined, includeAds: boole
  * directly; commands issued after it stay on dataLayer until the script runs.
  */
 function loadGoogleTag(): void {
+  guardAnalytics(loadGoogleTagNow);
+}
+
+function loadGoogleTagNow(): void {
   if (!isBrowser || googleTagLoading || googleTagLoaded) return;
   if (!GA4_ID && !GOOGLE_ADS_ID) {
     googleTagLoaded = true;
@@ -299,6 +332,10 @@ function loadGoogleTag(): void {
 
 /** Boot deferred trackers. Call once on app mount. Idempotent. */
 export function initAnalytics(): void {
+  guardAnalytics(bootAnalytics);
+}
+
+function bootAnalytics(): void {
   if (!isBrowser || initialized) return;
   initialized = true;
 
@@ -320,6 +357,10 @@ export function initAnalytics(): void {
 
 /** One GA4 page_view and, after the first page, one Ads page_view. */
 export function trackPageView(path: string, title?: string): void {
+  guardAnalytics(() => trackPageViewNow(path, title));
+}
+
+function trackPageViewNow(path: string, title?: string): void {
   if (!isBrowser) return;
   const snapshot = title || document.title;
   if (!googleTagLoaded) {
@@ -347,6 +388,17 @@ export function trackPageView(path: string, title?: string): void {
 export function trackLead(
   formName: string,
   tier: 'high-intent' | 'top-of-funnel' = 'high-intent',
+  value?: number,
+  eventId?: string,
+  identifiers?: { email?: string | null; phone?: string | null },
+  qualification?: { payload?: LeadFormFields; skipQualification?: boolean },
+): void {
+  guardAnalytics(() => trackLeadNow(formName, tier, value, eventId, identifiers, qualification));
+}
+
+function trackLeadNow(
+  formName: string,
+  tier: 'high-intent' | 'top-of-funnel',
   value?: number,
   eventId?: string,
   identifiers?: { email?: string | null; phone?: string | null },
@@ -415,6 +467,10 @@ export function trackLead(
  * and do not fire the page-load Contact conversion from here.
  */
 export function trackCall(label = 'phone_call'): void {
+  guardAnalytics(() => trackCallNow(label));
+}
+
+function trackCallNow(label: string): void {
   if (!isBrowser) return;
   loadGoogleTag();
   if (GA4_ID) {
@@ -429,6 +485,10 @@ export function trackCall(label = 'phone_call'): void {
 
 /** Generic engagement event for non-lead actions (PDF download, video play, etc). */
 export function trackEngagement(action: string, label?: string): void {
+  guardAnalytics(() => trackEngagementNow(action, label));
+}
+
+function trackEngagementNow(action: string, label?: string): void {
   if (!isBrowser) return;
   if (GA4_ID) {
     window.gtag?.('event', action, { event_label: label });

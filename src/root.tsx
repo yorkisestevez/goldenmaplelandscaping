@@ -90,9 +90,13 @@ export default function App() {
 
   // Client-only analytics + attribution init (was in App.tsx).
   useEffect(() => {
-    initAttributionCapture();
-    initBehaviorCapture();
-    initAnalytics();
+    try {
+      initAttributionCapture();
+      initBehaviorCapture();
+      initAnalytics();
+    } catch {
+      /* A tracker must not take the page down. */
+    }
     return onInteractOrIdle(() => {
       const fonts = document.getElementById('gm-fonts');
       if (fonts instanceof HTMLLinkElement) fonts.media = 'all';
@@ -102,7 +106,11 @@ export default function App() {
   // GA4 + Meta Pixel page_view + scroll-to-top on route change.
   useEffect(() => {
     if (typeof window !== 'undefined') window.scrollTo(0, 0);
-    trackPageView(location.pathname + location.search);
+    try {
+      trackPageView(location.pathname + location.search);
+    } catch {
+      /* A tracker must not take the page down. */
+    }
   }, [location.pathname, location.search]);
 
   // The deck designer stays chrome-less. The cost estimator uses the site

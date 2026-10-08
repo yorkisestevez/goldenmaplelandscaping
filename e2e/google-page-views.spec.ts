@@ -132,3 +132,51 @@ test('a call click before gtag.js arrives is queued and then sent',async({page})
   release();
   await expect.poll(()=>conversions.length,{timeout:10_000}).toBeGreaterThan(0);
 });
+
+test('accepted consent renders, navigates, and sends one page view per tag',async({page})=>{
+  test.setTimeout(150_000);
+  const errors:string[] = [];
+  page.on('pageerror',error=>errors.push(`${error.name}: ${error.message}`));
+  const hits:Hit[] = [];
+  page.on('request',req=>note(req,hits));
+
+  const healthy = async () => {
+    await expect(page.getByRole('heading',{level:1})).toBeVisible();
+    await expect(page.getByText('Application Error')).toHaveCount(0);
+    expect(errors,errors.join('\n')).toEqual([]);
+  };
+  const expectOneEach = async (from:number) => {
+    await expect.poll(()=>hits.slice(from).filter(hit=>hit.kind==='G').length,{timeout:12_000}).toBe(1);
+    await expect.poll(()=>hits.slice(from).filter(hit=>hit.kind==='AW').length,{timeout:12_000}).toBe(1);
+    await page.waitForTimeout(5_500);
+    const mine = hits.slice(from);
+    expect(mine.filter(hit=>hit.kind==='G'),mine.map(hit=>`${hit.kind} ${hit.path}`).join(', ')).toHaveLength(1);
+    expect(mine.filter(hit=>hit.kind==='AW')).toHaveLength(1);
+    const title = await page.title();
+    const path = pathOf(page.url());
+    for(const hit of mine){
+      expect(hit.title).toBe(title);
+      expect(pathOf(new URL(hit.path,page.url()).href)).toBe(path);
+    }
+  };
+
+  await page.goto('/',{waitUntil:'domcontentloaded'});
+  await page.getByRole('button',{name:'Accept',exact:true}).click();
+  await healthy();
+  await expectOneEach(0);
+
+  for(const href of ['/contact/','/about/']){
+    const from = hits.length;
+    await page.locator(`a[href="${href}"]`).first().click();
+    await page.waitForURL(url=>pathOf(url.href)===pathOf(href));
+    await healthy();
+    await expectOneEach(from);
+  }
+
+  const from = hits.length;
+  await page.reload({waitUntil:'domcontentloaded'});
+  await healthy();
+  await expect.poll(()=>page.evaluate(()=>localStorage.getItem('gm-consent'))).toBe('granted');
+  await expectOneEach(from);
+  console.log(hits.map(hit=>`${hit.kind} ${hit.title} ${hit.path}`).join('\n'));
+});
