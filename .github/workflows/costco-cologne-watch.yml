@@ -1,0 +1,65 @@
+name: Costco $99 cologne Ontario watch
+
+# Public Reddit JSON only. Emails Gmail when Ontario locations/deals change.
+# Inert (exit 0) until GMAIL_USER + GMAIL_APP_PASSWORD secrets are set.
+# See scripts/costco-deal-watcher/README.md
+
+on:
+  schedule:
+    - cron: '0 14 * * *'   # 10:00 America/Toronto (EST); 11:00 EDT
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'scripts/costco-deal-watcher/**'
+      - '.github/workflows/costco-cologne-watch.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/costco-deal-watcher/**'
+      - '.github/workflows/costco-cologne-watch.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: costco-cologne-watch
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Extractor tests
+        run: node --test scripts/costco-deal-watcher/*.test.mjs
+
+  watch:
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore previous digest state
+        uses: actions/cache@v4
+        with:
+          path: scripts/costco-deal-watcher/state.json
+          key: costco-cologne-watch-${{ github.run_id }}
+          restore-keys: |
+            costco-cologne-watch-
+
+      - name: Run watcher
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          GMAIL_TO: ${{ secrets.GMAIL_TO }}
+        run: node scripts/costco-deal-watcher/watch.mjs --email
