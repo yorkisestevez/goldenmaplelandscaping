@@ -141,7 +141,7 @@ export function priceFeatureLabourScope(settings:FeatureLabourSettings|undefined
     crewMembers:s.crewMembers,
     hours,
     units,
-    spec:`${basis} = ${manHours} man-hours @ CAD ${cfg.personHourRate.toFixed(2)}/h${supplyCost>0?`; extra materials $${supplyCost.toFixed(2)}`:''}.`,
+    spec:`Planning allowance (${basis} = ${manHours} man-hours @ CAD ${cfg.personHourRate.toFixed(2)}/h → labour $${installationCost.toFixed(2)}${supplyCost>0?`; extra materials $${supplyCost.toFixed(2)}`:''}). Boards/blocking are priced separately. Edit in Owner costs · Inlays & special features.`,
   };
 }
 

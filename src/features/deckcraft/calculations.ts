@@ -735,12 +735,12 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
     const labour=sections.find(s=>s.title==='Labour (Construction & Build)');
     if(accent&&labour){
       if(featureLabourIsQuote(data.featureLabour,'accent')){
-        labour.quoteRequired=true;labour.items.push({name:'Accent-colour board labour',spec:`Builder quote required: laying out and fitting ${accent.pieces} accent-colour board${accent.pieces===1?'':'s'}.`,qty:accent.pieces,unit:'boards',cost:null});
+        labour.quoteRequired=true;labour.items.push({name:'Accent-colour board labour',spec:`Builder quote required: laying out and fitting ${accent.pieces} accent-colour board${accent.pieces===1?'':'s'}. Switch to crew-hours in Owner costs · Inlays & special features to apply your default man-hours.`,qty:accent.pieces,unit:'boards',cost:null});
         quoteRequired.push('Accent-colour board labour (builder quote)');
       }else{
         const priced=priceFeatureLabourScope(data.featureLabour,'accent',accent.pieces);
         if(priced){labour.items.push({name:priced.label,spec:priced.spec,qty:accent.pieces,unit:'boards',cost:priced.installationCost,laborCost:priced.installationCost});labour.total+=priced.installationCost;
-          if(priced.supplyCost>0){const mat=priced.supplyCost*markupMult;labour.items.push({name:`${priced.label} · extra materials`,spec:'Extra consumables at the material markup.',qty:1,unit:'allowance',cost:mat});labour.total+=mat;}}
+          if(priced.supplyCost>0){const mat=priced.supplyCost*markupMult;labour.items.push({name:`${priced.label} · extra materials`,spec:`Extra consumables for accent fitting at this job’s material markup.`,qty:1,unit:'allowance',cost:mat});labour.total+=mat;}}
       }
     }
     if(accentRows.some(r=>r.group.material.id.split('_')[0]!==deckingMaterial.split('_')[0]))flags.push('Accent boards from a different manufacturer than the decking: confirm the board gap, hidden fasteners and warranty with the supplier before ordering.');
@@ -752,12 +752,12 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
     const labour=sections.find(s=>s.title==='Labour (Construction & Build)'),n=medallions.length,fill=medallions.reduce((a,p)=>a+p.fillSqft,0).toFixed(1);
     if(labour){
       if(featureLabourIsQuote(data.featureLabour,'medallion')){
-        labour.quoteRequired=true;labour.items.push({name:'Medallion inlay labour',spec:`Builder quote required: laying out, cutting and fitting ${n===1?'a medallion inlay':`${n} medallion inlays`} (${fill} sq ft).`,qty:n,unit:n===1?'medallion':'medallions',cost:null});
+        labour.quoteRequired=true;labour.items.push({name:'Medallion inlay labour',spec:`Builder quote required: laying out, cutting and fitting ${n===1?'a medallion inlay':`${n} medallion inlays`} (${fill} sq ft). Switch to crew-hours in Owner costs · Inlays & special features.`,qty:n,unit:n===1?'medallion':'medallions',cost:null});
         quoteRequired.push('Medallion inlay labour (builder quote)');
       }else{
         const priced=priceFeatureLabourScope(data.featureLabour,'medallion',n);
         if(priced){labour.items.push({name:priced.label,spec:`${priced.spec} (${fill} sq ft inside the frame${n===1?'':'s'}).`,qty:n,unit:n===1?'medallion':'medallions',cost:priced.installationCost,laborCost:priced.installationCost});labour.total+=priced.installationCost;
-          if(priced.supplyCost>0){const mat=priced.supplyCost*markupMult;labour.items.push({name:`${priced.label} · extra materials`,spec:'Extra consumables at the material markup.',qty:1,unit:'allowance',cost:mat});labour.total+=mat;}}
+          if(priced.supplyCost>0){const mat=priced.supplyCost*markupMult;labour.items.push({name:`${priced.label} · extra materials`,spec:`Extra consumables for medallion fitting at this job’s material markup.`,qty:1,unit:'allowance',cost:mat});labour.total+=mat;}}
       }
     }
   }
@@ -766,12 +766,12 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
     const labour=sections.find(s=>s.title==='Labour (Construction & Build)'),n=customInlays.length,fill=customInlays.reduce((a,p)=>a+p.fillSqft,0).toFixed(1);
     if(labour){
       if(featureLabourIsQuote(data.featureLabour,'customInlay')){
-        labour.quoteRequired=true;labour.items.push({name:'Custom inlay fabrication labour',spec:`Builder quote required: laying out, cutting, fitting and supporting ${n} custom or rotated inlay${n===1?'':'s'} (${fill} sq ft).`,qty:n,unit:n===1?'inlay':'inlays',cost:null});
+        labour.quoteRequired=true;labour.items.push({name:'Custom inlay fabrication labour',spec:`Builder quote required: laying out, cutting, fitting and supporting ${n} custom or rotated inlay${n===1?'':'s'} (${fill} sq ft). Switch to crew-hours in Owner costs · Inlays & special features.`,qty:n,unit:n===1?'inlay':'inlays',cost:null});
         quoteRequired.push('Custom inlay fabrication labour (builder quote)');
       }else{
         const priced=priceFeatureLabourScope(data.featureLabour,'customInlay',n);
         if(priced){labour.items.push({name:priced.label,spec:`${priced.spec} (${fill} sq ft inside the frame).`,qty:n,unit:n===1?'inlay':'inlays',cost:priced.installationCost,laborCost:priced.installationCost});labour.total+=priced.installationCost;
-          if(priced.supplyCost>0){const mat=priced.supplyCost*markupMult;labour.items.push({name:`${priced.label} · extra materials`,spec:'Extra consumables at the material markup.',qty:1,unit:'allowance',cost:mat});labour.total+=mat;}}
+          if(priced.supplyCost>0){const mat=priced.supplyCost*markupMult;labour.items.push({name:`${priced.label} · extra materials`,spec:`Extra consumables for custom inlay fitting at this job’s material markup.`,qty:1,unit:'allowance',cost:mat});labour.total+=mat;}}
       }
     }
   }
@@ -823,7 +823,7 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
   const skirting=data.skirting?skirt(data,model):null;
   if(skirting){
     const rows=pricedSkirtingRows(skirting,markupMult);
-    if(rows.length){const total=rows.reduce((n,r)=>n+(r.cost??0),0);sections.push({title:'Deck skirting',icon:'🧱',total,description:`${SKIRTING_STYLE_NAMES[skirting.style]} under the deck.`,items:rows});}
+    if(rows.length){const total=rows.reduce((n,r)=>n+(r.cost??0),0);sections.push({title:'Deck skirting',icon:'🧱',total,description:`${SKIRTING_STYLE_NAMES[skirting.style]} under the deck, priced from the skirting rate table (face supply, backing, access panels and install labour).`,items:rows});}
     flags.push(...skirting.notes);
   }
   // Stair sides, step ends and level drops (stairCladding.ts). 2026-10: DeckMart fascia supply + cladding finish rates.
