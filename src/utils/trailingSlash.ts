@@ -12,6 +12,10 @@ export function slashPath(path: string): string {
   // Netlify function URLs and files (including .webmanifest) are not pages.
   if (pathname.startsWith('/.netlify/')) return path;
   if (/\.[a-z0-9]+$/i.test(pathname)) return path;
+  // Image files and filename stems are assets. The hero concatenates
+  // `/images/concepts/backyard-hero-depth` with `-flat-v1-768.webp`; a trailing
+  // slash turns that into a directory that 404s the LCP image and its preload.
+  if (pathname === '/images' || pathname.startsWith('/images/')) return path;
   return `${pathname}/${rest}`;
 }
 

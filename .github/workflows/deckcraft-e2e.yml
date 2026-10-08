@@ -20,6 +20,10 @@ on:
       # The designer hydrates inside the document shell. A consent dialog or
       # a head-script change can break keyboard shortcuts and the smoke tests.
       - 'src/root.tsx'
+      # Trailing-slash rewriting runs on every module, including the designer.
+      # A bad rewrite has already hydrated the wrong tree.
+      - 'src/utils/trailingSlash.ts'
+      - 'buildTools/trailingSlashLinks.ts'
       - 'src/components/BookingScheduler.tsx'
       - 'public/__forms.html'
       - 'e2e/**'
