@@ -63,8 +63,8 @@ export function Layout({ children }: { children: ReactNode }) {
         <Meta />
         <Links />
         {/* Consent Mode before any Google tag. gtag.js for G-1BRTV91W3Z and
-            AW-10839158941 loads on the first input or idle, not in this head,
-            so it stays off the first paint. The ids stay in this HTML for tag scanners. */}
+            AW-10839158941 is not in this head: it loads on the first input or
+            browser idle, within about 2.5s. The ids stay in this HTML for tag scanners. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
