@@ -43,11 +43,15 @@ export function Layout({ children }: { children: ReactNode }) {
         <link rel="manifest" href="/site.webmanifest" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              '</script><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap" media="print" onload="this.media=\'all\'" /><script>',
-          }}
+        {/* media=print keeps the stylesheet off the first-paint critical path.
+            A script that closes its own tag to inject this link does not match
+            what React hydrates, and the deck designer tests treat that as a
+            page error. App flips media to all after hydration. */}
+        <link
+          id="gm-fonts"
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap"
+          media="print"
         />
         <noscript>
           <link
@@ -86,6 +90,8 @@ export default function App() {
 
   // Client-only analytics + attribution init (was in App.tsx).
   useEffect(() => {
+    const fonts = document.getElementById('gm-fonts');
+    if (fonts instanceof HTMLLinkElement) fonts.media = 'all';
     initAttributionCapture();
     initBehaviorCapture();
     initAnalytics();
@@ -100,19 +106,26 @@ export default function App() {
   // The deck designer stays chrome-less. The cost estimator uses the site
   // header so a visitor can reach services, reviews, and contact without
   // leaving the estimate. Its own sticky bars still sit above the page footer.
-  const bareApp = location.pathname.startsWith('/deck-designer');
+  // A regex, not a quoted path: the trailing-slash rewrite would turn
+  // startsWith('/deck-designer') into startsWith('/deck-designer/'), which
+  // misses the prerender path and hydrates a different tree. The cookie
+  // banner stays off this page: it is role=dialog, and the designer ignores
+  // keyboard shortcuts while a dialog is open.
+  const bareApp = /^\/deck-designer(?:\/|$)/.test(location.pathname);
 
   return (
     <HelmetProvider>
-      <ConsentBanner />
       {bareApp ? (
         <main>
           <Outlet />
         </main>
       ) : (
-        <SiteChrome>
-          <Outlet />
-        </SiteChrome>
+        <>
+          <ConsentBanner />
+          <SiteChrome>
+            <Outlet />
+          </SiteChrome>
+        </>
       )}
     </HelmetProvider>
   );

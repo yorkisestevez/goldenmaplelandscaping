@@ -9,7 +9,9 @@ export function slashPath(path: string): string {
   const pathname = path.slice(0, end);
   const rest = path.slice(end);
   if (pathname === '/' || pathname.endsWith('/')) return path;
-  if (/\.[a-z0-9]{2,5}$/i.test(pathname)) return path;
+  // Netlify function URLs and files (including .webmanifest) are not pages.
+  if (pathname.startsWith('/.netlify/')) return path;
+  if (/\.[a-z0-9]+$/i.test(pathname)) return path;
   return `${pathname}/${rest}`;
 }
 
