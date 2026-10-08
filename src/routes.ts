@@ -33,6 +33,8 @@ export default [
   route('portfolio', 'pages/Portfolio.tsx'),
   route('portfolio/:slug', 'pages/ProjectDetail.tsx'),
   route('contact', 'pages/Contact.tsx'),
+  route('thank-you', 'pages/ThankYou.tsx'),
+  route('reviews', 'pages/Reviews.tsx'),
   route('resources', 'pages/Resources.tsx'),
   // Outdoor Construction Library — topic hubs over /resources posts (src/data/library.ts).
   route('library', 'pages/library/LibraryHub.tsx'),
@@ -124,4 +126,6 @@ export default [
   route('locations/elmvale', 'pages/locations/Elmvale.tsx'),
   route('locations/stayner', 'pages/locations/Stayner.tsx'),
   route('locations/:slug', 'pages/locations/LocationLanding.tsx'),
+
+  route('*', 'pages/NotFound.tsx'),
 ] satisfies RouteConfig;

@@ -1,5 +1,4 @@
 import { type ReactNode, useState, useEffect } from 'react';
-import { motion } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Clock, Facebook, Twitter, Linkedin, Link as LinkIcon, Share2, Check } from 'lucide-react';
 import SEO from './SEO';
@@ -131,11 +130,7 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
               Back to Resources
             </Link>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
+            <div>
               <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6 block">
                 {category}
                 {librarySection && (
@@ -167,7 +162,7 @@ export default function BlogPostLayout({ title, seoTitle, seoDescription, catego
                   {review && <> · reviewed {review.reviewedOn}</>}
                 </p>
               )}
-            </motion.div>
+            </div>
 
             {photoApproved && <div className="aspect-[21/9] rounded-[2px] overflow-hidden mb-20 border border-brand-dim/10">
               <img src={heroImage} alt={title} loading="lazy" decoding="async" className="w-full h-full object-cover" />

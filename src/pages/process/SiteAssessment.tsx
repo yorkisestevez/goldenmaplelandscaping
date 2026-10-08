@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { Ruler, Shield, Heart, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
@@ -9,42 +8,34 @@ export default function SiteAssessment() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO 
-        title="Landscape Site Analysis Barrie | Engineering & Assessment | Golden Maple"
-        description="The Golden Maple site analysis goes beyond measurements. We evaluate soil, drainage, and structural integrity for your Simcoe County landscape project to ensure your investment lasts."
+        title="Landscape Site Visit Barrie | Soil, Drainage & Access | Golden Maple"
+        description="A Golden Maple site visit records soil, drainage, access, and elevations for a Barrie or Simcoe County hardscape before the written scope is issued."
         canonical="https://goldenmaplelandscaping.ca/process/site-assessment/"
       />
 
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div>
               <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-10 block">
                 Phase Two: Assessment
               </span>
               <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.1] mb-12">
-                Engineering <br />
-                <span className="italic text-brand-gold-dark">Precision.</span>
+                The site, <br />
+                <span className="italic text-brand-gold-dark">measured.</span>
               </h1>
-              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
-                Before a single 3D rendering is created, we must first understand the literal foundation of your project. We look for the technical details that others ignore—soil composition, water runoff patterns, and existing structural elevations.
+              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-8 font-light">
+                Before a drawing, we walk the property. The notes from that visit are what the written scope is built from.
+              </p>
+              <p className="font-sans text-base text-brand-muted leading-relaxed mb-16 font-light">
+                On a visit we record how water leaves the house, where the clay is soft, how equipment gets in, and the elevations that set a patio, wall, or deck. Those notes become the excavation and drainage lines in the written scope. A visit is booked after the project form, not from this page alone.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
-            >
+            <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
                 src="/images/projects/Golden Maple deck and walkway.jpg"
                 alt="Landscape Engineering Analysis Barrie"
@@ -55,7 +46,7 @@ export default function SiteAssessment() {
                 <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Technical Standard</p>
                 <p className="font-display text-xl text-brand-porcelain italic font-light">Laser-Guided Precision</p>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           <div className="mb-40">

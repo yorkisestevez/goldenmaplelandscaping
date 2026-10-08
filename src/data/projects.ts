@@ -220,7 +220,7 @@ export function projectsInCategory(category: ProjectCategory): ProjectRecord[] {
 export const FEATURED_PROJECTS: ProjectRecord[] = [
   ...PROJECTS.filter((p) => p.featured),
   ...PROJECTS.filter((p) => !p.featured),
-].slice(0, 2);
+].slice(0, 6);
 
 /** Card-sized cover for a project (4:3). */
 export function projectCover(project: ProjectRecord): ImageRef {

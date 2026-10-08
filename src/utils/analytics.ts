@@ -10,8 +10,15 @@
  *   VITE_CLARITY_ID               — Microsoft Clarity project ID, e.g. "qxz1abc2de"
  *                                   Enables session recordings + heatmaps.
  *
- * Every function no-ops cleanly when the relevant ID is missing — safe to call
- * unconditionally from components.
+ * Production builds keep the live IDs in this module even when env injection
+ * is missing, so the post-deploy guard can still see them. Dev builds stay
+ * dark unless the env vars are set. Every function no-ops cleanly when the
+ * relevant ID is missing.
+ *
+ * Clarity and the Meta Pixel wait for the first interaction or ~3s, and only
+ * load after advertising/analytics consent. gtag stays in the document head
+ * (advanced Consent Mode) so Ads scanners still see the tag. Lead and call
+ * events are never gated here — Consent Mode decides storage.
  */
 
 import { pushPage, pushClick, getBehaviorFields } from './behavior';
@@ -23,33 +30,148 @@ declare global {
     gtag?: (...args: unknown[]) => void;
     fbq?: (...args: unknown[]) => void;
     _fbq?: unknown;
+    clarity?: (...args: unknown[]) => void;
   }
 }
 
-const env = import.meta.env;
-const GA4_ID = (env.VITE_GA4_ID as string | undefined)?.trim() || '';
-const META_PIXEL_ID = (env.VITE_META_PIXEL_ID as string | undefined)?.trim() || '';
-const GOOGLE_ADS_ID = (env.VITE_GOOGLE_ADS_ID as string | undefined)?.trim() || '';
+const CONSENT_KEY = 'gm-consent';
+
+/** Live IDs. Kept as literals so production bundles contain them. */
+const GA4_ID =
+  (import.meta.env.VITE_GA4_ID as string | undefined)?.trim() ||
+  (import.meta.env.PROD ? 'G-1BRTV91W3Z' : '');
+const META_PIXEL_ID =
+  (import.meta.env.VITE_META_PIXEL_ID as string | undefined)?.trim() ||
+  (import.meta.env.PROD ? '2084193635490617' : '');
+const GOOGLE_ADS_ID =
+  (import.meta.env.VITE_GOOGLE_ADS_ID as string | undefined)?.trim() ||
+  (import.meta.env.PROD ? 'AW-10839158941' : '');
 const GOOGLE_ADS_LEAD_LABEL =
-  (env.VITE_GOOGLE_ADS_LEAD_LABEL as string | undefined)?.trim() || '';
+  (import.meta.env.VITE_GOOGLE_ADS_LEAD_LABEL as string | undefined)?.trim() || '';
 // Click to call — CID 513-052-1150. Do not use the page-load Contact label.
 const GOOGLE_ADS_CALL_LABEL =
-  (env.VITE_GOOGLE_ADS_CALL_LABEL as string | undefined)?.trim() ||
+  (import.meta.env.VITE_GOOGLE_ADS_CALL_LABEL as string | undefined)?.trim() ||
   'AW-10839158941/0CDHCIO2iPEbEJ3hwbAo';
-const CLARITY_ID = (env.VITE_CLARITY_ID as string | undefined)?.trim() || '';
+const CLARITY_ID =
+  (import.meta.env.VITE_CLARITY_ID as string | undefined)?.trim() ||
+  (import.meta.env.PROD ? 'wisgcj7yvw' : '');
 
-const isDev = env.DEV === true;
+const isDev = import.meta.env.DEV === true;
 const isBrowser = typeof window !== 'undefined';
 
-let initialized = false;
+export type ConsentChoice = 'granted' | 'denied';
 
-/** Boot gtag.js + Meta Pixel. Call once on app mount. Idempotent. */
+type ConsentState = 'granted' | 'denied';
+
+const consentUpdate = (state: ConsentState) => ({
+  ad_storage: state,
+  analytics_storage: state,
+  ad_user_data: state,
+  ad_personalization: state,
+});
+
+export function readStoredConsent(): ConsentChoice | null {
+  if (!isBrowser) return null;
+  try {
+    const value = localStorage.getItem(CONSENT_KEY);
+    if (value === 'granted' || value === 'denied') return value;
+  } catch {
+    /* private mode */
+  }
+  return null;
+}
+
+let initialized = false;
+let metaArmed = false;
+let pixelScriptRequested = false;
+let clarityScriptRequested = false;
+let deferredArmed = false;
+
+function installFbqStub(): void {
+  if (!isBrowser || window.fbq) return;
+  const n = function fbq(this: { callMethod?: (...args: unknown[]) => void; queue: unknown[] }) {
+    // eslint-disable-next-line prefer-rest-params
+    const args = arguments;
+    if (typeof this.callMethod === 'function') this.callMethod.apply(this, args as unknown as unknown[]);
+    else this.queue.push(args);
+  } as Window['fbq'] & { queue: unknown[]; loaded?: boolean; version?: string; push?: unknown };
+  window.fbq = n;
+  if (!window._fbq) window._fbq = n;
+  n.push = n;
+  n.loaded = true;
+  n.version = '2.0';
+  n.queue = [];
+}
+
+/** Queue Meta events immediately once consent is granted; the network script waits. */
+function armMeta(): void {
+  if (!isBrowser || !META_PIXEL_ID || metaArmed) return;
+  metaArmed = true;
+  installFbqStub();
+  window.fbq?.('init', META_PIXEL_ID);
+}
+
+function loadMetaScript(): void {
+  if (!isBrowser || !metaArmed || pixelScriptRequested) return;
+  pixelScriptRequested = true;
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://connect.facebook.net/en_US/fbevents.js';
+  document.head.appendChild(script);
+}
+
+function loadClarity(): void {
+  if (!isBrowser || !CLARITY_ID || clarityScriptRequested) return;
+  clarityScriptRequested = true;
+  /* eslint-disable */
+  (function (c: any, l: Document, a: string, r: string, i: string) {
+    c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+    const t = l.createElement(r) as HTMLScriptElement;
+    t.async = true;
+    t.src = 'https://www.clarity.ms/tag/' + i;
+    const y = l.getElementsByTagName(r)[0];
+    y.parentNode!.insertBefore(t, y);
+  })(window, document, 'clarity', 'script', CLARITY_ID);
+  /* eslint-enable */
+}
+
+function scheduleDeferredTrackers(): void {
+  if (!isBrowser || deferredArmed || readStoredConsent() !== 'granted') return;
+  deferredArmed = true;
+  armMeta();
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    cleanup();
+    loadMetaScript();
+    loadClarity();
+  };
+  const events = ['pointerdown', 'keydown', 'touchstart'] as const;
+  const cleanup = () => {
+    events.forEach((event) => window.removeEventListener(event, start));
+  };
+  events.forEach((event) => window.addEventListener(event, start, { once: true, passive: true }));
+  window.setTimeout(start, 3000);
+}
+
+export function applyConsent(choice: ConsentChoice): void {
+  if (!isBrowser) return;
+  try {
+    localStorage.setItem(CONSENT_KEY, choice);
+  } catch {
+    /* private mode */
+  }
+  window.gtag?.('consent', 'update', consentUpdate(choice));
+  if (choice === 'granted') scheduleDeferredTrackers();
+}
+
+/** Boot gtag.js companions. Call once on app mount. Idempotent. */
 export function initAnalytics(): void {
   if (!isBrowser || initialized) return;
   initialized = true;
 
-  // ---- Google (gtag.js) — covers both GA4 and Google Ads ----
-  // Skip a second script inject if the static HTML snippet already booted gtag.
+  // The document head already loads gtag. This path covers a head-less boot.
   if ((GA4_ID || GOOGLE_ADS_ID) && typeof window.gtag !== 'function') {
     const primaryId = GA4_ID || GOOGLE_ADS_ID;
     const script = document.createElement('script');
@@ -58,54 +180,18 @@ export function initAnalytics(): void {
     document.head.appendChild(script);
 
     window.dataLayer = window.dataLayer || [];
-    // gtag.js only processes dataLayer entries that are `arguments` objects —
-    // pushing a rest-param Array is silently ignored (no config, no events).
     window.gtag = function gtag() {
       // eslint-disable-next-line prefer-rest-params
       window.dataLayer!.push(arguments as unknown as unknown[]);
     } as Window['gtag'];
+    window.gtag('consent', 'default', { ...consentUpdate('denied'), wait_for_update: 500 });
+    if (readStoredConsent() === 'granted') window.gtag('consent', 'update', consentUpdate('granted'));
     window.gtag('js', new Date());
     if (GA4_ID) window.gtag('config', GA4_ID, { send_page_view: false });
-    if (GOOGLE_ADS_ID) window.gtag('config', GOOGLE_ADS_ID);
+    if (GOOGLE_ADS_ID) window.gtag('config', GOOGLE_ADS_ID, { send_page_view: false });
   }
 
-  // ---- Meta Pixel ----
-  if (META_PIXEL_ID) {
-    /* eslint-disable */
-    (function (f: any, b: Document, e: string, v: string) {
-      let n: any, t: any, s: any;
-      if (f.fbq) return;
-      n = f.fbq = function () {
-        n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-      };
-      if (!f._fbq) f._fbq = n;
-      n.push = n;
-      n.loaded = true;
-      n.version = '2.0';
-      n.queue = [];
-      t = b.createElement(e) as HTMLScriptElement;
-      t.async = true;
-      t.src = v;
-      s = b.getElementsByTagName(e)[0];
-      s.parentNode!.insertBefore(t, s);
-    })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-    /* eslint-enable */
-    window.fbq?.('init', META_PIXEL_ID);
-  }
-
-  // ---- Microsoft Clarity (heatmaps + session recordings) ----
-  if (CLARITY_ID) {
-    /* eslint-disable */
-    (function (c: any, l: Document, a: string, r: string, i: string) {
-      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
-      const t = l.createElement(r) as HTMLScriptElement;
-      t.async = true;
-      t.src = 'https://www.clarity.ms/tag/' + i;
-      const y = l.getElementsByTagName(r)[0];
-      y.parentNode!.insertBefore(t, y);
-    })(window, document, 'clarity', 'script', CLARITY_ID);
-    /* eslint-enable */
-  }
+  if (readStoredConsent() === 'granted') scheduleDeferredTrackers();
 
   if (isDev) {
     // eslint-disable-next-line no-console
@@ -118,16 +204,16 @@ export function initAnalytics(): void {
   }
 }
 
-/** SPA page-view event. Call on every route change. */
+/** One page_view per destination. send_to stops the event reaching every tag. */
 export function trackPageView(path: string, title?: string): void {
   if (!isBrowser) return;
-  if (GA4_ID) {
-    window.gtag?.('event', 'page_view', {
-      page_path: path,
-      page_title: title || document.title,
-      page_location: window.location.href,
-    });
-  }
+  const payload = {
+    page_path: path,
+    page_title: title || document.title,
+    page_location: window.location.href,
+  };
+  if (GA4_ID) window.gtag?.('event', 'page_view', { ...payload, send_to: GA4_ID });
+  if (GOOGLE_ADS_ID) window.gtag?.('event', 'page_view', { ...payload, send_to: GOOGLE_ADS_ID });
   window.fbq?.('track', 'PageView');
   pushPage(path, title);
   if (isDev) console.log('[analytics] pageview', path);

@@ -75,7 +75,7 @@ export default function ChoosingContractor() {
         <li>Will the same company be around in 5 years to honour it?</li>
       </ul>
 
-      <p>Ask each contractor for current written workmanship terms, including coverage, exclusions, remedy, and any maintenance requirements.</p>
+      <p></p>
 
       <blockquote>
         <p>"The best warranty is one you never need to use. That starts with building it right."</p>

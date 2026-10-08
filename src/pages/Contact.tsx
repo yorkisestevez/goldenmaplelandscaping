@@ -1,366 +1,94 @@
-import { PROJECT_BUDGET_RANGES } from '../data/projectBudgets';
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { MapPin, Phone, Mail, Clock, Shield, Award, CheckCircle, ChevronDown } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
-import PublicationTrustBar from '../components/PublicationTrustBar';
-import { trackLead, trackCall } from '../utils/analytics';
-import { getAttributionFields } from '../utils/utmCapture';
-import { getBehaviorFields } from '../utils/behavior';
-import { genEventId } from '../utils/eventId';
-import { scoreGoldenMapleLead } from '../utils/leadScoring';
-import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
-
-const encode = (data: Record<string, string>) =>
-  Object.keys(data)
-    .map((k) => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
-    .join('&');
-
-type Status = 'idle' | 'submitting' | 'success' | 'error';
-
-// ?service= values that preselect a Service Interest option (e.g. the seasonal clean-up page's CTA).
-const SERVICE_FROM_QUERY: Record<string, string> = {
-  'seasonal-cleanup': 'Seasonal Clean-Up (Spring / Fall)',
-};
+import LeadForm from '../components/LeadForm';
+import GoogleReviewsLink from '../components/GoogleReviewsLink';
+import { publicContact } from '../data/business';
+import { OWNER_FACTS, ownerFact } from '../data/ownerFacts';
+import { trackCall } from '../utils/analytics';
 
 export default function Contact() {
-  const [status, setStatus] = useState<Status>('idle');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    service: 'Backyard Outdoor Living / Premium Patio',
-    budget: '',
-    details: '',
-    'bot-field': '',
-  });
-
-  // Applied after mount so the prerendered HTML and the first client render match.
-  const [searchParams] = useSearchParams();
-  useEffect(() => {
-    const preset = SERVICE_FROM_QUERY[searchParams.get('service') ?? ''];
-    if (preset) setForm((f) => ({ ...f, service: preset }));
-  }, [searchParams]);
-
-  const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!form.name.trim() || !form.phone.trim() || !form.email.trim()) {
-      setStatus('error');
-      setErrorMsg('Please fill in your name, phone, and email.');
-      return;
-    }
-    setStatus('submitting');
-    setErrorMsg('');
-
-    // Compose details: include service interest + budget so the CRM (which only
-    // tracks `details`/`message`) doesn't lose this context.
-    const enrichedDetails = [
-      form.service && `Service: ${form.service}`,
-      form.budget && `Budget: ${form.budget}`,
-      form.details && `\nNotes: ${form.details}`,
-    ]
-      .filter(Boolean)
-      .join(' · ');
-
-    const eventId = genEventId();
-    const leadScore = scoreGoldenMapleLead({
-      budget: form.budget,
-      service: form.service,
-      details: form.details,
-    });
-    const payload = {
-      'form-name': 'contact',
-      event_id: eventId,
-      ...getAttributionFields(),
-      ...getBehaviorFields(),
-      ...form,
-      details: enrichedDetails || form.details,
-      lead_score: String(leadScore.score),
-      lead_tier: leadScore.tier,
-      lead_score_reasons: leadScore.reasons.join(','),
-    };
-
-    // Vite dev server doesn't process Netlify form submissions — short-circuit
-    // to success in dev so the full UI + analytics flow can be previewed locally.
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.log('[dev] contact payload (would POST to Netlify):', payload);
-      trackLead('contact', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone }, { payload });
-      setStatus('success');
-      return;
-    }
-
-    try {
-      const res = await fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: encode(payload),
-      });
-      if (!res.ok) throw new Error('Network response was not ok');
-      trackLead('contact', 'high-intent', undefined, eventId, { email: form.email, phone: form.phone }, { payload });
-      setStatus('success');
-    } catch (err) {
-      setStatus('error');
-      setErrorMsg(`Something went wrong. Please call us at ${publicContact.phoneDisplay} or email ${publicContact.email}.`);
-    }
-  };
+  const extraHours = ownerFact(OWNER_FACTS.extraHours);
 
   return (
     <div className="bg-brand-nearblack min-h-screen">
-      <SEO 
-        title="Start a Golden Maple Project | Premium Hardscape Barrie"
-        description="Start a project conversation for a premium patio, retaining wall, sloped-yard fix, or full backyard transformation in Barrie and Simcoe County."
+      <SEO
+        title="Contact Golden Maple | Patios, Walls & Decks in Barrie"
+        description="Send a short project form for interlocking, retaining walls, or composite decks in Barrie and Simcoe County."
         canonical="https://goldenmaplelandscaping.ca/contact"
       />
-      <PublicationTrustBar />
-      <section className="section-padding pt-48">
+      <section className="pt-28 pb-16 md:pt-36 md:pb-24">
         <div className="container-custom">
-          <div className="text-center max-w-3xl mx-auto mb-32">
-            <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">
-              Get Your Estimate
-            </span>
-            <h1 className="font-display text-5xl md:text-8xl font-light text-brand-bonewhite leading-[1.05] mb-12">
-              Start a project conversation. <br />
-              <span className="italic text-brand-gold-dark">Confirm current scope and next steps.</span>
+          <div className="max-w-3xl mb-8 md:mb-12">
+            <p className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-4">
+              Get an estimate
+            </p>
+            <h1 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite leading-[1.05] mb-4">
+              Tell us what you want built.
             </h1>
-            <p className="font-sans text-lg text-brand-muted leading-relaxed font-light">
-              Tell us your name, phone, and email — and a little about the space if you have it. We can discuss scope, availability and whether the project is a fit. Budget is optional.
+            <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light">
+              Name, phone, email, town, project type, and timing are enough. Budget is optional. Yorkis reviews the request and replies about scope.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <div className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-                <h2 className="font-display text-3xl font-light text-brand-bonewhite mb-8 leading-tight">Tell us about your space</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
+            <div className="lg:col-span-7 bg-brand-surface p-5 sm:p-8 md:p-10 rounded-[2px] border border-brand-dim/10 min-w-0">
+              <LeadForm
+                formName="contact"
+                source="contact-page"
+                idPrefix="contact"
+                submitLabel="Send my project"
+                heading="Project form"
+              />
+            </div>
 
-                <div className="mb-12 p-6 bg-brand-nearblack/50 border-l-2 border-brand-gold">
-                  <p className="font-sans text-base text-brand-muted leading-relaxed font-light">
-                    Name, phone, and email are enough to start. A ballpark budget helps us reply with real options, but it's optional. Yorkis comes back personally with an honest scope and timeline. No call required to get started.
-                  </p>
+            <aside className="lg:col-span-5 space-y-8 min-w-0">
+              <div className="space-y-6">
+                <h2 className="font-display text-2xl font-light text-brand-bonewhite">Talk to us directly</h2>
+                <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('contact_direct_line')} className="flex items-start gap-4 min-w-0">
+                  <Phone size={20} className="text-brand-gold-dark shrink-0 mt-1" strokeWidth={1.5} />
+                  <span>
+                    <span className="block font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">Phone</span>
+                    <span className="font-sans text-lg text-brand-bonewhite">{publicContact.phoneDisplay}</span>
+                  </span>
+                </a>
+                <a href={`mailto:${publicContact.email}`} className="flex items-start gap-4 min-w-0">
+                  <Mail size={20} className="text-brand-gold-dark shrink-0 mt-1" strokeWidth={1.5} />
+                  <span className="min-w-0">
+                    <span className="block font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">Email</span>
+                    <span className="font-sans text-base text-brand-bonewhite break-all">{publicContact.email}</span>
+                  </span>
+                </a>
+                <div className="flex items-start gap-4">
+                  <MapPin size={20} className="text-brand-gold-dark shrink-0 mt-1" strokeWidth={1.5} />
+                  <span>
+                    <span className="block font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">Where we build</span>
+                    <span className="font-sans text-base text-brand-bonewhite">Barrie and Simcoe County, Ontario</span>
+                  </span>
                 </div>
-
-                {status === 'success' ? (
-                  <div className="py-16 text-center space-y-8">
-                    <div className="mx-auto w-16 h-16 rounded-full border border-brand-gold flex items-center justify-center">
-                      <CheckCircle size={28} className="text-brand-gold-dark" strokeWidth={1.5} />
-                    </div>
-                    <h3 className="font-display text-3xl font-light text-brand-bonewhite">Estimate request received.</h3>
-                    <p className="font-sans text-base text-brand-muted leading-relaxed font-light max-w-md mx-auto">
-                      Your project request is ready for review. Contact us if you need to confirm receipt, availability or next steps.
-                    </p>
-                    <p className="font-sans text-sm text-brand-muted font-light">
-                      Project urgent? Call <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('contact_success_phone')} className="text-brand-gold-dark hover:underline">{publicContact.phoneDisplay}</a> directly.
-                    </p>
-                  </div>
-                ) : (
-                  <form
-                    name="contact"
-                    method="POST"
-                    onSubmit={onSubmit}
-                    className="space-y-10"
-                    noValidate
-                  >
-                    <input type="hidden" name="form-name" value="contact" />
-                    <p className="hidden">
-                      <label>Don't fill this out: <input name="bot-field" onChange={onChange} /></label>
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                      <div className="space-y-4">
-                        <label className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal">Full Name *</label>
-                        <input
-                          type="text"
-                          name="name"
-                          required
-                          value={form.name}
-                          onChange={onChange}
-                          className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite placeholder:text-brand-muted/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
-                          placeholder="John Doe"
-                        />
-                      </div>
-                      <div className="space-y-4">
-                        <label className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal">Phone Number *</label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          required
-                          value={form.phone}
-                          onChange={onChange}
-                          className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite placeholder:text-brand-muted/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
-                          placeholder={publicContact.phoneDisplay}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <label className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal">Email Address *</label>
-                      <input
-                        type="email"
-                        name="email"
-                        required
-                        value={form.email}
-                        onChange={onChange}
-                        className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite placeholder:text-brand-muted/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light"
-                        placeholder="your@email.com"
-                      />
-                    </div>
-                    <div className="space-y-4">
-                      <label className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal">Service Interest</label>
-                      <div className="relative">
-                      <select
-                        name="service"
-                        value={form.service}
-                        onChange={onChange}
-                        className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors appearance-none cursor-pointer font-light"
-                      >
-                        <option>Backyard Outdoor Living / Premium Patio</option>
-                        <option>Patio + Retaining Wall / Steps / Drainage</option>
-                        <option>Sloped Backyard / Retaining Wall Solution</option>
-                        <option>Premium Patio Rebuild</option>
-                        <option>Full Backyard Transformation</option>
-                        <option>Front Entrance / Walkway Package</option>
-                        <option>Seasonal Clean-Up (Spring / Fall)</option>
-                        <option>Other Hardscape Project</option>
-                      </select>
-                      <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-gold-dark pointer-events-none" />
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <label htmlFor="contact-budget" className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-normal">Project budget (optional)</label>
-                      <div className="relative">
-                      <select
-                        id="contact-budget"
-                        name="budget"
-                        value={form.budget}
-                        onChange={onChange}
-                        className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors appearance-none cursor-pointer font-light"
-                      >
-                        <option value="" disabled>Choose a ballpark…</option>
-                        {PROJECT_BUDGET_RANGES.map((range) => <option key={range.value} value={range.value}>{range.label}</option>)}
-                        <option value="unsure">Not sure yet</option>
-                      </select>
-                      <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-gold-dark pointer-events-none" />
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <label className="font-sans text-xs uppercase tracking-[0.25em] text-brand-muted font-normal">Project Details</label>
-                      <textarea
-                        name="details"
-                        rows={4}
-                        value={form.details}
-                        onChange={onChange}
-                        className="w-full bg-brand-nearblack border-b-2 border-brand-dim p-4 font-sans text-brand-bonewhite placeholder:text-brand-muted/70 focus:border-brand-gold outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/40 transition-colors font-light text-base"
-                        placeholder="Tell us about your project goals and timeline..."
-                      />
-                    </div>
-                    {status === 'error' && (
-                      <p className="font-sans text-sm text-brand-error font-light">{errorMsg}</p>
-                    )}
-                    <button
-                      type="submit"
-                      disabled={status === 'submitting'}
-                      className="btn-primary w-full py-6 mt-8 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {status === 'submitting' ? 'Sending…' : 'Send My Project Details'}
-                    </button>
-                    <div className="flex items-start justify-center gap-3 pt-2 text-[11px] text-brand-muted font-light leading-relaxed">
-                      <Shield size={14} className="text-brand-gold-dark/70 shrink-0 mt-px" strokeWidth={1.5} />
-                      <span>We only contact you about your project. No spam, ever — and we never share your information.</span>
-                    </div>
-                  </form>
-                )}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col gap-20"
-            >
-              <div className="space-y-16">
-                <h2 className="font-display text-3xl font-light text-brand-bonewhite leading-tight">Get in Touch</h2>
-                <div className="space-y-12">
-                  <div className="flex items-start gap-10">
-                    <div className="bg-brand-gold/5 p-6 rounded-[2px] border border-brand-gold/10">
-                      <MapPin size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
-                    </div>
-                    <div>
-                      <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-3">Our Location</h3>
-                      <p className="font-sans text-brand-muted font-light">Barrie, Ontario, Canada</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-10">
-                    <div className="bg-brand-gold/5 p-6 rounded-[2px] border border-brand-gold/10">
-                      <Phone size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
-                    </div>
-                    <div>
-                      <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-3">Phone</h3>
-                      <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('contact_direct_line')} className="font-sans text-brand-muted hover:text-brand-gold-dark transition-colors font-normal">{publicContact.phoneDisplay}</a>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-10">
-                    <div className="bg-brand-gold/5 p-6 rounded-[2px] border border-brand-gold/10">
-                      <Mail size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
-                    </div>
-                    <div>
-                      <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-3">Email</h3>
-                      <a href={`mailto:${publicContact.email}`} className="font-sans text-brand-muted hover:text-brand-gold-dark transition-colors font-normal">{publicContact.email}</a>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-10">
-                    <div className="bg-brand-gold/5 p-6 rounded-[2px] border border-brand-gold/10">
-                      <Clock size={24} className="text-brand-gold-dark" strokeWidth={1.5} />
-                    </div>
-                    <div>
-                      <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-3">Hours</h3>
-                      <p className="font-sans text-brand-muted font-light">Mon - Fri: 8:00 AM - 6:00 PM</p>
-                    </div>
-                  </div>
+                <div className="flex items-start gap-4">
+                  <Clock size={20} className="text-brand-gold-dark shrink-0 mt-1" strokeWidth={1.5} />
+                  <span>
+                    <span className="block font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">Office hours</span>
+                    <span className="font-sans text-base text-brand-bonewhite">Monday–Friday, 8:00 AM–6:00 PM</span>
+                    {extraHours && <span className="block font-sans text-sm text-brand-muted mt-1">{extraHours}</span>}
+                  </span>
                 </div>
               </div>
-
-              <div className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10">
-                <h3 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">Our Credentials</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
-                  <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <Shield size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.wsib, 'Current coverage documentation')}
-                  </div>
-                  <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <Award size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation')}
-                  </div>
-                  <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <CheckCircle size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms')}
-                  </div>
-                  <div className="flex items-center gap-4 font-sans text-xs uppercase tracking-[0.2em] text-brand-bonewhite font-normal">
-                    <CheckCircle size={18} className="text-brand-gold-dark" strokeWidth={1.5} /> Engineering Standard
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+              <GoogleReviewsLink className="font-sans text-sm text-brand-gold-dark underline underline-offset-2" />
+            </aside>
           </div>
 
-          <div className="h-[600px] w-full rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10 grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-1000">
-            <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d91063.15933010724!2d-79.761214!3d44.389355!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882aa346f368739d%3A0x279169666518a38!2sBarrie%2C%20ON!5e0!3m2!1sen!2sca!4v1710950000000!5m2!1sen!2sca" 
-              width="100%" 
-              height="100%" 
-              style={{ border: 0 }} 
-              allowFullScreen={true} 
-              loading="lazy" 
+          <div className="mt-12 h-64 md:h-80 w-full rounded-[2px] overflow-hidden border border-brand-dim/10">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d91063.15933010724!2d-79.761214!3d44.389355!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882aa346f368739d%3A0x279169666518a38!2sBarrie%2C%20ON!5e0!3m2!1sen!2sca!4v1710950000000!5m2!1sen!2sca"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               title="Barrie area map — not a Golden Maple office location"
-            ></iframe>
+            />
           </div>
         </div>
       </section>

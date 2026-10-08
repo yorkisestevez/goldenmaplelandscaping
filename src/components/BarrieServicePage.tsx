@@ -1,8 +1,8 @@
-import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Check } from 'lucide-react';
 import SEO from './SEO';
 import RelatedProjects from './RelatedProjects';
+import PlanningQuote from './PlanningQuote';
 import { breadcrumb, faqPage, graph, serviceNode } from '../utils/schema';
 import type { BarrieServiceDef } from '../data/barrieServices';
 
@@ -39,12 +39,7 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-[1.25fr_1fr] gap-16 lg:gap-24 items-start mb-32">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div>
               <h1 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">{def.h1}</h1>
               <p className="font-display text-5xl md:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-12">
                 {def.tagline[0]} <br />
@@ -59,15 +54,9 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
                   Talk to us about your project <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-brand-surface p-10 md:p-14 rounded-[2px] border border-brand-dim/40 shadow-2xl"
-            >
+            <div className="bg-brand-surface p-10 md:p-14 rounded-[2px] border border-brand-dim/40 shadow-2xl">
               <h2 className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-10 block">{def.scopeHeading}</h2>
               <ul className="space-y-6">
                 {def.scope.map((item) => (
@@ -77,7 +66,18 @@ export default function BarrieServicePage({ def }: { def: BarrieServiceDef }) {
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </div>
+          </div>
+
+          <div className="max-w-xl mb-24">
+            <PlanningQuote
+              source={def.slug}
+              rate={def.slug === 'interlocking-driveways-barrie' ? '$55–$85' : undefined}
+              rateDetail="per square foot installed for interlocking. A planning range, not a quote for your property."
+              categories={def.projectCategories}
+              defaultService={def.slug === 'interlocking-driveways-barrie' ? 'Interlock driveway' : def.slug === 'seasonal-cleanup-barrie' ? 'Seasonal clean-up' : def.slug === 'outdoor-kitchens-barrie' ? 'Outdoor kitchen' : def.slug === 'porcelain-patios-barrie' ? 'Interlocking patio' : 'Not sure yet'}
+              repairHref={def.slug === 'interlocking-driveways-barrie' || def.slug === 'porcelain-patios-barrie' ? '/premium-patio-rebuild-barrie/' : undefined}
+            />
           </div>
 
           <div className="max-w-4xl mx-auto mb-32 space-y-20">

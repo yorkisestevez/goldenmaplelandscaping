@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { motion } from 'motion/react';
 import { Quote } from 'lucide-react';
 import { BUSINESS, canPublish } from '../data/business';
 
@@ -89,14 +88,7 @@ export default function Testimonials({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {shown.map((r, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: idx * 0.1 }}
-              className="bg-brand-surface border border-brand-dim/10 rounded-[2px] p-10 flex flex-col"
-            >
+            <div key={idx} className="bg-brand-surface border border-brand-dim/10 rounded-[2px] p-10 flex flex-col">
               <Quote size={28} className="text-brand-gold mb-6" strokeWidth={1.5} />
               <p className="font-sans text-sm md:text-base text-brand-bonewhite leading-relaxed font-light flex-1 mb-10">
                 "{r.quote}"
@@ -113,7 +105,7 @@ export default function Testimonials({
                   {r.project}
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 

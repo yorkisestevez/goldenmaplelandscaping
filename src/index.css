@@ -1,5 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
+
+/* Cormorant is a condensed display face. The local serif that paints first is
+   wider, so the estimator's one-line title wraps to two lines and the form
+   card jumps when the webfont arrives. Scale the fallback to Cormorant's
+   advance width (measured "What will yours cost?" at 48px: 400.7 / 419.9)
+   and lock its em box to Cormorant's font bounding box. */
+@font-face {
+  font-family: "Cormorant Garamond Fallback";
+  src: local("Times New Roman"), local("Georgia"), local("Liberation Serif"), local("Nimbus Roman"), local("DejaVu Serif");
+  font-weight: 300 700;
+  font-style: oblique 0deg 20deg;
+  size-adjust: 95.42%;
+  ascent-override: 96.42%;
+  descent-override: 30.39%;
+  line-gap-override: 0%;
+}
 
 @theme {
   /* Ivory, charcoal and bronze. Existing token names remain compatible with
@@ -27,8 +42,8 @@
   --color-brand-porcelain-soft: #C9C3B9;
   --color-brand-error: #B3261E;
   --color-brand-success: #2F6B47;
-  --font-display: "Cormorant Garamond", serif;
-  --font-sans: "Inter", sans-serif;
+  --font-display: "Cormorant Garamond", "Cormorant Garamond Fallback", "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  --font-sans: Inter, "Segoe UI", system-ui, sans-serif;
 }
 
 html, body {
@@ -242,32 +257,48 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--color-brand-gol
   .home-hero-frame { height: 620px; }
 }
 
-/* Pinned depth push-in. This query is mirrored as STAGE_QUERY in HeroDepth.tsx —
-   change both. All LAYOUT lives here so the prerendered HTML is already right
-   and hydration shifts nothing; the component only drives transforms.
-   At rest, pre-measurement: the stack is viewport-sized and positioned so the
-   picture's focal point (55% / 60%, the dining table) sits at the frame centre. */
-@media (min-width: 1024px) and (min-height: 640px) and (prefers-reduced-motion: no-preference) {
-  .home-hero-stage { padding: 0; height: 260vh; }
-  .home-hero-pin { position: sticky; top: 0; height: 100vh; overflow: clip; display: flex; align-items: center; padding-top: 5.5rem; }
-  .home-hero-copy { position: relative; z-index: 1; }
-  .home-hero-frame { height: min(620px, 100vh - 17rem); }
-  .home-hero-window { z-index: 5; will-change: clip-path; }
-  .home-hero-stack { inset: auto; left: calc(50% - 55vw); top: calc(50% - 60vh); width: 100vw; height: 100vh; will-change: transform; }
-  .home-hero-flat { display: none; }
-  .home-hero-depth { display: block; will-change: transform; transition: opacity .45s ease; }
-  .home-hero-stack[data-ready="false"] .home-hero-depth { opacity: 0; }
-  /* The closing line sits on a real background-color, faded out at its top edge
-     with a mask, rather than on a gradient laid over the picture. Measured
-     against the actual pixels, gold text over a gradient scrim reached only
-     2.2:1; and a contrast auditor can read a background-color but not a gradient,
-     so this also keeps the site-optimizer's daily audit honest. */
-  .home-hero-closing { display: flex; align-items: flex-end; position: absolute; left: 0; right: 0; bottom: 0; height: 74vh; padding-bottom: 9vh; z-index: 6; opacity: 0; background-color: rgb(15 24 19 / .82); -webkit-mask-image: linear-gradient(to top, #000 0%, #000 56%, transparent 100%); mask-image: linear-gradient(to top, #000 0%, #000 56%, transparent 100%); }
-  .home-hero-closing[inert] { pointer-events: none; }
-  /* Ink button on an ink panel disappears; on the dark panel the fill goes gold. */
-  .home-hero-closing .btn-primary { background-color: var(--color-brand-gold); color: var(--color-brand-black); }
-  .home-hero-closing .btn-primary:hover { background-color: var(--color-brand-porcelain); }
-  .home-hero-closing-line { font-size: clamp(3.25rem, 6.2vw, 6.5rem); line-height: 1; letter-spacing: -.035em; }
+@media (max-width: 639px) { .home-hero .home-project-link { display: none; } }
+
+/* Tailwind preflight zeros heading margins. :where loses to any utility, so an
+   explicit mb-* still wins. Headings with no utility no longer collide with the next element. */
+:where(h1, h2, h3, h4, h5, h6) {
+  margin-bottom: 0.65rem;
 }
 
-@media (max-width: 639px) { .home-hero .home-project-link { display: none; } }
+.home-hero,
+.home-hero-grid,
+.home-hero-frame {
+  max-width: 100%;
+}
+.gm-consent {
+  position: fixed;
+  z-index: 70;
+  left: 1rem;
+  right: 1rem;
+  bottom: 5.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 0.9rem 1rem;
+  background: #fff;
+  color: #292824;
+  border: 1px solid #d8d2c8;
+  box-shadow: 0 12px 40px rgb(35 34 31 / 12%);
+}
+.gm-consent p { margin: 0; font-size: 0.8125rem; line-height: 1.45; flex: 1 1 16rem; }
+.gm-consent a { text-decoration: underline; }
+.gm-consent-actions { display: flex; gap: 0.5rem; }
+.gm-consent button {
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #292824;
+  background: transparent;
+  color: #292824;
+}
+.gm-consent-accept { background: #c6a47d; border-color: #c6a47d; }
+@media (min-width: 1280px) {
+  .gm-consent { left: auto; right: 1.5rem; bottom: 1.5rem; max-width: 32rem; }
+}

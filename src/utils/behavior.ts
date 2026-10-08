@@ -129,7 +129,7 @@ export function initBehaviorCapture(): void {
       try { window.clarity('set', 'visitor_id', visitor!.id); } catch { /* no-op */ }
       return;
     }
-    if (++attempts < 20) setTimeout(tagClarity, 500);
+    if (++attempts < 90) setTimeout(tagClarity, 500);
   };
   tagClarity();
 

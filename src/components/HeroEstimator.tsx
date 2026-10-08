@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { Grid, Layout, AlignJustify, ListTree, ChefHat, Map, ArrowRight, MapPin, Ruler } from 'lucide-react';
 import { trackEngagement } from '../utils/analytics';
 import { ESTIMATOR_LOCATIONS } from '../data/locations';
@@ -44,12 +43,7 @@ export default function HeroEstimator() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-brand-cream-light border border-brand-dim rounded-3xl p-7 md:p-9 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.7)]"
-    >
+    <div className="bg-brand-cream-light border border-brand-dim rounded-3xl p-7 md:p-9 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.7)]">
       <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">
         Free Cost Estimator · 60 Seconds
       </div>
@@ -161,6 +155,6 @@ export default function HeroEstimator() {
       <p className="font-sans text-[11px] text-brand-bonewhite/75 mt-4 text-center font-normal">
         Itemized breakdown · Material brand picker · Real numbers in 60 seconds
       </p>
-    </motion.div>
+    </div>
   );
 }

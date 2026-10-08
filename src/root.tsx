@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect } from 'react';
+import { ConsentBanner } from './components/ConsentBanner';
 import { HelmetProvider } from 'react-helmet-async';
 import {
   Links,
@@ -40,14 +41,34 @@ export function Layout({ children }: { children: ReactNode }) {
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/favicon-180.png" />
         <link rel="manifest" href="/site.webmanifest" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* media=print keeps the stylesheet off the first-paint critical path.
+            A script that closes its own tag to inject this link does not match
+            what React hydrates, and the deck designer tests treat that as a
+            page error. App flips media to all after hydration. */}
+        <link
+          id="gm-fonts"
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap"
+          media="print"
+        />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap"
+          />
+        </noscript>
         <Meta />
         <Links />
-        {/* Static Google tag so Ads Goals scanners see AW-10839158941 without waiting for JS hydrate. send_page_view stays false. */}
+        {/* Static Google tag so Ads Goals scanners see AW-10839158941 without waiting for JS hydrate.
+            Consent defaults to denied, then upgrades when a stored choice is granted, before config.
+            Both tags use send_page_view:false so the SPA sends one page_view per destination. */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-1BRTV91W3Z" />
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-1BRTV91W3Z',{send_page_view:false});gtag('config','AW-10839158941');",
+              "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});try{if(localStorage.getItem('gm-consent')==='granted'){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}gtag('js',new Date());gtag('config','G-1BRTV91W3Z',{send_page_view:false});gtag('config','AW-10839158941',{send_page_view:false});",
           }}
         />
         <script
@@ -69,6 +90,8 @@ export default function App() {
 
   // Client-only analytics + attribution init (was in App.tsx).
   useEffect(() => {
+    const fonts = document.getElementById('gm-fonts');
+    if (fonts instanceof HTMLLinkElement) fonts.media = 'all';
     initAttributionCapture();
     initBehaviorCapture();
     initAnalytics();
@@ -80,11 +103,15 @@ export default function App() {
     trackPageView(location.pathname + location.search);
   }, [location.pathname, location.search]);
 
-  // The cost estimator runs as a full-screen app: its page ships its own
-  // minimal top bar, and the global navbar/footer/chat would fight the
-  // wizard's sticky bars for attention (Layout already hid the mobile dock
-  // there — this completes that thought).
-  const bareApp = location.pathname.startsWith('/cost-estimator') || location.pathname.startsWith('/deck-designer');
+  // The deck designer stays chrome-less. The cost estimator uses the site
+  // header so a visitor can reach services, reviews, and contact without
+  // leaving the estimate. Its own sticky bars still sit above the page footer.
+  // A regex, not a quoted path: the trailing-slash rewrite would turn
+  // startsWith('/deck-designer') into startsWith('/deck-designer/'), which
+  // misses the prerender path and hydrates a different tree. The cookie
+  // banner stays off this page: it is role=dialog, and the designer ignores
+  // keyboard shortcuts while a dialog is open.
+  const bareApp = /^\/deck-designer(?:\/|$)/.test(location.pathname);
 
   return (
     <HelmetProvider>
@@ -93,9 +120,12 @@ export default function App() {
           <Outlet />
         </main>
       ) : (
-        <SiteChrome>
-          <Outlet />
-        </SiteChrome>
+        <>
+          <ConsentBanner />
+          <SiteChrome>
+            <Outlet />
+          </SiteChrome>
+        </>
       )}
     </HelmetProvider>
   );

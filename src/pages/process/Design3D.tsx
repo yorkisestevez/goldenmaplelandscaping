@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import { Heart, Shield, CheckCircle, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
@@ -17,12 +16,7 @@ export default function Design3D() {
       <section className="section-padding pt-48">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center mb-40">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            >
+            <div>
               <span className="font-sans text-xs tracking-[0.4em] uppercase text-brand-gold-dark mb-10 block">
                 Phase Three: Visualization
               </span>
@@ -30,21 +24,18 @@ export default function Design3D() {
                 A Vision in <br />
                 <span className="italic text-brand-gold-dark">3D Rendering.</span>
               </h1>
-              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-16 font-light">
-                Why guess what your backyard will look like when you can walk through it? Our high-resolution 3D landscape design process eliminates ambiguity and allows you to experience the spatial flow, lighting, and material textures of your future retreat.
+              <p className="font-sans text-xl text-brand-muted leading-relaxed mb-8 font-light">
+                A 3D view shows the layout, the steps, and where you sit. It is a picture of the plan, not a permit drawing.
+              </p>
+              <p className="font-sans text-base text-brand-muted leading-relaxed mb-16 font-light">
+                Decks can be drawn in the 3D deck designer on this site, which prices that deck from the price book. Patio and wall layouts are drawn for the property after the site visit. The crew builds the written scope, not the picture by itself.
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary w-full sm:w-auto py-5 text-center px-8">Tell Us Your Budget</Link>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[16/9] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10"
-            >
+            <div className="relative aspect-[16/9] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
                 src="/images/projects/Golden Maple deck and walkway.jpg"
                 alt="Aerial photograph showing the relationship between a deck, lawn and stone walkway"
@@ -55,7 +46,7 @@ export default function Design3D() {
                 <p className="font-sans text-[10px] uppercase tracking-widest text-brand-gold mb-2">Outdoor layout</p>
                 <p className="font-display text-xl text-brand-porcelain italic font-light">Space, flow and connection</p>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           <div className="mb-40">

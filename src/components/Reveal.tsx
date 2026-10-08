@@ -1,4 +1,3 @@
-import { motion, useReducedMotion, type HTMLMotionProps } from 'motion/react';
 import type { ReactNode } from 'react';
 
 type RevealProps = {
@@ -8,33 +7,13 @@ type RevealProps = {
   duration?: number;
   once?: boolean;
   className?: string;
-} & Omit<HTMLMotionProps<'div'>, 'initial' | 'whileInView' | 'viewport' | 'transition' | 'children'>;
+};
 
-export default function Reveal({
-  children,
-  delay = 0,
-  y = 24,
-  duration = 0.7,
-  once = true,
-  className,
-  ...rest
-}: RevealProps) {
-  const prefersReducedMotion = useReducedMotion();
-
-  if (prefersReducedMotion) {
-    return <div className={className}>{children}</div>;
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once, margin: '-80px' }}
-      transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
-      className={className}
-      {...rest}
-    >
-      {children}
-    </motion.div>
-  );
+/**
+ * Above-the-fold content used to ship as opacity:0 until this component
+ * hydrated. The wrapper now renders visible markup. The delay/y props stay so
+ * existing call sites do not need a rewrite; they no longer hide content.
+ */
+export default function Reveal({ children, className }: RevealProps) {
+  return <div className={className}>{children}</div>;
 }

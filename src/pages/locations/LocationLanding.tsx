@@ -1,8 +1,8 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { ArrowRight, MapPin, CheckCircle, Phone, Shield, Award } from 'lucide-react';
+import { ArrowRight, MapPin, CheckCircle, Phone } from 'lucide-react';
 import SEO from '../../components/SEO';
 import QuickQuote from '../../components/QuickQuote';
+import GoogleReviewsLink from '../../components/GoogleReviewsLink';
 import { trackCall } from '../../utils/analytics';
 import {
   SERVICES,
@@ -73,36 +73,21 @@ export default function LocationLanding() {
         <div className="container-custom relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
             <div className="lg:col-span-7">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
-                className="flex items-center gap-4 mb-8"
-              >
+              <div className="flex items-center gap-4 mb-8">
                 <MapPin size={14} className="text-brand-gold-dark" strokeWidth={1.5} />
                 <span className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark">
                   {location.region} · Population {location.population}
                 </span>
-              </motion.div>
+              </div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.1 }}
-                className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-10"
-              >
+              <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-10">
                 Premium landscaping <br />
                 in <span className="text-brand-gold-dark italic">{location.name}.</span>
-              </motion.h1>
+              </h1>
 
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.2 }}
-                className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light max-w-xl mb-10"
-              >
+              <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light max-w-xl mb-10">
                 {location.intro}
-              </motion.p>
+              </p>
             </div>
 
             <div className="lg:col-span-5 w-full">
@@ -115,22 +100,11 @@ export default function LocationLanding() {
       {/* Trust bar */}
       <section className="border-y border-brand-dim/20 bg-brand-surface/30">
         <div className="container-custom py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center">
-            <div className="flex items-center gap-4">
-              <CheckCircle size={14} className="text-brand-gold-dark" strokeWidth={1.5} />
-              <span className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-                {publicClaimCopy(BUSINESS.reviews.aggregate, 'Verified Google reviews.')}
-              </span>
-            </div>
-            <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <Shield size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.wsib, 'Current coverage documentation')}
-            </div>
-            <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <Award size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.liabilityInsurance, 'Current liability coverage documentation')}
-            </div>
-            <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.25em] text-brand-muted font-light">
-              <CheckCircle size={14} className="text-brand-gold-dark" strokeWidth={1.5} /> {publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, 'Written workmanship terms')}
-            </div>
+          <div className="flex flex-wrap gap-6 items-center">
+            <GoogleReviewsLink className="font-sans text-sm text-brand-gold-dark underline underline-offset-2" />
+            {[publicClaimCopy(BUSINESS.credentials.wsib, ''), publicClaimCopy(BUSINESS.credentials.liabilityInsurance, ''), publicClaimCopy(BUSINESS.credentials.workmanshipWarranty, '')].filter(Boolean).map((item) => (
+              <span key={item} className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">{item}</span>
+            ))}
           </div>
         </div>
       </section>

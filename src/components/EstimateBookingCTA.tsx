@@ -26,11 +26,11 @@ function CTACard({ href, className, children }: { href: string; className: strin
   return <Link to={href} className={className}>{children}</Link>;
 }
 
-export default function EstimateBookingCTA() {
+export default function EstimateBookingCTA({ bookHref = '/book/?from=estimator' }: { bookHref?: string }) {
   const stripeDesignUrl = (import.meta.env.VITE_STRIPE_DESIGN_URL as string | undefined)?.trim() || '';
   // Conversation track preserves the existing booking route.
   // Sending people to /contact made them re-type everything the estimator already captured.
-  const freeHref = '/book';
+  const freeHref = bookHref;
   const designHref = stripeDesignUrl || '/contact?type=design';
 
   // Owner-attested completed-project photos only (scripts/portfolio-sources.mjs).
@@ -72,7 +72,7 @@ export default function EstimateBookingCTA() {
             <span className="font-display text-2xl text-brand-bone tracking-tight">Project Discovery Call</span>
           </div>
           <p className="font-sans text-[13px] font-light text-brand-muted mb-6 flex-1 leading-relaxed">
-            A quick phone call with Yorkis to confirm scope, timeline, and budget fit for your project. No site visit, no sales pitch — just an honest read on your numbers.
+            Book a site visit with this estimate. Yorkis uses the range you just built to talk through scope, access, and whether a visit is the right next step.
           </p>
           <ul className="space-y-2 mb-7 font-sans text-[12px] font-light text-brand-bone">
             <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Pick a phone time that works for you</li>
@@ -80,7 +80,7 @@ export default function EstimateBookingCTA() {
             <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Honest read if we're not the right fit</li>
           </ul>
           <div className="flex items-center justify-between mt-auto pt-5 border-t border-brand-gold/15">
-            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark">Book My Call</span>
+            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark">Book a site visit</span>
             <Calendar size={16} className="text-brand-gold-dark group-hover:translate-x-1 transition-transform" strokeWidth={1.5} />
           </div>
         </CTACard>
@@ -103,7 +103,9 @@ export default function EstimateBookingCTA() {
             Contact us to confirm the current design scope, format, and project fit.
           </p>
           <ul className="space-y-2 mb-7 font-sans text-[12px] font-light text-brand-bone">
-            <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />{publicClaimCopy(BUSINESS.commercialPolicies.design, 'Current design details are available.')}</li>
+            {publicClaimCopy(BUSINESS.commercialPolicies.design, '') ? (
+              <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />{publicClaimCopy(BUSINESS.commercialPolicies.design, '')}</li>
+            ) : null}
             <li className="flex gap-2.5 items-start"><span className="mt-1.5 w-1 h-1 rounded-full bg-brand-gold shrink-0" />Discuss materials, layout, and project priorities</li>
           </ul>
           <div className="flex items-center justify-between mt-auto pt-5 border-t border-brand-dim/60">

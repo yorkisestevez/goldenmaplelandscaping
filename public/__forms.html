@@ -1,23 +1,5 @@
 <!doctype html>
-<!--
-  Netlify Forms detection file. Netlify's build bot scans deployed HTML for forms
-  with the `netlify` attribute and registers their schemas. In framework mode the
-  app no longer ships a static index.html, so these hidden form definitions live
-  here (any HTML file in the publish dir is scanned). Attribution fields (utm_*,
-  gclid, fbclid, etc.) are populated at runtime by src/utils/utmCapture.ts and
-  forwarded to the CRM via the submission-created bridge function.
 
-  IMPORTANT: this file must be the ONLY schema source for the forms below
-  (contact, quick-quote, cost-estimator, cost-guide, guide-download,
-  estimate-request, deck-design). Do NOT put data-netlify
-  on the runtime JSX versions of these forms — the prerendered pages get
-  scanned too, and their slim static markup (attribution inputs are added by
-  JS at runtime, so they're absent from prerendered HTML) re-registers the
-  form WITHOUT gclid/utm fields. Netlify then silently drops those fields
-  from every submission. That exact regression broke ad attribution until
-  2026-07-02. Runtime forms submit fine without the attribute: the fetch
-  POST carries `form-name`, which routes to the schema registered here.
--->
 <html lang="en">
   <head><meta charset="UTF-8" /><title>Netlify form definitions</title></head>
   <body>
@@ -28,13 +10,10 @@
       <input type="text" name="service" />
       <input type="text" name="budget" />
       <textarea name="details"></textarea>
-      <!-- Contact.tsx and HeroContactForm.tsx both POST these under form-name
-           "contact" (lead_score/lead_tier/lead_score_reasons come from
-           scoreGoldenMapleLead; event_id from genEventId for Meta CAPI dedup)
-           but they were never declared here, so Netlify silently dropped
-           them — the primary contact form's lead scoring never reached the
-           CRM. Declared 2026-08-14, alongside the same fields already on
-           cost-estimator. -->
+      <input type="text" name="town" />
+      <input type="text" name="timing" />
+      <input type="text" name="source" />
+      
       <input type="text" name="event_id" />
       <input type="text" name="lead_score" />
       <input type="text" name="lead_tier" />
@@ -59,9 +38,17 @@
     <form name="quick-quote" netlify netlify-honeypot="bot-field" hidden>
       <input type="text" name="name" />
       <input type="tel" name="phone" />
+      <input type="email" name="email" />
+      <input type="text" name="service" />
+      <input type="text" name="town" />
+      <input type="text" name="timing" />
+      <input type="text" name="budget" />
       <input type="text" name="details" />
       <input type="text" name="source" />
       <input type="text" name="event_id" />
+      <input type="text" name="lead_score" />
+      <input type="text" name="lead_tier" />
+      <input type="text" name="lead_score_reasons" />
       <input type="text" name="utm_source" />
       <input type="text" name="utm_medium" />
       <input type="text" name="utm_campaign" />
@@ -84,10 +71,7 @@
       <input type="email" name="email" />
       <input type="tel" name="phone" />
       <input type="text" name="source" />
-      <!-- Netlify drops any field not declared here. event_id, project_details
-           and the lead_score_* trio were being submitted by the app but were
-           never declared, so Meta CAPI dedup and lead scoring never reached
-           the CRM. Declared 2026-08-13. -->
+      
       <input type="text" name="event_id" />
       <input type="text" name="project_type" />
       <input type="text" name="project_elements" />
@@ -97,8 +81,7 @@
       <input type="text" name="lead_score_reasons" />
       <input type="text" name="estimate_low" />
       <input type="text" name="estimate_high" />
-      <!-- What the customer actually saw on screen (confidence-widened), vs the
-           raw engine basis above. Sales needs both. -->
+      
       <input type="text" name="displayed_low" />
       <input type="text" name="displayed_high" />
       <input type="text" name="target_budget" />
@@ -110,15 +93,11 @@
       <input type="text" name="add_ons" />
       <input type="text" name="has_photos" />
       <input type="text" name="site_conditions" />
-      <!-- Engine v3 (2026-08): the takeoff engine's exact invoice figures,
-           pre-tax cents / HST / grand total in dollars. Declared same-commit
-           as the app started sending them (see the file-header trap). -->
+      
       <input type="text" name="precise_subtotal" />
       <input type="text" name="precise_hst" />
       <input type="text" name="precise_total" />
-      <!-- A full backyard's deck, priced by the 3D deck designer inside the
-           estimator (its figure is inside the totals above); a drawn deck's
-           link reopens the exact design. Declared 2026-09-28, same commit. -->
+      
       <input type="text" name="deck_subtotal" />
       <input type="text" name="deck_summary" />
       <input type="text" name="deck_design_link" />
@@ -139,11 +118,7 @@
       <input type="text" name="session_duration_sec" />
       <textarea name="behavior_json"></textarea>
     </form>
-    <!-- estimator-unlock: RETIRED 2026-09-28. It was the email gate behind
-         "first estimate free, unlimited pricing after email"; the estimator is
-         now fully unlocked and nothing posts this form. The schema stays so
-         the form and its past submissions remain browsable in Netlify.
-         Declared 2026-08-26. -->
+    
     <form name="estimator-unlock" netlify netlify-honeypot="bot-field" hidden>
       <input type="text" name="name" />
       <input type="email" name="email" />
@@ -174,8 +149,16 @@
     <form name="cost-guide" netlify netlify-honeypot="bot-field" hidden>
       <input type="text" name="name" />
       <input type="email" name="email" />
+      <input type="tel" name="phone" />
+      <input type="text" name="service" />
+      <input type="text" name="town" />
+      <input type="text" name="timing" />
+      <input type="text" name="budget" />
       <input type="text" name="address" />
       <input type="text" name="details" />
+      <input type="text" name="lead_score" />
+      <input type="text" name="lead_tier" />
+      <input type="text" name="lead_score_reasons" />
       <input type="text" name="source" />
       <input type="text" name="event_id" />
       <input type="text" name="utm_source" />
@@ -195,20 +178,21 @@
       <input type="text" name="session_duration_sec" />
       <textarea name="behavior_json"></textarea>
     </form>
-    <!-- guide-download and estimate-request (BuyersGuide.tsx): both forms POST via
-         a JS fetch helper (postToNetlify), not a native submit, and previously
-         self-registered via a stray data-netlify attribute on the runtime JSX —
-         which meant Netlify built their schema from the slim static markup only
-         (attribution inputs are added by JS at runtime and are absent from
-         prerendered HTML), silently dropping event_id + every utm_/gclid/fbclid
-         field, same regression class documented in the file header. Declared
-         here 2026-08-14; data-netlify removed from the JSX so this file is the
-         only schema source, matching contact/quick-quote/cost-estimator/cost-guide. -->
+    
     <form name="guide-download" netlify netlify-honeypot="bot-field" hidden>
       <input type="text" name="name" />
       <input type="email" name="email" />
+      <input type="tel" name="phone" />
+      <input type="text" name="service" />
+      <input type="text" name="town" />
+      <input type="text" name="timing" />
+      <input type="text" name="budget" />
+      <textarea name="details"></textarea>
       <input type="text" name="source" />
       <input type="text" name="event_id" />
+      <input type="text" name="lead_score" />
+      <input type="text" name="lead_tier" />
+      <input type="text" name="lead_score_reasons" />
       <input type="text" name="utm_source" />
       <input type="text" name="utm_medium" />
       <input type="text" name="utm_campaign" />
@@ -233,8 +217,13 @@
       <input type="text" name="service" />
       <input type="text" name="budget" />
       <textarea name="details"></textarea>
+      <input type="text" name="town" />
+      <input type="text" name="timing" />
       <input type="text" name="source" />
       <input type="text" name="event_id" />
+      <input type="text" name="lead_score" />
+      <input type="text" name="lead_tier" />
+      <input type="text" name="lead_score_reasons" />
       <input type="text" name="utm_source" />
       <input type="text" name="utm_medium" />
       <input type="text" name="utm_campaign" />
@@ -252,12 +241,7 @@
       <input type="text" name="session_duration_sec" />
       <textarea name="behavior_json"></textarea>
     </form>
-    <!-- deck-design (DeckCraft "Send my design", src/features/deckcraft/sendDesign.ts): POSTs via
-         JS fetch like every other form; runtime JSX must NOT carry data-netlify (see the file-header
-         trap). The CRM keeps name/email/phone/address/details/value, so details carries the reopen
-         link, summary, estimate, review items, notes and consent line; the other fields stay in the
-         Netlify submission. scripts/check-deck-send.ts fails if the app sends a field not declared
-         here. Declared 2026-09-22. -->
+    
     <form name="deck-design" netlify netlify-honeypot="bot-field" hidden>
       <input type="text" name="name" />
       <input type="email" name="email" />
@@ -278,17 +262,16 @@
       <input type="text" name="consent_text" />
       <input type="text" name="consent_version" />
       <input type="text" name="consent_at" />
-      <!-- Optional qualifiers and the site's shared lead score (scoreGoldenMapleLead), declared 2026-09-23.
-           The CRM keeps only details, so details repeats them in words. -->
+      
       <input type="text" name="timeline" />
       <input type="text" name="budget" />
       <input type="text" name="samples_requested" />
       <input type="text" name="lead_score" />
       <input type="text" name="lead_tier" />
       <input type="text" name="lead_score_reasons" />
-      <!-- The price book the design was priced with (src/features/deckcraft/priceBook.ts), 2026-09-23. -->
+      
       <input type="text" name="price_book" />
-      <!-- The branded proposal PDF (ATTACH_PROPOSAL_PDF in src/features/deckcraft/sendDesign.ts), 2026-09-28. -->
+      
       <input type="file" name="proposal_pdf" />
       <input type="text" name="utm_source" />
       <input type="text" name="utm_medium" />
