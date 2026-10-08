@@ -54,8 +54,24 @@ export const G_TAPE_RATE={
   note:'G-Tape 3040BK 2″×65′ permanent-adhesion flashing tape for joist and beam tops; Deck Shoppe Canada CAD retail.',
 } as const;
 
+/**
+ * Pressure-treated 6×6 ground-contact posts — Home Depot Canada CAD retail (category listing 2026-10-08).
+ * Cut lengths pack into the shortest listed stock length that holds them.
+ */
+export const HOME_DEPOT_POST_RATES={
+  ft8:{sku:'1000790735',model:'6x6×8',lengthFt:8,unitPrice:25.97,url:'https://www.homedepot.ca/product/micropro-sienna-6-x-6-x-8-pressure-treated-wood-post-suitable-for-ground-contact-/1000790735',note:'PT 6×6×8 ground-contact post.'},
+  ft10:{sku:'1000790734',model:'6x6×10',lengthFt:10,unitPrice:33.20,url:'https://www.homedepot.ca/product/pressure-treated-6-x-6-x-10-premium-wood-post-suitable-for-ground-contact/1000790734',note:'PT 6×6×10 ground-contact post.'},
+  ft12:{sku:'1000790733',model:'6x6×12',lengthFt:12,unitPrice:39.34,url:'https://www.homedepot.ca/product/pressure-treated-6-x-6-x-12-premium-wood-post-suitable-for-ground-contact/1000790733',note:'PT 6×6×12 ground-contact post.'},
+  ft16:{sku:'1000790732',model:'6x6×16',lengthFt:16,unitPrice:53.48,url:'https://www.homedepot.ca/product/pressure-treated-6-x-6-x-16-premium-wood-post-suitable-for-ground-contact/1000790732',note:'PT 6×6×16 ground-contact post.'},
+} as const;
+
+export const HOME_DEPOT_POST_STOCK=Object.values(HOME_DEPOT_POST_RATES);
+
 export const hdConnectorBasis=(source:ConnectorRateSource)=>
   `${CONNECTOR_RATE_SUPPLIER} CAD ${source.unitPrice.toFixed(2)} (${source.model} / ${source.sku}); checked ${CONNECTOR_RATE_CHECKED_ON}. ${source.note} Confirm stock and finish on order.`;
 
 export const gTapeBasis=()=>
   `${G_TAPE_RATE_SUPPLIER} CAD ${G_TAPE_RATE.unitPrice.toFixed(2)}/roll (${G_TAPE_RATE.model} ${G_TAPE_RATE.rollLf} ft / ${G_TAPE_RATE.sku}); checked ${CONNECTOR_RATE_CHECKED_ON}. ${G_TAPE_RATE.note} Quantity covers modeled joist and beam tops; confirm stock and width on order.`;
+
+export const hdPostStockBasis=(ordered:{lengthFt:number;qty:number;unitPrice:number}[],cutLf:number)=>
+  `${CONNECTOR_RATE_SUPPLIER} PT 6×6 ground-contact posts (checked ${CONNECTOR_RATE_CHECKED_ON}): ${ordered.map(o=>`${o.qty}×${o.lengthFt} ft @ $${o.unitPrice.toFixed(2)}`).join(', ')}. Modeled cut length ${cutLf.toFixed(1)} lf packed into shortest listed stock. Confirm grade, stock and delivery on order.`;

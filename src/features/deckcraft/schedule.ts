@@ -1,4 +1,3 @@
-import {physicalSupportTimber} from './physicalQuote';
 import {activeCornerChamfers} from './lib/cornerChamfers';
 import type {DeckData} from './types';
 import type {DeckTakeoff,Member} from './deckTakeoff';
@@ -9,7 +8,8 @@ import {colourName,deckColourRef,darkSlateBorder} from './boardFinishes';
 import {partRef} from './deckPartFinishes';
 import {deckingStock,productStock} from './deckingStock';
 import {usesCurrentBuildRules} from './buildRules';
-import {gTapeBasis,G_TAPE_RATE,hdConnectorBasis,HOME_DEPOT_CONNECTOR_RATES} from './connectorRates';
+import {usesPhysicalElevations} from './elevationDatum';
+import {gTapeBasis,G_TAPE_RATE,hdConnectorBasis,hdPostStockBasis,HOME_DEPOT_CONNECTOR_RATES,HOME_DEPOT_POST_STOCK} from './connectorRates';
 export interface ConnectorScheduleRow {quoteResolved?:boolean;name:string;qty:number;unit:string;rate:number|null;basis:string}
 /** Connector schedule rows already carried as dollar lines in the legacy Hardware & Fasteners section. */
 export const LEGACY_HARDWARE_CONNECTOR_NAMES=new Set(['Joist hangers','Ledger bolts','Post anchors','Deck screws','Hidden clips']);
@@ -17,11 +17,38 @@ export const LEGACY_HARDWARE_CONNECTOR_NAMES=new Set(['Joist hangers','Ledger bo
 export const PRICED_CONNECTOR_SECTION_NAMES=new Set([
   'Joist-to-beam ties','Post-to-beam caps','Blocking connections','Stringer connectors',
   'Skewed joist and hip hangers','Railing post anchors/bolts','Connector fastener sets',
-  'G-Tape framing protection',
+  'G-Tape framing protection','Support post timber',
 ]);
 /** Manufacturer joist-tape accessories replace the priced G-Tape line (supplier quote for the branded product). */
 export const MANUFACTURER_JOIST_TAPE_IDS=new Set(['tt_protac_joist','dk_joist_tape']);
 const memberLf=(m:{a:{x:number;y:number;z:number};b:{x:number;y:number;z:number}})=>Math.hypot(m.b.x-m.a.x,m.b.y-m.a.y,m.b.z-m.a.z)/12;
+/** Support posts: 2026-10 packs cut lengths into HD PT 6×6 stock; legacy keeps the old quote wording/units. */
+export function supportPostTimberRow(data:DeckData,model:DeckTakeoff):ConnectorScheduleRow|null{
+  const cuts=model.foundationSupports.filter(f=>f.postHeightIn!==null&&f.postHeightIn>0).map(f=>f.postHeightIn as number);
+  if(!cuts.length)return null;
+  const cutLf=cuts.reduce((n,c)=>n+c,0)/12,physical=usesPhysicalElevations(data);
+  if(!usesCurrentBuildRules(data)){
+    return physical
+      ?{name:'Support post timber',qty:model.foundationQuantities.supportPostLf,unit:'lf',rate:null,basis:'Measured cut length from local proposed ground to beam bearing. Confirm stock lengths, waste and inclusion in foundation allowance; quote only the separate timber scope.'}
+      :{name:'Support post timber',qty:cuts.length,unit:'posts',rate:null,basis:'Confirm timber inclusion in footing allowance; separate post-length rate unavailable'};
+  }
+  const lengthsIn=HOME_DEPOT_POST_STOCK.map(p=>p.lengthFt*12),priceByIn=new Map(HOME_DEPOT_POST_STOCK.map(p=>[p.lengthFt*12,p]));
+  const plan=orderListedStock(cuts,0,{lengthsIn,trimIn:0});
+  if(plan.unresolved.length||!plan.bins.length){
+    return physical
+      ?{name:'Support post timber',qty:cutLf,unit:'lf',rate:null,basis:`Supplier quote required: ${plan.unresolved.length} cut(s) exceed the longest Home Depot Canada 6×6 stock (16 ft). Modeled ${cutLf.toFixed(1)} lf.`}
+      :{name:'Support post timber',qty:cuts.length,unit:'posts',rate:null,basis:`Supplier quote required: ${plan.unresolved.length} cut(s) exceed the longest Home Depot Canada 6×6 stock (16 ft).`};
+  }
+  const byLength=new Map<number,{lengthFt:number;qty:number;unitPrice:number}>();
+  for(const b of plan.bins){
+    const src=priceByIn.get(b.lengthIn)!;
+    const row=byLength.get(b.lengthIn)??{lengthFt:src.lengthFt,qty:0,unitPrice:src.unitPrice};
+    row.qty++;byLength.set(b.lengthIn,row);
+  }
+  const ordered=[...byLength.values()].sort((a,b)=>a.lengthFt-b.lengthFt);
+  const total=ordered.reduce((n,o)=>n+o.qty*o.unitPrice,0),qty=plan.bins.length,rate=total/qty;
+  return {name:'Support post timber',qty,unit:'pcs',rate,basis:hdPostStockBasis(ordered,cutLf)};
+}
 /** binLengthsIn: the length each cutting group is bought in, present only when the product lists more than one length
  * (each packed board is bought at the shortest listed length that holds it); stockLengthIn is then the longest. */
 export interface StockScheduleRow {name:string;section:string;stockLengthIn:number;binLengthsIn?:number[];orderedPieces:number;cutsIn:number[][];unresolvedIn:number[];installedLf:number;orderedLf:number}
@@ -75,7 +102,7 @@ export function connectorSchedule(data:DeckData,model:DeckTakeoff,h=getHardwareL
     {name:'Post anchors',qty:h.postAnchors,unit:'ea',rate:22,basis:'Existing Deck Craft Pro anchor allowance'},
     {name:'Joist-to-beam ties',qty:h.beamTies.length,unit:'ea',rate:rate(R.beamTie),basis:basis(R.beamTie,'Supplier quote required; no confirmed existing unit rate')},
     {name:'Post-to-beam caps',qty:h.postCaps.length,unit:'ea',rate:rate(R.postCap),basis:basis(R.postCap,'Supplier quote required; match beam plies and post width')},
-    physicalSupportTimber(data,model)??{name:'Support post timber',qty:model.quantities.supportPosts,unit:'posts',rate:null,basis:'Confirm timber inclusion in footing allowance; separate post-length rate unavailable'},
+    supportPostTimberRow(data,model)??{name:'Support post timber',qty:0,unit:'posts',rate:null,basis:'No support posts modeled'},
     {name:'Blocking connections',qty:h.blockingAngles.length,unit:'ea',rate:rate(R.blockingAngle),basis:basis(R.blockingAngle,'Supplier quote required for selected angle and fastener set')},
     {name:'Stringer connectors',qty:h.stringerConnectors.length,unit:'ea',rate:rate(R.stringerConnector),basis:basis(R.stringerConnector,'Supplier quote required for stair connector and fastener set')},
     {name:'Splice fasteners',qty:h.spliceBolts.length,unit:'ea',rate:null,basis:'Supplier quote required after connection design'},

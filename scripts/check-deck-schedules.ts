@@ -17,7 +17,7 @@ for(const width of [8,24,40])for(const length of [8,24])for(const pattern of ['S
  assert(Number.isFinite(e.total)&&e.total>0);
  for(const s of e.sections)assert(Math.abs(s.total-s.items.reduce((n,i)=>n+i.cost,0))<.01,`${s.title} item sum`);
  assert(e.connectorSchedule.some(r=>r.name==='Joist-to-beam ties'&&r.rate!==null&&r.rate>0));
- assert(e.connectorSchedule.some(r=>r.name==='Support post timber'&&r.rate===null)||e.connectorSchedule.some(r=>r.name==='Splice fasteners'&&r.rate===null)||e.flags.some(f=>f.includes('unpriced connection')));
+ assert(e.connectorSchedule.some(r=>r.name==='Splice fasteners'&&r.rate===null)||e.connectorSchedule.some(r=>r.name==='Support post timber'&&r.rate===null)||e.flags.some(f=>f.includes('unpriced connection'))||e.connectorSchedule.some(r=>r.name==='Support post timber'&&r.rate!==null));
  const hanger=e.connectorSchedule.find(r=>r.name==='Joist hangers');assert.equal(hanger?.qty,h.hangers.length);
  assert(e.stockSchedule.every(s=>!s.unresolvedIn.length),'All framing cuts fit stock');
  for(const s of e.stockSchedule){assert(s.orderedLf>=s.installedLf);for(const bin of s.cutsIn)assert(bin.reduce((a,b)=>a+b,0)+Math.max(0,bin.length-1)*.125<=s.stockLengthIn+.001);}

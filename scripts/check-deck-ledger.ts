@@ -225,7 +225,9 @@ for(const [path,covered] of paths)ok(covered,`The designs cover ${path}`);
 // 4. Builder or supplier, as the engine words it.
 const expect=(label:string,kind:QuoteKind)=>ok(kinds.get(label)===kind,`"${label.replace(/^item:/,'')}" is a ${kind} quote (got ${kinds.get(label)??'none'})`);
 for(const label of ['Accent-colour board labour (builder quote)','Medallion inlay labour (builder quote)','Fire pit, wood-burning (estimator allowance)'])expect(label,'builder');
-for(const label of ['Support post timber','Deckorators Dark Slate picture-frame boards','Fascia boards (supplier quote)','Stair treads and risers in TimberTech Composite Terrain+','Built-in Bench with selected finish',unrated[0].name,RAILING_CATALOGUE[0].name,`${nullLight.name} supply and installation`])expect(label,'supplier');
+for(const label of ['Deckorators Dark Slate picture-frame boards','Fascia boards (supplier quote)','Stair treads and risers in TimberTech Composite Terrain+','Built-in Bench with selected finish',unrated[0].name,RAILING_CATALOGUE[0].name,`${nullLight.name} supply and installation`])expect(label,'supplier');
+// Legacy saves still quote Support post timber; 2026-10 designs price it from HD stock.
+if(kinds.has('Support post timber'))expect('Support post timber','supplier');
 for(const item of ['Accent-colour board labour','Medallion inlay labour'])expect(`item:${item}`,'builder');
 for(const item of ['Manufacturer privacy screen','Deckorators Dark Slate'])expect(`item:${item}`,'supplier');
 ok([...kinds.keys()].every(k=>!/Porch-wrap|Deck skirting|Skirting /.test(k)),'Porch wrap and skirting are priced, not quote tags');

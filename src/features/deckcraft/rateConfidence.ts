@@ -1,5 +1,5 @@
 import {chamferLabourFactor} from './lib/cornerChamfers';
-import {CONNECTOR_RATE_CHECKED_ON,G_TAPE_RATE,HOME_DEPOT_CONNECTOR_RATES} from './connectorRates';
+import {CONNECTOR_RATE_CHECKED_ON,G_TAPE_RATE,HOME_DEPOT_CONNECTOR_RATES,HOME_DEPOT_POST_RATES} from './connectorRates';
 import {FASCIA_RETAIL_RATES} from './supplierRates';
 import {MATERIAL_TIERS} from './types';
 
@@ -50,7 +50,9 @@ export function unconfirmedRates():RateNote[]{
     {id:'frameless-glass',rate:'Frameless glass railing (glass, shoe or spigots, stair handrail)',value:'Supplier quote; installation labour on the Glass Panels basis (20 ft per crew-day and its ×1.40 on the job)',status:'owner-decision',where:'calculations.ts (frameless glass)',
       note:'The price book and the Carr data have no frameless glass rate. The owner chose on 2026-09-25 to list it for a supplier quote and reuse the Glass Panels labour until a rate is set; setting one is a price-book change. Intake: npm run deck:rate-intake.'},
     {id:'hd-connectors',rate:'Home Depot Canada framing connectors',value:`H2.5AZ $${HOME_DEPOT_CONNECTOR_RATES.beamTie.unitPrice}/ea · BC6Z $${HOME_DEPOT_CONNECTOR_RATES.postCap.unitPrice}/ea · A23Z $${HOME_DEPOT_CONNECTOR_RATES.blockingAngle.unitPrice}/ea · LSCZ $${HOME_DEPOT_CONNECTOR_RATES.stringerConnector.unitPrice}/ea · LSSR26Z $${HOME_DEPOT_CONNECTOR_RATES.skewedHanger.unitPrice}/ea · DTT2Z/4 $${HOME_DEPOT_CONNECTOR_RATES.railingPostBolt.unitPrice}/bolt · N8DHDG-R set $${HOME_DEPOT_CONNECTOR_RATES.fastenerSet.unitPrice}`,status:'estimate',where:'connectorRates.ts HOME_DEPOT_CONNECTOR_RATES',
-      note:`Owner 2026-10-08: price former connector quote lines from Home Depot Canada retail (checked ${CONNECTOR_RATE_CHECKED_ON}). Support post timber and splice fasteners stay quotes. Confirm stock, finish and length on order; not a Carr trade quote.`},
+      note:`Owner 2026-10-08: price former connector quote lines from Home Depot Canada retail (checked ${CONNECTOR_RATE_CHECKED_ON}). Splice fasteners stay quotes. Confirm stock, finish and length on order; not a Carr trade quote.`},
+    {id:'hd-posts',rate:'Home Depot Canada PT 6×6 support posts',value:`8 ft $${HOME_DEPOT_POST_RATES.ft8.unitPrice} · 10 ft $${HOME_DEPOT_POST_RATES.ft10.unitPrice} · 12 ft $${HOME_DEPOT_POST_RATES.ft12.unitPrice} · 16 ft $${HOME_DEPOT_POST_RATES.ft16.unitPrice}`,status:'estimate',where:'connectorRates.ts HOME_DEPOT_POST_RATES',
+      note:`Owner 2026-10-08: pack modeled post cut lengths into Home Depot Canada PT 6×6 ground-contact stock (checked ${CONNECTOR_RATE_CHECKED_ON}). Cuts over 16 ft stay a supplier quote. Confirm grade, stock and delivery on order.`},
     {id:'g-tape',rate:'G-Tape framing protection',value:`$${G_TAPE_RATE.unitPrice}/roll (${G_TAPE_RATE.model} ${G_TAPE_RATE.rollLf} ft)`,status:'estimate',where:'connectorRates.ts G_TAPE_RATE',
       note:`Owner 2026-10-08: price joist/beam protection tape from Deck Shoppe Canada G-Tape 3040BK retail (checked ${CONNECTOR_RATE_CHECKED_ON}). Rolls cover modeled joist and beam tops. A selected manufacturer joist tape (PRO-Tac / Deckorators) replaces this priced line. HD Canada stocks RESISTO Joist Guard as a store substitute; confirm stock and width on order.`},
   ];
