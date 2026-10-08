@@ -9,15 +9,19 @@ import {colourName,deckColourRef,darkSlateBorder} from './boardFinishes';
 import {partRef} from './deckPartFinishes';
 import {deckingStock,productStock} from './deckingStock';
 import {usesCurrentBuildRules} from './buildRules';
-import {hdConnectorBasis,HOME_DEPOT_CONNECTOR_RATES} from './connectorRates';
+import {gTapeBasis,G_TAPE_RATE,hdConnectorBasis,HOME_DEPOT_CONNECTOR_RATES} from './connectorRates';
 export interface ConnectorScheduleRow {quoteResolved?:boolean;name:string;qty:number;unit:string;rate:number|null;basis:string}
 /** Connector schedule rows already carried as dollar lines in the legacy Hardware & Fasteners section. */
 export const LEGACY_HARDWARE_CONNECTOR_NAMES=new Set(['Joist hangers','Ledger bolts','Post anchors','Deck screws','Hidden clips']);
-/** Rows priced from Home Depot Canada that must also appear as Hardware & Fasteners dollar lines. */
+/** Rows priced from Home Depot Canada / G-Tape that must also appear as Hardware & Fasteners dollar lines. */
 export const PRICED_CONNECTOR_SECTION_NAMES=new Set([
   'Joist-to-beam ties','Post-to-beam caps','Blocking connections','Stringer connectors',
   'Skewed joist and hip hangers','Railing post anchors/bolts','Connector fastener sets',
+  'G-Tape framing protection',
 ]);
+/** Manufacturer joist-tape accessories replace the priced G-Tape line (supplier quote for the branded product). */
+export const MANUFACTURER_JOIST_TAPE_IDS=new Set(['tt_protac_joist','dk_joist_tape']);
+const memberLf=(m:{a:{x:number;y:number;z:number};b:{x:number;y:number;z:number}})=>Math.hypot(m.b.x-m.a.x,m.b.y-m.a.y,m.b.z-m.a.z)/12;
 /** binLengthsIn: the length each cutting group is bought in, present only when the product lists more than one length
  * (each packed board is bought at the shortest listed length that holds it); stockLengthIn is then the longest. */
 export interface StockScheduleRow {name:string;section:string;stockLengthIn:number;binLengthsIn?:number[];orderedPieces:number;cutsIn:number[][];unresolvedIn:number[];installedLf:number;orderedLf:number}
@@ -51,7 +55,7 @@ export function constructionStock(model:DeckTakeoff):StockScheduleRow[]{
   return [...groups.values()].map(g=>{const plan=planStock(g.members.map(m=>Math.hypot(m.b.x-m.a.x,m.b.y-m.a.y,m.b.z-m.a.z)),192);return {name:'Framing lumber',section:g.section,stockLengthIn:192,orderedPieces:plan.bins.length,cutsIn:plan.bins.map(b=>b.cutsIn),unresolvedIn:plan.unresolved,installedLf:plan.installedLf,orderedLf:plan.purchasedLf};});
 }
 export function connectorSchedule(data:DeckData,model:DeckTakeoff,h=getHardwareLayout(data,model)):ConnectorScheduleRow[]{
-  // Home Depot Canada retail applies to 2026-10 designs only; legacy saves keep the old supplier-quote status so reopened drawings and prices match what was saved.
+  // Home Depot Canada / G-Tape retail applies to 2026-10 designs only; legacy saves keep the old supplier-quote status so reopened drawings and prices match what was saved.
   const hd=usesCurrentBuildRules(data),R=HOME_DEPOT_CONNECTOR_RATES;
   const rate=(source:typeof R[keyof typeof R])=>hd?source.unitPrice:null;
   const basis=(source:typeof R[keyof typeof R],legacy:string)=>hd?hdConnectorBasis(source):legacy;
@@ -60,6 +64,10 @@ export function connectorSchedule(data:DeckData,model:DeckTakeoff,h=getHardwareL
       ?`${hdConnectorBasis(R.skewedHanger)} Joist hangers skewed where joists meet the angled corners.`
       :`${hdConnectorBasis(R.skewedHanger)} Jack-joist hangers skewed to the corner angle, plus a hip hanger at each house corner.`)
     :(activeCornerChamfers(data)?'Supplier quote required; joist hangers skewed 45° where joists meet the angled corners':'Supplier quote required; jack-joist hangers skewed to the corner angle, plus a hip hanger at each house corner');
+  // G-Tape covers modeled joist and beam tops. A selected manufacturer joist-tape accessory replaces this priced line.
+  const brandedTape=data.catalogueAccessories?.some(id=>MANUFACTURER_JOIST_TAPE_IDS.has(id));
+  const tapeLf=model.levels.reduce((n,l)=>n+l.joists.reduce((s,j)=>s+memberLf(j),0)+l.beams.reduce((s,b)=>s+memberLf(b),0),0);
+  const tapeRolls=tapeLf>0?Math.ceil(tapeLf/G_TAPE_RATE.rollLf):0;
   return [
     {name:'Joist hangers',qty:h.hangers.length,unit:'ea',rate:4.5,basis:'Existing Deck Craft Pro unit rate; hanger selection to match member'},
     {name:'Skewed joist and hip hangers',qty:h.skewedHangers?.length??0,unit:'ea',rate:rate(R.skewedHanger),basis:skewedBasis},
@@ -75,6 +83,8 @@ export function connectorSchedule(data:DeckData,model:DeckTakeoff,h=getHardwareL
     {name:'Railing cap/skirt sets',qty:h.railCaps,unit:'sets',rate:25,basis:'Existing cap/skirt rate; included in railing system'},
     {name:'Railing post anchors/bolts',qty:h.railBolts.length,unit:'ea',rate:rate(R.railingPostBolt),basis:basis(R.railingPostBolt,'Confirm inclusion in selected railing kit; separate rate unavailable')},
     {name:'Connector fastener sets',qty:h.hangers.length+(h.skewedHangers?.length??0)+h.beamTies.length+h.blockingAngles.length+h.stringerConnectors.length,unit:'sets',rate:rate(R.fastenerSet),basis:basis(R.fastenerSet,'One manufacturer-approved fastening set per connector; exact nails/screws and rate require connector selection')},
+    // 2026-10 only: legacy saves never listed framing tape, so omitting it keeps reopened quote lists and totals identical.
+    ...(hd&&tapeRolls>0&&!brandedTape?[{name:'G-Tape framing protection',qty:tapeRolls,unit:'rolls',rate:G_TAPE_RATE.unitPrice,basis:`${gTapeBasis()} ${tapeLf.toFixed(1)} lf of joist and beam tops.`}]:[]),
     ...(h.hidden?[{name:'Hidden clips',qty:h.screws.length,unit:'modeled fixings',rate:null,basis:'Priced by existing $0.85/sqft area allowance; no per-clip conversion'}]:[{name:'Deck screws',qty:Math.ceil(h.screws.length*1.1),unit:'ea',rate:.28,basis:'Existing screw rate; modeled positions plus 10% allowance'}]),
   ].filter(r=>r.qty>0);
 }

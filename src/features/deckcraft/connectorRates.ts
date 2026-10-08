@@ -1,10 +1,12 @@
 /**
- * Home Depot Canada published CAD retail for framing connectors.
- * Purchasing benchmarks only — not a job-specific supply quote. Confirm stock and finish on order.
- * Checked 2026-10-08 from HD Canada product pages (live / Wayback snapshots where the live page blocks fetch).
+ * Home Depot Canada published CAD retail for framing connectors, plus G-Tape framing protection
+ * (Deck Shoppe Canada — HD does not stock Nichigo G-Tape). Purchasing benchmarks only — not a
+ * job-specific supply quote. Confirm stock and finish on order.
+ * Checked 2026-10-08 from HD Canada / Deck Shoppe product pages (live / Wayback where live fetch blocks).
  */
 export const CONNECTOR_RATE_CHECKED_ON='2026-10-08';
 export const CONNECTOR_RATE_SUPPLIER='Home Depot Canada';
+export const G_TAPE_RATE_SUPPLIER='Deck Shoppe Canada';
 
 export type ConnectorRateSource={
   sku:string;
@@ -38,5 +40,22 @@ export const HOME_DEPOT_CONNECTOR_RATES={
   fastenerSet:{sku:'1000180642',model:'N8DHDG-R',unitPrice:0.78,url:'https://www.homedepot.ca/product/simpson-strong-tie-strong-drive-1-1-2-in-x-0-131-in-scn-smooth-shank-hdg-connector-nail-150-pack-/1000180642',note:'N8DHDG-R HDG connector nails, 150-pack CAD11.77; 10 nails/set planning allowance.'},
 } as const satisfies Record<string,ConnectorRateSource>;
 
+/**
+ * G-Tape 3040BK 2″×65′ — acrylic flashing tape over joist and beam tops.
+ * Deck Shoppe Canada CAD retail (checked 2026-10-08); Home Depot Canada does not stock Nichigo G-Tape
+ * (RESISTO Joist Guard is the closest HD SKU if a store substitution is needed).
+ */
+export const G_TAPE_RATE={
+  sku:'3040BK-2',
+  model:'3040BK',
+  unitPrice:24.99,
+  rollLf:65,
+  url:'https://www.deckshoppe.ca/products/g-tape-2-x-65-permanent-adhesion-construction-tape-flashing-tape',
+  note:'G-Tape 3040BK 2″×65′ permanent-adhesion flashing tape for joist and beam tops; Deck Shoppe Canada CAD retail.',
+} as const;
+
 export const hdConnectorBasis=(source:ConnectorRateSource)=>
   `${CONNECTOR_RATE_SUPPLIER} CAD ${source.unitPrice.toFixed(2)} (${source.model} / ${source.sku}); checked ${CONNECTOR_RATE_CHECKED_ON}. ${source.note} Confirm stock and finish on order.`;
+
+export const gTapeBasis=()=>
+  `${G_TAPE_RATE_SUPPLIER} CAD ${G_TAPE_RATE.unitPrice.toFixed(2)}/roll (${G_TAPE_RATE.model} ${G_TAPE_RATE.rollLf} ft / ${G_TAPE_RATE.sku}); checked ${CONNECTOR_RATE_CHECKED_ON}. ${G_TAPE_RATE.note} Quantity covers modeled joist and beam tops; confirm stock and width on order.`;

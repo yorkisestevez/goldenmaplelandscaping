@@ -582,7 +582,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     {
       title: 'Hardware & Fasteners',
       icon: '🔩',
-      description: hdConnectorRows.length?'Screws, hidden clips, joist hangers, post anchors, and Home Depot Canada connector benchmarks.':'Screws, hidden clips, joist hangers, and post anchors.',
+      description: hdConnectorRows.length?'Screws, hidden clips, joist hangers, post anchors, Home Depot Canada connector benchmarks, and G-Tape framing protection when priced.':'Screws, hidden clips, joist hangers, and post anchors.',
       total: m_hardwareTotal,
       items: [
         { name: effectiveFasteningSystem === 'Face' ? 'Deck Screws' : 'Hidden Clips', spec: effectiveFasteningSystem === 'Face'?'Corrosion resistant; model plus 10%':'Existing area allowance; modeled clip count is shown separately', qty: effectiveFasteningSystem === 'Face' ? totalScrews : Math.ceil(area), unit: effectiveFasteningSystem === 'Face' ? 'pcs' : 'sqft', cost: m_screwCost + m_hiddenClipCost },
