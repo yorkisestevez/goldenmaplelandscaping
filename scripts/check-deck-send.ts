@@ -143,7 +143,7 @@ ok(!read('src/features/deckcraft/SendDesignDialog.tsx').includes('data-netlify')
 {
   const page=designerSource(),booking=read('src/components/BookingScheduler.tsx'),privacy=read('src/pages/Privacy.tsx');
   ok(/<header className="dd-header">[\s\S]*?className="dd-send-top"[\s\S]*?Send my design[\s\S]*?<\/header>/.test(page),'The header offers "Send my design"');
-  ok(page.includes('className="dd-send-card"')&&page.includes('<SendDesignDialog '),'The estimate step has the send card and the page mounts the dialog');
+  ok(/dd-close-pack[\s\S]*?<strong>Send<\/strong>[\s\S]*?onClick=\{onSend\}[\s\S]*?Send my design/.test(page)&&page.includes('<SendDesignDialog '),'The estimate close pack offers Send my design and the page mounts the dialog');
   ok(page.includes('trackLead(DECK_DESIGN_FORM')&&page.includes("fetch('/'")&&page.includes('getAttributionFields()'),'The page posts to Netlify with attribution and records the lead');
   ok(!page.includes('Talk through your design')&&!page.includes('Discuss this deck'),'The old contact-only links are gone');
   ok(/useLocation\(\)\.state/.test(booking)&&booking.includes('bookingNotes')&&!/searchParams/.test(booking),'The booking form reads the design link from router state, not the URL');
