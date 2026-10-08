@@ -39,9 +39,11 @@ const overridden=calculateDeckReleaseEstimate({...base,customOverrides:{[decking
 near(overridden.sections.find(s=>s.title==='Decking')!.items.find(i=>i.name===decking.name)!.cost as number,100,'Material line override sticks');
 
 const panel=readFileSync(new URL('../src/features/deckcraft/designer/OwnerCostEditor.tsx',import.meta.url),'utf8');
+const review=readFileSync(new URL('../src/features/deckcraft/designer/QuoteReviewPanel.tsx',import.meta.url),'utf8');
 const page=readFileSync(new URL('../src/pages/DeckDesigner.tsx',import.meta.url),'utf8');
 ok(panel.includes('Material markup')&&panel.includes('Your installation labour')&&panel.includes('Override priced material lines'),'Owner editor covers materials and labour');
-ok(page.includes('OwnerCostEditor')&&page.includes('onOwnerCosts')&&page.includes('setOwnerCostsOpen'),'Designer wires the owner cost editor');
+ok(review.includes('OwnerCostEditor')&&review.includes('variant="inline"'),'Quote review hosts the owner cost editor');
+ok(page.includes('onOwnerCosts')&&page.includes('setQuoteReviewOpen'),'Designer opens owner costs through quote review');
 ok(OWNER_COST_LIMITS.markupMax===500&&OWNER_COST_LIMITS.amountMax===1_000_000,'Owner cost limits match contractor preset bounds');
 
 console.log(`DECK OWNER COSTS OK — ${n} checks.`);

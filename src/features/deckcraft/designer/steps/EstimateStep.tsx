@@ -24,7 +24,7 @@ export default function EstimateStep({data,update,estimate,ledger,material,raili
     <PriceLedger ledger={ledger} variant="full"/>
     {!customer&&onOwnerCosts&&<section className="dd-owner-costs-entry" aria-labelledby="dd-owner-costs-entry-title">
       <h3 id="dd-owner-costs-entry-title">Your material &amp; labour costs</h3>
-      <p className="dd-note">Set your material markup, replace installation labour with your own CAD total (or crew × hours), and override priced material lines. Private to this job.</p>
+      <p className="dd-note">Set your material markup, replace installation labour with your own CAD total (or crew × hours), and override priced material lines. Opens the private cost review for this job.</p>
       <button type="button" className="dd-secondary" onClick={onOwnerCosts}>Edit your costs</button>
     </section>}
 
