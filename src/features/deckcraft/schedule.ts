@@ -9,7 +9,15 @@ import {colourName,deckColourRef,darkSlateBorder} from './boardFinishes';
 import {partRef} from './deckPartFinishes';
 import {deckingStock,productStock} from './deckingStock';
 import {usesCurrentBuildRules} from './buildRules';
+import {hdConnectorBasis,HOME_DEPOT_CONNECTOR_RATES} from './connectorRates';
 export interface ConnectorScheduleRow {quoteResolved?:boolean;name:string;qty:number;unit:string;rate:number|null;basis:string}
+/** Connector schedule rows already carried as dollar lines in the legacy Hardware & Fasteners section. */
+export const LEGACY_HARDWARE_CONNECTOR_NAMES=new Set(['Joist hangers','Ledger bolts','Post anchors','Deck screws','Hidden clips']);
+/** Rows priced from Home Depot Canada that must also appear as Hardware & Fasteners dollar lines. */
+export const PRICED_CONNECTOR_SECTION_NAMES=new Set([
+  'Joist-to-beam ties','Post-to-beam caps','Blocking connections','Stringer connectors',
+  'Skewed joist and hip hangers','Railing post anchors/bolts','Connector fastener sets',
+]);
 /** binLengthsIn: the length each cutting group is bought in, present only when the product lists more than one length
  * (each packed board is bought at the shortest listed length that holds it); stockLengthIn is then the longest. */
 export interface StockScheduleRow {name:string;section:string;stockLengthIn:number;binLengthsIn?:number[];orderedPieces:number;cutsIn:number[][];unresolvedIn:number[];installedLf:number;orderedLf:number}
@@ -43,21 +51,30 @@ export function constructionStock(model:DeckTakeoff):StockScheduleRow[]{
   return [...groups.values()].map(g=>{const plan=planStock(g.members.map(m=>Math.hypot(m.b.x-m.a.x,m.b.y-m.a.y,m.b.z-m.a.z)),192);return {name:'Framing lumber',section:g.section,stockLengthIn:192,orderedPieces:plan.bins.length,cutsIn:plan.bins.map(b=>b.cutsIn),unresolvedIn:plan.unresolved,installedLf:plan.installedLf,orderedLf:plan.purchasedLf};});
 }
 export function connectorSchedule(data:DeckData,model:DeckTakeoff,h=getHardwareLayout(data,model)):ConnectorScheduleRow[]{
+  // Home Depot Canada retail applies to 2026-10 designs only; legacy saves keep the old supplier-quote status so reopened drawings and prices match what was saved.
+  const hd=usesCurrentBuildRules(data),R=HOME_DEPOT_CONNECTOR_RATES;
+  const rate=(source:typeof R[keyof typeof R])=>hd?source.unitPrice:null;
+  const basis=(source:typeof R[keyof typeof R],legacy:string)=>hd?hdConnectorBasis(source):legacy;
+  const skewedBasis=hd
+    ?(activeCornerChamfers(data)
+      ?`${hdConnectorBasis(R.skewedHanger)} Joist hangers skewed where joists meet the angled corners.`
+      :`${hdConnectorBasis(R.skewedHanger)} Jack-joist hangers skewed to the corner angle, plus a hip hanger at each house corner.`)
+    :(activeCornerChamfers(data)?'Supplier quote required; joist hangers skewed 45° where joists meet the angled corners':'Supplier quote required; jack-joist hangers skewed to the corner angle, plus a hip hanger at each house corner');
   return [
     {name:'Joist hangers',qty:h.hangers.length,unit:'ea',rate:4.5,basis:'Existing Deck Craft Pro unit rate; hanger selection to match member'},
-    {name:'Skewed joist and hip hangers',qty:h.skewedHangers?.length??0,unit:'ea',rate:null,basis:activeCornerChamfers(data)?'Supplier quote required; joist hangers skewed 45° where joists meet the angled corners':'Supplier quote required; jack-joist hangers skewed to the corner angle, plus a hip hanger at each house corner'},
+    {name:'Skewed joist and hip hangers',qty:h.skewedHangers?.length??0,unit:'ea',rate:rate(R.skewedHanger),basis:skewedBasis},
     {name:'Ledger bolts',qty:h.ledgerBolts.length,unit:'ea',rate:2.8,basis:'Existing Deck Craft Pro unit rate'},
     {name:'Post anchors',qty:h.postAnchors,unit:'ea',rate:22,basis:'Existing Deck Craft Pro anchor allowance'},
-    {name:'Joist-to-beam ties',qty:h.beamTies.length,unit:'ea',rate:null,basis:'Supplier quote required; no confirmed existing unit rate'},
-    {name:'Post-to-beam caps',qty:h.postCaps.length,unit:'ea',rate:null,basis:'Supplier quote required; match beam plies and post width'},
+    {name:'Joist-to-beam ties',qty:h.beamTies.length,unit:'ea',rate:rate(R.beamTie),basis:basis(R.beamTie,'Supplier quote required; no confirmed existing unit rate')},
+    {name:'Post-to-beam caps',qty:h.postCaps.length,unit:'ea',rate:rate(R.postCap),basis:basis(R.postCap,'Supplier quote required; match beam plies and post width')},
     physicalSupportTimber(data,model)??{name:'Support post timber',qty:model.quantities.supportPosts,unit:'posts',rate:null,basis:'Confirm timber inclusion in footing allowance; separate post-length rate unavailable'},
-    {name:'Blocking connections',qty:h.blockingAngles.length,unit:'ea',rate:null,basis:'Supplier quote required for selected angle and fastener set'},
-    {name:'Stringer connectors',qty:h.stringerConnectors.length,unit:'ea',rate:null,basis:'Supplier quote required for stair connector and fastener set'},
+    {name:'Blocking connections',qty:h.blockingAngles.length,unit:'ea',rate:rate(R.blockingAngle),basis:basis(R.blockingAngle,'Supplier quote required for selected angle and fastener set')},
+    {name:'Stringer connectors',qty:h.stringerConnectors.length,unit:'ea',rate:rate(R.stringerConnector),basis:basis(R.stringerConnector,'Supplier quote required for stair connector and fastener set')},
     {name:'Splice fasteners',qty:h.spliceBolts.length,unit:'ea',rate:null,basis:'Supplier quote required after connection design'},
     {name:'Railing brackets',qty:h.railBrackets,unit:'ea',rate:8.5,basis:'Existing railing bracket rate; included in railing system'},
     {name:'Railing cap/skirt sets',qty:h.railCaps,unit:'sets',rate:25,basis:'Existing cap/skirt rate; included in railing system'},
-    {name:'Railing post anchors/bolts',qty:h.railBolts.length,unit:'ea',rate:null,basis:'Confirm inclusion in selected railing kit; separate rate unavailable'},
-    {name:'Connector fastener sets',qty:h.hangers.length+(h.skewedHangers?.length??0)+h.beamTies.length+h.blockingAngles.length+h.stringerConnectors.length,unit:'sets',rate:null,basis:'One manufacturer-approved fastening set per connector; exact nails/screws and rate require connector selection'},
+    {name:'Railing post anchors/bolts',qty:h.railBolts.length,unit:'ea',rate:rate(R.railingPostBolt),basis:basis(R.railingPostBolt,'Confirm inclusion in selected railing kit; separate rate unavailable')},
+    {name:'Connector fastener sets',qty:h.hangers.length+(h.skewedHangers?.length??0)+h.beamTies.length+h.blockingAngles.length+h.stringerConnectors.length,unit:'sets',rate:rate(R.fastenerSet),basis:basis(R.fastenerSet,'One manufacturer-approved fastening set per connector; exact nails/screws and rate require connector selection')},
     ...(h.hidden?[{name:'Hidden clips',qty:h.screws.length,unit:'modeled fixings',rate:null,basis:'Priced by existing $0.85/sqft area allowance; no per-clip conversion'}]:[{name:'Deck screws',qty:Math.ceil(h.screws.length*1.1),unit:'ea',rate:.28,basis:'Existing screw rate; modeled positions plus 10% allowance'}]),
   ].filter(r=>r.qty>0);
 }

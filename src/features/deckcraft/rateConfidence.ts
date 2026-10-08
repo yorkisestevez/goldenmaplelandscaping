@@ -1,4 +1,5 @@
 import {chamferLabourFactor} from './lib/cornerChamfers';
+import {CONNECTOR_RATE_CHECKED_ON,HOME_DEPOT_CONNECTOR_RATES} from './connectorRates';
 import {FASCIA_RETAIL_RATES} from './supplierRates';
 import {MATERIAL_TIERS} from './types';
 
@@ -48,5 +49,7 @@ export function unconfirmedRates():RateNote[]{
       note:'Eight lines (five TimberTech, three Deckorators) are not confirmed as sold in Canada; the owner chose to offer them with a supplier-confirmation note. Intake: npm run deck:rate-intake.'},
     {id:'frameless-glass',rate:'Frameless glass railing (glass, shoe or spigots, stair handrail)',value:'Supplier quote; installation labour on the Glass Panels basis (20 ft per crew-day and its ×1.40 on the job)',status:'owner-decision',where:'calculations.ts (frameless glass)',
       note:'The price book and the Carr data have no frameless glass rate. The owner chose on 2026-09-25 to list it for a supplier quote and reuse the Glass Panels labour until a rate is set; setting one is a price-book change. Intake: npm run deck:rate-intake.'},
+    {id:'hd-connectors',rate:'Home Depot Canada framing connectors',value:`H2.5AZ $${HOME_DEPOT_CONNECTOR_RATES.beamTie.unitPrice}/ea · BC6Z $${HOME_DEPOT_CONNECTOR_RATES.postCap.unitPrice}/ea · A23Z $${HOME_DEPOT_CONNECTOR_RATES.blockingAngle.unitPrice}/ea · LSCZ $${HOME_DEPOT_CONNECTOR_RATES.stringerConnector.unitPrice}/ea · LSSR26Z $${HOME_DEPOT_CONNECTOR_RATES.skewedHanger.unitPrice}/ea · DTT2Z/4 $${HOME_DEPOT_CONNECTOR_RATES.railingPostBolt.unitPrice}/bolt · N8DHDG-R set $${HOME_DEPOT_CONNECTOR_RATES.fastenerSet.unitPrice}`,status:'estimate',where:'connectorRates.ts HOME_DEPOT_CONNECTOR_RATES',
+      note:`Owner 2026-10-08: price former connector quote lines from Home Depot Canada retail (checked ${CONNECTOR_RATE_CHECKED_ON}). Support post timber and splice fasteners stay quotes. Confirm stock, finish and length on order; not a Carr trade quote.`},
   ];
 }

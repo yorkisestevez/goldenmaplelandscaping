@@ -151,7 +151,7 @@ for(const [width,length] of [[16,12],[24,20],[40,16]] as const)for(const [l,r] o
     ok((hw.skewedHangers?.length??0)>0&&hw.skewedHangers!.every(onAngled),`${tag}: skewed hangers sit on the angled rims (${hw.skewedHangers?.length??0})`);
     ok(!hw.hangers.some(onAngled),`${tag}: no square hanger is left on an angled rim`);
     const row=connectorSchedule(d,model,hw).find(r=>r.name==='Skewed joist and hip hangers')!;
-    ok(row.rate===null&&row.qty===hw.skewedHangers!.length&&row.basis.includes('angled corners'),`${tag}: skewed hangers are listed for a supplier quote with an angled-corner basis`);
+    ok(row.rate!==null&&row.rate>0&&row.qty===hw.skewedHangers!.length&&row.basis.includes('angled corners'),`${tag}: skewed hangers use the Home Depot Canada rate with an angled-corner basis`);
     ok(Number.isFinite(estimate.total)&&estimate.total>0,`${tag}: the estimate is a finite price`);
     designs++;skewed+=hw.skewedHangers!.length;
   }

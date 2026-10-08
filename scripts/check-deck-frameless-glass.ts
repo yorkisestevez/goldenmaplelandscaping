@@ -104,7 +104,10 @@ for(const [label,patch] of designs)for(const glassMount of GLASS_MOUNTS){
   ok(rail.quoteRequired&&rail.total===0&&rail.items.length>0&&rail.items.every(i=>i.cost===null),`${name}: the railing section is a supplier quote with no $0 lines`);
   ok(e.quoteRequired.some(q=>/^Frameless glass railing .*\(supplier quote\)$/.test(q)),`${name}: the quote list names the frameless glass`);
   ok(near(labour(e),labour(glass)),`${name}: installation labour equals the Glass Panels labour (${labour(e).toFixed(2)} vs ${labour(glass).toFixed(2)})`);
-  ok(near(e.subtotal,glass.subtotal-section(glass,'Railing System')!.total),`${name}: only the railing materials leave the priced total`);
+  // Frameless has no posts, so Home Depot DTT2Z railing-post anchors drop from Hardware with the posts.
+  const postAnchors=(est:typeof e)=>est.connectorSchedule.find(r=>r.name==='Railing post anchors/bolts'),glassAnchors=postAnchors(glass),markup=1+(d.materialMarkup??35)/100;
+  const anchorDrop=glassAnchors&&glassAnchors.rate!==null?glassAnchors.qty*glassAnchors.rate*markup:0;
+  ok(near(e.subtotal,glass.subtotal-section(glass,'Railing System')!.total-anchorDrop),`${name}: only the railing materials and priced post-anchor hardware leave the priced total`);
   const items=rail.items.map(i=>i.name);
   ok(items.includes('Frameless glass panels')&&items.includes(glassMount==='Spigots'?'Glass spigots':glassMount)&&items.includes('Glass-mounted handrail')===e.model.railing.frameless!.handrails.length>0,`${name}: panels, ${glassMount.toLowerCase()} and the stair handrail are listed`);
   ok(!e.flags.some(f=>f.includes('baluster spacing')),`${name}: no baluster note on glass`);

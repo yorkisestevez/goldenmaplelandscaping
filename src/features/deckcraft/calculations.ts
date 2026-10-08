@@ -40,7 +40,7 @@ import {buildYardModel,type YardModel} from './yardModel';
 import {buildYardTakeoff,type YardTakeoff} from './yardTakeoff';
 import {stairVeneerLayout} from './stairVeneerLayout';
 import {planStock} from './stockPlan';
-import {connectorSchedule,constructionStock,stairStock,type ConnectorScheduleRow,type StockScheduleRow} from './schedule';
+import {connectorSchedule,constructionStock,stairStock,PRICED_CONNECTOR_SECTION_NAMES,type ConnectorScheduleRow,type StockScheduleRow} from './schedule';
 import { 
   DeckData, 
   WASTE_FACTORS, 
@@ -278,7 +278,10 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
   const joistHangerCost = hardware.hangers.length * 4.50; // (Total Joists * 2)
   const ledgerBoltCost = hardware.ledgerBolts.length * 2.80;
   const postAnchorCost = footingCount * 22.00;
-  const hardwareTotal = screwCost + hiddenClipCost + joistHangerCost + ledgerBoltCost + postAnchorCost + breaker_screw_cost;
+  // Home Depot Canada connector benchmarks from connectorSchedule (ties, caps, angles, stringers, fasteners, …).
+  const hdConnectorRows=connectors.filter(c=>PRICED_CONNECTOR_SECTION_NAMES.has(c.name)&&c.rate!==null&&c.qty>0);
+  const hdConnectorCost=hdConnectorRows.reduce((n,c)=>n+c.qty*(c.rate as number),0);
+  const hardwareTotal = screwCost + hiddenClipCost + joistHangerCost + ledgerBoltCost + postAnchorCost + breaker_screw_cost + hdConnectorCost;
 
   // Railing (Precise Formulas)
   // NOTE: railing INSTALL labour is covered by the crew-day engine below
@@ -579,13 +582,14 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     {
       title: 'Hardware & Fasteners',
       icon: '🔩',
-      description: 'Screws, hidden clips, joist hangers, and post anchors.',
+      description: hdConnectorRows.length?'Screws, hidden clips, joist hangers, post anchors, and Home Depot Canada connector benchmarks.':'Screws, hidden clips, joist hangers, and post anchors.',
       total: m_hardwareTotal,
       items: [
         { name: effectiveFasteningSystem === 'Face' ? 'Deck Screws' : 'Hidden Clips', spec: effectiveFasteningSystem === 'Face'?'Corrosion resistant; model plus 10%':'Existing area allowance; modeled clip count is shown separately', qty: effectiveFasteningSystem === 'Face' ? totalScrews : Math.ceil(area), unit: effectiveFasteningSystem === 'Face' ? 'pcs' : 'sqft', cost: m_screwCost + m_hiddenClipCost },
         { name: 'Ledger Bolts', spec: 'Modeled ledger positions', qty: hardware.ledgerBolts.length, unit: 'ea', cost: ledgerBoltCost * markupMult },
         { name: 'Joist Hangers', spec: 'LUS26/28', qty: joistHangerCost / 4.5, unit: 'ea', cost: m_joistHangerCost },
         { name: 'Post Anchors', spec: 'ABU44/66', qty: footingCount, unit: 'ea', cost: m_postAnchorCost },
+        ...hdConnectorRows.map(c=>({name:c.name,spec:c.basis,qty:c.qty,unit:c.unit,cost:(c.rate as number)*c.qty*markupMult})),
       ]
     },
     {

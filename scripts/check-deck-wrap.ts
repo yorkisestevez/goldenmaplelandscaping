@@ -171,7 +171,7 @@ checkWrap(design({length:12,height:36,houseConfig:house(12,30),wrap:{left:{width
   const m=buildDeckTakeoff(d),fp=m.levels[0].footprint,i=fp.edgeIds!.indexOf('wingR-end'),a=fp.outline[i],b=fp.outline[(i+1)%fp.outline.length];
   ok(m.flights.length>0&&distanceToSegment({x:m.flights[0].start.x,y:m.flights[0].start.z},a,b)<4,'Stairs open on the chosen wing end');
   const e=calculateEstimate(d);
-  ok(e.connectorSchedule.some(r=>r.name==='Skewed joist and hip hangers'&&r.rate===null&&r.qty>0)&&e.quoteRequired.includes('Skewed joist and hip hangers'),'Skewed hangers are listed for a supplier quote, never priced at zero');
+  ok(e.connectorSchedule.some(r=>r.name==='Skewed joist and hip hangers'&&r.rate!==null&&r.rate>0&&r.qty>0)&&!e.quoteRequired.includes('Skewed joist and hip hangers'),'Skewed hangers use the Home Depot Canada LSSR26Z retail rate');
   ok(e.flags.some(f=>/engineer/i.test(f)&&/hip/i.test(f)),'Wrap corners always carry an engineering-review item');
   ok(wrapLabourFactor(activeWrap(d))===1.25&&wrapLabourFactor(activeWrap(design({width:22,length:12,houseConfig:house(26,22),wrap:{left:{widthFt:8,runFt:8},right:{widthFt:8,runFt:8}}})))===1.5&&wrapLabourFactor(null)===1,'Labour reuses the Multi-corner (one corner) and Curved (two corners) factors');
   const meshes=deckExportMeshes(d,m),hipPieces=m.levels[0].beams.filter(b=>b.role==='hip').length;

@@ -214,7 +214,7 @@ const paths:[string,boolean][]=[
   ['F6 fascia',all.some(e=>e.quoteRequired.includes('Fascia boards (supplier quote)'))],
   ['F6 quote-only treads',all.some(e=>e.quoteRequired.some(q=>q.startsWith('Stair treads and risers in')))],
   ['terrain stair connections',has('Terrain stair support connections',()=>true)],
-  ['connector quotes',all.some(e=>e.quoteRequired.includes('Joist-to-beam ties'))],
+  ['connector quotes',all.some(e=>e.quoteRequired.includes('Support post timber')||e.quoteRequired.includes('Splice fasteners'))],
   ['priced yard',has('Yard · ',s=>s.total>0)],
   ['unpriced yard lines',has('Yard · ',s=>!!s.quoteRequired)],
   ['yard allowances',has('Yard · ',s=>s.title.includes('(estimator allowance)')&&s.total>0)],
@@ -225,7 +225,7 @@ for(const [path,covered] of paths)ok(covered,`The designs cover ${path}`);
 // 4. Builder or supplier, as the engine words it.
 const expect=(label:string,kind:QuoteKind)=>ok(kinds.get(label)===kind,`"${label.replace(/^item:/,'')}" is a ${kind} quote (got ${kinds.get(label)??'none'})`);
 for(const label of ['Accent-colour board labour (builder quote)','Medallion inlay labour (builder quote)','Fire pit, wood-burning (estimator allowance)'])expect(label,'builder');
-for(const label of ['Joist-to-beam ties','Deckorators Dark Slate picture-frame boards','Fascia boards (supplier quote)','Stair treads and risers in TimberTech Composite Terrain+','Built-in Bench with selected finish',unrated[0].name,RAILING_CATALOGUE[0].name,`${nullLight.name} supply and installation`])expect(label,'supplier');
+for(const label of ['Support post timber','Deckorators Dark Slate picture-frame boards','Fascia boards (supplier quote)','Stair treads and risers in TimberTech Composite Terrain+','Built-in Bench with selected finish',unrated[0].name,RAILING_CATALOGUE[0].name,`${nullLight.name} supply and installation`])expect(label,'supplier');
 for(const item of ['Accent-colour board labour','Medallion inlay labour'])expect(`item:${item}`,'builder');
 for(const item of ['Manufacturer privacy screen','Deckorators Dark Slate'])expect(`item:${item}`,'supplier');
 ok([...kinds.keys()].every(k=>!/Porch-wrap|Deck skirting|Skirting /.test(k)),'Porch wrap and skirting are priced, not quote tags');
@@ -233,7 +233,7 @@ for(const [label,kind] of kinds)if(!label.startsWith('item:')){
   if(/\(builder quote\)/.test(label))ok(kind==='builder',`"${label}" says builder quote and is one`);
   if(/\(supplier quote\)/.test(label))ok(kind==='supplier',`"${label}" says supplier quote and is one`);
 }
-ok(quoteLabel('Deck skirting (builder quote)')==='Deck skirting'&&quoteLabel('Fascia boards (supplier quote)')==='Fascia boards'&&quoteLabel('Joist-to-beam ties')==='Joist-to-beam ties','A listed quote drops the words its tag already says');
+ok(quoteLabel('Deck skirting (builder quote)')==='Deck skirting'&&quoteLabel('Fascia boards (supplier quote)')==='Fascia boards'&&quoteLabel('Support post timber')==='Support post timber','A listed quote drops the words its tag already says');
 
 // 5. On the legacy parity designs the schedule shows the old breakdown's figures (EstimateStep's .dd-breakdown, R1).
 {
