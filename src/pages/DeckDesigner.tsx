@@ -1,5 +1,5 @@
 import {Suspense,lazy,useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
-import {Link} from 'react-router-dom';
+import {Link,useSearchParams} from 'react-router-dom';
 import SEO from '../components/SEO';
 import {deckReleaseData,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
 import {DEFAULT_DECK} from '../features/deckcraft/defaults';
@@ -26,9 +26,8 @@ import type {DeltaProps} from '../features/deckcraft/designer/useOptionDeltas';
 import WorkspaceTools from '../features/deckcraft/designer/WorkspaceTools';
 import WorkspacePrice from '../features/deckcraft/designer/WorkspacePrice';
 import {useDesignerMode} from '../features/deckcraft/designer/designerMode';
-import {useCustomerMode} from '../features/deckcraft/designer/customerMode';
-import {noteWarmLead} from '../features/deckcraft/warmLead';
 import type {ProPage} from '../features/deckcraft/designer/pro/proTypes';
+const noteWarmLead=(...args:Parameters<typeof import('../features/deckcraft/warmLead').noteWarmLead>)=>void import('../features/deckcraft/warmLead').then(m=>m.noteWarmLead(...args));
 import {loadExteriorStudio,loadViewer} from '../features/deckcraft/designer/previewLoaders';
 const PreviewPanel=lazy(()=>import('../features/deckcraft/designer/PreviewPanel'));
 import SectionList from '../features/deckcraft/designer/SectionList';
@@ -161,7 +160,8 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // The site plan's tool (R5). A deck that becomes a custom outline is drawn with the Draw outline tool.
   const [planTool,setPlanTool]=useState<PlanTool>('size');
   const pro=useDesignerMode();
-  const customer=useCustomerMode();
+  const [searchParams]=useSearchParams();
+  const customer=searchParams.get('view')==='customer';
   const [crewBusy,setCrewBusy]=useState(false);
   const assistantYardFeature=data.yardFeatures?.find(f=>f.id===selectedYardFeatureId);
   const yardInFocus=planTool==='yard'||workspaceView==='inspector'&&open.has('backyard');
