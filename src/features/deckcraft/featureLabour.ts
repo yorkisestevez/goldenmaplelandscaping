@@ -4,7 +4,6 @@
  * (private — stripped from public share/JSON). Materials for the boards themselves stay on the
  * accent/inlay supply lines; `materialsCad` is only extra consumables for that scope.
  */
-import {readProjectValue,updateProjectValue} from './projectStorage';
 import {CREW_DAY_RATES} from './types';
 
 export const FEATURE_LABOUR_SCOPES=['accent','medallion','customInlay'] as const;
@@ -31,7 +30,6 @@ export interface FeatureLabourSettings{
   scopes:Record<FeatureLabourScope,FeatureLabourScopeSettings>;
 }
 
-const KEY='feature-labour-defaults';
 const SCOPE_LABELS:Record<FeatureLabourScope,string>={
   accent:'Accent-colour board labour',
   medallion:'Medallion inlay labour',
@@ -117,9 +115,11 @@ export function mergeFeatureLabour(base:FeatureLabourSettings|undefined,patch:Fe
 
 export type FeatureLabourQty={accentBoards?:number;medallions?:number;customInlays?:number};
 
+const resolved=(settings:FeatureLabourSettings|undefined)=>settings??DEFAULT_FEATURE_LABOUR;
+
 /** Price one scope from settings. Returns null when the scope is in quote mode or qty is 0. */
 export function priceFeatureLabourScope(settings:FeatureLabourSettings|undefined,scope:FeatureLabourScope,units:number){
-  const cfg=validateFeatureLabour(settings);
+  const cfg=resolved(settings);
   const s=cfg.scopes[scope];
   if(s.mode!=='crew-hours'||units<=0)return null;
   const hours=s.hoursPerUnit?Math.round(s.hours*units*1000)/1000:s.hours;
@@ -141,24 +141,12 @@ export function priceFeatureLabourScope(settings:FeatureLabourSettings|undefined
     crewMembers:s.crewMembers,
     hours,
     units,
-    spec:`Planning allowance (${basis} = ${manHours} man-hours @ CAD ${cfg.personHourRate.toFixed(2)}/h → labour $${installationCost.toFixed(2)}${supplyCost>0?`; extra materials $${supplyCost.toFixed(2)}`:''}). Boards/blocking are priced separately. Edit in Owner costs · Inlays & special features.`,
+    spec:`${basis} = ${manHours} man-hours @ CAD ${cfg.personHourRate.toFixed(2)}/h${supplyCost>0?`; extra materials $${supplyCost.toFixed(2)}`:''}.`,
   };
 }
 
 export function featureLabourIsQuote(settings:FeatureLabourSettings|undefined,scope:FeatureLabourScope){
-  return validateFeatureLabour(settings).scopes[scope].mode==='quote';
-}
-
-/** Empty device book = built-in defaults. */
-export async function readFeatureLabourDefaults():Promise<FeatureLabourSettings>{
-  try{return validateFeatureLabour(await readProjectValue('privateRates',KEY));}
-  catch{return structuredClone(DEFAULT_FEATURE_LABOUR);}
-}
-
-export async function saveFeatureLabourDefaults(settings:FeatureLabourSettings):Promise<FeatureLabourSettings>{
-  const clean=validateFeatureLabour(settings);
-  await updateProjectValue<FeatureLabourSettings>('privateRates',KEY,()=>clean);
-  return clean;
+  return resolved(settings).scopes[scope].mode==='quote';
 }
 
 /** Sanity: default rate still tracks the confirmed crew-day. */

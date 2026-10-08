@@ -1,5 +1,5 @@
 import {pergolaQuoteKey,type PergolaQuoteContext} from '../pergolaPricing';
-import {calculateDeckReleaseEstimate,deckReleaseData} from '../deckReleaseCore';
+import {calculateDeckReleasePrices,deckReleaseData} from '../deckReleaseCore';
 import {DECK_SETTINGS} from '../defaults';
 import {pruneEdgeNames} from '../edgeNames';
 import {extrasLayout} from '../extrasLayout';
@@ -17,13 +17,13 @@ export const applyOption=(data:DeckData,patch:Partial<DeckData>)=>pruneEdgeNames
 /** The estimate the page settles on for a design: after the post, step and screen lights follow the modelled mounts. */
 export function settledEstimate(design:DeckData,context?:PergolaQuoteContext){
   const settings={...DECK_SETTINGS,pergolaQuote:context?.key===pergolaQuoteKey(design)?context.quote:undefined};
-  const estimate=calculateDeckReleaseEstimate(design,settings);
+  const estimate=calculateDeckReleasePrices(design,settings);
   const extras=extrasLayout(design,estimate.model),counts={posts:estimate.model.railing.posts.length,stairs:estimate.model.treads.length,privacy:extras.privacyMounts.length,border:extras.borderMounts.length};
   const lights=syncAutoLighting(design,counts);
   if(JSON.stringify(lights)===JSON.stringify(design.lightingSystem.selectedItems))return estimate;
-  return calculateDeckReleaseEstimate(deckReleaseData({...design,lightingSystem:{...design.lightingSystem,selectedItems:lights}}),settings);
+  return calculateDeckReleasePrices(deckReleaseData({...design,lightingSystem:{...design.lightingSystem,selectedItems:lights}}),settings);
 }
-type Estimate=ReturnType<typeof calculateDeckReleaseEstimate>;
+type Estimate=ReturnType<typeof calculateDeckReleasePrices>;
 /** An estimate without its model (the takeoff): all the price schedule reads, small enough to post between threads. */
 export type EstimateFigures=Pick<Estimate,'sections'|'subtotal'|'hst'|'total'|'quoteRequired'>;
 /** The option picked on the design, priced and settled. */

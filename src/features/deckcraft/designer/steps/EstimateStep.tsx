@@ -56,9 +56,11 @@ export default function EstimateStep({data,update,estimate,ledger,material,raili
         </li>
         <li>
           <strong>Send</strong>
-          <p>Your design, this estimate and a reopen link go straight to our team.</p>
-          <div className="dd-summary-actions"><button type="button" className="dd-primary" onClick={onSend}>Send my design</button></div>
-          <p className="dd-note">Prefer to talk? Call <a href={`tel:${publicContact.phoneTel}`}>{publicContact.phoneDisplay}</a> or <Link to="/contact">send us a message</Link>.</p>
+          <section aria-label="Send your design to Golden Maple">
+            <p>Your design, this estimate and a reopen link go straight to our team.</p>
+            <div className="dd-summary-actions"><button type="button" className="dd-primary" onClick={onSend}>Send my design</button></div>
+            <p className="dd-note">Prefer to talk? Call <a href={`tel:${publicContact.phoneTel}`}>{publicContact.phoneDisplay}</a> or <Link to="/contact">send us a message</Link>.</p>
+          </section>
         </li>
       </ol>
     </section>

@@ -26,12 +26,12 @@ export function pricedSkirtingRows(plan:SkirtingPlan,markup:number):{name:string
   }),markup):null;
   const faceCost=fascia?.cost??face*(plan.style==='Lattice'?SKIRTING_RATES.latticeFacePerSqft:SKIRTING_RATES.boardFacePerSqft)*markup;
   const faceSpec=fascia
-    ?`Fascia-matched face from DeckMart retail benchmark (${fascia.rate.sku}); ${fascia.boards} × 12 ft boards including 10% order allowance. Confirm colour and profile on order.`
-    :`${plan.style==='Lattice'?'Lattice panels':'Solid deck boards'} in the chosen skirting colour, from the rim to the clearance above grade. Confirm supplier stock.`;
+    ?`DeckMart ${fascia.rate.sku}; ${fascia.boards} × 12 ft boards, 10% order allowance.`
+    :`${plan.style==='Lattice'?'Lattice':'Boards'} in the skirting colour.`;
   return [
-    {name:'Skirting face',spec:faceSpec+(plan.foldedCorners?' Folded solid-board corners: confirm fabrication with the builder.':''),qty:fascia?.boards??face,unit:fascia?'boards':'sq ft',cost:round2(faceCost)},
-    {name:'Skirting backing',spec:`Pressure-treated 2×4 backing at $${SKIRTING_RATES.backingPerLf.toFixed(2)}/lf.`,qty:round2(plan.backingLf),unit:'lf',cost:round2(plan.backingLf*SKIRTING_RATES.backingPerLf*markup)},
-    ...(n?[{name:'Skirting access panels',spec:`Framed removable panels, ${plan.accessPanels.widthIn} in wide, at $${SKIRTING_RATES.accessPanelEach}/panel fabrication allowance.`,qty:n,unit:n===1?'panel':'panels',cost:round2(n*SKIRTING_RATES.accessPanelEach*markup)}]:[]),
-    {name:'Skirting labour',spec:`Frame and fit ${lf} ft of skirting at $${SKIRTING_RATES.labourPerLf}/lf (Barrie install allowance).`,qty:lf,unit:'lf',cost:round2(lf*SKIRTING_RATES.labourPerLf*markup)},
+    {name:'Skirting face',spec:faceSpec+(plan.foldedCorners?' Folded corners: confirm fabrication.':''),qty:fascia?.boards??face,unit:fascia?'boards':'sq ft',cost:round2(faceCost)},
+    {name:'Skirting backing',spec:`2×4 backing at $${SKIRTING_RATES.backingPerLf.toFixed(2)}/lf.`,qty:round2(plan.backingLf),unit:'lf',cost:round2(plan.backingLf*SKIRTING_RATES.backingPerLf*markup)},
+    ...(n?[{name:'Skirting access panels',spec:`${plan.accessPanels.widthIn} in panels at $${SKIRTING_RATES.accessPanelEach} each.`,qty:n,unit:n===1?'panel':'panels',cost:round2(n*SKIRTING_RATES.accessPanelEach*markup)}]:[]),
+    {name:'Skirting labour',spec:`${lf} ft at $${SKIRTING_RATES.labourPerLf}/lf.`,qty:lf,unit:'lf',cost:round2(lf*SKIRTING_RATES.labourPerLf*markup)},
   ];
 }
