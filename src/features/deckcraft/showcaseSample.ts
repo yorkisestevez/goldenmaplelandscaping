@@ -3,8 +3,7 @@ import type {LandscapeObject} from './landscapeTypes';
 import {DEFAULT_DECK} from './defaults';
 import {EXTERIOR_LOOKS,applyLook} from './houseLooks';
 import {getHouseConfig} from './houseSettings';
-import {houseOutline,getHouseBlocks} from './houseFootprint';
-import {blockRoofRise} from './components/viewer3d/houseGeometry';
+import {houseOutline} from './houseFootprint';
 import {buildDeckTakeoff} from './deckTakeoff';
 import {getFootprint,getStairPlacement} from './lib/deckGeometry';
 import {stairFootprints,planGapIn,fireOutline} from './fireFeatureModel';
@@ -184,16 +183,8 @@ export function ontarioShowcaseDesign():DeckData{
  const lit=buildDeckTakeoff(data);
  data.lightingSystem={wireDistance:80,selectedItems:syncAutoLighting({...data,lightingSystem:{wireDistance:80,selectedItems:[{productId:'liv',qty:6,zone:'landscape'},{productId:'scope',qty:4,zone:'landscape'}]}}, {posts:lit.quantities.railingPosts,stairs:lit.treads.length,privacy:0})};
 
- const blocks=getHouseBlocks(data),main=blocks.find(b=>b.id==='main')??blocks[0],rise=blockRoofRise(main,house.roofPitch);
- const roof=(x:number,z:number,y=main.wallHeightIn+rise)=>({x:x/12,y:y/12,z:z/12});
- const yardPoints=[
-  roof(main.rect.x0,0,main.wallHeightIn),roof(main.rect.x1,0,main.wallHeightIn),roof((main.rect.x0+main.rect.x1)/2,(main.rect.y0+main.rect.y1)/2),
-  {x:0,y:3,z:0},{x:data.width,y:3,z:0},{x:0,y:3,z:data.length},{x:data.width,y:3,z:data.length},
-  ...[terrace,loungePatio,poolPatio].flatMap(f=>[{x:f.xFt-f.widthFt/2,y:.4,z:f.zFt-f.depthFt/2},{x:f.xFt+f.widthFt/2,y:.4,z:f.zFt+f.depthFt/2}]),
-  {x:pool.xIn/12-8,y:0,z:pool.zIn/12-16},{x:pool.xIn/12+8,y:0,z:pool.zIn/12+16},
-  {x:-28,y:6,z:88},{x:52,y:6,z:88},{x:-28,y:5,z:8},{x:52,y:5,z:8},
- ];
- const hero=overviewCamera({w:80,d:100,cx:12,cz:40,height:28,aspect:16/9,points:yardPoints,direction:[.72,.58,1.08]},34);
+ // Rear three-quarter, held so the roof, both paved rooms, the pool and the lot-line fence stay inside a 16:9 frame.
+ const hero={position:[18,46,145] as [number,number,number],target:[12,8,18] as [number,number,number]};
  const poolCam=overviewCamera({w:30,d:44,cx:poolPatio.xFt,cz:poolPatio.zFt,height:1,aspect:16/9,points:[
   {x:poolPatio.xFt-13,y:0,z:poolPatio.zFt-20},{x:poolPatio.xFt+13,y:0,z:poolPatio.zFt-20},{x:poolPatio.xFt-13,y:0,z:poolPatio.zFt+20},{x:poolPatio.xFt+13,y:.2,z:poolPatio.zFt+20},
   {x:poolPatio.xFt,y:-3.5,z:poolPatio.zFt},
@@ -202,7 +193,7 @@ export function ontarioShowcaseDesign():DeckData{
   {x:loungePatio.xFt-8,y:0,z:loungePatio.zFt-8},{x:loungePatio.xFt+8,y:0,z:loungePatio.zFt-8},{x:loungePatio.xFt-8,y:1.6,z:loungePatio.zFt+8},{x:loungePatio.xFt+8,y:1.6,z:loungePatio.zFt+8},{x:fireX,y:1.4,z:fireZ},
  ],direction:[.22,.34,-1]},40);
  const shot=(id:string,name:string,frame:{position:[number,number,number];target:[number,number,number]},fov:number)=>({id,name,fov,positionIn:frame.position.map(n=>n*12) as [number,number,number],targetIn:frame.target.map(n=>n*12) as [number,number,number]});
- data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,34),shot('pool','Pool court',poolCam,38),shot('fire','Fire lounge',fireCam,40)]};
+ data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,40),shot('pool','Pool court',poolCam,38),shot('fire','Fire lounge',fireCam,40)]};
  return data;
 }
 
