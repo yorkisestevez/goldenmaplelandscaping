@@ -123,6 +123,7 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
           const {ontarioShowcaseDesign}=await import('../showcaseSample');
           const sample=ontarioShowcaseDesign(),lighting=new URLSearchParams(window.location.search).get('deck-lighting');
           if(lighting==='evening')sample.sceneLighting='Evening';else if(lighting==='daylight')sample.sceneLighting='Daylight';
+          await ensureLiveDesignExtensions(sample);
           if(active&&intent===editIntent.current&&baseline===dataRef.current){applyReplacement(sample);setDesignStatus('Showing the Ontario backyard sample for this view. It is not saved over a project on this device.');}
         }catch(error){if(active)setDesignStatus(error instanceof Error?error.message:'The Ontario sample could not be opened.');}
       }

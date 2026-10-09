@@ -29,6 +29,11 @@ void main(){
   #include <colorspace_fragment>
 }`;
 
+function photoRenderScale(){
+ if(typeof location==='undefined')return 1;
+ const n=Number(new URLSearchParams(location.search).get('deck-photo-scale'));
+ return Number.isFinite(n)?Math.max(.25,Math.min(1,n)):1;
+}
 function canPathTrace(gl:THREE.WebGLRenderer){
  return gl.capabilities.isWebGL2&&(gl.extensions.has('EXT_color_buffer_float')||gl.extensions.has('EXT_color_buffer_half_float'));
 }
@@ -47,8 +52,8 @@ function tintSky(texture:THREE.DataTexture,look:PhotoLook){
   for(let x=0;x<w;x++){
    const i=(y*w+x)*4;
    if(look==='golden'){
-    const warm=.15+.85*(1-up),dim=.55+.35*up;
-    data[i]*=(1.05*(1-warm)+1.55*warm)*dim;data[i+1]*=(.98*(1-warm)+.72*warm)*dim;data[i+2]*=(.92*(1-warm)+.32*warm)*dim;
+    const warm=.2+.8*(1-up),dim=.82+.18*up;
+    data[i]*=(1.02*(1-warm)+1.28*warm)*dim;data[i+1]*=(.99*(1-warm)+.84*warm)*dim;data[i+2]*=(.96*(1-warm)+.7*warm)*dim;
    }else{data[i]*=.72;data[i+1]*=.8;data[i+2]*=1.05;}
   }
  }
@@ -90,12 +95,20 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   const material=dome?.material as THREE.ShaderMaterial|undefined,lighting=material?.uniforms?.lighting?.value as THREE.Texture|undefined,horizonBand=Number(material?.uniforms?.uHorizonBand?.value??0);
   const key=skyLighting(),horizon=(lighting?visibleSkyHorizon(lighting,0):null)??SKY_DATA[key].horizonColor as [number,number,number];
   background?.dispose();
-  background=buildPhotoBackground(lighting??null,visibleSkyStrength(key),horizonBand,skyYaw(key),horizon);
+  background=buildPhotoBackground(lighting??null,1,horizonBand,skyYaw(key),horizon);
   tintSky(background,look);
   scene.background=background;scene.backgroundIntensity=1;scene.backgroundBlurriness=0;scene.backgroundRotation.set(0,0,0);
   const scale=look==='golden'?.72:look==='night'?1.15:1;
   scene.environmentIntensity=saved.environmentIntensity*scale;
   restoreScene=applyPhotoScene(scene,look,sunFor(look));
+  // Miss rays were coming back black on this GPU, so the visible sky is the dome itself: an emissive
+  // lat-long sphere the tracer can shade. It sits on the camera, outside the yard.
+  if(dome&&background){
+   dome.visible=true;
+   const previous=dome.material,skyMat=new THREE.MeshStandardMaterial({color:'#000000',emissive:'#ffffff',emissiveMap:background,emissiveIntensity:visibleSkyStrength(key),roughness:1,metalness:0,side:THREE.BackSide,depthWrite:false,fog:false});
+   dome.material=skyMat;dome.position.copy(camera.position);dome.updateMatrixWorld(true);
+   const inner=restoreScene;restoreScene=()=>{dome.material=previous;skyMat.dispose();inner?.();};
+  }
  }
  function restoreAll(){
   restoreScene?.();restoreScene=null;background?.dispose();background=null;
@@ -165,7 +178,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   apply(getPhotoSettings().look);
   tracer=new WebGLPathTracer(gl) as Tracer;
   tracer.renderToCanvas=false;tracer.renderDelay=0;tracer.fadeDuration=0;tracer.minSamples=1;tracer.rasterizeScene=false;tracer.multipleImportanceSampling=true;
-  tracer.bounces=5;tracer.transmissiveBounces=6;tracer.filterGlossyFactor=.4;tracer.tiles.set(2,2);tracer.renderScale=1;tracer.stableNoise=true;
+  tracer.bounces=5;tracer.transmissiveBounces=6;tracer.filterGlossyFactor=.4;tracer.tiles.set(2,2);tracer.renderScale=photoRenderScale();tracer.stableNoise=true;
   syncCamera(true);tracer.setScene(scene,photo);
  }catch(error){
   console.warn('DeckCraft photo: path tracing is unavailable.',error);tracer?.dispose();denoise.dispose();denoised.dispose();grade.dispose();restoreAll();gl.setPixelRatio(pixelRatio);delete gl.domElement.dataset.photoTrace;return fail();

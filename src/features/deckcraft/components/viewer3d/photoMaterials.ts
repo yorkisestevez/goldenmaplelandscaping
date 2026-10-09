@@ -95,8 +95,12 @@ export function buildPhotoBackground(source:THREE.Texture|null,strength:number,h
    data[i+3]=1;
   }
  }
- const texture=new THREE.DataTexture(data,w,h,THREE.RGBAFormat,THREE.FloatType);
- texture.mapping=THREE.EquirectangularReflectionMapping;texture.colorSpace=THREE.LinearSRGBColorSpace;texture.wrapS=THREE.RepeatWrapping;texture.needsUpdate=true;return texture;
+ const half=new Uint16Array(data.length);
+ for(let i=0;i<data.length;i++)half[i]=THREE.DataUtils.toHalfFloat(data[i]);
+ const texture=new THREE.DataTexture(half,w,h,THREE.RGBAFormat,THREE.HalfFloatType);
+ texture.mapping=THREE.EquirectangularReflectionMapping;texture.colorSpace=THREE.LinearSRGBColorSpace;texture.wrapS=THREE.RepeatWrapping;
+ // The live HDR is half-float. A float32 panorama samples black on this software GPU, so the photo sky matches that format.
+ texture.minFilter=THREE.LinearFilter;texture.magFilter=THREE.LinearFilter;texture.generateMipmaps=false;texture.needsUpdate=true;return texture;
 }
 function roleOf(mesh:THREE.Object3D){return typeof mesh.userData.poolRole==='string'?mesh.userData.poolRole:'';}
 
@@ -110,6 +114,8 @@ export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[num
   const mesh=object as THREE.Mesh;
   if(mesh.isMesh){
    const list=Array.isArray(mesh.material)?mesh.material:[mesh.material];
+   // Shader cards (night lens glows, outlines) have no standard colour. The tracer reads material.color and throws.
+   if(object.visible&&list.some(entry=>entry&&!(entry as THREE.Material&{isMeshStandardMaterial?:boolean}).isMeshStandardMaterial)){object.visible=false;hidden.push(object);}
    for(const entry of list){
     const material=standard(entry);if(!material||materials.has(material.uuid))continue;
     const saved=saveMaterial(material);materials.set(material.uuid,saved);

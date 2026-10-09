@@ -15,9 +15,9 @@ export interface PhotoGrade{
 
 /** AgX does the highlight shoulder. These are only the exposure and balance in front of it. */
 export const PHOTO_GRADE:Record<PhotoLook,PhotoGrade>={
- day:{exposure:1.05,balance:[1.02,1,0.98],saturation:1.02},
- golden:{exposure:1.08,balance:[1.22,0.94,0.68],saturation:1.06},
- night:{exposure:1.45,balance:[1.06,0.97,0.88],saturation:0.98},
+ day:{exposure:1.4,balance:[1.02,1,0.98],saturation:1.02},
+ golden:{exposure:2.05,balance:[1.08,0.99,0.88],saturation:1.04},
+ night:{exposure:5.2,balance:[1.1,0.96,0.84],saturation:1.02},
 };
 
 /** A print-like sun: a little larger than the real 0.27° so the penumbra reads in a still,
@@ -49,13 +49,13 @@ export function photoSunElevationDeg(look:PhotoLook,dayElevationDeg:number){
 
 export function photoSunIrradiance(look:PhotoLook,dayIrradiance:number){
  if(look==='night')return 0;
- if(look==='golden')return dayIrradiance*0.62;
+ if(look==='golden')return dayIrradiance*0.85;
  return dayIrradiance;
 }
 
 /** Linear sun colour. Day keeps the extracted HDR sun. Golden hour is the warm key. */
 export function photoSunColor(look:PhotoLook,dayColor:[number,number,number]):[number,number,number]{
- if(look==='golden')return [1,0.46,0.16];
+ if(look==='golden')return [1,0.58,0.32];
  return dayColor;
 }
 

@@ -13,7 +13,7 @@ let failed=0;
 function ok(cond:unknown,message:string){if(!cond){failed++;console.error('FAIL',message);}else console.log('ok',message);}
 
 const dayDisc=sunDisc(3.1,.9),goldenDisc=sunDisc(photoSunIrradiance('golden',3.1),1.45);
-ok(Math.abs(sunDiscIrradiance(dayDisc)-3.1)<1e-9&&Math.abs(sunDiscIrradiance(goldenDisc)-3.1*.62)<1e-9,'A sun disc returns the same direct irradiance the raster key would');
+ok(Math.abs(sunDiscIrradiance(dayDisc)-3.1)<1e-9&&Math.abs(sunDiscIrradiance(goldenDisc)-3.1*.85)<1e-9,'A sun disc returns the same direct irradiance the raster key would');
 ok(photoSunIrradiance('night',3.1)===0&&photoSunElevationDeg('golden',64)===11&&photoSunElevationDeg('night',64)===0,'Night has no sun and golden hour keeps a low sun on the same azimuth');
 ok(photoSunColor('golden',[1,.9,.8])[0]>photoSunColor('golden',[1,.9,.8])[2]&&photoSunColor('day',[.2,.3,.4])[0]===.2,'Golden hour warms the key; day keeps the extracted sun colour');
 ok(Object.values(PHOTO_GRADE).every(g=>[g.exposure,...g.balance,g.saturation].every(n=>Number.isFinite(n)&&n>0)),'The photo grade is finite');
