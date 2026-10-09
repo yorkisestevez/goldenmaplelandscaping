@@ -19,7 +19,7 @@ import {activeWrap,edgeNameOf} from '../src/features/deckcraft/lib/wrapGeometry'
 import {activeCornerChamfers,angledStairAllowed,angledStairFits,isChamferEdgeId} from '../src/features/deckcraft/lib/cornerChamfers';
 import {PLAN_TOOLS} from '../src/features/deckcraft/designer/constants';
 import {beginEdgeDrag,edgeLimit,edgeMove,edgeName,edgeSliders,endEdgeDrag,listKeyDelta,moveEdgeDrag,presetPatch,REFUSED,sliderKey} from '../src/features/deckcraft/designer/outlineEditMath';
-import {chooseShape,setWingSize,splitLevel} from '../src/features/deckcraft/designer/deckShapeActions';
+import {chooseShape,drawOwnOutline,setWingSize,splitLevel} from '../src/features/deckcraft/designer/deckShapeActions';
 import {beginGesture,clampFt,describeSlide,endGesture,ghostShift,handlePatch,houseHandles,keyValue,moveGesture,planGhost,planHandles,planShortcut,primaryStair,shapeHandles,stairHandle,stairTargets,type PlanHandleId} from '../src/features/deckcraft/designer/planEditMath';
 import {HOUSE_CASES} from './deck-house-finishes-cases';
 import type {DeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
@@ -205,7 +205,10 @@ for(const c of built){
   // The shape shortcuts are the Deck section's actions.
   ok(JSON.stringify(planShortcut(d0,'L-Shape').patch)===JSON.stringify(chooseShape(d0,'L-Shape'))&&planShortcut(d0,'L-Shape').status.startsWith('Now an L-shape.'),'L-shape is chooseShape');
   ok(planShortcut(d0,'Rectangle').patch===null,'The shape already chosen changes nothing');
-  const custom=planShortcut(d0,'Custom');ok(JSON.stringify(custom.patch)===JSON.stringify(chooseShape(d0,'Custom'))&&custom.tool==='outline',"Draw my own starts an outline and takes the plan's Draw outline tool");
+  const custom=planShortcut(d0,'Custom');ok(JSON.stringify(custom.patch)===JSON.stringify(drawOwnOutline(d0))&&custom.tool==='outline'&&!!custom.patch?.deckOutlines?.main&&custom.patch.customFront===undefined,"Draw my own seeds free points from the deck and takes the plan's Draw outline tool");
+  const lOwn=planShortcut(deckReleaseData({...base(),shape:'L-Shape',width:24,length:16,cutoutWidth:8,cutoutLength:6}),'Custom');
+  ok(!!lOwn.patch?.deckOutlines?.main&&lOwn.patch.deckOutlines.main.length>=6&&lOwn.patch.customFront===undefined&&!lOwn.patch.wrap,'Draw my own keeps an L-shape as editable free points');
+  ok(!!chooseShape(d0,'Custom').customFront&&!chooseShape(d0,'Custom').deckOutlines?.main,'The Deck shape menu Custom outline stays a constrained front');
   ok(JSON.stringify(planShortcut(d0,'split').patch)===JSON.stringify(splitLevel(d0))&&JSON.stringify(planShortcut({...d0,levels:2},'split').patch)==='{"levels":1}','Split level is splitLevel, and pressed again goes back to one level');
   const wl=planShortcut(d0,'wrap-left');ok(!!wl.patch?.wrap?.left&&!wl.patch.wrap.right&&wl.status==='Wrapped round the left house corner.',`Wrap left adds the left wing (${wl.status})`);
   const fixedUp=planShortcut(deckReleaseData({...base(),pattern:'Diagonal',shape:'L-Shape'}),'wrap-both');
