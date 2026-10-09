@@ -3,9 +3,16 @@ import type {EdgeContact,FootprintPlan,PlanPoint} from './deckGeometry';
 import {MANUFACTURER_ACCESSORIES} from '../manufacturerRuntimeCatalogue';
 
 export const PICTURE_FRAME_OVERHANG_IN=1.5;
+/** Mounting space for under-edge / under-step EVO HYDE fixtures (in-lite 5–6 cm). Shared by the
+ * picture-frame border option and lit stair nosings so the step-up matches the deck edge. */
+export const LIGHTING_MOUNTING_SPACE_IN=2.5;
 /** The lighting option is an explicit custom supported/recessed edge concept. The
  * ordinary saved overhang remains unchanged, and returns when the option is off. */
-export const pictureFrameOverhang=(data:DeckData)=>data.autoLighting?.border&&(data.pictureFrameRows||data.pattern==='Picture Frame')?2.5:Math.max(0,Math.min(1.5,data.pictureFrameOverhangIn??PICTURE_FRAME_OVERHANG_IN));
+export const pictureFrameOverhang=(data:DeckData)=>data.autoLighting?.border&&(data.pictureFrameRows||data.pattern==='Picture Frame')?LIGHTING_MOUNTING_SPACE_IN:Math.max(0,Math.min(1.5,data.pictureFrameOverhangIn??PICTURE_FRAME_OVERHANG_IN));
+/** Tread nose depth: ordinary ½ in, or the lighting mounting space when the picture-frame border
+ * lighting option is on (same supported/recessed concept as the deck edge). Under-step lights alone
+ * keep the ordinary nose so existing lit saves price unchanged. */
+export const lightingTreadNosing=(data:DeckData)=>data.autoLighting?.border?LIGHTING_MOUNTING_SPACE_IN:.5;
 /** Structural outline follows rim centre lines in the existing construction model. */
 export function finishedFasciaOffset(data:DeckData){
   return MANUFACTURER_ACCESSORIES.some(p=>p.kind==='fascia'&&data.catalogueAccessories?.includes(p.id))?1.525:.75;

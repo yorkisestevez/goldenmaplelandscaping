@@ -33,7 +33,9 @@ export function syncAutoLighting(data:DeckData,counts:{posts:number;stairs:numbe
   const wanted:SelectedLight[]=[];
   const add=(spec:{productId:string;zone:LightingZone},count:number)=>{if(count>0)wanted.push({productId:spec.productId,qty:Math.min(MAX_FIXTURE_QTY,count),zone:spec.zone,auto:true});};
   if(data.autoLighting?.posts)add(AUTO_LIGHTING.posts,counts.posts);
-  if(data.autoLighting?.stairs)add({productId:stairLightProductId(data),zone:'stairs'},counts.stairs);
+  // Border lighting also lights the step-up: under-step fixtures follow modeled treads whenever the
+  // picture-frame edge option is on (or stairs are selected explicitly).
+  if(data.autoLighting?.stairs||(data.autoLighting?.border&&counts.stairs>0))add({productId:stairLightProductId(data),zone:'stairs'},counts.stairs);
   add(AUTO_LIGHTING.privacy,counts.privacy);
   const managed=new Set(wanted.map(w=>w.productId));
   const manual=items.filter(i=>!i.auto&&!managed.has(i.productId));
