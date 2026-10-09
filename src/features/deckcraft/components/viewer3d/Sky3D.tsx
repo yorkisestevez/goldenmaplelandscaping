@@ -29,9 +29,10 @@ void main(){
   float el=asin(clamp(d.y,-1.,1.)),u=atan(d.z,d.x)/(2.*PI)+.5,seam=fract(u+.5);
   // The original photo's upper sky becomes the visible hemisphere. The HDRI
   // that illuminates and reflects from the design is unchanged. Neighbourhood
-  // mode (uHorizonBand 1) lets the photographed horizon in below about 18°.
+  // mode (uHorizonBand 1) opens a thin photographed horizon, about 3°. The corner
+  // camera looks down, so a taller band would replace the sky with the photo's trees.
   float displayed=max(0.,el),cleanEl=minimumElevation+displayed*(1.-minimumElevation/(PI*.5));
-  float band=1.-smoothstep(0.05,0.32,el),sampleEl=mix(cleanEl,max(el,0.),band*uHorizonBand),v=sampleEl/PI+.5;
+  float band=1.-smoothstep(0.0,0.045,el),sampleEl=mix(cleanEl,max(el,0.),band*uHorizonBand),v=sampleEl/PI+.5;
   float dux=abs(dFdx(u))<abs(dFdx(seam))?dFdx(u):dFdx(seam),duy=abs(dFdy(u))<abs(dFdy(seam))?dFdy(u):dFdy(seam);
   vec3 sky=textureGrad(lighting,vec2(u,v),vec2(dux,dFdx(v)),vec2(duy,dFdy(v))).rgb;
   gl_FragColor=vec4(sky*strength,1.);
