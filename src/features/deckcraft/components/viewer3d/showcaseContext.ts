@@ -1,4 +1,5 @@
 import type {DeckData} from '../../types';
+import {houseOutline} from '../../houseFootprint';
 import {isIlluminatingFixture} from '../../lightingPreview';
 import {cameraSetback} from './cameraFraming';
 
@@ -9,7 +10,7 @@ import {cameraSetback} from './cameraFraming';
 export interface LotBounds {x0:number;x1:number;z0:number;z1:number}
 export interface CameraClearance {x:number;y:number;z:number;tx:number;ty:number;tz:number;fov:number}
 export interface ContextTree {x:number;z:number;heightFt:number;rot:number;conifer:boolean}
-export interface NeighbourHome {x:number;z:number;w:number;d:number;h:number;yaw:number;siding:string;roof:string;trim:string;chimney:boolean;garage:boolean;floors:1|2}
+export interface NeighbourHome {x:number;z:number;w:number;d:number;h:number;yaw:number;siding:string;roof:string;trim:string;chimney:boolean;garage:boolean;floors:1|2;roofKind:'gable'|'hip';pitch:number}
 export interface GroundVertex {x:number;y:number;z:number;drive:number;fade:number;shade:number}
 export interface GroundGrid {name:string;nx:number;nz:number;vertices:GroundVertex[]}
 export interface ShowcaseContextModel {bounds:LotBounds;baseY:number;slopePct:number;runs:[number,number,number,number][];trees:ContextTree[];homes:NeighbourHome[];ground:GroundGrid[]}
@@ -22,7 +23,17 @@ export function showcaseRandom(seed:number){let s=seed>>>0;return ()=>{s=(Math.i
 
 /** Bounding lot of the deck, beds and yard features, in feet, padded so a fence can sit on the line.
  * The house side (negative Z) stays open: a privacy fence wraps the yard, not the street facade. */
+/** The permit lot, in feet, when the design has one. Left and rear match lotOf. */
+function permitLot(data:DeckData):LotBounds|null{
+ const s=data.permitSite;if(!s)return null;
+ let left:number;try{left=Math.min(...houseOutline(data).flat().map(p=>p.x))-s.leftYardFt*12;}catch{return null;}
+ if(!Number.isFinite(left))return null;
+ const rear=s.rearYardFt*12;
+ return {x0:left/12,x1:(left+s.lotWidthFt*12)/12,z0:(rear-s.lotDepthFt*12)/12,z1:rear/12};
+}
+
 export function showcaseLotBounds(data:DeckData):LotBounds {
+ const recorded=permitLot(data);if(recorded)return recorded;
  const xs:number[]=[],zs:number[]=[];
  for(const o of data.landscapeObjects??[]){
   if(o.enabled===false)continue;
@@ -118,11 +129,11 @@ export function showcaseTrees(bounds:LotBounds,cameras:CameraClearance[]):Contex
 export function showcaseHomes(bounds:LotBounds,cameras:CameraClearance[]):NeighbourHome[] {
  const r=showcaseRandom(3),homes:NeighbourHome[]=[];
  const add=(x:number,z:number,yaw:number)=>{
-  const w=28+r()*14,d=22+r()*10,floors:1|2=r()<.72?2:1,h=(floors===2?16:9)+r()*2;
+  const w=32+r()*12,d=24+r()*8,floors:1|2=r()<.7?2:1,h=(floors===2?18:10)+r()*1.2,roofKind=r()<.42?'hip':'gable',pitch=roofKind==='hip'?5:r()<.5?6:8;
   const spot=pushClear(bounds,x,z,Math.max(w,d)*.5,cameras,w/2+8,d/2+4);
   if(!spot)return;
   const i=homes.length;
-  homes.push({x:spot.x,z:spot.z,w,d,h,yaw,siding:SIDING[i%SIDING.length],roof:ROOFS[i%ROOFS.length],trim:TRIM[i%TRIM.length],chimney:r()>.4,garage:r()>.5,floors});
+  homes.push({x:spot.x,z:spot.z,w,d,h,yaw,siding:SIDING[i%SIDING.length],roof:ROOFS[i%ROOFS.length],trim:TRIM[i%TRIM.length],chimney:r()>.35,garage:r()>.45,floors,roofKind,pitch});
  };
  // Fronts face the lot: street houses look back toward the yard, side houses look inward.
  add(bounds.x0-56,bounds.z0-36,Math.PI);

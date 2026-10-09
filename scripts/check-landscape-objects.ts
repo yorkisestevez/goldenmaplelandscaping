@@ -11,6 +11,8 @@ import {landscapeTakeoff,landscapeBedAreas,landscapePlacement,landscapeRenderLod
 import {landscapeBedGeometry,landscapeInstanceMatrix} from '../src/features/deckcraft/components/viewer3d/Landscape3D';
 import {stillSize,captureSceneStill} from '../src/features/deckcraft/components/viewer3d/SceneStillExport';
 import {blocksHeroView,buildShowcaseContext,designHasNightLights,fenceRuns,heroClearances,NEIGHBOUR_WINDOW_BLOOM,neighbourWindowGlow} from '../src/features/deckcraft/components/viewer3d/showcaseContext';
+import {neighbourRoofSeated} from '../src/features/deckcraft/components/viewer3d/neighbourRoof';
+import {ontarioShowcaseDesign,showcaseSampleIssues} from '../src/features/deckcraft/showcaseSample';
 import {getShowcaseFlags,setShowcaseFlags} from '../src/features/deckcraft/components/viewer3d/showcaseMode';
 import type {DeckData} from '../src/features/deckcraft/types';
 let checks=0;const check=(v:unknown,label?:string)=>{assert.ok(v,label);checks++;},close=(a:number,b:number)=>check(Math.abs(a-b)<1e-5,`${a} ≈ ${b}`);
@@ -45,6 +47,7 @@ const cameras=heroClearances(contextDesign,context.bounds);
 check(context.trees.length>=8&&context.trees.length<=28);
 for(const tree of context.trees){const canopy=tree.heightFt*(tree.conifer?.32:.5);check(tree.x+0.4<=context.bounds.x0||tree.x-0.4>=context.bounds.x1||tree.z+0.4<=context.bounds.z0||tree.z-0.4>=context.bounds.z1,'Tree trunks stay outside the fenced lot');check(!blocksHeroView(tree.x,tree.z,canopy,cameras),'Trees stay out of the hero camera corridor');check(tree.heightFt>=26&&tree.heightFt<=60);}
 check(context.homes.length>=4);
+for(const kind of ['gable','hip'] as const)for(const [w,d,top] of [[36,28,18.4],[28,28,11],[44,30,19.2]] as const)check(neighbourRoofSeated(w,d,top,kind),`${kind} roof seats on ${w}×${d}`);
 for(const home of context.homes){check(home.x+home.w/2+8<=context.bounds.x0||home.x-home.w/2-8>=context.bounds.x1||home.z+home.d/2+4<=context.bounds.z0||home.z-home.d/2-4>=context.bounds.z1,'Neighbour houses sit outside the lot');check(home.h>8&&home.w>20&&home.d>16);check(!blocksHeroView(home.x,home.z,Math.max(home.w,home.d)*.5,cameras));}
 for(const ground of context.ground)for(const v of ground.vertices){check(v.x<=context.bounds.x0+.2||v.x>=context.bounds.x1-.2||v.z<=context.bounds.z0+.2||v.z>=context.bounds.z1-.2,'Neighbouring yards stay outside the designed lot');check(v.y<2&&v.fade>=0&&v.fade<=1&&(v.drive===0||v.drive===1));}
 check(context.ground.some(g=>g.vertices.some(v=>v.drive===1)),'A neighbour driveway is part of the ground outside the lot');
@@ -56,6 +59,11 @@ setShowcaseFlags({quality:true,context:true});check(getShowcaseFlags().quality&&
 let darkPanes=0,litPanes=0,peakGlow=0;const first=neighbourWindowGlow(0,0);
 for(let home=0;home<6;home++)for(let pane=0;pane<36;pane++){const glow=neighbourWindowGlow(home,pane);check(glow===neighbourWindowGlow(home,pane));check(glow>=0&&glow<NEIGHBOUR_WINDOW_BLOOM,'Neighbour windows stay under the evening bloom threshold');if(glow===0)darkPanes++;else litPanes++;peakGlow=Math.max(peakGlow,glow);}
 check(first===neighbourWindowGlow(0,0)&&darkPanes>litPanes&&litPanes>8&&peakGlow<0.55,'Most neighbour windows are dark, and the lit ones are a soft glow');
+const showcaseSample=ontarioShowcaseDesign(),showcaseIssues=showcaseSampleIssues(showcaseSample);
+check(showcaseIssues.length===0,showcaseIssues.join(' '));
+check(showcaseSample.permitSite?.lotWidthFt===80&&showcaseSample.permitSite.lotDepthFt===160&&showcaseSample.houseConfig?.storeys===2,'The showcase sample is a two-storey house on an 80×160 ft lot');
+check(showcaseSample.yardFeatures?.some(f=>f.id==='fire-bowl'&&f.supportFeatureId==='lounge')&&showcaseSample.pools?.length===1&&showcaseSample.pergola?.target.kind==='patio','The showcase yard connects a catalogue fire lounge, pool and pergola');
+check(designHasNightLights(showcaseSample),'The showcase yard lights itself, so the night fill stays off');
 check(!designHasNightLights(DEFAULT_DECK),'A design with no fixtures gets the showcase night fill');
 check(designHasNightLights({...DEFAULT_DECK,autoLighting:{stairs:true}})&&designHasNightLights({...DEFAULT_DECK,lightingSystem:{...DEFAULT_DECK.lightingSystem,selectedItems:[{productId:'ace',qty:2,zone:'landscape'}]}}),'Step lights and path lights are left to light the yard themselves');
 assert.deepEqual(stillSize(2048,{x:1500,y:900},8192),{width:2048,height:1229});checks++;assert.deepEqual(stillSize(4096,{x:390,y:390},8192),{width:4096,height:4096});checks++;assert.deepEqual(stillSize(4096,{x:100,y:400},8192),{width:1024,height:4096});checks++;assert.deepEqual(stillSize(4096,{x:400,y:100},8192),{width:4096,height:1024});checks++;assert.throws(()=>stillSize(4096,{x:100,y:400},2048));checks++;assert.throws(()=>stillSize(4096,{x:NaN,y:400},8192));checks++;
