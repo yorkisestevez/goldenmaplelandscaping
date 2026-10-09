@@ -17,6 +17,10 @@ import {newPergola} from './pergolaValidation';
 import {syncAutoLighting} from './lightingSystem';
 import {newLandscapeObject,newLandscapePlant} from './landscapeCatalogue';
 import {patioInlayPlans} from './patioInlays';
+import {onPaving,pavingRings} from './pathLightPlacement';
+import {poolOutline} from './poolGeometry';
+import {getLightingRuntimeProduct} from './lightingRuntimeCatalogue';
+import {insidePolygon} from './lib/polygonCuts';
 
 /**
  * The yard used for showcase stills: a two-storey contemporary house on a
@@ -28,7 +32,10 @@ import {patioInlayPlans} from './patioInlays';
  * serviceberry, hydrangea, dogwood and Karl Foerster, layered back to front.
  * The pool feature has no underwater light. Chaise loungers sit on the pool
  * deck only. The fire lounge seats two sofas facing the burner, 36–48 in
- * clear; the low table between them is the outdoor coffee table. The pergola
+ * clear; the low table between them is the outdoor coffee table. Path bollards
+ * stand in the planting beds beside the walks, never on paving. The pool deck,
+ * terrace and fire lounge take flush EVO GROUND fixtures and WEDGE step lights
+ * at the edges; those edge lights wash the water. The pergola
  * is black aluminium louvers, opened so the slats
  * and the light between them read. The dining table is the folding-table mesh
  * scaled to an eight-seat envelope; there is no larger table product.
@@ -241,15 +248,31 @@ export function ontarioShowcaseDesign():DeckData{
  ];
 
  const lit=buildDeckTakeoff(data);
- // The pool feature has no underwater lamp. SCOPE spots on the deck wash the water; LIV bollards
- // line the walks; LIV WALL fixtures wash the fire lounge. Each place is model inches.
+ // The pool feature has no underwater lamp. Bollards and stake spots stay in the beds.
+ // EVO GROUND is flush in the paving; WEDGE step lights at the edges wash the deck and the water.
+ // LIV WALL fixtures wash the fire lounge. Each place is model inches. Real preview lights are the
+ // 8 spots and 8 bollards; the flush fixtures are listed after them so they glow without taking a slot.
  const pin=(xFt:number,zFt:number,angle=0,y?:number)=>({x:xFt*12,z:zFt*12,angle,...(y===undefined?{}:{y})});
- const path=[pin(-11,28),pin(-7,53),pin(-7,60),pin(2,48),pin(46,48),pin(2,72),pin(46,72),pin(-22,46)];
- const spots=[pin(14,48,0),pin(34,48,0),pin(24,72,Math.PI),pin(48,60,-Math.PI/2),pin(-32,24,-Math.PI/2),pin(-32,55,-Math.PI/2),pin(56,24,Math.PI/2),pin(56,55,Math.PI/2)];
+ const cx=court.xFt,cz=court.zFt,tx0=terrace.xFt-terrace.widthFt/2,tx1=terrace.xFt+terrace.widthFt/2,tz1=terrace.zFt+terrace.depthFt/2,bedNorth=lounge.zFt+lounge.depthFt/2;
+ const path=[pin(-16,13),pin(-10,13),pin(-30.5,40),pin(-30.5,52),pin(-20,bedNorth+4),pin(-12,bedNorth+4),pin(54.5,50),pin(54.5,68)];
+ const spots=[pin(-32,24,Math.PI/2),pin(-32,55,Math.PI/2),pin(-34,36,Math.PI/2),pin(-18,bedNorth+4,Math.PI/2),pin(56,24,-Math.PI/2),pin(56,42,-Math.PI/2),pin(56,55,-Math.PI/2),pin(56,70,-Math.PI/2)];
+ const pavers=[
+  pin(cx-12,cz-10),pin(cx,cz-10),pin(cx+12,cz-10),pin(cx-20,cz),pin(cx+20,cz),pin(cx,cz+9),
+  pin(tx0+4,19),pin(tx1-4,19),pin(tx0+4,tz1-3),pin(terrace.xFt,tz1-3),pin(tx1-4,tz1-3),
+  pin(-21,fireZ-5.4),pin(-15,fireZ-5.4),pin(-21,fireZ+5.2),pin(-15,fireZ+5.2),
+ ];
+ const steps=[
+  pin(cx-16,cz-12,0,2),pin(cx,cz-12,0,2),pin(cx+16,cz-12,0,2),
+  pin(cx-16,cz+12,Math.PI,2),pin(cx,cz+12,Math.PI,2),pin(cx+16,cz+12,Math.PI,2),
+  pin(cx-21,cz,Math.PI/2,2),pin(cx+21,cz,-Math.PI/2,2),
+  pin(terrace.xFt-8,tz1-1.5,0,2),pin(terrace.xFt+8,tz1-1.5,0,2),
+ ];
  const loungeWall=[pin(innerX+0.45,fireZ-4.4,Math.PI/2,16),pin(innerX+0.45,fireZ+4.4,Math.PI/2,16),pin(fireX,(lz0+inset)/12+SEAT_DEPTH/2+0.4,0,16),pin(fireX,(lz1-inset)/12-SEAT_DEPTH/2-0.4,Math.PI,16)];
  data.lightingSystem={wireDistance:80,selectedItems:syncAutoLighting({...data,lightingSystem:{wireDistance:80,selectedItems:[
-  {productId:'liv',qty:path.length,zone:'landscape',places:path},
   {productId:'scope',qty:spots.length,zone:'landscape',places:spots},
+  {productId:'liv',qty:path.length,zone:'landscape',places:path},
+  {productId:'evo_ground_300',qty:pavers.length,zone:'landscape',places:pavers},
+  {productId:'wedge',qty:steps.length,zone:'deck',places:steps},
   {productId:'liv_wall',qty:loungeWall.length,zone:'deck',places:loungeWall},
  ]}}, {posts:lit.quantities.railingPosts,stairs:lit.treads.length,privacy:0})};
 
@@ -311,7 +334,16 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
  if(!table||Math.max(table.widthIn,table.depthIn)<84||Math.min(table.widthIn,table.depthIn)<40||chairs.length<6||chairs.length>8)issues.push('The dining set is not a 6–8 seat table under the pergola.');
  if(table&&data.pergola&&Math.hypot(table.xIn/12-data.pergola.xFt,table.zIn/12-data.pergola.zFt)>1)issues.push('The dining table is not centred under the pergola.');
  const lights=data.lightingSystem.selectedItems,placed=(id:string)=>lights.find(i=>i.productId===id)?.places?.length??0;
- if(placed('liv')<8||placed('scope')<8||placed('liv_wall')<4)issues.push('Path lights, tree uplights and fire-lounge wall lights are not placed.');
+ if(placed('liv')<8||placed('scope')<8||placed('liv_wall')<4||placed('evo_ground_300')<6||placed('wedge')<8)issues.push('Path lights, tree uplights, paver lights, step lights and fire-lounge wall lights are not placed.');
+ const hardscape=pavingRings(data,tk),water=(data.pools??[]).map(poolOutline),bedRings=(data.landscapeObjects??[]).filter(o=>o.kind==='bed'&&(o.polygon?.length??0)>=3).map(o=>o.polygon!.map(p=>({x:p.x,y:p.z})));
+ for(const item of lights){
+  const product=getLightingRuntimeProduct(item.productId);if(!product||!item.places)continue;
+  for(const place of item.places){
+   const paved=onPaving(hardscape,place.x,place.z),bed=bedRings.some(ring=>insidePolygon({x:place.x,y:place.z},ring)),swimming=water.some(ring=>insidePolygon({x:place.x,y:place.z},ring));
+   if((product.geometry==='bollard'||product.geometry==='spot')&&(paved||!bed))issues.push(`${product.name} is not in a planting bed clear of the paving.`);
+   if((item.productId==='evo_ground_300'||item.productId==='wedge')&&(!paved||swimming))issues.push(`${product.name} is not on the paving clear of the water.`);
+  }
+ }
  if((data.landscapeObjects??[]).filter(o=>o.assetId==='lounge-chair'&&o.supportFeatureId==='pool-court').length<2)issues.push('The pool deck has no lounge chairs.');
  if((data.landscapeObjects??[]).some(o=>o.assetId==='lounge-chair'&&o.supportFeatureId==='lounge'))issues.push('Chaise loungers are inside the fire lounge.');
  const sofas=(data.landscapeObjects??[]).filter(o=>o.assetId==='outdoor-sofa'&&o.supportFeatureId==='lounge').sort((a,b)=>a.xIn-b.xIn);
