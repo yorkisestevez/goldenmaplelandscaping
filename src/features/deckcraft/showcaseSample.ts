@@ -258,9 +258,9 @@ export function ontarioShowcaseDesign():DeckData{
  const hero={position:[-8,28,78] as [number,number,number],target:[12,1,28] as [number,number,number]};
  const eye={position:[24,5.2,23] as [number,number,number],target:[2,1,62] as [number,number,number]};
  const poolCam={position:[24,12,36] as [number,number,number],target:[24,0,64] as [number,number,number]};
- const fireCam={position:[-2,7.4,41] as [number,number,number],target:[fireX,1.1,fireZ] as [number,number,number]};
+ const fireCam={position:[-6,8.2,31] as [number,number,number],target:[fireX,1.05,fireZ] as [number,number,number]};
  const shot=(id:string,name:string,frame:{position:[number,number,number];target:[number,number,number]},fov:number)=>({id,name,fov,positionIn:frame.position.map(n=>n*12) as [number,number,number],targetIn:frame.target.map(n=>n*12) as [number,number,number]});
- data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,56),shot('terrace-eye','Terrace toward the pool',eye,55),shot('pool','Pool court',poolCam,42),shot('fire','Fire lounge',fireCam,44)]};
+ data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,56),shot('terrace-eye','Terrace toward the pool',eye,55),shot('pool','Pool court',poolCam,42),shot('fire','Fire lounge',fireCam,42)]};
  return data;
 }
 
