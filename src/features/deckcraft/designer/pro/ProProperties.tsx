@@ -57,7 +57,7 @@ export default function ProProperties({page,data,model,selectedPartId,hardscapeS
         const section=SECTION_BY_ID[id],open=id===active&&!collapsed;
         return <div key={id} className="dd-pro-properties-group">
           <h3><button type="button" id={`dd-pro-group-${id}`} aria-expanded={open} aria-controls={`dd-section-${id}-body`} onClick={()=>id===active?setCollapsed(c=>!c):page.openSection(id)}>
-            <span>{section.name}</span><small>{sectionSummary(section,data)}</small>
+            <WorkspaceIcon id={id}/><span>{section.name}</span><small>{sectionSummary(section,data)}</small>
           </button></h3>
           {open&&<div id={`dd-section-${id}-body`} className="dd-pro-properties-body dd-section-body" role="region" aria-labelledby={`dd-pro-group-${id}`}>
             <Suspense fallback={<p className="dd-note" role="status">Loading {section.name}…</p>}>{page.renderSection(id)}</Suspense>

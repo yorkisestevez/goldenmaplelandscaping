@@ -29,7 +29,7 @@ function StairDimensions({data,update}:{data:DeckData;update:Update}){
 
 /**
  * The Stairs & railings section: railing style, manufacturer railing and its colour, stair flights and layout, each
- * choice with its price effect (R6). The post and step lights are in the Lighting section, which the link at the end of
+ * choice with its price effect (R6). The post and step lights are in Outdoor lighting, which the link at the end of
  * this section opens.
  */
 export default function StairsStep({data,update,onApplyElevation,stairEdges,deltas,onEditEdges}:{data:DeckData;update:Update;onApplyElevation?:Update;stairEdges:StairEdge[];deltas:DeltaProps;onEditEdges?:()=>void}){

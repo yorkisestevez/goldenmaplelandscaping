@@ -1,0 +1,7 @@
+.dd-option-with-icon{display:flex;align-items:flex-start;gap:10px;min-height:44px}
+.dd-option-with-icon>input{flex:none;margin-top:4px}
+.dd-option-with-icon .dd-option-icon{flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-top:0;border-radius:6px;background:#eef3ea;color:#437256}
+.dd-option-with-icon .dd-option-icon svg{width:18px;height:18px}
+.dd-option-with-icon>span:last-child{flex:1;min-width:0;line-height:1.45;padding-top:4px}
+.dd-simple-lighting .dd-option-with-icon+.dd-option-with-icon{margin-top:8px}
+.dd-lighting-zones .dd-option-with-icon+.dd-option-with-icon{margin-top:6px}
