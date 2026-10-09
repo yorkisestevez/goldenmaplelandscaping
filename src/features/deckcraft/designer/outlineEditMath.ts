@@ -1,7 +1,6 @@
 import {activeCustomFront,customEdgeName,customOutline,OUTLINE_LIMITS,type OutlinePoint} from '../lib/customOutline';
 import {frontEdges,moveEdge,outlinePreset,type OutlinePresetId} from '../lib/outlineEdits';
 import type {DeckData} from '../types';
-import {chooseShape} from './deckShapeActions';
 
 /**
  * Editing a custom outline, the same way wherever it is done (useOutlineEdit.ts: the Deck section's outline editor and the
@@ -126,8 +125,11 @@ export function presetFront(data:DeckData,id:OutlinePresetId):OutlinePoint[]|nul
   return front?outlinePreset(id,front[0].x,Math.max(...front.map(p=>p.y))):outlinePreset(id,Number(data.width),Number(data.length));
 }
 /** The patch a starting shape makes: the outline, and on a deck that is not an outline yet, the outline shape too
- * (chooseShape, as the Deck section's shape menu makes it). Null when the shape does not fit. */
+ * (chooseShape, as the Deck section's shape menu makes it). Null when the shape does not fit. Legacy constrained
+ * fronts clear any free outline so `customFront` stays authoritative. */
 export function presetPatch(data:DeckData,id:OutlinePresetId):Partial<DeckData>|null{
   const next=presetFront(data,id);if(!next)return null;
-  return data.shape==='Custom'?{customFront:next}:{...chooseShape(data,'Custom'),customFront:next};
+  if(data.shape==='Custom'&&!data.deckOutlines?.main)return {customFront:next};
+  const deckOutlines=data.deckOutlines?{...data.deckOutlines,main:undefined}:undefined;
+  return {shape:'Custom',levels:1,customFront:next,...(data.deckOutlines?{deckOutlines}:{})};
 }

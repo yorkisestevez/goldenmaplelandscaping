@@ -79,10 +79,15 @@ export default function RetainingWalls() {
 
             <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
-                src="/images/portfolio/sloped-backyard-patio-steps-2-v1-full-1280.webp"
+                src="/images/portfolio/sloped-backyard-patio-steps-2-v1-full-720.webp"
+                srcSet="/images/portfolio/sloped-backyard-patio-steps-2-v1-full-720.webp 720w, /images/portfolio/sloped-backyard-patio-steps-2-v1-full-1280.webp 1280w, /images/portfolio/sloped-backyard-patio-steps-2-v1-full-1920.webp 1920w"
+                sizes="(min-width: 1024px) 42vw, 100vw"
+                width={1920}
+                height={1069}
                 alt="Block retaining wall with built-in steps down to a slab patio in Simcoe County, ON"
                 loading="lazy"
                 decoding="async"
+                fetchPriority="low"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />

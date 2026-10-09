@@ -3,13 +3,13 @@ import type {DeckTakeoff} from './deckTakeoff';
 import type {PlanPoint} from './lib/deckGeometry';
 import {insidePolygon as inside} from './lib/polygonCuts';
 import {getHouseContact} from './houseContact';
-import {finishedFasciaOffset} from './lib/finishedFootprint';
+import {finishedFasciaOffset,LIGHTING_MOUNTING_SPACE_IN} from './lib/finishedFootprint';
 
 /** A design concept for a supported/recessed border, not an approved board cantilever.
  * in-lite EVO HYDE 550 requires a 5–6 cm overhang mounting space; 2.5 in accommodates
  * the upper end of that range. Structural support and fasteners require a builder detail.
  * https://in-lite.com/en-CA/evo-hyde-550-black */
-export const BORDER_LIGHTING={productId:'evo_hyde_550',mountingSpaceIn:2.5,lengthIn:556/25.4,heightIn:22/25.4,depthIn:16/25.4,spacingIn:48,endClearanceIn:6,maxFixtures:30} as const;
+export const BORDER_LIGHTING={productId:'evo_hyde_550',mountingSpaceIn:LIGHTING_MOUNTING_SPACE_IN,lengthIn:556/25.4,heightIn:22/25.4,depthIn:16/25.4,spacingIn:48,endClearanceIn:6,maxFixtures:30} as const;
 export const hasPictureFrame=(data:DeckData)=>!!data.pictureFrameRows||data.pattern==='Picture Frame';
 export const borderLightingSelected=(data:DeckData)=>!!data.autoLighting?.border&&hasPictureFrame(data);
 export const borderLightingEnabled=(data:DeckData)=>borderLightingSelected(data)&&data.lightingZoneEnabled?.border!==false;

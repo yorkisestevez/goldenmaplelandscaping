@@ -87,8 +87,15 @@ export default function LandscapeDesign() {
 
             <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
-                src="/images/projects/Golden Maple deck and walkway.jpg"
+                src="/images/projects/golden-maple-deck-walkway-640.webp"
+                srcSet="/images/projects/golden-maple-deck-walkway-640.webp 640w, /images/projects/golden-maple-deck-walkway-1078.webp 1078w"
+                sizes="(min-width: 1024px) 42vw, 100vw"
+                width={1078}
+                height={1348}
                 alt="Aerial photograph of a backyard deck and walkway layout"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />

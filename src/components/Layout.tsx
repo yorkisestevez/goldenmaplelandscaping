@@ -134,6 +134,8 @@ const Navbar = () => {
               alt="Golden Maple Landscaping"
               width={160}
               height={129}
+              decoding="async"
+              fetchPriority="low"
               className="h-9 md:h-11 w-auto"
             />
             <span className="flex flex-col">

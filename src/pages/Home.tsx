@@ -32,7 +32,7 @@ const ServicesGrid = () => {
         <div className="no-scrollbar -mx-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-8 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-7 md:overflow-visible md:px-0 md:pb-0">
           {services.map((service) => (
             <Link to={service.link} key={service.title} className="group block w-[78vw] shrink-0 snap-start md:w-auto md:shrink">
-              <div className="overflow-hidden mb-6"><ResponsiveImage image={service.image} sizes="(min-width: 768px) 33vw, 100vw" aspect="fill" className="home-service-photo transition-transform duration-500 motion-safe:group-hover:scale-[1.03]" /></div>
+              <div className="overflow-hidden mb-6"><ResponsiveImage image={service.image} sizes="(min-width: 768px) 33vw, 100vw" aspect="fill" whenVisible className="home-service-photo transition-transform duration-500 motion-safe:group-hover:scale-[1.03]" /></div>
               <div className="flex items-center justify-between gap-4 mb-3"><h3 className="font-display text-3xl">{service.title}</h3><ArrowRight size={18} className="text-brand-gold-dark shrink-0" aria-hidden="true" /></div>
               <p className="text-sm leading-relaxed text-brand-muted max-w-sm">{service.desc}</p>
             </Link>
@@ -89,7 +89,7 @@ const WhyGoldenMaple = () => {
           </div>
           <div className="relative">
             <div className="aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-ink/10">
-              <ResponsiveImage image={projectCoverFull(getProject('cobblestone-driveway')!)} sizes="(min-width: 1024px) 45vw, 100vw" aspect="fill" className="w-full h-full object-cover" />
+              <ResponsiveImage image={projectCoverFull(getProject('cobblestone-driveway')!)} sizes="(min-width: 1024px) 45vw, 100vw" aspect="fill" whenVisible className="w-full h-full object-cover" />
             </div>
             {years && (
               <div className="absolute -bottom-10 -left-10 bg-brand-green-dark p-8 hidden md:block rounded-[2px] shadow-xl max-w-[220px]">
@@ -123,6 +123,7 @@ const SelectedWork = () => (
                   image={projectCover(project)}
                   sizes="(min-width: 1024px) 50vw, 100vw"
                   aspect="4/3"
+                  whenVisible
                   className="transition-transform duration-1000 motion-safe:group-hover:scale-[1.04]"
                 />
               </div>
@@ -171,7 +172,7 @@ const FinalCTA = () => {
   return (
     <section className="section-padding bg-brand-burgundy relative overflow-hidden">
       <div className="absolute inset-0 opacity-40">
-          <ResponsiveImage image={projectCoverFull(getProject('barrie-diamond-inlay-patio')!)} sizes="100vw" aspect="fill" className="w-full h-full object-cover" />
+          <ResponsiveImage image={projectCoverFull(getProject('barrie-diamond-inlay-patio')!)} sizes="100vw" aspect="fill" whenVisible className="w-full h-full object-cover" />
       </div>
       <Reveal className="container-custom relative z-10 text-center">
         <h2 className="font-display text-4xl md:text-8xl font-light text-brand-porcelain mb-12 leading-tight">

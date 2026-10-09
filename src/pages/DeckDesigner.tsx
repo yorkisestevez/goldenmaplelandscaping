@@ -29,7 +29,7 @@ import WorkspacePrice from '../features/deckcraft/designer/WorkspacePrice';
 import {useDesignerMode} from '../features/deckcraft/designer/designerMode';
 import type {ProPage} from '../features/deckcraft/designer/pro/proTypes';
 const noteWarmLead=(...args:Parameters<typeof import('../features/deckcraft/warmLead').noteWarmLead>)=>void import('../features/deckcraft/warmLead').then(m=>m.noteWarmLead(...args));
-import {loadExteriorStudio,loadViewer} from '../features/deckcraft/designer/previewLoaders';
+import {loadExteriorStudio,loadPlanBoundaryEditor,loadViewer} from '../features/deckcraft/designer/previewLoaders';
 const PreviewPanel=lazy(()=>import('../features/deckcraft/designer/PreviewPanel'));
 import SectionList from '../features/deckcraft/designer/SectionList';
 import {SECTIONS,SECTION_BY_ID,loadBackyardStep,loadBoardColourPanel,loadDeckFinishesPanel,loadDimensionsStep,loadEstimateStep,loadHouseSection,loadInlayEditor,loadMaterialsStep,loadSiteExtrasStep,loadSkirtingEditor,loadStairsStep,sectionsOfPatch,type SectionId} from '../features/deckcraft/designer/sections';
@@ -201,7 +201,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   useEffect(()=>{
     if((navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData)return;
     const desktopOnly=window.matchMedia?.('(min-width: 761px) and (pointer: fine)').matches?[loadViewer]:[];
-    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel,...desktopOnly])load().catch(()=>{/* Loaded again when opened. */});},4000);
+    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel,loadPlanBoundaryEditor,...desktopOnly])load().catch(()=>{/* Loaded again when opened. */});},4000);
     return()=>clearTimeout(timer);
   },[]);
   /** Opens a section (analytics: its old wizard step, and the section, once per visit). On a phone it closes the others. */

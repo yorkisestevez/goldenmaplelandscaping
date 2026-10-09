@@ -1,4 +1,3 @@
-import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { HERO_DEPTH } from '../data/heroDepth';
@@ -6,25 +5,15 @@ import { trackEngagement } from '../utils/analytics';
 
 /**
  * Static home hero. One <img> in the prerendered HTML, no scroll-linked depth
- * layers. Copy and CTAs are the conversion pass; the picture stays a single
- * eager image so the heading can paint without the parallax pin.
+ * layers. The picture is the mobile LCP element, so it is eager and
+ * fetchpriority=high at every viewport. React hoists one imagesrcset preload
+ * into <head> for that img; a second link would download the picture twice.
  */
 const SIZES = '(min-width: 1024px) 55vw, 100vw';
 
 export default function HeroDepth() {
   return (
     <section className="home-hero bg-brand-nearblack">
-      <Helmet>
-        <link
-          rel="preload"
-          as="image"
-          href={HERO_DEPTH.flat.src}
-          imageSrcSet={HERO_DEPTH.flat.srcSet}
-          imageSizes={SIZES}
-          media="(min-width: 1024px)"
-          fetchPriority="high"
-        />
-      </Helmet>
       <div className="container-custom w-full">
         <div className="home-hero-grid">
           <div className="home-hero-copy max-w-xl">
@@ -63,9 +52,8 @@ export default function HeroDepth() {
                 alt={HERO_DEPTH.alt}
                 width={HERO_DEPTH.width}
                 height={HERO_DEPTH.height}
-                loading="lazy"
                 decoding="async"
-                fetchPriority="low"
+                fetchPriority="high"
                 className="home-hero-layer home-hero-flat"
               />
             </div>

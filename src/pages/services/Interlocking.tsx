@@ -60,8 +60,15 @@ export default function Interlocking() {
 
             <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
-                src="/images/projects/paver-driveway.JPG"
+                src="/images/projects/paver-driveway-640.webp"
+                srcSet="/images/projects/paver-driveway-640.webp 640w, /images/projects/paver-driveway-1200.webp 1200w"
+                sizes="(min-width: 1024px) 42vw, 100vw"
+                width={1200}
+                height={1500}
                 alt="Interlocking Stone Patio in Barrie ON"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
