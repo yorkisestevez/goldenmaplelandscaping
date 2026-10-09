@@ -4,6 +4,8 @@ import sharp from 'sharp';
 import * as THREE from 'three';
 import ts from 'typescript';
 import {SCENE_LOOK} from '../src/features/deckcraft/components/viewer3d/sceneLook';
+import {SHOWCASE_BLOOM,gradeLinear} from '../src/features/deckcraft/components/viewer3d/showcaseGrade';
+import {buildSurfaceDetail,type DetailKind} from '../src/features/deckcraft/components/viewer3d/detailMaps';
 import {cameraSetback} from '../src/features/deckcraft/components/viewer3d/cameraFraming';
 import {railGeometry} from '../src/features/deckcraft/components/viewer3d/EasedRails';
 import {fitSun,shadowKey} from '../src/features/deckcraft/components/viewer3d/shadowCache';
@@ -50,6 +52,20 @@ ok(SCENE_LOOK.toneMapping==='Neutral'&&SCENE_LOOK.exposure===1,'Tone mapping sta
 ok(SCENE_LOOK.bloom.threshold>1,'Only HDR light sources glow: the bloom threshold is above white');
 ok(SCENE_LOOK.ao.intensity.day<=1&&SCENE_LOOK.ao.intensity.evening<SCENE_LOOK.ao.intensity.day,'Ambient occlusion is lighter in the evening, when fixtures carry the light');
 ok(SCENE_LOOK.powderCoat.metalness===0&&SCENE_LOOK.powderCoat.clearcoat>0,'Powder coat is paint with a clear coat, not metal');
+ok(SHOWCASE_BLOOM.threshold>1&&SHOWCASE_BLOOM.strength<SCENE_LOOK.bloom.strength,'Showcase night bloom stays above white and weaker than the evening default, so landscape lights glow without blowing the deck out');
+{
+  const toSrgb=(v:number)=>{const c=Math.min(1,Math.max(0,v));return (c<=.0031308?c*12.92:1.055*c**(1/2.4)-.055)*255;};
+  const pair=(rgb:readonly[number,number,number])=>rgb.map(toSrgb) as number[];
+  const grey:[number,number,number]=[.18,.18,.18],brown:[number,number,number]=[.28,.16,.09];
+  ok(deltaE(pair(grey),pair(gradeLinear(grey,'day')))<1.25,'The day grade leaves a mid grey within a barely visible ΔE of the swatch');
+  ok(deltaE(pair(brown),pair(gradeLinear(brown,'day')))<3,'The day grade leaves a decking brown close to the product colour');
+  const warm=gradeLinear([.7,.55,.3],'golden');ok(warm[0]>warm[2],'Golden hour warms the highlights');
+  for(const kind of ['paver','slab','cap','stone','deck','siding'] as DetailKind[]){
+    const map=buildSurfaceDetail(kind,32);let sum=0,z=0,facesOut=true;const n=map.size*map.size;
+    for(let i=0;i<n;i++){sum+=map.albedo[i*4];const b=map.normal[i*4+2];z+=b;if(b<128)facesOut=false;}
+    ok(Math.abs(sum/n-128)<.51&&facesOut&&z/n>180,`${kind} detail is a zero-mean colour modulation whose normals face out`);
+  }
+}
 for(const size of [[.75,36,.75],[3.5,42,3.5],[192,1.75,1.75]] as [number,number,number][]){
   const geometry=railGeometry(size);geometry.computeBoundingBox();
   const extent=geometry.boundingBox!.getSize(new THREE.Vector3()).toArray(),pos=geometry.getAttribute('position'),norm=geometry.getAttribute('normal');
@@ -146,6 +162,12 @@ for(const file of files){
   ok(maps.normal.every((v,i)=>i%4!==2||v>=128),`${file}: every normal faces out of the board`);
 }
 ok(grainIsVertical(rotate90({width:2,height:2,data:new Uint8Array(16)}))===false,'A flat picture has no grain to turn');
+{
+  const w=48,h=36,data=new Uint8Array(w*h*4);
+  for(let i=0;i<data.length;i+=4){data[i]=90;data[i+1]=62;data[i+2]=40;data[i+3]=255;}
+  const wide=await buildSwatchMaps({width:w,height:h,data},'composite',async()=>{},128);
+  ok(wide.width===128&&wide.normal.some((v,i)=>i%4===3&&v!==255)&&deltaE(wide.sourceMean,wide.atlasMean)<1,'A wider atlas keeps the photo mean and packs height into the normal alpha');
+}
 ok(!/from ['"](three|@react-three)/.test(read(`${VIEWER}swatchMaps.ts`)),'swatchMaps.ts stays free of three.js');
 
 // The shader patch rewrites chunks three still has, and every board's pick is stable and in range.

@@ -24,6 +24,6 @@ export function ShowcaseModeSync(){
  const invalidate=useThree(s=>s.invalidate),gl=useThree(s=>s.gl);
  const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
  useEffect(()=>{applyShowcaseSearch();},[]);
- useEffect(()=>{gl.domElement.dataset.showcaseContext=flags.context?'1':'0';invalidate();},[flags,gl,invalidate]);
+ useEffect(()=>{Object.assign(gl.domElement.dataset,{showcaseContext:flags.context?'1':'0',showcaseHour:flags.hour,showcasePost:flags.post?'1':'0'});invalidate();},[flags,gl,invalidate]);
  return null;
 }

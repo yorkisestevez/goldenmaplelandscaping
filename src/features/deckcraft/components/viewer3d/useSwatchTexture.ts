@@ -7,7 +7,9 @@
 import { useEffect, useMemo } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { buildSwatchMaps, type SwatchImage, type SwatchMaps } from './swatchMaps';
+import { ATLAS_WIDTH, buildSwatchMaps, type SwatchImage, type SwatchMaps } from './swatchMaps';
+import { showcaseDetail } from './showcaseMode';
+import { useRenderQuality } from './SceneRenderQuality';
 import type { SwatchResult } from './swatchMaps.worker';
 import { clearSurfaceMaps, disposeSurface, setSurfaceMaps, surfaceMaterial } from './surfaceShaders';
 import { useFixtureLit } from './fixtureLighting';
@@ -71,45 +73,47 @@ export const waitForSwatchTextures=(gl:THREE.WebGLRenderer,timeoutMs=15000):Prom
 const isWood = (url: string) => /(^|\/)wood-[^/]*$/.test(url.split('?')[0]);
 
 type Kind = 'composite' | 'wood';
-const pending = new Map<number, { resolve: (maps: SwatchMaps | null) => void; image: SwatchImage; kind: Kind }>();
+const pending = new Map<number, { resolve: (maps: SwatchMaps | null) => void; image: SwatchImage; kind: Kind; width: number }>();
 let worker: Worker | null | undefined, nextId = 0;
-const onMainThread = (image: SwatchImage, kind: Kind) => buildSwatchMaps(image, kind, () => new Promise(resolve => setTimeout(resolve, 0)));
+const onMainThread = (image: SwatchImage, kind: Kind, width = ATLAS_WIDTH) => buildSwatchMaps(image, kind, () => new Promise(resolve => setTimeout(resolve, 0)), width);
 // The worker lives for the page, so its listeners are module functions: written inline, the build folds this code into
 // the hook's effect and the listener kept the first 3D view's renderer, canvas and context alive.
 function onWorkerMessage(event: MessageEvent<SwatchResult>) { pending.get(event.data.id)?.resolve(event.data.maps); pending.delete(event.data.id); }
 /** A worker that fails to load hands its jobs back to the main thread, and no more are sent to it. */
-function onWorkerError() { worker = null; for (const job of pending.values()) onMainThread(job.image, job.kind).then(job.resolve, () => job.resolve(null)); pending.clear(); }
+function onWorkerError() { worker = null; for (const job of pending.values()) onMainThread(job.image, job.kind, job.width).then(job.resolve, () => job.resolve(null)); pending.clear(); }
 /** Atlases are built in a worker (swatchMaps.worker.ts); where none can start, on the main thread a strip at a time. */
-function buildAtlas(image: SwatchImage, kind: Kind): Promise<SwatchMaps | null> {
+function buildAtlas(image: SwatchImage, kind: Kind, width = ATLAS_WIDTH): Promise<SwatchMaps | null> {
   if (worker === undefined) {
     try { worker = typeof Worker === 'function' ? new Worker(new URL('./swatchMaps.worker.ts', import.meta.url), { type: 'module' }) : null; } catch { worker = null; }
     worker?.addEventListener('message', onWorkerMessage);
     worker?.addEventListener('error', onWorkerError);
   }
-  if (!worker) return onMainThread(image, kind);
+  if (!worker) return onMainThread(image, kind, width);
   const id = nextId++, job = worker;
-  return new Promise(resolve => { pending.set(id, { resolve, image, kind }); job.postMessage({ id, image, kind }); });
+  return new Promise(resolve => { pending.set(id, { resolve, image, kind, width }); job.postMessage({ id, image, kind, width }); });
 }
 
-function swatchMaps(url: string): Promise<SwatchMaps | null> {
-  const hit = cache.get(url);
-  if (hit) { cache.delete(url); cache.set(url, hit); return hit; }
+function swatchMaps(url: string, width = ATLAS_WIDTH): Promise<SwatchMaps | null> {
+  const key = width === ATLAS_WIDTH ? url : `${url}@${width}`;
+  const hit = cache.get(key);
+  if (hit) { cache.delete(key); cache.set(key, hit); return hit; }
   const job = (async () => {
     const img = new Image();
     img.decoding = 'async';
     img.src = url;
     await img.decode();
-    const scale = Math.min(1, READ_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
-    const width = Math.round(img.naturalWidth * scale), height = Math.round(img.naturalHeight * scale);
+    const edge = width > ATLAS_WIDTH ? 1800 : READ_EDGE;
+    const scale = Math.min(1, edge / Math.max(img.naturalWidth, img.naturalHeight));
+    const readW = Math.round(img.naturalWidth * scale), readH = Math.round(img.naturalHeight * scale);
     const canvas = document.createElement('canvas');
-    canvas.width = width; canvas.height = height;
+    canvas.width = readW; canvas.height = readH;
     const context = canvas.getContext('2d', { willReadFrequently: true });
     if (!context) return null;
-    context.drawImage(img, 0, 0, width, height);
-    const { data } = context.getImageData(0, 0, width, height);
-    return buildAtlas({ width, height, data }, isWood(url) ? 'wood' : 'composite');
+    context.drawImage(img, 0, 0, readW, readH);
+    const { data } = context.getImageData(0, 0, readW, readH);
+    return buildAtlas({ width: readW, height: readH, data }, isWood(url) ? 'wood' : 'composite', width);
   })().catch(() => null);
-  cache.set(url, job);
+  cache.set(key, job);
   if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value!);
   return job;
 }
@@ -129,15 +133,17 @@ function atlasTexture(pixels: Uint8Array, maps: SwatchMaps, colorSpace: THREE.Co
 export function useSwatchTexture(url: string, fallbackColor: string): THREE.MeshStandardMaterial {
   const gl = useThree(s => s.gl);
   const invalidate = useThree(s => s.invalidate);
+  const quality = useRenderQuality();
+  const atlasWidth = showcaseDetail(quality.tier) ? 2048 : ATLAS_WIDTH;
 
   // A new material per colour choice is intentional — disposal handled below.
-  const material = useMemo(() => surfaceMaterial(fallbackColor), [fallbackColor]);
+  const material = useMemo(() => surfaceMaterial(fallbackColor, atlasWidth > ATLAS_WIDTH), [fallbackColor, atlasWidth]);
 
   useEffect(() => {
     if (!url) return;
     let cancelled = false;
     const application = readinessFor(gl).begin();
-    swatchMaps(url).then(maps => {
+    swatchMaps(url, atlasWidth).then(maps => {
       if (cancelled) return;
       if (!maps) { application.applied(false); return; }
       const anisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy());
@@ -151,7 +157,7 @@ export function useSwatchTexture(url: string, fallbackColor: string): THREE.Mesh
       application.applied(true);
     }).catch(() => { if(!cancelled)application.applied(false); });
     return () => { cancelled = true; application.cancel(); clearSurfaceMaps(material); };
-  }, [url, material, gl, invalidate]);
+  }, [url, material, gl, invalidate, atlasWidth]);
 
   // Boards, treads, risers, fascia and skirting take the night's step and post lights.
   useFixtureLit(material);
