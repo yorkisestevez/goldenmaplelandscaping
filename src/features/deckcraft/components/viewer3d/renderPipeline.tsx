@@ -105,6 +105,8 @@ export default function RenderPipeline({evening}:{evening:boolean}){
       gl.getDrawingBufferSize(size);chain.setSize(size.x,size.y,scale);chain.render(gl,scene,camera,state.evening);
     };
     const frame=()=>{
+      // Photo mode path-traces the same canvas. Holding the raster here leaves the shadow-map line below untouched.
+      if(gl.domElement.dataset.photoTrace==='1')return;
       if(!state.broken)try{state.chain??=new Chain(gl,scene,camera,quality.msaaSamples,quality);draw(state.chain,1);gl.domElement.dataset.photographicPipeline='active';return;}catch(error){fail(error);}
       gl.render(scene,camera);
     };

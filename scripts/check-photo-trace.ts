@@ -1,0 +1,81 @@
+import {readFileSync} from 'node:fs';
+import * as THREE from 'three';
+import {SCENE_LOOK} from '../src/features/deckcraft/components/viewer3d/sceneLook';
+import {PHOTO_FALLBACK,PHOTO_GRADE,PHOTO_LIGHT,photoStillSize,photoSunColor,photoSunElevationDeg,photoSunIrradiance,sunDisc,sunDiscIrradiance} from '../src/features/deckcraft/components/viewer3d/photoGrade';
+import {applyPhotoScene,buildPhotoBackground} from '../src/features/deckcraft/components/viewer3d/photoMaterials';
+import {photoSampleHold} from '../src/features/deckcraft/components/viewer3d/photoMode';
+import {photoSamplesPerFrame,registerPhotoTracer,tracePhotoFrame} from '../src/features/deckcraft/photoTraceApi';
+import {windowGlass,WINDOW_ROOM} from '../src/features/deckcraft/components/viewer3d/windowGlass';
+import {guardGlass,GUARD_GLASS} from '../src/features/deckcraft/components/viewer3d/guardGlass';
+import {WATER_OPTICS} from '../src/features/deckcraft/components/viewer3d/waterOptics';
+
+let failed=0;
+function ok(cond:unknown,message:string){if(!cond){failed++;console.error('FAIL',message);}else console.log('ok',message);}
+
+const dayDisc=sunDisc(3.1,.9),goldenDisc=sunDisc(photoSunIrradiance('golden',3.1),1.45);
+ok(Math.abs(sunDiscIrradiance(dayDisc)-3.1)<1e-9&&Math.abs(sunDiscIrradiance(goldenDisc)-3.1*.62)<1e-9,'A sun disc returns the same direct irradiance the raster key would');
+ok(photoSunIrradiance('night',3.1)===0&&photoSunElevationDeg('golden',64)===11&&photoSunElevationDeg('night',64)===0,'Night has no sun and golden hour keeps a low sun on the same azimuth');
+ok(photoSunColor('golden',[1,.9,.8])[0]>photoSunColor('golden',[1,.9,.8])[2]&&photoSunColor('day',[.2,.3,.4])[0]===.2,'Golden hour warms the key; day keeps the extracted sun colour');
+ok(Object.values(PHOTO_GRADE).every(g=>[g.exposure,...g.balance,g.saturation].every(n=>Number.isFinite(n)&&n>0)),'The photo grade is finite');
+ok(PHOTO_FALLBACK.startsWith('Photo mode needs a graphics device'),'Devices that cannot path trace get a plain fallback');
+ok(photoStillSize(2048,{x:16,y:9},8192).width===2048&&photoStillSize(4096,{x:9,y:16},8192).height===4096,'Photo export is 2K or 4K on the long edge');
+let rejected=false;try{photoStillSize(1024,{x:16,y:9},8192);}catch{rejected=true;}ok(rejected,'Any other export size is rejected');
+ok(photoSamplesPerFrame()===0&&photoSampleHold('hero')===false,'Without a page URL the recorder stays on the raster path');
+ok(await tracePhotoFrame({samples:4})===null,'A frame trace is null until photo mode has mounted a tracer');
+let traced=0;registerPhotoTracer(async request=>{traced=request.samples;return {width:1,height:1,samples:request.samples,rgba:new Uint8Array(4),blob:new Blob()};});
+ok((await tracePhotoFrame({samples:3}))?.samples===3&&traced===3,'The recorder hook renders the requested sample count');
+registerPhotoTracer(null);ok(await tracePhotoFrame({samples:3})===null,'Removing the hook sends the recorder back to the raster path');
+
+const scene=new THREE.Scene();
+const sky=new THREE.Mesh(new THREE.SphereGeometry(1,4,3),new THREE.MeshBasicMaterial());sky.name='sky-dome';scene.add(sky);
+const blades=new THREE.Mesh(new THREE.SphereGeometry(1,4,3),new THREE.MeshBasicMaterial());blades.name='close-view-grass-blades';scene.add(blades);
+const windowMat=windowGlass(false),guard=guardGlass();
+const windowMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),windowMat);scene.add(windowMesh);
+const guardMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),guard);scene.add(guardMesh);
+const waterMat=new THREE.MeshPhysicalMaterial({color:'#ffffff',roughness:.055,ior:1.333,transmission:0});
+const water=new THREE.Mesh(new THREE.PlaneGeometry(1,1),waterMat);water.name='pool-water';water.userData.poolRole='water';scene.add(water);
+const floorMat=new THREE.MeshStandardMaterial({color:'#888888',roughness:.6});
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(1,1),floorMat);floor.userData.poolRole='floor';scene.add(floor);
+const leafMap=new THREE.DataTexture(new Uint8Array([0,128,0,255]),1,1);leafMap.needsUpdate=true;
+const leaf=new THREE.MeshStandardMaterial({color:'#3a5a30',alphaTest:.2,transparent:true,map:leafMap,roughness:.8});
+scene.add(new THREE.Mesh(new THREE.PlaneGeometry(1,1),leaf));
+const swatchMap=new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1);
+const swatch=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.9,metalness:.2,map:swatchMap});
+swatch.userData.surface={fallback:new THREE.Color('#c4a574')};scene.add(new THREE.Mesh(new THREE.PlaneGeometry(1,1),swatch));
+const sun=new THREE.DirectionalLight('#fff',2.4);sun.name='sun';scene.add(sun);
+const spot=new THREE.SpotLight('#ffd0a0',40);scene.add(spot);
+const point=new THREE.PointLight('#ffb060',45);scene.add(point);
+const background=buildPhotoBackground(null,1,0,0,[.4,.5,.6]);
+ok(background.mapping===THREE.EquirectangularReflectionMapping&&[...background.image.data].every((n:number)=>Number.isFinite(n)),'The photo sky is a finite equirectangular background');
+
+const restore=applyPhotoScene(scene,'day',{color:[1,.95,.9],direction:[.4,.8,.3],diameterFt:7,radiance:12,distanceFt:220});
+ok(!sky.visible&&!blades.visible,'The sky dome and grass blades stay out of the path-traced scene');
+ok(windowMat.transmission===0&&windowMat.ior===WINDOW_ROOM.ior&&windowMat.userData.photoRole==='glass','Window glass stays reflective during a photo, so the house is not a hollow shell');
+ok(guard.transmission===1&&guard.thickness===0&&guard.attenuationDistance===Infinity&&guard.ior===GUARD_GLASS.ior,'Guard glass is a thin transmissive sheet for the tracer');
+ok(waterMat.transmission===1&&waterMat.thickness===0&&waterMat.ior===1.333&&waterMat.color.getHex()!==0xffffff,'Pool water is a thin refractive sheet tinted by the water colour');
+ok(leaf.alphaTest>=.45&&leaf.transparent===false&&leaf.side===THREE.DoubleSide,'Foliage is alpha-tested, not a blended card');
+ok(swatch.color.equals(swatch.userData.surface.fallback)&&swatch.map===null&&swatch.metalness===0,'Board swatches use their fallback colour, because the tracer cannot see the raster atlas');
+ok(sun.intensity===0&&((spot as THREE.SpotLight&{radius?:number}).radius??0)>=PHOTO_LIGHT.spotRadiusFt&&point.intensity===45*PHOTO_LIGHT.pointKeep,'The directional sun steps aside for the disc; spots soften and point lights keep their candela');
+ok(scene.getObjectByName('photo-sun') instanceof THREE.RectAreaLight&&scene.getObjectByName('photo-emitter') instanceof THREE.Mesh,'A circular sun and a fixture bulb are added for the still');
+ok(floorMat.emissiveIntensity===PHOTO_LIGHT.floorCaustic&&floorMat.emissiveMap!==null,'The pool floor carries a caustic approximation');
+restore();
+ok(sky.visible&&blades.visible&&sun.intensity===2.4&&windowMat.transmission===0&&guard.transmission===0&&guard.depthWrite===false&&waterMat.transmission===0&&leaf.alphaTest===.2&&leaf.transparent===true&&swatch.map===swatchMap&&swatch.metalness===.2&&!scene.getObjectByName('photo-sun')&&!scene.getObjectByName('photo-emitter'),'Leaving photo mode puts the raster materials, lights and helpers back');
+const windowEmissive=windowMat.emissiveIntensity,night=applyPhotoScene(scene,'night',null);
+ok(windowMat.emissiveIntensity===PHOTO_LIGHT.windowNightEmissive&&floorMat.emissiveMap===null&&!scene.getObjectByName('photo-sun'),'Night windows emit and the sun stays out');
+night();
+ok(windowMat.emissiveIntensity===windowEmissive&&windowMat.transmission===0,'Night glass is restored to the raster window');
+background.dispose();
+
+const files=['src/features/deckcraft/photoTraceApi.ts','src/features/deckcraft/components/viewer3d/photoGrade.ts','src/features/deckcraft/components/viewer3d/photoMode.ts','src/features/deckcraft/components/viewer3d/photoMaterials.ts','src/features/deckcraft/components/viewer3d/photoEngine.ts','src/features/deckcraft/components/viewer3d/PhotoTracer.tsx','src/features/deckcraft/components/viewer3d/PhotoModePanel.tsx'];
+const source=files.map(file=>readFileSync(file,'utf8')).join('\n');
+ok(!/warmLead|anthropic|generatedImage|\/api\/assistant|\/api\/lead/.test(source),'Photo mode does not call the lead form or the AI endpoints');
+ok(!readFileSync('src/features/deckcraft/components/viewer3d/Deck3DViewer.tsx','utf8').includes("from 'three-gpu-pathtracer'")&&readFileSync('src/features/deckcraft/components/viewer3d/PhotoTracer.tsx','utf8').includes("import('./photoEngine')"),'The path tracer stays out of the viewer chunk until photo mode is on');
+ok(SCENE_LOOK.toneMapping==='Neutral'&&SCENE_LOOK.exposure===1&&readFileSync('src/features/deckcraft/components/viewer3d/Deck3DViewer.tsx','utf8').includes('toneMapping:THREE.NeutralToneMapping'),'The editor grade stays Khronos Neutral');
+const pipeline=readFileSync('src/features/deckcraft/components/viewer3d/renderPipeline.tsx','utf8');
+ok(pipeline.includes("gl.domElement.dataset.photoTrace==='1'")&&pipeline.includes('for(const listen of shadowListeners.get(gl)??[])listen();gl.shadowMap.needsUpdate=true;'),'The raster frame waits during a photo and still refreshes shadow maps the same way');
+const designer=readFileSync('src/features/deckcraft/designer/useDeckDesign.ts','utf8');
+ok(/const area=readDeckArea\(window\.location\.search\),link=designLinkFromHash\(window\.location\.hash\);/.test(designer)&&designer.includes('if(!link&&!stored){update(size);')&&designer.includes("get('deck-sample')==='ontario'")&&designer.indexOf('openSharedLink(link,stored)')<designer.indexOf("get('deck-sample')==='ontario'"),'The Ontario sample loads only for an empty project, after a shared link is handled');
+ok(WATER_OPTICS.shallow&&source.includes('transmission=1')&&source.includes('alphaTest'),'Water and foliage overrides live in the photo session');
+
+if(failed){console.error(`PHOTO TRACE: ${failed} failed`);process.exit(1);}
+console.log('PHOTO TRACE OK');
