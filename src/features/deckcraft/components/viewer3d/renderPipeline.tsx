@@ -4,11 +4,15 @@ import * as THREE from 'three';
 import {GTAOPass} from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass.js';
+import {FullScreenQuad} from 'three/examples/jsm/postprocessing/Pass.js';
 import {SCENE_LOOK,sceneQuality} from './sceneLook';
 import {useRenderQuality} from './SceneRenderQuality';
 import type {RenderQuality} from './renderQuality';
 import {fitSun,shadowKey} from './shadowCache';
 import {renderWindowReflections} from './windowReflections';
+import {SHOWCASE_STILL_SAMPLES,bloomFor} from './showcaseGrade';
+import {syncShowcaseShadows} from './pcssShadows';
+import {activeGradeHour,bindDof,bindGrade,blit,createBlendMaterial,createDofMaterial,createGradeMaterial,ensureShowcaseSmaa,focusDistance,jitterCamera,onShowcasePostReady,showcasePostActive,showcaseSmaa} from './showcasePost';
 
 /**
  * The live 3D view's renderer. The scene goes into a multisampled half-float image, ambient occlusion is worked out
@@ -22,6 +26,8 @@ const {ao:AO,bloom:BLOOM}=SCENE_LOOK;
 export class Chain{
   readonly beauty:THREE.WebGLRenderTarget;readonly post:THREE.WebGLRenderTarget;readonly gtao:GTAOPass;readonly output=new OutputPass();
   private bloom:UnrealBloomPass|null=null;private w=0;private h=0;private budget:ReturnType<typeof sceneQuality>;
+  private hold:THREE.WebGLRenderTarget|null=null;private accum:THREE.WebGLRenderTarget|null=null;private ping:THREE.WebGLRenderTarget|null=null;
+  private dof=null as ReturnType<typeof createDofMaterial>|null;private grade=null as ReturnType<typeof createGradeMaterial>|null;private blend=null as ReturnType<typeof createBlendMaterial>|null;private quad:FullScreenQuad|null=null;
   constructor(gl:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.Camera,samples:number,quality:RenderQuality){
     this.budget=sceneQuality(quality,gl.capabilities);
     const ext=gl.extensions,type=ext.has('EXT_color_buffer_float')||ext.has('EXT_color_buffer_half_float')?THREE.HalfFloatType:THREE.UnsignedByteType;
@@ -37,27 +43,61 @@ export class Chain{
   }
   setSize(w:number,h:number,scale:number){
     if(w===this.w&&h===this.h)return;
-    this.w=w;this.h=h;this.beauty.setSize(w,h);this.post.setSize(w,h);this.bloom?.setSize(Math.ceil(w*this.budget.bloomResolution),Math.ceil(h*this.budget.bloomResolution));
+    this.w=w;this.h=h;this.beauty.setSize(w,h);this.post.setSize(w,h);this.hold?.setSize(w,h);this.accum?.setSize(w,h);this.ping?.setSize(w,h);
+    this.bloom?.setSize(Math.ceil(w*this.budget.bloomResolution),Math.ceil(h*this.budget.bloomResolution));
     this.gtao.setSize(Math.max(1,Math.ceil(w*this.budget.aoResolution)),Math.max(1,Math.ceil(h*this.budget.aoResolution)));
     // The denoise radius is in shade pixels: a capture drawn larger blurs the same share of the picture.
     this.gtao.updatePdMaterial({radius:this.budget.denoiseRadius*scale});
   }
-  render(gl:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.Camera,evening:boolean){
-    this.gtao.scene=scene;this.gtao.camera=camera;this.gtao.blendIntensity=evening?AO.intensity.evening:AO.intensity.day;
-    renderWindowReflections(gl,scene,camera);
+  /** Allocates the showcase passes. Call before a still so SMAA's lookups can finish decoding. */
+  prepareShowcase(){if(!showcasePostActive())return Promise.resolve();this.ensureShowcase();return ensureShowcaseSmaa(Math.max(1,this.w),Math.max(1,this.h));}
+  private buffer(){return new THREE.WebGLRenderTarget(Math.max(1,this.w),Math.max(1,this.h),{type:this.post.texture.type,depthBuffer:false});}
+  private ensureShowcase(){if(this.hold)return;this.hold=this.buffer();this.dof=createDofMaterial();this.grade=createGradeMaterial();this.blend=createBlendMaterial();this.quad=new FullScreenQuad(this.dof);}
+  private ensureAccum(){this.accum??=this.buffer();this.ping??=this.buffer();}
+  private beautyPass(gl:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.Camera,evening:boolean){
     gl.setRenderTarget(this.beauty);gl.render(scene,camera);
     this.gtao.render(gl,this.post,this.beauty,0,false);
     if(evening){
       if(!this.bloom)this.bloom=new UnrealBloomPass(new THREE.Vector2(Math.ceil(this.w*this.budget.bloomResolution),Math.ceil(this.h*this.budget.bloomResolution)),BLOOM.strength,BLOOM.radius,BLOOM.threshold);
+      const look=bloomFor(showcasePostActive());this.bloom.strength=look.strength;this.bloom.radius=look.radius;this.bloom.threshold=look.threshold;
       this.bloom.render(gl,this.post,this.post,0,false);
     }
-    this.output.render(gl,this.post,this.post,0,false);
+  }
+  render(gl:THREE.WebGLRenderer,scene:THREE.Scene,camera:THREE.Camera,evening:boolean,samples=1,focus=0){
+    this.gtao.scene=scene;this.gtao.camera=camera;this.gtao.blendIntensity=evening?AO.intensity.evening:AO.intensity.day;
+    renderWindowReflections(gl,scene,camera);
+    const post=showcasePostActive(),perspective=camera as THREE.PerspectiveCamera;
+    const count=post&&samples>1&&perspective.isPerspectiveCamera?Math.min(4,samples):1;
+    const distance=focus>0?focus:camera.position.length();
+    if(post){this.ensureShowcase();void ensureShowcaseSmaa(Math.max(1,this.w),Math.max(1,this.h));}
+    try{
+      if(count===1)this.beautyPass(gl,scene,camera,evening);
+      else{
+        this.ensureAccum();
+        for(let i=0;i<count;i++){
+          jitterCamera(perspective,this.w,this.h,i);this.beautyPass(gl,scene,camera,evening);
+          const write=i%2===0?this.accum!:this.ping!,previous=i===0?null:i%2===0?this.ping!:this.accum!;
+          this.blend!.uniforms.tColor.value=this.post.texture;this.blend!.uniforms.tAcc.value=previous?.texture??null;this.blend!.uniforms.weight.value=1/count;this.blend!.uniforms.accumulate.value=previous?1:0;
+          blit(gl,this.quad!,this.blend!,write);
+        }
+        perspective.clearViewOffset();gl.setRenderTarget(this.beauty);gl.render(scene,camera);
+      }
+    }finally{if(count>1)perspective.clearViewOffset();}
+    if(post&&this.hold&&this.dof&&this.grade&&this.quad){
+      const color=count===1?this.post:count%2===1?this.accum!:this.ping!;
+      bindDof(this.dof,color.texture,this.beauty.depthTexture!,camera,distance,this.w,this.h);blit(gl,this.quad,this.dof,this.hold);
+      const smaa=showcaseSmaa();let graded:THREE.WebGLRenderTarget;
+      if(smaa){smaa.setSize(this.w,this.h);smaa.render(gl,this.post,this.hold,0,false);graded=this.post;}
+      else graded=this.hold;
+      bindGrade(this.grade,graded.texture,activeGradeHour(evening));blit(gl,this.quad,this.grade,graded===this.post?this.hold:this.post);
+      this.output.render(gl,graded===this.post?this.hold:this.post,this.post,0,false);
+    }else this.output.render(gl,this.post,this.post,0,false);
     gl.setRenderTarget(null);
   }
-  dispose(){this.beauty.depthTexture?.dispose();this.beauty.dispose();this.post.dispose();this.gtao.dispose();this.bloom?.dispose();this.output.dispose();}
+  dispose(){this.beauty.depthTexture?.dispose();this.beauty.dispose();this.post.dispose();this.hold?.dispose();this.accum?.dispose();this.ping?.dispose();this.dof?.dispose();this.grade?.dispose();this.blend?.dispose();this.gtao.dispose();this.bloom?.dispose();this.output.dispose();}
 }
 
-interface Pipeline{capture:(scale:number)=>void}
+interface Pipeline{capture:(scale:number)=>void|Promise<void>}
 const pipelines=new WeakMap<THREE.WebGLRenderer,Pipeline>(),renderers=new WeakMap<THREE.WebGLRenderer,()=>void>();
 /** The pipeline drawing this renderer's view, for the proposal snapshot (SnapshotBridge). */
 export function pipelineFor(gl:THREE.WebGLRenderer){return pipelines.get(gl);}
@@ -88,21 +128,21 @@ export function releaseDrawnResources(gl:THREE.WebGLRenderer){
 }
 
 export default function RenderPipeline({evening}:{evening:boolean}){
-  const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera),invalidate=useThree(s=>s.invalidate),quality=useRenderQuality();
-  const ref=useRef({chain:null as Chain|null,broken:false,evening,key:NaN});
+  const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera),invalidate=useThree(s=>s.invalidate),quality=useRenderQuality(),controls=useThree(s=>s.controls);
+  const ref=useRef({chain:null as Chain|null,broken:false,evening,key:NaN}),controlsRef=useRef(controls);controlsRef.current=controls;
   ref.current.evening=evening;
   useEffect(()=>{
-    const state=ref.current,size=new THREE.Vector2(),budget=sceneQuality(quality,gl.capabilities);
+    const state=ref.current,size=new THREE.Vector2(),budget=sceneQuality(quality,gl.capabilities),controls=()=>controlsRef.current;
     state.broken=false;
     const fail=(error:unknown)=>{
       console.warn('DeckCraft 3D: the photographic renderer failed, so the plain one takes over.',error);
       gl.domElement.dataset.photographicPipeline='fallback';state.broken=true;state.chain?.dispose();state.chain=null;gl.setRenderTarget(null);gl.shadowMap.autoUpdate=true;
     };
     const draw=(chain:Chain,scale:number)=>{
-      scene.updateMatrixWorld();const key=shadowKey(scene);
+      scene.updateMatrixWorld();syncShowcaseShadows(gl,scene);const key=shadowKey(scene);
       // Listeners draw with the shadow maps still frozen (needsUpdate is set after them), so they never redraw those.
       if(key!==state.key){state.key=key;const sun=scene.getObjectByName('sun') as THREE.DirectionalLight|undefined;if(sun?.isDirectionalLight&&sun.shadow.mapSize.x!==budget.shadowSize){sun.shadow.map?.dispose();sun.shadow.map=null;sun.shadow.mapSize.set(budget.shadowSize,budget.shadowSize);}fitSun(scene);for(const listen of shadowListeners.get(gl)??[])listen();gl.shadowMap.needsUpdate=true;}
-      gl.getDrawingBufferSize(size);chain.setSize(size.x,size.y,scale);chain.render(gl,scene,camera,state.evening);
+      gl.getDrawingBufferSize(size);chain.setSize(size.x,size.y,scale);chain.render(gl,scene,camera,state.evening,scale>1&&showcasePostActive()?SHOWCASE_STILL_SAMPLES:1,focusDistance(camera,controls()));
     };
     const frame=()=>{
       if(!state.broken)try{state.chain??=new Chain(gl,scene,camera,quality.msaaSamples,quality);draw(state.chain,1);gl.domElement.dataset.photographicPipeline='active';return;}catch(error){fail(error);}
@@ -126,6 +166,7 @@ export default function RenderPipeline({evening}:{evening:boolean}){
   // its swatch arrives) would otherwise be missed and keep this renderer alive.
   useLayoutEffect(()=>releaseDrawnResources(gl),[gl]);
   useEffect(()=>{invalidate();},[evening,invalidate]);
+  useEffect(()=>onShowcasePostReady(()=>invalidate()),[invalidate]);
   // Priority 1 takes over drawing from R3F; with frameloop="demand" it still runs only when something invalidates.
   useFrame(()=>{(renderers.get(gl)??(()=>gl.render(scene,camera)))();},1);
   return null;

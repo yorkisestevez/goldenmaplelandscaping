@@ -4,6 +4,8 @@ import masonryNormal from './assets/masonry-normal.webp';
 import rockDetail from './assets/rock-detail.webp';
 import rockNormal from './assets/rock-normal.webp';
 import {HOUSE_SURFACES,type HouseSurface} from './houseSurfaceKinds';
+import {surfaceReliefTextures} from './surfaceDetail';
+import type {DetailKind} from './detailMaps';
 
 /**
  * The house's surface detail (Real Life G4) on HouseParts' instanced boxes: a grey detail map (linear, mean 0.5) that the
@@ -39,7 +41,7 @@ function mapsFor(set:Set,anisotropy:number):Promise<Maps>{
 }
 
 const VERTEX=/* glsl */`
-uniform float uRepeat;varying vec2 vHouseUv;flat varying vec2 vHouseShift;`;
+uniform float uRepeat;varying vec2 vHouseUv;flat varying vec2 vHouseShift;varying vec3 vHouseN;`;
 const VERTEX_UV=/* glsl */`
   {
   #ifdef USE_INSTANCING
@@ -52,10 +54,16 @@ const VERTEX_UV=/* glsl */`
     if(ext.y>ext.x)st=st.yx;
     vHouseUv=st/uRepeat;
     vHouseShift=vec2(fract(sin(dot(hseed,vec3(12.9898,78.233,37.719)))*43758.5453),fract(sin(dot(hseed,vec3(39.346,11.135,83.155)))*43758.5453));
+    vHouseN=normalize(normalMatrix*normal);
   }`;
 const FRAGMENT=/* glsl */`
 varying vec2 vHouseUv;flat varying vec2 vHouseShift;
 vec4 houseTex(sampler2D t){return textureGrad(t,vHouseUv+vHouseShift,dFdx(vHouseUv),dFdy(vHouseUv));}`;
+const FRAGMENT_RELIEF=/* glsl */`
+uniform sampler2D uRelief;uniform sampler2D uReliefRough;
+varying vec2 vHouseUv;flat varying vec2 vHouseShift;varying vec3 vHouseN;
+vec4 houseTex(sampler2D t){vec3 dcView=normalize(vViewPosition);float dcH=texture2D(uRelief,vHouseUv).a;float dcParallax=smoothstep(0.12,0.42,abs(dot(normalize(vHouseN),dcView)));vec2 uv=vHouseUv+vHouseShift+dcView.xy*(dcH-.5)*.028*dcParallax;return textureGrad(t,uv,dFdx(vHouseUv),dFdy(vHouseUv));}`;
+const reliefKind=(surface:HouseSurface):DetailKind=>surface==='woodgrain'?'siding':surface==='rock'?'stone':surface==='stucco'?'slab':'paver';
 function chunk(name:string,from:string,to:string){
   const source=(THREE.ShaderChunk as Record<string,string>)[name];
   if(!source?.includes(from))throw new Error(`houseSurfaces: ShaderChunk.${name} no longer has "${from}"`);
@@ -63,16 +71,19 @@ function chunk(name:string,from:string,to:string){
 }
 
 /** A HouseParts material with surface detail; the colour is doubled against the detail map's mean of 0.5. */
-export function houseSurfaceMaterial(surface:HouseSurface,color:string,roughness:number,metalness:number,anisotropy=4,onLoad?:()=>void){
+export function houseSurfaceMaterial(surface:HouseSurface,color:string,roughness:number,metalness:number,anisotropy=4,onLoad?:()=>void,relief=false){
   const spec=HOUSE_SURFACES[surface],material=new THREE.MeshStandardMaterial({color:new THREE.Color(color).multiplyScalar(2),roughness,metalness,map:HALF,normalMap:FLAT,normalScale:new THREE.Vector2(spec.normalScale,spec.normalScale)});
-  material.customProgramCacheKey=()=>HOUSE_PROGRAM;
+  const detail=relief?surfaceReliefTextures(reliefKind(surface)):null;
+  material.customProgramCacheKey=()=>relief?`${HOUSE_PROGRAM}:relief`:HOUSE_PROGRAM;
   material.onBeforeCompile=shader=>{
     shader.uniforms.uRepeat={value:spec.repeatIn};
+    if(detail){shader.uniforms.uRelief={value:detail.normal};shader.uniforms.uReliefRough={value:detail.roughness};}
     shader.vertexShader=shader.vertexShader.replace('#include <common>',`#include <common>\n${VERTEX}`).replace('#include <uv_vertex>',`#include <uv_vertex>\n${VERTEX_UV}`);
-    shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>\n${FRAGMENT}`)
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>\n${relief?FRAGMENT_RELIEF:FRAGMENT}`)
       .replace('#include <map_fragment>',chunk('map_fragment','texture2D( map, vMapUv )','houseTex( map )'))
       .replace('#include <normal_fragment_begin>',chunk('normal_fragment_begin','vNormalMapUv','vHouseUv'))
-      .replace('#include <normal_fragment_maps>',chunk('normal_fragment_maps','texture2D( normalMap, vNormalMapUv )','houseTex( normalMap )'));
+      .replace('#include <normal_fragment_maps>',chunk('normal_fragment_maps','texture2D( normalMap, vNormalMapUv )','houseTex( normalMap )')+(relief?'\nvec3 dcReliefN=texture2D(uRelief,vHouseUv).xyz*2.0-1.0;\nfloat dcKeep=smoothstep(0.12,0.42,abs(dot(normalize(nonPerturbedNormal),normalize(vViewPosition))));\nnormal=normalize(mix(nonPerturbedNormal,normalize(normal+vec3(dcReliefN.xy,0.0)*0.85),dcKeep));':''))
+      .replace('#include <roughnessmap_fragment>',relief?'#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor*mix(0.86,1.14,texture2D(uReliefRough,vHouseUv).r),0.04,1.0);':'#include <roughnessmap_fragment>');
   };
   let alive=true;
   mapsFor(spec.set,anisotropy).then(maps=>{if(alive){Object.assign(material,maps);onLoad?.();}});

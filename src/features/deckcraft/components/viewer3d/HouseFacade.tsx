@@ -1,4 +1,4 @@
-import {createContext,useContext,useEffect,useMemo,useRef} from 'react';
+import {createContext,useContext,useEffect,useMemo,useRef,useSyncExternalStore} from 'react';
 import {useLoader,useThree,type ThreeEvent} from '@react-three/fiber';
 import * as THREE from 'three';
 import type {HouseOpening} from '../../types';
@@ -13,6 +13,7 @@ import {splitAtBand} from './houseWainscot';
 import {paneGeometry,createWindowGlass,type WindowRoom} from './windowGlass';
 import {reflectionBinding,registerWindowReflection,type WindowReflection} from './windowReflections';
 import {backingSurface,claddingSurface} from './houseSurfaceKinds';
+import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from './showcaseMode';
 import roomPhoto from './assets/room-atelier.webp';
 
 const NONE:[number,number][]=[];
@@ -21,6 +22,8 @@ type Shape=OpeningShape;
 
 /** A 2 in frame just inside an opening's glass, for the original (unstyled) glass doors and windows. */
 const openingFrame=(o:Shape):Box[]=>{const w=Math.max(1,o.w-3),h=Math.max(1,o.h-3);return [{x:o.x-w/2+1,y:o.y,z:1.2,w:2,h,d:1.2},{x:o.x+w/2-1,y:o.y,z:1.2,w:2,h,d:1.2},{x:o.x,y:o.y-h/2+1,z:1.2,w,h:2,d:1.2},{x:o.x,y:o.y+h/2-1,z:1.2,w,h:2,d:1.2}];};
+/** Showcase stills: a painted metal frame instead of the editor's flat matte casing. */
+const frameFinish=(polish:boolean)=>polish?{roughness:.42,metalness:.18}:{roughness:.82,metalness:0};
 
 /** A glass pane (windowGlass.ts): reflective glass with a room behind it, lit in the evening. */
 function Glass({x,y,z,w,h,evening,tilt=0}:{x:number;y:number;z:number;w:number;h:number;evening:boolean;tilt?:number}){
@@ -39,7 +42,7 @@ function Glass({x,y,z,w,h,evening,tilt=0}:{x:number;y:number;z:number;w:number;h
  * Window looks, in the facade frame (appearance only, never priced). The exported faces come from
  * `openingFaces`; this adds sash frames, rails and hardware.
  */
-function StyledWindow({o,c,evening}:{o:Shape;c:OpeningColors;evening:boolean}){
+function StyledWindow({o,c,evening,polish=false}:{o:Shape;c:OpeningColors;evening:boolean;polish?:boolean}){
  const w=Math.max(1,o.w-3),h=Math.max(1,o.h-3),bottom=o.y-h/2,frame:Box[]=[],hardware:Box[]=[];
  const sash=(cx:number,cy:number,sw:number,sh:number,z:number)=>frame.push({x:cx-sw/2+1,y:cy,z,w:2,h:sh,d:1.2},{x:cx+sw/2-1,y:cy,z,w:2,h:sh,d:1.2},{x:cx,y:cy-sh/2+1,z,w:sw,h:2,d:1.2},{x:cx,y:cy+sh/2-1,z,w:sw,h:2,d:1.2});
  const panes:{x:number;y:number;z:number;w:number;h:number}[]=[];
@@ -57,34 +60,34 @@ function StyledWindow({o,c,evening}:{o:Shape;c:OpeningColors;evening:boolean}){
  }else if(o.style==='Awning'){
   // Hinged at the top, the sash tips out at the bottom.
   sash(o.x,o.y,w,h,1.2);hardware.push({x:o.x,y:bottom+3,z:2.4,w:4,h:1,d:1.4});
-  return <><Glass x={o.x} y={o.y} z={1.2+Math.sin(.12)*h/2} w={w} h={h} evening={evening} tilt={-.12}/><HouseParts items={frame} color={c.windowFrame} name="awning-window-sash"/><HouseParts items={hardware} color={c.hardware} name="window-hardware"/></>;
+  return <><Glass x={o.x} y={o.y} z={1.2+Math.sin(.12)*h/2} w={w} h={h} evening={evening} tilt={-.12}/><HouseParts items={frame} color={c.windowFrame} name="awning-window-sash" {...frameFinish(polish)}/><HouseParts items={hardware} color={c.hardware} name="window-hardware"/></>;
  }else{
   // Picture window: one fixed pane in a heavier frame over a deeper sill.
   panes.push({x:o.x,y:o.y,z:.8,w,h});sash(o.x,o.y,w,h,1.3);frame.push({x:o.x,y:bottom-1,z:2.2,w:w+4,h:1.5,d:3});
  }
- return <>{panes.map((p,i)=><Glass key={i} {...p} evening={evening}/>)}<HouseParts items={frame} color={c.windowFrame} name={`${(o.style??'').toLowerCase()}-window-frames`}/>{hardware.length>0&&<HouseParts items={hardware} color={c.hardware} name="window-hardware"/>}</>;
+ return <>{panes.map((p,i)=><Glass key={i} {...p} evening={evening}/>)}<HouseParts items={frame} color={c.windowFrame} name={`${(o.style??'').toLowerCase()}-window-frames`} {...frameFinish(polish)}/>{hardware.length>0&&<HouseParts items={hardware} color={c.hardware} name="window-hardware"/>}</>;
 }
 
 /** Door looks, in the facade frame (appearance only, never priced). The exported faces come from
  * `openingFaces`; this adds the panels, muntins, frames and handles. */
-function StyledDoor({o,c,evening}:{o:Shape;c:OpeningColors;evening:boolean}){
+function StyledDoor({o,c,evening,polish=false}:{o:Shape;c:OpeningColors;evening:boolean;polish?:boolean}){
  const w=Math.max(1,o.w-3),h=Math.max(1,o.h-3),bottom=o.y-h/2,frame:Box[]=[],handles:Box[]=[];
  if(o.style==='Single'){
   // A painted slab: two raised panels below a glass lite, handle on the latch side.
   for(const col of [-1,1])frame.push({x:o.x+col*w/4,y:bottom+h*.22,z:1.8,w:w/2-5,h:h*.32,d:.5});
   handles.push({x:o.x+w/2-4,y:bottom+36,z:2.2,w:.8,h:8,d:1.6});
-  return <><mesh position={[o.x,o.y,.8]}><boxGeometry args={[w,h,1.75]}/><meshStandardMaterial color={c.slab} roughness={.55}/></mesh><Glass x={o.x} y={o.y+h*.22} z={1.7} w={w*.5} h={h*.3} evening={evening}/><HouseParts items={frame} color={c.doorPanels} name="door-panels"/><HouseParts items={handles} color={c.handle} name="door-handle"/></>;
+  return <><mesh position={[o.x,o.y,.8]}><boxGeometry args={[w,h,1.75]}/><meshStandardMaterial color={c.slab} roughness={polish?.42:.55} metalness={polish?.12:0}/></mesh><Glass x={o.x} y={o.y+h*.22} z={1.7} w={w*.5} h={h*.3} evening={evening}/><HouseParts items={frame} color={c.doorPanels} name="door-panels" {...frameFinish(polish)}/><HouseParts items={handles} color={c.handle} name="door-handle"/></>;
  }
  if(o.style==='French'){
   // Two glazed leaves meeting on a centre stile, each with a 2 × 4 muntin grid.
   frame.push({x:o.x,y:o.y,z:1.2,w:3,h,d:1.75});
   for(const side of [-1,1]){const cx=o.x+side*w/4,lw=w/2-1.5;frame.push({x:cx,y:o.y,z:1.1,w:1,h,d:1});for(let r=1;r<4;r++)frame.push({x:cx,y:bottom+h*r/4,z:1.1,w:lw,h:1,d:1});handles.push({x:o.x+side*3.5,y:bottom+36,z:2.2,w:.8,h:8,d:1.6});}
-  return <><Glass x={o.x} y={o.y} z={.8} w={w} h={h} evening={evening}/><HouseParts items={frame} color={c.frenchFrames} name="french-door-stiles-and-muntins"/><HouseParts items={handles} color={c.handle} name="door-handles"/></>;
+  return <><Glass x={o.x} y={o.y} z={.8} w={w} h={h} evening={evening}/><HouseParts items={frame} color={c.frenchFrames} name="french-door-stiles-and-muntins" {...frameFinish(polish)}/><HouseParts items={handles} color={c.handle} name="door-handles"/></>;
  }
  // Sliding patio door: a fixed pane and a sliding sash set further out, each in its own frame.
  for(const [cx,z] of [[o.x-w/4-.5,.8],[o.x+w/4+.5,2.2]] as const){const pw=w/2+1;frame.push({x:cx-pw/2+1,y:o.y,z:z+.3,w:2,h,d:1.2},{x:cx+pw/2-1,y:o.y,z:z+.3,w:2,h,d:1.2},{x:cx,y:bottom+1,z:z+.3,w:pw,h:2,d:1.2},{x:cx,y:bottom+h-1,z:z+.3,w:pw,h:2,d:1.2});}
  handles.push({x:o.x+4,y:bottom+36,z:3,w:.8,h:10,d:1.4});
- return <><Glass x={o.x-w/4-.5} y={o.y} z={.8} w={w/2+1} h={h} evening={evening}/><Glass x={o.x+w/4+.5} y={o.y} z={2.2} w={w/2+1} h={h} evening={evening}/><HouseParts items={frame} color={c.slidingFrames} name="sliding-door-frames"/><HouseParts items={handles} color={c.handle} name="door-handle"/></>;
+ return <><Glass x={o.x-w/4-.5} y={o.y} z={.8} w={w/2+1} h={h} evening={evening}/><Glass x={o.x+w/4+.5} y={o.y} z={2.2} w={w/2+1} h={h} evening={evening}/><HouseParts items={frame} color={c.slidingFrames} name="sliding-door-frames" {...frameFinish(polish)}/><HouseParts items={handles} color={c.handle} name="door-handle"/></>;
 }
 
 /** Garage door face by style, in the facade frame (appearance only, never priced). */
@@ -140,6 +143,7 @@ export default function HouseFacade({span,height,openings,hidden=NONE,finish,eve
  const pick=onSelectHouseWall&&((e:ThreeEvent<MouseEvent>)=>{if(e.delta>4)return;e.stopPropagation();onSelectHouseWall(wallId);invalidate();});
  const picked=!!selectedHouseWallId&&(selectedHouseWallId===wallId||selectedHouseWallId===blockId);
  const trim=useMemo(()=>{const boxes:Box[]=[];for(const o of shapes){for(const side of [-1,1])boxes.push({x:o.x+side*(o.w/2+1.5),y:o.y,z:1.8,w:3,h:o.h+6,d:2.2});for(const side of [-1,1])boxes.push({x:o.x,y:o.y+side*(o.h/2+1.5),z:1.8,w:o.w,h:3,d:2.2});}for(const x of [-span/2+1.5,span/2-1.5])boxes.push({x,y:height/2,z:1.2,w:3,h:height,d:1.8});boxes.push({x:0,y:height-2,z:1.5,w:span,h:4,d:2});return boxes;},[span,height,shapes]);
+ const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags),polish=flags.quality&&flags.post;
  return <group ref={facadeRef} userData={{pickPartId:`wall:${wallId}`}} onClick={pick}>
   <HouseParts name="wall-with-actual-opening-cutouts" items={split?split.upper:wall} color={look.backing} surface={backingSurface(look.cladding)}/>
   <HouseParts items={skins.skin.pieces} color={look.color} name={look.partName} variation={look.variation} roughness={look.roughness} metalness={look.metalness} surface={claddingSurface(look.cladding)}/>
@@ -148,16 +152,17 @@ export default function HouseFacade({span,height,openings,hidden=NONE,finish,eve
    <HouseParts items={band.skin.pieces} color={wainscot.color} name={`wainscot-${wainscot.partName}`} variation={wainscot.variation} roughness={wainscot.roughness} metalness={wainscot.metalness} surface={claddingSurface(wainscot.cladding)}/>
    <HouseParts items={band.cap} color={trimColor} name="wainscot-cap"/>
   </>}
-  <HouseParts items={trim} color={trimColor} name="opening-and-corner-trim"/>
+  <HouseParts items={trim} color={trimColor} name="opening-and-corner-trim" roughness={polish?.5:.82} metalness={polish?.12:0}/>
   {picked&&<PickedWall span={span} height={height}/>}
   {shapes.map(o=>{const c=openingColors(colours,o);return <group key={o.id} userData={{pickPartId:`opening:${o.id}`}} name={`${o.facade}-${o.type}-${o.id}`} onPointerDown={e=>startDrag(e,o)} onPointerMove={moveDrag} onPointerUp={endDrag} onLostPointerCapture={restoreControls}>
     {o.id===selectedHouseOpeningId&&<mesh position={[o.x,o.y,3.2]}><boxGeometry args={[o.w+7,o.h+7,.6]}/><meshBasicMaterial color="#df9b30" wireframe depthTest/></mesh>}
     <mesh position={[o.x,o.y,-12]}><boxGeometry args={[o.w,o.h,.5]}/><meshStandardMaterial color={evening?'#9b7b54':'#414947'} emissive={evening?'#efb873':'#000000'} emissiveIntensity={evening?.16:0} roughness={1}/></mesh>
     <WindowContext.Provider value={rooms.get(o.id)!}>
-    {o.type==='Garage'?<GarageDoor o={o} c={c}/>:o.type==='Door'&&o.style?<StyledDoor o={o} c={c} evening={evening}/>:o.type==='Window'&&o.style?<StyledWindow o={o} c={c} evening={evening}/>:<Glass x={o.x} y={o.y} z={.8} w={o.w-3} h={o.h-3} evening={evening}/>}
+    {o.type==='Garage'?<GarageDoor o={o} c={c}/>:o.type==='Door'&&o.style?<StyledDoor o={o} c={c} evening={evening} polish={polish}/>:o.type==='Window'&&o.style?<StyledWindow o={o} c={c} evening={evening} polish={polish}/>:<Glass x={o.x} y={o.y} z={.8} w={o.w-3} h={o.h-3} evening={evening}/>}
     </WindowContext.Provider>
     {/* The original glass door or window gets a frame only once a colour is chosen for it (it has none otherwise). */}
-    {o.type!=='Garage'&&!o.style&&openingColour(colours,o)&&<HouseParts items={openingFrame(o)} color={o.type==='Door'?c.slab:c.windowFrame} name="opening-frame"/>}
+    {o.type!=='Garage'&&!o.style&&openingColour(colours,o)&&<HouseParts items={openingFrame(o)} color={o.type==='Door'?c.slab:c.windowFrame} name="opening-frame" {...frameFinish(polish)}/>}
+    {o.type==='Window'&&polish&&<HouseParts items={[{x:o.x,y:o.y-o.h/2-1.1,z:2.5,w:o.w+8,h:1.7,d:3.4},{x:o.x,y:o.y+o.h/2+1.5,z:2.3,w:o.w+5,h:.8,d:2.2}]} color={c.windowFrame} name="window-sill-and-head-flashing" {...frameFinish(true)}/>}
     <HouseParts items={[...(o.w>42&&o.type!=='Garage'&&!o.style?[{x:o.x,y:o.y,z:1.2,w:1.5,h:o.h,d:1.8}]:[]),...(o.type==='Window'&&!o.style?[{x:o.x,y:o.y,z:1.2,w:o.w,h:1.2,d:1.8}]:[])]} color={c.mullions} name="opening-mullions"/>
     {o.type==='Door'&&<HouseParts items={[...(o.style?[]:[{x:o.x+(o.w>42?3:o.w/2-5),y:o.bottomIn+Math.min(36,o.h/2),z:3,w:.8,h:8,d:1.6}]),{x:o.x,y:o.bottomIn-.7,z:3,w:o.w+7,h:1.4,d:7}]} color={c.hardware} name="door-handle-and-threshold"/>}
   </group>;})}
