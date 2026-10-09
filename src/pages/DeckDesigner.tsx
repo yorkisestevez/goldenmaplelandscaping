@@ -3,6 +3,7 @@ import {Link,useSearchParams} from 'react-router-dom';
 import SEO from '../components/SEO';
 import {deckReleaseData,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
 import {DEFAULT_DECK} from '../features/deckcraft/defaults';
+import {DEFAULT_FEATURE_LABOUR} from '../features/deckcraft/featureLabour';
 import type {DeckData,DeckInlay,HouseOpening,PrivacyScreen} from '../features/deckcraft/types';
 import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,pricedPrivacyArea,privacySides,screenOn,screenProduct} from '../features/deckcraft/privacyScreens';
 import {MAX_DESIGN_BYTES} from '../features/deckcraft/designPersistence';
@@ -460,7 +461,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     void (async()=>{
       const next=deckReleaseData(structuredClone(DEFAULT_DECK));
       try{
-        const {readFeatureLabourDefaults,DEFAULT_FEATURE_LABOUR}=await import('../features/deckcraft/featureLabour');
+        const {readFeatureLabourDefaults}=await import('../features/deckcraft/featureLabourStorage');
         const saved=await readFeatureLabourDefaults();
         if(JSON.stringify(saved)!==JSON.stringify(DEFAULT_FEATURE_LABOUR))next.featureLabour=saved;
       }catch{/* Built-in man-hours defaults apply when device storage is unavailable. */}

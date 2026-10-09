@@ -17,7 +17,7 @@ import {hasBoardLayout,layoutBoardStock,layoutAutomaticBreakerLf,boardLayoutAllo
 import {boardFinishPlan,colourName,darkSlateBorder,deckColourRef,parseColourRef,type StockGroup} from './boardFinishes';
 import {DECK_PARTS,partRef,railingFinish,stairTreadKey} from './deckPartFinishes';
 import {inlayCrewDays,PATTERN_LABOUR} from './lib/inlayGeometry';
-import {SKIRTING_STYLE_NAMES,skirtingPlan} from './skirting';
+import {SKIRTING_STYLE_NAMES,skirtingGeometry,skirtingPlan,type SkirtingPlan} from './skirting';
 import {pricedSkirtingRows} from './skirtingPricing';
 import {claddingPlan} from './stairCladding';
 import {pricedCladdingFinish,pricedFasciaFinish,pricedStairFrameDetail} from './claddingPricing';
@@ -101,7 +101,15 @@ export interface EstimateResult {
   };
 }
 
+/** Page, scripts and saved designs: prices plus the skirting notes. */
 export function calculateEstimate(data: DeckData, settings?: any): EstimateResult {
+  return estimateBody(data,settings,skirtingPlan);
+}
+/** Option-delta worker: the same prices, without the skirting note copy. */
+export function calculateEstimatePrices(data: DeckData, settings?: any): EstimateResult {
+  return estimateBody(data,settings,skirtingGeometry);
+}
+function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:DeckTakeoff)=>SkirtingPlan|null): EstimateResult {
   settings = settings || DECK_SETTINGS;
   const model=buildDeckTakeoff(data);
   const yardModel=buildYardModel(data,model),yardTakeoff=buildYardTakeoff(data,yardModel);
@@ -812,7 +820,7 @@ export function calculateEstimate(data: DeckData, settings?: any): EstimateResul
     quoteRequired.push(label);sections.push({title:'Custom outline construction',icon:'📐',quoteRequired:true,total:0,items:[{name:label,spec:'Deck boards, actual perimeter, modeled framing and base installation allowance are priced. Bespoke angled supports, house attachment and reshaped level connections need a builder review and quote before a construction price is final.',qty:1,unit:'design',cost:null}]});
   }
   // Skirting under the deck (skirtingPricing.ts): face, backing, access panels and labour at published rates.
-  const skirting=data.skirting?skirtingPlan(data,model):null;
+  const skirting=data.skirting?skirt(data,model):null;
   if(skirting){
     const rows=pricedSkirtingRows(skirting,markupMult);
     if(rows.length){const total=rows.reduce((n,r)=>n+(r.cost??0),0);sections.push({title:'Deck skirting',icon:'🧱',total,description:`${SKIRTING_STYLE_NAMES[skirting.style]} under the deck, priced from the skirting rate table (face supply, backing, access panels and install labour).`,items:rows});}

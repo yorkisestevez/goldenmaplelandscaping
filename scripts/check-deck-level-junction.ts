@@ -12,6 +12,7 @@ import {levelJunctions,onJunction,worldOutline} from '../src/features/deckcraft/
 import {finishedFasciaOffset} from '../src/features/deckcraft/lib/finishedFootprint';
 import {exposedRim} from '../src/features/deckcraft/houseContact';
 import {skirtingPlan,newSkirting} from '../src/features/deckcraft/skirting';
+import {activeWrap,hasPorchWrap} from '../src/features/deckcraft/lib/wrapGeometry';
 import {polygonCut,signedArea} from '../src/features/deckcraft/lib/polygonCuts';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {junctionCases,junctionPrice,newDefaultJunctionCases} from './deck-level-junction-cases';
@@ -23,9 +24,11 @@ import {junctionCases,junctionPrice,newDefaultJunctionCases} from './deck-level-
  *   changes sourced supply and width-adjusted stair allowances; independent pricing checks verify those amounts.
  *   Existing pending quote scopes remain, with explicit cladding installation and paver order adjustments. Two quote
  *   lines are new since (pricing honesty, 2026-10-04): decking delivery on every design, and the stair picture-frame
- *   detail on a framed one. Both must stay unpriced quotes, never a price. Owner 2026-10-08: skirting and matched
- *   fascia boards are priced (fascia fasteners/delivery stay a quote); accent/medallion/custom-inlay labour defaults
- *   to man-hours so those builder-quote lines may drop; porch-wrap premium folds into wrapLabourFactor.
+ *   detail on a framed one. While they are quotes they stay unpriced.
+ *   Owner rates (2026-10-08) may replace a quote only with a priced line that is actually on the estimate: skirting,
+ *   fascia boards, fascia fasteners and delivery, connector and post-timber rows, stair cladding, stair picture-frame,
+ *   accent/medallion/custom-inlay crew-hours, or porch-wrap labour inside the labour total. A dropped quote with no
+ *   priced replacement still fails.
  *   The owner-approved September 28 footing correction removes crowded footings (a winder's inner posts, posts under one
  *   short beam), so footings and their post anchors may only go down from the baseline, never up.
  * - Geometry: levels touch (or keep the old spacing with a note), the step and 36 in fit on the lower level, the faces
@@ -36,16 +39,14 @@ let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);che
 const near=(a:number,b:number,eps=.01)=>Math.abs(a-b)<=eps;
 const read=(path:string)=>readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
 const baseline=JSON.parse(read('scripts/deck-level-junction-baseline.json')).cases as Record<string,ReturnType<typeof junctionPrice>>;
-const NEW_QUOTE='Stair and level cladding (builder quote)',STAIR_FRAME_QUOTE='Stair picture-frame detail (builder / supplier quote)',REVIEW_PRICE_SECTIONS=new Set(['Railing System','Stairs','Stair and level cladding','Labour (Construction & Build)','HST (13%)','Decking','Accent-colour boards','Accent colours & inlays','Deck-part finishes','Deck skirting','in-lite® Lighting System','Yard · Paving materials, wall allowances and shared delivery']),FEWER_FOOTINGS=new Set(['Foundation & Footings','Hardware & Fasteners']),
+const NEW_QUOTE='Stair and level cladding (builder quote)',STAIR_FRAME_QUOTE='Stair picture-frame detail (builder / supplier quote)',REVIEW_PRICE_SECTIONS=new Set(['Railing System','Stairs','Stair and level cladding','Labour (Construction & Build)','HST (13%)','Decking','Accent-colour boards','Deck-part finishes','in-lite® Lighting System','Yard · Paving materials, wall allowances and shared delivery']),FEWER_FOOTINGS=new Set(['Foundation & Footings','Hardware & Fasteners']),
   // Owner-approved 2026-09-28: the clean-room framing engine (structure/) sizes beams, posts and footings from public
   // Ontario sources, so its sections move either way against the 41d3eba baseline. The legacy golden pins every price.
   ENGINE_SECTIONS=(title:string)=>/^Structural Framing \(/.test(title)||FEWER_FOOTINGS.has(title),
   // Framing connectors the engine's beam layout calls for (a splice where two beam lines meet) stay builder quotes.
   ENGINE_QUOTES=new Set(['Splice fasteners']),
-  // Owner 2026-10-08 priced scopes that used to be builder/supplier quotes (independent pricing checks cover the amounts).
-  ALLOWED_NEW_QUOTES=new Set([NEW_QUOTE,DECKING_DELIVERY_QUOTE,'Paver packaging, colour and freight adjustments (supplier quote)','Fascia fasteners and delivery (supplier quote)',...ENGINE_QUOTES]),
-  // Owner 2026-10-08: Home Depot Canada retail prices the former connector quote lines (ties, caps, angles, stringers, skewed hangers, railing post anchors, fastener sets).
-  ALLOWED_DROPPED_QUOTES=new Set(['Deck skirting (builder quote)','Fascia boards (supplier quote)','Medallion inlay labour (builder quote)','Accent-colour board labour (builder quote)','Custom inlay fabrication labour (builder quote)','Porch-wrap labour premium (builder quote)','Joist-to-beam ties','Post-to-beam caps','Blocking connections','Stringer connectors','Skewed joist and hip hangers','Railing post anchors/bolts','Connector fastener sets','Support post timber','Stair and level cladding (builder quote)','Stair picture-frame detail (builder / supplier quote)','Fascia fasteners and delivery (supplier quote)']);
+  // These leave the quote list only when the same name is a Hardware & Fasteners line with a positive cost.
+  PRICED_CONNECTOR_QUOTES=new Set(['Joist-to-beam ties','Post-to-beam caps','Blocking connections','Stringer connectors','Skewed joist and hip hangers','Railing post anchors/bolts','Connector fastener sets','Support post timber']);
 const quoteScope=(label:string)=>label.replace(/: engineering and selected system confirmation$/,': selected wall system and site design confirmation').replace(/ (?:supply and installation|installation \(builder quote\)|supply \(supplier quote\))$/,'');
 const WALL_SCOPE_LABELS=['selected wall system and site design confirmation','manufacturer backing and top-course assembly confirmation','Preliminary manufacturer assembly survey and quote','Wall body stock supply','Selected cap stock supply','Wall body and cap installation','retained ground and reinforcement placement confirmation','drain outlet elevation and fall confirmation','Geogrid stock supply','Geogrid installation','Compacted leveling aggregate and placement','Drainage stone and placement','Reinforced backfill and compaction','Wall separator fabric and installation','Main perforated drain and installation','Drain outlet extension and installation','Drain outlet fittings and termination','Cap adhesive and installation','Core-fill stone, connectors and special stock','Wall packaging, freight and order adjustments','Wall survey/design services','drain outlet route and length confirmation'];
 function addedYardScope(design:DeckData,label:string){return ['Soil reuse, loose spoil and hauling confirmation','Hauling and disposal price adjustments'].includes(label)||(design.yardFeatures??[]).some(f=>f.enabled&&f.kind==='retaining-wall'&&WALL_SCOPE_LABELS.some(scope=>label===`${f.name}: ${scope}`));}
@@ -55,19 +56,27 @@ const cases=junctionCases();
 let same=0,guard=0,fallbacks=0;
 for(const [name,c] of Object.entries(cases)){
   const was=baseline[name],now=junctionPrice(c.design);ok(was,`${name}: in the baseline`);
-  const moved=Object.keys({...was.sections,...now.sections}).filter(t=>!near(was.sections[t]??0,now.sections[t]??0));
-  const keptNew=now.quoteRequired.every(q=>was.quoteRequired.some(old=>quoteScope(old)===quoteScope(q))||ALLOWED_NEW_QUOTES.has(q)||(q===STAIR_FRAME_QUOTE&&hasPictureFrame(c.design))||addedYardScope(c.design,q));
-  const keptOld=was.quoteRequired.every(q=>now.quoteRequired.some(next=>quoteScope(next)===quoteScope(q))||ALLOWED_DROPPED_QUOTES.has(q));
-  ok(keptNew&&keptOld,`${name}: existing quote scope is preserved, with explicit cladding, wall execution, hauling and paver order confirmation`);
   const detailed=calculateEstimate(c.design,DECK_SETTINGS);
+  const namedPriced=(title:string,item:string)=>detailed.sections.some(s=>s.title===title&&s.items.some(i=>i.name===item&&(i.cost??0)>0));
+  const skirtingPriced=(now.sections['Deck skirting']??0)>0&&(was.sections['Deck skirting']??0)===0&&detailed.sections.some(s=>s.title==='Deck skirting'&&s.items.length>0&&s.items.every(i=>(i.cost??0)>0));
+  const fasciaBoardsPriced=detailed.sections.some(s=>s.title==='Deck-part finishes'&&s.items.some(i=>i.name.startsWith('Fascia ·')&&(i.cost??0)>0));
+  const fasciaFastenersPriced=namedPriced('Deck-part finishes','Fascia fasteners')&&namedPriced('Deck-part finishes','Fascia delivery');
+  const fasciaFastenersQuoted=now.quoteRequired.includes('Fascia fasteners and delivery (supplier quote)')&&detailed.sections.some(s=>s.items.some(i=>i.name==='Fascia fasteners and delivery (supplier quote)'&&i.cost===null));
+  const sectionFullyPriced=(title:string)=>{const section=detailed.sections.find(s=>s.title===title);return !!section&&!section.quoteRequired&&section.items.length>0&&section.items.every(i=>(i.cost??0)>0)&&section.total>0;};
+  const claddingFullyPriced=sectionFullyPriced('Stair and level cladding');
+  const frameFullyPriced=sectionFullyPriced('Stair picture-frame detail');
+  const porchWrapPriced=hasPorchWrap(activeWrap(c.design))&&(now.sections['Labour (Construction & Build)']??0)>0;
+  const replacedQuote=(q:string)=>q==='Deck skirting (builder quote)'&&skirtingPriced||q==='Fascia boards (supplier quote)'&&fasciaBoardsPriced&&(fasciaFastenersQuoted||fasciaFastenersPriced)||q==='Fascia fasteners and delivery (supplier quote)'&&fasciaFastenersPriced||q==='Medallion inlay labour (builder quote)'&&namedPriced('Labour (Construction & Build)','Medallion inlay labour')||q==='Accent-colour board labour (builder quote)'&&namedPriced('Labour (Construction & Build)','Accent-colour board labour')||q==='Custom inlay fabrication labour (builder quote)'&&namedPriced('Labour (Construction & Build)','Custom inlay fabrication labour')||q==='Porch-wrap labour premium (builder quote)'&&porchWrapPriced||PRICED_CONNECTOR_QUOTES.has(q)&&namedPriced('Hardware & Fasteners',q)||q===NEW_QUOTE&&claddingFullyPriced||q===STAIR_FRAME_QUOTE&&frameFullyPriced;
+  const moved=Object.keys({...was.sections,...now.sections}).filter(t=>!near(was.sections[t]??0,now.sections[t]??0));
+  ok(now.quoteRequired.every(q=>was.quoteRequired.some(old=>quoteScope(old)===quoteScope(q))||q===NEW_QUOTE||ENGINE_QUOTES.has(q)||q==='Paver packaging, colour and freight adjustments (supplier quote)'||q===DECKING_DELIVERY_QUOTE||q===STAIR_FRAME_QUOTE&&hasPictureFrame(c.design)||addedYardScope(c.design,q)||q==='Fascia fasteners and delivery (supplier quote)'&&fasciaFastenersQuoted)&&was.quoteRequired.every(q=>now.quoteRequired.some(next=>quoteScope(next)===quoteScope(q))||replacedQuote(q)),`${name}: existing quote scope is preserved, with explicit cladding, wall execution, hauling and paver order confirmation`);
   for(const label of [DECKING_DELIVERY_QUOTE,STAIR_FRAME_QUOTE])if(now.quoteRequired.includes(label))ok(detailed.sections.some(s=>s.items.some(i=>i.name===label&&i.cost===null))&&!detailed.sections.some(s=>s.items.some(i=>i.name===label&&i.cost!==null)),`${name}: ${label} is a quote, never priced`);
   for(const row of detailed.yardTakeoff.sections.filter(row=>addedYardScope(c.design,row.label)))ok(row.amountCents===null&&detailed.sections.some(section=>section.quoteRequired&&section.total===0&&section.items.some(item=>item.name===row.label&&item.cost===null)),`${name}: added wall/hauling scope stays unpriced and separately identified`);
   const cladding=detailed.sections.find(s=>s.title==='Stair and level cladding');
   if(cladding){
-    const pricedFinish=cladding.items.every(i=>i.cost!==null);
-    ok(pricedFinish||cladding.items.some(i=>i.cost===null),`${name}: cladding is fully priced on 2026-10 when supply is known, otherwise install stays a quote`);
+    if(claddingFullyPriced)ok(!now.quoteRequired.includes(NEW_QUOTE),`${name}: fully priced cladding is not also a builder quote`);
+    else ok(cladding.items.some(i=>i.cost===null)&&now.quoteRequired.includes(NEW_QUOTE),`${name}: cladding installation stays a quote when finish rates do not apply`);
   }
-  ok(moved.every(t=>REVIEW_PRICE_SECTIONS.has(t)||t==='Stair picture-frame detail'||ENGINE_SECTIONS(t)||FEWER_FOOTINGS.has(t)&&(now.sections[t]??0)<(was.sections[t]??0)),`${name}: only the documented railing, stair-width and cladding sections and the framing engine's sections can change`);
+  ok(moved.every(t=>REVIEW_PRICE_SECTIONS.has(t)||ENGINE_SECTIONS(t)||t==='Deck skirting'&&skirtingPriced||t==='Stair picture-frame detail'&&frameFullyPriced),`${name}: only the documented railing, stair-width and cladding sections and the framing engine's sections can change`);
   if(c.expect==='same'){ok(near(now.railingLf,was.railingLf),`${name}: pricing review preserves guard quantities`);same++;}
   else{
     ok(now.railingLf<=was.railingLf+1e-6,`${name}: redundant guards remain removed; current stair/cladding prices are independently checked`);

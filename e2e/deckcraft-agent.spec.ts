@@ -29,7 +29,10 @@ test('agent previews leave autosave untouched; validated batch is acknowledged a
   await open(page);await expect.poll(async()=>!!await savedProject(page)).toBe(true);
   const before=await page.evaluate(()=>({snapshot:window.deckcraft!.read()}));const saved=await savedProject(page);
   const preview=good(await page.evaluate(()=>window.deckcraft!.preview({id:'preview-only',commands:[{type:'design.patch',patch:{width:24,length:18,skirting:{style:'Horizontal boards',clearanceIn:2}}}]})));
-  expect(preview.snapshot.pricing.total).toBeGreaterThan(before.snapshot.pricing.total);expect(preview.snapshot.quotes.some(q=>/skirting/i.test(q))).toBe(true);
+  const skirt=preview.snapshot.pricing.sections.find(s=>s.title==='Deck skirting');
+  expect(preview.snapshot.pricing.total).toBeGreaterThan(before.snapshot.pricing.total);
+  expect(skirt&&skirt.total>0&&skirt.items.every(i=>(i.cost??0)>0)).toBe(true);
+  expect(preview.snapshot.quotes.some(q=>/skirting/i.test(q))).toBe(false);
   expect(await savedProject(page)).toBe(saved);
   expect((await page.evaluate(()=>window.deckcraft!.read())).design).toEqual(before.snapshot.design);
   const changed=good(await execute(page,[{type:'design.patch',patch:{width:20}},{type:'design.patch',patch:{length:18}}],'atomic-edit'));

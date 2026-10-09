@@ -120,14 +120,13 @@ test('a call click before gtag.js arrives is queued and then sent',async({page})
     return {consent,conversion,scripts:document.querySelectorAll('script[src*="gtag/js"]').length};
   })).toEqual(expect.objectContaining({consent:0,scripts:1}));
 
-  const queued = await page.evaluate(()=>{
+  await expect.poll(()=>page.evaluate(()=>{
     const layer = (window as unknown as {dataLayer?:unknown[]}).dataLayer??[];
     return layer.findIndex(entry=>{
       const item = entry as {0?:string;1?:string;2?:{send_to?:string}};
       return item?.[0]==='event' && item?.[1]==='conversion' && String(item?.[2]?.send_to??'').includes('0CDHCIO2iPEbEJ3hwbAo');
     });
-  });
-  expect(queued).toBeGreaterThan(0);
+  })).toBeGreaterThan(0);
 
   release();
   await expect.poll(()=>conversions.length,{timeout:10_000}).toBeGreaterThan(0);

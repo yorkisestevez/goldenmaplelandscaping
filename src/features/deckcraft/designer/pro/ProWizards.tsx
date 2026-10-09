@@ -135,7 +135,9 @@ export default function ProWizards({kind,page,onClose}:{kind:WizardKind;page:Pro
       const api=(window as Window&{deckcraft?:{read:()=>{revision:number};execute:(r:unknown)=>Promise<{ok:true}|{ok?:false;error:{message:string}}>}}).deckcraft;
       if(api?.read&&api.execute){
         const before=api.read();
-        const result=await api.execute({id:`pro-wizard-${kind}-${crypto.randomUUID()}`,expectedRevision:before.revision,commands:[{type:'design.patch',patch}]});
+        // A cleared field is undefined in the designer patch. The controller accepts JSON only, so name it in unset.
+        const unset=Object.keys(patch).filter(key=>(patch as Record<string,unknown>)[key]===undefined);
+        const result=await api.execute({id:`pro-wizard-${kind}-${crypto.randomUUID()}`,expectedRevision:before.revision,commands:[{type:'design.patch',patch:JSON.parse(JSON.stringify(patch)),...(unset.length?{unset}:{})}]});
         if('error'in result)throw Error(result.error.message);
       }else page.apply(patch);
       page.openSection(plan.section);onClose();
