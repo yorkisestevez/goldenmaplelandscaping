@@ -57,7 +57,7 @@ export class Chain{
   dispose(){this.beauty.depthTexture?.dispose();this.beauty.dispose();this.post.dispose();this.gtao.dispose();this.bloom?.dispose();this.output.dispose();}
 }
 
-interface Pipeline{capture:(scale:number)=>void}
+interface Pipeline{capture:(scale:number)=>void;openSequence:(msaa:boolean)=>{draw:(evening:boolean)=>void;close:()=>void}}
 const pipelines=new WeakMap<THREE.WebGLRenderer,Pipeline>(),renderers=new WeakMap<THREE.WebGLRenderer,()=>void>();
 /** The pipeline drawing this renderer's view, for the proposal snapshot (SnapshotBridge). */
 export function pipelineFor(gl:THREE.WebGLRenderer){return pipelines.get(gl);}
@@ -89,7 +89,7 @@ export function releaseDrawnResources(gl:THREE.WebGLRenderer){
 
 export default function RenderPipeline({evening}:{evening:boolean}){
   const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera),invalidate=useThree(s=>s.invalidate),quality=useRenderQuality();
-  const ref=useRef({chain:null as Chain|null,broken:false,evening,key:NaN});
+  const ref=useRef({chain:null as Chain|null,broken:false,evening,key:NaN,sequence:false});
   ref.current.evening=evening;
   useEffect(()=>{
     const state=ref.current,size=new THREE.Vector2(),budget=sceneQuality(quality,gl.capabilities);
@@ -105,10 +105,12 @@ export default function RenderPipeline({evening}:{evening:boolean}){
       gl.getDrawingBufferSize(size);chain.setSize(size.x,size.y,scale);chain.render(gl,scene,camera,state.evening);
     };
     const frame=()=>{
+      if(state.sequence)return;
       if(!state.broken)try{state.chain??=new Chain(gl,scene,camera,quality.msaaSamples,quality);draw(state.chain,1);gl.domElement.dataset.photographicPipeline='active';return;}catch(error){fail(error);}
       gl.render(scene,camera);
     };
     gl.shadowMap.autoUpdate=false;state.key=NaN;
+    gl.domElement.dataset.pipelineGeneration=String(Number(gl.domElement.dataset.pipelineGeneration??0)+1);
     pipelines.set(gl,{capture:scale=>{
       if(state.broken||scale<=1){frame();return;}
       // A print-size picture: its own targets, without multisampling from twice the size up (it is supersampled).
@@ -116,6 +118,10 @@ export default function RenderPipeline({evening}:{evening:boolean}){
       try{chain=new Chain(gl,scene,camera,scale>=2?0:quality.msaaSamples,quality);draw(chain,scale);}
       catch(error){gl.setRenderTarget(null);gl.render(scene,camera);console.warn('DeckCraft 3D: capture drew without effects.',error);}
       finally{chain?.dispose();}
+    },openSequence(msaa){
+      // One set of targets for the whole sequence. A new chain per frame at 4K is what runs the tab out of memory.
+      let chain:Chain|null=null;state.sequence=true;state.key=NaN;
+      return {draw(evening){const previous=state.evening;state.evening=evening;try{if(state.broken){gl.render(scene,camera);return;}chain??=new Chain(gl,scene,camera,msaa?quality.msaaSamples:0,quality);draw(chain,1);}catch(error){gl.setRenderTarget(null);gl.render(scene,camera);console.warn('DeckCraft 3D: a fly-through frame drew without effects.',error);}finally{state.evening=previous;}},close(){chain?.dispose();chain=null;state.sequence=false;state.key=NaN;gl.setRenderTarget(null);}};
     }});
     const restored=()=>{state.chain?.dispose();state.chain=null;state.broken=false;state.key=NaN;gl.shadowMap.autoUpdate=false;invalidate();};
     gl.domElement.addEventListener('webglcontextrestored',restored);

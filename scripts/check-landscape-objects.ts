@@ -11,7 +11,7 @@ import {landscapeTakeoff,landscapeBedAreas,landscapePlacement,landscapeRenderLod
 import {landscapeBedGeometry,landscapeInstanceMatrix} from '../src/features/deckcraft/components/viewer3d/Landscape3D';
 import {stillSize,captureSceneStill} from '../src/features/deckcraft/components/viewer3d/SceneStillExport';
 import {blocksHeroView,buildShowcaseContext,fenceRuns,heroClearances} from '../src/features/deckcraft/components/viewer3d/showcaseContext';
-import {getShowcaseFlags,setShowcaseFlags} from '../src/features/deckcraft/components/viewer3d/showcaseMode';
+import {getShowcaseFlags,setShowcaseFlags} from '../src/features/deckcraft/showcaseMode';
 import type {DeckData} from '../src/features/deckcraft/types';
 let checks=0;const check=(v:unknown,label?:string)=>{assert.ok(v,label);checks++;},close=(a:number,b:number)=>check(Math.abs(a-b)<1e-5,`${a} ≈ ${b}`);
 const all=LANDSCAPE_ASSETS.map((a,i)=>newLandscapeObject(a.id,'object-'+i));check(validateLandscapeObjects(all));check(validateLandscapeObjects([]));check(!validateLandscapeObjects(undefined));

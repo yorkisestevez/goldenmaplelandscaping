@@ -3,7 +3,8 @@ import {useThree} from '@react-three/fiber';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
-import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from './showcaseMode';
+import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../showcaseMode';
+import {useSceneEvening} from './sceneEvening';
 import {useSyncExternalStore} from 'react';
 import {SHOWCASE_TREES,buildShowcaseContext,type ContextTree,type GroundGrid,type GroundVertex,type NeighbourHome} from './showcaseContext';
 
@@ -163,9 +164,9 @@ function TreeLine({trees,showcase}:{trees:ContextTree[];showcase:boolean}){
 export default function ShowcaseContext3D({data}:{data:DeckData}){
  const context=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().context,()=>false);
  const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false);
+ const evening=useSceneEvening(data.sceneLighting);
  const model=useMemo(()=>context?buildShowcaseContext(data):null,[context,data.landscapeObjects,data.yardFeatures,data.width,data.length,data.scenePresentation,data.terrainConfig]);
  if(!context||!model)return null;
- const evening=data.sceneLighting==='Evening';
  return <group name="showcase-context" scale={12} userData={{presentationOnly:true}}>
   <Fence runs={model.runs} baseY={model.baseY}/>
   <NeighbourGround grids={model.ground} evening={evening}/>

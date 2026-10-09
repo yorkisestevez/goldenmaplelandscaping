@@ -1,4 +1,4 @@
-/** Presentation-only switches for stills and future camera footage.
+/** Presentation-only switches for stills and fly-through footage.
  * They are not design data: colours, quantities and prices stay on the saved project.
  * URL (read once, after hydration): ?deck-quality=showcase and ?deck-context=1.
  * The still-export panel writes the same flags for the live view it captures. */

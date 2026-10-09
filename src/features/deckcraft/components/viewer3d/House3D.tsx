@@ -13,6 +13,7 @@ import type {HouseInteraction} from './houseInteraction';
 import {houseTrimColors,type HouseTrimColors} from '../../houseFinishes';
 import {GABLE_COURSE,gableCourses} from './houseCladdingSkins';
 import {facadeFinish,gableLook,hasWallFinishes,isGableEnd} from '../../houseWallFinishes';
+import {useSceneEvening} from './sceneEvening';
 import {ROOF_LOOK,ROOF_TEXTURE_SIZE,roofPixels} from './roofTextures';
 
 import {houseRoofMesh,blockRoofMesh,blockGableMesh,blockRoofRise,houseWallSpecs,type HouseMesh,type HouseWallSpec} from './houseGeometry';
@@ -67,7 +68,7 @@ export default function House3D({data,width,...interaction}:{data:DeckData;width
  const layout=useMemo(()=>houseLayout(data,width),[data.houseConfig,data.deckType,data.houseVisible,data.houseWallHeightIn,data.houseDoorWidthIn,data.houseDoorOffset,data.height,width,placeKey,defaultHouseKey]);
  const blocks=useMemo(()=>getHouseBlocks(data),[layout]);
  const walls=useMemo(()=>houseWallSpecs(data,layout.config,blocks),[layout,blocks]);
- const {minX,maxX,depth,wallHeight,roofRise,config}=layout,cx=(minX+maxX)/2,evening=data.sceneLighting==='Evening',look=ROOF_LOOK[config.roofFinish],trim=houseTrimColors(config);
+ const {minX,maxX,depth,wallHeight,roofRise,config}=layout,cx=(minX+maxX)/2,evening=useSceneEvening(data.sceneLighting),look=ROOF_LOOK[config.roofFinish],trim=houseTrimColors(config);
  const roof=useMemo(()=>buildHouseRoof(layout),[layout]),map=useMemo(()=>roofTexture(config.roofFinish),[config.roofFinish]);
  useEffect(()=>()=>roof.dispose(),[roof]);useEffect(()=>()=>map.dispose(),[map]);
  // Gable ends face the deck and the street (ridge front to back, the original) or the side walls (ridge side to side).

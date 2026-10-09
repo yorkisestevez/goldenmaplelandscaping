@@ -11,11 +11,12 @@ import type {YardModel} from '../../yardModel';
 import {useThree} from '@react-three/fiber';
 import {SCENE_LOOK} from './sceneLook';
 import {SKY_DATA,skyStrength,sunDirection} from './skyModel';
+import {useSceneEvening} from './sceneEvening';
 
 const SUN=sunDirection();
 
 export const Environment3D=React.memo(function Environment3D({data,footprint,topY,cutaway=false,finished=true,yard,...interaction}:{data:DeckData;footprint:FootprintPlan;topY:number;planKey:string;cutaway?:boolean;finished?:boolean;yard:YardModel}&HouseInteraction){
-  const evening=data.sceneLighting==='Evening',radius=Math.max(footprint.bounds.w,footprint.bounds.h)*3,shadowRange=radius/12;
+  const evening=useSceneEvening(data.sceneLighting),radius=Math.max(footprint.bounds.w,footprint.bounds.h)*3,shadowRange=radius/12;
   // renderPipeline fits the frustum to what casts; the sun's map is as large as this GPU allows, up to 4096.
   const mapSize=Math.min(SCENE_LOOK.sunShadow.mapSize,useThree(state=>state.gl.capabilities.maxTextureSize));
   // The daylight key shares the HDRI's direction (Sky3D.tsx); the evening sky has no directional key.

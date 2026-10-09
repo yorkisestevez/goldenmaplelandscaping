@@ -6,7 +6,7 @@ import {SKY_DATA as SKY,skyStrength,skyYaw,VISIBLE_SKY_MIN_DEG,visibleSkyStrengt
 import dayLighting from './assets/sky/sky-day-ibl.hdr?url';
 import eveningLighting from './assets/sky/sky-evening-ibl.hdr?url';
 import {SCENE_LOOK} from './sceneLook';
-import {SHOWCASE_FOG_DENSITY,getShowcaseFlags,subscribeShowcase} from './showcaseMode';
+import {SHOWCASE_FOG_DENSITY,getShowcaseFlags,subscribeShowcase} from '../../showcaseMode';
 
 /**
  * The real sky (Real Life G3): a CC0 HDRI supplies environment fill. An extracted sun, or a neutral key replacing
@@ -21,7 +21,7 @@ const DOME_VERTEX=/* glsl */`
 varying vec3 vDir;
 void main(){vDir=position;vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.);gl_Position=p.xyww;}`;
 const DOME_FRAGMENT=/* glsl */`
-uniform sampler2D lighting;uniform mat3 turn;uniform float minimumElevation,strength,uHorizonBand;
+uniform sampler2D lighting;uniform mat3 turn;uniform float minimumElevation,strength,uHorizonBand,warmth;
 varying vec3 vDir;
 const float PI=3.141592653589793;
 void main(){
@@ -35,13 +35,15 @@ void main(){
   float band=1.-smoothstep(0.0,0.045,el),sampleEl=mix(cleanEl,max(el,0.),band*uHorizonBand),v=sampleEl/PI+.5;
   float dux=abs(dFdx(u))<abs(dFdx(seam))?dFdx(u):dFdx(seam),duy=abs(dFdy(u))<abs(dFdy(seam))?dFdy(u):dFdy(seam);
   vec3 sky=textureGrad(lighting,vec2(u,v),vec2(dux,dFdx(v)),vec2(duy,dFdy(v))).rgb;
-  gl_FragColor=vec4(sky*strength,1.);
+  // warmth 0 is the photograph. A fly-through raises it only while grading golden hour.
+  vec3 graded=mix(sky,sky*vec3(1.22,.78,.42),clamp(warmth,0.,1.));
+  gl_FragColor=vec4(graded*strength,1.);
 }`;
 
 /** The clean photographed sky, following the camera and drawn behind everything. */
 function SkyDome({lighting,yaw,strength,horizonBand}:{lighting:THREE.Texture;yaw:number;strength:number;horizonBand:boolean}){
   const material=useMemo(()=>new THREE.ShaderMaterial({
-    uniforms:{lighting:{value:null},turn:{value:new THREE.Matrix3()},minimumElevation:{value:VISIBLE_SKY_MIN_DEG*Math.PI/180},strength:{value:1},uHorizonBand:{value:0}},
+    uniforms:{lighting:{value:null},turn:{value:new THREE.Matrix3()},minimumElevation:{value:VISIBLE_SKY_MIN_DEG*Math.PI/180},strength:{value:1},uHorizonBand:{value:0},warmth:{value:0}},
     vertexShader:DOME_VERTEX,fragmentShader:DOME_FRAGMENT,side:THREE.BackSide,depthWrite:false,fog:false,
   }),[]);
   useEffect(()=>()=>material.dispose(),[material]);
@@ -58,10 +60,10 @@ function SkyDome({lighting,yaw,strength,horizonBand}:{lighting:THREE.Texture;yaw
 function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyStrength(lighting).environment}:{lighting:Lighting;strength?:number;illumination?:number}){
   const data=SKY[lighting],yaw=skyYaw(lighting);
   const map=useEnvironment({files:lighting==='evening'?eveningLighting:dayLighting});
-  const scene=useThree(s=>s.scene),invalidate=useThree(s=>s.invalidate),context=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().context,()=>false);
+  const scene=useThree(s=>s.scene),gl=useThree(s=>s.gl),invalidate=useThree(s=>s.invalidate),context=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().context,()=>false);
   const horizon=useMemo(()=>(context?visibleSkyHorizon(map,0):visibleSkyHorizon(map))??data.horizonColor,[map,data,context]);
   // The viewer keeps one fog for its life (adding or removing fog recompiles every material); the sky only recolours it.
-  useEffect(()=>{if(!scene.fog)return;scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);if(scene.fog instanceof THREE.FogExp2)scene.fog.density=context?SHOWCASE_FOG_DENSITY:SCENE_LOOK.sky.fogDensity;invalidate();},[scene,horizon,strength,invalidate,context]);
+  useEffect(()=>{gl.domElement.dataset.sky=lighting;if(!scene.fog)return;scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);if(scene.fog instanceof THREE.FogExp2)scene.fog.density=context?SHOWCASE_FOG_DENSITY:SCENE_LOOK.sky.fogDensity;invalidate();},[scene,horizon,strength,invalidate,context,gl,lighting]);
   return <>
     <Environment map={map} environmentIntensity={illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
     <SkyDome lighting={map} yaw={yaw} strength={strength} horizonBand={context}/>

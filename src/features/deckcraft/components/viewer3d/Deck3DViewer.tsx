@@ -19,6 +19,9 @@ const Landscape3D=lazy(()=>import('./Landscape3D'));
 import {landscapePlacement,landscapeFootprint} from '../../landscapeModel';
 
 import SceneStillExport from './SceneStillExport';
+import FlythroughRecorder from './FlythroughRecorder';
+import FlythroughTools from './FlythroughTools';
+import {useFlythroughRendering,useSceneEvening} from './sceneEvening';
 
 import {isObjectVisible} from '../../editorOrganization';
 
@@ -352,7 +355,7 @@ export interface BoardPaint{scope:'piece'|'course';onPaint:(target:{level:number
 
 function CameraView({view,w,d,cx,cz,height,depth,points,sceneFrame,saved}:{view:string;w:number;d:number;cx:number;cz:number;height:number;depth:number;points:{x:number;y:number;z:number}[];sceneFrame?:{target:[number,number,number];position:[number,number,number]};saved?:SavedSceneCamera}){
 
- const {camera,controls,invalidate,set,size}=useThree();
+ const {camera,controls,invalidate,set,size,gl}=useThree(),flying=useFlythroughRendering();
 
  const aspect=size.width/Math.max(1,size.height),setback=cameraSetback(aspect);
 
@@ -360,6 +363,8 @@ function CameraView({view,w,d,cx,cz,height,depth,points,sceneFrame,saved}:{view:
 
  // Above uses an orthographic camera so board widths read true (no foreshortening) for sales and plan checks.
  useLayoutEffect(()=>{
+  if(flying){gl.domElement.dataset.flythroughHold='1';return;}
+  delete gl.domElement.dataset.flythroughHold;
   const r=Math.max(w,d),target=new THREE.Vector3(cx,view==='foundation'?-depth/24:height*.5,cz);
   const wantOrtho=view==='top'&&!frame&&!saved;
   let cam=camera;
@@ -373,7 +378,7 @@ function CameraView({view,w,d,cx,cz,height,depth,points,sceneFrame,saved}:{view:
   if(cam instanceof THREE.PerspectiveCamera){cam.fov=saved?.fov??38;cam.aspect=aspect;cam.updateProjectionMatrix();}
   if(cam instanceof THREE.OrthographicCamera){const half=Math.max(w,d)*.55/Math.max(.5,setback*.85);cam.left=-half*aspect;cam.right=half*aspect;cam.top=half;cam.bottom=-half;cam.near=SCENE_LOOK.sky.cameraNear;cam.far=SCENE_LOOK.sky.cameraFar;cam.updateProjectionMatrix();}
   cam.lookAt(target);if(controls&&'target' in controls){(controls as any).target.copy(target);(controls as any).update();}invalidate();
- },[view,w,d,cx,cz,height,depth,setback,aspect,frame?.position[0],frame?.position[1],frame?.position[2],frame?.target[0],frame?.target[1],frame?.target[2],saved?.fov,camera,controls,invalidate,set,size.width,size.height]);return null;
+ },[view,w,d,cx,cz,height,depth,setback,aspect,frame?.position[0],frame?.position[1],frame?.position[2],frame?.target[0],frame?.target[1],frame?.target[2],saved?.fov,camera,controls,invalidate,set,size.width,size.height,flying,gl]);return null;
 
 }
 
@@ -402,7 +407,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
   const extras=useMemo(()=>extrasLayout(data,model),[data,model]);
 
-  const evening=data.sceneLighting==='Evening',lightsOn=data.lightingPreviewOn!==false;
+  const evening=useSceneEvening(data.sceneLighting),lightsOn=data.lightingPreviewOn!==false;
 
   // Every near-field fixture lights its surroundings at night, with no count limit: only the texture is re-uploaded.
 
@@ -636,7 +641,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
 
   if(view==='overview'||view==='3d'||view==='top')for(const p of getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))){const v=p.permanentExclusionFootprints.flat(),xs=v.map(q=>q.x),zs=v.map(q=>q.y);if(!v.length)continue;addEnvelope(Math.min(...xs),Math.max(...xs),Math.min(...zs),Math.max(...zs),p.copingTopElevationIn);bounds.minX=Math.min(bounds.minX,...xs);bounds.maxX=Math.max(bounds.maxX,...xs);bounds.minZ=Math.min(bounds.minZ,...zs);bounds.maxZ=Math.max(bounds.maxZ,...zs);bounds.top=Math.max(bounds.top,p.copingTopElevationIn);}
 
-  const w=(bounds.maxX-bounds.minX)/12,d=(bounds.maxZ-bounds.minZ)/12,cx=(bounds.maxX+bounds.minX)/24,cz=(bounds.maxZ+bounds.minZ)/24,r=Math.max(w,d),height=bounds.top/12,evening=data.sceneLighting==='Evening';
+  const w=(bounds.maxX-bounds.minX)/12,d=(bounds.maxZ-bounds.minZ)/12,cx=(bounds.maxX+bounds.minX)/24,cz=(bounds.maxZ+bounds.minZ)/24,r=Math.max(w,d),height=bounds.top/12,evening=useSceneEvening(rawData.sceneLighting);
 
   // Only long-throw fixtures take real preview lights; the rest all light through the fixture light patch.
 
@@ -654,7 +659,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
 
   const simplifiedPaving=!structure&&!cutaway&&view!=='hardware'&&hasSimplifiedPaving(yard);
 
-  return <>{onUpdate&&!structure&&!cutaway&&<ScenePresentationTools data={data} update={onUpdate}/>} {!editInteraction&&onUpdate&&!structure&&!cutaway&&!boardPaint&&<PergolaTools data={data} selected={selected} setSelected={setSelected} mode={pergolaMode} setMode={setPergolaMode} update={onUpdate}/>}<div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
+  return <>{onUpdate&&!structure&&!cutaway&&<><ScenePresentationTools data={data} update={onUpdate}/><FlythroughTools data={data}/></>} {!editInteraction&&onUpdate&&!structure&&!cutaway&&!boardPaint&&<PergolaTools data={data} selected={selected} setSelected={setSelected} mode={pergolaMode} setMode={setPergolaMode} update={onUpdate}/>}<div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
 
     {data.siteModel&&<p className="absolute top-3 right-3 z-10 rounded bg-white/90 p-2 text-xs">Ground outside surveyed triangles is illustrative.</p>}<Canvas shadows="percentage" frameloop="demand" dpr={[1,1.5]} camera={{fov:38,near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar}} gl={{antialias:false,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:SCENE_LOOK.exposure}} onCreated={({gl})=>{const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
 
@@ -676,7 +681,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
 
       <FixtureLightContext.Provider value={fixtureLight}><Scene data={data} model={model} showMatureSpread={view==='top'} structure={structure} cutaway={cutaway} inspection={inspection} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} pergolaInteraction={!editInteraction&&onUpdate&&rawData.pergola&&!boardPaint&&!structure&&!cutaway?{selected,mode:pergolaMode,onSelect:()=>setSelected(true),onDraft:setDraft,onCommit:patch=>onUpdate({pergola:{...rawData.pergola!,...patch}})}:undefined} {...interaction}/></FixtureLightContext.Provider>
 
-      {editInteraction&&selection&&<Suspense fallback={null}><SceneEditHandles data={rawData} model={model} selection={selection} interaction={editInteraction}/></Suspense>}<SavedCameraBridge data={data} update={onUpdate}/><SelectionBridge enabled={!boardPaint} hardscapeOnly={!selectionEnabled} revision={calculatedYard??model} selection={selection??{partIds:[],boards:[]}} onPick={onObjectPick}/><SnapshotBridge onReady={onSnapshotReady}/><SceneStillExport revision={rawData}/>
+      {editInteraction&&selection&&<Suspense fallback={null}><SceneEditHandles data={rawData} model={model} selection={selection} interaction={editInteraction}/></Suspense>}<SavedCameraBridge data={data} update={onUpdate}/><SelectionBridge enabled={!boardPaint} hardscapeOnly={!selectionEnabled} revision={calculatedYard??model} selection={selection??{partIds:[],boards:[]}} onPick={onObjectPick}/><SnapshotBridge onReady={onSnapshotReady}/><SceneStillExport revision={rawData}/><FlythroughRecorder revision={rawData} designEvening={rawData.sceneLighting==='Evening'}/>
       <ShowcaseModeSync/><RenderQuality/><RenderPipeline evening={evening}/>
 
       <OrbitControls makeDefault target={savedCamera||preset||view==='overview'?undefined:[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={savedCamera||preset?1:r*.25} maxDistance={view==='overview'?Math.max(r*8,height*4):r*4} enableDamping={false}/>

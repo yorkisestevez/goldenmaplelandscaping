@@ -13,7 +13,7 @@ import {activePuttingCups,landscapeBedAreas,landscapePlacement,landscapeRenderLo
 import {createSiteSurface,siteClip,siteSolidCells,sitePlaneHeight} from '../../siteSurfaceEngine';
 import {getTerrainConfig} from '../../yardSettings';
 import {useRenderQuality} from './SceneRenderQuality';
-import {getShowcaseFlags,subscribeShowcase} from './showcaseMode';
+import {getShowcaseFlags,subscribeShowcase} from '../../showcaseMode';
 import {useFixtureLit} from './fixtureLighting';
 
 const SurfaceDetail=lazy(()=>import('./SurfaceDetail'));
