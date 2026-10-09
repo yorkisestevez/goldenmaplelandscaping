@@ -12,6 +12,9 @@ import {landscapeBedGeometry,landscapeInstanceMatrix} from '../src/features/deck
 import {stillSize,captureSceneStill} from '../src/features/deckcraft/components/viewer3d/SceneStillExport';
 import {blocksHeroView,buildShowcaseContext,designHasNightLights,fenceRuns,heroClearances,NEIGHBOUR_WINDOW_BLOOM,neighbourWindowGlow} from '../src/features/deckcraft/components/viewer3d/showcaseContext';
 import {neighbourRoofSeated} from '../src/features/deckcraft/components/viewer3d/neighbourRoof';
+import {showcaseRoofTrimSeated} from '../src/features/deckcraft/components/viewer3d/showcaseHouseRoof';
+import {getHouseBlocks} from '../src/features/deckcraft/houseFootprint';
+import {blockRoofRise} from '../src/features/deckcraft/components/viewer3d/houseGeometry';
 import {ontarioShowcaseDesign,showcaseSampleIssues} from '../src/features/deckcraft/showcaseSample';
 import {getShowcaseFlags,setShowcaseFlags} from '../src/features/deckcraft/components/viewer3d/showcaseMode';
 import type {DeckData} from '../src/features/deckcraft/types';
@@ -61,9 +64,11 @@ for(let home=0;home<6;home++)for(let pane=0;pane<36;pane++){const glow=neighbour
 check(first===neighbourWindowGlow(0,0)&&darkPanes>litPanes&&litPanes>8&&peakGlow<0.55,'Most neighbour windows are dark, and the lit ones are a soft glow');
 const showcaseSample=ontarioShowcaseDesign(),showcaseIssues=showcaseSampleIssues(showcaseSample);
 check(showcaseIssues.length===0,showcaseIssues.join(' '));
-check(showcaseSample.permitSite?.lotWidthFt===80&&showcaseSample.permitSite.lotDepthFt===160&&showcaseSample.houseConfig?.storeys===2,'The showcase sample is a two-storey house on an 80×160 ft lot');
+check(showcaseSample.permitSite?.lotWidthFt===120&&showcaseSample.permitSite.lotDepthFt===240&&showcaseSample.houseConfig?.storeys===2,'The showcase sample is a two-storey house on a 120×240 ft lot');
 check(showcaseSample.yardFeatures?.some(f=>f.id==='fire-bowl'&&f.supportFeatureId==='lounge')&&showcaseSample.pools?.length===1&&showcaseSample.pergola?.target.kind==='patio','The showcase yard connects a catalogue fire lounge, pool and pergola');
 check(designHasNightLights(showcaseSample),'The showcase yard lights itself, so the night fill stays off');
+for(const block of getHouseBlocks(showcaseSample))check(showcaseRoofTrimSeated({x0:block.rect.x0,x1:block.rect.x1,y0:block.rect.y0,y1:block.rect.y1,wallTop:block.wallHeightIn,rise:blockRoofRise(block,showcaseSample.houseConfig?.roofPitch),shape:block.roofShape,ridge:block.ridge}),`Showcase trim seats on the ${block.id} ${block.roofShape} roof`);
+check(showcaseRoofTrimSeated({x0:0,x1:480,y0:-360,y1:0,wallTop:240,rise:90,shape:'Gable',ridge:'x'})&&showcaseRoofTrimSeated({x0:0,x1:400,y0:-300,y1:0,wallTop:216,rise:6,shape:'Flat',ridge:'z'}),'Gable rake boards and a flat parapet seat without crossing the cap');
 check(!designHasNightLights(DEFAULT_DECK),'A design with no fixtures gets the showcase night fill');
 check(designHasNightLights({...DEFAULT_DECK,autoLighting:{stairs:true}})&&designHasNightLights({...DEFAULT_DECK,lightingSystem:{...DEFAULT_DECK.lightingSystem,selectedItems:[{productId:'ace',qty:2,zone:'landscape'}]}}),'Step lights and path lights are left to light the yard themselves');
 assert.deepEqual(stillSize(2048,{x:1500,y:900},8192),{width:2048,height:1229});checks++;assert.deepEqual(stillSize(4096,{x:390,y:390},8192),{width:4096,height:4096});checks++;assert.deepEqual(stillSize(4096,{x:100,y:400},8192),{width:1024,height:4096});checks++;assert.deepEqual(stillSize(4096,{x:400,y:100},8192),{width:4096,height:1024});checks++;assert.throws(()=>stillSize(4096,{x:100,y:400},2048));checks++;assert.throws(()=>stillSize(4096,{x:NaN,y:400},8192));checks++;
