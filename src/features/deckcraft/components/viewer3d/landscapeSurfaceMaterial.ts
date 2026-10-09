@@ -31,13 +31,16 @@ function disposeMaps(maps:Maps){Object.values(maps).forEach(t=>t.dispose());}
 export function createLandscapeSurfaceMaterial(id:LandscapeAssetId,anisotropy=1){
  const p=landscapeSurface(id)!,mulch=p.type==='mulch',key=(mulch?'mulch':id)+':'+anisotropy;
  let entry=shared.get(key);if(!entry){entry={maps:makeMaps(mulch?'mulch-bed':id,anisotropy),materials:new Set(),listeners:new Set(),pending:new Set()};shared.set(key,entry);}const resource=entry;
- const material=new THREE.MeshStandardMaterial({color:id==='black-mulch-bed'?'#2a2622':id==='cedar-mulch-bed'?'#ffce99':mulch?'#4a3122':'#ffffff',...resource.maps,normalScale:new THREE.Vector2(p.type==='turf'?.28:id==='limestone-screenings-bed'?.14:.72,p.type==='turf'?.28:.72),roughness:1});
+ const material=new THREE.MeshStandardMaterial({color:id==='black-mulch-bed'?'#2a2622':id==='cedar-mulch-bed'?'#ffce99':mulch?'#ffffff':'#ffffff',...resource.maps,normalScale:new THREE.Vector2(p.type==='turf'?.28:id==='limestone-screenings-bed'?.14:mulch?.18:.72,p.type==='turf'?.28:mulch?.18:.72),roughness:mulch?.9:1});
  resource.materials.add(material);
- if(mulch)addMaterialPatch(material,{key:'mulch-shred-fiber-v1',apply:shader=>{
-  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`float mulchLuma=dot(diffuseColor.rgb,vec3(.25,.55,.2));
-float mulchStrand=abs(fract(vMapUv.x*36.+vMapUv.y*6.2)-.5);
-float mulchShred=smoothstep(.06,.38,mulchStrand)*(.34+mulchLuma*1.25);
-diffuseColor.rgb=vec3(mulchShred);
+ if(mulch)addMaterialPatch(material,{key:'mulch-shred-fiber-v2',apply:shader=>{
+  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`float mulchLuma=dot(diffuseColor.rgb,vec3(.3,.5,.2));
+float mulchSlide=vMapUv.x*9.5+vMapUv.y*1.6;
+float mulchN=fract(sin(dot(floor(vec2(mulchSlide,vMapUv.y*8.)),vec2(127.1,311.7)))*43758.5453);
+float mulchBand=abs(fract(mulchSlide+mulchN*.45)-.5);
+float mulchFiber=smoothstep(.04,.22,mulchBand);
+float mulchSoft=mix(.7,1.,mulchFiber)*mix(.82,1.08,mulchN)*mix(.9,1.05,clamp(mulchLuma,0.,1.));
+diffuseColor.rgb=vec3(.34,.16,.055)*mulchSoft;
 #include <color_fragment>`);
  }});
  addMaterialPatch(material,{key:'ground-cover-stochastic-v1',apply:shader=>{
