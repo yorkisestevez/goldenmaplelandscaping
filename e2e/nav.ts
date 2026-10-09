@@ -41,7 +41,7 @@ export async function showProjectControls(page:Page){
 
 const PLAN_TABS:Record<string,string>={
   'Deck size':'Building','Shape & points':'Building','Stairs':'Building','Patios & walls':'Building','House':'Building','Rails & screens':'Building',
-  'Landscape':'Landscape','Board layout':'Materials','Inlays':'Materials','Select parts':'Main',
+  'Landscape':'Landscape','Fence':'Landscape','Board layout':'Materials','Inlays':'Materials','Select parts':'Main',
 };
 
 /** The design inspector is a dialog over the drawing. Plan tools underneath it are not clickable until it is dismissed. */

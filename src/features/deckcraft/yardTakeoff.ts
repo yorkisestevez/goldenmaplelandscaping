@@ -8,6 +8,7 @@ import type {DeckData,YardFeature} from './types';
 import {hardscapeSelection,hardscapeName} from './hardscapeCatalogue';
 import {yardEarthworkPlan} from './yardEarthwork';
 import {landscapeTakeoff,landscapeQuoteSections} from './landscapeModel';
+import {fenceQuoteSections} from './fenceTakeoff';
 import {wallQuoteScopes,yardTakeoffRuntime} from './yardQuoteScopes';
 import {buildYardModel,type YardModel} from './yardModel';
 import {ALLOWANCE_FINISHES,allowanceItems} from './yardSettings';
@@ -92,6 +93,7 @@ export function buildYardTakeoff(data:DeckData,model:YardModel=buildYardModel(da
  if(model.siteEarthwork&&!model.siteEarthwork.complete)unknown.push({id:'site-coverage-review',label:'Unsurveyed earthwork — field elevations required',amountCents:null,quantity:model.siteEarthwork.uncoveredGradingAreaSqft,unit:'sq ft',note:'Missing elevation coverage remains unmeasured. Complete the survey before excavation quantities can be finalized.'});
  const landscape=landscapeTakeoff(data.landscapeObjects??[],data);warnings.push(...landscape.warnings);
  unknown.push(...landscapeQuoteSections(data.landscapeObjects??[],landscape));
+ unknown.push(...fenceQuoteSections(data));
  const skids=materials.reduce((n,p)=>n+p.skids,0),edgePieces=Math.ceil(model.quantities.patioPerimeterLf/8),bins=earthwork.bins;
  if(common){
   const old=(id:string)=>common.items.find(i=>i.id===id)?.retailCents||0;

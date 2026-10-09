@@ -286,6 +286,8 @@ export interface DeckData {
   stairTargets?:import('./stairTargets').StairTarget[];
   siteModel?:import('./siteModel').SiteModel;
   landscapeObjects?:import('./landscapeTypes').LandscapeObject[];
+  /** Freestanding fence runs. Absent on every existing design. */
+  fences?:import('./fenceTypes').FenceRun[];
   pools?:import('./poolTypes').PoolFeature[];
   poolQuoteInputs?:import('./poolQuoteTypes').PoolQuoteInputs;
   editorOrganization?:import('./editorOrganization').EditorOrganization;
