@@ -8,13 +8,12 @@ import {
   FEATURE_LABOUR_LABELS,
   FEATURE_LABOUR_SCOPES,
   mergeFeatureLabour,
-  readFeatureLabourDefaults,
-  saveFeatureLabourDefaults,
   validateFeatureLabour,
   type FeatureLabourScope,
   type FeatureLabourScopeSettings,
   type FeatureLabourSettings,
 } from '../featureLabour';
+import {readFeatureLabourDefaults,saveFeatureLabourDefaults} from '../featureLabourStorage';
 import {DEFAULT_CREW_MEMBERS,DEFAULT_PERSON_HOUR_RATE,quoteCostFromCrewHours} from './quoteLabourHours';
 import {OWNER_COST_LIMITS,bookInstallationLabour,parseOwnerMarkup,parseOwnerMoney} from './ownerCostLimits';
 import './ownerCostEditor.css';

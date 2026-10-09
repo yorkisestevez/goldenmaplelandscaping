@@ -106,8 +106,17 @@ const GROUND_TOLERANCE=.25;
 const round1=(n:number)=>Math.round(n*10)/10;
 const inches=(n:number)=>`${round1(n)}`;
 
+/** Geometry only. The option-pricing worker uses this so the ventilation notes stay off that bundle. */
+export function skirtingGeometry(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
+  return layoutSkirting(data,model)?.plan??null;
+}
 /** The skirting a design asks for, laid out on its finished takeoff; null when the design has none. */
 export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
+  const laid=layoutSkirting(data,model);if(!laid)return null;
+  laid.plan.notes=skirtingNoteLines(data,laid);
+  return laid.plan;
+}
+function layoutSkirting(data:DeckData,model:DeckTakeoff){
   const config=data.skirting;if(!config)return null;
   const style=SKIRTING_STYLES.includes(config.style)?config.style:'Horizontal boards';
   const [cmin,cmax]=SKIRTING_LIMITS.clearanceIn,clearanceIn=Math.min(cmax,Math.max(cmin,Number(config.clearanceIn)||2));
@@ -293,10 +302,18 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
     }
   }));
 
-  const listed=[...edges.values()].filter(e=>e.lengthFt>=.5),notes:string[]=[];
+  const listed=[...edges.values()].filter(e=>e.lengthFt>=.5);
+  const plan:SkirtingPlan={style,colour,clearanceIn,foldedCorners,edges:listed,runs,faces,backing,frames,corners,
+    lengthFt:runs.reduce((n,r)=>n+r.lengthIn,0)/12,faceSqft:runs.reduce((n,r)=>n+r.faceSqft,0),backingLf:backingIn/12,latticePanels,
+    accessPanels:{requested,placed,widthIn:ACCESS.w,heightsIn},notes:[]};
+  return {plan,data,listed,foldedCorners,config,style,clearanceIn,placed,requested,terrain,estimatedGround,lowIn,colour};
+}
+function skirtingNoteLines(data:DeckData,laid:NonNullable<ReturnType<typeof layoutSkirting>>):string[]{
+  const {listed,foldedCorners,config,style,clearanceIn,placed,requested,terrain,estimatedGround,lowIn,colour}=laid;
+  const runs=laid.plan.runs,notes:string[]=[];
   if(!runs.length)notes.push(listed.length&&listed.every(e=>e.open)?'Skirting: every side is left open, so none is listed.':'Skirting: no deck edge has room for it: the framing sits too close to the ground.');
   else{
-    if(foldedCorners)notes.push('Skirting corners: folded solid deck-board returns at square outside corners are shown as custom fabrication; inside and angled corners retain mitred joins. Solid-profile stock is required; the builder must confirm the selected product, backing, movement allowances and fabrication method. Heat-folding approval and warranty coverage are not assumed. Corner fabrication remains in the builder quote.');
+    if(foldedCorners)notes.push('Skirting corners: folded solid deck-board returns at square outside corners are shown as custom fabrication; inside and angled corners retain mitred joins. Solid-profile stock is required; the builder must confirm the selected product, backing, movement allowances and fabrication method. Heat-folding approval and warranty coverage are not assumed. Corner fabrication stays in the priced skirting total; it is not a separate quote.');
     else if(config.cornerTreatment)notes.push('Folded corners require horizontal composite or PVC solid-board skirting; wood, lattice, vertical boards and known scalloped profiles are excluded. This design uses standard corner joins instead.');
     notes.push(`Skirting ventilation: the skirting stops ${inches(clearanceIn)} in above the ground${style==='Lattice'?' and the lattice is open':', with 1/4 in gaps between its boards'}, so air moves under the deck. Confirm the airflow the decking manufacturer requires under its boards before the deck is closed in.`);
     notes.push(placed?`Skirting access: ${placed} framed access panel${placed===1?'':'s'}, ${ACCESS.w} in wide, to reach the footings and framing under the deck${placed<requested?` (${requested} asked for; the rest do not fit where the skirting is tall enough)`:''}.`
@@ -310,9 +327,7 @@ export function skirtingPlan(data:DeckData,model:DeckTakeoff):SkirtingPlan|null{
   const opened=listed.filter(e=>e.open);
   if(opened.length&&runs.length)notes.push(`Skirting left open by choice: ${opened.map(e=>e.label.toLowerCase()).join('; ')}.`);
   if(config.colour&&colour!==config.colour)notes.push('The chosen skirting colour does not suit this decking, so the skirting is shown and listed in the deck colour.');
-  return {style,colour,clearanceIn,foldedCorners,edges:listed,runs,faces,backing,frames,corners,
-    lengthFt:runs.reduce((n,r)=>n+r.lengthIn,0)/12,faceSqft:runs.reduce((n,r)=>n+r.faceSqft,0),backingLf:backingIn/12,latticePanels,
-    accessPanels:{requested,placed,widthIn:ACCESS.w,heightsIn},notes};
+  return notes;
 }
 
 /** The estimate's "Deck skirting" rows: every one a quote (cost null), never $0, and none when nothing is skirted. */

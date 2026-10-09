@@ -16,8 +16,9 @@ async function openProposalFiles(page:Page){
 async function openPermitSet(page:Page){
   await page.goto('/deck-designer/');
   await openProposalFiles(page);
-  await page.locator('summary',{hasText:'Permit drawings (planning set)'}).click();
-  await page.getByRole('button',{name:'Open permit drawings',exact:true}).click();
+  const permit=page.locator('details').filter({has:page.locator('summary',{hasText:'Permit drawings (planning set)'})});
+  await permit.locator('summary').click();
+  await permit.getByRole('button',{name:'Open permit drawings',exact:true}).click();
   const dialog=page.getByRole('dialog',{name:'Permit drawing set'});
   await expect(dialog).toBeVisible();
   return dialog;

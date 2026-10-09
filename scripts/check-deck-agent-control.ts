@@ -39,7 +39,9 @@ async function main(){
   const stored=serializeDeckReleaseDesign(f.state.data);
   const dry=ok(await f.api.preview(request([{type:'design.patch',patch:{width:24,skirting:{style:'Horizontal boards',clearanceIn:2}}}],start.revision)));
   check(dry.snapshot.pricing.total>start.pricing.total,'Preview calculates changed costs');
-  check(dry.snapshot.pricing.sections.some(s=>s.title==='Deck skirting'&&s.total>0)&&!dry.snapshot.quotes.some(q=>/skirting/i.test(q)),'Preview prices skirting instead of leaving it as an unpriced quote');
+  // Owner 2026-10-08 priced skirting (skirtingPricing.ts). Every skirting row is priced; a leftover builder quote fails.
+  const skirt=dry.snapshot.pricing.sections.find(s=>s.title==='Deck skirting');
+  check(!!skirt&&skirt.total>0&&skirt.items.every(i=>(i.cost??0)>0)&&!dry.snapshot.quotes.some(q=>/skirting/i.test(q)),'Preview prices the skirting scope from the rate table');
   check(serializeDeckReleaseDesign(f.state.data)===stored&&f.commits===0&&f.history.past.length===0,'Preview changes neither persistence source, history nor host');
   const invalid:unknown[]=[
     {type:'design.patch',patch:{width:NaN}},{type:'design.patch',patch:{width:Infinity}},{type:'design.patch',patch:{width:3}},

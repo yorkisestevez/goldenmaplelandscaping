@@ -3,7 +3,9 @@ import type {AssistedSelection} from './naturalLanguageCommands';
 export type AssistantEditCommand=Exclude<AgentCommand,{type:'design.replace'|'view.set'|'section.open'|'history.undo'|'history.redo'|'action'}>;
 export type AssistantPlan=
  |{kind:'edit';message:string;assumptions:string[];commands:AssistantEditCommand[]}
- |{kind:'clarify';message:string;assumptions:string[];commands:[];question:string;choices:string[]};
+ |{kind:'clarify';message:string;assumptions:string[];commands:[];question:string;choices:string[]}
+ /** Grounded guidance with no design mutation — used by expert assistants for ideas and trade-offs. */
+ |{kind:'advice';message:string;assumptions:string[];commands:[];question:string;choices:string[]};
 export type AssistantPlanResult={ok:true;plan:AssistantPlan}|{ok:false;error:string};
 export type AssistantJson=string|number|boolean|null|AssistantJson[]|{[key:string]:AssistantJson};
 export interface AssistantContext {

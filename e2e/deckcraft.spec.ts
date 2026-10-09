@@ -398,16 +398,22 @@ test('reaches every feature of the designer',async({page})=>{
     const tools=fileTools(page);await openFiles(page);
     await tools.getByRole('button',{name:'Share link',exact:true}).click();
     const link=await tools.getByLabel('Link to this design').inputValue();
-    // The visitor's own design is kept only when it differs from the shared one.
+    // The link is the design as shared. A later edit stays on this device, and opening the link
+    // shows the shared copy. Autosave can flash the edited size while that copy is decoded.
     await openSection(page,'Deck shape & size');
     await setNumber(page,'Deck width',24);
     await expect(size(page)).toContainText('24 × 12 ft');
     await page.waitForTimeout(800);// autosave runs 450 ms after the last change
     await page.goto(link);
-    await expect(size(page)).toContainText('24 × 12 ft');
+    // The edited size can flash while the saved project restores. The shared copy is in place once the page says so.
+    await expect(tools).toContainText('shared with you');
+    await expect(size(page)).toContainText('16 × 12 ft');
     await showCanvas(page);
     await openFiles(page);
-    await reach('Go back to my own design',tools.getByRole('button',{name:'Go back to my own design'}));
+    const back=tools.getByRole('button',{name:'Go back to my own design'});
+    await reach('Go back to my own design',back);
+    await back.click();
+    await expect(size(page)).toContainText('24 × 12 ft');
   });
   expect(problems).toEqual([]);
 });
@@ -734,7 +740,7 @@ test('draws a custom outline, moves an edge from the keyboard and reprices it',a
   expect(problems).toEqual([]);
 });
 
-test('paints a row of accent boards, lists and keeps it, and prices the fitting as a builder quote',async({page})=>{
+test('paints a row of accent boards, lists and keeps it, and prices the fitting as crew-hours',async({page})=>{
   const problems=await openDesigner(page);
   const before=await (await price(page)).textContent();
   await openSection(page,'Boards & finish');
@@ -745,7 +751,12 @@ test('paints a row of accent boards, lists and keeps it, and prices the fitting 
   await panel.getByRole('button',{name:'Paint this row'}).click();
   await expect(panel.getByRole('listitem')).toHaveText(/Row 6 from the house · Dark Cocoa \(TimberTech EDGE Prime\+\)/);
   await expect((await price(page))).not.toHaveText(before??'');
-  await withSchedule(page,async()=>{ await expect(page.getByText('Accent-colour board labour')).toBeVisible(); });
+  await withSchedule(page,async()=>{
+    await expect(scheduleLine(page,'Labour (Construction & Build)')).toHaveText(/^Labour \(Construction & Build\)\$[\d,]+ · allowance$/);
+    await expect(quoteLine(page,'Accent-colour board labour')).toHaveCount(0);
+  });
+  await openSection(page,'Proposal & files');
+  await expect(fullList(page).getByRole('listitem').filter({hasText:'Accent-colour board labour'})).toHaveText(/^Accent-colour board labour \d+(?:\.\d+)? boards · Planning allowance$/);
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
   await page.reload();
   await openSection(page,'Boards & finish');
@@ -808,7 +819,7 @@ test('adds a framed inlay, fits it to the deck, and shows it and its framing on 
   expect(problems).toEqual([]);
 });
 
-test('adds a band and a compass medallion, and lists the medallion labour for a builder quote',async({page})=>{
+test('adds a band and a compass medallion, and prices the medallion labour as crew-hours',async({page})=>{
   const problems=await openDesigner(page);
   const before=await (await price(page)).textContent();
   await openSection(page,'Boards & finish');
@@ -829,34 +840,46 @@ test('adds a band and a compass medallion, and lists the medallion labour for a 
   await expect(await framingPlan(page)).toContainText('Inlay 2');
   await openSection(page,'Proposal & files');
   await expect(summary(page)).toContainText(/Inlays: a band two boards wide across the deck; a 4 ft compass medallion in eight wedges/);
-  // The breakdown shows the labour as needing a quote; the list of quotes names the medallion's.
-  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Labour (Construction & Build)')).toHaveText(/^Labour \(Construction & Build\)\$[\d,]+ \+ quote · allowance$/); });
-  await withSchedule(page,async()=>{ await expect(page.getByText('Medallion inlay labour')).toBeVisible(); });
+  // Crew-hours prices the medallion on the labour row; it is not left for a builder quote.
+  await withSchedule(page,async()=>{
+    await expect(scheduleLine(page,'Labour (Construction & Build)')).toHaveText(/^Labour \(Construction & Build\)\$[\d,]+ · allowance$/);
+    await expect(quoteLine(page,'Medallion inlay labour')).toHaveCount(0);
+  });
+  await expect(fullList(page).getByRole('listitem').filter({hasText:'Medallion inlay labour'})).toHaveText(/^Medallion inlay labour 1 medallion · Planning allowance$/);
   expect(problems).toEqual([]);
 });
 
-test('adds skirting under the deck, lists it for a builder quote, and keeps it after a reload',async({page})=>{
+test('adds skirting under the deck, prices it from the rate table, and keeps it after a reload',async({page})=>{
   const problems=await openDesigner(page);
   const before=await (await price(page)).textContent();
   await openSection(page,'Privacy, skirting & extras');
   const skirting=page.getByRole('region',{name:'Skirting under the deck'});
   await skirting.getByRole('checkbox',{name:'Add skirting under the deck'}).check();
-  await expect(skirting.getByRole('status')).toContainText('Listed for a builder quote');
+  const pricedStatus=/Skirting \d+\.\d ft, \d+ sq ft of face with 1 access panel\. Priced from the skirting rate table\./;
+  await expect(skirting.getByRole('status')).toContainText(pricedStatus);
+  await expect(skirting).toContainText('Face, backing, access panels and install labour are in the priced total, from the skirting rate table.');
+  await expect(skirting).not.toContainText(/builder quote|no skirting rates/i);
   // The three open sides are offered; the side against the house never is.
   await expect(skirting.getByRole('group',{name:'Sides to skirt'}).getByRole('checkbox')).toHaveCount(3);
-  await withSchedule(page,async()=>{ await expect(quoteLine(page,'Deck skirting')).toHaveText('Builder quote Deck skirting'); });
-  // A quote, never a price: the priced amount does not move.
-  await expect((await price(page))).toHaveText(before??'');
+  await withSchedule(page,async()=>{
+    await expect(scheduleLine(page,'Deck skirting')).toHaveText(/^Deck skirting\$[\d,]+ · allowance$/);
+    await expect(quoteLine(page,'Deck skirting')).toHaveCount(0);
+  });
+  await expect((await price(page))).not.toHaveText(before??'');
+  const boarded=await (await price(page)).textContent();
   await page.getByLabel('Skirting style',{exact:true}).selectOption('Lattice');
-  await expect(skirting.getByRole('status')).toContainText('Listed for a builder quote');
+  await expect(skirting.getByRole('status')).toContainText(pricedStatus);
+  await expect((await price(page))).not.toHaveText(boarded??'');
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
   await page.reload();
   await openSection(page,'Privacy, skirting & extras');
   await expect(page.getByLabel('Skirting style',{exact:true})).toHaveValue('Lattice');
   await openSection(page,'Proposal & files');
-  // The face is a supplier product; the backing, panels and labour are the builder's.
-  await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Deck skirting')).toHaveText('Deck skirtingSupplier & builder quotes'); });
-  await expect(fullList(page)).toContainText('Skirting labour');
+  await withSchedule(page,async()=>{
+    await expect(scheduleLine(page,'Deck skirting')).toHaveText(/^Deck skirting\$[\d,]+ · allowance$/);
+    await expect(quoteLine(page,'Deck skirting')).toHaveCount(0);
+  });
+  await expect(fullList(page).getByRole('listitem').filter({hasText:'Skirting labour'})).toHaveText(/^Skirting labour \d+(?:\.\d+)? lf · Planning allowance$/);
   await expect(summary(page)).toContainText(/Skirting: lattice in /);
   expect(problems).toEqual([]);
 });
@@ -896,9 +919,9 @@ test('lists what each change does to the price, tags quotes and never shows $0 f
   await withSchedule(page,async()=>{ await expect(schedule(page)).toContainText('Golden Maple price book'); });
   await withSchedule(page,async()=>{ await expect(changes(page)).toHaveCount(0); });
   await openSection(page,'Stairs & railings');
-  // A downgrade and a priced upgrade.
+  // Removing the flight drops its priced cladding and picture-frame allowances. No quote leaves the list.
   await page.getByLabel('Number of stair flights',{exact:true}).selectOption('0');
-  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\u2212\$[\d,]+ Stair flights → 0 \(\d+ fewer to quote\)$/); });
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\u2212\$[\d,]+ Stair flights → 0$/); });
   await page.getByLabel('Railing style',{exact:true}).selectOption('Glass Panels');
   await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\+\$[\d,]+ Railing style → Glass Panels$/); });
   await expect(announcement(page)).toHaveText(/^Railing style: Glass Panels\. \+\$[\d,]+\. Priced subtotal \$[\d,]+\.$/);
@@ -910,16 +933,21 @@ test('lists what each change does to the price, tags quotes and never shows $0 f
   await expect((await price(page))).not.toHaveText(before??'');
   await withSchedule(page,async()=>{ await expect(scheduleLine(page,'Railing System')).toHaveText('Railing SystemSupplier quote'); });
   await withSchedule(page,async()=>{ await expect(quoteLine(page,'TimberTech Classic Composite · balusters')).toHaveText('Supplier quote TimberTech Classic Composite · balusters'); });
-  // A builder quote beside it; nothing unpriced reads $0, and the total says it is the priced portion.
+  // Priced skirting raises the total and adds no quote; nothing unpriced reads $0.
+  const beforeSkirt=await (await price(page)).textContent();
   await openSection(page,'Privacy, skirting & extras');
   await page.getByRole('region',{name:'Skirting under the deck'}).getByRole('checkbox',{name:'Add skirting under the deck'}).check();
-  await withSchedule(page,async()=>{ await expect(quoteLine(page,'Deck skirting')).toHaveText('Builder quote Deck skirting'); });
-  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^Now a builder quote Skirting$/); });
+  await expect((await price(page))).not.toHaveText(beforeSkirt??'');
+  await withSchedule(page,async()=>{
+    await expect(scheduleLine(page,'Deck skirting')).toHaveText(/^Deck skirting\$[\d,]+ · allowance$/);
+    await expect(quoteLine(page,'Deck skirting')).toHaveCount(0);
+  });
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\+\$[\d,]+ Skirting$/); });
   await withSchedule(page,async()=>{ expect(await schedule(page).textContent()).not.toMatch(ZERO); });
   await withSchedule(page,async()=>{ await expect(schedule(page)).toContainText('Priced portion including HST'); });
-  // Undo shows what it gave back; a new design clears the list.
+  // Undo gives the priced skirting back; a new design clears the list.
   await undoFromHeader(page);
-  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText('No price change Undo (1 fewer to quote)'); });
+  await withSchedule(page,async()=>{ await expect(changes(page).first()).toHaveText(/^\u2212\$[\d,]+ Undo$/); });
   await openFiles(page);await expand(fileTools(page),'Start over');
   await fileTools(page).getByRole('button',{name:'Start a new design'}).click();
   await withSchedule(page,async()=>{ await expect(changes(page)).toHaveText(['New design loaded']); });

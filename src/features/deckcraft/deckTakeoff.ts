@@ -596,7 +596,7 @@ export function buildDeckTakeoff(data:DeckData){
   const builtInlays=levels.flatMap(l=>(l.inlays??[]).filter(p=>p.status==='ok'));
   if(builtInlays.some(p=>!p.band&&!p.solid||(p.band?.direction==='across'&&!p.band.rows)))issues.push('Decorative inlays: blocking is laid out under every joint where boards end at an inlay, with nailers under frame boards that run with the joists and ladder blocking under the inside where the joists alone do not carry it. Confirm fastening with the decking manufacturer before construction.');
   if(builtInlays.some(p=>p.band?.direction==='along'))issues.push('Bands running front to back sit on doubled build-up joists, as breaker boards do; a band that meets a breaker takes its place. Confirm fastening with the decking manufacturer before construction.');
-  if(builtInlays.some(p=>p.solid))issues.push('Medallions sit on solid blocking: rungs at 6 in centres under each medallion and one board around it. Their labour is a builder quote. Confirm fastening with the decking manufacturer before construction.');
+  if(builtInlays.some(p=>p.solid))issues.push('Medallions sit on solid blocking: rungs at 6 in centres under each medallion and one board around it. Their fitting labour is priced as crew-hours by default. Confirm fastening with the decking manufacturer before construction.');
   if(wrap)issues.push('Wrap-around corner: the doubled hip, the skewed jack-joist and hip hangers, and the posts under the hip are laid out from the existing beam span table. Have the corner framing reviewed by an engineer before construction.');
   for(const level of levels){
     if(level.kind!=='deck')continue;

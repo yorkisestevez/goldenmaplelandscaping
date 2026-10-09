@@ -62,7 +62,8 @@ const step=(h:DesignHistory<D>,before:D,key:string,at:number)=>recordChange(h,be
   ok(/setData\(restored\)/.test(hook)&&/setData\(deck\);dataRef\.current=deck;setEarlierYard/.test(hook),'Restoring the saved design on load is not a step');
   ok(/JSON\.stringify\(lastData\.current\)!==JSON\.stringify\(data\)/.test(hook),'A change that leaves the design as it was is not a step');
   ok(/setData\(prev=>deckReleaseData\(\{\.\.\.prev,lightingSystem:/.test(estimateHook)&&!/\b(update|replace)\(/.test(estimateHook),'The automatic lighting sync never becomes a step');
-  ok(page.includes('await replaceDesign(restored)')&&/const next=deckReleaseData\(structuredClone\(DEFAULT_DECK\)\)/.test(page)&&/\breplace\(next\)/.test(page)&&!/\bsetData\(/.test(page.replace(/useDeckEstimate\(data,setData\)/,'')),'Import and Start over are undoable; the page never sets the design around the history');
+  // Start over builds the default, then applies saved inlay/feature labour defaults, then replace() so the step stays undoable.
+  ok(page.includes('await replaceDesign(restored)')&&/const next=deckReleaseData\(structuredClone\(DEFAULT_DECK\)\);[\s\S]*?replace\(next\)/.test(page)&&!/\bsetData\(/.test(page.replace(/useDeckEstimate\(data,setData\)/,'')),'Import and Start over are undoable; the page never sets the design around the history');
   ok(/isContentEditable\|\|\/\^\(input\|textarea\|select\)\$\/i/.test(page)&&/key==='z'&&!e\.shiftKey\)\{e\.preventDefault\(\);undo\(\);\}/.test(page),'Ctrl/Cmd+Z undoes, except while typing in a field');
   ok(/onClick=\{onUndo\} disabled=\{!canUndo\}/.test(tools)&&/onClick=\{onRedo\} disabled=\{!canRedo\}/.test(tools),'The design tools offer Undo and Redo, disabled when there is nothing to do');
 }
