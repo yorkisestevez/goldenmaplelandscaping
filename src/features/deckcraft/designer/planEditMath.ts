@@ -7,7 +7,7 @@ import {edgeFacing,getFootprint,getStairPlacement,type EdgeName,type PlanPoint} 
 import {activeWrap,WRAP_MIN_MAIN_LEDGER_IN,WRAP_WING_WIDTH_FT,wrapBlockers} from '../lib/wrapGeometry';
 import type {DeckData,DeckShape,HouseConfig,HousePlacement} from '../types';
 import type {PlanTool} from './constants';
-import {chooseShape,setWing,setWingSize,splitLevel} from './deckShapeActions';
+import {chooseShape,drawOwnOutline,setWing,setWingSize,splitLevel} from './deckShapeActions';
 
 /**
  * The plan editor's arithmetic (PlanEditor.tsx), pure so the checks can run it: the handles a design has, their limits
@@ -371,10 +371,13 @@ export function planShortcut(data:DeckData,id:PlanShortcutId):{patch:Partial<Dec
     for(const side of ['left','right'] as const)if(!!next.wrap?.[side]!==target[side]){const r=setWing(next,house,side,target[side]);patch={...patch,...r.patch};next={...next,...r.patch};fix=r.status||fix;}
     return {patch,status:on?'Wrap-around removed.':[`Wrapped round ${id==='wrap-both'?'both house corners':`the ${id==='wrap-left'?'left':'right'} house corner`}.`,fix].filter(Boolean).join(' ')};
   }
-  // Draw my own / Custom: convert a legacy constrained front (or keep an existing free outline) into the point editor.
-  if(id==='Custom'&&data.shape==='Custom'&&data.deckOutlines?.main)return {patch:null,status:'',tool:'outline'};
-  if(data.shape===id&&!data.deckOutlines?.main&&id!=='Custom')return {patch:null,status:''};
+  // Draw my own keeps the real footprint as free points. The Deck menu's Custom outline stays chooseShape.
+  if(id==='Custom'){
+    if(data.shape==='Custom'&&data.deckOutlines?.main)return {patch:null,status:'',tool:'outline'};
+    return {patch:drawOwnOutline(data),status:'Now your own outline: drag any corner or edge on the plan. Undo is always available.',tool:'outline'};
+  }
+  if(data.shape===id&&!data.deckOutlines?.main)return {patch:null,status:''};
   const patch=chooseShape(data,id),paused=data.wrap&&(data.wrap.left||data.wrap.right)&&!patch.deckOutlines?.main?wrapBlockers({...data,...patch}):[];
-  const done=id==='Custom'?'Now your own outline: drag any corner or edge on the plan. Undo is always available.':`Now ${SHAPE_WORDS[id]}.${id==='L-Shape'||id==='Multi-corner'?' Drag the gold cut-out handles to size the corner.':''}`;
-  return {patch,status:paused.length?`${done} The wrap-around is paused: ${lower(paused[0])}`:done,...(id==='Custom'?{tool:'outline' as const}:{})};
+  const done=`Now ${SHAPE_WORDS[id]}.${id==='L-Shape'||id==='Multi-corner'?' Drag the gold cut-out handles to size the corner.':''}`;
+  return {patch,status:paused.length?`${done} The wrap-around is paused: ${lower(paused[0])}`:done};
 }
