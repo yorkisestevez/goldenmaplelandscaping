@@ -6,7 +6,7 @@ import {SKY_DATA as SKY,skyStrength,skyYaw,VISIBLE_SKY_MIN_DEG,visibleSkyStrengt
 import dayLighting from './assets/sky/sky-day-ibl.hdr?url';
 import eveningLighting from './assets/sky/sky-evening-ibl.hdr?url';
 import {SCENE_LOOK} from './sceneLook';
-import {SHOWCASE_FOG_DENSITY,getShowcaseFlags,subscribeShowcase} from './showcaseMode';
+import {SHOWCASE_FOG_DENSITY,getShowcaseFlags,showcaseGolden,subscribeShowcase} from './showcaseMode';
 
 /**
  * The real sky (Real Life G3): a CC0 HDRI supplies environment fill. An extracted sun, or a neutral key replacing
@@ -29,10 +29,10 @@ void main(){
   float el=asin(clamp(d.y,-1.,1.)),u=atan(d.z,d.x)/(2.*PI)+.5,seam=fract(u+.5);
   // The original photo's upper sky becomes the visible hemisphere. The HDRI
   // that illuminates and reflects from the design is unchanged. Neighbourhood
-  // mode (uHorizonBand 1) opens a thin photographed horizon, about 3°. The corner
-  // camera looks down, so a taller band would replace the sky with the photo's trees.
+  // mode keeps that same clean sample: the photo's ground ring is a dark flat
+  // band with vertical seams, and a corner camera would otherwise show it.
   float displayed=max(0.,el),cleanEl=minimumElevation+displayed*(1.-minimumElevation/(PI*.5));
-  float band=1.-smoothstep(0.0,0.045,el),sampleEl=mix(cleanEl,max(el,0.),band*uHorizonBand),v=sampleEl/PI+.5;
+  float sampleEl=cleanEl+uHorizonBand*0.,v=sampleEl/PI+.5;
   float dux=abs(dFdx(u))<abs(dFdx(seam))?dFdx(u):dFdx(seam),duy=abs(dFdy(u))<abs(dFdy(seam))?dFdy(u):dFdy(seam);
   vec3 sky=textureGrad(lighting,vec2(u,v),vec2(dux,dFdx(v)),vec2(duy,dFdy(v))).rgb;
   gl_FragColor=vec4(sky*strength,1.);
@@ -49,7 +49,7 @@ function SkyDome({lighting,yaw,strength,horizonBand}:{lighting:THREE.Texture;yaw
   u.turn.value.setFromMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0,yaw,0))).transpose();
   return <mesh name="sky-dome" material={material} frustumCulled={false} renderOrder={-1} raycast={()=>null}
     ref={mesh=>{if(mesh)mesh.onBeforeRender=(_r,_s,camera)=>{mesh.position.copy(camera.position);mesh.updateMatrixWorld();};}}>
-    <sphereGeometry args={[LOOK.domeRadiusFt,64,32]}/>
+    <sphereGeometry args={[LOOK.domeRadiusFt,128,64]}/>
   </mesh>;
 }
 
@@ -72,7 +72,9 @@ function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyS
  * loads behind the day sky dimmed, so switching to Night never drops back to the studio light. */
 export default function Sky3D({evening}:{evening:boolean}){
   useEffect(()=>{preloadEvening();},[]);
-  return evening?<Suspense fallback={<SkyOf lighting="day" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}><SkyOf lighting="evening"/></Suspense>:<SkyOf lighting="day"/>;
+  const golden=useSyncExternalStore(subscribeShowcase,showcaseGolden,()=>false);
+  const dayFill=skyStrength('day').environment*(golden&&!evening?0.72:1);
+  return evening?<Suspense fallback={<SkyOf lighting="day" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}><SkyOf lighting="evening"/></Suspense>:<SkyOf lighting="day" illumination={dayFill}/>;
 }
 // The day sky loads with the viewer; the evening's follows once the day's is in (preloadEvening), so switching to
 // Night (and the proposal's night pictures) rarely waits, without a phone fetching both skies up front.

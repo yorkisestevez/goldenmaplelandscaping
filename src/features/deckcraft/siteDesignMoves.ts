@@ -34,7 +34,7 @@ import {FIRE_CLEARANCE,GUARD,RETAINING_WALL,TERRACE_WALL,SEAT_WALL,RAISED_BED as
 import {raisedPatioWallPath,raisedPatioWall,raisedPatioGuard,type RaisedEdgeRun,type RaisedPatioGuard} from './raisedPatio';
 import {poolOutline,poolPermanentExclusion} from './poolGeometry';
 import {planTerraces} from './terracedBeds';
-import {newLandscapeObject} from './landscapeCatalogue';
+import {LANDSCAPE_SPECIES,newLandscapeObject} from './landscapeCatalogue';
 import {validateYardFinishedSettings} from './yardFinishedSettings';
 import {wallConstructionProblem,wallConstructionPlan} from './wallConstruction';
 import {validateStoneSteps} from './stoneSteps';
@@ -584,13 +584,12 @@ export async function stoneStepsMove(ctx:MoveContext,target:SiteMove|undefined,p
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Bed planting: the garden moves' beds planted so they read as a garden. The plants are the catalogue's generic visual
-// proxies (landscapeCatalogue.ts) at newly planted sizes, each a quote line as the planting move's are (no species,
-// nursery stock or price is assumed).
-interface BedPlant {assetId:'rounded-shrub'|'grass-clump';sizeIn:number;heightIn:number}
-const SHRUB:BedPlant={assetId:'rounded-shrub',sizeIn:26,heightIn:28},GRASS:BedPlant={assetId:'grass-clump',sizeIn:20,heightIn:24};
-/** Low mounds and tufts for raised beds: the catalogue has no vegetable or herb, so low shrubs and grasses stand in. */
-const LOW:readonly BedPlant[]=[{assetId:'rounded-shrub',sizeIn:16,heightIn:12},{assetId:'grass-clump',sizeIn:16,heightIn:15}];
+// Bed planting: the garden moves' beds planted so they read as a garden. Asset ids stay the shrub and grass proxies
+// (check-site-concepts). Each plant carries a cited Ontario species record; nursery stock, spacing and price stay open.
+interface BedPlant {assetId:'rounded-shrub'|'grass-clump';sizeIn:number;heightIn:number;speciesId:string}
+const SHRUB:BedPlant={assetId:'rounded-shrub',sizeIn:26,heightIn:28,speciesId:'physocarpus-opulifolius'},GRASS:BedPlant={assetId:'grass-clump',sizeIn:20,heightIn:24,speciesId:'calamagrostis-karl-foerster'};
+/** Low mounds and tufts for raised beds: spirea and little bluestem stand in for vegetables or herbs. */
+const LOW:readonly BedPlant[]=[{assetId:'rounded-shrub',sizeIn:16,heightIn:12,speciesId:'spiraea-japonica'},{assetId:'grass-clump',sizeIn:16,heightIn:15,speciesId:'schizachyrium-scoparium'}];
 const BED_PLANTS_MAX=12,PLANT_GAP_IN=1;
 /** Terrace rows, back to front: shrubs, then two rows of grasses, again while they fit; grasses alone where they make
  * more rows (a shallow tier). */
@@ -629,7 +628,7 @@ function plantBed(ctx:MoveContext,bed:LandscapeObject,u:P,v:P,rowsFor:(depthIn:n
   let n=Math.floor((span[1]-span[0])/pitch+1e-9)+1;if(n===prev&&n>1&&rows[i-1][0].sizeIn===size)n--;prev=n;
   for(let k=0;k<n&&plants.length<BED_PLANTS_MAX;k++){
    const p=row[k%row.length],c=at((span[0]+span[1])/2+(k-(n-1)/2)*pitch,t),turn=(deg+90*((i+3*k)%4)+540)%360-180;
-   const plant={...newLandscapeObject(p.assetId,freshId(ctx,`${bed.id}-plant-${plants.length+1}`,local),r2(c.x),r2(c.y)),rotationDeg:r2(turn),heightIn:p.heightIn,widthIn:p.sizeIn,depthIn:p.sizeIn} as LandscapeObject;
+   const species=LANDSCAPE_SPECIES.find(s=>s.id===p.speciesId),plant={...newLandscapeObject(p.assetId,freshId(ctx,`${bed.id}-plant-${plants.length+1}`,local),r2(c.x),r2(c.y)),rotationDeg:r2(turn),heightIn:p.heightIn,widthIn:p.sizeIn,depthIn:p.sizeIn,...species?{speciesRecord:species}:{}} as LandscapeObject;
    if(fits(objectRings(plant)[0]))plants.push(plant);else local.delete(plant.id);
   }
  }
@@ -694,7 +693,7 @@ export async function terracedBedsMove(ctx:MoveContext,params:Record<string,Move
  return feasible(ctx,'terraced-beds',`${plan.tiers} terraced beds stepping down the slope`,{...p,tiers:plan.tiers},{addYard:walls,replaceYard:[],addLandscape:[...beds,...plants],set:{}},
   [...walls.map(w=>({id:w.id,rings:featureRings(w),on:allIds})),...beds.map(b=>({id:b.id,rings:objectRings(b),on:allIds})),...plants.map(q=>({id:q.id,rings:objectRings(q),on:[owner.get(q.id)!]}))],
   [`${plan.message} The ground falls ${r1(plan.fallIn)} in across the ${ft(L)} × ${ft(Wd)} ft area (${plan.slope.pct} %).`,...plan.warnings,
-   ...(plants.length?[`${plants.length} plants on the planting soil, ${plantWords(plants)}, in staggered rows along the contour (the taller at the back); each is a generic visual proxy, so species, nursery stock and supply are quoted.`]:[]),
+   ...(plants.length?[`${plants.length} plants on the planting soil, ${plantWords(plants)} (ninebark and Karl Foerster feather reed grass), in staggered rows along the contour (the taller at the back). Species records are attached; nursery stock, spacing and supply stay unpriced.`]:[]),
    ...(separationOk?[]:[`The tiers sit closer than twice the lower wall's height apart, so the walls load each other: geogrid and an engineering review (${TERRACE_WALL.sources[0].title.split(',')[0]}).`]),
    `Grading and fill need a conservation authority permit only inside a regulated area (${CONSERVATION_AUTHORITY.regulation}, LSRCA or NVCA): check the map before terracing.`],
   {tiers:plan.tiers,fallIn:r1(plan.fallIn),slopePct:plan.slope.pct,alignment:plan.alignment,wallHeightsIn:heights.join(', '),maxWallIn:Math.max(...heights),wallCount:walls.length,bedSqft,plants:plants.length,separationOk,zone:zone?.id??null,zoneKind:zone?.kind??null,zoneSlopePct:zone?.slopePct??null,zoneSqft:zone?.areaSqft??null,downX:r2(at.d.x),downZ:r2(at.d.z),centreX:at.cx,centreZ:at.cz},
@@ -732,7 +731,7 @@ export async function raisedBedsMove(ctx:MoveContext,params:Record<string,MoveVa
  return feasible(ctx,'raised-beds',title,p,{addYard:[],replaceYard:[],addLandscape:[...objects,...plants],set:{}},[...objects.map(o=>({id:o.id,rings:objectRings(o)})),...plants.map(q=>({id:q.id,rings:objectRings(q),on:[owner.get(q.id)!]}))],
   [`${count} ${ft(L)} × ${ft(Wb)} ft raised bed${count>1?'s':''} with ${edge} edging, ${raised} in high, ${ft(best.houseGap)} ft from the house on ${best.slope} % ground${count>1?`, a ${gap} in path between`:''}; the soil top is level, so the low side stands up to ${r1(best.relief)} in taller.`,
    `${Wb} in wide or less, so the middle is in reach (${BED_RULE.maxWidthIn} in from both sides); planting soil and edging are quoted.`,
-   ...(plants.length?[`${plants.length} low plants in staggered rows on the soil, ${plantWords(plants)} standing in for vegetables or herbs (the catalogue has none); species and supply are quoted.`]:[]),sun],
+   ...(plants.length?[`${plants.length} low plants in staggered rows on the soil, ${plantWords(plants)} (spirea and little bluestem) standing in for vegetables or herbs. Species records are attached; nursery stock and supply stay unpriced.`]:[]),sun],
   {count,houseGapFt:ft(best.houseGap),slopePct:best.slope,reliefIn:r1(best.relief),raisedIn:raised,edge,alongHouse:best.alongX,sun:orient?orient.sunSide:null,zone:zone?.id??null,zoneKind:zone?.kind??null,areaSqft:r1(count*L*Wb/144),plants:plants.length},['^Raised bed \\d']);
 }
 
@@ -774,11 +773,11 @@ export async function plantingMove(ctx:MoveContext,params:Record<string,MoveValu
  // Plants spaced evenly along the bed's centre line, shrubs and grasses alternating.
  const count=typeof p.plants==='number'?p.plants:Math.max(2,Math.min(8,Math.floor(best.run/48))),stations=line.slice(1).reduce<number[]>((s,q,i)=>[...s,s[i]+Math.hypot(q.x-line[i].x,q.y-line[i].y)],[0]);
  const at=(d:number)=>{let i=0;while(i<stations.length-2&&stations[i+1]<d)i++;const a=line[i],b=line[i+1]??a,f=stations[i+1]>stations[i]?(d-stations[i])/(stations[i+1]-stations[i]):0;return {x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f};};
- const plants=Array.from({length:count},(_,i)=>{const q=at(best!.run*(i+.5)/count);return {...newLandscapeObject(i%2?'grass-clump':'rounded-shrub',freshId(ctx,`s3-plant-${i+1}`,local),r2(q.x),r2(q.y))} as LandscapeObject;});
+ const plants=Array.from({length:count},(_,i)=>{const q=at(best!.run*(i+.5)/count),species=LANDSCAPE_SPECIES.find(s=>s.id===(i%2?'calamagrostis-karl-foerster':'physocarpus-opulifolius'));return {...newLandscapeObject(i%2?'grass-clump':'rounded-shrub',freshId(ctx,`s3-plant-${i+1}`,local),r2(q.x),r2(q.y)),...species?{speciesRecord:species}:{}} as LandscapeObject;});
  if(!validateLandscapeObjects([...(ctx.data.landscapeObjects??[]),bed,...plants]))return infeasible('planting',title,p,'The planting bed did not make a valid outline here.');
  const g0=ctx.brief.elevation;
  return feasible(ctx,'planting',`Planting bed, ${ft(best.run)} ft along the high side`,{...p,plants:count},{addYard:[],replaceYard:[],addLandscape:[bed,...plants],set:{}},[{id:bed.id,rings:objectRings(bed),on:plants.map(q=>q.id)},...plants.map(q=>({id:q.id,rings:objectRings(q),on:[bed.id]}))],
-  [`A ${ft(depth)} ft deep bed that follows the ${signed(best.e0)} in contour for ${ft(best.run)} ft along the high side (${towardWords(up.x,up.y)}), where the measured ground runs up to ${signed(g0.maxIn)} in.`,`${count} plants, shrubs and ornamental grasses alternating; mulch and plants are priced or quoted as the estimate lists them.`],
+  [`A ${ft(depth)} ft deep bed that follows the ${signed(best.e0)} in contour for ${ft(best.run)} ft along the high side (${towardWords(up.x,up.y)}), where the measured ground runs up to ${signed(g0.maxIn)} in.`,`${count} plants, ninebark and Karl Foerster feather reed grass alternating. Species records are attached; mulch, nursery stock and installation stay unpriced.`],
   {bedId:bed.id,lengthFt:ft(best.run),depthFt:ft(depth),contourIn:r1(best.e0),plants:count,bedSqft:r1(yardArea(objectRings(bed))),highSide:towardWords(up.x,up.y)},['^Planting bed']);
 }
 
