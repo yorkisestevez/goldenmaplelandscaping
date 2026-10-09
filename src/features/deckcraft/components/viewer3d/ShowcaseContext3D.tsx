@@ -6,6 +6,7 @@ import type {DeckData} from '../../types';
 import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from './showcaseMode';
 import {useSyncExternalStore} from 'react';
 import {kelvinColour} from './fixtureLighting';
+import {neighbourRoof,neighbourRoofHeight} from './neighbourRoof';
 import {SHOWCASE_TREES,buildShowcaseContext,designHasNightLights,neighbourWindowGlow,type ContextTree,type GroundGrid,type GroundVertex,type NeighbourHome} from './showcaseContext';
 
 function noRay(){/* Presentation dressing is not pickable. */}
@@ -81,16 +82,18 @@ function NeighbourGround({grids,evening}:{grids:GroundGrid[];evening:boolean}){
  return <group name="showcase-neighbour-ground">{geometries.map((geometry,i)=><mesh key={grids[i].name} name={grids[i].name} geometry={geometry} material={material} receiveShadow raycast={noRay}/>)}</group>;
 }
 
-function gableGeometry(w:number,d:number,h:number,rise:number){
- const g=new THREE.BufferGeometry(),x=w/2+.04,y0=h,y1=h+rise,z0=-d/2,z1=d/2;
- g.setAttribute('position',new THREE.Float32BufferAttribute([-x,y0,z0,-x,y1,0,-x,y0,z1,x,y0,z0,x,y0,z1,x,y1,0],3));
- g.computeVertexNormals();return g;
+function RoofShell({positions,color,roughness}:{positions:number[];color:string;roughness:number}){
+ const geometry=useMemo(()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.computeVertexNormals();return g;},[positions]);
+ useEffect(()=>()=>geometry.dispose(),[geometry]);
+ if(!positions.length)return null;
+ return <mesh geometry={geometry} castShadow receiveShadow raycast={noRay}><meshStandardMaterial color={color} roughness={roughness}/></mesh>;
 }
 
 function NeighbourHouse({home,evening,homeIndex}:{home:NeighbourHome;evening:boolean;homeIndex:number}){
- const rise=Math.min(home.w,home.d)*.22,slope=Math.atan2(rise,home.d/2),run=Math.hypot(home.d/2,rise),wallY=.7+home.h/2;
- const gable=useMemo(()=>gableGeometry(home.w,home.d,home.h+.7,rise),[home.w,home.d,home.h,rise]);
- useEffect(()=>()=>gable.dispose(),[gable]);
+ const wallTop=.7+home.h,wallY=.7+home.h/2;
+ const shell=useMemo(()=>neighbourRoof(home.w,home.d,wallTop,home.roofKind,home.pitch),[home.w,home.d,wallTop,home.roofKind,home.pitch]);
+ const garageDepth=home.d*.62,garageRoof=useMemo(()=>home.garage?neighbourRoof(13,garageDepth,10.4,'hip',4):null,[home.garage,garageDepth]);
+ const chimneyY=neighbourRoofHeight(home.w,home.d,wallTop,home.roofKind,home.w*.22,home.d*.1,home.pitch)??wallTop;
  const dayGlass='#7f97a8';
  const windows:{position:[number,number,number];frame:[number,number,number];pane:[number,number,number];out:[number,number,number]}[]=[];
  const cols=home.w>40?4:3,rows=home.floors,pane=(w:number,h:number,depth:number):[number,number,number]=>[w,h,depth];
@@ -104,10 +107,10 @@ function NeighbourHouse({home,evening,homeIndex}:{home:NeighbourHome;evening:boo
  return <group name="showcase-neighbour" position={[home.x,0,home.z]} rotation={[0,home.yaw,0]}>
   <mesh position={[0,.35,0]} receiveShadow raycast={noRay}><boxGeometry args={[home.w+.5,.7,home.d+.5]}/><meshStandardMaterial color="#8a877f" roughness={.95}/></mesh>
   <mesh position={[0,wallY,0]} receiveShadow raycast={noRay}><boxGeometry args={[home.w,home.h,home.d]}/><meshStandardMaterial color={home.siding} roughness={.88}/></mesh>
-  <mesh position={[0,home.h+.7+rise/2,-home.d/4]} rotation={[slope,0,0]} receiveShadow raycast={noRay}><boxGeometry args={[home.w+1.5,.28,run+.4]}/><meshStandardMaterial color={home.roof} roughness={.8}/></mesh>
-  <mesh position={[0,home.h+.7+rise/2,home.d/4]} rotation={[-slope,0,0]} receiveShadow raycast={noRay}><boxGeometry args={[home.w+1.5,.28,run+.4]}/><meshStandardMaterial color={home.roof} roughness={.8}/></mesh>
-  <mesh geometry={gable} raycast={noRay}><meshStandardMaterial color={home.siding} roughness={.9}/></mesh>
-  <mesh position={[0,home.h+.55,-home.d/2-.02]} raycast={noRay}><boxGeometry args={[home.w+1.6,.28,.35]}/><meshStandardMaterial color={home.trim} roughness={.7}/></mesh>
+  <RoofShell positions={shell.roof} color={home.roof} roughness={.78}/>
+  <RoofShell positions={shell.soffit} color={home.trim} roughness={.9}/>
+  <RoofShell positions={shell.gables} color={home.siding} roughness={.9}/>
+  <RoofShell positions={shell.fascia} color={home.trim} roughness={.72}/>
   <mesh position={[0,1.1,-home.d/2-.08]} raycast={noRay}><boxGeometry args={[3.4,7.1,.12]}/><meshStandardMaterial color="#4a4038" roughness={.7}/></mesh>
   {windows.map((win,i)=>{
    const glow=evening?neighbourWindowGlow(homeIndex,i):0,glass=glow>0?'#ffd7a8':evening?'#1a2228':dayGlass;
@@ -115,11 +118,13 @@ function NeighbourHouse({home,evening,homeIndex}:{home:NeighbourHome;evening:boo
    <mesh raycast={noRay}><boxGeometry args={win.frame}/><meshStandardMaterial color="#2c3134" roughness={.55}/></mesh>
    <mesh position={[win.out[0]*.08,0,win.out[2]*.08]} raycast={noRay}><boxGeometry args={win.pane}/><meshStandardMaterial color={glass} emissive={glass} emissiveIntensity={glow} roughness={.18} metalness={.05}/></mesh>
   </group>;})}
-  {home.chimney&&<mesh position={[home.w*.28,home.h+.7+rise*.55,home.d*.12]} raycast={noRay}><boxGeometry args={[2.1,rise+2.4,2.1]}/><meshStandardMaterial color="#6a6560" roughness={.9}/></mesh>}
-  {home.garage&&<group position={[home.w/2+7,0,home.d*.08]}>
-   <mesh position={[0,5.2,0]} receiveShadow raycast={noRay}><boxGeometry args={[13,10.4,home.d*.62]}/><meshStandardMaterial color={home.siding} roughness={.88}/></mesh>
-   <mesh position={[0,10.7,0]} raycast={noRay}><boxGeometry args={[14.2,.4,home.d*.62+1]}/><meshStandardMaterial color={home.roof} roughness={.8}/></mesh>
-   <mesh position={[0,3.3,-home.d*.31-.08]} raycast={noRay}><boxGeometry args={[8.5,6.4,.1]}/><meshStandardMaterial color="#3a3e42" roughness={.6}/></mesh>
+  {home.chimney&&<mesh position={[home.w*.22,chimneyY+.4,home.d*.1]} raycast={noRay}><boxGeometry args={[2.2,3.4,2.2]}/><meshStandardMaterial color="#6a6560" roughness={.9}/></mesh>}
+  {home.garage&&garageRoof&&<group position={[home.w/2+7,0,home.d*.08]}>
+   <mesh position={[0,5.2,0]} receiveShadow raycast={noRay}><boxGeometry args={[13,10.4,garageDepth]}/><meshStandardMaterial color={home.siding} roughness={.88}/></mesh>
+   <RoofShell positions={garageRoof.roof} color={home.roof} roughness={.78}/>
+   <RoofShell positions={garageRoof.soffit} color={home.trim} roughness={.9}/>
+   <RoofShell positions={garageRoof.fascia} color={home.trim} roughness={.72}/>
+   <mesh position={[0,3.3,-garageDepth/2-.08]} raycast={noRay}><boxGeometry args={[8.5,6.4,.1]}/><meshStandardMaterial color="#3a3e42" roughness={.6}/></mesh>
   </group>}
  </group>;
 }
