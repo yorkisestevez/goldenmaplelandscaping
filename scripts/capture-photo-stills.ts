@@ -7,7 +7,7 @@ import {mkdirSync,writeFileSync} from 'node:fs';
 import {chromium,type Page} from '@playwright/test';
 
 const url=process.env.DECKCRAFT_PROOF_URL??'http://127.0.0.1:4187/deck-designer/';
-const samples=Number(process.env.DECK_PHOTO_SAMPLES??'8');
+const samples=Number(process.env.DECK_PHOTO_SAMPLES??'256');
 const output=process.env.DECK_PHOTO_OUT??'/opt/cursor/artifacts/photo-mode';
 mkdirSync(output,{recursive:true});
 
@@ -22,6 +22,15 @@ const all:[string,'day'|'golden'|'night','daylight'|'evening',boolean][]=[
 const only=new Set((process.env.DECK_PHOTO_ONLY??'').split(',').filter(Boolean));
 const shots=all.filter(shot=>only.size===0||only.has(shot[0]));
 
+async function saveStill(page:Page,name:string,photo:boolean){
+ if(photo){
+  const data=await page.evaluate(()=>(window as Window&{__DECK_PHOTO_PNG?:string}).__DECK_PHOTO_PNG??'');
+  if(!data.startsWith('data:image/png;base64,'))throw Error(`${name}: the path-traced still was not stored`);
+  writeFileSync(`${output}/${name}.png`,Buffer.from(data.slice(data.indexOf(',')+1),'base64'));
+  return;
+ }
+ await saveCanvas(page,name);
+}
 async function saveCanvas(page:Page,name:string){
  await page.evaluate(()=>{
   document.querySelector('#deck-live-preview canvas')?.scrollIntoView({block:'center',inline:'nearest'});
@@ -44,11 +53,11 @@ async function saveCanvas(page:Page,name:string){
 async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighting:'daylight'|'evening',photo:boolean){
  console.log('shot',name);
  const params=new URLSearchParams({ 'deck-sample':'ontario','deck-quality':'showcase','deck-context':'1','deck-lighting':lighting });
- if(photo){params.set('deck-photo','1');params.set('deck-photo-look',look);params.set('deck-photo-samples',String(samples));params.set('deck-photo-scale',process.env.DECK_PHOTO_SCALE??'0.5');}
+ if(photo){params.set('deck-photo','1');params.set('deck-photo-look',look);params.set('deck-photo-samples',String(samples));params.set('deck-photo-edge',process.env.DECK_PHOTO_EDGE??'2048');if(process.env.DECK_PHOTO_SCALE)params.set('deck-photo-scale',process.env.DECK_PHOTO_SCALE);}
  const errors:string[]=[];
  page.removeAllListeners('pageerror');page.removeAllListeners('console');
  page.on('pageerror',error=>errors.push(error.message));
- page.on('console',message=>{const text=message.text();if(/Shader Error|WebGLProgram|path tracing stopped|path tracing is unavailable/.test(text))errors.push(text.slice(0,700));});
+ page.on('console',message=>{const text=message.text();if(/Shader Error|WebGLProgram|path tracing stopped|path tracing is unavailable|trace triangles/.test(text))errors.push(text.slice(0,700));});
  await page.goto(`${url.split('?')[0]}?${params}`);
  await page.getByRole('tab',{name:'3D',exact:true}).click();
  const appeared=Date.now()+180_000;let canvasSeen=false;
@@ -63,10 +72,10 @@ async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighti
   await page.waitForFunction(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photographic-pipeline')==='active',undefined,{timeout:120_000});
   await page.waitForTimeout(4000);
  }else{
-  const deadline=Date.now()+1_200_000;let last='';
+  const deadline=Date.now()+5_400_000;let last='';
   while(Date.now()<deadline){
-   const state=await page.evaluate(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',sky:canvas?.getAttribute('data-photo-sky')??'',big:canvas?.getAttribute('data-photo-big')??''};});
-   const line=`${state.phase||'waiting'} ${state.samples||'0'}/${state.target||'?'} sky=${state.sky} big=${state.big}`;
+   const state=await page.evaluate(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',census:canvas?.getAttribute('data-photo-census')??'',still:canvas?.getAttribute('data-photo-still')??''};});
+   const line=`${state.phase||'waiting'} ${state.samples||'0'}/${state.target||'?'} census=${state.census} still=${state.still}`;
    if(line!==last){console.log(name,line);last=line;}
    if(state.phase==='ready'||state.phase==='fallback')break;
    await page.waitForTimeout(3000);
@@ -74,7 +83,7 @@ async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighti
   const phase=await page.evaluate(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photo-phase')??'');
   if(phase!=='ready')throw Error(`${name}: photo phase ${phase??'missing'}. ${await page.locator('#deck-live-preview [role=status]').last().innerText().catch(()=>'')} ${errors.join(' | ')}`);
  }
- await saveCanvas(page,name);
+ await saveStill(page,name,photo);
  if(errors.length)throw Error(`${name}: ${errors.join('\n')}`);
  console.log('wrote',`${output}/${name}.png`);
 }

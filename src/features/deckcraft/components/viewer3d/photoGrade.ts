@@ -17,7 +17,7 @@ export interface PhotoGrade{
 export const PHOTO_GRADE:Record<PhotoLook,PhotoGrade>={
  day:{exposure:1.4,balance:[1.02,1,0.98],saturation:1.02},
  golden:{exposure:2.05,balance:[1.08,0.99,0.88],saturation:1.04},
- night:{exposure:5.2,balance:[1.1,0.96,0.84],saturation:1.02},
+ night:{exposure:2.15,balance:[0.96,1,1.08],saturation:1.04},
 };
 
 /** A print-like sun: a little larger than the real 0.27° so the penumbra reads in a still,
@@ -68,11 +68,20 @@ export const PHOTO_LIGHT={
  spotRadiusFt:0.32,
  pointKeep:1,
  pointSphereRadiusFt:0.16,
- pointEmissiveScale:0.02,
- pointEmissiveCap:4,
- windowNightEmissive:1.2,
+ pointEmissiveScale:0.06,
+ pointEmissiveCap:12,
+ windowNightEmissive:7,
  floorCaustic:0.16,
- nightEmissiveBoost:1.65,
+ nightEmissiveBoost:2.8,
+};
+
+/** A dim, wide moon so the night still has fill on the deck and planting. Not a saved scene light. */
+export const PHOTO_MOON={
+ irradiance:0.42,
+ angularRadiusDeg:7.5,
+ elevationDeg:32,
+ azimuthDeg:214,
+ color:[0.62,0.74,1] as [number,number,number],
 };
 
 /** Long-edge export, same rule as the raster still: 2048 or 4096, aspect kept. */

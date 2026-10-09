@@ -4,7 +4,7 @@ import {FullScreenQuad} from 'three/examples/jsm/postprocessing/Pass.js';
 import {registerPhotoTracer,type PhotoTraceFrame,type PhotoTraceRequest} from '../../photoTraceApi';
 import {SCENE_LOOK} from './sceneLook';
 import {SKY_DATA,skyStrength,skyYaw,visibleSkyHorizon,visibleSkyStrength,type Lighting} from './skyModel';
-import {applyPhotoScene,buildPhotoBackground} from './photoMaterials';
+import {applyPhotoScene,buildPhotoBackground,rasterPhotoTriangles,tracePhotoTriangles} from './photoMaterials';
 import {PHOTO_FALLBACK,PHOTO_GRADE,SUN_ANGULAR_RADIUS_DEG,photoStillSize,photoSunColor,photoSunElevationDeg,photoSunIrradiance,sunDisc,type PhotoLook} from './photoGrade';
 import {getPhotoSettings,setPhotoProgress,type PhotoPhase} from './photoMode';
 
@@ -20,7 +20,7 @@ export interface PhotoEngine{step():void;exportStill(longEdge:number):Promise<vo
 const GRADE_FRAGMENT=/* glsl */`
 uniform sampler2D tMap;uniform float exposure;uniform vec3 balance;uniform float saturation;varying vec2 vUv;
 void main(){
-  vec3 color=texture2D(tMap,vUv).rgb*exposure*balance;
+  vec3 color=min(texture2D(tMap,vUv).rgb,vec3(12.0))*exposure*balance;
   float luma=dot(color,vec3(0.2126,0.7152,0.0722));
   color=mix(vec3(luma),color,saturation);
   // AgXToneMapping is defined by three's tone-mapping chunk while the renderer stays on Neutral.
@@ -29,10 +29,17 @@ void main(){
   #include <colorspace_fragment>
 }`;
 
+function photoQuery(name:string){
+ if(typeof location==='undefined')return '';
+ return new URLSearchParams(location.search).get(name)??'';
+}
 function photoRenderScale(){
- if(typeof location==='undefined')return 1;
- const n=Number(new URLSearchParams(location.search).get('deck-photo-scale'));
- return Number.isFinite(n)?Math.max(.25,Math.min(1,n)):1;
+ const n=Number(photoQuery('deck-photo-scale'));
+ return Number.isFinite(n)&&n>0?Math.max(.25,Math.min(1,n)):1;
+}
+function photoLongEdge(){
+ const n=Number(photoQuery('deck-photo-edge'));
+ return n===2048||n===4096?n:0;
 }
 function canPathTrace(gl:THREE.WebGLRenderer){
  return gl.capabilities.isWebGL2&&(gl.extensions.has('EXT_color_buffer_float')||gl.extensions.has('EXT_color_buffer_half_float'));
@@ -54,7 +61,7 @@ function tintSky(texture:THREE.DataTexture,look:PhotoLook){
    if(look==='golden'){
     const warm=.2+.8*(1-up),dim=.82+.18*up;
     data[i]*=(1.02*(1-warm)+1.28*warm)*dim;data[i+1]*=(.99*(1-warm)+.84*warm)*dim;data[i+2]*=(.96*(1-warm)+.7*warm)*dim;
-   }else{data[i]*=.72;data[i+1]*=.8;data[i+2]*=1.05;}
+   }else{data[i]*=1.35;data[i+1]*=1.5;data[i+2]*=1.85;}
   }
  }
  texture.needsUpdate=true;
@@ -76,9 +83,17 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
  };
  if(!canPathTrace(gl))return fail();
  publish('checking',0,'Checking whether this device can path trace…');
- const pixelRatio=gl.getPixelRatio();
+ const pixelRatio=gl.getPixelRatio(),viewSize=gl.getSize(new THREE.Vector2());
  gl.setPixelRatio(1);
  gl.domElement.dataset.photoTrace='1';
+ function restoreView(){gl.setPixelRatio(pixelRatio);gl.setSize(viewSize.x,viewSize.y,false);}
+ function fitStill(){
+  const edge=photoLongEdge();if(!edge)return;
+  try{
+   const dimensions=photoStillSize(edge,viewSize,Math.min(gl.capabilities.maxTextureSize,gl.getContext().getParameter(gl.getContext().MAX_RENDERBUFFER_SIZE)));
+   gl.setPixelRatio(1);gl.setSize(dimensions.width,dimensions.height,false);
+  }catch(error){console.warn('DeckCraft photo: the still stays at the canvas size.',error);}
+ }
  let disposed=false,busy=false,restoreScene:(()=>void)|null=null,background:THREE.DataTexture|null=null,tracer:Tracer|null=null;
  const saved={background:scene.background,backgroundIntensity:scene.backgroundIntensity,backgroundBlurriness:scene.backgroundBlurriness,backgroundRotation:scene.backgroundRotation.clone(),environmentIntensity:scene.environmentIntensity??1};
  const grade=new THREE.ShaderMaterial({uniforms:{tMap:{value:null},exposure:{value:1},balance:{value:new THREE.Vector3(1,1,1)},saturation:{value:1}},depthTest:false,depthWrite:false,toneMapped:true,
@@ -87,7 +102,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
  const denoised=new THREE.WebGLRenderTarget(4,4,{type:THREE.HalfFloatType,depthBuffer:false,colorSpace:THREE.LinearSRGBColorSpace});
  const quad=new FullScreenQuad(grade);
  const photo=new PhysicalCamera(35,.1,1,1000);photo.apertureBlades=0;
- let pose='',finished=false,shownDenoise=false,stall=0;
+ let pose='',finished=false,shownDenoise=false,stall=0,stashed=false;
  function skyLighting():Lighting{return input.evening?'evening':'day';}
  function apply(look:PhotoLook){
   restoreScene?.();restoreScene=null;
@@ -98,17 +113,24 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   background=buildPhotoBackground(lighting??null,1,horizonBand,skyYaw(key),horizon);
   tintSky(background,look);
   scene.background=background;scene.backgroundIntensity=1;scene.backgroundBlurriness=0;scene.backgroundRotation.set(0,0,0);
-  const scale=look==='golden'?.72:look==='night'?1.15:1;
+  const scale=look==='golden'?.85:look==='night'?5:1;
   scene.environmentIntensity=saved.environmentIntensity*scale;
+  const raster=rasterPhotoTriangles(scene);
   restoreScene=applyPhotoScene(scene,look,sunFor(look));
-  // Miss rays were coming back black on this GPU, so the visible sky is the dome itself: an emissive
-  // lat-long sphere the tracer can shade. It sits on the camera, outside the yard.
-  if(dome&&background){
-   dome.visible=true;
-   const previous=dome.material,skyMat=new THREE.MeshStandardMaterial({color:'#000000',emissive:'#ffffff',emissiveMap:background,emissiveIntensity:visibleSkyStrength(key),roughness:1,metalness:0,side:THREE.BackSide,depthWrite:false,fog:false});
-   dome.material=skyMat;dome.position.copy(camera.position);dome.updateMatrixWorld(true);
-   const inner=restoreScene;restoreScene=()=>{dome.material=previous;skyMat.dispose();inner?.();};
+  // The raster sky-dome stays hidden: it is a shader shell and, unhidden, it occludes the yard.
+  // Miss rays come back black on this GPU, so the visible sky is a separate emissive sphere
+  // centred on the camera and larger than the lawn.
+  if(background){
+   const strength=look==='night'?Math.max(1.8,visibleSkyStrength(key)*12):visibleSkyStrength(key);
+   const skyMat=new THREE.MeshStandardMaterial({color:'#000000',emissive:'#ffffff',emissiveMap:background,emissiveIntensity:strength,roughness:1,metalness:0,side:THREE.BackSide,depthWrite:false,fog:false});
+   const sky=new THREE.Mesh(new THREE.SphereGeometry(8000,48,24),skyMat);
+   sky.name='photo-sky';sky.frustumCulled=false;sky.position.copy(camera.position);
+   scene.add(sky);sky.updateMatrixWorld(true);
+   const inner=restoreScene;restoreScene=()=>{scene.remove(sky);sky.geometry.dispose();skyMat.dispose();inner?.();};
   }
+  const trace=tracePhotoTriangles(scene);
+  gl.domElement.dataset.photoCensus=`${trace.objects}:${trace.triangles}/${raster.objects}:${raster.triangles}`;
+  if(trace.triangles!==raster.triangles)console.warn('DeckCraft photo: trace triangles',trace.triangles,'raster triangles',raster.triangles);
  }
  function restoreAll(){
   restoreScene?.();restoreScene=null;background?.dispose();background=null;
@@ -120,8 +142,9 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   if(!force&&next===pose)return false;
   pose=next;finished=false;stall=0;
   photo.position.copy(camera.position);photo.quaternion.copy(camera.quaternion);photo.up.copy(camera.up);
-  photo.fov=persp.isPerspectiveCamera?persp.fov:35;photo.aspect=persp.isPerspectiveCamera?persp.aspect:1;photo.near=persp.near||.25;photo.far=persp.far||2400;
-  photo.fStop=settings.fStop;photo.focusDistance=focusDistance(camera,controls);photo.updateProjectionMatrix();photo.updateMatrixWorld();
+  photo.fov=persp.isPerspectiveCamera?persp.fov:35;photo.aspect=persp.isPerspectiveCamera?persp.aspect:1;photo.near=persp.near||.25;photo.far=Math.max(persp.far||2400,16000);
+  // f/22 is the closed end of the control: aperture goes to nothing, so depth of field stays off until the user opens it.
+  photo.fStop=settings.fStop>=22?Infinity:settings.fStop;photo.focusDistance=focusDistance(camera,controls);photo.updateProjectionMatrix();photo.updateMatrixWorld();
   tracer?.setCamera(photo);return true;
  }
  function present(finalPass:boolean){
@@ -145,6 +168,16 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   const rgba=new Uint8Array(raw.length),row=size.x*4;
   for(let y=0;y<size.y;y++)rgba.set(raw.subarray((size.y-1-y)*row,(size.y-y)*row),y*row);
   return {width:size.x,height:size.y,rgba};
+ }
+ function stashStill(){
+  if(stashed||disposed)return;
+  try{
+   const frame=readFrame(),canvas=document.createElement('canvas');canvas.width=frame.width;canvas.height=frame.height;
+   const ctx=canvas.getContext('2d');if(!ctx)return;
+   const image=ctx.createImageData(frame.width,frame.height);image.data.set(frame.rgba);ctx.putImageData(image,0,0);
+   (window as Window&{__DECK_PHOTO_PNG?:string}).__DECK_PHOTO_PNG=canvas.toDataURL('image/png');
+   gl.domElement.dataset.photoStill=`${frame.width}x${frame.height}`;stashed=true;
+  }catch(error){console.warn('DeckCraft photo: the still could not be stored.',error);}
  }
  async function encode(frame:{width:number;height:number;rgba:Uint8Array}){
   const canvas=document.createElement('canvas');canvas.width=frame.width;canvas.height=frame.height;
@@ -174,14 +207,15 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
  try{
   publish('building',0,'Building the scene for path tracing…');
   await new Promise(resolve=>setTimeout(resolve,0));
-  if(disposed)return {step(){},async exportStill(){},dispose(){gl.setPixelRatio(pixelRatio);delete gl.domElement.dataset.photoTrace;}};
+  if(disposed)return {step(){},async exportStill(){},dispose(){restoreView();delete gl.domElement.dataset.photoTrace;}};
   apply(getPhotoSettings().look);
+  fitStill();
   tracer=new WebGLPathTracer(gl) as Tracer;
   tracer.renderToCanvas=false;tracer.renderDelay=0;tracer.fadeDuration=0;tracer.minSamples=1;tracer.rasterizeScene=false;tracer.multipleImportanceSampling=true;
-  tracer.bounces=5;tracer.transmissiveBounces=6;tracer.filterGlossyFactor=.4;tracer.tiles.set(2,2);tracer.renderScale=photoRenderScale();tracer.stableNoise=true;
+  tracer.bounces=5;tracer.transmissiveBounces=6;tracer.filterGlossyFactor=.55;tracer.tiles.set(2,2);tracer.renderScale=photoRenderScale();tracer.stableNoise=true;
   syncCamera(true);tracer.setScene(scene,photo);
  }catch(error){
-  console.warn('DeckCraft photo: path tracing is unavailable.',error);tracer?.dispose();denoise.dispose();denoised.dispose();grade.dispose();restoreAll();gl.setPixelRatio(pixelRatio);delete gl.domElement.dataset.photoTrace;return fail();
+  console.warn('DeckCraft photo: path tracing is unavailable.',error);tracer?.dispose();denoise.dispose();denoised.dispose();grade.dispose();restoreAll();restoreView();delete gl.domElement.dataset.photoTrace;return fail();
  }
  const engine:PhotoEngine={
   step(){
@@ -189,14 +223,14 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
    const settings=getPhotoSettings();
    try{
     const moved=syncCamera();
-    if(!moved&&tracer.samples>=settings.target){if(!finished||shownDenoise!==settings.denoise){finished=true;shownDenoise=settings.denoise;present(true);note(tracer.samples,true);}return;}
+    if(!moved&&tracer.samples>=settings.target){if(!finished||shownDenoise!==settings.denoise){finished=true;shownDenoise=settings.denoise;present(true);stashStill();note(tracer.samples,true);}return;}
     const started=performance.now();
     do{tracer.renderSample();}while(!tracer.isCompiling&&tracer.samples<settings.target&&performance.now()-started<12);
     if(tracer.isCompiling){publish('building',tracer.samples,'Compiling the path tracer…');stall=0;bridge.invalidate();return;}
     if(tracer.samples===0){if(++stall>90){engine.dispose();publish('fallback',0,PHOTO_FALLBACK);return;}bridge.invalidate();return;}
     stall=0;
     if(Number.isInteger(tracer.samples))present(tracer.samples>=settings.target);
-    if(tracer.samples>=settings.target){finished=true;present(true);note(tracer.samples,true);return;}
+    if(tracer.samples>=settings.target){finished=true;present(true);stashStill();note(tracer.samples,true);return;}
     finished=false;note(tracer.samples,false);bridge.invalidate();
    }catch(error){console.warn('DeckCraft photo: path tracing stopped.',error);engine.dispose();publish('fallback',0,PHOTO_FALLBACK);}
   },
@@ -223,8 +257,8 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
    }
   },
   dispose(){
-   if(disposed)return;disposed=true;registerPhotoTracer(null);delete gl.domElement.dataset.photoTrace;delete gl.domElement.dataset.photoPhase;delete gl.domElement.dataset.photoSamples;delete gl.domElement.dataset.photoTarget;
-   restoreAll();gl.setPixelRatio(pixelRatio);gl.setRenderTarget(null);tracer?.dispose();denoise.dispose();denoised.dispose();grade.dispose();bridge.invalidate();
+   if(disposed)return;disposed=true;registerPhotoTracer(null);delete gl.domElement.dataset.photoTrace;delete gl.domElement.dataset.photoPhase;delete gl.domElement.dataset.photoSamples;delete gl.domElement.dataset.photoTarget;delete gl.domElement.dataset.photoStill;delete gl.domElement.dataset.photoCensus;
+   restoreAll();restoreView();gl.setRenderTarget(null);tracer?.dispose();denoise.dispose();denoised.dispose();grade.dispose();bridge.invalidate();
   },
  };
  registerPhotoTracer(async(request:PhotoTraceRequest):Promise<PhotoTraceFrame>=>{

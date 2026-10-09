@@ -13,7 +13,7 @@ export interface PhotoSettings{
  fStop:number;
 }
 
-const DEFAULTS:PhotoSettings={enabled:false,look:'day',target:64,denoise:true,fStop:8};
+const DEFAULTS:PhotoSettings={enabled:false,look:'day',target:384,denoise:true,fStop:22};
 let settings:PhotoSettings={...DEFAULTS};
 const listeners=new Set<()=>void>();
 let urlApplied=false;
