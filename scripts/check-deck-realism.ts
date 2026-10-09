@@ -101,6 +101,7 @@ ok(/catch\(error\)\{fail\(error\);\}\s*gl\.render\(scene,camera\);/.test(pipelin
 ok(viewer.includes('<RenderPipeline evening={evening}/>')&&viewer.includes('const pipeline=pipelineFor(gl);if(pipeline)pipeline.capture(scale);else gl.render(scene,camera);'),'The live view and the proposal pictures both draw through the pipeline');
 ok(viewer.includes('shadows="percentage"')&&viewer.includes('antialias:false'),'Multisampling lives in the pipeline’s own target, and shadows use PCF (r185 retires PCFSoft)');
 ok(environment.includes('<directionalLight name="sun" castShadow'),'The sun is named, so its shadow can be fitted');
+ok(environment.includes('GOLDEN_ELEVATION=7*Math.PI/180')&&environment.includes('name="golden-rim"')&&environment.includes('daySun*2.05'),'Showcase golden hour uses a low raking sun and a warm rim');
 
 // The shadow key: it changes when a shadow would, and not when only the camera or a colour does.
 function sceneWithSun(){

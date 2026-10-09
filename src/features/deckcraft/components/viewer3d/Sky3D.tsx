@@ -52,7 +52,11 @@ void main(){
   // fixed tree-line haze. The colour does not follow the sample's luminance.
   float skyline=smoothstep(0.22,0.0,el)*uSkyline;
   vec3 treeline=vec3(0.04,0.045,0.035)*strength;
-  exposed=mix(exposed,treeline,skyline*0.85);
+  // Warm glow just above the tree line at golden hour. The bottom stays the
+  // dark silhouette, and the colour is fixed so a bright sample cannot punch through.
+  float glow=smoothstep(0.20,0.07,el)*smoothstep(0.0,0.045,el)*uWarm*uSkyline;
+  exposed=mix(exposed,vec3(0.11,0.052,0.02)*strength,glow*0.62);
+  exposed=mix(exposed,treeline,skyline*mix(0.85,0.62,uWarm));
   gl_FragColor=vec4(max(exposed,vec3(0.0)),1.);
 }`;
 
