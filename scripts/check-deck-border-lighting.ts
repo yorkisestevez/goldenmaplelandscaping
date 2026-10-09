@@ -65,6 +65,21 @@ for(const design of scenarios){
 }
 near(pictureFrameOverhang(base),2.5,'Selected custom border shows mounting-space concept');
 near(pictureFrameOverhang({...base,autoLighting:{border:false}}),.5,'Turning option off restores ordinary saved overhang');
+{
+  const litStairs={...base,autoLighting:{border:true,stairs:true}},model=buildDeckTakeoff(litStairs),border=borderLightingPlan(litStairs,model);
+  const counts={posts:model.railing.posts.length,stairs:model.treads.length,privacy:0,border:border.availableMounts.length};
+  const synced=syncAutoLighting({...litStairs,autoLighting:{border:true}},counts);
+  ok(model.stairSupport.treadNosingIn===2.5,'Lit step-up noses use the same 2.5 in mounting space as the border');
+  ok(synced.some(i=>i.zone==='stairs'&&i.auto&&i.qty===counts.stairs),'Border lighting also installs under-step lights on every tread');
+  const one:DeckData={...structuredClone(DEFAULT_DECK),pictureFrameRows:1,pictureFrameOverhangIn:.5,height:7,stairFlights:1,autoLighting:{border:true,stairs:true}};
+  const oneModel=buildDeckTakeoff(one),oneCounts={posts:0,stairs:oneModel.treads.length,privacy:0,border:0};
+  ok(oneModel.flights[0]?.risers===1&&oneModel.treads.length===1,'A one-riser step-up gets a nosing tread when lighting is on');
+  ok(oneModel.stairSupport.treadNosingIn===2.5,'One-riser step-up nose matches the lighting mounting space');
+  const oneLit:DeckData={...one,lightingSystem:{wireDistance:0,selectedItems:syncAutoLighting(one,oneCounts)}};
+  ok(extrasLayout(oneLit,oneModel).fixtures.some(f=>f.zone==='stairs'),'One-riser step-up receives an under-step light');
+  const dark:DeckData={...structuredClone(DEFAULT_DECK),height:7,stairFlights:1};
+  ok(buildDeckTakeoff(dark).treads.length===0,'Without lighting, a one-riser step-up stays a rim riser with no extra tread');
+}
 const loaded=parseDesign(serializeDesign(base));
 ok(loaded.autoLighting?.border&&loaded.pictureFrameOverhangIn===.5,'Saved/share design preserves choice and ordinary overhang');
 const manual={...base,lightingSystem:{wireDistance:0,selectedItems:[{productId:'evo_hyde_550',qty:2,zone:'stairs' as const},{productId:'wedge',qty:1,zone:'posts' as const}]}};
