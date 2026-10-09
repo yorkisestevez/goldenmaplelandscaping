@@ -21,6 +21,7 @@ import {onPaving,pavingRings} from './pathLightPlacement';
 import {poolOutline} from './poolGeometry';
 import {getLightingRuntimeProduct} from './lightingRuntimeCatalogue';
 import {insidePolygon} from './lib/polygonCuts';
+import {furnitureFacingIssues,nearestSeatPoint,rotationDegFacing} from './furnitureFacing';
 
 /**
  * The yard used for showcase stills: a two-storey contemporary house on a
@@ -31,7 +32,7 @@ import {insidePolygon} from './lib/polygonCuts';
  * Planting uses the Ontario library: cedar hedge, sugar maple, white pine,
  * serviceberry, hydrangea, dogwood and Karl Foerster, layered back to front.
  * The pool feature has no underwater light. Chaise loungers sit on the pool
- * deck only. The fire lounge seats two sofas facing the burner, 36–48 in
+ * deck only, feet toward the water. The fire lounge seats two sofas facing the burner, 36–48 in
  * clear; the low table between them is the outdoor coffee table. Path bollards
  * stand in the planting beds beside the walks, never on paving. The pool deck,
  * terrace and fire lounge take flush EVO GROUND fixtures and WEDGE step lights
@@ -225,7 +226,10 @@ export function ontarioShowcaseDesign():DeckData{
  const diningX=data.pergola.xFt,diningZ=data.pergola.zFt;
  const nearDeck=court.zFt-court.depthFt/2+3.8,farDeck=court.zFt+court.depthFt/2-3.6;
  const table={...furn('outdoor-table','dining-table','Dining table',diningX,diningZ,0,terrace.id),widthIn:42,depthIn:96,heightIn:30};
- const seat=(id:string,dx:number,dz:number,rotation:number)=>furn('outdoor-chair',id,'Dining chair',diningX+dx,diningZ+dz,rotation,terrace.id);
+ const water=poolOutline(pool);
+ const aim=(xFt:number,zFt:number,tx:number,tz:number)=>rotationDegFacing(tx-xFt*12,tz-zFt*12);
+ const aimPool=(xFt:number,zFt:number)=>{const edge=nearestSeatPoint({x:xFt*12,y:zFt*12},water);return aim(xFt,zFt,edge.x,edge.y);};
+ const seat=(id:string,dx:number,dz:number)=>furn('outdoor-chair',id,'Dining chair',diningX+dx,diningZ+dz,aim(diningX+dx,diningZ+dz,diningX*12,diningZ*12),terrace.id);
  data.landscapeObjects=[
   bed('bed-west','West planting',-38,2,-28,rear0+4),
   bed('bed-east','East planting',52,2,62,rear0+4),
@@ -235,16 +239,16 @@ export function ontarioShowcaseDesign():DeckData{
   bed('bed-court-west','Pool planting',-28,loungeFar+0.2,-4.2,rear0-0.1),
   ...plants,
   table,
-  seat('dining-1',2.85,-2.67,-90),seat('dining-2',2.85,0,-90),seat('dining-3',2.85,2.67,-90),
-  seat('dining-4',-2.85,-2.67,90),seat('dining-5',-2.85,0,90),seat('dining-6',-2.85,2.67,90),
-  seat('dining-7',0,5.1,180),seat('dining-8',0,-5.1,0),
-  furn('outdoor-sofa','lounge-west','Lounge sofa',innerX+edgePad+sofaDepthFt/2,fireZ,-90,lounge.id),
-  furn('outdoor-sofa','lounge-east','Lounge sofa',patioEast-edgePad-sofaDepthFt/2,fireZ,90,lounge.id),
+  seat('dining-1',3.19,-2.99),seat('dining-2',2.85,0),seat('dining-3',3.19,2.99),
+  seat('dining-4',-3.19,-2.99),seat('dining-5',-2.85,0),seat('dining-6',-3.19,2.99),
+  seat('dining-7',0,5.1),seat('dining-8',0,-5.1),
+  furn('outdoor-sofa','lounge-west','Lounge sofa',innerX+edgePad+sofaDepthFt/2,fireZ,aim(innerX+edgePad+sofaDepthFt/2,fireZ,fireX*12,fireZ*12),lounge.id),
+  furn('outdoor-sofa','lounge-east','Lounge sofa',patioEast-edgePad-sofaDepthFt/2,fireZ,aim(patioEast-edgePad-sofaDepthFt/2,fireZ,fireX*12,fireZ*12),lounge.id),
   furn('outdoor-coffee-table','lounge-table','Fire table',(innerX+edgePad+sofaDepthFt+(fireX-burnerFt))/2,fireZ,90,lounge.id),
-  furn('lounge-chair','pool-near-1','Pool lounge',court.xFt-10,nearDeck,180,court.id),
-  furn('lounge-chair','pool-near-2','Pool lounge',court.xFt+10,nearDeck,180,court.id),
-  furn('lounge-chair','pool-far-1','Pool lounge',court.xFt-8,farDeck,0,court.id),
-  furn('lounge-chair','pool-far-2','Pool lounge',court.xFt+8,farDeck,0,court.id),
+  furn('lounge-chair','pool-near-1','Pool lounge',court.xFt-10,nearDeck,aimPool(court.xFt-10,nearDeck),court.id),
+  furn('lounge-chair','pool-near-2','Pool lounge',court.xFt+10,nearDeck,aimPool(court.xFt+10,nearDeck),court.id),
+  furn('lounge-chair','pool-far-1','Pool lounge',court.xFt-8,farDeck,aimPool(court.xFt-8,farDeck),court.id),
+  furn('lounge-chair','pool-far-2','Pool lounge',court.xFt+8,farDeck,aimPool(court.xFt+8,farDeck),court.id),
  ];
 
  const lit=buildDeckTakeoff(data);
@@ -282,8 +286,9 @@ export function ontarioShowcaseDesign():DeckData{
  const eye={position:[24,5.2,23] as [number,number,number],target:[2,1,62] as [number,number,number]};
  const poolCam={position:[24,12,36] as [number,number,number],target:[24,0,64] as [number,number,number]};
  const fireCam={position:[-6,8.2,31] as [number,number,number],target:[fireX,1.05,fireZ] as [number,number,number]};
+ const diningCam={position:[diningX+8,5,diningZ-3] as [number,number,number],target:[diningX,1.2,diningZ] as [number,number,number]};
  const shot=(id:string,name:string,frame:{position:[number,number,number];target:[number,number,number]},fov:number)=>({id,name,fov,positionIn:frame.position.map(n=>n*12) as [number,number,number],targetIn:frame.target.map(n=>n*12) as [number,number,number]});
- data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,56),shot('terrace-eye','Terrace toward the pool',eye,55),shot('pool','Pool court',poolCam,42),shot('fire','Fire lounge',fireCam,42)]};
+ data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,56),shot('terrace-eye','Terrace toward the pool',eye,55),shot('pool','Pool court',poolCam,42),shot('fire','Fire lounge',fireCam,42),shot('dining','Dining set',diningCam,42)]};
  return data;
 }
 
@@ -366,6 +371,7 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
   if(gap<48)issues.push(`Fire clearance is ${(gap/12).toFixed(2)} ft.`);
  }
  const cameras=data.scenePresentation?.cameras??[];
- if(data.scenePresentation?.activeCameraId!=='hero'||!['hero','terrace-eye','pool','fire'].every(id=>cameras.some(c=>c.id===id)))issues.push('Hero, terrace, pool and fire cameras are missing.');
+ if(data.scenePresentation?.activeCameraId!=='hero'||!['hero','terrace-eye','pool','fire','dining'].every(id=>cameras.some(c=>c.id===id)))issues.push('Hero, terrace, pool, fire and dining cameras are missing.');
+ issues.push(...furnitureFacingIssues(data));
  return issues;
 }
