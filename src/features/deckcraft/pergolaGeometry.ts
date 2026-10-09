@@ -21,8 +21,10 @@ export function pergolaParts(data:DeckData,layout:NonNullable<ReturnType<typeof 
  for(const px of [-1,1])for(const pz of [-1,1])add('post',px*(W-post)/2,(H-7)/2,pz*(D-post)/2,post,H-7,post,frame);
  for(const pz of [-1,1])add('frame',0,H-3.5,pz*(D-4)/2,W,7,4,frame);
  for(const px of [-1,1])add('frame',px*(W-4)/2,H-3.5,0,4,7,D-8,frame);
- const count=Math.max(1,Math.ceil((D-8)/8)),pitch=sel.louverDeg*Math.PI/180;
- for(let i=0;i<count;i++)add('louver',0,H-4,-(D-8)/2+(i+.5)*(D-8)/count,W-8,.8,(D-8)/count-.15,roof,pitch);
+ const count=Math.max(1,Math.ceil((D-8)/8)),pitch=sel.louverDeg*Math.PI/180,spacing=(D-8)/count;
+ // Closed louvers still fill the bay. Opening them narrows each blade so the gap, not a slab, is what you see.
+ const open=Math.min(1,Math.max(0,sel.louverDeg/75)),chord=Math.max(1.5,spacing*(1-.5*open)-.15);
+ for(let i=0;i<count;i++)add('louver',0,H-4,-(D-8)/2+(i+.5)*spacing,W-8,.8,chord,roof,pitch);
  if(sel.lighting){for(const side of [-1,1]){add('LED',0,H-7.2,side*(D-6)/2,W-12,.5,.6,'#ffe8a9');add('LED',side*(W-6)/2,H-7.2,0,.6,.5,D-12,'#ffe8a9');}}
  for(const id of sel.accessories){const ac=p.accessories.find(k=>k.id===id)!;
   if(ac.kind==='led')add('LED',0,H-7.2,-(D-5)/2,W-10,.3,.5,'#ffe8a9');
