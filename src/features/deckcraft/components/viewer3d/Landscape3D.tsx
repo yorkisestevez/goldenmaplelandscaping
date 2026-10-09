@@ -2,7 +2,7 @@ import {landscapeSurfaceCells,landscapeCellTriangles,raisedBedTop} from '../../l
 import {landscapeSurfaceDepth,puttingCupWorld} from '../../landscapeSurfaces';
 import {createLandscapeSurfaceMaterial} from './landscapeSurfaceMaterial';
 import {getPoolModels} from '../../poolModel';
-import {lazy,Suspense,useEffect,useLayoutEffect,useMemo,useRef,useState} from 'react';
+import {lazy,Suspense,useEffect,useLayoutEffect,useMemo,useRef,useState,useSyncExternalStore} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
 import {useGLTF,useTexture} from '@react-three/drei';
 import * as THREE from 'three';
@@ -13,6 +13,7 @@ import {activePuttingCups,landscapeBedAreas,landscapePlacement,landscapeRenderLo
 import {createSiteSurface,siteClip,siteSolidCells,sitePlaneHeight} from '../../siteSurfaceEngine';
 import {getTerrainConfig} from '../../yardSettings';
 import {useRenderQuality} from './SceneRenderQuality';
+import {getShowcaseFlags,subscribeShowcase} from './showcaseMode';
 import {useFixtureLit} from './fixtureLighting';
 
 const SurfaceDetail=lazy(()=>import('./SurfaceDetail'));
@@ -73,8 +74,9 @@ function MatureSpread({data,objects}:{data:DeckData;objects:LandscapeObject[]}){
  * load only when selected. Instanced batches share geometry and local textures. */
 export default function Landscape3D({data,showMatureSpread=false}:{data:DeckData;showMatureSpread?:boolean}){
  const objects=data.landscapeObjects??[],q=useRenderQuality(),camera=useThree(s=>s.camera),size=useThree(s=>s.size),[lods,setLods]=useState(new Map<string,0|1|2>()),last=useRef(''),[mature,setMature]=useState(showMatureSpread);
+ const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false);
  useEffect(()=>{const listener=(e:Event)=>setMature(!!(e as CustomEvent<{show:boolean}>).detail?.show);window.addEventListener('deckcraft:landscape-mature-spread',listener);window.dispatchEvent(new CustomEvent('deckcraft:landscape-mature-request'));return()=>window.removeEventListener('deckcraft:landscape-mature-spread',listener);},[]);
- useFrame(()=>{const next=landscapeRenderLods(objects,camera.position,size.height,q.tier),key=[...next].map(([id,lod])=>id+':'+lod).join('|');if(last.current!==key){last.current=key;setLods(next);}});
+ useFrame(()=>{const next=landscapeRenderLods(objects,camera.position,size.height,q.tier,showcase),key=[...next].map(([id,lod])=>id+':'+lod).join('|');if(last.current!==key){last.current=key;setLods(next);}});
  const groups=new Map<string,{items:LandscapeObject[];lod:0|1|2}>();for(const o of objects.filter(o=>o.enabled&&o.kind!=='bed'&&!landscapePlacement(data,o).pendingReason)){const lod=lods.get(o.id)??2,key=o.assetId+':'+lod,g=groups.get(key)??{items:[],lod};g.items.push(o);groups.set(key,g);}
  return <group name="landscape-designed-objects" userData={{designedObjectCount:objects.filter(o=>o.enabled).length,renderTier:q.tier,genericVisualProxies:true}}>{[...groups].map(([key,g])=><Suspense key={key} fallback={null}><AssetInstances data={data} items={g.items} lod={g.lod}/></Suspense>)}{objects.some(o=>o.enabled&&o.kind==='bed')&&<Suspense fallback={null}><Beds data={data} objects={objects}/></Suspense>}{(showMatureSpread||mature)&&<MatureSpread data={data} objects={objects}/>}</group>;
 }
