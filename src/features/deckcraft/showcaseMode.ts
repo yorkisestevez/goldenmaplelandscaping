@@ -1,4 +1,4 @@
-/** Presentation-only switches for stills and future camera footage.
+/** Presentation-only switches for stills and fly-through footage.
  * They are not design data: colours, quantities and prices stay on the saved project.
  * URL (read once, after hydration): ?deck-quality=showcase, ?deck-context=1,
  * ?deck-hour=day|golden|night and ?deck-grade=0 to keep the previous showcase look.

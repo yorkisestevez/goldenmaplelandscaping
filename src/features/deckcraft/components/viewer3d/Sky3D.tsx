@@ -24,7 +24,7 @@ const DOME_VERTEX=/* glsl */`
 varying vec3 vDir;
 void main(){vDir=position;vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.);gl_Position=p.xyww;}`;
 const DOME_FRAGMENT=/* glsl */`
-uniform sampler2D lighting;uniform mat3 turn;uniform float minimumElevation,strength,uHorizonBand,uRich,uWarm,uSkyline;
+uniform sampler2D lighting;uniform mat3 turn;uniform float minimumElevation,strength,uHorizonBand,uRich,uWarm,uSkyline,warmth;
 varying vec3 vDir;
 const float PI=3.141592653589793;
 void main(){
@@ -59,13 +59,15 @@ void main(){
   float glow=smoothstep(0.20,0.07,el)*smoothstep(0.0,0.045,el)*uWarm*uSkyline;
   exposed=mix(exposed,vec3(0.11,0.052,0.02)*strength,glow*0.62);
   exposed=mix(exposed,treeline,skyline*mix(0.85,0.62,uWarm));
+  // warmth 0 leaves the sky as graded. A fly-through raises it only while grading golden hour.
+  exposed=mix(exposed,exposed*vec3(1.22,.78,.42),clamp(warmth,0.,1.));
   gl_FragColor=vec4(max(exposed,vec3(0.0)),1.);
 }`;
 
 /** The clean photographed sky, following the camera and drawn behind everything. */
 function SkyDome({lighting,yaw,strength,horizonBand,rich,warm,skyline}:{lighting:THREE.Texture;yaw:number;strength:number;horizonBand:boolean;rich:boolean;warm:boolean;skyline:boolean}){
   const material=useMemo(()=>new THREE.ShaderMaterial({
-    uniforms:{lighting:{value:null},turn:{value:new THREE.Matrix3()},minimumElevation:{value:VISIBLE_SKY_MIN_DEG*Math.PI/180},strength:{value:1},uHorizonBand:{value:0},uRich:{value:0},uWarm:{value:0},uSkyline:{value:0}},
+    uniforms:{lighting:{value:null},turn:{value:new THREE.Matrix3()},minimumElevation:{value:VISIBLE_SKY_MIN_DEG*Math.PI/180},strength:{value:1},uHorizonBand:{value:0},uRich:{value:0},uWarm:{value:0},uSkyline:{value:0},warmth:{value:0}},
     vertexShader:DOME_VERTEX,fragmentShader:DOME_FRAGMENT,side:THREE.BackSide,depthWrite:false,fog:false,
   }),[]);
   useEffect(()=>()=>material.dispose(),[material]);
@@ -89,11 +91,11 @@ function useSkyMap(url:string){
 function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyStrength(lighting).environment}:{lighting:Lighting;strength?:number;illumination?:number}){
   const data=SKY[lighting],yaw=skyYaw(lighting);
   const map=useSkyMap(lighting==='evening'?eveningLighting:dayLighting);
-  const scene=useThree(s=>s.scene),invalidate=useThree(s=>s.invalidate),flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
+  const scene=useThree(s=>s.scene),gl=useThree(s=>s.gl),invalidate=useThree(s=>s.invalidate),flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
   const context=flags.context,graded=flags.quality&&flags.post&&lighting==='day',dayBlue=graded&&flags.hour!=='golden',goldenSky=graded&&flags.hour==='golden';
   const horizon=useMemo(()=>(context?visibleSkyHorizon(map,0):visibleSkyHorizon(map))??data.horizonColor,[map,data,context]);
   // The viewer keeps one fog for its life (adding or removing fog recompiles every material); the sky only recolours it.
-  useEffect(()=>{if(!scene.fog)return;scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);if(scene.fog instanceof THREE.FogExp2)scene.fog.density=context?(graded?SHOWCASE_CLEAR_FOG:SHOWCASE_FOG_DENSITY):SCENE_LOOK.sky.fogDensity;invalidate();},[scene,horizon,strength,invalidate,context,graded]);
+  useEffect(()=>{gl.domElement.dataset.sky=lighting;if(!scene.fog)return;scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);if(scene.fog instanceof THREE.FogExp2)scene.fog.density=context?(graded?SHOWCASE_CLEAR_FOG:SHOWCASE_FOG_DENSITY):SCENE_LOOK.sky.fogDensity;invalidate();},[scene,horizon,strength,invalidate,context,graded,gl,lighting]);
   return <>
     <EnvironmentMap map={map} environmentIntensity={graded?illumination*(goldenSky?SHOWCASE_GOLDEN_FILL:SHOWCASE_SKY_FILL):illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
     <SkyDome lighting={map} yaw={yaw} strength={strength} horizonBand={context} rich={dayBlue} warm={goldenSky} skyline={flags.quality&&flags.post}/>
