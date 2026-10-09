@@ -18,9 +18,9 @@ import {overviewCamera} from './components/viewer3d/cameraFraming';
 import type {LandscapeAssetId} from './landscapeTypes';
 
 /**
- * The yard used for showcase stills: a two-storey contemporary house on an
- * 80×160 ft Barrie lot, with a Techo-Bloc terrace at the stair foot, a lit
- * pergola dining set, a seat-wall fire lounge, and a fenced pool court.
+ * The yard used for showcase stills: a two-storey contemporary house on a
+ * 120×240 ft estate lot. The dining terrace, fire lounge and pool court are
+ * separate rooms with lawn and planting between them.
  * It is a sample, not the editor's default deck. Pricing runs through the
  * same takeoff as any other design.
  */
@@ -32,7 +32,7 @@ const POOL_PAVE:YardHardscape={finishId:'hd-smooth-grande',colorId:'champlain-gr
 const SEAT:YardHardscape={finishId:'smooth',colorId:'onyx-black',unitId:'double-sided-397-249-90',patternId:'running-bond',angleDeg:0,jointMm:0};
 const SEAT_DEPTH=249/304.8;
 const INSET=330/25.4;
-const LOT_W=80,LOT_D=160;
+const LOT_W=120,LOT_D=240;
 
 const line=(points:{x:number;y:number}[]):ShapePath=>({points,edges:points.slice(1).map(()=>({kind:'line'})),closed:false});
 const species=(id:string)=>structuredClone(LANDSCAPE_SPECIES.find(s=>s.id===id)!);
@@ -47,13 +47,10 @@ function push(data:DeckData,feature:YardFeature){data.yardFeatures=[...(data.yar
 
 function rectOf(f:YardFeature){const x=(f.xFt-f.widthFt/2)*12,z=(f.zFt-f.depthFt/2)*12,w=f.widthFt*12,d=f.depthFt*12;return [{x,y:z},{x:x+w,y:z},{x:x+w,y:z+d},{x,y:z}];}
 
-/** A short onyx walkway that runs from inside one patio to inside the next, across their shared reach. */
-function bridge(data:DeckData,id:string,name:string,a:YardFeature,b:YardFeature){
- const aRight=(a.xFt+a.widthFt/2)*12,bLeft=(b.xFt-b.widthFt/2)*12;
- const z0=Math.max(a.zFt-a.depthFt/2,b.zFt-b.depthFt/2)*12,z1=Math.min(a.zFt+a.depthFt/2,b.zFt+b.depthFt/2)*12;
- if(z1-z0<48)throw Error(`${name} has no shared run to cross.`);
- const z=(z0+z1)/2,spine=[{x:aRight-18,y:z},{x:bLeft+18,y:z}];
- const base=createYardFeature(data,{kind:'patio',id,name,xFt:spine[0].x/12,zFt:z/12,widthFt:4,depthFt:8,heightIn:0,productId:SLAB,hardscape:BORDER});
+/** An onyx walkway along a centreline, in world inches, joining two paved rooms across the lawn. */
+function pathWalk(data:DeckData,id:string,name:string,spine:{x:number;y:number}[]){
+ const mid=spine[Math.floor((spine.length-1)/2)];
+ const base=createYardFeature(data,{kind:'patio',id,name,xFt:mid.x/12,zFt:mid.y/12,widthFt:4,depthFt:8,heightIn:0,productId:SLAB,hardscape:BORDER});
  return push(data,{...applyWalkway(base,line(spine),48,'square'),color:ONYX});
 }
 
@@ -128,13 +125,24 @@ export function ontarioShowcaseDesign():DeckData{
  terrace={...terrace,color:ONYX,inlays:[fieldInlay(terrace,'Crema field')]};
  push(data,terrace);
 
- const loungeBuilt={...createYardFeature(data,{kind:'patio',id:'lounge',name:'Fire lounge',xFt:-14,zFt:34,widthFt:16,depthFt:16,heightIn:0,productId:SLAB,hardscape:BORDER}),color:ONYX};
+ const loungeBuilt={...createYardFeature(data,{kind:'patio',id:'lounge',name:'Fire lounge',xFt:-28,zFt:62,widthFt:18,depthFt:18,heightIn:0,productId:SLAB,hardscape:BORDER}),color:ONYX};
  loungeBuilt.inlays=[fieldInlay(loungeBuilt,'Crema field')];
  const loungePatio=push(data,loungeBuilt);
 
- const poolPatio=push(data,{...createYardFeature(data,{kind:'patio',id:'pool-court',name:'Pool court',xFt:37,zFt:48,widthFt:26,depthFt:40,heightIn:0,productId:SLAB,hardscape:POOL_PAVE}),color:CHAMPLAIN});
- bridge(data,'walk-lounge','Lounge walk',loungePatio,terrace);
- bridge(data,'walk-pool','Pool walk',terrace,poolPatio);
+ const poolPatio=push(data,{...createYardFeature(data,{kind:'patio',id:'pool-court',name:'Pool court',xFt:46,zFt:102,widthFt:30,depthFt:42,heightIn:0,productId:SLAB,hardscape:POOL_PAVE}),color:CHAMPLAIN});
+ const tz=terrace.zFt*12,lz=loungePatio.zFt*12,pz=(poolPatio.zFt-poolPatio.depthFt/2)*12;
+ pathWalk(data,'walk-lounge','Lounge walk',[
+  {x:(terrace.xFt-terrace.widthFt/2)*12+24,y:tz},
+  {x:(loungePatio.xFt+loungePatio.widthFt/2)*12+72,y:tz},
+  {x:(loungePatio.xFt+loungePatio.widthFt/2)*12+72,y:lz},
+  {x:(loungePatio.xFt+loungePatio.widthFt/2)*12-24,y:lz},
+ ]);
+ pathWalk(data,'walk-pool','Pool walk',[
+  {x:(terrace.xFt+terrace.widthFt/2)*12-24,y:tz},
+  {x:(poolPatio.xFt-6)*12,y:tz},
+  {x:(poolPatio.xFt-6)*12,y:pz+24},
+  {x:poolPatio.xFt*12,y:pz+24},
+ ]);
 
  const lx0=(loungePatio.xFt-loungePatio.widthFt/2)*12,lx1=(loungePatio.xFt+loungePatio.widthFt/2)*12,lz0=(loungePatio.zFt-loungePatio.depthFt/2)*12,lz1=(loungePatio.zFt+loungePatio.depthFt/2)*12,inset=28;
  const seatPath=[{x:lx0+inset,y:lz0+inset+18},{x:lx0+inset,y:lz1-inset},{x:lx1-inset,y:lz1-inset},{x:lx1-inset,y:lz0+inset+18}];
@@ -149,26 +157,29 @@ export function ontarioShowcaseDesign():DeckData{
  data.pergola={...pergola,accessories:['led'],lighting:'perimeter-led',target:{kind:'patio',featureId:terrace.id},xFt:terrace.xFt,zFt:terrace.zFt+terrace.depthFt/2-6.5,rotationDeg:0,louverDeg:18};
 
  const diningX=data.pergola.xFt,diningZ=data.pergola.zFt;
+ // Beds frame each room and the lot edges. The panel between them stays lawn.
  data.landscapeObjects=[
-  bed('bed-rear','Rear planting',-24,83,50,88),
-  bed('bed-west','West planting',-28,-2,-22.6,46),
-  bed('bed-house-left','House border',-16,1,-0.6,13),
-  bed('bed-house-right','East border',25,1,40,16),
-  bed('bed-pool','Pool border',42,70,51.4,81.5),
-  plant('deciduous-tree','serviceberry-1','Serviceberry',-8,85.2,168,'amelanchier-canadensis',20),
-  plant('deciduous-tree','serviceberry-2','Serviceberry',18,85.4,176,'amelanchier-canadensis',-15),
-  plant('conifer-tree','white-pine','White pine',-25.2,18,200,'pinus-strobus',8),
-  plant('rounded-shrub','dogwood-rear-1','Red-osier dogwood',-18,85,58,'cornus-sericea'),
-  plant('rounded-shrub','dogwood-rear-2','Red-osier dogwood',34,85.2,62,'cornus-sericea',12),
-  plant('rounded-shrub','dogwood-west','Red-osier dogwood',-25.4,30,56,'cornus-sericea',-8),
-  plant('rounded-shrub','dogwood-left','Red-osier dogwood',-8,4,48,'cornus-sericea'),
-  plant('rounded-shrub','dogwood-right','Red-osier dogwood',32,4,50,'cornus-sericea',6),
-  plant('rounded-shrub','dogwood-pool','Red-osier dogwood',48,74,54,'cornus-sericea',-20),
-  plant('grass-clump','reed-1','Karl Foerster',-20,83.6,46,'calamagrostis-karl-foerster'),
-  plant('grass-clump','reed-2','Karl Foerster',4,84.2,48,'calamagrostis-karl-foerster'),
-  plant('grass-clump','reed-3','Karl Foerster',28,84.6,44,'calamagrostis-karl-foerster'),
-  plant('grass-clump','reed-4','Karl Foerster',-25.6,8,46,'calamagrostis-karl-foerster'),
-  plant('grass-clump','reed-5','Karl Foerster',46,78,42,'calamagrostis-karl-foerster',10),
+  bed('bed-house-left','House border',-16,0.6,-1,15),
+  bed('bed-house-right','East border',25,0.6,42,15),
+  bed('bed-west','West planting',-46.5,4,-41.2,108),
+  bed('bed-east','East planting',63.2,18,70.4,118),
+  bed('bed-lounge','Lounge border',-40,74,-16,79.2),
+  bed('bed-terrace-west','Terrace border',-38,42,-22,49),
+  bed('bed-rear','Rear planting',18,124.4,66,127.2),
+  plant('conifer-tree','white-pine','White pine',-43.8,14,200,'pinus-strobus',8),
+  plant('deciduous-tree','serviceberry-1','Serviceberry',-43.6,78,168,'amelanchier-canadensis',20),
+  plant('deciduous-tree','serviceberry-2','Serviceberry',66.6,48,176,'amelanchier-canadensis',-15),
+  plant('rounded-shrub','dogwood-left','Red-osier dogwood',-8,6,48,'cornus-sericea'),
+  plant('rounded-shrub','dogwood-right','Red-osier dogwood',33,6,50,'cornus-sericea',6),
+  plant('rounded-shrub','dogwood-west','Red-osier dogwood',-43.8,36,56,'cornus-sericea',-8),
+  plant('rounded-shrub','dogwood-east','Red-osier dogwood',66.6,88,54,'cornus-sericea',12),
+  plant('rounded-shrub','dogwood-lounge','Red-osier dogwood',-28,76.4,52,'cornus-sericea'),
+  plant('rounded-shrub','dogwood-rear','Red-osier dogwood',42,125.6,48,'cornus-sericea',-12),
+  plant('grass-clump','reed-1','Karl Foerster',-43.9,52,46,'calamagrostis-karl-foerster'),
+  plant('grass-clump','reed-2','Karl Foerster',-43.7,96,44,'calamagrostis-karl-foerster'),
+  plant('grass-clump','reed-3','Karl Foerster',66.4,28,46,'calamagrostis-karl-foerster'),
+  plant('grass-clump','reed-4','Karl Foerster',-34,76.6,42,'calamagrostis-karl-foerster',10),
+  plant('grass-clump','reed-5','Karl Foerster',24,125.5,44,'calamagrostis-karl-foerster'),
   furn('outdoor-table','dining-table','Dining table',diningX,diningZ,0,terrace.id),
   furn('outdoor-chair','dining-1','Dining chair',diningX,diningZ-2.3,0,terrace.id),
   furn('outdoor-chair','dining-2','Dining chair',diningX,diningZ+2.3,180,terrace.id),
@@ -183,24 +194,32 @@ export function ontarioShowcaseDesign():DeckData{
  const lit=buildDeckTakeoff(data);
  data.lightingSystem={wireDistance:80,selectedItems:syncAutoLighting({...data,lightingSystem:{wireDistance:80,selectedItems:[{productId:'liv',qty:6,zone:'landscape'},{productId:'scope',qty:4,zone:'landscape'}]}}, {posts:lit.quantities.railingPosts,stairs:lit.treads.length,privacy:0})};
 
- // Rear three-quarter, held so the roof, both paved rooms, the pool and the lot-line fence stay inside a 16:9 frame.
- const hero={position:[18,46,145] as [number,number,number],target:[12,8,18] as [number,number,number]};
- const poolCam=overviewCamera({w:30,d:44,cx:poolPatio.xFt,cz:poolPatio.zFt,height:1,aspect:16/9,points:[
-  {x:poolPatio.xFt-13,y:0,z:poolPatio.zFt-20},{x:poolPatio.xFt+13,y:0,z:poolPatio.zFt-20},{x:poolPatio.xFt-13,y:0,z:poolPatio.zFt+20},{x:poolPatio.xFt+13,y:.2,z:poolPatio.zFt+20},
-  {x:poolPatio.xFt,y:-3.5,z:poolPatio.zFt},
- ],direction:[-.25,.42,-1.05]},38);
- const fireCam=overviewCamera({w:18,d:18,cx:loungePatio.xFt,cz:loungePatio.zFt,height:2,aspect:16/9,points:[
-  {x:loungePatio.xFt-8,y:0,z:loungePatio.zFt-8},{x:loungePatio.xFt+8,y:0,z:loungePatio.zFt-8},{x:loungePatio.xFt-8,y:1.6,z:loungePatio.zFt+8},{x:loungePatio.xFt+8,y:1.6,z:loungePatio.zFt+8},{x:fireX,y:1.4,z:fireZ},
- ],direction:[.22,.34,-1]},40);
+ // Rear three-quarter from just past the back fence: the roof, the three rooms and the lawn between them.
+ const hero={position:[36,32,196] as [number,number,number],target:[16,4,44] as [number,number,number]};
+ const poolCam=overviewCamera({w:30,d:42,cx:poolPatio.xFt,cz:poolPatio.zFt,height:1.2,aspect:16/9,points:[
+  {x:poolPatio.xFt-16,y:0,z:poolPatio.zFt-22},{x:poolPatio.xFt+16,y:0,z:poolPatio.zFt-22},{x:poolPatio.xFt-16,y:0,z:poolPatio.zFt+22},{x:poolPatio.xFt+16,y:0.4,z:poolPatio.zFt+22},
+  {x:poolPatio.xFt,y:-3.2,z:poolPatio.zFt},
+ ],direction:[-.35,.28,-1]},36);
+ const fireCam=overviewCamera({w:18,d:18,cx:loungePatio.xFt,cz:loungePatio.zFt,height:1.6,aspect:16/9,points:[
+  {x:loungePatio.xFt-9,y:0,z:loungePatio.zFt-9},{x:loungePatio.xFt+9,y:0,z:loungePatio.zFt-9},{x:loungePatio.xFt-9,y:1.8,z:loungePatio.zFt+9},{x:loungePatio.xFt+9,y:1.8,z:loungePatio.zFt+9},{x:fireX,y:1.5,z:fireZ},
+ ],direction:[.55,.22,-1]},38);
  const shot=(id:string,name:string,frame:{position:[number,number,number];target:[number,number,number]},fov:number)=>({id,name,fov,positionIn:frame.position.map(n=>n*12) as [number,number,number],targetIn:frame.target.map(n=>n*12) as [number,number,number]});
- data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,40),shot('pool','Pool court',poolCam,38),shot('fire','Fire lounge',fireCam,40)]};
+ data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,42),shot('pool','Pool court',poolCam,36),shot('fire','Fire lounge',fireCam,38)]};
  return data;
 }
 
 /** Layout promises the stills rely on. Empty when the sample is buildable. */
 export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
  const issues:string[]=[];
- if(data.permitSite?.lotWidthFt!==80||data.permitSite.lotDepthFt!==160)issues.push('Lot is not 80×160 ft.');
+ if(data.permitSite?.lotWidthFt!==LOT_W||data.permitSite.lotDepthFt!==LOT_D||LOT_W<100||LOT_D<200)issues.push('Lot is not a 120×240 ft estate.');
+ const rooms=(data.yardFeatures??[]).filter(f=>f.id==='terrace'||f.id==='lounge'||f.id==='pool-court');
+ const gapOf=(a:YardFeature,b:YardFeature)=>{const ax0=a.xFt-a.widthFt/2,ax1=a.xFt+a.widthFt/2,az0=a.zFt-a.depthFt/2,az1=a.zFt+a.depthFt/2,bx0=b.xFt-b.widthFt/2,bx1=b.xFt+b.widthFt/2,bz0=b.zFt-b.depthFt/2,bz1=b.zFt+b.depthFt/2,sx=ax1<bx0?bx0-ax1:bx1<ax0?ax0-bx1:0,sz=az1<bz0?bz0-az1:bz1<az0?az0-bz1:0;return sx===0||sz===0?sx+sz:Math.hypot(sx,sz);};
+ for(let i=0;i<rooms.length;i++)for(let j=i+1;j<rooms.length;j++){const gap=gapOf(rooms[i],rooms[j]);if(gap<12)issues.push(`${rooms[i].name} and ${rooms[j].name} are ${gap.toFixed(1)} ft apart.`);}
+ const lawn={x0:-6,x1:26,z0:44,z1:76},hitsLawn=(x:number,z:number)=>x>lawn.x0&&x<lawn.x1&&z>lawn.z0&&z<lawn.z1;
+ for(const object of data.landscapeObjects??[]){
+  if(object.kind==='bed'&&object.polygon?.some(p=>hitsLawn(p.x/12,p.z/12)))issues.push(`${object.name} cuts the lawn panel.`);
+  if(object.kind!=='bed'&&object.kind!=='furniture'&&hitsLawn(object.xIn/12,object.zIn/12))issues.push(`${object.name} stands in the lawn panel.`);
+ }
  if(!data.autoLighting?.posts||!data.autoLighting.stairs)issues.push('Deck lighting is off.');
  if(!data.pergola?.lighting)issues.push('The pergola has no lights.');
  const terrace=data.yardFeatures?.find(f=>f.id==='terrace'),lounge=data.yardFeatures?.find(f=>f.id==='lounge'),poolCourt=data.yardFeatures?.find(f=>f.id==='pool-court'),fire=data.yardFeatures?.find(f=>f.id==='fire-bowl'),wall=data.yardFeatures?.find(f=>f.id==='seat-wall');

@@ -6,7 +6,7 @@ import {SKY_DATA as SKY,skyStrength,skyYaw,VISIBLE_SKY_MIN_DEG,visibleSkyStrengt
 import dayLighting from './assets/sky/sky-day-ibl.hdr?url';
 import eveningLighting from './assets/sky/sky-evening-ibl.hdr?url';
 import {SCENE_LOOK} from './sceneLook';
-import {SHOWCASE_FOG_DENSITY,getShowcaseFlags,subscribeShowcase} from './showcaseMode';
+import {SHOWCASE_FOG_DENSITY,getShowcaseFlags,showcaseGolden,subscribeShowcase} from './showcaseMode';
 
 /**
  * The real sky (Real Life G3): a CC0 HDRI supplies environment fill. An extracted sun, or a neutral key replacing
@@ -72,7 +72,9 @@ function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyS
  * loads behind the day sky dimmed, so switching to Night never drops back to the studio light. */
 export default function Sky3D({evening}:{evening:boolean}){
   useEffect(()=>{preloadEvening();},[]);
-  return evening?<Suspense fallback={<SkyOf lighting="day" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}><SkyOf lighting="evening"/></Suspense>:<SkyOf lighting="day"/>;
+  const golden=useSyncExternalStore(subscribeShowcase,showcaseGolden,()=>false);
+  const dayFill=skyStrength('day').environment*(golden&&!evening?0.72:1);
+  return evening?<Suspense fallback={<SkyOf lighting="day" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}><SkyOf lighting="evening"/></Suspense>:<SkyOf lighting="day" illumination={dayFill}/>;
 }
 // The day sky loads with the viewer; the evening's follows once the day's is in (preloadEvening), so switching to
 // Night (and the proposal's night pictures) rarely waits, without a phone fetching both skies up front.
