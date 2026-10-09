@@ -1,6 +1,6 @@
-import {useEffect,useLayoutEffect,useMemo,Suspense} from 'react';
+import {useEffect,useLayoutEffect,useMemo,useState} from 'react';
 import {useThree} from '@react-three/fiber';
-import {useGLTF} from '@react-three/drei';
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from './showcaseMode';
@@ -119,15 +119,15 @@ function NeighbourHouse({home,evening}:{home:NeighbourHome;evening:boolean}){
  </group>;
 }
 
-function TreeSpecies({url,items}:{url:string;items:ContextTree[]}){
- const gltf=useGLTF(url),invalidate=useThree(s=>s.invalidate);
+function TreeSpecies({scene,items}:{scene:THREE.Object3D;items:ContextTree[]}){
+ const invalidate=useThree(s=>s.invalidate);
  const prepared=useMemo(()=>{
-  gltf.scene.updateMatrixWorld(true);
-  const bounds=new THREE.Box3().setFromObject(gltf.scene),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
+  scene.updateMatrixWorld(true);
+  const bounds=new THREE.Box3().setFromObject(scene),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
   const normalization=new THREE.Matrix4().makeScale(1/Math.max(size.y,.0001),1/Math.max(size.y,.0001),1/Math.max(size.y,.0001)).multiply(new THREE.Matrix4().makeTranslation(-center.x,-bounds.min.y,-center.z));
-  const meshes:THREE.Mesh[]=[];gltf.scene.traverse(o=>{if((o as THREE.Mesh).isMesh)meshes.push(o as THREE.Mesh);});
+  const meshes:THREE.Mesh[]=[];scene.traverse(o=>{if((o as THREE.Mesh).isMesh)meshes.push(o as THREE.Mesh);});
   return {normalization,meshes};
- },[gltf.scene]);
+ },[scene]);
  return <group name="showcase-tree-species">{prepared.meshes.map((mesh,index)=><TreeMesh key={index} mesh={mesh} items={items} normalization={prepared.normalization} invalidate={invalidate}/>)}</group>;
 }
 function TreeMesh({mesh,items,normalization,invalidate}:{mesh:THREE.Mesh;items:ContextTree[];normalization:THREE.Matrix4;invalidate:()=>void}){
@@ -146,9 +146,17 @@ function TreeMesh({mesh,items,normalization,invalidate}:{mesh:THREE.Mesh;items:C
 
 function TreeLine({trees,showcase}:{trees:ContextTree[];showcase:boolean}){
  const lod=showcase?0:1,deciduous=trees.filter(t=>!t.conifer),conifer=trees.filter(t=>t.conifer);
+ const [models,setModels]=useState<{deciduous:THREE.Object3D;conifer:THREE.Object3D}|null>(null);
+ // Load outside render. useGLTF updates the still-export progress store during render.
+ useEffect(()=>{
+  let live=true;setModels(null);const loader=new GLTFLoader();
+  Promise.all([loader.loadAsync(SHOWCASE_TREES.deciduous[lod]),loader.loadAsync(SHOWCASE_TREES.conifer[lod])]).then(([broadleaf,evergreen])=>{if(live)setModels({deciduous:broadleaf.scene,conifer:evergreen.scene});});
+  return ()=>{live=false;};
+ },[lod]);
+ if(!models)return null;
  return <group name="showcase-tree-line" userData={{style:'sugar-maple-and-white-pine',presentationOnly:true}}>
-  {deciduous.length>0&&<TreeSpecies url={SHOWCASE_TREES.deciduous[lod]} items={deciduous}/>}
-  {conifer.length>0&&<TreeSpecies url={SHOWCASE_TREES.conifer[lod]} items={conifer}/>}
+  {deciduous.length>0&&<TreeSpecies scene={models.deciduous} items={deciduous}/>}
+  {conifer.length>0&&<TreeSpecies scene={models.conifer} items={conifer}/>}
  </group>;
 }
 
@@ -162,6 +170,6 @@ export default function ShowcaseContext3D({data}:{data:DeckData}){
   <Fence runs={model.runs} baseY={model.baseY}/>
   <NeighbourGround grids={model.ground} evening={evening}/>
   <group name="showcase-neighbours">{model.homes.map((home,i)=><NeighbourHouse key={i} home={home} evening={evening}/>)}</group>
-  <Suspense fallback={null}><TreeLine trees={model.trees} showcase={showcase}/></Suspense>
+  <TreeLine trees={model.trees} showcase={showcase}/>
  </group>;
 }

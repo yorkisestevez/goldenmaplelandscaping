@@ -1,4 +1,5 @@
 import type {DeckData} from '../../types';
+import {cameraSetback} from './cameraFraming';
 
 /** Neighbourhood dressing around a designed yard. Authored in feet.
  * The viewer draws the yard in inches inside a group scaled 1/12, so the
@@ -43,30 +44,31 @@ export function fenceRuns(bounds:LotBounds):[number,number,number,number][] {
  return runs.filter(([ax,az,bx,bz])=>Math.hypot(bx-ax,bz-az)>=2);
 }
 
-/** The 3D view's starting camera, in feet, including the wide-layout setback.
- * Saved cameras use project inches. Together they are the views context must not block. */
-export function defaultHeroClearance(bounds:LotBounds):CameraClearance {
- const cx=(bounds.x0+bounds.x1)/2,cz=(bounds.z0+bounds.z1)/2,r=Math.max(bounds.x1-bounds.x0,bounds.z1-bounds.z0,12),height=4,setback=1.25;
+/** The 3D view's starting camera, in feet. `setback` matches cameraSetback: 1 on a wide
+ * desktop, larger as the frame gets narrower. Saved cameras use project inches. */
+export function defaultHeroClearance(bounds:LotBounds,setback=1):CameraClearance {
+ const cx=(bounds.x0+bounds.x1)/2,cz=(bounds.z0+bounds.z1)/2,r=Math.max(bounds.x1-bounds.x0,bounds.z1-bounds.z0,12),height=4;
  const tx=cx,ty=height*.5,tz=cz,px=cx+r*.9,py=height*.65+r*.4,pz=cz+r*1.3;
  return {x:tx+(px-tx)*setback,y:ty+(py-ty)*setback,z:tz+(pz-tz)*setback,tx,ty,tz,fov:38};
 }
 export function heroClearances(data:DeckData,bounds:LotBounds):CameraClearance[] {
  const saved=(data.scenePresentation?.cameras??[]).map(c=>({x:c.positionIn[0]/12,y:c.positionIn[1]/12,z:c.positionIn[2]/12,tx:c.targetIn[0]/12,ty:c.targetIn[1]/12,tz:c.targetIn[2]/12,fov:c.fov}));
- return [defaultHeroClearance(bounds),...saved];
+ // Wide desktop and the narrowest phone layout. A tree that clears both stays out of either lens.
+ return [defaultHeroClearance(bounds,1),defaultHeroClearance(bounds,cameraSetback(.5)),...saved];
 }
 
-/** A canopy at (x, z) blocks a hero view when it sits in the near corridor between the lens and the subject.
- * Background trees past the target, and trees behind the camera, are kept. */
+/** A canopy at (x, z) blocks a hero view when it fills the lens or stands in the approach.
+ * Backdrop past the subject, and anything behind the camera, is kept. */
 export function blocksHeroView(x:number,z:number,radiusFt:number,cameras:CameraClearance[]){
  for(const cam of cameras){
   const dx=cam.tx-cam.x,dz=cam.tz-cam.z,len=Math.hypot(dx,dz);
   if(len<1)continue;
+  const dist=Math.hypot(x-cam.x,z-cam.z);
+  if(dist<radiusFt+18)return true;
   const along=((x-cam.x)*dx+(z-cam.z)*dz)/len;
-  if(along<1||along>len+radiusFt)continue;
-  const near=Math.min(36,len*.55);
-  if(along>near&&along>len*.62)continue;
+  if(along<2||along>len*.92)continue;
   const px=cam.x+dx/len*along,pz=cam.z+dz/len*along,lateral=Math.hypot(x-px,z-pz);
-  const corridor=radiusFt+(along<near?10+along*Math.tan(cam.fov*Math.PI/360)*.45:3);
+  const corridor=radiusFt+6+along*Math.tan(cam.fov*Math.PI/360)*.72;
   if(lateral<corridor)return true;
  }
  return false;
@@ -74,13 +76,20 @@ export function blocksHeroView(x:number,z:number,radiusFt:number,cameras:CameraC
 
 function missesLot(bounds:LotBounds,x:number,z:number,hx:number,hz:number){return x+hx<=bounds.x0||x-hx>=bounds.x1||z+hz<=bounds.z0||z-hz>=bounds.z1;}
 
+/** Slide a blocker sideways out of the hero cone. Walking it away from the lot centre
+ * parked the back row in front of the lens; the corner camera sits outside that edge. */
 function pushClear(bounds:LotBounds,x:number,z:number,radius:number,cameras:CameraClearance[],hx:number,hz:number){
  const cx=(bounds.x0+bounds.x1)/2,cz=(bounds.z0+bounds.z1)/2;
  let px=x,pz=z;
- for(let n=0;n<8;n++){
+ for(let n=0;n<12;n++){
   if(missesLot(bounds,px,pz,hx,hz)&&!blocksHeroView(px,pz,radius,cameras))return {x:px,z:pz};
-  const dx=px-cx,dz=pz-cz,len=Math.hypot(dx,dz)||1;
-  px+=dx/len*10;pz+=dz/len*10;
+  const blocker=cameras.find(cam=>blocksHeroView(px,pz,radius,[cam]));
+  if(!blocker){const ox=px-cx,oz=pz-cz,olen=Math.hypot(ox,oz)||1;px+=ox/olen*8;pz+=oz/olen*8;continue;}
+  const dx=blocker.tx-blocker.x,dz=blocker.tz-blocker.z,len=Math.hypot(dx,dz)||1;
+  const along=((px-blocker.x)*dx+(pz-blocker.z)*dz)/len,ax=blocker.x+dx/len*along,az=blocker.z+dz/len*along;
+  let lx=px-ax,lz=pz-az,llen=Math.hypot(lx,lz);
+  if(llen<.5){lx=-dz/len;lz=dx/len;llen=1;}
+  px+=lx/llen*14;pz+=lz/llen*14;
  }
  return null;
 }
@@ -91,14 +100,16 @@ export function showcaseTrees(bounds:LotBounds,cameras:CameraClearance[]):Contex
  const r=showcaseRandom(42),out:ContextTree[]=[];
  const put=(x:number,z:number)=>{
   if(out.length>=28)return;
-  const conifer=r()<.42,heightFt=conifer?34+r()*22:28+r()*18,rot=r()*Math.PI*2,radius=heightFt*.28;
+  const conifer=r()<.42,heightFt=conifer?32+r()*16:26+r()*14,rot=r()*Math.PI*2,radius=heightFt*(conifer?.32:.5);
   const spot=pushClear(bounds,x,z,radius,cameras,.4,.4);
-  if(!spot||out.some(t=>Math.hypot(t.x-spot.x,t.z-spot.z)<9))return;
+  if(!spot||out.some(t=>Math.hypot(t.x-spot.x,t.z-spot.z)<16))return;
   out.push({x:spot.x,z:spot.z,heightFt,rot,conifer});
  };
- for(let x=bounds.x0-16;x<=bounds.x1+16;x+=13+r()*5){put(x,bounds.z1+9+r()*5);if(r()<.6)put(x+4,bounds.z1+24+r()*8);}
- for(let z=bounds.z0+6;z<=bounds.z1-2;z+=13+r()*5){put(bounds.x0-9-r()*5,z);put(bounds.x1+9+r()*5,z);}
- for(let x=bounds.x0-6;x<=bounds.x1+6;x+=18+r()*6)put(x,bounds.z0-18-r()*8);
+ // Sides frame the yard. The street row is the backdrop beyond the house. Corner
+ // trees sit wide of the back fence, never as a wall in front of the corner camera.
+ for(let z=bounds.z0-2;z<=bounds.z1+6;z+=16+r()*4){put(bounds.x0-18-r()*4,z);put(bounds.x1+18+r()*4,z+4);}
+ for(let x=bounds.x0-10;x<=bounds.x1+10;x+=18+r()*4){put(x,bounds.z0-32-r()*6);if(r()<.55)put(x+7,bounds.z0-48);}
+ put(bounds.x0-24,bounds.z1+18);put(bounds.x1+24,bounds.z1+18);
  return out;
 }
 
@@ -106,17 +117,17 @@ export function showcaseTrees(bounds:LotBounds,cameras:CameraClearance[]):Contex
 export function showcaseHomes(bounds:LotBounds,cameras:CameraClearance[]):NeighbourHome[] {
  const r=showcaseRandom(3),homes:NeighbourHome[]=[];
  const add=(x:number,z:number,yaw:number)=>{
-  const w=30+r()*16,d=24+r()*12,floors:1|2=r()<.72?2:1,h=(floors===2?17:10)+r()*3;
-  const spot=pushClear(bounds,x,z,Math.max(w,d)*.42,cameras,w/2+1,d/2+1);
+  const w=28+r()*14,d=22+r()*10,floors:1|2=r()<.72?2:1,h=(floors===2?16:9)+r()*2;
+  const spot=pushClear(bounds,x,z,Math.max(w,d)*.5,cameras,w/2+8,d/2+4);
   if(!spot)return;
   const i=homes.length;
   homes.push({x:spot.x,z:spot.z,w,d,h,yaw,siding:SIDING[i%SIDING.length],roof:ROOFS[i%ROOFS.length],trim:TRIM[i%TRIM.length],chimney:r()>.4,garage:r()>.5,floors});
  };
- add(bounds.x0-48,bounds.z0-30,0);
- add(bounds.x1+48,bounds.z0-28,0);
- add(bounds.x0-64,(bounds.z0+bounds.z1)/2,0);
- add(bounds.x1+64,(bounds.z0+bounds.z1)/2+6,0);
- for(let x=bounds.x0-8;x<bounds.x1+16;x+=54+r()*10)add(x,bounds.z1+62,Math.PI);
+ // Fronts face the lot: street houses look back toward the yard, side houses look inward.
+ add(bounds.x0-56,bounds.z0-36,Math.PI);
+ add(bounds.x1+56,bounds.z0-34,Math.PI);
+ add(bounds.x0-72,(bounds.z0+bounds.z1)/2,-Math.PI/2);
+ add(bounds.x1+72,(bounds.z0+bounds.z1)/2+6,Math.PI/2);
  return homes;
 }
 

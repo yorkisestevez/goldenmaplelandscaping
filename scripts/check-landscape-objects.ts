@@ -10,7 +10,7 @@ import {validateLandscapeObjects,validLandscapePolygon,validateLandscapeSpecies,
 import {landscapeTakeoff,landscapeBedAreas,landscapePlacement,landscapeRenderLods,matureSpreadConflicts} from '../src/features/deckcraft/landscapeModelRuntime';
 import {landscapeBedGeometry,landscapeInstanceMatrix} from '../src/features/deckcraft/components/viewer3d/Landscape3D';
 import {stillSize,captureSceneStill} from '../src/features/deckcraft/components/viewer3d/SceneStillExport';
-import {blocksHeroView,buildShowcaseContext,defaultHeroClearance,fenceRuns} from '../src/features/deckcraft/components/viewer3d/showcaseContext';
+import {blocksHeroView,buildShowcaseContext,fenceRuns,heroClearances} from '../src/features/deckcraft/components/viewer3d/showcaseContext';
 import {getShowcaseFlags,setShowcaseFlags} from '../src/features/deckcraft/components/viewer3d/showcaseMode';
 import type {DeckData} from '../src/features/deckcraft/types';
 let checks=0;const check=(v:unknown,label?:string)=>{assert.ok(v,label);checks++;},close=(a:number,b:number)=>check(Math.abs(a-b)<1e-5,`${a} ≈ ${b}`);
@@ -41,11 +41,11 @@ const showcaseTriangles=dense.reduce((n,o)=>n+landscapeAsset(o.assetId).triangle
 const contextDesign={...DEFAULT_DECK,width:20,length:16,yardFeatures:[{id:'patio',kind:'patio' as const,name:'Patio',enabled:true,xFt:10,zFt:28,widthFt:16,depthFt:14,heightIn:0,rotationDeg:0,productId:'patio',color:'#aaa'}],scenePresentation:{cameras:[{id:'hero',name:'Hero',positionIn:[360,96,720] as [number,number,number],targetIn:[120,24,180] as [number,number,number],fov:38}]}};
 const savedContext=JSON.stringify(contextDesign),context=buildShowcaseContext(contextDesign);check(JSON.stringify(contextDesign)===savedContext,'Neighbourhood context does not mutate the design');
 check(fenceRuns(context.bounds).length===3&&fenceRuns(context.bounds).every(run=>run[1]!==context.bounds.z0||run[3]!==context.bounds.z0),'The cedar fence wraps three lot lines and leaves the house side open');
-const cameras=[defaultHeroClearance(context.bounds),{x:360/12,y:96/12,z:720/12,tx:120/12,ty:24/12,tz:180/12,fov:38}];
+const cameras=heroClearances(contextDesign,context.bounds);
 check(context.trees.length>=8&&context.trees.length<=28);
-for(const tree of context.trees){check(tree.x+0.4<=context.bounds.x0||tree.x-0.4>=context.bounds.x1||tree.z+0.4<=context.bounds.z0||tree.z-0.4>=context.bounds.z1,'Tree trunks stay outside the fenced lot');check(!blocksHeroView(tree.x,tree.z,tree.heightFt*.28,cameras),'Trees stay out of the hero camera corridor');check(tree.heightFt>=28&&tree.heightFt<=60);}
+for(const tree of context.trees){const canopy=tree.heightFt*(tree.conifer?.32:.5);check(tree.x+0.4<=context.bounds.x0||tree.x-0.4>=context.bounds.x1||tree.z+0.4<=context.bounds.z0||tree.z-0.4>=context.bounds.z1,'Tree trunks stay outside the fenced lot');check(!blocksHeroView(tree.x,tree.z,canopy,cameras),'Trees stay out of the hero camera corridor');check(tree.heightFt>=26&&tree.heightFt<=60);}
 check(context.homes.length>=4);
-for(const home of context.homes){check(home.x+home.w/2<=context.bounds.x0||home.x-home.w/2>=context.bounds.x1||home.z+home.d/2<=context.bounds.z0||home.z-home.d/2>=context.bounds.z1,'Neighbour houses sit outside the lot');check(home.h>8&&home.w>20&&home.d>16);check(!blocksHeroView(home.x,home.z,Math.max(home.w,home.d)*.42,cameras));}
+for(const home of context.homes){check(home.x+home.w/2+8<=context.bounds.x0||home.x-home.w/2-8>=context.bounds.x1||home.z+home.d/2+4<=context.bounds.z0||home.z-home.d/2-4>=context.bounds.z1,'Neighbour houses sit outside the lot');check(home.h>8&&home.w>20&&home.d>16);check(!blocksHeroView(home.x,home.z,Math.max(home.w,home.d)*.5,cameras));}
 for(const ground of context.ground)for(const v of ground.vertices){check(v.x<=context.bounds.x0+.2||v.x>=context.bounds.x1-.2||v.z<=context.bounds.z0+.2||v.z>=context.bounds.z1-.2,'Neighbouring yards stay outside the designed lot');check(v.y<2&&v.fade>=0&&v.fade<=1&&(v.drive===0||v.drive===1));}
 check(context.ground.some(g=>g.vertices.some(v=>v.drive===1)),'A neighbour driveway is part of the ground outside the lot');
 check(blocksHeroView(0,30,8,[{x:0,y:8,z:40,tx:0,ty:2,tz:0,fov:38}])&&!blocksHeroView(0,-20,8,[{x:0,y:8,z:40,tx:0,ty:2,tz:0,fov:38}]),'Only the near view corridor is kept clear');

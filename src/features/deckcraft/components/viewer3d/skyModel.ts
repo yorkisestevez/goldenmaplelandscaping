@@ -21,10 +21,10 @@ export function visibleSkyElevation(elevation:number){const min=VISIBLE_SKY_MIN_
 /** Match the distance haze to the actual displayed sky horizon. RGBE loaders
  * may supply half-float or float data, with either row orientation. */
 /** Elevation sampled on the sky dome. horizonBand 0 is the editor's clean upper sky.
- * horizonBand 1 blends the photographed horizon in below about 18°. */
+ * horizonBand 1 blends the photographed horizon in below about 3°. */
 export function skyDomeSampleElevation(elevation:number,horizonBand:number){
  const min=VISIBLE_SKY_MIN_DEG*Math.PI/180,displayed=Math.max(0,elevation),clean=min+displayed*(1-min/(Math.PI/2));
- const t=Math.min(1,Math.max(0,(elevation-.05)/(.32-.05))),smooth=t*t*(3-2*t),band=1-smooth;
+ const t=elevation<=0?0:Math.min(1,elevation/.045),smooth=t*t*(3-2*t),band=1-smooth;
  return clean*(1-band*horizonBand)+Math.max(elevation,0)*band*horizonBand;
 }
 export function visibleSkyHorizon(map:THREE.Texture,elevation?:number):[number,number,number]|null {
