@@ -1,7 +1,7 @@
 /** Landscape coordinates and dimensions are world inches, from the deck's
  * back-left framing corner. A mesh never defines a botanical supplier SKU. */
 export type LandscapeKind='plant'|'boulder'|'furniture'|'bed';
-export type LandscapeAssetId='deciduous-tree'|'conifer-tree'|'rounded-shrub'|'hedge-shrub'|'grass-clump'|'natural-boulder'|'outdoor-table'|'outdoor-chair'|'lounge-chair'|'outdoor-sofa'|'outdoor-coffee-table'|'mulch-bed'|'black-mulch-bed'|'cedar-mulch-bed'|'river-rock-bed'|'mexican-beach-pebbles-bed'|'white-stone-bed'|'crushed-granite-bed'|'pea-gravel-bed'|'clear-limestone-bed'|'limestone-screenings-bed'|'granular-base-bed'|'artificial-grass'|'putting-green';
+export type LandscapeAssetId='deciduous-tree'|'conifer-tree'|'rounded-shrub'|'hedge-shrub'|'grass-clump'|'evergreen-shrub'|'pine-tree'|'hosta-clump'|'reed-grass'|'fern-clump'|'perennial-bloom'|'perennial-gold'|'natural-boulder'|'outdoor-table'|'outdoor-chair'|'lounge-chair'|'outdoor-sofa'|'outdoor-coffee-table'|'mulch-bed'|'black-mulch-bed'|'cedar-mulch-bed'|'river-rock-bed'|'mexican-beach-pebbles-bed'|'white-stone-bed'|'crushed-granite-bed'|'pea-gravel-bed'|'clear-limestone-bed'|'limestone-screenings-bed'|'granular-base-bed'|'artificial-grass'|'putting-green';
 export interface LandscapePoint {x:number;z:number}
 export type {LandscapeOutline,LandscapeRing,LandscapeSegment} from './landscapeOutline';
 export interface LandscapeSpeciesRecord {
