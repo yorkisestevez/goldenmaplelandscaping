@@ -29,7 +29,7 @@ const TABS:{name:string;groups:Group[]}[]=[
     {name:'Deck',buttons:[tool('size','Deck size',<Ruler size={size}/>),tool('outline','Shape & points',<Spline size={size}/>),tool('stairs','Stairs',<WorkspaceIcon id="stairs"/>)]},
     {name:'Edges',buttons:[tool('edges','Rails & screens',<Fence size={size}/>)]},
     {name:'House',buttons:[tool('house','House',<House size={size}/>),section('house','Doors & windows',<DoorOpen size={size}/>)]},
-    {name:'Options',buttons:[section('lighting','Lighting',<Lightbulb size={size}/>),section('extras','Privacy & extras')]},
+    {name:'Options',buttons:[section('lighting','Outdoor lighting',<Lightbulb size={size}/>),section('extras','Privacy & extras',<Fence size={size}/>)]},
   ]},
   // Terrain opens the Elevations & build workspace at each of its areas: the site survey (photo or PDF underlay,
   // measured points, elevation import and grading), deck levels, patio and wall levels, and sections and earthworks.

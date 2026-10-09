@@ -1,6 +1,6 @@
 import {expect,test,type Page} from '@playwright/test';
 import {openDesignTask,pickPlanTool,showProjectControls} from './nav';
-const names=['Deck shape & size','House','Boards & finish','Stairs & railings','Lighting','Privacy, skirting & extras','Site & foundation','Backyard','Proposal & files'];
+const names=['Deck shape & size','House','Boards & finish','Stairs & railings','Outdoor lighting','Privacy, skirting & extras','Site & foundation','Backyard','Proposal & files'];
 test.beforeEach(async({context})=>{
   await context.route('**/*',route=>{const host=new URL(route.request().url()).hostname;return ['127.0.0.1','localhost'].includes(host)?route.fallback():route.abort();});
   await context.route(/^https:\/\/([\w-]+\.)*(googletagmanager\.com|facebook\.net|clarity\.ms)\//,r=>r.fulfill({body:''}));
