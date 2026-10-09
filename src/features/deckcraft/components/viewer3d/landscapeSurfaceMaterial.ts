@@ -7,7 +7,7 @@ type Maps={map:THREE.Texture;normalMap:THREE.Texture;roughnessMap:THREE.Texture}
 interface Shared {maps:Maps;materials:Set<THREE.MeshStandardMaterial>;loading?:boolean;loaded?:boolean;listeners:Set<()=>void>;pending:Set<THREE.Texture>}
 const shared=new Map<string,Shared>();
 const hash=(x:number,z:number)=>{const n=Math.sin(x*127.1+z*311.7+19.17)*43758.5453;return n-Math.floor(n);};
-/** A local fallback with material-scale grains. The three mulch colours share the licensed wood-chip scan. */
+/** A local fallback with material-scale grains. The three mulch colours share the licensed wood-chip scan, remapped to shredded fibre so the default reads as dark brown hardwood rather than the scan's reddish chips. */
 function makeMaps(id:LandscapeAssetId,anisotropy:number):Maps{
  const p=landscapeSurface(id)!,size=anisotropy===4?128:anisotropy===8?256:512,turf=p.type==='turf',mulch=p.type==='mulch',fine=id==='limestone-screenings-bed';
  const bytes=new Uint8Array(size*size*4),normal=new Uint8Array(bytes.length),rough=new Uint8Array(bytes.length),height=new Float32Array(size*size),color=new THREE.Color(p.color).convertLinearToSRGB();
@@ -31,8 +31,15 @@ function disposeMaps(maps:Maps){Object.values(maps).forEach(t=>t.dispose());}
 export function createLandscapeSurfaceMaterial(id:LandscapeAssetId,anisotropy=1){
  const p=landscapeSurface(id)!,mulch=p.type==='mulch',key=(mulch?'mulch':id)+':'+anisotropy;
  let entry=shared.get(key);if(!entry){entry={maps:makeMaps(mulch?'mulch-bed':id,anisotropy),materials:new Set(),listeners:new Set(),pending:new Set()};shared.set(key,entry);}const resource=entry;
- const material=new THREE.MeshStandardMaterial({color:id==='black-mulch-bed'?'#2a2622':id==='cedar-mulch-bed'?'#ffce99':'#ffffff',...resource.maps,normalScale:new THREE.Vector2(p.type==='turf'?.28:id==='limestone-screenings-bed'?.14:.72,p.type==='turf'?.28:.72),roughness:1});
+ const material=new THREE.MeshStandardMaterial({color:id==='black-mulch-bed'?'#2a2622':id==='cedar-mulch-bed'?'#ffce99':mulch?'#4a3122':'#ffffff',...resource.maps,normalScale:new THREE.Vector2(p.type==='turf'?.28:id==='limestone-screenings-bed'?.14:.72,p.type==='turf'?.28:.72),roughness:1});
  resource.materials.add(material);
+ if(mulch)addMaterialPatch(material,{key:'mulch-shred-fiber-v1',apply:shader=>{
+  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`float mulchLuma=dot(diffuseColor.rgb,vec3(.25,.55,.2));
+float mulchStrand=abs(fract(vMapUv.x*36.+vMapUv.y*6.2)-.5);
+float mulchShred=smoothstep(.06,.38,mulchStrand)*(.34+mulchLuma*1.25);
+diffuseColor.rgb=vec3(mulchShred);
+#include <color_fragment>`);
+ }});
  addMaterialPatch(material,{key:'ground-cover-stochastic-v1',apply:shader=>{
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>
 float coverHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}

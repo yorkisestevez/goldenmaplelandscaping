@@ -9,6 +9,8 @@ import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import type {LandscapeObject,LandscapePoint} from '../../landscapeTypes';
 import {landscapeAsset,plantFoliageTint} from '../../landscapeCatalogue';
+import {applyFoliageLighting,tintPlantInstance} from './foliageLighting';
+import PlantBlooms from './plantBlooms';
 import {activePuttingCups,landscapeBedAreas,landscapePlacement,landscapeRenderLods} from '../../landscapeModelRuntime';
 import {createSiteSurface,siteClip,siteSolidCells,sitePlaneHeight} from '../../siteSurfaceEngine';
 import {getTerrainConfig} from '../../yardSettings';
@@ -41,12 +43,13 @@ export function steelEdgingGeometry(points:THREE.Vector3[]){
 }
 function InstancePart({data,items,source,normalization,lod}:{data:DeckData;items:LandscapeObject[];source:THREE.Mesh;normalization:THREE.Matrix4;lod:number}){
  const q=useRenderQuality(),invalidate=useThree(s=>s.invalidate),original=Array.isArray(source.material)?source.material[0]:source.material;
- const material=useMemo(()=>original.clone(),[original]);useFixtureLit(material);
+ const foliage=items[0]?.kind==='plant';
+ const material=useMemo(()=>{const m=original.clone();if(foliage)applyFoliageLighting(m);return m;},[original,foliage]);useFixtureLit(material);
  const instance=useMemo(()=>new THREE.InstancedMesh(source.geometry,material,Math.max(1,items.length)),[source.geometry,material,items.length]);
  useEffect(()=>()=>{instance.dispose();},[instance]);useEffect(()=>()=>material.dispose(),[material]);
  useLayoutEffect(()=>{
   const color=new THREE.Color();
-  items.forEach((o,i)=>{instance.setMatrixAt(i,landscapeInstanceMatrix(data,o,normalization,source.matrixWorld));instance.setColorAt(i,color.set(plantFoliageTint(o.speciesRecord?.id)));});instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
+  items.forEach((o,i)=>{instance.setMatrixAt(i,landscapeInstanceMatrix(data,o,normalization,source.matrixWorld));instance.setColorAt(i,o.kind==='plant'?tintPlantInstance(color,plantFoliageTint(o.speciesRecord?.id),o.id):color.set(plantFoliageTint(o.speciesRecord?.id)));});instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
   instance.name='landscape-'+items[0]?.assetId+'-lod'+lod;instance.userData={landscapeIds:items.map(o=>o.id),pickPartIds:items.map(o=>'landscape/'+o.id),genericVisualProxy:true,unmeasuredElevationIds:items.filter(o=>!landscapePlacement(data,o).measured).map(o=>o.id)};
   instance.castShadow=q.tier!=='constrained'&&lod<2;instance.receiveShadow=true;
   const standard=material as THREE.MeshStandardMaterial;if(standard.alphaTest>0){standard.transparent=false;standard.depthWrite=true;standard.side=THREE.DoubleSide;standard.alphaToCoverage=q.msaaSamples>0;standard.needsUpdate=true;}for(const t of [standard.map,standard.normalMap,standard.roughnessMap,standard.metalnessMap])if(t){t.anisotropy=q.anisotropy;t.needsUpdate=true;}invalidate();
@@ -92,5 +95,5 @@ export default function Landscape3D({data,showMatureSpread=false}:{data:DeckData
  useEffect(()=>{const listener=(e:Event)=>setMature(!!(e as CustomEvent<{show:boolean}>).detail?.show);window.addEventListener('deckcraft:landscape-mature-spread',listener);window.dispatchEvent(new CustomEvent('deckcraft:landscape-mature-request'));return()=>window.removeEventListener('deckcraft:landscape-mature-spread',listener);},[]);
  useFrame(()=>{const next=landscapeRenderLods(objects,camera.position,size.height,q.tier,showcase),key=[...next].map(([id,lod])=>id+':'+lod).join('|');if(last.current!==key){last.current=key;setLods(next);}});
  const groups=new Map<string,{items:LandscapeObject[];lod:0|1|2}>();for(const o of objects.filter(o=>o.enabled&&o.kind!=='bed'&&!landscapePlacement(data,o).pendingReason)){const lod=lods.get(o.id)??2,key=o.assetId+':'+lod,g=groups.get(key)??{items:[],lod};g.items.push(o);groups.set(key,g);}
- return <group name="landscape-designed-objects" userData={{designedObjectCount:objects.filter(o=>o.enabled).length,renderTier:q.tier,genericVisualProxies:true}}>{[...groups].map(([key,g])=><Suspense key={key} fallback={null}><AssetInstances data={data} items={g.items} lod={g.lod}/></Suspense>)}{objects.some(o=>o.enabled&&o.kind==='bed')&&<Suspense fallback={null}><Beds data={data} objects={objects}/></Suspense>}{(showMatureSpread||mature)&&<MatureSpread data={data} objects={objects}/>}</group>;
+ return <group name="landscape-designed-objects" userData={{designedObjectCount:objects.filter(o=>o.enabled).length,renderTier:q.tier,genericVisualProxies:true}}>{[...groups].map(([key,g])=><Suspense key={key} fallback={null}><AssetInstances data={data} items={g.items} lod={g.lod}/></Suspense>)}<PlantBlooms data={data} objects={objects} lods={lods}/>{objects.some(o=>o.enabled&&o.kind==='bed')&&<Suspense fallback={null}><Beds data={data} objects={objects}/></Suspense>}{(showMatureSpread||mature)&&<MatureSpread data={data} objects={objects}/>}</group>;
 }
