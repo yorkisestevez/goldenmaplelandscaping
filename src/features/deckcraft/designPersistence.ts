@@ -160,7 +160,16 @@ export function validateDesign(input:unknown):DeckData {
       seen.add(item.productId);const qty=numeric(item.qty,0,30,'Lighting quantity');if(!Number.isInteger(qty))throw new Error('Lighting quantities must be whole numbers.');
       if(item.zone==='border'||item.zone!==undefined&&!(LIGHTING_ZONES as readonly unknown[]).includes(item.zone))throw new Error('Unsupported lighting installation zone; picture-frame lights use their dedicated option.');
       if(item.auto!==undefined&&item.auto!==true)throw new Error('Invalid managed lighting flag.');
-      return {productId:item.productId,qty,...(item.zone?{zone:item.zone as LightingZone}:{}),...(item.auto?{auto:true as const}:{})};
+      let places:{x:number;z:number;angle:number;y?:number}[]|undefined;
+      if(item.places!==undefined){
+        if(!Array.isArray(item.places)||item.places.length!==qty)throw new Error('Lighting placements must match the fixture quantity.');
+        places=item.places.map(place=>{
+          if(!record(place))throw new Error('Invalid lighting placement.');
+          const y=place.y===undefined?undefined:numeric(place.y,-500,4000,'Lighting placement');
+          return {x:numeric(place.x,-200000,200000,'Lighting placement'),z:numeric(place.z,-200000,200000,'Lighting placement'),angle:numeric(place.angle,-Math.PI*2,Math.PI*2,'Lighting placement'),...(y===undefined?{}:{y})};
+        });
+      }
+      return {productId:item.productId,qty,...(item.zone?{zone:item.zone as LightingZone}:{}),...(item.auto?{auto:true as const}:{}),...(places?{places}:{})};
     }).filter(item=>item.qty>0)};
   }
   if(input.autoLighting!==undefined){

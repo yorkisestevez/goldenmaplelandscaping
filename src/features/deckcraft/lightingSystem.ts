@@ -50,7 +50,7 @@ export function activeLightingItems(data:DeckData,model?:DeckTakeoff){
     const zone=item.zone??defaultLightingZone(product);
     if(zone==='border')return []; // Dedicated option owns these actual mounts; manual choices stay in their zones.
     if(!isSystemProduct(product)&&data.lightingZoneEnabled?.[zone]===false)return [];
-    return [{...product,qty:item.qty,zone,productId:product.id}];
+    return [{...product,qty:item.qty,zone,productId:product.id,...(item.places?{places:item.places}:{})}];
   });
   // Border mounts are derived rather than stored as a second same-product row, so
   // manual EVO HYDE selections in other zones survive toggling this option.

@@ -1,5 +1,5 @@
 import type {DeckData,PatioInlay,YardFeature} from './types';
-import type {LandscapeObject} from './landscapeTypes';
+import type {LandscapeAssetId,LandscapeObject} from './landscapeTypes';
 import {DEFAULT_DECK} from './defaults';
 import {EXTERIOR_LOOKS,applyLook} from './houseLooks';
 import {getHouseConfig} from './houseSettings';
@@ -13,9 +13,8 @@ import {createPlanningPool,poolRoundedRectangle} from './poolAssembly';
 import {poolLocalBounds} from './poolGeometry';
 import {newPergola} from './pergolaValidation';
 import {syncAutoLighting} from './lightingSystem';
-import {LANDSCAPE_SPECIES,newLandscapeObject} from './landscapeCatalogue';
+import {newLandscapeObject,newLandscapePlant} from './landscapeCatalogue';
 import {patioInlayPlans} from './patioInlays';
-import type {LandscapeAssetId} from './landscapeTypes';
 
 /**
  * The yard used for showcase stills: a two-storey contemporary house on a
@@ -23,9 +22,10 @@ import type {LandscapeAssetId} from './landscapeTypes';
  * terrace, pool court, and a fire lounge beside it — wrapped in deep beds.
  * It is a sample, not the editor's default deck. Pricing runs through the
  * same takeoff as any other design.
- * The catalogue has no cedar, maple, or hydrangea, and no pool-lounger
- * product. Screening uses white pine, serviceberry, red-osier dogwood and
- * Karl Foerster. Poolside seating is the cushioned lounge chair.
+ * Planting uses the Ontario library: cedar hedge, sugar maple, white pine,
+ * serviceberry, hydrangea, dogwood and Karl Foerster, layered back to front.
+ * The pool feature has no underwater light. Poolside seating is the cushioned
+ * lounge chair. The pergola is black aluminium louvers with the LEDs on.
  */
 const SLAB='techo-blu60-smooth-slab';
 const ONYX='#565855',CREMA='#cabaaa',WALL_ONYX='#4b4d4d';
@@ -36,8 +36,6 @@ const SEAT_DEPTH=249/304.8;
 const BORDER_IN=18;
 const LOT_W=100,LOT_D=160;
 const JOIN=2/12;
-
-const species=(id:string)=>structuredClone(LANDSCAPE_SPECIES.find(s=>s.id===id)!);
 
 /** Picture-frame strips, each within the 20 ft inlay limit, on a light field. */
 function borderStrips(f:YardFeature):PatioInlay[]{
@@ -61,11 +59,6 @@ function bed(id:string,name:string,x0:number,z0:number,x1:number,z1:number):Land
  const o=newLandscapeObject('mulch-bed',id,(x0+x1)/2*12,(z0+z1)/2*12);
  return {...o,name,widthIn:(x1-x0)*12,depthIn:(z1-z0)*12,polygon:[{x:x0*12,z:z0*12},{x:x1*12,z:z0*12},{x:x1*12,z:z1*12},{x:x0*12,z:z1*12}]};
 }
-function plant(asset:LandscapeAssetId,id:string,name:string,xFt:number,zFt:number,heightIn:number,speciesId:string,rotationDeg=0):LandscapeObject{
- const o=newLandscapeObject(asset,id,xFt*12,zFt*12);
- const spread=asset==='grass-clump'?28:asset==='rounded-shrub'?46:asset==='conifer-tree'?Math.round(heightIn*.42):Math.round(heightIn*.55);
- return {...o,name,heightIn,widthIn:spread,depthIn:spread,rotationDeg,speciesRecord:species(speciesId)};
-}
 function furn(asset:LandscapeAssetId,id:string,name:string,xFt:number,zFt:number,rotationDeg:number,support:string):LandscapeObject{
  const o=newLandscapeObject(asset,id,xFt*12,zFt*12);
  return {...o,name,rotationDeg,supportFeatureId:support};
@@ -79,17 +72,25 @@ export function ontarioShowcaseDesign():DeckData{
   widthFt:48,depthFt:34,storeys:2,storeyHeightIn:120,roofShape:'Hip',roofPitch:6,ridge:'x',floorHeightIn:36,
   footprint:{rects:[{id:'garage',kind:'garage',wall:'Back',offsetFt:24,widthFt:22,depthFt:22,storeys:1,roofShape:'Hip'}]},
   openings:[
-   {id:'slider',type:'Door',facade:'Front',wallId:'main-front',style:'Sliding',offsetPct:50,bottomIn:36,widthIn:96,heightIn:84},
-   {id:'front-left',type:'Window',facade:'Front',wallId:'main-front',style:'Picture',offsetPct:14,bottomIn:28,widthIn:72,heightIn:60},
-   {id:'front-right',type:'Window',facade:'Front',wallId:'main-front',style:'Picture',offsetPct:86,bottomIn:28,widthIn:72,heightIn:60},
-   {id:'upper-left',type:'Window',facade:'Front',wallId:'main-front',style:'Picture',offsetPct:22,bottomIn:138,widthIn:64,heightIn:48},
-   {id:'upper-center',type:'Window',facade:'Front',wallId:'main-front',style:'Picture',offsetPct:50,bottomIn:138,widthIn:84,heightIn:48},
-   {id:'upper-right',type:'Window',facade:'Front',wallId:'main-front',style:'Picture',offsetPct:78,bottomIn:138,widthIn:64,heightIn:48},
-   {id:'side-left',type:'Window',facade:'Left',wallId:'main-left',style:'Picture',offsetPct:62,bottomIn:138,widthIn:48,heightIn:48},
-   {id:'side-right',type:'Window',facade:'Right',wallId:'main-right',style:'Picture',offsetPct:62,bottomIn:138,widthIn:48,heightIn:48},
+   {id:'slider',type:'Door',facade:'Front',wallId:'main-front',style:'Sliding',offsetPct:50,bottomIn:36,widthIn:144,heightIn:96},
+   {id:'front-left',type:'Window',facade:'Front',wallId:'main-front',style:'Picture',offsetPct:18,bottomIn:40,widthIn:156,heightIn:108},
+   {id:'front-right',type:'Window',facade:'Front',wallId:'main-front',style:'Picture',offsetPct:82,bottomIn:40,widthIn:156,heightIn:108},
+   {id:'upper-left',type:'Window',facade:'Front',wallId:'main-front',style:'Picture',offsetPct:20,bottomIn:160,widthIn:150,heightIn:68},
+   {id:'upper-center',type:'Window',facade:'Front',wallId:'main-front',style:'Picture',offsetPct:50,bottomIn:160,widthIn:168,heightIn:68},
+   {id:'upper-right',type:'Window',facade:'Front',wallId:'main-front',style:'Picture',offsetPct:80,bottomIn:160,widthIn:150,heightIn:68},
+   {id:'side-low-left',type:'Window',facade:'Left',wallId:'main-left',style:'Picture',offsetPct:34,bottomIn:40,widthIn:108,heightIn:96},
+   {id:'side-low-right',type:'Window',facade:'Right',wallId:'main-right',style:'Picture',offsetPct:34,bottomIn:40,widthIn:108,heightIn:96},
+   {id:'side-left',type:'Window',facade:'Left',wallId:'main-left',style:'Picture',offsetPct:68,bottomIn:162,widthIn:84,heightIn:60},
+   {id:'side-right',type:'Window',facade:'Right',wallId:'main-right',style:'Picture',offsetPct:68,bottomIn:162,widthIn:84,heightIn:60},
    {id:'garage-door',type:'Garage',facade:'Back',wallId:'garage-back',style:'Glass',offsetPct:50,bottomIn:0,widthIn:168,heightIn:84},
   ],
  },contemporary);
+ house.cladding='Board & batten';
+ house.claddingColor='#c4895a';
+ house.wainscot={cladding:'Fieldstone',color:'#9c9388',heightIn:42};
+ house.trimColor='#f6f1e8';
+ house.windowColor='#3d342c';
+ house.doorColor='#6e4b32';
 
  const data:DeckData={
   ...DEFAULT_DECK,
@@ -145,25 +146,38 @@ export function ontarioShowcaseDesign():DeckData{
  const pool={...createPlanningPool({id:'lap-pool',name:'Lap pool',type:'fiberglass',xIn:court.xFt*12,zIn:court.zFt*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolShape,depthProfile:[{stationIn:0,depthIn:48},{stationIn:poolLengthIn,depthIn:48}]};
  data.pools=[pool];
 
- const pergola=newPergola('lousol-junior','10x12');
- data.pergola={...pergola,accessories:['led'],lighting:'perimeter-led',target:{kind:'patio',featureId:terrace.id},xFt:terrace.xFt,zFt:terrace.zFt-terrace.depthFt/2+8,rotationDeg:0,louverDeg:18};
+ const pergola=newPergola('lousol-custom','custom');
+ data.pergola={...pergola,frameFinish:'black',roofFinish:'black',accessories:[],lighting:'perimeter-led',customSize:{widthFt:10,depthFt:12,heightFt:9},target:{kind:'patio',featureId:terrace.id},xFt:terrace.xFt,zFt:terrace.zFt-terrace.depthFt/2+8,rotationDeg:0,louverDeg:55};
 
  const rear0=court.zFt+court.depthFt/2+0.15,rear1=data.permitSite.rearYardFt-0.4;
  const flank1=court.zFt-court.depthFt/2-0.15;
  const loungeFar=lounge.zFt+lounge.depthFt/2;
  const plants:LandscapeObject[]=[];
  let n=0;
- const put=(asset:LandscapeAssetId,name:string,speciesId:string,x:number,z:number,h:number,rot=0)=>plants.push(plant(asset,`plant-${n++}`,name,x,z,h,speciesId,rot));
- const pine=(x:number,z:number,h:number,rot=8)=>put('conifer-tree','White pine','pinus-strobus',x,z,h,rot);
- const berry=(x:number,z:number,h:number,rot=12)=>put('deciduous-tree','Serviceberry','amelanchier-canadensis',x,z,h,rot);
- const shrub=(x:number,z:number,rot=0)=>put('rounded-shrub','Red-osier dogwood','cornus-sericea',x,z,50,rot);
- const grass=(x:number,z:number)=>put('grass-clump','Karl Foerster','calamagrostis-karl-foerster',x,z,46);
- // Two staggered rows down each side bed, a rear screen, and a frame on every room.
- pine(-34.6,10,200,6);berry(-30.6,18,158,-10);shrub(-34.8,26);grass(-30.4,32);pine(-34.2,42,176,14);shrub(-30.5,50,-6);berry(-34.4,58,168,20);grass(-30.6,66);shrub(-34.2,74,8);
- pine(57.2,14,188,-8);shrub(53.8,8);berry(53.6,24,152,16);grass(57.4,32);pine(53.8,44,210,4);shrub(57.6,54);berry(57.2,64,162,-14);grass(53.6,72);shrub(57.4,78);
- pine(-24,83.4,184,10);berry(-10,85.6,160,-8);shrub(2,82.2);grass(12,86.2);berry(22,83.2,172,18);shrub(34,86);pine(46,84.2,170,-6);grass(-34,81.2);shrub(58,83.6);
- berry(40,12,156,-16);shrub(36,8);grass(48,10);shrub(46,20);grass(36,22);berry(44,32,148,8);shrub(36,38);grass(48,36);
- berry(-18,68,154,6);shrub(-24,64);grass(-10,66);shrub(-16,74,-8);grass(-24,72);shrub(-8,70);
+ const grow=(speciesId:string,xFt:number,zFt:number,heightIn?:number,widthIn?:number)=>{
+  const o=newLandscapePlant(speciesId,`plant-${n++}`,xFt*12,zFt*12);
+  plants.push({...o,rotationDeg:(n*47)%50-25,speciesRecord:structuredClone(o.speciesRecord!),...(heightIn?{heightIn}:{}),...(widthIn?{widthIn,depthIn:widthIn}:{})});
+ };
+ const line=(fixed:'x'|'z',at:number,from:number,to:number,step:number,species:string[],heightIn?:number,widthIn?:number)=>{
+  for(let t=from,i=0;t<=to+1e-6;t+=step,i++)grow(species[i%species.length],fixed==='x'?at:t,fixed==='z'?at:t,heightIn,widthIn);
+ };
+ const zEnd=rear0-1.6;
+ // Fence line, then a middle shrub layer, then grasses and perennials at the bed's inner edge.
+ line('x',-36.5,6,zEnd,3.1,['thuja-occidentalis-smaragd'],112,34);
+ line('x',-34.6,12,zEnd-4,14,['acer-saccharum','pinus-strobus'],240,120);
+ line('x',-32.2,8,zEnd,3.6,['hydrangea-arborescens-annabelle','cornus-sericea','amelanchier-canadensis','hydrangea-paniculata','syringa-vulgaris']);
+ line('x',-29.4,7,zEnd,2.5,['calamagrostis-karl-foerster','hosta','echinacea-purpurea','rudbeckia-hirta','matteuccia-struthiopteris','schizachyrium-scoparium']);
+ line('x',60.5,6,zEnd,3.1,['thuja-occidentalis-smaragd'],112,34);
+ line('x',58.6,12,zEnd-4,14,['pinus-strobus','acer-saccharum'],230,110);
+ line('x',55.8,8,zEnd,3.6,['cornus-sericea','hydrangea-arborescens-annabelle','amelanchier-canadensis','physocarpus-opulifolius','hydrangea-paniculata']);
+ line('x',53.4,7,zEnd,2.5,['calamagrostis-karl-foerster','echinacea-purpurea','hosta','panicum-virgatum','hemerocallis','nepeta-faassenii']);
+ line('z',rear1-1.5,-34,58,3.2,['thuja-occidentalis-smaragd'],112,34);
+ line('z',(rear0+rear1)/2,-30,54,4.2,['acer-saccharum','amelanchier-canadensis','syringa-vulgaris','pinus-strobus'],200,100);
+ line('z',rear0+1.5,-32,56,2.8,['calamagrostis-karl-foerster','hydrangea-arborescens-annabelle','hosta','rudbeckia-hirta']);
+ line('x',48,8,flank1-1.2,3.4,['hydrangea-paniculata','cornus-sericea','amelanchier-canadensis']);
+ line('x',36,7,flank1-1.4,2.6,['calamagrostis-karl-foerster','echinacea-purpurea','hosta','salvia-nemorosa']);
+ line('z',rear0-1.4,-26,-8,3.4,['thuja-occidentalis-smaragd','pinus-strobus'],140,48);
+ line('z',loungeFar+2,-25,-7,3.2,['hydrangea-arborescens-annabelle','cornus-sericea','calamagrostis-karl-foerster']);
 
  const diningX=data.pergola.xFt,diningZ=data.pergola.zFt;
  const nearDeck=court.zFt-court.depthFt/2+3.8,farDeck=court.zFt+court.depthFt/2-3.6;
@@ -190,7 +204,17 @@ export function ontarioShowcaseDesign():DeckData{
  ];
 
  const lit=buildDeckTakeoff(data);
- data.lightingSystem={wireDistance:80,selectedItems:syncAutoLighting({...data,lightingSystem:{wireDistance:80,selectedItems:[{productId:'liv',qty:6,zone:'landscape'},{productId:'scope',qty:4,zone:'landscape'}]}}, {posts:lit.quantities.railingPosts,stairs:lit.treads.length,privacy:0})};
+ // The pool feature has no underwater lamp. SCOPE spots on the deck wash the water; LIV bollards
+ // line the walks; LIV WALL fixtures wash the fire lounge. Each place is model inches.
+ const pin=(xFt:number,zFt:number,angle=0,y?:number)=>({x:xFt*12,z:zFt*12,angle,...(y===undefined?{}:{y})});
+ const path=[pin(-7,45),pin(-7,53),pin(-7,60),pin(2,48),pin(46,48),pin(2,72),pin(46,72),pin(-22,46)];
+ const spots=[pin(14,48,0),pin(34,48,0),pin(24,72,Math.PI),pin(48,60,-Math.PI/2),pin(-32,24,-Math.PI/2),pin(-32,55,-Math.PI/2),pin(56,24,Math.PI/2),pin(56,55,Math.PI/2)];
+ const loungeWall=[pin(-24.6,49,Math.PI/2,16),pin(-24.6,56,Math.PI/2,16),pin(-18,46.9,0,16),pin(-18,57.9,Math.PI,16)];
+ data.lightingSystem={wireDistance:80,selectedItems:syncAutoLighting({...data,lightingSystem:{wireDistance:80,selectedItems:[
+  {productId:'liv',qty:path.length,zone:'landscape',places:path},
+  {productId:'scope',qty:spots.length,zone:'landscape',places:spots},
+  {productId:'liv_wall',qty:loungeWall.length,zone:'deck',places:loungeWall},
+ ]}}, {posts:lit.quantities.railingPosts,stairs:lit.treads.length,privacy:0})};
 
  // Over the rear bed, inside the fence, looking back at the house. The spine
  // fills the frame and the context trees sit behind the lens.
@@ -234,7 +258,14 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
  const rear=data.permitSite?.rearYardFt??0,visible=LOT_W*rear;
  if(visible<=0||(paved+bedSqft)/visible<0.58)issues.push('Hardscape and planting do not fill the yard.');
  const plants=(data.landscapeObjects??[]).filter(o=>o.kind==='plant');
- if(plants.length<40||!plants.some(o=>o.speciesRecord?.id==='pinus-strobus')||!plants.some(o=>o.speciesRecord?.id==='amelanchier-canadensis')||!plants.some(o=>o.speciesRecord?.id==='cornus-sericea')||!plants.some(o=>o.speciesRecord?.id==='calamagrostis-karl-foerster'))issues.push('The beds are not packed with the Ontario palette the catalogue actually has.');
+ const speciesIds=new Set(plants.map(o=>o.speciesRecord?.id));
+ for(const id of ['pinus-strobus','amelanchier-canadensis','cornus-sericea','calamagrostis-karl-foerster','thuja-occidentalis-smaragd','acer-saccharum','hydrangea-arborescens-annabelle'])if(!speciesIds.has(id))issues.push('The beds are missing '+id+'.');
+ if(plants.length<140||(data.landscapeObjects?.length??0)>300)issues.push(`Planting density is ${plants.length} plants in ${data.landscapeObjects?.length??0} objects.`);
+ const frontWall=data.houseConfig?.openings.filter(o=>o.wallId==='main-front'&&o.widthIn>=140&&o.heightIn>=96)??[];
+ if(frontWall.length<2||data.houseConfig?.cladding!=='Board & batten'||data.houseConfig.wainscot?.cladding!=='Fieldstone'||data.houseConfig.claddingColor==='#3d4043')issues.push('The house is not wood over stone with a window wall toward the yard.');
+ if(data.pergola?.roofFinish!=='black'||data.pergola.frameFinish!=='black'||data.pergola.lighting!=='perimeter-led'||(data.pergola.louverDeg??0)<40)issues.push('The pergola is not open black aluminium louvers with the LEDs on.');
+ const lights=data.lightingSystem.selectedItems,placed=(id:string)=>lights.find(i=>i.productId===id)?.places?.length??0;
+ if(placed('liv')<8||placed('scope')<8||placed('liv_wall')<4)issues.push('Path lights, tree uplights and fire-lounge wall lights are not placed.');
  if((data.landscapeObjects??[]).filter(o=>o.assetId==='lounge-chair'&&o.supportFeatureId==='pool-court').length<2)issues.push('The pool deck has no lounge chairs.');
  if(!data.autoLighting?.posts||!data.autoLighting.stairs)issues.push('Deck lighting is off.');
  if(!data.pergola?.lighting)issues.push('The pergola has no lights.');
