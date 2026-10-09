@@ -42,18 +42,12 @@ export function Layout({ children }: { children: ReactNode }) {
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/favicon-180.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* media=print keeps the stylesheet off the first paint. The hero copy
-            uses the system stack until App flips this after input or idle.
-            display=swap still applies the face when it arrives. A script that
-            injects a second link does not match what React hydrates. */}
-        <link
-          id="gm-fonts"
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap"
-          media="print"
-        />
+        {/* The webfont CSS is not in this head. A media=print stylesheet is
+            still fetched at low priority, and Lighthouse then treats that
+            Google response as part of the LCP graph. The hero copy uses the
+            sized local fallback until App injects this after input or idle.
+            display=swap applies the face when it arrives. No-JS gets the
+            noscript link. */}
         <noscript>
           <link
             rel="stylesheet"
@@ -98,8 +92,13 @@ export default function App() {
       /* A tracker must not take the page down. */
     }
     return onInteractOrIdle(() => {
-      const fonts = document.getElementById('gm-fonts');
-      if (fonts instanceof HTMLLinkElement) fonts.media = 'all';
+      if (document.getElementById('gm-fonts')) return;
+      const link = document.createElement('link');
+      link.id = 'gm-fonts';
+      link.rel = 'stylesheet';
+      link.href =
+        'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap';
+      document.head.appendChild(link);
     }, 8000);
   }, []);
 

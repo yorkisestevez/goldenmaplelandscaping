@@ -1,4 +1,4 @@
-import type { ImgHTMLAttributes } from 'react';
+import { useEffect, useRef, useState, type ImgHTMLAttributes } from 'react';
 import type { ImageRef } from '../data/portfolioImages';
 import { cn } from '../utils/cn';
 
@@ -23,6 +23,13 @@ export interface ResponsiveImageProps extends NativeImgProps {
   /** object-position, e.g. '50% 65%'. */
   position?: string;
   wrapperClassName?: string;
+  /**
+   * Leave src off the prerendered img and set it when the box intersects.
+   * Below-fold photos that stay in the HTML are fetched during the Lighthouse
+   * gather (the lazy margin is large on a fast connection) and then modeled as
+   * competing with the hero. The aspect box still reserves space.
+   */
+  whenVisible?: boolean;
 }
 
 /**
@@ -41,19 +48,44 @@ export default function ResponsiveImage({
   className,
   style,
   referrerPolicy = 'no-referrer',
+  whenVisible = false,
   ...rest
 }: ResponsiveImageProps) {
+  const hold = whenVisible && !priority;
+  const [shown, setShown] = useState(!hold);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (!hold || shown) return;
+    const el = imgRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setShown(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        setShown(true);
+        io.disconnect();
+      },
+      { rootMargin: '0px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hold, shown]);
+
   const img = (
     <img
-      src={image.src}
-      srcSet={image.srcSet}
+      ref={imgRef}
+      src={shown ? image.src : undefined}
+      srcSet={shown ? image.srcSet : undefined}
       sizes={sizes}
       width={image.width}
       height={image.height}
       alt={image.alt}
       loading={priority ? 'eager' : 'lazy'}
       decoding="async"
-      fetchPriority={priority ? 'high' : 'auto'}
+      fetchPriority={priority ? 'high' : hold ? 'low' : 'auto'}
       referrerPolicy={referrerPolicy}
       className={cn(
         aspect === 'fill' ? undefined : 'h-full w-full',
@@ -65,12 +97,34 @@ export default function ResponsiveImage({
     />
   );
 
-  if (aspect === 'fill') return img;
+  const fallback = hold ? (
+    <noscript>
+      <img
+        src={image.src}
+        srcSet={image.srcSet}
+        sizes={sizes}
+        width={image.width}
+        height={image.height}
+        alt={image.alt}
+        decoding="async"
+      />
+    </noscript>
+  ) : null;
+
+  if (aspect === 'fill') {
+    return (
+      <>
+        {img}
+        {fallback}
+      </>
+    );
+  }
 
   const ratio = aspect === 'native' ? `${image.width} / ${image.height}` : aspect.replace('/', ' / ');
   return (
     <div className={cn('overflow-hidden', wrapperClassName)} style={{ aspectRatio: ratio }}>
       {img}
+      {fallback}
     </div>
   );
 }

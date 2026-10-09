@@ -69,8 +69,15 @@ export default function CompositeDecking() {
 
             <div className="relative aspect-[4/5] rounded-[2px] overflow-hidden shadow-2xl border border-brand-dim/10">
               <img
-                src="/images/projects/Silver Maple Radiance Rail 0101.jpg"
+                src="/images/projects/silver-maple-radiance-rail-640.webp"
+                srcSet="/images/projects/silver-maple-radiance-rail-640.webp 640w, /images/projects/silver-maple-radiance-rail-1200.webp 1200w"
+                sizes="(min-width: 1024px) 42vw, 100vw"
+                width={1200}
+                height={1500}
                 alt="Luxury Composite Decking in Barrie ON"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
