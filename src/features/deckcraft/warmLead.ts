@@ -25,7 +25,7 @@ export function noteWarmLead(kind:WarmLeadKind,detail:{pricedSubtotal?:number;ha
     sent.add(tag);remember(sent);
     trackDeck('deckcraft_output',`deck_warm_${kind}`);
   }
-  if(import.meta.env.DEV){
+  if(typeof import.meta.env==='undefined'||import.meta.env.DEV){
     // eslint-disable-next-line no-console
     console.log('[dev] warm lead',kind,detail);
     return;

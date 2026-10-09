@@ -6,7 +6,7 @@ import {getHardwareLayout} from '../hardwareLayout';
 import {catalogueAccessoryLayout} from '../catalogueAccessories';
 import {stringerCutProfile} from '../components/viewer3d/stringerProfile';
 import {ACTUAL_DEPTH_IN,type JoistSize} from '../structure/spanTables';
-import {DETAIL_SCALES,SCALES,type DrawItem,type LayerId,type Pt,drawnExtents,feetInches,fitScale} from './drawingTypes';
+import {DETAIL_SCALES,SCALES,SHEET,type DrawItem,type LayerId,type Pt,drawnExtents,feetInches,fitScale} from './drawingTypes';
 import {translate} from './elevations';
 import {type Part,connectionParts,ledgerFlashing} from './pricedParts';
 
@@ -22,7 +22,7 @@ export interface DetailInput{
   reference:ZoneReference;
   /** How far the guard posts sit inside the front edge (from the typical section). */
   guardInset:number;
-  pier:{diameter:number;priced:boolean};
+  pier:{diameter:number;priced:boolean;sized?:boolean};
   materialName:string;railingName:string;
   /** The design's hardware layout, computed once for the whole set. */
   hardware:ReturnType<typeof getHardwareLayout>;
@@ -127,7 +127,8 @@ function footingDetail(c:Ctx):Detail{
   k.line('C-TOPO',-14,0,14,0);k.text(-14,1,'GRADE');
   if(blocks){k.rect('S-FTNG',-6,0,6,6);list.push([6,3,'Deck block'],[-6,.2,'Compacted, undisturbed soil']);}
   else{
-    const r=helical?1.4:c.pier.diameter/2,compress=depth>30,bottom=compress?-25:-depth;
+    // A tributary pier wider than 12 in is labelled at its size and drawn at 12 in, so the detail stays at a detail scale.
+    const r=helical?1.4:c.pier.sized?Math.min(c.pier.diameter/2,6):c.pier.diameter/2,compress=depth>30,bottom=compress?-25:-depth;
     if(c.hasPost)k.rect('S-POST',-.5,2,.5,postBase-.45);
     if(compress){
       // Drawn with a break: the pier's top and its foot, the depth dimensioned true across the break.
@@ -136,7 +137,7 @@ function footingDetail(c:Ctx):Detail{
     }else k.rect('S-FTNG',-r,bottom,r,2);
     if(helical)k.rect('S-FTNG',-6,bottom+4,6,bottom+4.3);
     k.dim(-r-4,0,-r-4,bottom,8,`${feetInches(depth)} below grade`);
-    list.push(helical?[1.4,-6,'Helical pile']:[r,-6,c.pier.priced?'16 in concrete pier':'Concrete pier (12 in shown)'],[-r,bottom+2,'Undisturbed soil below frost'],...(compress?[[r+2,-14.5,'Depth drawn with a break'] as [number,number,string]]:[]));
+    list.push(helical?[1.4,-6,'Helical pile']:[r,-6,c.pier.sized?`${c.pier.diameter} in concrete pier`:c.pier.priced?'16 in concrete pier':'Concrete pier (12 in shown)'],[-r,bottom+2,'Undisturbed soil below frost'],...(compress?[[r+2,-14.5,'Depth drawn with a break'] as [number,number,string]]:[]));
   }
   k.callouts(list,14,'start',postBase+12,blocks?-2:-22);
   return {title:'FOOTING',items:k.items};
@@ -225,18 +226,26 @@ export function detailItems(input:DetailInput,origin:Pt):{items:DrawItem[];title
   const ledger=data.houseVisible!==false&&getHouseContact(data,main.footprint).contacts.some(x=>x.kind==='ledger');
   const details=[ledger?ledgerDetail(c):houseSideDetail(c),beamDetail(c),footingDetail(c),...(data.railingType==='None'?[]:[guardDetail(c)]),stairDetail(c),deckingDetail(c)].filter((d):d is Detail=>!!d);
   // Each detail sits in a cell as wide as the widest and as tall as its row's tallest, its title underneath.
-  const boxes=details.map(d=>drawnExtents(d.items,DETAIL_SCALES[2].ratio,0)),out:DrawItem[]=[];
-  const colW=[0,1,2].map(col=>Math.max(0,...boxes.filter((_,i)=>i%3===col).map(b=>b.maxX-b.minX))),colX=colW.map((_,col)=>colW.slice(0,col).reduce((n,w)=>n+w+8,0));
-  let y=0;
-  for(let row=0;row*3<details.length;row++){
-    const idx=[0,1,2].map(i=>row*3+i).filter(i=>i<details.length),rowH=Math.max(...idx.map(i=>boxes[i].maxY-boxes[i].minY));
-    idx.forEach((i,col)=>{
-      const b=boxes[i],x=colX[col]+(colW[col]-(b.maxX-b.minX))/2;
-      out.push(...translate(details[i].items,x-b.minX,y+rowH-(b.maxY-b.minY)-b.minY));
-      out.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:colX[col]+colW[col]/2,y:y+rowH+10},text:`${i+1}  ${details[i].title}`,height:.12,anchor:'middle'});
-    });
-    y+=rowH+22;
-  }
+  // A deeper beam can miss the last detail scale by a fraction of an inch; a slightly tighter row gap recovers it.
+  // Designs that already fit keep the 22 in gap, so a saved drawing does not move.
+  const boxes=details.map(d=>drawnExtents(d.items,DETAIL_SCALES[2].ratio,0));
+  const place=(rowGap:number):DrawItem[]=>{
+    const out:DrawItem[]=[],colW=[0,1,2].map(col=>Math.max(0,...boxes.filter((_,i)=>i%3===col).map(b=>b.maxX-b.minX))),colX=colW.map((_,col)=>colW.slice(0,col).reduce((n,w)=>n+w+8,0));
+    let y=0;
+    for(let row=0;row*3<details.length;row++){
+      const idx=[0,1,2].map(i=>row*3+i).filter(i=>i<details.length),rowH=Math.max(...idx.map(i=>boxes[i].maxY-boxes[i].minY));
+      idx.forEach((i,col)=>{
+        const b=boxes[i],x=colX[col]+(colW[col]-(b.maxX-b.minX))/2;
+        out.push(...translate(details[i].items,x-b.minX,y+rowH-(b.maxY-b.minY)-b.minY));
+        out.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:colX[col]+colW[col]/2,y:y+rowH+10},text:`${i+1}  ${details[i].title}`,height:.12,anchor:'middle'});
+      });
+      y+=rowH+rowGap;
+    }
+    return out;
+  };
+  const fits=(items:DrawItem[])=>{const e=drawnExtents(items,DETAIL_SCALES[2].ratio);return (e.maxX-e.minX)/DETAIL_SCALES[2].ratio<=SHEET.area.w&&(e.maxY-e.minY)/DETAIL_SCALES[2].ratio<=SHEET.area.h;};
+  let out=place(22);
+  if(!fits(out))out=place(18);
   const fit=fitScale(out,[...DETAIL_SCALES,...SCALES]);
   return {items:translate(out,origin.x-fit.extents.minX,origin.y-fit.extents.minY),titles:details.map(d=>d.title)};
 }

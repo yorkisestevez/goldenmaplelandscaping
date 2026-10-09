@@ -32,11 +32,11 @@ export function pierOf(data:DeckData,model?:Pick<DeckTakeoff,'foundationSupports
 }
 
 /**
- * Ledger flashing: the estimate prices it only on an add-on deck; the TimberTech flashing accessory makes it a supplier
- * quote; otherwise it is not in the estimate, and the drawings say so rather than show it as included.
+ * Ledger flashing: priced on an add-on, and on a new attached deck that still takes a ledger. The TimberTech flashing
+ * accessory makes it a supplier quote. Otherwise it is not in the estimate, and the drawings say so.
  */
 export function ledgerFlashing(data:DeckData):{label:string;note:string}{
   if(data.catalogueAccessories?.includes('tt_protac_flashing'))return {label:'Flashing (supplier quote)',note:'Ledger flashing: the selected flashing is a supplier quote in this estimate.'};
-  if(priceLedgerFlashing(data))return {label:'Flashing (priced)',note:'Ledger flashing or membrane is priced along every wall the deck meets.'};
+  if(priceLedgerFlashing(data))return {label:'Flashing (priced)',note:'Ledger flashing is priced along every wall the deck meets.'};
   return {label:'Flashing (not in this estimate)',note:'Ledger flashing is drawn but is not in this estimate; confirm it with the builder before building.'};
 }

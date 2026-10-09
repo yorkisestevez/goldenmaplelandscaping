@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import {assertLeadsAllowed,INTERNAL_MODE_TOKEN,internalModeOn,setInternalMode} from '../src/features/deckcraft/internalMode';
 import {noteWarmLead} from '../src/features/deckcraft/warmLead';
 import {resetDeckAnalyticsVisit,setDeckAnalyticsSink,trackDeck} from '../src/features/deckcraft/deckAnalytics';
-import {askDesignerAi,checkAssistantAvailability} from '../src/features/deckcraft/designer/deckAssistantClient';
-import {designerAiStatus} from '../src/features/deckcraft/designer/siteDesignerAiClient';
+import {checkAssistantAvailability} from '../src/features/deckcraft/designer/deckAssistantClient';
+import {askDesignerAi,designerAiStatus} from '../src/features/deckcraft/designer/siteDesignerAiClient';
 import {deckReleaseData,calculateDeckReleaseEstimate} from '../src/features/deckcraft/deckRelease';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 

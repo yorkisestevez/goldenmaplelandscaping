@@ -30,7 +30,7 @@ ok((live.model.foundationSupports[0].pierRadiusIn??0)>6,'A new footing is wider 
 const flash=estimate().sections.flatMap(s=>s.items).find(i=>i.name==='Ledger Flashing');
 const savedFlash=saved.sections.flatMap(s=>s.items).find(i=>i.name==='Ledger Flashing');
 ok(!!flash&&flash.qty>0&&(flash.cost??0)>0,'Attached ledger flashing is priced on a new design');
-ok(!!savedFlash&&savedFlash.qty===0,'A 2026-10 attached deck does not gain that flashing line');
+ok(!savedFlash,'A 2026-10 attached deck does not gain that flashing line');
 has({},'Footings size');
 lacks({buildRules:'2026-10'},'Footings size');
 lacks({},'outside the Barrie');
@@ -56,7 +56,7 @@ ok(estimate({intendedLoad:'Heavy',buildRules:'2026-10'}).model.levels[0].referen
 const brickHouse={...getHouseConfig(design()),cladding:'Brick' as const};
 has({houseConfig:brickHouse},'Ledger blocked');
 ok(estimate({houseConfig:brickHouse}).model.levels[0].reference.beamRows.some(row=>row.kind==='house'),'Brick veneer frames a house-side beam instead of a ledger');
-ok(estimate({houseConfig:brickHouse}).sections.flatMap(s=>s.items).find(i=>i.name==='Ledger Flashing')!.qty===0,'A blocked ledger is not priced for flashing');
+ok(!estimate({houseConfig:brickHouse}).sections.flatMap(s=>s.items).find(i=>i.name==='Ledger Flashing'),'A blocked ledger is not priced for flashing');
 lacks({houseConfig:brickHouse,buildRules:'2026-10'},'Ledger blocked');
 
 has({height:144,framingSize:'2x8'},'Knee bracing');
