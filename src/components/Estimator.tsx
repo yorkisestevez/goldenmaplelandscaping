@@ -143,21 +143,27 @@ const STEP_NAMES: Record<number, string> = {
   1: 'type', 2: 'size', 3: 'conditions', 4: 'location', 5: 'material', 6: 'addons', 7: 'result',
 };
 
+/** Fixed grouping so server and browser render the same digits (React #418). */
+const grouped = (n: number) => {
+  const rounded = Math.round(n);
+  const sign = rounded < 0 ? '-' : '';
+  return sign + Math.abs(rounded).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
 const fmt = (n: number) =>
-  n >= 10000 ? `$${(n / 1000).toFixed(0)}k` : `$${n.toLocaleString()}`;
+  n >= 10000 ? `$${(n / 1000).toFixed(0)}k` : `$${grouped(n)}`;
 const preciseMoney = (cents: number) =>
-  `$${(Math.round(cents / 10000) * 100).toLocaleString('en-CA')}`;
+  `$${grouped(Math.round(cents / 10000) * 100)}`;
 
 /** Large, service-specific concept photograph for every project choice. */
-function TypeThumb({ typeId, eager = false }: { typeId: string; eager?: boolean }) {
+function TypeThumb({ typeId }: { typeId: string }) {
   const img = PROJECT_TYPE_IMAGES[typeId];
   return (
     <img
       src={img.src}
-      alt={img.alt}
+      alt=""
       width={960}
       height={720}
-      loading={eager ? 'eager' : 'lazy'}
+      loading="lazy"
       decoding="async"
       className="w-full aspect-[4/3] object-cover shrink-0"
     />
@@ -1020,7 +1026,7 @@ export default function Estimator({ onStudioChange }: {
    *  before the full breakdown takes over. */
   const showRail = step >= 2 && step < TOTAL_STEPS && precise !== null && display.low > 0;
 
-  const vaultMoney = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-CA')}`;
+  const vaultMoney = (cents: number) => `$${grouped(Math.round(cents / 100))}`;
 
   // The deck designer takes the page. Every hook above has run, so the estimate in progress keeps its state.
   if (studio) {
@@ -1156,7 +1162,7 @@ export default function Estimator({ onStudioChange }: {
                   
                     {delta !== null && (
                       <span key="delta" className={cn("font-sans text-[13px] font-medium", delta > 0 ? "text-brand-gold-dark" : "text-brand-success")}>
-                        {delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta / 100) * 100).toLocaleString()}
+                        {delta > 0 ? '+' : '−'}${grouped(Math.abs(Math.round(delta / 100) * 100))}
                       </span>
                     )}
                   
@@ -1203,13 +1209,12 @@ export default function Estimator({ onStudioChange }: {
               <h3 className="font-display text-3xl text-brand-bone mb-3">What are you looking to build?</h3>
               <p className="text-sm text-brand-muted mb-8">Choose your project below. Images illustrate each project type.</p>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
-                {PROJECT_TYPES.map((pt, idx) => {
+                {PROJECT_TYPES.map((pt) => {
                   const isSelected = projectType === pt.id;
                   return (
                     <button
                       key={pt.id}
                       type="button"
-                      aria-label={pt.label}
                       aria-pressed={isSelected}
                       onClick={() => { setProjectType(pt.id); if (pt.id !== 'full') setSelectedElements([]); }}
                       className={cn(
@@ -1217,7 +1222,7 @@ export default function Estimator({ onStudioChange }: {
                         isSelected ? 'bg-brand-gold/10 border-brand-gold-dark ring-1 ring-brand-gold-dark' : 'bg-brand-surface border-brand-dim hover:border-brand-gold-dark hover:shadow-md'
                       )}
                     >
-                      <TypeThumb typeId={pt.id} eager={idx < 3} />
+                      <TypeThumb typeId={pt.id} />
                       {isSelected && <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-brand-ink text-brand-porcelain flex items-center justify-center shadow-sm"><Check size={16} aria-hidden="true" /></span>}
                       <span className="block p-3 md:p-4">
                         <span className="block font-sans text-[12px] md:text-[14px] text-brand-ink font-medium mb-1.5 leading-snug">{pt.label}</span>
@@ -1261,7 +1266,6 @@ export default function Estimator({ onStudioChange }: {
                       <button
                         type="button"
                         key={pt.id}
-                        aria-label={pt.label}
                         aria-pressed={selectedElements.includes(pt.id)}
                         onClick={() => toggleElement(pt.id)}
                         className={cn(
@@ -1787,7 +1791,7 @@ function ReceiptRail({ precise, deckLabel, displayLow, displayHigh, confidence, 
   onSkip: () => void;
 }) {
   const money = (cents: number) =>
-    `$${(Math.round(cents / 10000) * 100).toLocaleString('en-CA')}`;
+    `$${grouped(Math.round(cents / 10000) * 100)}`;
   const rows: { label: string; cents: number }[] = [
     { label: 'Excavation & prep', cents: precise.perCategoryCents.excavation },
     { label: 'Materials & delivery', cents: precise.perCategoryCents.materials },
@@ -1806,7 +1810,7 @@ function ReceiptRail({ precise, deckLabel, displayLow, displayHigh, confidence, 
           
             {delta !== null && (
               <span key="delta" className={cn('font-sans text-[12px] font-medium', delta > 0 ? 'text-brand-gold-dark' : 'text-brand-success')}>
-                {delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta / 100) * 100).toLocaleString()}
+                {delta > 0 ? '+' : '−'}${grouped(Math.abs(Math.round(delta / 100) * 100))}
               </span>
             )}
           
@@ -1837,7 +1841,7 @@ function ReceiptRail({ precise, deckLabel, displayLow, displayHigh, confidence, 
             <div className="py-2.5 flex justify-between items-baseline gap-3">
               <span className="font-sans text-[12px] text-brand-gold-dark">Your target</span>
               <span className="font-display text-[13px] text-brand-gold-dark tabular-nums whitespace-nowrap">
-                ${targetBudget.toLocaleString()}
+                ${grouped(targetBudget)}
               </span>
             </div>
           )}
@@ -1925,7 +1929,7 @@ function MobileStickyBar({ low, high, delta, confidence, label, onContinue, sele
           
             {delta !== null && (
               <span key="delta" className={cn("font-sans text-[11px] font-medium", delta > 0 ? "text-brand-gold" : "text-brand-porcelain-soft")}>
-                {delta > 0 ? '+' : '−'}${Math.abs(Math.round(delta / 100) * 100).toLocaleString()}
+                {delta > 0 ? '+' : '−'}${grouped(Math.abs(Math.round(delta / 100) * 100))}
               </span>
             )}
           

@@ -58,6 +58,7 @@ const Navbar = () => {
   const navLinks = [
     { href: "/services", label: "Services", hasServicesDropdown: true },
     { href: "/portfolio", label: "Portfolio" },
+    { href: "/deck-designer", label: "Deck designer" },
     { href: "/cost-estimator", label: "Cost Estimator" },
     { href: "/process", label: "Process" },
     { href: "/resources", label: "Resources", hasDropdown: true },
@@ -429,6 +430,8 @@ const Footer = () => {
               <li><Link to="/portfolio" className="hover:text-brand-gold-dark transition-colors">Portfolio</Link></li>
               <li><Link to="/about" className="hover:text-brand-gold-dark transition-colors">Our Story</Link></li>
               <li><Link to="/library" className="hover:text-brand-gold-dark transition-colors">Construction Library</Link></li>
+              <li><Link to="/deck-designer" className="hover:text-brand-gold-dark transition-colors">Deck designer</Link></li>
+              <li><Link to="/book" className="hover:text-brand-gold-dark transition-colors">Book a call</Link></li>
               <li><Link to="/contact" className="hover:text-brand-gold-dark transition-colors">Contact</Link></li>
               <li><Link to="/reviews" className="hover:text-brand-gold-dark transition-colors">Google reviews</Link></li>
               <li><Link to="/service-areas" className="hover:text-brand-gold-dark transition-colors">Service Areas</Link></li>

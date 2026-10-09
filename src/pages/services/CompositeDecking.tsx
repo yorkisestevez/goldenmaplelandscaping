@@ -57,6 +57,8 @@ export default function CompositeDecking() {
                 >
                   Get My Free Estimate
                 </Link>
+                <Link to="/deck-designer" className="btn-ghost">Design your deck</Link>
+                <Link to="/book" className="btn-ghost">Book a call</Link>
                 <a
                   href={`tel:${publicContact.phoneTel}`}
                   onClick={() => trackCall('deck_lander_phone')}
@@ -178,6 +180,8 @@ export default function CompositeDecking() {
             >
               Get My Free Estimate
             </Link>
+            <Link to="/deck-designer" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Design your deck</Link>
+            <Link to="/book" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Book a call</Link>
             <a
               href={`tel:${publicContact.phoneTel}`}
               onClick={() => trackCall('deck_lander_final_phone')}

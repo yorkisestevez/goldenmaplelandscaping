@@ -44,6 +44,12 @@ export default function HeroDepth() {
               <a href="#selected-work" className="home-project-link hidden sm:inline-flex" onClick={() => trackEngagement('cta_click', 'home_selected_work')}>
                 See the work <ArrowRight size={15} aria-hidden="true" />
               </a>
+              <Link to="/book" className="home-project-link" onClick={() => trackEngagement('cta_click', 'home_book_call')}>
+                Book a call <ArrowRight size={15} aria-hidden="true" />
+              </Link>
+              <Link to="/deck-designer" className="home-project-link" onClick={() => trackEngagement('cta_click', 'home_deck_designer')}>
+                Design your deck <ArrowRight size={15} aria-hidden="true" />
+              </Link>
             </div>
             <p className="hidden md:block text-xs text-brand-muted mt-9">Interlock <span className="mx-2 text-brand-gold-dark">/</span> Walls <span className="mx-2 text-brand-gold-dark">/</span> Decks</p>
           </div>

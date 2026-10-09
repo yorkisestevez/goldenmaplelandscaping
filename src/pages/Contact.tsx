@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
 import LeadForm from '../components/LeadForm';
@@ -26,7 +27,7 @@ export default function Contact() {
               Tell us what you want built.
             </h1>
             <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light">
-              Name, phone, email, town, project type, and timing are enough. Budget is optional. Yorkis reviews the request and replies about scope.
+              Name, a phone number or email, and the project type are enough to start. Town, timing, notes, and photos are optional on the next step. Yorkis reviews the request and replies about scope.
             </p>
           </div>
 
@@ -44,6 +45,7 @@ export default function Contact() {
             <aside className="lg:col-span-5 space-y-8 min-w-0">
               <div className="space-y-6">
                 <h2 className="font-display text-2xl font-light text-brand-bonewhite">Talk to us directly</h2>
+                <Link to="/book" className="btn-secondary inline-flex">Book a call</Link>
                 <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('contact_direct_line')} className="flex items-start gap-4 min-w-0">
                   <Phone size={20} className="text-brand-gold-dark shrink-0 mt-1" strokeWidth={1.5} />
                   <span>

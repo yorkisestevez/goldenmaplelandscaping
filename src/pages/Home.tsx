@@ -8,6 +8,7 @@ import Reveal from '../components/Reveal';
 import { BUSINESS, publicClaimCopy } from '../data/business';
 import { OWNER_FACTS, ownerFact } from '../data/ownerFacts';
 import ResponsiveImage from '../components/ResponsiveImage';
+import LeadForm from '../components/LeadForm';
 
 const InstagramFeed = lazy(() => import('../components/InstagramFeed'));
 const Manifesto = lazy(() => import('../components/Manifesto'));
@@ -44,6 +45,7 @@ const ServicesGrid = () => {
           <Link to="/contact" className="hover:text-brand-ink">Fire features</Link>
           <Link to="/contact" className="hover:text-brand-ink">Landscape lighting</Link>
           <Link to="/services/seasonal-cleanup-barrie" className="hover:text-brand-ink">Spring &amp; fall clean-ups</Link>
+          <Link to="/deck-designer" className="hover:text-brand-ink">Design your deck</Link>
         </div>
       </div>
     </section>
@@ -112,7 +114,7 @@ const SelectedWork = () => (
           Recent work, up close.
         </h2>
       </Reveal>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 lg:gap-12 mb-14 md:mb-20">
+      <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-10 lg:gap-12 mb-14 md:mb-20">
         {FEATURED_PROJECTS.map((project, idx) => (
           <Reveal key={project.slug} delay={idx * 0.1}>
             <Link to={`/portfolio/${project.slug}`} className="group flex flex-col">
@@ -158,7 +160,7 @@ const GoogleReviews = () => (
         Read what homeowners wrote on Google.
       </h2>
       <p className="font-sans text-base text-brand-ink-soft font-light leading-relaxed mb-8">
-        We don&apos;t reprint reviews on this site. The current comments, photos, and rating live on our Google listing.
+        Homeowner reviews are on our Google listing.
       </p>
       <GoogleReviewsLink className="btn-primary inline-flex" />
     </div>
@@ -186,9 +188,12 @@ const FinalCTA = () => {
           </span>
           <div className="h-px w-20 bg-brand-gold/30" />
         </div>
-        <Link to="/contact" className="btn-primary px-20 py-5">
-          Get My Estimate
-        </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link to="/contact" className="btn-primary px-12 py-5">
+            Get My Estimate
+          </Link>
+          <Link to="/book" className="btn-ghost">Book a call</Link>
+        </div>
       </Reveal>
     </section>
   );
@@ -313,6 +318,32 @@ export default function Home() {
         schema={faqSchema}
       />
       <HeroDepth />
+      <section id="start" className="section-padding bg-brand-nearblack border-b border-brand-dim/20">
+        <div className="container-custom grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+          <div>
+            <p className="font-sans text-[11px] uppercase tracking-[0.3em] text-brand-gold-dark mb-6">Start here</p>
+            <h2 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite leading-tight mb-6">
+              Send the project, or pick a time to talk.
+            </h2>
+            <p className="font-sans text-base text-brand-muted font-light leading-relaxed mb-8 max-w-xl">
+              Name, a phone number or email, and the kind of work are enough. You can add details after that, book a call, or draw a deck.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link to="/book" className="btn-primary">Book a call</Link>
+              <Link to="/deck-designer" className="btn-ghost">Design your deck</Link>
+            </div>
+          </div>
+          <div className="bg-brand-surface border border-brand-dim/30 rounded-[2px] p-5 md:p-8 min-w-0">
+            <LeadForm
+              formName="estimate-request"
+              source="home-start"
+              idPrefix="home-start"
+              submitLabel="Send my request"
+              heading="Project form"
+            />
+          </div>
+        </div>
+      </section>
       <SelectedWork />
       <ServicesGrid />
       <Suspense fallback={null}><InstagramFeed /></Suspense>

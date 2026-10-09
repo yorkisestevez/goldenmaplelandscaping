@@ -48,6 +48,7 @@ export default function Interlocking() {
               </p>
               <div className="flex flex-col sm:flex-row gap-10">
                 <Link to="/contact" className="btn-primary">Get My Estimate</Link>
+                <Link to="/book" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">Book a call</Link>
                 <Link to="/portfolio" className="flex items-center gap-4 text-brand-bonewhite font-sans text-[11px] uppercase tracking-[0.25em] hover:text-brand-gold-dark transition-colors">
                   View Portfolio <ArrowRight size={16} strokeWidth={1.5} />
                 </Link>
@@ -162,6 +163,7 @@ export default function Interlocking() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/cost-estimator?type=patio" className="btn-primary px-12 py-4">See Your Cost Range</Link>
             <Link to="/contact" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Or Get My Estimate →</Link>
+            <Link to="/book" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Book a call</Link>
           </div>
         </div>
       </section>

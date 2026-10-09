@@ -70,6 +70,7 @@ export default function LandscapeDesign() {
                   >
                     Get My Free Estimate
                   </Link>
+                  <Link to="/book" className="btn-ghost text-center">Book a call</Link>
                   <span className="font-sans text-xs text-brand-muted italic font-light text-center sm:text-left">
                     Contact us to confirm current consultation and response details.
                   </span>
@@ -184,6 +185,7 @@ export default function LandscapeDesign() {
             >
               Get My Free Estimate
             </Link>
+            <Link to="/book" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Book a call</Link>
             <a
               href={`tel:${publicContact.phoneTel}`}
               onClick={() => trackCall('design_lander_final_phone')}
