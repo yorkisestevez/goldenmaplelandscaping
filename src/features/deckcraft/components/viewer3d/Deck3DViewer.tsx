@@ -15,6 +15,7 @@ const Fire3D=lazy(()=>import('./Fire3D'));
 import {foundationSolids} from '../../foundationSolids';
 
 const Landscape3D=lazy(()=>import('./Landscape3D'));
+const Fence3D=lazy(()=>import('./Fence3D'));
 
 import {landscapePlacement,landscapeFootprint} from '../../landscapeModel';
 
@@ -547,6 +548,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
     </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway}/></Suspense>}<Yard3D model={{...yard,features:yard.features.filter(f=>isObjectVisible(data.editorOrganization,f.config.id)),boxes:yard.boxes.filter(b=>isObjectVisible(data.editorOrganization,b.featureId)),members:yard.members.filter(m=>isObjectVisible(data.editorOrganization,m.featureId))}} inspection={inspection||cutaway} plantingBeds={(data.landscapeObjects??[]).filter(o=>o.enabled&&o.kind==='bed'&&isObjectVisible(data.editorOrganization,o.id)).map(o=>landscapeFootprint(o).map(v=>({x:v.x,y:v.z})))}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
 
     <Environment3D data={{...data,houseVisible:data.houseVisible!==false&&isObjectVisible(data.editorOrganization,'house')}} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
+    {data.fences?.some(f=>f.enabled)&&<Suspense fallback={null}><Fence3D data={data}/></Suspense>}
 
   </group><Suspense fallback={null}><Landscape3D data={{...data,landscapeObjects:data.landscapeObjects?.filter(o=>isObjectVisible(data.editorOrganization,o.id))}} showMatureSpread={showMatureSpread}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
 
@@ -612,7 +614,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
 
   const placedData=draft&&rawData.pergola?{...rawData,pergola:{...rawData.pergola,...draft}}:rawData;
 
-  const data=useMemo<DeckData>(()=>{if(!deckOnly)return placedData;const {yardFeatures:_yard,terrainConfig:_terrain,siteModel:_site,landscapeObjects:_landscape,pools:_pools,...deck}=placedData;return deck;},[placedData,deckOnly]);
+  const data=useMemo<DeckData>(()=>{if(!deckOnly)return placedData;const {yardFeatures:_yard,terrainConfig:_terrain,siteModel:_site,landscapeObjects:_landscape,pools:_pools,fences:_fences,...deck}=placedData;return deck;},[placedData,deckOnly]);
 
   const yard=useMemo(()=>!deckOnly&&calculatedYard?calculatedYard:buildYardModel(data,model),[deckOnly,calculatedYard,model,data.yardFeatures,data.pools,data.terrainConfig,data.siteModel,data.width,data.length,data.houseConfig?.widthFt,data.houseConfig?.depthFt,data.houseConfig?.footprint,data.housePlacement,data.houseVisible,data.deckType]);
 
@@ -635,6 +637,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
   if(view==='overview'||view==='3d'||view==='top')for(const o of data.landscapeObjects??[]){if(!o.enabled||!isObjectVisible(data.editorOrganization,o.id))continue;const placement=landscapePlacement(data,o),p=landscapeFootprint(o),xs=p.map(v=>v.x),zs=p.map(v=>v.z),top=placement.y*12+o.heightIn;addEnvelope(Math.min(...xs),Math.max(...xs),Math.min(...zs),Math.max(...zs),top);bounds.minX=Math.min(bounds.minX,...xs);bounds.maxX=Math.max(bounds.maxX,...xs);bounds.minZ=Math.min(bounds.minZ,...zs);bounds.maxZ=Math.max(bounds.maxZ,...zs);bounds.top=Math.max(bounds.top,top);}
 
   if(view==='overview'||view==='3d'||view==='top')for(const p of getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))){const v=p.permanentExclusionFootprints.flat(),xs=v.map(q=>q.x),zs=v.map(q=>q.y);if(!v.length)continue;addEnvelope(Math.min(...xs),Math.max(...xs),Math.min(...zs),Math.max(...zs),p.copingTopElevationIn);bounds.minX=Math.min(bounds.minX,...xs);bounds.maxX=Math.max(bounds.maxX,...xs);bounds.minZ=Math.min(bounds.minZ,...zs);bounds.maxZ=Math.max(bounds.maxZ,...zs);bounds.top=Math.max(bounds.top,p.copingTopElevationIn);}
+  if(view==='overview'||view==='3d'||view==='top')for(const run of data.fences??[]){if(!run.enabled||!isObjectVisible(data.editorOrganization,run.id))continue;const top=run.heightFt*12;for(const p of run.points){overviewPoints.push({x:p.x/12,y:0,z:p.y/12},{x:p.x/12,y:top/12,z:p.y/12});bounds.minX=Math.min(bounds.minX,p.x);bounds.maxX=Math.max(bounds.maxX,p.x);bounds.minZ=Math.min(bounds.minZ,p.y);bounds.maxZ=Math.max(bounds.maxZ,p.y);}bounds.top=Math.max(bounds.top,top);}
 
   const w=(bounds.maxX-bounds.minX)/12,d=(bounds.maxZ-bounds.minZ)/12,cx=(bounds.maxX+bounds.minX)/24,cz=(bounds.maxZ+bounds.minZ)/24,r=Math.max(w,d),height=bounds.top/12,evening=data.sceneLighting==='Evening';
 

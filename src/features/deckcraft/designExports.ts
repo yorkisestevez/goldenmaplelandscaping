@@ -1,7 +1,8 @@
 import {landscapeBedAreas} from './landscapeModel';
 import {landscapeSurfaceCells} from './landscapeSurfaceGeometry';
 import {landscapeSurfaceDepth} from './landscapeSurfaces';
-import {sitePlaneHeight} from './siteSurface';
+import {sampleSiteHeight,sitePlaneHeight} from './siteSurface';
+import {fenceSolids} from './fenceTypes';
 import {getPoolModels} from './poolModel';
 import {poolRenderMeshes} from './poolRenderMeshes';
 import {extrudePolygon} from './lib/physicalMesh';
@@ -68,6 +69,7 @@ function cylinder(name:string,x:number,z:number,bottom:number,top:number,radius:
 /** Inch-scale solids from the same takeoff used by the estimate and viewer. */
 export function deckExportMeshes(data:DeckData,model:DeckTakeoff):ExportMesh[]{
   const out:ExportMesh[]=[];
+  if(data.fences?.some(f=>f.enabled))fenceSolids(data.fences,(x,z)=>{try{return sampleSiteHeight(data,x,z);}catch{return 0;}}).forEach((s,i)=>{if(s.role==='collar')out.push(cylinder(`fence_footing_${i+1}`,s.x,s.z,s.y-s.h/2,s.y+s.h/2,s.w/2));else out.push(boxMesh(`fence_${s.role}_${i+1}`,{x:s.x,y:s.y,z:s.z,w:s.w,h:s.h,d:s.d,angle:s.angle}));});
   const cover=landscapeBedAreas(data.landscapeObjects??[],data);
   for(const o of data.landscapeObjects??[]){if(!o.enabled||o.kind!=='bed')continue;for(const [i,cell] of landscapeSurfaceCells(data,cover.get(o.id)??[],o).entries()){const vertices=cell.polygon.map(p=>({x:p.x,y:sitePlaneHeight(cell.plane,p.x,p.y)+landscapeSurfaceDepth(o)+.05,z:p.y}));out.push({name:`landscape_${o.id}_${i}`,vertices,faces:[vertices.map((_,i)=>i)]});}}
   for(const part of buildHouseGeometry(data,data.width*12).parts)out.push({name:`house_${part.name}`,vertices:part.vertices.map(([x,y,z])=>({x,y,z})),faces:part.faces});

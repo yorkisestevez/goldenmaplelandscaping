@@ -47,7 +47,8 @@ const SUMMARIES:Record<SectionId,(data:DeckData)=>string>={
   site:data=>words([dashes(data.municipality),`${dashes(data.siteType).toLowerCase()} site`,data.foundation.toLowerCase()]),
   backyard:data=>{
     const yard=(data.yardFeatures??[]).filter(f=>f.enabled),count=(kind:string)=>yard.filter(f=>f.kind===kind).length;
-    return words([count('patio')&&plural(count('patio'),'patio'),count('retaining-wall')&&plural(count('retaining-wall'),'retaining wall'),count('water-feature')&&plural(count('water-feature'),'water feature'),count('fire-feature')&&plural(count('fire-feature'),'fire feature'),...allowanceItems(data.yardAllowances).map(i=>i.id==='firepit'?'fire pit':i.id==='kitchen'?'outdoor kitchen':i.id==='turf'?'turf':'landscape lighting')]);
+    const fences=(data.fences??[]).filter(f=>f.enabled).length;
+    return words([count('patio')&&plural(count('patio'),'patio'),count('retaining-wall')&&plural(count('retaining-wall'),'retaining wall'),count('water-feature')&&plural(count('water-feature'),'water feature'),count('fire-feature')&&plural(count('fire-feature'),'fire feature'),fences&&plural(fences,'fence run'),...allowanceItems(data.yardAllowances).map(i=>i.id==='firepit'?'fire pit':i.id==='kitchen'?'outdoor kitchen':i.id==='turf'?'turf':'landscape lighting')]);
   },
   proposal:()=>'Summary, proposal, PDF, share link and CAD files',
 };

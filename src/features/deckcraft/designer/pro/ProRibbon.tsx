@@ -41,6 +41,7 @@ const TABS:{name:string;groups:Group[]}[]=[
   {name:'Landscape',groups:[
     {name:'Hardscape',buttons:[tool('yard','Patios & walls',<BrickWall size={size}/>)]},
     {name:'Planting',buttons:[tool('landscape','Landscape',<Trees size={size}/>)]},
+    {name:'Fences',buttons:[tool('fence','Fence',<Fence size={size}/>)]},
     {name:'Yard',buttons:[section('backyard','Pools & backyard',<Waves size={size}/>)]},
   ]},
   {name:'Materials',groups:[
