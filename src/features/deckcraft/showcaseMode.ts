@@ -43,8 +43,8 @@ export function applyShowcaseSearch(){
  if(quality||context||hour||post!==undefined)setShowcaseFlags({quality,context,...(hour?{hour}:{}),...(post!==undefined?{post}:{})});
 }
 
-/** Distance haze while the photographed horizon is visible. The yard (under ~80 ft) stays clear;
- * the far lawn dissolves into that band. The editor's fog is restored when context is off. */
-export const SHOWCASE_FOG_DENSITY=0.00155;
-/** Clearer air for the photographic grade. Context without the grade keeps SHOWCASE_FOG_DENSITY. */
+/** Distance haze for the neighbourhood. Light enough that a 160 ft lot stays
+ * clear; only the far neighbourhood softens. The editor's fog is unchanged. */
+export const SHOWCASE_FOG_DENSITY=0.00042;
+/** The photographic grade uses the same light haze, so a showcase still is not milkier than the neighbourhood. */
 export const SHOWCASE_CLEAR_FOG=0.00042;
