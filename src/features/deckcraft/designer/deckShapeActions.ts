@@ -1,26 +1,36 @@
 import {unnotchedMainOutline} from '../lib/deckGeometry';
 import {activeCornerChamfers} from '../lib/cornerChamfers';
+import {frontFromOutline,outlineProblems,rectangleFront} from '../lib/customOutline';
 import {boundaryBounds,boundaryProblem,savedBoundary} from '../lib/freeOutline';
 import type {DeckData,DeckShape,HouseConfig,WrapPorch,WrapWing} from '../types';
 
 /**
  * The deck's shape actions, as pure functions of the design: each returns the patch to hand to `update` (and, for a
- * wing, the status line to show), and none reads or sets page state. The footprint fields use them today; the shape
- * shortcuts on the plan will call the same ones, so a shape change means one thing wherever it is made.
+ * wing, the status line to show), and none reads or sets page state. The footprint fields and the plan's named
+ * shape shortcuts use them. Draw my own is drawOwnOutline, not the Deck menu's Custom outline.
  */
 type Side='left'|'right';
 type HouseSize=Pick<HouseConfig,'widthFt'|'depthFt'>;
 
 /**
- * A new shape. "Custom" / Draw my own seeds a free-form outline (`deckOutlines.main`) from the deck as drawn now so
- * the plan's point editor can pull any corner — including L-shapes, wraps and already-edited outlines — without
- * collapsing them to a constrained front or a rectangle. Other shapes clear that free outline.
+ * A new shape from the Deck menu. "Custom outline" is the constrained front (square or 45° edges, shape presets,
+ * keyboard edge moves). It starts from the deck as drawn now, or from the outline it already had, and clears any free
+ * point outline so that editor is the one on screen. Other shapes clear the free outline too. Draw my own on the plan
+ * is `drawOwnOutline`: that one keeps the real footprint as free points.
  */
 export function chooseShape(data:DeckData,shape:DeckShape):Partial<DeckData>{
-  if(shape!=='Custom'){
-    const deckOutlines=data.deckOutlines?{...data.deckOutlines,main:undefined}:undefined;
-    return {shape,...(data.deckOutlines?{deckOutlines}:{})};
-  }
+  const deckOutlines=data.deckOutlines?{...data.deckOutlines,main:undefined}:undefined;
+  if(shape!=='Custom')return {shape,...(data.deckOutlines?{deckOutlines}:{})};
+  const kept=data.customFront&&!outlineProblems(data.customFront).length?data.customFront:null;
+  return {shape,deckOutlines,customFront:kept??frontFromOutline(unnotchedMainOutline(data))??rectangleFront(data.width,data.length),levels:1};
+}
+
+/**
+ * Draw my own: seed a free-form outline (`deckOutlines.main`) from the deck as drawn now so the plan's point editor
+ * can pull any corner — including L-shapes, wraps and already-edited outlines — without collapsing them to a
+ * constrained front or a rectangle. An existing valid free outline is kept.
+ */
+export function drawOwnOutline(data:DeckData):Partial<DeckData>{
   if(data.deckOutlines?.main&&!boundaryProblem(data.deckOutlines.main.map(p=>({x:p.x*12,y:p.y*12})))){
     return {shape:'Custom',levels:1,customFront:undefined};
   }

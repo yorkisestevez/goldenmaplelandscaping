@@ -123,7 +123,7 @@ const COACH:Record<PlanTool,(custom:boolean)=>string>={
 
 };
 
-const shortcutOn=(data:DeckData,id:PlanShortcutId)=>id==='split'?data.levels>=2:id==='wrap-left'?!!data.wrap?.left&&!data.wrap.right:id==='wrap-right'?!!data.wrap?.right&&!data.wrap.left:id==='wrap-both'?!!(data.wrap?.left&&data.wrap.right):!data.deckOutlines?.main&&data.shape===id;
+const shortcutOn=(data:DeckData,id:PlanShortcutId)=>id==='split'?data.levels>=2:id==='wrap-left'?!!data.wrap?.left&&!data.wrap.right:id==='wrap-right'?!!data.wrap?.right&&!data.wrap.left:id==='wrap-both'?!!(data.wrap?.left&&data.wrap.right):id==='Custom'?!!data.deckOutlines?.main:!data.deckOutlines?.main&&data.shape===id;
 
 
 
