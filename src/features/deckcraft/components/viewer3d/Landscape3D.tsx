@@ -17,6 +17,7 @@ import {getTerrainConfig} from '../../yardSettings';
 import {useRenderQuality} from './SceneRenderQuality';
 import {getShowcaseFlags,subscribeShowcase} from './showcaseMode';
 import {useFixtureLit} from './fixtureLighting';
+import {meshYawRad} from '../../furnitureFacing';
 
 const SurfaceDetail=lazy(()=>import('./SurfaceDetail'));
 /** A raised bed's soil face, timber or steel edging (where no linked wall holds it): loaded with the first raised bed. */
@@ -26,6 +27,7 @@ const RaisedBedFaces3D=lazy(()=>import('./RaisedBedFaces3D'));
  * downloaded glTF's source metres, source origin or quantisation matrices. */
 export function landscapeInstanceMatrix(data:DeckData,o:LandscapeObject,normalization:THREE.Matrix4,source:THREE.Matrix4){
  const p=landscapePlacement(data,o),q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),-o.rotationDeg*Math.PI/180);
+ const meshYaw=meshYawRad(o.assetId);if(meshYaw)q.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),meshYaw));
  if(p.normal)q.premultiply(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(p.normal.x,p.normal.y,p.normal.z)));
  return new THREE.Matrix4().compose(new THREE.Vector3(p.x,p.y,p.z),q,new THREE.Vector3(o.widthIn/12,o.heightIn/12,o.depthIn/12)).multiply(normalization).multiply(source);
 }
