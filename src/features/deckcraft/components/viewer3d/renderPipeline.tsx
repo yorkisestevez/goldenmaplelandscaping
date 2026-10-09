@@ -10,7 +10,7 @@ import {useRenderQuality} from './SceneRenderQuality';
 import type {RenderQuality} from './renderQuality';
 import {fitSun,shadowKey} from './shadowCache';
 import {renderWindowReflections} from './windowReflections';
-import {bloomFor} from './showcaseGrade';
+import {SHOWCASE_STILL_SAMPLES,bloomFor} from './showcaseGrade';
 import {syncShowcaseShadows} from './pcssShadows';
 import {activeGradeHour,bindDof,bindGrade,blit,createBlendMaterial,createDofMaterial,createGradeMaterial,ensureShowcaseSmaa,focusDistance,jitterCamera,onShowcasePostReady,showcasePostActive,showcaseSmaa} from './showcasePost';
 
@@ -142,7 +142,7 @@ export default function RenderPipeline({evening}:{evening:boolean}){
       scene.updateMatrixWorld();syncShowcaseShadows(gl,scene);const key=shadowKey(scene);
       // Listeners draw with the shadow maps still frozen (needsUpdate is set after them), so they never redraw those.
       if(key!==state.key){state.key=key;const sun=scene.getObjectByName('sun') as THREE.DirectionalLight|undefined;if(sun?.isDirectionalLight&&sun.shadow.mapSize.x!==budget.shadowSize){sun.shadow.map?.dispose();sun.shadow.map=null;sun.shadow.mapSize.set(budget.shadowSize,budget.shadowSize);}fitSun(scene);for(const listen of shadowListeners.get(gl)??[])listen();gl.shadowMap.needsUpdate=true;}
-      gl.getDrawingBufferSize(size);chain.setSize(size.x,size.y,scale);chain.render(gl,scene,camera,state.evening,scale>1&&showcasePostActive()?4:1,focusDistance(camera,controls()));
+      gl.getDrawingBufferSize(size);chain.setSize(size.x,size.y,scale);chain.render(gl,scene,camera,state.evening,scale>1&&showcasePostActive()?SHOWCASE_STILL_SAMPLES:1,focusDistance(camera,controls()));
     };
     const frame=()=>{
       if(!state.broken)try{state.chain??=new Chain(gl,scene,camera,quality.msaaSamples,quality);draw(state.chain,1);gl.domElement.dataset.photographicPipeline='active';return;}catch(error){fail(error);}

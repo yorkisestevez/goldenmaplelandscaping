@@ -20,14 +20,32 @@ function wrap(u:number){return u-Math.floor(u);}
 function heightOf(kind:DetailKind,u:number,v:number){
   const n=fbm(u*18,v*18);
   if(kind==='paver'||kind==='slab'){
-    const cells=kind==='paver'?5:2.5,fx=wrap(u*cells),fy=wrap(v*cells);
-    const joint=fx<.055||fx>.945||fy<.055||fy>.945;
-    return joint?.18:.58+(n-.5)*(kind==='paver'?.16:.1);
+    const cells=kind==='paver'?5:2.5,fx=wrap(u*cells),fy=wrap(v*cells),d=Math.min(fx,1-fx,fy,1-fy);
+    const joint=kind==='paver'?.09:.065,bevel=joint+.075;
+    const face=.64+(n-.5)*(kind==='paver'?.1:.08);
+    if(d<joint)return .05;
+    if(d<bevel){const t=(d-joint)/(bevel-joint),s=t*t*(3-2*t);return .05+(face-.05)*s;}
+    return face;
   }
   if(kind==='cap')return .62+(fbm(u*10,v*8)-.5)*.08;
-  if(kind==='siding'){const fy=wrap(v*7);return fy<.07?.22:.6+(noise(u*28,v*3)-.5)*.12;}
+  if(kind==='siding'){
+    const fy=wrap(v*8),grain=noise(u*28,v*3);
+    if(fy<.055)return .08;
+    if(fy<.14){const t=(fy-.055)/.085;return .08+(.72-.08)*t*t;}
+    return .72+(grain-.5)*.08;
+  }
   if(kind==='deck')return .55+(noise(u*46,v*3.2)*.65+noise(u*90,v*7)*.35-.5)*.2;
-  return .5+(fbm(u*9+2,v*11)*.7+fbm(u*23,v*19+3)*.3-.5)*.45;
+  return .5+(fbm(u*9+2,v*11)*.7+fbm(u*23,v*19+3)*.3-.5)*.5;
+}
+function albedoOf(kind:DetailKind,u:number,v:number,h:number){
+  if(kind==='paver'||kind==='slab'){
+    const cells=kind==='paver'?5:2.5,fx=wrap(u*cells),fy=wrap(v*cells),d=Math.min(fx,1-fx,fy,1-fy);
+    const cx=Math.floor(u*cells),cy=Math.floor(v*cells),joint=kind==='paver'?.09:.065;
+    if(d<joint)return 56+(hash(cx+9,cy+4)-.5)*14;
+    return 150+(hash(cx+2.2,cy+7.1)-.5)*(kind==='paver'?54:26)+(h-.62)*22;
+  }
+  if(kind==='siding'){const fy=wrap(v*8);if(fy<.055)return 40;if(fy<.12)return 84;return 148+(noise(u*28,v*3)-.5)*16;}
+  return 128+(h-.55)*42;
 }
 
 function sample(grid:Float32Array,size:number,x:number,y:number){
@@ -47,15 +65,15 @@ export function buildSurfaceDetail(kind:DetailKind,size:number):SurfaceDetail{
     height[y*size+x]=Math.min(1,Math.max(0,base+hf));
   }
   const albedo=new Uint8Array(size*size*4),normal=new Uint8Array(size*size*4),roughness=new Uint8Array(size*size*4);
-  const strength=kind==='stone'?2.4:kind==='cap'?0.8:1.6;
+  const strength=kind==='stone'?2.6:kind==='siding'?2.7:kind==='paver'?3.2:kind==='slab'?2.3:kind==='cap'?.85:1.6;
   let sum=0;
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
-    const i=y*size+x,h=height[i];
+    const i=y*size+x,h=height[i],u=(x+.5)/size,v=(y+.5)/size;
     const dx=(height[y*size+(x+1)%size]-height[y*size+(x-1+size)%size])*strength;
     const dy=(height[((y+1)%size)*size+x]-height[((y-1+size)%size)*size+x])*strength;
-    const nz=1/Math.hypot(dx,dy,1),o=i*4;
-    const rough=Math.min(255,Math.max(0,Math.round((kind==='cap'?.55:kind==='deck'?.62:.78+(Math.hypot(dx,dy)-.15)*.35)*255)));
-    albedo[o]=albedo[o+1]=albedo[o+2]=Math.min(255,Math.max(0,Math.round(128+(h-.55)*42)));albedo[o+3]=255;sum+=albedo[o];
+    const nz=1/Math.hypot(dx,dy,1),o=i*4,slope=Math.hypot(dx,dy);
+    const rough=kind==='paver'||kind==='slab'?slope>.4?.94:.46:kind==='siding'?slope>.5?.92:.6:kind==='cap'?.55:kind==='deck'?.62:.78+(slope-.15)*.35;
+    albedo[o]=albedo[o+1]=albedo[o+2]=Math.min(255,Math.max(0,Math.round(albedoOf(kind,u,v,h))));albedo[o+3]=255;sum+=albedo[o];
     normal[o]=Math.round((-dx*nz*.5+.5)*255);normal[o+1]=Math.round((-dy*nz*.5+.5)*255);normal[o+2]=Math.round((nz*.5+.5)*255);normal[o+3]=Math.round(h*255);
     roughness[o]=roughness[o+1]=roughness[o+2]=rough;roughness[o+3]=255;
   }

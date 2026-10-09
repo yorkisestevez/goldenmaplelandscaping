@@ -22,7 +22,8 @@ export function surfaceReliefTextures(kind:DetailKind){
 const MAP_SAMPLE=`#ifdef USE_MAP
   vec3 dcView=normalize(vViewPosition);
   float dcH=texture2D(uRelief,vMapUv).a;
-  vec2 dcReliefUv=vMapUv+dcView.xy*(dcH-0.5)*0.035;
+  float dcParallax=smoothstep(0.12,0.42,abs(dot(normalize(vNormal),dcView)));
+  vec2 dcReliefUv=vMapUv+dcView.xy*(dcH-0.5)*0.035*dcParallax;
   vec4 sampledDiffuseColor=texture2D(map,dcReliefUv);
   diffuseColor*=sampledDiffuseColor;
 #endif`;
@@ -36,7 +37,7 @@ export function applySurfaceRelief(material:THREE.MeshStandardMaterial,kind:Deta
       .replace('#include <common>','#include <common>\nuniform sampler2D uRelief;\nuniform sampler2D uReliefRough;')
       .replace('#include <map_fragment>',MAP_SAMPLE)
       .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor*mix(0.84,1.16,texture2D(uReliefRough,vMapUv).r),0.04,1.0);')
-      .replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nvec3 dcReliefN=texture2D(uRelief,vMapUv).xyz*2.0-1.0;\nnormal=normalize(normal+vec3(dcReliefN.xy,0.0)*0.45);');
+      .replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nvec3 dcReliefN=texture2D(uRelief,vMapUv).xyz*2.0-1.0;\nfloat dcKeep=smoothstep(0.12,0.42,abs(dot(normalize(nonPerturbedNormal),normalize(vViewPosition))));\nnormal=normalize(mix(nonPerturbedNormal,normalize(normal+vec3(dcReliefN.xy,0.0)*0.72),dcKeep));');
   }});
   return material;
 }
