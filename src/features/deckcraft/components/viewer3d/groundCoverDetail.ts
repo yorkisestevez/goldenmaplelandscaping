@@ -17,7 +17,7 @@ export function coverInstances(id:LandscapeAssetId,rings:LandscapePoint[][],cell
  // Interleave tiles so budget exhaustion thins coverage instead of creating a hard patch edge.
  for(let i=0;i<perTile;i++)for(const t of tiles){
   const x=(t.x+detailHash(t.x,t.z,i*7))*tile,z=(t.z+detailHash(t.x,t.z,i*7+1))*tile;if(Math.hypot(x-focus.x,z-focus.z)>radius||!pointInCover(x,z,rings))continue;
-  const r=detailHash(t.x,t.z,i*7+2),mixed=id==='granular-base-bed'?(r<.7?.35:1.6):1,width=p.kind==='blade'?1:p.grain*(.6+r*.85)*mixed,depth=p.kind==='chip'?width*.34:width*(.65+detailHash(t.x,t.z,i*7+3)*.5),height=p.height*(.6+r*.7)*mixed;
+  const r=detailHash(t.x,t.z,i*7+2),mixed=id==='granular-base-bed'?(r<.7?.35:1.6):1,width=p.kind==='blade'?1:p.kind==='chip'?p.grain*(3.4+r*5.2):p.grain*(.6+r*.85)*mixed,depth=p.kind==='chip'?p.grain*(.22+detailHash(t.x,t.z,i*7+3)*.18):width*(.65+detailHash(t.x,t.z,i*7+3)*.5),height=p.kind==='chip'?.08+r*.05:p.height*(.6+r*.7)*mixed;
   if(!clearCoverEdge(x,z,rings,Math.hypot(width,depth)*.6)||cups.some(c=>Math.hypot(x-c.x,z-c.z)<2.125+width*.6))continue;
   const c=prepared.find(c=>x>=c.minX&&x<=c.maxX&&z>=c.minZ&&z<=c.maxZ&&pointInCover(x,z,[c.ring]));if(!c)continue;
   out.push({x,z,y:c.plane.x*x+c.plane.z*z+c.plane.constant+depthIn+.05+(p.kind==='blade'?0:height*.38),width,height,depth,yaw:p.kind==='blade'?.3+detailHash(t.x,t.z,i*7+4)*.6:detailHash(t.x,t.z,i*7+4)*Math.PI*2,tone:.67+detailHash(t.x,t.z,i*7+5)*.65,warm:detailHash(t.x,t.z,i*7+6)-.5,nx:-c.plane.x,nz:-c.plane.z});if(out.length>=budget)return out;

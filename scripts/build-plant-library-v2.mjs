@@ -96,40 +96,41 @@ async function spritesFromPng(buffer,limit=8){
 }
 
 function scatter(form,count,sprites,seed){
- const random=rng(seed),positions=[],uvs=[],normals=[],indices=[];
- const push=(center,right,up,rect)=>{
+ const random=rng(seed),positions=[],uvs=[],normals=[],colors=[],indices=[];
+ const push=(center,right,up,rect,col)=>{
   const nrm=cross(right,up),len=Math.hypot(...nrm)||1,normal=nrm.map(v=>v/len);
   const corners=[[-1,-1],[1,-1],[1,1],[-1,1]];
   const base=positions.length/3;
   const uv=[[rect.u0,rect.v0],[rect.u1,rect.v0],[rect.u1,rect.v1],[rect.u0,rect.v1]];
-  for(let i=0;i<4;i++){const [sx,sy]=corners[i];positions.push(center[0]+right[0]*sx+up[0]*sy,center[1]+right[1]*sx+up[1]*sy,center[2]+right[2]*sx+up[2]*sy);uvs.push(uv[i][0],uv[i][1]);normals.push(...normal);}
+  for(let i=0;i<4;i++){const [sx,sy]=corners[i];positions.push(center[0]+right[0]*sx+up[0]*sy,center[1]+right[1]*sx+up[1]*sy,center[2]+right[2]*sx+up[2]*sy);uvs.push(uv[i][0],uv[i][1]);normals.push(...normal);colors.push(...col);}
   indices.push(base,base+1,base+2,base,base+2,base+3);
  };
  let placed=0,guard=0;
- while(placed<count&&guard<count*30){
+ while(placed<count&&guard<count*80){
   guard++;
-  const y=form==='hosta'?random()*.62:form==='pine'?0.18+random()*.82:random();
-  const ang=random()*Math.PI*2,rad=random();
-  let r=0.48;
-  if(form==='column')r=0.46*(1-0.22*y*y)*(0.82+0.18*random());
-  else if(form==='ball'){const dy=y-0.46;r=Math.sqrt(Math.max(0,0.2-dy*dy))*(0.9+0.15*random());}
-  else if(form==='mound'){const dy=(y-0.32)/0.62;r=(dy*dy>1?0:0.5*Math.sqrt(1-dy*dy))*(0.85+0.2*random());}
-  else if(form==='pine')r=0.52*Math.pow(1-Math.max(0,y-0.12)/0.88,0.72)*(0.55+0.45*random());
-  else if(form==='hosta')r=0.5*(1-y*0.45)*(0.7+0.3*random());
-  else if(form==='reed')r=0.28*(1-y*0.55)*(0.5+random());
+  let y=form==='hosta'?random()*.62:form==='pine'?0.18+random()*.82:random();
+  const ang=random()*Math.PI*2;let rad=random();
+  let r=0.48,plume=false;
+  if(form==='column'){const lump=.74+.3*Math.sin(ang*3.1+y*5.5)+.14*Math.sin(ang*8-y*3);r=.4*lump*(1-.16*y*y);if(rad<.28&&random()<.72)continue;rad=Math.pow(rad,.62);}
+  else if(form==='ball'){const dy=y-.48,lump=.86+.22*Math.sin(ang*4+y*3);r=Math.sqrt(Math.max(0,.22-dy*dy))*lump;if(rad<.3&&random()<.6)continue;rad=Math.pow(rad,.7);}
+  else if(form==='mound'){const dy=(y-.28)/.66,lump=.82+.28*Math.sin(ang*3.4+1.7);r=(dy*dy>1?0:.52*Math.sqrt(1-dy*dy))*lump;if(rad<.25&&random()<.55)continue;rad=Math.pow(rad,.72);}
+  else if(form==='pine'){r=.5*Math.pow(1-Math.max(0,y-.12)/.88,.72)*(.72+.22*Math.sin(ang*5+y*4));rad=Math.pow(rad,.75);}
+  else if(form==='hosta')r=.5*(1-y*.45)*(.7+.3*random());
+  else if(form==='reed'){plume=random()<.46;if(plume){y=.68+random()*.3;r=.22*(.35+random());}else{y=random()*.08;r=.2*(.25+random());}}
   if(rad>1||r<0.02)continue;
   const x=Math.cos(ang)*r*rad,z=Math.sin(ang)*r*rad;
   const rect=sprites[(random()*sprites.length)|0];
-  const yaw=random()*Math.PI,tilt=form==='hosta'?0.9+random()*0.5:form==='reed'?random()*0.25:(random()-0.5)*0.5;
-  const size=form==='hosta'?0.22+random()*0.12:form==='column'||form==='ball'?0.07+random()*0.05:form==='pine'?0.1+random()*0.08:form==='reed'?0.035+random()*0.03:0.09+random()*0.07;
-  const tall=form==='reed'?0.16+random()*0.22:form==='hosta'?size*0.62:size*(form==='pine'?1.35:1.15);
+  const yaw=random()*Math.PI,tilt=form==='hosta'?.9+random()*.5:form==='reed'?(plume?.45+random()*.9:(random()-.5)*.35):(random()-.5)*.5;
+  const size=form==='hosta'?.22+random()*.12:form==='column'||form==='ball'?.075+random()*.06:form==='pine'?.1+random()*.08:form==='reed'?(plume?.055+random()*.045:.012+random()*.008):.1+random()*.08;
+  const tall=form==='reed'?(plume?.1+random()*.09:.58+random()*.26):form==='hosta'?size*.62:size*(form==='pine'?1.35:1.15);
+  const tone=.88+random()*.24,warm=(random()-.5)*.16,col=[tone*(1+warm),tone*(1.04+warm*.25),tone*(.88-warm)];
   const c=Math.cos(yaw),s=Math.sin(yaw),ct=Math.cos(tilt),st=Math.sin(tilt);
   const right=[c*size,0,-s*size],right2=[s*size,0,c*size],up=[s*st*tall,ct*tall,c*st*tall];
   const center=[x,y,z];
-  push(center,right,up,rect);push(center,right2,up,rect);
+  push(center,right,up,rect,col);push(center,right2,up,rect,col);
   placed++;
  }
- return {positions,uvs,normals,indices,triangles:indices.length/3,cards:placed};
+ return {positions,uvs,normals,colors,indices,triangles:indices.length/3,cards:placed};
 }
 function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
 
@@ -158,7 +159,9 @@ function writeGlb(file,parts,images,materials){
   const big=part.indices.length>65535,idx=big?new Uint32Array(part.indices):new Uint16Array(part.indices);
   let pmin=[Infinity,Infinity,Infinity],pmax=[-Infinity,-Infinity,-Infinity];
   for(let i=0;i<pos.length;i+=3)for(let k=0;k<3;k++){pmin[k]=Math.min(pmin[k],pos[i+k]);pmax[k]=Math.max(pmax[k],pos[i+k]);}
-  const primitives=[{attributes:{POSITION:acc(view(pos,34962),5126,'VEC3',pos.length/3,pmin,pmax),NORMAL:acc(view(nrm,34962),5126,'VEC3',nrm.length/3),TEXCOORD_0:acc(view(uv,34962),5126,'VEC2',uv.length/2)},indices:acc(view(idx,34963),big?5125:5123,'SCALAR',idx.length),material:part.material??0,mode:4}];
+  const attributes={POSITION:acc(view(pos,34962),5126,'VEC3',pos.length/3,pmin,pmax),NORMAL:acc(view(nrm,34962),5126,'VEC3',nrm.length/3),TEXCOORD_0:acc(view(uv,34962),5126,'VEC2',uv.length/2)};
+  if(part.colors){const col=new Float32Array(part.colors);attributes.COLOR_0=acc(view(col,34962),5126,'VEC3',col.length/3);}
+  const primitives=[{attributes,indices:acc(view(idx,34963),big?5125:5123,'SCALAR',idx.length),material:part.material??0,mode:4}];
   meshes.push({name:part.name||'foliage',primitives});nodes.push({name:part.name||'foliage',mesh:meshes.length-1});meshNodes.push(nodes.length-1);
  });
  const imageViews=images.map(img=>{const id=view(img);return id;});
@@ -173,7 +176,7 @@ function writeGlb(file,parts,images,materials){
  return {bytes:out.length,triangles:parts.reduce((n,p)=>n+p.indices.length/3,0),bounds:(()=>{let min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];for(const p of parts)for(let i=0;i<p.positions.length;i+=3)for(let k=0;k<3;k++){min[k]=Math.min(min[k],p.positions[i+k]);max[k]=Math.max(max[k],p.positions[i+k]);}return {min,max};})(),sha256:createHash('sha256').update(out).digest('hex')};
 }
 
-const MASK=(name)=>({name,alphaMode:'MASK',alphaCutoff:0.4,doubleSided:true,pbrMetallicRoughness:{baseColorTexture:{index:0},metallicFactor:0,roughnessFactor:0.82}});
+const MASK=(name)=>({name,alphaMode:'MASK',alphaCutoff:0.4,doubleSided:true,pbrMetallicRoughness:{baseColorTexture:{index:0},metallicFactor:0,roughnessFactor:0.62}});
 const OPAQUE=(name)=>({name,doubleSided:true,pbrMetallicRoughness:{baseColorFactor:[0.42,0.3,0.2,1],metallicFactor:0,roughnessFactor:0.9}});
 
 async function pngSize(buffer,size){

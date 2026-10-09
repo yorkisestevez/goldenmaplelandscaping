@@ -24,6 +24,10 @@ for(const surface of LANDSCAPE_SURFACES){
  ok(items.every(v=>Math.abs(v.y-(.1*v.x+.2*v.z+15.05+(p.kind==='blade'?0:v.height*.38)))<1e-8&&v.nx===-.1&&v.nz===-.2),surface.id+' follows the measured plane');
 }
 ok(coverInstances('river-rock-bed',[],[],3,focus,144,2000).length===0,'empty clipped areas have no geometry');
+const brownMulch=createLandscapeSurfaceMaterial('mulch-bed'),blackMulch=createLandscapeSurfaceMaterial('black-mulch-bed');
+ok(brownMulch.material.color.getHexString()==='4a3122'&&blackMulch.material.color.getHexString()==='2a2622','default mulch renders as dark brown and black stays available');
+ok(LANDSCAPE_SURFACES.find(s=>s.id==='mulch-bed')!.color==='#73503a'&&LANDSCAPE_SURFACES.find(s=>s.id==='black-mulch-bed')!.color==='#34302b','planning swatches stay on the original colours');
+brownMulch.dispose();blackMulch.dispose();
 const a=createLandscapeSurfaceMaterial('river-rock-bed'),b=createLandscapeSurfaceMaterial('river-rock-bed');
 ok(a.material!==b.material&&a.material.map===b.material.map,'materials stay viewer-local while maps are shared');
 let disposed=0;for(const t of [a.material.map,a.material.normalMap,a.material.roughnessMap])t!.addEventListener('dispose',()=>disposed++);
