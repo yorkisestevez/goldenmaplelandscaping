@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import {yardClip,type YardRole,type YardModel} from '../../yardModel';
+import {yardArea,yardClip,type YardRole,type YardModel} from '../../yardModel';
+import {yardFeatureOutline} from '../../yardPathGeometry';
 import type {PoolFeatureModel} from '../../poolModel';
 import {lawnGround} from './lawnGround';
 export const CONSTRUCTION_YARD_ROLES:ReadonlySet<YardRole>=new Set(['base','wall-drainage','backfill','geogrid','pump','drain-pipe','water-pipe']);
@@ -24,11 +25,26 @@ function widen(p:{x:number;y:number}[],d:number){
 }
 /** Ground in the finished views that is water, not lawn: ponds and pools. */
 export const waterDisplayFootprints=(yard:YardModel,pools:PoolFeatureModel[])=>[...yard.features.filter(f=>!f.excluded&&f.config.kind==='water-feature').flatMap(f=>f.footprints),...pools.flatMap(p=>p.permanentExclusionFootprints)];
+/** Retaining, seat and freestanding walls (all kind retaining-wall). The finished lawn opens on the wall body and on a
+ * cap that overhangs it, so a face or cap near grade is not drawn under the grass sheet. Where a wall's construction
+ * envelope pushed a patio back, the grass shelf left in front of the face is opened too: the paving's cut then meets
+ * the wall, and a sunken face below grade stays visible from inside. Drainage and backfill stay under the lawn. */
+export function wallDisplayFootprints(yard:YardModel){
+ const walls=yard.features.filter(f=>!f.excluded&&f.config.kind==='retaining-wall');
+ if(!walls.length)return [];
+ const stone=[...walls.flatMap(f=>f.footprints),...walls.flatMap(f=>f.boxes.filter(b=>b.role==='wall-cap'&&!b.renderDuplicate&&b.polygon).flatMap(b=>b.renderContours??[b.polygon!]))];
+ if(!stone.length)return [];
+ const removed=yard.features.filter(f=>!f.excluded&&f.config.kind==='patio'&&!f.config.stoneSteps&&!f.config.stepAssembly).flatMap(f=>{try{return yardClip(yardFeatureOutline(f.config),f.footprints,'difference');}catch{return [];}});
+ const near=stone.flatMap(ring=>{if(ring.length<3)return [];try{const grown=widen(ring,.75);return grown.length>=3?[grown]:[];}catch{return [];}});
+ const touch=removed.length&&near.length?yardClip(removed,near,'intersection'):[];
+ const shelves=touch.length?removed.filter(poly=>yardArea(yardClip([poly],touch,'intersection'))>.0001):[];
+ return yardClip([...stone,...shelves]);
+}
 /** Finished terrain is the proposed surface. Permanent water openings stay open and paving
  * stands in its own opening; excavation/working-clearance envelopes belong to inspection. */
 export function groundDisplayCuts(yard:YardModel,pools:PoolFeatureModel[],finished:boolean){
  return yardClip(finished?
-  [...waterDisplayFootprints(yard,pools),...patioDisplayFootprints(yard),...sunkenStepDisplayFootprints(yard)]:
+  [...waterDisplayFootprints(yard,pools),...patioDisplayFootprints(yard),...sunkenStepDisplayFootprints(yard),...wallDisplayFootprints(yard)]:
   [...yard.excavationRegions.map(e=>e.polygon),...pools.flatMap(p=>p.excavationFootprints)]);
 }
 /** The joint sand's actual top stays visible between rigid pavers. Its buried

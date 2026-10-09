@@ -1,5 +1,5 @@
 import type {PoolFeatureModel} from '../../poolModel';
-import {groundDisplayCuts,patioDisplayFootprints,sunkenStepDisplayFootprints} from './finishedSurfaceGeometry';
+import {groundDisplayCuts,patioDisplayFootprints,sunkenStepDisplayFootprints,wallDisplayFootprints} from './finishedSurfaceGeometry';
 import {useMemo,useEffect,useState,useRef,lazy,Suspense} from 'react';
 import {useThree,useFrame} from '@react-three/fiber';
 import * as THREE from 'three';
@@ -54,7 +54,7 @@ export default function Turf({width,depth,radius:_radius,yard,finished=true,land
  useEffect(()=>()=>geometry.dispose(),[geometry]);
  // The survey perimeter is bridged in both views: a measured patch higher or lower than the illustrative
  // lawn otherwise leaves an open seam (sky shows through). The faces are display only, as in inspection.
- const edges=useMemo(()=>groundEdgeGeometry(yard,finished?'proposed':'existing',finished?[...pools.flatMap(p=>p.permanentExclusionFootprints),...patioDisplayFootprints(yard),...sunkenStepDisplayFootprints(yard)]:pools.flatMap(p=>p.excavationFootprints),true,finished?patioDisplayFootprints(yard):[]),[yard,finished,pools]);
+ const edges=useMemo(()=>groundEdgeGeometry(yard,finished?'proposed':'existing',finished?[...pools.flatMap(p=>p.permanentExclusionFootprints),...patioDisplayFootprints(yard),...sunkenStepDisplayFootprints(yard),...wallDisplayFootprints(yard)]:pools.flatMap(p=>p.excavationFootprints),true,finished?patioDisplayFootprints(yard):[]),[yard,finished,pools]);
  useEffect(()=>()=>edges.dispose(),[edges]);
  // The sky's shade under what covers the ground, redrawn when that changes.
  const occlusion=useMemo(()=>new GroundOcclusion(),[]);

@@ -5,7 +5,9 @@
 // a survey with a traced boundary, a dense 2000-point survey, a survey whose hull carries a sliver triangle and a
 // U-shaped traced boundary, where the estimated lawn must not step where the nearest survey edge switches,
 // and steps down into a sunken lounge: the finished lawn opens over treads below it (meeting the paving with no
-// grass sliver) and stays whole over steps that rise from the lawn. Quantities and price stay on the yard model.
+// grass sliver) and stays whole over steps that rise from the lawn. Retaining, seat and freestanding walls are
+// opened the same way: the lawn stops at the wall (and at a cap that overhangs it) instead of crossing the face,
+// including a sunken wall whose base is below grade, while the drainage trench stays covered. Quantities and price stay on the yard model.
 import '../src/features/deckcraft/siteModelRuntime';
 import '../src/features/deckcraft/siteSurfaceEngine';
 import assert from 'node:assert/strict';
@@ -20,7 +22,7 @@ import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {ensureLiveDesignExtensions} from '../src/features/deckcraft/designExtensions';
 import {parseDesign} from '../src/features/deckcraft/designPersistence';
 import {groundGeometry} from '../src/features/deckcraft/components/viewer3d/lawnSurface';
-import {groundDisplayCuts,patioDisplayFootprints,sunkenStepDisplayFootprints,waterDisplayFootprints} from '../src/features/deckcraft/components/viewer3d/finishedSurfaceGeometry';
+import {groundDisplayCuts,patioDisplayFootprints,sunkenStepDisplayFootprints,wallDisplayFootprints,waterDisplayFootprints} from '../src/features/deckcraft/components/viewer3d/finishedSurfaceGeometry';
 import {lawnGround} from '../src/features/deckcraft/components/viewer3d/lawnGround';
 import {insideRings} from '../src/features/deckcraft/patioGroundContact';
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
@@ -165,6 +167,50 @@ const rolling=(x:number,z:number)=>z*.08+x*.03+Math.sin(x/90)*6+Math.cos(z/60)*8
   if(data.siteModel){const rim=perimeterGap(yard,'proposed');ok(rim.worst<.01,`${label}: survey edge still meets the estimated lawn (worst ${rim.worst.toFixed(5)})`);}
   ok(JSON.stringify(data)===saved&&JSON.stringify(yard.quantities)===quantities&&calculateEstimate(data).subtotal===subtotal,`${label}: design, quantities and price are unchanged by the lawn opening`);
   summary.push(`${label}: sunken treads ${sunken.length}, grade-or-rising treads ${clear.length}, buried ${down.quantities.buriedTreadAreaSqft.toFixed(2)} sq ft still reported`);
+  mesh.dispose();oldMesh.dispose();
+ }
+}
+
+// 7. Walls sit in the lawn the way paving does. A sunken lounge wall (base 18 in below grade) is opened through its
+// below-grade face and through the grass shelf the construction envelope left in front of it. A cap near grade, a
+// grade-height wall and a freestanding seat wall on open lawn are opened on their stone, and the lawn resumes just
+// outside. Drainage behind a wall stays covered. Blades do not grow on the stone. Price and quantities stay put.
+{
+ const lounge:YardFeature={id:'lounge',name:'Sunken lounge',kind:'patio',enabled:true,xFt:50,zFt:50,widthFt:10,depthFt:8,heightIn:0,rotationDeg:0,finishedElevationIn:-18,productId:'permacon-mondrian-plus',color:'#c4bfb4'};
+ const wall=(over:Partial<YardFeature>):YardFeature=>({id:'w',name:'Wall',kind:'retaining-wall',enabled:true,xFt:50,zFt:50,widthFt:10,depthFt:1,heightIn:24,rotationDeg:0,productId:'segmental-concrete',color:'#8f877b',...over});
+ const northZ=(lounge.zFt*12+lounge.depthFt*6+6)/12;
+ const features=[lounge,wall({id:'sunken',name:'Sunken retaining',xFt:50,zFt:northZ,baseElevationIn:-18,finishedElevationIn:6}),wall({id:'grade',name:'Grade wall',xFt:20,zFt:70,widthFt:12,heightIn:18,finishedElevationIn:18}),wall({id:'lowcap',name:'Cap near grade',xFt:30,zFt:20,widthFt:8,heightIn:6,finishedElevationIn:3}),wall({id:'seat',name:'Seat on lawn',xFt:80,zFt:30,widthFt:8,heightIn:18,wallConstruction:{freestanding:true}}),wall({id:'seat-pad',name:'Seat on paving',xFt:50,zFt:50,widthFt:6,heightIn:18,wallConstruction:{freestanding:true}})];
+ const flat=():DeckData=>({...structuredClone(DEFAULT_DECK),houseVisible:false,stairFlights:0,railingType:'None',yardFeatures:features,terrainConfig:{widthFt:160,depthFt:160,elevationIn:0,slopePct:0}});
+ const pointIn=(rings:{x:number;y:number}[][],x:number,z:number)=>insideRings(rings,x,z);
+ const covered=(g:BufferGeometry,x:number,z:number)=>{const p=g.getAttribute('position');for(let i=0;i<p.count;i+=3){const ax=p.getX(i),az=p.getZ(i),bx=p.getX(i+1),bz=p.getZ(i+1),cx=p.getX(i+2),cz=p.getZ(i+2),abx=bx-ax,abz=bz-az,acx=cx-ax,acz=cz-az,den=abx*acz-acx*abz;if(Math.abs(den)<1e-8)continue;const px=x-ax,pz=z-az,u=(px*acz-acx*pz)/den,v=(abx*pz-px*abz)/den;if(u>=-1e-4&&v>=-1e-4&&u+v<=1+1e-4)return true;}return false;};
+ const centroid=(poly:{x:number;y:number}[])=>{let a=0,cx=0,cy=0;for(let i=0;i<poly.length;i++){const q=poly[(i+1)%poly.length],k=poly[i].x*q.y-q.x*poly[i].y;a+=k;cx+=(poly[i].x+q.x)*k;cy+=(poly[i].y+q.y)*k;}return {x:cx/(3*a),y:cy/(3*a)};};
+ for(const [label,data] of [['Illustrative walls',flat()],['Surveyed walls',{...flat(),siteModel:{version:1,points:[{id:'a',xIn:-400,zIn:-400,elevationIn:0},{id:'b',xIn:2400,zIn:-400,elevationIn:0},{id:'c',xIn:2400,zIn:2400,elevationIn:0},{id:'d',xIn:-400,zIn:2400,elevationIn:0}],grading:[]}}]] as [string,DeckData][]){
+  await ensureLiveDesignExtensions(data);const saved=JSON.stringify(data),before=calculateEstimate(data),yard=buildYardModel(data,before.model),quantities=JSON.stringify(yard.quantities),subtotal=before.subtotal;
+  const byId=(id:string)=>yard.features.find(f=>f.config.id===id)!;
+  ok(['lounge','sunken','grade','lowcap','seat','seat-pad'].every(id=>!byId(id).excluded),`${label}: lounge and walls stay in the model`);
+  const lawn=lawnGround(yard),openings=wallDisplayFootprints(yard),cuts=groundDisplayCuts(yard,[],true),legacy=yardClip([...waterDisplayFootprints(yard,[]),...patioDisplayFootprints(yard),...sunkenStepDisplayFootprints(yard)]);
+  const stoneOf=(id:string)=>byId(id).boxes.filter(b=>(b.role==='wall-block'||b.role==='wall-cap')&&b.polygon&&!b.renderDuplicate);
+  for(const id of ['sunken','grade','lowcap','seat'])for(const b of stoneOf(id)){ok(pointIn(openings,b.x,b.z)&&pointIn(cuts,b.x,b.z),`${label}: ${id} ${b.role} is a finished lawn opening`);ok(!pointIn(legacy,b.x,b.z),`${label}: ${id} ${b.role} was not opened with the paving`);}
+  const sunken=byId('sunken'),below=sunken.boxes.filter(b=>b.role==='wall-block'&&b.polygon&&!b.renderDuplicate&&b.y+b.h/2<lawn.height(b.x,b.z));
+  ok(below.length>10&&sunken.config.baseElevationIn===-18,`${label}: the sunken wall's base is below grade and its courses cross the lawn`);
+  const capOf=(id:string)=>{const b=byId(id).boxes.find(b=>b.role==='wall-cap'&&!b.renderDuplicate&&b.polygon)!;return b.renderContours?.[0]??b.polygon!;};
+  const northOf=(id:string)=>{const poly=capOf(id),c=centroid(poly),edge=poly.reduce((e,p,i)=>{const q=poly[(i+1)%poly.length],mx=(p.x+q.x)/2,mz=(p.y+q.y)/2;return mz>e.mz?{x:mx,z:mz,mz}:e;},{x:0,z:0,mz:-Infinity});const len=Math.hypot(edge.x-c.x,edge.z-c.y)||1;return {x:edge.x+(edge.x-c.x)/len*1.25,z:edge.z+(edge.z-c.y)/len*1.25,lipX:edge.x-(edge.x-c.x)/len*.2,lipZ:edge.z-(edge.z-c.y)/len*.2};};
+  const {width,depth,bounds}=turfBounds(data,yard),mesh=groundGeometry(yard,cuts,width,depth,bounds,'proposed'),oldMesh=groundGeometry(yard,legacy,width,depth,bounds,'proposed'),c=cracks(mesh);
+  ok(c.mismatched===0&&c.tCracks===0,`${label}: lawn around the wall cuts stays watertight (shared ${c.worstShared.toFixed(4)} in, T-gap ${c.worstT.toFixed(4)} in)`);
+  for(const id of ['sunken','grade','lowcap','seat'])for(const b of stoneOf(id)){ok(!covered(mesh,b.x,b.z),`${label}: the lawn mesh leaves ${id} ${b.role} open`);ok(covered(oldMesh,b.x,b.z),`${label}: without the wall cut the same ${id} ${b.role} was covered`);}
+  for(const id of ['grade','lowcap','seat']){const out=northOf(id);ok(!covered(mesh,out.lipX,out.lipZ)&&!pointIn(cuts,out.x,out.z)&&covered(mesh,out.x,out.z)&&covered(oldMesh,out.x,out.z),`${label}: ${id} meets the lawn at its cap and the grass resumes 1.25 in outside`);}
+  const face=northOf('sunken');ok(!covered(mesh,face.lipX,face.lipZ),`${label}: the sunken wall's cap lip is open toward the lounge`);
+  ok(!covered(mesh,600,644)&&pointIn(cuts,600,644)&&covered(oldMesh,600,644),`${label}: the grass shelf in front of the sunken face is opened`);
+  ok(covered(mesh,600,670)&&!pointIn(cuts,600,670),`${label}: lawn on the retained side of the sunken wall stays whole`);
+  const drain=byId('grade').boxes.find(b=>b.role==='wall-drainage'&&b.polygon)!;const dc=centroid(drain.polygon!);
+  ok(!pointIn(cuts,dc.x,dc.y)&&covered(mesh,dc.x,dc.y)&&covered(oldMesh,dc.x,dc.y),`${label}: drainage behind the wall stays under the lawn`);
+  const seatPad=stoneOf('seat-pad')[0];ok(pointIn(patioDisplayFootprints(yard),seatPad.x,seatPad.z)&&!covered(mesh,seatPad.x,seatPad.z),`${label}: a seat wall standing on paving stays in the paving opening`);
+  const masks=yardClip([...cuts,...yard.features.filter(f=>!f.excluded).flatMap(f=>f.footprints)]),tufts=lawnTufts(yard,width,depth,masks,8000);
+  const onStone=tufts.some(t=>['sunken','grade','lowcap','seat'].some(id=>stoneOf(id).some(b=>pointIn(b.renderContours??[b.polygon!],t.x,t.z))));
+  ok(!onStone,`${label}: grass blades do not grow on wall faces or caps`);
+  if(data.siteModel){const rim=perimeterGap(yard,'proposed');ok(rim.worst<.01,`${label}: survey edge still meets the estimated lawn (worst ${rim.worst.toFixed(5)})`);}
+  ok(JSON.stringify(data)===saved&&JSON.stringify(yard.quantities)===quantities&&calculateEstimate(data).subtotal===subtotal,`${label}: design, quantities and price are unchanged by the wall opening`);
+  summary.push(`${label}: wall stone opened, drainage covered, ${below.length} sunken courses below the lawn`);
   mesh.dispose();oldMesh.dispose();
  }
 }
