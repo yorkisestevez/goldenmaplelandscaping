@@ -231,6 +231,10 @@ export default function ServiceLocation() {
                   Get My Free Estimate
                   <ArrowRight size={14} strokeWidth={1.5} className="transition-transform group-hover:translate-x-1" />
                 </Link>
+                {parsed.service === 'composite-decking' && (
+                  <Link to="/deck-designer" className="mt-4 btn-ghost w-full py-4 inline-flex items-center justify-center">Design your deck</Link>
+                )}
+                <Link to="/book" className="mt-4 font-sans text-[11px] uppercase tracking-[0.22em] text-brand-gold-dark hover:text-brand-gold inline-flex">Book a call</Link>
               </div>
             </div>
           </div>
@@ -392,6 +396,14 @@ export default function ServiceLocation() {
               <Phone size={14} strokeWidth={1.5} />
               {publicContact.phoneDisplay}
             </a>
+            <Link to="/book" className="flex-1 flex items-center justify-center font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark border border-brand-gold/30 py-5 px-8 hover:bg-brand-gold/5 transition-colors w-full">
+              Book a call
+            </Link>
+            {parsed.service === 'composite-decking' && (
+              <Link to="/deck-designer" className="flex-1 flex items-center justify-center font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark border border-brand-gold/30 py-5 px-8 hover:bg-brand-gold/5 transition-colors w-full">
+                Design your deck
+              </Link>
+            )}
             <Link
               to="/contact"
               className="flex-1 btn-primary py-5 inline-flex items-center justify-center gap-3 w-full"

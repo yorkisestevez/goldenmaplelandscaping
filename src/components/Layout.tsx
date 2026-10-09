@@ -28,6 +28,13 @@ const SERVICE_LINKS = [
   { href: "/services/landscape-design-barrie", label: "Landscape Design" },
 ];
 
+/** Drop a trailing slash so server paths and rewritten link literals compare equal. */
+function barePath(path: string): string {
+  const cut = path.search(/[?#]/);
+  const only = cut === -1 ? path : path.slice(0, cut);
+  return only.length > 1 ? only.replace(/\/+$/, '') : only;
+}
+
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -36,6 +43,12 @@ const Navbar = () => {
   const resourcesRef = useRef<HTMLDivElement>(null);
   const servicesRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const path = barePath(location.pathname);
+  const same = (href: string) => path === barePath(href);
+  const under = (prefix: string) => {
+    const root = barePath(prefix);
+    return path === root || path.startsWith(`${root}/`);
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -58,6 +71,7 @@ const Navbar = () => {
   const navLinks = [
     { href: "/services", label: "Services", hasServicesDropdown: true },
     { href: "/portfolio", label: "Portfolio" },
+    { href: "/deck-designer", label: "Deck designer" },
     { href: "/cost-estimator", label: "Cost Estimator" },
     { href: "/process", label: "Process" },
     { href: "/resources", label: "Resources", hasDropdown: true },
@@ -149,7 +163,7 @@ const Navbar = () => {
                     to={link.href}
                     className={cn(
                       "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
-                      location.pathname.startsWith('/services') ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                      under('/services') ? "text-brand-gold-dark" : "text-brand-bonewhite"
                     )}
                   >
                     {link.label}
@@ -221,7 +235,7 @@ const Navbar = () => {
                     to={link.href} 
                     className={cn(
                       "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
-                      location.pathname.startsWith('/resources') || location.pathname === '/buyers-guide' || location.pathname === '/cost-estimator' ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                      under('/resources') || same('/buyers-guide') || same('/cost-estimator') ? "text-brand-gold-dark" : "text-brand-bonewhite"
                     )}
                   >
                     {link.label}
@@ -259,7 +273,7 @@ const Navbar = () => {
                   to={link.href} 
                   className={cn(
                     "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap",
-                    location.pathname === link.href ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                    same(link.href) ? "text-brand-gold-dark" : "text-brand-bonewhite"
                   )}
                 >
                   {link.label}
@@ -274,7 +288,7 @@ const Navbar = () => {
               to="/contact" 
               className={cn(
                 "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium",
-                location.pathname === "/contact" ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                same("/contact") ? "text-brand-gold-dark" : "text-brand-bonewhite"
               )}
             >
               Contact
@@ -334,7 +348,7 @@ const Navbar = () => {
                       to={link.href} 
                       className={cn(
                         "font-display text-5xl font-light tracking-tight transition-colors",
-                        location.pathname === link.href ? "text-brand-gold" : "text-brand-porcelain"
+                        same(link.href) ? "text-brand-gold" : "text-brand-porcelain"
                       )}
                     >
                       {link.label}
@@ -392,7 +406,10 @@ const Footer = () => {
   // The estimator page runs its own contextual sticky bar — the global dock
   // would cover it (z-50 vs z-40) and steal its taps.
   const { pathname } = useLocation();
-  const hideDock = pathname.startsWith('/cost-estimator');
+  // Join avoids a '/cost-estimator' literal. The trailing-slash rewriter would
+  // append a slash the server pathname does not have yet, so the dock SSR'd
+  // and then disappeared on hydrate (React #418).
+  const hideDock = barePath(pathname) === ['', 'cost-estimator'].join('/');
   return (
     <footer className="bg-brand-surface text-brand-bonewhite pt-32 pb-24 md:pb-12">
       <div className="container-custom">
@@ -431,6 +448,8 @@ const Footer = () => {
               <li><Link to="/portfolio" className="hover:text-brand-gold-dark transition-colors">Portfolio</Link></li>
               <li><Link to="/about" className="hover:text-brand-gold-dark transition-colors">Our Story</Link></li>
               <li><Link to="/library" className="hover:text-brand-gold-dark transition-colors">Construction Library</Link></li>
+              <li><Link to="/deck-designer" className="hover:text-brand-gold-dark transition-colors">Deck designer</Link></li>
+              <li><Link to="/book" className="hover:text-brand-gold-dark transition-colors">Book a call</Link></li>
               <li><Link to="/contact" className="hover:text-brand-gold-dark transition-colors">Contact</Link></li>
               <li><Link to="/reviews" className="hover:text-brand-gold-dark transition-colors">Google reviews</Link></li>
               <li><Link to="/service-areas" className="hover:text-brand-gold-dark transition-colors">Service Areas</Link></li>

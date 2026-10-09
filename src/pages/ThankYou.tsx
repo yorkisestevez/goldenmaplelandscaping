@@ -4,6 +4,7 @@ import { CheckCircle, Download } from 'lucide-react';
 import SEO from '../components/SEO';
 import { publicContact } from '../data/business';
 import { trackCall } from '../utils/analytics';
+import { bookingSearch } from '../utils/bookingPrefill';
 
 const DOWNLOADS: Record<string, { href: string; filename: string; label: string }> = {
   'cost-guide': {
@@ -23,6 +24,12 @@ export default function ThankYou() {
   const [params] = useSearchParams();
   const form = params.get('form') ?? 'contact';
   const download = DOWNLOADS[form];
+  const bookHref = bookingSearch({
+    name: params.get('name') ?? '',
+    phone: params.get('phone') ?? '',
+    email: params.get('email') ?? '',
+    service: params.get('service') ?? '',
+  });
 
   useEffect(() => {
     if (!download) return;
@@ -54,7 +61,7 @@ export default function ThankYou() {
             Thanks. We have <span className="italic text-brand-gold-dark">your details.</span>
           </h1>
           <p className="font-sans text-base md:text-lg text-brand-muted font-light leading-relaxed mb-8">
-            Yorkis reviews project requests for Barrie and the surrounding towns. If you would rather talk now, call {publicContact.phoneDisplay}.
+            Yorkis reviews project requests for Barrie and the surrounding towns. Pick a time for a call, or phone {publicContact.phoneDisplay} if you would rather talk now.
           </p>
           {download && (
             <a href={download.href} download className="btn-primary inline-flex items-center gap-3 mb-8">
@@ -62,7 +69,8 @@ export default function ThankYou() {
             </a>
           )}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('thank_you_phone')} className="btn-primary">
+            <Link to={bookHref} className="btn-primary">Pick a call time</Link>
+            <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('thank_you_phone')} className="btn-ghost">
               Call {publicContact.phoneDisplay}
             </a>
             <Link to="/portfolio" className="btn-ghost">See recent projects</Link>

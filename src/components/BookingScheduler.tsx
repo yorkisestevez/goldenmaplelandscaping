@@ -1,5 +1,6 @@
-import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, type ChangeEvent, type FormEvent } from 'react';
 import { useLocation } from 'react-router-dom';
+import { bookingServiceFromLead, BOOKING_SERVICE_OPTIONS } from '../utils/bookingPrefill';
 import {
   ArrowRight,
   ArrowLeft,
@@ -33,15 +34,7 @@ interface AvailabilityDay {
 
 type Step = 'pick' | 'confirm' | 'submitting' | 'success' | 'error';
 
-const SERVICE_OPTIONS = [
-  'Complete Backyard Renovation',
-  'Interlocking Stone & Patios',
-  'Composite Decking',
-  'Retaining Walls',
-  'Landscape Design',
-  'Pool Surround & Features',
-  'Other',
-];
+const SERVICE_OPTIONS = [...BOOKING_SERVICE_OPTIONS];
 
 function formatDateLong(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -50,6 +43,33 @@ function formatDateLong(dateStr: string): string {
     month: 'long',
     day: 'numeric',
   });
+}
+
+function icsLocal(date: string, time: string): string {
+  const [hh = '00', mm = '00'] = time.split(':');
+  return `${date.replace(/-/g, '')}T${hh.padStart(2, '0')}${mm.padStart(2, '0')}00`;
+}
+
+/** Calendar file for the booked slot. End time comes from the slot itself; it is omitted when the slot has none. */
+function callCalendar(date: string, slot: AvailabilitySlot): string {
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Golden Maple Landscaping//EN',
+    'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    `UID:${date}-${slot.start}@goldenmaplelandscaping.ca`,
+    `DTSTAMP:${icsLocal(date, slot.start)}`,
+    `DTSTART:${icsLocal(date, slot.start)}`,
+  ];
+  if (slot.end) lines.push(`DTEND:${icsLocal(date, slot.end)}`);
+  lines.push(
+    'SUMMARY:Call with Golden Maple Landscaping',
+    'DESCRIPTION:A call with Golden Maple Landscaping.',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  );
+  return lines.join('\r\n');
 }
 
 function formatTime(time: string): string {
@@ -70,16 +90,22 @@ export default function BookingScheduler() {
   const [selectedSlot, setSelectedSlot] = useState<AvailabilitySlot | null>(null);
 
   // The deck designer's "Book a call" passes its design link through router state (never the URL).
+  // Thank-you and other links pass name, phone, email, and service as query params.
   const prefill = (useLocation().state ?? null) as { bookingNotes?: unknown; serviceInterest?: unknown } | null;
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    service_interest:
-      typeof prefill?.serviceInterest === 'string' && SERVICE_OPTIONS.includes(prefill.serviceInterest)
-        ? prefill.serviceInterest
-        : SERVICE_OPTIONS[0],
-    notes: typeof prefill?.bookingNotes === 'string' ? prefill.bookingNotes.slice(0, 4000) : '',
+  const bookingQuery = new URLSearchParams(useLocation().search);
+  const [form, setForm] = useState(() => {
+    const fromState = typeof prefill?.serviceInterest === 'string' ? prefill.serviceInterest : '';
+    const fromQuery = bookingQuery.get('service') ?? '';
+    const service = (SERVICE_OPTIONS as readonly string[]).includes(fromState)
+      ? fromState
+      : bookingServiceFromLead(fromQuery || fromState);
+    return {
+      name: bookingQuery.get('name') ?? '',
+      email: bookingQuery.get('email') ?? '',
+      phone: bookingQuery.get('phone') ?? '',
+      service_interest: service,
+      notes: typeof prefill?.bookingNotes === 'string' ? prefill.bookingNotes.slice(0, 4000) : '',
+    };
   });
 
   const onChange = (
@@ -124,6 +150,14 @@ export default function BookingScheduler() {
     setSelectedSlot(slot);
     setStep('confirm');
   };
+
+  const icsHref = useMemo(() => {
+    if (step !== 'success' || !selectedDate || !selectedSlot) return '';
+    return URL.createObjectURL(new Blob([callCalendar(selectedDate, selectedSlot)], { type: 'text/calendar' }));
+  }, [step, selectedDate, selectedSlot]);
+  useEffect(() => () => {
+    if (icsHref) URL.revokeObjectURL(icsHref);
+  }, [icsHref]);
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -199,8 +233,12 @@ export default function BookingScheduler() {
             </>
           )}
           A confirmation email is on its way. Yorkis will call you at the time you picked.
-          Mark it on your calendar — we don't waste each other's time.
         </p>
+        {icsHref && (
+          <a href={icsHref} download="golden-maple-call.ics" className="btn-primary inline-flex mb-8">
+            Add to calendar
+          </a>
+        )}
         <a
           href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('bookingscheduler_phone')}
           className="font-sans text-[10px] uppercase tracking-[0.25em] text-brand-gold-dark hover:underline inline-flex items-center gap-2"
