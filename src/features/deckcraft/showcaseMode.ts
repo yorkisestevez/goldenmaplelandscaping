@@ -46,3 +46,5 @@ export function applyShowcaseSearch(){
 /** Distance haze while the photographed horizon is visible. The yard (under ~80 ft) stays clear;
  * the far lawn dissolves into that band. The editor's fog is restored when context is off. */
 export const SHOWCASE_FOG_DENSITY=0.00155;
+/** Clearer air for the photographic grade. Context without the grade keeps SHOWCASE_FOG_DENSITY. */
+export const SHOWCASE_CLEAR_FOG=0.00042;

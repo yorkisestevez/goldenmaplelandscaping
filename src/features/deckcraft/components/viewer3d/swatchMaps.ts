@@ -21,7 +21,7 @@ export interface SwatchMaps{
 }
 export const ATLAS_WIDTH=1024,STRIP_ROWS=128,STRIP_GUTTER=8,STRIP_BODY=STRIP_ROWS-2*STRIP_GUTTER;
 /** Roughness of a composite's capped surface and of real wood; raised grain is a little smoother than its grooves. */
-export const BOARD_ROUGHNESS={composite:.48,wood:.75,relief:.08};
+export const BOARD_ROUGHNESS={composite:.48,wood:.75,relief:.08,detail:.22};
 /** How much of the photo's board-to-board tone difference each strip keeps. Multi-tone lines (Tigerwood) differ a lot
  * between the photo's four boards; at their full spread short pieces between butt joints read as a patchwork. */
 export const BOARD_TONE_SPREAD=.8;
@@ -134,7 +134,7 @@ export async function buildSwatchMaps(input:SwatchImage,kind:'composite'|'wood',
   }
   // Every channel scaled so the atlas's mean is the photo's.
   const gain=[0,1,2].map(c=>{let m=0;for(const b of bodies)for(const v of b[c])m+=v;m/=n*W*B;return m>0?sourceMean[c]/m:1;});
-  const rough=kind==='wood'?BOARD_ROUGHNESS.wood:BOARD_ROUGHNESS.composite,tilt=Math.tan(GRAIN_TILT_DEG*Math.PI/180);
+  const rough=kind==='wood'?BOARD_ROUGHNESS.wood:W===ATLAS_WIDTH?BOARD_ROUGHNESS.composite:.4,tilt=Math.tan(GRAIN_TILT_DEG*Math.PI/180),reliefAmp=W===ATLAS_WIDTH?BOARD_ROUGHNESS.relief:BOARD_ROUGHNESS.detail;
   bodies.forEach((ch,k)=>{
     const luma=new Float32Array(W*B);
     for(let i=0;i<W*B;i++)for(let c=0;c<3;c++)ch[c][i]=Math.min(255,Math.max(0,ch[c][i]*gain[c]));
@@ -158,7 +158,8 @@ export async function buildSwatchMaps(input:SwatchImage,kind:'composite'|'wood',
         const i=y*W+x,t=o+x*4,nx=-dx[i]*scale,ny=-dy[i]*scale,nz=1/Math.hypot(nx,ny,1);
         albedo[t]=ch[0][i];albedo[t+1]=ch[1][i];albedo[t+2]=ch[2][i];albedo[t+3]=255;
         normal[t]=Math.round((nx*nz*.5+.5)*255);normal[t+1]=Math.round((ny*nz*.5+.5)*255);normal[t+2]=Math.round((nz*.5+.5)*255);normal[t+3]=W===ATLAS_WIDTH?255:Math.round((height2[i]/(hi||1)*.5+.5)*255);
-        const r=Math.round(255*Math.min(1,Math.max(0,rough-BOARD_ROUGHNESS.relief*height2[i]/(hi||1))));roughness[t]=roughness[t+1]=roughness[t+2]=r;roughness[t+3]=255;
+        const sheen=W===ATLAS_WIDTH?0:Math.sin((x*6*Math.PI*2)/W+k*1.7)*.07+Math.sin((x*2*Math.PI*2)/W)*.04;
+        const r=Math.round(255*Math.min(1,Math.max(0,rough-reliefAmp*height2[i]/(hi||1)+sheen)));roughness[t]=roughness[t+1]=roughness[t+2]=r;roughness[t+3]=255;
       }
     }
   });

@@ -12,21 +12,26 @@ import {getShowcaseFlags,showcasePostEnabled,type ShowcaseHour} from './showcase
 const VERT=`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
 const DOF_FRAG=`uniform sampler2D tColor;uniform sampler2D tDepth;uniform vec2 resolution;uniform float cameraNear;uniform float cameraFar;uniform float focus;uniform float focusScale;uniform float focusBias;uniform float maxRadius;varying vec2 vUv;
 float dcViewZ(float depth){return(cameraNear*cameraFar)/((cameraFar-cameraNear)*depth-cameraFar);}
+void dcTap(vec2 uv,float centerZ,inout float wsum,inout vec3 accum){
+  float z=-dcViewZ(texture2D(tDepth,uv).r);
+  float w=smoothstep(0.45,0.06,abs(z-centerZ)/max(centerZ,1.0));
+  accum+=texture2D(tColor,uv).rgb*w;wsum+=w;
+}
 void main(){
   vec4 base=texture2D(tColor,vUv);
   float dist=-dcViewZ(texture2D(tDepth,vUv).r);
   float coc=clamp(abs(dist-focus)/(focus*focusScale+focusBias),0.0,1.0)*maxRadius;
   vec2 texel=coc/resolution;
-  vec3 color=base.rgb;
-  color+=texture2D(tColor,vUv+texel*vec2(0.55,0.15)).rgb;
-  color+=texture2D(tColor,vUv+texel*vec2(-0.4,0.55)).rgb;
-  color+=texture2D(tColor,vUv+texel*vec2(-0.55,-0.25)).rgb;
-  color+=texture2D(tColor,vUv+texel*vec2(0.15,-0.6)).rgb;
-  color+=texture2D(tColor,vUv+texel*vec2(0.95,-0.35)).rgb;
-  color+=texture2D(tColor,vUv+texel*vec2(-0.85,-0.75)).rgb;
-  color+=texture2D(tColor,vUv+texel*vec2(0.25,0.95)).rgb;
-  color+=texture2D(tColor,vUv+texel*vec2(-0.15,0.35)).rgb;
-  gl_FragColor=vec4(color/9.0,base.a);
+  vec3 color=base.rgb;float wsum=1.0;
+  dcTap(vUv+texel*vec2(0.55,0.15),dist,wsum,color);
+  dcTap(vUv+texel*vec2(-0.4,0.55),dist,wsum,color);
+  dcTap(vUv+texel*vec2(-0.55,-0.25),dist,wsum,color);
+  dcTap(vUv+texel*vec2(0.15,-0.6),dist,wsum,color);
+  dcTap(vUv+texel*vec2(0.95,-0.35),dist,wsum,color);
+  dcTap(vUv+texel*vec2(-0.85,-0.75),dist,wsum,color);
+  dcTap(vUv+texel*vec2(0.25,0.95),dist,wsum,color);
+  dcTap(vUv+texel*vec2(-0.15,0.35),dist,wsum,color);
+  gl_FragColor=vec4(color/max(wsum,0.001),base.a);
 }`;
 const GRADE_FRAG=`uniform sampler2D tColor;uniform vec3 slope;uniform vec3 offset;uniform vec3 power;uniform float contrast;uniform float pivot;uniform vec3 shadowTint;uniform vec3 highlightTint;uniform float split;uniform float vignette;varying vec2 vUv;
 void main(){

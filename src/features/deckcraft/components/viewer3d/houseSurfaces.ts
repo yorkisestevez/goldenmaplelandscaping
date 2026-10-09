@@ -61,7 +61,7 @@ vec4 houseTex(sampler2D t){return textureGrad(t,vHouseUv+vHouseShift,dFdx(vHouse
 const FRAGMENT_RELIEF=/* glsl */`
 uniform sampler2D uRelief;uniform sampler2D uReliefRough;
 varying vec2 vHouseUv;flat varying vec2 vHouseShift;
-vec4 houseTex(sampler2D t){vec3 dcView=normalize(vViewPosition);float dcH=texture2D(uRelief,vHouseUv).a;vec2 uv=vHouseUv+vHouseShift+dcView.xy*(dcH-.5)*.028;return textureGrad(t,uv,dFdx(vHouseUv),dFdy(vHouseUv));}`;
+vec4 houseTex(sampler2D t){vec3 dcView=normalize(vViewPosition);float dcH=texture2D(uRelief,vHouseUv).a;float dcParallax=smoothstep(0.12,0.42,abs(dot(normalize(vNormal),dcView)));vec2 uv=vHouseUv+vHouseShift+dcView.xy*(dcH-.5)*.028*dcParallax;return textureGrad(t,uv,dFdx(vHouseUv),dFdy(vHouseUv));}`;
 const reliefKind=(surface:HouseSurface):DetailKind=>surface==='woodgrain'?'siding':surface==='rock'?'stone':surface==='stucco'?'slab':'paver';
 function chunk(name:string,from:string,to:string){
   const source=(THREE.ShaderChunk as Record<string,string>)[name];
@@ -81,7 +81,7 @@ export function houseSurfaceMaterial(surface:HouseSurface,color:string,roughness
     shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>\n${relief?FRAGMENT_RELIEF:FRAGMENT}`)
       .replace('#include <map_fragment>',chunk('map_fragment','texture2D( map, vMapUv )','houseTex( map )'))
       .replace('#include <normal_fragment_begin>',chunk('normal_fragment_begin','vNormalMapUv','vHouseUv'))
-      .replace('#include <normal_fragment_maps>',chunk('normal_fragment_maps','texture2D( normalMap, vNormalMapUv )','houseTex( normalMap )')+(relief?'\nvec3 dcReliefN=texture2D(uRelief,vHouseUv).xyz*2.0-1.0;\nnormal=normalize(normal+vec3(dcReliefN.xy,0.0)*0.4);':''))
+      .replace('#include <normal_fragment_maps>',chunk('normal_fragment_maps','texture2D( normalMap, vNormalMapUv )','houseTex( normalMap )')+(relief?'\nvec3 dcReliefN=texture2D(uRelief,vHouseUv).xyz*2.0-1.0;\nfloat dcKeep=smoothstep(0.12,0.42,abs(dot(normalize(nonPerturbedNormal),normalize(vViewPosition))));\nnormal=normalize(mix(nonPerturbedNormal,normalize(normal+vec3(dcReliefN.xy,0.0)*0.85),dcKeep));':''))
       .replace('#include <roughnessmap_fragment>',relief?'#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor*mix(0.86,1.14,texture2D(uReliefRough,vHouseUv).r),0.04,1.0);':'#include <roughnessmap_fragment>');
   };
   let alive=true;

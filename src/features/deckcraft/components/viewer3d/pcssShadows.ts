@@ -41,7 +41,7 @@ const PCSS=`#else // SHADOWMAP_TYPE_BASIC
 
 				vec2 texel=vec2(1.0)/shadowMapSize;
 				float phi=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(0.06711056,0.00583715))))*6.2831853;
-				float search=max(shadowRadius,1.0)*texel.x*2.2;
+				float search=max(shadowRadius,1.0)*texel.x*4.0;
 				float blockers=0.0;
 				float blockerSum=0.0;
 				for(int i=0;i<8;i++){
@@ -59,7 +59,7 @@ const PCSS=`#else // SHADOWMAP_TYPE_BASIC
 				}else{
 					float average=blockerSum/blockers;
 					float penumbra=clamp(abs(shadowCoord.z-average)/max(average,0.0001),0.0,1.0);
-					float radius=texel.x*mix(0.45,max(shadowRadius,1.0)*1.7,penumbra);
+					float radius=texel.x*mix(1.15,max(shadowRadius,1.0)*2.6,penumbra);
 					float sum=0.0;
 					for(int i=0;i<8;i++){
 						float depth=texture2D(shadowMap,shadowCoord.xy+dcVogel(i,8,phi+1.7)*radius).r;
