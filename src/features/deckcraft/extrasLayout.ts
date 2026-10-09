@@ -195,6 +195,8 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
     const index=indices.get(item.zone)??0;indices.set(item.zone,index+1);
     const key=`${item.zone}:${item.id}`,own=perProduct.get(key)??0;perProduct.set(key,own+1);
     const p=perimeterPoint(index,counts.get(item.zone)??1),g=item.geometry,d=item.dimensionsIn,zone=item.zone;
+    const pinned='places' in item?item.places?.[own]:undefined;
+    if(pinned){fixtures.push({productId:item.id,x:pinned.x,z:pinned.z,y:pinned.y??terrain.elevationIn+pinned.z*terrain.slopePct/100,angle:pinned.angle,zone});continue;}
     let y=top+.15;
     if(zone==='border'){
       const mount=border.mounts[own];if(!mount)continue;
