@@ -74,7 +74,8 @@ function focusDistance(camera:THREE.Camera,controls:{target?:THREE.Vector3}|null
 export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE.Scene;camera:THREE.Camera;bridge:PhotoBridge;evening:boolean}):Promise<PhotoEngine>{
  const {gl,scene,camera,bridge}=input;
  const publish=(phase:PhotoPhase,samples:number,message:string)=>{
-  gl.domElement.dataset.photoPhase=phase;gl.domElement.dataset.photoSamples=String(Math.floor(samples));gl.domElement.dataset.photoTarget=String(getPhotoSettings().target);
+  const buf=gl.getDrawingBufferSize(new THREE.Vector2());
+  gl.domElement.dataset.photoPhase=phase;gl.domElement.dataset.photoSamples=String(Math.floor(samples));gl.domElement.dataset.photoTarget=String(getPhotoSettings().target);gl.domElement.dataset.photoBuffer=`${buf.x}x${buf.y}`;
   setPhotoProgress({phase,samples:Math.floor(samples),message});
  };
  const fail=(message=PHOTO_FALLBACK):PhotoEngine=>{
@@ -101,6 +102,15 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
  const denoise=new DenoiseMaterial({sigma:3,threshold:.08,kSigma:1});denoise.toneMapped=false;
  const denoised=new THREE.WebGLRenderTarget(4,4,{type:THREE.HalfFloatType,depthBuffer:false,colorSpace:THREE.LinearSRGBColorSpace});
  const quad=new FullScreenQuad(grade);
+ const accumMat=new THREE.ShaderMaterial({uniforms:{tBase:{value:null},tAdd:{value:null},useBase:{value:0}},depthTest:false,depthWrite:false,toneMapped:false,
+  vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
+  fragmentShader:'uniform sampler2D tBase;uniform sampler2D tAdd;uniform float useBase;varying vec2 vUv;void main(){gl_FragColor=vec4(texture2D(tBase,vUv).rgb*useBase+texture2D(tAdd,vUv).rgb,1.0);}'});
+ const scaleMat=new THREE.ShaderMaterial({uniforms:{tMap:{value:null},invCount:{value:1}},depthTest:false,depthWrite:false,toneMapped:false,
+  vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
+  fragmentShader:'uniform sampler2D tMap;uniform float invCount;varying vec2 vUv;void main(){gl_FragColor=vec4(texture2D(tMap,vUv).rgb*invCount,1.0);}'});
+ const accum=[new THREE.WebGLRenderTarget(4,4,{type:THREE.FloatType,depthBuffer:false,colorSpace:THREE.LinearSRGBColorSpace}),new THREE.WebGLRenderTarget(4,4,{type:THREE.FloatType,depthBuffer:false,colorSpace:THREE.LinearSRGBColorSpace})];
+ const averaged=new THREE.WebGLRenderTarget(4,4,{type:THREE.FloatType,depthBuffer:false,colorSpace:THREE.LinearSRGBColorSpace});
+ let passes=0;
  const photo=new PhysicalCamera(35,.1,1,1000);photo.apertureBlades=0;
  let pose='',finished=false,shownDenoise=false,stall=0,stashed=false;
  function skyLighting():Lighting{return input.evening?'evening':'day';}
@@ -147,14 +157,33 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   photo.fStop=settings.fStop>=22?Infinity:settings.fStop;photo.focusDistance=focusDistance(camera,controls);photo.updateProjectionMatrix();photo.updateMatrixWorld();
   tracer?.setCamera(photo);return true;
  }
+ const CHUNK=8;
+ function fitAccum(width:number,height:number){
+  for(const target of [accum[0],accum[1],averaged])if(target.width!==width||target.height!==height)target.setSize(width,height);
+ }
+ function storeChunk(){
+  if(!tracer)return;
+  const source=tracer.target,width=source.width,height=source.height;
+  fitAccum(width,height);
+  accumMat.uniforms.tBase.value=accum[passes%2].texture;accumMat.uniforms.tAdd.value=source.texture;accumMat.uniforms.useBase.value=passes===0?0:1;
+  gl.setRenderTarget(accum[(passes+1)%2]);gl.setScissorTest(false);gl.setViewport(0,0,width,height);quad.material=accumMat;quad.render(gl);gl.setRenderTarget(null);
+  passes+=1;tracer.reset();
+ }
  function present(finalPass:boolean){
   if(!tracer)return;
   const size=gl.getDrawingBufferSize(new THREE.Vector2());
   let map:THREE.Texture=tracer.target.texture;
+  if(passes>0){
+   const held=accum[passes%2];
+   fitAccum(held.width,held.height);
+   scaleMat.uniforms.tMap.value=held.texture;scaleMat.uniforms.invCount.value=1/passes;
+   gl.setRenderTarget(averaged);gl.setScissorTest(false);gl.setViewport(0,0,held.width,held.height);quad.material=scaleMat;quad.render(gl);gl.setRenderTarget(null);
+   map=averaged.texture;
+  }
   if(finalPass&&getPhotoSettings().denoise){
    try{
     if(denoised.width!==size.x||denoised.height!==size.y)denoised.setSize(size.x,size.y);
-    denoise.map=tracer.target.texture;denoise.sigma=Math.max(1.2,Math.min(7,16/Math.sqrt(Math.max(1,tracer.samples))));denoise.threshold=.08;denoise.kSigma=1;
+    denoise.map=map;denoise.sigma=Math.max(1.2,Math.min(7,16/Math.sqrt(Math.max(1,passes*CHUNK||tracer.samples))));denoise.threshold=.08;denoise.kSigma=1;
     gl.setRenderTarget(denoised);gl.setScissorTest(false);gl.setViewport(0,0,size.x,size.y);quad.material=denoise;quad.render(gl);map=denoised.texture;
    }catch(error){console.warn('DeckCraft photo: denoising was skipped.',error);}
   }
@@ -212,7 +241,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   fitStill();
   tracer=new WebGLPathTracer(gl) as Tracer;
   tracer.renderToCanvas=false;tracer.renderDelay=0;tracer.fadeDuration=0;tracer.minSamples=1;tracer.rasterizeScene=false;tracer.multipleImportanceSampling=true;
-  tracer.bounces=5;tracer.transmissiveBounces=6;tracer.filterGlossyFactor=.55;tracer.tiles.set(2,2);tracer.renderScale=photoRenderScale();tracer.stableNoise=true;
+  tracer.bounces=5;tracer.transmissiveBounces=6;tracer.filterGlossyFactor=.55;tracer.tiles.set(4,4);tracer.renderScale=photoRenderScale();tracer.stableNoise=true;
   syncCamera(true);tracer.setScene(scene,photo);
  }catch(error){
   console.warn('DeckCraft photo: path tracing is unavailable.',error);tracer?.dispose();denoise.dispose();denoised.dispose();grade.dispose();restoreAll();restoreView();delete gl.domElement.dataset.photoTrace;return fail();
@@ -223,15 +252,18 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
    const settings=getPhotoSettings();
    try{
     const moved=syncCamera();
-    if(!moved&&tracer.samples>=settings.target){if(!finished||shownDenoise!==settings.denoise){finished=true;shownDenoise=settings.denoise;present(true);stashStill();note(tracer.samples,true);}return;}
-    const started=performance.now();
-    do{tracer.renderSample();}while(!tracer.isCompiling&&tracer.samples<settings.target&&performance.now()-started<12);
-    if(tracer.isCompiling){publish('building',tracer.samples,'Compiling the path tracer…');stall=0;bridge.invalidate();return;}
-    if(tracer.samples===0){if(++stall>90){engine.dispose();publish('fallback',0,PHOTO_FALLBACK);return;}bridge.invalidate();return;}
+    const total=()=>passes*CHUNK+Math.floor(tracer?.samples??0);
+    if(!moved&&passes*CHUNK>=settings.target){if(!finished||shownDenoise!==settings.denoise){finished=true;shownDenoise=settings.denoise;present(true);stashStill();note(total(),true);}return;}
+    // One tile per frame. A tight loop fills SwiftShader's queue and the next draw never returns.
+    // The software GPU also stops returning from a draw after a long continuous trace, so each
+    // chunk is stored and the accumulator is reset before that happens.
+    tracer.renderSample();
+    if(tracer.samples>=CHUNK&&passes*CHUNK<settings.target)storeChunk();
+    if(tracer.isCompiling){publish('building',total(),'Compiling the path tracer…');stall=0;bridge.invalidate();return;}
+    if(tracer.samples===0&&passes===0){if(++stall>90){engine.dispose();publish('fallback',0,PHOTO_FALLBACK);return;}bridge.invalidate();return;}
     stall=0;
-    if(Number.isInteger(tracer.samples))present(tracer.samples>=settings.target);
-    if(tracer.samples>=settings.target){finished=true;present(true);stashStill();note(tracer.samples,true);return;}
-    finished=false;note(tracer.samples,false);bridge.invalidate();
+    if(passes*CHUNK>=settings.target){finished=true;present(true);stashStill();note(total(),true);return;}
+    finished=false;note(total(),false);bridge.invalidate();
    }catch(error){console.warn('DeckCraft photo: path tracing stopped.',error);engine.dispose();publish('fallback',0,PHOTO_FALLBACK);}
   },
   async exportStill(longEdge:number){
@@ -258,7 +290,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   },
   dispose(){
    if(disposed)return;disposed=true;registerPhotoTracer(null);delete gl.domElement.dataset.photoTrace;delete gl.domElement.dataset.photoPhase;delete gl.domElement.dataset.photoSamples;delete gl.domElement.dataset.photoTarget;delete gl.domElement.dataset.photoStill;delete gl.domElement.dataset.photoCensus;
-   restoreAll();restoreView();gl.setRenderTarget(null);tracer?.dispose();denoise.dispose();denoised.dispose();grade.dispose();bridge.invalidate();
+   restoreAll();restoreView();gl.setRenderTarget(null);tracer?.dispose();denoise.dispose();denoised.dispose();grade.dispose();accumMat.dispose();scaleMat.dispose();for(const target of [...accum,averaged])target.dispose();bridge.invalidate();
   },
  };
  registerPhotoTracer(async(request:PhotoTraceRequest):Promise<PhotoTraceFrame>=>{

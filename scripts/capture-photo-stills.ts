@@ -72,11 +72,12 @@ async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighti
   await page.waitForFunction(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photographic-pipeline')==='active',undefined,{timeout:120_000});
   await page.waitForTimeout(4000);
  }else{
-  const deadline=Date.now()+5_400_000;let last='';
+  const deadline=Date.now()+5_400_000;let last='',lastChange=Date.now();
   while(Date.now()<deadline){
-   const state=await page.evaluate(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',census:canvas?.getAttribute('data-photo-census')??'',still:canvas?.getAttribute('data-photo-still')??''};});
-   const line=`${state.phase||'waiting'} ${state.samples||'0'}/${state.target||'?'} census=${state.census} still=${state.still}`;
-   if(line!==last){console.log(name,line);last=line;}
+   const state=await page.evaluate(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',census:canvas?.getAttribute('data-photo-census')??'',still:canvas?.getAttribute('data-photo-still')??'',buffer:canvas?.getAttribute('data-photo-buffer')??''};});
+   const line=`${state.phase||'waiting'} ${state.samples||'0'}/${state.target||'?'} ${state.buffer} census=${state.census} still=${state.still}`;
+   if(line!==last){console.log(name,line);last=line;lastChange=Date.now();}
+   else if(Date.now()-lastChange>1_200_000)throw Error(`${name}: no sample progress for 20 minutes (${line})`);
    if(state.phase==='ready'||state.phase==='fallback')break;
    await page.waitForTimeout(3000);
   }
