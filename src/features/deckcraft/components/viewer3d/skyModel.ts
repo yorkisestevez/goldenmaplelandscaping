@@ -20,12 +20,12 @@ export function visibleSkyStrength(lighting:Lighting){return skyStrength(lightin
 export function visibleSkyElevation(elevation:number){const min=VISIBLE_SKY_MIN_DEG*Math.PI/180;return min+Math.min(Math.PI/2,Math.max(0,elevation))*(1-min/(Math.PI/2));}
 /** Match the distance haze to the actual displayed sky horizon. RGBE loaders
  * may supply half-float or float data, with either row orientation. */
-/** Elevation sampled on the sky dome. horizonBand 0 is the editor's clean upper sky.
- * horizonBand 1 blends the photographed horizon in below about 3°. */
+/** Elevation sampled on the sky dome. Editor and neighbourhood both stay on the
+ * clean upper photograph. The panorama's ground ring sits on the equator and
+ * reads as a dark seamed band, so horizonBand no longer opens it. */
 export function skyDomeSampleElevation(elevation:number,horizonBand:number){
  const min=VISIBLE_SKY_MIN_DEG*Math.PI/180,displayed=Math.max(0,elevation),clean=min+displayed*(1-min/(Math.PI/2));
- const t=elevation<=0?0:Math.min(1,elevation/.045),smooth=t*t*(3-2*t),band=1-smooth;
- return clean*(1-band*horizonBand)+Math.max(elevation,0)*band*horizonBand;
+ return clean+horizonBand*0;
 }
 export function visibleSkyHorizon(map:THREE.Texture,elevation?:number):[number,number,number]|null {
  const image=map.image as {width?:number;height?:number;data?:ArrayLike<number>}|undefined;

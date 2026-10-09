@@ -78,8 +78,11 @@ export function blocksHeroView(x:number,z:number,radiusFt:number,cameras:CameraC
   const dist=Math.hypot(x-cam.x,z-cam.z);
   if(dist<radiusFt+18)return true;
   const along=((x-cam.x)*dx+(z-cam.z)*dz)/len;
-  if(along<2||along>len*.92)continue;
   const px=cam.x+dx/len*along,pz=cam.z+dz/len*along,lateral=Math.hypot(x-px,z-pz);
+  // A canopy just in front of the lens filled the night hero. Backdrop past the
+  // subject stays: this only catches the near field the corridor used to skip.
+  if(along>=-2&&along<radiusFt+42&&lateral<radiusFt+16)return true;
+  if(along<2||along>len*.92)continue;
   const corridor=radiusFt+6+along*Math.tan(cam.fov*Math.PI/360)*.72;
   if(lateral<corridor)return true;
  }

@@ -31,7 +31,6 @@ export function applyShowcaseSearch(){
  if(quality||context||golden)setShowcaseFlags({quality,context,golden});
 }
 
-/** Distance haze while the photographed horizon is visible. Light enough that a
- * 200 ft estate stays clear; only the far neighbourhood softens. The editor's
- * fog is restored when context is off. */
+/** Distance haze for the neighbourhood. Light enough that a 160 ft lot stays
+ * clear; only the far neighbourhood softens. The editor's fog is unchanged. */
 export const SHOWCASE_FOG_DENSITY=0.00042;
