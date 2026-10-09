@@ -234,8 +234,8 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
       else if(g==='wall'||g==='undercap'){
         const legacyHyde=item.id==='evo_hyde',length=legacyHyde?LEGACY_HYDE.length:d.length??d.diameter??d.width??2;
         if(onStep*length+(onStep-1)*2>nose.width-4){warnings.push(`${item.name} is too long for this tread; choose a shorter fixture or a deck/house location.`);continue;}
-        // An under-step light tucks up flush under the tread, on the riser face below the nose (the nosing is too shallow
-        // to hide it); a riser light sits lower on that face.
+        // Under-step lights tuck flush under the tread nose. Lit designs use the lighting mounting-space nose so the
+        // fixture hides under the overhang; ordinary ½ in noses keep the fixture on the riser face below the nose.
         const nosing=t.polygon?0:model.stairSupport.treadNosingIn;
         const inset=nosing-(g==='undercap'?(legacyHyde?LEGACY_HYDE.depth:d.width??.7)/2+.05:(d.width??1)/2);
         p.x=nose.x+ux*along-nx*inset;p.z=nose.z+uz*along-nz*inset;
