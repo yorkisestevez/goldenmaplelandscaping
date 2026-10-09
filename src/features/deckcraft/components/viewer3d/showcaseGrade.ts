@@ -12,7 +12,7 @@ export interface ShowcaseGrade{
 }
 export const SHOWCASE_GRADES:Record<ShowcaseHour,ShowcaseGrade>={
   day:{slope:[1,1,1],offset:[0,0,0],power:[1,1,1],contrast:1.1,pivot:.18,shadow:[.992,.997,1],highlight:[1.028,1.006,.978],split:.06,vignette:.1},
-  golden:{slope:[1.2,1.06,.72],offset:[.02,.006,-.02],power:[.9,.97,1.1],contrast:1.22,pivot:.18,shadow:[.68,.56,.9],highlight:[1.34,.92,.46],split:.5,vignette:.16},
+  golden:{slope:[1.04,1.02,1],offset:[.006,.002,.004],power:[.98,.99,1],contrast:1.06,pivot:.18,shadow:[.92,.98,1.06],highlight:[1.14,1.04,.88],split:.35,vignette:.1},
   night:{slope:[.92,.98,1.05],offset:[-.006,-.003,.004],power:[1.03,1.01,.98],contrast:1.16,pivot:.16,shadow:[.66,.78,1.1],highlight:[1.18,1,.84],split:.3,vignette:.22},
 };
 /** Night bloom: a wider, weaker glow so landscape lights read without blowing out. Threshold stays above white. */
@@ -25,6 +25,8 @@ export const SHOWCASE_STILL_SAMPLES=1;
 export const SHOWCASE_DAY_SUN=1.62;
 /** Share of the daylight environment kept while the grade is on. Shade has to read against the key. */
 export const SHOWCASE_SKY_FILL=0.5;
+/** Golden hour keeps more sky fill, so open shade stays lightly cool and foliage is not painted by the sun. */
+export const SHOWCASE_GOLDEN_FILL=0.85;
 /**
  * Daylight chromaticity for the showcase sky dome, applied after panorama exposure.
  * The photographed upper sky is cyan enough that Neutral tone mapping prints its red as 0.
@@ -36,12 +38,12 @@ export const DAY_SKY_RED=0.55;
 export const DAY_SKY_GREEN=0.74;
 /** Extra panorama exposure for showcase day only. The photographed sky sits a stop under a print. */
 export const DAY_SKY_GAIN=1.5;
-/** Golden-hour dome: a warm chromaticity and a lift, after exposure, before the filmic grade. */
-export const GOLDEN_SKY_GAIN=1.55;
-export const GOLDEN_SKY_BLEND=0.5;
-export const GOLDEN_SKY_RED=1.12;
-export const GOLDEN_SKY_GREEN=0.86;
-export const GOLDEN_SKY_BLUE=0.62;
+/** Golden-hour dome: a light warm shift. Blue stays in the sky so the grade cannot turn the frame olive. */
+export const GOLDEN_SKY_GAIN=1.2;
+export const GOLDEN_SKY_BLEND=0.22;
+export const GOLDEN_SKY_RED=1.02;
+export const GOLDEN_SKY_GREEN=0.96;
+export const GOLDEN_SKY_BLUE=0.88;
 
 function smooth01(edge0:number,edge1:number,x:number){const t=x<=edge0?0:x>=edge1?1:(x-edge0)/(edge1-edge0);return t*t*(3-2*t);}
 /** The dome shader's daylight recolor. `rich` is 1 for showcase day and 0 everywhere else. */
