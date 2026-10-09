@@ -10,6 +10,15 @@ export class ViewerBoundary extends Component<{children:ReactNode;fallback:React
   static getDerivedStateFromError(){return {failed:true};}
   render(){return this.state.failed ? this.props.fallback : this.props.children;}
 }
+/** Catches a failed lazy plan editor chunk (stale deploy hash) and offers a reload without blanking the drawing. */
+export class PlanEditorBoundary extends Component<{children:ReactNode;onRetry?:()=>void},{failed:boolean;nonce:number}> {
+  state={failed:false,nonce:0};
+  static getDerivedStateFromError(){return {failed:true};}
+  render(){
+    if(!this.state.failed)return <div key={this.state.nonce}>{this.props.children}</div>;
+    return <div className="dd-quote-notice" role="alert"><strong>The outline editor could not load.</strong><p>A newer drawing update may still be downloading. Try again, or refresh the page.</p><button type="button" className="dd-secondary" onClick={()=>{this.props.onRetry?.();this.setState(s=>({failed:false,nonce:s.nonce+1}));}}>Try again</button></div>;
+  }
+}
 export function Field({label,children,hint,after}:{label:string;children:ReactNode;hint?:string;after?:ReactNode}){
   return <label className="dd-field"><span>{label}</span>{children}{hint && <small>{hint}</small>}{after}</label>;
 }

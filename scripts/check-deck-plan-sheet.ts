@@ -288,7 +288,7 @@ const r5={outline:0,stairs:0,house:0,shape:0};
   const rect=deckReleaseData(base()),T=deckReleaseData({...base(),width:20,length:14,shape:'Custom',customFront:outlinePreset('t',20,14)!});
   for(const p of OUTLINE_PRESETS){
     ok(same(presetPatch(T,p.id),outlinePreset(p.id,20,14)?{customFront:outlinePreset(p.id,20,14)}:null),`${p.name}: on an outline, the preset sized to it`);
-    const want=outlinePreset(p.id,16,12);ok(same(presetPatch(rect,p.id),want?{...chooseShape(rect,'Custom'),customFront:want}:null),`${p.name}: on a rectangle, the outline shape and the preset`);
+    const want=outlinePreset(p.id,16,12);ok(same(presetPatch(rect,p.id),want?{shape:'Custom',levels:1,customFront:want}:null),`${p.name}: on a rectangle, the outline shape and the preset`);
   }
   const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
   const hook=read('src/features/deckcraft/designer/useOutlineEdit.ts'),outlineUi=read('src/features/deckcraft/designer/OutlineEditor.tsx'),editor=read('src/features/deckcraft/designer/PlanEditor.tsx');
@@ -419,7 +419,7 @@ const r5={outline:0,stairs:0,house:0,shape:0};
   const panel=read('src/features/deckcraft/designer/PreviewPanel.tsx'),page=read('src/pages/DeckDesigner.tsx'),editor=read('src/features/deckcraft/designer/PlanEditor.tsx'),css=read('src/pages/DeckDesigner.css');
   ok(PLAN_TOOLS.map(t=>t[1]).join('|')==='Select parts|Shape & points|Board layout|Inlays|Rails & screens|Patios & walls|Landscape areas|Size & place|Stairs|House'&&read('src/features/deckcraft/designer/PlanToolPicker.tsx').includes('role="radiogroup" aria-label="Plan tools"')&&read('src/features/deckcraft/designer/PlanToolPicker.tsx').includes('role="radio" aria-checked={tool===id}'),'The plan has one tool at a time, including independently placed inlays and rail and screen sections');
   ok(page.includes("const [planTool,setPlanTool]=useState<PlanTool>('size');")&&page.includes("if(data.shape==='Custom')setPlanTool(t=>t==='size'?'outline':t)"),'The plan opens with size controls and switches custom shapes to point editing');
-  const custom=planShortcut(deckReleaseData(base()),'Custom');ok(custom.tool==='outline'&&panel.includes('if(r.tool)setTool(r.tool);')&&!panel.includes('onOpenDeck'),'Draw my own switches to the Draw outline tool');
+  const custom=planShortcut(deckReleaseData(base()),'Custom');ok(custom.tool==='outline'&&panel.includes('setTool(r.tool)')&&panel.includes('loadPlanBoundaryEditor')&&!panel.includes('onOpenDeck'),'Draw my own switches to the Draw outline tool and preloads its editor');
   ok(panel.includes(`variant="site" wholeHouse={tool==='house'}/>`)&&editor.includes("planFrame(model,{data,yard,variant:'site',wholeHouse:tool==='house'})"),'The House tool draws the whole house, on the plan and under its editor alike');
   for(const c of built.filter(b=>b.withData&&b.data.houseVisible!==false)){
     const whole=renderToStaticMarkup(createElement(ConstructionPlan,{model:c.model,data:c.data,variant:'site',wholeHouse:true})),f=planFrame(c.model,{data:c.data,variant:'site',wholeHouse:true}),hp=getHousePlacement(c.data);

@@ -9,7 +9,7 @@ import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcr
 import {decodeDesignLink,designLinkFromHash,encodeDesignLink} from '../src/features/deckcraft/designLink';
 import {describeDesign,shapeWords} from '../src/features/deckcraft/designFacts';
 import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
-import {getFootprint,unnotchedMainOutline} from '../src/features/deckcraft/lib/deckGeometry';
+import {getFootprint} from '../src/features/deckcraft/lib/deckGeometry';
 import {isChamferEdgeId} from '../src/features/deckcraft/lib/cornerChamfers';
 import {edgeNameOf} from '../src/features/deckcraft/lib/wrapGeometry';
 import {activeCustomFront,customLabourFactor,customOutline,customShapeWords,frontFromOutline,normalizeFront,outlineFeatures,outlineProblems,type OutlinePoint} from '../src/features/deckcraft/lib/customOutline';
@@ -163,9 +163,11 @@ for(const [name,patch] of [['rectangle',{}],['L-shape',{shape:'L-Shape',cutoutWi
 {
   const page=designerSource(),step=read('src/features/deckcraft/designer/steps/DimensionsStep.tsx'),editor=read('src/features/deckcraft/designer/OutlineEditor.tsx'),actions=read('src/features/deckcraft/designer/deckShapeActions.ts');
   ok(step.includes("['Custom','Custom outline']")&&step.includes("const OutlineEditor=lazy(()=>import('../OutlineEditor'));"),'The shape menu offers a custom outline, and its editor loads only when chosen');
-  ok(/return \{shape,deckOutlines,customFront:kept\?\?frontFromOutline\(unnotchedMainOutline\(data\)\)\?\?rectangleFront\(data\.width,data\.length\),levels:1\};/.test(actions)&&step.includes('update(chooseShape(data,e.target.value as DeckShape))'),'Choosing the legacy outline preset clears the free outline and starts from the deck as drawn, one level');
-  const drawn=deckReleaseData({...base(),levels:2}),picked=chooseShape(drawn,'Custom'),kept=chooseShape({...drawn,customFront:T},'Custom');
-  ok(picked.levels===1&&JSON.stringify(picked.customFront)===JSON.stringify(frontFromOutline(unnotchedMainOutline(drawn)))&&JSON.stringify(kept.customFront)===JSON.stringify(T),'The shape action starts from the deck as drawn, or keeps a clean outline');
+  ok(actions.includes('savedBoundary(points)')&&actions.includes("shape:'Custom'")&&step.includes('update(chooseShape(data,e.target.value as DeckShape))'),'Choosing Custom / Draw my own seeds a free outline from the deck as drawn, one level');
+  const drawn=deckReleaseData({...base(),levels:2}),picked=chooseShape(drawn,'Custom'),kept=chooseShape({...drawn,deckOutlines:{main:[{x:0,y:0},{x:20,y:0},{x:20,y:14},{x:0,y:14}]}},'Custom');
+  const lShape=deckReleaseData({...base(),shape:'L-Shape',width:24,length:16,cutoutWidth:8,cutoutLength:6}),drawnOwn=chooseShape(lShape,'Custom');
+  ok(picked.levels===1&&!!picked.deckOutlines?.main&&picked.customFront===undefined&&kept.deckOutlines===undefined&&kept.shape==='Custom','The shape action seeds a free outline from the deck as drawn, or keeps an existing free outline');
+  ok(!!drawnOwn.deckOutlines?.main&&drawnOwn.deckOutlines.main.length>=6&&!drawnOwn.wrap,'Draw my own keeps an L-shape as editable free points instead of collapsing to a rectangle');
   ok(JSON.stringify(chooseShape(drawn,'L-Shape'))==='{"shape":"L-Shape"}','Any other shape changes only the shape');
   ok(step.includes('hint="Set by the outline"')&&step.includes("disabled={custom}")&&step.includes('{!custom&&levelsSection}'),'Width, depth and levels follow the outline');
   // R5: the drawing moved to the plan (its Draw outline tool); the Deck section lists every edge as a button, and the keys

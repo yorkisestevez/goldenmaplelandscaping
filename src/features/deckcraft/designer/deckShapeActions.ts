@@ -1,6 +1,6 @@
-import {frontFromOutline,outlineProblems,rectangleFront} from '../lib/customOutline';
 import {unnotchedMainOutline} from '../lib/deckGeometry';
 import {activeCornerChamfers} from '../lib/cornerChamfers';
+import {boundaryBounds,boundaryProblem,savedBoundary} from '../lib/freeOutline';
 import type {DeckData,DeckShape,HouseConfig,WrapPorch,WrapWing} from '../types';
 
 /**
@@ -12,14 +12,32 @@ type Side='left'|'right';
 type HouseSize=Pick<HouseConfig,'widthFt'|'depthFt'>;
 
 /**
- * A new shape. A custom outline starts from the deck as drawn now (angled corners become its 45° edges), or from the
- * outline it had before; it sets the width and depth and is one level.
+ * A new shape. "Custom" / Draw my own seeds a free-form outline (`deckOutlines.main`) from the deck as drawn now so
+ * the plan's point editor can pull any corner — including L-shapes, wraps and already-edited outlines — without
+ * collapsing them to a constrained front or a rectangle. Other shapes clear that free outline.
  */
 export function chooseShape(data:DeckData,shape:DeckShape):Partial<DeckData>{
-  const deckOutlines=data.deckOutlines?{...data.deckOutlines,main:undefined}:undefined;
-  if(shape!=='Custom')return {shape,...(data.deckOutlines?{deckOutlines}:{})};
-  const kept=data.customFront&&!outlineProblems(data.customFront).length?data.customFront:null;
-  return {shape,deckOutlines,customFront:kept??frontFromOutline(unnotchedMainOutline(data))??rectangleFront(data.width,data.length),levels:1};
+  if(shape!=='Custom'){
+    const deckOutlines=data.deckOutlines?{...data.deckOutlines,main:undefined}:undefined;
+    return {shape,...(data.deckOutlines?{deckOutlines}:{})};
+  }
+  if(data.deckOutlines?.main&&!boundaryProblem(data.deckOutlines.main.map(p=>({x:p.x*12,y:p.y*12})))){
+    return {shape:'Custom',levels:1,customFront:undefined};
+  }
+  const outline=unnotchedMainOutline(data);
+  const problem=boundaryProblem(outline);
+  const points=problem?(()=>{const W=Math.max(4,Number(data.width)||16),L=Math.max(4,Number(data.length)||12);return [{x:0,y:0},{x:W*12,y:0},{x:W*12,y:L*12},{x:0,y:L*12}];})():outline;
+  const bounds=boundaryBounds(points);
+  return {
+    shape:'Custom',
+    levels:1,
+    width:Math.round(bounds.w/12*1000)/1000,
+    length:Math.round(bounds.h/12*1000)/1000,
+    deckOutlines:{...data.deckOutlines,main:savedBoundary(points)},
+    customFront:undefined,
+    wrap:undefined,
+    cornerChamfers:undefined,
+  };
 }
 
 /** What a wrap-around needs before its corner can be mitred: a rectangle, no inlay, straight boards and square front corners. */

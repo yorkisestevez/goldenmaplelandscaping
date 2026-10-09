@@ -14,7 +14,7 @@ const limit=(value:number)=>Math.max(.15,Math.min(3,value));
 const frameStamp=(frame:PlanFrame)=>`${frame.viewBox}|${frame.dims?.width.inches??''}|${frame.dims?.depth.inches??''}`;
 /** Navigation changes only the view: neither pricing nor the design's undo history. The Pro workspace docks the
  * navigation controls in its tool strip (`navigationTarget`); they keep working the same way there. */
-export default function PlanViewport({children,frame,navigationTarget}:{children:(zoom:number,frame:PlanFrame)=>ReactNode;frame:PlanFrame;navigationTarget?:HTMLElement|null}){
+export default function PlanViewport({children,frame,navigationTarget,fitToken}:{children:(zoom:number,frame:PlanFrame)=>ReactNode;frame:PlanFrame;navigationTarget?:HTMLElement|null;/** When this value changes, fit the drawing (Draw my own / outline tool). */fitToken?:string|number}){
   const box=useRef<HTMLDivElement>(null),stage=useRef<HTMLDivElement>(null);
   // Designer Mode (the Pro workspace) adds rulers in feet along the top and left edges.
   const rulers=useDesignerMode();
@@ -31,6 +31,11 @@ export default function PlanViewport({children,frame,navigationTarget}:{children
   });
   const fit=()=>{frozen.current=frame;gesture.current=null;setPanning(false);setView({zoom:1,x:0,y:0});};
   useArchitectKeys({z:fit});
+  const fitTokenSeen=useRef<string|number|undefined>(undefined);
+  useEffect(()=>{
+    if(fitToken===undefined||fitTokenSeen.current===fitToken)return;
+    fitTokenSeen.current=fitToken;fit();
+  },[fitToken,frame]);
   useEffect(()=>{
     const el=box.current;if(!el)return;
     const wheel=(event:WheelEvent)=>{
