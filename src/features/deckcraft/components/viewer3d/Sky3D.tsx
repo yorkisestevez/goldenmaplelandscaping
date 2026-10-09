@@ -6,7 +6,7 @@ import {SKY_DATA as SKY,skyStrength,skyYaw,VISIBLE_SKY_MIN_DEG,visibleSkyStrengt
 import dayLighting from './assets/sky/sky-day-ibl.hdr?url';
 import eveningLighting from './assets/sky/sky-evening-ibl.hdr?url';
 import {SCENE_LOOK} from './sceneLook';
-import {SHOWCASE_SKY_FILL} from './showcaseGrade';
+import {DAY_SKY_BLEND,DAY_SKY_GREEN,DAY_SKY_RED,SHOWCASE_SKY_FILL} from './showcaseGrade';
 import {SHOWCASE_CLEAR_FOG,SHOWCASE_FOG_DENSITY,getShowcaseFlags,getShowcaseServerFlags,showcaseGolden,subscribeShowcase} from './showcaseMode';
 
 /**
@@ -36,11 +36,15 @@ void main(){
   float sampleEl=cleanEl+uHorizonBand*0.,v=sampleEl/PI+.5;
   float dux=abs(dFdx(u))<abs(dFdx(seam))?dFdx(u):dFdx(seam),duy=abs(dFdy(u))<abs(dFdy(seam))?dFdy(u):dFdy(seam);
   vec3 sky=textureGrad(lighting,vec2(u,v),vec2(dux,dFdx(v)),vec2(duy,dFdy(v))).rgb;
-  float luma=dot(sky,vec3(0.2126,0.7152,0.0722));
-  vec3 graded=mix(vec3(luma),sky,mix(1.0,1.38,uRich));
-  graded=(graded-vec3(0.22))*mix(1.0,1.18,uRich)+vec3(0.22);
-  graded.r+=luma*0.05*uRich;graded.b*=mix(1.0,0.9,uRich);
-  gl_FragColor=vec4(max(graded,vec3(0.0))*strength,1.);
+  // Correct after exposure. A lift applied to the dim photograph sits under the neutral toe and prints as cyan.
+  vec3 exposed=max(sky,vec3(0.0))*strength;
+  float luma=dot(exposed,vec3(0.2126,0.7152,0.0722));
+  float lead=max(exposed.b,luma);
+  vec3 natural=vec3(lead*${DAY_SKY_RED},lead*${DAY_SKY_GREEN},lead);
+  float naturalL=max(dot(natural,vec3(0.2126,0.7152,0.0722)),0.0001);
+  float skyish=smoothstep(0.0,0.06,exposed.b-exposed.g)*uRich;
+  exposed=mix(exposed,natural*(luma/naturalL),${DAY_SKY_BLEND}*skyish);
+  gl_FragColor=vec4(max(exposed,vec3(0.0)),1.);
 }`;
 
 /** The clean photographed sky, following the camera and drawn behind everything. */
@@ -64,13 +68,13 @@ function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyS
   const data=SKY[lighting],yaw=skyYaw(lighting);
   const map=useEnvironment({files:lighting==='evening'?eveningLighting:dayLighting});
   const scene=useThree(s=>s.scene),invalidate=useThree(s=>s.invalidate),flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
-  const context=flags.context,rich=flags.quality&&flags.post&&lighting==='day';
+  const context=flags.context,graded=flags.quality&&flags.post&&lighting==='day',dayBlue=graded&&flags.hour!=='golden';
   const horizon=useMemo(()=>(context?visibleSkyHorizon(map,0):visibleSkyHorizon(map))??data.horizonColor,[map,data,context]);
   // The viewer keeps one fog for its life (adding or removing fog recompiles every material); the sky only recolours it.
-  useEffect(()=>{if(!scene.fog)return;scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);if(scene.fog instanceof THREE.FogExp2)scene.fog.density=context?(rich?SHOWCASE_CLEAR_FOG:SHOWCASE_FOG_DENSITY):SCENE_LOOK.sky.fogDensity;invalidate();},[scene,horizon,strength,invalidate,context,rich]);
+  useEffect(()=>{if(!scene.fog)return;scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);if(scene.fog instanceof THREE.FogExp2)scene.fog.density=context?(graded?SHOWCASE_CLEAR_FOG:SHOWCASE_FOG_DENSITY):SCENE_LOOK.sky.fogDensity;invalidate();},[scene,horizon,strength,invalidate,context,graded]);
   return <>
-    <Environment map={map} environmentIntensity={rich?illumination*SHOWCASE_SKY_FILL:illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
-    <SkyDome lighting={map} yaw={yaw} strength={strength} horizonBand={context} rich={rich}/>
+    <Environment map={map} environmentIntensity={graded?illumination*SHOWCASE_SKY_FILL:illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
+    <SkyDome lighting={map} yaw={yaw} strength={strength} horizonBand={context} rich={dayBlue}/>
   </>;
 }
 
