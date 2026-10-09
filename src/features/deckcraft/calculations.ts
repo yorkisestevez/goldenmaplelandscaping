@@ -783,7 +783,7 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
     sections.push({title:'Manufacturer deck accessories',icon:'🔩',quoteRequired:true,total:0,items:rows.map(r=>({name:r.name,spec:r.spec,qty:r.qty,unit:r.unit,cost:null}))});
     quoteRequired.push(...rows.map(r=>r.name));
     if(data.catalogueAccessories?.some(id=>id==='tt_concealoc'||id==='dk_stealthlock')){const section=sections.find(s=>s.title==='Hardware & Fasteners');if(section){for(const item of section.items)if(item.name==='Hidden Clips'||item.name==='Deck Screws')item.cost=null;section.quoteRequired=true;section.total=section.items.reduce((n,i)=>n+(i.cost??0),0);}}
-    if(data.catalogueAccessories?.includes('tt_protac_flashing')){const section=sections.find(s=>s.title==='Add-ons & Extras');if(section){for(const item of section.items)if(item.name==='Ledger Flashing')item.cost=null;section.total=section.items.reduce((n,i)=>n+(i.cost??0),0);}}
+    if(data.catalogueAccessories?.includes('tt_protac_flashing')){const section=sections.find(s=>s.title==='Add-ons & Extras');if(section){for(const item of section.items)if(item.name==='Ledger Flashing')item.cost=null;section.total=section.items.reduce((n,i)=>n+(i.cost??0),0);if(section.total===0&&section.items.some(i=>i.cost===null&&Number(i.qty)>0))section.quoteRequired=true;}}
   }
   if(catalogueMaterial?.availabilityNote)flags.push(catalogueMaterial.availabilityNote);
   // Deck-part finishes (deckPartFinishes.ts): the border in its own colour, ordered as its own boards at its collection's

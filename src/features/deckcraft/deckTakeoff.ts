@@ -43,6 +43,8 @@ export type DeckLevel={kind?:'deck'|'landing'|'winder';index?:number;rim?:Member
   angledEdges?:{a:PlanPoint;b:PlanPoint}[];footprint:FootprintPlan;deckingFootprint?:FootprintPlan;top:number;offset:V3;boards:BoardRun[];supports:V3[];joists:Member[];beams:Member[];blocking:Member[];breakers:number[];reference:ZoneReference;zones?:FramedZone[];
   /** Wrap-around main deck only: hip centre lines and the framing zones with their joist direction. */
   hips?:WrapHip[];wrapZones?:{id:string;label:string;outline:PlanPoint[];joistDir:PlanPoint}[];
+  /** Longest zone cantilever on a wrap, when a wing's beam sits farther from its edge than the main reference. */
+  zoneEdgeReachIn?:number;
   /** Decorative inlays planned on this level (lib/inlayGeometry.ts), built or not; absent when it has none. */
   inlays?:InlayPlan[]};
 const distance=(a:V3,b:V3)=>Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z);
@@ -128,7 +130,7 @@ export function buildDeckTakeoff(data:DeckData){
     const levelInlays=(data.inlays??[]).filter(i=>(i.level??1)===1);
     const inlayPlans=levelInlays.length?planInlays(levelInlays,{fieldPolygons,boardWidth:data.boardWidth,gap,stockLength,buildRules:data.buildRules,centre:{x:(footprint.origin?.x??0)+footprint.bounds.w/2,y:(footprint.origin?.y??0)+footprint.bounds.h/2},straight:true,...(data.hasInlay?{blocked:'Replace the centre inlay stripe with a band (on the finish step) to build decorative inlays on the main deck.'}:{})}):[];
     const installed=(inlayPlans.length?applyInlays(boards,inlayPlans,data.boardWidth,gap):boards).flatMap(b=>splitBoard(b,data.boardWidth,stockLength,gap));
-    const level:DeckLevel={kind:'deck',index:0,footprint,deckingFootprint,top,offset,supports:framed.supports,joists:framed.joists,beams:framed.beams,blocking:framed.blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,0,stockLength,inset),breakers:framed.breakers,reference:framed.reference,hips:framed.hips,wrapZones:planZones(framed.zones)};
+    const level:DeckLevel={kind:'deck',index:0,footprint,deckingFootprint,top,offset,supports:framed.supports,joists:framed.joists,beams:framed.beams,blocking:framed.blocking,boards:finishBoards(installed,deckingFootprint,data.boardWidth,gap,0,stockLength,inset),breakers:framed.breakers,reference:framed.reference,hips:framed.hips,wrapZones:planZones(framed.zones),zoneEdgeReachIn:Math.max(...framed.zones.map(z=>z.reference.edgeReachIn))};
     if(inlayPlans.length){level.inlays=inlayPlans;frameInlays(level,inlayPlans,{boardWidth:data.boardWidth,gap,spacing,pattern:data.pattern});}
     layoutLevel(level,inset);
     addRim(level);wrapBoardEndBlocking(level,framed.zones,framed.hips);
