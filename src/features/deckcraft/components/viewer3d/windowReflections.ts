@@ -1,4 +1,5 @@
 import {rendererQuality,type RenderQuality} from './renderQuality';
+import {showcasePostEnabled} from './showcaseMode';
 import * as THREE from 'three';
 import {Reflector} from 'three/examples/jsm/objects/Reflector.js';
 
@@ -17,7 +18,8 @@ export function registerWindowReflection(scene:THREE.Scene,facade:THREE.Group,bi
 }
 
 export function reflectionBudget(q:RenderQuality,capabilities:{maxTextureSize:number;maxSamples:number}){
- return {edge:Math.max(1,Math.min(q.tier==='constrained'?384:q.tier==='balanced'?768:1024,capabilities.maxTextureSize)),samples:Math.max(0,Math.min(2,q.msaaSamples,capabilities.maxSamples))};
+ const high=showcasePostEnabled()?1536:1024;
+ return {edge:Math.max(1,Math.min(q.tier==='constrained'?384:q.tier==='balanced'?768:high,capabilities.maxTextureSize)),samples:Math.max(0,Math.min(2,q.msaaSamples,capabilities.maxSamples))};
 }
 
 /** One clipped, mirrored-camera view per visible house facade, shared by all its panes.

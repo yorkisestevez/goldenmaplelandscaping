@@ -1,5 +1,5 @@
 import {CONSTRUCTION_YARD_ROLES,jointSurfaceGeometry} from './finishedSurfaceGeometry';
-import {useEffect,useLayoutEffect,useMemo,useState} from 'react';
+import {useEffect,useLayoutEffect,useMemo,useState,useSyncExternalStore} from 'react';
 import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -17,6 +17,9 @@ import {hardscapeAppearance} from './hardscapeAppearance';
 import {supplierFaceUv,type SampleWindow} from './hardscapeSurface';
 import {applyHardscapeFinish} from './hardscapeFinish';
 import {useRenderQuality} from './SceneRenderQuality';
+import {applySurfaceRelief} from './surfaceDetail';
+import type {DetailKind} from './detailMaps';
+import {getShowcaseFlags,getShowcaseServerFlags,showcaseDetail,subscribeShowcase} from './showcaseMode';
 import GrassBlades from './GrassBlades';
 import {bankTufts} from './bankTufts';
 import type {PlanPoint} from '../../lib/deckGeometry';
@@ -71,6 +74,13 @@ function pieceUvs(g:THREE.BufferGeometry,b:YardBox,repeatIn:number,paver?:{w:num
  }
  return new THREE.Float32BufferAttribute(uv,2);
 }
+function reliefKind(role:YardRole):DetailKind|null{
+ if(role==='paver')return 'paver';
+ if(role==='wall-cap')return 'cap';
+ if(role==='stone-step')return 'slab';
+ if(role==='wall-block'||role==='rock')return 'stone';
+ return null;
+}
 function YardBatch({items,color,role,occlusion,paverSize,supplierImage,sampleWindow,inspection}:{items:YardBox[];inspection:boolean;color:string;role:YardRole;occlusion:SharedOcclusion;paverSize?:{w:number;d:number;angle:number};supplierImage?:string;sampleWindow?:SampleWindow}){
  const scanned=SCANNED[role],supplierSurface=!!items[0]?.surface,simplified=!supplierSurface&&role==='paver'&&!!paverSize&&items.every(b=>b.illustrative),water=role==='water';
  const geometry=useMemo(()=>{const ranges:{start:number;end:number;pick:ReturnType<typeof boxSelection>}[]= [];let faces=0;const pieces=items.filter(b=>!b.renderDuplicate).map(b=>{let g=yardFinishGeometry(b);if(role==='bedding'&&!inspection){const top=jointSurfaceGeometry(g);g.dispose();g=top;}if(g.index){const converted=g.toNonIndexed();g.dispose();g=converted;}const p=g.getAttribute('position'),c=new THREE.Float32BufferAttribute(new Float32Array(p.count*3),3),appearance=hardscapeAppearance(b);
@@ -80,15 +90,17 @@ function YardBatch({items,color,role,occlusion,paverSize,supplierImage,sampleWin
   const uv1=new THREE.Float32BufferAttribute(new Float32Array(p.count*2),2);if(occlusion)for(let v=0;v<p.count;v++)uv1.setXY(v,...occlusionUv(occlusion.bounds,p.getX(v),p.getZ(v)));g.setAttribute('uv1',uv1);
   for(let v=0;v<p.count;v++)c.setXYZ(v,appearance.r,appearance.g,appearance.b);g.setAttribute('color',c);ranges.push({start:faces,end:faces+p.count/3,pick:boxSelection(b)});faces+=p.count/3;return g;});const merged=mergeGeometries(pieces);pieces.forEach(p=>p.dispose());if(merged)merged.userData.hardscapeRanges=ranges;return merged;},[items,scanned,simplified,paverSize,water,occlusion?.bounds,sampleWindow,inspection,role]);
  const invalidate=useThree(s=>s.invalidate),gl=useThree(s=>s.gl),quality=useRenderQuality();
+ const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags),detail=Boolean(flags)&&showcaseDetail(quality.tier),kind=reliefKind(role);
  const material=useMemo<THREE.Material>(()=>{
   const finish=(m:THREE.MeshStandardMaterial)=>role==='stone-step'||role==='wall-block'||role==='wall-cap'?applyWallDaylight(m):m;
-  if(supplierImage){let alive=true;const m=new THREE.MeshStandardMaterial({color,vertexColors:true,roughness:role==='wall-block'?.9:.84});const map=new THREE.TextureLoader().load(supplierImage,()=>{if(!alive)return;m.color.set('#ffffff');invalidate();},undefined,()=>{if(!alive)return;map.dispose();m.map=null;m.color.set(color);m.needsUpdate=true;invalidate();});map.colorSpace=THREE.SRGBColorSpace;map.wrapS=map.wrapT=THREE.ClampToEdgeWrapping;map.anisotropy=Math.min(quality.anisotropy,gl.capabilities.getMaxAnisotropy());m.map=map;const dispose=m.dispose.bind(m);m.dispose=()=>{alive=false;dispose();};return finish(applyHardscapeFinish(m));}
+  const relieve=(m:THREE.MeshStandardMaterial)=>detail&&kind?applySurfaceRelief(m,kind):m;
+  if(supplierImage){let alive=true;const m=new THREE.MeshStandardMaterial({color,vertexColors:true,roughness:role==='wall-block'?.9:.84});const map=new THREE.TextureLoader().load(supplierImage,()=>{if(!alive)return;m.color.set('#ffffff');invalidate();},undefined,()=>{if(!alive)return;map.dispose();m.map=null;m.color.set(color);m.needsUpdate=true;invalidate();});map.colorSpace=THREE.SRGBColorSpace;map.wrapS=map.wrapT=THREE.ClampToEdgeWrapping;map.anisotropy=Math.min(quality.anisotropy,gl.capabilities.getMaxAnisotropy());m.map=map;const dispose=m.dispose.bind(m);m.dispose=()=>{alive=false;dispose();};return relieve(finish(applyHardscapeFinish(m)));}
   if(role==='geogrid')return new THREE.MeshStandardMaterial({color,alphaMap:reinforcementGridTexture(),transparent:true,opacity:.85,roughness:1,side:THREE.DoubleSide,depthWrite:false});
   if(water)return new THREE.MeshPhysicalMaterial({color,roughness:.06,metalness:0,transmission:.4,transparent:true,opacity:.67,thickness:8,ior:1.333,envMapIntensity:1,clearcoat:1,depthWrite:false,normalMap:rippleTexture(),normalScale:new THREE.Vector2(.15,.15)});
-  if(simplified)return new THREE.MeshStandardMaterial({color,vertexColors:true,roughness:.85,map:jointTexture()});
-  if(scanned)return finish(scanMaterial(scanned.set,color,{roughness:scanned.roughness,normalScale:scanned.normalScale,vertexColors:true,anisotropy:Math.min(quality.anisotropy,gl.capabilities.getMaxAnisotropy()),onLoad:invalidate}));
+  if(simplified)return relieve(new THREE.MeshStandardMaterial({color,vertexColors:true,roughness:.85,map:jointTexture()}));
+  if(scanned)return relieve(finish(scanMaterial(scanned.set,color,{roughness:scanned.roughness,normalScale:scanned.normalScale,vertexColors:true,anisotropy:Math.min(quality.anisotropy,gl.capabilities.getMaxAnisotropy()),onLoad:invalidate})));
   return new THREE.MeshStandardMaterial({color,vertexColors:true,bumpMap:surfaceTexture(),bumpScale:role==='bedding'?.0015:.003,roughness:role==='liner'?.65:.92,metalness:role==='pump'?.25:0});
- },[supplierImage,water,simplified,scanned,color,role,gl,invalidate,quality]);
+ },[supplierImage,water,simplified,scanned,color,role,gl,invalidate,quality,detail,kind]);
  useFixtureLit(material);
  // Hardscape takes the lawn's shade from the sky; a one-pixel white stand-in keeps the program the same until it arrives.
  useLayoutEffect(()=>{if(water||!(material instanceof THREE.MeshStandardMaterial))return;material.aoMap=occlusion?.texture??WHITE;material.aoMapIntensity=.75;invalidate();},[material,occlusion,water,invalidate]);

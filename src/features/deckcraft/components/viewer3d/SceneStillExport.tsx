@@ -3,6 +3,8 @@ import {useThree} from '@react-three/fiber';
 import {useProgress} from '@react-three/drei';
 import * as THREE from 'three';
 import {pipelineFor} from './renderPipeline';
+import {ensureShowcaseSmaa} from './showcasePost';
+import {showcasePostEnabled} from './showcaseMode';
 export type SceneStillWidth=2048|4096;
 export function stillSize(longEdge:SceneStillWidth,size:{x:number;y:number},maximum:number){
  if(longEdge!==2048&&longEdge!==4096||!Number.isFinite(size.x)||!Number.isFinite(size.y)||size.x<=0||size.y<=0)throw Error('Choose a 2048 or 4096 pixel long-edge scene export.');
@@ -19,7 +21,8 @@ export async function captureSceneStill(gl:THREE.WebGLRenderer,scene:THREE.Scene
  try{
   gl.setPixelRatio(1);gl.setSize(dimensions.width,dimensions.height,false);gl.setScissorTest(false);gl.setRenderTarget(null);
   if(aspect!==null){perspective.aspect=dimensions.width/dimensions.height;perspective.updateProjectionMatrix();}
-  const pipeline=pipelineFor(gl);if(pipeline)pipeline.capture(Math.max(1,scale));else gl.render(scene,camera);
+  if(showcasePostEnabled())await ensureShowcaseSmaa(dimensions.width,dimensions.height);
+  const pipeline=pipelineFor(gl);if(pipeline)await pipeline.capture(Math.max(1,scale));else gl.render(scene,camera);
   const blob=await new Promise<Blob>((resolve,reject)=>gl.domElement.toBlob(value=>value?resolve(value):reject(Error('The browser could not encode the scene PNG.')),'image/png'));
   return blob;
  }finally{
