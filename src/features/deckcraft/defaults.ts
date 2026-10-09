@@ -1,4 +1,5 @@
 import {type DeckData, MATERIAL_TIERS, CREW_DAY_RATES, PERMIT_FEES, DEFAULT_ENGINEERING_FEE, RAILING_COSTS, STAIR_TREAD_COSTS, WASTE_FACTORS} from './types';
+import {CURRENT_BUILD_RULES} from './buildRules';
 export const DEFAULT_DECK: DeckData = {
     houseVisible: true,
     houseWallHeightIn: 120,
@@ -38,7 +39,7 @@ export const DEFAULT_DECK: DeckData = {
     fasteningSystem: 'Face',
     pictureFrameRows: 1,
     pictureFrameOverhangIn: 0,
-    buildRules: '2026-10',
+    buildRules: CURRENT_BUILD_RULES,
     hasInlay: false,
     inlayLf: 0,
     railingType: 'Aluminum',

@@ -1,5 +1,6 @@
 import {useEffect,useRef} from 'react';
 import {createDeckAgentController,type DeckAgentApi,type DeckAgentController,type DeckAgentHost,type DeckAgentHostState} from './deckAgentController';
+import {internalModeOn,setInternalMode} from '../internalMode';
 
 export type DeckAgentAdapter=DeckAgentHostState&Omit<DeckAgentHost,'getState'|'waitForRender'>;
 declare global {interface Window {deckcraft?:DeckAgentApi}}
@@ -31,7 +32,7 @@ export function useDeckAgentController(adapter:DeckAgentAdapter):DeckAgentContro
   });
   useEffect(()=>{
     connected.current=true;
-    const previous=window.deckcraft,exposed=Object.freeze({describe:api.describe,read:api.read,preview:api.preview,execute:api.execute});window.deckcraft=exposed;
+    const previous=window.deckcraft,exposed=Object.freeze({describe:api.describe,read:api.read,preview:api.preview,execute:api.execute,internalMode:internalModeOn,setInternalMode});window.deckcraft=exposed;
     return ()=>{
       if(window.deckcraft===exposed){if(previous)window.deckcraft=previous;else delete window.deckcraft;}
       connected.current=false;

@@ -1,6 +1,6 @@
 import type {DeckData,FoundationType} from './types';
 import type {DeckLevel} from './deckTakeoff';
-export interface FoundationDatum {id:string;levelIndex:number;supportIndex:number;x:number;z:number;bearingElevationIn:number;gradeElevationIn:number|null;bottomElevationIn:number|null;headTopElevationIn:number|null;postBaseElevationIn:number|null;postHeightIn:number|null;status:'modeled'|'coverage-pending'|'clearance-pending';depthIn:number;foundation:FoundationType}
+export interface FoundationDatum {id:string;levelIndex:number;supportIndex:number;x:number;z:number;bearingElevationIn:number;gradeElevationIn:number|null;bottomElevationIn:number|null;headTopElevationIn:number|null;postBaseElevationIn:number|null;postHeightIn:number|null;status:'modeled'|'coverage-pending'|'clearance-pending';depthIn:number;foundation:FoundationType;/** Set only under structural review: half the tributary pier diameter, inches. Absent keeps the 6 in schematic. */pierRadiusIn?:number}
 export interface FoundationCylinder {part:'concrete-pier'|'pile-shaft'|'pile-helix';x:number;z:number;bottom:number;top:number;radius:number}
 /** Circular radius and axial length stay exact; new mesh area error is <0.1%. */
 export const FOUNDATION_RADIAL_SEGMENTS=96;

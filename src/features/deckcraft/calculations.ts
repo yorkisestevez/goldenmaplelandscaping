@@ -13,6 +13,7 @@ import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock,type ProductStock} from './stockPlan';
 import {productStock} from './deckingStock';
 import {usesCurrentBuildRules} from './buildRules';
+import {priceLedgerFlashing} from './structure/structuralReview';
 import {hasBoardLayout,layoutBoardStock,layoutAutomaticBreakerLf,boardLayoutAllowance,BOARD_LAYOUT_POLICY,BOARD_LAYOUT_SUPPORT_QUOTE} from './boardLayoutPricing';
 import {boardFinishPlan,colourName,darkSlateBorder,deckColourRef,parseColourRef,type StockGroup} from './boardFinishes';
 import {DECK_PARTS,partRef,railingFinish,stairTreadKey} from './deckPartFinishes';
@@ -537,7 +538,7 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
     pergola: data.pergola ? 0 : pergolaSqft * 65 * markupMult,
     // Add-on module specific
     structuralTieIn: deckType === 'Add-on' ? (data.addOnHardwareCost || 450) * markupMult : 0,
-    ledgerFlashing: deckType === 'Add-on' ? (data.addOnFlashingLf || flashingLf) * 12 * markupMult : 0,
+    ledgerFlashing: priceLedgerFlashing(data) ? (data.addOnFlashingLf || flashingLf) * 12 * markupMult : 0,
     transitionLabor: deckType === 'Add-on' ? (data.addOnTransitionLabor || 850) : 0,
   };
 
@@ -672,7 +673,7 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
         { name: 'Demo & Removal', spec: 'Existing Deck', qty: hasDemo ? area : 0, unit: 'sqft', cost: addOnCosts.demo },
         { name: 'Pergola', spec: 'Wood/Aluminum', qty: data.pergola ? 0 : pergolaSqft, unit: 'sqft', cost: addOnCosts.pergola },
         { name: 'Structural Tie-in', spec: 'Hardware to Existing', qty: deckType === 'Add-on' ? 1 : 0, unit: 'ls', cost: addOnCosts.structuralTieIn },
-        { name: 'Ledger Flashing', spec: 'Connection Width', qty: deckType === 'Add-on' ? (data.addOnFlashingLf || flashingLf) : 0, unit: 'lf', cost: addOnCosts.ledgerFlashing },
+        { name: 'Ledger Flashing', spec: 'Connection Width', qty: priceLedgerFlashing(data) ? (data.addOnFlashingLf || flashingLf) : 0, unit: 'lf', cost: addOnCosts.ledgerFlashing },
         { name: 'Transition Labor', spec: 'Leveling & Siding Prep', qty: deckType === 'Add-on' ? 1 : 0, unit: 'ls', cost: addOnCosts.transitionLabor },
       ].filter(item => item.qty > 0)
     },
@@ -782,7 +783,7 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
     sections.push({title:'Manufacturer deck accessories',icon:'🔩',quoteRequired:true,total:0,items:rows.map(r=>({name:r.name,spec:r.spec,qty:r.qty,unit:r.unit,cost:null}))});
     quoteRequired.push(...rows.map(r=>r.name));
     if(data.catalogueAccessories?.some(id=>id==='tt_concealoc'||id==='dk_stealthlock')){const section=sections.find(s=>s.title==='Hardware & Fasteners');if(section){for(const item of section.items)if(item.name==='Hidden Clips'||item.name==='Deck Screws')item.cost=null;section.quoteRequired=true;section.total=section.items.reduce((n,i)=>n+(i.cost??0),0);}}
-    if(data.catalogueAccessories?.includes('tt_protac_flashing')){const section=sections.find(s=>s.title==='Add-ons & Extras');if(section){for(const item of section.items)if(item.name==='Ledger Flashing')item.cost=null;section.total=section.items.reduce((n,i)=>n+(i.cost??0),0);}}
+    if(data.catalogueAccessories?.includes('tt_protac_flashing')){const section=sections.find(s=>s.title==='Add-ons & Extras');if(section){for(const item of section.items)if(item.name==='Ledger Flashing')item.cost=null;section.total=section.items.reduce((n,i)=>n+(i.cost??0),0);if(section.total===0&&section.items.some(i=>i.cost===null&&Number(i.qty)>0))section.quoteRequired=true;}}
   }
   if(catalogueMaterial?.availabilityNote)flags.push(catalogueMaterial.availabilityNote);
   // Deck-part finishes (deckPartFinishes.ts): the border in its own colour, ordered as its own boards at its collection's

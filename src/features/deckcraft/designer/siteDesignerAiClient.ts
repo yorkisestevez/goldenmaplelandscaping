@@ -11,6 +11,7 @@ import type {SiteBrief} from '../siteBrief';
 import type {SiteConcept,SiteGoal} from '../siteConcepts';
 import type {DesignerAiConceptSummary,DesignerAiRequest,DesignerAiResponse,DesignerAiStatus,DesignerAiTurn} from './siteDesignerAiContract';
 import {moveParamAllowed} from '../siteMoveParams';
+import {internalModeOn} from '../internalMode';
 
 export const DESIGNER_AI_ENDPOINT='/.netlify/functions/deck-designer-ai';
 type Reason=NonNullable<DesignerAiStatus['reason']>;
@@ -44,6 +45,7 @@ function failure(status:number,record:Record<string,unknown>):DesignerAiError{
 
 /** Whether the AI designer can be asked now (configured, under the monthly cap, turns left today). */
 export async function designerAiStatus(signal?:AbortSignal,opts:DesignerAiClientOptions={}):Promise<DesignerAiStatus>{
+ if(internalModeOn())return {available:false,reason:'unavailable'};
  try{const {record}=await call('GET','',undefined,signal,opts,8000);
   if(record.available===true)return {available:true,...(typeof record.remainingTurnsToday==='number'?{remainingTurnsToday:record.remainingTurnsToday}:{})};
   const reason=typeof record.reason==='string'&&['not_configured','cap_reached','rate_limited','unavailable'].includes(record.reason)?record.reason as Reason:'unavailable';
@@ -58,6 +60,7 @@ function checkResponse(v:unknown):DesignerAiResponse{
 }
 /** One AI turn: POST, then poll the job until the answer is ready. Throws DesignerAiError (never a raw fetch error). */
 export async function askDesignerAi(req:DesignerAiRequest,signal?:AbortSignal,opts:DesignerAiClientOptions={}):Promise<DesignerAiResponse>{
+ if(internalModeOn())throw new DesignerAiError('unavailable','Internal mode is on. This turn was not sent to the AI.','internal_mode');
  const deadline=Date.now()+(opts.timeoutMs??240_000);
  let {status,record}=await call('POST','',req,signal,opts,30_000);
  if(status>=400||record.ok!==true)throw failure(status,record);

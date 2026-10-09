@@ -10,6 +10,7 @@ import {getHousePlacement} from '../src/features/deckcraft/housePlacement';
 import {extrasLayout} from '../src/features/deckcraft/extrasLayout';
 import {withPrivacyProduct} from '../src/features/deckcraft/privacyScreens';
 import {applyComponentEdit,listPlanComponents,type ComponentEdit,type ComponentEditResult} from '../src/features/deckcraft/designer/componentEditActions';
+import '../src/features/deckcraft/foundationDatumsRuntime';
 
 let checks=0;const check=(condition:unknown,message:string)=>{assert.ok(condition,message);checks++;};
 const success=(r:ComponentEditResult)=>{if('error'in r)throw new Error(r.error);return r;};
@@ -31,7 +32,30 @@ check(!listPlanComponents(disabled,buildDeckTakeoff(disabled)).find(p=>p.id==='s
 const lower=validateDesign({...base,levels:2,height2:16,width2:10,length2:8}),lowerModel=buildDeckTakeoff(lower),lowerParts=listPlanComponents(lower,lowerModel);
 check(lowerParts.some(p=>p.id==='deck:2'),'Actual second deck level has an independent editable-tool route');
 const l2=lowerModel.levels.find(l=>l.kind==='deck'&&l.index===1)!,mi=lowerModel.levels.indexOf(l2),beam=lowerParts.find(p=>p.id===`beam:${mi}:0`)!;
-check(beam.line![0].x===l2.beams[0].a.x+l2.offset.x&&beam.line![0].y===l2.beams[0].a.z+l2.offset.z,'Lower-level beam positions include the actual model world offset');
+check(beam.line![0].x===l2.beams[0].a.x&&beam.line![0].y===l2.beams[0].a.z,'Lower-level beam positions use the model world coordinates once');
+const spa=validateDesign({...base,levels:2,width2:16,length2:12,height2:18,deckOutlineOffsets:{second:{x:30,y:0}}}),spaModel=buildDeckTakeoff(spa),spaParts=listPlanComponents(spa,spaModel);
+const spaLevel=spaModel.levels.find(l=>l.kind==='deck'&&l.index===1)!,spaDeck=spaParts.find(p=>p.id==='deck:2')!;
+const span=spaDeck.polygon!.map(p=>p.x),spanMin=Math.min(...span),spanMax=Math.max(...span);
+check(spanMin===360&&spanMax===552,'The placed lower level spans x 360–552');
+const spaBeams=spaParts.filter(p=>p.kind==='beam'&&p.level===2);
+check(spaBeams.length===spaLevel.beams.length&&spaBeams.every((part,i)=>{
+  const member=spaLevel.beams[i],xs=[part.line![0].x,part.line![1].x];
+  return xs[0]===member.a.x&&xs[1]===member.b.x&&xs.every(x=>x>=spanMin-1e-6&&x<=spanMax+1e-6)&&xs[0]!==member.a.x+spaLevel.offset.x;
+}),'Lower-level beams stay on x 360–552 and are not shifted by the offset a second time');
+const spaFootings=spaParts.filter(p=>p.kind==='footing'&&p.level===2);
+check(spaFootings.length===spaLevel.supports.length&&spaFootings.every((part,i)=>{
+  const support=spaLevel.supports[i];
+  return part.anchor!.x===support.x&&part.anchor!.y===support.z&&part.anchor!.x>=spanMin-1e-6&&part.anchor!.x<=spanMax+1e-6&&part.anchor!.x!==support.x+spaLevel.offset.x;
+}),'Lower-level footings use each support once and stay on x 360–552');
+const sloped=validateDesign({...spa,terrainConfig:{widthFt:80,depthFt:80,elevationIn:0,slopePct:3}}),slopedModel=buildDeckTakeoff(sloped),slopedParts=listPlanComponents(sloped,slopedModel);
+const slopedLevel=slopedModel.levels.find(l=>l.kind==='deck'&&l.index===1)!;
+check(slopedParts.filter(p=>p.kind==='beam'&&p.level===2).every((part,i)=>{
+  const member=slopedLevel.beams[i];
+  return part.line![0].x===member.a.x&&part.line![1].x===member.b.x&&part.line![0].x>=360-1e-6&&part.line![1].x<=552+1e-6;
+})&&slopedParts.filter(p=>p.kind==='footing'&&p.level===2).every((part,i)=>{
+  const datum=slopedModel.foundationSupports.find(f=>f.levelIndex===slopedModel.levels.indexOf(slopedLevel)&&f.supportIndex===i)!;
+  return part.anchor!.x===datum.x&&part.anchor!.y===datum.z&&part.anchor!.x>=360-1e-6&&part.anchor!.x<=552+1e-6;
+}),'A sloped site keeps lower-level beams and datum footings on the same world span');
 const landing=validateDesign({...base,stairType:'Landing',height:72}),landingModel=buildDeckTakeoff(landing);
 check(listPlanComponents(landing,landingModel).filter(p=>p.kind==='footing').length===landingModel.levels.reduce((sum,l)=>sum+l.supports.length,0),'Generated stair landings expose their real supports too');
 

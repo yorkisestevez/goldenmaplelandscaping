@@ -69,8 +69,10 @@ const unplaced=deck({width:20,houseConfig:house({widthFt:12})});
 // 5. Appearance never prices; house size and position can.
 {
   const base=calculateEstimate(wide).total;
-  const restyled=calculateEstimate({...wide,houseConfig:house({widthFt:12,roofShape:'Hip',cladding:'Brick',claddingColor:'#884422',storeys:2,openings:[]})}).total;
-  ok(restyled===base,'Roof, cladding, colour, storeys and openings never change the price');
+  const restyled=calculateEstimate({...wide,houseConfig:house({widthFt:12,roofShape:'Hip',cladding:'Siding',claddingColor:'#884422',storeys:2,openings:[]})}).total;
+  ok(restyled===base,'Roof, siding colour, storeys and openings never change the price');
+  const brick=calculateEstimate({...wide,houseConfig:house({widthFt:12,cladding:'Brick'})});
+  ok(brick.total!==base&&brick.flags.some(flag=>flag.includes('Ledger blocked')),'Brick veneer blocks the ledger, so that cladding does change the attachment price');
   ok(calculateEstimate({...wide,houseConfig:house({widthFt:18})}).total<base,'A wider house means more ledger, less exposed framing');
 }
 

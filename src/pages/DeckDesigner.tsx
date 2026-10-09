@@ -27,6 +27,7 @@ import type {DeltaProps} from '../features/deckcraft/designer/useOptionDeltas';
 import WorkspaceTools from '../features/deckcraft/designer/WorkspaceTools';
 import WorkspacePrice from '../features/deckcraft/designer/WorkspacePrice';
 import {useDesignerMode} from '../features/deckcraft/designer/designerMode';
+import {assertLeadsAllowed,useInternalMode} from '../features/deckcraft/internalMode';
 import type {ProPage} from '../features/deckcraft/designer/pro/proTypes';
 const noteWarmLead=(...args:Parameters<typeof import('../features/deckcraft/warmLead').noteWarmLead>)=>void import('../features/deckcraft/warmLead').then(m=>m.noteWarmLead(...args));
 import {loadExteriorStudio,loadViewer} from '../features/deckcraft/designer/previewLoaders';
@@ -94,6 +95,7 @@ export interface DeckCraftEmbed{
 
 /** The whole designer: the /deck-designer page, and the cost estimator's deck step (`embed`). */
 export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
+  const internalMode=useInternalMode();
   // The open sections. Every section starts closed, in the prerendered page and on the client alike; none is saved.
   const [open,setOpen]=useState<ReadonlySet<SectionId>>(()=>new Set(['deck']));
   const [workspaceView,setWorkspaceView]=useState<'canvas'|'inspector'>('canvas');
@@ -420,6 +422,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // A sent design posts to the deck-design Netlify form (relayed to the CRM) with the site's attribution,
   // then counts as a lead conversion worth the priced subtotal, as the cost estimator does.
   async function postDesign(fields:Record<string,string>){
+    assertLeadsAllowed();
     const eventId=genEventId(),payload={...getAttributionFields(),...getBehaviorFields(),...fields,event_id:eventId};
     if(import.meta.env.DEV){
       // eslint-disable-next-line no-console
@@ -493,7 +496,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   const proPage:ProPage|undefined=pro?{open,renderSection,data,apply:atomicUpdate,ready:mounted&&designReady,issueCount:currentIssues.length,canUndo,canRedo,undo,redo,openSection,setPlanTool,setMode,showCanvas,showFullList,saveJSON,openProposal,downloadPdf,exportModel,exportPermit,setPresetsOpen,setPermitOpen,setJobsOpen,setSendOpen,setQuoteReviewOpen,setIssuesOpen,setSketchOpen,setAgentOpen,setAskOpen,setAskExpert:(expert)=>{setAskExpert(expert);showCanvas();setAskOpen(true);}}:undefined;
   return <div className="deck-designer" data-pro={pro||undefined} data-customer={customer||undefined} data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>
     {embed?embed.renderBar({data,estimate}):<SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>}
-    <header className="dd-header"><Link to="/" className="dd-workspace-brand" aria-label="Golden Maple home"><span className="dd-brand-symbol" aria-hidden="true">↗</span><span>DeckCraft<small>Golden Maple</small></span></Link><div className="dd-workspace-project"><h1>Draw your deck on your house.</h1><span className="dd-save-state"><i aria-hidden="true"/>{autosavePaused?'Auto-save paused':mounted?'Auto-save on this device':'Loading your design'}</span></div><WorkspaceTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={()=>saveJSON()} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} autosavePaused={autosavePaused} onDownloadPrevious={unrestoredDesign?()=>downloadFile(unrestoredDesign,'application/json','golden-maple-previous-design.json'):undefined}/><div id="dd-workspace-agent-slot"><button type="button" className="dd-agent-open" disabled={!mounted||!designReady} aria-haspopup="dialog" onClick={()=>setPresetsOpen(true)}>Presets</button><button type="button" className="dd-agent-open" aria-haspopup="dialog" onClick={()=>setAgentOpen(true)}>Agents</button></div><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
+    <header className="dd-header"><Link to="/" className="dd-workspace-brand" aria-label="Golden Maple home"><span className="dd-brand-symbol" aria-hidden="true">↗</span><span>DeckCraft<small>Golden Maple</small></span></Link><div className="dd-workspace-project"><h1>Draw your deck on your house.</h1><span className="dd-save-state"><i aria-hidden="true"/>{autosavePaused?'Auto-save paused':mounted?'Auto-save on this device':'Loading your design'}</span>{internalMode?<span className="dd-internal-badge" role="status">Internal · no leads</span>:null}</div><WorkspaceTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={()=>saveJSON()} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} autosavePaused={autosavePaused} onDownloadPrevious={unrestoredDesign?()=>downloadFile(unrestoredDesign,'application/json','golden-maple-previous-design.json'):undefined}/><div id="dd-workspace-agent-slot"><button type="button" className="dd-agent-open" disabled={!mounted||!designReady} aria-haspopup="dialog" onClick={()=>setPresetsOpen(true)}>Presets</button><button type="button" className="dd-agent-open" aria-haspopup="dialog" onClick={()=>setAgentOpen(true)}>Agents</button></div><button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
     {proPage&&mounted&&<Suspense fallback={null}><ProMenuBar page={proPage}/></Suspense>}
     {mounted&&<Suspense fallback={null}><EasyEditTools onAsk={()=>{showCanvas();setAskExpert('general');setAskOpen(true);requestAnimationFrame(()=>{if(window.matchMedia('(max-width:800px)').matches)document.getElementById('dd-assistant-dock')?.scrollIntoView({block:'start',behavior:'smooth'});});}} onJobs={()=>setJobsOpen(true)} onIssues={()=>setIssuesOpen(true)} issues={currentIssues.length} ready={designReady} autosaveState={autosaveState} savedAt={lastAutosaveAt} jobLabel={jobLabel}/></Suspense>}
     <main className="dd-workspace">

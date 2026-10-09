@@ -185,7 +185,7 @@ export default function ExteriorStudio({data,update,onClose,selectedOpeningId,on
         </fieldset>}
       </>}
       {tab==='looks'&&<>
-        <p className="dd-note">A look dresses the whole house in one go: walls, roof, trim, doors and windows. It never changes a size, a shape or the price.</p>
+        <p className="dd-note">A look dresses the whole house in one go: walls, roof, trim, doors and windows. It never changes a size or a shape. Brick or stone cladding can change the ledger and its price.</p>
         <div className="dd-exterior-looks" role="group" aria-label="Exterior looks">{EXTERIOR_LOOKS.map(l=><button key={l.id} type="button" aria-label={`${l.name} look`} aria-pressed={wearsLook(house,l)} onClick={()=>update({houseConfig:applyLook(house,l)})}><span className="dd-exterior-swatch" aria-hidden="true" style={lookSwatch(l)}/><strong>{l.name}</strong><span>{l.description}</span></button>)}</div>
         {ownFinishes(house)>0&&<p className="dd-note" role="status">{ownFinishes(house)} {ownFinishes(house)===1?'wall, block, door or window keeps its':'walls, blocks, doors or windows keep their'} own finish over the look. <button type="button" className="dd-linklike" onClick={()=>update({houseConfig:withoutOwnFinishes(house)})}>Reset them to the look</button></p>}
       </>}

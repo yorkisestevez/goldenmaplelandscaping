@@ -42,9 +42,11 @@ check('disabled yard features cause neither charges nor exported geometry',()=>{
   assert(!disabled.sections.some(s=>s.title.startsWith('Yard ·')));assert.deepEqual(deckExportMeshes(disabledData,disabled.model),deckExportMeshes(base,deckOnly.model));
 });
 check('house appearance and openings do not alter combined construction price',()=>{
-  const house=getHouseConfig(combinedData),houseConfig={...house,storeys:2 as const,roofShape:'Hip' as const,roofFinish:'Metal' as const,roofColor:'#304050',cladding:'Brick' as const,claddingColor:'#a35a42',trimColor:'#ffffee',openings:house.openings.map(o=>({...o,offsetPct:o.offsetPct+2}))};
+  const house=getHouseConfig(combinedData),houseConfig={...house,storeys:2 as const,roofShape:'Hip' as const,roofFinish:'Metal' as const,roofColor:'#304050',cladding:'Board & batten' as const,claddingColor:'#a35a42',trimColor:'#ffffee',openings:house.openings.map(o=>({...o,offsetPct:o.offsetPct+2}))};
   const changedData={...combinedData,houseConfig},changed=calculateEstimate(changedData,DECK_SETTINGS);assert.equal(changed.subtotal,combined.subtotal);assert.equal(changed.total,combined.total);assert.deepEqual(changed.yardTakeoff.quantities,combined.yardTakeoff.quantities);
   assert.notDeepEqual(deckExportMeshes(changedData,changed.model).filter(m=>m.name.startsWith('house_')),deckExportMeshes(combinedData,combined.model).filter(m=>m.name.startsWith('house_')),'appearance edit changes actual house export');
+  const brickData={...combinedData,houseConfig:{...house,cladding:'Brick' as const}},brick=calculateEstimate(brickData,DECK_SETTINGS);
+  assert.notEqual(brick.total,combined.total);assert(brick.flags.some(flag=>flag.includes('Ledger blocked')));assert.deepEqual(brick.yardTakeoff.quantities,combined.yardTakeoff.quantities);
 });
 check('combined exports include the same yard parts used by the estimate and house solids',()=>{
   const meshes=deckExportMeshes(combinedData,combined.model),byName=new Map(meshes.map(m=>[m.name,m]));assert(meshes.some(m=>m.name.startsWith('house_')));

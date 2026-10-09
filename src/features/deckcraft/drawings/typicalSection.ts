@@ -25,8 +25,8 @@ export interface TypicalSection{
   depthIn:number;attached:boolean;
   /** Where section 1 is cut, in plan (for its mark on S-2). */
   mark:{x:number;y0:number;y1:number};
-  /** The pier diameter drawn, and whether the price book names it. */
-  pier:{diameter:number;priced:boolean};
+  /** The pier diameter drawn, whether the price book names a 16 in allowance, and whether structural review sized it. */
+  pier:{diameter:number;priced:boolean;sized?:boolean};
   /** How far the guard posts' centre line sits inside the front edge, inches. */
   guardInset:number;
 }
@@ -43,7 +43,7 @@ export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialNa
   const size=data.framingSize as JoistSize,jd=ACTUAL_DEPTH_IN[size]??9.25,top=main.top,joistTop=top-DESIGN.deckingThicknessIn;
   const plies=ref.beam.plies,half=plies*.75,beamBottom=ref.beamBottomIn,beamTop=beamBottom+ref.beamDepthIn;
   const blocks=data.foundation==='Deck Blocks',helical=data.foundation==='Helical Piles',postBase=blocks?6.5:4.5,depth=blocks?0:data.foundationDepthIn??48;
-  const {priced:pricedPier,diameter:pier}=pierOf(data);
+  const {priced:pricedPier,diameter:pier,sized:pierSized}=pierOf(data,model);
   const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
   const fascia=catalogueAccessoryLayout(data,model).fascia.length>0;
   const items:DrawItem[]=[];
@@ -131,13 +131,15 @@ export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialNa
 
   // Callouts, in a column on each side, leaders to the members they name (top to bottom, so leaders do not cross).
   const last=rows.at(-1)!,bolts=hardware.ledgerBolts.length,hangers=hardware.hangers.length+(hardware.skewedHangers?.length??0);
+  const allowance=pricedPier?16:12;
   const footing=blocks?'Deck block on compacted, undisturbed soil':helical?`Helical pile to ${feetInches(depth)} below grade`
+    :pierSized?`${pier} in concrete pier sized for tributary load, ${feetInches(depth)} below grade; ${allowance} in price-book allowance`
     :pricedPier?`16 in concrete pier, ${feetInches(depth)} below grade`:`Concrete pier, ${feetInches(depth)} below grade`;
   const datum=rowDatums.get(last),localSolids=datum?foundationSolids(datum):undefined;
   const post=localSolids?.boxes.find(b=>b.part==='post'),base=localSolids?.boxes.find(b=>b.part==='deck-block'),shaft=localSolids?.cylinders.find(c=>c.part==='pile-shaft'||c.part==='concrete-pier');
   const physicalPosts:[Pt,string][]=post?[[P(last.z+post.d/2,post.y),`6x6 post, ${feetInches(post.h)} cut length on local post base`]]:[];
   const physicalFooting:[Pt,string]=base?[P(last.z+base.d/2,base.y),'Deck block on local proposed grade; bearing pending']
-    :shaft?[P(last.z+shaft.radius,(shaft.bottom+shaft.top)/2),helical?`Helical pile, ${feetInches(datum!.depthIn)} below local grade; design pending`:`12 in schematic concrete pier, ${feetInches(datum!.depthIn)} below local grade; diameter / bearing pending${pricedPier?' (16 in allowance basis)':''}`]
+    :shaft?[P(last.z+shaft.radius,(shaft.bottom+shaft.top)/2),helical?`Helical pile, ${feetInches(datum!.depthIn)} below local grade; design pending`:pierSized?`${Math.round(shaft.radius*2)} in concrete pier sized for tributary load, ${feetInches(datum!.depthIn)} below local grade; ${pricedPier?16:12} in price-book allowance`:`12 in schematic concrete pier, ${feetInches(datum!.depthIn)} below local grade; diameter / bearing pending${pricedPier?' (16 in allowance basis)':''}`]
     :[P(last.z+half,beamBottom),'Foundation datum / ground coverage pending; no footing modeled'];
   const right:[Pt,string][]=[
     ...(railed?[[P(g,top+h*.6),`Guard, ${h} in high`] as [Pt,string]]:[]),
@@ -164,5 +166,5 @@ export function typicalSection(data:DeckData,model:DeckTakeoff,names:{materialNa
 
   const b=items.flatMap(i=>i.kind==='line'||i.kind==='dim'?[i.a,i.b]:i.kind==='poly'?i.points:i.kind==='circle'?[i.c]:[i.at]);
   const minX=Math.min(...b.map(p=>p.x)),minY=Math.min(...b.map(p=>p.y));
-  return {items:translate(items,origin.x-minX,origin.y-minY),reference:ref,depthIn:d,attached,mark:{x,y0:y-36,y1:y+d+44},pier:physical?{diameter:12,priced:false}:{diameter:pier,priced:pricedPier},guardInset:d-g};
+  return {items:translate(items,origin.x-minX,origin.y-minY),reference:ref,depthIn:d,attached,mark:{x,y0:y-36,y1:y+d+44},pier:pierSized?{diameter:pier,priced:pricedPier,sized:true}:physical?{diameter:12,priced:false}:{diameter:pier,priced:pricedPier},guardInset:d-g};
 }

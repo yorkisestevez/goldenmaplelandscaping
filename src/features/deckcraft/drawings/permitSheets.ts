@@ -18,6 +18,8 @@ import {ELEVATION_DATUM,elevationLabel,usesPhysicalElevations} from '../elevatio
 import {buildYardModel} from '../yardModel';
 import {scheduleItems,scheduleTables} from './schedules';
 import {codeNoteItems,unverifiedCodeReferences,validateCodeReferences} from './codeReferences';
+import {usesStructuralReview} from '../buildRules';
+import {ledgerBlocked} from '../structure/structuralReview';
 
 /**
  * The permit drawing set built from the takeoff model: A-0 site plan, A-1 elevations, S-1 foundation plan, S-2 framing
@@ -130,7 +132,7 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
     for(const row of beamRows(l.beams.filter(m=>m.role!=='hip'&&Math.abs(m.a.z-m.b.z)<1e-6))){const m=row[0],left=m.a.x<m.b.x?m.a:m.b;
       s2.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:left.x+4,y:Math.min(...row.map(r=>r.a.z))-5},text:`${row.length}-${sizeOf(m.depth)} beam`,height:SMALL,anchor:'start'});}
   }
-  for(const c of contact?.contacts??[]){
+  for(const c of ledgerBlocked(data)?[]:(contact?.contacts??[])){
     s2.push({kind:'line',layer:'S-LEDG',a:{x:c.a.x+c.inward.x*.75,y:c.a.y+c.inward.y*.75},b:{x:c.b.x+c.inward.x*.75,y:c.b.y+c.inward.y*.75}});
     s2.push({kind:'text',layer:'A-ANNO-TEXT',at:{x:(c.a.x+c.b.x)/2,y:(c.a.y+c.b.y)/2+10},text:c.kind==='flush'?'Outside joist bolted to wall':`${joistSize} ledger`,height:SMALL,anchor:'middle'});
   }
@@ -139,12 +141,16 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
   s2.push(...chain([{x:b.maxX,y:0},...collapse(mainRows).map(z=>({x:b.maxX,y:z})),{x:b.maxX,y:main.footprint.bounds.h+main.offset.z}],-24));
   s2.push(...overall(main,false),...sectionMark(section.mark));
   const bolts=hardware.ledgerBolts.length,hangers=hardware.hangers.length+(hardware.skewedHangers?.length??0);
+  const speciesName=!data.framingSpecies||data.framingSpecies==='SPF'?'S-P-F':data.framingSpecies;
+  const beamNote=usesStructuralReview(data)
+    ?`Beams: ${reference.beam.plies}-ply ${reference.beam.size}${reference.codeSized===false?' (layout only; not a span-table size under this heavy load)':''}, chosen apart from the joist depth; OBC 2024 Table 9.23.4.2.-H (3-ply S-P-F) or Springwater's deck guide (2-ply, supported length up to 3.6 m).`
+    :`Beams: built-up ${joistSize}, plies as labelled; OBC 2024 Table 9.23.4.2.-H (3-ply) or Springwater's deck guide (2-ply, supported length up to 3.6 m).`;
   const s2Notes=[
-    `Joists: ${joistSize} S-P-F No. 1/No. 2 @ ${spacing}" o.c.; spans within OBC 2024 Table 9.23.4.2.-A (with bridging), ${feetInches(reference.joistSpanLimitIn)} at this size and spacing.`,
-    `Beams: built-up ${joistSize}, plies as labelled; OBC 2024 Table 9.23.4.2.-H (3-ply) or Springwater's deck guide (2-ply, supported length up to 3.6 m).`,
+    `Joists: ${joistSize} ${speciesName} No. 1/No. 2 @ ${spacing}" o.c.; spans within OBC 2024 Table 9.23.4.2.-A (with bridging), ${feetInches(reference.joistSpanLimitIn)} at this size and spacing.${reference.codeSized===false?' Under a heavy load this joist layout is not a span-table size.':''}`,
+    beamNote,
     `Joist cantilever ${feetInches(reference.cantileverIn)} past the outer beam: within 16 in (2x8) or 24 in (2x10, 2x12) and 1/6 of the span.`,
     'Blocking rows at most 2100 mm apart and from each bearing (OBC 9.23.9.4).',
-    ...(contact?.contacts.some(c=>c.kind==='ledger')?[`Ledger fastened to the house rim with ${bolts} bolts, as priced; no ledger on brick veneer or an I-joist rim (Barrie).`]:[]),
+    ...(!ledgerBlocked(data)&&contact?.contacts.some(c=>c.kind==='ledger')?[`Ledger fastened to the house rim with ${bolts} bolts, as priced; no ledger on brick veneer or an I-joist rim (Barrie).`]:[]),
     `${hangers} joist hangers and ${hardware.postCaps.length} post caps, as priced.`,
   ];
 
@@ -200,10 +206,10 @@ export function buildPermitSet(input:PermitSetInput):DrawingSet{
   const s4Notes=[
     `Section 1 is cut between two joists where marked on S-2, looking toward the deck's right-hand end: ${rows} beam row${rows===1?'':'s'}, joist span ${feetInches(ref.joistSpanIn)}${ref.edgeBeams?'':`, cantilever ${feetInches(ref.cantileverIn)}`}, framed as on S-2.`,
     s2Notes[0],
-    `Beam: ${ref.beam.plies}-ply ${ref.beam.size}, ${ref.beamMount==='drop'?'the joists bearing on top':'flush with the joists, which hang on hangers'}; ${feetInches(ref.beamSpanLimitIn)} limit between posts at its supported length, from OBC 2024 Table 9.23.4.2.-H (3-ply) or Springwater's deck guide (2-ply, supported length up to 3.6 m).`,
+    `Beam: ${ref.beam.plies}-ply ${ref.beam.size}${ref.codeSized===false?' (layout only; not a span-table size under this heavy load)':''}, ${ref.beamMount==='drop'?'the joists bearing on top':'flush with the joists, which hang on hangers'}; ${feetInches(ref.beamSpanLimitIn)} limit between posts at its supported length, from OBC 2024 Table 9.23.4.2.-H (3-ply) or Springwater's deck guide (2-ply, supported length up to 3.6 m).`,
     section.attached?`Ledger fastened to the house rim with ${hardware.ledgerBolts.length} bolts, as priced; no ledger on brick veneer or an I-joist rim (Barrie). ${ledgerFlashing(data).note}`:'Freestanding: the deck stands on its own beams and posts and is not fastened to the house.',
     s1Notes[2],
-    s1Notes[1]+(blocks||helical?'':physical?' The model shows a 12 in schematic pier; final diameter and bearing design are pending. A priced footing allowance does not establish its dimensions.':section.pier.priced?' 16 in piers, as priced for clay or fill soil.':' The pier is drawn 12 in across; the price book does not fix its diameter, so confirm it with the base size.'),
+    s1Notes[1]+(blocks||helical?'':section.pier.sized?` Piers are drawn ${section.pier.diameter} in across for the tributary load. The price book allowance remains ${section.pier.priced?'16':'12'} in at the existing unit rate.`:physical?' The model shows a 12 in schematic pier; final diameter and bearing design are pending. A priced footing allowance does not establish its dimensions.':section.pier.priced?' 16 in piers, as priced for clay or fill soil.':' The pier is drawn 12 in across; the price book does not fix its diameter, so confirm it with the base size.'),
     s2Notes[3],
     guardNote,
   ];
