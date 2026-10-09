@@ -32,3 +32,13 @@ export const landscapeAsset=(id:LandscapeAssetId)=>LANDSCAPE_ASSETS.find(a=>a.id
 export function newLandscapeObject(assetId:LandscapeAssetId,id:string,xIn=0,zIn=240):LandscapeObject {
  const a=landscapeAsset(assetId);return {id,name:a.name,enabled:true,kind:a.kind,assetId,xIn,zIn,rotationDeg:0,heightIn:a.heightIn,widthIn:a.widthIn,depthIn:a.depthIn,...a.kind==='bed'?(assetId==='mulch-bed'?{mulchDepthIn:3,edging:false}:{surfaceDepthIn:landscapeSurface(assetId)!.defaultDepthIn,edging:false,...assetId==='putting-green'?{puttingCups:[{x:0,z:0}]}:{}}):{} };
 }
+/**
+ * Where a library add lands. This list has no plan cursor, so the first object sits just past the deck
+ * (deck centre, 8 ft into the yard) and each later one steps aside instead of sharing that point.
+ */
+export function landscapeLibraryPoint(deck:{width:number;length:number},asset:{widthIn:number;depthIn:number},existing:readonly {xIn:number;zIn:number;widthIn?:number}[]):{xIn:number;zIn:number}{
+ const anchorX=deck.width*6,anchorZ=(deck.length+8)*12,stepX=Math.max(36,Math.round(asset.widthIn)+12),stepZ=Math.max(36,Math.round(asset.depthIn)+12);
+ const crowded=(x:number,z:number)=>existing.some(o=>Math.hypot(o.xIn-x,o.zIn-z)<Math.max(18,((o.widthIn??36)+asset.widthIn)/4));
+ for(let row=0;row<40;row++)for(let col=0;col<8;col++){const xIn=anchorX+col*stepX,zIn=anchorZ+row*stepZ;if(!crowded(xIn,zIn))return {xIn,zIn};}
+ return {xIn:anchorX+existing.length*stepX,zIn:anchorZ};
+}
