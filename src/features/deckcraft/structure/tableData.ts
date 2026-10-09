@@ -22,6 +22,17 @@ export const JOIST_TABLE={
 } as const;
 
 /**
+ * Hem-Fir and D.Fir-L No. 1/No. 2 joists, "with bridging", metres. The S-P-F with-bridging cells of this national
+ * table match OBC 2024 Table 9.23.4.2.-A exactly (North Bay reprint). Hem-Fir and D.Fir-L No. 1/No. 2 with bridging
+ * are the same as each other in the BCBC Table A-1 extract of that table. Confirm the OBC 2024 species sheet before
+ * a permit; the code reference stays on confirm. Beam spans stay on the S-P-F Table 9.23.4.2.-H.
+ */
+export const JOIST_TABLE_SPECIES={
+  'Hem-Fir':{'2x8':{12:4.00,16:3.76},'2x10':{12:4.66,16:4.38},'2x12':{12:5.26,16:4.94}},
+  'D.Fir-L':{'2x8':{12:4.00,16:3.76},'2x10':{12:4.66,16:4.38},'2x12':{12:5.26,16:4.94}},
+} as const;
+
+/**
  * Bridging or blocking rows: not more than 2100 mm from each support or from another row (OBC 9.23.9.4.(1)–(3)),
  * which the "with bridging" spans assume. Barrie prints it as 6 ft 11 in.
  */

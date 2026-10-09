@@ -13,6 +13,7 @@ import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock,type ProductStock} from './stockPlan';
 import {productStock} from './deckingStock';
 import {usesCurrentBuildRules} from './buildRules';
+import {priceLedgerFlashing} from './structure/structuralReview';
 import {hasBoardLayout,layoutBoardStock,layoutAutomaticBreakerLf,boardLayoutAllowance,BOARD_LAYOUT_POLICY,BOARD_LAYOUT_SUPPORT_QUOTE} from './boardLayoutPricing';
 import {boardFinishPlan,colourName,darkSlateBorder,deckColourRef,parseColourRef,type StockGroup} from './boardFinishes';
 import {DECK_PARTS,partRef,railingFinish,stairTreadKey} from './deckPartFinishes';
@@ -537,7 +538,7 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
     pergola: data.pergola ? 0 : pergolaSqft * 65 * markupMult,
     // Add-on module specific
     structuralTieIn: deckType === 'Add-on' ? (data.addOnHardwareCost || 450) * markupMult : 0,
-    ledgerFlashing: deckType === 'Add-on' ? (data.addOnFlashingLf || flashingLf) * 12 * markupMult : 0,
+    ledgerFlashing: priceLedgerFlashing(data) ? (data.addOnFlashingLf || flashingLf) * 12 * markupMult : 0,
     transitionLabor: deckType === 'Add-on' ? (data.addOnTransitionLabor || 850) : 0,
   };
 
@@ -672,7 +673,7 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
         { name: 'Demo & Removal', spec: 'Existing Deck', qty: hasDemo ? area : 0, unit: 'sqft', cost: addOnCosts.demo },
         { name: 'Pergola', spec: 'Wood/Aluminum', qty: data.pergola ? 0 : pergolaSqft, unit: 'sqft', cost: addOnCosts.pergola },
         { name: 'Structural Tie-in', spec: 'Hardware to Existing', qty: deckType === 'Add-on' ? 1 : 0, unit: 'ls', cost: addOnCosts.structuralTieIn },
-        { name: 'Ledger Flashing', spec: 'Connection Width', qty: deckType === 'Add-on' ? (data.addOnFlashingLf || flashingLf) : 0, unit: 'lf', cost: addOnCosts.ledgerFlashing },
+        { name: 'Ledger Flashing', spec: 'Connection Width', qty: priceLedgerFlashing(data) ? (data.addOnFlashingLf || flashingLf) : 0, unit: 'lf', cost: addOnCosts.ledgerFlashing },
         { name: 'Transition Labor', spec: 'Leveling & Siding Prep', qty: deckType === 'Add-on' ? 1 : 0, unit: 'ls', cost: addOnCosts.transitionLabor },
       ].filter(item => item.qty > 0)
     },

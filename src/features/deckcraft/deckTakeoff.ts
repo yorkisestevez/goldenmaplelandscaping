@@ -1,5 +1,6 @@
 import {designStockLength,designStockLengths} from './deckingStock';
-import {usesCurrentBuildRules} from './buildRules';
+import {usesCurrentBuildRules,usesStructuralReview} from './buildRules';
+import {footingDiameterIn,ledgerBlocked,structuralReviewInput,structuralReviewIssues} from './structure/structuralReview';
 import {foundationDatums} from './foundationDatums';
 import {stairTargetId,validateStairTargets} from './stairTargets';
 import {addConstructionDetails,addRim,finishBoards,memberLength,unsupportedJoistEnds} from './constructionDetails';
@@ -134,7 +135,8 @@ export function buildDeckTakeoff(data:DeckData){
     return level;
   }
   function makeLevel(footprint:FootprintPlan,top:number,offset:V3,attached:boolean,kind:DeckLevel['kind']='deck',index=0){
-    const cfg={top,spacing,framingSize:data.framingSize,joistDepth,pictureFrame:!!data.pictureFrameRows||data.pattern==='Picture Frame'};
+    const structural=usesStructuralReview(data);
+    const cfg={top,spacing,framingSize:data.framingSize,joistDepth,pictureFrame:!!data.pictureFrameRows||data.pattern==='Picture Frame',...(structural?{beamPick:'independent' as const}:{}),...(structural&&data.framingSpecies?{species:data.framingSpecies}:{}),...(structural&&data.intendedLoad==='Heavy'?{codeSized:false as const}:{})};
     if(wrap&&kind==='deck'&&index===0)return makeWrapLevel(footprint,top,offset,cfg,wrap);
     const angled=kind==='deck'&&index===0?angledCornerEdges(footprint):[];
     // A 45° edge that cuts a corner off the deck (every other point on its house side) is framed within its strip
@@ -203,7 +205,7 @@ export function buildDeckTakeoff(data:DeckData){
     if(customDeck)result.blocking=result.blocking.filter(b=>b.role!=='board-end'||memberLength(b)>=.05);
     return result;
   }
-  levels.push(makeLevel(mainFp,data.height,{x:0,y:0,z:0},deckAttachesToHouse(data)&&(!data.deckOutlines?.main||mainContact.contacts.length>0),'deck',0));
+  levels.push(makeLevel(mainFp,data.height,{x:0,y:0,z:0},deckAttachesToHouse(data)&&!ledgerBlocked(data)&&(!data.deckOutlines?.main||mainContact.contacts.length>0),'deck',0));
   /** A stair flight. A straight one carries its plan directions (outward = downhill) and how far its treads and risers
    * run past `width` at each end (a full-width step reaching its level's finished edge). */
   type Flight={id:string;kind:'grade'|'connection';risers:number;rise:number;run:number;width:number;start:V3;end:V3;type:string;stringerOffsets:number[];along?:PlanPoint;outward?:PlanPoint;endExtend?:number;endWidth?:number;terminationEdge?:{a:PlanPoint;b:PlanPoint};winderCenter?:PlanPoint;winderRadiusIn?:number};
@@ -603,7 +605,14 @@ export function buildDeckTakeoff(data:DeckData){
     const loose=unsupportedJoistEnds(level,level.index===0?mainContact:undefined);
     if(loose.length)issues.push(`${loose.length} joist end${loose.length===1?'':'s'} on the ${['main deck','second level','third level'][level.index??0]} do not bear on a ledger or beam (for example a shallow notch wing). Add a beam and posts under that edge before construction.`);
   }
-  const foundationSaddle=data.foundation==='Deck Blocks'?6.5:4.5,foundationSupports=foundationDatums(data,levels);
+  const foundationSaddle=data.foundation==='Deck Blocks'?6.5:4.5;
+  const deckAreaSqft=levels.reduce((sum,l)=>sum+(l.kind==='winder'?0:polygonArea(l.footprint)),0);
+  let foundationSupports=foundationDatums(data,levels);
+  if(usesStructuralReview(data)&&data.foundation==='Concrete Piers'){
+    const counted=Math.max(1,foundationSupports.filter(f=>f.status!=='coverage-pending').length);
+    const radius=footingDiameterIn(deckAreaSqft,counted,data)/2;
+    foundationSupports=foundationSupports.map(f=>({...f,pierRadiusIn:radius}));
+  }
   const missingTargets=targets.filter(t=>!flights.some(f=>f.kind==='grade'&&stairTargetId(f.id)===t.flightId));
   if(missingTargets.length)issues.push('A saved stair target no longer has a matching grade flight. Refit or remove the target before construction.');
   if(targets.some(t=>t.surface==='patio'&&!data.yardFeatures?.some(f=>f.enabled&&f.kind==='patio'&&f.id===t.patioId)))issues.push('A stair landing patio target is absent or disabled; confirm the landing surface before construction.');
@@ -613,7 +622,19 @@ export function buildDeckTakeoff(data:DeckData){
   if(levels.some(l=>l.supports.some(p=>p.y>0&&p.y<=foundationSaddle)||l.top<joistDepth+1+foundationSaddle))issues.push('Selected deck elevation leaves insufficient clearance for framing and the foundation saddle; review low-profile framing or excavation before construction.');
   const quantities={riserBoardPieces:riserBoards.length,riserBoardLf:riserBoards.reduce((n,b)=>n+b.w/12,0),riserBoardArea:riserBoards.reduce((n,b)=>n+b.w*b.h/144,0),inlayLf:levels.reduce((n,l)=>n+l.boards.filter(b=>b.role==='inlay').reduce((n,b)=>n+b.length/12,0),0),totalRisers:flights.reduce((n,f)=>n+f.risers,0),landingArea:levels.filter(l=>l.kind==='landing').reduce((n,l)=>n+polygonArea(l.footprint),0),breakerBoards:levels.reduce((n,l)=>n+l.breakers.length+(l.layoutBreakers?.length??0),0),blocking:levels.reduce((n,l)=>n+l.blocking.length,0),stairRailingLf:railRuns.filter(r=>r.a.y!==r.b.y).reduce((n,r)=>n+distance(r.a,r.b)/12,0),footings:foundationSupports.filter(f=>f.status!=='coverage-pending').length,supportPosts:foundationSupports.filter(f=>f.postHeightIn!==null&&f.postHeightIn>0).length,joists:levels.reduce((sum,l)=>sum+l.joists.length,0),railingPosts:posts.length,railingSections:railSections,railingLf:railRuns.reduce((sum,r)=>sum+distance(r.a,r.b)/12,0),risersPerFlight:risers,stairFlights:stairOpenings.length,stairTreads:treads.length,stringers:stringers.length,installedBoardPieces:levels.reduce((sum,l)=>sum+(data.boardLayout?physicalBoardPieceCount(l.boards,data.boardWidth):l.boards.length),0),area:levels.reduce((sum,l)=>sum+(l.kind==='winder'?0:polygonArea(l.footprint)),0),framingLf:levels.reduce((sum,l)=>sum+[...l.joists,...l.beams,...l.blocking,...(l.rim||[])].reduce((n,m)=>n+distance(m.a,m.b)/12,0),0)};
   const resolvedFoundations=foundationSupports.filter(f=>f.bottomElevationIn!==null&&f.headTopElevationIn!==null);
-  const foundationQuantities={supportPostLf:foundationSupports.reduce((n,f)=>n+(f.postHeightIn??0)/12,0),concretePierYd3:resolvedFoundations.filter(f=>f.foundation!=='Helical Piles'&&f.foundation!=='Deck Blocks').reduce((n,f)=>n+Math.PI*36*(f.headTopElevationIn!-f.bottomElevationIn!)/46656,0),pileShaftLf:resolvedFoundations.filter(f=>f.foundation==='Helical Piles').reduce((n,f)=>n+(f.headTopElevationIn!-f.bottomElevationIn!)/12,0),foundationCoveragePending:foundationSupports.filter(f=>f.status==='coverage-pending').length,foundationClearancePending:foundationSupports.filter(f=>f.status==='clearance-pending').length,foundationSoilPending:data.soilCondition==='Unknown'?1:0};
+  const foundationQuantities={supportPostLf:foundationSupports.reduce((n,f)=>n+(f.postHeightIn??0)/12,0),concretePierYd3:resolvedFoundations.filter(f=>f.foundation!=='Helical Piles'&&f.foundation!=='Deck Blocks').reduce((n,f)=>n+Math.PI*(f.pierRadiusIn??6)**2*(f.headTopElevationIn!-f.bottomElevationIn!)/46656,0),pileShaftLf:resolvedFoundations.filter(f=>f.foundation==='Helical Piles').reduce((n,f)=>n+(f.headTopElevationIn!-f.bottomElevationIn!)/12,0),foundationCoveragePending:foundationSupports.filter(f=>f.status==='coverage-pending').length,foundationClearancePending:foundationSupports.filter(f=>f.status==='clearance-pending').length,foundationSoilPending:data.soilCondition==='Unknown'?1:0};
+  if(usesStructuralReview(data)){
+    const diameter=foundationSupports.find(f=>f.pierRadiusIn)?.pierRadiusIn;
+    issues.push(...structuralReviewIssues(data,structuralReviewInput(data,{
+      surfaceIn:Math.max(data.height,...levels.map(l=>l.top)),
+      supports:levels.flatMap(l=>l.supports),
+      areaSqft:deckAreaSqft,
+      footingCount:foundationSupports.filter(f=>f.status!=='coverage-pending').length,
+      footingDiameterIn:diameter?diameter*2:0,
+      railingLf:railRuns.reduce((sum,r)=>sum+distance(r.a,r.b)/12,0),
+      flights:flights.map(f=>({risers:f.risers,rise:f.rise,run:f.run})),
+    })));
+  }
   return {foundationSupports,foundationQuantities,levels,treads,riserBoards,stairSupport,stringers,flights,connections,issues,railing:{posts,rails,balusters,glass,height:railHeight,...(newRules?{guardLines}:{}),...(frameless?{frameless}:{})} as TakeoffRailing,quantities,gap,stockLength,...(stockLengths.length>1?{stockLengths}:{})};
 }
 export type DeckTakeoff=ReturnType<typeof buildDeckTakeoff>;

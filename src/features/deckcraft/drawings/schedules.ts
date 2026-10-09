@@ -75,11 +75,11 @@ export function beamLines(model:DeckTakeoff):BeamLine[]{
 
 export function scheduleTables(data:DeckData,model:DeckTakeoff,names:{railingName:string},hardware=getHardwareLayout(data,model)):ScheduleTable[]{
   const physical=usesPhysicalElevations(data),tables:ScheduleTable[]=[],blocks=data.foundation==='Deck Blocks',helical=data.foundation==='Helical Piles',saddle=blocks?6.5:4.5;
-  const pier=pierOf(data),depth=blocks?0:data.foundationDepthIn??48;
+  const pier=pierOf(data,model),depth=blocks?0:data.foundationDepthIn??48;
   const spacing=data.pattern==='Diagonal'||data.pattern==='Herringbone'?12:data.joistSpacing;
 
   // Footings and posts, by level and height to the beam.
-  const footing=blocks?'Deck block':helical?'Helical pile':physical?'Concrete pier (12 in schematic; diameter pending)':pier.priced?'16 in concrete pier':'Concrete pier (12 in shown)';
+  const footing=blocks?'Deck block':helical?'Helical pile':pier.sized?`${pier.diameter} in concrete pier (tributary size; ${pier.priced?16:12} in price-book allowance)`:physical?'Concrete pier (12 in schematic; diameter pending)':pier.priced?'16 in concrete pier':'Concrete pier (12 in shown)';
   const footRows:string[][]=[];
   model.levels.forEach((l,i)=>{
     // A post stands where the beam clears the footing's saddle, as the takeoff counts it (on the exact height).

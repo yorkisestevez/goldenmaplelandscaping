@@ -14,13 +14,13 @@ const OBC='https://www.ontario.ca/page/ontarios-building-code';
 
 /** Public source locations; exact clauses and local applicability remain open for review. */
 export const CODE_REFERENCES:readonly CodeReference[]=[
-  {id:'joists',subject:'Joist spans',citation:'OBC 2024, Table 9.23.4.2.-A',sourceUrl:OBC,status:'confirm'},
-  {id:'beams',subject:'Three-ply beam spans',citation:'OBC 2024, Table 9.23.4.2.-H',sourceUrl:OBC,status:'confirm'},
+  {id:'joists',subject:'Joist spans',citation:'OBC 2024, Table 9.23.4.2.-A (Article 9.23.4.2.)',sourceUrl:OBC,status:'confirm'},
+  {id:'beams',subject:'Three-ply beam spans',citation:'OBC 2024, Table 9.23.4.2.-H (Article 9.23.4.2.)',sourceUrl:OBC,status:'confirm'},
   {id:'blocking',subject:'Joist bridging',citation:'OBC 2024, Article 9.23.9.4.',sourceUrl:OBC,status:'confirm'},
   {id:'posts',subject:'Wood post size',citation:'OBC 2024, Article 9.17.4.1.',sourceUrl:OBC,status:'confirm'},
-  {id:'guards',subject:'Guard height',citation:'OBC 2024, Article 9.8.8.3.',sourceUrl:OBC,status:'confirm'},
-  {id:'stairs',subject:'Private stair geometry',citation:'OBC 2024, Table 9.8.4.1.',sourceUrl:OBC,status:'confirm'},
-  {id:'barrie',subject:'Local deck details',citation:'City of Barrie, Deck Specs',sourceUrl:'https://www.barrie.ca/media/4040',status:'confirm'},
+  {id:'guards',subject:'Guard height',citation:'OBC 2024, Articles 9.8.8.1. and 9.8.8.3.',sourceUrl:OBC,status:'confirm'},
+  {id:'stairs',subject:'Private stair geometry',citation:'OBC 2024, Table 9.8.4.1. and Article 9.8.7.1.',sourceUrl:OBC,status:'confirm'},
+  {id:'barrie',subject:'Local deck details',citation:'City of Barrie, Deck Specs (cites OBC 9.8.8.1.(1), 9.8.8.3., SB-7, 9.8.4.2.)',sourceUrl:'https://www.barrie.ca/media/4040',status:'confirm'},
   {id:'springwater',subject:'Two-ply beam spans',citation:'Township of Springwater, Building Guide - Decks, March 2026',sourceUrl:'https://www.springwater.ca/media/qkdb5m4z/deck-guide-march-2026.pdf',status:'confirm'},
 ];
 

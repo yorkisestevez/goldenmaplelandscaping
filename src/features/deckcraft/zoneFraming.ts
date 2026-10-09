@@ -1,5 +1,5 @@
-import {frameRectangle,type RectFraming} from './structure/framing';
-import type {JoistSize} from './structure/spanTables';
+import {frameRectangle,type RectFraming,type RectFramingInput} from './structure/framing';
+import type {FramingSpecies,JoistSize} from './structure/spanTables';
 import type {PlanPoint} from './lib/deckGeometry';
 import type {Member,V3} from './deckTakeoff';
 
@@ -13,7 +13,7 @@ import type {Member,V3} from './deckTakeoff';
  * `outline` clips members to the zone's actual area.
  */
 export interface DeckZone{id:string;outline:PlanPoint[];origin:PlanPoint;size:{w:number;h:number};attached:boolean}
-export interface ZoneFramingConfig{top:number;spacing:number;framingSize:string;joistDepth:number;pictureFrame:boolean}
+export interface ZoneFramingConfig{top:number;spacing:number;framingSize:string;joistDepth:number;pictureFrame:boolean;beamPick?:'joist-depth'|'independent';species?:FramingSpecies;codeSized?:false}
 export type ZoneReference=RectFraming;
 export interface FramedZone{zone:DeckZone;reference:ZoneReference}
 
@@ -38,8 +38,12 @@ export function cleanPolygon(points:PlanPoint[]):PlanPoint[]{
   return out;
 }
 
+function framingInput(cfg:ZoneFramingConfig,size:{w:number;h:number},ledger:boolean,extra:Partial<RectFramingInput>={}):RectFramingInput{
+  return {widthIn:size.w,depthIn:size.h,topIn:cfg.top,ledger,joistSpacingIn:cfg.spacing as 12|16,joistSize:cfg.framingSize as JoistSize,...(cfg.beamPick?{beamPick:cfg.beamPick}:{}),...(cfg.species?{species:cfg.species}:{}),...(cfg.codeSized===false?{codeSized:false as const}:{}),...extra};
+}
+
 export function zoneReference(zone:DeckZone,cfg:ZoneFramingConfig,houseCantileverIn?:number):ZoneReference{
-  return frameRectangle({widthIn:zone.size.w,depthIn:zone.size.h,topIn:cfg.top,ledger:zone.attached,joistSpacingIn:cfg.spacing as 12|16,joistSize:cfg.framingSize as JoistSize,houseCantileverIn});
+  return frameRectangle(framingInput(cfg,zone.size,zone.attached,{houseCantileverIn}));
 }
 
 /** Freestanding zones that start on the house edge share one straight house-side beam: each is reframed with the
@@ -56,7 +60,7 @@ export function shareHouseSideBeam(zones:FramedZone[],cfg:ZoneFramingConfig):Fra
 /** A landing carries stair stringers at its edges, so its beams sit on both edges (outer face on the edge) instead of
  * behind a deck's joist cantilever, which on a 4-ft landing put the two post rows 1.8 ft apart, on overlapping footings. */
 export function landingReference(zone:DeckZone,cfg:ZoneFramingConfig):ZoneReference{
-  return frameRectangle({widthIn:zone.size.w,depthIn:zone.size.h,topIn:cfg.top,ledger:zone.attached,joistSpacingIn:cfg.spacing as 12|16,joistSize:cfg.framingSize as JoistSize,edgeBeams:true});
+  return frameRectangle(framingInput(cfg,zone.size,zone.attached,{edgeBeams:true}));
 }
 
 /** Posts and beams of one zone, clipped to its outline, or to `bearingOutline` (the part of the zone behind
@@ -88,7 +92,7 @@ export function frameZoneJoists({zone,reference:ref}:FramedZone,offset:V3,cfg:Zo
  * house side, using the framing engine's own house-side beam and posts sized to that stretch. */
 export function frameHouseSideBeams(stretches:[number,number][],depthIn:number,cfg:ZoneFramingConfig,offset:V3,out:{supports:V3[];beams:Member[]}){
   for(const [x0,x1] of stretches){
-    const side=frameRectangle({widthIn:x1-x0,depthIn,topIn:cfg.top,ledger:false,joistSpacingIn:cfg.spacing as 12|16,joistSize:cfg.framingSize as JoistSize});
+    const side=frameRectangle(framingInput(cfg,{w:x1-x0,h:depthIn},false));
     const row=side.beamRows.find(r=>r.kind==='house');if(!row)continue;
     for(const p of side.posts)if(p.row==='house')out.supports.push({x:x0+p.x+offset.x,y:Math.max(0,side.beamBottomIn),z:p.z+offset.z});
     for(let ply=0;ply<side.beam.plies;ply++){const y=side.beamBottomIn+side.beamDepthIn/2,z=row.z+offset.z+(ply-(side.beam.plies-1)/2)*1.5;out.beams.push({a:{x:x0+offset.x,y,z},b:{x:x1+offset.x,y,z},width:1.5,depth:side.beamDepthIn,role:'house-side-beam'});}
@@ -99,5 +103,5 @@ export function frameHouseSideBeams(stretches:[number,number][],depthIn:number,c
  * 10 × 10 ft attached deck. */
 export function doubledMemberSpanIn(cfg:ZoneFramingConfig){
   const joistSize=cfg.framingSize as JoistSize;
-  return frameRectangle({widthIn:120,depthIn:120,topIn:cfg.top,ledger:true,joistSpacingIn:cfg.spacing as 12|16,joistSize,beam:{size:joistSize,plies:2}}).beamSpanLimitIn;
+  return frameRectangle(framingInput(cfg,{w:120,h:120},true,{beam:{size:joistSize,plies:2}})).beamSpanLimitIn;
 }
