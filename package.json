@@ -33,7 +33,7 @@
     "check:business-rendered": "python3 scripts/check-rendered-business-claims.py",
     "serve:deck-assistant": "tsx scripts/serve-deck-assistant.ts",
     "check:site": "tsx scripts/check-site-surface.ts && tsx scripts/check-site-rendering.ts && tsx scripts/check-site-readings.ts && tsx scripts/check-ground-fit.ts && tsx scripts/check-site-resolver.ts && tsx scripts/check-ground-fit-data.ts && tsx scripts/check-ground-fit-pricing.ts && tsx scripts/check-ground-fit-options.ts && tsx scripts/check-lawn-watertight.ts && tsx scripts/check-site-brief.ts && tsx scripts/check-fire-features.ts && tsx scripts/check-seat-walls.ts && tsx scripts/check-raised-beds.ts && tsx scripts/check-agent-site-commands.ts && tsx scripts/check-site-concepts.ts && tsx scripts/check-designer-ai.ts",
-    "check:landscape": "tsx scripts/check-landscape-objects.ts",
+    "check:landscape": "tsx scripts/check-landscape-objects.ts && tsx scripts/check-landscape-library.ts",
     "check:projects": "tsx scripts/check-project-bundle.ts && tsx scripts/check-supplier-ratebook.ts",
     "check:site-workflow": "tsx scripts/check-site-workflow.ts && tsx scripts/check-site-agent-edits.ts"
   },
