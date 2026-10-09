@@ -41,7 +41,7 @@ function mapsFor(set:Set,anisotropy:number):Promise<Maps>{
 }
 
 const VERTEX=/* glsl */`
-uniform float uRepeat;varying vec2 vHouseUv;flat varying vec2 vHouseShift;`;
+uniform float uRepeat;varying vec2 vHouseUv;flat varying vec2 vHouseShift;varying vec3 vHouseN;`;
 const VERTEX_UV=/* glsl */`
   {
   #ifdef USE_INSTANCING
@@ -54,14 +54,15 @@ const VERTEX_UV=/* glsl */`
     if(ext.y>ext.x)st=st.yx;
     vHouseUv=st/uRepeat;
     vHouseShift=vec2(fract(sin(dot(hseed,vec3(12.9898,78.233,37.719)))*43758.5453),fract(sin(dot(hseed,vec3(39.346,11.135,83.155)))*43758.5453));
+    vHouseN=normalize(normalMatrix*normal);
   }`;
 const FRAGMENT=/* glsl */`
 varying vec2 vHouseUv;flat varying vec2 vHouseShift;
 vec4 houseTex(sampler2D t){return textureGrad(t,vHouseUv+vHouseShift,dFdx(vHouseUv),dFdy(vHouseUv));}`;
 const FRAGMENT_RELIEF=/* glsl */`
 uniform sampler2D uRelief;uniform sampler2D uReliefRough;
-varying vec2 vHouseUv;flat varying vec2 vHouseShift;
-vec4 houseTex(sampler2D t){vec3 dcView=normalize(vViewPosition);float dcH=texture2D(uRelief,vHouseUv).a;float dcParallax=smoothstep(0.12,0.42,abs(dot(normalize(vNormal),dcView)));vec2 uv=vHouseUv+vHouseShift+dcView.xy*(dcH-.5)*.028*dcParallax;return textureGrad(t,uv,dFdx(vHouseUv),dFdy(vHouseUv));}`;
+varying vec2 vHouseUv;flat varying vec2 vHouseShift;varying vec3 vHouseN;
+vec4 houseTex(sampler2D t){vec3 dcView=normalize(vViewPosition);float dcH=texture2D(uRelief,vHouseUv).a;float dcParallax=smoothstep(0.12,0.42,abs(dot(normalize(vHouseN),dcView)));vec2 uv=vHouseUv+vHouseShift+dcView.xy*(dcH-.5)*.028*dcParallax;return textureGrad(t,uv,dFdx(vHouseUv),dFdy(vHouseUv));}`;
 const reliefKind=(surface:HouseSurface):DetailKind=>surface==='woodgrain'?'siding':surface==='rock'?'stone':surface==='stucco'?'slab':'paver';
 function chunk(name:string,from:string,to:string){
   const source=(THREE.ShaderChunk as Record<string,string>)[name];
