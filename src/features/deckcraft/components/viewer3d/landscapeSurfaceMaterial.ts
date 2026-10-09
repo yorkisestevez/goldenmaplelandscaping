@@ -31,7 +31,7 @@ function disposeMaps(maps:Maps){Object.values(maps).forEach(t=>t.dispose());}
 export function createLandscapeSurfaceMaterial(id:LandscapeAssetId,anisotropy=1){
  const p=landscapeSurface(id)!,mulch=p.type==='mulch',key=(mulch?'mulch':id)+':'+anisotropy;
  let entry=shared.get(key);if(!entry){entry={maps:makeMaps(mulch?'mulch-bed':id,anisotropy),materials:new Set(),listeners:new Set(),pending:new Set()};shared.set(key,entry);}const resource=entry;
- const material=new THREE.MeshStandardMaterial({color:id==='black-mulch-bed'?'#71685e':id==='cedar-mulch-bed'?'#ffce99':'#ffffff',...resource.maps,normalScale:new THREE.Vector2(p.type==='turf'?.28:id==='limestone-screenings-bed'?.14:.72,p.type==='turf'?.28:.72),roughness:1});
+ const material=new THREE.MeshStandardMaterial({color:id==='black-mulch-bed'?'#2a2622':id==='cedar-mulch-bed'?'#ffce99':'#ffffff',...resource.maps,normalScale:new THREE.Vector2(p.type==='turf'?.28:id==='limestone-screenings-bed'?.14:.72,p.type==='turf'?.28:.72),roughness:1});
  resource.materials.add(material);
  addMaterialPatch(material,{key:'ground-cover-stochastic-v1',apply:shader=>{
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>

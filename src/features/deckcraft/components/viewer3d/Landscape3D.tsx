@@ -8,7 +8,7 @@ import {useGLTF,useTexture} from '@react-three/drei';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import type {LandscapeObject,LandscapePoint} from '../../landscapeTypes';
-import {landscapeAsset} from '../../landscapeCatalogue';
+import {landscapeAsset,plantFoliageTint} from '../../landscapeCatalogue';
 import {activePuttingCups,landscapeBedAreas,landscapePlacement,landscapeRenderLods} from '../../landscapeModelRuntime';
 import {createSiteSurface,siteClip,siteSolidCells,sitePlaneHeight} from '../../siteSurfaceEngine';
 import {getTerrainConfig} from '../../yardSettings';
@@ -27,16 +27,29 @@ export function landscapeInstanceMatrix(data:DeckData,o:LandscapeObject,normaliz
  if(p.normal)q.premultiply(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(p.normal.x,p.normal.y,p.normal.z)));
  return new THREE.Matrix4().compose(new THREE.Vector3(p.x,p.y,p.z),q,new THREE.Vector3(o.widthIn/12,o.heightIn/12,o.depthIn/12)).multiply(normalization).multiply(source);
 }
+/** Steel landscape edging: 4 in tall, 1/8 in thick, following the bed outline in feet. */
+export function steelEdgingGeometry(points:THREE.Vector3[]){
+ const half=0.125/24,rise=4/12,positions:number[]=[];
+ const add=(a:THREE.Vector3,b:THREE.Vector3,c:THREE.Vector3)=>positions.push(a.x,a.y,a.z,b.x,b.y,b.z,c.x,c.y,c.z);
+ for(let i=0;i<points.length-1;i++){
+  const a=points[i],b=points[i+1],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<1e-6)continue;
+  const nx=-dz/len*half,nz=dx/len*half,at=(p:THREE.Vector3,s:number,y:number)=>new THREE.Vector3(p.x+nx*s,p.y+y,p.z+nz*s);
+  const a0=at(a,1,0),a1=at(a,-1,0),b0=at(b,1,0),b1=at(b,-1,0),a2=at(a,1,rise),a3=at(a,-1,rise),b2=at(b,1,rise),b3=at(b,-1,rise);
+  add(a0,b0,b2);add(a0,b2,a2);add(b1,a1,a3);add(b1,a3,b3);add(a2,b2,b3);add(a2,b3,a3);add(a1,b1,b0);add(a1,b0,a0);add(a1,a0,a2);add(a1,a2,a3);add(b0,b1,b3);add(b0,b3,b2);
+ }
+ const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.computeVertexNormals();return geometry;
+}
 function InstancePart({data,items,source,normalization,lod}:{data:DeckData;items:LandscapeObject[];source:THREE.Mesh;normalization:THREE.Matrix4;lod:number}){
  const q=useRenderQuality(),invalidate=useThree(s=>s.invalidate),original=Array.isArray(source.material)?source.material[0]:source.material;
  const material=useMemo(()=>original.clone(),[original]);useFixtureLit(material);
  const instance=useMemo(()=>new THREE.InstancedMesh(source.geometry,material,Math.max(1,items.length)),[source.geometry,material,items.length]);
  useEffect(()=>()=>{instance.dispose();},[instance]);useEffect(()=>()=>material.dispose(),[material]);
  useLayoutEffect(()=>{
-  items.forEach((o,i)=>instance.setMatrixAt(i,landscapeInstanceMatrix(data,o,normalization,source.matrixWorld)));instance.count=items.length;instance.instanceMatrix.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
+  const color=new THREE.Color();
+  items.forEach((o,i)=>{instance.setMatrixAt(i,landscapeInstanceMatrix(data,o,normalization,source.matrixWorld));instance.setColorAt(i,color.set(plantFoliageTint(o.speciesRecord?.id)));});instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
   instance.name='landscape-'+items[0]?.assetId+'-lod'+lod;instance.userData={landscapeIds:items.map(o=>o.id),pickPartIds:items.map(o=>'landscape/'+o.id),genericVisualProxy:true,unmeasuredElevationIds:items.filter(o=>!landscapePlacement(data,o).measured).map(o=>o.id)};
   instance.castShadow=q.tier!=='constrained'&&lod<2;instance.receiveShadow=true;
-  const standard=material as THREE.MeshStandardMaterial;for(const t of [standard.map,standard.normalMap,standard.roughnessMap,standard.metalnessMap])if(t){t.anisotropy=q.anisotropy;t.needsUpdate=true;}invalidate();
+  const standard=material as THREE.MeshStandardMaterial;if(standard.alphaTest>0){standard.transparent=false;standard.depthWrite=true;standard.side=THREE.DoubleSide;standard.alphaToCoverage=q.msaaSamples>0;standard.needsUpdate=true;}for(const t of [standard.map,standard.normalMap,standard.roughnessMap,standard.metalnessMap])if(t){t.anisotropy=q.anisotropy;t.needsUpdate=true;}invalidate();
  },[data,items,instance,source,normalization,lod,q,material,invalidate]);
  return <primitive object={instance} dispose={null}/>;
 }
@@ -53,9 +66,10 @@ export function landscapeBedGeometry(data:DeckData,polys:LandscapePoint[][],dept
 }
 function Bed({data,object,polys,material}:{data:DeckData;object:LandscapeObject;polys:LandscapePoint[][];material:THREE.Material}){
  const geometry=useMemo(()=>landscapeBedGeometry(data,polys,landscapeSurfaceDepth(object),object),[data,polys,object]);useEffect(()=>()=>geometry.dispose(),[geometry]);
+ const steel=useMemo(()=>new THREE.MeshStandardMaterial({color:'#3a3e42',metalness:.62,roughness:.42}),[]);useEffect(()=>()=>steel.dispose(),[steel]);
  const top=useMemo(()=>raisedBedTop(data,object),[data,object]),surfaceY=(xIn:number,zIn:number)=>top!==undefined?top/12:landscapePlacement(data,{...object,xIn,zIn}).y;
- const edges=useMemo(()=>polys.map(p=>{const points=[...p,p[0]].map(v=>new THREE.Vector3(v.x/12,surfaceY(v.x,v.z)+((landscapeSurfaceDepth(object))+.1)/12,v.z/12));return new THREE.BufferGeometry().setFromPoints(points);}),[data,polys,object,top]);useEffect(()=>()=>edges.forEach(g=>g.dispose()),[edges]);
- return <group name={'landscape-bed-'+object.id} userData={{landscapeIds:[object.id]}}><mesh geometry={geometry} material={material} receiveShadow dispose={null} userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id]}}/>{activePuttingCups(object,polys).map((cup,i)=>{const p=puttingCupWorld(object,cup),h=surfaceY(p.x,p.z)+(landscapeSurfaceDepth(object)+.09)/12;return <group key={i} position={[p.x/12,h,p.z/12]} userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id]}}><mesh rotation={[-Math.PI/2,0,0]}><circleGeometry args={[2.125/12,32]}/><meshStandardMaterial color="#242b22" roughness={.9}/></mesh><mesh position={[0,1.4,0]}><cylinderGeometry args={[.018,.018,2.8,8]}/><meshStandardMaterial color="#eee9dc"/></mesh><mesh position={[.2,2.65,0]}><planeGeometry args={[.4,.25]}/><meshStandardMaterial color="#c7ab58" side={THREE.DoubleSide}/></mesh></group>;})}{object.edging&&edges.map((g,i)=><lineLoop key={i} geometry={g}><lineBasicMaterial color="#675443"/></lineLoop>)}{top!==undefined&&<Suspense fallback={null}><RaisedBedFaces3D data={data} object={object} polys={polys}/></Suspense>}</group>;
+ const edges=useMemo(()=>polys.map(p=>{const points=[...p,p[0]].map(v=>new THREE.Vector3(v.x/12,surfaceY(v.x,v.z)+((landscapeSurfaceDepth(object))+.1)/12,v.z/12));return steelEdgingGeometry(points);}),[data,polys,object,top]);useEffect(()=>()=>edges.forEach(g=>g.dispose()),[edges]);
+ return <group name={'landscape-bed-'+object.id} userData={{landscapeIds:[object.id]}}><mesh geometry={geometry} material={material} receiveShadow dispose={null} userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id]}}/>{activePuttingCups(object,polys).map((cup,i)=>{const p=puttingCupWorld(object,cup),h=surfaceY(p.x,p.z)+(landscapeSurfaceDepth(object)+.09)/12;return <group key={i} position={[p.x/12,h,p.z/12]} userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id]}}><mesh rotation={[-Math.PI/2,0,0]}><circleGeometry args={[2.125/12,32]}/><meshStandardMaterial color="#242b22" roughness={.9}/></mesh><mesh position={[0,1.4,0]}><cylinderGeometry args={[.018,.018,2.8,8]}/><meshStandardMaterial color="#eee9dc"/></mesh><mesh position={[.2,2.65,0]}><planeGeometry args={[.4,.25]}/><meshStandardMaterial color="#c7ab58" side={THREE.DoubleSide}/></mesh></group>;})}{object.edging&&edges.map((g,i)=><mesh key={i} geometry={g} material={steel} castShadow receiveShadow/>)}{top!==undefined&&<Suspense fallback={null}><RaisedBedFaces3D data={data} object={object} polys={polys}/></Suspense>}</group>;
 }
 function SurfaceBed({data,object,polys}:{data:DeckData;object:LandscapeObject;polys:LandscapePoint[][]}){
  const q=useRenderQuality(),invalidate=useThree(s=>s.invalidate),resource=useMemo(()=>createLandscapeSurfaceMaterial(object.assetId,q.anisotropy),[object.assetId,q.anisotropy]);useFixtureLit(resource.material);
