@@ -4,7 +4,7 @@ import sharp from 'sharp';
 import * as THREE from 'three';
 import ts from 'typescript';
 import {SCENE_LOOK} from '../src/features/deckcraft/components/viewer3d/sceneLook';
-import {SHOWCASE_BLOOM,SHOWCASE_STILL_SAMPLES,daySkyLinear,gradeLinear} from '../src/features/deckcraft/components/viewer3d/showcaseGrade';
+import {SHOWCASE_BLOOM,SHOWCASE_STILL_SAMPLES,daySkyLinear,goldenSkyLinear,gradeLinear} from '../src/features/deckcraft/components/viewer3d/showcaseGrade';
 import {buildSurfaceDetail,type DetailKind} from '../src/features/deckcraft/components/viewer3d/detailMaps';
 import {cameraSetback} from '../src/features/deckcraft/components/viewer3d/cameraFraming';
 import {railGeometry} from '../src/features/deckcraft/components/viewer3d/EasedRails';
@@ -62,7 +62,10 @@ ok(SHOWCASE_BLOOM.threshold>1&&SHOWCASE_BLOOM.strength<SCENE_LOOK.bloom.strength
   const warm=gradeLinear([.7,.55,.3],'golden');ok(warm[0]>warm[2],'Golden hour warms the highlights');
   const cyan:[number,number,number]=[.03,.073,.119],lifted=daySkyLinear(cyan,4,1),plain=daySkyLinear(cyan,4,0);
   ok(lifted[0]>0.14&&lifted[0]>lifted[2]*0.35,'Showcase day sky keeps red above the neutral toe on a cyan photograph');
-  ok(Math.abs(plain[0]-cyan[0]*4)<1e-6&&Math.abs(plain[2]-cyan[2]*4)<1e-6,'Editor, golden and night skies stay on the photograph');
+  ok(Math.abs(plain[0]-cyan[0]*4)<1e-6&&Math.abs(plain[2]-cyan[2]*4)<1e-6,'Editor and night skies stay on the photograph');
+  const golden=gradeLinear(goldenSkyLinear(cyan,4,1),'golden'),goldenOff=goldenSkyLinear(cyan,4,0);
+  ok(golden[0]>golden[2]*1.5,'Showcase golden hour warms a cyan sky');
+  ok(Math.abs(goldenOff[0]-cyan[0]*4)<1e-6,'The golden sky recolor is off for day, night and the editor');
   for(const kind of ['paver','slab','cap','stone','deck','siding'] as DetailKind[]){
     const map=buildSurfaceDetail(kind,32);let sum=0,z=0,facesOut=true;const n=map.size*map.size;
     for(let i=0;i<n;i++){sum+=map.albedo[i*4];const b=map.normal[i*4+2];z+=b;if(b<128)facesOut=false;}
@@ -250,7 +253,7 @@ ok(assetBytes<=15*1024*1024&&!readdirSync(ASSETS).some(f=>f.startsWith('grass008
   ok(viewer3.includes('<Suspense fallback={<StudioLight evening={evening}/>}><Sky3D evening={evening}/></Suspense>')&&viewer3.includes('near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar'),'The real sky loads behind the studio light, and the camera sees to the sky dome');
   ok(environment3.includes('castShadow={!evening}')&&environment3.includes('SUN.clone().multiplyScalar(radius)')&&!environment3.includes('hemisphereLight'),'The scene’s sun takes the HDRI’s place (none in the evening), and no hemisphere light doubles the sky');
   ok(sky.includes('name="sky-dome"')&&sky.includes('depthWrite:false,fog:false')&&sky.includes('scene.fog.color.setRGB(')&&viewer3.includes('<fogExp2 attach="fog" args={[')&&sky.includes('preloadEvening()')&&sky.includes("fallback={<SkyOf lighting=\"day\" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}"),'The dome draws behind everything without fog; one haze lasts the viewer’s life (adding fog recompiles every material) and the sky only recolours it; the evening sky preloads once the day is in, and the dimmed day sky stands in while it loads');
-  ok(sky.includes('lead*${DAY_SKY_RED}')&&sky.includes('${DAY_SKY_BLEND}*skyish')&&sky.includes('${DAY_SKY_GAIN}')&&sky.includes("dayBlue=graded&&flags.hour!=='golden'"),'Showcase day recolors the sky after exposure; golden hour keeps the photograph and warms it in the grade');
+  ok(sky.includes('lead*${DAY_SKY_RED}')&&sky.includes('${DAY_SKY_BLEND}*skyish')&&sky.includes('${DAY_SKY_GAIN}')&&sky.includes('${GOLDEN_SKY_GAIN}')&&sky.includes("dayBlue=graded&&flags.hour!=='golden'")&&sky.includes("goldenSky=graded&&flags.hour==='golden'"),'Showcase day recolors the sky after exposure, and golden hour warms the dome before the grade');
   ok(SCENE_LOOK.sky.domeRadiusFt<SCENE_LOOK.sky.cameraFar&&Math.exp(-((100*SCENE_LOOK.sky.fogDensity)**2))>.985,'The dome sits inside the far plane, and haze stays under 1.5% at 100 ft');
 }
 // The lawn: the chunks it patches, a natural mean colour, and ground that faces up all the way to the horizon.

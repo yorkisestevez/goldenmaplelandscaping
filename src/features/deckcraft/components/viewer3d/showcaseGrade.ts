@@ -29,13 +29,19 @@ export const SHOWCASE_SKY_FILL=0.5;
  * Daylight chromaticity for the showcase sky dome, applied after panorama exposure.
  * The photographed upper sky is cyan enough that Neutral tone mapping prints its red as 0.
  * Blend moves a blue-leading pixel toward these fractions of its blue lead and keeps the photo's luminance.
- * Golden hour, night and the editor pass rich = 0 and stay on the photograph.
+ * Night and the editor pass rich = 0 and stay on the photograph. Golden hour uses its own warm sky.
  */
 export const DAY_SKY_BLEND=0.55;
 export const DAY_SKY_RED=0.55;
 export const DAY_SKY_GREEN=0.74;
 /** Extra panorama exposure for showcase day only. The photographed sky sits a stop under a print. */
 export const DAY_SKY_GAIN=1.5;
+/** Golden-hour dome: a warm chromaticity and a lift, after exposure, before the filmic grade. */
+export const GOLDEN_SKY_GAIN=1.55;
+export const GOLDEN_SKY_BLEND=0.5;
+export const GOLDEN_SKY_RED=1.12;
+export const GOLDEN_SKY_GREEN=0.86;
+export const GOLDEN_SKY_BLUE=0.62;
 
 function smooth01(edge0:number,edge1:number,x:number){const t=x<=edge0?0:x>=edge1?1:(x-edge0)/(edge1-edge0);return t*t*(3-2*t);}
 /** The dome shader's daylight recolor. `rich` is 1 for showcase day and 0 everywhere else. */
@@ -47,6 +53,16 @@ export function daySkyLinear(rgb:readonly[number,number,number],strength:number,
   const naturalL=Math.max(.2126*natural[0]+.7152*natural[1]+.0722*natural[2],1e-4);
   const amt=DAY_SKY_BLEND*smooth01(0,.06,e[2]-e[1])*rich;
   return e.map((v,i)=>v+(natural[i]*luma/naturalL-v)*amt) as [number,number,number];
+}
+/** The dome shader's golden-hour recolor. `warm` is 1 only for showcase golden hour. */
+export function goldenSkyLinear(rgb:readonly[number,number,number],strength:number,warm=1):[number,number,number]{
+  const gain=1+(GOLDEN_SKY_GAIN-1)*warm;
+  const e:[number,number,number]=[Math.max(0,rgb[0])*strength*gain,Math.max(0,rgb[1])*strength*gain,Math.max(0,rgb[2])*strength*gain];
+  const luma=.2126*e[0]+.7152*e[1]+.0722*e[2];
+  const tone:[number,number,number]=[luma*GOLDEN_SKY_RED,luma*GOLDEN_SKY_GREEN,luma*GOLDEN_SKY_BLUE];
+  const toneL=Math.max(.2126*tone[0]+.7152*tone[1]+.0722*tone[2],1e-4);
+  const amt=GOLDEN_SKY_BLEND*warm;
+  return e.map((v,i)=>v+(tone[i]*luma/toneL-v)*amt) as [number,number,number];
 }
 
 export function presentationHour(evening:boolean,hour:ShowcaseHour):ShowcaseHour{
