@@ -1,4 +1,4 @@
-import {Suspense,useEffect,useMemo} from 'react';
+import {Suspense,useEffect,useMemo,useSyncExternalStore} from 'react';
 import {useThree} from '@react-three/fiber';
 import {Environment,Lightformer,useEnvironment} from '@react-three/drei';
 import * as THREE from 'three';
@@ -6,6 +6,7 @@ import {SKY_DATA as SKY,skyStrength,skyYaw,VISIBLE_SKY_MIN_DEG,visibleSkyStrengt
 import dayLighting from './assets/sky/sky-day-ibl.hdr?url';
 import eveningLighting from './assets/sky/sky-evening-ibl.hdr?url';
 import {SCENE_LOOK} from './sceneLook';
+import {SHOWCASE_FOG_DENSITY,getShowcaseFlags,showcaseGolden,subscribeShowcase} from './showcaseMode';
 
 /**
  * The real sky (Real Life G3): a CC0 HDRI supplies environment fill. An extracted sun, or a neutral key replacing
@@ -20,32 +21,35 @@ const DOME_VERTEX=/* glsl */`
 varying vec3 vDir;
 void main(){vDir=position;vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.);gl_Position=p.xyww;}`;
 const DOME_FRAGMENT=/* glsl */`
-uniform sampler2D lighting;uniform mat3 turn;uniform float minimumElevation,strength;
+uniform sampler2D lighting;uniform mat3 turn;uniform float minimumElevation,strength,uHorizonBand;
 varying vec3 vDir;
 const float PI=3.141592653589793;
 void main(){
   vec3 d=normalize(turn*vDir);
   float el=asin(clamp(d.y,-1.,1.)),u=atan(d.z,d.x)/(2.*PI)+.5,seam=fract(u+.5);
   // The original photo's upper sky becomes the visible hemisphere. The HDRI
-  // that illuminates and reflects from the design is unchanged.
-  float displayed=max(0.,el),sampleEl=minimumElevation+displayed*(1.-minimumElevation/(PI*.5)),v=sampleEl/PI+.5;
+  // that illuminates and reflects from the design is unchanged. Neighbourhood
+  // mode keeps that same clean sample: the photo's ground ring is a dark flat
+  // band with vertical seams, and a corner camera would otherwise show it.
+  float displayed=max(0.,el),cleanEl=minimumElevation+displayed*(1.-minimumElevation/(PI*.5));
+  float sampleEl=cleanEl+uHorizonBand*0.,v=sampleEl/PI+.5;
   float dux=abs(dFdx(u))<abs(dFdx(seam))?dFdx(u):dFdx(seam),duy=abs(dFdy(u))<abs(dFdy(seam))?dFdy(u):dFdy(seam);
   vec3 sky=textureGrad(lighting,vec2(u,v),vec2(dux,dFdx(v)),vec2(duy,dFdy(v))).rgb;
   gl_FragColor=vec4(sky*strength,1.);
 }`;
 
 /** The clean photographed sky, following the camera and drawn behind everything. */
-function SkyDome({lighting,yaw,strength}:{lighting:THREE.Texture;yaw:number;strength:number}){
+function SkyDome({lighting,yaw,strength,horizonBand}:{lighting:THREE.Texture;yaw:number;strength:number;horizonBand:boolean}){
   const material=useMemo(()=>new THREE.ShaderMaterial({
-    uniforms:{lighting:{value:null},turn:{value:new THREE.Matrix3()},minimumElevation:{value:VISIBLE_SKY_MIN_DEG*Math.PI/180},strength:{value:1}},
+    uniforms:{lighting:{value:null},turn:{value:new THREE.Matrix3()},minimumElevation:{value:VISIBLE_SKY_MIN_DEG*Math.PI/180},strength:{value:1},uHorizonBand:{value:0}},
     vertexShader:DOME_VERTEX,fragmentShader:DOME_FRAGMENT,side:THREE.BackSide,depthWrite:false,fog:false,
   }),[]);
   useEffect(()=>()=>material.dispose(),[material]);
-  const u=material.uniforms;u.lighting.value=lighting;u.strength.value=strength;
+  const u=material.uniforms;u.lighting.value=lighting;u.strength.value=strength;u.uHorizonBand.value=horizonBand?1:0;
   u.turn.value.setFromMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0,yaw,0))).transpose();
   return <mesh name="sky-dome" material={material} frustumCulled={false} renderOrder={-1} raycast={()=>null}
     ref={mesh=>{if(mesh)mesh.onBeforeRender=(_r,_s,camera)=>{mesh.position.copy(camera.position);mesh.updateMatrixWorld();};}}>
-    <sphereGeometry args={[LOOK.domeRadiusFt,64,32]}/>
+    <sphereGeometry args={[LOOK.domeRadiusFt,128,64]}/>
   </mesh>;
 }
 
@@ -54,12 +58,13 @@ function SkyDome({lighting,yaw,strength}:{lighting:THREE.Texture;yaw:number;stre
 function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyStrength(lighting).environment}:{lighting:Lighting;strength?:number;illumination?:number}){
   const data=SKY[lighting],yaw=skyYaw(lighting);
   const map=useEnvironment({files:lighting==='evening'?eveningLighting:dayLighting});
-  const scene=useThree(s=>s.scene),invalidate=useThree(s=>s.invalidate),horizon=useMemo(()=>visibleSkyHorizon(map)??data.horizonColor,[map,data]);
+  const scene=useThree(s=>s.scene),invalidate=useThree(s=>s.invalidate),context=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().context,()=>false);
+  const horizon=useMemo(()=>(context?visibleSkyHorizon(map,0):visibleSkyHorizon(map))??data.horizonColor,[map,data,context]);
   // The viewer keeps one fog for its life (adding or removing fog recompiles every material); the sky only recolours it.
-  useEffect(()=>{if(scene.fog){scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);invalidate();}},[scene,horizon,strength,invalidate]);
+  useEffect(()=>{if(!scene.fog)return;scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);if(scene.fog instanceof THREE.FogExp2)scene.fog.density=context?SHOWCASE_FOG_DENSITY:SCENE_LOOK.sky.fogDensity;invalidate();},[scene,horizon,strength,invalidate,context]);
   return <>
     <Environment map={map} environmentIntensity={illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
-    <SkyDome lighting={map} yaw={yaw} strength={strength}/>
+    <SkyDome lighting={map} yaw={yaw} strength={strength} horizonBand={context}/>
   </>;
 }
 
@@ -67,7 +72,9 @@ function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyS
  * loads behind the day sky dimmed, so switching to Night never drops back to the studio light. */
 export default function Sky3D({evening}:{evening:boolean}){
   useEffect(()=>{preloadEvening();},[]);
-  return evening?<Suspense fallback={<SkyOf lighting="day" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}><SkyOf lighting="evening"/></Suspense>:<SkyOf lighting="day"/>;
+  const golden=useSyncExternalStore(subscribeShowcase,showcaseGolden,()=>false);
+  const dayFill=skyStrength('day').environment*(golden&&!evening?0.72:1);
+  return evening?<Suspense fallback={<SkyOf lighting="day" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}><SkyOf lighting="evening"/></Suspense>:<SkyOf lighting="day" illumination={dayFill}/>;
 }
 // The day sky loads with the viewer; the evening's follows once the day's is in (preloadEvening), so switching to
 // Night (and the proposal's night pictures) rarely waits, without a phone fetching both skies up front.

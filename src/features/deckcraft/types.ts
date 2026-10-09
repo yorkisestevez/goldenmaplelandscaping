@@ -415,7 +415,8 @@ export interface DeckData {
   // Add-ons
   lightingSystem: {
     /** `auto` marks quantities kept in step with the modeled posts, treads or screen posts. */
-    selectedItems: { productId: string; qty: number; zone?:LightingZone; auto?:true }[];
+    /** `places` pins each fixture in model inches. Absent, the zone's own layout is used. */
+    selectedItems: { productId: string; qty: number; zone?:LightingZone; auto?:true; places?:{x:number;z:number;angle:number;y?:number}[] }[];
     wireDistance: number;
   };
   /** Simple post/stair lighting intent; kept separate so it survives a zero count. */

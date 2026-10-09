@@ -1,5 +1,5 @@
 {
-  "created": "2026-09-30",
+  "created": "2026-10-09",
   "license": "CC0-1.0",
   "assets": [
     {
@@ -319,79 +319,99 @@
     },
     {
       "id": "rounded-shrub",
-      "sourceId": "shrub_02",
-      "sourceURL": "https://polyhaven.com/a/shrub_02",
+      "sourceId": "tree_small_02",
+      "sourceURL": "https://polyhaven.com/a/tree_small_02",
       "license": "CC0-1.0",
       "licenseURL": "https://polyhaven.com/license",
-      "selectedSourceNode": 0,
       "lods": [
         {
           "uri": "rounded-shrub-lod0.glb",
-          "bytes": 466424,
-          "sha256": "ed30314bedc007f36133ddfab8f0917a4a6378386bfe5d531b94d7552c1e6ad5",
-          "triangles": 7590,
+          "bytes": 297264,
+          "sha256": "4796c8287b6c39c9a5a415419b9f9c4c162f37c068b12ee4ed752752c1c922ee",
+          "triangles": 2080,
           "bounds": {
             "min": [
-              -0.6560454214198409,
-              -0.000009478395707973597,
-              -0.8205362429881319
+              -0.6372574382442998,
+              -0.18762313243787368,
+              -0.574519098009958
             ],
             "max": [
-              0.6560132774493473,
-              1.6889765922069806,
-              0.8205265030626454
-            ]
-          },
-          "textureLimit": 512,
-          "foliage": []
-        },
-        {
-          "uri": "rounded-shrub-lod1.glb",
-          "bytes": 248652,
-          "sha256": "e71b46298454e560343cc6fa3f2770fd0c99477fcf4c350738ac90cd8b75d88b",
-          "triangles": 7590,
-          "bounds": {
-            "min": [
-              -0.6560454214198409,
-              -0.000009478395707973597,
-              -0.8205362429881319
-            ],
-            "max": [
-              0.6560132774493473,
-              1.6889765922069806,
-              0.8205265030626454
+              0.6242318948938279,
+              1.1246500968801418,
+              0.6848809383296345
             ]
           },
           "textureLimit": 256,
-          "foliage": []
+          "foliage": [
+            {
+              "cards": 520,
+              "triangles": 2080,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
         },
         {
-          "uri": "rounded-shrub-lod2.glb",
-          "bytes": 181844,
-          "sha256": "23a979f0452479775a1d71b145b1fc79a7db830e403c12a151a0adeef8db0908",
-          "triangles": 7590,
+          "uri": "rounded-shrub-lod1.glb",
+          "bytes": 116908,
+          "sha256": "43b4515f66ee078d723419f9dbb32562a4be83edb8f713f3dfab1d9df254b973",
+          "triangles": 880,
           "bounds": {
             "min": [
-              -0.6560454214198409,
-              -0.000009478395707973597,
-              -0.8205362429881319
+              -0.5748824977470619,
+              -0.17062259887445774,
+              -0.5753483228910974
             ],
             "max": [
-              0.6560132774493473,
-              1.6889765922069806,
-              0.8205265030626454
+              0.7087265129678089,
+              1.1163602331616436,
+              0.7592676888615539
             ]
           },
           "textureLimit": 128,
-          "foliage": []
+          "foliage": [
+            {
+              "cards": 220,
+              "triangles": 880,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
+        },
+        {
+          "uri": "rounded-shrub-lod2.glb",
+          "bytes": 46060,
+          "sha256": "728a9407baf25614c09db5f947fa52bf13a924db631e73626899b735107565ef",
+          "triangles": 360,
+          "bounds": {
+            "min": [
+              -0.5998865715702578,
+              -0.14672071086172309,
+              -0.4592832403604968
+            ],
+            "max": [
+              0.4927501175941042,
+              1.1096174112878046,
+              0.6736808717072919
+            ]
+          },
+          "textureLimit": 64,
+          "foliage": [
+            {
+              "cards": 90,
+              "triangles": 360,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": true
+            }
+          ]
         }
       ],
       "genericVisualProxy": true,
-      "sourceDescriptor": {
-        "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/shrub_02/shrub_02_1k.gltf",
-        "sha256": "99de0a70fe88ad414615cc8d8e020617c8512e2abfe08b911b153a6fcc40d93e",
-        "bytes": 8083
-      }
+      "library": "plant-v2",
+      "note": "Alpha-tested photographed cards. Not a nursery SKU."
     },
     {
       "id": "grass-clump",
@@ -687,6 +707,777 @@
         "sha256": "1b718deb56a9f07b260a5f95926fb7caa5fd27918cacca283414c840e46415f2",
         "bytes": 6826
       }
+    },
+    {
+      "id": "hedge-shrub",
+      "sourceId": "fir_tree_01",
+      "sourceURL": "https://polyhaven.com/a/fir_tree_01",
+      "license": "CC0-1.0",
+      "licenseURL": "https://polyhaven.com/license",
+      "lods": [
+        {
+          "uri": "hedge-shrub-lod0.glb",
+          "bytes": 367416,
+          "sha256": "11dc0d1e3b4fc23954c4f6be3735a67a90dc6f371baab8c11a78ae4adbc20eb8",
+          "triangles": 3120,
+          "bounds": {
+            "min": [
+              -0.4995856169307782,
+              -0.14991852122438173,
+              -0.495901519076004
+            ],
+            "max": [
+              0.5099318025992258,
+              1.1224843314183557,
+              0.4981063818549945
+            ]
+          },
+          "textureLimit": 256,
+          "foliage": [
+            {
+              "cards": 780,
+              "triangles": 3120,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
+        },
+        {
+          "uri": "hedge-shrub-lod1.glb",
+          "bytes": 136368,
+          "sha256": "13b0b6db89434b2fb917876bbb5afadd9c80ab30da514546b986879f61cc5a9b",
+          "triangles": 1200,
+          "bounds": {
+            "min": [
+              -0.46750698602039475,
+              -0.12807069924179573,
+              -0.4560729650766161
+            ],
+            "max": [
+              0.5327500531036327,
+              1.1328825004001701,
+              0.514530258864141
+            ]
+          },
+          "textureLimit": 128,
+          "foliage": [
+            {
+              "cards": 300,
+              "triangles": 1200,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
+        },
+        {
+          "uri": "hedge-shrub-lod2.glb",
+          "bytes": 53544,
+          "sha256": "3f10710e9815a98ad0aa7bdd9d5620d6834bce6c0526e8dd8f9eb43d5f18e05c",
+          "triangles": 480,
+          "bounds": {
+            "min": [
+              -0.48187742532975314,
+              -0.12872322967810898,
+              -0.3965226045864509
+            ],
+            "max": [
+              0.5170434651957821,
+              1.147840355282917,
+              0.4422722218425353
+            ]
+          },
+          "textureLimit": 64,
+          "foliage": [
+            {
+              "cards": 120,
+              "triangles": 480,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": true
+            }
+          ]
+        }
+      ],
+      "genericVisualProxy": true,
+      "library": "plant-v2",
+      "note": "Alpha-tested photographed cards. Not a nursery SKU."
+    },
+    {
+      "id": "evergreen-shrub",
+      "sourceId": "fir_tree_01",
+      "sourceURL": "https://polyhaven.com/a/fir_tree_01",
+      "license": "CC0-1.0",
+      "licenseURL": "https://polyhaven.com/license",
+      "lods": [
+        {
+          "uri": "evergreen-shrub-lod0.glb",
+          "bytes": 314780,
+          "sha256": "0cbfab3ff2edf4e976ee52dce2b37a7d047e6f9405093815e0139a8a2cbb0f26",
+          "triangles": 2560,
+          "bounds": {
+            "min": [
+              -0.5788250819293036,
+              -0.1316669451669739,
+              -0.578478169549495
+            ],
+            "max": [
+              0.5834344617473552,
+              1.0865855148219463,
+              0.5990806965544052
+            ]
+          },
+          "textureLimit": 256,
+          "foliage": [
+            {
+              "cards": 640,
+              "triangles": 2560,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
+        },
+        {
+          "uri": "evergreen-shrub-lod1.glb",
+          "bytes": 113808,
+          "sha256": "0d95d053c5404895391af481468fcc8e096fc6166ea53757a0931336be42d9b5",
+          "triangles": 960,
+          "bounds": {
+            "min": [
+              -0.5488384733300695,
+              -0.11664149490307213,
+              -0.5932673886044277
+            ],
+            "max": [
+              0.5789413112159274,
+              1.0756874943261456,
+              0.5744726320920955
+            ]
+          },
+          "textureLimit": 128,
+          "foliage": [
+            {
+              "cards": 240,
+              "triangles": 960,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
+        },
+        {
+          "uri": "evergreen-shrub-lod2.glb",
+          "bytes": 46024,
+          "sha256": "6e43640df1ce3287f94f812b2a2e07983172e022e36e4cd81688052eb62c6b26",
+          "triangles": 400,
+          "bounds": {
+            "min": [
+              -0.4827831142872267,
+              -0.10265373540496457,
+              -0.5945985927580365
+            ],
+            "max": [
+              0.5400175454147329,
+              1.0442045696253457,
+              0.5331950766411363
+            ]
+          },
+          "textureLimit": 64,
+          "foliage": [
+            {
+              "cards": 100,
+              "triangles": 400,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": true
+            }
+          ]
+        }
+      ],
+      "genericVisualProxy": true,
+      "library": "plant-v2",
+      "note": "Alpha-tested photographed cards. Not a nursery SKU."
+    },
+    {
+      "id": "pine-tree",
+      "sourceId": "fir_tree_01",
+      "sourceURL": "https://polyhaven.com/a/fir_tree_01",
+      "license": "CC0-1.0",
+      "licenseURL": "https://polyhaven.com/license",
+      "lods": [
+        {
+          "uri": "pine-tree-lod0.glb",
+          "bytes": 339292,
+          "sha256": "5101c9fd9276e1785b9bf02dc288bce109bbf52d15e85ec325edc2e5bf5c03f1",
+          "triangles": 2832,
+          "bounds": {
+            "min": [
+              -0.4331542564665572,
+              -0.0498228558733311,
+              -0.5044395247221338
+            ],
+            "max": [
+              0.500403353516549,
+              1.1998726348985036,
+              0.4826785509431611
+            ]
+          },
+          "textureLimit": 256,
+          "foliage": [
+            {
+              "cards": 700,
+              "triangles": 2800,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
+        },
+        {
+          "uri": "pine-tree-lod1.glb",
+          "bytes": 123276,
+          "sha256": "193b258015b745c3447ec2521e0829a2bc23aac7534a3f056f27670a9d4de61b",
+          "triangles": 1072,
+          "bounds": {
+            "min": [
+              -0.4751696915232835,
+              -0.032784733590495385,
+              -0.5036652524491513
+            ],
+            "max": [
+              0.45606076911082255,
+              1.2049458068829924,
+              0.4583940960591161
+            ]
+          },
+          "textureLimit": 128,
+          "foliage": [
+            {
+              "cards": 260,
+              "triangles": 1040,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
+        },
+        {
+          "uri": "pine-tree-lod2.glb",
+          "bytes": 46016,
+          "sha256": "031cd7b5ed41f2d34956a9dba79d8bfae1f622156db32f28acc6df112baf6c6e",
+          "triangles": 400,
+          "bounds": {
+            "min": [
+              -0.4292509500673576,
+              -0.035720006059654585,
+              -0.42945352810324855
+            ],
+            "max": [
+              0.4376058144145619,
+              1.2038478333835745,
+              0.4480102643894932
+            ]
+          },
+          "textureLimit": 64,
+          "foliage": [
+            {
+              "cards": 100,
+              "triangles": 400,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": true
+            }
+          ]
+        }
+      ],
+      "genericVisualProxy": true,
+      "library": "plant-v2",
+      "note": "Alpha-tested photographed cards. Not a nursery SKU."
+    },
+    {
+      "id": "hosta-clump",
+      "sourceId": "tree_small_02",
+      "sourceURL": "https://polyhaven.com/a/tree_small_02",
+      "license": "CC0-1.0",
+      "licenseURL": "https://polyhaven.com/license",
+      "lods": [
+        {
+          "uri": "hosta-clump-lod0.glb",
+          "bytes": 119776,
+          "sha256": "b3355e95d777c45f5673916630cfc46c4cdd296180d0111ea25fd8359c484f3f",
+          "triangles": 192,
+          "bounds": {
+            "min": [
+              -0.6630929617735881,
+              -0.02257047663859167,
+              -0.6555624464677328
+            ],
+            "max": [
+              0.6790275387424798,
+              0.7167857450170774,
+              0.7740681159397281
+            ]
+          },
+          "textureLimit": 256,
+          "foliage": [
+            {
+              "cards": 48,
+              "triangles": 192,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
+        },
+        {
+          "uri": "hosta-clump-lod1.glb",
+          "bytes": 42444,
+          "sha256": "b13a5875cfb2bfb7fedc388f20ff191ee396dfa1d7a5f94bf6a8d9f5c189612d",
+          "triangles": 88,
+          "bounds": {
+            "min": [
+              -0.5327839411837788,
+              -0.040263509658735645,
+              -0.6828476889830345
+            ],
+            "max": [
+              0.55672198092436,
+              0.6518924946793073,
+              0.6515850447937447
+            ]
+          },
+          "textureLimit": 128,
+          "foliage": [
+            {
+              "cards": 22,
+              "triangles": 88,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
+        },
+        {
+          "uri": "hosta-clump-lod2.glb",
+          "bytes": 15964,
+          "sha256": "372fa0d87dc4c8f38dbcb28cb961817c7514bfd5820db02c88156c51273f777c",
+          "triangles": 40,
+          "bounds": {
+            "min": [
+              -0.6624317115801179,
+              -0.00907511960162892,
+              -0.6019155950279009
+            ],
+            "max": [
+              0.6973977763548697,
+              0.655356726841899,
+              0.5876515091823199
+            ]
+          },
+          "textureLimit": 64,
+          "foliage": [
+            {
+              "cards": 10,
+              "triangles": 40,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": true
+            }
+          ]
+        }
+      ],
+      "genericVisualProxy": true,
+      "library": "plant-v2",
+      "note": "Alpha-tested photographed cards. Not a nursery SKU."
+    },
+    {
+      "id": "reed-grass",
+      "sourceId": "grass_medium_01",
+      "sourceURL": "https://polyhaven.com/a/grass_medium_01",
+      "license": "CC0-1.0",
+      "licenseURL": "https://polyhaven.com/license",
+      "lods": [
+        {
+          "uri": "reed-grass-lod0.glb",
+          "bytes": 189704,
+          "sha256": "bacf47d20830b05733bd4984af4af056fb2dec38f260c8f549ccb676959e1325",
+          "triangles": 880,
+          "bounds": {
+            "min": [
+              -0.370849460541213,
+              -0.8063850391310592,
+              -0.3763653070888078
+            ],
+            "max": [
+              0.3127642753078004,
+              1.1152926734221178,
+              0.4116615269596595
+            ]
+          },
+          "textureLimit": 256,
+          "foliage": [
+            {
+              "cards": 220,
+              "triangles": 880,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
+        },
+        {
+          "uri": "reed-grass-lod1.glb",
+          "bytes": 64792,
+          "sha256": "8b65279d677df698a8860631dbbade8fde5e7835a1b5f5ca4ff5acd26b5d03dd",
+          "triangles": 320,
+          "bounds": {
+            "min": [
+              -0.3129159343051993,
+              -0.8140171109136277,
+              -0.3371652540576151
+            ],
+            "max": [
+              0.38088562056718345,
+              1.094578333230324,
+              0.38496244229821924
+            ]
+          },
+          "textureLimit": 128,
+          "foliage": [
+            {
+              "cards": 80,
+              "triangles": 320,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false
+            }
+          ]
+        },
+        {
+          "uri": "reed-grass-lod2.glb",
+          "bytes": 23784,
+          "sha256": "fb79093b8659aacf53d9d2c0b784a861ff7ce09d1a899aca423dc9f559385a46",
+          "triangles": 128,
+          "bounds": {
+            "min": [
+              -0.36982870332827156,
+              -0.7931273292247518,
+              -0.3882812960805624
+            ],
+            "max": [
+              0.3641459974097808,
+              0.9978579576579903,
+              0.265838440106155
+            ]
+          },
+          "textureLimit": 64,
+          "foliage": [
+            {
+              "cards": 32,
+              "triangles": 128,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": true
+            }
+          ]
+        }
+      ],
+      "genericVisualProxy": true,
+      "library": "plant-v2",
+      "note": "Alpha-tested photographed cards. Not a nursery SKU."
+    },
+    {
+      "id": "fern-clump",
+      "sourceId": "fern_02",
+      "sourceURL": "https://polyhaven.com/a/fern_02",
+      "license": "CC0-1.0",
+      "licenseURL": "https://polyhaven.com/license",
+      "selectedSourceNode": 0,
+      "lods": [
+        {
+          "uri": "fern-clump-lod0.glb",
+          "bytes": 321376,
+          "sha256": "26dbcf4c08e519eb6ecd7d3f692a6ed2f25cb619d991c573e67b5c2edf0272c6",
+          "triangles": 2384,
+          "bounds": {
+            "min": [
+              -0.5281425714492798,
+              -0.030510280281305313,
+              -0.421874463558197
+            ],
+            "max": [
+              0.4616048336029053,
+              0.39718443155288696,
+              0.4718152582645416
+            ]
+          },
+          "textureLimit": 512,
+          "foliage": [
+            {
+              "triangles": 2384,
+              "alphaMode": "OPAQUE",
+              "alphaCutoff": 0,
+              "impostor": false,
+              "selectedSourceNode": 0
+            }
+          ]
+        },
+        {
+          "uri": "fern-clump-lod1.glb",
+          "bytes": 134692,
+          "sha256": "8eb7b0e6cbf4a34615e81c5da054d5cd9a479e3d16aa2ef4fa8c9cb6179fb811",
+          "triangles": 2239,
+          "bounds": {
+            "min": [
+              -0.5281425714492798,
+              -0.030510280281305313,
+              -0.41540399193763733
+            ],
+            "max": [
+              0.4616048336029053,
+              0.39718443155288696,
+              0.4718152582645416
+            ]
+          },
+          "textureLimit": 256,
+          "foliage": [
+            {
+              "triangles": 2239,
+              "alphaMode": "OPAQUE",
+              "alphaCutoff": 0,
+              "impostor": false,
+              "selectedSourceNode": 0
+            }
+          ]
+        },
+        {
+          "uri": "fern-clump-lod2.glb",
+          "bytes": 47412,
+          "sha256": "143774ede29f842cf6b71927efa85d4f641f8fbf907cae2567cc7bb777841391",
+          "triangles": 950,
+          "bounds": {
+            "min": [
+              -0.5281425714492798,
+              -0.030510280281305313,
+              -0.3964524269104004
+            ],
+            "max": [
+              0.4513852596282959,
+              0.3842417299747467,
+              0.4491417109966278
+            ]
+          },
+          "textureLimit": 128,
+          "foliage": [
+            {
+              "triangles": 950,
+              "alphaMode": "OPAQUE",
+              "alphaCutoff": 0,
+              "impostor": true,
+              "selectedSourceNode": 0
+            }
+          ]
+        }
+      ],
+      "genericVisualProxy": true,
+      "library": "plant-v2",
+      "note": "One photographed source plant. Solid geometry stays opaque; no transparent blending."
+    },
+    {
+      "id": "perennial-bloom",
+      "sourceId": "periwinkle_plant",
+      "sourceURL": "https://polyhaven.com/a/periwinkle_plant",
+      "license": "CC0-1.0",
+      "licenseURL": "https://polyhaven.com/license",
+      "selectedSourceNode": 5,
+      "lods": [
+        {
+          "uri": "perennial-bloom-lod0.glb",
+          "bytes": 742504,
+          "sha256": "bc02b71567f16b18a42f19faa88428b54147e791e57820536360590aa9c23b28",
+          "triangles": 11252,
+          "bounds": {
+            "min": [
+              0.4144851118326187,
+              0.00007923644443508238,
+              -0.1901986002922058
+            ],
+            "max": [
+              0.6752382069826126,
+              0.3972615897655487,
+              0.13054685294628143
+            ]
+          },
+          "textureLimit": 512,
+          "foliage": [
+            {
+              "triangles": 11252,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false,
+              "selectedSourceNode": 5
+            }
+          ]
+        },
+        {
+          "uri": "perennial-bloom-lod1.glb",
+          "bytes": 183096,
+          "sha256": "5b248adb105a1eec2ca8fac5d47466cf5f536424082be4348c3745f27496d008",
+          "triangles": 2146,
+          "bounds": {
+            "min": [
+              0.41645924746990204,
+              0.0002355128526687622,
+              -0.1886482685804367
+            ],
+            "max": [
+              0.6729970574378967,
+              0.3972615897655487,
+              0.12983499467372894
+            ]
+          },
+          "textureLimit": 256,
+          "foliage": [
+            {
+              "triangles": 2146,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false,
+              "selectedSourceNode": 5
+            }
+          ]
+        },
+        {
+          "uri": "perennial-bloom-lod2.glb",
+          "bytes": 56000,
+          "sha256": "c805d836aef1b5d260157ebc1a8de14770164031271edc8e642b794601d8f009",
+          "triangles": 393,
+          "bounds": {
+            "min": [
+              0.41645924746990204,
+              0.0002355128526687622,
+              -0.18327894806861877
+            ],
+            "max": [
+              0.6729970574378967,
+              0.39658287167549133,
+              0.12736570835113525
+            ]
+          },
+          "textureLimit": 128,
+          "foliage": [
+            {
+              "triangles": 393,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": true,
+              "selectedSourceNode": 5
+            }
+          ]
+        }
+      ],
+      "genericVisualProxy": true,
+      "library": "plant-v2",
+      "note": "One photographed source plant. Source blend was converted to alpha-test so foliage does not sort."
+    },
+    {
+      "id": "perennial-gold",
+      "sourceId": "celandine_01",
+      "sourceURL": "https://polyhaven.com/a/celandine_01",
+      "license": "CC0-1.0",
+      "licenseURL": "https://polyhaven.com/license",
+      "selectedSourceNode": 2,
+      "lods": [
+        {
+          "uri": "perennial-gold-lod0.glb",
+          "bytes": 554100,
+          "sha256": "357aa7d5894e9b3dbafe9f15079fe79ba1bdb6c8e54a4b8bb9fb930e13135d47",
+          "triangles": 4301,
+          "bounds": {
+            "min": [
+              -0.12008963525295258,
+              -0.0036067296750843525,
+              -0.10453974455595016
+            ],
+            "max": [
+              0.13705752789974213,
+              0.17198063433170319,
+              0.08180022984743118
+            ]
+          },
+          "textureLimit": 512,
+          "foliage": [
+            {
+              "triangles": 4301,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false,
+              "selectedSourceNode": 2
+            }
+          ]
+        },
+        {
+          "uri": "perennial-gold-lod1.glb",
+          "bytes": 156908,
+          "sha256": "e0c5c27be9a9a9b1cc35766e7ab67f52e614c1d5b66e9c66a40c8ff19395798e",
+          "triangles": 771,
+          "bounds": {
+            "min": [
+              -0.12008963525295258,
+              -0.0036067296750843525,
+              -0.10453974455595016
+            ],
+            "max": [
+              0.13705752789974213,
+              0.17153175175189972,
+              0.08180022984743118
+            ]
+          },
+          "textureLimit": 256,
+          "foliage": [
+            {
+              "triangles": 771,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": false,
+              "selectedSourceNode": 2
+            }
+          ]
+        },
+        {
+          "uri": "perennial-gold-lod2.glb",
+          "bytes": 55464,
+          "sha256": "e189267ed330abbe4ef57f9a6c8885cf799b74bf65154234cd9d758d39fbeaca",
+          "triangles": 277,
+          "bounds": {
+            "min": [
+              -0.12008963525295258,
+              0.0020350872073322535,
+              -0.10453974455595016
+            ],
+            "max": [
+              0.13705752789974213,
+              0.17154087126255035,
+              0.08180022984743118
+            ]
+          },
+          "textureLimit": 128,
+          "foliage": [
+            {
+              "triangles": 277,
+              "alphaMode": "MASK",
+              "alphaCutoff": 0.4,
+              "impostor": true,
+              "selectedSourceNode": 2
+            }
+          ]
+        }
+      ],
+      "genericVisualProxy": true,
+      "library": "plant-v2",
+      "note": "One photographed source plant. Source blend was converted to alpha-test so foliage does not sort."
     }
   ],
   "originalDownloads": [
@@ -1851,5 +2642,6 @@
         }
       ]
     }
-  ]
+  ],
+  "library": "plant-v2"
 }

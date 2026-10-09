@@ -5,11 +5,18 @@ import {resolve} from 'node:path';
 import sharp from 'sharp';
 import * as THREE from 'three';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {LANDSCAPE_ASSETS,LANDSCAPE_SPECIES,newLandscapeObject,landscapeAsset} from '../src/features/deckcraft/landscapeCatalogue';
+import {LANDSCAPE_ASSETS,LANDSCAPE_SPECIES,PLANT_LIBRARY,newLandscapeObject,newLandscapePlant,landscapeAsset,plantFoliageTint} from '../src/features/deckcraft/landscapeCatalogue';
 import {validateLandscapeObjects,validLandscapePolygon,validateLandscapeSpecies,type LandscapeObject} from '../src/features/deckcraft/landscapeTypesRuntime';
 import {landscapeTakeoff,landscapeBedAreas,landscapePlacement,landscapeRenderLods,matureSpreadConflicts} from '../src/features/deckcraft/landscapeModelRuntime';
-import {landscapeBedGeometry,landscapeInstanceMatrix} from '../src/features/deckcraft/components/viewer3d/Landscape3D';
+import {landscapeBedGeometry,landscapeInstanceMatrix,steelEdgingGeometry} from '../src/features/deckcraft/components/viewer3d/Landscape3D';
 import {stillSize,captureSceneStill} from '../src/features/deckcraft/components/viewer3d/SceneStillExport';
+import {blocksHeroView,buildShowcaseContext,designHasNightLights,fenceRuns,heroClearances,NEIGHBOUR_WINDOW_BLOOM,neighbourWindowGlow} from '../src/features/deckcraft/components/viewer3d/showcaseContext';
+import {neighbourRoofSeated} from '../src/features/deckcraft/components/viewer3d/neighbourRoof';
+import {showcaseRoofTrimSeated} from '../src/features/deckcraft/components/viewer3d/showcaseHouseRoof';
+import {getHouseBlocks} from '../src/features/deckcraft/houseFootprint';
+import {blockRoofRise} from '../src/features/deckcraft/components/viewer3d/houseGeometry';
+import {ontarioShowcaseDesign,showcaseSampleIssues} from '../src/features/deckcraft/showcaseSample';
+import {getShowcaseFlags,setShowcaseFlags} from '../src/features/deckcraft/components/viewer3d/showcaseMode';
 import type {DeckData} from '../src/features/deckcraft/types';
 let checks=0;const check=(v:unknown,label?:string)=>{assert.ok(v,label);checks++;},close=(a:number,b:number)=>check(Math.abs(a-b)<1e-5,`${a} ≈ ${b}`);
 const all=LANDSCAPE_ASSETS.map((a,i)=>newLandscapeObject(a.id,'object-'+i));check(validateLandscapeObjects(all));check(validateLandscapeObjects([]));check(!validateLandscapeObjects(undefined));
@@ -23,7 +30,7 @@ const a={...newLandscapeObject('mulch-bed','a',0,0),widthIn:120,depthIn:120,mulc
 const overlap=landscapeTakeoff([a,b]);close(overlap.bedAreaSqft,150);close(overlap.mulchYd3,(50*2+100*4)/324);close(overlap.edgingLf,60);close(overlap.items.reduce((n,i)=>n+i.edgingLf,0),overlap.edgingLf);check(overlap.warnings.length===1);
 const nested=landscapeTakeoff([{...a,widthIn:240,depthIn:240},{...b,xIn:0}]);close(nested.bedAreaSqft,400);close(nested.edgingLf,120);
 const adjacent=landscapeTakeoff([a,{...b,xIn:120}]);close(adjacent.bedAreaSqft,200);close(adjacent.edgingLf,70);
-const disabled=landscapeTakeoff([a,{...b,enabled:false},...all.filter(o=>o.kind!=='bed')]);close(disabled.bedAreaSqft,100);check(disabled.plantCount===5&&disabled.boulderCount===1&&disabled.furnitureCount===LANDSCAPE_ASSETS.filter(a=>a.kind==='furniture').length);check(disabled.items.every(i=>i.quoteRequired));
+const disabled=landscapeTakeoff([a,{...b,enabled:false},...all.filter(o=>o.kind!=='bed')]);close(disabled.bedAreaSqft,100);check(disabled.plantCount===LANDSCAPE_ASSETS.filter(a=>a.kind==='plant').length&&disabled.boulderCount===1&&disabled.furnitureCount===LANDSCAPE_ASSETS.filter(a=>a.kind==='furniture').length);check(disabled.items.every(i=>i.quoteRequired));
 const custom={...a,polygon:[...square].reverse()},saved=JSON.stringify(custom);landscapeBedAreas([custom]);landscapeTakeoff([custom]);check(JSON.stringify(custom)===saved,'Takeoff does not reverse or mutate canonical points');
 const data={...DEFAULT_DECK,terrainConfig:{widthFt:80,depthFt:80,elevationIn:12,slopePct:10}} as DeckData,p={...all[0],xIn:60,zIn:120};const legacy=landscapePlacement(data,p);close(legacy.y,2);check(!legacy.measured);
 const measured={...data,siteModel:{version:1,points:[{id:'p0',xIn:0,zIn:0,elevationIn:0},{id:'p1',xIn:240,zIn:0,elevationIn:24},{id:'p2',xIn:0,zIn:240,elevationIn:48},{id:'p3',xIn:240,zIn:240,elevationIn:72}],grading:[]}} as DeckData;
@@ -34,12 +41,42 @@ const norm=new THREE.Matrix4().makeScale(.5,.25,1/6),matrix=landscapeInstanceMat
 const plants=[{...p,id:'m0',speciesRecord:LANDSCAPE_SPECIES[0]},{...p,id:'m1',xIn:p.xIn+120,speciesRecord:LANDSCAPE_SPECIES[0]}];check(matureSpreadConflicts(plants).length===1);check(matureSpreadConflicts(plants.map((o,i)=>i?{...o,xIn:2000}:o)).length===0);
 const dense=Array.from({length:300},(_,i)=>({...newLandscapeObject('deciduous-tree','tree-'+i),xIn:(i%20)*120,zIn:Math.floor(i/20)*120}));
 for(const tier of ['high','balanced','constrained'] as const){const lods=landscapeRenderLods(dense,{x:0,y:4,z:0},900,tier);check(lods.size===300);const base=300*landscapeAsset('deciduous-tree').triangleCounts![2],total=dense.reduce((n,o)=>n+landscapeAsset(o.assetId).triangleCounts![lods.get(o.id)!],0);check(total<=base+(tier==='high'?800000:tier==='balanced'?120000:0));if(tier==='constrained')check([...lods.values()].every(lod=>lod===2));}
+const showcaseLods=landscapeRenderLods(dense,{x:0,y:4,z:0},900,'constrained',true);check([...showcaseLods.values()].every(lod=>lod===0),'Showcase stills use the highest plant model, including on a software GPU');
+const showcaseTriangles=dense.reduce((n,o)=>n+landscapeAsset(o.assetId).triangleCounts![showcaseLods.get(o.id)!],0),farTriangles=300*landscapeAsset('deciduous-tree').triangleCounts![2];check(showcaseTriangles>farTriangles);
+const contextDesign={...DEFAULT_DECK,width:20,length:16,yardFeatures:[{id:'patio',kind:'patio' as const,name:'Patio',enabled:true,xFt:10,zFt:28,widthFt:16,depthFt:14,heightIn:0,rotationDeg:0,productId:'patio',color:'#aaa'}],scenePresentation:{cameras:[{id:'hero',name:'Hero',positionIn:[360,96,720] as [number,number,number],targetIn:[120,24,180] as [number,number,number],fov:38}]}};
+const savedContext=JSON.stringify(contextDesign),context=buildShowcaseContext(contextDesign);check(JSON.stringify(contextDesign)===savedContext,'Neighbourhood context does not mutate the design');
+check(fenceRuns(context.bounds).length===3&&fenceRuns(context.bounds).every(run=>run[1]!==context.bounds.z0||run[3]!==context.bounds.z0),'The cedar fence wraps three lot lines and leaves the house side open');
+const cameras=heroClearances(contextDesign,context.bounds);
+check(context.trees.length>=8&&context.trees.length<=28);
+for(const tree of context.trees){const canopy=tree.heightFt*(tree.conifer?.32:.5);check(tree.x+0.4<=context.bounds.x0||tree.x-0.4>=context.bounds.x1||tree.z+0.4<=context.bounds.z0||tree.z-0.4>=context.bounds.z1,'Tree trunks stay outside the fenced lot');check(!blocksHeroView(tree.x,tree.z,canopy,cameras),'Trees stay out of the hero camera corridor');check(tree.heightFt>=26&&tree.heightFt<=60);}
+check(context.homes.length>=4);
+for(const kind of ['gable','hip'] as const)for(const [w,d,top] of [[36,28,18.4],[28,28,11],[44,30,19.2]] as const)check(neighbourRoofSeated(w,d,top,kind),`${kind} roof seats on ${w}×${d}`);
+for(const home of context.homes){check(home.x+home.w/2+8<=context.bounds.x0||home.x-home.w/2-8>=context.bounds.x1||home.z+home.d/2+4<=context.bounds.z0||home.z-home.d/2-4>=context.bounds.z1,'Neighbour houses sit outside the lot');check(home.h>8&&home.w>20&&home.d>16);check(!blocksHeroView(home.x,home.z,Math.max(home.w,home.d)*.5,cameras));}
+for(const ground of context.ground)for(const v of ground.vertices){check(v.x<=context.bounds.x0+.2||v.x>=context.bounds.x1-.2||v.z<=context.bounds.z0+.2||v.z>=context.bounds.z1-.2,'Neighbouring yards stay outside the designed lot');check(v.y<2&&v.fade>=0&&v.fade<=1&&(v.drive===0||v.drive===1));}
+check(context.ground.some(g=>g.vertices.some(v=>v.drive===1)),'A neighbour driveway is part of the ground outside the lot');
+check(blocksHeroView(0,30,8,[{x:0,y:8,z:40,tx:0,ty:2,tz:0,fov:38}])&&!blocksHeroView(0,-20,8,[{x:0,y:8,z:40,tx:0,ty:2,tz:0,fov:38}]),'Only the near view corridor is kept clear');
+const contextLod1=context.trees.reduce((n,t)=>n+landscapeAsset(t.conifer?'conifer-tree':'deciduous-tree').triangleCounts![1],0);
+const contextLod0=context.trees.reduce((n,t)=>n+landscapeAsset(t.conifer?'conifer-tree':'deciduous-tree').triangleCounts![0],0);
+check(contextLod1<900000,'Balanced-tier neighbourhood trees stay under 900k triangles');
+setShowcaseFlags({quality:true,context:true});check(getShowcaseFlags().quality&&getShowcaseFlags().context);setShowcaseFlags({quality:false,context:false});check(!getShowcaseFlags().quality&&!getShowcaseFlags().context,'Flags return to the editor default');
+let darkPanes=0,litPanes=0,peakGlow=0;const first=neighbourWindowGlow(0,0);
+for(let home=0;home<6;home++)for(let pane=0;pane<36;pane++){const glow=neighbourWindowGlow(home,pane);check(glow===neighbourWindowGlow(home,pane));check(glow>=0&&glow<NEIGHBOUR_WINDOW_BLOOM,'Neighbour windows stay under the evening bloom threshold');if(glow===0)darkPanes++;else litPanes++;peakGlow=Math.max(peakGlow,glow);}
+check(first===neighbourWindowGlow(0,0)&&darkPanes>litPanes&&litPanes>8&&peakGlow<0.55,'Most neighbour windows are dark, and the lit ones are a soft glow');
+const showcaseSample=ontarioShowcaseDesign(),showcaseIssues=showcaseSampleIssues(showcaseSample);
+check(showcaseIssues.length===0,showcaseIssues.join(' '));
+check(showcaseSample.permitSite?.lotWidthFt===100&&showcaseSample.permitSite.lotDepthFt===160&&showcaseSample.houseConfig?.storeys===2,'The showcase sample is a two-storey house on a 100×160 ft lot');
+check(showcaseSample.yardFeatures?.some(f=>f.id==='fire-bowl'&&f.supportFeatureId==='lounge')&&showcaseSample.pools?.length===1&&showcaseSample.pergola?.target.kind==='patio','The showcase yard connects a catalogue fire lounge, pool and pergola');
+check(designHasNightLights(showcaseSample),'The showcase yard lights itself, so the night fill stays off');
+for(const block of getHouseBlocks(showcaseSample))check(showcaseRoofTrimSeated({x0:block.rect.x0,x1:block.rect.x1,y0:block.rect.y0,y1:block.rect.y1,wallTop:block.wallHeightIn,rise:blockRoofRise(block,showcaseSample.houseConfig?.roofPitch),shape:block.roofShape,ridge:block.ridge}),`Showcase trim seats on the ${block.id} ${block.roofShape} roof`);
+check(showcaseRoofTrimSeated({x0:0,x1:480,y0:-360,y1:0,wallTop:240,rise:90,shape:'Gable',ridge:'x'})&&showcaseRoofTrimSeated({x0:0,x1:400,y0:-300,y1:0,wallTop:216,rise:6,shape:'Flat',ridge:'z'}),'Gable rake boards and a flat parapet seat without crossing the cap');
+check(!designHasNightLights(DEFAULT_DECK),'A design with no fixtures gets the showcase night fill');
+check(designHasNightLights({...DEFAULT_DECK,autoLighting:{stairs:true}})&&designHasNightLights({...DEFAULT_DECK,lightingSystem:{...DEFAULT_DECK.lightingSystem,selectedItems:[{productId:'ace',qty:2,zone:'landscape'}]}}),'Step lights and path lights are left to light the yard themselves');
 assert.deepEqual(stillSize(2048,{x:1500,y:900},8192),{width:2048,height:1229});checks++;assert.deepEqual(stillSize(4096,{x:390,y:390},8192),{width:4096,height:4096});checks++;assert.deepEqual(stillSize(4096,{x:100,y:400},8192),{width:1024,height:4096});checks++;assert.deepEqual(stillSize(4096,{x:400,y:100},8192),{width:4096,height:1024});checks++;assert.throws(()=>stillSize(4096,{x:100,y:400},2048));checks++;assert.throws(()=>stillSize(4096,{x:NaN,y:400},8192));checks++;
 // Deliberate PNG failure after resizing must restore renderer/camera/selection.
 const scene=new THREE.Scene(),outline=new THREE.Object3D();outline.name='picked-wall-outline';scene.add(outline);const camera=new THREE.PerspectiveCamera(38,1.5,.1,1000);let pixelRatio=1.5,size=new THREE.Vector2(600,400),scissorTest=true,rendered=0;
 const gl={capabilities:{maxTextureSize:8192},getContext:()=>({MAX_RENDERBUFFER_SIZE:1,getParameter:()=>8192}),getSize:(v:THREE.Vector2)=>v.copy(size),getDrawingBufferSize:(v:THREE.Vector2)=>v.set(size.x*pixelRatio,size.y*pixelRatio),getPixelRatio:()=>pixelRatio,getViewport:(v:THREE.Vector4)=>v.set(1,2,3,4),getScissor:(v:THREE.Vector4)=>v.set(5,6,7,8),getScissorTest:()=>scissorTest,getRenderTarget:()=>null,getClearColor:(c:THREE.Color)=>c.set('#abc'),getClearAlpha:()=>1,autoClear:true,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:1,shadowMap:{autoUpdate:false},setPixelRatio:(n:number)=>{pixelRatio=n;},setSize:(x:number,y:number)=>{size.set(x,y);},setScissorTest:(n:boolean)=>{scissorTest=n;},setRenderTarget:()=>{},setViewport:()=>{},setScissor:()=>{},setClearColor:()=>{},render:()=>{rendered++;},domElement:{toBlob:(fn:(b:null)=>void)=>fn(null)}} as unknown as THREE.WebGLRenderer;
 await assert.rejects(()=>captureSceneStill(gl,scene,camera,2048));checks++;close(pixelRatio,1.5);close(size.x,600);close(size.y,400);close(camera.aspect,1.5);check(outline.visible&&scissorTest&&rendered===2);
-const manifest=JSON.parse(readFileSync('public/deckcraft/landscape/manifest.json','utf8'));check(manifest.assets.length===7);const furnitureManifest=JSON.parse(readFileSync('public/deckcraft/landscape/original-furniture-manifest.json','utf8'));check(furnitureManifest.assets.length===3);let bytes=0,alphaTextures=0;
+const manifest=JSON.parse(readFileSync('public/deckcraft/landscape/manifest.json','utf8'));check(manifest.assets.length===15);const furnitureManifest=JSON.parse(readFileSync('public/deckcraft/landscape/original-furniture-manifest.json','utf8'));check(furnitureManifest.assets.length===3);let bytes=0,alphaTextures=0;
 for(const asset of manifest.assets){check(asset.license==='CC0-1.0'&&asset.sourceURL.startsWith('https://polyhaven.com/a/'));check(asset.lods.length===3);
  for(const lod of asset.lods){const binary=readFileSync('public/deckcraft/landscape/'+lod.uri);bytes+=binary.length;check(createHash('sha256').update(binary).digest('hex')===lod.sha256);check(binary.readUInt32LE(0)===0x46546c67&&binary.readUInt32LE(4)===2&&binary.readUInt32LE(8)===binary.length);const jsonLength=binary.readUInt32LE(12),json=JSON.parse(binary.subarray(20,20+jsonLength).toString('utf8')),bin=binary.subarray(28+jsonLength);check((json.extensionsRequired??[]).every((x:string)=>x==='KHR_mesh_quantization'||x==='KHR_texture_transform'));
   const tris=json.meshes.reduce((n:number,m:{primitives:{indices:number}[]})=>n+m.primitives.reduce((s,p)=>s+json.accessors[p.indices].count/3,0),0);close(tris,lod.triangles);
@@ -50,7 +87,12 @@ for(const asset of manifest.assets){check(asset.license==='CC0-1.0'&&asset.sourc
  }
 }
 for(const asset of furnitureManifest.assets){for(const lod of asset.lods){const binary=readFileSync('public/deckcraft/landscape/'+lod.uri);check(createHash('sha256').update(binary).digest('hex')===lod.sha256);const json=JSON.parse(binary.subarray(20,20+binary.readUInt32LE(12)).toString('utf8'));close(json.meshes.reduce((n:number,m:{primitives:{indices?:number;attributes:{POSITION:number}}[]})=>n+m.primitives.reduce((t,p)=>t+json.accessors[p.indices??p.attributes.POSITION].count/3,0),0),lod.triangles);}}
-check(bytes<14000000);check(alphaTextures>=12);
-for(const asset of LANDSCAPE_ASSETS.filter(a=>a.modelURL)){const found=[...manifest.assets,...furnitureManifest.assets].find((x:{id:string})=>x.id===(asset.id==='hedge-shrub'?'rounded-shrub':asset.id));check(!!found);for(let i=0;i<3;i++)close(found.lods[i].triangles,asset.triangleCounts![i]);}
+check(bytes<16000000);check(alphaTextures>=12);
+check(landscapeAsset('hedge-shrub').modelURL?.endsWith('hedge-shrub-lod0.glb')&&landscapeAsset('hedge-shrub').triangleCounts![0]!==landscapeAsset('rounded-shrub').triangleCounts![0],'Hedge uses its own dense model, not the shrub sprigs');
+check(PLANT_LIBRARY.length===26&&PLANT_LIBRARY.every(p=>LANDSCAPE_SPECIES.some(s=>s.id===p.speciesId)&&landscapeAsset(p.assetId).kind==='plant'));
+check(plantFoliageTint()==='#ffffff'&&plantFoliageTint('thuja-occidentalis-smaragd')!=='#ffffff');
+for(const visual of PLANT_LIBRARY){const planted=newLandscapePlant(visual.speciesId,'palette-'+visual.speciesId);check(validateLandscapeObjects([planted])&&planted.speciesRecord?.id===visual.speciesId&&planted.assetId===visual.assetId&&planted.name===planted.speciesRecord.commonName&&!planted.speciesRecord.spacingIn);}
+const ribbon=steelEdgingGeometry([new THREE.Vector3(0,1,0),new THREE.Vector3(2,1.2,0),new THREE.Vector3(2,1.1,2),new THREE.Vector3(0,1,0)]);check(ribbon.getAttribute('position').count>=36,'Steel edging is a ribbon, not a hairline');ribbon.dispose();
+for(const asset of LANDSCAPE_ASSETS.filter(a=>a.modelURL)){const found=[...manifest.assets,...furnitureManifest.assets].find((x:{id:string})=>x.id===asset.id);check(!!found,asset.id);for(let i=0;i<3;i++)close(found.lods[i].triangles,asset.triangleCounts![i]);}
 let verifiedOriginals=0;for(const record of manifest.originalDownloads){const file=resolve('../..',record.file);if(existsSync(file)){check(createHash('sha256').update(readFileSync(file)).digest('hex')===record.sha256);verifiedOriginals++;}}
-console.log(JSON.stringify({checks,assets:manifest.assets.length,lods:manifest.assets.length*3,glbBytes:bytes,alphaTextures,verifiedOriginals,maxObjects:300,bedOverlap:'last enabled bed; shared edging counted once',stillFailureRestored:true},null,2));
+console.log(JSON.stringify({checks,assets:manifest.assets.length,lods:manifest.assets.length*3,glbBytes:bytes,alphaTextures,verifiedOriginals,maxObjects:300,bedOverlap:'last enabled bed; shared edging counted once',stillFailureRestored:true,showcaseTrees:context.trees.length,contextLod1Triangles:contextLod1,contextLod0Triangles:contextLod0,neighbourHomes:context.homes.length},null,2));

@@ -1,4 +1,4 @@
-import {useEffect,useMemo} from 'react';
+import {useEffect,useMemo,useSyncExternalStore} from 'react';
 import * as THREE from 'three';
 import type {DeckData,GableAccent,HouseConfig,RoofFinish} from '../../types';
 import type {Box} from '../../deckTakeoff';
@@ -16,6 +16,8 @@ import {facadeFinish,gableLook,hasWallFinishes,isGableEnd} from '../../houseWall
 import {ROOF_LOOK,ROOF_TEXTURE_SIZE,roofPixels} from './roofTextures';
 
 import {houseRoofMesh,blockRoofMesh,blockGableMesh,blockRoofRise,houseWallSpecs,type HouseMesh,type HouseWallSpec} from './houseGeometry';
+import {getShowcaseFlags,subscribeShowcase} from './showcaseMode';
+import {showcaseRoofTrim,type ShowcaseRoofShape} from './showcaseHouseRoof';
 
 /** Three.js adapter for the exact roof mesh used by CAD exports. */
 /** Three.js adapter for the exact roof mesh used by CAD exports. */
@@ -41,7 +43,17 @@ function GableAccent({wall:{span,height,origin,yaw},look,rise}:GableEnd){
 
 /** A bump-out, wing or garage: its own roof, gable ends, plinth, soffit and gutters. Walls come with the house's facades.
  * `accents`: its gable ends in their own finish (its block's, or a wall's), drawn over its gables. */
-function HouseBlock3D({block,config,map,look,trim,accents}:{block:HouseBlockPlan;config:HouseConfig;map:THREE.Texture;look:typeof ROOF_LOOK[RoofFinish];trim:HouseTrimColors;accents:GableEnd[]}){
+function TrimMesh({positions,color,name}:{positions:number[];color:string;name:string}){
+ const geometry=useMemo(()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.computeVertexNormals();return g;},[positions]);
+ useEffect(()=>()=>geometry.dispose(),[geometry]);
+ if(positions.length<9)return null;
+ return <mesh name={name} geometry={geometry} castShadow receiveShadow><meshStandardMaterial color={color} roughness={name.includes('soffit')?.9:.72}/></mesh>;
+}
+function ShowcaseRoofShell({x0,x1,y0,y1,wallTop,rise,shape,ridge,fascia,soffit}:{x0:number;x1:number;y0:number;y1:number;wallTop:number;rise:number;shape:ShowcaseRoofShape;ridge:'x'|'z';fascia:string;soffit:string}){
+ const trim=useMemo(()=>showcaseRoofTrim({x0,x1,y0,y1,wallTop,rise,shape,ridge}),[x0,x1,y0,y1,wallTop,rise,shape,ridge]);
+ return <group name="showcase-roof-trim">{trim.fascia.length>0&&<TrimMesh positions={trim.fascia} color={fascia} name="showcase-fascia"/>}{trim.soffit.length>0&&<TrimMesh positions={trim.soffit} color={soffit} name="showcase-soffit"/>}</group>;
+}
+function HouseBlock3D({block,config,map,look,trim,accents,showcase}:{block:HouseBlockPlan;config:HouseConfig;map:THREE.Texture;look:typeof ROOF_LOOK[RoofFinish];trim:HouseTrimColors;accents:GableEnd[];showcase:boolean}){
  const roof=useMemo(()=>meshGeometry(blockRoofMesh(block,config)),[block,config]);
  const gable=useMemo(()=>{const m=blockGableMesh(block,config.claddingColor,'gable',config.roofPitch);return m?meshGeometry(m):null;},[block,config.claddingColor,config.roofPitch]);
  useEffect(()=>()=>roof.dispose(),[roof]);useEffect(()=>()=>gable?.dispose(),[gable]);
@@ -53,8 +65,7 @@ function HouseBlock3D({block,config,map,look,trim,accents}:{block:HouseBlockPlan
   <mesh geometry={roof} castShadow receiveShadow><meshStandardMaterial color={config.roofColor} map={map} bumpMap={map} bumpScale={look.bumpScale} metalness={look.metalness} roughness={look.roughness} side={THREE.DoubleSide}/></mesh>
   {gable&&<mesh geometry={gable} castShadow receiveShadow><meshStandardMaterial color={config.claddingColor} roughness={.9} side={THREE.DoubleSide}/></mesh>}
   {accents.map(a=><GableAccent key={a.wall.wall.id} {...a}/>)}
-  <HouseParts items={[{x:bx,y:h-.75,z:bz,w:w+20,h:1.5,d:d+20}]} color={trim.soffit} name="house-block-soffit"/>
-  <HouseParts items={block.roofShape==='Flat'?[]:gutters} color={trim.gutter} name="house-block-gutters"/>
+  {showcase?<ShowcaseRoofShell x0={x0} x1={x1} y0={y0} y1={y1} wallTop={h} rise={blockRoofRise(block,config.roofPitch)} shape={block.roofShape} ridge={block.ridge} fascia={trim.fascia} soffit={trim.soffit}/>:<><HouseParts items={[{x:bx,y:h-.75,z:bz,w:w+20,h:1.5,d:d+20}]} color={trim.soffit} name="house-block-soffit"/><HouseParts items={block.roofShape==='Flat'?[]:gutters} color={trim.gutter} name="house-block-gutters"/></>}
  </group>;
 }
 
@@ -68,6 +79,7 @@ export default function House3D({data,width,...interaction}:{data:DeckData;width
  const blocks=useMemo(()=>getHouseBlocks(data),[layout]);
  const walls=useMemo(()=>houseWallSpecs(data,layout.config,blocks),[layout,blocks]);
  const {minX,maxX,depth,wallHeight,roofRise,config}=layout,cx=(minX+maxX)/2,evening=data.sceneLighting==='Evening',look=ROOF_LOOK[config.roofFinish],trim=houseTrimColors(config);
+ const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false);
  const roof=useMemo(()=>buildHouseRoof(layout),[layout]),map=useMemo(()=>roofTexture(config.roofFinish),[config.roofFinish]);
  useEffect(()=>()=>roof.dispose(),[roof]);useEffect(()=>()=>map.dispose(),[map]);
  // Gable ends face the deck and the street (ridge front to back, the original) or the side walls (ridge side to side).
@@ -85,13 +97,12 @@ export default function House3D({data,width,...interaction}:{data:DeckData;width
   {walls.map(f=><group key={f.wall.id} name={`house-${f.name}-facade`} position={f.origin} rotation={[0,f.yaw,0]}><HouseFacade span={f.span} height={f.height} openings={f.openings} hidden={f.hidden} finish={facadeFinish(config,f.wall.id)} wallId={f.wall.id} blockId={f.block.id} evening={evening} {...interaction}/></group>)}
   <HouseParts items={[{x:cx,y:4,z:-depth/2,w:maxX-minX+1,h:8,d:depth+1}]} color="#93968d" name="house-foundation-plinth" surface="stucco"/>
   <mesh geometry={roof} castShadow receiveShadow><meshStandardMaterial color={config.roofColor} map={map} bumpMap={map} bumpScale={look.bumpScale} metalness={look.metalness} roughness={look.roughness} side={THREE.DoubleSide}/></mesh>
-  <HouseParts items={[{x:cx,y:wallHeight-.75,z:-depth/2,w:maxX-minX+20,h:1.5,d:depth+20}]} color={trim.soffit} name="eave-soffit"/>
+  {showcase?<ShowcaseRoofShell x0={minX} x1={maxX} y0={-depth} y1={0} wallTop={wallHeight} rise={roofRise} shape={config.roofShape} ridge={config.ridge==='x'?'x':'z'} fascia={trim.fascia} soffit={trim.soffit}/>:<HouseParts items={[{x:cx,y:wallHeight-.75,z:-depth/2,w:maxX-minX+20,h:1.5,d:depth+20}]} color={trim.soffit} name="eave-soffit"/>}
   {gable&&<><mesh geometry={gable} castShadow receiveShadow><meshStandardMaterial color={config.claddingColor} roughness={.9} side={sideGables?THREE.DoubleSide:THREE.FrontSide}/></mesh><HouseParts items={gableSkin} color={config.claddingColor} name="gable-cladding"/>
-   {/* Bargeboards along the rakes: the deck-facing gable, or both side gables. */}
-   {sideGables?[minX-12.25,maxX+12.25].flatMap(x=>[-1,1].map(side=><mesh key={`${x}${side}`} position={[x,wallHeight+roofRise/2-1.5,-depth/2+side*(depth/4+6)]} rotation={[side*Math.atan2(roofRise,depth/2+12),0,0]} castShadow><boxGeometry args={[1.5,3,Math.hypot(depth/2+12,roofRise)]}/><meshStandardMaterial color={trim.fascia} roughness={.8}/></mesh>))
-    :[-1,1].map(side=><mesh key={side} position={[cx+side*((maxX-minX)/4+6),wallHeight+roofRise/2-1.5,12.25]} rotation={[0,0,-side*Math.atan2(roofRise,(maxX-minX)/2+12)]} castShadow><boxGeometry args={[Math.hypot((maxX-minX)/2+12,roofRise),3,1.5]}/><meshStandardMaterial color={trim.fascia} roughness={.8}/></mesh>)}</>}
+   {!showcase&&(sideGables?[minX-12.25,maxX+12.25].flatMap(x=>[-1,1].map(side=><mesh key={`${x}${side}`} position={[x,wallHeight+roofRise/2-1.5,-depth/2+side*(depth/4+6)]} rotation={[side*Math.atan2(roofRise,depth/2+12),0,0]} castShadow><boxGeometry args={[1.5,3,Math.hypot(depth/2+12,roofRise)]}/><meshStandardMaterial color={trim.fascia} roughness={.8}/></mesh>))
+    :[-1,1].map(side=><mesh key={side} position={[cx+side*((maxX-minX)/4+6),wallHeight+roofRise/2-1.5,12.25]} rotation={[0,0,-side*Math.atan2(roofRise,(maxX-minX)/2+12)]} castShadow><boxGeometry args={[Math.hypot((maxX-minX)/2+12,roofRise),3,1.5]}/><meshStandardMaterial color={trim.fascia} roughness={.8}/></mesh>))}</>}
   {accents.filter(a=>a.wall.block.id==='main').map(a=><GableAccent key={a.wall.wall.id} {...a}/>)}
-  <HouseParts items={[minX-10,maxX+10].flatMap(x=>[{x,y:wallHeight-2,z:-depth/2,w:5,h:4,d:depth+24},{x,y:(wallHeight-2)/2,z:-depth+6,w:3,h:wallHeight-2,d:3}])} color={trim.gutter} name="gutters-and-downspouts"/>
-  {blocks.slice(1).map(block=><HouseBlock3D key={block.id} block={block} config={config} map={map} look={look} trim={trim} accents={accents.filter(a=>a.wall.block===block)}/>)}
+  {!showcase&&<HouseParts items={[minX-10,maxX+10].flatMap(x=>[{x,y:wallHeight-2,z:-depth/2,w:5,h:4,d:depth+24},{x,y:(wallHeight-2)/2,z:-depth+6,w:3,h:wallHeight-2,d:3}])} color={trim.gutter} name="gutters-and-downspouts"/>}
+  {blocks.slice(1).map(block=><HouseBlock3D key={block.id} block={block} config={config} map={map} look={look} trim={trim} accents={accents.filter(a=>a.wall.block===block)} showcase={showcase}/>)}
  </group>;
 }

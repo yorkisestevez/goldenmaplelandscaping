@@ -12,7 +12,10 @@ export interface PergolaInteraction{
 }
 function Part({part,glow}:{part:PergolaPart;glow:number}){
  const geometry=useMemo(()=>{const vs=pergolaVertices(part),positions=PERGOLA_FACES.flatMap(f=>[f[0],f[1],f[2],f[0],f[2],f[3]]).flatMap(i=>[vs[i].x,vs[i].y,vs[i].z]);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.computeVertexNormals();return g;},[part]);
- useEffect(()=>()=>geometry.dispose(),[geometry]);return <mesh geometry={geometry} castShadow receiveShadow name={`aluminum-pergola-${part.role}`}><meshStandardMaterial color={part.color} metalness={part.role==='LED'?0:.45} roughness={.38} emissive={part.role==='LED'?'#ffd09a':'#000000'} emissiveIntensity={part.role==='LED'?glow:0} transparent={part.role==='screen'} opacity={part.role==='screen'?.72:1}/></mesh>;
+ useEffect(()=>()=>geometry.dispose(),[geometry]);
+ const louver=part.role==='louver';
+ // Louvers are aluminium blades. A reflective white plane was picking up the lawn and reading as a flat green roof.
+ return <mesh geometry={geometry} castShadow receiveShadow name={`aluminum-pergola-${part.role}`}><meshStandardMaterial color={part.color} metalness={part.role==='LED'?0:louver?.72:.5} roughness={part.role==='LED'?.45:louver?.4:.38} envMapIntensity={louver?.22:1} emissive={part.role==='LED'?'#ffd09a':'#000000'} emissiveIntensity={part.role==='LED'?glow:0} transparent={part.role==='screen'} opacity={part.role==='screen'?.72:1}/></mesh>;
 }
 export default function Pergola3D({layout,data,interaction}:{layout:ReturnType<typeof pergolaLayout>;data:DeckData;interaction?:PergolaInteraction}){
  const parts=useMemo(()=>layout?pergolaParts(data,layout):[],[data,layout]);
