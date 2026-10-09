@@ -10,7 +10,7 @@ import {validateLandscapeObjects,validLandscapePolygon,validateLandscapeSpecies,
 import {landscapeTakeoff,landscapeBedAreas,landscapePlacement,landscapeRenderLods,matureSpreadConflicts} from '../src/features/deckcraft/landscapeModelRuntime';
 import {landscapeBedGeometry,landscapeInstanceMatrix} from '../src/features/deckcraft/components/viewer3d/Landscape3D';
 import {stillSize,captureSceneStill} from '../src/features/deckcraft/components/viewer3d/SceneStillExport';
-import {blocksHeroView,buildShowcaseContext,fenceRuns,heroClearances} from '../src/features/deckcraft/components/viewer3d/showcaseContext';
+import {blocksHeroView,buildShowcaseContext,designHasNightLights,fenceRuns,heroClearances,NEIGHBOUR_WINDOW_BLOOM,neighbourWindowGlow} from '../src/features/deckcraft/components/viewer3d/showcaseContext';
 import {getShowcaseFlags,setShowcaseFlags} from '../src/features/deckcraft/components/viewer3d/showcaseMode';
 import type {DeckData} from '../src/features/deckcraft/types';
 let checks=0;const check=(v:unknown,label?:string)=>{assert.ok(v,label);checks++;},close=(a:number,b:number)=>check(Math.abs(a-b)<1e-5,`${a} ≈ ${b}`);
@@ -53,6 +53,11 @@ const contextLod1=context.trees.reduce((n,t)=>n+landscapeAsset(t.conifer?'conife
 const contextLod0=context.trees.reduce((n,t)=>n+landscapeAsset(t.conifer?'conifer-tree':'deciduous-tree').triangleCounts![0],0);
 check(contextLod1<900000,'Balanced-tier neighbourhood trees stay under 900k triangles');
 setShowcaseFlags({quality:true,context:true});check(getShowcaseFlags().quality&&getShowcaseFlags().context);setShowcaseFlags({quality:false,context:false});check(!getShowcaseFlags().quality&&!getShowcaseFlags().context,'Flags return to the editor default');
+let darkPanes=0,litPanes=0,peakGlow=0;const first=neighbourWindowGlow(0,0);
+for(let home=0;home<6;home++)for(let pane=0;pane<36;pane++){const glow=neighbourWindowGlow(home,pane);check(glow===neighbourWindowGlow(home,pane));check(glow>=0&&glow<NEIGHBOUR_WINDOW_BLOOM,'Neighbour windows stay under the evening bloom threshold');if(glow===0)darkPanes++;else litPanes++;peakGlow=Math.max(peakGlow,glow);}
+check(first===neighbourWindowGlow(0,0)&&darkPanes>litPanes&&litPanes>8&&peakGlow<0.55,'Most neighbour windows are dark, and the lit ones are a soft glow');
+check(!designHasNightLights(DEFAULT_DECK),'A design with no fixtures gets the showcase night fill');
+check(designHasNightLights({...DEFAULT_DECK,autoLighting:{stairs:true}})&&designHasNightLights({...DEFAULT_DECK,lightingSystem:{...DEFAULT_DECK.lightingSystem,selectedItems:[{productId:'ace',qty:2,zone:'landscape'}]}}),'Step lights and path lights are left to light the yard themselves');
 assert.deepEqual(stillSize(2048,{x:1500,y:900},8192),{width:2048,height:1229});checks++;assert.deepEqual(stillSize(4096,{x:390,y:390},8192),{width:4096,height:4096});checks++;assert.deepEqual(stillSize(4096,{x:100,y:400},8192),{width:1024,height:4096});checks++;assert.deepEqual(stillSize(4096,{x:400,y:100},8192),{width:4096,height:1024});checks++;assert.throws(()=>stillSize(4096,{x:100,y:400},2048));checks++;assert.throws(()=>stillSize(4096,{x:NaN,y:400},8192));checks++;
 // Deliberate PNG failure after resizing must restore renderer/camera/selection.
 const scene=new THREE.Scene(),outline=new THREE.Object3D();outline.name='picked-wall-outline';scene.add(outline);const camera=new THREE.PerspectiveCamera(38,1.5,.1,1000);let pixelRatio=1.5,size=new THREE.Vector2(600,400),scissorTest=true,rendered=0;

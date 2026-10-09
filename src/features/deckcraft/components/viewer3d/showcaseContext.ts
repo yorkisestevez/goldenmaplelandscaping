@@ -1,4 +1,5 @@
 import type {DeckData} from '../../types';
+import {isIlluminatingFixture} from '../../lightingPreview';
 import {cameraSetback} from './cameraFraming';
 
 /** Neighbourhood dressing around a designed yard. Authored in feet.
@@ -168,3 +169,27 @@ export const SHOWCASE_TREES={
  deciduous:['/deckcraft/landscape/deciduous-tree-lod0.glb','/deckcraft/landscape/deciduous-tree-lod1.glb'],
  conifer:['/deckcraft/landscape/conifer-tree-lod0.glb','/deckcraft/landscape/conifer-tree-lod1.glb'],
 } as const;
+
+/** Evening bloom starts above this. Neighbour panes stay under it. */
+export const NEIGHBOUR_WINDOW_BLOOM=1.1;
+
+/**
+ * A neighbour window at night. Most panes stay dark. The lit ones are a soft
+ * warm interior, scattered by house and pane, and dim enough that bloom does
+ * not pull the eye off the designed yard. Presentation only.
+ */
+export function neighbourWindowGlow(home:number,pane:number):number{
+ let s=Math.imul(home+1,0x9e3779b1)^Math.imul(pane+3,0x85ebca6b);
+ s=Math.imul(s^(s>>>16),0xc2b2ae35);
+ const u=((s>>>0)%10000)/10000;
+ if(u>0.28)return 0;
+ return 0.22+(u/0.28)*0.26;
+}
+
+/** Step lights, post caps, path lights, up-lights, or a lit pergola. The showcase
+ * night fill stays off when any of these already light the yard. */
+export function designHasNightLights(data:DeckData):boolean{
+ if(data.autoLighting?.posts||data.autoLighting?.stairs||data.autoLighting?.border)return true;
+ if(data.pergola?.lighting||data.pergola?.accessories?.includes('led'))return true;
+ return (data.lightingSystem?.selectedItems??[]).some(item=>item.qty>0&&isIlluminatingFixture(item.productId));
+}

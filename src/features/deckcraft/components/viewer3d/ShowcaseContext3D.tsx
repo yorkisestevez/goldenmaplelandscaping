@@ -5,7 +5,8 @@ import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from './showcaseMode';
 import {useSyncExternalStore} from 'react';
-import {SHOWCASE_TREES,buildShowcaseContext,type ContextTree,type GroundGrid,type GroundVertex,type NeighbourHome} from './showcaseContext';
+import {kelvinColour} from './fixtureLighting';
+import {SHOWCASE_TREES,buildShowcaseContext,designHasNightLights,neighbourWindowGlow,type ContextTree,type GroundGrid,type GroundVertex,type NeighbourHome} from './showcaseContext';
 
 function noRay(){/* Presentation dressing is not pickable. */}
 
@@ -47,7 +48,9 @@ function neighbourMaterial(){
     float mow=sin(vYard.x*.62+vYard.y*.18)*.5+.5;
     diffuseColor.rgb*=mix(.9,1.07,mow);
     diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.16,.17,.18),clamp(vDrive,0.,1.));
-    diffuseColor.rgb=mix(diffuseColor.rgb,mix(vec3(.50,.56,.48),vec3(.07,.10,.15),uEvening),clamp(vFade,0.,1.)*(1.-clamp(vDrive,0.,1.)));`);
+    float nightFall=clamp(vFade,0.,1.);
+    diffuseColor.rgb=mix(diffuseColor.rgb,mix(vec3(.50,.56,.48),vec3(.04,.05,.07),uEvening),nightFall*(1.-clamp(vDrive,0.,1.)));
+    diffuseColor.rgb*=mix(1.,mix(.42,.1,nightFall),uEvening);`);
  };
  return material;
 }
@@ -84,11 +87,11 @@ function gableGeometry(w:number,d:number,h:number,rise:number){
  g.computeVertexNormals();return g;
 }
 
-function NeighbourHouse({home,evening}:{home:NeighbourHome;evening:boolean}){
+function NeighbourHouse({home,evening,homeIndex}:{home:NeighbourHome;evening:boolean;homeIndex:number}){
  const rise=Math.min(home.w,home.d)*.22,slope=Math.atan2(rise,home.d/2),run=Math.hypot(home.d/2,rise),wallY=.7+home.h/2;
  const gable=useMemo(()=>gableGeometry(home.w,home.d,home.h+.7,rise),[home.w,home.d,home.h,rise]);
  useEffect(()=>()=>gable.dispose(),[gable]);
- const glass=evening?'#ffd7a8':'#7f97a8',glow=evening?1.7:0;
+ const dayGlass='#7f97a8';
  const windows:{position:[number,number,number];frame:[number,number,number];pane:[number,number,number];out:[number,number,number]}[]=[];
  const cols=home.w>40?4:3,rows=home.floors,pane=(w:number,h:number,depth:number):[number,number,number]=>[w,h,depth];
  for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
@@ -106,10 +109,12 @@ function NeighbourHouse({home,evening}:{home:NeighbourHome;evening:boolean}){
   <mesh geometry={gable} raycast={noRay}><meshStandardMaterial color={home.siding} roughness={.9}/></mesh>
   <mesh position={[0,home.h+.55,-home.d/2-.02]} raycast={noRay}><boxGeometry args={[home.w+1.6,.28,.35]}/><meshStandardMaterial color={home.trim} roughness={.7}/></mesh>
   <mesh position={[0,1.1,-home.d/2-.08]} raycast={noRay}><boxGeometry args={[3.4,7.1,.12]}/><meshStandardMaterial color="#4a4038" roughness={.7}/></mesh>
-  {windows.map((win,i)=><group key={i} position={win.position}>
+  {windows.map((win,i)=>{
+   const glow=evening?neighbourWindowGlow(homeIndex,i):0,glass=glow>0?'#ffd7a8':evening?'#1a2228':dayGlass;
+   return <group key={i} position={win.position}>
    <mesh raycast={noRay}><boxGeometry args={win.frame}/><meshStandardMaterial color="#2c3134" roughness={.55}/></mesh>
    <mesh position={[win.out[0]*.08,0,win.out[2]*.08]} raycast={noRay}><boxGeometry args={win.pane}/><meshStandardMaterial color={glass} emissive={glass} emissiveIntensity={glow} roughness={.18} metalness={.05}/></mesh>
-  </group>)}
+  </group>;})}
   {home.chimney&&<mesh position={[home.w*.28,home.h+.7+rise*.55,home.d*.12]} raycast={noRay}><boxGeometry args={[2.1,rise+2.4,2.1]}/><meshStandardMaterial color="#6a6560" roughness={.9}/></mesh>}
   {home.garage&&<group position={[home.w/2+7,0,home.d*.08]}>
    <mesh position={[0,5.2,0]} receiveShadow raycast={noRay}><boxGeometry args={[13,10.4,home.d*.62]}/><meshStandardMaterial color={home.siding} roughness={.88}/></mesh>
@@ -160,6 +165,22 @@ function TreeLine({trees,showcase}:{trees:ContextTree[];showcase:boolean}){
  </group>;
 }
 
+/** Showcase night only, and only when the design has no landscape lights.
+ * A 2900 K wash over the yard plus a 2750 K bounce at the house and each patio.
+ * These lights are not saved, priced or counted. The editor's evening look is unchanged. */
+function ShowcaseNightFill({data}:{data:DeckData}){
+ const moon=useMemo(()=>kelvinColour(2900),[]),bounce=useMemo(()=>kelvinColour(2750),[]);
+ if(data.sceneLighting!=='Evening'||designHasNightLights(data))return null;
+ const patios=(data.yardFeatures??[]).filter(f=>f.enabled!==false&&f.kind==='patio').slice(0,4);
+ const xs=[0,data.width??16,...patios.map(p=>p.xFt)],zs=[0,data.length??12,...patios.map(p=>p.zFt)];
+ const x=(Math.min(...xs)+Math.max(...xs))/2,z=(Math.min(...zs)+Math.max(...zs))/2,houseX=(data.width??16)/2;
+ return <group name="showcase-night-fill">
+  <pointLight name="showcase-moonlight" position={[x,18,z]} color={moon} intensity={160} distance={42} decay={2}/>
+  <pointLight name="showcase-house-bounce" position={[houseX,5.5,2]} color={bounce} intensity={70} distance={26} decay={2}/>
+  {patios.map(p=><pointLight key={p.id} name="showcase-patio-bounce" position={[p.xFt,6.5,p.zFt]} color={moon} intensity={48} distance={22} decay={2}/>)}
+ </group>;
+}
+
 export default function ShowcaseContext3D({data}:{data:DeckData}){
  const context=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().context,()=>false);
  const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false);
@@ -169,7 +190,8 @@ export default function ShowcaseContext3D({data}:{data:DeckData}){
  return <group name="showcase-context" scale={12} userData={{presentationOnly:true}}>
   <Fence runs={model.runs} baseY={model.baseY}/>
   <NeighbourGround grids={model.ground} evening={evening}/>
-  <group name="showcase-neighbours">{model.homes.map((home,i)=><NeighbourHouse key={i} home={home} evening={evening}/>)}</group>
+  <ShowcaseNightFill data={data}/>
+  <group name="showcase-neighbours">{model.homes.map((home,i)=><NeighbourHouse key={i} home={home} evening={evening} homeIndex={i}/>)}</group>
   <TreeLine trees={model.trees} showcase={showcase}/>
  </group>;
 }
