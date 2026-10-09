@@ -107,13 +107,26 @@ function credentialsFor(r: Register, holder: CredentialDef['holder']): JsonLd[] 
 
 const nonEmpty = <K extends string>(key: K, list: unknown[]) => (list.length ? { [key]: list } : {});
 
+/** Counties and townships in the published service-area list are not cities. */
+const ADMINISTRATIVE_SERVICE_AREAS = new Set(['Simcoe', 'Essa']);
+
+function serviceAreaPlace(name: string): JsonLd {
+  return { '@type': ADMINISTRATIVE_SERVICE_AREAS.has(name) ? 'AdministrativeArea' : 'City', name };
+}
+
+/** Map link from the place ID already stored on the Google review URL. */
+function mapsPlaceUrl(reviewUrl: string | undefined): string | undefined {
+  const id = reviewUrl?.match(/(?:placeid|query_place_id)=([^&]+)/)?.[1];
+  return id ? `https://www.google.com/maps/place/?q=place_id:${id}` : undefined;
+}
+
 /** The one typed business node. Emitted by root.tsx only. */
 export function businessNode(r: Register = BUSINESS): JsonLd {
   return {
     '@type': ['LocalBusiness', 'HomeAndConstructionBusiness', 'GeneralContractor'],
     '@id': BUSINESS_ID,
     name: r.publicName.value,
-    description: `${r.publicName.value}: discuss ${r.services.value.join(', ')}. Confirm project scope and availability for your address.`,
+    description: `${r.publicName.value} offers ${r.services.value.join(', ')} for homeowners in Barrie and nearby towns.`,
     url: `${ORIGIN}/`,
     image: `${ORIGIN}/logo-mark.png`,
     logo: `${ORIGIN}/logo-mark.png`,
@@ -124,7 +137,8 @@ export function businessNode(r: Register = BUSINESS): JsonLd {
     priceRange: '$$$',
     currenciesAccepted: 'CAD',
     address: publicPostalAddress(),
-    areaServed: publicGbpServiceAreas.map((name) => ({ '@type': 'City', name })),
+    ...(mapsPlaceUrl(r.urls.googleReviewUrl.value) ? { hasMap: mapsPlaceUrl(r.urls.googleReviewUrl.value) } : {}),
+    areaServed: publicGbpServiceAreas.map(serviceAreaPlace),
     ...(canPublish(r.hours) ? { openingHoursSpecification: r.hours.value.map((hours) => ({
       '@type': 'OpeningHoursSpecification',
       dayOfWeek: hours.days,

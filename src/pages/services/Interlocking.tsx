@@ -88,7 +88,7 @@ export default function Interlocking() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
               {processSteps.map((step, idx) => (
                 <div key={idx} className="bg-brand-surface p-12 rounded-[2px] border border-brand-dim/10 shadow-2xl">
-                  <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10">0{idx + 1}</span>
+                  <span className="font-display text-6xl font-light text-brand-gold-dark/10 block mb-10" aria-hidden="true">0{idx + 1}</span>
                   <h3 className="font-display text-2xl font-light text-brand-bonewhite mb-6">{step.title}</h3>
                   <p className="font-sans text-sm text-brand-muted leading-relaxed font-light">{step.desc}</p>
                 </div>

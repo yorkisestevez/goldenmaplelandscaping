@@ -480,7 +480,7 @@ const Footer = () => {
 
         <div className="pt-12 border-t border-brand-dim/40 flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] uppercase tracking-[0.2em] text-brand-muted font-light">
           <p>© {new Date().getFullYear()} Golden Maple Landscaping. Architectural Precision.</p>
-          <div className="flex gap-6 flex-wrap justify-end text-[9px] opacity-80">
+          <div className="flex gap-6 flex-wrap justify-end text-[9px] text-brand-bonewhite">
             <Link to="/locations/barrie" className="hover:text-brand-gold-dark transition-colors">Barrie</Link>
             <Link to="/locations/innisfil" className="hover:text-brand-gold-dark transition-colors">Innisfil</Link>
             <Link to="/locations/oro-medonte" className="hover:text-brand-gold-dark transition-colors">Oro-Medonte</Link>
