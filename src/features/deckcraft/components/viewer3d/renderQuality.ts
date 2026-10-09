@@ -1,11 +1,14 @@
 import type * as THREE from 'three';
+import {showcaseQuality} from './showcaseMode';
 
 export interface RendererFacts {renderer?:string;memoryGb?:number;cores?:number;maxTextureSize:number;maxSamples:number}
 export interface RenderQuality {tier:'constrained'|'balanced'|'high';dpr:number;grassBudget:number;aoSamples:number;aoResolution:number;msaaSamples:number;shadowSize:number;anisotropy:number}
 /** Capability budgets are selected once per renderer and viewport class. Memory/CPU
  * hints are optional; missing hints never count as a low capability. Software GPUs
- * are constrained even in a large window. Saved geometry and quantities are untouched. */
-export function chooseRenderQuality(f:RendererFacts,narrow:boolean):RenderQuality {
+ * are constrained even in a large window. Saved geometry and quantities are untouched.
+ * Showcase is an explicit still-export opt-in; it is never inferred from the GPU. */
+export function chooseRenderQuality(f:RendererFacts,narrow:boolean,showcase=false):RenderQuality {
+ if(showcase)return {tier:'high',dpr:2,grassBudget:60000,aoSamples:16,aoResolution:.75,msaaSamples:Math.min(4,f.maxSamples),shadowSize:Math.min(4096,f.maxTextureSize),anisotropy:16};
  const software=/swiftshader|llvmpipe|softpipe|software|basic render/i.test(f.renderer??'');
  const low=software||f.maxTextureSize<4096||(f.memoryGb!==undefined&&f.memoryGb<=2)||(f.cores!==undefined&&f.cores<=2);
  const medium=narrow||f.maxTextureSize<8192||(f.memoryGb!==undefined&&f.memoryGb<=4)||(f.cores!==undefined&&f.cores<=4);
@@ -22,4 +25,4 @@ export function rendererFacts(gl:THREE.WebGLRenderer):RendererFacts {
  const hints=typeof navigator==='undefined'?undefined:navigator as Navigator&{deviceMemory?:number};
  const value={renderer,memoryGb:hints?.deviceMemory,cores:hints?.hardwareConcurrency,maxTextureSize:gl.capabilities.maxTextureSize,maxSamples:gl.capabilities.maxSamples};facts.set(gl,value);return value;
 }
-export const rendererQuality=(gl:THREE.WebGLRenderer,narrow=false)=>chooseRenderQuality(rendererFacts(gl),narrow);
+export const rendererQuality=(gl:THREE.WebGLRenderer,narrow=false)=>chooseRenderQuality(rendererFacts(gl),narrow,showcaseQuality());

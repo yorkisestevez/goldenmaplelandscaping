@@ -130,13 +130,14 @@ export function matureSpreadConflicts(objects:LandscapeObject[]){
  return pairs;
 }
 /** All objects retain a far LOD. A bounded extra triangle budget upgrades the
- * largest projected objects; the estimate and object list are never truncated. */
-export function landscapeRenderLods(objects:LandscapeObject[],camera:{x:number;y:number;z:number},viewportHeight:number,tier:'high'|'balanced'|'constrained'){
+ * largest projected objects; the estimate and object list are never truncated.
+ * Showcase stills opt in to the nearest model for every plant, with shadows. */
+export function landscapeRenderLods(objects:LandscapeObject[],camera:{x:number;y:number;z:number},viewportHeight:number,tier:'high'|'balanced'|'constrained',showcase=false){
  const lods=new Map<string,0|1|2>(),ranked=objects.filter(o=>o.enabled&&o.kind!=='bed').map(o=>{lods.set(o.id,2);const distance=Math.max(1,Math.hypot(o.xIn/12-camera.x,o.heightIn/24-camera.y,o.zIn/12-camera.z));return {o,pixels:o.heightIn/12/distance*viewportHeight/(2*Math.tan(19*Math.PI/180))};}).sort((a,b)=>b.pixels-a.pixels);
- if(tier==='constrained')return lods;
- let medium=tier==='high'?300000:120000,near=tier==='high'?500000:0;
- for(const {o,pixels} of ranked){const costs=landscapeAsset(o.assetId).triangleCounts;if(!costs)continue;const extra=costs[1]-costs[2];if(pixels>(tier==='high'?18:36)&&extra<=medium){lods.set(o.id,1);medium-=extra;}}
- for(const {o,pixels} of ranked){const costs=landscapeAsset(o.assetId).triangleCounts;if(!costs||lods.get(o.id)!==1)continue;const extra=costs[0]-costs[1];if(pixels>160&&extra<=near){lods.set(o.id,0);near-=extra;}}
+ if(tier==='constrained'&&!showcase)return lods;
+ let medium=showcase?1e8:tier==='high'?300000:120000,near=showcase?1e8:tier==='high'?500000:0;
+ for(const {o,pixels} of ranked){const costs=landscapeAsset(o.assetId).triangleCounts;if(!costs)continue;const extra=costs[1]-costs[2];if((showcase||pixels>(tier==='high'?18:36))&&extra<=medium){lods.set(o.id,1);medium-=extra;}}
+ for(const {o,pixels} of ranked){const costs=landscapeAsset(o.assetId).triangleCounts;if(!costs||lods.get(o.id)!==1)continue;const extra=costs[0]-costs[1];if((showcase||pixels>160)&&extra<=near){lods.set(o.id,0);near-=extra;}}
  return lods;
 }
 

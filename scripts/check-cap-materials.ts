@@ -14,7 +14,7 @@ import {bankTufts} from '../src/features/deckcraft/components/viewer3d/bankTufts
 import {exposedWallEnvelope} from '../src/features/deckcraft/components/viewer3d/wallFraming';
 import {overviewCamera} from '../src/features/deckcraft/components/viewer3d/cameraFraming';
 import type {YardBox} from '../src/features/deckcraft/yardModel';
-import {visibleSkyElevation,visibleSkyHorizon,visibleSkyStrength,skyStrength,VISIBLE_SKY_MIN_DEG,VISIBLE_DAY_SKY_EXPOSURE} from '../src/features/deckcraft/components/viewer3d/skyModel';
+import {visibleSkyElevation,visibleSkyHorizon,visibleSkyStrength,skyStrength,skyDomeSampleElevation,VISIBLE_SKY_MIN_DEG,VISIBLE_DAY_SKY_EXPOSURE} from '../src/features/deckcraft/components/viewer3d/skyModel';
 
 const map=JSON.parse(readFileSync('public/deckcraft/hardscape-swatches.json','utf8'));
 const manifest=JSON.parse(readFileSync('public/deckcraft/other-cap-sources.json','utf8'));
@@ -43,6 +43,13 @@ check(phone.tier==='balanced'&&phone.grassBudget===16000&&phone.shadowSize===204
 check(desktop.tier==='high'&&desktop.grassBudget===28000&&desktop.msaaSamples===4);
 for(const facts of [{...high,memoryGb:2},{...high,cores:2},{...high,maxTextureSize:2048},{...high,renderer:'llvmpipe'}])check(chooseRenderQuality(facts,false).tier==='constrained');
 check(chooseRenderQuality({maxTextureSize:8192,maxSamples:1},false).msaaSamples===1);
+const balancedFacts={renderer:'Hardware GPU',memoryGb:4,cores:4,maxTextureSize:8192,maxSamples:4};
+const balanced=chooseRenderQuality(balancedFacts,true),balancedAgain=chooseRenderQuality(balancedFacts,true,false);
+check(balanced.tier==='balanced'&&balanced.dpr===1.25&&balanced.grassBudget===16000&&balanced.shadowSize===2048&&balanced.msaaSamples===2&&balanced.aoSamples===12&&balanced.aoResolution===.45&&balanced.anisotropy===8);
+assert.deepEqual(balanced,balancedAgain);checks++;
+const showcase=chooseRenderQuality({...high,renderer:'ANGLE SwiftShader',maxSamples:4,maxTextureSize:8192},false,true);
+check(showcase.tier==='high'&&showcase.dpr===2&&showcase.grassBudget===60000&&showcase.aoSamples===16&&showcase.aoResolution===.75&&showcase.msaaSamples===4&&showcase.shadowSize===4096&&showcase.anisotropy===16);
+check(chooseRenderQuality({...high,renderer:'ANGLE SwiftShader'},false,false).tier==='constrained','Showcase stays off unless the caller opts in');
 const material=applyWallDaylight(applyHardscapeFinish(new THREE.MeshStandardMaterial()));
 check(materialPatchKeys(material).length===2);
 const shader={uniforms:{},vertexShader:'#include <common>\n#include <worldpos_vertex>',fragmentShader:'#include <common>\n#include <roughnessmap_fragment>\n#include <lights_fragment_maps>'} as THREE.WebGLProgramParametersWithUniforms;
@@ -72,6 +79,9 @@ check(visibleSkyElevation(0)===minimum&&Math.abs(visibleSkyElevation(Math.PI/2)-
 const skyBytes=new Float32Array(8*36*4);for(let y=0;y<36;y++)for(let x=0;x<8;x++){const i=(y*8+x)*4;skyBytes[i]=y/36;skyBytes[i+1]=.2;skyBytes[i+2]=.3;skyBytes[i+3]=1;}
 const skyMap=new THREE.DataTexture(skyBytes,8,36,THREE.RGBAFormat,THREE.FloatType);
 for(const flip of [false,true]){skyMap.flipY=flip;const v=minimum/Math.PI+.5,row=Math.floor((flip?1-v:v)*36),horizon=visibleSkyHorizon(skyMap)!;check(Math.abs(horizon[0]-row/36)<1e-6&&Math.abs(horizon[1]-.2)<1e-6&&Math.abs(horizon[2]-.3)<1e-6);}
+const rawHorizon=visibleSkyHorizon(skyMap,0)!;check(Math.abs(rawHorizon[0]-.5)<1e-6&&rawHorizon[0]!==visibleSkyHorizon(skyMap)![0],'A raw elevation samples the photographed horizon, not the remapped upper sky');
+for(const el of [-.2,0,.04,.2,.5,1,Math.PI/2]){const min=VISIBLE_SKY_MIN_DEG*Math.PI/180,displayed=Math.max(0,el),clean=min+displayed*(1-min/(Math.PI/2));check(Math.abs(skyDomeSampleElevation(el,0)-clean)<1e-12,'Horizon band off matches the editor sky');}
+check(skyDomeSampleElevation(0,1)===0&&skyDomeSampleElevation(Math.PI/2,1)>1.2,'The neighbourhood band opens the photographed horizon and keeps the zenith');
 skyMap.dispose();
 const halfBytes=new Uint16Array(8*36*4);for(let i=0;i<halfBytes.length;i++)halfBytes[i]=THREE.DataUtils.toHalfFloat([.2,.3,.4,1][i%4]);const halfMap=new THREE.DataTexture(halfBytes,8,36,THREE.RGBAFormat,THREE.HalfFloatType);const halfHorizon=visibleSkyHorizon(halfMap)!;check(halfHorizon.every((c,i)=>Math.abs(c-[.2,.3,.4][i])<.001));halfMap.dispose();
 check(visibleSkyHorizon(new THREE.Texture())===null);
