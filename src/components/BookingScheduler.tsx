@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, type ChangeEvent, type FormEvent } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { bookingServiceFromLead, BOOKING_SERVICE_OPTIONS } from '../utils/bookingPrefill';
 import {
   ArrowRight,
@@ -92,17 +92,17 @@ export default function BookingScheduler() {
   // The deck designer's "Book a call" passes its design link through router state (never the URL).
   // Thank-you and other links pass name, phone, email, and service as query params.
   const prefill = (useLocation().state ?? null) as { bookingNotes?: unknown; serviceInterest?: unknown } | null;
-  const [searchParams] = useSearchParams();
+  const bookingQuery = new URLSearchParams(useLocation().search);
   const [form, setForm] = useState(() => {
     const fromState = typeof prefill?.serviceInterest === 'string' ? prefill.serviceInterest : '';
-    const fromQuery = searchParams.get('service') ?? '';
+    const fromQuery = bookingQuery.get('service') ?? '';
     const service = (SERVICE_OPTIONS as readonly string[]).includes(fromState)
       ? fromState
       : bookingServiceFromLead(fromQuery || fromState);
     return {
-      name: searchParams.get('name') ?? '',
-      email: searchParams.get('email') ?? '',
-      phone: searchParams.get('phone') ?? '',
+      name: bookingQuery.get('name') ?? '',
+      email: bookingQuery.get('email') ?? '',
+      phone: bookingQuery.get('phone') ?? '',
       service_interest: service,
       notes: typeof prefill?.bookingNotes === 'string' ? prefill.bookingNotes.slice(0, 4000) : '',
     };
