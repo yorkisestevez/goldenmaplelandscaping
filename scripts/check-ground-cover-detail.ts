@@ -25,7 +25,7 @@ for(const surface of LANDSCAPE_SURFACES){
 }
 ok(coverInstances('river-rock-bed',[],[],3,focus,144,2000).length===0,'empty clipped areas have no geometry');
 const brownMulch=createLandscapeSurfaceMaterial('mulch-bed'),blackMulch=createLandscapeSurfaceMaterial('black-mulch-bed');
-ok(brownMulch.material.color.getHexString()==='4a3122'&&blackMulch.material.color.getHexString()==='2a2622','default mulch renders as dark brown and black stays available');
+ok(brownMulch.material.color.getHexString()==='ffffff'&&blackMulch.material.color.getHexString()==='2a2622','hardwood colour is in the fibre shader; black stays a dark multiply');
 ok(LANDSCAPE_SURFACES.find(s=>s.id==='mulch-bed')!.color==='#73503a'&&LANDSCAPE_SURFACES.find(s=>s.id==='black-mulch-bed')!.color==='#34302b','planning swatches stay on the original colours');
 brownMulch.dispose();blackMulch.dispose();
 const a=createLandscapeSurfaceMaterial('river-rock-bed'),b=createLandscapeSurfaceMaterial('river-rock-bed');
