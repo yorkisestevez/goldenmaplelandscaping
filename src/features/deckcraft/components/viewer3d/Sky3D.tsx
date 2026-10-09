@@ -6,7 +6,7 @@ import {SKY_DATA as SKY,skyStrength,skyYaw,VISIBLE_SKY_MIN_DEG,visibleSkyStrengt
 import dayLighting from './assets/sky/sky-day-ibl.hdr?url';
 import eveningLighting from './assets/sky/sky-evening-ibl.hdr?url';
 import {SCENE_LOOK} from './sceneLook';
-import {DAY_SKY_BLEND,DAY_SKY_GREEN,DAY_SKY_RED,SHOWCASE_SKY_FILL} from './showcaseGrade';
+import {DAY_SKY_BLEND,DAY_SKY_GAIN,DAY_SKY_GREEN,DAY_SKY_RED,SHOWCASE_SKY_FILL} from './showcaseGrade';
 import {SHOWCASE_CLEAR_FOG,SHOWCASE_FOG_DENSITY,getShowcaseFlags,getShowcaseServerFlags,showcaseGolden,subscribeShowcase} from './showcaseMode';
 
 /**
@@ -37,7 +37,7 @@ void main(){
   float dux=abs(dFdx(u))<abs(dFdx(seam))?dFdx(u):dFdx(seam),duy=abs(dFdy(u))<abs(dFdy(seam))?dFdy(u):dFdy(seam);
   vec3 sky=textureGrad(lighting,vec2(u,v),vec2(dux,dFdx(v)),vec2(duy,dFdy(v))).rgb;
   // Correct after exposure. A lift applied to the dim photograph sits under the neutral toe and prints as cyan.
-  vec3 exposed=max(sky,vec3(0.0))*strength;
+  vec3 exposed=max(sky,vec3(0.0))*strength*mix(1.0,${DAY_SKY_GAIN},uRich);
   float luma=dot(exposed,vec3(0.2126,0.7152,0.0722));
   float lead=max(exposed.b,luma);
   vec3 natural=vec3(lead*${DAY_SKY_RED},lead*${DAY_SKY_GREEN},lead);

@@ -34,11 +34,14 @@ export const SHOWCASE_SKY_FILL=0.5;
 export const DAY_SKY_BLEND=0.55;
 export const DAY_SKY_RED=0.55;
 export const DAY_SKY_GREEN=0.74;
+/** Extra panorama exposure for showcase day only. The photographed sky sits a stop under a print. */
+export const DAY_SKY_GAIN=1.5;
 
 function smooth01(edge0:number,edge1:number,x:number){const t=x<=edge0?0:x>=edge1?1:(x-edge0)/(edge1-edge0);return t*t*(3-2*t);}
 /** The dome shader's daylight recolor. `rich` is 1 for showcase day and 0 everywhere else. */
 export function daySkyLinear(rgb:readonly[number,number,number],strength:number,rich=1):[number,number,number]{
-  const e:[number,number,number]=[Math.max(0,rgb[0])*strength,Math.max(0,rgb[1])*strength,Math.max(0,rgb[2])*strength];
+  const gain=1+(DAY_SKY_GAIN-1)*rich;
+  const e:[number,number,number]=[Math.max(0,rgb[0])*strength*gain,Math.max(0,rgb[1])*strength*gain,Math.max(0,rgb[2])*strength*gain];
   const luma=.2126*e[0]+.7152*e[1]+.0722*e[2],lead=Math.max(e[2],luma);
   const natural:[number,number,number]=[lead*DAY_SKY_RED,lead*DAY_SKY_GREEN,lead];
   const naturalL=Math.max(.2126*natural[0]+.7152*natural[1]+.0722*natural[2],1e-4);
