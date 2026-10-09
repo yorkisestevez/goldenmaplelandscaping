@@ -3,6 +3,7 @@ import AuthorBio from '../../components/AuthorBio';
 import { Link } from 'react-router-dom';
 import CostGuideInlineCTA from '../../components/CostGuideInlineCTA';
 import { BUSINESS, publicContact } from '../../data/business';
+import { trackCall } from '../../utils/analytics';
 
 export default function InterlockingCostBarrie() {
   return (
@@ -200,7 +201,7 @@ export default function InterlockingCostBarrie() {
       <p>Contact us to confirm the current consultation scope, site-visit policy, and written-quote process for your project.</p>
 
       <p>
-        <strong>Call:</strong> <a href={`tel:${publicContact.phoneTel}`} className="text-brand-gold-dark hover:underline">{publicContact.phoneDisplay}</a><br />
+        <strong>Call:</strong> <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('interlocking_cost_article_phone')} className="text-brand-gold-dark hover:underline">{publicContact.phoneDisplay}</a><br />
         <strong>Email:</strong> <a href={`mailto:${publicContact.email}`} className="text-brand-gold-dark hover:underline">{publicContact.email}</a><br />
         <strong>Online:</strong> <Link to="/contact" className="text-brand-gold-dark hover:underline">Request a Quote</Link>
       </p>

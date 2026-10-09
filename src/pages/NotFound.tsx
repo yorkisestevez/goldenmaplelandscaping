@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Phone } from 'lucide-react';
 import SEO from '../components/SEO';
 import { publicContact } from '../data/business';
+import { trackCall } from '../utils/analytics';
 
 /** Branded 404. Prerendered to /404/index.html and copied to /404.html so Netlify can return status 404. */
 export default function NotFound() {
@@ -21,7 +22,7 @@ export default function NotFound() {
         <div className="flex flex-wrap items-center gap-4">
           <Link to="/" className="btn-primary">Back to home</Link>
           <Link to="/contact" className="btn-secondary">Request an estimate</Link>
-          <a href={`tel:${publicContact.phoneTel}`} className="inline-flex items-center gap-2 font-sans text-sm text-brand-ink">
+          <a href={`tel:${publicContact.phoneTel}`} onClick={() => trackCall('not_found_phone')} className="inline-flex items-center gap-2 font-sans text-sm text-brand-ink">
             <Phone size={16} aria-hidden="true" />
             {publicContact.phoneDisplay}
           </a>
