@@ -71,6 +71,7 @@ near(pictureFrameOverhang({...base,autoLighting:{border:false}}),.5,'Turning opt
   const synced=syncAutoLighting({...litStairs,autoLighting:{border:true}},counts);
   ok(model.stairSupport.treadNosingIn===2.5,'Lit step-up noses use the same 2.5 in mounting space as the border');
   ok(synced.some(i=>i.zone==='stairs'&&i.auto&&i.qty===counts.stairs),'Border lighting also installs under-step lights on every tread');
+  ok(buildDeckTakeoff({...base,autoLighting:{stairs:true}}).stairSupport.treadNosingIn===.5,'Under-step lights alone keep the ordinary ½ in nose for legacy price parity');
   const one:DeckData={...structuredClone(DEFAULT_DECK),pictureFrameRows:1,pictureFrameOverhangIn:.5,height:7,stairFlights:1,autoLighting:{border:true,stairs:true}};
   const oneModel=buildDeckTakeoff(one),oneCounts={posts:0,stairs:oneModel.treads.length,privacy:0,border:0};
   ok(oneModel.flights[0]?.risers===1&&oneModel.treads.length===1,'A one-riser step-up gets a nosing tread when lighting is on');

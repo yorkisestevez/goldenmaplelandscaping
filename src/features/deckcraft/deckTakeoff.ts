@@ -229,8 +229,8 @@ export function buildDeckTakeoff(data:DeckData){
     for(let i=0;i<n;i++)riserBoards.push(...makeRiserBoards({x:start.x+outward.x*i*run,y:start.y-i*rise,z:start.z+outward.y*i*run},along,outward,width+2*e,rise,stairSupport,data.deckingMaterial,id,i));
     if(rise<=1)issues.push('A stair rise is no greater than the modeled tread thickness; this transition needs a reviewed threshold detail.');
     for(let i=1;i<n;i++){const d=(i-.5)*run+stairSupport.treadNosingIn/2;treads.push({x:start.x+outward.x*d,y:start.y-i*rise-.5,z:start.z+outward.y*d,w:width+2*e,h:1,d:run+stairSupport.treadNosingIn,angle:yaw,kind:'tread',...(kind==='grade'?{flightId:stairTargetId(id)}:{})});}
-    // A one-riser step-up has no intermediate tread; when lighting is on, emit a nosing board at the upper rim so
-    // the step-up gets the same overhang and under-step mount as multi-riser flights and the lit deck edge.
+    // A one-riser step-up has no intermediate tread; when border or under-step lighting is on, emit a nosing
+    // board at the upper rim so the step-up can take an under-step light (and the lit border's mounting nose).
     if(n===1&&(data.autoLighting?.stairs||data.autoLighting?.border)){const nose=stairSupport.treadNosingIn,d=nose/2;treads.push({x:start.x+outward.x*d,y:start.y-.5,z:start.z+outward.y*d,w:width+2*e,h:1,d:nose,angle:yaw,kind:'tread',...(kind==='grade'?{flightId:stairTargetId(id)}:{})});}
     if(opts.stringers!==false)for(const shift of stringerOffsets){stringers.push({a:{x:start.x+along.x*shift,y:start.y-9,z:start.z+along.y*shift},b:{x:end.x+along.x*shift,y:end.y-4,z:end.z+along.y*shift},width:1.5,depth:9.25,role:'stringer',stair:{risers:n,rise,run,top:start.y,bottom:end.y}});}
     // Terminal grade guards stand on the last tread, not on the ground beyond its final riser (2026-10 rules; a design
