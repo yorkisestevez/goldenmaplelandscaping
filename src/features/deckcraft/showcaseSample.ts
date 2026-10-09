@@ -10,7 +10,7 @@ import {stairFootprints,planGapIn,fireOutline} from './fireFeatureModel';
 import {createYardFeature} from './yardCreateEdits';
 import {yardShapeEdit} from './yardShapeEditing';
 import {yardFeatureOutline} from './yardPathGeometry';
-import {yardArea,yardClip} from './yardModel';
+import {yardArea,yardClip,yardRectangle} from './yardModel';
 import {createPlanningPool,poolRoundedRectangle} from './poolAssembly';
 import {poolLocalBounds} from './poolGeometry';
 import {newPergola} from './pergolaValidation';
@@ -26,8 +26,10 @@ import {patioInlayPlans} from './patioInlays';
  * same takeoff as any other design.
  * Planting uses the Ontario library: cedar hedge, sugar maple, white pine,
  * serviceberry, hydrangea, dogwood and Karl Foerster, layered back to front.
- * The pool feature has no underwater light. Poolside seating is the cushioned
- * lounge chair. The pergola is black aluminium louvers, opened so the slats
+ * The pool feature has no underwater light. Chaise loungers sit on the pool
+ * deck only. The fire lounge seats two sofas facing the burner, 36–48 in
+ * clear; the low table between them is the outdoor coffee table. The pergola
+ * is black aluminium louvers, opened so the slats
  * and the light between them read. The dining table is the folding-table mesh
  * scaled to an eight-seat envelope; there is no larger table product.
  */
@@ -165,9 +167,13 @@ export function ontarioShowcaseDesign():DeckData{
  slab(data,'lounge-path','Lounge path',-28,36,terraceX0+JOIN,46);
 
  const lx0=(lounge.xFt-lounge.widthFt/2)*12,lx1=(lounge.xFt+lounge.widthFt/2)*12,lz0=(lounge.zFt-lounge.depthFt/2)*12,lz1=(lounge.zFt+lounge.depthFt/2)*12,inset=28;
- const seatPath=[{x:lx1-inset-18,y:lz0+inset},{x:lx0+inset,y:lz0+inset},{x:lx0+inset,y:lz1-inset},{x:lx1-inset-18,y:lz1-inset}];
+ // The west leg steps out so two sofas can face the burner with 36–48 in of clearance and still sit on the paving.
+ const westLeg=lx0+inset-12;
+ const seatPath=[{x:lx1-inset-18,y:lz0+inset},{x:westLeg,y:lz0+inset},{x:westLeg,y:lz1-inset},{x:lx1-inset-18,y:lz1-inset}];
  push(data,{...createYardFeature(data,{kind:'retaining-wall',id:'seat-wall',name:'Seat wall',wallPath:seatPath,heightIn:18,depthFt:SEAT_DEPTH,productId:'techo-raffinato-wall',hardscape:SEAT,freestanding:true,supportFeatureId:lounge.id}),color:WALL_ONYX});
- const fireX=lounge.xFt+0.4,fireZ=lounge.zFt;
+ const sofaDepthFt=36/12,burnerFt=1.75,edgePad=2/12;
+ const innerX=westLeg/12+SEAT_DEPTH/2,patioEast=lounge.xFt+lounge.widthFt/2;
+ const fireX=(innerX+edgePad+sofaDepthFt+patioEast-edgePad-sofaDepthFt)/2,fireZ=lounge.zFt;
  push(data,{...createYardFeature(data,{kind:'fire-feature',id:'fire-bowl',name:'Fire bowl',xFt:fireX,zFt:fireZ,widthFt:3.5,depthFt:3.5,productId:'fire-gas-bowl',supportFeatureId:lounge.id}),color:'#8a8478'});
 
  const poolLengthIn=16*12,poolShape=poolRoundedRectangle(36*12,poolLengthIn);
@@ -225,10 +231,9 @@ export function ontarioShowcaseDesign():DeckData{
   seat('dining-1',2.85,-2.67,-90),seat('dining-2',2.85,0,-90),seat('dining-3',2.85,2.67,-90),
   seat('dining-4',-2.85,-2.67,90),seat('dining-5',-2.85,0,90),seat('dining-6',-2.85,2.67,90),
   seat('dining-7',0,5.1,180),seat('dining-8',0,-5.1,0),
-  furn('outdoor-sofa','lounge-sofa','Lounge sofa',fireX-5.4,fireZ,90,lounge.id),
-  furn('outdoor-coffee-table','lounge-table','Coffee table',fireX-2.7,fireZ,90,lounge.id),
-  furn('lounge-chair','lounge-north','Chaise',fireX+1.6,fireZ+4.4,0,lounge.id),
-  furn('lounge-chair','lounge-south','Chaise',fireX+1.6,fireZ-4.4,180,lounge.id),
+  furn('outdoor-sofa','lounge-west','Lounge sofa',innerX+edgePad+sofaDepthFt/2,fireZ,-90,lounge.id),
+  furn('outdoor-sofa','lounge-east','Lounge sofa',patioEast-edgePad-sofaDepthFt/2,fireZ,90,lounge.id),
+  furn('outdoor-coffee-table','lounge-table','Fire table',(innerX+edgePad+sofaDepthFt+(fireX-burnerFt))/2,fireZ,90,lounge.id),
   furn('lounge-chair','pool-near-1','Pool lounge',court.xFt-10,nearDeck,180,court.id),
   furn('lounge-chair','pool-near-2','Pool lounge',court.xFt+10,nearDeck,180,court.id),
   furn('lounge-chair','pool-far-1','Pool lounge',court.xFt-8,farDeck,0,court.id),
@@ -241,7 +246,7 @@ export function ontarioShowcaseDesign():DeckData{
  const pin=(xFt:number,zFt:number,angle=0,y?:number)=>({x:xFt*12,z:zFt*12,angle,...(y===undefined?{}:{y})});
  const path=[pin(-11,28),pin(-7,53),pin(-7,60),pin(2,48),pin(46,48),pin(2,72),pin(46,72),pin(-22,46)];
  const spots=[pin(14,48,0),pin(34,48,0),pin(24,72,Math.PI),pin(48,60,-Math.PI/2),pin(-32,24,-Math.PI/2),pin(-32,55,-Math.PI/2),pin(56,24,Math.PI/2),pin(56,55,Math.PI/2)];
- const loungeWall=[pin(-24.6,49,Math.PI/2,16),pin(-24.6,56,Math.PI/2,16),pin(-18,46.9,0,16),pin(-18,57.9,Math.PI,16)];
+ const loungeWall=[pin(innerX+0.45,fireZ-4.4,Math.PI/2,16),pin(innerX+0.45,fireZ+4.4,Math.PI/2,16),pin(fireX,(lz0+inset)/12+SEAT_DEPTH/2+0.4,0,16),pin(fireX,(lz1-inset)/12-SEAT_DEPTH/2-0.4,Math.PI,16)];
  data.lightingSystem={wireDistance:80,selectedItems:syncAutoLighting({...data,lightingSystem:{wireDistance:80,selectedItems:[
   {productId:'liv',qty:path.length,zone:'landscape',places:path},
   {productId:'scope',qty:spots.length,zone:'landscape',places:spots},
@@ -253,7 +258,7 @@ export function ontarioShowcaseDesign():DeckData{
  const hero={position:[-8,28,78] as [number,number,number],target:[12,1,28] as [number,number,number]};
  const eye={position:[24,5.2,23] as [number,number,number],target:[2,1,62] as [number,number,number]};
  const poolCam={position:[24,12,36] as [number,number,number],target:[24,0,64] as [number,number,number]};
- const fireCam={position:[-4,5.2,40] as [number,number,number],target:[-18,1.1,54] as [number,number,number]};
+ const fireCam={position:[-2,7.4,41] as [number,number,number],target:[fireX,1.1,fireZ] as [number,number,number]};
  const shot=(id:string,name:string,frame:{position:[number,number,number];target:[number,number,number]},fov:number)=>({id,name,fov,positionIn:frame.position.map(n=>n*12) as [number,number,number],targetIn:frame.target.map(n=>n*12) as [number,number,number]});
  data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,56),shot('terrace-eye','Terrace toward the pool',eye,55),shot('pool','Pool court',poolCam,42),shot('fire','Fire lounge',fireCam,44)]};
  return data;
@@ -308,6 +313,17 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
  const lights=data.lightingSystem.selectedItems,placed=(id:string)=>lights.find(i=>i.productId===id)?.places?.length??0;
  if(placed('liv')<8||placed('scope')<8||placed('liv_wall')<4)issues.push('Path lights, tree uplights and fire-lounge wall lights are not placed.');
  if((data.landscapeObjects??[]).filter(o=>o.assetId==='lounge-chair'&&o.supportFeatureId==='pool-court').length<2)issues.push('The pool deck has no lounge chairs.');
+ if((data.landscapeObjects??[]).some(o=>o.assetId==='lounge-chair'&&o.supportFeatureId==='lounge'))issues.push('Chaise loungers are inside the fire lounge.');
+ const sofas=(data.landscapeObjects??[]).filter(o=>o.assetId==='outdoor-sofa'&&o.supportFeatureId==='lounge').sort((a,b)=>a.xIn-b.xIn);
+ if(sofas.length!==2)issues.push('The fire lounge does not have two sofas.');
+ if(fire&&sofas.length===2){
+  const burner=fireOutline(fire),ring=(o:LandscapeObject)=>yardRectangle(o.xIn,o.zIn,o.widthIn,o.depthIn,o.rotationDeg*Math.PI/180);
+  const turn=(d:number)=>{const n=((d%360)+360)%360;return n>180?n-360:n;};
+  if(Math.abs(turn(sofas[0].rotationDeg)+90)>1||Math.abs(turn(sofas[1].rotationDeg)-90)>1)issues.push('The lounge sofas do not face the burner.');
+  for(const sofa of sofas){const gap=planGapIn(ring(sofa),burner);if(gap<36||gap>48)issues.push(`A lounge sofa is ${gap.toFixed(1)} in from the burner.`);}
+  const low=data.landscapeObjects?.find(o=>o.id==='lounge-table');
+  if(low&&(planGapIn(ring(low),burner)<1||sofas.some(sofa=>planGapIn(ring(low),ring(sofa))<1)))issues.push('The fire table overlaps a sofa or the burner.');
+ }
  if(!data.autoLighting?.posts||!data.autoLighting.stairs)issues.push('Deck lighting is off.');
  if(!data.pergola?.lighting)issues.push('The pergola has no lights.');
  if(!fire?.supportFeatureId)issues.push('The fire bowl is not on the lounge.');
