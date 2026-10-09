@@ -73,7 +73,7 @@ export default function ProjectDetail() {
   return (
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
-        title={`${project.title} | ${project.category} in ${project.town}`}
+        title={`${project.title} in ${project.town}`}
         description={project.summary}
         canonical={canonical}
         image={absolute(cover.src)}
