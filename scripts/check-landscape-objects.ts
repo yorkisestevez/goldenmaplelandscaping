@@ -64,7 +64,7 @@ for(let home=0;home<6;home++)for(let pane=0;pane<36;pane++){const glow=neighbour
 check(first===neighbourWindowGlow(0,0)&&darkPanes>litPanes&&litPanes>8&&peakGlow<0.55,'Most neighbour windows are dark, and the lit ones are a soft glow');
 const showcaseSample=ontarioShowcaseDesign(),showcaseIssues=showcaseSampleIssues(showcaseSample);
 check(showcaseIssues.length===0,showcaseIssues.join(' '));
-check(showcaseSample.permitSite?.lotWidthFt===120&&showcaseSample.permitSite.lotDepthFt===240&&showcaseSample.houseConfig?.storeys===2,'The showcase sample is a two-storey house on a 120×240 ft lot');
+check(showcaseSample.permitSite?.lotWidthFt===100&&showcaseSample.permitSite.lotDepthFt===160&&showcaseSample.houseConfig?.storeys===2,'The showcase sample is a two-storey house on a 100×160 ft lot');
 check(showcaseSample.yardFeatures?.some(f=>f.id==='fire-bowl'&&f.supportFeatureId==='lounge')&&showcaseSample.pools?.length===1&&showcaseSample.pergola?.target.kind==='patio','The showcase yard connects a catalogue fire lounge, pool and pergola');
 check(designHasNightLights(showcaseSample),'The showcase yard lights itself, so the night fill stays off');
 for(const block of getHouseBlocks(showcaseSample))check(showcaseRoofTrimSeated({x0:block.rect.x0,x1:block.rect.x1,y0:block.rect.y0,y1:block.rect.y1,wallTop:block.wallHeightIn,rise:blockRoofRise(block,showcaseSample.houseConfig?.roofPitch),shape:block.roofShape,ridge:block.ridge}),`Showcase trim seats on the ${block.id} ${block.roofShape} roof`);

@@ -1,4 +1,4 @@
-import type {DeckData,PatioInlay,YardFeature,YardHardscape} from './types';
+import type {DeckData,PatioInlay,YardFeature} from './types';
 import type {LandscapeObject} from './landscapeTypes';
 import {DEFAULT_DECK} from './defaults';
 import {EXTERIOR_LOOKS,applyLook} from './houseLooks';
@@ -8,59 +8,62 @@ import {buildDeckTakeoff} from './deckTakeoff';
 import {getFootprint,getStairPlacement} from './lib/deckGeometry';
 import {stairFootprints,planGapIn,fireOutline} from './fireFeatureModel';
 import {createYardFeature} from './yardCreateEdits';
-import {applyWalkway,type ShapePath} from './shapeTools';
 import {yardArea,yardClip} from './yardModel';
-import {createPlanningPool} from './poolAssembly';
+import {createPlanningPool,poolRoundedRectangle} from './poolAssembly';
+import {poolLocalBounds} from './poolGeometry';
 import {newPergola} from './pergolaValidation';
 import {syncAutoLighting} from './lightingSystem';
 import {LANDSCAPE_SPECIES,newLandscapeObject} from './landscapeCatalogue';
-import {overviewCamera} from './components/viewer3d/cameraFraming';
+import {patioInlayPlans} from './patioInlays';
 import type {LandscapeAssetId} from './landscapeTypes';
 
 /**
  * The yard used for showcase stills: a two-storey contemporary house on a
- * 120×240 ft estate lot. The dining terrace, fire lounge and pool court are
- * separate rooms with lawn and planting between them.
+ * 100×160 ft lot. One light-slab spine steps off the deck stairs — dining
+ * terrace, pool court, and a fire lounge beside it — wrapped in deep beds.
  * It is a sample, not the editor's default deck. Pricing runs through the
  * same takeoff as any other design.
+ * The catalogue has no cedar, maple, or hydrangea, and no pool-lounger
+ * product. Screening uses white pine, serviceberry, red-osier dogwood and
+ * Karl Foerster. Poolside seating is the cushioned lounge chair.
  */
 const SLAB='techo-blu60-smooth-slab';
-const ONYX='#565855',CREMA='#cabaaa',CHAMPLAIN='#8d8377',WALL_ONYX='#4b4d4d';
-const BORDER:YardHardscape={finishId:'hd-smooth6-13',colorId:'onyx-black',unitId:'standalone-6x13',patternId:'l77-linear-laying-pattern-09-100-6x13',angleDeg:0,jointMm:7};
-const FIELD:YardHardscape={finishId:'hd-smooth-grande',colorId:'caff-crema',unitId:'grande-495-825-60',patternId:'linear-laying-pattern-05-100-blu-grande',angleDeg:0,jointMm:7};
-const POOL_PAVE:YardHardscape={finishId:'hd-smooth-grande',colorId:'champlain-grey',unitId:'grande-495-825-60',patternId:'linear-laying-pattern-05-100-blu-grande',angleDeg:0,jointMm:7};
-const SEAT:YardHardscape={finishId:'smooth',colorId:'onyx-black',unitId:'double-sided-397-249-90',patternId:'running-bond',angleDeg:0,jointMm:0};
+const ONYX='#565855',CREMA='#cabaaa',WALL_ONYX='#4b4d4d';
+const BORDER:YardFeature['hardscape']={finishId:'hd-smooth6-13',colorId:'onyx-black',unitId:'standalone-6x13',patternId:'l77-linear-laying-pattern-09-100-6x13',angleDeg:0,jointMm:7};
+const FIELD:YardFeature['hardscape']={finishId:'hd-smooth-grande',colorId:'caff-crema',unitId:'grande-495-825-60',patternId:'linear-laying-pattern-05-100-blu-grande',angleDeg:0,jointMm:7};
+const SEAT:YardFeature['hardscape']={finishId:'smooth',colorId:'onyx-black',unitId:'double-sided-397-249-90',patternId:'running-bond',angleDeg:0,jointMm:0};
 const SEAT_DEPTH=249/304.8;
-const INSET=330/25.4;
-const LOT_W=120,LOT_D=240;
+const BORDER_IN=18;
+const LOT_W=100,LOT_D=160;
+const JOIN=2/12;
 
-const line=(points:{x:number;y:number}[]):ShapePath=>({points,edges:points.slice(1).map(()=>({kind:'line'})),closed:false});
 const species=(id:string)=>structuredClone(LANDSCAPE_SPECIES.find(s=>s.id===id)!);
 
-function fieldInlay(f:YardFeature,name:string):PatioInlay{
- const widthIn=f.widthFt*12-2*INSET,depthIn=f.depthFt*12-2*INSET;
- if(widthIn<12||depthIn<12||widthIn>240||depthIn>240)throw Error(`${f.name} field is ${widthIn.toFixed(1)}×${depthIn.toFixed(1)} in; a catalogue inlay stays within 20 ft.`);
- return {id:`${f.id}-field`,name,shape:'rectangle',xIn:0,yIn:0,widthIn,depthIn,rotationDeg:0,productId:SLAB,color:CREMA,hardscape:FIELD};
+/** Picture-frame strips, each within the 20 ft inlay limit, on a light field. */
+function borderStrips(f:YardFeature):PatioInlay[]{
+ const w=f.widthFt*12,d=f.depthFt*12,b=BORDER_IN,out:PatioInlay[]=[];
+ const pieces=(span:number)=>{const n=Math.ceil(span/240-1e-6),size=span/n;return Array.from({length:n},(_,i)=>({at:-span/2+size*(i+.5),size}));};
+ let k=0;
+ const add=(xIn:number,yIn:number,widthIn:number,depthIn:number)=>{out.push({id:`${f.id}-border-${k++}`,name:'Onyx border',shape:'rectangle',xIn,yIn,widthIn,depthIn,rotationDeg:0,productId:SLAB,color:ONYX,hardscape:{...BORDER!}});};
+ for(const side of [-1,1])for(const p of pieces(w))add(p.at,side*(d/2-b/2),p.size,b);
+ for(const side of [-1,1])for(const p of pieces(d-2*b))add(side*(w/2-b/2),p.at,b,p.size);
+ return out;
 }
 
 function push(data:DeckData,feature:YardFeature){data.yardFeatures=[...(data.yardFeatures??[]),feature];return feature;}
-
-function rectOf(f:YardFeature){const x=(f.xFt-f.widthFt/2)*12,z=(f.zFt-f.depthFt/2)*12,w=f.widthFt*12,d=f.depthFt*12;return [{x,y:z},{x:x+w,y:z},{x:x+w,y:z+d},{x,y:z}];}
-
-/** An onyx walkway along a centreline, in world inches, joining two paved rooms across the lawn. */
-function pathWalk(data:DeckData,id:string,name:string,spine:{x:number;y:number}[]){
- const mid=spine[Math.floor((spine.length-1)/2)];
- const base=createYardFeature(data,{kind:'patio',id,name,xFt:mid.x/12,zFt:mid.y/12,widthFt:4,depthFt:8,heightIn:0,productId:SLAB,hardscape:BORDER});
- return push(data,{...applyWalkway(base,line(spine),48,'square'),color:ONYX});
+function slab(data:DeckData,id:string,name:string,x0:number,z0:number,x1:number,z1:number,border=false){
+ const feature={...createYardFeature(data,{kind:'patio',id,name,xFt:(x0+x1)/2,zFt:(z0+z1)/2,widthFt:x1-x0,depthFt:z1-z0,heightIn:0,productId:SLAB,hardscape:FIELD}),color:CREMA};
+ return push(data,border?{...feature,inlays:borderStrips(feature)}:feature);
 }
+function rectOf(f:YardFeature){const x=(f.xFt-f.widthFt/2)*12,z=(f.zFt-f.depthFt/2)*12,w=f.widthFt*12,d=f.depthFt*12;return [{x,y:z},{x:x+w,y:z},{x:x+w,y:z+d},{x,y:z+d}];}
 
 function bed(id:string,name:string,x0:number,z0:number,x1:number,z1:number):LandscapeObject{
- const o=newLandscapeObject('cedar-mulch-bed',id,(x0+x1)/2*12,(z0+z1)/2*12);
+ const o=newLandscapeObject('mulch-bed',id,(x0+x1)/2*12,(z0+z1)/2*12);
  return {...o,name,widthIn:(x1-x0)*12,depthIn:(z1-z0)*12,polygon:[{x:x0*12,z:z0*12},{x:x1*12,z:z0*12},{x:x1*12,z:z1*12},{x:x0*12,z:z1*12}]};
 }
 function plant(asset:LandscapeAssetId,id:string,name:string,xFt:number,zFt:number,heightIn:number,speciesId:string,rotationDeg=0):LandscapeObject{
  const o=newLandscapeObject(asset,id,xFt*12,zFt*12);
- const spread=asset==='grass-clump'?28:asset==='rounded-shrub'?46:asset==='conifer-tree'?Math.round(heightIn*.45):Math.round(heightIn*.62);
+ const spread=asset==='grass-clump'?28:asset==='rounded-shrub'?46:asset==='conifer-tree'?Math.round(heightIn*.42):Math.round(heightIn*.55);
  return {...o,name,heightIn,widthIn:spread,depthIn:spread,rotationDeg,speciesRecord:species(speciesId)};
 }
 function furn(asset:LandscapeAssetId,id:string,name:string,xFt:number,zFt:number,rotationDeg:number,support:string):LandscapeObject{
@@ -114,117 +117,127 @@ export function ontarioShowcaseDesign():DeckData{
  let terrace:YardFeature|undefined,landingError:Error|undefined;
  for(const overlapIn of [1.2,1,0.8,0.6]){
   try{
-   const z0=foot-overlapIn,depthIn=20*12;
-   terrace=createYardFeature(data,{kind:'patio',id:'terrace',name:'Dining terrace',xFt:stairX/12,zFt:(z0+depthIn/2)/12,widthFt:22,depthFt:20,heightIn:0,productId:SLAB,hardscape:BORDER});
+   const z0=foot-overlapIn,depthIn=24*12;
+   terrace=createYardFeature(data,{kind:'patio',id:'terrace',name:'Dining terrace',xFt:stairX/12,zFt:(z0+depthIn/2)/12,widthFt:40,depthFt:24,heightIn:0,productId:SLAB,hardscape:FIELD});
    break;
   }catch(error){landingError=error as Error;}
  }
  if(!terrace)throw landingError??Error('The dining terrace could not meet the stair.');
  const landingOverlap=yardArea(yardClip([rectOf(terrace)],rings,'intersection'));
  if(landingOverlap<=0.05||landingOverlap>0.5)throw Error(`Stair landing overlap is ${landingOverlap.toFixed(3)} sq ft; it has to meet the tread without standing on the flight.`);
- terrace={...terrace,color:ONYX,inlays:[fieldInlay(terrace,'Crema field')]};
+ terrace={...terrace,color:CREMA,inlays:borderStrips(terrace)};
  push(data,terrace);
 
- const loungeBuilt={...createYardFeature(data,{kind:'patio',id:'lounge',name:'Fire lounge',xFt:-28,zFt:62,widthFt:18,depthFt:18,heightIn:0,productId:SLAB,hardscape:BORDER}),color:ONYX};
- loungeBuilt.inlays=[fieldInlay(loungeBuilt,'Crema field')];
- const loungePatio=push(data,loungeBuilt);
+ // The 36 ft pool run is across the yard. A 36 ft run away from the house does
+ // not leave the surround and a rear bed inside this lot.
+ const far=terrace.zFt+terrace.depthFt/2;
+ const court=slab(data,'pool-court','Pool court',-4,far-JOIN,52,far-JOIN+34);
+ const lounge=slab(data,'lounge','Fire lounge',-28,court.zFt-court.depthFt/2,-10,court.zFt-court.depthFt/2+18,true);
+ slab(data,'spine-walk','Spine walk',-10-JOIN,lounge.zFt-lounge.depthFt/2-JOIN,-4+JOIN,lounge.zFt+lounge.depthFt/2+JOIN);
 
- const poolPatio=push(data,{...createYardFeature(data,{kind:'patio',id:'pool-court',name:'Pool court',xFt:46,zFt:102,widthFt:30,depthFt:42,heightIn:0,productId:SLAB,hardscape:POOL_PAVE}),color:CHAMPLAIN});
- const tz=terrace.zFt*12,lz=loungePatio.zFt*12,pz=(poolPatio.zFt-poolPatio.depthFt/2)*12;
- pathWalk(data,'walk-lounge','Lounge walk',[
-  {x:(terrace.xFt-terrace.widthFt/2)*12+24,y:tz},
-  {x:(loungePatio.xFt+loungePatio.widthFt/2)*12+72,y:tz},
-  {x:(loungePatio.xFt+loungePatio.widthFt/2)*12+72,y:lz},
-  {x:(loungePatio.xFt+loungePatio.widthFt/2)*12-24,y:lz},
- ]);
- pathWalk(data,'walk-pool','Pool walk',[
-  {x:(terrace.xFt+terrace.widthFt/2)*12-24,y:tz},
-  {x:(poolPatio.xFt-6)*12,y:tz},
-  {x:(poolPatio.xFt-6)*12,y:pz+24},
-  {x:poolPatio.xFt*12,y:pz+24},
- ]);
+ const lx0=(lounge.xFt-lounge.widthFt/2)*12,lx1=(lounge.xFt+lounge.widthFt/2)*12,lz0=(lounge.zFt-lounge.depthFt/2)*12,lz1=(lounge.zFt+lounge.depthFt/2)*12,inset=28;
+ const seatPath=[{x:lx1-inset-18,y:lz0+inset},{x:lx0+inset,y:lz0+inset},{x:lx0+inset,y:lz1-inset},{x:lx1-inset-18,y:lz1-inset}];
+ push(data,{...createYardFeature(data,{kind:'retaining-wall',id:'seat-wall',name:'Seat wall',wallPath:seatPath,heightIn:18,depthFt:SEAT_DEPTH,productId:'techo-raffinato-wall',hardscape:SEAT,freestanding:true,supportFeatureId:lounge.id}),color:WALL_ONYX});
+ const fireX=lounge.xFt+0.4,fireZ=lounge.zFt;
+ push(data,{...createYardFeature(data,{kind:'fire-feature',id:'fire-bowl',name:'Fire bowl',xFt:fireX,zFt:fireZ,widthFt:3.5,depthFt:3.5,productId:'fire-gas-bowl',supportFeatureId:lounge.id}),color:'#8a8478'});
 
- const lx0=(loungePatio.xFt-loungePatio.widthFt/2)*12,lx1=(loungePatio.xFt+loungePatio.widthFt/2)*12,lz0=(loungePatio.zFt-loungePatio.depthFt/2)*12,lz1=(loungePatio.zFt+loungePatio.depthFt/2)*12,inset=28;
- const seatPath=[{x:lx0+inset,y:lz0+inset+18},{x:lx0+inset,y:lz1-inset},{x:lx1-inset,y:lz1-inset},{x:lx1-inset,y:lz0+inset+18}];
- push(data,{...createYardFeature(data,{kind:'retaining-wall',id:'seat-wall',name:'Seat wall',wallPath:seatPath,heightIn:18,depthFt:SEAT_DEPTH,productId:'techo-raffinato-wall',hardscape:SEAT,freestanding:true,supportFeatureId:loungePatio.id}),color:WALL_ONYX});
- const fireX=loungePatio.xFt,fireZ=loungePatio.zFt+0.4;
- push(data,{...createYardFeature(data,{kind:'fire-feature',id:'fire-bowl',name:'Fire bowl',xFt:fireX,zFt:fireZ,widthFt:3.5,depthFt:3.5,productId:'fire-gas-bowl',supportFeatureId:loungePatio.id}),color:'#8a8478'});
-
- const pool=createPlanningPool({id:'lap-pool',name:'Lap pool',type:'fiberglass',xIn:poolPatio.xFt*12,zIn:poolPatio.zFt*12,copingTopElevationIn:0,shape:'rounded-rectangle'});
+ const poolLengthIn=16*12,poolShape=poolRoundedRectangle(36*12,poolLengthIn);
+ const pool={...createPlanningPool({id:'lap-pool',name:'Lap pool',type:'fiberglass',xIn:court.xFt*12,zIn:court.zFt*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolShape,depthProfile:[{stationIn:0,depthIn:48},{stationIn:poolLengthIn,depthIn:48}]};
  data.pools=[pool];
 
  const pergola=newPergola('lousol-junior','10x12');
- data.pergola={...pergola,accessories:['led'],lighting:'perimeter-led',target:{kind:'patio',featureId:terrace.id},xFt:terrace.xFt,zFt:terrace.zFt+terrace.depthFt/2-6.5,rotationDeg:0,louverDeg:18};
+ data.pergola={...pergola,accessories:['led'],lighting:'perimeter-led',target:{kind:'patio',featureId:terrace.id},xFt:terrace.xFt,zFt:terrace.zFt-terrace.depthFt/2+8,rotationDeg:0,louverDeg:18};
+
+ const rear0=court.zFt+court.depthFt/2+0.15,rear1=data.permitSite.rearYardFt-0.4;
+ const flank1=court.zFt-court.depthFt/2-0.15;
+ const loungeFar=lounge.zFt+lounge.depthFt/2;
+ const plants:LandscapeObject[]=[];
+ let n=0;
+ const put=(asset:LandscapeAssetId,name:string,speciesId:string,x:number,z:number,h:number,rot=0)=>plants.push(plant(asset,`plant-${n++}`,name,x,z,h,speciesId,rot));
+ const pine=(x:number,z:number,h:number,rot=8)=>put('conifer-tree','White pine','pinus-strobus',x,z,h,rot);
+ const berry=(x:number,z:number,h:number,rot=12)=>put('deciduous-tree','Serviceberry','amelanchier-canadensis',x,z,h,rot);
+ const shrub=(x:number,z:number,rot=0)=>put('rounded-shrub','Red-osier dogwood','cornus-sericea',x,z,50,rot);
+ const grass=(x:number,z:number)=>put('grass-clump','Karl Foerster','calamagrostis-karl-foerster',x,z,46);
+ // Two staggered rows down each side bed, a rear screen, and a frame on every room.
+ pine(-34.6,10,200,6);berry(-30.6,18,158,-10);shrub(-34.8,26);grass(-30.4,32);pine(-34.2,42,176,14);shrub(-30.5,50,-6);berry(-34.4,58,168,20);grass(-30.6,66);shrub(-34.2,74,8);
+ pine(57.2,14,188,-8);shrub(53.8,8);berry(53.6,24,152,16);grass(57.4,32);pine(53.8,44,210,4);shrub(57.6,54);berry(57.2,64,162,-14);grass(53.6,72);shrub(57.4,78);
+ pine(-24,83.4,184,10);berry(-10,85.6,160,-8);shrub(2,82.2);grass(12,86.2);berry(22,83.2,172,18);shrub(34,86);pine(46,84.2,170,-6);grass(-34,81.2);shrub(58,83.6);
+ berry(40,12,156,-16);shrub(36,8);grass(48,10);shrub(46,20);grass(36,22);berry(44,32,148,8);shrub(36,38);grass(48,36);
+ berry(-18,68,154,6);shrub(-24,64);grass(-10,66);shrub(-16,74,-8);grass(-24,72);shrub(-8,70);
 
  const diningX=data.pergola.xFt,diningZ=data.pergola.zFt;
- // Beds frame each room and the lot edges. The panel between them stays lawn.
+ const nearDeck=court.zFt-court.depthFt/2+3.8,farDeck=court.zFt+court.depthFt/2-3.6;
  data.landscapeObjects=[
-  bed('bed-house-left','House border',-16,0.6,-1,15),
-  bed('bed-house-right','East border',25,0.6,42,15),
-  bed('bed-west','West planting',-46.5,4,-41.2,108),
-  bed('bed-east','East planting',63.2,18,70.4,118),
-  bed('bed-lounge','Lounge border',-40,74,-16,79.2),
-  bed('bed-terrace-west','Terrace border',-38,42,-22,49),
-  bed('bed-rear','Rear planting',18,124.4,66,127.2),
-  plant('conifer-tree','white-pine','White pine',-43.8,14,200,'pinus-strobus',8),
-  plant('deciduous-tree','serviceberry-1','Serviceberry',-43.6,78,168,'amelanchier-canadensis',20),
-  plant('deciduous-tree','serviceberry-2','Serviceberry',66.6,48,176,'amelanchier-canadensis',-15),
-  plant('rounded-shrub','dogwood-left','Red-osier dogwood',-8,6,48,'cornus-sericea'),
-  plant('rounded-shrub','dogwood-right','Red-osier dogwood',33,6,50,'cornus-sericea',6),
-  plant('rounded-shrub','dogwood-west','Red-osier dogwood',-43.8,36,56,'cornus-sericea',-8),
-  plant('rounded-shrub','dogwood-east','Red-osier dogwood',66.6,88,54,'cornus-sericea',12),
-  plant('rounded-shrub','dogwood-lounge','Red-osier dogwood',-28,76.4,52,'cornus-sericea'),
-  plant('rounded-shrub','dogwood-rear','Red-osier dogwood',42,125.6,48,'cornus-sericea',-12),
-  plant('grass-clump','reed-1','Karl Foerster',-43.9,52,46,'calamagrostis-karl-foerster'),
-  plant('grass-clump','reed-2','Karl Foerster',-43.7,96,44,'calamagrostis-karl-foerster'),
-  plant('grass-clump','reed-3','Karl Foerster',66.4,28,46,'calamagrostis-karl-foerster'),
-  plant('grass-clump','reed-4','Karl Foerster',-34,76.6,42,'calamagrostis-karl-foerster',10),
-  plant('grass-clump','reed-5','Karl Foerster',24,125.5,44,'calamagrostis-karl-foerster'),
+  bed('bed-west','West planting',-38,2,-28,rear0+4),
+  bed('bed-east','East planting',52,2,62,rear0+4),
+  bed('bed-rear','Rear planting',-38,rear0,62,rear1),
+  bed('bed-flank','Terrace planting',32.05,4,51.7,flank1),
+  bed('bed-court-west','Pool planting',-28,loungeFar+0.2,-4.2,rear0-0.1),
+  ...plants,
   furn('outdoor-table','dining-table','Dining table',diningX,diningZ,0,terrace.id),
-  furn('outdoor-chair','dining-1','Dining chair',diningX,diningZ-2.3,0,terrace.id),
-  furn('outdoor-chair','dining-2','Dining chair',diningX,diningZ+2.3,180,terrace.id),
-  furn('outdoor-chair','dining-3','Dining chair',diningX-2.3,diningZ,90,terrace.id),
-  furn('outdoor-chair','dining-4','Dining chair',diningX+2.3,diningZ,-90,terrace.id),
-  furn('outdoor-sofa','lounge-sofa','Lounge sofa',fireX,fireZ+2.6,0,loungePatio.id),
-  furn('outdoor-coffee-table','lounge-table','Coffee table',fireX,fireZ+1.15,0,loungePatio.id),
-  furn('lounge-chair','lounge-left','Chaise',fireX-3.2,fireZ-1.3,90,loungePatio.id),
-  furn('lounge-chair','lounge-right','Chaise',fireX+3.2,fireZ-1.3,-90,loungePatio.id),
+  furn('outdoor-chair','dining-1','Dining chair',diningX,diningZ-2.2,0,terrace.id),
+  furn('outdoor-chair','dining-2','Dining chair',diningX,diningZ+2.2,180,terrace.id),
+  furn('outdoor-chair','dining-3','Dining chair',diningX-2.2,diningZ,90,terrace.id),
+  furn('outdoor-chair','dining-4','Dining chair',diningX+2.2,diningZ,-90,terrace.id),
+  furn('outdoor-sofa','lounge-sofa','Lounge sofa',fireX-5.4,fireZ,90,lounge.id),
+  furn('outdoor-coffee-table','lounge-table','Coffee table',fireX-2.7,fireZ,90,lounge.id),
+  furn('lounge-chair','lounge-north','Chaise',fireX+1.6,fireZ+4.4,0,lounge.id),
+  furn('lounge-chair','lounge-south','Chaise',fireX+1.6,fireZ-4.4,180,lounge.id),
+  furn('lounge-chair','pool-near-1','Pool lounge',court.xFt-10,nearDeck,180,court.id),
+  furn('lounge-chair','pool-near-2','Pool lounge',court.xFt+10,nearDeck,180,court.id),
+  furn('lounge-chair','pool-far-1','Pool lounge',court.xFt-8,farDeck,0,court.id),
+  furn('lounge-chair','pool-far-2','Pool lounge',court.xFt+8,farDeck,0,court.id),
  ];
 
  const lit=buildDeckTakeoff(data);
  data.lightingSystem={wireDistance:80,selectedItems:syncAutoLighting({...data,lightingSystem:{wireDistance:80,selectedItems:[{productId:'liv',qty:6,zone:'landscape'},{productId:'scope',qty:4,zone:'landscape'}]}}, {posts:lit.quantities.railingPosts,stairs:lit.treads.length,privacy:0})};
 
- // Rear three-quarter from just past the back fence: the roof, the three rooms and the lawn between them.
- const hero={position:[36,32,196] as [number,number,number],target:[16,4,44] as [number,number,number]};
- const poolCam=overviewCamera({w:30,d:42,cx:poolPatio.xFt,cz:poolPatio.zFt,height:1.2,aspect:16/9,points:[
-  {x:poolPatio.xFt-16,y:0,z:poolPatio.zFt-22},{x:poolPatio.xFt+16,y:0,z:poolPatio.zFt-22},{x:poolPatio.xFt-16,y:0,z:poolPatio.zFt+22},{x:poolPatio.xFt+16,y:0.4,z:poolPatio.zFt+22},
-  {x:poolPatio.xFt,y:-3.2,z:poolPatio.zFt},
- ],direction:[-.35,.28,-1]},36);
- const fireCam=overviewCamera({w:18,d:18,cx:loungePatio.xFt,cz:loungePatio.zFt,height:1.6,aspect:16/9,points:[
-  {x:loungePatio.xFt-9,y:0,z:loungePatio.zFt-9},{x:loungePatio.xFt+9,y:0,z:loungePatio.zFt-9},{x:loungePatio.xFt-9,y:1.8,z:loungePatio.zFt+9},{x:loungePatio.xFt+9,y:1.8,z:loungePatio.zFt+9},{x:fireX,y:1.5,z:fireZ},
- ],direction:[.55,.22,-1]},38);
+ // Over the rear bed, inside the fence, looking back at the house. The spine
+ // fills the frame and the context trees sit behind the lens.
+ const hero={position:[-8,28,78] as [number,number,number],target:[12,1,28] as [number,number,number]};
+ const eye={position:[24,5.2,23] as [number,number,number],target:[2,1,62] as [number,number,number]};
+ const poolCam={position:[24,12,36] as [number,number,number],target:[24,0,64] as [number,number,number]};
+ const fireCam={position:[-4,5.2,40] as [number,number,number],target:[-18,1.1,54] as [number,number,number]};
  const shot=(id:string,name:string,frame:{position:[number,number,number];target:[number,number,number]},fov:number)=>({id,name,fov,positionIn:frame.position.map(n=>n*12) as [number,number,number],targetIn:frame.target.map(n=>n*12) as [number,number,number]});
- data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,42),shot('pool','Pool court',poolCam,36),shot('fire','Fire lounge',fireCam,38)]};
+ data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,56),shot('terrace-eye','Terrace toward the pool',eye,55),shot('pool','Pool court',poolCam,42),shot('fire','Fire lounge',fireCam,44)]};
  return data;
 }
+
+function gapOf(a:YardFeature,b:YardFeature){const ax0=a.xFt-a.widthFt/2,ax1=a.xFt+a.widthFt/2,az0=a.zFt-a.depthFt/2,az1=a.zFt+a.depthFt/2,bx0=b.xFt-b.widthFt/2,bx1=b.xFt+b.widthFt/2,bz0=b.zFt-b.depthFt/2,bz1=b.zFt+b.depthFt/2,sx=ax1<bx0?bx0-ax1:bx1<ax0?ax0-bx1:0,sz=az1<bz0?bz0-az1:bz1<az0?az0-bz1:0;return sx===0||sz===0?sx+sz:Math.hypot(sx,sz);}
+function overlapSqft(a:YardFeature,b:YardFeature){return yardArea(yardClip([rectOf(a)],[rectOf(b)],'intersection'));}
 
 /** Layout promises the stills rely on. Empty when the sample is buildable. */
 export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
  const issues:string[]=[];
- if(data.permitSite?.lotWidthFt!==LOT_W||data.permitSite.lotDepthFt!==LOT_D||LOT_W<100||LOT_D<200)issues.push('Lot is not a 120×240 ft estate.');
- const rooms=(data.yardFeatures??[]).filter(f=>f.id==='terrace'||f.id==='lounge'||f.id==='pool-court');
- const gapOf=(a:YardFeature,b:YardFeature)=>{const ax0=a.xFt-a.widthFt/2,ax1=a.xFt+a.widthFt/2,az0=a.zFt-a.depthFt/2,az1=a.zFt+a.depthFt/2,bx0=b.xFt-b.widthFt/2,bx1=b.xFt+b.widthFt/2,bz0=b.zFt-b.depthFt/2,bz1=b.zFt+b.depthFt/2,sx=ax1<bx0?bx0-ax1:bx1<ax0?ax0-bx1:0,sz=az1<bz0?bz0-az1:bz1<az0?az0-bz1:0;return sx===0||sz===0?sx+sz:Math.hypot(sx,sz);};
- for(let i=0;i<rooms.length;i++)for(let j=i+1;j<rooms.length;j++){const gap=gapOf(rooms[i],rooms[j]);if(gap<12)issues.push(`${rooms[i].name} and ${rooms[j].name} are ${gap.toFixed(1)} ft apart.`);}
- const lawn={x0:-6,x1:26,z0:44,z1:76},hitsLawn=(x:number,z:number)=>x>lawn.x0&&x<lawn.x1&&z>lawn.z0&&z<lawn.z1;
+ if(data.permitSite?.lotWidthFt!==LOT_W||data.permitSite.lotDepthFt!==LOT_D)issues.push('Lot is not 100×160 ft.');
+ const terrace=data.yardFeatures?.find(f=>f.id==='terrace'),lounge=data.yardFeatures?.find(f=>f.id==='lounge'),court=data.yardFeatures?.find(f=>f.id==='pool-court'),walk=data.yardFeatures?.find(f=>f.id==='spine-walk'),fire=data.yardFeatures?.find(f=>f.id==='fire-bowl'),wall=data.yardFeatures?.find(f=>f.id==='seat-wall');
+ if(!terrace||!lounge||!court||!walk){issues.push('The spine is missing a room.');return issues;}
+ if(Math.abs(terrace.widthFt-40)>0.2||Math.abs(terrace.depthFt-24)>0.2)issues.push('The terrace is not 40×24 ft.');
+ if(Math.abs(court.widthFt-56)>0.2||Math.abs(court.depthFt-34)>0.2)issues.push('The pool court is not 56×34 ft.');
+ if(Math.abs(lounge.widthFt-18)>0.2||Math.abs(lounge.depthFt-18)>0.2)issues.push('The fire lounge is not 18×18 ft.');
+ if(walk.widthFt<5.5||walk.widthFt>7)issues.push('The spine walk is not about 6 ft wide.');
+ if(terrace.hardscape?.colorId!=='caff-crema'||court.hardscape?.colorId!=='caff-crema'||walk.hardscape?.colorId!=='caff-crema')issues.push('The spine is not one crema grande slab.');
+ if(overlapSqft(terrace,court)<1||overlapSqft(walk,court)<0.4||overlapSqft(walk,lounge)<0.4||overlapSqft(walk,terrace)<0.2)issues.push('Terrace, pool court and fire lounge are not joined.');
+ const loungeGap=gapOf(lounge,court);if(loungeGap<5||loungeGap>6.5)issues.push(`Lounge and pool court are ${loungeGap.toFixed(1)} ft apart.`);
+ for(const room of [terrace,lounge]){const plans=patioInlayPlans(room);if(!plans.length||plans.some(p=>p.status!=='ok')||plans.some(p=>p.inlay.hardscape?.colorId!=='onyx-black'))issues.push(`${room.name} is missing its onyx border.`);}
+ const pool=data.pools?.[0],bounds=pool?poolLocalBounds(pool):undefined;
+ if(!bounds||Math.abs(bounds.widthIn-36*12)>1||Math.abs(bounds.lengthIn-16*12)>1)issues.push('The pool is not 36 ft across and 16 ft out from the house.');
+ const beds=(data.landscapeObjects??[]).filter(o=>o.kind==='bed');
+ if(!beds.length||beds.some(o=>o.assetId!=='mulch-bed'))issues.push('Planting beds are not brown mulch.');
+ const lawn={x0:-27.4,x1:-8.4,z0:10,z1:42.6},hits=(x:number,z:number)=>x>lawn.x0&&x<lawn.x1&&z>lawn.z0&&z<lawn.z1;
+ let bedSqft=0;
  for(const object of data.landscapeObjects??[]){
-  if(object.kind==='bed'&&object.polygon?.some(p=>hitsLawn(p.x/12,p.z/12)))issues.push(`${object.name} cuts the lawn panel.`);
-  if(object.kind!=='bed'&&object.kind!=='furniture'&&hitsLawn(object.xIn/12,object.zIn/12))issues.push(`${object.name} stands in the lawn panel.`);
+  if(object.kind==='bed'&&object.polygon){if(object.polygon.some(p=>hits(p.x/12,p.z/12)))issues.push(`${object.name} cuts the lawn panel.`);bedSqft+=Math.abs(object.widthIn*object.depthIn)/144;}
+  if(object.kind!=='bed'&&object.kind!=='furniture'&&hits(object.xIn/12,object.zIn/12))issues.push(`${object.name} stands in the lawn panel.`);
  }
+ const paved=[terrace,court,lounge,walk].reduce((n,f)=>n+f.widthFt*f.depthFt,0);
+ const rear=data.permitSite?.rearYardFt??0,visible=LOT_W*rear;
+ if(visible<=0||(paved+bedSqft)/visible<0.58)issues.push('Hardscape and planting do not fill the yard.');
+ const plants=(data.landscapeObjects??[]).filter(o=>o.kind==='plant');
+ if(plants.length<40||!plants.some(o=>o.speciesRecord?.id==='pinus-strobus')||!plants.some(o=>o.speciesRecord?.id==='amelanchier-canadensis')||!plants.some(o=>o.speciesRecord?.id==='cornus-sericea')||!plants.some(o=>o.speciesRecord?.id==='calamagrostis-karl-foerster'))issues.push('The beds are not packed with the Ontario palette the catalogue actually has.');
+ if((data.landscapeObjects??[]).filter(o=>o.assetId==='lounge-chair'&&o.supportFeatureId==='pool-court').length<2)issues.push('The pool deck has no lounge chairs.');
  if(!data.autoLighting?.posts||!data.autoLighting.stairs)issues.push('Deck lighting is off.');
  if(!data.pergola?.lighting)issues.push('The pergola has no lights.');
- const terrace=data.yardFeatures?.find(f=>f.id==='terrace'),lounge=data.yardFeatures?.find(f=>f.id==='lounge'),poolCourt=data.yardFeatures?.find(f=>f.id==='pool-court'),fire=data.yardFeatures?.find(f=>f.id==='fire-bowl'),wall=data.yardFeatures?.find(f=>f.id==='seat-wall');
- if(!terrace?.inlays?.length||!lounge?.inlays?.length)issues.push('A paved room is missing its field.');
- if(poolCourt?.hardscape?.colorId!=='champlain-grey')issues.push('The pool court is not champlain grande.');
  if(!fire?.supportFeatureId)issues.push('The fire bowl is not on the lounge.');
  if(!wall?.wallConstruction?.freestanding)issues.push('The seat wall is not freestanding.');
  const tk=buildDeckTakeoff(data);
@@ -233,6 +246,7 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
   const gap=Math.min(...rings.filter(r=>r.length>=3).map(r=>planGapIn(body,r)));
   if(gap<48)issues.push(`Fire clearance is ${(gap/12).toFixed(2)} ft.`);
  }
- if(data.scenePresentation?.activeCameraId!=='hero'||(data.scenePresentation.cameras?.length??0)<3)issues.push('Hero, pool and fire cameras are missing.');
+ const cameras=data.scenePresentation?.cameras??[];
+ if(data.scenePresentation?.activeCameraId!=='hero'||!['hero','terrace-eye','pool','fire'].every(id=>cameras.some(c=>c.id===id)))issues.push('Hero, terrace, pool and fire cameras are missing.');
  return issues;
 }

@@ -81,7 +81,7 @@ const skyMap=new THREE.DataTexture(skyBytes,8,36,THREE.RGBAFormat,THREE.FloatTyp
 for(const flip of [false,true]){skyMap.flipY=flip;const v=minimum/Math.PI+.5,row=Math.floor((flip?1-v:v)*36),horizon=visibleSkyHorizon(skyMap)!;check(Math.abs(horizon[0]-row/36)<1e-6&&Math.abs(horizon[1]-.2)<1e-6&&Math.abs(horizon[2]-.3)<1e-6);}
 const rawHorizon=visibleSkyHorizon(skyMap,0)!;check(Math.abs(rawHorizon[0]-.5)<1e-6&&rawHorizon[0]!==visibleSkyHorizon(skyMap)![0],'A raw elevation samples the photographed horizon, not the remapped upper sky');
 for(const el of [-.2,0,.04,.2,.5,1,Math.PI/2]){const min=VISIBLE_SKY_MIN_DEG*Math.PI/180,displayed=Math.max(0,el),clean=min+displayed*(1-min/(Math.PI/2));check(Math.abs(skyDomeSampleElevation(el,0)-clean)<1e-12,'Horizon band off matches the editor sky');}
-check(skyDomeSampleElevation(0,1)===0&&skyDomeSampleElevation(Math.PI/2,1)>1.2,'The neighbourhood band opens the photographed horizon and keeps the zenith');
+check(Math.abs(skyDomeSampleElevation(0,1)-minimum)<1e-12&&skyDomeSampleElevation(Math.PI/2,1)>1.2,'Neighbourhood sky stays on the clean upper photograph, including at the horizon');
 skyMap.dispose();
 const halfBytes=new Uint16Array(8*36*4);for(let i=0;i<halfBytes.length;i++)halfBytes[i]=THREE.DataUtils.toHalfFloat([.2,.3,.4,1][i%4]);const halfMap=new THREE.DataTexture(halfBytes,8,36,THREE.RGBAFormat,THREE.HalfFloatType);const halfHorizon=visibleSkyHorizon(halfMap)!;check(halfHorizon.every((c,i)=>Math.abs(c-[.2,.3,.4][i])<.001));halfMap.dispose();
 check(visibleSkyHorizon(new THREE.Texture())===null);
