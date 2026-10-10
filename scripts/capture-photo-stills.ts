@@ -3,7 +3,7 @@
  *   npx react-router dev --port 4187
  *   DECKCRAFT_PROOF_URL=http://127.0.0.1:4187/deck-designer/ npx tsx scripts/capture-photo-stills.ts
  */
-import {mkdirSync,writeFileSync} from 'node:fs';
+import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {deflateSync} from 'node:zlib';
 import {chromium,type Browser,type Page} from '@playwright/test';
 import {PHOTO_GRADE,type PhotoLook} from '../src/features/deckcraft/components/viewer3d/photoGrade';
@@ -71,6 +71,10 @@ async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighti
  }
  if(!canvasSeen){const body=await page.locator('body').innerText().catch(()=>'');throw Error(`${name}: the 3D canvas never appeared. ${body.slice(0,240).replace(/\s+/g,' ')}`);}
  await page.waitForFunction(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-showcase-context')==='1',undefined,{timeout:120_000});
+ const ask=<T>(fn:()=>T,ms=90_000)=>new Promise<T>((resolve,reject)=>{
+  const timer=setTimeout(()=>reject(Error(`${name}: the path tracer stopped answering`)),ms);
+  page.evaluate(fn).then(value=>{clearTimeout(timer);resolve(value as T);},error=>{clearTimeout(timer);reject(error);});
+ });
  if(!photo){
   await page.waitForFunction(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photographic-pipeline')==='active',undefined,{timeout:120_000});
   await page.waitForTimeout(4000);
@@ -78,13 +82,13 @@ async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighti
   const budget=Math.max(5_400_000,passSamples*180_000+1_800_000);
   const deadline=Date.now()+budget;let last='',lastChange=Date.now(),savedStill='';
   while(Date.now()<deadline){
-   const state=await page.evaluate(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',census:canvas?.getAttribute('data-photo-census')??'',still:canvas?.getAttribute('data-photo-still')??'',buffer:canvas?.getAttribute('data-photo-buffer')??'',tiles:canvas?.getAttribute('data-photo-tiles')??''};});
+   const state=await ask(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',census:canvas?.getAttribute('data-photo-census')??'',still:canvas?.getAttribute('data-photo-still')??'',buffer:canvas?.getAttribute('data-photo-buffer')??'',tiles:canvas?.getAttribute('data-photo-tiles')??''};});
    const line=`${state.phase||'waiting'} ${state.samples||'0'}/${state.target||'?'} ${state.buffer} tiles=${state.tiles} census=${state.census} still=${state.still}`;
    if(line!==last){console.log(new Date().toISOString(),name,line);last=line;lastChange=Date.now();}
    else if(Date.now()-lastChange>1_200_000)throw Error(`${name}: no sample progress for 20 minutes (${line})`);
    if(state.still&&state.still!==savedStill){
     savedStill=state.still;
-    const data=await page.evaluate(()=>(window as Window&{__DECK_PHOTO_PNG?:string}).__DECK_PHOTO_PNG??'');
+    const data=await ask(()=>(window as Window&{__DECK_PHOTO_PNG?:string}).__DECK_PHOTO_PNG??'',180_000);
     if(data.startsWith('data:image/png;base64,')){
      const preview=`${output}/${name}-${state.samples}.png`;
      writeFileSync(preview,Buffer.from(data.slice(data.indexOf(',')+1),'base64'));
@@ -94,13 +98,13 @@ async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighti
    if(state.phase==='ready'||state.phase==='fallback')break;
    await page.waitForTimeout(3000);
   }
-  const phase=await page.evaluate(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photo-phase')??'');
+  const phase=await ask(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photo-phase')??'');
   if(phase!=='ready')throw Error(`${name}: photo phase ${phase??'missing'}. ${await page.locator('#deck-live-preview [role=status]').last().innerText().catch(()=>'')} ${errors.join(' | ')}`);
  }
  if(!pass)await saveStill(page,name,photo);
  if(errors.length)throw Error(`${name}: ${errors.join('\n')}`);
  if(!photo||!pass){console.log('wrote',`${output}/${name}.png`);return null;}
- const packed=await page.evaluate(()=>{const record=window as Window&{__DECK_PHOTO_LINEAR?:string;__DECK_PHOTO_LINEAR_SIZE?:string};return {data:record.__DECK_PHOTO_LINEAR??'',size:record.__DECK_PHOTO_LINEAR_SIZE??''};});
+ const packed=await ask(()=>{const record=window as Window&{__DECK_PHOTO_LINEAR?:string;__DECK_PHOTO_LINEAR_SIZE?:string};return {data:record.__DECK_PHOTO_LINEAR??'',size:record.__DECK_PHOTO_LINEAR_SIZE??''};},180_000);
  if(!packed.data||!packed.size.startsWith('rgbe:'))throw Error(`${name}: the linear pass was not stored (${packed.size||'empty'})`);
  const [w,h,n]=packed.size.slice(5).split('x').map(Number);
  const bytes=Buffer.from(packed.data,'base64');
@@ -217,14 +221,24 @@ for(const [name,look,lighting,photo] of shots){
   catch(error){console.error('failed',name,error instanceof Error?error.message:error);}
   continue;
  }
- const passSize=Math.max(8,Number(process.env.DECK_PHOTO_PASS??'16'));
+ const passSize=Math.max(8,Number(process.env.DECK_PHOTO_PASS??'8'));
+ const cache=`${output}/${name}.sum`;
  let sum:Float32Array|null=null,width=0,height=0,count=0;
+ try{
+  const stored=readFileSync(cache);
+  if(stored.readUInt32LE(0)===0x46333250){
+   width=stored.readUInt32LE(4);height=stored.readUInt32LE(8);count=stored.readUInt32LE(12);
+   const view=new Float32Array(stored.buffer,stored.byteOffset+16,(stored.length-16)/4);
+   sum=new Float32Array(view);
+   console.log('resume',name,`${count}/${samples}`);
+  }
+ }catch{/* a new still */}
  try{
   while(count<samples){
    const n=Math.min(passSize,samples-count);
    let frame:Awaited<ReturnType<typeof openShot>>=null;
    let lastError:unknown;
-   for(let attempt=0;attempt<2&&!frame;attempt++){
+   for(let attempt=0;attempt<4&&!frame;attempt++){
     try{frame=await withPage(page=>openShot(page,name,look,lighting,true,{samples:n,seed:count+attempt*1_000_003}));}
     catch(error){lastError=error;console.error('retry',name,count,error instanceof Error?error.message:error);}
    }
@@ -234,6 +248,9 @@ for(const [name,look,lighting,photo] of shots){
    if(frame.w!==width||frame.h!==height)throw Error(`${name}: pass size changed`);
    for(let i=0;i<sum.length;i++)sum[i]+=frame.rgb[i]*frame.n;
    count+=frame.n;
+   const header=Buffer.alloc(16);
+   header.writeUInt32LE(0x46333250,0);header.writeUInt32LE(width,4);header.writeUInt32LE(height,8);header.writeUInt32LE(count,12);
+   writeFileSync(cache,Buffer.concat([header,Buffer.from(sum.buffer,sum.byteOffset,sum.byteLength)]));
    console.log(new Date().toISOString(),name,`${count}/${samples} accumulated`);
    if(count%64===0||count>=samples){
     const mean=new Float32Array(sum.length);
