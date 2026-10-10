@@ -251,7 +251,7 @@ for(const [name,look,lighting,photo] of shots){
   continue;
  }
  const passSize=Math.max(4,Number(process.env.DECK_PHOTO_PASS??'8')||8);
- const sessionPasses=Math.max(1,Number(process.env.DECK_PHOTO_SESSION??'8')||8);
+ const sessionPasses=Math.max(1,Number(process.env.DECK_PHOTO_SESSION??'4')||4);
  const cache=`${output}/${name}.sum`;
  let sum:Float32Array|null=null,width=0,height=0,count=0;
  try{
