@@ -4,11 +4,14 @@
  *   DECKCRAFT_PROOF_URL=http://127.0.0.1:4187/deck-designer/ npx tsx scripts/capture-photo-stills.ts
  */
 import {execFileSync} from 'node:child_process';
-import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
+import {mkdirSync,readFileSync,renameSync,writeFileSync,writeSync} from 'node:fs';
 import {deflateSync} from 'node:zlib';
 import {chromium,type Browser,type Page} from '@playwright/test';
 import {PHOTO_GRADE,type PhotoLook} from '../src/features/deckcraft/components/viewer3d/photoGrade';
 
+const emit=(fd:number)=>(...args:unknown[])=>{writeSync(fd,`${args.map(part=>typeof part==='string'?part:String(part)).join(' ')}\n`);};
+console.log=emit(1) as typeof console.log;
+console.error=emit(2) as typeof console.error;
 const url=process.env.DECKCRAFT_PROOF_URL??'http://127.0.0.1:4187/deck-designer/';
 const samples=Number(process.env.DECK_PHOTO_SAMPLES??'256');
 const output=process.env.DECK_PHOTO_OUT??'/opt/cursor/artifacts/photo-mode';
@@ -245,6 +248,26 @@ function gradeStill(rgb:Float32Array,w:number,h:number,look:PhotoLook,sampleCoun
  }
  return rgba;
 }
+function writeSum(cache:string,header:Buffer,sum:Float32Array){
+ const payload=Buffer.concat([header,Buffer.from(sum.buffer,sum.byteOffset,sum.byteLength)]);
+ const tmp=`${cache}.${process.pid}.tmp`;
+ let last:unknown;
+ for(let attempt=0;attempt<5;attempt++){
+  try{writeFileSync(tmp,payload);renameSync(tmp,cache);return;}
+  catch(error){last=error;Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,300);}
+ }
+ throw last instanceof Error?last:Error(`${cache}: the sample sum could not be stored`);
+}
+function lockedCensus(file:string,census:string,name:string){
+ if(!census.includes('/'))throw Error(`${name}: the scene census was not reported`);
+ const [traced,raster]=census.split('/');
+ if(!traced||traced!==raster)throw Error(`${name}: trace and raster census differ (${census})`);
+ let current='';
+ try{current=readFileSync(file,'utf8').trim();}catch{/* the first pass of this still */}
+ if(!current){writeFileSync(file,`${census}\n`);return census;}
+ if(current!==census)throw Error(`${name}: scene ${census} is not ${current}`);
+ return current;
+}
 for(const [name,look,lighting,photo] of shots){
  if(!photo){
   try{await withPage(page=>openShot(page,name,look,lighting,false));}
@@ -264,17 +287,18 @@ for(const [name,look,lighting,photo] of shots){
    console.log('resume',name,`${count}/${samples}`);
   }
  }catch{/* a new still */}
- const sceneCensus='493:1406694/493:1406694';
+ const censusFile=`${output}/photo-census.txt`;
  const absorb=(frame:NonNullable<Awaited<ReturnType<typeof openShot>>>,n:number)=>{
-  if(frame.census!==sceneCensus)throw Error(`${name}: scene ${frame.census||'missing'} is not ${sceneCensus}`);
+  const sceneCensus=lockedCensus(censusFile,frame.census||'',name);
   if(frame.n!==n||frame.rgb.length!==frame.w*frame.h*3)throw Error(`${name}: pass ${frame.w}x${frame.h} x${frame.n} does not match ${n} samples`);
   if(!sum){sum=new Float32Array(frame.rgb.length);width=frame.w;height=frame.h;}
   if(frame.w!==width||frame.h!==height)throw Error(`${name}: pass size changed`);
-  for(let i=0;i<sum.length;i++)sum[i]+=frame.rgb[i]*frame.n;
-  count+=frame.n;
+  const next=Float32Array.from(sum,(value,index)=>value+frame.rgb[index]*frame.n);
+  const nextCount=count+frame.n;
   const header=Buffer.alloc(16);
-  header.writeUInt32LE(0x46333250,0);header.writeUInt32LE(width,4);header.writeUInt32LE(height,8);header.writeUInt32LE(count,12);
-  writeFileSync(cache,Buffer.concat([header,Buffer.from(sum.buffer,sum.byteOffset,sum.byteLength)]));
+  header.writeUInt32LE(0x46333250,0);header.writeUInt32LE(width,4);header.writeUInt32LE(height,8);header.writeUInt32LE(nextCount,12);
+  writeSum(cache,header,next);
+  sum=next;count=nextCount;
   console.log(new Date().toISOString(),name,`${count}/${samples} accumulated`);
   if(count%64===0||count>=samples){
    const mean=new Float32Array(sum.length);
