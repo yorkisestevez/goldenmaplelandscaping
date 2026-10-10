@@ -197,7 +197,9 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
    gl.setRenderTarget(averaged);gl.setScissorTest(false);gl.setViewport(0,0,held.width,held.height);quad.material=scaleMat;quad.render(gl);gl.setRenderTarget(null);
    map=averaged.texture;
   }
-  if(finalPass&&getPhotoSettings().denoise){
+  // Batch stills denoise the accumulated plate outside the browser. This kernel at a handful of samples
+  // is a full-frame draw, and SwiftShader often never returns from one of those.
+  if(finalPass&&getPhotoSettings().denoise&&photoQuery('deck-photo-linear')!=='1'){
    try{
     if(denoised.width!==size.x||denoised.height!==size.y)denoised.setSize(size.x,size.y);
     denoise.map=map;denoise.sigma=Math.max(1,Math.min(7,16/Math.sqrt(Math.max(1,heldSamples||tracer.samples))));denoise.threshold=.08;denoise.kSigma=1;
@@ -231,6 +233,12 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
    const record=window as Window&{__DECK_PHOTO_LINEAR?:string;__DECK_PHOTO_LINEAR_SIZE?:string};
    record.__DECK_PHOTO_LINEAR=btoa(binary);record.__DECK_PHOTO_LINEAR_SIZE=`rgbe:${w}x${h}x${heldSamples}`;
   }catch(error){console.warn('DeckCraft photo: the linear still could not be stored.',error);}
+ }
+ function markStill(samples:number){
+  // The capture reads the linear buffer. Encoding a 2K PNG on the same turn as the last tile
+  // keeps the page from answering, so the batch path only publishes the size.
+  if(photoQuery('deck-photo-linear')==='1'){gl.domElement.dataset.photoStill=`${averaged.width}x${averaged.height}@${samples}`;return;}
+  stashStill(samples);
  }
  function stashStill(samples:number){
   if(disposed)return;
@@ -290,7 +298,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
    try{
     const moved=syncCamera();
     const total=()=>heldSamples+Math.floor(tracer?.samples??0);
-    if(!moved&&heldSamples>=settings.target){if(!finished||shownDenoise!==settings.denoise){finished=true;shownDenoise=settings.denoise;present(true);exportLinear();stashStill(total());note(total(),true);}return;}
+    if(!moved&&heldSamples>=settings.target){if(!finished||shownDenoise!==settings.denoise){finished=true;shownDenoise=settings.denoise;present(true);exportLinear();markStill(total());note(total(),true);}return;}
     // One tile per frame. A tight loop fills SwiftShader's queue and the next draw never returns.
     // The software GPU also stops returning from a draw after a long continuous trace, so each
     // chunk is stored and the accumulator is reset before that happens.
@@ -301,7 +309,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
     if(tracer.samples===0&&heldSamples===0){if(++stall>90){engine.dispose();publish('fallback',0,PHOTO_FALLBACK);return;}bridge.invalidate();return;}
     stall=0;
     const count=total();
-    if(heldSamples>=settings.target){finished=true;present(true);exportLinear();stashStill(count);note(count,true);return;}
+    if(heldSamples>=settings.target){finished=true;present(true);exportLinear();markStill(count);note(count,true);return;}
     if(count-previewAt>=64){previewAt=count;present(true);stashStill(count);}
     finished=false;note(count,false);bridge.invalidate();
    }catch(error){console.warn('DeckCraft photo: path tracing stopped.',error);engine.dispose();publish('fallback',0,PHOTO_FALLBACK);}

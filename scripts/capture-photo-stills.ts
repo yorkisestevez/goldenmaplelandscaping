@@ -3,6 +3,7 @@
  *   npx react-router dev --port 4187
  *   DECKCRAFT_PROOF_URL=http://127.0.0.1:4187/deck-designer/ npx tsx scripts/capture-photo-stills.ts
  */
+import {execFileSync} from 'node:child_process';
 import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {deflateSync} from 'node:zlib';
 import {chromium,type Browser,type Page} from '@playwright/test';
@@ -71,7 +72,7 @@ async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighti
  }
  if(!canvasSeen){const body=await page.locator('body').innerText().catch(()=>'');throw Error(`${name}: the 3D canvas never appeared. ${body.slice(0,240).replace(/\s+/g,' ')}`);}
  await page.waitForFunction(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-showcase-context')==='1',undefined,{timeout:120_000});
- const ask=<T>(fn:()=>T,ms=90_000)=>new Promise<T>((resolve,reject)=>{
+ const ask=<T>(fn:()=>T,ms=Number(process.env.DECK_PHOTO_ASK_MS??'360000'))=>new Promise<T>((resolve,reject)=>{
   const timer=setTimeout(()=>reject(Error(`${name}: the path tracer stopped answering`)),ms);
   page.evaluate(fn).then(value=>{clearTimeout(timer);resolve(value as T);},error=>{clearTimeout(timer);reject(error);});
  });
@@ -127,7 +128,21 @@ async function launchBrowser(){
   ?chromium.launch({executablePath:process.env.DECK_BROWSER,headless:true,args:browserArgs})
   :chromium.launch({channel:'msedge',headless:true,args:browserArgs}).catch(()=>chromium.launch({executablePath:'/opt/google/chrome/chrome',headless:true,args:browserArgs}));
 }
+function chromePids(){
+ try{return new Set(execFileSync('ps',['-C','chrome','-o','pid='],{encoding:'utf8'}).split('\n').map(line=>line.trim()).filter(Boolean));}
+ catch{return new Set<string>();}
+}
+function killNewChrome(before:Set<string>){
+ for(const pid of chromePids())if(!before.has(pid)){try{process.kill(Number(pid),'SIGKILL');}catch{/* already gone */}}
+}
+async function closeBrowser(browser:Browser,before:Set<string>){
+ const closed=browser.close().catch(()=>undefined);
+ await Promise.race([closed,new Promise<void>(resolve=>setTimeout(resolve,10_000))]);
+ killNewChrome(before);
+ await Promise.race([closed,new Promise<void>(resolve=>setTimeout(resolve,2_000))]);
+}
 async function withPage<T>(run:(page:Page)=>Promise<T>){
+ const before=chromePids();
  const browser:Browser=await launchBrowser();
  try{
   const context=await browser.newContext({viewport:{width:1440,height:1200},deviceScaleFactor:1});
@@ -135,7 +150,7 @@ async function withPage<T>(run:(page:Page)=>Promise<T>){
   const page=await context.newPage();
   page.setDefaultTimeout(180_000);page.setDefaultNavigationTimeout(180_000);
   return await run(page);
- }finally{await browser.close();}
+ }finally{await closeBrowser(browser,before);}
 }
 function pngChunk(type:string,data:Buffer){
  const body=Buffer.concat([Buffer.from(type),data]);
