@@ -125,8 +125,9 @@ async function finishPass(page:Page,name:string,ask:ReturnType<typeof bindAsk>,e
   rgb[p]=bytes[i]/255*scale;rgb[p+1]=bytes[i+1]/255*scale;rgb[p+2]=bytes[i+2]/255*scale;
   peak=Math.max(peak,rgb[p],rgb[p+1],rgb[p+2]);if(rgb[p]+rgb[p+1]+rgb[p+2]>1e-4)lit++;
  }
- console.log('pass',name,packed.size,`peak ${peak.toFixed(3)}`,`lit ${(100*lit/(w*h)).toFixed(1)}%`);
- return {w,h,n,rgb};
+ const census=await ask(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photo-census')??'');
+ console.log('pass',name,packed.size,`peak ${peak.toFixed(3)}`,`lit ${(100*lit/(w*h)).toFixed(1)}%`,census);
+ return {w,h,n,rgb,census};
 }
 async function nextPass(page:Page,name:string,seed:number,passSamples:number){
  console.log('continue',name,`seed ${seed}`);
@@ -263,7 +264,9 @@ for(const [name,look,lighting,photo] of shots){
    console.log('resume',name,`${count}/${samples}`);
   }
  }catch{/* a new still */}
+ const sceneCensus='493:1406694/493:1406694';
  const absorb=(frame:NonNullable<Awaited<ReturnType<typeof openShot>>>,n:number)=>{
+  if(frame.census!==sceneCensus)throw Error(`${name}: scene ${frame.census||'missing'} is not ${sceneCensus}`);
   if(frame.n!==n||frame.rgb.length!==frame.w*frame.h*3)throw Error(`${name}: pass ${frame.w}x${frame.h} x${frame.n} does not match ${n} samples`);
   if(!sum){sum=new Float32Array(frame.rgb.length);width=frame.w;height=frame.h;}
   if(frame.w!==width||frame.h!==height)throw Error(`${name}: pass size changed`);
