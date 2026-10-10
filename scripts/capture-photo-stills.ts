@@ -236,7 +236,7 @@ for(const [name,look,lighting,photo] of shots){
   catch(error){console.error('failed',name,error instanceof Error?error.message:error);}
   continue;
  }
- const passSize=Math.max(8,Number(process.env.DECK_PHOTO_PASS??'8'));
+ const passSize=Math.max(4,Number(process.env.DECK_PHOTO_PASS??'8')||8);
  const cache=`${output}/${name}.sum`;
  let sum:Float32Array|null=null,width=0,height=0,count=0;
  try{
