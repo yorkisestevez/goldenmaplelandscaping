@@ -72,39 +72,46 @@ async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighti
  }
  if(!canvasSeen){const body=await page.locator('body').innerText().catch(()=>'');throw Error(`${name}: the 3D canvas never appeared. ${body.slice(0,240).replace(/\s+/g,' ')}`);}
  await page.waitForFunction(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-showcase-context')==='1',undefined,{timeout:120_000});
- const ask=<T>(fn:()=>T,ms=Number(process.env.DECK_PHOTO_ASK_MS??'360000'))=>new Promise<T>((resolve,reject)=>{
-  const timer=setTimeout(()=>reject(Error(`${name}: the path tracer stopped answering`)),ms);
-  page.evaluate(fn).then(value=>{clearTimeout(timer);resolve(value as T);},error=>{clearTimeout(timer);reject(error);});
- });
+ const ask=bindAsk(page,name);
  if(!photo){
   await page.waitForFunction(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photographic-pipeline')==='active',undefined,{timeout:120_000});
   await page.waitForTimeout(4000);
- }else{
-  const budget=Math.max(5_400_000,passSamples*180_000+1_800_000);
-  const deadline=Date.now()+budget;let last='',lastChange=Date.now(),savedStill='';
-  while(Date.now()<deadline){
-   const state=await ask(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',census:canvas?.getAttribute('data-photo-census')??'',still:canvas?.getAttribute('data-photo-still')??'',buffer:canvas?.getAttribute('data-photo-buffer')??'',tiles:canvas?.getAttribute('data-photo-tiles')??''};});
-   const line=`${state.phase||'waiting'} ${state.samples||'0'}/${state.target||'?'} ${state.buffer} tiles=${state.tiles} census=${state.census} still=${state.still}`;
-   if(line!==last){console.log(new Date().toISOString(),name,line);last=line;lastChange=Date.now();}
-   else if(Date.now()-lastChange>1_200_000)throw Error(`${name}: no sample progress for 20 minutes (${line})`);
-   if(state.still&&state.still!==savedStill){
-    savedStill=state.still;
-    const data=await ask(()=>(window as Window&{__DECK_PHOTO_PNG?:string}).__DECK_PHOTO_PNG??'',180_000);
-    if(data.startsWith('data:image/png;base64,')){
-     const preview=`${output}/${name}-${state.samples}.png`;
-     writeFileSync(preview,Buffer.from(data.slice(data.indexOf(',')+1),'base64'));
-     console.log('preview',preview);
-    }
-   }
-   if(state.phase==='ready'||state.phase==='fallback')break;
-   await page.waitForTimeout(3000);
-  }
-  const phase=await ask(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photo-phase')??'');
-  if(phase!=='ready')throw Error(`${name}: photo phase ${phase??'missing'}. ${await page.locator('#deck-live-preview [role=status]').last().innerText().catch(()=>'')} ${errors.join(' | ')}`);
+  await saveStill(page,name,false);
+  if(errors.length)throw Error(`${name}: ${errors.join('\n')}`);
+  console.log('wrote',`${output}/${name}.png`);
+  return null;
  }
- if(!pass)await saveStill(page,name,photo);
+ return finishPass(page,name,ask,errors,passSamples);
+}
+function bindAsk(page:Page,name:string){
+ return <T>(fn:()=>T,ms=Number(process.env.DECK_PHOTO_ASK_MS??'360000'))=>new Promise<T>((resolve,reject)=>{
+  const timer=setTimeout(()=>reject(Error(`${name}: the path tracer stopped answering`)),ms);
+  page.evaluate(fn).then(value=>{clearTimeout(timer);resolve(value as T);},error=>{clearTimeout(timer);reject(error);});
+ });
+}
+async function finishPass(page:Page,name:string,ask:ReturnType<typeof bindAsk>,errors:string[],passSamples:number){
+ const budget=Math.max(5_400_000,passSamples*180_000+1_800_000);
+ const deadline=Date.now()+budget;let last='',lastChange=Date.now(),savedStill='';
+ while(Date.now()<deadline){
+  const state=await ask(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',census:canvas?.getAttribute('data-photo-census')??'',still:canvas?.getAttribute('data-photo-still')??'',buffer:canvas?.getAttribute('data-photo-buffer')??'',tiles:canvas?.getAttribute('data-photo-tiles')??''};});
+  const line=`${state.phase||'waiting'} ${state.samples||'0'}/${state.target||'?'} ${state.buffer} tiles=${state.tiles} census=${state.census} still=${state.still}`;
+  if(line!==last){console.log(new Date().toISOString(),name,line);last=line;lastChange=Date.now();}
+  else if(Date.now()-lastChange>1_200_000)throw Error(`${name}: no sample progress for 20 minutes (${line})`);
+  if(state.still&&state.still!==savedStill){
+   savedStill=state.still;
+   const data=await ask(()=>(window as Window&{__DECK_PHOTO_PNG?:string}).__DECK_PHOTO_PNG??'',180_000);
+   if(data.startsWith('data:image/png;base64,')){
+    const preview=`${output}/${name}-${state.samples}.png`;
+    writeFileSync(preview,Buffer.from(data.slice(data.indexOf(',')+1),'base64'));
+    console.log('preview',preview);
+   }
+  }
+  if(state.phase==='ready'||state.phase==='fallback')break;
+  await page.waitForTimeout(3000);
+ }
+ const phase=await ask(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photo-phase')??'');
+ if(phase!=='ready')throw Error(`${name}: photo phase ${phase??'missing'}. ${await page.locator('#deck-live-preview [role=status]').last().innerText().catch(()=>'')} ${errors.join(' | ')}`);
  if(errors.length)throw Error(`${name}: ${errors.join('\n')}`);
- if(!photo||!pass){console.log('wrote',`${output}/${name}.png`);return null;}
  const packed=await ask(()=>{const record=window as Window&{__DECK_PHOTO_LINEAR?:string;__DECK_PHOTO_LINEAR_SIZE?:string};return {data:record.__DECK_PHOTO_LINEAR??'',size:record.__DECK_PHOTO_LINEAR_SIZE??''};},180_000);
  if(!packed.data||!packed.size.startsWith('rgbe:'))throw Error(`${name}: the linear pass was not stored (${packed.size||'empty'})`);
  const [w,h,n]=packed.size.slice(5).split('x').map(Number);
@@ -120,6 +127,13 @@ async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighti
  }
  console.log('pass',name,packed.size,`peak ${peak.toFixed(3)}`,`lit ${(100*lit/(w*h)).toFixed(1)}%`);
  return {w,h,n,rgb};
+}
+async function nextPass(page:Page,name:string,seed:number,passSamples:number){
+ console.log('continue',name,`seed ${seed}`);
+ const ask=bindAsk(page,name);
+ const started=await ask(()=>{const hook=(window as Window&{__DECK_PHOTO_CONTINUE?:(seed:number)=>boolean}).__DECK_PHOTO_CONTINUE;return hook?hook(seed):false;});
+ if(!started)throw Error(`${name}: the next pass did not start`);
+ return finishPass(page,name,ask,[],passSamples);
 }
 
 const browserArgs=['--enable-unsafe-swiftshader','--use-angle=swiftshader','--no-sandbox'];
@@ -237,6 +251,7 @@ for(const [name,look,lighting,photo] of shots){
   continue;
  }
  const passSize=Math.max(4,Number(process.env.DECK_PHOTO_PASS??'8')||8);
+ const sessionPasses=Math.max(1,Number(process.env.DECK_PHOTO_SESSION??'8')||8);
  const cache=`${output}/${name}.sum`;
  let sum:Float32Array|null=null,width=0,height=0,count=0;
  try{
@@ -248,32 +263,43 @@ for(const [name,look,lighting,photo] of shots){
    console.log('resume',name,`${count}/${samples}`);
   }
  }catch{/* a new still */}
+ const absorb=(frame:NonNullable<Awaited<ReturnType<typeof openShot>>>,n:number)=>{
+  if(frame.n!==n||frame.rgb.length!==frame.w*frame.h*3)throw Error(`${name}: pass ${frame.w}x${frame.h} x${frame.n} does not match ${n} samples`);
+  if(!sum){sum=new Float32Array(frame.rgb.length);width=frame.w;height=frame.h;}
+  if(frame.w!==width||frame.h!==height)throw Error(`${name}: pass size changed`);
+  for(let i=0;i<sum.length;i++)sum[i]+=frame.rgb[i]*frame.n;
+  count+=frame.n;
+  const header=Buffer.alloc(16);
+  header.writeUInt32LE(0x46333250,0);header.writeUInt32LE(width,4);header.writeUInt32LE(height,8);header.writeUInt32LE(count,12);
+  writeFileSync(cache,Buffer.concat([header,Buffer.from(sum.buffer,sum.byteOffset,sum.byteLength)]));
+  console.log(new Date().toISOString(),name,`${count}/${samples} accumulated`);
+  if(count%64===0||count>=samples){
+   const mean=new Float32Array(sum.length);
+   for(let i=0;i<sum.length;i++)mean[i]=sum[i]/count;
+   const file=count>=samples?`${output}/${name}.png`:`${output}/${name}-${count}.png`;
+   writePng(file,width,height,gradeStill(mean,width,height,look,count));
+   console.log('wrote',file,`${width}x${height}`,count,'samples');
+  }
+ };
  try{
   while(count<samples){
-   const n=Math.min(passSize,samples-count);
-   let frame:Awaited<ReturnType<typeof openShot>>=null;
+   const startCount=count;
    let lastError:unknown;
-   for(let attempt=0;attempt<4&&!frame;attempt++){
-    try{frame=await withPage(page=>openShot(page,name,look,lighting,true,{samples:n,seed:count+attempt*1_000_003}));}
-    catch(error){lastError=error;console.error('retry',name,count,error instanceof Error?error.message:error);}
+   for(let attempt=0;attempt<4&&count===startCount;attempt++){
+    try{
+     await withPage(async page=>{
+      const n=Math.min(passSize,samples-count);
+      const first=await openShot(page,name,look,lighting,true,{samples:n,seed:count+attempt*1_000_003});
+      if(!first)throw Error(`${name}: pass at ${count} was empty`);
+      absorb(first,n);
+      for(let extra=1;extra<sessionPasses&&samples-count>=passSize;extra++){
+       const more=await nextPass(page,name,count,passSize);
+       absorb(more,passSize);
+      }
+     });
+    }catch(error){lastError=error;console.error('retry',name,count,error instanceof Error?error.message:error);}
    }
-   if(!frame)throw lastError instanceof Error?lastError:Error(`${name}: pass at ${count} failed`);
-   if(frame.n!==n||frame.rgb.length!==frame.w*frame.h*3)throw Error(`${name}: pass ${frame.w}x${frame.h} x${frame.n} does not match ${n} samples`);
-   if(!sum){sum=new Float32Array(frame.rgb.length);width=frame.w;height=frame.h;}
-   if(frame.w!==width||frame.h!==height)throw Error(`${name}: pass size changed`);
-   for(let i=0;i<sum.length;i++)sum[i]+=frame.rgb[i]*frame.n;
-   count+=frame.n;
-   const header=Buffer.alloc(16);
-   header.writeUInt32LE(0x46333250,0);header.writeUInt32LE(width,4);header.writeUInt32LE(height,8);header.writeUInt32LE(count,12);
-   writeFileSync(cache,Buffer.concat([header,Buffer.from(sum.buffer,sum.byteOffset,sum.byteLength)]));
-   console.log(new Date().toISOString(),name,`${count}/${samples} accumulated`);
-   if(count%64===0||count>=samples){
-    const mean=new Float32Array(sum.length);
-    for(let i=0;i<sum.length;i++)mean[i]=sum[i]/count;
-    const file=count>=samples?`${output}/${name}.png`:`${output}/${name}-${count}.png`;
-    writePng(file,width,height,gradeStill(mean,width,height,look,count));
-    console.log('wrote',file,`${width}x${height}`,count,'samples');
-   }
+   if(count===startCount)throw lastError instanceof Error?lastError:Error(`${name}: pass at ${count} failed`);
   }
  }catch(error){console.error('failed',name,error instanceof Error?error.message:error);}
 }

@@ -287,9 +287,25 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   tracer.bounces=photoBounces('deck-photo-bounces',5);tracer.transmissiveBounces=photoBounces('deck-photo-transmissive',6);tracer.filterGlossyFactor=.55;tracer.tiles.set(tilesX,tilesY);tracer.renderScale=photoRenderScale();tracer.stableNoise=false;
   syncCamera(true);tracer.setScene(scene,photo);
   const seed=Number(photoQuery('deck-photo-seed'));
-  if(Number.isFinite(seed)&&seed>=0)(tracer as unknown as {_pathTracer:{material:{seed:number}}})._pathTracer.material.seed=Math.round(seed);
+  if(Number.isFinite(seed)&&seed>=0)setSeed(seed);
+  (window as Window&{__DECK_PHOTO_CONTINUE?:(seed:number)=>boolean}).__DECK_PHOTO_CONTINUE=beginPass;
  }catch(error){
   console.warn('DeckCraft photo: path tracing is unavailable.',error);tracer?.dispose();denoise.dispose();denoised.dispose();grade.dispose();restoreAll();restoreView();delete gl.domElement.dataset.photoTrace;return fail();
+ }
+ function setSeed(seed:number){
+  if(!tracer)return;
+  (tracer as unknown as {_pathTracer:{material:{seed:number}}})._pathTracer.material.seed=Math.round(seed);
+ }
+ function beginPass(seed:number){
+  if(disposed||!tracer)return false;
+  heldSamples=0;passes=0;finished=false;shownDenoise=false;stall=0;previewAt=0;
+  delete gl.domElement.dataset.photoStill;
+  const record=window as Window&{__DECK_PHOTO_LINEAR?:string;__DECK_PHOTO_LINEAR_SIZE?:string};
+  delete record.__DECK_PHOTO_LINEAR;delete record.__DECK_PHOTO_LINEAR_SIZE;
+  setSeed(seed);tracer.reset();
+  publish('sampling',0,`Path tracing · 0 / ${getPhotoSettings().target} samples`);
+  bridge.invalidate();
+  return true;
  }
  const engine:PhotoEngine={
   step(){
@@ -337,7 +353,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
    }
   },
   dispose(){
-   if(disposed)return;disposed=true;registerPhotoTracer(null);delete gl.domElement.dataset.photoTrace;delete gl.domElement.dataset.photoPhase;delete gl.domElement.dataset.photoSamples;delete gl.domElement.dataset.photoTarget;delete gl.domElement.dataset.photoStill;delete gl.domElement.dataset.photoCensus;
+   if(disposed)return;disposed=true;registerPhotoTracer(null);delete (window as Window&{__DECK_PHOTO_CONTINUE?:unknown}).__DECK_PHOTO_CONTINUE;delete gl.domElement.dataset.photoTrace;delete gl.domElement.dataset.photoPhase;delete gl.domElement.dataset.photoSamples;delete gl.domElement.dataset.photoTarget;delete gl.domElement.dataset.photoStill;delete gl.domElement.dataset.photoCensus;
    restoreAll();restoreView();gl.setRenderTarget(null);tracer?.dispose();denoise.dispose();denoised.dispose();grade.dispose();accumMat.dispose();scaleMat.dispose();packMat.dispose();packed.dispose();for(const target of [...accum,averaged])target.dispose();bridge.invalidate();
   },
  };
