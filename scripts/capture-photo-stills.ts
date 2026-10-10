@@ -131,7 +131,7 @@ async function finishPass(page:Page,name:string,ask:ReturnType<typeof bindAsk>,e
 async function nextPass(page:Page,name:string,seed:number,passSamples:number){
  console.log('continue',name,`seed ${seed}`);
  const ask=bindAsk(page,name);
- const started=await ask(()=>{const hook=(window as Window&{__DECK_PHOTO_CONTINUE?:(seed:number)=>boolean}).__DECK_PHOTO_CONTINUE;return hook?hook(seed):false;});
+ const started=await page.evaluate(next=>{const hook=(window as Window&{__DECK_PHOTO_CONTINUE?:(value:number)=>boolean}).__DECK_PHOTO_CONTINUE;return hook?hook(next):false;},seed);
  if(!started)throw Error(`${name}: the next pass did not start`);
  return finishPass(page,name,ask,[],passSamples);
 }
