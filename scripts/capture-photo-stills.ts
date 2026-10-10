@@ -15,7 +15,10 @@ console.error=emit(2) as typeof console.error;
 const url=process.env.DECKCRAFT_PROOF_URL??'http://127.0.0.1:4187/deck-designer/';
 const samples=Number(process.env.DECK_PHOTO_SAMPLES??'256');
 const output=process.env.DECK_PHOTO_OUT??'/opt/cursor/artifacts/photo-mode';
+// Sample sums are about 32MB and the artifact store rejects a rename once the stills are beside them.
+const cacheRoot=process.env.DECK_PHOTO_CACHE??output;
 mkdirSync(output,{recursive:true});
+mkdirSync(cacheRoot,{recursive:true});
 
 const all:[string,'day'|'golden'|'night','daylight'|'evening',boolean][]=[
  ['raster-day','day','daylight',false],
@@ -276,7 +279,7 @@ for(const [name,look,lighting,photo] of shots){
  }
  const passSize=Math.max(4,Number(process.env.DECK_PHOTO_PASS??'8')||8);
  const sessionPasses=Math.max(1,Number(process.env.DECK_PHOTO_SESSION??'4')||4);
- const cache=`${output}/${name}.sum`;
+ const cache=`${cacheRoot}/${name}.sum`;
  let sum:Float32Array|null=null,width=0,height=0,count=0;
  try{
   const stored=readFileSync(cache);
@@ -303,9 +306,10 @@ for(const [name,look,lighting,photo] of shots){
   if(count%64===0||count>=samples){
    const mean=new Float32Array(sum.length);
    for(let i=0;i<sum.length;i++)mean[i]=sum[i]/count;
-   const file=count>=samples?`${output}/${name}.png`:`${output}/${name}-${count}.png`;
+   const file=`${cacheRoot}/${count>=samples?name:`${name}-${count}`}.png`;
    writePng(file,width,height,gradeStill(mean,width,height,look,count));
-   console.log('wrote',file,`${width}x${height}`,count,'samples');
+   if(count>=samples&&cacheRoot!==output)writeFileSync(`${output}/${name}.png`,readFileSync(file));
+   console.log('wrote',count>=samples?`${output}/${name}.png`:file,`${width}x${height}`,count,'samples');
   }
  };
  try{
