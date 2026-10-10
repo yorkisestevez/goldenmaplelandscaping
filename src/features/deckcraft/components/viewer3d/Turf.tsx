@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import colorUrl from './assets/lawn-color.webp';
 import normalUrl from './assets/lawn-normal.webp';
 import roughnessUrl from './assets/lawn-roughness.webp';
+if(typeof window!=='undefined'){for(const url of [colorUrl,normalUrl,roughnessUrl]){const img=new Image();img.decoding='async';img.src=url;}}
 import {yardClip,type YardModel} from '../../yardModel';
 import {GroundOcclusion,publishGroundOcclusion,type GroundBounds} from './groundOcclusion';
 import {groundGeometry,groundEdgeGeometry,lawnMaterial,soilFaceMaterial} from './lawnSurface';
@@ -69,13 +70,16 @@ export default function Turf({width,depth,radius:_radius,yard,finished=true,land
  const wallBanks=finished&&yard.features.some(f=>!f.excluded&&f.config.kind==='retaining-wall'),budget=Math.floor(quality.grassBudget*(wallBanks?.8:1)),bladeMasks=useMemo(()=>yardClip([...cuts,...yard.features.filter(f=>!f.excluded).flatMap(f=>f.footprints),...[...landscapeBedAreas(landscapeObjects).values()].flat().map(ring=>ring.map(p=>({x:p.x,y:p.z})))]),[cuts,yard,landscapeObjects]);
  const camera=useThree(s=>s.camera),[focus,setFocus]=useState<{x:number;z:number}|undefined>(),focusKey=useRef(''),cameraScratch=useMemo(()=>({p:new THREE.Vector3(),d:new THREE.Vector3()}),[]);
  useFrame(()=>{camera.getWorldPosition(cameraScratch.p);camera.getWorldDirection(cameraScratch.d);const {p,d}=cameraScratch,reach=Math.min(12,Math.max(0,p.y/Math.max(.25,-d.y))),x=Math.round((p.x+d.x*reach)/4)*48,z=Math.round((p.z+d.z*reach)/4)*48,close=Math.abs(p.y)<24,key=close?x+':'+z:'far';if(key!==focusKey.current){focusKey.current=key;setFocus(close?{x,z}:undefined);}});
- const tufts=useMemo(()=>lawnTufts(yard,width,depth,bladeMasks,budget,focus),[yard,width,depth,bladeMasks,budget,focus]);
+ // Blades are the same set either way. Building them after the first frame keeps that frame from waiting on tens of thousands of tufts.
+ const [bladesReady,setBladesReady]=useState(false);
+ useEffect(()=>{let cancel=false,inner=0;const outer=requestAnimationFrame(()=>{inner=requestAnimationFrame(()=>{if(!cancel)setBladesReady(true);});});return()=>{cancel=true;cancelAnimationFrame(outer);cancelAnimationFrame(inner);};},[]);
+ const tufts=useMemo(()=>bladesReady?lawnTufts(yard,width,depth,bladeMasks,budget,focus):[],[bladesReady,yard,width,depth,bladeMasks,budget,focus]);
  return <group name="textured-lawn">
   <mesh name="lawn-to-the-horizon" receiveShadow geometry={geometry}><primitive object={material} attach="material"/></mesh>
   {edges.getAttribute('position').count>0&&<mesh name={finished?"defined-grade-earth-faces":"survey-construction-cut-faces"} geometry={edges} material={soil} dispose={null} userData={{constructionInspection:!finished,measuredTransition:finished}} receiveShadow></mesh>}
   {/* Where a patio meets ground higher or lower than itself: the dig still to grade, its base left standing, or the
       stone edge course holding its raised side (PatioEdges3D.tsx; it draws nothing for a yard without plain paving). */}
   {finished&&yard.features.some(f=>f.config.kind==='patio')&&<Suspense fallback={null}><PatioEdges3D yard={yard} pools={pools} soil={soil}/></Suspense>}
-  <GrassBlades tufts={tufts} budget={budget}/>
+  <GrassBlades tufts={tufts} budget={bladesReady?budget:0}/>
  </group>;
 }

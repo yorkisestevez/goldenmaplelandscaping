@@ -12,8 +12,8 @@
       "lods": [
         {
           "uri": "deciduous-tree-lod0.glb",
-          "bytes": 4081976,
-          "sha256": "0625059599dc4bf426e928037fdf0e69a2f851fde41cdcf45c6df538fc1e6676",
+          "bytes": 2972432,
+          "sha256": "44d99cd0add569e31a10ced77be67984250b11b144ebe07eb8eccc09e522276b",
           "triangles": 65256,
           "bounds": {
             "min": [
@@ -40,8 +40,8 @@
         },
         {
           "uri": "deciduous-tree-lod1.glb",
-          "bytes": 1683176,
-          "sha256": "b145df8da1a85305f3609301575ed350bcb1a177e706e8fc7eb454860f8750df",
+          "bytes": 1138252,
+          "sha256": "d8b685441859e58aa5b433a0ef9bc0e362b47d012ffebbcae805bf33bc2e3b94",
           "triangles": 31663,
           "bounds": {
             "min": [
@@ -68,8 +68,8 @@
         },
         {
           "uri": "deciduous-tree-lod2.glb",
-          "bytes": 456620,
-          "sha256": "14d33f5b04f4d3c4bb36e57fff2bceffc4a0d14ad724a0b4aa49182b6a8b050e",
+          "bytes": 317128,
+          "sha256": "caec1ae8e1fcb99bca994f5fc4c6ced967387e8bf74b05899c9a3735b3e22ce7",
           "triangles": 8499,
           "bounds": {
             "min": [
@@ -112,8 +112,8 @@
       "lods": [
         {
           "uri": "conifer-tree-lod0.glb",
-          "bytes": 1365148,
-          "sha256": "7795aca2018fdb527d647a0255a830c15b95f9cf87d50158a5fb67e4f830a6fd",
+          "bytes": 1146232,
+          "sha256": "737241c358101ac5bf17cedcab829c7954c488462c6498bafac521ac2ed56bab",
           "triangles": 14364,
           "bounds": {
             "min": [
@@ -178,8 +178,8 @@
         },
         {
           "uri": "conifer-tree-lod1.glb",
-          "bytes": 463040,
-          "sha256": "dcf5337bc33cd239a983b880a91da843975e0a3f6e493f3f0daa4d46c6f0435e",
+          "bytes": 377764,
+          "sha256": "2fe623c24f3b99f71013573a35ae6f2af8ea290a5278f5914f39d2fc22f3806b",
           "triangles": 5799,
           "bounds": {
             "min": [
@@ -244,8 +244,8 @@
         },
         {
           "uri": "conifer-tree-lod2.glb",
-          "bytes": 147656,
-          "sha256": "63903a29a090c80d48ff53a794ac135a948d2882b5ab68a5cdc740f4384a64fd",
+          "bytes": 118068,
+          "sha256": "ea770b5a43ce72db9416d646dfb239f6a4d5e2a0176a2dba9d798016d44b8466",
           "triangles": 2012,
           "bounds": {
             "min": [
@@ -327,8 +327,8 @@
       "lods": [
         {
           "uri": "rounded-shrub-lod0.glb",
-          "bytes": 466424,
-          "sha256": "ed30314bedc007f36133ddfab8f0917a4a6378386bfe5d531b94d7552c1e6ad5",
+          "bytes": 436348,
+          "sha256": "6fab7b4e445153a43da16d85b9db2569b4b04acbacd8fc37118a7fc6d2ec9d9b",
           "triangles": 7590,
           "bounds": {
             "min": [
@@ -347,8 +347,8 @@
         },
         {
           "uri": "rounded-shrub-lod1.glb",
-          "bytes": 248652,
-          "sha256": "e71b46298454e560343cc6fa3f2770fd0c99477fcf4c350738ac90cd8b75d88b",
+          "bytes": 218568,
+          "sha256": "02943031d17a62050f5b80f821ec9e1f0278cf1b5e95c6d6c76e6869d5df6c51",
           "triangles": 7590,
           "bounds": {
             "min": [
@@ -367,8 +367,8 @@
         },
         {
           "uri": "rounded-shrub-lod2.glb",
-          "bytes": 181844,
-          "sha256": "23a979f0452479775a1d71b145b1fc79a7db830e403c12a151a0adeef8db0908",
+          "bytes": 151760,
+          "sha256": "ca4c4ad6e848d1a0b718da1d2b208909f7f9d3abf549562b968a70e8875d9ea2",
           "triangles": 7590,
           "bounds": {
             "min": [
@@ -403,8 +403,8 @@
       "lods": [
         {
           "uri": "grass-clump-lod0.glb",
-          "bytes": 589496,
-          "sha256": "cb096b5b9f08ee07cebf302df1a3e939a9403c36dfb904983b8e3b41838e9e5f",
+          "bytes": 575028,
+          "sha256": "c0dcdbcefd6a4cbb6753a1624585483f8e5e392b6a2f4e48ec0073b854a802e6",
           "triangles": 2287,
           "bounds": {
             "min": [
@@ -423,8 +423,8 @@
         },
         {
           "uri": "grass-clump-lod1.glb",
-          "bytes": 230788,
-          "sha256": "75d96fca246507891af2310540e2df62f54f5102a951ebc4679556028f2741fc",
+          "bytes": 216316,
+          "sha256": "a8748f6ab4d9fd0baa9a6d281a4a072b27ec6242299f1f484f6d31b8accfdfbb",
           "triangles": 2287,
           "bounds": {
             "min": [
@@ -443,8 +443,8 @@
         },
         {
           "uri": "grass-clump-lod2.glb",
-          "bytes": 116580,
-          "sha256": "e22d48798b663cd0cea0a2b15b84d4e9e228d5744a40d05bb04a2b833935dde0",
+          "bytes": 102092,
+          "sha256": "17266a3b778429e36155a4e265675607e6b6db20c173ba035b7c3eb7a3b96fef",
           "triangles": 2287,
           "bounds": {
             "min": [
@@ -479,8 +479,8 @@
       "lods": [
         {
           "uri": "natural-boulder-lod0.glb",
-          "bytes": 347900,
-          "sha256": "b912380f5f378f7d6fbe95c6aa7269df2e4bbe0588fd094f3f99af7ab9b3ef34",
+          "bytes": 321832,
+          "sha256": "8b496bbc2d7b28bdd50e5489dbed12d12bb5bdd812b16d7f73e63358f2898cca",
           "triangles": 10370,
           "bounds": {
             "min": [
@@ -498,8 +498,8 @@
         },
         {
           "uri": "natural-boulder-lod1.glb",
-          "bytes": 99752,
-          "sha256": "d6af59c2b77e17f46f1f892f0172adfa35f35263b435c94c54fddafd52657c99",
+          "bytes": 92212,
+          "sha256": "916a4aeaf86a39c095f7552d634acc961941137ce1fa6387f398a03217eb4915",
           "triangles": 3240,
           "bounds": {
             "min": [
@@ -517,8 +517,8 @@
         },
         {
           "uri": "natural-boulder-lod2.glb",
-          "bytes": 27284,
-          "sha256": "728a678b8538104684eb1b041f8b3ba88e13af64a0adbcb70857c6e7e2c46b53",
+          "bytes": 25620,
+          "sha256": "08fa9d7b0924969408786697da5bc273509a37d6ec93acd5e4994360613ed2cd",
           "triangles": 810,
           "bounds": {
             "min": [
@@ -552,8 +552,8 @@
       "lods": [
         {
           "uri": "outdoor-chair-lod0.glb",
-          "bytes": 236600,
-          "sha256": "4d2e24d5e6cf4c211a668621f4b6207add2d9b70644ab1ba4c4ce61e51e77b35",
+          "bytes": 197416,
+          "sha256": "6f52dc4461b077dcb299226638ef0826bea52f853e9e5204d3e3c2490bc2fad0",
           "triangles": 3752,
           "bounds": {
             "min": [
@@ -571,8 +571,8 @@
         },
         {
           "uri": "outdoor-chair-lod1.glb",
-          "bytes": 114816,
-          "sha256": "8b57e3a97a2aad672a5a7ed32cb172d9960c2510d975f61c5786b8a6fe46519f",
+          "bytes": 85740,
+          "sha256": "69e9f43938014075e56bfb60a02f4ad10ec2d4f2931896153599bb51a58e15ee",
           "triangles": 1876,
           "bounds": {
             "min": [
@@ -590,8 +590,8 @@
         },
         {
           "uri": "outdoor-chair-lod2.glb",
-          "bytes": 81352,
-          "sha256": "9858adcd94578f88c9f226cf8afaedc7acd50457e4192fe3bfaa876f06d81814",
+          "bytes": 54308,
+          "sha256": "daf6764aa623db937a2f566be81937b181382defcecc16838fe5843eae624a9f",
           "triangles": 1592,
           "bounds": {
             "min": [
@@ -625,8 +625,8 @@
       "lods": [
         {
           "uri": "outdoor-table-lod0.glb",
-          "bytes": 208664,
-          "sha256": "4d7cbda00e0fb287008fba324bd27428326edface268f62e4a7ac851be8e71cc",
+          "bytes": 173000,
+          "sha256": "ea81494b13f160268f3b11462cf5a9f8d9ac9d17ea765932684a42aad06a2bb6",
           "triangles": 2324,
           "bounds": {
             "min": [
@@ -644,8 +644,8 @@
         },
         {
           "uri": "outdoor-table-lod1.glb",
-          "bytes": 105124,
-          "sha256": "149dfaa686e4eba56139890834301f564b1b7dd9cb8eeba0daed94f02da8b871",
+          "bytes": 76884,
+          "sha256": "8717fb35993cfe439990d11afb79115b8ec4d6c4b120d294f923ed2f831ade9a",
           "triangles": 1592,
           "bounds": {
             "min": [
@@ -663,8 +663,8 @@
         },
         {
           "uri": "outdoor-table-lod2.glb",
-          "bytes": 75624,
-          "sha256": "c3821c6d5711da48528e11918b3f32c48989c3b6af2a4367db8562ede3a4c808",
+          "bytes": 48624,
+          "sha256": "f883f4e3e132c121f44e0c4a7a8e3986f88ec44894d388708aaa64e1bdfe37c3",
           "triangles": 1472,
           "bounds": {
             "min": [

@@ -15,6 +15,7 @@ export interface WindowSurface {reflection:WindowReflection;room:WindowRoom;offs
 /** Double-glazed low-e glass reflects about 11% head-on (plain glass 4%), which is what makes a window read as glass. */
 export const WINDOW_ROOM={depthIn:144,sideIn:36,sillIn:30,heightIn:108,dayLevel:.06,glow:[1.1,1.8] as const,litShare:1,f0:.11,ior:2};
 
+const ROOM_PLACEHOLDER=new THREE.DataTexture(new Uint8Array([128,128,128,255]),1,1);ROOM_PLACEHOLDER.needsUpdate=true;
 const VERTEX=/* glsl */`
 attribute vec2 aPane;
 uniform vec3 uPaneOffset;uniform vec2 uRoomHalf;uniform mat4 uReflectionMatrix;
@@ -70,7 +71,7 @@ function patch(material:THREE.MeshPhysicalMaterial,evening:boolean,surface?:Wind
   material.customProgramCacheKey=()=>'dc-window-v4-deck-reflection';
   material.onBeforeCompile=shader=>{
     shader.uniforms.uEvening={value:evening?1:0};
-    shader.uniforms.uRoomPhoto={value:material.userData.roomPhoto??null};
+    shader.uniforms.uRoomPhoto={value:material.userData.roomPhoto??ROOM_PLACEHOLDER};
     shader.uniforms.uRoomPhotoReady={value:material.userData.roomPhoto?1:0};
     shader.uniforms.uPaneOffset={value:new THREE.Vector3(...(surface?.offset??[0,0,0]))};
     shader.uniforms.uRoomHalf={value:new THREE.Vector2(surface?surface.room.w/2:0,surface?surface.room.h/2:0)};
@@ -87,7 +88,7 @@ function patch(material:THREE.MeshPhysicalMaterial,evening:boolean,surface?:Wind
   return material;
 }
 /** A pane's own uniforms; panes in an opening share the same room coordinates and facade reflection. */
-export function createWindowGlass(evening:boolean,photo:THREE.Texture,surface:WindowSurface){
+export function createWindowGlass(evening:boolean,photo:THREE.Texture|null,surface:WindowSurface){
   const m=patch(new THREE.MeshPhysicalMaterial({color:'#000000',roughness:.04,metalness:0,ior:WINDOW_ROOM.ior,envMapIntensity:.18}),evening,surface);
   m.userData.roomPhoto=photo;m.userData.photoRole='glass';return m;
 }

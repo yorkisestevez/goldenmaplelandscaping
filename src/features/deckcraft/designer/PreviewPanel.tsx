@@ -41,14 +41,15 @@ const AssistantTargets=lazy(()=>import('./AssistantTargets'));
 
 /**
 
- * The 3D viewer (three.js, about 300 KB compressed). It loads when a 3D view is shown; a desktop also fetches it once the
+ * The 3D viewer (three.js, about 300 KB compressed). It loads when a 3D view is shown, and the plan prefetches it
 
- * page has settled (DeckDesigner's prefetch), a phone never before its 3D sheet is chosen.
+ * (previewLoaders.prefetchViewer) so the chunk is usually cached before the 3D sheet is chosen.
 
  */
 
-import {loadViewer,loadExteriorStudio,loadPlanBoundaryEditor} from './previewLoaders';
+import {loadViewer,loadExteriorStudio,loadPlanBoundaryEditor,prefetchViewer} from './previewLoaders';
 export {loadViewer,loadExteriorStudio,loadPlanBoundaryEditor} from './previewLoaders';
+prefetchViewer();
 
 const Viewer=lazy(loadViewer);
 
