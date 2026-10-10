@@ -53,7 +53,7 @@ async function saveCanvas(page:Page,name:string){
 async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighting:'daylight'|'evening',photo:boolean){
  console.log('shot',name);
  const params=new URLSearchParams({ 'deck-sample':'ontario','deck-quality':'showcase','deck-context':'1','deck-lighting':lighting });
- if(photo){params.set('deck-photo','1');params.set('deck-photo-look',look);params.set('deck-photo-samples',String(samples));params.set('deck-photo-edge',process.env.DECK_PHOTO_EDGE??'2048');if(process.env.DECK_PHOTO_SCALE)params.set('deck-photo-scale',process.env.DECK_PHOTO_SCALE);}
+ if(photo){params.set('deck-photo','1');params.set('deck-photo-look',look);params.set('deck-photo-samples',String(samples));params.set('deck-photo-edge',process.env.DECK_PHOTO_EDGE??'2048');if(process.env.DECK_PHOTO_SCALE)params.set('deck-photo-scale',process.env.DECK_PHOTO_SCALE);if(process.env.DECK_PHOTO_TILES)params.set('deck-photo-tiles',process.env.DECK_PHOTO_TILES);if(process.env.DECK_PHOTO_BOUNCES)params.set('deck-photo-bounces',process.env.DECK_PHOTO_BOUNCES);if(process.env.DECK_PHOTO_TRANSMISSIVE)params.set('deck-photo-transmissive',process.env.DECK_PHOTO_TRANSMISSIVE);}
  const errors:string[]=[];
  page.removeAllListeners('pageerror');page.removeAllListeners('console');
  page.on('pageerror',error=>errors.push(error.message));
@@ -72,12 +72,22 @@ async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighti
   await page.waitForFunction(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photographic-pipeline')==='active',undefined,{timeout:120_000});
   await page.waitForTimeout(4000);
  }else{
-  const deadline=Date.now()+5_400_000;let last='',lastChange=Date.now();
+  const budget=Math.max(5_400_000,samples*180_000+1_800_000);
+  const deadline=Date.now()+budget;let last='',lastChange=Date.now(),savedStill='';
   while(Date.now()<deadline){
-   const state=await page.evaluate(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',census:canvas?.getAttribute('data-photo-census')??'',still:canvas?.getAttribute('data-photo-still')??'',buffer:canvas?.getAttribute('data-photo-buffer')??''};});
-   const line=`${state.phase||'waiting'} ${state.samples||'0'}/${state.target||'?'} ${state.buffer} census=${state.census} still=${state.still}`;
-   if(line!==last){console.log(name,line);last=line;lastChange=Date.now();}
+   const state=await page.evaluate(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',census:canvas?.getAttribute('data-photo-census')??'',still:canvas?.getAttribute('data-photo-still')??'',buffer:canvas?.getAttribute('data-photo-buffer')??'',tiles:canvas?.getAttribute('data-photo-tiles')??''};});
+   const line=`${state.phase||'waiting'} ${state.samples||'0'}/${state.target||'?'} ${state.buffer} tiles=${state.tiles} census=${state.census} still=${state.still}`;
+   if(line!==last){console.log(new Date().toISOString(),name,line);last=line;lastChange=Date.now();}
    else if(Date.now()-lastChange>1_200_000)throw Error(`${name}: no sample progress for 20 minutes (${line})`);
+   if(state.still&&state.still!==savedStill){
+    savedStill=state.still;
+    const data=await page.evaluate(()=>(window as Window&{__DECK_PHOTO_PNG?:string}).__DECK_PHOTO_PNG??'');
+    if(data.startsWith('data:image/png;base64,')){
+     const preview=`${output}/${name}-${state.samples}.png`;
+     writeFileSync(preview,Buffer.from(data.slice(data.indexOf(',')+1),'base64'));
+     console.log('preview',preview);
+    }
+   }
    if(state.phase==='ready'||state.phase==='fallback')break;
    await page.waitForTimeout(3000);
   }

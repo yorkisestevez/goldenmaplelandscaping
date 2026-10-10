@@ -114,7 +114,7 @@ function shown(object:THREE.Object3D){
 export function photoSkip(object:THREE.Object3D){
  if(HIDDEN.has(object.name)||object.name.includes('grass-blades')||object.name.includes('outline')||PHOTO_ADDED.has(object.name))return true;
  const data=object.userData??{};
- if(data.helper||data.shadowOnly||data.photoSkip||data.editHandle)return true;
+ if(data.helper||data.shadowOnly||data.photoSkip||data.editHandle||data.renderOnly)return true;
  const mesh=object as THREE.Mesh;
  if(!mesh.isMesh)return false;
  const list=Array.isArray(mesh.material)?mesh.material:[mesh.material];

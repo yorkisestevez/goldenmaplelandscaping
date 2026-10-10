@@ -41,6 +41,18 @@ function photoLongEdge(){
  const n=Number(photoQuery('deck-photo-edge'));
  return n===2048||n===4096?n:0;
 }
+function photoTiles():[number,number]{
+ const raw=photoQuery('deck-photo-tiles');
+ const parts=raw.split(',').map(part=>Number(part));
+ const x=parts[0],y=parts.length>1?parts[1]:parts[0];
+ if(Number.isFinite(x)&&x>=1&&Number.isFinite(y)&&y>=1)return [Math.min(16,Math.round(x)),Math.min(16,Math.round(y))];
+ // Two by two is the largest tile that still returns on SwiftShader. A single full-frame draw never comes back.
+ return [2,2];
+}
+function photoBounces(name:string,fallback:number){
+ const n=Number(photoQuery(name));
+ return Number.isFinite(n)&&n>=1?Math.min(16,Math.round(n)):fallback;
+}
 function canPathTrace(gl:THREE.WebGLRenderer){
  return gl.capabilities.isWebGL2&&(gl.extensions.has('EXT_color_buffer_float')||gl.extensions.has('EXT_color_buffer_half_float'));
 }
@@ -110,7 +122,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   fragmentShader:'uniform sampler2D tMap;uniform float invCount;varying vec2 vUv;void main(){gl_FragColor=vec4(texture2D(tMap,vUv).rgb*invCount,1.0);}'});
  const accum=[new THREE.WebGLRenderTarget(4,4,{type:THREE.FloatType,depthBuffer:false,colorSpace:THREE.LinearSRGBColorSpace}),new THREE.WebGLRenderTarget(4,4,{type:THREE.FloatType,depthBuffer:false,colorSpace:THREE.LinearSRGBColorSpace})];
  const averaged=new THREE.WebGLRenderTarget(4,4,{type:THREE.FloatType,depthBuffer:false,colorSpace:THREE.LinearSRGBColorSpace});
- let passes=0;
+ let passes=0,previewAt=0;
  const photo=new PhysicalCamera(35,.1,1,1000);photo.apertureBlades=0;
  let pose='',finished=false,shownDenoise=false,stall=0,stashed=false;
  function skyLighting():Lighting{return input.evening?'evening':'day';}
@@ -140,6 +152,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   }
   const trace=tracePhotoTriangles(scene);
   gl.domElement.dataset.photoCensus=`${trace.objects}:${trace.triangles}/${raster.objects}:${raster.triangles}`;
+  gl.domElement.dataset.photoTiles=`${tracer?.tiles.x??photoTiles()[0]}x${tracer?.tiles.y??photoTiles()[1]}`;
   if(trace.triangles!==raster.triangles)console.warn('DeckCraft photo: trace triangles',trace.triangles,'raster triangles',raster.triangles);
  }
  function restoreAll(){
@@ -198,14 +211,14 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   for(let y=0;y<size.y;y++)rgba.set(raw.subarray((size.y-1-y)*row,(size.y-y)*row),y*row);
   return {width:size.x,height:size.y,rgba};
  }
- function stashStill(){
-  if(stashed||disposed)return;
+ function stashStill(samples:number){
+  if(disposed)return;
   try{
    const frame=readFrame(),canvas=document.createElement('canvas');canvas.width=frame.width;canvas.height=frame.height;
    const ctx=canvas.getContext('2d');if(!ctx)return;
    const image=ctx.createImageData(frame.width,frame.height);image.data.set(frame.rgba);ctx.putImageData(image,0,0);
    (window as Window&{__DECK_PHOTO_PNG?:string}).__DECK_PHOTO_PNG=canvas.toDataURL('image/png');
-   gl.domElement.dataset.photoStill=`${frame.width}x${frame.height}`;stashed=true;
+   gl.domElement.dataset.photoStill=`${frame.width}x${frame.height}@${samples}`;stashed=true;
   }catch(error){console.warn('DeckCraft photo: the still could not be stored.',error);}
  }
  async function encode(frame:{width:number;height:number;rgba:Uint8Array}){
@@ -241,7 +254,8 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   fitStill();
   tracer=new WebGLPathTracer(gl) as Tracer;
   tracer.renderToCanvas=false;tracer.renderDelay=0;tracer.fadeDuration=0;tracer.minSamples=1;tracer.rasterizeScene=false;tracer.multipleImportanceSampling=true;
-  tracer.bounces=5;tracer.transmissiveBounces=6;tracer.filterGlossyFactor=.55;tracer.tiles.set(4,4);tracer.renderScale=photoRenderScale();tracer.stableNoise=true;
+  const [tilesX,tilesY]=photoTiles();
+  tracer.bounces=photoBounces('deck-photo-bounces',5);tracer.transmissiveBounces=photoBounces('deck-photo-transmissive',6);tracer.filterGlossyFactor=.55;tracer.tiles.set(tilesX,tilesY);tracer.renderScale=photoRenderScale();tracer.stableNoise=true;
   syncCamera(true);tracer.setScene(scene,photo);
  }catch(error){
   console.warn('DeckCraft photo: path tracing is unavailable.',error);tracer?.dispose();denoise.dispose();denoised.dispose();grade.dispose();restoreAll();restoreView();delete gl.domElement.dataset.photoTrace;return fail();
@@ -253,7 +267,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
    try{
     const moved=syncCamera();
     const total=()=>passes*CHUNK+Math.floor(tracer?.samples??0);
-    if(!moved&&passes*CHUNK>=settings.target){if(!finished||shownDenoise!==settings.denoise){finished=true;shownDenoise=settings.denoise;present(true);stashStill();note(total(),true);}return;}
+    if(!moved&&passes*CHUNK>=settings.target){if(!finished||shownDenoise!==settings.denoise){finished=true;shownDenoise=settings.denoise;present(true);stashStill(total());note(total(),true);}return;}
     // One tile per frame. A tight loop fills SwiftShader's queue and the next draw never returns.
     // The software GPU also stops returning from a draw after a long continuous trace, so each
     // chunk is stored and the accumulator is reset before that happens.
@@ -262,8 +276,10 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
     if(tracer.isCompiling){publish('building',total(),'Compiling the path tracer…');stall=0;bridge.invalidate();return;}
     if(tracer.samples===0&&passes===0){if(++stall>90){engine.dispose();publish('fallback',0,PHOTO_FALLBACK);return;}bridge.invalidate();return;}
     stall=0;
-    if(passes*CHUNK>=settings.target){finished=true;present(true);stashStill();note(total(),true);return;}
-    finished=false;note(total(),false);bridge.invalidate();
+    const count=total();
+    if(passes*CHUNK>=settings.target){finished=true;present(true);stashStill(count);note(count,true);return;}
+    if(count-previewAt>=64){previewAt=count;present(true);stashStill(count);}
+    finished=false;note(count,false);bridge.invalidate();
    }catch(error){console.warn('DeckCraft photo: path tracing stopped.',error);engine.dispose();publish('fallback',0,PHOTO_FALLBACK);}
   },
   async exportStill(longEdge:number){

@@ -52,9 +52,10 @@ const matrix=new THREE.Matrix4();
 for(let i=0;i<3;i++)instanced.setMatrixAt(i,matrix.makeTranslation(i*3,1,0));
 instanced.count=3;instanced.name='photo-check-instances';
 const catcher=new THREE.Mesh(box,new THREE.MeshStandardMaterial());catcher.userData.shadowOnly=true;catcher.name='shadow-catcher';
+const detail=new THREE.Mesh(box,new THREE.MeshStandardMaterial({color:'#335533'}));detail.userData.renderOnly=true;detail.name='surface-detail-test';
 const basicMat=new THREE.MeshBasicMaterial({color:'#c8843a'});
 const basic=new THREE.Mesh(box,basicMat);basic.name='photo-check-basic';
-scene.add(solid,instanced,catcher,basic);
+scene.add(solid,instanced,catcher,basic,detail);
 const background=buildPhotoBackground(null,1,0,0,[.4,.5,.6]);
 ok(background.mapping===THREE.EquirectangularReflectionMapping&&[...background.image.data].every((n:number)=>Number.isFinite(n)),'The photo sky is a finite equirectangular background');
 
@@ -63,7 +64,7 @@ const restore=applyPhotoScene(scene,'day',{color:[1,.95,.9],direction:[.4,.8,.3]
 const trace=tracePhotoTriangles(scene);
 ok(raster.triangles===trace.triangles&&raster.objects===trace.objects&&raster.triangles>=12+36,'The path tracer keeps every raster triangle, including each instance of a mesh');
 ok(!instanced.visible&&!catcher.visible&&!sky.visible&&scene.getObjectByName('photo-baked-photo-check-instances') instanceof THREE.Mesh,'Instances are baked into the trace, and the sky shell and shadow catchers stay out');
-ok(!sky.visible&&!blades.visible,'The sky dome and grass blades stay out of the path-traced scene');
+ok(!sky.visible&&!blades.visible&&!detail.visible,'The sky dome, grass blades and camera-following ground detail stay out of the path-traced scene');
 ok(windowMat.transmission===0&&windowMat.ior===WINDOW_ROOM.ior&&windowMat.userData.photoRole==='glass','Window glass stays reflective during a photo, so the house is not a hollow shell');
 ok(guard.transmission===1&&guard.thickness===0&&guard.attenuationDistance===Infinity&&guard.ior===GUARD_GLASS.ior,'Guard glass is a thin transmissive sheet for the tracer');
 ok(waterMat.transmission===1&&waterMat.thickness===0&&waterMat.ior===1.333&&waterMat.color.getHex()!==0xffffff,'Pool water is a thin refractive sheet tinted by the water colour');
@@ -73,7 +74,7 @@ ok(sun.intensity===0&&((spot as THREE.SpotLight&{radius?:number}).radius??0)>=PH
 ok(scene.getObjectByName('photo-sun') instanceof THREE.RectAreaLight&&scene.getObjectByName('photo-emitter') instanceof THREE.Mesh,'A circular sun and a fixture bulb are added for the still');
 ok(floorMat.emissiveIntensity===PHOTO_LIGHT.floorCaustic&&floorMat.emissiveMap!==null,'The pool floor carries a caustic approximation');
 restore();
-ok(sky.visible&&blades.visible&&instanced.visible&&catcher.visible&&basic.material===basicMat&&sun.intensity===2.4&&windowMat.transmission===0&&guard.transmission===0&&guard.depthWrite===false&&waterMat.transmission===0&&leaf.alphaTest===.2&&leaf.transparent===true&&swatch.map===swatchMap&&swatch.metalness===.2&&!scene.getObjectByName('photo-sun')&&!scene.getObjectByName('photo-emitter')&&!scene.getObjectByName('photo-baked-photo-check-instances'),'Leaving photo mode puts the raster materials, lights and helpers back');
+ok(sky.visible&&blades.visible&&detail.visible&&instanced.visible&&catcher.visible&&basic.material===basicMat&&sun.intensity===2.4&&windowMat.transmission===0&&guard.transmission===0&&guard.depthWrite===false&&waterMat.transmission===0&&leaf.alphaTest===.2&&leaf.transparent===true&&swatch.map===swatchMap&&swatch.metalness===.2&&!scene.getObjectByName('photo-sun')&&!scene.getObjectByName('photo-emitter')&&!scene.getObjectByName('photo-baked-photo-check-instances'),'Leaving photo mode puts the raster materials, lights and helpers back');
 const windowEmissive=windowMat.emissiveIntensity,night=applyPhotoScene(scene,'night',null);
 ok(windowMat.emissiveIntensity===PHOTO_LIGHT.windowNightEmissive&&floorMat.emissiveMap===null&&!scene.getObjectByName('photo-sun'),'Night windows emit and the sun stays out');
 night();
