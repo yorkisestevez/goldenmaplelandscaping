@@ -170,7 +170,7 @@ const transitionSchema:Schema={...fields('id name enabled'),a:transitionBoundary
 const nested:Record<string,Schema>={
   pools:[poolSchema],
   stairPath:{points:[point]},
-  pergola:{...fields('productId variantId frameFinish roofFinish supplyMode xFt zFt rotationDeg louverDeg lighting'),accessories:[true],target:fields('kind level featureId'),customSize:fields('widthFt depthFt heightFt')},
+  pergola:{...fields('productId variantId frameFinish roofFinish supplyMode xFt zFt rotationDeg louverDeg lighting'),accessories:[true],target:fields('kind level featureId'),customSize:fields('widthFt depthFt heightFt'),posts:[fields('xIn zIn')]},
   boundaryLocks:[fields('level edge dxIn dyIn')],
   boardLayout:{regions:[regionSchema],breakers:[breakerSchema],pieces:[pieceSchema]},
   deckOutlines:{main:[point],second:[point],third:[point]},deckOutlineOffsets:{second:point,third:point},
@@ -188,7 +188,7 @@ const nested:Record<string,Schema>={
   privacyScreens:[fields('id side lengthFt heightFt offsetPct lights enabled product design finish panels level edgeId')],
   railSections:[fields('id level edgeId startPct endPct enabled')],railDefault:true,
 };
-const designSchema:Record<string,Schema>={...fields('deckType municipality siteType soilCondition buildSeason intendedLoad foundation width length height cutoutWidth cutoutLength width2 length2 height2 cutoutWidth2 cutoutLength2 shape levels pattern deckingMaterial deckingColor framingSize framingSpecies boardWidth joistSpacing fasteningSystem pictureFrameRows hasInlay inlayLf railingType railingLf stairFlights stairWidth stairRiserCount stairTreadDepthIn stairType stairPosition stairOffset benchLf privacySqft hasDrainage hasDemo pergolaSqft stairEdgeId level2EdgeId level2FullStep lightingPreviewOn catalogueRailingId glassMount glassFinish borderFinish pictureFrameOverhangIn houseVisible houseWallHeightIn houseDoorOffset houseDoorWidthIn sceneLighting level2Position level2Offset stairTurn landingDepthIn foundationDepthIn projectKind buildRules'),...nested};
+const designSchema:Record<string,Schema>={...fields('deckType municipality siteType soilCondition buildSeason intendedLoad foundation width length height cutoutWidth cutoutLength width2 length2 height2 cutoutWidth2 cutoutLength2 shape levels pattern deckingMaterial deckingColor framingSize framingSpecies boardWidth joistSpacing fasteningSystem pictureFrameRows hasInlay inlayLf railingType railingLf stairFlights stairWidth stairRiserCount stairTreadDepthIn stairType stairPosition stairOffset benchLf privacySqft hasDrainage hasDemo pergolaSqft stairEdgeId level2EdgeId level2FullStep lightingPreviewOn catalogueRailingId glassMount glassFinish borderFinish pictureFrameOverhangIn houseVisible houseWallHeightIn houseDoorOffset houseDoorWidthIn sceneLighting level2Position level2Offset stairTurn landingDepthIn foundationDepthIn houseCantileverIn projectKind buildRules'),...nested};
 function safeTree(value:unknown,path='request',depth=0):void {
   if(depth>24)fail(`${path}: nesting exceeds 24 levels.`);
   if(value===null||typeof value==='string'||typeof value==='boolean')return;

@@ -2,7 +2,7 @@ import type {DeckData} from './types';
 import type {Box,DeckTakeoff,Member} from './deckTakeoff';
 import type {PlanPoint} from './lib/deckGeometry';
 import {pergolaProduct,pergolaVariant} from './pergolaCostCatalog';
-import {pergolaSize} from './pergolaValidation';
+import {pergolaPostPlan,pergolaSize} from './pergolaValidation';
 import {buildYardModel,yardClip,yardArea} from './yardModel';
 import {getHouseBlocks} from './houseFootprint';
 import {getHouseConfig} from './houseSettings';
@@ -20,7 +20,7 @@ export function pergolaLayout(data:DeckData,model:DeckTakeoff,extraBoxes:Box[]=[
  const H=dim.heightIn,roofLow=base+H-8,roofHigh=base+H+Math.max(0,Math.abs(Math.sin(sel.louverDeg*Math.PI/180))*4-3.6);
  if(!checkConflicts)return {footprint,base,roofHigh,dimensions:dim,warnings,conceptual:!v.dimensions||p.custom};
  const postPolys:PlanPoint[][]=[];
- for(const px of [-1,1])for(const pz of [-1,1]){const lx=px*(dim.widthIn-post)/2,lz=pz*(dim.depthIn-post)/2;postPolys.push(rect(x+c*lx-s*lz,z+s*lx+c*lz,post,post,a));}
+ for(const station of pergolaPostPlan(sel,dim,post))postPolys.push(rect(x+c*station.xIn-s*station.zIn,z+s*station.xIn+c*station.zIn,post,post,a));
  const obstacles:{name:string;poly:PlanPoint[];lo:number;hi:number}[]=[];
  const box=(name:string,b:Box)=>obstacles.push({name,poly:b.polygon??rect(b.x,b.z,b.w,b.d,-(b.angle??0)),lo:b.y-b.h/2,hi:b.y+b.h/2});
  const member=(name:string,m:Member)=>{const dx=m.b.x-m.a.x,dz=m.b.z-m.a.z,len=Math.hypot(dx,dz);obstacles.push({name,poly:rect((m.a.x+m.b.x)/2,(m.a.z+m.b.z)/2,len||m.width,m.width,Math.atan2(dz,dx)),lo:Math.min(m.a.y,m.b.y)-m.depth/2,hi:Math.max(m.a.y,m.b.y)+m.depth/2});};

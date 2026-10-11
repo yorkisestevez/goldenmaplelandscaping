@@ -21,4 +21,6 @@ export interface PergolaSelection{
   xFt:number;zFt:number;rotationDeg:number;louverDeg:number;
   lighting?:'perimeter-led';
   customSize?:{widthFt:number;depthFt:number;heightFt:number};
+  /** Local-inch post centres from the pergola origin. Absent draws the four roof corners. */
+  posts?:{xIn:number;zIn:number}[];
 }

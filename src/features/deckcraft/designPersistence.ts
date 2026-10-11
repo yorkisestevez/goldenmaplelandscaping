@@ -72,7 +72,7 @@ const enums: Partial<Record<keyof DeckData, readonly (string | number)[]>> = {
 const ranges: Partial<Record<keyof DeckData, readonly [number,number]>> = {
   width:[4,60],length:[4,60],height:[8,144],width2:[4,40],length2:[4,40],height2:[8,144],
   cutoutWidth:[0,48],cutoutLength:[0,48],cutoutWidth2:[0,48],cutoutLength2:[0,48],
-  foundationDepthIn:[24,144],stairWidth:[36,120],stairOffset:[0,100],inlayLf:[0,200],
+  foundationDepthIn:[24,144],houseCantileverIn:[0,24],stairWidth:[36,120],stairOffset:[0,100],inlayLf:[0,200],
   stairRiserCount:[1,32],stairTreadDepthIn:[10,24],
   benchLf:[0,100],privacySqft:[0,500],pergolaSqft:[0,600],
   pictureFrameOverhangIn:[0,1.5],

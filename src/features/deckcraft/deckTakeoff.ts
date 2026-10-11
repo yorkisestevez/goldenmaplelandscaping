@@ -149,7 +149,8 @@ export function buildDeckTakeoff(data:DeckData){
     const customDeck=kind==='deck'&&index===0&&data.shape==='Custom',o=footprint.outline;
     const stepXs=customDeck?o.flatMap((p,i)=>{const q=o[(i+1)%o.length];return Math.abs(p.x-q.x)<.5&&Math.abs(p.y-q.y)>.5&&p.x>.5&&p.x<footprint.bounds.w-.5?[p.x]:[];}):[];
     const free=kind==='deck'&&!!freeFootprint(data,(index+1) as 1|2|3);
-    const framedZones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0,attached&&index===0?mainContact.contacts.filter(c=>c.kind==='flush').map(c=>c.a.x):[],angled.filter(cornerCut).flatMap(e=>[e.a.x,e.b.x]).filter(x=>!stepXs.some(s=>Math.abs(s-x)<.5)),free).map(zone=>({zone,reference:kind==='landing'?landingReference(zone,cfg):zoneReference(zone,cfg)}));
+    const houseC=!attached&&kind==='deck'&&index===0?data.houseCantileverIn:undefined;
+    const framedZones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0,attached&&index===0?mainContact.contacts.filter(c=>c.kind==='flush').map(c=>c.a.x):[],angled.filter(cornerCut).flatMap(e=>[e.a.x,e.b.x]).filter(x=>!stepXs.some(s=>Math.abs(s-x)<.5)),free).map(zone=>({zone,reference:kind==='landing'?landingReference(zone,cfg):zoneReference(zone,cfg,houseC)}));
     const zones=shareHouseSideBeam(framedZones,cfg),reference=zones[0].reference;
     const supports:V3[]=[],joists:Member[]=[],beams:Member[]=[],blocking:Member[]=[];
     for(const zone of zones){
