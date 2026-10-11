@@ -43,6 +43,7 @@ import {furnitureFacingIssues,nearestSeatPoint,rotationDegFacing,seatFront} from
  * flank the stair. The dining table is the folding-table mesh scaled to an
  * eight-seat envelope on the deck; there is no larger table product.
  * The house front is 48 ft. The 30 ft deck is centred on that wall.
+ * A saved camera on the terrace looks up the centre stair at the deck and pergola.
  */
 const SLAB='techo-blu60-smooth-slab';
 const ONYX='#565855',CREMA='#cabaaa',WALL_ONYX='#4b4d4d';
@@ -327,8 +328,10 @@ export function ontarioShowcaseDesign():DeckData{
  const fireCam={position:[-6,8.2,31] as [number,number,number],target:[fireX,1.05,fireZ] as [number,number,number]};
  const diningCam={position:[diningX+8,5.6,diningZ+5] as [number,number,number],target:[diningX,1.4,diningZ] as [number,number,number]};
  const terraceLoungeCam={position:[terraceLoungeX+10,5.2,terraceLoungeZ-2] as [number,number,number],target:[terraceLoungeX,1.1,terraceLoungeZ] as [number,number,number]};
+ const stairMid=(s0+s1)/24;
+ const stairUp={position:[stairMid,5.2,foot/12+6] as [number,number,number],target:[stairMid,6.5,data.length*0.45] as [number,number,number]};
  const shot=(id:string,name:string,frame:{position:[number,number,number];target:[number,number,number]},fov:number)=>({id,name,fov,positionIn:frame.position.map(n=>n*12) as [number,number,number],targetIn:frame.target.map(n=>n*12) as [number,number,number]});
- data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,56),shot('terrace-eye','Terrace toward the pool',eye,55),shot('pool','Pool court',poolCam,42),shot('fire','Fire lounge',fireCam,42),shot('dining','Dining set',diningCam,42),shot('terrace-lounge','Terrace lounge',terraceLoungeCam,42)]};
+ data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,56),shot('terrace-eye','Terrace toward the pool',eye,55),shot('pool','Pool court',poolCam,42),shot('fire','Fire lounge',fireCam,42),shot('dining','Dining set',diningCam,42),shot('terrace-lounge','Terrace lounge',terraceLoungeCam,42),shot('stair-up','Up the stair',stairUp,48)]};
  return data;
 }
 
@@ -438,7 +441,9 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
   if(gap<48)issues.push(`Fire clearance is ${(gap/12).toFixed(2)} ft.`);
  }
  const cameras=data.scenePresentation?.cameras??[];
- if(data.scenePresentation?.activeCameraId!=='hero'||!['hero','terrace-eye','pool','fire','dining','terrace-lounge'].every(id=>cameras.some(c=>c.id===id)))issues.push('Hero, terrace, pool, fire, dining and terrace-lounge cameras are missing.');
+ if(data.scenePresentation?.activeCameraId!=='hero'||!['hero','terrace-eye','pool','fire','dining','terrace-lounge','stair-up'].every(id=>cameras.some(c=>c.id===id)))issues.push('Hero, terrace, pool, fire, dining, terrace-lounge and stair cameras are missing.');
+ const stairCam=cameras.find(c=>c.id==='stair-up');
+ if(stairCam&&stairCam.positionIn[2]<=stairCam.targetIn[2])issues.push('The terrace stair camera does not look up the stair toward the deck.');
  issues.push(...furnitureFacingIssues(data));
  return issues;
 }

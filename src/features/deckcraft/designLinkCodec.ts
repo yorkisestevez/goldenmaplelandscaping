@@ -2,7 +2,7 @@ import type {DeckData} from './types';
 import {parseDeckReleaseDesign} from './deckRelease';
 import {MAX_PUBLIC_DESIGN_BYTES as MAX_DESIGN_BYTES} from './designPersistence';
 import {readPriceBookVersion} from './priceBook';
-import {DesignLinkError,MAX_DESIGN_LINK_CHARS,DESIGN_LINK_PARAM,designLinkJson,withoutPersonalDetails} from './designLink';
+import {DesignLinkError,MAX_DESIGN_LINK_CHARS,DESIGN_LINK_PARAM,expandSharedSpecies,linkDesignJson,withoutPersonalDetails} from './designLink';
 const LINK_VERSION='1';
 const DAMAGED='This design link is incomplete or damaged. Ask for the link again, or for the saved design file.';
 function toBase64Url(bytes:Uint8Array):string{
@@ -33,7 +33,7 @@ export async function transformBytes(bytes:Uint8Array,stream:CompressionStream|D
 }
 
 export async function encode(data:DeckData,origin:string):Promise<string>{
-  const json=new TextEncoder().encode(designLinkJson(data));
+  const json=new TextEncoder().encode(linkDesignJson(data));
   const payload=typeof CompressionStream==='function'?'z'+toBase64Url(await transformBytes(json,new CompressionStream('deflate'))):'j'+toBase64Url(json);
   return `${origin}/deck-designer/#${DESIGN_LINK_PARAM}=${LINK_VERSION}${payload}`;
 }
@@ -48,7 +48,7 @@ export async function decodeDesignLinkFile(value:string):Promise<{design:DeckDat
     catch(error){throw error instanceof DesignLinkError?error:new DesignLinkError(DAMAGED);}
   }else if(kind!=='j')throw new DesignLinkError(DAMAGED);
   let text:string;
-  try{text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);}catch{throw new DesignLinkError(DAMAGED);}
+  try{text=expandSharedSpecies(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{throw new DesignLinkError(DAMAGED);}
   let design:DeckData;
   try{await (await import('./designExtensions')).ensureDesignExtensions(JSON.parse(text));design=parseDeckReleaseDesign(text);}
   catch(error){
