@@ -40,10 +40,11 @@ import {furnitureFacingIssues,nearestSeatPoint,rotationDegFacing,seatFront} from
  * west half, beside the deck, and leaves an 8 ft path from the stair foot toward
  * the pool. It is flush-lit only: one long sofa and two deep chairs from the
  * outdoor-sofa mesh, with a low table, in about a 12×12 ft group. There is no
- * club-chair product. The pergola is one black LOUSOL bay on the freestanding deck, louvers
- * open. Six posts sit on the beam lines: two on the house-side beam, clear of
- * the slider, and four on the front beam, the outer piers and the two that
- * flank the stair. The dining table is the folding-table mesh scaled to an
+ * club-chair product. The pergola is one black LOUSOL roof on the freestanding deck, louvers
+ * open. Eight posts stand tight against the outside face of each beam:
+ * the house line at 1, 8.5, 21.5 and 29 ft, clear of the slider, and the
+ * front line on the four piers at 1, 10.33, 19.67 and 29 ft. Joists shift
+ * so no post clips a joist. The dining table is the folding-table mesh scaled to an
  * eight-seat envelope on the deck; there is no larger table product.
  * The house front is 48 ft. The 30 ft deck is centred on that wall.
  * A saved camera on the terrace looks up the centre stair at the deck and pergola.
@@ -201,32 +202,42 @@ export function ontarioShowcaseDesign():DeckData{
  data.pools=[pool];
 
  const pergola=newPergola('lousol-custom','custom');
- // One LOUSOL roof (the product allows 30 ft and publishes no smaller bay). Posts stand on the beam lines.
- // The house beam keeps only its outer piers: a post between them lands in the slider. The front beam keeps every pier, and the inner two flank the stair.
- const POST=5,supports=takeoff.levels[0].supports,houseZ=Math.min(...supports.map(s=>s.z)),beamZ=Math.max(...supports.map(s=>s.z));
+ // Posts stand against the outside face of each beam, not on the centre line, so a post does not cut the beam.
+ // The house line adds two posts beside the slider. The published house-beam limit is 23 ft, so the outer piers alone cannot carry it.
+ const POST=5,level=takeoff.levels[0],supports=level.supports,houseZ=Math.min(...supports.map(s=>s.z)),beamZ=Math.max(...supports.map(s=>s.z));
+ const halfBeam=level.reference.beam.plies*1.5/2;
+ const near=(z:number)=>level.beams.filter(b=>Math.abs(b.a.z-z)<halfBeam+1).map(b=>b.a.z);
+ const houseFace=Math.min(...near(houseZ))-0.75,frontFace=Math.max(...near(beamZ))+0.75;
+ if(!Number.isFinite(houseFace)||!Number.isFinite(frontFace)||Math.abs(houseFace-(houseZ-halfBeam))>0.2||Math.abs(frontFace-(beamZ+halfBeam))>0.2)throw Error('The beam faces do not match the ply stack.');
  const onBeam=(z:number)=>supports.filter(s=>Math.abs(s.z-z)<2).map(s=>s.x).sort((a,b)=>a-b);
  const houseXs=onBeam(houseZ),frontXs=onBeam(beamZ);
  const slider=house.openings.find(o=>o.id==='slider');
  if(!slider)throw Error('The showcase house is missing its slider.');
  const sliderMid=houseLeft+slider.offsetPct/100*house.widthFt*12,sliderA=sliderMid-slider.widthIn/2,sliderB=sliderMid+slider.widthIn/2;
- const housePosts=[houseXs[0],houseXs[houseXs.length-1]].filter(x=>x<=sliderA||x>=sliderB);
+ const housePosts=[houseXs[0],8.5*12,21.5*12,houseXs[houseXs.length-1]];
  const frontPosts=frontXs.filter(x=>x<s0-2||x>s1+2);
- if(housePosts.length!==2||frontPosts.length<4)throw Error(`Pergola posts need the two outer house piers and four front piers, got ${housePosts.length} and ${frontPosts.length}.`);
+ if(housePosts.length!==4||frontPosts.length!==4)throw Error(`Pergola posts need four on each beam, got ${housePosts.length} and ${frontPosts.length}.`);
+ if(housePosts.some((x,i)=>Math.abs(x-[12,102,258,348][i])>1))throw Error('The house posts are not at 1, 8.5, 21.5 and 29 ft.');
+ if(housePosts.some(x=>x+POST/2>sliderA&&x-POST/2<sliderB))throw Error('A house post stands in the slider.');
+ const houseGaps=housePosts.slice(1).map((x,i)=>x-housePosts[i]);
+ if(Math.max(...houseGaps)>23*12)throw Error('A house-side pergola span is over 23 ft.');
  const postXs=[...housePosts,...frontPosts],postX0=Math.min(...postXs),postX1=Math.max(...postXs);
- const pergolaW=(postX1-postX0+POST)/12,pergolaD=(beamZ-houseZ+POST)/12,roofX=(postX0+postX1)/2,roofZ=(houseZ+beamZ)/2;
- if(pergolaW>30||pergolaD>30||pergolaD<4)throw Error(`The deck bay is ${pergolaW.toFixed(2)}×${pergolaD.toFixed(2)} ft, past a single LOUSOL span.`);
- const posts=[...housePosts.map(x=>({xIn:x-roofX,zIn:houseZ-roofZ})),...frontPosts.map(x=>({xIn:x-roofX,zIn:beamZ-roofZ}))];
+ const housePostZ=houseFace-POST/2,frontPostZ=frontFace+POST/2;
+ const pergolaW=(postX1-postX0+POST)/12,pergolaD=(frontPostZ-housePostZ+POST)/12,roofX=(postX0+postX1)/2,roofZ=(housePostZ+frontPostZ)/2;
+ if(pergolaW>30||pergolaD>30||pergolaD<4)throw Error(`The pergola is ${pergolaW.toFixed(2)} by ${pergolaD.toFixed(2)} ft, outside the LOUSOL size limit.`);
+ const roofM2=pergolaW*pergolaD*0.09290304;
+ const posts=[...housePosts.map(x=>({xIn:x-roofX,zIn:housePostZ-roofZ})),...frontPosts.map(x=>({xIn:x-roofX,zIn:frontPostZ-roofZ}))];
  data.pergola={...pergola,frameFinish:'black',roofFinish:'black',accessories:[],lighting:'perimeter-led',customSize:{widthFt:pergolaW,depthFt:pergolaD,heightFt:10.5},target:{kind:'deck',level:0},xFt:roofX/12,zFt:roofZ/12,rotationDeg:0,louverDeg:80,posts};
  data.scopeOfWork=[
   'Build notes for Joist. The model shows what DeckCraft can draw; the rest is construction intent.',
-  `Freestanding deck, not fastened to the house. The house-side beam stands on its own piers ${houseZ.toFixed(0)} in off the foundation wall. Concrete piers are ${data.foundationDepthIn} in deep, below the Barrie frost line.`,
-  'The pergola is freestanding and is not attached to the house. Its posts drop through the deck to their own piers below that frost line. Frame the deck around each post with headers and blocking and about a 1/2 in gap, and do not notch the posts. The preview does not cut those holes.',
-  'LOUSOL custom, black. The sealed design covers Barrie snow (2.5 kPa with the louvers closed) plus uplift. A building permit is required (about 41 m²). Pipe the downspouts to daylight, away from the piers. LOUSOL publishes no bay module under the 30 ft maximum, so this is one roof.',
-  'Six posts. Two sit on the house beam at the outer piers, because a third would stand in the 12 ft slider. Four sit on the front beam: the outer piers and the two piers that flank the 8 ft stair. A single centre post would land in the stair, so the bays are not two equal 15 ft spans.',
-  'The guard is 36 in with openings of 4 in or less. Those guard posts are the aluminum rail posts, independent of the pergola posts. The house-wall guard is left off so the slider stays clear; the wall is the barrier there.',
-  'The stair is an 8 ft centre flight: 5 risers at 7.2 in, 4 treads at an 11 in run, with a handrail on both sides. The bottom landing is the crema terrace, at least the stair width by 36 in deep. There is no separate concrete-pad product, so the terrace paving is that pad.',
+  `Freestanding deck, not fastened to the house. Set the deck 1/2-1 in below the slider sill. The house-side beam stands on its own piers ${houseZ.toFixed(0)} in off the foundation wall. Those piers go to undisturbed soil below the backfill, or use helical piles. Other piers are ${data.foundationDepthIn} in deep, below the Barrie frost line.`,
+  'The pergola is freestanding, not attached to the house. Eight posts sit tight against the outside beam faces (house beam on the house side, front beam on the yard side) on engineer-designed combined footings. House posts at 1, 8.5, 21.5 and 29 ft keep each span under the 23 ft LOUSOL limit. Front posts at 1, 10.33, 19.67 and 29 ft flank the stair. Interior posts need a 22-24 in bell or pad. Use rated post bases, hurricane ties and diagonal 2x6 bracing in both end bays.',
+  'Posts drop through the deck. Frame headers and blocking around each with about a 1/2 in gap, and do not notch the posts. The preview does not cut those holes. Shifted joists keep every post clear of a joist. Drain each post in solid pipe to daylight, away from the piers and the foundation.',
+  `LOUSOL custom, black, one roof of about ${roofM2.toFixed(1)} m². A permit is required, and the roof needs LOUSOL's sealed design. Closed-louver snow is about 2.4 kPa against their 55 psf limit; confirm uplift. Snow guards on the house roof, or a setback so snow can slide off.`,
+  'The guard is 36 in with openings of 4 in or less. Guard posts are the aluminum rail posts, separate from the pergola posts. The house-wall guard is off so the slider stays clear; the wall is the barrier there.',
+  'The stair is an 8 ft centre flight: 5 risers at 7.2 in, 4 treads at an 11 in run, 11 stringers at 10 in o.c., a doubled front rim at the stair, and a handrail on both sides. The crema terrace landing is at least the stair width by 36 in deep, with a concrete strip under the pavers at the stair foot.',
  ].join(' ');
- if(data.scopeOfWork.length>2000)throw Error('The build notes exceed the scope field.');
+ if(data.scopeOfWork.length>2000)throw Error(`The build notes exceed the scope field (${data.scopeOfWork.length}).`);
 
  const rear0=court.zFt+court.depthFt/2+0.15,rear1=data.permitSite.rearYardFt-0.4;
  const flank1=court.zFt-court.depthFt/2-0.15;
@@ -392,19 +403,32 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
  if(data.pergola?.customSize&&(data.pergola.customSize.heightFt*12-7<96||data.height+data.pergola.customSize.heightFt*12-7<148))issues.push('The pergola beam does not clear 8 ft at the house, or it crosses the picture-window heads.');
  if(data.pergola?.customSize&&data.pergola.posts){
   const px=data.pergola.xFt*12,pz=data.pergola.zFt*12,stations=data.pergola.posts.map(p=>({x:px+p.xIn,z:pz+p.zIn}));
-  const houseZ=Math.min(...tk.levels[0].supports.map(s=>s.z)),beamZ=Math.max(...tk.levels[0].supports.map(s=>s.z));
+  const framed=tk.levels[0],houseZ=Math.min(...framed.supports.map(s=>s.z)),beamZ=Math.max(...framed.supports.map(s=>s.z));
+  const half=framed.reference.beam.plies*1.5/2,houseFace=houseZ-half,frontFace=beamZ+half;
   if(Math.abs(houseZ-16)>2)issues.push('The house-side beam is not about 16 in off the foundation.');
-  const housePosts=stations.filter(p=>Math.abs(p.z-houseZ)<3),frontPosts=stations.filter(p=>Math.abs(p.z-beamZ)<3);
-  if(stations.length!==6||housePosts.length!==2||frontPosts.length!==4)issues.push('The pergola does not have two house-beam posts and four front-beam posts.');
-  if(frontPosts.some(p=>!tk.levels[0].supports.some(s=>Math.hypot(s.x-p.x,s.z-p.z)<3)))issues.push('Front pergola posts are not on a footing.');
+  const housePosts=stations.filter(p=>p.z<houseZ&&Math.abs(p.z+2.5-houseFace)<1),frontPosts=stations.filter(p=>p.z>beamZ&&Math.abs(p.z-2.5-frontFace)<1);
+  if(stations.length!==8||housePosts.length!==4||frontPosts.length!==4)issues.push('The pergola does not have four posts tight against each beam face.');
+  const want=[12,102,258,348];
+  if(housePosts.length===4&&want.some(x=>!housePosts.some(p=>Math.abs(p.x-x)<1)))issues.push('The house posts are not at 1, 8.5, 21.5 and 29 ft.');
+  const hx=housePosts.map(p=>p.x).sort((a,b)=>a-b);
+  if(hx.slice(1).some((x,i)=>x-hx[i]>23*12+0.5))issues.push('A house-side pergola span is over 23 ft.');
+  const frontPiers=framed.supports.filter(s=>Math.abs(s.z-beamZ)<2);
+  if(frontPosts.some(p=>!frontPiers.some(s=>Math.abs(s.x-p.x)<1)))issues.push('A front pergola post is not on a front-pier line.');
   if(Math.abs(data.pergola.customSize.widthFt-data.width)>2)issues.push('The pergola does not cover the deck.');
+  const roofM2=data.pergola.customSize.widthFt*data.pergola.customSize.depthFt*0.09290304;
+  if(roofM2<36||roofM2>37.2)issues.push(`The pergola roof is ${roofM2.toFixed(1)} m².`);
   const stairs=stairFootprints(tk);
   for(const p of stations){const poly=[{x:p.x-3,y:p.z-3},{x:p.x+3,y:p.z-3},{x:p.x+3,y:p.z+3},{x:p.x-3,y:p.z+3}];if(yardArea(yardClip([poly],stairs,'intersection'))>0.01)issues.push('A pergola post stands in the stair opening.');}
   const slider=data.houseConfig?.openings.find(o=>o.id==='slider'),hLeft=Math.min(...houseOutline(data).flat().map(p=>p.x));
-  if(slider){const mid=hLeft+slider.offsetPct/100*(data.houseConfig?.widthFt??0)*12,a=mid-slider.widthIn/2-6,b=mid+slider.widthIn/2+6;if(stations.some(p=>p.x>a&&p.x<b&&Math.abs(p.z-houseZ)<3))issues.push('A pergola post blocks the slider.');}
+  if(slider){const mid=hLeft+slider.offsetPct/100*(data.houseConfig?.widthFt??0)*12,a=mid-slider.widthIn/2-6,b=mid+slider.widthIn/2+6;if(stations.some(p=>p.x>a&&p.x<b&&Math.abs(p.z-houseZ)<8))issues.push('A pergola post blocks the slider.');}
   const stair=getStairPlacement(data,getFootprint(data));
   if(stair&&frontPosts.filter(p=>p.x<stair.origin.x-1||p.x>stair.origin.x+stair.width+1).length<2)issues.push('The front posts do not flank the stair.');
+  const joistXs=framed.joists.map(j=>j.a.x);
+  if(stations.some(p=>joistXs.some(x=>Math.abs(x-p.x)<3.24)))issues.push('A pergola post clips a joist.');
  }
+ const notes=data.scopeOfWork??'';
+ if(!notes.includes('1/2-1 in below the slider')||!notes.includes('8.5')||!notes.includes('21.5')||!notes.includes('23 ft')||!notes.includes('2.4 kPa')||!notes.includes('55 psf')||!notes.includes('Snow guards')||!notes.includes('solid pipe')||!notes.includes('helical')||!notes.includes('22-24')||!notes.includes('hurricane')||!notes.includes('2x6')||!notes.includes('concrete strip')||!notes.includes('11 stringers')||!notes.includes('doubled front rim'))issues.push('The build notes are missing a Joist re-check item.');
+ if(/41 m|30\s*[x×]\s*30|30 ft maximum|Six posts|2\.5 kPa/i.test(notes))issues.push('The build notes still claim a 30 ft single span or the old roof area.');
  const table=data.landscapeObjects?.find(o=>o.id==='dining-table'),chairs=(data.landscapeObjects??[]).filter(o=>o.id.startsWith('dining-')&&o.assetId==='outdoor-chair');
  if(!table||table.widthIn!==96||table.depthIn!==42||table.supportFeatureId||chairs.length!==8||chairs.some(o=>o.supportFeatureId))issues.push('The dining set is not an 8-seat table on the deck.');
  if(table&&data.pergola&&Math.hypot(table.xIn/12-data.pergola.xFt,table.zIn/12-data.pergola.zFt)>1)issues.push('The dining table is not centred under the pergola.');

@@ -173,7 +173,10 @@ export function buildDeckTakeoff(data:DeckData){
     const breakers=inlayPlans.length?keepBreakers(allBreakers,inlayPlans,data.boardWidth,gap):allBreakers;
 
     const buildUps=[...breakers.flatMap(x=>[-1.5,-.5,.5,1.5].map(k=>x+k*(1.5+.375))),...(borders?[1.5+2.375,1.5+2*2.375,footprint.bounds.w-1.5-2.375,footprint.bounds.w-1.5-2*2.375]:[]),...bandBuildUps(inlayPlans,data.boardWidth,gap)];
-    for(const zone of zones)frameZoneJoists(zone,offset,cfg,buildUps,{joists,blocking});
+    // Explicit pergola posts (not the default four corners) shift a joist that would otherwise run through a post.
+    const pergola=data.pergola,a=pergola?pergola.rotationDeg*Math.PI/180:0,c=Math.cos(a),s=Math.sin(a);
+    const clearXs=kind==='deck'&&pergola?.posts?.length&&pergola.target.kind==='deck'&&pergola.target.level===index?pergola.posts.map(p=>pergola.xFt*12+c*p.xIn-s*p.zIn):[];
+    for(const zone of zones)frameZoneJoists(zone,offset,cfg,buildUps,{joists,blocking},clearXs);
     // Corner-cutting 45° edges line the 45° layouts up with themselves, one per direction (see getBoardRows /
     // getHerringboneRows): running left toward the house ('left', like the front-left corner) or away from it.
     const cutting=angled.filter(cornerCut),leftAngled=cutting.some(e=>e.b.y<e.a.y),rightAngled=cutting.some(e=>e.b.y>e.a.y),anyAngled=angled.length>0;
