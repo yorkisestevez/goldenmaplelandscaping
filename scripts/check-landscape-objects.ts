@@ -65,7 +65,7 @@ check(first===neighbourWindowGlow(0,0)&&darkPanes>litPanes&&litPanes>8&&peakGlow
 const showcaseSample=ontarioShowcaseDesign(),showcaseIssues=showcaseSampleIssues(showcaseSample);
 check(showcaseIssues.length===0,showcaseIssues.join(' '));
 check(showcaseSample.permitSite?.lotWidthFt===100&&showcaseSample.permitSite.lotDepthFt===160&&showcaseSample.houseConfig?.storeys===2,'The showcase sample is a two-storey house on a 100×160 ft lot');
-check(showcaseSample.yardFeatures?.some(f=>f.id==='fire-bowl'&&f.supportFeatureId==='lounge')&&showcaseSample.pools?.length===1&&showcaseSample.pergola?.target.kind==='patio','The showcase yard connects a catalogue fire lounge, pool and pergola');
+check(showcaseSample.yardFeatures?.some(f=>f.id==='fire-bowl'&&f.supportFeatureId==='lounge')&&showcaseSample.pools?.length===1&&showcaseSample.pergola?.target.kind==='deck','The showcase yard connects a catalogue fire lounge, pool and a pergola on the deck');
 check(designHasNightLights(showcaseSample),'The showcase yard lights itself, so the night fill stays off');
 for(const block of getHouseBlocks(showcaseSample))check(showcaseRoofTrimSeated({x0:block.rect.x0,x1:block.rect.x1,y0:block.rect.y0,y1:block.rect.y1,wallTop:block.wallHeightIn,rise:blockRoofRise(block,showcaseSample.houseConfig?.roofPitch),shape:block.roofShape,ridge:block.ridge}),`Showcase trim seats on the ${block.id} ${block.roofShape} roof`);
 check(showcaseRoofTrimSeated({x0:0,x1:480,y0:-360,y1:0,wallTop:240,rise:90,shape:'Gable',ridge:'x'})&&showcaseRoofTrimSeated({x0:0,x1:400,y0:-300,y1:0,wallTop:216,rise:6,shape:'Flat',ridge:'z'}),'Gable rake boards and a flat parapet seat without crossing the cap');

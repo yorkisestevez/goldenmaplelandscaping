@@ -21,7 +21,7 @@ import {onPaving,pavingRings} from './pathLightPlacement';
 import {poolOutline} from './poolGeometry';
 import {getLightingRuntimeProduct} from './lightingRuntimeCatalogue';
 import {insidePolygon} from './lib/polygonCuts';
-import {furnitureFacingIssues,nearestSeatPoint,rotationDegFacing} from './furnitureFacing';
+import {furnitureFacingIssues,nearestSeatPoint,rotationDegFacing,seatFront} from './furnitureFacing';
 
 /**
  * The yard used for showcase stills: a two-storey contemporary house on a
@@ -36,10 +36,11 @@ import {furnitureFacingIssues,nearestSeatPoint,rotationDegFacing} from './furnit
  * clear; the low table between them is the outdoor coffee table. Path bollards
  * stand in the planting beds beside the walks, never on paving. The pool deck,
  * terrace and fire lounge take flush EVO GROUND fixtures and WEDGE step lights
- * at the edges; those edge lights wash the water. The pergola
- * is black aluminium louvers, opened so the slats
- * and the light between them read. The dining table is the folding-table mesh
- * scaled to an eight-seat envelope; there is no larger table product.
+ * at the edges; those edge lights wash the water. The terrace lounge is flush-lit
+ * only. The pergola is one black LOUSOL bay on the deck, louvers open, posts on
+ * the front beam and the ledger. The dining table is the folding-table mesh
+ * scaled to an eight-seat envelope on the deck; there is no larger table product.
+ * The house front is 48 ft. The 30 ft deck is centred on that wall.
  */
 const SLAB='techo-blu60-smooth-slab';
 const ONYX='#565855',CREMA='#cabaaa',WALL_ONYX='#4b4d4d';
@@ -93,9 +94,9 @@ function polyBed(id:string,name:string,points:{x:number;z:number}[]):LandscapeOb
  const o=newLandscapeObject('mulch-bed',id,(x0+x1)/2*12,(z0+z1)/2*12);
  return {...o,name,widthIn:(x1-x0)*12,depthIn:(z1-z0)*12,polygon:points.map(p=>({x:p.x*12,z:p.z*12}))};
 }
-function furn(asset:LandscapeAssetId,id:string,name:string,xFt:number,zFt:number,rotationDeg:number,support:string):LandscapeObject{
+function furn(asset:LandscapeAssetId,id:string,name:string,xFt:number,zFt:number,rotationDeg:number,support?:string):LandscapeObject{
  const o=newLandscapeObject(asset,id,xFt*12,zFt*12);
- return {...o,name,rotationDeg,supportFeatureId:support};
+ return {...o,name,rotationDeg,...(support?{supportFeatureId:support}:{})};
 }
 
 export function ontarioShowcaseDesign():DeckData{
@@ -129,10 +130,12 @@ export function ontarioShowcaseDesign():DeckData{
  const data:DeckData={
   ...DEFAULT_DECK,
   customerName:'Showcase sample',projectAddress:'Barrie, Ontario',
-  width:24,length:16,height:36,
-  deckingMaterial:'tt_vintage',deckingColor:'Weathered Teak',boardWidth:5.5,
+  width:30,length:16,height:36,
+  deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk',boardWidth:5.5,
   pictureFrameRows:1,pictureFrameOverhangIn:0,railingType:'Aluminum',
-  stairFlights:1,stairWidth:60,stairType:'Straight',stairPosition:'Front',stairOffset:50,
+  catalogueRailingId:'dk_contemporary',
+  deckFinishes:{border:'tt_prime_plus:Dark Cocoa',railingColor:'Textured Black'},
+  stairFlights:1,stairWidth:96,stairType:'Straight',stairPosition:'Front',stairOffset:50,
   houseVisible:true,houseConfig:house,housePlacement:{anchor:'center',offsetIn:0},
   terrainConfig:{widthFt:LOT_W,depthFt:LOT_D,elevationIn:0,slopePct:0},
   lightingPreviewOn:true,autoLighting:{posts:true,stairs:true},
@@ -141,7 +144,8 @@ export function ontarioShowcaseDesign():DeckData{
  };
 
  const houseLeft=Math.min(...houseOutline(data).flat().map(p=>p.x));
- const lotLeft=data.width*6-LOT_W*6;
+ // Pin the lot on the previous west line. Centering it on the wider deck would slide the fence through the west garden.
+ const lotLeft=-38*12;
  data.permitSite={lotWidthFt:LOT_W,lotDepthFt:LOT_D,leftYardFt:(houseLeft-lotLeft)/12,rearYardFt:data.length/2+LOT_D/2,yardFaces:'S'};
 
  const takeoff=buildDeckTakeoff(data),rings=stairFootprints(takeoff);
@@ -152,7 +156,7 @@ export function ontarioShowcaseDesign():DeckData{
  const stair=getStairPlacement(data,getFootprint(data));
  if(!stair||stair.outward.y<0.5)throw Error('The showcase stair has to come off the front of the deck.');
  // Wider than the deck. The near edge returns to the fascia on both sides of the flight and meets the tread by under half a square foot.
- const x0=deckX0-8*12,x1=deckX1+8*12,zN=foot-1.15,zFar=zN+24*12;
+ const x0=deckX0-8*12,x1=deckX1+8*12,coverIn=Math.min(1.1,0.32*144/Math.max(1,s1-s0)),zN=foot-coverIn,zFar=zN+24*12;
  const nose=createYardFeature(data,{kind:'patio',id:'terrace',name:'Dining terrace',xFt:(x0+x1)/24,zFt:(zN+zFar)/24,widthFt:(x1-x0)/12,depthFt:(zFar-zN)/12,heightIn:0,productId:SLAB,hardscape:FIELD});
  let terrace=yardShapeEdit(nose,[
   {x:x0,y:deckFront},{x:s0,y:deckFront},{x:s0,y:zN},{x:s1,y:zN},{x:s1,y:deckFront},{x:x1,y:deckFront},{x:x1,y:zFar},{x:x0,y:zFar},
@@ -189,7 +193,13 @@ export function ontarioShowcaseDesign():DeckData{
  data.pools=[pool];
 
  const pergola=newPergola('lousol-custom','custom');
- data.pergola={...pergola,frameFinish:'black',roofFinish:'black',accessories:[],lighting:'perimeter-led',customSize:{widthFt:10,depthFt:12,heightFt:9},target:{kind:'patio',featureId:terrace.id},xFt:terrace.xFt,zFt:foot/12+8,rotationDeg:0,louverDeg:80};
+ // One LOUSOL bay (the product allows 30 ft). Four corner posts sit on the outer footings: house pair on the ledger, outer pair on the front beam.
+ const POST=5,ledgerZ=Math.min(...deckRing.map(p=>p.y))+POST/2+1,beamZ=Math.max(...takeoff.levels[0].supports.map(s=>s.z));
+ const footingX=takeoff.levels[0].supports.filter(s=>Math.abs(s.z-beamZ)<2).map(s=>s.x).sort((a,b)=>a-b);
+ const postX0=footingX[0],postX1=footingX[footingX.length-1];
+ const pergolaW=(postX1-postX0+POST)/12,pergolaD=(beamZ-ledgerZ+POST)/12;
+ if(pergolaW>30||pergolaD>30||pergolaD<4)throw Error(`The deck bay is ${pergolaW.toFixed(2)}×${pergolaD.toFixed(2)} ft, past a single LOUSOL span.`);
+ data.pergola={...pergola,frameFinish:'black',roofFinish:'black',accessories:[],lighting:'perimeter-led',customSize:{widthFt:pergolaW,depthFt:pergolaD,heightFt:10.5},target:{kind:'deck',level:0},xFt:(postX0+postX1)/24,zFt:(ledgerZ+beamZ)/24,rotationDeg:0,louverDeg:80};
 
  const rear0=court.zFt+court.depthFt/2+0.15,rear1=data.permitSite.rearYardFt-0.4;
  const flank1=court.zFt-court.depthFt/2-0.15;
@@ -217,31 +227,36 @@ export function ontarioShowcaseDesign():DeckData{
  line('z',(rear0+rear1)/2,-30,54,4.2,['acer-saccharum','amelanchier-canadensis','syringa-vulgaris','pinus-strobus'],200,100);
  line('z',rear0+1.5,-32,56,2.8,['calamagrostis-karl-foerster','hydrangea-arborescens-annabelle','hosta','rudbeckia-hirta']);
  line('x',48,8,flank1-1.2,3.4,['hydrangea-paniculata','cornus-sericea','amelanchier-canadensis']);
- line('x',36,7,flank1-1.4,2.6,['calamagrostis-karl-foerster','echinacea-purpurea','hosta','salvia-nemorosa']);
+ line('x',terrace.xFt+terrace.widthFt/2+2.4,7,flank1-1.4,2.6,['calamagrostis-karl-foerster','echinacea-purpurea','hosta','salvia-nemorosa']);
  line('z',rear0-1.4,-26,-8,3.4,['thuja-occidentalis-smaragd','pinus-strobus'],140,48);
  line('z',loungeFar+2,-25,-7,3.2,['hydrangea-arborescens-annabelle','cornus-sericea','calamagrostis-karl-foerster']);
- grow('hydrangea-arborescens-annabelle',-22,6);grow('cornus-sericea',-14,6);grow('hydrangea-paniculata',-6,6);
- grow('calamagrostis-karl-foerster',-24,12);grow('hosta',-16,12);grow('echinacea-purpurea',-8,12);
+ grow('hydrangea-arborescens-annabelle',-22,6);grow('cornus-sericea',-14,6);
 
  const diningX=data.pergola.xFt,diningZ=data.pergola.zFt;
+ const terraceLoungeX=terrace.xFt,terraceLoungeZ=foot/12+8;
  const nearDeck=court.zFt-court.depthFt/2+3.8,farDeck=court.zFt+court.depthFt/2-3.6;
- const table={...furn('outdoor-table','dining-table','Dining table',diningX,diningZ,0,terrace.id),widthIn:42,depthIn:96,heightIn:30};
+ // Long side across the 30 ft deck so 36 in behind the side chairs fits in the 16 ft depth. No patio id: the set sits on the deck.
+ const table={...furn('outdoor-table','dining-table','Dining table',diningX,diningZ,0),widthIn:96,depthIn:42,heightIn:30};
  const water=poolOutline(pool);
  const aim=(xFt:number,zFt:number,tx:number,tz:number)=>rotationDegFacing(tx-xFt*12,tz-zFt*12);
  const aimPool=(xFt:number,zFt:number)=>{const edge=nearestSeatPoint({x:xFt*12,y:zFt*12},water);return aim(xFt,zFt,edge.x,edge.y);};
- const seat=(id:string,dx:number,dz:number)=>furn('outdoor-chair',id,'Dining chair',diningX+dx,diningZ+dz,aim(diningX+dx,diningZ+dz,diningX*12,diningZ*12),terrace.id);
+ const seat=(id:string,dx:number,dz:number)=>furn('outdoor-chair',id,'Dining chair',diningX+dx,diningZ+dz,aim(diningX+dx,diningZ+dz,diningX*12,diningZ*12));
  data.landscapeObjects=[
   bed('bed-west','West planting',-38,2,-28,rear0+4),
   bed('bed-east','East planting',52,2,62,rear0+4),
   bed('bed-rear','Rear planting',-38,rear0,62,rear1),
-  polyBed('bed-flank','Terrace planting',[{x:24,z:2},{x:51.7,z:2},{x:51.7,z:flank1},{x:32.05,z:flank1},{x:32.05,z:16},{x:24,z:16}]),
+  polyBed('bed-flank','Terrace planting',[{x:deckX1/12+0.2,z:2},{x:51.7,z:2},{x:51.7,z:flank1},{x:terrace.xFt+terrace.widthFt/2+0.3,z:flank1},{x:terrace.xFt+terrace.widthFt/2+0.3,z:deckFront/12},{x:deckX1/12+0.2,z:deckFront/12}]),
   bed('bed-deckside','Deckside planting',-28,2,0,16),
   bed('bed-court-west','Pool planting',-28,loungeFar+0.2,-4.2,rear0-0.1),
   ...plants,
   table,
-  seat('dining-1',3.19,-2.99),seat('dining-2',2.85,0),seat('dining-3',3.19,2.99),
-  seat('dining-4',-3.19,-2.99),seat('dining-5',-2.85,0),seat('dining-6',-3.19,2.99),
-  seat('dining-7',0,5.1),seat('dining-8',0,-5.1),
+  seat('dining-1',-2.987,-3.173),seat('dining-2',0,-2.833),seat('dining-3',2.987,-3.173),
+  seat('dining-4',-2.987,3.173),seat('dining-5',0,2.833),seat('dining-6',2.987,3.173),
+  seat('dining-7',-5.083,0),seat('dining-8',5.083,0),
+  furn('outdoor-sofa','terrace-sofa','Terrace sofa',terraceLoungeX,terraceLoungeZ-3.6,aim(terraceLoungeX,terraceLoungeZ-3.6,terraceLoungeX*12,terraceLoungeZ*12),terrace.id),
+  furn('outdoor-chair','terrace-chair-1','Terrace chair',terraceLoungeX-1.7,terraceLoungeZ+3,aim(terraceLoungeX-1.7,terraceLoungeZ+3,terraceLoungeX*12,terraceLoungeZ*12),terrace.id),
+  furn('outdoor-chair','terrace-chair-2','Terrace chair',terraceLoungeX+1.7,terraceLoungeZ+3,aim(terraceLoungeX+1.7,terraceLoungeZ+3,terraceLoungeX*12,terraceLoungeZ*12),terrace.id),
+  furn('outdoor-coffee-table','terrace-coffee','Terrace table',terraceLoungeX,terraceLoungeZ,0,terrace.id),
   furn('outdoor-sofa','lounge-west','Lounge sofa',innerX+edgePad+sofaDepthFt/2,fireZ,aim(innerX+edgePad+sofaDepthFt/2,fireZ,fireX*12,fireZ*12),lounge.id),
   furn('outdoor-sofa','lounge-east','Lounge sofa',patioEast-edgePad-sofaDepthFt/2,fireZ,aim(patioEast-edgePad-sofaDepthFt/2,fireZ,fireX*12,fireZ*12),lounge.id),
   furn('outdoor-coffee-table','lounge-table','Fire table',(innerX+edgePad+sofaDepthFt+(fireX-burnerFt))/2,fireZ,90,lounge.id),
@@ -263,6 +278,7 @@ export function ontarioShowcaseDesign():DeckData{
  const pavers=[
   pin(cx-12,cz-10),pin(cx,cz-10),pin(cx+12,cz-10),pin(cx-20,cz),pin(cx+20,cz),pin(cx,cz+9),
   pin(tx0+4,19),pin(tx1-4,19),pin(tx0+4,tz1-3),pin(terrace.xFt,tz1-3),pin(tx1-4,tz1-3),
+  pin(terraceLoungeX-8,terraceLoungeZ-1),pin(terraceLoungeX+8,terraceLoungeZ-1),pin(terraceLoungeX-8,terraceLoungeZ+1),pin(terraceLoungeX+8,terraceLoungeZ+1),
   pin(-21,fireZ-5.4),pin(-15,fireZ-5.4),pin(-21,fireZ+5.2),pin(-15,fireZ+5.2),
  ];
  const steps=[
@@ -282,13 +298,14 @@ export function ontarioShowcaseDesign():DeckData{
 
  // Over the rear bed, inside the fence, looking back at the house. The spine
  // fills the frame and the context trees sit behind the lens.
- const hero={position:[-8,28,78] as [number,number,number],target:[12,1,28] as [number,number,number]};
- const eye={position:[24,5.2,23] as [number,number,number],target:[2,1,62] as [number,number,number]};
+ const hero={position:[-6,30,82] as [number,number,number],target:[15,2,30] as [number,number,number]};
+ const eye={position:[28,5.4,22] as [number,number,number],target:[6,1.2,58] as [number,number,number]};
  const poolCam={position:[24,12,36] as [number,number,number],target:[24,0,64] as [number,number,number]};
  const fireCam={position:[-6,8.2,31] as [number,number,number],target:[fireX,1.05,fireZ] as [number,number,number]};
- const diningCam={position:[diningX+8,5,diningZ-3] as [number,number,number],target:[diningX,1.2,diningZ] as [number,number,number]};
+ const diningCam={position:[diningX+8,5.6,diningZ+5] as [number,number,number],target:[diningX,1.4,diningZ] as [number,number,number]};
+ const terraceLoungeCam={position:[terraceLoungeX+10,5.2,terraceLoungeZ-2] as [number,number,number],target:[terraceLoungeX,1.1,terraceLoungeZ] as [number,number,number]};
  const shot=(id:string,name:string,frame:{position:[number,number,number];target:[number,number,number]},fov:number)=>({id,name,fov,positionIn:frame.position.map(n=>n*12) as [number,number,number],targetIn:frame.target.map(n=>n*12) as [number,number,number]});
- data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,56),shot('terrace-eye','Terrace toward the pool',eye,55),shot('pool','Pool court',poolCam,42),shot('fire','Fire lounge',fireCam,42),shot('dining','Dining set',diningCam,42)]};
+ data.scenePresentation={viewMode:'finished',cameraPreset:'terrace',activeCameraId:'hero',cameras:[shot('hero','Whole property',hero,56),shot('terrace-eye','Terrace toward the pool',eye,55),shot('pool','Pool court',poolCam,42),shot('fire','Fire lounge',fireCam,42),shot('dining','Dining set',diningCam,42),shot('terrace-lounge','Terrace lounge',terraceLoungeCam,42)]};
  return data;
 }
 
@@ -334,10 +351,31 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
  if(plants.length<140||(data.landscapeObjects?.length??0)>300)issues.push(`Planting density is ${plants.length} plants in ${data.landscapeObjects?.length??0} objects.`);
  const frontWall=data.houseConfig?.openings.filter(o=>o.wallId==='main-front'&&o.widthIn>=140&&o.heightIn>=96)??[];
  if(frontWall.length<2||data.houseConfig?.cladding!=='Board & batten'||data.houseConfig.wainscot?.cladding!=='Fieldstone'||data.houseConfig.claddingColor==='#3d4043')issues.push('The house is not wood over stone with a window wall toward the yard.');
- if(data.pergola?.roofFinish!=='black'||data.pergola.frameFinish!=='black'||data.pergola.lighting!=='perimeter-led'||(data.pergola.louverDeg??0)<70)issues.push('The pergola is not open black aluminium louvers with the LEDs on.');
- const table=data.landscapeObjects?.find(o=>o.id==='dining-table'),chairs=(data.landscapeObjects??[]).filter(o=>o.assetId==='outdoor-chair'&&o.supportFeatureId==='terrace');
- if(!table||Math.max(table.widthIn,table.depthIn)<84||Math.min(table.widthIn,table.depthIn)<40||chairs.length<6||chairs.length>8)issues.push('The dining set is not a 6–8 seat table under the pergola.');
+ if(data.width!==30||data.length!==16||data.height!==36||data.deckingColor!=='Coconut Husk'||data.deckFinishes?.border!=='tt_prime_plus:Dark Cocoa'||data.stairWidth!==96)issues.push('The deck is not a 30×16 ft Coconut Husk deck with a Dark Cocoa picture frame and an 8 ft stair.');
+ if(data.catalogueRailingId!=='dk_contemporary'||data.deckFinishes?.railingColor!=='Textured Black')issues.push('The rail is not black aluminum.');
+ if(data.pergola?.target.kind!=='deck'||data.pergola.roofFinish!=='black'||data.pergola.frameFinish!=='black'||data.pergola.lighting!=='perimeter-led'||(data.pergola.louverDeg??0)<70)issues.push('The pergola is not open black aluminium louvers on the deck with the LEDs on.');
+ if(data.pergola?.customSize&&(data.pergola.customSize.heightFt*12-7<96||data.height+data.pergola.customSize.heightFt*12-7<148))issues.push('The pergola beam does not clear 8 ft at the house, or it crosses the picture-window heads.');
+ if(data.pergola?.customSize){
+  const POST=5,w=data.pergola.customSize.widthFt*12,d=data.pergola.customSize.depthFt*12,px=data.pergola.xFt*12,pz=data.pergola.zFt*12;
+  const postXs=[-1,1].map(s=>px+s*(w-POST)/2),postZs=[-1,1].map(s=>pz+s*(d-POST)/2);
+  const ledgerZ=Math.min(...deckYs)+POST/2+1,beamZ=Math.max(...tk.levels[0].supports.map(s=>s.z));
+  if(Math.abs(Math.min(...postZs)-ledgerZ)>3||Math.abs(Math.max(...postZs)-beamZ)>3)issues.push('Pergola posts are not on the ledger and the front beam.');
+  const frontZ=Math.max(...postZs);
+  if(postXs.some(x=>!tk.levels[0].supports.some(s=>Math.hypot(s.x-x,s.z-frontZ)<3)))issues.push('Front pergola posts are not on a footing.');
+  if(Math.abs(w/12-data.width)>2)issues.push('The pergola does not cover the deck.');
+  const stairs=stairFootprints(tk);
+  for(const x of postXs)for(const z of postZs){const poly=[{x:x-3,y:z-3},{x:x+3,y:z-3},{x:x+3,y:z+3},{x:x-3,y:z+3}];if(yardArea(yardClip([poly],stairs,'intersection'))>0.01)issues.push('A pergola post stands in the stair opening.');}
+  const slider=data.houseConfig?.openings.find(o=>o.id==='slider'),hLeft=Math.min(...houseOutline(data).flat().map(p=>p.x));
+  if(slider){const mid=hLeft+slider.offsetPct/100*(data.houseConfig?.widthFt??0)*12,a=mid-slider.widthIn/2-6,b=mid+slider.widthIn/2+6;if(postXs.some(x=>x>a&&x<b))issues.push('A pergola post blocks the slider.');}
+ }
+ const table=data.landscapeObjects?.find(o=>o.id==='dining-table'),chairs=(data.landscapeObjects??[]).filter(o=>o.id.startsWith('dining-')&&o.assetId==='outdoor-chair');
+ if(!table||table.widthIn!==96||table.depthIn!==42||table.supportFeatureId||chairs.length!==8||chairs.some(o=>o.supportFeatureId))issues.push('The dining set is not an 8-seat table on the deck.');
  if(table&&data.pergola&&Math.hypot(table.xIn/12-data.pergola.xFt,table.zIn/12-data.pergola.zFt)>1)issues.push('The dining table is not centred under the pergola.');
+ const deckRingPts=deck.footprint.outline.map(p=>({x:p.x+deck.offset.x,y:p.y+deck.offset.z}));
+ for(const chair of chairs){const front=seatFront(chair.rotationDeg),backX=chair.xIn-front.x*chair.depthIn/2,backZ=chair.zIn-front.z*chair.depthIn/2;if(!insidePolygon({x:backX-front.x*36,y:backZ-front.z*36},deckRingPts))issues.push(`${chair.id} has under 36 in behind it.`);}
+ const terraceSeats=(data.landscapeObjects??[]).filter(o=>o.id==='terrace-sofa'||o.id.startsWith('terrace-chair'));
+ const terraceCoffee=data.landscapeObjects?.find(o=>o.id==='terrace-coffee');
+ if(terraceSeats.length!==3||!terraceCoffee||terraceSeats.some(o=>o.supportFeatureId!=='terrace')||terraceCoffee.supportFeatureId!=='terrace')issues.push('The terrace lounge is not a sofa, two chairs and a coffee table on the terrace.');
  const lights=data.lightingSystem.selectedItems,placed=(id:string)=>lights.find(i=>i.productId===id)?.places?.length??0;
  if(placed('liv')<8||placed('scope')<8||placed('liv_wall')<4||placed('evo_ground_300')<6||placed('wedge')<8)issues.push('Path lights, tree uplights, paver lights, step lights and fire-lounge wall lights are not placed.');
  const hardscape=pavingRings(data,tk),water=(data.pools??[]).map(poolOutline),bedRings=(data.landscapeObjects??[]).filter(o=>o.kind==='bed'&&(o.polygon?.length??0)>=3).map(o=>o.polygon!.map(p=>({x:p.x,y:p.z})));
@@ -371,7 +409,7 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
   if(gap<48)issues.push(`Fire clearance is ${(gap/12).toFixed(2)} ft.`);
  }
  const cameras=data.scenePresentation?.cameras??[];
- if(data.scenePresentation?.activeCameraId!=='hero'||!['hero','terrace-eye','pool','fire','dining'].every(id=>cameras.some(c=>c.id===id)))issues.push('Hero, terrace, pool, fire and dining cameras are missing.');
+ if(data.scenePresentation?.activeCameraId!=='hero'||!['hero','terrace-eye','pool','fire','dining','terrace-lounge'].every(id=>cameras.some(c=>c.id===id)))issues.push('Hero, terrace, pool, fire, dining and terrace-lounge cameras are missing.');
  issues.push(...furnitureFacingIssues(data));
  return issues;
 }

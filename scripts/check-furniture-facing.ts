@@ -57,11 +57,13 @@ const east=seatFront(90);assert.ok(east.x<-.99&&Math.abs(east.z)<.01);
 const design=ontarioShowcaseDesign(),issues=furnitureFacingIssues(design);
 assert.deepEqual(issues, [], issues.join('; '));
 const groups={
- dining:design.landscapeObjects?.filter(o=>o.assetId==='outdoor-chair'&&o.supportFeatureId==='terrace').length,
+ dining:design.landscapeObjects?.filter(o=>o.assetId==='outdoor-chair'&&o.id.startsWith('dining-')).length,
+ terrace:design.landscapeObjects?.filter(o=>o.assetId==='outdoor-chair'&&o.supportFeatureId==='terrace').length,
  sofas:design.landscapeObjects?.filter(o=>o.assetId==='outdoor-sofa').length,
  pool:design.landscapeObjects?.filter(o=>o.assetId==='lounge-chair').length,
 };
 assert.equal(groups.dining,8);
-assert.equal(groups.sofas,2);
+assert.equal(groups.terrace,2);
+assert.equal(groups.sofas,3);
 assert.equal(groups.pool,4);
-console.log('FURNITURE FACING OK — chair mesh yaw 180°, sofa and chaise already +Z; dining, fire lounge and pool seats face their targets.');
+console.log('FURNITURE FACING OK — chair mesh yaw 180°, sofa and chaise already +Z; dining, terrace lounge, fire lounge and pool seats face their targets.');

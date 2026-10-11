@@ -107,6 +107,19 @@ function raisedQuoteLines(o:LandscapeObject,item:LandscapeItemTakeoff):import('.
  return out;
 }
 const supports=new WeakMap<DeckData,ReturnType<typeof buildYardModel>>();
+const deckModels=new WeakMap<DeckData,ReturnType<typeof buildDeckTakeoff>>();
+/** Walking surface, in inches, when the whole footprint sits on a deck level. Landings and winders are not a floor. */
+function deckSurfaceIn(data:DeckData,foot:LandscapePoint[]){
+ if(area([foot])<=0)return undefined;
+ let model=deckModels.get(data);
+ if(!model){try{model=buildDeckTakeoff(data);}catch{return undefined;}deckModels.set(data,model);}
+ for(const level of model.levels){
+  if(level.kind==='landing'||level.kind==='winder')continue;
+  const ring=(level.deckingFootprint??level.footprint).outline.map(p=>({x:p.x+level.offset.x,z:p.y+level.offset.z}));
+  if(area(clip([foot],[ring],true))<0.5)return level.top;
+ }
+ return undefined;
+}
 export function landscapePlacement(data:DeckData,o:LandscapeObject){
  const poolConflict=o.kind==='bed'&&o.groundCoverOnly?undefined:getPoolModels(data).find(p=>area(landscapeClip([landscapeFootprint(o)],p.permanentExclusionFootprints.map(poly=>poly.map(v=>({x:v.x,z:v.y}))),'intersection'))>.001);
  if(poolConflict)return {x:o.xIn/12,y:0,z:o.zIn/12,measured:false,normal:undefined,pendingReason:`Footprint intersects ${poolConflict.config.name}'s opening, structure or coping. Move or reshape this object; no pool-hole support is assumed.`};
@@ -118,6 +131,8 @@ export function landscapePlacement(data:DeckData,o:LandscapeObject){
   }
   return {x:o.xIn/12,y:0,z:o.zIn/12,measured:false,normal:undefined,pendingReason:'Selected patio support is missing, disabled, excluded, or does not cover the entire furniture footprint.'};
  }
+ // A chair with no patio stands on the deck when its whole footprint is on the decking. Otherwise it stays at grade.
+ if(o.kind==='furniture'&&!o.supportFeatureId){const top=deckSurfaceIn(data,landscapeFootprint(o));if(top!==undefined)return {x:o.xIn/12,y:top/12,z:o.zIn/12,measured:true,normal:undefined,pendingReason:undefined};}
  if(o.kind!=='bed'){const raised=raisedSupport(data,o.xIn,o.zIn);if(raised)return {x:o.xIn/12,y:raised.y/12,z:o.zIn/12,measured:raised.measured,normal:undefined,pendingReason:undefined};}
  const measured=sampleSiteHeight(data,o.xIn,o.zIn);if(measured!==undefined)return {x:o.xIn/12,y:measured/12,z:o.zIn/12,measured:!!data.siteModel,normal:undefined,pendingReason:undefined};
  const t=getTerrainConfig(data);return {x:o.xIn/12,y:(t.elevationIn+o.zIn*t.slopePct/100)/12,z:o.zIn/12,measured:false,normal:undefined,pendingReason:undefined};
