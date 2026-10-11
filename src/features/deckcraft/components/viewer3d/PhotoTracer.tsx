@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import {PHOTO_FALLBACK} from './photoGrade';
 import {getPhotoServerSettings,getPhotoSettings,photoSampleHold,setPhotoProgress,subscribePhoto} from './photoMode';
+import {getShowcaseFlags} from './showcaseMode';
 import type {PhotoBridge,PhotoEngine} from './photoEngine';
 
 /** Mounted inside the canvas. The path tracer is loaded only after photo mode is turned on. */
@@ -20,12 +21,23 @@ export default function PhotoTracer({evening,revision}:{evening:boolean;revision
   if(!settings.enabled||loading||hold||!envId)return;
   let dead=false,eng:PhotoEngine|null=null;
   setPhotoProgress({phase:'checking',samples:0,message:'Checking whether this device can path trace…'});
-  void import('./photoEngine').then(async({startPhotoEngine})=>{
+  void (async()=>{
+   // Showcase stills use the near meshes. A software GPU otherwise keeps the far cards, and the tracer would bake those.
+   const deadline=performance.now()+45000;
+   while(!dead&&getShowcaseFlags().quality&&performance.now()<deadline){
+    let far=0,near=0;
+    scene.traverse(object=>{if(object.name.endsWith('-lod2'))far++;else if(object.name.endsWith('-lod0'))near++;});
+    if(near>0&&far===0)break;
+    invalidate();
+    await new Promise(resolve=>requestAnimationFrame(()=>resolve(undefined)));
+   }
+   if(dead)return;
+   const {startPhotoEngine}=await import('./photoEngine');
    if(dead)return;
    eng=await startPhotoEngine({gl,scene,camera,bridge:bridge.current,evening});
    if(dead){eng.dispose();return;}
    engine.current=eng;invalidate();
-  }).catch(error=>{console.warn('DeckCraft photo: the path tracer could not be loaded.',error);if(!dead)setPhotoProgress({phase:'fallback',samples:0,message:PHOTO_FALLBACK});});
+  })().catch(error=>{console.warn('DeckCraft photo: the path tracer could not be loaded.',error);if(!dead)setPhotoProgress({phase:'fallback',samples:0,message:PHOTO_FALLBACK});});
   return ()=>{dead=true;eng?.dispose();if(engine.current===eng)engine.current=null;setPhotoProgress({phase:'off',samples:0,message:''});};
  },[settings.enabled,settings.look,loading,hold,evening,revision,envId,gl,scene,camera,invalidate]);
  useEffect(()=>{

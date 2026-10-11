@@ -1,10 +1,10 @@
-import {useEffect,useLayoutEffect,useMemo} from 'react';
+import {useEffect,useLayoutEffect,useMemo,useSyncExternalStore} from 'react';
 import {useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import type {LandscapeObject} from '../../landscapeTypes';
 import {landscapePlacement} from '../../landscapeModelRuntime';
-import {getShowcaseFlags} from './showcaseMode';
+import {getShowcaseFlags,subscribeShowcase} from './showcaseMode';
 import {applyBloomLighting,plantColorHash} from './foliageLighting';
 import {useFixtureLit} from './fixtureLighting';
 
@@ -126,11 +126,13 @@ function BloomMesh({data,points,map,role}:{data:DeckData;points:BloomPoint[];map
 }
 /** Alpha-tested flower heads for the species in bloom. Distant impostors skip them. */
 export default function PlantBlooms({data,objects,lods}:{data:DeckData;objects:LandscapeObject[];lods:Map<string,0|1|2>}){
+ const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false);
  const points=useMemo(()=>objects.flatMap(o=>{
   const spec=o.enabled&&o.kind==='plant'&&o.speciesRecord?BLOOMS[o.speciesRecord.id]:undefined;
-  if(!spec||(lods.get(o.id)??(getShowcaseFlags().quality?0:2))>1||landscapePlacement(data,o).pendingReason)return [];
+  const lod=showcase?0:(lods.get(o.id)??2);
+  if(!spec||lod>1||landscapePlacement(data,o).pendingReason)return [];
   return place(o,spec);
- }),[data,objects,lods]);
+ }),[data,objects,lods,showcase]);
  const textures=useMemo(()=>({daisy:flowerTexture('daisy'),mop:flowerTexture('mop'),whorl:flowerTexture('whorl')}),[]);
  useEffect(()=>()=>{textures.daisy.dispose();textures.mop.dispose();textures.whorl.dispose();},[textures]);
  const daisy=points.filter(p=>p.kind==='daisy'),mop=points.filter(p=>p.kind==='mop'||p.kind==='cone'),whorl=points.filter(p=>p.kind==='whorl'||p.kind==='spike'),stems=points.filter(p=>p.kind==='stem'),centers=daisy;
