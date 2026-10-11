@@ -58,12 +58,14 @@ const design=ontarioShowcaseDesign(),issues=furnitureFacingIssues(design);
 assert.deepEqual(issues, [], issues.join('; '));
 const groups={
  dining:design.landscapeObjects?.filter(o=>o.assetId==='outdoor-chair'&&o.id.startsWith('dining-')).length,
- terrace:design.landscapeObjects?.filter(o=>o.assetId==='outdoor-chair'&&o.supportFeatureId==='terrace').length,
- sofas:design.landscapeObjects?.filter(o=>o.assetId==='outdoor-sofa').length,
+ terraceFolding:design.landscapeObjects?.filter(o=>o.assetId==='outdoor-chair'&&o.supportFeatureId==='terrace').length,
+ terraceLounge:design.landscapeObjects?.filter(o=>o.assetId==='outdoor-sofa'&&o.supportFeatureId==='terrace').length,
+ fire:design.landscapeObjects?.filter(o=>o.assetId==='outdoor-sofa'&&o.supportFeatureId==='lounge').length,
  pool:design.landscapeObjects?.filter(o=>o.assetId==='lounge-chair').length,
 };
 assert.equal(groups.dining,8);
-assert.equal(groups.terrace,2);
-assert.equal(groups.sofas,3);
+assert.equal(groups.terraceFolding,0);
+assert.equal(groups.terraceLounge,3);
+assert.equal(groups.fire,2);
 assert.equal(groups.pool,4);
 console.log('FURNITURE FACING OK — chair mesh yaw 180°, sofa and chaise already +Z; dining, terrace lounge, fire lounge and pool seats face their targets.');
