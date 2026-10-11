@@ -4,7 +4,7 @@ import {FullScreenQuad} from 'three/examples/jsm/postprocessing/Pass.js';
 import {registerPhotoTracer,type PhotoTraceFrame,type PhotoTraceRequest} from '../../photoTraceApi';
 import {SCENE_LOOK} from './sceneLook';
 import {SKY_DATA,skyStrength,skyYaw,visibleSkyHorizon,visibleSkyStrength,type Lighting} from './skyModel';
-import {applyPhotoScene,buildPhotoBackground,rasterPhotoTriangles,tracePhotoTriangles} from './photoMaterials';
+import {applyPhotoScene,buildPhotoBackground,photoTexturesReady,rasterPhotoTriangles,tracePhotoTriangles} from './photoMaterials';
 import {PHOTO_FALLBACK,PHOTO_GRADE,SUN_ANGULAR_RADIUS_DEG,photoStillSize,photoSunColor,photoSunElevationDeg,photoSunIrradiance,sunDisc,type PhotoLook} from './photoGrade';
 import {getPhotoSettings,setPhotoProgress,type PhotoPhase} from './photoMode';
 
@@ -277,7 +277,8 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
  }
  try{
   publish('building',0,'Building the scene for path tracing…');
-  await new Promise(resolve=>setTimeout(resolve,0));
+  const texturesReadyAt=performance.now()+20000;
+  while(!disposed&&!photoTexturesReady(scene)&&performance.now()<texturesReadyAt)await new Promise(resolve=>requestAnimationFrame(()=>resolve(undefined)));
   if(disposed)return {step(){},async exportStill(){},dispose(){restoreView();delete gl.domElement.dataset.photoTrace;}};
   apply(getPhotoSettings().look);
   fitStill();

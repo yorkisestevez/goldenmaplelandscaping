@@ -14,9 +14,10 @@ interface SavedMaterial{
  color:THREE.Color;emissive:THREE.Color;
  map:THREE.Texture|null;normalMap:THREE.Texture|null;roughnessMap:THREE.Texture|null;emissiveMap:THREE.Texture|null;aoMap:THREE.Texture|null;
  roughness:number;metalness:number;opacity:number;transparent:boolean;depthWrite:boolean;alphaTest:number;side:THREE.Side;
- emissiveIntensity:number;envMapIntensity:number;aoMapIntensity:number;normalScale:THREE.Vector2;
+ emissiveIntensity:number;envMapIntensity:number;aoMapIntensity:number;normalScale:THREE.Vector2;vertexColors:boolean;
  transmission:number;thickness:number;ior:number;attenuationDistance:number;attenuationColor:THREE.Color;
 }
+interface WidenedColor{geometry:THREE.BufferGeometry;color:THREE.BufferAttribute}
 interface SavedLight{light:THREE.Light&{intensity:number;radius?:number};intensity:number;radius:number|undefined}
 
 function physical(material:THREE.Material):THREE.MeshPhysicalMaterial|null{
@@ -29,12 +30,12 @@ function saveMaterial(material:THREE.MeshStandardMaterial):SavedMaterial{
  const body=physical(material);
  return {material,color:material.color.clone(),emissive:material.emissive.clone(),map:material.map,normalMap:material.normalMap,roughnessMap:material.roughnessMap,emissiveMap:material.emissiveMap,aoMap:material.aoMap,
   roughness:material.roughness,metalness:material.metalness,opacity:material.opacity,transparent:material.transparent,depthWrite:material.depthWrite,alphaTest:material.alphaTest,side:material.side,
-  emissiveIntensity:material.emissiveIntensity,envMapIntensity:material.envMapIntensity,aoMapIntensity:material.aoMapIntensity,normalScale:material.normalScale.clone(),
+  emissiveIntensity:material.emissiveIntensity,envMapIntensity:material.envMapIntensity,aoMapIntensity:material.aoMapIntensity,normalScale:material.normalScale.clone(),vertexColors:material.vertexColors,
   transmission:body?.transmission??0,thickness:body?.thickness??0,ior:body?.ior??1.5,attenuationDistance:body?.attenuationDistance??Infinity,attenuationColor:(body?.attenuationColor??new THREE.Color(1,1,1)).clone()};
 }
 function restoreMaterial(saved:SavedMaterial){
  const material=saved.material,body=physical(material);
- material.color.copy(saved.color);material.emissive.copy(saved.emissive);
+ material.color.copy(saved.color);material.emissive.copy(saved.emissive);material.vertexColors=saved.vertexColors;
  material.map=saved.map;material.normalMap=saved.normalMap;material.roughnessMap=saved.roughnessMap;material.emissiveMap=saved.emissiveMap;material.aoMap=saved.aoMap;
  material.roughness=saved.roughness;material.metalness=saved.metalness;material.opacity=saved.opacity;material.transparent=saved.transparent;material.depthWrite=saved.depthWrite;
  material.alphaTest=saved.alphaTest;material.side=saved.side;material.emissiveIntensity=saved.emissiveIntensity;material.envMapIntensity=saved.envMapIntensity;material.aoMapIntensity=saved.aoMapIntensity;material.normalScale.copy(saved.normalScale);
@@ -103,6 +104,69 @@ export function buildPhotoBackground(source:THREE.Texture|null,strength:number,h
  texture.minFilter=THREE.LinearFilter;texture.magFilter=THREE.LinearFilter;texture.generateMipmaps=false;texture.needsUpdate=true;return texture;
 }
 function roleOf(mesh:THREE.Object3D){return typeof mesh.userData.poolRole==='string'?mesh.userData.poolRole:'';}
+function textureReady(texture:THREE.Texture|null|undefined){
+ const image=texture?.image as {width?:number;height?:number;complete?:boolean;naturalWidth?:number}|null|undefined;
+ if(!image)return false;
+ if(typeof image.complete==='boolean')return image.complete&&(image.naturalWidth??image.width??0)>0;
+ return (image.width??0)>0&&(image.height??0)>0;
+}
+/** An image that has started loading but has no pixels yet. A null image is not worth waiting on. */
+function texturePending(texture:THREE.Texture){
+ const image=texture.image as {complete?:boolean;naturalWidth?:number}|null;
+ if(!image||typeof image.complete!=='boolean')return false;
+ return !image.complete||(image.naturalWidth??0)===0;
+}
+export function photoTexturesReady(root:THREE.Object3D){
+ let ready=true;
+ root.traverse(object=>{
+  const mesh=object as THREE.Mesh;
+  if(!mesh.isMesh||!ready)return;
+  const list=Array.isArray(mesh.material)?mesh.material:[mesh.material];
+  for(const entry of list){
+   const material=entry as THREE.MeshStandardMaterial|null;
+   if(!material||!standard(material))continue;
+   for(const key of ['map','normalMap','roughnessMap','metalnessMap','emissiveMap','alphaMap'] as const){const tex=material[key];if(tex&&texturePending(tex))ready=false;}
+  }
+ });
+ return ready;
+}
+function toLinear(value:number,srgb:boolean){
+ const u=Math.max(0,value);
+ if(!srgb)return u;
+ return u<=0.04045?u/12.92:((u+0.055)/1.055)**2.4;
+}
+function meanColor(attr:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,count=attr.count){
+ let r=0,g=0,b=0;const n=Math.max(0,Math.min(count,attr.count));
+ for(let i=0;i<n;i++){r+=attr.getX(i);g+=attr.getY(i);b+=attr.getZ(i);}
+ const d=Math.max(1,n);return new THREE.Color(r/d,g/d,b/d);
+}
+function meanMap(texture:THREE.Texture){
+ const image=texture.image as {width?:number;height?:number;data?:ArrayLike<number>;getContext?:(kind:string)=>CanvasRenderingContext2D|null};
+ let data:ArrayLike<number>|null=image?.data??null;const width=image?.width??0,height=image?.height??0;
+ if(!data&&image?.getContext){const pixels=image.getContext('2d')?.getImageData(0,0,width,height);data=pixels?.data??null;}
+ if(!data||!width||!height)return new THREE.Color(1,1,1);
+ const channels=Math.max(1,Math.round(data.length/(width*height))),srgb=texture.colorSpace===THREE.SRGBColorSpace;
+ const max=data instanceof Uint8Array||data instanceof Uint8ClampedArray?255:data instanceof Uint16Array?65535:1;
+ let r=0,g=0,b=0,n=0;const step=Math.max(1,Math.floor((width*height)/4096));
+ for(let i=0;i<width*height;i+=step){const o=i*channels;r+=toLinear(Number(data[o])/max,srgb);g+=toLinear(Number(data[o+1]??data[o])/max,srgb);b+=toLinear(Number(data[o+2]??data[o])/max,srgb);n++;}
+ return new THREE.Color(r/Math.max(1,n),g/Math.max(1,n),b/Math.max(1,n));
+}
+/** Linear mean albedo: material colour × decoded map × mean vertex colour, the product the tracer shades with.
+ * `raster` applies the viewer's own rules (a loaded paver photo is not tinted a second time; an atlas the tracer cannot see uses its fallback). */
+export function photoMeanAlbedo(material:THREE.MeshStandardMaterial,source?:THREE.Object3D|null,mode:'raster'|'trace'='trace'){
+ const mesh=source as THREE.Mesh|null|undefined,geometry=mesh?.geometry as THREE.BufferGeometry|undefined,color=material.color.clone();
+ const swatch=material.userData.hardscapeSwatch===true,fallback=(material.userData.surface as SurfaceRecord|undefined)?.fallback;
+ let map=material.map;
+ if(mode==='raster'){
+  if(fallback){color.copy(fallback);map=null;}
+  else if(swatch){if(map&&textureReady(map))color.set('#ffffff');else map=null;}
+ }
+ if(map&&textureReady(map))color.multiply(meanMap(map));
+ const inst=mesh as THREE.InstancedMesh|undefined;
+ if(mode==='raster'&&inst?.isInstancedMesh&&inst.instanceColor&&inst.count>0)color.multiply(meanColor(inst.instanceColor,inst.count));
+ if(material.vertexColors&&geometry){const attr=geometry.getAttribute('color') as THREE.BufferAttribute|undefined;if(attr&&attr.count)color.multiply(meanColor(attr));}
+ return color;
+}
 
 const PHOTO_ADDED=new Set(['photo-sky','photo-emitter','photo-moon']);
 
@@ -178,7 +242,9 @@ function bakeInstances(mesh:THREE.InstancedMesh){
  const src=mesh.geometry,count=mesh.count,position=src.getAttribute('position'),normal=src.getAttribute('normal'),index=src.index,verts=position.count;
  const matrix=new THREE.Matrix4(),normalMatrix=new THREE.Matrix3(),vertex=new THREE.Vector3();
  const positions=new Float32Array(verts*count*3),normals=normal?new Float32Array(verts*count*3):null;
- const extras=['uv','uv2','color','tangent'].flatMap(key=>{
+ const srcColor=src.getAttribute('color') as THREE.BufferAttribute|undefined,instanceColor=mesh.instanceColor;
+ const colors=srcColor||instanceColor?new Float32Array(verts*count*4):null;
+ const extras=['uv','uv2','tangent'].flatMap(key=>{
   const attr=src.getAttribute(key);
   return attr?[{key,itemSize:attr.itemSize,source:attr,array:new Float32Array(verts*count*attr.itemSize)}]:[];
  });
@@ -201,11 +267,18 @@ function bakeInstances(mesh:THREE.InstancedMesh){
      if(extra.itemSize>3)extra.array[at+3]=extra.source.getComponent(j,3);
     }else for(let c=0;c<extra.itemSize;c++)extra.array[at+c]=extra.source.getComponent(j,c);
    }
+   if(colors){
+    const at=(base+j)*4;let r=1,g=1,b=1,a=1;
+    if(srcColor){r=srcColor.getX(j);g=srcColor.getY(j);b=srcColor.getZ(j);if(srcColor.itemSize>3)a=srcColor.getW(j);}
+    if(instanceColor){r*=instanceColor.getX(i);g*=instanceColor.getY(i);b*=instanceColor.getZ(i);if(instanceColor.itemSize>3)a*=instanceColor.getW(i);}
+    colors[at]=r;colors[at+1]=g;colors[at+2]=b;colors[at+3]=a;
+   }
   }
  }
  const geometry=new THREE.BufferGeometry();
  geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
  if(normals)geometry.setAttribute('normal',new THREE.BufferAttribute(normals,3));
+ if(colors)geometry.setAttribute('color',new THREE.BufferAttribute(colors,4));
  for(const extra of extras)geometry.setAttribute(extra.key,new THREE.BufferAttribute(extra.array,extra.itemSize));
  if(index){
   const out=new Uint32Array(index.count*count);
@@ -213,6 +286,7 @@ function bakeInstances(mesh:THREE.InstancedMesh){
   geometry.setIndex(new THREE.BufferAttribute(out,1));
   for(let i=0;i<count;i++)for(const group of src.groups)geometry.addGroup(group.start+i*index.count,group.count,group.materialIndex);
  }
+ if(colors){const list=Array.isArray(mesh.material)?mesh.material:[mesh.material];for(const entry of list){const material=standard(entry);if(material)material.vertexColors=true;}}
  const baked=new THREE.Mesh(geometry,mesh.material);
  baked.name=mesh.name?`photo-baked-${mesh.name}`:'photo-baked';
  baked.frustumCulled=false;baked.matrixAutoUpdate=false;baked.userData={photoBaked:true};
@@ -220,9 +294,12 @@ function bakeInstances(mesh:THREE.InstancedMesh){
 }
 function tuneMaterial(mesh:THREE.Mesh,material:THREE.MeshStandardMaterial,look:PhotoLook,ripple:THREE.Texture,caustics:THREE.Texture|null){
  const body=physical(material),role=roleOf(mesh),surface=(material.userData.surface as SurfaceRecord|undefined)?.fallback;
+ // A loaded paver photo already contains the product colour. Tint it only when the photo has not arrived, otherwise the field goes black.
+ if(material.userData.hardscapeSwatch){if(material.map&&textureReady(material.map))material.color.set('#ffffff');else material.map=null;}
  if(role==='water'||mesh.name.includes('water')&&body&&Math.abs((body.ior??1.5)-1.333)<0.02){
   const tint=new THREE.Color(WATER_OPTICS.shallow).lerp(new THREE.Color(WATER_OPTICS.deep),0.42);
   material.color.copy(tint);material.roughness=0.045;material.metalness=0;material.opacity=1;material.transparent=true;material.side=THREE.DoubleSide;material.normalMap=ripple;material.normalScale.set(0.35,0.35);
+  // Thickness stays 0. An open water sheet has no exit face, and a finite thickness absorbs the interior finish to black.
   if(body){body.transmission=1;body.thickness=0;body.ior=1.333;body.attenuationDistance=Infinity;body.attenuationColor.set('#ffffff');}
   material.needsUpdate=true;
  }else if(material.userData.photoRole==='glass'&&(body?.ior??1.5)>1.7){
@@ -235,7 +312,9 @@ function tuneMaterial(mesh:THREE.Mesh,material:THREE.MeshStandardMaterial,look:P
  }else if(surface){
   material.color.copy(surface);material.map=null;material.normalMap=null;material.roughnessMap=null;material.roughness=Math.min(material.roughness,0.62);material.metalness=0;material.needsUpdate=true;
  }else if(material.alphaTest>0||material.alphaMap||material.transparent&&material.map&&material.opacity>0.85&&(body?.transmission??0)<0.05){
-  material.alphaTest=Math.max(material.alphaTest,0.45);material.transparent=false;material.depthWrite=true;material.side=THREE.DoubleSide;material.needsUpdate=true;
+  // Keep the asset's own cutoff. Raising a soft leaf card to 0.45 leaves only a few white texels.
+  if(material.alphaTest<=0)material.alphaTest=.08;
+  material.transparent=false;material.depthWrite=true;material.side=THREE.DoubleSide;material.needsUpdate=true;
  }else if(look==='night'&&material.emissiveIntensity>0.05){
   material.emissiveIntensity*=PHOTO_LIGHT.nightEmissiveBoost;material.needsUpdate=true;
  }
@@ -246,10 +325,25 @@ function tuneMaterial(mesh:THREE.Mesh,material:THREE.MeshStandardMaterial,look:P
  material.aoMap=null;
 }
 
+/** The tracer's merge leaves an RGB colour attribute at zero when another mesh has RGBA. Widen to RGBA before that merge. */
+function widenSceneColors(scene:THREE.Scene,widened:WidenedColor[]){
+ const seen=new Set<string>();
+ scene.traverse(object=>{
+  const mesh=object as THREE.Mesh;
+  if(!mesh.isMesh||!shown(mesh)||photoSkip(mesh))return;
+  const geometry=mesh.geometry;if(!geometry||seen.has(geometry.uuid))return;seen.add(geometry.uuid);
+  const color=geometry.getAttribute('color') as THREE.BufferAttribute|undefined;
+  if(!color||color.itemSize>=4)return;
+  const next=new Float32Array(color.count*4);
+  for(let i=0;i<color.count;i++){next[i*4]=color.getX(i);next[i*4+1]=color.getY(i);next[i*4+2]=color.getZ(i);next[i*4+3]=1;}
+  geometry.setAttribute('color',new THREE.BufferAttribute(next,4));
+  widened.push({geometry,color});
+ });
+}
 /** Swap raster-only shader tricks for values the path tracer reads, and put a soft sun and area emitters in the scene.
  * Everything is put back by the returned function, including when setup throws. */
 export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[number,number,number];direction:[number,number,number];diameterFt:number;radiance:number;distanceFt:number}|null){
- const materials=new Map<string,SavedMaterial>(),lights:SavedLight[]=[],hidden:THREE.Object3D[]=[],added:THREE.Object3D[]=[],proxies:THREE.Material[]=[];
+ const materials=new Map<string,SavedMaterial>(),lights:SavedLight[]=[],hidden:THREE.Object3D[]=[],added:THREE.Object3D[]=[],proxies:THREE.Material[]=[],widened:WidenedColor[]=[];
  const swapped:THREE.Mesh[]=[],previous:THREE.Material[]=[];
  const ripple=waterRippleNormal(),caustics=look==='night'?null:causticTexture();
  scene.updateMatrixWorld(true);
@@ -301,7 +395,9 @@ export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[num
  }
  for(const object of added)scene.add(object);
  scene.updateMatrixWorld(true);
+ widenSceneColors(scene,widened);
  return ()=>{
+  for(const entry of widened)entry.geometry.setAttribute('color',entry.color);
   for(const saved of materials.values())restoreMaterial(saved);
   for(const saved of lights){saved.light.intensity=saved.intensity;if(saved.radius===undefined)delete saved.light.radius;else saved.light.radius=saved.radius;}
   for(const object of hidden)object.visible=true;

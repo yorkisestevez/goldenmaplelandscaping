@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import type {LandscapeObject} from '../../landscapeTypes';
 import {landscapePlacement} from '../../landscapeModelRuntime';
+import {getShowcaseFlags} from './showcaseMode';
 import {applyBloomLighting,plantColorHash} from './foliageLighting';
 import {useFixtureLit} from './fixtureLighting';
 
@@ -127,7 +128,7 @@ function BloomMesh({data,points,map,role}:{data:DeckData;points:BloomPoint[];map
 export default function PlantBlooms({data,objects,lods}:{data:DeckData;objects:LandscapeObject[];lods:Map<string,0|1|2>}){
  const points=useMemo(()=>objects.flatMap(o=>{
   const spec=o.enabled&&o.kind==='plant'&&o.speciesRecord?BLOOMS[o.speciesRecord.id]:undefined;
-  if(!spec||(lods.get(o.id)??2)>1||landscapePlacement(data,o).pendingReason)return [];
+  if(!spec||(lods.get(o.id)??(getShowcaseFlags().quality?0:2))>1||landscapePlacement(data,o).pendingReason)return [];
   return place(o,spec);
  }),[data,objects,lods]);
  const textures=useMemo(()=>({daisy:flowerTexture('daisy'),mop:flowerTexture('mop'),whorl:flowerTexture('whorl')}),[]);
