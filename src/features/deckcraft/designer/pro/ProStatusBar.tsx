@@ -9,6 +9,7 @@ const TOOL_KEYS:Partial<Record<PlanTool,Keys>>={
   inlays:[['Escape','cancel placing']],
   yard:[['Enter','exact length'],['Ctrl+A','angle snapping'],['G','snap settings']],
   landscape:[['Enter','exact length'],['Backspace','remove last point']],
+  fence:[['Enter','exact length'],['Backspace','remove last point']],
 };
 const VIEW_KEYS:Keys=[['Wheel','zoom'],['Z','fit']];
 const SHEET_KEYS:Record<'3d'|'framing',Keys>={'3d':[['T','move'],['R','rotate'],['S','scale']],framing:[]};

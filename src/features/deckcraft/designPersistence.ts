@@ -13,6 +13,7 @@ import {patioInlayProblem,PATIO_INLAY_LIMITS} from './patioInlays';
 export {pruneEdgeNames} from './edgeNames';
 import {validatePergola} from './pergolaValidation';
 import {validatePermitSite} from './permitSite';
+import {validateFences} from './fenceTypes';
 import { DEFAULT_DECK } from './defaults';
 import {BUILD_RULES,type BuildRules} from './buildRules';
 import {PICTURE_FRAME_OVERHANG_IN} from './lib/finishedFootprint';
@@ -94,6 +95,7 @@ export function validateDesign(input:unknown):DeckData {
   const poolsDescriptor=Object.getOwnPropertyDescriptor(input,'pools');if(poolsDescriptor){if(!('value'in poolsDescriptor)||!poolsDescriptor.enumerable)throw Error('Pool settings must be plain saved values.');if(poolsDescriptor.value!==undefined){if(!validatePoolFeatures(poolsDescriptor.value))throw Error('Invalid pool settings.');clean.pools=structuredClone(poolsDescriptor.value);}}
   if(input.siteModel!==undefined)clean.siteModel=validateSiteModel(input.siteModel);
   if(input.landscapeObjects!==undefined){if(!validateLandscapeObjects(input.landscapeObjects))throw Error('Invalid landscape objects.');clean.landscapeObjects=structuredClone(input.landscapeObjects) as NonNullable<DeckData['landscapeObjects']>;}
+  if(input.fences!==undefined)clean.fences=validateFences(input.fences);
   if(input.editorOrganization!==undefined)clean.editorOrganization=validateEditorOrganization(input.editorOrganization);
   if(input.scenePresentation!==undefined)clean.scenePresentation=validateScenePresentation(input.scenePresentation);
   for(const [key,values] of Object.entries(enums))if(Object.hasOwn(input,key)){
@@ -471,7 +473,7 @@ export function defaultLevel3(data:DeckData):NonNullable<DeckData['level3']>{
 export function serializeDesign(data:DeckData):string {
   const clean=validateDesign(data);
   const configuration:Record<string,unknown>={};
-  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'buildRules','deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','stairPath','stairTargets','level2EdgeId','level3','scenePresentation','pools','siteModel','landscapeObjects','editorOrganization','yardFeatures','yardEarthwork','terrainConfig','yardAllowances','permitSite','customFront','boardColours','inlays','skirting','deckFinishes','underDeck','deckOutlines','deckOutlineOffsets','boardLayout','boundaryLocks','railSections','railDefault','pergola']){
+  for(const key of [...Object.keys(enums),...Object.keys(ranges),...booleans,...texts,'buildRules','deckingMaterial','deckingColor','lightingSystem','autoLighting','privacyScreens','catalogueRailingId','catalogueAccessories','lightingZoneEnabled','houseConfig','housePlacement','wrap','cornerChamfers','stairEdgeId','stairPath','stairTargets','level2EdgeId','level3','scenePresentation','pools','siteModel','landscapeObjects','fences','editorOrganization','yardFeatures','yardEarthwork','terrainConfig','yardAllowances','permitSite','customFront','boardColours','inlays','skirting','deckFinishes','underDeck','deckOutlines','deckOutlineOffsets','boardLayout','boundaryLocks','railSections','railDefault','pergola']){
     if(clean[key as keyof DeckData]!==undefined)configuration[key]=clean[key as keyof DeckData];
   }
   return JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration},null,2);

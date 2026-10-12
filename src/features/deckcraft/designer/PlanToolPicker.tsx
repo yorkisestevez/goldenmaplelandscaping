@@ -1,8 +1,8 @@
 import {useEffect,useRef,useState,type KeyboardEvent} from 'react';
 import type {PlanTool} from './constants';
 import './planToolPicker.css';
-const groups=[['Building',['size','outline','stairs','yard','house','edges']],['Landscape',['landscape','yard']],['Materials',['boards','inlays']],['Main',['components','size']]] as const;
-const labels:Record<PlanTool,string>={size:'Deck size',outline:'Shape & points',stairs:'Stairs',yard:'Patios & walls',house:'House',edges:'Rails & screens',landscape:'Landscape',boards:'Board layout',inlays:'Inlays',components:'Select parts'};
+const groups=[['Building',['size','outline','stairs','yard','house','edges']],['Landscape',['landscape','yard','fence']],['Materials',['boards','inlays']],['Main',['components','size']]] as const;
+const labels:Record<PlanTool,string>={size:'Deck size',outline:'Shape & points',stairs:'Stairs',yard:'Patios & walls',house:'House',edges:'Rails & screens',landscape:'Landscape',fence:'Fence',boards:'Board layout',inlays:'Inlays',components:'Select parts'};
 const category=(tool:PlanTool)=>groups.findIndex(([,ids])=>(ids as readonly string[]).includes(tool));
 export default function PlanToolPicker({tool,onPick,hint,onSketch,sketchReady=true}:{tool:PlanTool;onPick:(tool:PlanTool)=>void;hint:string;onSketch?:()=>void;sketchReady?:boolean}){
  const [group,setGroup]=useState(()=>category(tool)),row=useRef<HTMLDivElement>(null);

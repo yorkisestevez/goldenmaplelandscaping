@@ -30,6 +30,7 @@ export function assertUnlockedChanges(before:DeckData,after:DeckData){
  for(const f of before.yardFeatures??[])if(isObjectLocked(o,f.id)&&JSON.stringify(f)!==JSON.stringify(after.yardFeatures?.find(n=>n.id===f.id)))throw Error(`${f.name} is locked. Unlock its object or layer first.`);
  for(const f of before.pools??[])if(isObjectLocked(o,f.id)&&JSON.stringify(f)!==JSON.stringify(after.pools?.find(n=>n.id===f.id)))throw Error(`${f.name} is locked. Unlock its object or layer first.`);
  for(const f of before.landscapeObjects??[])if(isObjectLocked(o,f.id)&&JSON.stringify(f)!==JSON.stringify(after.landscapeObjects?.find(n=>n.id===f.id)))throw Error(`${f.name} is locked. Unlock its object or layer first.`);
+ for(const f of before.fences??[])if(isObjectLocked(o,f.id)&&JSON.stringify(f)!==JSON.stringify(after.fences?.find(n=>n.id===f.id)))throw Error(`${f.name} is locked. Unlock its object or layer first.`);
  for(const t of before.siteModel?.transitions??[])if(isObjectLocked(o,t.id)&&JSON.stringify(t)!==JSON.stringify(after.siteModel?.transitions?.find(n=>n.id===t.id)))throw Error(`${t.name} is locked. Unlock its object or layer first.`);
  if(isObjectLocked(o,'site')&&JSON.stringify(before.siteModel)!==JSON.stringify(after.siteModel))throw Error('The site layer is locked.');
  const pick=(d:DeckData,keys:string[])=>JSON.stringify(Object.fromEntries(keys.map(k=>[k,(d as unknown as Record<string,unknown>)[k]])));

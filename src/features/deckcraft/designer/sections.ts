@@ -136,7 +136,7 @@ export const FIELD_NAMES:Partial<Record<FieldPath|'sceneLighting'|'lightingPrevi
   autoLighting:'Deck lighting',lightingSystem:'Lighting',lightingZoneEnabled:'Lighting zones',
   privacyScreens:'Privacy screens',privacySqft:'Privacy screen area',skirting:'Skirting',benchLf:'Built-in bench',pergolaSqft:'Pergola',hasDemo:'Remove an existing deck',hasDrainage:'Under-deck drainage',catalogueAccessories:'Manufacturer accessories',
   municipality:'Project area',siteType:'Site conditions',soilCondition:'Soil conditions',foundation:'Foundation',foundationDepthIn:'Footing depth',buildSeason:'Build season',intendedLoad:'Intended load',framingSize:'Joist size',joistSpacing:'Joist spacing',boardWidth:'Board width',
-  stairTargets:'Stair landing elevations',siteModel:'Survey and grading',landscapeObjects:'Landscape objects',editorOrganization:'Layers, groups and locks',yardFeatures:'Backyard features',terrainConfig:'Terrain',yardAllowances:'Backyard allowances',
+  stairTargets:'Stair landing elevations',siteModel:'Survey and grading',landscapeObjects:'Landscape objects',fences:'Fences',editorOrganization:'Layers, groups and locks',yardFeatures:'Backyard features',terrainConfig:'Terrain',yardAllowances:'Backyard allowances',
   customerName:'Your name',projectAddress:'Project address',scopeOfWork:'Scope of work',permitSite:'Lot and setbacks',
   sceneLighting:'Day or night preview',lightingPreviewOn:'Preview lights',
 };

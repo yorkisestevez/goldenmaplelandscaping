@@ -521,7 +521,7 @@ const toolRow=(page:Page)=>page.getByRole('radiogroup',{name:'Plan tools'}).eval
 /** The category ribbon. Select parts is on every category. Sketch is a button beside the radios, not one of them. */
 const PLAN_RIBBONS=[
   ['Building',['Deck size','Shape & points','Stairs','Patios & walls','House','Rails & screens','Select parts']],
-  ['Landscape',['Landscape','Patios & walls','Select parts']],
+  ['Landscape',['Landscape','Patios & walls','Fence','Select parts']],
   ['Materials',['Board layout','Inlays','Select parts']],
   ['Main',['Select parts','Deck size']],
 ] as const;
