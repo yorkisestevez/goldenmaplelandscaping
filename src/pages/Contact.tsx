@@ -2,12 +2,13 @@ import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import SEO from '../components/SEO';
 import LeadForm from '../components/LeadForm';
 import GoogleReviewsLink from '../components/GoogleReviewsLink';
-import { publicContact } from '../data/business';
+import { publicContact, publicHoursLine, publicPostalAddress } from '../data/business';
 import { OWNER_FACTS, ownerFact } from '../data/ownerFacts';
 import { trackCall } from '../utils/analytics';
 
 export default function Contact() {
   const extraHours = ownerFact(OWNER_FACTS.extraHours);
+  const postalAddress = publicPostalAddress();
 
   return (
     <div className="bg-brand-nearblack min-h-screen">
@@ -63,13 +64,14 @@ export default function Contact() {
                   <span>
                     <span className="block font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">Where we build</span>
                     <span className="font-sans text-base text-brand-bonewhite">Barrie and Simcoe County, Ontario</span>
+                    {'streetAddress' in postalAddress && <span className="block font-sans text-sm text-brand-muted mt-1">{postalAddress.streetAddress}, {postalAddress.addressLocality}, {postalAddress.addressRegion} {postalAddress.postalCode}</span>}
                   </span>
                 </div>
                 <div className="flex items-start gap-4">
                   <Clock size={20} className="text-brand-gold-dark shrink-0 mt-1" strokeWidth={1.5} />
                   <span>
                     <span className="block font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">Office hours</span>
-                    <span className="font-sans text-base text-brand-bonewhite">Monday–Friday, 8:00 AM–6:00 PM</span>
+                    <span className="font-sans text-base text-brand-bonewhite">{publicHoursLine()}</span>
                     {extraHours && <span className="block font-sans text-sm text-brand-muted mt-1">{extraHours}</span>}
                   </span>
                 </div>

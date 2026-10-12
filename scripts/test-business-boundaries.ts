@@ -6,6 +6,9 @@ assert.equal(canPublish({...fact,lastVerified:'not-a-date'}),false,'Malformed ve
 assert.equal(canPublish({...fact,lastVerified:'2026-09-05',source:''}),false,'Missing provenance must fail closed');
 assert.equal(canPublish({...fact,lastVerified:'2026-09-05',source:'Owner-approved current evidence'}),true);
 assert.equal(publicPostalAddress('Orillia','L3V').addressLocality,'Barrie','Service city must not become an invented business address');
-assert.equal('postalCode' in publicPostalAddress(),false,'Incomplete/unconfirmed postal code must not be asserted');
+assert.equal(publicPostalAddress('Orillia','L3V').postalCode,'L4N 7J1','Service postal root must not replace the business postal code');
+assert.equal(publicPostalAddress().streetAddress,'8 Milne Court','Confirmed street address must match the Google Business Profile');
+assert.equal(canPublish(BUSINESS.addressPolicy),true,'Street address publishes only as a confirmed, dated fact');
+assert.equal(canPublish(BUSINESS.hours),true,'Hours publish only as a confirmed, dated fact');
 assert.doesNotMatch(publicClaimCopy(BUSINESS.reviews.aggregate,'Verified Google reviews'),/reviews are available/i,'Unknown reviews must not become an availability claim');
 console.log('Evidence publication boundaries: PASS');

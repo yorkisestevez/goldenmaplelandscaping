@@ -130,15 +130,20 @@ export const BUSINESS = {
     ),
   },
 
-  addressPolicy: published(
-    { kind: 'service_area_business' as const, publicStreetAddress: false, publicLocality: 'Barrie', region: 'ON', country: 'CA', postalCodePrefix: 'L4N' },
-    'Existing schema publishes Barrie/ON/L4N only; no street address is present',
-    'Whether a residential street address should be public remains unresolved.',
-  ),
-  hours: published(
-    [{ days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:00', closes: '18:00' }],
-    'Existing root and SEO schema',
-  ),
+  addressPolicy: {
+    value: { kind: 'service_area_business' as const, publicStreetAddress: true, streetAddress: '8 Milne Court', publicLocality: 'Barrie', region: 'ON', country: 'CA', postalCode: 'L4N 7J1', postalCodePrefix: 'L4N' },
+    status: 'confirmed' as const,
+    lastVerified: '2026-10-12',
+    source: 'Google Business Profile read live 2026-10-12 (8 Milne Ct, Barrie, ON L4N 7J1); owner locked this as the canonical name/address/phone on 2026-09-06.',
+    notes: 'Must match the Google Business Profile character for character. If the profile ever hides the street address, set publicStreetAddress to false here in the same change.',
+  },
+  hours: {
+    value: [{ days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], opens: '08:00', closes: '18:00' }],
+    status: 'confirmed' as const,
+    lastVerified: '2026-10-12',
+    source: 'Google Business Profile read live 2026-10-12: 8 a.m.–6 p.m. every day.',
+    notes: 'Mirrors the owner-set Google Business Profile hours. Change both together.',
+  },
   urls: {
     facebook: published('https://www.facebook.com/GoldenMaplegroup', 'Existing root and SEO schema'),
     instagram: {
@@ -268,10 +273,18 @@ export const publicContact = {
   ...BUSINESS.serviceArea.secondary.value,
 ] as const;
 
+/** Hours as one readable line, e.g. "Monday–Sunday, 8:00 AM–6:00 PM". */
+export function publicHoursLine(): string {
+  const clock = (t: string) => { const [h, m] = t.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`; };
+  return BUSINESS.hours.value.map((h) => `${h.days.length > 1 ? `${h.days[0]}–${h.days[h.days.length - 1]}` : h.days[0]}, ${clock(h.opens)}–${clock(h.closes)}`).join('; ');
+}
+
 /** Service landing-page arguments are kept compatible, never used as branch addresses. */
 export function publicPostalAddress(_serviceLocality?: string, _servicePostalCode?: string) {
+  const policy = BUSINESS.addressPolicy;
   return {
     '@type': 'PostalAddress',
+    ...(policy.value.publicStreetAddress && canPublish(policy) ? { streetAddress: policy.value.streetAddress, postalCode: policy.value.postalCode } : {}),
     addressLocality: BUSINESS.addressPolicy.value.publicLocality,
     addressRegion: BUSINESS.addressPolicy.value.region,
     addressCountry: BUSINESS.addressPolicy.value.country,

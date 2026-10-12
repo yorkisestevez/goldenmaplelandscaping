@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { BUSINESS, publicContact, publicClaimCopy } from '../src/data/business.ts';
+import { BUSINESS, publicContact, publicClaimCopy, publicHoursLine, publicPostalAddress } from '../src/data/business.ts';
 import { OWNER_FACTS, googleReviewBadge, ownerFact, ownerLink } from '../src/data/ownerFacts.ts';
 
 const root = resolve(import.meta.dirname, '..');
@@ -11,7 +11,8 @@ function line(label: string, value: string | null): string {
 }
 
 function renderBusinessBrief() {
-  const hours = BUSINESS.hours.value.map(h => `${h.days.join(', ')} ${h.opens}–${h.closes}`).join('; ');
+  const hours = publicHoursLine();
+  const address = publicPostalAddress();
   const extraHours = ownerFact(OWNER_FACTS.extraHours);
   const areas = [...BUSINESS.serviceArea.primary.value, ...BUSINESS.serviceArea.secondary.value].join(', ');
   const reviewsUrl = ownerLink(OWNER_FACTS.googleReviewsUrl);
@@ -34,7 +35,7 @@ function renderBusinessBrief() {
 ${line('Founded', founded)}- **Phone:** ${publicContact.phoneDisplay} (${publicContact.phoneTel})
 - **Email:** ${publicContact.email}
 - **Website:** ${BUSINESS.canonicalUrl}
-- **Based in:** ${BUSINESS.addressPolicy.value.publicLocality}, ${BUSINESS.addressPolicy.value.region}. No street address is published.
+- **Address:** ${'streetAddress' in address ? `${address.streetAddress}, ${address.addressLocality}, ${address.addressRegion} ${address.postalCode}` : `${address.addressLocality}, ${address.addressRegion}`}
 - **Office hours:** ${hours}${extraHours ? `; ${extraHours}` : ''}
 ${line('Response', response)}${reviewsUrl ? `- **Google reviews:** ${reviewsUrl}${reviewLine ? ` (${reviewLine})` : ''}\n` : ''}${line('Liability coverage', insurance)}${line('WSIB', wsib)}${line('Workmanship terms', warranty)}${line('Certifications', certs)}${line('Project minimum', minimum)}
 ## What we build
