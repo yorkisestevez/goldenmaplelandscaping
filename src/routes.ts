@@ -113,6 +113,7 @@ export default [
   route('resources/hpb-vs-limestone-screenings-barrie', 'pages/blog/HpbVsLimestoneScreeningsBarrie.tsx'),
 
   route('resources/best-pavers-ontario-winters', 'pages/blog/BestPaversOntarioWinters.tsx'),
+  route('resources/front-steps-heaving-barrie', 'pages/blog/FrontStepsHeavingBarrie.tsx'),
 
   // Locations
   route('locations/barrie', 'pages/locations/Barrie.tsx'),
