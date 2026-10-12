@@ -42,7 +42,7 @@ const owned = (id, project, master, extra = {}) => ({
 });
 
 export const SOURCES = [
-  // Barrie bungalow — interlocking patio behind a brick bungalow
+  // Barrie gazebo patio — slug kept for URL stability; the house is not a bungalow (owner, 2026-10-12)
   owned('barrie-bungalow-patio-1', 'barrie-bungalow-patio', `${S26}/IMG_3743.jpg`),
   owned('barrie-bungalow-patio-2', 'barrie-bungalow-patio', `${S26}/Barrie1.jpeg`),
 

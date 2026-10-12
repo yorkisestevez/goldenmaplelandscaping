@@ -94,15 +94,15 @@ export interface ProjectRecord {
 export const PROJECTS: readonly ProjectRecord[] = [
   {
     slug: 'barrie-bungalow-patio',
-    title: 'Bungalow patio with gazebo',
+    title: 'Backyard patio with gazebo',
     town: 'Barrie',
     category: 'Patios & interlocking',
-    summary: 'Interlocking paver patio behind a brick bungalow, sized for a gazebo-covered dining area and a barbecue corner, with a new lawn on three sides.',
+    summary: 'Interlocking paver patio behind a brick home, sized for a gazebo-covered dining area and a barbecue corner, with a new lawn on three sides. Techo-Bloc pavers supplied by Carr Landscape Depot in Barrie.',
     cover: 'barrie-bungalow-patio-1',
     instagramPermalink: 'https://www.instagram.com/p/DbXDqSfjfZp/',
     photos: [
-      { id: 'barrie-bungalow-patio-1', alt: 'Interlocking paver patio with a gazebo-covered dining set behind a brick bungalow in Barrie, ON' },
-      { id: 'barrie-bungalow-patio-2', alt: 'Paver patio and side entrance steps beside a brick bungalow in Barrie, ON, with planters and a gazebo' },
+      { id: 'barrie-bungalow-patio-1', alt: 'Interlocking paver patio with a gazebo-covered dining set behind a brick home in Barrie, ON' },
+      { id: 'barrie-bungalow-patio-2', alt: 'Paver patio and side entrance steps beside a brick home in Barrie, ON, with planters and a gazebo' },
     ],
   },
   {
@@ -250,7 +250,7 @@ export const HOME_HERO_PROJECT = getProject('barrie-bungalow-patio')!;
 export const HOME_HERO: ImageRef = portfolioImage(
   'barrie-bungalow-patio-1',
   'full',
-  'Completed interlocking paver patio with a gazebo-covered dining area behind a brick bungalow in Barrie, ON',
+  'Completed interlocking paver patio with a gazebo-covered dining area behind a brick home in Barrie, ON',
 );
 
 export { CARD_SIZES, FULL_SIZES };
