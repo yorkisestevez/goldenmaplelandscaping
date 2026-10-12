@@ -242,8 +242,8 @@ export interface RailSegment { a: PlanPoint; b: PlanPoint; edge: EdgeName | 'Not
 
 /**
  * Railing runs around the outline: classifies each polygon edge, drops edges
- * against the house (ledger, no rail), and splits the stair edge around the
- * opening (the skip logic DeckDiagram implements per-edge inline).
+ * against the house wall (a ledger, or a freestanding edge on that wall), and
+ * splits the stair edge around the opening.
  */
 export function getRailingSegments(
   data: DeckData,
@@ -268,7 +268,7 @@ export function getRailingSegments(
     else if (vertical && Math.abs(a.x - fp.bounds.w) < EPS) edge = 'Right';
     else edge = fp.isCurved && a.y > fp.bounds.h - EPS ? 'Curve' : 'Notch';
 
-    if (contact?.isContactEdge(i)) continue; // house side — ledger, no rail
+    if (contact?.isContactEdge(i)) continue; // against the house wall — no automatic guard
 
     // Cut only the physical polygon edge carrying the opening, including notch/arc segments.
     if(stair && (stair.edgeIndex===i || (stair.edgeIndex===undefined && edge===stair.edge))){

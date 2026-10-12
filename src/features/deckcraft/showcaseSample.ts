@@ -4,7 +4,7 @@ import {DEFAULT_DECK} from './defaults';
 import {EXTERIOR_LOOKS,applyLook} from './houseLooks';
 import {getHouseConfig} from './houseSettings';
 import {houseOutline} from './houseFootprint';
-import {buildDeckTakeoff} from './deckTakeoff';
+import {buildDeckTakeoff,guardRuns} from './deckTakeoff';
 import {getFootprint,getStairPlacement} from './lib/deckGeometry';
 import {stairFootprints,planGapIn,fireOutline} from './fireFeatureModel';
 import {createYardFeature} from './yardCreateEdits';
@@ -144,7 +144,6 @@ export function ontarioShowcaseDesign():DeckData{
   deckFinishes:{border:'tt_prime_plus:Dark Cocoa',railingColor:'Textured Black'},
   stairFlights:1,stairWidth:96,stairType:'Straight',stairPosition:'Front',stairOffset:50,
   stairRiserCount:5,stairTreadDepthIn:11,
-  railSections:[{id:'house-wall',level:1,edgeId:'rect-back',startPct:0,endPct:100,enabled:false}],
   houseVisible:true,houseConfig:house,housePlacement:{anchor:'center',offsetIn:0},
   terrainConfig:{widthFt:LOT_W,depthFt:LOT_D,elevationIn:0,slopePct:0},
   lightingPreviewOn:true,autoLighting:{posts:true,stairs:true},
@@ -234,7 +233,7 @@ export function ontarioShowcaseDesign():DeckData{
   'The pergola is freestanding, not attached to the house. Eight posts sit tight against the outside beam faces (house beam on the house side, front beam on the yard side) on engineer-designed combined footings. House posts at 1, 8.5, 21.5 and 29 ft keep each span under the 23 ft LOUSOL limit. Front posts at 1, 10.33, 19.67 and 29 ft flank the stair. Interior posts need a 22-24 in bell or pad. Use rated post bases, hurricane ties and diagonal 2x6 bracing in both end bays.',
   'Posts drop through the deck. Frame headers and blocking around each with about a 1/2 in gap, and do not notch the posts. The preview does not cut those holes. Shifted joists keep every post clear of a joist. Drain each post in solid pipe to daylight, away from the piers and the foundation.',
   `LOUSOL custom, black, one roof of about ${roofM2.toFixed(1)} m². A permit is required, and the roof needs LOUSOL's sealed design. Closed-louver snow is about 2.4 kPa against their 55 psf limit; confirm uplift. Snow guards on the house roof, or a setback so snow can slide off.`,
-  'The guard is 36 in with openings of 4 in or less. Guard posts are the aluminum rail posts, separate from the pergola posts. The house-wall guard is off so the slider stays clear; the wall is the barrier there.',
+  'Guards are 36 in, openings of 4 in or less, on the ends and yard side, open at the stair. The house edge has no guard. The 16 in gap gets a flashed trim board or rim. Posts are aluminum rail posts, separate from the pergola posts.',
   'The stair is an 8 ft centre flight: 5 risers at 7.2 in, 4 treads at an 11 in run, 11 stringers at 10 in o.c., a doubled front rim at the stair, and a handrail on both sides. The crema terrace landing is at least the stair width by 36 in deep, with a concrete strip under the pavers at the stair foot.',
  ].join(' ');
  if(data.scopeOfWork.length>2000)throw Error(`The build notes exceed the scope field (${data.scopeOfWork.length}).`);
@@ -397,7 +396,15 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
  if(data.foundationDepthIn!==48||data.houseCantileverIn!==16||data.stairRiserCount!==5||data.stairTreadDepthIn!==11)issues.push('The piers, house-side beam, or stair rise and run are not the reviewed sizes.');
  const grade=tk.flights.find(f=>f.kind==='grade'&&!f.id.endsWith('-upper')&&!f.id.endsWith('-lower'));
  if(!grade||grade.risers!==5||Math.abs(grade.rise-7.2)>0.05||Math.abs(grade.run-11)>0.05)issues.push('The stair is not 5 risers at 7.2 in and an 11 in run.');
- if(!data.railSections?.some(s=>s.edgeId==='rect-back'&&s.enabled===false))issues.push('The house-wall guard still crosses the slider.');
+ const guards=guardRuns(tk).filter(r=>Math.abs(r.a.y-r.b.y)<.5&&r.a.y>data.height-1);
+ const deckLen=data.length*12;
+ if(guards.some(r=>Math.abs(r.a.z)<1&&Math.abs(r.b.z)<1))issues.push('A guard still runs along the house side of the deck.');
+ if(!guards.some(r=>Math.abs(r.a.x)<2&&Math.abs(r.b.x)<2)||!guards.some(r=>Math.abs(r.a.x-data.width*12)<2&&Math.abs(r.b.x-data.width*12)<2))issues.push('An end guard is missing.');
+ if(!guards.some(r=>Math.abs(r.a.z-deckLen)<2&&Math.abs(r.b.z-deckLen)<2))issues.push('The yard-side guard is missing.');
+ if(guards.some(r=>Math.abs(r.a.z-deckLen)<2&&Math.hypot(r.b.x-r.a.x,r.b.z-r.a.z)>data.width*12-24))issues.push('The yard-side guard is not open at the stair.');
+ const finished=deck.deckingFootprint?.outline??[];
+ if(finished.some(p=>p.y<-0.05))issues.push('The house-side decking enters the wall.');
+ if(!(deck.rim??[]).some(r=>Math.abs(r.a.z)<.5&&Math.abs(r.b.z)<.5))issues.push('The house-side rim is missing.');
  if(data.catalogueRailingId!=='dk_contemporary'||data.deckFinishes?.railingColor!=='Textured Black')issues.push('The rail is not black aluminum.');
  if(data.pergola?.target.kind!=='deck'||data.pergola.roofFinish!=='black'||data.pergola.frameFinish!=='black'||data.pergola.lighting!=='perimeter-led'||(data.pergola.louverDeg??0)<70)issues.push('The pergola is not open black aluminium louvers on the deck with the LEDs on.');
  if(data.pergola?.customSize&&(data.pergola.customSize.heightFt*12-7<96||data.height+data.pergola.customSize.heightFt*12-7<148))issues.push('The pergola beam does not clear 8 ft at the house, or it crosses the picture-window heads.');
@@ -427,7 +434,7 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
   if(stations.some(p=>joistXs.some(x=>Math.abs(x-p.x)<3.24)))issues.push('A pergola post clips a joist.');
  }
  const notes=data.scopeOfWork??'';
- if(!notes.includes('1/2-1 in below the slider')||!notes.includes('8.5')||!notes.includes('21.5')||!notes.includes('23 ft')||!notes.includes('2.4 kPa')||!notes.includes('55 psf')||!notes.includes('Snow guards')||!notes.includes('solid pipe')||!notes.includes('helical')||!notes.includes('22-24')||!notes.includes('hurricane')||!notes.includes('2x6')||!notes.includes('concrete strip')||!notes.includes('11 stringers')||!notes.includes('doubled front rim'))issues.push('The build notes are missing a Joist re-check item.');
+ if(!notes.includes('1/2-1 in below the slider')||!notes.includes('8.5')||!notes.includes('21.5')||!notes.includes('23 ft')||!notes.includes('2.4 kPa')||!notes.includes('55 psf')||!notes.includes('Snow guards')||!notes.includes('solid pipe')||!notes.includes('helical')||!notes.includes('22-24')||!notes.includes('hurricane')||!notes.includes('2x6')||!notes.includes('concrete strip')||!notes.includes('11 stringers')||!notes.includes('doubled front rim')||!notes.includes('no guard')||!notes.includes('flashed trim'))issues.push('The build notes are missing a Joist re-check item.');
  if(/41 m|30\s*[x×]\s*30|30 ft maximum|Six posts|2\.5 kPa/i.test(notes))issues.push('The build notes still claim a 30 ft single span or the old roof area.');
  const table=data.landscapeObjects?.find(o=>o.id==='dining-table'),chairs=(data.landscapeObjects??[]).filter(o=>o.id.startsWith('dining-')&&o.assetId==='outdoor-chair');
  if(!table||table.widthIn!==96||table.depthIn!==42||table.supportFeatureId||chairs.length!==8||chairs.some(o=>o.supportFeatureId))issues.push('The dining set is not an 8-seat table on the deck.');

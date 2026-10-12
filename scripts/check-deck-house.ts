@@ -4,7 +4,9 @@ import {buildDeckTakeoff,guardRuns} from '../src/features/deckcraft/deckTakeoff'
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {getHardwareLayout} from '../src/features/deckcraft/hardwareLayout';
 import {catalogueAccessoryLayout} from '../src/features/deckcraft/catalogueAccessories';
-import {getHouseContact,exposedHouseLine,availableStairSides} from '../src/features/deckcraft/houseContact';
+import {getHouseContact,exposedHouseLine,availableStairSides,abuttingHouseEdges} from '../src/features/deckcraft/houseContact';
+import {edgeSectionId} from '../src/features/deckcraft/lib/edgeSections';
+import {getFootprint} from '../src/features/deckcraft/lib/deckGeometry';
 import {getHousePlacement,MIN_HOUSE_OVERLAP_IN} from '../src/features/deckcraft/housePlacement';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
 import {privacySides} from '../src/features/deckcraft/privacyScreens';
@@ -102,5 +104,25 @@ const unplaced=deck({width:20,houseConfig:house({widthFt:12})});
   ok(!calculateEstimate(deck({shape:'L-Shape'})).flags.some(f=>/do not bear/.test(f)),'The L-shape no longer needs a bearing warning');
   const flushCurve=deck({shape:'Curved',height:12,deckType:'Floating'});
   ok(calculateEstimate(flushCurve).flags.some(f=>/do not bear/.test(f)),'A flush-beam curved front is honestly flagged for a curved beam');
+}
+// 8. A freestanding edge on the house wall gets no automatic guard. The rim stays, the picture frame
+// stops at the wall, and a stretch past the house is still railed. An enabled section cannot put the guard back.
+{
+  const free=deck({deckType:'Freestanding',width:20,houseConfig:house({widthFt:12}),housePlacement:{anchor:'left',offsetIn:0},pictureFrameRows:1});
+  const m=buildDeckTakeoff(free),fp=m.levels[0].footprint,runs=guardRuns(m).filter(r=>Math.abs(r.a.y-free.height)<.5);
+  const onHouse=runs.filter(r=>Math.abs(r.a.z)<1&&Math.abs(r.b.z)<1);
+  ok(onHouse.every(r=>Math.min(r.a.x,r.b.x)>=144-.5),'No guard on the freestanding edge that abuts the house');
+  ok(onHouse.some(r=>Math.min(r.a.x,r.b.x)>=144-.5),'The stretch past the house still has a guard');
+  ok((m.levels[0].rim??[]).some(r=>Math.abs(r.a.z)<.5&&Math.max(r.a.x,r.b.x)<=144+.5),'The house-side rim stays');
+  ok(m.levels[0].deckingFootprint!.outline.every(p=>p.y>=-1e-6),'The picture frame stays flush along the whole back line');
+  ok(abuttingHouseEdges(free,fp).length===1,'Only the wall-length back edge abuts the house');
+  const id=edgeSectionId(getFootprint(free),abuttingHouseEdges(free,getFootprint(free))[0]);
+  const forced=buildDeckTakeoff({...free,railSections:[{id:'house',level:1,edgeId:id,startPct:0,endPct:100,enabled:true}]});
+  ok(!guardRuns(forced).some(r=>Math.abs(r.a.z)<1&&Math.abs(r.b.z)<1&&Math.max(r.a.x,r.b.x)<=144+.5),'An enabled section cannot restore a guard on the house wall');
+  const plain=buildDeckTakeoff(deck({deckType:'Freestanding'}));
+  ok(!guardRuns(plain).some(r=>Math.abs(r.a.z)<1&&Math.abs(r.b.z)<1&&Math.abs(r.a.y-36)<.5),'A freestanding deck has no guard along the house wall');
+  ok(guardRuns(plain).some(r=>Math.abs(r.a.x)<1&&Math.abs(r.b.x)<1),'The end guard stays on a freestanding deck');
+  const hidden=buildDeckTakeoff(deck({deckType:'Freestanding',houseVisible:false}));
+  ok(guardRuns(hidden).some(r=>Math.abs(r.a.z)<1&&Math.abs(r.b.z)<1),'A deck with the house hidden keeps the back guard');
 }
 console.log(`DECK HOUSE OK — ${checks} house position, ledger, exposed-edge framing, door-sill, pricing and persistence checks.`);
