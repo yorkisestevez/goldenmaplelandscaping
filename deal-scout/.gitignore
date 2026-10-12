@@ -1,0 +1,6 @@
+out/
+config.json
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
