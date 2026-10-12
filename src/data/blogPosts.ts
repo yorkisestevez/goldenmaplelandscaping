@@ -24,14 +24,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     image: "/images/projects/orillia-walkway.jpg",
   },
   {
-    slug: 'front-steps-heaving-barrie',
-    title: 'Why Front Steps Heave Every Winter in Barrie (and How to Fix Them for Good)',
-    excerpt: 'Front steps heave in Barrie because most sit above the 1.2 m frost line on frost-susceptible soil. Why it happens and the rebuild spec that stops it for good.',
-    category: 'Engineering',
-    readTime: '12 min',
-    image: '/images/projects/orillia-walkway.jpg',
-  },
-  {
     slug: "best-pavers-ontario-winters",
     title: "Best Pavers for Ontario Winters: What Freeze-Thaw Testing Means",
     excerpt: "Pavers that pass CSA A231.2 lose under 500 g/m² after 49 freeze-thaw cycles in 3% salt solution — what that means for Simcoe County winters.",
