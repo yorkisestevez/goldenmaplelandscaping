@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastRunAt": "2026-10-05T15:00:41.000Z",
+  "lastRunAt": "2026-10-12T10:00:00.000Z",
   "usedTopicIds": [
     "auto-001",
     "auto-002",
@@ -25,10 +25,11 @@
     "auto-021",
     "auto-022",
     "auto-023",
-    "auto-024"
+    "auto-024",
+    "auto-025"
   ],
   "publishedSlugs": [],
-  "currentDraft": "backyard-entertaining-wasaga-beach",
+  "currentDraft": "front-steps-heaving-barrie",
   "history": [
     {
       "topicId": "auto-001",
@@ -366,6 +367,21 @@
         "ok": true
       },
       "generatedBy": "muse-autopilot"
+    },
+    {
+      "topicId": "auto-025",
+      "slug": "front-steps-heaving-barrie",
+      "at": "2026-10-12T10:00:00.000Z",
+      "validation": {
+        "ok": true,
+        "errors": [],
+        "wordCount": 2702,
+        "linkCount": 6,
+        "hasTable": true,
+        "numericCount": 14
+      },
+      "generatedBy": "claude-cloud-routine",
+      "mode": "draft-pr"
     }
   ]
 }

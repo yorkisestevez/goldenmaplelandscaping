@@ -15,6 +15,14 @@ export interface BlogPostMeta {
 }
 
 export const BLOG_POSTS: BlogPostMeta[] = [
+    {
+    slug: "front-steps-heaving-barrie",
+    title: "Why Front Steps Heave Every Winter in Barrie (and How to Fix Them for Good)",
+    excerpt: "Barrie front steps heave through 50–80 freeze-thaw cycles annually. Learn the root causes and how a proper drained base fixes them for good.",
+    category: "Engineering",
+    readTime: "10 min",
+    image: "/images/projects/orillia-walkway.jpg",
+  },
   {
     slug: "best-pavers-ontario-winters",
     title: "Best Pavers for Ontario Winters: What Freeze-Thaw Testing Means",
