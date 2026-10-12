@@ -8,7 +8,7 @@
  *
  * Do not invent values. Insurance amount, WSIB, warranty term, founding year,
  * years in business, Google rating/count, certifications, response time,
- * hours beyond Mon–Fri 8–6, and the project minimum are unknown until set here.
+ * hours beyond the published 8–6, and the project minimum are unknown until set here.
  * When a slot is complete, pages that already call ownerFact() / publicClaimCopy()
  * render it. No second edit is required.
  *
@@ -44,7 +44,7 @@ export const OWNER_FACTS = {
   } satisfies OwnerFactSlot,
   certifications: blank('Current, documentable certifications only. Example: "Landscape Ontario member; Techo-Bloc contractor program". Leave null if proof is not on file.'),
   responseTime: blank('A promise the owner will keep. Example: "Yorkis replies within 1 business day." Do not add Saturday hours or 24/7 here unless that is the real policy.'),
-  extraHours: blank('Hours beyond Mon–Fri 8:00–18:00. Example: "Saturday 9:00–13:00 for scheduled site visits." Leave null to keep the published weekday hours only.'),
+  extraHours: blank('Hours beyond the published 8:00–18:00 (BUSINESS.hours). Example: "Saturday 9:00–13:00 for scheduled site visits." Leave null to keep the published hours only.'),
   projectMinimum: blank('Smallest project the company wants, in the owner\'s words. Example: "Hardscape projects from $15,000; seasonal clean-ups quoted per property."'),
 } as const;
 
