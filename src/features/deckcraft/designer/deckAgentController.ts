@@ -138,7 +138,12 @@ export interface AgentSnapshot {
 }
 export type AgentResponse={ok:true;revision:number;snapshot:AgentSnapshot;changed:boolean;replayed?:boolean;result?:{url:string};interpretation?:{warnings:string[];summary:string[]};groundFit?:import('../groundFit').GroundFitResult}|{ok:false;error:{code:string;message:string};revision:number};
 export interface DeckAgentController {describe:()=>ReturnType<typeof descriptor>;read:()=>AgentSnapshot;preview:(request:unknown)=>Promise<AgentResponse>;execute:(request:unknown)=>Promise<AgentResponse>;subscribe:(listener:()=>void)=>()=>void;notify:()=>void;dispose:()=>void}
-export type DeckAgentApi=Pick<DeckAgentController,'describe'|'read'|'preview'|'execute'>;
+export type DeckAgentApi=Pick<DeckAgentController,'describe'|'read'|'preview'|'execute'>&{
+  /** Whether internal designer mode is on (no leads, no CRM, no conversion analytics, no paid AI). */
+  internalMode:()=>boolean;
+  /** Turn internal mode on with the staff token, or off with no token. */
+  setInternalMode:(enabled:boolean,token?:string)=>boolean;
+};
 class ControlError extends Error {constructor(public code:string,message:string){super(message);}}
 const fail=(message:string,code='invalid_command'):never=>{throw new ControlError(code,message);};
 const clone=<T,>(value:T):T=>structuredClone(value);
@@ -183,7 +188,7 @@ const nested:Record<string,Schema>={
   privacyScreens:[fields('id side lengthFt heightFt offsetPct lights enabled product design finish panels level edgeId')],
   railSections:[fields('id level edgeId startPct endPct enabled')],railDefault:true,
 };
-const designSchema:Record<string,Schema>={...fields('deckType municipality siteType soilCondition buildSeason intendedLoad foundation width length height cutoutWidth cutoutLength width2 length2 height2 cutoutWidth2 cutoutLength2 shape levels pattern deckingMaterial deckingColor framingSize boardWidth joistSpacing fasteningSystem pictureFrameRows hasInlay inlayLf railingType railingLf stairFlights stairWidth stairRiserCount stairTreadDepthIn stairType stairPosition stairOffset benchLf privacySqft hasDrainage hasDemo pergolaSqft stairEdgeId level2EdgeId level2FullStep lightingPreviewOn catalogueRailingId glassMount glassFinish borderFinish pictureFrameOverhangIn houseVisible houseWallHeightIn houseDoorOffset houseDoorWidthIn sceneLighting level2Position level2Offset stairTurn landingDepthIn foundationDepthIn projectKind buildRules'),...nested};
+const designSchema:Record<string,Schema>={...fields('deckType municipality siteType soilCondition buildSeason intendedLoad foundation width length height cutoutWidth cutoutLength width2 length2 height2 cutoutWidth2 cutoutLength2 shape levels pattern deckingMaterial deckingColor framingSize framingSpecies boardWidth joistSpacing fasteningSystem pictureFrameRows hasInlay inlayLf railingType railingLf stairFlights stairWidth stairRiserCount stairTreadDepthIn stairType stairPosition stairOffset benchLf privacySqft hasDrainage hasDemo pergolaSqft stairEdgeId level2EdgeId level2FullStep lightingPreviewOn catalogueRailingId glassMount glassFinish borderFinish pictureFrameOverhangIn houseVisible houseWallHeightIn houseDoorOffset houseDoorWidthIn sceneLighting level2Position level2Offset stairTurn landingDepthIn foundationDepthIn projectKind buildRules'),...nested};
 function safeTree(value:unknown,path='request',depth=0):void {
   if(depth>24)fail(`${path}: nesting exceeds 24 levels.`);
   if(value===null||typeof value==='string'||typeof value==='boolean')return;

@@ -3,6 +3,7 @@
  * Track once per kind per visit and optionally ping the CRM form so Sophie/Yorkis can follow up.
  */
 import {trackDeck} from './deckAnalytics';
+import {internalModeOn} from './internalMode';
 
 const KEY='gm_deckcraft_warm_lead';
 const FORM='deck-warm-lead';
@@ -18,12 +19,13 @@ function remember(sent:Set<string>){
 
 /** Record a warm-lead moment. Fires GA once per kind per visit; posts a lightweight CRM ping in production. */
 export function noteWarmLead(kind:WarmLeadKind,detail:{pricedSubtotal?:number;hasName?:boolean;hasAddress?:boolean}={}){
+  if(internalModeOn())return;
   const sent=remembered(),tag=`warm_${kind}`;
   if(!sent.has(tag)){
     sent.add(tag);remember(sent);
     trackDeck('deckcraft_output',`deck_warm_${kind}`);
   }
-  if(import.meta.env.DEV){
+  if(typeof import.meta.env==='undefined'||import.meta.env.DEV){
     // eslint-disable-next-line no-console
     console.log('[dev] warm lead',kind,detail);
     return;

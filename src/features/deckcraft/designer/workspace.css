@@ -16,6 +16,7 @@
 .dd-workspace-project{min-width:0;flex:1;display:flex;align-items:center;gap:18px;padding-left:12px;border-left:1px solid #ffffff1f}
 .dd-workspace-project h1{margin:0;color:#f5f4f0!important;font-size:13px;font-weight:500;letter-spacing:0!important}
 .dd-save-state{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:11px;color:#b9bfba}.dd-save-state i{width:5px;height:5px;background:#9fc0a2;border-radius:50%}
+.dd-internal-badge{display:inline-flex;align-items:center;margin-left:8px;padding:2px 8px;border-radius:999px;background:#8f532e;color:#fffaf2;font-size:11px;line-height:1.4;white-space:nowrap}
 .dd-workspace-tools{display:flex;align-items:center;gap:10px;flex:none;position:relative}
 .dd-undo-actions{display:flex;gap:2px}.dd-undo-actions button{width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:#e9e9e3}.dd-undo-actions button:hover{background:#ffffff12}.dd-undo-actions button:disabled{opacity:.35;cursor:default}
 .dd-workspace-files{position:relative}.dd-workspace-files>summary{display:flex;align-items:center;justify-content:center;gap:12px;min-width:72px;min-height:44px;padding:0 12px;border:1px solid #ffffff28;border-radius:8px;font-size:13px;cursor:pointer;list-style:none}.dd-workspace-files>summary::-webkit-details-marker{display:none}.dd-workspace-files>summary:hover,.dd-workspace-files[open]>summary{background:#ffffff0d}

@@ -14,13 +14,13 @@ For each entry in `src/features/deckcraft/drawings/codeReferences.ts`:
 
 | ID | Reference to check | Record the relevant drawing decision |
 | --- | --- | --- |
-| joists | OBC 2024, Table 9.23.4.2.-A | Joist size, spacing, grade, span and bridging |
-| beams | OBC 2024, Table 9.23.4.2.-H | Ply count, supported length, beam span and bearing |
+| joists | OBC 2024, Table 9.23.4.2.-A (Article 9.23.4.2.) | Joist size, spacing, grade, span and bridging |
+| beams | OBC 2024, Table 9.23.4.2.-H (Article 9.23.4.2.) | Ply count, supported length, beam span and bearing |
 | blocking | OBC 2024, Article 9.23.9.4. | Bridging or blocking spacing |
 | posts | OBC 2024, Article 9.17.4.1. | Post size and any exception |
-| guards | OBC 2024, Article 9.8.8.3. | Height relative to grade and stair guard conditions |
-| stairs | OBC 2024, Table 9.8.4.1. | Rise, run and scope of the cited table |
-| barrie | City of Barrie, Deck Specs | Footing, ledger, post, guard and stair details used |
+| guards | OBC 2024, Articles 9.8.8.1. and 9.8.8.3. | Where a guard is required, and height relative to grade |
+| stairs | OBC 2024, Table 9.8.4.1. and Article 9.8.7.1. | Rise, run, and handrail above three risers |
+| barrie | City of Barrie, Deck Specs (cites OBC 9.8.8.1.(1), 9.8.8.3., SB-7, 9.8.4.2.) | Footing, ledger, post, guard and stair details used |
 | springwater | Township of Springwater, Building Guide - Decks, March 2026 | Two-ply beam conditions and local use |
 
 Document any mismatch as a design issue and correct the calculation or drawing before closing its reference.

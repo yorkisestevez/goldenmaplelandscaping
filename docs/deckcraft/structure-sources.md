@@ -81,8 +81,9 @@ spans assume this.
   cantilever rule allows, rounded down to the inch.
 - **Freestanding decks:** a house-side beam, set in by the same cantilever as the front. Zones along one house edge
   share the smallest of those, so the house-side beam is one straight line.
-- **Beam size:** the same lumber size as the joists, as in Barrie's "same depth as joists" template.
+- **Beam size:** designs saved before the structural review keep joist-depth lumber, as in Barrie's "same depth as joists" template. A new design (`2026-10-struct`) picks the beam on its own: the shallowest 2-ply that can stand 8 ft apart, otherwise the shallowest 3-ply that can.
   - 2-ply when its posts can stand at least 8 ft apart; otherwise 3-ply.
+  - Hem-Fir and D.Fir-L change joist spans only (with-bridging cells whose S-P-F column matches Table 9.23.4.2.-A). Beams stay on the S-P-F tables, and the design says so.
 - **Posts:**
   - Posts sit 12 in in from the beam ends and are evenly spaced within the beam's span.
   - They are never closer than 24 in, so two pier footings don't overlap (the rule
@@ -102,7 +103,8 @@ spans assume this.
   uses the stricter rule, 16 in, plus the 1/6 limit.
 - **2-ply beams:** Severn prohibits them, and the code table has none. The engine uses Springwater's 2-ply values only
   up to their stated 3.6 m supported length.
-- **Ledger on brick veneer:** Barrie prohibits it. The engine takes the takeoff's ledger or no-ledger choice as
-  given. It does not decide from the wall finish.
+- **Ledger on brick veneer:** Barrie prohibits it. A new design blocks a ledger when the house cladding is brick, stone, ledgestone, fieldstone, Norman brick or Roman brick, and frames a house-side beam instead. Saved designs keep the ledger they were quoted with.
+- **Snow outside Barrie:** Barrie (Ss 2.5, Sr 0.4) stays on the 1.9 kPa tables. Toronto uses a published summary (Ss 1.4, Sr 0.4; confirm SB-1) that still leaves 1.9 kPa governing. Simcoe County, Burlington–Oakville and Rural-Other warn that they are not the Barrie station. Penetanguishene at about 1.94 kPa remains the example of a site outside the tables.
+- **Footings, guards, stairs and posts** on a new design are checked in `structure/structuralReview.ts`. Pier diameter uses a DeckCraft planning bearing (unknown/clay 75 kPa, sandy 150 kPa, fill 50 kPa), not an OBC table. Post knee-brace (72 in), 6x6 (108 in) and freestanding (48 in) limits are planning thresholds; OBC 9.17.4.1 only sets the 140 mm minimum post. Guards use 600 mm (OBC 9.8.8.1.(1)). Stair rise and run use Barrie's print of Table 9.8.4.1 (125–200 mm, 255–355 mm). A handrail is required above 3 risers (OBC 9.8.7.1.). Frost depth is 48 in (1.2 m, OBC 9.12.2.2) unless the deck is floating or on helical piles or deck blocks.
 - **Posts:** Barrie and the code (9.17.4.1) call for 6x6 posts; some guides allow 4x4. Post sizing is priced
   elsewhere in the takeoff, not in this engine.

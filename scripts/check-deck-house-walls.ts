@@ -23,6 +23,7 @@ import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
 import {ProposalSheet} from '../src/features/deckcraft/ProposalSheet';
 import {HOUSE_CASES,ORIGINAL_CLADDINGS,SKIN_WALLS,exactDigest,shapesFor} from './deck-house-finishes-cases';
 import type {Box} from '../src/features/deckcraft/deckTakeoff';
+import {MASONRY_CLADDINGS} from '../src/features/deckcraft/structure/structuralReview';
 import type {DeckData,HouseBlock,HouseCladding,HouseConfig,HouseFinish,HouseOpening} from '../src/features/deckcraft/types';
 
 /**
@@ -215,10 +216,14 @@ const NEW_KEYS=/"(wallFinishes|wainscot|gableAccent|finish)"/;
       ok(wearsLook(next,look)&&JSON.stringify(applyLook(next,look))===JSON.stringify(next),`${look.name}: applied, and applying it again changes nothing`);
       const after:DeckData={...d,houseConfig:next};
       eq(validateDesign(after).houseConfig,parseDesign(serializeDesign(after)).houseConfig,`${look.name}: saves and loads`);
-      eq(buildDeckTakeoff(after).quantities,buildDeckTakeoff(d).quantities,`${look.name}: no quantity moves`);
       const [a,b]=[calculateEstimate(after),calculateEstimate(d)];
-      eq(a.sections.map(s=>[s.title,s.total]),b.sections.map(s=>[s.title,s.total]),`${look.name}: no price moves`);
-      ok(a.total===b.total,`${look.name}: the same total`);
+      if(look.set.cladding&&(MASONRY_CLADDINGS as readonly string[]).includes(look.set.cladding)&&d.deckType!=='Freestanding'){
+        ok(a.total!==b.total&&a.flags.some(flag=>flag.includes('Ledger blocked')),`${look.name}: masonry cladding blocks the ledger and changes the price`);
+      }else{
+        eq(buildDeckTakeoff(after).quantities,buildDeckTakeoff(d).quantities,`${look.name}: no quantity moves`);
+        eq(a.sections.map(s=>[s.title,s.total]),b.sections.map(s=>[s.title,s.total]),`${look.name}: no price moves`);
+        ok(a.total===b.total,`${look.name}: the same total`);
+      }
       ok(JSON.stringify(next.wallFinishes)===JSON.stringify(house.wallFinishes)&&JSON.stringify(next.openings)===JSON.stringify(house.openings)&&JSON.stringify(next.footprint)===JSON.stringify(house.footprint),`${look.name}: walls, blocks, doors and windows keep their own finishes`);
     }
   }
@@ -232,7 +237,7 @@ const NEW_KEYS=/"(wallFinishes|wainscot|gableAccent|finish)"/;
   }
   // The estimate key leaves the house's looks out: all of houseConfig, and a block's finish in the house fit.
   const estimateHook=read('features/deckcraft/designer/useDeckEstimate.ts'),fit=/houseFit:[^\n]*?rects\.map\(b=>\[([^\]]*)\]\)/.exec(estimateHook);
-  ok(/houseConfig:undefined/.test(estimateHook)&&fit&&!/finish|wainscot|gable|wallFinishes/.test(fit[1])&&!/wallFinishes|wainscot|gableAccent/.test(estimateHook),'The estimate key never sees a wall finish, wainscot, gable accent or look');
+  ok(/houseConfig:undefined/.test(estimateHook)&&/houseCladding:data\.houseConfig\?\.cladding/.test(estimateHook)&&fit&&!/finish|wainscot|gable|wallFinishes/.test(fit[1])&&!/wallFinishes|wainscot|gableAccent/.test(estimateHook),'The estimate key sees whole-house cladding, which can block a ledger, and never a wall finish, wainscot or gable accent');
   ok(designFeatures(dressed).includes('deck_house_exterior')&&designFeatures(deck({wainscot:W36})).includes('deck_house_exterior'),'The funnel counts dressed houses');
 }
 
@@ -270,7 +275,7 @@ const NEW_KEYS=/"(wallFinishes|wainscot|gableAccent|finish)"/;
   ok(/aria-label="Walls to finish"/.test(studio)&&/The whole house/.test(studio)&&/A whole block/.test(studio)&&/One wall/.test(studio),'The walls tab picks the whole house, a block or a wall');
   ok(/aria-label="Wainscot height"/.test(studio)&&/WAINSCOT_HEIGHT_IN/.test(studio)&&/Gable accent/.test(studio),'Wainscot (cladding, colour, height within the limits) and gable accent controls');
   ok(/Apply to the whole house/.test(studio)&&/applyToBlock/.test(studio)&&/Reset this wall/.test(studio)&&/resetBlock/.test(studio),'Apply to a block or the whole house, and reset');
-  ok(/appearance only|never priced/i.test(studio)&&/never changes a size, a shape or the price/.test(studio),'The studio says looks and finishes are appearance only');
+  ok(/appearance only|never priced/i.test(studio)&&/never changes a size or a shape/.test(studio)&&/Brick or stone cladding can change the ledger/.test(studio),'The studio says looks keep size and shape, and that brick or stone can change the ledger price');
   // Walls a customer can see and pick are exactly the houseWallSpecs walls with an exposed stretch.
   const d=HOUSE_CASES['blocks/bump-wing-garage'],specs:HouseWallSpec[]=houseWallSpecs(d,getHouseConfig(d));
   eq(specs.map(s=>s.wall.id),getHouseWalls(d).map(w=>w.id),'Wall ids come from houseWallSpecs');

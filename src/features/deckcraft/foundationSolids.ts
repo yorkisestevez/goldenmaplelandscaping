@@ -7,7 +7,7 @@ export function foundationSolids(d:FoundationDatum):{boxes:(Box&{part:'deck-bloc
  const grade=d.gradeElevationIn;
  if(d.foundation==='Deck Blocks')boxes.push({part:'deck-block',x:d.x,y:grade+3,z:d.z,w:12,h:6,d:12});
  else if(d.foundation==='Helical Piles'){cylinders.push({part:'pile-shaft',x:d.x,z:d.z,bottom:d.bottomElevationIn,top:d.headTopElevationIn,radius:1.4},{part:'pile-helix',x:d.x,z:d.z,bottom:d.bottomElevationIn+4,top:d.bottomElevationIn+4.3,radius:6});}
- else cylinders.push({part:'concrete-pier',x:d.x,z:d.z,bottom:d.bottomElevationIn,top:d.headTopElevationIn,radius:6});
+ else cylinders.push({part:'concrete-pier',x:d.x,z:d.z,bottom:d.bottomElevationIn,top:d.headTopElevationIn,radius:d.pierRadiusIn??6});
  // Schematic steel shoe: seat touches the timber; pedestal bridges the intentional standoff.
  const seat=d.postBaseElevationIn,head=d.headTopElevationIn,gap=Math.max(0,seat-.4-head);
  boxes.push({part:'post-base',x:d.x,y:seat-.2,z:d.z,w:7,h:.4,d:7});

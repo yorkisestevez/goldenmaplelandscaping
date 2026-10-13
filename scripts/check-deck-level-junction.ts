@@ -86,7 +86,7 @@ for(const [name,c] of Object.entries(cases)){
 
 // 2. Geometry of every case, and of multi-level designs on the live default (one-row flush frame, 2026-10 rules).
 const fresh=newDefaultJunctionCases();
-ok(Object.keys(fresh).length>=2&&Object.values(fresh).every(c=>hasPictureFrame(c.design)&&c.design.buildRules==='2026-10'),'The geometry also covers the new default: framed, under the 2026-10 rules');
+ok(Object.keys(fresh).length>=2&&Object.values(fresh).every(c=>hasPictureFrame(c.design)&&c.design.buildRules==='2026-10-struct'),'The geometry also covers the new default: framed, under the current structural-review rules');
 for(const [name,c] of Object.entries({...cases,...fresh})){
   const d=c.design,e=calculateEstimate(d,DECK_SETTINGS),m=e.model,fell=m.issues.some(i=>i.includes('does not fit on the lower level'));
   if(fell)fallbacks++;

@@ -1,5 +1,5 @@
 import {SOURCES,type SourceId} from './sources';
-import {BEAM_CANTILEVER,BEAM_TABLE_2PLY,BEAM_TABLE_3PLY,BLOCKING,JOIST_CANTILEVER,JOIST_TABLE} from './tableData';
+import {BEAM_CANTILEVER,BEAM_TABLE_2PLY,BEAM_TABLE_3PLY,BLOCKING,JOIST_CANTILEVER,JOIST_TABLE,JOIST_TABLE_SPECIES} from './tableData';
 
 /**
  * Span lookups for the deck framing engine. The numbers live in tableData.ts, transcribed from the public references
@@ -12,6 +12,8 @@ import {BEAM_CANTILEVER,BEAM_TABLE_2PLY,BEAM_TABLE_3PLY,BLOCKING,JOIST_CANTILEVE
  * These are planning assumptions for a design tool, never an engineering certification or a permit approval.
  */
 export type JoistSize='2x8'|'2x10'|'2x12';
+/** Absent or SPF is S-P-F No. 1/No. 2. Hem-Fir and D.Fir-L change joist spans only. */
+export type FramingSpecies='SPF'|'Hem-Fir'|'D.Fir-L';
 export interface BeamChoice{size:JoistSize;plies:2|3}
 
 const MM_PER_IN=25.4;
@@ -41,9 +43,9 @@ export const DESIGN={
   minDropBeamUndersideIn:6,
 } as const;
 
-export function joistSpanLimitIn(size:JoistSize,spacingIn:12|16):number{
-  const m=JOIST_TABLE.metres[size]?.[spacingIn];
-  if(!m)throw new Error(`No joist span for ${size} at ${spacingIn} in`);
+export function joistSpanLimitIn(size:JoistSize,spacingIn:12|16,species:FramingSpecies='SPF'):number{
+  const m=species==='SPF'?JOIST_TABLE.metres[size]?.[spacingIn]:JOIST_TABLE_SPECIES[species][size]?.[spacingIn];
+  if(!m)throw new Error(`No joist span for ${species} ${size} at ${spacingIn} in`);
   return metresToIn(m);
 }
 
@@ -81,6 +83,21 @@ export function pickBeam(joistSize:JoistSize,supportedLengthIn:number):BeamChoic
   const three:BeamChoice={size:joistSize,plies:3};
   if(!beamSpanLimitIn(three,supportedLengthIn))throw new Error(`Supported length ${supportedLengthIn} in is past the beam table`);
   return three;
+}
+
+/** A beam chosen apart from the joist depth: the shallowest 2-ply that can stand DESIGN.targetPostSpacingIn apart,
+ * otherwise the shallowest 3-ply that can, otherwise the 3-ply with the longest tabulated span. S-P-F tables only. */
+export function pickBeamIndependent(supportedLengthIn:number):BeamChoice{
+  const sizes:JoistSize[]=['2x8','2x10','2x12'];
+  for(const size of sizes){const two:BeamChoice={size,plies:2};if(beamSpanLimitIn(two,supportedLengthIn)>=DESIGN.targetPostSpacingIn)return two;}
+  let best:BeamChoice|undefined,bestSpan=-1;
+  for(const size of sizes){
+    const three:BeamChoice={size,plies:3},span=beamSpanLimitIn(three,supportedLengthIn);
+    if(span>=DESIGN.targetPostSpacingIn)return three;
+    if(span>bestSpan){best=three;bestSpan=span;}
+  }
+  if(!best||bestSpan<=0)throw new Error(`Supported length ${supportedLengthIn} in is past the beam table`);
+  return best;
 }
 
 /** The references every framing result rests on, for proposals and drawings to cite. */

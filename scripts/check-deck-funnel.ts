@@ -69,7 +69,7 @@ ok(!designFeatures(design({width:22,length:12,houseConfig:{...house,widthFt:26,d
 // The border (owner 2026-10-04): new designs start with one row, so only a departure from it is a choice. A save from
 // before the default (legacy build rules, rows 0) was never given the border and is not counted as removing it;
 // `deck_border_rows` (one or more rows) is retired so its GA4 history keeps that meaning.
-ok(DEFAULT_DECK.pictureFrameRows===1&&DEFAULT_DECK.buildRules==='2026-10','New designs start with a one-row picture frame under the 2026-10 build rules');
+ok(DEFAULT_DECK.pictureFrameRows===1&&DEFAULT_DECK.buildRules==='2026-10-struct','New designs start with a one-row picture frame under the current structural-review rules');
 {
   const legacy=design({pictureFrameRows:0,buildRules:'legacy'}),unmarked=design({pictureFrameRows:0});delete unmarked.buildRules;
   ok(designFeatures(legacy).every(f=>!f.startsWith('deck_border'))&&designFeatures(unmarked).every(f=>!f.startsWith('deck_border')),`A legacy unframed save reports no border label (got ${designFeatures(legacy).join(', ')||'none'})`);

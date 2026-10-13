@@ -215,7 +215,7 @@ export function unsupportedJoistEnds(level:DeckLevel,contact?:{onContact(a:{x:nu
   // A joist end bears on a beam whose centre line is within the edge reach: the cantilever past a drop beam, or half
   // a flush edge beam's width. Zones of one level differ (each cantilever is held to a share of its own span), so
   // the largest applies.
-  const reach=Math.max(level.reference?.edgeReachIn??24,...(level.zones??[]).map(z=>z.reference.edgeReachIn))+1,loose:V3[]=[],beams=level.beams.filter(b=>b.role!=='hip'),hips=level.hips??[];
+  const reach=Math.max(level.reference?.edgeReachIn??24,level.zoneEdgeReachIn??0,...(level.zones??[]).map(z=>z.reference.edgeReachIn))+1,loose:V3[]=[],beams=level.beams.filter(b=>b.role!=='hip'),hips=level.hips??[];
   for(const j of level.joists){
     const k=Math.abs(j.b.z-j.a.z)<1e-6&&Math.abs(j.b.x-j.a.x)>1e-6?'x':'z',c=k==='z'?'x':'z';
     const [lo,hi]=j.a[k]<=j.b[k]?[j.a,j.b]:[j.b,j.a];

@@ -50,10 +50,11 @@ export function frameAngledBearing(framed:FramedZone,bearing:AngledBearing,offse
     const s=(ply-(ref.beam.plies-1)/2)*1.5;
     out.beams.push({a:{x:a.x+n.x*s+offset.x,y,z:a.y+n.y*s+offset.z},b:{x:b.x+n.x*s+offset.x,y,z:b.y+n.y*s+offset.z},width:1.5,depth:ref.beamDepthIn,role:'angled-beam'});
   }
-  // A post already standing within a foot of a station and within 6 in of the beam (a beam row's own post
-  // near the crossing) carries that station: the station moves onto it and no second footing goes in.
+  // A post already standing within a foot of a station and of the beam (a beam row's own post near the
+  // crossing, including one just past the beam end) carries that station: the station moves onto it and
+  // no second footing goes in. A 2-ply end can sit just over 6 in from the segment end.
   const at=(t:number)=>({x:a.x+u.x*t+offset.x,z:a.y+u.y*t+offset.z}),beam={a:{x:a.x+offset.x,y:a.y+offset.z},b:{x:b.x+offset.x,y:b.y+offset.z}};
-  const carrier=(t:number)=>{const s=at(t);return out.supports.find(p=>Math.hypot(p.x-s.x,p.z-s.z)<12&&distanceToSegment({x:p.x,y:p.z},beam.a,beam.b)<=6);};
+  const carrier=(t:number)=>{const s=at(t);return out.supports.find(p=>Math.hypot(p.x-s.x,p.z-s.z)<12&&distanceToSegment({x:p.x,y:p.z},beam.a,beam.b)<12);};
   const onBeam=(p:V3)=>Math.min(len,Math.max(0,(p.x-offset.x-a.x)*u.x+(p.z-offset.z-a.y)*u.y));
   const stations:number[]=[];
   for(const z of rowZsIn(framed))if(Math.abs(b.y-a.y)>1e-6&&(z-a.y)*(z-b.y)<=1e-6){const t=(z-a.y)/(b.y-a.y)*len;if(t>=-.5&&t<=len+.5)stations.push(Math.min(len,Math.max(0,t)));}

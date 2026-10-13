@@ -16,6 +16,7 @@ import {serializeDeckReleaseDesign} from '../src/features/deckcraft/deckRelease'
 import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
 import {HOUSE_CASES,ORIGINAL_CLADDINGS,SKIN_WALLS,exactDigest,shapesFor} from './deck-house-finishes-cases';
 import {designerSource} from './deck-designer-source';
+import {MASONRY_CLADDINGS} from '../src/features/deckcraft/structure/structuralReview';
 import type {DeckData,HouseCladding,HouseConfig,HouseOpening} from '../src/features/deckcraft/types';
 
 /**
@@ -158,9 +159,15 @@ const deck=(patch:Partial<HouseConfig>={},deckPatch:Partial<DeckData>={}):DeckDa
     ...HOUSE_CLADDINGS.map(cladding=>({cladding})),...ROOF_FINISHES.map(roofFinish=>({roofFinish})),
     ...HOUSE_COLOUR_FIELDS.map(k=>({[k]:'#5a3f2b'})),{openings:base.openings.map(o=>({...o,color:'#2f6a6a'}))},
   ];
-  for(const look of looks){const d=deck(look);assert.deepEqual(buildDeckTakeoff(d).quantities,model.quantities);assert.equal(calculateEstimate(d).total,total);checks+=2;}
+  for(const look of looks){
+    const d=deck(look),priced=calculateEstimate(d);
+    if(look.cladding&&(MASONRY_CLADDINGS as readonly string[]).includes(look.cladding)){assert.notEqual(priced.total,total);assert.ok(priced.flags.some(flag=>flag.includes('Ledger blocked')));}
+    else{assert.deepEqual(buildDeckTakeoff(d).quantities,model.quantities);assert.equal(priced.total,total);}
+    checks+=2;
+  }
   const deckParts=(d:DeckData)=>JSON.stringify(deckExportMeshes(d,buildDeckTakeoff(d)).filter(m=>!m.name.startsWith('house_')));
-  ok(deckParts(deck({cladding:'Fieldstone',roofFinish:'Slate',doorColor:'#8b2320'}))===deckParts(plain),'The exported deck is untouched by house finishes');
+  ok(deckParts(deck({cladding:'Cedar shakes',roofFinish:'Slate',doorColor:'#8b2320'}))===deckParts(plain),'The exported deck is untouched by non-masonry house finishes');
+  ok(deckParts(deck({cladding:'Fieldstone'}))!==deckParts(plain),'Fieldstone blocks the ledger, so the exported deck framing changes');
   const housePart=(d:DeckData,name:string)=>buildHouseGeometry(d,d.width*12).parts.find(p=>p.name===name)!;
   const shaped=(d:DeckData)=>JSON.stringify(buildHouseGeometry(d,d.width*12).parts.map(p=>[p.name,p.vertices,p.faces]));
   const styled=deck({openings:[{id:'d1',type:'Door',facade:'Front',offsetPct:40,bottomIn:36,widthIn:36,heightIn:84,style:'Single'},{id:'w1',type:'Window',facade:'Front',offsetPct:80,bottomIn:48,widthIn:40,heightIn:48,style:'Double-hung'}]});

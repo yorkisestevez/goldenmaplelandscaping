@@ -27,7 +27,7 @@ const base=():DeckData=>legacyBaseDeck();
 const scenarios=legacyScenarios();
 // New designs (owner 2026-10-04/06): a one-row flush picture frame under the 2026-10 build rules. Any other change to the
 // live default needs its own saved-design decision, so the frozen base may differ from it only in these three keys.
-assert.equal(DEFAULT_DECK.pictureFrameRows,1);assert.equal(DEFAULT_DECK.pictureFrameOverhangIn,0);assert.equal(DEFAULT_DECK.buildRules,'2026-10');
+assert.equal(DEFAULT_DECK.pictureFrameRows,1);assert.equal(DEFAULT_DECK.pictureFrameOverhangIn,0);assert.equal(DEFAULT_DECK.buildRules,'2026-10-struct');
 assert.ok(!('pictureFrameOverhangIn' in LEGACY_DEFAULT_DECK)&&!('buildRules' in LEGACY_DEFAULT_DECK)&&LEGACY_DEFAULT_DECK.pictureFrameRows===0,'The legacy base has no frame, no saved overhang and no build rules');
 {const {pictureFrameRows:_rows,pictureFrameOverhangIn:_overhang,buildRules:_rules,...rest}=DEFAULT_DECK,{pictureFrameRows:_legacyRows,...legacy}=LEGACY_DEFAULT_DECK;assert.deepEqual(legacy,rest,'The live default differs from the frozen 9b2ee11 default only in the picture frame and build rules');}
 

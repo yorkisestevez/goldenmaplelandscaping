@@ -25,7 +25,7 @@ export default function CostEstimator() {
         "name": "What does a composite deck cost in Simcoe County?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Our 3D deck designer gives the one deck price on this site: it prices your exact size, height, stairs, railing and TimberTech collection from our price book. For example, a 20 × 15 ft (300 sq ft) attached deck 18 in off the ground in TimberTech EDGE Prime+ decking, with aluminum railing, one stair and a one-row picture-frame border, has a priced portion of about $35,400 before HST; the same deck 8 ft up as a walkout has a priced portion of about $54,300. Unpriced connections, installation and order-specific adjustments are confirmed by supplier quote or builder quote before a final quotation."
+          "text": "Our 3D deck designer gives the one deck price on this site: it prices your exact size, height, stairs, railing and TimberTech collection from our price book. For example, a 20 × 15 ft (300 sq ft) attached deck 18 in off the ground in TimberTech EDGE Prime+ decking, with aluminum railing, one stair and a one-row picture-frame border, has a priced portion of about $36,600 before HST; the same deck 8 ft up as a walkout has a priced portion of about $55,100. Unpriced connections, installation and order-specific adjustments are confirmed by supplier quote or builder quote before a final quotation."
         }
       },
       {

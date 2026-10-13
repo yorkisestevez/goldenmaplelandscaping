@@ -1,4 +1,4 @@
-import {ACTUAL_DEPTH_IN,DESIGN,beamSpanLimitIn,joistCantileverLimitIn,joistCantileverRule,joistSpanLimitIn,maxBlockingGapIn,pickBeam,type BeamChoice,type JoistSize} from './spanTables';
+import {ACTUAL_DEPTH_IN,DESIGN,beamSpanLimitIn,joistCantileverLimitIn,joistCantileverRule,joistSpanLimitIn,maxBlockingGapIn,pickBeam,pickBeamIndependent,type BeamChoice,type FramingSpecies,type JoistSize} from './spanTables';
 
 /**
  * Framing of one rectangular deck zone, from the span tables in spanTables.ts.
@@ -32,6 +32,12 @@ export interface RectFramingInput{
   /** True when the zone hangs off a ledger; false frames a house-side beam. */
   ledger:boolean;
   joistSpacingIn:12|16;joistSize:JoistSize;
+  /** Joist species. Omitted is S-P-F. Beams stay on the S-P-F beam tables either way. */
+  species?:FramingSpecies;
+  /** 'independent' picks a beam depth apart from the joists (structural review). Omitted keeps joist-depth lumber. */
+  beamPick?:'joist-depth'|'independent';
+  /** False marks the layout as not sized from the span tables (a heavy point or area load). */
+  codeSized?:boolean;
   /** A fixed beam, e.g. a doubled joist-size member; omitted picks one with pickBeam. */
   beam?:BeamChoice;
   /** Beams on the free edges and no joist cantilever, whatever the mount (a landing). */
@@ -61,6 +67,8 @@ export interface RectFraming{
   edgeReachIn:number;
   /** Clear joist span between bearings (the ledger or beam rows). */
   joistSpanIn:number;
+  /** False when a heavy load means this layout must not be read as a span-table size. Absent means sized. */
+  codeSized?:false;
 }
 
 const RIM_CENTRE_IN=.75;
@@ -94,9 +102,9 @@ function blockingRows(bearings:number[]){
   return rows;
 }
 
-export function frameRectangle(input:RectFramingInput):RectFraming{
+function layoutRectangle(input:RectFramingInput):RectFraming{
   const {widthIn:w,depthIn:d,ledger,joistSpacingIn,joistSize}=input;
-  const joistLimit=joistSpanLimitIn(joistSize,joistSpacingIn);
+  const joistLimit=joistSpanLimitIn(joistSize,joistSpacingIn,input.species??'SPF');
   // The mount comes first: joists hung between flush beams on hangers stop at the beam, so only a drop beam lets
   // them cantilever. The beam is joist-size lumber unless one is given, so its depth is known before the layout.
   const joistDepth=ACTUAL_DEPTH_IN[joistSize],beamDepth=ACTUAL_DEPTH_IN[input.beam?.size??joistSize];
@@ -129,4 +137,19 @@ export function frameRectangle(input:RectFramingInput):RectFraming{
     joistXsIn,blockingZsIn:blockingRows([ledger?0:rows[0].z,...rows.filter(r=>r.kind!=='house').map(r=>r.z)]),
     joistSpanLimitIn:joistLimit,beamSpanLimitIn:beamSpan,cantileverIn:c,joistSpanIn:s,edgeReachIn:d-rows.at(-1)!.z,
   };
+}
+
+/** Frames one rectangle. An independent beam is chosen from the laid-out supported length, then the layout is
+ * repeated with that beam's depth until the choice settles. Omitting beamPick keeps the joist-depth pick. */
+export function frameRectangle(input:RectFramingInput):RectFraming{
+  const mark=(laid:RectFraming):RectFraming=>input.codeSized===false?{...laid,codeSized:false}:laid;
+  if(input.beamPick!=='independent'||input.beam)return mark(layoutRectangle(input));
+  let beam:BeamChoice|undefined,last!:RectFraming;
+  for(let i=0;i<3;i++){
+    last=layoutRectangle({...input,beam,beamPick:undefined,codeSized:undefined});
+    const next=pickBeamIndependent(Math.max(...last.beamRows.map(r=>r.supportedLengthIn)));
+    if(beam&&beam.size===next.size&&beam.plies===next.plies)break;
+    beam=next;
+  }
+  return mark(last);
 }

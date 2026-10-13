@@ -151,9 +151,9 @@ async function main(){
   {
     // Takeoff rules (buildRules.ts) are read-only: snapshots carry them, every edit keeps them, a different value is refused.
     const fresh=fixture(),old=fixture(parseDeckReleaseDesign(serializeDeckReleaseDesign({...deckReleaseData(structuredClone(DEFAULT_DECK)),buildRules:undefined})));
-    check(fresh.api.read().design.buildRules==='2026-10'&&old.api.read().design.buildRules==='legacy','Snapshots carry the design\'s takeoff rules');
+    check(fresh.api.read().design.buildRules==='2026-10-struct'&&old.api.read().design.buildRules==='legacy','Snapshots carry the design\'s takeoff rules');
     check(!fresh.api.describe().editableFields.includes('buildRules'),'The descriptor does not list takeoff rules as editable');
-    for(const [h,own,other] of [[fresh,'2026-10','legacy'],[old,'legacy','2026-10']] as const){
+    for(const [h,own,other] of [[fresh,'2026-10-struct','legacy'],[old,'legacy','2026-10-struct']] as const){
       const saved=serializeDeckReleaseDesign(h.state.data),commits=h.commits,design=h.api.read().design;
       for(const command of [{type:'design.replace',design:{...design,buildRules:other}},{type:'design.patch',patch:{buildRules:other}},{type:'design.patch',patch:{width:20,buildRules:other}},{type:'design.patch',patch:{width:20},unset:['buildRules']}] as AgentCommand[]){
         const r=await h.api.execute(request([command]));check('error' in r&&(command.type==='design.patch'&&command.unset?/unset/:/takeoff rules it was saved under/).test(r.error.message)&&h.commits===commits&&serializeDeckReleaseDesign(h.state.data)===saved,`A ${own} design refuses ${command.type} to other takeoff rules without writes`);}

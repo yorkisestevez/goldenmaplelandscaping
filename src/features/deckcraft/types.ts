@@ -343,7 +343,7 @@ export interface DeckData {
   catalogueAccessories?: string[];
   borderFinish?: 'Matching'|'Dark Slate';
   pictureFrameOverhangIn?: number;
-  /** Takeoff rules: absent or 'legacy' for designs saved before 2026-10-06, '2026-10' for new ones (see buildRules.ts). */
+  /** Takeoff rules: absent or 'legacy' for designs saved before 2026-10-06, '2026-10' for the takeoff after that, '2026-10-struct' for a new design (see buildRules.ts). */
   buildRules?: import('./buildRules').BuildRules;
   houseVisible?: boolean;
   houseWallHeightIn?: number;
@@ -396,6 +396,8 @@ export interface DeckData {
   deckingMaterial: string;
   deckingColor?: string;
   framingSize: '2x8' | '2x10' | '2x12';
+  /** Joist species. Absent means S-P-F No. 1/No. 2, which is what every saved design was sized with. */
+  framingSpecies?: 'SPF' | 'Hem-Fir' | 'D.Fir-L';
   boardWidth: 5.5 | 3.5;
   joistSpacing: 12 | 16;
   fasteningSystem: 'Face' | 'Hidden';

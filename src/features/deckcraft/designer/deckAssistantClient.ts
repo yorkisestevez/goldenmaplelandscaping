@@ -1,4 +1,5 @@
 import type {AgentRequest,AgentSnapshot} from './deckAgentController';
+import {internalModeOn} from '../internalMode';
 import type {AssistedSelection} from './naturalLanguageCommands';
 import {routeExpert,type ExpertId} from './expertAgents';
 
@@ -44,6 +45,7 @@ async function untilDone(first:Record<string,unknown>,signal?:AbortSignal):Promi
 }
 
 export async function checkAssistantAvailability(signal?:AbortSignal):Promise<AssistantAvailability>{
+ if(internalModeOn())return {ready:false,source:'exact-only',message:'Internal mode is on. AI interpretation is not called.'};
  try{const result=await jsonRequest('GET',undefined,signal);
   if(result.ready===true&&result.source==='local-ai')return {ready:true,source:'local-ai',model:boundedText(result.model,100),message:'AI interpretation is connected on this computer.'};
   if(result.ready===true&&result.source==='cloud-ai')return {ready:true,source:'cloud-ai',model:boundedText(result.model,100),message:'AI interpretation is connected (Claude).'};
@@ -60,6 +62,7 @@ export async function interpretAssistantRequest(text:string,snapshot:AgentSnapsh
  if(!Array.isArray(conversation)||conversation.length>turnCap||conversation.some(t=>!t||!['user','assistant'].includes(t.role)||typeof t.content!=='string'||t.content.length>1200)||conversation.reduce((n,t)=>n+t.content.length,0)>12000)throw Error('This conversation is too long. Start a new request.');
  const routedTo=routeExpert(text,expert),routed=routedTo!==expert&&expert==='general';
  if(!conversation.length){const {parseNaturalLanguageCommands}=await import('./naturalLanguageCommands');if(signal?.aborted)throw signal.reason??new DOMException('Cancelled','AbortError');const exact=parseNaturalLanguageCommands(text,snapshot,selection);if(exact.ok===true)return {kind:'edit',request:exact.request,summary:exact.summary,assumptions:[],source:'exact',message:'Understood as a measured edit.',expert:routedTo,routed};if(exact.localOnly)return {kind:'clarify',question:exact.clarification,choices:[],source:'exact',message:exact.clarification,expert:routedTo,routed};}
+ if(internalModeOn())return {kind:'advice',message:'Internal mode is on, so this request was not sent to the AI. Measured instructions still work.',assumptions:[],question:'',choices:[],source:'exact',expert:routedTo,routed};
  const {buildAssistantContext,parseAssistantPlan,assistantPlanRequest}=await import('./assistantPlan');
  const response=await untilDone(await jsonRequest('POST',{prompt:text.trim(),context:buildAssistantContext(snapshot,selection),conversation:conversation.map(t=>({role:t.role,content:t.content})),expert:routedTo},signal),signal);
  if(response.ok!==true||!isSource(response.source))throw Error('AI interpretation did not complete. No edit was applied.');

@@ -10,6 +10,7 @@ import {getHouseBlocks,getHouseWalls,openingHidden,openingWallId} from '../src/f
 import {addHouseOpening,MAX_HOUSE_OPENINGS,OPENING_PRESETS,openingLabel,removeHouseOpening,restyleHouseOpening,stylesFor,wallFloorIn,WINDOW_STYLES} from '../src/features/deckcraft/houseOpenings';
 import {deckExportMeshes} from '../src/features/deckcraft/designExports';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
+import {MASONRY_CLADDINGS} from '../src/features/deckcraft/structure/structuralReview';
 import type {DeckData,HouseConfig} from '../src/features/deckcraft/types';
 
 /**
@@ -73,9 +74,14 @@ const top=(d:DeckData,name='roof')=>Math.max(...part(d,name)!.vertices.map(v=>v[
     ...DOOR_STYLES.map(style=>({openings:base.openings.map(o=>o.type==='Door'?{...o,style}:o)})),
   ];
   for(const look of looks){
-    const d=deck(look);
-    assert.deepEqual(buildDeckTakeoff(d).quantities,model.quantities);
-    assert.equal(calculateEstimate(d).total,total);checks+=2;
+    const d=deck(look),priced=calculateEstimate(d);
+    if(look.cladding&&(MASONRY_CLADDINGS as readonly string[]).includes(look.cladding)){
+      assert.notEqual(priced.total,total);assert.ok(priced.flags.some(flag=>flag.includes('Ledger blocked')));
+    }else{
+      assert.deepEqual(buildDeckTakeoff(d).quantities,model.quantities);
+      assert.equal(priced.total,total);
+    }
+    checks+=2;
   }
   // …while the house export does change.
   const houseMeshes=(d:DeckData)=>JSON.stringify(deckExportMeshes(d,buildDeckTakeoff(d)).filter(m=>m.name.startsWith('house_')));

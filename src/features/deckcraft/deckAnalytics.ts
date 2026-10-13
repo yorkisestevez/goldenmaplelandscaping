@@ -2,6 +2,7 @@ import {getHouseConfig,ORIGINAL_HOUSE_CLADDINGS} from './houseSettings';
 import {HOUSE_COLOUR_FIELDS} from './houseSettings';
 import {DEFAULT_DECK} from './defaults';
 import {usesCurrentBuildRules} from './buildRules';
+import {internalModeOn} from './internalMode';
 import {isSystemProduct} from './lightingSystem';
 import {LIGHTING_RUNTIME_CATALOGUE} from './lightingRuntimeCatalogue';
 import {screenOn} from './privacyScreens';
@@ -49,6 +50,7 @@ export function resetDeckAnalyticsVisit(){memory=new Set();try{sessionStorage.re
 /** Sends one DeckCraft event. Labels outside the fixed vocabulary are dropped, never sent. */
 export function trackDeck(event:DeckEvent,label:string){
   if(!DECK_LABEL.test(label))return;
+  if(internalModeOn()&&(event==='deckcraft_send'||label.startsWith('deck_warm_')))return;
   if(ONCE_PER_VISIT.has(event)){
     const sent=sentThisVisit(),key=`${event}:${label}`;
     if(sent.has(key))return;
