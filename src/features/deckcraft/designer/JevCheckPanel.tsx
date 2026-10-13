@@ -39,7 +39,7 @@ export default function JevCheckPanel({design}:{design:()=>string}){
  }
  const report=state.status==='done'?state.report:null,flagged=report?report.rules.filter(r=>!r.pass||r.unsure):[];
  return <aside style={card} aria-label="Design rule check">
-  <button type="button" style={{...button,opacity:state.status==='busy'?.6:1}} disabled={state.status==='busy'} onClick={()=>void run()}>{state.status==='busy'?'Checking…':'Check design rules'}</button>
+  <button type="button" style={{...button,opacity:state.status==='busy'?.75:1}} disabled={state.status==='busy'} onClick={()=>void run()}>{state.status==='busy'?'Checking…':'Check design rules'}</button>
   {state.status==='error'&&<p role="alert" style={{margin:'8px 0 0',color:'#9b1c1c'}}>{state.message}</p>}
   {report&&<div role="status" style={{marginTop:8}}>
    <p style={{margin:'0 0 6px',fontWeight:600,color:report.pass?'#1d6b3a':'#9b1c1c'}}>{report.pass?`All ${report.rules.length} rules pass${report.needsReview?', some need a look':''}.`:`${report.rules.filter(r=>!r.pass).length} of ${report.rules.length} rules fail.`}</p>
