@@ -29,7 +29,7 @@ ok(!saved.model.foundationSupports.some(f=>f.pierRadiusIn),'A 2026-10 footing st
 ok((live.model.foundationSupports[0].pierRadiusIn??0)>6,'A new footing is wider than the drawn 12 in pier');
 const flash=estimate().sections.flatMap(s=>s.items).find(i=>i.name==='Ledger Flashing');
 const savedFlash=saved.sections.flatMap(s=>s.items).find(i=>i.name==='Ledger Flashing');
-ok(!!flash&&flash.qty>0&&(flash.cost??0)>0,'Attached ledger flashing is priced on a new design');
+ok(!!flash&&typeof flash.qty==='number'&&flash.qty>0&&(flash.cost??0)>0,'Attached ledger flashing is priced on a new design');
 ok(!savedFlash,'A 2026-10 attached deck does not gain that flashing line');
 has({},'Footings size');
 lacks({buildRules:'2026-10'},'Footings size');
