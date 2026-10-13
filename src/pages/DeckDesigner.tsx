@@ -19,7 +19,7 @@ import {CAMERA_MODES,type PlanTool,type PreviewMode} from '../features/deckcraft
 import ChangeAnnouncer from '../features/deckcraft/designer/ChangeAnnouncer';
 import {priceLedger} from '../features/deckcraft/designer/priceLedgerModel';
 import {priceState,useChangeLedger} from '../features/deckcraft/designer/useChangeLedger';
-import {downloadFile} from '../features/deckcraft/designer/fields';
+import {downloadFile} from '../features/deckcraft/designer/downloadFile';
 import {useDeckDesign} from '../features/deckcraft/designer/useDeckDesign';
 import {prepareDesignUpdate} from '../features/deckcraft/designer/designUpdate';
 import {useDeckEstimate} from '../features/deckcraft/designer/useDeckEstimate';

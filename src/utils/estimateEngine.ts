@@ -36,9 +36,7 @@
 import {
   PAVER_BRANDS, DECK_BRANDS, ADD_ONS, BIN_COST, type PaverTier,
 } from '../data/carrPrices';
-import {
-  ESTIMATOR_LOCATIONS, ZONE_SURCHARGE, type EstimatorLocationKey,
-} from '../data/locations';
+import { ZONE_SURCHARGE, zoneOf, type EstimatorLocationKey } from '../data/locationZones';
 import { applyDailyProductionFloor, applyPreciseCrewFloor } from './pricingDoctrine';
 import {
   hardscapeTakeoff, disposalBinsFor, c,
@@ -411,8 +409,7 @@ export function computeEstimate(input: EstimateInput): EstimateResult {
   const restorationHigh = Math.max(1500, totalSqftCalc * 4);
 
   // Zone surcharge for delivery
-  const loc = ESTIMATOR_LOCATIONS.find(l => l.key === location) || ESTIMATOR_LOCATIONS[0];
-  const surcharge = ZONE_SURCHARGE[loc.zone];
+  const surcharge = ZONE_SURCHARGE[zoneOf(location)];
 
   // Add-ons
   let addOnsLow = 0;
