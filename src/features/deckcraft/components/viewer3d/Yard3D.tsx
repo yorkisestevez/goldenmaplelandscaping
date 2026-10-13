@@ -110,11 +110,13 @@ function RetainedBanks({model,occlusion,plantingBeds}:{model:YardModel;occlusion
   if(!parts.length)return null;const merged=mergeGeometries(parts);parts.forEach(g=>g.dispose());return merged;
  },[model,occlusion?.bounds,plantingBeds]);
  const bladeMasks=useMemo(()=>yardClip([...model.features.filter(f=>!f.excluded).flatMap(f=>f.footprints),...model.boxes.filter(b=>b.role==='wall-cap').flatMap(b=>b.renderContours??(b.polygon?[b.polygon]:[])),...plantingBeds]),[model,plantingBeds]);
- const tufts=useMemo(()=>geometry?bankTufts(geometry,budget,bladeMasks):[],[geometry,budget,bladeMasks]);
+ const [bladesReady,setBladesReady]=useState(false);
+ useEffect(()=>{let cancel=false,inner=0;const outer=requestAnimationFrame(()=>{inner=requestAnimationFrame(()=>{if(!cancel)setBladesReady(true);});});return()=>{cancel=true;cancelAnimationFrame(outer);cancelAnimationFrame(inner);};},[]);
+ const tufts=useMemo(()=>geometry&&bladesReady?bankTufts(geometry,budget,bladeMasks):[],[geometry,budget,bladeMasks,bladesReady]);
  useLayoutEffect(()=>{material.aoMap=occlusion?.texture??WHITE;material.aoMapIntensity=.75;invalidate();},[material,occlusion,invalidate]);
  useEffect(()=>()=>geometry?.dispose(),[geometry]);
  if(!geometry)return null;
- return <group><mesh name="yard-retained-bank" geometry={geometry} material={material} castShadow receiveShadow userData={GROUND_LEVEL}/><GrassBlades name="retained-bank-grass-blades" tufts={tufts} budget={budget}/></group>;
+ return <group><mesh name="yard-retained-bank" geometry={geometry} material={material} castShadow receiveShadow userData={GROUND_LEVEL}/><GrassBlades name="retained-bank-grass-blades" tufts={tufts} budget={bladesReady?budget:0}/></group>;
 }
 function WaterMotion({model}:{model:YardModel}){
  const invalidate=useThree(s=>s.invalidate);

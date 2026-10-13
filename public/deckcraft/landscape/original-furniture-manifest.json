@@ -9,21 +9,21 @@
       "lods": [
         {
           "uri": "lounge-chair-lod0.glb",
-          "bytes": 103464,
+          "bytes": 69420,
           "triangles": 1396,
-          "sha256": "bae94bc87ea4799c1ef9ba8b68cce76dffcbc27eba7a810a27d82245f5d90f6d"
+          "sha256": "d97348083b56f9eda6d846e263af2a828ac334683ecb9420f05c5c6a22cdcc7f"
         },
         {
           "uri": "lounge-chair-lod1.glb",
-          "bytes": 71204,
+          "bytes": 46220,
           "triangles": 948,
-          "sha256": "19e22fd043ffa7da53c5aa9a186fa31b04f63f638be97f289eef69156580b0f1"
+          "sha256": "220babb66327bb7f44ed1e4bb06c9bf7339d2aee9fc2f9010de05a3725b9f7fa"
         },
         {
           "uri": "lounge-chair-lod2.glb",
-          "bytes": 55076,
+          "bytes": 34724,
           "triangles": 724,
-          "sha256": "3e3d4a763e5b37cca1129283c1ab6b52a7350c6b58fa8933776443145f058e29"
+          "sha256": "b89390c4681ea2c0b925628bbbfdc629c0ce871b510f4c18fa2915cfd02ba04a"
         }
       ]
     },
@@ -32,21 +32,21 @@
       "lods": [
         {
           "uri": "outdoor-sofa-lod0.glb",
-          "bytes": 282056,
+          "bytes": 193224,
           "triangles": 3876,
-          "sha256": "5540c0af83f7577b2446452d353588bb178d1bd568ef7ffdc54618174e0c070c"
+          "sha256": "365935c80ce7bcdf1e1342766476978f4b5d0b0e019dd1baea4c1bca8daddb7f"
         },
         {
           "uri": "outdoor-sofa-lod1.glb",
-          "bytes": 185292,
+          "bytes": 123944,
           "triangles": 2532,
-          "sha256": "5575548189909e5d03e287b4e674ba85110903c85a11fbb0aa9bfa654ef993ef"
+          "sha256": "fc2cca4ad2f32bf004ce9a55589c1c55157fce1776e3d92faf7f6bdc300fb798"
         },
         {
           "uri": "outdoor-sofa-lod2.glb",
-          "bytes": 136904,
+          "bytes": 89352,
           "triangles": 1860,
-          "sha256": "caf714aec66ff9a151bb7f19aac153d9bdcd8bac422bb2e7dfc39b5742369eb4"
+          "sha256": "e777c58779b510ff5c4bff69b21e732405d2f7eaf0192e572bf46f61107a938f"
         }
       ]
     },
@@ -55,21 +55,21 @@
       "lods": [
         {
           "uri": "outdoor-coffee-table-lod0.glb",
-          "bytes": 17536,
+          "bytes": 7324,
           "triangles": 216,
-          "sha256": "9321198b1a8f634d491196b6848497d2e2a2039b64be2f9191c9524c3dcde4d7"
+          "sha256": "02f0cefcfe20a7a0da802ecc36b27f191eb6e201d4100ced249b7f39ae4a46ff"
         },
         {
           "uri": "outdoor-coffee-table-lod1.glb",
-          "bytes": 17536,
+          "bytes": 7324,
           "triangles": 216,
-          "sha256": "9321198b1a8f634d491196b6848497d2e2a2039b64be2f9191c9524c3dcde4d7"
+          "sha256": "02f0cefcfe20a7a0da802ecc36b27f191eb6e201d4100ced249b7f39ae4a46ff"
         },
         {
           "uri": "outdoor-coffee-table-lod2.glb",
-          "bytes": 17536,
+          "bytes": 7324,
           "triangles": 216,
-          "sha256": "9321198b1a8f634d491196b6848497d2e2a2039b64be2f9191c9524c3dcde4d7"
+          "sha256": "02f0cefcfe20a7a0da802ecc36b27f191eb6e201d4100ced249b7f39ae4a46ff"
         }
       ]
     }

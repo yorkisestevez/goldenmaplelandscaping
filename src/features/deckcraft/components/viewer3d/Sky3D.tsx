@@ -66,7 +66,9 @@ function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyS
 /** The HDRI's light, its dome and the horizon haze. Suspends while the day sky loads; the evening's, once asked for,
  * loads behind the day sky dimmed, so switching to Night never drops back to the studio light. */
 export default function Sky3D({evening}:{evening:boolean}){
-  useEffect(()=>{preloadEvening();},[]);
+  // The day map is already in (this component suspended until then). Wait briefly so the evening file does not
+  // share the first uploads and shader compiles.
+  useEffect(()=>{const timer=window.setTimeout(preloadEvening,1500);return()=>window.clearTimeout(timer);},[]);
   return evening?<Suspense fallback={<SkyOf lighting="day" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}><SkyOf lighting="evening"/></Suspense>:<SkyOf lighting="day"/>;
 }
 // The day sky loads with the viewer; the evening's follows once the day's is in (preloadEvening), so switching to

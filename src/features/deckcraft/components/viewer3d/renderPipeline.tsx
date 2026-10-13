@@ -89,7 +89,7 @@ export function releaseDrawnResources(gl:THREE.WebGLRenderer){
 
 export default function RenderPipeline({evening}:{evening:boolean}){
   const gl=useThree(s=>s.gl),scene=useThree(s=>s.scene),camera=useThree(s=>s.camera),invalidate=useThree(s=>s.invalidate),quality=useRenderQuality();
-  const ref=useRef({chain:null as Chain|null,broken:false,evening,key:NaN});
+  const ref=useRef({chain:null as Chain|null,broken:false,primed:false,evening,key:NaN});
   ref.current.evening=evening;
   useEffect(()=>{
     const state=ref.current,size=new THREE.Vector2(),budget=sceneQuality(quality,gl.capabilities);
@@ -104,20 +104,26 @@ export default function RenderPipeline({evening}:{evening:boolean}){
       if(key!==state.key){state.key=key;const sun=scene.getObjectByName('sun') as THREE.DirectionalLight|undefined;if(sun?.isDirectionalLight&&sun.shadow.mapSize.x!==budget.shadowSize){sun.shadow.map?.dispose();sun.shadow.map=null;sun.shadow.mapSize.set(budget.shadowSize,budget.shadowSize);}fitSun(scene);for(const listen of shadowListeners.get(gl)??[])listen();gl.shadowMap.needsUpdate=true;}
       gl.getDrawingBufferSize(size);chain.setSize(size.x,size.y,scale);chain.render(gl,scene,camera,state.evening);
     };
-    const frame=()=>{
+    const paint=()=>{
       if(!state.broken)try{state.chain??=new Chain(gl,scene,camera,quality.msaaSamples,quality);draw(state.chain,1);gl.domElement.dataset.photographicPipeline='active';return;}catch(error){fail(error);}
       gl.render(scene,camera);
     };
+    const frame=()=>{
+      // One plain frame first, so the deck is on screen before the occlusion chain compiles its shaders.
+      // Snapshots call paint() and always use the photographic chain.
+      if(!state.broken&&!state.chain&&!state.primed){state.primed=true;scene.updateMatrixWorld();gl.setRenderTarget(null);gl.render(scene,camera);invalidate();return;}
+      paint();
+    };
     gl.shadowMap.autoUpdate=false;state.key=NaN;
     pipelines.set(gl,{capture:scale=>{
-      if(state.broken||scale<=1){frame();return;}
+      if(state.broken||scale<=1){paint();return;}
       // A print-size picture: its own targets, without multisampling from twice the size up (it is supersampled).
       let chain:Chain|null=null;
       try{chain=new Chain(gl,scene,camera,scale>=2?0:quality.msaaSamples,quality);draw(chain,scale);}
       catch(error){gl.setRenderTarget(null);gl.render(scene,camera);console.warn('DeckCraft 3D: capture drew without effects.',error);}
       finally{chain?.dispose();}
     }});
-    const restored=()=>{state.chain?.dispose();state.chain=null;state.broken=false;state.key=NaN;gl.shadowMap.autoUpdate=false;invalidate();};
+    const restored=()=>{state.chain?.dispose();state.chain=null;state.broken=false;state.primed=false;state.key=NaN;gl.shadowMap.autoUpdate=false;invalidate();};
     gl.domElement.addEventListener('webglcontextrestored',restored);
     renderers.set(gl,frame);invalidate();
     return ()=>{gl.domElement.removeEventListener('webglcontextrestored',restored);delete gl.domElement.dataset.photographicPipeline;pipelines.delete(gl);renderers.delete(gl);state.chain?.dispose();state.chain=null;gl.shadowMap.autoUpdate=true;};

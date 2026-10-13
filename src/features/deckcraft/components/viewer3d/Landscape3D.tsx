@@ -72,9 +72,11 @@ function MatureSpread({data,objects}:{data:DeckData;objects:LandscapeObject[]}){
 /** Mount at the scene's world origin, OUTSIDE an inch-scaled deck group. Assets
  * load only when selected. Instanced batches share geometry and local textures. */
 export default function Landscape3D({data,showMatureSpread=false}:{data:DeckData;showMatureSpread?:boolean}){
- const objects=data.landscapeObjects??[],q=useRenderQuality(),camera=useThree(s=>s.camera),size=useThree(s=>s.size),[lods,setLods]=useState(new Map<string,0|1|2>()),last=useRef(''),[mature,setMature]=useState(showMatureSpread);
+ const objects=data.landscapeObjects??[],q=useRenderQuality(),camera=useThree(s=>s.camera),size=useThree(s=>s.size),invalidate=useThree(s=>s.invalidate),[lods,setLods]=useState(new Map<string,0|1|2>()),last=useRef(''),[mature,setMature]=useState(showMatureSpread),shown=useRef(typeof performance!=='undefined'?performance.now():0);
  useEffect(()=>{const listener=(e:Event)=>setMature(!!(e as CustomEvent<{show:boolean}>).detail?.show);window.addEventListener('deckcraft:landscape-mature-spread',listener);window.dispatchEvent(new CustomEvent('deckcraft:landscape-mature-request'));return()=>window.removeEventListener('deckcraft:landscape-mature-spread',listener);},[]);
- useFrame(()=>{const next=landscapeRenderLods(objects,camera.position,size.height,q.tier),key=[...next].map(([id,lod])=>id+':'+lod).join('|');if(last.current!==key){last.current=key;setLods(next);}});
+ // Far models (lod 2) draw immediately. Nearer models, which are much larger files, start once the view is up.
+ useEffect(()=>{const timer=window.setTimeout(()=>invalidate(),1200);return()=>window.clearTimeout(timer);},[invalidate]);
+ useFrame(()=>{if(performance.now()-shown.current<1200)return;const next=landscapeRenderLods(objects,camera.position,size.height,q.tier),key=[...next].map(([id,lod])=>id+':'+lod).join('|');if(last.current!==key){last.current=key;setLods(next);}});
  const groups=new Map<string,{items:LandscapeObject[];lod:0|1|2}>();for(const o of objects.filter(o=>o.enabled&&o.kind!=='bed'&&!landscapePlacement(data,o).pendingReason)){const lod=lods.get(o.id)??2,key=o.assetId+':'+lod,g=groups.get(key)??{items:[],lod};g.items.push(o);groups.set(key,g);}
  return <group name="landscape-designed-objects" userData={{designedObjectCount:objects.filter(o=>o.enabled).length,renderTier:q.tier,genericVisualProxies:true}}>{[...groups].map(([key,g])=><Suspense key={key} fallback={null}><AssetInstances data={data} items={g.items} lod={g.lod}/></Suspense>)}{objects.some(o=>o.enabled&&o.kind==='bed')&&<Suspense fallback={null}><Beds data={data} objects={objects}/></Suspense>}{(showMatureSpread||mature)&&<MatureSpread data={data} objects={objects}/>}</group>;
 }

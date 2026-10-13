@@ -1,5 +1,5 @@
-import {createContext,useContext,useEffect,useMemo,useRef} from 'react';
-import {useLoader,useThree,type ThreeEvent} from '@react-three/fiber';
+import {createContext,useContext,useEffect,useMemo,useRef,useState} from 'react';
+import {useThree,type ThreeEvent} from '@react-three/fiber';
 import * as THREE from 'three';
 import type {HouseOpening} from '../../types';
 import type {Box} from '../../deckTakeoff';
@@ -14,6 +14,7 @@ import {paneGeometry,createWindowGlass,type WindowRoom} from './windowGlass';
 import {reflectionBinding,registerWindowReflection,type WindowReflection} from './windowReflections';
 import {backingSurface,claddingSurface} from './houseSurfaceKinds';
 import roomPhoto from './assets/room-atelier.webp';
+if(typeof window!=='undefined'){const img=new Image();img.decoding='async';img.src=roomPhoto;}
 
 const NONE:[number,number][]=[];
 const WindowContext=createContext<{reflection:WindowReflection;room:WindowRoom}|null>(null);
@@ -24,8 +25,10 @@ const openingFrame=(o:Shape):Box[]=>{const w=Math.max(1,o.w-3),h=Math.max(1,o.h-
 
 /** A glass pane (windowGlass.ts): reflective glass with a room behind it, lit in the evening. */
 function Glass({x,y,z,w,h,evening,tilt=0}:{x:number;y:number;z:number;w:number;h:number;evening:boolean;tilt?:number}){
- const photo=useLoader(THREE.TextureLoader,roomPhoto);
- useMemo(()=>{photo.colorSpace=THREE.SRGBColorSpace;photo.wrapS=THREE.RepeatWrapping;photo.needsUpdate=true;},[photo]);
+ // The photograph is staging only. Loading it without suspending lets the deck draw first; the shader's procedural
+ // room stands in until the picture arrives, then the pane is rebuilt with it.
+ const [photo,setPhoto]=useState<THREE.Texture|null>(null);
+ useEffect(()=>{let alive=true;const texture=new THREE.TextureLoader().load(roomPhoto,t=>{if(!alive){t.dispose();return;}t.colorSpace=THREE.SRGBColorSpace;t.wrapS=THREE.RepeatWrapping;t.needsUpdate=true;setPhoto(t);});return()=>{alive=false;texture.dispose();};},[]);
  const geometry=useMemo(()=>paneGeometry(w,h),[w,h]);
  const context=useContext(WindowContext);
  const fallback=useMemo(()=>reflectionBinding(),[]);
