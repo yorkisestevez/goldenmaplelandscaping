@@ -148,6 +148,11 @@ export default function Services() {
                     <span>Explore Service</span>
                     <ArrowRight size={16} strokeWidth={1.5} />
                   </Link>
+                  {service.id === 'decking' && (
+                    <Link to="/deck-designer" className="font-sans text-xs uppercase tracking-[0.2em] text-brand-muted hover:text-brand-gold-dark transition-colors">
+                      Design your deck
+                    </Link>
+                  )}
                   {hasProjects && service.category && (
                     <Link
                       to={`/portfolio?category=${categorySlug(service.category)}`}

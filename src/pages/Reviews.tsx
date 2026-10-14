@@ -13,7 +13,7 @@ export default function Reviews() {
     <div className="bg-brand-nearblack min-h-screen">
       <SEO
         title="Google Reviews | Golden Maple Landscaping Barrie"
-        description="Read Golden Maple Landscaping reviews on Google. We don't republish review text on this site."
+        description="Read Golden Maple Landscaping reviews on the Google listing."
         canonical="https://goldenmaplelandscaping.ca/reviews/"
       />
       <section className="section-padding pt-32 md:pt-48">
@@ -22,11 +22,8 @@ export default function Reviews() {
           <h1 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite leading-tight mb-8">
             Our reviews are on <span className="italic text-brand-gold-dark">Google.</span>
           </h1>
-          <p className="font-sans text-lg text-brand-muted font-light leading-relaxed mb-6">
-            Golden Maple builds interlocking patios and driveways, retaining walls, and composite decks for homeowners in Barrie and nearby towns. Homeowner reviews are published on our Google listing, not rewritten here.
-          </p>
-          <p className="font-sans text-base text-brand-muted font-light leading-relaxed mb-10">
-            This page does not show star counts or quotations until those details are confirmed for the site. Use the link below to read the reviews on Google.
+          <p className="font-sans text-lg text-brand-muted font-light leading-relaxed mb-10">
+            Golden Maple builds interlocking patios and driveways, retaining walls, and composite decks for homeowners in Barrie and nearby towns. Homeowner reviews are on the Google listing.
           </p>
           <GoogleReviewsLink className="btn-primary inline-flex" />
           <div className="mt-12 flex flex-col sm:flex-row gap-4">

@@ -25,7 +25,7 @@
 .deck-designer[data-drawing-focus=true] .dd-canvas>[aria-label="Interactive deck construction model"]{height:max(280px,calc(100dvh - 300px))!important}
 .deck-designer .dd-drawing-focus-toggle{margin-right:6px!important}
 html:has(.deck-designer[data-drawing-focus=true]){scroll-padding-bottom:12px}
-@media(max-width:800px){.deck-designer[data-drawing-focus=true]:has(.dd-easy-tools) .dd-workspace{height:auto;min-height:calc(100dvh - 64px)}.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-plan-viewport,.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-site-plan{height:max(360px,calc(100dvh - 320px))!important}}
+@media(max-width:800px){.deck-designer[data-drawing-focus=true]:has(.dd-easy-tools) .dd-workspace{height:auto;min-height:calc(100dvh - 64px);padding-bottom:calc(var(--dd-price-height,156px) + 12px)}.deck-designer[data-drawing-focus=true] .dd-workspace-price{display:grid}.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-plan-viewport,.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-site-plan{height:max(360px,calc(100dvh - 320px))!important}}
 
 .deck-designer[data-drawing-focus=true] .dd-preview-head{flex-direction:row;justify-content:flex-start;padding-right:130px;min-height:48px}
 .deck-designer[data-drawing-focus=true] .dd-preview-head h2,.deck-designer[data-drawing-focus=true] .dd-sheet-panel>.dd-summary-actions,.deck-designer[data-drawing-focus=true] .dd-sheet-panel>button[title="Keyboard shortcuts (F1)"]{display:none}

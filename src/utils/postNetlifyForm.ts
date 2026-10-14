@@ -30,6 +30,8 @@ export interface LeadPayloadInput {
   /** Extra fields already declared for this form-name in public/__forms.html. */
   extra?: Record<string, string>;
   scoreInput?: LeadScoreInput;
+  /** Optional photos. Sent as multipart only when at least one file is present. */
+  files?: File[];
 }
 
 export interface PostedLead {
@@ -84,15 +86,26 @@ export async function postNetlifyForm(input: LeadPayloadInput): Promise<PostedLe
 
   if (import.meta.env.DEV) {
     // eslint-disable-next-line no-console
-    console.log(`[dev] ${input.formName} payload (would POST to Netlify):`, payload);
+    console.log(`[dev] ${input.formName} payload (would POST to Netlify):`, payload, input.files?.length ? { photos: input.files.length } : '');
     return { eventId, payload };
   }
 
-  const res = await fetch('/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: encode(payload),
-  });
+  const files = (input.files ?? []).filter((file) => file.size > 0);
+  const res = files.length
+    ? await fetch('/', { method: 'POST', body: multipart(payload, files) })
+    : await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: encode(payload),
+      });
   if (!res.ok) throw new Error('Network response was not ok');
   return { eventId, payload };
+}
+
+/** Multipart so Netlify receives file fields. Leave Content-Type unset so the browser sets the boundary. */
+function multipart(payload: Record<string, string>, files: File[]): FormData {
+  const body = new FormData();
+  for (const [key, value] of Object.entries(payload)) body.append(key, value);
+  for (const file of files) body.append('photos', file, file.name);
+  return body;
 }

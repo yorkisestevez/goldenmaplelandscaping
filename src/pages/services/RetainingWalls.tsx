@@ -66,6 +66,7 @@ export default function RetainingWalls() {
                 >
                   Get My Free Estimate
                 </Link>
+                <Link to="/book" className="btn-ghost">Book a call</Link>
                 <a
                   href={`tel:${publicContact.phoneTel}`}
                   onClick={() => trackCall('wall_lander_phone')}
@@ -191,6 +192,7 @@ export default function RetainingWalls() {
             >
               Get My Free Estimate
             </Link>
+            <Link to="/book" className="font-sans text-[11px] uppercase tracking-[0.25em] text-brand-porcelain/80 hover:text-brand-gold transition-colors">Book a call</Link>
             <a
               href={`tel:${publicContact.phoneTel}`}
               onClick={() => trackCall('wall_lander_final_phone')}
