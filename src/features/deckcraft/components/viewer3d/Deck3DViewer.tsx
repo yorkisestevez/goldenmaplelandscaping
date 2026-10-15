@@ -671,7 +671,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
 
   const simplifiedPaving=!structure&&!cutaway&&view!=='hardware'&&hasSimplifiedPaving(yard);
 
-  return <>{onUpdate&&!structure&&!cutaway&&<><ScenePresentationTools data={data} update={onUpdate}/><FlythroughLauncher data={data}/></>} {!editInteraction&&onUpdate&&!structure&&!cutaway&&!boardPaint&&<PergolaTools data={data} selected={selected} setSelected={setSelected} mode={pergolaMode} setMode={setPergolaMode} update={onUpdate}/>}<div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
+  return <>{onUpdate&&!structure&&!cutaway&&<ScenePresentationTools data={data} update={onUpdate}/>} {!editInteraction&&onUpdate&&!structure&&!cutaway&&!boardPaint&&<PergolaTools data={data} selected={selected} setSelected={setSelected} mode={pergolaMode} setMode={setPergolaMode} update={onUpdate}/>}<div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
 
     {data.siteModel&&<p className="absolute top-3 right-3 z-10 rounded bg-white/90 p-2 text-xs">Ground outside surveyed triangles is illustrative.</p>}<Canvas shadows="percentage" frameloop="demand" dpr={[1,1.5]} camera={{fov:38,near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar}} gl={{antialias:false,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:SCENE_LOOK.exposure}} onCreated={({gl})=>{const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
 
@@ -700,6 +700,6 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
 
     </Canvas>{photoOn&&<Suspense fallback={null}><PhotoModePanel lighting={evening?'Evening':'Daylight'} onLighting={lighting=>onUpdate?.({sceneLighting:lighting})}/></Suspense>}{simplifiedPaving&&<p className="absolute top-3 left-3 right-3 w-fit rounded-md bg-white/95 px-3 py-2 text-xs text-[#38413b] shadow-sm pointer-events-none">Simplified paving preview · {yard.quantities.paverPieces.toLocaleString()} pavers retained in quantities, construction view and exports.</p>}<p className={`absolute bottom-3 left-4 right-4 text-[10px] pointer-events-none ${evening?'text-white':'text-[#474c43]'}`}>Drag to orbit · pinch or scroll to zoom{evening&&data.lightingPreviewOn!==false&&lights>MAX_PREVIEW_LIGHTS?` · ${lights} fixtures shown; light spread preview limited to ${MAX_PREVIEW_LIGHTS} fixtures`:''}</p>
 
-  </div>{terrainWarnings.length>0&&<details open className="text-xs py-2" aria-label="Terrain conflicts"><summary>Terrain needs attention · {terrainWarnings.length}</summary><ul>{terrainWarnings.map(w=><li key={w}>{w}</li>)}</ul></details>}</>;
+  </div>{onUpdate&&!structure&&!cutaway&&<FlythroughLauncher data={data}/>}{terrainWarnings.length>0&&<details open className="text-xs py-2" aria-label="Terrain conflicts"><summary>Terrain needs attention · {terrainWarnings.length}</summary><ul>{terrainWarnings.map(w=><li key={w}>{w}</li>)}</ul></details>}</>;
 
 }
