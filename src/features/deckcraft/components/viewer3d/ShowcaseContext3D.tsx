@@ -1,6 +1,7 @@
 import {useEffect,useLayoutEffect,useMemo,useState} from 'react';
 import {useThree} from '@react-three/fiber';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {MeshoptDecoder} from 'three-stdlib';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from './showcaseMode';
@@ -160,6 +161,8 @@ function TreeLine({trees,showcase}:{trees:ContextTree[];showcase:boolean}){
  // Load outside render. useGLTF updates the still-export progress store during render.
  useEffect(()=>{
   let live=true;setModels(null);const loader=new GLTFLoader();
+  // The tree models are meshopt-compressed (PR 155), as drei's useGLTF expects; register the same decoder.
+  loader.setMeshoptDecoder((typeof MeshoptDecoder==='function'?MeshoptDecoder():MeshoptDecoder) as Parameters<GLTFLoader['setMeshoptDecoder']>[0]);
   Promise.all([loader.loadAsync(SHOWCASE_TREES.deciduous[lod]),loader.loadAsync(SHOWCASE_TREES.conifer[lod])]).then(([broadleaf,evergreen])=>{if(live)setModels({deciduous:broadleaf.scene,conifer:evergreen.scene});});
   return ()=>{live=false;};
  },[lod]);
