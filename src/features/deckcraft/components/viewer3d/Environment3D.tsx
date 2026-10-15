@@ -14,12 +14,13 @@ import {SCENE_LOOK} from './sceneLook';
 import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../showcaseMode';
 import {SHOWCASE_DAY_SUN} from './showcaseGrade';
 import {SKY_DATA,skyStrength,sunDirection} from './skyModel';
+import {useSceneEvening} from './sceneEvening';
 
 const SUN=sunDirection();
 const GOLDEN_ELEVATION=7*Math.PI/180;
 
 export const Environment3D=React.memo(function Environment3D({data,footprint,topY,cutaway=false,finished=true,yard,...interaction}:{data:DeckData;footprint:FootprintPlan;topY:number;planKey:string;cutaway?:boolean;finished?:boolean;yard:YardModel}&HouseInteraction){
-  const evening=data.sceneLighting==='Evening',radius=Math.max(footprint.bounds.w,footprint.bounds.h)*3,shadowRange=radius/12;
+  const evening=useSceneEvening(data.sceneLighting),radius=Math.max(footprint.bounds.w,footprint.bounds.h)*3,shadowRange=radius/12;
   const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
   const post=flags.quality&&flags.post&&!evening,golden=post&&flags.hour==='golden';
   // Daylight keeps the HDRI sun. Showcase golden hour drops it to about 7° so shadows rake, and raises the key so level surfaces still glow.

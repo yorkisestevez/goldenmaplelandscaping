@@ -10,6 +10,7 @@ import {scanMaterial} from './houseSurfaces';
 import {applyWallDaylight} from './wallDaylight';
 import {useFixtureLit} from './fixtureLighting';
 import {useRenderQuality} from './SceneRenderQuality';
+import {useSceneEvening} from './sceneEvening';
 
 /**
  * Fire features (fireFeatureModel.ts), a lazy chunk the viewer loads only when the design has one. Model inches, inside
@@ -93,6 +94,6 @@ function FireFeature({feature,lit,light,inspection}:{feature:YardFeatureModel;li
 }
 /** `data` gives the night preview as the viewer reads it: the Evening scene with the lighting preview on. */
 export default function Fire3D({yard,data,inspection}:{yard:YardModel;data:DeckData;inspection:boolean}){
- const evening=data.sceneLighting==='Evening',on=data.lightingPreviewOn!==false,fires=yard.features.filter(f=>!f.excluded&&f.config.kind==='fire-feature'&&f.boxes.some(b=>b.role==='fire-body')&&isObjectVisible(data.editorOrganization,f.config.id));
+ const evening=useSceneEvening(data.sceneLighting),on=data.lightingPreviewOn!==false,fires=yard.features.filter(f=>!f.excluded&&f.config.kind==='fire-feature'&&f.boxes.some(b=>b.role==='fire-body')&&isObjectVisible(data.editorOrganization,f.config.id));
  return <group name="fire-features">{fires.map((f,i)=><FireFeature key={f.config.id} feature={f} lit={evening&&on&&!inspection} light={i<MAX_FIRE_LIGHTS} inspection={inspection}/>)}</group>;
 }

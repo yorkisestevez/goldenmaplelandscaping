@@ -5,6 +5,7 @@ import {MeshoptDecoder} from 'three-stdlib';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../showcaseMode';
+import {useSceneEvening} from './sceneEvening';
 import {useSyncExternalStore} from 'react';
 import {kelvinColour} from './fixtureLighting';
 import {neighbourRoof,neighbourRoofHeight} from './neighbourRoof';
@@ -192,9 +193,9 @@ function ShowcaseNightFill({data}:{data:DeckData}){
 export default function ShowcaseContext3D({data}:{data:DeckData}){
  const context=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().context,()=>false);
  const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false);
+ const evening=useSceneEvening(data.sceneLighting);
  const model=useMemo(()=>context?buildShowcaseContext(data):null,[context,data.landscapeObjects,data.yardFeatures,data.width,data.length,data.scenePresentation,data.terrainConfig]);
  if(!context||!model)return null;
- const evening=data.sceneLighting==='Evening';
  return <group name="showcase-context" scale={12} userData={{presentationOnly:true}}>
   <Fence runs={model.runs} baseY={model.baseY}/>
   <NeighbourGround grids={model.ground} evening={evening}/>
