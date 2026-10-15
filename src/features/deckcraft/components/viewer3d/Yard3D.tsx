@@ -17,7 +17,7 @@ import {hardscapeAppearance} from './hardscapeAppearance';
 import {supplierFaceUv,type SampleWindow} from './hardscapeSurface';
 import {applyHardscapeFinish} from './hardscapeFinish';
 import {useRenderQuality} from './SceneRenderQuality';
-import {applySurfaceRelief} from './surfaceDetail';
+import {applySurfaceRelief} from './surfaceRelief';
 import type {DetailKind} from './detailMaps';
 import {getShowcaseFlags,getShowcaseServerFlags,showcaseDetail,subscribeShowcase} from './showcaseMode';
 import GrassBlades from './GrassBlades';

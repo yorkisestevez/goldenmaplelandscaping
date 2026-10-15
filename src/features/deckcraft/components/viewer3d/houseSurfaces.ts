@@ -4,7 +4,7 @@ import masonryNormal from './assets/masonry-normal.webp';
 import rockDetail from './assets/rock-detail.webp';
 import rockNormal from './assets/rock-normal.webp';
 import {HOUSE_SURFACES,type HouseSurface} from './houseSurfaceKinds';
-import {surfaceReliefTextures} from './surfaceDetail';
+import {surfaceReliefTextures} from './surfaceRelief';
 import type {DetailKind} from './detailMaps';
 
 /**
