@@ -16,7 +16,7 @@ import {showcaseRoofTrimSeated} from '../src/features/deckcraft/components/viewe
 import {getHouseBlocks} from '../src/features/deckcraft/houseFootprint';
 import {blockRoofRise} from '../src/features/deckcraft/components/viewer3d/houseGeometry';
 import {ontarioShowcaseDesign,showcaseSampleIssues} from '../src/features/deckcraft/showcaseSample';
-import {getShowcaseFlags,setShowcaseFlags} from '../src/features/deckcraft/components/viewer3d/showcaseMode';
+import {getShowcaseFlags,setShowcaseFlags} from '../src/features/deckcraft/showcaseMode';
 import type {DeckData} from '../src/features/deckcraft/types';
 let checks=0;const check=(v:unknown,label?:string)=>{assert.ok(v,label);checks++;},close=(a:number,b:number)=>check(Math.abs(a-b)<1e-5,`${a} ≈ ${b}`);
 const all=LANDSCAPE_ASSETS.map((a,i)=>newLandscapeObject(a.id,'object-'+i));check(validateLandscapeObjects(all));check(validateLandscapeObjects([]));check(!validateLandscapeObjects(undefined));

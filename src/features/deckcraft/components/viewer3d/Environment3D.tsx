@@ -13,7 +13,7 @@ import {useThree} from '@react-three/fiber';
 import {useSyncExternalStore} from 'react';
 import {SCENE_LOOK} from './sceneLook';
 import {SKY_DATA,skyStrength,sunDirection} from './skyModel';
-import {getShowcaseFlags,showcaseGolden,subscribeShowcase} from './showcaseMode';
+import {getShowcaseFlags,showcaseGolden,subscribeShowcase} from '../../showcaseMode';
 
 const SUN=sunDirection();
 /** Low warm key for showcase stills only. The saved day and evening suns stay put. */

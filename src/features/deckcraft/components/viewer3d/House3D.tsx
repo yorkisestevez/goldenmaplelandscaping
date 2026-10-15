@@ -16,7 +16,7 @@ import {facadeFinish,gableLook,hasWallFinishes,isGableEnd} from '../../houseWall
 import {ROOF_LOOK,ROOF_TEXTURE_SIZE,roofPixels} from './roofTextures';
 
 import {houseRoofMesh,blockRoofMesh,blockGableMesh,blockRoofRise,houseWallSpecs,type HouseMesh,type HouseWallSpec} from './houseGeometry';
-import {getShowcaseFlags,subscribeShowcase} from './showcaseMode';
+import {getShowcaseFlags,subscribeShowcase} from '../../showcaseMode';
 // Showcase only: the subject roof's fascia and soffit load once showcase quality is on.
 const ShowcaseRoofShell=lazy(()=>import('./ShowcaseRoofShell'));
 

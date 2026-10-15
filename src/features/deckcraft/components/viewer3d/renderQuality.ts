@@ -1,5 +1,5 @@
 import type * as THREE from 'three';
-import {showcaseQuality} from './showcaseMode';
+import {showcaseQuality} from '../../showcaseMode';
 
 export interface RendererFacts {renderer?:string;memoryGb?:number;cores?:number;maxTextureSize:number;maxSamples:number}
 export interface RenderQuality {tier:'constrained'|'balanced'|'high';dpr:number;grassBudget:number;aoSamples:number;aoResolution:number;msaaSamples:number;shadowSize:number;anisotropy:number}

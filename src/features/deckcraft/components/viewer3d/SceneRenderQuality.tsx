@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useSyncExternalStore} from 'react';
 import {useThree} from '@react-three/fiber';
 import {chooseRenderQuality,rendererFacts} from './renderQuality';
-import {applyShowcaseSearch,getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from './showcaseMode';
+import {applyShowcaseSearch,getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../showcaseMode';
 
 export function useRenderQuality(){
  const gl=useThree(s=>s.gl),narrow=useThree(s=>s.size.width<600);
