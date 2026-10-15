@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {MeshoptDecoder} from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {newLandscapeObject} from '../src/features/deckcraft/landscapeCatalogue';
 import {landscapeInstanceMatrix} from '../src/features/deckcraft/components/viewer3d/Landscape3D';
@@ -12,6 +13,8 @@ import type {LandscapeAssetId} from '../src/features/deckcraft/landscapeTypes';
 const seating:LandscapeAssetId[]=['outdoor-chair','outdoor-sofa','lounge-chair'];
 (globalThis as {self?:unknown}).self=globalThis;
 const loader=new GLTFLoader();
+// The landscape models are meshopt-compressed (PR 155).
+loader.setMeshoptDecoder(MeshoptDecoder);
 function load(file:string){
  const buf=readFileSync(file);
  return new Promise<THREE.Group>((resolve,reject)=>loader.parse(buf.buffer.slice(buf.byteOffset,buf.byteOffset+buf.byteLength),'',g=>resolve(g.scene),reject));
