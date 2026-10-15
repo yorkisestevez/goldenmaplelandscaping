@@ -88,14 +88,14 @@ function useSkyMap(url:string){
 /** One sky: illumination and panorama exposure are independent. The day sky can stand in at dusk while it loads. */
 function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyStrength(lighting).environment}:{lighting:Lighting;strength?:number;illumination?:number}){
   const data=SKY[lighting],yaw=skyYaw(lighting);
-  const map=useEnvironment({files:lighting==='evening'?eveningLighting:dayLighting});
+  const map=useSkyMap(lighting==='evening'?eveningLighting:dayLighting);
   const scene=useThree(s=>s.scene),invalidate=useThree(s=>s.invalidate),flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
   const context=flags.context,graded=flags.quality&&flags.post&&lighting==='day',dayBlue=graded&&flags.hour!=='golden',goldenSky=graded&&flags.hour==='golden';
   const horizon=useMemo(()=>(context?visibleSkyHorizon(map,0):visibleSkyHorizon(map))??data.horizonColor,[map,data,context]);
   // The viewer keeps one fog for its life (adding or removing fog recompiles every material); the sky only recolours it.
   useEffect(()=>{if(!scene.fog)return;scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);if(scene.fog instanceof THREE.FogExp2)scene.fog.density=context?(graded?SHOWCASE_CLEAR_FOG:SHOWCASE_FOG_DENSITY):SCENE_LOOK.sky.fogDensity;invalidate();},[scene,horizon,strength,invalidate,context,graded]);
   return <>
-    <Environment map={map} environmentIntensity={graded?illumination*(goldenSky?SHOWCASE_GOLDEN_FILL:SHOWCASE_SKY_FILL):illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
+    <EnvironmentMap map={map} environmentIntensity={graded?illumination*(goldenSky?SHOWCASE_GOLDEN_FILL:SHOWCASE_SKY_FILL):illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
     <SkyDome lighting={map} yaw={yaw} strength={strength} horizonBand={context} rich={dayBlue} warm={goldenSky} skyline={flags.quality&&flags.post}/>
   </>;
 }
