@@ -127,7 +127,7 @@ night();
 ok(windowMat.emissiveIntensity===windowEmissive&&windowMat.transmission===0,'Night glass is restored to the raster window');
 background.dispose();
 
-const files=['src/features/deckcraft/photoTraceApi.ts','src/features/deckcraft/components/viewer3d/photoGrade.ts','src/features/deckcraft/components/viewer3d/photoMode.ts','src/features/deckcraft/components/viewer3d/photoMaterials.ts','src/features/deckcraft/components/viewer3d/photoEngine.ts','src/features/deckcraft/components/viewer3d/PhotoTracer.tsx','src/features/deckcraft/components/viewer3d/PhotoModePanel.tsx'];
+const files=['src/features/deckcraft/photoTraceApi.ts','src/features/deckcraft/photoGrade.ts','src/features/deckcraft/photoMode.ts','src/features/deckcraft/components/viewer3d/photoMaterials.ts','src/features/deckcraft/components/viewer3d/photoEngine.ts','src/features/deckcraft/components/viewer3d/PhotoTracer.tsx','src/features/deckcraft/components/viewer3d/PhotoModePanel.tsx'];
 const source=files.map(file=>readFileSync(file,'utf8')).join('\n');
 ok(!/warmLead|anthropic|generatedImage|\/api\/assistant|\/api\/lead/.test(source),'Photo mode does not call the lead form or the AI endpoints');
 ok(!readFileSync('src/features/deckcraft/components/viewer3d/Deck3DViewer.tsx','utf8').includes("from 'three-gpu-pathtracer'")&&readFileSync('src/features/deckcraft/components/viewer3d/PhotoTracer.tsx','utf8').includes("import('./photoEngine')"),'The path tracer stays out of the viewer chunk until photo mode is on');
