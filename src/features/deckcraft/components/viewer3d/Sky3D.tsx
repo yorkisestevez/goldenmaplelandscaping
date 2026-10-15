@@ -1,6 +1,8 @@
 import {Suspense,useEffect,useMemo,useSyncExternalStore} from 'react';
-import {useThree} from '@react-three/fiber';
-import {Environment,Lightformer,useEnvironment} from '@react-three/drei';
+import {useThree,useLoader} from '@react-three/fiber';
+import {Lightformer} from '@react-three/drei';
+import {EnvironmentMap,EnvironmentPortal} from './sceneEnvironment';
+import {RGBELoader} from 'three-stdlib';
 import * as THREE from 'three';
 import {SKY_DATA as SKY,skyStrength,skyYaw,VISIBLE_SKY_MIN_DEG,visibleSkyStrength,visibleSkyHorizon,type Lighting} from './skyModel';
 import dayLighting from './assets/sky/sky-day-ibl.hdr?url';
@@ -53,17 +55,24 @@ function SkyDome({lighting,yaw,strength,horizonBand}:{lighting:THREE.Texture;yaw
   </mesh>;
 }
 
+/** The sky's .hdr light probe, loaded exactly as drei's useEnvironment loads an .hdr (three-stdlib RGBELoader,
+ * equirectangular, linear). Calling the loader directly keeps drei's EXR and gain-map loaders out of the viewer. */
+function useSkyMap(url:string){
+  const texture=useLoader(RGBELoader,url);
+  texture.mapping=THREE.EquirectangularReflectionMapping;texture.colorSpace=THREE.LinearSRGBColorSpace;
+  return texture;
+}
 /** The HDRI's light, its dome and the horizon haze. Suspends while the files load. */
 /** One sky: illumination and panorama exposure are independent. The day sky can stand in at dusk while it loads. */
 function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyStrength(lighting).environment}:{lighting:Lighting;strength?:number;illumination?:number}){
   const data=SKY[lighting],yaw=skyYaw(lighting);
-  const map=useEnvironment({files:lighting==='evening'?eveningLighting:dayLighting});
+  const map=useSkyMap(lighting==='evening'?eveningLighting:dayLighting);
   const scene=useThree(s=>s.scene),invalidate=useThree(s=>s.invalidate),context=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().context,()=>false);
   const horizon=useMemo(()=>(context?visibleSkyHorizon(map,0):visibleSkyHorizon(map))??data.horizonColor,[map,data,context]);
   // The viewer keeps one fog for its life (adding or removing fog recompiles every material); the sky only recolours it.
   useEffect(()=>{if(!scene.fog)return;scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);if(scene.fog instanceof THREE.FogExp2)scene.fog.density=context?SHOWCASE_FOG_DENSITY:SCENE_LOOK.sky.fogDensity;invalidate();},[scene,horizon,strength,invalidate,context]);
   return <>
-    <Environment map={map} environmentIntensity={illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
+    <EnvironmentMap map={map} environmentIntensity={illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
     <SkyDome lighting={map} yaw={yaw} strength={strength} horizonBand={context}/>
   </>;
 }
@@ -80,14 +89,14 @@ export default function Sky3D({evening}:{evening:boolean}){
 }
 // The day sky loads with the viewer; the evening's follows once the day's is in (preloadEvening), so switching to
 // Night (and the proposal's night pictures) rarely waits, without a phone fetching both skies up front.
-useEnvironment.preload({files:dayLighting});
+useLoader.preload(RGBELoader,dayLighting);
 let eveningPreloaded=false;
-function preloadEvening(){if(eveningPreloaded)return;eveningPreloaded=true;useEnvironment.preload({files:eveningLighting});}
+function preloadEvening(){if(eveningPreloaded)return;eveningPreloaded=true;useLoader.preload(RGBELoader,eveningLighting);}
 
 /** The studio light the viewer had before G3: three soft panels and a hemisphere light, while the sky loads or if it can't. */
 export function StudioLight({evening}:{evening:boolean}){
   return <>
     <hemisphereLight args={[evening?'#667f9d':'#eaf2ff',evening?'#283022':'#788565',evening?.13:.55]}/>
-    <Environment key={evening?'evening':'day'} resolution={128} frames={1} environmentIntensity={evening?.16:.4}><Lightformer intensity={3} position={[0,12,0]} rotation={[Math.PI/2,0,0]} scale={[20,20,1]}/><Lightformer intensity={2} position={[-15,6,8]} rotation={[0,Math.PI/2,0]} scale={[12,15,1]}/><Lightformer intensity={1} position={[12,5,-8]} rotation={[0,-Math.PI/2,0]} scale={[10,10,1]}/></Environment>
+    <EnvironmentPortal key={evening?'evening':'day'} resolution={128} environmentIntensity={evening?.16:.4}><Lightformer intensity={3} position={[0,12,0]} rotation={[Math.PI/2,0,0]} scale={[20,20,1]}/><Lightformer intensity={2} position={[-15,6,8]} rotation={[0,Math.PI/2,0]} scale={[12,15,1]}/><Lightformer intensity={1} position={[12,5,-8]} rotation={[0,-Math.PI/2,0]} scale={[10,10,1]}/></EnvironmentPortal>
   </>;
 }
