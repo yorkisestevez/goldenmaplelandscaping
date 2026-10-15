@@ -4,10 +4,11 @@
  *   DECKCRAFT_PROOF_URL=http://127.0.0.1:4187/deck-designer/ npx tsx scripts/capture-photo-stills.ts
  */
 import {execFileSync} from 'node:child_process';
-import {mkdirSync,readFileSync,renameSync,writeFileSync,writeSync} from 'node:fs';
+import {existsSync,mkdirSync,readFileSync,renameSync,writeFileSync,writeSync} from 'node:fs';
 import {deflateSync} from 'node:zlib';
 import {chromium,type Browser,type Page} from '@playwright/test';
 import {PHOTO_GRADE,type PhotoLook} from '../src/features/deckcraft/photoGrade';
+import {denoisePlate,type PhotoGuides} from '../src/features/deckcraft/photoDenoise';
 
 const emit=(fd:number)=>(...args:unknown[])=>{writeSync(fd,`${args.map(part=>typeof part==='string'?part:String(part)).join(' ')}\n`);};
 console.log=emit(1) as typeof console.log;
@@ -99,8 +100,8 @@ async function finishPass(page:Page,name:string,ask:ReturnType<typeof bindAsk>,e
  const budget=Math.max(5_400_000,passSamples*180_000+1_800_000);
  const deadline=Date.now()+budget;let last='',lastChange=Date.now(),savedStill='';
  while(Date.now()<deadline){
-  const state=await ask(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',census:canvas?.getAttribute('data-photo-census')??'',still:canvas?.getAttribute('data-photo-still')??'',buffer:canvas?.getAttribute('data-photo-buffer')??'',tiles:canvas?.getAttribute('data-photo-tiles')??''};});
-  const line=`${state.phase||'waiting'} ${state.samples||'0'}/${state.target||'?'} ${state.buffer} tiles=${state.tiles} census=${state.census} still=${state.still}`;
+  const state=await ask(()=>{const canvas=document.querySelector('#deck-live-preview canvas');return {phase:canvas?.getAttribute('data-photo-phase')??'',samples:canvas?.getAttribute('data-photo-samples')??'',target:canvas?.getAttribute('data-photo-target')??'',census:canvas?.getAttribute('data-photo-census')??'',still:canvas?.getAttribute('data-photo-still')??'',buffer:canvas?.getAttribute('data-photo-buffer')??'',tiles:canvas?.getAttribute('data-photo-tiles')??'',guides:canvas?.getAttribute('data-photo-guides')??''};});
+  const line=`${state.phase||'waiting'} ${state.samples||'0'}/${state.target||'?'} ${state.buffer} tiles=${state.tiles} census=${state.census} still=${state.still} guides=${state.guides}`;
   if(line!==last){console.log(new Date().toISOString(),name,line);last=line;lastChange=Date.now();}
   else if(Date.now()-lastChange>2_700_000)throw Error(`${name}: no sample progress for 45 minutes (${line})`);
   if(state.census.includes('/')){
@@ -140,7 +141,15 @@ async function finishPass(page:Page,name:string,ask:ReturnType<typeof bindAsk>,e
  }
  const census=await ask(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photo-census')??'');
  console.log('pass',name,packed.size,`peak ${peak.toFixed(3)}`,`lit ${(100*lit/(w*h)).toFixed(1)}%`,census);
- return {w,h,n,rgb,census};
+ const packedGuides=await ask(()=>{const record=window as Window&{__DECK_PHOTO_ALBEDO?:string;__DECK_PHOTO_NORMAL?:string;__DECK_PHOTO_GUIDE_SIZE?:string};return {albedo:record.__DECK_PHOTO_ALBEDO??'',normal:record.__DECK_PHOTO_NORMAL??'',size:record.__DECK_PHOTO_GUIDE_SIZE??''};},180_000);
+ let guides:PhotoGuides|null=null;
+ const [gw,gh]=packedGuides.size.split('x').map(Number);
+ if(gw>0&&gh>0&&packedGuides.albedo&&packedGuides.normal){
+  const albedo=new Uint8Array(Buffer.from(packedGuides.albedo,'base64')),normal=new Uint8Array(Buffer.from(packedGuides.normal,'base64'));
+  if(albedo.length===gw*gh*3&&normal.length===gw*gh*3)guides={albedo,normal,width:gw,height:gh};
+  else console.error(name,'guides were',albedo.length,normal.length,'not',gw,gh);
+ }
+ return {w,h,n,rgb,census,guides};
 }
 async function nextPass(page:Page,name:string,seed:number,passSamples:number){
  console.log('continue',name,`seed ${seed}`);
@@ -219,30 +228,28 @@ function srgbByte(channel:number){
  const c=Math.min(1,Math.max(0,channel));
  return Math.round(255*(c<=0.0031308?c*12.92:1.055*c**(1/2.4)-0.055));
 }
-function denoiseLinear(rgb:Float32Array,w:number,h:number,sigma:number,threshold:number){
- const radius=Math.max(1,Math.min(2,Math.round(sigma))),radQ=radius*radius,out=new Float32Array(rgb.length);
- const invSigmaQx2=0.5/(sigma*sigma),invSigmaQx2PI=0.3183098861837907*invSigmaQx2,invThresholdSqx2=0.5/(threshold*threshold),invThresholdSqrt2PI=0.3989422804014327/threshold;
- for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-  const at=(y*w+x)*3,center:[number,number,number]=[rgb[at],rgb[at+1],rgb[at+2]];
-  let z=0,ar=0,ag=0,ab=0;
-  for(let dx=-radius;dx<=radius;dx++){
-   const pt=Math.sqrt(Math.max(0,radQ-dx*dx));
-   for(let dy=Math.ceil(-pt);dy<=Math.floor(pt);dy++){
-    const sx=Math.min(w-1,Math.max(0,x+dx)),sy=Math.min(h-1,Math.max(0,y+dy)),j=(sy*w+sx)*3;
-    const blur=Math.exp(-(dx*dx+dy*dy)*invSigmaQx2)*invSigmaQx2PI;
-    const dr=rgb[j]-center[0],dg=rgb[j+1]-center[1],db=rgb[j+2]-center[2];
-    const weight=Math.exp(-(dr*dr+dg*dg+db*db)*invThresholdSqx2)*invThresholdSqrt2PI*blur;
-    z+=weight;ar+=weight*rgb[j];ag+=weight*rgb[j+1];ab+=weight*rgb[j+2];
-   }
-  }
-  out[at]=ar/z;out[at+1]=ag/z;out[at+2]=ab/z;
- }
- return out;
+function loadGuides(name:string):PhotoGuides|null{
+ try{
+  const stored=readFileSync(`${cacheRoot}/${name}.guides`);
+  if(stored.readUInt32LE(0)!==0x47554944)return null;
+  const w=stored.readUInt32LE(4),h=stored.readUInt32LE(8),count=w*h*3;
+  if(stored.length<12+count*2)return null;
+  return {width:w,height:h,albedo:new Uint8Array(stored.subarray(12,12+count)),normal:new Uint8Array(stored.subarray(12+count,12+count*2))};
+ }catch{return null;}
 }
-function gradeStill(rgb:Float32Array,w:number,h:number,look:PhotoLook,sampleCount:number){
+function writeGuides(name:string,guides:PhotoGuides){
+ const file=`${cacheRoot}/${name}.guides`;
+ if(existsSync(file))return;
+ const header=Buffer.alloc(12);
+ header.writeUInt32LE(0x47554944,0);header.writeUInt32LE(guides.width,4);header.writeUInt32LE(guides.height,8);
+ writeFileSync(file,Buffer.concat([header,Buffer.from(guides.albedo),Buffer.from(guides.normal)]));
+ console.log('guides',file,`${guides.width}x${guides.height}`);
+}
+function gradeStill(rgb:Float32Array,w:number,h:number,look:PhotoLook,sampleCount:number,name:string){
  const grade=PHOTO_GRADE[look];
- const sigma=Math.max(1,Math.min(7,16/Math.sqrt(Math.max(1,sampleCount))));
- const clean=denoiseLinear(rgb,w,h,sigma,.08);
+ const guides=loadGuides(name);
+ console.log('grade',name,`${sampleCount} samples`,guides?`${guides.width}x${guides.height} guides`:'no guides');
+ const clean=denoisePlate(rgb,w,h,guides,look==='night'?'high':'balanced');
  const rgba=Buffer.alloc(w*h*4);
  for(let i=0,p=0;i<clean.length;i+=3,p+=4){
   const color:[number,number,number]=[
@@ -309,7 +316,8 @@ for(const [name,look,lighting,photo] of shots){
   header.writeUInt32LE(0x46333250,0);header.writeUInt32LE(width,4);header.writeUInt32LE(height,8);header.writeUInt32LE(nextCount,12);
   writeSum(cache,header,next);
   sum=next;count=nextCount;
-  console.log(new Date().toISOString(),name,`${count}/${samples} accumulated`);
+  console.log(new Date().toISOString(),name,`${count}/${samples} accumulated`,sceneCensus);
+  if(frame.guides)writeGuides(name,frame.guides);
   // A graded plate every 16 samples, so a crash keeps the last finished chunk.
   if(count%16===0||count>=samples)publishStill(name,look,sum,width,height,count);
  };
@@ -318,7 +326,7 @@ function publishStill(name:string,look:PhotoLook,sum:Float32Array,width:number,h
  for(let i=0;i<sum.length;i++)mean[i]=sum[i]/count;
  const final=force||count>=samples;
  const file=`${cacheRoot}/${final?name:`${name}-${count}`}.png`;
- writePng(file,width,height,gradeStill(mean,width,height,look,count));
+ writePng(file,width,height,gradeStill(mean,width,height,look,count,name));
  if(final&&cacheRoot!==output)writeFileSync(`${output}/${name}.png`,readFileSync(file));
  console.log('wrote',final?`${output}/${name}.png`:file,`${width}x${height}`,count,'samples');
 }

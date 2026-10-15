@@ -9,8 +9,10 @@ import {PHOTO_FALLBACK,PHOTO_GRADE,SUN_ANGULAR_RADIUS_DEG,photoStillSize,photoSu
 import {getPhotoSettings,setPhotoProgress,type PhotoPhase} from '../../photoMode';
 
 /** Progressive stills on the live WebGL renderer.
- * three-gpu-pathtracer's WebGL path matches three 0.185 and this canvas. The WebGPU tracer and oidn-web
- * both need a WebGPU device this software GPU does not offer, so denoising is the tracer's own edge-aware pass.
+ * three-gpu-pathtracer's WebGL path matches three 0.185 and this canvas. The WebGPU tracer needs a device
+ * this software GPU does not offer. Batch stills keep the linear plate and denoise it outside the browser
+ * (Open Image Denoise when its CPU tool is present, otherwise an edge-avoiding wavelet), using albedo and
+ * normal guides rasterized from the same photo scene.
  * The editor's Khronos Neutral grade is left on the renderer; AgX runs only in the photo blit. */
 
 type Tracer=WebGLPathTracer&{isCompiling:boolean;stableNoise:boolean};
@@ -75,8 +77,8 @@ function tintSky(texture:THREE.DataTexture,look:PhotoLook){
     data[i]*=(1.02*(1-warm)+1.28*warm)*dim;data[i+1]*=(.99*(1-warm)+.84*warm)*dim;data[i+2]*=(.96*(1-warm)+.7*warm)*dim;
    }else{
     // The evening panorama is still a dusk sky. Pull it down to a dark blue so it does not light the yard.
-    const dim=.045+.03*up;
-    data[i]=data[i]*dim*.3+.0025;data[i+1]=data[i+1]*dim*.4+.005;data[i+2]=data[i+2]*dim*.75+.016;
+    const dim=.05+.04*up;
+    data[i]=data[i]*dim*.4+.008;data[i+1]=data[i+1]*dim*.55+.02;data[i+2]=data[i+2]*dim*.9+.055;
    }
   }
  }
@@ -143,7 +145,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   background=buildPhotoBackground(lighting??null,1,horizonBand,skyYaw(key),horizon);
   tintSky(background,look);
   scene.background=background;scene.backgroundIntensity=1;scene.backgroundBlurriness=0;scene.backgroundRotation.set(0,0,0);
-  const scale=look==='golden'?.85:look==='night'?.045:1;
+  const scale=look==='golden'?.85:look==='night'?.06:1;
   scene.environmentIntensity=saved.environmentIntensity*scale;
   const raster=rasterPhotoTriangles(scene);
   restoreScene=applyPhotoScene(scene,look,sunFor(look));
@@ -151,7 +153,7 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   // Miss rays come back black on this GPU, so the visible sky is a separate emissive sphere
   // centred on the camera and larger than the lawn.
   if(background){
-   const strength=look==='night'?0.22:visibleSkyStrength(key);
+   const strength=look==='night'?0.4:visibleSkyStrength(key);
    const skyMat=new THREE.MeshStandardMaterial({color:'#000000',emissive:'#ffffff',emissiveMap:background,emissiveIntensity:strength,roughness:1,metalness:0,side:THREE.BackSide,depthWrite:false,fog:false});
    const sky=new THREE.Mesh(new THREE.SphereGeometry(8000,48,24),skyMat);
    sky.name='photo-sky';sky.frustumCulled=false;sky.position.copy(camera.position);
@@ -221,6 +223,65 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   for(let y=0;y<size.y;y++)rgba.set(raw.subarray((size.y-1-y)*row,(size.y-y)*row),y*row);
   return {width:size.x,height:size.y,rgba};
  }
+ function encodeBytes(bytes:Uint8Array){
+  let binary='';
+  for(let i=0;i<bytes.length;i+=4096)binary+=String.fromCharCode(...bytes.subarray(i,i+4096));
+  return btoa(binary);
+ }
+ function flipRead(raw:Uint8Array,w:number,h:number){
+  const flipped=new Uint8Array(raw.length),row=w*4;
+  for(let y=0;y<h;y++)flipped.set(raw.subarray((h-1-y)*row,(h-y)*row),y*row);
+  return flipped;
+ }
+ function packRgb(rgba:Uint8Array){
+  const rgb=new Uint8Array(rgba.length/4*3);
+  for(let i=0,j=0;i<rgba.length;i+=4,j+=3){rgb[j]=rgba[i];rgb[j+1]=rgba[i+1];rgb[j+2]=rgba[i+2];}
+  return rgb;
+ }
+ let guidesReady=false;
+ function storeGuides(){
+  if(guidesReady||photoQuery('deck-photo-guides')==='0'||disposed)return;
+  const w=averaged.width,h=averaged.height;
+  if(w<2||h<2)return;
+  gl.domElement.dataset.photoGuides='capturing';
+  const albedoTarget=new THREE.WebGLRenderTarget(w,h,{type:THREE.UnsignedByteType,depthBuffer:true,colorSpace:THREE.SRGBColorSpace});
+  const normalTarget=new THREE.WebGLRenderTarget(w,h,{type:THREE.UnsignedByteType,depthBuffer:true,colorSpace:THREE.NoColorSpace});
+  const normalMat=new THREE.MeshNormalMaterial({side:THREE.DoubleSide});
+  const ambient=new THREE.AmbientLight('#ffffff',Math.PI);
+  ambient.name='photo-guide-ambient';
+  const savedLights:{light:THREE.Light&{intensity:number};intensity:number}[]=[];
+  const tone=gl.toneMapping,output=gl.outputColorSpace,background=scene.background,environment=scene.environment,envIntensity=scene.environmentIntensity;
+  try{
+   scene.traverse(object=>{
+    const light=object as THREE.Light&{intensity?:number};
+    if(!light.isLight||typeof light.intensity!=='number'||light===ambient)return;
+    savedLights.push({light:light as THREE.Light&{intensity:number},intensity:light.intensity});
+    light.intensity=0;
+   });
+   scene.add(ambient);scene.background=null;scene.environment=null;scene.environmentIntensity=0;
+   gl.toneMapping=THREE.NoToneMapping;gl.outputColorSpace=THREE.SRGBColorSpace;
+   gl.setRenderTarget(albedoTarget);gl.setScissorTest(false);gl.setViewport(0,0,w,h);gl.setClearColor(0x000000,1);gl.clear(true,true,true);
+   scene.updateMatrixWorld(true);gl.render(scene,photo);
+   const albedoRaw=new Uint8Array(w*h*4);
+   gl.readRenderTargetPixels(albedoTarget,0,0,w,h,albedoRaw);
+   scene.overrideMaterial=normalMat;gl.outputColorSpace=THREE.LinearSRGBColorSpace;
+   gl.setRenderTarget(normalTarget);gl.setViewport(0,0,w,h);gl.setClearColor(new THREE.Color(0.5,0.5,1),1);gl.clear(true,true,true);gl.render(scene,photo);
+   const normalRaw=new Uint8Array(w*h*4);
+   gl.readRenderTargetPixels(normalTarget,0,0,w,h,normalRaw);
+   const record=window as Window&{__DECK_PHOTO_ALBEDO?:string;__DECK_PHOTO_NORMAL?:string;__DECK_PHOTO_GUIDE_SIZE?:string};
+   record.__DECK_PHOTO_ALBEDO=encodeBytes(packRgb(flipRead(albedoRaw,w,h)));
+   record.__DECK_PHOTO_NORMAL=encodeBytes(packRgb(flipRead(normalRaw,w,h)));
+   record.__DECK_PHOTO_GUIDE_SIZE=`${w}x${h}`;
+   gl.domElement.dataset.photoGuides=`${w}x${h}`;
+   guidesReady=true;
+  }finally{
+   scene.overrideMaterial=null;scene.remove(ambient);
+   for(const saved of savedLights)saved.light.intensity=saved.intensity;
+   scene.background=background;scene.environment=environment;scene.environmentIntensity=envIntensity;
+   gl.toneMapping=tone;gl.outputColorSpace=output;gl.setRenderTarget(null);
+   albedoTarget.dispose();normalTarget.dispose();normalMat.dispose();
+  }
+ }
  function exportLinear(){
   if(photoQuery('deck-photo-linear')!=='1'||disposed||heldSamples<=0)return;
   try{
@@ -230,12 +291,10 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
    gl.setRenderTarget(packed);gl.setScissorTest(false);gl.setViewport(0,0,w,h);quad.material=packMat;quad.render(gl);
    const raw=new Uint8Array(w*h*4);
    gl.readRenderTargetPixels(packed,0,0,w,h,raw);gl.setRenderTarget(null);
-   const flipped=new Uint8Array(raw.length),row=w*4;
-   for(let y=0;y<h;y++)flipped.set(raw.subarray((h-1-y)*row,(h-y)*row),y*row);
-   let binary='';
-   for(let i=0;i<flipped.length;i+=4096) binary+=String.fromCharCode(...flipped.subarray(i,i+4096));
+   const flipped=flipRead(raw,w,h);
    const record=window as Window&{__DECK_PHOTO_LINEAR?:string;__DECK_PHOTO_LINEAR_SIZE?:string};
-   record.__DECK_PHOTO_LINEAR=btoa(binary);record.__DECK_PHOTO_LINEAR_SIZE=`rgbe:${w}x${h}x${heldSamples}`;
+   record.__DECK_PHOTO_LINEAR=encodeBytes(flipped);record.__DECK_PHOTO_LINEAR_SIZE=`rgbe:${w}x${h}x${heldSamples}`;
+   try{storeGuides();}catch(error){console.warn('DeckCraft photo: albedo and normal guides were skipped.',error);gl.domElement.dataset.photoGuides='skipped';}
   }catch(error){console.warn('DeckCraft photo: the linear still could not be stored.',error);}
  }
  function markStill(samples:number){

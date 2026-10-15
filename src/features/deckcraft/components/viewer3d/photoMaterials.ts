@@ -3,7 +3,7 @@ import {WATER_OPTICS} from './waterOptics';
 import {WINDOW_ROOM} from './windowGlass';
 import {skyDomeSampleElevation} from './skyModel';
 import {materialPatchKeys} from './materialPatches';
-import {PHOTO_LIGHT,PHOTO_MOON,sunDisc,type PhotoLook} from '../../photoGrade';
+import {PHOTO_LIGHT,PHOTO_MOON,PHOTO_NIGHT_FILL,sunDisc,type PhotoLook} from '../../photoGrade';
 
 const HIDDEN=new Set(['sky-dome','picked-wall-outline','selection-outline','picked-pergola-outline','landscape-mature-overlay']);
 let rippleNormal:THREE.DataTexture|null=null;
@@ -352,13 +352,33 @@ function bakeInstances(mesh:THREE.InstancedMesh){
  baked.frustumCulled=false;baked.matrixAutoUpdate=false;baked.userData={photoBaked:true};
  return baked;
 }
-function tuneMaterial(mesh:THREE.Mesh,material:THREE.MeshStandardMaterial,look:PhotoLook,ripple:THREE.Texture,caustics:THREE.Texture|null){
+/** Shallow edges and the waterline go lighter; the middle of the floor stays a deeper teal. The original colours are put back with the rest of the photo session. */
+function paintPoolGradient(mesh:THREE.Mesh,role:'floor'|'wall',saved:Map<THREE.BufferGeometry,THREE.BufferAttribute>){
+ const geometry=mesh.geometry,color=geometry.getAttribute('color') as THREE.BufferAttribute|undefined,position=geometry.getAttribute('position') as THREE.BufferAttribute|undefined;
+ if(!color||!position||saved.has(geometry))return;
+ saved.set(geometry,color);
+ const painted=color.clone(),n=position.count;
+ let sx=0,sz=0,minY=Infinity,maxY=-Infinity;
+ for(let i=0;i<n;i++){sx+=position.getX(i);sz+=position.getZ(i);minY=Math.min(minY,position.getY(i));maxY=Math.max(maxY,position.getY(i));}
+ sx/=n;sz/=n;
+ let maxR=1e-4;
+ for(let i=0;i<n;i++)maxR=Math.max(maxR,Math.hypot(position.getX(i)-sx,position.getZ(i)-sz));
+ const shallow=new THREE.Color('#c5f3ea'),deep=new THREE.Color('#145e68'),top=new THREE.Color('#d4f3ec'),low=new THREE.Color('#124e58');
+ for(let i=0;i<n;i++){
+  const c=role==='floor'
+   ?deep.clone().lerp(shallow,Math.pow(Math.min(1,Math.hypot(position.getX(i)-sx,position.getZ(i)-sz)/maxR),.72))
+   :low.clone().lerp(top,maxY>minY?(position.getY(i)-minY)/(maxY-minY):1);
+  painted.setXYZ(i,c.r,c.g,c.b);if(painted.itemSize>3)painted.setW(i,1);
+ }
+ geometry.setAttribute('color',painted);painted.needsUpdate=true;
+}
+function tuneMaterial(mesh:THREE.Mesh,material:THREE.MeshStandardMaterial,look:PhotoLook,ripple:THREE.Texture,caustics:THREE.Texture|null,poolColors:Map<THREE.BufferGeometry,THREE.BufferAttribute>){
  const body=physical(material),role=roleOf(mesh),surface=(material.userData.surface as SurfaceRecord|undefined)?.fallback;
  // A loaded paver photo already contains the product colour. Tint it only when the photo has not arrived, otherwise the field goes black.
  if(material.userData.hardscapeSwatch){if(material.map&&textureReady(material.map))material.color.set('#ffffff');else material.map=null;}
  if(role==='water'||mesh.name.includes('water')&&body&&Math.abs((body.ior??1.5)-1.333)<0.02){
   const tint=new THREE.Color(WATER_OPTICS.shallow).lerp(new THREE.Color(WATER_OPTICS.deep),0.42);
-  material.color.copy(tint);material.roughness=0.045;material.metalness=0;material.opacity=1;material.transparent=true;material.side=THREE.DoubleSide;material.normalMap=ripple;material.normalScale.set(0.35,0.35);
+  material.color.copy(tint);material.roughness=look==='night'?0.08:0.045;material.metalness=0;material.opacity=1;material.transparent=true;material.side=THREE.DoubleSide;material.normalMap=ripple;material.normalScale.set(look==='night'?1.05:0.35,look==='night'?1.05:0.35);
   // Thickness stays 0. An open water sheet has no exit face, and a finite thickness absorbs the interior finish to black.
   if(body){body.transmission=1;body.thickness=0;body.ior=1.333;body.attenuationDistance=Infinity;body.attenuationColor.set('#ffffff');}
   material.needsUpdate=true;
@@ -375,6 +395,8 @@ function tuneMaterial(mesh:THREE.Mesh,material:THREE.MeshStandardMaterial,look:P
   // Keep the asset's own cutoff. Raising a soft leaf card to 0.45 leaves only a few white texels.
   if(material.alphaTest<=0)material.alphaTest=.08;
   material.transparent=false;material.depthWrite=true;material.side=THREE.DoubleSide;material.needsUpdate=true;
+ }else if(look==='night'&&mesh.name==='aluminum-pergola-LED'){
+  material.emissive.set('#ffd09a');material.emissiveIntensity=2.4;material.needsUpdate=true;
  }else if(look==='night'&&(mesh.name==='fire-flame'||mesh.name==='fire-burner'||material.emissive.getHex()>0&&mesh.name.startsWith('fire-'))){
   material.emissive.set('#ff7a30');material.emissiveIntensity=mesh.name==='fire-flame'?2.6:1.7;material.needsUpdate=true;
  }else if(look==='night'&&material.emissiveIntensity>0.05&&material.emissiveIntensity<1.2){
@@ -384,7 +406,14 @@ function tuneMaterial(mesh:THREE.Mesh,material:THREE.MeshStandardMaterial,look:P
   material.emissiveIntensity*=PHOTO_LIGHT.nightEmissiveBoost;material.needsUpdate=true;
  }
  if(look==='night'&&(role==='floor'||role==='wall')){
-  material.emissive.set(role==='floor'?'#d5efe6':'#b7ddd2');material.emissiveIntensity=role==='floor'?.62:.28;material.needsUpdate=true;
+  paintPoolGradient(mesh,role,poolColors);
+  material.emissive.set(role==='floor'?'#e7fff8':'#c9ebe4');
+  if(role==='floor'){material.emissiveMap=caustics;material.emissiveIntensity=PHOTO_LIGHT.nightFloorGlow;}
+  else material.emissiveIntensity=PHOTO_LIGHT.nightWallGlow;
+  material.needsUpdate=true;
+ }
+ if(look==='night'&&(role==='coping'||role==='collar')){
+  material.emissive.set('#d5ebe4');material.emissiveIntensity=PHOTO_LIGHT.nightCopingGlow;material.needsUpdate=true;
  }
  if(role==='floor'&&caustics&&look!=='night'){
   material.emissive.set('#fff1dc');material.emissiveMap=caustics;material.emissiveIntensity=PHOTO_LIGHT.floorCaustic;material.needsUpdate=true;
@@ -441,8 +470,8 @@ function widenSceneColors(scene:THREE.Scene,widened:WidenedColor[]){
  * Everything is put back by the returned function, including when setup throws. */
 export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[number,number,number];direction:[number,number,number];diameterFt:number;radiance:number;distanceFt:number}|null){
  const materials=new Map<string,SavedMaterial>(),lights:SavedLight[]=[],hidden:THREE.Object3D[]=[],added:THREE.Object3D[]=[],proxies:THREE.Material[]=[],widened:WidenedColor[]=[];
- const swapped:THREE.Mesh[]=[],previous:THREE.Material[]=[];
- const ripple=waterRippleNormal(),caustics=look==='night'?null:causticTexture();
+ const swapped:THREE.Mesh[]=[],previous:THREE.Material[]=[],poolColors=new Map<THREE.BufferGeometry,THREE.BufferAttribute>();
+ const ripple=waterRippleNormal(),caustics=causticTexture();
  scene.updateMatrixWorld(true);
  const meshes:THREE.Mesh[]=[];
  scene.traverse(object=>{if((object as THREE.Mesh).isMesh)meshes.push(object as THREE.Mesh);});
@@ -460,7 +489,7 @@ export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[num
   for(const entry of tuned){
    const material=standard(entry);if(!material||materials.has(material.uuid))continue;
    materials.set(material.uuid,saveMaterial(material));
-   tuneMaterial(mesh,material,look,ripple,caustics);
+   tuneMaterial(mesh,material,look,ripple,caustics,poolColors);
   }
  }
  for(const mesh of meshes){
@@ -487,15 +516,40 @@ export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[num
  };
  if(sun)place(sun.color,sun.direction,sun.diameterFt,sun.radiance,sun.distanceFt,'photo-sun');
  if(look==='night'){
-  const el=PHOTO_MOON.elevationDeg*Math.PI/180,az=PHOTO_MOON.azimuthDeg*Math.PI/180,disc=sunDisc(PHOTO_MOON.irradiance,PHOTO_MOON.angularRadiusDeg);
-  place(PHOTO_MOON.color,[Math.cos(el)*Math.cos(az),Math.sin(el),Math.cos(el)*Math.sin(az)],disc.diameterFt,disc.radiance,disc.distanceFt,'photo-moon');
-  // Step lights and flush pavers that only light through the raster shader. A short warm pool so the paving is not flat.
+  const aim=(spec:{elevationDeg:number;azimuthDeg:number;irradiance:number;angularRadiusDeg:number;color:[number,number,number]},name:string)=>{
+   const el=spec.elevationDeg*Math.PI/180,az=spec.azimuthDeg*Math.PI/180,disc=sunDisc(spec.irradiance,spec.angularRadiusDeg);
+   place(spec.color,[Math.cos(el)*Math.cos(az),Math.sin(el),Math.cos(el)*Math.sin(az)],disc.diameterFt,disc.radiance,disc.distanceFt,name);
+  };
+  aim(PHOTO_MOON,'photo-moon');
+  aim(PHOTO_NIGHT_FILL,'photo-night-fill');
+  // Step lights and flush pavers only light the raster through a shader. A short warm pool sits just outside the housing.
   scene.traverse(object=>{
    if(!/^(wedge|evo_hyde|evo_ground_300)-/.test(object.name))return;
    if(object.children.some(child=>(child as THREE.Light).isLight))return;
-   const fill=new THREE.PointLight('#ffb56a',5.5,8,2);
-   object.getWorldPosition(fill.position);fill.position.y=Math.max(0.15,fill.position.y);
-   fill.name='photo-fill';added.push(fill);
+   const step=/^wedge-/.test(object.name);
+   const fill=new THREE.PointLight('#ffb56a',step?PHOTO_LIGHT.stepLightCandela:PHOTO_LIGHT.paverLightCandela,step?PHOTO_LIGHT.stepLightRangeFt:6,2);
+   const lens=step?new THREE.Vector3(0,-4,6):new THREE.Vector3(0,.4,0);
+   object.localToWorld(lens);fill.position.copy(lens);fill.position.y=Math.max(0.05,fill.position.y);
+   fill.name=step?'photo-step':'photo-fill';added.push(fill);
+  });
+  // Underwater-looking wash: a few lamps just above the surface, so the coping catches a soft pool light and the floor is not a flat slab.
+  scene.traverse(object=>{
+   if(roleOf(object)!=='water')return;
+   const box=new THREE.Box3().setFromObject(object),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
+   if(size.x+size.z<0.2)return;
+   const alongX=size.x>=size.z,span=Math.max(size.x,size.z);
+   for(let i=0;i<3;i++){
+    const t=(i-1)*.28;
+    const lamp=new THREE.PointLight('#c8fff4',PHOTO_LIGHT.poolLightCandela,span*0.55,2);
+    lamp.position.set(center.x+(alongX?size.x*t:0),box.max.y+0.4,center.z+(alongX?0:size.z*t));
+    lamp.name='photo-pool-light';added.push(lamp);
+   }
+  });
+  scene.traverse(object=>{
+   if(object.name!=='aluminum-pergola-LED')return;
+   const at=object.getWorldPosition(new THREE.Vector3());
+   const wash=new THREE.PointLight('#ffc89a',PHOTO_LIGHT.pergolaWashCandela,12,2);
+   wash.position.set(at.x,Math.max(0.4,at.y-1.4),at.z);wash.name='photo-pergola-wash';added.push(wash);
   });
  }
  for(const object of added)scene.add(object);
@@ -503,6 +557,7 @@ export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[num
  widenSceneColors(scene,widened);
  return ()=>{
   for(const entry of widened)entry.geometry.setAttribute('color',entry.color);
+  for(const [geometry,color] of poolColors)geometry.setAttribute('color',color);
   for(const saved of materials.values())restoreMaterial(saved);
   for(const saved of lights){saved.light.intensity=saved.intensity;if(saved.radius===undefined)delete saved.light.radius;else saved.light.radius=saved.radius;}
   for(const object of hidden)object.visible=true;

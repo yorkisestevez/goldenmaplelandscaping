@@ -2,6 +2,7 @@ import {readFileSync} from 'node:fs';
 import * as THREE from 'three';
 import {SCENE_LOOK} from '../src/features/deckcraft/components/viewer3d/sceneLook';
 import {PHOTO_FALLBACK,PHOTO_GRADE,PHOTO_LIGHT,photoStillSize,photoSunColor,photoSunElevationDeg,photoSunIrradiance,sunDisc,sunDiscIrradiance} from '../src/features/deckcraft/photoGrade';
+import {clampFireflies,denoiseEdgeAware} from '../src/features/deckcraft/photoDenoise';
 import {applyPhotoScene,buildPhotoBackground,photoMeanAlbedo,rasterPhotoTriangles,tracePhotoTriangles} from '../src/features/deckcraft/components/viewer3d/photoMaterials';
 import {photoSampleHold} from '../src/features/deckcraft/photoMode';
 import {photoSamplesPerFrame,registerPhotoTracer,tracePhotoFrame} from '../src/features/deckcraft/photoTraceApi';
@@ -121,8 +122,17 @@ ok(scene.getObjectByName('photo-sun') instanceof THREE.RectAreaLight&&scene.getO
 ok(floorMat.emissiveIntensity===PHOTO_LIGHT.floorCaustic&&floorMat.emissiveMap!==null,'The pool floor carries a caustic approximation');
 restore();
 ok(sky.visible&&blades.visible&&detail.visible&&instanced.visible&&catcher.visible&&basic.material===basicMat&&sun.intensity===2.4&&windowMat.transmission===0&&guard.transmission===0&&guard.depthWrite===false&&waterMat.transmission===0&&leaf.alphaTest===.2&&leaf.transparent===true&&swatch.map===swatchMap&&swatch.metalness===.2&&shrub.map===shrubMap&&shrub.alphaTest===.4&&shrub.emissive.g===0&&!shrub.userData.photoLeafLift&&!scene.getObjectByName('photo-sun')&&!scene.getObjectByName('photo-emitter')&&!scene.getObjectByName('photo-baked-photo-check-instances'),'Leaving photo mode puts the raster materials, lights and helpers back');
+const wedge=new THREE.Group();wedge.name='wedge-1';wedge.position.set(2,1,0);scene.add(wedge);
 const windowEmissive=windowMat.emissiveIntensity,night=applyPhotoScene(scene,'night',null);
-ok(windowMat.emissiveIntensity===PHOTO_LIGHT.windowNightEmissive&&floorMat.emissiveMap===null&&!scene.getObjectByName('photo-sun'),'Night windows emit and the sun stays out');
+const step=scene.getObjectByName('photo-step') as THREE.PointLight|undefined;
+ok(windowMat.emissiveIntensity===PHOTO_LIGHT.windowNightEmissive&&windowMat.emissiveIntensity<1.4&&floorMat.emissiveMap!==null&&floorMat.emissiveIntensity===PHOTO_LIGHT.nightFloorGlow&&!scene.getObjectByName('photo-sun')&&scene.getObjectByName('photo-moon') instanceof THREE.RectAreaLight&&scene.getObjectByName('photo-night-fill') instanceof THREE.RectAreaLight&&scene.getObjectByName('photo-pool-light') instanceof THREE.PointLight&&step?.intensity===PHOTO_LIGHT.stepLightCandela,'Night keeps a warm window, lights the pool from inside, fills the yard with moonlight, and gives step lights a real pool');
+const noisy=new Float32Array(32*8*3);
+for(let y=0;y<8;y++)for(let x=0;x<32;x++){const i=(y*32+x)*3,base=x<16?0.05:0.62,n=((x*13+y*7)%5-2)*0.01;noisy[i]=noisy[i+1]=noisy[i+2]=base+n;}
+const spike=(4*32+4)*3;noisy[spike]=noisy[spike+1]=noisy[spike+2]=40;
+const cleaned=denoiseEdgeAware(noisy,32,8);
+const meanOf=(x0:number,x1:number)=>{let s=0,n=0;for(let y=1;y<7;y++)for(let x=x0;x<x1;x++){s+=cleaned[(y*32+x)*3];n++;}return s/n;};
+ok(meanOf(1,12)<0.2&&meanOf(20,30)>0.4&&cleaned[spike]<2,'The still denoiser keeps an edge, clears a firefly, and leaves the two sides apart');
+ok(clampFireflies(noisy,32,8)[spike]<2,'A single-pixel firefly is pulled down before the filter');
 night();
 ok(windowMat.emissiveIntensity===windowEmissive&&windowMat.transmission===0,'Night glass is restored to the raster window');
 background.dispose();

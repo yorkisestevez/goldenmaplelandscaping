@@ -70,18 +70,35 @@ export const PHOTO_LIGHT={
  pointSphereRadiusFt:0.16,
  pointEmissiveScale:0.06,
  pointEmissiveCap:2.4,
- windowNightEmissive:1.55,
+ windowNightEmissive:1.08,
  floorCaustic:0.16,
+ nightFloorGlow:0.58,
+ nightWallGlow:0.22,
+ nightCopingGlow:0.1,
  nightEmissiveBoost:1.15,
+ stepLightCandela:18,
+ stepLightRangeFt:5,
+ paverLightCandela:12,
+ poolLightCandela:80,
+ pergolaWashCandela:16,
 };
 
-/** A dim, wide moon so the night still has fill on the deck and planting. Not a saved scene light. */
+/** A wide moon plus a softer overhead fill. Together they are moonlight, not a second sun. */
 export const PHOTO_MOON={
- irradiance:0.045,
- angularRadiusDeg:7.5,
- elevationDeg:32,
+ irradiance:0.2,
+ angularRadiusDeg:12,
+ elevationDeg:38,
  azimuthDeg:214,
- color:[0.62,0.74,1] as [number,number,number],
+ color:[0.58,0.72,1] as [number,number,number],
+};
+
+/** Blue fill from nearly overhead, so lawn, fence, siding and coping read without a hard shadow. */
+export const PHOTO_NIGHT_FILL={
+ irradiance:0.36,
+ angularRadiusDeg:32,
+ elevationDeg:82,
+ azimuthDeg:18,
+ color:[0.4,0.52,0.92] as [number,number,number],
 };
 
 /** Long-edge export, same rule as the raster still: 2048 or 4096, aspect kept. */
