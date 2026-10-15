@@ -21,8 +21,6 @@ const TRIM=['#f4f1ea','#efe6d6','#d9d3c8','#e4e8ea','#f7f4ef','#e6d3bc'];
 
 export function showcaseRandom(seed:number){let s=seed>>>0;return ()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296;};}
 
-/** Bounding lot of the deck, beds and yard features, in feet, padded so a fence can sit on the line.
- * The house side (negative Z) stays open: a privacy fence wraps the yard, not the street facade. */
 /** The permit lot, in feet, when the design has one. Left and rear match lotOf. */
 function permitLot(data:DeckData):LotBounds|null{
  const s=data.permitSite;if(!s)return null;
@@ -32,6 +30,9 @@ function permitLot(data:DeckData):LotBounds|null{
  return {x0:left/12,x1:(left+s.lotWidthFt*12)/12,z0:(rear-s.lotDepthFt*12)/12,z1:rear/12};
 }
 
+/** The fenced lot around the yard, in feet: the permit lot when recorded, otherwise one that clears the house,
+ * the deck, its stairs, beds and yard features. The house side (negative Z) stays open: a privacy fence wraps the
+ * yard, not the street facade. */
 export function showcaseLotBounds(data:DeckData):LotBounds {
  const recorded=permitLot(data);if(recorded)return recorded;
  const xs:number[]=[],zs:number[]=[];
@@ -46,9 +47,15 @@ export function showcaseLotBounds(data:DeckData):LotBounds {
   for(const [lx,lz] of corners){xs.push(f.xFt+c*lx-s*lz);zs.push(f.zFt+s*lx+c*lz);}
  }
  xs.push(0,data.width??16);zs.push(0,data.length??12);
- const pad=2;
- return {x0:Math.min(...xs)-pad,x1:Math.max(...xs)+pad,z0:Math.min(0,...zs),z1:Math.max(...zs)+pad};
+ try{for(const p of houseOutline(data).flat())xs.push(p.x/12);}catch{/* no house: the deck alone */}
+ // A believable suburban backyard: the fence clears the house, the deck, its stairs and every designed object,
+ // at least SHOWCASE_LOT.minWidthFt wide and SHOWCASE_LOT.minRearFt from the house wall.
+ let x0=Math.min(...xs)-SHOWCASE_LOT.sideClearFt,x1=Math.max(...xs)+SHOWCASE_LOT.sideClearFt;
+ const grow=Math.max(0,SHOWCASE_LOT.minWidthFt-(x1-x0))/2;x0-=grow;x1+=grow;
+ return {x0,x1,z0:Math.min(0,...zs),z1:Math.max(SHOWCASE_LOT.minRearFt,Math.max(...zs)+SHOWCASE_LOT.rearClearFt)};
 }
+/** The neighbourhood's lot when the design records none (feet). */
+export const SHOWCASE_LOT={minWidthFt:50,minRearFt:35,sideClearFt:6,rearClearFt:12} as const;
 
 /** West, back and east lot lines. The min-Z side is the house and stays open. */
 export function fenceRuns(bounds:LotBounds):[number,number,number,number][] {
@@ -169,7 +176,8 @@ export function showcaseGround(bounds:LotBounds,elevationIn:number,slopePct:numb
   grid('west-yard',bounds.x0-56,bounds.z0,bounds.x0-.15,bounds.z1+34,8,10,baseY,slopePct,bounds,none),
   grid('east-yard',bounds.x1+.15,bounds.z0,bounds.x1+56,bounds.z1+34,8,10,baseY,slopePct,bounds,none),
   grid('back-yard',bounds.x0,bounds.z1+.15,bounds.x1,bounds.z1+52,10,8,baseY,slopePct,bounds,none),
-  grid('street-yard',bounds.x0-62,bounds.z0-44,bounds.x1+62,bounds.z0-.2,14,6,baseY,slopePct,bounds,drives),
+  // At most 6 ft between columns, so the 10 ft driveways always land on the grid however wide the lot is.
+  grid('street-yard',bounds.x0-62,bounds.z0-44,bounds.x1+62,bounds.z0-.2,Math.max(14,Math.ceil((bounds.x1-bounds.x0+124)/6)),6,baseY,slopePct,bounds,drives),
  ];
 }
 
