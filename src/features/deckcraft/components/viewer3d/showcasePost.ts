@@ -59,7 +59,8 @@ export function bindDof(material:THREE.ShaderMaterial,color:THREE.Texture,depth:
   const u=material.uniforms,perspective=camera as THREE.PerspectiveCamera;
   u.tColor.value=color;u.tDepth.value=depth;u.resolution.value.set(w,h);u.focus.value=Math.max(.5,focus);
   u.cameraNear.value=perspective.isPerspectiveCamera?perspective.near:.25;u.cameraFar.value=perspective.isPerspectiveCamera?perspective.far:2400;
-  u.maxRadius.value=perspective.isPerspectiveCamera?SHOWCASE_DOF.maxRadiusPx:0;
+  // Depth of field belongs to presentation stills; the live realistic look stays sharp.
+  u.maxRadius.value=perspective.isPerspectiveCamera&&getShowcaseFlags().quality?SHOWCASE_DOF.maxRadiusPx:0;
 }
 export function bindGrade(material:THREE.ShaderMaterial,color:THREE.Texture,hour:ShowcaseHour){
   const g:ShowcaseGrade=SHOWCASE_GRADES[hour],u=material.uniforms;

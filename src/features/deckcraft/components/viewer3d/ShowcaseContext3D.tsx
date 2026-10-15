@@ -191,16 +191,20 @@ function ShowcaseNightFill({data}:{data:DeckData}){
 }
 
 export default function ShowcaseContext3D({data}:{data:DeckData}){
+ // `context` (presentation): fence, neighbour yards and houses, night fill. The realistic look adds only the tree line.
  const context=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().context,()=>false);
+ const trees=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().context||getShowcaseFlags().realistic,()=>false);
  const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false);
  const evening=useSceneEvening(data.sceneLighting);
- const model=useMemo(()=>context?buildShowcaseContext(data):null,[context,data.landscapeObjects,data.yardFeatures,data.width,data.length,data.scenePresentation,data.terrainConfig]);
- if(!context||!model)return null;
+ const model=useMemo(()=>trees?buildShowcaseContext(data):null,[trees,data.landscapeObjects,data.yardFeatures,data.width,data.length,data.scenePresentation,data.terrainConfig]);
+ if(!trees||!model)return null;
  return <group name="showcase-context" scale={12} userData={{presentationOnly:true}}>
-  <Fence runs={model.runs} baseY={model.baseY}/>
-  <NeighbourGround grids={model.ground} evening={evening}/>
-  <ShowcaseNightFill data={data}/>
-  <group name="showcase-neighbours">{model.homes.map((home,i)=><NeighbourHouse key={i} home={home} evening={evening} homeIndex={i}/>)}</group>
+  {context&&<>
+   <Fence runs={model.runs} baseY={model.baseY}/>
+   <NeighbourGround grids={model.ground} evening={evening}/>
+   <ShowcaseNightFill data={data}/>
+   <group name="showcase-neighbours">{model.homes.map((home,i)=><NeighbourHouse key={i} home={home} evening={evening} homeIndex={i}/>)}</group>
+  </>}
   <TreeLine trees={model.trees} showcase={showcase}/>
  </group>;
 }

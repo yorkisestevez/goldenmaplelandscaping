@@ -92,13 +92,14 @@ function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyS
   const data=SKY[lighting],yaw=skyYaw(lighting);
   const map=useSkyMap(lighting==='evening'?eveningLighting:dayLighting);
   const scene=useThree(s=>s.scene),gl=useThree(s=>s.gl),invalidate=useThree(s=>s.invalidate),flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
-  const context=flags.context,graded=flags.quality&&flags.post&&lighting==='day',dayBlue=graded&&flags.hour!=='golden',goldenSky=graded&&flags.hour==='golden';
+  // Trees and haze come with the realistic look too; the grade follows it at the device's own budget.
+  const context=flags.context||flags.realistic,graded=(flags.quality||flags.realistic)&&flags.post&&lighting==='day',dayBlue=graded&&flags.hour!=='golden',goldenSky=graded&&flags.hour==='golden';
   const horizon=useMemo(()=>(context?visibleSkyHorizon(map,0):visibleSkyHorizon(map))??data.horizonColor,[map,data,context]);
   // The viewer keeps one fog for its life (adding or removing fog recompiles every material); the sky only recolours it.
   useEffect(()=>{gl.domElement.dataset.sky=lighting;if(!scene.fog)return;scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);if(scene.fog instanceof THREE.FogExp2)scene.fog.density=context?(graded?SHOWCASE_CLEAR_FOG:SHOWCASE_FOG_DENSITY):SCENE_LOOK.sky.fogDensity;invalidate();},[scene,horizon,strength,invalidate,context,graded,gl,lighting]);
   return <>
     <EnvironmentMap map={map} environmentIntensity={graded?illumination*(goldenSky?SHOWCASE_GOLDEN_FILL:SHOWCASE_SKY_FILL):illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
-    <SkyDome lighting={map} yaw={yaw} strength={strength} horizonBand={context} rich={dayBlue} warm={goldenSky} skyline={flags.quality&&flags.post}/>
+    <SkyDome lighting={map} yaw={yaw} strength={strength} horizonBand={context} rich={dayBlue} warm={goldenSky} skyline={(flags.quality||flags.realistic)&&flags.post}/>
   </>;
 }
 

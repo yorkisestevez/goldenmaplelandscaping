@@ -71,7 +71,7 @@ export default function House3D({data,width,...interaction}:{data:DeckData;width
  const blocks=useMemo(()=>getHouseBlocks(data),[layout]);
  const walls=useMemo(()=>houseWallSpecs(data,layout.config,blocks),[layout,blocks]);
  const {minX,maxX,depth,wallHeight,roofRise,config}=layout,cx=(minX+maxX)/2,evening=useSceneEvening(data.sceneLighting),look=ROOF_LOOK[config.roofFinish],trim=houseTrimColors(config);
- const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false);
+ const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality||getShowcaseFlags().realistic,()=>false);
  const roof=useMemo(()=>buildHouseRoof(layout),[layout]),map=useMemo(()=>roofTexture(config.roofFinish),[config.roofFinish]);
  useEffect(()=>()=>roof.dispose(),[roof]);useEffect(()=>()=>map.dispose(),[map]);
  // Gable ends face the deck and the street (ridge front to back, the original) or the side walls (ridge side to side).
