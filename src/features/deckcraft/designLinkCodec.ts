@@ -2,7 +2,8 @@ import type {DeckData} from './types';
 import {parseDeckReleaseDesign} from './deckRelease';
 import {MAX_PUBLIC_DESIGN_BYTES as MAX_DESIGN_BYTES} from './designPersistence';
 import {readPriceBookVersion} from './priceBook';
-import {DesignLinkError,MAX_DESIGN_LINK_CHARS,DESIGN_LINK_PARAM,expandSharedSpecies,linkDesignJson,withoutPersonalDetails} from './designLink';
+import {DesignLinkError,MAX_DESIGN_LINK_CHARS,DESIGN_LINK_PARAM,withoutPersonalDetails} from './designLink';
+import {expandSharedSpecies,linkDesignJson} from './designLinkSpecies';
 const LINK_VERSION='1';
 const DAMAGED='This design link is incomplete or damaged. Ask for the link again, or for the saved design file.';
 function toBase64Url(bytes:Uint8Array):string{
