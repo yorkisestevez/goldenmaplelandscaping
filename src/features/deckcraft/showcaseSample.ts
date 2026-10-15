@@ -18,7 +18,7 @@ import {syncAutoLighting} from './lightingSystem';
 import {newLandscapeObject,newLandscapePlant} from './landscapeCatalogue';
 import {patioInlayPlans} from './patioInlays';
 import {onPaving,pavingRings} from './pathLightPlacement';
-import {poolOutline} from './poolGeometry';
+import {poolOutline,poolPermanentExclusion} from './poolGeometry';
 import {getLightingRuntimeProduct} from './lightingRuntimeCatalogue';
 import {insidePolygon} from './lib/polygonCuts';
 import {furnitureFacingIssues,nearestSeatPoint,rotationDegFacing,seatFront} from './furnitureFacing';
@@ -92,6 +92,42 @@ function slab(data:DeckData,id:string,name:string,x0:number,z0:number,x1:number,
  return push(data,border?{...feature,inlays:borderStrips(feature)}:feature);
 }
 function rectOf(f:YardFeature){const x=(f.xFt-f.widthFt/2)*12,z=(f.zFt-f.depthFt/2)*12,w=f.widthFt*12,d=f.depthFt*12;return [{x,y:z},{x:x+w,y:z},{x:x+w,y:z+d},{x,y:z+d}];}
+
+/** Blu Grande, long side across the yard. The 300 mm lens fits inside one stone with room to spare. */
+const GRANDE_L=825/25.4,GRANDE_W=495/25.4,GRANDE_J=7/25.4,PAVER_LENS_L=11.811,PAVER_LENS_W=1.1811;
+type PaverPin={x:number;z:number;angle:number;y?:number};
+function grandeGrid(f:YardFeature){
+ const turn=((f.rotationDeg??0)+(f.hardscape?.angleDeg??0))*Math.PI/180,c=Math.cos(turn),s=Math.sin(turn),pitchX=GRANDE_L+GRANDE_J,pitchZ=GRANDE_W+GRANDE_J;
+ const toLocal=(x:number,z:number)=>{const dx=x-f.xFt*12,dz=z-f.zFt*12;return {x:c*dx+s*dz,z:-s*dx+c*dz};};
+ const toWorld=(lx:number,lz:number)=>({x:f.xFt*12+c*lx-s*lz,z:f.zFt*12+s*lx+c*lz});
+ // The housing's long axis is local +X. A yaw of −turn sends that axis along the slab.
+ return {pitchX,pitchZ,toLocal,toWorld,angle:-turn};
+}
+function paverLensCorners(x:number,z:number,angle:number){
+ const c=Math.cos(angle),s=Math.sin(angle),out:{x:number;z:number}[]=[];
+ for(const u of [-PAVER_LENS_L/2,PAVER_LENS_L/2])for(const v of [-PAVER_LENS_W/2,PAVER_LENS_W/2])out.push({x:x+c*u+s*v,z:z-s*u+c*v});
+ return out;
+}
+/** Move each flush lens onto the centre of one whole Grande slab, long axis with the joints. */
+function seatOnGrande(features:YardFeature[],pools:DeckData['pools'],places:PaverPin[],blocked:{x:number;y:number}[][]=[]){
+ const grids=features.map(f=>({...grandeGrid(f),id:f.id,rings:yardFeatureOutline(f),bands:patioInlayPlans(f).filter(p=>p.status==='ok').map(p=>p.outline)}));
+ const poolEx=(pools??[]).flatMap(poolPermanentExclusion),used=new Set<string>();
+ const inside=(polys:{x:number;y:number}[][],x:number,z:number)=>polys.some(poly=>poly.length>=3&&insidePolygon({x,y:z},poly));
+ const clear=(g:typeof grids[number],x:number,z:number)=>paverLensCorners(x,z,g.angle).every(p=>inside(g.rings,p.x,p.z)&&!inside(g.bands,p.x,p.z)&&!inside(poolEx,p.x,p.z)&&!inside(blocked,p.x,p.z));
+ return places.map(p=>{
+  const g=grids.find(g=>inside(g.rings,p.x,p.z));if(!g)return p;
+  const loc=g.toLocal(p.x,p.z),col0=Math.round((loc.x-GRANDE_L/2)/g.pitchX),row0=Math.round((loc.z-GRANDE_W/2)/g.pitchZ);
+  let best:{d:number;x:number;z:number;key:string}|undefined;
+  for(let dc=-4;dc<=4;dc++)for(let dr=-4;dr<=4;dr++){
+   const col=col0+dc,row=row0+dr,key=`${g.id}:${col}:${row}`;if(used.has(key))continue;
+   const w=g.toWorld(col*g.pitchX+GRANDE_L/2,row*g.pitchZ+GRANDE_W/2),d=Math.hypot(w.x-p.x,w.z-p.z);
+   if(!clear(g,w.x,w.z)||best&&d>=best.d)continue;
+   best={d,x:w.x,z:w.z,key};
+  }
+  if(!best)throw Error(`No whole Grande slab will hold a paver light near (${(p.x/12).toFixed(1)} ft, ${(p.z/12).toFixed(1)} ft).`);
+  used.add(best.key);return {...p,x:best.x,z:best.z,angle:g.angle};
+ });
+}
 
 function bed(id:string,name:string,x0:number,z0:number,x1:number,z1:number):LandscapeObject{
  return polyBed(id,name,[{x:x0,z:z0},{x:x1,z:z0},{x:x1,z:z1},{x:x0,z:z1}]);
@@ -320,12 +356,16 @@ export function ontarioShowcaseDesign():DeckData{
  const cx=court.xFt,cz=court.zFt,tx0=terrace.xFt-terrace.widthFt/2,tx1=terrace.xFt+terrace.widthFt/2,tz1=terrace.zFt+terrace.depthFt/2,bedNorth=lounge.zFt+lounge.depthFt/2;
  const path=[pin(-16,13),pin(-10,13),pin(-30.5,40),pin(-30.5,52),pin(-20,bedNorth+4),pin(-12,bedNorth+4),pin(54.5,50),pin(54.5,68)];
  const spots=[pin(-32,24,Math.PI/2),pin(-32,55,Math.PI/2),pin(-34,36,Math.PI/2),pin(-18,bedNorth+4,Math.PI/2),pin(56,24,-Math.PI/2),pin(56,42,-Math.PI/2),pin(56,55,-Math.PI/2),pin(56,70,-Math.PI/2)];
- const pavers=[
+ // Each lens is the centre of one Grande slab, long axis with the joints, clear of the onyx band,
+ // the pool coping and the furniture. A bar that starts near a slab end runs across that joint.
+ const paverHosts=[terrace,court,lounge];
+ const paverBlocked=(data.landscapeObjects??[]).filter(o=>o.kind==='furniture').map(o=>yardRectangle(o.xIn,o.zIn,o.widthIn,o.depthIn,(o.rotationDeg??0)*Math.PI/180));
+ const pavers=seatOnGrande(paverHosts,data.pools,[
   pin(cx-12,cz-10),pin(cx,cz-10),pin(cx+12,cz-10),pin(cx-20,cz),pin(cx+20,cz),pin(cx,cz+9),
   pin(tx0+4,33),pin(tx1-4,19),pin(tx0+4,tz1-3),pin(terrace.xFt,tz1-3),pin(tx1-4,tz1-3),
   pin(loungeX-7.2,sofaZ),pin(loungeX+7.2,sofaZ),pin(loungeX-7.2,chairZ),pin(loungeX+7.2,chairZ),
   pin(-21,fireZ-5.4),pin(-15,fireZ-5.4),pin(-21,fireZ+5.2),pin(-15,fireZ+5.2),
- ];
+ ],paverBlocked);
  // Coping is 12 in wide with 1 in of overhang, so the outer face is 11 in outside the water. The plate sits in that face.
  const cope=11,halfW=18*12,halfL=8*12,faceY=-1,paverFace=-60/25.4/2,terraceMid=(zN+zFar)/2;
  const onFace=(xIn:number,zIn:number,angle:number,y=faceY)=>pin(xIn/12,zIn/12,angle,y);
@@ -513,6 +553,20 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
    if((product.geometry==='bollard'||product.geometry==='spot')&&(paved||!bed))issues.push(`${product.name} is not in a planting bed clear of the paving.`);
    if((item.productId==='evo_ground_300'||item.productId==='wedge')&&(!paved||swimming))issues.push(`${product.name} is not on the paving clear of the water.`);
    if(item.productId==='evo_ground_300'&&Math.abs((place.y??0))>0.2)issues.push('A paver light is not seated on the paving surface.');
+   if(item.productId==='evo_ground_300'){
+    const slab=(data.yardFeatures??[]).find(f=>(f.id==='terrace'||f.id==='pool-court'||f.id==='lounge')&&yardFeatureOutline(f).some(ring=>ring.length>=3&&insidePolygon({x:place.x,y:place.z},ring)));
+    if(!slab)issues.push('A paver light is not on the terrace, the pool deck or the fire lounge.');
+    else{
+     const grid=grandeGrid(slab),loc=grid.toLocal(place.x,place.z);
+     const along=((loc.x%grid.pitchX)+grid.pitchX)%grid.pitchX,across=((loc.z%grid.pitchZ)+grid.pitchZ)%grid.pitchZ;
+     const turn=Math.atan2(Math.sin(place.angle-grid.angle),Math.cos(place.angle-grid.angle));
+     const parallel=Math.min(Math.abs(turn),Math.abs(Math.abs(turn)-Math.PI))<0.02;
+     if(!parallel||Math.abs(along-GRANDE_L/2)>0.15||Math.abs(across-GRANDE_W/2)>0.15)issues.push('A paver light is skewed across the Grande joints instead of centred in one slab.');
+     const bands=patioInlayPlans(slab).filter(p=>p.status==='ok').map(p=>p.outline),poolEx=(data.pools??[]).flatMap(poolPermanentExclusion);
+     const hit=(polys:{x:number;y:number}[][],x:number,z:number)=>polys.some(poly=>poly.length>=3&&insidePolygon({x,y:z},poly));
+     if(paverLensCorners(place.x,place.z,place.angle).some(p=>hit(bands,p.x,p.z)||hit(poolEx,p.x,p.z)||!yardFeatureOutline(slab).some(ring=>insidePolygon({x:p.x,y:p.z},ring))))issues.push('A paver light leaves its slab and meets the onyx band, the coping or the patio edge.');
+    }
+   }
    if(item.productId==='wedge'&&(place.y===undefined||place.y>-0.2||place.y<-2))issues.push('A step light is not seated in the riser.');
   }
  }
