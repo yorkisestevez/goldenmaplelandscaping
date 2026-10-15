@@ -1,8 +1,23 @@
 import {SCENE_LOOK} from './sceneLook';
-import {DEFAULT_KELVIN,FLUSH_LENS_PROUD_IN,FLUSH_TRIM_IN,linearFlushGround} from '../../fixtureLight';
+import {DEFAULT_KELVIN,FLUSH_LENS_PROUD_IN,FLUSH_TRIM_IN,ROUND_FLUSH_TOP_IN,WELL_FACE_IN,WELL_LENS_IN,linearFlushGround,roundFlushGround} from '../../fixtureLight';
 import {kelvinColour,lensGlow} from './fixtureLighting';
 
-type ProductShape={name:string;geometry:string;finish?:string;colorTemperatureK?:number;dimensionsIn:{height?:number;width?:number;length?:number;diameter?:number;mountingDepth?:number}};
+type ProductShape={id?:string;name:string;geometry:string;finish?:string;colorTemperatureK?:number;dimensionsIn:{height?:number;width?:number;length?:number;diameter?:number;mountingDepth?:number}};
+
+/** Dark bars across the well-light lens, three ways, clipped to the aperture. */
+function Honeycomb({radius,y}:{radius:number;y:number}){
+ const pitch=.24,thick=.028,bars=[];
+ const metal=<meshStandardMaterial color="#141618" metalness={.72} roughness={.34}/>;
+ for(const rot of [0,Math.PI/3,-Math.PI/3]){
+  const c=Math.cos(rot),s=Math.sin(rot),n=Math.floor(radius/pitch);
+  for(let i=-n;i<=n;i++){
+   const off=i*pitch,half=Math.sqrt(Math.max(0,radius*radius-off*off));
+   if(half<.08)continue;
+   bars.push(<mesh key={`${rot}:${i}`} position={[-s*off,y,c*off]} rotation={[0,rot,0]}><boxGeometry args={[half*2,.012,thick]}/>{metal}</mesh>);
+  }
+ }
+ return <group name="honeycomb-louver">{bars}</group>;
+}
 
 /** Family envelopes use published dimensions where available. Unspecified
  * profile/cord/stem details are illustrative and disclosed in the catalogue. */
@@ -18,6 +33,11 @@ export default function CatalogueFixture({product,evening,enabled=true}:{product
   // The body stays under the paver. A dark trim ring and a lens a millimetre or two thick are all that show.
   const height=d.height??d.mountingDepth??1.4,proud=FLUSH_LENS_PROUD_IN,trim=FLUSH_TRIM_IN,lensY=trim+proud/2;
   if(linearFlushGround(d)){const length=d.length??diameter,width=d.width??diameter;return <group name="recessed-catalogue-housing"><mesh position={[0,-height/2,0]}><boxGeometry args={[length*.92,height,width*.92]}/>{dark}</mesh><mesh position={[0,trim/2,0]}><boxGeometry args={[length,trim,width]}/>{dark}</mesh><mesh position={[0,lensY,0]}><boxGeometry args={[length*.86,proud,width*.62]}/>{lit}</mesh></group>;}
+  // Round paver lights and the stainless well light: the face is dead flush, and only a thin ring shows around the lens.
+  if(product.id&&roundFlushGround(product.id)){
+   const top=ROUND_FLUSH_TOP_IN,well=product.id==='inground_2ss',faceR=well?WELL_FACE_IN/2:diameter/2,lensR=well?WELL_LENS_IN/2:Math.max(.12,faceR-.06);
+   return <group name="recessed-catalogue-housing"><mesh position={[0,-height/2,0]}><cylinderGeometry args={[lensR*.92,lensR*.88,height,24]}/>{dark}</mesh><mesh position={[0,top/2,0]}><cylinderGeometry args={[faceR,faceR,top,40]}/>{dark}</mesh><mesh position={[0,top+.006,0]}><cylinderGeometry args={[lensR,lensR,.012,36]}/>{lit}</mesh>{well&&<Honeycomb radius={lensR*.9} y={top+.016}/>}</group>;
+  }
   const r=diameter/2;return <group name="recessed-catalogue-housing"><mesh position={[0,-height/2,0]}><cylinderGeometry args={[r*.92,r*.88,height,24]}/>{dark}</mesh><mesh position={[0,trim/2,0]}><cylinderGeometry args={[r,r,trim,32]}/>{dark}</mesh><mesh position={[0,lensY,0]}><cylinderGeometry args={[r*.72,r*.72,proud,32]}/>{lit}</mesh></group>;
  }
  if(g==='wall'){const faceH=d.diameter??h,bodyDepth=d.diameter?(d.height??d.length??1):depth;return <group name="wall-catalogue-housing"><mesh rotation={[d.diameter?Math.PI/2:0,0,0]}>{d.diameter?<cylinderGeometry args={[diameter/2,diameter/2,bodyDepth,24]}/>:<boxGeometry args={[w,faceH,bodyDepth]}/>}{dark}</mesh><mesh position={[0,-faceH/2-.02,bodyDepth*.23]}><boxGeometry args={[w*.72,.08,Math.min(bodyDepth*.55,1)]}/>{lit}</mesh></group>;}

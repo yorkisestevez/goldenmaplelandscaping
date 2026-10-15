@@ -47,6 +47,13 @@ export function linearFlushGround(d:{diameter?:number;width?:number;length?:numb
   const width=d.width??d.diameter??0,length=d.length??0;
   return !d.diameter&&length>width*2.5&&width>0;
 }
+/** Drilled-in round paver lights and the flush stainless well light. The top of the face is this far above the
+ * paver (about 0.5 mm), so the ring reads as set into the stone. */
+export const ROUND_FLUSH_TOP_IN=0.02;
+const ROUND_FLUSH_IDS=new Set(['fusion_22','hyve_22','dot_22','paver_40','inground_2ss']);
+export const roundFlushGround=(productId:string)=>ROUND_FLUSH_IDS.has(productId);
+/** 2 in lens inside the 2.75 in face plate. */
+export const WELL_LENS_IN=2,WELL_FACE_IN=2.75;
 const norm=(v:V3):V3=>{const l=Math.hypot(...v)||1;return [v[0]/l,v[1]/l,v[2]/l];};
 const deg=(d:number)=>d*Math.PI/180;
 /** Down and tipped 5° back toward the riser: an under-nose light washes the riser below and pools on the tread. */
@@ -64,6 +71,12 @@ export function fixtureNight(productId:string,zone?:string):FixtureNight{
     if(zone==='posts'||zone==='stairs')return {route:'glow-only',kelvin,lens,source:null,shadowPriority:0};
     // A linear paver light is a thin lens in the stone. No camera-facing sparkle: a short soft pool on the paving.
     if(!legacy&&linearFlushGround(d))return {route:'patch',kelvin,lens:null,source:{kind:'point',position:[0,lensY+.08,0],direction:DOWN,halfLengthIn:0,radiusIn:8,angle:Math.PI,penumbra:0,candela:1.4,rangeFt:4.5},shadowPriority:0};
+    // A round flush light is a frosted lens in the paver. A small soft glow, a short pool, and no uplight beam.
+    if(!legacy&&roundFlushGround(productId)){
+      const face=(d.diameter??2)/2,lensR=productId==='inground_2ss'?WELL_LENS_IN/2:Math.max(.12,face-.06),y=ROUND_FLUSH_TOP_IN+.006;
+      const well=productId==='inground_2ss';
+      return {route:'patch',kelvin:p.colorTemperatureK??2700,lens:{position:[0,y,0],normal:UP,radiusIn:lensR,lengthIn:0,strength:well?0.26:0.18},source:{kind:'point',position:[0,y+.04,0],direction:DOWN,halfLengthIn:0,radiusIn:well?5:3.5,angle:Math.PI,penumbra:0,candela:well?1.1:.6,rangeFt:well?4:3},shadowPriority:0};
+    }
     return {route:'real',kelvin,lens,source:{kind:'spot',position:[0,lensY+.2,0],direction:UP,halfLengthIn:0,radiusIn:0,angle:1.25,penumbra:.8,candela:3,rangeFt:12},shadowPriority:1};
   }
   if(g==='undercap'){

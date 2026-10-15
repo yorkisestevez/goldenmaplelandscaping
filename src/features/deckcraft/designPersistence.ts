@@ -47,6 +47,7 @@ import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WI
 
 export {GARAGE_DOOR_STYLES} from './houseOpeningStyles';
 import { LIGHTING_RUNTIME_CATALOGUE } from './lightingRuntimeCatalogue';
+import { MAX_PINNED_FIXTURE_QTY } from './lightingSystem';
 import { DECKING_CATALOGUE, RAILING_CATALOGUE, MANUFACTURER_ACCESSORIES } from './manufacturerRuntimeCatalogue';
 
 /** A wainscot band's top above grade, inches. */
@@ -157,7 +158,7 @@ export function validateDesign(input:unknown):DeckData {
     const seen=new Set<string>();
     clean.lightingSystem={wireDistance:numeric(lighting.wireDistance,0,500,'Wire distance'),selectedItems:lighting.selectedItems.map(item=>{
       if(!record(item)||typeof item.productId!=='string'||!LIGHTING_RUNTIME_CATALOGUE.some(p=>p.id===item.productId&&p.supported)||seen.has(item.productId))throw new Error('Unknown, unsupported or duplicate lighting product.');
-      seen.add(item.productId);const qty=numeric(item.qty,0,30,'Lighting quantity');if(!Number.isInteger(qty))throw new Error('Lighting quantities must be whole numbers.');
+      seen.add(item.productId);const qty=numeric(item.qty,0,MAX_PINNED_FIXTURE_QTY,'Lighting quantity');if(!Number.isInteger(qty))throw new Error('Lighting quantities must be whole numbers.');
       if(item.zone==='border'||item.zone!==undefined&&!(LIGHTING_ZONES as readonly unknown[]).includes(item.zone))throw new Error('Unsupported lighting installation zone; picture-frame lights use their dedicated option.');
       if(item.auto!==undefined&&item.auto!==true)throw new Error('Invalid managed lighting flag.');
       let places:{x:number;z:number;angle:number;y?:number}[]|undefined;
@@ -166,7 +167,8 @@ export function validateDesign(input:unknown):DeckData {
         places=item.places.map(place=>{
           if(!record(place))throw new Error('Invalid lighting placement.');
           const y=place.y===undefined?undefined:numeric(place.y,-500,4000,'Lighting placement');
-          return {x:numeric(place.x,-200000,200000,'Lighting placement'),z:numeric(place.z,-200000,200000,'Lighting placement'),angle:numeric(place.angle,-Math.PI*2,Math.PI*2,'Lighting placement'),...(y===undefined?{}:{y})};
+          const angle=place.angle===undefined?0:numeric(place.angle,-Math.PI*2,Math.PI*2,'Lighting placement');
+          return {x:numeric(place.x,-200000,200000,'Lighting placement'),z:numeric(place.z,-200000,200000,'Lighting placement'),angle,...(y===undefined?{}:{y})};
         });
       }
       return {productId:item.productId,qty,...(item.zone?{zone:item.zone as LightingZone}:{}),...(item.auto?{auto:true as const}:{}),...(places?{places}:{})};
