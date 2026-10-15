@@ -1,6 +1,6 @@
 import {useEffect,useState,useSyncExternalStore} from 'react';
-import {applyPhotoSearch,getPhotoProgress,getPhotoServerProgress,getPhotoServerSettings,getPhotoSettings,setPhotoSettings,subscribePhoto,subscribePhotoProgress,clampStop,clampTarget} from './photoMode';
-import {PHOTO_FALLBACK,PHOTO_LOOKS,type PhotoLook} from './photoGrade';
+import {applyPhotoSearch,getPhotoProgress,getPhotoServerProgress,getPhotoServerSettings,getPhotoSettings,setPhotoSettings,subscribePhoto,subscribePhotoProgress,clampStop,clampTarget} from '../../photoMode';
+import {PHOTO_FALLBACK,PHOTO_LOOKS,type PhotoLook} from '../../photoGrade';
 
 const LOOK_LABEL:Record<PhotoLook,string>={day:'Day',golden:'Golden hour',night:'Night'};
 

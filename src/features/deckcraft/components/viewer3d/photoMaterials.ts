@@ -3,7 +3,7 @@ import {WATER_OPTICS} from './waterOptics';
 import {WINDOW_ROOM} from './windowGlass';
 import {skyDomeSampleElevation} from './skyModel';
 import {materialPatchKeys} from './materialPatches';
-import {PHOTO_LIGHT,PHOTO_MOON,sunDisc,type PhotoLook} from './photoGrade';
+import {PHOTO_LIGHT,PHOTO_MOON,sunDisc,type PhotoLook} from '../../photoGrade';
 
 const HIDDEN=new Set(['sky-dome','picked-wall-outline','selection-outline','picked-pergola-outline','landscape-mature-overlay']);
 let rippleNormal:THREE.DataTexture|null=null;

@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import type {LandscapeObject} from '../../landscapeTypes';
 import {landscapePlacement} from '../../landscapeModelRuntime';
-import {getShowcaseFlags,subscribeShowcase} from './showcaseMode';
+import {getShowcaseFlags,subscribeShowcase} from '../../showcaseMode';
 import {applyBloomLighting,plantColorHash} from './foliageLighting';
 import {useFixtureLit} from './fixtureLighting';
 

@@ -7,7 +7,7 @@ import {execFileSync} from 'node:child_process';
 import {mkdirSync,readFileSync,renameSync,writeFileSync,writeSync} from 'node:fs';
 import {deflateSync} from 'node:zlib';
 import {chromium,type Browser,type Page} from '@playwright/test';
-import {PHOTO_GRADE,type PhotoLook} from '../src/features/deckcraft/components/viewer3d/photoGrade';
+import {PHOTO_GRADE,type PhotoLook} from '../src/features/deckcraft/photoGrade';
 
 const emit=(fd:number)=>(...args:unknown[])=>{writeSync(fd,`${args.map(part=>typeof part==='string'?part:String(part)).join(' ')}\n`);};
 console.log=emit(1) as typeof console.log;

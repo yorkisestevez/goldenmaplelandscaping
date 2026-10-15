@@ -5,8 +5,8 @@ import {registerPhotoTracer,type PhotoTraceFrame,type PhotoTraceRequest} from '.
 import {SCENE_LOOK} from './sceneLook';
 import {SKY_DATA,skyStrength,skyYaw,visibleSkyHorizon,visibleSkyStrength,type Lighting} from './skyModel';
 import {applyPhotoScene,buildPhotoBackground,photoTexturesReady,rasterPhotoTriangles,tracePhotoTriangles} from './photoMaterials';
-import {PHOTO_FALLBACK,PHOTO_GRADE,SUN_ANGULAR_RADIUS_DEG,photoStillSize,photoSunColor,photoSunElevationDeg,photoSunIrradiance,sunDisc,type PhotoLook} from './photoGrade';
-import {getPhotoSettings,setPhotoProgress,type PhotoPhase} from './photoMode';
+import {PHOTO_FALLBACK,PHOTO_GRADE,SUN_ANGULAR_RADIUS_DEG,photoStillSize,photoSunColor,photoSunElevationDeg,photoSunIrradiance,sunDisc,type PhotoLook} from '../../photoGrade';
+import {getPhotoSettings,setPhotoProgress,type PhotoPhase} from '../../photoMode';
 
 /** Progressive stills on the live WebGL renderer.
  * three-gpu-pathtracer's WebGL path matches three 0.185 and this canvas. The WebGPU tracer and oidn-web

@@ -1,6 +1,6 @@
 /** Opt-in path-traced stills. Not design data: colours, quantities and prices stay on the project.
  * URL, read once: ?deck-photo=1, ?deck-photo-look=day|golden|night, ?deck-photo-samples=N. */
-import {photoSamplesPerFrame} from '../../photoTraceApi';
+import {photoSamplesPerFrame} from './photoTraceApi';
 import {PHOTO_GRADE,PHOTO_LOOKS,type PhotoLook} from './photoGrade';
 
 export interface PhotoSettings{

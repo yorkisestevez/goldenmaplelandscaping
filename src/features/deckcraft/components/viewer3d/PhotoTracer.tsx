@@ -3,10 +3,10 @@ import {useFrame,useThree} from '@react-three/fiber';
 import {useProgress} from '@react-three/drei';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
-import {PHOTO_FALLBACK} from './photoGrade';
+import {PHOTO_FALLBACK} from '../../photoGrade';
 import {rasterPhotoTriangles} from './photoMaterials';
-import {getPhotoServerSettings,getPhotoSettings,photoSampleHold,setPhotoProgress,subscribePhoto} from './photoMode';
-import {getShowcaseFlags,subscribeShowcase} from './showcaseMode';
+import {getPhotoServerSettings,getPhotoSettings,photoSampleHold,setPhotoProgress,subscribePhoto} from '../../photoMode';
+import {getShowcaseFlags,subscribeShowcase} from '../../showcaseMode';
 import type {PhotoBridge,PhotoEngine} from './photoEngine';
 
 /** Mounted inside the canvas. The path tracer is loaded only after photo mode is turned on. */

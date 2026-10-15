@@ -133,7 +133,7 @@ import RenderPipeline,{pipelineFor} from './renderPipeline';
 
 // Photo mode (the path tracer, its materials and its panel) loads once it is switched on.
 const PhotoTracer=lazy(()=>import('./PhotoTracer'));
-import {applyPhotoSearch,getPhotoServerSettings,getPhotoSettings,subscribePhoto} from './photoMode';
+import {applyPhotoSearch,getPhotoServerSettings,getPhotoSettings,subscribePhoto} from '../../photoMode';
 
 const PhotoModePanel=lazy(()=>import('./PhotoModePanel'));
 
