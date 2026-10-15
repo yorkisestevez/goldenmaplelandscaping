@@ -27,7 +27,7 @@ test.beforeEach(async({context})=>{
  */
 const TITLE='Draw your deck on your house';
 /** The sections of the designer, in page order. */
-const SECTION_NAMES=['House','Deck shape & size','Boards & finish','Stairs & railings','Lighting','Privacy, skirting & extras','Site & foundation','Backyard','Proposal & files'] as const;
+const SECTION_NAMES=['House','Deck shape & size','Boards & finish','Stairs & railings','Outdoor lighting','Privacy, skirting & extras','Site & foundation','Backyard','Proposal & files'] as const;
 type Section=typeof SECTION_NAMES[number];
 /** The drawing's sheets: the site plan, the 3D view and the framing. */
 type ViewTab='Plan'|'3D'|'Framing';
@@ -339,8 +339,8 @@ test('reaches every feature of the designer',async({page})=>{
     await page.getByLabel('Manufacturer railing system',{exact:true}).selectOption('tt_classic_composite');
     await reach('Railing colour (F6)',page.getByLabel('Railing colour',{exact:true}));
   });
-  await test.step('Lighting',async()=>{
-    await openSection(page,'Lighting');
+  await test.step('Outdoor lighting',async()=>{
+    await openSection(page,'Outdoor lighting');
     await reach('Deck lighting',page.getByRole('group',{name:'Deck lighting',exact:true}));
     await reach('Lighting catalogue',page.getByLabel('Find lighting',{exact:true}));
     await viewTab(page,'3D');
@@ -430,8 +430,8 @@ test('opens tasks in any order, keeps one focused inspector, preserves choices a
   await expect(sectionButton(page,'Stairs & railings')).toHaveAttribute('aria-expanded','false');
   await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveCount(0);
   await openSection(page,'Stairs & railings');await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveValue('2');
-  await sectionBody(page,'Stairs & railings').getByRole('button',{name:'Light the steps and posts: open Lighting'}).click();
-  await expect(sectionButton(page,'Lighting')).toHaveAttribute('aria-expanded','true');
+  await sectionBody(page,'Stairs & railings').getByRole('button',{name:'Light the steps and posts: open Outdoor lighting'}).click();
+  await expect(sectionButton(page,'Outdoor lighting')).toHaveAttribute('aria-expanded','true');
   await expect(page.getByRole('group',{name:'Deck lighting',exact:true})).toBeVisible();
   await openSection(page,'Stairs & railings');await expect(page.getByLabel('Number of stair flights',{exact:true})).toHaveValue('2');
   // From the keyboard: back to the drawing, Enter on the task's menu, then Enter on the task.
@@ -1001,7 +1001,7 @@ test('offers a frameless glass railing in three mounts, as a supplier quote with
   await expect(plan(page).locator('g[aria-label="Frameless glass railing · Spigots"] circle').first()).toBeAttached();
   await withSchedule(page,async()=>{ expect(await schedule(page).textContent()).not.toMatch(ZERO); });
   // No posts, so no post-cap lights.
-  await openSection(page,'Lighting');
+  await openSection(page,'Outdoor lighting');
   const cap=page.getByRole('checkbox',{name:/^Cap light on each railing post/});
   await expect(cap).toBeDisabled();
   await expect(page.getByText('Cap light on each railing post · a frameless glass railing has no posts')).toBeVisible();

@@ -27,7 +27,7 @@ page.on('console',m=>{if(/Shader Error|WebGLProgram|photographic renderer failed
 try{
 await page.goto(url);
 await page.getByRole('tab',{name:'3D',exact:true}).click();
-await openSection('Lighting');
+await openSection('Outdoor lighting');
 await page.getByRole('checkbox',{name:'Light under the picture-frame deck edge',exact:true}).check();
 await expect(page.getByRole('region',{name:'Price schedule',exact:true})).toContainText('Custom picture-frame lighting support, connections and wiring');
 await page.getByRole('group',{name:'Camera'}).getByRole('button',{name:'Front',exact:true}).click();
@@ -40,7 +40,7 @@ await page.locator('#deck-live-preview').screenshot({path:output+'border-lightin
 await openSection('Boards & finish');
 const overhang=page.getByRole('spinbutton',{name:'Outer frame overhang beyond fascia',exact:true});
 await expect(overhang).toHaveValue('2.5');await expect(overhang).toBeDisabled();
-await openSection('Lighting');
+await openSection('Outdoor lighting');
 await page.getByRole('checkbox',{name:'Light under the picture-frame deck edge',exact:true}).uncheck();
 await openSection('Boards & finish');
 await expect(overhang).toHaveValue('0.5');await expect(overhang).toBeEnabled();

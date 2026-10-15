@@ -67,7 +67,7 @@ export async function pickPlanTool(page:Page,name:string){
 }
 
 const TASK_GROUPS:Record<string,string>={
-  'Deck shape & size':'Design','House':'Design','Boards & finish':'Design','Stairs & railings':'Design','Lighting':'Design',
+  'Deck shape & size':'Design','House':'Design','Boards & finish':'Design','Stairs & railings':'Design','Outdoor lighting':'Design',
   'Privacy, skirting & extras':'Build & landscape','Site & foundation':'Build & landscape','Backyard':'Build & landscape',
   'Proposal & files':'Your project',
 };

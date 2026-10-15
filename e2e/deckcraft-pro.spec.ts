@@ -157,9 +157,9 @@ test('edits the selected object in the docked properties panel, beside the drawi
   await expect(properties(page).getByRole('heading',{level:2})).toHaveText('Edit House');
   await expect(group(page,'House')).toHaveAttribute('aria-expanded','true');
   await ribbonTab(page,'Building').click();
-  await ribbonButton(page,'Lighting').click();
+  await ribbonButton(page,'Outdoor lighting').click();
   await expect(properties(page).getByRole('heading',{level:2})).toHaveText('Edit Stairs & Railings');
-  await expect(area(page,'Lighting')).toBeVisible();
+  await expect(area(page,'Outdoor lighting')).toBeVisible();
   expect(problems).toEqual([]);
 });
 

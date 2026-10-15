@@ -48,7 +48,7 @@ export function proMenus(a:ProMenuActions,wizard:(kind:WizardKind)=>void=()=>{})
       {label:'Deck shape & size',run:()=>a.openSection('deck')},
       {label:'Stairs & railings',run:()=>a.openSection('stairs')},
       {label:'House, doors & windows',run:()=>a.openSection('house')},
-      {label:'Lighting',run:()=>a.openSection('lighting')},
+      {label:'Outdoor lighting',run:()=>a.openSection('lighting')},
       {label:'Privacy, skirting & extras',run:()=>a.openSection('extras')},
       {label:'Patios, walls & pools',run:()=>a.openSection('backyard')},
     ]},

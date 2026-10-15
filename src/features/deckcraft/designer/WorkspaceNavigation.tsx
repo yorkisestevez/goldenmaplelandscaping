@@ -1,6 +1,6 @@
 import {SECTION_BY_ID,type SectionId} from './sections';
 export const WORKSPACE_TASKS:{title:string;items:{id:SectionId;label:string}[]}[]=[
-  {title:'Design',items:[{id:'deck',label:'Shape & size'},{id:'house',label:'House'},{id:'boards',label:'Materials'},{id:'stairs',label:'Stairs & rails'},{id:'lighting',label:'Lighting'}]},
+  {title:'Design',items:[{id:'deck',label:'Shape & size'},{id:'house',label:'House'},{id:'boards',label:'Materials'},{id:'stairs',label:'Stairs & rails'},{id:'lighting',label:'Outdoor lighting'}]},
   {title:'Build & landscape',items:[{id:'extras',label:'Privacy & extras'},{id:'site',label:'Site & foundation'},{id:'backyard',label:'Backyard'}]},
   {title:'Your project',items:[{id:'proposal',label:'Proposal & files'}]},
 ];
