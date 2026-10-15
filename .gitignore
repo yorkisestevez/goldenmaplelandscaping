@@ -46,3 +46,5 @@ playwright-report/
 # Local consolidation diagnostics and generated review/test artifacts
 /work/
 /work-inspect-hardscape.ts
+.photo-cache/
+/artifacts/

@@ -149,6 +149,8 @@ export default function RenderPipeline({evening}:{evening:boolean}){
       gl.render(scene,camera);
     };
     const frame=()=>{
+      // Photo mode path-traces the same canvas. Holding the raster here leaves the shadow-map line below untouched.
+      if(gl.domElement.dataset.photoTrace==='1')return;
       // One plain frame first, so the deck is on screen before the occlusion chain compiles its shaders.
       // Snapshots call paint() and always use the photographic chain.
       if(!state.broken&&!state.chain&&!state.primed){state.primed=true;scene.updateMatrixWorld();gl.setRenderTarget(null);gl.render(scene,camera);invalidate();return;}
