@@ -3,7 +3,7 @@ import {useMemo} from 'react';
 import * as THREE from 'three';
 import {getLightingProduct} from '../../lightingCatalogue';
 import {previewLightPlan} from '../../lightingPreview';
-import {fixtureNight,LEGACY_FIXTURE_SHAPES,LEGACY_HYDE,type FixtureSource} from '../../fixtureLight';
+import {fixtureNight,LEGACY_FIXTURE_SHAPES,LEGACY_HYDE,WEDGE_HOUSING,type FixtureSource} from '../../fixtureLight';
 import CatalogueFixture from './CatalogueFixture';
 import {SCENE_LOOK} from './sceneLook';
 import {kelvinColour,lensGlow} from './fixtureLighting';
@@ -35,7 +35,8 @@ export default function LightingFixtures({items,evening,enabled=true}:{items:Fix
       {recessed&&<><mesh><cylinderGeometry args={[id==='puck'?.55:1.3,id==='puck'?.55:1.3,.28,20]}/>{dark}</mesh><mesh position={[0,.17,0]}><cylinderGeometry args={[id==='puck'?.35:1.02,id==='puck'?.35:1.02,.08,20]}/>{light}</mesh>{id==='hyve'&&[-.5,0,.5].map(x=><mesh key={x} position={[x,.23,0]}><boxGeometry args={[.06,.05,1.75]}/>{dark}</mesh>)}</>}
       {/* The diffuser faces straight down under the tread nose: from standing height you see the lit riser, not the bar. */}
       {id==='evo_hyde'&&<><mesh><boxGeometry args={[LEGACY_HYDE.length,LEGACY_HYDE.height,LEGACY_HYDE.depth]}/>{dark}</mesh><mesh position={[0,-LEGACY_HYDE.height/2-.02,0]}><boxGeometry args={[LEGACY_HYDE.length-.6,.05,LEGACY_HYDE.depth*.6]}/>{light}</mesh></>}
-      {id==='wedge'&&<><mesh rotation={[.2,0,0]}><boxGeometry args={[2.8,2.8,1.4]}/>{dark}</mesh><mesh position={[0,-1.35,.5]} rotation={[-.3,0,0]}><boxGeometry args={[2.4,.15,1]}/>{light}</mesh></>}
+      {/* Face on the riser (local z = 0). The housing is behind that face, so the light does not stand out of it. */}
+      {id==='wedge'&&<><mesh position={[0,0,-WEDGE_HOUSING.depth/2]}><boxGeometry args={[WEDGE_HOUSING.width,WEDGE_HOUSING.height,WEDGE_HOUSING.depth]}/>{dark}</mesh><mesh position={[0,WEDGE_HOUSING.lensY,WEDGE_HOUSING.lensProud/2]}><boxGeometry args={[WEDGE_HOUSING.lensWidth,WEDGE_HOUSING.lensHeight,WEDGE_HOUSING.lensProud]}/>{light}</mesh></>}
       {id==='blink'&&<><mesh rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[1.5,1.5,1.2,24]}/>{dark}</mesh><mesh position={[0,-.6,.67]}><sphereGeometry args={[.7,12,8]}/>{light}</mesh></>}
       {bollard&&<><mesh position={[0,9,0]}><boxGeometry args={[1.7,18,1.7]}/>{dark}</mesh><mesh position={[0,18,0]}><boxGeometry args={[id==='ace'?3.3:2.2,3,2.2]}/>{dark}</mesh><mesh position={[0,17.7,id==='ace'?1.15:0]}><boxGeometry args={[1.8,1.3,id==='ace'?.12:2.3]}/>{light}</mesh><mesh position={[0,.1,0]}><boxGeometry args={[3.6,.3,3.6]}/>{dark}</mesh></>}
       {id==='scope'&&<><mesh position={[0,3,0]}><cylinderGeometry args={[.22,.22,6,8]}/>{dark}</mesh><group position={[0,6.5,0]} rotation={[Math.PI/3,0,0]}><mesh><cylinderGeometry args={[1.2,1.2,3.2,20]}/>{dark}</mesh><mesh position={[0,1.65,0]}><cylinderGeometry args={[1,1,.08,20]}/>{light}</mesh></group></>}

@@ -7,7 +7,7 @@ import {extrasLayout,postFacing,screenOffsetFromPoint,treadNose,walkableAt} from
 import {deckExportMeshes} from '../src/features/deckcraft/designExports';
 import type {DeckData,YardFeature} from '../src/features/deckcraft/types';
 import {MAX_PREVIEW_LIGHTS,MAX_SHADOW_LIGHTS,previewLightPlan,castsPreviewLight} from '../src/features/deckcraft/lightingPreview';
-import {DEFAULT_KELVIN,FX_MAX_FIXTURES,FX_TEXELS,LEGACY_HYDE,fixtureNight,kelvinSrgb,packFixtureLights} from '../src/features/deckcraft/fixtureLight';
+import {DEFAULT_KELVIN,FLUSH_LENS_PROUD_IN,FLUSH_TRIM_IN,FX_MAX_FIXTURES,FX_TEXELS,LEGACY_HYDE,fixtureNight,kelvinSrgb,linearFlushGround,packFixtureLights} from '../src/features/deckcraft/fixtureLight';
 import {onPaving,pavingRings} from '../src/features/deckcraft/pathLightPlacement';
 const data:DeckData={...structuredClone(DEFAULT_DECK),lightingSystem:{selectedItems:[{productId:'wedge',qty:4,zone:'stairs'},{productId:'hyve',qty:4,zone:'deck'},{productId:'hub100',qty:1}],wireDistance:80}};
 const on=calculateEstimate(data),off=calculateEstimate({...data,lightingPreviewOn:false,sceneLighting:'Evening'});
@@ -137,6 +137,13 @@ assert(!withCable.sections.find(s=>s.title==='in-lite® Lighting System')!.items
   assert(![...plan.keys()].some(i=>['stairs','posts'].includes(heavy[i].zone)),'No step or post light takes a real light or casts a shadow');
   assert(!castsPreviewLight('puck','posts')&&fixtureNight('puck','posts').route==='glow-only','A PUCK in a post cap faces the sky: it glows and lights nothing');
   assert.equal(fixtureNight('evo_hyde','stairs').route,'patch','An under-step light lights its step through the fixture light patch');
+  const paver=fixtureNight('evo_ground_300','landscape');
+  assert(linearFlushGround({width:1.1811,length:11.811}),'EVO GROUND is a linear flush paver light');
+  assert.equal(paver.route,'patch','A flush paver light pools on the paving instead of taking a real uplight');
+  assert.equal(paver.lens,null,'A flush paver light has no camera-facing sparkle');
+  assert(paver.source&&paver.source.kind==='point'&&paver.source.rangeFt<=6&&paver.source.position[1]<FLUSH_TRIM_IN+FLUSH_LENS_PROUD_IN+0.2,'The paver pool sits on the lens and stays short');
+  assert(FLUSH_TRIM_IN+FLUSH_LENS_PROUD_IN<0.12,'The lens and trim stay within a few millimetres of the paver');
+  assert.equal(fixtureNight('nero','landscape').route,'real','A round uplight still throws upward');
   assert.equal(fixtureNight('wedge','posts').route,'patch','A post light lights the deck through the fixture light patch');
   const small=[...at('fusion','deck',2),...at('evo_hyde','stairs',1)],smallPlan=previewLightPlan(small);
   assert.equal(smallPlan.size,2,'The under-step light is not a real light');

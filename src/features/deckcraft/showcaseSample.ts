@@ -55,7 +55,9 @@ const BORDER:YardFeature['hardscape']={finishId:'hd-smooth6-13',colorId:'onyx-bl
 const FIELD:YardFeature['hardscape']={finishId:'hd-smooth-grande',colorId:'caff-crema',unitId:'grande-495-825-60',patternId:'linear-laying-pattern-05-100-blu-grande',angleDeg:0,jointMm:7};
 const SEAT:YardFeature['hardscape']={finishId:'smooth',colorId:'onyx-black',unitId:'double-sided-397-249-90',patternId:'running-bond',angleDeg:0,jointMm:0};
 const SEAT_DEPTH=249/304.8;
-const BORDER_IN=18;
+/** One 6×13 course (330 mm) across the band, and the same reveal of field paver outside it. */
+const BAND=330/25.4,MARGIN=BAND;
+const BORDER_IN=BAND;
 const LOT_W=100,LOT_D=160;
 const JOIN=2/12;
 
@@ -70,19 +72,17 @@ function borderStrips(f:YardFeature):PatioInlay[]{
  return out;
 }
 
-/** Onyx frame on the notched terrace: the near edge returns to the deck on both sides of the stairs. */
-function notchBorder(f:YardFeature,b:{x0:number;x1:number;zD:number;zN:number;zFar:number;s0:number;s1:number}):PatioInlay[]{
- const B=BORDER_IN,cx=f.xFt*12,cz=f.zFt*12,out:PatioInlay[]=[];
+/** One onyx picture frame, inset by the same margin on every side of a world-inch rectangle. Corners belong to the
+ * across-yard strips so the returns meet them on a straight joint and never overlap. */
+function rectFrame(f:YardFeature,rect:{x0:number;x1:number;z0:number;z1:number}):PatioInlay[]{
+ const B=BAND,M=MARGIN,cx=f.xFt*12,cz=f.zFt*12,out:PatioInlay[]=[];
+ const x0=rect.x0+M,x1=rect.x1-M,z0=rect.z0+M,z1=rect.z1-M;
+ if(x1-x0<=2*B+1||z1-z0<=2*B+1)throw Error(`${f.name} is too small for an even onyx frame.`);
  let k=0;
  const cuts=(a:number,c:number)=>{const n=Math.ceil((c-a)/240-1e-9),size=(c-a)/n;return Array.from({length:n},(_,i)=>[a+size*i,a+size*(i+1)] as const);};
- const add=(x0:number,z0:number,x1:number,z1:number)=>out.push({id:`${f.id}-border-${k++}`,name:'Onyx border',shape:'rectangle',xIn:(x0+x1)/2-cx,yIn:(z0+z1)/2-cz,widthIn:x1-x0,depthIn:z1-z0,rotationDeg:0,productId:SLAB,color:ONYX,hardscape:{...BORDER!}});
- for(const [z0,z1] of cuts(b.zD,b.zFar)){add(b.x0,z0,b.x0+B,z1);add(b.x1-B,z0,b.x1,z1);}
- for(const [a,c] of cuts(b.x0+B,b.x1-B))add(a,b.zFar-B,c,b.zFar);
- add(b.x0+B,b.zD,b.s0-B,b.zD+B);
- add(b.s1+B,b.zD,b.x1-B,b.zD+B);
- add(b.s0-B,b.zD,b.s0,b.zN);
- add(b.s1,b.zD,b.s1+B,b.zN);
- add(b.s0,b.zN,b.s1,b.zN+B);
+ const add=(ax:number,az:number,bx:number,bz:number)=>out.push({id:`${f.id}-border-${k++}`,name:'Onyx border',shape:'rectangle',xIn:(ax+bx)/2-cx,yIn:(az+bz)/2-cz,widthIn:bx-ax,depthIn:bz-az,rotationDeg:0,productId:SLAB,color:ONYX,hardscape:{...BORDER!}});
+ for(const [a,c] of cuts(x0,x1)){add(a,z0,c,z0+B);add(a,z1-B,c,z1);}
+ for(const [a,c] of cuts(z0+B,z1-B)){add(x0,a,x0+B,c);add(x1-B,a,x1,c);}
  return out;
 }
 
@@ -173,13 +173,18 @@ export function ontarioShowcaseDesign():DeckData{
  const deckOverlap=yardArea(yardClip(yardFeatureOutline(terrace),[deckRing],'intersection'));
  if(deckOverlap>0.01)throw Error(`The terrace overlaps the deck by ${deckOverlap.toFixed(3)} sq ft.`);
  if(landingOverlap<=0.05||landingOverlap>0.5)throw Error(`Stair landing overlap is ${landingOverlap.toFixed(3)} sq ft; the treads have to land on the paving without the terrace standing on the flight.`);
- terrace={...terrace,color:CREMA,inlays:notchBorder(terrace,{x0,x1,zD:deckFront,zN,zFar,s0,s1})};
+ // The framed field is the full-width slab in front of the stair nose, centred on the stair and the house.
+ // The shallow wings beside the flight stay outside that rectangle, so the band does not run into the stair.
+ terrace={...terrace,color:CREMA,inlays:rectFrame(terrace,{x0,x1,z0:zN,z1:zFar})};
  push(data,terrace);
 
- // The 36 ft pool run is across the yard. A 36 ft run away from the house does
- // not leave the surround and a rear bed inside this lot.
+ // The 36 ft pool run is across the yard. The court is 20 ft larger than the pool on both axes, so the
+ // surround — and the onyx frame inset into it — is the same on every side.
  const far=terrace.zFt+terrace.depthFt/2;
- const court=slab(data,'pool-court','Pool court',-4,far-JOIN,52,far-JOIN+34);
+ const courtDepth=36;
+ const court=slab(data,'pool-court','Pool court',-4,far-JOIN,52,far-JOIN+courtDepth);
+ const courtX0=(court.xFt-court.widthFt/2)*12,courtX1=(court.xFt+court.widthFt/2)*12,courtZ0=(court.zFt-court.depthFt/2)*12,courtZ1=(court.zFt+court.depthFt/2)*12;
+ court.inlays=rectFrame(court,{x0:courtX0,x1:courtX1,z0:courtZ0,z1:courtZ1});
  const lounge=slab(data,'lounge','Fire lounge',-28,court.zFt-court.depthFt/2,-10,court.zFt-court.depthFt/2+18,true);
  slab(data,'spine-walk','Spine walk',-10-JOIN,lounge.zFt-lounge.depthFt/2-JOIN,-4+JOIN,lounge.zFt+lounge.depthFt/2+JOIN);
  const terraceX0=terrace.xFt-terrace.widthFt/2;
@@ -252,11 +257,11 @@ export function ontarioShowcaseDesign():DeckData{
  };
  const zEnd=rear0-1.6;
  // Fence line, then a middle shrub layer, then grasses and perennials at the bed's inner edge.
- line('x',-36.5,6,zEnd,3.1,['thuja-occidentalis-smaragd'],112,34);
+ line('x',-36.5,6,zEnd,3.35,['thuja-occidentalis-smaragd'],112,34);
  line('x',-34.6,12,zEnd-4,14,['acer-saccharum','pinus-strobus'],240,120);
  line('x',-32.2,8,zEnd,3.6,['hydrangea-arborescens-annabelle','cornus-sericea','amelanchier-canadensis','hydrangea-paniculata','syringa-vulgaris']);
  line('x',-29.4,7,zEnd,2.5,['calamagrostis-karl-foerster','hosta','echinacea-purpurea','rudbeckia-hirta','matteuccia-struthiopteris','schizachyrium-scoparium']);
- line('x',60.5,6,zEnd,3.1,['thuja-occidentalis-smaragd'],112,34);
+ line('x',60.5,6,zEnd,3.35,['thuja-occidentalis-smaragd'],112,34);
  line('x',58.6,12,zEnd-4,14,['pinus-strobus','acer-saccharum'],230,110);
  line('x',55.8,8,zEnd,3.6,['cornus-sericea','hydrangea-arborescens-annabelle','amelanchier-canadensis','physocarpus-opulifolius','hydrangea-paniculata']);
  line('x',53.4,7,zEnd,2.5,['calamagrostis-karl-foerster','echinacea-purpurea','hosta','panicum-virgatum','hemerocallis','nepeta-faassenii']);
@@ -270,9 +275,10 @@ export function ontarioShowcaseDesign():DeckData{
  grow('hydrangea-arborescens-annabelle',-22,6);grow('cornus-sericea',-14,6);
 
  const diningX=data.pergola.xFt,diningZ=data.pergola.zFt;
- // West of the stair, beside the deck. The 8 ft corridor from the stair foot stays open toward the pool.
- const loungeX=1,sofaD=40,chairD=40,tableD=36,gap=14;
- const sofaZ=deckFront/12+1+sofaD/24,tableZ=sofaZ+(sofaD+2*gap+tableD)/24,chairZ=tableZ+(tableD+2*gap+chairD)/24;
+ // The west inner court of the onyx frame, clear of the stair. The lounge group is centred in that rectangle.
+ const westX0=x0+MARGIN+BAND,westX1=s0,westZ0=zN+MARGIN+BAND,westZ1=zFar-MARGIN-BAND;
+ const loungeX=(westX0+westX1)/24,loungeCz=(westZ0+westZ1)/2,sofaD=40,chairD=40,tableD=36,gap=14;
+ const sofaZ=(loungeCz-(sofaD+2*gap+tableD)/2)/12,tableZ=sofaZ+(sofaD+2*gap+tableD)/24,chairZ=tableZ+(tableD+2*gap+chairD)/24;
  const nearDeck=court.zFt-court.depthFt/2+3.8,farDeck=court.zFt+court.depthFt/2-3.6;
  // Long side across the 30 ft deck so 36 in behind the side chairs fits in the 16 ft depth. No patio id: the set sits on the deck.
  const table={...furn('outdoor-table','dining-table','Dining table',diningX,diningZ,0),widthIn:96,depthIn:42,heightIn:30};
@@ -320,11 +326,14 @@ export function ontarioShowcaseDesign():DeckData{
   pin(loungeX-7.2,sofaZ),pin(loungeX+7.2,sofaZ),pin(loungeX-7.2,chairZ),pin(loungeX+7.2,chairZ),
   pin(-21,fireZ-5.4),pin(-15,fireZ-5.4),pin(-21,fireZ+5.2),pin(-15,fireZ+5.2),
  ];
+ // Coping is 12 in wide with 1 in of overhang, so the outer face is 11 in outside the water. The plate sits in that face.
+ const cope=11,halfW=18*12,halfL=8*12,faceY=-1,paverFace=-60/25.4/2,terraceMid=(zN+zFar)/2;
+ const onFace=(xIn:number,zIn:number,angle:number,y=faceY)=>pin(xIn/12,zIn/12,angle,y);
  const steps=[
-  pin(cx-16,cz-12,0,2),pin(cx,cz-12,0,2),pin(cx+16,cz-12,0,2),
-  pin(cx-16,cz+12,Math.PI,2),pin(cx,cz+12,Math.PI,2),pin(cx+16,cz+12,Math.PI,2),
-  pin(cx-21,cz,Math.PI/2,2),pin(cx+21,cz,-Math.PI/2,2),
-  pin(terrace.xFt-8,tz1-1.5,0,2),pin(terrace.xFt+8,tz1-1.5,0,2),
+  onFace(cx*12-16*12,cz*12-halfL-cope,0),onFace(cx*12,cz*12-halfL-cope,0),onFace(cx*12+16*12,cz*12-halfL-cope,0),
+  onFace(cx*12-16*12,cz*12+halfL+cope,Math.PI),onFace(cx*12,cz*12+halfL+cope,Math.PI),onFace(cx*12+16*12,cz*12+halfL+cope,Math.PI),
+  onFace(cx*12-halfW-cope,cz*12,Math.PI/2),onFace(cx*12+halfW+cope,cz*12,-Math.PI/2),
+  onFace(x0+0.25,terraceMid,-Math.PI/2,paverFace),onFace(x1-0.25,terraceMid,Math.PI/2,paverFace),
  ];
  const loungeWall=[pin(innerX+0.45,fireZ-4.4,Math.PI/2,16),pin(innerX+0.45,fireZ+4.4,Math.PI/2,16),pin(fireX,(lz0+inset)/12+SEAT_DEPTH/2+0.4,0,16),pin(fireX,(lz1-inset)/12-SEAT_DEPTH/2-0.4,Math.PI,16)];
  data.lightingSystem={wireDistance:80,selectedItems:syncAutoLighting({...data,lightingSystem:{wireDistance:80,selectedItems:[
@@ -365,14 +374,32 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
  if(Math.abs(terrace.zFt-terrace.depthFt/2-deckFront)>0.05)issues.push('The terrace does not meet the deck beside the stairs.');
  const landing=yardArea(yardClip(yardFeatureOutline(terrace),stairFootprints(tk),'intersection'));
  if(landing<=0.05||landing>0.5)issues.push(`The stairs do not land on the terrace (${landing.toFixed(3)} sq ft).`);
- if(Math.abs(court.widthFt-56)>0.2||Math.abs(court.depthFt-34)>0.2)issues.push('The pool court is not 56×34 ft.');
+ if(Math.abs(court.widthFt-56)>0.2||Math.abs(court.depthFt-36)>0.2)issues.push('The pool court is not 56×36 ft.');
  if(Math.abs(lounge.widthFt-18)>0.2||Math.abs(lounge.depthFt-18)>0.2)issues.push('The fire lounge is not 18×18 ft.');
  if(walk.widthFt<5.5||walk.widthFt>7)issues.push('The spine walk is not about 6 ft wide.');
  if(west.widthFt<5.5||west.widthFt>8||overlapSqft(west,terrace)<1||overlapSqft(loungePath,west)<1||overlapSqft(loungePath,lounge)<1)issues.push('The west path does not join the terrace to the fire lounge.');
  if([terrace,court,walk,west,loungePath].some(f=>f.hardscape?.colorId!=='caff-crema'))issues.push('The spine is not one crema grande slab.');
  if(overlapSqft(terrace,court)<1||overlapSqft(walk,court)<0.4||overlapSqft(walk,lounge)<0.4||overlapSqft(walk,terrace)<0.2)issues.push('Terrace, pool court and fire lounge are not joined.');
  const loungeGap=gapOf(lounge,court);if(loungeGap<5||loungeGap>6.5)issues.push(`Lounge and pool court are ${loungeGap.toFixed(1)} ft apart.`);
- for(const room of [terrace,lounge]){const plans=patioInlayPlans(room);if(!plans.length||plans.some(p=>p.status!=='ok')||plans.some(p=>p.inlay.hardscape?.colorId!=='onyx-black'))issues.push(`${room.name} is missing its onyx border.`);}
+ for(const room of [terrace,lounge,court]){const plans=patioInlayPlans(room);if(!plans.length||plans.some(p=>p.status!=='ok')||plans.some(p=>p.inlay.hardscape?.colorId!=='onyx-black'))issues.push(`${room.name} is missing its onyx border.`);}
+ {
+  const bandOf=(room:YardFeature)=>{const plans=patioInlayPlans(room).filter(p=>p.status==='ok');const xs=plans.flatMap(p=>p.outline.flatMap(v=>[v.x])),zs=plans.flatMap(p=>p.outline.flatMap(v=>[v.y]));return {x0:Math.min(...xs),x1:Math.max(...xs),z0:Math.min(...zs),z1:Math.max(...zs),plans};};
+  const even=(room:YardFeature,rect:{x0:number;x1:number;z0:number;z1:number},label:string)=>{
+   const band=bandOf(room);
+   const gaps=[band.x0-rect.x0,rect.x1-band.x1,band.z0-rect.z0,rect.z1-band.z1];
+   if(gaps.some(g=>Math.abs(g-MARGIN)>0.2))issues.push(`${label} onyx frame is not inset evenly (${gaps.map(g=>g.toFixed(1)).join(', ')} in).`);
+   if(band.plans.some(p=>Math.abs(Math.min(p.inlay.widthIn,p.inlay.depthIn)-BAND)>0.2))issues.push(`${label} onyx band is not one 6×13 course.`);
+   const cx=(band.x0+band.x1)/2,cz=(band.z0+band.z1)/2;
+   return {cx,cz};
+  };
+  let foot=-Infinity,s0=Infinity,s1=-Infinity;
+  for(const ring of stairFootprints(tk))for(const p of ring){foot=Math.max(foot,p.y);s0=Math.min(s0,p.x);s1=Math.max(s1,p.x);}
+  const coverIn=Math.min(1.1,0.32*144/Math.max(1,s1-s0)),zN=foot-coverIn,zFar=zN+24*12,x0=Math.min(...deckXs)-8*12,x1=Math.max(...deckXs)+8*12;
+  const terraceFrame=even(terrace,{x0,x1,z0:zN,z1:zFar},'Terrace');
+  if(Math.abs(terraceFrame.cx-(s0+s1)/2)>1)issues.push('The terrace onyx frame is not centred on the stair.');
+  const pool=data.pools?.[0];
+  if(pool){const poolFrame=even(court,{x0:(court.xFt-court.widthFt/2)*12,x1:(court.xFt+court.widthFt/2)*12,z0:(court.zFt-court.depthFt/2)*12,z1:(court.zFt+court.depthFt/2)*12},'Pool');if(Math.abs(poolFrame.cx-pool.xIn)>1||Math.abs(poolFrame.cz-pool.zIn)>1)issues.push('The pool onyx frame is not centred on the pool.');}
+ }
  const pool=data.pools?.[0],bounds=pool?poolLocalBounds(pool):undefined;
  if(!bounds||Math.abs(bounds.widthIn-36*12)>1||Math.abs(bounds.lengthIn-16*12)>1)issues.push('The pool is not 36 ft across and 16 ft out from the house.');
  const beds=(data.landscapeObjects??[]).filter(o=>o.kind==='bed');
@@ -449,6 +476,15 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
  if((data.landscapeObjects??[]).some(o=>o.assetId==='outdoor-chair'&&o.supportFeatureId==='terrace'))issues.push('Folding dining chairs are on the terrace.');
  if(terraceSofa&&terraceCoffee){
   const box=terraceSeats.concat(terraceCoffee);
+  {
+   let foot=-Infinity,s0=Infinity,s1=-Infinity;
+   for(const ring of stairFootprints(tk))for(const p of ring){foot=Math.max(foot,p.y);s0=Math.min(s0,p.x);s1=Math.max(s1,p.x);}
+   const coverIn=Math.min(1.1,0.32*144/Math.max(1,s1-s0)),zN=foot-coverIn,zFar=zN+24*12,x0=Math.min(...deckXs)-8*12;
+   const westX0=x0+MARGIN+BAND,westX1=s0,westZ0=zN+MARGIN+BAND,westZ1=zFar-MARGIN-BAND;
+   const xs0=box.flatMap(o=>[o.xIn-o.widthIn/2,o.xIn+o.widthIn/2]),zs0=box.flatMap(o=>[o.zIn-o.depthIn/2,o.zIn+o.depthIn/2]);
+   const mx=(Math.min(...xs0)+Math.max(...xs0))/2,mz=(Math.min(...zs0)+Math.max(...zs0))/2;
+   if(Math.abs(mx-(westX0+westX1)/2)>6||Math.abs(mz-(westZ0+westZ1)/2)>6)issues.push('The terrace lounge is not centred in the west framed court.');
+  }
   const xs=box.flatMap(o=>[o.xIn-o.widthIn/2,o.xIn+o.widthIn/2]),zs=box.flatMap(o=>[o.zIn-o.depthIn/2,o.zIn+o.depthIn/2]);
   const spanX=(Math.max(...xs)-Math.min(...xs))/12,spanZ=(Math.max(...zs)-Math.min(...zs))/12;
   if(spanX<10||spanX>14||spanZ<10||spanZ>14)issues.push(`The terrace lounge group is ${spanX.toFixed(1)}×${spanZ.toFixed(1)} ft, not about 12×12.`);
@@ -476,6 +512,8 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
    const paved=onPaving(hardscape,place.x,place.z),bed=bedRings.some(ring=>insidePolygon({x:place.x,y:place.z},ring)),swimming=water.some(ring=>insidePolygon({x:place.x,y:place.z},ring));
    if((product.geometry==='bollard'||product.geometry==='spot')&&(paved||!bed))issues.push(`${product.name} is not in a planting bed clear of the paving.`);
    if((item.productId==='evo_ground_300'||item.productId==='wedge')&&(!paved||swimming))issues.push(`${product.name} is not on the paving clear of the water.`);
+   if(item.productId==='evo_ground_300'&&Math.abs((place.y??0))>0.2)issues.push('A paver light is not seated on the paving surface.');
+   if(item.productId==='wedge'&&(place.y===undefined||place.y>-0.2||place.y<-2))issues.push('A step light is not seated in the riser.');
   }
  }
  if((data.landscapeObjects??[]).filter(o=>o.assetId==='lounge-chair'&&o.supportFeatureId==='pool-court').length<2)issues.push('The pool deck has no lounge chairs.');
