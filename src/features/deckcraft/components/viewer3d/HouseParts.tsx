@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import type {Box} from '../../deckTakeoff';
 import type {HouseSurface} from './houseSurfaceKinds';
 import {houseSurfaceMaterial} from './houseSurfaces';
-import {getShowcaseFlags,getShowcaseServerFlags,showcaseDetail,subscribeShowcase} from './showcaseMode';
+import {getShowcaseFlags,getShowcaseServerFlags,showcaseDetail,subscribeShowcase} from '../../showcaseMode';
 import {useRenderQuality} from './SceneRenderQuality';
 /** Instanced boxes of one colour. surface (Real Life G4) adds scanned or painted detail up close (houseSurfaces.ts). */
 export default function HouseParts({items,color,name,variation=false,roughness=.82,metalness=0,surface}:{items:Box[];color:string;name:string;variation?:boolean;roughness?:number;metalness?:number;surface?:HouseSurface}){

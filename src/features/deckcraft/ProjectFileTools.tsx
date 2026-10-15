@@ -2,7 +2,7 @@ import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import type {DeckData} from './types';
 import {DEFAULT_DECK} from './defaults';
 import {prepareDesignUpdate} from './designer/designUpdate';
-import {applyShowcaseSearch,getShowcaseFlags,getShowcaseServerFlags,setShowcaseFlags,subscribeShowcase,type ShowcaseHour} from './components/viewer3d/showcaseMode';
+import {applyShowcaseSearch,getShowcaseFlags,getShowcaseServerFlags,setShowcaseFlags,subscribeShowcase,type ShowcaseHour} from './showcaseMode';
 export function portableReplacement(current:DeckData,next:DeckData):Partial<DeckData>{
  const keys=new Set([...Object.keys(current),...Object.keys(DEFAULT_DECK),...Object.keys(next)]),privateKeys=new Set(['quoteResolutions','pergolaQuoteCosts','materialMarkup','customLaborCost','customOverrides','featureLabour','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','customerName','projectAddress','scopeOfWork','generatedImageUrl','isGeneratingImage']);
  return Object.fromEntries([...keys].filter(k=>!privateKeys.has(k)).map(k=>[k,(next as unknown as Record<string,unknown>)[k]])) as Partial<DeckData>;

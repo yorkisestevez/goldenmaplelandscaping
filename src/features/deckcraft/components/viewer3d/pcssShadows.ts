@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {showcasePostEnabled} from './showcaseMode';
+import {showcasePostEnabled} from '../../showcaseMode';
 
 /**
  * Contact-hardening shadows for showcase post. three.js 0.185's PCF sampler is a comparison

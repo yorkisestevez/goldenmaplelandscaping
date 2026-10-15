@@ -4,7 +4,7 @@ import {useProgress} from '@react-three/drei';
 import * as THREE from 'three';
 import {pipelineFor} from './renderPipeline';
 import {loadShowcasePost,showcasePostModule} from './showcasePostLoader';
-import {showcasePostEnabled} from './showcaseMode';
+import {showcasePostEnabled} from '../../showcaseMode';
 export type SceneStillWidth=2048|4096;
 export function stillSize(longEdge:SceneStillWidth,size:{x:number;y:number},maximum:number){
  if(longEdge!==2048&&longEdge!==4096||!Number.isFinite(size.x)||!Number.isFinite(size.y)||size.x<=0||size.y<=0)throw Error('Choose a 2048 or 4096 pixel long-edge scene export.');

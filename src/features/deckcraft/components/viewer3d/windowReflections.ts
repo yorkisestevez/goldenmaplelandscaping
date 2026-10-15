@@ -1,5 +1,5 @@
 import {rendererQuality,type RenderQuality} from './renderQuality';
-import {showcasePostEnabled} from './showcaseMode';
+import {showcasePostEnabled} from '../../showcaseMode';
 import * as THREE from 'three';
 import {Reflector} from 'three/examples/jsm/objects/Reflector.js';
 

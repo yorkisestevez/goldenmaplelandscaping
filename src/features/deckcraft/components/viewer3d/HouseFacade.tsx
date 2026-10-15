@@ -13,7 +13,7 @@ import {splitAtBand} from './houseWainscot';
 import {paneGeometry,createWindowGlass,type WindowRoom} from './windowGlass';
 import {reflectionBinding,registerWindowReflection,type WindowReflection} from './windowReflections';
 import {backingSurface,claddingSurface} from './houseSurfaceKinds';
-import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from './showcaseMode';
+import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../showcaseMode';
 import roomPhoto from './assets/room-atelier.webp';
 if(typeof window!=='undefined'){const img=new Image();img.decoding='async';img.src=roomPhoto;}
 

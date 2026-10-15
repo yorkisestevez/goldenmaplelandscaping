@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {FullScreenQuad} from 'three/examples/jsm/postprocessing/Pass.js';
 import {SMAAPass} from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import {SHOWCASE_DOF,SHOWCASE_GRADES,gradeLinear,presentationHour,type ShowcaseGrade} from './showcaseGrade';
-import {getShowcaseFlags,showcasePostEnabled,type ShowcaseHour} from './showcaseMode';
+import {getShowcaseFlags,showcasePostEnabled,type ShowcaseHour} from '../../showcaseMode';
 
 /**
  * Showcase-only passes that sit in linear HDR, ahead of OutputPass: depth of field, SMAA, and the

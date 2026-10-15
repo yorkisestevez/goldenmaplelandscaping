@@ -1,5 +1,5 @@
 import {SCENE_LOOK} from './sceneLook';
-import type {ShowcaseHour} from './showcaseMode';
+import type {ShowcaseHour} from '../../showcaseMode';
 
 /**
  * Filmic grade for showcase stills and video, applied in linear HDR before Khronos Neutral.

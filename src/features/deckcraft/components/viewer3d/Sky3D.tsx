@@ -9,7 +9,7 @@ import dayLighting from './assets/sky/sky-day-ibl.hdr?url';
 import eveningLighting from './assets/sky/sky-evening-ibl.hdr?url';
 import {SCENE_LOOK} from './sceneLook';
 import {DAY_SKY_BLEND,DAY_SKY_GAIN,DAY_SKY_GREEN,DAY_SKY_RED,GOLDEN_SKY_BLEND,GOLDEN_SKY_BLUE,GOLDEN_SKY_GAIN,GOLDEN_SKY_GREEN,GOLDEN_SKY_RED,SHOWCASE_GOLDEN_FILL,SHOWCASE_SKY_FILL} from './showcaseGrade';
-import {SHOWCASE_CLEAR_FOG,SHOWCASE_FOG_DENSITY,getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from './showcaseMode';
+import {SHOWCASE_CLEAR_FOG,SHOWCASE_FOG_DENSITY,getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../showcaseMode';
 
 /**
  * The real sky (Real Life G3): a CC0 HDRI supplies environment fill. An extracted sun, or a neutral key replacing

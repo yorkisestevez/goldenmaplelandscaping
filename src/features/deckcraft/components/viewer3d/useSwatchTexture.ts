@@ -8,7 +8,7 @@ import { useEffect, useMemo } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ATLAS_WIDTH, buildSwatchMaps, type SwatchImage, type SwatchMaps } from './swatchMaps';
-import { showcaseDetail } from './showcaseMode';
+import { showcaseDetail } from '../../showcaseMode';
 import { useRenderQuality } from './SceneRenderQuality';
 import type { SwatchResult } from './swatchMaps.worker';
 import { clearSurfaceMaps, disposeSurface, setSurfaceMaps, surfaceMaterial } from './surfaceShaders';

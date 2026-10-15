@@ -19,7 +19,7 @@ import {applyHardscapeFinish} from './hardscapeFinish';
 import {useRenderQuality} from './SceneRenderQuality';
 import {applySurfaceRelief} from './surfaceRelief';
 import type {DetailKind} from './detailMaps';
-import {getShowcaseFlags,getShowcaseServerFlags,showcaseDetail,subscribeShowcase} from './showcaseMode';
+import {getShowcaseFlags,getShowcaseServerFlags,showcaseDetail,subscribeShowcase} from '../../showcaseMode';
 import GrassBlades from './GrassBlades';
 import {bankTufts} from './bankTufts';
 import type {PlanPoint} from '../../lib/deckGeometry';

@@ -1,4 +1,4 @@
-import {showcasePostEnabled} from './showcaseMode';
+import {showcasePostEnabled} from '../../showcaseMode';
 
 type Post=typeof import('./showcasePost');
 type Shadows=typeof import('./pcssShadows');

@@ -11,7 +11,7 @@ import type {HouseInteraction} from './houseInteraction';
 import type {YardModel} from '../../yardModel';
 import {useThree} from '@react-three/fiber';
 import {SCENE_LOOK} from './sceneLook';
-import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from './showcaseMode';
+import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../showcaseMode';
 import {SHOWCASE_DAY_SUN} from './showcaseGrade';
 import {SKY_DATA,skyStrength,sunDirection} from './skyModel';
 
