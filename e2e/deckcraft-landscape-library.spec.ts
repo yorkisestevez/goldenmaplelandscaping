@@ -17,6 +17,8 @@ test.beforeEach(async({context})=>{
 
 const ribbon=(page:Page)=>page.getByRole('region',{name:'Ribbon',exact:true});
 const library=(page:Page)=>page.getByRole('region',{name:'Plants, beds and outdoor objects'});
+/** Beds, stone, furniture and the generic plant proxies sit in a collapsed section under the Ontario planting palette. */
+async function openMore(list:ReturnType<typeof library>){const more=list.locator('details.dd-landscape-more');if(!await more.evaluate(d=>(d as HTMLDetailsElement).open))await more.locator('summary').click();}
 const objects=async(page:Page)=>page.evaluate(()=>{
   const design=(window as unknown as {deckcraft:{read:()=>{design:{landscapeObjects?:{id:string;name:string;kind:string;xIn:number;zIn:number;widthIn:number;enabled:boolean}[];sceneLighting?:string;scenePresentation?:{cameras?:unknown[]}}}}}).deckcraft.read().design;
   return {items:design.landscapeObjects??[],lighting:design.sceneLighting??'Daylight',cameras:design.scenePresentation?.cameras?.length??0};
@@ -42,7 +44,7 @@ test('added landscape objects stay after Day/Night and a saved camera',async({pa
   });
   await openLibrary(page);
   const list=library(page);
-  await list.getByRole('button',{name:'Add deciduous tree'}).click();
+  await openMore(list);await list.getByRole('button',{name:'Add generic deciduous tree'}).click();
   await expect.poll(async()=>(await objects(page)).items.length).toBe(1);
   await expect(list.getByRole('combobox',{name:'Selected landscape object'})).toContainText('Deciduous tree');
   await expect(list.locator('.dd-landscape-quantities div',{hasText:'Plants'}).locator('dd')).toHaveText('1');
@@ -64,7 +66,7 @@ test('added landscape objects stay after Day/Night and a saved camera',async({pa
   await expect.poll(async()=>(await objects(page)).cameras).toBeGreaterThan(0);
   await expect.poll(async()=>(await objects(page)).items.map(item=>item.id)).toEqual([added.items[0].id]);
 
-  await list.getByRole('button',{name:'Add hedge shrub'}).click();
+  await openMore(list);await list.getByRole('button',{name:'Add generic hedge shrub'}).click();
   await expect.poll(async()=>(await objects(page)).items.length).toBe(2);
   const both=await objects(page);
   expect(both.items[0].xIn!==both.items[1].xIn||both.items[0].zIn!==both.items[1].zIn).toBe(true);
@@ -101,7 +103,7 @@ test('a bed size edit stays staged through Day/Night until it is applied',async(
   page.on('request',request=>{const url=new URL(request.url());if(url.pathname.includes('/.netlify/functions/')||/anthropic/i.test(url.hostname))remote.push(request.url());});
   await openLibrary(page);
   const list=library(page);
-  await list.getByRole('button',{name:'Add planting bed'}).click();
+  await openMore(list);await list.getByRole('button',{name:'Add planting bed'}).click();
   await expect.poll(async()=>(await objects(page)).items.length).toBe(1);
   const width=list.getByRole('spinbutton',{name:'Design width (in)'});
   await width.fill('180');
