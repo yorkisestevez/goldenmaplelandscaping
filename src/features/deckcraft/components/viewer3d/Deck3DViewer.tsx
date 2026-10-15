@@ -1,3 +1,4 @@
+import {seatOnPaving} from './paverSeating';
 import {Suspense,lazy,useCallback,useContext,useEffect,useMemo,useLayoutEffect,useRef,useState} from 'react';
 import ScenePresentationTools from './ScenePresentationTools';
 
@@ -400,7 +401,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
   const borderRef=borderFinishRef(data),borderColour=borderRef?parseColourRef(borderRef):null,stairBorder=darkBorder||!!borderColour;
   const borderMaterial=useSwatchTexture(darkBorder?swatchUrl('dk-border-dark-slate.jpg'):borderColour?swatchUrl(borderColour.color.swatch):'','#343635');
 
-  const extras=useMemo(()=>extrasLayout(data,model),[data,model]);
+  const extras=useMemo(()=>seatOnPaving(data,extrasLayout(data,model)),[data,model]);
 
   const evening=data.sceneLighting==='Evening',lightsOn=data.lightingPreviewOn!==false;
 
