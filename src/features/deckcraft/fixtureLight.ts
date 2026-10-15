@@ -1,3 +1,4 @@
+import {FLUSH_TRIM_IN,FLUSH_LENS_PROUD_IN,WEDGE_HOUSING} from './lightHousings';
 import {LEGACY_HYDE,type FixturePlacement} from './extrasLayout';
 import {getLightingProduct} from './lightingCatalogue';
 
@@ -40,6 +41,12 @@ export const FX_TEXELS=4;
 
 const NONE:FixtureNight={route:'none',kelvin:DEFAULT_KELVIN,lens:null,source:null,shadowPriority:0};
 const UP:V3=[0,1,0],DOWN:V3=[0,-1,0],OMNI:V3=[0,0,0];
+export {FLUSH_TRIM_IN,FLUSH_LENS_PROUD_IN,WEDGE_HOUSING} from './lightHousings';
+/** A long narrow ground light (EVO GROUND), not a round uplight. Those pool across the paving instead of throwing up. */
+export function linearFlushGround(d:{diameter?:number;width?:number;length?:number}){
+  const width=d.width??d.diameter??0,length=d.length??0;
+  return !d.diameter&&length>width*2.5&&width>0;
+}
 const norm=(v:V3):V3=>{const l=Math.hypot(...v)||1;return [v[0]/l,v[1]/l,v[2]/l];};
 const deg=(d:number)=>d*Math.PI/180;
 /** Down and tipped 5° back toward the riser: an under-nose light washes the riser below and pools on the tread. */
@@ -50,11 +57,14 @@ export function fixtureNight(productId:string,zone?:string):FixtureNight{
   if(!p||!p.supported||['transformer','cable','accessory'].includes(p.geometry))return NONE;
   const g=p.geometry,d=p.dimensionsIn,kelvin=p.colorTemperatureK??DEFAULT_KELVIN,legacy=LEGACY_FIXTURE_SHAPES.includes(productId);
   if(g==='recessed'){
+    const lensY=FLUSH_TRIM_IN+FLUSH_LENS_PROUD_IN/2;
     const lens:FixtureLens=legacy?{position:[0,.21,0],normal:UP,radiusIn:productId==='puck'?.55:1.02,lengthIn:0,strength:.9}
-      :{position:[0,.14,0],normal:UP,radiusIn:(d.diameter??d.width??2.2)/2*.83,lengthIn:0,strength:.85};
+      :{position:[0,lensY,0],normal:UP,radiusIn:(d.diameter??d.width??2.2)/2*.72,lengthIn:0,strength:.85};
     // A lens in a post cap or a tread faces the sky: it glows and lights nothing around it.
     if(zone==='posts'||zone==='stairs')return {route:'glow-only',kelvin,lens,source:null,shadowPriority:0};
-    return {route:'real',kelvin,lens,source:{kind:'spot',position:[0,.5,0],direction:UP,halfLengthIn:0,radiusIn:0,angle:1.25,penumbra:.8,candela:3,rangeFt:12},shadowPriority:1};
+    // A linear paver light is a thin lens in the stone. No camera-facing sparkle: a short soft pool on the paving.
+    if(!legacy&&linearFlushGround(d))return {route:'patch',kelvin,lens:null,source:{kind:'point',position:[0,lensY+.08,0],direction:DOWN,halfLengthIn:0,radiusIn:8,angle:Math.PI,penumbra:0,candela:1.4,rangeFt:4.5},shadowPriority:0};
+    return {route:'real',kelvin,lens,source:{kind:'spot',position:[0,lensY+.2,0],direction:UP,halfLengthIn:0,radiusIn:0,angle:1.25,penumbra:.8,candela:3,rangeFt:12},shadowPriority:1};
   }
   if(g==='undercap'){
     const length=legacy?LEGACY_HYDE.length:d.length??12,height=legacy?LEGACY_HYDE.height:d.height??.5;
@@ -64,14 +74,16 @@ export function fixtureNight(productId:string,zone?:string):FixtureNight{
     return {route:'patch',kelvin,lens,source:{kind:'spot',position:[0,-height/2-.1,0],direction:UNDER_NOSE,halfLengthIn:Math.max(0,length/2-.5),radiusIn:2,angle:deg(70),penumbra:1,candela:2.5,rangeFt:2.2},shadowPriority:0};
   }
   if(g==='wall'){
-    const lens:FixtureLens=productId==='wedge'?{position:[0,-1.35,.5],normal:norm([0,-.95,.3]),radiusIn:1,lengthIn:2,strength:.6}
+    const lens:FixtureLens=productId==='wedge'?{position:[0,WEDGE_HOUSING.lensY,WEDGE_HOUSING.lensProud/2],normal:norm([0,-.25,.97]),radiusIn:.7,lengthIn:WEDGE_HOUSING.lensWidth*.7,strength:.45}
       :productId==='blink'?{position:[0,-.6,.67],normal:norm([0,-.5,.87]),radiusIn:.8,lengthIn:0,strength:.6}
       :{position:[0,-(d.diameter??d.height??3)/2-.02,0],normal:DOWN,radiusIn:.9,lengthIn:0,strength:.6};
     if(zone==='house')return {route:'real',kelvin,lens,source:{kind:'spot',position:[0,-.7,2],direction:norm([0,-1,1]),halfLengthIn:0,radiusIn:0,angle:.9,penumbra:.8,candela:9,rangeFt:12},shadowPriority:2};
     // On a post or a screen post, the light falls onto the deck in front of it.
     if(zone==='posts'||zone==='privacy')return {route:'patch',kelvin,lens,source:{kind:'spot',position:[0,-1.2,.9],direction:norm([0,-Math.sin(deg(55)),Math.cos(deg(55))]),halfLengthIn:0,radiusIn:1.5,angle:deg(65),penumbra:1,candela:zone==='posts'?18:14,rangeFt:7},shadowPriority:0};
-    // On a riser, a step light throws down and out across the tread below.
-    if(zone==='stairs')return {route:'patch',kelvin,lens,source:{kind:'spot',position:[0,-1,.8],direction:norm([0,-1,.9]),halfLengthIn:0,radiusIn:1.2,angle:deg(60),penumbra:1,candela:6,rangeFt:3.5},shadowPriority:0};
+    // On a riser, a step light throws down and out across the tread below. A WEDGE's lens is on the riser face.
+    if(zone==='stairs')return {route:'patch',kelvin,lens,source:productId==='wedge'
+      ?{kind:'spot',position:[0,WEDGE_HOUSING.lensY,WEDGE_HOUSING.lensProud+.08],direction:norm([0,-1,.65]),halfLengthIn:0,radiusIn:1.2,angle:deg(60),penumbra:1,candela:6,rangeFt:3.5}
+      :{kind:'spot',position:[0,-1,.8],direction:norm([0,-1,.9]),halfLengthIn:0,radiusIn:1.2,angle:deg(60),penumbra:1,candela:6,rangeFt:3.5},shadowPriority:0};
     // On the fascia, it washes down the deck edge onto the ground.
     return {route:'patch',kelvin,lens,source:{kind:'spot',position:[0,-1,.8],direction:norm([0,-1,.6]),halfLengthIn:0,radiusIn:1.5,angle:deg(60),penumbra:1,candela:9,rangeFt:6},shadowPriority:0};
   }

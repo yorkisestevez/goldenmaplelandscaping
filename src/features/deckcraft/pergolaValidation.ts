@@ -28,5 +28,17 @@ export function validatePergola(value:unknown):PergolaSelection{
   if(v.lighting!==undefined&&v.lighting!=='perimeter-led')throw new Error('Invalid pergola lighting.');
   if(v.lighting==='perimeter-led'&&!clean.accessories.includes('led'))clean.lighting='perimeter-led';
   if(p.custom){const c=obj(v.customSize);clean.customSize={widthFt:n(c.widthFt,...(PERGOLA_OPTIONS[p.id].sizeLimits?.widthFt??[4,30])),depthFt:n(c.depthFt,...(PERGOLA_OPTIONS[p.id].sizeLimits?.depthFt??[4,30])),heightFt:n(c.heightFt,...(PERGOLA_OPTIONS[p.id].sizeLimits?.heightFt??[7,14]))};}
+  if(v.posts!==undefined){
+    if(!Array.isArray(v.posts)||v.posts.length<4||v.posts.length>8)throw new Error('A pergola lists four to eight posts.');
+    const halfW=(clean.customSize?.widthFt??30)*6+6,halfD=(clean.customSize?.depthFt??30)*6+6;
+    clean.posts=v.posts.map(raw=>{const post=obj(raw);return {xIn:n(post.xIn,-halfW,halfW),zIn:n(post.zIn,-halfD,halfD)};});
+  }
   return clean;
+}
+/** Post centres in local inches. Absent stations keep the four roof corners. */
+export function pergolaPostPlan(sel:PergolaSelection,dim:PergolaDimensions,postIn:number):{xIn:number;zIn:number}[]{
+  if(sel.posts?.length)return sel.posts;
+  const out:{xIn:number;zIn:number}[]=[];
+  for(const px of [-1,1])for(const pz of [-1,1])out.push({xIn:px*(dim.widthIn-postIn)/2,zIn:pz*(dim.depthIn-postIn)/2});
+  return out;
 }

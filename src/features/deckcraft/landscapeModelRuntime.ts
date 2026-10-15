@@ -107,6 +107,19 @@ function raisedQuoteLines(o:LandscapeObject,item:LandscapeItemTakeoff):import('.
  return out;
 }
 const supports=new WeakMap<DeckData,ReturnType<typeof buildYardModel>>();
+const deckModels=new WeakMap<DeckData,ReturnType<typeof buildDeckTakeoff>>();
+/** Walking surface, in inches, when the whole footprint sits on a deck level. Landings and winders are not a floor. */
+function deckSurfaceIn(data:DeckData,foot:LandscapePoint[]){
+ if(area([foot])<=0)return undefined;
+ let model=deckModels.get(data);
+ if(!model){try{model=buildDeckTakeoff(data);}catch{return undefined;}deckModels.set(data,model);}
+ for(const level of model.levels){
+  if(level.kind==='landing'||level.kind==='winder')continue;
+  const ring=(level.deckingFootprint??level.footprint).outline.map(p=>({x:p.x+level.offset.x,z:p.y+level.offset.z}));
+  if(area(clip([foot],[ring],true))<0.5)return level.top;
+ }
+ return undefined;
+}
 export function landscapePlacement(data:DeckData,o:LandscapeObject){
  const poolConflict=o.kind==='bed'&&o.groundCoverOnly?undefined:getPoolModels(data).find(p=>area(landscapeClip([landscapeFootprint(o)],p.permanentExclusionFootprints.map(poly=>poly.map(v=>({x:v.x,z:v.y}))),'intersection'))>.001);
  if(poolConflict)return {x:o.xIn/12,y:0,z:o.zIn/12,measured:false,normal:undefined,pendingReason:`Footprint intersects ${poolConflict.config.name}'s opening, structure or coping. Move or reshape this object; no pool-hole support is assumed.`};
@@ -118,6 +131,8 @@ export function landscapePlacement(data:DeckData,o:LandscapeObject){
   }
   return {x:o.xIn/12,y:0,z:o.zIn/12,measured:false,normal:undefined,pendingReason:'Selected patio support is missing, disabled, excluded, or does not cover the entire furniture footprint.'};
  }
+ // A chair with no patio stands on the deck when its whole footprint is on the decking. Otherwise it stays at grade.
+ if(o.kind==='furniture'&&!o.supportFeatureId){const top=deckSurfaceIn(data,landscapeFootprint(o));if(top!==undefined)return {x:o.xIn/12,y:top/12,z:o.zIn/12,measured:true,normal:undefined,pendingReason:undefined};}
  if(o.kind!=='bed'){const raised=raisedSupport(data,o.xIn,o.zIn);if(raised)return {x:o.xIn/12,y:raised.y/12,z:o.zIn/12,measured:raised.measured,normal:undefined,pendingReason:undefined};}
  const measured=sampleSiteHeight(data,o.xIn,o.zIn);if(measured!==undefined)return {x:o.xIn/12,y:measured/12,z:o.zIn/12,measured:!!data.siteModel,normal:undefined,pendingReason:undefined};
  const t=getTerrainConfig(data);return {x:o.xIn/12,y:(t.elevationIn+o.zIn*t.slopePct/100)/12,z:o.zIn/12,measured:false,normal:undefined,pendingReason:undefined};
@@ -130,13 +145,14 @@ export function matureSpreadConflicts(objects:LandscapeObject[]){
  return pairs;
 }
 /** All objects retain a far LOD. A bounded extra triangle budget upgrades the
- * largest projected objects; the estimate and object list are never truncated. */
-export function landscapeRenderLods(objects:LandscapeObject[],camera:{x:number;y:number;z:number},viewportHeight:number,tier:'high'|'balanced'|'constrained'){
+ * largest projected objects; the estimate and object list are never truncated.
+ * Showcase stills opt in to the nearest model for every plant, with shadows. */
+export function landscapeRenderLods(objects:LandscapeObject[],camera:{x:number;y:number;z:number},viewportHeight:number,tier:'high'|'balanced'|'constrained',showcase=false){
  const lods=new Map<string,0|1|2>(),ranked=objects.filter(o=>o.enabled&&o.kind!=='bed').map(o=>{lods.set(o.id,2);const distance=Math.max(1,Math.hypot(o.xIn/12-camera.x,o.heightIn/24-camera.y,o.zIn/12-camera.z));return {o,pixels:o.heightIn/12/distance*viewportHeight/(2*Math.tan(19*Math.PI/180))};}).sort((a,b)=>b.pixels-a.pixels);
- if(tier==='constrained')return lods;
- let medium=tier==='high'?300000:120000,near=tier==='high'?500000:0;
- for(const {o,pixels} of ranked){const costs=landscapeAsset(o.assetId).triangleCounts;if(!costs)continue;const extra=costs[1]-costs[2];if(pixels>(tier==='high'?18:36)&&extra<=medium){lods.set(o.id,1);medium-=extra;}}
- for(const {o,pixels} of ranked){const costs=landscapeAsset(o.assetId).triangleCounts;if(!costs||lods.get(o.id)!==1)continue;const extra=costs[0]-costs[1];if(pixels>160&&extra<=near){lods.set(o.id,0);near-=extra;}}
+ if(tier==='constrained'&&!showcase)return lods;
+ let medium=showcase?1e8:tier==='high'?300000:120000,near=showcase?1e8:tier==='high'?500000:0;
+ for(const {o,pixels} of ranked){const costs=landscapeAsset(o.assetId).triangleCounts;if(!costs)continue;const extra=costs[1]-costs[2];if((showcase||pixels>(tier==='high'?18:36))&&extra<=medium){lods.set(o.id,1);medium-=extra;}}
+ for(const {o,pixels} of ranked){const costs=landscapeAsset(o.assetId).triangleCounts;if(!costs||lods.get(o.id)!==1)continue;const extra=costs[0]-costs[1];if((showcase||pixels>160)&&extra<=near){lods.set(o.id,0);near-=extra;}}
  return lods;
 }
 
@@ -154,10 +170,10 @@ export function landscapeQuoteSections(objects:import('./landscapeTypes').Landsc
    for(const [key,label,unit] of [['aggregateYd3','decorative stone supply and placement','cu yd'],['turfAreaSqft','artificial turf supply and installation','sq ft'],['baseYd3','recorded base aggregate supply and placement','cu yd'],['cupCount','putting cup supply and installation','ea']] as const){const quantity=item[key]??0;if(quantity>.001)unknown.push({id:`landscape-${key}-${item.objectId}`,label:`${item.name} — ${label}`,amountCents:null,quantity,unit,featureIds:[item.objectId],note:'Measured remaining plan area; layer volumes use recorded vertical depth. Confirm product, ordering waste, purchasing units, delivery and labour. Cup drainage, turf seams and infill remain installation inputs. Reconcile package inclusions and shared earthwork.'});}
    if(object.assetId!=='mulch-bed'&&object.baseDepthIn===undefined&&item.areaSqft>.001)unknown.push({id:`landscape-base-pending-${item.objectId}`,label:`${item.name} — base and drainage specification pending`,amountCents:null,featureIds:[item.objectId],note:'Enter a base depth and installation specification. No excavation, disposal, geotextile, density or drainage quantity is invented.'});
    if(object.raisedIn!==undefined)unknown.push(...raisedQuoteLines(object,item));
-   if(item.edgingLf>.001)unknown.push({id:`landscape-edging-${item.objectId}`,label:`${item.name} — edging supply and installation`,amountCents:null,quantity:item.edgingLf,unit:'ft',featureIds:[item.objectId],note:'Unique measured boundary length; shared collinear edges are counted once. Confirm selected product, purchasing pack, cuts and anchoring.'});
-  }else unknown.push({id:`landscape-${item.objectId}`,label:`${item.name} — supply and installation`,amountCents:null,quantity:item.count,unit:'ea',featureIds:[item.objectId],note:'Generic visual proxy; confirm actual species/product, nursery stock or SKU, supply, delivery and installation.'});
+   if(item.edgingLf>.001)unknown.push({id:`landscape-edging-${item.objectId}`,label:`${item.name} — edging supply and installation`,amountCents:null,quantity:item.edgingLf,unit:'ft',featureIds:[item.objectId],note:'Unique measured boundary length; shared collinear edges are counted once. The view shows a steel ribbon. Confirm the product, height, purchasing pack, cuts and anchoring. No price is assumed.'});
+  }else {const plant=objects.find(o=>o.id===item.objectId),species=plant?.kind==='plant'?plant.speciesRecord:undefined;unknown.push({id:`landscape-${item.objectId}`,label:`${item.name} — supply and installation`,amountCents:null,quantity:item.count,unit:'ea',featureIds:[item.objectId],note:species?`${species.botanicalName} (${species.commonName}). The mesh is a summer visual proxy for that planting, not a nursery SKU. Supply, stock size, delivery and installation are unpriced.`:'Generic visual proxy; confirm actual species/product, nursery stock or SKU, supply, delivery and installation.'});}
  }
 
- for(const o of objects.filter(o=>o.enabled&&o.kind==='plant'&&(!o.speciesRecord||o.speciesRecord.spacingIn===undefined)))unknown.push({id:`plant-specification-${o.id}`,label:`${o.name}: botanical specification and planting spacing confirmation`,amountCents:null,featureIds:[o.id],note:'A generic visual proxy and cost entry cannot establish mature dimensions or planting spacing. Record a botanical source and the spacing specification.'});
+ for(const o of objects.filter(o=>o.enabled&&o.kind==='plant'&&(!o.speciesRecord||o.speciesRecord.spacingIn===undefined)))unknown.push({id:`plant-specification-${o.id}`,label:`${o.name}: botanical specification and planting spacing confirmation`,amountCents:null,featureIds:[o.id],note:o.speciesRecord?`${o.speciesRecord.botanicalName} is recorded. Planting spacing is not specified, so nursery spacing still needs a cited source. No price is assumed.`:'A generic visual proxy and cost entry cannot establish mature dimensions or planting spacing. Record a botanical source and the spacing specification.'});
  return unknown;
 }

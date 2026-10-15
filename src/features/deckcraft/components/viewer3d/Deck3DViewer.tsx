@@ -1,3 +1,4 @@
+import {seatOnPaving} from './paverSeating';
 import {Suspense,lazy,useCallback,useContext,useEffect,useMemo,useLayoutEffect,useRef,useState} from 'react';
 import ScenePresentationTools from './ScenePresentationTools';
 
@@ -134,7 +135,7 @@ import {SCENE_LOOK} from './sceneLook';
 
 import Sky3D,{StudioLight} from './Sky3D';
 
-import RenderQuality from './SceneRenderQuality';
+import RenderQuality,{ShowcaseModeSync} from './SceneRenderQuality';
 
 import {exposedWallEnvelope} from './wallFraming';
 
@@ -400,7 +401,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
   const borderRef=borderFinishRef(data),borderColour=borderRef?parseColourRef(borderRef):null,stairBorder=darkBorder||!!borderColour;
   const borderMaterial=useSwatchTexture(darkBorder?swatchUrl('dk-border-dark-slate.jpg'):borderColour?swatchUrl(borderColour.color.swatch):'','#343635');
 
-  const extras=useMemo(()=>extrasLayout(data,model),[data,model]);
+  const extras=useMemo(()=>seatOnPaving(data,extrasLayout(data,model)),[data,model]);
 
   const evening=data.sceneLighting==='Evening',lightsOn=data.lightingPreviewOn!==false;
 
@@ -544,7 +545,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <LightingFixtures items={extras.fixtures} evening={evening} enabled={lightsOn}/>
 
-    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway}/></Suspense>}<Yard3D model={{...yard,features:yard.features.filter(f=>isObjectVisible(data.editorOrganization,f.config.id)),boxes:yard.boxes.filter(b=>isObjectVisible(data.editorOrganization,b.featureId)),members:yard.members.filter(m=>isObjectVisible(data.editorOrganization,m.featureId))}} inspection={inspection||cutaway} plantingBeds={(data.landscapeObjects??[]).filter(o=>o.enabled&&o.kind==='bed'&&isObjectVisible(data.editorOrganization,o.id)).map(o=>landscapeFootprint(o).map(v=>({x:v.x,y:v.z})))}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
+    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway} evening={evening}/></Suspense>}<Yard3D model={{...yard,features:yard.features.filter(f=>isObjectVisible(data.editorOrganization,f.config.id)),boxes:yard.boxes.filter(b=>isObjectVisible(data.editorOrganization,b.featureId)),members:yard.members.filter(m=>isObjectVisible(data.editorOrganization,m.featureId))}} inspection={inspection||cutaway} plantingBeds={(data.landscapeObjects??[]).filter(o=>o.enabled&&o.kind==='bed'&&isObjectVisible(data.editorOrganization,o.id)).map(o=>landscapeFootprint(o).map(v=>({x:v.x,y:v.z})))}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
 
     <Environment3D data={{...data,houseVisible:data.houseVisible!==false&&isObjectVisible(data.editorOrganization,'house')}} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
 
@@ -677,7 +678,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
       <FixtureLightContext.Provider value={fixtureLight}><Scene data={data} model={model} showMatureSpread={view==='top'} structure={structure} cutaway={cutaway} inspection={inspection} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} pergolaInteraction={!editInteraction&&onUpdate&&rawData.pergola&&!boardPaint&&!structure&&!cutaway?{selected,mode:pergolaMode,onSelect:()=>setSelected(true),onDraft:setDraft,onCommit:patch=>onUpdate({pergola:{...rawData.pergola!,...patch}})}:undefined} {...interaction}/></FixtureLightContext.Provider>
 
       {editInteraction&&selection&&<Suspense fallback={null}><SceneEditHandles data={rawData} model={model} selection={selection} interaction={editInteraction}/></Suspense>}<SavedCameraBridge data={data} update={onUpdate}/><SelectionBridge enabled={!boardPaint} hardscapeOnly={!selectionEnabled} revision={calculatedYard??model} selection={selection??{partIds:[],boards:[]}} onPick={onObjectPick}/><SnapshotBridge onReady={onSnapshotReady}/><SceneStillExport revision={rawData}/>
-      <RenderQuality/><RenderPipeline evening={evening}/>
+      <ShowcaseModeSync/><RenderQuality/><RenderPipeline evening={evening}/>
 
       <OrbitControls makeDefault target={savedCamera||preset||view==='overview'?undefined:[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={savedCamera||preset?1:r*.25} maxDistance={view==='overview'?Math.max(r*8,height*4):r*4} enableDamping={false}/>
 

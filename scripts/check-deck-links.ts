@@ -7,6 +7,11 @@ import {MANUFACTURER_ACCESSORIES,RAILING_CATALOGUE} from '../src/features/deckcr
 import {DOOR_STYLES} from '../src/features/deckcraft/houseSettings';
 import {GARAGE_DOOR_STYLES,WINDOW_STYLES} from '../src/features/deckcraft/houseOpenings';
 import {DesignLinkError,MAX_DESIGN_LINK_CHARS,decodeDesignLink,designLinkFromHash,designLinkJson,designToKeep,encodeDesignLink,transformBytes,withoutPersonalDetails} from '../src/features/deckcraft/designLink';
+import {linkDesignJson} from '../src/features/deckcraft/designLinkSpecies';
+import {MAX_PUBLIC_DESIGN_BYTES} from '../src/features/deckcraft/designPersistence';
+import {ensureLiveDesignExtensions} from '../src/features/deckcraft/designExtensions';
+import {LANDSCAPE_SPECIES,newLandscapePlant} from '../src/features/deckcraft/landscapeCatalogue';
+import {ontarioShowcaseDesign} from '../src/features/deckcraft/showcaseSample';
 import type {DeckData,HouseOpening} from '../src/features/deckcraft/types';
 import {designerSource} from './deck-designer-source';
 
@@ -138,6 +143,40 @@ ok(longest<3000,`The longest scenario link (${longest} characters) stays under 3
   const workspaceTools=readFileSync(new URL('../src/features/deckcraft/designer/WorkspaceTools.tsx',import.meta.url),'utf8'),estimateStep=readFileSync(new URL('../src/features/deckcraft/designer/steps/EstimateStep.tsx',import.meta.url),'utf8');
   ok(page.includes('<WorkspaceTools data={data}')&&workspaceTools.includes('<ShareDesignLink data={p.data}/>')&&estimateStep.includes('<ShareDesignLink data={data}'),'Share controls in the active workspace Files menu and on the estimate step');
   ok(share.includes('encodeDesignLink(data)')&&/name and project address are not included/.test(share),'The share control builds the link and says what it leaves out');
+}
+
+// 8. Repeated plant species travel once, and come back on every plant. A species used once stays on the plant.
+{
+  ok(linkDesignJson(scenarios['Rectangle/Straight/Attached'])===designLinkJson(scenarios['Rectangle/Straight/Attached']),'A design without plants is unchanged');
+  const hosta=structuredClone(LANDSCAPE_SPECIES.find(s=>s.id==='hosta')!),maple=structuredClone(LANDSCAPE_SPECIES.find(s=>s.id==='acer-saccharum')!);
+  const plants=[0,1,2].map(i=>({...newLandscapePlant('hosta',`h${i}`,i*80,400),speciesRecord:structuredClone(hosta)}));
+  const lone={...newLandscapePlant('acer-saccharum','maple',0,200),speciesRecord:maple};
+  const planted=design({landscapeObjects:[...plants,lone]});
+  await ensureLiveDesignExtensions(planted);
+  const payload=JSON.parse(linkDesignJson(planted)) as {speciesTable?:{id:string}[];configuration:{landscapeObjects:{id:string;speciesId?:string;speciesRecord?:{id:string}}[]}};
+  ok(payload.speciesTable?.length===1&&payload.speciesTable[0].id==='hosta','A repeated species is stored once');
+  ok(payload.configuration.landscapeObjects.filter(o=>o.id.startsWith('h')).every(o=>o.speciesId==='hosta'&&!o.speciesRecord),'Repeated plants name that species');
+  ok(payload.configuration.landscapeObjects.find(o=>o.id==='maple')?.speciesRecord?.id==='acer-saccharum'&&!payload.configuration.landscapeObjects.find(o=>o.id==='maple')?.speciesId,'A species used once stays on the plant');
+  assert.equal(serializeDeckReleaseDesign(await decodeDesignLink(valueOf(await encodeDesignLink(planted,ORIGIN)))),serializeDeckReleaseDesign(withoutPersonalDetails(planted)),'Repeated species come back on every plant');checks++;
+  const edited={...structuredClone(hosta),commonName:'Edited hosta'};
+  const clash=design({landscapeObjects:[{...plants[0],speciesRecord:structuredClone(hosta)},{...plants[1],id:'h1',speciesRecord:edited}]});
+  await ensureLiveDesignExtensions(clash);
+  const clashPayload=JSON.parse(linkDesignJson(clash)) as {speciesTable?:unknown;configuration:{landscapeObjects:{speciesId?:string;speciesRecord?:{commonName:string}}[]}};
+  ok(!clashPayload.speciesTable&&clashPayload.configuration.landscapeObjects.every(o=>o.speciesRecord&&!o.speciesId),'Records that share an id but differ stay on the plant');
+  const sample=ontarioShowcaseDesign();
+  await ensureLiveDesignExtensions(sample);
+  const estate=linkDesignJson(sample),estateBytes=new TextEncoder().encode(estate).length;
+  ok(estateBytes<=MAX_PUBLIC_DESIGN_BYTES,`The estate share payload is ${estateBytes} bytes, inside ${MAX_PUBLIC_DESIGN_BYTES}`);
+  const estateFile=JSON.parse(estate) as {speciesTable:{id:string}[];configuration:{landscapeObjects:{kind:string;speciesId?:string;speciesRecord?:unknown}[]}};
+  const estatePlants=estateFile.configuration.landscapeObjects.filter(o=>o.kind==='plant');
+  ok(estateFile.speciesTable.length>0&&estateFile.speciesTable.length<estatePlants.length&&estatePlants.every(o=>o.speciesId&&!o.speciesRecord),'The estate link names each planting and keeps one species table');
+  const saved=designLinkJson(sample);
+  ok(saved.includes('"speciesRecord"')&&!saved.includes('speciesTable'),'The saved-file JSON still carries a record on every plant');
+  const link=await encodeDesignLink(sample,ORIGIN);
+  ok(link.length<=MAX_DESIGN_LINK_CHARS,`The estate link is ${link.length} characters`);
+  const opened=await decodeDesignLink(valueOf(link));
+  assert.equal(serializeDeckReleaseDesign(opened),serializeDeckReleaseDesign(withoutPersonalDetails(sample)),'The estate design survives the link');checks++;
+  ok(opened.scopeOfWork===DEFAULT_DECK.scopeOfWork&&opened.customerName==='','The link still leaves the build notes and the customer’s name at home');
 }
 
 console.log(`DECK LINKS OK — ${Object.keys(scenarios).length} designs round-trip exactly (longest link ${longest} chars); ${checks} privacy, rejection and wiring checks.`);

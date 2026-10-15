@@ -14,9 +14,13 @@ import {getHouseContact} from './houseContact';
 import {getHousePlacement} from './housePlacement';
 import {openingWallId} from './houseFootprint';
 import {borderLightingPlan} from './borderLighting';
+import {onPaving,pavingRings,shiftOffPaving} from './pathLightPlacement';
 import {edgeSectionId} from './lib/edgeSections';
+import {WEDGE_HEIGHT_IN} from './wedgeHeight';
 
-export type FixturePlacement={productId:string;x:number;y:number;z:number;angle:number;zone?:string};
+/** `paving`: a new design's recessed light with no stored height. The 3D view sets it on the paver under it
+ * (viewer3d/paverSeating.ts); drawings and exports keep the height given here. */
+export type FixturePlacement={productId:string;x:number;y:number;z:number;angle:number;zone?:string;paving?:true};
 /** The original EVO HYDE allowance's housing, in inches: the EVO HYDE profile (22 × 16 mm) at the short 180C length,
  * since the allowance itself names no length. Illustrative, not a shop drawing. */
 export const LEGACY_HYDE={length:7.09,height:.87,depth:.63};
@@ -191,10 +195,18 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
   const perProduct=new Map<string,number>(),perProductQty=new Map<string,number>();
   for(const item of selected)perProductQty.set(`${item.zone}:${item.id}`,(perProductQty.get(`${item.zone}:${item.id}`)??0)+item.qty);
   const facing=selected.some(i=>i.zone==='posts')?postFacing(model):[],noses=model.treads.map(treadNose);
+  const hardscape=pavingRings(data,model),standing=(g:string)=>g==='bollard'||g==='spot';
   for(const item of selected)for(let i=0;i<item.qty;i++){
     const index=indices.get(item.zone)??0;indices.set(item.zone,index+1);
     const key=`${item.zone}:${item.id}`,own=perProduct.get(key)??0;perProduct.set(key,own+1);
     const p=perimeterPoint(index,counts.get(item.zone)??1),g=item.geometry,d=item.dimensionsIn,zone=item.zone;
+    const pinned='places' in item?item.places?.[own]:undefined;
+    if(pinned){
+      if(standing(g)&&onPaving(hardscape,pinned.x,pinned.z)){warnings.push(`${item.name} is pinned on paving. Path bollards and stake lights stay in planting beds, off patios, pool decks and walks.`);continue;}
+      // A new design's recessed light with no stored height sits on the paver it lands on, not on the soil under a raised
+      // slab. The 3D view resolves that height; a saved design keeps its fixtures exactly where they were (buildRules).
+      fixtures.push({productId:item.id,x:pinned.x,z:pinned.z,y:pinned.y??terrain.elevationIn+pinned.z*terrain.slopePct/100,angle:pinned.angle,zone,paving:pinned.y===undefined&&g==='recessed'&&usesCurrentBuildRules(data)||undefined});continue;
+    }
     let y=top+.15;
     if(zone==='border'){
       const mount=border.mounts[own];if(!mount)continue;
@@ -237,9 +249,12 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
         // Under-step lights tuck flush under the tread nose. Lit designs use the lighting mounting-space nose so the
         // fixture hides under the overhang; ordinary ½ in noses keep the fixture on the riser face below the nose.
         const nosing=t.polygon?0:model.stairSupport.treadNosingIn;
-        const inset=nosing-(g==='undercap'?(legacyHyde?LEGACY_HYDE.depth:d.width??.7)/2+.05:(d.width??1)/2);
+        // A WEDGE's origin is its riser face, set back by the nosing, so the plate sits in the riser.
+        // New designs only; a saved design keeps the earlier inset and height (buildRules).
+        const wedge=item.id==='wedge'&&usesCurrentBuildRules(data);
+        const inset=nosing-(g==='undercap'?(legacyHyde?LEGACY_HYDE.depth:d.width??.7)/2+.05:wedge?0:(d.width??1)/2);
         p.x=nose.x+ux*along-nx*inset;p.z=nose.z+uz*along-nz*inset;
-        y=t.y-t.h/2-(g==='undercap'?(legacyHyde?LEGACY_HYDE.height:d.height??.5)/2:2.7);
+        y=t.y-t.h/2-(g==='undercap'?(legacyHyde?LEGACY_HYDE.height:d.height??.5)/2:wedge?WEDGE_HEIGHT_IN/2+.08:2.7);
       }else{warnings.push(`${item.name} is not a recessed or surface stair fixture; choose its intended installation zone.`);continue;}
     }else if(zone==='house'&&g==='wall'){
       if(!houseVisible){warnings.push(`${item.name}: enable the house to place wall fixtures.`);continue;}
@@ -248,7 +263,14 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
       for(const o of house.openings.filter(o=>openingWallId(o,house)==='main-front')){const ox=houseLeft+o.offsetPct/100*house.widthFt*12;if(Math.abs(p.x-ox)<o.widthIn/2+5&&y>o.bottomIn-5&&y<o.bottomIn+o.heightIn+5)y=Math.min(house.storeys*house.storeyHeightIn-8,o.bottomIn+o.heightIn+7);}
     }else if(zone==='landscape'||g==='bollard'||g==='spot'){
       // Existing perimeter point is 4 in inboard; place path fittings 24 in beyond it.
-      p.x-=Math.sin(p.angle)*28;p.z-=Math.cos(p.angle)*28;y=terrain.elevationIn+p.z*terrain.slopePct/100;p.angle+=Math.PI;
+      const outX=-Math.sin(p.angle),outZ=-Math.cos(p.angle);
+      p.x+=outX*28;p.z+=outZ*28;
+      if(standing(g)){
+        const clear=shiftOffPaving(hardscape,p.x,p.z,outX,outZ);
+        if(!clear){warnings.push(`${item.name} would stand on paving. Path bollards and stake lights stay in planting beds, off patios, pool decks and walks.`);continue;}
+        p.x=clear.x;p.z=clear.z;
+      }
+      y=terrain.elevationIn+p.z*terrain.slopePct/100;p.angle+=Math.PI;
       if(g==='wall'||g==='undercap'){warnings.push(`${item.name} needs a real wall or cap; select the deck, posts or house zone.`);continue;}
     }else if(g==='wall'||g==='undercap'){
       const length=d.length??d.width??4,eligible=edges.filter(e=>e.len>=length+12),edge=eligible[index%Math.max(1,eligible.length)];

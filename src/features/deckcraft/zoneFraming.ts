@@ -76,11 +76,43 @@ export function frameZoneBearings({zone,reference:ref}:FramedZone,offset:V3,out:
   }
 }
 
-/** Joists (the engine's layout plus build-ups inside this zone) and the blocking rows of one zone. */
-export function frameZoneJoists({zone,reference:ref}:FramedZone,offset:V3,cfg:ZoneFramingConfig,buildUps:number[],out:{joists:Member[];blocking:Member[]}){
+/** A 1.5 in joist and a 5 in post clip when their centres are closer than this. */
+const JOIST_POST_CLEAR_IN=3.25;
+
+/** Shift field joists off post centres and fill any bay that move opens past the spacing. Rims stay put. */
+function clearJoistsOfPosts(xs:number[],posts:number[],spacing:number,rim0:number,rim1:number){
+  const moved=xs.map(x=>{
+    if(Math.abs(x-rim0)<.2||Math.abs(x-rim1)<.2)return x;
+    let next=x;
+    for(const p of posts){
+      if(Math.abs(next-p)>=JOIST_POST_CLEAR_IN)continue;
+      const left=p-JOIST_POST_CLEAR_IN,right=p+JOIST_POST_CLEAR_IN;
+      next=Math.abs(x-left)<=Math.abs(x-right)?left:right;
+    }
+    return next;
+  }).sort((a,b)=>a-b);
+  const kept:number[]=[];
+  for(const x of moved)if(!kept.length||x-kept[kept.length-1]>=1.5)kept.push(x);
+  const out:number[]=[];
+  for(let i=0;i<kept.length;i++){
+    const x=kept[i],nxt=kept[i+1];
+    out.push(x);
+    if(nxt===undefined||nxt-x<=spacing+1e-6)continue;
+    let mid=(x+nxt)/2;
+    for(const p of posts)if(Math.abs(mid-p)<JOIST_POST_CLEAR_IN){const side=mid<=p?p-JOIST_POST_CLEAR_IN:p+JOIST_POST_CLEAR_IN;if(side>x+1.5&&side<nxt-1.5)mid=side;}
+    if(mid>x+1.5&&mid<nxt-1.5&&posts.every(p=>Math.abs(mid-p)>=JOIST_POST_CLEAR_IN-1e-6))out.push(mid);
+  }
+  return out.sort((a,b)=>a-b);
+}
+
+/** Joists (the engine's layout plus build-ups inside this zone) and the blocking rows of one zone.
+ * `clearXs` are world-space post centres. An empty list leaves the engine grid unchanged. */
+export function frameZoneJoists({zone,reference:ref}:FramedZone,offset:V3,cfg:ZoneFramingConfig,buildUps:number[],out:{joists:Member[];blocking:Member[]},clearXs:number[]=[]){
   const o=zone.origin,w=zone.size.w,y=cfg.top-1-cfg.joistDepth/2;
   const ups=buildUps.filter(x=>x>=o.x&&x<=o.x+w);
-  const regular=ref.joistXsIn.map(x=>Math.max(.75,Math.min(w-.75,x))+o.x).filter(x=>!ups.some(u=>Math.abs(u-x)<1.5));
+  const posts=clearXs.map(x=>x-offset.x);
+  let regular=ref.joistXsIn.map(x=>Math.max(.75,Math.min(w-.75,x))+o.x).filter(x=>!ups.some(u=>Math.abs(u-x)<1.5));
+  if(posts.length)regular=clearJoistsOfPosts(regular,posts,cfg.spacing,o.x+.75,o.x+w-.75).filter(x=>!ups.some(u=>Math.abs(u-x)<1.5));
   const joists:Member[]=[];
   for(const x of [...regular,...ups].sort((a,b)=>a-b))for(const [a,b]of outlineSpans(zone.outline,x,'x'))if(b-a>1e-6)joists.push({a:{x:x+offset.x,y,z:a+offset.z},b:{x:x+offset.x,y,z:b+offset.z},width:1.5,depth:cfg.joistDepth});
   // Blocking rows from the framing engine: no gap between rows or bearings over the code's 2100 mm.

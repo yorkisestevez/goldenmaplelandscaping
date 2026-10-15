@@ -20,11 +20,18 @@ export function visibleSkyStrength(lighting:Lighting){return skyStrength(lightin
 export function visibleSkyElevation(elevation:number){const min=VISIBLE_SKY_MIN_DEG*Math.PI/180;return min+Math.min(Math.PI/2,Math.max(0,elevation))*(1-min/(Math.PI/2));}
 /** Match the distance haze to the actual displayed sky horizon. RGBE loaders
  * may supply half-float or float data, with either row orientation. */
-export function visibleSkyHorizon(map:THREE.Texture):[number,number,number]|null {
+/** Elevation sampled on the sky dome. Editor and neighbourhood both stay on the
+ * clean upper photograph. The panorama's ground ring sits on the equator and
+ * reads as a dark seamed band, so horizonBand no longer opens it. */
+export function skyDomeSampleElevation(elevation:number,horizonBand:number){
+ const min=VISIBLE_SKY_MIN_DEG*Math.PI/180,displayed=Math.max(0,elevation),clean=min+displayed*(1-min/(Math.PI/2));
+ return clean+horizonBand*0;
+}
+export function visibleSkyHorizon(map:THREE.Texture,elevation?:number):[number,number,number]|null {
  const image=map.image as {width?:number;height?:number;data?:ArrayLike<number>}|undefined;
  const w=image?.width,h=image?.height,data=image?.data;if(!w||!h||!data)return null;
  const channels=data.length/(w*h);if(channels!==3&&channels!==4)return null;
- const v=visibleSkyElevation(0)/Math.PI+.5,row=Math.min(h-1,Math.max(0,Math.floor((map.flipY?1-v:v)*h))),sum=[0,0,0];let count=0;
+ const el=elevation===undefined?visibleSkyElevation(0):elevation,v=el/Math.PI+.5,row=Math.min(h-1,Math.max(0,Math.floor((map.flipY?1-v:v)*h))),sum=[0,0,0];let count=0;
  for(let y=Math.max(0,row-1);y<=Math.min(h-1,row+1);y++)for(let x=0;x<w;x+=4){for(let c=0;c<3;c++){const n=data[(y*w+x)*channels+c];sum[c]+=map.type===THREE.HalfFloatType?THREE.DataUtils.fromHalfFloat(n):n;}count++;}
  return count&&sum.every(Number.isFinite)?sum.map(n=>n/count) as [number,number,number]:null;
 }

@@ -18,7 +18,7 @@ import {DECKING_CATALOGUE} from './manufacturerRuntimeCatalogue';
 import {finishedFasciaOffset} from './lib/finishedFootprint';
 import {getStairSupport,getStringerOffsets,makeRiserBoards,type RiserBoard} from './stairConstruction';
 import {framelessGlassLayout,glassPanelMembers,type FramelessGlassLayout} from './framelessGlass';
-import {getHouseContact,exposedSides,deckAttachesToHouse,exposedHouseLine} from './houseContact';
+import {getHouseContact,exposedSides,deckAttachesToHouse,exposedHouseLine,abuttingHouseEdges,freestandingHouseLine} from './houseContact';
 import {getHouseConfig} from './houseSettings';
 import {getHousePlacement} from './housePlacement';
 import {blocksTowardDeck,getHouseBlocks,rectPolygon} from './houseFootprint';
@@ -107,6 +107,12 @@ export function buildDeckTakeoff(data:DeckData){
   const joistDepth=data.framingSize==='2x8'?7.25:data.framingSize==='2x12'?11.25:9.25;
   const levels:DeckLevel[]=[];const railRuns:RailRun[]=[];const mounts:{old:V3;next:V3}[]=[];const treads:Box[]=[];const riserBoards:RiserBoard[]=[];const stringers:Member[]=[];const stairOpenings:StairPlacement[]=[];
   const mainFp=getFootprint(data,1),mainContact=getHouseContact(data,mainFp);
+  // A freestanding (or floating) edge that lies on the house wall gets no automatic guard. The
+  // ledger contact is unchanged, so the rim stays and the beam is not turned into a ledger.
+  const wallEdges=new Set(newRules?abuttingHouseEdges(data,mainFp):[]);
+  const railContact=wallEdges.size?{...mainContact,isContactEdge:(i:number)=>mainContact.isContactEdge(i)||wallEdges.has(i)}:mainContact;
+  const flushEdges=new Set(newRules?freestandingHouseLine(data,mainFp):[]);
+  const wallFlush=flushEdges.size?{isContactEdge:()=>false,isFlushEdge:(i:number)=>flushEdges.has(i)}:undefined;
   const wrap=activeWrap(data);
   function layoutLevel(level:DeckLevel,inset:number){
     if(!data.boardLayout||level.kind!=='deck'||level.index===undefined)return;
@@ -149,7 +155,8 @@ export function buildDeckTakeoff(data:DeckData){
     const customDeck=kind==='deck'&&index===0&&data.shape==='Custom',o=footprint.outline;
     const stepXs=customDeck?o.flatMap((p,i)=>{const q=o[(i+1)%o.length];return Math.abs(p.x-q.x)<.5&&Math.abs(p.y-q.y)>.5&&p.x>.5&&p.x<footprint.bounds.w-.5?[p.x]:[];}):[];
     const free=kind==='deck'&&!!freeFootprint(data,(index+1) as 1|2|3);
-    const framedZones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0,attached&&index===0?mainContact.contacts.filter(c=>c.kind==='flush').map(c=>c.a.x):[],angled.filter(cornerCut).flatMap(e=>[e.a.x,e.b.x]).filter(x=>!stepXs.some(s=>Math.abs(s-x)<.5)),free).map(zone=>({zone,reference:kind==='landing'?landingReference(zone,cfg):zoneReference(zone,cfg)}));
+    const houseC=!attached&&kind==='deck'&&index===0?data.houseCantileverIn:undefined;
+    const framedZones=levelZones(footprint,attached,cfg,kind==='deck'&&index===0,attached&&index===0?mainContact.contacts.filter(c=>c.kind==='flush').map(c=>c.a.x):[],angled.filter(cornerCut).flatMap(e=>[e.a.x,e.b.x]).filter(x=>!stepXs.some(s=>Math.abs(s-x)<.5)),free).map(zone=>({zone,reference:kind==='landing'?landingReference(zone,cfg):zoneReference(zone,cfg,houseC)}));
     const zones=shareHouseSideBeam(framedZones,cfg),reference=zones[0].reference;
     const supports:V3[]=[],joists:Member[]=[],beams:Member[]=[],blocking:Member[]=[];
     for(const zone of zones){
@@ -160,7 +167,7 @@ export function buildDeckTakeoff(data:DeckData){
     }
     if(attached&&index===0)frameHouseSideBeams(exposedHouseLine(data,footprint,mainContact),footprint.bounds.h,cfg,offset,{supports,beams});
     const borders=data.pictureFrameRows||(data.pattern==='Picture Frame'?1:0),inset=borders*(data.boardWidth+gap);
-    const deckingFootprint=getFinishedFootprint(data,footprint,attached?mainContact:undefined),fieldPolygons=offsetPolygons([deckingFootprint.outline],inset),fieldXs=fieldPolygons.flat().map(p=>p.x),fieldLeft=fieldXs.length?Math.min(...fieldXs):inset;
+    const deckingFootprint=getFinishedFootprint(data,footprint,attached?mainContact:!attached&&index===0?wallFlush:undefined),fieldPolygons=offsetPolygons([deckingFootprint.outline],inset),fieldXs=fieldPolygons.flat().map(p=>p.x),fieldLeft=fieldXs.length?Math.min(...fieldXs):inset;
     const fieldWidth=fieldXs.length?Math.max(...fieldXs)-fieldLeft:0,breakerZone=data.boardWidth+2*gap;
     let breakerCount=0;while((fieldWidth-breakerCount*breakerZone)/(breakerCount+1)>stockLength+1e-6)breakerCount++;
     const segment=(fieldWidth-breakerCount*breakerZone)/(breakerCount+1);
@@ -172,7 +179,10 @@ export function buildDeckTakeoff(data:DeckData){
     const breakers=inlayPlans.length?keepBreakers(allBreakers,inlayPlans,data.boardWidth,gap):allBreakers;
 
     const buildUps=[...breakers.flatMap(x=>[-1.5,-.5,.5,1.5].map(k=>x+k*(1.5+.375))),...(borders?[1.5+2.375,1.5+2*2.375,footprint.bounds.w-1.5-2.375,footprint.bounds.w-1.5-2*2.375]:[]),...bandBuildUps(inlayPlans,data.boardWidth,gap)];
-    for(const zone of zones)frameZoneJoists(zone,offset,cfg,buildUps,{joists,blocking});
+    // Explicit pergola posts (not the default four corners) shift a joist that would otherwise run through a post.
+    const pergola=data.pergola,a=pergola?pergola.rotationDeg*Math.PI/180:0,c=Math.cos(a),s=Math.sin(a);
+    const clearXs=kind==='deck'&&pergola?.posts?.length&&pergola.target.kind==='deck'&&pergola.target.level===index?pergola.posts.map(p=>pergola.xFt*12+c*p.xIn-s*p.zIn):[];
+    for(const zone of zones)frameZoneJoists(zone,offset,cfg,buildUps,{joists,blocking},clearXs);
     // Corner-cutting 45° edges line the 45° layouts up with themselves, one per direction (see getBoardRows /
     // getHerringboneRows): running left toward the house ('left', like the front-left corner) or away from it.
     const cutting=angled.filter(cornerCut),leftAngled=cutting.some(e=>e.b.y<e.a.y),rightAngled=cutting.some(e=>e.b.y>e.a.y),anyAngled=angled.length>0;
@@ -459,7 +469,7 @@ export function buildDeckTakeoff(data:DeckData){
   const levelSeats:{level:DeckLevel;seat:(p:PlanPoint)=>PlanPoint}[]=[];
   for(const [index,level]of levels.entries()){
     if(level.kind!=='deck')continue;
-    let segments=getRailingSegments(data,level.footprint,null,index===0?mainContact:undefined);
+    let segments=getRailingSegments(data,level.footprint,null,index===0?railContact:undefined);
     // Cuts the stretch lo…hi (along u from origin, level plan inches) out of every guard segment lying on that line.
     const cutAlong=(origin:PlanPoint,u:PlanPoint,lo:number,hi:number,tol=.01)=>{
       const ox=origin.x,oz=origin.y,ux=u.x,uz=u.y;

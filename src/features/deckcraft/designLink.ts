@@ -12,7 +12,9 @@ import type {DeckData} from './types';
  * plain JSON (`j`), then base64url-encoded. The hash never reaches a server.
  *
  * Opening a link goes through `parseDeckReleaseDesign`, so its 100 KB limit and `validateDesign`
- * stay the only way a design gets in.
+ * stay the only way a design gets in. Before deflate, repeated plant species records are stored once
+ * in `speciesTable` and named with `speciesId` on each plant. Opening the link puts the record back
+ * on the plant. A saved design file, and `designLinkJson`, still carry the record on every plant.
  */
 export const DESIGN_LINK_PARAM='d';
 /** Longest link payload accepted before decoding; a heavy design is about 1,800 characters. */
@@ -37,7 +39,7 @@ export function withoutPersonalDetails(data:DeckData):DeckData{
   return {...data,...Object.fromEntries(PERSONAL_FIELDS.map(key=>[key,DEFAULT_DECK[key]]))};
 }
 
-/** The design file a link carries (minified, personal details removed), with the price book it was priced with. */
+/** Minified design file with personal details removed and the price book it was priced with. A link compacts repeated species (designLinkSpecies.ts) before this is deflated. */
 export function designLinkJson(data:DeckData):string{
   const file=JSON.parse(serializeDeckReleaseDesign(data)) as {configuration:Record<string,unknown>;priceBook?:string};
   for(const key of [...PERSONAL_FIELDS,'poolQuoteInputs'])delete file.configuration[key];

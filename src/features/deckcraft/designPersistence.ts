@@ -72,7 +72,7 @@ const enums: Partial<Record<keyof DeckData, readonly (string | number)[]>> = {
 const ranges: Partial<Record<keyof DeckData, readonly [number,number]>> = {
   width:[4,60],length:[4,60],height:[8,144],width2:[4,40],length2:[4,40],height2:[8,144],
   cutoutWidth:[0,48],cutoutLength:[0,48],cutoutWidth2:[0,48],cutoutLength2:[0,48],
-  foundationDepthIn:[24,144],stairWidth:[36,120],stairOffset:[0,100],inlayLf:[0,200],
+  foundationDepthIn:[24,144],houseCantileverIn:[0,24],stairWidth:[36,120],stairOffset:[0,100],inlayLf:[0,200],
   stairRiserCount:[1,32],stairTreadDepthIn:[10,24],
   benchLf:[0,100],privacySqft:[0,500],pergolaSqft:[0,600],
   pictureFrameOverhangIn:[0,1.5],
@@ -160,7 +160,16 @@ export function validateDesign(input:unknown):DeckData {
       seen.add(item.productId);const qty=numeric(item.qty,0,30,'Lighting quantity');if(!Number.isInteger(qty))throw new Error('Lighting quantities must be whole numbers.');
       if(item.zone==='border'||item.zone!==undefined&&!(LIGHTING_ZONES as readonly unknown[]).includes(item.zone))throw new Error('Unsupported lighting installation zone; picture-frame lights use their dedicated option.');
       if(item.auto!==undefined&&item.auto!==true)throw new Error('Invalid managed lighting flag.');
-      return {productId:item.productId,qty,...(item.zone?{zone:item.zone as LightingZone}:{}),...(item.auto?{auto:true as const}:{})};
+      let places:{x:number;z:number;angle:number;y?:number}[]|undefined;
+      if(item.places!==undefined){
+        if(!Array.isArray(item.places)||item.places.length!==qty)throw new Error('Lighting placements must match the fixture quantity.');
+        places=item.places.map(place=>{
+          if(!record(place))throw new Error('Invalid lighting placement.');
+          const y=place.y===undefined?undefined:numeric(place.y,-500,4000,'Lighting placement');
+          return {x:numeric(place.x,-200000,200000,'Lighting placement'),z:numeric(place.z,-200000,200000,'Lighting placement'),angle:numeric(place.angle,-Math.PI*2,Math.PI*2,'Lighting placement'),...(y===undefined?{}:{y})};
+        });
+      }
+      return {productId:item.productId,qty,...(item.zone?{zone:item.zone as LightingZone}:{}),...(item.auto?{auto:true as const}:{}),...(places?{places}:{})};
     }).filter(item=>item.qty>0)};
   }
   if(input.autoLighting!==undefined){

@@ -113,6 +113,21 @@ function addBlockContacts(data:DeckData,fp:FootprintPlan,contacts:ContactSegment
   });
 }
 
+/** Edges of a deck that is not ledgered to the house, but that still lie on the deck-facing wall.
+ * A guard is never automatic there, freestanding included. An unpositioned house covers the whole
+ * back line; a positioned one covers only its own width. Stretches past the house stay open. */
+export function abuttingHouseEdges(data:DeckData,fp:FootprintPlan):number[]{
+  if(data.houseVisible===false||deckAttachesToHouse(data))return [];
+  const house=data.housePlacement||data.deckOutlines?.main?getHousePlacement(data):null;
+  return houseLineEdges(fp).filter(e=>!house||(e.a.x>=house.x0-TOL&&e.b.x<=house.x1+TOL)).map(e=>e.index);
+}
+/** The whole back line of a freestanding deck, so the finished border stays on the wall instead of
+ * stepping into it at a house corner. Attached decks already do this through the house contact. */
+export function freestandingHouseLine(data:DeckData,fp:FootprintPlan):number[]{
+  if(data.houseVisible===false||deckAttachesToHouse(data))return [];
+  return houseLineEdges(fp).map(e=>e.index);
+}
+
 /** Stretches of the deck's back line that are NOT against the house (deck wider than the
  * house). They need a rail, and a beam with posts instead of a ledger. [x0, x1] pairs, inches. */
 export function exposedHouseLine(data:DeckData,fp:FootprintPlan,contact:EdgeContact):[number,number][]{

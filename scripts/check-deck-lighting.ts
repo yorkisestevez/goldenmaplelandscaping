@@ -5,15 +5,26 @@ import {activeLightingItems,lightingSystemCheck,syncAutoLighting,AUTO_LIGHTING,M
 import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {extrasLayout,postFacing,screenOffsetFromPoint,treadNose,walkableAt} from '../src/features/deckcraft/extrasLayout';
 import {deckExportMeshes} from '../src/features/deckcraft/designExports';
-import type {DeckData} from '../src/features/deckcraft/types';
+import type {DeckData,YardFeature} from '../src/features/deckcraft/types';
 import {MAX_PREVIEW_LIGHTS,MAX_SHADOW_LIGHTS,previewLightPlan,castsPreviewLight} from '../src/features/deckcraft/lightingPreview';
-import {DEFAULT_KELVIN,FX_MAX_FIXTURES,FX_TEXELS,LEGACY_HYDE,fixtureNight,kelvinSrgb,packFixtureLights} from '../src/features/deckcraft/fixtureLight';
+import {DEFAULT_KELVIN,FLUSH_LENS_PROUD_IN,FLUSH_TRIM_IN,FX_MAX_FIXTURES,FX_TEXELS,LEGACY_HYDE,fixtureNight,kelvinSrgb,linearFlushGround,packFixtureLights} from '../src/features/deckcraft/fixtureLight';
+import {onPaving,pavingRings} from '../src/features/deckcraft/pathLightPlacement';
 const data:DeckData={...structuredClone(DEFAULT_DECK),lightingSystem:{selectedItems:[{productId:'wedge',qty:4,zone:'stairs'},{productId:'hyve',qty:4,zone:'deck'},{productId:'hub100',qty:1}],wireDistance:80}};
 const on=calculateEstimate(data),off=calculateEstimate({...data,lightingPreviewOn:false,sceneLighting:'Evening'});
 const landscape={...data,terrainConfig:{widthFt:80,depthFt:80,elevationIn:6,slopePct:2},lightingSystem:{selectedItems:[{productId:'ace',qty:2,zone:'landscape' as const}],wireDistance:0}};
 const groundFixtures=extrasLayout(landscape,on.model).fixtures;
 assert(groundFixtures.length>0);
 for(const fixture of groundFixtures)assert(Math.abs(fixture.y-(6+fixture.z*.02))<1e-8,'Landscape fixtures follow the shared terrain grade');
+{
+ const bare=groundFixtures.filter(f=>f.productId==='ace');
+ assert(bare.length===2,'Two path bollards are placed beside a deck with no patio');
+ const pad={id:'pad',kind:'patio',name:'Pad',enabled:true,xFt:bare[0].x/12,zFt:bare[0].z/12,widthFt:20,depthFt:20,heightIn:0,rotationDeg:0,productId:'segmental-concrete',color:'#ccc'} as YardFeature;
+ const covered={...landscape,yardFeatures:[pad]},rings=pavingRings(covered,on.model),moved=extrasLayout(covered,on.model);
+ assert(moved.fixtures.filter(f=>f.productId==='ace').length===2&&moved.fixtures.filter(f=>f.productId==='ace').every(f=>!onPaving(rings,f.x,f.z)),'Automatic path bollards walk off a patio');
+ assert(moved.fixtures.some(f=>f.productId==='ace'&&Math.hypot(f.x-bare[0].x,f.z-bare[0].z)>6),'The bollard that landed on the patio actually moved');
+ const pinned={...covered,lightingSystem:{selectedItems:[{productId:'ace',qty:1,zone:'landscape' as const,places:[{x:bare[0].x,z:bare[0].z,angle:0}]}],wireDistance:0}},held=extrasLayout(pinned,on.model);
+ assert(!held.fixtures.some(f=>f.productId==='ace')&&held.warnings.some(w=>/paving/.test(w)),'A path bollard pinned on paving is not drawn');
+}
 assert.equal(on.total,off.total,'Preview lights and time never alter the purchase');
 assert.deepEqual(extrasLayout(data,on.model).fixtures,extrasLayout({...data,lightingPreviewOn:false},off.model).fixtures);
 const removed={...data,lightingZoneEnabled:{stairs:false}},reduced=calculateEstimate(removed);
@@ -126,6 +137,13 @@ assert(!withCable.sections.find(s=>s.title==='in-lite® Lighting System')!.items
   assert(![...plan.keys()].some(i=>['stairs','posts'].includes(heavy[i].zone)),'No step or post light takes a real light or casts a shadow');
   assert(!castsPreviewLight('puck','posts')&&fixtureNight('puck','posts').route==='glow-only','A PUCK in a post cap faces the sky: it glows and lights nothing');
   assert.equal(fixtureNight('evo_hyde','stairs').route,'patch','An under-step light lights its step through the fixture light patch');
+  const paver=fixtureNight('evo_ground_300','landscape');
+  assert(linearFlushGround({width:1.1811,length:11.811}),'EVO GROUND is a linear flush paver light');
+  assert.equal(paver.route,'patch','A flush paver light pools on the paving instead of taking a real uplight');
+  assert.equal(paver.lens,null,'A flush paver light has no camera-facing sparkle');
+  assert(paver.source&&paver.source.kind==='point'&&paver.source.rangeFt<=6&&paver.source.position[1]<FLUSH_TRIM_IN+FLUSH_LENS_PROUD_IN+0.2,'The paver pool sits on the lens and stays short');
+  assert(FLUSH_TRIM_IN+FLUSH_LENS_PROUD_IN<0.12,'The lens and trim stay within a few millimetres of the paver');
+  assert.equal(fixtureNight('nero','landscape').route,'real','A round uplight still throws upward');
   assert.equal(fixtureNight('wedge','posts').route,'patch','A post light lights the deck through the fixture light patch');
   const small=[...at('fusion','deck',2),...at('evo_hyde','stairs',1)],smallPlan=previewLightPlan(small);
   assert.equal(smallPlan.size,2,'The under-step light is not a real light');

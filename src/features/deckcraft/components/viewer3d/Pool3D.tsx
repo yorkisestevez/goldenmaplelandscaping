@@ -1,5 +1,5 @@
 import {hardscapeAppearance} from './hardscapeAppearance';
-import {poolDepthSampler,WATER_OPTICS} from './waterOptics';
+import {poolDepthSampler,NIGHT_WATER_OPTICS,WATER_OPTICS} from './waterOptics';
 import {applyHardscapeFinish} from './hardscapeFinish';
 import {addMaterialPatch} from './materialPatches';
 import {useEffect,useMemo} from 'react';
@@ -25,14 +25,18 @@ export function poolBufferGeometry(mesh:PoolRenderMesh,depthAt?:(x:number,z:numb
  for(const f of mesh.faces)for(let i=1;i+1<f.length;i++)for(const index of [f[0],f[i],f[i+1]]){const p=mesh.vertices[index];positions.push(p.x,p.y,p.z);uv.push(p.x/24,p.z/24);depth.push(mesh.role==='water'?depthAt?.(p.x,p.z)??0:0);}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('poolDepth',new THREE.Float32BufferAttribute(depth,1));g.computeVertexNormals();g.computeBoundingSphere();return g;
 }
-/** Recorded tint plus unmeasured generic mineral finish; never a claimed supplier scan. */
-export function poolMaterial(part:Pick<PoolRenderMesh,'color'|'role'>){
+/** Recorded tint plus unmeasured generic mineral finish; never a claimed supplier scan.
+ * Day keeps the clear outdoor surface. Night is a separate material: the same
+ * calm ripples, a dark teal body, and a faint panorama so the coping lights
+ * show in the water. */
+export function poolMaterial(part:Pick<PoolRenderMesh,'color'|'role'>,evening=false){
   if(part.role==='water'){
-   const m=new THREE.MeshPhysicalMaterial({color:'#ffffff',roughness:.055,metalness:0,transparent:true,opacity:1,clearcoat:0,ior:1.333,depthWrite:false});
-   const shallow=new THREE.Color(WATER_OPTICS.shallow),deep=new THREE.Color(WATER_OPTICS.deep);
+   const night=evening?NIGHT_WATER_OPTICS:null,look=night??WATER_OPTICS,ripple=night?.ripple??([.008,.005,.002] as [number,number,number]);
+   const m=new THREE.MeshPhysicalMaterial({color:'#ffffff',roughness:night?.roughness??.055,metalness:0,transparent:true,opacity:1,clearcoat:0,ior:1.333,depthWrite:false,envMapIntensity:night?.envMapIntensity??1,emissive:night?.emissive??'#000000',emissiveIntensity:night?.emissiveIntensity??0});
+   const shallow=new THREE.Color(look.shallow),deep=new THREE.Color(look.deep);
    // Evaluate calm ripples per fragment in project feet. Geometry is never
    // displaced and demand rendering needs no timer or frame animation.
-   addMaterialPatch(m,{key:'pool-depth-water-v3',apply:s=>{
+   addMaterialPatch(m,{key:night?'pool-depth-water-night-v2':'pool-depth-water-v3',apply:s=>{
     s.uniforms.poolShallow={value:shallow};s.uniforms.poolDeep={value:deep};
     s.vertexShader=s.vertexShader.replace('#include <common>','#include <common>\nattribute float poolDepth;varying float vPoolDepth;varying vec2 vPoolPosition;varying vec3 vPoolX,vPoolUp,vPoolZ;')
      .replace('#include <defaultnormal_vertex>',`#include <defaultnormal_vertex>
@@ -40,13 +44,22 @@ vPoolDepth=poolDepth/12.;vPoolPosition=position.xz/12.;
 vPoolX=normalize(normalMatrix*vec3(1.,0.,0.));vPoolUp=normalize(normalMatrix*vec3(0.,1.,0.));vPoolZ=normalize(normalMatrix*vec3(0.,0.,1.));`);
     s.fragmentShader=s.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 poolShallow,poolDeep;varying float vPoolDepth;varying vec2 vPoolPosition;varying vec3 vPoolX,vPoolUp,vPoolZ;')
      .replace('#include <color_fragment>',`#include <color_fragment>
-float poolAbsorption=1.-exp(-${WATER_OPTICS.extinctionPerFt}*max(vPoolDepth,0.));
+float poolAbsorption=1.-exp(-${look.extinctionPerFt}*max(vPoolDepth,0.));
 diffuseColor.rgb*=mix(poolShallow,poolDeep,poolAbsorption);
-diffuseColor.a=mix(${WATER_OPTICS.minimumAlpha},${WATER_OPTICS.maximumAlpha},poolAbsorption);`)
+diffuseColor.a=mix(${look.minimumAlpha},${look.maximumAlpha},poolAbsorption);
+${night?`float poolRipple=cos(dot(vPoolPosition,vec2(2.1,1.4)))*.65+cos(dot(vPoolPosition,vec2(-1.2,3.3))+1.7)*.35;
+diffuseColor.rgb*=1.+poolRipple*.14;`:''}`)
      .replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
 float poolWaveA=cos(dot(vPoolPosition,vec2(2.1,1.4))),poolWaveB=cos(dot(vPoolPosition,vec2(-1.2,3.3))+1.7),poolWaveC=cos(dot(vPoolPosition,vec2(5.3,-2.2))+.8);
-vec2 poolGradient=.008*vec2(2.1,1.4)*poolWaveA+.005*vec2(-1.2,3.3)*poolWaveB+.002*vec2(5.3,-2.2)*poolWaveC;
-normal=normalize(vPoolUp-poolGradient.x*vPoolX-poolGradient.y*vPoolZ);`);
+vec2 poolGradient=${ripple[0]}*vec2(2.1,1.4)*poolWaveA+${ripple[1]}*vec2(-1.2,3.3)*poolWaveB+${ripple[2]}*vec2(5.3,-2.2)*poolWaveC;
+normal=normalize(vPoolUp-poolGradient.x*vPoolX-poolGradient.y*vPoolZ);`)
+     .replace('#include <emissivemap_fragment>',night?`#include <emissivemap_fragment>
+totalEmissiveRadiance*=1.+poolRipple*.22;`:'#include <emissivemap_fragment>')
+     .replace('#include <lights_fragment_end>',night?`#include <lights_fragment_end>
+reflectedLight.indirectSpecular*=${night.mirrorScale};
+reflectedLight.indirectDiffuse*=${night.ambientScale};
+reflectedLight.directDiffuse*=${night.directScale};
+reflectedLight.directSpecular*=${night.specularScale};`:'#include <lights_fragment_end>');
    }});return m;
   }
   const m=new THREE.MeshStandardMaterial({color:part.color,vertexColors:true,roughness:part.role==='floor'||part.role==='wall'?.27:.86,metalness:0,side:THREE.DoubleSide});
@@ -70,15 +83,15 @@ if(abs(poolDet)>1e-10)normal=normalize(abs(poolDet)*normal-.00008*sign(poolDet)*
   return m;
 
 }
-function PoolPart({parts,pool}:{parts:PoolRenderMesh[];pool:PoolFeatureModel}){
+function PoolPart({parts,pool,evening}:{parts:PoolRenderMesh[];pool:PoolFeatureModel;evening:boolean}){
  const part=parts[0];
  const quality=useRenderQuality(),geometry=useMemo(()=>{const positions:number[]=[],uv:number[]=[],depth:number[]=[],colors:number[]=[];const sample=poolDepthSampler(pool);for(const p of parts){const g=poolBufferGeometry(p,sample);positions.push(...g.getAttribute('position').array);uv.push(...g.getAttribute('uv').array);depth.push(...g.getAttribute('poolDepth').array);const finish=(p.role==='coping'||p.role==='collar')?hardscapeAppearance({id:p.name,unitId:p.stockId,role:'wall-cap'}):{r:1,g:1,b:1};for(let i=0;i<g.getAttribute('position').count;i++)colors.push(finish.r,finish.g,finish.b);g.dispose();}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('poolDepth',new THREE.Float32BufferAttribute(depth,1));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.computeVertexNormals();g.computeBoundingSphere();return g;},[parts,pool]);
- const material=useMemo(()=>poolMaterial(part),[part.color,part.role]);useFixtureLit(material);
+ const material=useMemo(()=>poolMaterial(part,evening),[part.color,part.role,evening]);useFixtureLit(material);
  useEffect(()=>()=>geometry.dispose(),[geometry]);useEffect(()=>()=>material.dispose(),[material]);
  return <mesh name={part.name} geometry={geometry} material={material} dispose={null} receiveShadow castShadow={part.role!=='water'&&quality.tier!=='constrained'} renderOrder={part.role==='water'?2:0} userData={{pickHardscape:{kind:'pool',id:part.poolId,part:part.role},pickPartId:'pool/'+part.poolId,poolId:part.poolId,poolRole:part.role,planning:part.planning,stockIds:parts.flatMap(p=>p.stockId?[p.stockId]:[]),physicalMeshNames:parts.map(p=>p.name),coversGround:false}}/>;
 }
-export default function Pool3D({pools,inspection=false}:{pools:PoolFeatureModel[];inspection?:boolean}){
+export default function Pool3D({pools,inspection=false,evening=false}:{pools:PoolFeatureModel[];inspection?:boolean;evening?:boolean}){
  const parts=useMemo(()=>pools.flatMap(poolRenderMeshes).filter(p=>inspection?p.role!=='water':['floor','wall','water','coping','setting-bed'].includes(p.role)),[pools,inspection]);
  const batches=useMemo(()=>{const groups=new Map<string,PoolRenderMesh[]>();for(const p of parts){const key=[p.poolId,p.role,p.color,p.planning].join('/'),g=groups.get(key)??[];g.push(p);groups.set(key,g);}return groups;},[parts]);
- return <group name="physical-pools" userData={{planningPoolIds:pools.filter(p=>p.status!=='ready').map(p=>p.config.id)}}>{[...batches].map(([key,parts])=><PoolPart key={key} parts={parts} pool={pools.find(p=>p.config.id===parts[0].poolId)!}/>)}</group>;
+ return <group name="physical-pools" userData={{planningPoolIds:pools.filter(p=>p.status!=='ready').map(p=>p.config.id)}}>{[...batches].map(([key,parts])=><PoolPart key={key} parts={parts} pool={pools.find(p=>p.config.id===parts[0].poolId)!} evening={evening}/>)}</group>;
 }

@@ -1,5 +1,5 @@
 import {SCENE_LOOK} from './sceneLook';
-import {DEFAULT_KELVIN} from '../../fixtureLight';
+import {DEFAULT_KELVIN,FLUSH_LENS_PROUD_IN,FLUSH_TRIM_IN,linearFlushGround} from '../../fixtureLight';
 import {kelvinColour,lensGlow} from './fixtureLighting';
 
 type ProductShape={name:string;geometry:string;finish?:string;colorTemperatureK?:number;dimensionsIn:{height?:number;width?:number;length?:number;diameter?:number;mountingDepth?:number}};
@@ -14,7 +14,12 @@ export default function CatalogueFixture({product,evening,enabled=true}:{product
  // The lens in the product's rated colour temperature, bright enough at night for tone mapping to compress, not clip.
  const lit=<meshStandardMaterial color="#fff6e8" emissive={kelvinColour(product.colorTemperatureK??DEFAULT_KELVIN)} emissiveIntensity={lensGlow(enabled,evening)}/>;
  const diameter=d.diameter??d.width??2.2,w=d.width??d.diameter??2.5,h=d.height??3,depth=d.length??1.5;
- if(g==='recessed'){const height=d.height??d.mountingDepth??1.4,r=diameter/2;return <group name="recessed-catalogue-housing"><mesh position={[0,-height/2,0]}><cylinderGeometry args={[r,r*.93,height,24]}/>{dark}</mesh><mesh position={[0,.08,0]}><cylinderGeometry args={[r*.83,r*.83,.12,24]}/>{lit}</mesh></group>;}
+ if(g==='recessed'){
+  // The body stays under the paver. A dark trim ring and a lens a millimetre or two thick are all that show.
+  const height=d.height??d.mountingDepth??1.4,proud=FLUSH_LENS_PROUD_IN,trim=FLUSH_TRIM_IN,lensY=trim+proud/2;
+  if(linearFlushGround(d)){const length=d.length??diameter,width=d.width??diameter;return <group name="recessed-catalogue-housing"><mesh position={[0,-height/2,0]}><boxGeometry args={[length*.92,height,width*.92]}/>{dark}</mesh><mesh position={[0,trim/2,0]}><boxGeometry args={[length,trim,width]}/>{dark}</mesh><mesh position={[0,lensY,0]}><boxGeometry args={[length*.86,proud,width*.62]}/>{lit}</mesh></group>;}
+  const r=diameter/2;return <group name="recessed-catalogue-housing"><mesh position={[0,-height/2,0]}><cylinderGeometry args={[r*.92,r*.88,height,24]}/>{dark}</mesh><mesh position={[0,trim/2,0]}><cylinderGeometry args={[r,r,trim,32]}/>{dark}</mesh><mesh position={[0,lensY,0]}><cylinderGeometry args={[r*.72,r*.72,proud,32]}/>{lit}</mesh></group>;
+ }
  if(g==='wall'){const faceH=d.diameter??h,bodyDepth=d.diameter?(d.height??d.length??1):depth;return <group name="wall-catalogue-housing"><mesh rotation={[d.diameter?Math.PI/2:0,0,0]}>{d.diameter?<cylinderGeometry args={[diameter/2,diameter/2,bodyDepth,24]}/>:<boxGeometry args={[w,faceH,bodyDepth]}/>}{dark}</mesh><mesh position={[0,-faceH/2-.02,bodyDepth*.23]}><boxGeometry args={[w*.72,.08,Math.min(bodyDepth*.55,1)]}/>{lit}</mesh></group>;}
  if(g==='undercap'){const length=d.length??12,height=d.height??.5,width=d.width??.7;return <group name="linear-catalogue-housing"><mesh><boxGeometry args={[length,height,width]}/>{dark}</mesh><mesh position={[0,-height/2-.025,0]}><boxGeometry args={[Math.max(.2,length-.25),.05,width*.7]}/>{lit}</mesh></group>;}
  if(g==='bollard'){const height=d.height??24,r=(d.diameter??d.width??2)/2;return <group name="bollard-catalogue-housing"><mesh position={[0,height/2,0]}><cylinderGeometry args={[r,r,height,20]}/>{dark}</mesh><mesh position={[0,height-1.5,0]}><cylinderGeometry args={[r*1.04,r*1.04,1.2,20]}/>{lit}</mesh><mesh position={[0,.12,0]}><cylinderGeometry args={[r*1.5,r*1.5,.25,20]}/>{dark}</mesh></group>;}
