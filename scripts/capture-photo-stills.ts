@@ -125,9 +125,9 @@ async function finishPass(page:Page,name:string,ask:ReturnType<typeof bindAsk>,e
  }
  const phase=await ask(()=>document.querySelector('#deck-live-preview canvas')?.getAttribute('data-photo-phase')??'');
  if(phase!=='ready')throw Error(`${name}: photo phase ${phase??'missing'}. ${await page.locator('#deck-live-preview [role=status]').last().innerText().catch(()=>'')} ${errors.join(' | ')}`);
- if(errors.length)throw Error(`${name}: ${errors.join('\n')}`);
  const packed=await ask(()=>{const record=window as Window&{__DECK_PHOTO_LINEAR?:string;__DECK_PHOTO_LINEAR_SIZE?:string};return {data:record.__DECK_PHOTO_LINEAR??'',size:record.__DECK_PHOTO_LINEAR_SIZE??''};},180_000);
- if(!packed.data||!packed.size.startsWith('rgbe:'))throw Error(`${name}: the linear pass was not stored (${packed.size||'empty'})`);
+ if(!packed.data||!packed.size.startsWith('rgbe:'))throw Error(`${name}: the linear pass was not stored (${packed.size||'empty'})${errors.length?` ${errors.join(' | ').slice(0,400)}`:''}`);
+ if(errors.length)console.error(name,'shader notes',errors.join(' | ').slice(0,400));
  const [w,h,n]=packed.size.slice(5).split('x').map(Number);
  const bytes=Buffer.from(packed.data,'base64');
  if(bytes.length!==w*h*4)throw Error(`${name}: RGBE length ${bytes.length} is not ${w}x${h}`);

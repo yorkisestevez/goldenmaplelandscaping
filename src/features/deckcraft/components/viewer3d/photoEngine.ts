@@ -246,20 +246,13 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
   gl.domElement.dataset.photoGuides='capturing';
   const albedoTarget=new THREE.WebGLRenderTarget(w,h,{type:THREE.UnsignedByteType,depthBuffer:true,colorSpace:THREE.SRGBColorSpace});
   const normalTarget=new THREE.WebGLRenderTarget(w,h,{type:THREE.UnsignedByteType,depthBuffer:true,colorSpace:THREE.NoColorSpace});
+  // Override materials only. Recompiling the deck shaders (by clearing lights or the environment) references a normal map those materials do not declare.
+  const albedoMat=new THREE.MeshBasicMaterial({color:'#ffffff',vertexColors:true,side:THREE.DoubleSide});
   const normalMat=new THREE.MeshNormalMaterial({side:THREE.DoubleSide});
-  const ambient=new THREE.AmbientLight('#ffffff',Math.PI);
-  ambient.name='photo-guide-ambient';
-  const savedLights:{light:THREE.Light&{intensity:number};intensity:number}[]=[];
-  const tone=gl.toneMapping,output=gl.outputColorSpace,background=scene.background,environment=scene.environment,envIntensity=scene.environmentIntensity;
+  const tone=gl.toneMapping,output=gl.outputColorSpace,background=scene.background;
   try{
-   scene.traverse(object=>{
-    const light=object as THREE.Light&{intensity?:number};
-    if(!light.isLight||typeof light.intensity!=='number'||light===ambient)return;
-    savedLights.push({light:light as THREE.Light&{intensity:number},intensity:light.intensity});
-    light.intensity=0;
-   });
-   scene.add(ambient);scene.background=null;scene.environment=null;scene.environmentIntensity=0;
-   gl.toneMapping=THREE.NoToneMapping;gl.outputColorSpace=THREE.SRGBColorSpace;
+   scene.background=null;gl.toneMapping=THREE.NoToneMapping;gl.outputColorSpace=THREE.SRGBColorSpace;
+   scene.overrideMaterial=albedoMat;
    gl.setRenderTarget(albedoTarget);gl.setScissorTest(false);gl.setViewport(0,0,w,h);gl.setClearColor(0x000000,1);gl.clear(true,true,true);
    scene.updateMatrixWorld(true);gl.render(scene,photo);
    const albedoRaw=new Uint8Array(w*h*4);
@@ -275,11 +268,9 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
    gl.domElement.dataset.photoGuides=`${w}x${h}`;
    guidesReady=true;
   }finally{
-   scene.overrideMaterial=null;scene.remove(ambient);
-   for(const saved of savedLights)saved.light.intensity=saved.intensity;
-   scene.background=background;scene.environment=environment;scene.environmentIntensity=envIntensity;
+   scene.overrideMaterial=null;scene.background=background;
    gl.toneMapping=tone;gl.outputColorSpace=output;gl.setRenderTarget(null);
-   albedoTarget.dispose();normalTarget.dispose();normalMat.dispose();
+   albedoTarget.dispose();normalTarget.dispose();albedoMat.dispose();normalMat.dispose();
   }
  }
  function exportLinear(){
