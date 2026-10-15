@@ -118,8 +118,6 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
         try{const query=new URLSearchParams(window.location.search);query.delete('sqft');const rest=query.toString();window.history.replaceState(null,'',window.location.pathname+(rest?`?${rest}`:'')+window.location.hash);}catch{}
       }
       if(link)await openSharedLink(link,stored);
-      // ?deck-sample=ontario: the showcase sample, opened by its own lazy module.
-      if(!link&&!stored&&location.search.includes('deck-sample=ontario'))await import('../showcaseSample').then(m=>m.openOntarioSample(applyReplacement,setDesignStatus,()=>active&&intent===editIntent.current&&baseline===dataRef.current),()=>{/* the sample chunk did not load: keep the default design */});
       if(active){setStorageReady(true);setDesignReady(true);}
     }
     void load();

@@ -3,6 +3,9 @@
  *   npx react-router dev --port 4187
  *   DECKCRAFT_PROOF_URL=http://127.0.0.1:4187/deck-designer/ npx tsx scripts/capture-photo-stills.ts
  */
+import {encodeDesignLink} from '../src/features/deckcraft/designLink';
+import {ontarioShowcaseDesign} from '../src/features/deckcraft/showcaseSample';
+import {ensureLiveDesignExtensions} from '../src/features/deckcraft/designExtensions';
 import {execFileSync} from 'node:child_process';
 import {existsSync,mkdirSync,readFileSync,renameSync,writeFileSync,writeSync} from 'node:fs';
 import {deflateSync} from 'node:zlib';
@@ -60,6 +63,14 @@ async function saveCanvas(page:Page,name:string){
  writeFileSync(`${output}/${name}.png`,Buffer.from(shot.data,'base64'));
  await session.detach();
 }
+/** The Ontario sample opens through its own share link (#d=), in the lighting the shot asks for. */
+const sampleHashes:Partial<Record<'daylight'|'evening',string>>={};
+async function sampleHash(lighting:'daylight'|'evening'){
+ if(sampleHashes[lighting])return sampleHashes[lighting];
+ const design={...ontarioShowcaseDesign(),sceneLighting:lighting==='evening'?'Evening' as const:'Daylight' as const};
+ await ensureLiveDesignExtensions(design);
+ return sampleHashes[lighting]=new URL(await encodeDesignLink(design,'http://127.0.0.1')).hash;
+}
 async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighting:'daylight'|'evening',photo:boolean,pass?:{samples:number;seed:number}){
  console.log('shot',name,pass?`pass ${pass.seed}+${pass.samples}`:'');
  const params=new URLSearchParams({ 'deck-sample':'ontario','deck-quality':'showcase','deck-context':'1','deck-lighting':lighting });
@@ -69,7 +80,7 @@ async function openShot(page:Page,name:string,look:'day'|'golden'|'night',lighti
  page.removeAllListeners('pageerror');page.removeAllListeners('console');
  page.on('pageerror',error=>errors.push(error.message));
  page.on('console',message=>{const text=message.text();if(/Shader Error|WebGLProgram|path tracing stopped|path tracing is unavailable|trace triangles/.test(text))errors.push(text.slice(0,700));});
- await page.goto(`${url.split('?')[0]}?${params}`);
+ await page.goto(`${url.split('?')[0]}?${params}${await sampleHash(lighting)}`);
  await page.getByRole('tab',{name:'3D',exact:true}).click();
  const appeared=Date.now()+180_000;let canvasSeen=false;
  while(Date.now()<appeared){

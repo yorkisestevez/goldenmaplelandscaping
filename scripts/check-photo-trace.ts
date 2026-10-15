@@ -145,7 +145,8 @@ ok(SCENE_LOOK.toneMapping==='Neutral'&&SCENE_LOOK.exposure===1&&readFileSync('sr
 const pipeline=readFileSync('src/features/deckcraft/components/viewer3d/renderPipeline.tsx','utf8');
 ok(pipeline.includes("gl.domElement.dataset.photoTrace==='1'")&&pipeline.includes('for(const listen of shadowListeners.get(gl)??[])listen();gl.shadowMap.needsUpdate=true;'),'The raster frame waits during a photo and still refreshes shadow maps the same way');
 const designer=readFileSync('src/features/deckcraft/designer/useDeckDesign.ts','utf8');
-ok(/const area=readDeckArea\(window\.location\.search\),link=designLinkFromHash\(window\.location\.hash\);/.test(designer)&&designer.includes('if(!link&&!stored){update(size);')&&designer.includes("get('deck-sample')==='ontario'")&&designer.indexOf('openSharedLink(link,stored)')<designer.indexOf("get('deck-sample')==='ontario'"),'The Ontario sample loads only for an empty project, after a shared link is handled');
+const capture=readFileSync('scripts/capture-photo-stills.ts','utf8');
+ok(/const area=readDeckArea\(window\.location\.search\),link=designLinkFromHash\(window\.location\.hash\);/.test(designer)&&designer.includes('if(!link&&!stored){update(size);')&&!designer.includes('showcaseSample')&&capture.includes('encodeDesignLink(design')&&capture.includes('await sampleHash(lighting)'),'The Ontario sample opens through its share link (#d=), so the deck route never loads it')
 ok(WATER_OPTICS.shallow&&source.includes('transmission=1')&&source.includes('alphaTest'),'Water and foliage overrides live in the photo session');
 
 if(failed){console.error(`PHOTO TRACE: ${failed} failed`);process.exit(1);}
