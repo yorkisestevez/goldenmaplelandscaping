@@ -228,7 +228,7 @@ export const CARR_TRADE = {
     fabricSqftPerRoll: 400,
   },
   /** Carr delivery, Zone 1 (Barrie/Innisfil/Angus/Ivy/Midhurst/Shanty Bay).
-   *  Zones 2–4 keep the flat ZONE_SURCHARGE in locations.ts on top. */
+   *  Zones 2–4 keep the flat ZONE_SURCHARGE in locationZones.ts on top. */
   delivery: {
     tandemPerLoad: 125, tandemMaxYd3: 16,
     triAxlePerLoad: 135, triAxleMaxYd3: 22,

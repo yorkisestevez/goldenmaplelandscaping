@@ -3,7 +3,7 @@ import type {DeckData,PermitSite} from '../types';
 import {houseOutline} from '../houseFootprint';
 import type {DeckTakeoff} from '../deckTakeoff';
 import {PRICE_BOOK} from '../priceBook';
-import {downloadFile} from '../designer/fields';
+import {downloadFile} from '../designer/downloadFile';
 import {buildPermitSet} from './permitSheets';
 import {buildPermitDxf} from './renderDxf';
 import PermitSheetSvg from './PermitSheetSvg';

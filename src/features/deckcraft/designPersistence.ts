@@ -34,7 +34,7 @@ import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,MAX_SCREEN_PANELS,PRIVACY_HEIGHTS,P
 
 const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy','border'] as const satisfies readonly LightingZone[];
 import {ALLOWANCE_FINISHES,PATIO_PRODUCTS,TURF_SQFT,WALL_PRODUCTS,WATER_PRODUCTS,fireProduct} from './yardSettings';
-import {GARAGE_DOOR_STYLES,WINDOW_STYLES} from './houseOpenings';
+import {GARAGE_DOOR_STYLES,WINDOW_STYLES} from './houseOpeningStyles';
 import {clampHouseOpening,DOOR_STYLES,HOUSE_CLADDINGS,ROOF_FINISHES,ROOF_PITCH_RANGE} from './houseSettings';
 import {HEX_COLOUR,HOUSE_COLOUR_FIELDS} from './houseSettings';
 import {angledStairAllowed,angledStairFits,CORNER_CHAMFER_FT,isChamferEdgeId} from './lib/cornerChamfers';
@@ -45,7 +45,7 @@ import {SKIRTING_EDGE,SKIRTING_LIMITS,SKIRTING_STYLES} from './skirting';
 import {DECK_PARTS,pruneDeckFinishes} from './deckPartFinishes';
 import {HOUSE_BLOCK_DEPTH_FT,HOUSE_BLOCK_ID,HOUSE_BLOCK_OFFSET_FT,HOUSE_BLOCK_WIDTH_FT,MAX_HOUSE_BLOCKS,normalizeHouseBlocks,openingWallId} from './houseFootprint';
 
-export {GARAGE_DOOR_STYLES} from './houseOpenings';
+export {GARAGE_DOOR_STYLES} from './houseOpeningStyles';
 import { LIGHTING_RUNTIME_CATALOGUE } from './lightingRuntimeCatalogue';
 import { DECKING_CATALOGUE, RAILING_CATALOGUE, MANUFACTURER_ACCESSORIES } from './manufacturerRuntimeCatalogue';
 

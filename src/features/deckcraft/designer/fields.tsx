@@ -37,9 +37,6 @@ export function NumberField({label,value,min,max,unit,increment,hint,onValue,dis
   const commit=()=>{clearTimeout(pending.current);if(displayDecimals!==undefined&&draft===display(value))return;const n=Number(draft);if(draft.trim()===''||!Number.isFinite(n)){setDraft(display(value));return;}const next=Math.min(max,Math.max(min,n));setDraft(display(next));onValue(next);};
   return <Field label={label} hint={hint}><span className="dd-number"><input aria-label={label} type="number" inputMode="decimal" min={min} max={max} step={increment} value={draft} disabled={disabled} onChange={e=>{clearTimeout(pending.current);setDraft(e.target.value);const n=Number(e.target.value);if(e.target.value!==''&&Number.isFinite(n)&&n>=min&&n<=max)pending.current=setTimeout(()=>onValue(n),150);}} onBlur={commit} onKeyDown={e=>{if(e.key==='Enter')e.currentTarget.blur();}}/><span>{unit}</span></span></Field>;
 }
-export function downloadFile(body:BlobPart,type:string,name:string){
-  const url=URL.createObjectURL(new Blob([body],{type}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
 
 /** The number, select and checkbox controls bound to one design field, with the same markup on every step. */
 export function controlsFor(data:DeckData,update:Update){
