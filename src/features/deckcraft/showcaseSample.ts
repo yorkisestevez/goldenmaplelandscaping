@@ -1,3 +1,4 @@
+import {ensureLiveDesignExtensions} from './designExtensions';
 import type {DeckData,PatioInlay,YardFeature} from './types';
 import type {LandscapeAssetId,LandscapeObject} from './landscapeTypes';
 import {DEFAULT_DECK} from './defaults';
@@ -144,6 +145,15 @@ function furn(asset:LandscapeAssetId,id:string,name:string,xFt:number,zFt:number
 
 /** Status lines for the ?deck-sample=ontario view. */
 export const ONTARIO_SAMPLE_STATUS={shown:'Showing the Ontario backyard sample for this view. It is not saved over a project on this device.'} as const;
+/** Opens the sample for ?deck-sample=ontario in the designer: its extensions load first, and it replaces the design
+ * only while the page is still waiting for it (`live`). It is not saved over a project. */
+export async function openOntarioSample(apply:(d:DeckData)=>void,status:(s:string)=>void,live:()=>boolean){
+ try{
+  const sample=ontarioShowcaseFromUrl();
+  await ensureLiveDesignExtensions(sample);
+  if(live()){apply(sample);status(ONTARIO_SAMPLE_STATUS.shown);}
+ }catch(error){if(live())status(error instanceof Error?error.message:'The Ontario sample could not be opened.');}
+}
 /** The sample for ?deck-sample=ontario, in the lighting ?deck-lighting=evening|daylight asks for (the design's own otherwise). */
 export function ontarioShowcaseFromUrl():DeckData{
  const sample=ontarioShowcaseDesign(),lighting=new URLSearchParams(window.location.search).get('deck-lighting');
