@@ -48,8 +48,7 @@ export default function FlythroughTools({data}:{data:DeckData}){
   setStatus({phase:'preparing',frame:0,frames:0,message:'Starting the fly-through…'});
   window.dispatchEvent(new CustomEvent(FLYTHROUGH_EXPORT,{detail:{job,signal:controller.signal}}));
  };
- return <details className="py-2 text-xs">
-  <summary>Fly-through</summary>
+ return <>
   <div className="flex flex-wrap gap-2 items-center py-2" aria-label="Fly-through recorder">
    <button type="button" onClick={add} disabled={busy||keyframes.length>=24}>Add keyframe</button>
    <button type="button" onClick={()=>{try{setKeyframes(pathFromCameras(cameras));setStatus({phase:'done',frame:0,frames:0,message:'Path built from the saved cameras. Adjust a move, or export.'});}catch(error){setStatus({phase:'error',frame:0,frames:0,message:error instanceof Error?error.message:'Save more cameras first.'});}}} disabled={busy}>Use saved cameras</button>
@@ -75,5 +74,5 @@ export default function FlythroughTools({data}:{data:DeckData}){
    </li>)}
   </ol>}
   <p>Exports render at a fixed frame rate in showcase quality, then the view returns to its previous quality. Saved cameras and keyframes are presentation only: colours, quantities and prices stay as they are.{status&&<> <span role="status">{status.message}</span></>}{busy&&status.frames>0&&<progress className="ml-2 align-middle" value={status.frame} max={status.frames}/>}</p>
- </details>;
+ </>;
 }

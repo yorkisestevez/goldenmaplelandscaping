@@ -15,3 +15,9 @@ export function patchFlythrough(next:Partial<FlythroughFlags>){
  flags={rendering,evening};emit();
 }
 export function resetFlythrough(){patchFlythrough({rendering:false,evening:null});}
+let armed=false;
+const armListeners=new Set<()=>void>();
+/** True once the Fly-through panel has been opened: the recorder and its encoders load from then on. */
+export function isFlythroughArmed(){return armed;}
+export function armFlythrough(){if(armed)return;armed=true;for(const listener of armListeners)listener();}
+export function subscribeFlythroughArm(listener:()=>void){armListeners.add(listener);return()=>armListeners.delete(listener);}

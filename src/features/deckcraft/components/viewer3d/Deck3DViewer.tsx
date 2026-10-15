@@ -20,8 +20,10 @@ const Landscape3D=lazy(()=>import('./Landscape3D'));
 import {landscapePlacement,landscapeFootprint} from '../../landscapeModel';
 
 import SceneStillExport from './SceneStillExport';
-import FlythroughRecorder from './FlythroughRecorder';
-import FlythroughTools from './FlythroughTools';
+// Fly-through: the panel's tools and the recorder (camera paths, video encoder) load once the panel is opened.
+import FlythroughLauncher from './FlythroughLauncher';
+const FlythroughRecorder=lazy(()=>import('./FlythroughRecorder'));
+import {isFlythroughArmed,subscribeFlythroughArm} from './flythroughState';
 import {useFlythroughRendering,useSceneEvening} from './sceneEvening';
 
 import {isObjectVisible} from '../../editorOrganization';
@@ -620,6 +622,7 @@ function SnapshotBridge({onReady}:{onReady?:(capture:DeckSnapshotCapture|null)=>
 
 export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,boardPaint,onUpdate,selection,selectionEnabled=false,onObjectPick,editInteraction,...interaction}:{onUpdate?:Update;data:DeckData;model:DeckTakeoff;selection?:SelectionState;selectionEnabled?:boolean;editInteraction?:SceneEditInteraction;onObjectPick?:(pick:ObjectPick,toggle:boolean)=>void;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:DeckSnapshotCapture|null)=>void;boardPaint?:BoardPaint}&HouseInteraction){
   const photoOn=useSyncExternalStore(subscribePhoto,()=>getPhotoSettings().enabled,()=>getPhotoServerSettings().enabled);
+  const flythroughArmed=useSyncExternalStore(subscribeFlythroughArm,isFlythroughArmed,()=>false);
   useEffect(()=>{applyPhotoSearch();},[]);
 
   const [selected,setSelected]=useState(false),[pergolaMode,setPergolaMode]=useState<'move'|'rotate'>('move'),[draft,setDraft]=useState<Partial<PergolaSelection>|null>(null);
@@ -668,7 +671,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
 
   const simplifiedPaving=!structure&&!cutaway&&view!=='hardware'&&hasSimplifiedPaving(yard);
 
-  return <>{onUpdate&&!structure&&!cutaway&&<><ScenePresentationTools data={data} update={onUpdate}/><FlythroughTools data={data}/></>} {!editInteraction&&onUpdate&&!structure&&!cutaway&&!boardPaint&&<PergolaTools data={data} selected={selected} setSelected={setSelected} mode={pergolaMode} setMode={setPergolaMode} update={onUpdate}/>}<div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
+  return <>{onUpdate&&!structure&&!cutaway&&<><ScenePresentationTools data={data} update={onUpdate}/><FlythroughLauncher data={data}/></>} {!editInteraction&&onUpdate&&!structure&&!cutaway&&!boardPaint&&<PergolaTools data={data} selected={selected} setSelected={setSelected} mode={pergolaMode} setMode={setPergolaMode} update={onUpdate}/>}<div className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
 
     {data.siteModel&&<p className="absolute top-3 right-3 z-10 rounded bg-white/90 p-2 text-xs">Ground outside surveyed triangles is illustrative.</p>}<Canvas shadows="percentage" frameloop="demand" dpr={[1,1.5]} camera={{fov:38,near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar}} gl={{antialias:false,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:SCENE_LOOK.exposure}} onCreated={({gl})=>{const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
 
@@ -690,7 +693,7 @@ export default function Deck3DViewer({data:rawData,model,yardModel:calculatedYar
 
       <FixtureLightContext.Provider value={fixtureLight}><Scene data={data} model={model} showMatureSpread={view==='top'} structure={structure} cutaway={cutaway} inspection={inspection} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} pergolaInteraction={!editInteraction&&onUpdate&&rawData.pergola&&!boardPaint&&!structure&&!cutaway?{selected,mode:pergolaMode,onSelect:()=>setSelected(true),onDraft:setDraft,onCommit:patch=>onUpdate({pergola:{...rawData.pergola!,...patch}})}:undefined} {...interaction}/></FixtureLightContext.Provider>
 
-      {editInteraction&&selection&&<Suspense fallback={null}><SceneEditHandles data={rawData} model={model} selection={selection} interaction={editInteraction}/></Suspense>}<SavedCameraBridge data={data} update={onUpdate}/><SelectionBridge enabled={!boardPaint} hardscapeOnly={!selectionEnabled} revision={calculatedYard??model} selection={selection??{partIds:[],boards:[]}} onPick={onObjectPick}/><SnapshotBridge onReady={onSnapshotReady}/><SceneStillExport revision={rawData}/><FlythroughRecorder revision={rawData} designEvening={rawData.sceneLighting==='Evening'}/>
+      {editInteraction&&selection&&<Suspense fallback={null}><SceneEditHandles data={rawData} model={model} selection={selection} interaction={editInteraction}/></Suspense>}<SavedCameraBridge data={data} update={onUpdate}/><SelectionBridge enabled={!boardPaint} hardscapeOnly={!selectionEnabled} revision={calculatedYard??model} selection={selection??{partIds:[],boards:[]}} onPick={onObjectPick}/><SnapshotBridge onReady={onSnapshotReady}/><SceneStillExport revision={rawData}/>{flythroughArmed&&<Suspense fallback={null}><FlythroughRecorder revision={rawData} designEvening={rawData.sceneLighting==='Evening'}/></Suspense>}
       <ShowcaseModeSync/><RenderQuality/><RenderPipeline evening={evening}/>{photoOn&&<Suspense fallback={null}><PhotoTracer evening={evening} revision={rawData}/></Suspense>}
 
       <OrbitControls makeDefault target={savedCamera||preset||view==='overview'?undefined:[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={savedCamera||preset?1:r*.25} maxDistance={view==='overview'?Math.max(r*8,height*4):r*4} enableDamping={false}/>
