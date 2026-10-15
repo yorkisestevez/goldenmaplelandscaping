@@ -120,10 +120,10 @@ export function useDeckDesign({onReplaced}:{onReplaced:()=>void}){
       if(link)await openSharedLink(link,stored);
       if(!link&&!stored&&new URLSearchParams(window.location.search).get('deck-sample')==='ontario'){
         try{
-          const sample=(await import('../showcaseSample')).ontarioShowcaseFromUrl();
+          const {ontarioShowcaseFromUrl,ONTARIO_SAMPLE_STATUS}=await import('../showcaseSample'),sample=ontarioShowcaseFromUrl();
           await ensureLiveDesignExtensions(sample);
-          if(active&&intent===editIntent.current&&baseline===dataRef.current){applyReplacement(sample);setDesignStatus('Showing the Ontario backyard sample for this view. It is not saved over a project on this device.');}
-        }catch(error){if(active)setDesignStatus(error instanceof Error?error.message:'The Ontario sample could not be opened.');}
+          if(active&&intent===editIntent.current&&baseline===dataRef.current){applyReplacement(sample);setDesignStatus(ONTARIO_SAMPLE_STATUS.shown);}
+        }catch(error){if(active)setDesignStatus(error instanceof Error?error.message:String(error));}
       }
       if(active){setStorageReady(true);setDesignReady(true);}
     }

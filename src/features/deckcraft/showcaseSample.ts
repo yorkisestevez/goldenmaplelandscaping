@@ -142,6 +142,8 @@ function furn(asset:LandscapeAssetId,id:string,name:string,xFt:number,zFt:number
  return {...o,name,rotationDeg,...(support?{supportFeatureId:support}:{})};
 }
 
+/** Status lines for the ?deck-sample=ontario view. */
+export const ONTARIO_SAMPLE_STATUS={shown:'Showing the Ontario backyard sample for this view. It is not saved over a project on this device.'} as const;
 /** The sample for ?deck-sample=ontario, in the lighting ?deck-lighting=evening|daylight asks for (the design's own otherwise). */
 export function ontarioShowcaseFromUrl():DeckData{
  const sample=ontarioShowcaseDesign(),lighting=new URLSearchParams(window.location.search).get('deck-lighting');
