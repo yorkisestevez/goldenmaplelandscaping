@@ -30,7 +30,7 @@ import {useDesignerMode} from '../features/deckcraft/designer/designerMode';
 import {assertLeadsAllowed,useInternalMode} from '../features/deckcraft/internalMode';
 import type {ProPage} from '../features/deckcraft/designer/pro/proTypes';
 const noteWarmLead=(...args:Parameters<typeof import('../features/deckcraft/warmLead').noteWarmLead>)=>void import('../features/deckcraft/warmLead').then(m=>m.noteWarmLead(...args));
-import {loadExteriorStudio,loadPlanBoundaryEditor,loadViewer} from '../features/deckcraft/designer/previewLoaders';
+import {loadExteriorStudio,loadPlanBoundaryEditor} from '../features/deckcraft/designer/previewLoaders';
 const PreviewPanel=lazy(()=>import('../features/deckcraft/designer/PreviewPanel'));
 import SectionList from '../features/deckcraft/designer/SectionList';
 import {SECTIONS,SECTION_BY_ID,loadBackyardStep,loadBoardColourPanel,loadDeckFinishesPanel,loadDimensionsStep,loadEstimateStep,loadHouseSection,loadInlayEditor,loadMaterialsStep,loadSiteExtrasStep,loadSkirtingEditor,loadStairsStep,sectionsOfPatch,type SectionId} from '../features/deckcraft/designer/sections';
@@ -198,12 +198,11 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   useEffect(()=>{trackDeck('deckcraft_step',stepLabel(0));},[]);
   useEffect(()=>{trackDeck('deckcraft_view',`deck_view_${mode}`);},[mode]);
   // Fetch the section bodies and the on-demand panels once the page has settled, so opening one is instant; not when
-  // the visitor has asked the browser to save data. A desktop also fetches the 3D viewer then (without drawing it); a
-  // phone never downloads three.js until a 3D view is chosen.
+  // the visitor has asked the browser to save data. The 3D viewer is the plan's own prefetch (previewLoaders.prefetchViewer):
+  // a desktop fetches it as the plan opens, a phone never downloads three.js until a 3D view is chosen.
   useEffect(()=>{
     if((navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData)return;
-    const desktopOnly=window.matchMedia?.('(min-width: 761px) and (pointer: fine)').matches?[loadViewer]:[];
-    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel,loadPlanBoundaryEditor,...desktopOnly])load().catch(()=>{/* Loaded again when opened. */});},4000);
+    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel,loadPlanBoundaryEditor])load().catch(()=>{/* Loaded again when opened. */});},4000);
     return()=>clearTimeout(timer);
   },[]);
   /** Opens a section (analytics: its old wizard step, and the section, once per visit). On a phone it closes the others. */

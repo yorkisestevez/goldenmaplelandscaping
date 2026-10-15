@@ -41,9 +41,9 @@ const AssistantTargets=lazy(()=>import('./AssistantTargets'));
 
 /**
 
- * The 3D viewer (three.js, about 300 KB compressed). It loads when a 3D view is shown, and the plan prefetches it
+ * The 3D viewer (three.js, about 300 KB compressed). It loads when a 3D view is shown, and on a desktop the plan
 
- * (previewLoaders.prefetchViewer) so the chunk is usually cached before the 3D sheet is chosen.
+ * prefetches it (previewLoaders.prefetchViewer) so the chunk is usually cached; a phone never before its 3D sheet is chosen.
 
  */
 
