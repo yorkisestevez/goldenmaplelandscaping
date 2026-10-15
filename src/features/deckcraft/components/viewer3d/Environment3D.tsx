@@ -33,6 +33,6 @@ export const Environment3D=React.memo(function Environment3D({data,footprint,top
   return <group>
     <directionalLight name="sun" castShadow={!evening} color={sunColor} intensity={sunIntensity} position={sun.toArray()} shadow-mapSize={[mapSize,mapSize]} shadow-camera-left={-shadowRange} shadow-camera-right={shadowRange} shadow-camera-top={shadowRange} shadow-camera-bottom={-shadowRange} shadow-camera-near={.5} shadow-camera-far={radius/3} shadow-bias={-.00015} shadow-normalBias={post?.012:.025} shadow-radius={SCENE_LOOK.sunShadow.radius}/>
     {golden&&<directionalLight name="golden-rim" color={[1,.5,.16]} intensity={daySun*.38} position={[-sun.x,Math.max(radius*.22,Math.abs(sun.y)*3),-sun.z]}/>}
-    {!cutaway&&<>{isObjectVisible(data.editorOrganization,'site')&&<Turf pools={getPoolModels(data)} landscapeObjects={data.landscapeObjects} width={footprint.bounds.w} depth={footprint.bounds.h} radius={radius} yard={yard} finished={finished}/>}<House3D data={data} width={footprint.bounds.w} {...interaction}/><ShowcaseContext3D data={data}/></>}
+    {!cutaway&&<>{isObjectVisible(data.editorOrganization,'site')&&<Turf pools={getPoolModels(data)} landscapeObjects={data.landscapeObjects} width={footprint.bounds.w} depth={footprint.bounds.h} radius={radius} yard={yard} finished={finished}/>}<House3D data={data} width={footprint.bounds.w} {...interaction}/>{flags.context&&<React.Suspense fallback={null}><ShowcaseContext3D data={data}/></React.Suspense>}</>}
   </group>;
 });
