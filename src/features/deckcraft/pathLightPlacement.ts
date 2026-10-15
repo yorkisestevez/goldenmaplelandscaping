@@ -2,7 +2,7 @@ import type {DeckData} from './types';
 import type {DeckTakeoff} from './deckTakeoff';
 import type {PlanPoint} from './lib/deckGeometry';
 import {yardFeatureOutline} from './yardPathGeometry';
-import {stairFootprints} from './fireFeatureModel';
+import {stairFootprints} from './stairFootprints';
 import {insidePolygon} from './lib/polygonCuts';
 
 /** Patios, the wood deck and its stairs. A standing path light does not belong on any of them. */
