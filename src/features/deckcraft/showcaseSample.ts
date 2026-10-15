@@ -142,6 +142,12 @@ function furn(asset:LandscapeAssetId,id:string,name:string,xFt:number,zFt:number
  return {...o,name,rotationDeg,...(support?{supportFeatureId:support}:{})};
 }
 
+/** The sample for ?deck-sample=ontario, in the lighting ?deck-lighting=evening|daylight asks for (the design's own otherwise). */
+export function ontarioShowcaseFromUrl():DeckData{
+ const sample=ontarioShowcaseDesign(),lighting=new URLSearchParams(window.location.search).get('deck-lighting');
+ if(lighting==='evening')sample.sceneLighting='Evening';else if(lighting==='daylight')sample.sceneLighting='Daylight';
+ return sample;
+}
 export function ontarioShowcaseDesign():DeckData{
  const contemporary=EXTERIOR_LOOKS.find(look=>look.id==='contemporary');
  if(!contemporary)throw Error('The contemporary exterior look is missing.');
