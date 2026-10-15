@@ -8,7 +8,7 @@ import {existsSync,mkdirSync,readFileSync,renameSync,writeFileSync,writeSync} fr
 import {deflateSync} from 'node:zlib';
 import {chromium,type Browser,type Page} from '@playwright/test';
 import {PHOTO_GRADE,type PhotoLook} from '../src/features/deckcraft/photoGrade';
-import {denoisePlate,type PhotoGuides} from '../src/features/deckcraft/photoDenoise';
+import {denoisePlate,type PhotoGuides} from './photoDenoise';
 
 const emit=(fd:number)=>(...args:unknown[])=>{writeSync(fd,`${args.map(part=>typeof part==='string'?part:String(part)).join(' ')}\n`);};
 console.log=emit(1) as typeof console.log;

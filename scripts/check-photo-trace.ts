@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import * as THREE from 'three';
 import {SCENE_LOOK} from '../src/features/deckcraft/components/viewer3d/sceneLook';
 import {PHOTO_FALLBACK,PHOTO_GRADE,PHOTO_LIGHT,photoStillSize,photoSunColor,photoSunElevationDeg,photoSunIrradiance,sunDisc,sunDiscIrradiance} from '../src/features/deckcraft/photoGrade';
-import {clampFireflies,denoiseEdgeAware} from '../src/features/deckcraft/photoDenoise';
+import {clampFireflies,denoiseEdgeAware} from './photoDenoise';
 import {applyPhotoScene,buildPhotoBackground,photoMeanAlbedo,rasterPhotoTriangles,tracePhotoTriangles} from '../src/features/deckcraft/components/viewer3d/photoMaterials';
 import {photoSampleHold} from '../src/features/deckcraft/photoMode';
 import {photoSamplesPerFrame,registerPhotoTracer,tracePhotoFrame} from '../src/features/deckcraft/photoTraceApi';
