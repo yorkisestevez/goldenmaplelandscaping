@@ -1,6 +1,7 @@
 import { MapPin, CheckCircle, ArrowRight, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../../components/SEO';
+import QuickQuote from '../../components/QuickQuote';
 import { publicContact } from '../../data/business';
 import { breadcrumb, faqPage, graph, serviceNode } from '../../utils/schema';
 import { trackEngagement, trackCall } from '../../utils/analytics';
@@ -131,6 +132,7 @@ export default function OroMedonteLanding() {
                 <Phone size={18} /> Call {publicContact.phoneDisplay}
               </a>
             </div>
+            <QuickQuote source="location-oro-medonte" />
           </div>
 
           {/* Why Choose Us */}

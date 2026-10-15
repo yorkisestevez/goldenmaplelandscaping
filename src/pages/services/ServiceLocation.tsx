@@ -16,7 +16,7 @@ import {
   type ServiceKey,
   type LocationKey,
 } from '../../data/serviceLocations';
-import { BUSINESS, publicClaimCopy, publicContact, publicPostalAddress } from '../../data/business';
+import { BUSINESS, publicClaimCopy, publicContact } from '../../data/business';
 
 /**
  * Parse the URL slug like "interlocking-barrie" or "composite-decking-orillia"
@@ -72,7 +72,7 @@ export default function ServiceLocation() {
       name: `${service.name} in ${location.name}`,
       serviceType: service.name,
       description: seoDescription,
-      areaServed: { '@type': 'City', name: location.name, address: publicPostalAddress(location.name, location.postalRoot) },
+      areaServed: { '@type': 'City', name: location.name },
       priceDescription: `${service.startingPriceText} ${service.perUnitText}`,
     }),
     faqPage(pagePath, service.faqs),
@@ -119,7 +119,7 @@ export default function ServiceLocation() {
 
               <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-light text-brand-bonewhite leading-[1.05] mb-10">
                 {service.shortName} in <br />
-                <span className="text-brand-gold-dark italic">{location.name}, Ontario.</span>
+                <span className="text-brand-gold-dark italic">{`${location.name}, Ontario.`}</span>
               </h1>
 
               <p className="font-sans text-base md:text-lg text-brand-muted leading-relaxed font-light max-w-xl mb-10">
@@ -264,7 +264,7 @@ export default function ServiceLocation() {
               </span>
               <h2 className="font-display text-4xl md:text-5xl font-light text-brand-bonewhite leading-tight">
                 Quick answers about <br />
-                <span className="italic text-brand-gold-dark">{service.shortName.toLowerCase()} in {location.name}.</span>
+                <span className="italic text-brand-gold-dark">{`${service.shortName.toLowerCase()} in ${location.name}.`}</span>
               </h2>
             </div>
 
@@ -379,7 +379,7 @@ export default function ServiceLocation() {
         <div className="container-custom py-32 text-center">
           <h2 className="font-display text-4xl md:text-6xl font-light text-brand-bonewhite leading-tight mb-10">
             Ready to build in <br />
-            <span className="italic text-brand-gold-dark">{location.name}?</span>
+            <span className="italic text-brand-gold-dark">{`${location.name}?`}</span>
           </h2>
           <p className="font-sans text-base md:text-lg text-brand-muted font-light max-w-xl mx-auto mb-14 leading-relaxed">
             Contact Yorkis to discuss scope, budget, and the current consultation options.
