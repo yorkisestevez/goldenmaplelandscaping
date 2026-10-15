@@ -70,6 +70,48 @@ const CLARITY_ID =
 const isDev = import.meta.env.DEV === true;
 const isBrowser = typeof window !== 'undefined';
 
+/**
+ * Relative weights for conversion events. These are NOT dollar amounts and
+ * must not be replaced with an estimate total or a package price.
+ * TODO(yorkis): when separate Google Ads conversion actions exist, point each
+ * event at its own label and set that action's value to the weight below.
+ * Until then every lead still uses the single Ads lead label, and the weight
+ * is only the conversion value so the events can be compared.
+ */
+export const CONVERSION_WEIGHTS = {
+  booking: 3,
+  deck_design_sent: 3,
+  quote_form: 2,
+  estimate_saved: 2,
+  click_to_call: 2,
+  guide_download: 1,
+  email_click: 1,
+  chat_start: 1,
+  sophie_lead: 2,
+} as const;
+
+function leadEvent(formName: string): { name: string; weight: number } {
+  switch (formName) {
+    case 'booking':
+      return { name: 'book_appointment', weight: CONVERSION_WEIGHTS.booking };
+    case 'deck-design':
+      return { name: 'deck_design_sent', weight: CONVERSION_WEIGHTS.deck_design_sent };
+    case 'cost-estimator':
+      return { name: 'estimate_saved', weight: CONVERSION_WEIGHTS.estimate_saved };
+    case 'contact':
+    case 'quick-quote':
+    case 'estimate-request':
+      return { name: 'quote_form', weight: CONVERSION_WEIGHTS.quote_form };
+    case 'guide-download':
+    case 'cost-guide':
+      return { name: 'guide_download', weight: CONVERSION_WEIGHTS.guide_download };
+    case 'sophie-chat':
+      return { name: 'generate_lead', weight: CONVERSION_WEIGHTS.sophie_lead };
+    default:
+      return { name: 'quote_form', weight: CONVERSION_WEIGHTS.quote_form };
+  }
+}
+
 export type ConsentChoice = 'granted' | 'denied';
 
 type ConsentState = 'granted' | 'denied';
@@ -342,6 +384,13 @@ function bootAnalytics(): void {
   if (!GA4_ID && !GOOGLE_ADS_ID) googleTagLoaded = true;
   else onInteractOrSoon(loadGoogleTag, 2500);
 
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (!target.closest('a[href^="mailto:"]')) return;
+    trackEmailNow('mailto');
+  });
+
   if (readStoredConsent() === 'granted') scheduleDeferredTrackers();
 
   if (isDev) {
@@ -376,7 +425,7 @@ function trackPageViewNow(path: string, title?: string): void {
  *
  * @param formName — used as the GA4 form_name parameter and Meta content_category
  * @param tier     — funnel position ("high-intent" or "top-of-funnel")
- * @param value    — optional monetary value of the lead, in CAD
+ * @param value    — ignored. Conversion value comes from CONVERSION_WEIGHTS, not a quoted dollar amount.
  * @param eventId  — UUID shared with the CAPI server-side event for Meta dedup
  * @param identifiers — optional user-provided email/phone for Enhanced
  *   Conversions for Leads. Passed PLAIN; gtag.js normalizes + SHA-256-hashes
@@ -419,12 +468,17 @@ function trackLeadNow(
   // submit during the idle wait is not dropped.
   loadGoogleTag();
 
+  const mapped = leadEvent(formName);
+  // Caller `value` is an estimate dollar figure on some forms. Do not send it.
+  void value;
+
   if (GA4_ID) {
-    window.gtag?.('event', 'generate_lead', {
+    window.gtag?.('event', mapped.name, {
+      send_to: GA4_ID,
       form_name: formName,
       tier,
       currency: 'CAD',
-      value: value || 0,
+      value: mapped.weight,
     });
   }
 
@@ -435,7 +489,7 @@ function trackLeadNow(
       content_name: formName,
       content_category: tier,
       currency: 'CAD',
-      value: value || 0,
+      value: mapped.weight,
     },
     eventId ? { eventID: eventId } : undefined,
   );
@@ -453,12 +507,12 @@ function trackLeadNow(
   if (GOOGLE_ADS_LEAD_LABEL) {
     window.gtag?.('event', 'conversion', {
       send_to: GOOGLE_ADS_LEAD_LABEL,
-      value: value || 0,
+      value: mapped.weight,
       currency: 'CAD',
     });
   }
 
-  if (isDev) console.log('[analytics] trackLead', { formName, tier, value, eventId });
+  if (isDev) console.log('[analytics] trackLead', { formName, event: mapped.name, tier, weight: mapped.weight, eventId });
 }
 
 /**
@@ -473,14 +527,50 @@ export function trackCall(label = 'phone_call'): void {
 function trackCallNow(label: string): void {
   if (!isBrowser) return;
   loadGoogleTag();
+  // GA4 only. An event without send_to is also collected by the Ads tag as a
+  // generic remarketing hit, which is not the click-to-call conversion.
   if (GA4_ID) {
-    window.gtag?.('event', 'cta_click', { event_label: label });
+    window.gtag?.('event', 'click_to_call', {
+      send_to: GA4_ID,
+      event_label: label,
+      value: CONVERSION_WEIGHTS.click_to_call,
+      currency: 'CAD',
+    });
   }
   if (GOOGLE_ADS_CALL_LABEL) {
-    window.gtag?.('event', 'conversion', { send_to: GOOGLE_ADS_CALL_LABEL });
+    window.gtag?.('event', 'conversion', {
+      send_to: GOOGLE_ADS_CALL_LABEL,
+      value: CONVERSION_WEIGHTS.click_to_call,
+      currency: 'CAD',
+    });
   }
   pushClick(label);
   if (isDev) console.log('[analytics] trackCall', label, GOOGLE_ADS_CALL_LABEL);
+}
+
+function trackEmailNow(label: string): void {
+  if (!isBrowser || !GA4_ID) return;
+  loadGoogleTag();
+  window.gtag?.('event', 'email_click', {
+    send_to: GA4_ID,
+    event_label: label,
+    value: CONVERSION_WEIGHTS.email_click,
+    currency: 'CAD',
+  });
+  if (isDev) console.log('[analytics] email_click', label);
+}
+
+/** Widget opened. Not a lead. GA4 only, so Ads does not treat it as remarketing. */
+export function trackChatStart(): void {
+  guardAnalytics(() => {
+    if (!isBrowser || !GA4_ID) return;
+    loadGoogleTag();
+    window.gtag?.('event', 'chat_start', {
+      send_to: GA4_ID,
+      value: CONVERSION_WEIGHTS.chat_start,
+      currency: 'CAD',
+    });
+  });
 }
 
 /** Generic engagement event for non-lead actions (PDF download, video play, etc). */

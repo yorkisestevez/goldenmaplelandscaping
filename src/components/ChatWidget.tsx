@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageCircle, X, Send, Leaf } from 'lucide-react';
-import { trackEngagement, trackCall, trackLead } from '../utils/analytics';
+import { trackChatStart, trackEngagement, trackCall, trackLead } from '../utils/analytics';
 import { openSophieSession, type SophieSession } from '../utils/sophieChat';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
 
@@ -59,7 +59,7 @@ export default function ChatWidget() {
 
   useEffect(() => {
     if (open) {
-      trackEngagement('chat_open');
+      trackChatStart();
       setTimeout(() => inputRef.current?.focus(), 250);
     }
   }, [open]);
