@@ -4,7 +4,7 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {MeshoptDecoder} from 'three-stdlib';
 import * as THREE from 'three';
 import type {DeckData} from '../../types';
-import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from './showcaseMode';
+import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../showcaseMode';
 import {useSceneEvening} from './sceneEvening';
 import {useSyncExternalStore} from 'react';
 import {kelvinColour} from './fixtureLighting';

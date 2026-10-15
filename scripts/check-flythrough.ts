@@ -6,7 +6,7 @@ import {muxAvcMp4} from '../src/features/deckcraft/components/viewer3d/mp4Mux';
 import {crc32,storedZipBytes} from '../src/features/deckcraft/components/viewer3d/storedZip';
 import {sunDirectionAt,timeOfDayAt} from '../src/features/deckcraft/components/viewer3d/timeOfDay';
 import {getFlythroughFlags,resetFlythrough,resolveSceneEvening} from '../src/features/deckcraft/components/viewer3d/flythroughState';
-import {getShowcaseFlags} from '../src/features/deckcraft/components/viewer3d/showcaseMode';
+import {getShowcaseFlags} from '../src/features/deckcraft/showcaseMode';
 import type {SavedSceneCamera} from '../src/features/deckcraft/scenePresentation';
 
 let checks=0;

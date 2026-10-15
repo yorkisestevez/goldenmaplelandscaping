@@ -7,7 +7,7 @@ import {assertDeviceCanRender,assertZipMemory,flythroughFilename,planFlythrough,
 import {FLYTHROUGH_EXPORT,FLYTHROUGH_POSE,FLYTHROUGH_READ_POSE,FLYTHROUGH_STATUS,type CameraPose,type FlythroughJob,type FlythroughStatus} from './flythroughJob';
 import {getFlythroughFlags,getForcedEvening,patchFlythrough,resetFlythrough,subscribeFlythrough} from './flythroughState';
 import {useFlythroughRendering} from './sceneEvening';
-import {getShowcaseFlags,setShowcaseFlags} from './showcaseMode';
+import {getShowcaseFlags,setShowcaseFlags} from '../../showcaseMode';
 import {muxAvcMp4,type Mp4Sample} from './mp4Mux';
 import {pipelineFor} from './renderPipeline';
 import {rendererFacts} from './renderQuality';
