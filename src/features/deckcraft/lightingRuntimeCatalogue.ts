@@ -2015,6 +2015,40 @@ const VERIFIED_ADDITIONS:LightingRuntimeProduct[]=[
     ],
     "requiredCableGauge": "10/2",
     "requiresSmartHub": true
+  },
+  {
+    "id": "paver_40",
+    "name": "PAVER 40",
+    "category": "Recessed",
+    "cost": null,
+    "laborCost": null,
+    "geometry": "recessed",
+    "dimensionsIn": {
+      "height": 1.2598,
+      "diameter": 1.5748,
+      "mountingDepth": 1.9685
+    },
+    "supported": true,
+    "legacyRate": false,
+    "specWarnings": [],
+    "va": 1
+  },
+  {
+    "id": "inground_2ss",
+    "name": "INGROUND 2 SS",
+    "category": "Recessed",
+    "cost": null,
+    "laborCost": null,
+    "geometry": "recessed",
+    "dimensionsIn": {
+      "height": 4.5,
+      "diameter": 2.75,
+      "mountingDepth": 4.25
+    },
+    "supported": true,
+    "legacyRate": false,
+    "specWarnings": [],
+    "va": 1
   }
 ];
 const LEGACY_METADATA:Record<string,Partial<LightingRuntimeProduct>>={

@@ -359,6 +359,32 @@ const VERIFIED_DISPLAY:Record<string,Partial<LightingCatalogueProduct>>={
     "colorTemperatureK": 3000.0,
     "voltage": "12 volt"
   },
+  "paver_40": {
+    "sourceUrl": "https://pros.techo-bloc.com/how-to-add-lights-to-pavers",
+    "sourceVerified": true,
+    "specificationStatus": "verified-family",
+    "compatibilityNotes": [
+      "Drilled-in round paver light, about 40 mm (1.5 in), set flush in the stone. The Techo-Bloc paver guide uses the 22 mm In-Lite ground light and a larger 1 W size; this is that larger round."
+    ],
+    "finish": "StainlessSteel",
+    "watts": 1.0,
+    "colorTemperatureK": 2700.0,
+    "voltage": "12 volt",
+    "description": "40 mm drilled-in round paver light"
+  },
+  "inground_2ss": {
+    "sourceUrl": "https://pros.techo-bloc.com/how-to-add-lights-to-pavers",
+    "sourceVerified": true,
+    "specificationStatus": "verified-family",
+    "compatibilityNotes": [
+      "Modelled on a 2 in round stainless recessed in-ground light (WAC 2022-27SS / Legend LR76V): a 2.75 in face plate and a honeycomb louver, set flush. Used on the onyx band and the pool coping."
+    ],
+    "finish": "StainlessSteel",
+    "watts": 1.0,
+    "colorTemperatureK": 2700.0,
+    "voltage": "12 volt",
+    "description": "2 in stainless in-ground light, 2.75 in honeycomb face"
+  },
   "big_nero": {
     "sourceUrl": "https://in-lite.com/en-US/big-nero",
     "sourceVerified": true,

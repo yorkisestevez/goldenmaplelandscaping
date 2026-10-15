@@ -13,6 +13,8 @@ export const isSystemProduct=(p:LightingRuntimeProduct)=>['transformer','cable',
 
 type SelectedLight=DeckData['lightingSystem']['selectedItems'][number];
 export const MAX_FIXTURE_QTY=30;
+/** Pinned fixtures on one product row. Automatic post and step lights stay at MAX_FIXTURE_QTY. */
+export const MAX_PINNED_FIXTURE_QTY=160;
 /** Simple options use existing price-book allowances only; no new rates. */
 /** Under-step styles: both mount under the tread nose (undercap). EVO FLEX has no price-book rate yet. */
 export const STAIR_LIGHT_STYLES={
