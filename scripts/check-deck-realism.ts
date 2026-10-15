@@ -4,11 +4,13 @@ import sharp from 'sharp';
 import * as THREE from 'three';
 import ts from 'typescript';
 import {SCENE_LOOK} from '../src/features/deckcraft/components/viewer3d/sceneLook';
+import {SHOWCASE_BLOOM,SHOWCASE_STILL_SAMPLES,daySkyLinear,goldenSkyLinear,gradeLinear} from '../src/features/deckcraft/components/viewer3d/showcaseGrade';
+import {buildSurfaceDetail,type DetailKind} from '../src/features/deckcraft/components/viewer3d/detailMaps';
 import {cameraSetback} from '../src/features/deckcraft/components/viewer3d/cameraFraming';
 import {railGeometry} from '../src/features/deckcraft/components/viewer3d/EasedRails';
 import {fitSun,shadowKey} from '../src/features/deckcraft/components/viewer3d/shadowCache';
 import {ATLAS_WIDTH,STRIP_ROWS,buildSwatchMaps,deltaE,grainIsVertical,rotate90} from '../src/features/deckcraft/components/viewer3d/swatchMaps';
-import {PATCHED_CHUNKS,boardVariation,boxVariant,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
+import {PATCHED_CHUNKS,RELIEF_EDGE,RELIEF_FULL,boardVariation,boxVariant,reliefWeight,surfaceMaterial} from '../src/features/deckcraft/components/viewer3d/surfaceShaders';
 import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {HDRLoader} from 'three/examples/jsm/loaders/HDRLoader.js';
 import {SKY_DATA,skyStrength,skyYaw,sunDirection} from '../src/features/deckcraft/components/viewer3d/skyModel';
@@ -50,6 +52,33 @@ ok(SCENE_LOOK.toneMapping==='Neutral'&&SCENE_LOOK.exposure===1,'Tone mapping sta
 ok(SCENE_LOOK.bloom.threshold>1,'Only HDR light sources glow: the bloom threshold is above white');
 ok(SCENE_LOOK.ao.intensity.day<=1&&SCENE_LOOK.ao.intensity.evening<SCENE_LOOK.ao.intensity.day,'Ambient occlusion is lighter in the evening, when fixtures carry the light');
 ok(SCENE_LOOK.powderCoat.metalness===0&&SCENE_LOOK.powderCoat.clearcoat>0,'Powder coat is paint with a clear coat, not metal');
+ok(SHOWCASE_BLOOM.threshold>1&&SHOWCASE_BLOOM.strength<SCENE_LOOK.bloom.strength,'Showcase night bloom stays above white and weaker than the evening default, so landscape lights glow without blowing the deck out');
+{
+  const toSrgb=(v:number)=>{const c=Math.min(1,Math.max(0,v));return (c<=.0031308?c*12.92:1.055*c**(1/2.4)-.055)*255;};
+  const pair=(rgb:readonly[number,number,number])=>rgb.map(toSrgb) as number[];
+  const grey:[number,number,number]=[.18,.18,.18],brown:[number,number,number]=[.28,.16,.09];
+  ok(deltaE(pair(grey),pair(gradeLinear(grey,'day')))<1.25,'The day grade leaves a mid grey within a barely visible ΔE of the swatch');
+  ok(deltaE(pair(brown),pair(gradeLinear(brown,'day')))<3,'The day grade leaves a decking brown close to the product colour');
+  const warm=gradeLinear([.7,.55,.3],'golden');ok(warm[0]>warm[2],'Golden hour warms the highlights');
+  const cyan:[number,number,number]=[.03,.073,.119],lifted=daySkyLinear(cyan,4,1),plain=daySkyLinear(cyan,4,0);
+  ok(lifted[0]>0.14&&lifted[0]>lifted[2]*0.35,'Showcase day sky keeps red above the neutral toe on a cyan photograph');
+  ok(Math.abs(plain[0]-cyan[0]*4)<1e-6&&Math.abs(plain[2]-cyan[2]*4)<1e-6,'Editor and night skies stay on the photograph');
+  const goldenSky=goldenSkyLinear(cyan,4,1),goldenOff=goldenSkyLinear(cyan,4,0),gradedSky=gradeLinear(goldenSky,'golden');
+  ok(goldenSky[0]/goldenSky[2]>(cyan[0]*4)/(cyan[2]*4)&&goldenSky[2]>goldenSky[0]&&gradedSky[2]>gradedSky[0],'Showcase golden hour warms a cyan sky and keeps its blue');
+  ok(Math.abs(goldenOff[0]-cyan[0]*4)<1e-6,'The golden sky recolor is off for day, night and the editor');
+  const leaf=gradeLinear([.05,.12,.03],'golden'),shade=gradeLinear([.06,.07,.09],'golden');
+  ok(leaf[1]>leaf[0]&&leaf[1]>leaf[2],'Golden hour leaves green foliage green');
+  ok(shade[2]>=shade[0],'Golden hour open shade stays lightly cool');
+  for(const kind of ['paver','slab','cap','stone','deck','siding'] as DetailKind[]){
+    const map=buildSurfaceDetail(kind,32);let sum=0,z=0,facesOut=true;const n=map.size*map.size;
+    for(let i=0;i<n;i++){sum+=map.albedo[i*4];const b=map.normal[i*4+2];z+=b;if(b<128)facesOut=false;}
+    ok(Math.abs(sum/n-128)<.51&&facesOut&&z/n>180,`${kind} detail is a zero-mean colour modulation whose normals face out`);
+  }
+  const span=(kind:DetailKind)=>{const map=buildSurfaceDetail(kind,128);let lo=255,hi=0;for(let i=0;i<map.albedo.length;i+=4){lo=Math.min(lo,map.albedo[i]);hi=Math.max(hi,map.albedo[i]);}return hi-lo;};
+  const pavers=buildSurfaceDetail('paver',128),at=(x:number,y:number)=>pavers.albedo[(y*128+x)*4];
+  ok(span('paver')>48&&Math.abs(at(12,12)-at(38,12))>8,'Paver joints sit below the slab, and neighbouring slabs do not share one tone');
+  ok(span('siding')>40,'Siding courses keep a shadow line under each lap');
+}
 for(const size of [[.75,36,.75],[3.5,42,3.5],[192,1.75,1.75]] as [number,number,number][]){
   const geometry=railGeometry(size);geometry.computeBoundingBox();
   const extent=geometry.boundingBox!.getSize(new THREE.Vector3()).toArray(),pos=geometry.getAttribute('position'),norm=geometry.getAttribute('normal');
@@ -72,6 +101,7 @@ ok(/catch\(error\)\{fail\(error\);\}\s*gl\.render\(scene,camera\);/.test(pipelin
 ok(viewer.includes('<RenderPipeline evening={evening}/>')&&viewer.includes('const pipeline=pipelineFor(gl);if(pipeline)pipeline.capture(scale);else gl.render(scene,camera);'),'The live view and the proposal pictures both draw through the pipeline');
 ok(viewer.includes('shadows="percentage"')&&viewer.includes('antialias:false'),'Multisampling lives in the pipeline’s own target, and shadows use PCF (r185 retires PCFSoft)');
 ok(environment.includes('<directionalLight name="sun" castShadow'),'The sun is named, so its shadow can be fitted');
+ok(environment.includes('GOLDEN_ELEVATION=7*Math.PI/180')&&environment.includes('name="golden-rim"')&&environment.includes('daySun*2.05'),'Showcase golden hour uses a low raking sun and a warm rim');
 
 // The shadow key: it changes when a shadow would, and not when only the camera or a colour does.
 function sceneWithSun(){
@@ -146,6 +176,15 @@ for(const file of files){
   ok(maps.normal.every((v,i)=>i%4!==2||v>=128),`${file}: every normal faces out of the board`);
 }
 ok(grainIsVertical(rotate90({width:2,height:2,data:new Uint8Array(16)}))===false,'A flat picture has no grain to turn');
+{
+  const w=48,h=36,data=new Uint8Array(w*h*4);
+  for(let i=0;i<data.length;i+=4){data[i]=90;data[i+1]=62;data[i+2]=40;data[i+3]=255;}
+  const wide=await buildSwatchMaps({width:w,height:h,data},'composite',async()=>{},128);
+  const narrow=await buildSwatchMaps({width:w,height:h,data},'composite');
+  const spread=(bytes:Uint8Array)=>{let lo=255,hi=0;for(let i=0;i<bytes.length;i+=4){lo=Math.min(lo,bytes[i]);hi=Math.max(hi,bytes[i]);}return hi-lo;};
+  ok(wide.width===128&&wide.normal.some((v,i)=>i%4===3&&v!==255)&&deltaE(wide.sourceMean,wide.atlasMean)<1,'A wider atlas keeps the photo mean and packs height into the normal alpha');
+  ok(spread(wide.roughness)>spread(narrow.roughness)+12,'Showcase composite decking varies roughness, so the grain can catch a sheen');
+}
 ok(!/from ['"](three|@react-three)/.test(read(`${VIEWER}swatchMaps.ts`)),'swatchMaps.ts stays free of three.js');
 
 // The shader patch rewrites chunks three still has, and every board's pick is stable and in range.
@@ -161,7 +200,13 @@ for(const [name,lookup] of PATCHED_CHUNKS)ok((THREE.ShaderChunk as Record<string
   const plain=new THREE.MeshStandardMaterial();ok(boxVariant(plain)===plain,'Other materials are left as they are');
   const a=boardVariation(12.5,-40),b=boardVariation(12.5,-40),c=boardVariation(18,-40);
   ok(a.every((v,i)=>v===b[i])&&a.some((v,i)=>v!==c[i])&&[a,c].every(v=>v[0]>=0&&v[0]<1&&v[1]>=0&&v[1]<1&&(v[2]===0||v[2]===1)),'A board keeps its strip while it stays put, and the next board gets another');
+  ok(reliefWeight(0.1)===0&&reliefWeight(0.08)===0&&reliefWeight(.8)===1&&reliefWeight((RELIEF_EDGE+RELIEF_FULL)/2)>.4,'A stair tread seen nearly edge-on drops atlas relief; a face-on board keeps the grain');
+  const reliefMat=surfaceMaterial('#886644',true),reliefShader={uniforms:{} as Record<string,THREE.IUniform>,defines:{} as Record<string,string>,vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};
+  reliefMat.onBeforeCompile(reliefShader as unknown as THREE.WebGLProgramParametersWithUniforms,undefined as never);
+  ok(reliefShader.fragmentShader.includes(`smoothstep(${RELIEF_EDGE},${RELIEF_FULL}`)&&reliefShader.fragmentShader.includes('mix(nonPerturbedNormal,normal,dcKeep)')&&reliefShader.fragmentShader.includes('dcUv+=dcView.xy*(dcHeight-.5)*.03*dcKeep')&&!shader.fragmentShader.includes('dcKeep'),'Grazing stair treads keep the geometric surface; the editor shader is unchanged');
 }
+ok(SHOWCASE_STILL_SAMPLES===1&&pipeline.includes('SHOWCASE_STILL_SAMPLES'),'Showcase stills do not jitter the camera across thin stair treads');
+ok(read(`${VIEWER}showcasePost.ts`).includes('abs(z-centerZ)'),'Depth of field leaves a thin tread instead of averaging in the ground behind it');
 const viewer2=read(`${VIEWER}Deck3DViewer.tsx`);
 {
  const ast=ts.createSourceFile('Deck3DViewer.tsx',viewer2,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),batch=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='BoardBatch')!,attributes:ts.CallExpression[]=[];
@@ -212,6 +257,8 @@ ok(assetBytes<=15*1024*1024&&!readdirSync(ASSETS).some(f=>f.startsWith('grass008
   ok(viewer3.includes('<Suspense fallback={<StudioLight evening={evening}/>}><Sky3D evening={evening}/></Suspense>')&&viewer3.includes('near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar'),'The real sky loads behind the studio light, and the camera sees to the sky dome');
   ok(environment3.includes('castShadow={!evening}')&&environment3.includes('SUN.clone().multiplyScalar(radius)')&&!environment3.includes('hemisphereLight'),'The scene’s sun takes the HDRI’s place (none in the evening), and no hemisphere light doubles the sky');
   ok(sky.includes('name="sky-dome"')&&sky.includes('depthWrite:false,fog:false')&&sky.includes('scene.fog.color.setRGB(')&&viewer3.includes('<fogExp2 attach="fog" args={[')&&sky.includes('preloadEvening()')&&sky.includes("fallback={<SkyOf lighting=\"day\" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}"),'The dome draws behind everything without fog; one haze lasts the viewer’s life (adding fog recompiles every material) and the sky only recolours it; the evening sky preloads once the day is in, and the dimmed day sky stands in while it loads');
+  ok(sky.includes('lead*${DAY_SKY_RED}')&&sky.includes('${DAY_SKY_BLEND}*skyish')&&sky.includes('${DAY_SKY_GAIN}')&&sky.includes('${GOLDEN_SKY_GAIN}')&&sky.includes("dayBlue=graded&&flags.hour!=='golden'")&&sky.includes("goldenSky=graded&&flags.hour==='golden'"),'Showcase day recolors the sky after exposure, and golden hour warms the dome before the grade');
+  ok(sky.includes('sampleEl=cleanEl+uHorizonBand*0.')&&sky.includes('smoothstep(0.22,0.0,el)*uSkyline')&&sky.includes('vec3(0.04,0.045,0.035)*strength')&&!sky.includes('band*uHorizonBand')&&sky.includes('goldenSky?SHOWCASE_GOLDEN_FILL:SHOWCASE_SKY_FILL')&&!sky.includes('?0.72:1'),'The dome keeps the clean upper sky, fades the horizon into a tree line, and applies golden fill once');
   ok(SCENE_LOOK.sky.domeRadiusFt<SCENE_LOOK.sky.cameraFar&&Math.exp(-((100*SCENE_LOOK.sky.fogDensity)**2))>.985,'The dome sits inside the far plane, and haze stays under 1.5% at 100 ft');
 }
 // The lawn: the chunks it patches, a natural mean colour, and ground that faces up all the way to the horizon.

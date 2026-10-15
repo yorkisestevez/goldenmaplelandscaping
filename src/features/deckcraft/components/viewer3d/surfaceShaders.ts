@@ -20,7 +20,7 @@ export const SURFACE_PROGRAM='dc-surface-v1';
 const GUTTER=8/128,BODY=112/128;
 
 export interface SurfaceMaps{map:THREE.Texture;normalMap:THREE.Texture;roughnessMap:THREE.Texture}
-interface Surface{box:boolean;strips:{value:number};variants:THREE.MeshStandardMaterial[];maps:SurfaceMaps|null;fallback:THREE.Color;standIn:SurfaceMaps}
+interface Surface{box:boolean;strips:{value:number};variants:THREE.MeshStandardMaterial[];maps:SurfaceMaps|null;fallback:THREE.Color;standIn:SurfaceMaps;relief:{value:boolean}}
 const surfaceOf=(m:THREE.Material)=>m.userData.surface as Surface|undefined;
 
 const VERTEX_HEAD=/* glsl */`
@@ -54,12 +54,32 @@ varying vec2 vDcUv;
 flat varying vec2 vDcVar;
 vec2 dcUv;vec2 dcDx;vec2 dcDy;
 vec4 dcTex(sampler2D t){return textureGrad(t,dcUv,dcDx,dcDy);}`;
+/** Edge-on surfaces (a stair tread in a wide hero) drop atlas relief. Face-on boards keep it. */
+export const RELIEF_EDGE=0.12,RELIEF_FULL=0.42;
+export function reliefWeight(facing:number){
+  if(facing<=RELIEF_EDGE)return 0;
+  if(facing>=RELIEF_FULL)return 1;
+  const t=(facing-RELIEF_EDGE)/(RELIEF_FULL-RELIEF_EDGE);
+  return t*t*(3-2*t);
+}
+const FRAGMENT_HEAD_RELIEF=/* glsl */`${FRAGMENT_HEAD}
+float dcKeep;`;
 const FRAGMENT_UV=/* glsl */`
   {
     float course=floor(vDcUv.y),across=vDcUv.y-course;
     float strip=min(floor(fract(vDcVar.x+course*.6180339)*uStrips),uStrips-1.);
     dcUv=vec2(vDcUv.x+vDcVar.y+course*.37,(strip+${GUTTER}+clamp(across,0.,1.)*${BODY})/uStrips);
     vec2 scale=vec2(1.,${BODY}/uStrips);dcDx=dFdx(vDcUv)*scale;dcDy=dFdy(vDcUv)*scale;
+  }`;
+const FRAGMENT_UV_RELIEF=/* glsl */`
+  {
+    float course=floor(vDcUv.y),across=vDcUv.y-course;
+    float strip=min(floor(fract(vDcVar.x+course*.6180339)*uStrips),uStrips-1.);
+    dcUv=vec2(vDcUv.x+vDcVar.y+course*.37,(strip+${GUTTER}+clamp(across,0.,1.)*${BODY})/uStrips);
+    vec2 scale=vec2(1.,${BODY}/uStrips);dcDx=dFdx(vDcUv)*scale;dcDy=dFdy(vDcUv)*scale;
+    float dcHeight=dcTex(normalMap).a;vec3 dcView=normalize(vViewPosition);
+    dcKeep=smoothstep(${RELIEF_EDGE},${RELIEF_FULL},abs(dot(normalize(vNormal),dcView)));
+    dcUv+=dcView.xy*(dcHeight-.5)*.03*dcKeep;
   }`;
 
 /** The standard chunks with their map lookups sent through the board's atlas coordinates. Throws if three renamed them. */
@@ -73,17 +93,18 @@ export const PATCHED_CHUNKS:[string,string][]=[['map_fragment','texture2D( map, 
 
 function patch(material:THREE.MeshStandardMaterial,surface:Surface){
   material.userData.surface=surface;
-  material.customProgramCacheKey=()=>`${SURFACE_PROGRAM}:${surface.box?'box':'mesh'}`;
+  material.customProgramCacheKey=()=>`${SURFACE_PROGRAM}:${surface.box?'box':'mesh'}:${surface.relief.value?'relief':''}`;
   material.onBeforeCompile=shader=>{
     shader.uniforms.uStrips=surface.strips;
     if(surface.box)shader.defines={...shader.defines,DC_BOX_UV:''};
     shader.vertexShader=shader.vertexShader.replace('#include <common>',`#include <common>\n${VERTEX_HEAD}`).replace('#include <uv_vertex>','#include <uv_vertex>\n  dcBoard();');
+    const relief=surface.relief.value;
     shader.fragmentShader=shader.fragmentShader
-      .replace('#include <common>',`#include <common>\n${FRAGMENT_HEAD}`)
-      .replace('#include <map_fragment>',`${FRAGMENT_UV}\n${chunk('map_fragment','texture2D( map, vMapUv )','dcTex( map )')}`)
+      .replace('#include <common>',`#include <common>\n${relief?FRAGMENT_HEAD_RELIEF:FRAGMENT_HEAD}`)
+      .replace('#include <map_fragment>',`${relief?FRAGMENT_UV_RELIEF:FRAGMENT_UV}\n${chunk('map_fragment','texture2D( map, vMapUv )','dcTex( map )')}`)
       .replace('#include <roughnessmap_fragment>',chunk('roughnessmap_fragment','texture2D( roughnessMap, vRoughnessMapUv )','dcTex( roughnessMap )'))
       .replace('#include <normal_fragment_begin>',chunk('normal_fragment_begin','vNormalMapUv','vDcUv'))
-      .replace('#include <normal_fragment_maps>',chunk('normal_fragment_maps','texture2D( normalMap, vNormalMapUv )','dcTex( normalMap )'));
+      .replace('#include <normal_fragment_maps>',chunk('normal_fragment_maps','texture2D( normalMap, vNormalMapUv )','dcTex( normalMap )')+(relief?'\nnormal=normalize(mix(nonPerturbedNormal,normal,dcKeep));':''));
   };
   return material;
 }
@@ -104,9 +125,9 @@ function standIns(fallback:THREE.Color):SurfaceMaps{
 }
 
 /** A swatch material that samples its atlas per board ("mesh" mode); the solid fallback colour until maps arrive. */
-export function surfaceMaterial(color:THREE.ColorRepresentation){
+export function surfaceMaterial(color:THREE.ColorRepresentation,relief=false){
   const fallback=new THREE.Color(color),material=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:1,metalness:0});
-  const surface:Surface={box:false,strips:{value:1},variants:[],maps:null,fallback,standIn:standIns(fallback)};
+  const surface:Surface={box:false,strips:{value:1},variants:[],maps:null,fallback,standIn:standIns(fallback),relief:{value:relief}};
   Object.assign(material,surface.standIn);
   return patch(material,surface);
 }
@@ -118,7 +139,7 @@ export function boxVariant(material:THREE.Material):THREE.Material{
   const existing=surface.variants[0];if(existing)return existing;
   // clone() copies userData through JSON, so the surface (materials and textures) is lifted off first.
   const source=material as THREE.MeshStandardMaterial,userData=source.userData;source.userData={};
-  const box=patch(source.clone(),{box:true,strips:surface.strips,variants:[],maps:null,fallback:surface.fallback,standIn:surface.standIn});source.userData=userData;
+  const box=patch(source.clone(),{box:true,strips:surface.strips,variants:[],maps:null,fallback:surface.fallback,standIn:surface.standIn,relief:surface.relief});source.userData=userData;
   surface.variants.push(box);return box;
 }
 
