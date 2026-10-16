@@ -7,7 +7,7 @@ import {guardRuns} from '../src/features/deckcraft/deckTakeoff';
 import {getHouseContact} from '../src/features/deckcraft/houseContact';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {describeDesign} from '../src/features/deckcraft/designFacts';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {syncAutoLighting} from '../src/features/deckcraft/lightingSystem';
 import {CONFIRMED_RATES} from '../src/features/deckcraft/rateConfidence';
 import {proposalFinishes} from '../src/features/deckcraft/proposalModel';

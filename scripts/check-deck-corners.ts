@@ -18,7 +18,7 @@ import {memberLength,unsupportedJoistEnds} from '../src/features/deckcraft/const
 import {parseDesign,pruneEdgeNames,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {decodeDesignLink,designLinkFromHash,encodeDesignLink} from '../src/features/deckcraft/designLink';
 import {describeDesign,shapeWords} from '../src/features/deckcraft/designFacts';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import ConstructionPlan from '../src/features/deckcraft/ConstructionPlan';
 import {activeCornerChamfers,angledStairAllowed,angledStairFits,chamferFaceFt,chamferLabourFactor,describeChamfers,isChamferEdgeId} from '../src/features/deckcraft/lib/cornerChamfers';
 import {getFootprint,SIDE_DOT,type PlanPoint} from '../src/features/deckcraft/lib/deckGeometry';

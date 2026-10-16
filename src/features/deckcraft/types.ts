@@ -343,7 +343,7 @@ export interface DeckData {
   catalogueAccessories?: string[];
   borderFinish?: 'Matching'|'Dark Slate';
   pictureFrameOverhangIn?: number;
-  /** Takeoff rules: absent or 'legacy' for designs saved before 2026-10-06, '2026-10' for the takeoff after that, '2026-10-struct' for a new design (see buildRules.ts). */
+  /** Takeoff rules: absent or 'legacy' for designs saved before 2026-10-06, '2026-10' for the takeoff after that, '2026-10-struct' with the structural review, '2026-10-piers' for a new design (see buildRules.ts). */
   buildRules?: import('./buildRules').BuildRules;
   houseVisible?: boolean;
   houseWallHeightIn?: number;

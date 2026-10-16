@@ -12,7 +12,7 @@ import {addRim} from '../src/features/deckcraft/constructionDetails';
 import {deckExportMeshes} from '../src/features/deckcraft/designExports';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {describeDesign} from '../src/features/deckcraft/designFacts';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {buildDeckDesignSubmission,type SendDesignFields} from '../src/features/deckcraft/sendDesign';
 import {getHouseContact} from '../src/features/deckcraft/houseContact';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';

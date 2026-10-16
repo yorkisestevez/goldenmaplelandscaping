@@ -6,7 +6,7 @@ import {calculateDeckReleaseEstimate,deckReleaseData} from '../src/features/deck
 import {buildDeckTakeoff,type DeckLevel,type Member} from '../src/features/deckcraft/deckTakeoff';
 import {serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {describeDesign} from '../src/features/deckcraft/designFacts';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {boardFinishPlan} from '../src/features/deckcraft/boardFinishes';
 import {inSolidInlay} from '../src/features/deckcraft/inlayFraming';
 import {deckBoardStock} from '../src/features/deckcraft/stockPlan';
@@ -296,14 +296,14 @@ for(const [label,patch,status] of [
 
 // 8. Stock: inlay boards are their own order, at the allowance of what they are.
 {
-  const d=base({inlays:[rug({pattern:'Herringbone',frame:'tt_prime_plus:Dark Cocoa'})]}),e=price(d),s=e.sections.find(x=>x.title==='Accent colours & inlays')!;
+  const d=base({deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk',inlays:[rug({pattern:'Herringbone',frame:'tt_prime_plus:Dark Cocoa'})]}),e=price(d),s=e.sections.find(x=>x.title==='Accent colours & inlays')!;
   ok(s&&s.items.some(i=>i.name==='Inlay frame · TimberTech EDGE Prime+ · Dark Cocoa')&&s.items.some(i=>i.name==='Inlay inside, herringbone · TimberTech EDGE Prime+ · Coconut Husk'),'The frame and the inside are ordered as their own boards, in their colours');
   const frameRow=e.stockSchedule.find(r=>r.name.startsWith('Inlay frame'))!,cuts=frameRow.cutsIn.flat().reduce((n,c)=>n+c,0)/12;
   ok(frameRow.orderedPieces>=Math.ceil(cuts*1.22/16),'The frame carries the picture-frame waste allowance (×1.22)');
   const inlayPieces=e.model.levels[0].boards.filter(b=>b.inlay).length,main=e.stockSchedule[0].cutsIn.flat().length;
   ok(main+e.stockSchedule.filter(r=>r.name.startsWith('Inlay')).reduce((n,r)=>n+r.cutsIn.flat().length,0)===e.model.levels[0].boards.length&&inlayPieces>0,'Every deck board is ordered once: the main order or an inlay order');
   ok(s.items.every(i=>i.cost!==0),'No inlay line is priced at $0');
-  const fd=base({inlays:[band({atFt:-4,fill:'tt_prime_plus:Dark Cocoa'}),medallion({dxFt:4,fill:'tt_prime_plus:Dark Cocoa'})]}),f=price(fd),fs=f.sections.find(x=>x.title==='Accent colours & inlays')!;
+  const fd=base({deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk',inlays:[band({atFt:-4,fill:'tt_prime_plus:Dark Cocoa'}),medallion({dxFt:4,fill:'tt_prime_plus:Dark Cocoa'})]}),f=price(fd),fs=f.sections.find(x=>x.title==='Accent colours & inlays')!;
   ok(fs.items.some(i=>i.name==='Inlay band · TimberTech EDGE Prime+ · Dark Cocoa')&&fs.items.some(i=>i.name==='Medallion inlay · TimberTech EDGE Prime+ · Dark Cocoa')&&fs.items.some(i=>i.name==='Medallion inlay · TimberTech EDGE Prime+ · Coconut Husk'),'A band and a medallion are ordered as their own boards, the medallion in both its colours');
   const allowance=(name:string,factor:number)=>{const r=f.stockSchedule.find(x=>x.name.startsWith(name))!,lf=r.cutsIn.flat().reduce((n,c)=>n+c,0)/12;return r.orderedPieces>=Math.ceil(lf*factor/16);};
   ok(allowance('Inlay band',WASTE_FACTORS.Straight)&&allowance('Medallion inlay · TimberTech EDGE Prime+ · Dark Cocoa',WASTE_FACTORS.Herringbone),'A band carries the straight allowance and a medallion the herringbone allowance');

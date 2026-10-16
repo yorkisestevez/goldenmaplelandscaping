@@ -17,9 +17,9 @@ test('proposal cover matches the restored board finish and subsequent grey choic
     const response=await page.evaluate(({id,commands})=>window.deckcraft!.execute({id,commands}),{id,commands});
     expect(response.ok,JSON.stringify(response)).toBe(true);
   };
-  await execute('choose-grey',[{type:'design.patch',patch:{deckingColor:'Sea Salt Gray'}}]);
+  await execute('choose-grey',[{type:'design.patch',patch:{deckingColor:'Slate Gray'}}]);
   await execute('restore-brown',[{type:'history.undo'}]);
-  expect(await page.evaluate(()=>window.deckcraft!.read().design.deckingColor)).toBe('Coconut Husk');
+  expect(await page.evaluate(()=>window.deckcraft!.read().design.deckingColor)).toBe('Brownstone');
   const cover=async(finish:string)=>{
     await execute(`proposal-${finish.replace(/\s/g,'-')}`,[{type:'action',action:'proposal.open'}]);
     const dialog=page.getByRole('dialog',{name:'Deck proposal preview'});
@@ -38,9 +38,9 @@ test('proposal cover matches the restored board finish and subsequent grey choic
     await dialog.getByRole('button',{name:'Close',exact:true}).click();
     return samples;
   };
-  const brown=await cover('Coconut Husk');
-  await execute('choose-grey-final',[{type:'design.patch',patch:{deckingColor:'Sea Salt Gray'}}]);
-  const grey=await cover('Sea Salt Gray');
+  const brown=await cover('Brownstone');
+  await execute('choose-grey-final',[{type:'design.patch',patch:{deckingColor:'Slate Gray'}}]);
+  const grey=await cover('Slate Gray');
   const warmer=brown.filter(([r,g],i)=>r-g-(grey[i][0]-grey[i][1])>15).length;
   expect(delayed).toBeGreaterThan(0);
   expect(warmer,'At least 12% of the deck-area samples must visibly change from warm brown to grey').toBeGreaterThan(brown.length*.12);

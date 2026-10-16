@@ -2,11 +2,12 @@ import type {ReactNode} from 'react';
 import type {DeckData} from '../../types';
 import type {PlanTool,PreviewMode} from '../constants';
 import type {SectionId} from '../sections';
+import {designIssues} from '../reviewNotes';
 
 /** The page's own functions and state, handed over as they are. The Pro chunks (loaded only in Designer Mode) turn
  * them into menu and ribbon actions, so the public route carries no Pro code beyond this one object. */
 export interface ProPage{
-  ready:boolean;issueCount:number;canUndo:boolean;canRedo:boolean;
+  ready:boolean;issues:readonly string[];canUndo:boolean;canRedo:boolean;
   undo:()=>void;redo:()=>void;
   openSection:(id:SectionId,bringIntoView?:boolean)=>void;
   /** The open design area and its settings: the docked properties panel shows them in place of the section pop-over. */
@@ -39,7 +40,7 @@ export interface ProMenuActions extends ProCommands{
   tool:(tool:PlanTool)=>void;sheet:(mode:PreviewMode)=>void;
   quoteCosts:()=>void;fullList:()=>void;ask:()=>void;askExpert:(expert:import('../expertAgents').ExpertId)=>void;issues:()=>void;sketch:()=>void;agents:()=>void;
 }
-export const proMenuActions=(p:ProPage):ProMenuActions=>({...proCommands(p),ready:p.ready,issueCount:p.issueCount,
+export const proMenuActions=(p:ProPage):ProMenuActions=>({...proCommands(p),ready:p.ready,issueCount:designIssues(p.issues).length,
   saveFile:()=>p.saveJSON(),jobs:()=>p.setJobsOpen(true),
   proposal:()=>void p.openProposal(),pdf:()=>void p.downloadPdf(),exportDxf:()=>void p.exportModel('dxf'),exportObj:()=>void p.exportModel('obj'),exportPlanDxf:()=>void p.exportPermit('dxf2d'),send:()=>p.setSendOpen(true),
   tool:next=>{p.setPlanTool(next);p.setMode('plan');p.showCanvas();},sheet:next=>{p.setMode(next);p.showCanvas();},
