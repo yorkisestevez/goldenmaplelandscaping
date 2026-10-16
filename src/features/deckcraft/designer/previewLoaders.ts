@@ -3,6 +3,11 @@ export const loadViewer=()=>import('../components/viewer3d/Deck3DViewer');
 export const loadExteriorStudio=()=>import('./ExteriorStudio');
 /** Free-form outline editor (Draw my own): prefetched so a deploy does not 404 a stale chunk mid-edit. */
 export const loadPlanBoundaryEditor=()=>import('./PlanBoundaryEditor');
+/** The drawing's prerendered pieces (the Project controls, the tools ribbon, the plan): the page starts them with the
+ * drawing itself, not after it, because it holds hydration until they are in (DeckDesigner.tsx, piecesReady). */
+export const loadArchitectShortcuts=()=>import('./ArchitectShortcuts');
+export const loadPlanToolPicker=()=>import('./PlanToolPicker');
+export const loadPlanEditingWorkspace=()=>import('./PlanEditingWorkspace');
 
 /** Fetch the 3D viewer while the plan is on screen: a desktop (wide screen, mouse) only, and not when the browser is
  * saving data. Evaluating the viewer starts the day-sky download, so a phone waits until its 3D sheet is chosen to
