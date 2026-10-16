@@ -40,7 +40,7 @@ async function trace(page:Page,context:BrowserContext,shape:SketchDocument['shap
 test.beforeEach(async({context,page})=>{
  const errors:string[]=[];pageErrors.set(page,errors);page.on('pageerror',error=>errors.push(error.message));
  await context.addInitScript('window.__name=(target,value)=>target;');
- await context.addInitScript(({key,configuration})=>{if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},{key:'golden-maple.deck-studio.deck-only.v1',configuration:{...DEFAULT_DECK,deckingColor:'Sea Salt Gray',customerName:'QA Sketch Customer',projectAddress:'QA fixture address'}});
+ await context.addInitScript(({key,configuration})=>{if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},{key:'golden-maple.deck-studio.deck-only.v1',configuration:{...DEFAULT_DECK,deckingMaterial:'tt_prime_plus',deckingColor:'Sea Salt Gray',customerName:'QA Sketch Customer',projectAddress:'QA fixture address'}});
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&r.request().method()==='GET'?r.continue():r.fulfill({status:200,body:''}));
  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
 });
