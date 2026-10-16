@@ -10,7 +10,7 @@ import {getHardwareLayout} from '../src/features/deckcraft/hardwareLayout';
 import {parseDesign,pruneEdgeNames,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {decodeDesignLink,designLinkFromHash,encodeDesignLink} from '../src/features/deckcraft/designLink';
 import {describeDesign} from '../src/features/deckcraft/designFacts';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {buildDeckDesignSubmission,type SendDesignFields} from '../src/features/deckcraft/sendDesign';
 import {exposedRim,getHouseContact} from '../src/features/deckcraft/houseContact';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';

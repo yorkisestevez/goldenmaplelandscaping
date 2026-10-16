@@ -17,6 +17,9 @@ test('proposal cover matches the restored board finish and subsequent grey choic
     const response=await page.evaluate(({id,commands})=>window.deckcraft!.execute({id,commands}),{id,commands});
     expect(response.ok,JSON.stringify(response)).toBe(true);
   };
+  // The brown/grey contrast threshold below is set on EDGE Prime+ (Coconut Husk against Sea Salt Gray), so the test
+  // starts there rather than on the starter board.
+  await execute('choose-prime',[{type:'design.patch',patch:{deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk'}}]);
   await execute('choose-grey',[{type:'design.patch',patch:{deckingColor:'Sea Salt Gray'}}]);
   await execute('restore-brown',[{type:'history.undo'}]);
   expect(await page.evaluate(()=>window.deckcraft!.read().design.deckingColor)).toBe('Coconut Husk');

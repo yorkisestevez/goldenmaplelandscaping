@@ -14,6 +14,7 @@ import type {DeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {usesPhysicalElevations} from '../src/features/deckcraft/elevationDatum';
 import {stairTargetId} from '../src/features/deckcraft/stairTargets';
 import {LEGACY_DEFAULT_DECK,legacyBaseDeck,legacyScenarios} from './deck-legacy-scenarios';
+import {serializeDesign} from '../src/features/deckcraft/designPersistence';
 
 // Existing designs must build, draw and price exactly as before while the house/wrap
 // work refactors the geometry core. Run with --update only when a change is owner-approved.
@@ -26,10 +27,15 @@ const update=process.argv.includes('--update'),report=process.argv.includes('--r
 const base=():DeckData=>legacyBaseDeck();
 const scenarios=legacyScenarios();
 // New designs (owner 2026-10-04/06): a one-row flush picture frame under the 2026-10 build rules. Any other change to the
-// live default needs its own saved-design decision, so the frozen base may differ from it only in these three keys.
-assert.equal(DEFAULT_DECK.pictureFrameRows,1);assert.equal(DEFAULT_DECK.pictureFrameOverhangIn,0);assert.equal(DEFAULT_DECK.buildRules,'2026-10-struct');
+// live default needs its own saved-design decision, so the frozen base may differ from it only in these keys.
+// 2026-10-15 (owner): new designs start on square-edge Harvest in Brownstone. Every save since the designer launched
+// (033ee5e, 2026-09-10) writes its board and colour, so no saved design falls back to the new default; checked below.
+assert.equal(DEFAULT_DECK.pictureFrameRows,1);assert.equal(DEFAULT_DECK.pictureFrameOverhangIn,0);assert.equal(DEFAULT_DECK.buildRules,'2026-10-piers');
+assert.equal(DEFAULT_DECK.deckingMaterial,'tt_harvest');assert.equal(DEFAULT_DECK.deckingColor,'Brownstone');
+assert.equal(LEGACY_DEFAULT_DECK.deckingMaterial,'tt_prime_plus');assert.equal(LEGACY_DEFAULT_DECK.deckingColor,'Coconut Husk');
+{const saved=JSON.parse(serializeDesign(legacyBaseDeck())).configuration;assert.equal(saved.deckingMaterial,'tt_prime_plus');assert.equal(saved.deckingColor,'Coconut Husk');}
 assert.ok(!('pictureFrameOverhangIn' in LEGACY_DEFAULT_DECK)&&!('buildRules' in LEGACY_DEFAULT_DECK)&&LEGACY_DEFAULT_DECK.pictureFrameRows===0,'The legacy base has no frame, no saved overhang and no build rules');
-{const {pictureFrameRows:_rows,pictureFrameOverhangIn:_overhang,buildRules:_rules,...rest}=DEFAULT_DECK,{pictureFrameRows:_legacyRows,...legacy}=LEGACY_DEFAULT_DECK;assert.deepEqual(legacy,rest,'The live default differs from the frozen 9b2ee11 default only in the picture frame and build rules');}
+{const {pictureFrameRows:_rows,pictureFrameOverhangIn:_overhang,buildRules:_rules,deckingMaterial:_board,deckingColor:_colour,...rest}=DEFAULT_DECK,{pictureFrameRows:_legacyRows,deckingMaterial:_legacyBoard,deckingColor:_legacyColour,...legacy}=LEGACY_DEFAULT_DECK;assert.deepEqual(legacy,rest,'The live default differs from the frozen 9b2ee11 default only in the picture frame, build rules and starter board');}
 
 // Rounded, -0-free JSON so identity-transform refactors do not trip on float noise.
 const stable=(value:unknown)=>JSON.stringify(value,(_k,v)=>typeof v==='number'?(Object.is(v,-0)||Math.abs(v)<5e-7?0:Math.round(v*1e6)/1e6):v);

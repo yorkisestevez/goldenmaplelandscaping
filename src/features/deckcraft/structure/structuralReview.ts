@@ -1,9 +1,9 @@
 /**
- * Structural review for designs on the current build rules (buildRules.ts, '2026-10-struct').
+ * Structural review for designs on the current build rules (buildRules.ts, '2026-10-struct' and '2026-10-piers').
  * Saved '2026-10' and legacy designs do not call this. Planning checks for the office, not a permit approval.
  * Thresholds that are not a published OBC table are named as DeckCraft planning values.
  */
-import {usesStructuralReview} from '../buildRules';
+import {usesSizedPiers,usesStructuralReview} from '../buildRules';
 import {FROST_DEPTH_IN,GUARD_REQUIRED_ABOVE_IN,STONE_STEPS} from '../designRules';
 import {deckAttachesToHouse} from '../houseContact';
 import {getHouseConfig} from '../houseSettings';
@@ -126,7 +126,7 @@ export function structuralReviewIssues(data:DeckData,input:StructuralReviewInput
     const allowance=data.soilCondition==='Clay'||data.soilCondition==='Fill'?16:12;
     const bearing=PLANNING_BEARING_KPA[data.soilCondition];
     if(data.soilCondition==='Shallow Bedrock')issues.push('Shallow bedrock: the drawn pier is not a bearing design. A professional design sets the foundation.');
-    else if(input.footingDiameterIn>allowance)issues.push(`Footings size to ${input.footingDiameterIn} in for the tributary load on ${data.soilCondition.toLowerCase()} soil (${bearing} kPa DeckCraft planning bearing; dead ${PLANNING_DEAD_KPA} kPa plus the greater of 1.9 kPa and the municipal snow). The price book still allows a ${allowance} in pier at the existing unit rate. Confirm the diameter and bearing before construction.`);
+    else if(input.footingDiameterIn>allowance)issues.push(`Footings size to ${input.footingDiameterIn} in for the tributary load on ${data.soilCondition.toLowerCase()} soil (${bearing} kPa DeckCraft planning bearing; dead ${PLANNING_DEAD_KPA} kPa plus the greater of 1.9 kPa and the municipal snow). ${usesSizedPiers(data)?'':`The price book still allows a ${allowance} in pier at the existing unit rate. `}Confirm the diameter and bearing before construction.`);
     if(data.soilCondition==='Fill')issues.push('Fill soil: planning bearing is 50 kPa. A professional design should confirm the foundation before construction.');
   }
   const depth=data.foundationDepthIn??FROST_DEPTH_IN;

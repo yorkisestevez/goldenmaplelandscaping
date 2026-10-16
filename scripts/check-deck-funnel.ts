@@ -5,7 +5,8 @@ import {hasPictureFrame} from '../src/features/deckcraft/borderLighting';
 import {deckReleaseData} from '../src/features/deckcraft/deckRelease';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
 import {MANUFACTURER_ACCESSORIES,RAILING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
-import {DECK_LABEL,designFeatures,resetDeckAnalyticsVisit,setDeckAnalyticsSink,stepLabel,trackDeck,type DeckEvent} from '../src/features/deckcraft/deckAnalytics';
+import {DECK_LABEL,resetDeckAnalyticsVisit,setDeckAnalyticsSink,stepLabel,trackDeck,type DeckEvent} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import type {DeckData} from '../src/features/deckcraft/types';
 import {SECTIONS} from '../src/features/deckcraft/designer/sections';
 import {designerSource} from './deck-designer-source';
@@ -69,7 +70,7 @@ ok(!designFeatures(design({width:22,length:12,houseConfig:{...house,widthFt:26,d
 // The border (owner 2026-10-04): new designs start with one row, so only a departure from it is a choice. A save from
 // before the default (legacy build rules, rows 0) was never given the border and is not counted as removing it;
 // `deck_border_rows` (one or more rows) is retired so its GA4 history keeps that meaning.
-ok(DEFAULT_DECK.pictureFrameRows===1&&DEFAULT_DECK.buildRules==='2026-10-struct','New designs start with a one-row picture frame under the current structural-review rules');
+ok(DEFAULT_DECK.pictureFrameRows===1&&DEFAULT_DECK.buildRules==='2026-10-piers','New designs start with a one-row picture frame under the current rules (structural review, sized piers)');
 {
   const legacy=design({pictureFrameRows:0,buildRules:'legacy'}),unmarked=design({pictureFrameRows:0});delete unmarked.buildRules;
   ok(designFeatures(legacy).every(f=>!f.startsWith('deck_border'))&&designFeatures(unmarked).every(f=>!f.startsWith('deck_border')),`A legacy unframed save reports no border label (got ${designFeatures(legacy).join(', ')||'none'})`);

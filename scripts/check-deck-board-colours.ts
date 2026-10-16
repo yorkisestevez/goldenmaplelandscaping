@@ -6,7 +6,7 @@ import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {encodeDesignLink,MAX_DESIGN_LINK_CHARS} from '../src/features/deckcraft/designLink';
 import {describeDesign} from '../src/features/deckcraft/designFacts';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {buildDeckDesignSubmission,type SendDesignFields} from '../src/features/deckcraft/sendDesign';
 import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {accentCollections,boardFinishPlan,colourRef,deckColourRef,MAX_BOARD_COLOURS,parseColourRef} from '../src/features/deckcraft/boardFinishes';

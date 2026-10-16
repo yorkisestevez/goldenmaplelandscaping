@@ -31,8 +31,10 @@ export const DEFAULT_DECK: DeckData = {
     shape: 'Rectangle',
     levels: 1,
     pattern: 'Straight',
-    deckingMaterial: 'tt_prime_plus',
-    deckingColor: 'Coconut Husk',
+    // Square-edge boards (owner 2026-10-15): the picture frame's outer edge needs a solid square shoulder, which the
+    // scalloped EDGE Prime+ (the default until then) does not have. Harvest is listed square-shoulder in Brownstone.
+    deckingMaterial: 'tt_harvest',
+    deckingColor: 'Brownstone',
     framingSize: '2x10',
     boardWidth: 5.5,
     joistSpacing: 16,

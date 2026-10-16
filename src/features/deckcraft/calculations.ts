@@ -12,7 +12,7 @@ import { outlineSpans } from './zoneFraming';
 import {getHardwareLayout} from './hardwareLayout';
 import {deckBoardStock,type ProductStock} from './stockPlan';
 import {productStock} from './deckingStock';
-import {usesCurrentBuildRules} from './buildRules';
+import {usesCurrentBuildRules,usesSizedPiers} from './buildRules';
 import {priceLedgerFlashing} from './structure/structuralReview';
 import {hasBoardLayout,layoutBoardStock,layoutAutomaticBreakerLf,boardLayoutAllowance,BOARD_LAYOUT_POLICY,BOARD_LAYOUT_SUPPORT_QUOTE} from './boardLayoutPricing';
 import {boardFinishPlan,colourName,darkSlateBorder,deckColourRef,parseColourRef,type StockGroup} from './boardFinishes';
@@ -267,6 +267,10 @@ function estimateBody(data: DeckData, settings: any, skirt:(data:DeckData,model:
       footingType = 'Concrete Pier 16"';
       footingCostPerUnit = 240;
     }
+    // A new design prices a pier the structural review sizes past the price book's pier at its own size: the book's
+    // 12 in ($190) and 16 in ($240) piers scaled by cross-section, as concrete and excavation follow the area.
+    const sized=usesSizedPiers(data)?2*(model.foundationSupports.find(f=>f.pierRadiusIn)?.pierRadiusIn??0):0;
+    if(sized>(footingCostPerUnit===240?16:12)){footingType=`Concrete Pier ${sized}"`;footingCostPerUnit=Math.round(190+(sized*sized-144)*50/112);}
   }
 
   if (siteType === 'Waterfront-Lakefront' || siteType === 'Island-Ferry') {

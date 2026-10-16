@@ -5,7 +5,7 @@ import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import type {AgentSnapshot,AgentRequest} from '../src/features/deckcraft/designer/deckAgentController';
 const proof=resolve('../../outputs/deckcraft-edge-sections-review');mkdirSync(proof,{recursive:true});
-const fixture={...DEFAULT_DECK,width:20,length:12,height:48,deckingMaterial:'tt_prime_plus',railingType:'None',stairFlights:1,stairPosition:'Front',privacySqft:0,autoLighting:{posts:true},customerName:'Local screen review',projectAddress:'Local review address'};
+const fixture={...DEFAULT_DECK,width:20,length:12,height:48,deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk',railingType:'None',stairFlights:1,stairPosition:'Front',privacySqft:0,autoLighting:{posts:true},customerName:'Local screen review',projectAddress:'Local review address'};
 const read=(page:Page)=>page.evaluate(()=>window.deckcraft!.read());
 const controls=(page:Page)=>page.getByRole('region',{name:'Railing and privacy screen controls',exact:true});
 async function open(page:Page){await pickPlanTool(page,'Rails & screens');await expect(page.locator('.dd-edge-section-editor svg')).toBeVisible();}

@@ -9,7 +9,7 @@ import {deleteSelectedBoards} from '../src/features/deckcraft/designer/boardRemo
 import {createDeckAgentController,type DeckAgentHostState} from '../src/features/deckcraft/designer/deckAgentController';
 import type {DeckData} from '../src/features/deckcraft/types';
 let checks=0,sequence=0;const ok=(v:unknown,label:string)=>{assert(v,label);checks++;};
-const base=(patch:Partial<DeckData>={}):DeckData=>deckReleaseData({...structuredClone(DEFAULT_DECK),deckType:'Freestanding',houseVisible:false,stairFlights:0,railingType:'None',width:20,length:12,pictureFrameRows:2,deckingMaterial:'tt_prime_plus',materialMarkup:.17,...patch});
+const base=(patch:Partial<DeckData>={}):DeckData=>deckReleaseData({...structuredClone(DEFAULT_DECK),deckType:'Freestanding',houseVisible:false,stairFlights:0,railingType:'None',width:20,length:12,pictureFrameRows:2,deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk',materialMarkup:.17,...patch});
 const target=(data:DeckData,id?:string)=>{const model=buildDeckTakeoff(data),board=selectableBoards(data,model).find(b=>id?b.run.layoutId===id:b.run.role==='border')!;assert(board);return {model,board,t:{level:board.modelLevel,index:board.index}};};
 for(const pattern of ['Straight','Diagonal','Picture Frame','Herringbone'] as const)for(const boardWidth of [3.5,5.5] as const){
  const data=base({pattern,boardWidth,levels:2,width2:8,length2:8}),frozen=JSON.stringify(data),{model,board,t}=target(data),result=deleteSelectedBoards(data,model,[t],()=>`delete-${++sequence}`),next={...data,...result.patch},built=buildDeckTakeoff(next),region=next.boardLayout!.regions[0];

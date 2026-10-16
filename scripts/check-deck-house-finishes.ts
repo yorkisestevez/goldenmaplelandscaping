@@ -13,7 +13,7 @@ import {deckExportMeshes} from '../src/features/deckcraft/designExports';
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {decodeDesignLink,designLinkFromHash,encodeDesignLink} from '../src/features/deckcraft/designLink';
 import {serializeDeckReleaseDesign} from '../src/features/deckcraft/deckRelease';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {HOUSE_CASES,ORIGINAL_CLADDINGS,SKIN_WALLS,exactDigest,shapesFor} from './deck-house-finishes-cases';
 import {designerSource} from './deck-designer-source';
 import {MASONRY_CLADDINGS} from '../src/features/deckcraft/structure/structuralReview';

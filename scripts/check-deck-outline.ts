@@ -8,7 +8,7 @@ import {memberLength,unsupportedJoistEnds} from '../src/features/deckcraft/const
 import {parseDesign,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {decodeDesignLink,designLinkFromHash,encodeDesignLink} from '../src/features/deckcraft/designLink';
 import {describeDesign,shapeWords} from '../src/features/deckcraft/designFacts';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {getFootprint,unnotchedMainOutline} from '../src/features/deckcraft/lib/deckGeometry';
 import {isChamferEdgeId} from '../src/features/deckcraft/lib/cornerChamfers';
 import {edgeNameOf} from '../src/features/deckcraft/lib/wrapGeometry';

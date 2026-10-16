@@ -19,7 +19,7 @@ import {deckExportMeshes} from '../src/features/deckcraft/designExports';
 import {WAINSCOT_HEIGHT_IN,parseDesign,pruneEdgeNames,serializeDesign,validateDesign} from '../src/features/deckcraft/designPersistence';
 import {decodeDesignLink,designLinkFromHash,encodeDesignLink} from '../src/features/deckcraft/designLink';
 import {deckReleaseData,serializeDeckReleaseDesign} from '../src/features/deckcraft/deckRelease';
-import {designFeatures} from '../src/features/deckcraft/deckAnalytics';
+import {designFeatures} from '../src/features/deckcraft/deckFeatures';
 import {ProposalSheet} from '../src/features/deckcraft/ProposalSheet';
 import {HOUSE_CASES,ORIGINAL_CLADDINGS,SKIN_WALLS,exactDigest,shapesFor} from './deck-house-finishes-cases';
 import type {Box} from '../src/features/deckcraft/deckTakeoff';

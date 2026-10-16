@@ -313,9 +313,9 @@ test('reaches every feature of the designer',async({page})=>{
   });
   await test.step('Boards, accent paint tool and inlays',async()=>{
     await openSection(page,'Boards & finish');
-    await reach('Decking colours',page.getByRole('button',{name:'Sea Salt Gray',exact:true}));
+    await reach('Decking colours',page.getByRole('button',{name:'Slate Gray',exact:true}));
     const accents=page.getByRole('region',{name:'Accent boards'});
-    await accents.getByRole('button',{name:'Paint with Dark Cocoa (TimberTech EDGE Prime+)'}).click();
+    await accents.getByRole('button',{name:'Paint with Kona (TimberTech AZEK Harvest)'}).click();
     await reach('Accent paint tool',paintChip(page));
     await showCanvas(page);await paintChip(page).getByRole('button',{name:'Done'}).click();
     await expect(paintChip(page)).toHaveCount(0);
@@ -492,7 +492,7 @@ test('@phone keeps every control at least 44 px tall at 375 px',async({page})=>{
   // Controls shown only while in use: the paint tool's chip over the drawing, and the exterior studio's colour chips
   // and its link back to the look for a wall with a finish of its own.
   await openSection(page,'Boards & finish');
-  await page.getByRole('region',{name:'Accent boards'}).getByRole('button',{name:'Paint with Dark Cocoa (TimberTech EDGE Prime+)'}).click();
+  await page.getByRole('region',{name:'Accent boards'}).getByRole('button',{name:'Paint with Kona (TimberTech AZEK Harvest)'}).click();
   await showCanvas(page);
   expect(await underTouchSize(paintChip(page)),'The paint tool').toEqual([]);
   await showCanvas(page);await paintChip(page).getByRole('button',{name:'Done'}).click();
@@ -745,11 +745,11 @@ test('paints a row of accent boards, lists and keeps it, and prices the fitting 
   const before=await (await price(page)).textContent();
   await openSection(page,'Boards & finish');
   const panel=page.getByRole('region',{name:'Accent boards'});
-  await panel.getByRole('button',{name:'Paint with Dark Cocoa (TimberTech EDGE Prime+)'}).click();
-  await expect(paintChip(page)).toContainText('Painting: Dark Cocoa');
+  await panel.getByRole('button',{name:'Paint with Kona (TimberTech AZEK Harvest)'}).click();
+  await expect(paintChip(page)).toContainText('Painting: Kona');
   await setNumber(page,'Row from the house',6);
   await panel.getByRole('button',{name:'Paint this row'}).click();
-  await expect(panel.getByRole('listitem')).toHaveText(/Row 6 from the house · Dark Cocoa \(TimberTech EDGE Prime\+\)/);
+  await expect(panel.getByRole('listitem')).toHaveText(/Row 6 from the house · Kona \(TimberTech AZEK Harvest\)/);
   await expect((await price(page))).not.toHaveText(before??'');
   await withSchedule(page,async()=>{
     await expect(scheduleLine(page,'Labour (Construction & Build)')).toHaveText(/^Labour \(Construction & Build\)\$[\d,]+ · allowance$/);
@@ -771,7 +771,7 @@ test('paints a single board by clicking it in the 3D view',async({page})=>{
   const problems=await openDesigner(page);
   await openSection(page,'Boards & finish');
   const panel=page.getByRole('region',{name:'Accent boards'});
-  await panel.getByRole('button',{name:'Paint with Sea Salt Gray (TimberTech EDGE Prime+)'}).click();
+  await panel.getByRole('button',{name:'Paint with Slate Gray (TimberTech AZEK Harvest)'}).click();
   // The section covers the drawing: back to it to click the board, then back to the section to see the result.
   await showCanvas(page);
   const canvas=viewer3d(page);
@@ -783,7 +783,7 @@ test('paints a single board by clicking it in the 3D view',async({page})=>{
   await canvas.click({position:{x:box.width*.5,y:box.height*.4}});
   await openSection(page,'Boards & finish');
   await expect(panel.getByRole('heading',{name:/Your accent boards · 1 board$/})).toBeVisible();
-  await expect(panel.getByRole('listitem')).toHaveText(/One board in row \d+ from the house · Sea Salt Gray/);
+  await expect(panel.getByRole('listitem')).toHaveText(/One board in row \d+ from the house · Slate Gray/);
   await showCanvas(page);await paintChip(page).getByRole('button',{name:'Done'}).click();
   await expect(paintChip(page)).toHaveCount(0);
   expect(problems).toEqual([]);
@@ -1028,7 +1028,7 @@ test('shows the price effect beside each option, and picking one moves the price
   // A desktop prices the options on its own: no "Show price effect" to press.
   await expect(sectionBody(page,'Boards & finish').getByRole('button',{name:'Show price effect'})).toHaveCount(0);
   // A dearer collection reads "+$…" as its description (its name is unchanged); the current one has none.
-  const vintage=collection(page,'TimberTech AZEK Vintage'),current=collection(page,'TimberTech EDGE Prime+');
+  const vintage=collection(page,'TimberTech AZEK Vintage'),current=collection(page,'TimberTech AZEK Harvest');
   await expect(vintage).toHaveAccessibleDescription(/^\+\$[\d,]+$/);
   await expect(current).toHaveAttribute('aria-pressed','true');
   await expect(current).not.toHaveAttribute('aria-describedby',/./);

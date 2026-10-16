@@ -8,7 +8,7 @@ import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
 import {sceneBounds} from '../src/features/deckcraft/components/viewer3d/sceneBounds';
 import type {AgentSnapshot} from '../src/features/deckcraft/designer/deckAgentController';
 const proof=resolve('../../outputs/deckcraft-delete-pull-review/boards');mkdirSync(proof,{recursive:true});
-const fixture={...DEFAULT_DECK,deckType:'Freestanding' as const,houseVisible:false,width:20,length:12,height:48,pictureFrameRows:2 as const,stairFlights:0,railingType:'None' as const,deckingMaterial:'tt_prime_plus'};
+const fixture={...DEFAULT_DECK,deckType:'Freestanding' as const,houseVisible:false,width:20,length:12,height:48,pictureFrameRows:2 as const,stairFlights:0,railingType:'None' as const,deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk'};
 const read=(page:Page)=>page.evaluate(()=>window.deckcraft!.read());
 async function expectNoAdditions(page:Page){await expect.poll(async()=>{const layout=(await read(page)).design.boardLayout;return (layout?.regions.length??0)+(layout?.breakers.length??0)+(layout?.pieces.length??0);}).toBe(0);}
 async function undo(page:Page){await page.getByRole('region',{name:'Save and restore design',exact:true}).getByRole('button',{name:'Undo',exact:true}).click();}
