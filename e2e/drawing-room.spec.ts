@@ -4,6 +4,8 @@ const shots=proofDir('drawing-room');
 for(const phone of [false,true])test(`larger drawing room and project controls ${phone?'@phone':''}`,async({page,context})=>{
  await context.addInitScript('window.__name=(t,v)=>t');await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
  await page.goto('/deck-designer/');await expect(page.getByRole('button',{name:'Show project controls',exact:true})).toBeVisible();await expect(page.locator('.deck-designer')).toHaveAttribute('data-drawing-focus','true');
+ // Drawing focus now applies from the first paint, so it no longer implies the designer has loaded: wait for that.
+ await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
  const before=await page.evaluate(()=>(window as any).deckcraft.read().design),canvas=page.locator('.dd-plan-viewport');
  const initial=(await canvas.boundingBox())!;expect(initial.width).toBeGreaterThan(page.viewportSize()!.width-50);await expect(page.getByRole('navigation',{name:'Design tasks'})).not.toBeVisible();
  if(!phone){const visible=Math.min(initial.y+initial.height,page.viewportSize()!.height)-initial.y;expect(visible).toBeGreaterThan(400);expect(initial.y+initial.height).toBeLessThanOrEqual(page.viewportSize()!.height+1);}

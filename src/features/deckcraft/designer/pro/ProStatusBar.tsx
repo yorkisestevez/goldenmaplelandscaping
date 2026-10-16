@@ -18,7 +18,7 @@ const ALWAYS:Keys=[['Ctrl+Z','undo'],['F1','all shortcuts']];
 export default function ProStatusBar({sheet,toolLabel,hint,tool}:{sheet:'plan'|'3d'|'framing';toolLabel:string;hint:string;tool:PlanTool}){
   const keys=[...(sheet==='plan'?[...(TOOL_KEYS[tool]??[]),...VIEW_KEYS]:SHEET_KEYS[sheet]),...ALWAYS];
   return <div className="dd-pro-statusbar" role="region" aria-label="Status bar">
-    <p role="status"><strong>{sheet==='plan'?toolLabel:sheet==='3d'?'3D view':'Framing'}</strong>{sheet==='plan'?` · ${hint}`:sheet==='3d'?' · Drag to orbit, scroll to zoom, or pick a camera.':' · Inspect framing, connections and below-ground parts.'}</p>
+    <p role="status"><strong>{sheet==='plan'?toolLabel:sheet==='3d'?'3D view':'Framing'}</strong>{sheet==='plan'?` · ${hint}`:sheet==='3d'?' · Drag to orbit, Ctrl + scroll to zoom, or pick a camera.':' · Inspect framing, connections and below-ground parts.'}</p>
     <ul aria-label="Keys for this tool">{keys.map(([key,what])=><li key={key+what}><kbd>{key}</kbd> {what}</li>)}</ul>
   </div>;
 }
