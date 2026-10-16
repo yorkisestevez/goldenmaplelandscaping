@@ -60,9 +60,13 @@ test('added landscape objects stay after Day/Night and a saved camera',async({pa
   await expect.poll(async()=>(await objects(page)).items.map(item=>item.id)).toEqual([added.items[0].id]);
   await expect(list.getByRole('combobox',{name:'Selected landscape object'})).toContainText('Deciduous tree');
 
+  // Saved cameras live under the 3D view's More menu.
+  const viewMore=page.getByRole('group',{name:'3D view controls',exact:true}).getByText('More',{exact:true});
+  await viewMore.click();
   const save=page.getByRole('button',{name:'Save current camera',exact:true});
   await expect(save).toBeEnabled();
   await save.click();
+  await viewMore.click();
   await expect.poll(async()=>(await objects(page)).cameras).toBeGreaterThan(0);
   await expect.poll(async()=>(await objects(page)).items.map(item=>item.id)).toEqual([added.items[0].id]);
 
