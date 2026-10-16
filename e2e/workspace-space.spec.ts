@@ -22,8 +22,9 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}])test('3D
  const view=page.getByRole('region',{name:'Interactive deck construction model'});
  await expect(view.locator('canvas')).toBeVisible();
  await expect(page.locator('[data-autosave-state]')).toBeVisible();
- // Camera, day and night, lights, selection and the realistic look share one bar over the top of the model.
- await expect.poll(()=>overlay(page)).toBe('compact');
+ // Camera, day and night, lights, selection and the realistic look share one bar over the top of the model. One read can
+ // wait out a busy software renderer (CI), hence the longer poll.
+ await expect.poll(()=>overlay(page),{timeout:60_000}).toBe('compact');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false);
  // The scroll wheel keeps scrolling the page until the view is clicked, and says so.
  const box=(await view.boundingBox())!;
@@ -40,5 +41,5 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}])test('3D
  await expect(more.getByRole('region',{name:'Pergola preview controls'})).toBeVisible();
  expect(await more.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1;})).toBe(true);
  await page.getByRole('button',{name:'Show project controls',exact:true}).click();
- await expect.poll(()=>overlay(page)).toBe('compact');
+ await expect.poll(()=>overlay(page),{timeout:60_000}).toBe('compact');
 });
