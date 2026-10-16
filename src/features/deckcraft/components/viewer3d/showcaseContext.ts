@@ -166,8 +166,8 @@ function grid(name:string,x0:number,z0:number,x1:number,z1:number,nx:number,nz:n
  return {name,nx,nz,vertices};
 }
 
-/** Neighbouring yards and driveways outside the fence. The existing far lawn continues past these
- * grids and, with the horizon band, fades into the photographed sky. */
+/** Neighbouring yards and driveways outside the fence. The far lawn continues past these grids to the distant tree
+ * line (horizonBelt.ts) and fades into the sky's own horizon colour (skyShade.ts). */
 export function showcaseGround(bounds:LotBounds,elevationIn:number,slopePct:number):GroundGrid[] {
  const baseY=(elevationIn-.7)/12;
  const none=()=>0;

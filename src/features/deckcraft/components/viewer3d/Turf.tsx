@@ -15,6 +15,8 @@ import {useFixtureLit} from './fixtureLighting';
 import {lawnTufts} from './lawnTufts';
 import GrassBlades from './GrassBlades';
 import {useRenderQuality} from './SceneRenderQuality';
+import {SCENE_LOOK} from './sceneLook';
+import {beltGeometry,beltMaterial,beltRadii} from './horizonBelt';
 import type {LandscapeObject} from '../../landscapeTypes';
 import {landscapeBedAreas} from '../../landscapeModel';
 
@@ -53,6 +55,13 @@ export default function Turf({width,depth,radius:_radius,yard,finished=true,land
  const bounds=useMemo<GroundBounds>(()=>{const tw=yard.terrain.widthFt*12,td=yard.terrain.depthFt*12;const b=yard.siteSurface?.bounds,points=pools.flatMap(p=>p.excavationFootprints.flat()),xs=points.map(p=>p.x),zs=points.map(p=>p.y),minX=Math.min(width/2-tw/2,b?.minX??Infinity,...xs.map(x=>x-24)),minZ=Math.min(depth/2-td/2,b?.minZ??Infinity,...zs.map(z=>z-24)),maxX=Math.max(width/2+tw/2,b?.maxX??-Infinity,...xs.map(x=>x+24)),maxZ=Math.max(depth/2+td/2,b?.maxZ??-Infinity,...zs.map(z=>z+24));return {minX,minZ,width:maxX-minX,depth:maxZ-minZ};},[yard,width,depth,pools]);
  const geometry=useMemo(()=>groundGeometry(yard,cuts,width,depth,bounds,finished?'proposed':'existing'),[yard,cuts,width,depth,bounds,finished]);
  useEffect(()=>()=>geometry.dispose(),[geometry]);
+ // Past the yard the far lawn fades into the sky (lawnSurface.ts): the far ring's centre, and how far round it the yard reaches.
+ // The distant tree line round the yard, on the far ring (horizonBelt.ts).
+ const [beltNear,beltFar]=useMemo(()=>beltRadii(Math.hypot(bounds.width,bounds.depth)/24),[bounds]);
+ const belt=useMemo(()=>beltGeometry(beltNear,beltFar),[beltNear,beltFar]),beltLook=useMemo(()=>beltMaterial(gl,beltNear,beltFar),[gl,beltNear,beltFar]);
+ useEffect(()=>()=>belt.dispose(),[belt]);useEffect(()=>()=>beltLook.dispose(),[beltLook]);
+ const farRing=geometry.userData.farRing as {cx:number;cz:number;mid:number};
+ useEffect(()=>{const a=material.userData.aerial;a.uLawnCentre.value.set(width/2,bounds.minZ+bounds.depth/2);a.uYardIn.value=Math.hypot(bounds.width,bounds.depth)/2+SCENE_LOOK.sky.aerial.yardMarginFt*12;invalidate();},[material,bounds,width,invalidate]);
  // The survey perimeter is bridged in both views: a measured patch higher or lower than the illustrative
  // lawn otherwise leaves an open seam (sky shows through). The faces are display only, as in inspection.
  const edges=useMemo(()=>groundEdgeGeometry(yard,finished?'proposed':'existing',finished?[...pools.flatMap(p=>p.permanentExclusionFootprints),...patioDisplayFootprints(yard),...sunkenStepDisplayFootprints(yard),...wallDisplayFootprints(yard)]:pools.flatMap(p=>p.excavationFootprints),true,finished?patioDisplayFootprints(yard):[]),[yard,finished,pools]);
@@ -76,6 +85,7 @@ export default function Turf({width,depth,radius:_radius,yard,finished=true,land
  const tufts=useMemo(()=>bladesReady?lawnTufts(yard,width,depth,bladeMasks,budget,focus):[],[bladesReady,yard,width,depth,bladeMasks,budget,focus]);
  return <group name="textured-lawn">
   <mesh name="lawn-to-the-horizon" receiveShadow geometry={geometry}><primitive object={material} attach="material"/></mesh>
+  <mesh name="horizon-belt" geometry={belt} material={beltLook} position={[farRing.cx,farRing.mid,farRing.cz]} renderOrder={-1} raycast={()=>null} userData={{photoSkip:true}}/>
   {edges.getAttribute('position').count>0&&<mesh name={finished?"defined-grade-earth-faces":"survey-construction-cut-faces"} geometry={edges} material={soil} dispose={null} userData={{constructionInspection:!finished,measuredTransition:finished}} receiveShadow></mesh>}
   {/* Where a patio meets ground higher or lower than itself: the dig still to grade, its base left standing, or the
       stone edge course holding its raised side (PatioEdges3D.tsx; it draws nothing for a yard without plain paving). */}
