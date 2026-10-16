@@ -146,7 +146,7 @@ export default function HouseFacade({span,height,openings,hidden=NONE,finish,eve
  const pick=onSelectHouseWall&&((e:ThreeEvent<MouseEvent>)=>{if(e.delta>4)return;e.stopPropagation();onSelectHouseWall(wallId);invalidate();});
  const picked=!!selectedHouseWallId&&(selectedHouseWallId===wallId||selectedHouseWallId===blockId);
  const trim=useMemo(()=>{const boxes:Box[]=[];for(const o of shapes){for(const side of [-1,1])boxes.push({x:o.x+side*(o.w/2+1.5),y:o.y,z:1.8,w:3,h:o.h+6,d:2.2});for(const side of [-1,1])boxes.push({x:o.x,y:o.y+side*(o.h/2+1.5),z:1.8,w:o.w,h:3,d:2.2});}for(const x of [-span/2+1.5,span/2-1.5])boxes.push({x,y:height/2,z:1.2,w:3,h:height,d:1.8});boxes.push({x:0,y:height-2,z:1.5,w:span,h:4,d:2});return boxes;},[span,height,shapes]);
- const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags),polish=flags.quality&&flags.post;
+ const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags),polish=(flags.quality||flags.realistic)&&flags.post;
  return <group ref={facadeRef} userData={{pickPartId:`wall:${wallId}`}} onClick={pick}>
   <HouseParts name="wall-with-actual-opening-cutouts" items={split?split.upper:wall} color={look.backing} surface={backingSurface(look.cladding)}/>
   <HouseParts items={skins.skin.pieces} color={look.color} name={look.partName} variation={look.variation} roughness={look.roughness} metalness={look.metalness} surface={claddingSurface(look.cladding)}/>

@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useSyncExternalStore} from 'react';
 import {useThree} from '@react-three/fiber';
 import {chooseRenderQuality,rendererFacts} from './renderQuality';
-import {applyShowcaseSearch,getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../showcaseMode';
+import {applyShowcaseSearch,getShowcaseFlags,getShowcaseServerFlags,realisticPreference,setShowcaseFlags,subscribeShowcase} from '../../showcaseMode';
 
 export function useRenderQuality(){
  const gl=useThree(s=>s.gl),narrow=useThree(s=>s.size.width<600);
@@ -24,6 +24,9 @@ export function ShowcaseModeSync(){
  const invalidate=useThree(s=>s.invalidate),gl=useThree(s=>s.gl);
  const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
  useEffect(()=>{applyShowcaseSearch();},[]);
- useEffect(()=>{Object.assign(gl.domElement.dataset,{showcaseContext:flags.context?'1':'0',showcaseHour:flags.hour,showcasePost:flags.post?'1':'0'});invalidate();},[flags,gl,invalidate]);
+ // The realistic look: on for a high-tier renderer unless the viewer has turned it off on this device.
+ const narrow=useThree(s=>s.size.width<600);
+ useEffect(()=>{const pref=realisticPreference(),tier=chooseRenderQuality(rendererFacts(gl),narrow,false).tier;setShowcaseFlags({realistic:pref==='on'||(pref===null&&tier==='high')});},[gl,narrow]);
+ useEffect(()=>{Object.assign(gl.domElement.dataset,{showcaseContext:flags.context?'1':'0',realisticLook:flags.realistic?'1':'0',showcaseHour:flags.hour,showcasePost:flags.post?'1':'0'});invalidate();},[flags,gl,invalidate]);
  return null;
 }
