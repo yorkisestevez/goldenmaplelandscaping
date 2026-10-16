@@ -5,7 +5,7 @@ import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentCon
 const read=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.read());
 test('right-click applies a drawn area and breaker as one undoable edit each',async({page,context})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
- await context.addInitScript(configuration=>localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration})),{...DEFAULT_DECK,deckType:'Freestanding',houseVisible:false,stairFlights:0,railingType:'None',width:20,length:12,deckingMaterial:'tt_prime_plus'});
+ await context.addInitScript(configuration=>localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration})),{...DEFAULT_DECK,deckType:'Freestanding',houseVisible:false,stairFlights:0,railingType:'None',width:20,length:12,deckingMaterial:'tt_prime_plus',deckingColor:'Coconut Husk'});
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({status:200,body:''}));
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/deck-designer/');await expect.poll(async()=>{try{return (await read(page)).ready;}catch{return false;}}).toBe(true);
