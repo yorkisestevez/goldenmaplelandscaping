@@ -4,11 +4,12 @@ import {Lightformer} from '@react-three/drei';
 import {EnvironmentMap,EnvironmentPortal} from './sceneEnvironment';
 import {RGBELoader} from 'three-stdlib';
 import * as THREE from 'three';
-import {SKY_DATA as SKY,skyStrength,skyYaw,VISIBLE_SKY_MIN_DEG,visibleSkyStrength,visibleSkyHorizon,type Lighting} from './skyModel';
+import {SKY_DATA as SKY,skyStrength,skyYaw,visibleSkyStrength,visibleSkyHorizon,type Lighting} from './skyModel';
 import dayLighting from './assets/sky/sky-day-ibl.hdr?url';
 import eveningLighting from './assets/sky/sky-evening-ibl.hdr?url';
 import {SCENE_LOOK} from './sceneLook';
-import {DAY_SKY_BLEND,DAY_SKY_GAIN,DAY_SKY_GREEN,DAY_SKY_RED,GOLDEN_SKY_BLEND,GOLDEN_SKY_BLUE,GOLDEN_SKY_GAIN,GOLDEN_SKY_GREEN,GOLDEN_SKY_RED,SHOWCASE_GOLDEN_FILL,SHOWCASE_SKY_FILL} from './showcaseGrade';
+import {SHOWCASE_GOLDEN_FILL,SHOWCASE_SKY_FILL} from './showcaseGrade';
+import {SKY_PARS,SKY_RADIANCE,hazeColour,skyUniforms} from './skyShade';
 import {SHOWCASE_CLEAR_FOG,SHOWCASE_FOG_DENSITY,getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../showcaseMode';
 
 /**
@@ -23,55 +24,24 @@ const {sky:LOOK}=SCENE_LOOK;
 const DOME_VERTEX=/* glsl */`
 varying vec3 vDir;
 void main(){vDir=position;vec4 p=projectionMatrix*modelViewMatrix*vec4(position,1.);gl_Position=p.xyww;}`;
-const DOME_FRAGMENT=/* glsl */`
-uniform sampler2D lighting;uniform mat3 turn;uniform float minimumElevation,strength,uHorizonBand,uRich,uWarm,uSkyline,warmth;
+// The sky's colour comes from skyShade.ts, which the far lawn shares so the two meet at the same colour.
+const DOME_FRAGMENT=/* glsl */`${SKY_PARS}${SKY_RADIANCE}
 varying vec3 vDir;
-const float PI=3.141592653589793;
-void main(){
-  vec3 d=normalize(turn*vDir);
-  float el=asin(clamp(d.y,-1.,1.)),u=atan(d.z,d.x)/(2.*PI)+.5,seam=fract(u+.5);
-  // The original photo's upper sky becomes the visible hemisphere. The HDRI
-  // that illuminates and reflects from the design is unchanged. Neighbourhood
-  // mode keeps that same clean sample: the photo's ground ring is a dark flat
-  // band with vertical seams, and a corner camera would otherwise show it.
-  float displayed=max(0.,el),cleanEl=minimumElevation+displayed*(1.-minimumElevation/(PI*.5));
-  float sampleEl=cleanEl+uHorizonBand*0.,v=sampleEl/PI+.5;
-  float dux=abs(dFdx(u))<abs(dFdx(seam))?dFdx(u):dFdx(seam),duy=abs(dFdy(u))<abs(dFdy(seam))?dFdy(u):dFdy(seam);
-  vec3 sky=textureGrad(lighting,vec2(u,v),vec2(dux,dFdx(v)),vec2(duy,dFdy(v))).rgb;
-  // Correct after exposure. A lift applied to the dim photograph sits under the neutral toe and prints as cyan.
-  vec3 exposed=max(sky,vec3(0.0))*strength*mix(1.0,${DAY_SKY_GAIN},uRich)*mix(1.0,${GOLDEN_SKY_GAIN},uWarm);
-  float luma=dot(exposed,vec3(0.2126,0.7152,0.0722));
-  float lead=max(exposed.b,luma);
-  vec3 natural=vec3(lead*${DAY_SKY_RED},lead*${DAY_SKY_GREEN},lead);
-  float naturalL=max(dot(natural,vec3(0.2126,0.7152,0.0722)),0.0001);
-  float skyish=smoothstep(0.0,0.06,exposed.b-exposed.g)*uRich;
-  exposed=mix(exposed,natural*(luma/naturalL),${DAY_SKY_BLEND}*skyish);
-  vec3 warmTone=vec3(luma*${GOLDEN_SKY_RED},luma*${GOLDEN_SKY_GREEN},luma*${GOLDEN_SKY_BLUE});
-  float warmL=max(dot(warmTone,vec3(0.2126,0.7152,0.0722)),0.0001);
-  exposed=mix(exposed,warmTone*(luma/warmL),${GOLDEN_SKY_BLEND}*uWarm);
-  // The clean upper sky is stretched onto the horizon, so a bright patch in that
-  // sample would sit as a smeared strip. Showcase fades the lowest sky into a
-  // fixed tree-line haze. The colour does not follow the sample's luminance.
-  float skyline=smoothstep(0.22,0.0,el)*uSkyline;
-  vec3 treeline=vec3(0.04,0.045,0.035)*strength;
-  // Warm glow just above the tree line at golden hour. The bottom stays the
-  // dark silhouette, and the colour is fixed so a bright sample cannot punch through.
-  float glow=smoothstep(0.20,0.07,el)*smoothstep(0.0,0.045,el)*uWarm*uSkyline;
-  exposed=mix(exposed,vec3(0.11,0.052,0.02)*strength,glow*0.62);
-  exposed=mix(exposed,treeline,skyline*mix(0.85,0.62,uWarm));
-  // warmth 0 leaves the sky as graded. A fly-through raises it only while grading golden hour.
-  exposed=mix(exposed,exposed*vec3(1.22,.78,.42),clamp(warmth,0.,1.));
-  gl_FragColor=vec4(max(exposed,vec3(0.0)),1.);
-}`;
+void main(){gl_FragColor=vec4(skyRadiance(vDir),1.);}`;
 
 /** The clean photographed sky, following the camera and drawn behind everything. */
-function SkyDome({lighting,yaw,strength,horizonBand,rich,warm,skyline}:{lighting:THREE.Texture;yaw:number;strength:number;horizonBand:boolean;rich:boolean;warm:boolean;skyline:boolean}){
+function SkyDome({lighting,yaw,strength,horizonBand,rich,warm,skyline,haze,hazeRgb}:{lighting:THREE.Texture;yaw:number;strength:number;horizonBand:boolean;rich:boolean;warm:boolean;skyline:boolean;haze:number;hazeRgb:[number,number,number]}){
+  const gl=useThree(s=>s.gl),invalidate=useThree(s=>s.invalidate);
+  // The uniforms are the renderer's shared sky set (skyShade.ts): the far lawn reads them too.
   const material=useMemo(()=>new THREE.ShaderMaterial({
-    uniforms:{lighting:{value:null},turn:{value:new THREE.Matrix3()},minimumElevation:{value:VISIBLE_SKY_MIN_DEG*Math.PI/180},strength:{value:1},uHorizonBand:{value:0},uRich:{value:0},uWarm:{value:0},uSkyline:{value:0},warmth:{value:0}},
+    uniforms:skyUniforms(gl),
     vertexShader:DOME_VERTEX,fragmentShader:DOME_FRAGMENT,side:THREE.BackSide,depthWrite:false,fog:false,
-  }),[]);
+  }),[gl]);
   useEffect(()=>()=>material.dispose(),[material]);
   const u=material.uniforms;u.lighting.value=lighting;u.strength.value=strength;u.uHorizonBand.value=horizonBand?1:0;u.uRich.value=rich?1:0;u.uWarm.value=warm?1:0;u.uSkyline.value=skyline?1:0;
+  u.uHaze.value=haze;u.uHazeColour.value.set(...hazeRgb);
+  // The lawn fades into the sky only while a dome is up (counted, as the evening sky can replace the day's in one commit).
+  useEffect(()=>{u.uSkyReady.value+=1;invalidate();return()=>{u.uSkyReady.value=Math.max(0,u.uSkyReady.value-1);};},[u,invalidate]);
   u.turn.value.setFromMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0,yaw,0))).transpose();
   return <mesh name="sky-dome" material={material} frustumCulled={false} renderOrder={-1} raycast={()=>null}
     ref={mesh=>{if(mesh)mesh.onBeforeRender=(_r,_s,camera)=>{mesh.position.copy(camera.position);mesh.updateMatrixWorld();};}}>
@@ -95,11 +65,14 @@ function SkyOf({lighting,strength=visibleSkyStrength(lighting),illumination=skyS
   // Trees and haze come with the realistic look too; the grade follows it at the device's own budget.
   const context=flags.context||flags.realistic,graded=(flags.quality||flags.realistic)&&flags.post&&lighting==='day',dayBlue=graded&&flags.hour!=='golden',goldenSky=graded&&flags.hour==='golden';
   const horizon=useMemo(()=>(context?visibleSkyHorizon(map,0):visibleSkyHorizon(map))??data.horizonColor,[map,data,context]);
+  // The haze over the horizon (and so the colour the far lawn ends in) comes from the clean sky's horizon row in every look.
+  const {horizonHaze:HAZE}=SCENE_LOOK.sky,hazeRgb=useMemo(()=>hazeColour(visibleSkyHorizon(map)??data.horizonColor as [number,number,number],strength),[map,data,strength]);
+  const haze=lighting==='evening'?HAZE.evening:goldenSky?HAZE.golden:context?HAZE.realistic:HAZE.editor;
   // The viewer keeps one fog for its life (adding or removing fog recompiles every material); the sky only recolours it.
   useEffect(()=>{gl.domElement.dataset.sky=lighting;if(!scene.fog)return;scene.fog.color.setRGB(horizon[0],horizon[1],horizon[2]).multiplyScalar(strength);if(scene.fog instanceof THREE.FogExp2)scene.fog.density=context?(graded?SHOWCASE_CLEAR_FOG:SHOWCASE_FOG_DENSITY):SCENE_LOOK.sky.fogDensity;invalidate();},[scene,horizon,strength,invalidate,context,graded,gl,lighting]);
   return <>
     <EnvironmentMap map={map} environmentIntensity={graded?illumination*(goldenSky?SHOWCASE_GOLDEN_FILL:SHOWCASE_SKY_FILL):illumination} environmentRotation={new THREE.Euler(0,yaw,0)}/>
-    <SkyDome lighting={map} yaw={yaw} strength={strength} horizonBand={context} rich={dayBlue} warm={goldenSky} skyline={(flags.quality||flags.realistic)&&flags.post}/>
+    <SkyDome lighting={map} yaw={yaw} strength={strength} horizonBand={context} rich={dayBlue} warm={goldenSky} skyline={(flags.quality||flags.realistic)&&flags.post} haze={haze} hazeRgb={hazeRgb}/>
   </>;
 }
 

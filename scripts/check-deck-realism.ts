@@ -15,6 +15,8 @@ import {DECKING_CATALOGUE} from '../src/features/deckcraft/manufacturerCatalog';
 import {HDRLoader} from 'three/examples/jsm/loaders/HDRLoader.js';
 import {SKY_DATA,skyStrength,skyYaw,sunDirection} from '../src/features/deckcraft/components/viewer3d/skyModel';
 import {FAR_RING_IN,LAWN_CHUNKS,groundGeometry,lawnMaterial} from '../src/features/deckcraft/components/viewer3d/lawnSurface';
+import {lawnAerial} from '../src/features/deckcraft/components/viewer3d/skyShade';
+import {BELT,BELT_FRAGMENT,beltGeometry,beltRadii} from '../src/features/deckcraft/components/viewer3d/horizonBelt';
 import {occlusionUv} from '../src/features/deckcraft/components/viewer3d/groundOcclusion';
 import {buildYardModel,yardClip} from '../src/features/deckcraft/yardModel';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -253,7 +255,7 @@ ok(shipped.every(f=>readme.includes(f)),'Every shipped texture and sky file has 
 const assetBytes=readdirSync(ASSETS,{recursive:true}).map(String).filter(f=>/\.(webp|hdr|jpg|png|json)$/.test(f)).reduce((n,f)=>n+readFileSync(`${ASSETS}${f}`).length,0);
 ok(assetBytes<=15*1024*1024&&!readdirSync(ASSETS).some(f=>f.startsWith('grass008')),`The viewer's scanned assets total ${(assetBytes/1048576).toFixed(1)} MB, within 15 MB, and the old lawn is gone`);
 {
-  const viewer3=read(`${VIEWER}Deck3DViewer.tsx`),environment3=read(`${VIEWER}Environment3D.tsx`),sky=read(`${VIEWER}Sky3D.tsx`);
+  const viewer3=read(`${VIEWER}Deck3DViewer.tsx`),environment3=read(`${VIEWER}Environment3D.tsx`),sky=read(`${VIEWER}Sky3D.tsx`)+read(`${VIEWER}skyShade.ts`);
   ok(viewer3.includes('<Suspense fallback={<StudioLight evening={evening}/>}><Sky3D evening={evening}/></Suspense>')&&viewer3.includes('near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar'),'The real sky loads behind the studio light, and the camera sees to the sky dome');
   ok(environment3.includes('castShadow={!evening}')&&environment3.includes('SUN.clone().multiplyScalar(radius)')&&!environment3.includes('hemisphereLight'),'The scene’s sun takes the HDRI’s place (none in the evening), and no hemisphere light doubles the sky');
   ok(sky.includes('name="sky-dome"')&&sky.includes('depthWrite:false,fog:false')&&sky.includes('scene.fog.color.setRGB(')&&viewer3.includes('<fogExp2 attach="fog" args={[')&&sky.includes('preloadEvening()')&&sky.includes("fallback={<SkyOf lighting=\"day\" strength={skyStrength('evening').background} illumination={skyStrength('evening').environment}/>}"),'The dome draws behind everything without fog; one haze lasts the viewer’s life (adding fog recompiles every material) and the sky only recolours it; the evening sky preloads once the day is in, and the dimmed day sky stands in while it loads');
@@ -266,8 +268,21 @@ for(const [name,lookup] of LAWN_CHUNKS)ok((THREE.ShaderChunk as Record<string,st
 {
   const lawn=JSON.parse(read(`${ASSETS}lawn.json`)),[r,g,b]=lawn.meanSrgb,saturation=(Math.max(r,g,b)-Math.min(r,g,b))/Math.max(r,g,b);
   ok(g>r&&g>b&&saturation<=.5,`The lawn is a natural green (mean sRGB ${lawn.meanSrgb.join(', ')}, saturation ${saturation.toFixed(2)})`);
+  const yard0=buildYardModel(DEFAULT_DECK);
   const surface=lawnMaterial();ok(surface.normalScale.x<=.35&&surface.normalScale.y<=.35,'Short lawn relief stays fine rather than pebble-like');surface.dispose();
-  const yard=buildYardModel(DEFAULT_DECK),tw=yard.terrain.widthFt*12,td=yard.terrain.depthFt*12,width=192,depth=144,bounds={minX:width/2-tw/2,minZ:depth/2-td/2,width:tw,depth:td};
+  // The far lawn ends in the dome's own colour (skyShade.ts), never over the yard or within AERIAL.nearFt of the camera.
+  const shader={vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader,uniforms:{}} as unknown as THREE.WebGLProgramParametersWithUniforms;
+  const air=lawnMaterial();air.onBeforeCompile(shader,{} as THREE.WebGLRenderer);air.dispose();
+  ok(shader.fragmentShader.includes('vec3 skyRadiance(')&&shader.fragmentShader.includes('skyRadiance(vec3(lawnH.x,0.,lawnH.y)/lawnD)')&&!shader.fragmentShader.includes('#include <fog_fragment>')&&!shader.fragmentShader.includes('const float PI')&&'uSkyReady' in shader.uniforms&&'uLawnCentre' in shader.uniforms,'The far lawn fades into the sky dome’s own horizon colour, with the dome’s function and uniforms');
+  const {aerial,horizonHaze}=SCENE_LOOK.sky,yardIn=Math.hypot(yard0.terrain.widthFt*12,yard0.terrain.depthFt*12)/2+aerial.yardMarginFt*12;
+  ok([0,100,1000,2400].every(cam=>lawnAerial(cam,yardIn,yardIn,FAR_RING_IN)===0)&&[0,50,aerial.nearFt].every(cam=>lawnAerial(cam,FAR_RING_IN*.6,yardIn,FAR_RING_IN)===0),'No haze on the yard itself, or on lawn nearer the camera than the aerial ramp starts');
+  ok([0,aerial.nearFt,aerial.farFt,2400].every(cam=>lawnAerial(cam,FAR_RING_IN*aerial.rimTo,yardIn,FAR_RING_IN)>=.999)&&lawnAerial(aerial.farFt,FAR_RING_IN*.8,yardIn,FAR_RING_IN)>=.999,'The far lawn is wholly the sky’s colour by the rim, from any camera');
+  ok(horizonHaze.topRad<=.1&&SCENE_LOOK.sky.fogDensity===.0011,'The horizon haze stays within the lowest few degrees, and the scene’s fog is unchanged');
+  // The distant tree line: outside the yard, inside the lawn's rim, hazed with the lawn's own air and sky colour.
+  const [beltNear,beltFar]=beltRadii(Math.hypot(yard0.terrain.widthFt,yard0.terrain.depthFt)/2),belt=beltGeometry(beltNear,beltFar);
+  ok(beltNear>=BELT.nearMinFt&&beltNear*12>yardIn+aerial.yardRampFt*12&&beltFar<.9*FAR_RING_IN/12&&beltFar>beltNear,`The tree line stands ${beltNear} and ${beltFar} ft out: past the yard, inside the lawn's rim`);
+  ok(belt.getAttribute('position').count===BELT.segments*12&&BELT_FRAGMENT.includes('vec3 skyRadiance(')&&BELT_FRAGMENT.includes('skyRadiance(vec3(h.x,0.,h.y)/d)')&&BELT_FRAGMENT.includes('1./uAerialNear-1./d'),'The tree line is two rings shaded with the lawn’s air and the dome’s horizon colour');belt.dispose();
+  const yard=yard0,tw=yard.terrain.widthFt*12,td=yard.terrain.depthFt*12,width=192,depth=144,bounds={minX:width/2-tw/2,minZ:depth/2-td/2,width:tw,depth:td};
   const geometry=groundGeometry(yard,yardClip(yard.excavationRegions.map(e=>e.polygon)),width,depth,bounds),pos=geometry.getAttribute('position');
   let down=0,far=0;const a=new THREE.Vector3(),b2=new THREE.Vector3(),c=new THREE.Vector3();
   for(let i=0;i<pos.count;i+=3){a.fromBufferAttribute(pos,i);b2.fromBufferAttribute(pos,i+1);c.fromBufferAttribute(pos,i+2);if(b2.clone().sub(a).cross(c.clone().sub(a)).y<=0)down++;for(const v of [a,b2,c])far=Math.max(far,Math.hypot(v.x-width/2,v.z-(bounds.minZ+td/2)));}

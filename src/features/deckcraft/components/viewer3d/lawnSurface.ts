@@ -8,6 +8,8 @@ import {occlusionUv,type GroundBounds} from './groundOcclusion';
 import {snapshotHeight} from './siteRendering';
 import {lawnGround,surveyHeightOn,SURVEY_FEATHER_IN} from './lawnGround';
 import {insideRings} from '../../patioGroundContact';
+import {SKY_PARS,SKY_RADIANCE,skyUniforms} from './skyShade';
+import {SCENE_LOOK} from './sceneLook';
 
 /**
  * The lawn's surface (Real Life G3), apart from its files so the check scripts can test it: the patched material
@@ -18,19 +20,22 @@ const toLinear=(v:number)=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.
 /** The lawn's mean colour (linear), for the distance fade and the blades. */
 export const LAWN_MEAN=LAWN.meanSrgb.map(toLinear) as [number,number,number];
 
+const {aerial:AERIAL}=SCENE_LOOK.sky;
 const LAWN_FRAGMENT_HEAD=/* glsl */`
 uniform float uTile;uniform vec3 uMean;
 varying vec2 vLawn;
 float lawnHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float lawnNoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(lawnHash(i),lawnHash(i+vec2(1.,0.)),f.x),mix(lawnHash(i+vec2(0.,1.)),lawnHash(i+1.),f.x),f.y);}
-vec2 lawnUv,lawnDx,lawnDy,lawnA,lawnB;float lawnMix,lawnFade,lawnDry;
+vec2 lawnUv,lawnDx,lawnDy,lawnA,lawnB;float lawnMix,lawnFade,lawnFar,lawnDry;
 vec4 lawnTex(sampler2D t){return mix(textureGrad(t,lawnUv+lawnA,lawnDx,lawnDy),textureGrad(t,lawnUv+lawnB,lawnDx,lawnDy),lawnMix);}`;
 const LAWN_SETUP=/* glsl */`
   {
     lawnUv=vLawn/uTile;lawnDx=dFdx(lawnUv);lawnDy=dFdy(lawnUv);
     float k=lawnNoise(lawnUv*.37)*8.,f=fract(k);lawnA=sin(vec2(3.,7.)*floor(k));lawnB=sin(vec2(3.,7.)*(floor(k)+1.));lawnMix=smoothstep(.2,.8,f);
     lawnFade=smoothstep(1440.,4800.,length(vViewPosition)*12.);
-    lawnDry=smoothstep(.62,.9,lawnNoise(vLawn/240.+41.))*.15;
+    // Past the yard the 9-35 ft variation is under a pixel and only shimmers: it fades out with the texture there.
+    lawnFar=lawnFade*smoothstep(uYardIn,uYardIn+${(AERIAL.yardRampFt*12).toFixed(1)},length(vLawn-uLawnCentre));
+    lawnDry=smoothstep(.62,.9,lawnNoise(vLawn/240.+41.))*.15*(1.-lawnFar);
   }`;
 const LAWN_COLOUR=/* glsl */`
   {
@@ -39,11 +44,33 @@ const LAWN_COLOUR=/* glsl */`
     // Subtle alternating blade direction from mowing, fixed in world space.
     float stripe=sin((vLawn.x*.8+vLawn.y*.6)/42.0);
     bright*=1.+.035*stripe*(1.-lawnFade);
+    bright=mix(bright,1.,lawnFar*.8);
     // Fine scan contrast should read as short grass, not gravel; preserve its measured mean colour.
     diffuseColor.rgb=mix(diffuseColor.rgb,uMean,.14);
     diffuseColor.rgb=mix(diffuseColor.rgb*bright,uMean*bright,lawnFade);
     diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(1.35,1.12,.78),lawnDry);
   }`;
+
+/** The far lawn's air (replaces three's fog_fragment): the scene's fog as before, then, from AERIAL.nearFt out and
+ * wholly at the rim, the sky dome's own colour on the fragment's azimuth (skyShade.ts), so the ground's edge meets the
+ * sky at the same colour. Off while no sky is up, in the orthographic Above view, and over the yard itself. */
+const LAWN_AIR=/* glsl */`
+#ifdef USE_FOG
+{
+ #ifdef FOG_EXP2
+ float fogFactor=1.-exp(-fogDensity*fogDensity*vFogDepth*vFogDepth);
+ #else
+ float fogFactor=smoothstep(fogNear,fogFar,vFogDepth);
+ #endif
+ vec2 lawnH=vLawnWorld.xz-cameraPosition.xz;float lawnD=max(length(lawnH),1.);
+ float lawnQ=clamp((1./uAerialNear-1./lawnD)/(1./uAerialNear-1./uAerialFar),0.,1.),lawnOut=length(vLawn-uLawnCentre);
+ lawnQ=lawnQ*lawnQ*(3.-2.*lawnQ)*smoothstep(uYardIn,uYardIn+${(AERIAL.yardRampFt*12).toFixed(1)},lawnOut);
+ float lawnRim=smoothstep(${(AERIAL.rimFrom*FAR_RING_IN).toFixed(1)},${(AERIAL.rimTo*FAR_RING_IN).toFixed(1)},lawnOut);
+ float lawnAir=step(.5,uSkyReady)*(isOrthographic?0.:1.)*max(lawnQ,lawnRim);
+ vec3 lawnSky=skyRadiance(vec3(lawnH.x,0.,lawnH.y)/lawnD);
+ gl_FragColor.rgb=mix(mix(gl_FragColor.rgb,fogColor,fogFactor),lawnSky,lawnAir);
+}
+#endif`;
 
 function chunk(name:string,from:string,to:string){
   const source=(THREE.ShaderChunk as Record<string,string>)[name];
@@ -53,14 +80,20 @@ function chunk(name:string,from:string,to:string){
 /** The chunks and lookups the lawn patch rewrites (check-deck-realism checks they exist). */
 export const LAWN_CHUNKS:[string,string][]=[['map_fragment','texture2D( map, vMapUv )'],['roughnessmap_fragment','texture2D( roughnessMap, vRoughnessMapUv )'],['normal_fragment_maps','texture2D( normalMap, vNormalMapUv )'],['normal_fragment_maps','mapN.xy *= normalScale;']];
 
-/** The lawn material: standard, with the anti-tiling, variation and distance fade patched in. */
+/** The lawn material: standard, with the anti-tiling, variation, distance fade and aerial perspective patched in.
+ * userData.aerial holds the far ring's centre and the yard's radius (inches), which Turf.tsx sets. */
 export function lawnMaterial(){
   const m=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:1,metalness:0,normalScale:new THREE.Vector2(.3,.3)});
-  m.customProgramCacheKey=()=>'dc-lawn-v3';
-  m.onBeforeCompile=shader=>{
+  // Until Turf sets the yard (a retaining wall's bank never does), the guard covers everything: no haze.
+  const aerial={uLawnCentre:{value:new THREE.Vector2()},uYardIn:{value:1e9}};m.userData.aerial=aerial;
+  m.customProgramCacheKey=()=>'dc-lawn-v4';
+  m.onBeforeCompile=(shader,renderer)=>{
+    if(!shader.fragmentShader.includes('#include <fog_fragment>'))throw new Error('Turf: the lawn shader no longer has fog_fragment');
+    Object.assign(shader.uniforms,skyUniforms(renderer),aerial);
     shader.uniforms.uTile={value:TILE_IN};shader.uniforms.uMean={value:new THREE.Vector3(...LAWN_MEAN)};
-    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vLawn;').replace('#include <uv_vertex>','#include <uv_vertex>\n  vLawn=position.xz;');
-    shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>\n${LAWN_FRAGMENT_HEAD}`)
+    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vLawn;varying vec3 vLawnWorld;').replace('#include <uv_vertex>','#include <uv_vertex>\n  vLawn=position.xz;vLawnWorld=(modelMatrix*vec4(position,1.)).xyz;');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>\n${SKY_PARS}uniform vec2 uLawnCentre;uniform float uYardIn;varying vec3 vLawnWorld;\n${SKY_RADIANCE}${LAWN_FRAGMENT_HEAD}`)
+      .replace('#include <fog_fragment>',LAWN_AIR)
       .replace('#include <map_fragment>',`${LAWN_SETUP}\n${chunk('map_fragment','texture2D( map, vMapUv )','lawnTex( map )')}\n${LAWN_COLOUR}`)
       .replace('#include <roughnessmap_fragment>',`${chunk('roughnessmap_fragment','texture2D( roughnessMap, vRoughnessMapUv )','lawnTex( roughnessMap )')}\n  roughnessFactor=min(1.,roughnessFactor+.05*lawnDry/.25);`)
       .replace('#include <normal_fragment_maps>',chunk('normal_fragment_maps','texture2D( normalMap, vNormalMapUv )','lawnTex( normalMap )').replace('mapN.xy *= normalScale;','mapN.xy *= normalScale*(1.-lawnFade);'));
@@ -152,7 +185,10 @@ export function groundGeometry(yard:YardModel,cuts:{x:number;y:number}[][],width
   }}
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.setAttribute('uv1',new THREE.Float32BufferAttribute(uv1,2));
-  g.computeVertexNormals();return g;
+  g.computeVertexNormals();
+  // Where the far ring is centred and the height it flattens to (inches): the distant tree line stands there (horizonBelt.ts).
+  g.userData.farRing={cx,cz,mid};
+  return g;
 }
 
 /** Defined grade discontinuity faces, plus optional inspection cuts at the survey perimeter.

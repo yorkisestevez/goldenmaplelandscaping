@@ -22,7 +22,12 @@ export const SCENE_LOOK={
    * distance haze thickens to 10% at 300 ft; the sky dome sits inside the camera's far plane. */
   // A tree-filtered HDR has no extracted sun. Redistribute part of its measured horizontal irradiance to a
   // neutral directional key, keeping the same total energy. This gives rails and steps legible cast shadows.
-  sky:{sunAzimuthDeg:34.7,dayEnvironment:.55,dayFill:2.2,evening:.16,fogDensity:.0011,domeRadiusFt:1900,cameraNear:.25,cameraFar:2400},
+  sky:{sunAzimuthDeg:34.7,dayEnvironment:.55,dayFill:2.2,evening:.16,fogDensity:.0011,domeRadiusFt:1900,cameraNear:.25,cameraFar:2400,
+    /** Aerial perspective (skyShade.ts): the far lawn fades into the sky's own horizon colour from nearFt to farFt from the
+     * camera, never within yardMarginFt of the yard (ramping in over yardRampFt), and wholly at the 1500 ft rim. */
+    aerial:{nearFt:400,farFt:4000,yardMarginFt:60,yardRampFt:100,rimFrom:.9,rimTo:.975},
+    /** The pale air over the sky's lowest topRad radians: how much, per look, and its colour from the clean horizon row. */
+    horizonHaze:{editor:.6,realistic:.3,golden:.2,evening:.35,lift:1.25,desaturate:.5,topRad:.07}},
 };
 
 /** Device budgets are applied by the actual target/pass constructors, including
