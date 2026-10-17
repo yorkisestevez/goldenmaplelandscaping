@@ -40,11 +40,18 @@ function sizeOption(project: QuickProject, size: QuickSize): SizeOption {
   return option;
 }
 
+/** The estimator element each quick project is priced as. A walkway is laid in pavers, so it is the paver
+ *  (patio) element at walkway sizes — not the estimator's natural-stone element. */
+const ENGINE_ELEMENT: Record<Exclude<QuickProject, 'deck'>, 'patio' | 'wall' | 'full'> = {
+  patio: 'patio', walkway: 'patio', wall: 'wall', full: 'full',
+};
+
 function estimatorInput(project: Exclude<QuickProject, 'deck'>, amount: number, city: EstimatorLocationKey): EstimateInput {
+  const element = ENGINE_ELEMENT[project];
   return {
-    projectType: project,
-    selectedElements: project === 'full' ? [...FULL_BACKYARD_PREFILL] : [],
-    sizes: { ...ESTIMATOR_DEFAULT_SIZES, [project === 'full' ? 'patio' : project]: amount },
+    projectType: element,
+    selectedElements: element === 'full' ? [...FULL_BACKYARD_PREFILL] : [],
+    sizes: { ...ESTIMATOR_DEFAULT_SIZES, [element === 'full' ? 'patio' : element]: amount },
     details: {},
     conditions: { ...ESTIMATOR_DEFAULT_CONDITIONS },
     location: city,
@@ -72,9 +79,10 @@ export function quickRange({ project, size, city }: QuickRangeInput): QuickRange
   const summary = `${meta.label}, ${sizeText}, ${town}`;
   const band = `${money(low)}–${money(high)} + HST`;
 
-  const sizeKey = project === 'full' ? 'patio' : project;
+  const element = ENGINE_ELEMENT[project];
+  const sizeKey = element === 'full' ? 'patio' : element;
   const inWindow = option.amount >= ESTIMATOR_PREFILL_SIZE.min && option.amount <= ESTIMATOR_PREFILL_SIZE.max;
-  const params = new URLSearchParams({ type: project });
+  const params = new URLSearchParams({ type: element });
   if (inWindow) params.set('sqft', String(option.amount));
   params.set('city', city);
 

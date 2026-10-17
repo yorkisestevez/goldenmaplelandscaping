@@ -20,9 +20,9 @@ export default function PatioCostFactors() {
 
       <h2>The Starting Point</h2>
 
-      <p>As a baseline, a professionally installed, engineered interlocking patio from a reputable contractor in the region typically ranges from <strong>$35 to $65+ per square foot.</strong></p>
+      <p>As a baseline, a professionally installed, engineered interlocking patio from a reputable contractor in the region typically ranges <strong>around $40–$45 before HST</strong> per square foot for most 300–1,000 sq ft patios (typically $38–$64; smaller patios cost more per foot).</p>
 
-      <p>For a standard 400-square-foot patio (20' x 20'), you are looking at an investment of roughly <strong>$14,000 to $26,000.</strong></p>
+      <p>For a standard 400-square-foot patio (20' x 20'), you are looking at roughly <strong>$15,500 to $22,500 before HST</strong>, most likely about $16,500.</p>
 
       <p>Why is the range so wide? Because "square footage" is only one of five major variables that dictate the final price.</p>
 

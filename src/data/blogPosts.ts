@@ -42,7 +42,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
           {
     slug: "backyard-entertaining-wasaga-beach",
     title: "Outdoor Entertaining in Wasaga Beach: How to Build a Backyard That Works",
-    excerpt: "Build a Wasaga Beach backyard for entertaining with real 2026 costs: $18K–$65K for a full setup, $22–$28 per sq ft for interlocking patio, pergola included.",
+    excerpt: "Build a Wasaga Beach backyard for entertaining with real 2026 costs: $20K–$65K for a full setup, about $43 per sq ft for an interlocking patio, pergola included.",
     category: "Design",
     readTime: "11 min",
     image: "/images/projects/patio-pergola.jpg",
