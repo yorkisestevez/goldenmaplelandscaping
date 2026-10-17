@@ -4,7 +4,7 @@ import { computeEstimate, type EstimateInput } from '../src/utils/estimateEngine
 import type { EstimatorLocationKey } from '../src/data/locations';
 
 /**
- * Retaining-wall prices in the blog are the cost estimator's own (owner decision 2026-10-17: the engine's wall
+ * Retaining-wall prices on the site (blog posts, the retaining-walls service page, location cost tables) are the cost estimator's own (owner decision 2026-10-17: the engine's wall
  * allowance, about $330–$670 per linear foot by height at the default mid tier, is closer to what Golden Maple
  * charges than the old blog ranges). The posts carry plain text so the prerendered HTML stays crawlable; this
  * check recomputes every quoted figure from the engine so a rate change cannot leave a post behind.
@@ -118,4 +118,33 @@ const oro: EstimatorLocationKey = 'oro-medonte';
   ok(!/\$5,000 to \$10,000|\$7,000–\$17,000/.test(post), 'patio factors: superseded wall add-on figures are gone');
 }
 
-console.log(`BLOG WALL PRICES OK — ${checks} checks: every retaining-wall price in the blog is the estimator engine's (mid tier, accessible site).`);
+// ---- Retaining-walls service page: the planning rate (owner's "~$330–$670 per linear ft by height") ----
+{
+  const page = read('src/pages/services/RetainingWalls.tsx');
+  const rate = `${foot('Under 2ft', 'barrie').around}–${foot('4-6ft', 'barrie').around}`;
+  ok(page.includes(`rate="${rate}"`), `service page: planning rate is ${rate}`);
+  ok(page.includes(`rateDetail="per linear foot for walls from under 2 ft up to 4–6 ft high, about ${QUOTED_LENGTH} ft on an accessible site, before HST. A planning range, not a quote for your property."`), 'service page: rate unit and assumptions stated');
+  ok(!/\$60–\$140|per square foot of wall face/.test(page), 'service page: unsourced face-area rate is gone');
+  // The same rate feeds every town's retaining-walls page (meta description, JSON-LD priceDescription, visible rate).
+  const data = read('src/data/serviceLocations.ts');
+  const entry = /'retaining-walls': \{[\s\S]*?startingPriceText: '([^']*)',\s*perUnitText: '([^']*)'/.exec(data);
+  ok(entry, 'service-location data: retaining-walls entry found');
+  ok(entry![1] === rate, `service-location data: starting price is ${rate}`);
+  ok(entry![2] === `per linear foot before HST, for walls from under 2 ft up to 4–6 ft high (about ${QUOTED_LENGTH} ft, accessible site)`, 'service-location data: unit and assumptions stated');
+  ok(!/per square foot of wall face/.test(data), 'service-location data: unsourced face-area rate is gone');
+}
+
+// ---- Location pages: the retaining-wall row of each cost table ----
+for (const [file, town, fromLf, toLf] of [
+  ['OroMedonte', 'oro-medonte', 50, 100],
+  ['Innisfil', 'innisfil', 30, 60],
+  ['Springwater', 'springwater', 30, 60],
+] as Array<[string, EstimatorLocationKey, number, number]>) {
+  const page = read(`src/pages/locations/${file}.tsx`);
+  const cost = `$${to(wall(fromLf, '2-4ft', town).low, 500).toLocaleString('en-CA')} – $${to(wall(toLf, '2-4ft', town).high, 500).toLocaleString('en-CA')}`;
+  const row = `{ project: "Retaining wall (${fromLf}-${toLf} linear ft, 2-4 ft high, before HST)", range: "${cost}" },`;
+  ok(page.includes(row), `${file}: wall row is ${cost}`);
+  ok(!/\$8,000 – \$20,000|\$15,000 – \$40,000/.test(page), `${file}: superseded wall range is gone`);
+}
+
+console.log(`WALL PRICES OK — ${checks} checks: every retaining-wall price on the site (blog, service page, location pages) is the estimator engine's (mid tier, accessible site).`);

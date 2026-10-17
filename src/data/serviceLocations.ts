@@ -134,8 +134,8 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     shortName: 'Retaining Walls',
     blurb:
       'Engineered structural walls built with geogrid reinforcement to hold sloped lots flat — for decades, not seasons.',
-    startingPriceText: '$60–$140',
-    perUnitText: 'per square foot of wall face',
+    startingPriceText: '$330–$670',
+    perUnitText: 'per linear foot before HST, for walls from under 2 ft up to 4–6 ft high (about 50 ft, accessible site)',
     scope: [
       '3/4" clear stone footing on compacted aggregate',
       'Allan Block, Techo-Bloc Mini-Creta, or Permacon engineered units',

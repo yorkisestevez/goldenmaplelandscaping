@@ -41,7 +41,7 @@ const PRICING = [
   { project: "Interlocking patio (200-400 sq ft)", range: "$12,000 – $25,000" },
   { project: "Full backyard transformation", range: "$35,000 – $90,000" },
   { project: "Composite deck (200-350 sq ft)", range: "$15,000 – $35,000" },
-  { project: "Retaining wall (30-60 linear ft)", range: "$8,000 – $20,000" },
+  { project: "Retaining wall (30-60 linear ft, 2-4 ft high, before HST)", range: "$13,000 – $32,500" },
   { project: "Extended rural driveway", range: "$25,000 – $55,000" },
   { project: "Premium outdoor living space", range: "$90,000 – $160,000+" },
 ];
