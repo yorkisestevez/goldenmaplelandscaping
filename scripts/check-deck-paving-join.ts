@@ -91,7 +91,7 @@ near(nextPlane.x,firstPlane.x,'Same fall across');near(nextPlane.z,firstPlane.z,
 eq(joinNewPatio({yardFeatures:[first]},patio('apart',40,30,8,8)),patio('apart',40,30,8,8),'A patio drawn apart is left as drawn');
 eq(joinNewPatio({yardFeatures:[{...first,enabled:false}]},drawn),drawn,'A hidden patio is not continued');
 const base=design([patio('a',6,22,16,12,{color:'#555'})]);
-eq(fitNewPatio(base,patio('n',17,27,12,10)).color,'#555','Drawing over a patio continues it (fitNewPatio)');
+eq(joinNewPatio(base,fitNewPatio(base,patio('n',17,27,12,10))).color,'#555','Drawing over a patio continues it (the drawing tools fit, then join)');
 eq(newYardFeature('patio',{...base,yardFeatures:[patio('a',DEFAULT_DECK.width/2,DEFAULT_DECK.length+10,16,12,{color:'#555'})]}).color,'#aaa69b','The default placement never takes a neighbour\'s paving');
 const both=buildYardModel(design([first,next]));
 eq(rootOf(both,'drawn'),'first','The continued patio is laid as the same surface');
