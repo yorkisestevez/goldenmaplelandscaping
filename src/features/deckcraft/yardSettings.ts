@@ -1,4 +1,5 @@
 import {sampleSiteHeight} from './siteSurface';
+import {joinNewPatio} from './pavingLook';
 import {PAVER_BRANDS} from '../../data/carrPrices';
 import {GROUND_FIT_LIMITS,type DeckData,type TerrainConfig,type YardAllowances,type YardFeature,type YardFeatureKind} from './types';
 export const WALL_PRODUCTS=[{id:'segmental-concrete',name:'Segmental concrete wall'},{id:'armour-stone',name:'Armour stone wall'}];
@@ -26,12 +27,15 @@ export function newYardFeature(kind:YardFeatureKind,data:DeckData,at?:{xFt:numbe
   if(kind==='fire-feature')return newFireFeature(data,at);
   const xFt=at?.xFt??data.width/2,zFt=at?.zFt??data.length+10,heightIn=kind==='patio'?0:24,ground=sampleSiteHeight(data,xFt*12,zFt*12);
   if(kind!=='water-feature'&&!Number.isFinite(ground))throw Error('Survey the default feature centre before placing a fixed finished surface.');
-  return fitNewPatio(data,{...(kind!=='water-feature'?{finishedElevationIn:ground!+heightIn}:{}),...(kind==='patio'?{patioSlope:{xPct:0,zPct:0}}:{}),id:`${kind}-${crypto.randomUUID()}`,kind,name:kind==='patio'?'Patio':kind==='retaining-wall'?'Retaining wall':'Water feature',enabled:true,xFt,zFt,widthFt:kind==='patio'?16:kind==='retaining-wall'?16:6,depthFt:kind==='patio'?12:kind==='retaining-wall'?1:6,heightIn:kind==='patio'?0:kind==='retaining-wall'?24:24,rotationDeg:0,productId:kind==='patio'?PATIO_PRODUCTS[0].id:kind==='retaining-wall'?WALL_PRODUCTS[0].id:WATER_PRODUCTS[0].id,color:kind==='water-feature'?'#657478':'#aaa69b'});
+  // The default spot is a starting point, not a drawn shape: it never takes a neighbour's paving (join false).
+  return fitNewPatio(data,{...(kind!=='water-feature'?{finishedElevationIn:ground!+heightIn}:{}),...(kind==='patio'?{patioSlope:{xPct:0,zPct:0}}:{}),id:`${kind}-${crypto.randomUUID()}`,kind,name:kind==='patio'?'Patio':kind==='retaining-wall'?'Retaining wall':'Water feature',enabled:true,xFt,zFt,widthFt:kind==='patio'?16:kind==='retaining-wall'?16:6,depthFt:kind==='patio'?12:kind==='retaining-wall'?1:6,heightIn:kind==='patio'?0:kind==='retaining-wall'?24:24,rotationDeg:0,productId:kind==='patio'?PATIO_PRODUCTS[0].id:kind==='retaining-wall'?WALL_PRODUCTS[0].id:WATER_PRODUCTS[0].id,color:kind==='water-feature'?'#657478':'#aaa69b'},false);
 }
 /** The one place a new patio gets its ground fit, however it is added (Backyard, plan drawing, starters, wizard, sketch):
  * on measured ground it sits level with the ground at its centre, to the nearest 1/4 in, and the ground round it is graded
- * at the default 3:1. Legacy yards, walls and steps come back unchanged; saved designs never pass through here. */
-export function fitNewPatio(data:DeckData,f:YardFeature):YardFeature{const g=f.kind==='patio'&&data.siteModel&&!f.stoneSteps&&!f.stepAssembly?sampleSiteHeight(data,f.xFt*12,f.zFt*12):undefined;return typeof g==='number'&&Number.isFinite(g)?{...f,finishedElevationIn:Math.round((g+f.heightIn)*4)/4,patioSlope:f.patioSlope??{xPct:0,zPct:0},groundFit:f.groundFit??{slopeRatio:GROUND_FIT_LIMITS.defaultRatio}}:f;}
+ * at the default 3:1. One drawn touching an existing patio continues that patio's paving and plane instead (pavingLook.ts
+ * joinNewPatio, unless `join` is false), so the two are one surface. Legacy yards, walls and steps come back unchanged; saved designs never pass
+ * through here. */
+export function fitNewPatio(data:DeckData,f:YardFeature,join=true):YardFeature{const g=f.kind==='patio'&&data.siteModel&&!f.stoneSteps&&!f.stepAssembly?sampleSiteHeight(data,f.xFt*12,f.zFt*12):undefined;const fitted=typeof g==='number'&&Number.isFinite(g)?{...f,finishedElevationIn:Math.round((g+f.heightIn)*4)/4,patioSlope:f.patioSlope??{xPct:0,zPct:0},groundFit:f.groundFit??{slopeRatio:GROUND_FIT_LIMITS.defaultRatio}}:f;return join?joinNewPatio(data,fitted):fitted;}
 
 /** The cost estimator's finish tiers, in its words; they set the fire pit, kitchen and lighting allowances. */
 export const ALLOWANCE_FINISHES=[{id:'budget',label:'Standard'},{id:'mid',label:'Elevated'},{id:'premium',label:'Premium'}] as const;
