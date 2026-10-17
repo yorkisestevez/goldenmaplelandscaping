@@ -1,3 +1,4 @@
+import { underPath } from '../utils/trailingSlash';
 import type { QuickProject } from './sophieQuoteOptions';
 
 /** Sophie's one proactive nudge per session: a page-aware line beside the launcher. Copy stays
@@ -48,10 +49,11 @@ const normalize = (pathname: string) => (pathname.replace(/\/+$/, '') || '/').to
 
 export function pickTeaser(pathname: string): Teaser | null {
   const path = normalize(pathname);
-  if (SUPPRESSED.some((p) => path === p || path.startsWith(`${p}/`))) return null;
+  // underPath, not quoted comparisons: the build rewrites quoted paths here to their slashed form (utils/trailingSlash.ts).
+  if (SUPPRESSED.some((p) => underPath(path, p))) return null;
   const project = PROJECT_KEYWORDS.find(([re]) => re.test(path))?.[1];
 
-  if (path.startsWith('/portfolio')) {
+  if (underPath(path, '/portfolio')) {
     return { key: 'portfolio', line: "If one of these builds is close to what you want, give me a rough size and your town and I'll pull a planning range.", chips: CHIPS, project };
   }
   if (path.startsWith('/resources/')) {

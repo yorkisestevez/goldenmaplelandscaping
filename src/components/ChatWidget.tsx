@@ -16,6 +16,7 @@ import {
 } from '../data/sophieTeasers';
 import type { QuickRange } from '../utils/sophieQuote';
 import SophieMark from './SophieMark';
+import { underPath } from '../utils/trailingSlash';
 
 type Role = 'user' | 'assistant';
 type PricedRange = Extract<QuickRange, { kind: 'range' }>;
@@ -87,7 +88,7 @@ export default function ChatWidget() {
 
   const userTurns = messages.filter((m) => m.role === 'user').length;
   const chatted = userTurns > 0;
-  const launcherVisible = pastHero && !pathname.startsWith('/contact');
+  const launcherVisible = pastHero && !underPath(pathname, '/contact');
 
   // The latest planning range and the tap choices behind it.
   const lastRangeRef = useRef<{ range: PricedRange; choice: QuickRangeInput } | null>(null);
@@ -111,7 +112,7 @@ export default function ChatWidget() {
 
   // Never auto-open. Stay off the homepage hero and off /contact/, where the form is the page.
   useEffect(() => {
-    if (pathname.startsWith('/contact')) setOpen(false);
+    if (underPath(pathname, '/contact')) setOpen(false);
   }, [pathname]);
 
   // Until the visitor says something, Sophie's opener follows the page they're on.
@@ -200,7 +201,7 @@ export default function ChatWidget() {
     setTeaser(null);
     setOpen(false);
     // Already on /book: its scheduler reads prefill only on arrival, so just reveal it.
-    if (pathname.startsWith('/book')) return;
+    if (underPath(pathname, '/book')) return;
     navigate('/book', {
       state: {
         serviceInterest: range?.serviceInterest ?? (pageProject ? projectMeta(pageProject).serviceInterest : undefined),
@@ -395,8 +396,8 @@ export default function ChatWidget() {
   };
 
   // Links to the page the visitor is already on would do nothing: both pages read their prefill on arrival.
-  const onBookPage = pathname.startsWith('/book');
-  const onEstimatorPage = pathname.startsWith('/cost-estimator');
+  const onBookPage = underPath(pathname, '/book');
+  const onEstimatorPage = underPath(pathname, '/cost-estimator');
 
   // Once the visitor keeps talking after seeing a range, keep the booking one tap away.
   const resultAt = messages.map((m) => !!(m.range || m.designerHref)).lastIndexOf(true);
