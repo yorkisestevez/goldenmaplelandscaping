@@ -4,9 +4,13 @@
 // from the prerendered pages at postbuild (2026-09-27), so a new post is listed
 // automatically once it is routed.
 // inside the repo. Called in-process from cli.cjs workflow-run.
+// Contact details in the draft's HTML render from publicContact
+// (src/data/business.ts), and injectDraft refuses the post if any written file
+// still hardcodes one (contact-gate.cjs).
 
 const fs = require('fs');
 const path = require('path');
+const { assertContactsCentralized } = require('./contact-gate.cjs');
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 // RR7 framework mode (migration d9a66cf, 2026-07): src/App.tsx is gone — the
@@ -35,32 +39,63 @@ function normalizeReadTime(rt, suffix) {
   return str.includes('min') ? str : str + suffix;
 }
 
+// The phone numbers and email scripts/check-contact-centralization.py rejects
+// outside src/data/business.ts. Its pattern, plus a leading "+1" or "(" and a
+// tel:/sms: scheme, so the whole number is replaced and not just its tail.
+const CONTACT_RE = /((?:tel|sms):\s*)?((?:(?<!\d)\+?1[\s.-]*)?\(?705[\s().-]*(?:300[\s.-]*8015|500[\s.-]*3581|790[\s.-]*3838))|yorkis@goldenmaplelandscaping\.ca/gi;
+
+// Rewrites a JS literal made by JSON.stringify so each contact detail in it is
+// read from publicContact:
+//   "<p>call (705) 300-8015</p>"  ->  "<p>call " + publicContact.phoneDisplay + "</p>"
+// JSON.stringify leaves digits, spaces, ( ) + . - : and @ unescaped, so a match
+// always sits whole inside one double-quoted string and can be spliced out of
+// it. The legacy and personal numbers render as the current public number.
+function renderContacts(literal, onUse) {
+  return literal
+    .replace(CONTACT_RE, (match, scheme, phone) => {
+      onUse();
+      if (phone === undefined) return '" + publicContact.email + "';
+      if (scheme) return `${scheme.trim().toLowerCase()}" + publicContact.phoneTel + "`;
+      return '" + publicContact.phoneDisplay + "';
+    })
+    // Drop the empty strings left when a contact opens or closes a literal.
+    // (?<!\\) keeps an escaped quote (\") from being read as an empty string.
+    .replace(/(?<!\\)"" \+ (?=publicContact\.)/g, '')
+    .replace(/(publicContact\.\w+) \+ ""/g, '$1');
+}
+
 function buildTsx(draft) {
   const compName = slugToComponent(draft.slug);
+  // Every literal that can carry draft HTML goes through lit(); usesContact
+  // decides whether the page imports publicContact.
+  let usesContact = false;
+  const useContact = () => { usesContact = true; };
+  const lit = (value) => renderContacts(JSON.stringify(value), useContact);
+
   const faqMainEntity = (draft.faqs || []).map(f => ({
     "@type": "Question",
     "name": f.question,
     "acceptedAnswer": { "@type": "Answer", "text": f.answer }
   }));
-  const faqSchemaLiteral = JSON.stringify({
+  const faqSchemaLiteral = renderContacts(JSON.stringify({
     "@type": "FAQPage",
     "mainEntity": faqMainEntity
-  }, null, 4).split('\n').map((l, i) => i === 0 ? l : '  ' + l).join('\n');
+  }, null, 4).split('\n').map((l, i) => i === 0 ? l : '  ' + l).join('\n'), useContact);
 
-  const introHtml = JSON.stringify(draft.intro);
+  const introHtml = lit(draft.intro);
   const sectionsJsx = (draft.sections || []).map((s) => {
     const headingEscaped = s.heading.replace(/"/g, '\\"');
-    const htmlLiteral = JSON.stringify(s.html);
+    const htmlLiteral = lit(s.html);
     return `      <h2>${headingEscaped}</h2>\n      <div dangerouslySetInnerHTML={{ __html: ${htmlLiteral} }} />\n`;
   }).join('\n');
 
   const faqsJsx = (draft.faqs || []).map((f) => {
     const qEscaped = f.question.replace(/"/g, '\\"');
-    const aLiteral = JSON.stringify(`<p>${f.answer}</p>`);
+    const aLiteral = lit(`<p>${f.answer}</p>`);
     return `        <div className="mb-8">\n          <h3 className="font-display text-2xl text-brand-bonewhite mb-3">${qEscaped}</h3>\n          <div dangerouslySetInnerHTML={{ __html: ${aLiteral} }} />\n        </div>`;
   }).join('\n');
 
-  const ctaLiteral = JSON.stringify(`<p>${draft.cta_paragraph}</p>`);
+  const ctaLiteral = lit(`<p>${draft.cta_paragraph}</p>`);
 
   // TLDR — rendered as a "Quick Answer" box at the very top. Featured-snippet target.
   const tldrJsx = draft.tldr
@@ -69,7 +104,7 @@ function buildTsx(draft) {
 
   // Comparison table — rendered if the topic warranted one
   const tableJsx = (draft.comparison_table?.include && draft.comparison_table?.html)
-    ? `      <div className="not-prose my-10 overflow-x-auto">\n        ${draft.comparison_table.caption ? `<p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold mb-3">${draft.comparison_table.caption.replace(/"/g, '\\"')}</p>\n        ` : ''}<div dangerouslySetInnerHTML={{ __html: ${JSON.stringify(draft.comparison_table.html)} }} />\n      </div>\n\n`
+    ? `      <div className="not-prose my-10 overflow-x-auto">\n        ${draft.comparison_table.caption ? `<p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold mb-3">${draft.comparison_table.caption.replace(/"/g, '\\"')}</p>\n        ` : ''}<div dangerouslySetInnerHTML={{ __html: ${lit(draft.comparison_table.html)} }} />\n      </div>\n\n`
     : '';
 
   // Author bio — closes the article. E-E-A-T signal for Google + AI engines.
@@ -78,13 +113,16 @@ function buildTsx(draft) {
   // how 18 posts ended up hardcoding it. bio={"..."} not bio="..." because a
   // JSX attribute cannot carry backslash escapes.
   const bioJsx = draft.author_bio
-    ? `      <AuthorBio bio={${JSON.stringify(draft.author_bio)}} />\n\n`
+    ? `      <AuthorBio bio={${lit(draft.author_bio)}} />\n\n`
     : '';
   const bioImport = draft.author_bio
     ? `\nimport AuthorBio from '../../components/AuthorBio';`
     : '';
+  const contactImport = usesContact
+    ? `\nimport { publicContact } from '../../data/business';`
+    : '';
 
-  return `import BlogPostLayout from '../../components/BlogPostLayout';${bioImport}
+  return `import BlogPostLayout from '../../components/BlogPostLayout';${bioImport}${contactImport}
 
 export default function ${compName}() {
   const faqSchema = ${faqSchemaLiteral};
@@ -185,6 +223,10 @@ function injectDraft(draft) {
     snapshot(BLOG_POSTS_TS);
     injectIntoResources(draft);
 
+    // Same check postbuild runs, on the three files just written. Inside the
+    // try so a refusal rolls them all back and the next run starts clean.
+    assertContactsCentralized([newTsxPath, ROUTES_TS, BLOG_POSTS_TS]);
+
   } catch (err) {
     for (const { path: p, before } of rollback.reverse()) {
       try {
@@ -204,4 +246,4 @@ function injectDraft(draft) {
   };
 }
 
-module.exports = { injectDraft, slugToComponent, buildTsx };
+module.exports = { injectDraft, slugToComponent, buildTsx, renderContacts };
