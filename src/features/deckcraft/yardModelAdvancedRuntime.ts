@@ -35,6 +35,7 @@ import type {SitePlane,SiteSurface} from './siteSurface';
 import {foundationSolids} from './foundationSolids';
 import {getPoolModels,reconcilePoolMaterials} from './poolModel';
 import {fireFeatureModels,stairFootprints} from './fireFeatureModel';
+import {joinPavingField,rootFrame,rowGrid,sharePaver,type PavingField} from './pavingJoin';
 
 import {registerAdvancedYardRuntime,yardSignedArea,yardArea,yardClip,yardSolidCells,projectedYardPavers,YARD_PAVER_BUDGET,yardRectangle as rectangle,yardCentroid as centroid,yardPaverProfiles as profiles,yardStockFaceSqft as stockFaceSqft} from './yardModel';
 import type {YardBox,YardRole,YardFeatureModel,YardMember,YardExcavationRegion} from './yardModel';
@@ -122,6 +123,8 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
  warnings.push(...pools.flatMap(p=>p.warnings.map(w=>`${p.config.name}: ${w}`)));
  for(const pool of pools)for(const formation of pool.formationRegions)excavations.push({featureId:formation.featureId,polys:[formation.polygon],bottom:formation.bottomIn,formationPlane:formation.formationPlane});
  let occupied:PlanPoint[][]=[...houseFootprint],pavingOccupied:PlanPoint[][]=[...houseFootprint];
+ // Touching patios in the same paving share one bond (pavingJoin.ts).
+ const pavingFields:PavingField[]=[];
  // Fire features are modelled after everything else (fireFeatureModel.ts): they stand on a patio or their own pad.
  const enabled=(data.yardFeatures||[]).filter(f=>f.enabled&&f.kind!=='fire-feature').sort((a,b)=>rank(a)-rank(b));
  const ids=new Set<string>(),supportCutouts:PlanPoint[][]=[],budgetExcludedIds:string[]=[];let reservedPavers=0,guardStructures:GuardBlock[]|undefined;
@@ -191,6 +194,8 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
   const model:YardFeatureModel={config:f,footprints,topIn:f.kind==='patio'?planeAt(patioPlane,x,z):grade,...(sloped?{topPlane:patioPlane}:{}),boxes:[],members:[],warnings:localWarnings,quantities:{areaSqft:yardArea(footprints)},excluded,supportClearances:supports};features.push(model);
   if(excluded){warnings.push(...localWarnings);continue;}
   reservedPavers+=projectedPavers;
+  const paving=f.kind==='patio'?joinPavingField(pavingFields,f,patioPlane,original,footprints):undefined,joined=paving&&paving.root!==f?rootFrame(paving,sloped):undefined;
+  if(joined)model.pavingRootId=paving!.root.id;
   occupied=yardClip([...occupied,...(f.kind==='patio'?footprints:envelope)]);
   const finishEnvelope=padPlane?[]:f.pavingInterface&&construction?yardClip([...coursePaths.flatMap(path=>yardPathEnvelope(path,d+2*f.pavingInterface!.jointIn)),...yardPathEnvelope(coursePaths.at(-1)!,Math.max(d,capDepth)+2*f.pavingInterface.jointIn)]):envelope;
   pavingOccupied=yardClip([...pavingOccupied,...(f.kind==='patio'?footprints:finishEnvelope)]);
@@ -222,12 +227,14 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
    const inlayValidationFootprints=pools.length?yardClip([...footprints,...yardClip(original,poolExclusions,'intersection')]):footprints;
    const plans=patioInlayPlans(f,inlayValidationFootprints),valid=plans.filter(p=>p.status==='ok'),field=yardClip(footprints,valid.map(p=>p.outline),'difference');
    for(const p of plans.filter(p=>p.status!=='ok'))localWarnings.push(`${p.inlay.name}: ${p.message}`);
-   const laySupplier=(zone:YardFeature,mask:PlanPoint[][],inlayId?:string)=>{const sel=hardscapeSelection(zone)!;const za=zone.rotationDeg*Math.PI/180,zc=Math.cos(za),zs=Math.sin(za),before=model.boxes.length;
-    const patternZone=sloped?{...zone,outline:mask.flat().map(p=>{const q=untiltStockPoint(p,patioPlane,stockOrigin),dx=q.x-zone.xFt*12,dz=q.y-zone.zFt*12;return {x:zc*dx+zs*dz,y:-zs*dx+zc*dz};})}:zone;
-    for(const blank of hardscapeBlanks(patternZone)){const centre={x:zone.xFt*12+zc*blank.cx-zs*blank.cy,y:zone.zFt*12+zs*blank.cx+zc*blank.cy},angle=za+blank.angle,stock=sel.finish.units.find(u=>u.id===blank.unitId)??sel.unit;
-     const contours=yardClip(hardscapeStockPolygons(sel.product.id,stock,centre.x,centre.y,angle).map(p=>p.map(tilt)),mask,'intersection'),profile=hardscapeProfile(sel.product.id,stock);
+   const laySupplier=(zone:YardFeature,mask:PlanPoint[][],inlayId?:string)=>{const sel=hardscapeSelection(zone)!,grid=inlayId?undefined:joined,lay=grid?paving!.root:zone,put=grid?grid.tilt:tilt;const za=lay.rotationDeg*Math.PI/180,zc=Math.cos(za),zs=Math.sin(za),before=model.boxes.length;
+    // A patio joining another's paving is laid on that patio's grid (pavingJoin.ts), over its own paving only.
+    const patternZone=grid?{...lay,outline:mask.flat().map(grid.local)}:sloped?{...zone,outline:mask.flat().map(p=>{const q=untiltStockPoint(p,patioPlane,stockOrigin),dx=q.x-zone.xFt*12,dz=q.y-zone.zFt*12;return {x:zc*dx+zs*dz,y:-zs*dx+zc*dz};})}:zone;
+    for(const blank of hardscapeBlanks(patternZone)){const centre={x:lay.xFt*12+zc*blank.cx-zs*blank.cy,y:lay.zFt*12+zs*blank.cx+zc*blank.cy},angle=za+blank.angle,stock=sel.finish.units.find(u=>u.id===blank.unitId)??sel.unit,first=model.boxes.length,unitId=`${lay.id}-paver-${blank.id}`;
+     const contours=yardClip(hardscapeStockPolygons(sel.product.id,stock,centre.x,centre.y,angle).map(p=>p.map(put)),mask,'intersection'),profile=hardscapeProfile(sel.product.id,stock);
      // a stone split into several solid cells (any off-axis angle) is drawn once from its whole cut contour, never as seamed pieces
-     const cells=yardSolidCells(contours),whole=!!profile||valid.length>0||cells.length>1;let fragment=0;for(const p of cells){add('paver',p,top,stock.heightMm/25.4,zone.color,!rectangularUnit(stock)&&!profile);const b=model.boxes.at(-1)!;b.unitId=`${zone.id}-paver-${blank.id}`;b.stockAreaSqft=stockFaceSqft(sel.product.id,stock,blank.length,blank.width);b.stockUnitId=stock.id;if(whole){if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}if(sel.color.swatch)b.surface={swatchKey:hardscapeSwatchKey(sel.product.id,sel.finish.id,sel.color.id),cx:tilt(centre).x,cz:tilt(centre).y,angle,lengthIn:blank.length,widthIn:blank.width,heightIn:stock.heightMm/25.4,kind:'paver',sourceUrl:sel.product.sourceUrl};}
+     const cells=yardSolidCells(contours),whole=!!profile||valid.length>0||cells.length>1;let fragment=0;for(const p of cells){add('paver',p,top,stock.heightMm/25.4,zone.color,!rectangularUnit(stock)&&!profile);const b=model.boxes.at(-1)!;b.unitId=unitId;b.stockAreaSqft=stockFaceSqft(sel.product.id,stock,blank.length,blank.width);b.stockUnitId=stock.id;if(whole){if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}if(sel.color.swatch)b.surface={swatchKey:hardscapeSwatchKey(sel.product.id,sel.finish.id,sel.color.id),cx:put(centre).x,cz:put(centre).y,angle,lengthIn:blank.length,widthIn:blank.width,heightIn:stock.heightMm/25.4,kind:'paver',sourceUrl:sel.product.sourceUrl};}
+     if(paving&&!inlayId)sharePaver(paving,unitId,model.boxes.slice(first),contours);
     }
     const recipe=sel.finish.patterns.find(p=>p.id===zone.hardscape!.patternId);if(inlayId&&recipe?.layout.installationJointMm!==undefined)localWarnings.push(`${zone.name}: supplier installation joint ${recipe.layout.installationJointMm} mm differs from nominal pattern modules; confirm installed spacing before ordering.`);
     const stock=[...new Map(model.boxes.slice(before).map(b=>[b.unitId,b])).values()],stockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);model.pavingZones??=[];model.pavingZones.push({feature:zone,areaSqft:yardArea(mask)*slopeScale,stockAreaSqft,...(inlayId?{inlayId}:{})});
@@ -240,8 +247,13 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
     if(!rectangularUnit(supplier.unit))localWarnings.push(hardscapeProfile(supplier.product.id,supplier.unit)?'Stock outlines follow the manufacturer plan drawing at nominal dimensions; confirm joints and fabrication against the supplier technical guide.':'The supplier lists a shaped unit. Rectangular stock envelopes are illustrative; its exact mould profile has not been digitized.');
    }else{
    const rows=spec?.rows||[{depth:12,lengths:[24]}],gap=.125;let row=0;const rw=w*slopeScale,rd=d*slopeScale;
-   for(let v=-rd/2;v<rd/2-.001;){const r=rows[row%rows.length],depth=r.depth;let col=0;
-    for(let u=-rw/2-(row%2?(r.lengths[0]+gap)/2:0);u<rw/2-.001;){const len=r.lengths[col%r.lengths.length],contours=yardClip([localRect(u+len/2,v+depth/2,len,depth).map(tilt)],field,'intersection'),cells=yardSolidCells(contours),whole=valid.length>0||cells.length>1;let fragment=0;for(const p of cells){add('paver',p,top,thick,f.color,spec?.illustrative||!spec);const b=model.boxes.at(-1)!;b.unitId=`${f.id}-paver-${row}-${col}`;if(whole){if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}}u+=len+gap;col++;}
+   const lay=(unitId:string,rect:PlanPoint[])=>{const first=model.boxes.length,contours=yardClip([rect],field,'intersection'),cells=yardSolidCells(contours),whole=valid.length>0||cells.length>1;let fragment=0;for(const p of cells){add('paver',p,top,thick,f.color,spec?.illustrative||!spec);const b=model.boxes.at(-1)!;b.unitId=unitId;if(whole){if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}}if(paving)sharePaver(paving,unitId,model.boxes.slice(first),contours);};
+   if(joined){
+    // Joining another patio's paving: its rows and columns, numbered as it numbers them, over this patio only.
+    const root=paving!.root,local=field.flat().map(joined.local),xs=local.map(p=>p.x),ys=local.map(p=>p.y);
+    for(const c of rowGrid(rows,gap,root.widthFt*12*slopeScale,root.depthFt*12*slopeScale,{u0:Math.min(...xs),u1:Math.max(...xs),v0:Math.min(...ys),v1:Math.max(...ys)})){const u=c.u+c.length/2,v=c.v+c.depth/2;lay(`${root.id}-paver-${c.row}-${c.col}`,rectangle(joined.x+joined.c*u-joined.s*v,joined.z+joined.s*u+joined.c*v,c.length,c.depth,joined.angle).map(joined.tilt));}
+   }else for(let v=-rd/2;v<rd/2-.001;){const r=rows[row%rows.length],depth=r.depth;let col=0;
+    for(let u=-rw/2-(row%2?(r.lengths[0]+gap)/2:0);u<rw/2-.001;){const len=r.lengths[col%r.lengths.length];lay(`${f.id}-paver-${row}-${col}`,localRect(u+len/2,v+depth/2,len,depth).map(tilt));u+=len+gap;col++;}
     v+=depth+gap;row++;
    }
    }
