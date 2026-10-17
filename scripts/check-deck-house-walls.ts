@@ -8,7 +8,7 @@ import {calculateEstimate} from '../src/features/deckcraft/calculations';
 import {getHouseConfig,HOUSE_CLADDINGS} from '../src/features/deckcraft/houseSettings';
 import {getHouseWalls,MAX_HOUSE_BLOCKS} from '../src/features/deckcraft/houseFootprint';
 import {buildHouseGeometry,houseWallSpecs,type HouseWallSpec} from '../src/features/deckcraft/components/viewer3d/houseGeometry';
-import {houseWallParts} from '../src/features/deckcraft/components/viewer3d/houseWallParts';
+import {HOUSE_FOUNDATION_REVEAL_IN,houseWallParts} from '../src/features/deckcraft/components/viewer3d/houseWallParts';
 import {SKIN_PIECE_CAP,facadeSkins,gableCourses,openingShapes,wallSkin} from '../src/features/deckcraft/components/viewer3d/houseCladdingSkins';
 import {WAINSCOT_CAP,splitAtBand,wainscotBand,wainscotCap} from '../src/features/deckcraft/components/viewer3d/houseWainscot';
 import {resolveWallFinish} from '../src/features/deckcraft/houseFinishes';
@@ -75,10 +75,11 @@ const NEW_KEYS=/"(wallFinishes|wainscot|gableAccent|finish)"/;
     eq(parseDesign(saved),validateDesign(d),`${name}: saves and loads unchanged`);
     ok(pruneEdgeNames(d)===d||!!d.stairEdgeId,`${name}: an edit leaves the house untouched`);
   }
-  // Without a wainscot the facade's pieces are exactly the F4 skins, for every cladding and wall.
+  // Without a wainscot the facade's pieces are exactly the F4 skins, laid from the foundation reveal up, for every
+  // cladding and wall.
   for(const cladding of HOUSE_CLADDINGS)for(const [wall,w] of Object.entries(SKIN_WALLS)){
-    const shapes=shapesFor(w.span,w.openings);
-    eq(facadeSkins(cladding,w.span,w.height,shapes,w.hidden),{skin:wallSkin(cladding,w.span,w.height,shapes,w.hidden)},`${cladding}/${wall}: no wainscot, the same pieces as before`);
+    const shapes=shapesFor(w.span,w.openings),r=HOUSE_FOUNDATION_REVEAL_IN,f4=wallSkin(cladding,w.span,w.height-r,shapes.map(o=>({...o,y:o.y-r,bottomIn:o.bottomIn-r})),w.hidden);
+    eq(facadeSkins(cladding,w.span,w.height,shapes,w.hidden),{skin:{pieces:f4.pieces.map(b=>({...b,y:b.y+r})),simplified:f4.simplified}},`${cladding}/${wall}: no wainscot, the F4 pieces on the foundation reveal`);
   }
   const link=await encodeDesignLink(HOUSE_CASES['blocks/bump-wing-garage'],'https://example.test');
   ok(!NEW_KEYS.test(serializeDeckReleaseDesign(await decodeDesignLink(designLinkFromHash(new URL(link).hash)!))),'A share link gains no finish fields');

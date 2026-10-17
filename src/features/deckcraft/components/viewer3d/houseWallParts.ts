@@ -1,6 +1,11 @@
 import type {HouseOpening} from '../../types';
 import type {Box} from '../../deckTakeoff';
 
+/** Parged concrete foundation showing under the siding on every house wall, from grade (owner, 2026-10-16). The 3D view
+ * and the export split each wall here: the piece below is foundation, the cladding starts at the reveal. */
+export const HOUSE_FOUNDATION_REVEAL_IN=8;
+export const HOUSE_FOUNDATION_COLOR='#86837b';
+
 /** Partition wall solids at every opening edge; no overlapping holes or door threshold caps. */
 /** `hidden`: local x stretches of the wall inside another house block; nothing is built there. */
 export function houseWallParts(span:number,height:number,openings:HouseOpening[],hidden:[number,number][]=[]):Box[]{
