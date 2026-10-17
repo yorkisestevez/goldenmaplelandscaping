@@ -3,13 +3,18 @@ import type {DeckData} from '../../types';
 import type {DeckTakeoff} from '../../deckTakeoff';
 import {foundationRadialSegments} from '../../foundationDatums';
 import {foundationSolids} from '../../foundationSolids';
+/** Cast concrete, a mid grey that stays grey in full sun (the old light grey read as white plastic), and the soil
+ * stain on a pier's first inches above grade. */
+const CONCRETE='#8b877e',STAIN='#6b665c',STAIN_IN=1.5;
 /** The same local-datum foundation solids are used by takeoff and mesh exports. */
 export default function FootingDetails({data,model,cutaway}:{data:DeckData;model:DeckTakeoff;cutaway:boolean}){
  const supports=model.foundationSupports.filter(f=>f.gradeElevationIn!==null),dimension=supports.find(f=>f.depthIn>0),pending=model.foundationQuantities.foundationCoveragePending;
  return <group name="footings">
   {supports.map(f=>{const solids=foundationSolids(f);return <group key={f.id} userData={{pickPartId:f.id}} name={f.id}>
-   {solids.boxes.filter(b=>b.part!=='post').map((b,i)=><mesh key={`${b.part}-${i}`} castShadow receiveShadow position={[b.x,b.y,b.z]}><boxGeometry args={[b.w,b.h,b.d]}/><meshStandardMaterial color={b.part==='deck-block'?'#b4b1a5':'#aab2b5'} metalness={b.part==='post-base'?.86:0} roughness={b.part==='post-base'?.34:.95}/></mesh>)}
-   {solids.cylinders.map(p=><mesh key={p.part} castShadow receiveShadow position={[p.x,(p.top+p.bottom)/2,p.z]}><cylinderGeometry args={[p.radius,p.radius,p.top-p.bottom,foundationRadialSegments(data)]}/><meshStandardMaterial color={p.part==='concrete-pier'?'#b0ada2':'#aab2b5'} metalness={p.part==='concrete-pier'?0:.86} roughness={p.part==='concrete-pier'?.98:.34}/></mesh>)}
+   {solids.boxes.filter(b=>b.part!=='post').map((b,i)=><mesh key={`${b.part}-${i}`} castShadow receiveShadow position={[b.x,b.y,b.z]}><boxGeometry args={[b.w,b.h,b.d]}/><meshStandardMaterial color={b.part==='deck-block'?CONCRETE:'#aab2b5'} metalness={b.part==='post-base'?.86:0} roughness={b.part==='post-base'?.34:.97}/></mesh>)}
+   {solids.cylinders.map(p=><mesh key={p.part} castShadow receiveShadow position={[p.x,(p.top+p.bottom)/2,p.z]}><cylinderGeometry args={[p.radius,p.radius,p.top-p.bottom,foundationRadialSegments(data)]}/><meshStandardMaterial color={p.part==='concrete-pier'?CONCRETE:'#aab2b5'} metalness={p.part==='concrete-pier'?0:.86} roughness={p.part==='concrete-pier'?.98:.34}/></mesh>)}
+   {/* Soil-stained concrete where the pier leaves the ground: display only, the solids above stay the takeoff's. */}
+   {solids.cylinders.filter(p=>p.part==='concrete-pier'&&p.top>f.gradeElevationIn!).map(p=>{const top=Math.min(p.top,f.gradeElevationIn!+STAIN_IN);return <mesh key="grade-stain" receiveShadow position={[p.x,(f.gradeElevationIn!+top)/2,p.z]}><cylinderGeometry args={[p.radius+.04,p.radius+.04,top-f.gradeElevationIn!,foundationRadialSegments(data)]}/><meshStandardMaterial color={STAIN} roughness={1}/></mesh>;})}
   </group>;})}
   {cutaway&&dimension&&<group>
    <Line points={[[dimension.x-16,dimension.gradeElevationIn!,dimension.z],[dimension.x-16,dimension.bottomElevationIn!,dimension.z]]} color="#4b4237" lineWidth={1.4}/>

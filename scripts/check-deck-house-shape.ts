@@ -64,16 +64,17 @@ const exposedLen=(d:DeckData,id:string)=>getHouseWalls(d).find(w=>w.id===id)!.ex
   ok(openingWallId(o('stale'),house)==='main-left','A wall id whose block is gone falls back to the facade wall');
   ok(openingHidden(o('covered'),walls,house)&&!openingHidden(o('gdoor'),walls,house),'An opening on a covered stretch is flagged hidden');
   const meshes=deckExportMeshes(garage,buildDeckTakeoff(garage)).map(m=>m.name);
-  ok(meshes.includes('house_garage1_back_Garage_gdoor_panel')&&meshes.includes('house_garage1_roof')&&meshes.includes('house_garage1_foundation'),'Garage exports its door, roof and plinth');
+  ok(meshes.includes('house_garage1_back_Garage_gdoor_panel')&&meshes.includes('house_garage1_roof')&&meshes.some(m=>/^house_garage1_\w+_foundation_\d+$/.test(m)),'Garage exports its door, roof and foundation reveal');
   ok(!meshes.some(m=>m.includes('_covered_')),'A hidden opening is not exported');
   ok(meshes.some(m=>m.startsWith('house_garage1_right_wall_'))&&meshes.some(m=>m.startsWith('house_garage1_back_wall_')),'Garage walls export under the block name');
 }
 
-// 3. The main block builds exactly as before; blocks that do not touch the deck change no price.
+// 3. The main block builds exactly as before (its wall and foundation pieces stop where a block joins it); blocks that
+// do not touch the deck change no price.
 {
   const plain=deck({houseConfig:{...base,widthFt:30,depthFt:24}}),plainModel=buildDeckTakeoff(plain);
   const L=withBlocks([{id:'wing1',kind:'house',wall:'Back',offsetFt:0,widthFt:12,depthFt:14},{id:'garage1',kind:'garage',wall:'Left',offsetFt:0,widthFt:22,depthFt:20}]);
-  const main=(d:DeckData)=>deckExportMeshes(d,buildDeckTakeoff(d)).filter(m=>m.name.startsWith('house_')&&!/^house_(wing1|garage1)_/.test(m.name)&&!/_wall_/.test(m.name));
+  const main=(d:DeckData)=>deckExportMeshes(d,buildDeckTakeoff(d)).filter(m=>m.name.startsWith('house_')&&!/^house_(wing1|garage1)_/.test(m.name)&&!/_(wall|foundation)_/.test(m.name));
   assert.deepEqual(main(L),main(plain));checks++;
   const Lmodel=buildDeckTakeoff(L);
   assert.deepEqual(Lmodel.quantities,plainModel.quantities);checks++;

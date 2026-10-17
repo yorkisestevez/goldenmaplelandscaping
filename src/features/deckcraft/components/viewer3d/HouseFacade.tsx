@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import type {HouseOpening} from '../../types';
 import type {Box} from '../../deckTakeoff';
 import HouseParts from './HouseParts';
-import {houseWallParts} from './houseWallParts';
+import {HOUSE_FOUNDATION_COLOR,HOUSE_FOUNDATION_REVEAL_IN,houseWallParts} from './houseWallParts';
 import type {HouseInteraction} from './houseInteraction';
 import {openingColour,openingColors,type OpeningColors} from '../../houseFinishes';
 import type {FacadeFinish} from '../../houseWallFinishes';
@@ -136,7 +136,8 @@ export default function HouseFacade({span,height,openings,hidden=NONE,finish,eve
    const shared=anchor?{x:anchor.x,y:anchor.y,w:span,h:anchor.h,door:true}:null;
    return new Map(shapes.map(o=>[o.id,{reflection,room:shared&&o.bottomIn>=anchor!.bottomIn&&o.y<anchor!.bottomIn+108?shared:{x:o.x,y:o.y,w:o.w,h:o.h,door:o.type==='Door'}}]));
  },[shapes,reflection,span]);
- const wall=useMemo(()=>houseWallParts(span,height,openings,hidden),[span,height,openings,hidden]);
+ // The bottom of the wall is the bare foundation; everything clad stands on it.
+ const parts=useMemo(()=>splitAtBand(houseWallParts(span,height,openings,hidden),HOUSE_FOUNDATION_REVEAL_IN),[span,height,openings,hidden]),wall=parts.upper;
  // The cladding over the wall (houseCladdingSkins.ts); a very large wall in a newer cladding is drawn plain. A wainscot
  // splits the wall at its top: the band in its own cladding under a trim cap, the wall's cladding above.
  const {wall:look,wainscot,trim:trimColor,openings:colours}=finish;
@@ -145,9 +146,10 @@ export default function HouseFacade({span,height,openings,hidden=NONE,finish,eve
  // Exterior studio: a click on the wall (not an orbit drag) picks it; its outline shows while it is picked.
  const pick=onSelectHouseWall&&((e:ThreeEvent<MouseEvent>)=>{if(e.delta>4)return;e.stopPropagation();onSelectHouseWall(wallId);invalidate();});
  const picked=!!selectedHouseWallId&&(selectedHouseWallId===wallId||selectedHouseWallId===blockId);
- const trim=useMemo(()=>{const boxes:Box[]=[];for(const o of shapes){for(const side of [-1,1])boxes.push({x:o.x+side*(o.w/2+1.5),y:o.y,z:1.8,w:3,h:o.h+6,d:2.2});for(const side of [-1,1])boxes.push({x:o.x,y:o.y+side*(o.h/2+1.5),z:1.8,w:o.w,h:3,d:2.2});}for(const x of [-span/2+1.5,span/2-1.5])boxes.push({x,y:height/2,z:1.2,w:3,h:height,d:1.8});boxes.push({x:0,y:height-2,z:1.5,w:span,h:4,d:2});return boxes;},[span,height,shapes]);
+ const trim=useMemo(()=>{const boxes:Box[]=[];for(const o of shapes){for(const side of [-1,1])boxes.push({x:o.x+side*(o.w/2+1.5),y:o.y,z:1.8,w:3,h:o.h+6,d:2.2});for(const side of [-1,1])boxes.push({x:o.x,y:o.y+side*(o.h/2+1.5),z:1.8,w:o.w,h:3,d:2.2});}for(const x of [-span/2+1.5,span/2-1.5])boxes.push({x,y:(height+HOUSE_FOUNDATION_REVEAL_IN)/2,z:1.2,w:3,h:height-HOUSE_FOUNDATION_REVEAL_IN,d:1.8});boxes.push({x:0,y:height-2,z:1.5,w:span,h:4,d:2});return boxes;},[span,height,shapes]);
  const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags),polish=(flags.quality||flags.realistic)&&flags.post;
  return <group ref={facadeRef} userData={{pickPartId:`wall:${wallId}`}} onClick={pick}>
+  <HouseParts name="house-foundation" items={parts.lower} color={HOUSE_FOUNDATION_COLOR} surface="stucco" roughness={.94}/>
   <HouseParts name="wall-with-actual-opening-cutouts" items={split?split.upper:wall} color={look.backing} surface={backingSurface(look.cladding)}/>
   <HouseParts items={skins.skin.pieces} color={look.color} name={look.partName} variation={look.variation} roughness={look.roughness} metalness={look.metalness} surface={claddingSurface(look.cladding)}/>
   {band&&split&&wainscot&&<>
