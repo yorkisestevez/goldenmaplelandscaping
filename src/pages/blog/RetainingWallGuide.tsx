@@ -58,12 +58,13 @@ export default function RetainingWallGuide() {
 
       <h2>Cost Expectations in 2026</h2>
 
-      <p>Retaining wall costs in Simcoe County vary widely based on height, material, site access, and soil conditions. Here are realistic ranges:</p>
+      <p>Retaining wall costs in Simcoe County vary widely based on height, material, site access, and soil conditions. Here are realistic ranges from our cost estimator, for about 50 feet of wall on an accessible site in Barrie, before HST. Shorter walls cost more per foot, because the dig-out, delivery and cleanup don't shrink with the wall. Tight equipment access adds roughly 13–17%, a steep slope 6–10% and wet soil that needs extra drainage 6–9%; together they add about 30–37%.</p>
 
       <ul>
-        <li><strong>Small garden walls (under 2 ft):</strong> $150-$250 per linear foot</li>
-        <li><strong>Structural walls (2-4 ft):</strong> $300-$500 per linear foot</li>
-        <li><strong>Engineered walls (4+ ft):</strong> $500-$800+ per linear foot</li>
+        <li><strong>Small garden walls (under 2 ft):</strong> around $330 per linear foot (typically $280–$425)</li>
+        <li><strong>Structural walls (2-4 ft):</strong> around $470 per linear foot (typically $405–$555)</li>
+        <li><strong>Engineered walls (4-6 ft):</strong> around $670 per linear foot (typically $585–$770)</li>
+        <li><strong>Taller engineered walls (6 ft+):</strong> around $970+ per linear foot (typically $845–$1,090)</li>
         <li><strong>Armour stone walls:</strong> $400-$700 per linear foot depending on stone size</li>
       </ul>
 
