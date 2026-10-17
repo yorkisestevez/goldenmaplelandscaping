@@ -21,6 +21,8 @@ const CONNECT_TIMEOUT_MS = 8000;
 
 export interface SophieSession {
   send: (text: string) => void;
+  /** Background facts for the agent (e.g. the planning range the visitor just saw); never shown as a turn. */
+  sendContext: (text: string) => void;
   close: () => void;
 }
 
@@ -76,6 +78,7 @@ export function openSophieSession(handlers: SophieHandlers): Promise<SophieSessi
           clearTimeout(timer);
           resolve({
             send: (text: string) => ws.send(JSON.stringify({ type: 'user_message', text })),
+            sendContext: (text: string) => ws.send(JSON.stringify({ type: 'contextual_update', text })),
             close: () => { try { ws.close(); } catch { /* already closing */ } },
           });
           break;
