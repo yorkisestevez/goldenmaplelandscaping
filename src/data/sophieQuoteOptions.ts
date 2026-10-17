@@ -4,13 +4,13 @@ import { ESTIMATOR_LOCATIONS, type EstimatorLocationKey } from './locations';
  *  widget can render the taps without loading the engine, and so the chat function can validate a
  *  visitor's choices before re-pricing them itself. */
 
-export type QuickProject = 'patio' | 'stone' | 'wall' | 'full' | 'deck';
+export type QuickProject = 'patio' | 'walkway' | 'wall' | 'full' | 'deck';
 export type QuickSize = 'small' | 'medium' | 'large';
 
 /** `serviceInterest` must match a BookingScheduler SERVICE_OPTIONS entry or /book ignores it. */
 export const QUICK_PROJECTS: ReadonlyArray<{ id: QuickProject; label: string; noun: string; serviceInterest: string }> = [
   { id: 'patio', label: 'Patio', noun: 'patio', serviceInterest: 'Interlocking Stone & Patios' },
-  { id: 'stone', label: 'Walkway', noun: 'walkway', serviceInterest: 'Interlocking Stone & Patios' },
+  { id: 'walkway', label: 'Walkway', noun: 'walkway', serviceInterest: 'Interlocking Stone & Patios' },
   { id: 'wall', label: 'Retaining wall', noun: 'retaining wall', serviceInterest: 'Retaining Walls' },
   { id: 'full', label: 'Full backyard', noun: 'full backyard', serviceInterest: 'Complete Backyard Renovation' },
   { id: 'deck', label: 'Deck', noun: 'deck', serviceInterest: 'Composite Decking' },
@@ -27,7 +27,7 @@ const areaSizes = (small: number, medium: number, large: number): SizeOption[] =
 /** Patio buckets match the home-page quick estimator (HeroEstimator SIZE_BUCKETS). */
 export const QUICK_SIZES: Readonly<Record<QuickProject, SizeOption[]>> = {
   patio: areaSizes(300, 600, 1000),
-  stone: areaSizes(100, 150, 250),
+  walkway: areaSizes(100, 150, 250),
   wall: [
     { id: 'small', label: 'Short', hint: '~30 ft long', amount: 30, unit: 'linear ft' },
     { id: 'medium', label: 'Medium', hint: '~50 ft long', amount: 50, unit: 'linear ft' },
