@@ -3,6 +3,7 @@ import {DenoiseMaterial,PhysicalCamera,WebGLPathTracer} from 'three-gpu-pathtrac
 import {FullScreenQuad} from 'three/examples/jsm/postprocessing/Pass.js';
 import {registerPhotoTracer,type PhotoTraceFrame,type PhotoTraceRequest} from '../../photoTraceApi';
 import {SCENE_LOOK} from './sceneLook';
+import {pipelineFor} from './renderPipeline';
 import {SKY_DATA,skyStrength,skyYaw,visibleSkyHorizon,visibleSkyStrength,type Lighting} from './skyModel';
 import {applyPhotoScene,buildPhotoBackground,photoTexturesReady,rasterPhotoTriangles,tracePhotoTriangles} from './photoMaterials';
 import {PHOTO_FALLBACK,PHOTO_GRADE,SUN_ANGULAR_RADIUS_DEG,photoStillSize,photoSunColor,photoSunElevationDeg,photoSunIrradiance,sunDisc,type PhotoLook} from '../../photoGrade';
@@ -104,6 +105,9 @@ export async function startPhotoEngine(input:{gl:THREE.WebGLRenderer;scene:THREE
  publish('checking',0,'Checking whether this device can path trace…');
  const pixelRatio=gl.getPixelRatio(),viewSize=gl.getSize(new THREE.Vector2());
  gl.setPixelRatio(1);
+ // Resizing empties the opaque canvas. Draw the view once at the new size so it does not sit black until the first
+ // traced samples are shown.
+ if(pixelRatio!==1){const pipeline=pipelineFor(gl);if(pipeline)pipeline.capture(1);else gl.render(scene,camera);}
  gl.domElement.dataset.photoTrace='1';
  function restoreView(){gl.setPixelRatio(pixelRatio);gl.setSize(viewSize.x,viewSize.y,false);}
  function fitStill(){

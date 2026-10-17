@@ -20,10 +20,11 @@ export const PHOTO_GRADE:Record<PhotoLook,PhotoGrade>={
  night:{exposure:1.12,balance:[0.94,0.98,1.1],saturation:1},
 };
 
-/** A print-like sun: a little larger than the real 0.27° so the penumbra reads in a still,
- * while a horizontal card still receives the same direct irradiance as the raster key. */
+/** The real sun: 0.27° angular radius, so shadows are crisp where a post or a trunk meets the ground and soften with
+ * distance, as in a photograph. Golden hour is a touch wider for the haze at a low sun. A horizontal card still receives
+ * the same direct irradiance as the raster key. */
 export const SUN_DISTANCE_FT=220;
-export const SUN_ANGULAR_RADIUS_DEG:Record<PhotoLook,number>={day:0.9,golden:1.45,night:0};
+export const SUN_ANGULAR_RADIUS_DEG:Record<PhotoLook,number>={day:0.27,golden:0.35,night:0};
 
 export interface SunDisc{diameterFt:number;radiance:number;angularRadiusDeg:number;distanceFt:number}
 
