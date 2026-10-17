@@ -19,6 +19,7 @@ import { ESTIMATOR_LOCATIONS, type EstimatorLocationKey } from '../data/location
 import {
   ESTIMATOR_DEFAULT_SIZES, ESTIMATOR_DEFAULT_CONDITIONS, ESTIMATOR_DEFAULT_LOCATION, ESTIMATOR_DEFAULT_TIER,
   ESTIMATOR_DEFAULT_PAVER_ID, ESTIMATOR_DEFAULT_DECK_ID, ESTIMATOR_ENTRY_CONFIDENCE, FULL_BACKYARD_PREFILL,
+  ESTIMATOR_PREFILL_SIZE,
 } from '../data/estimatorDefaults';
 import { getEstimatorRangeCopy } from '../utils/pricingDoctrine';
 import { computeEstimate, deltaFor, widenFactors, widenTotals, type EstimateInput, type EstimateLine } from '../utils/estimateEngine';
@@ -428,7 +429,7 @@ export default function Estimator({ onStudioChange }: {
     }
     if (sqftParam) {
       const n = parseInt(sqftParam, 10);
-      if (!isNaN(n) && n >= 100 && n <= 2000 && t) {
+      if (!isNaN(n) && n >= ESTIMATOR_PREFILL_SIZE.min && n <= ESTIMATOR_PREFILL_SIZE.max && t) {
         setSizes(prev => ({
           ...prev,
           [t === 'full' ? 'patio' : t]: n,

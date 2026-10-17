@@ -43,7 +43,8 @@ assert.equal(shouldShowTeaser({ ...base, pathname: '/privacy' }), false);
 for (const q of ['How much does a patio cost?', 'whats the price for a wall', 'ballpark for 400 sq ft?', 'what would it cost']) {
   assert.equal(isPriceQuestion(q), true, q);
 }
-for (const q of ['Do you build composite decks?', 'Which areas do you serve?', "What's your warranty?"]) {
+// Policy questions ("free estimate", "a quote", budget talk) belong to the fact-gated model, not the range.
+for (const q of ['Do you build composite decks?', 'Which areas do you serve?', "What's your warranty?", 'Do you offer free estimates?', 'I need a quote', 'Can I get an estimate visit?', 'Is it expensive to maintain?']) {
   assert.equal(isPriceQuestion(q), false, q);
 }
 

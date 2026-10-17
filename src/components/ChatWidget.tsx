@@ -101,6 +101,8 @@ export default function ChatWidget() {
   useEffect(() => {
     if (open) {
       trackEngagement('chat_open');
+      // Opening the chat is the nudge's job done; never pop it up afterwards.
+      if (readTeaserMemory() === null) writeTeaserMemory('seen');
       setUnread(false);
       setTeaser(null);
       setTimeout(() => inputRef.current?.focus(), 250);
@@ -190,17 +192,19 @@ export default function ChatWidget() {
     setLoading(false);
   };
 
-  /** /book with the service and (when there is one) the range already filled in. */
-  const goBook = (source: string) => {
-    const last = lastRangeRef.current;
+  /** /book with the service and (when there is one) the range already filled in — the card's own
+   *  range when booked from a card, otherwise the latest one. */
+  const goBook = (source: string, range: PricedRange | undefined = lastRangeRef.current?.range) => {
     const pageProject = pickTeaser(pathname)?.project;
     trackEngagement('chat_book_click', source);
     setTeaser(null);
     setOpen(false);
+    // Already on /book: its scheduler reads prefill only on arrival, so just reveal it.
+    if (pathname.startsWith('/book')) return;
     navigate('/book', {
       state: {
-        serviceInterest: last?.range.serviceInterest ?? (pageProject ? projectMeta(pageProject).serviceInterest : undefined),
-        bookingNotes: last?.range.bookingNotes ?? `Sent from Sophie chat on ${pathname}.`,
+        serviceInterest: range?.serviceInterest ?? (pageProject ? projectMeta(pageProject).serviceInterest : undefined),
+        bookingNotes: range?.bookingNotes ?? `Sent from Sophie chat on ${pathname}.`,
       },
     });
   };
@@ -234,6 +238,7 @@ export default function ChatWidget() {
       const result = quickRange(choice);
       setLoading(false);
       if (result.kind === 'designer') {
+        lastRangeRef.current = null;
         say({
           role: 'assistant',
           content: 'Decks get their price from our deck designer. It opens at your size, and you can draw your own shape.',
@@ -389,9 +394,15 @@ export default function ChatWidget() {
     return ESTIMATOR_LOCATIONS.map((l) => ({ label: l.name, onClick: () => pickCity(flow.project, flow.size, l.key) }));
   };
 
+  // Links to the page the visitor is already on would do nothing: both pages read their prefill on arrival.
+  const onBookPage = pathname.startsWith('/book');
+  const onEstimatorPage = pathname.startsWith('/cost-estimator');
+
   // Once the visitor keeps talking after seeing a range, keep the booking one tap away.
-  const rangeAt = messages.map((m) => !!m.range).lastIndexOf(true);
-  const showBookPill = rangeAt >= 0 && messages.slice(rangeAt + 1).some((m) => m.role === 'user') && !loading;
+  const resultAt = messages.map((m) => !!(m.range || m.designerHref)).lastIndexOf(true);
+  const showBookPill = !onBookPage && resultAt >= 0 && !!messages[resultAt].range
+    && messages.slice(resultAt + 1).some((m) => m.role === 'user') && !loading;
+  const suggestions = onBookPage ? SUGGESTIONS.filter((s) => s !== BOOK_CHIP) : SUGGESTIONS;
 
   return (
     <>
@@ -399,9 +410,9 @@ export default function ChatWidget() {
       <AnimatePresence>
         {teaser && !open && launcherVisible && (
           <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.97 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="fixed z-[60] left-4 right-4 max-w-[300px] bottom-[calc(10rem+env(safe-area-inset-bottom,0px))] xl:left-auto xl:right-6 xl:bottom-24 rounded-2xl border border-brand-dim bg-brand-surface shadow-[0_24px_60px_-18px_rgba(33,30,21,0.45)] p-4"
             role="status"
@@ -446,7 +457,7 @@ export default function ChatWidget() {
       <AnimatePresence>
         {!open && launcherVisible && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
             animate={unread && !reduceMotion
               ? { opacity: 1, scale: [1, 1.1, 1, 1.06, 1], rotate: [0, -8, 6, -3, 0] }
               : { opacity: 1, scale: 1, rotate: 0 }}
@@ -519,18 +530,24 @@ export default function ChatWidget() {
                         From our cost estimator. Your price is confirmed at a site visit.
                       </p>
                       <div className="flex flex-col gap-2 mt-3">
-                        <button
-                          onClick={() => goBook('range_card')}
-                          className="w-full rounded-full bg-brand-black text-brand-gold-light font-sans text-[13px] py-2.5 flex items-center justify-center gap-2 hover:bg-brand-ink transition-colors"
-                        >
-                          Book a site visit <ArrowRight size={14} strokeWidth={1.75} />
-                        </button>
-                        <button
-                          onClick={() => goTo(m.range!.estimatorHref, 'range_finetune')}
-                          className="w-full rounded-full border border-brand-dim text-brand-bonewhite font-sans text-[12.5px] py-2 hover:border-brand-gold transition-colors"
-                        >
-                          Fine-tune it in the estimator
-                        </button>
+                        {onBookPage ? (
+                          <p className="font-sans text-[12px] text-brand-bonewhite">Pick a time in the scheduler on this page to book the site visit.</p>
+                        ) : (
+                          <button
+                            onClick={() => goBook('range_card', m.range)}
+                            className="w-full rounded-full bg-brand-black text-brand-gold-light font-sans text-[13px] py-2.5 flex items-center justify-center gap-2 hover:bg-brand-ink transition-colors"
+                          >
+                            Book a site visit <ArrowRight size={14} strokeWidth={1.75} />
+                          </button>
+                        )}
+                        {!onEstimatorPage && (
+                          <button
+                            onClick={() => goTo(m.range!.estimatorHref, 'range_finetune')}
+                            className="w-full rounded-full border border-brand-dim text-brand-bonewhite font-sans text-[12.5px] py-2 hover:border-brand-gold transition-colors"
+                          >
+                            {m.range.estimatorPrefilled ? 'Fine-tune it in the estimator' : 'Open the estimator and set your size'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -580,7 +597,7 @@ export default function ChatWidget() {
               )}
               {!flow && messages.length <= 1 && !loading && (
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {SUGGESTIONS.map((s) => (
+                  {suggestions.map((s) => (
                     <button key={s} onClick={() => onChip(s)} className={chipClass}>{s}</button>
                   ))}
                 </div>

@@ -2,6 +2,7 @@ import { computeEstimate, widenTotals, type EstimateInput } from './estimateEngi
 import {
   ESTIMATOR_DEFAULT_SIZES, ESTIMATOR_DEFAULT_CONDITIONS, ESTIMATOR_DEFAULT_TIER,
   ESTIMATOR_DEFAULT_PAVER_ID, ESTIMATOR_DEFAULT_DECK_ID, ESTIMATOR_ENTRY_CONFIDENCE, FULL_BACKYARD_PREFILL,
+  ESTIMATOR_PREFILL_SIZE,
 } from '../data/estimatorDefaults';
 import { getLocation, type EstimatorLocationKey } from '../data/locations';
 import { QUICK_PROJECTS, QUICK_SIZES, type QuickProject, type QuickSize, type QuickRangeInput, type SizeOption } from '../data/sophieQuoteOptions';
@@ -11,10 +12,6 @@ export { QUICK_PROJECTS, QUICK_SIZES, parseQuickRangeInput, type QuickProject, t
 
 /** Sophie's 3-tap planning range. Every dollar comes from the cost estimator's own engine, built the
  *  way /cost-estimator?type=&sqft=&city= builds it on arrival, so chat and estimator never disagree. */
-
-/** The estimator applies a ?sqft= prefill only inside this window (Estimator.tsx prefill effect). */
-const PREFILL_MIN = 100;
-const PREFILL_MAX = 2000;
 
 export type QuickRange =
   | { kind: 'designer'; href: string }
@@ -27,6 +24,8 @@ export type QuickRange =
       /** e.g. "$10,750–$23,000 + HST". */
       band: string;
       estimatorHref: string;
+      /** True when the estimator link opens on this exact range; false when the visitor must set the size there. */
+      estimatorPrefilled: boolean;
       serviceInterest: string;
       bookingNotes: string;
       /** What the AI is told, so a follow-up question gets these numbers and no others. */
@@ -67,14 +66,16 @@ export function quickRange({ project, size, city }: QuickRangeInput): QuickRange
   const town = getLocation(city).name;
   // Sophie doesn't ask wall height, so say which height band was priced (the estimator's default).
   const sizeText =
-    project === 'full' ? `~${option.amount} sq ft patio, wall and lighting`
+    project === 'full' ? `~${option.amount} sq ft patio, ~${ESTIMATOR_DEFAULT_SIZES.wall} ft wall and lighting`
     : project === 'wall' ? `~${option.amount} ${option.unit}, ${String(ESTIMATOR_DEFAULT_SIZES.wallHeight).replace('-', '–').replace('ft', ' ft')} high`
     : `~${option.amount} ${option.unit}`;
   const summary = `${meta.label}, ${sizeText}, ${town}`;
   const band = `${money(low)}–${money(high)} + HST`;
 
+  const sizeKey = project === 'full' ? 'patio' : project;
+  const inWindow = option.amount >= ESTIMATOR_PREFILL_SIZE.min && option.amount <= ESTIMATOR_PREFILL_SIZE.max;
   const params = new URLSearchParams({ type: project });
-  if (option.amount >= PREFILL_MIN && option.amount <= PREFILL_MAX) params.set('sqft', String(option.amount));
+  if (inWindow) params.set('sqft', String(option.amount));
   params.set('city', city);
 
   return {
@@ -85,6 +86,7 @@ export function quickRange({ project, size, city }: QuickRangeInput): QuickRange
     summary,
     band,
     estimatorHref: `/cost-estimator?${params.toString()}`,
+    estimatorPrefilled: inWindow || option.amount === Number(ESTIMATOR_DEFAULT_SIZES[sizeKey]),
     serviceInterest: meta.serviceInterest,
     bookingNotes: `Sophie planning range: ${summary}: ${band} (site estimator, before a site visit).`,
     contextText:

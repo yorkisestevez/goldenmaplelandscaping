@@ -81,7 +81,9 @@ export function projectFromText(text: string): QuickProject | undefined {
   return TEXT_PROJECTS.find(([re]) => re.test(text))?.[1];
 }
 
-const PRICE_QUESTION = /\b(cost|costs|price|prices|pricing|how much|ballpark|budget|quote|estimate|expensive|afford)\b|\$/i;
+/** Only plain "what does it cost" asks. Quote, estimate, free-visit and budget questions are policy
+ *  questions that stay with the fact-gated model. */
+const PRICE_QUESTION = /\b(cost|costs|price|prices|pricing|how much|ballpark)\b|\$/i;
 
 export function isPriceQuestion(text: string): boolean {
   return PRICE_QUESTION.test(text);

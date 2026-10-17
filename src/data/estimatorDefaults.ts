@@ -29,5 +29,8 @@ export const ESTIMATOR_DEFAULT_DECK_ID = 'timbertech-prime';
 /** A ?type=full link pre-selects the three most common picks so the size step still has meaning. */
 export const FULL_BACKYARD_PREFILL: readonly string[] = ['patio', 'wall', 'lighting'];
 
+/** A /cost-estimator?sqft= link is applied only inside this window (Estimator.tsx prefill effect). */
+export const ESTIMATOR_PREFILL_SIZE = { min: 100, max: 2000 } as const;
+
 /** The ± band the estimator shows before any project question is answered (its confidence starts here). */
 export const ESTIMATOR_ENTRY_CONFIDENCE = 30;
