@@ -5,6 +5,7 @@ import { MessageCircle, X, Send, Leaf } from 'lucide-react';
 import { trackEngagement, trackCall, trackLead } from '../utils/analytics';
 import { openSophieSession, type SophieSession } from '../utils/sophieChat';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+import { underPath } from '../utils/trailingSlash';
 
 type Role = 'user' | 'assistant';
 interface Msg { role: Role; content: string }
@@ -66,7 +67,7 @@ export default function ChatWidget() {
 
   // Never auto-open. Stay off the homepage hero and off /contact/, where the form is the page.
   useEffect(() => {
-    if (pathname.startsWith('/contact')) setOpen(false);
+    if (underPath(pathname, '/contact')) setOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -184,7 +185,7 @@ export default function ChatWidget() {
     <>
       {/* Left side on phones so it clears the estimate half of the sticky bar. Never opens by itself. */}
       <AnimatePresence>
-        {!open && pastHero && !pathname.startsWith('/contact') && (
+        {!open && pastHero && !underPath(pathname, '/contact') && (
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}

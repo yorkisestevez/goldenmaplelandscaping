@@ -3,7 +3,9 @@ import path from 'path';
 import type { Plugin } from 'vite';
 import { slashPath } from '../src/utils/trailingSlash';
 
-const SRC = path.resolve(__dirname, '../src');
+// Vite ids use forward slashes on every platform; path.resolve gives backslashes on Windows. Compare in one form, or
+// a Windows build skips the rewrite and differs from the production (Linux) build.
+const SRC = path.resolve(__dirname, '../src').replace(/\\/g, '/');
 
 /**
  * Rewrite internal absolute paths to the trailing-slash canonical Netlify
@@ -15,9 +17,9 @@ export function trailingSlashLinks(): Plugin {
     name: 'gm-trailing-slash-links',
     enforce: 'pre',
     load(id) {
-      const file = id.split('?')[0];
+      const file = id.split('?')[0].replace(/\\/g, '/');
       if (!file.startsWith(SRC) || !/\.[cm]?tsx?$/.test(file)) return null;
-      if (file.endsWith(`${path.sep}trailingSlash.ts`)) return null;
+      if (file.endsWith('/trailingSlash.ts')) return null;
       const code = readFileSync(file, 'utf8');
       let next = rewritePaths(code);
       if (next === code) return null;
