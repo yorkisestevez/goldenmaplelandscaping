@@ -621,6 +621,20 @@ function SnapshotBridge({onReady}:{onReady?:(capture:DeckSnapshotCapture|null)=>
 
 }
 
+const DAY_BACKGROUND='#e9edf0';
+/** three always asks the browser for an alpha:true context (its alpha option only sets the clear alpha), so leaf edges drawn
+ * with alpha-to-coverage let the page show through as white speckle. Create the context ourselves, opaque. Tone mapping is
+ * set in onCreated: with a function here, R3F no longer applies gl props. An opaque buffer is black until it is drawn, so it
+ * starts as the day sky the scene clears to, not a black flash. */
+function opaqueRenderer(defaults:{canvas:HTMLCanvasElement|OffscreenCanvas}){
+ const canvas=defaults.canvas as HTMLCanvasElement,context=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:true,stencil:false,premultipliedAlpha:true,powerPreference:'high-performance'});
+ const renderer=new THREE.WebGLRenderer({canvas,...context?{context}:{},antialias:false});
+ renderer.setClearColor(DAY_BACKGROUND,1);renderer.clear();
+ // Hand back the clear state the post chain and the environment cube were built against (black, alpha 0).
+ renderer.setClearColor(0x000000,0);
+ return renderer;
+}
+
 export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,boardPaint,onUpdate,selection,selectionEnabled=false,onObjectPick,editInteraction,...interaction}:{toolbar?:React.ReactNode;onUpdate?:Update;data:DeckData;model:DeckTakeoff;selection?:SelectionState;selectionEnabled?:boolean;editInteraction?:SceneEditInteraction;onObjectPick?:(pick:ObjectPick,toggle:boolean)=>void;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:DeckSnapshotCapture|null)=>void;boardPaint?:BoardPaint}&HouseInteraction){
   // The page keeps scrolling over the 3D view: the wheel zooms once the view has been clicked, or with Ctrl/⌘ (pinch
   // on a trackpad sends Ctrl). Touch pinch is unaffected. The 2D plan already zooms only with Ctrl.
@@ -687,7 +701,7 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
     {(toolbar||presenting)&&<div className="dd-3d-bar" role="group" aria-label="3D view controls"><div className="dd-3d-bar-main">{toolbar}{presenting&&<RealisticLookToggle/>}</div>{presenting&&<details className="dd-3d-more"><summary>More</summary><div className="dd-3d-more-panel"><ScenePresentationTools data={data} update={onUpdate!}/>{!data.pergola&&pergolaTools}</div></details>}</div>}
     {wheelHint&&<p className="dd-3d-wheel-hint" role="status">Click the view first, or hold Ctrl, to zoom with the scroll wheel.</p>}
 
-    {data.siteModel&&<p className="absolute top-3 right-3 z-10 rounded bg-white/90 p-2 text-xs">Ground outside surveyed triangles is illustrative.</p>}<Canvas shadows="percentage" frameloop="demand" dpr={[1,1.5]} camera={{fov:38,near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar}} gl={{antialias:false,toneMapping:THREE.NeutralToneMapping,toneMappingExposure:SCENE_LOOK.exposure}} onCreated={({gl})=>{const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
+    {data.siteModel&&<p className="absolute top-3 right-3 z-10 rounded bg-white/90 p-2 text-xs">Ground outside surveyed triangles is illustrative.</p>}<Canvas shadows="percentage" frameloop="demand" dpr={[1,1.5]} camera={{fov:38,near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar}} gl={opaqueRenderer} onCreated={({gl})=>{gl.toneMapping=THREE.NeutralToneMapping;gl.toneMappingExposure=SCENE_LOOK.exposure;const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
 
         // Leaving 3D (e.g. for the Plan view) disposes the renderer and also fires this event;
 
@@ -695,7 +709,7 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
 
         setTimeout(()=>{if(canvas.isConnected)onContextLost?.();},0);},false);}}>
 
-      <color attach="background" args={[evening?'#28374a':'#e9edf0']}/>
+      <color attach="background" args={[evening?'#28374a':DAY_BACKGROUND]}/>
 
       {/* The real sky (Real Life G3); the studio light stands in while it loads. */}
 

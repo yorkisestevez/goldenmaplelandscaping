@@ -3,6 +3,7 @@ import {WATER_OPTICS} from './waterOptics';
 import {WINDOW_ROOM} from './windowGlass';
 import {skyDomeSampleElevation} from './skyModel';
 import {materialPatchKeys} from './materialPatches';
+import {FOLIAGE} from './foliageLighting';
 import {PHOTO_LIGHT,PHOTO_MOON,PHOTO_NIGHT_FILL,sunDisc,type PhotoLook} from '../../photoGrade';
 
 const HIDDEN=new Set(['sky-dome','picked-wall-outline','selection-outline','picked-pergola-outline','landscape-mature-overlay']);
@@ -41,7 +42,7 @@ function restoreMaterial(saved:SavedMaterial){
  material.roughness=saved.roughness;material.metalness=saved.metalness;material.opacity=saved.opacity;material.transparent=saved.transparent;material.depthWrite=saved.depthWrite;
  material.alphaTest=saved.alphaTest;material.side=saved.side;material.emissiveIntensity=saved.emissiveIntensity;material.envMapIntensity=saved.envMapIntensity;material.aoMapIntensity=saved.aoMapIntensity;material.normalScale.copy(saved.normalScale);
  if(body){body.transmission=saved.transmission;body.thickness=saved.thickness;body.ior=saved.ior;body.attenuationDistance=saved.attenuationDistance;body.attenuationColor.copy(saved.attenuationColor);}
- delete material.userData.photoLeafLift;delete material.userData.photoBloomLift;material.needsUpdate=true;
+ delete material.userData.photoLeaf;delete material.userData.photoBloomLift;material.needsUpdate=true;
 }
 /** A repeating ripple the path tracer can sample. The raster water keeps its shader waves. */
 export function waterRippleNormal(){
@@ -136,11 +137,6 @@ function toLinear(value:number,srgb:boolean){
  if(!srgb)return u;
  return u<=0.04045?u/12.92:((u+0.055)/1.055)**2.4;
 }
-/** Same curve as foliageLighting: pow(albedo, 0.8) lifts a crushed leaf, then a small green gain. */
-const LEAF_GAIN=[1.01,1.03,0.98];
-const liftedLeafMaps:THREE.DataTexture[]=[];
-const liftedLeafCache=new Map<string,THREE.DataTexture>();
-function leafLinear(value:number){return Math.pow(Math.max(0,value),0.8);}
 function srgbByte(linear:number){
  const c=Math.min(1,Math.max(0,linear));
  const s=c<=0.0031308?c*12.92:1.055*c**(1/2.4)-0.055;
@@ -162,34 +158,6 @@ function readTextureRGBA(texture:THREE.Texture){
  ctx.drawImage(image as CanvasImageSource,0,0);
  const read=ctx.getImageData(0,0,image.width,image.height);
  return {data:read.data,w:image.width,h:image.height};
-}
-/** A copy of a leaf atlas with the raster foliage curve baked in. The path tracer cannot run that shader. */
-function liftLeafMap(texture:THREE.Texture){
- const cached=liftedLeafCache.get(texture.uuid);if(cached)return cached;
- const pixels=readTextureRGBA(texture);if(!pixels)return null;
- const srgb=texture.colorSpace===THREE.SRGBColorSpace,out=new Uint8Array(pixels.w*pixels.h*4);
- for(let i=0;i<out.length;i+=4){
-  out[i]=srgbByte(leafLinear(toLinear(pixels.data[i]/255,srgb))*LEAF_GAIN[0]);
-  out[i+1]=srgbByte(leafLinear(toLinear(pixels.data[i+1]/255,srgb))*LEAF_GAIN[1]);
-  out[i+2]=srgbByte(leafLinear(toLinear(pixels.data[i+2]/255,srgb))*LEAF_GAIN[2]);
-  out[i+3]=pixels.data[i+3];
- }
- const lifted=new THREE.DataTexture(out,pixels.w,pixels.h);lifted.colorSpace=THREE.SRGBColorSpace;lifted.flipY=texture.flipY;
- lifted.wrapS=texture.wrapS;lifted.wrapT=texture.wrapT;lifted.offset.copy(texture.offset);lifted.repeat.copy(texture.repeat);
- lifted.magFilter=texture.magFilter;lifted.minFilter=texture.minFilter;lifted.anisotropy=texture.anisotropy;lifted.needsUpdate=true;
- liftedLeafCache.set(texture.uuid,lifted);liftedLeafMaps.push(lifted);return lifted;
-}
-/** Shade fill plus sun through the back of a card — the two terms the foliage shader adds after the shadow map. */
-function leafGlow(look:PhotoLook):[number,number,number]{
- // Shade fill, plus a little sun through the card. The full backlight on every texel turned the beds neon.
- const night=look==='night',sun=night?0:look==='golden'?0.42:0.32;
- const fill=night?[0.05,0.07,0.035]:look==='golden'?[0.07,0.09,0.04]:[0.06,0.08,0.035];
- const through=[0.1,0.18,0.05];
- return [fill[0]+through[0]*sun,fill[1]+through[1]*sun,fill[2]+through[2]*sun];
-}
-function releaseLeafMaps(){
- for(const texture of liftedLeafMaps)texture.dispose();
- liftedLeafMaps.length=0;liftedLeafCache.clear();
 }
 function meanColor(attr:THREE.BufferAttribute|THREE.InterleavedBufferAttribute,count=attr.count){
  let r=0,g=0,b=0;const n=Math.max(0,Math.min(count,attr.count));
@@ -304,7 +272,7 @@ function bakeInstances(mesh:THREE.InstancedMesh){
   const attr=src.getAttribute(key);
   return attr?[{key,itemSize:attr.itemSize,source:attr,array:new Float32Array(verts*count*attr.itemSize)}]:[];
  });
- const leaf=listHas(mesh.material,'photoLeafLift'),bloom=listBloom(mesh.material);
+ const bloom=listBloom(mesh.material);
  for(let i=0;i<count;i++){
   mesh.getMatrixAt(i,matrix);matrix.premultiply(mesh.matrixWorld);normalMatrix.getNormalMatrix(matrix);
   const base=i*verts;
@@ -328,8 +296,6 @@ function bakeInstances(mesh:THREE.InstancedMesh){
     const at=(base+j)*4;let r=1,g=1,b=1,a=1;
     if(srcColor){r=srcColor.getX(j);g=srcColor.getY(j);b=srcColor.getZ(j);if(srcColor.itemSize>3)a=srcColor.getW(j);}
     if(instanceColor){r*=instanceColor.getX(i);g*=instanceColor.getY(i);b*=instanceColor.getZ(i);if(instanceColor.itemSize>3)a*=instanceColor.getW(i);}
-    // The raster foliage shader lifts the product of the atlas and the instance tint. Do the tint half here; the atlas is already lifted.
-    if(leaf){r=leafLinear(r);g=leafLinear(g);b=leafLinear(b);}
     if(bloom){const scale=1+bloom;r*=scale;g*=scale;b*=scale;}
     colors[at]=r;colors[at+1]=g;colors[at+2]=b;colors[at+3]=a;
    }
@@ -419,21 +385,13 @@ function tuneMaterial(mesh:THREE.Mesh,material:THREE.MeshStandardMaterial,look:P
   material.emissive.set('#fff1dc');material.emissiveMap=caustics;material.emissiveIntensity=PHOTO_LIGHT.floorCaustic;material.needsUpdate=true;
  }
  const patches=materialPatchKeys(material);
- if(patches.includes('foliage-summer-v1')){
-  // Match the raster leaf shader: lifted albedo, a lower card cutoff so the soft fringe survives, and green light through the shaded side.
-  const glow=leafGlow(look),hasMap=!!(material.map&&textureReady(material.map));
-  if(hasMap){
-   const lifted=liftLeafMap(material.map!);
-   if(lifted){material.map=lifted;material.emissiveMap=lifted;}
-   material.color.setRGB(leafLinear(material.color.r),leafLinear(material.color.g),leafLinear(material.color.b));
-   material.emissive.setRGB(glow[0],glow[1],glow[2]);
-  }else{
-   const r=leafLinear(material.color.r)*LEAF_GAIN[0],g=leafLinear(material.color.g)*LEAF_GAIN[1],b=leafLinear(material.color.b)*LEAF_GAIN[2];
-   material.color.setRGB(r,g,b);material.emissive.setRGB(r*glow[0],g*glow[1],b*glow[2]);
-  }
-  material.emissiveIntensity=1;material.roughness=Math.min(material.roughness,.64);material.metalness=0;
+ if(patches.some(key=>key.startsWith('foliage-summer-v2'))){
+  // Match the raster leaf shader: the atlas as it is and matte, with no faked glow. The tracer's transmission is see-through
+  // glass, not leaf translucency (it darkens the leaf and lets grey light under the tree), so leaves stay opaque cards.
+  // A cutoff above 0.22 would punch a soft leaf card down to specks.
+  material.roughness=FOLIAGE.roughness;material.metalness=0;
   if(material.alphaTest>0.22)material.alphaTest=0.22;
-  material.userData.photoLeafLift=true;material.needsUpdate=true;
+  material.userData.photoLeaf=true;material.needsUpdate=true;
  }else if(patches.includes('bloom-lift-v1')){
   // Flower cards carry their own unlit lift. A hard 0.45 cutoff also trims the soft petal down to a speck.
   if(material.alphaTest>0.2)material.alphaTest=0.2;
@@ -441,10 +399,6 @@ function tuneMaterial(mesh:THREE.Mesh,material:THREE.MeshStandardMaterial,look:P
  }
  // The lawn's raster occlusion map is a baked shadow of the house. The tracer casts its own contact shadows.
  material.aoMap=null;
-}
-function listHas(material:THREE.Material|THREE.Material[],key:'photoLeafLift'){
- const list=Array.isArray(material)?material:[material];
- return list.some(entry=>!!(standard(entry)?.userData as {photoLeafLift?:boolean}|undefined)?.[key]);
 }
 function listBloom(material:THREE.Material|THREE.Material[]){
  const list=Array.isArray(material)?material:[material];
@@ -564,6 +518,5 @@ export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[num
   swapped.forEach((mesh,i)=>{mesh.material=previous[i];});
   for(const proxy of proxies)proxy.dispose();
   for(const object of added){scene.remove(object);const mesh=object as THREE.Mesh;mesh.geometry?.dispose();if(mesh.name==='photo-emitter')(mesh.material as THREE.Material|undefined)?.dispose?.();}
-  releaseLeafMaps();
  };
 }

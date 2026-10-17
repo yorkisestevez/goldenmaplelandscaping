@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import type {LandscapeObject,LandscapePoint} from '../../landscapeTypes';
 import {landscapeAsset,plantFoliageTint} from '../../landscapeCatalogue';
-import {applyFoliageLighting,tintPlantInstance} from './foliageLighting';
+import {applyFoliageLighting,crownBend,isLeafMaterial,leafTransmitUniform,tintPlantInstance} from './foliageLighting';
 import PlantBlooms from './plantBlooms';
 import {activePuttingCups,landscapeBedAreas,landscapePlacement,landscapeRenderLods} from '../../landscapeModelRuntime';
 import {createSiteSurface,siteClip,siteSolidCells,sitePlaneHeight} from '../../siteSurfaceEngine';
@@ -46,16 +46,21 @@ export function steelEdgingGeometry(points:THREE.Vector3[]){
 function InstancePart({data,items,source,normalization,lod}:{data:DeckData;items:LandscapeObject[];source:THREE.Mesh;normalization:THREE.Matrix4;lod:number}){
  const q=useRenderQuality(),invalidate=useThree(s=>s.invalidate),original=Array.isArray(source.material)?source.material[0]:source.material;
  const foliage=items[0]?.kind==='plant';
- const material=useMemo(()=>{const m=original.clone();if(foliage)applyFoliageLighting(m);return m;},[original,foliage]);useFixtureLit(material);
+ const assetId=items[0]?.assetId;
+ // Card normals lean out from the centre of this part's own leaves (its geometry bounds), so a canopy shades as a volume.
+ const material=useMemo(()=>{const m=original.clone();if(foliage){source.geometry.computeBoundingBox();applyFoliageLighting(m,{center:source.geometry.boundingBox!.getCenter(new THREE.Vector3()),bend:crownBend(assetId??'')});}return m;},[original,foliage,source.geometry,assetId]);
+ // The species tint is a leaf colour: textured bark and trunks keep their own (an untextured trunk keeps the tint it had).
+ const leafTint=foliage&&(isLeafMaterial(original)||!(original as THREE.MeshStandardMaterial).map);useFixtureLit(material);
  const instance=useMemo(()=>new THREE.InstancedMesh(source.geometry,material,Math.max(1,items.length)),[source.geometry,material,items.length]);
  useEffect(()=>()=>{instance.dispose();},[instance]);useEffect(()=>()=>material.dispose(),[material]);
  useLayoutEffect(()=>{
   const color=new THREE.Color();
-  items.forEach((o,i)=>{instance.setMatrixAt(i,landscapeInstanceMatrix(data,o,normalization,source.matrixWorld));instance.setColorAt(i,o.kind==='plant'?tintPlantInstance(color,plantFoliageTint(o.speciesRecord?.id),o.id):color.set(plantFoliageTint(o.speciesRecord?.id)));});instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
+  items.forEach((o,i)=>{instance.setMatrixAt(i,landscapeInstanceMatrix(data,o,normalization,source.matrixWorld));instance.setColorAt(i,o.kind==='plant'?(leafTint?tintPlantInstance(color,plantFoliageTint(o.speciesRecord?.id),o.id):color.set('#ffffff')):color.set(plantFoliageTint(o.speciesRecord?.id)));});instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
   instance.name='landscape-'+items[0]?.assetId+'-lod'+lod;instance.userData={landscapeIds:items.map(o=>o.id),pickPartIds:items.map(o=>'landscape/'+o.id),genericVisualProxy:true,unmeasuredElevationIds:items.filter(o=>!landscapePlacement(data,o).measured).map(o=>o.id)};
   instance.castShadow=q.tier!=='constrained'&&lod<2;instance.receiveShadow=true;
+  if(foliage)leafTransmitUniform(material).value=instance.castShadow?1:0;
   const standard=material as THREE.MeshStandardMaterial;if(standard.alphaTest>0){standard.transparent=false;standard.depthWrite=true;standard.side=THREE.DoubleSide;standard.alphaToCoverage=q.msaaSamples>0;standard.needsUpdate=true;}for(const t of [standard.map,standard.normalMap,standard.roughnessMap,standard.metalnessMap])if(t){t.anisotropy=q.anisotropy;t.needsUpdate=true;}invalidate();
- },[data,items,instance,source,normalization,lod,q,material,invalidate]);
+ },[data,items,instance,source,normalization,lod,q,material,invalidate,leafTint]);
  return <primitive object={instance} dispose={null}/>;
 }
 function AssetInstances({data,items,lod}:{data:DeckData;items:LandscapeObject[];lod:0|1|2}){
