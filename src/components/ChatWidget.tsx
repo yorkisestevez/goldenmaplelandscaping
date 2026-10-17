@@ -1,26 +1,43 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import { MessageCircle, X, Send, Leaf } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { X, Send, ArrowRight } from 'lucide-react';
 import { trackEngagement, trackCall, trackLead } from '../utils/analytics';
 import { openSophieSession, type SophieSession } from '../utils/sophieChat';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
+import { ESTIMATOR_LOCATIONS, type EstimatorLocationKey } from '../data/locations';
+import {
+  QUICK_PROJECTS, QUICK_SIZES, type QuickProject, type QuickRangeInput, type QuickSize,
+} from '../data/sophieQuoteOptions';
+import {
+  pickTeaser, shouldShowTeaser, isPriceQuestion, projectFromText, COST_CHIP, BOOK_CHIP,
+  TEASER_DELAY_MS, TEASER_SCROLL_RATIO, TEASER_AUTOHIDE_MS, TEASER_STORAGE_KEY,
+  type Teaser, type TeaserMemory,
+} from '../data/sophieTeasers';
+import type { QuickRange } from '../utils/sophieQuote';
+import SophieMark from './SophieMark';
 
 type Role = 'user' | 'assistant';
-interface Msg { role: Role; content: string }
+type PricedRange = Extract<QuickRange, { kind: 'range' }>;
+interface Msg { role: Role; content: string; range?: PricedRange; designerHref?: string }
+
+/** The 3-tap range, one step at a time. */
+type Flow =
+  | { step: 'project' }
+  | { step: 'size'; project: QuickProject }
+  | { step: 'city'; project: QuickProject; size: QuickSize };
 
 /** Legacy DeepSeek chat function — now only a fallback if the live agent is unreachable. */
 const CHAT_ENDPOINT = '/.netlify/functions/chat';
 
 const GREETING =
-  "Hi! I'm Sophie. Ask me about our services, process, service areas, or a project conversation. For numbers, the cost estimator can provide a planning range.";
+  "Hi, I'm Sophie. I can pull a planning range for your project from our cost estimator, or answer questions about our services, process and service areas.";
 
-const SUGGESTIONS = [
-  'Can you help me book a project call?',
-  "What's your warranty?",
-  'Which areas do you serve?',
-  'Do you build composite decks?',
-];
+const SUGGESTIONS = [COST_CHIP, BOOK_CHIP, "What's your warranty?", 'Which areas do you serve?'];
+
+const greetingFor = (pathname: string) => pickTeaser(pathname)?.line ?? GREETING;
+const projectMeta = (id: QuickProject) => QUICK_PROJECTS.find((p) => p.id === id)!;
+const money = (n: number) => `$${n.toLocaleString('en-CA')}`;
 
 /** Local canned answers so the widget is fully testable in `vite dev` (no function/key).
  *  Production uses the real DeepSeek-backed function — this is only hit when the
@@ -42,24 +59,52 @@ function fallbackReply(q: string): string {
   return 'Happy to help! I can talk through our services, process, warranty, service areas, and rough pricing. The cost calculator can provide an itemized planning range. What are you planning?';
 }
 
+/** sessionStorage can throw (private mode, blocked storage); the teaser then simply shows once per page view. */
+function readTeaserMemory(): TeaserMemory {
+  try {
+    const v = sessionStorage.getItem(TEASER_STORAGE_KEY);
+    return v === 'seen' || v === 'dismissed' ? v : null;
+  } catch { return null; }
+}
+function writeTeaserMemory(v: Exclude<TeaserMemory, null>) {
+  try { sessionStorage.setItem(TEASER_STORAGE_KEY, v); } catch { /* storage blocked */ }
+}
+
 export default function ChatWidget() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const reduceMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [pastHero, setPastHero] = useState(pathname !== '/');
-  const [messages, setMessages] = useState<Msg[]>([{ role: 'assistant', content: GREETING }]);
+  const [messages, setMessages] = useState<Msg[]>([{ role: 'assistant', content: greetingFor(pathname) }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [flow, setFlow] = useState<Flow | null>(null);
+  const [teaser, setTeaser] = useState<Teaser | null>(null);
+  const [unread, setUnread] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const userTurns = messages.filter((m) => m.role === 'user').length;
+  const chatted = userTurns > 0;
+  const launcherVisible = pastHero && !pathname.startsWith('/contact');
+
+  // The latest planning range and the tap choices behind it.
+  const lastRangeRef = useRef<{ range: PricedRange; choice: QuickRangeInput } | null>(null);
+  // Range context waiting for the live agent session to open.
+  const pendingContextRef = useRef<string | null>(null);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages, loading]);
+  }, [messages, loading, flow]);
 
   useEffect(() => {
     if (open) {
       trackEngagement('chat_open');
+      // Opening the chat is the nudge's job done; never pop it up afterwards.
+      if (readTeaserMemory() === null) writeTeaserMemory('seen');
+      setUnread(false);
+      setTeaser(null);
       setTimeout(() => inputRef.current?.focus(), 250);
     }
   }, [open]);
@@ -67,6 +112,12 @@ export default function ChatWidget() {
   // Never auto-open. Stay off the homepage hero and off /contact/, where the form is the page.
   useEffect(() => {
     if (pathname.startsWith('/contact')) setOpen(false);
+  }, [pathname]);
+
+  // Until the visitor says something, Sophie's opener follows the page they're on.
+  useEffect(() => {
+    if (!chatted && !flow) setMessages([{ role: 'assistant', content: greetingFor(pathname) }]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   useEffect(() => {
@@ -87,6 +138,45 @@ export default function ChatWidget() {
     return () => observer.disconnect();
   }, [pathname]);
 
+  // The one proactive nudge per session: after a dwell or a real scroll, never over the open panel.
+  useEffect(() => {
+    setTeaser(null);
+    if (!launcherVisible || !shouldShowTeaser({ pathname, stored: readTeaserMemory(), chatted, open })) return;
+    const candidate = pickTeaser(pathname)!;
+    let timer = 0;
+    const stop = () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('scroll', onScroll);
+    };
+    const fire = () => {
+      stop();
+      writeTeaserMemory('seen');
+      setTeaser(candidate);
+      setUnread(true);
+      trackEngagement('chat_teaser_shown', candidate.key);
+    };
+    function onScroll() {
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollable > 0 && window.scrollY / scrollable >= TEASER_SCROLL_RATIO) fire();
+    }
+    timer = window.setTimeout(fire, TEASER_DELAY_MS);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return stop;
+  }, [pathname, launcherVisible, chatted, open]);
+
+  useEffect(() => {
+    if (!teaser) return;
+    const t = window.setTimeout(() => setTeaser(null), TEASER_AUTOHIDE_MS);
+    return () => window.clearTimeout(t);
+  }, [teaser]);
+
+  const dismissTeaser = () => {
+    writeTeaserMemory('dismissed');
+    setTeaser(null);
+    setUnread(false);
+    trackEngagement('chat_teaser_dismiss', teaser?.key);
+  };
+
   // The live agent session. Opened lazily on the first message so visitors who
   // never chat cost nothing, and reused for the rest of the conversation so
   // Sophie keeps her context (and her tools) across turns.
@@ -95,9 +185,95 @@ export default function ChatWidget() {
 
   useEffect(() => () => { sessionRef.current?.close(); }, []);
 
+  const say = (msg: Msg) => setMessages((m) => [...m, msg]);
+
   const addReply = (content: string) => {
-    setMessages((m) => [...m, { role: 'assistant', content }]);
+    say({ role: 'assistant', content });
     setLoading(false);
+  };
+
+  /** /book with the service and (when there is one) the range already filled in — the card's own
+   *  range when booked from a card, otherwise the latest one. */
+  const goBook = (source: string, range: PricedRange | undefined = lastRangeRef.current?.range) => {
+    const pageProject = pickTeaser(pathname)?.project;
+    trackEngagement('chat_book_click', source);
+    setTeaser(null);
+    setOpen(false);
+    // Already on /book: its scheduler reads prefill only on arrival, so just reveal it.
+    if (pathname.startsWith('/book')) return;
+    navigate('/book', {
+      state: {
+        serviceInterest: range?.serviceInterest ?? (pageProject ? projectMeta(pageProject).serviceInterest : undefined),
+        bookingNotes: range?.bookingNotes ?? `Sent from Sophie chat on ${pathname}.`,
+      },
+    });
+  };
+
+  const goTo = (href: string, label: string) => {
+    trackEngagement('chat_link_click', label);
+    setOpen(false);
+    navigate(href);
+  };
+
+  // ---- 3-tap planning range: deterministic, priced by the estimator engine ----
+
+  const askSize = (project: QuickProject) => {
+    say({ role: 'assistant', content: `Roughly how big is the ${projectMeta(project).noun}?` });
+    setFlow({ step: 'size', project });
+  };
+
+  const startQuote = (project?: QuickProject) => {
+    trackEngagement('chat_range_start', project ?? 'none');
+    if (project) { askSize(project); return; }
+    say({ role: 'assistant', content: 'Happy to. What are you planning?' });
+    setFlow({ step: 'project' });
+  };
+
+  const finishQuote = async (choice: QuickRangeInput) => {
+    setFlow(null);
+    setLoading(true);
+    try {
+      // The engine loads only once someone asks for a price.
+      const { quickRange } = await import('../utils/sophieQuote');
+      const result = quickRange(choice);
+      setLoading(false);
+      if (result.kind === 'designer') {
+        lastRangeRef.current = null;
+        say({
+          role: 'assistant',
+          content: 'Decks get their price from our deck designer. It opens at your size, and you can draw your own shape.',
+          designerHref: result.href,
+        });
+        trackEngagement('chat_range_shown', `deck_${choice.size}`);
+        return;
+      }
+      say({ role: 'assistant', content: `Planning range for ${result.summary}: ${result.band}.`, range: result });
+      lastRangeRef.current = { range: result, choice };
+      if (sessionRef.current) sessionRef.current.sendContext(result.contextText);
+      else pendingContextRef.current = result.contextText;
+      trackEngagement('chat_range_shown', `${choice.project}_${choice.size}_${choice.city}`);
+    } catch {
+      addReply("I couldn't load the estimator just now. You can open it directly here: /cost-estimator");
+    }
+  };
+
+  const pickProject = (project: QuickProject) => {
+    say({ role: 'user', content: projectMeta(project).label });
+    askSize(project);
+  };
+
+  const pickSize = (project: QuickProject, size: QuickSize) => {
+    const option = QUICK_SIZES[project].find((s) => s.id === size)!;
+    say({ role: 'user', content: `${option.label} (${option.hint})` });
+    // The deck designer prices by area alone, so a deck skips the town.
+    if (project === 'deck') { void finishQuote({ project, size, city: 'barrie' }); return; }
+    say({ role: 'assistant', content: 'And which town is the property in?' });
+    setFlow({ step: 'city', project, size });
+  };
+
+  const pickCity = (project: QuickProject, size: QuickSize, city: EstimatorLocationKey) => {
+    say({ role: 'user', content: ESTIMATOR_LOCATIONS.find((l) => l.key === city)!.name });
+    void finishQuote({ project, size, city });
   };
 
   /** Legacy Netlify function → canned answers. Only used if the agent is unreachable. */
@@ -106,8 +282,12 @@ export default function ChatWidget() {
       const res = await fetch(CHAT_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Only send role + content; trim history to last 12 turns to bound cost.
-        body: JSON.stringify({ messages: history.slice(-12).map((m) => ({ role: m.role, content: m.content })) }),
+        // Only send role + content; trim history to last 12 turns to bound cost. The range goes as the
+        // visitor's tap choices only — the function re-prices them itself.
+        body: JSON.stringify({
+          messages: history.slice(-12).map((m) => ({ role: m.role, content: m.content })),
+          pricingContext: lastRangeRef.current?.choice,
+        }),
       });
       if (!res.ok) throw new Error(`status ${res.status}`);
       const data = (await res.json()) as { reply?: string; leadCaptured?: boolean };
@@ -128,8 +308,15 @@ export default function ChatWidget() {
     const next: Msg[] = [...messages, { role: 'user', content }];
     setMessages(next);
     setInput('');
-    setLoading(true);
     trackEngagement('chat_message', content.slice(0, 60));
+
+    // A price question before any range gets the estimator's number, not the model's guess.
+    if (!lastRangeRef.current && isPriceQuestion(content)) {
+      startQuote(projectFromText(content) ?? pickTeaser(pathname)?.project);
+      return;
+    }
+    setFlow(null);
+    setLoading(true);
 
     if (!liveRef.current) { await sendViaFallback(content, next); return; }
 
@@ -144,6 +331,10 @@ export default function ChatWidget() {
           },
         });
       }
+      if (pendingContextRef.current) {
+        sessionRef.current.sendContext(pendingContextRef.current);
+        pendingContextRef.current = null;
+      }
       sessionRef.current.send(content);
       // The reply arrives asynchronously via onReply, which clears `loading`.
     } catch {
@@ -151,6 +342,18 @@ export default function ChatWidget() {
       sessionRef.current = null;
       await sendViaFallback(content, next);
     }
+  };
+
+  const onChip = (chip: string) => {
+    if (chip === COST_CHIP) { say({ role: 'user', content: chip }); startQuote(pickTeaser(pathname)?.project); return; }
+    if (chip === BOOK_CHIP) { goBook('chip'); return; }
+    void send(chip);
+  };
+
+  const onTeaserChip = (chip: string) => {
+    trackEngagement('chat_teaser_chip', chip);
+    if (chip !== BOOK_CHIP) setOpen(true);
+    onChip(chip);
   };
 
   const onSubmit = (e: FormEvent) => {
@@ -162,14 +365,13 @@ export default function ChatWidget() {
   const renderContent = (text: string) => {
     const parts = text.split(new RegExp(`(\\/cost-estimator|\\/book|\\/contact|${publicContact.phoneDisplay.replace(/[()]/g, '\\$&')})`));
     return parts.map((p, i) => {
-      if (p === '/cost-estimator' || p === '/book' || p === '/contact') {
+      if (p === '/book') {
+        return <button key={i} onClick={() => goBook('reply')} className="text-brand-green-dark underline underline-offset-2">book a site visit</button>;
+      }
+      if (p === '/cost-estimator' || p === '/contact') {
         return (
-          <button
-            key={i}
-            onClick={() => { setOpen(false); navigate(p); }}
-            className="text-brand-green-dark underline underline-offset-2 hover:text-brand-green-dark"
-          >
-            {p === '/cost-estimator' ? 'cost calculator' : p === '/book' ? 'book a call' : 'contact us'}
+          <button key={i} onClick={() => goTo(p, p.slice(1))} className="text-brand-green-dark underline underline-offset-2">
+            {p === '/cost-estimator' ? 'cost calculator' : 'contact us'}
           </button>
         );
       }
@@ -180,22 +382,100 @@ export default function ChatWidget() {
     });
   };
 
+  const chipClass =
+    'px-3 py-2 rounded-full border border-brand-green/40 text-brand-green-dark font-sans text-[12px] hover:bg-brand-green/10 hover:border-brand-green transition-colors text-left';
+
+  const flowChips = (): Array<{ label: string; onClick: () => void }> => {
+    if (!flow) return [];
+    if (flow.step === 'project') return QUICK_PROJECTS.map((p) => ({ label: p.label, onClick: () => pickProject(p.id) }));
+    if (flow.step === 'size') {
+      return QUICK_SIZES[flow.project].map((s) => ({ label: `${s.label} · ${s.hint}`, onClick: () => pickSize(flow.project, s.id) }));
+    }
+    return ESTIMATOR_LOCATIONS.map((l) => ({ label: l.name, onClick: () => pickCity(flow.project, flow.size, l.key) }));
+  };
+
+  // Links to the page the visitor is already on would do nothing: both pages read their prefill on arrival.
+  const onBookPage = pathname.startsWith('/book');
+  const onEstimatorPage = pathname.startsWith('/cost-estimator');
+
+  // Once the visitor keeps talking after seeing a range, keep the booking one tap away.
+  const resultAt = messages.map((m) => !!(m.range || m.designerHref)).lastIndexOf(true);
+  const showBookPill = !onBookPage && resultAt >= 0 && !!messages[resultAt].range
+    && messages.slice(resultAt + 1).some((m) => m.role === 'user') && !loading;
+  const suggestions = onBookPage ? SUGGESTIONS.filter((s) => s !== BOOK_CHIP) : SUGGESTIONS;
+
   return (
     <>
+      {/* Sophie's single nudge for this session. Sits above the launcher; tapping it opens the chat. */}
+      <AnimatePresence>
+        {teaser && !open && launcherVisible && (
+          <motion.div
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.97 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed z-[60] left-4 right-4 max-w-[300px] bottom-[calc(10rem+env(safe-area-inset-bottom,0px))] xl:left-auto xl:right-6 xl:bottom-24 rounded-2xl border border-brand-dim bg-brand-surface shadow-[0_24px_60px_-18px_rgba(33,30,21,0.45)] p-4"
+            role="status"
+          >
+            <button
+              onClick={dismissTeaser}
+              aria-label="Dismiss Sophie's message"
+              className="absolute top-2 right-2 p-1 text-brand-muted hover:text-brand-bonewhite transition-colors"
+            >
+              <X size={14} strokeWidth={1.75} />
+            </button>
+            <button
+              onClick={() => { trackEngagement('chat_teaser_click', teaser.key); setOpen(true); }}
+              className="flex items-start gap-3 text-left pr-5"
+            >
+              <span className="mt-0.5 w-8 h-8 shrink-0 rounded-full bg-brand-black text-brand-gold-light flex items-center justify-center">
+                <SophieMark size={18} />
+              </span>
+              <span>
+                <span className="block font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark mb-1">Sophie</span>
+                <span className="block font-sans text-[13px] leading-snug text-brand-bonewhite">{teaser.line}</span>
+              </span>
+            </button>
+            <div className="flex flex-wrap gap-2 mt-3 pl-11">
+              {teaser.chips.map((chip, i) => (
+                <button
+                  key={chip}
+                  onClick={() => onTeaserChip(chip)}
+                  className={i === 0
+                    ? 'px-3 py-1.5 rounded-full bg-brand-black text-brand-gold-light font-sans text-[12px] hover:bg-brand-ink transition-colors'
+                    : 'px-3 py-1.5 rounded-full border border-brand-dim text-brand-bonewhite font-sans text-[12px] hover:border-brand-gold transition-colors'}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Left side on phones so it clears the estimate half of the sticky bar. Never opens by itself. */}
       <AnimatePresence>
-        {!open && pastHero && !pathname.startsWith('/contact') && (
+        {!open && launcherVisible && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
+            animate={unread && !reduceMotion
+              ? { opacity: 1, scale: [1, 1.1, 1, 1.06, 1], rotate: [0, -8, 6, -3, 0] }
+              : { opacity: 1, scale: 1, rotate: 0 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: unread ? 0.9 : 0.25 }}
             onClick={() => setOpen(true)}
-            aria-label="Open chat assistant"
-            className="fixed z-[60] left-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] xl:left-auto xl:right-6 xl:bottom-6 w-14 h-14 rounded-full bg-gradient-to-br from-brand-green to-brand-green-dark text-brand-black flex items-center justify-center shadow-[0_10px_30px_-6px_rgba(95,174,126,0.55)] hover:shadow-[0_14px_38px_-6px_rgba(95,174,126,0.7)] hover:-translate-y-0.5 transition-all gm-live-dot"
+            aria-label={unread ? 'Open chat with Sophie (1 new message)' : 'Open chat with Sophie'}
+            className="group fixed z-[60] left-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] xl:left-auto xl:right-6 xl:bottom-6 w-14 h-14 rounded-full bg-brand-black text-brand-gold-light ring-1 ring-inset ring-brand-gold/40 flex items-center justify-center shadow-[0_10px_30px_-6px_rgba(198,164,125,0.55)] hover:shadow-[0_14px_38px_-6px_rgba(198,164,125,0.75)] hover:-translate-y-0.5 transition-[box-shadow,translate] gm-live-dot"
           >
-            <MessageCircle size={24} strokeWidth={1.75} />
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-brand-green-light border-2 border-brand-nearblack" />
+            <SophieMark size={30} />
+            {unread ? (
+              <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-brand-gold text-brand-black font-sans text-[11px] font-semibold leading-5 text-center border-2 border-brand-nearblack">1</span>
+            ) : (
+              <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-brand-black" />
+            )}
+            <span className="hidden xl:block pointer-events-none absolute right-full mr-3 whitespace-nowrap rounded-full bg-brand-black px-3 py-1.5 font-sans text-[12px] text-brand-gold-light opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+              Chat with Sophie
+            </span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -215,14 +495,14 @@ export default function ChatWidget() {
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-brand-dim/60 bg-gradient-to-r from-brand-green/15 to-transparent">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-green to-brand-green-dark flex items-center justify-center">
-                  <Leaf size={17} className="text-brand-black" strokeWidth={1.75} />
+                <div className="w-9 h-9 rounded-full bg-brand-black text-brand-gold-light ring-1 ring-inset ring-brand-gold/40 flex items-center justify-center">
+                  <SophieMark size={20} />
                 </div>
                 <div>
                   <div className="font-display text-[16px] text-brand-bonewhite leading-none">Sophie</div>
                   <div className="flex items-center gap-1.5 mt-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-green-light" />
-                    <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">Online · replies instantly</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-muted">Online · planning ranges</span>
                   </div>
                 </div>
               </div>
@@ -235,15 +515,60 @@ export default function ChatWidget() {
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-5 space-y-4" aria-live="polite">
               {messages.map((m, i) => (
                 <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-[82%] px-4 py-2.5 rounded-2xl font-sans text-[13.5px] leading-relaxed ${
-                      m.role === 'user'
-                        ? 'bg-brand-gold text-brand-black rounded-br-md'
-                        : 'bg-brand-midsurface text-brand-bonewhite border border-brand-dim/60 rounded-bl-md'
-                    }`}
-                  >
-                    {m.role === 'assistant' ? renderContent(m.content) : m.content}
-                  </div>
+                  {m.range ? (
+                    <div className="w-[88%] rounded-2xl rounded-bl-md border border-brand-gold/40 bg-brand-nearblack p-4">
+                      <div className="font-sans text-[10px] uppercase tracking-[0.2em] text-brand-gold-dark">Planning range</div>
+                      <div className="font-display text-[24px] leading-tight text-brand-bonewhite mt-1">
+                        {money(m.range.low)}–{money(m.range.high)}
+                        <span className="font-sans text-[12px] text-brand-muted"> + HST</span>
+                      </div>
+                      <div className="font-sans text-[12.5px] text-brand-bonewhite mt-1">{m.range.summary}</div>
+                      <div className="font-sans text-[12px] text-brand-muted mt-0.5">
+                        About {m.range.days.low}–{m.range.days.high} days on site
+                      </div>
+                      <p className="font-sans text-[11.5px] text-brand-muted leading-snug mt-2">
+                        From our cost estimator. Your price is confirmed at a site visit.
+                      </p>
+                      <div className="flex flex-col gap-2 mt-3">
+                        {onBookPage ? (
+                          <p className="font-sans text-[12px] text-brand-bonewhite">Pick a time in the scheduler on this page to book the site visit.</p>
+                        ) : (
+                          <button
+                            onClick={() => goBook('range_card', m.range)}
+                            className="w-full rounded-full bg-brand-black text-brand-gold-light font-sans text-[13px] py-2.5 flex items-center justify-center gap-2 hover:bg-brand-ink transition-colors"
+                          >
+                            Book a site visit <ArrowRight size={14} strokeWidth={1.75} />
+                          </button>
+                        )}
+                        {!onEstimatorPage && (
+                          <button
+                            onClick={() => goTo(m.range!.estimatorHref, 'range_finetune')}
+                            className="w-full rounded-full border border-brand-dim text-brand-bonewhite font-sans text-[12.5px] py-2 hover:border-brand-gold transition-colors"
+                          >
+                            {m.range.estimatorPrefilled ? 'Fine-tune it in the estimator' : 'Open the estimator and set your size'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className={`max-w-[82%] px-4 py-2.5 rounded-2xl font-sans text-[13.5px] leading-relaxed ${
+                        m.role === 'user'
+                          ? 'bg-brand-gold text-brand-black rounded-br-md'
+                          : 'bg-brand-midsurface text-brand-bonewhite border border-brand-dim/60 rounded-bl-md'
+                      }`}
+                    >
+                      {m.role === 'assistant' ? renderContent(m.content) : m.content}
+                      {m.designerHref && (
+                        <button
+                          onClick={() => goTo(m.designerHref!, 'range_deck_designer')}
+                          className="mt-2 w-full rounded-full bg-brand-black text-brand-gold-light font-sans text-[13px] py-2 flex items-center justify-center gap-2"
+                        >
+                          Open the deck designer <ArrowRight size={14} strokeWidth={1.75} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
 
@@ -262,21 +587,33 @@ export default function ChatWidget() {
                 </div>
               )}
 
-              {/* Suggested questions — only at the start */}
-              {messages.length <= 1 && !loading && (
+              {/* 3-tap range options, or the opening suggestions */}
+              {flow && !loading && (
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {SUGGESTIONS.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => void send(s)}
-                      className="px-3 py-2 rounded-full border border-brand-green/40 text-brand-green-dark font-sans text-[12px] hover:bg-brand-green/10 hover:border-brand-green transition-colors text-left"
-                    >
-                      {s}
-                    </button>
+                  {flowChips().map((c) => (
+                    <button key={c.label} onClick={c.onClick} className={chipClass}>{c.label}</button>
+                  ))}
+                </div>
+              )}
+              {!flow && messages.length <= 1 && !loading && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {suggestions.map((s) => (
+                    <button key={s} onClick={() => onChip(s)} className={chipClass}>{s}</button>
                   ))}
                 </div>
               )}
             </div>
+
+            {showBookPill && (
+              <div className="px-3 pt-2">
+                <button
+                  onClick={() => goBook('pill')}
+                  className="w-full rounded-full bg-brand-black text-brand-gold-light font-sans text-[12.5px] py-2 flex items-center justify-center gap-2 hover:bg-brand-ink transition-colors"
+                >
+                  Book a site visit for this range <ArrowRight size={13} strokeWidth={1.75} />
+                </button>
+              </div>
+            )}
 
             {/* Input */}
             <form onSubmit={onSubmit} className="px-3 py-3 border-t border-brand-dim/60 flex items-center gap-2">
