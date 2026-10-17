@@ -6,6 +6,7 @@ import type {DeckData} from '../../types';
 import {Field,type Update} from '../fields';
 import PriceLedger from '../PriceLedger';
 import {isBuilderQuote,type Ledger} from '../priceLedgerModel';
+import './estimateStep.css';
 
 export interface EstimateStepProps{
   data:DeckData;update:Update;estimate:DeckEstimate;ledger:Ledger;material:DeckMaterial;railingName:string;

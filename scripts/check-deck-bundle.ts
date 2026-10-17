@@ -111,6 +111,17 @@ const css=(route.css??[]).filter(f=>!sharedCss.has(f)).map(f=>f.replace(/^\/asse
 const cssKB=css.reduce((n,f)=>n+gz(f),0);
 ok(css.length>0,'The deck designer route has a stylesheet of its own');
 ok(cssKB<=BUDGET_KB.routeCss,`Deck designer route CSS is ${cssKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.routeCss} KB): ${css.join(', ')}`);
+// October 16 (first paint): the prerendered drawing is placed and sized by the route's own stylesheet (the tools ribbon,
+// the Project controls button, the plan's frame and zoom bar) and each lazy piece of it is preloaded before hydration
+// (designer/hydrationLazy.ts). React streams those pieces as Suspense boundaries; a new one must join the preload list
+// (DeckDesigner.tsx piecesReady, PreviewPanel.tsx partsReady) or it is thrown away and redrawn on a slow load.
+{
+  const routeCss=css.map(f=>readFileSync(new URL(f,assets),'utf8')).join('\n');
+  ok(routeCss.includes('.dd-simple-tools{')&&routeCss.includes('.dd-drawing-focus-toggle{position:absolute')&&routeCss.includes('.dd-plan-navigation{'),"The tools ribbon, the Project controls button and the plan's zoom bar are styled by the route's stylesheet");
+  ok(!files.some(f=>/^PlanToolPicker-.*\.css$/.test(f)),'The tools ribbon has no stylesheet of its own to land after the first paint');
+  const streamed=readFileSync(new URL('../deck-designer/index.html',assets),'utf8').match(/\$RC\("B:\d+"/g)?.length??0;
+  ok(streamed===7,`The prerendered designer streams ${streamed} Suspense boundaries; 7 expected (the drawing, the Deck section body, the Project controls, the tools ribbon, the plan, and React Router's two data handoffs). Preload any new one before hydration, then update this count.`);
+}
 for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
 // Each section body, and the site plan's editor, is a chunk of its own (one merged into the route would pass the test
 // above unseen).
