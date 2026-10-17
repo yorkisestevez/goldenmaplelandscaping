@@ -187,23 +187,15 @@
 .dd-summary{display:flex;flex-direction:column;gap:6px;margin:20px 0;padding:16px;border:1px solid var(--dc-rule-soft);background:#fff;font-size:13px}.dd-summary strong{font-family:var(--dc-head);font-size:16px;font-weight:600;font-stretch:87.5%}.dd-summary span{font-size:12px;color:var(--dc-ink-2)}
 .dd-summary-actions{display:flex;flex-wrap:wrap;gap:10px}
 .dd-send-card{margin:24px 0 8px;padding:16px 18px;border:1px solid var(--dc-ink);border-left:3px solid var(--dc-gold);background:#fff}.dd-send-card h3{margin-top:0}.dd-send-card a{color:var(--dc-gold-ink)}
-.dd-close-pack{margin:24px 0 8px;padding:16px 18px;border:1px solid var(--dc-ink);border-left:3px solid var(--dc-gold);background:#fff}.dd-close-pack h3{margin-top:0}.dd-close-pack a{color:var(--dc-gold-ink)}
-.dd-close-steps{margin:12px 0 0;padding-left:1.25rem;display:grid;gap:16px}.dd-close-steps>li>strong{display:block;margin-bottom:4px}.dd-close-steps>li>p{margin:.35rem 0 .6rem}
+.dd-close-pack h3{margin-top:0}
 .deck-designer[data-customer] .dd-advanced{display:none}
-.dd-takeoff-list section>div{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--dc-rule-soft);font-size:12px}.dd-takeoff-list small{display:block;margin-top:4px;font-size:11px;color:var(--dc-muted)}.dd-takeoff-list strong{white-space:nowrap;font-family:var(--dc-mono);font-weight:500}.dd-takeoff-list strong small{display:block;max-width:180px;margin-top:4px;font-family:var(--dc-body);white-space:normal}.dd-takeoff-list .dd-rate-note{white-space:normal;text-align:right;font-size:11px}
-.dd-cut-table{width:100%;margin-top:14px;border-collapse:collapse;font-size:12px}.dd-cut-table th,.dd-cut-table td{padding:10px 6px;border-bottom:1px solid var(--dc-rule-soft);text-align:left;vertical-align:top}.dd-cut-table caption{margin-bottom:10px;text-align:left;font-weight:600}.dd-cut-detail{overflow-wrap:anywhere}
 .dd-yard-editor>h3{margin-top:8px}
 
-/* The price schedule: a ruled column from 1280 px, a drawer below it, the full list in Proposal & files. */
-.dd-ledger{min-width:0;padding:16px 16px 10px;background:var(--dc-sheet);border:1px solid var(--dc-ink);border-radius:0;color:var(--dc-ink);font-size:13px;line-height:1.45}.dd-ledger-column{display:none}.dd-ledger-full{margin:16px 0 20px}
-.dd-ledger-title{margin:0;font-size:19px;line-height:1.2}.dd-ledger-stamp{margin:4px 0 10px;font-family:var(--dc-mono);font-size:11px;font-weight:500;color:var(--dc-muted)}
-.dd-ledger-table{width:100%;table-layout:fixed;border-collapse:collapse}.dd-ledger-table th{padding:6px 10px 6px 0;font-weight:400;text-align:left;vertical-align:top;overflow-wrap:break-word}.dd-ledger-table td{width:40%;padding:6px 0;font-family:var(--dc-mono);font-weight:500;text-align:right;vertical-align:top}
-.dd-ledger-line+.dd-ledger-line>*{border-top:1px dotted var(--dc-rule-soft)}.dd-ledger-sums tr:first-child>*{border-top:1px solid var(--dc-ink)}.dd-ledger-subtotal>*,.dd-ledger-total>*{font-weight:600}.dd-ledger-total>*{border-top:1px solid var(--dc-ink);border-bottom:3px double var(--dc-ink);font-size:14px}
-.dd-ledger-items{margin:4px 0 0;padding:0;list-style:none;font-size:12px;color:var(--dc-ink-2)}.dd-ledger-items li{padding:2px 0}.dd-ledger-qty{white-space:nowrap;font-family:var(--dc-mono)}
+/* The price schedule lives in designer/priceLedger.css, loaded with it. These stay here: .dd-tag (the price bar) and the
+   two rules that tie a page rule of the same specificity (the quotes/changes headings, .dd-ledger-more). */
 .dd-tag{display:inline-block;padding:1px 6px;border:1px solid var(--dc-gold-ink);border-radius:0;background:var(--dc-cream);color:var(--dc-gold-ink);font-family:var(--dc-body);font-size:11px;font-weight:700;line-height:1.4;text-align:center;vertical-align:1px}.dd-tag[data-kind=builder]{border-color:var(--dc-ink);color:var(--dc-ink)}
-.dd-ledger :is(.dd-ledger-quotes,.dd-ledger-changes) :is(h3,h4){margin:14px 0 4px;font-size:14px}.dd-ledger-quotes ul,.dd-ledger-changes ol{margin:0;padding:0;list-style:none}.dd-ledger-quotes li,.dd-ledger-changes li{padding:5px 0;border-top:1px dotted var(--dc-rule-soft)}
-.dd-ledger-changes strong{margin-right:4px;font-family:var(--dc-mono);font-weight:500;white-space:nowrap}.dd-ledger-changes li[data-kind=quote] strong{color:var(--dc-gold-ink)}.dd-ledger .dd-note{margin:10px 0 4px}.dd-ledger-more{font-size:13px}
-.dd-ledger-sheet{width:100%;max-width:min(560px,100%);max-height:85vh;margin:auto auto 0;padding:0;border:2px solid var(--dc-ink);border-bottom:0;border-radius:0;background:var(--dc-sheet);color:var(--dc-ink);overflow:auto;overscroll-behavior:contain}.dd-ledger-sheet::backdrop{background:#14261c99}.dd-ledger-drawer{border:0;padding-top:12px}.dd-ledger-sheet .dd-ledger-close{float:right;margin:12px 16px 0 8px}
+.dd-ledger :is(.dd-ledger-quotes,.dd-ledger-changes) :is(h3,h4){margin:14px 0 4px;font-size:14px}
+.dd-ledger-more{font-size:13px}
 
 /* Send my design: the modal form. */
 body.dd-send-open{overflow:hidden}

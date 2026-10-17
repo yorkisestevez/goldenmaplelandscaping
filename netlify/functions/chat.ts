@@ -16,6 +16,7 @@
 
 import crypto from 'node:crypto';
 import { BUSINESS, publicContact } from '../../src/data/business';
+import { parseQuickRangeInput, quickRange } from '../../src/utils/sophieQuote';
 
 interface NetlifyEvent {
   httpMethod: string;
@@ -52,6 +53,18 @@ GUARDRAILS:
 - LEAD HANDOFF (IMPORTANT, machine-readable): the FIRST time the visitor has given you their name AND a phone OR email, write your normal warm reply confirming Yorkis will reach out, then on the very last line append this block EXACTLY, with no other text on that line: [[LEAD]]{"name":"…","phone":"…","email":"…","project":"…","town":"…"}[[/LEAD]] — fill fields you know, use "" for any you don't. Emit this block only ONCE per conversation, never again afterward. NEVER mention, describe, or explain this block to the visitor; it is stripped before they see your message.
 - When useful, refer to paths exactly as "/cost-estimator", "/book", or "/contact" and the phone as "${publicContact.phoneDisplay}" — the app turns these into buttons/links.
 - Keep it short and genuinely helpful.`;
+
+/** The widget's estimator range arrives from the browser, so it is untrusted: the browser sends only
+ *  the visitor's 3 tap choices, and the server re-prices them with the estimator engine itself. */
+function pricingPrompt(raw: unknown): string {
+  const choice = parseQuickRangeInput(raw);
+  if (!choice) return '';
+  const range = quickRange(choice);
+  if (range.kind !== 'range') return '';
+  return `
+
+PRICING CONTEXT (from the site cost estimator, shown to the visitor): ${range.summary}: ${range.band}. You may quote exactly these numbers as a planning range that is confirmed at a site visit. Never quote any other price, and offer /book to set up the site visit.`;
+}
 
 // Sophie appends a machine-readable lead block when she's collected contact
 // details. We extract it, strip it from the visible reply, and forward the lead
@@ -126,9 +139,11 @@ export const handler = async (event: NetlifyEvent) => {
   }
 
   let messages: ClientMsg[] = [];
+  let pricing = '';
   try {
     const parsed = JSON.parse(event.body || '{}');
     messages = Array.isArray(parsed.messages) ? parsed.messages : [];
+    pricing = pricingPrompt(parsed.pricingContext);
   } catch {
     return { statusCode: 400, body: JSON.stringify({ error: 'invalid json' }) };
   }
@@ -176,7 +191,7 @@ export const handler = async (event: NetlifyEvent) => {
         stream: false,
         // OpenAI-style: system prompt as the first message. DeepSeek caches the
         // repeated prefix automatically (cache-hit pricing) — no special field.
-        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...convo],
+        messages: [{ role: 'system', content: SYSTEM_PROMPT + pricing }, ...convo],
       }),
     });
 

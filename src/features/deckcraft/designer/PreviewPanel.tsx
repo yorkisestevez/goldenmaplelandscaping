@@ -2,8 +2,11 @@ import {Suspense,lazy,useEffect,useMemo,useRef,useState} from 'react';
 import {useArchitectKeys,revealControl} from './architectKeys';
 import {hasBackyardLayout} from '../backyard';
 import {yardShapeFrame} from '../yardShapeGeometry';
+import {preloadable} from './hydrationLazy';
+// The context menu draws nothing until a right-click and its edit actions are about 60 KB: it mounts after the page starts
+// (below), so it is not in the prerendered drawing and hydration never waits for it.
 const CanvasContextMenu=lazy(()=>import('./CanvasContextMenu'));
-const ArchitectShortcuts=lazy(()=>import('./ArchitectShortcuts'));
+const ArchitectShortcuts=preloadable(loadArchitectShortcuts);
 const documentDrawing=()=>typeof document!=='undefined'&&!!document.querySelector('.dd-shape-draw-surface,.dd-yard-shape-editor[data-drawing],.dd-landscape-plan[data-drawing]');
 
 
@@ -41,15 +44,14 @@ const AssistantTargets=lazy(()=>import('./AssistantTargets'));
 
 /**
 
- * The 3D viewer (three.js, about 300 KB compressed). It loads when a 3D view is shown, and on a desktop the plan
-
- * prefetches it (previewLoaders.prefetchViewer) so the chunk is usually cached; a phone never before its 3D sheet is chosen.
+ * The 3D viewer (three.js, about 300 KB compressed). It loads when a 3D view is shown, and on a desktop it is prefetched
+ * (previewLoaders.prefetchViewer) once the drawing's own pieces are in (partsReady below), so the chunk is usually cached;
+ * a phone never before its 3D sheet is chosen.
 
  */
 
-import {loadViewer,loadExteriorStudio,loadPlanBoundaryEditor,prefetchViewer} from './previewLoaders';
+import {loadViewer,loadExteriorStudio,loadPlanBoundaryEditor,prefetchViewer,loadArchitectShortcuts,loadPlanToolPicker,loadPlanEditingWorkspace} from './previewLoaders';
 export {loadViewer,loadExteriorStudio,loadPlanBoundaryEditor} from './previewLoaders';
-prefetchViewer();
 
 const Viewer=lazy(loadViewer);
 
@@ -72,12 +74,12 @@ const BoardLayoutEditor=lazy(()=>import('./BoardLayoutEditor'));
 const PlanComponentEditor=lazy(()=>import('./PlanComponentEditor'));
 const EdgeSectionEditor=lazy(()=>import('./EdgeSectionEditor'));
 const StepShapeHandles=lazy(()=>import('./StepShapeHandles'));
-const PlanToolPicker=lazy(()=>import('./PlanToolPicker'));
+const PlanToolPicker=preloadable(loadPlanToolPicker);
 const HardscapeInspector=lazy(()=>import('./HardscapeInspector'));
 const HardscapePlanSelection=lazy(()=>import('./HardscapePlanSelection'));
 const LandscapePlanEditor=lazy(()=>import('./LandscapePlanEditor'));
 const PreviewedObjectInspector=lazy(()=>import('./PreviewedObjectInspector'));
-const PlanEditingWorkspace=lazy(()=>import('./PlanEditingWorkspace'));
+const PlanEditingWorkspace=preloadable(loadPlanEditingWorkspace);
 const SceneEditingWorkspace=lazy(()=>import('./SceneEditingWorkspace'));
 const YardShapeEditor=lazy(()=>import('./YardShapeEditor'));
 const InlayPlanEditor=lazy(()=>import('./InlayPlanEditor'));
@@ -87,6 +89,12 @@ const ProToolStrip=lazy(()=>import('./pro/ProToolStrip'));
 const ProStatusBar=lazy(()=>import('./pro/ProStatusBar'));
 const ProProperties=lazy(()=>import('./pro/ProProperties'));
 const ProLayers=lazy(()=>import('./pro/ProLayers'));
+/**
+ * The drawing's pieces that are in the prerendered page (the Project controls button, the tools ribbon and the plan's
+ * frame). They are fetched as soon as this module runs, because the page holds hydration until they are in (DeckDesigner.tsx,
+ * piecesReady). Only then does a desktop prefetch the 3D viewer, so its 300 KB does not slow them down.
+ */
+export const partsReady=typeof document==='undefined'?undefined:Promise.allSettled([ArchitectShortcuts,PlanToolPicker,PlanEditingWorkspace].map(part=>part.preload())).then(()=>prefetchViewer());
 
 
 
@@ -322,7 +330,7 @@ export default function PreviewPanel({pro,previewData,onPreviewData,data,update,
 
       {!snapshotLighting&&<div className="dd-summary-actions"><button type="button" className="dd-secondary" aria-expanded={elevationsOpen} aria-controls="dd-elevation-tools" onClick={()=>setElevationsOpen(!elevationsOpen)}>{elevationsOpen?'Close elevations & build':'Elevations & build'}</button></div>}
       {elevationsOpen&&!snapshotLighting&&<div id="dd-elevation-tools"><Suspense fallback={<p role="status">Loading elevations &amp; build…</p>}><ElevationWorkspace initialArea={elevationArea} data={data} estimate={estimate} onApply={applyComponent} onGeometry={onPreviewData??(()=>{})} selectedFeatureId={selectedFeatureId} onSelectFeature={onSelectFeature} onOpenSection={onOpenSection} onClose={()=>setElevationsOpen(false)}/></Suspense></div>}
-      <Suspense fallback={null}><ArchitectShortcuts pro={!!pro}/></Suspense><Suspense fallback={null}>{!snapshotLighting&&<CanvasContextMenu data={data} model={estimate.model} selection={selection} onSelect={selectObjects} onTool={setTool} onSection={onOpenSection} onBoundary={setBoundaryLevel} onApply={applyComponent}/>}</Suspense>
+      <Suspense fallback={null}><ArchitectShortcuts pro={!!pro}/></Suspense>{mounted&&!snapshotLighting&&<Suspense fallback={null}><CanvasContextMenu data={data} model={estimate.model} selection={selection} onSelect={selectObjects} onTool={setTool} onSection={onOpenSection} onBoundary={setBoundaryLevel} onApply={applyComponent}/></Suspense>}
       {!pro&&onPlan&&<Suspense fallback={null}><PlanToolPicker tool={tool} onPick={pickTool} hint={COACH[tool](data.shape==='Custom')} onSketch={onSketch} sketchReady={sketchReady}/></Suspense>}
 
 

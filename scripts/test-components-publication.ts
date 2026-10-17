@@ -26,6 +26,14 @@ for (const file of [
   }
 }
 
+// Sophie's proactive copy lives outside src/components but publishes into the chat widget.
+for (const file of ['src/data/sophieTeasers.ts', 'src/utils/sophieQuote.ts', 'src/components/SophieMark.tsx']) {
+  const source = readFileSync(resolve(file), 'utf8');
+  for (const pattern of prohibited) {
+    assert.doesNotMatch(source, pattern, `${file} must not publish an unverified business claim: ${pattern}`);
+  }
+}
+
 for (const file of ['HeroContactForm.tsx', 'QuickQuote.tsx', 'BookingScheduler.tsx', 'Manifesto.tsx', 'EstimateBookingCTA.tsx']) {
   const source = component(file);
   assert.match(source, /publicContact/, `${file} must use canonical public contact data`);
