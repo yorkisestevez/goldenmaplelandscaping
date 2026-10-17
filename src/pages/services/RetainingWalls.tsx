@@ -104,8 +104,8 @@ export default function RetainingWalls() {
             </div>
             <PlanningQuote
               source="retaining-walls-barrie"
-              rate="$60–$140"
-              rateDetail="per square foot of wall face. A planning range, not a quote for your property."
+              rate="$330–$670"
+              rateDetail="per linear foot for walls from under 2 ft up to 4–6 ft high, about 50 ft on an accessible site, before HST. A planning range, not a quote for your property."
               categories={['Walls & steps']}
               defaultService="Retaining wall"
             />

@@ -48,7 +48,7 @@ export default function PatioCostFactors() {
       </ul>
 
       <h3>4. Grading and Retaining Walls</h3>
-      <p>If your yard is perfectly flat, the patio is straightforward. But if your yard slopes, the patio must be built up or dug into the hill. This requires structural retaining walls around the perimeter to hold the base material in place. A 2-foot retaining wall around the edge of a patio can quickly add $5,000 to $10,000 to the total cost.</p>
+      <p>If your yard is perfectly flat, the patio is straightforward. But if your yard slopes, the patio must be built up or dug into the hill. This requires structural retaining walls around the perimeter to hold the base material in place. On a 400 sq ft patio, a 30-foot retaining wall up to 4 ft high adds roughly $9,000–$13,500 before HST, depending on its height.</p>
 
       <h3>5. Custom Features</h3>
       <p>A flat square patio is the cheapest shape to build. The price increases when you add:</p>
