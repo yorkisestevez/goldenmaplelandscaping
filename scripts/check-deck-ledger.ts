@@ -13,12 +13,15 @@ import {DECKING_CATALOGUE,MANUFACTURER_ACCESSORIES,RAILING_CATALOGUE} from '../s
 import {priceBookLabel} from '../src/features/deckcraft/priceBook';
 import type {DeckData,PrivacyScreen} from '../src/features/deckcraft/types';
 import {GROUP_MS} from '../src/features/deckcraft/designer/designHistory';
-import PriceLedger from '../src/features/deckcraft/designer/PriceLedger';
+import {register} from 'node:module';
 import {isBuilderQuote,priceLedger,quoteLabel,sectionPriceEffect,type Ledger,type QuoteKind} from '../src/features/deckcraft/designer/priceLedgerModel';
 import {SECTIONS,SECTION_BY_ID,ownsTitle} from '../src/features/deckcraft/designer/sections';
 import {EMPTY_CHANGES,MAX_CHANGES,announceChange,changeLedger,changeValue,describeChange,describeEdit,priceState,signedDollars,type ChangeAction,type ChangeLedgerState,type PriceState} from '../src/features/deckcraft/designer/useChangeLedger';
 import {DEFAULT_FEATURE_LABOUR,mergeFeatureLabour} from '../src/features/deckcraft/featureLabour';
 import {legacyScenarios} from './deck-legacy-scenarios';
+// The schedule imports its stylesheet (priceLedger.css, loaded with it); Node has no CSS loader.
+register('data:text/javascript,'+encodeURIComponent('export async function load(url,context,next){if(url.endsWith(".css"))return {format:"module",source:"",shortCircuit:true};return next(url,context);}'));
+const {default:PriceLedger}=await import('../src/features/deckcraft/designer/PriceLedger');
 const quoteFeatures=mergeFeatureLabour(undefined,{
   scopes:{
     accent:{...DEFAULT_FEATURE_LABOUR.scopes.accent,mode:'quote'},

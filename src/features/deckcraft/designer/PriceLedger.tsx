@@ -2,6 +2,7 @@ import {useEffect,useId,useRef,type KeyboardEvent,type RefObject} from 'react';
 import {dollars} from '../designFacts';
 import {lineBasis,quoteLabel,quoteTag,type Ledger} from './priceLedgerModel';
 import {describeChange,type ChangeRecord} from './useChangeLedger';
+import './priceLedger.css';
 
 const Tag=({kinds}:{kinds:readonly ('supplier'|'builder')[]})=><span className="dd-tag" data-kind={kinds.length>1?'both':kinds[0]}>{quoteTag(kinds)}</span>;
 

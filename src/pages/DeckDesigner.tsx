@@ -1,4 +1,4 @@
-import {Suspense,lazy,useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
+import {Suspense,lazy,use,useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {Link,useSearchParams} from 'react-router-dom';
 import SEO from '../components/SEO';
 import {deckReleaseData,parseDeckReleaseDesign as parseDesign,serializeDeckReleaseDesign as serializeDesign} from '../features/deckcraft/deckRelease';
@@ -30,8 +30,9 @@ import {useDesignerMode} from '../features/deckcraft/designer/designerMode';
 import {assertLeadsAllowed,useInternalMode} from '../features/deckcraft/internalMode';
 import type {ProPage} from '../features/deckcraft/designer/pro/proTypes';
 const noteWarmLead=(...args:Parameters<typeof import('../features/deckcraft/warmLead').noteWarmLead>)=>void import('../features/deckcraft/warmLead').then(m=>m.noteWarmLead(...args));
-import {loadExteriorStudio,loadPlanBoundaryEditor} from '../features/deckcraft/designer/previewLoaders';
-const PreviewPanel=lazy(()=>import('../features/deckcraft/designer/PreviewPanel'));
+import {loadArchitectShortcuts,loadExteriorStudio,loadPlanBoundaryEditor,loadPlanEditingWorkspace,loadPlanToolPicker} from '../features/deckcraft/designer/previewLoaders';
+import {preloadable,whenSettled} from '../features/deckcraft/designer/hydrationLazy';
+const PreviewPanel=preloadable(()=>import('../features/deckcraft/designer/PreviewPanel'));
 import SectionList from '../features/deckcraft/designer/SectionList';
 import {SECTIONS,SECTION_BY_ID,loadBackyardStep,loadBoardColourPanel,loadDeckFinishesPanel,loadDimensionsStep,loadEstimateStep,loadHouseSection,loadInlayEditor,loadMaterialsStep,loadSiteExtrasStep,loadSkirtingEditor,loadStairsStep,sectionsOfPatch,type SectionId} from '../features/deckcraft/designer/sections';
 import type {AgentRequest} from '../features/deckcraft/designer/deckAgentController';
@@ -43,6 +44,9 @@ import {getBehaviorFields} from '../utils/behavior';
 import {genEventId} from '../utils/eventId';
 import './DeckDesigner.css';
 import '../features/deckcraft/designer/workspace.css';
+// The tools ribbon is in the prerendered page, so its styles come with the page's own (render-blocking) stylesheet: with
+// its lazy chunk they landed after the first paint and the ribbon grew from 72 to 129 px, pushing the plan down.
+import '../features/deckcraft/designer/planToolPicker.css';
 
 /**
  * The drawing-set type, on this page only: Archivo (headings, section names, the title block) and IBM Plex Mono
@@ -69,8 +73,16 @@ const JobRevisionDialog=lazy(()=>import('../features/deckcraft/designer/JobRevis
 const ProMenuBar=lazy(()=>import('../features/deckcraft/designer/pro/ProMenuBar'));
 const loadSendDialog=()=>import('../features/deckcraft/SendDesignDialog');
 const loadProposalDialog=()=>import('../features/deckcraft/ProposalDialog');
-const HouseSection=lazy(loadHouseSection),DimensionsStep=lazy(loadDimensionsStep),MaterialsStep=lazy(loadMaterialsStep),StairsStep=lazy(loadStairsStep),SiteExtrasStep=lazy(loadSiteExtrasStep),EstimateStep=lazy(loadEstimateStep);
+const HouseSection=lazy(loadHouseSection),DimensionsStep=preloadable(loadDimensionsStep),MaterialsStep=lazy(loadMaterialsStep),StairsStep=lazy(loadStairsStep),SiteExtrasStep=lazy(loadSiteExtrasStep),EstimateStep=lazy(loadEstimateStep);
 const BackyardStep=lazy(loadBackyardStep),SendDesignDialog=lazy(loadSendDialog),ProposalDialog=lazy(loadProposalDialog);
+/**
+ * The prerendered page holds the drawing (its Project controls, tools ribbon and plan) and the Deck section's body, drawn by
+ * chunks that load after the page. The designer waits for them before it hydrates, so React keeps that HTML instead of
+ * throwing it away on the first update and redrawing it when they land: at most 4 s, then as before. The prerender (no
+ * document) never waits; the cost estimator's studio waits behind its own loading screen. The drawing's own pieces start
+ * with it, not after it. In development a cold start can pass 4 s, and editing this file makes a new gate (one wait).
+ */
+const piecesReady=typeof document==='undefined'?undefined:whenSettled([PreviewPanel.preload().then(panel=>panel.partsReady),DimensionsStep.preload(),loadArchitectShortcuts(),loadPlanToolPicker(),loadPlanEditingWorkspace()],4000);
 // Phones (the layout's single column) show one section at a time; wider screens keep several open.
 const reducedMotion=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -95,6 +107,7 @@ export interface DeckCraftEmbed{
 
 /** The whole designer: the /deck-designer page, and the cost estimator's deck step (`embed`). */
 export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
+  if(piecesReady)use(piecesReady); // Hydration, and the estimator's studio, wait for the prerendered pieces (piecesReady).
   const internalMode=useInternalMode();
   // The open sections. Every section starts closed, in the prerendered page and on the client alike; none is saved.
   const [open,setOpen]=useState<ReadonlySet<SectionId>>(()=>new Set(['deck']));
