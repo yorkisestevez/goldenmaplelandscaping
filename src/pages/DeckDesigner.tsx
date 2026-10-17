@@ -164,7 +164,9 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   const [planTool,setPlanTool]=useState<PlanTool>('size');
   const pro=useDesignerMode();
   const [searchParams]=useSearchParams();
-  const customer=searchParams.get('view')==='customer';
+  // The customer view (?view=customer) starts once the page is running: the prerendered page has no query, and React keeps
+  // the prerender's attributes while it hydrates, so a flag read during hydration never reached the page.
+  const customer=mounted&&searchParams.get('view')==='customer';
   const [crewBusy,setCrewBusy]=useState(false);
   const assistantYardFeature=data.yardFeatures?.find(f=>f.id===selectedYardFeatureId);
   const yardInFocus=planTool==='yard'||workspaceView==='inspector'&&open.has('backyard');
