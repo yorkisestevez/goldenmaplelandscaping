@@ -1845,3 +1845,18 @@ test('@phone fits the screen, with the send button in reach',async({page})=>{
   await expect(dialog).toBeVisible();
   expect(await sendDialog(page).evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=window.innerWidth;})).toBe(true);
 });
+
+test('@phone keeps the price and "Send my design" on screen in drawing focus',async({page})=>{
+  // Phones hide the header's Send, so the price bar carries it, even in the drawing focus the designer opens in.
+  await page.goto('/deck-designer/');
+  await expect(page.locator('.dd-drawing-focus-toggle')).toHaveAttribute('aria-pressed','true');
+  const bar=page.getByRole('region',{name:'Live price',exact:true}),navigation=page.getByRole('group',{name:'Drawing navigation',exact:true});
+  await expect(bar.getByRole('status',{name:'Priced subtotal'})).toContainText('$');
+  await expect(bar).toBeInViewport({ratio:1});await expect(navigation).toBeVisible();
+  // Two rows at most, and the drawing's zoom bar stays above it.
+  const box=(await bar.boundingBox())!,nav=(await navigation.boundingBox())!;
+  expect(box.height).toBeLessThanOrEqual(120);expect(nav.y+nav.height).toBeLessThanOrEqual(box.y+1);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  await bar.getByRole('button',{name:'Send my design',exact:true}).click();
+  await expect(page.getByRole('dialog',{name:'Send your design to Golden Maple'})).toBeVisible();
+});
