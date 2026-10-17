@@ -154,7 +154,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
                   {
     slug: "retaining-wall-cost-oro-medonte",
     title: "Retaining Wall Cost in Oro-Medonte: 2026 Price Breakdown",
-    excerpt: "Retaining walls in Oro-Medonte cost $150–$350 per linear foot installed in 2026, depending on height, block brand, and whether engineering is required.",
+    excerpt: "Retaining walls in Oro-Medonte cost about $340–$680 per linear foot installed in 2026, before HST, depending on height, site access and engineering.",
     category: "Investment",
     readTime: "11 min",
     image: "/images/projects/garden-wall.JPEG",

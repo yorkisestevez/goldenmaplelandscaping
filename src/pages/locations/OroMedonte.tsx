@@ -41,7 +41,7 @@ const PRICING = [
   { project: "Estate patio (400-800 sq ft)", range: "$25,000 – $55,000" },
   { project: "Full outdoor living space", range: "$60,000 – $160,000+" },
   { project: "Composite deck with view (300-500 sq ft)", range: "$20,000 – $45,000" },
-  { project: "Retaining wall system (50-100+ linear ft)", range: "$15,000 – $40,000" },
+  { project: "Retaining wall (50-100 linear ft, 2-4 ft high, before HST)", range: "$20,500 – $51,500" },
   { project: "Extended driveway (600-1200 sq ft)", range: "$35,000 – $65,000" },
 ];
 

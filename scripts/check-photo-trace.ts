@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import * as THREE from 'three';
 import {SCENE_LOOK} from '../src/features/deckcraft/components/viewer3d/sceneLook';
-import {PHOTO_FALLBACK,PHOTO_GRADE,PHOTO_LIGHT,photoStillSize,photoSunColor,photoSunElevationDeg,photoSunIrradiance,sunDisc,sunDiscIrradiance} from '../src/features/deckcraft/photoGrade';
+import {PHOTO_FALLBACK,PHOTO_GRADE,PHOTO_LIGHT,SUN_ANGULAR_RADIUS_DEG,photoStillSize,photoSunColor,photoSunElevationDeg,photoSunIrradiance,sunDisc,sunDiscIrradiance} from '../src/features/deckcraft/photoGrade';
 import {clampFireflies,denoiseEdgeAware} from './photoDenoise';
 import {applyPhotoScene,buildPhotoBackground,photoMeanAlbedo,rasterPhotoTriangles,tracePhotoTriangles} from '../src/features/deckcraft/components/viewer3d/photoMaterials';
 import {photoSampleHold} from '../src/features/deckcraft/photoMode';
@@ -9,12 +9,12 @@ import {photoSamplesPerFrame,registerPhotoTracer,tracePhotoFrame} from '../src/f
 import {windowGlass,WINDOW_ROOM} from '../src/features/deckcraft/components/viewer3d/windowGlass';
 import {guardGlass,GUARD_GLASS} from '../src/features/deckcraft/components/viewer3d/guardGlass';
 import {WATER_OPTICS} from '../src/features/deckcraft/components/viewer3d/waterOptics';
-import {applyFoliageLighting} from '../src/features/deckcraft/components/viewer3d/foliageLighting';
+import {FOLIAGE,applyFoliageLighting} from '../src/features/deckcraft/components/viewer3d/foliageLighting';
 
 let failed=0;
 function ok(cond:unknown,message:string){if(!cond){failed++;console.error('FAIL',message);}else console.log('ok',message);}
 
-const dayDisc=sunDisc(3.1,.9),goldenDisc=sunDisc(photoSunIrradiance('golden',3.1),1.45);
+const dayDisc=sunDisc(3.1,SUN_ANGULAR_RADIUS_DEG.day),goldenDisc=sunDisc(photoSunIrradiance('golden',3.1),SUN_ANGULAR_RADIUS_DEG.golden);
 ok(Math.abs(sunDiscIrradiance(dayDisc)-3.1)<1e-9&&Math.abs(sunDiscIrradiance(goldenDisc)-3.1*.85)<1e-9,'A sun disc returns the same direct irradiance the raster key would');
 ok(photoSunIrradiance('night',3.1)===0&&photoSunElevationDeg('golden',64)===11&&photoSunElevationDeg('night',64)===0,'Night has no sun and golden hour keeps a low sun on the same azimuth');
 ok(photoSunColor('golden',[1,.9,.8])[0]>photoSunColor('golden',[1,.9,.8])[2]&&photoSunColor('day',[.2,.3,.4])[0]===.2,'Golden hour warms the key; day keeps the extracted sun colour');
@@ -106,8 +106,8 @@ ok(waterMat.transmission===1&&waterMat.thickness===0&&waterMat.ior===1.333&&wate
 ok(floor.geometry.getAttribute('color').itemSize===4&&photoMeanAlbedo(floorMat,floor).r>.15&&photoMeanAlbedo(floorMat,floor).g>.3,'The pool interior keeps its turquoise finish instead of collapsing to black');
 ok(leaf.alphaTest===.2&&leaf.transparent===false&&leaf.side===THREE.DoubleSide,'Foliage keeps its own alpha test instead of being punched into specks');
 const bakedLeaf=scene.getObjectByName('photo-baked-photo-check-leaf-instances') as THREE.Mesh;
-ok(shrub.alphaTest===.22&&shrub.map!==shrubMap&&shrub.emissive.g>shrub.emissive.r&&shrub.emissive.g>.08&&shrub.emissive.g<.35&&shrub.metalness===0&&shrub.roughness<=.64,'Leaf cards keep a soft fringe and a natural green fill instead of reading as black or neon');
-ok(!!bakedLeaf&&bakedLeaf.geometry.getAttribute('color').getY(0)>.3,'Leaf instance tints are lifted the way the raster foliage shader lifts them');
+ok(shrub.alphaTest===.22&&shrub.map===shrubMap&&shrub.emissive.getHex()===0&&!('transmission' in shrub)&&shrub.metalness===0&&shrub.roughness===FOLIAGE.roughness,'Leaf cards keep a soft fringe and their own atlas, matte, with no faked glow and no see-through transmission');
+ok(!!bakedLeaf&&Math.abs(bakedLeaf.geometry.getAttribute('color').getY(0)-.25)<1e-6,'Leaf instance tints are baked as they are, as the raster foliage shader uses them');
 ok(soft.alphaTest===.08&&soft.transparent===false,'A blended foliage card gets a low cutoff and stays a card');
 ok(paver.geometry.getAttribute('color').itemSize===4&&paver.geometry.getAttribute('color').getX(0)>.9,'Paver vertex colours stay bright and are widened to RGBA');
 ok(fence.geometry.getAttribute('color').itemSize===4&&photoMeanAlbedo(fenceMat,fence).r>.05,'The fence keeps its brown vertex colour');
@@ -121,6 +121,7 @@ ok(sun.intensity===0&&((spot as THREE.SpotLight&{radius?:number}).radius??0)>=PH
 ok(scene.getObjectByName('photo-sun') instanceof THREE.RectAreaLight&&scene.getObjectByName('photo-emitter') instanceof THREE.Mesh,'A circular sun and a fixture bulb are added for the still');
 ok(floorMat.emissiveIntensity===PHOTO_LIGHT.floorCaustic&&floorMat.emissiveMap!==null,'The pool floor carries a caustic approximation');
 restore();
+ok(!('transmission' in shrub)&&shrub.userData.photoLeaf===undefined,'Leaving the photo removes the leaf transmission from the raster material');
 ok(sky.visible&&blades.visible&&detail.visible&&instanced.visible&&catcher.visible&&basic.material===basicMat&&sun.intensity===2.4&&windowMat.transmission===0&&guard.transmission===0&&guard.depthWrite===false&&waterMat.transmission===0&&leaf.alphaTest===.2&&leaf.transparent===true&&swatch.map===swatchMap&&swatch.metalness===.2&&shrub.map===shrubMap&&shrub.alphaTest===.4&&shrub.emissive.g===0&&!shrub.userData.photoLeafLift&&!scene.getObjectByName('photo-sun')&&!scene.getObjectByName('photo-emitter')&&!scene.getObjectByName('photo-baked-photo-check-instances'),'Leaving photo mode puts the raster materials, lights and helpers back');
 const wedge=new THREE.Group();wedge.name='wedge-1';wedge.position.set(2,1,0);scene.add(wedge);
 const windowEmissive=windowMat.emissiveIntensity,night=applyPhotoScene(scene,'night',null);
@@ -141,7 +142,7 @@ const files=['src/features/deckcraft/photoTraceApi.ts','src/features/deckcraft/p
 const source=files.map(file=>readFileSync(file,'utf8')).join('\n');
 ok(!/warmLead|anthropic|generatedImage|\/api\/assistant|\/api\/lead/.test(source),'Photo mode does not call the lead form or the AI endpoints');
 ok(!readFileSync('src/features/deckcraft/components/viewer3d/Deck3DViewer.tsx','utf8').includes("from 'three-gpu-pathtracer'")&&readFileSync('src/features/deckcraft/components/viewer3d/PhotoTracer.tsx','utf8').includes("import('./photoEngine')"),'The path tracer stays out of the viewer chunk until photo mode is on');
-ok(SCENE_LOOK.toneMapping==='Neutral'&&SCENE_LOOK.exposure===1&&readFileSync('src/features/deckcraft/components/viewer3d/Deck3DViewer.tsx','utf8').includes('toneMapping:THREE.NeutralToneMapping'),'The editor grade stays Khronos Neutral');
+ok(SCENE_LOOK.toneMapping==='Neutral'&&SCENE_LOOK.exposure===1&&readFileSync('src/features/deckcraft/components/viewer3d/Deck3DViewer.tsx','utf8').includes('gl.toneMapping=THREE.NeutralToneMapping'),'The editor grade stays Khronos Neutral');
 const pipeline=readFileSync('src/features/deckcraft/components/viewer3d/renderPipeline.tsx','utf8');
 ok(pipeline.includes("gl.domElement.dataset.photoTrace==='1'")&&pipeline.includes('for(const listen of shadowListeners.get(gl)??[])listen();gl.shadowMap.needsUpdate=true;'),'The raster frame waits during a photo and still refreshes shadow maps the same way');
 const designer=readFileSync('src/features/deckcraft/designer/useDeckDesign.ts','utf8');

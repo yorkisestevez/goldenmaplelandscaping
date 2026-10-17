@@ -16,6 +16,11 @@ import { buildPermalink, decodeBuild } from '../utils/buildPermalink';
 import { PROJECT_TYPE_IMAGES, PAVER_SWATCHES } from '../data/estimatorImages';
 import { PAVER_BRANDS, ADD_ONS, defaultPaverForTier, sortPaversForDisplay, type PaverTier } from '../data/carrPrices';
 import { ESTIMATOR_LOCATIONS, type EstimatorLocationKey } from '../data/locations';
+import {
+  ESTIMATOR_DEFAULT_SIZES, ESTIMATOR_DEFAULT_CONDITIONS, ESTIMATOR_DEFAULT_LOCATION, ESTIMATOR_DEFAULT_TIER,
+  ESTIMATOR_DEFAULT_PAVER_ID, ESTIMATOR_DEFAULT_DECK_ID, ESTIMATOR_ENTRY_CONFIDENCE, FULL_BACKYARD_PREFILL,
+  ESTIMATOR_PREFILL_SIZE,
+} from '../data/estimatorDefaults';
 import { getEstimatorRangeCopy } from '../utils/pricingDoctrine';
 import { computeEstimate, deltaFor, widenFactors, widenTotals, type EstimateInput, type EstimateLine } from '../utils/estimateEngine';
 import PriceDelta from './ui/PriceDelta';
@@ -251,27 +256,13 @@ export default function Estimator({ onStudioChange }: {
   const [openElement, setOpenElement] = useState<string | null>(null);
   const [projectType, setProjectType] = useState<string | null>(null);
   const [selectedElements, setSelectedElements] = useState<string[]>([]);
-  const [sizes, setSizes] = useState<Record<string, number | string>>({
-    patio: 500,
-    stone: 500,
-    wall: 50,
-    wallHeight: '2-4ft',
-    steps: 5,
-    deck: 300,
-    kitchen: 'Basic',
-    firepit: 'Medium',
-    pergola: 'Medium',
-    turf: 500,
-    lighting: 'Medium',
-  });
-  const [conditions, setConditions] = useState<Record<string, boolean>>({
-    access: false, slope: false, drainage: false, levels: false,
-  });
+  const [sizes, setSizes] = useState<Record<string, number | string>>({ ...ESTIMATOR_DEFAULT_SIZES });
+  const [conditions, setConditions] = useState<Record<string, boolean>>({ ...ESTIMATOR_DEFAULT_CONDITIONS });
   const [details, setDetails] = useState<Record<string, string>>({});
-  const [location, setLocation] = useState<EstimatorLocationKey>('barrie');
-  const [tier, setTier] = useState<PaverTier>('mid');
-  const [paverBrandId, setPaverBrandId] = useState<string>('permacon-mondrian-plus');
-  const [deckBrandId, setDeckBrandId] = useState<string>('timbertech-prime');
+  const [location, setLocation] = useState<EstimatorLocationKey>(ESTIMATOR_DEFAULT_LOCATION);
+  const [tier, setTier] = useState<PaverTier>(ESTIMATOR_DEFAULT_TIER);
+  const [paverBrandId, setPaverBrandId] = useState<string>(ESTIMATOR_DEFAULT_PAVER_ID);
+  const [deckBrandId, setDeckBrandId] = useState<string>(ESTIMATOR_DEFAULT_DECK_ID);
   const [addOns, setAddOns] = useState<string[]>([]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   /** Optional. null = never answered, which is a legitimate answer — the coach
@@ -431,14 +422,14 @@ export default function Estimator({ onStudioChange }: {
       setProjectType(t);
       if (t === 'full') {
         // Pre-fill with the 3 most common picks so size step still has meaning
-        setSelectedElements(['patio', 'wall', 'lighting']);
+        setSelectedElements([...FULL_BACKYARD_PREFILL]);
         setOpenElement('patio'); // mobile accordion starts somewhere useful
       }
       advanced = true;
     }
     if (sqftParam) {
       const n = parseInt(sqftParam, 10);
-      if (!isNaN(n) && n >= 100 && n <= 2000 && t) {
+      if (!isNaN(n) && n >= ESTIMATOR_PREFILL_SIZE.min && n <= ESTIMATOR_PREFILL_SIZE.max && t) {
         setSizes(prev => ({
           ...prev,
           [t === 'full' ? 'patio' : t]: n,
@@ -591,7 +582,7 @@ export default function Estimator({ onStudioChange }: {
   }, [projectType, pricedElements, details]);
 
   const confidence = useMemo(() => {
-    let c = 30;
+    let c = ESTIMATOR_ENTRY_CONFIDENCE;
     c -= Math.min(10, answeredDetails * 2.5); // project-specific answers
     if (step >= 4) c -= 3;  // site conditions reviewed
     if (step >= 5) c -= 4;  // location set
