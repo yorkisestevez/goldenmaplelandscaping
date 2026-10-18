@@ -62,6 +62,14 @@ for (const fine of [
   'It is 1,200 sqft.', 'It costs more for 1,000 sqft.', 'Is it 1200 ft² or so?', 'Call it 1,200 s.f. of patio.', 'That is 1,500 cu ft of stone.',
   'Leave 1,500 millimetres of clearance.', 'A 12,000 BTU fire table.', 'About 1,200 bricks.', 'This is the 1,000th question today.',
 ]) ok(guardReply(fine, null).text === fine, `size and contact answers unchanged: "${fine}"`);
+for (const reply of ['Lighting adds about 950 to that.', 'It is about 500 extra.', 'Roughly 900.', 'Call it fifteen hundred.', 'About 25 hundred for that.', 'Maybe 1.5 mil for the whole yard.', 'About ten K more.']) {
+  ok(redacted(reply), `small, spoken or slang amount caught: "${reply}"`);
+}
+for (const fine of ['A patio of about 300 sq ft.', 'About 120 pavers per pallet.', 'Roughly 600 mm of base.', 'A few hundred square feet is common.', 'Is it for about 150 guests?',
+  'It is about 120 in. wide.', 'About 144 in of run.', 'Roughly 120 by 80.', 'Use a 6 mil poly liner.']) {
+  ok(guardReply(fine, null).text === fine, `small measured number unchanged: "${fine}"`);
+}
+ok(claimed('Every visit is for free.') && claimed('We include a free estimate.'), 'a free offer is still a claim');
 for (const boast of ['We have completed over 500 patios.', 'We have done 300+ projects.', 'We have built hundreds of patios.']) ok(claimed(boast), `track record replaced: "${boast}"`);
 {
   const started = Date.now();

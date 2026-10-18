@@ -44,6 +44,13 @@ A "price" is read the way a visitor reads it:
 - anything in `scripts/claim-rules.json`;
 - a topic only the team may speak to in writing: insurance, licensing, warranty, financing, "free", permits, minimums, ratings, reviews, years in business, job counts.
 
+## The deck and site designers' AI
+The designers' AI (`server/siteDesignerAi.ts`, and the deck assistant in `server/deckAssistantCloud.ts` and `server/deckAssistantBackend.ts`) uses the same detection through `findPricesAndClaims`. It **rejects** a bad answer instead of redacting it; the visitor sees the designer's retry message.
+- **Site designer:** may repeat only figures the engine gave it (concept subtotals and deltas, the baseline, the budget).
+- **Deck assistant:** may state no price at all. The editor prices every preview.
+- **Both:** reject any claim, except permit guidance and "free" as design prose ("keep the lawn free for play"), which their prompts are written to give. A free *offer* is still rejected.
+- **Still blocked, by design:** third-party credentials such as "licensed electrician", "CSA-certified" and "manufacturer warranty".
+
 ## Common tasks
 | You want to… | Run |
 |---|---|

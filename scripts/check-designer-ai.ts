@@ -91,6 +91,8 @@ for(const [body,what] of bad)rejects(()=>validateDesignerRequest(body),'invalid_
 {const r=parseDesignerOutput(choice({params:[{kind:'fire-room',key:'patioFt',value:12},{kind:'raised-beds',key:'count',value:2}]}),request);
  ok(r.kind==='choice'&&r.choice?.base==='room'&&JSON.stringify(r.choice.params)===JSON.stringify({'fire-room':{patioFt:12}})&&!('budget' in r.choice!)&&JSON.stringify(r.choice.goals)==='["entertaining"]','A valid choice maps to the contract (params per move; settings for moves not kept are dropped)');}
 ok(parseDesignerOutput(choice({},{explanation:'It stays well under your budget of $35,000 and keeps the $29,734 room.'}),{...request,budget:35000}).kind==='choice','Dollar figures the model was given may be repeated');
+ok(parseDesignerOutput(choice({},{explanation:'It adds 29,734 to the design and fits the 1,200 sq ft yard. In Barrie an open wood fire pit needs a daily open-air permit.'}),request).kind==='choice','Engine figures written without "$", measurements and the owner\'s permit guidance pass');
+ok(parseDesignerOutput(choice({},{explanation:'It keeps the centre of the lawn free for the kids, with maintenance-free composite and a weed-free base. About 1,800 boards, 1,200 posts and a 45,000 L pool.'}),request).kind==='choice','"Free" as design prose and counts with their units pass');
 ok(parseDesignerOutput(JSON.stringify({kind:'clarify',choice:null,explanation:'Two good directions fit this yard.',highlights:[],questions:['Is a fire or a garden more important?']}),request).questions?.length===1,'A clarification passes');
 const badOut:[string,string][]=[
  ['not json','not JSON'],[choice({params:[{kind:'fire-room',key:'patioFt',value:30}]}),'param above its bound'],[choice({params:[{kind:'fire-room',key:'patioFt',value:'14'}]}),'number param given as text'],
@@ -99,6 +101,10 @@ const badOut:[string,string][]=[
  [choice({base:'garden'}),'a concept that was not offered'],[choice({base:'yard-2'}),'an unknown concept id'],[choice({include:['fire-room','fire-room']}),'duplicate moves'],[choice({include:['pool']}),'an unknown move'],[choice({include:[]}),'no moves'],
  [choice({extra:1}),'extra key in the choice'],[choice({},{extra:1}),'extra top-level key'],[choice({budget:-1}),'negative budget'],[choice({goals:['luxury']}),'unknown goal'],
  [choice({},{explanation:'This comes in at about $18,500 all in.'}),'a price the engine did not give'],[choice({},{highlights:['Only $5k more']}),'a price in shorthand'],
+ [choice({},{explanation:'This comes in at about 18,500 all in.'}),'a price without a dollar sign'],[choice({},{highlights:['About 25 grand more']}),'a price in words'],
+ [choice({},{explanation:'That is roughly twenty thousand dollars.'}),'a spelled-out price'],[choice({},{explanation:'We are fully insured and WSIB covered.'}),'a claim only the team may make'],
+ [choice({},{questions:['Want to book a free consultation?']}),'a blocked business claim'],[choice({},{highlights:['Free estimate included']}),'a free offer'],
+ [choice({},{explanation:'The lighting adds about 950 to the design.'}),'a small price after a cost word'],[choice({},{explanation:'Call it fifteen hundred for the planting.'}),'a spoken price'],
  [choice({},{explanation:'Call us at 705-555-1234.'}),'contact details in the answer'],[JSON.stringify({kind:'clarify',choice:{base:'room',include:['fire-room'],params:[],goals:[],budget:null},explanation:'x',highlights:[],questions:['Which?']}),'a clarification carrying a choice'],
  [JSON.stringify({kind:'clarify',choice:null,explanation:'x',highlights:[],questions:[]}),'a clarification without a question'],[choice({},{explanation:''}),'an empty explanation'],
 ];
@@ -356,9 +362,15 @@ function httpFetch(svc:AiTurnService):typeof globalThis.fetch{let jar='';
  ok(ASSISTANT_CLOUD_SYSTEM.includes('design.patch {patch:')&&new TextEncoder().encode(ASSISTANT_CLOUD_SYSTEM).length<40000,'Assistant prompt: the local policy plus a compact command reference (not the 220 KB schema)');
  const editJson=(commands:unknown,top:Record<string,unknown>={})=>JSON.stringify({kind:'edit',message:'Widen the main deck to 18 ft.',assumptions:['A little wider means 2 ft.'],commands_json:JSON.stringify(commands),question:'',choices:[],...top});
  const plan=parseAssistantOutput(editJson([{type:'design.patch',patch:{width:18}}]));ok(plan.kind==='edit'&&plan.commands[0].type==='design.patch','A wrapped plan parses into a strict assistant plan');
+ ok(parseAssistantOutput(editJson([{type:'design.patch',patch:{width:18}}],{message:'In Barrie an open wood pit needs a permit and 15 m from buildings.'})).kind==='edit','The owner\'s permit guidance passes the assistant check');
  for(const [raw,what] of [[editJson([{type:'design.patch',patch:{materialMarkup:1}}]),'a private pricing field'],[editJson([{type:'action',action:'share.create'}]),'an action command'],[editJson([]),'an edit without commands'],
   [JSON.stringify({kind:'edit',message:'x',assumptions:[],commands_json:'not json',question:'',choices:[]}),'commands that are not JSON'],[editJson([{type:'design.patch',patch:{width:18}}],{extra:true}),'an extra key'],
-  [editJson([{type:'design.patch',patch:{width:18}}],{message:'This adds about $2,400.'}),'a price']] as [string,string][])
+  [editJson([{type:'design.patch',patch:{width:18}}],{message:'This adds about $2,400.'}),'a price'],
+  [editJson([{type:'design.patch',patch:{width:18}}],{message:'This adds about 2,400 to the job.'}),'a price without a dollar sign'],
+  [editJson([{type:'design.patch',patch:{width:18}}],{assumptions:['Roughly 3 grand more.']}),'a price in words in an assumption'],
+  [editJson([{type:'design.patch',patch:{width:18}}],{message:'Every deck comes with a 25-year warranty.'}),'a claim only the team may make'],
+  [JSON.stringify({kind:'clarify',message:'Which edge?',assumptions:[],commands_json:'[]',question:'Is about 900 extra okay for glass rail?',choices:['Yes','No']}),'a price in a clarify question'],
+  [JSON.stringify({kind:'advice',message:'Both work.',assumptions:[],commands_json:'[]',question:'',choices:['Cedar, about 1,500 more','Composite']}),'a price in an advice choice']] as [string,string][])
   rejects(()=>parseAssistantOutput(raw),'invalid_ai_plan',`Assistant output rejected: ${what}`);
 
  let data:DeckData={...structuredClone(DEFAULT_DECK),customerName:'PRIVATE CLIENT',projectAddress:'PRIVATE ADDRESS',materialMarkup:41};const history:DeckData[]=[];

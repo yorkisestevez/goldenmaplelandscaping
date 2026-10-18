@@ -1,5 +1,10 @@
 import {ASSISTANT_SYSTEM_PROMPT,assistantPlanSchemaForContext,parseAssistantPlan,validateAssistantContext} from '../src/features/deckcraft/designer/assistantPlan';
 import {assistantSystemPromptFor,isExpertId,type ExpertId} from '../src/features/deckcraft/designer/expertAgents';
+import {DESIGNER_ALLOWED_TOPICS,findPricesAndClaims} from '../src/utils/sophieGuard';
+import type {AssistantPlan} from '../src/features/deckcraft/designer/assistantContracts';
+
+/** Every word of a plan the visitor reads: the message, assumptions, and a clarify/advice question with its choices. */
+export const assistantPlanProse=(plan:AssistantPlan)=>[plan.message,...plan.assumptions,...(plan.kind==='edit'?[]:[plan.question,...plan.choices])].join('\n');
 
 export const DECK_ASSISTANT_PATH='/.netlify/functions/deck-assistant';
 export const ASSISTANT_BACKEND_LIMITS={bodyBytes:128*1024,contextBytes:96*1024,prompt:6000,turns:12,turnContent:3000,conversation:16000,responseBytes:256*1024,planContent:48000,timeoutMs:60000,healthTimeoutMs:3000,concurrent:2} as const;
@@ -107,6 +112,8 @@ export function createDeckAssistantService(options:DeckAssistantBackendOptions={
       if(!object(reply)||!object(reply.message)||typeof reply.message.content!=='string'||!reply.message.content.trim()||reply.message.content.length>ASSISTANT_BACKEND_LIMITS.planContent)error('invalid_ai_response','The local AI did not return a complete design plan. Try clarifying the request.',502);
       let rawPlan:unknown;try{rawPlan=JSON.parse(reply.message.content);}catch{error('invalid_ai_plan','The local AI did not return a valid structured plan. Try clarifying the request.',502);}
       try{safeJSON(rawPlan);}catch{error('invalid_ai_plan','The local AI plan contains unsupported or invalid changes. Try clarifying the request.',502);}const parsed=parseAssistantPlan(rawPlan);if('error'in parsed)error('invalid_ai_plan','The local AI plan contains unsupported or invalid changes. Try clarifying the request.',502);
+      // The same rule as the cloud assistant: no price in any form (the editor prices every preview) and no team-only claim.
+      const said=findPricesAndClaims(assistantPlanProse(parsed.plan),DESIGNER_ALLOWED_TOPICS);if(said.prices.length||said.claims.length)error('invalid_ai_plan','The local AI plan stated a price or a claim only the team can confirm. Try clarifying the request.',502);
       log('complete');return response({ok:true,source:'local-ai',model,plan:parsed.plan});
     }catch(e){const cause=controller.signal.aborted?controller.signal.reason:e,known=cause instanceof ServiceError?cause:new ServiceError('assistant_error','The local assistant could not complete the request. Your design has not changed.',500);log(known.code);return response({ok:false,error:{code:known.code,message:known.message}},known.status);}
     finally{if(acquired)active--;if(timer)clearTimeout(timer);request.signal.removeEventListener('abort',cancel);}

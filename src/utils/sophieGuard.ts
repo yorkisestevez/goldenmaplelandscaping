@@ -35,6 +35,8 @@ const MONEY = new RegExp(
     String.raw`\b${NUM}(?:${SEP}${NUM})?\s?\$`, // 25 000 $
     String.raw`\b${WORD}(?:[\s-]+${WORD})*(?:[\s-]+(?:thousand|million))?\s+(?:dollars|bucks|grand)\b`, // twenty grand
     String.raw`\b\d{1,3}(?:\.\d+)?\s?k\b(?:${SEP}\d{1,3}(?:\.\d+)?\s?k\b)?`, // 25k · 30K–40K (2,700K is masked as a colour temperature first)
+    String.raw`\b${WORD}(?:[\s-]+${WORD})*\s?k\b`, // ten K
+    String.raw`\b${NUM}\s?mil\b(?!\s?(?:poly\w*|liner|vapou?r|film|sheet|plastic|membrane|barrier|thick\w*|spec))`, // 1.5 mil (not "6 mil poly")
     String.raw`\b${NUM}(?:${SEP}${NUM})?\s?(?:per|a|an|\/)\s?(?:square|sq\b|sq\.|linear|lin\b|sf\b|lf\b|foot\b|ft\b|hour\b)`, // 40 to 45 per square foot
   ].join('|'),
   'gi',
@@ -47,22 +49,31 @@ const MONEY_CASED = new RegExp(
 );
 const KELVIN = /\b\d{1,2},?\d{3}\s?K\b/g; // 2,700K / 3000K light
 
-// Fail closed: a number of 1,000 or more ("25,000", "25000", "25.000", "25 thousand", "twenty five thousand") is a
-// price unless what follows the last number of its chain measures something: "1,200 or 1,500 square feet",
-// "3,000 pounds", "1000 people". Years and phone numbers are not counted.
+// Fail closed: a number of 1,000 or more ("25,000", "25000", "25.000", "25 thousand", "fifteen hundred") is a price
+// unless what follows the last number of its chain measures something: "1,200 or 1,500 square feet", "3,000 pounds",
+// "1000 people". So is a smaller one right after a cost word ("adds about 950", "about 500 extra"). Years and phone
+// numbers are not counted.
 const ANY = String.raw`\d+(?:[ ,.]\d{3})*(?:\.\d+)?`;
 const CHAIN = new RegExp(
-  String.raw`\b${ANY}(?:\s?(?:thousand|million)\b)?(?:\s?(?:or|and|to|–|—|-)\s?${ANY}(?:\s?(?:thousand|million)\b)?)*|\b${WORD}(?:[\s-]+${WORD})*[\s-]+(?:thousand|million)\b`,
+  [
+    String.raw`\b${ANY}(?:\s?(?:hundred|thousand|million)\b)?(?:\s?(?:or|and|to|–|—|-)\s?${ANY}(?:\s?(?:hundred|thousand|million)\b)?)*`,
+    String.raw`\b${WORD}(?:[\s-]+${WORD})*[\s-]+(?:hundred|thousand|million)\b`,
+  ].join('|'),
   'gi',
 );
-const UNIT_AFTER = /^\s?-?\s?(?:sqft|sq\.?\s?ft|sq\b|sq\.|s\.f\.|ft²|ft2|cu\.?\s?ft|millimet|centimet|BTU|bricks?|hits|items|th\b|st\b|nd\b|rd\b|square|ft\b|feet|foot|'|"|inch|lbs?\b|pounds|kg\b|kilos?|tonnes?|tons?|mm\b|cm\b|m\b|m2|m²|km\b|kilomet|metres?|meters?|acres?|%|percent|hours?|hrs?|days?|weeks?|months?|years?|people|visitors|residents|homes|households|homeowners|pavers|stones|blocks|units|pieces|pallets|bags|steps|times|gallons|litres?|liters?|lumens|watts|psi|yards?|yd|cubic|linear|lin\b|sf\b|lf\b|plants|trees|of (?:them|those|these))/i;
+const COST_BEFORE = /\b(?:adds?|costs?|runs?|extra|about|roughly|around|approximately|pay|spend|budget|charge[sd]?|price[sd]?)\s+$/i;
+const SMALL_PRICE = 100;
+// Units that only measure a small number ("about 120 in. wide", "roughly 120 by 80"). Kept out of UNIT_AFTER so
+// "adds 1,200 in total" is still a price.
+const SMALL_UNIT = /^\s?-?\s?(?:in\b\.?|min(?:ute)?s?\b|volts?|V\b|amps?|A\b|deg(?:rees?)?|°|mph|Hz|gal\b\.?|words?|wide|deep|long|high|tall|thick|by\b|x\b)/i;
+const UNIT_AFTER = /^\s?-?\s?(?:sqft|sq\.?\s?ft|sq\b|sq\.|s\.f\.|ft²|ft2|cu\.?\s?ft|cu\.?\s?yd|millimet|centimet|BTU|bricks?|hits|items|boards?|screws?|fasteners?|posts?|balusters?|spindles?|joists?|pcs\b|guests|seats|lumen|kWh?\b|W\b|L\b|ml\b|g\b|th\b|st\b|nd\b|rd\b|square|ft\b|feet|foot|'|"|inch|lbs?\b|pounds|kg\b|kilos?|tonnes?|tons?|mm\b|cm\b|m\b|m2|m²|km\b|kilomet|metres?|meters?|acres?|%|percent|hours?|hrs?|days?|weeks?|months?|years?|people|visitors|residents|homes|households|homeowners|pavers|stones|blocks|units|pieces|pallets|bags|steps|times|gallons|litres?|liters?|lumens|watts|psi|yards?|yd|cubic|linear|lin\b|sf\b|lf\b|plants|trees|of (?:them|those|these))/i;
 const PHONE = /\(?\b\d{3}\)?[\s.-]?\d{3}[\s.-]\d{4}\b|\b[2-9]\d{9}\b|\b1[\s.-]?8\d\d[\s.-]?\d{3}[\s.-]?\d{4}\b/g;
 const YEAR = /^(?:19|20)\d\d$/;
 
 /** The largest amount in a chain like "1,200 or 1,500" ("25.000" read as twenty-five thousand). */
 function largest(chain: string): number {
-  if (/thousand|million/i.test(chain) && !/\d/.test(chain)) return 1e3; // "twenty five thousand"
-  const mult = /million/i.test(chain) ? 1e6 : /thousand/i.test(chain) ? 1e3 : 1;
+  if (!/\d/.test(chain)) return 1e3; // spelled out: "twenty five thousand", "fifteen hundred"
+  const mult = /million/i.test(chain) ? 1e6 : /thousand/i.test(chain) ? 1e3 : /hundred/i.test(chain) ? 100 : 1;
   return Math.max(...[...chain.matchAll(new RegExp(ANY, 'g'))].map(([n]) =>
     (/^\d{1,3}(?:[ ,.]\d{3})+$/.test(n) ? Number(n.replace(/[ ,.]/g, '')) : Number(n)) * mult));
 }
@@ -73,8 +84,11 @@ function pricesIn(sentence: string): string[] {
   const rest = s.replace(MONEY, ' ').replace(MONEY_CASED, ' ');
   for (const m of rest.matchAll(CHAIN)) {
     const chain = m[0].trim();
-    if (YEAR.test(chain) || largest(chain) < 1000) continue;
-    if (UNIT_AFTER.test(rest.slice((m.index ?? 0) + m[0].length))) continue;
+    const value = largest(chain);
+    if (YEAR.test(chain) || value < SMALL_PRICE) continue;
+    const after = rest.slice((m.index ?? 0) + m[0].length);
+    if (value < 1000 && (!COST_BEFORE.test(rest.slice(Math.max(0, (m.index ?? 0) - 30), m.index)) || SMALL_UNIT.test(after))) continue;
+    if (UNIT_AFTER.test(after)) continue;
     found.push(chain);
   }
   return found;
@@ -103,16 +117,18 @@ const TEAM_ONLY = [
   { id: 'sophie:insurance', re: /\binsur(?:ed|ance)\b|\bWSIB\b|\blicen[sc]ed\b|\bbonded\b|\bliability\b/i },
   { id: 'sophie:warranty', re: /\bwarrant(?:y|ies|ied)\b|\bguarantee/i },
   { id: 'sophie:financing', re: /\bfinanc|\bpayment plans?\b|\bmoney down\b/i },
-  { id: 'sophie:free', re: /\bfree\b(?![- ](?:to|draining|standing|thaw|flowing|form))|\bno[- ](?:charge|cost|obligation)\b|\bat no cost\b|\bcomplimentary\b/i },
+  { id: 'sophie:free-offer', re: /\bfree\s+(?:quotes?|estimates?|designs?|consult\w*|visits?|assessments?|measure\w*|delivery|install\w*|shipping|upgrades?|service|trial|removal|disposal|haul\w*)\b|\bfor free\b|\bfree of charge\b|\bno[- ](?:charge|cost|obligation)\b|\bat no (?:extra )?cost\b|\bcomplimentary\b/i },
+  { id: 'sophie:free', re: /\bfree\b(?![- ](?:to|draining|standing|thaw|flowing|form))/i },
   { id: 'sophie:minimum', re: /\bno (?:job |project )?minimum\b|\bminimum (?:project|job|order|investment|size)\b/i },
   { id: 'sophie:permits', re: /\bpermits?\b/i },
   { id: 'sophie:ratings', re: /\b\d(?:\.\d)?[\s-]*stars?\b|\bfive[- ]star\b|\b\d[\d,]*\+?\s*(?:reviews|ratings)\b|\b(?:top|highly|best)[- ]rated\b|\brated\s+\d/i },
   { id: 'sophie:track-record', re: /\byears? (?:of )?experience\b|\bsince (?:19|20)\d\d\b|\bin business for\b|\b(?:over|more than|built|completed|installed|done|finished|delivered)\s+\d[\d,]*\+?\s*(?:patios|projects|jobs|walls|homes|clients|customers|installs|installations|families)\b|\b\d[\d,]*\+\s*(?:patios|projects|jobs|walls|homes|clients|customers|installs|installations|families)\b|\b(?:hundreds|thousands|dozens) of (?:patios|projects|jobs|walls|homes|clients|customers|installs|installations|families)\b|\baward|\bcertified\b|\baccredited\b|\bBBB\b/i },
 ];
 
-function claimIn(sentence: string): string | undefined {
+/** `allow`: TEAM_ONLY topic ids the caller's own prompt is written to discuss. The claim-rules.json list always applies. */
+function claimIn(sentence: string, allow: readonly string[] = []): string | undefined {
   const s = sentence.replace(/\bfeel free\b/gi, '');
-  return (RULES.find((r) => r.re.test(s)) ?? TEAM_ONLY.find((r) => r.re.test(s)))?.id;
+  return (RULES.find((r) => r.re.test(s)) ?? TEAM_ONLY.find((r) => !allow.includes(r.id) && r.re.test(s)))?.id;
 }
 
 const ABBREVIATION = /\b(?:sq|ft|approx|vs|etc|e\.g|i\.e|st|dr|mr|mrs|ms|no)$/i;
@@ -135,6 +151,32 @@ function sentences(line: string): string[] {
 
 /** Longer than any sentence Sophie writes; past it the patterns get slow, so it is replaced unread (fail closed). */
 const MAX_SENTENCE = 1000;
+
+/**
+ * Claim topics the designers' prompts are written to discuss: the owner's permit guidance (fire pits, walls, decks),
+ * and "free" as design prose ("keep the lawn free for play", "maintenance-free"). A free OFFER is still a claim.
+ */
+export const DESIGNER_ALLOWED_TOPICS = ['sophie:permits', 'sophie:free'] as const;
+
+/**
+ * Every price (with its dollar amounts; NaN when spelled out) and every claim in `text`, read the same way guardReply
+ * reads Sophie. For the designers' AI, which rejects a bad answer outright instead of redacting it; they pass
+ * DESIGNER_ALLOWED_TOPICS.
+ */
+export function findPricesAndClaims(text: string, allow: readonly string[] = []) {
+  const prices: Array<{ figure: string; amounts: number[] }> = [];
+  const claims: string[] = [];
+  for (const line of text.split('\n')) {
+    for (const sentence of sentences(line)) {
+      if (sentence.length > MAX_SENTENCE) { claims.push('sophie:too-long'); continue; }
+      const probe = sentence.normalize('NFKC');
+      const claim = claimIn(probe, allow);
+      if (claim) claims.push(claim);
+      for (const figure of pricesIn(probe)) prices.push({ figure, amounts: amountsIn(figure) });
+    }
+  }
+  return { prices, claims };
+}
 
 export function guardReply(text: string, range: AllowedRange) {
   const redactedPrices: string[] = [];

@@ -15,6 +15,7 @@ import {MOVE_INFO,MOVE_NEEDS,MOVE_PARAMS,SITE_CONCEPT_IDS,SITE_GOALS,SITE_MOVE_K
 import {CONSERVATION_AUTHORITY,FIRE_CLEARANCE,GUARD,RETAINING_WALL,STONE_STEPS,ZONING_SETBACKS} from '../src/features/deckcraft/designRules';
 import {DESIGN_TRENDS,DESIGN_TRENDS_STATUS} from '../src/features/deckcraft/designTrends';
 import {usageCostUsd,worstCaseUsd} from './aiSpendLedger';
+import {DESIGNER_ALLOWED_TOPICS,findPricesAndClaims} from '../src/utils/sophieGuard';
 
 type SiteGoal=typeof SITE_GOALS[number];
 export const CLAUDE_MODEL='claude-opus-5-5';
@@ -386,7 +387,11 @@ export function parseDesignerOutput(raw:string,req:DesignerAiRequest):DesignerAi
  }
  // Pricing honesty and privacy over everything the visitor will read.
  const prose=[explanation,...highlights,...questions].join('\n'),given=givenFigures(req);
- for(const f of figures(prose))if(!given.some(g=>Math.abs(g-f)<=1))bad('The AI stated a price the engine did not give it.');
+ // Prices read the way Sophie's guard reads them ("about 18,500", "25 grand", "twenty thousand dollars"), so a
+ // figure without a "$" is held to the same rule; a spelled-out amount (NaN) can never match a given figure.
+ const {prices,claims}=findPricesAndClaims(prose,DESIGNER_ALLOWED_TOPICS);
+ for(const p of prices)if(p.amounts.some(a=>!given.some(g=>Math.abs(g-a)<=1)))bad('The AI stated a price the engine did not give it.');
+ if(claims.length)bad('The AI made a claim only the team can confirm in writing.');
  if(hasContact(prose))bad('The AI answer contains contact details.');
  return response;
 }
