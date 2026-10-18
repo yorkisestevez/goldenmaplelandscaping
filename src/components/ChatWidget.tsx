@@ -380,17 +380,19 @@ export default function ChatWidget() {
     void send(input);
   };
 
-  // Linkify /cost-estimator, /book, /contact and tel: mentions inside replies.
+  // Linkify /cost-estimator, /book, /contact and tel: mentions inside replies. Pages are matched by name: the build
+  // slashes quoted paths ('/book' becomes '/book/', buildTools/trailingSlashLinks.ts), which the split pieces never equal.
   const renderContent = (text: string) => {
     const parts = text.split(new RegExp(`(\\/cost-estimator|\\/book|\\/contact|${publicContact.phoneDisplay.replace(/[()]/g, '\\$&')})`));
     return parts.map((p, i) => {
-      if (p === '/book') {
+      const page = /^\/(cost-estimator|book|contact)$/.exec(p)?.[1];
+      if (page === 'book') {
         return <button key={i} onClick={() => goBook('reply')} className="text-brand-green-dark underline underline-offset-2">book a site visit</button>;
       }
-      if (p === '/cost-estimator' || p === '/contact') {
+      if (page === 'cost-estimator' || page === 'contact') {
         return (
-          <button key={i} onClick={() => goTo(p, p.slice(1))} className="text-brand-green-dark underline underline-offset-2">
-            {p === '/cost-estimator' ? 'cost calculator' : 'contact us'}
+          <button key={i} onClick={() => goTo(`/${page}`, page)} className="text-brand-green-dark underline underline-offset-2">
+            {page === 'cost-estimator' ? 'cost calculator' : 'contact us'}
           </button>
         );
       }
