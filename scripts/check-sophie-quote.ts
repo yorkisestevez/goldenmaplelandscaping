@@ -56,7 +56,7 @@ for (const project of QUICK_PROJECTS) {
       // A link that carries the size must open on Sophie's exact range; one that can't must say so.
       assert.equal(result.estimatorPrefilled, opened.low === result.low && opened.high === result.high,
         `${project.id}/${size.id}/${city}: estimatorPrefilled must be true exactly when the link opens on the same range`);
-      if (size.amount === Number(ESTIMATOR_DEFAULT_SIZES[project.id === 'full' ? 'patio' : project.id]) || result.estimatorHref.includes('sqft=')) {
+      if (size.amount === Number(ESTIMATOR_DEFAULT_SIZES[project.id === 'full' || project.id === 'walkway' ? 'patio' : project.id]) || result.estimatorHref.includes('sqft=')) {
         assert.ok(result.estimatorPrefilled, `${project.id}/${size.id} link must reproduce the range`);
       }
       assert.ok(result.low > 0 && result.high > result.low, `${project.id}/${size.id} must be a real band`);
@@ -64,7 +64,8 @@ for (const project of QUICK_PROJECTS) {
       assert.match(result.bookingNotes, /\+ HST/);
       assert.ok(result.bookingNotes.includes(result.low.toLocaleString('en-CA')));
       assert.ok(result.contextText.includes(result.high.toLocaleString('en-CA')));
-      assert.match(result.estimatorHref, new RegExp(`^/cost-estimator\\?type=${project.id}`));
+      // A walkway is laid in pavers: it opens the estimator's paver (patio) element, never natural stone.
+      assert.match(result.estimatorHref, new RegExp(`^/cost-estimator\\?type=${project.id === 'walkway' ? 'patio' : project.id}`));
       assert.ok(result.estimatorHref.includes(`city=${city}`));
       // The estimator only prefills sizes inside its window; others must not be sent.
       assert.equal(result.estimatorHref.includes('sqft='), size.amount >= ESTIMATOR_PREFILL_SIZE.min && size.amount <= ESTIMATOR_PREFILL_SIZE.max);

@@ -87,7 +87,6 @@ export default function House3D({data,width,...interaction}:{data:DeckData;width
  if(!layout.visible)return null;
  return <group name="complete-editable-house" userData={{pickPartId:"house:main"}}>
   {walls.map(f=><group key={f.wall.id} name={`house-${f.name}-facade`} position={f.origin} rotation={[0,f.yaw,0]}><HouseFacade span={f.span} height={f.height} openings={f.openings} hidden={f.hidden} finish={facadeFinish(config,f.wall.id)} wallId={f.wall.id} blockId={f.block.id} evening={evening} {...interaction}/></group>)}
-  <HouseParts items={[{x:cx,y:4,z:-depth/2,w:maxX-minX+1,h:8,d:depth+1}]} color="#93968d" name="house-foundation-plinth" surface="stucco"/>
   <mesh geometry={roof} castShadow receiveShadow><meshStandardMaterial color={config.roofColor} map={map} bumpMap={map} bumpScale={look.bumpScale} metalness={look.metalness} roughness={look.roughness} side={THREE.DoubleSide}/></mesh>
   {showcase?<Suspense fallback={null}><ShowcaseRoofShell x0={minX} x1={maxX} y0={-depth} y1={0} wallTop={wallHeight} rise={roofRise} shape={config.roofShape} ridge={config.ridge==='x'?'x':'z'} fascia={trim.fascia} soffit={trim.soffit}/></Suspense>:<HouseParts items={[{x:cx,y:wallHeight-.75,z:-depth/2,w:maxX-minX+20,h:1.5,d:depth+20}]} color={trim.soffit} name="eave-soffit"/>}
   {gable&&<><mesh geometry={gable} castShadow receiveShadow><meshStandardMaterial color={config.claddingColor} roughness={.9} side={sideGables?THREE.DoubleSide:THREE.FrontSide}/></mesh><HouseParts items={gableSkin} color={config.claddingColor} name="gable-cladding"/>

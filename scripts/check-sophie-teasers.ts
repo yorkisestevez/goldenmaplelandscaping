@@ -10,7 +10,7 @@ const cases: Array<[string, string | undefined]> = [
   ['/sloped-backyard-solutions-barrie', 'wall'],
   ['/services/composite-decking-barrie', 'deck'],
   ['/full-backyard-transformations-barrie', 'full'],
-  ['/resources/paver-walkway-cost-barrie', 'stone'],
+  ['/resources/paver-walkway-cost-barrie', 'walkway'],
   ['/portfolio', undefined],
 ];
 for (const [path, project] of cases) {
@@ -55,7 +55,7 @@ const named: Array<[string, string | undefined]> = [
   ['what does a retaining wall run', 'wall'],
   ['cost of a composite deck', 'deck'],
   ['ballpark for redoing the whole backyard', 'full'],
-  ['how much is a walkway', 'stone'],
+  ['how much is a walkway', 'walkway'],
   ['how much does it cost', undefined],
 ];
 for (const [q, project] of named) assert.equal(projectFromText(q), project, q);

@@ -316,7 +316,7 @@ for(const [name,lookup] of LAWN_CHUNKS)ok((THREE.ShaderChunk as Record<string,st
   ok(half.count===pane.getAttribute('position').count&&half.getX(0)===15&&half.getY(0)===24,'Each pane carries its half size, so its room fits it');
   const facade=read(`${VIEWER}HouseFacade.tsx`),house=read(`${VIEWER}House3D.tsx`),parts=read(`${VIEWER}HouseParts.tsx`);
   ok(!facade.includes('transmission={.25}')&&(facade.match(/<Glass /g)??[]).length>=6&&(facade.match(/<Glass [^>]*evening=\{evening\}/g)??[]).length===(facade.match(/<Glass /g)??[]).length,'Every window and door pane is the new glass, told whether it is evening');
-  ok(facade.includes('surface={claddingSurface(look.cladding)}')&&facade.includes('surface={backingSurface(look.cladding)}')&&facade.includes('surface={claddingSurface(wainscot.cladding)}')&&house.includes('name="gable-accent-courses" surface={claddingSurface(look.cladding)}')&&house.includes('name="house-foundation-plinth" surface="stucco"')&&parts.includes('houseSurfaceMaterial(surface,'),'Walls, wainscots, gable accents and plinths take their surface detail through HouseParts');
+  ok(facade.includes('surface={claddingSurface(look.cladding)}')&&facade.includes('surface={backingSurface(look.cladding)}')&&facade.includes('surface={claddingSurface(wainscot.cladding)}')&&house.includes('name="gable-accent-courses" surface={claddingSurface(look.cladding)}')&&facade.includes('name="house-foundation" items={parts.lower} color={HOUSE_FOUNDATION_COLOR} surface="stucco"')&&parts.includes('houseSurfaceMaterial(surface,'),'Walls, wainscots, gable accents and the foundation reveal take their surface detail through HouseParts');
 }
 
 // G5: the yard's hardscape and its finished earthwork.

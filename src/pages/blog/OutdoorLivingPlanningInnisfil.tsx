@@ -11,7 +11,7 @@ export default function OutdoorLivingPlanningInnisfil() {
               "name": "What is the minimum budget for an outdoor living space in Innisfil?",
               "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "A basic interlocking patio with proper base prep starts around $15,000–$20,000 for a 300–400 sq ft surface. Add a pergola, seat wall, and composite deck and the realistic range for a mid-scope project is $40,000–$70,000. The base spec — 12 to 16 inches of clear stone — is non-negotiable and already built into those numbers."
+                  "text": "A basic interlocking patio with proper base prep starts around $13,500–$16,500 before HST for a 300–400 sq ft surface. Add a pergola, seat wall, and composite deck and the realistic range for a mid-scope project is $40,000–$70,000. The base spec — 12 to 16 inches of clear stone — is non-negotiable and already built into those numbers."
               }
           },
           {
@@ -103,14 +103,14 @@ export default function OutdoorLivingPlanningInnisfil() {
 
       <div className="not-prose my-10 overflow-x-auto">
         <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold-dark mb-3">Paver Brand Comparison: Permacon vs. Unilock vs. Techo-Bloc for Simcoe County Projects</p>
-        <div dangerouslySetInnerHTML={{ __html: "<table><thead><tr><th>Brand</th><th>Best Use</th><th>Typical Installed Cost</th><th>Material Lead Time</th><th>Where Contractors Source It</th></tr></thead><tbody><tr><td><strong>Permacon</strong></td><td>Driveways, value-focused patios</td><td>$18–$26 per sq ft</td><td>1–2 weeks</td><td>Carr Landscape Depot, Barrie</td></tr><tr><td><strong>Unilock</strong></td><td>Patios, pool decks, large-format slabs</td><td>$22–$35 per sq ft</td><td>2–4 weeks</td><td>Carr Landscape Depot, Barrie</td></tr><tr><td><strong>Techo-Bloc</strong></td><td>Contemporary design, premium textures</td><td>$24–$38 per sq ft</td><td>3–5 weeks</td><td>Carr Landscape Depot, Barrie</td></tr></tbody></table>" }} />
+        <div dangerouslySetInnerHTML={{ __html: "<table><thead><tr><th>Brand</th><th>Best Use</th><th>Typical Installed Cost</th><th>Material Lead Time</th><th>Where Contractors Source It</th></tr></thead><tbody><tr><td><strong>Permacon</strong></td><td>Driveways, value-focused patios</td><td>around $41 per sq ft (mid-tier, 400 sq ft, before HST)</td><td>1–2 weeks</td><td>Carr Landscape Depot, Barrie</td></tr><tr><td><strong>Unilock</strong></td><td>Patios, pool decks, large-format slabs</td><td>Confirmed on product selection</td><td>2–4 weeks</td><td>Carr Landscape Depot, Barrie</td></tr><tr><td><strong>Techo-Bloc</strong></td><td>Contemporary design, premium textures</td><td>Confirmed on product selection</td><td>3–5 weeks</td><td>Carr Landscape Depot, Barrie</td></tr></tbody></table>" }} />
       </div>
 
       <h2>Frequently Asked Questions</h2>
       <div className="mt-8">
         <div className="mb-8">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-3">What is the minimum budget for an outdoor living space in Innisfil?</h3>
-          <div dangerouslySetInnerHTML={{ __html: "<p>A basic interlocking patio with proper base prep starts around $15,000–$20,000 for a 300–400 sq ft surface. Add a pergola, seat wall, and composite deck and the realistic range for a mid-scope project is $40,000–$70,000. The base spec — 12 to 16 inches of clear stone — is non-negotiable and already built into those numbers.</p>" }} />
+          <div dangerouslySetInnerHTML={{ __html: "<p>A basic interlocking patio with proper base prep starts around $13,500–$16,500 before HST for a 300–400 sq ft surface. Add a pergola, seat wall, and composite deck and the realistic range for a mid-scope project is $40,000–$70,000. The base spec — 12 to 16 inches of clear stone — is non-negotiable and already built into those numbers.</p>" }} />
         </div>
         <div className="mb-8">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-3">Do I need a permit for a patio in Innisfil?</h3>

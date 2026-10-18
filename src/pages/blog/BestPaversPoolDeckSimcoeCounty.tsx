@@ -69,19 +69,19 @@ export default function BestPaversPoolDeckSimcoeCounty() {
     <BlogPostLayout
       title="Best Pavers for Pool Decks in Simcoe County: Slip-Rated, Cool-Touch, Freeze-Thaw Tested"
       seoTitle="Pool Deck Pavers Simcoe County | Slip-Rated Guide"
-      seoDescription="Best pavers for Simcoe County pool decks — slip-rated R-11 or higher, cool-touch light colours, freeze-thaw certified. Budget $37-65/sq ft installed."
+      seoDescription="Best pavers for Simcoe County pool decks — slip-rated R-11 or higher, cool-touch light colours, freeze-thaw certified. Budget around $40–$45/sq ft installed before HST."
       category="Materials"
       date="June 15, 2026"
       readTime="9 min"
       heroImage="/images/projects/best.JPEG"
       schema={faqSchema}
-      tldr="For a Simcoe County pool deck, three things actually matter — slip resistance (R-11 rating or higher when wet), cool-touch under July sun (lighter colours that don't burn bare feet), and freeze-thaw durability through the 60-plus annual cycles. Quality pavers from Permacon, Unilock, and Techo-Bloc meet all three when you choose the right line. Budget $37-65 per square foot installed, including the 12-16 inch compacted clear stone base the climate demands. The paver matters; the base matters more."
+      tldr="For a Simcoe County pool deck, three things actually matter — slip resistance (R-11 rating or higher when wet), cool-touch under July sun (lighter colours that don't burn bare feet), and freeze-thaw durability through the 60-plus annual cycles. Quality pavers from Permacon, Unilock, and Techo-Bloc meet all three when you choose the right line. Budget around $40–$45 per square foot installed before HST for a 300–1,000 sq ft pool deck in mid-tier pavers, including the 12-16 inch compacted clear stone base the climate demands. The paver matters; the base matters more."
       keywords="Pool Deck Pavers Simcoe County | Slip-Rated Guide"
       wordCount={1820}
     >
       <div className="not-prose mb-12 p-7 rounded-2xl border border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.08] to-transparent">
         <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-brand-gold-dark mb-3">Quick Answer</div>
-        <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">For a Simcoe County pool deck, three things actually matter — slip resistance (R-11 rating or higher when wet), cool-touch under July sun (lighter colours that don\'t burn bare feet), and freeze-thaw durability through the 60-plus annual cycles. Quality pavers from Permacon, Unilock, and Techo-Bloc meet all three when you choose the right line. Budget $37-65 per square foot installed, including the 12-16 inch compacted clear stone base the climate demands. The paver matters; the base matters more.</p>
+        <p className="font-sans text-base text-brand-bonewhite font-light leading-relaxed mb-0">For a Simcoe County pool deck, three things actually matter — slip resistance (R-11 rating or higher when wet), cool-touch under July sun (lighter colours that don\'t burn bare feet), and freeze-thaw durability through the 60-plus annual cycles. Quality pavers from Permacon, Unilock, and Techo-Bloc meet all three when you choose the right line. Budget around $40–$45 per square foot installed before HST for a 300–1,000 sq ft pool deck in mid-tier pavers, including the 12-16 inch compacted clear stone base the climate demands. The paver matters; the base matters more.</p>
       </div>
 
       <div dangerouslySetInnerHTML={{ __html: "<p>Drive past any pool in Innisfil, Oro-Medonte, or the Bayfield Street neighbourhoods of Barrie three years after installation and you can sort the contractors in about ten seconds. The bad ones built decks that are already shifting, scaling around the coping, or staining where the chlorinated water splashed. The good ones look exactly the way they did the day they were finished — flat, true, and dry-finishing within minutes of a thunderstorm.</p><p>The difference isn't the paver brand. It's whether the installer matched the paver to the three real demands of an Ontario pool deck: <strong>slip resistance when wet, cool surface temperature under direct July sun, and freeze-thaw durability through the 60-plus annual cycles</strong>. Skip any one of those and you get a deck that's beautiful in the showroom and dangerous, painful, or broken on your property.</p><p>This is what contractors look at before specifying a paver for any pool contractors build in Simcoe County.</p>" }} />

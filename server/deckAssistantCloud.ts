@@ -8,8 +8,9 @@
  */
 import {ASSISTANT_PLAN_SCHEMA,ASSISTANT_SYSTEM_PROMPT,parseAssistantPlan,type AssistantContext,type AssistantPlan} from '../src/features/deckcraft/designer/assistantPlan';
 import {assistantSystemPromptFor,type ExpertId} from '../src/features/deckcraft/designer/expertAgents';
-import {parseDeckAssistantRequest} from './deckAssistantBackend';
+import {assistantPlanProse,parseDeckAssistantRequest} from './deckAssistantBackend';
 import {AiError,plainJson,redactContact,taskMessages,type AiTask} from './siteDesignerAi';
+import {DESIGNER_ALLOWED_TOPICS,findPricesAndClaims} from '../src/utils/sophieGuard';
 
 export const ASSISTANT_CLOUD_LIMITS={maxTokens:10000,localMaxTokens:900,outputBytes:64*1024} as const;
 export interface AssistantCloudInput {prompt:string;context:AssistantContext;turns:{role:'user'|'assistant';content:string}[];expert:ExpertId}
@@ -66,6 +67,9 @@ export function parseAssistantOutput(raw:string):AssistantPlan{
   :{kind:v.kind,message:v.message,assumptions:v.assumptions,commands};
  const parsed=parseAssistantPlan(plan);
  if(parsed.ok===false)return bad('The AI plan contains unsupported or invalid changes. Try clarifying the request.');
- if(/\$\s?\d/.test(JSON.stringify([parsed.plan.message,parsed.plan.assumptions])))bad('The AI plan stated a price; the editor prices every preview.');
+ // Any price, in any form ("$2,400", "about 2,400", "3 grand"): the editor prices every preview itself.
+ const {prices,claims}=findPricesAndClaims(assistantPlanProse(parsed.plan),DESIGNER_ALLOWED_TOPICS);
+ if(prices.length)bad('The AI plan stated a price; the editor prices every preview.');
+ if(claims.length)bad('The AI plan made a claim only the team can confirm in writing.');
  return parsed.plan;
 }

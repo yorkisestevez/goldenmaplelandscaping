@@ -1,6 +1,7 @@
 import type {HouseCladding,HouseOpening} from '../../types';
 import type {Box} from '../../deckTakeoff';
 import {wainscotBand,wainscotCap} from './houseWainscot';
+import {HOUSE_FOUNDATION_REVEAL_IN} from './houseWallParts';
 
 /**
  * The pieces laid over a house wall for its cladding, in the facade frame: local x along the wall (−span/2 to
@@ -163,19 +164,19 @@ export function wallSkin(cladding:HouseCladding,span:number,height:number,shapes
 }
 
 /**
- * A wall's cladding pieces, with a wainscot band along the bottom when it has one. Without one this is exactly
- * `wallSkin`. With one, the band is clad in its own cladding from grade up to its top, and the wall's cladding
+ * A wall's cladding pieces, with a wainscot band along the bottom when it has one. Everything starts on the
+ * foundation reveal (HOUSE_FOUNDATION_REVEAL_IN), which stays bare concrete. Without a band this is `wallSkin` laid
+ * from the reveal up. With one, the band is clad in its own cladding from the reveal up to its top, and the wall's cladding
  * starts afresh at the band's top (its courses laid from there), so each keeps whole courses; the trim cap covers
  * the joint. Each stays under SKIN_PIECE_CAP on its own, as every wall does.
  */
 export function facadeSkins(cladding:HouseCladding,span:number,height:number,shapes:OpeningShape[],hidden:[number,number][],wainscot?:{cladding:HouseCladding;heightIn:number}):{skin:{pieces:Box[];simplified:boolean};band?:{top:number;skin:{pieces:Box[];simplified:boolean};cap:Box[]}}{
- const top=wainscot?wainscotBand(wainscot.heightIn,height):0;
- if(!wainscot||!top)return {skin:wallSkin(cladding,span,height,shapes,hidden)};
- const above=wallSkin(cladding,span,height-top,shapes.map(o=>({...o,y:o.y-top,bottomIn:o.bottomIn-top})),hidden);
- return {
-  skin:{pieces:above.pieces.map(b=>({...b,y:b.y+top})),simplified:above.simplified},
-  band:{top,skin:wallSkin(wainscot.cladding,span,top,shapes,hidden),cap:wainscotCap(span,top,shapes,hidden)},
- };
+ // Cladding starts on the foundation reveal, not at grade; a band too low to clear it is left off.
+ const base=HOUSE_FOUNDATION_REVEAL_IN,band=wainscot?wainscotBand(wainscot.heightIn,height):0,top=band>base?band:0;
+ // A skin laid from `from` to `to`, its courses starting at `from`.
+ const lay=(c:HouseCladding,from:number,to:number)=>{const s=wallSkin(c,span,to-from,shapes.map(o=>({...o,y:o.y-from,bottomIn:o.bottomIn-from})),hidden);return {pieces:s.pieces.map(b=>({...b,y:b.y+from})),simplified:s.simplified};};
+ if(!wainscot||!top)return {skin:lay(cladding,base,height)};
+ return {skin:lay(cladding,top,height),band:{top,skin:lay(wainscot.cladding,base,top),cap:wainscotCap(span,top,shapes,hidden)}};
 }
 
 /**
