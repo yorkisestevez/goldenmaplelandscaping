@@ -1,0 +1,2569 @@
+{
+  "_readme": "Every non-engine dollar figure on the site, per file. Maintained by scripts/check-price-ledger.ts — see its header.",
+  "entries": {
+    "src/components/BuyersGuide.tsx": {
+      "$40k–$90k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "stone, porcelain\", \"How to budget for a $40K–$90K+ project\", \"Questions to ask every contra"
+      }
+    },
+    "src/components/EstimateLeadCapture.tsx": {
+      "$12k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "e's highest-intent // conversion — Ads couldn't tell a $12K walkway from a $90K backyard. const conversionValue ="
+      },
+      "$90k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "// conversion — Ads couldn't tell a $12K walkway from a $90K backyard. const conversionValue = Math.round((estimate"
+      }
+    },
+    "src/components/EstimateWorkbench.tsx": {
+      "$24k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "{/* Whole outcomes side by side, not just deltas. Seeing \"$24k / $28k / $33k\" is a different act from reading"
+      },
+      "$28k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "hole outcomes side by side, not just deltas. Seeing \"$24k / $28k / $33k\" is a different act from reading \"+$4,1"
+      },
+      "$33k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "y side, not just deltas. Seeing \"$24k / $28k / $33k\" is a different act from reading \"+$4,100\" — it's choosing"
+      },
+      "$4,100": {
+        "count": 1,
+        "status": "unverified",
+        "context": "$28k / $33k\" is a different act from reading \"+$4,100\" — it's choosing between three finished projec"
+      }
+    },
+    "src/components/Estimator.tsx": {
+      "$1.5k–$3.5k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "{ id: 'drainage', label: 'Drainage work needed', hint: '+$1.5k–$3.5k', why: 'Catch basins, weeping tile, or swales to move water"
+      },
+      "$1.5k–$4k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ope', label: 'Significant slope or grading needed', hint: '+$1.5k–$4k', why: 'Cut-and-fill plus extra base material to get a leve"
+      },
+      "$2,400": {
+        "count": 1,
+        "status": "unverified",
+        "context": "[build, confidence, deckCents], ); // Transient \"+$2,400\" chip when an answer moves the estimate — makes every input"
+      },
+      "$3,200": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ld, not against a // generic average — \"+$3,200\" on their 500 sqft patio, not \"+12–16%\"."
+      },
+      "$3,900": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ium' })` is a real re-run of the * same engine, so a \"+$3,900\" hint can never promise a number the estimate * won't"
+      }
+    },
+    "src/components/ui/AnimatedPrice.tsx": {
+      "$100": {
+        "count": 1,
+        "status": "unverified",
+        "context": "-CA')}`; /** * A planning total rounded to the nearest $100. The takeoff engine still * prices to the cent for the CR"
+      }
+    },
+    "src/components/ui/PriceDelta.tsx": {
+      "$0": {
+        "count": 1,
+        "status": "unverified",
+        "context": "* * Below the noise floor we say \"Included\" rather than \"+$0\" — a rounding-error * delta dressed up as a price is wors"
+      }
+    },
+    "src/data/blogPosts.ts": {
+      "$0.25–$0.65": {
+        "count": 1,
+        "status": "unverified",
+        "context": "County runs $1.20–$2.50 per sq ft installed; seeding costs $0.25–$0.65 per sq ft but takes 8–16 weeks to establish.\", categor"
+      },
+      "$1,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "\"Wet backyard in Barrie? We cover 6 drainage solutions—from $1,500 French drains to $8,000+ catch basin systems—for Simcoe Cou"
+      },
+      "$1.20–$2.50": {
+        "count": 1,
+        "status": "unverified",
+        "context": "n\", excerpt: \"Sodding a new lawn in Simcoe County runs $1.20–$2.50 per sq ft installed; seeding costs $0.25–$0.65 per sq ft bu"
+      },
+      "$12–$25": {
+        "count": 1,
+        "status": "unverified",
+        "context": "in Barrie?\", excerpt: \"Heated driveways in Barrie cost $12–$25 per sq ft installed — find out if electric radiant or hydro"
+      },
+      "$12,000–$30,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "000 installed in Barrie, pavilions $18,000–$45,000, gazebos $12,000–$30,000. Which structure adds the most value? Honest 2026 breakdown"
+      },
+      "$18,000–$45,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Pergolas cost $8,000–$18,000 installed in Barrie, pavilions $18,000–$45,000, gazebos $12,000–$30,000. Which structure adds the most val"
+      },
+      "$20k–$65k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "asaga Beach backyard for entertaining with real 2026 costs: $20K–$65K for a full setup, about $43 per sq ft for an interlocking p"
+      },
+      "$25,000–$80,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "living space in Innisfil takes 7 steps — most projects run $25,000–$80,000 depending on zones, materials, and phasing strategy.\","
+      },
+      "$3,500–$18,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "its)\", excerpt: \"Fire pit installation in Barrie costs $3,500–$18,000 depending on type; City of Barrie permits are required for"
+      },
+      "$340–$680": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "\", excerpt: \"Retaining walls in Oro-Medonte cost about $340–$680 per linear foot installed in 2026, before HST, depending on"
+      },
+      "$43": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "ing with real 2026 costs: $20K–$65K for a full setup, about $43 per sq ft for an interlocking patio, pergola included.\","
+      },
+      "$8,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "f a failing patio in Barrie — catch them before repairs hit $8,000.\", category: \"Engineering\", readTime: \"9 min\","
+      },
+      "$8,000–$18,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ds the Most Value in Barrie?\", excerpt: \"Pergolas cost $8,000–$18,000 installed in Barrie, pavilions $18,000–$45,000, gazebos $12"
+      },
+      "$8,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "We cover 6 drainage solutions—from $1,500 French drains to $8,000+ catch basin systems—for Simcoe County clay soil.\", cat"
+      }
+    },
+    "src/data/business.ts": {
+      "$2,500–$8,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "rce: 'llms.txt conflicts with src/data/serviceLocations.ts ($2,500–$8,000; 100% credited)', notes: 'Price, deliverables, wheth"
+      },
+      "$99": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ng /book and llms.txt copy'), design: { value: '$99 paid design session, credited toward a project', sta"
+      }
+    },
+    "src/data/carrPrices.ts": {
+      "$800–$2,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "for clay soil sites. Can be added later, but expect roughly $800–$2,000 extra to lift and relay pavers over the run. Fire Feature P"
+      }
+    },
+    "src/data/heroDepth.ts": {
+      "$0": {
+        "count": 1,
+        "status": "unverified",
+        "context": "g file.) * * Built by two local scripts, in order (both $0, no API): * python scripts/upscale-hero-master.py *"
+      }
+    },
+    "src/data/ownerFacts.ts": {
+      "$15,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "s, in the owner\\'s words. Example: \"Hardscape projects from $15,000; seasonal clean-ups quoted per property.\"'), } as const;"
+      },
+      "$2,000,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "bilityCoverage: blank('Example shape, not a value to copy: \"$2,000,000 commercial general liability, certificate dated YYYY-MM-DD\""
+      }
+    },
+    "src/data/projectBudgets.ts": {
+      "$100,000–$250,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "l: '$50,000 – $100,000' }, { value: '100k-250k', label: '$100,000 – $250,000' }, { value: '250k+', label: '$250,000+' }, ] as const;"
+      },
+      "$13,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "CT_BUDGET_RANGES = [ { value: 'under-13k', label: 'Under $13,000' }, { value: '13k-25k', label: '$13,000 – $25,000' },"
+      },
+      "$13,000–$25,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "', label: 'Under $13,000' }, { value: '13k-25k', label: '$13,000 – $25,000' }, { value: '25k-50k', label: '$25,000 – $50,000' },"
+      },
+      "$25,000–$50,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "abel: '$13,000 – $25,000' }, { value: '25k-50k', label: '$25,000 – $50,000' }, { value: '50k-100k', label: '$50,000 – $100,000' },"
+      },
+      "$250,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "abel: '$100,000 – $250,000' }, { value: '250k+', label: '$250,000+' }, ] as const; export type ProjectBudgetRangeValue = ("
+      },
+      "$50,000–$100,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "bel: '$25,000 – $50,000' }, { value: '50k-100k', label: '$50,000 – $100,000' }, { value: '100k-250k', label: '$100,000 – $250,000' }"
+      }
+    },
+    "src/data/serviceLocations.ts": {
+      "$330–$670": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "flat — for decades, not seasons.', startingPriceText: '$330–$670', perUnitText: 'per linear foot before HST, retaining"
+      },
+      "$40–$45": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "confirmed in the written scope.', startingPriceText: '$40–$45', perUnitText: 'per sq ft before HST, interlocking pat"
+      },
+      "$50k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "sheet during the first visit. That's how you end up with a $50K patio that doesn't drain — or matches the wrong side of the"
+      }
+    },
+    "src/pages/CostEstimator.tsx": {
+      "$35,000–$75,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "premium interlocking patio in Barrie typically ranges from $35,000 to $75,000 depending on size, paver selection, site conditions such as"
+      },
+      "$39,700": {
+        "count": 1,
+        "status": "unverified",
+        "context": "one-row picture-frame border, has a priced portion of about $39,700 before HST; the same deck 8 ft up as a walkout has a priced"
+      },
+      "$58,200": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ame deck 8 ft up as a walkout has a priced portion of about $58,200. Unpriced connections, installation and order-specific adju"
+      }
+    },
+    "src/pages/CostGuide.tsx": {
+      "$120k": {
+        "count": 2,
+        "status": "unverified",
+        "context": "final number', 'Sample budgets: $25K functional patio → $120K elevated outdoor living', ]; export default function Co"
+      },
+      "$18,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ckyards in Simcoe County', '5 hidden costs that turn an \"$18,000 bargain\" into a $58,000 rebuild', '4 questions to ask a"
+      },
+      "$25k": {
+        "count": 2,
+        "status": "unverified",
+        "context": "ade actually change your final number', 'Sample budgets: $25K functional patio → $120K elevated outdoor living', ]; e"
+      },
+      "$30k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "sample backyards', body: 'Functional ($25K) → Entertainer ($30K) → Outdoor Room ($40K+) → Elevated ($120K).' },"
+      },
+      "$40k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ases and quote structures that signal you\\'re about to lose $40K.' }, ].map((item, idx) => ("
+      },
+      "$40k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "dy: 'Functional ($25K) → Entertainer ($30K) → Outdoor Room ($40K+) → Elevated ($120K).' }, { title: 'Site pr"
+      },
+      "$58,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "', '5 hidden costs that turn an \"$18,000 bargain\" into a $58,000 rebuild', '4 questions to ask a cheap contractor — in wr"
+      }
+    },
+    "src/pages/FullBackyardTransformationsBarrie.tsx": {
+      "$120k–$160k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "lement — built as one coordinated project.' }, { range: '$120K–$160K', title: 'Multi-Zone Outdoor Living', detail: 'Dining and l"
+      },
+      "$160k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "stem with real traffic flow between zones.' }, { range: '$160K+', title: 'Estate-Level Build', detail: 'Outdoor kitchen, pr"
+      },
+      "$90k–$120k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "from '../data/business'; const packages = [ { range: '$90K–$120K', title: 'Single-Season Transformation', detail: 'Patio, re"
+      },
+      "$90k–$160k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "block\">Backyard Renovation in Barrie · Full Transformations $90K-$160K+ <p className=\"font-display text-5xl md:te"
+      },
+      "$90k+": {
+        "count": 2,
+        "status": "unverified",
+        "context": "\"Backyard Renovation Barrie | Full Backyard Transformations $90K+\" description=\"Complete backyard transformations in"
+      }
+    },
+    "src/pages/Home.tsx": {
+      "$15k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "nal' Price Kept Climbing\", cause: \"What started as a $15K quote turned into $22K after 'unforeseen' extras. Sound fam"
+      },
+      "$22k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "g\", cause: \"What started as a $15K quote turned into $22K after 'unforeseen' extras. Sound familiar?\", solutio"
+      }
+    },
+    "src/pages/LuxuryLandscapeBarrie.tsx": {
+      "$120,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "at an in-person consult — there's no honest way to price a $120,000 build from a phone call. We walk the property, talk through"
+      },
+      "$158,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "e first quote. Most Premium builds land between $94,000 and $158,000. <div className=\"flex fl"
+      },
+      "$4,800–$11,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "lled. If we're a fit, the next step is a paid design phase ($4,800-$11,000, applied against the build budget if you proceed). If we're"
+      },
+      "$90k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "residential landscapes, not installed yards. Project starts $90K.\" canonical=\"https://goldenmaplelandscaping.ca/lux"
+      },
+      "$90k–$160k+": {
+        "count": 2,
+        "status": "unverified",
+        "context": "/analytics'; // Tier 3 — Premium residential landscapes ($90K-$160K+). // Hook: engineered residential landscape, multi-trade c"
+      },
+      "$94,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "gn before the first quote. Most Premium builds land between $94,000 and $158,000. <div class"
+      }
+    },
+    "src/pages/OutdoorLivingBarrie.tsx": {
+      "$35k–$90k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "alytics'; // Tier 2 — Signature outdoor living projects ($35K-$90K). // Hook: integrated systems (patio + pergola + lighting"
+      },
+      "$40k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "tic planning range. Most outdoor living builds land between $40K and $90K+, with full backyard transformations moving past $"
+      },
+      "$90k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "K and $90K+, with full backyard transformations moving past $90K once walls, kitchen, lighting, fire, or major grade correct"
+      },
+      "$90k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ing range. Most outdoor living builds land between $40K and $90K+, with full backyard transformations moving past $90K once w"
+      }
+    },
+    "src/pages/PatiosBarrie.tsx": {
+      "$35,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "m patio projects Golden Maple is built to serve run between $35,000 and $75,000 depending on size, access, base prep, drainage,"
+      },
+      "$35k–$75k": {
+        "count": 3,
+        "status": "unverified",
+        "context": "../components/PlanningQuote'; // Premium patio projects ($35K-$75K). // Hook: cost transparency + base-depth differentiator +"
+      },
+      "$40–$45": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "uote source=\"patios-barrie\" rate=\"$40–$45\" rateDetail=\"per square foot before HST for mo"
+      },
+      "$75,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ects Golden Maple is built to serve run between $35,000 and $75,000 depending on size, access, base prep, drainage, steps, and"
+      }
+    },
+    "src/pages/PaverPatioBarrieAds.tsx": {
+      "$40–$45": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "span className=\"font-display text-4xl text-brand-porcelain\">$40–$45 <span className=\"block font-sans text-sm te"
+      }
+    },
+    "src/pages/PremiumPatioRebuildBarrie.tsx": {
+      "$25k–$100k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "] text-brand-gold-dark mb-8 block\">Sinking Patio Rebuilds · $25K-$100K+ <h1 className=\"font-display text-5xl md"
+      },
+      "$25k–$45k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "to discuss a rebuild plan']; const ranges = [ { range: '$25K–$45K', title: 'Clean Patio Rebuild', detail: 'Old surface remova"
+      },
+      "$40k–$75k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "pavers, edge restraint, polymeric joints.' }, { range: '$40K–$75K', title: 'Rebuild + Upgrade', detail: 'Larger patio footpri"
+      },
+      "$60k–$100k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ction, lighting conduit, premium material.' }, { range: '$60K–$100K+', title: 'Failure Fix + Outdoor Room', detail: 'Replace fai"
+      }
+    },
+    "src/pages/SlopedBackyardSolutionsBarrie.tsx": {
+      "$100k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "and between $50K and $100K. <p className=\"font-sans text-bran"
+      },
+      "$30k–$55k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "from '../data/business'; const packages = [ { range: '$30K–$55K', title: 'Grade Fix + Drainage', detail: 'Slope correction,"
+      },
+      "$50k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "rojects land between $50K and $100K. <p className=\"font-sans"
+      },
+      "$50k–$100k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "nd a clean usable zone for a future patio.' }, { range: '$50K–$100K', title: 'Patio + Retaining Wall', detail: 'The core Golden"
+      },
+      "$90k–$150k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ll, drainage, and proper open-graded base.' }, { range: '$90K–$150K+', title: 'Terraced Backyard Transformation', detail: 'Multi"
+      }
+    },
+    "src/pages/blog/BackyardDrainageSolutionsBarrie.tsx": {
+      "$1,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "yard in Barrie? Contractors cover 6 drainage solutions—from $1,500 French drains to $8,000+ catch basin systems—for Simcoe Cou"
+      },
+      "$1,500–$4,500": {
+        "count": 6,
+        "status": "unverified",
+        "context": "\"text\": \"A French drain in Barrie typically costs $1,500–$4,500 installed, depending on trench depth, total run length, and"
+      },
+      "$2,000–$3,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Sump-pump drainage systems for low-lying properties can add $2,000–$3,500 to the total and require a dedicated 120V electrical circui"
+      },
+      "$2,500–$6,500": {
+        "count": 4,
+        "status": "unverified",
+        "context": "$3,000–$8,000+) address higher-volume problems; re-grading ($2,500–$6,500) fixes the source. No drainage pipe substitutes for correct"
+      },
+      "$3,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "t a solution without a grade assessment is how people spend $3,000 on a French drain that misses the problem by a metre and a"
+      },
+      "$3,000–$6,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "e-metre patio plus associated lawn in Barrie typically runs $3,000–$6,000 installed, depending on pipe run length and whether a pump"
+      },
+      "$3,000–$8,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "basins in addition to—or instead of—perforated pipe. Budget $3,000–$8,000 for a complete surface drainage system tied to a daylight e"
+      },
+      "$3,000–$8,000+": {
+        "count": 3,
+        "status": "unverified",
+        "context": "ild sheet-flow issues; catch basins and solid pipe systems ($3,000–$8,000+) address higher-volume problems; re-grading ($2,500–$6,500)"
+      },
+      "$4,000–$7,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "system Low-lying lots with no gravity exit $4,000–$7,500 10–15 yrs (pump); 30+ (pipe) Requires elect"
+      },
+      "$8,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ors cover 6 drainage solutions—from $1,500 French drains to $8,000+ catch basin systems—for Simcoe County clay soil.\" ca"
+      },
+      "$800–$2,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "h drain under an existing patio is practical. Expect to add $800–$2,000 to the drainage installation cost to cover the work of lift"
+      }
+    },
+    "src/pages/blog/BackyardEntertainingWasagaBeach.tsx": {
+      "$1,500–$2,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "($1,800–$2,500), and standard sod for remaining lawn area ($1,500–$2,500). That is a complete, functional outdoor entertaining space"
+      },
+      "$1,500–$3,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "perimeter needs 8–12 fixtures, putting ambient lighting at $1,500–$3,500 for the layer. Task lighting — work"
+      },
+      "$1,800–$2,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "rgola ($5,500–$7,000), 8–10 path and accent light fixtures ($1,800–$2,500), and standard sod for remaining lawn area ($1,500–$2,500)."
+      },
+      "$1,800–$3,500": {
+        "count": 2,
+        "status": "unverified",
+        "context": "ium pergola adds $4,500–$9,500; and landscape lighting adds $1,800–$3,500. Wasaga Beach sandy soil drains better than Barrie clay, bu"
+      },
+      "$10,000–$18,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "8,000), a 14 × 16 ft aluminium pergola or a cedar pavilion ($10,000–$18,000), a full 3-layer lighting system including smart controls ("
+      },
+      "$12,000–$22,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ulated roofing panels — adds full rain protection and costs $12,000–$22,000 installed. For a property used regularly from May through T"
+      },
+      "$14,500–$17,000": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "ng> delivers: 300–400 sq ft of mid-tier interlocking patio ($14,500–$17,000), a 12 × 14 ft cedar pergola ($5,500–$7,000), 8–10 path and"
+      },
+      "$15,000–$28,000": {
+        "count": 3,
+        "status": "unverified",
+        "context": "g system pushes to $38,000–$55,000. An outdoor kitchen adds $15,000–$28,000 on top of those numbers.\" } },"
+      },
+      "$150–$280": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ng> — trees, steps, garden features: uplighting fixtures at $150–$280 per unit installed. Four to six accent fixtures on feature"
+      },
+      "$17,000": {
+        "count": 2,
+        "status": "engine-checked",
+        "context": "patio runs about $43 per sq ft installed before HST (about $17,000); a cedar or aluminium pergola adds $4,500–$9,500; and land"
+      },
+      "$180–$300": {
+        "count": 1,
+        "status": "unverified",
+        "context": "y edges and patio borders provide the base layer. Cost runs $180–$300 per fixture installed. A typical 400 sq ft patio perimeter"
+      },
+      "$2,200–$5,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "look like a used-car lot. All three layers together: $2,200–$5,500 for a complete setup on a standard 400–500 sq ft Wasaga Bea"
+      },
+      "$20,000–$30,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "an honest breakdown for Wasaga Beach in 2026: $20,000–$30,000 delivers: 300–400 sq ft of mid-tier interlocking p"
+      },
+      "$20,000–$55,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "omplete outdoor entertaining backyards in Wasaga Beach cost $20,000–$55,000 for a patio, shade structure, and lighting package. A 400 s"
+      },
+      "$20,000–$65,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "tdoor entertaining backyard in Wasaga Beach typically costs $20,000–$65,000 depending on size, materials, and features. A standard 400"
+      },
+      "$20k–$30k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "InnerHTML={{ __html: \" Feature $20K–$30K $38K–$58K $58K–$80K <tbody"
+      },
+      "$20k–$65k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "asaga Beach backyard for entertaining with real 2026 costs: $20K–$65K for a full setup, about $43 per sq ft for an interlocking p"
+      },
+      "$21,500–$28,000": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "delivers: 450–600 sq ft of premium-line interlocking patio ($21,500–$28,000), a 14 × 16 ft aluminium pergola or a cedar pavilion ($10,0"
+      },
+      "$22,000–$32,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "atio with a cedar pergola and basic lighting typically runs $22,000–$32,000. Adding an aluminium pergola or pavilion and a full lightin"
+      },
+      "$25,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "describing a $50,000 scope to a contractor who quotes it at $25,000. Something is being cut — and you will not find out where u"
+      },
+      "$25k": {
+        "count": 1,
+        "status": "unverified",
+        "context": ", not an excavation project. \" }} /> What a $25K vs. $50K Wasaga Beach Backyard Actually Buys <d"
+      },
+      "$3,000–$6,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "features — step nosing, seat wall caps, garden bed edging ($3,000–$6,000). This tier reads as deliberately designed rather than just"
+      },
+      "$3,500–$5,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "), a full 3-layer lighting system including smart controls ($3,500–$5,500), and natural stone or porcelain accent features — step nos"
+      },
+      "$38,000–$55,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "um pergola or pavilion and a full lighting system pushes to $38,000–$55,000. An outdoor kitchen adds $15,000–$28,000 on top of those nu"
+      },
+      "$38,000–$58,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "entertaining space — not a bare minimum one. $38,000–$58,000 delivers: 450–600 sq ft of premium-line interlocki"
+      },
+      "$38k–$58k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "l: \" Feature $20K–$30K $38K–$58K $58K–$80K Patio siz"
+      },
+      "$4,000–$8,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "sed regularly from May through Thanksgiving, the additional $4,000–$8,000 over a pergola often pays back in actual use: you are not m"
+      },
+      "$4,500–$7,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "e Wasaga Beach lots desirable. Standard sizing: 12 × 14 ft, $4,500–$7,000 for a pressure-treated cedar frame; 14 × 16 ft, $6,500–$9,5"
+      },
+      "$4,500–$9,500": {
+        "count": 2,
+        "status": "unverified",
+        "context": "fore HST (about $17,000); a cedar or aluminium pergola adds $4,500–$9,500; and landscape lighting adds $1,800–$3,500. Wasaga Beach sa"
+      },
+      "$400–$900": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ble. A 10-metre LED strip running at 12–18W per metre costs $400–$900 installed for a standard pergola beam. This is the layer th"
+      },
+      "$43": {
+        "count": 3,
+        "status": "engine-checked",
+        "context": "ing with real 2026 costs: $20K–$65K for a full setup, about $43 per sq ft for an interlocking patio, pergola included.\""
+      },
+      "$5,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "a standard 400–500 sq ft Wasaga Beach patio. Anything above $5,500 typically involves smart controls — app-based dimming and s"
+      },
+      "$5,500–$7,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ocking patio ($14,500–$17,000), a 12 × 14 ft cedar pergola ($5,500–$7,000), 8–10 path and accent light fixtures ($1,800–$2,500), and"
+      },
+      "$50,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "s. The number one budget mistake we see: describing a $50,000 scope to a contractor who quotes it at $25,000. Something i"
+      },
+      "$50k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "excavation project. \" }} /> What a $25K vs. $50K Wasaga Beach Backyard Actually Buys <div danger"
+      },
+      "$58,000–$80,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "erately designed rather than just functional. $58,000–$80,000 typically adds an outdoor kitchen: a 10–14 ft buil"
+      },
+      "$58k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "runs $15,000–$28,000, pushing almost any project above the $58K line. It is the right investment for a household that hosts"
+      },
+      "$58k–$80k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Feature $20K–$30K $38K–$58K $58K–$80K Patio size 300–400"
+      },
+      "$6,500–$9,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": ",500–$7,000 for a pressure-treated cedar frame; 14 × 16 ft, $6,500–$9,500. Post anchors are either direct-buried 6 × 6 posts in concr"
+      },
+      "$700–$1,600": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ixtures on feature trees or a seat wall cap typically costs $700–$1,600. Used sparingly, accent lighting adds depth; used heavily,"
+      },
+      "$800–$1,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "eview costs nothing. Moving an installed pergola post costs $800–$1,500. Visit our Wasaga Beach l"
+      },
+      "$9,000–$15,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ands such as Trex Pergola and Palram — cost more upfront at $9,000–$15,000 installed, but require zero maintenance and handle coastal"
+      }
+    },
+    "src/pages/blog/BackyardROI.tsx": {
+      "$100,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "urs. Over-improvement: A $100,000 backyard in a $400,000 neighbourhood won't get its money ba"
+      },
+      "$400,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Over-improvement: A $100,000 backyard in a $400,000 neighbourhood won't get its money back. The improvement sho"
+      },
+      "$5,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ties: A half-finished pond, a wood deck that needs $5,000 in repairs, or a retaining wall that's leaning — these beco"
+      },
+      "$600k–$1.5m+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "e consistently rated as \"highly desirable\" by buyers in the $600K-$1.5M+ range — which is exactly the market in Simcoe County."
+      }
+    },
+    "src/pages/blog/BestPaversPoolDeckSimcoeCounty.tsx": {
+      "$1–$3": {
+        "count": 2,
+        "status": "unverified",
+        "context": "\"text\": \"Pool-deck-rated pavers usually cost $1-3 per square foot more than the same brand's standard patio l"
+      },
+      "$4": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ation, regardless of how cheap it is. Contractors have seen $4/sq ft import pavers that looked identical to brand-name pro"
+      },
+      "$40–$45": {
+        "count": 3,
+        "status": "engine-checked",
+        "context": "l-touch light colours, freeze-thaw certified. Budget around $40–$45/sq ft installed before HST.\" category=\"Materials\""
+      },
+      "$600–$1,800": {
+        "count": 2,
+        "status": "unverified",
+        "context": "ame brand's standard patio line. On a 600 sq ft deck that's $600-1,800 of paver upgrade. For comparison, the base build (12-16 inc"
+      },
+      "$8–$15": {
+        "count": 2,
+        "status": "unverified",
+        "context": "ild (12-16 inches of compacted clear stone) typically costs $8-15 per square foot — the paver upgrade is a small fraction of"
+      }
+    },
+    "src/pages/blog/ChoosingContractor.tsx": {
+      "$12,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "p>If you get a quote that's one line — \"Patio installation: $12,000\" — that's not a quote. That's a guess. And guesses lead to"
+      },
+      "$2m": {
+        "count": 1,
+        "status": "unverified",
+        "context": "u're exposed. Look for a minimum of $2 million in general liability coverage . Ask each contractor"
+      }
+    },
+    "src/pages/blog/ClearStoneVsGranularA.tsx": {
+      "$1.50–$2.50": {
+        "count": 1,
+        "status": "unverified",
+        "context": "The cost difference per square foot is small — usually $1.50 to $2.50 more in materials. The lifespan difference is enormous."
+      },
+      "$100": {
+        "count": 1,
+        "status": "unverified",
+        "context": "material cost. Contractors quoting low margins protect that $100. The failure shows up after they'"
+      },
+      "$120,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Contractors don't use it. Not on $15,000 patios, not on $120,000 pool decks, not anywhere. Here's the engineering reason — a"
+      },
+      "$15,000": {
+        "count": 3,
+        "status": "unverified",
+        "context": ". Contractors don't use it. Not on $15,000 patios, not on $120,000 pool decks, not anywhere. Here's th"
+      },
+      "$60–$100": {
+        "count": 1,
+        "status": "unverified",
+        "context": "per cubic yard. On a typical 500-square-foot patio that's a $60 to $100 swing in material cost. Contractors quoting low margins pro"
+      },
+      "$8": {
+        "count": 1,
+        "status": "unverified",
+        "context": "It's cheaper at the quarry. By maybe $8 per cubic yard. On a typical 500-square-foot patio that's a"
+      }
+    },
+    "src/pages/blog/CompositeDeckingMaintenanceOntario.tsx": {
+      "$300–$600": {
+        "count": 1,
+        "status": "unverified",
+        "context": "at the ledger board — catches these issues when they are a $300-$600 flashing repair rather than a $6,000-$12,000 structural reb"
+      },
+      "$6,000–$12,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ues when they are a $300-$600 flashing repair rather than a $6,000-$12,000 structural rebuild. After gap clearing, rinse the dec"
+      }
+    },
+    "src/pages/blog/ConcreteVsInterlockingPatioBarrie.tsx": {
+      "$10": {
+        "count": 4,
+        "status": "unverified",
+        "context": ": \"In Barrie, the cost to install a patio ranges from about $10 per square foot for basic concrete to around $40-$45 per sq"
+      },
+      "$10–$20": {
+        "count": 5,
+        "status": "unverified",
+        "context": "for interlock. Concrete patios are at the lower end, around $10-$20 per square foot, while most interlocking patios of 300–1,00"
+      },
+      "$20": {
+        "count": 2,
+        "status": "unverified",
+        "context": "ally, installing a concrete patio will cost between $10 and $20 per square foot, which makes it an appealing option for bud"
+      },
+      "$40–$45": {
+        "count": 8,
+        "status": "engine-checked",
+        "context": "from about $10 per square foot for basic concrete to around $40-$45 per square foot before HST for interlock. Concrete patios a"
+      }
+    },
+    "src/pages/blog/FailingInterlockingPatioSignsBarrie.tsx": {
+      "$1,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "the earlier contractors take a look, the more likely it's a $1,000 repair instead of a $15,000 rebuild. Reach out and a contra"
+      },
+      "$1,500–$4,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "r damage itself. Regrading a pooling section typically runs $1,500-$4,000 depending on how much base has to come out to fix the slope"
+      },
+      "$12,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "int, re-compacting the last 18 inches of base) prevents the $12,000+ rebuild that follows once interior joints have opened up to"
+      },
+      "$15,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "e a look, the more likely it's a $1,000 repair instead of a $15,000 rebuild. Reach out and a contractor will walk the patio wit"
+      },
+      "$15,500–$30,000": {
+        "count": 6,
+        "status": "engine-checked",
+        "context": "0 square foot patio with a proper compacted base runs about $15,500-$30,000 before HST, including removing the old pavers. The differen"
+      },
+      "$200–$400": {
+        "count": 2,
+        "status": "unverified",
+        "context": "is gone from that section. Weeds by themselves are a $200-$400 re-sand fix if caught early — lift the growth, clean the jo"
+      },
+      "$300–$600": {
+        "count": 1,
+        "status": "unverified",
+        "context": "d washout Re-sand with fresh polymeric sand $300-$600 Weeds growing through joints Polym"
+      },
+      "$500–$1,200": {
+        "count": 2,
+        "status": "unverified",
+        "context": "the edge, not just at the perimeter. This is a case where a $500-$1,200 fix now (excavating the edge, installing aluminum restraint"
+      },
+      "$8,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "f a failing patio in Barrie — catch them before repairs hit $8,000.\" category=\"Engineering\" date=\"August 1, 2026"
+      },
+      "$800–$1,500": {
+        "count": 3,
+        "status": "unverified",
+        "context": "-heave stage, before it stops settling back down, is when a $800-$1,500 spot repair is still on the table instead of a full section"
+      },
+      "$800–$2,500": {
+        "count": 7,
+        "status": "unverified",
+        "context": "ed damage under 8-10 pavers is almost always repairable for $800-$2,500.\" } }, {"
+      }
+    },
+    "src/pages/blog/FirePitCostBarrieWithPermits.tsx": {
+      "$1,200–$2,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ding a patio by 10 m2 to create a proper fire pit zone adds $1,200–$2,000 to your base scope. Use the <a href='/cost-estimator?type=f"
+      },
+      "$1,500–$2,500": {
+        "count": 3,
+        "status": "unverified",
+        "context": "propane over the same period. The gas line extension cost ($1,500–$2,500 if required) typically pays back in 2–3 seasons of regular"
+      },
+      "$1,500–$3,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "urner style. Add $3,000–$6,000 for the masonry surround and $1,500–$3,000 for a licensed gas connection if there is no existing stub-"
+      },
+      "$1,620–$2,520": {
+        "count": 1,
+        "status": "unverified",
+        "context": "0–$280 per m2 with a proper compacted clear stone base — so $1,620–$2,520 for the pad alone, before the fire feature itself. Permacon"
+      },
+      "$1,800–$5,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "most requested option in 2026. The gas feature itself runs $1,800–$5,000 depending on BTU rating and burner style. Add $3,000–$6,000"
+      },
+      "$10,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "t-in seating. Most residential jobs land between $5,000 and $10,000. Here is how the money breaks down across the three main op"
+      },
+      "$120–$180": {
+        "count": 1,
+        "status": "unverified",
+        "context": "300–400 mm wide — around two or three sides of the pit runs $120–$180 per linear metre using Techo-Bloc Siena or Unilock Blak-Bak"
+      },
+      "$14,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "licensed gas connection typically lands between $6,500 and $14,000. The main cost drivers are feature type, size of the paver"
+      },
+      "$150–$400": {
+        "count": 2,
+        "status": "unverified",
+        "context": "run $300–$600 for a fire pit structure, plus an additional $150–$400 for the gas permit where applicable. Permit needs and respo"
+      },
+      "$18,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "re pit in Barrie runs from roughly $3,500 on the low end to $18,000 or more for a full custom gas outdoor fireplace with built-"
+      },
+      "$180–$280": {
+        "count": 1,
+        "status": "unverified",
+        "context": "fire. That is roughly 9 m2 of paving surface, installed at $180–$280 per m2 with a proper compacted clear stone base — so $1,620"
+      },
+      "$2,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "uring the consultation process so you are not discovering a $2,000 gas extension cost after the patio is already poured. \""
+      },
+      "$3,000–$6,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "$1,800–$5,000 depending on BTU rating and burner style. Add $3,000–$6,000 for the masonry surround and $1,500–$3,000 for a licensed g"
+      },
+      "$3,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "lled price range for a fire pit in Barrie runs from roughly $3,500 on the low end to $18,000 or more for a full custom gas out"
+      },
+      "$3,500–$18,000": {
+        "count": 5,
+        "status": "unverified",
+        "context": "text\": \"A professionally installed fire pit in Barrie costs $3,500–$18,000 depending on the type. A prefab steel bowl on a paver surro"
+      },
+      "$3,500–$6,000": {
+        "count": 6,
+        "status": "unverified",
+        "context": "type. A prefab steel bowl on a paver surround starts around $3,500–$6,000. A wood-burning masonry pit runs $4,000–$10,000. A natural"
+      },
+      "$3,500–$8,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ensed gas trade Propane fire table $3,500–$8,000 Portable units: generally no permit; fixed: check w"
+      },
+      "$300–$600": {
+        "count": 4,
+        "status": "unverified",
+        "context": "hy or sightlines. Permit fees in Barrie typically run $300–$600 for a fire pit structure, plus an additional $150–$400 for"
+      },
+      "$4,000–$10,000": {
+        "count": 6,
+        "status": "unverified",
+        "context": "tarts around $3,500–$6,000. A wood-burning masonry pit runs $4,000–$10,000. A natural gas fire table with a proper paver base and lice"
+      },
+      "$5,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "e with built-in seating. Most residential jobs land between $5,000 and $10,000. Here is how the money breaks down across the t"
+      },
+      "$5,000–$12,000": {
+        "count": 3,
+        "status": "unverified",
+        "context": ", depending on whether you choose a natural gas fire table ($5,000–$12,000), a wood-burning masonry pit ($4,000–$10,000), or a prefab"
+      },
+      "$6,500": {
+        "count": 2,
+        "status": "unverified",
+        "context": "er base and licensed gas connection typically lands between $6,500 and $14,000. The main cost drivers are feature type, size o"
+      },
+      "$6,500–$14,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "rong>Natural gas fire table or gas-insert masonry surround: $6,500–$14,000. This is the most requested option in 2026. The ga"
+      },
+      "$600–$1,200": {
+        "count": 1,
+        "status": "unverified",
+        "context": "units: generally no permit; fixed: check with city $600–$1,200/season No gas line needed; propane significantly mo"
+      },
+      "$600–$800": {
+        "count": 2,
+        "status": "unverified",
+        "context": "er and October costs roughly $80–$120 in natural gas versus $600–$800 in propane over the same period. The gas line extension cos"
+      },
+      "$720–$1,080": {
+        "count": 1,
+        "status": "unverified",
+        "context": "A 6-metre seating wall on two sides of a 3 m × 3 m pad adds $720–$1,080 to the project total. Thermal-finished cap is the preferenc"
+      },
+      "$8,000–$14,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "~15 m Natural gas masonry surround $8,000–$14,000 Building permit + TSSA gas permit $80–$200/"
+      },
+      "$80–$120": {
+        "count": 3,
+        "status": "unverified",
+        "context": "e table running through September and October costs roughly $80–$120 in natural gas versus $600–$800 in propane over the same pe"
+      },
+      "$80–$200": {
+        "count": 2,
+        "status": "unverified",
+        "context": "0–$12,000 Building permit + TSSA gas permit $80–$200/season Most convenient; requires gas stub-out withi"
+      }
+    },
+    "src/pages/blog/FirePitRegulations.tsx": {
+      "$3,000–$8,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "li> Custom natural gas fire pit (built-in): $3,000-$8,000 Premium linear fire feature or fi"
+      },
+      "$5,000–$15,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Premium linear fire feature or fire table: $5,000-$15,000 Integrated fire feature with seat"
+      },
+      "$500–$2,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Simple propane fire pit (portable): $500-$2,000 Custom natural gas fire pit (buil"
+      },
+      "$8,000–$20,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "i> Integrated fire feature with seat walls: $8,000-$20,000+ These prices include the gas"
+      }
+    },
+    "src/pages/blog/HeatedDrivewayWorthItBarrie.tsx": {
+      "$1,200–$2,200": {
+        "count": 2,
+        "status": "unverified",
+        "context": "d — most Barrie homes need 200A service for this): $1,200–$2,200 Paver bedding layer rebuild and paver re-se"
+      },
+      "$1,500–$2,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": ">Labour for system installation and commissioning: $1,500–$2,500 Total for a new installation: roughly $"
+      },
+      "$1,800–$3,200": {
+        "count": 1,
+        "status": "unverified",
+        "context": "rong>Paver bedding layer rebuild and paver re-set: $1,800–$3,200 Labour for system installation and commissi"
+      },
+      "$12–$25": {
+        "count": 3,
+        "status": "unverified",
+        "context": "ROI\" seoDescription=\"Heated driveways in Barrie cost $12–$25 per sq ft installed — find out if electric radiant or hydro"
+      },
+      "$12,000–$20,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "the system is active. Hydronic systems cost more upfront — $12,000–$20,000 for a comparable 50 m2 driveway — because of the boiler, ma"
+      },
+      "$13,000–$20,000": {
+        "count": 4,
+        "status": "unverified",
+        "context": "radiant system. Hydronic systems on the same footprint run $13,000–$20,000 before boiler costs. Price varies with driveway size, exist"
+      },
+      "$140–$300": {
+        "count": 4,
+        "status": "unverified",
+        "context": "se electricity rates. A hydronic system on natural gas runs $140–$300 for comparable coverage. The exact cost depends on the wint"
+      },
+      "$150–$200": {
+        "count": 1,
+        "status": "unverified",
+        "context": "40–$300 for the same coverage. The energy cost difference — $150–$200 per year — takes decades to offset the $6,000–$8,000 hydron"
+      },
+      "$2,500–$3,800": {
+        "count": 1,
+        "status": "unverified",
+        "context": ">Electric radiant heating cable and mat materials: $2,500–$3,800 Snow sensor and automatic controller:</stro"
+      },
+      "$25–$50": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ason compared to a light limestone or beige paver — that is $25–$50 in electricity savings annually, which is not enormous but"
+      },
+      "$250–$800": {
+        "count": 2,
+        "status": "unverified",
+        "context": "car driveway, expect $6,000–$15,000 in installed cost, plus $250–$800 per season in energy. Systems work under Permacon, Unilock,"
+      },
+      "$280–$550": {
+        "count": 4,
+        "status": "unverified",
+        "context": "ay running about 130 active hours per Barrie winter, expect $280–$550 per season on Time-of-Use electricity rates. A hydronic sys"
+      },
+      "$3–$5": {
+        "count": 1,
+        "status": "unverified",
+        "context": "the bedding layer rebuilt, and the pavers relaid — plan for $3–$5 per sq ft more than a new-construction install. For a"
+      },
+      "$4,000–$7,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "13,000–$20,000, with a separate boiler installation cost of $4,000–$7,000 on top if a new boiler is needed. Operating cost for"
+      },
+      "$6,000–$15,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "col system. For a typical 50–60 m2 two-car driveway, expect $6,000–$15,000 in installed cost, plus $250–$800 per season in energy. Sys"
+      },
+      "$6,000–$8,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "fference — $150–$200 per year — takes decades to offset the $6,000–$8,000 hydronic premium. For a residential driveway, electric near"
+      },
+      "$6,500–$12,000": {
+        "count": 4,
+        "status": "unverified",
+        "context": "ext\": \"A heated interlocking paver driveway in Barrie costs $6,500–$12,000 installed for a standard two-car driveway of 55–65 m2, usin"
+      },
+      "$600–$900": {
+        "count": 1,
+        "status": "unverified",
+        "context": "> Snow sensor and automatic controller: $600–$900 Electrical panel upgrade (if required — mos"
+      },
+      "$8,000–$12,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "tically. Installed cost in Barrie for a 50 m2 driveway runs $8,000–$12,000 including controls, electrical panel upgrade if required, a"
+      }
+    },
+    "src/pages/blog/HiddenCostsCheapLandscaping.tsx": {
+      "$17,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "\"You aren't saving $17,000 by choosing the lowest bid. You are just paying an $18,000"
+      },
+      "$18,000": {
+        "count": 6,
+        "status": "unverified",
+        "context": "und $35,000. The third contractor said they could do it for $18,000. Human nature tells you to go with the $18,"
+      },
+      "$18k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "s. The guy in the unmarked truck doing it for $18k cash? He likely has neither. If one of his workers cuts the"
+      },
+      "$35,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "for your new backyard patio. Two contractors came in around $35,000. The third contractor said they could do it for $18,000.</p"
+      },
+      "$5,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "i> Cost to demolish and dump the failed patio: $5,000 Cost to finally build it correctly: $35,0"
+      },
+      "$58,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ectly: $35,000 Total actual cost: $58,000 <"
+      }
+    },
+    "src/pages/blog/InterlockingCostBarrie.tsx": {
+      "$12,000–$32,000": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "lassName=\"py-3 pr-6\">300–600 sq ft $12,000 – $32,000 <tr className=\"border-b border-brand"
+      },
+      "$14,800": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "e lighting: Patio: 350 sq ft ≈ $14,800 Steps: ≈ $3,800 Lightin"
+      },
+      "$15–$25": {
+        "count": 1,
+        "status": "unverified",
+        "context": "e=\"py-3 pr-4\">Poured concrete $15 – $25 15-20 years <td className"
+      },
+      "$15,000–$35,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "lassName=\"py-3 pr-6\">200–500 sq ft $15,000 – $35,000 </di"
+      },
+      "$20–$35": {
+        "count": 1,
+        "status": "unverified",
+        "context": "=\"py-3 pr-4\">Stamped concrete $20 – $35 10-15 years <td className"
+      },
+      "$20,000–$35,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "lassName=\"py-3 pr-6\">400–600 sq ft $20,000 – $35,000 <tr className=\"border-b border-brand"
+      },
+      "$25,700": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "ghting: ≈ $7,200 Total estimate: ~$25,700 before HST (items are rounded)"
+      },
+      "$3–$5": {
+        "count": 1,
+        "status": "unverified",
+        "context": "und — premium alternative to polymeric sand, adds ~$3-5/sq ft 5. Project Size"
+      },
+      "$3,000–$8,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "tier pavers), steps (about $4,000 for 3 steps), seat walls ($3,000-$8,000) Example: A"
+      },
+      "$3,800": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "Patio: 350 sq ft ≈ $14,800 Steps: ≈ $3,800 Lighting: ≈ $7,200 <str"
+      },
+      "$30,000–$50,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "lassName=\"py-3 pr-6\">600–900 sq ft $30,000 – $50,000 <tr className=\"border-b border-brand"
+      },
+      "$35": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "Per-square-foot quotes under $35 — base prep is being cut somewhere <"
+      },
+      "$35–$65": {
+        "count": 1,
+        "status": "unverified",
+        "context": "assName=\"py-3 pr-4\">Wood deck $35 – $65 15-20 years <td className"
+      },
+      "$4,000": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "ng (about $6,000–$7,500 with mid-tier pavers), steps (about $4,000 for 3 steps), seat walls ($3,000-$8,000)"
+      },
+      "$40–$45": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "andard concrete pavers around $40–$45 Budget-friendly patios, walkways</"
+      },
+      "$40–$70": {
+        "count": 1,
+        "status": "unverified",
+        "context": "\"py-3 pr-4\">Natural flagstone $40 – $70 30+ years <td className=\""
+      },
+      "$5": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "um concrete paver lines about $5 more Mid to high-end patios, drive"
+      },
+      "$53": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "ls, and finishing. Smaller patios cost more per foot: about $53 at 200 sq ft. These prices reflect premium"
+      },
+      "$6,000–$7,500": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "Add feature costs — lighting (about $6,000–$7,500 with mid-tier pavers), steps (about $4,000 for 3 steps), se"
+      },
+      "$7,000–$14,000": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "className=\"py-3 pr-6\">50–120 sq ft $7,000 – $14,000 <tr className=\"border-b border-brand"
+      },
+      "$7,200": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "Steps: ≈ $3,800 Lighting: ≈ $7,200 Total estimate: ~$25,700 before H"
+      },
+      "$75–$100": {
+        "count": 1,
+        "status": "unverified",
+        "context": "=\"py-3 pr-6\">Porcelain pavers $75 – $100 Modern outdoor living, pool areas<"
+      },
+      "$80–$120": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ame=\"py-3 pr-6\">Natural stone $80 – $120 High-end feature areas, steps"
+      },
+      "$9,000–$19,500": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "lassName=\"py-3 pr-6\">150–300 sq ft $9,000 – $19,500 <tr className=\"border-b border-brand"
+      }
+    },
+    "src/pages/blog/LandscapeLightingGuide.tsx": {
+      "$10,000–$20,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "xtures, smart control, architectural integration): $10,000-$20,000+ Contractors typically integra"
+      },
+      "$3,000–$5,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "asic package (8-12 fixtures, transformer, wiring): $3,000-$5,000 Mid-range (15-25 fixtures, multip"
+      },
+      "$40,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "mages/projects/IHPX8926.JPEG\" > You invested $40,000 in a stunning patio, retaining walls, and lush landscaping."
+      },
+      "$5,000–$10,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "strong>Mid-range (15-25 fixtures, multiple zones): $5,000-$10,000 Premium (30+ fixtures, smart cont"
+      },
+      "$9,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "is complete. A lighting-only retrofit starts around $9,000 — it carries its own mobilization, excavation mini"
+      }
+    },
+    "src/pages/blog/LandscaperQuoteExcavationLineItem.tsx": {
+      "$1,800–$3,600": {
+        "count": 3,
+        "status": "unverified",
+        "context": "e foot. A 300 sq ft patio should show an excavation line of $1,800 to $3,600 before any paver or installation cost. If you see a number"
+      },
+      "$21,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "nestly. If one contractor quotes $28,000 and another quotes $21,000, a lump-sum format tells you nothing about why. When you ca"
+      },
+      "$26,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "line by line when a homeowner trims site prep by $400 on a $26,000 job. But a lump sum with no supporting detail — no stated d"
+      },
+      "$28,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "you compare contractors honestly. If one contractor quotes $28,000 and another quotes $21,000, a lump-sum format tells you not"
+      },
+      "$300–$600": {
+        "count": 1,
+        "status": "unverified",
+        "context": "anular A. For a 400 sq ft patio, that difference is roughly $300 to $600 in material alone. Swapping granular A into a lump-sum quot"
+      },
+      "$4": {
+        "count": 3,
+        "status": "unverified",
+        "context": "installation cost. If you see a number significantly below $4 per square foot, ask what is excluded — depth, base materia"
+      },
+      "$4,200": {
+        "count": 1,
+        "status": "unverified",
+        "context": "m depth, 19 mm clear stone base, debris disposal included — $4,200 , they have put a specific scope on paper. If they"
+      },
+      "$400": {
+        "count": 1,
+        "status": "unverified",
+        "context": "negotiate line by line when a homeowner trims site prep by $400 on a $26,000 job. But a lump sum with no supporting detail"
+      },
+      "$5–$8": {
+        "count": 1,
+        "status": "unverified",
+        "context": "> Wrong base material. Clear stone costs $5 to $8 more per tonne than granular A. For a 400 sq ft patio, that"
+      },
+      "$6–$12": {
+        "count": 5,
+        "status": "unverified",
+        "context": "clear stone, and disposal included, excavation runs roughly $6 to $12 per square foot. A 300 sq ft patio should show an excavatio"
+      },
+      "$600–$900": {
+        "count": 1,
+        "status": "unverified",
+        "context": "machine time and one truck load of base material — roughly $600 to $900 in contractor cost. On Barrie's clay soil, a 200 mm base wi"
+      },
+      "$80–$130": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ubic metres of spoil. Simcoe County waste facilities charge $80 to $130 per truck load depending on material type, and transportati"
+      }
+    },
+    "src/pages/blog/LandscapingCostGuide.tsx": {
+      "$15,000–$35,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ont Entrance Makeover Typical Range: $15,000 - $35,000+ This typically includes removing the"
+      },
+      "$150,000–$300,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "operty Transformation Typical Range: $150,000 - $300,000+ For large estate properties or compl"
+      },
+      "$18k": {
+        "count": 2,
+        "status": "unverified",
+        "context": "If you receive three quotes for $40k, $45k, and $18k... the $18k quote isn't a \"great deal.\" It's a guarantee of"
+      },
+      "$25,000–$50,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "rd (Patio & Fire Pit) Typical Range: $25,000 - $50,000+ This covers a 400-600 square foot in"
+      },
+      "$40k": {
+        "count": 2,
+        "status": "unverified",
+        "context": "eap\" Quote If you receive three quotes for $40k, $45k, and $18k... the $18k quote isn't a \"great deal.\" It'"
+      },
+      "$45k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "uote If you receive three quotes for $40k, $45k, and $18k... the $18k quote isn't a \"great deal.\" It's a gu"
+      },
+      "$5,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "a premium Techo-Bloc slab can swing the materials budget by $5,000+. This is why contractors prov"
+      },
+      "$60,000–$120,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Outdoor Living Space Typical Range: $60,000 - $120,000+ This is where contractors transform"
+      }
+    },
+    "src/pages/blog/NaturalStoneVsPaversBarrie.tsx": {
+      "$22,000–$38,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "demands. That same 400 sq ft patio in natural stone can run $22,000 to $38,000 or more. The gap is real — natural stone commonly cos"
+      },
+      "$40–$45": {
+        "count": 5,
+        "status": "engine-checked",
+        "context": "ably more installed than concrete pavers. Pavers run around $40-$45 per square foot installed before HST, while natural stone r"
+      },
+      "$55–$95+": {
+        "count": 6,
+        "status": "unverified",
+        "context": "foot installed before HST, while natural stone runs roughly $55-$95+ per square foot depending on the stone type and installatio"
+      }
+    },
+    "src/pages/blog/OutdoorKitchenGuide.tsx": {
+      "$1,500–$3,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "trong>Budget: Gas line installation typically runs $1,500-$3,500 depending on distance from the meter."
+      },
+      "$15,000–$25,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Basic (grill + counter + storage): $15,000-$25,000 Mid-range (add sink, fridge, side"
+      },
+      "$25,000–$45,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Mid-range (add sink, fridge, side burner): $25,000-$45,000 Premium (full kitchen with pizza"
+      },
+      "$45,000–$80,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "l kitchen with pizza oven, bar seating, lighting): $45,000-$80,000+ These ranges include the hard"
+      },
+      "$80–$150": {
+        "count": 1,
+        "status": "unverified",
+        "context": "heat-resistant, and handles freeze-thaw beautifully. Budget $80-$150/sq ft installed. Dekton:"
+      }
+    },
+    "src/pages/blog/OutdoorLightingDesignMistakes.tsx": {
+      "$1,800–$3,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "t for 10 fixtures $200–$500 (DIY installed) $1,800–$3,500 professionally installed \" }} />"
+      },
+      "$200–$500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "eeded Typical cost for 10 fixtures $200–$500 (DIY installed) $1,800–$3,500 professionally instal"
+      },
+      "$30": {
+        "count": 1,
+        "status": "unverified",
+        "context": "duit sleeve installed correctly the first time costs around $30. If your current system has cables you can see or fee"
+      },
+      "$40–$80": {
+        "count": 1,
+        "status": "unverified",
+        "context": "th rather than across the full property composition, and at $40–$80 per fixture, it is significantly more expensive than necess"
+      },
+      "$600–$1,200": {
+        "count": 1,
+        "status": "unverified",
+        "context": "re-run a failed cable under an interlocking driveway costs $600–$1,200 in labour and materials; the conduit sleeve installed corre"
+      }
+    },
+    "src/pages/blog/OutdoorLivingPlanningInnisfil.tsx": {
+      "$13,500–$16,500": {
+        "count": 2,
+        "status": "engine-checked",
+        "context": "asic interlocking patio with proper base prep starts around $13,500–$16,500 before HST for a 300–400 sq ft surface. Add a pergola, seat"
+      },
+      "$2,500–$3,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "n established edge, remobilising equipment — typically adds $2,500–$3,500 to the total cost. The savings are not there, and the disru"
+      },
+      "$25,000–$80,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "living space in Innisfil takes 7 steps — most projects run $25,000–$80,000 depending on zones, materials, and phasing strategy.\""
+      },
+      "$35,000–$65,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "16+ inches. A 600 sq ft patio-and-deck combo typically runs $35,000–$65,000 installed. Most projects take 10–15 weeks from first consul"
+      },
+      "$4,000–$6,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": ",200 sq ft project, excavating the full area in Year 1 runs $4,000–$6,000. Returning to excavate a second section — working around an"
+      },
+      "$40–$65": {
+        "count": 1,
+        "status": "unverified",
+        "context": "r granite — are available for a custom look and add roughly $40–$65 per linear foot over a paver cap. One local considera"
+      },
+      "$40,000–$70,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "ite deck and the realistic range for a mid-scope project is $40,000–$70,000. The base spec — 12 to 16 inches of clear stone — is non-ne"
+      },
+      "$41": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "ong> Driveways, value-focused patios around $41 per sq ft (mid-tier, 400 sq ft, before HST) 1–2 wee"
+      },
+      "$800–$2,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "g to daylight or a municipal connection. The cost is real — $800–$2,500 depending on the run length — but the alternative is a wet"
+      }
+    },
+    "src/pages/blog/PatioCostFactors.tsx": {
+      "$15,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": ".ft patio: The Functional Minimum (~$15,000) Standard pavers, simple square or re"
+      },
+      "$25,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "engineered base. The Entertainer (~$25,000) Premium fade-resistant pavers (like"
+      },
+      "$40,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "e centre. The Luxury Outdoor Room (~$40,000+) Large format premium slabs, built in"
+      },
+      "$9,000–$13,500": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "atio, a 30-foot retaining wall up to 4 ft high adds roughly $9,000–$13,500 before HST, depending on its height. 5. Cu"
+      }
+    },
+    "src/pages/blog/PaverWalkwayCostBarrie.tsx": {
+      "$10,000–$16,000": {
+        "count": 2,
+        "status": "engine-checked",
+        "context": "0,500 before HST in the Barrie area for 2026 (planning band $10,000–$16,000). The final price depends on the paver choice, site access,"
+      },
+      "$15–$25+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "aking the bank. Premium & Porcelain Pavers ($15 - $25+ per sq. ft. material cost): This tier includes hig"
+      },
+      "$5–$9": {
+        "count": 1,
+        "status": "unverified",
+        "context": "akdown of the tiers: Entry-Level Pavers ($5 - $9 per sq. ft. material cost): These are your classic"
+      },
+      "$9–$15": {
+        "count": 1,
+        "status": "unverified",
+        "context": "budget-conscious choice. Mid-Range Pavers ($9 - $15 per sq. ft. material cost): This is the sweet spot"
+      }
+    },
+    "src/pages/blog/PergolaVsPavilionVsGazeboBarrie.tsx": {
+      "$10,000–$16,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "a over a Unilock or Techo-Bloc patio base typically returns $10,000–$16,000 on a $15,000–$20,000 investment — a 65–80% return at resale"
+      },
+      "$10,000–$20,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "already investing in an interlocking patio base — the extra $10,000–$20,000 for a pavilion typically pays off in actual usability.\""
+      },
+      "$12,000–$16,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "000 supply-only; installed with a proper base and footings, $12,000–$16,000. A custom cedar gazebo built on-site with a cupola and ceda"
+      },
+      "$12,000–$30,000": {
+        "count": 4,
+        "status": "unverified",
+        "context": "000 installed in Barrie, pavilions $18,000–$45,000, gazebos $12,000–$30,000. Which structure adds the most value? Honest 2026 breakdown"
+      },
+      "$13,000–$16,000": {
+        "count": 5,
+        "status": "unverified",
+        "context": "ture in 2026. Pressure-treated pine framing starts lower at $13,000–$16,000. Aluminum louvred pergolas with adjustable blades run $19,0"
+      },
+      "$13,000–$25,000": {
+        "count": 6,
+        "status": "unverified",
+        "context": "entertain in July and August on dry evenings, a pergola at $13,000–$25,000 delivers the same outdoor room feel at a fraction of the co"
+      },
+      "$15,000–$20,000": {
+        "count": 4,
+        "status": "unverified",
+        "context": "text\": \"A cedar pergola installed in Barrie typically costs $15,000–$20,000 for a 10×12 ft to 12×16 ft structure in 2026. Pressure-trea"
+      },
+      "$18,000–$28,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "12×16 ft cedar pavilion with a shingled roof typically runs $18,000–$28,000 installed. Metal-roof versions (standing seam or corrugated"
+      },
+      "$18,000–$45,000": {
+        "count": 4,
+        "status": "unverified",
+        "context": "ergolas cost $13,000–$25,000 installed in Barrie, pavilions $18,000–$45,000, gazebos $12,000–$30,000. Which structure adds the most val"
+      },
+      "$19,000–$25,000": {
+        "count": 3,
+        "status": "unverified",
+        "context": "6,000. Aluminum louvred pergolas with adjustable blades run $19,000–$25,000 installed. The main cost variables are size, material, foot"
+      },
+      "$2,000–$5,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "lled. Metal-roof versions (standing seam or corrugated) add $2,000–$5,000 to that but last significantly longer in Simcoe County’s fr"
+      },
+      "$20,000–$30,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ebo built on-site with a cupola and cedar shingle roof runs $20,000–$30,000. Contractors generally recommend vinyl over cedar for gazeb"
+      },
+      "$35,000–$45,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ine stubbed out for a heater or outdoor kitchen — can reach $35,000–$45,000. Gazebo (installed cost, 2026): Pref"
+      },
+      "$650,000–$950,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ature that most reliably adds to list appeal. Buyers in the $650,000–$950,000 range see it as a lifestyle signal: they picture themselves"
+      },
+      "$7,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "fab vinyl gazebos in the 12 ft octagonal range start around $7,000 supply-only; installed with a proper base and footings, $12"
+      },
+      "$850,000–$1.1m": {
+        "count": 1,
+        "status": "unverified",
+        "context": "fan, outdoor kitchen rough-in, and a paved base in Barrie’s $850,000–$1.1M tier can return close to full cost because the buyer demogr"
+      }
+    },
+    "src/pages/blog/PermaconPaversHonestReview2026.tsx": {
+      "$13": {
+        "count": 2,
+        "status": "engine-checked",
+        "context": "stone, polymeric sand, edging and delivery — come to about $13 per square foot. Excavation and base preparat"
+      },
+      "$18,500": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "in a running bond on a flat, accessible Barrie lot — about $18,500 before HST. A 600-square-foot premium-line patio with curve"
+      },
+      "$2,500": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "per square foot more than a mid-tier one — roughly $2,500 on a 500-square-foot patio. Techo-Bloc and Unilock pricing"
+      },
+      "$28,000": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "00-square-foot premium-line patio with curved edges — about $28,000. Use the patio c"
+      },
+      "$3–$6": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ition of an existing asphalt or concrete pad typically adds $3–$6 per square foot depending on thickness and access. Es"
+      },
+      "$3.50–$4.50": {
+        "count": 1,
+        "status": "unverified",
+        "context": "constraint. Material cost through Carr runs roughly $3.50–$4.50 per square foot depending on colour and quantity."
+      },
+      "$3.50–$9.00": {
+        "count": 1,
+        "status": "unverified",
+        "context": "vers themselves, supplied through Carr Landscape Depot, run $3.50–$9.00 per square foot depending on product line. Monta and standa"
+      },
+      "$4.00–$5.50": {
+        "count": 1,
+        "status": "unverified",
+        "context": "age-style homes in Barrie's east end. Material runs $4.00–$5.50 per square foot . The tumbled profile also conceals"
+      },
+      "$40–$45": {
+        "count": 3,
+        "status": "engine-checked",
+        "context": "ractor's honest review of Permacon pavers: installed around $40–$45 per square foot before HST in our cost estimator, top produ"
+      },
+      "$41": {
+        "count": 2,
+        "status": "engine-checked",
+        "context": "e lawn and edges back. Total installed: about $41 per square foot before HST for a 400 sq ft mid-tie"
+      },
+      "$5.00–$7.00": {
+        "count": 1,
+        "status": "unverified",
+        "context": "lly on Innisfil lakefront properties. Material runs $5.00–$7.00 per square foot depending on colour. The laying pa"
+      },
+      "$6": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "uts. Disposal and restoration: about $6 per square foot for bins, haul-away and putting the lawn an"
+      },
+      "$7.00–$9.00": {
+        "count": 1,
+        "status": "unverified",
+        "context": "st. Material is at the top of the Permacon range at $7.00–$9.00 per square foot . The large footprint takes more ca"
+      },
+      "$9": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "> Excavation and base preparation: about $9 per square foot. This covers excavation to depth (typically"
+      }
+    },
+    "src/pages/blog/PermitsBylawsBarrie.tsx": {
+      "$1,500–$3,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Engineering on a typical 1.2–1.8 m wall costs $1,500–$3,500 . Permit fees add $200–$600 . Reput"
+      },
+      "$100k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "liability for damaged utilities (a damaged gas line can run $100K+) How to call: <a href=\"https:"
+      },
+      "$200–$600": {
+        "count": 1,
+        "status": "unverified",
+        "context": "sts $1,500–$3,500 . Permit fees add $200–$600 . Reputable contractors include both in the contrac"
+      },
+      "$250,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ne for individuals Up to $250,000 fine for corporations Full liabi"
+      },
+      "$50,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "locate include: Up to $50,000 fine for individuals Up to <stro"
+      },
+      "$8,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ctor shows up. Contractors have seen homeowners pay $8,000+ to remove and rebuild walls that were built withou"
+      }
+    },
+    "src/pages/blog/PolymericSandVsRegularSandPatio.tsx": {
+      "$10": {
+        "count": 1,
+        "status": "unverified",
+        "context": "35-$50, while a bag of regular jointing sand might be under $10. On a medium-sized patio, this can add several hundred doll"
+      },
+      "$300–$500": {
+        "count": 3,
+        "status": "unverified",
+        "context": "eric sand. For an average 400 sq. ft. patio, this might add $300-$500 to the total project cost. However, this cost is quickly of"
+      },
+      "$35–$50": {
+        "count": 1,
+        "status": "unverified",
+        "context": "out the cost. A bag of high-quality polymeric sand can cost $35-$50, while a bag of regular jointing sand might be under $10. O"
+      },
+      "a few hundred dollars": {
+        "count": 1,
+        "status": "unverified",
+        "context": "erodes, and sprouts weeds within a season or two. It costs a few hundred dollars more upfront (roughly $300–$500 on an average 400 sq ft pat"
+      },
+      "hundred dollars": {
+        "count": 1,
+        "status": "unverified",
+        "context": "entially zero. You sweep it. That's it. The extra couple of hundred dollars you spend upfront buys you back dozens of hours of your own"
+      },
+      "several hundred dollars": {
+        "count": 1,
+        "status": "unverified",
+        "context": "d might be under $10. On a medium-sized patio, this can add several hundred dollars to the material cost of the project. Some homeowners, and e"
+      }
+    },
+    "src/pages/blog/PoolDeckMaterials.tsx": {
+      "$2,500–$5,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "g at the edge. Budget $2,500–$5,000 for proper pool deck drainage on top of the deck c"
+      },
+      "$25–$35": {
+        "count": 1,
+        "status": "unverified",
+        "context": "te $25–35 Va"
+      },
+      "$32,000–$42,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "sqft surround, Techo-Bloc Blu 60, basic drainage: $32,000–$42,000 installed 800 sqft surround, Unil"
+      },
+      "$35–$80": {
+        "count": 2,
+        "status": "unverified",
+        "context": "ent injuries). Bullnose coping in matching paver tones runs $35–80 per linear foot installed depending on material. Porcelain"
+      },
+      "$35,000–$70,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "standard 800 sqft pool surround in Barrie typically ranges $35,000–$70,000 installed in 2026. Concrete pavers land around $40–$45/sqft"
+      },
+      "$4,500–$5,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ng>~96 linear feet of coping . Mid-tier coping adds $4,500–$5,500; premium adds $6,500–$7,500. Salt-Water vs"
+      },
+      "$40": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "Melville 60 around $40 (before HST) R10</t"
+      },
+      "$40–$45": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": ",000–$70,000 installed in 2026. Concrete pavers land around $40–$45/sqft installed before HST (mid to premium lines); porcelain"
+      },
+      "$40–$80": {
+        "count": 1,
+        "status": "unverified",
+        "context": "concrete pavers. Avoid travertine. Budget $40–80/sqft installed, plus coping at $35–80/lin ft. Total typical"
+      },
+      "$40k–$45k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ourcing and aesthetics. Budget is firm at $40k–$45k for the surround. Pool Copin"
+      },
+      "$45–$55": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Techo-Bloc / Permacon bullnose coping ($45–55/lin ft) — colour-matched to the deck. Solid mid-tier option"
+      },
+      "$50–$65": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ne $50–65 R1"
+      },
+      "$50,000–$65,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ock Umbriano, premium coping, integrated drainage: $50,000–$65,000 1,000 sqft surround, Porcea porce"
+      },
+      "$55–$80": {
+        "count": 1,
+        "status": "unverified",
+        "context": "n. Natural stone coping ($55–80/lin ft) — variable thickness, hand-cut bullnose. Beautiful"
+      },
+      "$58–$65": {
+        "count": 2,
+        "status": "unverified",
+        "context": "ed before HST (mid to premium lines); porcelain (Porcea) at $58–65/sqft; full natural stone (Oakville Blue Ice) at $65–80/sqft"
+      },
+      "$6,500–$7,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": ". Mid-tier coping adds $4,500–$5,500; premium adds $6,500–$7,500. Salt-Water vs Chlorine Pools: Material Im"
+      },
+      "$65–$75": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Blue Ice (natural) $65–75 R10"
+      },
+      "$65–$80": {
+        "count": 2,
+        "status": "unverified",
+        "context": ") at $58–65/sqft; full natural stone (Oakville Blue Ice) at $65–80/sqft. Add 15–20% for grading, integrated drainage, and copi"
+      },
+      "$70–$80": {
+        "count": 1,
+        "status": "unverified",
+        "context": "lle Black Limestone $70–80 R10"
+      },
+      "$75,000–$95,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "in, L-coping, full integrated drainage + lighting: $75,000–$95,000 Full pool landscape (deck + retai"
+      },
+      "$90,000–$160,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ape (deck + retaining wall + lighting + planting): $90,000–$160,000 Frequently Asked Questions</"
+      }
+    },
+    "src/pages/blog/RetainingWallCostOroMedonte.tsx": {
+      "$1,200–$2,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "nt construction stages. Engineering drawings typically cost $1,200–$2,500 depending on wall height and complexity. Permit fees in Oro"
+      },
+      "$1,500–$3,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "permit requirements under Ontario Building Code, which adds $1,500–$3,000 to the job. 2. Site access. Oro-Medo"
+      },
+      "$12,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "mber that the cheapest price is rarely the cheapest wall. A $12,000 quote with no drainage line item against a $16,000 quote wi"
+      },
+      "$12,000–$15,500": {
+        "count": 2,
+        "status": "engine-checked",
+        "context": "foot installed before HST for walls up to 4 ft, or roughly $12,000–$15,500 for a typical 30-foot run. Height is the primary cost drive"
+      },
+      "$13,500–$28,500": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": ",200 mm, 30–50 linear feet, with drainage system): $13,500–$28,500 Engineered wall (4–6 ft / 1.2–1.8 m, 30–50"
+      },
+      "$16,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "wall. A $12,000 quote with no drainage line item against a $16,000 quote with full drainage is not a $4,000 saving — it is a $"
+      },
+      "$18–$28": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Material cost (per lin. ft.) $18–$28 $24–$38 $30–$45 Best appli"
+      },
+      "$18,500–$39,000+": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "ge and geogrid; taller or tiered walls cost more): $18,500–$39,000+ On a per-linear-foot basis (about 50 feet of wa"
+      },
+      "$200–$600": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ht and complexity. Permit fees in Oro-Medonte are generally $200–$600 for a residential retaining wall. Be cautious of any"
+      },
+      "$24–$38": {
+        "count": 1,
+        "status": "unverified",
+        "context": "tr> Material cost (per lin. ft.) $18–$28 $24–$38 $30–$45 Best application F"
+      },
+      "$25–$50": {
+        "count": 1,
+        "status": "unverified",
+        "context": "than build hydrostatic pressure. This drainage package adds $25–$50 per linear foot. Walls built without it typically show move"
+      },
+      "$285–$430": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "before HST), pricing runs around $340 under 2 ft (typically $285–$430), $470 at 2–4 ft ($410–$565) and $680 at 4–6 ft ($595–$780)"
+      },
+      "$30–$45": {
+        "count": 1,
+        "status": "unverified",
+        "context": "cost (per lin. ft.) $18–$28 $24–$38 $30–$45 Best application Functional walls;"
+      },
+      "$340": {
+        "count": 3,
+        "status": "engine-checked",
+        "context": "lled option; our estimator puts a wall under 2 ft at around $340 per linear foot before HST for about 50 feet, with a basic"
+      },
+      "$340–$470": {
+        "count": 2,
+        "status": "engine-checked",
+        "context": "ldr=\"A single-tier retaining wall in Oro-Medonte runs about $340–$470 per linear foot installed before HST for walls up to 4 ft,"
+      },
+      "$340–$680": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "seoDescription=\"Retaining walls in Oro-Medonte cost about $340–$680 per linear foot installed in 2026, before HST, depending on"
+      },
+      "$39,000": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "almost all of the price spread between an $8,500 job and a $39,000 job. 1. Wall height. This is the dom"
+      },
+      "$4,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "ne item against a $16,000 quote with full drainage is not a $4,000 saving — it is a $4,000 deposit on a wall that will need re"
+      },
+      "$410–$565": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "ound $340 under 2 ft (typically $285–$430), $470 at 2–4 ft ($410–$565) and $680 at 4–6 ft ($595–$780). Shorter walls cost more pe"
+      },
+      "$595–$780": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "$285–$430), $470 at 2–4 ft ($410–$565) and $680 at 4–6 ft ($595–$780). Shorter walls cost more per foot, because the dig-out, de"
+      },
+      "$680": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "2 ft (typically $285–$430), $470 at 2–4 ft ($410–$565) and $680 at 4–6 ft ($595–$780). Shorter walls cost more per foot, be"
+      },
+      "$8,500": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "ables account for almost all of the price spread between an $8,500 job and a $39,000 job. 1. Wall height.</stron"
+      },
+      "$8,500–$16,500": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "all (under 2 ft / 600 mm high, 20–30 linear feet): $8,500–$16,500 total Mid-height wall (2–4 ft / 600–1,200 m"
+      },
+      "$800–$2,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "re. Haul-away is not always included in base quotes. Expect $800–$2,500 for excavation and disposal on a typical Oro-Medonte wall p"
+      }
+    },
+    "src/pages/blog/RetainingWallEngineerRequiredOntario.tsx": {
+      "$0–$1,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Verify with municipality Sometimes $0–$1,500 Standard residential wall, City of Barrie<"
+      },
+      "$1,500–$3,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "f Barrie Over 1.0 m Yes Yes $1,500–$3,000 Wall below or near a driveway (surcharge l"
+      },
+      "$1,500–$3,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "d>Any height Yes if over 600 mm Yes $1,500–$3,500 Tiered wall system (multiple tiers, each u"
+      },
+      "$1,500–$4,000": {
+        "count": 5,
+        "status": "unverified",
+        "context": "tural engineering fees for a residential retaining wall run $1,500–$4,000 in Ontario. A straightforward wall under 1.5 m on flat grou"
+      },
+      "$150–$500": {
+        "count": 3,
+        "status": "unverified",
+        "context": "re at the higher end. Permit fees are additional, typically $150–$500 in Barrie and nearby Simcoe County townships.\""
+      },
+      "$2,000–$4,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "m Recommended Strongly recommended $2,000–$4,000 Engineered wall on Barrie clay, over 1.5 m"
+      },
+      "$2,500–$4,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "er 1.5 m Over 1.5 m Yes Yes $2,500–$4,000+ \" }} /> <h2"
+      },
+      "$300–$600": {
+        "count": 1,
+        "status": "unverified",
+        "context": "a structural engineer assessment. An assessment visit runs $300–$600 as a standalone service — a fraction of the cost of rebuild"
+      }
+    },
+    "src/pages/blog/RetainingWallGuide.tsx": {
+      "$400–$700": {
+        "count": 1,
+        "status": "unverified",
+        "context": "090) Armour stone walls: $400-$700 per linear foot depending on stone size"
+      },
+      "$970+": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "li> Taller engineered walls (6 ft+): around $970+ per linear foot (typically $845–$1,090) <"
+      }
+    },
+    "src/pages/blog/SoddingVsSeedingSimcoeCounty.tsx": {
+      "$0.10–$0.20": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ove existing grass, and fall overseeding costs as little as $0.10–$0.20 per sq ft in materials Slope above 15% grad"
+      },
+      "$0.15–$0.45": {
+        "count": 1,
+        "status": "unverified",
+        "context": "t roughly 2% slope away from the foundation. Regrading adds $0.15–$0.45 per sq ft depending on how much material needs to move. Non"
+      },
+      "$0.25–$0.65": {
+        "count": 7,
+        "status": "unverified",
+        "context": "@type\": \"Answer\", \"text\": \"Seeding costs $0.25–$0.65 per square foot installed versus $1.20–$2.50 for sod, so se"
+      },
+      "$0.30–$0.60": {
+        "count": 1,
+        "status": "unverified",
+        "context": "oes down; on problem sites we use 6 inches. That is roughly $0.30–$0.60 per sq ft added to the budget, which is why \\\"cheap sod\\\" q"
+      },
+      "$0.40–$0.80": {
+        "count": 3,
+        "status": "unverified",
+        "context": "4–6 inches of screened topsoil before sod goes down, adding $0.40–$0.80 per sq ft to the base quote.\" } }"
+      },
+      "$0.50–$0.90": {
+        "count": 1,
+        "status": "unverified",
+        "context": "has kept sod pallets from the Barrie-area nurseries in the $0.50–$0.90 per sq ft range at the farm gate, but that is not what you"
+      },
+      "$1,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "A typical 400 sq ft backyard project lands between $480 and $1,000; a 2,000 sq ft full yard (front + back) is more realistical"
+      },
+      "$1,200–$2,500": {
+        "count": 2,
+        "status": "unverified",
+        "context": "nd delivery. A 1,000 sq ft backyard project typically costs $1,200–$2,500. The biggest variable is how much topsoil prep is needed —"
+      },
+      "$1,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ium on its own. We have had clients seed in hopes of saving $1,500 and then spend the following summer roping off a muddy yard"
+      },
+      "$1.20–$2.50": {
+        "count": 9,
+        "status": "unverified",
+        "context": "\"text\": \"Installed sod in Barrie and Simcoe County runs $1.20–$2.50 per square foot all-in, including topsoil prep, labour, and"
+      },
+      "$100–$260": {
+        "count": 1,
+        "status": "unverified",
+        "context": "square foot installed, which works out to roughly $100–$260 for a 400 sq ft space or $500–$1,300 for 2,000 sq ft. That"
+      },
+      "$12": {
+        "count": 1,
+        "status": "unverified",
+        "context": "soil thermometer before any seeding, not a calendar date. A $12 thermometer prevents a $400 seeding job from being redone.<"
+      },
+      "$2,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ped yard, lose most of it in one rain event, and then spend $2,000 on sod six weeks later. \" }} /> How Ontario"
+      },
+      "$2,400–$5,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "2,000 sq ft full yard (front + back) is more realistically $2,400–$5,000 once prep, delivery, and labour are included. Supply-chain"
+      },
+      "$3,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "lines in our climate, and a few common mistakes that turn a $3,000 lawn project into a $6,000 redo. \" }} /> Wh"
+      },
+      "$3,000–$8,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "rge open area, flat, fall timing: Seeding can save $3,000–$8,000 on large lots and is worth the patience Yar"
+      },
+      "$40–$55": {
+        "count": 1,
+        "status": "unverified",
+        "context": "cape Depot in Barrie, screened topsoil currently runs about $40–$55 per yard delivered; a 2,000 sq ft yard needs roughly 25–30"
+      },
+      "$400": {
+        "count": 1,
+        "status": "unverified",
+        "context": "seeding, not a calendar date. A $12 thermometer prevents a $400 seeding job from being redone. In short: if your proj"
+      },
+      "$480": {
+        "count": 1,
+        "status": "unverified",
+        "context": "g first. A typical 400 sq ft backyard project lands between $480 and $1,000; a 2,000 sq ft full yard (front + back) is more"
+      },
+      "$500–$1,300": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ich works out to roughly $100–$260 for a 400 sq ft space or $500–$1,300 for 2,000 sq ft. That gap between sod and seed pricing is r"
+      },
+      "$6,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "few common mistakes that turn a $3,000 lawn project into a $6,000 redo. \" }} /> What Does Sod Actually Cost i"
+      },
+      "$800": {
+        "count": 1,
+        "status": "unverified",
+        "context": "; it is the practical choice. We have seen homeowners spend $800 on seed and straw for a sloped yard, lose most of it in one"
+      }
+    },
+    "src/pages/blog/SpringCleanupChecklistBarrie.tsx": {
+      "$1,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "td>Medium May DIY Full border relay $1,000+ Catch basin clearance (Task 4) Hig"
+      },
+      "$1,500–$8,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "igh Early May DIY inspect / Pro fix $1,500–$8,000 relay Joint sand inspection (Task 2) <"
+      },
+      "$1.50–$2.50": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ks to reach mowing height. The cost difference is typically $1.50 to $2.50 per square metre more for sod, which most clients find wort"
+      },
+      "$150–$350": {
+        "count": 2,
+        "status": "unverified",
+        "context": "ofessional spring site assessment in Barrie typically costs $150 to $350 for a 1 to 2 hour walkthrough, depending on property size a"
+      },
+      "$150–$400": {
+        "count": 2,
+        "status": "unverified",
+        "context": "n commercial and residential projects alike — costs roughly $150 to $400 for an average-sized patio depending on the extent of deple"
+      },
+      "$3,000–$10,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "Task 4) High Late April DIY $3,000–$10,000 base failure Foundation grading check (Tas"
+      },
+      "$3,000–$15,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "s at the top, if ignored, lead to structural repairs in the $3,000 to $15,000 range. The ones toward the bottom address recovery and long"
+      },
+      "$5,000–$20,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "igh Late April DIY assess / Pro fix $5,000–$20,000 waterproofing Downspout extension check (T"
+      },
+      "$500–$2,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "sanding the affected area — is usually sufficient and costs $500 to $2,000 depending on scope. If the settlement is widespread (more t"
+      },
+      "$800–$2,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "left through summer invites weed root intrusion that costs $800 to $2,000 to fix properly.\" keywords=\"Spring Landscape Cleanup"
+      },
+      "$800–$5,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "gh May DIY or structural inspection $800–$5,000 frame repair Lawn aeration and overseeding"
+      },
+      "$800+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "/td> May DIY re-sand $150–$400, rises to $800+ if left Edge restraint check (Task 3)"
+      }
+    },
+    "src/pages/blog/TimberTechVsWood.tsx": {
+      "$0": {
+        "count": 2,
+        "status": "unverified",
+        "context": "Annual maintenance: Soap and water. $0. Board replacement: $0 ("
+      },
+      "$12,000–$15,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "Initial build: ~$12,000 - $15,000 (materials + labour) Annual stain"
+      },
+      "$2–$3": {
+        "count": 1,
+        "status": "unverified",
+        "context": "a lumber yard sees the same thing: pressure-treated wood at $2-3 per linear foot, and composite decking at $8-12. The math s"
+      },
+      "$25,000–$35,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "Initial build: ~$25,000 - $35,000 (higher upfront, premium materials) <stro"
+      },
+      "$32,500–$47,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": ") Total 20-year cost: $32,500 - $47,500 That's not including your weekends"
+      },
+      "$400–$800": {
+        "count": 1,
+        "status": "unverified",
+        "context": "/li> Annual staining/sealing: $400-$800/year × 20 years = $8,000 - $16,000 <stron"
+      },
+      "$500–$1,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "cement: Warped, cracked, or rotted boards — budget $500-$1,500 over 20 years Full replacement at"
+      },
+      "$8–$12": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ated wood at $2-3 per linear foot, and composite decking at $8-12. The math seems simple. But that's the wrong math.<"
+      },
+      "$8,000–$16,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "nual staining/sealing: $400-$800/year × 20 years = $8,000 - $16,000 Board replacement: Warpe"
+      }
+    },
+    "src/pages/locations/Innisfil.tsx": {
+      "$12,000–$25,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "{ project: \"Interlocking patio (200-400 sq ft)\", range: \"$12,000 – $25,000\" }, { project: \"Full backyard transformation\", range: \"$"
+      },
+      "$13,000–$32,500": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "g wall (30-60 linear ft, 2-4 ft high, before HST)\", range: \"$13,000 – $32,500\" }, { project: \"Premium outdoor living space\", range: \"$"
+      },
+      "$15,000–$35,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "}, { project: \"Composite deck (200-350 sq ft)\", range: \"$15,000 – $35,000\" }, { project: \"Retaining wall (30-60 linear ft, 2-4 ft"
+      },
+      "$35,000–$90,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "0\" }, { project: \"Full backyard transformation\", range: \"$35,000 – $90,000\" }, { project: \"Composite deck (200-350 sq ft)\", range:"
+      },
+      "$90,000–$160,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "0\" }, { project: \"Premium outdoor living space\", range: \"$90,000 – $160,000+\" }, ]; const FAQS = [ { q: \"Do I need a permit"
+      }
+    },
+    "src/pages/locations/OroMedonte.tsx": {
+      "$20,000–$45,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "roject: \"Composite deck with view (300-500 sq ft)\", range: \"$20,000 – $45,000\" }, { project: \"Retaining wall (50-100 linear ft, 2-4 ft"
+      },
+      "$20,500–$51,500": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "wall (50-100 linear ft, 2-4 ft high, before HST)\", range: \"$20,500 – $51,500\" }, { project: \"Extended driveway (600-1200 sq ft)\", ran"
+      },
+      "$25,000–$55,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "G = [ { project: \"Estate patio (400-800 sq ft)\", range: \"$25,000 – $55,000\" }, { project: \"Full outdoor living space\", range: \"$60,"
+      },
+      "$35,000–$65,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "{ project: \"Extended driveway (600-1200 sq ft)\", range: \"$35,000 – $65,000\" }, ]; const FAQS = [ { q: \"Do Oro-Medonte proj"
+      },
+      "$60,000–$160,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": ",000\" }, { project: \"Full outdoor living space\", range: \"$60,000 – $160,000+\" }, { project: \"Composite deck with view (300-500 sq ft)"
+      }
+    },
+    "src/pages/locations/Springwater.tsx": {
+      "$12,000–$25,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "{ project: \"Interlocking patio (200-400 sq ft)\", range: \"$12,000 – $25,000\" }, { project: \"Full backyard transformation\", range: \"$"
+      },
+      "$13,000–$32,500": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "g wall (30-60 linear ft, 2-4 ft high, before HST)\", range: \"$13,000 – $32,500\" }, { project: \"Extended rural driveway\", range: \"$25,00"
+      },
+      "$15,000–$35,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "}, { project: \"Composite deck (200-350 sq ft)\", range: \"$15,000 – $35,000\" }, { project: \"Retaining wall (30-60 linear ft, 2-4 ft"
+      },
+      "$25,000–$55,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "32,500\" }, { project: \"Extended rural driveway\", range: \"$25,000 – $55,000\" }, { project: \"Premium outdoor living space\", range: \"$"
+      },
+      "$35,000–$90,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "0\" }, { project: \"Full backyard transformation\", range: \"$35,000 – $90,000\" }, { project: \"Composite deck (200-350 sq ft)\", range:"
+      },
+      "$90,000–$160,000+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "0\" }, { project: \"Premium outdoor living space\", range: \"$90,000 – $160,000+\" }, ]; const FAQS = [ { q: \"Do Springwater proj"
+      }
+    },
+    "src/pages/services/Interlocking.tsx": {
+      "$40–$45": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "source=\"interlocking-barrie\" rate=\"$40–$45\" rateDetail=\"per square foot before HST for mo"
+      }
+    },
+    "src/pages/services/LandscapeDesign.tsx": {
+      "$5,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "rvice without construction, our packages typically start at $5,000. This includes a full architectural 3D rendering of the pro"
+      }
+    },
+    "src/pages/services/RetainingWalls.tsx": {
+      "$330–$670": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "source=\"retaining-walls-barrie\" rate=\"$330–$670\" rateDetail=\"per linear foot for walls from"
+      }
+    },
+    "src/utils/budgetLevers.ts": {
+      "$3,400": {
+        "count": 1,
+        "status": "unverified",
+        "context": "r's yard, not preferences. \"Untick * drainage to save $3,400\" would produce a number the site visit * immediately"
+      },
+      "$500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "> { // Ignore rounding-noise levers — a \"saving\" under $500 isn't a real choice. if (l.saving < 500) return;"
+      }
+    },
+    "src/utils/pricingDoctrine.ts": {
+      "$1,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "tom and roughly halved // deck gross margin (~$800/day vs ~$1,500/day). Rails stay 3400/4000 around // the 3700 target. If t"
+      },
+      "$18k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "l walkway that genuinely costed out // at $9K was shown as $18K. Removed 2026-07-27 — every visitor now prices // their re"
+      },
+      "$18k–$90k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "lamp every result up to a per-project-type job // minimum ($18K–$90K), which meant a small walkway that genuinely costed out //"
+      },
+      "$2,470": {
+        "count": 1,
+        "status": "unverified",
+        "context": "overhead, and margin already inside; corrected from a stale $2,470 // on 2026-07-28). // FACTS derive from engine-baseline.j"
+      },
+      "$2,800": {
+        "count": 1,
+        "status": "unverified",
+        "context": "floors come // straight from the LOCKED all-in rate card ($2,800/crew-day — wages, burden, // equipment, overhead, and marg"
+      },
+      "$3,000": {
+        "count": 2,
+        "status": "unverified",
+        "context": "DeckCraft engine. // 2026-07-28 — deck was briefly cut to $3,000, then returned to the $3,700 // target: $3,000 sat below t"
+      },
+      "$3,400": {
+        "count": 1,
+        "status": "unverified",
+        "context": "d to the $3,700 // target: $3,000 sat below the documented $3,400 bottom and roughly halved // deck gross margin (~$800/day"
+      },
+      "$3,700": {
+        "count": 2,
+        "status": "unverified",
+        "context": "ngine-baseline.json'; // Deck rates bracket the engine's $3,700/crew-day card. Hardscape floors come // straight from the"
+      },
+      "$30k–$90k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "aining wall and sloped-yard projects we build commonly land $30K–$90K+, with patio + wall + drainage packages often reaching ${fmt"
+      },
+      "$7,500": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ERY result on the estimator's result step — including // a $7,500 100-sqft build, since there is deliberately no job minimum"
+      },
+      "$800": {
+        "count": 1,
+        "status": "unverified",
+        "context": "ed $3,400 bottom and roughly halved // deck gross margin (~$800/day vs ~$1,500/day). Rails stay 3400/4000 around // the 37"
+      },
+      "$9k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "hich meant a small walkway that genuinely costed out // at $9K was shown as $18K. Removed 2026-07-27 — every visitor now p"
+      }
+    },
+    "src/utils/pricingDoctrine.ts#getEstimatorRangeCopy": {
+      "$30k–$90k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "aining wall and sloped-yard projects we build commonly land $30K–$90K+, with patio + wall + drainage packages often reaching $50K–"
+      },
+      "$35k–$75k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "–$100K. Most premium patios and outdoor rooms we build land $35K–$75K depending on size, access, base prep, drainage, and materia"
+      },
+      "$50k–$100k": {
+        "count": 2,
+        "status": "unverified",
+        "context": "$90K+, with patio + wall + drainage packages often reaching $50K–$100K. Most premium patios and outdoor rooms we build land $35K–$"
+      },
+      "$90k–$150k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "luded. Full backyard transformations we build commonly land $90K–$150K+ when patio, walls, lighting, fire, kitchen, drainage, or gr"
+      }
+    },
+    "src/utils/sophieQuote.ts": {
+      "$10,750–$23,000": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "r; high: number }; summary: string; /** e.g. \"$10,750–$23,000 + HST\". */ band: string; estimatorHref: strin"
+      }
+    }
+  }
+}

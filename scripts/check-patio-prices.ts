@@ -249,4 +249,22 @@ none('FailingInterlockingPatioSignsBarrie', /\$12,000-\$20,000/);
   }
 }
 
+// ---- Money pages: the interlocking planning rate, and no deck rate anywhere (decks are priced in the designer) ----
+{
+  const detail = 'per square foot before HST for most 300–1,000 sq ft interlocking patios with mid-tier pavers. A planning range, not a quote for your property.';
+  for (const page of ['src/pages/services/Interlocking.tsx', 'src/pages/PatiosBarrie.tsx']) {
+    ok(read(page).includes(`rate="${RATE}"`) && read(page).includes(`rateDetail="${detail}"`), `${page}: planning rate is the engine's ${RATE}, with its basis`);
+  }
+  const data = read('src/data/serviceLocations.ts');
+  const interlock = /\binterlocking: \{[\s\S]*?startingPriceText: '([^']*)',\s*perUnitText: '([^']*)',\s*rateBasis: '([^']*)'/.exec(data);
+  // perUnitText is what the town pages, cards, meta description and JSON-LD render: it must name the subject itself.
+  ok(interlock?.[1] === RATE && interlock?.[2] === 'per sq ft before HST, interlocking patios' && interlock?.[3] === '300–1,000 sq ft, mid-tier pavers', `serviceLocations: every town's interlocking page quotes ${RATE} for interlocking patios, with its basis`);
+  const ads = read('src/pages/PaverPatioBarrieAds.tsx');
+  ok(ads.includes(`>${RATE}<`) && ads.includes('per square foot before HST for most 300–1,000 sq ft interlocking patios with mid-tier pavers. A planning range, not a quote for this property.') && !/\$55–\$85/.test(ads), `PaverPatioBarrieAds (Google Ads landing page): the same ${RATE} planning rate as the other patio pages`);
+  ok(!/rate=\{[^}]*'\$/.test(read('src/components/BarrieServicePage.tsx')), 'BarrieServicePage: no per-square-foot driveway rate (the engine does not price driveways)');
+  const deck = /'composite-decking': \{[\s\S]*?startingPriceText: '([^']*)'/.exec(data);
+  ok(deck && !deck[1].includes('$'), 'serviceLocations: decks carry no per-square-foot price (the deck designer prices decks)');
+  ok(!/rate="\$/.test(read('src/pages/services/CompositeDecking.tsx')), 'CompositeDecking: no per-square-foot deck rate');
+}
+
 console.log(`PATIO PRICES OK — ${checks} checks: every interlocking patio and walkway price in the blog is the estimator engine's (mid tier, accessible site); no per-square-foot driveway prices.`);
