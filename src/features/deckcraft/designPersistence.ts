@@ -32,7 +32,7 @@ import {getFootprint} from './lib/deckGeometry';
 import {normalizeWrap,WRAP_PORCH_DEPTH_FT,WRAP_PORCH_RUN_FT,WRAP_RUN_FT,WRAP_WING_WIDTH_FT} from './lib/wrapGeometry';
 import {MAX_PRIVACY_SCREENS,MAX_PRIVACY_SQFT,MAX_SCREEN_PANELS,PRIVACY_HEIGHTS,PRIVACY_PRODUCTS,PRIVACY_SIDES,pricedPrivacyArea} from './privacyScreens';
 
-const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy','border'] as const satisfies readonly LightingZone[];
+const LIGHTING_ZONES=['deck','posts','stairs','landscape','house','privacy','border','pool','pool-deck','pergola-dining','fire-lounge','paths','accent-trees','facade'] as const satisfies readonly LightingZone[];
 import {ALLOWANCE_FINISHES,PATIO_PRODUCTS,TURF_SQFT,WALL_PRODUCTS,WATER_PRODUCTS,fireProduct} from './yardSettings';
 import {GARAGE_DOOR_STYLES,WINDOW_STYLES} from './houseOpeningStyles';
 import {clampHouseOpening,DOOR_STYLES,HOUSE_CLADDINGS,ROOF_FINISHES,ROOF_PITCH_RANGE} from './houseSettings';
@@ -184,6 +184,10 @@ export function validateDesign(input:unknown):DeckData {
     if(Object.hasOwn(auto,'stairStyle')){
       if(auto.stairStyle!=='evo_hyde'&&auto.stairStyle!=='evo_flex')throw new Error('Unsupported under-step light style.');
       clean.autoLighting.stairStyle=auto.stairStyle;
+    }
+    if(Object.hasOwn(auto,'stairsPerTread')){
+      if(auto.stairsPerTread!==1&&auto.stairsPerTread!==2)throw new Error('Under-step lights per tread must be 1 or 2.');
+      clean.autoLighting.stairsPerTread=auto.stairsPerTread;
     }
   }
   if(input.privacyScreens!==undefined){

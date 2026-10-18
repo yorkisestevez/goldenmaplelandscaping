@@ -12,7 +12,9 @@ import {getTerrainConfig} from './yardSettings';
 import {screenLengthIn,screenOn,screenProduct} from './privacyScreens';
 import {getHouseContact} from './houseContact';
 import {getHousePlacement} from './housePlacement';
-import {openingWallId} from './houseFootprint';
+import {houseOutline,openingWallId} from './houseFootprint';
+import {poolLightPlaces} from './lightingPlacementRules';
+import {POOL_LIGHT_ID} from './poolLightSpec';
 import {borderLightingPlan} from './borderLighting';
 import {onPaving,pavingRings,shiftOffPaving} from './pathLightPlacement';
 import {edgeSectionId} from './lib/edgeSections';
@@ -201,6 +203,12 @@ export function extrasLayout(data:DeckData,model:DeckTakeoff){
     const key=`${item.zone}:${item.id}`,own=perProduct.get(key)??0;perProduct.set(key,own+1);
     const p=perimeterPoint(index,counts.get(item.zone)??1),g=item.geometry,d=item.dimensionsIn,zone=item.zone;
     const pinned='places' in item?item.places?.[own]:undefined;
+    // An unpinned underwater light takes the next place the pool rule gives (the wall nearest the house, 12 ft apart).
+    if(!pinned&&item.id===POOL_LIGHT_ID){
+      const spots=(data.pools??[]).filter(pool=>pool.enabled).flatMap(pool=>poolLightPlaces(pool,houseVisible?houseOutline(data):[])),spot=spots[own];
+      if(!spot){warnings.push(spots.length?`${item.name}: the pool rule places ${spots.length}; the rest are not placed.`:`${item.name} needs a pool to sit in.`);continue;}
+      fixtures.push({productId:item.id,...spot,zone});continue;
+    }
     if(pinned){
       if(standing(g)&&onPaving(hardscape,pinned.x,pinned.z)){warnings.push(`${item.name} is pinned on paving. Path bollards and stake lights stay in planting beds, off patios, pool decks and walks.`);continue;}
       // A new design's recessed light with no stored height sits on the paver it lands on, not on the soil under a raised

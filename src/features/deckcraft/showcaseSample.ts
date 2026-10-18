@@ -15,6 +15,9 @@ import {createPlanningPool,poolRoundedRectangle} from './poolAssembly';
 import {poolLocalBounds} from './poolGeometry';
 import {newPergola} from './pergolaValidation';
 import {syncAutoLighting} from './lightingSystem';
+import {poolLightPlaces,lightingPlacementIssues,poolWaterRing,ringDistance} from './lightingPlacementRules';
+import {POOL_LIGHT_ID} from './poolLightSpec';
+import {postFacing,treadNose} from './extrasLayout';
 import {newLandscapeObject,newLandscapePlant} from './landscapeCatalogue';
 import {patioInlayPlans} from './patioInlays';
 import {onPaving,pavingRings} from './pathLightPlacement';
@@ -31,15 +34,15 @@ import {furnitureFacingIssues,nearestSeatPoint,rotationDegFacing,seatFront} from
  * same takeoff as any other design.
  * Planting uses the Ontario library: cedar hedge, sugar maple, white pine,
  * serviceberry, hydrangea, dogwood and Karl Foerster, layered back to front.
- * The pool feature has no underwater light. Chaise loungers sit on the pool
- * deck only, feet toward the water. The fire lounge seats two sofas facing the burner, 36–48 in
+ * The pool has three underwater 12 V niche lights in its house-side wall, shining away from the house; the coping is
+ * not lit. Chaise loungers sit on the pool deck only, feet toward the water. The fire lounge seats two sofas facing the burner, 36–48 in
  * clear; the low table between them is the outdoor coffee table. Path bollards
- * stand in the planting beds beside the walks, never on paving. Field lights are
- * round flush paver lights (FUSION 22 and PAVER 40), centred in a Grande slab.
- * INGROUND 2 SS well lights sit flush on the onyx band and the pool coping, evenly
- * spaced. The terrace lounge sits on the
+ * stand in the planting beds beside the walks, never on paving. In-ground lights are
+ * round and flush: 22 mm markers on the walked edges of the onyx band, a 40 mm one at the
+ * stair foot, four DOT 22 on the pool deck centred in a Grande slab, and two 2 in louvered
+ * rounds grazing the front pergola posts. No light sits in a seating floor. The terrace lounge sits on the
  * west half, beside the deck, and leaves an 8 ft path from the stair foot toward
- * the pool. It is flush-lit only: one long sofa and two deep chairs from the
+ * the pool. It has no floor lights: one long sofa and two deep chairs from the
  * outdoor-sofa mesh, with a low table, in about a 12×12 ft group. There is no
  * club-chair product. The pergola is one black LOUSOL roof on the freestanding deck, louvers
  * open. Eight posts stand tight against the outside face of each beam:
@@ -96,8 +99,6 @@ function rectOf(f:YardFeature){const x=(f.xFt-f.widthFt/2)*12,z=(f.zFt-f.depthFt
 
 /** Blu Grande, long side across the yard. A round paver light sits in the middle of one stone. */
 const GRANDE_L=825/25.4,GRANDE_W=495/25.4,GRANDE_J=7/25.4,PAVER_DOT_R=40/25.4/2;
-/** Well lights along a band or the coping, every 4 ft, held off the corners. */
-export const PAVER_LIGHT_SPACING_IN=48;
 type PaverPin={x:number;z:number;angle:number;y?:number};
 function grandeGrid(f:YardFeature){
  const turn=((f.rotationDeg??0)+(f.hardscape?.angleDeg??0))*Math.PI/180,c=Math.cos(turn),s=Math.sin(turn),pitchX=GRANDE_L+GRANDE_J,pitchZ=GRANDE_W+GRANDE_J;
@@ -112,21 +113,12 @@ function paverDotSamples(x:number,z:number){
  return out;
 }
 const tenth=(n:number)=>Math.round(n*10)/10;
-/** Points along a segment, evenly spaced, held off both ends so a corner is not lit twice. */
-function spaceSide(ax:number,az:number,bx:number,bz:number,target=PAVER_LIGHT_SPACING_IN):PaverPin[]{
- const len=Math.hypot(bx-ax,bz-az),n=Math.max(1,Math.round(len/target)),out:PaverPin[]=[];
- for(let i=0;i<n;i++){const t=(i+.5)/n;out.push({x:tenth(ax+(bx-ax)*t),z:tenth(az+(bz-az)*t),angle:0});}
- return out;
-}
-function spaceRect(x0:number,z0:number,x1:number,z1:number,target=PAVER_LIGHT_SPACING_IN){
- return [...spaceSide(x0,z0,x1,z0,target),...spaceSide(x1,z0,x1,z1,target),...spaceSide(x1,z1,x0,z1,target),...spaceSide(x0,z1,x0,z0,target)];
-}
-/** Move each flush lens onto the centre of one whole Grande slab, long axis with the joints. */
-function seatOnGrande(features:YardFeature[],pools:DeckData['pools'],places:PaverPin[],blocked:{x:number;y:number}[][]=[]){
+/** Move each flush lens onto the centre of one whole Grande slab, long axis with the joints, at a place `accept` allows. */
+function seatOnGrande(features:YardFeature[],pools:DeckData['pools'],places:PaverPin[],blocked:{x:number;y:number}[][]=[],accept:(x:number,z:number)=>boolean=()=>true){
  const grids=features.map(f=>({...grandeGrid(f),id:f.id,rings:yardFeatureOutline(f),bands:patioInlayPlans(f).filter(p=>p.status==='ok').map(p=>p.outline)}));
  const poolEx=(pools??[]).flatMap(poolPermanentExclusion),used=new Set<string>();
  const inside=(polys:{x:number;y:number}[][],x:number,z:number)=>polys.some(poly=>poly.length>=3&&insidePolygon({x,y:z},poly));
- const clear=(g:typeof grids[number],x:number,z:number)=>paverDotSamples(x,z).every(p=>inside(g.rings,p.x,p.z)&&!inside(g.bands,p.x,p.z)&&!inside(poolEx,p.x,p.z)&&!inside(blocked,p.x,p.z));
+ const clear=(g:typeof grids[number],x:number,z:number)=>accept(x,z)&&paverDotSamples(x,z).every(p=>inside(g.rings,p.x,p.z)&&!inside(g.bands,p.x,p.z)&&!inside(poolEx,p.x,p.z)&&!inside(blocked,p.x,p.z));
  return places.map(p=>{
   const g=grids.find(g=>inside(g.rings,p.x,p.z));if(!g)return p;
   const loc=g.toLocal(p.x,p.z),col0=Math.round((loc.x-GRANDE_L/2)/g.pitchX),row0=Math.round((loc.z-GRANDE_W/2)/g.pitchZ);
@@ -361,48 +353,90 @@ export function ontarioShowcaseDesign():DeckData{
  ];
 
  const lit=buildDeckTakeoff(data);
- // The pool feature has no underwater lamp. Bollards and stake spots stay in the beds.
- // Field lights are round and flush, centred in a Grande slab. Well lights sit on the
- // onyx band and the pool coping. LIV WALL fixtures wash the fire lounge. Each place is
- // model inches. Real preview lights are the 8 spots and 8 bollards; the flush fixtures
- // are listed after them so they glow without taking a slot.
+ // Lighting follows the best-practice rules (lightingPlacementRules.ts), each fixture on its own zone:
+ // - pool: 3 underwater 12 V niche lights in the house-side wall, lens top 18 in down, shining away from the house;
+ //   nothing in the coping, and 4 round markers on the pool deck, 36–48 in out from it;
+ // - paths: 22 mm round markers on the walked edges of the onyx band, about 6 ft apart, a 40 mm one at the stair
+ //   foot, and path lights only in the beds, 8–10 ft apart and staggered;
+ // - stairs and posts: 2 under-step lights a tread on the 8 ft flight; shielded down-lights on the stair posts, the
+ //   front corners and every other post, none on the house edge;
+ // - pergola and dining: the perimeter LED, a downlight centred over the table, and 2 louvered rounds grazing the
+ //   front pergola posts; fire lounge: the 4 under-cap seat-wall lights and the flame, no floor lights;
+ // - accent trees: narrow cowled uplights on the yard side of each tree, aimed into the yard; facade: a down-light
+ //   beside each side of the slider. No light sits inside a seating floor.
+ // Each place is model inches. The real preview lights are the 8 tree uplights, 7 path lights and the dining downlight.
  const pin=(xFt:number,zFt:number,angle=0,y?:number)=>({x:xFt*12,z:zFt*12,angle,...(y===undefined?{}:{y})});
- const cx=court.xFt,cz=court.zFt,tx0=terrace.xFt-terrace.widthFt/2,tx1=terrace.xFt+terrace.widthFt/2,tz1=terrace.zFt+terrace.depthFt/2,bedNorth=lounge.zFt+lounge.depthFt/2;
- const path=[pin(-16,13),pin(-10,13),pin(-30.5,40),pin(-30.5,52),pin(-20,bedNorth+4),pin(-12,bedNorth+4),pin(54.5,50),pin(54.5,68)];
- const spots=[pin(-32,24,Math.PI/2),pin(-32,55,Math.PI/2),pin(-34,36,Math.PI/2),pin(-18,bedNorth+4,Math.PI/2),pin(56,24,-Math.PI/2),pin(56,42,-Math.PI/2),pin(56,55,-Math.PI/2),pin(56,70,-Math.PI/2)];
- // Each lens is the centre of one Grande slab, clear of the onyx band, the pool coping and the furniture.
- const paverHosts=[terrace,court,lounge];
- const paverBlocked=(data.landscapeObjects??[]).filter(o=>o.kind==='furniture').map(o=>yardRectangle(o.xIn,o.zIn,o.widthIn,o.depthIn,(o.rotationDeg??0)*Math.PI/180));
- const pavers=seatOnGrande(paverHosts,data.pools,[
-  pin(cx-12,cz-10),pin(cx,cz-10),pin(cx+12,cz-10),pin(cx-20,cz),pin(cx+20,cz),pin(cx,cz+9),
-  pin(tx0+4,33),pin(tx1-4,19),pin(tx0+4,tz1-3),pin(terrace.xFt,tz1-3),pin(tx1-4,tz1-3),
-  pin(loungeX-7.2,sofaZ),pin(loungeX+7.2,sofaZ),pin(loungeX-7.2,chairZ),pin(loungeX+7.2,chairZ),
-  pin(-21,fireZ-5.4),pin(-15,fireZ-5.4),pin(-21,fireZ+5.2),pin(-15,fireZ+5.2),
- ],paverBlocked);
- const smallDots=pavers.filter((_,i)=>i%2===0),largeDots=pavers.filter((_,i)=>i%2===1);
- // Band centreline. Terrace and court frames are inset by the same margin; the lounge band sits on the patio edge.
- const bandIn=MARGIN+BAND/2,edgeIn=BAND/2;
- const terraceBand=spaceRect(x0+bandIn,zN+bandIn,x1-bandIn,zFar-bandIn);
- const courtBand=spaceRect(courtX0+bandIn,courtZ0+bandIn,courtX1-bandIn,courtZ1-bandIn);
- const loungeBand=spaceRect(lx0+edgeIn,lz0+edgeIn,lx1-edgeIn,lz1-edgeIn);
- // Coping is 12 in wide with 1 in of overhang, so the visible top is 11 in and its centre is 5.5 in outside the water.
- // Straight runs stop at the 24 in corner radius.
- const px=cx*12,pz=cz*12,halfW=18*12,halfL=8*12,rad=24,copeMid=5.5;
- const coping=[
-  ...spaceSide(px-(halfW-rad),pz-(halfL+copeMid),px+(halfW-rad),pz-(halfL+copeMid)),
-  ...spaceSide(px-(halfW-rad),pz+(halfL+copeMid),px+(halfW-rad),pz+(halfL+copeMid)),
-  ...spaceSide(px-(halfW+copeMid),pz-(halfL-rad),px-(halfW+copeMid),pz+(halfL-rad)),
-  ...spaceSide(px+(halfW+copeMid),pz-(halfL-rad),px+(halfW+copeMid),pz+(halfL-rad)),
+ const tenthIn=(p:{x:number;z:number;angle:number;y?:number})=>({...p,x:tenth(p.x),z:tenth(p.z),...(p.y===undefined?{}:{y:tenth(p.y)})});
+ const houseRings=houseOutline(data);
+ const poolLights=poolLightPlaces(pool,houseRings).map(tenthIn);
+ // Pool deck: one round marker at each corner of the walk round the pool, 42 in out from the coping on the diagonal.
+ // No marker inside a seat's 24 in pad: the walked edge passes the chaise feet, and a light there sits in their floor.
+ const seatPads=(data.landscapeObjects??[]).filter(o=>o.kind==='furniture').map(o=>yardRectangle(o.xIn,o.zIn,o.widthIn+48,o.depthIn+48,(o.rotationDeg??0)*Math.PI/180));
+ const waterRing=poolWaterRing(pool),wx=waterRing.map(p=>p.x),wz=waterRing.map(p=>p.y);
+ const wx0=Math.min(...wx),wx1=Math.max(...wx),wz0=Math.min(...wz),wz1=Math.max(...wz),cornerR=24,copeOut=(pool.coping?.widthIn??12)-(pool.coping?.overhangIn??1);
+ const fromCoping=(x:number,z:number)=>ringDistance(x,z,waterRing)-copeOut;
+ const diag=(cornerR+copeOut+42)/Math.SQRT2;
+ const deckCorners=[[wx0,-1],[wx1,1]].flatMap(([ex,sx])=>[[wz0,-1],[wz1,1]].map(([ez,sz])=>({x:ex-sx*cornerR+sx*diag,z:ez-sz*cornerR+sz*diag,angle:0})));
+ const poolDeck=seatOnGrande([court],data.pools,deckCorners,seatPads,(x,z)=>{const d=fromCoping(x,z);return d>=36&&d<=48;});
+ // Onyx band centrelines. Markers go on the walked edges only: the terrace's south edge toward the pool court, its west
+ // edge where the west walk and the lounge path meet it, and the court's west edge along the spine walk.
+ const bandIn=MARGIN+BAND/2,step=72;
+ const tb={x0:x0+bandIn,x1:x1-bandIn,z0:zN+bandIn,z1:zFar-bandIn},courtBandX=courtX0+bandIn;
+ const southRun=Math.round((tb.x1-tb.x0)/step);
+ const bandMarkers=[
+  ...Array.from({length:southRun+1},(_,i)=>({x:tenth(tb.x0+(tb.x1-tb.x0)*i/southRun),z:tenth(tb.z1),angle:0})),
+  ...[1,2,3].map(k=>({x:tenth(tb.x0),z:tenth(tb.z1-k*step),angle:0})),
+  ...[48.5,54.5,60.5].map(zFt=>({x:tenth(courtBandX),z:zFt*12,angle:0})),
+ ].filter(p=>!seatPads.some(r=>insidePolygon({x:p.x,y:p.z},r)));
+ // The 40 mm marker at the stair foot, on the band the treads land on.
+ const stairFoot=[{x:tenth((s0+s1)/2),z:tenth(tb.z0),angle:0}];
+ // Two louvered 2 in rounds grazing the front pergola posts beside the stair, 12 in out from the deck fascia.
+ const frontPostXs=data.pergola.posts!.filter(p=>p.zIn>0).map(p=>roofX+p.xIn).filter(x=>Math.abs(x-(s0+s1)/2)<8*12).sort((a,b)=>a-b);
+ const postGrazers=frontPostXs.map(x=>({x:tenth(x),z:tenth(deckFront+12),angle:Math.PI}));
+ // Under-cap seat-wall lights, face mounted 2.5 in under the cap, aimed at the lounge floor; none faces a sofa up close.
+ const capY=18-2.5,slimDepth=1.378,wallFace=(xFt:number)=>xFt*12+slimDepth/2+.05;
+ const northFace=lz0+inset+SEAT_DEPTH*6,southFace=lz1-inset-SEAT_DEPTH*6;
+ const loungeWall=[
+  {x:tenth(wallFace(innerX)),z:tenth((fireZ-4.4)*12),angle:Math.PI/2,y:capY},{x:tenth(wallFace(innerX)),z:tenth((fireZ+4.4)*12),angle:Math.PI/2,y:capY},
+  {x:tenth(fireX*12),z:tenth(northFace+slimDepth/2+.05),angle:0,y:capY},{x:tenth(fireX*12),z:tenth(southFace-slimDepth/2-.05),angle:Math.PI,y:capY},
  ];
- const wells=[...terraceBand,...courtBand,...loungeBand,...coping];
- const loungeWall=[pin(innerX+0.45,fireZ-4.4,Math.PI/2,16),pin(innerX+0.45,fireZ+4.4,Math.PI/2,16),pin(fireX,(lz0+inset)/12+SEAT_DEPTH/2+0.4,0,16),pin(fireX,(lz1-inset)/12-SEAT_DEPTH/2-0.4,Math.PI,16)];
+ // Shielded post lights: the stair posts, the two front corners, then every other post along each run. The house edge has no guard.
+ const facing=postFacing(lit),railTop=lit.railing.height;
+ const deckPosts=lit.railing.posts.map((p,i)=>({p,i,f:facing[i]??{x:0,y:1}}));
+ const stairPost=(p:{x:number;z:number})=>p.x>s0-24&&p.x<s1+24&&p.z>deckFront-24;
+ const cornerPost=(p:{x:number;z:number})=>p.z>deckFront-24&&(Math.abs(p.x-deckX0)<12||Math.abs(p.x-deckX1)<12);
+ const chosen=new Set(deckPosts.filter(({p})=>stairPost(p)||cornerPost(p)).map(q=>q.i));
+ // The end runs, from the front corner back toward the house: every other post after the corner.
+ for(const side of [deckX0,deckX1]){
+  const run=deckPosts.filter(({p})=>Math.abs(p.x-side)<12&&!cornerPost(p)).sort((a,b)=>b.p.z-a.p.z);
+  run.forEach((q,k)=>{if(k%2===1)chosen.add(q.i);});
+ }
+ const postOut=1.9+3.937/2;
+ const postLights=deckPosts.filter(q=>chosen.has(q.i)).map(({p,f})=>({x:tenth(p.x+f.x*postOut),z:tenth(p.z+f.y*postOut),y:tenth(p.y+railTop-7),angle:Math.atan2(f.x,f.y)}));
+ // A down-light on the house wall each side of the slider, 69 in over the deck.
+ const doorLights=[sliderA-14,sliderB+14].map(x=>({x:tenth(x),z:.8,y:data.height+69,angle:0}));
+ // The dining downlight, centred over the table, under the louvers.
+ const diningLight=[{x:tenth(diningX*12),z:tenth(diningZ*12),y:tenth(data.height+data.pergola.customSize!.heightFt*12-8),angle:0}];
+ // Tree uplights 24 in in front of each trunk, on the yard side, aimed up into the canopy and into the yard.
+ const trees=[26,40,54,68].flatMap(zFt=>[pin(-34.6+2,zFt,Math.PI/2),pin(58.6-2,zFt,-Math.PI/2)]);
+ // Path lights in the beds, 14 in back from the walk, 8–10 ft apart and staggered side to side.
+ const path=[pin(-11,14.8),pin(-29.2,40),pin(-29.2,50),pin(-7,63.4),pin(-5.4,72),pin(53.3,52),pin(53.3,62)];
+ data.autoLighting={posts:false,stairs:true,stairsPerTread:2};
  data.lightingSystem={wireDistance:80,selectedItems:syncAutoLighting({...data,lightingSystem:{wireDistance:80,selectedItems:[
-  {productId:'scope',qty:spots.length,zone:'landscape',places:spots},
-  {productId:'liv',qty:path.length,zone:'landscape',places:path},
-  {productId:'fusion_22',qty:smallDots.length,zone:'landscape',places:smallDots},
-  {productId:'paver_40',qty:largeDots.length,zone:'landscape',places:largeDots},
-  {productId:'inground_2ss',qty:wells.length,zone:'landscape',places:wells},
-  {productId:'liv_wall',qty:loungeWall.length,zone:'deck',places:loungeWall},
+  {productId:POOL_LIGHT_ID,qty:poolLights.length,zone:'pool',places:poolLights},
+  {productId:'dot_22',qty:poolDeck.length,zone:'pool-deck',places:poolDeck},
+  {productId:'fusion_22',qty:bandMarkers.length,zone:'paths',places:bandMarkers},
+  {productId:'paver_40',qty:stairFoot.length,zone:'paths',places:stairFoot},
+  {productId:'liv',qty:path.length,zone:'paths',places:path},
+  {productId:'big_scope_narrow',qty:trees.length,zone:'accent-trees',places:trees},
+  {productId:'inground_2ss',qty:postGrazers.length,zone:'pergola-dining',places:postGrazers},
+  {productId:'scope_ceiling',qty:diningLight.length,zone:'pergola-dining',places:diningLight},
+  {productId:'wedge_slim',qty:loungeWall.length,zone:'fire-lounge',places:loungeWall},
+  {productId:'halo_down',qty:postLights.length,zone:'posts',places:postLights},
+  {productId:'evo_down',qty:doorLights.length,zone:'facade',places:doorLights},
+  // Two 100 VA hubs on the house wall by the deck, about 50 ft from the pool: the load is about 120 VA before the
+  // unrated fixtures, and each hub stays under 80%. The pool lights run on the pool builder's own 12 V supply.
+  {productId:'hub100',qty:2},
  ]}}, {posts:lit.quantities.railingPosts,stairs:lit.treads.length,privacy:0})};
 
  // Over the rear bed, inside the fence, looking back at the house. The spine
@@ -565,20 +599,23 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
   }
  }
  const lights=data.lightingSystem.selectedItems,placed=(id:string)=>lights.find(i=>i.productId===id)?.places?.length??0;
- if(placed('liv')<8||placed('scope')<8||placed('liv_wall')<4||placed('fusion_22')<6||placed('paver_40')<6||placed('inground_2ss')<24)issues.push('Path lights, tree uplights, paver lights, coping lights and fire-lounge wall lights are not placed.');
+ if(placed(POOL_LIGHT_ID)!==3||placed('dot_22')<1||placed('dot_22')>4||placed('fusion_22')<12||placed('fusion_22')>16||placed('paver_40')!==1||placed('inground_2ss')!==2||placed('liv')<6||placed('big_scope_narrow')<8||placed('wedge_slim')!==4||placed('scope_ceiling')!==1||placed('evo_down')!==2||placed('halo_down')<6)issues.push('The lighting plan is not the best-practice set: 3 pool lights, up to 4 pool-deck markers, 12–16 band markers, a stair-foot marker, 2 post grazers, path lights, tree uplights, 4 seat-wall lights, a dining downlight, 2 door lights and the post caps.');
+ if(lights.some(i=>i.productId==='scope'||i.productId==='liv_wall'))issues.push('Wide tree spots or the tall seat-wall lights are back.');
+ const zoneOf=new Map(lights.map(i=>[i.productId,i.zone]));
+ if(zoneOf.get(POOL_LIGHT_ID)!=='pool'||zoneOf.get('dot_22')!=='pool-deck'||zoneOf.get('big_scope_narrow')!=='accent-trees'||zoneOf.get('scope_ceiling')!=='pergola-dining'||zoneOf.get('evo_down')!=='facade'||zoneOf.get('wedge_slim')!=='fire-lounge')issues.push('The lights are not on their own zones.');
+ const pinnedFixtures=lights.flatMap(i=>i.places?.length?i.places.map(p=>({productId:i.productId,x:p.x,z:p.z,y:p.y??0,angle:p.angle,zone:i.zone})):Array.from({length:i.qty},()=>({productId:i.productId,x:-9999,z:-9999,y:0,angle:0,zone:i.zone})));
+ for(const msg of lightingPlacementIssues(data,tk,pinnedFixtures,{treadWidths:tk.treads.map(t=>treadNose(t).width),houseRings:houseOutline(data)}))if(!msg.includes('within 3 m of the pool. Use a GFCI'))issues.push(`Lighting rule: ${msg}`);
+ for(const pool of data.pools??[]){const ring=poolWaterRing(pool);for(const p of lights.find(i=>i.productId==='dot_22')?.places??[]){const d=ringDistance(p.x,p.z,ring)-((pool.coping?.widthIn??12)-(pool.coping?.overhangIn??1));if(d<36||d>48)issues.push(`A pool-deck marker is ${d.toFixed(0)} in from the coping.`);}}
  const hardscape=pavingRings(data,tk),water=(data.pools??[]).map(poolOutline),bedRings=(data.landscapeObjects??[]).filter(o=>o.kind==='bed'&&(o.polygon?.length??0)>=3).map(o=>o.polygon!.map(p=>({x:p.x,y:p.z})));
  const bandOutlines=(data.yardFeatures??[]).filter(f=>f.id==='terrace'||f.id==='pool-court'||f.id==='lounge').flatMap(f=>patioInlayPlans(f).filter(p=>p.status==='ok').map(p=>p.outline));
- const edgeDistance=(x:number,z:number,ring:{x:number;y:number}[])=>{let best=Infinity;for(let i=0;i<ring.length;i++){const a=ring[i],b=ring[(i+1)%ring.length],dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((x-a.x)*dx+(z-a.y)*dy)/l2));best=Math.min(best,Math.hypot(x-(a.x+dx*t),z-(a.y+dy*t)));}return best;};
- const wells=lights.find(i=>i.productId==='inground_2ss')?.places??[];
- for(let i=0;i<wells.length;i++)for(let j=i+1;j<wells.length;j++)if(Math.hypot(wells[i].x-wells[j].x,wells[i].z-wells[j].z)<30)issues.push('Two well lights sit closer than 30 in.');
  for(const item of lights){
   const product=getLightingRuntimeProduct(item.productId);if(!product||!item.places)continue;
-  const field=item.productId==='fusion_22'||item.productId==='paver_40',well=item.productId==='inground_2ss';
+  const field=item.productId==='dot_22',band=item.productId==='fusion_22'||item.productId==='paver_40',well=item.productId==='inground_2ss';
   for(const place of item.places){
    const paved=onPaving(hardscape,place.x,place.z),bed=bedRings.some(ring=>insidePolygon({x:place.x,y:place.z},ring)),swimming=water.some(ring=>insidePolygon({x:place.x,y:place.z},ring));
    if((product.geometry==='bollard'||product.geometry==='spot')&&(paved||!bed))issues.push(`${product.name} is not in a planting bed clear of the paving.`);
-   if((field||well)&&(!paved||swimming))issues.push(`${product.name} is not on the paving clear of the water.`);
-   if((field||well)&&Math.abs(place.y??0)>0.2)issues.push('A paver light is not seated on the paving surface.');
+   if((field||band||well)&&(!paved||swimming))issues.push(`${product.name} is not on the paving clear of the water.`);
+   if((field||band||well)&&Math.abs(place.y??0)>0.2)issues.push('A paver light is not seated on the paving surface.');
    if(field){
     const slab=(data.yardFeatures??[]).find(f=>(f.id==='terrace'||f.id==='pool-court'||f.id==='lounge')&&yardFeatureOutline(f).some(ring=>ring.length>=3&&insidePolygon({x:place.x,y:place.z},ring)));
     if(!slab)issues.push('A paver light is not on the terrace, the pool deck or the fire lounge.');
@@ -591,11 +628,8 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
      if(paverDotSamples(place.x,place.z).some(p=>hit(bands,p.x,p.z)||hit(poolEx,p.x,p.z)||!yardFeatureOutline(slab).some(ring=>insidePolygon({x:p.x,y:p.z},ring))))issues.push('A paver light leaves its slab and meets the onyx band, the coping or the patio edge.');
     }
    }
-   if(well){
-    const onBand=bandOutlines.some(poly=>poly.length>=3&&insidePolygon({x:place.x,y:place.z},poly));
-    const onCope=water.some(ring=>ring.length>=3&&edgeDistance(place.x,place.z,ring)>3&&edgeDistance(place.x,place.z,ring)<9);
-    if(!onBand&&!onCope)issues.push('A well light is not centred on the onyx band or the pool coping.');
-   }
+   if(band&&!bandOutlines.some(poly=>poly.length>=3&&insidePolygon({x:place.x,y:place.z},poly)))issues.push(`${product.name} is not on the onyx band.`);
+   if(well&&!paved)issues.push('A post grazer is not on the paving.');
   }
  }
  if((data.landscapeObjects??[]).filter(o=>o.assetId==='lounge-chair'&&o.supportFeatureId==='pool-court').length<2)issues.push('The pool deck has no lounge chairs.');
@@ -610,7 +644,8 @@ export function showcaseSampleIssues(data=ontarioShowcaseDesign()):string[]{
   const low=data.landscapeObjects?.find(o=>o.id==='lounge-table');
   if(low&&(planGapIn(ring(low),burner)<1||sofas.some(sofa=>planGapIn(ring(low),ring(sofa))<1)))issues.push('The fire table overlaps a sofa or the burner.');
  }
- if(!data.autoLighting?.posts||!data.autoLighting.stairs)issues.push('Deck lighting is off.');
+ if(!data.autoLighting?.stairs||data.autoLighting.stairsPerTread!==2)issues.push('The 8 ft stair does not have two lights a tread.');
+ if(placed('halo_down')>=tk.railing.posts.length)issues.push('Every deck post has a cap light; light the stair posts, corners and every other post.');
  if(!data.pergola?.lighting)issues.push('The pergola has no lights.');
  if(!fire?.supportFeatureId)issues.push('The fire bowl is not on the lounge.');
  if(!wall?.wallConstruction?.freestanding)issues.push('The seat wall is not freestanding.');

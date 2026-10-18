@@ -385,6 +385,18 @@ const VERIFIED_DISPLAY:Record<string,Partial<LightingCatalogueProduct>>={
     "voltage": "12 volt",
     "description": "2 in stainless in-ground light, 2.75 in honeycomb face"
   },
+  "pool_niche_led": {
+    "sourceUrl": "https://hayward.com/media/akeneo_connector/asset_files/G/0/G092791_RevD_c52b.pdf",
+    "sourceVerified": true,
+    "specificationStatus": "verified-family",
+    "compatibilityNotes": [
+      "Modelled on a 12 V LED wet-niche pool light (Hayward ColorLogic / CrystaLogic, Pentair IntelliBrite, Jandy WaterColors class): a round lens about 8 in across in a 10 in face ring, set in the pool wall. Lights go in the wall nearest the house and shine away from it, about 12-14 ft apart, all at one depth."
+    ],
+    "finish": "StainlessSteel",
+    "colorTemperatureK": 3000.0,
+    "voltage": "12 volt",
+    "description": "12 V LED underwater pool light, warm white, in a wet niche"
+  },
   "big_nero": {
     "sourceUrl": "https://in-lite.com/en-US/big-nero",
     "sourceVerified": true,

@@ -66,7 +66,9 @@ export type GlassMount = 'Top-mount base shoe' | 'Fascia-mount base shoe' | 'Spi
 /** A frameless glass railing's shoe, spigots and handrail: black powder coat, or clear anodized / 316 stainless. */
 export type GlassFinish = 'Black' | 'Silver';
 export type StairType = 'Straight' | 'Winder' | 'Landing';
-export type LightingZone = 'deck'|'posts'|'stairs'|'landscape'|'house'|'privacy'|'border';
+/** Installation zones, each on its own switch and dimmer. The yard zones (pool to facade) follow the lighting
+ * best-practice layering: pool, pool deck, pergola and dining, fire lounge, paths, tree accents and the facade. */
+export type LightingZone = 'deck'|'posts'|'stairs'|'landscape'|'house'|'privacy'|'border'|'pool'|'pool-deck'|'pergola-dining'|'fire-lounge'|'paths'|'accent-trees'|'facade';
 /** A single freestanding screen on one exposed deck edge; priced by its face area. */
 export type PrivacyProductId='slatted'|'hideaway'|'oasis';
 export interface PrivacyScreen {id:string;side:'Left'|'Right'|'Front'|'Back';lengthFt:number;heightFt:4|5|6;offsetPct:number;lights:boolean;
@@ -424,7 +426,9 @@ export interface DeckData {
     wireDistance: number;
   };
   /** Simple post/stair lighting intent; kept separate so it survives a zero count. */
-  autoLighting?: {posts?:boolean;stairs?:boolean;border?:boolean;stairStyle?:'evo_hyde'|'evo_flex'};
+  autoLighting?: {posts?:boolean;stairs?:boolean;border?:boolean;stairStyle?:'evo_hyde'|'evo_flex';
+    /** Under-step lights per tread. Absent is 1. A stair wider than 60 in takes 2, at about the third points. */
+    stairsPerTread?:1|2};
   benchLf: number;
   /** Priced privacy area. Derived from privacyScreens whenever screens are present. */
   privacySqft: number;

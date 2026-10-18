@@ -2049,6 +2049,24 @@ const VERIFIED_ADDITIONS:LightingRuntimeProduct[]=[
     "legacyRate": false,
     "specWarnings": [],
     "va": 1
+  },
+  {
+    "id": "pool_niche_led",
+    "name": "POOL NICHE LED",
+    "category": "Recessed",
+    "cost": null,
+    "laborCost": null,
+    "geometry": "wall",
+    "dimensionsIn": {
+      "diameter": 10,
+      "length": 4.5
+    },
+    "supported": true,
+    "legacyRate": false,
+    "specWarnings": [
+      "Wet-niche pool light: it runs on the pool builder's listed 12 V pool-light transformer, GFCI-protected and bonded, not on this landscape lighting hub. Installed by a licensed electrical contractor under an ESA permit (CEC 68-060, 68-066).",
+      "Set the top of the lens 18 in (450 mm) below the normal water level, and no deeper than 600 mm unless the fixture is rated for it. Use the fibreglass shell maker's approved niche locations."
+    ]
   }
 ];
 const LEGACY_METADATA:Record<string,Partial<LightingRuntimeProduct>>={

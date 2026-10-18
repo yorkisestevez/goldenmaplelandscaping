@@ -86,6 +86,7 @@ import FixtureGlows from './FixtureGlows';
 import {FixtureLightContext,createFixtureLighting,useFixtureLit} from './fixtureLighting';
 
 import {packFixtureLights} from '../../fixtureLight';
+import {POOL_LIGHT_ID} from '../../poolLightSpec';
 
 import {castsPreviewLight} from '../../lightingPreview';
 
@@ -423,6 +424,8 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
   const fx=useContext(FixtureLightContext),invalidate=useThree(s=>s.invalidate);
 
+  // Underwater lights glow in the night water (Pool3D); off by day and with the preview lights off.
+  const poolLamps=useMemo(()=>evening&&lightsOn?extras.fixtures.filter(f=>f.productId===POOL_LIGHT_ID).map(f=>({x:f.x,z:f.z,angle:f.angle})):[],[extras.fixtures,evening,lightsOn]);
   useLayoutEffect(()=>{if(!fx)return;fx.update(packFixtureLights(extras.fixtures,{evening,enabled:lightsOn}));invalidate();},[fx,extras.fixtures,evening,lightsOn,invalidate]);
 
   const catalogueExtras=useMemo(()=>catalogueAccessoryLayout(data,model),[data,model]);
@@ -559,7 +562,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <LightingFixtures items={extras.fixtures} evening={evening} enabled={lightsOn}/>
 
-    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway} evening={evening}/></Suspense>}<Yard3D model={{...yard,features:yard.features.filter(f=>isObjectVisible(data.editorOrganization,f.config.id)),boxes:yard.boxes.filter(b=>isObjectVisible(data.editorOrganization,b.featureId)),members:yard.members.filter(m=>isObjectVisible(data.editorOrganization,m.featureId))}} inspection={inspection||cutaway} plantingBeds={(data.landscapeObjects??[]).filter(o=>o.enabled&&o.kind==='bed'&&isObjectVisible(data.editorOrganization,o.id)).map(o=>landscapeFootprint(o).map(v=>({x:v.x,y:v.z})))}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
+    </group>{data.pools?.some(p=>p.enabled)&&<Suspense fallback={null}><Pool3D pools={getPoolModels(data,model).filter(p=>isObjectVisible(data.editorOrganization,p.config.id))} inspection={inspection||cutaway} evening={evening} lamps={poolLamps}/></Suspense>}<Yard3D model={{...yard,features:yard.features.filter(f=>isObjectVisible(data.editorOrganization,f.config.id)),boxes:yard.boxes.filter(b=>isObjectVisible(data.editorOrganization,b.featureId)),members:yard.members.filter(m=>isObjectVisible(data.editorOrganization,m.featureId))}} inspection={inspection||cutaway} plantingBeds={(data.landscapeObjects??[]).filter(o=>o.enabled&&o.kind==='bed'&&isObjectVisible(data.editorOrganization,o.id)).map(o=>landscapeFootprint(o).map(v=>({x:v.x,y:v.z})))}/>{yard.features.some(f=>f.config.kind==='fire-feature')&&<Suspense fallback={null}><Fire3D yard={yard} data={data} inspection={inspection||cutaway}/></Suspense>}
 
     <Environment3D data={{...data,houseVisible:data.houseVisible!==false&&isObjectVisible(data.editorOrganization,'house')}} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
 

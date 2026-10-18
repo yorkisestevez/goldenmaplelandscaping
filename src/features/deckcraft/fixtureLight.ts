@@ -52,6 +52,10 @@ export function linearFlushGround(d:{diameter?:number;width?:number;length?:numb
 export const ROUND_FLUSH_TOP_IN=0.02;
 const ROUND_FLUSH_IDS=new Set(['fusion_22','hyve_22','dot_22','paver_40','inground_2ss']);
 export const roundFlushGround=(productId:string)=>ROUND_FLUSH_IDS.has(productId);
+import {POOL_LENS_IN,POOL_FACE_IN,POOL_LIGHT_ID} from './poolLightSpec';
+export {POOL_LENS_IN,POOL_FACE_IN,POOL_LIGHT_ID};
+/** A narrow tree uplight: beam of 36° or less, with a glare cowl (lighting best practice A1/G5). */
+export const narrowSpot=(productId:string)=>productId.includes('narrow');
 /** 2 in lens inside the 2.75 in face plate. */
 export const WELL_LENS_IN=2,WELL_FACE_IN=2.75;
 const norm=(v:V3):V3=>{const l=Math.hypot(...v)||1;return [v[0]/l,v[1]/l,v[2]/l];};
@@ -63,6 +67,10 @@ export function fixtureNight(productId:string,zone?:string):FixtureNight{
   const p=getLightingProduct(productId);
   if(!p||!p.supported||['transformer','cable','accessory'].includes(p.geometry))return NONE;
   const g=p.geometry,d=p.dimensionsIn,kelvin=p.colorTemperatureK??DEFAULT_KELVIN,legacy=LEGACY_FIXTURE_SHAPES.includes(productId);
+  // Underwater: a wide soft beam out of the wall, tipped a little down, lighting the floor and the far wall. The water's
+  // own glow round each lamp is drawn by the night water (Pool3D), since a surface lit from below gets no direct light.
+  if(productId===POOL_LIGHT_ID)return {route:'patch',kelvin,lens:{position:[0,0,.2],normal:[0,0,1],radiusIn:POOL_LENS_IN/2,lengthIn:0,strength:.32},
+    source:{kind:'spot',position:[0,0,1.5],direction:norm([0,-.18,1]),halfLengthIn:0,radiusIn:POOL_LENS_IN/2,angle:deg(55),penumbra:1,candela:55,rangeFt:26},shadowPriority:0};
   if(g==='recessed'){
     const lensY=FLUSH_TRIM_IN+FLUSH_LENS_PROUD_IN/2;
     const lens:FixtureLens=legacy?{position:[0,.21,0],normal:UP,radiusIn:productId==='puck'?.55:1.02,lengthIn:0,strength:.9}
@@ -108,6 +116,8 @@ export function fixtureNight(productId:string,zone?:string):FixtureNight{
   }
   if(g==='spot'){
     const height=d.height??5;
+    // A narrow, cowled uplight keeps its beam in the canopy (36° or less) so nothing spills over the fence.
+    if(narrowSpot(productId))return {route:'real',kelvin,lens:null,source:{kind:'spot',position:[0,height*.65,1],direction:norm([0,52,22]),halfLengthIn:0,radiusIn:0,angle:deg(17),penumbra:.6,candela:22,rangeFt:24},shadowPriority:3};
     return {route:'real',kelvin,lens:null,source:{kind:'spot',position:[0,height*.65,1],direction:norm([0,24-height*.65,59]),halfLengthIn:0,radiusIn:0,angle:.42,penumbra:.65,candela:16,rangeFt:20},shadowPriority:3};
   }
   if(g==='pendant'||g==='ceiling'){

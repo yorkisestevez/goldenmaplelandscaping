@@ -22,6 +22,9 @@ export const STAIR_LIGHT_STYLES={
   evo_flex:{productId:'evo_flex_1_kit',label:'EVO FLEX 1 m LED strip',note:'Supplier / installation quote required · needs stairs about 44 in wide'},
 } as const;
 export const stairLightProductId=(data:DeckData)=>STAIR_LIGHT_STYLES[data.autoLighting?.stairStyle??'evo_hyde'].productId;
+/** Under-step lights on each tread. One centred light lights a stair up to 60 in wide; a wider flight takes 2 at about
+ * the third points (lighting best practice S2). A saved design keeps its count: absent is 1. */
+export const stairLightsPerTread=(data:Pick<DeckData,'autoLighting'>)=>data.autoLighting?.stairsPerTread??1;
 export const AUTO_LIGHTING={
   posts:{productId:'puck',zone:'posts'},
   stairs:{productId:STAIR_LIGHT_STYLES.evo_hyde.productId,zone:'stairs'},
@@ -37,7 +40,7 @@ export function syncAutoLighting(data:DeckData,counts:{posts:number;stairs:numbe
   if(data.autoLighting?.posts)add(AUTO_LIGHTING.posts,counts.posts);
   // Border lighting also lights the step-up: under-step fixtures follow modeled treads whenever the
   // picture-frame edge option is on (or stairs are selected explicitly).
-  if(data.autoLighting?.stairs||(data.autoLighting?.border&&counts.stairs>0))add({productId:stairLightProductId(data),zone:'stairs'},counts.stairs);
+  if(data.autoLighting?.stairs||(data.autoLighting?.border&&counts.stairs>0))add({productId:stairLightProductId(data),zone:'stairs'},counts.stairs*stairLightsPerTread(data));
   add(AUTO_LIGHTING.privacy,counts.privacy);
   const managed=new Set(wanted.map(w=>w.productId));
   const manual=items.filter(i=>!i.auto&&!managed.has(i.productId));
