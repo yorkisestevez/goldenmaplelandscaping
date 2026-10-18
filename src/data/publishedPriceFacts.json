@@ -13,6 +13,17 @@
         "interlock",
         "paver"
       ],
+      "requires": "per[\\s-]+(?:square[\\s-]+f(?:oo|ee)t|sq\\.?[\\s-]?ft|sqft|sf)\\b|\\/\\s?(?:sq\\.?[\\s-]?ft|sqft|sf)\\b|a\\s+square[\\s-]+foot|psf\\b",
+      "excludes": [
+        "wall",
+        "walkway",
+        "path",
+        "concrete(?!\\s+pavers?)",
+        "brick",
+        "gravel",
+        "wood"
+      ],
+      "forbids": "\\b(?:[1-9]\\d|[12]\\d\\d)[\\s-]?(?:sq\\.?[\\s-]?ft|sqft|square[\\s-]+f(?:oo|ee)t|sf)\\b|\\b(?:1,?(?:0[1-9]\\d|0\\d[1-9]|[1-9]\\d\\d)|[2-9],?\\d{3}|\\d{5,})[\\s-]?(?:sq\\.?[\\s-]?ft|sqft|square[\\s-]+f(?:oo|ee)t|sf)\\b",
       "statement": "Most interlocking patios of 300–1,000 sq ft come out around $40–$45 per square foot before HST, typically $38–$64 depending on access, shape and finishes.",
       "figures": [
         "$40–$45",
@@ -26,7 +37,17 @@
         "interlock",
         "paver"
       ],
-      "statement": "Smaller patios cost more per square foot: about $53 at 200 sq ft.",
+      "requires": "(?=[\\s\\S]*(?:per[\\s-]+(?:square[\\s-]+f(?:oo|ee)t|sq\\.?[\\s-]?ft|sqft|sf)\\b|\\/\\s?(?:sq\\.?[\\s-]?ft|sqft|sf)\\b|a\\s+square[\\s-]+foot|psf\\b))(?=[\\s\\S]*(?:\\b200[\\s-]?(?:sq\\.?[\\s-]?ft|sqft|square[\\s-]+f(?:oo|ee)t|sf)\\b))",
+      "excludes": [
+        "wall",
+        "walkway",
+        "path",
+        "concrete(?!\\s+pavers?)",
+        "brick",
+        "gravel",
+        "wood"
+      ],
+      "statement": "Smaller patios cost more per square foot: about $53 per square foot at 200 sq ft.",
       "figures": [
         "$53"
       ]
@@ -37,6 +58,17 @@
         "patio",
         "interlock",
         "paver"
+      ],
+      "requires": "(?=[\\s\\S]*(?:per[\\s-]+(?:square[\\s-]+f(?:oo|ee)t|sq\\.?[\\s-]?ft|sqft|sf)\\b|\\/\\s?(?:sq\\.?[\\s-]?ft|sqft|sf)\\b|a\\s+square[\\s-]+foot|psf\\b))(?=[\\s\\S]*(?:premium))",
+      "excludes": [
+        "wall",
+        "walkway",
+        "path",
+        "concrete(?!\\s+pavers?)",
+        "brick",
+        "gravel",
+        "wood",
+        "sand"
       ],
       "statement": "Premium paver lines add about $5 per square foot.",
       "figures": [
@@ -49,6 +81,16 @@
         "patio",
         "interlock",
         "paver"
+      ],
+      "requires": "\\b300[\\s-]?(?:sq\\.?[\\s-]?ft|sqft|square[\\s-]+f(?:oo|ee)t|sf)\\b",
+      "excludes": [
+        "wall",
+        "walkway",
+        "path",
+        "concrete(?!\\s+pavers?)",
+        "brick",
+        "gravel",
+        "wood"
       ],
       "statement": "A 300 sq ft interlocking patio is most likely about $13,500 before HST (planning band $12,000–$19,500).",
       "figures": [
@@ -63,6 +105,16 @@
         "interlock",
         "paver"
       ],
+      "requires": "\\b400[\\s-]?(?:sq\\.?[\\s-]?ft|sqft|square[\\s-]+f(?:oo|ee)t|sf)\\b",
+      "excludes": [
+        "wall",
+        "walkway",
+        "path",
+        "concrete(?!\\s+pavers?)",
+        "brick",
+        "gravel",
+        "wood"
+      ],
       "statement": "A 400 sq ft interlocking patio is most likely about $16,500 before HST (planning band $15,500–$22,500).",
       "figures": [
         "$16,500",
@@ -75,6 +127,16 @@
         "patio",
         "interlock",
         "paver"
+      ],
+      "requires": "\\b600[\\s-]?(?:sq\\.?[\\s-]?ft|sqft|square[\\s-]+f(?:oo|ee)t|sf)\\b",
+      "excludes": [
+        "wall",
+        "walkway",
+        "path",
+        "concrete(?!\\s+pavers?)",
+        "brick",
+        "gravel",
+        "wood"
       ],
       "statement": "A 600 sq ft interlocking patio is most likely about $24,000 before HST (planning band $23,000–$32,000).",
       "figures": [
@@ -89,6 +151,16 @@
         "interlock",
         "paver"
       ],
+      "requires": "\\b1,?000[\\s-]?(?:sq\\.?[\\s-]?ft|sqft|square[\\s-]+f(?:oo|ee)t|sf)\\b",
+      "excludes": [
+        "wall",
+        "walkway",
+        "path",
+        "concrete(?!\\s+pavers?)",
+        "brick",
+        "gravel",
+        "wood"
+      ],
       "statement": "A 1,000 sq ft interlocking patio is most likely about $40,000 before HST (planning band $37,500–$51,000).",
       "figures": [
         "$40,000",
@@ -101,9 +173,38 @@
         "walkway",
         "path"
       ],
-      "statement": "A 100–200 sq ft paver walkway runs around $53–$82 per square foot before HST (shorter walkways cost more per foot); a 200 sq ft walkway is most likely about $10,500.",
+      "requires": "per[\\s-]+(?:square[\\s-]+f(?:oo|ee)t|sq\\.?[\\s-]?ft|sqft|sf)\\b|\\/\\s?(?:sq\\.?[\\s-]?ft|sqft|sf)\\b|a\\s+square[\\s-]+foot|psf\\b",
+      "excludes": [
+        "wall",
+        "patio",
+        "concrete(?!\\s+pavers?)",
+        "brick",
+        "gravel",
+        "wood"
+      ],
+      "forbids": "\\b(?:2(?:0[1-9]|[1-9]\\d)|[3-9]\\d\\d|\\d,?\\d{3})[\\s-]?(?:sq\\.?[\\s-]?ft|sqft|square[\\s-]+f(?:oo|ee)t|sf)\\b",
+      "statement": "A 100–200 sq ft paver walkway runs around $53–$82 per square foot before HST (shorter walkways cost more per foot).",
       "figures": [
-        "$53–$82",
+        "$53–$82"
+      ]
+    },
+    {
+      "id": "walkway.total.200",
+      "keywords": [
+        "walkway",
+        "path"
+      ],
+      "requires": "\\b200[\\s-]?(?:sq\\.?[\\s-]?ft|sqft|square[\\s-]+f(?:oo|ee)t|sf)\\b",
+      "excludes": [
+        "wall",
+        "patio",
+        "concrete(?!\\s+pavers?)",
+        "brick",
+        "gravel",
+        "wood"
+      ],
+      "statement": "A 200 sq ft paver walkway is most likely about $10,500 before HST.",
+      "figures": [
         "$10,500"
       ]
     },
@@ -112,6 +213,15 @@
       "keywords": [
         "wall"
       ],
+      "requires": "(?:linear|lineal|running)[\\s-]+f(?:oo|ee)?t|per[\\s-]+(?:linear[\\s-]+)?f(?:oo)?t\\b|\\/\\s?(?:lf|ft)\\b|\\blf\\b",
+      "excludes": [
+        "patio",
+        "interlock",
+        "paver",
+        "walkway",
+        "path"
+      ],
+      "forbids": "\\b(?:over|above|taller\\s+than|more\\s+than)\\s+6\\b|\\b(?:[7-9]|1\\d)(?:\\.\\d)?[\\s-]?(?:ft|feet|foot|')[\\s-]?(?:high|tall)\\b",
       "statement": "Retaining walls run around $330–$670 per linear foot before HST for walls from under 2 ft up to 4–6 ft high (about 50 ft of wall).",
       "figures": [
         "$330–$670"
@@ -121,6 +231,14 @@
       "id": "wall.Under 2ft",
       "keywords": [
         "wall"
+      ],
+      "requires": "(?=[\\s\\S]*(?:(?:linear|lineal|running)[\\s-]+f(?:oo|ee)?t|per[\\s-]+(?:linear[\\s-]+)?f(?:oo)?t\\b|\\/\\s?(?:lf|ft)\\b|\\blf\\b))(?=[\\s\\S]*(?:under\\s+2|below\\s+2|less\\s+than\\s+2|<\\s?2|up\\s+to\\s+2\\s?(?:ft|feet|')))",
+      "excludes": [
+        "patio",
+        "interlock",
+        "paver",
+        "walkway",
+        "path"
       ],
       "statement": "A retaining wall under 2 ft high is around $330 per linear foot (typically $280–$425) for about 50 ft of wall.",
       "figures": [
@@ -133,6 +251,14 @@
       "keywords": [
         "wall"
       ],
+      "requires": "(?=[\\s\\S]*(?:(?:linear|lineal|running)[\\s-]+f(?:oo|ee)?t|per[\\s-]+(?:linear[\\s-]+)?f(?:oo)?t\\b|\\/\\s?(?:lf|ft)\\b|\\blf\\b))(?=[\\s\\S]*(?:\\b2\\s?(?:–|—|-|to)\\s?4\\s?(?:ft|feet|')))",
+      "excludes": [
+        "patio",
+        "interlock",
+        "paver",
+        "walkway",
+        "path"
+      ],
       "statement": "A retaining wall 2–4 ft high is around $470 per linear foot (typically $405–$555) for about 50 ft of wall.",
       "figures": [
         "$470",
@@ -144,6 +270,14 @@
       "keywords": [
         "wall"
       ],
+      "requires": "(?=[\\s\\S]*(?:(?:linear|lineal|running)[\\s-]+f(?:oo|ee)?t|per[\\s-]+(?:linear[\\s-]+)?f(?:oo)?t\\b|\\/\\s?(?:lf|ft)\\b|\\blf\\b))(?=[\\s\\S]*(?:\\b4\\s?(?:–|—|-|to)\\s?6\\s?(?:ft|feet|')))",
+      "excludes": [
+        "patio",
+        "interlock",
+        "paver",
+        "walkway",
+        "path"
+      ],
       "statement": "A retaining wall 4–6 ft high is around $670 per linear foot (typically $585–$770) for about 50 ft of wall.",
       "figures": [
         "$670",
@@ -154,6 +288,14 @@
       "id": "wall.6ft+",
       "keywords": [
         "wall"
+      ],
+      "requires": "(?=[\\s\\S]*(?:(?:linear|lineal|running)[\\s-]+f(?:oo|ee)?t|per[\\s-]+(?:linear[\\s-]+)?f(?:oo)?t\\b|\\/\\s?(?:lf|ft)\\b|\\blf\\b))(?=[\\s\\S]*(?:\\b6\\s?(?:ft|feet|')\\s?(?:\\+|plus|or\\s+(?:more|taller|higher)|and\\s+(?:up|over))|(?:over|above|taller\\s+than|more\\s+than)\\s+6\\s?(?:ft|feet|')))",
+      "excludes": [
+        "patio",
+        "interlock",
+        "paver",
+        "walkway",
+        "path"
       ],
       "statement": "A retaining wall 6 ft+ high is around $970 per linear foot (typically $845–$1,090) for about 50 ft of wall.",
       "figures": [

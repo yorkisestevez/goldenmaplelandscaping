@@ -56,6 +56,7 @@ test('a draft that keeps quoting an unapproved price is rejected after two retri
   );
   assert.equal(prompts.length, 3, 'two retries');
   assert.match(prompts[1], /PRICE FIX/, 'the retry tells the writer which figures to remove');
+  assert.match(prompts[1], /\(not a published engine figure\)/, 'each figure in the retry carries its reason');
   assert.equal(fs.readFileSync(STATE_PATH, 'utf8'), before, 'state.json untouched — the topic stays queued');
 });
 
@@ -66,4 +67,10 @@ test('no queued topic hands the writer a price in its title, keyword or slug', (
   for (const t of topicList) {
     assert.deepEqual(extractPriceFigures([t.title, t.primary_keyword, t.slug].join(' ')), [], `${t.id}: ${t.title}`);
   }
+});
+
+test('a FAQ answer that quotes a fact without its subject is caught, as the built page (FAQ JSON-LD) would be', () => {
+  const draft = { ...draftWith('Base depth matters.'), slug: 'retaining-wall-cost-test', faqs: [{ question: 'How much does a retaining wall cost per foot in Barrie?', answer: 'Around $330–$670 per linear foot before HST, depending on height.' }] };
+  const v = validateDraft(draft);
+  assert.ok(v.priceIssues.some((i) => i.figure === '$330–$670' && /same sentence/.test(i.reason)), JSON.stringify(v.priceIssues));
 });

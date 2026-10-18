@@ -50,6 +50,12 @@ test('"CAD" the drawing tool is not a currency; CAD the currency is', () => {
   assert.deepEqual(extractPriceFigures('Budget CAD 18,000, or 25,000 CAD.'), ['$18,000', '$25,000']);
 });
 
+test('k ranges, open-ended k amounts and "a grand" forms are prices; code values are not', () => {
+  assert.deepEqual(extractPriceFigures('A full backyard runs 60-90k. Most jobs land at 25k-40k. Some reach 90k+, or 120K+.'), ['$60k–$90k', '$25k–$40k', '$90k+', '$120k+']);
+  assert.deepEqual(extractPriceFigures('Lighting adds a couple grand, or a thousand dollars.'), ['a couple grand', 'a thousand dollars']);
+  assert.deepEqual(extractPriceFigures("value: '13k-25k', key under-25k, '250k+', budget_or_estimate_50k_plus, 2,700K, 3000K"), []);
+});
+
 test('"25 grand", "25 thousand" and a bare "25k" / "25K" are prices; colour temperatures and areas are not', () => {
   assert.deepEqual(extractPriceFigures('That is 25 grand, or about 25k, or 25K, or 25 thousand.'), ['$25k', '$25k', '$25k', '$25k']);
   assert.deepEqual(extractPriceFigures('Use 2,700K or 3000K lights over 10 thousand square feet.'), []);
@@ -86,7 +92,40 @@ test('an engine figure is not approved for another subject named in its own sent
     'A composite deck beside the patio costs $40–$45 per square foot.',
     'Porcelain pavers on a rear patio run $5 more per square foot.',
   ]) assert.equal(findUnapprovedFigures(s, SHEET).length, 1, s);
-  assert.deepEqual(findUnapprovedFigures('For a 300 sq ft patio, here is the math. The range is $40–$45 per square foot.', SHEET), []);
+  // The subject must be in the figure's own sentence: a subject one sentence away is how a driveway price got through.
+  assert.equal(findUnapprovedFigures('For a 300 sq ft patio, here is the math. The range is $40–$45 per square foot.', SHEET).length, 1);
+});
+
+// The real sheet: every fact also carries its basis (unit, size, height) and the other facts' subjects.
+const REAL = require('../../../src/data/publishedPriceFacts.json');
+
+test('a published fact copied as stated is approved', () => {
+  for (const f of REAL.facts) if (f.figures.length) assert.deepEqual(findUnapprovedFigures(f.statement, REAL), [], f.id);
+});
+
+test('an engine figure for the wrong subject, size, unit or height is not approved, however it is split', () => {
+  for (const s of [
+    '<p>An interlocking driveway is built on a deeper base. It costs about $40–$45 per square foot.</p>',
+    'How much does a porcelain patio cost?\nMost come out around $40–$45 per square foot before HST.',
+    '<h2>Interlocking Driveway Costs in Barrie</h2>\n<p>The base is deeper.</p>\n<p>Most interlocking work runs about $40–$45 per square foot before HST.</p>',
+    'Drainage behind the patio runs $40–$45 per square foot.',
+    'Unlike interlocking patios, a retaining wall runs $40–$45 per linear foot.',
+    'A 300 sq ft interlocking patio is most likely about $40,000.',
+    'A French drain behind the retaining wall runs around $470 per linear foot.',
+    'An armour-stone wall 2–4 ft high runs around $470 per linear foot.',
+    'A natural-stone patio runs around $40–$45 per square foot.',
+    'Interlock steps at the front entrance add about $5 per square foot with premium pavers.',
+    'Repairing a sunken interlock patio usually runs $40–$45 per square foot.',
+    'A retaining wall runs about $970 per linear foot.',
+    'Interlocking patios run about $40–$45.',
+  ]) assert.equal(findUnapprovedFigures(s, REAL).length, 1, s);
+});
+
+test('each unapproved figure says what to fix', () => {
+  const [hit] = findUnapprovedFigures('An interlocking driveway costs about $40–$45 per square foot.', REAL);
+  assert.match(hit.reason, /driveway/);
+  const [bare] = findUnapprovedFigures('A patio runs about 40 grand.', REAL);
+  assert.match(bare.reason, /not a published engine figure/);
 });
 
 test('bare amounts in a price column are prices; other columns are not', () => {
@@ -98,8 +137,13 @@ test('bare amounts in a price column are prices; other columns are not', () => {
   assert.deepEqual(findUnapprovedFigures(units, SHEET), [], 'area and settling columns are not prices');
   const totals = '<table><tr><th>Cost level</th><th>Total</th></tr><tr><td>2</td><td>25000</td></tr></table>';
   assert.deepEqual(findUnapprovedFigures(totals, SHEET).map((h) => h.figure), ['$25,000 (bare, in a price table)'], 'a Total column is money, a Cost level column is a ranking');
-  const cells = '<tr><td>Standard pavers</td><td>around $40–$45</td><td>Patios, walkways</td></tr>';
-  assert.deepEqual(findUnapprovedFigures(cells, SHEET), [], 'a fact in a table cell is read with the cells beside it');
+  const cells = '<table><tr><th>Paver</th><th>Per sq ft</th><th>Best for</th></tr><tr><td>Standard pavers</td><td>around $40–$45</td><td>Patios</td></tr></table>';
+  assert.deepEqual(findUnapprovedFigures(cells, REAL), [], 'a fact in a table cell is read with its header, row and caption');
+  const walls = '<table><caption>Retaining wall cost by height</caption><tr><th>Wall height</th><th>Around (per linear ft)</th><th>Typical range</th></tr>'
+    + '<tr><td>Under 2 ft</td><td>$330</td><td>$280–$425</td></tr><tr><td>2–4 ft</td><td>$470</td><td>$405–$555</td></tr><tr><td>4–6 ft</td><td>$670</td><td>$585–$770</td></tr></table>';
+  assert.deepEqual(findUnapprovedFigures(walls, REAL), [], 'a by-height wall table built from the facts passes');
+  const noted = '<table><tr><th>Patio</th><th>Typical Cost (CAD)</th></tr><tr><td>Small</td><td>15,500–30,000 (350–450 sq ft)</td></tr><tr><td>Large</td><td>about 40,000</td></tr></table>';
+  assert.equal(findUnapprovedFigures(noted, REAL).length, 2, 'money cells with a note, "about" or a (CAD) header are prices');
 });
 
 test('any figure that is not an engine fact is reported with its context', () => {
@@ -109,4 +153,31 @@ test('any figure that is not an engine fact is reported with its context', () =>
 
 test('repeated figures are all reported, in order', () => {
   assert.deepEqual(extractPriceFigures('$40–$45 here, $53 there, $40-$45 again'), ['$40–$45', '$53', '$40–$45']);
+});
+
+test('round 5: wrong paving, out-of-range sizes and heights, and after-tax figures are not approved', () => {
+  for (const s of [
+    'A concrete patio costs $40–$45 per square foot.',
+    'Premium paver sand is about $5 per square foot.',
+    'A 100 sq ft interlocking patio costs $40–$45 per square foot.',
+    'Retaining walls over 6 ft run $330–$670 per linear foot.',
+    'Most interlocking patios come out around $40–$45 per square foot after HST.',
+  ]) assert.equal(findUnapprovedFigures(s, REAL).length, 1, s);
+});
+
+test('round 5: natural writing of a fact still passes', () => {
+  for (const s of [
+    'A 300-square-foot interlocking patio is most likely about $13,500 before HST.',
+    'A 300 sq-ft interlocking patio is most likely about $13,500 before HST.',
+    'Standard concrete pavers on an interlocking patio come out around $40–$45 per square foot before HST.',
+    '<p>A retaining wall 6 ft+ high is around $970 per linear foot (typically $845–$1,090) for about 50 ft of wall.</p>\n<h2>Budgeting steps</h2>\n<p>Steps are priced at the site visit.</p>',
+    'A retaining wall 2–4 ft high is around $470 per linear foot (typically $405–$555). Access and drainage can move it.',
+  ]) assert.deepEqual(findUnapprovedFigures(s, REAL), [], s);
+});
+
+test('round 5: "a grand entrance" is not a price; cost-table rows and "from 15,000" are', () => {
+  assert.deepEqual(extractPriceFigures('A grand entrance, a grand total of three steps, a grand idea.'), []);
+  assert.deepEqual(extractPriceFigures('Steps add about a grand each.'), ['a grand']);
+  const table = '<table><tr><th>Patio size</th><th>Cost ($)</th></tr><tr><td>300 sq ft</td><td>99,999</td></tr><tr><td>Large (over 600 sq ft)</td><td>from 15,000</td></tr><tr><td>Number of steps</td><td>12,000 per job</td></tr></table>';
+  assert.equal(findUnapprovedFigures(table, REAL).length, 3);
 });

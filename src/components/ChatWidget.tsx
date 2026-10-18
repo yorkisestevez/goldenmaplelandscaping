@@ -16,7 +16,7 @@ import {
 } from '../data/sophieTeasers';
 import type { QuickRange } from '../utils/sophieQuote';
 import SophieMark from './SophieMark';
-import { guardReply, PRICE_REDACTION } from '../utils/sophieGuard';
+import { guardReply, MAX_SHOWN_RANGES, PRICE_REDACTION } from '../utils/sophieGuard';
 
 type Role = 'user' | 'assistant';
 type PricedRange = Extract<QuickRange, { kind: 'range' }>;
@@ -93,6 +93,8 @@ export default function ChatWidget() {
 
   // The latest planning range and the tap choices behind it.
   const lastRangeRef = useRef<{ range: PricedRange; choice: QuickRangeInput } | null>(null);
+  /** Every range shown in this conversation (newest last, at most MAX_SHOWN_RANGES): Sophie may repeat any of them. */
+  const shownRangesRef = useRef<{ range: PricedRange; choice: QuickRangeInput }[]>([]);
   // Range context waiting for the live agent session to open.
   const pendingContextRef = useRef<string | null>(null);
 
@@ -197,8 +199,7 @@ export default function ChatWidget() {
       setLoading(false);
       return;
     }
-    const given = lastRangeRef.current?.range;
-    const guarded = guardReply(content, given ? { low: given.low, high: given.high } : null);
+    const guarded = guardReply(content, shownRangesRef.current.map(({ range }) => ({ low: range.low, high: range.high })));
     // Counts and claim ids only: the invented price itself is not worth sending anywhere.
     if (guarded.changed) trackEngagement('chat_reply_guarded', `prices:${guarded.redactedPrices.length} ${guarded.blockedClaims.join(' ')}`.slice(0, 60));
     // The fallback function may already have redacted a price server-side; offer the real range either way.
@@ -263,6 +264,7 @@ export default function ChatWidget() {
       }
       say({ role: 'assistant', content: `Planning range for ${result.summary}: ${result.band}.`, range: result });
       lastRangeRef.current = { range: result, choice };
+      shownRangesRef.current = [...shownRangesRef.current.filter((r) => r.range.summary !== result.summary), { range: result, choice }].slice(-MAX_SHOWN_RANGES);
       if (sessionRef.current) sessionRef.current.sendContext(result.contextText);
       else pendingContextRef.current = result.contextText;
       trackEngagement('chat_range_shown', `${choice.project}_${choice.size}_${choice.city}`);
@@ -301,6 +303,7 @@ export default function ChatWidget() {
         body: JSON.stringify({
           messages: history.slice(-12).map((m) => ({ role: m.role, content: m.content })),
           pricingContext: lastRangeRef.current?.choice,
+          pricingContexts: shownRangesRef.current.map((r) => r.choice),
         }),
       });
       if (!res.ok) throw new Error(`status ${res.status}`);

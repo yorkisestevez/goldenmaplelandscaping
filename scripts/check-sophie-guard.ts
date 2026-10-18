@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { guardReply, PRICE_REDACTION, CLAIM_REPLACEMENT } from '../src/utils/sophieGuard';
+import { guardReply, PRICE_REDACTION, CLAIM_REPLACEMENT, type AllowedRange } from '../src/utils/sophieGuard';
 
 /**
  * Sophie never shows a visitor a price or a business claim nobody approved (owner decision 2026-10-17: prevent
@@ -11,7 +11,7 @@ import { guardReply, PRICE_REDACTION, CLAIM_REPLACEMENT } from '../src/utils/sop
 let checks = 0;
 const ok = (value: unknown, message: string) => { assert(value, message); checks++; };
 const range = { low: 18250, high: 33250 };
-const redacted = (text: string, given: typeof range | null = null) => guardReply(text, given).text.includes(PRICE_REDACTION);
+const redacted = (text: string, given: AllowedRange = null) => guardReply(text, given).text.includes(PRICE_REDACTION);
 const claimed = (text: string) => guardReply(text, null).text.includes(CLAIM_REPLACEMENT);
 
 // Prices: every way of writing one is caught, and the sentence goes, not just the number.
@@ -99,6 +99,58 @@ for (const fine of ['Feel free to ask about base depth.', 'Interlocking pavers f
   ok(r.text === `Here is what we do:\n- Patios\n- ${CLAIM_REPLACEMENT}\n- Retaining walls\nCall us!`, 'one list item is replaced, the others kept');
 }
 ok(guardReply('It is $40 per sq. ft. installed. It is $5 more for premium.', null).text === PRICE_REDACTION, 'two priced sentences in a row become one replacement, and "sq. ft." does not split a sentence');
+
+// Final review (2026-10-18): forms that got through, and ordinary answers that were wrongly blanked.
+for (const reply of [
+  'A patio that size is usually around eighteen thousand dollars.', 'Most walls like that land near sixteen thousand.',
+  "That's roughly thirteen grand.", 'Pavers are about eighteen dollars a square foot.', 'Expect sixteen bucks a square foot for that stone.',
+  'Lighting usually adds about a thousand dollars.', 'Lighting adds a couple thousand.', 'Expect a couple grand for the steps.', 'Steps add about a grand each.',
+  'Most interlock patios run 40 to 60 per sqft installed.', 'Interlock is usually 35-55/sqft.', 'Natural stone is 75 psf.',
+  'Walls are usually 250 per lineal foot.', 'Excavation is about 90 a yard.',
+]) ok(redacted(reply), `price caught: "${reply}"`);
+for (const reply of [
+  "There's no fee for the site visit.", 'We offer a no-fee site visit.', "The site visit won't cost you anything.", 'It costs nothing to have us come out.',
+  'Yes, the site visit is on the house.', 'We stand behind our work for five years.', 'We back every patio for five years against sinking.',
+  'If anything sinks or settles within 5 years, we come back and fix it.', "We've been in business over 10 years.",
+  'Yorkis has a decade of experience building patios.', 'Yorkis has 15 years in the trade.', 'Our customers rate us 4.9 out of 5.',
+  'The patio sits on grade, so it needs no building permit.', 'This low deck is permit-free in Barrie.', 'The design is approved for your lot.', 'This layout meets the Ontario Building Code.',
+]) ok(claimed(reply), `claim replaced: "${reply}"`);
+for (const fine of [
+  'Polymeric sand keeps the joints weed-free. It also stops ants.', 'Composite is low-maintenance and splinter-free, so it suits a busy family.',
+  'The base has to be free of topsoil and roots.', 'Our deck designer offers TimberTech PRO Reserve and Legacy boards.',
+  "You're booked for Thursday at 10 a.m. at 2976 Horseshoe Valley Rd W in Oro-Medonte. Yorkis will text you the day before.",
+  'Got it, so the house at 1450 Bayfield St in Barrie.', 'Are you planning for 2026 or 2027?', 'We are booking the 2026-2027 season now.',
+  'Is it about 1,200+ sq ft?', 'Decks must sit at least 2 ft from the rear and side lot lines under zoning by-law 2009-141.',
+  'Each of the 3 risers is 6.5 in, inside the 4.875–7.875 in range Barrie asks for.', 'Raise the main deck to 30.125 in so it sits one riser below the sill.',
+  'Use a 1.125 in board.', 'The survey runs from -144 to 1,080 in across.', 'A gas fire bowl needs no open-air burn permit.',
+  'This is planning guidance, not a guarantee.', 'A 2 star inlay works in the centre.',
+]) ok(guardReply(fine, null).text === fine, `ordinary answer unchanged: "${fine}"`);
+ok(claimed('Book a cost-free visit.'), '"cost-free" is still a free offer');
+ok(guardReply('Adds 1,200 in total.', null).text === PRICE_REDACTION && guardReply('Most patios land at 25000 in Barrie.', null).text === PRICE_REDACTION, '"in total" and "in Barrie" are not inches');
+// Round 5 (2026-10-18).
+for (const reply of [
+  "He's been building patios for 15 years.", "We've been around for 10 years.", 'Over 10 years in Barrie.', 'Decades of experience go into every job.',
+  'Yorkis has been doing this for twenty years.', 'Over 500 happy customers.', 'Hundreds of happy homeowners.', 'We build to code.', 'Compliant with the Building Code.',
+  'It will pass inspection.', 'Engineer-approved designs.', "We're a Unilock Authorized Contractor.", 'Permacon approved installer.', 'ICPI trained crew.',
+  "We're 4.9 on Google.", 'Our rating is 4.9.', 'Deposit is 10%.', 'We take 30% down.', 'You can pay over time.', 'Pay in instalments.',
+  'The manufacturer warrants them.', 'We hold a business licence.', "We'll fix it if it sinks.",
+]) ok(claimed(reply), `claim replaced: "${reply}"`);
+for (const fine of [
+  'If pavers sink, the usual fix is a deeper compacted base.', 'A patio that heaves usually needs the base redone.',
+  'A sealer should cover the joints and be reapplied every 3 years.', 'Anything more than 6 feet should be engineered.',
+  'A grand entrance needs wide steps.', 'Your booking ID is 1234.',
+]) ok(guardReply(fine, null).text === fine, `ordinary answer unchanged: "${fine}"`);
+for (const reply of ['That would be $2000-2050.', 'About $2000 to 2050.']) ok(redacted(reply), `a "$" year-shaped amount is still a price: "${reply}"`);
+
+// Rounding and formatting the given range, and repeating any range shown earlier in the chat.
+{
+  const walk = { low: 7250, high: 15750 };
+  ok(!guardReply("That's roughly $7k to $16k before HST.", walk).changed, 'a range rounded to the nearest $1k is kept, even at the low end');
+  ok(!guardReply('Your planning range is $10,750.00–$23,000.00 + HST.', { low: 10750, high: 23000 }).changed, 'a range written with cents is kept');
+  const both = [{ low: 10750, high: 23000 }, { low: 11750, high: 24000 }];
+  ok(!guardReply('Your patio range was $10,750–$23,000 + HST, and the wall is $11,750–$24,000 + HST.', both).changed, 'every range shown in the chat may be repeated');
+  ok(redacted('Your patio range was $10,750–$23,000 + HST, and lighting adds $4,000.', both), 'a price that was never shown is still redacted');
+}
 
 // The widget loads this on every page; Safari before 16.4 cannot parse a regex lookbehind.
 ok(!/\(\?<[=!]/.test(readFileSync(new URL('../src/utils/sophieGuard.ts', import.meta.url), 'utf8')), 'no regex lookbehind in the guard');

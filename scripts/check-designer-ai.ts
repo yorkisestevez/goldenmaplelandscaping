@@ -25,6 +25,8 @@ import {AiError,CLAUDE_FALLBACK_BETA,CLAUDE_MODEL,DESIGNER_RESPONSE_SCHEMA,DESIG
 import {createSpendLedger,createVisitorLimiter,memoryKv,monthOf,onSpendAlert,usageCostUsd,worstCaseUsd,type SpendAlert} from '../server/aiSpendLedger';
 import {createAiTurnService,deckAssistantFunction,designerAiFunction,inlineDispatch,selectProvider,DESIGNER_AI_PATH,JOB_EXPIRY_MS,type AiRuntime,type AiTurnService} from '../server/aiTurnService';
 import {ASSISTANT_CLOUD_SYSTEM,ASSISTANT_WIRE_SCHEMA,assistantTask,parseAssistantCloudInput,parseAssistantOutput} from '../server/deckAssistantCloud';
+import {assistantPlanProse} from '../server/deckAssistantBackend';
+import {DESIGNER_ALLOWED_TOPICS,findPricesAndClaims} from '../src/utils/sophieGuard';
 import {DECK_ASSISTANT_PATH} from '../server/deckAssistantBackend';
 
 let checks=0;const ok=(v:unknown,m:string)=>{assert.ok(v,m);checks++;};
@@ -92,6 +94,8 @@ for(const [body,what] of bad)rejects(()=>validateDesignerRequest(body),'invalid_
  ok(r.kind==='choice'&&r.choice?.base==='room'&&JSON.stringify(r.choice.params)===JSON.stringify({'fire-room':{patioFt:12}})&&!('budget' in r.choice!)&&JSON.stringify(r.choice.goals)==='["entertaining"]','A valid choice maps to the contract (params per move; settings for moves not kept are dropped)');}
 ok(parseDesignerOutput(choice({},{explanation:'It stays well under your budget of $35,000 and keeps the $29,734 room.'}),{...request,budget:35000}).kind==='choice','Dollar figures the model was given may be repeated');
 ok(parseDesignerOutput(choice({},{explanation:'It adds 29,734 to the design and fits the 1,200 sq ft yard. In Barrie an open wood fire pit needs a daily open-air permit.'}),request).kind==='choice','Engine figures written without "$", measurements and the owner\'s permit guidance pass');
+ok(parseDesignerOutput(choice({},{explanation:'Decks must sit at least 2 ft from the rear and side lot lines under zoning by-law 2009-141. Each of the 3 risers is 6.5 in, inside the 4.875–7.875 in range Barrie asks for. A gas fire bowl needs no open-air burn permit.'}),request).kind==='choice','By-law numbers, inch decimals and the owner\'s burn-permit guidance pass');
+ok(parseDesignerOutput(choice({},{explanation:'It stays under your 30k budget and keeps the room.'}),{...request,prompt:'We have about 30k to spend.'}).kind==='choice','A budget the homeowner wrote without "$" may be repeated back');
 ok(parseDesignerOutput(choice({},{explanation:'It keeps the centre of the lawn free for the kids, with maintenance-free composite and a weed-free base. About 1,800 boards, 1,200 posts and a 45,000 L pool.'}),request).kind==='choice','"Free" as design prose and counts with their units pass');
 ok(parseDesignerOutput(JSON.stringify({kind:'clarify',choice:null,explanation:'Two good directions fit this yard.',highlights:[],questions:['Is a fire or a garden more important?']}),request).questions?.length===1,'A clarification passes');
 const badOut:[string,string][]=[
@@ -104,6 +108,8 @@ const badOut:[string,string][]=[
  [choice({},{explanation:'This comes in at about 18,500 all in.'}),'a price without a dollar sign'],[choice({},{highlights:['About 25 grand more']}),'a price in words'],
  [choice({},{explanation:'That is roughly twenty thousand dollars.'}),'a spelled-out price'],[choice({},{explanation:'We are fully insured and WSIB covered.'}),'a claim only the team may make'],
  [choice({},{questions:['Want to book a free consultation?']}),'a blocked business claim'],[choice({},{highlights:['Free estimate included']}),'a free offer'],
+ [choice({},{explanation:'The patio sits on grade, so it needs no building permit.'}),'a permit outcome the prompt forbids'],[choice({},{highlights:['Permit-free low deck']}),'a permit-free claim'],
+ [choice({},{explanation:'This layout is approved for your lot and meets the Ontario Building Code.'}),'an approval claim'],
  [choice({},{explanation:'The lighting adds about 950 to the design.'}),'a small price after a cost word'],[choice({},{explanation:'Call it fifteen hundred for the planting.'}),'a spoken price'],
  [choice({},{explanation:'Call us at 705-555-1234.'}),'contact details in the answer'],[JSON.stringify({kind:'clarify',choice:{base:'room',include:['fire-room'],params:[],goals:[],budget:null},explanation:'x',highlights:[],questions:['Which?']}),'a clarification carrying a choice'],
  [JSON.stringify({kind:'clarify',choice:null,explanation:'x',highlights:[],questions:[]}),'a clarification without a question'],[choice({},{explanation:''}),'an empty explanation'],
@@ -363,6 +369,9 @@ function httpFetch(svc:AiTurnService):typeof globalThis.fetch{let jar='';
  const editJson=(commands:unknown,top:Record<string,unknown>={})=>JSON.stringify({kind:'edit',message:'Widen the main deck to 18 ft.',assumptions:['A little wider means 2 ft.'],commands_json:JSON.stringify(commands),question:'',choices:[],...top});
  const plan=parseAssistantOutput(editJson([{type:'design.patch',patch:{width:18}}]));ok(plan.kind==='edit'&&plan.commands[0].type==='design.patch','A wrapped plan parses into a strict assistant plan');
  ok(parseAssistantOutput(editJson([{type:'design.patch',patch:{width:18}}],{message:'In Barrie an open wood pit needs a permit and 15 m from buildings.'})).kind==='edit','The owner\'s permit guidance passes the assistant check');
+ ok(parseAssistantOutput(editJson([{type:'design.patch',patch:{width:18}}],{message:'Switched the decking to TimberTech PRO Reserve in a darker colour. Raise the main deck to 30.125 in so it sits one riser below the sill.'})).kind==='edit','The designer\'s own TimberTech PRO products and inch decimals pass the assistant check');
+ {const prose=assistantPlanProse({kind:'edit',message:'Added a hot tub pad.',assumptions:[],commands:[{type:'yard.create',kind:'hot-tub',name:'Hot tub pad (about 8,000 installed)'} as never]});
+  ok(prose.includes('about 8,000')&&findPricesAndClaims(prose,DESIGNER_ALLOWED_TOPICS).prices.length===1,'Names and notes inside edit commands are checked too');}
  for(const [raw,what] of [[editJson([{type:'design.patch',patch:{materialMarkup:1}}]),'a private pricing field'],[editJson([{type:'action',action:'share.create'}]),'an action command'],[editJson([]),'an edit without commands'],
   [JSON.stringify({kind:'edit',message:'x',assumptions:[],commands_json:'not json',question:'',choices:[]}),'commands that are not JSON'],[editJson([{type:'design.patch',patch:{width:18}}],{extra:true}),'an extra key'],
   [editJson([{type:'design.patch',patch:{width:18}}],{message:'This adds about $2,400.'}),'a price'],

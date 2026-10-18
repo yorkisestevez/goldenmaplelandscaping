@@ -344,7 +344,10 @@ const figures=(s:string)=>[...s.matchAll(DOLLARS)].map(m=>Number(m[1].replace(/,
 /** Dollar figures the model was given (concept subtotals and deltas, the baseline, the budget, any figure in the
  * reasons or findings). Pricing honesty: the model may repeat these, never introduce its own. */
 function givenFigures(req:DesignerAiRequest):number[]{
- const out=[req.baseline.subtotal,...req.concepts.flatMap(c=>[c.subtotal,Math.abs(c.delta)]),...(req.budget!==undefined?[req.budget]:[]),...figures(JSON.stringify(req))];
+ // A budget the homeowner wrote without "$" ("about 30k", "30,000 tops") may be repeated back to them too.
+ const visitor=[req.prompt,...(req.conversation??[]).filter(t=>t.role==='user').map(t=>t.text)].join('\n');
+ const stated=findPricesAndClaims(visitor).prices.flatMap(p=>p.amounts).filter(Number.isFinite);
+ const out=[req.baseline.subtotal,...req.concepts.flatMap(c=>[c.subtotal,Math.abs(c.delta)]),...(req.budget!==undefined?[req.budget]:[]),...figures(JSON.stringify(req)),...stated];
  return out.map(v=>Math.round(v));
 }
 const outText=(v:unknown,max:number,what:string)=>{if(typeof v!=='string'||!v.trim()||v.length>max||/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(v))fail('invalid_ai_response',`${what} is missing or too long.`,502);return (v as string).trim();};

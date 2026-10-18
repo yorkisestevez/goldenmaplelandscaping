@@ -1,13 +1,6 @@
 {
   "_readme": "Every non-engine dollar figure on the site, per file. Maintained by scripts/check-price-ledger.ts — see its header.",
   "entries": {
-    "src/components/BarrieServicePage.tsx": {
-      "$55–$85": {
-        "count": 1,
-        "status": "unverified",
-        "context": "rate={def.slug === 'interlocking-driveways-barrie' ? '$55–$85' : undefined} rateDetail=\"per square foot in"
-      }
-    },
     "src/components/BuyersGuide.tsx": {
       "$40k–$90k+": {
         "count": 1,
@@ -174,6 +167,13 @@
         "context": "ng /book and llms.txt copy'), design: { value: '$99 paid design session, credited toward a project', sta"
       }
     },
+    "src/data/carrPrices.ts": {
+      "$800–$2,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "for clay soil sites. Can be added later, but expect roughly $800–$2,000 extra to lift and relay pavers over the run. Fire Feature P"
+      }
+    },
     "src/data/heroDepth.ts": {
       "$0": {
         "count": 1,
@@ -226,6 +226,16 @@
       }
     },
     "src/data/serviceLocations.ts": {
+      "$330–$670": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "flat — for decades, not seasons.', startingPriceText: '$330–$670', perUnitText: 'per linear foot before HST, retaining"
+      },
+      "$40–$45": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "confirmed in the written scope.', startingPriceText: '$40–$45', perUnitText: 'per sq ft before HST, interlocking pat"
+      },
       "$50k": {
         "count": 1,
         "status": "unverified",
@@ -390,6 +400,11 @@
         "status": "unverified",
         "context": "../components/PlanningQuote'; // Premium patio projects ($35K-$75K). // Hook: cost transparency + base-depth differentiator +"
       },
+      "$40–$45": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "uote source=\"patios-barrie\" rate=\"$40–$45\" rateDetail=\"per square foot before HST for mo"
+      },
       "$75,000": {
         "count": 1,
         "status": "unverified",
@@ -397,10 +412,10 @@
       }
     },
     "src/pages/PaverPatioBarrieAds.tsx": {
-      "$55–$85": {
+      "$40–$45": {
         "count": 1,
-        "status": "unverified",
-        "context": "span className=\"font-display text-4xl text-brand-porcelain\">$55–$85 <span className=\"block font-sans text-sm te"
+        "status": "engine-checked",
+        "context": "span className=\"font-display text-4xl text-brand-porcelain\">$40–$45 <span className=\"block font-sans text-sm te"
       }
     },
     "src/pages/PremiumPatioRebuildBarrie.tsx": {
@@ -755,9 +770,9 @@
         "context": "ation, regardless of how cheap it is. Contractors have seen $4/sq ft import pavers that looked identical to brand-name pro"
       },
       "$40–$45": {
-        "count": 2,
+        "count": 3,
         "status": "engine-checked",
-        "context": "eet all three when you choose the right line. Budget around $40–$45 per square foot installed before HST for a 300–1,000 sq ft"
+        "context": "l-touch light colours, freeze-thaw certified. Budget around $40–$45/sq ft installed before HST.\" category=\"Materials\""
       },
       "$600–$1,800": {
         "count": 2,
@@ -843,9 +858,9 @@
         "context": "ally, installing a concrete patio will cost between $10 and $20 per square foot, which makes it an appealing option for bud"
       },
       "$40–$45": {
-        "count": 1,
+        "count": 8,
         "status": "engine-checked",
-        "context": "body> Initial Cost per sq ft $10-$20 $40-$45 Average Lifespan 10-15 years <"
+        "context": "from about $10 per square foot for basic concrete to around $40-$45 per square foot before HST for interlock. Concrete patios a"
       }
     },
     "src/pages/blog/FailingInterlockingPatioSignsBarrie.tsx": {
@@ -1274,10 +1289,25 @@
         "status": "engine-checked",
         "context": "ng (about $6,000–$7,500 with mid-tier pavers), steps (about $4,000 for 3 steps), seat walls ($3,000-$8,000)"
       },
+      "$40–$45": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "andard concrete pavers around $40–$45 Budget-friendly patios, walkways</"
+      },
       "$40–$70": {
         "count": 1,
         "status": "unverified",
         "context": "\"py-3 pr-4\">Natural flagstone $40 – $70 30+ years <td className=\""
+      },
+      "$5": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "um concrete paver lines about $5 more Mid to high-end patios, drive"
+      },
+      "$53": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "ls, and finishing. Smaller patios cost more per foot: about $53 at 200 sq ft. These prices reflect premium"
       },
       "$6,000–$7,500": {
         "count": 1,
@@ -1320,6 +1350,11 @@
         "count": 1,
         "status": "unverified",
         "context": "asic package (8-12 fixtures, transformer, wiring): $3,000-$5,000 Mid-range (15-25 fixtures, multip"
+      },
+      "$40,000": {
+        "count": 1,
+        "status": "unverified",
+        "context": "mages/projects/IHPX8926.JPEG\" > You invested $40,000 in a stunning patio, retaining walls, and lush landscaping."
       },
       "$5,000–$10,000": {
         "count": 1,
@@ -1443,7 +1478,7 @@
         "context": "demands. That same 400 sq ft patio in natural stone can run $22,000 to $38,000 or more. The gap is real — natural stone commonly cos"
       },
       "$40–$45": {
-        "count": 3,
+        "count": 5,
         "status": "engine-checked",
         "context": "ably more installed than concrete pavers. Pavers run around $40-$45 per square foot installed before HST, while natural stone r"
       },
@@ -1720,6 +1755,11 @@
         "count": 1,
         "status": "unverified",
         "context": "age-style homes in Barrie's east end. Material runs $4.00–$5.50 per square foot . The tumbled profile also conceals"
+      },
+      "$40–$45": {
+        "count": 3,
+        "status": "engine-checked",
+        "context": "ractor's honest review of Permacon pavers: installed around $40–$45 per square foot before HST in our cost estimator, top produ"
       },
       "$41": {
         "count": 2,
@@ -2401,11 +2441,25 @@
         "context": "0\" }, { project: \"Premium outdoor living space\", range: \"$90,000 – $160,000+\" }, ]; const FAQS = [ { q: \"Do Springwater proj"
       }
     },
+    "src/pages/services/Interlocking.tsx": {
+      "$40–$45": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "source=\"interlocking-barrie\" rate=\"$40–$45\" rateDetail=\"per square foot before HST for mo"
+      }
+    },
     "src/pages/services/LandscapeDesign.tsx": {
       "$5,000": {
         "count": 1,
         "status": "unverified",
         "context": "rvice without construction, our packages typically start at $5,000. This includes a full architectural 3D rendering of the pro"
+      }
+    },
+    "src/pages/services/RetainingWalls.tsx": {
+      "$330–$670": {
+        "count": 1,
+        "status": "engine-checked",
+        "context": "source=\"retaining-walls-barrie\" rate=\"$330–$670\" rateDetail=\"per linear foot for walls from"
       }
     },
     "src/utils/budgetLevers.ts": {
@@ -2480,6 +2534,28 @@
         "count": 1,
         "status": "unverified",
         "context": "hich meant a small walkway that genuinely costed out // at $9K was shown as $18K. Removed 2026-07-27 — every visitor now p"
+      }
+    },
+    "src/utils/pricingDoctrine.ts#getEstimatorRangeCopy": {
+      "$30k–$90k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "aining wall and sloped-yard projects we build commonly land $30K–$90K+, with patio + wall + drainage packages often reaching $50K–"
+      },
+      "$35k–$75k": {
+        "count": 1,
+        "status": "unverified",
+        "context": "–$100K. Most premium patios and outdoor rooms we build land $35K–$75K depending on size, access, base prep, drainage, and materia"
+      },
+      "$50k–$100k": {
+        "count": 2,
+        "status": "unverified",
+        "context": "$90K+, with patio + wall + drainage packages often reaching $50K–$100K. Most premium patios and outdoor rooms we build land $35K–$"
+      },
+      "$90k–$150k+": {
+        "count": 1,
+        "status": "unverified",
+        "context": "luded. Full backyard transformations we build commonly land $90K–$150K+ when patio, walls, lighting, fire, kitchen, drainage, or gr"
       }
     },
     "src/utils/sophieQuote.ts": {

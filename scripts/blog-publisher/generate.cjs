@@ -219,7 +219,7 @@ HARD CONSTRAINTS:
 - Brand voice: operator-honest, anti-corporate, specific. No "industry-leading", "passionate", "dedicated team", "state-of-the-art", "in today's world", "look no further", "elevate your", "transform your".
 - Use Canadian English (metre, colour, neighbour, kilometre, centimetre).
 - No fake stats. No fake testimonials.
-- **PRICES (hard rule — a draft that breaks it is rejected):** the only dollar figures you may write are the ones in PRICE FACTS below, copied exactly, about the same subject the fact describes, with its basis (before HST, planning figure). Never write any other price, cost, rate, fee, budget, saving or dollar amount — not for materials, not for other services, not as an example. For anything PRICE FACTS does not cover, say the price is confirmed at a site visit and link ${estimatorPath}. Write each fact with its "$" sign, in a sentence about that subject alone: never in the same sentence as driveways, decks, porcelain, natural stone, pergolas, kitchens, fire pits, lighting or any other item. No amounts in words ("twenty thousand dollars"), no "CAD", and no bare numbers in a cost or price table column.
+- **PRICES (hard rule — a draft that breaks it is rejected):** the only dollar figures you may write are the ones in PRICE FACTS below, copied exactly, about the same subject the fact describes, with its basis (before HST, planning figure). Never write any other price, cost, rate, fee, budget, saving or dollar amount — not for materials, not for other services, not as an example. For anything PRICE FACTS does not cover, say the price is confirmed at a site visit and link ${estimatorPath}. Write each fact with its "$" sign, copied as stated: name its subject (patio, walkway or retaining wall) and its basis (per square foot / per linear foot, the size in sq ft or the wall height, before HST) in the same sentence. Give each price its own short paragraph: that sentence, the sentence before it, and the heading above it must not name driveways, decks, porcelain, natural stone, concrete, drainage, steps, repairs, pergolas, kitchens, fire pits, lighting, permits or any other item. Never put a price under a heading about another item. No amounts in words ("twenty thousand dollars"), no "CAD", and no bare numbers in a cost or price table column.
 - Reference real local context: Lake Simcoe, freeze-thaw cycles, Barrie's clay soil, Highway 400 corridor, Bayfield Street, City of Barrie bylaws, Simcoe County weather. Don't fabricate addresses or named clients.
 - Founder is Yorkis Estevez, Founder & Lead Builder. Company is Golden Maple Landscaping. Service area: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood. We install Permacon, Unilock, Techo-Bloc pavers + TimberTech composite decking. Bases are compacted 3/4" clear stone over geotextile with HPB bedding (not granular A). Base DEPTH is project-specific (soil, use, drainage) — never state one universal depth. Supplier: Carr Landscape Depot in Barrie.
 - NEVER write any unverified trust claim — the build's claim gate (scripts/claim-rules.json) rejects them: Google ratings, star scores or review counts; WSIB status; insurance dollar amounts; warranty lengths; installer certifications, manufacturer program or dealer status, or trade-association memberships; no-charge consultations or site visits; design-fee credits; promises to handle permits; founding year or project counts.
@@ -227,7 +227,7 @@ HARD CONSTRAINTS:
 
 PRICE FACTS (from the Golden Maple cost estimator — the ONLY prices you may quote):
 ${PRICE_FACTS.facts.map(f => '- ' + f.statement).join('\n')}
-${priceFix.length ? `\nPRICE FIX — your previous draft quoted prices that are not in PRICE FACTS. Remove every one of these (say the price is confirmed at a site visit instead) and add no other dollar figure. If one of them IS a PRICE FACTS figure, it was rejected because its sentence also names another item (a deck, a driveway, a permit, lighting…): give the fact a sentence of its own about its subject only:\n${priceFix.map(i => `- ${i.figure} in: "${i.context}"`).join('\n')}\n` : ''}
+${priceFix.length ? `\nPRICE FIX — your previous draft quoted prices that are not in PRICE FACTS. Fix each one as its reason says; if a figure is not in PRICE FACTS, remove it (say the price is confirmed at a site visit instead). Add no other dollar figure:\n${priceFix.map(i => `- ${i.figure} in: "${i.context}" (${i.reason})`).join('\n')}\n` : ''}
 ALLOWED hero image paths (pick the single most relevant one):
 ${ALLOWED_HEROES.map(h => '- ' + h).join('\n')}
 
@@ -269,10 +269,19 @@ function validateDraft(draft) {
   }
 
   // Prices: every dollar figure must be an engine fact about its own subject (see PRICE_FACTS).
+  // Each field its own paragraph; a section heading or FAQ question is the heading over what follows it.
+  const asHeading = (h) => (h ? `<h2>${h}</h2>` : '');
   const priceText = [draft.title, draft.seoTitle, draft.seoDescription, draft.tldr, draft.intro,
-    ...(draft.sections || []).flatMap(s => [s.heading, s.html]), draft.comparison_table?.caption, draft.comparison_table?.html,
-    ...(draft.faqs || []).flatMap(f => [f.question, f.answer]), draft.author_bio, draft.cta_paragraph].filter(Boolean).join('\n');
-  const priceIssues = findUnapprovedFigures(priceText, PRICE_FACTS);
+    ...(draft.sections || []).flatMap(s => [asHeading(s.heading), s.html]), draft.comparison_table?.caption, draft.comparison_table?.html,
+    ...(draft.faqs || []).flatMap(f => [asHeading(f.question), f.answer]), draft.author_bio, draft.cta_paragraph].filter(Boolean).join('\n\n');
+  // Also the page exactly as it will be built (FAQ JSON-LD included), which is what the build's price ledger scans.
+  let built = [];
+  if (draft.slug) {
+    try { built = findUnapprovedFigures(require('./inject.cjs').buildTsx(draft), PRICE_FACTS); }
+    catch (e) { errors.push(`draft could not be built into a page: ${e.message}`); }
+  }
+  const priceIssues = [...findUnapprovedFigures(priceText, PRICE_FACTS), ...built]
+    .filter((issue, n, all) => all.findIndex((x) => x.figure === issue.figure && x.reason === issue.reason) === n);
   for (const i of priceIssues) errors.push(`unapproved price: ${i.figure} — "${i.context}"`);
 
   // Soft signals (don't fail, but track)

@@ -130,7 +130,7 @@ const oro: EstimatorLocationKey = 'oro-medonte';
   const entry = /'retaining-walls': \{[\s\S]*?startingPriceText: '([^']*)',\s*perUnitText: '([^']*)',\s*rateBasis: '([^']*)'/.exec(data);
   ok(entry, 'service-location data: retaining-walls entry found');
   ok(entry![1] === rate, `service-location data: starting price is ${rate}`);
-  ok(entry![2] === 'per linear foot before HST' && entry![3] === `walls from under 2 ft up to 4–6 ft high, about ${QUOTED_LENGTH} ft on an accessible site`, 'service-location data: unit and assumptions stated');
+  ok(entry![2] === 'per linear foot before HST, retaining walls' && entry![3] === `under 2 ft up to 4–6 ft high, about ${QUOTED_LENGTH} ft on an accessible site`, 'service-location data: subject, unit and assumptions stated');
   ok(!/per square foot of wall face/.test(data), 'service-location data: unsourced face-area rate is gone');
 }
 

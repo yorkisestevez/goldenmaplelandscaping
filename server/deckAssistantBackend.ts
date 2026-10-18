@@ -3,8 +3,12 @@ import {assistantSystemPromptFor,isExpertId,type ExpertId} from '../src/features
 import {DESIGNER_ALLOWED_TOPICS,findPricesAndClaims} from '../src/utils/sophieGuard';
 import type {AssistantPlan} from '../src/features/deckcraft/designer/assistantContracts';
 
-/** Every word of a plan the visitor reads: the message, assumptions, and a clarify/advice question with its choices. */
-export const assistantPlanProse=(plan:AssistantPlan)=>[plan.message,...plan.assumptions,...(plan.kind==='edit'?[]:[plan.question,...plan.choices])].join('\n');
+const COMMAND_TEXT=/^(?:name|label|title|notes?|text|description|caption)$/i;
+/** The free text inside edit commands that the editor shows (feature, inlay and object names, notes). */
+const commandText=(v:unknown,key=''):string[]=>typeof v==='string'?(COMMAND_TEXT.test(key)?[v]:[]):Array.isArray(v)?v.flatMap(x=>commandText(x,key)):v&&typeof v==='object'?Object.entries(v).flatMap(([k,x])=>commandText(x,k)):[];
+/** Every word of a plan the visitor reads: the message, assumptions, a clarify/advice question with its choices, and
+ * the names and notes inside its commands. */
+export const assistantPlanProse=(plan:AssistantPlan)=>[plan.message,...plan.assumptions,...(plan.kind==='edit'?commandText(plan.commands):[plan.question,...plan.choices])].join('\n');
 
 export const DECK_ASSISTANT_PATH='/.netlify/functions/deck-assistant';
 export const ASSISTANT_BACKEND_LIMITS={bodyBytes:128*1024,contextBytes:96*1024,prompt:6000,turns:12,turnContent:3000,conversation:16000,responseBytes:256*1024,planContent:48000,timeoutMs:60000,healthTimeoutMs:3000,concurrent:2} as const;
