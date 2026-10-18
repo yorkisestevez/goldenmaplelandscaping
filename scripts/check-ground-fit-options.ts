@@ -166,11 +166,16 @@ ok(lateResult.status==='pending'&&lateResult.warnings[0].includes('cancelled'),'
 ok(JSON.stringify(data)===before,'Input still unchanged after every run');
 
 // (f) Another patio's own ground message never hides this patio's options (G1 is scoped to this patio, and to what
-// fitting it changes). The side patio's dig-back warning used to leave only a stone-edge option.
+// fitting it changes). The side patio's dig-back warning used to leave only a stone-edge option. Whether a stair slide
+// is shown also depends on prices: one a level option beats on every count is dropped (with the 2026-10-08 fascia rates,
+// stair:4 prices 15 cents above level:4), so the stair lever is proved on its own, with the level lever off.
 const side=await load(c=>{const l=c.yardFeatures[0];c.yardFeatures=[{...structuredClone(l),id:'side',name:'Side patio',xFt:9,widthFt:3,zFt:7.75,depthFt:2},l];});
 const sideFit=await groundFitOptions(side,{featureId:'landing',maxOptions:8});
 ok(calculateEstimate(side).yardModel.warnings.some(w=>w.startsWith('Side patio: the measured ground beside it is up to')),'Side patio: carries its own ground message');
-ok(sideFit.options.some(o=>o.kind==='level')&&sideFit.options.some(o=>o.kind==='stair'),`Side patio: level and stair options come back (${sideFit.options.slice(1).map(o=>o.id).join(', ')})`);
+ok(sideFit.options.some(o=>o.kind==='level'),`Side patio: level options come back (${sideFit.options.slice(1).map(o=>o.id).join(', ')})`);
+const sideStairs=await groundFitOptions(side,{featureId:'landing',maxOptions:8,levers:{level:false}});
+ok(sideStairs.options.some(o=>o.kind==='stair'),`Side patio: stair options come back when no level option can beat them (${sideStairs.options.slice(1).map(o=>o.id).join(', ')})`);
+checkAll(sideStairs,side,'Side patio, stair and deck levers',true);
 checkAll(sideFit,side,'Side patio',true);
 const sideFitted=await load(c=>{const l=c.yardFeatures[0];c.yardFeatures=[{...structuredClone(l),id:'side',name:'Side patio',xFt:9,widthFt:3,zFt:7.75,depthFt:2,finishedElevationIn:9,groundFit:{slopeRatio:3}},l];});
 checkAll(await groundFitOptions(sideFitted,{featureId:'landing',maxOptions:8}),sideFitted,'Fitted side patio',true);
