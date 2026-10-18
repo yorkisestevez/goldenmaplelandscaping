@@ -39,6 +39,10 @@ function writeJson(p, obj) { fs.writeFileSync(p, JSON.stringify(obj, null, 2)); 
 // and response shape, so every call site and extractText() work unchanged.
 // Original implementation preserved in generate.cjs.bak-gemini-20260728.
 const { geminiCompatPost } = require('./claude-provider.cjs');
+// The only prices a post may quote (owner decision 2026-10-17: no invented prices, at all cost). Generated from
+// the cost-estimator engine by scripts/gen-price-facts.ts; lint fails if it drifts from the engine.
+const PRICE_FACTS = require('../../src/data/publishedPriceFacts.json');
+const { findUnapprovedFigures } = require('./price-figures.cjs');
 function geminiPost(apiKey, body) {
   return geminiCompatPost(apiKey, body);
 }
@@ -160,7 +164,7 @@ function estimatorPathFor(topic) {
   return '/cost-estimator';
 }
 
-function buildPrompt(topic) {
+function buildPrompt(topic, { priceFix = [] } = {}) {
   const linkHints = (topic.internal_link_hints || []).join(', ') || '(none)';
   const estimatorPath = estimatorPathFor(topic);
   return `You are Yorkis Estevez writing for the Golden Maple Landscaping blog. You are a working hardscape contractor in Barrie, Ontario. Your readers are real homeowners in Simcoe County making a buying decision in the next 90 days.
@@ -180,12 +184,12 @@ response gets thrown away.
   "category": "<one of: Engineering, Materials, Design, Investment, Decking, Hiring Guide, Process, Seasonal, Regulations, Retaining Walls>",
   "readTime": "<STRING formatted as 'X min' where X is an integer 6-12, e.g. '8 min'. MUST be a JSON string, NOT a bare integer.>",
   "heroImage": "<one path from ALLOWED list below — pick the most relevant>",
-  "tldr": "<50-90 words. THE direct answer to the article's main question, written for Google featured snippets AND AI engines (ChatGPT/Claude/Perplexity citation). MUST contain at least one specific number, range, or named product. Plain prose — no HTML. This goes in a 'Quick Answer' box at the very top of the post.>",
+  "tldr": "<50-90 words. THE direct answer to the article's main question, written for Google featured snippets AND AI engines (ChatGPT/Claude/Perplexity citation). MUST contain at least one specific measurement, specification, or named product. Any price in it must come from PRICE FACTS. Plain prose — no HTML. This goes in a 'Quick Answer' box at the very top of the post.>",
   "intro": "<2-3 paragraph opening that follows the TL;DR — expands on it with a specific Barrie/Simcoe-County observation or real frustration. Plain HTML, only <p>, <strong>, <em> tags. No fluff openers. No 'In today's world.' No 'As a homeowner.'>",
   "sections": [
     {
       "heading": "<H2 — keyword-rich but human. Phrase as a question when the topic is informational.>",
-      "html": "<3-5 paragraphs of plain HTML using only <p>, <strong>, <em>, <ul>, <li>, <a href='/internal/path'>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. NO inline styles. NO classes. NO <h3>. Aim for 200-350 words per section. EVERY section must contain at least one specific number, measurement, range, or named product/brand — not generic claims.>"
+      "html": "<3-5 paragraphs of plain HTML using only <p>, <strong>, <em>, <ul>, <li>, <a href='/internal/path'>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. NO inline styles. NO classes. NO <h3>. Aim for 200-350 words per section. EVERY section must contain at least one specific measurement, specification, or named product/brand — not generic claims. Prices only from PRICE FACTS.>"
     }
   ],
   "comparison_table": {
@@ -194,7 +198,7 @@ response gets thrown away.
     "html": "<a single <table> with <thead><tr><th> headers and <tbody><tr><td> data rows. 3-6 columns, 3-8 rows. Honest comparison — don't fake-skew toward our products. AI engines and Google featured snippets specifically extract from tables.>"
   },
   "faqs": [
-    { "question": "<plain question a Barrie homeowner would actually type into Google. Phrase as a real search query.>", "answer": "<2-4 sentence direct answer that leads with the answer in the first sentence. No hedging. Include a specific number/range when possible.>" }
+    { "question": "<plain question a Barrie homeowner would actually type into Google. Phrase as a real search query.>", "answer": "<2-4 sentence direct answer that leads with the answer in the first sentence. No hedging. Include a specific measurement or specification when possible; a price only if it is in PRICE FACTS.>" }
   ],
   "author_bio": "<40-70 words closing in the author's voice. CRITICAL: invent NO facts about the business — no founding year, no years-in-business, no square footage, no job counts, no revenue, no client counts. Use ONLY details supplied in credibilityMarkers above. If a specific number is not given to you, do not state one. Write about the WORK and the POV, not about scale.>",
   "cta_paragraph": "<one paragraph that bridges from the article to contacting Golden Maple. Mention Barrie/Simcoe County. End naturally — the layout adds the actual button.>"
@@ -210,16 +214,20 @@ HARD CONSTRAINTS:
 - 5 to 8 FAQs.
 - Internal links: place at least 3 anchor links pointing to paths from this list (use only these paths, exactly as written): ${linkHints}, /contact, ${estimatorPath}, /portfolio
 - The cost-estimator link (${estimatorPath}) MUST appear in the cta_paragraph${estimatorPath.includes('?type=') ? ` — it opens the calculator with this topic's project type already selected, so anchor it with copy like "price out your own ${topic.category.toLowerCase()} project" rather than generic "click here"` : ' — this topic has no matching prefill, so the link opens the calculator on its first step; anchor it with general copy like "get a real price on your project" rather than claiming a preselected type'}.
-- **Numeric specificity (critical for SEO + AI citation):** every section should contain at least one specific number, range, measurement, percentage, or brand/product name. Generic statements like "many homeowners" or "high-quality materials" are banned — replace with "homeowners in Bayfield-Street neighbourhoods" or "80mm Permacon pavers on 3/4\" clear stone".
+- **Numeric specificity (critical for SEO + AI citation):** every section should contain at least one specific measurement, specification, percentage, or brand/product name (never an invented price — see PRICES). Generic statements like "many homeowners" or "high-quality materials" are banned — replace with "homeowners in Bayfield-Street neighbourhoods" or "80mm Permacon pavers on 3/4\" clear stone".
 - **Featured-snippet optimization:** FAQ answers and section opening sentences should be self-contained — readable as an extracted quote without surrounding context. Lead with the answer, then explain.
 - Brand voice: operator-honest, anti-corporate, specific. No "industry-leading", "passionate", "dedicated team", "state-of-the-art", "in today's world", "look no further", "elevate your", "transform your".
 - Use Canadian English (metre, colour, neighbour, kilometre, centimetre).
-- No fake stats. No fake testimonials. If you need a number, give a range like "$X-$Y per square foot" and say what drives the variance.
+- No fake stats. No fake testimonials.
+- **PRICES (hard rule — a draft that breaks it is rejected):** the only dollar figures you may write are the ones in PRICE FACTS below, copied exactly, about the same subject the fact describes, with its basis (before HST, planning figure). Never write any other price, cost, rate, fee, budget, saving or dollar amount — not for materials, not for other services, not as an example. For anything PRICE FACTS does not cover, say the price is confirmed at a site visit and link ${estimatorPath}. Write each fact with its "$" sign, in a sentence about that subject alone: never in the same sentence as driveways, decks, porcelain, natural stone, pergolas, kitchens, fire pits, lighting or any other item. No amounts in words ("twenty thousand dollars"), no "CAD", and no bare numbers in a cost or price table column.
 - Reference real local context: Lake Simcoe, freeze-thaw cycles, Barrie's clay soil, Highway 400 corridor, Bayfield Street, City of Barrie bylaws, Simcoe County weather. Don't fabricate addresses or named clients.
 - Founder is Yorkis Estevez, Founder & Lead Builder. Company is Golden Maple Landscaping. Service area: Barrie, Innisfil, Oro-Medonte, Springwater, Orillia, Wasaga Beach, Midland, Collingwood. We install Permacon, Unilock, Techo-Bloc pavers + TimberTech composite decking. Bases are compacted 3/4" clear stone over geotextile with HPB bedding (not granular A). Base DEPTH is project-specific (soil, use, drainage) — never state one universal depth. Supplier: Carr Landscape Depot in Barrie.
 - NEVER write any unverified trust claim — the build's claim gate (scripts/claim-rules.json) rejects them: Google ratings, star scores or review counts; WSIB status; insurance dollar amounts; warranty lengths; installer certifications, manufacturer program or dealer status, or trade-association memberships; no-charge consultations or site visits; design-fee credits; promises to handle permits; founding year or project counts.
 - Don't mention competitors as superior. Don't recommend specific products outside this list.
 
+PRICE FACTS (from the Golden Maple cost estimator — the ONLY prices you may quote):
+${PRICE_FACTS.facts.map(f => '- ' + f.statement).join('\n')}
+${priceFix.length ? `\nPRICE FIX — your previous draft quoted prices that are not in PRICE FACTS. Remove every one of these (say the price is confirmed at a site visit instead) and add no other dollar figure. If one of them IS a PRICE FACTS figure, it was rejected because its sentence also names another item (a deck, a driveway, a permit, lighting…): give the fact a sentence of its own about its subject only:\n${priceFix.map(i => `- ${i.figure} in: "${i.context}"`).join('\n')}\n` : ''}
 ALLOWED hero image paths (pick the single most relevant one):
 ${ALLOWED_HEROES.map(h => '- ' + h).join('\n')}
 
@@ -260,21 +268,63 @@ function validateDraft(draft) {
     if (lower.includes(phrase)) errors.push(`banned phrase: "${phrase}"`);
   }
 
+  // Prices: every dollar figure must be an engine fact about its own subject (see PRICE_FACTS).
+  const priceText = [draft.title, draft.seoTitle, draft.seoDescription, draft.tldr, draft.intro,
+    ...(draft.sections || []).flatMap(s => [s.heading, s.html]), draft.comparison_table?.caption, draft.comparison_table?.html,
+    ...(draft.faqs || []).flatMap(f => [f.question, f.answer]), draft.author_bio, draft.cta_paragraph].filter(Boolean).join('\n');
+  const priceIssues = findUnapprovedFigures(priceText, PRICE_FACTS);
+  for (const i of priceIssues) errors.push(`unapproved price: ${i.figure} — "${i.context}"`);
+
   // Soft signals (don't fail, but track)
   const hasTable = !!draft.comparison_table?.include && !!draft.comparison_table?.html;
   const numericMatches = (bodyHtml.match(/\b\d+([.,]\d+)?\s*(%|mm|cm|m|ft|in|"|sq\.?\s*ft|sqft|\$|CAD|years?|hours?|days?)\b/gi) || []).length;
 
-  return { ok: errors.length === 0, errors, wordCount: words, linkCount: linkMatches.length, hasTable, numericCount: numericMatches };
+  return { ok: errors.length === 0, errors, priceIssues, wordCount: words, linkCount: linkMatches.length, hasTable, numericCount: numericMatches };
 }
 
-async function generateDraft({ topicId = null } = {}) {
+/** One draft from the configured writer model, as raw text. */
+async function callWriter(prompt) {
   const geminiKey = process.env.GEMINI_API_KEY;
   const deepseekKey = process.env.DEEPSEEK_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!geminiKey && !deepseekKey && !openaiKey) {
     throw new Error('Set GEMINI_API_KEY, DEEPSEEK_API_KEY, or OPENAI_API_KEY');
   }
+  if (geminiKey) {
+    const response = await geminiPost(geminiKey, {
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.75,
+        topP: 0.95,
+        maxOutputTokens: 16384,
+        responseMimeType: 'application/json'
+      }
+    });
+    console.log('[generate] used local Claude CLI (via claude-provider.cjs, GEMINI_API_KEY presence-gate)');
+    return extractText(response);
+  }
+  if (deepseekKey) {
+    console.log('[generate] using DeepSeek deepseek-chat (~10x cheaper than OpenAI)');
+    const response = await openaiCompatiblePost(deepseekKey, prompt, {
+      hostname: 'api.deepseek.com',
+      model: 'deepseek-chat'
+    });
+    console.log('[generate] used DeepSeek');
+    return extractOpenAICompatibleText(response, 'DeepSeek');
+  }
+  console.log('[generate] using OpenAI gpt-4o (DEEPSEEK_API_KEY not set)');
+  const response = await openaiCompatiblePost(openaiKey, prompt, {
+    hostname: 'api.openai.com',
+    model: 'gpt-4o'
+  });
+  console.log('[generate] used OpenAI gpt-4o');
+  return extractOpenAICompatibleText(response, 'OpenAI');
+}
 
+/** A draft may quote only PRICE FACTS: up to two rewrites with the offending figures listed, then the run stops (no PR). */
+const PRICE_ATTEMPTS = 3;
+
+async function generateDraft({ topicId = null, writer = callWriter } = {}) {
   const topics = readJson(TOPICS_PATH).topics;
   const state = readJson(STATE_PATH);
 
@@ -289,54 +339,35 @@ async function generateDraft({ topicId = null } = {}) {
 
   console.log(`[generate] ${topic.id} — ${topic.title}`);
 
-  let text;
-  if (geminiKey) {
-    const response = await geminiPost(geminiKey, {
-      contents: [{ role: 'user', parts: [{ text: buildPrompt(topic) }] }],
-      generationConfig: {
-        temperature: 0.75,
-        topP: 0.95,
-        maxOutputTokens: 16384,
-        responseMimeType: 'application/json'
-      }
-    });
-    text = extractText(response);
-    console.log('[generate] used local Claude CLI (via claude-provider.cjs, GEMINI_API_KEY presence-gate)');
-  } else if (deepseekKey) {
-    console.log('[generate] using DeepSeek deepseek-chat (~10x cheaper than OpenAI)');
-    const response = await openaiCompatiblePost(deepseekKey, buildPrompt(topic), {
-      hostname: 'api.deepseek.com',
-      model: 'deepseek-chat'
-    });
-    text = extractOpenAICompatibleText(response, 'DeepSeek');
-    console.log('[generate] used DeepSeek');
-  } else {
-    console.log('[generate] using OpenAI gpt-4o (DEEPSEEK_API_KEY not set)');
-    const response = await openaiCompatiblePost(openaiKey, buildPrompt(topic), {
-      hostname: 'api.openai.com',
-      model: 'gpt-4o'
-    });
-    text = extractOpenAICompatibleText(response, 'OpenAI');
-    console.log('[generate] used OpenAI gpt-4o');
-  }
-
   let draft;
-  try { draft = parseJson(text); }
-  catch (e) { throw new Error('LLM returned non-JSON: ' + text.slice(0, 500)); }
+  let priceFix = [];
+  for (let attempt = 1; ; attempt++) {
+    const text = await writer(buildPrompt(topic, { priceFix }));
+    try { draft = parseJson(text); }
+    catch (e) { throw new Error('LLM returned non-JSON: ' + text.slice(0, 500)); }
 
-  // Defensive normalization — Gemini sometimes returns shapes that differ
-  // from the prompt's contract (e.g. readTime as a bare integer instead of
-  // a string like "8 min"). Caught 2026-06-08: inject.cjs crashed on
-  // `draft.readTime.includes is not a function`. Normalize once here so all
-  // downstream consumers see a consistent shape.
-  if (typeof draft.readTime === 'number') draft.readTime = `${draft.readTime} min`;
-  if (typeof draft.readTime !== 'string') draft.readTime = '8 min';
+    // Defensive normalization — Gemini sometimes returns shapes that differ
+    // from the prompt's contract (e.g. readTime as a bare integer instead of
+    // a string like "8 min"). Caught 2026-06-08: inject.cjs crashed on
+    // `draft.readTime.includes is not a function`. Normalize once here so all
+    // downstream consumers see a consistent shape.
+    if (typeof draft.readTime === 'number') draft.readTime = `${draft.readTime} min`;
+    if (typeof draft.readTime !== 'string') draft.readTime = '8 min';
 
-  draft.slug = topic.slug;
-  draft.topicId = topic.id;
-  draft.generatedAt = new Date().toISOString();
-  draft.author = 'Yorkis Estevez';
-  draft.validation = validateDraft(draft);
+    draft.slug = topic.slug;
+    draft.topicId = topic.id;
+    draft.generatedAt = new Date().toISOString();
+    draft.author = 'Yorkis Estevez';
+    draft.validation = validateDraft(draft);
+
+    if (!draft.validation.priceIssues.length) break;
+    if (attempt >= PRICE_ATTEMPTS) {
+      // Thrown before the draft or state.json is written: the topic stays queued and no PR is opened.
+      throw new Error(`draft quoted unapproved prices after ${attempt} attempts, so no PR was opened: ${draft.validation.priceIssues.map(i => `${i.figure} ("${i.context}")`).join('; ')}`);
+    }
+    priceFix = draft.validation.priceIssues;
+    console.log(`[generate] attempt ${attempt} quoted unapproved prices (${priceFix.map(i => i.figure).join(', ')}); asking for a rewrite`);
+  }
 
   // Queue-low awareness: count topics still unused AFTER this run (i.e. topics
   // that won't be picked by future cron firings). Used by the PR-body builder

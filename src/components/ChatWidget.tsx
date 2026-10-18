@@ -16,10 +16,12 @@ import {
 } from '../data/sophieTeasers';
 import type { QuickRange } from '../utils/sophieQuote';
 import SophieMark from './SophieMark';
+import { guardReply, PRICE_REDACTION } from '../utils/sophieGuard';
 
 type Role = 'user' | 'assistant';
 type PricedRange = Extract<QuickRange, { kind: 'range' }>;
-interface Msg { role: Role; content: string; range?: PricedRange; designerHref?: string }
+/** `offerRange`: the guard removed a price from this AI reply, so offer the estimator's real range instead. */
+interface Msg { role: Role; content: string; range?: PricedRange; designerHref?: string; offerRange?: boolean }
 
 /** The 3-tap range, one step at a time. */
 type Flow =
@@ -187,8 +189,20 @@ export default function ChatWidget() {
 
   const say = (msg: Msg) => setMessages((m) => [...m, msg]);
 
-  const addReply = (content: string) => {
-    say({ role: 'assistant', content });
+  /** Every AI reply passes the guard first: no price but the given range, no blocked business claim. */
+  /** `fromModel`: AI text, so it is guarded. The widget's own canned lines are written by us and shown as is. */
+  const addReply = (content: string, fromModel = true) => {
+    if (!fromModel) {
+      say({ role: 'assistant', content });
+      setLoading(false);
+      return;
+    }
+    const given = lastRangeRef.current?.range;
+    const guarded = guardReply(content, given ? { low: given.low, high: given.high } : null);
+    // Counts and claim ids only: the invented price itself is not worth sending anywhere.
+    if (guarded.changed) trackEngagement('chat_reply_guarded', `prices:${guarded.redactedPrices.length} ${guarded.blockedClaims.join(' ')}`.slice(0, 60));
+    // The fallback function may already have redacted a price server-side; offer the real range either way.
+    say({ role: 'assistant', content: guarded.text, offerRange: guarded.text.includes(PRICE_REDACTION) });
     setLoading(false);
   };
 
@@ -253,7 +267,7 @@ export default function ChatWidget() {
       else pendingContextRef.current = result.contextText;
       trackEngagement('chat_range_shown', `${choice.project}_${choice.size}_${choice.city}`);
     } catch {
-      addReply("I couldn't load the estimator just now. You can open it directly here: /cost-estimator");
+      addReply("I couldn't load the estimator just now. You can open it directly here: /cost-estimator", false);
     }
   };
 
@@ -290,15 +304,17 @@ export default function ChatWidget() {
         }),
       });
       if (!res.ok) throw new Error(`status ${res.status}`);
-      const data = (await res.json()) as { reply?: string; leadCaptured?: boolean };
+      const data = (await res.json()) as { reply?: string; leadCaptured?: boolean; source?: string };
       // Sophie's lead-handoff writes straight to the CRM server-side — this is
       // the only signal the browser gets that it happened, so fire the GA4/
       // Meta/Ads lead event here (mirrors what a form submit does on success).
       if (data.leadCaptured) trackLead('sophie-chat', 'high-intent', undefined, undefined, undefined, { skipQualification: true });
-      addReply((data.reply || '').trim() || fallbackReply(content));
+      const reply = (data.reply || '').trim();
+      // The function's canned replies are ours; only a model reply is guarded (again — the function guards it too).
+      addReply(reply || fallbackReply(content), !!reply && data.source !== 'fallback');
     } catch {
       // Dev (no function) or transient error → graceful canned answer.
-      addReply(fallbackReply(content));
+      addReply(fallbackReply(content), false);
     }
   };
 
@@ -559,6 +575,14 @@ export default function ChatWidget() {
                       }`}
                     >
                       {m.role === 'assistant' ? renderContent(m.content) : m.content}
+                      {m.offerRange && !flow && (
+                        <button
+                          onClick={() => onChip(COST_CHIP)}
+                          className="mt-2 w-full rounded-full bg-brand-black text-brand-gold-light font-sans text-[13px] py-2 flex items-center justify-center gap-2"
+                        >
+                          Get my planning range <ArrowRight size={14} strokeWidth={1.75} />
+                        </button>
+                      )}
                       {m.designerHref && (
                         <button
                           onClick={() => goTo(m.designerHref!, 'range_deck_designer')}

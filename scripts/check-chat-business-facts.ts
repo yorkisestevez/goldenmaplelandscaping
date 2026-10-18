@@ -56,4 +56,14 @@ for (const bad of [
   assert.doesNotMatch(capturedPrompt,/PRICING CONTEXT|Ignore previous/, `rejected pricing context: ${JSON.stringify(bad)}`);
 }
 assert.equal(requests,7);
-console.log('PASS: 3 real fallback paths, 3 validation boundaries, 1 synthetic prompt-assembly path, pricing context 1 accepted + 5 rejected; zero external network requests.');
+
+// The model's own reply is guarded before the visitor sees it: no invented price, no blocked claim.
+globalThis.fetch = async () => {
+  requests++;
+  return new Response(JSON.stringify({choices:[{message:{content:'A patio like yours is about $9,500 and we offer a free consultation. Your range is $10,750–$23,000 + HST.'}}]}),{status:200,headers:{'Content-Type':'application/json'}});
+};
+const guarded = JSON.parse((await handler({httpMethod:'POST',body:JSON.stringify({pricingContext:{project:'patio',size:'small',city:'barrie'},messages:[{role:'user',content:'How much?'}]})})).body).reply;
+assert.doesNotMatch(guarded,/\$9,500|free consultation/i,'invented price and blocked claim never reach the visitor');
+assert.match(guarded,/\$10,750–\$23,000/,'the server-computed range is kept');
+assert.equal(requests,8);
+console.log('PASS: 3 real fallback paths, 3 validation boundaries, 1 synthetic prompt-assembly path, pricing context 1 accepted + 5 rejected, model reply guarded; zero external network requests.');

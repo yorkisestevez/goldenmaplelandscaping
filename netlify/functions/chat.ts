@@ -17,6 +17,7 @@
 import crypto from 'node:crypto';
 import { BUSINESS, publicContact } from '../../src/data/business';
 import { parseQuickRangeInput, quickRange } from '../../src/utils/sophieQuote';
+import { guardReply, type AllowedRange } from '../../src/utils/sophieGuard';
 
 interface NetlifyEvent {
   httpMethod: string;
@@ -56,11 +57,15 @@ GUARDRAILS:
 
 /** The widget's estimator range arrives from the browser, so it is untrusted: the browser sends only
  *  the visitor's 3 tap choices, and the server re-prices them with the estimator engine itself. */
-function pricingPrompt(raw: unknown): string {
+function pricedRange(raw: unknown) {
   const choice = parseQuickRangeInput(raw);
-  if (!choice) return '';
+  if (!choice) return null;
   const range = quickRange(choice);
-  if (range.kind !== 'range') return '';
+  return range.kind === 'range' ? range : null;
+}
+
+function pricingPrompt(range: ReturnType<typeof pricedRange>): string {
+  if (!range) return '';
   return `
 
 PRICING CONTEXT (from the site cost estimator, shown to the visitor): ${range.summary}: ${range.band}. You may quote exactly these numbers as a planning range that is confirmed at a site visit. Never quote any other price, and offer /book to set up the site visit.`;
@@ -140,10 +145,14 @@ export const handler = async (event: NetlifyEvent) => {
 
   let messages: ClientMsg[] = [];
   let pricing = '';
+  // The only price the reply may contain: the range the server computed itself. guardReply enforces it below.
+  let given: AllowedRange = null;
   try {
     const parsed = JSON.parse(event.body || '{}');
     messages = Array.isArray(parsed.messages) ? parsed.messages : [];
-    pricing = pricingPrompt(parsed.pricingContext);
+    const range = pricedRange(parsed.pricingContext);
+    pricing = pricingPrompt(range);
+    given = range ? { low: range.low, high: range.high } : null;
   } catch {
     return { statusCode: 400, body: JSON.stringify({ error: 'invalid json' }) };
   }
@@ -219,6 +228,8 @@ export const handler = async (event: NetlifyEvent) => {
       leadCaptured = await forwardLead(leadMatch[1]);
       visibleReply = reply.replace(LEAD_RE, '').replace(/\[\[\/?LEAD\]\]/gi, '').trim();
     }
+    // Last line of defence: no price but the given range, no blocked business claim reaches the visitor.
+    visibleReply = guardReply(visibleReply, given).text;
 
     return {
       statusCode: 200,
