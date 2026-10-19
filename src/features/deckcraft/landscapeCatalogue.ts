@@ -1,5 +1,7 @@
 import {LANDSCAPE_SURFACES,landscapeSurface} from './landscapeSurfaces';
 import type {LandscapeAssetId,LandscapeKind,LandscapeObject,LandscapeSpeciesRecord} from './landscapeTypes';
+import {PREMIUM_FURNITURE} from './premiumFurniture';
+import {PREMIUM_FURNITURE_TRIANGLES} from './premiumFurnitureTriangles';
 export interface LandscapeAsset {id:LandscapeAssetId;name:string;kind:LandscapeKind;category:string;heightIn:number;widthIn:number;depthIn:number;sourceURL?:string;modelURL?:string;lowModelURL?:string;farModelURL?:string;triangleCounts?:[number,number,number];visualNote:string}
 const model=(id:string)=>'/deckcraft/landscape/'+id;
 export const LANDSCAPE_ASSETS:LandscapeAsset[]=[
@@ -23,8 +25,10 @@ export const LANDSCAPE_ASSETS:LandscapeAsset[]=[
  {id:'outdoor-sofa',name:'Outdoor three-seat sofa',kind:'furniture',category:'Furniture',heightIn:32,widthIn:84,depthIn:36,modelURL:model('outdoor-sofa-lod0.glb'),lowModelURL:model('outdoor-sofa-lod1.glb'),visualNote:'Original project-owned upholstered outdoor seating proxy. Not a built-in bench or verified manufacturer SKU.'},
  {id:'outdoor-coffee-table',name:'Outdoor low coffee table',kind:'furniture',category:'Furniture',heightIn:16,widthIn:48,depthIn:26,modelURL:model('outdoor-coffee-table-lod0.glb'),lowModelURL:model('outdoor-coffee-table-lod1.glb'),visualNote:'Original project-owned low slatted-table visual proxy. Supply and installation remain unpriced.'},
 ];
+// Premium outdoor-room furniture (premiumFurniture.ts): original meshes, unpriced, quote required.
+for(const a of PREMIUM_FURNITURE)LANDSCAPE_ASSETS.push({id:a.id,name:a.name,kind:'furniture',category:'Furniture',heightIn:a.heightIn,widthIn:a.widthIn,depthIn:a.depthIn,modelURL:model(a.id+'-lod0.glb'),lowModelURL:model(a.id+'-lod1.glb'),visualNote:a.visualNote});
 for(const s of LANDSCAPE_SURFACES.filter(s=>s.id!=='mulch-bed'))LANDSCAPE_ASSETS.push({id:s.id,name:s.name,kind:'bed',category:s.type==='turf'?'Turf and greens':'Decorative ground covers',heightIn:1,widthIn:s.type==='turf'?180:120,depthIn:s.type==='turf'?240:72,visualNote:'Editable planning finish. Original visual proxy; confirm actual product, depth, base, drainage and installation. No supplier price is assumed.'});
-const triangleCounts:Partial<Record<LandscapeAssetId,[number,number,number]>>={'deciduous-tree':[65256,31663,8499],'conifer-tree':[14364,5799,2012],'rounded-shrub':[2080,880,360],'hedge-shrub':[3120,1200,480],'evergreen-shrub':[2560,960,400],'pine-tree':[2832,1072,400],'hosta-clump':[192,88,40],'reed-grass':[880,320,128],'fern-clump':[2384,2239,950],'perennial-bloom':[11252,2146,393],'perennial-gold':[4301,771,277],'grass-clump':[2287,2287,2287],'natural-boulder':[10370,3240,810],'outdoor-table':[2324,1592,1472],'outdoor-chair':[3752,1876,1592],'lounge-chair':[1396,948,724],'outdoor-sofa':[3876,2532,1860],'outdoor-coffee-table':[216,216,216]};
+const triangleCounts:Partial<Record<LandscapeAssetId,[number,number,number]>>={'deciduous-tree':[65256,31663,8499],'conifer-tree':[14364,5799,2012],'rounded-shrub':[2080,880,360],'hedge-shrub':[3120,1200,480],'evergreen-shrub':[2560,960,400],'pine-tree':[2832,1072,400],'hosta-clump':[192,88,40],'reed-grass':[880,320,128],'fern-clump':[2384,2239,950],'perennial-bloom':[11252,2146,393],'perennial-gold':[4301,771,277],'grass-clump':[2287,2287,2287],'natural-boulder':[10370,3240,810],'outdoor-table':[2324,1592,1472],'outdoor-chair':[3752,1876,1592],'lounge-chair':[1396,948,724],'outdoor-sofa':[3876,2532,1860],'outdoor-coffee-table':[216,216,216],...PREMIUM_FURNITURE_TRIANGLES};
 for(const a of LANDSCAPE_ASSETS)if(a.lowModelURL){a.farModelURL=a.lowModelURL.replace('-lod1.glb','-lod2.glb');a.triangleCounts=triangleCounts[a.id];}
 /** These records describe mature planning envelopes, not the identity of the
  * visual mesh or an Ontario nursery quotation. Site/cultivar suitability still

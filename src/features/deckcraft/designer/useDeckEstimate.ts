@@ -8,6 +8,7 @@ import {extrasLayout,treadNose} from '../extrasLayout';
 import {houseRailingReviewFlags} from '../houseRailingClearance';
 import {isSystemProduct,lightingSystemCheck,syncAutoLighting} from '../lightingSystem';
 import {lightingPlacementIssues} from '../lightingPlacementRules';
+import {outdoorRoomIssues} from '../outdoorRoomRules';
 import {houseOutline} from '../houseFootprint';
 import type {DeckData} from '../types';
 
@@ -46,7 +47,8 @@ export function useDeckEstimate(data:DeckData,setData:Dispatch<SetStateAction<De
   const hasFixtures=lightingCheck.items.some(p=>!isSystemProduct(p));
   // Where the lights sit against the lighting best practices (lightingPlacementRules.ts): pool, floors, steps, beds, pool clearance.
   const placementFlags=useMemo(()=>lightingPlacementIssues(data,estimate.model,extras.fixtures,{treadWidths:estimate.model.treads.map(t=>treadNose(t).width),houseRings:data.houseVisible!==false?houseOutline(data):[]}),[data,estimate.model,extras.fixtures]);
-  const reviewFlags=[...new Set([...houseRailingReviewFlags(data,estimate.model,estimate.flags),...extras.warnings,...placementFlags])];
+  const roomFlags=useMemo(()=>outdoorRoomIssues(data,estimate.model),[data,estimate.model]);
+  const reviewFlags=[...new Set([...houseRailingReviewFlags(data,estimate.model,estimate.flags),...extras.warnings,...placementFlags,...roomFlags])];
   // One description of the design feeds the estimate step, the summary download, the proposal and a sent design.
   const described=describeDesign(data,estimate);
   // The estimate key also keys the option deltas (R6): a delta is shown only for the design it was priced for.

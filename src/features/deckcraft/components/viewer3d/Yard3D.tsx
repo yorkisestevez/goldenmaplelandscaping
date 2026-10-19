@@ -55,6 +55,11 @@ const WHITE=(()=>{const t=new THREE.DataTexture(new Uint8Array([255,255,255,255]
 function jointTexture(){const n=64,bytes=new Uint8Array(n*n*4);for(let y=0;y<n;y++)for(let x=0;x<n;x++){const edge=Math.min(x,y,n-1-x,n-1-y)<1.5,v=edge?.55:1,i=(y*n+x)*4;bytes[i]=bytes[i+1]=bytes[i+2]=v*255;bytes[i+3]=255;}const t=new THREE.DataTexture(bytes,n,n);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.needsUpdate=true;return t;}
 /** Four-inch conceptual reinforcement grid in the inspection view only. */
 function reinforcementGridTexture(){const n=64,bytes=new Uint8Array(n*n*4);for(let y=0;y<n;y++)for(let x=0;x<n;x++){const v=Math.min(x,y,n-1-x,n-1-y)<2?255:0,i=(y*n+x)*4;bytes[i]=bytes[i+1]=bytes[i+2]=v;bytes[i+3]=255;}const t=new THREE.DataTexture(bytes,n,n);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;t.needsUpdate=true;return t;}
+/** A warm grade multiplied over a manufacturer photo whose neutral beige reads cool grey under the evening sky and
+ * the 2700 K lights. Caffè Crema is a warm beige (Techo-Bloc's "warm revival" palette): a slight amber lift keeps it
+ * beige at dusk without changing its daylight value much. Every other photo stays as photographed. */
+const SWATCH_GRADES:Record<string,string>={'caff-crema':'#fff0dc'};
+export const swatchGrade=(key?:string)=>{const colour=key?.split('/')[2];return (colour&&SWATCH_GRADES[colour])||'#ffffff';};
 /** A colour darkened to a share of its brightness (joint sand in its own shade). */
 const shade=(hex:string,k:number)=>`#${new THREE.Color(hex).multiplyScalar(k).getHexString()}`;
 /** UVs for one piece (non-indexed): each triangle in the plane of its facing axis, in repeats, shifted by the piece's own
@@ -94,7 +99,7 @@ function YardBatch({items,color,role,occlusion,paverSize,supplierImage,sampleWin
  const material=useMemo<THREE.Material>(()=>{
   const finish=(m:THREE.MeshStandardMaterial)=>role==='stone-step'||role==='wall-block'||role==='wall-cap'?applyWallDaylight(m):m;
   const relieve=(m:THREE.MeshStandardMaterial)=>detail&&kind?applySurfaceRelief(m,kind):m;
-  if(supplierImage){let alive=true;const m=new THREE.MeshStandardMaterial({color,vertexColors:true,roughness:role==='wall-block'?.9:.84});m.userData.hardscapeSwatch=true;const map=new THREE.TextureLoader().load(supplierImage,()=>{if(!alive)return;m.color.set('#ffffff');invalidate();},undefined,()=>{if(!alive)return;map.dispose();m.map=null;m.color.set(color);m.needsUpdate=true;invalidate();});map.colorSpace=THREE.SRGBColorSpace;map.wrapS=map.wrapT=THREE.ClampToEdgeWrapping;map.anisotropy=Math.min(quality.anisotropy,gl.capabilities.getMaxAnisotropy());m.map=map;const dispose=m.dispose.bind(m);m.dispose=()=>{alive=false;dispose();};return relieve(finish(applyHardscapeFinish(m)));}
+  if(supplierImage){let alive=true;const m=new THREE.MeshStandardMaterial({color,vertexColors:true,roughness:role==='wall-block'?.9:.84});m.userData.hardscapeSwatch=true;const map=new THREE.TextureLoader().load(supplierImage,()=>{if(!alive)return;m.color.set(swatchGrade(items[0]?.surface?.swatchKey));invalidate();},undefined,()=>{if(!alive)return;map.dispose();m.map=null;m.color.set(color);m.needsUpdate=true;invalidate();});map.colorSpace=THREE.SRGBColorSpace;map.wrapS=map.wrapT=THREE.ClampToEdgeWrapping;map.anisotropy=Math.min(quality.anisotropy,gl.capabilities.getMaxAnisotropy());m.map=map;const dispose=m.dispose.bind(m);m.dispose=()=>{alive=false;dispose();};return relieve(finish(applyHardscapeFinish(m)));}
   if(role==='geogrid')return new THREE.MeshStandardMaterial({color,alphaMap:reinforcementGridTexture(),transparent:true,opacity:.85,roughness:1,side:THREE.DoubleSide,depthWrite:false});
   if(water)return new THREE.MeshPhysicalMaterial({color,roughness:.06,metalness:0,transmission:.4,transparent:true,opacity:.67,thickness:8,ior:1.333,envMapIntensity:1,clearcoat:1,depthWrite:false,normalMap:rippleTexture(),normalScale:new THREE.Vector2(.15,.15)});
   if(simplified)return relieve(new THREE.MeshStandardMaterial({color,vertexColors:true,roughness:.85,map:jointTexture()}));
