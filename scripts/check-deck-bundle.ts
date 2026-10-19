@@ -87,7 +87,12 @@ import {basename} from 'node:path';
 // October 15 (showcase estate, PR 146): path lights kept off paving, pergola posts outside the beams and the
 // freestanding-deck framing price inside the estimate graph — option-deltas worker 211.0 → 212.2 KB gzip.
 // Raised to 213 KB with the owner's approval; the showcase scene itself stays out of the worker.
-const BUDGET_KB={routeInitial:276,routeCss:12,viewer:340,pdf:150,deltaWorker:213,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35};
+// October 19 (estate lighting and outdoor rooms, PRs 182 and 183): the three new light records (the underwater pool
+// light with its GFCI/ESA warnings and two round flush lights), seven new lighting zones and the two-per-tread step
+// option are validated and priced with the first estimate. Route 275.7 → 276.8 KB gzip (276.9 with PR 183's
+// furniture and fire bowl ids), option-deltas worker 212.4 → 213.1 KB. Both checkers stay lazy (guarded below).
+// Raised to 277/214 KB with the owner's approval.
+const BUDGET_KB={routeInitial:277,routeCss:12,viewer:340,pdf:150,deltaWorker:214,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);
