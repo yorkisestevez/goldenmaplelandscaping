@@ -103,19 +103,19 @@
           "uri": "swivel-lounge-chair-lod0.glb",
           "bytes": 399072,
           "triangles": 21776,
-          "sha256": "fa27c503d767ef6cecf2dcc3f25fc4a93b968fd4626a7be5b80a071cf375180f"
+          "sha256": "fadfbd843d3313b62736f302163f04d935336fd11c869a6fc27534b81899c3b7"
         },
         {
           "uri": "swivel-lounge-chair-lod1.glb",
           "bytes": 109020,
           "triangles": 5775,
-          "sha256": "6c380090d53ff561e7f86ef1699e49bade868a5b94f8e0bb2ffa0b88d463f7e0"
+          "sha256": "2243c66829b40d25c0c5e6979a6261025d0970a8b980f6572050f5e943513f64"
         },
         {
           "uri": "swivel-lounge-chair-lod2.glb",
           "bytes": 62996,
           "triangles": 3227,
-          "sha256": "17042949e653aed924ba71e598b97a5d0810aecd2dc667bbede75a8a1f0ddaf5"
+          "sha256": "b03f02150d1f83a9afd3961c65befeaf88a9e002e7a2577d270952553ee300a0"
         }
       ]
     },
@@ -172,19 +172,19 @@
           "uri": "cantilever-umbrella-lod0.glb",
           "bytes": 74952,
           "triangles": 3444,
-          "sha256": "2644ae0a434b1c85cc3c4b201be5f253200a4f4b07ac1a9371aa1a443822f3d9"
+          "sha256": "a70a00455d69ac03e175ccfec812f9b17aa40e1d7a2b4e43442498a059188e0c"
         },
         {
           "uri": "cantilever-umbrella-lod1.glb",
           "bytes": 33684,
           "triangles": 1387,
-          "sha256": "65cd2b2e044726235447d2cb3f247a1b98fb3214419c9dd467ba8bab14b9ce71"
+          "sha256": "a64cf7f27562202d352f2f129f9343a7f353b8bcd0683a6b5b6c21950bd101f5"
         },
         {
           "uri": "cantilever-umbrella-lod2.glb",
           "bytes": 24444,
           "triangles": 931,
-          "sha256": "57d7b541b980757112128faaebd5120b5606fb1eba9a2e9490996f4ff4fe12cf"
+          "sha256": "cfcd4a27d36f0e4058b9210867f38d454eb0f8eb385db23ac39e0b516735a198"
         }
       ]
     },
@@ -241,19 +241,19 @@
           "uri": "woven-dining-chair-lod0.glb",
           "bytes": 87440,
           "triangles": 4184,
-          "sha256": "1ce81eb3e6a94b4c398dc7bdc0e1c570be5be990d819dd9f294b23f764dce1b0"
+          "sha256": "777b53837c9332f3e43766702896d68721b71a64cf159b46ee4f7511f36f1a8c"
         },
         {
           "uri": "woven-dining-chair-lod1.glb",
           "bytes": 37148,
           "triangles": 1639,
-          "sha256": "47fc88526bef2e82eeeab0cfb1cf26187fbc79845777c2d4fdb293a6b2c141c0"
+          "sha256": "53aed9fef68b09b4a698c787f1520fb10388d99e2687e505f75c28f82e5631f0"
         },
         {
           "uri": "woven-dining-chair-lod2.glb",
           "bytes": 29716,
           "triangles": 1273,
-          "sha256": "5848b06315fee30d8413b1dfd2c7c5ed7c13273d1bc7106e717a050bab1d5fdf"
+          "sha256": "66c994b7d039cf1a67f148d89c29062c0ee3a9840dd0d441e4b162c85a11ebdc"
         }
       ]
     },
@@ -287,19 +287,19 @@
           "uri": "bar-stool-lod0.glb",
           "bytes": 68308,
           "triangles": 3208,
-          "sha256": "15369b9be8f9a5df9f2cfe691c79aaeae1f114ccceb22f010478b6fa0016b1ef"
+          "sha256": "e6fc591abc14d34e7286698537e2852f4ee7aa881239895c89d66222c7a1e576"
         },
         {
           "uri": "bar-stool-lod1.glb",
           "bytes": 35756,
           "triangles": 1587,
-          "sha256": "26df95ebe2e7e5609d21b377a96284ec316c186f558a787a7f5112e7ae27a407"
+          "sha256": "a59f5a5d060ce4dfd16aafea57cae09d377b79f09d7733e52a6438504c3f9b93"
         },
         {
           "uri": "bar-stool-lod2.glb",
           "bytes": 23748,
           "triangles": 971,
-          "sha256": "7faa76b43ffb38cbaec566d2c4b2d531fc062f99ec4852b900e61b01fa561c90"
+          "sha256": "b47527427a9de2864fd01f40e4c6f7c60e8c0f2f8c682c3ed8afe9b151fcbea3"
         }
       ]
     },
@@ -310,19 +310,19 @@
           "uri": "outdoor-lantern-lod0.glb",
           "bytes": 70036,
           "triangles": 3460,
-          "sha256": "af4caf3906f14482781bdb0ca42ce4b426bc78a062462779cfd2d0409eec713c"
+          "sha256": "5be80230565ad33c933362abc64663daecc58763722c2e1bf43bb9de62356812"
         },
         {
           "uri": "outdoor-lantern-lod1.glb",
           "bytes": 34476,
           "triangles": 1515,
-          "sha256": "d9d82a3eb2036752632c4648fd08905a6573ffb0aad45950f56662ee80af7224"
+          "sha256": "a39cee052fc9596a0689b0819f706c944048b126369389fb03aef1a88cf9e84b"
         },
         {
           "uri": "outdoor-lantern-lod2.glb",
           "bytes": 28164,
           "triangles": 1183,
-          "sha256": "6adada42862c88cc7736aabf7631f6e500eca9060a4f5e70c8c5957164e3d19b"
+          "sha256": "f5bc5a4afb348a95bc4a1cccd9bd06f91fe47f1d7a8df4c37aa61079f46471d2"
         }
       ]
     },
@@ -333,19 +333,19 @@
           "uri": "infrared-heater-lod0.glb",
           "bytes": 28396,
           "triangles": 1285,
-          "sha256": "a04614a9e5b87a001a2b0d4b035f7543ca396950fc56f928f1ad74356ceed9be"
+          "sha256": "e0673714a6ae0e9119ff32a2fb47668d459082c707db53849b9732bc367db141"
         },
         {
           "uri": "infrared-heater-lod1.glb",
           "bytes": 14796,
           "triangles": 520,
-          "sha256": "701a25ee6435c92b724864e78c16740becae20f347d6afe2b8a27051a593de7f"
+          "sha256": "511654fe8e0783d6322de3b203ac61bd314776df7e93a7467e712ae0f39ad8d2"
         },
         {
           "uri": "infrared-heater-lod2.glb",
           "bytes": 14796,
           "triangles": 520,
-          "sha256": "701a25ee6435c92b724864e78c16740becae20f347d6afe2b8a27051a593de7f"
+          "sha256": "511654fe8e0783d6322de3b203ac61bd314776df7e93a7467e712ae0f39ad8d2"
         }
       ]
     }

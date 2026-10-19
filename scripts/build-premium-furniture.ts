@@ -20,7 +20,7 @@ const M={
  rope:{name:'Woven taupe rope',color:'#9d8d77',rough:.93},
  teak:{name:'Oiled teak',color:'#a77b52',rough:.6},
  teakDark:{name:'Teak end grain',color:'#946a45',rough:.66},
- frame:{name:'Powder-coated bronze aluminium',color:'#2f2c29',rough:.42,metal:.35},
+ frame:{name:'Powder-coated bronze aluminium',color:'#2f2c29',rough:.62,metal:.18},
  plinth:{name:'Shadow plinth',color:'#1d1c1b',rough:.8},
  concrete:{name:'Warm cast concrete',color:'#a79d90',rough:.88},
  stone:{name:'Greyed nickel stone veneer',color:'#b7b3ad',rough:.86},
