@@ -109,6 +109,9 @@ let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);che
 // that pulled the checker back in would bring its messages into a first-load chunk.
 const initialText=initial.map(f=>readFileSync(new URL(f,assets),'utf8')).join('\n');
 ok(!initialText.includes('has no underwater light'),'The light-placement checker stays outside the first estimate');
+// October 19 (estate outdoor rooms, PR 183): the outdoor-room checker (outdoorRoomRules.ts) loads after the first paint
+// too, so its fire, pool and patio geometry stays lazy.
+ok(!initialText.includes('keep one band width'),'The outdoor-room checker stays outside the first estimate');
 ok(routeKB<=BUDGET_KB.routeInitial,`Deck designer initial JS is ${routeKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.routeInitial} KB): ${initial.join(', ')}`);
 // The route's own CSS, beyond the stylesheet every page loads.
 const sharedCss=new Set(manifest.routes.root.css??[]);
