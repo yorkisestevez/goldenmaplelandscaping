@@ -17,6 +17,8 @@ import {PAVER_BRANDS} from '../../data/carrPrices';
 import baseline from '../../data/engine-baseline.json';
 import {getHousePlacement} from './housePlacement';
 import {hasHouseBlocks,houseOutline} from './houseFootprint';
+import {poolLightPlaces} from './lightingPlacementRules';
+export {poolLightPlaces};
 const flat=(h:number):SitePlane=>({x:0,z:0,constant:h});
 const volume=(ps:PlanPoint[][],top:SitePlane,bottom:SitePlane)=>yardSolidCells(ps).reduce((n,p)=>n+Math.max(0,planeVolume(abovePlane(p,subtractPlanes(top,bottom)),subtractPlanes(top,bottom)))/46656,0);
 const strip=(p:PoolFeature,lo:number,hi:number)=>{const b=poolLocalBounds(p);return [poolWorldPoint(p,{x:b.minX-1000,y:lo}),poolWorldPoint(p,{x:b.maxX+1000,y:lo}),poolWorldPoint(p,{x:b.maxX+1000,y:hi}),poolWorldPoint(p,{x:b.minX-1000,y:hi})];};
@@ -100,6 +102,6 @@ export function reconcilePoolMaterials(pools:PoolFeatureModel[],features:YardFea
  }
  const all=new Set(patios.map(f=>f.config.id));boxes.splice(0,boxes.length,...boxes.filter(b=>!all.has(b.featureId)),...patios.flatMap(f=>f.boxes));
 }
-registerPoolModelRuntime({getPoolModels,reconcilePoolMaterials});
+registerPoolModelRuntime({getPoolModels,reconcilePoolMaterials,poolLightPlaces});
 
 import {prismVolume,subtractBand,subtractPrism,lowerPrisms,type Prism} from './materialPrisms';

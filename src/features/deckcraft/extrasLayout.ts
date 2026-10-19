@@ -13,7 +13,7 @@ import {screenLengthIn,screenOn,screenProduct} from './privacyScreens';
 import {getHouseContact} from './houseContact';
 import {getHousePlacement} from './housePlacement';
 import {houseOutline,openingWallId} from './houseFootprint';
-import {poolLightPlaces} from './lightingPlacementRules';
+import {poolLightPlaces} from './poolModel';
 import {POOL_LIGHT_ID} from './poolLightSpec';
 import {borderLightingPlan} from './borderLighting';
 import {onPaving,pavingRings,shiftOffPaving} from './pathLightPlacement';

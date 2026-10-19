@@ -1,16 +1,16 @@
 import {usePergolaQuote} from './usePergolaQuote';
 import {pergolaQuoteKey} from '../pergolaPricing';
-import {useEffect,useMemo,type Dispatch,type SetStateAction} from 'react';
+import {useEffect,useMemo,useState,type Dispatch,type SetStateAction} from 'react';
 import {calculateDeckReleaseEstimate as calculateEstimate,deckReleaseData} from '../deckRelease';
 import {DECK_SETTINGS} from '../defaults';
 import {describeDesign} from '../designFacts';
 import {extrasLayout,treadNose} from '../extrasLayout';
 import {houseRailingReviewFlags} from '../houseRailingClearance';
 import {isSystemProduct,lightingSystemCheck,syncAutoLighting} from '../lightingSystem';
-import {lightingPlacementIssues} from '../lightingPlacementRules';
 import {outdoorRoomIssues} from '../outdoorRoomRules';
 import {houseOutline} from '../houseFootprint';
 import type {DeckData} from '../types';
+type PlacementRules=typeof import('../lightingPlacementRules');
 
 /**
  * What re-prices the design: the design without its appearance (house looks and openings, screen positions, scene
@@ -46,7 +46,11 @@ export function useDeckEstimate(data:DeckData,setData:Dispatch<SetStateAction<De
   },[autoKey]);
   const hasFixtures=lightingCheck.items.some(p=>!isSystemProduct(p));
   // Where the lights sit against the lighting best practices (lightingPlacementRules.ts): pool, floors, steps, beds, pool clearance.
-  const placementFlags=useMemo(()=>lightingPlacementIssues(data,estimate.model,extras.fixtures,{treadWidths:estimate.model.treads.map(t=>treadNose(t).width),houseRings:data.houseVisible!==false?houseOutline(data):[]}),[data,estimate.model,extras.fixtures]);
+  // The checker is advisory and never blocks a save, so it loads after the first paint (the route's bundle budget) and
+  // its flags join the list once it is here.
+  const [placementRules,setPlacementRules]=useState<PlacementRules>();
+  useEffect(()=>{let alive=true;import('../lightingPlacementRules').then(rules=>{if(alive)setPlacementRules(rules);});return ()=>{alive=false;};},[]);
+  const placementFlags=useMemo(()=>placementRules?placementRules.lightingPlacementIssues(data,estimate.model,extras.fixtures,{treadWidths:estimate.model.treads.map(t=>treadNose(t).width),houseRings:data.houseVisible!==false?houseOutline(data):[]}):[],[placementRules,data,estimate.model,extras.fixtures]);
   const roomFlags=useMemo(()=>outdoorRoomIssues(data,estimate.model),[data,estimate.model]);
   const reviewFlags=[...new Set([...houseRailingReviewFlags(data,estimate.model,estimate.flags),...extras.warnings,...placementFlags,...roomFlags])];
   // One description of the design feeds the estimate step, the summary download, the proposal and a sent design.
