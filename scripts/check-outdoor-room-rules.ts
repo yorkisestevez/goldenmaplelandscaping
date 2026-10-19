@@ -9,12 +9,17 @@ const run=(d:Design)=>outdoorRoomIssues(d,buildDeckTakeoff(d));
 const base=ontarioShowcaseDesign();
 // The showcase passes every room rule; the pool reminder is the only line.
 assert.deepEqual(run(base).filter(m=>!m.startsWith('A pool needs a by-law enclosure')),[]);
-assert.ok(run(base).some(m=>m.includes('1.22 m')),'R-POOL-FENCE reminder');
 assert.deepEqual(showcaseSampleIssues(base),[]);
 assert.deepEqual(showcaseSampleIssues(ontarioShowcaseDesign({palette:'classic'})),[],'the classic Onyx palette also builds');
 const edit=(fn:(d:Design)=>void)=>{const d=structuredClone(base);fn(d);return run(d);};
 const move=(id:string,dx:number,dz:number)=>(d:Design)=>{const o=d.landscapeObjects!.find(o=>o.id===id)!;o.xIn+=dx;o.zIn+=dz;};
 const has=(msgs:string[],text:string)=>assert.ok(msgs.some(m=>m.includes(text)),`expected "${text}" in ${JSON.stringify(msgs)}`);
+// R-POOL-FENCE: one reminder per design with a pool in use, at Barrie's 1.2 m; none when the pool is switched off.
+const fence=(msgs:string[])=>msgs.filter(m=>m.startsWith('A pool needs a by-law enclosure'));
+assert.equal(fence(run(base)).length,1,'R-POOL-FENCE reminder');
+assert.ok(fence(run(base))[0].includes('at least 1.2 m high'),`R-POOL-FENCE gives Barrie's 1.2 m: ${fence(run(base))[0]}`);
+assert.deepEqual(fence(edit(d=>{for(const p of d.pools!)p.enabled=false;})),[],'No fence reminder for a pool that is switched off');
+assert.deepEqual(fence(edit(d=>{d.pools=[];})),[],'No fence reminder without a pool');
 // F-CHAISE-COPING: a chaise pushed 12 in toward the water.
 has(edit(move('pool-chaise-1',0,12)),'from the pool coping');
 // F-COFFEE-GAP: the coffee table 6 in toward the sofa.

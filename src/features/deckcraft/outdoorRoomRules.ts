@@ -112,7 +112,7 @@ export function outdoorRoomIssues(data:DeckData,model?:Pick<DeckTakeoff,'levels'
  const extraWalk=[...walks].filter(k=>!main.has(k));
  if(main.size>2||extraWalk.length>1||main.size+extraWalk.length>3)out.push(`The paving uses ${main.size+extraWalk.length} colour and finish combinations; keep to a field and a band, with a third only on the walks.`);
  // R-POOL-FENCE
- if((data.pools??[]).length)out.push('A pool needs a by-law enclosure: in Barrie a barrier at least 1.22 m high with self-closing, self-latching gates and a pool enclosure permit. Confirm the lot fence and gates qualify.');
+ if((data.pools??[]).some(p=>p.enabled))out.push('A pool needs a by-law enclosure: in Barrie a barrier at least 1.2 m high with self-closing, self-latching gates and a pool enclosure permit. Confirm the lot fence and gates qualify.');
  return out;
 }
 /** Whether a patio reads as a walk for M-PAVE-COUNT. */

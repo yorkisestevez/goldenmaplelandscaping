@@ -306,7 +306,7 @@ export function ontarioShowcaseDesign({palette='trend-2026'}:{palette?:ShowcaseP
   `LOUSOL custom, black, one roof of about ${roofM2.toFixed(1)} m². A permit is required, and the roof needs LOUSOL's sealed design. Closed-louver snow is about 2.4 kPa against their 55 psf limit; confirm uplift. Snow guards on the house roof, or a setback so snow can slide off.`,
   'Guards are 36 in, openings of 4 in or less, on the ends and yard side, open at the stair. The house edge has no guard. The 16 in gap gets a flashed trim board or rim.',
   'The stair is an 8 ft centre flight: 5 risers at 7.2 in, 4 treads at an 11 in run, 11 stringers at 10 in o.c., a doubled front rim at the stair, and a handrail on both sides. The crema terrace landing is at least the stair width by 36 in deep, with a concrete strip under the pavers at the stair foot.',
-  'Pool enclosure (Barrie by-law): 1.22 m min., non-climbable, self-closing and self-latching gates, permit. Confirm the lot fence.',
+  'Pool enclosure (Barrie by-law): 1.2 m min., non-climbable, self-closing and self-latching gates, permit. Confirm the lot fence.',
   'Kitchen, heaters and furniture: design intent, unpriced. Gas by a TSSA fitter, circuits by an electrician.',
  ].join(' ');
  if(data.scopeOfWork.length>2000)throw Error(`The build notes exceed the scope field (${data.scopeOfWork.length}).`);
