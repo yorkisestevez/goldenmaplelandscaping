@@ -1,0 +1,48 @@
+{
+  "location": {
+    "city": "barrie",
+    "region_label": "Barrie / Simcoe County",
+    "kijiji_location_id": "1700078",
+    "kijiji_location_slug": "barrie",
+    "homedepot_host": "www.homedepot.ca",
+    "currency": "CAD"
+  },
+  "economics": {
+    "local_fee_rate": 0.0,
+    "ebay_fee_rate": 0.1325,
+    "gas_and_pickup_cad": 15,
+    "hours_per_deal": 1.5,
+    "hourly_opportunity_cad": 25,
+    "min_net_profit_cad": 40,
+    "min_roi": 0.35,
+    "min_ask_cad": 20,
+    "max_ask_cad": 2500
+  },
+  "sources": {
+    "craigslist": true,
+    "kijiji": true,
+    "homedepot_watchlist": true,
+    "ebay_comps": false
+  },
+  "search_queries": [
+    "dewalt",
+    "milwaukee",
+    "generator",
+    "snowblower",
+    "pressure washer",
+    "lawn mower",
+    "air compressor",
+    "trailer",
+    "chainsaw"
+  ],
+  "homedepot_watchlist": [
+    {
+      "sku": "1000746788",
+      "name": "Example — replace with a real SKU you flip",
+      "typical_resale_cad": 80,
+      "notes": "Delete this row after you add real SKUs"
+    }
+  ],
+  "manual_listings": [],
+  "alert_webhook": ""
+}
