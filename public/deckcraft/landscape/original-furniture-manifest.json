@@ -333,19 +333,19 @@
           "uri": "kitchen-island-lod0.glb",
           "bytes": 833052,
           "triangles": 44920,
-          "sha256": "3c00a165f85d9c4b9c47592247cea45ab6d1f2e667d9c74dec6a2101bc7490ac"
+          "sha256": "04c2db52467bdfcaf79c1dddd9254841fb6e7c92c0cd370f94aa9a08fa76ffe0"
         },
         {
           "uri": "kitchen-island-lod1.glb",
           "bytes": 315472,
           "triangles": 16359,
-          "sha256": "b19f69fe77a09ac78ad315436ac99979e8ab62769968172baeef7decc3699e92"
+          "sha256": "55596ab05162daa483c8689aa595cd7246b6bec446151067346559515892d455"
         },
         {
           "uri": "kitchen-island-lod2.glb",
           "bytes": 310072,
           "triangles": 16171,
-          "sha256": "7d32b02a0ed583d835e3c7a0ca29637974ba89d717be9d64427cabe8f0a6086d"
+          "sha256": "781cea5cc4788db470fea5285353f22c7cbf08aa9d9f69a1c011221bfad15002"
         }
       ]
     }

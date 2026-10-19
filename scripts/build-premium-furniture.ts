@@ -33,7 +33,7 @@ const M={
  rug:{name:'Flat-weave rug field',color:'#cbc1b0',rough:.98},
  rugBorder:{name:'Flat-weave rug border',color:'#7d6f5f',rough:.98},
  glass:{name:'Lantern glass',color:'#e9eef0',rough:.05,alpha:.22},
- led:{name:'Warm LED strip, 2700 K',color:'#f6e7d0',rough:.5,emissive:'#ffb866',emissiveStrength:2.2},
+ led:{name:'Warm LED strip, 2700 K',color:'#f6e7d0',rough:.5,emissive:'#ffd29a',emissiveStrength:1.3},
  candle:{name:'Warm LED candle',color:'#f3e6cf',rough:.6,emissive:'#ffb35c',emissiveStrength:1.6},
  heaterFace:{name:'Infrared element grille',color:'#1b1b1b',rough:.5,metal:.4},
 } satisfies Record<string,Mat>;
