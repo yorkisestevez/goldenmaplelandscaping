@@ -33,6 +33,7 @@ const M={
  rug:{name:'Flat-weave rug field',color:'#cbc1b0',rough:.98},
  rugBorder:{name:'Flat-weave rug border',color:'#7d6f5f',rough:.98},
  glass:{name:'Lantern glass',color:'#e9eef0',rough:.05,alpha:.22},
+ led:{name:'Warm LED strip, 2700 K',color:'#f6e7d0',rough:.5,emissive:'#ffb866',emissiveStrength:2.2},
  candle:{name:'Warm LED candle',color:'#f3e6cf',rough:.6,emissive:'#ffb35c',emissiveStrength:1.6},
  heaterFace:{name:'Infrared element grille',color:'#1b1b1b',rough:.5,metal:.4},
 } satisfies Record<string,Mat>;
@@ -185,6 +186,8 @@ function kitchenIsland(b:Builder){
  // x along the island, cook face +Z. Body z −9..19.5 (bar wall at the back), counter z −5..21 at 36 in, bar ledge z −21..−4 at 42 in.
  const X=66,ctr=36,ct=1.5,bar=42,j=.3,course=5.9,face=.9;
  b.add(M.mortar,box(2*X-2,ctr-ct,24.5,0,0,7.25));b.add(M.mortar,box(2*X-2,bar-ct,4,0,0,-7));
+ // Warm LED strips under the counter lip and the bar ledge wash the stone at night, as built outdoor kitchens are lit.
+ b.add(M.led,box(2*X-6,.35,.5,0,ctr-ct-.4,20.6));b.add(M.led,box(2*X-6,.35,.8,0,bar-ct-.4,-19.8));
  const units=[15.6,11.8,19.7];
  /** Coursed Greyed Nickel units over the joint colour along [a0,a1], skipping the `skip` ranges. */
  const lay=(a0:number,a1:number,y0:number,y1:number,skip:[number,number][],put:(a:number,c:number,y:number,h:number)=>void)=>{let row=0;for(let y=y0;y<y1-.4;y+=course,row++){const h=Math.min(course,y1-y)-j;let a=a0-(row%2?7.4:0),k=row;while(a<a1){const c=Math.min(a1,a+units[k++%3]);let s0=Math.max(a0,a);const pieces:[number,number][]=[[s0,c]];
