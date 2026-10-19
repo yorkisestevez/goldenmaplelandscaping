@@ -69,7 +69,7 @@ export function fixtureNight(productId:string,zone?:string):FixtureNight{
   const g=p.geometry,d=p.dimensionsIn,kelvin=p.colorTemperatureK??DEFAULT_KELVIN,legacy=LEGACY_FIXTURE_SHAPES.includes(productId);
   // Underwater: a wide soft beam out of the wall, tipped a little down, lighting the floor and the far wall. The water's
   // own glow round each lamp is drawn by the night water (Pool3D), since a surface lit from below gets no direct light.
-  if(productId===POOL_LIGHT_ID)return {route:'patch',kelvin,lens:{position:[0,0,.2],normal:[0,0,1],radiusIn:POOL_LENS_IN/2,lengthIn:0,strength:.32},
+  if(productId===POOL_LIGHT_ID)return {route:'patch',kelvin,lens:{position:[0,0,.2],normal:[0,0,1],radiusIn:POOL_LENS_IN/2,lengthIn:0,strength:.07},
     source:{kind:'spot',position:[0,0,1.5],direction:norm([0,-.18,1]),halfLengthIn:0,radiusIn:POOL_LENS_IN/2,angle:deg(55),penumbra:1,candela:55,rangeFt:26},shadowPriority:0};
   if(g==='recessed'){
     const lensY=FLUSH_TRIM_IN+FLUSH_LENS_PROUD_IN/2;
