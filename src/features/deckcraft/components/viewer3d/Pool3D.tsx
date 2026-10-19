@@ -27,15 +27,14 @@ export function poolBufferGeometry(mesh:PoolRenderMesh,depthAt?:(x:number,z:numb
 }
 /** Recorded tint plus unmeasured generic mineral finish; never a claimed supplier scan.
  * Day keeps the clear outdoor surface. Night is a separate material: the same
- * calm ripples, a dark teal body, and a faint panorama so the coping lights
- * show in the water. */
+ * calm ripples, a dark teal body, a faint panorama, and the glow of any underwater lights. */
 /** An underwater light as the night water sees it: position (project inches) and the way its beam leaves the wall. */
 export type PoolLamp={x:number;z:number;angle:number};
 /** The most underwater lights one water surface glows from. */
 export const MAX_POOL_LAMPS=8;
 /** Glow the water carries from each underwater light: a warm core at the lens fading into a soft teal fan across the
  * pool (the light scattering in the water and off a light shell). Render-only coefficients, not photometry. */
-export const POOL_LAMP_GLOW={teal:'#2bb5ad',tealStrength:.95,warm:'#ffdcae',warmStrength:.75,reachFt:8,spreadFt:1.3,fanPerFt:.6};
+export const POOL_LAMP_GLOW={teal:'#2bb5ad',tealStrength:.95,warm:'#ffdcae',warmStrength:.5,reachFt:8,spreadFt:1.6,fanPerFt:.6};
 export function poolMaterial(part:Pick<PoolRenderMesh,'color'|'role'>,evening=false,lamps:PoolLamp[]=[]){
   if(part.role==='water'){
    const night=evening?NIGHT_WATER_OPTICS:null,look=night??WATER_OPTICS,ripple=night?.ripple??([.008,.005,.002] as [number,number,number]);
