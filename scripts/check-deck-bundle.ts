@@ -104,6 +104,11 @@ const shared=new Set([manifest.entry.module,...manifest.entry.imports,manifest.r
 const initial=[route.module,...(route.imports??[])].filter(m=>!shared.has(m)).map(m=>m.replace(/^\/assets\//,''));
 const routeKB=initial.reduce((n,f)=>n+gz(f),0);
 let checks=0;const ok=(value:unknown,message:string)=>{assert(value,message);checks++;};
+// October 19 (estate lighting, PR 182): the light-placement checker (lightingPlacementRules.ts) loads after the first
+// paint and the pool-light places come with the pool geometry, so neither rides in the first estimate. A static import
+// that pulled the checker back in would bring its messages into a first-load chunk.
+const initialText=initial.map(f=>readFileSync(new URL(f,assets),'utf8')).join('\n');
+ok(!initialText.includes('has no underwater light'),'The light-placement checker stays outside the first estimate');
 ok(routeKB<=BUDGET_KB.routeInitial,`Deck designer initial JS is ${routeKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.routeInitial} KB): ${initial.join(', ')}`);
 // The route's own CSS, beyond the stylesheet every page loads.
 const sharedCss=new Set(manifest.routes.root.css??[]);
