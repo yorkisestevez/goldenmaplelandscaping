@@ -258,6 +258,29 @@
       ]
     },
     {
+      "id": "kitchen-island",
+      "lods": [
+        {
+          "uri": "kitchen-island-lod0.glb",
+          "bytes": 833048,
+          "triangles": 44920,
+          "sha256": "21136209750e4cbb49d2070709507506dfdc300d68b3a680384651884be3ac18"
+        },
+        {
+          "uri": "kitchen-island-lod1.glb",
+          "bytes": 315468,
+          "triangles": 16359,
+          "sha256": "993ee47834c750a13b1afab668fb75cada9bb687a0f27b14cb1aaa9fbfd09f25"
+        },
+        {
+          "uri": "kitchen-island-lod2.glb",
+          "bytes": 310068,
+          "triangles": 16171,
+          "sha256": "2bd144b64ba58c40df44241eb1ae4171234d4fcb1ddefeb566e3085d884c9eec"
+        }
+      ]
+    },
+    {
       "id": "bar-stool",
       "lods": [
         {
@@ -323,29 +346,6 @@
           "bytes": 14796,
           "triangles": 520,
           "sha256": "511654fe8e0783d6322de3b203ac61bd314776df7e93a7467e712ae0f39ad8d2"
-        }
-      ]
-    },
-    {
-      "id": "kitchen-island",
-      "lods": [
-        {
-          "uri": "kitchen-island-lod0.glb",
-          "bytes": 833052,
-          "triangles": 44920,
-          "sha256": "04c2db52467bdfcaf79c1dddd9254841fb6e7c92c0cd370f94aa9a08fa76ffe0"
-        },
-        {
-          "uri": "kitchen-island-lod1.glb",
-          "bytes": 315472,
-          "triangles": 16359,
-          "sha256": "55596ab05162daa483c8689aa595cd7246b6bec446151067346559515892d455"
-        },
-        {
-          "uri": "kitchen-island-lod2.glb",
-          "bytes": 310072,
-          "triangles": 16171,
-          "sha256": "781cea5cc4788db470fea5285353f22c7cbf08aa9d9f69a1c011221bfad15002"
         }
       ]
     }

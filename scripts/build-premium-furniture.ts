@@ -23,9 +23,9 @@ const M={
  frame:{name:'Powder-coated bronze aluminium',color:'#2f2c29',rough:.62,metal:.18},
  plinth:{name:'Shadow plinth',color:'#1d1c1b',rough:.8},
  concrete:{name:'Warm cast concrete',color:'#a79d90',rough:.88},
- stone:{name:'Greyed nickel stone veneer',color:'#b7b3ad',rough:.86},
+ stone:{name:'Greyed nickel stone veneer',color:'#cfc6b8',rough:.82},
  mortar:{name:'Recessed joint',color:'#6d6a66',rough:.95},
- granite:{name:'Leathered black granite',color:'#2a2a2b',rough:.48},
+ granite:{name:'Honed warm quartz counter',color:'#e2dace',rough:.3},
  steel:{name:'Brushed stainless steel',color:'#c9cbcc',rough:.32,metal:.92},
  steelDark:{name:'Grill grate and burner',color:'#232323',rough:.55,metal:.6},
  knob:{name:'Black control knob',color:'#151515',rough:.4},
@@ -197,7 +197,7 @@ function kitchenIsland(b:Builder){
  lay(-X+1,X-1,0,ctr-ct,appliances,(a,c,y,h)=>b.add(M.stone,box(c-a,h,face,(a+c)/2,y,19.5+face/2,.1)));
  lay(-X+1,X-1,0,bar-ct,[],(a,c,y,h)=>b.add(M.stone,box(c-a,h,face,(a+c)/2,y,-9-face/2,.1)));
  for(const side of [-1,1]){lay(-9-face,19.5+face,0,ctr-ct,[],(a,c,y,h)=>b.add(M.stone,box(face,h,c-a,side*(X-1+face/2),y,(a+c)/2,.1)));lay(-9-face,-5,ctr-ct,bar-ct,[],(a,c,y,h)=>b.add(M.stone,box(face,h,c-a,side*(X-1+face/2),y,(a+c)/2,.1)));}
- // Leathered black granite, eased edges.
+ // Honed warm quartz, eased edges; it catches the downlight at night.
  b.add(M.granite,box(2*X,ct,26,0,ctr-ct,8,.35));b.add(M.granite,box(2*X,ct,17,0,bar-ct,-12.5,.35));
  // Built-in 36 in grill: access doors, a control panel with four knobs, a firebox and a rounded hood with a front handle.
  b.add(M.steel,box(gw+2,22,.8,gx,3,19.5+face+.4,.2));

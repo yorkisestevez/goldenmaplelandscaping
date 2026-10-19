@@ -566,7 +566,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <Environment3D data={{...data,houseVisible:data.houseVisible!==false&&isObjectVisible(data.editorOrganization,'house')}} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
 
-  </group><Suspense fallback={null}><Landscape3D data={{...data,landscapeObjects:data.landscapeObjects?.filter(o=>isObjectVisible(data.editorOrganization,o.id))}} showMatureSpread={showMatureSpread}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
+  </group>{evening&&lightsOn&&<KitchenDownlights data={data}/>}<Suspense fallback={null}><Landscape3D data={{...data,landscapeObjects:data.landscapeObjects?.filter(o=>isObjectVisible(data.editorOrganization,o.id))}} showMatureSpread={showMatureSpread}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
 
 }
 
@@ -733,4 +733,12 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
 
   </div>{onUpdate&&!structure&&!cutaway&&<FlythroughLauncher data={data}/>}{terrainWarnings.length>0&&<details open className="text-xs py-2" aria-label="Terrain conflicts"><summary>Terrain needs attention · {terrainWarnings.length}</summary><ul>{terrainWarnings.map(w=><li key={w}>{w}</li>)}</ul></details>}</>;
 
+}
+
+/** Night stills: a warm 2700 K pergola-style downlight over each outdoor kitchen island so the
+ * veneer and counter read at night instead of relying on the under-counter LED strip alone. */
+function KitchenDownlights({data}:{data:DeckData}){
+ const islands=(data.landscapeObjects??[]).filter(o=>o.enabled&&o.assetId==='kitchen-island');
+ return <group name="kitchen-downlights">{islands.map(o=>{let y=0;try{y=landscapePlacement(data,o).y;}catch{/* runtime not loaded yet */}
+  return <group key={o.id}><pointLight position={[o.xIn/12,y+7.5,o.zIn/12-1.2]} color="#ffcf98" intensity={14} distance={16} decay={2}/><pointLight position={[o.xIn/12,y+7.5,o.zIn/12+2.2]} color="#ffcf98" intensity={9} distance={14} decay={2}/></group>;})}</group>;
 }
