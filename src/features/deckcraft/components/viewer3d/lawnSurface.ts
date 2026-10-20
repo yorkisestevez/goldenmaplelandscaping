@@ -86,11 +86,13 @@ export function lawnMaterial(){
   const m=new THREE.MeshStandardMaterial({color:'#ffffff',roughness:1,metalness:0,normalScale:new THREE.Vector2(.3,.3)});
   // Until Turf sets the yard (a retaining wall's bank never does), the guard covers everything: no haze.
   const aerial={uLawnCentre:{value:new THREE.Vector2()},uYardIn:{value:1e9}};m.userData.aerial=aerial;
+  // The far lawn fades to this mean; Turf.tsx scales it with the season's lawn tint so near and far agree.
+  const mean={value:new THREE.Vector3(...LAWN_MEAN)};m.userData.lawnMean=mean;
   m.customProgramCacheKey=()=>'dc-lawn-v4';
   m.onBeforeCompile=(shader,renderer)=>{
     if(!shader.fragmentShader.includes('#include <fog_fragment>'))throw new Error('Turf: the lawn shader no longer has fog_fragment');
     Object.assign(shader.uniforms,skyUniforms(renderer),aerial);
-    shader.uniforms.uTile={value:TILE_IN};shader.uniforms.uMean={value:new THREE.Vector3(...LAWN_MEAN)};
+    shader.uniforms.uTile={value:TILE_IN};shader.uniforms.uMean=mean;
     shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vLawn;varying vec3 vLawnWorld;').replace('#include <uv_vertex>','#include <uv_vertex>\n  vLawn=position.xz;vLawnWorld=(modelMatrix*vec4(position,1.)).xyz;');
     shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>\n${SKY_PARS}uniform vec2 uLawnCentre;uniform float uYardIn;varying vec3 vLawnWorld;\n${SKY_RADIANCE}${LAWN_FRAGMENT_HEAD}`)
       .replace('#include <fog_fragment>',LAWN_AIR)

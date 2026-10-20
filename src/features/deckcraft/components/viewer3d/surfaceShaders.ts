@@ -93,6 +93,8 @@ export const PATCHED_CHUNKS:[string,string][]=[['map_fragment','texture2D( map, 
 
 function patch(material:THREE.MeshStandardMaterial,surface:Surface){
   material.userData.surface=surface;
+  // Deck boards and treads are shovelled in winter (seasonSnow.ts reads this; no import keeps the snow code out of here).
+  material.userData.snow='dust';
   material.customProgramCacheKey=()=>`${SURFACE_PROGRAM}:${surface.box?'box':'mesh'}:${surface.relief.value?'relief':''}`;
   material.onBeforeCompile=shader=>{
     shader.uniforms.uStrips=surface.strips;

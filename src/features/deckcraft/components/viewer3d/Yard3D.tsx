@@ -88,6 +88,8 @@ function reliefKind(role:YardRole):DetailKind|null{
  if(role==='wall-block'||role==='rock')return 'stone';
  return null;
 }
+/** Walkable stone is shovelled in winter (seasonSnow.ts reads the mark; no import keeps the snow code out of this chunk). */
+function shovelled(role:YardRole,material:THREE.Material){if(role==='paver'||role==='stone-step'||role==='fire-pad')material.userData.snow='dust';return material;}
 function YardBatch({evening=false,items,color,role,occlusion,supplierImage,sampleWindow,inspection}:{evening?:boolean;items:YardBox[];inspection:boolean;color:string;role:YardRole;occlusion:SharedOcclusion;supplierImage?:string;sampleWindow?:SampleWindow}){
  const scanned=SCANNED[role],supplierSurface=!!items[0]?.surface,simplified=!supplierSurface&&role==='paver'&&items.every(b=>b.illustrative&&b.patternFrame),water=role==='water';
  const geometry=useMemo(()=>{const ranges:{start:number;end:number;pick:ReturnType<typeof boxSelection>}[]= [];let faces=0;const pieces=items.filter(b=>!b.renderDuplicate).map(b=>{let g=yardFinishGeometry(b);if(role==='bedding'&&!inspection){const top=jointSurfaceGeometry(g);g.dispose();g=top;}if(g.index){const converted=g.toNonIndexed();g.dispose();g=converted;}const p=g.getAttribute('position'),c=new THREE.Float32BufferAttribute(new Float32Array(p.count*3),3),appearance=hardscapeAppearance(b);
@@ -98,7 +100,8 @@ function YardBatch({evening=false,items,color,role,occlusion,supplierImage,sampl
   for(let v=0;v<p.count;v++)c.setXYZ(v,appearance.r,appearance.g,appearance.b);g.setAttribute('color',c);ranges.push({start:faces,end:faces+p.count/3,pick:boxSelection(b)});faces+=p.count/3;return g;});const merged=mergeGeometries(pieces);pieces.forEach(p=>p.dispose());if(merged)merged.userData.hardscapeRanges=ranges;return merged;},[items,scanned,simplified,water,occlusion?.bounds,sampleWindow,inspection,role]);
  const invalidate=useThree(s=>s.invalidate),gl=useThree(s=>s.gl),quality=useRenderQuality();
  const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags),detail=Boolean(flags)&&showcaseDetail(quality.tier),kind=reliefKind(role);
- const material=useMemo<THREE.Material>(()=>{
+ // Pavers, stone steps and fire pads are shovelled in winter: a dusting, so the stone still shows (seasonSnow.ts).
+ const material=useMemo<THREE.Material>(()=>shovelled(role,(()=>{
   const finish=(m:THREE.MeshStandardMaterial)=>role==='stone-step'||role==='wall-block'||role==='wall-cap'?applyWallDaylight(m):m;
   const relieve=(m:THREE.MeshStandardMaterial)=>detail&&kind?applySurfaceRelief(m,kind):m;
   if(supplierImage){let alive=true;const m=new THREE.MeshStandardMaterial({color,vertexColors:true,roughness:role==='wall-block'?.9:.84});m.userData.hardscapeSwatch=true;const map=new THREE.TextureLoader().load(supplierImage,()=>{if(!alive)return;m.color.set(swatchGrade(items[0]?.surface?.swatchKey,evening));invalidate();},undefined,()=>{if(!alive)return;map.dispose();m.map=null;m.color.set(color);m.needsUpdate=true;invalidate();});map.colorSpace=THREE.SRGBColorSpace;map.wrapS=map.wrapT=THREE.ClampToEdgeWrapping;map.anisotropy=Math.min(quality.anisotropy,gl.capabilities.getMaxAnisotropy());m.map=map;const dispose=m.dispose.bind(m);m.dispose=()=>{alive=false;dispose();};return relieve(finish(applyHardscapeFinish(m)));}
@@ -107,7 +110,7 @@ function YardBatch({evening=false,items,color,role,occlusion,supplierImage,sampl
   if(simplified)return relieve(new THREE.MeshStandardMaterial({color,vertexColors:true,roughness:.85,map:jointTexture()}));
   if(scanned)return relieve(finish(scanMaterial(scanned.set,color,{roughness:scanned.roughness,normalScale:scanned.normalScale,vertexColors:true,anisotropy:Math.min(quality.anisotropy,gl.capabilities.getMaxAnisotropy()),onLoad:invalidate})));
   return new THREE.MeshStandardMaterial({color,vertexColors:true,bumpMap:surfaceTexture(),bumpScale:role==='bedding'?.0015:.003,roughness:role==='liner'?.65:.92,metalness:role==='pump'?.25:0});
- },[supplierImage,water,simplified,scanned,color,role,gl,invalidate,quality,detail,kind,evening]);
+ })()),[supplierImage,water,simplified,scanned,color,role,gl,invalidate,quality,detail,kind,evening]);
  useFixtureLit(material);
  // Hardscape takes the lawn's shade from the sky; a one-pixel white stand-in keeps the program the same until it arrives.
  useLayoutEffect(()=>{if(water||!(material instanceof THREE.MeshStandardMaterial))return;material.aoMap=occlusion?.texture??WHITE;material.aoMapIntensity=.75;invalidate();},[material,occlusion,water,invalidate]);
