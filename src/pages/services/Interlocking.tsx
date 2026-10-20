@@ -76,8 +76,8 @@ export default function Interlocking() {
 
           <PlanningQuote
             source="interlocking-barrie"
-            rate="$55–$85"
-            rateDetail="per square foot installed. A planning range, not a quote for your property."
+            rate="$40–$45"
+            rateDetail="per square foot before HST for most 300–1,000 sq ft interlocking patios with mid-tier pavers. A planning range, not a quote for your property."
             categories={['Patios & interlocking', 'Driveways']}
             defaultService="Interlocking patio"
             repairHref="/premium-patio-rebuild-barrie/"

@@ -83,8 +83,8 @@ function PaverQuoteForm() {
     <div id="quote-form" className="bg-brand-burgundy/95 backdrop-blur-md border border-brand-gold/25 rounded-[2px] p-5 sm:p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
       <p className="mb-6">
         <span className="font-sans text-[10px] uppercase tracking-[0.22em] text-brand-gold block mb-2">Planning range</span>
-        <span className="font-display text-4xl text-brand-porcelain">$55–$85</span>
-        <span className="block font-sans text-sm text-brand-porcelain/80 font-light mt-2">per square foot installed for interlocking. A planning range, not a quote for this property.</span>
+        <span className="font-display text-4xl text-brand-porcelain">$40–$45</span>
+        <span className="block font-sans text-sm text-brand-porcelain/80 font-light mt-2">per square foot before HST for most 300–1,000 sq ft interlocking patios with mid-tier pavers. A planning range, not a quote for this property.</span>
       </p>
       <p className="font-sans text-sm text-brand-porcelain/80 font-light mb-6">
         Sinking or uneven interlock is a repair and re-level.{' '}

@@ -30,6 +30,8 @@ export interface ServiceDef {
   blurb: string;
   startingPriceText: string;
   perUnitText: string;
+  /** What the rate assumes, shown beside it in the quote panel (kept out of perUnitText, which feeds meta descriptions). */
+  rateBasis?: string;
   scope: string[];
   whyMatters: string;
   faqs: { q: string; a: string }[];
@@ -58,8 +60,9 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     shortName: 'Interlocking',
     blurb:
       'Patios, walkways, and driveways planned around site conditions and Ontario freeze-thaw cycles; final base depth is confirmed in the written scope.',
-    startingPriceText: '$55–$85',
-    perUnitText: 'per square foot installed',
+    startingPriceText: '$40–$45',
+    perUnitText: 'per sq ft before HST, interlocking patios',
+    rateBasis: '300–1,000 sq ft, mid-tier pavers',
     scope: [
       'Base prep and materials specified for the site; excavation depth is confirmed per project',
       'Geotextile separation on clay soils',
@@ -96,8 +99,8 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     shortName: 'Composite Decking',
     blurb:
       'Composite deck options for Ontario weather; available products and any manufacturer warranty are confirmed with the selected product documentation.',
-    startingPriceText: '$45–$85',
-    perUnitText: 'per square foot installed',
+    startingPriceText: 'Priced in 3D',
+    perUnitText: 'in the deck designer',
     scope: [
       'Pressure-treated structural framing on engineered concrete piers',
       'TimberTech AZEK Vintage or Trex Transcend deck boards',
@@ -135,7 +138,8 @@ export const SERVICES: Record<ServiceKey, ServiceDef> = {
     blurb:
       'Engineered structural walls built with geogrid reinforcement to hold sloped lots flat — for decades, not seasons.',
     startingPriceText: '$330–$670',
-    perUnitText: 'per linear foot before HST, for walls from under 2 ft up to 4–6 ft high (about 50 ft, accessible site)',
+    perUnitText: 'per linear foot before HST, retaining walls',
+    rateBasis: 'under 2 ft up to 4–6 ft high, about 50 ft on an accessible site',
     scope: [
       '3/4" clear stone footing on compacted aggregate',
       'Allan Block, Techo-Bloc Mini-Creta, or Permacon engineered units',

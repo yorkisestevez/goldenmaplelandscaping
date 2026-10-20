@@ -140,7 +140,7 @@ export default function ServiceLocation() {
               <PlanningQuote
                 source={`service-${slug}`}
                 rate={service.startingPriceText.startsWith('$') ? service.startingPriceText : undefined}
-                rateDetail={`${service.perUnitText}. A planning range, not a quote for your property.`}
+                rateDetail={`${service.perUnitText}${service.rateBasis ? `, ${service.rateBasis}` : ''}. A planning range, not a quote for your property.`}
                 categories={quoteCategories[parsed.service] ?? []}
                 defaultService={parsed.service === 'interlocking' ? 'Interlocking patio' : parsed.service === 'composite-decking' ? 'Composite deck' : parsed.service === 'retaining-walls' ? 'Retaining wall' : 'Landscape design'}
                 repairHref={parsed.service === 'interlocking' ? '/premium-patio-rebuild-barrie/' : undefined}

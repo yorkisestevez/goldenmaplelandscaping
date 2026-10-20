@@ -17,6 +17,7 @@
 import crypto from 'node:crypto';
 import { BUSINESS, publicContact } from '../../src/data/business';
 import { parseQuickRangeInput, quickRange } from '../../src/utils/sophieQuote';
+import { guardReply, MAX_SHOWN_RANGES, type AllowedRange } from '../../src/utils/sophieGuard';
 
 interface NetlifyEvent {
   httpMethod: string;
@@ -56,14 +57,19 @@ GUARDRAILS:
 
 /** The widget's estimator range arrives from the browser, so it is untrusted: the browser sends only
  *  the visitor's 3 tap choices, and the server re-prices them with the estimator engine itself. */
-function pricingPrompt(raw: unknown): string {
+function pricedRange(raw: unknown) {
   const choice = parseQuickRangeInput(raw);
-  if (!choice) return '';
+  if (!choice) return null;
   const range = quickRange(choice);
-  if (range.kind !== 'range') return '';
+  return range.kind === 'range' ? range : null;
+}
+
+function pricingPrompt(range: ReturnType<typeof pricedRange>, earlier: NonNullable<ReturnType<typeof pricedRange>>[] = []): string {
+  if (!range) return '';
+  const others = earlier.filter((r) => r.summary !== range.summary);
   return `
 
-PRICING CONTEXT (from the site cost estimator, shown to the visitor): ${range.summary}: ${range.band}. You may quote exactly these numbers as a planning range that is confirmed at a site visit. Never quote any other price, and offer /book to set up the site visit.`;
+PRICING CONTEXT (from the site cost estimator, shown to the visitor): ${range.summary}: ${range.band}.${others.length ? ` Earlier in this chat: ${others.map((r) => `${r.summary}: ${r.band}`).join('; ')}.` : ''} You may quote exactly these numbers as planning ranges that are confirmed at a site visit. Never quote any other price, and offer /book to set up the site visit.`;
 }
 
 // Sophie appends a machine-readable lead block when she's collected contact
@@ -140,10 +146,19 @@ export const handler = async (event: NetlifyEvent) => {
 
   let messages: ClientMsg[] = [];
   let pricing = '';
+  // The only price the reply may contain: the range the server computed itself. guardReply enforces it below.
+  let given: AllowedRange = null;
   try {
     const parsed = JSON.parse(event.body || '{}');
     messages = Array.isArray(parsed.messages) ? parsed.messages : [];
-    pricing = pricingPrompt(parsed.pricingContext);
+    const range = pricedRange(parsed.pricingContext);
+    // Every range the widget showed in this chat, each re-priced here from the visitor's tap choices.
+    const earlier = (Array.isArray(parsed.pricingContexts) ? parsed.pricingContexts : []).slice(-MAX_SHOWN_RANGES)
+      .map(pricedRange).filter((r): r is NonNullable<typeof r> => !!r);
+    pricing = pricingPrompt(range, earlier);
+    // After a deck tap there is no current range, but the ones shown before it may still be repeated.
+    const allowed = [...(range ? [range] : []), ...earlier].map((r) => ({ low: r.low, high: r.high }));
+    given = allowed.length ? allowed : null;
   } catch {
     return { statusCode: 400, body: JSON.stringify({ error: 'invalid json' }) };
   }
@@ -219,6 +234,8 @@ export const handler = async (event: NetlifyEvent) => {
       leadCaptured = await forwardLead(leadMatch[1]);
       visibleReply = reply.replace(LEAD_RE, '').replace(/\[\[\/?LEAD\]\]/gi, '').trim();
     }
+    // Last line of defence: no price but the given range, no blocked business claim reaches the visitor.
+    visibleReply = guardReply(visibleReply, given).text;
 
     return {
       statusCode: 200,

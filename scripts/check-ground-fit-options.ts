@@ -31,6 +31,16 @@ const {groundFitOptions}=await import('../src/features/deckcraft/groundFit');
 register('data:text/javascript,'+encodeURIComponent('export async function load(url,context,next){if(url.endsWith(".css"))return {format:"module",source:"",shortCircuit:true};return next(url,context);}'));
 const {groundFitPriceEffect}=await import('../src/features/deckcraft/designer/GroundFitPanel');
 type Result=Awaited<ReturnType<typeof groundFitOptions>>;type Option=Result['options'][number];
+// What the search finds, not how fast it finds it. Under load the default 4 s budget cut the search short and the
+// option set changed from run to run (the side patio came back as level:4, level:2, deck:3+edge, level:3 one run and
+// level:2, level:3 the next). Checks on which options come back give it time to finish, and fail with the reason if it
+// still stops early. The timing checks in (a) and (b) keep the real budget.
+const FULL_BUDGET_MS=120_000;
+const fitAll=async(design:DeckData,request:Omit<Parameters<typeof groundFitOptions>[1],'budgetMs'>)=>{
+ const r=await groundFitOptions(design,{...request,budgetMs:FULL_BUDGET_MS});
+ ok(!r.warnings.some(w=>/time limit/.test(w)),`${request.featureId}: the search ran to the end, so the options do not depend on machine load (${r.warnings.join(' | ')})`);
+ return r;
+};
 const sill=data.houseConfig!.floorHeightIn!,ALLOWED=new Set(['yardFeatures','stairTargets','stairOffset','height','lightingSystem']);
 const CONTACT=/^(?:the measured ground beside it is up to ([\d.]+) in above|its finished surface stands up to ([\d.]+) in above)/;
 const JUMP=/^(\d+) proposed grading boundary span\(s\) change elevation abruptly \(maximum ([\d.]+) in\)/,STAIR=/\brises?\b|\btreads?\b/i;
@@ -109,20 +119,21 @@ ok(tr.r.status==='ready'&&tr.ms<=6000&&tr.slices.every(own),`Traced 180-point bo
 checkAll(run.r,big,'2000 shots',true);
 
 // (b) Craighurst: ready, current first, deterministic, input untouched, timed.
+// Timed at the real budget (it must finish inside it); what it finds is checked on full-budget runs.
 let progress:[number,number][]=[];
-const t0=performance.now(),first=await groundFitOptions(data,{featureId:'landing',onProgress:(d,n)=>progress.push([d,n])}),coldMs=performance.now()-t0;
-const t1=performance.now(),second=await groundFitOptions(data,{featureId:'landing'}),warmMs=performance.now()-t1;
-ok(first.status==='ready'&&first.featureId==='landing'&&!first.warnings.some(w=>/time limit/.test(w)),`Craighurst: ready, searched in full (${first.warnings.join(' ')})`);
+const t0=performance.now(),coldRun=await groundFitOptions(data,{featureId:'landing',onProgress:(d,n)=>progress.push([d,n])}),coldMs=performance.now()-t0;
+const t1=performance.now(),warmRun=await groundFitOptions(data,{featureId:'landing'}),warmMs=performance.now()-t1;
+const first=await fitAll(data,{featureId:'landing'}),second=await fitAll(data,{featureId:'landing'});
+ok(first.status==='ready'&&first.featureId==='landing',`Craighurst: ready (${first.warnings.join(' ')})`);
 ok(first.options[0]?.id==='current'&&first.options[0].kind==='current','Current design comes first');
 ok(first.options.length>=2&&first.options.length<=5,`Current plus 1–4 options (${first.options.length-1})`);
 ok(JSON.stringify(first)===JSON.stringify(second),'Deterministic: two runs give the same options');
 ok(JSON.stringify(data)===before,'Input design unchanged (serialized)');assert.deepEqual(data,beforeClone);checks++;
-ok(coldMs<4000&&warmMs<4000,`Craighurst under 4 s (cold ${coldMs.toFixed(0)} ms, warm ${warmMs.toFixed(0)} ms)`);
-ok(progress.length>2&&progress.every(([d,n],i)=>d<=n&&(i===0||d>=progress[i-1][0]))&&progress.at(-1)![0]===progress.at(-1)![1],`Progress counts up to its total (${progress.length} reports)`);
+ok(coldMs<4000&&warmMs<4000&&[coldRun,warmRun].every(r=>r.status==='ready'&&!r.warnings.some(w=>/time limit/.test(w))),`Craighurst searched in full inside its 4 s budget (cold ${coldMs.toFixed(0)} ms, warm ${warmMs.toFixed(0)} ms; ${coldRun.warnings.join(' ')})`);ok(progress.length>2&&progress.every(([d,n],i)=>d<=n&&(i===0||d>=progress[i-1][0]))&&progress.at(-1)![0]===progress.at(-1)![1],`Progress counts up to its total (${progress.length} reports)`);
 
 // (c) Every option checked; the stone edge is capped at two courses; quoted work ranks last.
 checkAll(first,data,'Craighurst',true);
-const current=first.options[0],all8=await groundFitOptions(data,{featureId:'landing',maxOptions:8});checkAll(all8,data,'Craighurst (8)',true);
+const current=first.options[0],all8=await fitAll(data,{featureId:'landing',maxOptions:8});checkAll(all8,data,'Craighurst (8)',true);
 const fewer=first.options.filter(o=>o.metrics.risers!==null&&o.metrics.risers<4),three=all8.options.find(o=>o.metrics.risers===3&&o.kind==='level');
 ok(fewer.length>0,`An option changes the risers (${fewer.map(o=>`${o.id}: ${o.metrics.risers}×${o.metrics.riseIn!.toFixed(2)} in`).join(', ')})`);
 // 3 risers reach no lower than 30 − 3 × 7.75 = +6.75 in; the ground under the landing averages about +2 in, so the
@@ -135,7 +146,7 @@ ok(all8.options.slice(1).every(o=>o.subtotal<current.subtotal||o.metrics.bankCut
 ok(!all8.options.some(o=>o.id==='level:2+edge')&&all8.options.every(o=>o.metrics.edgeMaxIn<=16),`No stone edge past two courses (${all8.options.filter(o=>o.kind==='edge').map(o=>`${o.id} ${o.metrics.edgeMaxIn} in`).join(', ')||'none offered'})`);
 const adds=quotedWork(first);ok(!adds(first.options[1])&&first.options.slice(1).some(o=>adds(o)),`Craighurst lists an option without quoted work first (${first.options.slice(1).map(o=>`${o.id}${adds(o)?' (by quote)':''}`).join(', ')})`);
 // A raised patio whose only way past a wide bank is a stone edge taller than two courses: not offered, and said so.
-const raised=async(e:number)=>{const d=await load(c=>{c.stairFlights=0;delete c.stairTargets;c.yardFeatures[0].finishedElevationIn=e;});return {d,r:await groundFitOptions(d,{featureId:'landing',levers:{level:false}})};};
+const raised=async(e:number)=>{const d=await load(c=>{c.stairFlights=0;delete c.stairTargets;c.yardFeatures[0].finishedElevationIn=e;});return {d,r:await fitAll(d,{featureId:'landing',levers:{level:false}})};};
 const tall=await raised(16),low=await raised(12);
 ok(!tall.r.options.some(o=>o.kind==='edge')&&tall.r.warnings.some(w=>/retaining wall/.test(w)&&/past two courses/.test(w)),`A 20 in stone face is not offered, and the panel says why (${tall.r.warnings.join(' ')})`);
 ok(low.r.options.some(o=>o.kind==='edge'&&o.metrics.edgeMaxIn<=16)&&!low.r.warnings.some(w=>/retaining wall/.test(w)),`A stone edge within two courses is still offered (${low.r.options.map(o=>`${o.id} ${o.metrics.edgeMaxIn}`).join(', ')})`);
@@ -149,15 +160,15 @@ for(const o of all8.options.slice(1)){const text=groundFitPriceEffect(o,all8.bas
  ok(shown===want&&/^(?:[+−]\$[\d,]+|no change|[a-z].* by quote)/.test(text)&&!/^\$0\b|[+−]\$0\b/.test(text),`${o.id}: "${text}" = ${dollars(o.subtotal)} − ${dollars(all8.baseline!.subtotal)}`);}
 
 // (e) Lever switches, patio only, legacy, cancel.
-const levelOnly=await groundFitOptions(data,{featureId:'landing',levers:{stair:false,deck:false,edge:false},maxOptions:8});
+const levelOnly=await fitAll(data,{featureId:'landing',levers:{stair:false,deck:false,edge:false},maxOptions:8});
 ok(levelOnly.status==='ready'&&levelOnly.options.slice(1).every(o=>o.kind==='level'&&o.patch.stairOffset===undefined&&o.patch.height===undefined),`Level lever alone (${levelOnly.options.slice(1).map(o=>o.id).join(', ')})`);
 checkAll(levelOnly,data,'Level-only',true);
 const patioOnly=parseDesign(serializeDesign({...data,stairFlights:0,stairTargets:undefined}));
-const po=await groundFitOptions(patioOnly,{featureId:'landing'}),poLevel=await groundFitOptions(patioOnly,{featureId:'landing',levers:{edge:false}});
+const po=await fitAll(patioOnly,{featureId:'landing'}),poLevel=await fitAll(patioOnly,{featureId:'landing',levers:{edge:false}});
 ok(po.status==='ready'&&po.options.length>=2&&po.options.slice(1).every(o=>(o.kind==='level'||o.kind==='edge')&&o.metrics.risers===null&&o.patch.stairTargets===undefined),`Patio only: options (${po.options.slice(1).map(o=>`${o.id} ${o.metrics.landingIn}`).join(', ')})`);
 ok(poLevel.options.length>=2&&poLevel.options.slice(1).every(o=>o.kind==='level')&&new Set(poLevel.options.map(o=>o.metrics.landingIn)).size===poLevel.options.length,`Patio only: distinct level options (${poLevel.options.slice(1).map(o=>`${o.id} ${o.metrics.landingIn}`).join(', ')})`);
 checkAll(poLevel,patioOnly,'Patio-only level',false);checkAll(po,patioOnly,'Patio-only',false);
-const legacy=await groundFitOptions({...data,siteModel:undefined},{featureId:'landing'});
+const legacy=await fitAll({...data,siteModel:undefined},{featureId:'landing'});
 ok(legacy.status==='pending'&&!legacy.options.length&&legacy.warnings.length===1,`Legacy design without a survey is pending (${legacy.warnings[0]})`);
 ok((await groundFitOptions(data,{featureId:'nope'})).status==='pending','Unknown patio is pending');
 const abort=new AbortController();abort.abort();ok((await groundFitOptions(data,{featureId:'landing',signal:abort.signal})).status==='pending','An aborted request returns pending');
@@ -166,31 +177,36 @@ ok(lateResult.status==='pending'&&lateResult.warnings[0].includes('cancelled'),'
 ok(JSON.stringify(data)===before,'Input still unchanged after every run');
 
 // (f) Another patio's own ground message never hides this patio's options (G1 is scoped to this patio, and to what
-// fitting it changes). The side patio's dig-back warning used to leave only a stone-edge option.
+// fitting it changes). The side patio's dig-back warning used to leave only a stone-edge option. Whether a stair slide
+// is shown also depends on prices: one a level option beats on every count is dropped (with the 2026-10-08 fascia rates,
+// stair:4 prices 15 cents above level:4), so the stair lever is proved on its own, with the level lever off.
 const side=await load(c=>{const l=c.yardFeatures[0];c.yardFeatures=[{...structuredClone(l),id:'side',name:'Side patio',xFt:9,widthFt:3,zFt:7.75,depthFt:2},l];});
-const sideFit=await groundFitOptions(side,{featureId:'landing',maxOptions:8});
+const sideFit=await fitAll(side,{featureId:'landing',maxOptions:8});
 ok(calculateEstimate(side).yardModel.warnings.some(w=>w.startsWith('Side patio: the measured ground beside it is up to')),'Side patio: carries its own ground message');
-ok(sideFit.options.some(o=>o.kind==='level')&&sideFit.options.some(o=>o.kind==='stair'),`Side patio: level and stair options come back (${sideFit.options.slice(1).map(o=>o.id).join(', ')})`);
+ok(sideFit.options.some(o=>o.kind==='level'),`Side patio: level options come back (${sideFit.options.slice(1).map(o=>o.id).join(', ')})`);
+const sideStairs=await fitAll(side,{featureId:'landing',maxOptions:8,levers:{level:false}});
+ok(sideStairs.options.some(o=>o.kind==='stair'),`Side patio: stair options come back when no level option can beat them (${sideStairs.options.slice(1).map(o=>o.id).join(', ')})`);
+checkAll(sideStairs,side,'Side patio, stair and deck levers',true);
 checkAll(sideFit,side,'Side patio',true);
 const sideFitted=await load(c=>{const l=c.yardFeatures[0];c.yardFeatures=[{...structuredClone(l),id:'side',name:'Side patio',xFt:9,widthFt:3,zFt:7.75,depthFt:2,finishedElevationIn:9,groundFit:{slopeRatio:3}},l];});
-checkAll(await groundFitOptions(sideFitted,{featureId:'landing',maxOptions:8}),sideFitted,'Fitted side patio',true);
+checkAll(await fitAll(sideFitted,{featureId:'landing',maxOptions:8}),sideFitted,'Fitted side patio',true);
 
 // (g) A second stair with a set riser count keeps its rise in limits: the deck lever used to raise the deck to 30.25 in
 // and leave it at 4 × 7.79 in ("Edited stair count gives 7.79-inch rises").
 const twoFlights=async(e1:number)=>{const d=await load(c=>{c.houseConfig.floorHeightIn=34.12;c.stairFlights=2;});return {...d,stairTargets:[...d.stairTargets!,{flightId:'grade-1',elevationIn:e1,riserCount:4,treadDepthIn:10.6875,surface:'terrain' as const}]};};
 const tight=await twoFlights(-.9),roomy=await twoFlights(0);
 ok(!buildDeckTakeoff(tight).issues.some(i=>/Edited stair count/.test(i)),'Two stairs: the second starts at 4 × 7.725 in, within limits');
-const tightAll=await groundFitOptions(tight,{featureId:'landing',maxOptions:8}),tightDeck=await groundFitOptions(tight,{featureId:'landing',levers:{level:false,stair:false,edge:false},maxOptions:8});
+const tightAll=await fitAll(tight,{featureId:'landing',maxOptions:8}),tightDeck=await fitAll(tight,{featureId:'landing',levers:{level:false,stair:false,edge:false},maxOptions:8});
 checkAll(tightAll,tight,'Two stairs',true);
 ok(tightDeck.status==='ready'&&!tightDeck.options.some(o=>o.kind==='deck'),`Two stairs: no deck height breaks the second stair (${tightDeck.options.slice(1).map(o=>`${o.id} h=${o.patch.height}`).join(', ')||'none offered'})`);
-const roomyDeck=await groundFitOptions(roomy,{featureId:'landing',levers:{level:false,stair:false,edge:false},maxOptions:8});
+const roomyDeck=await fitAll(roomy,{featureId:'landing',levers:{level:false,stair:false,edge:false},maxOptions:8});
 ok(roomyDeck.options.some(o=>o.kind==='deck'),`Two stairs with room: the deck lever still works (${roomyDeck.options.slice(1).map(o=>`${o.id} h=${o.patch.height}`).join(', ')})`);
 checkAll(roomyDeck,roomy,'Two stairs, deck lever',true);
 
 // (h) No option adds a jump in the grading: here sliding the stair with a stone edge used to leave a 0.5 in step.
 const bumped=await load(c=>{c.stairFlights=2;for(const p of c.siteModel.points)if(p.zIn>100)p.elevationIn+=12;});
 const bumpedTwo={...bumped,stairTargets:[...bumped.stairTargets!,{flightId:'grade-1',elevationIn:0,riserCount:4,treadDepthIn:10.6875,surface:'terrain' as const}]};
-checkAll(await groundFitOptions(bumpedTwo,{featureId:'landing',maxOptions:8}),bumpedTwo,'Raised back yard',true);
+checkAll(await fitAll(bumpedTwo,{featureId:'landing',maxOptions:8}),bumpedTwo,'Raised back yard',true);
 
 // (i) The agent command: options without a change, then one option applied as one design change.
 let state:DeckAgentHostState={data,view:'plan',openSections:[],canUndo:false,canRedo:false,ready:true},commits=0;
