@@ -11,8 +11,9 @@ import {tiltStockPoint,untiltStockPoint} from './yardElevationGeometry';
  * cut pieces. A later patio joins the first patio it touches (overlapping it, or along at least 6 in of its edge) when
  * both are plain paving with the same stock, colour, bond and bond direction (pavingLook.ts), on the same finished
  * plane. It is then laid on that patio's grid (its origin, rotation and row/column numbering), and a paver both patios
- * share keeps one id, one look and one outline. Each patio still owns the paving inside its own footprint, so areas,
- * pricing and per-patio quantities are unchanged. Patios at different levels, or in different paving, stay separate.
+ * share keeps one id, one look and one outline. Each patio still owns the paving inside its own footprint, so areas
+ * and pricing are unchanged; a shared paver is one stone, counted and ordered once, by the patio that laid it first.
+ * Patios at different levels, or in different paving, stay separate.
  */
 const LEVEL_TOLERANCE_IN=.05;
 type Unit={box:YardBox;contours:PlanPoint[][]};
@@ -51,7 +52,8 @@ export function rowGrid(rows:{depth:number;lengths:number[]}[],gap:number,rw:num
 }
 /** Records one paver laid by a field member: `boxes` are its fragments (the first is the one drawn) and `contours` the
  * paver as cut to that member's paving. A paver an earlier member already laid is drawn once, from the earlier
- * fragment, as the union of every member's part of it; the later fragments stay in their patio's quantities only. */
+ * fragment, as the union of every member's part of it, and counted there; the later fragments are drawn and counted
+ * by the earlier one. */
 export function sharePaver(field:PavingField,unitId:string,boxes:YardBox[],contours:PlanPoint[][]){
  if(!boxes.length)return;
  const unit=field.units.get(unitId);

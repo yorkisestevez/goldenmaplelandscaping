@@ -1,7 +1,19 @@
-import {yardPaverProfiles,type YardBox,type YardModel} from '../../yardModel';
+import {yardClip,yardPaverProfiles,type YardBox,type YardModel} from '../../yardModel';
 import {planeAt,planeNormalScale} from '../../yardElevationGeometry';
 
 export const MAX_DETAILED_PREVIEW_PAVERS=6000;
+/** The boxes of the features on show. A paver two joined patios share (pavingJoin.ts) is drawn once, as the whole stone,
+ * from the earlier patio's fragment; with one of the patios hidden it is drawn from the fragments on show only. */
+export function visibleYardBoxes(boxes:YardBox[],shown:(featureId:string)=>boolean):YardBox[]{
+ const hiddenUnits=new Set(boxes.filter(b=>b.unitId&&!shown(b.featureId)).map(b=>b.unitId)),parts=new Map<string,YardBox[]>(),out:YardBox[]=[];
+ for(const b of boxes){
+  if(!shown(b.featureId))continue;
+  if(!b.unitId||!hiddenUnits.has(b.unitId)){out.push(b);continue;}
+  const part={...b};parts.set(b.unitId,[...(parts.get(b.unitId)??[]),part]);out.push(part);
+ }
+ for(const group of parts.values())group.forEach((b,i)=>{if(i){b.renderDuplicate=true;delete b.renderContours;}else{delete b.renderDuplicate;b.renderContours=yardClip(group.map(p=>p.polygon!));}});
+ return out;
+}
 export function hasSimplifiedPaving(model:YardModel){return model.quantities.paverPieces>MAX_DETAILED_PREVIEW_PAVERS&&model.features.some(f=>!f.excluded&&f.config.kind==='patio'&&!f.config.hardscape);}
 
 /** Preview only: the full model remains unchanged for quantities, inspection and exports.

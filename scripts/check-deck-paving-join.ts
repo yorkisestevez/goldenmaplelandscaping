@@ -9,7 +9,7 @@ import {fitNewPatio,newYardFeature} from '../src/features/deckcraft/yardSettings
 import {joinNewPatio} from '../src/features/deckcraft/pavingLook';
 import {rowGrid} from '../src/features/deckcraft/pavingJoin';
 import {patioTopPlane,planeAt} from '../src/features/deckcraft/patioPlane';
-import {yardPreviewBoxes,MAX_DETAILED_PREVIEW_PAVERS} from '../src/features/deckcraft/components/viewer3d/yardPreview';
+import {visibleYardBoxes,yardPreviewBoxes,MAX_DETAILED_PREVIEW_PAVERS} from '../src/features/deckcraft/components/viewer3d/yardPreview';
 import {edgingRuns} from '../src/features/deckcraft/components/viewer3d/bedEdging';
 
 /** Patios drawn at different times that meet are laid as one surface (pavingJoin.ts, pavingLook.ts). */
@@ -42,7 +42,22 @@ eq(rootOf(alone,'b'),undefined,'A different colour is a different surface');
 ok(pavers(alone,'b').every(p=>p.unitId!.startsWith('b-paver-')),'A separate surface keeps its own bond');
 near(feature(alone,'b').quantities.areaSqft,feature(joined,'b').quantities.areaSqft,'Joining never changes a patio\'s area');
 const price=(d:DeckData)=>buildYardTakeoff(d).materials.map(m=>[m.productId,m.installedAreaSqft,m.amountCents]);
-eq(price(design([a,b])),price(design([a,{...b,id:'b2'}])),'Pricing is by area, the same whichever patio is joined');
+eq(price(design([a,b])),price(design([a,{...b,color:'#8a7f72'}])),'Joining never changes pricing: the same as the patios laid as separate surfaces');
+// A paver the patios share is one stone: counted once, in the patio that laid it first.
+const distinct=(m:YardModel,ids:string[])=>new Set(ids.flatMap(id=>pavers(m,id).map(p=>p.unitId))).size;
+eq(feature(joined,'a').quantities.paverPieces,distinct(joined,['a']),'The first patio counts every paver it lays');
+eq(feature(joined,'a').quantities.paverPieces+feature(joined,'b').quantities.paverPieces,distinct(joined,['a','b']),'A shared paver is counted once across the joined patios');
+eq(joined.quantities.paverPieces,distinct(joined,['a','b']),'The design\'s paver count is the stones laid');
+// Shown and hidden: a shared paver is drawn from the fragments of the patios on show, never over a hidden one.
+const drawnArea=(boxes:ReturnType<typeof visibleYardBoxes>)=>boxes.filter(p=>p.role==='paver'&&!p.renderDuplicate).reduce((n,p)=>n+yardArea(p.renderContours??[p.polygon!]),0);
+const ownArea=(id:string)=>pavers(joined,id).reduce((n,p)=>n+yardArea([p.polygon!]),0);
+eq(visibleYardBoxes(joined.boxes,()=>true),joined.boxes,'With every patio shown, the boxes are drawn as laid');
+for(const [hide,show] of [['a','b'],['b','a']]){
+ const shownBoxes=visibleYardBoxes(joined.boxes,id=>id!==hide);
+ ok(shownBoxes.every(p=>p.featureId===show),`Hiding ${hide} draws nothing of it`);
+ near(drawnArea(shownBoxes),ownArea(show),`Hiding ${hide}: ${show}'s pavers are drawn whole across its own paving, and not beyond it`,1e-6);
+ for(const id of new Set(shared.map(p=>p.unitId)))eq(shownBoxes.filter(p=>p.unitId===id&&!p.renderDuplicate).length,1,`Hiding ${hide}: ${id} is drawn once`);
+}
 
 // 2. The joined grid is the first patio's own grid, extended: same rows, columns and ids it lays itself.
 const own=new Set(pavers(buildYardModel(design([a])),'a').map(p=>p.unitId));
@@ -77,6 +92,8 @@ for(const patternId of ['running-bond',finish.patterns[0].id]){
  ok(pavers(m,'hb').every(p=>p.unitId!.startsWith('ha-paver-')),`${patternId}: on the first patio's grid`);
  const both=pavers(m,'hb').filter(p=>pavers(m,'ha').some(q=>q.unitId===p.unitId));
  ok(both.length>0&&both.every(p=>p.renderDuplicate),`${patternId}: a shared stone is drawn once`);
+ const stock=(ids:string[])=>[...new Map(ids.flatMap(id=>pavers(m,id)).map(p=>[p.unitId,p])).values()].reduce((n,p)=>n+(p.stockAreaSqft??0),0);
+ near(feature(m,'ha').quantities.paverStockAreaSqft!+feature(m,'hb').quantities.paverStockAreaSqft!,stock(['ha','hb']),`${patternId}: a shared stone is ordered once`,1e-6);
  const turned=buildYardModel(design([ha,{...hb,hardscape:{...hardscape,angleDeg:45}}]));
  eq(rootOf(turned,'hb'),undefined,`${patternId}: a bond at another angle stays apart`);
 }

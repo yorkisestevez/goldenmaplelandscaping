@@ -114,6 +114,9 @@ function patioGuard(rings:PlanPoint[][],plane:SitePlane,surface:SiteSurface,bloc
 }
 /** Build order: walls and water, then seat walls (one on a patio checks only what stands on the paving), then patios. */
 const rank=(f:YardFeature)=>f.kind==='patio'?2:+!!f.wallConstruction?.freestanding;
+/** The stones a patio lays and orders: one per paver, less any it shares with an earlier patio of its paving
+ * (pavingJoin.ts), which lays and counts that stone. */
+const laidStones=(boxes:YardBox[])=>[...new Map(boxes.filter(b=>b.role==='paver'&&!b.renderDuplicate).map(b=>[b.unitId,b])).values()];
 function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
  const terrain=getTerrainConfig(data),site=data.siteModel?createSiteSurface(designSiteModel(data),terrain):undefined,gradeAt=(z:number,x=0)=>site?site.sample(x,z)??NaN:terrain.elevationIn+z*terrain.slopePct/100,siteAll=site,gradeAll=gradeAt;
  const warnings:string[]=[],features:YardFeatureModel[]=[],boxes:YardBox[]=[],members:YardMember[]=[],excavations:{featureId:string;polys:PlanPoint[][];bottom:number;formationPlane?:SitePlane}[]=[];
@@ -237,7 +240,7 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
      if(paving&&!inlayId)sharePaver(paving,unitId,model.boxes.slice(first),contours);
     }
     const recipe=sel.finish.patterns.find(p=>p.id===zone.hardscape!.patternId);if(inlayId&&recipe?.layout.installationJointMm!==undefined)localWarnings.push(`${zone.name}: supplier installation joint ${recipe.layout.installationJointMm} mm differs from nominal pattern modules; confirm installed spacing before ordering.`);
-    const stock=[...new Map(model.boxes.slice(before).map(b=>[b.unitId,b])).values()],stockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);model.pavingZones??=[];model.pavingZones.push({feature:zone,areaSqft:yardArea(mask)*slopeScale,stockAreaSqft,...(inlayId?{inlayId}:{})});
+    const stock=laidStones(model.boxes.slice(before)),stockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);model.pavingZones??=[];model.pavingZones.push({feature:zone,areaSqft:yardArea(mask)*slopeScale,stockAreaSqft,...(inlayId?{inlayId}:{})});
     model.stockSchedule??=[];model.stockSchedule.push(...sel.finish.units.flatMap(u=>{const pieces=stock.filter(b=>b.stockUnitId===u.id).length;return pieces?[{unitId:u.id,widthMm:u.widthMm,lengthMm:u.lengthMm,heightMm:u.heightMm,pieces,...(inlayId?{productId:zone.productId,inlayId}:{})}]:[];}));
    };
    if(supplier){
@@ -259,8 +262,8 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
    }
    if(!supplier&&valid.length)model.pavingZones=[{feature:f,areaSqft:yardArea(field)*slopeScale,stockAreaSqft:yardArea(field)*slopeScale}];
    for(const p of valid){const mask=pools.length?yardClip([p.outline],footprints,'intersection'):[p.outline];if(mask.length)laySupplier(patioInlayFeature(f,p.inlay),mask,p.inlay.id);if(pools.length&&yardArea(mask)<yardArea([p.outline])-.001)localWarnings.push(`${p.inlay.name}: the pool cuts this inlay; only the remaining paving is installed and ordered. Its saved outline is preserved.`);localWarnings.push(`${p.inlay.name}: custom inlay cutting, setting and waste require a builder quote; this is a cut-paver design, not a manufactured medallion kit.`);}
-   model.quantities={...model.quantities,planAreaSqft:planArea,surfaceAreaSqft:area,paverPieces:new Set(model.boxes.filter(b=>b.role==='paver').map(b=>b.unitId)).size,baseYd3:area*base/324,beddingYd3:area/324,paverAreaSqft:area};
-   if(supplier||valid.length){const stock=[...new Map(model.boxes.filter(b=>b.role==='paver').map(b=>[b.unitId,b])).values()];model.quantities.paverStockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);}
+   model.quantities={...model.quantities,planAreaSqft:planArea,surfaceAreaSqft:area,paverPieces:laidStones(model.boxes).length,baseYd3:area*base/324,beddingYd3:area/324,paverAreaSqft:area};
+   if(supplier||valid.length){const stock=laidStones(model.boxes);model.quantities.paverStockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);}
    const formation=top-thick-1-base,formationPlane=belowPlane(patioPlane,thick+1+base),formationPolys=yardClip(sloped?footprints.map(p=>p.map(v=>({x:v.x+patioPlane.x*(thick+1+base)/slopeScale,y:v.y+patioPlane.z*(thick+1+base)/slopeScale}))):footprints,poolExclusions,'difference');let fill=formationPolys;
    if(site)fill=[]; // Dedicated site fill is integrated against every proposed face below.
    else if(terrain.slopePct){const z0=(formation-terrain.elevationIn)/(terrain.slopePct/100),lo=terrain.slopePct>0?-1e7:z0,hi=terrain.slopePct>0?z0:1e7;fill=yardClip(fill,[[{x:-1e7,y:lo},{x:1e7,y:lo},{x:1e7,y:hi},{x:-1e7,y:hi}]],'intersection');}
