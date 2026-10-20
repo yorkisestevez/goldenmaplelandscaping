@@ -14,7 +14,7 @@ import {BED_RELIEF,bedReliefGeometry,bedReliefs,drapedBed,FLUSH_EDGING,flushEdgi
 import {PLANT_SEAT,plantSeats,STEM_OFFSET,stemCentre,stemRadiusIn} from '../src/features/deckcraft/components/viewer3d/plantSeating';
 import {chipClearance,collarFit,collarGeometry,COLLAR_SIDES,SHADE_RING,shadeRingMatrix,shadeRingRadiusIn} from '../src/features/deckcraft/components/viewer3d/plantContactDecals';
 import {MULCH_FIBRE_MEAN,MULCH_SCAN_MEAN,mulchPhotoColor,mulchSwatch} from '../src/features/deckcraft/components/viewer3d/landscapeSurfaceMaterial';
-import {coverInstances} from '../src/features/deckcraft/components/viewer3d/groundCoverDetail';
+import {clearCoverEdge,coverInstances} from '../src/features/deckcraft/components/viewer3d/groundCoverDetail';
 import {steelEdgingGeometry} from '../src/features/deckcraft/components/viewer3d/Landscape3D';
 import type {LandscapeObject,LandscapePoint} from '../src/features/deckcraft/landscapeTypes';
 import type {DeckData} from '../src/features/deckcraft/types';
@@ -113,13 +113,27 @@ for(const [label,data] of [['flat',flat],['sloped',sloped]] as const){
  ok(chips.every(c=>lone.cutDistance(c.x,c.z)>=BED_RELIEF.taperIn*BED_RELIEF.soilShare),`${label}: no chip on the cut's soil`);
  ok(chips.every(c=>inLone.every(p=>Math.hypot(c.x-p.seat.x,c.z-p.seat.z)>=(collarFit(p.object,p.seat,lone.polys)?.[1]??0))),`${label}: no chip on a collar or lip`);
  ok(chips.every(c=>Math.abs(c.y-c.height*.38-(ground.height(c.x,c.z)+lone.rise(c.x,c.z)))<.02),`${label}: chips sit on the drawn top`);
- const time=(f:()=>void)=>{const runs:number[]=[];for(let i=0;i<7;i++){const t=performance.now();f();runs.push(performance.now()-t);}return runs.sort((a,b)=>a-b)[3];};
- const plain=time(()=>coverInstances('mulch-bed',lone.polys,cells,3,{x:348,z:250},216,6000)),withClearance=time(()=>coverInstances('mulch-bed',lone.polys,cells,3,{x:348,z:250},216,6000,[],clearance));
- ok(withClearance<=plain*1.25+2,`${label}: chip layout stays about as fast (${plain.toFixed(1)} → ${withClearance.toFixed(1)} ms)`);
+ // Clearance keeps chip layout about as fast. Its work is counted, not timed, so a busy machine cannot fail this: the same search
+ // with one grid lookup per candidate, and nothing of the bed, its plants or its outline read once built, bar the cut under chips on its slope.
+ // Candidates are distinct spots, so a spot looked up twice counts as two lookups but one candidate.
+ let lookups=0,reads=0;const candidates=new Set<string>();
+ const layout=(c?:Parameters<typeof coverInstances>[8])=>coverInstances('mulch-bed',lone.polys,cells,3,{x:348,z:250},216,6000,[],c),watch=<T extends object>(o:T)=>new Proxy(o,{get:(t,k,r)=>{reads++;return Reflect.get(t,k,r);}});
+ const plain=layout(),probed=layout({clear:(x,z)=>{candidates.add(`${x},${z}`);return true;}}),watched=chipClearance(watch(lone),watch(inLone),watch(lone.polys))!;reads=0;
+ const counted=layout({clear:(x,z,r)=>{lookups++;return watched.clear(x,z,r);},rise:watched.rise});
+ // A cell's centre decides whether the cut is measured, so a chip on the slope is within the taper plus a cell's half-diagonal of a cut segment.
+ const cutSegments=lone.tapered.map(s=>[{x:s.ax,z:s.az},{x:s.bx,z:s.bz}]),onSlope=chips.filter(c=>!clearCoverEdge(c.x,c.z,cutSegments,BED_RELIEF.taperIn+Math.SQRT1_2)).length;
+ ok(JSON.stringify(probed)===JSON.stringify(plain)&&JSON.stringify(counted)===JSON.stringify(chips),`${label}: the counting probes lay out the very same chips`);
+ ok(lookups<=candidates.size*1.25,`${label}: chip layout searches about as many candidates with clearance, one lookup each (${candidates.size} candidates → ${lookups} lookups)`);
+ ok(reads<=onSlope,`${label}: chip layout reads the bed only for the cut under chips on its slope (${reads} reads; ${onSlope} of ${chips.length} chips there)`);
  // Flush edging: ½ in proud of the ground along the whole outline, on a slope too (split at the ground's face edges).
  const edged=landscapeBedAreas(objects,data).get('edged')![0],points=flushEdgingPoints(data,edged),ribbon=steelEdgingGeometry(points),rise=4;
  let worst=0;for(let i=0;i+1<points.length;i++)for(let t=0;t<=1;t+=.125){const x=(points[i].x+(points[i+1].x-points[i].x)*t)*12,z=(points[i].z+(points[i+1].z-points[i].z)*t)*12,y=(points[i].y+(points[i+1].y-points[i].y)*t)*12+rise;worst=Math.max(worst,Math.abs(y-(ground.height(x,z)+FLUSH_EDGING.proudIn)));}
  ok(worst<=.05,`${label}: steel edging stands ½ in above the ground everywhere (worst ${worst.toFixed(4)} in)`);ribbon.dispose();
+ // An edging run (the outline less a stretch shared with a bed of the same surface) stays open, end to end.
+ const run=edged.slice(0,3),open=flushEdgingPoints(data,run,false),end=open.at(-1)!,whole=flushEdgingPoints(data,[...edged,edged[0]],false);
+ ok(Math.abs(open[0].x*12-run[0].x)<1e-6&&Math.abs(open[0].z*12-run[0].z)<1e-6&&Math.abs(end.x*12-run[2].x)<1e-6&&Math.abs(end.z*12-run[2].z)<1e-6,`${label}: an open edging run starts and ends at its own ends`);
+ ok(open.every(p=>Math.abs(p.y*12+rise-(ground.height(p.x*12,p.z*12)+FLUSH_EDGING.proudIn))<.05),`${label}: an open edging run stands ½ in above the ground too`);
+ ok(whole.length===points.length&&whole.every((p,i)=>p.distanceTo(points[i])<1e-9),`${label}: a run that goes all the way round is the closed ring's edging`);
 }
 ok(FLUSH_EDGING.buryIn+FLUSH_EDGING.proudIn===4,'The 4 in ribbon is buried 3½ in');
 
@@ -161,6 +175,6 @@ ok(SHADE_RING.day<=.4&&SHADE_RING.night<=.12&&decals.includes("evening||hour==='
 ok(photo.includes("patches.includes('mulch-shred-fiber-v3')&&material.userData.mulchPhotoColor instanceof THREE.Color")&&material.includes("key:'mulch-shred-fiber-v3'"),'Photo mode traces the same mulch colour');
 ok(/m\.aoMap=occlusion\?\.texture\?\?NO_OCCLUSION;m\.aoMapIntensity=\.75/.test(landscape),'Beds take the lawn’s shared occlusion map');
 ok(landscape.includes('NO_OCCLUSION.channel=1;'),'The stand-in occlusion map uses the lawn map’s uv1 channel, so the bed shader does not recompile when the lawn map arrives');
-ok(landscape.includes('const flush=!!relief,')&&landscape.includes('steelEdgingGeometry(flush?flushEdgingPoints(data,p):'),'Only plain (relief) beds get flush edging; raised, turf and putting-green beds keep their ribbon and its steel');
+ok(landscape.includes('const flush=!!relief,')&&landscape.includes('polys.flatMap(p=>edgingRuns(p,joins)).map(run=>steelEdgingGeometry(flush?flushEdgingPoints(data,run,false):'),'Only plain (relief) beds get flush edging; raised, turf and putting-green beds keep their ribbon and its steel');
 ok(Object.keys(STEM_OFFSET).every(id=>Math.abs(STEM_OFFSET[id]![0])<.5&&Math.abs(STEM_OFFSET[id]![1])<.5),'Stem offsets stay inside the envelope');
 console.log(`BED EDGES OK — ${checks} checks: mulch at grade + 1 in with a spade-cut edge (none against beds or structures), plants seated by form with collars and lips, shade rings on every tier, flush edging on a slope, honest mulch colours (raster and Photo), data and exports unchanged.`);

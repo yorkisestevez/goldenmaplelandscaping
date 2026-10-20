@@ -205,13 +205,14 @@ export function addSheetAttributes(geometry:THREE.BufferGeometry,bounds?:GroundB
 }
 
 /** Flush steel edging: the ribbon's base 3.5 in into the ground, so its top stands ½ in above grade, split at each of the
- * ground's face edges so it follows a sloped surface exactly. Points: world feet along one ring (closed). */
+ * ground's face edges so it follows a sloped surface exactly. Points: world feet along one ring (closed), or along an
+ * open run (edgingRuns) when `closed` is false. */
 export const FLUSH_EDGING={buryIn:3.5,proudIn:.5};
-export function flushEdgingPoints(data:DeckData,ring:LandscapePoint[]){
- const ground=reliefGround(data),pts:THREE.Vector3[]=[];
+export function flushEdgingPoints(data:DeckData,ring:LandscapePoint[],closed=true){
+ const ground=reliefGround(data),pts:THREE.Vector3[]=[],last=ring.at(-1);
  const breaks=(a:Plan,b:Plan)=>{const ts=[0];for(const t of ground.triangles){if(Math.max(a.x,b.x)<t.minX||Math.min(a.x,b.x)>t.maxX||Math.max(a.y,b.y)<t.minZ||Math.min(a.y,b.y)>t.maxZ)continue;for(let i=0;i<3;i++){const p=t.plan[i],q=t.plan[(i+1)%3],d=(b.x-a.x)*(q.y-p.y)-(b.y-a.y)*(q.x-p.x);if(Math.abs(d)<1e-9)continue;const s=((p.x-a.x)*(q.y-p.y)-(p.y-a.y)*(q.x-p.x))/d,u=((p.x-a.x)*(b.y-a.y)-(p.y-a.y)*(b.x-a.x))/d;if(s>1e-6&&s<1-1e-6&&u>=-1e-6&&u<=1+1e-6)ts.push(s);}}return [...new Set(ts.map(t=>Math.round(t*1e6)/1e6))].sort((p,q)=>p-q);};
  const y=(x:number,z:number)=>(ground.height(x,z)-FLUSH_EDGING.buryIn)/12;
- for(let i=0;i<ring.length;i++){const a={x:ring[i].x,y:ring[i].z},b={x:ring[(i+1)%ring.length].x,y:ring[(i+1)%ring.length].z};for(const t of breaks(a,b)){const x=a.x+(b.x-a.x)*t,z=a.y+(b.y-a.y)*t;pts.push(new THREE.Vector3(x/12,y(x,z),z/12));}}
- if(pts.length)pts.push(pts[0].clone());
+ for(let i=0;i<(closed?ring.length:ring.length-1);i++){const a={x:ring[i].x,y:ring[i].z},b={x:ring[(i+1)%ring.length].x,y:ring[(i+1)%ring.length].z};for(const t of breaks(a,b)){const x=a.x+(b.x-a.x)*t,z=a.y+(b.y-a.y)*t;pts.push(new THREE.Vector3(x/12,y(x,z),z/12));}}
+ if(pts.length)pts.push(closed?pts[0].clone():new THREE.Vector3(last!.x/12,y(last!.x,last!.z),last!.z/12));
  return pts;
 }
