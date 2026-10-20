@@ -64,8 +64,9 @@ export const swatchGrade=(key?:string,evening=false)=>{const colour=key?.split('
 /** A colour darkened to a share of its brightness (joint sand in its own shade). */
 const shade=(hex:string,k:number)=>`#${new THREE.Color(hex).multiplyScalar(k).getHexString()}`;
 /** UVs for one piece (non-indexed): each triangle in the plane of its facing axis, in repeats, shifted by the piece's own
- * offset; or, for a simplified paving slab, in pavers of the sample's size along its angle. */
-function pieceUvs(g:THREE.BufferGeometry,b:YardBox,repeatIn:number,paver?:{w:number;d:number;angle:number},window?:SampleWindow){
+ * offset; or, for a simplified paving slab, in pavers from its patio's bond corner (patternFrame, yardPreview.ts), so
+ * neighbouring slabs and joined patios carry one joint pattern. */
+function pieceUvs(g:THREE.BufferGeometry,b:YardBox,repeatIn:number,paver:boolean,window?:SampleWindow){
  const p=g.getAttribute('position'),uv=new Float32Array(p.count*2),a=new THREE.Vector3(),c=new THREE.Vector3(),d=new THREE.Vector3(),n=new THREE.Vector3(),appearance=hardscapeAppearance(b),su=appearance.shiftU,sv=appearance.shiftV;
  for(let t=0;t<p.count;t+=3){
   a.fromBufferAttribute(p,t);c.fromBufferAttribute(p,t+1).sub(a);d.fromBufferAttribute(p,t+2).sub(a);n.crossVectors(c,d);
@@ -73,7 +74,7 @@ function pieceUvs(g:THREE.BufferGeometry,b:YardBox,repeatIn:number,paver?:{w:num
   for(let k=0;k<3;k++){
    const x=p.getX(t+k),y=p.getY(t+k),z=p.getZ(t+k);
    if(b.surface){const [s,q]=supplierFaceUv(b,{x,y,z},n,window,appearance);uv[(t+k)*2]=s;uv[(t+k)*2+1]=q;continue;}
-   if(paver){const cos=Math.cos(paver.angle),sin=Math.sin(paver.angle),u=(x-b.x)*cos-(z-b.z)*sin,v=(x-b.x)*sin+(z-b.z)*cos;uv[(t+k)*2]=u/paver.w;uv[(t+k)*2+1]=v/paver.d;continue;}
+   if(paver&&b.patternFrame){const f=b.patternFrame,cos=Math.cos(f.angle),sin=Math.sin(f.angle),dx=x-f.x,dz=z-f.z;uv[(t+k)*2]=(cos*dx+sin*dz)/f.w;uv[(t+k)*2+1]=(cos*dz-sin*dx)/f.d;continue;}
    const [s,q]=ay>=ax&&ay>=az?[x,z]:ax>=az?[z,y]:[x,y];
    uv[(t+k)*2]=s/repeatIn+su;uv[(t+k)*2+1]=q/repeatIn+sv;
   }
@@ -87,14 +88,14 @@ function reliefKind(role:YardRole):DetailKind|null{
  if(role==='wall-block'||role==='rock')return 'stone';
  return null;
 }
-function YardBatch({evening=false,items,color,role,occlusion,paverSize,supplierImage,sampleWindow,inspection}:{evening?:boolean;items:YardBox[];inspection:boolean;color:string;role:YardRole;occlusion:SharedOcclusion;paverSize?:{w:number;d:number;angle:number};supplierImage?:string;sampleWindow?:SampleWindow}){
- const scanned=SCANNED[role],supplierSurface=!!items[0]?.surface,simplified=!supplierSurface&&role==='paver'&&!!paverSize&&items.every(b=>b.illustrative),water=role==='water';
+function YardBatch({evening=false,items,color,role,occlusion,supplierImage,sampleWindow,inspection}:{evening?:boolean;items:YardBox[];inspection:boolean;color:string;role:YardRole;occlusion:SharedOcclusion;supplierImage?:string;sampleWindow?:SampleWindow}){
+ const scanned=SCANNED[role],supplierSurface=!!items[0]?.surface,simplified=!supplierSurface&&role==='paver'&&items.every(b=>b.illustrative&&b.patternFrame),water=role==='water';
  const geometry=useMemo(()=>{const ranges:{start:number;end:number;pick:ReturnType<typeof boxSelection>}[]= [];let faces=0;const pieces=items.filter(b=>!b.renderDuplicate).map(b=>{let g=yardFinishGeometry(b);if(role==='bedding'&&!inspection){const top=jointSurfaceGeometry(g);g.dispose();g=top;}if(g.index){const converted=g.toNonIndexed();g.dispose();g=converted;}const p=g.getAttribute('position'),c=new THREE.Float32BufferAttribute(new Float32Array(p.count*3),3),appearance=hardscapeAppearance(b);
-  if(scanned||simplified||supplierSurface)g.setAttribute('uv',pieceUvs(g,b,scanned?.repeatIn??48,simplified?paverSize:undefined,sampleWindow));
+  if(scanned||simplified||supplierSurface)g.setAttribute('uv',pieceUvs(g,b,scanned?.repeatIn??48,simplified,sampleWindow));
   else{const uv=new THREE.Float32BufferAttribute(new Float32Array(p.count*2),2);for(let v=0;v<p.count;v++)uv.setXY(v,p.getX(v)/(water?RIPPLE_IN:role==='geogrid'?4:18),p.getZ(v)/(water?RIPPLE_IN:role==='geogrid'?4:18));g.setAttribute('uv',uv);}
   // The lawn's occlusion map's UVs, for hardscape under the deck.
   const uv1=new THREE.Float32BufferAttribute(new Float32Array(p.count*2),2);if(occlusion)for(let v=0;v<p.count;v++)uv1.setXY(v,...occlusionUv(occlusion.bounds,p.getX(v),p.getZ(v)));g.setAttribute('uv1',uv1);
-  for(let v=0;v<p.count;v++)c.setXYZ(v,appearance.r,appearance.g,appearance.b);g.setAttribute('color',c);ranges.push({start:faces,end:faces+p.count/3,pick:boxSelection(b)});faces+=p.count/3;return g;});const merged=mergeGeometries(pieces);pieces.forEach(p=>p.dispose());if(merged)merged.userData.hardscapeRanges=ranges;return merged;},[items,scanned,simplified,paverSize,water,occlusion?.bounds,sampleWindow,inspection,role]);
+  for(let v=0;v<p.count;v++)c.setXYZ(v,appearance.r,appearance.g,appearance.b);g.setAttribute('color',c);ranges.push({start:faces,end:faces+p.count/3,pick:boxSelection(b)});faces+=p.count/3;return g;});const merged=mergeGeometries(pieces);pieces.forEach(p=>p.dispose());if(merged)merged.userData.hardscapeRanges=ranges;return merged;},[items,scanned,simplified,water,occlusion?.bounds,sampleWindow,inspection,role]);
  const invalidate=useThree(s=>s.invalidate),gl=useThree(s=>s.gl),quality=useRenderQuality();
  const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags),detail=Boolean(flags)&&showcaseDetail(quality.tier),kind=reliefKind(role);
  const material=useMemo<THREE.Material>(()=>{
@@ -147,8 +148,6 @@ function WaterMotion({model}:{model:YardModel}){
 export default function Yard3D({model,inspection=false,plantingBeds=[],evening=false}:{model:YardModel;inspection?:boolean;plantingBeds?:PlanPoint[][];evening?:boolean}){
  const hidden=CONSTRUCTION_YARD_ROLES;
  const groups=useMemo(()=>{const map=new Map<string,YardBox[]>();for(const box of yardPreviewBoxes(model,inspection)){if(!inspection&&(hidden.has(box.role)||GRADED_ROLES.includes(box.role)))continue;const b=inspection?box:seatOnLawn(box,model.terrain);const key=b.role+':'+b.color+':'+(b.surface?.swatchKey??'')+(b.illustrative?':simplified':'');if(map.has(key))map.get(key)!.push(b);else map.set(key,[b]);}return [...map.entries()];},[model,inspection]);
- // The simplified paving preview draws the sample paver's joints (yardPreview.ts keeps its size and angle).
- const paverSize=useMemo(()=>{const sample=model.boxes.find(b=>b.role==='paver');return sample?{w:sample.w,d:sample.d,angle:sample.angle||0}:undefined;},[model]);
  const occlusion=useGroundOcclusion(),swatches=useSwatchMap();
- return <group name="combined-yard-features">{groups.map(([key,items])=><YardBatch key={key} evening={evening} items={items} role={items[0].role} inspection={inspection} color={!inspection&&items[0].role==='bedding'?shade(items[0].color,JOINT_SHADE):items[0].color} occlusion={occlusion} paverSize={items[0].illustrative?paverSize:undefined} supplierImage={swatchUrl(swatches,items[0].surface?.swatchKey)} sampleWindow={swatches?.sampleWindows?.[items[0].surface?.swatchKey??'']}/>)}{illustrativeBanksVisible(model,inspection)&&<RetainedBanks model={model} occlusion={occlusion} plantingBeds={plantingBeds}/>}<WaterMotion model={model}/>{inspection&&model.members.map(m=>{const a=new THREE.Vector3(m.a.x,m.a.y,m.a.z),b=new THREE.Vector3(m.b.x,m.b.y,m.b.z),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());return <mesh key={m.id} position={a.clone().add(b).multiplyScalar(.5)} quaternion={q}><cylinderGeometry args={[m.width/2,m.width/2,a.distanceTo(b),10]}/><meshStandardMaterial color={m.color} roughness={.65}/></mesh>;})}</group>;
+ return <group name="combined-yard-features">{groups.map(([key,items])=><YardBatch key={key} evening={evening} items={items} role={items[0].role} inspection={inspection} color={!inspection&&items[0].role==='bedding'?shade(items[0].color,JOINT_SHADE):items[0].color} occlusion={occlusion} supplierImage={swatchUrl(swatches,items[0].surface?.swatchKey)} sampleWindow={swatches?.sampleWindows?.[items[0].surface?.swatchKey??'']}/>)}{illustrativeBanksVisible(model,inspection)&&<RetainedBanks model={model} occlusion={occlusion} plantingBeds={plantingBeds}/>}<WaterMotion model={model}/>{inspection&&model.members.map(m=>{const a=new THREE.Vector3(m.a.x,m.a.y,m.a.z),b=new THREE.Vector3(m.b.x,m.b.y,m.b.z),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());return <mesh key={m.id} position={a.clone().add(b).multiplyScalar(.5)} quaternion={q}><cylinderGeometry args={[m.width/2,m.width/2,a.distanceTo(b),10]}/><meshStandardMaterial color={m.color} roughness={.65}/></mesh>;})}</group>;
 }
