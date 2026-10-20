@@ -13,6 +13,7 @@ import type {LandscapeObject,LandscapePoint} from '../../landscapeTypes';
 import {landscapeAsset,plantFoliageTint} from '../../landscapeCatalogue';
 import {applyFoliageLighting,crownBend,isLeafMaterial,leafTransmitUniform,tintPlantInstance} from './foliageLighting';
 import PlantBlooms from './plantBlooms';
+import {hydrangeaCultivar} from '../../hydrangeaCultivars';
 import {activePuttingCups,landscapeBedAreas,landscapePlacement,landscapeRenderLods} from '../../landscapeModelRuntime';
 import {createSiteSurface,siteClip,siteSolidCells,sitePlaneHeight} from '../../siteSurfaceEngine';
 import {getTerrainConfig} from '../../yardSettings';
@@ -29,6 +30,8 @@ import {weatheredSteelMaterial} from './weatheredSteel';
 import {landscapeStructureExclusions} from '../../landscapeFill';
 
 const SurfaceDetail=lazy(()=>import('./SurfaceDetail'));
+/** Hydrangeas built from their botany, with their photo atlases: loaded with the first hydrangea. */
+const Hydrangeas3D=lazy(()=>import('./hydrangea/Hydrangeas3D'));
 /** A raised bed's soil face, timber or steel edging (where no linked wall holds it): loaded with the first raised bed. */
 const RaisedBedFaces3D=lazy(()=>import('./RaisedBedFaces3D'));
 
@@ -143,6 +146,8 @@ export default function Landscape3D({data:fresh,showMatureSpread=false,source,mo
  // Far models (lod 2) draw immediately. Nearer models, which are much larger files, start once the view is up.
  useEffect(()=>{const timer=window.setTimeout(()=>invalidate(),1200);return()=>window.clearTimeout(timer);},[invalidate]);
  useFrame(()=>{if(performance.now()-shown.current<1200)return;const live=getShowcaseFlags().quality;const next=landscapeRenderLods(objects,camera.position,size.height,q.tier,live),key=[...next].map(([id,lod])=>id+':'+lod).join('|');if(last.current!==key){last.current=key;setLods(next);}});
- const groups=new Map<string,{items:LandscapeObject[];lod:0|1|2}>();for(const o of objects.filter(o=>o.enabled&&o.kind!=='bed'&&!landscapePlacement(data,o).pendingReason)){const lod=showcase?0:(lods.get(o.id)??2),key=o.assetId+':'+lod,g=groups.get(key)??{items:[],lod};g.items.push(o);groups.set(key,g);}
- return <group name="landscape-designed-objects" userData={{designedObjectCount:objects.filter(o=>o.enabled).length,renderTier:q.tier,genericVisualProxies:true}}>{[...groups].map(([key,g])=><Suspense key={key} fallback={null}><AssetInstances data={data} items={g.items} lod={g.lod} seats={seats}/></Suspense>)}<PlantBlooms data={data} objects={objects} lods={lods} seats={seats}/><PlantShadeRings data={data} plants={seated}/>{objects.some(o=>o.enabled&&o.kind==='bed')&&<Suspense fallback={null}><Beds data={data} objects={objects} areas={areas} reliefs={reliefs} seats={seats}/></Suspense>}{(showMatureSpread||mature)&&<MatureSpread data={data} objects={objects} seats={seats}/>}</group>;
+ // Hydrangeas are built from their botany (hydrangea/), not the shared shrub model and its flower cards.
+ const hydrangeas=useMemo(()=>objects.filter(o=>o.enabled&&o.kind==='plant'&&hydrangeaCultivar(o.speciesRecord?.id)&&!landscapePlacement(data,o).pendingReason),[objects,data]),others=useMemo(()=>hydrangeas.length?objects.filter(o=>!hydrangeas.includes(o)):objects,[objects,hydrangeas]);
+ const groups=new Map<string,{items:LandscapeObject[];lod:0|1|2}>();for(const o of others.filter(o=>o.enabled&&o.kind!=='bed'&&!landscapePlacement(data,o).pendingReason)){const lod=showcase?0:(lods.get(o.id)??2),key=o.assetId+':'+lod,g=groups.get(key)??{items:[],lod};g.items.push(o);groups.set(key,g);}
+ return <group name="landscape-designed-objects" userData={{designedObjectCount:objects.filter(o=>o.enabled).length,renderTier:q.tier,genericVisualProxies:true}}>{[...groups].map(([key,g])=><Suspense key={key} fallback={null}><AssetInstances data={data} items={g.items} lod={g.lod} seats={seats}/></Suspense>)}<PlantBlooms data={data} objects={others} lods={lods} seats={seats}/>{hydrangeas.length>0&&<Suspense fallback={null}><Hydrangeas3D data={data} objects={hydrangeas} lods={lods} seats={seats}/></Suspense>}<PlantShadeRings data={data} plants={seated}/>{objects.some(o=>o.enabled&&o.kind==='bed')&&<Suspense fallback={null}><Beds data={data} objects={objects} areas={areas} reliefs={reliefs} seats={seats}/></Suspense>}{(showMatureSpread||mature)&&<MatureSpread data={data} objects={objects} seats={seats}/>}</group>;
 }

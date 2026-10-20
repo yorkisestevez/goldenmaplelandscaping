@@ -34,20 +34,22 @@ export const crownBend=(assetId:string)=>/grass|fern/.test(assetId)?.2:.6;
  * canopies and needles do not dissolve. Light through the leaf comes from the sun only, and only where the leaf casts
  * its own shadow. Bark and trunks are left alone.
  */
-export function applyFoliageLighting(material:THREE.Material,crown?:{center:THREE.Vector3;bend:number}){
+/** crown.outAttribute: each instance carries its own outward direction (aCrownOut, in the card's own frame) in place of
+ * the crown centre, for plants whose every leaf is an instance (the hydrangea models). */
+export function applyFoliageLighting(material:THREE.Material,crown?:{center:THREE.Vector3;bend:number;outAttribute?:boolean}){
  const standard=material as THREE.MeshStandardMaterial;
  if(!isLeafMaterial(standard))return;
  standard.roughness=FOLIAGE.roughness;standard.roughnessMap=null;standard.normalMap=null;standard.metalness=0;
- const center=crown?.center.clone()??new THREE.Vector3(),bend=crown?.bend??0,[tr,tg,tb]=FOLIAGE.transmit;
+ const center=crown?.center.clone()??new THREE.Vector3(),bend=crown?.bend??0,perLeaf=!!crown?.outAttribute,[tr,tg,tb]=FOLIAGE.transmit;
  // Light through the leaf needs the leaf's own shadow to be right, so it is on only while this part casts shadows
  // (Landscape3D turns it off for LOD2 and the constrained tier).
  const transmit=leafTransmitUniform(material);
- addMaterialPatch(material,{key:bend>=CROWN_KEEP_FACE?'foliage-summer-v2-crown':'foliage-summer-v2',apply(shader){
+ addMaterialPatch(material,{key:(bend>=CROWN_KEEP_FACE?'foliage-summer-v2-crown':'foliage-summer-v2')+(perLeaf?'-instanced':''),apply(shader){
   shader.uniforms.uCrownCenter={value:center};shader.uniforms.uCrownBend={value:bend};shader.uniforms.uLeafTransmit=transmit;
   shader.vertexShader=`uniform vec3 uCrownCenter;
 uniform float uCrownBend;
-`+shader.vertexShader.replace('#include <beginnormal_vertex>',`#include <beginnormal_vertex>
-{ vec3 leafOut=position-uCrownCenter; if(dot(leafOut,leafOut)>1e-8)objectNormal=normalize(mix(objectNormal,normalize(leafOut),uCrownBend)); }`);
+${perLeaf?'attribute vec3 aCrownOut;\n':''}`+shader.vertexShader.replace('#include <beginnormal_vertex>',`#include <beginnormal_vertex>
+{ vec3 leafOut=${perLeaf?'aCrownOut':'position-uCrownCenter'}; if(dot(leafOut,leafOut)>1e-8)objectNormal=normalize(mix(objectNormal,normalize(leafOut),uCrownBend)); }`);
   shader.fragmentShader=shader.fragmentShader
    .replace('#include <map_fragment>',`#include <map_fragment>
 #if defined( USE_MAP ) && defined( USE_ALPHATEST )
