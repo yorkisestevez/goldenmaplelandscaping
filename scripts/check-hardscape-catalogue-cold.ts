@@ -34,13 +34,15 @@ notReady(()=>parseDeckReleaseDesign(saved),'A saved supplier patio is never vali
 let reads=0;const guarded={};Object.defineProperty(guarded,'yardFeatures',{enumerable:true,get(){reads++;return [landing];}});
 await ensureDesignExtensions(guarded);ok(!reads&&!hardscapeCatalogueReady(),'Presence detection never invokes an accessor');
 
-// The option deltas' worker prepares the design's extensions before it prices (optionDeltas.worker.ts).
-let delivered=0,loads=0;
-const receiver=createQuoteAwarePricingReceiver(()=>{delivered++;},async data=>{loads++;await ensureLiveDesignExtensions(data);},()=>assert.fail('Catalogue preparation unexpectedly failed'));
+// The option deltas' worker prepares the design's extensions before it prices (optionDeltas.worker.ts), including a
+// flat patio that needs no other extension (no finished level, slope, site model or pool).
+const {finishedElevationIn:_level,...flatLanding}=landing,flat:DeckData={...structuredClone(DEFAULT_DECK),yardFeatures:[flatLanding]};
+let delivered=0,loads=0,flatTotal=NaN;
+const receiver=createQuoteAwarePricingReceiver(request=>{delivered++;if('job'in request&&request.job===2)flatTotal=priceOption(request.data,{}).total;},async data=>{loads++;await ensureLiveDesignExtensions(data);},()=>assert.fail('Catalogue preparation unexpectedly failed'));
 receiver({job:1,data:plain,items:[{key:'base',patch:{}}]});ok(delivered===1&&loads===0,'The worker prices a plain deck without loading the catalogue');
-receiver({job:2,data:design,items:[{key:'patio',patch:{}}]});ok(delivered===1&&loads===1,'The worker holds a supplier patio until the catalogue is ready');
+receiver({job:2,data:flat,items:[{key:'patio',patch:{}}]});ok(delivered===1&&loads===1,'The worker holds a flat supplier patio until the catalogue is ready');
 await new Promise(r=>setTimeout(r,0));await ensureDesignExtensions(JSON.parse(saved));await new Promise(r=>setTimeout(r,0));
-ok(delivered===2,'The worker prices the patio once the catalogue has loaded');
+ok(delivered===2&&flatTotal>calculateEstimate(plain).total,'The worker prices the flat patio once the catalogue has loaded');
 
 ok(hardscapeCatalogueReady()&&designExtensionsReady(design),'Preparing a saved design with yard features loads the catalogue');
 const restored=parseDeckReleaseDesign(saved),patio=restored.yardFeatures?.[0];

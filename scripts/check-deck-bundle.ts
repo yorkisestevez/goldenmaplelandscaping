@@ -176,6 +176,7 @@ const proposalCss=files.find(f=>/^ProposalDialog-.*\.css$/.test(f));
 ok(proposalCss&&readFileSync(new URL(proposalCss,assets),'utf8').includes('.dd-proposal-page')&&!css.some(f=>readFileSync(new URL(f,assets),'utf8').includes('.dd-proposal-page')),'The proposal stylesheet loads with its dialog, not with the page');
 const workerFiles=deltaWorker?workerGraph(deltaWorker):[],workerKB=workerFiles.reduce((n,f)=>n+gz(f),0);
 ok(deltaWorker&&!initial.includes(deltaWorker)&&workerKB<=BUDGET_KB.deltaWorker,`Option deltas' full initial worker graph is ${workerKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.deltaWorker} KB), loaded on demand`);
+ok(!workerFiles.some(f=>f.startsWith('hardscapeCatalogue-')),'The option-deltas worker loads the supplier hardscape catalogue with yard features, not with its engine');
 const swatchWorker=files.find(f=>/^swatchMaps\.worker-.*\.js$/.test(f));
 ok(swatchWorker&&!initial.includes(swatchWorker)&&gz(swatchWorker)<=BUDGET_KB.swatchWorker,`Board atlas worker is ${swatchWorker?gz(swatchWorker).toFixed(1):'missing'} KB gzip (budget ${BUDGET_KB.swatchWorker} KB), loaded with the 3D view`);
 const sketchChunks=files.filter(f=>/^(SketchDesigner|sketchToDesign|sketchTypes|sketchGeometry)-.*\.js$/.test(f));
