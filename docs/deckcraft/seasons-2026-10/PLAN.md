@@ -89,6 +89,17 @@ mode, stills, fly-through (S2/S3). Must not change: prices, saved designs, share
 Each season shows its highlights: every plant at its peak for that season (spring = late April to early June
 bloomers), not one calendar day.
 
+### Scope Lock — S2 (snow, fallen leaves, lawn and sun)
+Acceptance:
+1. Winter: level surfaces take snow in world-space drifts (lawn, beds, roof, rails, caps, foliage tops, the tree line). Deck boards, pavers and stone steps are shovelled to a dusting. Glass, water and lit fixtures stay clear.
+2. Winter on computers: snow falls. Phones and software renderers show settled snow only.
+3. Leaving winter returns every surface to its own look, with no change to the design.
+4. Fall: maple leaves lie under each broadleaf tree in the design. The lawn yellows a little and the sun is lower and warmer.
+5. Spring's lawn is fresher. Winter's sun is about 22°, with no grass blades poking through the snow.
+6. Route bundle unchanged. The viewer chunk stays within 340 KB (the snow code is lazy). e2e passes with no shader errors.
+
+Out of scope: photo mode snow and the seasons fly-through (S3).
+
 ### Progress
 - 2026-10-20: plan approved; worktree `.claude/worktrees/seasons` off origin/main 3e94257.
 - 2026-10-20: S1 built.
@@ -99,6 +110,19 @@ bloomers), not one calendar day.
     - high tier: GPU p95 5.58 vs 5.29 ms (1.05×), CPU 1.05×, +4 draw calls;
     - constrained tier: no slower.
   - Independent review: 0 critical. 2 important, both fixed: the URL season is now read by the first reader, not only the bar; flower textures are no longer redrawn on every level-of-detail change. Minors fixed: the stem shadow follows the tier, context tree instances are disposed, evergreens are not rebuilt on a season switch, and the atlas mean is cached per texture. Photo mode now paints seasonal leaves from a grey atlas.
+- 2026-10-20: S2 built.
+  - Checks: check-season-snow 26 checks; check:deck and check:landscape green.
+  - e2e: deck-seasons-snow, deck-seasons and plants-render pass.
+  - Bundle: viewer 338.2/340 KB, because the winter scene is lazy; route unchanged.
+  - Surprise: three r185 lights from `material.diffuseContribution` and `specularColorBlended`, so the first snow patch drew nothing until it wrote those.
+  - Independent review: 0 critical, 5 important, all fixed:
+    - grass blades now stay mounted, so they come back after winter;
+    - snow is picked up on the first frame that draws a new material;
+    - pavers are tagged when their material is made;
+    - the far lawn takes the season tint;
+    - fallen leaves sample the ground on a 5×5 grid per tree, with a cap of 6,000.
+  - Also from verification: dried hydrangea heads use rounder cards, plants that have died back cast no contact shade, and lilac is lighter.
 
 ### Deferred
+- Snow on the horizon belt and the neighbour houses (presentation context, a shader material): it stays as it is.
 - A winter-maple leaf-removal and fall-colour pixel assertion in e2e (the review's test gaps); hosta's summer flower scapes and spirea's late-spring bloom are deliberate (bloom windows on the cited pages), not drive-bys.

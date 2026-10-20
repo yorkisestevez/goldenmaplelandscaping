@@ -10,11 +10,14 @@ export type Season='spring'|'summer'|'fall'|'winter';
 export const SEASONS:readonly Season[]=['spring','summer','fall','winter'];
 export const DEFAULT_SEASON:Season='summer';
 export const SEASON_LABELS:Record<Season,string>={spring:'Spring',summer:'Summer',fall:'Fall',winter:'Winter'};
+/** The season a quarter of the way through a fly-through "through the seasons": spring, summer, fall, winter. */
+export const seasonAt=(u:number):Season=>SEASONS[Math.min(3,Math.max(0,Math.floor(u*4)))];
 export const parseSeason=(value:string|null|undefined):Season|undefined=>SEASONS.find(s=>s===value);
 
 export type PlantHabit='deciduous-tree'|'deciduous-shrub'|'evergreen'|'perennial'|'grass';
 /** Flower shapes, one texture each (plantBlooms.tsx). `seed` is a seed head: the dark centre with no petals. */
-export type FlowerHead='daisy'|'drooping'|'trumpet'|'whorl'|'spike'|'mop'|'cone'|'panicle'|'flat'|'blossom'|'seed';
+/** `dried` is a hydrangea head left on the bare winter stems. */
+export type FlowerHead='daisy'|'drooping'|'trumpet'|'whorl'|'spike'|'mop'|'cone'|'panicle'|'flat'|'blossom'|'seed'|'dried';
 /** Flower cards in the plant's unit envelope: y0–y1 is the band of heights, spread the radius they scatter over. */
 export interface FlowerLook {head:FlowerHead;petals:string;center:string;count:number;y0:number;y1:number;spread:number;size:number;stems?:boolean}
 export interface SeasonLook {
@@ -58,7 +61,7 @@ export const SPECIES_SEASONS:Record<string,PlantSeasons>={
   spring:{leaves:'#b9d27e'},
   summer:{leaves:'summer',flowers:{head:'mop',petals:'#f6f3ec',center:'#f6f3ec',count:13,y0:.5,y1:.95,spread:.5,size:.18}},
   fall:{leaves:'#c3ba6a',flowers:{head:'mop',petals:'#c9b98a',center:'#c9b98a',count:12,y0:.5,y1:.95,spread:.5,size:.17}},
-  winter:{leaves:null,stems:twigs('#b09a7c'),flowers:{head:'mop',petals:'#a8936c',center:'#a8936c',count:7,y0:.7,y1:.92,spread:.5,size:.15}}},
+  winter:{leaves:null,stems:twigs('#b09a7c'),flowers:{head:'dried',petals:'#b39e78',center:'#b39e78',count:7,y0:.7,y1:.92,spread:.5,size:.15}}},
  'hydrangea-paniculata':{habit:'deciduous-shrub',
   spring:{leaves:'#b9d27e'},
   summer:{leaves:'summer',flowers:{head:'cone',petals:'#f4f0e4',center:'#efe4c4',count:11,y0:.6,y1:.85,spread:.36,size:.13}},
@@ -69,7 +72,7 @@ export const SPECIES_SEASONS:Record<string,PlantSeasons>={
   summer:{leaves:'summer',flowers:{head:'flat',petals:'#d870a0',center:'#b84e82',count:16,y0:.62,y1:.96,spread:.5,size:.16}},
   fall:{leaves:'#c8642a'},winter:{leaves:null,stems:twigs('#94735c')}},
  'syringa-vulgaris':{habit:'deciduous-shrub',
-  spring:{leaves:'summer',flowers:{head:'panicle',petals:'#b896dc',center:'#8f6cb8',count:14,y0:.6,y1:.95,spread:.5,size:.2}},
+  spring:{leaves:'summer',flowers:{head:'panicle',petals:'#cdb0ec',center:'#a382cc',count:14,y0:.6,y1:.95,spread:.5,size:.2}},
   summer:SUMMER,fall:{leaves:'#a8a860'},winter:{leaves:null,stems:twigs('#8a8076')}},
  'echinacea-purpurea':perennial({
   spring:{leaves:'#a9cf6c'},
