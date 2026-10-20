@@ -62,7 +62,7 @@ ok(bark.roughness===.9&&materialPatchKeys(bark).length===0,'Bark and trunks are 
 
 // 3. Plants in the scene.
 const landscape=source('src/features/deckcraft/components/viewer3d/Landscape3D.tsx');
-ok(landscape.includes("leafTint?tintPlantInstance(color,plantFoliageTint(o.speciesRecord?.id),o.id):color.set('#ffffff')")&&landscape.includes('const leafTint=foliage&&(isLeafMaterial(original)||!(original as THREE.MeshStandardMaterial).map);'),'The species tint colours leaves (and untextured trunks, as before); textured bark keeps its own colour');
+ok(landscape.includes("leafTint?tintPlantInstance(color,leafColor(o),o.id):color.set('#ffffff')")&&landscape.includes("return look&&look!=='summer'?look:plantFoliageTint(o.speciesRecord?.id);")&&landscape.includes('const leafTint=foliage&&(isLeafMaterial(original)||!(original as THREE.MeshStandardMaterial).map);'),'The species tint colours leaves (and untextured trunks, as before); textured bark keeps its own colour');
 ok(landscape.includes('if(foliage)leafTransmitUniform(material).value=instance.castShadow?1:0;'),'Light through the leaf is on only where the plant casts its shadow (not LOD2 or the constrained tier)');
 ok(landscape.includes('applyFoliageLighting(m,{center:source.geometry.boundingBox!.getCenter(new THREE.Vector3()),bend:crownBend(assetId??\'\')})'),'Each plant part leans its normals out from the centre of its own leaves');
 

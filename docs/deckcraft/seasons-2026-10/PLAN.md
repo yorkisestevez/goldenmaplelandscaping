@@ -1,0 +1,104 @@
+# DeckCraft seasons — plan (2026-10-20)
+
+Owner ask: see a design in spring, summer, fall and winter. Snow in winter, coloured leaves in fall, and every
+flowering plant looking its best in its own season.
+
+## How it works
+
+- **A season switch in the 3D view**: Spring · Summer · Fall · Winter. Summer stays the default, so nothing changes
+  for anyone who never touches it.
+- **View-only, not saved in the design.** Prices, quotes and share links stay exactly as they are. Like the
+  day / golden hour / night switch, it also works from the link (`?deck-season=winter`) for stills and reels.
+- **All the code lives in the 3D view's own lazy chunk.** The designer route is at 275.75 of 276 KB, so it gets nothing
+  new.
+
+## What changes per season
+
+| | Spring (mid-May) | Summer (mid-July, today's look) | Fall (mid-October) | Winter (January) |
+|---|---|---|---|---|
+| Maples, serviceberry, redbud | fresh yellow-green leaves; serviceberry white, redbud magenta flowers | green | sugar maple orange, red maple scarlet, serviceberry orange-red, redbud yellow | bare branches (the tree model already has its own branch part) |
+| Lilac, spirea, ninebark, dogwood | lilac purple panicles, ninebark white clusters | spirea pink flat-tops | ninebark bronze, dogwood maroon | bare twigs; red-osier dogwood's red stems |
+| Hydrangeas | small green buds | big white mopheads / cones | Annabelle tan heads, panicle heads blushing pink | dried tan heads left standing, capped with snow |
+| Perennials | low new growth; catmint and salvia start flowering late May | coneflower, black-eyed Susan, bergamot, daylily, catmint, salvia in full bloom | coneflower and Susan seed heads, foliage turning | cut back: low brown stubs; hosta and fern gone below the snow |
+| Grasses | short green tufts | green with plumes | Karl Foerster tan plumes, bluestem copper, switchgrass gold | tan and standing, snow on top |
+| Evergreens (cedar, boxwood, yew, spruce, pine) | green | green | green | green, a little darker, snow resting on the tops |
+| Ground and beds | bright lawn | today's lawn | lawn a touch warmer, fallen leaves scattered under each deciduous tree and drifting onto lawn and patio | snow over lawn and beds; light snow on roof, rails, wall caps and furniture |
+| Light | sun at Barrie's May noon height | today | lower, warmer sun | low winter sun (about 22° at noon), long shadows, soft cool sky |
+
+Seasonal colours and bloom windows come from the extension pages each species already cites.
+
+## Flowering plants that look amazing
+
+Today's flowers are soft round blobs on cards, and only 8 perennials have any. The flowers will be redrawn as real
+flower shapes, one for each species:
+- coneflower: drooping purple rays around a spiky orange cone;
+- black-eyed Susan: gold rays around a dark dome;
+- bergamot: ragged lavender heads;
+- daylily: six-petal orange trumpets;
+- catmint and salvia: dense spikes of small florets;
+- hydrangea: mopheads and cones built from four-petal florets.
+
+The shrubs and trees that bloom get flowers too: lilac, spirea, ninebark, serviceberry and redbud. Redbud flowers
+along its bare spring branches.
+
+Each flower keeps its own colour in shade (as now) and is checked in day, golden hour and photo mode.
+
+## Phases (each one is its own PR, each needs your OK to merge)
+
+1. **S1: switch + plants by season** (about 2 days). The season switch, the table of seasonal looks for all 26
+   species, bare winter trees and shrubs, fall colours, spring and summer blooms, and the new flower shapes.
+2. **S2: snow and fallen leaves** (about 2 days). Snow on every upward-facing surface, done as one material patch (lawn,
+   beds, roof, rails, caps, evergreen tops, context trees). Fallen-leaf scatter in fall. Lawn tint per season, and sun
+   height and sky per season.
+3. **S3: stills and reels** (about 1 day). Photo mode and still export use the season. The fly-through can play
+   "through the seasons", the way it already does day → golden hour → night.
+
+Each phase gets tests first (a check script for the season table and an e2e that switches all four seasons with no
+console errors), the speed probe on each device tier (within 1.15× of today), and before and after shots on desktop and
+phone.
+
+## Scope note
+
+Since 2026-10-17, realism work has been limited to the house, materials and placed plants. Seasons also touches the
+lawn, the sky light and the context trees, because snow and fallen leaves can't look right without them. That covers
+seasons only; it doesn't reopen general scenery work.
+
+## Ledger
+
+### Owner choices (2026-10-20)
+Winter deck and patio shovelled with a light dusting · falling snow on desktop only · chips on the main 3D toolbar ·
+build S1 → S2 → S3.
+
+### Scope Lock — S1 (switch + plants by season)
+Acceptance:
+1. The 3D bar shows Spring · Summer · Fall · Winter chips; choosing one re-renders the plants without changing the
+   design data (no `onUpdate` call), and `?deck-season=` picks the start season.
+2. Summer is the default and draws the same programs and colours as before (no season patch on any summer material).
+3. A season table covers all 26 catalogue species and every generic plant model, for all four seasons (check script).
+4. Winter: deciduous trees show branches and trunk only; deciduous shrubs show bare stems (red-osier dogwood red);
+   perennials are cut back; grasses stand tan; evergreens keep their needles.
+5. Fall recolours deciduous leaves to each species' fall colour; spring shows fresh leaves and the spring bloomers.
+6. Flowers are redrawn per species shape; lilac, spirea, ninebark, serviceberry and redbud bloom in their season.
+7. Route JS/CSS unchanged (bundle gate); the viewer and landscape chunks stay inside their budgets; e2e switches all four
+   seasons with no shader or console errors.
+
+In: viewer3d (Landscape3D, plantBlooms, foliageLighting, new plantSeasons/sceneSeason/plantStems), Deck3DViewer bar,
+ShowcaseContext3D trees, viewerBar.css, a new check script and e2e. Out: snow, fallen leaves, lawn, sun, photo
+mode, stills, fly-through (S2/S3). Must not change: prices, saved designs, share links, summer look.
+
+Each season shows its highlights: every plant at its peak for that season (spring = late April to early June
+bloomers), not one calendar day.
+
+### Progress
+- 2026-10-20: plan approved; worktree `.claude/worktrees/seasons` off origin/main 3e94257.
+- 2026-10-20: S1 built.
+  - Checks: check-plant-seasons 44 checks; check:deck and check:landscape green.
+  - e2e: deck-seasons and deck-plants-render pass.
+  - Bundle: route unchanged at 275.7/276 KB; viewer 337.8/340 KB.
+  - Speed, interleaved A/B against main on the demo bed:
+    - high tier: GPU p95 5.58 vs 5.29 ms (1.05×), CPU 1.05×, +4 draw calls;
+    - constrained tier: no slower.
+  - Independent review: 0 critical. 2 important, both fixed: the URL season is now read by the first reader, not only the bar; flower textures are no longer redrawn on every level-of-detail change. Minors fixed: the stem shadow follows the tier, context tree instances are disposed, evergreens are not rebuilt on a season switch, and the atlas mean is cached per texture. Photo mode now paints seasonal leaves from a grey atlas.
+
+### Deferred
+- A winter-maple leaf-removal and fall-colour pixel assertion in e2e (the review's test gaps); hosta's summer flower scapes and spirea's late-spring bloom are deliberate (bloom windows on the cited pages), not drive-bys.

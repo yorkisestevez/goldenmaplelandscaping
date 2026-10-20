@@ -87,3 +87,48 @@ export function applyBloomLighting(material:THREE.Material){
 #include <opaque_fragment>`);
  }});
 }
+/** Linear luminance of a leaf atlas's opaque texels, measured once per texture: the recolour keeps each leaf's own light
+ * and dark against it, so a fall leaf is as detailed as a summer one. */
+const atlasLuminance=new WeakMap<THREE.Texture,number>();
+const toLinear=(c:number)=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4;
+export function leafAtlasLuminance(material:THREE.Material){
+ const standard=material as THREE.MeshStandardMaterial,map=standard.map,base=standard.color??new THREE.Color(1,1,1);
+ const plain=.2126*base.r+.7152*base.g+.0722*base.b;
+ const image=map?.image as CanvasImageSource&{width?:number;height?:number}|undefined;
+ if(!map||!image||typeof document==='undefined')return Math.max(.02,plain);
+ const known=atlasLuminance.get(map);if(known!==undefined)return Math.max(.02,known*plain);
+ let sum=0,count=0;
+ try{
+  const size=32,canvas=document.createElement('canvas');canvas.width=canvas.height=size;
+  const g=canvas.getContext('2d',{willReadFrequently:true})!;g.drawImage(image,0,0,size,size);
+  const px=g.getImageData(0,0,size,size).data;
+  for(let i=0;i<px.length;i+=4)if(px[i+3]>128){sum+=.2126*toLinear(px[i]/255)+.7152*toLinear(px[i+1]/255)+.0722*toLinear(px[i+2]/255);count++;}
+ }catch{/* an image the canvas cannot read: treat the atlas as mid-grey */}
+ // The texture's own mean is cached; each material scales it by its own colour.
+ const mean=count?sum/count:.18;atlasLuminance.set(map,mean);return Math.max(.02,mean*plain);
+}
+/** How much a recoloured canopy varies leaf to leaf: fall mixes red, orange and yellow; spring and winter barely vary. */
+export const SEASON_VARIETY={fall:1,spring:.35,winter:.25,summer:0} as const;
+/**
+ * Seasonal leaves on a summer atlas. The leaf's own luminance, relative to its atlas, keeps its detail; its colour then
+ * comes from the instance colour (the season's leaf colour for that species). Patches of the atlas lean warmer or cooler,
+ * so a fall maple is not one flat orange. Summer materials never carry this patch.
+ */
+export function applyLeafRecolor(material:THREE.Material,variety:number){
+ const lum={value:leafAtlasLuminance(material)},mix={value:variety};
+ addMaterialPatch(material,{key:'foliage-season-v1',apply(shader){
+  shader.uniforms.uLeafLum=lum;shader.uniforms.uSeasonVariety=mix;
+  shader.fragmentShader=shader.fragmentShader
+   .replace('#include <common>',`#include <common>
+uniform float uLeafLum;
+uniform float uSeasonVariety;`)
+   .replace('#include <color_fragment>',`{ float leafL=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
+ vec3 leafTone=vec3(mix(1.0,clamp(leafL/uLeafLum,0.0,2.2),.85));
+#ifdef USE_MAP
+ float leafPatch=fract(sin(dot(floor(vMapUv*7.0),vec2(12.9898,78.233)))*43758.5453);
+ leafTone*=mix(vec3(1.0),mix(vec3(1.12,.78,.62),vec3(.9,1.1,1.18),leafPatch),uSeasonVariety);
+#endif
+ diffuseColor.rgb=leafTone; }
+#include <color_fragment>`);
+ }});
+}
