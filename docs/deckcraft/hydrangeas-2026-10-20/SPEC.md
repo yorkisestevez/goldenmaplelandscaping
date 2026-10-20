@@ -182,15 +182,24 @@ These are the seasons session's notes:
 
 **Re-review:** both findings resolved, nothing new above MINOR.
 
+### Seasons (merged from main 2026-10-20: PRs #188, #189, #190)
+
+- The hydrangeas take the scene's season from a per-cultivar table in `Hydrangeas3D.tsx` (sources: research/botany.md).
+  - Spring: fresh leaves, no heads yet.
+  - Fall: Limelight rose heads over reddening leaves; Annabelle tan-green heads; Endless Summer antique rose.
+  - Winter: bare canes in their old-wood colour, holding dried heads; the snow comes from main's patch.
+- Seasonal colours are multipliers on the shared per-cultivar materials, so changing season rebuilds nothing.
+- Hydrangeas are left out of `PlantStems`, as well as PlantBlooms.
+- Endless Summer has a record in main's `plantSeasons.ts`, used for the season rings and the checks.
+
 ### Deferred
 
+- **Spring leaf colours.** The spring hydrangea leaf colours are estimates; no source gave a May colour.
 - **Photo mode undersides.** Photo mode shows the upper-side photo on both faces of a leaf, because the underside is a raster-only shader switch, and the per-leaf crown normals are not baked either.
 - **Coarse picking.** A click anywhere in a hydrangea's envelope box selects it.
 - **Detail budget.** A design with hydrangeas spends the shared near-detail triangle budget at hydrangea cost, so other plants in it may step down a detail level sooner than on main. This is render only.
-
-- Seasonal bloom colours, after the seasons branch lands.
-- Little Lime, Quick Fire, Incrediball and oakleaf.
-- The other Ontario species.
+- **Next cultivars.** Little Lime, Quick Fire, Incrediball and oakleaf.
+- **The rest of the list.** The other Ontario species.
 
 ## Size
 
