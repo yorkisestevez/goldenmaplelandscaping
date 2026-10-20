@@ -8,6 +8,7 @@ import type {Update} from './fields';
 import type {LandscapeObject} from '../landscapeTypes';
 import type {YardPullKind} from '../yardShapeEditing';
 import {fitNewPatio,newYardFeature} from '../yardSettings';
+import {joinNewPatio} from '../pavingLook';
 import {yardGradeIn} from '../yardElevations';
 import {parseContractorLength} from './boundaryDimensions';
 import {newLandscapeObject} from '../landscapeCatalogue';
@@ -43,7 +44,7 @@ export default function DesignerShapePanel({data,update,selected,selection,frame
  const [panelHost,setPanelHost]=useState<HTMLDivElement|null>(null);
  const patios=(data.yardFeatures??[]).filter(f=>f.kind==='patio'&&!f.stepAssembly&&!f.stoneSteps&&f.id!==selected?.id);
  const room=(n=1)=>{if((data.yardFeatures?.length??0)+n>20)throw Error('This design supports up to 20 yard features.');};
- const placed=(f:YardFeature)=>{const grade=yardGradeIn(data,f);if(!Number.isFinite(grade))throw Error('Survey the new feature centre before setting its finished level.');return fitNewPatio(data,{...f,finishedElevationIn:grade+f.heightIn});};
+ const placed=(f:YardFeature)=>{const grade=yardGradeIn(data,f);if(!Number.isFinite(grade))throw Error('Survey the new feature centre before setting its finished level.');return joinNewPatio(data,fitNewPatio(data,{...f,finishedElevationIn:grade+f.heightIn}));};
  const attempt=(fn:()=>void)=>{try{fn();}catch(e){announce(e instanceof Error?e.message:'That shape tool could not be applied.',true);}};
  const apply=(next:YardFeature,what:string)=>{if(!selected)return;if(commit(selected,next))announce(`${what}. ${summary(next)} Undo restores the previous shape.`);};
  const summary=(f:YardFeature)=>{const p=yardFeaturePath(f);return f.kind==='patio'?`${(pathArea(p)/144).toFixed(1)} sq ft, ${feetInches(pathLength(p))} around.`:`${feetInches(pathLength(p))} of wall.`;};
