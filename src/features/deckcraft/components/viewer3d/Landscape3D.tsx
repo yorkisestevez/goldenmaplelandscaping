@@ -20,6 +20,7 @@ import {useRenderQuality} from './SceneRenderQuality';
 import {getShowcaseFlags,subscribeShowcase} from '../../showcaseMode';
 import {useFixtureLit} from './fixtureLighting';
 import {meshYawRad} from '../../furnitureFacing';
+import {edgingRuns} from './bedEdging';
 import {addSheetAttributes,bedReliefGeometry,bedReliefs,flushEdgingPoints,soilTint,type BedRelief} from './bedRelief';
 import {plantSeats,type PlantSeat} from './plantSeating';
 import {chipClearance,collarGeometry,PlantShadeRings} from './plantContactDecals';
@@ -83,7 +84,7 @@ export function landscapeBedGeometry(data:DeckData,polys:LandscapePoint[][],dept
  const {positions,uv}=landscapeCellTriangles(landscapeSurfaceCells(data,polys,object),depthIn);
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.computeVertexNormals();geometry.computeBoundingSphere();return geometry;
 }
-function Bed({data,object,polys,material,relief,plants}:{data:DeckData;object:LandscapeObject;polys:LandscapePoint[][];material:THREE.Material;relief?:BedRelief;plants:{object:LandscapeObject;seat:PlantSeat}[]}){
+function Bed({data,object,polys,joins,material,relief,plants}:{data:DeckData;object:LandscapeObject;polys:LandscapePoint[][];joins:LandscapePoint[][];material:THREE.Material;relief?:BedRelief;plants:{object:LandscapeObject;seat:PlantSeat}[]}){
  const occlusion=useGroundOcclusion(),bounds=occlusion?.bounds;
  const geometry=useMemo(()=>relief?bedReliefGeometry(data,relief,bounds):addSheetAttributes(landscapeBedGeometry(data,polys,landscapeSurfaceDepth(object),object),bounds),[data,polys,object,relief,bounds]);useEffect(()=>()=>geometry.dispose(),[geometry]);
  const collars=useMemo(()=>plants.length?collarGeometry(data,plants,soilTint(object),polys,relief,bounds):null,[data,plants,object,polys,relief,bounds]);useEffect(()=>()=>collars?.dispose(),[collars]);
@@ -91,25 +92,28 @@ function Bed({data,object,polys,material,relief,plants}:{data:DeckData;object:La
  const flush=!!relief,steel=useMemo(()=>flush?weatheredSteelMaterial():new THREE.MeshStandardMaterial({color:'#3a3e42',metalness:.62,roughness:.42}),[flush]);useEffect(()=>()=>steel.dispose(),[steel]);
  const top=useMemo(()=>raisedBedTop(data,object),[data,object]),surfaceY=(xIn:number,zIn:number)=>top!==undefined?top/12:landscapePlacement(data,{...object,xIn,zIn}).y;
  // A plain bed's edging is set 3.5 in into the ground, ½ in proud; raised and turf beds keep their ribbon on the finish.
- const edges=useMemo(()=>polys.map(p=>steelEdgingGeometry(flush?flushEdgingPoints(data,p):[...p,p[0]].map(v=>new THREE.Vector3(v.x/12,surfaceY(v.x,v.z)+((landscapeSurfaceDepth(object))+.1)/12,v.z/12)))),[data,polys,object,top,flush]);useEffect(()=>()=>edges.forEach(g=>g.dispose()),[edges]);
+ // It follows the outline less the stretches shared with a bed of the same surface (edgingRuns).
+ const edges=useMemo(()=>polys.flatMap(p=>edgingRuns(p,joins)).map(run=>steelEdgingGeometry(flush?flushEdgingPoints(data,run,false):run.map(v=>new THREE.Vector3(v.x/12,surfaceY(v.x,v.z)+((landscapeSurfaceDepth(object))+.1)/12,v.z/12)))),[data,polys,object,top,flush,joins]);useEffect(()=>()=>edges.forEach(g=>g.dispose()),[edges]);
  return <group name={'landscape-bed-'+object.id} userData={{landscapeIds:[object.id]}}><mesh geometry={geometry} material={material} receiveShadow dispose={null} name={relief?'landscape-bed-relief':undefined} userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id],coversGround:false}}/>{collars&&<mesh geometry={collars} material={material} receiveShadow dispose={null} name="landscape-bed-collars" userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id],coversGround:false}}/>}{activePuttingCups(object,polys).map((cup,i)=>{const p=puttingCupWorld(object,cup),h=surfaceY(p.x,p.z)+(landscapeSurfaceDepth(object)+.09)/12;return <group key={i} position={[p.x/12,h,p.z/12]} userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id]}}><mesh rotation={[-Math.PI/2,0,0]}><circleGeometry args={[2.125/12,32]}/><meshStandardMaterial color="#242b22" roughness={.9}/></mesh><mesh position={[0,1.4,0]}><cylinderGeometry args={[.018,.018,2.8,8]}/><meshStandardMaterial color="#eee9dc"/></mesh><mesh position={[.2,2.65,0]}><planeGeometry args={[.4,.25]}/><meshStandardMaterial color="#c7ab58" side={THREE.DoubleSide}/></mesh></group>;})}{object.edging&&edges.map((g,i)=><mesh key={i} geometry={g} material={steel} castShadow receiveShadow/>)}{top!==undefined&&<Suspense fallback={null}><RaisedBedFaces3D data={data} object={object} polys={polys}/></Suspense>}</group>;
 }
 /** The sky's occlusion map stands in where the lawn's has not been drawn yet. */
 const NO_OCCLUSION=new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1);NO_OCCLUSION.channel=1;NO_OCCLUSION.needsUpdate=true;
-function SurfaceBed({data,object,polys,relief,plants}:{data:DeckData;object:LandscapeObject;polys:LandscapePoint[][];relief?:BedRelief;plants:{object:LandscapeObject;seat:PlantSeat}[]}){
+function SurfaceBed({data,object,polys,joins,relief,plants}:{data:DeckData;object:LandscapeObject;polys:LandscapePoint[][];joins:LandscapePoint[][];relief?:BedRelief;plants:{object:LandscapeObject;seat:PlantSeat}[]}){
  const q=useRenderQuality(),invalidate=useThree(s=>s.invalidate),resource=useMemo(()=>createLandscapeSurfaceMaterial(object.assetId,q.anisotropy),[object.assetId,q.anisotropy]);useFixtureLit(resource.material);
  useEffect(()=>{resource.loadPhotos(invalidate);return ()=>resource.dispose();},[resource,invalidate]);
  // A bed beside the house is shaded from the sky as the lawn there is: the lawn's shared occlusion map (not owned here).
  const occlusion=useGroundOcclusion();useLayoutEffect(()=>{const m=resource.material;m.aoMap=occlusion?.texture??NO_OCCLUSION;m.aoMapIntensity=.75;m.needsUpdate=true;invalidate();},[resource,occlusion,invalidate]);
  const clearance=useMemo(()=>chipClearance(relief,plants,polys),[relief,plants,polys]);
- return <><Bed data={data} object={object} polys={polys} material={resource.material} relief={relief} plants={plants}/><Suspense fallback={null}><SurfaceDetail data={data} object={object} polys={polys} clearance={clearance}/></Suspense></>;
+ return <><Bed data={data} object={object} polys={polys} joins={joins} material={resource.material} relief={relief} plants={plants}/><Suspense fallback={null}><SurfaceDetail data={data} object={object} polys={polys} clearance={clearance}/></Suspense></>;
 }
 function Beds({data,objects,areas,reliefs,seats}:{data:DeckData;objects:LandscapeObject[];areas:Map<string,LandscapePoint[][]>;reliefs:Map<string,BedRelief>;seats:Map<string,PlantSeat>}){
- const beds=objects.filter(o=>o.enabled&&o.kind==='bed');
+ const beds=useMemo(()=>objects.filter(o=>o.enabled&&o.kind==='bed'),[objects]);
+ // Ground-cover beds of the same surface that meet are one bed to the eye: no edging between them (edgingRuns).
+ const joins=useMemo(()=>{const flat=(o:LandscapeObject)=>raisedBedTop(data,o)===undefined;return new Map(beds.map(o=>[o.id,flat(o)?beds.filter(b=>b!==o&&b.assetId===o.assetId&&flat(b)).flatMap(b=>areas.get(b.id)??[]):[]]));},[beds,areas,data]);
  const plants=useMemo(()=>{const byBed=new Map<string,{object:LandscapeObject;seat:PlantSeat}[]>();for(const o of objects){const seat=seats.get(o.id);if(!seat?.bed)continue;const list=byBed.get(seat.bed.id)??[];list.push({object:o,seat});byBed.set(seat.bed.id,list);}return byBed;},[objects,seats]);
- return <>{beds.map(o=><SurfaceBed key={o.id} data={data} object={o} polys={areas.get(o.id)??[]} relief={reliefs.get(o.id)} plants={plants.get(o.id)??NO_PLANTS}/>)}</>;
+ return <>{beds.map(o=><SurfaceBed key={o.id} data={data} object={o} polys={areas.get(o.id)??[]} joins={joins.get(o.id)??NO_JOINS} relief={reliefs.get(o.id)} plants={plants.get(o.id)??NO_PLANTS}/>)}</>;
 }
-const NO_PLANTS:{object:LandscapeObject;seat:PlantSeat}[]=[];
+const NO_PLANTS:{object:LandscapeObject;seat:PlantSeat}[]=[],NO_JOINS:LandscapePoint[][]=[];
 function MatureSpread({data,objects,seats}:{data:DeckData;objects:LandscapeObject[];seats:Map<string,PlantSeat>}){
  const geometry=useMemo(()=>{const points:number[]=[];for(const o of objects.filter(o=>o.enabled&&o.kind==='plant'&&o.speciesRecord)){const r=o.speciesRecord!.matureSpreadIn[1]/2,dy=(seats.get(o.id)?.dyIn??0)/12;for(let i=0;i<64;i++){for(const n of [i,i+1]){const a=n/64*Math.PI*2,xIn=o.xIn+Math.cos(a)*r,zIn=o.zIn+Math.sin(a)*r,p=landscapePlacement(data,{...o,xIn,zIn});points.push(p.x,p.y+dy+.035,p.z);}}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));return g;},[data,objects,seats]);useEffect(()=>()=>geometry.dispose(),[geometry]);
  return <lineSegments name="landscape-mature-overlay" geometry={geometry} renderOrder={5}><lineBasicMaterial color="#dfa72b" depthTest={false} transparent opacity={.8}/></lineSegments>;
