@@ -11,6 +11,7 @@ import type {DeckTakeoff} from '../../deckTakeoff';
 import type {YardModel} from '../../yardModel';
 import type {LandscapeObject,LandscapePoint} from '../../landscapeTypes';
 import {landscapeAsset,plantFoliageTint} from '../../landscapeCatalogue';
+import {boulderStone} from '../../boulderStones';
 import {applyFoliageLighting,crownBend,isLeafMaterial,leafTransmitUniform,tintPlantInstance} from './foliageLighting';
 import PlantBlooms from './plantBlooms';
 import {activePuttingCups,landscapeBedAreas,landscapePlacement,landscapeRenderLods} from '../../landscapeModelRuntime';
@@ -40,6 +41,13 @@ export function landscapeInstanceMatrix(data:DeckData,o:LandscapeObject,normaliz
  if(p.normal)q.premultiply(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(p.normal.x,p.normal.y,p.normal.z)));
  return new THREE.Matrix4().compose(new THREE.Vector3(p.x,p.y,p.z),q,new THREE.Vector3(o.widthIn/12,o.heightIn/12,o.depthIn/12)).multiply(normalization).multiply(source);
 }
+/** A scan-shape boulder's instance colour. Its scan is grey with a linear mean of 0.5 (build-boulder-library.mjs), so twice
+ * the stone colour reproduces that colour on average. undefined keeps the scan's own colour (natural-boulder and every
+ * other object). */
+export function boulderTint(color:THREE.Color,o:LandscapeObject){const stone=boulderStone(o);return stone?color.set(stone.colour).multiplyScalar(2):undefined;}
+/** Vertical offset of a placed model, inches: a plant's seat in the drawn mulch (plantSeating.ts) lifts or sinks it; a
+ * boulder's buried part sits below grade. */
+export const landscapeSeatDyIn=(o:LandscapeObject,seats:Map<string,PlantSeat>)=>(seats.get(o.id)?.dyIn??0)-(o.burialIn??0);
 /** Steel landscape edging: 4 in tall, 1/8 in thick, following the bed outline in feet. */
 export function steelEdgingGeometry(points:THREE.Vector3[]){
  const half=0.125/24,rise=4/12,positions:number[]=[];
@@ -64,8 +72,7 @@ function InstancePart({data,items,source,normalization,lod,seats}:{data:DeckData
  useEffect(()=>()=>{instance.dispose();},[instance]);useEffect(()=>()=>material.dispose(),[material]);
  useLayoutEffect(()=>{
   const color=new THREE.Color(),seat=new THREE.Matrix4();
-  // A plant's seat in the drawn mulch (plantSeating.ts) lifts or sinks the whole placed model.
-  items.forEach((o,i)=>{instance.setMatrixAt(i,seat.makeTranslation(0,(seats.get(o.id)?.dyIn??0)/12,0).multiply(landscapeInstanceMatrix(data,o,normalization,source.matrixWorld)));instance.setColorAt(i,o.kind==='plant'?(leafTint?tintPlantInstance(color,plantFoliageTint(o.speciesRecord?.id),o.id):color.set('#ffffff')):color.set(plantFoliageTint(o.speciesRecord?.id)));});instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
+  items.forEach((o,i)=>{instance.setMatrixAt(i,seat.makeTranslation(0,landscapeSeatDyIn(o,seats)/12,0).multiply(landscapeInstanceMatrix(data,o,normalization,source.matrixWorld)));instance.setColorAt(i,o.kind==='plant'?(leafTint?tintPlantInstance(color,plantFoliageTint(o.speciesRecord?.id),o.id):color.set('#ffffff')):(boulderTint(color,o)??color.set(plantFoliageTint(o.speciesRecord?.id))));});instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
   instance.name='landscape-'+items[0]?.assetId+'-lod'+lod;instance.userData={landscapeIds:items.map(o=>o.id),pickPartIds:items.map(o=>'landscape/'+o.id),genericVisualProxy:true,unmeasuredElevationIds:items.filter(o=>!landscapePlacement(data,o).measured).map(o=>o.id)};
   instance.castShadow=q.tier!=='constrained'&&lod<2;instance.receiveShadow=true;
   if(foliage)leafTransmitUniform(material).value=instance.castShadow?1:0;

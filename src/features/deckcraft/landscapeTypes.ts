@@ -1,7 +1,9 @@
 /** Landscape coordinates and dimensions are world inches, from the deck's
  * back-left framing corner. A mesh never defines a botanical supplier SKU. */
 export type LandscapeKind='plant'|'boulder'|'furniture'|'bed';
-export type LandscapeAssetId='deciduous-tree'|'conifer-tree'|'rounded-shrub'|'hedge-shrub'|'grass-clump'|'evergreen-shrub'|'pine-tree'|'hosta-clump'|'reed-grass'|'fern-clump'|'perennial-bloom'|'perennial-gold'|'natural-boulder'|'outdoor-table'|'outdoor-chair'|'lounge-chair'|'outdoor-sofa'|'outdoor-coffee-table'|'mulch-bed'|'black-mulch-bed'|'cedar-mulch-bed'|'river-rock-bed'|'mexican-beach-pebbles-bed'|'white-stone-bed'|'crushed-granite-bed'|'pea-gravel-bed'|'clear-limestone-bed'|'limestone-screenings-bed'|'granular-base-bed'|'artificial-grass'|'putting-green';
+export type LandscapeAssetId='deciduous-tree'|'conifer-tree'|'rounded-shrub'|'hedge-shrub'|'grass-clump'|'evergreen-shrub'|'pine-tree'|'hosta-clump'|'reed-grass'|'fern-clump'|'perennial-bloom'|'perennial-gold'|'natural-boulder'|'boulder-fieldstone-round'|'boulder-fieldstone-dome'|'boulder-quarried-block'|'boulder-quarried-fractured'|'boulder-bench'|'outdoor-table'|'outdoor-chair'|'lounge-chair'|'outdoor-sofa'|'outdoor-coffee-table'|'mulch-bed'|'black-mulch-bed'|'cedar-mulch-bed'|'river-rock-bed'|'mexican-beach-pebbles-bed'|'white-stone-bed'|'crushed-granite-bed'|'pea-gravel-bed'|'clear-limestone-bed'|'limestone-screenings-bed'|'granular-base-bed'|'artificial-grass'|'putting-green';
+/** Natural stone for the boulder-* scan shapes; it sets the stone's colour and its estimated weight. */
+export type BoulderStone='granite'|'limestone'|'sandstone';
 export interface LandscapePoint {x:number;z:number}
 export type {LandscapeOutline,LandscapeRing,LandscapeSegment} from './landscapeOutline';
 export interface LandscapeSpeciesRecord {
@@ -29,6 +31,10 @@ export interface LandscapeObject {
  raisedIn?:number;
  /** What holds a raised bed's soil (requires raisedIn). A wall is a retaining-wall yard feature, linked by id. */
  edge?:LandscapeBedEdge;
+ /** Boulder-* scan shapes only (absent draws and weighs as granite). natural-boulder never carries it. */
+ stoneType?:BoulderStone;
+ /** Boulder-* scan shapes only: how far the stone is set into the ground. heightIn is the whole stone. */
+ burialIn?:number;
 }
 export interface LandscapeBedEdge {kind:'wall'|'timber'|'steel';wallFeatureId?:string}
 export const LANDSCAPE_LIMITS={objects:300,polygonPoints:64,coordinateIn:120000,dimensionIn:2400} as const;

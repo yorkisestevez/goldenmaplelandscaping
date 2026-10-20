@@ -12,12 +12,17 @@ import {sitePlaneHeight} from './siteSurface';
 import {landscapeWorld,landscapeOutlinePaths,insideLandscapeRing} from './landscapeOutline';
 import {landscapeConnected,landscapeStructureExclusions,landscapeClip} from './landscapeFill';
 import {landscapeAsset} from './landscapeCatalogue';
+import {boulderStone} from './boulderStones';
 import {bedLevel,exposedRun,planeFillYd3,planeGround,ringGround,RAISED_BED,type BedGround,type BedLevel} from './raisedBeds';
 import {designSiteSurface,integrateSiteFeatureFill} from './siteSurface';
 export interface LandscapeItemTakeoff {objectId:string;name:string;kind:LandscapeObject['kind'];count:number;areaSqft:number;mulchYd3:number;edgingLf:number;aggregateYd3?:number;turfAreaSqft?:number;baseYd3?:number;cupCount?:number;quoteRequired:true;
  /** Raised beds only (raisedBeds.ts): level soil top (project datum), planting soil, highest soil over the outline's ground, timber/steel edging and holding wall run. */
- soilTopIn?:number;soilYd3?:number;raisedMaxIn?:number;raisedEdgeLf?:number;wallLf?:number;wallLinked?:boolean;unheld?:boolean}
-export interface LandscapeTakeoff {plantCount:number;boulderCount:number;furnitureCount:number;bedAreaSqft:number;mulchYd3:number;edgingLf:number;aggregateYd3?:number;turfAreaSqft?:number;baseYd3?:number;cupCount?:number;soilYd3?:number;raisedEdgeLf?:number;items:LandscapeItemTakeoff[];warnings:string[]}
+ soilTopIn?:number;soilYd3?:number;raisedMaxIn?:number;raisedEdgeLf?:number;wallLf?:number;wallLinked?:boolean;unheld?:boolean;
+ /** Scan-shape boulders only: estimated stone weight, tonnes (envelope × measured fill × typical density). */
+ stoneTonnes?:number}
+export interface LandscapeTakeoff {plantCount:number;boulderCount:number;furnitureCount:number;bedAreaSqft:number;mulchYd3:number;edgingLf:number;aggregateYd3?:number;turfAreaSqft?:number;baseYd3?:number;cupCount?:number;soilYd3?:number;raisedEdgeLf?:number;
+ /** Present only when an enabled scan-shape boulder is in the design: their estimated weight, tonnes. */
+ boulderTonnes?:number;items:LandscapeItemTakeoff[];warnings:string[]}
 const SCALE=1000;
 const signedArea=(p:LandscapePoint[])=>p.reduce((n,a,i)=>{const b=p[(i+1)%p.length];return n+a.x*b.z-b.x*a.z;},0)/2;
 const area=(polys:LandscapePoint[][])=>Math.abs(polys.reduce((n,p)=>n+signedArea(p),0));
@@ -41,6 +46,10 @@ export function landscapeBedAreas(objects:LandscapeObject[],data?:DeckData){
 }
 /** Entire cup opening must remain in the visible area, including holes and later overlaps. */
 export function activePuttingCups(o:LandscapeObject,remaining:LandscapePoint[][]){return (o.puttingCups??[]).filter(p=>{const w=puttingCupWorld(o,p),radius=2.125,circle=Array.from({length:64},(_,i)=>({x:w.x+radius*Math.cos(i*Math.PI/32),z:w.z+radius*Math.sin(i*Math.PI/32)}));return area(clip([circle],remaining,true))<.005;});}
+const CUBIC_INCH_M3=1.6387064e-5;
+/** A scan-shape boulder's estimated weight in tonnes: its envelope × the scan's measured fill × the stone's typical
+ * density. undefined for natural-boulder, which keeps its count-only takeoff. */
+export function boulderTonnes(o:LandscapeObject){const stone=boulderStone(o),fill=landscapeAsset(o.assetId).fillShare;return stone&&fill?fill*o.widthIn*o.heightIn*o.depthIn*CUBIC_INCH_M3*stone.densityTm3:undefined;}
 export function landscapeTakeoff(objects:LandscapeObject[]=[],data?:DeckData):LandscapeTakeoff {
  const q:LandscapeTakeoff={plantCount:0,boulderCount:0,furnitureCount:0,bedAreaSqft:0,mulchYd3:0,edgingLf:0,items:[],warnings:[]},beds=landscapeBedAreas(objects,data),edges=new Map<string,{start:number;end:number;item:LandscapeItemTakeoff}[]>();
  for(const o of objects.filter(o=>o.enabled)){
@@ -48,7 +57,7 @@ export function landscapeTakeoff(objects:LandscapeObject[]=[],data?:DeckData):La
   if(data&&o.kind==='bed'&&o.groundCoverOnly&&(!data.siteModel||landscapeOutlinePaths(o).flat().some(p=>sampleSiteHeight(data,p.x,p.z)===undefined)))q.warnings.push(o.name+': unmeasured ground coverage is illustrative. Enter survey coverage before construction.');
   const item:LandscapeItemTakeoff={objectId:o.id,name:o.name,kind:o.kind,count:o.kind==='bed'?0:1,areaSqft:0,mulchYd3:0,edgingLf:0,quoteRequired:true};
   if(o.kind==='plant'){q.plantCount++;if(!o.speciesRecord)q.warnings.push(o.name+': species, nursery stock and spacing have not been specified.');}
-  else if(o.kind==='boulder')q.boulderCount++;else if(o.kind==='furniture')q.furnitureCount++;
+  else if(o.kind==='boulder'){q.boulderCount++;const tonnes=boulderTonnes(o);if(tonnes!==undefined){item.stoneTonnes=tonnes;q.boulderTonnes=(q.boulderTonnes??0)+tonnes;}}else if(o.kind==='furniture')q.furnitureCount++;
   else {const remaining=beds.get(o.id)??[];item.areaSqft=area(remaining)/144;const finish=landscapeSurface(o.assetId),volume=item.areaSqft*landscapeSurfaceDepth(o)/324;item.mulchYd3=finish?.type==='mulch'?volume:0;item.aggregateYd3=finish?.type==='aggregate'?volume:0;item.turfAreaSqft=finish?.type==='turf'?item.areaSqft:0;item.baseYd3=item.areaSqft*(o.baseDepthIn??0)/324;item.cupCount=activePuttingCups(o,remaining).length;q.bedAreaSqft+=item.areaSqft;q.mulchYd3+=item.mulchYd3;for(const key of ['aggregateYd3','turfAreaSqft','baseYd3','cupCount'] as const)q[key]=(q[key]??0)+(item[key]??0);if(o.assetId!=='mulch-bed'&&item.areaSqft>.001&&o.baseDepthIn===undefined)q.warnings.push(o.name+': base depth, subgrade preparation and drainage remain unspecified.');if(item.cupCount!==(o.puttingCups??[]).length)q.warnings.push(o.name+': a putting cup is covered by another area or excluded by a pool. Adjust its position.');
    if(o.raisedIn!==undefined)raisedTakeoff(o,remaining,item,q,data);
    if(o.edging)for(const p of remaining.filter(p=>!o.outline||o.holeEdging||signedArea(p)>0))for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length],length=Math.hypot(b.x-a.x,b.z-a.z);if(length<.0001)continue;let dx=(b.x-a.x)/length,dz=(b.z-a.z)/length;if(dx<-.000001||Math.abs(dx)<.000001&&dz<0){dx=-dx;dz=-dz;}const key=[Math.round(dx*1e6),Math.round(dz*1e6),Math.round((dx*a.z-dz*a.x)*1000)].join('/'),u=dx*a.x+dz*a.z,v=dx*b.x+dz*b.z,list=edges.get(key)??[];list.push({start:Math.min(u,v),end:Math.max(u,v),item});edges.set(key,list);}
@@ -171,7 +180,8 @@ export function landscapeQuoteSections(objects:import('./landscapeTypes').Landsc
    if(object.assetId!=='mulch-bed'&&object.baseDepthIn===undefined&&item.areaSqft>.001)unknown.push({id:`landscape-base-pending-${item.objectId}`,label:`${item.name} — base and drainage specification pending`,amountCents:null,featureIds:[item.objectId],note:'Enter a base depth and installation specification. No excavation, disposal, geotextile, density or drainage quantity is invented.'});
    if(object.raisedIn!==undefined)unknown.push(...raisedQuoteLines(object,item));
    if(item.edgingLf>.001)unknown.push({id:`landscape-edging-${item.objectId}`,label:`${item.name} — edging supply and installation`,amountCents:null,quantity:item.edgingLf,unit:'ft',featureIds:[item.objectId],note:'Unique measured boundary length; shared collinear edges are counted once. The view shows a steel ribbon. Confirm the product, height, purchasing pack, cuts and anchoring. No price is assumed.'});
-  }else {const plant=objects.find(o=>o.id===item.objectId),species=plant?.kind==='plant'?plant.speciesRecord:undefined;unknown.push({id:`landscape-${item.objectId}`,label:`${item.name} — supply and installation`,amountCents:null,quantity:item.count,unit:'ea',featureIds:[item.objectId],note:species?`${species.botanicalName} (${species.commonName}). The mesh is a summer visual proxy for that planting, not a nursery SKU. Supply, stock size, delivery and installation are unpriced.`:'Generic visual proxy; confirm actual species/product, nursery stock or SKU, supply, delivery and installation.'});}
+  }else if(item.stoneTonnes!==undefined){const o=objects.find(o=>o.id===item.objectId)!,stone=boulderStone(o)!,round=(v:number)=>Math.round(v*10)/10;unknown.push({id:`landscape-${item.objectId}`,label:`${item.name} — supply and installation`,amountCents:null,quantity:item.count,unit:'ea',featureIds:[item.objectId],note:`${stone.name}, ${landscapeAsset(o.assetId).name.toLowerCase()}, about ${round(o.widthIn)} × ${round(o.depthIn)} in and ${round(o.heightIn)} in tall, ${round(o.burialIn??0)} in of it set into the ground. Estimated weight ${item.stoneTonnes.toFixed(2)} t: the planned size × the scan's measured fill × a typical ${stone.name.toLowerCase()} density of ${stone.densityTm3} t/m³ (AusIMM bulk density table). Confirm the stone, its weight, delivery and machine placement with the supplier; no price is assumed.`});}
+  else {const plant=objects.find(o=>o.id===item.objectId),species=plant?.kind==='plant'?plant.speciesRecord:undefined;unknown.push({id:`landscape-${item.objectId}`,label:`${item.name} — supply and installation`,amountCents:null,quantity:item.count,unit:'ea',featureIds:[item.objectId],note:species?`${species.botanicalName} (${species.commonName}). The mesh is a summer visual proxy for that planting, not a nursery SKU. Supply, stock size, delivery and installation are unpriced.`:'Generic visual proxy; confirm actual species/product, nursery stock or SKU, supply, delivery and installation.'});}
  }
 
  for(const o of objects.filter(o=>o.enabled&&o.kind==='plant'&&(!o.speciesRecord||o.speciesRecord.spacingIn===undefined)))unknown.push({id:`plant-specification-${o.id}`,label:`${o.name}: botanical specification and planting spacing confirmation`,amountCents:null,featureIds:[o.id],note:o.speciesRecord?`${o.speciesRecord.botanicalName} is recorded. Planting spacing is not specified, so nursery spacing still needs a cited source. No price is assumed.`:'A generic visual proxy and cost entry cannot establish mature dimensions or planting spacing. Record a botanical source and the spacing specification.'});
