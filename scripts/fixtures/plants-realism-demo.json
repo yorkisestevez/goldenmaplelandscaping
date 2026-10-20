@@ -1,0 +1,1098 @@
+[
+ {
+  "id": "demo-bed",
+  "name": "Planting bed",
+  "enabled": true,
+  "kind": "bed",
+  "assetId": "mulch-bed",
+  "xIn": 96,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 1,
+  "widthIn": 408,
+  "depthIn": 108,
+  "mulchDepthIn": 3,
+  "edging": false
+ },
+ {
+  "id": "demo-0",
+  "name": "Sugar maple",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "deciduous-tree",
+  "xIn": -74,
+  "zIn": 420,
+  "rotationDeg": 0,
+  "heightIn": 180,
+  "widthIn": 108,
+  "depthIn": 108,
+  "speciesRecord": {
+   "id": "acer-saccharum",
+   "commonName": "Sugar maple",
+   "botanicalName": "Acer saccharum",
+   "matureHeightIn": [
+    480,
+    1440
+   ],
+   "matureSpreadIn": [
+    360,
+    720
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/acer-saccharum/",
+   "sourceNote": "NC State Extension: height 40–120 ft, spread 30–60 ft. Barrie zone 4–5 site and nursery stock need local confirmation. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-1",
+  "name": "Eastern redbud",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "deciduous-tree",
+  "xIn": 28,
+  "zIn": 420,
+  "rotationDeg": 0,
+  "heightIn": 132,
+  "widthIn": 108,
+  "depthIn": 108,
+  "speciesRecord": {
+   "id": "cercis-canadensis",
+   "commonName": "Eastern redbud",
+   "botanicalName": "Cercis canadensis",
+   "matureHeightIn": [
+    240,
+    360
+   ],
+   "matureSpreadIn": [
+    300,
+    420
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/cercis-canadensis/",
+   "sourceNote": "NC State Extension: height 20–30 ft, spread 25–35 ft. Northern stock and site need local confirmation. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-2",
+  "name": "Eastern white pine",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "pine-tree",
+  "xIn": 130,
+  "zIn": 420,
+  "rotationDeg": 0,
+  "heightIn": 168,
+  "widthIn": 96,
+  "depthIn": 96,
+  "speciesRecord": {
+   "id": "pinus-strobus",
+   "commonName": "Eastern white pine",
+   "botanicalName": "Pinus strobus",
+   "matureHeightIn": [
+    600,
+    960
+   ],
+   "matureSpreadIn": [
+    240,
+    480
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/pinus-strobus/",
+   "sourceNote": "NC State Extension: height 50–80 ft, spread 20–40 ft. The pine mesh is a summer needle-card proxy, not a measured specimen."
+  }
+ },
+ {
+  "id": "demo-3",
+  "name": "Colorado blue spruce",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "conifer-tree",
+  "xIn": 232,
+  "zIn": 420,
+  "rotationDeg": 0,
+  "heightIn": 144,
+  "widthIn": 72,
+  "depthIn": 72,
+  "speciesRecord": {
+   "id": "picea-pungens",
+   "commonName": "Colorado blue spruce",
+   "botanicalName": "Picea pungens",
+   "matureHeightIn": [
+    360,
+    720
+   ],
+   "matureSpreadIn": [
+    120,
+    240
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/picea-pungens/",
+   "sourceNote": "NC State Extension: height 30–60 ft, spread 10–20 ft. The conifer mesh is a summer proxy, not a measured blue spruce."
+  }
+ },
+ {
+  "id": "demo-4",
+  "name": "'Smaragd' emerald cedar",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "hedge-shrub",
+  "xIn": -78.85714285714286,
+  "zIn": 312,
+  "rotationDeg": 0,
+  "heightIn": 96,
+  "widthIn": 36,
+  "depthIn": 36,
+  "speciesRecord": {
+   "id": "thuja-occidentalis-smaragd",
+   "commonName": "'Smaragd' emerald cedar",
+   "botanicalName": "Thuja occidentalis 'Smaragd'",
+   "matureHeightIn": [
+    144,
+    168
+   ],
+   "matureSpreadIn": [
+    36,
+    48
+   ],
+   "sourceURL": "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderDetails.aspx?taxonid=254004",
+   "sourceNote": "Missouri Botanical Garden Plant Finder lists Smaragd at 12–14 ft tall and 3–4 ft wide. Use the cultivar size, not the species 40–60 ft. Nursery stock needs local confirmation."
+  }
+ },
+ {
+  "id": "demo-5",
+  "name": "'Smaragd' emerald cedar",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "hedge-shrub",
+  "xIn": -20.57142857142857,
+  "zIn": 312,
+  "rotationDeg": 0,
+  "heightIn": 96,
+  "widthIn": 36,
+  "depthIn": 36,
+  "speciesRecord": {
+   "id": "thuja-occidentalis-smaragd",
+   "commonName": "'Smaragd' emerald cedar",
+   "botanicalName": "Thuja occidentalis 'Smaragd'",
+   "matureHeightIn": [
+    144,
+    168
+   ],
+   "matureSpreadIn": [
+    36,
+    48
+   ],
+   "sourceURL": "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderDetails.aspx?taxonid=254004",
+   "sourceNote": "Missouri Botanical Garden Plant Finder lists Smaragd at 12–14 ft tall and 3–4 ft wide. Use the cultivar size, not the species 40–60 ft. Nursery stock needs local confirmation."
+  }
+ },
+ {
+  "id": "demo-6",
+  "name": "Yew",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "hedge-shrub",
+  "xIn": 37.71428571428572,
+  "zIn": 312,
+  "rotationDeg": 0,
+  "heightIn": 48,
+  "widthIn": 36,
+  "depthIn": 36,
+  "speciesRecord": {
+   "id": "taxus-media",
+   "commonName": "Yew",
+   "botanicalName": "Taxus × media",
+   "matureHeightIn": [
+    24,
+    240
+   ],
+   "matureSpreadIn": [
+    24,
+    144
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/taxus-x-media/",
+   "sourceNote": "NC State Extension: height 2–20 ft, spread 2–12 ft. Cultivar size varies widely; confirm the nursery plant. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-7",
+  "name": "Lilac",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "rounded-shrub",
+  "xIn": 96,
+  "zIn": 312,
+  "rotationDeg": 0,
+  "heightIn": 48,
+  "widthIn": 40,
+  "depthIn": 40,
+  "speciesRecord": {
+   "id": "syringa-vulgaris",
+   "commonName": "Lilac",
+   "botanicalName": "Syringa vulgaris",
+   "matureHeightIn": [
+    96,
+    192
+   ],
+   "matureSpreadIn": [
+    72,
+    144
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/syringa-vulgaris/",
+   "sourceNote": "NC State Extension: height 8–16 ft, spread 6–12 ft. Cultivar size varies. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-8",
+  "name": "Panicle hydrangea",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "rounded-shrub",
+  "xIn": 154.28571428571428,
+  "zIn": 312,
+  "rotationDeg": 0,
+  "heightIn": 48,
+  "widthIn": 42,
+  "depthIn": 42,
+  "speciesRecord": {
+   "id": "hydrangea-paniculata",
+   "commonName": "Panicle hydrangea",
+   "botanicalName": "Hydrangea paniculata",
+   "matureHeightIn": [
+    96,
+    300
+   ],
+   "matureSpreadIn": [
+    72,
+    300
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/hydrangea-paniculata/",
+   "sourceNote": "NC State Extension: height 8–25 ft, spread 6–25 ft. Cultivar size varies. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-9",
+  "name": "Ninebark",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "rounded-shrub",
+  "xIn": 212.57142857142856,
+  "zIn": 312,
+  "rotationDeg": 0,
+  "heightIn": 48,
+  "widthIn": 48,
+  "depthIn": 48,
+  "speciesRecord": {
+   "id": "physocarpus-opulifolius",
+   "commonName": "Ninebark",
+   "botanicalName": "Physocarpus opulifolius",
+   "matureHeightIn": [
+    60,
+    96
+   ],
+   "matureSpreadIn": [
+    48,
+    72
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/physocarpus-opulifolius/",
+   "sourceNote": "NC State Extension: height 5–8 ft, spread 4–6 ft. Cultivar foliage colour varies. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-10",
+  "name": "Red-osier dogwood",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "rounded-shrub",
+  "xIn": 270.85714285714283,
+  "zIn": 312,
+  "rotationDeg": 0,
+  "heightIn": 42,
+  "widthIn": 42,
+  "depthIn": 42,
+  "speciesRecord": {
+   "id": "cornus-sericea",
+   "commonName": "Red-osier dogwood",
+   "botanicalName": "Cornus sericea",
+   "matureHeightIn": [
+    60,
+    108
+   ],
+   "matureSpreadIn": [
+    60,
+    120
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/cornus-sericea/",
+   "sourceNote": "NC State Extension dimensions: height 5–9 ft; spread 5–10 ft. Cultivar sizes vary."
+  }
+ },
+ {
+  "id": "demo-11",
+  "name": "Boxwood",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "evergreen-shrub",
+  "xIn": -82.5,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 24,
+  "widthIn": 28,
+  "depthIn": 28,
+  "speciesRecord": {
+   "id": "buxus-microphylla",
+   "commonName": "Boxwood",
+   "botanicalName": "Buxus microphylla",
+   "matureHeightIn": [
+    36,
+    48
+   ],
+   "matureSpreadIn": [
+    24,
+    48
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/buxus-microphylla/",
+   "sourceNote": "NC State Extension: height 3–4 ft, spread 2–4 ft. Zone 4–5 cultivar hardiness needs local confirmation. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-12",
+  "name": "Boxwood",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "evergreen-shrub",
+  "xIn": -31.5,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 24,
+  "widthIn": 28,
+  "depthIn": 28,
+  "speciesRecord": {
+   "id": "buxus-microphylla",
+   "commonName": "Boxwood",
+   "botanicalName": "Buxus microphylla",
+   "matureHeightIn": [
+    36,
+    48
+   ],
+   "matureSpreadIn": [
+    24,
+    48
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/buxus-microphylla/",
+   "sourceNote": "NC State Extension: height 3–4 ft, spread 2–4 ft. Zone 4–5 cultivar hardiness needs local confirmation. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-13",
+  "name": "'Annabelle' hydrangea",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "rounded-shrub",
+  "xIn": 19.5,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 36,
+  "widthIn": 40,
+  "depthIn": 40,
+  "speciesRecord": {
+   "id": "hydrangea-arborescens-annabelle",
+   "commonName": "'Annabelle' hydrangea",
+   "botanicalName": "Hydrangea arborescens 'Annabelle'",
+   "matureHeightIn": [
+    36,
+    60
+   ],
+   "matureSpreadIn": [
+    36,
+    60
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/hydrangea-arborescens/",
+   "sourceNote": "NC State Extension species page: height 3–5 ft, spread 3–5 ft. Annabelle is the common white cultivar in that range. Confirm the nursery plant. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-14",
+  "name": "Spirea",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "rounded-shrub",
+  "xIn": 70.5,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 30,
+  "widthIn": 36,
+  "depthIn": 36,
+  "speciesRecord": {
+   "id": "spiraea-japonica",
+   "commonName": "Spirea",
+   "botanicalName": "Spiraea japonica",
+   "matureHeightIn": [
+    48,
+    72
+   ],
+   "matureSpreadIn": [
+    48,
+    84
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/spiraea-japonica/",
+   "sourceNote": "NC State Extension: height 4–6 ft, spread 4–7 ft. Cultivar size varies. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-15",
+  "name": "Karl Foerster feather reed grass",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "reed-grass",
+  "xIn": 121.5,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 48,
+  "widthIn": 24,
+  "depthIn": 24,
+  "speciesRecord": {
+   "id": "calamagrostis-karl-foerster",
+   "commonName": "Karl Foerster feather reed grass",
+   "botanicalName": "Calamagrostis × acutiflora 'Karl Foerster'",
+   "matureHeightIn": [
+    60,
+    60
+   ],
+   "matureSpreadIn": [
+    24,
+    24
+   ],
+   "sourceURL": "https://plantsearch.extension.umn.edu/searchplants/view?editid1=1551",
+   "sourceNote": "University of Minnesota profile lists height 5 ft and spread 2 ft. The grass mesh is a summer proxy, not a measured cultivar."
+  }
+ },
+ {
+  "id": "demo-16",
+  "name": "Karl Foerster feather reed grass",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "reed-grass",
+  "xIn": 172.5,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 48,
+  "widthIn": 24,
+  "depthIn": 24,
+  "speciesRecord": {
+   "id": "calamagrostis-karl-foerster",
+   "commonName": "Karl Foerster feather reed grass",
+   "botanicalName": "Calamagrostis × acutiflora 'Karl Foerster'",
+   "matureHeightIn": [
+    60,
+    60
+   ],
+   "matureSpreadIn": [
+    24,
+    24
+   ],
+   "sourceURL": "https://plantsearch.extension.umn.edu/searchplants/view?editid1=1551",
+   "sourceNote": "University of Minnesota profile lists height 5 ft and spread 2 ft. The grass mesh is a summer proxy, not a measured cultivar."
+  }
+ },
+ {
+  "id": "demo-17",
+  "name": "Switchgrass",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "reed-grass",
+  "xIn": 223.5,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 42,
+  "widthIn": 24,
+  "depthIn": 24,
+  "speciesRecord": {
+   "id": "panicum-virgatum",
+   "commonName": "Switchgrass",
+   "botanicalName": "Panicum virgatum",
+   "matureHeightIn": [
+    36,
+    84
+   ],
+   "matureSpreadIn": [
+    24,
+    36
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/panicum-virgatum/",
+   "sourceNote": "NC State Extension: height 3–7 ft, spread 2–3 ft. Cultivar size varies. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-18",
+  "name": "Little bluestem",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "reed-grass",
+  "xIn": 274.5,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 30,
+  "widthIn": 18,
+  "depthIn": 18,
+  "speciesRecord": {
+   "id": "schizachyrium-scoparium",
+   "commonName": "Little bluestem",
+   "botanicalName": "Schizachyrium scoparium",
+   "matureHeightIn": [
+    24,
+    48
+   ],
+   "matureSpreadIn": [
+    18,
+    36
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/schizachyrium-scoparium/",
+   "sourceNote": "NC State Extension: height 2–4 ft, spread 1.5–3 ft. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-19",
+  "name": "Red maple",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "deciduous-tree",
+  "xIn": -84,
+  "zIn": 236,
+  "rotationDeg": 0,
+  "heightIn": 180,
+  "widthIn": 108,
+  "depthIn": 108,
+  "speciesRecord": {
+   "id": "acer-rubrum",
+   "commonName": "Red maple",
+   "botanicalName": "Acer rubrum",
+   "matureHeightIn": [
+    480,
+    1440
+   ],
+   "matureSpreadIn": [
+    360,
+    600
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/acer-rubrum/",
+   "sourceNote": "NC State Extension: height 40–120 ft, spread 30–50 ft. Site and nursery stock need local confirmation. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-20",
+  "name": "Serviceberry",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "deciduous-tree",
+  "xIn": 276,
+  "zIn": 236,
+  "rotationDeg": 0,
+  "heightIn": 120,
+  "widthIn": 84,
+  "depthIn": 84,
+  "speciesRecord": {
+   "id": "amelanchier-canadensis",
+   "commonName": "Serviceberry",
+   "botanicalName": "Amelanchier canadensis",
+   "matureHeightIn": [
+    180,
+    300
+   ],
+   "matureSpreadIn": [
+    180,
+    240
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/amelanchier-canadensis/",
+   "sourceNote": "NC State Extension dimensions: height 15–25 ft; spread 15–20 ft. Climate and nursery stock suitability require local confirmation."
+  }
+ },
+ {
+  "id": "demo-21",
+  "name": "Hosta",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "hosta-clump",
+  "xIn": -26,
+  "zIn": 244,
+  "rotationDeg": 0,
+  "heightIn": 16,
+  "widthIn": 28,
+  "depthIn": 28,
+  "speciesRecord": {
+   "id": "hosta",
+   "commonName": "Hosta",
+   "botanicalName": "Hosta",
+   "matureHeightIn": [
+    4,
+    30
+   ],
+   "matureSpreadIn": [
+    6,
+    36
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/hosta/",
+   "sourceNote": "NC State Extension genus page: height 4 in–2.5 ft, spread 6 in–3 ft. Cultivar size varies; confirm the nursery plant. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-22",
+  "name": "Hosta",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "hosta-clump",
+  "xIn": 2,
+  "zIn": 244,
+  "rotationDeg": 0,
+  "heightIn": 16,
+  "widthIn": 28,
+  "depthIn": 28,
+  "speciesRecord": {
+   "id": "hosta",
+   "commonName": "Hosta",
+   "botanicalName": "Hosta",
+   "matureHeightIn": [
+    4,
+    30
+   ],
+   "matureSpreadIn": [
+    6,
+    36
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/hosta/",
+   "sourceNote": "NC State Extension genus page: height 4 in–2.5 ft, spread 6 in–3 ft. Cultivar size varies; confirm the nursery plant. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-23",
+  "name": "Ostrich fern",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "fern-clump",
+  "xIn": 30,
+  "zIn": 244,
+  "rotationDeg": 0,
+  "heightIn": 36,
+  "widthIn": 28,
+  "depthIn": 28,
+  "speciesRecord": {
+   "id": "matteuccia-struthiopteris",
+   "commonName": "Ostrich fern",
+   "botanicalName": "Matteuccia struthiopteris",
+   "matureHeightIn": [
+    36,
+    60
+   ],
+   "matureSpreadIn": [
+    24,
+    48
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/matteuccia-struthiopteris/",
+   "sourceNote": "NC State Extension: height 3–5 ft, spread 2–4 ft. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-24",
+  "name": "Purple coneflower",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "perennial-bloom",
+  "xIn": 58,
+  "zIn": 244,
+  "rotationDeg": 0,
+  "heightIn": 30,
+  "widthIn": 18,
+  "depthIn": 18,
+  "speciesRecord": {
+   "id": "echinacea-purpurea",
+   "commonName": "Purple coneflower",
+   "botanicalName": "Echinacea purpurea",
+   "matureHeightIn": [
+    36,
+    48
+   ],
+   "matureSpreadIn": [
+    12,
+    24
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/echinacea-purpurea/",
+   "sourceNote": "NC State Extension: height 3–4 ft, spread 1–2 ft. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-25",
+  "name": "Purple coneflower",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "perennial-bloom",
+  "xIn": 86,
+  "zIn": 244,
+  "rotationDeg": 0,
+  "heightIn": 30,
+  "widthIn": 18,
+  "depthIn": 18,
+  "speciesRecord": {
+   "id": "echinacea-purpurea",
+   "commonName": "Purple coneflower",
+   "botanicalName": "Echinacea purpurea",
+   "matureHeightIn": [
+    36,
+    48
+   ],
+   "matureSpreadIn": [
+    12,
+    24
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/echinacea-purpurea/",
+   "sourceNote": "NC State Extension: height 3–4 ft, spread 1–2 ft. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-26",
+  "name": "Black-eyed Susan",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "perennial-gold",
+  "xIn": 114,
+  "zIn": 244,
+  "rotationDeg": 0,
+  "heightIn": 28,
+  "widthIn": 16,
+  "depthIn": 16,
+  "speciesRecord": {
+   "id": "rudbeckia-hirta",
+   "commonName": "Black-eyed Susan",
+   "botanicalName": "Rudbeckia hirta",
+   "matureHeightIn": [
+    24,
+    48
+   ],
+   "matureSpreadIn": [
+    12,
+    24
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/rudbeckia-hirta/",
+   "sourceNote": "NC State Extension: height 2–4 ft, spread 1–2 ft. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-27",
+  "name": "Wild bergamot",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "perennial-bloom",
+  "xIn": 142,
+  "zIn": 244,
+  "rotationDeg": 0,
+  "heightIn": 30,
+  "widthIn": 24,
+  "depthIn": 24,
+  "speciesRecord": {
+   "id": "monarda-fistulosa",
+   "commonName": "Wild bergamot",
+   "botanicalName": "Monarda fistulosa",
+   "matureHeightIn": [
+    24,
+    48
+   ],
+   "matureSpreadIn": [
+    24,
+    36
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/monarda-fistulosa/",
+   "sourceNote": "NC State Extension: height 2–4 ft, spread 2–3 ft. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-28",
+  "name": "Daylily",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "perennial-gold",
+  "xIn": 170,
+  "zIn": 244,
+  "rotationDeg": 0,
+  "heightIn": 24,
+  "widthIn": 20,
+  "depthIn": 20,
+  "speciesRecord": {
+   "id": "hemerocallis",
+   "commonName": "Daylily",
+   "botanicalName": "Hemerocallis",
+   "matureHeightIn": [
+    12,
+    36
+   ],
+   "matureSpreadIn": [
+    12,
+    36
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/hemerocallis/",
+   "sourceNote": "NC State Extension: height 1–3 ft, spread 1–3 ft. Cultivar colour and size vary. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-29",
+  "name": "Catmint",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "perennial-bloom",
+  "xIn": 198,
+  "zIn": 244,
+  "rotationDeg": 0,
+  "heightIn": 18,
+  "widthIn": 24,
+  "depthIn": 24,
+  "speciesRecord": {
+   "id": "nepeta-faassenii",
+   "commonName": "Catmint",
+   "botanicalName": "Nepeta × faassenii",
+   "matureHeightIn": [
+    18,
+    24
+   ],
+   "matureSpreadIn": [
+    24,
+    36
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/nepeta-x-faassenii/",
+   "sourceNote": "NC State Extension: height 1.5–2 ft, spread 2–3 ft. Confirm the cultivar for zone 4–5. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-30",
+  "name": "Salvia",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "perennial-bloom",
+  "xIn": 226,
+  "zIn": 244,
+  "rotationDeg": 0,
+  "heightIn": 24,
+  "widthIn": 16,
+  "depthIn": 16,
+  "speciesRecord": {
+   "id": "salvia-nemorosa",
+   "commonName": "Salvia",
+   "botanicalName": "Salvia nemorosa",
+   "matureHeightIn": [
+    18,
+    36
+   ],
+   "matureSpreadIn": [
+    6,
+    24
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/salvia-nemorosa/",
+   "sourceNote": "NC State Extension: height 1.5–3 ft, spread 0.5–2 ft. Cultivar hardiness needs local confirmation. No price is assumed."
+  }
+ },
+ {
+  "id": "swatch-bed-0",
+  "name": "Planting bed",
+  "enabled": true,
+  "kind": "bed",
+  "assetId": "mulch-bed",
+  "xIn": 420,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 1,
+  "widthIn": 96,
+  "depthIn": 72,
+  "mulchDepthIn": 3,
+  "edging": false
+ },
+ {
+  "id": "demo-31",
+  "name": "Hosta",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "hosta-clump",
+  "xIn": 396,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 16,
+  "widthIn": 28,
+  "depthIn": 28,
+  "speciesRecord": {
+   "id": "hosta",
+   "commonName": "Hosta",
+   "botanicalName": "Hosta",
+   "matureHeightIn": [
+    4,
+    30
+   ],
+   "matureSpreadIn": [
+    6,
+    36
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/hosta/",
+   "sourceNote": "NC State Extension genus page: height 4 in–2.5 ft, spread 6 in–3 ft. Cultivar size varies; confirm the nursery plant. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-32",
+  "name": "Boxwood",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "evergreen-shrub",
+  "xIn": 444,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 24,
+  "widthIn": 28,
+  "depthIn": 28,
+  "speciesRecord": {
+   "id": "buxus-microphylla",
+   "commonName": "Boxwood",
+   "botanicalName": "Buxus microphylla",
+   "matureHeightIn": [
+    36,
+    48
+   ],
+   "matureSpreadIn": [
+    24,
+    48
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/buxus-microphylla/",
+   "sourceNote": "NC State Extension: height 3–4 ft, spread 2–4 ft. Zone 4–5 cultivar hardiness needs local confirmation. No price is assumed."
+  }
+ },
+ {
+  "id": "swatch-bed-1",
+  "name": "Black mulch",
+  "enabled": true,
+  "kind": "bed",
+  "assetId": "black-mulch-bed",
+  "xIn": 528,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 1,
+  "widthIn": 96,
+  "depthIn": 72,
+  "surfaceDepthIn": 3,
+  "edging": false
+ },
+ {
+  "id": "demo-33",
+  "name": "Hosta",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "hosta-clump",
+  "xIn": 504,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 16,
+  "widthIn": 28,
+  "depthIn": 28,
+  "speciesRecord": {
+   "id": "hosta",
+   "commonName": "Hosta",
+   "botanicalName": "Hosta",
+   "matureHeightIn": [
+    4,
+    30
+   ],
+   "matureSpreadIn": [
+    6,
+    36
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/hosta/",
+   "sourceNote": "NC State Extension genus page: height 4 in–2.5 ft, spread 6 in–3 ft. Cultivar size varies; confirm the nursery plant. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-34",
+  "name": "Boxwood",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "evergreen-shrub",
+  "xIn": 552,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 24,
+  "widthIn": 28,
+  "depthIn": 28,
+  "speciesRecord": {
+   "id": "buxus-microphylla",
+   "commonName": "Boxwood",
+   "botanicalName": "Buxus microphylla",
+   "matureHeightIn": [
+    36,
+    48
+   ],
+   "matureSpreadIn": [
+    24,
+    48
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/buxus-microphylla/",
+   "sourceNote": "NC State Extension: height 3–4 ft, spread 2–4 ft. Zone 4–5 cultivar hardiness needs local confirmation. No price is assumed."
+  }
+ },
+ {
+  "id": "swatch-bed-2",
+  "name": "Cedar mulch",
+  "enabled": true,
+  "kind": "bed",
+  "assetId": "cedar-mulch-bed",
+  "xIn": 636,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 1,
+  "widthIn": 96,
+  "depthIn": 72,
+  "surfaceDepthIn": 3,
+  "edging": true
+ },
+ {
+  "id": "demo-35",
+  "name": "Hosta",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "hosta-clump",
+  "xIn": 612,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 16,
+  "widthIn": 28,
+  "depthIn": 28,
+  "speciesRecord": {
+   "id": "hosta",
+   "commonName": "Hosta",
+   "botanicalName": "Hosta",
+   "matureHeightIn": [
+    4,
+    30
+   ],
+   "matureSpreadIn": [
+    6,
+    36
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/hosta/",
+   "sourceNote": "NC State Extension genus page: height 4 in–2.5 ft, spread 6 in–3 ft. Cultivar size varies; confirm the nursery plant. No price is assumed."
+  }
+ },
+ {
+  "id": "demo-36",
+  "name": "Boxwood",
+  "enabled": true,
+  "kind": "plant",
+  "assetId": "evergreen-shrub",
+  "xIn": 660,
+  "zIn": 276,
+  "rotationDeg": 0,
+  "heightIn": 24,
+  "widthIn": 28,
+  "depthIn": 28,
+  "speciesRecord": {
+   "id": "buxus-microphylla",
+   "commonName": "Boxwood",
+   "botanicalName": "Buxus microphylla",
+   "matureHeightIn": [
+    36,
+    48
+   ],
+   "matureSpreadIn": [
+    24,
+    48
+   ],
+   "sourceURL": "https://plants.ces.ncsu.edu/plants/buxus-microphylla/",
+   "sourceNote": "NC State Extension: height 3–4 ft, spread 2–4 ft. Zone 4–5 cultivar hardiness needs local confirmation. No price is assumed."
+  }
+ }
+]

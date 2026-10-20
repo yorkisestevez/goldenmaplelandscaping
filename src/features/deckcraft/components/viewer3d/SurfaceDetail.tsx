@@ -9,6 +9,7 @@ import {useRenderQuality} from './SceneRenderQuality';
 import {useFixtureLit} from './fixtureLighting';
 import {addMaterialPatch} from './materialPatches';
 import {coverInstances,detailProfile,detailHash,type DetailKind} from './groundCoverDetail';
+import type {ChipClearance} from './plantContactDecals';
 
 const geometries=new Map<DetailKind,{geometry:THREE.BufferGeometry;refs:number}>();
 function acquireGeometry(kind:DetailKind){let item=geometries.get(kind);if(!item){
@@ -24,15 +25,16 @@ function acquireGeometry(kind:DetailKind){let item=geometries.get(kind);if(!item
  item={geometry:g,refs:0};geometries.set(kind,item);
  }item.refs++;const value=item;return {geometry:value.geometry,dispose:()=>{if(--value.refs===0){value.geometry.dispose();geometries.delete(kind);}}};}
 
-export default function SurfaceDetail({data,object,polys}:{data:DeckData;object:LandscapeObject;polys:LandscapePoint[][]}){
+export default function SurfaceDetail({data,object,polys,clearance}:{data:DeckData;object:LandscapeObject;polys:LandscapePoint[][];clearance?:ChipClearance}){
  const q=useRenderQuality(),camera=useThree(s=>s.camera),invalidate=useThree(s=>s.invalidate),ref=useRef<THREE.InstancedMesh>(null),last=useRef('');
  const [view,setView]=useState({x:0,z:0,height:10000}),scratch=useMemo(()=>({p:new THREE.Vector3(),d:new THREE.Vector3()}),[]);
  useFrame(()=>{camera.getWorldPosition(scratch.p);camera.getWorldDirection(scratch.d);const reach=Math.min(15,Math.max(0,scratch.p.y/Math.max(.25,-scratch.d.y))),x=Math.round((scratch.p.x+scratch.d.x*reach)/3)*36,z=Math.round((scratch.p.z+scratch.d.z*reach)/3)*36,height=Math.round(scratch.p.y*2)*6,key=x+':'+z+':'+height;if(key!==last.current){last.current=key;setView({x,z,height});}});
  const radius=q.tier==='high'?216:q.tier==='balanced'?144:84,weights=(data.landscapeObjects??[]).filter(o=>o.enabled&&o.kind==='bed').map(o=>({id:o.id,w:1/(1+(Math.max(0,Math.hypot(o.xIn-view.x,o.zIn-view.z)-Math.hypot(o.widthIn,o.depthIn)/2)/60)**4)})),weight=weights.find(o=>o.id===object.id)?.w??0,budget=Math.max(1,Math.floor((q.tier==='high'?65000:q.tier==='balanced'?22000:6000)*weight/Math.max(1,weights.reduce((s,o)=>s+o.w,0)))),profile=detailProfile(object.assetId);
  const cells=useMemo(()=>landscapeSurfaceCells(data,polys,object),[data,polys,object]);
- const instances=useMemo(()=>Math.abs(view.height-(cells[0]?.plane.constant??0)-(cells[0]?.plane.x??0)*view.x-(cells[0]?.plane.z??0)*view.z)>radius*1.5?[]:coverInstances(object.assetId,polys,cells,landscapeSurfaceDepth(object),view,radius,budget,(object.puttingCups??[]).map(c=>puttingCupWorld(object,c))),[object,polys,cells,view,radius,budget]);
+ const instances=useMemo(()=>Math.abs(view.height-(cells[0]?.plane.constant??0)-(cells[0]?.plane.x??0)*view.x-(cells[0]?.plane.z??0)*view.z)>radius*1.5?[]:coverInstances(object.assetId,polys,cells,landscapeSurfaceDepth(object),view,radius,budget,(object.puttingCups??[]).map(c=>puttingCupWorld(object,c)),clearance),[object,polys,cells,view,radius,budget,clearance]);
  const resource=useMemo(()=>acquireGeometry(profile.kind),[profile.kind]);useEffect(()=>()=>resource.dispose(),[resource]);
- const appearance=object.assetId==='mulch-bed'?'#8a4e2c':object.assetId==='black-mulch-bed'?'#241f1c':object.assetId==='cedar-mulch-bed'?'#b56b38':profile.color;
+ // Mulch chips are the product's swatch, as the bed's own albedo is (landscapeSurfaceMaterial.ts).
+ const appearance=profile.color;
  const material=useMemo(()=>{
   const m=new THREE.MeshStandardMaterial({color:'#ffffff',vertexColors:profile.kind==='blade',roughness:profile.kind==='round'?.87:.97,flatShading:profile.kind==='angular',side:profile.kind==='blade'?THREE.DoubleSide:THREE.FrontSide});
   addMaterialPatch(m,{key:'cover-detail-dither-'+profile.kind+'-'+radius,apply:shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>',`#include <alphatest_fragment>\nfloat detailFade=1.-smoothstep(${(radius/12*.55).toFixed(2)},${(radius/12*1.3).toFixed(2)},length(vViewPosition));\nif(fract(sin(dot(floor(gl_FragCoord.xy),vec2(12.9898,78.233)))*43758.5453)>detailFade)discard;`);if(profile.kind==='chip'){shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vChipUv;').replace('#include <uv_vertex>','#include <uv_vertex>\nvChipUv=uv;');shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vChipUv;').replace('#include <map_fragment>','#include <map_fragment>\nfloat grain=sin(vChipUv.x*110.+sin(vChipUv.y*13.)*2.);diffuseColor.rgb*=.9+.1*grain;');}if(profile.kind==='blade')shader.fragmentShader=shader.fragmentShader.replace('#include <lights_fragment_end>','#include <lights_fragment_end>\n reflectedLight.indirectDiffuse+=diffuseColor.rgb*.12;');}});return m;
