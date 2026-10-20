@@ -2,6 +2,7 @@ import {test,expect,type Page,type Locator} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import type {DeckData} from '../src/features/deckcraft/types';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
+import {showProjectControls} from './nav';
 
 /**
  * Ground fit (G3) on Craighurst: a real U-Level survey (no customer details) under a 12 × 5 ft deck at +30 in with four
@@ -23,13 +24,14 @@ test.beforeEach(async({page,context})=>{
  expect(fit(await design(page))).toMatchObject({landing:5,risers:4});
 });
 
-async function showProjectControls(page:Page){const show=page.getByRole('button',{name:'Show project controls',exact:true});if(await show.isVisible())await show.click();}
-/** Elevations & build → Deck levels & stairs → the Ground fit panel. */
+/** Backyard → the landing's "Fit to the ground…" → the Ground fit panel. Elevations & build is Designer Mode only. */
 async function openGroundFit(page:Page){
  await showProjectControls(page);
- const tasks=page.getByRole('group',{name:'Elevation tasks',exact:true});
- if(!await tasks.isVisible())await page.getByRole('button',{name:'Elevations & build',exact:true}).click();
- await tasks.getByRole('button',{name:'Deck levels & stairs',exact:true}).click();
+ const nav=page.getByRole('navigation',{name:'Design tasks'}),open=nav.getByRole('button',{name:'Backyard',exact:true});
+ if(!await open.isVisible())await nav.locator('details').filter({has:page.locator('button[aria-label="Backyard"]')}).locator('summary').click();
+ await open.click();
+ const entry=page.getByRole('button',{name:'Fit to the ground…',exact:true});
+ await entry.scrollIntoViewIfNeeded();await entry.click();await expect(entry).toHaveAttribute('aria-expanded','true');
  const panel=page.getByRole('region',{name:'Ground fit',exact:true});
  await expect(panel).toBeVisible();await panel.scrollIntoViewIfNeeded();
  return panel;
@@ -81,13 +83,7 @@ test('Ground fit offers priced options, applies one as a single change and Undo 
 });
 
 test('the Backyard patio editor opens the same Ground fit panel for the selected patio',async({page})=>{
- await showProjectControls(page);
- const nav=page.getByRole('navigation',{name:'Design tasks'}),open=nav.getByRole('button',{name:'Backyard',exact:true});
- if(!await open.isVisible())await nav.locator('details').filter({has:page.locator('button[aria-label="Backyard"]')}).locator('summary').click();
- await open.click();
- const entry=page.getByRole('button',{name:'Fit to the ground…',exact:true});
- await entry.scrollIntoViewIfNeeded();await entry.click();await expect(entry).toHaveAttribute('aria-expanded','true');
- const panel=page.getByRole('region',{name:'Ground fit',exact:true});
+ const panel=await openGroundFit(page);
  await expect(nowLine(panel)).toHaveText('Now: 4 steps down to Stone landing at +5.00 in; main deck top +30.00 in.');
  await expect(panel.getByRole('button',{name:'Find options',exact:true})).toBeEnabled();
 });

@@ -6,7 +6,7 @@ import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {expect,test,type Page} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {pickPlanTool,savedConfiguration,showProjectControls} from './nav';
+import {openDesignerMode,pickPlanTool,savedConfiguration,showProjectControls} from './nav';
 
 const proof=resolve(process.env.E2E_OUTPUTS??'/opt/cursor/artifacts','design-tools-review');
 mkdirSync(proof,{recursive:true});
@@ -22,8 +22,9 @@ const TOOLS=[
   {name:'Landscape',kind:'button' as const,probe:['Add editable area']},
   {name:'Board layout',kind:'button' as const,probe:['Select board']},
   {name:'Inlays',kind:'label' as const,probe:['Inlay plan controls']},
-  {name:'Select parts',kind:'label' as const,probe:['Plan component type','Select plan part']},
 ] as const;
+/** Select parts left the homeowner ribbon; Designer Mode keeps it in its quick-tools strip. */
+const PRO_TOOL={name:'Select parts',probe:['Plan component type','Select plan part']} as const;
 
 const SHAPES=['Rectangle','L-shape','Multi-corner','Curved','Wrap left','Wrap right','Wrap both','Split level','Draw my own'] as const;
 
@@ -88,6 +89,14 @@ test('every plan tool opens its editor without console crashes',async({page})=>{
       await shot(page,`tool-${tool.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}`);
     });
   }
+  await expect(page.getByRole('radio',{name:PRO_TOOL.name,exact:true})).toHaveCount(0);
+  await test.step(`${PRO_TOOL.name} (Designer Mode)`,async()=>{
+    await openDesignerMode(page);
+    await pickPlanTool(page,PRO_TOOL.name);
+    for(const label of PRO_TOOL.probe)await expect(page.getByLabel(label,{exact:true}).first(),`${PRO_TOOL.name} → ${label}`).toBeVisible({timeout:20_000});
+    await expect(page.getByText('outline editor could not load')).toHaveCount(0);
+    await shot(page,'tool-select-parts');
+  });
   expect(problems,problems.join('\n')).toEqual([]);
 });
 

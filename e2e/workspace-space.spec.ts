@@ -1,4 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
+import {openDesignerMode,proMenu} from './nav';
 /** One layout read. Separate bounding-box calls race a 3D re-render and come back null. */
 async function overlay(page:Page){
  return page.evaluate(()=>{
@@ -34,12 +35,17 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}])test('3D
  await expect(page.getByText('Click the view first, or hold Ctrl, to zoom with the scroll wheel.')).toHaveCount(0);
  await page.mouse.wheel(0,200);
  await expect(page.getByText('Click the view first, or hold Ctrl, to zoom with the scroll wheel.')).toHaveCount(0);
- // Surfaces, landscape cameras and the pergola picker are one click away under More, inside the screen.
+ // Surfaces, landscape cameras and the pergola picker live under More in Designer Mode only; homeowners get no More.
+ await expect(page.getByRole('group',{name:'3D view controls'}).getByText('More',{exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'Show all options',exact:true}).click();
+ await expect.poll(()=>overlay(page),{timeout:60_000}).toBe('compact');
+ // In Designer Mode they are one click away under More, inside the screen.
+ await openDesignerMode(page);
+ await proMenu(page,'View','3D');
+ await expect(view.locator('canvas')).toBeVisible();
  await page.getByRole('group',{name:'3D view controls'}).getByText('More',{exact:true}).click();
  const more=page.locator('.dd-3d-more-panel');
  await expect(more.getByLabel('Landscape camera',{exact:true})).toBeVisible();
  await expect(more.getByRole('region',{name:'Pergola preview controls'})).toBeVisible();
  expect(await more.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1;})).toBe(true);
- await page.getByRole('button',{name:'Show project controls',exact:true}).click();
- await expect.poll(()=>overlay(page),{timeout:60_000}).toBe('compact');
 });
