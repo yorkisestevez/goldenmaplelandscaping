@@ -1,6 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {savedConfiguration} from './nav';
 import {expect,test,type Locator,type Page} from '@playwright/test';
+import {newLandscapeObject,newLandscapePlant} from '../src/features/deckcraft/landscapeCatalogue';
 
 /**
  * DeckCraft smoke tests on the production build: the paths a customer takes, end to end. Each test starts
@@ -1667,7 +1668,8 @@ test('puts a lit design at night on the proposal cover, then gives the visitor b
 });
 
 /**
- * The photographic renderer (Real Life G1) at its heaviest: night, post and step lights, a glass railing. Every
+ * The photographic renderer (Real Life G1) at its heaviest: night, post and step lights, a glass railing, and a planted
+ * mulch bed (its spade-cut relief, collars and the lawn's occlusion map) with a tree's shade ring in the lawn. Every
  * compiled shader stays within the GPU's texture units (each shadow-casting light takes one in every lit material),
  * none fails to compile, and the renderer never falls back to the plain one. KNOWN_CONSOLE lets THREE. messages
  * through, so those are watched for here on their own.
@@ -1679,6 +1681,10 @@ test('draws the 3D view at night with lights and glass, within the GPU’s textu
   // three announces each renderer it makes to window.__THREE_DEVTOOLS__, which is how the test reaches the live one.
   await page.addInitScript(()=>{const w=window as unknown as {__THREE_DEVTOOLS__:EventTarget;__renderers:unknown[]};w.__renderers=[];w.__THREE_DEVTOOLS__=new EventTarget();w.__THREE_DEVTOOLS__.addEventListener('observe',e=>{const d=(e as CustomEvent).detail;if(d?.isWebGLRenderer)w.__renderers.push(d);});});
   const problems=await openDesigner(page);
+  await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:{read:()=>{ready:boolean}}}).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
+  const bed={...newLandscapeObject('mulch-bed','night-bed',96,276),widthIn:240,depthIn:96},plants=['thuja-occidentalis-smaragd','hosta','calamagrostis-karl-foerster'].map((id,i)=>newLandscapePlant(id,'night-plant-'+i,30+i*60,276));
+  const planted=await page.evaluate(objects=>(window as unknown as {deckcraft:{execute:(r:unknown)=>Promise<{ok:boolean}>}}).deckcraft.execute({id:'night-beds',commands:[{type:'design.patch',patch:{landscapeObjects:objects}}]}),[bed,...plants,newLandscapePlant('acer-saccharum','night-tree',96,440)]);
+  expect(planted.ok).toBe(true);
   await openSection(page,'Stairs & railings');
   await page.getByLabel('Railing style',{exact:true}).selectOption('Glass Panels');
   await viewTab(page,'3D');

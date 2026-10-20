@@ -9,9 +9,9 @@ import {swatchUrl} from '../../lib/swatches';
 import {useSwatchTexture} from './useSwatchTexture';
 import {timberFaceGeometry} from './raisedBedTimber';
 import {soilFaceMaterial} from './lawnSurface';
-import {applyHardscapeFinish} from './hardscapeFinish';
 import {addMaterialPatch} from './materialPatches';
 import {useFixtureLit} from './fixtureLighting';
+import {weatheredSteelMaterial} from './weatheredSteel';
 
 /** Weathered timber: the swatch a little darker and greyer, and a dark seam between courses. */
 function weatherTimber(material:THREE.MeshStandardMaterial){
@@ -20,14 +20,6 @@ function weatherTimber(material:THREE.MeshStandardMaterial){
 {float dcCourse=fract(vDcUv.y),dcSeam=fwidth(vDcUv.y);diffuseColor.rgb*=mix(.42,1.,smoothstep(dcSeam,.04+dcSeam,min(dcCourse,1.-dcCourse)));
 diffuseColor.rgb=mix(diffuseColor.rgb,vec3(dot(diffuseColor.rgb,vec3(.3,.59,.11))),.3);}`);}});
 }
-/** Dark weathered steel edging: slightly rough, mottled where it has weathered. */
-function steelMaterial(){
- const material=applyHardscapeFinish(new THREE.MeshStandardMaterial({color:'#4a3b32',roughness:.78,metalness:.35,side:THREE.DoubleSide}));
- addMaterialPatch(material,{key:'weathered-steel-v1',apply:s=>{s.fragmentShader=s.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-diffuseColor.rgb*=.8+.28*mineralNoise(vMineralPosition/.6)+.08*mineralNoise(vMineralPosition/.08);`);}});
- return material;
-}
-
 /** A raised bed's soil face, or its timber or steel edging, where it stands over the ground; a linked wall's run is left
  * to the yard renderer. Loaded with the first raised bed. */
 export default function RaisedBedFaces3D({data,object,polys}:{data:DeckData;object:LandscapeObject;polys:LandscapePoint[][]}){
@@ -40,7 +32,7 @@ export default function RaisedBedFaces3D({data,object,polys}:{data:DeckData;obje
  useEffect(()=>()=>geometry.dispose(),[geometry]);
  const wood=useSwatchTexture(kind==='timber'?swatchUrl('wood-pressure-treated.jpg'):'','#8a7356');
  useLayoutEffect(()=>{if(kind==='timber'){weatherTimber(wood);invalidate();}},[wood,kind,invalidate]);
- const plain=useMemo(()=>kind==='steel'?steelMaterial():kind==='soil'?soilFaceMaterial():null,[kind]);
+ const plain=useMemo(()=>kind==='steel'?weatheredSteelMaterial():kind==='soil'?soilFaceMaterial():null,[kind]);
  useEffect(()=>()=>plain?.dispose(),[plain]);useFixtureLit(plain);
  return <mesh geometry={geometry} material={plain??wood} castShadow receiveShadow userData={{pickPartId:'landscape/'+object.id,landscapeIds:[object.id],raisedEdge:kind}}/>;
 }

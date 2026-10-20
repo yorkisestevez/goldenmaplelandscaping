@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type {DeckData} from '../../types';
 import type {LandscapeObject} from '../../landscapeTypes';
 import {landscapePlacement} from '../../landscapeModelRuntime';
+import type {PlantSeat} from './plantSeating';
 import {getShowcaseFlags,subscribeShowcase} from '../../showcaseMode';
 import {applyBloomLighting,plantColorHash} from './foliageLighting';
 import {useFixtureLit} from './fixtureLighting';
@@ -95,7 +96,7 @@ function place(o:LandscapeObject,spec:BloomSpec):BloomPoint[]{
  }
  return out;
 }
-function BloomMesh({data,points,map,role}:{data:DeckData;points:BloomPoint[];map:THREE.Texture|null;role:'petal'|'center'|'stem'}){
+function BloomMesh({data,points,map,role,seats}:{data:DeckData;points:BloomPoint[];map:THREE.Texture|null;role:'petal'|'center'|'stem';seats?:Map<string,PlantSeat>}){
  const invalidate=useThree(s=>s.invalidate);
  const geometry=useMemo(()=>role==='stem'?stemCards():crossedCards(),[role]);
  const material=useMemo(()=>{
@@ -112,7 +113,7 @@ function BloomMesh({data,points,map,role}:{data:DeckData;points:BloomPoint[];map
    q.setFromAxisAngle(up,-o.rotationDeg*Math.PI/180);
    if(placed.normal)q.premultiply(new THREE.Quaternion().setFromUnitVectors(up,new THREE.Vector3(placed.normal.x,placed.normal.y,placed.normal.z)));
    scale.set(o.widthIn/12,o.heightIn/12,o.depthIn/12);
-   plant.compose(new THREE.Vector3(placed.x,placed.y,placed.z),q,scale);
+   plant.compose(new THREE.Vector3(placed.x,placed.y+(seats?.get(o.id)?.dyIn??0)/12,placed.z),q,scale);
    spin.setFromAxisAngle(up,p.yaw);tilt.setFromAxisAngle(axis,p.pitch);spin.multiply(tilt);
    const s=role==='center'?p.size*.38:role==='stem'?.08:p.size;
    const stemBase=.08;
@@ -120,12 +121,12 @@ function BloomMesh({data,points,map,role}:{data:DeckData;points:BloomPoint[];map
    mesh.setMatrixAt(i,plant.multiply(local));mesh.setColorAt(i,color.set(role==='center'?p.center:role==='stem'?'#3e6a32':p.petals));
   });
   mesh.count=points.length;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;mesh.computeBoundingSphere();mesh.castShadow=false;mesh.receiveShadow=true;mesh.raycast=()=>{};invalidate();
- },[data,points,mesh,role,invalidate]);
+ },[data,points,mesh,role,invalidate,seats]);
  if(!points.length)return null;
  return <primitive object={mesh} dispose={null}/>;
 }
 /** Alpha-tested flower heads for the species in bloom. Distant impostors skip them. */
-export default function PlantBlooms({data,objects,lods}:{data:DeckData;objects:LandscapeObject[];lods:Map<string,0|1|2>}){
+export default function PlantBlooms({data,objects,lods,seats}:{data:DeckData;objects:LandscapeObject[];lods:Map<string,0|1|2>;seats?:Map<string,PlantSeat>}){
  const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false);
  const points=useMemo(()=>objects.flatMap(o=>{
   const spec=o.enabled&&o.kind==='plant'&&o.speciesRecord?BLOOMS[o.speciesRecord.id]:undefined;
@@ -137,10 +138,10 @@ export default function PlantBlooms({data,objects,lods}:{data:DeckData;objects:L
  useEffect(()=>()=>{textures.daisy.dispose();textures.mop.dispose();textures.whorl.dispose();},[textures]);
  const daisy=points.filter(p=>p.kind==='daisy'),mop=points.filter(p=>p.kind==='mop'||p.kind==='cone'),whorl=points.filter(p=>p.kind==='whorl'||p.kind==='spike'),stems=points.filter(p=>p.kind==='stem'),centers=daisy;
  return <>
-  <BloomMesh data={data} points={daisy} map={textures.daisy} role="petal"/>
-  <BloomMesh data={data} points={mop} map={textures.mop} role="petal"/>
-  <BloomMesh data={data} points={whorl} map={textures.whorl} role="petal"/>
-  <BloomMesh data={data} points={centers} map={textures.daisy} role="center"/>
-  <BloomMesh data={data} points={stems} map={null} role="stem"/>
+  <BloomMesh data={data} points={daisy} map={textures.daisy} role="petal" seats={seats}/>
+  <BloomMesh data={data} points={mop} map={textures.mop} role="petal" seats={seats}/>
+  <BloomMesh data={data} points={whorl} map={textures.whorl} role="petal" seats={seats}/>
+  <BloomMesh data={data} points={centers} map={textures.daisy} role="center" seats={seats}/>
+  <BloomMesh data={data} points={stems} map={null} role="stem" seats={seats}/>
  </>;
 }

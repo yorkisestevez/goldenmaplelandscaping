@@ -9,7 +9,9 @@ export function detailProfile(id:LandscapeAssetId){const s=landscapeSurface(id)!
 export function pointInCover(x:number,z:number,rings:LandscapePoint[][]){let inside=false;for(const p of rings)for(let i=0,j=p.length-1;i<p.length;j=i++){const a=p[i],b=p[j];if((a.z>z)!==(b.z>z)&&x<(b.x-a.x)*(z-a.z)/(b.z-a.z)+a.x)inside=!inside;}return inside;}
 export function clearCoverEdge(x:number,z:number,rings:LandscapePoint[][],radius:number){for(const p of rings)for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length],dx=b.x-a.x,dz=b.z-a.z,t=Math.max(0,Math.min(1,((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz||1)));if(Math.hypot(x-a.x-t*dx,z-a.z-t*dz)<radius)return false;}return true;}
 /** Stable world-space samples: moving the camera never randomises already visible particles. All units are inches. */
-export function coverInstances(id:LandscapeAssetId,rings:LandscapePoint[][],cells:ReturnType<typeof landscapeSurfaceCells>,depthIn:number,focus:{x:number;z:number},radius:number,budget:number,cups:LandscapePoint[]=[]):CoverInstance[]{
+/** clearance (plantContactDecals.chipClearance): where a drawn bed top and its collars are, the particles sit on that top
+ * (rise above the ground instead of the finish depth) and keep off the spade cut and the collars. */
+export function coverInstances(id:LandscapeAssetId,rings:LandscapePoint[][],cells:ReturnType<typeof landscapeSurfaceCells>,depthIn:number,focus:{x:number;z:number},radius:number,budget:number,cups:LandscapePoint[]=[],clearance?:{rise?:(x:number,z:number)=>number;clear:(x:number,z:number,r:number)=>boolean}):CoverInstance[]{
  if(!rings.length||budget<1)return [];const p=detailProfile(id),tile=36,xs=rings.flat().map(v=>v.x),zs=rings.flat().map(v=>v.z),x0=Math.max(Math.min(...xs),focus.x-radius),x1=Math.min(Math.max(...xs),focus.x+radius),z0=Math.max(Math.min(...zs),focus.z-radius),z1=Math.min(Math.max(...zs),focus.z+radius),out:CoverInstance[]=[];
  const perTile=Math.min(p.kind==='blade'?2400:1200,Math.ceil(tile*tile/(Math.max(.4,p.grain)**2)*(p.kind==='blade'?1:p.kind==='chip'?1.5:2.3)));
  const tiles:{x:number;z:number;d:number}[]=[];for(let z=Math.floor(z0/tile);z<=Math.floor(z1/tile);z++)for(let x=Math.floor(x0/tile);x<=Math.floor(x1/tile);x++)tiles.push({x,z,d:Math.hypot((x+.5)*tile-focus.x,(z+.5)*tile-focus.z)});tiles.sort((a,b)=>a.d-b.d);
@@ -18,9 +20,9 @@ export function coverInstances(id:LandscapeAssetId,rings:LandscapePoint[][],cell
  for(let i=0;i<perTile;i++)for(const t of tiles){
   const x=(t.x+detailHash(t.x,t.z,i*7))*tile,z=(t.z+detailHash(t.x,t.z,i*7+1))*tile;if(Math.hypot(x-focus.x,z-focus.z)>radius||!pointInCover(x,z,rings))continue;
   const r=detailHash(t.x,t.z,i*7+2),mixed=id==='granular-base-bed'?(r<.7?.35:1.6):1,width=p.kind==='blade'?1:p.kind==='chip'?p.grain*(7+r*9):p.grain*(.6+r*.85)*mixed,depth=p.kind==='chip'?p.grain*(.55+detailHash(t.x,t.z,i*7+3)*.4):width*(.65+detailHash(t.x,t.z,i*7+3)*.5),height=p.kind==='chip'?.045+r*.03:p.height*(.6+r*.7)*mixed;
-  if(!clearCoverEdge(x,z,rings,Math.hypot(width,depth)*.6)||cups.some(c=>Math.hypot(x-c.x,z-c.z)<2.125+width*.6))continue;
+  if(clearance&&!clearance.clear(x,z,Math.hypot(width,depth)*.6)||!clearCoverEdge(x,z,rings,Math.hypot(width,depth)*.6)||cups.some(c=>Math.hypot(x-c.x,z-c.z)<2.125+width*.6))continue;
   const c=prepared.find(c=>x>=c.minX&&x<=c.maxX&&z>=c.minZ&&z<=c.maxZ&&pointInCover(x,z,[c.ring]));if(!c)continue;
-  out.push({x,z,y:c.plane.x*x+c.plane.z*z+c.plane.constant+depthIn+.05+(p.kind==='blade'?0:height*.38),width,height,depth,yaw:p.kind==='blade'?.3+detailHash(t.x,t.z,i*7+4)*.6:detailHash(t.x,t.z,i*7+4)*Math.PI*2,tone:p.kind==='chip'?.86+detailHash(t.x,t.z,i*7+5)*.22:.67+detailHash(t.x,t.z,i*7+5)*.65,warm:p.kind==='chip'?.2+detailHash(t.x,t.z,i*7+6)*.45:detailHash(t.x,t.z,i*7+6)-.5,nx:-c.plane.x,nz:-c.plane.z});if(out.length>=budget)return out;
+  out.push({x,z,y:c.plane.x*x+c.plane.z*z+c.plane.constant+(clearance?.rise?clearance.rise(x,z):depthIn+.05)+(p.kind==='blade'?0:height*.38),width,height,depth,yaw:p.kind==='blade'?.3+detailHash(t.x,t.z,i*7+4)*.6:detailHash(t.x,t.z,i*7+4)*Math.PI*2,tone:p.kind==='chip'?.86+detailHash(t.x,t.z,i*7+5)*.22:.67+detailHash(t.x,t.z,i*7+5)*.65,warm:p.kind==='chip'?.2+detailHash(t.x,t.z,i*7+6)*.45:detailHash(t.x,t.z,i*7+6)-.5,nx:-c.plane.x,nz:-c.plane.z});if(out.length>=budget)return out;
  }
  return out;
 }

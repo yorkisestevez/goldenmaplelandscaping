@@ -16,6 +16,14 @@ export interface BlogPostMeta {
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    slug: 'geogrid-retaining-wall-explained',
+    title: 'What Geogrid Does in a Retaining Wall (and When Your Wall Needs It)',
+    excerpt: 'Geogrid turns a block wall into a reinforced soil mass — layers every 2 courses, extending 60–80% of wall height back. When a Simcoe County wall needs it.',
+    category: 'Retaining Walls',
+    readTime: '11 min',
+    image: '/images/projects/garden-wall.JPEG',
+  },
+  {
     slug: 'front-steps-heaving-barrie',
     title: 'Why Front Steps Heave Every Winter in Barrie (and How to Fix Them for Good)',
     excerpt: 'Front steps heave in Barrie because most sit above the 1.2 m frost line on frost-susceptible soil. Why it happens and the rebuild spec that stops it for good.',
