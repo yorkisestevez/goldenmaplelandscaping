@@ -100,7 +100,15 @@ Acceptance:
 
 Out of scope: photo mode snow and the seasons fly-through (S3).
 
-### Progress
+### Scope Lock — S3 (photo mode and fly-throughs)
+Acceptance:
+1. Winter photos show snow on the surfaces that are mostly snow (lawn, roof, beds, caps), and everything is restored after the photo.
+2. Photo mode's day sun stands at the season's height and strength.
+3. The fly-through can run "Through the seasons": spring, summer, fall, winter, a quarter each. The video keeps settled snow but not falling snow, and the view's own season comes back afterwards.
+4. Existing photo and fly-through checks still pass.
+
+Known limit: in photos, evergreen needles stay green under snow (the tracer cannot add snow to an alpha-cut leaf card without losing the cut-out).
+
 - 2026-10-20: plan approved; worktree `.claude/worktrees/seasons` off origin/main 3e94257.
 - 2026-10-20: S1 built.
   - Checks: check-plant-seasons 44 checks; check:deck and check:landscape green.
@@ -122,6 +130,12 @@ Out of scope: photo mode snow and the seasons fly-through (S3).
     - the far lawn takes the season tint;
     - fallen leaves sample the ground on a 5×5 grid per tree, with a cap of 6,000.
   - Also from verification: dried hydrangea heads use rounder cards, plants that have died back cast no contact shade, and lilac is lighter.
+- 2026-10-20: S3 built.
+  - Checks: check-season-media 12 checks, including a functional bake-and-restore test caught by a mutation; check-photo-trace and check-flythrough green.
+  - A headless "through the seasons" export (24 fps, 4 s) cycled Spring, Summer, Fall and Winter, then restored Summer. Its frames show spring, summer and fall lawns, then a snowy roof and ground.
+  - The winter photo shows a snowy roof and ground with long shadows.
+  - Independent review: 0 critical, 2 important, both fixed with tests. Snow coverage is now measured by area, so wall caps take snow. A material that an instanced or multi-material mesh also draws is left unbaked.
+  - Visibility audit: no contrast findings below 3:1 on the 3D view in any season, desktop or phone.
 
 ### Deferred
 - Snow on the horizon belt and the neighbour houses (presentation context, a shader material): it stays as it is.
