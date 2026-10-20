@@ -1,5 +1,8 @@
 import {useEffect,useLayoutEffect,useMemo,useState} from 'react';
 import {useThree} from '@react-three/fiber';
+import {SEASON_VARIETY,applyLeafRecolor,isLeafMaterial,tintPlantInstance} from './foliageLighting';
+import {CONTEXT_BROADLEAF} from './plantSeasons';
+import {useSeason} from './sceneSeason';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {MeshoptDecoder} from 'three-stdlib';
 import * as THREE from 'three';
@@ -131,8 +134,8 @@ function NeighbourHouse({home,evening,homeIndex}:{home:NeighbourHome;evening:boo
  </group>;
 }
 
-function TreeSpecies({scene,items}:{scene:THREE.Object3D;items:ContextTree[]}){
- const invalidate=useThree(s=>s.invalidate);
+function TreeSpecies({scene,items,broadleaf=false}:{scene:THREE.Object3D;items:ContextTree[];broadleaf?:boolean}){
+ const invalidate=useThree(s=>s.invalidate),season=useSeason(),leaves=broadleaf?CONTEXT_BROADLEAF[season].leaves:'summer';
  const prepared=useMemo(()=>{
   scene.updateMatrixWorld(true);
   const bounds=new THREE.Box3().setFromObject(scene),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
@@ -140,19 +143,23 @@ function TreeSpecies({scene,items}:{scene:THREE.Object3D;items:ContextTree[]}){
   const meshes:THREE.Mesh[]=[];scene.traverse(o=>{if((o as THREE.Mesh).isMesh)meshes.push(o as THREE.Mesh);});
   return {normalization,meshes};
  },[scene]);
- return <group name="showcase-tree-species">{prepared.meshes.map((mesh,index)=><TreeMesh key={index} mesh={mesh} items={items} normalization={prepared.normalization} invalidate={invalidate}/>)}</group>;
+ // The tree line's maples follow the season too: bare in winter, recoloured in spring and fall.
+ const leafOf=(mesh:THREE.Mesh)=>isLeafMaterial(Array.isArray(mesh.material)?mesh.material[0]:mesh.material);
+ return <group name="showcase-tree-species">{prepared.meshes.map((mesh,index)=>leaves===null&&leafOf(mesh)?null:<TreeMesh key={index} mesh={mesh} items={items} normalization={prepared.normalization} invalidate={invalidate} recolor={leaves!=='summer'&&leaves!==null&&leafOf(mesh)?{color:leaves,variety:SEASON_VARIETY[season]}:undefined}/>)}</group>;
 }
-function TreeMesh({mesh,items,normalization,invalidate}:{mesh:THREE.Mesh;items:ContextTree[];normalization:THREE.Matrix4;invalidate:()=>void}){
- const material=useMemo(()=>{const source=Array.isArray(mesh.material)?mesh.material[0]:mesh.material;return source.clone();},[mesh]);
+function TreeMesh({mesh,items,normalization,invalidate,recolor}:{mesh:THREE.Mesh;items:ContextTree[];normalization:THREE.Matrix4;invalidate:()=>void;recolor?:{color:string;variety:number}}){
+ const variety=recolor?.variety;
+ const material=useMemo(()=>{const source=Array.isArray(mesh.material)?mesh.material[0]:mesh.material,m=source.clone();if(variety!==undefined)applyLeafRecolor(m,variety);return m;},[mesh,variety]);
  const instance=useMemo(()=>new THREE.InstancedMesh(mesh.geometry,material,items.length),[mesh.geometry,material,items.length]);
- useEffect(()=>()=>{material.dispose();},[material]);
+ useEffect(()=>()=>{material.dispose();},[material]);useEffect(()=>()=>instance.dispose(),[instance]);
  useLayoutEffect(()=>{
   const matrix=new THREE.Matrix4(),q=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0),s=new THREE.Vector3(),p=new THREE.Vector3();
-  items.forEach((tree,i)=>{q.setFromAxisAngle(up,tree.rot);s.set(tree.heightFt,tree.heightFt,tree.heightFt);p.set(tree.x,0,tree.z);instance.setMatrixAt(i,matrix.compose(p,q,s).multiply(normalization).multiply(mesh.matrixWorld));});
-  instance.count=items.length;instance.instanceMatrix.needsUpdate=true;instance.computeBoundingSphere();
+  const color=new THREE.Color();
+  items.forEach((tree,i)=>{q.setFromAxisAngle(up,tree.rot);s.set(tree.heightFt,tree.heightFt,tree.heightFt);p.set(tree.x,0,tree.z);instance.setMatrixAt(i,matrix.compose(p,q,s).multiply(normalization).multiply(mesh.matrixWorld));if(recolor)instance.setColorAt(i,tintPlantInstance(color,recolor.color,'context-tree-'+i));});
+  instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingSphere();
   instance.name='showcase-tree-line';instance.receiveShadow=true;instance.castShadow=false;instance.raycast=noRay;instance.userData={presentationOnly:true,coversGround:false};
   invalidate();
- },[instance,items,mesh,normalization,invalidate]);
+ },[instance,items,mesh,normalization,invalidate,recolor?.color]);
  return <primitive object={instance} raycast={noRay}/>;
 }
 
@@ -169,7 +176,7 @@ function TreeLine({trees,showcase}:{trees:ContextTree[];showcase:boolean}){
  },[lod]);
  if(!models)return null;
  return <group name="showcase-tree-line" userData={{style:'sugar-maple-and-white-pine',presentationOnly:true}}>
-  {deciduous.length>0&&<TreeSpecies scene={models.deciduous} items={deciduous}/>}
+  {deciduous.length>0&&<TreeSpecies scene={models.deciduous} items={deciduous} broadleaf/>}
   {conifer.length>0&&<TreeSpecies scene={models.conifer} items={conifer}/>}
  </group>;
 }

@@ -12,8 +12,12 @@ import type {YardModel} from '../../yardModel';
 import type {LandscapeObject,LandscapePoint} from '../../landscapeTypes';
 import {landscapeAsset,plantFoliageTint} from '../../landscapeCatalogue';
 import {boulderStone} from '../../boulderStones';
-import {applyFoliageLighting,crownBend,isLeafMaterial,leafTransmitUniform,tintPlantInstance} from './foliageLighting';
+import {SEASON_VARIETY,applyFoliageLighting,applyLeafRecolor,crownBend,isLeafMaterial,leafTransmitUniform,tintPlantInstance} from './foliageLighting';
 import PlantBlooms from './plantBlooms';
+import PlantStems from './plantStems';
+import FallenLeaves from './fallenLeaves';
+import {plantSeasonLook,type Season} from './plantSeasons';
+import {useSeason} from './sceneSeason';
 import {activePuttingCups,landscapeBedAreas,landscapePlacement,landscapeRenderLods} from '../../landscapeModelRuntime';
 import {createSiteSurface,siteClip,siteSolidCells,sitePlaneHeight} from '../../siteSurfaceEngine';
 import {getTerrainConfig} from '../../yardSettings';
@@ -60,30 +64,43 @@ export function steelEdgingGeometry(points:THREE.Vector3[]){
  }
  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.computeVertexNormals();return geometry;
 }
-function InstancePart({data,items,source,normalization,lod,seats}:{data:DeckData;items:LandscapeObject[];source:THREE.Mesh;normalization:THREE.Matrix4;lod:number;seats:Map<string,PlantSeat>}){
+/** How a placed model draws in the season shown: today's summer leaves, its leaves recoloured, or bare (no leaf cards). */
+type SeasonMode='summer'|'recolor'|'bare';
+function seasonMode(o:LandscapeObject,season:Season):SeasonMode{
+ if(o.kind!=='plant')return 'summer';
+ const leaves=plantSeasonLook(o.speciesRecord?.id,o.assetId,season).leaves;
+ return leaves===null?'bare':leaves==='summer'?'summer':'recolor';
+}
+function InstancePart({data,items,source,normalization,lod,seats,season,mode}:{data:DeckData;items:LandscapeObject[];source:THREE.Mesh;normalization:THREE.Matrix4;lod:number;seats:Map<string,PlantSeat>;season:Season;mode:SeasonMode}){
  const q=useRenderQuality(),invalidate=useThree(s=>s.invalidate),original=Array.isArray(source.material)?source.material[0]:source.material;
  const foliage=items[0]?.kind==='plant';
  const assetId=items[0]?.assetId;
  // Card normals lean out from the centre of this part's own leaves (its geometry bounds), so a canopy shades as a volume.
- const material=useMemo(()=>{const m=original.clone();if(foliage){source.geometry.computeBoundingBox();applyFoliageLighting(m,{center:source.geometry.boundingBox!.getCenter(new THREE.Vector3()),bend:crownBend(assetId??'')});}return m;},[original,foliage,source.geometry,assetId]);
+ // Out of summer a leaf part may take the season's colour (applyLeafRecolor); summer materials stay exactly as they were.
+ const recolor=foliage&&mode==='recolor'&&isLeafMaterial(original),tone=recolor?season:'summer';
+ const material=useMemo(()=>{const m=original.clone();if(foliage){source.geometry.computeBoundingBox();applyFoliageLighting(m,{center:source.geometry.boundingBox!.getCenter(new THREE.Vector3()),bend:crownBend(assetId??'')});if(recolor)applyLeafRecolor(m,SEASON_VARIETY[tone]);}return m;},[original,foliage,source.geometry,assetId,recolor,tone]);
  // The species tint is a leaf colour: textured bark and trunks keep their own (an untextured trunk keeps the tint it had).
  const leafTint=foliage&&(isLeafMaterial(original)||!(original as THREE.MeshStandardMaterial).map);useFixtureLit(material);
+ // A recoloured leaf takes the season's colour for its species; everything else keeps the species tint.
+ const leafColor=(o:LandscapeObject)=>{const look=recolor?plantSeasonLook(o.speciesRecord?.id,o.assetId,tone).leaves:null;return look&&look!=='summer'?look:plantFoliageTint(o.speciesRecord?.id);};
  const instance=useMemo(()=>new THREE.InstancedMesh(source.geometry,material,Math.max(1,items.length)),[source.geometry,material,items.length]);
  useEffect(()=>()=>{instance.dispose();},[instance]);useEffect(()=>()=>material.dispose(),[material]);
  useLayoutEffect(()=>{
   const color=new THREE.Color(),seat=new THREE.Matrix4();
-  items.forEach((o,i)=>{instance.setMatrixAt(i,seat.makeTranslation(0,landscapeSeatDyIn(o,seats)/12,0).multiply(landscapeInstanceMatrix(data,o,normalization,source.matrixWorld)));instance.setColorAt(i,o.kind==='plant'?(leafTint?tintPlantInstance(color,plantFoliageTint(o.speciesRecord?.id),o.id):color.set('#ffffff')):(boulderTint(color,o)??color.set(plantFoliageTint(o.speciesRecord?.id))));});instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
+  items.forEach((o,i)=>{instance.setMatrixAt(i,seat.makeTranslation(0,landscapeSeatDyIn(o,seats)/12,0).multiply(landscapeInstanceMatrix(data,o,normalization,source.matrixWorld)));instance.setColorAt(i,o.kind==='plant'?(leafTint?tintPlantInstance(color,leafColor(o),o.id):color.set('#ffffff')):(boulderTint(color,o)??color.set(plantFoliageTint(o.speciesRecord?.id))));});instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
   instance.name='landscape-'+items[0]?.assetId+'-lod'+lod;instance.userData={landscapeIds:items.map(o=>o.id),pickPartIds:items.map(o=>'landscape/'+o.id),genericVisualProxy:true,unmeasuredElevationIds:items.filter(o=>!landscapePlacement(data,o).measured).map(o=>o.id)};
   instance.castShadow=q.tier!=='constrained'&&lod<2;instance.receiveShadow=true;
   if(foliage)leafTransmitUniform(material).value=instance.castShadow?1:0;
   const standard=material as THREE.MeshStandardMaterial;if(standard.alphaTest>0){standard.transparent=false;standard.depthWrite=true;standard.side=THREE.DoubleSide;standard.alphaToCoverage=q.msaaSamples>0;standard.needsUpdate=true;}for(const t of [standard.map,standard.normalMap,standard.roughnessMap,standard.metalnessMap])if(t){t.anisotropy=q.anisotropy;t.needsUpdate=true;}invalidate();
- },[data,items,instance,source,normalization,lod,q,material,invalidate,leafTint,seats]);
+ },[data,items,instance,source,normalization,lod,q,material,invalidate,leafTint,seats,recolor,tone]);
  return <primitive object={instance} dispose={null}/>;
 }
-function AssetInstances({data,items,lod,seats}:{data:DeckData;items:LandscapeObject[];lod:0|1|2;seats:Map<string,PlantSeat>}){
+function AssetInstances({data,items,lod,seats,season,mode}:{data:DeckData;items:LandscapeObject[];lod:0|1|2;seats:Map<string,PlantSeat>;season:Season;mode:SeasonMode}){
  const a=landscapeAsset(items[0].assetId),url=lod===0?a.modelURL!:lod===1?a.lowModelURL!:a.farModelURL!,gltf=useGLTF(url);
  const source=useMemo(()=>{gltf.scene.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(gltf.scene),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());const normalization=new THREE.Matrix4().makeScale(1/Math.max(.0001,size.x),1/Math.max(.0001,size.y),1/Math.max(.0001,size.z)).multiply(new THREE.Matrix4().makeTranslation(-center.x,-bounds.min.y,-center.z)),meshes:THREE.Mesh[]=[];gltf.scene.traverse(o=>{if((o as THREE.Mesh).isMesh)meshes.push(o as THREE.Mesh);});return {normalization,meshes};},[gltf.scene]);
- return <group name={'landscape-asset-'+a.id} userData={{sourceURL:a.sourceURL,genericVisualProxy:true}}>{source.meshes.map((m,i)=><InstancePart key={i} data={data} items={items} source={m} normalization={source.normalization} lod={lod} seats={seats}/>)}</group>;
+ // A bare plant draws no leaf cards: a winter maple keeps its branches and trunk, a shrub leaves its stems to PlantStems.
+ const parts=mode==='bare'?source.meshes.filter(m=>!isLeafMaterial(Array.isArray(m.material)?m.material[0]:m.material)):source.meshes;
+ return <group name={'landscape-asset-'+a.id} userData={{sourceURL:a.sourceURL,genericVisualProxy:true}}>{parts.map(m=><InstancePart key={source.meshes.indexOf(m)} data={data} items={items} source={m} normalization={source.normalization} lod={lod} seats={seats} season={season} mode={mode}/>)}</group>;
 }
 /** Clip each bed into the proposed TIN faces. This follows exact measured
  * elevation and grading breaks, including holes left by overlapping beds. */
@@ -142,14 +159,15 @@ function useStableDesign(data:DeckData){
  * models it built, so structure footprints reuse its cached pool and yard geometry instead of rebuilding them per copy. */
 export default function Landscape3D({data:fresh,showMatureSpread=false,source,model,yard}:{data:DeckData;showMatureSpread?:boolean;source?:DeckData;model?:DeckTakeoff;yard?:YardModel}){
  const data=useStableDesign(fresh),objects=data.landscapeObjects??[],q=useRenderQuality(),camera=useThree(s=>s.camera),size=useThree(s=>s.size),invalidate=useThree(s=>s.invalidate),[lods,setLods]=useState(new Map<string,0|1|2>()),last=useRef(''),[mature,setMature]=useState(showMatureSpread),shown=useRef(typeof performance!=='undefined'?performance.now():0);
- const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false);
+ const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false),season=useSeason();
  // Bed areas, the drawn tops of plain beds and where each plant meets them: one pass, shared by beds, plants and rings.
  const areas=useMemo(()=>landscapeBedAreas(objects,data),[objects,data]),structures=useMemo(()=>{if(!source||!model||!yard)return undefined;try{return landscapeStructureExclusions(source,{deck:model,yard});}catch{return undefined;}},[source,model,yard]),reliefs=useMemo(()=>bedReliefs(data,objects,areas,structures),[data,objects,areas,structures]),seats=useMemo(()=>plantSeats(data,objects,reliefs),[data,objects,reliefs]);
- const seated=useMemo(()=>objects.flatMap(o=>{const seat=seats.get(o.id);return seat?[{object:o,seat}]:[];}),[objects,seats]);
+ // A plant that has died back for the season (a winter hosta) casts no contact shade.
+ const seated=useMemo(()=>objects.flatMap(o=>{const seat=seats.get(o.id),look=plantSeasonLook(o.speciesRecord?.id,o.assetId,season);return seat&&(look.leaves!==null||look.stems)?[{object:o,seat}]:[];}),[objects,seats,season]);
  useEffect(()=>{const listener=(e:Event)=>setMature(!!(e as CustomEvent<{show:boolean}>).detail?.show);window.addEventListener('deckcraft:landscape-mature-spread',listener);window.dispatchEvent(new CustomEvent('deckcraft:landscape-mature-request'));return()=>window.removeEventListener('deckcraft:landscape-mature-spread',listener);},[]);
  // Far models (lod 2) draw immediately. Nearer models, which are much larger files, start once the view is up.
  useEffect(()=>{const timer=window.setTimeout(()=>invalidate(),1200);return()=>window.clearTimeout(timer);},[invalidate]);
  useFrame(()=>{if(performance.now()-shown.current<1200)return;const live=getShowcaseFlags().quality;const next=landscapeRenderLods(objects,camera.position,size.height,q.tier,live),key=[...next].map(([id,lod])=>id+':'+lod).join('|');if(last.current!==key){last.current=key;setLods(next);}});
- const groups=new Map<string,{items:LandscapeObject[];lod:0|1|2}>();for(const o of objects.filter(o=>o.enabled&&o.kind!=='bed'&&!landscapePlacement(data,o).pendingReason)){const lod=showcase?0:(lods.get(o.id)??2),key=o.assetId+':'+lod,g=groups.get(key)??{items:[],lod};g.items.push(o);groups.set(key,g);}
- return <group name="landscape-designed-objects" userData={{designedObjectCount:objects.filter(o=>o.enabled).length,renderTier:q.tier,genericVisualProxies:true}}>{[...groups].map(([key,g])=><Suspense key={key} fallback={null}><AssetInstances data={data} items={g.items} lod={g.lod} seats={seats}/></Suspense>)}<PlantBlooms data={data} objects={objects} lods={lods} seats={seats}/><PlantShadeRings data={data} plants={seated}/>{objects.some(o=>o.enabled&&o.kind==='bed')&&<Suspense fallback={null}><Beds data={data} objects={objects} areas={areas} reliefs={reliefs} seats={seats}/></Suspense>}{(showMatureSpread||mature)&&<MatureSpread data={data} objects={objects} seats={seats}/>}</group>;
+ const groups=new Map<string,{items:LandscapeObject[];lod:0|1|2;mode:SeasonMode}>();for(const o of objects.filter(o=>o.enabled&&o.kind!=='bed'&&!landscapePlacement(data,o).pendingReason)){const lod=showcase?0:(lods.get(o.id)??2),mode=seasonMode(o,season),key=o.assetId+':'+lod+(mode==='summer'?'':':'+mode),g=groups.get(key)??{items:[],lod,mode};g.items.push(o);groups.set(key,g);}
+ return <group name="landscape-designed-objects" userData={{designedObjectCount:objects.filter(o=>o.enabled).length,renderTier:q.tier,genericVisualProxies:true}}>{[...groups].map(([key,g])=><Suspense key={key} fallback={null}><AssetInstances data={data} items={g.items} lod={g.lod} seats={seats} season={season} mode={g.mode}/></Suspense>)}<PlantBlooms data={data} objects={objects} lods={lods} seats={seats} season={season}/>{season!=='summer'&&<PlantStems data={data} objects={objects} seats={seats} season={season}/>}{season==='fall'&&<FallenLeaves data={data} objects={objects}/>}<PlantShadeRings data={data} plants={seated}/>{objects.some(o=>o.enabled&&o.kind==='bed')&&<Suspense fallback={null}><Beds data={data} objects={objects} areas={areas} reliefs={reliefs} seats={seats}/></Suspense>}{(showMatureSpread||mature)&&<MatureSpread data={data} objects={objects} seats={seats}/>}</group>;
 }
