@@ -4,6 +4,7 @@ import {WINDOW_ROOM} from './windowGlass';
 import {skyDomeSampleElevation} from './skyModel';
 import {materialPatchKeys} from './materialPatches';
 import {FOLIAGE} from './foliageLighting';
+import {PHOTO_GREY_GAIN,photoSeasonAtlas} from './seasonPhoto';
 import {PHOTO_LIGHT,PHOTO_MOON,PHOTO_NIGHT_FILL,sunDisc,type PhotoLook} from '../../photoGrade';
 
 const HIDDEN=new Set(['sky-dome','picked-wall-outline','selection-outline','picked-pergola-outline','landscape-mature-overlay']);
@@ -392,6 +393,10 @@ function tuneMaterial(mesh:THREE.Mesh,material:THREE.MeshStandardMaterial,look:P
   material.roughness=FOLIAGE.roughness;material.metalness=0;
   if(material.alphaTest>0.22)material.alphaTest=0.22;
   material.userData.photoLeaf=true;material.needsUpdate=true;
+  // A seasonal leaf (spring, fall, winter grass) is recoloured in a shader the tracer never runs: give it the grey tone of
+  // its atlas so the season's colour, baked from the instance colours, paints it (seasonPhoto.ts).
+  const grey=patches.includes('foliage-season-v1')?photoSeasonAtlas(material):null;
+  if(grey){material.map=grey;material.color.setScalar(PHOTO_GREY_GAIN);}
  }else if(patches.includes('mulch-shred-fiber-v3')&&material.userData.mulchPhotoColor instanceof THREE.Color){
   // The raster shader paints the product's swatch over the scan's grain; the tracer sees the plain scan, so its colour is
   // the swatch over the scan's mean, and the bed averages to the same swatch (vertex colours still give the soil).

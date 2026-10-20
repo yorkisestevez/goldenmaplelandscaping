@@ -9,11 +9,13 @@ import roughnessUrl from './assets/lawn-roughness.webp';
 if(typeof window!=='undefined'){for(const url of [colorUrl,normalUrl,roughnessUrl]){const img=new Image();img.decoding='async';img.src=url;}}
 import {yardClip,type YardModel} from '../../yardModel';
 import {GroundOcclusion,publishGroundOcclusion,type GroundBounds} from './groundOcclusion';
-import {groundGeometry,groundEdgeGeometry,lawnMaterial,soilFaceMaterial} from './lawnSurface';
+import {LAWN_MEAN,groundGeometry,groundEdgeGeometry,lawnMaterial,soilFaceMaterial} from './lawnSurface';
 import {onShadowChange} from './renderPipeline';
 import {useFixtureLit} from './fixtureLighting';
 import {lawnTufts} from './lawnTufts';
 import GrassBlades from './GrassBlades';
+import {useSeason} from './sceneSeason';
+import {SEASON_LAWN} from './seasonLook';
 import {useRenderQuality} from './SceneRenderQuality';
 import {SCENE_LOOK} from './sceneLook';
 import {beltGeometry,beltMaterial,beltRadii} from './horizonBelt';
@@ -43,6 +45,8 @@ export function useLawnMaterial(){
    }));return ()=>{cancelled=true;loaded.forEach(t=>t.dispose());material.map=null;material.normalMap=null;material.roughnessMap=null;};
  },[material,gl,invalidate,quality.anisotropy]);
  useEffect(()=>()=>material.dispose(),[material]);
+ // Spring's flush and fall's yellowing tint the lawn; winter's lies under snow (seasonSnow.ts).
+ const season=useSeason();useEffect(()=>{const [r,g,b]=SEASON_LAWN[season],mean=material.userData.lawnMean as {value:THREE.Vector3}|undefined;material.color.setRGB(r,g,b);mean?.value.set(LAWN_MEAN[0]*r,LAWN_MEAN[1]*g,LAWN_MEAN[2]*b);invalidate();},[material,season,invalidate]);
  return material;
 }
 
