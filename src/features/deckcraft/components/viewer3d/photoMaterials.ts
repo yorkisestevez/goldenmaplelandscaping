@@ -5,6 +5,7 @@ import {skyDomeSampleElevation} from './skyModel';
 import {materialPatchKeys} from './materialPatches';
 import {FOLIAGE} from './foliageLighting';
 import {PHOTO_GREY_GAIN,photoSeasonAtlas} from './seasonPhoto';
+import {SNOW,photoSnowFor,snowCover} from './seasonSnow';
 import {PHOTO_LIGHT,PHOTO_MOON,PHOTO_NIGHT_FILL,sunDisc,type PhotoLook} from '../../photoGrade';
 
 const HIDDEN=new Set(['sky-dome','picked-wall-outline','selection-outline','picked-pergola-outline','landscape-mature-overlay']);
@@ -194,6 +195,53 @@ export function photoMeanAlbedo(material:THREE.MeshStandardMaterial,source?:THRE
 }
 
 const PHOTO_ADDED=new Set(['photo-sky','photo-emitter','photo-moon']);
+/** A material's surfaces must average at least this much snow before winter photos paint it as snow. */
+const PHOTO_SNOW_MIN=.25;
+interface GeometrySwap{mesh:THREE.Mesh;geometry:THREE.BufferGeometry}
+/**
+ * Winter photos. The tracer never runs the snow patch (seasonSnow.ts), so a material whose surfaces are mostly snow (lawn,
+ * roof, beds, caps) carries the same drifts in vertex colours instead and drops its colour map; each mesh draws a copy of
+ * its geometry with those colours until the photo ends. Walls, sills and alpha-cut leaves keep their own look.
+ */
+function bakePhotoSnow(meshes:THREE.Mesh[],swaps:GeometrySwap[]){
+ const groups=new Map<THREE.MeshStandardMaterial,THREE.Mesh[]>(),blocked=new Set<THREE.Material>();
+ for(const mesh of meshes){
+  if(!shown(mesh))continue;
+  // A material also drawn by a mesh that cannot take baked colours (instanced, multi-material, no normals) is left as it is.
+  if((mesh as THREE.InstancedMesh).isInstancedMesh||Array.isArray(mesh.material)||!mesh.geometry?.getAttribute('normal')){for(const m of Array.isArray(mesh.material)?mesh.material:[mesh.material])blocked.add(m);continue;}
+  const material=standard(mesh.material);
+  if(!material||material.alphaTest>0||!photoSnowFor(material))continue;
+  const list=groups.get(material)??[];list.push(mesh);groups.set(material,list);
+ }
+ for(const material of blocked)groups.delete(material as THREE.MeshStandardMaterial);
+ const n=new THREE.Vector3(),p=new THREE.Vector3(),a=new THREE.Vector3(),b=new THREE.Vector3(),normalMatrix=new THREE.Matrix3(),snow=new THREE.Color(...SNOW.color),c=new THREE.Color(),own=new THREE.Color();
+ for(const [material,list] of groups){
+  const cover=list.map(mesh=>{
+   // A two-sided surface (the roof) faces the sky from whichever side is up, as the raster shader's flipped normal does.
+   const g=mesh.geometry,pos=g.getAttribute('position'),nor=g.getAttribute('normal'),k=new Float32Array(pos.count),twoSided=material.side===THREE.DoubleSide;normalMatrix.getNormalMatrix(mesh.matrixWorld);
+   for(let i=0;i<pos.count;i++){n.fromBufferAttribute(nor,i).applyMatrix3(normalMatrix).normalize();p.fromBufferAttribute(pos,i).applyMatrix4(mesh.matrixWorld);k[i]=snowCover(twoSided?Math.abs(n.y):n.y,p.x,p.z);}
+   return k;
+  });
+  // Snow by area, not by vertex: a cap's level top is most of its area but only a sixth of a box's corners.
+  let area=0,snowed=0;
+  list.forEach((mesh,index)=>{
+   const g=mesh.geometry,pos=g.getAttribute('position'),index3=g.getIndex(),k=cover[index],triangles=(index3?index3.count:pos.count)/3;
+   for(let t=0;t<triangles;t++){
+    const ia=index3?index3.getX(t*3):t*3,ib=index3?index3.getX(t*3+1):t*3+1,ic=index3?index3.getX(t*3+2):t*3+2;
+    a.fromBufferAttribute(pos,ia).applyMatrix4(mesh.matrixWorld);b.fromBufferAttribute(pos,ib).applyMatrix4(mesh.matrixWorld);p.fromBufferAttribute(pos,ic).applyMatrix4(mesh.matrixWorld);
+    const size=b.sub(a).cross(p.sub(a)).length()/2;area+=size;snowed+=size*(k[ia]+k[ib]+k[ic])/3;
+   }
+  });
+  if(!area||snowed/area<PHOTO_SNOW_MIN)continue;
+  const base=material.color.clone();if(material.map&&textureReady(material.map))base.multiply(meanMap(material.map));
+  list.forEach((mesh,index)=>{
+   const g=mesh.geometry.clone(),k=cover[index],tint=material.vertexColors?g.getAttribute('color') as THREE.BufferAttribute|undefined:undefined,out=new Float32Array(k.length*3);
+   for(let i=0;i<k.length;i++){c.copy(base);if(tint)c.multiply(own.setRGB(tint.getX(i),tint.getY(i),tint.getZ(i)));c.lerp(snow,k[i]);out[i*3]=c.r;out[i*3+1]=c.g;out[i*3+2]=c.b;}
+   g.setAttribute('color',new THREE.Float32BufferAttribute(out,3));swaps.push({mesh,geometry:mesh.geometry});mesh.geometry=g;
+  });
+  material.map=null;material.color.set('#ffffff');material.vertexColors=true;material.needsUpdate=true;
+ }
+}
 
 function shown(object:THREE.Object3D){
  for(let current:THREE.Object3D|null=object;current;current=current.parent)if(!current.visible)return false;
@@ -433,7 +481,7 @@ function widenSceneColors(scene:THREE.Scene,widened:WidenedColor[]){
  * Everything is put back by the returned function, including when setup throws. */
 export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[number,number,number];direction:[number,number,number];diameterFt:number;radiance:number;distanceFt:number}|null){
  const materials=new Map<string,SavedMaterial>(),lights:SavedLight[]=[],hidden:THREE.Object3D[]=[],added:THREE.Object3D[]=[],proxies:THREE.Material[]=[],widened:WidenedColor[]=[];
- const swapped:THREE.Mesh[]=[],previous:THREE.Material[]=[],poolColors=new Map<THREE.BufferGeometry,THREE.BufferAttribute>();
+ const swapped:THREE.Mesh[]=[],previous:THREE.Material[]=[],poolColors=new Map<THREE.BufferGeometry,THREE.BufferAttribute>(),snowSwaps:GeometrySwap[]=[];
  const ripple=waterRippleNormal(),caustics=causticTexture();
  scene.updateMatrixWorld(true);
  const meshes:THREE.Mesh[]=[];
@@ -455,6 +503,7 @@ export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[num
    tuneMaterial(mesh,material,look,ripple,caustics,poolColors);
   }
  }
+ bakePhotoSnow(meshes,snowSwaps);
  for(const mesh of meshes){
   const inst=mesh as THREE.InstancedMesh;
   if(!inst.isInstancedMesh||!shown(inst)||inst.count<=0||!inst.geometry?.getAttribute('position'))continue;
@@ -521,6 +570,7 @@ export function applyPhotoScene(scene:THREE.Scene,look:PhotoLook,sun:{color:[num
  return ()=>{
   for(const entry of widened)entry.geometry.setAttribute('color',entry.color);
   for(const [geometry,color] of poolColors)geometry.setAttribute('color',color);
+  for(const swap of snowSwaps){swap.mesh.geometry.dispose();swap.mesh.geometry=swap.geometry;}
   for(const saved of materials.values())restoreMaterial(saved);
   for(const saved of lights){saved.light.intensity=saved.intensity;if(saved.radius===undefined)delete saved.light.radius;else saved.light.radius=saved.radius;}
   for(const object of hidden)object.visible=true;

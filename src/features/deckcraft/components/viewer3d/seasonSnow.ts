@@ -69,7 +69,8 @@ if(uSnowOn>0.0){
  return true;
 }
 
-// Photo mode: the path tracer never runs the snow patch, so it bakes the same drifts into vertex colours (S3).
+// Photo mode: the path tracer never runs the snow patch, so it bakes the same drifts into vertex colours (S3). It is
+// sampled per vertex, so the broad drifts match the live view and the inch-scale clumps soften.
 const hash=(x:number,y:number)=>{const s=Math.sin(x*127.1+y*311.7)*43758.5453;return s-Math.floor(s);};
 function noise(x:number,y:number){
  const ix=Math.floor(x),iy=Math.floor(y);let fx=x-ix,fy=y-iy;fx=fx*fx*(3-2*fx);fy=fy*fy*(3-2*fy);
