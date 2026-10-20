@@ -17,7 +17,7 @@ export default function FlythroughTools({data}:{data:DeckData}){
  const [fps,setFps]=useState<FlythroughFps>(30);
  const [resolution,setResolution]=useState<'1080p'|'4k'>('1080p');
  const [format,setFormat]=useState<FlythroughFormat>('mp4');
- const [timeOfDay,setTimeOfDay]=useState(false);
+ const [timeOfDay,setTimeOfDay]=useState(false),[seasons,setSeasons]=useState(false);
  const [startSec,setStartSec]=useState('');
  const [endSec,setEndSec]=useState('');
  const [status,setStatus]=useState<FlythroughStatus|null>(null),cancelRef=useRef<AbortController|null>(null);
@@ -38,7 +38,7 @@ export default function FlythroughTools({data}:{data:DeckData}){
   const width=resolution==='4k'?3840:1920,height=resolution==='4k'?2160:1080;
   const start=startSec.trim()?Number(startSec):undefined,end=endSec.trim()?Number(endSec):undefined;
   let job:FlythroughJob;
-  try{job={keyframes,fps,width,height,format,timeOfDay,startSec:start,endSec:end};planFlythrough(job);}catch(error){setStatus({phase:'error',frame:0,frames:0,message:error instanceof Error?error.message:'The fly-through could not be planned.'});return;}
+  try{job={keyframes,fps,width,height,format,timeOfDay,seasons,startSec:start,endSec:end};planFlythrough(job);}catch(error){setStatus({phase:'error',frame:0,frames:0,message:error instanceof Error?error.message:'The fly-through could not be planned.'});return;}
   if(format==='png-zip'){
    const picker=(window as unknown as {showSaveFilePicker?:(options:unknown)=>Promise<FlythroughFileSink>}).showSaveFilePicker;
    if(picker){try{job.file=await picker({suggestedName:flythroughFilename({width,fps,format}),types:[{description:'PNG sequence',accept:{'application/zip':['.zip']}}]});}catch(error){if((error as {name?:string}).name==='AbortError')return;}}
@@ -57,6 +57,7 @@ export default function FlythroughTools({data}:{data:DeckData}){
    <label>Frame rate <select aria-label="Fly-through frame rate" value={fps} disabled={busy} onChange={event=>setFps(Number(event.target.value) as FlythroughFps)}><option value={24}>24 fps</option><option value={30}>30 fps</option><option value={60}>60 fps</option></select></label>
    <label>File <select aria-label="Fly-through file" value={format} disabled={busy} onChange={event=>setFormat(event.target.value as FlythroughFormat)}><option value="mp4">MP4</option><option value="png-zip">PNG sequence</option></select></label>
    <label className="inline-flex gap-1 items-center"><input type="checkbox" checked={timeOfDay} disabled={busy} onChange={event=>setTimeOfDay(event.target.checked)}/>Day through golden hour to night</label>
+   <label className="inline-flex gap-1 items-center"><input type="checkbox" checked={seasons} disabled={busy} onChange={event=>setSeasons(event.target.checked)}/>Through the seasons</label>
    <label>From <input aria-label="Export start seconds" className="w-16" inputMode="decimal" value={startSec} disabled={busy} placeholder="start" onChange={event=>setStartSec(event.target.value)}/></label>
    <label>To <input aria-label="Export end seconds" className="w-16" inputMode="decimal" value={endSec} disabled={busy} placeholder="end" onChange={event=>setEndSec(event.target.value)}/></label>
    <button type="button" onClick={()=>void exportTour()} disabled={busy||keyframes.length<2}>Export fly-through</button>

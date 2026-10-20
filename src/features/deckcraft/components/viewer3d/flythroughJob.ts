@@ -8,6 +8,8 @@ export interface FlythroughJob{
  height:1080|2160;
  format:FlythroughFormat;
  timeOfDay:boolean;
+ /** Spring, summer, fall then winter, a quarter of the path each (plantSeasons.ts seasonAt). */
+ seasons?:boolean;
  startSec?:number;
  endSec?:number;
  file?:FlythroughFileSink;
