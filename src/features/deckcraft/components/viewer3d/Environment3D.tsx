@@ -15,6 +15,8 @@ import {getShowcaseFlags,getShowcaseServerFlags,subscribeShowcase} from '../../s
 import {SHOWCASE_DAY_SUN} from './showcaseGrade';
 import {SKY_DATA,skyStrength,sunDirection} from './skyModel';
 import {useSceneEvening} from './sceneEvening';
+import {useSeason} from './sceneSeason';
+import {SEASON_SUN} from './seasonLook';
 
 const SUN=sunDirection();
 const GOLDEN_ELEVATION=7*Math.PI/180;
@@ -22,12 +24,15 @@ const GOLDEN_ELEVATION=7*Math.PI/180;
 export const Environment3D=React.memo(function Environment3D({data,footprint,topY,cutaway=false,finished=true,yard,...interaction}:{data:DeckData;footprint:FootprintPlan;topY:number;planKey:string;cutaway?:boolean;finished?:boolean;yard:YardModel}&HouseInteraction){
   const evening=useSceneEvening(data.sceneLighting),radius=Math.max(footprint.bounds.w,footprint.bounds.h)*3,shadowRange=radius/12;
   const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags);
-  const post=(flags.quality||flags.realistic)&&flags.post&&!evening,golden=post&&flags.hour==='golden';
+  const post=(flags.quality||flags.realistic)&&flags.post&&!evening,golden=post&&flags.hour==='golden',season=SEASON_SUN[useSeason()];
   // Daylight keeps the HDRI sun. Showcase golden hour drops it to about 7° so shadows rake, and raises the key so level surfaces still glow.
-  const sun=useMemo(()=>{const placed=SUN.clone().multiplyScalar(radius);if(!golden)return placed;const flat=Math.hypot(placed.x,placed.z)||1;placed.y=flat*Math.tan(GOLDEN_ELEVATION);return placed.normalize().multiplyScalar(radius);},[radius,golden]);
+  // Out of summer the sun stands at the season's noon height (seasonLook.ts); golden hour still rakes at 7°.
+  const elevation=golden?GOLDEN_ELEVATION:season.elevationDeg===null?null:season.elevationDeg*Math.PI/180;
+  const sun=useMemo(()=>{const placed=SUN.clone().multiplyScalar(radius);if(elevation===null)return placed;const flat=Math.hypot(placed.x,placed.z)||1;placed.y=flat*Math.tan(elevation);return placed.normalize().multiplyScalar(radius);},[radius,elevation]);
   const daySun=skyStrength(evening?'evening':'day').sun;
-  const sunColor=(golden?[1,.58,.22]:post?[1,.94,.86]:SKY_DATA.day.sunColor) as [number,number,number];
-  const sunIntensity=golden?daySun*2.05:post?daySun*SHOWCASE_DAY_SUN:daySun;
+  const base=(golden?[1,.58,.22]:post?[1,.94,.86]:SKY_DATA.day.sunColor) as [number,number,number];
+  const sunColor=golden?base:base.map((c,i)=>c*season.tint[i]) as [number,number,number];
+  const sunIntensity=(golden?daySun*2.05:post?daySun*SHOWCASE_DAY_SUN:daySun)*(golden?1:season.gain);
   // renderPipeline fits the frustum to what casts; the sun's map is as large as this GPU allows, up to 4096.
   const mapSize=Math.min(SCENE_LOOK.sunShadow.mapSize,useThree(state=>state.gl.capabilities.maxTextureSize));
   // The daylight key shares the HDRI's direction (Sky3D.tsx); the evening sky has no directional key.
