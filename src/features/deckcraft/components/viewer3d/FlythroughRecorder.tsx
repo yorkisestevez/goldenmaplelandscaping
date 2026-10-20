@@ -15,8 +15,11 @@ import {SCENE_LOOK} from './sceneLook';
 import {skyStrength} from './skyModel';
 import {StoredZip} from './storedZip';
 import {sunDirectionAt,timeOfDayAt,type DayLook} from './timeOfDay';
+import {seasonAt} from './plantSeasons';
+import {getSeason,setSeason} from './sceneSeason';
 
-const HIDDEN=new Set(['picked-wall-outline','selection-outline','picked-pergola-outline','landscape-mature-overlay']);
+// Falling snow runs on the wall clock, not the frame clock, so it would jump between frames: the video keeps settled snow.
+const HIDDEN=new Set(['picked-wall-outline','selection-outline','picked-pergola-outline','landscape-mature-overlay','season-snowfall']);
 class FlythroughCancelled extends Error{constructor(){super('Fly-through cancelled.');this.name='FlythroughCancelled';}}
 type Orbit={enabled:boolean;target:THREE.Vector3;update:()=>void};
 interface SavedPose{position:THREE.Vector3;quaternion:THREE.Quaternion;fov:number;aspect:number;enabled:boolean;target:THREE.Vector3}
@@ -124,7 +127,7 @@ export default function FlythroughRecorder({revision,designEvening}:{revision?:u
    if(!perspective.isPerspectiveCamera||!orbit){publish({phase:'error',frame:0,frames:0,message:'Fly-through uses a perspective camera. Choose Corner, Overview or Front, then export.'});return;}
    let plan:FlythroughPlan;
    try{plan=planFlythrough(job);}catch(error){publish({phase:'error',frame:0,frames:0,message:error instanceof Error?error.message:'The fly-through could not be planned.'});return;}
-   const requestedRevision=currentRevision.current,previousFlags={...getShowcaseFlags()},exposure=gl.toneMappingExposure;
+   const requestedRevision=currentRevision.current,previousFlags={...getShowcaseFlags()},previousSeason=getSeason(),exposure=gl.toneMappingExposure;
    const logical=gl.getSize(new THREE.Vector2()),ratio=gl.getPixelRatio(),viewport=gl.getViewport(new THREE.Vector4()),scissor=gl.getScissor(new THREE.Vector4()),scissorTest=gl.getScissorTest(),target=gl.getRenderTarget();
    const hidden:THREE.Object3D[]=[];let sequence:ReturnType<NonNullable<ReturnType<typeof pipelineFor>>['openSequence']>|null=null,encoder:VideoEncoder|null=null,writable:{write(data:Uint8Array):Promise<void>;close():Promise<void>}|null=null,lost=false;
    const onLost=()=>{lost=true;};
@@ -173,6 +176,14 @@ export default function FlythroughRecorder({revision,designEvening}:{revision?:u
      if(lost)throw Error('The graphics context was lost during the fly-through. Export a shorter range, or use 1080p.');
      if(currentRevision.current!==requestedRevision)throw Error('The design changed during the fly-through. Export the current revision again.');
      const time=plan.times[index],look=job.timeOfDay?timeOfDayAt(plan.duration?time/plan.duration:0):null;
+     const season=job.seasons?seasonAt(plan.duration?time/plan.duration:0):null;
+     if(season&&season!==getSeason()){
+      // The plants rebuild for the new season, and winter loads its snow, before the next frame is drawn.
+      setSeason(season);
+      await waitFor(()=>(gl.domElement.dataset.snowfall!==undefined)===(season==='winter'),signal,'The season did not finish changing. Try the export again.');
+      for(let settle=0;settle<3;settle++)await nextFrame();
+      scene.traverse(object=>{if(object.visible&&HIDDEN.has(object.name)){hidden.push(object);object.visible=false;}});
+     }
      if(look&&look.evening!==(eveningNow??false)){
       eveningNow=look.evening;patchFlythrough({evening:look.evening});
       await waitFor(()=>gl.domElement.dataset.sceneEvening===(look.evening?'1':'0')&&gl.domElement.dataset.sky===(look.evening?'evening':'day'),signal,'The sky did not follow the time of day. Try the export again.');
@@ -227,7 +238,7 @@ export default function FlythroughRecorder({revision,designEvening}:{revision?:u
     gl.setPixelRatio(ratio);gl.setSize(logical.x,logical.y,false);gl.setViewport(viewport);gl.setScissor(scissor);gl.setScissorTest(scissorTest);gl.setRenderTarget(target);
     delete gl.domElement.dataset.flythrough;
     gl.domElement.removeEventListener('webglcontextlost',onLost);
-    setShowcaseFlags(previousFlags);resetFlythrough();
+    setShowcaseFlags(previousFlags);setSeason(previousSeason);resetFlythrough();
     busy.current=false;invalidate();
    }
   };
