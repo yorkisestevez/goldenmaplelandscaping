@@ -168,6 +168,8 @@ export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;pa
 /** 'fire-feature': a fire pit or table (fireFeatures.ts); widthFt/depthFt are its body (round: depth = width),
  * heightIn its body height, productId a FIRE_PRODUCTS id, color its stone. */
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature'|'fire-feature';
+/** Natural flagstone (flagstone.ts): the stone, one even joint width and the permeable chips in the joints. */
+export interface YardFlagstone {stone:import('./landscapeTypes').BoulderStone;jointIn:number;jointColour:'black'|'tan'|'grey'}
 export interface YardHardscape {finishId:string;colorId:string;unitId:string;patternId:string;angleDeg:number;jointMm:number;capUnitId?:string}
 /** Decorative paving zones, centre-relative patio-local inches before patio rotation. */
 export interface PatioInlay {id:string;name:string;shape:'rectangle'|'diamond'|'circle'|'compass'|'band'|'custom';xIn:number;yIn:number;widthIn:number;depthIn:number;rotationDeg:number;points?:{x:number;y:number}[];productId:string;color:string;hardscape?:YardHardscape}
@@ -208,6 +210,8 @@ export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled
   inlays?:PatioInlay[];
   /** A walkway's centreline, kept so it can be edited again. The outline is derived from it and stays authoritative. */
   pathSpine?:YardPathSpine;
+  /** Natural flagstone, cut to fit with even joints (productId natural-flagstone). Absent: manufactured paving. */
+  flagstone?:YardFlagstone;
 }
 /** How the ground meets a patio: graded banks at this run:rise (3 = 3 ft out per 1 ft of height). */
 export interface PatioGroundFit {slopeRatio:number;

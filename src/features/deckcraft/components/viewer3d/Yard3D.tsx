@@ -50,6 +50,8 @@ const SCANNED:Partial<Record<YardRole,{set:'masonry'|'rock';repeatIn:number;norm
  'wall-cap':{set:'masonry',repeatIn:8,normalScale:.12,roughness:.84},
  rock:{set:'rock',repeatIn:20,normalScale:1,roughness:.9},
 };
+/** Natural flagstone tops: the rock scan in the stone's colour (flagstoneLayout.ts stones carry naturalStone). */
+const NATURAL_STONE={set:'rock' as const,repeatIn:24,normalScale:.9,roughness:.88};
 const WHITE=(()=>{const t=new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1);t.needsUpdate=true;t.channel=1;return t;})();
 /** Paver joints for the simplified preview: one paver per repeat, a quarter-inch dark joint round it. */
 function jointTexture(){const n=64,bytes=new Uint8Array(n*n*4);for(let y=0;y<n;y++)for(let x=0;x<n;x++){const edge=Math.min(x,y,n-1-x,n-1-y)<1.5,v=edge?.55:1,i=(y*n+x)*4;bytes[i]=bytes[i+1]=bytes[i+2]=v*255;bytes[i+3]=255;}const t=new THREE.DataTexture(bytes,n,n);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.needsUpdate=true;return t;}
@@ -83,7 +85,7 @@ function reliefKind(role:YardRole):DetailKind|null{
  return null;
 }
 function YardBatch({items,color,role,occlusion,supplierImage,sampleWindow,inspection}:{items:YardBox[];inspection:boolean;color:string;role:YardRole;occlusion:SharedOcclusion;supplierImage?:string;sampleWindow?:SampleWindow}){
- const scanned=SCANNED[role],supplierSurface=!!items[0]?.surface,simplified=!supplierSurface&&role==='paver'&&items.every(b=>b.illustrative&&b.patternFrame),water=role==='water';
+ const natural=!!items[0]?.naturalStone,scanned=natural?NATURAL_STONE:SCANNED[role],supplierSurface=!!items[0]?.surface,simplified=!supplierSurface&&role==='paver'&&items.every(b=>b.illustrative&&b.patternFrame),water=role==='water';
  const geometry=useMemo(()=>{const ranges:{start:number;end:number;pick:ReturnType<typeof boxSelection>}[]= [];let faces=0;const pieces=items.filter(b=>!b.renderDuplicate).map(b=>{let g=yardFinishGeometry(b);if(role==='bedding'&&!inspection){const top=jointSurfaceGeometry(g);g.dispose();g=top;}if(g.index){const converted=g.toNonIndexed();g.dispose();g=converted;}const p=g.getAttribute('position'),c=new THREE.Float32BufferAttribute(new Float32Array(p.count*3),3),appearance=hardscapeAppearance(b);
   if(scanned||simplified||supplierSurface)g.setAttribute('uv',pieceUvs(g,b,scanned?.repeatIn??48,simplified,sampleWindow));
   else{const uv=new THREE.Float32BufferAttribute(new Float32Array(p.count*2),2);for(let v=0;v<p.count;v++)uv.setXY(v,p.getX(v)/(water?RIPPLE_IN:role==='geogrid'?4:18),p.getZ(v)/(water?RIPPLE_IN:role==='geogrid'?4:18));g.setAttribute('uv',uv);}
@@ -91,7 +93,7 @@ function YardBatch({items,color,role,occlusion,supplierImage,sampleWindow,inspec
   const uv1=new THREE.Float32BufferAttribute(new Float32Array(p.count*2),2);if(occlusion)for(let v=0;v<p.count;v++)uv1.setXY(v,...occlusionUv(occlusion.bounds,p.getX(v),p.getZ(v)));g.setAttribute('uv1',uv1);
   for(let v=0;v<p.count;v++)c.setXYZ(v,appearance.r,appearance.g,appearance.b);g.setAttribute('color',c);ranges.push({start:faces,end:faces+p.count/3,pick:boxSelection(b)});faces+=p.count/3;return g;});const merged=mergeGeometries(pieces);pieces.forEach(p=>p.dispose());if(merged)merged.userData.hardscapeRanges=ranges;return merged;},[items,scanned,simplified,water,occlusion?.bounds,sampleWindow,inspection,role]);
  const invalidate=useThree(s=>s.invalidate),gl=useThree(s=>s.gl),quality=useRenderQuality();
- const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags),detail=Boolean(flags)&&showcaseDetail(quality.tier),kind=reliefKind(role);
+ const flags=useSyncExternalStore(subscribeShowcase,getShowcaseFlags,getShowcaseServerFlags),detail=Boolean(flags)&&showcaseDetail(quality.tier),kind=natural?'stone':reliefKind(role);
  const material=useMemo<THREE.Material>(()=>{
   const finish=(m:THREE.MeshStandardMaterial)=>role==='stone-step'||role==='wall-block'||role==='wall-cap'?applyWallDaylight(m):m;
   const relieve=(m:THREE.MeshStandardMaterial)=>detail&&kind?applySurfaceRelief(m,kind):m;
@@ -141,7 +143,7 @@ function WaterMotion({model}:{model:YardModel}){
 }
 export default function Yard3D({model,inspection=false,plantingBeds=[]}:{model:YardModel;inspection?:boolean;plantingBeds?:PlanPoint[][]}){
  const hidden=CONSTRUCTION_YARD_ROLES;
- const groups=useMemo(()=>{const map=new Map<string,YardBox[]>();for(const box of yardPreviewBoxes(model,inspection)){if(!inspection&&(hidden.has(box.role)||GRADED_ROLES.includes(box.role)))continue;const b=inspection?box:seatOnLawn(box,model.terrain);const key=b.role+':'+b.color+':'+(b.surface?.swatchKey??'')+(b.illustrative?':simplified':'');if(map.has(key))map.get(key)!.push(b);else map.set(key,[b]);}return [...map.entries()];},[model,inspection]);
+ const groups=useMemo(()=>{const map=new Map<string,YardBox[]>();for(const box of yardPreviewBoxes(model,inspection)){if(!inspection&&(hidden.has(box.role)||GRADED_ROLES.includes(box.role)))continue;const b=inspection?box:seatOnLawn(box,model.terrain);const key=b.role+':'+b.color+':'+(b.surface?.swatchKey??'')+(b.illustrative?':simplified':'')+(b.naturalStone?':stone':'');if(map.has(key))map.get(key)!.push(b);else map.set(key,[b]);}return [...map.entries()];},[model,inspection]);
  const occlusion=useGroundOcclusion(),swatches=useSwatchMap();
  return <group name="combined-yard-features">{groups.map(([key,items])=><YardBatch key={key} items={items} role={items[0].role} inspection={inspection} color={!inspection&&items[0].role==='bedding'?shade(items[0].color,JOINT_SHADE):items[0].color} occlusion={occlusion} supplierImage={swatchUrl(swatches,items[0].surface?.swatchKey)} sampleWindow={swatches?.sampleWindows?.[items[0].surface?.swatchKey??'']}/>)}{illustrativeBanksVisible(model,inspection)&&<RetainedBanks model={model} occlusion={occlusion} plantingBeds={plantingBeds}/>}<WaterMotion model={model}/>{inspection&&model.members.map(m=>{const a=new THREE.Vector3(m.a.x,m.a.y,m.a.z),b=new THREE.Vector3(m.b.x,m.b.y,m.b.z),q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),b.clone().sub(a).normalize());return <mesh key={m.id} position={a.clone().add(b).multiplyScalar(.5)} quaternion={q}><cylinderGeometry args={[m.width/2,m.width/2,a.distanceTo(b),10]}/><meshStandardMaterial color={m.color} roughness={.65}/></mesh>;})}</group>;
 }
