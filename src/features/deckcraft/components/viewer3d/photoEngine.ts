@@ -5,6 +5,8 @@ import {registerPhotoTracer,type PhotoTraceFrame,type PhotoTraceRequest} from '.
 import {SCENE_LOOK} from './sceneLook';
 import {pipelineFor} from './renderPipeline';
 import {SKY_DATA,skyStrength,skyYaw,visibleSkyHorizon,visibleSkyStrength,type Lighting} from './skyModel';
+import {SEASON_SUN} from './seasonLook';
+import {getSeason} from './sceneSeason';
 import {applyPhotoScene,buildPhotoBackground,photoTexturesReady,rasterPhotoTriangles,tracePhotoTriangles} from './photoMaterials';
 import {PHOTO_FALLBACK,PHOTO_GRADE,SUN_ANGULAR_RADIUS_DEG,photoStillSize,photoSunColor,photoSunElevationDeg,photoSunIrradiance,sunDisc,type PhotoLook} from '../../photoGrade';
 import {getPhotoSettings,setPhotoProgress,type PhotoPhase} from '../../photoMode';
@@ -62,9 +64,11 @@ function canPathTrace(gl:THREE.WebGLRenderer){
 function sunFor(look:PhotoLook){
  const irradiance=photoSunIrradiance(look,skyStrength('day').sun);
  if(irradiance<=0)return null;
- const elevation=photoSunElevationDeg(look,SKY_DATA.day.sunElevationDeg),el=elevation*Math.PI/180,az=SCENE_LOOK.sky.sunAzimuthDeg*Math.PI/180;
- const disc=sunDisc(irradiance,SUN_ANGULAR_RADIUS_DEG[look]);
- return {color:photoSunColor(look,SKY_DATA.day.sunColor as [number,number,number]),direction:[Math.cos(el)*Math.cos(az),Math.sin(el),Math.cos(el)*Math.sin(az)] as [number,number,number],diameterFt:disc.diameterFt,radiance:disc.radiance,distanceFt:disc.distanceFt};
+ // By day the photo sun stands at the season's height and strength, as the live view's does (seasonLook.ts).
+ const season=SEASON_SUN[getSeason()],seasonal=look==='day'&&season.elevationDeg!==null;
+ const elevation=seasonal?season.elevationDeg!:photoSunElevationDeg(look,SKY_DATA.day.sunElevationDeg),el=elevation*Math.PI/180,az=SCENE_LOOK.sky.sunAzimuthDeg*Math.PI/180;
+ const disc=sunDisc(irradiance*(seasonal?season.gain:1),SUN_ANGULAR_RADIUS_DEG[look]),color=photoSunColor(look,SKY_DATA.day.sunColor as [number,number,number]);
+ return {color:seasonal?color.map((c,i)=>c*season.tint[i]) as [number,number,number]:color,direction:[Math.cos(el)*Math.cos(az),Math.sin(el),Math.cos(el)*Math.sin(az)] as [number,number,number],diameterFt:disc.diameterFt,radiance:disc.radiance,distanceFt:disc.distanceFt};
 }
 function tintSky(texture:THREE.DataTexture,look:PhotoLook){
  if(look==='day')return;

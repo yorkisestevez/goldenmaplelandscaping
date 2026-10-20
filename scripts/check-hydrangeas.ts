@@ -92,4 +92,9 @@ const scene=readFileSync('src/features/deckcraft/components/viewer3d/Landscape3D
 ok(/const Hydrangeas3D=lazy\(\(\)=>import\('\.\/hydrangea\/Hydrangeas3D'\)\)/.test(scene)&&/<Hydrangeas3D /.test(scene),'The landscape draws hydrangeas with their own models, loaded only when a design has one');
 ok(/hydrangeaCultivar\(o\.speciesRecord\?\.id\)/.test(scene),'Hydrangea plants are kept out of the shared shrub instances and the generic flower cards');
 
+// 6. Seasons: the hydrangeas take the scene's season (bare canes holding dried heads in winter, no heads in spring) and
+// are left out of the generic season stems, which would draw a second set of canes.
+ok(/<PlantStems data=\{data\} objects=\{others\}/.test(scene)&&/<Hydrangeas3D [^>]*season=\{season\}/.test(scene),'Hydrangeas follow the season and are not given the generic season stems');
+const renderer=readFileSync('src/features/deckcraft/components/viewer3d/hydrangea/Hydrangeas3D.tsx','utf8');
+for(const cultivar of ['limelight','annabelle',"'endless-summer'"])ok(new RegExp(`${cultivar}:\{spring:\{leaves:'#[0-9a-f]{6}',heads:null\},summer:\{leaves:'summer',heads:'summer'\},fall:\{leaves:'#[0-9a-f]{6}',heads:'#[0-9a-f]{6}'\},winter:\{leaves:null,heads:'#[0-9a-f]{6}'\}\}`).test(renderer),`${cultivar}: fresh leaves and no heads in spring, fall colour, bare canes with dried heads in winter`);
 console.log(`check-hydrangeas: ${checks} checks passed`);

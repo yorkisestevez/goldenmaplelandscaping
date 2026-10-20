@@ -14,6 +14,7 @@ import {applyFoliageLighting,leafTransmitUniform,plantColorHash} from '../foliag
 import {addMaterialPatch} from '../materialPatches';
 import {buildHydrangea,hydrangeaLod,panicleRadius,type HydrangeaPlant} from './hydrangeaModel';
 import {HYDRANGEA_SPECS} from './hydrangeaSpecs';
+import type {Season} from '../plantSeasons';
 import {HYDRANGEA_CULTIVARS,HYDRANGEA_FILL,HYDRANGEA_TEXTURES,atlasCell} from './hydrangeaTextures';
 
 const UP=new THREE.Vector3(0,1,0),IN_TO_FT=1/12;
@@ -104,6 +105,26 @@ function cardMaterial(map:THREE.Texture,side:THREE.Side,name:string){
  * underside row of the atlas (half the atlas below the upper side). Florets never cast and never let light through. */
 interface CultivarMaterials {leaf:THREE.MeshStandardMaterial;floret:THREE.MeshStandardMaterial;cluster:THREE.MeshStandardMaterial;core:THREE.MeshStandardMaterial;stem:THREE.MeshStandardMaterial}
 const UNDERSIDE_ROW=new THREE.Vector2(0,-.5);
+/**
+ * Each season's leaves and heads (research/botany.md, southern Ontario): 'summer' is the photo look, a colour recolours it,
+ * null leaves the part out. Spring (May) has fresh leaves and no heads yet. Fall (October): Limelight rose heads over
+ * reddening leaves, Annabelle tan-green heads over yellowing leaves, Endless Summer antique rose over reddening leaves.
+ * Winter: bare canes holding dried heads. Spring leaf colours are estimates; the rest follow the cited sources.
+ */
+type Look={leaves:'summer'|string|null;heads:'summer'|string|null};
+const SEASON_LOOKS:Record<HydrangeaCultivar,Record<Season,Look>>={
+ limelight:{spring:{leaves:'#5d7f34',heads:null},summer:{leaves:'summer',heads:'summer'},fall:{leaves:'#7a4030',heads:'#c9798c'},winter:{leaves:null,heads:'#bfa27e'}},
+ annabelle:{spring:{leaves:'#5d7f34',heads:null},summer:{leaves:'summer',heads:'summer'},fall:{leaves:'#8a843e',heads:'#c1b48f'},winter:{leaves:null,heads:'#a38c6b'}},
+ 'endless-summer':{spring:{leaves:'#5d7f34',heads:null},summer:{leaves:'summer',heads:'summer'},fall:{leaves:'#6e4a30',heads:'#a3386a'},winter:{leaves:null,heads:'#8e7356'}},
+};
+/** Old wood on bare winter canes (research/botany.md: Limelight reddish-brown, Annabelle and Endless Summer grey-brown). */
+const WINTER_CANE:Record<HydrangeaCultivar,string>={limelight:'#7a5a3e',annabelle:'#8b7a66','endless-summer':'#9c8a72'};
+/** The colour a summer-coloured part is multiplied by to show `look` (white keeps it as it is). */
+function seasonTint(target:'summer'|string|null,summer:string,out:THREE.Color){
+ if(!target||target==='summer')return out.set('#ffffff');
+ const t=new THREE.Color(target),s=new THREE.Color(summer);
+ return out.setRGB(Math.min(3,t.r/Math.max(.01,s.r)),Math.min(3,t.g/Math.max(.01,s.g)),Math.min(3,t.b/Math.max(.01,s.b)));
+}
 function cultivarMaterials(cultivar:HydrangeaCultivar,florets:THREE.Texture,leaves:THREE.Texture):CultivarMaterials{
  const spec=HYDRANGEA_SPECS[cultivar];
  const leaf=cardMaterial(atlasMap(leaves,cultivar,0),THREE.DoubleSide,'hydrangea-leaf');
@@ -214,7 +235,7 @@ function fillBatch(batch:FarBatch,cultivar:HydrangeaCultivar,members:{o:Landscap
  * underside, and heads of real-photo florets around a core. Distant plants use fewer, larger leaf and floret-cluster
  * cards. Loads its two atlases on first use.
  */
-export default function Hydrangeas3D({data,objects,lods,seats}:{data:DeckData;objects:LandscapeObject[];lods:Map<string,0|1|2>;seats:Map<string,PlantSeat>}){
+export default function Hydrangeas3D({data,objects,lods,seats,season}:{data:DeckData;objects:LandscapeObject[];lods:Map<string,0|1|2>;seats:Map<string,PlantSeat>;season:Season}){
  const showcase=useSyncExternalStore(subscribeShowcase,()=>getShowcaseFlags().quality,()=>false),q=useRenderQuality(),invalidate=useThree(s=>s.invalidate),fixtures=useContext(FixtureLightContext);
  const [floretAtlas,leafAtlas]=useTexture([HYDRANGEA_TEXTURES.florets,HYDRANGEA_TEXTURES.leaves]);
  const materials=useMemo(()=>new Map(HYDRANGEA_CULTIVARS.map(c=>[c,cultivarMaterials(c,floretAtlas,leafAtlas)])),[floretAtlas,leafAtlas]);
@@ -242,7 +263,15 @@ export default function Hydrangeas3D({data,objects,lods,seats}:{data:DeckData;ob
   forget(store,new Set(shown));
   // Light through a leaf needs the leaf's own shadow: none on the shadowless tier.
   const shadows=q.tier!=='constrained';
-  for(const set of materials.values())leafTransmitUniform(set.leaf).value=shadows?1:0;
+  for(const [cultivar,set] of materials){
+   leafTransmitUniform(set.leaf).value=shadows?1:0;
+   const look=SEASON_LOOKS[cultivar][season],spec=HYDRANGEA_SPECS[cultivar];
+   seasonTint(look.leaves,spec.leaf.front,set.leaf.color);
+   for(const m of [set.floret,set.cluster])seasonTint(look.heads,spec.head.color,m.color);
+   seasonTint(look.heads,spec.head.color,set.core.color);
+   // Bare winter canes show their old wood (grey-brown), not the green of the season's new growth.
+   set.stem.color.set(season==='winter'?WINTER_CANE[cultivar]:spec.stem);
+  }
   const far=new Map<HydrangeaCultivar,{o:LandscapeObject;parts:PlantParts;matrix:THREE.Matrix4}[]>();
   for(const {o,node} of placed){
    const cultivar=node.plant.cultivar,lod=showcase?0:(lods.get(o.id)??2),matrix=plantMatrix(data,o,seats);
@@ -252,7 +281,8 @@ export default function Hydrangeas3D({data,objects,lods,seats}:{data:DeckData;ob
    for(const [i,other] of node.levels.entries())if(other){
     const active=i===lod;
     // Photo mode waits while anything named '-lod2' is in the scene, so a hidden level is named 'idle'.
-    for(const m of other.meshes){m.visible=active;if(m.parent!==node.group)node.group.add(m);}
+    const look=SEASON_LOOKS[cultivar][season];
+    for(const m of other.meshes){m.visible=active&&(m===other.leaves?look.leaves!==null:m===other.florets||m===other.cores?look.heads!==null:true);if(m.parent!==node.group)node.group.add(m);}
     other.leaves.name=`landscape-hydrangea-${cultivar}-leaves-${active?'lod'+i:'idle'}`;
     other.florets.name=`landscape-hydrangea-${cultivar}-florets-${active?'lod'+i:'idle'}`;other.cores.name=`landscape-hydrangea-${cultivar}-cores-${active?'lod'+i:'idle'}`;
     other.stems.name=`landscape-hydrangea-${cultivar}-stems`;
@@ -270,11 +300,12 @@ export default function Hydrangeas3D({data,objects,lods,seats}:{data:DeckData;ob
    // Rebuilt only when its plants, their placements or the shadow tier change, not on every level change elsewhere.
    const key=members.map(x=>x.o.id+':'+x.matrix.elements.join(',')).join('|')+(shadows?'+s':'');
    if(batch!==old||batch.key!==key){fillBatch(batch,cultivar,members,shadows);batch.key=key;}
+   const look=SEASON_LOOKS[cultivar][season];batch.leaves.visible=look.leaves!==null;batch.florets.visible=batch.cores.visible=look.heads!==null;
    if(batch!==old)store.batches.set(cultivar,batch);
   }
   const groups=[...store.batches.values()].map(b=>b.group);
   setBatchGroups(prev=>prev.length===groups.length&&prev.every((g,i)=>g===groups[i])?prev:groups);
   invalidate();
- },[placed,shown,store,lods,showcase,data,seats,materials,q.tier,invalidate]);
+ },[placed,shown,store,lods,showcase,data,seats,materials,season,q.tier,invalidate]);
  return <group name="landscape-hydrangeas">{placed.map(({o,node})=><primitive key={o.id} object={node.group} dispose={null}/>)}{batchGroups.map(g=><primitive key={g.uuid} object={g} dispose={null}/>)}</group>;
 }
