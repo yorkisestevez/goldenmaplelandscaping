@@ -4,11 +4,21 @@ import type {LandscapeAssetId} from '../../landscapeTypes';
 import {addMaterialPatch} from './materialPatches';
 
 type Maps={map:THREE.Texture;normalMap:THREE.Texture;roughnessMap:THREE.Texture};
-interface Shared {maps:Maps;materials:Set<THREE.MeshStandardMaterial>;loading?:boolean;loaded?:boolean;listeners:Set<()=>void>;pending:Set<THREE.Texture>}
+/** A colour map's mean linear colour and luminance, so a mulch's look can be normalised to its swatch. */
+export interface ScanMean{rgb:[number,number,number];luma:number}
+/** The licensed wood-chip scan (public/deckcraft/landscape/mulch-diffuse.jpg), linear, measured over all its pixels. */
+export const MULCH_SCAN_MEAN:ScanMean={rgb:[.2202,.10837,.04977],luma:.12792};
+/** The mean of the shader's shredded-fibre pattern (mix(.7,1,fibre)*mix(.82,1.08,n)) over the bed, so it averages 1. */
+export const MULCH_FIBRE_MEAN=.8773;
+/** Mulch albedo, linear: the swatch is the product's own colour (LANDSCAPE_SURFACES), the scan only its grain. */
+export function mulchSwatch(id:LandscapeAssetId){return new THREE.Color(landscapeSurface(id)!.color);}
+/** Photo mode's mulch colour: the swatch over the scan's mean, so the traced scan averages to the swatch. */
+export function mulchPhotoColor(id:LandscapeAssetId,mean:ScanMean){const s=mulchSwatch(id);return new THREE.Color(s.r/mean.rgb[0],s.g/mean.rgb[1],s.b/mean.rgb[2]);}
+interface Shared {maps:Maps;mean:ScanMean;materials:Set<THREE.MeshStandardMaterial>;loading?:boolean;loaded?:boolean;listeners:Set<()=>void>;pending:Set<THREE.Texture>}
 const shared=new Map<string,Shared>();
 const hash=(x:number,z:number)=>{const n=Math.sin(x*127.1+z*311.7+19.17)*43758.5453;return n-Math.floor(n);};
 /** A local fallback with material-scale grains. The three mulch colours share the licensed wood-chip scan, remapped to shredded fibre so the default reads as dark brown hardwood rather than the scan's reddish chips. */
-function makeMaps(id:LandscapeAssetId,anisotropy:number):Maps{
+function makeMaps(id:LandscapeAssetId,anisotropy:number):Maps&{mean:ScanMean}{
  const p=landscapeSurface(id)!,size=anisotropy===4?128:anisotropy===8?256:512,turf=p.type==='turf',mulch=p.type==='mulch',fine=id==='limestone-screenings-bed';
  const bytes=new Uint8Array(size*size*4),normal=new Uint8Array(bytes.length),rough=new Uint8Array(bytes.length),height=new Float32Array(size*size),color=new THREE.Color(p.color).convertLinearToSRGB();
  for(let z=0;z<size;z++)for(let x=0;x<size;x++){
@@ -21,28 +31,39 @@ function makeMaps(id:LandscapeAssetId,anisotropy:number):Maps{
   bytes[k]=Math.min(255,color.r*255*tone*(1+warm));bytes[k+1]=Math.min(255,color.g*255*tone);bytes[k+2]=Math.min(255,color.b*255*tone*(1-warm));bytes[k+3]=255;
   rough[k]=rough[k+1]=rough[k+2]=mulch?242:turf?233:id==='mexican-beach-pebbles-bed'?205+noise*25:fine?250:226+noise*23;rough[k+3]=255;
  }
+ let r=0,g=0,b=0;const lin=(c:number)=>{c/=255;return c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4);};for(let k=0;k<bytes.length;k+=4){r+=lin(bytes[k]);g+=lin(bytes[k+1]);b+=lin(bytes[k+2]);}const n=size*size,mean:ScanMean={rgb:[r/n,g/n,b/n],luma:(.2126*r+.7152*g+.0722*b)/n};
  for(let z=0;z<size;z++)for(let x=0;x<size;x++){const dx=height[z*size+(x+1)%size]-height[z*size+(x+size-1)%size],dz=height[((z+1)%size)*size+x]-height[((z+size-1)%size)*size+x],n=new THREE.Vector3(-dx*5,-dz*5,1).normalize(),k=(z*size+x)*4;normal[k]=(n.x*.5+.5)*255;normal[k+1]=(n.y*.5+.5)*255;normal[k+2]=(n.z*.5+.5)*255;normal[k+3]=255;}
  const texture=(data:Uint8Array,srgb=false)=>{const t=new THREE.DataTexture(data,size,size,THREE.RGBAFormat);t.colorSpace=srgb?THREE.SRGBColorSpace:THREE.NoColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.generateMipmaps=true;t.anisotropy=anisotropy;t.repeat.setScalar(2.1/.0254/(p.grainIn*8));t.needsUpdate=true;return t;};
- return {map:texture(bytes,true),normalMap:texture(normal),roughnessMap:texture(rough)};
+ return {map:texture(bytes,true),normalMap:texture(normal),roughnessMap:texture(rough),mean};
 }
-function applyMaps(m:THREE.MeshStandardMaterial,maps:Maps){Object.assign(m,maps);m.needsUpdate=true;}
+function applyMaps(m:THREE.MeshStandardMaterial,maps:Maps,mean:ScanMean){Object.assign(m,maps);setScanMean(m,mean);m.needsUpdate=true;}
+function setScanMean(m:THREE.MeshStandardMaterial,mean:ScanMean){const u=m.userData.mulchUniforms as {uMulchMean:{value:number}}|undefined;if(u)u.uMulchMean.value=mean.luma;if(m.userData.mulchSwatchId)m.userData.mulchPhotoColor=mulchPhotoColor(m.userData.mulchSwatchId,mean);}
 function disposeMaps(maps:Maps){Object.values(maps).forEach(t=>t.dispose());}
-/** Reference-counted maps are shared; each viewer retains its own material and fixture-light uniforms. */
+/** Reference-counted maps are shared; each viewer retains its own material and fixture-light uniforms. Beds carry a vertex
+ * colour (white, or the soil of a spade-cut edge and plant collars: bedRelief.ts), which multiplies the finish. */
 export function createLandscapeSurfaceMaterial(id:LandscapeAssetId,anisotropy=1){
  const p=landscapeSurface(id)!,mulch=p.type==='mulch',key=(mulch?'mulch':id)+':'+anisotropy;
- let entry=shared.get(key);if(!entry){entry={maps:makeMaps(mulch?'mulch-bed':id,anisotropy),materials:new Set(),listeners:new Set(),pending:new Set()};shared.set(key,entry);}const resource=entry;
- const material=new THREE.MeshStandardMaterial({color:id==='black-mulch-bed'?'#2a2622':id==='cedar-mulch-bed'?'#ffce99':mulch?'#ffffff':'#ffffff',...resource.maps,normalScale:new THREE.Vector2(p.type==='turf'?.28:id==='limestone-screenings-bed'?.14:mulch?.18:.72,p.type==='turf'?.28:mulch?.18:.72),roughness:mulch?.9:1});
+ let entry=shared.get(key);if(!entry){const {mean,...maps}=makeMaps(mulch?'mulch-bed':id,anisotropy);entry={maps,mean,materials:new Set(),listeners:new Set(),pending:new Set()};shared.set(key,entry);}const resource=entry;
+ const material=new THREE.MeshStandardMaterial({color:id==='black-mulch-bed'?'#2a2622':id==='cedar-mulch-bed'?'#ffce99':mulch?'#ffffff':'#ffffff',...resource.maps,normalScale:new THREE.Vector2(p.type==='turf'?.28:id==='limestone-screenings-bed'?.14:mulch?.18:.72,p.type==='turf'?.28:mulch?.18:.72),roughness:mulch?.9:1,vertexColors:true});
  resource.materials.add(material);
- if(mulch)addMaterialPatch(material,{key:'mulch-shred-fiber-v2',apply:shader=>{
-  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`float mulchLuma=dot(diffuseColor.rgb,vec3(.3,.5,.2));
+ if(mulch){
+  // Albedo = the product's swatch × the shredded fibre (normalised to average 1) × the scan's own light and dark
+  // (its luminance over its mean, clamped): brown, black and cedar each read as their own colour.
+  const uniforms={uMulchSwatch:{value:mulchSwatch(id)},uMulchMean:{value:resource.mean.luma}};
+  material.userData.mulchUniforms=uniforms;material.userData.mulchSwatchId=id;material.userData.mulchPhotoColor=mulchPhotoColor(id,resource.mean);
+  addMaterialPatch(material,{key:'mulch-shred-fiber-v3',apply:shader=>{
+   Object.assign(shader.uniforms,uniforms);
+   shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uMulchSwatch;\nuniform float uMulchMean;').replace('#include <color_fragment>',`vec3 mulchScan=diffuseColor.rgb/max(diffuse,vec3(.001));
+float mulchLuma=dot(mulchScan,vec3(.2126,.7152,.0722));
 float mulchSlide=vMapUv.x*9.5+vMapUv.y*1.6;
 float mulchN=fract(sin(dot(floor(vec2(mulchSlide,vMapUv.y*8.)),vec2(127.1,311.7)))*43758.5453);
 float mulchBand=abs(fract(mulchSlide+mulchN*.45)-.5);
 float mulchFiber=smoothstep(.04,.22,mulchBand);
-float mulchSoft=mix(.7,1.,mulchFiber)*mix(.82,1.08,mulchN)*mix(.9,1.05,clamp(mulchLuma,0.,1.));
-diffuseColor.rgb=vec3(.34,.16,.055)*mulchSoft;
+float mulchSoft=mix(.7,1.,mulchFiber)*mix(.82,1.08,mulchN)/${MULCH_FIBRE_MEAN.toFixed(4)};
+diffuseColor.rgb=uMulchSwatch*mulchSoft*clamp(mulchLuma/max(uMulchMean,.001),.6,1.4);
 #include <color_fragment>`);
- }});
+  }});
+ }
  addMaterialPatch(material,{key:'ground-cover-stochastic-v1',apply:shader=>{
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>
 float coverHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -56,7 +77,7 @@ vec4 coverSample(sampler2D t,vec2 uv){vec2 c=floor(uv*.2),f=fract(uv*.2);f=f*f*(
   const urls=['diffuse','normal','roughness'];
   urls.forEach((name,index)=>loader.load('/deckcraft/landscape/mulch-'+name+'.jpg',t=>{
    if(shared.get(key)!==resource||failed){t.dispose();return;}loaded[index]=t;resource.pending.add(t);t.colorSpace=index===0?THREE.SRGBColorSpace:THREE.NoColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.minFilter=THREE.LinearMipmapLinearFilter;t.anisotropy=anisotropy;t.needsUpdate=true;
-   if(++completed===3){const old=resource.maps;resource.maps={map:loaded[0],normalMap:loaded[1],roughnessMap:loaded[2]};resource.loaded=true;resource.pending.clear();resource.materials.forEach(m=>applyMaps(m,resource.maps));disposeMaps(old);resource.listeners.forEach(f=>f());}
+   if(++completed===3){const old=resource.maps;resource.maps={map:loaded[0],normalMap:loaded[1],roughnessMap:loaded[2]};resource.mean=MULCH_SCAN_MEAN;resource.loaded=true;resource.pending.clear();resource.materials.forEach(m=>applyMaps(m,resource.maps,resource.mean));disposeMaps(old);resource.listeners.forEach(f=>f());}
   },undefined,()=>{failed=true;loaded.forEach(t=>t.dispose());resource.pending.clear();resource.loading=false;}));
  },dispose(){if(released)return;released=true;if(listener)resource.listeners.delete(listener);resource.materials.delete(material);material.dispose();if(!resource.materials.size){shared.delete(key);resource.pending.forEach(t=>t.dispose());resource.pending.clear();disposeMaps(resource.maps);}}};
 }
