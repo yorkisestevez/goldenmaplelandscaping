@@ -34,7 +34,7 @@ export default function InterlockingDrivewayLifespanOntario() {
               "name": "What is the cost difference between interlock and asphalt in Barrie?",
               "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "In the Barrie area, a professionally installed interlocking driveway typically costs between $20 and $35 per square foot. Asphalt is significantly cheaper upfront, usually $5 to $10 per square foot, but its shorter lifespan and higher maintenance needs often make interlock a better long-term investment."
+                  "text": "In the Barrie area, a professionally installed interlocking driveway costs more upfront than asphalt, but asphalt's shorter lifespan and higher maintenance needs often make interlock a better long-term investment. Driveway pricing depends on the site, so it is confirmed at a site visit."
               }
           },
           {
@@ -99,7 +99,7 @@ export default function InterlockingDrivewayLifespanOntario() {
 
       <div className="not-prose my-10 overflow-x-auto">
         <p className="font-sans text-[11px] uppercase tracking-widest text-brand-gold-dark mb-3">Driveway Material Lifespan & Cost Comparison in Simcoe County</p>
-        <div dangerouslySetInnerHTML={{ __html: "<table><thead><tr><th>Feature</th><th>Interlocking Pavers</th><th>Asphalt</th><th>Poured Concrete</th></tr></thead><tbody><tr><td><strong>Typical Lifespan</strong></td><td>25-50+ years</td><td>10-20 years</td><td>20-30 years</td></tr><tr><td><strong>Upfront Cost (per sq. ft.)</strong></td><td>$20 - $35</td><td>$5 - $10</td><td>$15 - $25</td></tr><tr><td><strong>Key Maintenance</strong></td><td>Seal every 3-5 years, top up sand</td><td>Seal every 2-3 years, crack filling</td><td>Seal every 3-5 years, crack filling</td></tr><tr><td><strong>Repairability</strong></td><td>Excellent (replace individual pavers)</td><td>Poor (patching is visible)</td><td>Very Poor (cracks are permanent)</td></tr><tr><td><strong>Salt Resistance</strong></td><td>Good (with sealer & proper de-icer)</td><td>Good</td><td>Poor (prone to spalling)</td></tr><tr><td><strong>Freeze-Thaw Performance</strong></td><td>Excellent (with proper base)</td><td>Fair (prone to heaving/cracking)</td><td>Poor (prone to cracking/heaving)</td></tr></tbody></table>" }} />
+        <div dangerouslySetInnerHTML={{ __html: "<table><thead><tr><th>Feature</th><th>Interlocking Pavers</th><th>Asphalt</th><th>Poured Concrete</th></tr></thead><tbody><tr><td><strong>Typical Lifespan</strong></td><td>25-50+ years</td><td>10-20 years</td><td>20-30 years</td></tr><tr><td><strong>Upfront Cost</strong></td><td>Highest</td><td>Lowest</td><td>Moderate</td></tr><tr><td><strong>Key Maintenance</strong></td><td>Seal every 3-5 years, top up sand</td><td>Seal every 2-3 years, crack filling</td><td>Seal every 3-5 years, crack filling</td></tr><tr><td><strong>Repairability</strong></td><td>Excellent (replace individual pavers)</td><td>Poor (patching is visible)</td><td>Very Poor (cracks are permanent)</td></tr><tr><td><strong>Salt Resistance</strong></td><td>Good (with sealer & proper de-icer)</td><td>Good</td><td>Poor (prone to spalling)</td></tr><tr><td><strong>Freeze-Thaw Performance</strong></td><td>Excellent (with proper base)</td><td>Fair (prone to heaving/cracking)</td><td>Poor (prone to cracking/heaving)</td></tr></tbody></table>" }} />
       </div>
 
       <h2>Frequently Asked Questions</h2>
@@ -118,7 +118,7 @@ export default function InterlockingDrivewayLifespanOntario() {
         </div>
         <div className="mb-8">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-3">What is the cost difference between interlock and asphalt in Barrie?</h3>
-          <div dangerouslySetInnerHTML={{ __html: "<p>In the Barrie area, a professionally installed interlocking driveway typically costs between $20 and $35 per square foot. Asphalt is significantly cheaper upfront, usually $5 to $10 per square foot, but its shorter lifespan and higher maintenance needs often make interlock a better long-term investment.</p>" }} />
+          <div dangerouslySetInnerHTML={{ __html: "<p>In the Barrie area, a professionally installed interlocking driveway costs more upfront than asphalt, but asphalt's shorter lifespan and higher maintenance needs often make interlock a better long-term investment. Driveway pricing depends on the site, so it is confirmed at a site visit.</p>" }} />
         </div>
         <div className="mb-8">
           <h3 className="font-display text-2xl text-brand-bonewhite mb-3">Do interlocking pavers fade over time?</h3>

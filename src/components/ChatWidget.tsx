@@ -16,10 +16,13 @@ import {
 } from '../data/sophieTeasers';
 import type { QuickRange } from '../utils/sophieQuote';
 import SophieMark from './SophieMark';
+import { guardReply, MAX_SHOWN_RANGES, PRICE_REDACTION } from '../utils/sophieGuard';
+import { underPath } from '../utils/trailingSlash';
 
 type Role = 'user' | 'assistant';
 type PricedRange = Extract<QuickRange, { kind: 'range' }>;
-interface Msg { role: Role; content: string; range?: PricedRange; designerHref?: string }
+/** `offerRange`: the guard removed a price from this AI reply, so offer the estimator's real range instead. */
+interface Msg { role: Role; content: string; range?: PricedRange; designerHref?: string; offerRange?: boolean }
 
 /** The 3-tap range, one step at a time. */
 type Flow =
@@ -87,10 +90,12 @@ export default function ChatWidget() {
 
   const userTurns = messages.filter((m) => m.role === 'user').length;
   const chatted = userTurns > 0;
-  const launcherVisible = pastHero && !pathname.startsWith('/contact');
+  const launcherVisible = pastHero && !underPath(pathname, '/contact');
 
   // The latest planning range and the tap choices behind it.
   const lastRangeRef = useRef<{ range: PricedRange; choice: QuickRangeInput } | null>(null);
+  /** Every range shown in this conversation (newest last, at most MAX_SHOWN_RANGES): Sophie may repeat any of them. */
+  const shownRangesRef = useRef<{ range: PricedRange; choice: QuickRangeInput }[]>([]);
   // Range context waiting for the live agent session to open.
   const pendingContextRef = useRef<string | null>(null);
 
@@ -111,7 +116,7 @@ export default function ChatWidget() {
 
   // Never auto-open. Stay off the homepage hero and off /contact/, where the form is the page.
   useEffect(() => {
-    if (pathname.startsWith('/contact')) setOpen(false);
+    if (underPath(pathname, '/contact')) setOpen(false);
   }, [pathname]);
 
   // Until the visitor says something, Sophie's opener follows the page they're on.
@@ -187,8 +192,19 @@ export default function ChatWidget() {
 
   const say = (msg: Msg) => setMessages((m) => [...m, msg]);
 
-  const addReply = (content: string) => {
-    say({ role: 'assistant', content });
+  /** Every AI reply passes the guard first: no price but the given range, no blocked business claim. */
+  /** `fromModel`: AI text, so it is guarded. The widget's own canned lines are written by us and shown as is. */
+  const addReply = (content: string, fromModel = true) => {
+    if (!fromModel) {
+      say({ role: 'assistant', content });
+      setLoading(false);
+      return;
+    }
+    const guarded = guardReply(content, shownRangesRef.current.map(({ range }) => ({ low: range.low, high: range.high })));
+    // Counts and claim ids only: the invented price itself is not worth sending anywhere.
+    if (guarded.changed) trackEngagement('chat_reply_guarded', `prices:${guarded.redactedPrices.length} ${guarded.blockedClaims.join(' ')}`.slice(0, 60));
+    // The fallback function may already have redacted a price server-side; offer the real range either way.
+    say({ role: 'assistant', content: guarded.text, offerRange: guarded.text.includes(PRICE_REDACTION) });
     setLoading(false);
   };
 
@@ -200,7 +216,7 @@ export default function ChatWidget() {
     setTeaser(null);
     setOpen(false);
     // Already on /book: its scheduler reads prefill only on arrival, so just reveal it.
-    if (pathname.startsWith('/book')) return;
+    if (underPath(pathname, '/book')) return;
     navigate('/book', {
       state: {
         serviceInterest: range?.serviceInterest ?? (pageProject ? projectMeta(pageProject).serviceInterest : undefined),
@@ -249,11 +265,12 @@ export default function ChatWidget() {
       }
       say({ role: 'assistant', content: `Planning range for ${result.summary}: ${result.band}.`, range: result });
       lastRangeRef.current = { range: result, choice };
+      shownRangesRef.current = [...shownRangesRef.current.filter((r) => r.range.summary !== result.summary), { range: result, choice }].slice(-MAX_SHOWN_RANGES);
       if (sessionRef.current) sessionRef.current.sendContext(result.contextText);
       else pendingContextRef.current = result.contextText;
       trackEngagement('chat_range_shown', `${choice.project}_${choice.size}_${choice.city}`);
     } catch {
-      addReply("I couldn't load the estimator just now. You can open it directly here: /cost-estimator");
+      addReply("I couldn't load the estimator just now. You can open it directly here: /cost-estimator", false);
     }
   };
 
@@ -287,18 +304,21 @@ export default function ChatWidget() {
         body: JSON.stringify({
           messages: history.slice(-12).map((m) => ({ role: m.role, content: m.content })),
           pricingContext: lastRangeRef.current?.choice,
+          pricingContexts: shownRangesRef.current.map((r) => r.choice),
         }),
       });
       if (!res.ok) throw new Error(`status ${res.status}`);
-      const data = (await res.json()) as { reply?: string; leadCaptured?: boolean };
+      const data = (await res.json()) as { reply?: string; leadCaptured?: boolean; source?: string };
       // Sophie's lead-handoff writes straight to the CRM server-side — this is
       // the only signal the browser gets that it happened, so fire the GA4/
       // Meta/Ads lead event here (mirrors what a form submit does on success).
       if (data.leadCaptured) trackLead('sophie-chat', 'high-intent', undefined, undefined, undefined, { skipQualification: true });
-      addReply((data.reply || '').trim() || fallbackReply(content));
+      const reply = (data.reply || '').trim();
+      // The function's canned replies are ours; only a model reply is guarded (again — the function guards it too).
+      addReply(reply || fallbackReply(content), !!reply && data.source !== 'fallback');
     } catch {
       // Dev (no function) or transient error → graceful canned answer.
-      addReply(fallbackReply(content));
+      addReply(fallbackReply(content), false);
     }
   };
 
@@ -361,17 +381,19 @@ export default function ChatWidget() {
     void send(input);
   };
 
-  // Linkify /cost-estimator, /book, /contact and tel: mentions inside replies.
+  // Linkify /cost-estimator, /book, /contact and tel: mentions inside replies. Pages are matched by name: the build
+  // slashes quoted paths ('/book' becomes '/book/', buildTools/trailingSlashLinks.ts), which the split pieces never equal.
   const renderContent = (text: string) => {
     const parts = text.split(new RegExp(`(\\/cost-estimator|\\/book|\\/contact|${publicContact.phoneDisplay.replace(/[()]/g, '\\$&')})`));
     return parts.map((p, i) => {
-      if (p === '/book') {
+      const page = /^\/(cost-estimator|book|contact)$/.exec(p)?.[1];
+      if (page === 'book') {
         return <button key={i} onClick={() => goBook('reply')} className="text-brand-green-dark underline underline-offset-2">book a site visit</button>;
       }
-      if (p === '/cost-estimator' || p === '/contact') {
+      if (page === 'cost-estimator' || page === 'contact') {
         return (
-          <button key={i} onClick={() => goTo(p, p.slice(1))} className="text-brand-green-dark underline underline-offset-2">
-            {p === '/cost-estimator' ? 'cost calculator' : 'contact us'}
+          <button key={i} onClick={() => goTo(`/${page}`, page)} className="text-brand-green-dark underline underline-offset-2">
+            {page === 'cost-estimator' ? 'cost calculator' : 'contact us'}
           </button>
         );
       }
@@ -395,8 +417,8 @@ export default function ChatWidget() {
   };
 
   // Links to the page the visitor is already on would do nothing: both pages read their prefill on arrival.
-  const onBookPage = pathname.startsWith('/book');
-  const onEstimatorPage = pathname.startsWith('/cost-estimator');
+  const onBookPage = underPath(pathname, '/book');
+  const onEstimatorPage = underPath(pathname, '/cost-estimator');
 
   // Once the visitor keeps talking after seeing a range, keep the booking one tap away.
   const resultAt = messages.map((m) => !!(m.range || m.designerHref)).lastIndexOf(true);
@@ -559,6 +581,14 @@ export default function ChatWidget() {
                       }`}
                     >
                       {m.role === 'assistant' ? renderContent(m.content) : m.content}
+                      {m.offerRange && !flow && (
+                        <button
+                          onClick={() => onChip(COST_CHIP)}
+                          className="mt-2 w-full rounded-full bg-brand-black text-brand-gold-light font-sans text-[13px] py-2 flex items-center justify-center gap-2"
+                        >
+                          Get my planning range <ArrowRight size={14} strokeWidth={1.75} />
+                        </button>
+                      )}
                       {m.designerHref && (
                         <button
                           onClick={() => goTo(m.designerHref!, 'range_deck_designer')}

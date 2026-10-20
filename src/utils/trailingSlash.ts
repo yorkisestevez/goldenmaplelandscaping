@@ -19,6 +19,22 @@ export function slashPath(path: string): string {
   return `${pathname}/${rest}`;
 }
 
+/**
+ * Compare a page's pathname with an internal path, with or without trailing slashes. The build rewrites quoted
+ * internal paths in modules to their slashed form ('/contact' becomes '/contact/', buildTools/trailingSlashLinks.ts),
+ * but the prerender renders each page at its unslashed path while the browser is at the slashed one: a plain
+ * comparison then differs between the prerendered HTML and the first client render, and React throws the page away
+ * (#418). This module is not rewritten, so these compare the paths as written.
+ */
+export function samePath(pathname: string, path: string): boolean {
+  return slashPath(pathname) === slashPath(path);
+}
+
+/** True on `path` itself and every page under it, with or without trailing slashes (see samePath). */
+export function underPath(pathname: string, path: string): boolean {
+  return slashPath(pathname).startsWith(slashPath(path));
+}
+
 export function __gmSlash(path: string): string {
   return slashPath(path);
 }
