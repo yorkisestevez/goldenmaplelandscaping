@@ -5,7 +5,7 @@ import baseline from '../../data/engine-baseline.json';
 import {computeEstimate,type EstimateInput} from '../../utils/estimateEngine';
 import {hardscapeTakeoff,disposalBinsFor,c} from '../../utils/takeoff';
 import type {DeckData,YardFeature} from './types';
-import {hardscapeSelection,hardscapeName} from './hardscapeCatalogue';
+import {hardscapeSelection,hardscapeName} from './hardscapeLookup';
 import {yardEarthworkPlan} from './yardEarthwork';
 import {landscapeTakeoff,landscapeQuoteSections} from './landscapeModel';
 import {wallQuoteScopes,yardTakeoffRuntime} from './yardQuoteScopes';

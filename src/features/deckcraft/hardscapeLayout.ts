@@ -1,5 +1,5 @@
 import type {YardFeature} from './types';
-import {hardscapeSelection,hardscapeProblem} from './hardscapeCatalogue';
+import {hardscapeSelection,hardscapeProblem} from './hardscapeLookup';
 import {hardscapeProfile,shapedBond} from './hardscapeShapes';
 export interface HardscapeBlank {cx:number;cy:number;length:number;width:number;angle:number;id:string;unitId?:string}
 /** Nominal stock sizes stay intact. Joints are added to pitch, never subtracted
