@@ -2,6 +2,9 @@ import {seatOnPaving} from './paverSeating';
 import {Suspense,lazy,useCallback,useContext,useEffect,useMemo,useLayoutEffect,useRef,useState,useSyncExternalStore} from 'react';
 import ScenePresentationTools,{RealisticLookToggle} from './ScenePresentationTools';
 import SeasonPicker from './SeasonPicker';
+import {useSeason} from './sceneSeason';
+// Winter only: settled and falling snow load with the first winter view, keeping the viewer chunk in its budget.
+const SeasonScene=lazy(()=>import('./SeasonScene'));
 import './viewerBar.css';
 
 import SavedCameraBridge from './SavedCameraBridge';
@@ -645,6 +648,7 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
    const wheel=(e:WheelEvent)=>{if(engaged||e.ctrlKey||e.metaKey)return;e.stopPropagation();setWheelHint(true);window.clearTimeout(timer);timer=window.setTimeout(()=>setWheelHint(false),2400);};
    el.addEventListener('pointerdown',down);el.addEventListener('pointerleave',leave);el.addEventListener('wheel',wheel,{capture:true,passive:true});
    return()=>{window.clearTimeout(timer);el.removeEventListener('pointerdown',down);el.removeEventListener('pointerleave',leave);el.removeEventListener('wheel',wheel,{capture:true});};},[]);
+  const winter=useSeason()==='winter';
   const photoOn=useSyncExternalStore(subscribePhoto,()=>getPhotoSettings().enabled,()=>getPhotoServerSettings().enabled);
   const flythroughArmed=useSyncExternalStore(subscribeFlythroughArm,isFlythroughArmed,()=>false);
   useEffect(()=>{applyPhotoSearch();},[]);
@@ -722,7 +726,7 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
 
       <FixtureLightContext.Provider value={fixtureLight}><Scene data={data} model={model} showMatureSpread={view==='top'} structure={structure} cutaway={cutaway} inspection={inspection} yard={yard} onMovePrivacyScreen={onMovePrivacyScreen} boardPaint={boardPaint} pergolaInteraction={!editInteraction&&onUpdate&&rawData.pergola&&!boardPaint&&!structure&&!cutaway?{selected,mode:pergolaMode,onSelect:()=>setSelected(true),onDraft:setDraft,onCommit:patch=>onUpdate({pergola:{...rawData.pergola!,...patch}})}:undefined} {...interaction}/></FixtureLightContext.Provider>
 
-      {editInteraction&&selection&&<Suspense fallback={null}><SceneEditHandles data={rawData} model={model} selection={selection} interaction={editInteraction}/></Suspense>}<SavedCameraBridge data={data} update={onUpdate}/><SelectionBridge enabled={!boardPaint} hardscapeOnly={!selectionEnabled} revision={calculatedYard??model} selection={selection??{partIds:[],boards:[]}} onPick={onObjectPick}/><SnapshotBridge onReady={onSnapshotReady}/><SceneStillExport revision={rawData}/>{flythroughArmed&&<Suspense fallback={null}><FlythroughRecorder revision={rawData} designEvening={rawData.sceneLighting==='Evening'}/></Suspense>}
+      {editInteraction&&selection&&<Suspense fallback={null}><SceneEditHandles data={rawData} model={model} selection={selection} interaction={editInteraction}/></Suspense>}<SavedCameraBridge data={data} update={onUpdate}/><SelectionBridge enabled={!boardPaint} hardscapeOnly={!selectionEnabled} revision={calculatedYard??model} selection={selection??{partIds:[],boards:[]}} onPick={onObjectPick}/><SnapshotBridge onReady={onSnapshotReady}/><SceneStillExport revision={rawData}/>{winter&&<Suspense fallback={null}><SeasonScene/></Suspense>}{flythroughArmed&&<Suspense fallback={null}><FlythroughRecorder revision={rawData} designEvening={rawData.sceneLighting==='Evening'}/></Suspense>}
       <ShowcaseModeSync/><RenderQuality/><RenderPipeline evening={evening}/>{photoOn&&<Suspense fallback={null}><PhotoTracer evening={evening} revision={rawData}/></Suspense>}
 
       <OrbitControls makeDefault target={savedCamera||preset||view==='overview'?undefined:[cx,cutaway?-(data.foundationDepthIn??48)/24:height*.4,cz]} maxPolarAngle={cutaway?Math.PI*.7:Math.PI/2-.04} minDistance={savedCamera||preset?1:r*.25} maxDistance={view==='overview'?Math.max(r*8,height*4):r*4} enableDamping={false}/>

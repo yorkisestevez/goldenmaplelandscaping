@@ -17,7 +17,7 @@ interface HeadStyle {card:Card;aspect?:number;width?:number;disc?:number;shell?:
 const HEADS:Record<FlowerHead,HeadStyle>={
  daisy:{card:'face',disc:.36},drooping:{card:'face',disc:.42},trumpet:{card:'face'},whorl:{card:'face'},
  spike:{card:'tall',aspect:3.4,width:.42},panicle:{card:'tall',aspect:1.35,shell:true},cone:{card:'tall',aspect:1.5},
- mop:{card:'out',shell:true},flat:{card:'out',shell:true},blossom:{card:'out',shell:true},seed:{card:'face',disc:.55},
+ mop:{card:'out',shell:true},dried:{card:'face',shell:true},flat:{card:'out',shell:true},blossom:{card:'out',shell:true},seed:{card:'face',disc:.55},
 };
 interface BloomPoint {kind:FlowerHead|'stem';petals:string;center:string;x:number;y:number;z:number;yaw:number;pitch:number;size:number;object:LandscapeObject;out?:[number,number,number]}
 
@@ -59,7 +59,7 @@ const DRAW:Record<string,()=>HTMLCanvasElement>={
  disc:()=>{const {c,g}=canvas(),r=rand(13),dome=g.createRadialGradient(110,104,10,128,128,120);dome.addColorStop(0,grey(1));dome.addColorStop(.75,grey(.7));dome.addColorStop(1,grey(.5));g.fillStyle=dome;g.beginPath();g.arc(128,128,118,0,Math.PI*2);g.fill();
   for(let i=0;i<260;i++){const a=i*2.39996,d=Math.sqrt(i/260)*112;g.fillStyle=grey(.35+r()*.3);g.beginPath();g.arc(128+Math.cos(a)*d,128+Math.sin(a)*d,4+r()*2,0,Math.PI*2);g.fill();}return c;},
 };
-const TEXTURE_OF:Record<FlowerHead,string>={daisy:'rays',drooping:'drooping',trumpet:'trumpet',whorl:'whorl',spike:'spike',panicle:'panicle',cone:'panicle',mop:'mop',flat:'flat',blossom:'blossom',seed:'disc'};
+const TEXTURE_OF:Record<FlowerHead,string>={daisy:'rays',drooping:'drooping',trumpet:'trumpet',whorl:'whorl',spike:'spike',panicle:'panicle',cone:'panicle',mop:'mop',dried:'mop',flat:'flat',blossom:'blossom',seed:'disc'};
 function flowerTexture(name:string){const tex=new THREE.CanvasTexture(DRAW[name]());tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;tex.needsUpdate=true;return tex;}
 
 function quads(list:{n:[number,number,number];corner:(sx:number,sy:number)=>[number,number,number]}[]){
