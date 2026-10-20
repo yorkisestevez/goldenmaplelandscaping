@@ -14,7 +14,7 @@ import {BED_RELIEF,bedReliefGeometry,bedReliefs,drapedBed,FLUSH_EDGING,flushEdgi
 import {PLANT_SEAT,plantSeats,STEM_OFFSET,stemCentre,stemRadiusIn} from '../src/features/deckcraft/components/viewer3d/plantSeating';
 import {chipClearance,collarFit,collarGeometry,COLLAR_SIDES,SHADE_RING,shadeRingMatrix,shadeRingRadiusIn} from '../src/features/deckcraft/components/viewer3d/plantContactDecals';
 import {MULCH_FIBRE_MEAN,MULCH_SCAN_MEAN,mulchPhotoColor,mulchSwatch} from '../src/features/deckcraft/components/viewer3d/landscapeSurfaceMaterial';
-import {coverInstances} from '../src/features/deckcraft/components/viewer3d/groundCoverDetail';
+import {clearCoverEdge,coverInstances} from '../src/features/deckcraft/components/viewer3d/groundCoverDetail';
 import {steelEdgingGeometry} from '../src/features/deckcraft/components/viewer3d/Landscape3D';
 import type {LandscapeObject,LandscapePoint} from '../src/features/deckcraft/landscapeTypes';
 import type {DeckData} from '../src/features/deckcraft/types';
@@ -113,9 +113,18 @@ for(const [label,data] of [['flat',flat],['sloped',sloped]] as const){
  ok(chips.every(c=>lone.cutDistance(c.x,c.z)>=BED_RELIEF.taperIn*BED_RELIEF.soilShare),`${label}: no chip on the cut's soil`);
  ok(chips.every(c=>inLone.every(p=>Math.hypot(c.x-p.seat.x,c.z-p.seat.z)>=(collarFit(p.object,p.seat,lone.polys)?.[1]??0))),`${label}: no chip on a collar or lip`);
  ok(chips.every(c=>Math.abs(c.y-c.height*.38-(ground.height(c.x,c.z)+lone.rise(c.x,c.z)))<.02),`${label}: chips sit on the drawn top`);
- const time=(f:()=>void)=>{const runs:number[]=[];for(let i=0;i<7;i++){const t=performance.now();f();runs.push(performance.now()-t);}return runs.sort((a,b)=>a-b)[3];};
- const plain=time(()=>coverInstances('mulch-bed',lone.polys,cells,3,{x:348,z:250},216,6000)),withClearance=time(()=>coverInstances('mulch-bed',lone.polys,cells,3,{x:348,z:250},216,6000,[],clearance));
- ok(withClearance<=plain*1.25+2,`${label}: chip layout stays about as fast (${plain.toFixed(1)} → ${withClearance.toFixed(1)} ms)`);
+ // Clearance keeps chip layout about as fast. Its work is counted, not timed, so a busy machine cannot fail this: the same search
+ // with one grid lookup per candidate, and nothing of the bed, its plants or its outline read once built, bar the cut under chips on its slope.
+ // Candidates are distinct spots, so a spot looked up twice counts as two lookups but one candidate.
+ let lookups=0,reads=0;const candidates=new Set<string>();
+ const layout=(c?:Parameters<typeof coverInstances>[8])=>coverInstances('mulch-bed',lone.polys,cells,3,{x:348,z:250},216,6000,[],c),watch=<T extends object>(o:T)=>new Proxy(o,{get:(t,k,r)=>{reads++;return Reflect.get(t,k,r);}});
+ const plain=layout(),probed=layout({clear:(x,z)=>{candidates.add(`${x},${z}`);return true;}}),watched=chipClearance(watch(lone),watch(inLone),watch(lone.polys))!;reads=0;
+ const counted=layout({clear:(x,z,r)=>{lookups++;return watched.clear(x,z,r);},rise:watched.rise});
+ // A cell's centre decides whether the cut is measured, so a chip on the slope is within the taper plus a cell's half-diagonal of a cut segment.
+ const cutSegments=lone.tapered.map(s=>[{x:s.ax,z:s.az},{x:s.bx,z:s.bz}]),onSlope=chips.filter(c=>!clearCoverEdge(c.x,c.z,cutSegments,BED_RELIEF.taperIn+Math.SQRT1_2)).length;
+ ok(JSON.stringify(probed)===JSON.stringify(plain)&&JSON.stringify(counted)===JSON.stringify(chips),`${label}: the counting probes lay out the very same chips`);
+ ok(lookups<=candidates.size*1.25,`${label}: chip layout searches about as many candidates with clearance, one lookup each (${candidates.size} candidates → ${lookups} lookups)`);
+ ok(reads<=onSlope,`${label}: chip layout reads the bed only for the cut under chips on its slope (${reads} reads; ${onSlope} of ${chips.length} chips there)`);
  // Flush edging: ½ in proud of the ground along the whole outline, on a slope too (split at the ground's face edges).
  const edged=landscapeBedAreas(objects,data).get('edged')![0],points=flushEdgingPoints(data,edged),ribbon=steelEdgingGeometry(points),rise=4;
  let worst=0;for(let i=0;i+1<points.length;i++)for(let t=0;t<=1;t+=.125){const x=(points[i].x+(points[i+1].x-points[i].x)*t)*12,z=(points[i].z+(points[i+1].z-points[i].z)*t)*12,y=(points[i].y+(points[i+1].y-points[i].y)*t)*12+rise;worst=Math.max(worst,Math.abs(y-(ground.height(x,z)+FLUSH_EDGING.proudIn)));}
