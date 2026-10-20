@@ -566,7 +566,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <Environment3D data={{...data,houseVisible:data.houseVisible!==false&&isObjectVisible(data.editorOrganization,'house')}} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
 
-  </group><Suspense fallback={null}><Landscape3D data={{...data,landscapeObjects:data.landscapeObjects?.filter(o=>isObjectVisible(data.editorOrganization,o.id))}} showMatureSpread={showMatureSpread}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
+  </group><Suspense fallback={null}><Landscape3D data={{...data,landscapeObjects:data.landscapeObjects?.filter(o=>isObjectVisible(data.editorOrganization,o.id))}} showMatureSpread={showMatureSpread} source={data} model={model} yard={yard}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
 
 }
 

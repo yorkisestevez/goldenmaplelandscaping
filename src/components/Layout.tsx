@@ -6,6 +6,7 @@ import { trackEngagement, trackCall } from '../utils/analytics';
 import { onInteractOrIdle } from '../utils/defer';
 const ChatWidget = lazy(() => import('./ChatWidget'));
 import { cn } from '../utils/cn';
+import { samePath, underPath } from '../utils/trailingSlash';
 import { BUSINESS, publicClaimCopy, publicContact } from '../data/business';
 
 // Canonical profile URLs live in src/data/business.ts — never hardcode handles here.
@@ -149,7 +150,7 @@ const Navbar = () => {
                     to={link.href}
                     className={cn(
                       "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
-                      location.pathname.startsWith('/services') ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                      underPath(location.pathname, '/services') ? "text-brand-gold-dark" : "text-brand-bonewhite"
                     )}
                   >
                     {link.label}
@@ -221,7 +222,7 @@ const Navbar = () => {
                     to={link.href} 
                     className={cn(
                       "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap flex items-center gap-1",
-                      location.pathname.startsWith('/resources') || location.pathname === '/buyers-guide' || location.pathname === '/cost-estimator' ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                      underPath(location.pathname, '/resources') || samePath(location.pathname, '/buyers-guide') || samePath(location.pathname, '/cost-estimator') ? "text-brand-gold-dark" : "text-brand-bonewhite"
                     )}
                   >
                     {link.label}
@@ -259,7 +260,7 @@ const Navbar = () => {
                   to={link.href} 
                   className={cn(
                     "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium whitespace-nowrap",
-                    location.pathname === link.href ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                    samePath(location.pathname, link.href) ? "text-brand-gold-dark" : "text-brand-bonewhite"
                   )}
                 >
                   {link.label}
@@ -274,7 +275,7 @@ const Navbar = () => {
               to="/contact" 
               className={cn(
                 "font-sans text-[9px] 2xl:text-[10px] uppercase tracking-[0.12em] 2xl:tracking-[0.18em] transition-colors hover:text-brand-gold-dark font-medium",
-                location.pathname === "/contact" ? "text-brand-gold-dark" : "text-brand-bonewhite"
+                samePath(location.pathname, "/contact") ? "text-brand-gold-dark" : "text-brand-bonewhite"
               )}
             >
               Contact
@@ -334,7 +335,7 @@ const Navbar = () => {
                       to={link.href} 
                       className={cn(
                         "font-display text-5xl font-light tracking-tight transition-colors",
-                        location.pathname === link.href ? "text-brand-gold" : "text-brand-porcelain"
+                        samePath(location.pathname, link.href) ? "text-brand-gold" : "text-brand-porcelain"
                       )}
                     >
                       {link.label}
@@ -392,7 +393,7 @@ const Footer = () => {
   // The estimator page runs its own contextual sticky bar — the global dock
   // would cover it (z-50 vs z-40) and steal its taps.
   const { pathname } = useLocation();
-  const hideDock = pathname.startsWith('/cost-estimator');
+  const hideDock = underPath(pathname, '/cost-estimator');
   return (
     <footer className="bg-brand-surface text-brand-bonewhite pt-32 pb-24 md:pb-12">
       <div className="container-custom">

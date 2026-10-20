@@ -392,6 +392,10 @@ function tuneMaterial(mesh:THREE.Mesh,material:THREE.MeshStandardMaterial,look:P
   material.roughness=FOLIAGE.roughness;material.metalness=0;
   if(material.alphaTest>0.22)material.alphaTest=0.22;
   material.userData.photoLeaf=true;material.needsUpdate=true;
+ }else if(patches.includes('mulch-shred-fiber-v3')&&material.userData.mulchPhotoColor instanceof THREE.Color){
+  // The raster shader paints the product's swatch over the scan's grain; the tracer sees the plain scan, so its colour is
+  // the swatch over the scan's mean, and the bed averages to the same swatch (vertex colours still give the soil).
+  material.color.copy(material.userData.mulchPhotoColor);material.needsUpdate=true;
  }else if(patches.includes('bloom-lift-v1')){
   // Flower cards carry their own unlit lift. A hard 0.45 cutoff also trims the soft petal down to a speck.
   if(material.alphaTest>0.2)material.alphaTest=0.2;
