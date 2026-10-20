@@ -18,8 +18,9 @@
 /* Drawing mode reserves the screen for geometry; project controls remain one click away. */
 .deck-designer:has(.dd-workspace-nav) .dd-preview-head{display:flex;align-items:center;justify-content:space-between}
 .deck-designer[data-drawing-focus=true] .dd-workspace-nav{display:none}
-/* The price sits in the sheet-tab row's free space beside All options, so the drawing keeps its full height. */
-@media(min-width:801px){.deck-designer[data-drawing-focus=true] .dd-workspace{position:relative}.deck-designer[data-drawing-focus=true] .dd-workspace>.dd-workspace-price{grid-area:auto;position:absolute;top:4px;right:120px;flex-wrap:nowrap;gap:8px;padding:0;background:none;border:0}.deck-designer[data-drawing-focus=true] .dd-workspace-amount{flex:none;flex-wrap:nowrap;gap:8px}.deck-designer[data-drawing-focus=true] .dd-workspace-amount>*{flex-basis:auto}.deck-designer[data-drawing-focus=true] .dd-workspace-amount>strong{font-size:20px}.deck-designer[data-drawing-focus=true] .dd-workspace-quotes[open]{top:100%;bottom:auto}}
+/* The price sits in the sheet-tab row's free space beside All options, so the drawing keeps its full height. The workspace
+   scrolls rather than the drawing panel, so the price scrolls with that row instead of floating over the ribbon. */
+@media(min-width:801px){.deck-designer[data-drawing-focus=true] .dd-workspace{position:relative;overflow:hidden auto}.deck-designer[data-drawing-focus=true] .dd-preview{overflow:visible}.deck-designer[data-drawing-focus=true] .dd-workspace>.dd-workspace-price{grid-area:auto;position:absolute;top:4px;right:120px;flex-wrap:nowrap;gap:8px;padding:0;background:none;border:0}.deck-designer[data-drawing-focus=true] .dd-workspace-amount{flex:none;flex-wrap:nowrap;gap:8px}.deck-designer[data-drawing-focus=true] .dd-workspace-amount>*{flex-basis:auto}.deck-designer[data-drawing-focus=true] .dd-workspace-amount>strong{font-size:20px}.deck-designer[data-drawing-focus=true] .dd-workspace-quotes[open]{top:100%;bottom:auto}}
 @media(min-width:801px) and (max-width:1000px){.deck-designer[data-drawing-focus=true] .dd-workspace-amount{flex-direction:column;gap:0}.deck-designer[data-drawing-focus=true] .dd-workspace-amount>span{display:none}}
 .deck-designer[data-drawing-focus=true]:has(.dd-easy-tools) .dd-workspace{height:calc(100dvh - 72px - var(--dd-easy-tools-height,0px));min-height:0;grid-template-rows:minmax(0,1fr);padding-bottom:0}
 .deck-designer[data-drawing-focus=true]:has(.dd-workspace-nav) .dd-preview{grid-row:1;padding:6px 10px}
@@ -34,7 +35,7 @@
 .deck-designer[data-drawing-focus=true] .dd-drawing-focus-toggle{position:absolute;top:8px;right:10px;min-height:44px;font-size:12px}
 @media(max-width:400px){.deck-designer[data-drawing-focus=true] .dd-sheet-tabs button{padding:0 10px}.deck-designer[data-drawing-focus=true] .dd-drawing-focus-toggle{padding:0 8px;font-size:11px}}
 
-/* Keep actual save/recovery feedback visible while the job toolbar is collapsed. */
+/* Keep the design's save and recovery status visible in drawing focus. */
 .deck-designer[data-drawing-focus=true] .dd-easy-tools{display:flex;padding:3px 12px;min-height:24px}
 .deck-designer[data-drawing-focus=true] .dd-easy-tools strong,.deck-designer[data-drawing-focus=true] .dd-save-state{display:none}
 .deck-designer[data-drawing-focus=true] .dd-easy-tools span{margin:0}

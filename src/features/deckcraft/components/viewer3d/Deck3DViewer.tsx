@@ -698,8 +698,8 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
   // A design already saved with one in use keeps "More", so the visitor can switch back.
   const presentationTools=designer||presentation?.viewMode==='inspection'||!!preset||!!presentation?.activeCameraId;
   const presenting=!!onUpdate&&!structure&&!cutaway,pergolaTools=!editInteraction&&presenting&&!boardPaint?<PergolaTools data={data} selected={selected} setSelected={setSelected} mode={pergolaMode} setMode={setPergolaMode} update={onUpdate!}/>:null;
-  // One bar over the canvas: the page's camera, day/night, lights and selection tools, the realistic look, and a More menu
-  // for surfaces, landscape cameras and adding a pergola. A placed pergola keeps its editing tools above the view.
+  // One bar over the canvas: the page's camera, day/night and lights (plus selection tools in Designer Mode), the realistic
+  // look, and the More menu when presentationTools allows it. A placed pergola keeps its editing tools above the view.
   return <>{data.pergola&&pergolaTools}<div ref={regionRef} className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
     {(toolbar||presenting)&&<div className="dd-3d-bar" role="group" aria-label="3D view controls"><div className="dd-3d-bar-main">{toolbar}{presenting&&<RealisticLookToggle/>}</div>{presenting&&presentationTools&&<details className="dd-3d-more"><summary>More</summary><div className="dd-3d-more-panel"><ScenePresentationTools data={data} update={onUpdate!}/>{!data.pergola&&pergolaTools}</div></details>}</div>}
     {wheelHint&&<p className="dd-3d-wheel-hint" role="status">Click the view first, or hold Ctrl, to zoom with the scroll wheel.</p>}
