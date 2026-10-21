@@ -13,8 +13,8 @@ import {houseOutline} from './houseFootprint';
  * - a 7×7 ft spa on the pool's east end, on the pool's long axis, coping to coping, one 12 V underwater light in its
  *   house-side wall (aimed away from the house), no coping light;
  * - a pondless waterfall in the rear bed, centred on the pool's long axis so the pool loungers look at it;
- * - a flowering perennial layer (Ontario natives: coneflower, black-eyed Susan, bee balm, blazing star, butterfly
- *   weed, wild columbine, asters) in front of the existing grasses, plus serviceberries framing the waterfall.
+ * - a flowering front row in the rear bed (Ontario natives: coneflower, bee balm, black-eyed Susan) and two
+ *   native eastern redbuds framing the waterfall.
  */
 export function ultimateParadiseDesign():DeckData{
  const data=ontarioShowcaseDesign();
@@ -35,9 +35,12 @@ export function ultimateParadiseDesign():DeckData{
  let objs=(data.landscapeObjects??[]).filter(o=>!(o.kind==='plant'&&o.xIn/12>fx0&&o.xIn/12<fx1&&o.zIn/12>rear0&&o.zIn/12<fz1));
  const extra:LandscapeObject[]=[];let n=0;
  const grow=(sp:string,x:number,z:number)=>{try{const o=newLandscapePlant(sp,`paradise-${n++}`,x*12,z*12);extra.push({...o,speciesRecord:structuredClone(o.speciesRecord!)});}catch{}};
- grow('amelanchier-canadensis',fx0-1,fall.zFt+1);grow('amelanchier-canadensis',fx1+1,fall.zFt+1);
- const blooms=['echinacea-purpurea','monarda-fistulosa','liatris-spicata','asclepias-tuberosa','rudbeckia-hirta','aquilegia-canadensis','symphyotrichum-novae-angliae'];
- for(let x=-30,i=0;x<=54;x+=4.4,i++)if(x<fx0-1.5||x>fx1+1.5)grow(blooms[i%blooms.length],x,rear0+0.9);
+ grow('cercis-canadensis',fx0-1,fall.zFt+1);grow('cercis-canadensis',fx1+1,fall.zFt+1);
+ // Flowering layer: the rear bed's front row turns to Ontario-native bloomers (swapped in place, so the design
+ // stays inside the public design-link size).
+ const blooms=['echinacea-purpurea','monarda-fistulosa','rudbeckia-hirta'];
+ let k=0;
+ objs=objs.map(o=>{if(o.kind!=='plant'||Math.abs(o.zIn/12-(rear0+1.5))>0.3||!['hosta','hydrangea-arborescens-annabelle'].includes(o.speciesRecord?.id??''))return o;try{const q=newLandscapePlant(blooms[k++%blooms.length],o.id,o.xIn,o.zIn);return {...q,rotationDeg:o.rotationDeg,speciesRecord:structuredClone(q.speciesRecord!)};}catch{return o;}});
  objs=[...objs,...extra];
  data.landscapeObjects=objs;
  // Spa light: one more niche light in the spa's house-side wall.

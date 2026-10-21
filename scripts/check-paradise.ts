@@ -17,3 +17,7 @@ assert.deepEqual(light.filter(x=>!/within 3 m of the pool\. Use a GFCI/.test(x))
 assert.deepEqual(showcaseSampleIssues({...d,pools:[d.pools![0]]}).filter(x=>!x.startsWith('The lighting plan is not the best-practice set')),[]);
 assert.equal(d.pools!.length,2);assert.ok(d.yardFeatures!.some(f=>f.kind==='water-feature'));
 console.log('paradise ok: objects',d.landscapeObjects!.length);
+const {linkDesignJson}=await import('../src/features/deckcraft/designLinkSpecies');
+const {MAX_PUBLIC_DESIGN_BYTES}=await import('../src/features/deckcraft/designPersistence');
+const bytes=new TextEncoder().encode(linkDesignJson(d)).length;
+assert.ok(bytes<MAX_PUBLIC_DESIGN_BYTES,`the paradise design link is ${bytes} bytes, over the ${MAX_PUBLIC_DESIGN_BYTES} public limit`);
