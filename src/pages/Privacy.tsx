@@ -27,7 +27,7 @@ export default function Privacy() {
               <li><strong className="text-brand-bonewhite">Marketing attribution:</strong> referring URL, landing page, and click-tracking parameters (utm_source, utm_medium, utm_campaign, gclid, fbclid) so we can measure which channels send qualified leads.</li>
               <li><strong className="text-brand-bonewhite">Site behavior:</strong> pages visited, time on each page, scrolls, clicks, and visitor session recordings via Microsoft Clarity. We use this to improve the site, never to identify you personally.</li>
               <li><strong className="text-brand-bonewhite">Analytics identifiers:</strong> Google Analytics 4 client ID and Meta Pixel browser ID for aggregate measurement.</li>
-              <li><strong className="text-brand-bonewhite">AI requests:</strong> the words you type into our chat assistant or the deck designer's AI features and, for the deck designer, your design (its layout, sizes, materials and any site measurements you've added).</li>
+              <li><strong className="text-brand-bonewhite">AI requests:</strong> the messages you type into our chat assistant and, in the deck designer's AI features, your request and your design (its layout, sizes, materials, any site measurements you've added, your budget and goals if you give them, and its estimate).</li>
             </ul>
 
             <h2 className="font-display text-2xl text-brand-bonewhite mt-12 mb-4">How we use your information</h2>
@@ -47,8 +47,9 @@ export default function Privacy() {
               <li><strong className="text-brand-bonewhite">Google (Analytics & Ads)</strong> — measures site traffic and ad conversions.</li>
               <li><strong className="text-brand-bonewhite">Meta (Facebook/Instagram)</strong> — measures ad conversions via the Meta Pixel.</li>
               <li><strong className="text-brand-bonewhite">Microsoft Clarity</strong> — anonymous heatmaps and session recordings for site improvement.</li>
-              <li><strong className="text-brand-bonewhite">Anthropic</strong> — runs the deck designer's AI features (the AI site designer and the design assistant). It processes the words you type and your design in the United States to suggest changes. Anthropic's commercial terms do not allow it to train its models on this data.</li>
-              <li><strong className="text-brand-bonewhite">DeepSeek</strong> — runs our website chat assistant. It processes the messages you type there to write replies. DeepSeek is based in China; under its privacy policy it stores this data in China and may use it to improve its services. Please don't share sensitive personal information in the chat.</li>
+              <li><strong className="text-brand-bonewhite">Anthropic</strong> — runs the deck designer's AI features (the AI site designer and the design assistant). It receives your request and your design to suggest changes; we remove email addresses, phone numbers and street addresses from your words before they are sent. Anthropic's commercial terms do not allow it to train its models on this data. It may process this data outside Canada.</li>
+              <li><strong className="text-brand-bonewhite">ElevenLabs</strong> — runs our website chat assistant, the same assistant that answers our phone. It processes the messages you type to write replies, and can book a consultation or take a message into our CRM. If you give your name, phone number or email in the chat, those go to it too; please don't share other sensitive information there. It may process this data outside Canada.</li>
+              <li><strong className="text-brand-bonewhite">DeepSeek</strong> — answers the chat only when ElevenLabs can't be reached. DeepSeek is based in China; under its privacy policy it stores this data in China and may use it to improve its services.</li>
               <li><strong className="text-brand-bonewhite">Our internal CRM</strong> — stores leads and project records for our team only.</li>
             </ul>
 
@@ -57,7 +58,7 @@ export default function Privacy() {
               We use cookies and similar technologies for essential site functionality, analytics, and marketing measurement. You can disable cookies via your browser settings; some features (forms, attribution) may not work fully if you do.
             </p>
             <p>
-              The deck designer's AI features set one first-party cookie, <code>dc_ai</code> (a random ID kept for up to a year), and keep a one-way hash of your IP address, only to limit how many AI requests each visitor can make per day.
+              The deck designer's AI features set one first-party cookie, <code>dc_ai</code> (a random ID kept for up to a year), and keep a one-way hash of your IP address. We use them only to limit how many AI requests each visitor can make per day and to return your AI results to you.
             </p>
 
             <h2 className="font-display text-2xl text-brand-bonewhite mt-12 mb-4">Your rights</h2>
