@@ -2,7 +2,8 @@ import type {GableAccent,HouseConfig,HouseFinish} from './types';
 import {houseTrimColors,resolveWallFinish,type OpeningColourSource,type WallFinish} from './houseFinishes';
 
 /**
- * Per-wall and per-block house finishes (appearance only, never priced). Loaded with the 3D view and the exterior
+ * Per-wall and per-block house finishes (appearance only; brick or stone on a wall the deck fastens to blocks its ledger,
+ * which structuralReview.ts resolves on its own). Loaded with the 3D view and the exterior
  * studio, never with the page: the page only validates and keeps these fields (designPersistence.ts).
  *
  * A wall ('garage1-back'; 'main-front' faces the deck) takes its own finish, else its block's, else the whole

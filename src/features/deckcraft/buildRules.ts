@@ -8,18 +8,21 @@
  * Absent or 'legacy' keeps the rules every design saved before 2026-10-06 was quoted under. '2026-10' keeps that
  * takeoff (picture frame, stair guards, stock lengths) without the later structural review. '2026-10-struct' is the
  * rules for a design saved from 2026-10-08: the same takeoff, plus guard, beam, footing, snow, stair, post and ledger
- * checks. '2026-10-piers' is the current rules for a new design: that review, with a pier the review sizes past the
- * price book's pier priced at its own size.
+ * checks. '2026-10-piers' is that review, with a pier the review sizes past the price book's pier priced at its own size.
+ * '2026-10-walls' is the current rules for a new design (2026-10-21): the same, with the ledger decided by the cladding
+ * of the walls the deck fastens to (a wall's own finish, then its block's, then the house's), not the whole house's.
  * DEFAULT_DECK carries the current value, and parsing a save that has no value writes 'legacy' (designPersistence.ts),
  * so the `{...DEFAULT_DECK,...design}` spreads cannot upgrade an old save. Dependency-free on purpose: the pricing
  * worker imports it.
  */
-export type BuildRules = 'legacy' | '2026-10' | '2026-10-struct' | '2026-10-piers';
-export const BUILD_RULES: readonly BuildRules[] = ['legacy', '2026-10', '2026-10-struct', '2026-10-piers'];
-export const CURRENT_BUILD_RULES: BuildRules = '2026-10-piers';
+export type BuildRules = 'legacy' | '2026-10' | '2026-10-struct' | '2026-10-piers' | '2026-10-walls';
+export const BUILD_RULES: readonly BuildRules[] = ['legacy', '2026-10', '2026-10-struct', '2026-10-piers', '2026-10-walls'];
+export const CURRENT_BUILD_RULES: BuildRules = '2026-10-walls';
 /** True when the design uses the 2026-10 takeoff (picture frame, stair guards, stock lengths). Absent means legacy. */
 export const usesCurrentBuildRules = (d: { buildRules?: BuildRules }): boolean => !!d.buildRules && d.buildRules !== 'legacy';
 /** True only for a new design under the structural review. Saved '2026-10' and legacy designs stay on their old framing. */
-export const usesStructuralReview = (d: { buildRules?: BuildRules }): boolean => d.buildRules === '2026-10-struct' || d.buildRules === '2026-10-piers';
+export const usesStructuralReview = (d: { buildRules?: BuildRules }): boolean => d.buildRules === '2026-10-struct' || d.buildRules === '2026-10-piers' || d.buildRules === '2026-10-walls';
 /** True only for a new design: a pier the structural review sizes past the price book's pier is priced at that size. */
-export const usesSizedPiers = (d: { buildRules?: BuildRules }): boolean => d.buildRules === '2026-10-piers';
+export const usesSizedPiers = (d: { buildRules?: BuildRules }): boolean => d.buildRules === '2026-10-piers' || d.buildRules === '2026-10-walls';
+/** True only for a new design: the walls the deck fastens to, not the whole house, decide whether brick or stone blocks the ledger. */
+export const usesWallLedgerRule = (d: { buildRules?: BuildRules }): boolean => d.buildRules === '2026-10-walls';
