@@ -27,6 +27,8 @@ export interface LandscapeObject {
  /** Raised bed (beds only, 0–36 in): a level soil top at the lowest ground along the outline + raisedIn, never below
   * the highest ground inside − 2 in (raisedBeds.ts). Absent keeps the bed a finish layer draped on the ground. */
  raisedIn?:number;
+ /** Mass planting drift drawn inside the bed (landscapeDrift.ts). */
+ drift?:import('./landscapeDrift').BedDrift;
  /** What holds a raised bed's soil (requires raisedIn). A wall is a retaining-wall yard feature, linked by id. */
  edge?:LandscapeBedEdge;
 }
