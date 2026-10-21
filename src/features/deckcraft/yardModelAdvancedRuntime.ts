@@ -42,9 +42,9 @@ import type {YardBox,YardRole,YardFeatureModel,YardMember,YardExcavationRegion} 
 import {FLAGSTONE_CHIPS,FLAGSTONE_JOINT_DROP_IN,FLAGSTONE_THICKNESS_IN} from './flagstone';
 import {flagstoneLayout,flagstoneLocalOutline} from './flagstoneLayout';
 import {BOULDER_STONES} from './boulderStones';
-const CUBIC_FOOT_M3=.0283168466;
 import {GUILLOTINED_WALL,LIMESTONE_LB_PER_FT3} from './wallStones';
 import {STONE_JOINT_IN,STONE_LENGTH_IN,stoneCourseJoints} from './wallStoneCourses';
+const CUBIC_FOOT_M3=.0283168466;
 const SUPPORT_CLEARANCE_IN=1;
 const circle=(x:number,z:number,r:number):PlanPoint[]=>Array.from({length:32},(_,i)=>({x:x+Math.cos(i*Math.PI/16)*r,y:z+Math.sin(i*Math.PI/16)*r}));
 /** Cross-sections match the current footing/post model. The one-inch separation
