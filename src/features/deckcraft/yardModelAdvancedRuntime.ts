@@ -318,6 +318,18 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
     const natural=guillotined&&role==='wall-block',spans=natural?edges.map((_,seg)=>spanOf(seg)):undefined,runOf:number[]=[],naturalStones=new Map<number,[number,number,number,boolean,boolean][]>();
     if(spans){
      for(let seg=0;seg<edges.length;seg++){const a=seg?path[seg-1]:path[0],b=path[seg],c=path[seg+1],inLine=seg>0&&Math.abs((b.x-a.x)*(c.y-b.y)-(b.y-a.y)*(c.x-b.x))<1e-9*Math.hypot(b.x-a.x,b.y-a.y)*Math.hypot(c.x-b.x,c.y-b.y)&&(b.x-a.x)*(c.x-b.x)+(b.y-a.y)*(c.y-b.y)>0;runOf.push(curved?curveStarts[edges[seg]]:inLine?runOf[seg-1]:seg);}
+     // Corner bond: where two straight runs meet, the corner block (the other run's stone in this run's lane) goes whole to
+     // one run, the earlier on even courses and the later on odd ones, so the stone through the corner alternates legs and
+     // no joint runs up the corner. Arcs keep their mitres.
+     const bent=(seg:number)=>curved&&!!f.curves?.some(c=>c.edge===edges[seg]);
+     for(let seg=0;seg+1<edges.length;seg++){
+      const a=spans[seg],b=spans[seg+1];if(!a||!b||runOf[seg]===runOf[seg+1]||bent(seg)||bent(seg+1))continue;
+      const [own,other,ownSeg]=row%2?[b,a,seg+1]:[a,b,seg],corner=path[seg+1],sign=ownSeg===seg?1:-1,ux=spans[ownSeg]!.ux*sign,uy=spans[ownSeg]!.uy*sign,h=width/2;
+      const lane=[[-width,h],[3*width,h],[3*width,-h],[-width,-h]].map(([u,v])=>({x:corner.x+ux*u-uy*v,y:corner.y+uy*u+ux*v})),block=yardClip(other.zone,[lane],'intersection');
+      if(!block.length)continue;
+      own.zone=yardClip([...own.zone,...block]);other.zone=yardClip(other.zone,block,'difference');
+      for(const s of [own,other]){const along=s.zone.flat().map(v=>(v.x-s.p.x)*s.ux+(v.y-s.p.y)*s.uy);s.start=Math.min(...along);s.end=Math.max(...along);}
+     }
      const ref=coursePaths[0],refStations=[0];for(let seg=0;seg+1<ref.length;seg++)refStations.push(refStations.at(-1)!+Math.hypot(ref[seg+1].x-ref[seg].x,ref[seg+1].y-ref[seg].y));
      for(const first of new Set(runOf)){
       const facets=runOf.flatMap((r,seg)=>r===first?[seg]:[]),segs=facets.filter(seg=>spans[seg]);if(!segs.length)continue;
