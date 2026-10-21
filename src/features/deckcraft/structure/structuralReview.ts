@@ -67,7 +67,6 @@ export function footingDiameterIn(areaSqft:number,footingCount:number,data:Pick<
 }
 
 const isMasonry=(cladding:string)=>(MASONRY_CLADDINGS as readonly string[]).includes(cladding);
-const CONTACT_SIDE:Record<string,string>={front:'front',left:'left',right:'right',far:'back'};
 
 /**
  * The masonry cladding that blocks a ledger, if any. Saves before '2026-10-walls' read the whole house's cladding. A new
@@ -77,9 +76,9 @@ const CONTACT_SIDE:Record<string,string>={front:'front',left:'left',right:'right
 function blockingCladding(data:DeckData):{cladding:string;wall:boolean}|undefined{
   const h=getHouseConfig(data),rects=h.footprint?.rects??[];
   if(!usesWallLedgerRule(data)||!h.wallFinishes&&!rects.some(b=>b.finish))return isMasonry(h.cladding)?{cladding:h.cladding,wall:false}:undefined;
-  const walls=getHouseContact(data).contacts.map(c=>c.wall.includes('-')?c.wall:`${c.blockId}-${CONTACT_SIDE[c.wall]}`);
+  const walls=getHouseContact(data).contacts.map(c=>c.wall.includes('-')?c.wall:c.blockId+'-'+(c.wall==='far'?'back':c.wall));
   const cladding=(walls.length?walls:['main-front']).map(id=>h.wallFinishes?.[id]?.cladding??rects.find(b=>b.id===id.split('-')[0])?.finish?.cladding??h.cladding).find(isMasonry);
-  return cladding?{cladding,wall:true}:undefined;
+  return cladding&&{cladding,wall:true};
 }
 
 export function masonryCladding(data:DeckData):boolean{
