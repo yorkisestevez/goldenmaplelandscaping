@@ -1,5 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
-import {pickPlanTool} from './nav';
+import {openDesignerMode,pickPlanTool} from './nav';
 import {mkdirSync,writeFileSync,readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import * as THREE from 'three';
@@ -20,7 +20,8 @@ test.beforeEach(async({context,page})=>{
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.addInitScript(configuration=>localStorage.setItem('golden-maple.deck-studio.deck-only.v1',JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration})),fixture);
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&r.request().method()==='GET'?r.continue():r.fulfill({status:200,body:''}));
- await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready)).toBe(true);
+ // Select parts and the 3D selection tools are Designer Mode tools.
+ await openDesignerMode(page);
 });
 for(const v of [{name:'desktop',width:1440,height:1000,touch:false},{name:'phone',width:390,height:844,touch:true},{name:'tablet',width:768,height:1024,touch:true}])test.describe(`${v.name} shared selection`,()=>{
  test.use({viewport:{width:v.width,height:v.height},hasTouch:v.touch,isMobile:v.name==='phone'});

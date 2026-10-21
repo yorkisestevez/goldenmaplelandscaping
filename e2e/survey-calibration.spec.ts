@@ -1,5 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {jsPDF} from 'jspdf';
+import {openDesignTask} from './nav';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 const read=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.read());
 const ready=async(page:Page)=>expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
@@ -7,9 +8,8 @@ const saved=async(page:Page)=>expect(page.locator('[data-autosave-state="saved"]
 test.beforeEach(async({context})=>{await context.addInitScript('window.__name=(target,value)=>target;');await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&['GET','HEAD'].includes(r.request().method())?r.continue():r.fulfill({body:''}));});
 const surveyPdf=()=>{const pdf=new jsPDF();pdf.setDrawColor(0,0,0);pdf.line(30,40,130,40);return {name:'survey.pdf',mimeType:'application/pdf',buffer:Buffer.from(pdf.output('arraybuffer'))};};
 async function openSurvey(page:Page){
- await page.getByRole('button',{name:'Show project controls',exact:true}).click();
+ await openDesignTask(page,'Backyard');
  const survey=page.getByLabel('Survey file',{exact:true});
- if(!await survey.count())await page.getByRole('button',{name:'Elevations & build',exact:true}).click();
  await expect(survey).toBeVisible();return survey;
 }
 /** Clicks a point given in survey-image pixels, mapped through the letterboxed SVG's screen matrix. */

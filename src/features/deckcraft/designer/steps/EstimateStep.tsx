@@ -6,6 +6,7 @@ import type {DeckData} from '../../types';
 import {Field,type Update} from '../fields';
 import PriceLedger from '../PriceLedger';
 import {isBuilderQuote,type Ledger} from '../priceLedgerModel';
+import {useDesignerMode} from '../designerMode';
 import './estimateStep.css';
 
 export interface EstimateStepProps{
@@ -19,11 +20,12 @@ export interface EstimateStepProps{
 
 /** The Proposal & files section: close pack (options → share → proposal → send), crew export, and contractor details. */
 export default function EstimateStep({data,update,estimate,ledger,material,railingName,designFacts,wrapped,reviewFlags,saved,preparing,pdfBusy,crewBusy,customer,onSend,onOpenProposal,onDownloadPdf,onSaveJSON,onDownloadSummary,onExport,onOpenPermit,onCrewPack,onOpenJobs,onWarmShare}:EstimateStepProps){
+  const designer=useDesignerMode();
   return <>
     <p>Your selected dimensions, materials, stairs, extras and backyard are priced using Golden Maple’s existing price book. Priced lines are planning allowances until a supplier or builder quote is recorded; products and work without a rate are listed for a quote.</p>
     <div className="dd-summary"><strong>{data.width} × {data.length} ft · {shapeWords(data,wrapped)}</strong><span>{material.name} · {data.deckingColor}</span><span>{data.stairFlights} stair flight(s) · {railingName} railing</span>{designFacts.map(fact=><span key={fact}>{fact}</span>)}</div>
     <PriceLedger ledger={ledger} variant="full"/>
-    {!customer&&<p className="dd-note">Owners: use <strong>Review quote costs</strong> on the price bar to edit material markup, installation labour, and priced material lines.</p>}
+    {designer&&!customer&&<p className="dd-note">Owners: use <strong>Review quote costs</strong> on the price bar to edit material markup, installation labour, and priced material lines.</p>}
 
     <section className="dd-close-pack" aria-labelledby="dd-close-pack-title">
       <h3 id="dd-close-pack-title">Close this design</h3>
