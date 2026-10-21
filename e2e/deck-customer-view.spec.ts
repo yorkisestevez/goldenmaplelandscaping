@@ -13,7 +13,7 @@ test('a direct customer-view link hides the contractor details',async({page,cont
  await page.goto('/deck-designer/?view=customer');
  await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  await expect(page.locator('.deck-designer')).toHaveAttribute('data-customer','true');
- await page.getByRole('button',{name:'Show project controls',exact:true}).click();
+ await page.getByRole('button',{name:'Show all options',exact:true}).click();
  const nav=page.getByRole('navigation',{name:'Design tasks'});
  await nav.locator('summary').filter({hasText:/^Build & landscape$/}).click();await nav.getByRole('button',{name:'Privacy, skirting & extras',exact:true}).click();
  const advanced=page.locator('#dd-section-extras-body .dd-advanced');
@@ -28,7 +28,7 @@ test('the designer without the customer view keeps the contractor details',async
  await page.goto('/deck-designer/');
  await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  await expect(page.locator('.deck-designer')).not.toHaveAttribute('data-customer');
- await page.getByRole('button',{name:'Show project controls',exact:true}).click();
+ await page.getByRole('button',{name:'Show all options',exact:true}).click();
  const nav=page.getByRole('navigation',{name:'Design tasks'});
  await nav.locator('summary').filter({hasText:/^Build & landscape$/}).click();await nav.getByRole('button',{name:'Privacy, skirting & extras',exact:true}).click();
  await expect(page.locator('#dd-section-extras-body .dd-advanced').first()).toBeVisible();

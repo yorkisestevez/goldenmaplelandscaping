@@ -12,12 +12,15 @@ import {
   CREW_DAY_PERSON_HOURS,
   DEFAULT_CREW_MEMBERS,
   DEFAULT_PERSON_HOUR_RATE,
+  HARDSCAPE_PERSON_HOUR_RATE,
+  scopePersonHourRate,
   crewHoursNote,
   crewManHours,
   quoteCostFromCrewHours,
 } from '../src/features/deckcraft/designer/quoteLabourHours';
 import {readFileSync} from 'node:fs';
 import {CONFIRMED_RATES,unconfirmedRates} from '../src/features/deckcraft/rateConfidence';
+import baseline from '../src/data/engine-baseline.json';
 
 let n=0;
 const ok=(v:unknown,s:string)=>{assert.ok(v,s);n++;};
@@ -59,7 +62,15 @@ const rates=unconfirmedRates();
 ok(CONFIRMED_RATES.some(r=>r.id==='medallion-labour'),'Rate register confirms medallion labour man-hours default');
 ok(CONFIRMED_RATES.some(r=>r.id==='accent-board-labour'),'Rate register confirms accent labour man-hours default');
 
+// Hardscape scopes (yard rows) default to the $2,800 hardscape crew day ÷ 27, deck scopes to the $3,700 deck crew day.
+near(HARDSCAPE_PERSON_HOUR_RATE,Math.round(baseline.facts.crewDayRateHardscape/27*100)/100,'Hardscape person-hour rate is $2,800 ÷ 27');
+near(HARDSCAPE_PERSON_HOUR_RATE,103.7,'That is CAD 103.70 an hour');
+ok(scopePersonHourRate(scope!)===DEFAULT_PERSON_HOUR_RATE,'A deck scope defaults to the deck person-hour rate');
+const yard=deckReleaseData({...structuredClone(DEFAULT_DECK),yardFeatures:[{id:'sw',kind:'retaining-wall',name:'Wall',enabled:true,xFt:0,zFt:40,widthFt:20,depthFt:1,heightIn:30,rotationDeg:0,productId:'segmental-concrete',color:'#999999'}]});
+const yardScope=quoteScopeReview(yard,calculateDeckReleaseEstimate(yard)).scopes.find(s=>s.rows.every(r=>r.sectionTitle.startsWith('Yard · ')));
+ok(!!yardScope&&scopePersonHourRate(yardScope)===HARDSCAPE_PERSON_HOUR_RATE,'A yard scope defaults to the hardscape person-hour rate');
 const panel=readFileSync(new URL('../src/features/deckcraft/designer/QuoteReviewPanel.tsx',import.meta.url),'utf8');
 ok(panel.includes("basis:'total'|'unit'|'crew'")&&panel.includes('Crew members × hours')&&panel.includes('quoteCostFromCrewHours'),'Quote Review exposes the crew-hours entry basis');
+ok(panel.includes('scopePersonHourRate(next)')&&panel.includes('fresh(first?scopePersonHourRate(first):undefined)'),'Quote Review starts a scope at its own crew-day rate');
 
 console.log(`DECK QUOTE LABOUR HOURS OK — ${n} checks.`);

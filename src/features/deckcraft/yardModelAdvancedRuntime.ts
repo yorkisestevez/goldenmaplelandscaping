@@ -39,6 +39,12 @@ import {joinPavingField,rootFrame,rowGrid,sharePaver,type PavingField} from './p
 
 import {registerAdvancedYardRuntime,yardSignedArea,yardArea,yardClip,yardSolidCells,projectedYardPavers,YARD_PAVER_BUDGET,yardRectangle as rectangle,yardCentroid as centroid,yardPaverProfiles as profiles,yardStockFaceSqft as stockFaceSqft} from './yardModel';
 import type {YardBox,YardRole,YardFeatureModel,YardMember,YardExcavationRegion} from './yardModel';
+import {FLAGSTONE_CHIPS,FLAGSTONE_JOINT_DROP_IN,FLAGSTONE_THICKNESS_IN} from './flagstone';
+import {flagstoneLayout,flagstoneLocalOutline} from './flagstoneLayout';
+import {BOULDER_STONES} from './boulderStones';
+const CUBIC_FOOT_M3=.0283168466;
+import {GUILLOTINED_WALL,LIMESTONE_LB_PER_FT3} from './wallStones';
+import {STONE_JOINT_IN,STONE_LENGTH_IN,stoneCourseJoints} from './wallStoneCourses';
 const SUPPORT_CLEARANCE_IN=1;
 const circle=(x:number,z:number,r:number):PlanPoint[]=>Array.from({length:32},(_,i)=>({x:x+Math.cos(i*Math.PI/16)*r,y:z+Math.sin(i*Math.PI/16)*r}));
 /** Cross-sections match the current footing/post model. The one-inch separation
@@ -153,7 +159,7 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
   let finishedProblem='';try{validateYardFinishedSettings(f);}catch(error){finishedProblem=error instanceof Error?error.message:'Invalid finished levels.';}
   const supplierProblem=finishedProblem||hardscapeProblem(f)||wallConstructionProblem(f);if(supplierProblem){warnings.push(`${f.name}: ${supplierProblem} Excluded until revised.`);features.push({config:f,footprints:[],topIn:0,boxes:[],members:[],warnings:[supplierProblem],quantities:{areaSqft:0},excluded:true,quoteRequired:true});continue;}
   if(f.outline||f.wallPath){const problem=f.kind==='patio'&&f.wallPath||f.kind==='retaining-wall'&&f.outline||f.kind==='water-feature'?'The shape does not match this feature.':yardShapeProblem(f.kind as 'patio'|'retaining-wall',f.outline??f.wallPath);if(problem){warnings.push(`${f.name}: ${problem} Excluded until revised.`);features.push({config:f,footprints:[],topIn:0,boxes:[],members:[],warnings:[problem],quantities:{areaSqft:0},excluded:true,quoteRequired:true});continue;}}
-  const paverThickness=(hardscapeSelection(f)?.unit.heightMm??PAVER_BRANDS.find(p=>p.id===f.productId)?.thicknessMm??60)/25.4;
+  const paverThickness=f.flagstone?FLAGSTONE_THICKNESS_IN:(hardscapeSelection(f)?.unit.heightMm??PAVER_BRANDS.find(p=>p.id===f.productId)?.thicknessMm??60)/25.4;
   const supplier=hardscapeSelection(f),capDepth=supplier?.cap?supplier.cap.lengthMm/25.4:f.depthFt*12+2;
   // A seat wall stands on a patio's paving only when its whole base course lies on that patio (seatWallPatio): the
   // patio's top is then its ground (no survey, no dig), and it builds to its own seat height over the paving whatever
@@ -169,7 +175,7 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
    budgetExcludedIds.push(f.id);warnings.push(message);features.push({config:f,footprints:[],topIn:grade+f.heightIn,boxes:[],members:[],warnings:[message],quantities:{areaSqft:0,paverAreaSqft:0,paverPieces:0},excluded:true,quoteRequired:true,exclusionReason:'paver-budget'});continue;
   }
   const wallPath=f.kind==='retaining-wall'?yardWallPath(f):[],construction=f.kind==='retaining-wall'?wallConstructionForPath(wf,grade,wallPath,gradeAt,site,!!padPlane):undefined;
-  const wallRawStock=construction?construction.count*(Math.ceil(pathRun(wallPath)/(supplier?supplier.unit.widthMm/25.4:f.productId==='armour-stone'?36:18))+(f.wallPath?.length??2)*2):0;
+  const wallRawStock=construction?construction.count*(Math.ceil(pathRun(wallPath)/(supplier?supplier.unit.widthMm/25.4:f.productId==='armour-stone'?36:f.productId===GUILLOTINED_WALL?STONE_LENGTH_IN.min:18))+(f.wallPath?.length??2)*2):0;
   if(construction&&(construction.count>256||wallRawStock>20000)){const message=`${f.name}: finished/ground elevation difference exceeds the wall geometry budget (256 courses or 20,000 raw stock pieces). Confirm the project datum and wall levels; construction quantities remain pending.`;warnings.push(message);features.push({config:f,footprints:[],topIn:construction.top,boxes:[],members:[],warnings:[message],quantities:{areaSqft:0,wallGeometryPending:1},excluded:true,quoteRequired:true,exclusionReason:'wall-budget'});continue;}
   const coursePaths=construction?Array.from({length:construction.count},(_,row)=>wallCoursePath(wallPath,row*construction.setbackPerCourseIn)):[],original=construction?yardClip(coursePaths.flatMap(path=>yardPathEnvelope(path,d))):yardFeatureOutline(f),reinforcedEnvelope=construction?yardClip([...yardPathEnvelope(wallPath,Math.max(d,supplier?.cap?capDepth:d)+12),...yardPathEnvelope(coursePaths.at(-1)!,Math.max(d,supplier?.cap?capDepth:d)+12),...yardPathBackStrip(wallPath,d/2,Math.max(d/2+construction.drainageDepthIn+12,-d/2+construction.lengthIn)+construction.maxSetbackIn)]):[],envelope=construction?reinforcedEnvelope:f.kind==='retaining-wall'&&f.wallPath?yardClip([...yardPathEnvelope(wallPath,Math.max(d,supplier?.cap?capDepth:d)+12),...yardPathBackStrip(wallPath,d/2,d/2+24)]):f.kind==='retaining-wall'?[rectangle(x-s*9,z+c*9,w+12,Math.max(d,supplier?.cap?capDepth:d)+30,a)]:f.kind==='water-feature'?[rectangle(x,z,w+12,d+12,a)]:sloped?yardClip([...original,...original.map(p=>p.map(v=>({x:v.x+patioPlane.x*(paverThickness+1+baseline.facts.baseDepthIn)/slopeScale,y:v.y+patioPlane.z*(paverThickness+1+baseline.facts.baseDepthIn)/slopeScale}))) ]):original,overlap=yardClip(padPlane?original:envelope,f.kind==='patio'||padPlane?pavingOccupied:occupied,'intersection'),localWarnings:string[]=[];
   const pendingFoundationHit=!!deckModel&&(data.siteModel||data.terrainConfig)&&yardArea(yardClip(envelope,deckModel.foundationSupports.filter(p=>p.status==='coverage-pending').map(p=>rectangle(p.x,p.z,12+2*SUPPORT_CLEARANCE_IN,12+2*SUPPORT_CLEARANCE_IN)),'intersection'))>.001;
@@ -197,7 +203,7 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
   const model:YardFeatureModel={config:f,footprints,topIn:f.kind==='patio'?planeAt(patioPlane,x,z):grade,...(sloped?{topPlane:patioPlane}:{}),boxes:[],members:[],warnings:localWarnings,quantities:{areaSqft:yardArea(footprints)},excluded,supportClearances:supports};features.push(model);
   if(excluded){warnings.push(...localWarnings);continue;}
   reservedPavers+=projectedPavers;
-  const paving=f.kind==='patio'?joinPavingField(pavingFields,f,patioPlane,original,footprints):undefined,joined=paving&&paving.root!==f?rootFrame(paving,sloped):undefined;
+  const paving=f.kind==='patio'&&!f.flagstone?joinPavingField(pavingFields,f,patioPlane,original,footprints):undefined,joined=paving&&paving.root!==f?rootFrame(paving,sloped):undefined;
   if(joined)model.pavingRootId=paving!.root.id;
   occupied=yardClip([...occupied,...(f.kind==='patio'?footprints:envelope)]);
   const finishEnvelope=padPlane?[]:f.pavingInterface&&construction?yardClip([...coursePaths.flatMap(path=>yardPathEnvelope(path,d+2*f.pavingInterface!.jointIn)),...yardPathEnvelope(coursePaths.at(-1)!,Math.max(d,capDepth)+2*f.pavingInterface.jointIn)]):envelope;
@@ -222,13 +228,14 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
   }else if(f.kind==='patio'){
    const product=PAVER_BRANDS.find(p=>p.id===f.productId),spec=profiles[f.productId as keyof typeof profiles];
    const thick=paverThickness,base=baseline.facts.baseDepthIn,top=model.topIn,planArea=model.quantities.areaSqft,area=planArea*slopeScale;
-   if(!product)localWarnings.push(`${supplier?`${supplier.product.brand} ${supplier.product.name}`:'Unknown paver selection'}: supply and installation need a product-specific quote.`);
+   if(!product&&!f.flagstone)localWarnings.push(`${supplier?`${supplier.product.brand} ${supplier.product.name}`:'Unknown paver selection'}: supply and installation need a product-specific quote.`);
    model.sourceUrl=supplier?.product.sourceUrl??spec?.sourceUrl;
-   localWarnings.push('Paver module dimensions follow the referenced family. Confirm the exact SKU, colour, laying-pattern mix, joints and supplier pack quantities before ordering.');
+   if(!f.flagstone)localWarnings.push('Paver module dimensions follow the referenced family. Confirm the exact SKU, colour, laying-pattern mix, joints and supplier pack quantities before ordering.');
    if(spec?.illustrative)localWarnings.push('Rosebel has irregular interlocking edges: the rectangular module envelopes are illustrative, not production cut templates.');
-   for(const p of yardSolidCells(footprints)){add('base',p,top-thick-1,base,'#8c8a7c');add('bedding',p,top-thick,1,'#c5bda4');}
+   for(const p of yardSolidCells(footprints)){add('base',p,top-thick-1,base,'#8c8a7c');add('bedding',p,f.flagstone?top-FLAGSTONE_JOINT_DROP_IN:top-thick,f.flagstone?thick+1-FLAGSTONE_JOINT_DROP_IN:1,f.flagstone?FLAGSTONE_CHIPS[f.flagstone.jointColour]:'#c5bda4');}
    const inlayValidationFootprints=pools.length?yardClip([...footprints,...yardClip(original,poolExclusions,'intersection')]):footprints;
-   const plans=patioInlayPlans(f,inlayValidationFootprints),valid=plans.filter(p=>p.status==='ok'),field=yardClip(footprints,valid.map(p=>p.outline),'difference');
+   if(f.flagstone&&f.inlays?.length)localWarnings.push(`${f.name}: inlays are not laid in natural flagstone; their saved outlines are kept.`);
+   const plans=f.flagstone?[]:patioInlayPlans(f,inlayValidationFootprints),valid=plans.filter(p=>p.status==='ok'),field=yardClip(footprints,valid.map(p=>p.outline),'difference');
    for(const p of plans.filter(p=>p.status!=='ok'))localWarnings.push(`${p.inlay.name}: ${p.message}`);
    const laySupplier=(zone:YardFeature,mask:PlanPoint[][],inlayId?:string)=>{const sel=hardscapeSelection(zone)!,grid=inlayId?undefined:joined,lay=grid?paving!.root:zone,put=grid?grid.tilt:tilt;const za=lay.rotationDeg*Math.PI/180,zc=Math.cos(za),zs=Math.sin(za),before=model.boxes.length;
     // A patio joining another's paving is laid on that patio's grid (pavingJoin.ts), over its own paving only.
@@ -243,7 +250,17 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
     const stock=laidStones(model.boxes.slice(before)),stockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);model.pavingZones??=[];model.pavingZones.push({feature:zone,areaSqft:yardArea(mask)*slopeScale,stockAreaSqft,...(inlayId?{inlayId}:{})});
     model.stockSchedule??=[];model.stockSchedule.push(...sel.finish.units.flatMap(u=>{const pieces=stock.filter(b=>b.stockUnitId===u.id).length;return pieces?[{unitId:u.id,widthMm:u.widthMm,lengthMm:u.lengthMm,heightMm:u.heightMm,pieces,...(inlayId?{productId:zone.productId,inlayId}:{})}]:[];}));
    };
-   if(supplier){
+   // Natural flagstone (flagstoneLayout.ts): irregular stones cut to fit, one joint apart, each its own 2 in slab.
+   let flagstoneFace=0;
+   const layFlagstone=(spec:NonNullable<YardFeature['flagstone']>)=>{const colour=BOULDER_STONES.find(b=>b.id===spec.stone)!.colour;
+    // A sloped patio is laid in its own (stock) plane and tilted onto the slope, so stones cover the whole sloped face.
+    const local=sloped?original.map(ring=>ring.map(p=>{const q=untiltStockPoint(p,patioPlane,stockOrigin),dx=q.x-x,dz=q.y-z;return {x:c*dx+s*dz,y:-s*dx+c*dz};})):flagstoneLocalOutline(f);
+    for(const piece of flagstoneLayout(local,f.id,spec.jointIn)){const unitId=`${f.id}-flag-${piece.id}`,contours=yardClip([piece.polygon.map(p=>tilt({x:x+c*p.x-s*p.y,y:z+s*p.x+c*p.y}))],field,'intersection');let fragment=0;
+     for(const cell of yardSolidCells(contours)){add('paver',cell,top,thick,colour);const b=model.boxes.at(-1)!;b.unitId=unitId;b.naturalStone=true;b.stockAreaSqft=yardArea([piece.polygon]);if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}
+     flagstoneFace+=yardArea(contours)*slopeScale;}
+   };
+   if(f.flagstone)layFlagstone(f.flagstone);
+   else if(supplier){
     laySupplier(f,field);
     const recipe=supplier.finish.patterns.find(p=>p.id===f.hardscape!.patternId);if(recipe?.layout.installationJointMm!==undefined)localWarnings.push(`Manufacturer diagram uses nominal stock modules; the supplier specifies ${recipe.layout.installationJointMm} mm installation joints. Installed module spacing and pack quantities need confirmation; this diagram is not an installation joint schedule.`);localWarnings.push(recipe?`Manufacturer recipe ${recipe.name}: documented units and repeat coordinates retained. Nominal module pitch follows ${recipe.sourceUrl}; confirm actual supplied dimensions and joint tolerances before ordering.`:`Selected stock ${supplier.unit.widthMm} Ã— ${supplier.unit.lengthMm} Ã— ${supplier.unit.heightMm} mm; ${f.hardscape!.jointMm} mm joints are added to the module. The contractor pattern uses this single stock size; supplier multi-size recipes remain in the pattern library.`);
     if(!rectangularUnit(supplier.unit)&&['herringbone','basket-weave'].includes(f.hardscape!.patternId))localWarnings.push('Legacy rectangular envelope layout retained from the saved design; choose a compatible shaped bond or verified supplier recipe.');
@@ -264,6 +281,15 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
    for(const p of valid){const mask=pools.length?yardClip([p.outline],footprints,'intersection'):[p.outline];if(mask.length)laySupplier(patioInlayFeature(f,p.inlay),mask,p.inlay.id);if(pools.length&&yardArea(mask)<yardArea([p.outline])-.001)localWarnings.push(`${p.inlay.name}: the pool cuts this inlay; only the remaining paving is installed and ordered. Its saved outline is preserved.`);localWarnings.push(`${p.inlay.name}: custom inlay cutting, setting and waste require a builder quote; this is a cut-paver design, not a manufactured medallion kit.`);}
    model.quantities={...model.quantities,planAreaSqft:planArea,surfaceAreaSqft:area,paverPieces:laidStones(model.boxes).length,baseYd3:area*base/324,beddingYd3:area/324,paverAreaSqft:area};
    if(supplier||valid.length){const stock=laidStones(model.boxes);model.quantities.paverStockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);}
+   if(f.flagstone){const spec=f.flagstone,stone=BOULDER_STONES.find(b=>b.id===spec.stone)!,tonnes=flagstoneFace*thick/12*CUBIC_FOOT_M3*stone.densityTm3,chips=(area-flagstoneFace)*(thick-FLAGSTONE_JOINT_DROP_IN)/324,line=(id:string,label:string,quantity:number,unit:string,note:string)=>({id:`${f.id}-flagstone${id}`,label:`${f.name}: ${label}`,amountCents:null,quantity,unit,featureIds:[f.id],note});
+    Object.assign(model.quantities,{flagstoneFaceSqft:flagstoneFace,flagstoneTonnes:tonnes,jointChipYd3:chips});
+    model.assemblyQuoteScopes=[
+     line('','natural flagstone supply, cut-to-fit and setting',area,'sq ft',`${stone.name} flagstone about ${thick} in thick, ${laidStones(model.boxes).length} stones cut to fit with even ${spec.jointIn} in joints on a 1 in chip bed. Confirm the stone, cutting waste, delivery and setting; no price is assumed.`),
+     line('-weight','flagstone stone weight (estimate)',tonnes,'tonne',`Stone face ${flagstoneFace.toFixed(1)} sq ft × ${thick} in × a typical ${stone.name.toLowerCase()} density of ${stone.densityTm3} t/m³ (AusIMM bulk density table), before cutting waste. Confirm against the supplier's coverage per tonne.`),
+     line('-joints',`${spec.jointColour} permeable joint chips`,chips,'cu yd',`${spec.jointColour[0].toUpperCase()+spec.jointColour.slice(1)} permeable chips fill the ${spec.jointIn} in joints to ${FLAGSTONE_JOINT_DROP_IN} in below the stone, compacted and stabilised. Confirm the product and bag count.`),
+     line('-bed','1 in chip setting bed',area/324,'cu yd','Chips screeded 1 in over the base; each stone is worked into them until the tops are flush.'),
+     line('-base','¾ in clear stone base',area*base/324,'cu yd',`Open-graded ¾ in clear stone, ${base} in compacted, under the chip bed. Shared excavation and disposal are counted once with the rest of the yard.`),
+    ];}
    const formation=top-thick-1-base,formationPlane=belowPlane(patioPlane,thick+1+base),formationPolys=yardClip(sloped?footprints.map(p=>p.map(v=>({x:v.x+patioPlane.x*(thick+1+base)/slopeScale,y:v.y+patioPlane.z*(thick+1+base)/slopeScale}))):footprints,poolExclusions,'difference');let fill=formationPolys;
    if(site)fill=[]; // Dedicated site fill is integrated against every proposed face below.
    else if(terrain.slopePct){const z0=(formation-terrain.elevationIn)/(terrain.slopePct/100),lo=terrain.slopePct>0?-1e7:z0,hi=terrain.slopePct>0?z0:1e7;fill=yardClip(fill,[[{x:-1e7,y:lo},{x:1e7,y:lo},{x:1e7,y:hi},{x:-1e7,y:hi}]],'intersection');}
@@ -305,18 +331,57 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
    // Mesh facets on an arc share a stock schedule. Real control corners keep
    // separate cut units; a tessellation boundary is not a new purchased block.
    const curveStarts:number[]=[];if(f.curves?.length){const controls=f.wallPath??[{x:-w/2,y:0},{x:w/2,y:0}];let searchFrom=0;for(const control of controls){const point={x:x+c*control.x-s*control.y,y:z+s*control.x+c*control.y},index=wallPath.findIndex((p,i)=>i>=searchFrom&&Math.hypot(p.x-point.x,p.y-point.y)<1e-5);if(index>=0){curveStarts.push(index);searchFrom=index+1;}}}
+   const guillotined=f.productId===GUILLOTINED_WALL,stoneRuns=new Map<number,ReturnType<typeof stoneCourseJoints>>();
    const lay=(role:'wall-block'|'wall-cap',path:PlanPoint[],elevation:number,height:number,unitLength:number,row:number)=>{
     const width=role==='wall-cap'?capDepth:d,zones=zonesFor(path,-width/2,width/2,yardPathEnvelope(path,width)),curved=curveStarts.length>=2,stations=[0],curvePieces=new Map<string,YardBox[]>();for(let seg=0;seg+1<path.length;seg++)stations.push(stations.at(-1)!+Math.hypot(path[seg+1].x-path[seg].x,path[seg+1].y-path[seg].y));
-    let controlEdge=0;for(let seg=0;seg+1<path.length;seg++){
-     while(curved&&controlEdge+1<curveStarts.length-1&&seg>=curveStarts[controlEdge+1])controlEdge++;
-
-     const p=path[seg],q=path[seg+1],span=Math.hypot(q.x-p.x,q.y-p.y),ux=(q.x-p.x)/span,uy=(q.y-p.y)/span,angle=Math.atan2(uy,ux),zone=yardClip(zones[seg],role==='wall-cap'&&f.wallTopSteps?.length?yardClip(sections.flatMap((section,i)=>section.segment===seg&&Math.abs(section.topIn!-elevation)<1e-6?sectionMasks[i]:[])):scope(seg,role==='wall-cap'?elevation-cap+1e-7:elevation),'intersection'),along=zone.flat().map(v=>(v.x-p.x)*ux+(v.y-p.y)*uy);if(!along.length)continue;
-     const start=Math.min(...along),end=Math.max(...along),stagger=row%2&&f.hardscape?.patternId!=='stack-bond'?unitLength/2:0,station=curved?stations[seg]-stations[curveStarts[controlEdge]]:0;let slot=curved?Math.floor((station+start+stagger)/unitLength):0;
-     for(let u=curved?slot*unitLength-stagger-station:start-stagger;u<end-.001;u+=unitLength,slot++){
-      const left=Math.max(start,u),right=Math.min(end,u+unitLength);if(right-left<=.05)continue;
-      const leftGap=curved&&!supplier&&Math.abs(left-u)<1e-6?.025:0,rightGap=curved&&!supplier&&Math.abs(right-u-unitLength)<1e-6?.025:0,centre=(left+leftGap+right-rightGap)/2,blank=rectangle(p.x+ux*centre,p.y+uy*centre,right-left-(curved?leftGap+rightGap:supplier?0:.05),width,angle),cuts=yardClip([blank],zone,'intersection');
+    const spanOf=(seg:number)=>{const p=path[seg],q=path[seg+1],span=Math.hypot(q.x-p.x,q.y-p.y),ux=(q.x-p.x)/span,uy=(q.y-p.y)/span,angle=Math.atan2(uy,ux),zone=yardClip(zones[seg],role==='wall-cap'&&f.wallTopSteps?.length?yardClip(sections.flatMap((section,i)=>section.segment===seg&&Math.abs(section.topIn!-elevation)<1e-6?sectionMasks[i]:[])):scope(seg,role==='wall-cap'?elevation-cap+1e-7:elevation),'intersection'),along=zone.flat().map(v=>(v.x-p.x)*ux+(v.y-p.y)*uy);return along.length?{p,ux,uy,angle,zone,start:Math.min(...along),end:Math.max(...along)}:undefined;};
+    const edges:number[]=[];for(let seg=0,edge=0;seg+1<path.length;seg++){while(curved&&edge+1<curveStarts.length-1&&seg>=curveStarts[edge+1])edge++;edges.push(edge);}
+    // A guillotined course is laid run by run (an arc's control edge, or straight segments in line, so a straight split
+    // such as a wall top step is not a joint). Stations are measured from course 0's run start, so every course meets
+    // the same joints however far along its own foundation step or mitre it starts. [u, length, slot, joint at left, joint at right].
+    const natural=guillotined&&role==='wall-block',spans=natural?edges.map((_,seg)=>spanOf(seg)):undefined,runOf:number[]=[],naturalStones=new Map<number,[number,number,number,boolean,boolean][]>();
+    if(spans){
+     for(let seg=0;seg<edges.length;seg++){const a=seg?path[seg-1]:path[0],b=path[seg],c=path[seg+1],inLine=seg>0&&Math.abs((b.x-a.x)*(c.y-b.y)-(b.y-a.y)*(c.x-b.x))<1e-9*Math.hypot(b.x-a.x,b.y-a.y)*Math.hypot(c.x-b.x,c.y-b.y)&&(b.x-a.x)*(c.x-b.x)+(b.y-a.y)*(c.y-b.y)>0;runOf.push(curved?curveStarts[edges[seg]]:inLine?runOf[seg-1]:seg);}
+     // Corner bond: where two straight runs meet, the corner block (the other run's stone in this run's lane) goes whole to
+     // one run, the earlier on even courses and the later on odd ones, so the stone through the corner alternates legs and
+     // no joint runs up the corner. Arcs keep their mitres.
+     const bent=(seg:number)=>curved&&!!f.curves?.some(c=>c.edge===edges[seg]);
+     for(let seg=0;seg+1<edges.length;seg++){
+      const a=spans[seg],b=spans[seg+1];if(!a||!b||runOf[seg]===runOf[seg+1]||bent(seg)||bent(seg+1))continue;
+      const [own,other,ownSeg]=row%2?[b,a,seg+1]:[a,b,seg],corner=path[seg+1],sign=ownSeg===seg?1:-1,ux=spans[ownSeg]!.ux*sign,uy=spans[ownSeg]!.uy*sign,h=width/2;
+      const lane=[[-width,h],[3*width,h],[3*width,-h],[-width,-h]].map(([u,v])=>({x:corner.x+ux*u-uy*v,y:corner.y+uy*u+ux*v})),block=yardClip(other.zone,[lane],'intersection');
+      if(!block.length)continue;
+      own.zone=yardClip([...own.zone,...block]);other.zone=yardClip(other.zone,block,'difference');
+      for(const s of [own,other]){const along=s.zone.flat().map(v=>(v.x-s.p.x)*s.ux+(v.y-s.p.y)*s.uy);s.start=Math.min(...along);s.end=Math.max(...along);}
+     }
+     const ref=coursePaths[0],refStations=[0];for(let seg=0;seg+1<ref.length;seg++)refStations.push(refStations.at(-1)!+Math.hypot(ref[seg+1].x-ref[seg].x,ref[seg+1].y-ref[seg].y));
+     for(const first of new Set(runOf)){
+      const facets=runOf.flatMap((r,seg)=>r===first?[seg]:[]),segs=facets.filter(seg=>spans[seg]);if(!segs.length)continue;
+      const base=(seg:number)=>stations[seg]-stations[first],refBase=(seg:number)=>refStations[seg]-refStations[first],facetAt=(s:number,at:(seg:number)=>number)=>facets.reduce((i,seg)=>s>=at(seg)?seg:i,facets[0]);
+      // This course's run stations to course 0's: by facet and fraction on an arc (a control edge the wall's curves bend),
+      // so concentric courses keep their angle and a battered arc's stones grow or shrink with its radius; on a straight
+      // run, even one split in line, shifted by how far along this course's run start sits from course 0's (a batter moves a corner).
+      const arc=curved&&!!f.curves?.some(c=>c.edge===edges[first]),next=path[first+1],length=Math.hypot(next.x-path[first].x,next.y-path[first].y),shift=((path[first].x-ref[first].x)*(next.x-path[first].x)+(path[first].y-ref[first].y)*(next.y-path[first].y))/length;
+      const toRef=arc?(s:number)=>{const i=facetAt(s,base);return refBase(i)+(s-base(i))*(refStations[i+1]-refStations[i])/(stations[i+1]-stations[i]);}:(s:number)=>s+shift;
+      const fromRef=arc?(s:number)=>{const i=facetAt(s,refBase);return base(i)+(s-refBase(i))*(stations[i+1]-stations[i])/(refStations[i+1]-refStations[i]);}:(s:number)=>s-shift;
+      // The course's own stretches along the run: a foundation step can stop it and start it again further along (a
+      // remnant under 24 in is one cut stone).
+      const stretches:[number,number][]=[];
+      for(const [a,b] of segs.flatMap(seg=>{const {p,ux,uy,zone}=spans[seg]!;return zone.map(ring=>{const along=ring.map(v=>(v.x-p.x)*ux+(v.y-p.y)*uy);return [base(seg)+Math.min(...along),base(seg)+Math.max(...along)] as [number,number];});}).sort((x,y)=>x[0]-y[0])){const last=stretches.at(-1);if(last&&a<=last[1]+.05)last[1]=Math.max(last[1],b);else stretches.push([a,b]);}
+      const run=stoneRuns.get(first)??stoneCourseJoints(`${f.id}:${first}`),lists=run(row,stretches.map(([a,b])=>[toRef(a),toRef(b)]));stoneRuns.set(first,run);
+      let slot=0;for(const joints of lists)for(let k=0;k+1<joints.length;k++,slot++){const a=fromRef(joints[k]),b=fromRef(joints[k+1]);for(const seg of segs){const {start,end}=spans[seg]!,u=a-base(seg);if(u<end-.001&&b-base(seg)>start)naturalStones.set(seg,[...naturalStones.get(seg)??[],[u,b-a,slot,k>0,k+2<joints.length]]);}}
+     }
+    }
+    for(let seg=0;seg+1<path.length;seg++){
+     const controlEdge=edges[seg],span=spans?spans[seg]:spanOf(seg);if(!span)continue;
+     const {p,ux,uy,angle,zone,start,end}=span,stagger=row%2&&f.hardscape?.patternId!=='stack-bond'?unitLength/2:0,station=curved?stations[seg]-stations[curveStarts[controlEdge]]:0;
+     const stones=natural?naturalStones.get(seg)??[]:[];
+     if(!natural){let slot=curved?Math.floor((station+start+stagger)/unitLength):0;for(let u=curved?slot*unitLength-stagger-station:start-stagger;u<end-.001;u+=unitLength,slot++)stones.push([u,unitLength,slot,true,true]);}
+     for(const [u,length,slot,jointLeft,jointRight] of stones){
+      const left=Math.max(start,u),right=Math.min(end,u+length);if(right-left<=.05)continue;
+      const leftGap=natural?(jointLeft&&Math.abs(left-u)<1e-6?STONE_JOINT_IN/2:0):curved&&!supplier&&Math.abs(left-u)<1e-6?.025:0,rightGap=natural?(jointRight&&Math.abs(right-u-length)<1e-6?STONE_JOINT_IN/2:0):curved&&!supplier&&Math.abs(right-u-length)<1e-6?.025:0,centre=(left+leftGap+right-rightGap)/2,blank=rectangle(p.x+ux*centre,p.y+uy*centre,right-left-(natural||curved?leftGap+rightGap:supplier?0:.05),width,angle),cuts=yardClip([blank],zone,'intersection');
       let textureX=p.x+ux*(u+unitLength/2),textureZ=p.y+uy*(u+unitLength/2),textureAngle=angle;if(curved){const target=stations[curveStarts[controlEdge]]+slot*unitLength-stagger+unitLength/2;let lo=curveStarts[controlEdge],hi=curveStarts[controlEdge+1]-1;while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(stations[mid]<=target)lo=mid;else hi=mid-1;}const begin=path[lo],finish=path[lo+1],length=Math.hypot(finish.x-begin.x,finish.y-begin.y),distance=target-stations[lo];textureX=begin.x+(finish.x-begin.x)*distance/length;textureZ=begin.y+(finish.y-begin.y)*distance/length;textureAngle=Math.atan2(finish.y-begin.y,finish.x-begin.x);}
-      let fragment=0;for(const cut of yardSolidCells(cuts)){add(role,cut,elevation,height,f.color,!supplier||!rectangularUnit(supplier.unit));const b=model.boxes.at(-1)!;b.unitId=`${f.id}-${role}-${row}-${curved?controlEdge:seg}-${slot}`;if(fragment++===0)b.renderContours=cuts;else b.renderDuplicate=true;if(curved){const pieces=curvePieces.get(b.unitId)??[];pieces.push(b);curvePieces.set(b.unitId,pieces);}if(supplier?.color.swatch)b.surface={swatchKey:hardscapeSwatchKey(supplier.product.id,supplier.finish.id,supplier.color.id),cx:textureX,cz:textureZ,angle:textureAngle,lengthIn:unitLength,widthIn:width,heightIn:role==='wall-cap'?height:course,kind:role==='wall-cap'?'paver':'wall',sourceUrl:supplier.product.sourceUrl};}
+      let fragment=0;for(const cut of yardSolidCells(cuts)){add(role,cut,elevation,height,f.color,!supplier||!rectangularUnit(supplier.unit));const b=model.boxes.at(-1)!;b.unitId=`${f.id}-${role}-${row}-${curved?controlEdge:natural?runOf[seg]:seg}-${slot}`;if(fragment++===0)b.renderContours=cuts;else b.renderDuplicate=true;if(curved){const pieces=curvePieces.get(b.unitId)??[];pieces.push(b);curvePieces.set(b.unitId,pieces);}if(supplier?.color.swatch)b.surface={swatchKey:hardscapeSwatchKey(supplier.product.id,supplier.finish.id,supplier.color.id),cx:textureX,cz:textureZ,angle:textureAngle,lengthIn:unitLength,widthIn:width,heightIn:role==='wall-cap'?height:course,kind:role==='wall-cap'?'paver':'wall',sourceUrl:supplier.product.sourceUrl};}
      }
     }
     for(const pieces of curvePieces.values()){pieces[0].renderContours=yardClip(pieces.map(b=>b.polygon!));delete pieces[0].renderDuplicate;for(const b of pieces.slice(1))b.renderDuplicate=true;}
@@ -360,7 +425,7 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
    if(free){/* no drain */}else if(!drainOutletCheckPassed){model.quoteRequired=true;localWarnings.push(construction!.drainOutletCount!==1?'Outlet elevation check pending: multiple outlets need per-route surveyed inverts, lengths and required fall.':!checkableOutlet?'Outlet elevation check pending: enter surveyed discharge invert, required fall and positive solid route length.':'Entered outlet invert cannot provide the specified fall from the lowest modeled collection invert; revise the route or discharge elevation.');}
    else localWarnings.push(`Entered outlet drop ${outletCheck.drainOutletAvailableFallIn!.toFixed(2)} in meets the ${outletCheck.drainOutletRequiredFallIn!.toFixed(2)} in specified fall. Collection grade, fittings and discharge remain pending.`);
    const constructionQuantities={minDrainCollectionInvertIn,drainOutletElevationPending:drainOutletCheckPassed?0:1,drainOutletCheckPassed:drainOutletCheckPassed?1:0,...outletCheck,geogridLayers:actualGridLayers,geogridMaxLayersPerBench:site?Math.max(0,...sectionGridCounts):Math.max(...sectionLayers.map(layers=>layers.length)),geogridAboveGroundSqft:aboveGroundGridArea,geogridPlanningSqft:planningGridArea,geogridPlanningOrderSqft:planningGridGrossArea*1.1,geogridPlacementPending:aboveGroundGridArea>.001?1:0,geogridSqft:gridArea,geogridGrossSqft:gridGrossArea,geogridCornerOverlapSqft:Math.max(0,gridGrossArea-gridArea),geogridOrderSqft:gridGrossArea*1.1,geogridLengthIn:lengthIn,geogridCourseInterval:construction!.everyCourses,minWallBurialIn:Number.isFinite(minBurial)?Number(minBurial.toFixed(5)):construction!.minBurialIn,maxWallBurialIn:Number.isFinite(maxBurial)?Number(maxBurial.toFixed(5)):construction!.maxBurialIn,maxExposedHeightIn:wf.finishedElevationIn!==undefined?maxExposed:construction!.maxExposedHeightIn,minExposedHeightIn:wf.finishedElevationIn!==undefined?minExposed:construction!.minExposedHeightIn,wallFoundationSteps:stepChanges,wallSetbackIn:construction!.maxSetbackIn,wallBatterAngleDeg:construction!.batterAngleDeg,drainOutletCount:construction!.drainOutletCount,drainOutletPipeLf:construction!.drainOutletLengthFt,wallCapBondLf:cap?run/12:0};
-   model.quantities={...model.quantities,wallLengthLf:(f.wallTopSteps?.length?yardWallStationPath(f).lengthIn:run)/12,wallFaceSqft:wf.finishedElevationIn!==undefined?sections.reduce((n,section)=>{const p=wallPath[section.segment],q=wallPath[section.segment+1],span=Math.hypot(q.x-p.x,q.y-p.y),lo=Math.max(0,section.startIn),hi=Math.min(span,section.endIn),ux=(q.x-p.x)/span,uy=(q.y-p.y)/span,inset=Math.min(1e-5,(hi-lo)/100),height=(u:number)=>(section.topIn??top)-gradeAt(p.y+uy*u-ux*d/2,p.x+ux*u+uy*d/2),a=height(lo+inset),b=height(hi-inset),run=Math.max(0,hi-lo),area=a>=0&&b>=0?run*(a+b)/2:a<=0&&b<=0?0:run*Math.max(a,b)**2/(2*Math.abs(a-b));return n+area/144;},0):run*h/144,wallBlocks:new Set(model.boxes.filter(b=>b.role==='wall-block').map(b=>b.unitId)).size,wallCaps:new Set(model.boxes.filter(b=>b.role==='wall-cap').map(b=>b.unitId)).size,drainPipeLf:drainPipeLengthIn/12,wallBaseYd3:baseYd3,drainageYd3,backfillYd3,wallFilterFabricSqft:filterArea,...constructionQuantities};
+   model.quantities={...model.quantities,wallLengthLf:(f.wallTopSteps?.length?yardWallStationPath(f).lengthIn:run)/12,wallFaceSqft:wf.finishedElevationIn!==undefined?sections.reduce((n,section)=>{const p=wallPath[section.segment],q=wallPath[section.segment+1],span=Math.hypot(q.x-p.x,q.y-p.y),lo=Math.max(0,section.startIn),hi=Math.min(span,section.endIn),ux=(q.x-p.x)/span,uy=(q.y-p.y)/span,inset=Math.min(1e-5,(hi-lo)/100),height=(u:number)=>(section.topIn??top)-gradeAt(p.y+uy*u-ux*d/2,p.x+ux*u+uy*d/2),a=height(lo+inset),b=height(hi-inset),run=Math.max(0,hi-lo),area=a>=0&&b>=0?run*(a+b)/2:a<=0&&b<=0?0:run*Math.max(a,b)**2/(2*Math.abs(a-b));return n+area/144;},0):run*h/144,wallBlocks:new Set(model.boxes.filter(b=>b.role==='wall-block').map(b=>b.unitId)).size,wallCaps:new Set(model.boxes.filter(b=>b.role==='wall-cap').map(b=>b.unitId)).size,drainPipeLf:drainPipeLengthIn/12,wallBaseYd3:baseYd3,drainageYd3,backfillYd3,wallFilterFabricSqft:filterArea,...constructionQuantities,...(guillotined?{wallStoneLb:model.boxes.filter(b=>b.role==='wall-block').reduce((n,b)=>n+Math.abs(yardSignedArea(b.polygon!))*b.h,0)/1728*LIMESTONE_LB_PER_FT3}:{})};
    if(site&&!free){const retained=site.extrema(yardPathBackStrip(wallPath,d/2,backEnd+construction!.maxSetbackIn));model.quantities.retainedGradeMinIn=retained.min;model.quantities.retainedGradeMaxIn=retained.max;if(aboveGroundGridArea>.001||retained.min<top-cap-.01||retained.max>top-cap+.01){model.quantities.wallRetainedGradePending=1;model.quoteRequired=true;localWarnings.push(`Proposed retained ground ${retained.min.toFixed(1)}â€“${retained.max.toFixed(1)} in versus body top ${(top-cap).toFixed(1)} in. Drainage/backfill are clipped to measured proposed ground; ${aboveGroundGridArea.toFixed(1)} sq ft of planned grid has no measured buried placement. Confirm retained grading, reinforcement cover/connections and exposed wall design.`);}}
    // Seat wall: two finished faces and no retained side (wallQuoteScopes quotes the second face; never $0).
    if(free){const q=model.quantities,hi=q.maxExposedHeightIn;delete q.minDrainCollectionInvertIn;q.drainOutletElevationPending=0;q.wallFreestanding=1;if(pad)q.wallFaceSqft=run*(top-grade)/144;q.wallSecondFaceSqft=q.wallFaceSqft;
@@ -421,7 +486,7 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
  // A ground-fit patio's edge is a designed step: the bank meets its top, the ground under it stays for its own
  // excavation. Its interior is left out of the grade-jump check so only real jumps (between banks, at walls) remain.
  const gradeWarnings=site?siteElevationWarnings(data,outsideFeaturePads(site,designSiteModel(data)?.featurePads),features):[];warnings.push(...gradeWarnings);
- for(const feature of features){const scopes=hardscapeAssemblyQuoteScopes([feature]);if(scopes.length)feature.assemblyQuoteScopes=scopes;}
+ for(const feature of features){const scopes=hardscapeAssemblyQuoteScopes([feature]);if(scopes.length)feature.assemblyQuoteScopes=[...feature.assemblyQuoteScopes??[],...scopes];}
  const fires=fireFeatureModels(data,features,{gradeAt,houseFootprint,deckModel,ids});features.push(...fires);for(const fire of fires)for(const w of fire.warnings)if(!warnings.includes(w))warnings.push(w);
  const active=features.filter(f=>!f.excluded),sum=(key:string)=>active.reduce((n,f)=>n+(f.quantities[key]||0),0),patioUnion=yardClip(active.filter(f=>f.config.kind==='patio').flatMap(f=>f.footprints));
  // Stone edge courses on raised patio sides (ground fit lowEdge 'stone'); absent unless a patio has one, so other

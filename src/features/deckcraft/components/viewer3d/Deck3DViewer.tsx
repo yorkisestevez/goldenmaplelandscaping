@@ -639,7 +639,7 @@ function opaqueRenderer(defaults:{canvas:HTMLCanvasElement|OffscreenCanvas}){
  return renderer;
 }
 
-export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,boardPaint,onUpdate,selection,selectionEnabled=false,onObjectPick,editInteraction,...interaction}:{toolbar?:React.ReactNode;onUpdate?:Update;data:DeckData;model:DeckTakeoff;selection?:SelectionState;selectionEnabled?:boolean;editInteraction?:SceneEditInteraction;onObjectPick?:(pick:ObjectPick,toggle:boolean)=>void;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:DeckSnapshotCapture|null)=>void;boardPaint?:BoardPaint}&HouseInteraction){
+export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calculatedYard,deckOnly=false,structure=false,cutaway=false,view="3d",onContextLost,onMovePrivacyScreen,onSnapshotReady,boardPaint,onUpdate,selection,selectionEnabled=false,onObjectPick,editInteraction,designer=false,...interaction}:{toolbar?:React.ReactNode;onUpdate?:Update;designer?:boolean;data:DeckData;model:DeckTakeoff;selection?:SelectionState;selectionEnabled?:boolean;editInteraction?:SceneEditInteraction;onObjectPick?:(pick:ObjectPick,toggle:boolean)=>void;yardModel?:YardModel;deckOnly?:boolean;structure?:boolean;cutaway?:boolean;view?:string;onContextLost?:()=>void;onMovePrivacyScreen?:(id:string,offsetPct:number)=>void;onSnapshotReady?:(capture:DeckSnapshotCapture|null)=>void;boardPaint?:BoardPaint}&HouseInteraction){
   // The page keeps scrolling over the 3D view: the wheel zooms once the view has been clicked, or with Ctrl/⌘ (pinch
   // on a trackpad sends Ctrl). Touch pinch is unaffected. The 2D plan already zooms only with Ctrl.
   const regionRef=useRef<HTMLDivElement>(null),[wheelHint,setWheelHint]=useState(false);
@@ -699,11 +699,14 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
 
   const simplifiedPaving=!structure&&!cutaway&&view!=='hardware'&&hasSimplifiedPaving(yard);
 
+  // Presentation settings (surfaces, landscape cameras, the pergola picker) and the fly-through are Designer Mode tools.
+  // A design already saved with one in use keeps "More", so the visitor can switch back.
+  const presentationTools=designer||presentation?.viewMode==='inspection'||!!preset||!!presentation?.activeCameraId;
   const presenting=!!onUpdate&&!structure&&!cutaway,pergolaTools=!editInteraction&&presenting&&!boardPaint?<PergolaTools data={data} selected={selected} setSelected={setSelected} mode={pergolaMode} setMode={setPergolaMode} update={onUpdate!}/>:null;
-  // One bar over the canvas: the page's camera, day/night, lights and selection tools, the season, the realistic look, and a More menu
-  // for surfaces, landscape cameras and adding a pergola. A placed pergola keeps its editing tools above the view.
+  // One bar over the canvas: the page's camera, day/night and lights (plus selection tools in Designer Mode), the season, the
+  // realistic look, and the More menu when presentationTools allows it. A placed pergola keeps its editing tools above the view.
   return <>{data.pergola&&pergolaTools}<div ref={regionRef} className="w-full aspect-square md:aspect-video relative overflow-hidden" role="region" aria-label="Interactive deck construction model">
-    {(toolbar||presenting)&&<div className="dd-3d-bar" role="group" aria-label="3D view controls"><div className="dd-3d-bar-main">{toolbar}{!structure&&!cutaway&&<SeasonPicker/>}{presenting&&<RealisticLookToggle/>}</div>{presenting&&<details className="dd-3d-more"><summary>More</summary><div className="dd-3d-more-panel"><ScenePresentationTools data={data} update={onUpdate!}/>{!data.pergola&&pergolaTools}</div></details>}</div>}
+    {(toolbar||presenting)&&<div className="dd-3d-bar" role="group" aria-label="3D view controls"><div className="dd-3d-bar-main">{toolbar}{!structure&&!cutaway&&<SeasonPicker/>}{presenting&&<RealisticLookToggle/>}</div>{presenting&&presentationTools&&<details className="dd-3d-more"><summary>More</summary><div className="dd-3d-more-panel"><ScenePresentationTools data={data} update={onUpdate!}/>{!data.pergola&&pergolaTools}</div></details>}</div>}
     {wheelHint&&<p className="dd-3d-wheel-hint" role="status">Click the view first, or hold Ctrl, to zoom with the scroll wheel.</p>}
 
     {data.siteModel&&<p className="absolute top-3 right-3 z-10 rounded bg-white/90 p-2 text-xs">Ground outside surveyed triangles is illustrative.</p>}<Canvas shadows="percentage" frameloop="demand" dpr={[1,1.5]} camera={{fov:38,near:SCENE_LOOK.sky.cameraNear,far:SCENE_LOOK.sky.cameraFar}} gl={opaqueRenderer} onCreated={({gl})=>{gl.toneMapping=THREE.NeutralToneMapping;gl.toneMappingExposure=SCENE_LOOK.exposure;const canvas=gl.domElement;canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();
@@ -733,6 +736,6 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
 
     </Canvas>{photoOn&&<Suspense fallback={null}><PhotoModePanel lighting={evening?'Evening':'Daylight'} onLighting={lighting=>onUpdate?.({sceneLighting:lighting})}/></Suspense>}{simplifiedPaving&&<p className="absolute top-3 left-3 right-3 w-fit rounded-md bg-white/95 px-3 py-2 text-xs text-[#38413b] shadow-sm pointer-events-none">Simplified paving preview · {yard.quantities.paverPieces.toLocaleString()} pavers retained in quantities, construction view and exports.</p>}<p className={`absolute bottom-3 left-4 right-4 text-[10px] pointer-events-none ${evening?'text-white':'text-[#474c43]'}`}>Drag to orbit · pinch, or Ctrl + scroll, to zoom{evening&&data.lightingPreviewOn!==false&&lights>MAX_PREVIEW_LIGHTS?` · ${lights} fixtures shown; light spread preview limited to ${MAX_PREVIEW_LIGHTS} fixtures`:''}</p>
 
-  </div>{onUpdate&&!structure&&!cutaway&&<FlythroughLauncher data={data}/>}{terrainWarnings.length>0&&<details open className="text-xs py-2" aria-label="Terrain conflicts"><summary>Terrain needs attention · {terrainWarnings.length}</summary><ul>{terrainWarnings.map(w=><li key={w}>{w}</li>)}</ul></details>}</>;
+  </div>{designer&&onUpdate&&!structure&&!cutaway&&<FlythroughLauncher data={data}/>}{terrainWarnings.length>0&&<details open className="text-xs py-2" aria-label="Terrain conflicts"><summary>Terrain needs attention · {terrainWarnings.length}</summary><ul>{terrainWarnings.map(w=><li key={w}>{w}</li>)}</ul></details>}</>;
 
 }

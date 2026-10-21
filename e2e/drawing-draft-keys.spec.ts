@@ -1,5 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {pickPlanTool} from './nav';
 // Draft keys act on the drawing in progress, never on the saved design: Ctrl+Z removes the last point, L/T/A pick the
 // next edge, C finishes. Shift-held drawing still closes on the first point. The right-click menu deletes patios and
 // opens the stair shape tool.
@@ -12,7 +13,7 @@ test.beforeEach(async({page,context},info)=>{
  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
 });
 async function patioSurface(page:Page){
- await page.getByRole('radio',{name:'Patios & walls',exact:true}).click();await page.getByRole('button',{name:'Draw patio',exact:true}).click();
+ await pickPlanTool(page,'Patios & walls');await page.getByRole('button',{name:'Draw patio',exact:true}).click();
  const surface=page.getByLabel('Yard shape drawing surface',{exact:true});await surface.scrollIntoViewIfNeeded();
  const b=(await surface.boundingBox())!,side=Math.min(85,b.width*.26,b.height*.28),start={x:b.x+b.width*.4,y:b.y+b.height*.45};
  return {surface,side,start,square:[start,{x:start.x+side,y:start.y},{x:start.x+side,y:start.y+side},{x:start.x,y:start.y+side}]};
@@ -39,7 +40,7 @@ test('Shift-held drawing still closes the patio on its first point',async({page}
 });
 test('designer drawing: L, T and A pick the next edge, Ctrl+Z steps back through the draft, C closes',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));const before=await read(page);
- await page.getByRole('radio',{name:'Patios & walls',exact:true}).click();await page.getByLabel('Designer tools',{exact:true}).check();await page.getByRole('button',{name:'Patio outline',exact:true}).click();
+ await pickPlanTool(page,'Patios & walls');await page.getByLabel('Designer tools',{exact:true}).check();await page.getByRole('button',{name:'Patio outline',exact:true}).click();
  const surface=page.getByLabel('Patio outline drawing surface',{exact:true}),dots=surface.locator('.dd-shape-draw-point'),edge=page.getByRole('group',{name:'Next edge'});
  await surface.scrollIntoViewIfNeeded();const b=(await surface.boundingBox())!,side=Math.min(85,b.width*.26,b.height*.28),start={x:b.x+b.width*.4,y:b.y+b.height*.45};
  for(const p of [start,{x:start.x+side,y:start.y},{x:start.x+side,y:start.y+side}])await page.mouse.click(p.x,p.y);await expect(dots).toHaveCount(3);
@@ -50,14 +51,15 @@ test('designer drawing: L, T and A pick the next edge, Ctrl+Z steps back through
 });
 test('right-click deletes a patio in one undo step and opens the stair shape tool',async({page})=>{
  await expect.poll(async()=>(await read(page)).design.yardFeatures?.length??0).toBe(1);
- await page.getByRole('radio',{name:'Patios & walls',exact:true}).click();
+ await pickPlanTool(page,'Patios & walls');
  const menu=page.getByRole('menu',{name:'Object edit menu'});
  const patio=await page.locator('.dd-hardscape-plan-picks').evaluate(svg=>{const poly=[...svg.querySelectorAll('polygon')].find(node=>node.getAttribute('data-context-hardscape')?.includes('menu-patio'));if(!poly)return null;const box=(poly as SVGGraphicsElement).getBBox(),point=(svg as SVGSVGElement).createSVGPoint();point.x=box.x+box.width/2;point.y=box.y+box.height/2;const screen=point.matrixTransform((svg as SVGSVGElement).getScreenCTM()!);return {x:screen.x,y:screen.y};});
  expect(patio).toBeTruthy();await page.mouse.click(patio!.x,patio!.y,{button:'right'});await expect(menu).toContainText('Menu patio');
  await menu.getByRole('menuitem',{name:'Delete',exact:true}).click();await expect.poll(async()=>(await read(page)).design.yardFeatures?.length??0).toBe(0);
  await page.getByRole('button',{name:'Undo',exact:true}).click();await expect.poll(async()=>(await read(page)).design.yardFeatures?.length??0).toBe(1);
- await page.getByRole('radio',{name:'Select parts',exact:true}).click();
- await page.locator('.dd-component-handle[data-kind=stairs]').first().click({button:'right'});await expect(menu).toBeVisible();
+ // Select parts is a Designer Mode tool; a homeowner right-clicks the stairs drawn on the site plan.
+ const tread=(await page.locator('.dd-plan-stage .dd-site-plan [data-select-stairs]').first().boundingBox())!;
+ await page.mouse.click(tread.x+tread.width/2,tread.y+tread.height/2,{button:'right'});await expect(menu).toBeVisible();
  await menu.getByRole('menuitem',{name:'Edit stair shape',exact:true}).click();
  await expect(page.getByRole('radio',{name:'Stairs',exact:true})).toHaveAttribute('aria-checked','true');await expect(page.getByRole('region',{name:'Stair shape tools'})).toBeVisible();
 });

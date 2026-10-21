@@ -1,7 +1,8 @@
 import {sampleSiteHeight} from './siteSurface';
 import {PAVER_BRANDS} from '../../data/carrPrices';
+import {GUILLOTINED_WALL} from './wallStones';
 import {GROUND_FIT_LIMITS,type DeckData,type TerrainConfig,type YardAllowances,type YardFeature,type YardFeatureKind} from './types';
-export const WALL_PRODUCTS=[{id:'segmental-concrete',name:'Segmental concrete wall'},{id:'armour-stone',name:'Armour stone wall'}];
+export const WALL_PRODUCTS=[{id:'segmental-concrete',name:'Segmental concrete wall'},{id:'armour-stone',name:'Armour stone wall'},{id:GUILLOTINED_WALL,name:'Guillotined armour stone wall'}];
 export const WATER_PRODUCTS=[{id:'pond',name:'Pond'},{id:'pondless-waterfall',name:'Pondless waterfall'},{id:'fountain',name:'Fountain'}];
 export const PATIO_PRODUCTS=PAVER_BRANDS.filter(p=>p.useCase!=='driveway');
 /**
