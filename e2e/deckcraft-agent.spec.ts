@@ -1,5 +1,5 @@
 import {expect,test,type Page} from '@playwright/test';
-import {pickPlanTool,showProjectControls} from './nav';
+import {openDesignerMode,pickPlanTool,showProjectControls} from './nav';
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import type {AgentCommand,AgentResponse} from '../src/features/deckcraft/designer/deckAgentController';
@@ -78,7 +78,7 @@ test('agent edits all three boundaries, creates private-free share links and dow
 });
 
 test('semantic Agent tools controls preview before apply and restore keyboard focus',async({page})=>{
-  await open(page);const launcher=page.getByRole('button',{name:'Agents',exact:true});await launcher.click();
+  await openDesignerMode(page);const launcher=page.getByRole('button',{name:'Agents',exact:true});await launcher.click();
   const dialog=page.getByRole('dialog',{name:'Work with your agent'});await expect(dialog).toBeVisible();await expect(dialog).toContainText('Agent interface ready');
   if(process.env.DECK_AGENT_PROOF==='1')await page.screenshot({path:resolve('../../outputs/DeckCraft-agent-tools-desktop.png')});
   await expect(dialog.getByLabel('Structured agent command')).toBeHidden();await dialog.getByText('Advanced · structured commands',{exact:true}).click();
@@ -89,7 +89,7 @@ test('semantic Agent tools controls preview before apply and restore keyboard fo
 });
 
 test('agent tools fit phone and keep the regular editor available @phone',async({page})=>{
-  await open(page);await page.getByRole('button',{name:'Agents',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Work with your agent'});await expect(dialog).toBeVisible();
+  await openDesignerMode(page);await page.getByRole('button',{name:'Agents',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Work with your agent'});await expect(dialog).toBeVisible();
   const fits=await dialog.evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&el.scrollWidth<=el.clientWidth;});expect(fits).toBe(true);
   if(process.env.DECK_AGENT_PROOF==='1')await page.screenshot({path:resolve('../../outputs/DeckCraft-agent-tools-phone.png')});
   await dialog.getByRole('button',{name:'Close agent tools'}).click();await expect(dialog).toBeHidden();await pickPlanTool(page,'Shape & points');await expect(page.getByRole('button',{name:'Main deck point 1',exact:true})).toBeVisible();

@@ -29,7 +29,7 @@ export interface YardFields {name?:string;xFt?:number;zFt?:number;widthFt?:numbe
  freestanding?:boolean;
  /** A fire feature stands on this patio. A seat wall given one must lie on it and then follows its paving (no link is saved). */
  supportFeatureId?:string;
- groundFit?:YardFeature['groundFit'];hardscape?:YardFeature['hardscape']}
+ groundFit?:YardFeature['groundFit'];hardscape?:YardFeature['hardscape'];flagstone?:YardFeature['flagstone']}
 export type YardCreate=YardFields&{kind:'patio'|'retaining-wall'|'fire-feature';id?:string};
 export type YardUpdate=YardFields&{id:string;unset?:('groundFit'|'supportFeatureId'|'hardscape')[]};
 
@@ -76,12 +76,13 @@ function apply(data:DeckData,base:YardFeature,c:YardFields,created:boolean,unset
   if(c.widthFt!==undefined||c.depthFt!==undefined){if(f.outline)throw Error('This patio has a drawn outline: resize it with yard.dimension or yard.set.');if(c.widthFt!==undefined&&f.wallPath)throw Error('This wall follows a drawn path: change its wallPath instead.');}
   if(c.widthFt!==undefined)f.widthFt=c.widthFt;
   if(c.depthFt!==undefined)f.depthFt=c.depthFt;
-  if(c.productId!==undefined&&c.productId!==f.productId){f.productId=c.productId;if(!c.hardscape)delete f.hardscape;}
+  if(c.productId!==undefined&&c.productId!==f.productId){f.productId=c.productId;if(!c.hardscape)delete f.hardscape;if(!c.flagstone)delete f.flagstone;}
  }
  // A fixed top keeps its height over the ground it was set from: a new height moves it by the difference.
  if(c.heightIn!==undefined){if(f.finishedElevationIn!==undefined&&c.finishedElevationIn===undefined)f.finishedElevationIn=Math.round((f.finishedElevationIn+c.heightIn-f.heightIn)*100)/100;f.heightIn=c.heightIn;}
  if(c.finishedElevationIn!==undefined)f.finishedElevationIn=c.finishedElevationIn;
  if(c.hardscape)f.hardscape=structuredClone(c.hardscape);
+ if(c.flagstone)f.flagstone=structuredClone(c.flagstone);
  if(c.groundFit)f.groundFit=structuredClone(c.groundFit);
  if(c.freestanding!==undefined){const rest={...f.wallConstruction};delete rest.freestanding;const kept=c.freestanding?{...(rest.foundationMode?{foundationMode:rest.foundationMode}:{}),freestanding:true}:rest;if(Object.keys(kept).length)f.wallConstruction=kept;else delete f.wallConstruction;}
  if(c.wallPath){if(!Array.isArray(c.wallPath))throw Error('wallPath is a list of world-inch points.');f=yardShapeEdit(f,c.wallPath);}

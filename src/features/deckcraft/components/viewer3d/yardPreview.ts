@@ -14,7 +14,7 @@ export function visibleYardBoxes(boxes:YardBox[],shown:(featureId:string)=>boole
  for(const group of parts.values())group.forEach((b,i)=>{if(i){b.renderDuplicate=true;delete b.renderContours;}else{delete b.renderDuplicate;b.renderContours=yardClip(group.map(p=>p.polygon!));}});
  return out;
 }
-export function hasSimplifiedPaving(model:YardModel){return model.quantities.paverPieces>MAX_DETAILED_PREVIEW_PAVERS&&model.features.some(f=>!f.excluded&&f.config.kind==='patio'&&!f.config.hardscape);}
+export function hasSimplifiedPaving(model:YardModel){return model.quantities.paverPieces>MAX_DETAILED_PREVIEW_PAVERS&&model.features.some(f=>!f.excluded&&f.config.kind==='patio'&&!f.config.hardscape&&!f.config.flagstone);}
 
 /** Preview only: the full model remains unchanged for quantities, inspection and exports.
  * Bedding cells already contain the exact patio perimeter, overlap and support cutouts. Every cell draws its joints
@@ -25,10 +25,10 @@ export function yardPreviewBoxes(model:YardModel,detailed=false):YardBox[]{
  if(detailed||!hasSimplifiedPaving(model))return model.boxes;
  // Supplier recipes retain their exact stock geometry and swatch UVs, including
  // mixed-size layouts. Only the legacy generic preview uses its simplification.
- const supplierIds=new Set(model.features.filter(f=>f.config.hardscape).flatMap(f=>f.boxes.filter(b=>b.role==='paver').map(b=>b.id)));
+ const supplierIds=new Set(model.features.filter(f=>f.config.hardscape||f.config.flagstone).flatMap(f=>f.boxes.filter(b=>b.role==='paver').map(b=>b.id)));
  const boxes=model.boxes.filter(b=>b.role!=='paver'||supplierIds.has(b.id));
  for(const f of model.features){
-  if(f.excluded||f.config.kind!=='patio'||f.config.hardscape)continue;
+  if(f.excluded||f.config.kind!=='patio'||f.config.hardscape||f.config.flagstone)continue;
   const sample=f.boxes.find(b=>b.role==='paver');if(!sample)continue;
   const top=sample.y+sample.h/2,root=model.features.find(g=>g.config.id===f.pavingRootId)?.config??f.config,row=(yardPaverProfiles[root.productId as keyof typeof yardPaverProfiles]?.rows??[{depth:12,lengths:[24]}])[0];
   const angle=root.rotationDeg*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle),u=-root.widthFt*6,v=-root.depthFt*6,patternFrame={x:root.xFt*12+c*u-s*v,z:root.zFt*12+s*u+c*v,angle,w:row.lengths[0]+.125,d:row.depth+.125};
