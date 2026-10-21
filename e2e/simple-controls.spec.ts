@@ -10,7 +10,7 @@ for(const phone of [false,true])test(`simple controls keep common tools visible 
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  const tools=page.getByRole('radiogroup',{name:'Plan tools'}),deck=tools.getByRole('radio',{name:'Deck size',exact:true});
- await expect(deck).toHaveAttribute('aria-checked','true');await expect(tools.getByRole('radio')).toHaveCount(7);
+ await expect(deck).toHaveAttribute('aria-checked','true');await expect(tools.getByRole('radio')).toHaveCount(5);
  expect(await tools.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
  await expect(page.getByRole('button',{name:'Main deck point 1',exact:true})).toHaveCount(0);
  await expect(page.getByRole('slider',{name:'Deck width, right end',exact:true})).toBeVisible();

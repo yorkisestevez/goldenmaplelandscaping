@@ -1,8 +1,8 @@
 import {test,expect} from '@playwright/test';
-import {pickPlanTool} from './nav';
+import {openDesignerMode,pickPlanTool} from './nav';
 test.beforeEach(async({page,context})=>{await context.addInitScript('window.__name=(target,value)=>target;');await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);});
 test('Architect help, file save, point editing and fit navigation',async({page})=>{
- const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await expect(page.getByRole('button',{name:'Show project controls',exact:true})).toBeVisible();await page.keyboard.press('F1');const help=page.getByRole('dialog',{name:'Keyboard shortcuts',exact:true});await expect(help).toBeVisible();await expect(help).toContainText('Ctrl+A');await page.keyboard.press('Escape');await expect(help).not.toBeVisible();
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await expect(page.getByRole('button',{name:'Show all options',exact:true})).toBeVisible();await page.keyboard.press('F1');const help=page.getByRole('dialog',{name:'Keyboard shortcuts',exact:true});await expect(help).toBeVisible();await expect(help).toContainText('Ctrl+A');await page.keyboard.press('Escape');await expect(help).not.toBeVisible();
  await page.keyboard.press('e');await expect(page.getByRole('radio',{name:'Shape & points',exact:true})).toHaveAttribute('aria-checked','true');await page.keyboard.press('e');await expect(page.getByRole('radio',{name:'Deck size',exact:true})).toHaveAttribute('aria-checked','true');
  await page.getByRole('button',{name:'Zoom in',exact:true}).click();await page.keyboard.press('z');await expect(page.getByLabel('Drawing zoom',{exact:true})).toHaveText('100%');
  const download=page.waitForEvent('download');await page.keyboard.press('Control+s');expect((await download).suggestedFilename()).toBe('golden-maple-deck-design.json');
@@ -21,7 +21,7 @@ for(const tool of ['patio','designer','sketch'])test(`Architect drawing keys pro
  expect(errors).toEqual([]);
 });
 test('A L N select parts without changing geometry',async({page})=>{
- const before=await page.evaluate(()=>(window as any).deckcraft.read().design);await pickPlanTool(page,'Select parts');await expect(page.getByRole('button',{name:'Select all matching parts',exact:true})).toBeVisible();await page.keyboard.press('a');await expect(page.locator('.dd-component-selection-actions span')).not.toHaveText('0 selected');await page.keyboard.press('n');await expect(page.locator('.dd-component-selection-actions span')).toHaveText('0 selected');
+ await openDesignerMode(page);const before=await page.evaluate(()=>(window as any).deckcraft.read().design);await pickPlanTool(page,'Select parts');await expect(page.getByRole('button',{name:'Select all matching parts',exact:true})).toBeVisible();await page.keyboard.press('a');await expect(page.locator('.dd-component-selection-actions span')).not.toHaveText('0 selected');await page.keyboard.press('n');await expect(page.locator('.dd-component-selection-actions span')).toHaveText('0 selected');
  await page.getByLabel('Select plan part',{exact:true}).selectOption('deck:1');await page.getByLabel('Deck drawing canvas',{exact:true}).focus();await page.keyboard.press('l');await expect(page.locator('.dd-component-selection-actions span')).not.toHaveText('0 selected');expect(await page.evaluate(()=>(window as any).deckcraft.read().design)).toEqual(before);
 });
 test('Architect transform keys and help in 3D',async({page})=>{

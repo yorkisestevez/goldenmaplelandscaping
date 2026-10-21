@@ -31,18 +31,43 @@ export async function savedJobLibrary(page:Page){
   return storedProjectJson(page,'jobs');
 }
 
-/** Canvas-first drawing focus hides the task menus, the price bar and the job-tool buttons. */
+/** Canvas-first drawing focus hides the task menus; "All options" shows them. Designer Mode has no drawing focus. */
 export async function showProjectControls(page:Page){
+  if(await page.locator('.deck-designer[data-pro]').count())return;
   const toggle=page.locator('.dd-drawing-focus-toggle');
   await expect(toggle).toBeVisible();
   if(await toggle.getAttribute('aria-pressed')==='true')await toggle.click();
   await expect(toggle).toHaveAttribute('aria-pressed','false');
 }
 
+/** The ribbon tab of each plan tool; Designer Mode's ribbon uses the same tab names. Select parts is a Designer Mode tool. */
 const PLAN_TABS:Record<string,string>={
-  'Deck size':'Building','Shape & points':'Building','Stairs':'Building','Patios & walls':'Building','House':'Building','Rails & screens':'Building',
-  'Landscape':'Landscape','Board layout':'Materials','Inlays':'Materials','Select parts':'Main',
+  'Deck size':'Building','Shape & points':'Building','Stairs':'Building','House':'Building','Rails & screens':'Building',
+  'Landscape':'Landscape','Patios & walls':'Landscape','Board layout':'Materials','Inlays':'Materials','Select parts':'Main',
 };
+
+/** Opens Designer Mode, which keeps the contractor tools the homeowner page leaves out. */
+export async function openDesignerMode(page:Page,path='/deck-designer/?designer=1'){
+  await page.goto(path);
+  await expect(page.getByRole('menubar',{name:'Pro workspace menu'})).toBeVisible({timeout:60_000});
+  await expect.poll(()=>page.evaluate(()=>(window as {deckcraft?:{read():{ready:boolean}}}).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
+}
+
+/** Opens a Designer Mode menu item, such as ('Tools', 'Agents…'). */
+export async function proMenu(page:Page,menu:string,item:string|RegExp){
+  await page.getByRole('menubar',{name:'Pro workspace menu'}).getByRole('menuitem',{name:menu,exact:true}).click();
+  await page.getByRole('menu',{name:menu}).getByRole('menuitem',{name:item,exact:typeof item==='string'}).click();
+}
+
+/** Designer Mode picks plan tools from its quick-tools strip or its ribbon. */
+async function pickProTool(page:Page,name:string){
+  const quick=page.getByRole('group',{name:'Quick tools'}).getByRole('button',{name,exact:true});
+  const button=await quick.count()?quick:page.locator('#dd-pro-ribbon-panel').getByRole('button',{name,exact:true});
+  if(button!==quick&&!await button.isVisible())await page.getByRole('tablist',{name:'Ribbon tabs'}).getByRole('tab',{name:PLAN_TABS[name]??'Building',exact:true}).click();
+  await button.click();
+  await expect(button).toHaveAttribute('aria-pressed','true');
+  return button;
+}
 
 /** The design inspector is a dialog over the drawing. Plan tools underneath it are not clickable until it is dismissed. */
 export async function dismissDesignInspector(page:Page){
@@ -55,6 +80,7 @@ export async function dismissDesignInspector(page:Page){
 
 /** Picks a plan tool, opening its category tab when that radio is not on the current ribbon. */
 export async function pickPlanTool(page:Page,name:string){
+  if(await page.locator('.deck-designer[data-pro]').count())return pickProTool(page,name);
   await dismissDesignInspector(page);
   const radio=page.getByRole('radio',{name,exact:true});
   if(!await radio.isVisible()){

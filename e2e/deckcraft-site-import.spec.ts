@@ -1,17 +1,17 @@
 import {test,expect,type Page} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
+import {openDesignerMode,proMenu} from './nav';
 const read=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:DeckAgentApi}).deckcraft.read());
 const ready=async(page:Page)=>expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);
 const saved=async(page:Page)=>expect(page.locator('[data-autosave-state="saved"]')).toHaveCount(1);
 const zip={name:'ulevel_10-05-26_14-18.zip',mimeType:'application/zip',buffer:readFileSync('e2e/fixtures/ulevel-sample.zip')};
 const SHOTS=Array.from({length:11},(_,i)=>`P${i+1}`);
 test.beforeEach(async({context})=>{await context.addInitScript('window.__name=(target,value)=>target;');await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())&&['GET','HEAD'].includes(r.request().method())?r.continue():r.fulfill({body:''}));});
+/** The survey import sits in the Elevations & build site area, which only Designer Mode opens (Tools › Site survey & photo import…). */
 async function openImport(page:Page){
- await page.getByRole('button',{name:'Show project controls',exact:true}).click();
- const open=page.getByRole('button',{name:'Import from U-Level or survey file',exact:true});
- if(!await open.count())await page.getByRole('button',{name:'Elevations & build',exact:true}).click();
- await open.click();
+ await proMenu(page,'Tools','Site survey & photo import…');
+ await page.getByRole('button',{name:'Import from U-Level or survey file',exact:true}).click();
  return page.getByRole('region',{name:'Survey readings import'});
 }
 /** Loads the real U-Level export and returns the door sill height the dialog reports. */
@@ -34,7 +34,7 @@ async function previewAndApply(page:Page){
 
 test('a U-Level zip imports, ties to the door sill, undoes in one step and survives reload',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('/deck-designer/');await ready(page);await saved(page);
+ await openDesignerMode(page);await saved(page);
  const before=(await read(page)).design;
  await openImport(page);
  const sill=await loadZip(page);
@@ -59,7 +59,7 @@ test('a U-Level zip imports, ties to the door sill, undoes in one step and survi
 });
 
 test('a second U-Level export is added under its date instead of overwriting P1..P11',async({page})=>{
- await page.goto('/deck-designer/');await ready(page);await saved(page);
+ await openDesignerMode(page);await saved(page);
  await openImport(page);await loadZip(page);await previewAndApply(page);
  await loadZip(page);
  await expect(page.getByLabel('Combine with measured points',{exact:true})).toHaveValue('append');
@@ -70,7 +70,7 @@ test('a second U-Level export is added under its date instead of overwriting P1.
 });
 
 test('@phone the survey import keeps every control at least 44 px tall',async({page})=>{
- await page.goto('/deck-designer/');await ready(page);await saved(page);
+ await openDesignerMode(page);await saved(page);
  const region=await openImport(page);await loadZip(page);
  for(const control of await region.locator('button,select,input:not([type=checkbox]):not([type=file])').all()){
   if(!await control.isVisible())continue;const box=(await control.boundingBox())!;

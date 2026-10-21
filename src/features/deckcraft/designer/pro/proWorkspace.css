@@ -1,20 +1,26 @@
 /* The Pro workspace (Designer Mode): a CAD-style shell around the same designer. Loaded only with the Pro chunks, and
    every rule is scoped to .deck-designer[data-pro], so the public designer never changes. */
 
-/* The menus and ribbon replace the task menus, the job-tools bar (Describe a change, Jobs, Review issues: all in the
-   menus), the drawing-focus toggle, the Elevations button (Terrain tab) and the shortcuts button (Help menu). */
+/* The menus and ribbon replace the task menus, the job bar (Describe a change, Jobs and Review issues are in the
+   menus) and the drawing-focus toggle. */
 /* One column: the drawing panel over the price bar. (The public layout keys this off the task menus, which Pro drops
    along with the section pop-over: the open section docks beside the drawing instead.) */
 .deck-designer[data-pro] .dd-workspace{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
 .deck-designer[data-pro] .dd-preview{grid-column:1;grid-row:1;min-width:0;padding:8px 12px}
 .deck-designer[data-pro] .dd-workspace-price{grid-column:1;grid-row:2}
 .deck-designer[data-pro] .dd-assistant-slot{grid-column:1}
+/* On desktop the open assistant (Describe a change, the experts) takes its own column beside the drawing and the price bar,
+   so it covers neither the drawing nor its own Apply button. */
+@media(min-width:801px){.deck-designer[data-pro][data-assistant-open] .dd-workspace{grid-template-columns:minmax(0,1fr) minmax(340px,400px)}.deck-designer[data-pro] .dd-assistant-slot{grid-column:2;grid-row:1/3}}
 .deck-designer[data-pro] .dd-controls,
 .deck-designer[data-pro] .dd-workspace-nav,
 .deck-designer[data-pro] .dd-easy-tools,
-.deck-designer[data-pro] .dd-drawing-focus-toggle,
-.deck-designer[data-pro] .dd-sheet-panel>.dd-summary-actions,
-.deck-designer[data-pro] .dd-sheet-panel>button[title="Keyboard shortcuts (F1)"]{display:none!important}
+.deck-designer[data-pro] .dd-drawing-focus-toggle{display:none!important}
+/* The header's Presets and Agents buttons render only in Designer Mode. */
+.deck-designer[data-pro] .dd-agent-open{display:inline-flex;align-items:center;justify-content:center;min-width:64px;min-height:44px;padding:0 12px;border:1px solid #ffffff28;border-radius:8px;background:none;color:#f8f7f3;font-size:12px;line-height:1.3}.deck-designer[data-pro] .dd-agent-open:hover{background:#ffffff0d}
+.deck-designer[data-pro] #dd-workspace-agent-slot{display:flex;gap:6px;flex:none}
+@media(max-width:800px){.deck-designer[data-pro] .dd-agent-open{min-width:50px;padding:0 8px;font-size:11px}}
+@media(max-width:500px){.deck-designer[data-pro] #dd-workspace-agent-slot{gap:4px}.deck-designer[data-pro] .dd-agent-open{min-width:44px;padding:0 6px}}
 
 /* The drawing fills the window between the ribbon and the sheet tabs, as in a CAD program. */
 .deck-designer[data-pro] .dd-canvas>.dd-plan-viewport,
