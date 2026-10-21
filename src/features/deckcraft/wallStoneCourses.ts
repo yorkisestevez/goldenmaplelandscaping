@@ -19,32 +19,37 @@ function seeded(text:string){
 
 /**
  * The joints of one run of a wall (a straight run of collinear segments, or an arc's control edge), per course, in run
- * stations shared by every course. A course starts at its own `fromIn` (a foundation step or a mitre can start it
- * part way along) and ends at `toIn`; the list holds both ends and every joint between. The same seed always lays the
- * same stones. Stones take listed lengths in a random order per position, and a short search backtracks until every
- * joint clears the course below and the course ends in a whole stone (24 in or more, unless the course itself is
- * shorter). When no such course exists, each stone takes the length whose joint comes closest to clearing. Courses are
- * laid bottom up; a course with none below has nothing to clear.
+ * stations shared by every course. A course is one or more stretches (a foundation step can stop and restart it), and
+ * each stretch's list holds both its ends and every joint between. The same seed always lays the same stones. Stones
+ * take listed lengths in a random order per position, and a short search backtracks until every joint clears the course
+ * below and the stretch ends in a whole stone (24 in or more, unless the stretch itself is shorter). When no such
+ * stretch exists (a run of 48-54 in leaves under 6 in for its joint), each stone takes the length whose joint comes
+ * closest to clearing. A short first course (under 72 in) puts its joint at the near end, so the courses above can
+ * alternate. Courses are laid bottom up; a course with none below has nothing to clear.
  */
 export function stoneCourseJoints(seed:string){
- const rows=new Map<number,number[]>();
- return (row:number,fromIn:number,toIn:number):number[]=>{
+ const rows=new Map<number,number[][]>();
+ return (row:number,stretches:[number,number][]):number[][]=>{
   const saved=rows.get(row);if(saved)return saved;
-  const next=seeded(`${seed}:${row}`),below=rows.get(row-1)??[],gap=(at:number)=>Math.min(Infinity,...below.map(b=>Math.abs(at-b)));
-  // Lengths that leave room for a whole last stone, in this position's random order.
-  const choices=(at:number)=>{const fits=LENGTHS.filter(length=>toIn-at-length>=STONE_LENGTH_IN.min),first=Math.floor(next()*fits.length);return fits.map((_,i)=>fits[(first+i)%fits.length]);};
-  const dead=new Set<number>(),key=(at:number)=>Math.round((at-fromIn)/STONE_LENGTH_IN.step);
-  const clear=(at:number):number[]|null=>{
-   if(toIn-at<=STONE_LENGTH_IN.max)return [toIn];
-   if(dead.has(key(at)))return null;
-   for(const length of choices(at))if(gap(at+length)>=STONE_JOINT_CLEARANCE_IN){const rest=clear(at+length);if(rest)return [at+length,...rest];}
-   dead.add(key(at));return null;
-  };
-  const closest=(at:number):number[]=>{
-   if(toIn-at<=STONE_LENGTH_IN.max)return [toIn];
-   const best=choices(at).reduce((a,b)=>gap(at+b)>gap(at+a)?b:a);return [at+best,...closest(at+best)];
-  };
-  const list=[fromIn,...(toIn-fromIn<=1e-6?[]:clear(fromIn)??closest(fromIn))];
-  rows.set(row,list);return list;
+  const next=seeded(`${seed}:${row}`),below=rows.get(row-1)?.flat()??[],gap=(at:number)=>Math.min(Infinity,...below.map(b=>Math.abs(at-b)));
+  const lists=stretches.map(([fromIn,toIn]):number[]=>{
+   if(!Number.isFinite(fromIn)||!Number.isFinite(toIn)||toIn-fromIn<=1e-6)return [fromIn,toIn];
+   const nearEnd=!below.length&&toIn-fromIn<3*STONE_LENGTH_IN.min;
+   // Lengths that leave room for a whole last stone, in this position's random order.
+   const choices=(at:number)=>{const fits=LENGTHS.filter(length=>toIn-at-length>=STONE_LENGTH_IN.min);if(nearEnd)return fits;const first=Math.floor(next()*fits.length);return fits.map((_,i)=>fits[(first+i)%fits.length]);};
+   const dead=new Set<number>(),key=(at:number)=>Math.round((at-fromIn)/STONE_LENGTH_IN.step);
+   const clear=(at:number):number[]|null=>{
+    if(toIn-at<=STONE_LENGTH_IN.max)return [toIn];
+    if(dead.has(key(at)))return null;
+    for(const length of choices(at))if(gap(at+length)>=STONE_JOINT_CLEARANCE_IN){const rest=clear(at+length);if(rest)return [at+length,...rest];}
+    dead.add(key(at));return null;
+   };
+   const closest=(at:number):number[]=>{
+    if(toIn-at<=STONE_LENGTH_IN.max)return [toIn];
+    const best=choices(at).reduce((a,b)=>gap(at+b)>gap(at+a)?b:a);return [at+best,...closest(at+best)];
+   };
+   return [fromIn,...(clear(fromIn)??closest(fromIn))];
+  });
+  rows.set(row,lists);return lists;
  };
 }

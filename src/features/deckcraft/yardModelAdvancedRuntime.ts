@@ -318,11 +318,20 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
     const natural=guillotined&&role==='wall-block',spans=natural?edges.map((_,seg)=>spanOf(seg)):undefined,runOf:number[]=[],naturalStones=new Map<number,[number,number,number,boolean,boolean][]>();
     if(spans){
      for(let seg=0;seg<edges.length;seg++){const a=seg?path[seg-1]:path[0],b=path[seg],c=path[seg+1],inLine=seg>0&&Math.abs((b.x-a.x)*(c.y-b.y)-(b.y-a.y)*(c.x-b.x))<1e-9*Math.hypot(b.x-a.x,b.y-a.y)*Math.hypot(c.x-b.x,c.y-b.y)&&(b.x-a.x)*(c.x-b.x)+(b.y-a.y)*(c.y-b.y)>0;runOf.push(curved?curveStarts[edges[seg]]:inLine?runOf[seg-1]:seg);}
+     const ref=coursePaths[0],refStations=[0];for(let seg=0;seg+1<ref.length;seg++)refStations.push(refStations.at(-1)!+Math.hypot(ref[seg+1].x-ref[seg].x,ref[seg+1].y-ref[seg].y));
      for(const first of new Set(runOf)){
-      const segs=runOf.flatMap((r,seg)=>r===first&&spans[seg]?[seg]:[]);if(!segs.length)continue;
-      const base=(seg:number)=>stations[seg]-stations[first],ref=coursePaths[0][first],next=path[first+1],length=Math.hypot(next.x-path[first].x,next.y-path[first].y),shift=((path[first].x-ref.x)*(next.x-path[first].x)+(path[first].y-ref.y)*(next.y-path[first].y))/length;
-      const run=stoneRuns.get(first)??stoneCourseJoints(`${f.id}:${first}`),joints=run(row,shift+base(segs[0])+spans[segs[0]]!.start,shift+base(segs.at(-1)!)+spans[segs.at(-1)!]!.end);stoneRuns.set(first,run);
-      for(const seg of segs){const {start,end}=spans[seg]!,list:[number,number,number,boolean,boolean][]=[];for(let k=0;k+1<joints.length;k++){const u=joints[k]-shift-base(seg);if(u<end-.001&&u+joints[k+1]-joints[k]>start)list.push([u,joints[k+1]-joints[k],k,k>0,k+2<joints.length]);}naturalStones.set(seg,list);}
+      const facets=runOf.flatMap((r,seg)=>r===first?[seg]:[]),segs=facets.filter(seg=>spans[seg]);if(!segs.length)continue;
+      const base=(seg:number)=>stations[seg]-stations[first],refBase=(seg:number)=>refStations[seg]-refStations[first],facetAt=(s:number,at:(seg:number)=>number)=>facets.reduce((i,seg)=>s>=at(seg)?seg:i,facets[0]);
+      // This course's run stations to course 0's: by facet and fraction on an arc, so concentric courses keep their angle;
+      // on a straight run, shifted by how far along this course's run start sits from course 0's (a batter moves a corner).
+      const next=path[first+1],length=Math.hypot(next.x-path[first].x,next.y-path[first].y),shift=((path[first].x-ref[first].x)*(next.x-path[first].x)+(path[first].y-ref[first].y)*(next.y-path[first].y))/length;
+      const toRef=curved?(s:number)=>{const i=facetAt(s,base);return refBase(i)+(s-base(i))*(refStations[i+1]-refStations[i])/(stations[i+1]-stations[i]);}:(s:number)=>s+shift;
+      const fromRef=curved?(s:number)=>{const i=facetAt(s,refBase);return base(i)+(s-refBase(i))*(stations[i+1]-stations[i])/(refStations[i+1]-refStations[i]);}:(s:number)=>s-shift;
+      // The course's own stretches along the run: a foundation step can stop it and start it again further along.
+      const stretches:[number,number][]=[];
+      for(const [a,b] of segs.flatMap(seg=>{const {p,ux,uy,zone}=spans[seg]!;return zone.map(ring=>{const along=ring.map(v=>(v.x-p.x)*ux+(v.y-p.y)*uy);return [base(seg)+Math.min(...along),base(seg)+Math.max(...along)] as [number,number];});}).sort((x,y)=>x[0]-y[0])){const last=stretches.at(-1);if(last&&a<=last[1]+.05)last[1]=Math.max(last[1],b);else stretches.push([a,b]);}
+      const run=stoneRuns.get(first)??stoneCourseJoints(`${f.id}:${first}`),lists=run(row,stretches.map(([a,b])=>[toRef(a),toRef(b)]));stoneRuns.set(first,run);
+      let slot=0;for(const joints of lists)for(let k=0;k+1<joints.length;k++,slot++){const a=fromRef(joints[k]),b=fromRef(joints[k+1]);for(const seg of segs){const {start,end}=spans[seg]!,u=a-base(seg);if(u<end-.001&&b-base(seg)>start)naturalStones.set(seg,[...naturalStones.get(seg)??[],[u,b-a,slot,k>0,k+2<joints.length]]);}}
      }
     }
     for(let seg=0;seg+1<path.length;seg++){

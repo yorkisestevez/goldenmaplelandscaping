@@ -12,6 +12,8 @@ import {yardWallCourses} from '../src/features/deckcraft/yardElevations';
 import {loadWallStationRuntime} from '../src/features/deckcraft/yardPathGeometry';
 import {ensureLiveDesignExtensions,hasAdvancedYard} from '../src/features/deckcraft/designExtensions';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
+import {arcGeometry} from '../src/features/deckcraft/circularArcs';
+import {loadSiteEngine} from '../src/features/deckcraft/siteSurface';
 import type {DeckData,YardFeature} from '../src/features/deckcraft/types';
 import {WALL_PRODUCTS} from '../src/features/deckcraft/yardSettings';
 import {GUILLOTINED_WALL,WALL_STONES,WALL_STONE_COURSES_IN,LIMESTONE_LB_PER_FT3,wallStoneOf,wallStoneProblem} from '../src/features/deckcraft/wallStones';
@@ -34,9 +36,9 @@ const courses=(stones:YardBox[],dir:{x:number;y:number},run?:string)=>{
  for(const b of stones){if(run!==undefined&&runKeyOf(b)!==run)continue;const along=b.polygon!.map(p=>p.x*dir.x+p.y*dir.y),row=byRow.get(rowOf(b))??new Map(),s=row.get(b.unitId!)??{lo:Infinity,hi:-Infinity};s.lo=Math.min(s.lo,...along);s.hi=Math.max(s.hi,...along);row.set(b.unitId!,s);byRow.set(rowOf(b),row);}
  return [...byRow].sort((a,b)=>a[0]-b[0]).map(([row,m])=>({row,stones:[...m.values()].sort((a,b)=>a.lo-b.lo)}));
 };
-const interior=(stones:{lo:number;hi:number}[])=>stones.slice(0,-1).map(s=>s.hi+STONE_JOINT_IN/2);
+const interior=(stones:{lo:number;hi:number}[])=>stones.slice(1).map((s,i)=>(stones[i].hi+s.lo)/2);
 /** Joints closer than the clearance to a joint in the course directly below. */
-const stackedJoints=(rows:ReturnType<typeof courses>)=>rows.flatMap((r,i)=>i>0&&rows[i-1].row===r.row-1?interior(r.stones).filter(j=>interior(rows[i-1].stones).some(b=>Math.abs(j-b)<STONE_JOINT_CLEARANCE_IN-1e-6)):[]);
+const stackedJoints=(rows:ReturnType<typeof courses>,toleranceIn=1e-6)=>rows.flatMap((r,i)=>i>0&&rows[i-1].row===r.row-1?interior(r.stones).filter(j=>interior(rows[i-1].stones).some(b=>Math.abs(j-b)<STONE_JOINT_CLEARANCE_IN-toleranceIn)):[]);
 /** Each stone's share of its course (joint centre to joint centre, course ends at the stone faces). */
 const pitches=(stones:{lo:number;hi:number}[])=>{const stations=[stones[0].lo,...interior(stones),stones.at(-1)!.hi];return stations.slice(1).map((s,i)=>s-stations[i]);};
 
@@ -46,7 +48,7 @@ const cold=flat([wall()]);
 ok(hasAdvancedYard(cold)&&needsAdvancedYard(cold),'Opening a design discovers a guillotined wall needs the advanced yard runtime, as the model does');
 await ensureLiveDesignExtensions(cold);
 ok(buildYardModel(cold).features[0].boxes.some(b=>b.role==='wall-block'),'After the design extensions load, the wall builds without "Geometry is loading"');
-await Promise.all([loadAdvancedYardRuntime(),loadWallStationRuntime()]);
+await Promise.all([loadAdvancedYardRuntime(),loadWallStationRuntime(),loadSiteEngine()]);
 const {validateWallTopSteps}=await import('../src/features/deckcraft/wallTopStepsRuntime');
 
 // 1. The product, its stones and courses.
@@ -94,9 +96,15 @@ const other=blocks(buildYardModel(flat([wall({id:'gw2',finishedElevationIn:30})]
 ok(JSON.stringify(other.map(b=>xs(b)))!==JSON.stringify(stones.map(b=>xs(b))),'Another wall gets its own stone pattern');
 // The course generator: a course may start anywhere (a foundation step), it is balanced so its last stone is a whole
 // 24-48 in stone, and its joints clear the course below in shared stations.
-{const run=stoneCourseJoints('unit'),below=run(0,0,300),above=run(1,137,300),step=above.slice(1).map((j,i)=>j-above[i]);
+{const run=stoneCourseJoints('unit'),[below]=run(0,[[0,300]]),[above]=run(1,[[137,300]]),step=above.slice(1).map((j,i)=>j-above[i]);
  ok(above[0]===137&&above.at(-1)===300&&step.every(l=>l>=STONE_LENGTH_IN.min-1e-9&&l<=STONE_LENGTH_IN.max+1e-9),'A course starting at a step still lays whole 24-48 in stones to its end');
- ok(above.slice(1,-1).every(j=>below.every(b=>Math.abs(j-b)>=STONE_JOINT_CLEARANCE_IN)),'…with every joint clear of the course below at the same stations');}
+ ok(above.slice(1,-1).every(j=>below.every(b=>Math.abs(j-b)>=STONE_JOINT_CLEARANCE_IN)),'…with every joint clear of the course below at the same stations');
+ const gapped=stoneCourseJoints('gap')(0,[[0,100],[160,300]]);ok(gapped.length===2&&gapped.every(list=>list.slice(1).every((j,i)=>j-list[i]>=STONE_LENGTH_IN.min-1e-9)),'A course broken by a foundation step ends each stretch in whole stones');
+ const short=stoneCourseJoints('short'),r0=short(0,[[0,60]])[0],r1=short(1,[[0,60]])[0],r2=short(2,[[0,60]])[0];
+ ok(r0.length===3&&r1.length===3&&r2.length===3&&Math.abs(r1[1]-r0[1])>=STONE_JOINT_CLEARANCE_IN&&Math.abs(r2[1]-r1[1])>=STONE_JOINT_CLEARANCE_IN,'A 60 in run alternates its one joint so each clears the course below');
+ const tight=stoneCourseJoints('tight')(0,[[0,50]])[0];ok(tight.slice(1).every((j,i)=>j-tight[i]>=STONE_LENGTH_IN.min-1e-9),'A 50 in run is two whole stones');
+ ok(stoneCourseJoints('tiny')(0,[[0,20]])[0].length===2,'A run under 24 in is one stone');
+ ok(Array.isArray(stoneCourseJoints('nan')(0,[[Number.NaN,40]])[0]),'A non-finite stretch lays nothing rather than throwing');}
 
 // 4b. Real ground and real shapes: stepped foundations, a battered corner, a curved corner.
 const slope=buildYardModel(flat([wall({id:'w12',xFt:60,zFt:60,widthFt:30,finishedElevationIn:102,rotationDeg:-90})],{terrainConfig:{widthFt:250,depthFt:250,elevationIn:0,slopePct:10}}));
@@ -106,6 +114,20 @@ ok(stackedJoints(slopeRows).length===0,'…and their joints still clear the cour
 ok(slopeRows.every(r=>r.stones.at(-1)!.hi-r.stones[0].lo<STONE_LENGTH_IN.min||pitches(r.stones).every(l=>l>=STONE_LENGTH_IN.min-1e-6)),'…with no stone shorter than 24 in, at either end of a course');
 const battered=blocks(buildYardModel(flat([wall({id:'bw',widthFt:280/12,heightIn:60,finishedElevationIn:60,wallPath:[{x:-120,y:0},{x:0,y:0},{x:0,y:-160}],wallConstruction:{setbackPerCourseIn:2}})])),'bw');
 ok(stackedJoints(courses(battered,{x:1,y:0},'0')).length===0&&stackedJoints(courses(battered,{x:0,y:-1},'1')).length===0,'A battered L wall keeps 6 in joint clearance on both legs');
+// A curved wall with a batter: courses on concentric arcs keep their joints 6 in apart, measured by angle about the
+// arc centre as arc length at course 0's radius.
+{const arc=arcGeometry({x:-120,y:0},{x:120,y:0},40),bent=blocks(buildYardModel(flat([wall({id:'bend',widthFt:arc.lengthIn/12,heightIn:60,finishedElevationIn:60,wallPath:[{x:-120,y:0},{x:120,y:0}],curves:[{edge:0,bulgeIn:40}],wallConstruction:{setbackPerCourseIn:2}})])),'bend');
+ const cx=arc.center.x,cy=480+arc.center.y,mid=Math.atan2(480+40-cy,0-cx),byAngle=new Map<number,Map<string,{lo:number;hi:number}>>();
+ for(const b of bent){const s=b.polygon!.map(v=>{let a=Math.atan2(v.y-cy,v.x-cx)-mid;a=Math.atan2(Math.sin(a),Math.cos(a));return a*arc.radius;}),row=byAngle.get(rowOf(b))??new Map(),st=row.get(b.unitId!)??{lo:Infinity,hi:-Infinity};st.lo=Math.min(st.lo,...s);st.hi=Math.max(st.hi,...s);row.set(b.unitId!,st);byAngle.set(rowOf(b),row);}
+ const arcRows=[...byAngle].sort((a,b)=>a[0]-b[0]).map(([row,m])=>({row,stones:[...m.values()].sort((a,b)=>a.lo-b.lo)}));
+ // Joints are square to each facet, not exactly radial, so measuring them by angle reads within about 0.1 in.
+ ok(arcRows.length>=4&&stackedJoints(arcRows,.25).length===0,`A battered curved wall keeps 6 in joint clearance between concentric courses (${stackedJoints(arcRows,.25).map(j=>j.toFixed(1)).join(', ')})`);}
+// A hump in the ground: the lower courses stop either side of it, and each stretch still ends in whole stones.
+{const points=[];for(let x=-240;x<=600;x+=30)for(let z=240;z<=720;z+=60)points.push({id:`H${x}_${z}`,xIn:x,zIn:z,elevationIn:+(30*Math.max(0,1-Math.abs(x)/70)).toFixed(3)});
+ const humped=blocks(buildYardModel(flat([wall({id:'hump',heightIn:40,finishedElevationIn:66})],{siteModel:{version:1,points,grading:[]}})),'hump');
+ const stretchRows=courses(humped,{x:1,y:0}).map(r=>({row:r.row,groups:r.stones.reduce((g,s)=>{const last=g.at(-1);if(last&&s.lo-last.at(-1)!.hi<=STONE_JOINT_IN+.01)last.push(s);else g.push([s]);return g;},[] as {lo:number;hi:number}[][])}));
+ ok(stretchRows.some(r=>r.groups.length>1),'Over the hump a lower course stops and starts again');
+ ok(stretchRows.every(r=>r.groups.every(g=>g.at(-1)!.hi-g[0].lo<STONE_LENGTH_IN.min||pitches(g).every(l=>l>=STONE_LENGTH_IN.min-1e-6))),'…and each stretch of it ends in whole stones, not cut ones');}
 // A curved wall's stones cover the same body as natural armour stone of the same shape, bar the thin joints.
 const curved=wall({id:'cw',finishedElevationIn:30,wallPath:[{x:-120,y:0},{x:0,y:0},{x:0,y:120}],curves:[{edge:1,bulgeIn:20}]}),curvedStones=blocks(buildYardModel(flat([curved])),'cw');
 const curvedArmour=blocks(buildYardModel(flat([{...curved,productId:'armour-stone',wallStone:undefined}])),'cw'),jointArea=2*STONE_JOINT_IN*curved.depthFt*12;// a joint widens on the outside of an arc; the corner notch was about 33 sq in
