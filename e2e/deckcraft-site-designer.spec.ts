@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import type {DeckData} from '../src/features/deckcraft/types';
 import type {DeckAgentApi} from '../src/features/deckcraft/designer/deckAgentController';
 import type {DesignerAiRequest,DesignerAiResponse} from '../src/features/deckcraft/designer/siteDesignerAiContract';
+import {openDesignerMode,showProjectControls} from './nav';
 
 /**
  * S5 "Design from my ground" on Craighurst extended: the real U-Level shots under the 12 × 5 ft deck plus SYNTHETIC
@@ -74,7 +75,6 @@ test.beforeEach(async({page,context})=>{
  expect((await design(page)).siteModel?.points.length).toBeGreaterThan(40);
 });
 
-async function showProjectControls(page:Page){const show=page.getByRole('button',{name:'Show project controls',exact:true});if(await show.isVisible())await show.click();}
 /** Backyard → "Design from my ground" → the panel. */
 async function openSiteDesigner(page:Page){
  await showProjectControls(page);
@@ -257,9 +257,11 @@ for(const [code,line] of [['rate_limited',/used today’s AI designer turns/],['
 }
 
 test('Elevations & build → Ground & grading opens the same panel',async({page})=>{
- await showProjectControls(page);
+ // Elevations & build is Designer Mode's: its Terrain tab opens the workspace.
+ await openDesignerMode(page);
+ await page.getByRole('tablist',{name:'Ribbon tabs'}).getByRole('tab',{name:'Terrain',exact:true}).click();
+ await page.locator('#dd-pro-ribbon-panel').getByRole('button',{name:'Ground & survey',exact:true}).click();
  const tasks=page.getByRole('group',{name:'Elevation tasks',exact:true});
- if(!await tasks.isVisible())await page.getByRole('button',{name:'Elevations & build',exact:true}).click();
  await tasks.getByRole('button',{name:'Ground & grading',exact:true}).click();
  const entry=page.locator('.dd-elevation-workspace').getByRole('button',{name:'Design from my ground',exact:true});
  await entry.scrollIntoViewIfNeeded();await entry.click();await expect(entry).toHaveAttribute('aria-expanded','true');

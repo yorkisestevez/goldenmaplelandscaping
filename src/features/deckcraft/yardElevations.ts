@@ -1,6 +1,7 @@
 import type {DeckData,YardFeature} from './types';
 import {sampleSiteHeight} from './siteSurface';
 import {hardscapeSelection} from './hardscapeCatalogue';
+import {GUILLOTINED_WALL,wallStoneOf} from './wallStones';
 
 export type YardElevationField='heightIn'|'baseElevationIn';
 export function yardGradeIn(data:DeckData,f:YardFeature){return sampleSiteHeight(data,f.xFt*12,f.zFt*12)??NaN;}
@@ -17,7 +18,7 @@ export function yardElevationEdit(f:YardFeature,field:YardElevationField,value:n
 /** Full supplier courses, aligned to the requested top. Fractional height is
  * resolved by additional burial, never by squeezing or stretching a block. */
 export function yardWallCourses(f:YardFeature,grade:number){
- const s=hardscapeSelection(f),armour=f.productId==='armour-stone',course=s?s.unit.heightMm/25.4:armour?18:6,cap=s?.cap?s.cap.heightMm/25.4:s||armour?0:3,base=grade+(f.baseElevationIn??0),top=f.finishedElevationIn??base+Math.max(1,f.heightIn),h=Math.max(1,top-base);
+ const s=hardscapeSelection(f),guillotined=f.productId===GUILLOTINED_WALL,armour=f.productId==='armour-stone'||guillotined,course=s?s.unit.heightMm/25.4:guillotined?wallStoneOf(f).courseIn:armour?18:6,cap=s?.cap?s.cap.heightMm/25.4:s||armour?0:3,base=grade+(f.baseElevationIn??0),top=f.finishedElevationIn??base+Math.max(1,f.heightIn),h=Math.max(1,top-base);
  // Techo-Bloc's wall installation guide requires at least 6 in or 10% of
  // exposed height. Other systems retain one planning course pending their
  // system/site design; selecting a nominal block is not structural approval.

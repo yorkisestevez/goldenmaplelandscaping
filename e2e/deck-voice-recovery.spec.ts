@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {showProjectControls} from './nav';
+import {openDesignerMode,proMenu} from './nav';
 
 for(const phone of [false,true])test.describe(phone?'phone voice recovery':'desktop voice recovery',()=>{
  test.use({viewport:phone?{width:390,height:844}:{width:1500,height:1050},isMobile:phone,hasTouch:phone});
@@ -15,9 +15,9 @@ for(const phone of [false,true])test.describe(phone?'phone voice recovery':'desk
    (window as any).SpeechRecognition=Recognition;
    (window as any).qaSay=(text:string)=>(window as any).qaMic.onresult?.({resultIndex:0,results:[Object.assign([{transcript:text}],{isFinal:true})]});
   });
-  await page.goto('/deck-designer/');await page.waitForFunction(()=>(window as any).deckcraft?.read().ready);
+  await openDesignerMode(page);
   const before=await page.evaluate(()=>(window as any).deckcraft.read());
-  await showProjectControls(page);await page.getByRole('button',{name:'Describe a change',exact:true}).click();
+  await proMenu(page,'Edit','Describe a change…');
   const text=page.getByRole('textbox',{name:'What would you like to change?',exact:true});
   await page.getByRole('button',{name:'Talk',exact:true}).click();
   await page.evaluate(()=>{(window as any).qaSay('make the deck twenty feet wide');(window as any).qaLate=(window as any).qaMic.onresult;});

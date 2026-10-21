@@ -1,19 +1,18 @@
 import {test,expect} from '@playwright/test';
-import {openDesignTask,showProjectControls} from './nav';
+import {openDesignerMode,proMenu} from './nav';
 import {mkdirSync} from 'node:fs';
 import {resolve} from 'node:path';
 test('short desktop switches full side panels and preserves the assistant draft beside the drawing',async({page,context})=>{
  await page.setViewportSize({width:1280,height:720});
  await context.addInitScript(()=>localStorage.clear());
  await context.route('**/.netlify/functions/deck-assistant',r=>r.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{message:'Unavailable during controlled layout test.'}})}));
- await page.goto('/deck-designer/');
- await showProjectControls(page);
- await page.getByRole('button',{name:'Describe a change',exact:true}).click();
+ await openDesignerMode(page);
+ await proMenu(page,'Edit','Describe a change…');
  const dock=page.getByRole('region',{name:'Design assistant',exact:true});await expect(dock).toBeVisible();
  const input=dock.getByRole('textbox',{name:'What would you like to change?',exact:true});await input.fill('Make the deck slightly wider');
- await openDesignTask(page,'Deck shape & size');
-  await expect(page.getByRole('dialog',{name:'Design inspector',exact:true})).toBeVisible();await expect(dock).toBeHidden();
- await page.getByRole('button',{name:'Back to assistant'}).click();await expect(dock).toBeVisible();
+ await proMenu(page,'Add','Deck shape & size');
+  await expect(page.locator('#dd-pro-properties').getByRole('region',{name:/^Deck shape & size/})).toBeVisible();await expect(dock).toBeHidden();
+ await proMenu(page,'Edit','Describe a change…');await expect(dock).toBeVisible();
  await expect(input).toHaveValue('Make the deck slightly wider');
  expect(await dock.locator('.dd-instructions-body').evaluate(el=>el.clientHeight)).toBeGreaterThan(200);
  const preview=dock.getByRole('button',{name:'Preview edit',exact:true});await preview.scrollIntoViewIfNeeded();await expect(preview).toBeVisible();

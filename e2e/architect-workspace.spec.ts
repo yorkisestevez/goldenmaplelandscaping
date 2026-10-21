@@ -12,7 +12,7 @@ for(const width of [390,900,1440])test(`ribbon, settings and canvas at ${width}p
  await tabs.getByRole('tab',{name:'Landscape',exact:true}).click();await page.getByRole('radio',{name:'Landscape',exact:true}).click();await expect(page.getByRole('radio',{name:'Landscape',exact:true})).toHaveAttribute('aria-checked','true');
  await tabs.getByRole('tab',{name:'Building',exact:true}).click();await page.getByRole('radio',{name:'Deck size',exact:true}).click();
  expect(await page.evaluate(()=>(window as any).deckcraft.read().design)).toEqual(before);
- await page.getByRole('button',{name:'Show project controls',exact:true}).click();const nav=page.getByRole('navigation',{name:'Design tasks'});await nav.locator('summary').filter({hasText:/^Design$/}).click();await nav.getByRole('button',{name:'Boards & finish',exact:true}).click();
+ await page.getByRole('button',{name:'Show all options',exact:true}).click();const nav=page.getByRole('navigation',{name:'Design tasks'});await nav.locator('summary').filter({hasText:/^Design$/}).click();await nav.getByRole('button',{name:'Boards & finish',exact:true}).click();
  const inspector=page.getByRole('dialog',{name:'Design inspector',exact:true});await expect(inspector).toBeVisible();await page.keyboard.press('Escape');await expect(inspector).not.toBeVisible();
  await page.getByRole('radio',{name:'Deck size',exact:true}).scrollIntoViewIfNeeded();
  const canvas=await page.locator('.dd-plan-viewport').boundingBox();expect(canvas!.width).toBeGreaterThan(width-70);

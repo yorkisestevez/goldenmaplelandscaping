@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {showProjectControls} from './nav';
+import {openDesignerMode,proMenu} from './nav';
 
 test.use({viewport:{width:1440,height:1000}});
 test.beforeEach(async({context,page})=>{
@@ -11,8 +11,7 @@ test.beforeEach(async({context,page})=>{
   Object.defineProperty(window,'speechSynthesis',{value:{cancel(){},speak(u:any){queueMicrotask(()=>u.onend?.());}}});
  });
  await page.route('**/.netlify/functions/deck-assistant',route=>route.fulfill({json:{ready:false,source:'exact-only'}}));
- await page.goto('/deck-designer/');await page.waitForFunction(()=>(window as any).deckcraft?.read().ready);
- await showProjectControls(page);await page.getByRole('button',{name:'Describe a change',exact:true}).click();
+ await openDesignerMode(page);await proMenu(page,'Edit','Describe a change…');
 });
 const read=(page:any)=>page.evaluate(()=>(window as any).deckcraft.read());
 const say=async(page:any,text:string)=>{await page.waitForFunction(()=>!!(window as any).qaMic?.onresult);await page.evaluate((value:string)=>(window as any).qaSay(value),text);};
@@ -54,7 +53,8 @@ test('cancel interrupts pending AI work and backgrounding stops the microphone',
 });
 test('desktop inspector stays clear of the canvas; phone has no horizontal overflow',async({page})=>{
  await page.getByRole('button',{name:'Close instruction assistant',exact:true}).click();
- for(const width of [1280,1440]){await page.setViewportSize({width,height:1000});const canvas=await page.locator('.dd-canvas').boundingBox(),panel=await page.locator('.dd-selection-inspector').boundingBox();expect(panel!.y).toBeGreaterThanOrEqual(canvas!.y+canvas!.height-1);expect(panel!.x).toBeGreaterThanOrEqual(0);expect(panel!.x+panel!.width).toBeLessThanOrEqual(width+1);}
+ // Designer Mode docks the inspector in the side column beside the drawing.
+ for(const width of [1280,1440]){await page.setViewportSize({width,height:1000});const canvas=await page.locator('.dd-canvas').boundingBox(),panel=await page.locator('.dd-pro-side .dd-selection-inspector').boundingBox();expect(panel!.x).toBeGreaterThanOrEqual(canvas!.x+canvas!.width-1);expect(panel!.x).toBeGreaterThanOrEqual(0);expect(panel!.x+panel!.width).toBeLessThanOrEqual(width+1);}
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 

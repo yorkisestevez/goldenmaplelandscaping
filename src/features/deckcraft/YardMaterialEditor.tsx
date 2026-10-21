@@ -2,6 +2,7 @@ import {lazy,Suspense,useId,useState} from 'react';
 import type {YardFeature} from './types';
 import {hardscapeName,hardscapeProduct} from './hardscapeCatalogue';
 import {PATIO_PRODUCTS,WALL_PRODUCTS} from './yardSettings';
+import {withoutStaleStone} from './WallStoneEditor';
 import './YardMaterialEditor.css';
 const HardscapePicker=lazy(()=>import('./HardscapePicker'));
 const FlagstoneChooser=lazy(()=>import('./FlagstoneChooser'));
@@ -17,6 +18,6 @@ export default function YardMaterialEditor({feature,onChange,disabled=false}:{fe
   <button type="button" className="dd-yard-material-button" disabled={disabled} aria-expanded={open} aria-controls={id} onClick={()=>setOpen(!open)}><span aria-hidden="true" className="dd-yard-material-swatch" style={{backgroundColor:feature.color}}/><span>{wall?'Choose wall material':'Choose patio material'}</span><span aria-hidden="true">{open?'−':'+'}</span></button>
   <p className="dd-yard-material-current">{material}</p>
   {!open&&<p className="dd-yard-material-hint">Techo-Bloc · Unilock · Permacon · Oaks<br/>Products, colours, finishes, sizes and patterns</p>}
-  <div id={id} hidden={!open}>{open&&<Suspense fallback={<p role="status">Loading material choices…</p>}>{!wall&&<FlagstoneChooser feature={feature} onChange={change}/>}<HardscapePicker feature={feature} onChange={change}/></Suspense>}</div>
+  <div id={id} hidden={!open}>{open&&<Suspense fallback={<p role="status">Loading material choices…</p>}>{!wall&&<FlagstoneChooser feature={feature} onChange={change}/>}<HardscapePicker feature={feature} onChange={patch=>change(withoutStaleStone(feature,patch))}/></Suspense>}</div>
  </section>;
 }
