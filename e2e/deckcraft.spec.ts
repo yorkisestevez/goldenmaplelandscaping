@@ -1473,6 +1473,10 @@ test('finishes one wall with its own cladding and a wainscot, dresses the house 
   await wallTiles(studio).getByRole('button',{name:'Ledgestone',exact:true}).click();
   await expect(wallTiles(studio).getByRole('button',{name:'Ledgestone',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(studio.getByText('This wall has its own finish.',{exact:true})).toBeVisible();
+  // Stone on the wall the deck fastens to means no ledger (2026-10-21): the house side becomes a beam on posts, so the
+  // price moves. The wainscot, the look and the reload below leave that new price alone.
+  await expect((await price(page))).not.toHaveText(before??'');
+  const walled=await (await price(page)).textContent();
   await studio.getByRole('checkbox',{name:'A band of another cladding along the bottom, under a trim cap',exact:true}).check();
   await studio.getByLabel('Wainscot cladding',{exact:true}).selectOption('Fieldstone');
   await studio.getByLabel('Wainscot height',{exact:true}).selectOption('42');
@@ -1483,7 +1487,7 @@ test('finishes one wall with its own cladding and a wainscot, dresses the house 
   await expect(studio.getByRole('button',{name:'Coastal look',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(studio.getByText(/^1 wall, block, door or window keeps its own finish over the look\./)).toBeVisible();
   await expect(viewer3d(page)).toBeVisible();
-  await expect((await price(page))).toHaveText(before??'');
+  await expect((await price(page))).toHaveText(walled??'');
   await page.waitForTimeout(800);// autosave runs 450 ms after the last change
   await page.reload();
   const again=await openExterior(page);
@@ -1495,7 +1499,7 @@ test('finishes one wall with its own cladding and a wainscot, dresses the house 
   await expect(wallTiles(again).getByRole('button',{name:'Ledgestone',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(again.getByLabel('Wainscot cladding',{exact:true})).toHaveValue('Fieldstone');
   await expect(again.getByLabel('Wainscot height',{exact:true})).toHaveValue('42');
-  await expect((await price(page))).toHaveText(before??'');
+  await expect((await price(page))).toHaveText(walled??'');
   expect(problems).toEqual([]);
 });
 
