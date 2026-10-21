@@ -30,8 +30,9 @@ import {arcGeometry} from './circularArcs';
  */
 const CREMA='#d0bca4';
 const FIELD:YardFeature['hardscape']={finishId:'hd-smooth-grande',colorId:'caff-crema',unitId:'grande-495-825-60',patternId:'linear-laying-pattern-05-100-blu-grande',angleDeg:0,jointMm:7};
-const plank=(angleDeg:number):YardFeature['hardscape']=>({finishId:'klean-bloc-wood-texture',colorId:'hazelnut-brandy',unitId:'127-762-57-mm-127-762-57',patternId:'atlas-borealis-01',angleDeg,jointMm:0});
-const SLAB='techo-blu60-smooth-slab',PLANK='techo-borealis-slab';
+// Walks: Techo-Bloc Linea in Chestnut Brown, the long 100×425 unit in running bond, laid along each walk.
+const plank=(angleDeg:number):YardFeature['hardscape']=>({finishId:'dry-cast',colorId:'chestnut-brown',unitId:'100-425-100-mm-100-425-100',patternId:'running-bond',angleDeg,jointMm:3});
+const SLAB='techo-blu60-smooth-slab',PLANK='techo-linea-paver';
 
 export function resortEstateDesign():DeckData{
  const look=EXTERIOR_LOOKS.find(l=>l.id==='modern-farmhouse')!;
@@ -58,7 +59,7 @@ export function resortEstateDesign():DeckData{
  const allDeck=tk.levels.flatMap(l=>l.footprint.outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z})));
  const deckFront=Math.max(...tk.levels[0].footprint.outline.map(p=>p.y+tk.levels[0].offset.z));
  const push=(f:YardFeature)=>{data.yardFeatures=[...data.yardFeatures!,f];return f;};
- const pave=(id:string,name:string,xFt:number,zFt:number,w:number,d:number,rot=0,walk?:number)=>push({...createYardFeature(data,{kind:'patio',id,name,xFt,zFt,widthFt:w,depthFt:d,heightIn:0,productId:walk===undefined?SLAB:PLANK,hardscape:walk===undefined?FIELD:plank(walk)}),rotationDeg:((rot%360)+360)%360,color:walk===undefined?CREMA:'#a0714a'});
+ const pave=(id:string,name:string,xFt:number,zFt:number,w:number,d:number,rot=0,walk?:number)=>push({...createYardFeature(data,{kind:'patio',id,name,xFt,zFt,widthFt:w,depthFt:d,heightIn:0,productId:walk===undefined?SLAB:PLANK,hardscape:walk===undefined?FIELD:plank(walk)}),rotationDeg:((rot%360)+360)%360,color:walk===undefined?CREMA:'#836f5e'});
  // Arrival terrace: 16 ft deep, notched round the flight so the treads land on it.
  const cx=(s0+s1)/2,x0=s0-10*12,x1=s1+10*12,cover=Math.min(1.1,0.32*144/(s1-s0)),zN=foot-cover,zF=zN+16*12;
  let terrace=createYardFeature(data,{kind:'patio',id:'terrace',name:'Arrival terrace',xFt:(x0+x1)/24,zFt:(zN+zF)/24,widthFt:(x1-x0)/12,depthFt:(zF-zN)/12,heightIn:0,productId:SLAB,hardscape:FIELD});
@@ -100,14 +101,14 @@ export function resortEstateDesign():DeckData{
  data.pergola={...pg,frameFinish:'black',roofFinish:'black',accessories:[],lighting:'perimeter-led',customSize:{widthFt:13,depthFt:14,heightFt:10},target:{kind:'patio',featureId:cab.id},xFt:cab.xFt-5.5,zFt:cab.zFt,rotationDeg:0,louverDeg:0} as any;
  // Objects.
  const objs:LandscapeObject[]=[];let n=0;
- const bed=(id:string,name:string,pts:[number,number][],extra:Partial<LandscapeObject>={})=>{const xs=pts.map(p=>p[0]),zs=pts.map(p=>p[1]);const o=newLandscapeObject('mulch-bed',id,(Math.min(...xs)+Math.max(...xs))*6,(Math.min(...zs)+Math.max(...zs))*6);objs.push({...o,name,widthIn:(Math.max(...xs)-Math.min(...xs))*12,depthIn:(Math.max(...zs)-Math.min(...zs))*12,polygon:pts.map(([x,z])=>({x:x*12,z:z*12})),...extra} as LandscapeObject);};
+ const bed=(id:string,name:string,pts:[number,number][],extra:Partial<LandscapeObject>={})=>{const xs=pts.map(p=>p[0]),zs=pts.map(p=>p[1]);const o=newLandscapeObject((extra as {drift?:unknown}).drift?'black-mulch-bed':'mulch-bed',id,(Math.min(...xs)+Math.max(...xs))*6,(Math.min(...zs)+Math.max(...zs))*6);objs.push({...o,name,widthIn:(Math.max(...xs)-Math.min(...xs))*12,depthIn:(Math.max(...zs)-Math.min(...zs))*12,polygon:pts.map(([x,z])=>({x:x*12,z:z*12})),...extra} as LandscapeObject);};
  const grow=(sp:string,x:number,z:number)=>{const o=newLandscapePlant(sp,`p${n++}`,x*12,z*12);objs.push({...o,rotationDeg:(n*53)%360,speciesRecord:structuredClone(o.speciesRecord!)});};
  const furn=(a:LandscapeAssetId,id:string,x:number,z:number,rot:number,sup?:string)=>objs.push({...newLandscapeObject(a,id,x*12,z*12),rotationDeg:rot,...(sup?{supportFeatureId:sup}:{})});
  // Meadow beds either side of the winding path, planted as dense native drifts (one object each).
- const MEADOW=['echinacea-purpurea','monarda-fistulosa','rudbeckia-hirta','schizachyrium-scoparium','echinacea-purpurea','panicum-virgatum','monarda-fistulosa','rudbeckia-hirta'];
+ const MEADOW=['matteuccia-struthiopteris','echinacea-purpurea','hydrangea-arborescens-annabelle','rudbeckia-hirta','panicum-virgatum','monarda-fistulosa','matteuccia-struthiopteris','schizachyrium-scoparium'];
  const drift=(species:string[],spacingIn:number,seed:number)=>({drift:{species,spacingIn,seed}}) as Partial<LandscapeObject>;
- bed('meadow-west','Native meadow',[[tx-27,tz+3.2],[tx-3.3,tz+3.2],[tx-3.3,tz+12],[tx+1.4,tz+21.4],[tx+6.4,tz+28],[tx-27,tz+28]],drift(MEADOW,16,11));
- bed('meadow-east','Native meadow',[[tx+3.4,tz+0.3],[x1/12-0.6,tz+0.3],[x1/12-0.6,tz+6],[tx+20,tz+6],[tx+20,tz+17],[tx+13,tz+19],[tx+13,tz+20],[tx+8.3,tz+12]],drift(MEADOW,16,12));
+ bed('meadow-west','Native meadow',[[tx-27,tz+3.2],[tx-3.3,tz+3.2],[tx-3.3,tz+12],[tx+1.4,tz+21.4],[tx+6.4,tz+28],[tx-27,tz+28]],drift(MEADOW,13,11));
+ bed('meadow-east','Native meadow',[[tx+3.4,tz+0.3],[x1/12-0.6,tz+0.3],[x1/12-0.6,tz+6],[tx+20,tz+6],[tx+20,tz+17],[tx+13,tz+19],[tx+13,tz+20],[tx+8.3,tz+12]],drift(MEADOW,13,12));
  for(const [sp,x,z] of [['cercis-canadensis',tx-14,tz+16],['acer-rubrum',tx-24,tz+25],['amelanchier-canadensis',tx+16,tz+14]] as const)grow(sp,x,z);
  // Cutting garden: three raised cedar beds west of the fire circle, rows of coneflower and black-eyed Susan.
  for(let k=0;k<3;k++){const bx=fc.xFt-17,bz=fc.zFt-7+k*7;bed(`cut-${k}`,'Cutting garden bed',[[bx-2,bz-2.5],[bx+2,bz-2.5],[bx+2,bz+2.5],[bx-2,bz+2.5]],{raisedIn:18,edge:{kind:'timber'}} as any);for(const dz of [-1.5,0,1.5])grow(k%2?'rudbeckia-hirta':'echinacea-purpurea',bx,bz+dz);}
@@ -123,7 +124,7 @@ export function resortEstateDesign():DeckData{
  const RISERS=6,RUN=14;
  push({id:'stone-steps',name:'Stone slab steps',kind:'patio',enabled:true,xFt:SX,zFt:WZ-((RISERS-1)*RUN+RUN+2)/24+1.2,widthFt:5,depthFt:((RISERS-1)*RUN+RUN+2)/12,heightIn:0,rotationDeg:180,productId:SLAB,hardscape:FIELD,color:'#a39887',finishedElevationIn:UP,
   stoneSteps:{lowerElevationIn:0,riserCount:RISERS,treadRunIn:RUN,stockWidthIn:60,stockDepthIn:RUN+2,stockThicknessIn:6,baseDepthIn:6,settingBedIn:1,jointIn:0,productName:'Natural armour stone slab steps'}} as YardFeature);
- const top=push({...createYardFeature(data,{kind:'patio',id:'overlook',name:'Overlook',xFt:SX,zFt:WZ+5.5,widthFt:10,depthFt:7,heightIn:0,productId:PLANK,hardscape:plank(0)}),finishedElevationIn:UP,color:'#a0714a'});
+ const top=push({...createYardFeature(data,{kind:'patio',id:'overlook',name:'Overlook',xFt:SX,zFt:WZ+5.5,widthFt:10,depthFt:7,heightIn:0,productId:PLANK,hardscape:plank(0)}),finishedElevationIn:UP,color:'#836f5e'});
  // The walk from the fire circle to the step foot, through the rear meadow.
  pave('rear-walk','Meadow walk',SX,(fc.zFt+11+WZ-RISERS*RUN/12+1.2)/2,5.5,(WZ-RISERS*RUN/12+1.2)-(fc.zFt+11)+0.6,0,90);
  const upper=(x:number,z:number)=>!(Math.abs(x-SX)<6.5&&z<WZ+10);
@@ -138,13 +139,17 @@ export function resortEstateDesign():DeckData{
  furn('outdoor-coffee-table','overlook-table',top.xFt,top.zFt-2.3,0,top.id);
  // Lower meadow along the wall foot, either side of the meadow walk; deep mixed borders down both sides; a lawn
  // panel (the open green west of the fire circle) is left clean between them.
- bed('meadow-rear','Rear meadow',[[LX0+9.6,WZ-13],[SX-3.1,WZ-13],[SX-3.1,WZ-1.6],[LX0+9.6,WZ-1.6]],drift(MEADOW,16,31));
+ bed('meadow-rear','Rear meadow',[[LX0+9.6,WZ-13],[SX-3.1,WZ-13],[SX-3.1,WZ-1.6],[LX0+9.6,WZ-1.6]],drift(MEADOW,13,31));
  const pE=L(23,-16.5),pW=L(0,-16.5);
  bed('wall-foot-east','Wall-foot planting',[[SX+3.1,WZ-6.6],[LX1-5.4,WZ-6.6],[LX1-5.4,WZ-1.6],[SX+3.1,WZ-1.6]],drift(['rudbeckia-hirta','monarda-fistulosa','schizachyrium-scoparium','echinacea-purpurea'],16,32));
  bed('west-border','West border',[[LX0-1.4,14],[LX0+9.2,14],[LX0+9.2,WZ-1.6],[LX0-1.4,WZ-1.6]],drift(['hydrangea-arborescens-annabelle','cornus-sericea','echinacea-purpurea','physocarpus-opulifolius','monarda-fistulosa','schizachyrium-scoparium'],24,41));
  bed('east-border','East border',[[LX1-5,tz+6.4],[LX1+1.4,tz+6.4],[LX1+1.4,WZ-1.6],[LX1-5,WZ-1.6]],drift(['hydrangea-paniculata','cornus-sericea','echinacea-purpurea','rudbeckia-hirta','amelanchier-canadensis'],24,42));
- bed('cabana-garden','Cabana garden',[[tx+20.6,tz+6.4],[LX1-5.4,tz+6.4],[LX1-5.4,pE.z-1.2],[pW.x+1,pW.z-1.2],[tx+20.6,pW.z-1.2]],drift(MEADOW,16,43));
+ bed('cabana-garden','Cabana garden',[[tx+20.6,tz+6.4],[LX1-5.4,tz+6.4],[LX1-5.4,pE.z-1.2],[pW.x+1,pW.z-1.2],[tx+20.6,pW.z-1.2]],drift(MEADOW,13,43));
  bed('house-west','Foundation planting',[[hl+0.5,1.5],[-0.8,1.5],[-0.8,tz-6.4-0.5-6],[hl+0.5,tz-6.4-0.5-6]],drift(['hydrangea-arborescens-annabelle','echinacea-purpurea','hosta','monarda-fistulosa'],20,51));
+ // Fire-to-pool garden: closes the lawn between the fire circle, the west meadow and the pool court.
+ const g1=L(-23.6,-6),g2=L(-23.6,16.6),g3=L(5,16.6);
+ bed('fire-pool-garden','Fire-to-pool garden',[[-6.9,fc.zFt+11.6],[tx-27.6,fc.zFt+11.6],[tx-27.6,tz+28.6],[g1.x,g1.z],[g2.x,g2.z],[g3.x,g3.z],[g3.x,WZ-7.2],[-6.9,WZ-7.2]],drift(MEADOW,13,61));
+ grow('acer-rubrum',4,72);grow('cercis-canadensis',14,86);grow('amelanchier-canadensis',-1,60);
  for(let z=22;z<=WZ-4;z+=8){grow('thuja-occidentalis-smaragd',LX0+0.6,z);grow('thuja-occidentalis-smaragd',LX1-0.6,z);}
  // Cabana: kitchen island along its back under the roof, stools facing it; dining on the open east half.
  const kx=data.pergola!.xFt!,kz=cab.zFt-3;
