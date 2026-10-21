@@ -205,6 +205,9 @@ const rings=(b:YardBox)=>(b.renderContours??[b.polygon!]).filter(r=>yardSignedAr
 const edgeDistance=(ring:Plan[],q:Plan)=>Math.min(...ring.map((a,i)=>{const c=ring[(i+1)%ring.length],dx=c.x-a.x,dy=c.y-a.y,t=Math.max(0,Math.min(1,((q.x-a.x)*dx+(q.y-a.y)*dy)/(dx*dx+dy*dy||1)));return Math.hypot(a.x+t*dx-q.x,a.y+t*dy-q.y);}));
 const insideRing=(ring:Plan[],q:Plan)=>{let hit=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i],c=ring[j];if((a.y>q.y)!==(c.y>q.y)&&q.x<(c.x-a.x)*(q.y-a.y)/(c.y-a.y)+a.x)hit=!hit;}return hit||edgeDistance(ring,q)<1e-3;};
 const lWall=blocks(buildYardModel(flat([wall({id:'lw',xFt:-40,finishedElevationIn:30,wallPath:[{x:-120,y:0},{x:0,y:0},{x:0,y:120}]})])),'lw');
+// Corner bond (owner, 2026-10-21): the stone through an L corner alternates legs course by course, so no joint runs up the corner.
+const cornerRows=[...new Set(lWall.map(rowOf))].sort((a,b)=>a-b),cornerOwners=cornerRows.map(r=>[...new Set(lWall.filter(b=>rowOf(b)===r&&insideRing(b.polygon!,{x:-476,y:476})).map(runKeyOf))]);
+ok(cornerRows.length>=3&&cornerOwners.every(o=>o.length===1)&&cornerOwners.every((o,i)=>!i||o[0]!==cornerOwners[i-1][0]),`The corner stone alternates legs course by course (${cornerOwners.map(o=>o.join('/')).join(' ')})`);
 // Also a wall split in line by a top step, and two walls laid end to end.
 const topStepWall=blocks(buildYardModel(flat([wall({id:'ts',zFt:120,finishedElevationIn:48,heightIn:48,wallTopSteps:[{stationIn:130,elevationIn:34}]})])),'ts');
 const endToEnd=[...blocks(buildYardModel(flat([wall({id:'wa',xFt:-10,zFt:80,finishedElevationIn:30})])),'wa'),...blocks(buildYardModel(flat([wall({id:'wb',xFt:10,zFt:80,finishedElevationIn:30})])),'wb')];
