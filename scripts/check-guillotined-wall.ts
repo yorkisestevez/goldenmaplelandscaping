@@ -126,6 +126,12 @@ ok(stackedJoints(courses(battered,{x:1,y:0},'0')).length===0&&stackedJoints(cour
 // is mapped by angle).
 {const mixed=blocks(buildYardModel(flat([wall({id:'mix',widthFt:30,heightIn:60,finishedElevationIn:60,wallPath:[{x:-180,y:0},{x:-60,y:0},{x:60,y:0},{x:180,y:0}],curves:[{edge:1,bulgeIn:30}],wallConstruction:{setbackPerCourseIn:2}})])),'mix');
  ok(stackedJoints(courses(mixed,{x:1,y:0},'0')).length===0&&stackedJoints(courses(mixed,{x:1,y:0},'2')).length===0,'The straight legs of a battered wall with an arc keep 6 in joint clearance');}
+// A battered L whose second leg is split in line (as a wall top step or a hand-added point splits it): both legs keep
+// exact 6 in clearance and whole stones (the split is not an arc).
+{const split=blocks(buildYardModel(flat([wall({id:'split',widthFt:280/12,heightIn:100,finishedElevationIn:100,wallPath:[{x:-120,y:0},{x:0,y:0},{x:0,y:-80},{x:0,y:-160}],wallConstruction:{setbackPerCourseIn:2}})])),'split');
+ const legA=courses(split,{x:1,y:0},'0'),legB=courses(split,{x:0,y:-1},'1');
+ ok(legA.length>4&&stackedJoints(legA).length===0&&stackedJoints(legB).length===0,`A battered L split in line keeps 6 in joint clearance (${[...stackedJoints(legA),...stackedJoints(legB)].map(j=>j.toFixed(1)).join(', ')})`);
+ ok([...legA,...legB].every(r=>r.stones.slice(1,-1).every(st=>st.hi-st.lo>=STONE_LENGTH_IN.min-STONE_JOINT_IN-1e-6)),'…with whole stones between its ends');}
 // Run lengths from 24 to 120 in: whole 24-48 in stones, and 6 in clearance wherever a run has room for it (54 in up).
 {const misses:string[]=[];for(let len=24;len<=120;len+=2){const run=stoneCourseJoints(`len${len}`),lists=[0,1,2].map(row=>run(row,[[0,len]])[0]);
   if(lists.some(l=>l.slice(1).some((j,i)=>j-l[i]<STONE_LENGTH_IN.min-1e-9||j-l[i]>STONE_LENGTH_IN.max+1e-9)))misses.push(`${len} length`);

@@ -322,10 +322,10 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
      for(const first of new Set(runOf)){
       const facets=runOf.flatMap((r,seg)=>r===first?[seg]:[]),segs=facets.filter(seg=>spans[seg]);if(!segs.length)continue;
       const base=(seg:number)=>stations[seg]-stations[first],refBase=(seg:number)=>refStations[seg]-refStations[first],facetAt=(s:number,at:(seg:number)=>number)=>facets.reduce((i,seg)=>s>=at(seg)?seg:i,facets[0]);
-      // This course's run stations to course 0's: by facet and fraction on an arc (a run of several facets), so concentric
-      // courses keep their angle and a battered arc's stones grow or shrink with its radius; on a straight run, shifted by
-      // how far along this course's run start sits from course 0's (a batter moves a corner).
-      const arc=facets.length>1,next=path[first+1],length=Math.hypot(next.x-path[first].x,next.y-path[first].y),shift=((path[first].x-ref[first].x)*(next.x-path[first].x)+(path[first].y-ref[first].y)*(next.y-path[first].y))/length;
+      // This course's run stations to course 0's: by facet and fraction on an arc (a control edge the wall's curves bend),
+      // so concentric courses keep their angle and a battered arc's stones grow or shrink with its radius; on a straight
+      // run, even one split in line, shifted by how far along this course's run start sits from course 0's (a batter moves a corner).
+      const arc=curved&&!!f.curves?.some(c=>c.edge===edges[first]),next=path[first+1],length=Math.hypot(next.x-path[first].x,next.y-path[first].y),shift=((path[first].x-ref[first].x)*(next.x-path[first].x)+(path[first].y-ref[first].y)*(next.y-path[first].y))/length;
       const toRef=arc?(s:number)=>{const i=facetAt(s,base);return refBase(i)+(s-base(i))*(refStations[i+1]-refStations[i])/(stations[i+1]-stations[i]);}:(s:number)=>s+shift;
       const fromRef=arc?(s:number)=>{const i=facetAt(s,refBase);return base(i)+(s-refBase(i))*(stations[i+1]-stations[i])/(refStations[i+1]-refStations[i]);}:(s:number)=>s-shift;
       // The course's own stretches along the run: a foundation step can stop it and start it again further along (a
