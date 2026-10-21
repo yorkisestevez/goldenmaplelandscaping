@@ -482,6 +482,11 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
         const saved=await readFeatureLabourDefaults();
         if(JSON.stringify(saved)!==JSON.stringify(DEFAULT_FEATURE_LABOUR))next.featureLabour=saved;
       }catch{/* Built-in man-hours defaults apply when device storage is unavailable. */}
+      try{
+        const {customHardscapeLabourDefaults}=await import('../features/deckcraft/hardscapeLabourStorage');
+        const saved=await customHardscapeLabourDefaults();
+        if(saved)next.hardscapeLabour=saved;
+      }catch{/* Built-in setting rates apply when device storage is unavailable. */}
       replace(next);clearJobContext();closeSections();setSaved(false);setDesignStatus('A new default design is ready.');setDesignError('');resumeAutosave();
     })();
   };
@@ -489,7 +494,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     const next=parseDesign(serializeDesign(candidate));
     // JobRevisionDialog supplies a validated local snapshot. Public serialization intentionally
     // omits contractor prices; retain the exact reviewed local rates, including absent values.
-    for(const key of ['materialMarkup','customLaborCost','customOverrides','featureLabour','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','quoteResolutions','pergolaQuoteCosts','poolQuoteInputs'] as const){
+    for(const key of ['materialMarkup','customLaborCost','customOverrides','featureLabour','hardscapeLabour','addOnTransitionLabor','addOnHardwareCost','addOnFlashingLf','quoteResolutions','pergolaQuoteCosts','poolQuoteInputs'] as const){
       delete next[key];
       if(Object.hasOwn(candidate,key))(next as unknown as Record<string,unknown>)[key]=structuredClone(candidate[key]);
     }
