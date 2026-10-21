@@ -39,6 +39,10 @@ import {joinPavingField,rootFrame,rowGrid,sharePaver,type PavingField} from './p
 
 import {registerAdvancedYardRuntime,yardSignedArea,yardArea,yardClip,yardSolidCells,projectedYardPavers,YARD_PAVER_BUDGET,yardRectangle as rectangle,yardCentroid as centroid,yardPaverProfiles as profiles,yardStockFaceSqft as stockFaceSqft} from './yardModel';
 import type {YardBox,YardRole,YardFeatureModel,YardMember,YardExcavationRegion} from './yardModel';
+import {FLAGSTONE_CHIPS,FLAGSTONE_JOINT_DROP_IN,FLAGSTONE_THICKNESS_IN} from './flagstone';
+import {flagstoneLayout,flagstoneLocalOutline} from './flagstoneLayout';
+import {BOULDER_STONES} from './boulderStones';
+const CUBIC_FOOT_M3=.0283168466;
 import {GUILLOTINED_WALL,LIMESTONE_LB_PER_FT3} from './wallStones';
 import {STONE_JOINT_IN,STONE_LENGTH_IN,stoneCourseJoints} from './wallStoneCourses';
 const SUPPORT_CLEARANCE_IN=1;
@@ -155,7 +159,7 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
   let finishedProblem='';try{validateYardFinishedSettings(f);}catch(error){finishedProblem=error instanceof Error?error.message:'Invalid finished levels.';}
   const supplierProblem=finishedProblem||hardscapeProblem(f)||wallConstructionProblem(f);if(supplierProblem){warnings.push(`${f.name}: ${supplierProblem} Excluded until revised.`);features.push({config:f,footprints:[],topIn:0,boxes:[],members:[],warnings:[supplierProblem],quantities:{areaSqft:0},excluded:true,quoteRequired:true});continue;}
   if(f.outline||f.wallPath){const problem=f.kind==='patio'&&f.wallPath||f.kind==='retaining-wall'&&f.outline||f.kind==='water-feature'?'The shape does not match this feature.':yardShapeProblem(f.kind as 'patio'|'retaining-wall',f.outline??f.wallPath);if(problem){warnings.push(`${f.name}: ${problem} Excluded until revised.`);features.push({config:f,footprints:[],topIn:0,boxes:[],members:[],warnings:[problem],quantities:{areaSqft:0},excluded:true,quoteRequired:true});continue;}}
-  const paverThickness=(hardscapeSelection(f)?.unit.heightMm??PAVER_BRANDS.find(p=>p.id===f.productId)?.thicknessMm??60)/25.4;
+  const paverThickness=f.flagstone?FLAGSTONE_THICKNESS_IN:(hardscapeSelection(f)?.unit.heightMm??PAVER_BRANDS.find(p=>p.id===f.productId)?.thicknessMm??60)/25.4;
   const supplier=hardscapeSelection(f),capDepth=supplier?.cap?supplier.cap.lengthMm/25.4:f.depthFt*12+2;
   // A seat wall stands on a patio's paving only when its whole base course lies on that patio (seatWallPatio): the
   // patio's top is then its ground (no survey, no dig), and it builds to its own seat height over the paving whatever
@@ -199,7 +203,7 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
   const model:YardFeatureModel={config:f,footprints,topIn:f.kind==='patio'?planeAt(patioPlane,x,z):grade,...(sloped?{topPlane:patioPlane}:{}),boxes:[],members:[],warnings:localWarnings,quantities:{areaSqft:yardArea(footprints)},excluded,supportClearances:supports};features.push(model);
   if(excluded){warnings.push(...localWarnings);continue;}
   reservedPavers+=projectedPavers;
-  const paving=f.kind==='patio'?joinPavingField(pavingFields,f,patioPlane,original,footprints):undefined,joined=paving&&paving.root!==f?rootFrame(paving,sloped):undefined;
+  const paving=f.kind==='patio'&&!f.flagstone?joinPavingField(pavingFields,f,patioPlane,original,footprints):undefined,joined=paving&&paving.root!==f?rootFrame(paving,sloped):undefined;
   if(joined)model.pavingRootId=paving!.root.id;
   occupied=yardClip([...occupied,...(f.kind==='patio'?footprints:envelope)]);
   const finishEnvelope=padPlane?[]:f.pavingInterface&&construction?yardClip([...coursePaths.flatMap(path=>yardPathEnvelope(path,d+2*f.pavingInterface!.jointIn)),...yardPathEnvelope(coursePaths.at(-1)!,Math.max(d,capDepth)+2*f.pavingInterface.jointIn)]):envelope;
@@ -224,13 +228,14 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
   }else if(f.kind==='patio'){
    const product=PAVER_BRANDS.find(p=>p.id===f.productId),spec=profiles[f.productId as keyof typeof profiles];
    const thick=paverThickness,base=baseline.facts.baseDepthIn,top=model.topIn,planArea=model.quantities.areaSqft,area=planArea*slopeScale;
-   if(!product)localWarnings.push(`${supplier?`${supplier.product.brand} ${supplier.product.name}`:'Unknown paver selection'}: supply and installation need a product-specific quote.`);
+   if(!product&&!f.flagstone)localWarnings.push(`${supplier?`${supplier.product.brand} ${supplier.product.name}`:'Unknown paver selection'}: supply and installation need a product-specific quote.`);
    model.sourceUrl=supplier?.product.sourceUrl??spec?.sourceUrl;
-   localWarnings.push('Paver module dimensions follow the referenced family. Confirm the exact SKU, colour, laying-pattern mix, joints and supplier pack quantities before ordering.');
+   if(!f.flagstone)localWarnings.push('Paver module dimensions follow the referenced family. Confirm the exact SKU, colour, laying-pattern mix, joints and supplier pack quantities before ordering.');
    if(spec?.illustrative)localWarnings.push('Rosebel has irregular interlocking edges: the rectangular module envelopes are illustrative, not production cut templates.');
-   for(const p of yardSolidCells(footprints)){add('base',p,top-thick-1,base,'#8c8a7c');add('bedding',p,top-thick,1,'#c5bda4');}
+   for(const p of yardSolidCells(footprints)){add('base',p,top-thick-1,base,'#8c8a7c');add('bedding',p,f.flagstone?top-FLAGSTONE_JOINT_DROP_IN:top-thick,f.flagstone?thick+1-FLAGSTONE_JOINT_DROP_IN:1,f.flagstone?FLAGSTONE_CHIPS[f.flagstone.jointColour]:'#c5bda4');}
    const inlayValidationFootprints=pools.length?yardClip([...footprints,...yardClip(original,poolExclusions,'intersection')]):footprints;
-   const plans=patioInlayPlans(f,inlayValidationFootprints),valid=plans.filter(p=>p.status==='ok'),field=yardClip(footprints,valid.map(p=>p.outline),'difference');
+   if(f.flagstone&&f.inlays?.length)localWarnings.push(`${f.name}: inlays are not laid in natural flagstone; their saved outlines are kept.`);
+   const plans=f.flagstone?[]:patioInlayPlans(f,inlayValidationFootprints),valid=plans.filter(p=>p.status==='ok'),field=yardClip(footprints,valid.map(p=>p.outline),'difference');
    for(const p of plans.filter(p=>p.status!=='ok'))localWarnings.push(`${p.inlay.name}: ${p.message}`);
    const laySupplier=(zone:YardFeature,mask:PlanPoint[][],inlayId?:string)=>{const sel=hardscapeSelection(zone)!,grid=inlayId?undefined:joined,lay=grid?paving!.root:zone,put=grid?grid.tilt:tilt;const za=lay.rotationDeg*Math.PI/180,zc=Math.cos(za),zs=Math.sin(za),before=model.boxes.length;
     // A patio joining another's paving is laid on that patio's grid (pavingJoin.ts), over its own paving only.
@@ -245,7 +250,17 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
     const stock=laidStones(model.boxes.slice(before)),stockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);model.pavingZones??=[];model.pavingZones.push({feature:zone,areaSqft:yardArea(mask)*slopeScale,stockAreaSqft,...(inlayId?{inlayId}:{})});
     model.stockSchedule??=[];model.stockSchedule.push(...sel.finish.units.flatMap(u=>{const pieces=stock.filter(b=>b.stockUnitId===u.id).length;return pieces?[{unitId:u.id,widthMm:u.widthMm,lengthMm:u.lengthMm,heightMm:u.heightMm,pieces,...(inlayId?{productId:zone.productId,inlayId}:{})}]:[];}));
    };
-   if(supplier){
+   // Natural flagstone (flagstoneLayout.ts): irregular stones cut to fit, one joint apart, each its own 2 in slab.
+   let flagstoneFace=0;
+   const layFlagstone=(spec:NonNullable<YardFeature['flagstone']>)=>{const colour=BOULDER_STONES.find(b=>b.id===spec.stone)!.colour;
+    // A sloped patio is laid in its own (stock) plane and tilted onto the slope, so stones cover the whole sloped face.
+    const local=sloped?original.map(ring=>ring.map(p=>{const q=untiltStockPoint(p,patioPlane,stockOrigin),dx=q.x-x,dz=q.y-z;return {x:c*dx+s*dz,y:-s*dx+c*dz};})):flagstoneLocalOutline(f);
+    for(const piece of flagstoneLayout(local,f.id,spec.jointIn)){const unitId=`${f.id}-flag-${piece.id}`,contours=yardClip([piece.polygon.map(p=>tilt({x:x+c*p.x-s*p.y,y:z+s*p.x+c*p.y}))],field,'intersection');let fragment=0;
+     for(const cell of yardSolidCells(contours)){add('paver',cell,top,thick,colour);const b=model.boxes.at(-1)!;b.unitId=unitId;b.naturalStone=true;b.stockAreaSqft=yardArea([piece.polygon]);if(fragment++===0)b.renderContours=contours;else b.renderDuplicate=true;}
+     flagstoneFace+=yardArea(contours)*slopeScale;}
+   };
+   if(f.flagstone)layFlagstone(f.flagstone);
+   else if(supplier){
     laySupplier(f,field);
     const recipe=supplier.finish.patterns.find(p=>p.id===f.hardscape!.patternId);if(recipe?.layout.installationJointMm!==undefined)localWarnings.push(`Manufacturer diagram uses nominal stock modules; the supplier specifies ${recipe.layout.installationJointMm} mm installation joints. Installed module spacing and pack quantities need confirmation; this diagram is not an installation joint schedule.`);localWarnings.push(recipe?`Manufacturer recipe ${recipe.name}: documented units and repeat coordinates retained. Nominal module pitch follows ${recipe.sourceUrl}; confirm actual supplied dimensions and joint tolerances before ordering.`:`Selected stock ${supplier.unit.widthMm} Ã— ${supplier.unit.lengthMm} Ã— ${supplier.unit.heightMm} mm; ${f.hardscape!.jointMm} mm joints are added to the module. The contractor pattern uses this single stock size; supplier multi-size recipes remain in the pattern library.`);
     if(!rectangularUnit(supplier.unit)&&['herringbone','basket-weave'].includes(f.hardscape!.patternId))localWarnings.push('Legacy rectangular envelope layout retained from the saved design; choose a compatible shaped bond or verified supplier recipe.');
@@ -266,6 +281,15 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
    for(const p of valid){const mask=pools.length?yardClip([p.outline],footprints,'intersection'):[p.outline];if(mask.length)laySupplier(patioInlayFeature(f,p.inlay),mask,p.inlay.id);if(pools.length&&yardArea(mask)<yardArea([p.outline])-.001)localWarnings.push(`${p.inlay.name}: the pool cuts this inlay; only the remaining paving is installed and ordered. Its saved outline is preserved.`);localWarnings.push(`${p.inlay.name}: custom inlay cutting, setting and waste require a builder quote; this is a cut-paver design, not a manufactured medallion kit.`);}
    model.quantities={...model.quantities,planAreaSqft:planArea,surfaceAreaSqft:area,paverPieces:laidStones(model.boxes).length,baseYd3:area*base/324,beddingYd3:area/324,paverAreaSqft:area};
    if(supplier||valid.length){const stock=laidStones(model.boxes);model.quantities.paverStockAreaSqft=stock.reduce((n,b)=>n+(b.stockAreaSqft??0),0);}
+   if(f.flagstone){const spec=f.flagstone,stone=BOULDER_STONES.find(b=>b.id===spec.stone)!,tonnes=flagstoneFace*thick/12*CUBIC_FOOT_M3*stone.densityTm3,chips=(area-flagstoneFace)*(thick-FLAGSTONE_JOINT_DROP_IN)/324,line=(id:string,label:string,quantity:number,unit:string,note:string)=>({id:`${f.id}-flagstone${id}`,label:`${f.name}: ${label}`,amountCents:null,quantity,unit,featureIds:[f.id],note});
+    Object.assign(model.quantities,{flagstoneFaceSqft:flagstoneFace,flagstoneTonnes:tonnes,jointChipYd3:chips});
+    model.assemblyQuoteScopes=[
+     line('','natural flagstone supply, cut-to-fit and setting',area,'sq ft',`${stone.name} flagstone about ${thick} in thick, ${laidStones(model.boxes).length} stones cut to fit with even ${spec.jointIn} in joints on a 1 in chip bed. Confirm the stone, cutting waste, delivery and setting; no price is assumed.`),
+     line('-weight','flagstone stone weight (estimate)',tonnes,'tonne',`Stone face ${flagstoneFace.toFixed(1)} sq ft × ${thick} in × a typical ${stone.name.toLowerCase()} density of ${stone.densityTm3} t/m³ (AusIMM bulk density table), before cutting waste. Confirm against the supplier's coverage per tonne.`),
+     line('-joints',`${spec.jointColour} permeable joint chips`,chips,'cu yd',`${spec.jointColour[0].toUpperCase()+spec.jointColour.slice(1)} permeable chips fill the ${spec.jointIn} in joints to ${FLAGSTONE_JOINT_DROP_IN} in below the stone, compacted and stabilised. Confirm the product and bag count.`),
+     line('-bed','1 in chip setting bed',area/324,'cu yd','Chips screeded 1 in over the base; each stone is worked into them until the tops are flush.'),
+     line('-base','¾ in clear stone base',area*base/324,'cu yd',`Open-graded ¾ in clear stone, ${base} in compacted, under the chip bed. Shared excavation and disposal are counted once with the rest of the yard.`),
+    ];}
    const formation=top-thick-1-base,formationPlane=belowPlane(patioPlane,thick+1+base),formationPolys=yardClip(sloped?footprints.map(p=>p.map(v=>({x:v.x+patioPlane.x*(thick+1+base)/slopeScale,y:v.y+patioPlane.z*(thick+1+base)/slopeScale}))):footprints,poolExclusions,'difference');let fill=formationPolys;
    if(site)fill=[]; // Dedicated site fill is integrated against every proposed face below.
    else if(terrain.slopePct){const z0=(formation-terrain.elevationIn)/(terrain.slopePct/100),lo=terrain.slopePct>0?-1e7:z0,hi=terrain.slopePct>0?z0:1e7;fill=yardClip(fill,[[{x:-1e7,y:lo},{x:1e7,y:lo},{x:1e7,y:hi},{x:-1e7,y:hi}]],'intersection');}
@@ -462,7 +486,7 @@ function buildUncachedYardModel(data:DeckData,deckModel?:DeckTakeoff){
  // A ground-fit patio's edge is a designed step: the bank meets its top, the ground under it stays for its own
  // excavation. Its interior is left out of the grade-jump check so only real jumps (between banks, at walls) remain.
  const gradeWarnings=site?siteElevationWarnings(data,outsideFeaturePads(site,designSiteModel(data)?.featurePads),features):[];warnings.push(...gradeWarnings);
- for(const feature of features){const scopes=hardscapeAssemblyQuoteScopes([feature]);if(scopes.length)feature.assemblyQuoteScopes=scopes;}
+ for(const feature of features){const scopes=hardscapeAssemblyQuoteScopes([feature]);if(scopes.length)feature.assemblyQuoteScopes=[...feature.assemblyQuoteScopes??[],...scopes];}
  const fires=fireFeatureModels(data,features,{gradeAt,houseFootprint,deckModel,ids});features.push(...fires);for(const fire of fires)for(const w of fire.warnings)if(!warnings.includes(w))warnings.push(w);
  const active=features.filter(f=>!f.excluded),sum=(key:string)=>active.reduce((n,f)=>n+(f.quantities[key]||0),0),patioUnion=yardClip(active.filter(f=>f.config.kind==='patio').flatMap(f=>f.footprints));
  // Stone edge courses on raised patio sides (ground fit lowEdge 'stone'); absent unless a patio has one, so other
