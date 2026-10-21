@@ -1,7 +1,7 @@
 {
   "passed": true,
-  "routes_checked": 156,
-  "schemas_checked": 293,
+  "routes_checked": 159,
+  "schemas_checked": 299,
   "allowed_by_register": [],
   "findings": [],
   "warnings": [
@@ -23,17 +23,22 @@
     {
       "route": "/resources/best-pavers-pool-deck-simcoe-county",
       "rule": "universal_base_depth",
-      "excerpt": "ght line. Budget $37-65 per square foot installed, including the 12-16 inch compacted clear stone base the climate demands. The paver matters; the base matters more. Drive pas"
+      "excerpt": "or a 300\u20131,000 sq ft pool deck in mid-tier pavers, including the 12-16 inch compacted clear stone base the climate demands. The paver matters; the base matters more. Drive pas"
     },
     {
       "route": "/resources/failing-interlocking-patio-signs-barrie",
       "rule": "universal_base_depth",
-      "excerpt": " 2-4 usually costs $800-$2,500 for a localized fix with a proper 12-16 inch compacted clear stone base. Waiting until year 6-8 often means a $12,000-$20,000 full rebuild. I've"
+      "excerpt": " 2-4 usually costs $800-$2,500 for a localized fix with a proper 12-16 inch compacted clear stone base. Waiting until year 6-8 often means a $15,500-$30,000 full rebuild. I've"
     },
     {
       "route": "/resources/fire-pit-cost-barrie-with-permits",
       "rule": "universal_base_depth",
       "excerpt": "base: Every fire pit surround contractors build uses 300\u2013400 mm (12\u201316 inches) of compacted clear stone \u2014 the same specification contractors use for driveways and full patios."
+    },
+    {
+      "route": "/resources/front-steps-heaving-barrie",
+      "rule": "universal_base_depth",
+      "excerpt": "e piers or helical piles to at least 1.2 metres, or a rebuild on 12\u201316 inches of compacted clear stone with drainage that keeps water from the base. Every April in Barrie, the"
     },
     {
       "route": "/resources/heated-driveway-worth-it-barrie",
