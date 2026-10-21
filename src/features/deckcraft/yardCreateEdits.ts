@@ -10,6 +10,7 @@ import {buildDeckTakeoff} from './deckTakeoff';
 import {getHousePlacement} from './housePlacement';
 import {hasHouseBlocks,houseOutline} from './houseFootprint';
 import {fireOutline,stairFootprints,FIRE_PAD_MARGIN_IN} from './fireFeatureModel';
+import {GUILLOTINED_WALL,WALL_STONES} from './wallStones';
 
 /**
  * The agent's yard.create and yard.update (designer/deckAgentController.ts): a patio, a retaining or seat wall, or a
@@ -29,7 +30,9 @@ export interface YardFields {name?:string;xFt?:number;zFt?:number;widthFt?:numbe
  freestanding?:boolean;
  /** A fire feature stands on this patio. A seat wall given one must lie on it and then follows its paving (no link is saved). */
  supportFeatureId?:string;
- groundFit?:YardFeature['groundFit'];hardscape?:YardFeature['hardscape'];flagstone?:YardFeature['flagstone']}
+ groundFit?:YardFeature['groundFit'];hardscape?:YardFeature['hardscape'];flagstone?:YardFeature['flagstone'];
+ /** Guillotined walls: the stone and course. As in the editor, the wall takes the stone's colour and is as deep as the course. */
+ wallStone?:YardFeature['wallStone']}
 export type YardCreate=YardFields&{kind:'patio'|'retaining-wall'|'fire-feature';id?:string};
 export type YardUpdate=YardFields&{id:string;unset?:('groundFit'|'supportFeatureId'|'hardscape')[]};
 
@@ -76,13 +79,15 @@ function apply(data:DeckData,base:YardFeature,c:YardFields,created:boolean,unset
   if(c.widthFt!==undefined||c.depthFt!==undefined){if(f.outline)throw Error('This patio has a drawn outline: resize it with yard.dimension or yard.set.');if(c.widthFt!==undefined&&f.wallPath)throw Error('This wall follows a drawn path: change its wallPath instead.');}
   if(c.widthFt!==undefined)f.widthFt=c.widthFt;
   if(c.depthFt!==undefined)f.depthFt=c.depthFt;
-  if(c.productId!==undefined&&c.productId!==f.productId){f.productId=c.productId;if(!c.hardscape)delete f.hardscape;if(!c.flagstone)delete f.flagstone;}
+  if(c.productId!==undefined&&c.productId!==f.productId){f.productId=c.productId;if(!c.hardscape)delete f.hardscape;if(!c.flagstone)delete f.flagstone;if(!c.wallStone)delete f.wallStone;}
  }
  // A fixed top keeps its height over the ground it was set from: a new height moves it by the difference.
  if(c.heightIn!==undefined){if(f.finishedElevationIn!==undefined&&c.finishedElevationIn===undefined)f.finishedElevationIn=Math.round((f.finishedElevationIn+c.heightIn-f.heightIn)*100)/100;f.heightIn=c.heightIn;}
  if(c.finishedElevationIn!==undefined)f.finishedElevationIn=c.finishedElevationIn;
  if(c.hardscape)f.hardscape=structuredClone(c.hardscape);
  if(c.flagstone)f.flagstone=structuredClone(c.flagstone);
+ if(c.wallStone&&f.productId!==GUILLOTINED_WALL)throw Error(`A stone and course belong to a guillotined armour stone wall: set productId to ${GUILLOTINED_WALL} too.`);
+ if(c.wallStone){f.wallStone=structuredClone(c.wallStone);const stone=WALL_STONES.find(s=>s.id===c.wallStone!.stoneId);if(stone)f.color=stone.hex;if(c.depthFt===undefined&&typeof c.wallStone.courseIn==='number')f.depthFt=c.wallStone.courseIn/12;}
  if(c.groundFit)f.groundFit=structuredClone(c.groundFit);
  if(c.freestanding!==undefined){const rest={...f.wallConstruction};delete rest.freestanding;const kept=c.freestanding?{...(rest.foundationMode?{foundationMode:rest.foundationMode}:{}),freestanding:true}:rest;if(Object.keys(kept).length)f.wallConstruction=kept;else delete f.wallConstruction;}
  if(c.wallPath){if(!Array.isArray(c.wallPath))throw Error('wallPath is a list of world-inch points.');f=yardShapeEdit(f,c.wallPath);}
