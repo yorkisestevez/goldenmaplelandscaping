@@ -22,6 +22,8 @@ import WallStoneEditor,{wallProductPatch,withoutStaleStone} from '../src/feature
 import baseline from '../src/data/engine-baseline.json';
 import {createDeckAgentController,type DeckAgentHostState} from '../src/features/deckcraft/designer/deckAgentController';
 import {buildAssistantContext,validateAssistantContext} from '../src/features/deckcraft/designer/assistantPlan';
+import * as THREE from 'three';
+import {drawnSplit,edgeBreak,mergeStonePieces,nextStoneCacheRound,splitFaceFeatures,splitFaceStoneGeometry,splitFaceStoneMesh,splitStoneMaterial,stoneCache,stoneNeighbours,stoneOutlines} from '../src/features/deckcraft/components/viewer3d/splitFaceStone';
 
 let checks=0;const ok=(v:unknown,m:string)=>{assert.ok(v,m);checks++;},near=(a:number,b:number,m:string,tolerance=1e-6)=>ok(Math.abs(a-b)<=tolerance,`${m}: ${a} vs ${b}`);
 const flat=(features:YardFeature[],extra:Partial<DeckData>={}):DeckData=>({...structuredClone(DEFAULT_DECK),houseVisible:false,yardFeatures:features,...extra});
@@ -192,5 +194,131 @@ ok(inspected.ok,`A material-picker change moves a guillotined wall to a supplier
 ok(!('wallStone' in wallProductPatch(wall(),'segmental-concrete'))||wallProductPatch(wall(),'segmental-concrete').wallStone===undefined,'Picking another product from the list drops the stone choice');
 const switched=await agent.execute({id:'gw-agent-switch',commands:[{type:'yard.update',id:'gw',productId:'segmental-concrete'}]});
 ok(switched.ok&&state.data.yardFeatures?.[0].productId==='segmental-concrete'&&state.data.yardFeatures[0].wallStone===undefined,`An agent can move a guillotined wall to another product (${JSON.stringify(switched).slice(0,160)})`);
+
+// 10. The stone looks real (render only): flat top and bed, a split face with relief, crisp arrises broken by chips, its own
+// shade of the limestone. It is carved inward from its laid stone, so nothing leaves the stone's footprint or course except,
+// behind the face, its ends reaching the middle of a joint to meet the next stone's. Positions are 32-bit floats, so heights
+// and outlines are compared to a thousandth of an inch. Edge and face depths are measured from the stone as drawn
+// (straight, where it was laid on an arc).
+type Plan={x:number;y:number};
+const rings=(b:YardBox)=>(b.renderContours??[b.polygon!]).filter(r=>yardSignedArea(r)>0);
+const edgeDistance=(ring:Plan[],q:Plan)=>Math.min(...ring.map((a,i)=>{const c=ring[(i+1)%ring.length],dx=c.x-a.x,dy=c.y-a.y,t=Math.max(0,Math.min(1,((q.x-a.x)*dx+(q.y-a.y)*dy)/(dx*dx+dy*dy||1)));return Math.hypot(a.x+t*dx-q.x,a.y+t*dy-q.y);}));
+const insideRing=(ring:Plan[],q:Plan)=>{let hit=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i],c=ring[j];if((a.y>q.y)!==(c.y>q.y)&&q.x<(c.x-a.x)*(q.y-a.y)/(c.y-a.y)+a.x)hit=!hit;}return hit||edgeDistance(ring,q)<1e-3;};
+const lWall=blocks(buildYardModel(flat([wall({id:'lw',xFt:-40,finishedElevationIn:30,wallPath:[{x:-120,y:0},{x:0,y:0},{x:0,y:120}]})])),'lw');
+// Also a wall split in line by a top step, and two walls laid end to end.
+const topStepWall=blocks(buildYardModel(flat([wall({id:'ts',zFt:120,finishedElevationIn:48,heightIn:48,wallTopSteps:[{stationIn:130,elevationIn:34}]})])),'ts');
+const endToEnd=[...blocks(buildYardModel(flat([wall({id:'wa',xFt:-10,zFt:80,finishedElevationIn:30})])),'wa'),...blocks(buildYardModel(flat([wall({id:'wb',xFt:10,zFt:80,finishedElevationIn:30})])),'wb')];
+// (Each test wall stands on its own, some in the same place, so neighbours are found wall by wall, the end-to-end pair together.)
+const tightArc=blocks(buildYardModel(flat([wall({id:'ta',zFt:160,finishedElevationIn:30,wallPath:[{x:-120,y:0},{x:0,y:0},{x:0,y:120}],curves:[{edge:1,bulgeIn:50}]})])),'ta');
+const fixtures=[stones,battered,curvedStones,lWall,topStepWall,endToEnd,tightArc].map(mergeStonePieces),laidStones=fixtures.flat(),nextTo=new Map(fixtures.flatMap(g=>[...stoneNeighbours(g)])),sample=laidStones.filter(b=>!b.renderDuplicate),halfJoint=STONE_JOINT_IN/2+1e-3;
+const look=(b:YardBox,coarse=false,neighbours=nextTo.get(b)??[])=>{
+ const g=splitFaceStoneGeometry(b,coarse,neighbours),p=g.getAttribute('position'),col=g.getAttribute('color'),index=g.index!,outline=rings(b),lo=b.y-b.h/2,hi=b.y+b.h/2;
+ const at=(i:number)=>({x:p.getX(i),y:p.getY(i),z:p.getZ(i)}),plan=(i:number)=>({x:p.getX(i),y:p.getZ(i)}),inset=(i:number)=>Math.min(...outline.map(r=>edgeDistance(r,plan(i)))),drawn=stoneOutlines(b),depth=(i:number)=>Math.min(...drawn.map(r=>edgeDistance(r,plan(i))));
+ let volume=0,topArea=0,bedArea=0;const edges=new Map<string,number>(),key=(v:{x:number;y:number;z:number})=>`${Math.round(v.x*1e3)},${Math.round(v.y*1e3)},${Math.round(v.z*1e3)}`;
+ for(let t=0;t<index.count;t+=3){const tri=[at(index.getX(t)),at(index.getX(t+1)),at(index.getX(t+2))],[a,c,d]=tri;volume+=(a.x*(c.y*d.z-c.z*d.y)-a.y*(c.x*d.z-c.z*d.x)+a.z*(c.x*d.y-c.y*d.x))/6;const flatArea=Math.abs((c.x-a.x)*(d.z-a.z)-(d.x-a.x)*(c.z-a.z))/2;if(tri.every(v=>Math.abs(v.y-hi)<1e-3))topArea+=flatArea;if(tri.every(v=>Math.abs(v.y-lo)<1e-3))bedArea+=flatArea;tri.forEach((v,k)=>{const e=key(v)+'>'+key(tri[(k+1)%3]);edges.set(e,(edges.get(e)??0)+1);});}
+ const all=[...Array(p.count).keys()],tone=(i:number)=>(col.getX(i)+col.getY(i)+col.getZ(i))/3,onSeam=(k:string)=>{const [x,,z]=k.split(',').map(Number);return outline.filter(r=>edgeDistance(r,{x:x/1e3,y:z/1e3})<.1).length>1;},open=[...edges].filter(([e,n])=>{const [a,c]=e.split('>');return (edges.get(c+'>'+a)??0)!==n&&!(onSeam(a)&&onSeam(c));}).length;
+ return {g,lo,hi,outline,drawn,all,at,plan,inset,depth,volume,topArea,bedArea,col,tone,open,area:outline.reduce((n,r)=>n+yardSignedArea(r),0),drawnArea:drawn.reduce((n,r)=>n+yardSignedArea(r),0),triangles:index.count/3};
+};
+const rect=(over:Partial<YardBox>={}):YardBox=>({id:'r',featureId:'gw',role:'wall-block',color:'#a7a399',x:0,y:7,z:0,w:48,h:14,d:14,polygon:[{x:-24,y:-7},{x:24,y:-7},{x:24,y:7},{x:-24,y:7}],unitId:'gw-wall-block-0-0-3',...over});
+const range=(v:number[])=>`${Math.min(...v).toFixed(2)}-${Math.max(...v).toFixed(2)}`;
+for(const coarse of [false,true]){
+ const tier=coarse?'below the high render tier':'in full',misses={carved:[] as string[],flatBeds:[] as string[],brokenTops:[] as string[],splitFaces:[] as string[],solid:[] as string[],open:[] as string[],joints:[] as string[]};
+ for(const b of sample){
+  const s=look(b,coarse),id=b.unitId!,beside=nextTo.get(b)??[];
+  // Outside its laid stone only in a joint, with a neighbour across it (on an arc a little wider or narrower than laid), and
+  // never by more than half the laid joint.
+  if(!s.all.every(i=>{const v=s.at(i),q=s.plan(i);return v.y>=s.lo-1e-3&&v.y<=s.hi+1e-3&&(s.outline.some(r=>insideRing(r,q))||(s.inset(i)<=halfJoint&&beside.some(r=>edgeDistance(r,q)<=.6)));}))misses.carved.push(id);
+  if(s.topArea<.5*s.area||s.bedArea<.5*s.area)misses.flatBeds.push(`${id} top ${(s.topArea/s.area).toFixed(2)} bed ${(s.bedArea/s.area).toFixed(2)}`);
+  // Where a stone laid in pieces continues into its next piece, its edge stays put.
+  const seam=(i:number)=>s.outline.filter(r=>edgeDistance(r,s.plan(i))<.1).length>1,top=s.all.filter(i=>Math.abs(s.at(i).y-s.hi)<1e-3&&!seam(i)).map(s.depth),mid=s.all.filter(i=>{const y=s.at(i).y;return y>s.lo+.35*b.h&&y<s.hi-.35*b.h&&!seam(i);}).map(s.depth);
+  if(s.area>=200&&!(Math.max(...top)-Math.min(...top)>=.5&&top.reduce((n,v)=>n+v,0)/top.length>=.2&&Math.max(...top)<=4.5))misses.brokenTops.push(`${id} ${range(top)} in`);
+  // The coarse stone samples its face less often, so it shows a little less of the relief.
+  if(s.area>=200&&!(Math.max(...mid)>=(coarse?.5:.6)&&Math.max(...mid)<=3.5&&Math.max(...mid)-Math.min(...mid)>=.4))misses.splitFaces.push(`${id} ${range(mid)} in`);
+  if(!(s.volume>=.6*s.drawnArea*b.h&&s.volume<=s.area*b.h+1e-6))misses.solid.push(`${id} ${(s.volume/(s.drawnArea*b.h)).toFixed(2)}`);
+  if(s.open)misses.open.push(`${id} ${s.open} open edges`);
+  // Every joint closes behind the face at every height: some point of the stone reaches the middle of it.
+  const levels=[...new Set(s.all.map(i=>Math.round(s.at(i).y*1e3)))];
+  // (A joint: at least an inch of the stone's edge lies across one from the neighbour, not a corner touching a corner.)
+  for(const r of beside.filter(r=>s.drawn.reduce((n,d)=>n+d.reduce((m,p,i)=>{const q=d[(i+1)%d.length];return edgeDistance(r,{x:(p.x+q.x)/2,y:(p.y+q.y)/2})<STONE_JOINT_IN+.1?m+Math.hypot(q.x-p.x,q.y-p.y):m;},0),0)>=1))for(const y of levels)if(!s.all.some(i=>Math.round(s.at(i).y*1e3)===y&&edgeDistance(r,s.plan(i))<=halfJoint)){misses.joints.push(`${id} at ${(y/1e3).toFixed(2)}`);break;}
+  s.g.dispose();
+ }
+ ok(!misses.carved.length,`Every stone stays inside its own laid course and footprint, bar its ends meeting the next stone's in the joint (straight, battered L, L and arc walls, ${tier}): ${misses.carved.join()}`);
+ ok(!misses.flatBeds.length,`Every stone keeps a flat top and bed, as the guillotine leaves them (${tier}): ${misses.flatBeds.join()}`);
+ ok(!misses.brokenTops.length,`Every stone's top edge is broken, never a straight arris (${tier}): ${misses.brokenTops.join()}`);
+ ok(!misses.splitFaces.length,`Every stone's face is split rock with relief, not a flat plane (${tier}): ${misses.splitFaces.join()}`);
+ ok(!misses.solid.length,`Every stone is a solid of most of its drawn volume, within its laid volume (${tier}): ${misses.solid.join()}`);
+ // (Where a stone laid in pieces meets itself, its pieces' sides stand against each other and aren't counted.)
+ ok(!misses.open.length,`Every stone is closed, its surfaces never folding over at a sharp corner (${tier}): ${misses.open.join()}`);
+ ok(!misses.joints.length,`Every joint, mitred corners included, closes up behind the face at every height, so none shows the sky through the wall (${tier}): ${misses.joints.join()}`);
+}
+// A stone the model laid in two pieces where a top step splits the run in line is drawn as one stone, no joint at the split.
+const splitInLine=topStepWall.filter(b=>!b.renderDuplicate&&topStepWall.filter(o=>!o.renderDuplicate&&o.unitId===b.unitId).length>1),mergedTopStep=mergeStonePieces(topStepWall).filter(b=>!b.renderDuplicate);
+ok(splitInLine.length>0&&new Set(mergedTopStep.map(b=>b.unitId)).size===mergedTopStep.length&&mergedTopStep.filter(b=>splitInLine.some(o=>o.unitId===b.unitId)).every(b=>stoneOutlines(b).length===1&&(nextTo.get(b)??[]).length<=2),`A stone split in line by a wall top step is drawn as one straight stone (${splitInLine.length} pieces)`);
+// Where two guillotined walls meet end to end, their end stones meet in the joint like any others.
+const meeting=laidStones.filter(b=>(b.featureId==='wa'&&Math.max(...b.polygon!.map(p=>p.x))>-1)||(b.featureId==='wb'&&Math.min(...b.polygon!.map(p=>p.x))<1));
+ok(meeting.length>=4&&meeting.every(b=>(nextTo.get(b)??[]).some(r=>r.some(p=>Math.abs(p.x)<1))),`Two walls laid end to end close the joint between them (${meeting.length} end stones)`);
+// The split stones' material patches compile against the three.js installed.
+const stoneMaterial=splitStoneMaterial(new THREE.MeshStandardMaterial()),compiled={vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader,uniforms:{}};
+stoneMaterial.onBeforeCompile(compiled as never,{} as never);
+ok(stoneMaterial.shadowSide===THREE.BackSide&&!compiled.vertexShader.includes('#include <shadowmap_vertex>')&&compiled.vertexShader.includes('directionalLightShadows[ i ].shadowNormalBias + 0.1')&&compiled.fragmentShader.includes('vec3( 0.5 ) / max( sampledDiffuseColor.rgb'),'The split stones\' shadow and detail patches apply to this three.js');
+// The 3D view's batch keeps the stones it drew in its last build: a rebuilt design that lays the same stone reuses it, and a
+// stone not drawn for two builds is let go.
+const kept=stoneCache(),first=splitFaceStoneMesh(rect(),false,[],kept).getAttribute('position');nextStoneCacheRound(kept);
+const reused=splitFaceStoneMesh(rect(),false,[],kept).getAttribute('position');nextStoneCacheRound(kept);nextStoneCacheRound(kept);
+ok(reused===first&&splitFaceStoneMesh(rect(),false,[],kept).getAttribute('position')!==first&&kept.now.size===1&&kept.before.size===0,'A rebuilt design reuses the stones its batch drew last time, and lets go of older ones');
+// A wall's free ends have no joint: they break like a face and stay on the laid stone.
+ok(stones.filter(b=>!b.renderDuplicate).every(b=>{const s=look(b),inside=s.all.every(i=>Math.abs(s.plan(i).x)<=120+1e-3);s.g.dispose();return inside;}),'A wall\'s free ends stay on the laid stone, with no joint to reach into');
+// A stone no longer than it is deep (a short stretch, a 20 in course) still has its faces on the wall faces and its ends at
+// its joints.
+for(const [length,deep] of [[12,14],[16,20]]){
+ const b=rect({polygon:[{x:-length/2,y:-deep/2},{x:length/2,y:-deep/2},{x:length/2,y:deep/2},{x:-length/2,y:deep/2}],w:length,d:deep,h:deep,y:deep/2}),end=length/2+STONE_JOINT_IN,beside=[[{x:-end-24,y:-deep/2},{x:-end,y:-deep/2},{x:-end,y:deep/2},{x:-end-24,y:deep/2}],[{x:end,y:-deep/2},{x:end+24,y:-deep/2},{x:end+24,y:deep/2},{x:end,y:deep/2}]];
+ const s=look(b,false,beside),reach=Math.max(...s.all.map(i=>Math.abs(s.plan(i).x)));
+ ok(s.all.every(i=>Math.abs(s.plan(i).y)<=deep/2+1e-3)&&Math.abs(reach-(length/2+STONE_JOINT_IN/2))<1e-3,`A ${length} in stone in a ${deep} in course keeps its faces on the wall faces and its ends at its joints (reaches ${reach.toFixed(3)} in)`);
+ s.g.dispose();
+}
+ok(look(rect()).triangles<=1100&&look(rect(),true).triangles<=500,`A 48 in stone stays within 1,100 triangles, 500 below the high render tier (${look(rect()).triangles}, ${look(rect(),true).triangles})`);
+const remnant=look(rect({polygon:[{x:-1.5,y:-7},{x:1.5,y:-7},{x:1.5,y:7},{x:-1.5,y:7}],w:3}));
+ok(remnant.volume>0&&remnant.all.every(i=>insideRing(remnant.outline[0],remnant.plan(i))),'A 3 in cut remnant is still a solid inside its footprint');
+const positions=(b:YardBox,beside=nextTo.get(b)??[])=>[...splitFaceStoneGeometry(b,false,beside).getAttribute('position').array];
+ok(positions(rect()).join()===positions(rect()).join(),'The same stone always looks the same');
+ok(positions(rect()).join()!==positions(rect({unitId:'gw-wall-block-0-0-4'})).join(),'Each stone looks different from the next');
+// Moving the wall moves its stones without changing how any stone looks, whichever way the wall runs.
+for(const [rotationDeg,dx,dz] of [[0,10,0],[90,3.7,-2.2],[270,-25,13]]){
+ const before=blocks(buildYardModel(flat([wall({id:'mw',rotationDeg,finishedElevationIn:30})])),'mw'),after=blocks(buildYardModel(flat([wall({id:'mw',rotationDeg,xFt:dx,zFt:40+dz,finishedElevationIn:30})])),'mw'),n0=stoneNeighbours(before),n1=stoneNeighbours(after);
+ ok(before.filter(b=>!b.renderDuplicate).every(b=>{const m=after.find(o=>o.unitId===b.unitId&&!o.renderDuplicate);if(!m)return false;const a=positions(b,n0.get(b)),c=positions(m,n1.get(m));return a.length===c.length&&a.every((v,i)=>Math.abs(v+(i%3===0?dx*12:i%3===2?dz*12:0)-c[i])<1e-3);}),`Moving a wall that runs at ${rotationDeg}° changes no stone's look`);
+}
+// The top edge breaks back from the face just below it (a small straight break, now and then a chip).
+const breaks=sample.flatMap(b=>{
+ const s=look(b),levels=[...new Set(s.all.map(i=>Math.round(s.at(i).y*1e3)))].sort((p,q)=>p-q),count=s.all.length/(levels.length+2),below=levels.findIndex(y=>Math.abs(y/1e3-(s.hi-.9))<1e-3);
+ if(s.area<200||!Number.isInteger(count)||below<0){s.g.dispose();return [];}
+ const top=levels.length-1,list=Array.from({length:count},(_,i)=>s.depth(top*count+i)-s.depth(below*count+i));s.g.dispose();
+ return [list.reduce((n,v)=>n+v,0)/list.length];
+});
+ok(breaks.length>=40&&breaks.reduce((n,v)=>n+v,0)/breaks.length>=.15,`Each top edge breaks back from the face (${breaks.length} stones, mean ${(breaks.reduce((n,v)=>n+v,0)/breaks.length).toFixed(2)} in)`);
+ok(Math.abs(edgeBreak(0,0)-.2)<1e-9&&Math.abs(edgeBreak(.7,.999)-.45)<1e-3&&edgeBreak(.72,0)===edgeBreak(0,0)&&Math.abs(edgeBreak(.9999,0)-1.8)<1e-3,'The edge breaks back 0.2-0.45 in, and up to 1.6 in more where a chip breaks out');
+// On an arc a stone is still straight: each face that followed the curve is one straight face (the chord outside the curve,
+// a line across the deepest point inside it), inside the laid stone, so a curved wall facets like a real one.
+// The arc runs from the corner (0, 480) to (0, 600): a 120 in chord bowed 20 in, so radius 100 in about (80, 540), the
+// stones 14 in deep. Stones wholly on it (not the straight leg, nor the corner wedges where the leg meets it):
+const onArc=(p:Plan)=>Math.abs(Math.abs(Math.atan2(p.y-540,p.x-80))-Math.PI)<=Math.asin(.6)+.01&&Math.abs(Math.hypot(p.y-540,p.x-80)-100)<=7.5;
+const arcStones=curvedStones.filter(b=>!b.renderDuplicate&&rings(b).flat().every(onArc));
+const turns=(ring:Plan[])=>ring.filter((p,i)=>{const a=ring[(i+ring.length-1)%ring.length],c=ring[(i+1)%ring.length],ux=p.x-a.x,uy=p.y-a.y,vx=c.x-p.x,vy=c.y-p.y;return Math.abs(Math.atan2(ux*vy-uy*vx,ux*vx+uy*vy))>.004;}).length;
+ok(arcStones.length>=8,`The arc wall has stones laid in facets (${arcStones.length})`);
+const bent=arcStones.flatMap(b=>{const laid=rings(b),drawn=stoneOutlines(b),area=yardSignedArea(drawn[0])/laid.reduce((n,r)=>n+yardSignedArea(r),0);return drawn.length===1&&turns(drawn[0])<=4&&area>=.8&&area<=1+1e-6&&drawn[0].every(p=>laid.some(r=>insideRing(r,p)))?[]:[`${b.unitId} ${drawn.length} pieces, ${turns(drawn[0])} corners, ${area.toFixed(3)} of its area`];});
+// A stone whose laid outline is notched (the model's clipping near the ends of the curve leaves gaps about a joint wide)
+// can't be squared up without crossing into the joint, so it keeps its laid pieces.
+ok(bent.length<=arcStones.length/4,`Stones on the arc are drawn straight and in one piece, four-cornered, inside their laid stone (${arcStones.length-bent.length}/${arcStones.length}; kept as laid: ${bent.join()})`);
+// Colour: each stone its own shade, warm or cool; recesses darker and the top weathered lighter; the swatch's own lightness.
+const shades=sample.map(b=>{const s=look(b),mean=(f:(i:number)=>number,list=s.all)=>list.reduce((n,i)=>n+f(i),0)/list.length,top=s.all.filter(i=>Math.abs(s.at(i).y-s.hi)<1e-3),face=s.all.filter(i=>{const y=s.at(i).y;return y>s.lo+.3*b.h&&y<s.hi-.3*b.h;});const r={tone:mean(s.tone),warm:mean(i=>s.col.getX(i)-s.col.getZ(i)),top:mean(s.tone,top),face:mean(s.tone,face),lo:Math.min(...s.all.map(s.tone)),hi:Math.max(...s.all.map(s.tone))};s.g.dispose();return r;});
+ok(Math.max(...shades.map(s=>s.tone))-Math.min(...shades.map(s=>s.tone))>=.1,'Stones differ in shade, as quarried limestone does');
+ok(shades.some(s=>s.warm>.01)&&shades.some(s=>s.warm<-.01),'Some stones are warmer (buff) and some cooler (blue-grey)');
+ok(shades.every(s=>s.lo>=.5&&s.hi<=1.6),'No part of a stone strays far from the chosen colour (a bleached stone\'s weathered top is the lightest)');
+const wallTone=shades.reduce((n,s)=>n+s.tone,0)/shades.length;
+ok(wallTone>=.9&&wallTone<=1.02,`The wall keeps the swatch's own lightness, so Orillia Grey stays light and Dark Grey dark (${wallTone.toFixed(3)})`);
+ok(shades.filter(s=>s.top>s.face).length>=.8*shades.length,'Tops are weathered lighter than the faces');
+// Only guillotined stones take this look; every other wall, cap, paver and rock is drawn exactly as before.
+const mixed=buildYardModel(flat([wall({finishedElevationIn:30}),wall({id:'aw',xFt:30,productId:'armour-stone',wallStone:undefined,depthFt:3,finishedElevationIn:30}),wall({id:'sw',xFt:-30,productId:'segmental-concrete',wallStone:undefined,depthFt:1,finishedElevationIn:30})])),splitWalls=splitFaceFeatures(mixed);
+ok([...splitWalls].join()==='gw','Only the guillotined wall is drawn as split stone');
+ok(mixed.boxes.every(b=>drawnSplit(b,splitWalls)===(b.featureId==='gw'&&b.role==='wall-block'))&&mixed.boxes.some(b=>b.featureId!=='gw'&&b.role==='wall-block'),'Only its body stones are drawn split; the other walls\' stones, and every other part, are drawn as before');
 
 console.log(`GUILLOTINED WALL OK — ${checks} checks`);
