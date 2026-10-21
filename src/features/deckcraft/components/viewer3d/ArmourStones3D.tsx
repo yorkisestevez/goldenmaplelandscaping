@@ -28,7 +28,7 @@ export function armourStones(walls:YardFeature[],groundFt:number):Stone[]{
     const top=course===courses,ch=hFt/courses;let t=course%2?-.9:0;
     while(t<len){
      const L=top?2.6+r()*2.4:2.8+r()*2.6;const mid=Math.min(len,Math.max(0,t+L/2));
-     const back=top?.9+r()*.5:-1.05+(r()-.5)*.3+course*.18;
+     const back=top?-(.9+r()*.5):1.05+(r()-.5)*.3-course*.18; // positive = toward the house (the exposed face)
      const px=a.x+ux*mid+uz*back,pz=a.z+uz*mid-ux*back;
      const sy=top?1+r()*.5:ch*(1.3+r()*.35);
      out.push({x:px,y:groundFt+(top?hFt-sy*.3:ch*(course+.5)-.15),z:pz,sx:L*(1.02+r()*.12),sy,sz:top?2+r()*1.2:2.8+r()*.8,yaw:yaw+(r()-.5)*.22,tilt:(r()-.5)*.12,tint:TINTS[Math.floor(r()*TINTS.length)]});
