@@ -20,9 +20,8 @@ export function wallStoneOf(f:Pick<YardFeature,'wallStone'>){
  const stone=WALL_STONES.find(s=>s.id===f.wallStone?.stoneId)??WALL_STONES[0];
  return {stone,courseIn:f.wallStone?.courseIn??14};
 }
-export const WALL_STONE_PROBLEM='Only a guillotined armour stone wall takes a wall stone, from the listed stones and courses.';
-/** A stone choice belongs to a guillotined wall and names a listed stone and course. */
-export function wallStoneProblem(f:Pick<YardFeature,'productId'|'wallStone'>){
- const v=f.wallStone;
- return v===undefined||f.productId===GUILLOTINED_WALL&&v&&typeof v==='object'&&Object.keys(v).every(k=>k==='stoneId'||k==='courseIn')&&WALL_STONES.some(s=>s.id===v.stoneId)&&(WALL_STONE_COURSES_IN as readonly number[]).includes(v.courseIn)?'':WALL_STONE_PROBLEM;
+export const WALL_STONE_PROBLEM='Choose a listed wall stone and course height.';
+/** A guillotined wall's stone choice: absent, or a listed stone and course with no other fields. */
+export function wallStoneProblem(v:unknown){
+ return v===undefined||!!v&&typeof v==='object'&&Object.keys(v).every(k=>k==='stoneId'||k==='courseIn')&&WALL_STONES.some(s=>s.id===(v as {stoneId?:unknown}).stoneId)&&(WALL_STONE_COURSES_IN as readonly unknown[]).includes((v as {courseIn?:unknown}).courseIn)?'':WALL_STONE_PROBLEM;
 }

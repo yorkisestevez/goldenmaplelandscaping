@@ -18,27 +18,33 @@ function seeded(text:string){
 }
 
 /**
- * Joint stations for one run of a wall, in inches from the run's start (which is station 0), per course. The same
- * seed always lays the same stones, however far each course is asked to reach. A stone's length starts at a random
- * listed length and takes the first one, in turn, whose far joint clears every joint below; when none can, the one
- * that comes closest.
+ * The joints of one run of a wall (a straight run of collinear segments, or an arc's control edge), per course, in run
+ * stations shared by every course. A course starts at its own `fromIn` (a foundation step or a mitre can start it
+ * part way along) and ends at `toIn`; the list holds both ends and every joint between. The same seed always lays the
+ * same stones. Stones take listed lengths in a random order per position, and a short search backtracks until every
+ * joint clears the course below and the course ends in a whole stone (24 in or more, unless the course itself is
+ * shorter). When no such course exists, each stone takes the length whose joint comes closest to clearing. Courses are
+ * laid bottom up; a course with none below has nothing to clear.
  */
 export function stoneCourseJoints(seed:string){
- const rows=new Map<number,{joints:number[];next:()=>number}>();
- const joints=(row:number,toIn:number):number[]=>{
-  let course=rows.get(row);if(!course){course={joints:[0],next:seeded(`${seed}:${row}`)};rows.set(row,course);}
-  const list=course.joints;if(list.at(-1)!>=toIn)return list;
-  const below=row>0?joints(row-1,toIn+STONE_LENGTH_IN.max):[];
-  while(list.at(-1)!<toIn){
-   const at=list.at(-1)!,first=Math.floor(course.next()*LENGTHS.length);let best=LENGTHS[first],bestGap=-1;
-   for(let i=0;i<LENGTHS.length;i++){
-    const length=LENGTHS[(first+i)%LENGTHS.length],gap=Math.min(Infinity,...below.map(b=>Math.abs(at+length-b)));
-    if(gap>=STONE_JOINT_CLEARANCE_IN){best=length;break;}
-    if(gap>bestGap){best=length;bestGap=gap;}
-   }
-   list.push(at+best);
-  }
-  return list;
+ const rows=new Map<number,number[]>();
+ return (row:number,fromIn:number,toIn:number):number[]=>{
+  const saved=rows.get(row);if(saved)return saved;
+  const next=seeded(`${seed}:${row}`),below=rows.get(row-1)??[],gap=(at:number)=>Math.min(Infinity,...below.map(b=>Math.abs(at-b)));
+  // Lengths that leave room for a whole last stone, in this position's random order.
+  const choices=(at:number)=>{const fits=LENGTHS.filter(length=>toIn-at-length>=STONE_LENGTH_IN.min),first=Math.floor(next()*fits.length);return fits.map((_,i)=>fits[(first+i)%fits.length]);};
+  const dead=new Set<number>(),key=(at:number)=>Math.round((at-fromIn)/STONE_LENGTH_IN.step);
+  const clear=(at:number):number[]|null=>{
+   if(toIn-at<=STONE_LENGTH_IN.max)return [toIn];
+   if(dead.has(key(at)))return null;
+   for(const length of choices(at))if(gap(at+length)>=STONE_JOINT_CLEARANCE_IN){const rest=clear(at+length);if(rest)return [at+length,...rest];}
+   dead.add(key(at));return null;
+  };
+  const closest=(at:number):number[]=>{
+   if(toIn-at<=STONE_LENGTH_IN.max)return [toIn];
+   const best=choices(at).reduce((a,b)=>gap(at+b)>gap(at+a)?b:a);return [at+best,...closest(at+best)];
+  };
+  const list=[fromIn,...(toIn-fromIn<=1e-6?[]:clear(fromIn)??closest(fromIn))];
+  rows.set(row,list);return list;
  };
- return joints;
 }

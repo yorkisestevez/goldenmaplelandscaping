@@ -31,7 +31,7 @@ export function wallStone(walls:YardFeatureModel[]):PublicYardSection[]{
  return walls.filter(f=>f.quantities.wallStoneLb>0).map(f=>{
   const lb=f.quantities.wallStoneLb,{stone,courseIn}=wallStoneOf(f.config);
   return {id:`wall-stone-${f.config.id}`,label:`${f.config.name}: Guillotined armour stone, ${stone.name}, ${courseIn} in courses`,amountCents:Math.round(c(lb*stone.tradePerLb)*baseline.facts.materialMarkup),featureIds:[f.config.id],quantity:lb/2000,unit:'tons',
-   note:`${Math.round(lb).toLocaleString('en-CA')} lb of modelled stone at ${LIMESTONE_LB_PER_FT3} lb per cubic ft, buried course included; Carr Landscape Depot guillotined wallstone, 2025 trade price per lb plus material markup. Confirm the ${courseIn} in size, skids and delivery with Carr.`};
+   note:`Carr Landscape Depot guillotined wallstone, priced by weight: ${Math.round(lb).toLocaleString('en-CA')} lb of modelled stone at ${LIMESTONE_LB_PER_FT3} lb per cubic ft, buried course included. Confirm the ${courseIn} in size, skids and delivery with Carr.`};
  });
 }
 /** A raised patio's guard (yardModelAdvancedRuntime.ts, raisedPatioGuard, OBC 9.8.8.1): one builder-quote row with its

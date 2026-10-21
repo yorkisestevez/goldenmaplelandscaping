@@ -5,10 +5,11 @@ import {GUILLOTINED_WALL,WALL_STONES,WALL_STONE_COURSES_IN,wallStoneOf} from './
  * as the course and drawn in the stone's colour. */
 export function wallProductPatch(f:YardFeature,productId:string):Partial<YardFeature>{
  const patch:Partial<YardFeature>={productId,hardscape:undefined,depthFt:f.kind==='retaining-wall'?Math.max(.5,f.depthFt):f.depthFt};
- if(productId!==GUILLOTINED_WALL)return patch;
+ if(productId!==GUILLOTINED_WALL)return withoutStaleStone(f,patch);
  const {stone,courseIn}=wallStoneOf({});return {...patch,wallStone:{stoneId:stone.id,courseIn},depthFt:courseIn/12,color:stone.hex};
 }
-/** Any edit that moves a wall off the guillotined product (the list or the material picker) drops its stone choice. */
+/** An edit that moves a wall off the guillotined product (the product list, or the material picker in any editor) drops
+ * its stone choice, so the edited wall stays canonical for the strict agent patch the editors preview through. */
 export function withoutStaleStone(f:YardFeature,patch:Partial<YardFeature>):Partial<YardFeature>{
  return f.wallStone&&patch.productId!==undefined&&patch.productId!==GUILLOTINED_WALL?{...patch,wallStone:undefined}:patch;
 }
