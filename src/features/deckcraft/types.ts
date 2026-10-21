@@ -4,6 +4,7 @@ export interface QuoteResolution {scopeKey:string;fingerprint:string;supplyCost:
 import type {PergolaQuoteContext} from './pergolaPricing';
 import type {PergolaSelection} from './pergolaCatalog';
 import type {FeatureLabourSettings} from './featureLabour';
+import type {HardscapeLabourSettings} from './hardscapeLabour';
 export type DeckType = 'Attached' | 'Freestanding' | 'Floating' | 'Add-on';
 export type Municipality = 'Toronto' | 'Barrie' | 'Simcoe County' | 'Burlington-Oakville' | 'Rural-Other';
 export type SiteType = 'Standard' | 'Waterfront-Lakefront' | 'Hillside' | 'Urban Tight' | 'Island-Ferry';
@@ -450,6 +451,8 @@ export interface DeckData {
   customOverrides?: Record<string, { qty?: number; cost?: number }>;
   /** Private per-job inlay/special-feature labour (man-hours + materials). Stripped from public share/JSON. */
   featureLabour?: FeatureLabourSettings;
+  /** Private per-job hardscape setting labour (production rate on the crew day). Stripped from public share/JSON. */
+  hardscapeLabour?: HardscapeLabourSettings;
 
   // Customer & Project Info
   customerName: string;

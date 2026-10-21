@@ -160,8 +160,8 @@ ok(row&&row.amountCents===Math.round(Math.round(lb*.125*100)*baseline.facts.mate
 ok(row!.label==='Guillotined wall: Guillotined armour stone, Orillia Grey, 14 in courses'&&row!.unit==='tons'&&Math.abs(row!.quantity!-lb/2000)<1e-9,'The row names the stone and course and counts tons');
 ok(!/trade|markup|margin/i.test(row!.note??'')&&/Carr/.test(row!.note??''),'The homeowner-facing note names the supplier but no trade price, markup or margin');
 ok(!takeoff.sections.some(s=>s.id==='wall-body-gw'),'No separate wall-body supply quote for a priced stone');
-ok(takeoff.sections.some(s=>s.id==='wall-installation-gw'&&s.amountCents===null),'Setting the stone stays a builder quote');
-ok(takeoff.quoteRequired,'The wall still needs a quote for labour and the rest');
+ok(takeoff.sections.some(s=>s.id==='wall-stone-setting'&&s.amountCents!>0)&&!takeoff.sections.some(s=>s.id==='wall-installation-gw'),'Setting the stone is priced (check-hardscape-labour.ts), not a builder quote');
+ok(takeoff.quoteRequired,'The wall still needs a quote for its base, drainage and the rest');
 const dark=buildYardTakeoff(flat([wall({finishedElevationIn:30,wallStone:{stoneId:'carr-dark-grey',courseIn:14},color:'#6e6c68'})])),darkRow=dark.sections.find(s=>s.id==='wall-stone-gw')!;
 ok(darkRow.amountCents===Math.round(Math.round(lb*.153*100)*baseline.facts.materialMarkup),'Dark Grey is priced at $0.153/lb trade');
 ok(dark.knownSubtotalCents-takeoff.knownSubtotalCents===darkRow.amountCents!-row!.amountCents!,'The stone row is part of the known subtotal');

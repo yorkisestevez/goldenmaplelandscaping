@@ -9,9 +9,10 @@ export function registerYardTakeoffRuntime(value:typeof import('./yardTakeoffRun
 export function yardTakeoffRuntime(){if(!takeoffRuntime)throw Error('Geometry is loading. Retry shortly.');return takeoffRuntime;}
 
 /** Quantities and prerequisites stay synchronous; extended contractor notes load with quote review. */
-export function wallQuoteScopes(f:YardFeatureModel,hasAssemblyAllowance:boolean):PublicYardSection[]{
+/** settingPriced: the stone and its setting are priced rows (yardTakeoffRuntime.ts wallStone), so no installation quote. */
+export function wallQuoteScopes(f:YardFeatureModel,hasAssemblyAllowance:boolean,settingPriced=false):PublicYardSection[]{
  const c=f.config,q=f.quantities,selected=hardscapeSelection(c),rows:PublicYardSection[]=[];
- const basis=hasAssemblyAllowance?'Existing assembly allowance included; quote additional scope only. ':q.wallStoneLb?'Stone priced separately; installation unpriced. ':'Selected supply/installation unpriced. ';
+ const basis=hasAssemblyAllowance?'Existing assembly allowance included; quote additional scope only. ':q.wallStoneLb?settingPriced?'Stone and setting priced separately. ':'Stone priced separately; installation unpriced. ':'Selected supply/installation unpriced. ';
  const add=(id:string,label:string,quantity:number,unit:string,note='Measured planning scope; confirm assembly, labour and order details.')=>{if(quantity>0)rows.push({id:`${id}-${c.id}`,label:`${c.name}: ${label}`,amountCents:null,featureIds:[c.id],quantity,unit,note:basis+note});};
  const status=(id:string,label:string,note:string)=>rows.push({id:`${id}-${c.id}`,label:`${c.name}: ${label}`,amountCents:null,featureIds:[c.id],note});
  status('wall-design','selected wall system and site design confirmation','Surveyed grades, foundation, reinforcement, soil/slope/surcharge stability and discharge require system/site design; costs cannot approve it.');
@@ -25,7 +26,7 @@ export function wallQuoteScopes(f:YardFeatureModel,hasAssemblyAllowance:boolean)
   const size=(u:{widthMm:number;lengthMm:number;heightMm:number})=>`${u.widthMm} × ${u.lengthMm} × ${u.heightMm} mm`;
   if(!q.wallStoneLb)add('wall-body','Wall body stock supply',q.wallBlocks,'stock units',`Buried courses and cut-stock blanks included. ${selected?size(selected.unit):'Generic body'}; confirm end/corner stock and packaging.`);
   add('wall-caps','Selected cap stock supply',q.wallCaps,'stock units',`${selected?.cap?size(selected.cap):'Generic cap'}; confirm cuts and procurement waste.`);
-  add('wall-installation','Wall body and cap installation',q.wallFaceSqft,'sq ft exposed face');
+  if(!settingPriced)add('wall-installation','Wall body and cap installation',q.wallFaceSqft,'sq ft exposed face');
  }
  if(q.geogridPlacementPending||q.wallRetainedGradePending)status('wall-retained-grade','retained ground and reinforcement placement confirmation','Reinforcement above proposed ground is excluded from measured placement. Conservative supply/install allowance remains; confirm cover, connections, retained grading and engineering before execution.');
  if(q.drainOutletElevationPending)status('wall-outlet-elevation','drain outlet elevation and fall confirmation','Enter surveyed discharge invert, required fall and route length. Multiple outlets require separate route review; a scalar check cannot approve collector routing or discharge.');

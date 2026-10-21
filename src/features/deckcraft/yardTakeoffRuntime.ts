@@ -9,6 +9,7 @@ import {fireProduct,type AllowanceItem} from './yardSettings';
 import {GROUND_FIT_RATES} from './groundFitRates';
 import {GUARD} from './designRules';
 import {LIMESTONE_LB_PER_FT3,wallStoneOf} from './wallStones';
+import {validateHardscapeLabour,type HardscapeLabourSettings} from './hardscapeLabour';
 
 /**
  * The quote rows of seat walls, fire features, ground-fit banks, stone edge courses and raised-patio guards. Each exists only on a model
@@ -26,13 +27,23 @@ export function edgeCourse(model:YardModel,patios:YardFeatureModel[],unknown:Pub
  const course=model.quantities.edgeCourseLf??0;if(course>0)unknown.push({id:'yard-edge-course',label:'Stone edge course on raised patio sides',amountCents:null,quantity:course,unit:'lf',featureIds:patios.filter(f=>f.quantities.edgeCourseLf>0).map(f=>f.config.id),note:`Tallest face ${(model.quantities.edgeCourseMaxIn??0).toFixed(1)} in above grade; stone and setting unpriced.`});
 }
 /** Guillotined armour stone (wallStones.ts): the modelled stone, buried course included, priced by weight at Carr's 2025
- * trade price per lb with the engine's material markup. Setting it, the base and drainage stay builder-quote rows. */
-export function wallStone(walls:YardFeatureModel[]):PublicYardSection[]{
- return walls.filter(f=>f.quantities.wallStoneLb>0).map(f=>{
+ * trade price per lb with the engine's material markup. Setting it is priced (hardscapeLabour.ts) unless the job takes it
+ * as a builder quote (`setting` false keeps each wall's installation quote row); the base and drainage stay quotes. */
+export function wallStone(walls:YardFeatureModel[],labour?:HardscapeLabourSettings):{rows:PublicYardSection[];setting:boolean}{
+ const stoneWalls=walls.filter(f=>f.quantities.wallStoneLb>0),rows:PublicYardSection[]=stoneWalls.map(f=>{
   const lb=f.quantities.wallStoneLb,{stone,courseIn}=wallStoneOf(f.config);
   return {id:`wall-stone-${f.config.id}`,label:`${f.config.name}: Guillotined armour stone, ${stone.name}, ${courseIn} in courses`,amountCents:Math.round(c(lb*stone.tradePerLb)*baseline.facts.materialMarkup),featureIds:[f.config.id],quantity:lb/2000,unit:'tons',
    note:`Carr Landscape Depot guillotined wallstone, priced by weight: ${Math.round(lb).toLocaleString('en-CA')} lb of modelled stone at ${LIMESTONE_LB_PER_FT3} lb per cubic ft, buried course included. Confirm the ${courseIn} in size, skids and delivery with Carr.`};
  });
+ const {crewDayRate,scopes:{guillotinedSetting:s}}=validateHardscapeLabour(labour);
+ if(s.mode==='quote'||!stoneWalls.length)return {rows,setting:false};
+ // One crew sets every guillotined wall, so the total is stepped once. The note gives tons and crew days, never the rate.
+ const tons=stoneWalls.reduce((n,f)=>n+f.quantities.wallStoneLb,0)/2000,raw=tons/s.tonsPerCrewDay,
+  days=Math.max(s.minCrewDays,s.stepCrewDays>0?Math.ceil(raw/s.stepCrewDays-1e-9)*s.stepCrewDays:raw),
+  fmt=(n:number)=>n.toLocaleString('en-CA',{maximumFractionDigits:2}),word=(n:number)=>`${fmt(n)} crew-day${n===1?'':'s'}`;
+ rows.push({id:'wall-stone-setting',label:'Guillotined armour stone setting',amountCents:Math.round(days*crewDayRate*100),featureIds:stoneWalls.map(f=>f.config.id),quantity:days,unit:'crew-days',
+  note:`Setting ${fmt(tons)} tons of stone at ${fmt(s.tonsPerCrewDay)} tons per crew-day (industry planning rate) = ${word(raw)}${days===raw?'':`, billed ${s.stepCrewDays>0?`in ${fmt(s.stepCrewDays)} crew-day steps`:'exactly'}${s.minCrewDays>0?` with a ${word(s.minCrewDays)} minimum`:''}: ${word(days)}`}. Base, drainage stone and backfill are quoted separately.`});
+ return {rows,setting:true};
 }
 /** A raised patio's guard (yardModelAdvancedRuntime.ts, raisedPatioGuard, OBC 9.8.8.1): one builder-quote row with its
  * length over every patio that needs one, never $0. Absent unless a patio needs a guard. */
