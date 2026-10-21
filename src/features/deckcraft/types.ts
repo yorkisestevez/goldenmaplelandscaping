@@ -199,6 +199,8 @@ export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled
   baseElevationIn?:number;
   /** Reinforcement budgeting inputs; these never certify a structural design. */
   wallConstruction?:import('./wallConstruction').WallConstruction;
+  /** Guillotined armour stone walls only: the stone (a wallStones.ts id) and course height in inches. */
+  wallStone?:{stoneId:string;courseIn:number};
   /** Patio perimeter in local inches about the feature centre, before rotation. */
   outline?:{x:number;y:number}[];
   /** Open retaining-wall centreline in local inches; widthFt is its total run. */

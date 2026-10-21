@@ -8,6 +8,7 @@ import {registerYardTakeoffRuntime} from './yardQuoteScopes';
 import {fireProduct,type AllowanceItem} from './yardSettings';
 import {GROUND_FIT_RATES} from './groundFitRates';
 import {GUARD} from './designRules';
+import {LIMESTONE_LB_PER_FT3,wallStoneOf} from './wallStones';
 
 /**
  * The quote rows of seat walls, fire features, ground-fit banks, stone edge courses and raised-patio guards. Each exists only on a model
@@ -23,6 +24,15 @@ export function seatWall(q:Record<string,number>,hasAssemblyAllowance:boolean,ad
 }
 export function edgeCourse(model:YardModel,patios:YardFeatureModel[],unknown:PublicYardSection[]){
  const course=model.quantities.edgeCourseLf??0;if(course>0)unknown.push({id:'yard-edge-course',label:'Stone edge course on raised patio sides',amountCents:null,quantity:course,unit:'lf',featureIds:patios.filter(f=>f.quantities.edgeCourseLf>0).map(f=>f.config.id),note:`Tallest face ${(model.quantities.edgeCourseMaxIn??0).toFixed(1)} in above grade; stone and setting unpriced.`});
+}
+/** Guillotined armour stone (wallStones.ts): the modelled stone, buried course included, priced by weight at Carr's 2025
+ * trade price per lb with the engine's material markup. Setting it, the base and drainage stay builder-quote rows. */
+export function wallStone(walls:YardFeatureModel[]):PublicYardSection[]{
+ return walls.filter(f=>f.quantities.wallStoneLb>0).map(f=>{
+  const lb=f.quantities.wallStoneLb,{stone,courseIn}=wallStoneOf(f.config);
+  return {id:`wall-stone-${f.config.id}`,label:`${f.config.name}: Guillotined armour stone, ${stone.name}, ${courseIn} in courses`,amountCents:Math.round(c(lb*stone.tradePerLb)*baseline.facts.materialMarkup),featureIds:[f.config.id],quantity:lb/2000,unit:'tons',
+   note:`${Math.round(lb).toLocaleString('en-CA')} lb of modelled stone at ${LIMESTONE_LB_PER_FT3} lb per cubic ft, buried course included; Carr Landscape Depot guillotined wallstone, 2025 trade price per lb plus material markup. Confirm the ${courseIn} in size, skids and delivery with Carr.`};
+ });
 }
 /** A raised patio's guard (yardModelAdvancedRuntime.ts, raisedPatioGuard, OBC 9.8.8.1): one builder-quote row with its
  * length over every patio that needs one, never $0. Absent unless a patio needs a guard. */
@@ -72,4 +82,4 @@ export function banks(model:YardModel){
  return {model:em,rows,fillNote:bf>.001&&!hf?` Includes ${bf.toFixed(1)} cu yd of bank fill round patios.`:'',
   cut(unknown:PublicYardSection[]){if(bc>.001&&!hc)for(const s of unknown)if(/^yard-(haul|exc)/.test(s.id))s.note+=` Includes ${bc.toFixed(1)} cu yd dug from graded banks round patios.`;}};
 }
-registerYardTakeoffRuntime({seatWall,edgeCourse,patioGuard,fireAllowance,fires,banks});
+registerYardTakeoffRuntime({seatWall,edgeCourse,patioGuard,fireAllowance,fires,banks,wallStone});

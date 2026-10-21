@@ -87,7 +87,10 @@ import {basename} from 'node:path';
 // October 15 (showcase estate, PR 146): path lights kept off paving, pergola posts outside the beams and the
 // freestanding-deck framing price inside the estimate graph — option-deltas worker 211.0 → 212.2 KB gzip.
 // Raised to 213 KB with the owner's approval; the showcase scene itself stays out of the worker.
-const BUDGET_KB={routeInitial:276,routeCss:12,viewer:340,pdf:150,deltaWorker:213,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35};
+// October 20 (guillotined armour stone walls): the product entry, its saved-design validation, course height and
+// priced stone row ride with the first estimate — route 275.7 → 276.2 KB, worker 212.4 → 212.6 KB. Raised to 277 KB
+// with the owner's approval; the editor, the random-length laying and the stone pricing stay lazy.
+const BUDGET_KB={routeInitial:277,routeCss:12,viewer:340,pdf:150,deltaWorker:213,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);

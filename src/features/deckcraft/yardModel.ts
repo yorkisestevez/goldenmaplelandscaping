@@ -15,6 +15,7 @@ import {hardscapeBlanks} from './hardscapeLayout';
 import {hardscapeProfile,hardscapeStockPolygons} from './hardscapeShapes';
 import {yardWallCourses} from './yardElevations';
 import {wallConstructionProblem} from './wallConstruction';
+import {GUILLOTINED_WALL} from './wallStones';
 import {wallCoursePath,wallFoundationSections,wallSectionMask,wallConstructionForPath} from './wallFoundation';
 import {patioInlayPlans,patioInlayFeature} from './patioInlays';
 import {createSiteSurface,integrateSiteExcavation,integrateSiteFeatureFill,siteSurfaceSnapshot,siteMaterialBand,sitePolygonsBelowGround,siteRetainedSideArea,sitePlaneHeight,siteDeckClearances} from './siteSurface';
@@ -348,5 +349,5 @@ export function registerAdvancedYardRuntime(value:AdvancedYardRuntime){advanced=
 export const advancedYardRuntimeReady=()=>!!advanced;
 export async function loadAdvancedYardRuntime(){if(advanced)return;loading??=import('./yardModelAdvancedRuntime').then(value=>{advanced=value;},error=>{loading=undefined;throw error;});await loading;}
 /** New physical geometry is derived only after its optional runtime is ready. Seat (freestanding) walls are modelled there. */
-export function needsAdvancedYard(data:Pick<DeckData,'siteModel'|'terrainConfig'|'yardFeatures'|'stairTargets'|'pools'>){return !!data.pools?.length||!!data.siteModel||!!data.stairTargets?.length||!!data.terrainConfig&&(data.terrainConfig.elevationIn!==0||data.terrainConfig.slopePct!==0)||!!data.yardFeatures?.some(f=>f.kind==='fire-feature'||f.finishedElevationIn!==undefined||f.patioSlope!==undefined||f.wallTopSteps!==undefined||!!f.wallConstruction?.freestanding);}
+export function needsAdvancedYard(data:Pick<DeckData,'siteModel'|'terrainConfig'|'yardFeatures'|'stairTargets'|'pools'>){return !!data.pools?.length||!!data.siteModel||!!data.stairTargets?.length||!!data.terrainConfig&&(data.terrainConfig.elevationIn!==0||data.terrainConfig.slopePct!==0)||!!data.yardFeatures?.some(f=>f.kind==='fire-feature'||f.finishedElevationIn!==undefined||f.patioSlope!==undefined||f.wallTopSteps!==undefined||!!f.wallConstruction?.freestanding||f.productId===GUILLOTINED_WALL);}
 export function buildYardModel(data:DeckData,deckModel?:DeckTakeoff):YardModel{if(needsAdvancedYard(data)){if(!advanced)throw Error('Geometry is loading. Retry shortly.');return advanced.buildYardModel(data,deckModel);}return buildLegacyYardModel(data,deckModel) as YardModel;}

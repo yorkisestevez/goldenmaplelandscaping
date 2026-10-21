@@ -11,7 +11,7 @@ export function yardTakeoffRuntime(){if(!takeoffRuntime)throw Error('Geometry is
 /** Quantities and prerequisites stay synchronous; extended contractor notes load with quote review. */
 export function wallQuoteScopes(f:YardFeatureModel,hasAssemblyAllowance:boolean):PublicYardSection[]{
  const c=f.config,q=f.quantities,selected=hardscapeSelection(c),rows:PublicYardSection[]=[];
- const basis=hasAssemblyAllowance?'Existing assembly allowance included; quote additional scope only. ':'Selected supply/installation unpriced. ';
+ const basis=hasAssemblyAllowance?'Existing assembly allowance included; quote additional scope only. ':q.wallStoneLb?'Stone priced separately; installation unpriced. ':'Selected supply/installation unpriced. ';
  const add=(id:string,label:string,quantity:number,unit:string,note='Measured planning scope; confirm assembly, labour and order details.')=>{if(quantity>0)rows.push({id:`${id}-${c.id}`,label:`${c.name}: ${label}`,amountCents:null,featureIds:[c.id],quantity,unit,note:basis+note});};
  const status=(id:string,label:string,note:string)=>rows.push({id:`${id}-${c.id}`,label:`${c.name}: ${label}`,amountCents:null,featureIds:[c.id],note});
  status('wall-design','selected wall system and site design confirmation','Surveyed grades, foundation, reinforcement, soil/slope/surcharge stability and discharge require system/site design; costs cannot approve it.');
@@ -23,7 +23,7 @@ export function wallQuoteScopes(f:YardFeatureModel,hasAssemblyAllowance:boolean)
  }
  if(!hasAssemblyAllowance&&!q.wallAssemblyPending){
   const size=(u:{widthMm:number;lengthMm:number;heightMm:number})=>`${u.widthMm} × ${u.lengthMm} × ${u.heightMm} mm`;
-  add('wall-body','Wall body stock supply',q.wallBlocks,'stock units',`Buried courses and cut-stock blanks included. ${selected?size(selected.unit):'Generic body'}; confirm end/corner stock and packaging.`);
+  if(!q.wallStoneLb)add('wall-body','Wall body stock supply',q.wallBlocks,'stock units',`Buried courses and cut-stock blanks included. ${selected?size(selected.unit):'Generic body'}; confirm end/corner stock and packaging.`);
   add('wall-caps','Selected cap stock supply',q.wallCaps,'stock units',`${selected?.cap?size(selected.cap):'Generic cap'}; confirm cuts and procurement waste.`);
   add('wall-installation','Wall body and cap installation',q.wallFaceSqft,'sq ft exposed face');
  }
