@@ -122,6 +122,15 @@ ok(stackedJoints(courses(battered,{x:1,y:0},'0')).length===0&&stackedJoints(cour
  const arcRows=[...byAngle].sort((a,b)=>a[0]-b[0]).map(([row,m])=>({row,stones:[...m.values()].sort((a,b)=>a.lo-b.lo)}));
  // Joints are square to each facet, not exactly radial, so measuring them by angle reads within about 0.1 in.
  ok(arcRows.length>=4&&stackedJoints(arcRows,.25).length===0,`A battered curved wall keeps 6 in joint clearance between concentric courses (${stackedJoints(arcRows,.25).map(j=>j.toFixed(1)).join(', ')})`);}
+// A straight-curved-straight wall with a batter: the straight legs keep exact 6 in clearance (only an arc's own run
+// is mapped by angle).
+{const mixed=blocks(buildYardModel(flat([wall({id:'mix',widthFt:30,heightIn:60,finishedElevationIn:60,wallPath:[{x:-180,y:0},{x:-60,y:0},{x:60,y:0},{x:180,y:0}],curves:[{edge:1,bulgeIn:30}],wallConstruction:{setbackPerCourseIn:2}})])),'mix');
+ ok(stackedJoints(courses(mixed,{x:1,y:0},'0')).length===0&&stackedJoints(courses(mixed,{x:1,y:0},'2')).length===0,'The straight legs of a battered wall with an arc keep 6 in joint clearance');}
+// Run lengths from 24 to 120 in: whole 24-48 in stones, and 6 in clearance wherever a run has room for it (54 in up).
+{const misses:string[]=[];for(let len=24;len<=120;len+=2){const run=stoneCourseJoints(`len${len}`),lists=[0,1,2].map(row=>run(row,[[0,len]])[0]);
+  if(lists.some(l=>l.slice(1).some((j,i)=>j-l[i]<STONE_LENGTH_IN.min-1e-9||j-l[i]>STONE_LENGTH_IN.max+1e-9)))misses.push(`${len} length`);
+  if(len>=54&&lists.some((l,i)=>i>0&&l.slice(1,-1).some(j=>lists[i-1].slice(1,-1).some(b=>Math.abs(j-b)<STONE_JOINT_CLEARANCE_IN-1e-9))))misses.push(`${len} clearance`);}
+ ok(misses.length===0,`Runs of 24-120 in lay whole stones and clear the course below from 54 in (${misses.join(', ')})`);}
 // A hump in the ground: the lower courses stop either side of it, and each stretch still ends in whole stones.
 {const points=[];for(let x=-240;x<=600;x+=30)for(let z=240;z<=720;z+=60)points.push({id:`H${x}_${z}`,xIn:x,zIn:z,elevationIn:+(30*Math.max(0,1-Math.abs(x)/70)).toFixed(3)});
  const humped=blocks(buildYardModel(flat([wall({id:'hump',heightIn:40,finishedElevationIn:66})],{siteModel:{version:1,points,grading:[]}})),'hump');
