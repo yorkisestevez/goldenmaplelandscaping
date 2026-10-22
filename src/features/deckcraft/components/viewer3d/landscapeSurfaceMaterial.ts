@@ -33,14 +33,14 @@ export function createLandscapeSurfaceMaterial(id:LandscapeAssetId,anisotropy=1)
  let entry=shared.get(key);if(!entry){entry={maps:makeMaps(mulch?'mulch-bed':id,anisotropy),materials:new Set(),listeners:new Set(),pending:new Set()};shared.set(key,entry);}const resource=entry;
  const material=new THREE.MeshStandardMaterial({color:id==='black-mulch-bed'?'#2a2622':id==='cedar-mulch-bed'?'#ffce99':mulch?'#ffffff':'#ffffff',...resource.maps,normalScale:new THREE.Vector2(p.type==='turf'?.28:id==='limestone-screenings-bed'?.14:mulch?.18:.72,p.type==='turf'?.28:mulch?.18:.72),roughness:mulch?.9:1});
  resource.materials.add(material);
- if(mulch)addMaterialPatch(material,{key:'mulch-shred-fiber-v2',apply:shader=>{
+ if(mulch)addMaterialPatch(material,{key:'mulch-shred-fiber-v3',apply:shader=>{
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`float mulchLuma=dot(diffuseColor.rgb,vec3(.3,.5,.2));
 float mulchSlide=vMapUv.x*9.5+vMapUv.y*1.6;
 float mulchN=fract(sin(dot(floor(vec2(mulchSlide,vMapUv.y*8.)),vec2(127.1,311.7)))*43758.5453);
 float mulchBand=abs(fract(mulchSlide+mulchN*.45)-.5);
 float mulchFiber=smoothstep(.04,.22,mulchBand);
 float mulchSoft=mix(.7,1.,mulchFiber)*mix(.82,1.08,mulchN)*mix(.9,1.05,clamp(mulchLuma,0.,1.));
-diffuseColor.rgb=vec3(.34,.16,.055)*mulchSoft;
+diffuseColor.rgb=(diffuse.r<.2?vec3(.062,.056,.05):vec3(.34,.16,.055))*mulchSoft;
 #include <color_fragment>`);
  }});
  addMaterialPatch(material,{key:'ground-cover-stochastic-v1',apply:shader=>{
