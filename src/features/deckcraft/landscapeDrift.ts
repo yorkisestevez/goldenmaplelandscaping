@@ -5,7 +5,7 @@ import {newLandscapePlant} from './landscapeCatalogue';
  * stable), grouped in drifts of one species the way designers plant masses. Drift plants are visual only: they are
  * not saved objects, so they do not count against the 300-object limit or the design-link size. */
 export interface BedDrift {species:string[];spacingIn:number;seed:number}
-export const DRIFT_LIMITS={species:8,minSpacingIn:12,maxSpacingIn:120,maxPlants:900};
+export const DRIFT_LIMITS={species:8,minSpacingIn:12,maxSpacingIn:120,maxPlants:2400};
 export function validDrift(v:unknown):v is BedDrift{
  if(!v||typeof v!=='object')return false;const d=v as Record<string,unknown>;
  return Object.keys(d).every(k=>k==='species'||k==='spacingIn'||k==='seed')&&Array.isArray(d.species)&&d.species.length>=1&&d.species.length<=DRIFT_LIMITS.species&&d.species.every(s=>typeof s==='string'&&s.length<=80)
