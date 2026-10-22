@@ -19,9 +19,12 @@
  * load after advertising/analytics consent. The document head only sets
  * Consent Mode. gtag.js loads on the first input or browser idle, whichever
  * comes first, and always within ~2.5s so a visitor who leaves without
- * touching the page is still counted. Lead and call events are never gated
+ * touching the page is still counted. Lead and call events are not consent-gated
  * here — Consent Mode decides storage. A conversion that happens before the
  * script arrives is queued on dataLayer and the script is requested then.
+ * An engagement event fired earlier is held here instead: gtag.js drops any
+ * event queued ahead of its config. Only a real visitor on the live host
+ * reaches any tag at all (trackingGate.ts).
  *
  * GA4 is configured with send_page_view:false and one explicit page_view per
  * page. The Ads container sends one page_view on config and ignores
@@ -34,6 +37,7 @@
 import { pushPage, pushClick, getBehaviorFields } from './behavior';
 import { onInteractOrSoon } from './defer';
 import { shouldFireLeadConversion, type LeadFormFields } from './leadQualification';
+import { decideTracking } from './trackingGate';
 
 declare global {
   interface Window {
@@ -42,6 +46,7 @@ declare global {
     fbq?: (...args: unknown[]) => void;
     _fbq?: unknown;
     clarity?: (...args: unknown[]) => void;
+    __gmAnalyticsTest?: boolean;
   }
 }
 
@@ -96,6 +101,8 @@ let initialized = false;
 let googleTagLoaded = false;
 let googleTagLoading = false;
 let queuedViews: { path: string; title?: string }[] = [];
+let queuedEvents: { action: string; label?: string }[] = [];
+let tracked: boolean | null = null;
 let metaArmed = false;
 let pixelScriptRequested = false;
 let clarityScriptRequested = false;
@@ -130,6 +137,46 @@ function installFbqStub(): void {
   n.version = '2.0';
   n.queue = [];
 }
+
+/** Decided once per page load (trackingGate.ts); `?notrack=` is stored on the way. */
+function trackingOn(): boolean {
+  if (!isBrowser) return false;
+  if (tracked === null) {
+    let storage: Storage | null = null;
+    try {
+      storage = window.localStorage;
+    } catch {
+      /* blocked site data */
+    }
+    tracked = decideTracking({
+      search: window.location.search,
+      hostname: window.location.hostname,
+      webdriver: navigator.webdriver === true,
+      testOptIn: window.__gmAnalyticsTest === true,
+      storage,
+    });
+    dropNoTrackParam();
+    if (isDev && !tracked) console.log('[analytics] off: not the live host, an automated browser, or ?notrack');
+  }
+  return tracked;
+}
+
+/**
+ * A link copied with `?notrack=` must not opt out whoever opens it, so the parameter leaves the address bar once read.
+ * The router keeps its own copy of that first location, so the first page view of an owner's visit still shows it.
+ */
+function dropNoTrackParam(): void {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has('notrack')) return;
+  url.searchParams.delete('notrack');
+  try {
+    History.prototype.replaceState.call(history, history.state, '', url);
+  } catch {
+    /* a sandboxed frame: the parameter stays in the address bar */
+  }
+}
+
+const sendEngagement = (action: string, label?: string) => window.gtag?.('event', action, { event_label: label });
 
 /** A tracker failure must not reject the React render. */
 function guardAnalytics(run: () => void): void {
@@ -174,7 +221,7 @@ function loadClarity(): void {
 }
 
 function scheduleDeferredTrackers(): void {
-  if (!isBrowser || deferredArmed || readStoredConsent() !== 'granted') return;
+  if (!isBrowser || deferredArmed || readStoredConsent() !== 'granted' || !trackingOn()) return;
   deferredArmed = true;
   armMeta();
   let started = false;
@@ -292,7 +339,7 @@ function loadGoogleTag(): void {
 }
 
 function loadGoogleTagNow(): void {
-  if (!isBrowser || googleTagLoading || googleTagLoaded) return;
+  if (!isBrowser || googleTagLoading || googleTagLoaded || !trackingOn()) return;
   if (!GA4_ID && !GOOGLE_ADS_ID) {
     googleTagLoaded = true;
     return;
@@ -325,9 +372,13 @@ function loadGoogleTagNow(): void {
   // that event is kept even if the address bar has since moved. An explicit
   // Ads event here would use the live URL and double the current page.
   const pending = views.length ? views : [current];
-  pending.forEach((view) => {
-    emitPageView(view.path, view.title, false);
-  });
+  try {
+    pending.forEach((view) => {
+      emitPageView(view.path, view.title, false);
+    });
+  } finally {
+    queuedEvents.splice(0).forEach(({ action, label }) => sendEngagement(action, label));
+  }
 }
 
 /** Boot deferred trackers. Call once on app mount. Idempotent. */
@@ -338,6 +389,7 @@ export function initAnalytics(): void {
 function bootAnalytics(): void {
   if (!isBrowser || initialized) return;
   initialized = true;
+  if (!trackingOn()) return;
 
   if (!GA4_ID && !GOOGLE_ADS_ID) googleTagLoaded = true;
   else onInteractOrSoon(loadGoogleTag, 2500);
@@ -363,6 +415,10 @@ export function trackPageView(path: string, title?: string): void {
 function trackPageViewNow(path: string, title?: string): void {
   if (!isBrowser) return;
   const snapshot = title || document.title;
+  if (!trackingOn()) {
+    pushPage(path, snapshot);
+    return;
+  }
   if (!googleTagLoaded) {
     queuedViews.push({ path, title: snapshot });
     return;
@@ -414,6 +470,8 @@ function trackLeadNow(
     if (isDev) console.log('[analytics] trackLead skipped (unqualified)', { formName, eventId });
     return;
   }
+
+  if (!trackingOn()) return;
 
   // Queue on the stub if the script has not arrived, and request it now so a
   // submit during the idle wait is not dropped.
@@ -472,6 +530,10 @@ export function trackCall(label = 'phone_call'): void {
 
 function trackCallNow(label: string): void {
   if (!isBrowser) return;
+  if (!trackingOn()) {
+    pushClick(label);
+    return;
+  }
   loadGoogleTag();
   if (GA4_ID) {
     window.gtag?.('event', 'cta_click', { event_label: label });
@@ -490,8 +552,9 @@ export function trackEngagement(action: string, label?: string): void {
 
 function trackEngagementNow(action: string, label?: string): void {
   if (!isBrowser) return;
-  if (GA4_ID) {
-    window.gtag?.('event', action, { event_label: label });
+  if (GA4_ID && trackingOn()) {
+    if (googleTagLoaded) sendEngagement(action, label);
+    else queuedEvents.push({ action, label });
   }
   window.fbq?.('trackCustom', action, label ? { label } : undefined);
   if (label) pushClick(label);
