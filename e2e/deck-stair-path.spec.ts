@@ -41,7 +41,7 @@ async function path(page:Page,points:SketchPoint[],touch=false){
  return drawn;
 }
 async function apply(page:Page){await modal(page).getByRole('button',{name:'Generate design',exact:true}).click();await expect(modal(page).getByRole('tabpanel',{name:'Plan sketch preview'})).toBeVisible();const name=(await draft(page)).shapes.at(-1)!.points.length===2?'line':'wrap';await page.screenshot({path:resolve(proof,`${test.info().project.name}-${name}-plan-preview.png`)});await modal(page).getByRole('button',{name:'Apply design',exact:true}).click();await expect(modal(page)).toBeHidden();await expect.poll(async()=>(await state(page)).ready).toBe(true);return state(page);}
-async function stairControls(page:Page){await openDesignTask(page,'Stairs & railings');const controls=page.getByRole('dialog',{name:'Design inspector',exact:true}).getByRole('region',{name:'Stairs & railings',exact:true});await expect(controls.getByRole('spinbutton',{name:'Number of risers',exact:true})).toBeVisible();return controls;}
+async function stairControls(page:Page){await openDesignTask(page,'Stairs & railings');const controls=page.locator('#dd-home-panel').getByRole('region',{name:'Stairs & railings',exact:true});await expect(controls.getByRole('spinbutton',{name:'Number of risers',exact:true})).toBeVisible();return controls;}
 const lengths=(points:SketchPoint[])=>points.slice(1).map((p,i)=>Math.hypot(p.x-points[i].x,p.y-points[i].y));
 
 test.beforeEach(async({page,context})=>{

@@ -1,5 +1,5 @@
 import {test,expect,type Page,type Locator} from '@playwright/test';
-import {dismissDesignInspector,pickPlanTool,savedConfiguration,showProjectControls} from './nav';
+import {dismissDesignInspector,openDesignTask,pickPlanTool,savedConfiguration} from './nav';
 import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {GROUP_MS} from '../src/features/deckcraft/designer/designHistory';
@@ -17,8 +17,8 @@ const state=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:Deck
 const picker=(page:Page)=>page.getByRole('region',{name:'Ontario supplier library',exact:true});
 async function ready(page:Page){await expect.poll(()=>page.evaluate(()=>(window as unknown as {deckcraft?:DeckAgentApi}).deckcraft?.read().ready??false)).toBe(true);return state(page);}
 async function activate(control:Locator,touch=false){await control.scrollIntoViewIfNeeded();if(touch){const b=(await control.boundingBox())!;expect(b.width).toBeGreaterThanOrEqual(44);expect(b.height).toBeGreaterThanOrEqual(44);await control.tap();}else await control.click();}
-async function openMaterial(page:Page,wall?:boolean,touch=false){const button=page.getByRole('dialog',{name:'Design inspector',exact:true}).getByRole('button',{name:wall===undefined?/^Choose (wall|patio) material$/:wall?'Choose wall material':'Choose patio material',exact:true});if(await button.getAttribute('aria-expanded')!=='true')await activate(button,touch);await expect(picker(page).getByLabel('Hardscape supplier',{exact:true})).toBeVisible();}
-async function open(page:Page,touch=false){await showProjectControls(page);const nav=page.getByRole('navigation',{name:'Design tasks'}),button=nav.getByRole('button',{name:'Backyard',exact:true});if(!await button.isVisible())await nav.locator('summary').filter({hasText:/^Build & landscape$/}).click();await activate(button,touch);await openMaterial(page,undefined,touch);}
+async function openMaterial(page:Page,wall?:boolean,touch=false){const button=page.locator('#dd-home-panel').getByRole('button',{name:wall===undefined?/^Choose (wall|patio) material$/:wall?'Choose wall material':'Choose patio material',exact:true});if(await button.getAttribute('aria-expanded')!=='true')await activate(button,touch);await expect(picker(page).getByLabel('Hardscape supplier',{exact:true})).toBeVisible();}
+async function open(page:Page,touch=false){await openDesignTask(page,'Backyard');await openMaterial(page,undefined,touch);}
 const errors=new WeakMap<Page,string[]>();
 test.beforeEach(async({page,context})=>{const found:string[]=[];errors.set(page,found);page.on('pageerror',e=>found.push(e.message));await context.addInitScript('window.__name=(target,value)=>target;');await context.addInitScript(configuration=>{const key='golden-maple.deck-studio.deck-only.v1';if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify({format:'golden-maple-deck-design',version:1,units:'inches-and-feet',configuration}));},fixture);await context.route('**/*',route=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(route.request().url())&&['GET','HEAD'].includes(route.request().method())?route.continue():route.fulfill({status:200,body:''}));await page.goto('/deck-designer/');await ready(page);});
 test.afterEach(async({page})=>expect(errors.get(page)??[]).toEqual([]));

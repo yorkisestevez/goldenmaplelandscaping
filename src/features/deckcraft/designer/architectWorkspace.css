@@ -1,29 +1,22 @@
-/* A compact menu strip replaces the permanent task rail. Loaded with workspace help. */
-.deck-designer:has(.dd-workspace-nav) .dd-workspace{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto}
-.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav{grid-column:1;grid-row:1;position:relative;top:auto;z-index:45;display:flex;align-items:center;gap:8px;overflow:visible;padding:0 12px;background:#f4f5f0;border:0;border-bottom:1px solid #d6dad1}
-.deck-designer .dd-workspace-nav .dd-nav-group{position:relative;margin:0;flex:none;display:block}
-.deck-designer .dd-nav-group>summary{min-height:44px;padding:0 12px;align-content:center;font-size:12px;cursor:pointer;color:#374337}
-.deck-designer .dd-nav-menu{position:absolute;left:0;top:100%;width:220px;padding:6px;background:#fff;border:1px solid #cdd3c8;box-shadow:0 8px 24px #20321b22;border-radius:4px;z-index:50}
-.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav button{display:flex;flex-direction:row;justify-content:flex-start;gap:8px;min-height:44px;width:100%;margin:0;padding:8px;font-size:12px;text-align:left}
-.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav .dd-nav-canvas{display:none}
-.deck-designer:has(.dd-workspace-nav) .dd-preview{grid-column:1;grid-row:2;padding:8px 12px;min-width:0}
-.deck-designer:has(.dd-workspace-nav) .dd-preview-head{margin-bottom:6px;gap:8px}
-.deck-designer:has(.dd-workspace-nav) .dd-preview h2{font-size:13px}
-.deck-designer:has(.dd-workspace-nav) .dd-workspace-price{grid-column:1;grid-row:3;padding:6px 14px;gap:8px}
-.deck-designer:has(.dd-workspace-nav) .dd-workspace-amount>strong{font-size:20px}
-.deck-designer:has(.dd-workspace-nav) .dd-sheet-panel>.dd-secondary{margin:0 0 6px}
-.deck-designer:has(.dd-workspace-nav) .dd-canvas{border-radius:4px}
-@media(max-width:800px){.deck-designer:has(.dd-workspace-nav) .dd-workspace-nav{position:relative;top:auto;gap:0;padding:0 6px}.dd-nav-group>summary{font-size:11px;padding:0 9px}.dd-nav-group:last-child .dd-nav-menu{left:auto;right:0}.deck-designer:has(.dd-workspace-nav) .dd-preview{padding:8px}.deck-designer:has(.dd-workspace-nav) .dd-preview-head{flex-wrap:wrap}.deck-designer:has(.dd-workspace-nav) .dd-preview h2{margin:0}.deck-designer:has(.dd-workspace-nav) .dd-workspace-price{padding:6px 10px;row-gap:0}.deck-designer:has(.dd-workspace-nav) .dd-workspace-amount>small{flex-basis:auto}}
+/* The homeowner layout (the four tabs, homeTabs.ts): one column for the drawing. Loaded with workspace help. */
+.deck-designer:has(.dd-home-tabs) .dd-workspace{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto}
+.deck-designer:has(.dd-home-tabs) .dd-preview{grid-column:1;grid-row:2;padding:8px 12px;min-width:0}
+.deck-designer:has(.dd-home-tabs) .dd-preview-head{margin-bottom:6px;gap:8px}
+.deck-designer:has(.dd-home-tabs) .dd-preview h2{font-size:13px}
+.deck-designer:has(.dd-home-tabs) .dd-workspace-price{grid-column:1;grid-row:3;padding:6px 14px;gap:8px}
+.deck-designer:has(.dd-home-tabs) .dd-workspace-amount>strong{font-size:20px}
+.deck-designer:has(.dd-home-tabs) .dd-sheet-panel>.dd-secondary{margin:0 0 6px}
+.deck-designer:has(.dd-home-tabs) .dd-canvas{border-radius:4px}
+@media(max-width:800px){.deck-designer:has(.dd-home-tabs) .dd-preview{padding:8px}.deck-designer:has(.dd-home-tabs) .dd-preview-head{flex-wrap:wrap}.deck-designer:has(.dd-home-tabs) .dd-preview h2{margin:0}.deck-designer:has(.dd-home-tabs) .dd-workspace-price{padding:6px 10px;row-gap:0}.deck-designer:has(.dd-home-tabs) .dd-workspace-amount>small{flex-basis:auto}}
 
 /* Drawing mode reserves the screen for geometry; project controls remain one click away. */
-.deck-designer:has(.dd-workspace-nav) .dd-preview-head{display:flex;align-items:center;justify-content:space-between}
-.deck-designer[data-drawing-focus=true] .dd-workspace-nav{display:none}
+.deck-designer:has(.dd-home-tabs) .dd-preview-head{display:flex;align-items:center;justify-content:space-between}
 /* The price sits in the sheet-tab row's free space beside All options, so the drawing keeps its full height. The workspace
    scrolls rather than the drawing panel, so the price scrolls with that row instead of floating over the ribbon. */
-@media(min-width:801px){.deck-designer[data-drawing-focus=true] .dd-workspace{position:relative;overflow:hidden auto}.deck-designer[data-drawing-focus=true] .dd-preview{overflow:visible}.deck-designer[data-drawing-focus=true] .dd-workspace>.dd-workspace-price{grid-area:auto;position:absolute;top:4px;right:120px;flex-wrap:nowrap;gap:8px;padding:0;background:none;border:0}.deck-designer[data-drawing-focus=true] .dd-workspace-amount{flex:none;flex-wrap:nowrap;gap:8px}.deck-designer[data-drawing-focus=true] .dd-workspace-amount>*{flex-basis:auto}.deck-designer[data-drawing-focus=true] .dd-workspace-amount>strong{font-size:20px}.deck-designer[data-drawing-focus=true] .dd-workspace-quotes[open]{top:100%;bottom:auto}}
+@media(min-width:801px){.deck-designer[data-drawing-focus=true] .dd-workspace{position:relative;overflow:hidden auto}.deck-designer[data-drawing-focus=true] .dd-preview{overflow:visible}.deck-designer[data-drawing-focus=true] .dd-workspace>.dd-workspace-price{grid-area:auto;position:absolute;top:4px;right:10px;flex-wrap:nowrap;gap:8px;padding:0;background:none;border:0}.deck-designer[data-drawing-focus=true] .dd-workspace-amount{flex:none;flex-wrap:nowrap;gap:8px}.deck-designer[data-drawing-focus=true] .dd-workspace-amount>*{flex-basis:auto}.deck-designer[data-drawing-focus=true] .dd-workspace-amount>strong{font-size:20px}.deck-designer[data-drawing-focus=true] .dd-workspace-quotes[open]{top:100%;bottom:auto}}
 @media(min-width:801px) and (max-width:1000px){.deck-designer[data-drawing-focus=true] .dd-workspace-amount{flex-direction:column;gap:0}.deck-designer[data-drawing-focus=true] .dd-workspace-amount>span{display:none}}
 .deck-designer[data-drawing-focus=true]:has(.dd-easy-tools) .dd-workspace{height:calc(100dvh - 72px - var(--dd-easy-tools-height,0px));min-height:0;grid-template-rows:minmax(0,1fr);padding-bottom:0}
-.deck-designer[data-drawing-focus=true]:has(.dd-workspace-nav) .dd-preview{grid-row:1;padding:6px 10px}
+.deck-designer[data-drawing-focus=true]:has(.dd-home-tabs) .dd-preview{grid-row:1;padding:6px 10px}
 .deck-designer[data-drawing-focus=true] .dd-canvas>.dd-plan-viewport,.deck-designer[data-drawing-focus=true] .dd-canvas>.dd-site-plan{height:max(280px,calc(100dvh - 300px))!important}
 .deck-designer[data-drawing-focus=true] .dd-canvas>[aria-label="Interactive deck construction model"]{height:max(280px,calc(100dvh - 300px))!important}
 .deck-designer .dd-drawing-focus-toggle{margin-right:6px!important}

@@ -33,7 +33,7 @@ const noteWarmLead=(...args:Parameters<typeof import('../features/deckcraft/warm
 import {loadArchitectShortcuts,loadExteriorStudio,loadPlanBoundaryEditor,loadPlanEditingWorkspace,loadPlanToolPicker} from '../features/deckcraft/designer/previewLoaders';
 import {preloadable,whenSettled} from '../features/deckcraft/designer/hydrationLazy';
 const PreviewPanel=preloadable(()=>import('../features/deckcraft/designer/PreviewPanel'));
-import SectionList from '../features/deckcraft/designer/SectionList';
+import {ESTIMATOR_TABS,HOME_TABS,homeTabLabel,phoneLayout,tabOfSection,tabOfTool,type HomeTabId} from '../features/deckcraft/designer/homeTabs';
 import {SECTIONS,SECTION_BY_ID,loadBackyardStep,loadBoardColourPanel,loadDeckFinishesPanel,loadDimensionsStep,loadEstimateStep,loadHouseSection,loadInlayEditor,loadMaterialsStep,loadSiteExtrasStep,loadSkirtingEditor,loadStairsStep,sectionsOfPatch,type SectionId} from '../features/deckcraft/designer/sections';
 import type {AgentRequest} from '../features/deckcraft/designer/deckAgentController';
 import type {BoardPaintChoice} from '../features/deckcraft/boardFinishes';
@@ -71,6 +71,8 @@ const IssueReviewDialog=lazy(()=>import('../features/deckcraft/designer/IssueRev
 const PermitSetDialog=lazy(()=>import('../features/deckcraft/drawings/PermitSetDialog'));
 const JobRevisionDialog=lazy(()=>import('../features/deckcraft/designer/JobRevisionDialog'));
 const ProMenuBar=lazy(()=>import('../features/deckcraft/designer/pro/ProMenuBar'));
+const loadHomePanel=()=>import('../features/deckcraft/designer/HomePanel');
+const HomePanel=lazy(loadHomePanel);
 const loadSendDialog=()=>import('../features/deckcraft/SendDesignDialog');
 const loadProposalDialog=()=>import('../features/deckcraft/ProposalDialog');
 const HouseSection=lazy(loadHouseSection),DimensionsStep=preloadable(loadDimensionsStep),MaterialsStep=lazy(loadMaterialsStep),StairsStep=lazy(loadStairsStep),SiteExtrasStep=lazy(loadSiteExtrasStep),EstimateStep=lazy(loadEstimateStep);
@@ -112,6 +114,13 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // The open sections. Every section starts closed, in the prerendered page and on the client alike; none is saved.
   const [open,setOpen]=useState<ReadonlySet<SectionId>>(()=>new Set(['deck']));
   const [workspaceView,setWorkspaceView]=useState<'canvas'|'inspector'>('canvas');
+  // Homeowners: the open tab and whether its panel shows (homeTabs.ts). The page opens on Draw with the panel closed.
+  const [homeTab,setHomeTab]=useState<HomeTabId>('draw'),[panelOpen,setPanelOpen]=useState(false);
+  // Once opened, the panel stays mounted while hidden, so it reopens where the visitor left it.
+  const [panelUsed,setPanelUsed]=useState(false);
+  // A section opened from elsewhere, for the panel to bring into view and focus once it shows (it may still be loading).
+  const [focusSection,setFocusSection]=useState<SectionId|null>(null);
+  useEffect(()=>{if(panelOpen)setPanelUsed(true);},[panelOpen]);
   const [sketchOpen,setSketchOpen]=useState(false);
   const [pendingInlay,setPendingInlay]=useState<DeckInlay|null>(null);
   const [presetsOpen,setPresetsOpen]=useState(false);
@@ -125,7 +134,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   const [yardTarget,setYardTarget]=useState<{id:string;target:'area'|'edge'|'point';index:number}>({id:'',target:'area',index:0});
   const setYardFeatureId=(id:string)=>{setRawYardFeatureId(id);setYardTarget({id,target:'area',index:0});};
   const clearJobContext=()=>{setJobLabel('');void import('../features/deckcraft/designer/jobRevisionLibrary').then(m=>m.clearActiveJobLabel()).catch(()=>{});};
-  const closeSections=useCallback(()=>{setOpen(new Set(['deck']));setWorkspaceView('canvas');},[]);
+  const closeSections=useCallback(()=>{setOpen(new Set(['deck']));setWorkspaceView('canvas');setPanelOpen(false);},[]);
   // Your changes (the price schedule): every edit, undo, redo and whole new design is noted as it happens.
   const changes=useChangeLedger();
   const {data,setData,update:applyUpdate,replace:replaceDesign,undo:undoDesign,redo:redoDesign,canUndo,canRedo,earlierYard,restoreEarlierYard:restoreYard,dismissEarlierYard,mounted,designReady,hasWebGL,setHasWebGL,retryWebGL,saved,setSaved,autosaveState,lastAutosaveAt,autosavePaused,unrestoredDesign,resumeAutosave,designStatus,setDesignStatus,designError,setDesignError,linkBackup,restoreOwnDesign}=useDeckDesign({onReplaced:()=>{closeSections();changes.loaded();clearJobContext();}});
@@ -176,17 +185,21 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // The site plan's tool (R5). A deck that becomes a custom outline is drawn with the Draw outline tool.
   const [planTool,setPlanTool]=useState<PlanTool>('size');
   const pro=useDesignerMode();
+  // The cost estimator's studio has its own price and hand-off, so its tabs leave out Price & send (homeTabs.ts).
+  const homeTabs=embed?ESTIMATOR_TABS:HOME_TABS;
   const [searchParams]=useSearchParams();
   // The customer view (?view=customer) starts once the page is running: the prerendered page has no query, and React keeps
   // the prerender's attributes while it hydrates, so a flag read during hydration never reached the page.
   const customer=mounted&&searchParams.get('view')==='customer';
   const [crewBusy,setCrewBusy]=useState(false);
   const assistantYardFeature=data.yardFeatures?.find(f=>f.id===selectedYardFeatureId);
-  const yardInFocus=planTool==='yard'||workspaceView==='inspector'&&open.has('backyard');
+  const yardInFocus=planTool==='yard'||(pro?workspaceView==='inspector':panelOpen)&&open.has('backyard');
   const assistantSelection={...selection,...(data.pools?.some(p=>p.id===selectedYardFeatureId)?{poolId:selectedYardFeatureId}:{}),...(yardInFocus&&assistantYardFeature&&assistantYardFeature.kind!=='water-feature'?{yard:yardTarget.id===selectedYardFeatureId?yardTarget:{id:selectedYardFeatureId,target:'area' as const,index:0}}:{})};
   useEffect(()=>{if(planTool!=='inlays')setPendingInlay(null);},[planTool]);
   useEffect(()=>{setPendingInlay(null);},[data]);
   useEffect(()=>{if(data.shape==='Custom')setPlanTool(t=>t==='size'?'outline':t);},[data.shape]);
+  // A tool chosen from elsewhere (a section's "on the plan" link, a located warning, the agent) brings its own tab forward.
+  useEffect(()=>{const owner=tabOfTool(planTool,homeTabs);if(owner)setHomeTab(tab=>homeTabs.find(t=>t.id===tab)?.tools.includes(planTool)?tab:owner.id);},[planTool]);
   const openExterior=useCallback((open:boolean)=>{setExteriorOpen(open);if(open)setMode(m=>CAMERA_MODES.includes(m)?m:'3d');},[]);
   const [wrapStatus,setWrapStatus]=useState('');
   const [proposal,setProposal]=useState<{shots:ProposalShot[];date:string}|null>(null);
@@ -217,22 +230,45 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // a desktop fetches it as the plan opens, a phone never downloads three.js until a 3D view is chosen.
   useEffect(()=>{
     if((navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData)return;
-    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel,loadPlanBoundaryEditor])load().catch(()=>{/* Loaded again when opened. */});},4000);
+    const timer=setTimeout(()=>{for(const load of [...new Set(SECTIONS.map(s=>s.load)),loadSendDialog,loadProposalDialog,loadHomePanel,loadBoardColourPanel,loadInlayEditor,loadExteriorStudio,loadSkirtingEditor,loadDeckFinishesPanel,loadPlanBoundaryEditor])load().catch(()=>{/* Loaded again when opened. */});},4000);
     return()=>clearTimeout(timer);
   },[]);
-  /** Opens a section (analytics: its old wizard step, and the section, once per visit). On a phone it closes the others. */
-  function openSection(id:SectionId,bringIntoView=false){
+  /** A section's reach (analytics: its old wizard step, and the section, once per visit). */
+  function trackSection(id:SectionId){
     const section=SECTION_BY_ID[id];
     trackDeck('deckcraft_step',stepLabel(section.legacyStep));
     trackDeck('deckcraft_section',`deck_section_${section.id}`);
-    setOpen(new Set([id]));setWorkspaceView('inspector');
-    // A section closing above this one moves it up, off the screen; one opened from elsewhere is brought into view.
-    if(bringIntoView)requestAnimationFrame(()=>{
-      const row=document.getElementById(`dd-section-${id}`),top=row?.getBoundingClientRect().top??0;
-      if(row&&(bringIntoView||top<0||top>window.innerHeight))row.scrollIntoView({block:'start',behavior:bringIntoView&&!reducedMotion()?'smooth':'auto'});
-    });
   }
-  const toggleSection=(id:SectionId)=>openSection(id);
+  /** Opens a section, closing the others. A homeowner sees it in its tab's panel, with the view and the plan tool left as
+   *  they are; Designer Mode docks it in its properties. */
+  function openSection(id:SectionId,bringIntoView=false){
+    trackSection(id);
+    setOpen(new Set([id]));
+    if(pro)setWorkspaceView('inspector');else{showTab(tabOfSection(id,homeTabs).id);setPanelOpen(true);setFocusSection(bringIntoView?id:null);}
+    // One opened from elsewhere is brought into view; the homeowner's panel also gives it the focus (HomePanel.tsx).
+    if(bringIntoView&&pro)requestAnimationFrame(()=>document.getElementById(`dd-section-${id}`)?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'}));
+  }
+  /** Shows a tab in the strip (counted once per visit), leaving the view and the plan tool alone. */
+  function showTab(id:HomeTabId){trackDeck('deckcraft_section',homeTabLabel(id));setHomeTab(id);}
+  /** A homeowner picks a tab. Draw gives the drawing the whole width, on the plan, with a drawing tool; the others open their
+   *  view and their panel at its first section. Picking the open tab again, its panel showing, changes nothing (Draw aside,
+   *  which always gives the drawing back); with the panel put away, it brings the panel back as it was left. */
+  function selectHomeTab(id:HomeTabId){
+    const tab=homeTabs.find(t=>t.id===id)??homeTabs[0];
+    setFocusSection(null);
+    if(id==='draw'){showTab(id);setMode('plan');setPlanTool(t=>tab.tools.includes(t)?t:data.shape==='Custom'?'outline':'size');setPanelOpen(false);return;}
+    if(id===homeTab&&panelOpen)return;
+    if(tab.view==='3d')setMode(m=>CAMERA_MODES.includes(m)?m:'3d');
+    setPanelOpen(true);
+    // What was left open in another tab (a new design reopens the Deck section) gives way to this tab's first section.
+    if(id===homeTab&&[...open].every(s=>tab.sections.includes(s)))return;
+    showTab(id);
+    const first=id==='send'?undefined:tab.sections[0];
+    if(first)trackSection(first);
+    setOpen(new Set(first?[first]:[]));
+  }
+  /** Hide panel: the focus goes back to the open tab. */
+  const hidePanel=()=>{setPanelOpen(false);setFocusSection(null);requestAnimationFrame(()=>document.getElementById(`dd-home-tab-${homeTab}`)?.focus());};
   // Feature labels load after the page; each counts once per visit (deckAnalytics.ts), so a repeat send is dropped.
   useEffect(()=>{let live=true;void import('../features/deckcraft/deckFeatures').then(({designFeatures})=>{if(live)for(const label of designFeatures(data))trackDeck('deckcraft_feature',label);});return()=>{live=false;};},[data]);
   const {estimate,estimateKey,lightingCheck,autoCounts,hasFixtures,reviewFlags,described}=useDeckEstimate(data,setData);
@@ -472,7 +508,14 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} crewBusy={crewBusy} customer={customer} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={()=>saveJSON()} onDownloadSummary={download} onExport={kind=>void exportModel(kind)} onOpenPermit={()=>setPermitOpen(true)} onCrewPack={()=>void downloadCrewPack()} onOpenJobs={()=>setJobsOpen(true)} onWarmShare={warmShare}/>;
   }};
   // "Draw it on the plan" (the Deck section's outline editor): the Draw outline tool, with the plan brought into view.
-  const showCanvas=()=>{setWorkspaceView('canvas');requestAnimationFrame(()=>document.getElementById('deck-live-preview')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'}));};
+  // On phones the tab panel is a drawer over the drawing, so going back to the drawing puts it away.
+  // A control in the drawer then hands the focus back to the open tab, read then, since the click may have picked a tool
+  // that brings another tab forward.
+  const showCanvas=()=>{
+    const drawer=!pro&&phoneLayout(),fromDrawer=drawer&&!!document.getElementById('dd-home-panel')?.contains(document.activeElement);
+    setWorkspaceView('canvas');if(drawer)setPanelOpen(false);
+    requestAnimationFrame(()=>{document.getElementById('deck-live-preview')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'});if(fromDrawer)document.querySelector<HTMLElement>('.dd-home-tabs [role=tab][aria-selected=true]')?.focus({preventScroll:true});});
+  };
   const drawOnPlan=()=>{setPlanTool('outline');setMode('plan');showCanvas();};
   const startOver=()=>{
     void (async()=>{
@@ -513,16 +556,16 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   // The Pro workspace (Designer Mode) reaches the same actions through a menu bar and ribbon. The page hands over its own
   // functions as they are; the Pro chunks, loaded only in Designer Mode, build the menu and ribbon actions from them.
   const proPage:ProPage|undefined=pro?{open,renderSection,data,apply:atomicUpdate,ready:mounted&&designReady,issues:currentIssues,canUndo,canRedo,undo,redo,openSection,setPlanTool,setMode,showCanvas,showFullList,saveJSON,openProposal,downloadPdf,exportModel,exportPermit,setPresetsOpen,setPermitOpen,setJobsOpen,setSendOpen,setQuoteReviewOpen,setIssuesOpen,setSketchOpen,setAgentOpen,setAskOpen,setAskExpert:(expert)=>{setAskExpert(expert);showCanvas();setAskOpen(true);}}:undefined;
-  return <div className="deck-designer" data-drawing-focus={pro?undefined:'true'} data-pro={pro||undefined} data-customer={customer||undefined} data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>
+  return <div className="deck-designer" data-drawing-focus={pro?undefined:'true'} data-home-panel={!proPage&&panelOpen||undefined} data-pro={pro||undefined} data-customer={customer||undefined} data-workspace-view={workspaceView} data-assistant-open={askOpen||undefined} data-embedded={embed?'estimator':undefined}>
     {embed?embed.renderBar({data,estimate}):<SEO title="Design Your Deck in 3D | Golden Maple" description="Explore deck dimensions, materials, stairs and railings with a live 3D model and detailed planning estimate." canonical="https://goldenmaplelandscaping.ca/deck-designer"/>}
     <header className="dd-header"><Link to="/" className="dd-workspace-brand" aria-label="Golden Maple home"><span className="dd-brand-symbol" aria-hidden="true">↗</span><span>DeckCraft<small>Golden Maple</small></span></Link><div className="dd-workspace-project"><h1>Draw your deck on your house.</h1><span className="dd-save-state"><i aria-hidden="true"/>{autosavePaused?'Auto-save paused':mounted?'Auto-save on this device':'Loading your design'}</span>{internalMode?<span className="dd-internal-badge" role="status">Internal · no leads</span>:null}</div><WorkspaceTools data={data} linkBackup={linkBackup} designStatus={designStatus} designError={designError} onSave={()=>saveJSON()} onImport={importFile} onRestoreOwn={restoreOwnDesign} onStartOver={startOver} onUndo={undo} onRedo={redo} canUndo={canUndo} canRedo={canRedo} autosavePaused={autosavePaused} onDownloadPrevious={unrestoredDesign?()=>downloadFile(unrestoredDesign,'application/json','golden-maple-previous-design.json'):undefined}/>{pro&&<div id="dd-workspace-agent-slot"><button type="button" className="dd-agent-open" disabled={!mounted||!designReady} aria-haspopup="dialog" onClick={()=>setPresetsOpen(true)}>Presets</button><button type="button" className="dd-agent-open" aria-haspopup="dialog" onClick={()=>setAgentOpen(true)}>Agents</button></div>}<button type="button" className="dd-send-top" onClick={()=>setSendOpen(true)}>Send my design</button></header>
     {proPage&&mounted&&<Suspense fallback={null}><ProMenuBar page={proPage}/></Suspense>}
     {mounted&&<Suspense fallback={null}><EasyEditTools onIssueCount={setIssueCount} issues={currentIssues} autosaveState={autosaveState} savedAt={lastAutosaveAt} jobLabel={jobLabel}/></Suspense>}
     <main className="dd-workspace">
-      <Suspense fallback={<div className="dd-preview" role="status">Preparing design workspace…</div>}><PreviewPanel pro={proPage} previewData={geometryPreview} onPreviewData={setGeometryPreview} assistantTargets={assistantTargets} data={data} update={update} applyComponent={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} onSelectYardTarget={setYardTarget} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} snapshotLighting={snapshotLighting} tool={planTool} setTool={setPlanTool} pendingInlay={pendingInlay} onPendingInlay={setPendingInlay} externalSelection={selection} onSelectionChange={setSelection} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior} onSketch={()=>setSketchOpen(true)} sketchReady={mounted&&designReady}/></Suspense>
+      <Suspense fallback={<div className="dd-preview" role="status">Preparing design workspace…</div>}><PreviewPanel pro={proPage} previewData={geometryPreview} onPreviewData={setGeometryPreview} assistantTargets={assistantTargets} data={data} update={update} applyComponent={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} onSelectYardTarget={setYardTarget} mode={mode} setMode={setMode} mounted={mounted} hasWebGL={hasWebGL} setHasWebGL={setHasWebGL} retryWebGL={retryWebGL} hasFixtures={hasFixtures} autoCounts={autoCounts} houseOpen={open.has('house')} pickedHouseOpeningId={pickedHouseOpeningId} effectiveHouseOpeningId={effectiveHouseOpeningId} selectHouseOpening={selectHouseOpening} moveHouseOpening={moveHouseOpening} editHouseOpening={editHouseOpening} setScreen={setScreen} onSnapshotReady={onSnapshotReady} snapshotLighting={snapshotLighting} tool={planTool} setTool={setPlanTool} pendingInlay={pendingInlay} onPendingInlay={setPendingInlay} externalSelection={selection} onSelectionChange={setSelection} stairEdges={stairEdges} onOpenSection={id=>openSection(id,true)} docked={docked} boardPaint={boardPaint} setBoardPaint={setBoardPaint} onPaintBoard={onPaintBoard} exteriorOpen={exteriorOpen} setExteriorOpen={openExterior} onSketch={()=>setSketchOpen(true)} sketchReady={mounted&&designReady} homeTab={homeTab} homeTabs={homeTabs} onHomeTab={selectHomeTab} onHomeSettings={()=>openSection('deck',true)}/></Suspense>
       <section className="dd-controls" aria-label="Deck configuration">
-        {/* In the Pro workspace the open section docks beside the drawing (ProProperties) instead of this pop-over. */}
-        {!proPage&&<SectionList data={data} ledger={schedule} open={open} onToggle={toggleSection} onOpen={id=>openSection(id,true)} renderBody={renderSection} onAssistant={askOpen?showCanvas:undefined} onCanvas={showCanvas} inspectorVisible={workspaceView==='inspector'}/>}
+        {/* In the Pro workspace the open section docks beside the drawing (ProProperties) instead of this panel. */}
+        {!proPage&&(panelOpen||panelUsed)&&<Suspense fallback={null}><HomePanel hidden={!panelOpen} tab={homeTabs.find(t=>t.id===homeTab)??homeTabs[0]} data={data} ledger={schedule} expanded={[...open][0]} onExpand={id=>openSection(id)} onCollapse={()=>setOpen(new Set())} renderBody={renderSection} onClose={hidePanel} onEdit={id=>openSection(id,true)} focus={focusSection??undefined} onFocused={()=>setFocusSection(null)} onSend={()=>setSendOpen(true)} onDownloadPdf={()=>void downloadPdf()} pdfBusy={pdfBusy} onWarmShare={warmShare}/></Suspense>}
       </section>
       <aside id="dd-assistant-dock" className="dd-assistant-slot" hidden={!askOpen}><button type="button" className="dd-assistant-back" onClick={showCanvas}>↑ Back to drawing</button></aside>
       <WorkspacePrice onSend={()=>setSendOpen(true)} onQuoteReview={pro?()=>setQuoteReviewOpen(true):undefined} issues={pro||!designReady?0:issueCount} onIssues={()=>setIssuesOpen(true)} ledger={schedule} changes={changes.records} onFullList={showFullList}/>
