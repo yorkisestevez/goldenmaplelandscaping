@@ -48,3 +48,4 @@ playwright-report/
 /work-inspect-hardscape.ts
 .photo-cache/
 /artifacts/
+.scratch/
