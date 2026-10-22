@@ -46,12 +46,12 @@ export function resortEstateDesign():DeckData{
   ]},look);
  const data:DeckData={...DEFAULT_DECK,customerName:'Paradise Resort',projectAddress:'Barrie, Ontario',
   width:36,length:14,height:40,deckType:'Freestanding',foundationDepthIn:48,houseCantileverIn:16,
-  levels:2,level2Position:'Right',level2Offset:50,
+  levels:2,level2Position:'Right',level2Offset:50,height2:28,
   deckingMaterial:'tt_prime_plus',deckingColor:'Dark Cocoa',boardWidth:5.5,pictureFrameRows:1,railingType:'Glass Panels',
   stairFlights:1,stairWidth:72,stairType:'Straight',stairPosition:'Front',stairOffset:35,stairRiserCount:5,stairTreadDepthIn:11,
   houseVisible:true,houseConfig:house,housePlacement:{anchor:'center',offsetIn:-60},
   terrainConfig:{widthFt:200,depthFt:250,elevationIn:0,slopePct:0},
-  lightingPreviewOn:true,autoLighting:{posts:true,stairs:true,stairsPerTread:2},lightingSystem:{selectedItems:[],wireDistance:80},
+  lightingPreviewOn:true,autoLighting:{posts:false,stairs:true,stairsPerTread:2},lightingSystem:{selectedItems:[],wireDistance:80},
   yardFeatures:[],landscapeObjects:[]} as DeckData;
  data.permitSite={lotWidthFt:128,lotDepthFt:200,leftYardFt:30,rearYardFt:128,yardFaces:'S'};
  const tk=buildDeckTakeoff(data),rings=stairFootprints(tk);
@@ -72,10 +72,10 @@ export function resortEstateDesign():DeckData{
  pave('path-3','Garden path',tx+9.6,tz+25,6,10,0,90);
  // Resort pool court, turned 22°.
  const courtX=tx+12,courtZ=tz+43,ROT=22;
- pave('court','Pool court',courtX,courtZ,44,30,ROT);
+ pave('court','Pool court',courtX,courtZ,50,30,ROT);
  const t=ROT*Math.PI/180;
  const L=(u:number,v:number)=>({x:courtX+u*Math.cos(t)-v*Math.sin(t),z:courtZ+u*Math.sin(t)+v*Math.cos(t)});
- const PC=L(-4,3),SC=L(15.5,3);
+ const PC=L(-7,3),SC=L(19.5,3);
  const pool={...createPlanningPool({id:'lagoon',name:'Resort pool',type:'concrete',xIn:PC.x*12,zIn:PC.z*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolRoundedRectangle(30*12,14*12,78),rotationDeg:ROT,depthProfile:[{stationIn:0,depthIn:42},{stationIn:168,depthIn:60}]};
  const spa={...createPlanningPool({id:'spa',name:'Spa',type:'concrete',xIn:SC.x*12,zIn:SC.z*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolRoundedRectangle(8*12,8*12,30),rotationDeg:ROT,depthProfile:[{stationIn:0,depthIn:36},{stationIn:96,depthIn:36}]};
  data.pools=[pool,spa];
@@ -159,23 +159,22 @@ export function resortEstateDesign():DeckData{
  furn('teak-dining-table','dining-table',dX,dZ,0,cab.id);
  for(const s of [-1,1])for(const dx of [-2.75,0,2.75])furn('woven-dining-chair',`dine-${s}-${dx}`,dX+dx,dZ+s*3.1,rotationDegFacing(0,-s),cab.id);
  // Pool loungers on the house-side deck of the court, feet to the water.
- for(const k of [-1,1]){const c=L(-4+k*4.5,-11.4);furn('lounge-chair',`chaise-${k}`,c.x,c.z,ROT,'court');}
- const st=L(-4,-13.6);furn('side-table','chaise-table',st.x,st.z,ROT,'court');
- const um=L(-14,-11);furn('cantilever-umbrella','umbrella',um.x,um.z,ROT,'court');
+ for(const k of [-1,1]){const c=L(-6+k*4.5,-11.4);furn('lounge-chair',`chaise-${k}`,c.x,c.z,ROT);}
+ const st=L(-6,-13.8);furn('side-table','chaise-table',st.x,st.z,ROT);
+ const um=L(-16,-9.5);furn('cantilever-umbrella','umbrella',um.x,um.z,ROT,'court');
  data.landscapeObjects=objs;
  // Lighting: pool + spa niche lights, 2 step lights per tread, path lights in the meadow beds 8–10 ft staggered, tree uplights.
  const hr=houseOutline(data);
  const pl=[...poolLightPlaces(pool,hr),...poolLightPlaces(spa,hr).slice(0,1)];
  const pin=(x:number,z:number,angle=0)=>({x:x*12,z:z*12,angle});
- const path=[pin(tx-3.8,tz+5),pin(tx+3.9,tz+10),pin(tx-1.5,tz+16.5),pin(tx+13.5,tz+15.5)];
+ const _path=[pin(tx-3.8,tz+5),pin(tx+3.9,tz+10),pin(tx-1.5,tz+16.5),pin(tx+13.5,tz+15.5)];
  const trees=[pin(tx-14,tz+14.2,Math.PI),pin(tx-24,tz+23,Math.PI),pin(tx+16,tz+12.2,Math.PI)];
  data.lightingSystem={wireDistance:80,selectedItems:syncAutoLighting({...data,lightingSystem:{wireDistance:80,selectedItems:[
   {productId:POOL_LIGHT_ID,qty:pl.length,zone:'pool',places:pl},
-  {productId:'liv',qty:path.length,zone:'paths',places:path},
   {productId:'big_scope_narrow',qty:trees.length,zone:'accent-trees',places:trees},
   {productId:'hub100',qty:1},
  ]}} as DeckData,{posts:tk.quantities.railingPosts,stairs:tk.treads.length,privacy:0})} as any;
- void allDeck;
+ void allDeck;void _path;
  const shot=(id:string,name:string,p:number[],tg:number[],fov:number)=>({id,name,fov,positionIn:p.map(v=>v*12) as [number,number,number],targetIn:tg.map(v=>v*12) as [number,number,number]});
  data.scenePresentation={viewMode:'finished',activeCameraId:'overhead',cameras:[
   shot('overhead','Overhead',[12,190,72],[12,0,71.9],55),
