@@ -1,8 +1,11 @@
 import {LANDSCAPE_SURFACES,landscapeSurface} from './landscapeSurfaces';
 import type {LandscapeAssetId,LandscapeKind,LandscapeObject,LandscapeSpeciesRecord} from './landscapeTypes';
+import {BOULDER_STONES,DEFAULT_BURIAL_SHARE,burialFor,isBoulderShape} from './boulderStones';
 import {PREMIUM_FURNITURE} from './premiumFurniture';
 import {PREMIUM_FURNITURE_TRIANGLES} from './premiumFurnitureTriangles';
-export interface LandscapeAsset {id:LandscapeAssetId;name:string;kind:LandscapeKind;category:string;heightIn:number;widthIn:number;depthIn:number;sourceURL?:string;modelURL?:string;lowModelURL?:string;farModelURL?:string;triangleCounts?:[number,number,number];visualNote:string}
+export interface LandscapeAsset {id:LandscapeAssetId;name:string;kind:LandscapeKind;category:string;heightIn:number;widthIn:number;depthIn:number;sourceURL?:string;modelURL?:string;lowModelURL?:string;farModelURL?:string;triangleCounts?:[number,number,number];visualNote:string;
+ /** Scan volume over its bounding box (boulder shapes, measured by build-boulder-library.mjs); sets the weight estimate. */
+ fillShare?:number}
 const model=(id:string)=>'/deckcraft/landscape/'+id;
 export const LANDSCAPE_ASSETS:LandscapeAsset[]=[
  {id:'deciduous-tree',name:'Deciduous tree',kind:'plant',category:'Trees',heightIn:180,widthIn:108,depthIn:108,sourceURL:'https://polyhaven.com/a/tree_small_02',modelURL:model('deciduous-tree-lod0.glb'),lowModelURL:model('deciduous-tree-lod1.glb'),visualNote:'Generic broadleaf visual proxy. Source mesh is Tree Small 02; a species record is selected separately.'},
@@ -18,6 +21,11 @@ export const LANDSCAPE_ASSETS:LandscapeAsset[]=[
  {id:'perennial-gold',name:'Gold flowering perennial',kind:'plant',category:'Perennials',heightIn:28,widthIn:18,depthIn:18,sourceURL:'https://polyhaven.com/a/celandine_01',modelURL:model('perennial-gold-lod0.glb'),lowModelURL:model('perennial-gold-lod1.glb'),visualNote:'Summer gold-flowering perennial from Poly Haven celandine, drawn with alpha-tested cards. Not a nursery SKU.'},
  {id:'grass-clump',name:'Ornamental grass clump',kind:'plant',category:'Grasses',heightIn:30,widthIn:24,depthIn:24,sourceURL:'https://polyhaven.com/a/grass_medium_01',modelURL:model('grass-clump-lod0.glb'),lowModelURL:model('grass-clump-lod1.glb'),visualNote:'Generic grass visual proxy; planting species and mature size are separate records.'},
  {id:'natural-boulder',name:'Natural boulder',kind:'boulder',category:'Stone',heightIn:24,widthIn:42,depthIn:30,sourceURL:'https://polyhaven.com/a/namaqualand_boulder_03',modelURL:model('natural-boulder-lod0.glb'),lowModelURL:model('natural-boulder-lod1.glb'),visualNote:'CC0 rock scan scaled to the chosen envelope. Stone type, weight, supply and placement require a quote.'},
+ {id:'boulder-fieldstone-round',name:'Round fieldstone boulder',kind:'boulder',category:'Stone',heightIn:21,widthIn:22,depthIn:40,sourceURL:'https://polyhaven.com/a/namaqualand_boulder_06',modelURL:model('boulder-fieldstone-round-lod0.glb'),lowModelURL:model('boulder-fieldstone-round-lod1.glb'),fillShare:0.4826,visualNote:'CC0 rock scan coloured by the chosen stone. The weight is an estimate; stone, supply, delivery and placement require a quote.'},
+ {id:'boulder-fieldstone-dome',name:'Domed fieldstone boulder',kind:'boulder',category:'Stone',heightIn:27,widthIn:36,depthIn:36,sourceURL:'https://polyhaven.com/a/namaqualand_boulder_04',modelURL:model('boulder-fieldstone-dome-lod0.glb'),lowModelURL:model('boulder-fieldstone-dome-lod1.glb'),fillShare:0.4186,visualNote:'CC0 rock scan coloured by the chosen stone. The weight is an estimate; stone, supply, delivery and placement require a quote.'},
+ {id:'boulder-quarried-block',name:'Quarried block boulder',kind:'boulder',category:'Stone',heightIn:20,widthIn:33,depthIn:42,sourceURL:'https://polyhaven.com/a/namaqualand_boulder_03',modelURL:model('boulder-quarried-block-lod0.glb'),lowModelURL:model('boulder-quarried-block-lod1.glb'),fillShare:0.4044,visualNote:'CC0 rock scan coloured by the chosen stone. The weight is an estimate; stone, supply, delivery and placement require a quote.'},
+ {id:'boulder-quarried-fractured',name:'Fractured quarried boulder',kind:'boulder',category:'Stone',heightIn:22,widthIn:28,depthIn:40,sourceURL:'https://polyhaven.com/a/boulder_01',modelURL:model('boulder-quarried-fractured-lod0.glb'),lowModelURL:model('boulder-quarried-fractured-lod1.glb'),fillShare:0.316,visualNote:'CC0 rock scan coloured by the chosen stone. The weight is an estimate; stone, supply, delivery and placement require a quote.'},
+ {id:'boulder-bench',name:'Flat-top bench boulder',kind:'boulder',category:'Stone',heightIn:22,widthIn:56,depthIn:31,sourceURL:'https://polyhaven.com/a/namaqualand_boulder_05',modelURL:model('boulder-bench-lod0.glb'),lowModelURL:model('boulder-bench-lod1.glb'),fillShare:0.4192,visualNote:'CC0 rock scan coloured by the chosen stone. The weight is an estimate; stone, supply, delivery and placement require a quote.'},
  {id:'outdoor-table',name:'Outdoor folding table',kind:'furniture',category:'Furniture',heightIn:30,widthIn:36,depthIn:36,sourceURL:'https://polyhaven.com/a/outdoor_table_chair_set_01',modelURL:model('outdoor-table-lod0.glb'),lowModelURL:model('outdoor-table-lod1.glb'),visualNote:'Generic outdoor furniture, not a priced manufacturer product.'},
  {id:'outdoor-chair',name:'Outdoor folding chair',kind:'furniture',category:'Furniture',heightIn:34,widthIn:20,depthIn:22,sourceURL:'https://polyhaven.com/a/outdoor_table_chair_set_01',modelURL:model('outdoor-chair-lod0.glb'),lowModelURL:model('outdoor-chair-lod1.glb'),visualNote:'Generic outdoor furniture, not a priced manufacturer product.'},
  {id:'mulch-bed',name:'Planting bed',kind:'bed',category:'Beds',heightIn:1,widthIn:120,depthIn:72,visualNote:'Measured polygon area, mulch volume and optional edging. Plant placements are counted separately.'},
@@ -28,7 +36,7 @@ export const LANDSCAPE_ASSETS:LandscapeAsset[]=[
 // Premium outdoor-room furniture (premiumFurniture.ts): original meshes, unpriced, quote required.
 for(const a of PREMIUM_FURNITURE)LANDSCAPE_ASSETS.push({id:a.id,name:a.name,kind:'furniture',category:'Furniture',heightIn:a.heightIn,widthIn:a.widthIn,depthIn:a.depthIn,modelURL:model(a.id+'-lod0.glb'),lowModelURL:model(a.id+'-lod1.glb'),visualNote:a.visualNote});
 for(const s of LANDSCAPE_SURFACES.filter(s=>s.id!=='mulch-bed'))LANDSCAPE_ASSETS.push({id:s.id,name:s.name,kind:'bed',category:s.type==='turf'?'Turf and greens':'Decorative ground covers',heightIn:1,widthIn:s.type==='turf'?180:120,depthIn:s.type==='turf'?240:72,visualNote:'Editable planning finish. Original visual proxy; confirm actual product, depth, base, drainage and installation. No supplier price is assumed.'});
-const triangleCounts:Partial<Record<LandscapeAssetId,[number,number,number]>>={'deciduous-tree':[65256,31663,8499],'conifer-tree':[14364,5799,2012],'rounded-shrub':[2080,880,360],'hedge-shrub':[3120,1200,480],'evergreen-shrub':[2560,960,400],'pine-tree':[2832,1072,400],'hosta-clump':[192,88,40],'reed-grass':[880,320,128],'fern-clump':[2384,2239,950],'perennial-bloom':[11252,2146,393],'perennial-gold':[4301,771,277],'grass-clump':[2287,2287,2287],'natural-boulder':[10370,3240,810],'outdoor-table':[2324,1592,1472],'outdoor-chair':[3752,1876,1592],'lounge-chair':[1396,948,724],'outdoor-sofa':[3876,2532,1860],'outdoor-coffee-table':[216,216,216],...PREMIUM_FURNITURE_TRIANGLES};
+const triangleCounts:Partial<Record<LandscapeAssetId,[number,number,number]>>={'deciduous-tree':[65256,31663,8499],'conifer-tree':[14364,5799,2012],'rounded-shrub':[2080,880,360],'hedge-shrub':[3120,1200,480],'evergreen-shrub':[2560,960,400],'pine-tree':[2832,1072,400],'hosta-clump':[192,88,40],'reed-grass':[880,320,128],'fern-clump':[2384,2239,950],'perennial-bloom':[11252,2146,393],'perennial-gold':[4301,771,277],'grass-clump':[2287,2287,2287],'natural-boulder':[10370,3240,810],'boulder-fieldstone-round':[10228,3196,798],'boulder-fieldstone-dome':[10150,3230,806],'boulder-quarried-block':[10126,3290,822],'boulder-quarried-fractured':[10330,3228,806],'boulder-bench':[10496,3150,786],'outdoor-table':[2324,1592,1472],'outdoor-chair':[3752,1876,1592],'lounge-chair':[1396,948,724],'outdoor-sofa':[3876,2532,1860],'outdoor-coffee-table':[216,216,216],...PREMIUM_FURNITURE_TRIANGLES};
 for(const a of LANDSCAPE_ASSETS)if(a.lowModelURL){a.farModelURL=a.lowModelURL.replace('-lod1.glb','-lod2.glb');a.triangleCounts=triangleCounts[a.id];}
 /** These records describe mature planning envelopes, not the identity of the
  * visual mesh or an Ontario nursery quotation. Site/cultivar suitability still
@@ -47,6 +55,7 @@ export const LANDSCAPE_SPECIES:LandscapeSpeciesRecord[]=[
  {id:'cornus-sericea',commonName:'Red-osier dogwood',botanicalName:'Cornus sericea',matureHeightIn:[60,108],matureSpreadIn:[60,120],sourceURL:'https://plants.ces.ncsu.edu/plants/cornus-sericea/',sourceNote:'NC State Extension dimensions: height 5–9 ft; spread 5–10 ft. Cultivar sizes vary.'},
  {id:'hydrangea-arborescens-annabelle',commonName:"'Annabelle' hydrangea",botanicalName:"Hydrangea arborescens 'Annabelle'",matureHeightIn:[36,60],matureSpreadIn:[36,60],sourceURL:'https://plants.ces.ncsu.edu/plants/hydrangea-arborescens/',sourceNote:'NC State Extension species page: height 3–5 ft, spread 3–5 ft. Annabelle is the common white cultivar in that range. Confirm the nursery plant. No price is assumed.'},
  {id:'hydrangea-paniculata',commonName:'Panicle hydrangea',botanicalName:'Hydrangea paniculata',matureHeightIn:[96,300],matureSpreadIn:[72,300],sourceURL:'https://plants.ces.ncsu.edu/plants/hydrangea-paniculata/',sourceNote:'NC State Extension: height 8–25 ft, spread 6–25 ft. Cultivar size varies. No price is assumed.'},
+ {id:'hydrangea-macrophylla-endless-summer',commonName:'Endless Summer hydrangea',botanicalName:"Hydrangea macrophylla Endless Summer 'Bailmer'",matureHeightIn:[36,60],matureSpreadIn:[36,60],sourceURL:'https://endlesssummerhydrangeas.com/our-hydrangeas/the-original/',sourceNote:'Endless Summer (The Original): 3–5 ft tall and wide, flowering on old and new wood. Flowers are pink in neutral to alkaline soil and blue only in acidic soil. Confirm the nursery plant. No price is assumed.'},
  {id:'spiraea-japonica',commonName:'Spirea',botanicalName:'Spiraea japonica',matureHeightIn:[48,72],matureSpreadIn:[48,84],sourceURL:'https://plants.ces.ncsu.edu/plants/spiraea-japonica/',sourceNote:'NC State Extension: height 4–6 ft, spread 4–7 ft. Cultivar size varies. No price is assumed.'},
  {id:'syringa-vulgaris',commonName:'Lilac',botanicalName:'Syringa vulgaris',matureHeightIn:[96,192],matureSpreadIn:[72,144],sourceURL:'https://plants.ces.ncsu.edu/plants/syringa-vulgaris/',sourceNote:'NC State Extension: height 8–16 ft, spread 6–12 ft. Cultivar size varies. No price is assumed.'},
  {id:'echinacea-purpurea',commonName:'Purple coneflower',botanicalName:'Echinacea purpurea',matureHeightIn:[36,48],matureSpreadIn:[12,24],sourceURL:'https://plants.ces.ncsu.edu/plants/echinacea-purpurea/',sourceNote:'NC State Extension: height 3–4 ft, spread 1–2 ft. No price is assumed.'},
@@ -77,6 +86,7 @@ export const PLANT_LIBRARY:PlantVisual[]=[
  {speciesId:'cornus-sericea',assetId:'rounded-shrub',tint:'#d7e4b6',heightIn:42,widthIn:42,depthIn:42,group:'Shrubs'},
  {speciesId:'hydrangea-arborescens-annabelle',assetId:'rounded-shrub',tint:'#dce8c2',heightIn:36,widthIn:40,depthIn:40,group:'Shrubs'},
  {speciesId:'hydrangea-paniculata',assetId:'rounded-shrub',tint:'#d5e2b8',heightIn:48,widthIn:42,depthIn:42,group:'Shrubs'},
+ {speciesId:'hydrangea-macrophylla-endless-summer',assetId:'rounded-shrub',tint:'#d0deb4',heightIn:36,widthIn:36,depthIn:36,group:'Shrubs'},
  {speciesId:'spiraea-japonica',assetId:'rounded-shrub',tint:'#d4c6a0',heightIn:30,widthIn:36,depthIn:36,group:'Shrubs'},
  {speciesId:'syringa-vulgaris',assetId:'rounded-shrub',tint:'#cddab0',heightIn:48,widthIn:40,depthIn:40,group:'Shrubs'},
  {speciesId:'echinacea-purpurea',assetId:'perennial-bloom',tint:'#c9d6a6',heightIn:30,widthIn:18,depthIn:18,group:'Perennials'},
@@ -97,6 +107,28 @@ export const plantFoliageTint=(speciesId?:string)=>plantLibraryEntry(speciesId)?
 export const landscapeAsset=(id:LandscapeAssetId)=>LANDSCAPE_ASSETS.find(a=>a.id===id)!;
 export function newLandscapeObject(assetId:LandscapeAssetId,id:string,xIn=0,zIn=240):LandscapeObject {
  const a=landscapeAsset(assetId);return {id,name:a.name,enabled:true,kind:a.kind,assetId,xIn,zIn,rotationDeg:0,heightIn:a.heightIn,widthIn:a.widthIn,depthIn:a.depthIn,...a.kind==='bed'?(assetId==='mulch-bed'?{mulchDepthIn:3,edging:false}:{surfaceDepthIn:landscapeSurface(assetId)!.defaultDepthIn,edging:false,...assetId==='putting-green'?{puttingCups:[{x:0,z:0}]}:{}}):{} };
+}
+/** Names DeckCraft gives a boulder; a name the user typed is never replaced. */
+export const defaultBoulderName=(name:string)=>name==='Natural boulder'||BOULDER_STONES.some(s=>name===s.name+' boulder');
+const halfInch=(v:number)=>Math.round(v*2)/2;
+/**
+ * A new natural stone boulder: granite, a quarter of it set into the ground, turned to a random whole degree and up to
+ * 15 % larger or smaller on each axis than the shape's own size, so a group of boulders never repeats. The variation is
+ * saved, so the plan, takeoff and weight match what is drawn.
+ */
+export function newBoulder(assetId:LandscapeAssetId,id:string,xIn=0,zIn=240,random:()=>number=Math.random):LandscapeObject {
+ if(!isBoulderShape(assetId))throw Error('Not a boulder shape.');
+ const a=landscapeAsset(assetId),stone=BOULDER_STONES[0];
+ const vary=(size:number)=>Math.min(Math.floor(size*1.15*2)/2,Math.max(Math.ceil(size*.85*2)/2,halfInch(size*(.85+.3*random()))));
+ const widthIn=vary(a.widthIn),heightIn=vary(a.heightIn),depthIn=vary(a.depthIn),rotationDeg=Math.floor(random()*360)%360;
+ return {id,name:stone.name+' boulder',enabled:true,kind:'boulder',assetId,xIn,zIn,rotationDeg,heightIn,widthIn,depthIn,stoneType:stone.id,burialIn:burialFor(heightIn,DEFAULT_BURIAL_SHARE)};
+}
+/** The same stone in another shape: its volume, place, turn and set-in share are kept; proportions are the new shape's. */
+export function reshapeBoulder(o:LandscapeObject,assetId:LandscapeAssetId):LandscapeObject {
+ const a=landscapeAsset(assetId),scale=Math.cbrt(o.widthIn*o.heightIn*o.depthIn/(a.widthIn*a.heightIn*a.depthIn)),tenth=(v:number)=>Math.round(v*10)/10;
+ const share=isBoulderShape(o.assetId)&&o.burialIn!==undefined?o.burialIn/o.heightIn:DEFAULT_BURIAL_SHARE,stone=BOULDER_STONES.find(s=>s.id===(o.stoneType??'granite'))!;
+ const heightIn=tenth(a.heightIn*scale);
+ return {...o,assetId,name:defaultBoulderName(o.name)?stone.name+' boulder':o.name,widthIn:tenth(a.widthIn*scale),heightIn,depthIn:tenth(a.depthIn*scale),stoneType:stone.id,burialIn:burialFor(heightIn,share)};
 }
 /**
  * Where a library add lands. This list has no plan cursor, so the first object sits just past the deck

@@ -1,0 +1,9 @@
+{
+  "note": "Boulders as production (3e94257) saved them: assetId natural-boulder and only the base fields. Frozen with legacy-boulders-golden.json; never regenerate either from current code.",
+  "landscapeObjects": [
+    {"id":"rock-a","name":"Natural boulder","enabled":true,"kind":"boulder","assetId":"natural-boulder","xIn":96,"zIn":300,"rotationDeg":0,"heightIn":24,"widthIn":42,"depthIn":30},
+    {"id":"rock-b","name":"Natural boulder copy","enabled":true,"kind":"boulder","assetId":"natural-boulder","xIn":160,"zIn":330,"rotationDeg":35,"heightIn":30,"widthIn":48,"depthIn":36},
+    {"id":"rock-c","name":"Corner rock","enabled":true,"kind":"boulder","assetId":"natural-boulder","xIn":-40,"zIn":260,"rotationDeg":-120,"heightIn":18,"widthIn":28,"depthIn":22},
+    {"id":"rock-d","name":"Spare rock","enabled":false,"kind":"boulder","assetId":"natural-boulder","xIn":20,"zIn":400,"rotationDeg":90,"heightIn":20,"widthIn":30,"depthIn":30}
+  ]
+}

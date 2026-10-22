@@ -2,8 +2,12 @@ import type {DeckData} from './types';
 import type {LandscapeObject,LandscapePoint} from './landscapeTypes';
 export interface LandscapeItemTakeoff {objectId:string;name:string;kind:LandscapeObject['kind'];count:number;areaSqft:number;mulchYd3:number;edgingLf:number;aggregateYd3?:number;turfAreaSqft?:number;baseYd3?:number;cupCount?:number;quoteRequired:true;
  /** Raised beds only (raisedBeds.ts): level soil top (project datum), planting soil, highest soil over the outline's ground, timber/steel edging and holding wall run. */
- soilTopIn?:number;soilYd3?:number;raisedMaxIn?:number;raisedEdgeLf?:number;wallLf?:number;wallLinked?:boolean;unheld?:boolean}
-export interface LandscapeTakeoff {plantCount:number;boulderCount:number;furnitureCount:number;bedAreaSqft:number;mulchYd3:number;edgingLf:number;aggregateYd3?:number;turfAreaSqft?:number;baseYd3?:number;cupCount?:number;soilYd3?:number;raisedEdgeLf?:number;items:LandscapeItemTakeoff[];warnings:string[]}
+ soilTopIn?:number;soilYd3?:number;raisedMaxIn?:number;raisedEdgeLf?:number;wallLf?:number;wallLinked?:boolean;unheld?:boolean;
+ /** Scan-shape boulders only: estimated stone weight, tonnes (envelope × measured fill × typical density). */
+ stoneTonnes?:number}
+export interface LandscapeTakeoff {plantCount:number;boulderCount:number;furnitureCount:number;bedAreaSqft:number;mulchYd3:number;edgingLf:number;aggregateYd3?:number;turfAreaSqft?:number;baseYd3?:number;cupCount?:number;soilYd3?:number;raisedEdgeLf?:number;
+ /** Present only when an enabled scan-shape boulder is in the design: their estimated weight, tonnes. */
+ boulderTonnes?:number;items:LandscapeItemTakeoff[];warnings:string[]}
 import {DesignExtensionLoadError} from './designExtensionState';
 type Runtime=Pick<typeof import('./landscapeModelRuntime'),'landscapeFootprint'|'landscapeBedAreas'|'landscapeTakeoff'|'landscapePlacement'|'matureSpreadConflicts'|'landscapeRenderLods'|'landscapeQuoteSections'>;
 let runtime:Runtime|undefined,loading:Promise<void>|undefined;

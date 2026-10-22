@@ -14,6 +14,8 @@ import {
   type FeatureLabourSettings,
 } from '../featureLabour';
 import {readFeatureLabourDefaults,saveFeatureLabourDefaults} from '../featureLabourStorage';
+import {DEFAULT_HARDSCAPE_LABOUR,validateHardscapeLabour,type HardscapeLabourSettings,type HardscapeSetting} from '../hardscapeLabour';
+import {readHardscapeLabourDefaults,saveHardscapeLabourDefaults} from '../hardscapeLabourStorage';
 import {DEFAULT_CREW_MEMBERS,DEFAULT_PERSON_HOUR_RATE,quoteCostFromCrewHours} from './quoteLabourHours';
 import {OWNER_COST_LIMITS,bookInstallationLabour,parseOwnerMarkup,parseOwnerMoney} from './ownerCostLimits';
 import './ownerCostEditor.css';
@@ -41,11 +43,13 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
   const [personHourRate,setPersonHourRate]=useState(String(DEFAULT_PERSON_HOUR_RATE));
   const [lineDrafts,setLineDrafts]=useState<Record<string,string>>({});
   const [feature,setFeature]=useState<FeatureLabourSettings>(()=>validateFeatureLabour(data.featureLabour));
+  const [hardscape,setHardscape]=useState<HardscapeLabourSettings>(()=>validateHardscapeLabour(data.hardscapeLabour));
   const closeRef=useRef(onClose);closeRef.current=onClose;
 
   useEffect(()=>setMarkupDraft(String(data.materialMarkup??35)),[data.materialMarkup]);
   useEffect(()=>setLabourDraft(data.customLaborCost===undefined?'':String(data.customLaborCost)),[data.customLaborCost]);
   useEffect(()=>setFeature(validateFeatureLabour(data.featureLabour)),[data.featureLabour]);
+  useEffect(()=>setHardscape(validateHardscapeLabour(data.hardscapeLabour)),[data.hardscapeLabour]);
   useEffect(()=>{
     const next:Record<string,string>={};
     for(const [name,row] of Object.entries(data.customOverrides??{}))if(row.cost!==undefined)next[name]=String(row.cost);
@@ -66,6 +70,16 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
   const patchScope=(id:FeatureLabourScope,patch:Partial<FeatureLabourScopeSettings>)=>{
     commitFeature(mergeFeatureLabour(feature,{scopes:{[id]:{...feature.scopes[id],...patch}}}));
   };
+  const commitHardscape=(next:HardscapeLabourSettings,message='Guillotined armour stone setting updated for this job.')=>{
+    try{
+      const clean=validateHardscapeLabour(next);
+      setHardscape(clean);onUpdate({hardscapeLabour:clean});setError('');setStatus(message);
+    }catch(e){setHardscape(validateHardscapeLabour(data.hardscapeLabour));setError(e instanceof Error?e.message:'Setting labour could not be saved.');}
+  };
+  const setting=hardscape.scopes.guillotinedSetting;
+  const draftSetting=(patch:Partial<HardscapeSetting>)=>setHardscape(h=>({...h,scopes:{guillotinedSetting:{...h.scopes.guillotinedSetting,...patch}}}));
+  const patchSetting=(patch:Partial<HardscapeSetting>)=>commitHardscape({...hardscape,scopes:{guillotinedSetting:{...setting,...patch}}});
+  const settingRow=estimate.sections.find(s=>s.title==='Yard · Guillotined armour stone setting')?.items[0];
 
   const materialLines=useMemo(()=>estimate.sections
     .filter(s=>MATERIAL_SECTIONS.test(s.title))
@@ -111,8 +125,8 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
   };
 
   const clearAll=()=>{
-    onUpdate({materialMarkup:undefined,customLaborCost:undefined,customOverrides:undefined,featureLabour:undefined});
-    setMarkupDraft('35');setLabourDraft('');setLineDrafts({});setFeature(validateFeatureLabour(undefined));setError('');setStatus('Owner costs reset to book defaults.');
+    onUpdate({materialMarkup:undefined,customLaborCost:undefined,customOverrides:undefined,featureLabour:undefined,hardscapeLabour:undefined});
+    setMarkupDraft('35');setLabourDraft('');setLineDrafts({});setFeature(validateFeatureLabour(undefined));setHardscape(validateHardscapeLabour(undefined));setError('');setStatus('Owner costs reset to book defaults.');
   };
   const saveDeviceDefaults=async()=>{
     try{await saveFeatureLabourDefaults(feature);setStatus('Saved as your device defaults for new jobs.');setError('');}
@@ -120,6 +134,14 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
   };
   const loadDeviceDefaults=async()=>{
     try{const next=await readFeatureLabourDefaults();commitFeature(next);setStatus('Loaded your device defaults onto this job.');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be loaded.');}
+  };
+  const saveSettingDefaults=async()=>{
+    try{await saveHardscapeLabourDefaults(hardscape);setStatus('Setting labour saved as your device defaults for new jobs.');setError('');}
+    catch(e){setError(e instanceof Error?e.message:'Device defaults could not be saved.');}
+  };
+  const loadSettingDefaults=async()=>{
+    try{commitHardscape(await readHardscapeLabourDefaults(),'Loaded your setting labour defaults onto this job.');}
     catch(e){setError(e instanceof Error?e.message:'Device defaults could not be loaded.');}
   };
 
@@ -211,6 +233,39 @@ export default function OwnerCostEditor({data,estimate,onUpdate,onClose,variant=
         <button type="button" className="dd-secondary" onClick={()=>void saveDeviceDefaults()}>Save as my defaults</button>
         <button type="button" className="dd-secondary" onClick={()=>void loadDeviceDefaults()}>Load my defaults</button>
         <button type="button" className="dd-secondary" onClick={()=>commitFeature(structuredClone(DEFAULT_FEATURE_LABOUR))}>Reset feature labour</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="dd-owner-setting-title">
+      <h4 id="dd-owner-setting-title">Guillotined armour stone setting</h4>
+      <p>Timed at an industry production rate and priced on your hardscape crew day, with no markup. Base, drainage stone and backfill stay builder quotes. Homeowners see tons and crew-days, never your rate.</p>
+      <p role="status">{settingRow&&settingRow.cost!==null
+        ?<>This job: <strong>{settingRow.qty} {settingRow.unit}</strong> of setting = <strong>{dollars(settingRow.cost)}</strong>.</>
+        :<>No setting is priced on this job: it has no guillotined wall{setting.mode==='quote'?', or setting is a builder quote':''}.</>}</p>
+      <label className="dd-owner-costs-field">Pricing
+        <select aria-label="Guillotined setting pricing" value={setting.mode} onChange={e=>patchSetting({mode:e.target.value as HardscapeSetting['mode']})}>
+          <option value="production">Production rate (default)</option>
+          <option value="quote">Builder quote (enter in Quote Review)</option>
+        </select>
+      </label>
+      {setting.mode==='production'&&<div className="dd-owner-costs-grid">
+        <label>Tons per crew-day<input aria-label="Guillotined setting tons per crew-day" type="number" min=".1" max="200" step=".1" value={setting.tonsPerCrewDay} onChange={e=>draftSetting({tonsPerCrewDay:Number(e.target.value)})} onBlur={e=>patchSetting({tonsPerCrewDay:Number(e.target.value)})}/></label>
+        <label>Crew-day rate · CAD<input aria-label="Guillotined setting crew-day rate" type="number" min=".01" max="20000" step=".01" value={hardscape.crewDayRate} onChange={e=>setHardscape(h=>({...h,crewDayRate:Number(e.target.value)}))} onBlur={e=>commitHardscape({...hardscape,crewDayRate:Number(e.target.value)})}/></label>
+        <label>Bill crew-days
+          <select aria-label="Guillotined setting crew-day steps" value={setting.stepCrewDays} onChange={e=>patchSetting({stepCrewDays:Number(e.target.value)})}>
+            <option value="0">Exactly</option>
+            <option value="0.25">In quarter days</option>
+            <option value="0.5">In half days (default)</option>
+            <option value="1">In whole days</option>
+          </select>
+        </label>
+        <label>Minimum crew-days<input aria-label="Guillotined setting minimum crew-days" type="number" min="0" max="10" step=".25" value={setting.minCrewDays} onChange={e=>draftSetting({minCrewDays:Number(e.target.value)})} onBlur={e=>patchSetting({minCrewDays:Number(e.target.value)})}/></label>
+      </div>}
+      <small>Defaults: {DEFAULT_HARDSCAPE_LABOUR.scopes.guillotinedSetting.tonsPerCrewDay} tons per crew-day (RSMeans dry-set cut stone on 3 people × 9 h) at CAD {DEFAULT_HARDSCAPE_LABOUR.crewDayRate.toLocaleString('en-CA')} per hardscape crew-day, half-day steps, 1 crew-day minimum.</small>
+      <div className="dd-owner-costs-actions">
+        <button type="button" className="dd-secondary" aria-label="Save setting labour as my defaults" onClick={()=>void saveSettingDefaults()}>Save as my defaults</button>
+        <button type="button" className="dd-secondary" aria-label="Load my setting labour defaults" onClick={()=>void loadSettingDefaults()}>Load my defaults</button>
+        <button type="button" className="dd-secondary" onClick={()=>commitHardscape(structuredClone(DEFAULT_HARDSCAPE_LABOUR),'Setting labour reset to the built-in defaults.')}>Reset setting labour</button>
       </div>
     </section>
 

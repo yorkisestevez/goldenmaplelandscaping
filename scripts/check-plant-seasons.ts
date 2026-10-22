@@ -27,7 +27,7 @@ ok(!/sceneSeason|plantSeasons/.test(source('src/features/deckcraft/showcaseMode.
 
 // 2. Coverage: every species in the library and every plant model.
 const plantModels=LANDSCAPE_ASSETS.filter(a=>a.kind==='plant').map(a=>a.id);
-ok(PLANT_LIBRARY.length===26&&PLANT_LIBRARY.every(p=>SPECIES_SEASONS[p.speciesId]),'All 26 catalogue species have a season record');
+ok(PLANT_LIBRARY.length===27&&PLANT_LIBRARY.every(p=>SPECIES_SEASONS[p.speciesId]),'All 27 catalogue species have a season record');
 ok(plantModels.every(id=>MODEL_SEASONS[id]),'Every plant model has a season record for plants with no species');
 ok(Object.keys(SPECIES_SEASONS).every(id=>PLANT_LIBRARY.some(p=>p.speciesId===id)),'No season record names a species the catalogue lacks');
 

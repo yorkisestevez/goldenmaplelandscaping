@@ -11,8 +11,10 @@ import type {DeckTakeoff} from '../../deckTakeoff';
 import type {YardModel} from '../../yardModel';
 import type {LandscapeObject,LandscapePoint} from '../../landscapeTypes';
 import {landscapeAsset,plantFoliageTint} from '../../landscapeCatalogue';
+import {boulderStone} from '../../boulderStones';
 import {SEASON_VARIETY,applyFoliageLighting,applyLeafRecolor,crownBend,isLeafMaterial,leafTransmitUniform,tintPlantInstance} from './foliageLighting';
 import PlantBlooms from './plantBlooms';
+import {hydrangeaCultivar} from '../../hydrangeaCultivars';
 import PlantStems from './plantStems';
 import FallenLeaves from './fallenLeaves';
 import {plantSeasonLook,type Season} from './plantSeasons';
@@ -33,6 +35,8 @@ import {weatheredSteelMaterial} from './weatheredSteel';
 import {landscapeStructureExclusions} from '../../landscapeFill';
 
 const SurfaceDetail=lazy(()=>import('./SurfaceDetail'));
+/** Hydrangeas built from their botany, with their photo atlases: loaded with the first hydrangea. */
+const Hydrangeas3D=lazy(()=>import('./hydrangea/Hydrangeas3D'));
 /** A raised bed's soil face, timber or steel edging (where no linked wall holds it): loaded with the first raised bed. */
 const RaisedBedFaces3D=lazy(()=>import('./RaisedBedFaces3D'));
 
@@ -44,6 +48,13 @@ export function landscapeInstanceMatrix(data:DeckData,o:LandscapeObject,normaliz
  if(p.normal)q.premultiply(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(p.normal.x,p.normal.y,p.normal.z)));
  return new THREE.Matrix4().compose(new THREE.Vector3(p.x,p.y,p.z),q,new THREE.Vector3(o.widthIn/12,o.heightIn/12,o.depthIn/12)).multiply(normalization).multiply(source);
 }
+/** A scan-shape boulder's instance colour. Its scan is grey with a linear mean of 0.5 (build-boulder-library.mjs), so twice
+ * the stone colour reproduces that colour on average. undefined keeps the scan's own colour (natural-boulder and every
+ * other object). */
+export function boulderTint(color:THREE.Color,o:LandscapeObject){const stone=boulderStone(o);return stone?color.set(stone.colour).multiplyScalar(2):undefined;}
+/** Vertical offset of a placed model, inches: a plant's seat in the drawn mulch (plantSeating.ts) lifts or sinks it; a
+ * boulder's buried part sits below grade. */
+export const landscapeSeatDyIn=(o:LandscapeObject,seats:Map<string,PlantSeat>)=>(seats.get(o.id)?.dyIn??0)-(o.burialIn??0);
 /** Steel landscape edging: 4 in tall, 1/8 in thick, following the bed outline in feet. */
 export function steelEdgingGeometry(points:THREE.Vector3[]){
  const half=0.125/24,rise=4/12,positions:number[]=[];
@@ -79,8 +90,7 @@ function InstancePart({data,items,source,normalization,lod,seats,season,mode}:{d
  useEffect(()=>()=>{instance.dispose();},[instance]);useEffect(()=>()=>material.dispose(),[material]);
  useLayoutEffect(()=>{
   const color=new THREE.Color(),seat=new THREE.Matrix4();
-  // A plant's seat in the drawn mulch (plantSeating.ts) lifts or sinks the whole placed model.
-  items.forEach((o,i)=>{instance.setMatrixAt(i,seat.makeTranslation(0,(seats.get(o.id)?.dyIn??0)/12,0).multiply(landscapeInstanceMatrix(data,o,normalization,source.matrixWorld)));instance.setColorAt(i,o.kind==='plant'?(leafTint?tintPlantInstance(color,leafColor(o),o.id):color.set('#ffffff')):color.set(plantFoliageTint(o.speciesRecord?.id)));});instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
+  items.forEach((o,i)=>{instance.setMatrixAt(i,seat.makeTranslation(0,landscapeSeatDyIn(o,seats)/12,0).multiply(landscapeInstanceMatrix(data,o,normalization,source.matrixWorld)));instance.setColorAt(i,o.kind==='plant'?(leafTint?tintPlantInstance(color,leafColor(o),o.id):color.set('#ffffff')):(boulderTint(color,o)??color.set(plantFoliageTint(o.speciesRecord?.id))));});instance.count=items.length;instance.instanceMatrix.needsUpdate=true;if(instance.instanceColor)instance.instanceColor.needsUpdate=true;instance.computeBoundingBox();instance.computeBoundingSphere();
   instance.name='landscape-'+items[0]?.assetId+'-lod'+lod;instance.userData={landscapeIds:items.map(o=>o.id),pickPartIds:items.map(o=>'landscape/'+o.id),genericVisualProxy:true,unmeasuredElevationIds:items.filter(o=>!landscapePlacement(data,o).measured).map(o=>o.id)};
   instance.castShadow=q.tier!=='constrained'&&lod<2;instance.receiveShadow=true;
   if(foliage)leafTransmitUniform(material).value=instance.castShadow?1:0;
@@ -161,6 +171,8 @@ export default function Landscape3D({data:fresh,showMatureSpread=false,source,mo
  // Far models (lod 2) draw immediately. Nearer models, which are much larger files, start once the view is up.
  useEffect(()=>{const timer=window.setTimeout(()=>invalidate(),1200);return()=>window.clearTimeout(timer);},[invalidate]);
  useFrame(()=>{if(performance.now()-shown.current<1200)return;const live=getShowcaseFlags().quality;const next=landscapeRenderLods(objects,camera.position,size.height,q.tier,live),key=[...next].map(([id,lod])=>id+':'+lod).join('|');if(last.current!==key){last.current=key;setLods(next);}});
- const groups=new Map<string,{items:LandscapeObject[];lod:0|1|2;mode:SeasonMode}>();for(const o of objects.filter(o=>o.enabled&&o.kind!=='bed'&&!landscapePlacement(data,o).pendingReason)){const lod=showcase?0:(lods.get(o.id)??2),mode=seasonMode(o,season),key=o.assetId+':'+lod+(mode==='summer'?'':':'+mode),g=groups.get(key)??{items:[],lod,mode};g.items.push(o);groups.set(key,g);}
- return <group name="landscape-designed-objects" userData={{designedObjectCount:objects.filter(o=>o.enabled).length,renderTier:q.tier,genericVisualProxies:true}}>{[...groups].map(([key,g])=><Suspense key={key} fallback={null}><AssetInstances data={data} items={g.items} lod={g.lod} seats={seats} season={season} mode={g.mode}/></Suspense>)}<PlantBlooms data={data} objects={objects} lods={lods} seats={seats} season={season}/>{season!=='summer'&&<PlantStems data={data} objects={objects} seats={seats} season={season}/>}{season==='fall'&&<FallenLeaves data={data} objects={objects}/>}<PlantShadeRings data={data} plants={seated}/>{objects.some(o=>o.enabled&&o.kind==='bed')&&<Suspense fallback={null}><Beds data={data} objects={objects} areas={areas} reliefs={reliefs} seats={seats}/></Suspense>}{(showMatureSpread||mature)&&<MatureSpread data={data} objects={objects} seats={seats}/>}</group>;
+  // Hydrangeas are built from their botany (hydrangea/), not the shared shrub model, its flower cards and season stems.
+ const hydrangeas=useMemo(()=>objects.filter(o=>o.enabled&&o.kind==='plant'&&hydrangeaCultivar(o.speciesRecord?.id)&&!landscapePlacement(data,o).pendingReason),[objects,data]),others=useMemo(()=>hydrangeas.length?objects.filter(o=>!hydrangeas.includes(o)):objects,[objects,hydrangeas]);
+ const groups=new Map<string,{items:LandscapeObject[];lod:0|1|2;mode:SeasonMode}>();for(const o of others.filter(o=>o.enabled&&o.kind!=='bed'&&!landscapePlacement(data,o).pendingReason)){const lod=showcase?0:(lods.get(o.id)??2),mode=seasonMode(o,season),key=o.assetId+':'+lod+(mode==='summer'?'':':'+mode),g=groups.get(key)??{items:[],lod,mode};g.items.push(o);groups.set(key,g);}
+ return <group name="landscape-designed-objects" userData={{designedObjectCount:objects.filter(o=>o.enabled).length,renderTier:q.tier,genericVisualProxies:true}}>{[...groups].map(([key,g])=><Suspense key={key} fallback={null}><AssetInstances data={data} items={g.items} lod={g.lod} seats={seats} season={season} mode={g.mode}/></Suspense>)}<PlantBlooms data={data} objects={others} lods={lods} seats={seats} season={season}/>{hydrangeas.length>0&&<Suspense fallback={null}><Hydrangeas3D data={data} objects={hydrangeas} lods={lods} seats={seats} season={season}/></Suspense>}{season!=='summer'&&<PlantStems data={data} objects={others} seats={seats} season={season}/>}{season==='fall'&&<FallenLeaves data={data} objects={objects}/>}<PlantShadeRings data={data} plants={seated}/>{objects.some(o=>o.enabled&&o.kind==='bed')&&<Suspense fallback={null}><Beds data={data} objects={objects} areas={areas} reliefs={reliefs} seats={seats}/></Suspense>}{(showMatureSpread||mature)&&<MatureSpread data={data} objects={objects} seats={seats}/>}</group>;
 }

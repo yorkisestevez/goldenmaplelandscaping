@@ -1,5 +1,5 @@
 import {test,expect,type Page,type BrowserContext} from '@playwright/test';
-import {pickPlanTool,savedConfiguration} from './nav';
+import {openDesignerMode,pickPlanTool,savedConfiguration} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import * as THREE from 'three';
@@ -65,7 +65,7 @@ test('Delete replaces one selected picture-frame cut and retains all other edges
 });
 
 test('actual 3D breaker click can be deleted without leaving the 3D sheet',async({page,context})=>{
- await page.setViewportSize({width:1440,height:1000});const original=await read(page),added=await addBreaker(page,context);await page.getByRole('tab',{name:'3D',exact:false}).click();await page.getByRole('button',{name:'Above',exact:true}).click();await page.getByRole('button',{name:'Select objects in 3D',exact:true}).click();
+ await page.setViewportSize({width:1440,height:1000});await openDesignerMode(page);await pickPlanTool(page,'Board layout');await expect(page.locator('.dd-board-layout-svg')).toBeVisible();const original=await read(page),added=await addBreaker(page,context);await page.getByRole('tab',{name:'3D',exact:false}).click();await page.getByRole('button',{name:'Above',exact:true}).click();await page.getByRole('button',{name:'Select objects in 3D',exact:true}).click();
  const canvas=page.getByRole('region',{name:'Interactive deck construction model',exact:true}).locator('canvas');await expect(canvas).toBeVisible();await page.waitForTimeout(900);
  const model=buildDeckTakeoff({...fixture,...added.design}),bounds=sceneBounds(model),rect=(await canvas.boundingBox())!,cx=(bounds.maxX+bounds.minX)/24,cz=(bounds.maxZ+bounds.minZ)/24,r=Math.max((bounds.maxX-bounds.minX)/12,(bounds.maxZ-bounds.minZ)/12),camera=new THREE.PerspectiveCamera(38,rect.width/rect.height,.1,1000);camera.position.set(cx,r*2+.1,cz+.01);camera.lookAt(cx,bounds.top/24,cz);camera.updateMatrixWorld();
  const board=added.boards.find(b=>b.layoutKind==='breaker')!,p=new THREE.Vector3((board.cx+board.offset.x)/12,(model.levels[0].top-.5)/12,(board.cy+board.offset.y)/12).project(camera);await page.mouse.click(rect.x+(p.x+1)*rect.width/2,rect.y+(1-p.y)*rect.height/2);

@@ -10,7 +10,6 @@
 .dd-assistant-targets :is(polygon,polyline,circle){fill:#337e9a24;stroke:#147590;stroke-width:3;stroke-dasharray:7 4;vector-effect:non-scaling-stroke}
 .dd-assistant-targets polyline{fill:none;stroke-width:5}
 .deck-designer .dd-canvas{position:relative}
-.deck-designer .dd-workspace-price>.dd-quote-review-link{border:0;border-radius:6px;min-height:44px;padding:6px;background:transparent;color:#8b502e;text-decoration:underline;text-underline-offset:3px;font-size:11px}
 @media(max-width:800px){.deck-designer[data-assistant-open][data-workspace-view=inspector] .dd-workspace-inspector{display:block}.dd-assistant-slot{order:2;width:100%;height:auto;border-left:0;border-top:1px solid #e0ddd5;scroll-margin-top:136px}.dd-workspace-price{grid-template-rows:auto auto auto}.deck-designer .dd-workspace-price>.dd-quote-review-link{grid-column:2;grid-row:3;min-height:44px;justify-self:end;padding:2px 0}}
 
 .dd-assistant-return{display:none}
