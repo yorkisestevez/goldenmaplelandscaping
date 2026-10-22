@@ -1,6 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
-import {openSketch,proofDir} from './nav';
+import {openSketch,pickPlanTool,proofDir} from './nav';
 const shots=proofDir('canvas-first');
 const read=(page:Page)=>page.evaluate(()=>(window as any).deckcraft.read().design);
 for(const phone of [false,true])test(`canvas first settings and patio joining ${phone?'@phone':''}`,async({page,context})=>{
@@ -11,10 +11,10 @@ for(const phone of [false,true])test(`canvas first settings and patio joining ${
  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
  const original=await read(page),dialog=page.getByRole('dialog',{name:'Design inspector'}),dock=page.locator('.dd-selection-inspector');
  await expect(dialog).not.toBeVisible();await expect(dock).not.toHaveAttribute('open');
- await page.getByRole('button',{name:'Show project controls',exact:true}).click();await page.getByRole('navigation',{name:'Design tasks'}).locator('summary').filter({hasText:/^Design$/}).click();await page.getByRole('navigation',{name:'Design tasks'}).getByRole('button',{name:'Boards & finish',exact:true}).click();
+ await page.getByRole('button',{name:'Show all options',exact:true}).click();await page.getByRole('navigation',{name:'Design tasks'}).locator('summary').filter({hasText:/^Design$/}).click();await page.getByRole('navigation',{name:'Design tasks'}).getByRole('button',{name:'Boards & finish',exact:true}).click();
  await expect(dialog).toBeVisible();const box=(await dialog.boundingBox())!,vp=page.viewportSize()!;expect(box.y).toBeGreaterThan(vp.height*.2);expect(box.y+box.height).toBeLessThanOrEqual(vp.height+1);
  await dialog.press('Escape');await expect(dialog).not.toBeVisible();expect(await read(page)).toEqual(original);
- await page.getByRole('radio',{name:'Patios & walls',exact:true}).click();await page.getByRole('button',{name:'Draw patio',exact:true}).click();
+ await pickPlanTool(page,'Patios & walls');await page.getByRole('button',{name:'Draw patio',exact:true}).click();
  const surface=page.getByLabel('Yard shape drawing surface',{exact:true});await surface.scrollIntoViewIfNeeded();
  const b=(await surface.boundingBox())!,side=Math.min(85,b.width*.26,b.height*.28),start={x:b.x+b.width*.4,y:b.y+b.height*.45};
  const pts=[start,{x:start.x+side,y:start.y},{x:start.x+side,y:start.y+side},{x:start.x,y:start.y+side}];
@@ -37,7 +37,7 @@ for(const phone of [false,true])test(`advanced drawing and sketch share clear cl
  await context.addInitScript('window.__name=(target,value)=>target;');
  await context.route('**/*',r=>/^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(r.request().url())?r.continue():r.fulfill({body:''}));
  await page.goto('/deck-designer/');await expect.poll(()=>page.evaluate(()=>(window as any).deckcraft?.read().ready??false)).toBe(true);
- await page.getByRole('radio',{name:'Patios & walls',exact:true}).click();await page.getByLabel('Designer tools',{exact:true}).check();
+ await pickPlanTool(page,'Patios & walls');await page.getByLabel('Designer tools',{exact:true}).check();
  await page.getByRole('button',{name:'Patio outline',exact:true}).click();
  const surface=page.getByLabel('Patio outline drawing surface',{exact:true});await surface.scrollIntoViewIfNeeded();
  const b=(await surface.boundingBox())!,side=Math.min(85,b.width*.26,b.height*.28),start={x:b.x+b.width*.4,y:b.y+b.height*.45};

@@ -1,5 +1,5 @@
 import {test,expect,type Page} from '@playwright/test';
-import {pickPlanTool,savedConfiguration,showProjectControls} from './nav';
+import {dismissDesignInspector,savedConfiguration,showProjectControls} from './nav';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
@@ -14,7 +14,8 @@ const state=(page:Page)=>page.evaluate(()=>(window as unknown as {deckcraft:Deck
 let sequence=0;
 async function request(page:Page,commands:AgentCommand[],preview=false,revision?:number){return page.evaluate(async({commands,preview,revision,id})=>{const api=(window as unknown as {deckcraft:DeckAgentApi}).deckcraft;return api[preview?'preview':'execute']({commands,id,expectedRevision:revision??api.read().revision});},{commands,preview,revision,id:`component-independent-${++sequence}`});}
 function success(response:AgentResponse){if('error'in response)throw new Error(`${response.error.code}: ${response.error.message}`);return response;}
-async function selectTool(page:Page){await pickPlanTool(page,'Select parts');await expect(page.getByRole('combobox',{name:'Select plan part',exact:true})).toBeVisible();}
+// Select parts left the homeowner ribbon (Designer Mode keeps it). Selecting a part through the agent interface still opens it; clearing that selection leaves it open with nothing picked, as the ribbon did.
+async function selectTool(page:Page){await dismissDesignInspector(page);await expect.poll(()=>page.evaluate(()=>'deckcraftWorkspace'in window)).toBe(true);expect(await page.evaluate(()=>['deck:1','nothing'].map(name=>(window as unknown as {deckcraftWorkspace:{select(name:string):{ok:boolean}}}).deckcraftWorkspace.select(name).ok))).toEqual([true,true]);await expect(page.getByRole('combobox',{name:'Select plan part',exact:true})).toBeVisible();}
 async function choose(page:Page,id:string){await page.getByRole('combobox',{name:'Plan component type',exact:true}).selectOption('all');await page.getByRole('searchbox',{name:'Find plan part',exact:true}).fill('');await page.getByRole('combobox',{name:'Select plan part',exact:true}).selectOption(id);}
 async function undo(page:Page){await page.getByRole('region',{name:'Save and restore design',exact:true}).getByRole('button',{name:'Undo',exact:true}).click();}
 const notice=(page:Page)=>page.locator('.dd-component-notice');

@@ -9,6 +9,7 @@ Plant library v2 uses Poly Haven CC0 scans and photographs, downloaded for local
 - [periwinkle_plant](https://polyhaven.com/a/periwinkle_plant) → perennial-bloom (alpha blend converted to alpha test)
 - [celandine_01](https://polyhaven.com/a/celandine_01) → perennial-gold (alpha blend converted to alpha test)
 - [namaqualand_boulder_03](https://polyhaven.com/a/namaqualand_boulder_03) → natural-boulder
+- Natural stone boulder shapes (boulder-library-manifest.json; grey luminance maps, coloured by stone type in the viewer): [namaqualand_boulder_06](https://polyhaven.com/a/namaqualand_boulder_06) → boulder-fieldstone-round, [namaqualand_boulder_04](https://polyhaven.com/a/namaqualand_boulder_04) → boulder-fieldstone-dome, [namaqualand_boulder_03](https://polyhaven.com/a/namaqualand_boulder_03) → boulder-quarried-block, [boulder_01](https://polyhaven.com/a/boulder_01) → boulder-quarried-fractured, [namaqualand_boulder_05](https://polyhaven.com/a/namaqualand_boulder_05) → boulder-bench
 - [outdoor_table_chair_set_01](https://polyhaven.com/a/outdoor_table_chair_set_01) → outdoor-chair and outdoor-table
 
 [Poly Haven asset license](https://polyhaven.com/license) permits commercial use and redistribution. Source download URLs, selected nodes, byte-range hashes and derived GLB hashes appear in manifest.json.
@@ -16,3 +17,5 @@ Plant library v2 uses Poly Haven CC0 scans and photographs, downloaded for local
 The hedge is its own columnar needle-card volume. It no longer reuses the old shrub_02 sprig scan. Distant levels of detail are reduced crossed-card impostors that keep the silhouette. Foliage materials use alpha masking so cards do not sort as transparent glass. The deciduous tree still uses source-position cards for its original connected leaf UV islands. The evergreen selects the fuller original Fir Tree 01 variant B.
 
 Mulch: [Wood Chip Path](https://polyhaven.com/a/wood_chip_path), CC0, by Dimitrios Savva. Brown, black and cedar beds share that scan. Black is a dark multiply of the same chips. Local 512 px derivatives use the documented 2.1 m texture span.
+
+Hydrangeas (Limelight, Annabelle and Endless Summer) are built in this repository from their botany, without a model file. Their floret and leaf textures, `hydrangea/florets.webp` and `hydrangea/leaves.webp`, are cut out and colour-balanced from CC0 (public-domain) iNaturalist photos. Each photo, its observer, its observation page and the derived texture hashes are listed in `hydrangea/SOURCES.json`.

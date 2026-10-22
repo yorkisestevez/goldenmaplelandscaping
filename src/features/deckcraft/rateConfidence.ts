@@ -1,6 +1,7 @@
 import {CLADDING_RATES,FASCIA_FINISH_RATES,STAIR_FRAME_RATES} from './claddingPricing';
 import {FASCIA_RETAIL_RATES} from './supplierRates';
 import {MATERIAL_TIERS} from './types';
+import {DEFAULT_HARDSCAPE_LABOUR} from './hardscapeLabour';
 
 /**
  * Rates the deck estimate uses today that the owner has not confirmed: the list to settle with the owner.
@@ -31,6 +32,7 @@ export const CONFIRMED_RATES=[
   {id:'stair-frame-detail',on:'2026-10-08',note:`Stair picture-frame net premium: mitre $${STAIR_FRAME_RATES.mitreLabourPerLf}/lf, fasteners $${STAIR_FRAME_RATES.fastenersPerLf}/lf, delivery $${STAIR_FRAME_RATES.delivery}; different-collection border boards supplied separately.`},
   {id:'fascia-finish',on:'2026-10-08',note:`Fascia fasteners $${FASCIA_FINISH_RATES.fastenersPerBoard}/board and delivery $${FASCIA_FINISH_RATES.delivery} when fascia supply is priced.`},
   {id:'manufacturer-accessories',on:'2026-10-08',note:'Selected manufacturer deck accessories stay supplier quotes for branded product pricing.'},
+  {id:'guillotined-setting',on:'2026-10-21',note:`Guillotined armour stone setting: ${DEFAULT_HARDSCAPE_LABOUR.scopes.guillotinedSetting.tonsPerCrewDay} t per crew-day (industry timing: RSMeans dry-set cut stone on the 3 × 9 h crew day) at the $${DEFAULT_HARDSCAPE_LABOUR.crewDayRate.toLocaleString('en-CA')} hardscape crew day, half crew-day steps, 1 crew-day minimum; editable per user.`},
   {id:'under-deck-site-quotes',on:'2026-10-08',note:'Under-deck supply can be priced; site discharge, waterproofing and ground/freight confirmations stay builder quotes.'},
 ] as const;
 export interface RateNote{id:string;rate:string;value:string;status:RateStatus;where:string;note:string}

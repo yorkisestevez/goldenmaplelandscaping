@@ -1,11 +1,17 @@
 import {CREW_DAY_RATES} from '../types';
 import {QUOTE_RESOLUTION_LIMITS} from '../quoteResolutionValidation';
+import type {QuoteScope} from '../quoteResolutions';
+import baseline from '../../../data/engine-baseline.json';
 
 /** Person-hours in one confirmed crew-day (3 people × 9 hours). */
 export const CREW_DAY_PERSON_HOURS=27;
 export const DEFAULT_CREW_MEMBERS=3;
 /** Default CAD per person-hour from the confirmed $3,700 crew-day. */
 export const DEFAULT_PERSON_HOUR_RATE=Math.round(CREW_DAY_RATES.Toronto/CREW_DAY_PERSON_HOURS*100)/100;
+/** CAD per person-hour for hardscape (yard) work, from the all-in $2,800 hardscape crew-day. */
+export const HARDSCAPE_PERSON_HOUR_RATE=Math.round(baseline.facts.crewDayRateHardscape/CREW_DAY_PERSON_HOURS*100)/100;
+/** A scope made only of yard rows is hardscape work, so it starts at the hardscape crew-day rate; anything else, the deck's. */
+export const scopePersonHourRate=(scope:QuoteScope)=>scope.rows.length&&scope.rows.every(r=>r.sectionTitle.startsWith('Yard · '))?HARDSCAPE_PERSON_HOUR_RATE:DEFAULT_PERSON_HOUR_RATE;
 
 export type CrewHoursInput={crewMembers:string|number;hours:string|number;personHourRate?:string|number;materials?:string|number};
 

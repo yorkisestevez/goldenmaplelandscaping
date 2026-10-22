@@ -1,0 +1,121 @@
+{
+ "note": "Hydrangea floret and leaf textures, cut out and colour-balanced from CC0 (public-domain) iNaturalist photos by scripts/build-hydrangea-textures.mts. iNaturalist grades cultivated plants \"casual\"; the photos show these species, not a verified cultivar. No CC0 underside photo of H. macrophylla was usable, so the Endless Summer underside is its upper-side photo recoloured to the underside colour.",
+ "photos": [
+  {
+   "photoId": 720834356,
+   "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/720834356/original.jpg",
+   "observationUrl": "https://www.inaturalist.org/observations/393278872",
+   "observer": "jacob_mullin",
+   "licence": "cc0",
+   "use": "Limelight (H. paniculata) floret"
+  },
+  {
+   "photoId": 47732501,
+   "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/47732501/original.jpeg",
+   "observationUrl": "https://www.inaturalist.org/observations/30529047",
+   "observer": "lvdt",
+   "licence": "cc0",
+   "use": "Annabelle (H. arborescens) floret"
+  },
+  {
+   "photoId": 422983973,
+   "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/422983973/original.jpeg",
+   "observationUrl": "https://www.inaturalist.org/observations/237654588",
+   "observer": "marinolinic",
+   "licence": "cc0",
+   "use": "Endless Summer (H. macrophylla) floret"
+  },
+  {
+   "photoId": 730410163,
+   "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/730410163/original.jpg",
+   "observationUrl": "https://www.inaturalist.org/observations/398187027",
+   "observer": "roberto-rizzi",
+   "licence": "cc0",
+   "use": "H. paniculata leaf, upper side"
+  },
+  {
+   "photoId": 702347193,
+   "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/702347193/original.jpg",
+   "observationUrl": "https://www.inaturalist.org/observations/383727485",
+   "observer": "jacob_mullin",
+   "licence": "cc0",
+   "use": "H. paniculata leaf, underside"
+  },
+  {
+   "photoId": 669507718,
+   "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/669507718/original.jpg",
+   "observationUrl": "https://www.inaturalist.org/observations/366649561",
+   "observer": "ingolfaskevold",
+   "licence": "cc0",
+   "use": "H. arborescens leaf, upper side"
+  },
+  {
+   "photoId": 413271678,
+   "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/413271678/original.jpg",
+   "observationUrl": "https://www.inaturalist.org/observations/232608060",
+   "observer": "kzoebel",
+   "licence": "cc0",
+   "use": "H. arborescens leaf, underside"
+  },
+  {
+   "photoId": 601598413,
+   "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/601598413/original.jpg",
+   "observationUrl": "https://www.inaturalist.org/observations/331604936",
+   "observer": "fabiotenshi",
+   "licence": "cc0",
+   "use": "H. macrophylla leaf, upper side"
+  }
+ ],
+ "textures": [
+  {
+   "file": "florets.webp",
+   "sha256": "335d2761fc0e1d1286e5cdc024c1b5a401df1521431c0b88cf71bfa3b9f2fe22",
+   "bytes": 68824,
+   "photoIds": [
+    720834356,
+    47732501,
+    422983973
+   ],
+   "fill": {
+    "limelight": [
+     0.9609,
+     0.8281
+    ],
+    "annabelle": [
+     0.9609,
+     0.8711
+    ],
+    "endless-summer": [
+     0.9609,
+     0.9414
+    ]
+   }
+  },
+  {
+   "file": "leaves.webp",
+   "sha256": "7d24ac24806f42d13ad1f83937bfea93d55bac98bfa54487c5c36d167e6bab23",
+   "bytes": 133098,
+   "photoIds": [
+    730410163,
+    702347193,
+    669507718,
+    413271678,
+    601598413
+   ],
+   "fill": {
+    "limelight": [
+     0.8125,
+     0.9805
+    ],
+    "annabelle": [
+     0.9805,
+     0.6387
+    ],
+    "endless-summer": [
+     0.9805,
+     0.7617
+    ]
+   }
+  }
+ ]
+}

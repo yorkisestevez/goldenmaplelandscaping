@@ -67,6 +67,12 @@ export const SPECIES_SEASONS:Record<string,PlantSeasons>={
   summer:{leaves:'summer',flowers:{head:'cone',petals:'#f4f0e4',center:'#efe4c4',count:11,y0:.6,y1:.85,spread:.36,size:.13}},
   fall:{leaves:'#b9b46a',flowers:{head:'cone',petals:'#d99aa2',center:'#c47a86',count:11,y0:.6,y1:.85,spread:.36,size:.13}},
   winter:{leaves:null,stems:twigs('#a88c70'),flowers:{head:'cone',petals:'#a88a68',center:'#94785a',count:8,y0:.66,y1:.9,spread:.3,size:.11}}},
+ // Endless Summer draws from the hydrangea models (hydrangea/); this record is for the season rings, fallen leaves and checks.
+ 'hydrangea-macrophylla-endless-summer':{habit:'deciduous-shrub',
+  spring:{leaves:'#b9d27e'},
+  summer:{leaves:'summer',flowers:{head:'mop',petals:'#e48cb2',center:'#e48cb2',count:9,y0:.5,y1:.95,spread:.45,size:.15}},
+  fall:{leaves:'#a8664a',flowers:{head:'mop',petals:'#a3386a',center:'#a3386a',count:8,y0:.5,y1:.95,spread:.45,size:.14}},
+  winter:{leaves:null,stems:twigs('#9c8a72'),flowers:{head:'dried',petals:'#8e7356',center:'#8e7356',count:6,y0:.62,y1:.9,spread:.45,size:.13}}},
  'spiraea-japonica':{habit:'deciduous-shrub',
   spring:{leaves:'#d8b25a',flowers:{head:'flat',petals:'#e07aa8',center:'#c4568a',count:16,y0:.62,y1:.96,spread:.5,size:.16}},
   summer:{leaves:'summer',flowers:{head:'flat',petals:'#d870a0',center:'#b84e82',count:16,y0:.62,y1:.96,spread:.5,size:.16}},

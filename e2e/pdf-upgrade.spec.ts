@@ -1,12 +1,10 @@
 import {test,expect} from '@playwright/test';
 import {jsPDF} from 'jspdf';
+import {openDesignTask} from './nav';
 test('patched PDF importer renders pages and rejects invalid PDFs',async({page})=>{
  await page.goto('/deck-designer/');
- await page.getByRole('button',{name:'Show project controls',exact:true}).click();
+ await openDesignTask(page,'Backyard');
  const survey=page.getByLabel('Survey file',{exact:true});
- if(!await survey.count()) {
-  await page.getByRole('button',{name:'Elevations & build',exact:true}).click();
- }
  await expect(survey).toBeVisible();
  const pdf=new jsPDF();pdf.setFillColor(200,0,0);pdf.rect(20,20,80,50,'F');pdf.addPage();pdf.setFillColor(0,0,200);pdf.rect(20,20,50,80,'F');
  await survey.setInputFiles({name:'two-pages.pdf',mimeType:'application/pdf',buffer:Buffer.from(pdf.output('arraybuffer'))});

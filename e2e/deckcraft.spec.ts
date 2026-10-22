@@ -1,5 +1,5 @@
 import {readFileSync} from 'node:fs';
-import {savedConfiguration} from './nav';
+import {openDesignerMode,savedConfiguration} from './nav';
 import {expect,test,type Locator,type Page} from '@playwright/test';
 import {newLandscapeObject,newLandscapePlant} from '../src/features/deckcraft/landscapeCatalogue';
 
@@ -36,7 +36,7 @@ type ViewTab='Plan'|'3D'|'Framing';
 /** The full price schedule, opened explicitly from the persistent price bar on every screen size. */
 const schedule=(page:Page)=>page.getByRole('region',{name:'Price schedule',exact:true});
 /** The priced amount stays available while switching between the canvas and focused inspectors, once the project
- * controls show (drawing focus hides the price bar). */
+ * controls show (on a phone, drawing focus hides the price bar). */
 const price=async(page:Page)=>(await phoneBar(page)).getByRole('status',{name:'Priced subtotal'});
 /** One line of the schedule, by its engine title ("Railing System"). */
 const scheduleLine=(page:Page,title:string)=>schedule(page).getByRole('row').filter({has:page.getByRole('rowheader',{name:title,exact:true})});
@@ -111,8 +111,8 @@ const openingCount=async(page:Page)=>Number(/(\d+) of/.exec((await openingsBar(p
 /** The header's "Send my design" button, and the send dialog (named by a heading that changes once sent). */
 const sendButton=(page:Page)=>page.locator('.dd-send-top');
 const sendDialog=(page:Page)=>page.locator('[role=dialog].dd-send-panel');
-/** The canvas-first workspace opens in drawing focus, which hides the task menus and the price bar. Its toggle (mounted
- * with the drawing, so waited for) reads "Show project controls" while pressed; one tap shows them, and they stay. */
+/** The canvas-first workspace opens in drawing focus, which hides the task menus (and, on a phone, the price bar). Its
+ * toggle (mounted with the drawing, so waited for) reads "Show all options" while pressed; one tap shows them, and they stay. */
 async function showProjectControls(page:Page){
   const focus=page.locator('.dd-drawing-focus-toggle');
   await expect(focus).toHaveAttribute('aria-pressed',/^(true|false)$/);
@@ -387,9 +387,11 @@ test('reaches every feature of the designer',async({page})=>{
     await reach('Start over',tools.getByRole('button',{name:'Start a new design'}));
     await closeFiles(page);
   });
-  await test.step('Framing sheet: the 2D framing plan, the 3D contractor views and the quantities',async()=>{
-    const view=await contractorView(page);
-    for(const name of ['Plan','Framing','Hardware','Below ground'])await reach(`Contractor view: ${name}`,view.getByRole('group',{name:'Contractor preview modes'}).getByRole('button',{name,exact:true}));
+  await test.step('Framing sheet: the 2D framing plan, the 3D framing and the quantities',async()=>{
+    const view=await contractorView(page),modes=view.getByRole('group',{name:'Contractor preview modes'});
+    for(const name of ['Plan','Framing'])await reach(`Contractor view: ${name}`,modes.getByRole('button',{name,exact:true}));
+    // Hardware and Below ground are Designer Mode views, reached there in the last step.
+    for(const name of ['Hardware','Below ground'])await expect(modes.getByRole('button',{name,exact:true}),`${name} is left to Designer Mode`).toHaveCount(0);
     await reach('Modelled quantities',view.getByLabel('Modeled quantities'));
     await reach('The framing plan',await framingPlan(page));
     await viewTab(page,'Plan');
@@ -415,6 +417,11 @@ test('reaches every feature of the designer',async({page})=>{
     await reach('Go back to my own design',back);
     await back.click();
     await expect(size(page)).toContainText('24 × 12 ft');
+  });
+  await test.step('Designer Mode: the hardware and below-ground views',async()=>{
+    await openDesignerMode(page);
+    const modes=(await contractorView(page)).getByRole('group',{name:'Contractor preview modes'});
+    for(const name of ['Hardware','Below ground'])await reach(`Contractor view: ${name}`,modes.getByRole('button',{name,exact:true}));
   });
   expect(problems).toEqual([]);
 });
@@ -519,12 +526,11 @@ const toolRow=(page:Page)=>page.getByRole('radiogroup',{name:'Plan tools'}).eval
   });
   return {height:box.height,rows:new Set(tools.map(t=>t.top)).size,scrolls:row.scrollWidth>row.clientWidth,pageFits:document.documentElement.scrollWidth<=innerWidth,tools};
 });
-/** The category ribbon. Select parts is on every category. Sketch is a button beside the radios, not one of them. */
+/** The category ribbon. Select parts is a Designer Mode tool. Sketch is a button beside the radios, not one of them. */
 const PLAN_RIBBONS=[
-  ['Building',['Deck size','Shape & points','Stairs','Patios & walls','House','Rails & screens','Select parts']],
-  ['Landscape',['Landscape','Patios & walls','Select parts']],
-  ['Materials',['Board layout','Inlays','Select parts']],
-  ['Main',['Select parts','Deck size']],
+  ['Building',['Deck size','Shape & points','Stairs','House','Rails & screens']],
+  ['Landscape',['Landscape','Patios & walls']],
+  ['Materials',['Board layout','Inlays']],
 ] as const;
 async function showToolCategory(page:Page,name:string){
   const tab=page.getByRole('tablist',{name:'Tool categories'}).getByRole('tab',{name,exact:true});

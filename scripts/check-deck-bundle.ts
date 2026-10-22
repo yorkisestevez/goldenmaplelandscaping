@@ -92,7 +92,13 @@ import {basename} from 'node:path';
 // option are validated and priced with the first estimate. Route 275.7 → 276.8 KB gzip (276.9 with PR 183's
 // furniture and fire bowl ids), option-deltas worker 212.4 → 213.1 KB. Both checkers stay lazy (guarded below).
 // Raised to 277/214 KB with the owner's approval.
-const BUDGET_KB={routeInitial:277,routeCss:12,viewer:340,pdf:150,deltaWorker:214,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35};
+// October 20 (guillotined armour stone walls): the product entry, its saved-design validation, course height and
+// priced stone row ride with the first estimate — route 275.7 → 276.2 KB, worker 212.4 → 212.6 KB. Raised to 277 KB
+// with the owner's approval; the editor, the random-length laying and the stone pricing stay lazy.
+// October 21 (guillotined stones look real): the split-stone geometry is a chunk of its own, fetched by the 3D view only
+// for a design with a guillotined wall, so the viewer stays within its budget (338.9 KB). The chunk measured 5.8 KB with its
+// joints, crease normals and per-stone cache; bound it at 6.5 KB.
+const BUDGET_KB={routeInitial:277,routeCss:12,viewer:340,pdf:150,deltaWorker:214,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);
@@ -132,7 +138,7 @@ ok(cssKB<=BUDGET_KB.routeCss,`Deck designer route CSS is ${cssKB.toFixed(1)} KB 
   const streamed=readFileSync(new URL('../deck-designer/index.html',assets),'utf8').match(/\$RC\("B:\d+"/g)?.length??0;
   ok(streamed===7,`The prerendered designer streams ${streamed} Suspense boundaries; 7 expected (the drawing, the Deck section body, the Project controls, the tools ribbon, the plan, and React Router's two data handoffs). Preload any new one before hydration, then update this count.`);
 }
-for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
+for(const lazy of [/^Deck3DViewer-/,/^jspdf/,/^html2canvas/,/^purify/,/^ProposalDialog-/,/^proposalPdf-/,/^pdfAssets-/,/^proposalModel-/,/^DimensionsStep-/,/^MaterialsStep-/,/^StairsStep-/,/^SiteExtrasStep-/,/^EstimateStep-/,/^HouseSection-/,/^BackyardStep-/,/^SendDesignDialog-/,/^ProposalSheet-/,/^OutlineEditor-/,/^BoardColourPanel-/,/^InlayEditor-/,/^ExteriorStudio-/,/^SkirtingEditor-/,/^DeckFinishesPanel-/,/^PlanEditor-/,/^railingScreenColours-/,/^deckReleaseExports-/,/^designExports-/,/^optionDeltas-/,/^useOptionDeltas-/,/^splitFaceStone-/])ok(!initial.some(f=>lazy.test(f)),`${lazy.source} is loaded on demand, not with the page`);
 // Each section body, and the site plan's editor, is a chunk of its own (one merged into the route would pass the test
 // above unseen).
 for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep','SiteExtrasStep','BackyardStep','EstimateStep','PlanEditor','BoardLayoutEditor','HardscapePicker','YardShapeEditor','optionDeltas','useOptionDeltas','ProposalDialog','proposalPdf']){
@@ -149,6 +155,8 @@ for(const body of ['HouseSection','DimensionsStep','MaterialsStep','StairsStep',
 }
 const viewer=files.find(f=>/^Deck3DViewer-.*\.js$/.test(f)),pdf=files.find(f=>/^jspdf.*\.js$/.test(f)),deltaWorker=files.find(f=>/^optionDeltas\.worker-.*\.js$/.test(f));
 ok(viewer&&gz(viewer)<=BUDGET_KB.viewer,`3D viewer chunk is ${viewer?gz(viewer).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.viewer} KB)`);
+const splitStone=files.find(f=>/^splitFaceStone-.*\.js$/.test(f));
+ok(splitStone&&gz(splitStone)<=BUDGET_KB.splitStone,`The guillotined wall's split stones are a chunk of their own, ${splitStone?gz(splitStone).toFixed(1):'?'} KB gzip (budget ${BUDGET_KB.splitStone} KB)`);
 // The PDF: jsPDF plus the proposal's builder, its pictures and the model it shares with the dialog, all loaded on demand.
 const builder=files.filter(f=>/^(proposalPdf|pdfAssets|proposalModel)-.*\.js$/.test(f)),pdfKB=(pdf?gz(pdf):Infinity)+builder.reduce((n,f)=>n+gz(f),0);
 ok(builder.some(f=>f.startsWith('proposalPdf-'))&&pdfKB<=BUDGET_KB.pdf,`PDF engine (jsPDF and the proposal builder) is ${pdfKB.toFixed(1)} KB gzip (budget ${BUDGET_KB.pdf} KB): ${[pdf,...builder].join(', ')}`);

@@ -4,6 +4,7 @@ export interface QuoteResolution {scopeKey:string;fingerprint:string;supplyCost:
 import type {PergolaQuoteContext} from './pergolaPricing';
 import type {PergolaSelection} from './pergolaCatalog';
 import type {FeatureLabourSettings} from './featureLabour';
+import type {HardscapeLabourSettings} from './hardscapeLabour';
 export type DeckType = 'Attached' | 'Freestanding' | 'Floating' | 'Add-on';
 export type Municipality = 'Toronto' | 'Barrie' | 'Simcoe County' | 'Burlington-Oakville' | 'Rural-Other';
 export type SiteType = 'Standard' | 'Waterfront-Lakefront' | 'Hillside' | 'Urban Tight' | 'Island-Ferry';
@@ -170,6 +171,8 @@ export interface Level3Config {widthFt:number;lengthFt:number;heightIn:number;pa
 /** 'fire-feature': a fire pit or table (fireFeatures.ts); widthFt/depthFt are its body (round: depth = width),
  * heightIn its body height, productId a FIRE_PRODUCTS id, color its stone. */
 export type YardFeatureKind='patio'|'retaining-wall'|'water-feature'|'fire-feature';
+/** Natural flagstone (flagstone.ts): the stone, one even joint width and the permeable chips in the joints. */
+export interface YardFlagstone {stone:import('./landscapeTypes').BoulderStone;jointIn:number;jointColour:'black'|'tan'|'grey'}
 export interface YardHardscape {finishId:string;colorId:string;unitId:string;patternId:string;angleDeg:number;jointMm:number;capUnitId?:string}
 /** Decorative paving zones, centre-relative patio-local inches before patio rotation. */
 export interface PatioInlay {id:string;name:string;shape:'rectangle'|'diamond'|'circle'|'compass'|'band'|'custom';xIn:number;yIn:number;widthIn:number;depthIn:number;rotationDeg:number;points?:{x:number;y:number}[];productId:string;color:string;hardscape?:YardHardscape}
@@ -201,6 +204,8 @@ export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled
   baseElevationIn?:number;
   /** Reinforcement budgeting inputs; these never certify a structural design. */
   wallConstruction?:import('./wallConstruction').WallConstruction;
+  /** Guillotined armour stone walls only: the stone (a wallStones.ts id) and course height in inches. */
+  wallStone?:{stoneId:string;courseIn:number};
   /** Patio perimeter in local inches about the feature centre, before rotation. */
   outline?:{x:number;y:number}[];
   /** Open retaining-wall centreline in local inches; widthFt is its total run. */
@@ -210,6 +215,8 @@ export interface YardFeature {id:string;kind:YardFeatureKind;name:string;enabled
   inlays?:PatioInlay[];
   /** A walkway's centreline, kept so it can be edited again. The outline is derived from it and stays authoritative. */
   pathSpine?:YardPathSpine;
+  /** Natural flagstone, cut to fit with even joints (productId natural-flagstone). Absent: manufactured paving. */
+  flagstone?:YardFlagstone;
 }
 /** How the ground meets a patio: graded banks at this run:rise (3 = 3 ft out per 1 ft of height). */
 export interface PatioGroundFit {slopeRatio:number;
@@ -452,6 +459,8 @@ export interface DeckData {
   customOverrides?: Record<string, { qty?: number; cost?: number }>;
   /** Private per-job inlay/special-feature labour (man-hours + materials). Stripped from public share/JSON. */
   featureLabour?: FeatureLabourSettings;
+  /** Private per-job hardscape setting labour (production rate on the crew day). Stripped from public share/JSON. */
+  hardscapeLabour?: HardscapeLabourSettings;
 
   // Customer & Project Info
   customerName: string;
