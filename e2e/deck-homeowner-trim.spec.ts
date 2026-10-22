@@ -2,7 +2,7 @@ import {test,expect,type Page,type BrowserContext} from '@playwright/test';
 import {DEFAULT_DECK} from '../src/features/deckcraft/defaults';
 import {getHouseConfig} from '../src/features/deckcraft/houseSettings';
 import {getHousePlacement} from '../src/features/deckcraft/housePlacement';
-import {openDesignerMode,proofDir,showProjectControls} from './nav';
+import {openDesignerMode,openHomeTab,proofDir} from './nav';
 
 // The homeowner page (Designer Mode off) keeps draw, materials, price and Send in view and leaves contractor and Pro
 // tools to Designer Mode (`?designer=1`), where every one of them stays.
@@ -16,10 +16,10 @@ async function open(page:Page,context:BrowserContext){await route(context);await
 const box=async(page:Page,selector:string)=>(await page.locator(selector).first().boundingBox())!;
 const apart=(a:{x:number;y:number;width:number;height:number},b:typeof a)=>a.x+a.width<=b.x||b.x+b.width<=a.x||a.y+a.height<=b.y||b.y+b.height<=a.y;
 const sheet=(page:Page,name:string)=>page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name,exact:true}).click();
-/** The price shares the sheet-tab row with the tabs and All options, and never covers the tools ribbon below it. */
+/** The price shares the sheet-tab row with the sheet tabs, and never covers the four tabs or the tools below them. */
 async function priceClearOfControls(page:Page){
  const bar=await box(page,'.dd-workspace-price');
- for(const control of ['.dd-sheet-tabs','.dd-drawing-focus-toggle','.dd-ribbon-tabs','.dd-simple-tools-grid'])expect(apart(bar,await box(page,control)),`price clear of ${control}`).toBe(true);
+ for(const control of ['.dd-sheet-tabs','.dd-ribbon-tabs','.dd-simple-tools-grid'])expect(apart(bar,await box(page,control)),`price clear of ${control}`).toBe(true);
 }
 // A window the railing crosses gives the design one warning to review.
 const storageKey='golden-maple.deck-studio.deck-only.v1',house=getHouseConfig(DEFAULT_DECK),place=getHousePlacement(DEFAULT_DECK);
@@ -52,34 +52,32 @@ test('the header keeps Send and leaves Presets and Agents to Designer Mode',asyn
  const header=page.locator('header.dd-header');
  await expect(header.getByRole('button',{name:'Send my design',exact:true})).toBeVisible();
  await expect(header.getByRole('button',{name:'Presets',exact:true})).toHaveCount(0);await expect(header.getByRole('button',{name:'Agents',exact:true})).toHaveCount(0);
- await expect(page.getByRole('button',{name:'Show all options',exact:true})).toHaveText('All options');
 });
 
-test('the tools ribbon has three categories without Select parts, each with the sketch button',async({page,context})=>{
+test('the four tabs show their plan tools without Select parts, each with the sketch button',async({page,context})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.setViewportSize({width:1366,height:900});await open(page,context);
- const tabs=page.getByRole('tablist',{name:'Tool categories'});await expect(tabs.getByRole('tab')).toHaveText(['Building','Landscape','Materials']);
- for(const [tab,tools] of [['Building',['Deck size','Shape & points','Stairs','House','Rails & screens']],['Landscape',['Landscape','Patios & walls']],['Materials',['Board layout','Inlays']]] as const){
-  await tabs.getByRole('tab',{name:tab,exact:true}).click();
+ const tabs=page.getByRole('tablist',{name:'Design',exact:true});await expect(tabs.getByRole('tab')).toHaveText(['Draw','Materials','Extras','Price & send']);
+ for(const [tab,tools] of [['Draw',['Deck size','Shape & points','Stairs','House','Rails & screens']],['Extras',['Landscape','Patios & walls']],['Materials',['Board layout','Inlays']]] as const){
+  await tabs.getByRole('tab',{name:tab,exact:true}).click();await sheet(page,'Plan');
   await expect(page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio')).toHaveText([...tools]);
   await expect(page.getByRole('button',{name:'Sketch a design',exact:true})).toBeVisible();
  }
  expect(errors).toEqual([]);
 });
 
-test('All options shows the task menus by section name, the save status and no contractor tools',async({page,context})=>{
+test('the tab panels list every section by name, beside the save status and no contractor tools',async({page,context})=>{
  await page.setViewportSize({width:1366,height:900});await open(page,context);
- await showProjectControls(page);await expect(page.getByRole('button',{name:'Focus drawing',exact:true})).toBeVisible();
  await expect(page.getByRole('region',{name:'Live price',exact:true})).toBeVisible();
  await expect(page.getByRole('region',{name:'Contractor job tools'}).getByRole('button')).toHaveCount(0);await expect(page.locator('[data-autosave-state]')).toBeVisible();
  for(const name of ['Describe a change','Jobs & versions','Review quote costs','Elevations & build','Keyboard shortcuts · F1'])await expect(page.getByRole('button',{name,exact:true})).toHaveCount(0);
- const nav=page.getByRole('navigation',{name:'Design tasks'});
- for(const [group,items] of [['Design',['Deck shape & size','House','Boards & finish','Stairs & railings','Lighting']],['Build & landscape',['Privacy, skirting & extras','Site & foundation','Backyard']],['Your project',['Proposal & files']]] as const){
-  const summary=nav.locator('summary').filter({hasText:new RegExp(`^${group}$`)});await summary.click();
-  await expect(nav.locator('details[open] .dd-nav-menu button')).toHaveText([...items]);await summary.click();
+ const rows=page.locator('#dd-home-panel .dd-home-row strong');
+ await page.getByRole('button',{name:'Deck settings',exact:true}).click();await expect(rows).toHaveText(['Deck shape & size','Stairs & railings','House']);
+ for(const [tab,items] of [['Materials',['Boards & finish']],['Extras',['Lighting','Privacy, skirting & extras','Backyard']],['Price & send',['Site & foundation','Proposal & files']]] as const){
+  await openHomeTab(page,tab);await expect(rows).toHaveText([...items]);
  }
  await page.keyboard.press('F1');await expect(page.getByRole('dialog',{name:'Keyboard shortcuts'})).toBeVisible();await page.keyboard.press('Escape');
- await page.screenshot({path:`${shots}/all-options.png`});
+ await page.screenshot({path:`${shots}/tab-panels.png`});
 });
 
 test('the Framing sheet and the 3D view keep contractor views and presentation tools for Designer Mode',async({page,context})=>{
@@ -107,7 +105,7 @@ test('Designer Mode keeps every control the homeowner page leaves out',async({pa
  await expect(page.locator('details.dd-3d-more>summary')).toHaveText('More');await expect(page.getByText('Fly-through',{exact:true})).toBeVisible();
 });
 
-test('the plan ribbon still opens when Select parts was chosen elsewhere',async({page,context})=>{
+test('the plan tools still show when Select parts was chosen elsewhere',async({page,context})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.setViewportSize({width:1366,height:900});await open(page,context);
  await sheet(page,'Framing');
@@ -115,7 +113,7 @@ test('the plan ribbon still opens when Select parts was chosen elsewhere',async(
  const id=await page.evaluate(()=>(window as any).deckcraftWorkspace.read().objects.find((o:any)=>o.id.startsWith('deck:')).id);
  await page.evaluate(id=>(window as any).deckcraftWorkspace.select(id),id);
  await sheet(page,'Plan');
- await expect(page.getByRole('tablist',{name:'Tool categories'})).toBeVisible();await expect(page.locator('.dd-ribbon-hint')).toContainText('Select parts');
+ await expect(page.getByRole('tablist',{name:'Design',exact:true})).toBeVisible();await expect(page.locator('.dd-ribbon-hint')).toContainText('Select parts');
  await expect(page.getByRole('radiogroup',{name:'Plan tools'}).getByRole('radio',{checked:true})).toHaveCount(0);
  expect(errors).toEqual([]);
 });
