@@ -145,14 +145,14 @@ export function resortEstateDesign():DeckData{
  const pE=L(23,-16.5),pW=L(0,-16.5);
  bed('wall-foot-east','Wall-foot planting',[[SX+3.1,WZ-6.6],[LX1-5.4,WZ-6.6],[LX1-5.4,WZ-1.6],[SX+3.1,WZ-1.6]],drift(['rudbeckia-hirta','monarda-fistulosa','schizachyrium-scoparium','echinacea-purpurea'],16,32));
  bed('west-border','West border',[[LX0-1.4,14],[LX0+9.2,14],[LX0+9.2,WZ-1.6],[LX0-1.4,WZ-1.6]],drift(['hydrangea-arborescens-annabelle','cornus-sericea','echinacea-purpurea','physocarpus-opulifolius','monarda-fistulosa','schizachyrium-scoparium'],24,41));
- bed('east-border','East border',[[LX1-5,tz+6.4],[LX1+1.4,tz+6.4],[LX1+1.4,WZ-1.6],[LX1-5,WZ-1.6]],drift(['hydrangea-paniculata','cornus-sericea','echinacea-purpurea','rudbeckia-hirta','amelanchier-canadensis'],24,42));
+ bed('east-border','East border',[[LX1-5,tz+6.4],[LX1+1.4,tz+6.4],[LX1+1.4,WZ-1.6],[LX1-5,WZ-1.6]],drift(['hydrangea-paniculata','cornus-sericea','echinacea-purpurea','rudbeckia-hirta','physocarpus-opulifolius'],24,42));
  bed('cabana-garden','Cabana garden',[[tx+20.6,tz+6.4],[LX1-5.4,tz+6.4],[LX1-5.4,pE.z-1.2],[pW.x+1,pW.z-1.2],[tx+20.6,pW.z-1.2]],drift(MEADOW,13,43));
  bed('house-west','Foundation planting',[[hl+0.5,1.5],[-0.8,1.5],[-0.8,tz-6.4-0.5-6],[hl+0.5,tz-6.4-0.5-6]],drift(['hydrangea-arborescens-annabelle','echinacea-purpurea','hosta','monarda-fistulosa'],20,51));
  // Fire-to-pool garden: closes the lawn between the fire circle, the west meadow and the pool court.
  const g1=L(-23.6,-6),g2=L(-23.6,16.6),g3=L(5,16.6);
  bed('fire-pool-garden','Fire-to-pool garden',[[-6.9,fc.zFt+11.6],[tx-27.6,fc.zFt+11.6],[tx-27.6,tz+28.6],[g1.x,g1.z],[g2.x,g2.z],[g3.x,g3.z],[g3.x,WZ-7.2],[-6.9,WZ-7.2]],drift(MEADOW,13,61));
  grow('acer-rubrum',4,72);grow('cercis-canadensis',14,86);grow('amelanchier-canadensis',-1,60);
- for(let z=22;z<=WZ-4;z+=8){grow('thuja-occidentalis-smaragd',LX0+0.6,z);grow('thuja-occidentalis-smaragd',LX1-0.6,z);}
+ for(let z=22;z<=WZ-4;z+=8){grow('thuja-occidentalis-smaragd',LX0+0.6,z);if(Math.abs(z-66)>14)grow('thuja-occidentalis-smaragd',LX1-0.6,z);}
  // Cabana: kitchen island along its back under the roof, stools facing it; dining on the open east half.
  const kx=data.pergola!.xFt!,kz=cab.zFt-3;
  furn('kitchen-island','kitchen-island',kx,kz,180,cab.id);
@@ -178,7 +178,7 @@ export function resortEstateDesign():DeckData{
  ]}} as DeckData,{posts:tk.quantities.railingPosts,stairs:tk.treads.length,privacy:0})} as any;
  void allDeck;void _path;
  const shot=(id:string,name:string,p:number[],tg:number[],fov:number)=>({id,name,fov,positionIn:p.map(v=>v*12) as [number,number,number],targetIn:tg.map(v=>v*12) as [number,number,number]});
- data.scenePresentation={viewMode:'finished',poolEdgeWarmth:.2,activeCameraId:'overhead',cameras:[
+ data.scenePresentation={viewMode:'finished',poolEdgeWarmth:0,activeCameraId:'overhead',cameras:[
   shot('overhead','Overhead',[12,190,72],[12,0,71.9],55),
   shot('eye','Path to the pool',[tx-6,5.5,tz+1],[courtX,2,courtZ],60),
   shot('wall','Armour stone wall and steps',[-10,6,70],[-10,4,106],58),
