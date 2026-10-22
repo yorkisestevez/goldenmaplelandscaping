@@ -115,16 +115,18 @@ async function revealSection(page:Page,id:string){
   await expect(page.locator('#dd-home-panel')).toBeVisible();
 }
 
-/** Picks a plan tool: Draw's tools from the Draw tab; Materials' and Extras' tools by bringing their tab forward as a link
- * does, then the plan sheet when another view is showing. */
+/** Shows a homeowner tab's plan tools: Draw from its tab; Materials and Extras brought forward as a link does, so the view
+ * stays as it is; then the plan sheet when another view is showing. */
+export async function showTabTools(page:Page,tab:'Draw'|'Materials'|'Extras'){
+  if(tab==='Draw')await openHomeTab(page,'Draw');else await revealSection(page,tab==='Materials'?'boards':'lighting');
+  if(!await page.getByRole('radiogroup',{name:'Plan tools'}).isVisible())await page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name:'Plan',exact:true}).click();
+}
+
+/** Picks a plan tool, showing its tab's tools first when they are not on screen. */
 export async function pickPlanTool(page:Page,name:string){
   if(await page.locator('.deck-designer[data-pro]').count())return pickProTool(page,name);
   const radio=page.getByRole('radio',{name,exact:true});
-  if(!await radio.isVisible()){
-    const tab=HOME_TOOL_TABS[name]??'Draw';
-    if(tab==='Draw')await openHomeTab(page,'Draw');else await revealSection(page,tab==='Materials'?'boards':'lighting');
-    if(!await radio.isVisible())await page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name:'Plan',exact:true}).click();
-  }
+  if(!await radio.isVisible())await showTabTools(page,HOME_TOOL_TABS[name]??'Draw');
   await dismissDesignInspector(page);
   await radio.click();
   await expect(radio).toHaveAttribute('aria-checked','true');

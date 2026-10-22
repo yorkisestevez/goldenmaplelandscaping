@@ -1,5 +1,5 @@
 import {readFileSync} from 'node:fs';
-import {openDesignTask,openDesignerMode,savedConfiguration} from './nav';
+import {openDesignTask,openDesignerMode,savedConfiguration,showTabTools} from './nav';
 import {expect,test,type Locator,type Page} from '@playwright/test';
 import {newLandscapeObject,newLandscapePlant} from '../src/features/deckcraft/landscapeCatalogue';
 
@@ -508,10 +508,11 @@ const PLAN_RIBBONS=[
   ['Extras',['Landscape','Patios & walls']],
   ['Materials',['Board layout','Inlays']],
 ] as const;
-/** Opens a tab and shows its tools on the plan (Extras and Materials open the 3D view and a panel). */
-async function showToolCategory(page:Page,name:string){
+/** Shows a tab's tools on the plan (nav.ts showTabTools: Extras and Materials come forward as a link brings them, with
+ * their panel, and the view stays on the plan). */
+async function showToolCategory(page:Page,name:'Draw'|'Materials'|'Extras'){
   const tab=page.getByRole('tablist',{name:'Design',exact:true}).getByRole('tab',{name,exact:true});
-  if(await tab.getAttribute('aria-selected')!=='true')await tab.click();
+  if(await tab.getAttribute('aria-selected')!=='true')await showTabTools(page,name);
   await expect(tab).toHaveAttribute('aria-selected','true');
   await showCanvas(page);
   if(!await page.getByRole('radiogroup',{name:'Plan tools'}).isVisible())await viewTab(page,'Plan');
