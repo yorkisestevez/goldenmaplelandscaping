@@ -48,7 +48,8 @@ function StoneStepBlocks({data}:{data:DeckData}){
   // Local +z of a 180° flight runs toward the bank; treads climb from the lower edge.
   const dir=Math.cos(rot)<0?1:-1,z0=f.zFt-dir*f.depthFt/2;
   return Array.from({length:n},(_,k)=>{const top=rise*(k+1),zA=z0+dir*k*run,zB=z0+dir*(f.depthFt+1.5),zc=(zA+zB)/2,len=Math.abs(zB-zA),r=rnd(331+k);
-   return <mesh key={f.id+k} position={[f.xFt+(r()-.5)*.25,base+top/2,zc]} rotation={[0,(r()-.5)*.05,0]} castShadow receiveShadow><boxGeometry args={[f.widthFt+.5+r()*.4,top,len]}/><meshStandardMaterial color={['#8b8378','#7d766c','#958c80'][k%3]} roughness={.92}/></mesh>;});
+   const segs=3;return Array.from({length:segs},(_,j)=>{const w=(f.widthFt+.9)/segs,h=top+.1+r()*.08,x=f.xFt-(f.widthFt+.9)/2+w*(j+.5)+(r()-.5)*.15;
+    return <mesh key={f.id+k+'-'+j} position={[x,base+h/2,zc+(r()-.5)*.2]} rotation={[(r()-.5)*.03,(r()-.5)*.12,(r()-.5)*.03]} castShadow receiveShadow><boxGeometry args={[w*(.96+r()*.06),h,len+(r()-.5)*.3]}/><meshStandardMaterial color={['#8b8378','#7d766c','#958c80','#857c70'][(k+j)%4]} roughness={.93}/></mesh>;});}).flat();
  })}</group>;
 }
 export default function ArmourStones3D({data}:{data:DeckData}){
