@@ -59,7 +59,7 @@ function reinforcementGridTexture(){const n=64,bytes=new Uint8Array(n*n*4);for(l
  * the 2700 K lights. Caffè Crema is a warm beige (Techo-Bloc's "warm revival" palette): a slight amber lift keeps it
  * beige at dusk without changing its daylight value much; the evening grade is stronger because the blue sky fill
  * otherwise wins. Greyed Nickel gets a slight evening lift so the band does not read blue. Other photos stay as photographed. */
-const SWATCH_GRADES:Record<string,[day:string,evening:string]>={'caff-crema':['#fff3e6','#ffdcb4'],'greyed-nickel':['#ffffff','#ffd6b0']};
+const SWATCH_GRADES:Record<string,[day:string,evening:string]>={'caff-crema':['#fff3e6','#ffdcb4'],'greyed-nickel':['#ffffff','#ffd6b0'],'chestnut-brown':['#ffd2a8','#ffc493']};
 export const swatchGrade=(key?:string,evening=false)=>{const colour=key?.split('/')[2],g=colour?SWATCH_GRADES[colour]:undefined;return g?g[evening?1:0]:'#ffffff';};
 /** A colour darkened to a share of its brightness (joint sand in its own shade). */
 const shade=(hex:string,k:number)=>`#${new THREE.Color(hex).multiplyScalar(k).getHexString()}`;
