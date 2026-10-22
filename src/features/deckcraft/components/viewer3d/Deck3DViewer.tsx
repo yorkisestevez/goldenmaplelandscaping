@@ -17,6 +17,7 @@ import {getPoolModels} from '../../poolModel';
 
 const Pool3D=lazy(()=>import('./Pool3D'));
 const Fire3D=lazy(()=>import('./Fire3D'));
+const KitchenDownlights=lazy(()=>import('./KitchenDownlights'));
 
 import {foundationSolids} from '../../foundationSolids';
 
@@ -570,7 +571,7 @@ function Scene({data,model,showMatureSpread=false,structure,cutaway,inspection,y
 
     <Environment3D data={{...data,houseVisible:data.houseVisible!==false&&isObjectVisible(data.editorOrganization,'house')}} footprint={model.levels[0].footprint} topY={data.height} planKey={JSON.stringify(model.quantities)} cutaway={cutaway} finished={!inspection} yard={yard} {...interaction}/>
 
-  </group>{evening&&lightsOn&&<KitchenDownlights data={data}/>}<Suspense fallback={null}><Landscape3D data={{...data,landscapeObjects:data.landscapeObjects?.filter(o=>isObjectVisible(data.editorOrganization,o.id))}} showMatureSpread={showMatureSpread} source={data} model={model} yard={yard}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
+  </group>{evening&&lightsOn&&data.landscapeObjects?.some(o=>o.enabled&&o.assetId==='kitchen-island')&&<Suspense fallback={null}><KitchenDownlights data={data}/></Suspense>}<Suspense fallback={null}><Landscape3D data={{...data,landscapeObjects:data.landscapeObjects?.filter(o=>isObjectVisible(data.editorOrganization,o.id))}} showMatureSpread={showMatureSpread} source={data} model={model} yard={yard}/></Suspense><FixtureGlows items={extras.fixtures} evening={evening} enabled={lightsOn}/></>;
 
 }
 
@@ -741,12 +742,4 @@ export default function Deck3DViewer({toolbar,data:rawData,model,yardModel:calcu
 
   </div>{designer&&onUpdate&&!structure&&!cutaway&&<FlythroughLauncher data={data}/>}{terrainWarnings.length>0&&<details open className="text-xs py-2" aria-label="Terrain conflicts"><summary>Terrain needs attention · {terrainWarnings.length}</summary><ul>{terrainWarnings.map(w=><li key={w}>{w}</li>)}</ul></details>}</>;
 
-}
-
-/** Night stills: a warm 2700 K pergola-style downlight over each outdoor kitchen island, angled so the second also washes the cook face, so the
- * veneer and counter read at night instead of relying on the under-counter LED strip alone. */
-function KitchenDownlights({data}:{data:DeckData}){
- const islands=(data.landscapeObjects??[]).filter(o=>o.enabled&&o.assetId==='kitchen-island');
- return <group name="kitchen-downlights">{islands.map(o=>{let y=0;try{y=landscapePlacement(data,o).y;}catch{/* runtime not loaded yet */}
-  return <group key={o.id}><pointLight position={[o.xIn/12,y+7.5,o.zIn/12-1.2]} color="#ffcf98" intensity={14} distance={16} decay={2}/><pointLight position={[o.xIn/12,y+7.5,o.zIn/12+4]} color="#ffcf98" intensity={12} distance={14} decay={2}/><pointLight position={[o.xIn/12,y+1.6,o.zIn/12+4.5]} color="#ffd6a8" intensity={4} distance={8} decay={2}/><pointLight position={[o.xIn/12,y+1.6,o.zIn/12-4.5]} color="#ffd6a8" intensity={4} distance={8} decay={2}/></group>;})}</group>;
 }
