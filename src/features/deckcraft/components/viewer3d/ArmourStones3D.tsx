@@ -44,7 +44,7 @@ export function armourStones(walls:YardFeature[],groundFt:number):Stone[]{
 /** Natural armour-slab steps as a crew sets them: one thick rectangular slab per riser, each bedded on the bank and
  * lapping 3 in onto the slab below, with boulder cheek walls both sides. Replaces the app's flat stone-step boxes
  * for flights coloured ARMOUR_STEP_MARK. */
-const SLAB_TINTS=['#a08f7a','#978672','#a89580','#8f7f6c'];
+const SLAB_TINTS=['#b5a48d','#ab9a84','#bcab94','#a69580'];
 /** A split armour slab: subdivided box with chipped edges, a gently cupped top and per-vertex tan/grey mottling. */
 function slabGeometry(w:number,t:number,l:number,seed:number,tint:string){
  const g=new THREE.BoxGeometry(w,t,l,10,3,8),p=g.attributes.position as THREE.BufferAttribute,r=rnd(seed),c=new THREE.Color(tint),col=new Float32Array(p.count*3),v=new THREE.Vector3();
@@ -67,7 +67,7 @@ function StoneStepBlocks({data}:{data:DeckData}){
   const dir=Math.cos(rot)<0?1:-1,z0=f.zFt-dir*f.depthFt/2,w=Math.min(f.widthFt,5),lap=.25,thick=rise+.08,r=rnd(911);
   const parts:ReactElement[]=[];
   // Compacted bank under the flight: a dark soil wedge so no slab ever shows daylight beneath it.
-  for(let k=0;k<n;k++){const zA=z0+dir*k*run,zB=z0+dir*(n*run+1);parts.push(<mesh key={'bank'+k} position={[f.xFt,base+(k*rise)/2,(zA+zB)/2]} receiveShadow><boxGeometry args={[w+.2,Math.max(.01,k*rise),Math.abs(zB-zA)]}/><meshStandardMaterial color="#3a332c" roughness={1}/></mesh>);}
+  for(let k=0;k<n;k++){const zA=z0+dir*k*run,zB=z0+dir*(n*run+1);parts.push(<mesh key={'bank'+k} position={[f.xFt,base+(k*rise)/2,(zA+zB)/2]} receiveShadow><boxGeometry args={[w-.5,Math.max(.01,k*rise-.05),Math.abs(zB-zA)-.3]}/><meshStandardMaterial color="#3a332c" roughness={1}/></mesh>);}
   for(let k=0;k<n;k++){const top=base+rise*(k+1),zA=z0+dir*k*run-dir*.04,len=run+lap+.04,zc=zA+dir*len/2;
    parts.push(<mesh key={'slab'+k} geometry={slabGeometry(w,thick,len,77+k*13,SLAB_TINTS[k%4])} position={[f.xFt,top-thick/2,zc]} castShadow receiveShadow><meshStandardMaterial vertexColors color="#ffffff" roughness={.96} flatShading/></mesh>);
    // Cheek boulders, both sides, stepping up with the flight.
