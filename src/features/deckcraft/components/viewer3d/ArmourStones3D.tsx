@@ -1,3 +1,5 @@
+import {ARMOUR_STEP_MARK} from './armourStepMark';
+import type {ReactElement} from 'react';
 import {useLayoutEffect,useMemo} from 'react';
 import * as THREE from 'three';
 import type {DeckData,YardFeature} from '../../types';
@@ -39,18 +41,26 @@ export function armourStones(walls:YardFeature[],groundFt:number):Stone[]{
  }
  return out;
 }
-/** Natural stone slab steps cut into an armour-stone bank: each tread is a solid stone block from the ground up to its
- * own top, running back into the bank, so the flight reads as stacked slabs set into the slope (no gap below). */
+/** Natural armour-slab steps as a crew sets them: one thick rectangular slab per riser, each bedded on the bank and
+ * lapping 3 in onto the slab below, with boulder cheek walls both sides. Replaces the app's flat stone-step boxes
+ * for flights coloured ARMOUR_STEP_MARK. */
+const SLAB_TINTS=['#9a9183','#8f8678','#a39a8b','#958b7d'];
 function StoneStepBlocks({data}:{data:DeckData}){
- const flights=(data.yardFeatures??[]).filter(f=>f.enabled&&f.stoneSteps&&f.productId&&(data.yardFeatures??[]).some(w=>w.productId==='armour-stone'));
+ const flights=(data.yardFeatures??[]).filter(f=>f.enabled&&f.stoneSteps&&f.color===ARMOUR_STEP_MARK);
  const base=(data.terrainConfig?.elevationIn??0)/12;
- return <group name="stone-step-blocks">{flights.flatMap(f=>{const s=f.stoneSteps!,n=s.riserCount,rise=((f.finishedElevationIn??0)-s.lowerElevationIn)/n/12,run=s.treadRunIn/12,rot=(f.rotationDeg??0)*Math.PI/180;
-  // Local +z of a 180° flight runs toward the bank; treads climb from the lower edge.
-  const dir=Math.cos(rot)<0?1:-1,z0=f.zFt-dir*f.depthFt/2;
-  return Array.from({length:n},(_,k)=>{const top=rise*(k+1),zA=z0+dir*k*run,zB=z0+dir*(f.depthFt+1.5),zc=(zA+zB)/2,len=Math.abs(zB-zA),r=rnd(331+k);
-   const segs=3;return Array.from({length:segs},(_,j)=>{const w=(f.widthFt+.9)/segs,h=top+.1+r()*.08,x=f.xFt-(f.widthFt+.9)/2+w*(j+.5)+(r()-.5)*.15;
-    return <mesh key={f.id+k+'-'+j} position={[x,base+h/2,zc+(r()-.5)*.2]} rotation={[(r()-.5)*.03,(r()-.5)*.12,(r()-.5)*.03]} castShadow receiveShadow><boxGeometry args={[w*(.96+r()*.06),h,len+(r()-.5)*.3]}/><meshStandardMaterial color={['#8b8378','#7d766c','#958c80','#857c70'][(k+j)%4]} roughness={.93}/></mesh>;});}).flat();
- })}</group>;
+ const geo=useMemo(boulderGeometry,[]);
+ return <group name="armour-slab-steps">{flights.map(f=>{const s=f.stoneSteps!,n=s.riserCount,rise=((f.finishedElevationIn??0)-s.lowerElevationIn)/n/12,run=s.treadRunIn/12,rot=(f.rotationDeg??0)*Math.PI/180;
+  const dir=Math.cos(rot)<0?1:-1,z0=f.zFt-dir*f.depthFt/2,w=Math.min(f.widthFt,5),lap=.25,thick=rise+.08,r=rnd(911);
+  const parts:ReactElement[]=[];
+  // Compacted bank under the flight: a dark soil wedge so no slab ever shows daylight beneath it.
+  for(let k=0;k<n;k++){const zA=z0+dir*k*run,zB=z0+dir*(n*run+1);parts.push(<mesh key={'bank'+k} position={[f.xFt,base+(k*rise)/2,(zA+zB)/2]} receiveShadow><boxGeometry args={[w+.2,Math.max(.01,k*rise),Math.abs(zB-zA)]}/><meshStandardMaterial color="#2c2723" roughness={1}/></mesh>);}
+  for(let k=0;k<n;k++){const top=base+rise*(k+1),zA=z0+dir*k*run-dir*.04,len=run+lap+.04,zc=zA+dir*len/2;
+   parts.push(<mesh key={'slab'+k} position={[f.xFt+(r()-.5)*.08,top-thick/2,zc]} rotation={[0,(r()-.5)*.025,0]} castShadow receiveShadow><boxGeometry args={[w,thick,len]}/><meshStandardMaterial color={SLAB_TINTS[k%4]} roughness={.95}/></mesh>);
+   // Cheek boulders, both sides, stepping up with the flight.
+   for(const side of [-1,1]){const sz=1.5+r()*.5,h=rise*(k+1)+.6+r()*.3;
+    parts.push(<mesh key={'cheek'+k+side} geometry={geo} position={[f.xFt+side*(w/2+sz*.42),base+h/2-.15,zA+dir*run/2]} rotation={[r()*.4,r()*6.28,r()*.4]} scale={[sz*.55,h/2+.1,run*.62+.1]} castShadow receiveShadow><meshStandardMaterial color={['#6b645a','#736a5e','#5f5a52'][(k+side+3)%3]} roughness={.95}/></mesh>);}
+  }
+  return <group key={f.id}>{parts}</group>;})}</group>;
 }
 export default function ArmourStones3D({data}:{data:DeckData}){
  const walls=(data.yardFeatures??[]).filter(f=>f.enabled&&f.kind==='retaining-wall'&&f.productId==='armour-stone'&&!f.wallConstruction?.freestanding);

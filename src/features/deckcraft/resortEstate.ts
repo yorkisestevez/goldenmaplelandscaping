@@ -29,10 +29,11 @@ import {arcGeometry} from './circularArcs';
  *   little bluestem, switchgrass) with redbud, red maple and serviceberry feature trees.
  */
 const CREMA='#d0bca4';
-const FIELD:YardFeature['hardscape']={finishId:'hd-smooth-grande',colorId:'caff-crema',unitId:'grande-495-825-60',patternId:'linear-laying-pattern-05-100-blu-grande',angleDeg:0,jointMm:7};
+const STEPF:YardFeature['hardscape']={finishId:'hd-smooth-grande',colorId:'caff-crema',unitId:'grande-495-825-60',patternId:'linear-laying-pattern-05-100-blu-grande',angleDeg:0,jointMm:7};
+const FIELD:YardFeature['hardscape']={finishId:'hd-smooth',colorId:'beige-cream',unitId:'900-600-60-mm-600-900-60',patternId:'linear-pattern-35-100-900x600',angleDeg:0,jointMm:0};
 // Walks: Techo-Bloc Linea in Chestnut Brown, the long 100×425 unit in running bond, laid along each walk.
 const plank=(angleDeg:number):YardFeature['hardscape']=>({finishId:'dry-cast',colorId:'chestnut-brown',unitId:'100-425-100-mm-100-425-100',patternId:'running-bond',angleDeg,jointMm:3});
-const SLAB='techo-blu60-smooth-slab',PLANK='techo-linea-paver';
+const SLAB='techo-industria-slab',STEPSLAB='techo-blu60-smooth-slab',PLANK='techo-linea-paver';
 
 export function resortEstateDesign():DeckData{
  const look=EXTERIOR_LOOKS.find(l=>l.id==='modern-farmhouse')!;
@@ -59,7 +60,7 @@ export function resortEstateDesign():DeckData{
  const allDeck=tk.levels.flatMap(l=>l.footprint.outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z})));
  const deckFront=Math.max(...tk.levels[0].footprint.outline.map(p=>p.y+tk.levels[0].offset.z));
  const push=(f:YardFeature)=>{data.yardFeatures=[...data.yardFeatures!,f];return f;};
- const pave=(id:string,name:string,xFt:number,zFt:number,w:number,d:number,rot=0,walk?:number)=>push({...createYardFeature(data,{kind:'patio',id,name,xFt,zFt,widthFt:w,depthFt:d,heightIn:0,productId:walk===undefined?SLAB:PLANK,hardscape:walk===undefined?FIELD:plank(walk)}),rotationDeg:((rot%360)+360)%360,color:walk===undefined?CREMA:'#836f5e'});
+ const pave=(id:string,name:string,xFt:number,zFt:number,w:number,d:number,rot=0,walk?:number)=>push({...createYardFeature(data,{kind:'patio',id,name,xFt,zFt,widthFt:w,depthFt:d,heightIn:0,productId:walk===undefined?SLAB:PLANK,hardscape:walk===undefined?{...FIELD!,angleDeg:(360-((rot%360)+360)%360)%360}:plank(walk)}),rotationDeg:((rot%360)+360)%360,color:walk===undefined?CREMA:'#836f5e'});
  // Arrival terrace: 16 ft deep, notched round the flight so the treads land on it.
  const cx=(s0+s1)/2,x0=s0-10*12,x1=s1+10*12,cover=Math.min(1.1,0.32*144/(s1-s0)),zN=foot-cover,zF=zN+16*12;
  let terrace=createYardFeature(data,{kind:'patio',id:'terrace',name:'Arrival terrace',xFt:(x0+x1)/24,zFt:(zN+zF)/24,widthFt:(x1-x0)/12,depthFt:(zF-zN)/12,heightIn:0,productId:SLAB,hardscape:FIELD});
@@ -78,6 +79,8 @@ export function resortEstateDesign():DeckData{
  const PC=L(-7,3),SC=L(19.5,3);
  const pool={...createPlanningPool({id:'lagoon',name:'Resort pool',type:'concrete',xIn:PC.x*12,zIn:PC.z*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolRoundedRectangle(30*12,14*12,78),rotationDeg:ROT,depthProfile:[{stationIn:0,depthIn:42},{stationIn:168,depthIn:60}]};
  const spa={...createPlanningPool({id:'spa',name:'Spa',type:'concrete',xIn:SC.x*12,zIn:SC.z*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolRoundedRectangle(8*12,8*12,30),rotationDeg:ROT,depthProfile:[{stationIn:0,depthIn:36},{stationIn:96,depthIn:36}]};
+ const COPING={status:'planning' as const,widthIn:14,thicknessIn:2,overhangIn:1,jointIn:.125,transitionJointIn:.375,stockLengthIn:24,manufacturer:'Techo-Bloc',productId:'techo-piazzetta-coping',verifiedForPool:false,color:'#d8d1c3'};
+ (pool as any).coping=COPING;(spa as any).coping=COPING;
  data.pools=[pool,spa];
  // Cabana: its own patio east of the terrace, LOUSOL roof over kitchen and bar; dining on the open half.
  const cab=pave('cabana','Pool cabana',x1/12-0.3+12.5,tz-4,25,18);
@@ -121,8 +124,8 @@ export function resortEstateDesign():DeckData{
   let len=0;for(let k=1;k<pts.length;k++)len+=Math.hypot(pts[k].x-pts[k-1].x,pts[k].y-pts[k-1].y);
   return push({id,kind:'retaining-wall',name:'Armour stone wall',enabled:true,xFt:(xa+xb)/2,zFt:WZ,widthFt:len/12,depthFt:2.5,heightIn:UP,rotationDeg:0,productId:'armour-stone',color:'#9a8f80',wallPath:pts} as YardFeature);};
  const wW=armour('armour-west',LX0-1,SX-GAP),wE=armour('armour-east',SX+GAP,LX1+1);
- const RISERS=6,RUN=14;
- push({id:'stone-steps',name:'Stone slab steps',kind:'patio',enabled:true,xFt:SX,zFt:WZ-((RISERS-1)*RUN+RUN+2)/24+1.2,widthFt:5,depthFt:((RISERS-1)*RUN+RUN+2)/12,heightIn:0,rotationDeg:180,productId:SLAB,hardscape:FIELD,color:'#a39887',finishedElevationIn:UP,
+ const RISERS=6,RUN=17;
+ push({id:'stone-steps',name:'Stone slab steps',kind:'patio',enabled:true,xFt:SX,zFt:WZ-((RISERS-1)*RUN+RUN+2)/24+1.2,widthFt:5,depthFt:((RISERS-1)*RUN+RUN+2)/12,heightIn:0,rotationDeg:180,productId:STEPSLAB,hardscape:STEPF,color:'#a39887',finishedElevationIn:UP,
   stoneSteps:{lowerElevationIn:0,riserCount:RISERS,treadRunIn:RUN,stockWidthIn:60,stockDepthIn:RUN+2,stockThicknessIn:6,baseDepthIn:6,settingBedIn:1,jointIn:0,productName:'Natural armour stone slab steps'}} as YardFeature);
  const top=push({...createYardFeature(data,{kind:'patio',id:'overlook',name:'Overlook',xFt:SX,zFt:WZ+5.5,widthFt:10,depthFt:7,heightIn:0,productId:PLANK,hardscape:plank(0)}),finishedElevationIn:UP,color:'#836f5e'});
  // The walk from the fire circle to the step foot, through the rear meadow.

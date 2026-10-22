@@ -1,3 +1,4 @@
+import {ARMOUR_STEP_MARK} from './armourStepMark';
 import {CONSTRUCTION_YARD_ROLES,jointSurfaceGeometry} from './finishedSurfaceGeometry';
 import {useEffect,useLayoutEffect,useMemo,useState,useSyncExternalStore} from 'react';
 import {useThree} from '@react-three/fiber';
@@ -146,7 +147,7 @@ function WaterMotion({model}:{model:YardModel}){
 }
 export default function Yard3D({model,inspection=false,plantingBeds=[],evening=false}:{model:YardModel;inspection?:boolean;plantingBeds?:PlanPoint[][];evening?:boolean}){
  const hidden=CONSTRUCTION_YARD_ROLES;
- const groups=useMemo(()=>{const map=new Map<string,YardBox[]>();for(const box of yardPreviewBoxes(model,inspection)){if(!inspection&&(hidden.has(box.role)||GRADED_ROLES.includes(box.role)))continue;const b=inspection?box:seatOnLawn(box,model.terrain);const key=b.role+':'+b.color+':'+(b.surface?.swatchKey??'')+(b.illustrative?':simplified':'');if(map.has(key))map.get(key)!.push(b);else map.set(key,[b]);}return [...map.entries()];},[model,inspection]);
+ const groups=useMemo(()=>{const map=new Map<string,YardBox[]>();for(const box of yardPreviewBoxes(model,inspection)){if(!inspection&&(hidden.has(box.role)||GRADED_ROLES.includes(box.role)))continue;if(!inspection&&box.role==='stone-step'&&box.color===ARMOUR_STEP_MARK)continue;const b=inspection?box:seatOnLawn(box,model.terrain);const key=b.role+':'+b.color+':'+(b.surface?.swatchKey??'')+(b.illustrative?':simplified':'');if(map.has(key))map.get(key)!.push(b);else map.set(key,[b]);}return [...map.entries()];},[model,inspection]);
  // The simplified paving preview draws the sample paver's joints (yardPreview.ts keeps its size and angle).
  const paverSize=useMemo(()=>{const sample=model.boxes.find(b=>b.role==='paver');return sample?{w:sample.w,d:sample.d,angle:sample.angle||0}:undefined;},[model]);
  const occlusion=useGroundOcclusion(),swatches=useSwatchMap();
