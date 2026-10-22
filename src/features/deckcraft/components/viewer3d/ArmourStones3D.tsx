@@ -39,6 +39,18 @@ export function armourStones(walls:YardFeature[],groundFt:number):Stone[]{
  }
  return out;
 }
+/** Natural stone slab steps cut into an armour-stone bank: each tread is a solid stone block from the ground up to its
+ * own top, running back into the bank, so the flight reads as stacked slabs set into the slope (no gap below). */
+function StoneStepBlocks({data}:{data:DeckData}){
+ const flights=(data.yardFeatures??[]).filter(f=>f.enabled&&f.stoneSteps&&f.productId&&(data.yardFeatures??[]).some(w=>w.productId==='armour-stone'));
+ const base=(data.terrainConfig?.elevationIn??0)/12;
+ return <group name="stone-step-blocks">{flights.flatMap(f=>{const s=f.stoneSteps!,n=s.riserCount,rise=((f.finishedElevationIn??0)-s.lowerElevationIn)/n/12,run=s.treadRunIn/12,rot=(f.rotationDeg??0)*Math.PI/180;
+  // Local +z of a 180° flight runs toward the bank; treads climb from the lower edge.
+  const dir=Math.cos(rot)<0?1:-1,z0=f.zFt-dir*f.depthFt/2;
+  return Array.from({length:n},(_,k)=>{const top=rise*(k+1),zA=z0+dir*k*run,zB=z0+dir*(f.depthFt+1.5),zc=(zA+zB)/2,len=Math.abs(zB-zA),r=rnd(331+k);
+   return <mesh key={f.id+k} position={[f.xFt+(r()-.5)*.25,base+top/2,zc]} rotation={[0,(r()-.5)*.05,0]} castShadow receiveShadow><boxGeometry args={[f.widthFt+.5+r()*.4,top,len]}/><meshStandardMaterial color={['#8b8378','#7d766c','#958c80'][k%3]} roughness={.92}/></mesh>;});
+ })}</group>;
+}
 export default function ArmourStones3D({data}:{data:DeckData}){
  const walls=(data.yardFeatures??[]).filter(f=>f.enabled&&f.kind==='retaining-wall'&&f.productId==='armour-stone'&&!f.wallConstruction?.freestanding);
  const stones=useMemo(()=>armourStones(walls,(data.terrainConfig?.elevationIn??0)/12),[JSON.stringify(walls),data.terrainConfig?.elevationIn]);
@@ -49,6 +61,5 @@ export default function ArmourStones3D({data}:{data:DeckData}){
   stones.forEach((s,i)=>{e.set(s.tilt,s.yaw,s.tilt*.6);q.setFromEuler(e);m.compose(new THREE.Vector3(s.x,s.y,s.z),q,new THREE.Vector3(s.sx,s.sy,s.sz));mesh.setMatrixAt(i,m);mesh.setColorAt(i,col.set(s.tint));});
   mesh.count=stones.length;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;mesh.castShadow=true;mesh.receiveShadow=true;mesh.name='armour-stone-boulders';
  },[stones,mesh]);
- if(!stones.length)return null;
- return <primitive object={mesh} dispose={null}/>;
+ return <>{stones.length>0&&<primitive object={mesh} dispose={null}/>}<StoneStepBlocks data={data}/></>;
 }
