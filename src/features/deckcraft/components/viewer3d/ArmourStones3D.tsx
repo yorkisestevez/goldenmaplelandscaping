@@ -69,7 +69,7 @@ function StoneStepBlocks({data}:{data:DeckData}){
   // Compacted bank under the flight: a dark soil wedge so no slab ever shows daylight beneath it.
   for(let k=0;k<n;k++){const zA=z0+dir*k*run,zB=z0+dir*(n*run+1);parts.push(<mesh key={'bank'+k} position={[f.xFt,base+(k*rise)/2,(zA+zB)/2]} receiveShadow><boxGeometry args={[w-.5,Math.max(.01,k*rise-.05),Math.abs(zB-zA)-.3]}/><meshStandardMaterial color="#3a332c" roughness={1}/></mesh>);}
   for(let k=0;k<n;k++){const top=base+rise*(k+1),zA=z0+dir*k*run-dir*.04,len=run+lap+.04,zc=zA+dir*len/2;
-   parts.push(<mesh key={'slab'+k} geometry={slabGeometry(w,thick,len,77+k*13,SLAB_TINTS[k%4])} position={[f.xFt,top-thick/2,zc]} castShadow receiveShadow><meshStandardMaterial vertexColors color="#ffffff" roughness={.96} flatShading/></mesh>);
+   parts.push(<mesh key={'slab'+k} geometry={slabGeometry(w,thick,len,77+k*13,SLAB_TINTS[k%4])} position={[f.xFt,top-thick/2,zc]} castShadow receiveShadow><meshStandardMaterial vertexColors color="#ffffff" emissive="#3a2e22" emissiveIntensity={.45} roughness={.96} flatShading/></mesh>);
    // Cheek boulders, both sides, stepping up with the flight.
    for(const side of [-1,1]){const sz=1.5+r()*.5,h=rise*(k+1)+.6+r()*.3;
     parts.push(<mesh key={'cheek'+k+side} geometry={geo} position={[f.xFt+side*(w/2+sz*.42),base+h/2-.15,zA+dir*run/2]} rotation={[r()*.4,r()*6.28,r()*.4]} scale={[sz*.55,h/2+.1,run*.62+.1]} castShadow receiveShadow><meshStandardMaterial color={['#6b645a','#736a5e','#5f5a52'][(k+side+3)%3]} roughness={.95}/></mesh>);}
