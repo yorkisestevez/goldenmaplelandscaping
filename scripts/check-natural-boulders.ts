@@ -23,6 +23,7 @@ import {boulderTint,landscapeInstanceMatrix,landscapeSeatDyIn} from '../src/feat
 import {createDeckAgentController,type AgentResponse,type DeckAgentHostState} from '../src/features/deckcraft/designer/deckAgentController';
 import {assistantPlanSchemaForContext,buildAssistantContext} from '../src/features/deckcraft/designer/assistantPlan';
 import type {DeckData} from '../src/features/deckcraft/types';
+import {PRICE_BOOK} from '../src/features/deckcraft/priceBook';
 
 let checks=0;const ok=(value:unknown,message:string)=>{assert.ok(value,message);checks++;},eq=(a:unknown,b:unknown,message:string)=>{assert.deepEqual(a,b,message);checks++;};
 const near=(a:number,b:number,tolerance:number,message:string)=>ok(Math.abs(a-b)<=tolerance,`${message} (${a} vs ${b})`);
@@ -35,7 +36,8 @@ const seeded=(seed:number)=>()=>{seed=(seed*16807)%2147483647;return (seed-1)/21
  await ensureLiveDesignExtensions(design);
  const saved=serializeDesign(parseDesign(serializeDesign(design))),reopened=parseDesign(saved);
  eq(saved,golden.saved,'A saved legacy boulder design serializes exactly as before');
- eq(designLinkJson(reopened),golden.link,'…and links exactly as before');
+ // A link records the price book it was priced with (check-deck-price-book), so the frozen link is read at today's book.
+ eq(designLinkJson(reopened),golden.link.replace(/"priceBook":"[^"]*"/,`"priceBook":"${PRICE_BOOK.version}"`),'…and links exactly as before');
  const takeoff=landscapeTakeoff(reopened.landscapeObjects,reopened);
  eq(JSON.parse(JSON.stringify(takeoff)),golden.takeoff,'Legacy boulder takeoff is unchanged (no weight, no new keys)');
  eq(JSON.parse(JSON.stringify(landscapeQuoteSections(reopened.landscapeObjects!,takeoff))),golden.quote,'Legacy boulder quote lines are unchanged');

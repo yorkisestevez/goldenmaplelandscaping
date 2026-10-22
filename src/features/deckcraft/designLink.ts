@@ -45,6 +45,9 @@ export function designLinkJson(data:DeckData):string{
   for(const key of [...PERSONAL_FIELDS,'poolQuoteInputs'])delete file.configuration[key];
   const site=file.configuration.siteModel as Record<string,unknown>|undefined;if(site)delete site.overlay;
   file.priceBook=PRICE_BOOK.version;
+  // A round light has no long axis. A facing of zero is the default on open, so the link omits it.
+  const lighting=file.configuration.lightingSystem as {selectedItems?:{places?:Record<string,unknown>[]}[]}|undefined;
+  for(const item of lighting?.selectedItems??[])for(const place of item.places??[])if(place.angle===0)delete place.angle;
   return JSON.stringify(file);
 }
 

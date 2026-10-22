@@ -184,7 +184,7 @@ const nested:Record<string,Schema>={
   boardColours:[fields('lv role scope course at colour')],inlays:[inlaySchema],
   skirting:{...fields('style colour clearanceIn accessPanels cornerTreatment'),openEdges:[true]},deckFinishes:fields('fascia treads risers border railingColor'),level3:fields('widthFt lengthFt heightIn parent position offsetPct edgeId fullStep'),
   lightingZoneEnabled:fields('deck posts stairs landscape house privacy border'),catalogueAccessories:[true],
-  lightingSystem:{selectedItems:[fields('productId qty zone auto')],wireDistance:true},autoLighting:fields('posts stairs border stairStyle'),
+  lightingSystem:{selectedItems:[fields('productId qty zone auto')],wireDistance:true},autoLighting:fields('posts stairs border stairStyle stairsPerTread'),
   privacyScreens:[fields('id side lengthFt heightFt offsetPct lights enabled product design finish panels level edgeId')],
   railSections:[fields('id level edgeId startPct endPct enabled')],railDefault:true,
 };
