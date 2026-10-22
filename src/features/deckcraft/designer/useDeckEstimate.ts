@@ -9,7 +9,7 @@ import {houseRailingReviewFlags} from '../houseRailingClearance';
 import {isSystemProduct,lightingSystemCheck,syncAutoLighting} from '../lightingSystem';
 import {houseOutline} from '../houseFootprint';
 import type {DeckData} from '../types';
-type PlacementRules=typeof import('../lightingPlacementRules');
+type ReviewRules={placement:typeof import('../lightingPlacementRules');rooms:typeof import('../outdoorRoomRules')};
 
 /**
  * What re-prices the design: the design without its appearance (house looks and openings, screen positions, scene
@@ -44,13 +44,14 @@ export function useDeckEstimate(data:DeckData,setData:Dispatch<SetStateAction<De
     setData(prev=>deckReleaseData({...prev,lightingSystem:{...prev.lightingSystem,selectedItems:syncAutoLighting(prev,autoCounts)}}));
   },[autoKey]);
   const hasFixtures=lightingCheck.items.some(p=>!isSystemProduct(p));
-  // Where the lights sit against the lighting best practices (lightingPlacementRules.ts): pool, floors, steps, beds, pool clearance.
-  // The checker is advisory and never blocks a save, so it loads after the first paint (the route's bundle budget) and
-  // its flags join the list once it is here.
-  const [placementRules,setPlacementRules]=useState<PlacementRules>();
-  useEffect(()=>{let alive=true;import('../lightingPlacementRules').then(rules=>{if(alive)setPlacementRules(rules);});return ()=>{alive=false;};},[]);
-  const placementFlags=useMemo(()=>placementRules?placementRules.lightingPlacementIssues(data,estimate.model,extras.fixtures,{treadWidths:estimate.model.treads.map(t=>treadNose(t).width),houseRings:data.houseVisible!==false?houseOutline(data):[]}):[],[placementRules,data,estimate.model,extras.fixtures]);
-  const reviewFlags=[...new Set([...houseRailingReviewFlags(data,estimate.model,estimate.flags),...extras.warnings,...placementFlags])];
+  // Where the lights sit against the lighting best practices (lightingPlacementRules.ts): pool, floors, steps, beds, pool
+  // clearance; and the outdoor-room clearances (outdoorRoomRules.ts). Both checkers are advisory and never block a save,
+  // so they load after the first paint (the route's bundle budget) and their flags join the list once they are here.
+  const [reviewRules,setReviewRules]=useState<ReviewRules>();
+  useEffect(()=>{let alive=true;Promise.all([import('../lightingPlacementRules'),import('../outdoorRoomRules')]).then(([placement,rooms])=>{if(alive)setReviewRules({placement,rooms});});return ()=>{alive=false;};},[]);
+  const placementFlags=useMemo(()=>reviewRules?reviewRules.placement.lightingPlacementIssues(data,estimate.model,extras.fixtures,{treadWidths:estimate.model.treads.map(t=>treadNose(t).width),houseRings:data.houseVisible!==false?houseOutline(data):[]}):[],[reviewRules,data,estimate.model,extras.fixtures]);
+  const roomFlags=useMemo(()=>reviewRules?reviewRules.rooms.outdoorRoomIssues(data,estimate.model):[],[reviewRules,data,estimate.model]);
+  const reviewFlags=[...new Set([...houseRailingReviewFlags(data,estimate.model,estimate.flags),...extras.warnings,...placementFlags,...roomFlags])];
   // One description of the design feeds the estimate step, the summary download, the proposal and a sent design.
   const described=describeDesign(data,estimate);
   // The estimate key also keys the option deltas (R6): a delta is shown only for the design it was priced for.

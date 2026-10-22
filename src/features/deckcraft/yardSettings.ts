@@ -15,6 +15,9 @@ export const FIRE_PRODUCTS=[
  {id:'fire-wood-ring',name:'Wood-burning fire ring',fuel:'wood',round:true,min:36,max:48},
  {id:'fire-gas-bowl',name:'Gas fire bowl',fuel:'gas',round:true,min:30,max:48},
  {id:'fire-gas-linear',name:'Linear gas fire table',fuel:'gas',round:false,min:48,max:84},
+ /** A tapered cast-concrete bowl on a narrow foot with a wide flat rim (Techo-Bloc Sculptura style): the same gas burner,
+  * allowance and clearances as the gas bowl, drawn as a sculptural form. */
+ {id:'fire-gas-sculptural',name:'Sculptural gas fire bowl',fuel:'gas',round:true,min:36,max:48},
 ] as const;
 export const fireProduct=(f:{productId:string})=>FIRE_PRODUCTS.find(p=>p.id===f.productId);
 /** A new 42 in gas fire bowl on its own gravel pad, centred on the deck 10 ft out from its front edge, or at `near`.
