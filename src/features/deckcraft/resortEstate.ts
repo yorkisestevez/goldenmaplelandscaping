@@ -78,7 +78,7 @@ export function resortEstateDesign():DeckData{
  const PC=L(-7,3),SC=L(19.5,3);
  const pool={...createPlanningPool({id:'lagoon',name:'Resort pool',type:'concrete',xIn:PC.x*12,zIn:PC.z*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolRoundedRectangle(30*12,14*12,78),rotationDeg:ROT,depthProfile:[{stationIn:0,depthIn:42},{stationIn:168,depthIn:60}]};
  const spa={...createPlanningPool({id:'spa',name:'Spa',type:'concrete',xIn:SC.x*12,zIn:SC.z*12,copingTopElevationIn:0,shape:'rounded-rectangle'}),...poolRoundedRectangle(8*12,8*12,30),rotationDeg:ROT,depthProfile:[{stationIn:0,depthIn:36},{stationIn:96,depthIn:36}]};
- const COPING={status:'planning' as const,widthIn:14,thicknessIn:2,overhangIn:1,jointIn:.125,transitionJointIn:.375,stockLengthIn:24,manufacturer:'Techo-Bloc',productId:'techo-piazzetta-coping',verifiedForPool:false,color:'#cfcdc8'};
+ const COPING={status:'planning' as const,widthIn:14,thicknessIn:2,overhangIn:1,jointIn:.125,transitionJointIn:.375,stockLengthIn:24,manufacturer:'Techo-Bloc',productId:'techo-piazzetta-coping',verifiedForPool:false,color:'#a9aaa8'};
  (pool as any).coping=COPING;(spa as any).coping=COPING;(pool as any).waterOffsetIn=3;(spa as any).waterOffsetIn=3;
  data.pools=[pool,spa];
  // Cabana: its own patio east of the terrace, LOUSOL roof over kitchen and bar; dining on the open half.
@@ -178,7 +178,7 @@ export function resortEstateDesign():DeckData{
  ]}} as DeckData,{posts:tk.quantities.railingPosts,stairs:tk.treads.length,privacy:0})} as any;
  void allDeck;void _path;
  const shot=(id:string,name:string,p:number[],tg:number[],fov:number)=>({id,name,fov,positionIn:p.map(v=>v*12) as [number,number,number],targetIn:tg.map(v=>v*12) as [number,number,number]});
- data.scenePresentation={viewMode:'finished',activeCameraId:'overhead',cameras:[
+ data.scenePresentation={viewMode:'finished',poolEdgeWarmth:.2,activeCameraId:'overhead',cameras:[
   shot('overhead','Overhead',[12,190,72],[12,0,71.9],55),
   shot('eye','Path to the pool',[tx-6,5.5,tz+1],[courtX,2,courtZ],60),
   shot('wall','Armour stone wall and steps',[-10,6,70],[-10,4,106],58),

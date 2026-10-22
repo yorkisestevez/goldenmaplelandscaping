@@ -1,10 +1,11 @@
 /** Presentation only. Camera coordinates use project inches and never feed takeoffs. */
 export interface SavedSceneCamera {id:string;name:string;positionIn:[number,number,number];targetIn:[number,number,number];fov:number}
-export interface ScenePresentation {viewMode?:'finished'|'inspection';cameraPreset?:'terrace'|'pool'|'wall';activeCameraId?:string;cameras?:SavedSceneCamera[]}
+export interface ScenePresentation {viewMode?:'finished'|'inspection';cameraPreset?:'terrace'|'pool'|'wall';activeCameraId?:string;cameras?:SavedSceneCamera[];/** 0–1 scale on the warm glow underwater lights cast at the pool edge (default 1). */poolEdgeWarmth?:number}
 export function validateScenePresentation(value:unknown):ScenePresentation{
  const dense=(v:unknown,max:number):unknown[]=>{if(!Array.isArray(v)||Object.getPrototypeOf(v)!==Array.prototype||v.length>max||Object.getOwnPropertySymbols(v).length)throw Error('Camera lists must use plain arrays.');const ds=Object.getOwnPropertyDescriptors(v);if(Object.entries(ds).some(([k,d])=>k!=='length'&&(!/^\d+$/.test(k)||Number(k)>=v.length||!d.enumerable||!('value'in d)))||Array.from({length:v.length},(_,i)=>i).some(i=>!Object.hasOwn(ds,String(i))))throw Error('Camera lists must contain plain entries.');return v;};
  const plain=(v:unknown,keys:string[])=>{if(!v||typeof v!=='object'||Array.isArray(v)||![Object.prototype,null].includes(Object.getPrototypeOf(v))||Object.getOwnPropertySymbols(v).length)throw Error('Scene settings must be plain data.');const ds=Object.getOwnPropertyDescriptors(v);if(Object.entries(ds).some(([k,d])=>!keys.includes(k)||!d.enumerable||!('value'in d)))throw Error('Unsupported scene settings.');return v as Record<string,unknown>;};
- const r=plain(value,['viewMode','cameraPreset','activeCameraId','cameras']),out:ScenePresentation={};
+ const r=plain(value,['viewMode','cameraPreset','activeCameraId','cameras','poolEdgeWarmth']),out:ScenePresentation={};
+ if(r.poolEdgeWarmth!==undefined){if(typeof r.poolEdgeWarmth!=='number'||!(r.poolEdgeWarmth>=0&&r.poolEdgeWarmth<=1))throw Error('Pool edge warmth must be between 0 and 1.');out.poolEdgeWarmth=r.poolEdgeWarmth;}
  if(r.viewMode!==undefined){if(r.viewMode!=='finished'&&r.viewMode!=='inspection')throw Error('Choose finished or inspection view.');out.viewMode=r.viewMode;}
  if(r.cameraPreset!==undefined){if(!['terrace','pool','wall'].includes(r.cameraPreset as string))throw Error('Unsupported scene camera preset.');out.cameraPreset=r.cameraPreset as ScenePresentation['cameraPreset'];}
  const label=(v:unknown)=>{if(typeof v!=='string'||!v.trim()||v.length>100||/[\u0000-\u001f]/.test(v))throw Error('Invalid camera label.');return v;};

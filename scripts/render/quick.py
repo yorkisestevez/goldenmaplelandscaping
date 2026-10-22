@@ -11,7 +11,7 @@ async def main():
         ctx=await b.new_context(viewport={'width':1300,'height':1000}); await ctx.route('**/*',guard)
         pg=await ctx.new_page(); pg.set_default_timeout(1800000)
         night=C[n][3] is True
-        await pg.goto(BASE+('?deck-lighting=evening' if night else '?deck-hour=golden&deck-quality=showcase' if C[n][3]=='golden' else '')+h,wait_until='load',timeout=600000)
+        await pg.goto(BASE+('?deck-lighting=evening&deck-quality=showcase' if night else '?deck-hour=golden&deck-quality=showcase' if C[n][3]=='golden' else '')+h,wait_until='load',timeout=600000)
         await pg.wait_for_function('window.deckcraft && window.deckcraft.read().ready',timeout=600000)
         async def ex(cmds):
             rev=await pg.evaluate('window.deckcraft.read().revision')
