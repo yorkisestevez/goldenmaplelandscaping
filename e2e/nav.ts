@@ -99,12 +99,30 @@ export async function dismissDesignInspector(page:Page){
   }
 }
 
-/** Picks a plan tool: its homeowner tab, then the plan sheet when that tab opened another view. */
+/** The section id of each section (designer/sections.ts). */
+const SECTION_IDS:Record<string,string>={
+  'Deck shape & size':'deck','House':'house','Stairs & railings':'stairs','Boards & finish':'boards','Lighting':'lighting',
+  'Privacy, skirting & extras':'extras','Backyard':'backyard','Site & foundation':'site','Proposal & files':'proposal',
+};
+
+/** Brings a section's tab and panel forward the way a link to it does (the agent's `section.open`), leaving the view as it
+ * is. Picking Materials or Extras opens the 3D view, which CI's software WebGL draws slowly and which crowds out the work a
+ * test is about; the tabs' own tests pick them (deck-home-tabs.spec.ts). */
+async function revealSection(page:Page,id:string){
+  await expect.poll(()=>page.evaluate(()=>(window as {deckcraft?:{read():{ready:boolean}}}).deckcraft?.read().ready??false),{timeout:60_000}).toBe(true);
+  const result=await page.evaluate(section=>(window as unknown as {deckcraft:{execute(r:unknown):Promise<{ok:boolean}>}}).deckcraft.execute({id:`nav-${section}-${Date.now()}`,commands:[{type:'section.open',section}]}),id);
+  expect(result.ok,JSON.stringify(result)).toBe(true);
+  await expect(page.locator('#dd-home-panel')).toBeVisible();
+}
+
+/** Picks a plan tool: Draw's tools from the Draw tab; Materials' and Extras' tools by bringing their tab forward as a link
+ * does, then the plan sheet when another view is showing. */
 export async function pickPlanTool(page:Page,name:string){
   if(await page.locator('.deck-designer[data-pro]').count())return pickProTool(page,name);
   const radio=page.getByRole('radio',{name,exact:true});
   if(!await radio.isVisible()){
-    await openHomeTab(page,HOME_TOOL_TABS[name]??'Draw');
+    const tab=HOME_TOOL_TABS[name]??'Draw';
+    if(tab==='Draw')await openHomeTab(page,'Draw');else await revealSection(page,tab==='Materials'?'boards':'lighting');
     if(!await radio.isVisible())await page.getByRole('tablist',{name:'Drawing sheets'}).getByRole('tab',{name:'Plan',exact:true}).click();
   }
   await dismissDesignInspector(page);
@@ -155,12 +173,13 @@ export async function closeSketchMeasurements(page:Page){
   await expect(inspector).toHaveJSProperty('open',false);
 }
 
-/** Opens a section in its tab's panel: the tab (Draw's panel opens from "Deck settings"), then the section's row. */
+/** Opens a section in its tab's panel, then makes sure its row is expanded. Draw's panel opens from "Deck settings"; the
+ * other tabs' sections open as a link opens them, so the view stays as it is. */
 export async function openDesignTask(page:Page,name:string){
   const tab=SECTION_TABS[name];
   if(!tab)throw Error(`No homeowner tab holds ${name}`);
   const panel=page.locator('#dd-home-panel'),drawOpen=await homeTabs(page).getByRole('tab',{name:'Draw',exact:true}).getAttribute('aria-selected')==='true';
-  if(tab!=='Draw')await openHomeTab(page,tab);
+  if(tab!=='Draw')await revealSection(page,SECTION_IDS[name]);
   else if(!drawOpen||!await panel.isVisible()){
     await openHomeTab(page,'Draw');
     await page.getByRole('button',{name:'Deck settings',exact:true}).click();

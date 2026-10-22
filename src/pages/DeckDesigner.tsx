@@ -501,22 +501,22 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
   const renderSection=(id:SectionId)=>{switch(id){
     case 'house':return <HouseSection data={data} update={update} selectedOpeningId={effectiveHouseOpeningId} onSelectOpening={setSelectedHouseOpeningId} openExterior={()=>openExterior(true)}/>;
     case 'deck':return <DimensionsStep data={data} update={update} houseConfig={houseConfig} wrap={wrap} wrapStatus={wrapStatus} setWrapStatus={setWrapStatus} stairEdges={levelEdges} onDrawOnPlan={drawOnPlan}/>;
-    case 'boards':return <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage} deltas={deltas} onEditBoardLayout={()=>{setPlanTool('boards');setMode('plan');showCanvas();}} onPlaceInlay={inlay=>{setPendingInlay(inlay);setPlanTool('inlays');setMode('plan');showCanvas();}}/>;
-    case 'stairs':return <StairsStep data={data} update={update} onApplyElevation={atomicUpdate} stairEdges={stairEdges} deltas={deltas} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas();}}/>;
-    case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas();}} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch} deltas={deltas}/>;
-    case 'backyard':return <BackyardStep onGeometry={setGeometryPreview} data={data} update={update} onApplyElevation={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard} onDesign={()=>{setPlanTool('yard');setMode('plan');showCanvas();}}/>;
+    case 'boards':return <MaterialsStep data={data} update={update} material={material} reviewFlags={reviewFlags} model={estimate.model} paint={boardPaint} setPaint={setBoardPaint} paintMessage={paintMessage} deltas={deltas} onEditBoardLayout={()=>{setPlanTool('boards');setMode('plan');showCanvas('boards');}} onPlaceInlay={inlay=>{setPendingInlay(inlay);setPlanTool('inlays');setMode('plan');showCanvas('inlays');}}/>;
+    case 'stairs':return <StairsStep data={data} update={update} onApplyElevation={atomicUpdate} stairEdges={stairEdges} deltas={deltas} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas('edges');}}/>;
+    case 'lighting':case 'extras':case 'site':return <SiteExtrasStep part={id} onEditEdges={()=>{setPlanTool('edges');setMode('plan');showCanvas('edges');}} data={data} update={update} estimate={estimate} autoCounts={autoCounts} lightingCheck={lightingCheck} screens={screens} screenArea={screenArea} sides={sides} canAddScreen={canAddScreen} setScreen={setScreen} writeScreen={writeScreen} lightingSearch={lightingSearch} setLightingSearch={setLightingSearch} deltas={deltas}/>;
+    case 'backyard':return <BackyardStep onGeometry={setGeometryPreview} data={data} update={update} onApplyElevation={atomicUpdate} estimate={estimate} selectedFeatureId={selectedYardFeatureId} onSelectFeature={setYardFeatureId} earlierYard={earlierYard?.yardFeatures.length??0} onRestoreEarlierYard={restoreEarlierYard} onDismissEarlierYard={dismissEarlierYard} onDesign={()=>{setPlanTool('yard');setMode('plan');showCanvas('yard');}}/>;
     case 'proposal':return <EstimateStep data={data} update={update} estimate={estimate} material={material} railingName={railingName} ledger={schedule} designFacts={designFacts} wrapped={!!wrap} reviewFlags={reviewFlags} saved={saved} preparing={preparing} pdfBusy={pdfBusy} crewBusy={crewBusy} customer={customer} onSend={()=>setSendOpen(true)} onOpenProposal={()=>void openProposal()} onDownloadPdf={()=>void downloadPdf()} onSaveJSON={()=>saveJSON()} onDownloadSummary={download} onExport={kind=>void exportModel(kind)} onOpenPermit={()=>setPermitOpen(true)} onCrewPack={()=>void downloadCrewPack()} onOpenJobs={()=>setJobsOpen(true)} onWarmShare={warmShare}/>;
   }};
   // "Draw it on the plan" (the Deck section's outline editor): the Draw outline tool, with the plan brought into view.
   // On phones the tab panel is a drawer over the drawing, so going back to the drawing puts it away.
-  // A control in the drawer then hands the focus back to the open tab, read then, since the click may have picked a tool
-  // that brings another tab forward.
-  const showCanvas=()=>{
-    const drawer=!pro&&phoneLayout(),fromDrawer=drawer&&!!document.getElementById('dd-home-panel')?.contains(document.activeElement);
+  // A control in the drawer then hands the focus back to the open tab, or to the tab of the tool the click picked (`tool`),
+  // which the page brings forward on a later render.
+  const showCanvas=(tool?:PlanTool)=>{
+    const drawer=!pro&&phoneLayout(),fromDrawer=drawer&&!!document.getElementById('dd-home-panel')?.contains(document.activeElement),focusTab=(tool&&tabOfTool(tool,homeTabs)?.id)||homeTab;
     setWorkspaceView('canvas');if(drawer)setPanelOpen(false);
-    requestAnimationFrame(()=>{document.getElementById('deck-live-preview')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'});if(fromDrawer)document.querySelector<HTMLElement>('.dd-home-tabs [role=tab][aria-selected=true]')?.focus({preventScroll:true});});
+    requestAnimationFrame(()=>{document.getElementById('deck-live-preview')?.scrollIntoView({block:'start',behavior:reducedMotion()?'auto':'smooth'});if(fromDrawer)document.getElementById(`dd-home-tab-${focusTab}`)?.focus({preventScroll:true});});
   };
-  const drawOnPlan=()=>{setPlanTool('outline');setMode('plan');showCanvas();};
+  const drawOnPlan=()=>{setPlanTool('outline');setMode('plan');showCanvas('outline');};
   const startOver=()=>{
     void (async()=>{
       const next=deckReleaseData(structuredClone(DEFAULT_DECK));
@@ -543,7 +543,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
     }
     const diff=Object.fromEntries(Object.keys({...data,...next}).filter(k=>JSON.stringify(data[k as keyof DeckData])!==JSON.stringify(next[k as keyof DeckData])).map(k=>[k,next[k as keyof DeckData]]));
     if(Object.keys(diff).length){changes.edit(diff,data,true);replaceDesign(next);setSaved(false);}
-    setSelection({partIds:[],boards:[]});setDesignError('');setJobsOpen(false);setMode('plan');setPlanTool('outline');showCanvas();
+    setSelection({partIds:[],boards:[]});setDesignError('');setJobsOpen(false);setMode('plan');setPlanTool('outline');showCanvas('outline');
     setDesignStatus('Saved job version restored as one undoable change. Pricing uses the current price book.');
     resumeAutosave();
   };
@@ -567,7 +567,7 @@ export function DeckCraftWorkspace({embed}:{embed?:DeckCraftEmbed}={}){
         {/* In the Pro workspace the open section docks beside the drawing (ProProperties) instead of this panel. */}
         {!proPage&&(panelOpen||panelUsed)&&<Suspense fallback={null}><HomePanel hidden={!panelOpen} tab={homeTabs.find(t=>t.id===homeTab)??homeTabs[0]} data={data} ledger={schedule} expanded={[...open][0]} onExpand={id=>openSection(id)} onCollapse={()=>setOpen(new Set())} renderBody={renderSection} onClose={hidePanel} onEdit={id=>openSection(id,true)} focus={focusSection??undefined} onFocused={()=>setFocusSection(null)} onSend={()=>setSendOpen(true)} onDownloadPdf={()=>void downloadPdf()} pdfBusy={pdfBusy} onWarmShare={warmShare}/></Suspense>}
       </section>
-      <aside id="dd-assistant-dock" className="dd-assistant-slot" hidden={!askOpen}><button type="button" className="dd-assistant-back" onClick={showCanvas}>↑ Back to drawing</button></aside>
+      <aside id="dd-assistant-dock" className="dd-assistant-slot" hidden={!askOpen}><button type="button" className="dd-assistant-back" onClick={()=>showCanvas()}>↑ Back to drawing</button></aside>
       <WorkspacePrice onSend={()=>setSendOpen(true)} onQuoteReview={pro?()=>setQuoteReviewOpen(true):undefined} issues={pro||!designReady?0:issueCount} onIssues={()=>setIssuesOpen(true)} ledger={schedule} changes={changes.records} onFullList={showFullList}/>
     </main>
     {mounted&&<Suspense fallback={null}><DeckAgentBridge onSelect={next=>{setSelection(next);setYardFeatureId(next.hardscape?.id??'');if(next.partIds.length)setPlanTool('components');else if(next.boards.length)setPlanTool('boards');}} onPreviewDesign={next=>setGeometryPreview(next?{...data,...next}:null)} open={agentOpen} onClose={()=>setAgentOpen(false)} plainLanguageOpen={askOpen} initialExpert={askExpert} key={`ask-${askExpert}-${askOpen}`} dockTargetId="dd-assistant-dock" onTargetsChange={setAssistantTargets} onClosePlainLanguage={()=>{setAskOpen(false);setAssistantTargets(null);}} selection={assistantSelection} adapter={{data,estimate,reviewFlags,view:mode,openSections:[...open],canUndo,canRedo,ready:mounted&&designReady,commitDesign:next=>{const diff=Object.fromEntries(Object.keys({...data,...next}).filter(k=>JSON.stringify(data[k as keyof DeckData])!==JSON.stringify(next[k as keyof DeckData])).map(k=>[k,next[k as keyof DeckData]]));changes.edit(diff,data,true);replaceDesign(next);},undo,redo,setView:setMode,openSection:id=>openSection(id,true),actions:{'save.json':()=>saveJSON(true),'export.obj':()=>exportModel('obj',true),'export.dxf':()=>exportModel('dxf',true),'export.dxf2d':()=>exportPermit('dxf2d',true),'permit.pdf':()=>exportPermit('pdf',true),'proposal.open':()=>openProposal(true),'proposal.pdf':()=>downloadPdf(undefined,true),'review.open':()=>setSendOpen(true)}}}/></Suspense>}
