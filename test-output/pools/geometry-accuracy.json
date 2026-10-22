@@ -1,0 +1,300 @@
+{
+  "checks": 131,
+  "maxErrorPct": 0.0002729709246568399,
+  "fixtures": [
+    {
+      "label": "16x32 inside opening",
+      "actual": 512,
+      "expected": 512,
+      "errorPct": 0
+    },
+    {
+      "label": "Flat water volume exact",
+      "actual": 75.85185185185185,
+      "expected": 75.85185185185185,
+      "errorPct": 0
+    },
+    {
+      "label": "US gallon water quantity",
+      "actual": 15320.101925925925,
+      "expected": 15320.101925925925,
+      "errorPct": 0
+    },
+    {
+      "label": "Finish area uses physical floor and wall face below coping",
+      "actual": 928,
+      "expected": 928,
+      "errorPct": 0
+    },
+    {
+      "label": "Structure envelope separately offset",
+      "actual": 577.7777777777778,
+      "expected": 577.7777777777778,
+      "errorPct": 0
+    },
+    {
+      "label": "Coping edge and specified transition permanent deduction",
+      "actual": 606.5941840277778,
+      "expected": 606.5941840277778,
+      "errorPct": 0
+    },
+    {
+      "label": "Working clearance distinct construction envelope",
+      "actual": 796.4444444444445,
+      "expected": 796.4444444444445,
+      "errorPct": 0
+    },
+    {
+      "label": "Flat pool excavation includes water offset, slab and base",
+      "actual": 162.23868312757202,
+      "expected": 162.23868312757202,
+      "errorPct": 0
+    },
+    {
+      "label": "Base under structure",
+      "actual": 10.699588477366255,
+      "expected": 10.699588477366255,
+      "errorPct": 0
+    },
+    {
+      "label": "Bond beam/collar independently measured",
+      "actual": 1.9506172839506173,
+      "expected": 1.9506172839506173,
+      "errorPct": 0
+    },
+    {
+      "label": "Floor and wall physical volumes are disjoint",
+      "actual": 21.256515775034295,
+      "expected": 21.256515775034295,
+      "errorPct": 0
+    },
+    {
+      "label": "Pool backfill excludes collar and supported coping",
+      "actual": 42.434670781893004,
+      "expected": 42.434670781893,
+      "errorPct": 1.674439138251288e-14
+    },
+    {
+      "label": "Physical base solid volume equals takeoff",
+      "actual": 10.699588477366255,
+      "expected": 10.699588477366255,
+      "errorPct": 0
+    },
+    {
+      "label": "Physical backfill volume equals takeoff",
+      "actual": 42.434670781893004,
+      "expected": 42.434670781893004,
+      "errorPct": 0
+    },
+    {
+      "label": "Pool subtracts permanent hole, not excavation clearance",
+      "actual": 1393.4058159722222,
+      "expected": 1393.4058159722222,
+      "errorPct": 0
+    },
+    {
+      "label": "Patio aggregate excludes pool collar support volume",
+      "actual": 50.51234552079283,
+      "expected": 50.51234552079282,
+      "errorPct": 1.4066714353377502e-14
+    },
+    {
+      "label": "Partitioned aggregate physical mesh quantities reconcile",
+      "actual": 50.51234552079283,
+      "expected": 50.51234552079283,
+      "errorPct": 0
+    },
+    {
+      "label": "Shared formation quantities reconcile",
+      "actual": 219.30432152771027,
+      "expected": 219.30432152771027,
+      "errorPct": 0
+    },
+    {
+      "label": "Pool owns deepest cells exactly once",
+      "actual": 162.23868312757202,
+      "expected": 162.23868312757202,
+      "errorPct": 0
+    },
+    {
+      "label": "Pool and patio overlapping excavation counted once",
+      "actual": 219.30432152771027,
+      "expected": 219.30432152771027,
+      "errorPct": 0
+    },
+    {
+      "label": "Deleting pool restores original paving",
+      "actual": 2000,
+      "expected": 2000,
+      "errorPct": 0
+    },
+    {
+      "label": "Pool subtracts all intersected patios once",
+      "actual": 2393.405815972222,
+      "expected": 2393.405815972222,
+      "errorPct": 0
+    },
+    {
+      "label": "Rotated shallow/deep water volume",
+      "actual": 85.33333021340974,
+      "expected": 85.33333333333333,
+      "errorPct": 0.0000036561604577212137
+    },
+    {
+      "label": "Shallow floor world level",
+      "actual": -42,
+      "expected": -42,
+      "errorPct": 0
+    },
+    {
+      "label": "Deep floor world level",
+      "actual": -78,
+      "expected": -78,
+      "errorPct": 0
+    },
+    {
+      "label": "Unrelated site grading excluded from pool-owned excavation",
+      "actual": 162.23868312757202,
+      "expected": 162.23868312757202,
+      "errorPct": 0
+    },
+    {
+      "label": "Ground edit preserves fixed coping level",
+      "actual": 0,
+      "expected": 0,
+      "errorPct": 0
+    },
+    {
+      "label": "Ground edit preserves water",
+      "actual": -6,
+      "expected": -6,
+      "errorPct": 0
+    },
+    {
+      "label": "Compound survey plane exact mean over centred rotated pit",
+      "actual": 238.07939230708905,
+      "expected": 238.07939230708882,
+      "errorPct": 9.550329965138357e-14
+    },
+    {
+      "label": "Circular rounded opening analytic area",
+      "actual": 508.564982376035,
+      "expected": 508.5663706143592,
+      "errorPct": 0.00027297092462191114
+    },
+    {
+      "label": "Curved pool analytic water",
+      "actual": 75.34296035200515,
+      "expected": 75.34316601694209,
+      "errorPct": 0.0002729709246568399
+    },
+    {
+      "label": "Analytic arc perimeter",
+      "actual": 92.56637061435919,
+      "expected": 92.56637061435917,
+      "errorPct": 1.5352070758403022e-14
+    },
+    {
+      "label": "Rounded excavation offset true circular area",
+      "actual": 158.43038173616117,
+      "expected": 158.4306044467893,
+      "errorPct": 0.00014057298392578763
+    },
+    {
+      "label": "Measured mortar setting bed under supported coping",
+      "actual": 0.14098936899862824,
+      "expected": 0.14098936899862827,
+      "errorPct": 1.9686289691741906e-14
+    },
+    {
+      "label": "Transition sealant/backer-rod run at joint centreline",
+      "actual": 103.45833333333333,
+      "expected": 103.45833333333333,
+      "errorPct": 0
+    },
+    {
+      "label": "Coping setting bed mesh equals material takeoff",
+      "actual": 0.14098936899862824,
+      "expected": 0.14098936899862824,
+      "errorPct": 0
+    },
+    {
+      "label": "Shallow collar excavation outside narrow shell working pit",
+      "actual": 120.2962962962963,
+      "expected": 120.29629629629629,
+      "errorPct": 1.181321050832679e-14
+    },
+    {
+      "label": "Recorded collar cover fill avoids coping overlap",
+      "actual": 0.4922839506172839,
+      "expected": 0.492283950617284,
+      "errorPct": 2.2552492788623864e-14
+    },
+    {
+      "label": "Missing aggregate not invented",
+      "actual": 0,
+      "expected": 0,
+      "errorPct": 0
+    },
+    {
+      "label": "Entered service length",
+      "actual": 50,
+      "expected": 50,
+      "errorPct": 0
+    },
+    {
+      "label": "Trench and pit overlap counted once",
+      "actual": 3.481481481481495,
+      "expected": 3.4814814814814814,
+      "errorPct": 3.954283708984068e-13
+    },
+    {
+      "label": "Ground-relative trench depth through triangle boundaries",
+      "actual": 3.481481481481495,
+      "expected": 3.481481481481495,
+      "errorPct": 0
+    },
+    {
+      "label": "Overlapping pool pits use deepest floor once",
+      "actual": 191.7366255144033,
+      "expected": 191.7366255144033,
+      "errorPct": 0
+    },
+    {
+      "label": "Ground/floor crossing splits positive excavation analytically",
+      "actual": 4.7407407407407405,
+      "expected": 4.7407407407407405,
+      "errorPct": 0
+    },
+    {
+      "label": "Piecewise depth stations integrate each floor plane",
+      "actual": 85.33333333333333,
+      "expected": 85.33333333333333,
+      "errorPct": 0
+    },
+    {
+      "label": "Concave custom pool water integral",
+      "actual": 56.888888888888886,
+      "expected": 56.888888888888886,
+      "errorPct": 0
+    },
+    {
+      "label": "Concave offset excavation integral",
+      "actual": 136.16460905349794,
+      "expected": 136.16460905349794,
+      "errorPct": 0
+    },
+    {
+      "label": "Partially intersecting pool deducts clipped paving only",
+      "actual": 1583.716796875,
+      "expected": 1583.716796875,
+      "errorPct": 0
+    },
+    {
+      "label": "Pool cuts inlay without discarding remaining installed design",
+      "actual": 154.375,
+      "expected": 154.375,
+      "errorPct": 0
+    }
+  ]
+}

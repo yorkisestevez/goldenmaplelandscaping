@@ -1,0 +1,12 @@
+import {loadAdvancedYardRuntime} from '../src/features/deckcraft/yardModel';
+await loadAdvancedYardRuntime();
+import {ensureLiveDesignExtensions} from '../src/features/deckcraft/designExtensions';
+import {yardFeatureOutline} from '../src/features/deckcraft/yardPathGeometry';
+import {poolOutline} from '../src/features/deckcraft/poolGeometry';
+import {buildDeckTakeoff} from '../src/features/deckcraft/deckTakeoff';
+import {houseOutline} from '../src/features/deckcraft/houseFootprint';
+import {writeFileSync} from 'node:fs';
+const {resortEstateDesign}=await import('../src/features/deckcraft/resortEstate');
+const d=resortEstateDesign();await ensureLiveDesignExtensions(d);const tk=buildDeckTakeoff(d);
+const out:any={feat:d.yardFeatures!.map(f=>({id:f.id,r:yardFeatureOutline(f)})),pools:d.pools!.map(p=>(poolOutline as any)(p)),deck:tk.levels.map(l=>l.footprint.outline.map(p=>({x:p.x+l.offset.x,y:p.y+l.offset.z}))),house:houseOutline(d),objs:(await import('../src/features/deckcraft/landscapeDrift')).withDriftPlants(d.landscapeObjects).map(o=>({k:o.kind,a:o.assetId,x:o.xIn,z:o.zIn,w:o.widthIn,d:o.depthIn,r:o.rotationDeg,poly:(o as any).polygon})),pg:d.pergola};
+writeFileSync('.scratch/rplot.json',JSON.stringify(out));

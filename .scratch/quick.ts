@@ -1,0 +1,11 @@
+import {loadAdvancedYardRuntime} from '../src/features/deckcraft/yardModel';
+await loadAdvancedYardRuntime();
+const {ontarioShowcaseDesign,showcaseSampleIssues}=await import('../src/features/deckcraft/showcaseSample');
+const {outdoorRoomIssues}=await import('../src/features/deckcraft/outdoorRoomRules');
+const {buildDeckTakeoff}=await import('../src/features/deckcraft/deckTakeoff');
+const d=ontarioShowcaseDesign();
+console.log('scope',d.scopeOfWork!.length);
+console.log('ROOM',outdoorRoomIssues(d,buildDeckTakeoff(d)));
+console.log('ISSUES',showcaseSampleIssues(d));
+for(const o of d.landscapeObjects!.filter(o=>o.kind==='furniture'))console.log(o.id,(o.xIn/12).toFixed(2),(o.zIn/12).toFixed(2),o.rotationDeg.toFixed(1),o.widthIn,o.depthIn);
+console.log(JSON.stringify(d.lightingSystem.selectedItems.map(i=>[i.productId,i.places?.length??i.qty])));
