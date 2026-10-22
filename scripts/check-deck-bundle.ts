@@ -98,7 +98,10 @@ import {basename} from 'node:path';
 // October 21 (guillotined stones look real): the split-stone geometry is a chunk of its own, fetched by the 3D view only
 // for a design with a guillotined wall, so the viewer stays within its budget (338.9 KB). The chunk measured 5.8 KB with its
 // joints, crease normals and per-stone cache; bound it at 6.5 KB.
-const BUDGET_KB={routeInitial:277,routeCss:12,viewer:340,pdf:150,deltaWorker:214,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
+// October 22 (estate lighting meets guillotined armour stone): both raised the route to 277 KB on their own branches.
+// Together they measure 277.6 KB (option-deltas worker 213.4 KB, viewer 339.8 KB). Raised to 278 KB with the owner's
+// approval; perf/deckcraft-route-headroom (the lazy hardscape catalogue) is the planned way back down.
+const BUDGET_KB={routeInitial:278,routeCss:12,viewer:340,pdf:150,deltaWorker:214,swatchWorker:5,sketch:27,contractorTool:15,permitSet:35,splitStone:6.5};
 const assets=new URL('../build/client/assets/',import.meta.url);
 assert(existsSync(assets),'No build found: run `npm run build` first.');
 const files=readdirSync(assets);
